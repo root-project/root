@@ -9,15 +9,7 @@
 ################################################################################
 
 r"""
-/**
-\class TTree
-\brief \parblock \endparblock
-\htmlonly
-<details open>
-<summary  style="font-size:20px; color: #425788;"><b>Python interface</b></summary>
-<div class="pyrootbox">
-\endhtmlonly
-\anchor python
+\pythondoc TTree
 
 The TTree class has several additions for its use from Python, which are also
 available in its subclasses e.g. TChain and TNtuple.
@@ -40,13 +32,13 @@ a tree as described above if performance is not an issue or when dealing with
 a small dataset. To read and process the entries of a tree in a much faster
 way, please use ROOT::RDataFrame.
 
-Two methods of TTree have been pythonised to facilitate their: TTree::Branch and 
+Two methods of TTree have been pythonised to facilitate their: TTree::Branch and
 TTree::SetBranchAddress.
 
 ### Pythonisation of TTree::Branch
 
-The following example shows how we can create different types of branches of a TTree. 
-`Branch` links the new branch with a given Python object. It is therefore possible to 
+The following example shows how we can create different types of branches of a TTree.
+`Branch` links the new branch with a given Python object. It is therefore possible to
 fill such object with the desired content before calling TTree::Fill.
 
 \code{.py}
@@ -82,7 +74,7 @@ with ROOT.TFile("outfile.root", "RECREATE") as ofile:
     t.Branch('classb', cb)
 
     # Struct as leaflist. This is interpreted on the fly,
-    # but could be known to ROOT by other means, such as 
+    # but could be known to ROOT by other means, such as
     # header inclusion or dictionary load.
     ROOT.gInterpreter.Declare('''
     struct MyStruct {
@@ -95,7 +87,7 @@ with ROOT.TFile("outfile.root", "RECREATE") as ofile:
 
     # Store struct members individually
     ms = ROOT.MyStruct()
-    # Use the `addressof` function in the ROOT module 
+    # Use the `addressof` function in the ROOT module
     # to get the address of the struct members
     t.Branch('myintb', ROOT.addressof(ms, 'myint'), 'myint/I')
     t.Branch('myfloatb', ROOT.addressof(ms, 'myfloat'), 'myfloat/F')
@@ -108,11 +100,11 @@ with ROOT.TFile("outfile.root", "RECREATE") as ofile:
 
 ### Pythonisation of TTree::SetBranchAddress
 
-This section is to be considered for advanced users. Simple event 
+This section is to be considered for advanced users. Simple event
 loops reading tree entries in Python can be performed as shown above.
 
 Below an example is shown of reading different types tree branches.
-Note that `SetBranchAddress` will just link a given branch with a 
+Note that `SetBranchAddress` will just link a given branch with a
 certain Python object; after that, in order to read the content of such
 branch for a given TTree entry `x`, TTree::GetEntry(x) must be
 invoked.
@@ -150,7 +142,7 @@ with ROOT.TFile('outfile.root') as infile:
     t.SetBranchAddress('classb', cb)
 
     # Struct as leaflist. This is interpreted on the fly,
-    # but could be known to ROOT by other means, such as 
+    # but could be known to ROOT by other means, such as
     # header inclusion or dictionary load.
     ROOT.gInterpreter.Declare('''
     struct MyStruct {
@@ -163,11 +155,8 @@ with ROOT.TFile('outfile.root') as infile:
 
     t.GetEntry(0)
 \endcode
-\htmlonly
-</div>
-</details>
-\endhtmlonly
-*/
+
+\endpythondoc
 """
 
 from libROOTPythonizations import GetBranchAttr, BranchPyz

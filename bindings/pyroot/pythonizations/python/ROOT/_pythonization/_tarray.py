@@ -9,14 +9,7 @@
 ################################################################################
 
 r'''
-/**
-\class TArray
-\brief \parblock \endparblock
-\htmlonly
-<div class="pyrootbox">
-\endhtmlonly
-\anchor python
-## PyROOT
+\pythondoc TArray
 
 When used from Python, the subclasses of TArray (TArrayC, TArrayS, TArrayI, TArrayL, TArrayF and TArrayD) benefit from the following extra features:
 
@@ -40,10 +33,8 @@ print(a[0]) # prints '0.2'
 for elem in a:
     print(elem)
 \endcode
-\htmlonly
-</div>
-\endhtmlonly
-*/
+
+\endpythondoc
 '''
 
 from . import pythonization
