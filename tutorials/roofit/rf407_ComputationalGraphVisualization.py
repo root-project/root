@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
-## Data and categories: latex printing of lists and sets of RooArgSets
+## Data and categories: Visualing computational graph model before fitting, and latex printing of lists and sets of RooArgSets after fitting
 ##
 ## \macro_code
 ## \macro_output
@@ -47,6 +47,21 @@ bkg = ROOT.RooAddPdf("bkg", "Signal", [bkg1, bkg2], [sig1frac])
 bkgfrac = ROOT.RooRealVar("bkgfrac", "fraction of background", 0.5, 0.0, 1.0)
 model = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig], [bkgfrac])
 
+# Print composite tree in ASCII
+# -----------------------------------------------------------
+
+# Print tree to stdout
+model.Print("t")
+
+# Print tree to file
+model.printCompactTree("", "rf206_asciitree.txt")
+
+# Draw composite tree graphically
+# -------------------------------------------------------------
+
+# Print GraphViz DOT file with representation of tree
+model.graphVizTree("rf206_model.dot")
+
 # Make list of parameters before and after fit
 # ----------------------------------------------------------------------------------------
 
@@ -59,6 +74,21 @@ initParams = params.snapshot()
 # Do fit to data, obtain error estimates on parameters
 data = model.generate({x}, 1000)
 model.fitTo(data, PrintLevel=-1)
+
+# Print composite tree in ASCII
+# -----------------------------------------------------------
+
+# Print tree to stdout
+model.Print("t")
+
+# Print tree to file
+model.printCompactTree("", "rf206_asciitree.txt")
+
+# Draw composite tree graphically
+# -------------------------------------------------------------
+
+# Print GraphViz DOT file with representation of tree
+model.graphVizTree("rf206_model.dot")
 
 # Print LateX table of parameters of pdf
 # --------------------------------------------------------------------------

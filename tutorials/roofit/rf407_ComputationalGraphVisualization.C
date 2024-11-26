@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-/// Data and categories: latex printing of lists and sets of RooArgSets
+/// Data and categories: Visualing computational graph model before fitting, and latex printing of lists and sets of RooArgSets after fitting
 ///
 /// \macro_code
 /// \macro_output
@@ -20,7 +20,7 @@
 #include "RooPlot.h"
 using namespace RooFit;
 
-void rf407_latextables()
+void rf407_ComputationalGraphVisualization()
 {
    // S e t u p   c o m p o s i t e    p d f
    // --------------------------------------
@@ -55,6 +55,30 @@ void rf407_latextables()
    // Sum the composite signal and background
    RooRealVar bkgfrac("bkgfrac", "fraction of background", 0.5, 0., 1.);
    RooAddPdf model("model", "g1+g2+a", RooArgList(bkg, sig), bkgfrac);
+
+   // P r i n t   c o m p o s i t e   t r e e   i n   A S C I I
+   // -----------------------------------------------------------
+
+   // Print tree to stdout
+   model.Print("t");
+
+   // Print tree to file
+   model.printCompactTree("", "rf206_asciitree.txt");
+
+   // D r a w   c o m p o s i t e   t r e e   g r a p h i c a l l y
+   // -------------------------------------------------------------
+
+   // Print GraphViz DOT file with representation of tree
+   model.graphVizTree("rf206_model.dot");
+
+   // Make graphic output file with one of the GraphViz tools
+   // (freely available from www.graphviz.org)
+   //
+   // 'Top-to-bottom graph'
+   // unix> dot -Tgif -o rf207_model_dot.gif rf207_model.dot
+   //
+   // 'Spring-model graph'
+   // unix> fdp -Tgif -o rf207_model_fdp.gif rf207_model.dot
 
    // M a k e   l i s t   o f   p a r a m e t e r s   b e f o r e   a n d   a f t e r   f i t
    // ----------------------------------------------------------------------------------------
