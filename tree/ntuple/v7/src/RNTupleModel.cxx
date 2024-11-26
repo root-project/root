@@ -392,7 +392,7 @@ ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> 
    for (const auto &subField : *field) {
       sourceField = FindField(mapping(subField.GetQualifiedFieldName()));
       if (!sourceField)
-         return R__FAIL("no such field: " + mapping(fieldName));
+         return R__FAIL("no such field: " + mapping(subField.GetQualifiedFieldName()));
       fieldMap[&subField] = sourceField;
    }
 
