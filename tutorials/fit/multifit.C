@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook -js
-///  Fitting multiple functions to different ranges of a 1-D histogram
+/// \preview   Fitting multiple functions to different ranges of a 1-D histogram
 ///      Example showing how to fit in a sub-range of an histogram
 ///  A histogram is created and filled with the bin contents and errors
 ///  defined in the table below.
@@ -13,10 +13,11 @@
 ///  of parameters must be given. In this particular case, the initial values
 ///  are taken from the result of the individual fits.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2022
 /// \author Rene Brun
 
 #include "TH1.h"

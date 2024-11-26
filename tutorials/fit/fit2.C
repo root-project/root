@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook
-/// Fitting a 2-D histogram
+/// \preview  Fitting a 2-D histogram
 /// This tutorial illustrates :
 ///  - how to create a 2-d function
 ///  - fill a 2-d histogram randomly from this function
@@ -15,10 +15,11 @@
 ///   root > .x fit2.C++
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Rene Brun
 
 #include "TF2.h"

@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook
-/// Demonstrate performance and usage of Minuit2 and Fumili2 for monodimensional fits.
+/// \preview  Demonstrate performance and usage of Minuit2 and Fumili2 for monodimensional fits.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2022
 /// \author Lorenzo Moneta
 
 #include "TH1.h"

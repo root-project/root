@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook -js
-/// Tutorial for convolution of two functions
+/// \preview  Tutorial for convolution of two functions
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Aurelie Flandi
 
 #include <TCanvas.h>

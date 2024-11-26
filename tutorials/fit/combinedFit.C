@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook
-/// Combined (simultaneous) fit of two histogram with separate functions
+/// \preview  Combined (simultaneous) fit of two histogram with separate functions
 /// and some common parameters
 ///
 /// See http://root.cern/phpBB3//viewtopic.php?f=3&t=11740#p50908
@@ -9,10 +9,11 @@
 ///
 /// N.B. this macro must be compiled with ACliC
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2024
 /// \author Lorenzo Moneta
 
 #include <Fit/Fitter.h>

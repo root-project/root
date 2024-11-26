@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook
-/// Fitting a TGraph2D
+/// \preview  Fitting a TGraph2D
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date December 2022
 /// \author Olivier Couet
 
 #include <TMath.h>

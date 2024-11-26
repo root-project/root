@@ -1,17 +1,18 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook
-/// Tutorial for creating a Vectorized TF1 function using a formula expression and
+/// \preview  Tutorial for creating a Vectorized TF1 function using a formula expression and
 /// use it for fitting an histogram
 ///
 /// To create a vectorized function (if ROOT has been compiled with support for vectorization)
 /// is very easy. One needs to create the TF1 object with the option "VEC" or call the method
 /// TF1::SetVectorized
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date July 2022
 /// \author Lorenzo Moneta
 
 #include <Math/MinimizerOptions.h>

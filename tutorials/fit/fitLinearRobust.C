@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook -js
-/// This tutorial shows how the least trimmed squares regression,
+/// \preview  This tutorial shows how the least trimmed squares regression,
 /// included in the TLinearFitter class, can be used for fitting
 /// in cases when the data contains outliers.
 /// Here the fitting is done via the TGraph::Fit function with option "rob":
@@ -9,10 +9,11 @@
 /// the robust fitting coefficients, just use the TLinearFitter::EvalRobust
 /// function instead of TLinearFitter::Eval
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Anna Kreshuk
 
 #include "TRandom.h"

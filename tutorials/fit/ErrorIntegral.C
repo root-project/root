@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook -js
-/// Estimate the error in the integral of a fitted function
+/// \preview  Estimate the error in the integral of a fitted function
 /// taking into account the errors in the parameters resulting from the fit.
 /// The error is estimated also using the correlations values obtained from
 /// the fit
@@ -35,10 +35,11 @@
 /// since they are obtained directly from the fit without using the approximation of error propagation.
 /// This is possible in ROOT. when using the TF1NormSum class, see the tutorial fitNormSum.C
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Lorenzo Moneta
 
 #include "TF1.h"

@@ -1,13 +1,14 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook -js
-/// fitting a parabola to a multigraph of 3 partly overlapping graphs
+/// \preview  fitting a parabola to a multigraph of 3 partly overlapping graphs
 /// with different errors
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Anna Kreshuk
 
 #include "TMultiGraph.h"

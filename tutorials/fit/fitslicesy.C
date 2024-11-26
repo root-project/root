@@ -1,17 +1,18 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook -js
-/// Illustrates how to use the TH1::FitSlicesY function
+/// \preview  Illustrates how to use the TH1::FitSlicesY function
 /// It uses the TH2F histogram generated in macro hsimple.C
 /// It invokes FitSlicesY and draw the fitted "mean" and "sigma"
 /// in 2 sepate pads.
 /// This macro shows also how to annotate a picture, change
 /// some pad parameters.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Rene Brun
 
 #include <TCanvas.h>

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook
-/// Tutorial for normalized sum of two functions
+/// \preview  Tutorial for normalized sum of two functions
 /// Here: a background exponential and a crystalball function
 /// Parameters can be set:
 ///  1.   with the TF1 object before adding the function (for 3) and 4))
@@ -14,10 +14,11 @@
 ///  3. by the list of functions and coefficients (which are 1 by default)
 ///  4. by a std::vector for functions and coefficients
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2022
 /// \author Lorenzo Moneta
 
 #include <Math/MinimizerOptions.h>

@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook -js
-/// Example of fit where the model is histogram + function
+/// \preview  Example of fit where the model is histogram + function
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2022
 /// \author Rene Brun
 
 #include <TF1.h>
