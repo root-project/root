@@ -48,8 +48,7 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::Experimen
 ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
 {
    try {
-      CommitCluster(true /* commitClusterGroup */);
-      fFillContext.fSink->CommitDataset();
+      CommitDataset();
    } catch (const RException &err) {
       R__LOG_ERROR(NTupleLog()) << "failure committing ntuple: " << err.GetError().GetReport();
    }
@@ -110,6 +109,24 @@ void ROOT::Experimental::RNTupleWriter::CommitClusterGroup()
       return;
    fFillContext.fSink->CommitClusterGroup();
    fLastCommittedClusterGroup = GetNEntries();
+}
+
+ROOT::Experimental::RNTupleModel &ROOT::Experimental::RNTupleWriter::GetUpdatableModel()
+{
+   if (fFillContext.fModel->IsRetired()) {
+      throw RException(R__FAIL("invalid attempt to update retired model"));
+   }
+   return *fFillContext.fModel;
+}
+
+void ROOT::Experimental::RNTupleWriter::CommitDataset()
+{
+   if (fFillContext.GetModel().IsRetired())
+      return;
+
+   CommitCluster(true /* commitClusterGroup */);
+   fFillContext.fSink->CommitDataset();
+   fFillContext.fModel->Retire();
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>

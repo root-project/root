@@ -35,12 +35,18 @@ std::uint64_t GetNewModelId()
 ROOT::Experimental::RFieldZero &
 ROOT::Experimental::Internal::GetFieldZeroOfModel(ROOT::Experimental::RNTupleModel &model)
 {
+   if (model.IsRetired()) {
+      throw RException(R__FAIL("invalid use of retired model"));
+   }
    return *model.fFieldZero;
 }
 
 ROOT::Experimental::Internal::RProjectedFields &
 ROOT::Experimental::Internal::GetProjectedFieldsOfModel(ROOT::Experimental::RNTupleModel &model)
 {
+   if (model.IsRetired()) {
+      throw RException(R__FAIL("invalid use of retired model"));
+   }
    return *model.fProjectedFields;
 }
 
