@@ -12,6 +12,36 @@ from . import pythonization
 from ._pyz_utils import MethodTemplateGetter, MethodTemplateWrapper
 
 
+def _REntry_GetPtr(self, key):
+    # key can be either a RFieldToken already or a string. In the latter case, get a token to use it twice.
+    if (
+        not hasattr(type(key), "__cpp_name__")
+        or type(key).__cpp_name__ != "ROOT::Experimental::REntry::RFieldToken"
+    ):
+        key = self.GetToken(key)
+    fieldType = self.GetTypeName(key)
+    return self._GetPtr[fieldType](key)
+
+
+def _REntry_getitem(self, key):
+    ptr = self.GetPtr(key)
+    return ptr.get()[0]
+
+
+def _REntry_setitem(self, key, value):
+    ptr = self.GetPtr(key)
+    ptr.get()[0] = value
+
+
+@pythonization("REntry", ns="ROOT::Experimental")
+def pythonize_REntry(klass):
+    klass._GetPtr = klass.GetPtr
+    klass.GetPtr = _REntry_GetPtr
+
+    klass.__getitem__ = _REntry_getitem
+    klass.__setitem__ = _REntry_setitem
+
+
 def _RNTupleModel_CreateBare(*args):
     if len(args) >= 1:
         raise ValueError("no support for passing explicit RFieldZero")
