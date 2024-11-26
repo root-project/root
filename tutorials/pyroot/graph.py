@@ -9,7 +9,6 @@
 ##
 ## \author Wim Lavrijsen
 
-from __future__ import print_function
 from ROOT import TCanvas, TGraph
 from ROOT import gROOT
 from math import sin
