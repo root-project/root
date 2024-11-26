@@ -735,7 +735,7 @@ if(ROOT_pyroot_FOUND)
   file(GLOB_RECURSE pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.py)
 
   # Now python-specific vetos:
-  set(pyveto pyroot/demo.py         # requires GUI
+  set(pyveto demo.py         # requires GUI
              pyroot/fit1_py.py      # not a tutorial
              pyroot/gui_ex.py       # requires GUI
              pyroot/mrt.py          # not really a tutorial

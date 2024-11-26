@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_hist
 ## \notebook
 ## Example of function called when a mouse event occurs in a pad.
 ## When moving the mouse in the canvas, a second canvas shows the
