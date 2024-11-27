@@ -7,6 +7,7 @@
 ##
 ## \macro_code
 ##
+## \date December 2017
 ## \author Juan Fernando Jaramillo Botero
 
 from ROOT import TSQLServer

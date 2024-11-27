@@ -16,6 +16,7 @@
 ///
 /// \macro_code
 ///
+/// \date June 2018
 /// \author Matevz Tadel
 
 void geom_atlas_playback()

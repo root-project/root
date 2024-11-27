@@ -16,6 +16,7 @@
 ## \macro_image
 ## \macro_code
 ##
+## \date November 2019
 ## \author Rene Brun, Johann Cohen-Tanugi, Wim Lavrijsen, Enric Tejedor
 
 import sys

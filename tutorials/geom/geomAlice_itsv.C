@@ -10,6 +10,7 @@
 /// \image html geom_geomAlice_itsv.png width=800px
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Rene Brun
 
 void geomAlice_itsv() {

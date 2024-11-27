@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date December 2019
 /// \author Simon Spies
 
 void gmultierrors() {

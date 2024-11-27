@@ -5,6 +5,7 @@
 /// \macro_image(nobatch)
 /// \macro_code
 ///
+/// \date December 2017
 /// \author  Timur Pocheptsov
 
 void glh3c()

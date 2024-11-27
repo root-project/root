@@ -3,6 +3,7 @@
 ///
 /// \macro_code
 ///
+/// \date November 2015
 /// \author Matevz Tadel
 
 void camera_restore(const char* fname, int mode = 0)

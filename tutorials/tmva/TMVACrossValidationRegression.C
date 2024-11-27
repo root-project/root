@@ -53,6 +53,7 @@
 ///
 /// \macro_output
 /// \macro_code
+/// \date August 2020
 /// \author Kim Albertsson (adapted from code originally by Andreas Hoecker)
 
 #include <cstdlib>

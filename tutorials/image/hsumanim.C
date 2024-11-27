@@ -10,6 +10,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date April 2022
 /// \authors Rene Brun, Valeriy Onuchin
 
 void hsumanim() {

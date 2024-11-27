@@ -5,6 +5,7 @@
 /// \image html eve_window_manager.png
 /// \macro_code
 ///
+/// \date June 2018
 /// \author Matevz Tadel
 
 #include "TEveWindow.h"

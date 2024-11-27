@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Valeriy Onuchin
 
 #include "TImage.h"

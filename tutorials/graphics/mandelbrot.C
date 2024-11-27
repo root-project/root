@@ -21,6 +21,7 @@
 ///
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Luigi Bardelli <bardelli@fi.infn.it>
 
 #include <TStyle.h>

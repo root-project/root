@@ -13,6 +13,7 @@
 ///
 /// \macro_output
 /// \macro_code
+/// \date February 2023
 /// \author Kim Albertsson (adapted from code originally by Andreas Hoecker)
 
 #include <cstdlib>

@@ -4,6 +4,7 @@
 ///
 /// \macro_code
 ///
+/// \date May 2017
 /// \author Richard Maunder
 
 void glViewerLOD(Int_t reqNodes = 1000, Bool_t randomDist = kTRUE,

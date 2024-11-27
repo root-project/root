@@ -5,6 +5,7 @@
 /// \image html eve_geom_alice_tpc.png
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Matevz Tadel
 
 void geom_alice_tpc()

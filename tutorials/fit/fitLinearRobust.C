@@ -13,6 +13,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Anna Kreshuk
 
 #include "TRandom.h"

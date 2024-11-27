@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date June 2024
 /// \author Rene Brun
 
 #include "TCanvas.h"

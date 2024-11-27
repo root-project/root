@@ -8,6 +8,7 @@
 /// \macro_code
 /// \macro_output
 ///
+/// \date October 2020
 /// \author Claudi Martinez
 
 void FITS_tutorial1()

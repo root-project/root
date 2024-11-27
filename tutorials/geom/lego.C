@@ -13,6 +13,7 @@
 /// \image html geom_lego.png width=800px
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Soon Gi Kwon(1116won@hanmail.net), Dept. of Physics, Univ. of Seoul
 
 #include "TSystem.h"

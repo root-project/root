@@ -13,6 +13,7 @@
 /// \image html geom_robot.png width=500px
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Jin Hui Hwang, Dept. of Physics, Univ. of Seoul
 
 #include "TGeoManager.h"

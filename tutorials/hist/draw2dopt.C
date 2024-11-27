@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date June 2022
 /// \author Rene Brun
 
 void draw2dopt()

@@ -7,6 +7,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date June 2023
 /// \authors Kyle Cranmer, Wouter Verkerke
 
 #include "RooRealVar.h"

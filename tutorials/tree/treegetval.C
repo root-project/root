@@ -29,6 +29,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2017
 /// \author Olivier Couet
 
 void treegetval() {

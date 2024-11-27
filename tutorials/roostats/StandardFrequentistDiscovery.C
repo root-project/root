@@ -18,6 +18,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date December 2022
 /// \authors Sven Kreiss, Kyle Cranmer
 
 #include "TFile.h"

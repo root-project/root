@@ -14,6 +14,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2022
 /// \author Olivier Couet
 
 TCanvas *c = nullptr;

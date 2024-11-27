@@ -10,6 +10,7 @@
 /// \macro_image(nobatch)
 /// \macro_code
 ///
+/// \date May 2017
 /// \authors Rene Brun, Timur Pocheptsov
 
 void glsurfaces()

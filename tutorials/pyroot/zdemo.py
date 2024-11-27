@@ -14,6 +14,7 @@
 ## \macro_image
 ## \macro_code
 ##
+## \date December 2016
 ## \authors Michael Tokarev, Elena Potrebenikova (JINR Dubna)
 
 import ROOT

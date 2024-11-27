@@ -15,6 +15,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date September 2023
 /// \author Olivier Couet
 
 void histpalettecolor()

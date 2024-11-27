@@ -6,6 +6,7 @@
 /// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Rene Brun
 
 void arrows(){

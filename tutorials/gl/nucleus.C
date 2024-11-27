@@ -4,6 +4,7 @@
 ///
 /// \macro_code
 ///
+/// \date January 2016
 /// \author Otto Schaile
 
 void nucleus(Int_t nProtons  = 40,Int_t  nNeutrons = 60)

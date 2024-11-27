@@ -138,6 +138,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date April 2024
 /// \authors  authors: Kyle Cranmer, Tanja Rommerskirchen
 
 #include "TStopwatch.h"

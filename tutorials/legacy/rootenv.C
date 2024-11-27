@@ -5,6 +5,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Rene Brun
 
 {

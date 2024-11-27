@@ -12,6 +12,7 @@
 ///
 /// \macro_code
 /// \macro_output
+/// \date April 2022
 /// \author Lorenzo Moneta
 
 using namespace TMVA::Experimental;

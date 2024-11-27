@@ -20,6 +20,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date August 2024
 /// \authors A. Tolosa-Delgado
 
 double f2(const double * x) {

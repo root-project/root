@@ -19,6 +19,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date May 2024
 /// \author Damir Buskulic
 
 #include <time.h>

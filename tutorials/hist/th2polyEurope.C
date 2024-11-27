@@ -20,6 +20,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Olivier Couet
 
 void th2polyEurope(Int_t npoints=500000)

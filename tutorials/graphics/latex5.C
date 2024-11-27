@@ -13,6 +13,7 @@
 /// ### svg output:
 /// \macro_image (mathsymb.svg)
 ///
+/// \date January 2022
 /// \author Rene Brun
 
 void latex5() {

@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date August 2024
 /// \author Olivier Couet
 
 void scatter()

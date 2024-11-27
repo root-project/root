@@ -13,6 +13,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date June 2023
 /// \author Kyle Cranmer
 
 #include "RooGlobalFunc.h"

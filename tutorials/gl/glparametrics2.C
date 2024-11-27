@@ -28,6 +28,7 @@
 /// \macro_image(nobatch)
 /// \macro_code
 ///
+/// \date August 2016
 /// \author  Timur Pocheptsov
 
 void klein_bottle(TGLVertex3 &dst, Double_t u, Double_t v)

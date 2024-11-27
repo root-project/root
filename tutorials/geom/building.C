@@ -13,6 +13,7 @@
 /// \image html geom_building.png width=800px
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Hyung Ju Lee (laccalus@nate.com), Dept. of Physics, Univ. of Seoul
 
 #include "TGeoManager.h"

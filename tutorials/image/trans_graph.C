@@ -10,6 +10,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Valeriy Onuchin
 
 #include "TColor.h"

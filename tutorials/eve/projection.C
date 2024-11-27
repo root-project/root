@@ -5,6 +5,7 @@
 /// \image html eve_projection.png
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Matevz Tadel
 
 const char* esd_geom_file_name =

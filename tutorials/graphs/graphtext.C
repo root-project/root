@@ -9,6 +9,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date October 2019
 /// \author Olivier Couet
 
 void graphtext() {

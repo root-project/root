@@ -6,6 +6,7 @@
 ///
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Ilka Antcheva
 
 #include <TH1.h>

@@ -7,6 +7,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date August 2020
 /// \authors Miroslav Morhac, Olivier Couet
 
 void Background_smooth() {

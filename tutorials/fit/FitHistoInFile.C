@@ -8,6 +8,7 @@
 /// \macro_image
 /// \macro_code
 /// \macro_output
+/// \date January 2022
 /// \author Author E. von Toerne
 /// Based on FittingDemo.C by Rene Brun
 

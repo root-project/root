@@ -5,6 +5,7 @@
 /// \image html eve_boxset_cones.png
 /// \macro_code
 ///
+/// \date January 2024
 /// \author Alja Mrak-Tadel
 
 using namespace ROOT::Experimental;

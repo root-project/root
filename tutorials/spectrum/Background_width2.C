@@ -7,6 +7,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date March 2019
 /// \authors Miroslav Morhac, Olivier Couet
 
 void Background_width2() {

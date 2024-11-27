@@ -15,6 +15,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date October 2016
 /// \author Olivier Couet
 
 TCanvas *pavetext(){

@@ -5,6 +5,7 @@
 ##
 ## \macro_code
 ##
+## \date January 2017
 ## \author Wim Lavrijsen
 
 import os

@@ -10,6 +10,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date February 2023
 /// \author Paul Gessinger
 
 void ratioplot1() {

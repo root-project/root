@@ -11,6 +11,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date April 2022
 /// \authors Jan Conrad, Johan Lundberg
 
 #include "TROOT.h"

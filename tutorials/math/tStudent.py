@@ -14,6 +14,7 @@
 ## \macro_image
 ## \macro_code
 ##
+## \date April 2019
 ## \author Juan Fernando Jaramillo Botero
 
 from ROOT import TH1D, TF1, TCanvas, kRed, kBlue

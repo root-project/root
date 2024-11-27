@@ -39,6 +39,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \authors Anna Kreshuk, Jens Hoffmann
 
 #include "TH1D.h"

@@ -6,6 +6,7 @@
 ///
 /// \macro_code
 ///
+/// \date December 2017
 /// \author Sergey Linev, Juan Fernando Jaramillo Botero
 
 #include <TSQLServer.h>

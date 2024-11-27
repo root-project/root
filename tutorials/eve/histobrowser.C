@@ -5,6 +5,7 @@
 /// \image html eve_histobrowser.png
 /// \macro_code
 ///
+/// \date July 2022
 /// \author Matevz Tadel
 
 TGFileBrowser *g_hlt_browser = 0;

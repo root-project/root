@@ -19,6 +19,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date September 2016
 /// \authors Anna Kreshuk, Muriel Pivc
 
 #include "TSPlot.h"

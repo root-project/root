@@ -7,6 +7,7 @@
 /// See also the other tutorial readCode.C
 /// \macro_code
 ///
+/// \date May 2018
 /// \author Rene Brun
 
 #include "TFile.h"

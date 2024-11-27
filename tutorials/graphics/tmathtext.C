@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date January 2022
 /// \author Yue Shi Lai
 
 {

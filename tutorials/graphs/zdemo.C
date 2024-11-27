@@ -16,6 +16,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date October 2023
 /// \authors Michael Tokarev, Elena Potrebenikova (JINR Dubna)
 
 #include "TCanvas.h"

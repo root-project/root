@@ -7,6 +7,7 @@
 /// \macro_code
 /// \macro_output
 ///
+/// \date August 2020
 /// \author Elizabeth Buckley-Geer
 
 void FITS_tutorial7()

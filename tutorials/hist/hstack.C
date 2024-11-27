@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date December 2022
 /// \author Rene Brun
 
 void hstack()

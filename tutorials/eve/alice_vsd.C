@@ -17,6 +17,7 @@
 /// \image html eve_alice_vsd.png
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Matevz Tadel
 
 

@@ -13,6 +13,7 @@
 /// \macro_code
 /// \macro_image
 ///
+/// \date February 2024
 /// \author Olivier Couet
 
 void th2polyUSA()

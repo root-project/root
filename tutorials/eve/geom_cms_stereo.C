@@ -7,6 +7,7 @@
 /// \image html eve_geom_cms_stereo.png
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Matevz Tadel
 
 void geom_cms_stereo(Bool_t quad_buf=kTRUE)

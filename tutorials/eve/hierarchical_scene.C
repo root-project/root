@@ -4,6 +4,7 @@
 /// \image html eve_hierarchical_scene.png
 /// \macro_code
 ///
+/// \date June 2018
 /// \author Matevz Tadel
 
 const Int_t Ns = 7;

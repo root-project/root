@@ -145,6 +145,7 @@
 ///
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Rene Brun
 
 #include "h1analysis.h"

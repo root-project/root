@@ -17,6 +17,7 @@
 ## \macro_image
 ## \macro_code
 ##
+## \date November 2024
 ## \author Juan Fernando Jaramillo Botero
 
 import ROOT

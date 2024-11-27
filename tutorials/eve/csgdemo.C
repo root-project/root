@@ -11,6 +11,7 @@
 /// \image html eve_csgdemo.png
 /// \macro_code
 ///
+/// \date June 2018
 /// \author Andrei Gheata
 
 #include "TGeoManager.h"

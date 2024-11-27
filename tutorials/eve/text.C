@@ -5,6 +5,7 @@
 /// \image html eve_text.png
 /// \macro_code
 ///
+/// \date June 2018
 /// \author Alja Mrak-Tadel
 
 TEveText* text()

@@ -7,6 +7,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date December 2022
 /// \author Olivier Couet
 
 #include <TMath.h>

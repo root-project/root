@@ -21,6 +21,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date June 2019
 /// \author Olivier Couet
 
 void transparency()

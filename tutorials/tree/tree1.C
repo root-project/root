@@ -28,6 +28,7 @@
 /// ~~~
 /// \macro_code
 ///
+/// \date October 2019
 /// \author Rene Brun
 
 #include "TROOT.h"

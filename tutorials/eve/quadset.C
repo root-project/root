@@ -5,6 +5,7 @@
 /// \image html eve_quadset.png
 /// \macro_code
 ///
+/// \date June 2018
 /// \author Matevz Tadel
 
 void    quadset_callback(TEveDigitSet* ds, Int_t idx, TObject* obj);

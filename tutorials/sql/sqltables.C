@@ -8,6 +8,7 @@
 ///
 /// \macro_code
 ///
+/// \date September 2016
 /// \author Sergey Linev
 
 // example configuration for MySQL 4.1

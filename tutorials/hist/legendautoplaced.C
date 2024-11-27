@@ -10,6 +10,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date January 2018
 /// \author Olivier Couet
 
 void legendautoplaced()

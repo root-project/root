@@ -14,6 +14,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2023
 /// \author Magdalena Slawinska
 
 #include "TMath.h"

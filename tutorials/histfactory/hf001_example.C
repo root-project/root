@@ -6,6 +6,7 @@
 /// \macro_code
 /// \macro_output
 ///
+/// \date August 2024
 /// \author George Lewis
 
 #include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>

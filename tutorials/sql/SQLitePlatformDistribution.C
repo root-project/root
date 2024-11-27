@@ -14,6 +14,7 @@
 ///
 /// \macro_code
 ///
+/// \date October 2024
 /// \author Alexandra-Maria Dobrescu 08/2018
 
 #include <TSQLiteServer.h>

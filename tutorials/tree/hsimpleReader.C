@@ -7,6 +7,7 @@
 ///
 /// \macro_code
 ///
+/// \date September 2016
 /// \author Anders Eie, 2013
 
 #include "TFile.h"

@@ -5,6 +5,7 @@
 /// \macro_image(nobatch)
 /// \macro_code
 ///
+/// \date November 2023
 /// \authors Timur Pocheptsov, Sergey Linev
 
 //Includes for ACLiC (cling does not need them).

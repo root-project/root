@@ -12,6 +12,7 @@
 ///
 /// \macro_code
 ///
+/// \date September 2016
 /// \author Fons Rademakers
 
 #include "TGButton.h"

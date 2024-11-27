@@ -103,6 +103,7 @@
 ///
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Philippe Canal from original h1analysis.C by Rene Brun
 
 TEntryList *elist;

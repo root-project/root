@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date December 2017
 /// \author Georg Troska
 
 void candleplotoption()

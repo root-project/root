@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2022
 /// \author Victor Perevovchikov
 
 void canvasRefresh(TCanvas *c1)

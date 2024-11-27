@@ -6,6 +6,7 @@
 ## \macro_image
 ## \macro_code
 ##
+## \date June 2017
 ## \author Alberto Ferro
 
 import ROOT

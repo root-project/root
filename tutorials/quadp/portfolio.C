@@ -117,6 +117,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Eddy Offermann
 
 #include "Riostream.h"

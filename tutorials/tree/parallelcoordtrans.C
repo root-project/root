@@ -17,6 +17,7 @@
 ///
 /// \macro_code
 ///
+/// \date January 2022
 /// \author Olivier Couet
 
 #include "TFile.h"

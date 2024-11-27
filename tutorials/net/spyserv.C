@@ -11,6 +11,7 @@
 ///     buttons
 /// \macro_code
 ///
+/// \date September 2022
 /// \author Fons Rademakers
 
 #include "TH1.h"

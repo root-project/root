@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date August 2016
 /// \authors Lorenzo Moneta, Bartolomeu Rabacal (Dec 2010)
 
 #include "TH1.h"

@@ -22,6 +22,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date July 2022
 /// \authors H.Pernegger, Markus Friedl
 
 #include "TH1.h"

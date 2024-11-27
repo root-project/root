@@ -5,6 +5,7 @@
 ///
 /// \macro_code
 ///
+/// \date March 2021
 /// \author Matevz Tadel
 
 #ifndef __RUN_PYTHIA_DISPLAY__

@@ -5,6 +5,7 @@
 /// \image html eve_geom_default.png
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Matevz Tadel
 
 void geom_default()

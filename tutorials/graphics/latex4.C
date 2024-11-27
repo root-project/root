@@ -17,6 +17,7 @@
 /// ### svg output:
 /// \macro_image (greek.svg)
 ///
+/// \date January 2022
 /// \author Rene Brun
 
 void latex4() {

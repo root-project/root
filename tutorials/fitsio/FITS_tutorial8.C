@@ -23,6 +23,7 @@
 /// \macro_code
 /// \macro_output
 ///
+/// \date October 2020
 /// \author Cosimo Nigro
 
 void FITS_tutorial8()

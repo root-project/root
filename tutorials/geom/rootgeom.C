@@ -5,6 +5,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2018
 /// \author Andrei Gheata
 
 void rootgeom(bool vis = true)

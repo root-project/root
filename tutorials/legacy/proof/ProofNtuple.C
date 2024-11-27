@@ -5,6 +5,7 @@
 ///
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Gerardo Ganis (gerardo.ganis@cern.ch)
 
 #define ProofNtuple_cxx

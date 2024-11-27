@@ -17,6 +17,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2022
 /// \author Rene Brun
 
 #include "TH1.h"

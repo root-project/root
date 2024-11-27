@@ -7,6 +7,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date January 2022
 /// \author Rene Brun
 
 #include "TGraphErrors.h"

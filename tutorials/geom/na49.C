@@ -7,6 +7,7 @@
 ///
 /// \macro_code
 ///
+/// \date April 2017
 /// \author Rene Brun
 
 #ifdef __CLING__

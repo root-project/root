@@ -5,6 +5,7 @@
 /// \image html eve_pointset.png
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Matevz Tadel
 
 #include <TEveManager.h>

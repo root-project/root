@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date January 2017
 /// \authors Miroslav Morhac, Olivier Couet
 
 void Background_decr() {

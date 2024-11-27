@@ -14,6 +14,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date June 2019
 /// \author Axel Naumann, 2005-02-02
 
 Double_t theUnknownFunction(Double_t x, Double_t y) {

@@ -9,6 +9,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date May 2024
 /// \authors Philippe Gras, Bertrand Bellenot, Olivier Couet
 
 #include "TAxis.h"

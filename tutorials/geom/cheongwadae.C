@@ -13,6 +13,7 @@
 /// \image html geom_cheongwadae.png width=800px
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Hee Jun Shin (s-heejun@hanmail.net), Dept. of Physics, Univ. of Seoul
 
 #include "TGeoManager.h"

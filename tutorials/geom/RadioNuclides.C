@@ -75,6 +75,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date January 2017
 /// \author Mihaela Gheata
 
 void DrawPopulation(TObjArray *vect, TCanvas *can, Double_t tmin=0.,

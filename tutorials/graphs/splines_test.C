@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Federico Carminati
 
 void splines_test(Int_t np=23, Double_t a=-0.5, Double_t b=31)

@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date July 2020
 /// \author Rene Brun
 
 void na49view() {

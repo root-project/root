@@ -3,6 +3,7 @@
 /// \notebook
 /// This macro draw all possible symbols provided by TMathtext.
 /// \macro_image
+/// \date August 2016
 /// \author Olivier Couet
 
 TCanvas * tmathtext2()

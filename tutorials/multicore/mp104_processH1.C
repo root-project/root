@@ -6,6 +6,7 @@
 ///
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Gerardo Ganis
 
 #include "TString.h"

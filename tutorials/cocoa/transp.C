@@ -7,6 +7,7 @@
 ///
 /// \macro_code
 ///
+/// \date June 2016
 /// \author Timur Pocheptsov
 
 //Includes for ACLiC (cling does not need them).

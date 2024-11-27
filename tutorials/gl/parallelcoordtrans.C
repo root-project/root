@@ -8,6 +8,7 @@
 /// \macro_image(nobatch)
 /// \macro_code
 ///
+/// \date October 2023
 /// \authors Timur Pocheptsov, Olivier Couet
 
 //All these includes are (only) to make the macro

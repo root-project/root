@@ -6,6 +6,7 @@
 ///
 /// \macro_code
 ///
+/// \date July 2019
 /// \author Sergey Linev
 
 #include "THttpServer.h"

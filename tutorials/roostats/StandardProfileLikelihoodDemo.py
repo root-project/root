@@ -24,6 +24,7 @@
 ## \macro_output
 ## \macro_code
 ##
+## \date November 2023
 ## \authors Akeem Hart, Kyle Cranmer (C++ Version)
 
 import ROOT

@@ -16,6 +16,7 @@
 ///
 /// \macro_code
 /// \macro_output
+/// \date February 2023
 /// \author Lorenzo Moneta
 
 using namespace TMVA::Experimental;
