@@ -14,7 +14,8 @@ if(dataframe)
         ROOT/_pythonization/_rdataframe.py
         ROOT/_pythonization/_rdfdescription.py
         ROOT/_pythonization/_rdf_conversion_maps.py
-        ROOT/_pythonization/_rdf_pyz.py)
+        ROOT/_pythonization/_rdf_pyz.py
+        ROOT/_pythonization/_rdisplay.py)
 endif()
 
 if(roofit)
