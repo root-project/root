@@ -75,6 +75,7 @@ echo "        ../../sql/                       \\" >> Doxyfile_INPUT
 echo "        ../../tutorials/                 \\" >> Doxyfile_INPUT
 echo "        ../../bindings/tpython/          \\" >> Doxyfile_INPUT
 echo "        ../../bindings/pyroot/           \\" >> Doxyfile_INPUT
+echo "        ../../bindings/pyroot/pythonizations/python/ROOT/_pythonization/__init__.py          \\" >> Doxyfile_INPUT
 echo "        ../../bindings/r/                \\" >> Doxyfile_INPUT
 
 # echo "        ../../core/clib/                 \\" >> Doxyfile_INPUT
