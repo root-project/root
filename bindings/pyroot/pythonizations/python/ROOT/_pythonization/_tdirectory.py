@@ -53,7 +53,7 @@ def _TDirectory_getitem(self, key):
     - Raising an AttributeError if the object does not exist
     - Caching the result of a successful get for future re-attempts.
     Once cached, the same object is retrieved every time.
-    This pythonisation is inherited by TDirectoryFile and TFile.
+    This pythonization is inherited by TDirectoryFile and TFile.
 
     Example:
     ```

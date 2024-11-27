@@ -5,7 +5,7 @@ from ROOT import TClass, TObject, TObjString
 
 class TClassDynamicCast(unittest.TestCase):
     """
-    Test for the pythonisation of TClass::DynamicCast, which adds an
+    Test for the pythonization of TClass::DynamicCast, which adds an
     an extra cast before returning the Python proxy to the user so that
     it has the right type.
     """
