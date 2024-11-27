@@ -114,6 +114,8 @@ void codegenImpl(RooRecursiveFraction &arg, CodegenContext &ctx);
 void codegenImpl(RooStats::HistFactory::FlexibleInterpVar &arg, CodegenContext &ctx);
 void codegenImpl(RooUniform &arg, CodegenContext &ctx);
 
+std::string
+codegenIntegralImpl(RooFit::Detail::RooNormalizedPdf &arg, int code, const char *rangeName, CodegenContext &ctx);
 std::string codegenIntegralImpl(RooAbsReal &arg, int code, const char *rangeName, CodegenContext &ctx);
 std::string codegenIntegralImpl(RooBernstein &arg, int code, const char *rangeName, CodegenContext &ctx);
 std::string codegenIntegralImpl(RooBifurGauss &arg, int code, const char *rangeName, CodegenContext &ctx);

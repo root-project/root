@@ -653,6 +653,13 @@ void codegenImpl(RooUniform &arg, CodegenContext &ctx)
 /// \param[in] ctx An object to manage auxiliary information for code-squashing.
 ///
 /// \returns The representative code string of the integral for the given object.
+std::string
+codegenIntegralImpl(RooFit::Detail::RooNormalizedPdf &arg, int code, const char *rangeName, CodegenContext &ctx)
+{
+   // Dispatch to the pdf's integral function.
+   return codegenIntegral(const_cast<RooAbsPdf &>(arg.pdf()), code, rangeName, ctx);
+}
+
 std::string codegenIntegralImpl(RooAbsReal &arg, int, const char *, CodegenContext &)
 {
    std::stringstream errorMsg;
