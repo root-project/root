@@ -3651,6 +3651,7 @@ void TColor::InvertPalette()
    std::reverse(fgPalette.fArray, fgPalette.fArray + fgPalette.GetSize());
 }
 
+////////////////////////////////////////////////////////////////////////////////
 /// The `color` string argument argument will be evaluated
 /// to get the actual ROOT color number, like `kRed`.
 /// Here is how the string is parsed:
@@ -3686,3 +3687,7 @@ TColorNumber::TColorNumber(std::string const &color)
       throw std::invalid_argument(msg.str());
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Instantiate a color from a tuple of RGB values between 0.0 and 1.0.
+TColorNumber::TColorNumber(std::array<Float_t, 3> rgb) : fNumber{TColor::GetColor(rgb[0], rgb[1], rgb[2])} {}
