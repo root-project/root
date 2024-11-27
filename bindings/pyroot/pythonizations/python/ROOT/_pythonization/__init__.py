@@ -54,7 +54,6 @@ def pythonization(class_name, ns='::', is_prefix=False):
         function: function that receives the user-defined function and
             decorates it.
     '''
-# \cond INTERNALS
 
     # Type check and parsing of target argument.
     # Retrieve the scope(s) of the class(es)/prefix(es) to register the
@@ -73,6 +72,8 @@ def pythonization(class_name, ns='::', is_prefix=False):
     else:
         def passes_filter(class_name):
             return class_name in target
+        
+# \cond INTERNALS
 
     def pythonization_impl(user_pythonizor):
         '''
