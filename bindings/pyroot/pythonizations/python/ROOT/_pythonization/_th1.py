@@ -9,14 +9,7 @@
 ################################################################################
 
 r"""
-/**
-\class TH1
-\brief \parblock \endparblock
-\htmlonly
-<details open>
-<summary  style="font-size:20px; color: #425788;"><b>Python interface</b></summary>
-<div class="pyrootbox">
-\endhtmlonly
+\pythondoc TH1
 
 ## Fitting histograms in Python
 
@@ -100,6 +93,68 @@ myTH1D.FillRandom("gaus", 1000)
 myTH1D.Fit("myFunction")
 \endcode
 
+## Pythonizations
+The TH1 class has several additions for its use from Python, which are also available in its subclasses (e.g., TH1F, TH1D).
+
+### In-Place Multiplication
+
+TH1 instances support in-place multiplication with a scalar value using the `*=` operator:
+
+\code{.py}
+import ROOT
+
+h = ROOT.TH1D("h", "h", 100, -10, 10)
+h.FillRandom("gaus", 1000)
+
+# Multiply histogram contents by 2
+h *= 2
+\endcode
+
+This operation is equivalent to calling `h.Scale(2)`.
+
+### Filling with NumPy Arrays
+
+The Fill method has been pythonized to accept NumPy arrays as input. This allows for efficient filling of histograms with large datasets:
+
+\code{.py}
+import ROOT
+import numpy as np
+
+# Create a histogram
+h = ROOT.TH1D("h", "h", 100, -10, 10)
+
+# Create sample data
+data = np.random.normal(0, 2, 10000)
+
+# Fill histogram with data
+h.Fill(data)
+
+# Fill with weights
+weights = np.ones_like(data) * 0.5
+h.Fill(data, weights)
+\endcode
+
+The Fill method accepts the following arguments when used with NumPy arrays:
+- First argument: NumPy array containing the data to fill
+- Second argument (optional): NumPy array containing the weights for each entry
+
+<em>Please note</em> that when providing weights, the length of the weights array must match the length of the data array. If weights are not provided, all entries will have a weight of 1. A ValueError will be raised if the lengths don't match:
+
+\code{.py}
+# This will raise ValueError
+data = np.array([1.0, 2.0, 3.0])
+weights = np.array([0.5, 1.0])  # Wrong length!
+h.Fill(data, weights)  # Raises ValueError: "Length mismatch: data length (3) != weights length (2)"
+\endcode
+
+The original Fill method functionality is preserved for non-NumPy arguments:
+
+\code{.py}
+# Traditional filling still works
+h.Fill(1.0)  # Fill single value
+h.Fill(1.0, 2.0)  # Fill single value with weight
+\endcode
+
 ## Further Python fitting examples
 Further examples can be found in the tutorials:
 - [combinedFit.py](combinedFit__8py.html) performs a combined (simultaneous) fit of two 1D histograms with separate functions and some common parameters.
@@ -108,12 +163,7 @@ Further examples can be found in the tutorials:
 - [fitNormSum.py](fitNormSum__8py.html) fits a 1D histogram to the normalized sum of two functions (here, a background exponential and a crystal ball function).
 - [multifit.py](multifit__8py.html) fits multiple functions to different ranges of a 1D histogram.
 
-
-\htmlonly
-</div>
-</details>
-\endhtmlonly
-*/
+\endpythondoc
 """
 
 from . import pythonization
