@@ -99,18 +99,7 @@ TGraphPolar::~TGraphPolar()
 
 void TGraphPolar::Draw(Option_t* options)
 {
-   // Process options
-   TString opt = options;
-   opt.ToUpper();
-
-   // Ignore same
-   opt.ReplaceAll("SAME","");
-
-   // ReDraw polargram if required by options
-   if (opt.Contains("A")) fOptionAxis = kTRUE;
-   opt.ReplaceAll("A","");
-
-   AppendPad(opt);
+   AppendPad(options);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -162,4 +151,65 @@ void TGraphPolar::SetMinPolar(Double_t minimum)
 void TGraphPolar::SetMinRadial(Double_t minimum)
 {
    if (fPolargram) fPolargram->SetRangeRadial(minimum, fPolargram->GetRMax());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create polargram object for given draw options
+
+TGraphPolargram *TGraphPolar::CreatePolargram(const char *opt)
+{
+   Int_t theNpoints = GetN();
+
+   if (theNpoints < 1)
+      return nullptr;
+
+   Double_t *theX = GetX();
+   Double_t *theY = GetY();
+   Double_t *theEX = GetEX();
+   Double_t *theEY = GetEY();
+
+   // Get range, initialize with first/last value
+   Double_t rwrmin = theY[0], rwrmax = theY[theNpoints - 1], rwtmin = theX[0], rwtmax = theX[theNpoints - 1];
+
+   for (Int_t ipt = 0; ipt < theNpoints; ipt++) {
+      // Check for errors if available
+      if (theEX) {
+         if (theX[ipt] - theEX[ipt] < rwtmin)
+            rwtmin = theX[ipt] - theEX[ipt];
+         if (theX[ipt] + theEX[ipt] > rwtmax)
+            rwtmax = theX[ipt] + theEX[ipt];
+      } else {
+         if (theX[ipt] < rwtmin)
+            rwtmin = theX[ipt];
+         if (theX[ipt] > rwtmax)
+            rwtmax = theX[ipt];
+      }
+      if (theEY) {
+         if (theY[ipt] - theEY[ipt] < rwrmin)
+            rwrmin = theY[ipt] - theEY[ipt];
+         if (theY[ipt] + theEY[ipt] > rwrmax)
+            rwrmax = theY[ipt] + theEY[ipt];
+      } else {
+         if (theY[ipt] < rwrmin)
+            rwrmin = theY[ipt];
+         if (theY[ipt] > rwrmax)
+            rwrmax = theY[ipt];
+      }
+   }
+
+   // Add radial and Polar margins.
+   if (rwrmin == rwrmax)
+      rwrmax += 1.;
+   if (rwtmin == rwtmax)
+      rwtmax += 1.;
+
+   Double_t dr = rwrmax - rwrmin, dt = rwtmax - rwtmin;
+
+   rwrmax += 0.1 * dr;
+   rwrmin -= 0.1 * dr;
+
+   // Assume equally spaced points for full 2*Pi.
+   rwtmax += dt / theNpoints;
+
+   return new TGraphPolargram("Polargram", rwrmin, rwrmax, rwtmin, rwtmax, opt);
 }
