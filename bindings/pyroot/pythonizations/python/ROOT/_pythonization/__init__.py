@@ -74,7 +74,7 @@ def pythonization(class_name, ns='::', is_prefix=False):
     else:
         def passes_filter(class_name):
             return class_name in target
-        
+
     def pythonization_impl(user_pythonizor):
         '''
         The real decorator. Accepts a user-provided function and decorates it.
