@@ -92,7 +92,8 @@ public:
    virtual Int_t    Fill(Double_t x, const char *namey, Double_t z, Double_t w);
    virtual Int_t    Fill(Double_t x, Double_t y, const char *namez, Double_t w);
 
-           void     FillRandom(const char *fname, Int_t ntimes=5000, TRandom *rng = nullptr) override;
+   using TH1::FillRandom;
+           void     FillRandom(TF1 *f1, Int_t ntimes=5000, TRandom *rng = nullptr) override;
            void     FillRandom(TH1 *h, Int_t ntimes=5000, TRandom *rng = nullptr) override;
    virtual void     FitSlicesZ(TF1 *f1 = nullptr, Int_t binminx = 1, Int_t binmaxx = 0, Int_t binminy = 1, Int_t binmaxy = 0,
                                Int_t cut = 0, Option_t *option = "QNR"); // *MENU*

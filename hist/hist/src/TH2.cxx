@@ -711,15 +711,12 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
 ///
 ///  One can also call TF2::GetRandom2 to get a random variate from a function.
 
-void TH2::FillRandom(const char *fname, Int_t ntimes, TRandom * rng)
+void TH2::FillRandom(TF1 *fobj, Int_t ntimes, TRandom * rng)
 {
    Int_t bin, binx, biny, ibin, loop;
    Double_t r1, x, y;
-   //*-*- Search for fname in the list of ROOT defined functions
-   TObject *fobj = gROOT->GetFunction(fname);
-   if (!fobj) { Error("FillRandom", "Unknown function: %s",fname); return; }
    TF2 * f1 = dynamic_cast<TF2*>(fobj);
-   if (!f1) { Error("FillRandom", "Function: %s is not a TF2, is a %s",fname,fobj->IsA()->GetName()); return; }
+   if (!f1) { Error("FillRandom", "Function: %s is not a TF2, is a %s",fobj->GetName(),fobj->IsA()->GetName()); return; }
 
 
    TAxis & xAxis = fXaxis;

@@ -55,13 +55,13 @@ hSB = ROOT.TH1D("hSB", "histo S+B", 100, 0, 100)
 
 fB = ROOT.TF1("fB", "expo", 0, 100)
 fB.SetParameters(1, -0.05)
-hB.FillRandom("fB")
+hB.FillRandom(fB)
 
 fS = ROOT.TF1("fS", "gaus", 0, 100)
 fS.SetParameters(1, 30, 5)
 
-hSB.FillRandom("fB", 2000)
-hSB.FillRandom("fS", 1000)
+hSB.FillRandom(fB, 2000)
+hSB.FillRandom(fS, 1000)
 
 # perform now global fit
 
