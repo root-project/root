@@ -9,7 +9,7 @@
 /// The JetEvent class is in $ROOTSYS/tutorials/tree/JetEvent.h,cxx
 /// to execute the script, do
 /// ~~~
-/// .x jets.C
+/// .x tree130_jets.C
 /// ~~~
 ///
 /// \macro_code
@@ -27,14 +27,15 @@
 #include "Riostream.h"
 
 
-void write(Int_t nev=100) {
+void write(Int_t nev=100)
+{
    //write nev Jet events
    TFile f("JetEvent.root","recreate");
-   TTree *T = new TTree("T","Event example with Jets");
-   JetEvent *event = new JetEvent;
-   T->Branch("event","JetEvent",&event,8000,2);
+   auto T = new TTree("T", "Event example with Jets");
+   auto event = new JetEvent;
+   T->Branch("event", "JetEvent", &event, 8000, 2);
 
-   for (Int_t ev=0;ev<nev;ev++) {
+   for (Int_t ev=0; ev<nev; ev++) {
       event->Build();
       T->Fill();
    }
@@ -43,39 +44,44 @@ void write(Int_t nev=100) {
    T->Write();
 }
 
-void read() {
-  //read the JetEvent file
-  TFile f("JetEvent.root");
-  TTree *T = (TTree*)f.Get("T");
-  JetEvent *event = 0;
-  T->SetBranchAddress("event", &event);
-  Long64_t nentries = T->GetEntries();
+void read()
+{
+   //read the JetEvent file
+   TFile f("JetEvent.root");
+   auto T = f.Get<TTree>("T");
+   JetEvent *event = 0;
+   T->SetBranchAddress("event", &event);
+   Long64_t nentries = T->GetEntries();
 
-  for (Long64_t ev=0;ev<nentries;ev++) {
+   for (Long64_t ev=0;ev<nentries;ev++) {
       T->GetEntry(ev);
-      if (ev) continue; //dump first event only
-      cout << " Event: "<< ev
-           << "  Jets: " << event->GetNjet()
-           << "  Tracks: " << event->GetNtrack()
-           << "  Hits A: " << event->GetNhitA()
-           << "  Hits B: " << event->GetNhitB() << endl;
-  }
+      if (ev)
+         continue; //dump first event only
+      std::cout << " Event: "<< ev
+                << "  Jets: " << event->GetNjet()
+                << "  Tracks: " << event->GetNtrack()
+                << "  Hits A: " << event->GetNhitA()
+                << "  Hits B: " << event->GetNhitB() << std::endl;
+   }
 }
 
-void pileup(Int_t nev=200) {
-  //make nev pileup events, each build with LOOPMAX events selected
-  //randomly among the nentries
-  TFile f("JetEvent.root");
-  TTree *T = (TTree*)f.Get("T");
-  // Long64_t nentries = T->GetEntries();
+void pileup(Int_t nev=200)
+{
+   //make nev pileup events, each build with LOOPMAX events selected
+   //randomly among the nentries
+   TFile f("JetEvent.root");
+   auto T = f.Get<TTree>("T");
+   // Long64_t nentries = T->GetEntries();
 
-  const Int_t LOOPMAX=10;
-  JetEvent *events[LOOPMAX];
-  Int_t loop;
-  for (loop=0;loop<LOOPMAX;loop++) events[loop] = 0;
-  for (Long64_t ev=0;ev<nev;ev++) {
-      if (ev%10 == 0) printf("building pileup: %lld\n",ev);
-      for (loop=0;loop<LOOPMAX;loop++) {
+   const Int_t LOOPMAX=10;
+   JetEvent *events[LOOPMAX];
+   Int_t loop;
+   for (loop=0; loop<LOOPMAX; loop++)
+      events[loop] = 0;
+   for (Long64_t ev=0; ev<nev; ev++) {
+      if (ev%10 == 0)
+         printf("building pileup: %lld\n", ev);
+      for (loop=0; loop<LOOPMAX; loop++) {
          Int_t rev = gRandom->Uniform(LOOPMAX);
          T->SetBranchAddress("event", &events[loop]);
          T->GetEntry(rev);
@@ -83,7 +89,8 @@ void pileup(Int_t nev=200) {
   }
 }
 
-void jets(Int_t nev=100, Int_t npileup=200, Bool_t secondrun = true) {
+void jets(Int_t nev=100, Int_t npileup=200, Bool_t secondrun = true)
+{
    // Embedding these loads inside the first run of the script is not yet
    // supported in v6
    // gROOT->ProcessLine(".L $ROOTSYS/tutorials/tree/JetEvent.cxx+");
@@ -95,12 +102,13 @@ void jets(Int_t nev=100, Int_t npileup=200, Bool_t secondrun = true) {
 #else
 
 //void jets(Int_t nev=100, Int_t npileup=200, Bool_t secondrun);
-void jets(Int_t nev=100, Int_t npileup=200) {
+void tree130_jets(Int_t nev = 100, Int_t npileup = 200)
+{
    TString tutdir = gROOT->GetTutorialDir();
    gROOT->ProcessLine(".L " + tutdir + "/tree/JetEvent.cxx+");
    gROOT->ProcessLine("#define JETS_SECOND_RUN yes");
    gROOT->ProcessLine("#include \"" __FILE__ "\"");
-   gROOT->ProcessLine("jets(100,200,true)");
+   gROOT->ProcessLine("jets(100, 200, true)");
 }
 
 #endif
