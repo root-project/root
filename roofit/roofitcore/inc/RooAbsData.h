@@ -106,6 +106,8 @@ public:
   virtual double weightSquared() const = 0 ; // DERIVED
 
   enum ErrorType { Poisson, SumW2, None, Auto, Expected } ;
+  static ErrorType errorTypeFromString(std::string const &name);
+
   /// Return the symmetric error on the current weight.
   /// See also weightError(double&,double&,ErrorType) const for asymmetric errors.
   // \param[in] etype Type of error to compute. May throw if not supported.

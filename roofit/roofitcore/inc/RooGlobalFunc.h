@@ -224,6 +224,7 @@ RooCmdArg EventRange(Int_t nStart, Int_t nStop) ;
 // RooChi2Var::ctor / RooNLLVar arguments
 RooCmdArg Extended(bool flag=true) ;
 RooCmdArg DataError(Int_t) ;
+RooCmdArg DataError(std::string const&) ;
 RooCmdArg NumCPU(Int_t nCPU, Int_t interleave=0) ;
 RooCmdArg Parallelize(int nWorkers) ;
 RooCmdArg ModularL(bool flag=false) ;

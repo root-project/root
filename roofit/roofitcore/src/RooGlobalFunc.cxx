@@ -18,6 +18,7 @@
 
 #include <RooGlobalFunc.h>
 
+#include <RooAbsData.h>
 #include <RooAbsPdf.h>
 #include <RooCategory.h>
 #include <RooDataHist.h>
@@ -469,7 +470,11 @@ RooCmdArg Extended(bool flag)
 }
 RooCmdArg DataError(Int_t etype)
 {
-   return RooCmdArg("DataError", (Int_t)etype, 0, 0, 0, nullptr, nullptr, nullptr, nullptr);
+   return RooCmdArg("DataError", etype);
+}
+RooCmdArg DataError(std::string const &etype)
+{
+   return DataError(RooAbsData::errorTypeFromString(etype));
 }
 RooCmdArg NumCPU(Int_t nCPU, Int_t interleave)
 {

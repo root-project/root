@@ -119,6 +119,9 @@ observable snapshots are stored in the dataset.
 
 #include <iostream>
 #include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <unordered_map>
 
 
 ClassImp(RooAbsData);
@@ -2639,4 +2642,25 @@ TH2F *RooAbsData::createHistogram(const RooAbsRealLValue &var1, const RooAbsReal
    }
 
    return histogram;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a string to the value of the RooAbsData::ErrorType enum with the
+/// same name.
+RooAbsData::ErrorType RooAbsData::errorTypeFromString(std::string const &name)
+{
+   using Map = std::unordered_map<std::string, RooAbsData::ErrorType>;
+   static Map enumMap{{"Poisson", RooAbsData::Poisson},
+                      {"SumW2", RooAbsData::SumW2},
+                      {"None", RooAbsData::None},
+                      {"Auto", RooAbsData::Auto},
+                      {"Expected", RooAbsData::Expected}};
+   auto found = enumMap.find(name);
+   if (found == enumMap.end()) {
+      std::stringstream msg;
+      msg << "Unsupported error type type passed to DataError(). "
+             "Supported decay types are : \"Poisson\", \"SumW2\", \"Auto\", \"Expected\", and None.";
+      throw std::invalid_argument(msg.str());
+   }
+   return found->second;
 }
