@@ -131,6 +131,8 @@ public:
     return _fast ? _value : getValV(normalisationSet.empty() ? nullptr : &normalisationSet) ;
   }
 
+  double getVal(RooArgSet &&) const;
+
   virtual double getValV(const RooArgSet* normalisationSet = nullptr) const ;
 
   double getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = {}) const;

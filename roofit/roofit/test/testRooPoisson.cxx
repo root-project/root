@@ -15,11 +15,13 @@ TEST(RooPoisson, Bare) {
   RooRealVar lambda("lambda", "lambda", 1);
   RooPoisson pois("pois", "pois", x, lambda);
 
+  RooArgSet normSet{x};
+
   auto Poisson = [&](int val, double lambdaVal, double target) {
     x = val;
     lambda = lambdaVal;
 
-    EXPECT_NEAR(pois.getVal(x), target, 5.E-16)
+    EXPECT_NEAR(pois.getVal(normSet), target, 5.E-16)
       << "Test was Pois(" << val << " | " << lambdaVal << ")";
   };
 
