@@ -1,56 +1,31 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// A macro to demonstrate the functionality of TGraph::Apply() method.
-/// TGraph::Apply applies a function `f` to all the data TGraph points.
-/// `f` may be a 1-D function TF1 or 2-d function TF2.
-/// The Y values of the graph are replaced by the new values computed using
-/// the function.
+///
+/// This tutorial demonstrates the use of TGraphAsymmErrors to plot a graph with asymmetrical errors on both the x and y axes.
+/// The errors for the x values are divided into low (left side of the marker) and high (right side of the marker) errors.
+/// Similarly, for the y values, there are low (lower side of the marker) and high (upper side of the marker) errors.
 ///
 /// \macro_image
 /// \macro_code
-///
+/// 
 /// \author Miro Helbich
 
-void graphApply()
-{
+void gr004_err_asym() {
+   TCanvas *c2 = new TCanvas("c2","", 700, 500);
+
+   c2->SetGrid();
    const Int_t npoints=3;
    Double_t xaxis[npoints] = {1.,2.,3.};
    Double_t yaxis[npoints] = {10.,20.,30.};
-   Double_t errorx[npoints] = {0.5,0.5,0.5};
-   Double_t errory[npoints] = {5.,5.,5.};
 
-   Double_t exl[npoints] = {0.5,0.5,0.5};
-   Double_t exh[npoints] = {0.5,0.5,0.5};
-   Double_t eyl[npoints] = {5.,5.,5.};
-   Double_t eyh[npoints] = {5.,5.,5.};
+   Double_t exl[npoints] = {0.5,0.2,0.1}; //Lower x errors
+   Double_t exh[npoints] = {0.5,0.3,0.4}; //Higher x errors
+   Double_t eyl[npoints] = {3.,5.,4.}; //Lower y errors
+   Double_t eyh[npoints] = {3.,5.,4.}; //Higher y errors
 
-   TGraph *gr1 = new TGraph(npoints,xaxis,yaxis);
-   TGraphErrors *gr2 = new TGraphErrors(npoints,xaxis,yaxis,errorx,errory);
-   TGraphAsymmErrors *gr3 = new TGraphAsymmErrors(npoints,xaxis,yaxis,exl,exh,eyl,eyh);
-   TF2 *ff = new TF2("ff","-1./y");
+   TGraphAsymmErrors *gr = new TGraphAsymmErrors(npoints,xaxis,yaxis,exl,exh,eyl,eyh); //Create the TGraphAsymmErrors object with data and asymmetrical errors
 
-   TCanvas *c1 = new TCanvas("c1","c1");
-   c1->Divide(2,3);
-
-   // TGraph
-   c1->cd(1);
-   gr1->DrawClone("A*");
-   c1->cd(2);
-   gr1->Apply(ff);
-   gr1->Draw("A*");
-
-   // TGraphErrors
-   c1->cd(3);
-   gr2->DrawClone("A*");
-   c1->cd(4);
-   gr2->Apply(ff);
-   gr2->Draw("A*");
-
-   // TGraphAsymmErrors
-   c1->cd(5);
-   gr3->DrawClone("A*");
-   c1->cd(6);
-   gr3->Apply(ff);
-   gr3->Draw("A*");
+   gr->SetTitle("A simple graph with asymmetrical errors");
+   gr->Draw("A*"); //"A" = draw axes and "*" = draw markers at the points with error bars
 }
