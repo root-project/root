@@ -19,6 +19,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2018
 /// \author Olivier Couet
 
 #include "TStyle.h"

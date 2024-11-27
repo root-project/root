@@ -44,6 +44,7 @@
 /// \macro_code
 /// \macro_output
 ///
+/// \date August 2020
 /// \authors Stephan Hageboeck, Wouter Verkerke
 
 #include "RooRealVar.h"

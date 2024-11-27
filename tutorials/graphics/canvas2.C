@@ -13,6 +13,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Olivier Couet
 
 void CanvasPartition(TCanvas *C,const Int_t Nx = 2,const Int_t Ny = 2,

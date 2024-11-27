@@ -11,6 +11,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Olivier Couet
 
 void box(double x1, double y1, double x2, double y2,int col) {

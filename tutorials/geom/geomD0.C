@@ -12,6 +12,7 @@
 /// \image html geom_geomD0.png width=800px
 /// \macro_code
 ///
+/// \date August 2020
 /// \authors Bertrand Bellenot, Rene Brun
 
 void RecursiveInvisible(TGeoVolume *vol);

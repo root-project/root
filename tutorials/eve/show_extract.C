@@ -6,6 +6,7 @@
 /// \image html eve_show_extract.png
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Matevz Tadel
 
 void show_extract(const char* file="http://root.cern/files/alice_ESDgeometry.root")

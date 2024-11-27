@@ -5,6 +5,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date January 2022
 /// \authors Rene Brun, Eddy Offermann, Jan Musinsky
 
 TList *lq = nullptr;

@@ -21,6 +21,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Rene Brun
 
 #include "TSpectrum2.h"

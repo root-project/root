@@ -13,6 +13,7 @@
 /// \image html geom_station1.png width=800px
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Chang Yeol Lee, Dept. of Physics, Univ. of Seoul
 
 #include "TGeoManager.h"

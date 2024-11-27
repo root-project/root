@@ -7,6 +7,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date February 2023
 /// \author Georg Troska
 
 void candlescaled()

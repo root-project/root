@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2023
 /// \author Jorge Lopez
 
 void multivarGaus() {

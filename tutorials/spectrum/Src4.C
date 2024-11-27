@@ -7,6 +7,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date June 2022
 /// \authors Miroslav Morhac, Olivier Couet
 
 #include <TSpectrum2.h>

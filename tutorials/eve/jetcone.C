@@ -5,6 +5,7 @@
 /// \image html eve_jetcone.png
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Jochen Thaeder
 
 const char* esd_geom_file_name =

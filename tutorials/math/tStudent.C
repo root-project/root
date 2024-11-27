@@ -12,6 +12,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Magdalena Slawinska
 
 #include "TH1.h"

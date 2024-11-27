@@ -21,6 +21,7 @@
 /// \macro_code
 /// \macro_output
 ///
+/// \date June 2023
 /// \author Kyle Cranmer
 
 #include "RooRealVar.h"

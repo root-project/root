@@ -13,6 +13,7 @@
 /// \image html geom_station2.png width=800px
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Dong Ryeol Lee (leedr2580@hanmail.net), Dept. of Physics, Univ. of Seoul
 
 #include "TGeoManager.h"

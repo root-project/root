@@ -7,6 +7,7 @@
 ///
 /// \macro_code
 ///
+/// \date September 2016
 /// \author Omar Zapata
 
 #include<TRInterface.h>

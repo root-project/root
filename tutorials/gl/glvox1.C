@@ -5,6 +5,7 @@
 /// \macro_image(nobatch)
 /// \macro_code
 ///
+/// \date August 2016
 /// \author  Timur Pocheptsov
 
 void glvox1()

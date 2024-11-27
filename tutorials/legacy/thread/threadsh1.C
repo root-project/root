@@ -5,6 +5,7 @@
 ///
 /// \macro_code
 ///
+/// \date September 2023
 /// \author Victor Perevovchikov
 
 #include "TCanvas.h"

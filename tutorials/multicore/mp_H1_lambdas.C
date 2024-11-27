@@ -6,6 +6,7 @@
 ///
 /// \macro_code
 ///
+/// \date December 2017
 /// \author Gerardo Ganis
 
 // This function is used to check the result of the H1 analysis

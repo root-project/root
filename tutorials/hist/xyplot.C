@@ -7,6 +7,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date January 2017
 /// \author Olivier Couet
 
 void xyplot()

@@ -5,6 +5,7 @@
 /// obtaining running TMVA_Higgs_Classification.C
 /// You need to run that macro before this one
 ///
+/// \date March 2022
 /// \author Lorenzo Moneta
 
 using namespace TMVA::Experimental;

@@ -4,6 +4,7 @@
 ///
 /// \macro_code
 ///
+/// \date April 2016
 /// \author Rene Brun
 
 Double_t pi;

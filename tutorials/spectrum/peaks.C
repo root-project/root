@@ -31,6 +31,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date March 2018
 /// \author Rene Brun
 
 #include "TCanvas.h"

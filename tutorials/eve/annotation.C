@@ -5,6 +5,7 @@
 /// \image html eve_annotation.png
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Alja Mrak-Tadel
 
 #include <TEveManager.h>

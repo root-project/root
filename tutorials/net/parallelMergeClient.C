@@ -14,6 +14,7 @@
 ///
 /// \macro_code
 ///
+/// \date September 2016
 /// \authors Fons Rademakers, Philippe Canal
 
 #include "TMessage.h"

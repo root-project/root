@@ -39,6 +39,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Lorenzo Moneta
 
 #include "TF1.h"

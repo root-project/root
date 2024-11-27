@@ -70,6 +70,7 @@
 /// \image html eve_alice_esd.png
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Matevz Tadel
 
 void alice_esd()

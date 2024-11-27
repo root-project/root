@@ -66,6 +66,7 @@
 ///
 /// \macro_code
 ///
+/// \date May 2019
 /// \author
 
 int TestAuth(int port = 1094, char *user = "")

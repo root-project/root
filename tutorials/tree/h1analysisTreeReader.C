@@ -5,6 +5,7 @@
 ///
 /// \macro_code
 ///
+/// \date December 2023
 /// \author Anders Eie, 2013
 
 #include "h1analysisTreeReader.h"

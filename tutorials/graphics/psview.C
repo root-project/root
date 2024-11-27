@@ -20,6 +20,7 @@
 ///
 /// \macro_code
 ///
+/// \date January 2017
 /// \author Valeriy Onoutchin
 
 #include "TROOT.h"

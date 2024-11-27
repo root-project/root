@@ -5,6 +5,7 @@
 /// \image html eve_geom_alice_its.png
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Matevz Tadel
 
 #include "TEveManager.h"

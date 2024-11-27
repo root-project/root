@@ -5,6 +5,7 @@
 ///
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Sergey Linev
 
 #include "TXMLEngine.h"

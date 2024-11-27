@@ -14,6 +14,7 @@
 ///
 /// \macro_code
 ///
+/// \date August 2024
 /// \author Axel Naumann
 
 #include "THtml.h"

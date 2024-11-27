@@ -14,6 +14,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date January 2017
 /// \author Christian Stratowa, Vienna, Austria
 
 #include "TString.h"

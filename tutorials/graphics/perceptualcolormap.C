@@ -21,6 +21,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date May 2021
 /// \author Olivier Couet
 
 void Perceptual_Colormap(TH2D *h, Double_t val_cut) {

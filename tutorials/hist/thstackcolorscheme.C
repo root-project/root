@@ -8,6 +8,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date October 2024
 /// \author Olivier Couet
 
 void thstackcolorscheme()

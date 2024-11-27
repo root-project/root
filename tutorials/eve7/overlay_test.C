@@ -5,6 +5,7 @@
 /// \image html eve_box.png
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Matevz Tadel
 #include <ROOT/REveBox.hxx>
 #include <ROOT/REveScene.hxx>

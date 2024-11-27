@@ -14,6 +14,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date July 2024
 /// \author Andrei Gheata
 
 void align();

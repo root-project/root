@@ -6,6 +6,7 @@
 /// \image html image_hist2image.png
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Valeriy Onuchin
 
 #include <TAttImage.h>

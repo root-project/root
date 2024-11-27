@@ -13,6 +13,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date December 2022
 /// \author Eun Young Kim, Dept. of Physics, Univ. of Seoul
 
 #include "TCanvas.h"

@@ -7,6 +7,7 @@
 /// \macro_image(nobatch)
 /// \macro_code
 ///
+/// \date January 2016
 /// \author  Timur Pocheptsov
 
 void glrose()

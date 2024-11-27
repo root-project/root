@@ -4,6 +4,7 @@
 ##
 ## \macro_code
 ##
+## \date December 2015
 ## \author Wim Lavrijsen
 
 import ROOT

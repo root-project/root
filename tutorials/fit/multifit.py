@@ -17,6 +17,7 @@
 ## \macro_output
 ## \macro_code
 ##
+## \date January 2022
 ## \authors Jonas Rembser, Rene Brun (C++ version)
 
 import ROOT

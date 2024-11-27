@@ -42,6 +42,7 @@
 ///  You should have received a copy of the GNU General Public License
 ///  along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
 ///
+/// \date March 2024
 /// \author Stefan Schmitt DESY, 14.10.2008
 
 #include <TMath.h>

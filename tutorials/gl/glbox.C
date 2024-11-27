@@ -5,6 +5,7 @@
 /// \macro_image(nobatch)
 /// \macro_code
 ///
+/// \date June 2018
 /// \author  Timur Pocheptsov
 
 void glbox()

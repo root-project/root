@@ -11,6 +11,7 @@
 ///
 /// \macro_code
 ///
+/// \date February 2020
 /// \author Lorenzo Moneta
 
 #include "TH2.h"

@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date June 2022
 /// \author Otto Schaile
 
 #include "TROOT.h"

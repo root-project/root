@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date July 2016
 /// \author Rene Brun
 
 TCanvas *hlabels1()

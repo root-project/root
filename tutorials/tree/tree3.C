@@ -12,6 +12,7 @@
 /// TTree::Draw is called with variables from both Trees.
 /// \macro_code
 ///
+/// \date September 2016
 /// \author Rene Brun
 
 #include "TFile.h"

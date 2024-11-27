@@ -7,6 +7,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date January 2017
 /// \author Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 void xtruSamples()

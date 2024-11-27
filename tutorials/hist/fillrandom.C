@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date October 2021
 /// \author Rene Brun
 
 void fillrandom(int plot=1) {

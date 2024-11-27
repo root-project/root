@@ -8,6 +8,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date January 2023
 /// \author Olivier Couet
 
 TH2F *h2;

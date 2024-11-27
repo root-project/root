@@ -4,6 +4,7 @@
 /// Macro demonstrating the merging of containers.
 /// \macro_code
 ///
+/// \date January 2017
 /// \author The Root Team
 
 TFile *f;

@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date August 2016
 /// \authors Rene Brun, Eddy Offermann
 
 void quantiles() {

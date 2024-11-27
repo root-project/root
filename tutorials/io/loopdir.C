@@ -7,6 +7,7 @@
 ///
 /// \macro_code
 ///
+/// \date July 2021
 /// \author Rene Brun
 
 void loopdir() {

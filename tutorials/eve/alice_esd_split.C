@@ -70,6 +70,7 @@
 /// \image html eve_alice_esd_split.png
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Bertrand Bellenot
 
 void alice_esd_split()

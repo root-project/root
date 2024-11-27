@@ -14,6 +14,7 @@
 ///   TObjArra8 *border_array = geom->GetListOfBorderSurfaces();
 /// Alternatively accessors by name can also be used: GetSkinSurface(name)/GetBorderSurface(name)
 ///
+/// \date January 2019
 /// \author Andrei Gheata
 
 #include <cassert>

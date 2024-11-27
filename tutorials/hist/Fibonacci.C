@@ -18,6 +18,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date September 2016
 /// \author Olivier Couet
 
 void Arc(int n, double a, double r, double *px, double *py);

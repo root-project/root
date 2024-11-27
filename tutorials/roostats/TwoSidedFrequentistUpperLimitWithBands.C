@@ -97,6 +97,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date March 2024
 /// \authors Kyle Cranmer,Contributions from Aaron Armbruster, Haoshuang Ji, Haichen Wang and Daniel Whiteson
 
 #include "TFile.h"

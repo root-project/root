@@ -5,6 +5,7 @@
 ///
 /// \macro_code
 ///
+/// \date August 2018
 /// \author Valeriy Onuchin
 
 #include <TGPicture.h>

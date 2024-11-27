@@ -25,6 +25,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Eddy Offermann
 
 #include "Riostream.h"

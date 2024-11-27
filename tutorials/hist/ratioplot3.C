@@ -9,6 +9,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date January 2020
 /// \author Paul Gessinger
 
 void ratioplot3()  {

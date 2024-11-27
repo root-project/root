@@ -25,6 +25,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date February 2024
 /// \author Kyle Cranmer
 
 #include "RooStats/ProfileLikelihoodCalculator.h"

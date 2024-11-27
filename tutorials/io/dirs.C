@@ -26,6 +26,7 @@
 /// ~~~
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Rene Brun
 
 void dirs() {

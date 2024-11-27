@@ -34,6 +34,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date August 2024
 /// \author Kyle Cranmer
 
 #include "TFile.h"

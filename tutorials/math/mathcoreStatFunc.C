@@ -12,6 +12,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date June 2017
 /// \author Andras Zsenei
 
 #include "TF2.h"

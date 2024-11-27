@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date July 2019
 /// \authors Miroslav Morhac, Olivier Couet
 
 #include <TSpectrum2.h>

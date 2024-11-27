@@ -5,6 +5,7 @@
 /// \image html geom_visualizeWavefrontObj.png width=500px
 /// \macro_code
 ///
+/// \date July 2020
 /// \author Andrei Gheata
 
 #include <TROOT.h>

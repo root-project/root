@@ -9,6 +9,7 @@
 ///
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Valeriy Onuchin   17/07/2007
 
 #include <TGButton.h>

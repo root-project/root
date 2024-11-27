@@ -5,6 +5,7 @@
 /// \image html eve_pack.png
 /// \macro_code
 ///
+/// \date June 2018
 /// \author Matevz Tadel
 
 TGPack *hp = 0;

@@ -40,6 +40,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date November 2023
 /// \authors Rene Brun, Lorenzo Moneta
 
 #include <TRandom1.h>

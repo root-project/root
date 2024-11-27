@@ -14,6 +14,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date April 2018
 /// \author Olivier Couet
 
 void hline (Double_t x, Double_t y)

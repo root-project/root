@@ -11,6 +11,7 @@
 /// \image html eve_assembly.png
 /// \macro_code
 ///
+/// \date June 2018
 /// \author Andrei Gheata
 
 void assembly()

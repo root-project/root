@@ -13,6 +13,7 @@
 /// \image html geom_south_gate.png width=800px
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Lan Hee Yang(yangd5d5@hotmail.com), Dept. of Physics, Univ. of Seoul
 
 #include "TGeoManager.h"

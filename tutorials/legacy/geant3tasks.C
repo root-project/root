@@ -6,6 +6,7 @@
 ///
 /// \macro_code
 ///
+/// \date June 2019
 /// \author Rene Brun
 
 void geant3tasks()

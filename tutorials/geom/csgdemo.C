@@ -4,6 +4,7 @@
 ///
 /// \macro_code
 ///
+/// \date December 2022
 /// \author Andrei Gheata
 
 Bool_t raytracing = kTRUE;

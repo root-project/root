@@ -12,6 +12,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2023
 /// \author Olivier Couet (from an original macro sent by Ernst-Jan Buis)
 
 TCanvas *earth(){

@@ -12,6 +12,7 @@
 ## \macro_image
 ## \macro_code
 ##
+## \date November 2019
 ## \author Wim Lavrijsen, Enric Tejedor
 
 from ROOT import TCanvas, TFile, TProfile, TNtuple, TH1F, TH2F

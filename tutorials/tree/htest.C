@@ -15,6 +15,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2017
 /// \author Rene Brun
 
 void htw() {

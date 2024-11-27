@@ -8,6 +8,7 @@
 ## \macro_output
 ## \macro_code
 ##
+## \date January 2022
 ## \author Jonas Rembser, Lorenzo Moneta (C++ version)
 
 

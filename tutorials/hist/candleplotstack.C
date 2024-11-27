@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date May 2024
 /// \authors Georg Troska, Olivier Couet
 
 void candleplotstack()

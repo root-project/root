@@ -5,6 +5,7 @@
 /// \image html eve_arrow.png
 /// \macro_code
 ///
+/// \date June 2018
 /// \author Alja Mrak-Tadel
 
 

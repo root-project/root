@@ -8,6 +8,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2017
 /// \authors Danilo Piparo, Olivier Couet
 
 void timeSeriesFromCSV()

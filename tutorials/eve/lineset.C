@@ -5,6 +5,7 @@
 /// \image html eve_lineset.png
 /// \macro_code
 ///
+/// \date June 2018
 /// \author Matevz Tadel
 
 TEveStraightLineSet* lineset(Int_t nlines = 40, Int_t nmarkers = 4)

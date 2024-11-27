@@ -8,6 +8,7 @@
 ///
 /// \macro_code
 ///
+/// \date March 2017
 /// \author Timur Pocheptsov
 
 #include <cassert>

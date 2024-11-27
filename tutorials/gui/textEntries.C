@@ -9,6 +9,7 @@
 ///
 /// \macro_code
 ///
+/// \date October 2016
 /// \author Valeriy Onuchin   25/08/2007
 
 #include <TGTextEntry.h>

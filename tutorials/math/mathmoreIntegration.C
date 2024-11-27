@@ -19,6 +19,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date November 2024
 /// \authors M. Slawinska, L. Moneta
 
 #include "TMath.h"

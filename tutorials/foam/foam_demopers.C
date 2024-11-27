@@ -8,6 +8,7 @@
 ///
 /// \macro_code
 ///
+/// \date February 2020
 /// \author Stascek Jadach
 
 #include "Riostream.h"

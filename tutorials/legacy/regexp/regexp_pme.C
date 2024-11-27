@@ -8,6 +8,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date June 2019
 /// \author Eddy Offermann
 
 void regexp_pme()

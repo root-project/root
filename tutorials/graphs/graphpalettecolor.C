@@ -16,6 +16,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date April 2022
 /// \author Olivier Couet
 
 void graphpalettecolor () {

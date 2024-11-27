@@ -11,6 +11,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2022
 /// \author Rene Brun
 
 Float_t progressRatio = 0.;

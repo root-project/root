@@ -22,6 +22,7 @@
 ///
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Gerardo Ganis
 
 #include "Getline.h"

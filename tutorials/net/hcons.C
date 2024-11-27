@@ -8,6 +8,7 @@
 ///
 /// \macro_code
 ///
+/// \date February 2024
 /// \author Fons Rademakers
 
 {

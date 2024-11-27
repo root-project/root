@@ -5,6 +5,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date April 2016
 /// \author Robert Hatcher (rhatcher@fnal.gov) 2000.09.06
 
 void xtruDraw() {

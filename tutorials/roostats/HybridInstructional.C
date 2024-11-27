@@ -54,6 +54,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date March 2024
 /// \authors Kyle Cranmer, Wouter Verkerke, and Sven Kreiss
 
 #include "RooGlobalFunc.h"

@@ -12,6 +12,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date July 2022
 /// \author Lorenzo Moneta
 
 #include <Math/MinimizerOptions.h>

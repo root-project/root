@@ -12,6 +12,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2024
 /// \authors Kerstin Tackmann, Andreas Hoecker, Heiko Lacker
 
 #include <iostream>

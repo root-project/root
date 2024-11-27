@@ -8,6 +8,7 @@
 /// \macro_image
 /// \macro_code
 /// \note For this to work, ROOT has to be compiled with gviz ON
+/// \date March 2022
 /// \author Olivier Couet
 
 TCanvas* graphstruct()

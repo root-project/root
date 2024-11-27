@@ -5,6 +5,7 @@
 /// \image html eve_compound.png
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Matevz Tadel
 
 TEveLine* random_line(TRandom& rnd, Int_t n, Float_t delta)

@@ -6,6 +6,7 @@
 /// This example uses the file produced by the tutorial importCode.C
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Rene Brun
 
 #include "TFile.h"

@@ -12,6 +12,7 @@
 /// \macro_image(nobatch)
 /// \macro_code
 ///
+/// \date April 2022
 /// \author Timur Pocheptsov
 
 void gltf3()

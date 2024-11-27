@@ -21,6 +21,7 @@
 ///
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Sergey Linev
 
 #include "TH1.h"

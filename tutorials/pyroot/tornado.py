@@ -6,6 +6,7 @@
 ## \macro_image
 ## \macro_code
 ##
+## \date September 2016
 ## \author Wim Lavrijsen
 
 from ROOT import TCanvas, TView, TPolyMarker3D, TPaveText

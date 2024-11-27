@@ -4,6 +4,7 @@
 ///
 /// \macro_code
 ///
+/// \date November 2023
 /// \author  Timur Pocheptsov
 
 #include "TRandom.h"

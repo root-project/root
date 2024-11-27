@@ -11,6 +11,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2022
 /// \author Advait Dhingra
 
 void ZoomHistogram()

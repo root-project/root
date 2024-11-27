@@ -5,6 +5,7 @@
 /// \image html eve_calorimeters.png
 /// \macro_code
 ///
+/// \date September 2024
 /// \author Alja Mrak-Tadel
 
 #include "TEveProjections.h"

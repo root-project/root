@@ -7,6 +7,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2024
 /// \author Gregory Schott
 
 #include "RooRealVar.h"

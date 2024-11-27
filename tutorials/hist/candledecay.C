@@ -6,6 +6,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date December 2018
 /// \author Georg Troska
 
 void candledecay()

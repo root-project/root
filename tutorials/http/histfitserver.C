@@ -6,6 +6,7 @@
 ///
 /// \macro_code
 ///
+/// \date March 2017
 /// \author  Sergey Linev
 
 

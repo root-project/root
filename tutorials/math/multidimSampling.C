@@ -7,6 +7,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date November 2023
 /// \author Lorenzo Moneta
 
 // function (a 4d gaussian)

@@ -10,6 +10,7 @@
 /// The two plots represent the same data sets but because of a bad symbol
 /// choice, the two plots on the top appear further apart than for the bottom
 /// example.
+/// \date November 2022
 /// \author Olivier Couet
 
 void markerwarning()

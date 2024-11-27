@@ -7,6 +7,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2024
 /// \author Lorenzo Moneta
 
 #include "TH1.h"

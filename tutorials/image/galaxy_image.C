@@ -6,6 +6,7 @@
 /// \image html image_galaxy_image.png
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Valeriy Onuchin
 
 void galaxy_image()

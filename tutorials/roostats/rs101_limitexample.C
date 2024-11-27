@@ -9,6 +9,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date April 2024
 /// \author Kyle Cranmer
 
 #include "RooProfileLL.h"

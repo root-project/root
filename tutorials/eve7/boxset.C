@@ -5,6 +5,7 @@
 /// \image html eve_boxset.png
 /// \macro_code
 ///
+/// \date January 2024
 /// \author Matevz Tadel
 
 #include "TRandom.h"

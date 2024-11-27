@@ -84,6 +84,7 @@
 ///      - Save as GIF file
 ///      - Save as C file
 ///      - Close c2
+/// \date August 2020
 /// \author Olivier Couet
 
 Int_t file_size(const char *filename)

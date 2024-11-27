@@ -102,6 +102,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date September 2023
 /// \authors Kyle Cranmer, Haichen Wang, Daniel Whiteson
 
 #include "TFile.h"

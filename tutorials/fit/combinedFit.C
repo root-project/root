@@ -13,6 +13,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2024
 /// \author Lorenzo Moneta
 
 #include <Fit/Fitter.h>

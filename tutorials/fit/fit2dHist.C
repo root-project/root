@@ -36,6 +36,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2024
 /// \authors: Lorenzo Moneta, Rene Brun 18/01/2006
 
 #include "TH2D.h"

@@ -13,6 +13,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Lorenzo Moneta
 
 #include "TF1.h"

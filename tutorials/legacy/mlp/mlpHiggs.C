@@ -11,6 +11,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Christophe Delaere
 
 void mlpHiggs(Int_t ntrain=100) {
