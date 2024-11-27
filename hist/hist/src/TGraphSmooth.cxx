@@ -30,7 +30,7 @@ ClassImp(TGraphSmooth);
 /** \class TGraphSmooth
     \ingroup Graphs
 A helper class to smooth TGraph.
-see examples in $ROOTSYS/tutorials/visualisation/graphs/motorcycle.C and approx.C
+see examples in $ROOTSYS/tutorials/visualisation/graphs/gr010_approx_smooth.C and $ROOTSYS/tutorials/visualisation/graphs/gr015_smooth.C
 */
 
 TGraphSmooth::TGraphSmooth()

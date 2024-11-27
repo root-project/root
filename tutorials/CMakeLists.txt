@@ -101,7 +101,7 @@ if (NOT dataframe)
     # RDataFrame
     list(APPEND dataframe_veto analysis/dataframe/*.C analysis/dataframe/*.py)
     # RDataFrame tutorial in graphs
-    list(APPEND dataframe_veto visualisation/graphs/timeSeriesFromCSV_TDF.C)
+    list(APPEND dataframe_veto visualisation/graphs/gr109_timeSeriesFromCSV_RDF.C)
     # TMVA tutorials dependent on RDataFrame
     list(APPEND dataframe_veto machine_learning/tmva*.C)
     list(APPEND dataframe_veto machine_learning/TMVA_SOFIE_RDataFrame*.C)
@@ -244,7 +244,7 @@ if(NOT ROOT_opengl_FOUND)
 endif()
 
 if(NOT GRAPHVIZ_FOUND)
-  set(gviz_veto visualisation/graphs/graphstruct.C)
+  set(gviz_veto visualisation/graphs/gr016_struct.C)
 endif()
 
 if(NOT TBB_FOUND AND NOT builtin_tbb)
@@ -443,7 +443,7 @@ if(MSVC AND NOT llvm13_broken_tests)
     list(APPEND extra_veto
          analysis/dataframe/df007_snapshot.C
          visualisation/graphics/earth.C
-         visualisation/graphs/motorcycle.C
+         visualisation/graphs/gr015_smooth.C
          io/ntuple/ntpl001_staff.C)
   endif()
 endif()
@@ -511,8 +511,8 @@ set(returncode_1 math/fit/fit2a.C
                  visualisation/graphics/earth.C
                  visualisation/graphics/pavetext.C
                  visualisation/graphics/tmathtext.C visualisation/graphics/tmathtext2.C
-                 visualisation/graphs/exclusiongraph.C
-                 visualisation/graphs/graphstruct.C
+                 visualisation/graphs/gr106_exclusiongraph.C
+                 visualisation/graphs/gr016_struct.C
                  hist/hist102_TH2_contour_list.C
                  hist/hist006_TH1_bar_charts.C
                  hist/hist037_TH2Poly_boxes.C

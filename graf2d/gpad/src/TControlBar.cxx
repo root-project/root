@@ -31,15 +31,15 @@ will return the name of the last clicked button.
    TControlBar bar("vertical");
    bar.AddButton("Help to run demos",".x demoshelp.C",
                  "Explains how to run the demos");
-   bar.AddButton("framework",        ".x graphics/framework.C",
+   bar.AddButton("framework",        ".x visualisation/graphics/framework.C",
                  "An Example of Object Oriented User Interface");
    bar.AddButton("hsimple",          ".x hsimple.C",
                  "An Example Creating Histograms/Ntuples on File");
    bar.AddButton("hsum",             ".x hist/hsum.C",
                  "Filling histograms and some graphics options");
-   bar.AddButton("canvas",           ".x graphics/canvas.C",
+   bar.AddButton("canvas",           ".x visualisation/graphics/canvas.C",
                  "Canvas and Pad Management");
-   bar.AddButton("formula1",         ".x graphics/formula1.C",
+   bar.AddButton("formula1",         ".x visualisation/graphics/formula1.C",
                  "Simple Formula and Functions");
    bar.AddButton("fillrandom",       ".x hist/fillrandom.C",
                  "Histograms with Random Numbers from a Function");
@@ -47,11 +47,11 @@ will return the name of the last clicked button.
                  "A Simple Fitting Example");
    bar.AddButton("draw2dopt",        ".x hist/draw2dopt.C",
                  "Drawing Options for 2D Histograms");
-   bar.AddButton("graph",            ".x graphs/graph.C",
+   bar.AddButton("graph",            ".x visualisation/graphs/gr001_simple.C",
                  "Examples of a simple graph");
-   bar.AddButton("tornado",          ".x graphics/tornado.C",
+   bar.AddButton("tornado",          ".x visualisation/graphics/tornado.C",
                  "Examples of 3-D PolyMarkers");
-   bar.AddButton("shapes",           ".x geom/shapes.C",
+   bar.AddButton("shapes",           ".x visualisation/geom/shapes.C",
                  "The Geometry Shapes");
    bar.AddButton("file_layout",      ".x io/file.C",
                  "The ROOT file format");

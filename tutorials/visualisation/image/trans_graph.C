@@ -34,8 +34,8 @@ void trans_graph()
    // switch to batch mode
    gROOT->SetBatch(kTRUE);
 
-   // execute graph.C macro
-   gROOT->Macro("$ROOTSYS/tutorials/visualisation/graphs/graph.C");
+   // execute gr001_simple.C macro
+   gROOT->Macro("$ROOTSYS/tutorials/visualisation/graphs/gr001_basic.C");
 
    // create gVirtualPS object
    TImageDump dmp("dummy.png");
