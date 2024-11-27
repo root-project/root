@@ -78,6 +78,7 @@ set(py_sources
   ROOT/_application.py
   ROOT/_asan.py
   ROOT/_facade.py
+  ROOT/_uhi.py
   ROOT/__init__.py
   ROOT/_numbadeclare.py
   ROOT/_pythonization/__init__.py
