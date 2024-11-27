@@ -40,13 +40,15 @@ const bool writeJsonFiles = false;
 
 std::vector<double> getValues(RooAbsReal const &real, RooRealVar &obs, bool normalize, bool useBatchMode)
 {
+   RooArgSet normSet{obs};
+
    std::vector<double> out;
    // We want to evaluate the function at the bin centers
    std::vector<double> binCenters(obs.numBins());
    for (int iBin = 0; iBin < obs.numBins(); ++iBin) {
       obs.setBin(iBin);
       binCenters[iBin] = obs.getVal();
-      out.push_back(normalize ? real.getVal(obs) : real.getVal());
+      out.push_back(normalize ? real.getVal(normSet) : real.getVal());
    }
 
    if (useBatchMode == false) {

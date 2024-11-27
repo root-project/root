@@ -4475,3 +4475,29 @@ void RooAbsReal::enableOffsetting(bool flag)
 
 
 RooAbsReal::Ref::Ref(double val) : _ref{RooFit::RooConst(val)} {}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Calling RooAbsReal::getVal() with an r-value reference is a common
+/// performance trap, because this usually happens when implicitly constructing
+/// the RooArgSet to be used as the parameter (for example, in calls like
+/// `pdf.getVal(x)`).
+///
+/// Creating the RooArgSet can cause quite some overhead, especially when the
+/// evaluated object is just a simple variable. Even worse, many RooFit objects
+/// internally cache information using the uniqueId() of the normalization set
+/// as the key. So by constructing normalization sets in place, RooFits caching
+/// logic is broken.
+///
+/// To avoid these kind of problems, getVal() will just throw an error when
+/// it's called with an r-value reference. This also catches the cases where
+/// one uses it in Python, implicitly creating the normalization set from a
+/// Python list or set.
+double RooAbsReal::getVal(RooArgSet &&) const
+{
+   std::stringstream errMsg;
+   errMsg << "calling RooAbsReal::getVal() with r-value references to the normalization set is not allowed, because "
+             "it breaks RooFits caching logic and potentially introduces significant overhead. Please explicitly "
+             "create the RooArgSet outside the call to getVal().";
+   coutF(Eval) << errMsg.str() << std::endl;
+   throw std::runtime_error(errMsg.str());
+}
