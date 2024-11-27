@@ -36,24 +36,26 @@ static const std::string DisplayPrintDefaultRows("+-----+----+----+----------+\n
 static const std::string DisplayAsStringDefaultRows = DisplayPrintDefaultRows;
 
 static const std::string DisplayAsHtmlDefaultRows(
-"<table>\n"
-"  <tr>\n    <th>Row</th>\n    <th>b1</th>\n    <th>b2</th>\n    <th>b3</th>\n  </tr>\n"
-"  <tr>\n    <td>0</td>\n    <td>0</td>\n    <td>1</td>\n    <td>2.000000</td>\n  </tr>\n"
-"  <tr>\n    <td></td>\n    <td></td>\n    <td>2</td>\n    <td></td>\n  </tr>\n"
-"  <tr>\n    <td></td>\n    <td></td>\n    <td>3</td>\n    <td></td>\n  </tr>\n"
-"  <tr>\n    <td>1</td>\n    <td>0</td>\n    <td>1</td>\n    <td>2.000000</td>\n  </tr>\n"
-"  <tr>\n    <td></td>\n    <td></td>\n    <td>2</td>\n    <td></td>\n  </tr>\n"
-"  <tr>\n    <td></td>\n    <td></td>\n    <td>3</td>\n    <td></td>\n  </tr>\n"
-"  <tr>\n    <td>2</td>\n    <td>0</td>\n    <td>1</td>\n    <td>2.000000</td>\n  </tr>\n"
-"  <tr>\n    <td></td>\n    <td></td>\n    <td>2</td>\n    <td></td>\n  </tr>\n"
-"  <tr>\n    <td></td>\n    <td></td>\n    <td>3</td>\n    <td></td>\n  </tr>\n"
-"  <tr>\n    <td>3</td>\n    <td>0</td>\n    <td>1</td>\n    <td>2.000000</td>\n  </tr>\n"
-"  <tr>\n    <td></td>\n    <td></td>\n    <td>2</td>\n    <td></td>\n  </tr>\n"
-"  <tr>\n    <td></td>\n    <td></td>\n    <td>3</td>\n    <td></td>\n  </tr>\n"
-"  <tr>\n    <td>4</td>\n    <td>0</td>\n    <td>1</td>\n    <td>2.000000</td>\n  </tr>\n"
-"  <tr>\n    <td></td>\n    <td></td>\n    <td>2</td>\n    <td></td>\n  </tr>\n"
-"  <tr>\n    <td></td>\n    <td></td>\n    <td>3</td>\n    <td></td>\n  </tr>\n"
-"</table>");
+"<table style=\"border: 1px solid black; border-collapse: collapse;\">\n"
+"  <tr style=\"background: #fff\">\n    <th style=\"padding: 1px 4px\">Row</th>\n    <th style=\"padding: 1px 4px\">b1</th>\n    <th style=\"padding: 1px 4px\">b2</th>\n    <th style=\"padding: 1px 4px\">b3</th>\n  </tr>\n"
+"  <tr style=\"border-top: 1px dotted; background: #eee\">\n    <td style=\"padding: 1px 4px\">0</td>\n    <td style=\"padding: 1px 4px\">0</td>\n    <td style=\"padding: 1px 4px\">1</td>\n    <td style=\"padding: 1px 4px\">2.000000</td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">2</td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">3</td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"  <tr style=\"border-top: 1px dotted; background: #fff\">\n    <td style=\"padding: 1px 4px\">1</td>\n    <td style=\"padding: 1px 4px\">0</td>\n    <td style=\"padding: 1px 4px\">1</td>\n    <td style=\"padding: 1px 4px\">2.000000</td>\n  </tr>\n"
+"  <tr style=\"background: #fff\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">2</td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"  <tr style=\"background: #fff\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">3</td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"  <tr style=\"border-top: 1px dotted; background: #eee\">\n    <td style=\"padding: 1px 4px\">2</td>\n    <td style=\"padding: 1px 4px\">0</td>\n    <td style=\"padding: 1px 4px\">1</td>\n    <td style=\"padding: 1px 4px\">2.000000</td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">2</td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">3</td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"  <tr style=\"border-top: 1px dotted; background: #fff\">\n    <td style=\"padding: 1px 4px\">3</td>\n    <td style=\"padding: 1px 4px\">0</td>\n    <td style=\"padding: 1px 4px\">1</td>\n    <td style=\"padding: 1px 4px\">2.000000</td>\n  </tr>\n"
+"  <tr style=\"background: #fff\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">2</td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"  <tr style=\"background: #fff\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">3</td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"  <tr style=\"border-top: 1px dotted; background: #eee\">\n    <td style=\"padding: 1px 4px\">4</td>\n    <td style=\"padding: 1px 4px\">0</td>\n    <td style=\"padding: 1px 4px\">1</td>\n    <td style=\"padding: 1px 4px\">2.000000</td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">2</td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">3</td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"</table>"
+);
 
 TEST(RDFDisplayTests, DisplayNoJitDefaultRows)
 {
@@ -108,6 +110,7 @@ TEST(RDFDisplayTests, DisplayJitDefaultRows)
 
    // Testing the string returned
    EXPECT_EQ(dd->AsString(), DisplayAsStringDefaultRows);
+   EXPECT_EQ(dd->AsString({ RDisplay::EPrintFormat::kHtml }), DisplayAsHtmlDefaultRows);
 }
 
 TEST(RDFDisplayTests, DisplayRegexDefaultRows)
@@ -135,6 +138,7 @@ TEST(RDFDisplayTests, DisplayRegexDefaultRows)
 
    // Testing the string returned
    EXPECT_EQ(dd->AsString(), DisplayAsStringDefaultRows);
+   EXPECT_EQ(dd->AsString({ RDisplay::EPrintFormat::kHtml }), DisplayAsHtmlDefaultRows);
 }
 
 static const std::string DisplayPrintTwoRows("+-----+----+----+----------+\n"
@@ -150,6 +154,19 @@ static const std::string DisplayPrintTwoRows("+-----+----+----+----------+\n"
                                              "+-----+----+----+----------+\n");
 
 static const std::string DisplayAsStringTwoRows = DisplayPrintTwoRows;
+
+static const std::string DisplayAsHtmlTwoRows(
+"<table style=\"border: 1px solid black; border-collapse: collapse;\">\n"
+"  <tr style=\"background: #fff\">\n    <th style=\"padding: 1px 4px\">Row</th>\n    <th style=\"padding: 1px 4px\">b1</th>\n    <th style=\"padding: 1px 4px\">b2</th>\n    <th style=\"padding: 1px 4px\">b3</th>\n  </tr>\n"
+"  <tr style=\"border-top: 1px dotted; background: #eee\">\n    <td style=\"padding: 1px 4px\">0</td>\n    <td style=\"padding: 1px 4px\">0</td>\n    <td style=\"padding: 1px 4px\">1</td>\n    <td style=\"padding: 1px 4px\">2.000000</td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">2</td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">3</td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"  <tr style=\"border-top: 1px dotted; background: #fff\">\n    <td style=\"padding: 1px 4px\">1</td>\n    <td style=\"padding: 1px 4px\">0</td>\n    <td style=\"padding: 1px 4px\">1</td>\n    <td style=\"padding: 1px 4px\">2.000000</td>\n  </tr>\n"
+"  <tr style=\"background: #fff\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">2</td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"  <tr style=\"background: #fff\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">3</td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"</table>"
+);
 
 TEST(RDFDisplayTests, DisplayJitTwoRows)
 {
@@ -215,6 +232,29 @@ static const std::string DisplayAsStringTwoColumns("+-----+----+----+\n"
                                                    "|     |    | 3  | \n"
                                                    "+-----+----+----+\n");
 
+static const std::string DisplayAsHtmlTwoColumns(
+"<table style=\"border: 1px solid black; border-collapse: collapse;\">\n"
+"  <tr style=\"background: #fff\">\n    <th style=\"padding: 1px 4px\">Row</th>\n    <th style=\"padding: 1px 4px\">b1</th>\n    <th style=\"padding: 1px 4px\">b2</th>\n  </tr>\n"
+"  <tr style=\"border-top: 1px dotted; background: #eee\">\n    <td style=\"padding: 1px 4px\">0</td>\n    <td style=\"padding: 1px 4px\">0</td>\n    <td style=\"padding: 1px 4px\">1</td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">2</td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">3</td>\n  </tr>\n"
+"  <tr style=\"border-top: 1px dotted; background: #fff\">\n    <td style=\"padding: 1px 4px\">1</td>\n    <td style=\"padding: 1px 4px\">0</td>\n    <td style=\"padding: 1px 4px\">1</td>\n  </tr>\n"
+"  <tr style=\"background: #fff\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">2</td>\n  </tr>\n"
+"  <tr style=\"background: #fff\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">3</td>\n  </tr>\n"
+"  <tr style=\"border-top: 1px dotted; background: #eee\">\n    <td style=\"padding: 1px 4px\">2</td>\n    <td style=\"padding: 1px 4px\">0</td>\n    <td style=\"padding: 1px 4px\">1</td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">2</td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">3</td>\n  </tr>\n"
+"  <tr style=\"border-top: 1px dotted; background: #fff\">\n    <td style=\"padding: 1px 4px\">3</td>\n    <td style=\"padding: 1px 4px\">0</td>\n    <td style=\"padding: 1px 4px\">1</td>\n  </tr>\n"
+"  <tr style=\"background: #fff\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">2</td>\n  </tr>\n"
+"  <tr style=\"background: #fff\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">3</td>\n  </tr>\n"
+"  <tr style=\"border-top: 1px dotted; background: #eee\">\n    <td style=\"padding: 1px 4px\">4</td>\n    <td style=\"padding: 1px 4px\">0</td>\n    <td style=\"padding: 1px 4px\">1</td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">2</td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\">3</td>\n  </tr>\n"
+"  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"</table>"
+);
+
+
 TEST(RDFDisplayTests, DisplayAmbiguity)
 {
    // This test verifies that the correct method is called and there is no ambiguity between the JIT call to Display
@@ -227,6 +267,7 @@ TEST(RDFDisplayTests, DisplayAmbiguity)
 
    EXPECT_EQ(display_1->AsString(), DisplayAsStringOneColumn);
    EXPECT_EQ(display_2->AsString(), DisplayAsStringTwoColumns);
+   EXPECT_EQ(display_2->AsString({ ROOT::RDF::RDisplay::EPrintFormat::kHtml }), DisplayAsHtmlTwoColumns);
 }
 
 static const std::string DisplayAsStringString("+-----+-------+\n"
@@ -236,6 +277,15 @@ static const std::string DisplayAsStringString("+-----+-------+\n"
                                                "+-----+-------+\n"
                                                "| 1   | \"foo\" | \n"
                                                "+-----+-------+\n");
+
+static const std::string DisplayAsHtmlString(
+"<table style=\"border: 1px solid black; border-collapse: collapse;\">\n"
+"  <tr style=\"background: #fff\">\n    <th style=\"padding: 1px 4px\">Row</th>\n    <th style=\"padding: 1px 4px\">b1</th>\n  </tr>\n"
+"  <tr style=\"border-top: 1px dotted; background: #eee\">\n    <td style=\"padding: 1px 4px\">0</td>\n    <td style=\"padding: 1px 4px\">\"foo\"</td>\n  </tr>\n"
+"  <tr style=\"border-top: 1px dotted; background: #fff\">\n    <td style=\"padding: 1px 4px\">1</td>\n    <td style=\"padding: 1px 4px\">\"foo\"</td>\n  </tr>\n"
+"  <tr style=\"background: #fff\">\n    <td style=\"padding: 1px 4px\"></td>\n    <td style=\"padding: 1px 4px\"></td>\n  </tr>\n"
+"</table>"
+);
 
 TEST(RDFDisplayTests, DisplayPrintString)
 {
@@ -255,6 +305,7 @@ TEST(RDFDisplayTests, DisplayPrintString)
 
    // Testing the string returned
    EXPECT_EQ(dd->AsString(), DisplayAsStringString);
+   EXPECT_EQ(dd->AsString({ ROOT::RDF::RDisplay::EPrintFormat::kHtml }), DisplayAsHtmlString);
 }
 
 TEST(RDFDisplayTests, CharArray)
