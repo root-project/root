@@ -229,7 +229,7 @@ gStyle->SetEndErrorSize(np);
 The four parameters of **`TGraphErrors`** are: `X, Y` (as in
 **`TGraph`**), `X`-errors, and `Y`-errors - the size of the errors
 in the `x` and `y` direction. Next example is
-`$ROOTSYS/tutorials/graphs/gerrors.C.`
+`$ROOTSYS/tutorials/graphs/gr002_err_1gr.C.`
 
 ``` {.cpp}
 {
@@ -702,7 +702,7 @@ root[] gr5->Draw("ALP")
 ```
 
 For more graph examples see the scripts: `$ROOTSYS/tutorials` directory
-`graph.C`, `gerrors.C`, `zdemo.C`, and `gerrors2.C`.
+`gr001_basic.C`, `gr002_err_1gr.C`, `gr303_zdemo.C`, and `gr003_err_2gr.C`.
 
 ![A graph with axis titles](pictures/0300005D.png)
 

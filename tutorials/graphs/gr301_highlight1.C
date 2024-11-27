@@ -1,10 +1,9 @@
 /// \file
 /// \ingroup tutorial_graphs
 ///
-/// This tutorial demonstrates how to use the highlight mode on graph.
+/// This tutorial demonstrates how to use the highlight mode on graph, thanks to the TCanvas [HighlightConnect](https://root.cern/doc/master/classTCanvas.html#a462b8dc286a2d29152fefa9b31f89920) method.
 ///
 /// \macro_code
-///
 /// \date March 2018
 /// \author Jan Musinsky
 
@@ -27,7 +26,7 @@ void HighlightHisto(TVirtualPad *pad, TObject *obj, Int_t ihp, Int_t y)
    }
 }
 
-void hlGraph1()
+void gr301_highlight1()
 {
    auto Canvas = new TCanvas("Canvas", "Canvas", 0, 0, 700, 500);
    Canvas->HighlightConnect("HighlightHisto(TVirtualPad*,TObject*,Int_t,Int_t)");

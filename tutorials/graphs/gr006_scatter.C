@@ -1,14 +1,15 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Draw a scatter plot.
+/// Draw a scatter plot for 4 variables, mapped to: x, y, marker colour and marker size.
+///
+/// TScatter is available since ROOT v.6.30. See the [TScatter documentation](https://root.cern/doc/master/classTScatter.html)
 ///
 /// \macro_image
 /// \macro_code
-///
 /// \author Olivier Couet
 
-void scatter()
+void gr006_scatter()
 {
    auto canvas = new TCanvas();
    canvas->SetRightMargin(0.14);
@@ -20,7 +21,7 @@ void scatter()
    double c[n];
    double s[n];
 
-   // Define four random data set
+   // Define four random data sets
    auto r  = new TRandom();
    for (int i=0; i<n; i++) {
       x[i] = 100*r->Rndm(i);

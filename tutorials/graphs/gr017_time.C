@@ -1,11 +1,10 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Example of TGraphTime.
+/// Example of TGraphTime. See the [TGraphTime documentation](https://root.cern/doc/master/classTGraphTime.html)
 ///
 /// \macro_image
 /// \macro_code
-///
 /// \author Rene Brun
 
 #include "TCanvas.h"
@@ -16,7 +15,7 @@
 #include "TGraphTime.h"
 #include <vector>
 
-void gtime(Int_t nsteps = 500, Int_t np = 100)
+void gr017_time(Int_t nsteps = 500, Int_t np = 100)
 {
    if (np > 1000) np = 1000;
    std::vector<Int_t> color(np);
@@ -59,16 +58,16 @@ void gtime(Int_t nsteps = 500, Int_t np = 100)
    g->Draw();
 
    // save object as animated gif
-   // g->SaveAnimatedGif("gtime.gif");
+   // g->SaveAnimatedGif("gr17_time.gif");
 
-   //save object to a file
-   auto f = TFile::Open("gtime.root","recreate");
+   // save object to a file
+   auto f = TFile::Open("gr17_time.root","recreate");
    f->WriteObject(g, "g");
    delete f;
 
-   //to view this object in another session do
-   //  TFile::Open("gtime.root");
-   //  g->Draw();
+   // to view this object in another session do
+   // TFile::Open("gr17_time.root");
+   // g->Draw();
 }
 
 

@@ -1,11 +1,11 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Hint: Spherical waves
+/// Draw spherical waves interference. Two closed TGraphs filled with white are used
+/// here to draw triangles on top of a 2D function in order to hide parts of it.
 ///
 /// \macro_image
 /// \macro_code
-///
 /// \author Otto Schaile
 
 #include "TROOT.h"
@@ -51,18 +51,18 @@ Double_t result( Double_t *x, Double_t *par)
 
 
 //_____________________________________________________________
-void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
+void gr201_waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
 {
-   TCanvas *c1 = new TCanvas("waves", "A double slit experiment", 300, 40, 1004, 759);
+   TCanvas *c1 = new TCanvas("gr201_waves", "A double slit experiment", 300, 40, 1004, 759);
    c1->Range(0, -10,  30, 10);
    c1->SetFillColor(0);
-   TPad *pad = new TPad("pr","pr",  0.5, 0 , 1., 1);
-   pad->Range(0, -10,  15, 10);
+   TPad *pad = new TPad("pr", "pr", 0.5, 0, 1., 1);
+   pad->Range(0, -10, 15, 10);
    pad->Draw();
 
    const Int_t colNum = 30;
    Int_t palette[colNum];
-   for (Int_t i=0;i<colNum;i++) {
+   for (Int_t i = 0; i < colNum; i++) {
       Float_t level = 1.*i/colNum;
       palette[i] = TColor::GetColor((Float_t) TMath::Power(level,0.3), (Float_t) TMath::Power(level,0.3), (Float_t) 0.5*level);
       // palette[i] = 1001+i;
@@ -71,7 +71,9 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
 
    c1->cd();
 
-   TF2 *f0 = new TF2("ray_source",interference, 0.02, 15, -8, 8, 4);
+   // For the incoming waves, on the left side, we use a TF2 and increase the number
+   // of points used for drawing to 200 (default is 100) for better resolution
+   TF2 *f0 = new TF2("ray_source", interference, 0.02, 15, -8, 8, 4);
    f0->SetParameters(amp, lambda, 0, 0);
    f0->SetNpx(200);
    f0->SetNpy(200);
@@ -81,8 +83,10 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
    TLatex title;
    title.DrawLatex(1.6, 8.5, "A double slit experiment");
 
+   // Draw 2 white triangles to cover parts of f0, simulating a cone
+   // (change the fill color to see these)
    TGraph *graph = new TGraph(4);
-   graph->SetFillColor(0);
+   graph->SetFillColor(1);
    graph->SetFillStyle(1001);
    graph->SetLineWidth(0);
    graph->SetPoint(0, 0., 0.1);
@@ -92,7 +96,7 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
    graph->Draw("F");
 
    graph = new TGraph(4);
-   graph->SetFillColor(0);
+   graph->SetFillColor(1);
    graph->SetFillStyle(1001);
    graph->SetLineWidth(0);
    graph->SetPoint(0, 0, -0.1);
@@ -101,20 +105,22 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
    graph->SetPoint(3, 0, -0.1);
    graph->Draw("F");
 
-   TLine * line = new TLine(15,-10, 15, 0 - 0.5*d -0.2);
+   // To represent the wall with 2 openings, we draw 3 black vertical lines
+   TLine * line = new TLine(15,-10, 15, 0 - 0.5*d - 0.2);
    line->SetLineWidth(10);
    line->Draw();
 
-   line = new TLine(15, 0 - 0.5*d +0.2 ,15, 0 + 0.5*d -0.2);
+   line = new TLine(15, 0 - 0.5*d + 0.2, 15, 0 + 0.5*d - 0.2);
    line->SetLineWidth(10);
    line->Draw();
 
-   line = new TLine(15,0 + 0.5*d + 0.2,15, 10);
+   line = new TLine(15, 0 + 0.5*d + 0.2, 15, 10);
    line->SetLineWidth(10);
    line->Draw();
 
-   pad ->cd();
+   pad->cd();
 
+   // Interference plot, on the centre-right side
    TF2 *finter = new TF2("interference",interference, 0.01, 14, -10, 10, 4);
    finter->SetParameters(amp, lambda, d, 1);
    finter->SetNpx(200);
@@ -122,6 +128,7 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
    finter->SetContour(colNum-2);
    finter->Draw("samecol");
 
+   // Some lines
    TArc arc;
    arc.SetFillStyle(0);
    arc.SetLineWidth(2);
@@ -133,8 +140,9 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
       r += dr;
    }
 
-   pad ->cd();
+   pad->cd();
 
+   // Result, on the right edge
    TF2 *fresult = new TF2("result",result, 14, 15, -10, 10, 4);
    fresult->SetParameters(amp, lambda, d, 1);
    fresult->SetNpx(300);
@@ -142,7 +150,8 @@ void waves( Double_t d = 3, Double_t lambda = 1, Double_t amp = 10)
    fresult->SetContour(colNum-2);
    fresult->Draw("samecol");
 
-   line = new TLine(13.8,-10, 14, 10);
+   // Vertical white line on the right side
+   line = new TLine(14,-10, 14, 10);
    line->SetLineWidth(10); line->SetLineColor(0); line->Draw();
    c1->Modified(kTRUE);
    c1->Update();

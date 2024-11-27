@@ -1,14 +1,17 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Create and draw a polar graph with PI axis using a TF1.
+/// Create a polar graph using a TF1 and draw it with PI axis.
+/// See the [TGraphPolar documentation](https://root.cern/doc/master/classTGraphPolar.html)
+///
+/// Since TGraphPolar is a TGraphErrors, it is painted with
+/// [TGraphPainter](https://root.cern/doc/master/classTGraphPainter.html) options.
 ///
 /// \macro_image
 /// \macro_code
-///
 /// \author Olivier Couet
 
-void graphpolar3()
+void gr014_polar3()
 {
    TCanvas *CPol = new TCanvas("CPol","TGraphPolar Examples",500,500);
 

@@ -8,10 +8,9 @@
 ///
 /// \macro_image
 /// \macro_code
-///
 /// \author Olivier Couet
 
-void graphtext() {
+void gr202_textmarkers() {
    TCanvas *c = new TCanvas("c","A Simple Graph Example with Text",700,500);
    c->SetGrid();
 
@@ -27,7 +26,6 @@ void graphtext() {
       x = i*0.1;
       y = 10*sin(x+0.2);
       gr->SetPoint(i,x,y);
-
    }
    gr->Draw("ALP");
 }

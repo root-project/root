@@ -12,13 +12,14 @@
 /// and filled area. The graphs are drawn with curves (`C` option) and one can see
 /// the color of each graph is picked inside the palette `kSolar`. The
 /// same is visible on filled polygons in the automatically built legend.
+/// To have more control on the legend, it can be created manually, see the graph
+/// tutorial gr111_legend.C
 ///
 /// \macro_image
 /// \macro_code
-///
 /// \author Olivier Couet
 
-void graphpalettecolor () {
+void gr104_palettecolor () {
 
    gStyle->SetOptTitle(kFALSE);
    gStyle->SetPalette(kSolar);
@@ -42,6 +43,7 @@ void graphpalettecolor () {
    g4->SetLineWidth(3); g4->SetMarkerColor(kBlue);
    g5->SetLineWidth(3); g5->SetMarkerStyle(kFullSquare);
 
+   // The Draw option "A" (draw axes) is needed (only) for the first drawn graph
    g1->Draw("CA* PLC PFC");
    g2->Draw("PC  PLC PFC");
    g3->Draw("PC  PLC PFC");

@@ -1,17 +1,18 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook -js
-/// Macro to test interpolation function Approx
+/// Create a TGraphSmooth and show the usage of the interpolation function Approx
+///
+/// See the [TGraphSmooth documentation](https://root.cern/doc/master/classTGraphSmooth.html)
 ///
 /// \macro_image
 /// \macro_code
-///
 /// \author Christian Stratowa, Vienna, Austria.
 
 TCanvas *vC1;
 TGraph *grxy, *grin, *grout;
 
-void DrawSmooth(Int_t pad, const char *title, const char *xt, const char *yt)
+void gr010_approx_smooth(Int_t pad, const char *title, const char *xt, const char *yt)
 {
   vC1->cd(pad);
   TH1F *vFrame = gPad->DrawFrame(0,0,15,150);
@@ -30,7 +31,7 @@ void DrawSmooth(Int_t pad, const char *title, const char *xt, const char *yt)
   grout->DrawClone("LP");
 }
 
-void approx()
+void gr10_approx_smooth()
 {
 // Test data (square)
    Int_t n = 11;

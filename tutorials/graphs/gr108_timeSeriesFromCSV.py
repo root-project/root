@@ -7,7 +7,6 @@
 ##
 ## \macro_image
 ## \macro_code
-##
 ## \authors Danilo Piparo, Olivier Couet
 
 import ROOT
@@ -20,7 +19,8 @@ dirName += "/graphs/"
 dirName= dirName.replace("/./", "/")
 inputFileName = "%s/SWAN2017.dat" %dirName
 
-# Create the time graph
+# Create the time graph. In this example, we don't specify anything about it,
+# and data points will be added with SetPoint (the first point has index 0)
 g = ROOT.TGraph()
 g.SetTitle("SWAN Users during July 2017;Time;Number of Sessions")
 

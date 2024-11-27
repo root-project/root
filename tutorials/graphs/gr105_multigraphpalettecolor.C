@@ -4,7 +4,7 @@
 /// Palette coloring for multi-graphs is activated thanks to the options `PFC`
 /// (Palette Fill Color), `PLC` (Palette Line Color) and `AMC` (Palette Marker Color).
 /// When one of these options is given to `TMultiGraph::Draw` the `TGraph`s  in the
-/// `TMultiGraph`get their color from the current color palette defined by
+/// `TMultiGraph` get their color from the current color palette defined by
 /// `gStyle->SetPalette(...)`. The color is determined according to the number of
 /// `TGraph`s.
 ///
@@ -13,10 +13,9 @@
 ///
 /// \macro_image
 /// \macro_code
-///
 /// \author Olivier Couet
 
-void multigraphpalettecolor()
+void gr105_multigraphpalettecolor()
 {
    auto mg  = new TMultiGraph();
 

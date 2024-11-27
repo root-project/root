@@ -15,7 +15,6 @@
 ///
 /// \macro_image
 /// \macro_code
-///
 /// \authors Michael Tokarev, Elena Potrebenikova (JINR Dubna)
 
 #include "TCanvas.h"
@@ -36,7 +35,7 @@ Float_t Z[NMAX], HZ[NMAX], PT[NMAX], INVSIG[NMAX];
 void hz_calc(Float_t, Float_t, Float_t, Float_t, Float_t, Float_t);
 
 //__________________________________________________________________
-void zdemo()
+void gr303_zdemo()
 {
 
    Float_t energ;

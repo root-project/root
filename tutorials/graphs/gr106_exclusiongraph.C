@@ -3,13 +3,17 @@
 /// \notebook
 /// Draw three graphs with an exclusion zone.
 ///
+/// The shaded areas are obtained with a fill for the graph and controlled with `SetLineWidth`.
+/// `SetLineWidth` for exclusion graphs is explained in the [TGraphPainter documentation](https://root.cern/doc/master/classTGraphPainter.html#GrP2)
+///
+/// As the graphs will be superposed on drawing, we add them to a [TMultiGraph](https://root.cern/doc/master/classTMultiGraph.html) and then draw this one.
+///
 /// \macro_image
 /// \macro_code
-///
 /// \author Olivier Couet
 
-TCanvas *exclusiongraph() {
-   TCanvas *c1 = new TCanvas("c1","Exclusion graphs examples",200,10,600,400);
+void gr106_exclusiongraph() {
+   TCanvas *c1 = new TCanvas("c1","Exclusion graph examples",200,10,600,400);
    c1->SetGrid();
 
    TMultiGraph *mg = new TMultiGraph();
@@ -26,6 +30,7 @@ TCanvas *exclusiongraph() {
      yvalues3[i] = 10*sin(xvalues1[i])-2;
    }
 
+   // See explanation for SetLineWidth above
    TGraph *gr1 = new TGraph(n,xvalues1,yvalues1);
    gr1->SetLineColor(2);
    gr1->SetLineWidth(1504);
@@ -47,6 +52,4 @@ TCanvas *exclusiongraph() {
    mg->Add(gr2);
    mg->Add(gr3);
    mg->Draw("AC");
-
-   return c1;
 }

@@ -4,9 +4,10 @@
 /// Example of TGraphTime showing how the class could be used to visualize
 /// a set of particles with their time stamp in a MonteCarlo program.
 ///
+/// See the [TGraphTime documentation](https://root.cern/doc/master/classTGraphTime.html)
+///
 /// \macro_image
 /// \macro_code
-///
 /// \author Rene Brun
 
 #include "TRandom3.h"
@@ -17,7 +18,7 @@
 #include "TGraphTime.h"
 #include <vector>
 
-void gtime2(Int_t nsteps = 200, Int_t np = 5000)
+void gr018_time2(Int_t nsteps = 200, Int_t np = 5000)
 {
    if (np > 5000) np = 5000;
    std::vector<Int_t> color(np);
@@ -52,8 +53,8 @@ void gtime2(Int_t nsteps = 200, Int_t np = 5000)
 
    g->Draw();
 
-   // store object as animated gif
-   // g->SaveAnimatedGif("gtime2.gif");
+   // save object as animated gif
+   // g->SaveAnimatedGif("gr18_time2.gif");
 
    // start animation, can be stopped with g->Animate(kFALSE);
    // g->Animate();

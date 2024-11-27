@@ -47,7 +47,7 @@ will return the name of the last clicked button.
                  "A Simple Fitting Example");
    bar.AddButton("draw2dopt",        ".x hist/draw2dopt.C",
                  "Drawing Options for 2D Histograms");
-   bar.AddButton("graph",            ".x graphs/graph.C",
+   bar.AddButton("graph",            ".x graphs/gr001_basic.C",
                  "Examples of a simple graph");
    bar.AddButton("tornado",          ".x graphics/tornado.C",
                  "Examples of 3-D PolyMarkers");

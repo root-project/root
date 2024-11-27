@@ -1,22 +1,27 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Draw several graphs with an exclusion zones.
+/// Draw several graphs with exclusion zones.
+/// The shaded areas are obtained with a fill for the graph and controlled with `SetLineWidth`.
+/// `SetLineWidth` for exclusion graphs is explained in the [TGraphPainter documentation](https://root.cern/doc/master/classTGraphPainter.html#GrP2)
+///
+/// The graphs are drawn superposed, with help of an empty histogram that defines the axes, so we must make sure that the axis limits are adequate for all graphs. Notice that only the first drawn graph needs the "A" (draw axes) option. Alternatively, one could add the graphs to a TMultiGraph, which automatically defines the appropriate limits; see the gr106_exclusiongraph.C tutorial.
+///
+/// We add some text to the plot with [TLatex](https://root.cern/doc/master/classTLatex.html). Notice that the TLatex text is drawn on the current pad/canvas and does not need, nor have, a "same" option.
 ///
 /// \macro_image
 /// \macro_code
-///
 /// \author Olivier Couet
 
-void exclusiongraph2()
+void gr107_exclusiongraph2()
 {
-   TCanvas *c = new TCanvas("c",
-      "Charged Higgs L300 Contour",0,0,700,700);
+   TCanvas *c = new TCanvas("c","Charged Higgs L300 Contour",0,0,700,700);
    c->SetTickx();
    c->SetTicky();
    c->SetGridx();
    c->SetGridy();
 
+   // Frame to define the axis limits (50 to 500 and 1 to 50)
    TH1 *frame = new TH1F("frame","",1000,50,500);
    frame->SetMinimum(1);
    frame->SetMaximum(50);

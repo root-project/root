@@ -1,14 +1,17 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook -js
-/// Bent error bars
+/// Graph with bent error bars. See the [TGraphBentErrors documentation](https://root.cern/doc/master/classTGraphBentErrors.html)
+///
+/// exl / exh: low and high (left/right) errors in x; similar for y
+/// e*d: delta, in axis units, to be added/subtracted (if >0 or <0) in x or y from
+/// the data point's position to use as end point of the corresponding error
 ///
 /// \macro_image
 /// \macro_code
-///
 /// \author Olivier Couet
 
-void bent() 
+void gr009_bent_err() 
 {
    const Int_t n = 10;
    Double_t x[n]  = {-0.22, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};

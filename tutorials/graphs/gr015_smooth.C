@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Macro to test scatterplot smoothers: ksmooth, lowess, supsmu
+/// Show scatter plot smoothers: ksmooth, lowess, supsmu,
 /// as described in:
 ///
 ///      Modern Applied Statistics with S-Plus, 3rd Edition
@@ -9,11 +9,11 @@
 ///      Chapter 9: Smooth Regression, Figure 9.1
 ///
 /// Example is a set of data on 133 observations of acceleration against time
-/// for a simulated motorcycle accident, taken from Silverman (1985).
+/// for a simulated motorcycle accident, taken from Silverman (1985). The data
+/// are read from motorcycle.dat (2 columns of floats)
 ///
 /// \macro_image
 /// \macro_code
-///
 /// \author Christian Stratowa, Vienna, Austria
 
 #include "TString.h"
@@ -40,7 +40,7 @@ void DrawSmooth(Int_t pad, const char *title, const char *xt, const char *yt)
    grout->DrawClone("LPX");
 }
 
-void motorcycle()
+void gr015_smooth()
 {
 // data taken from R library MASS: mcycle.txt
    TString dir = gROOT->GetTutorialDir();

@@ -10,7 +10,7 @@
 /// \note For this to work, ROOT has to be compiled with gviz ON
 /// \author Olivier Couet
 
-TCanvas* graphstruct()
+TCanvas* gr016_struct()
 {
    #if __has_include("TGraphStruct.h") // handy check on whether gviz was installed
    TGraphStruct *gs = new TGraphStruct();

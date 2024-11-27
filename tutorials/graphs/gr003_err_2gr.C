@@ -1,15 +1,23 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook -js
-/// Draw two graphs with error bars
+/// Create and draw two graphs with error bars, superposed on the same canvas
+///
+/// We first draw an empty frame with the axes, then draw the graphs on top of it
+/// Note that the graphs should have the same or very close ranges (in both axis),
+/// otherwise they may not be visible in the frame.
+///
+/// Alternatively, an automatic axis scaling can be achieved via a
+/// [TMultiGraph](https://root.cern/doc/master/classTMultiGraph.html)
+///
+/// See the [TGraphErrors documentation](https://root.cern/doc/master/classTGraphErrors.html)
 ///
 /// \macro_image
 /// \macro_code
-///
 /// \author Rene Brun
 
-void gerrors2() {
-   TCanvas *c1 = new TCanvas("c1","gerrors2",200,10,700,500);
+void gr003_err_2gr() {
+   TCanvas *c1 = new TCanvas("c1","2 graphs with errors",200,10,700,500);
    c1->SetGrid();
 
    // draw a frame to define the range
@@ -19,14 +27,17 @@ void gerrors2() {
    c1->GetFrame()->SetBorderSize(12);
 
    // create first graph
+   // We will use the constructor requiring: the number of points, arrays containing the x-and y-axis values, and arrays with the x- andy-axis errors
    const Int_t n1 = 10;
    Double_t xval1[]  = {-0.22, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
    Double_t yval1[]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
    Double_t ex1[] = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
    Double_t ey1[] = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
+   // If all x-axis errors should zero, just provide a single 0 in place of ex1
    TGraphErrors *gr1 = new TGraphErrors(n1,xval1,yval1,ex1,ey1);
    gr1->SetMarkerColor(kBlue);
    gr1->SetMarkerStyle(21);
+   // Since we already have a frame in the canvas, we draw the graph without the option "A" (which draws axes for this graph)
    gr1->Draw("LP");
 
    // create second graph

@@ -4,8 +4,8 @@
 The histograms and graphs plotting options are described in details in the THistPainter and TGraphPainter classes.
 Some related  tutorials:
 
-  - graph.C: Using and drawing a simple TGraph.
-  - graph2derrorsfit.C: TGraph2D with errors drawing.
+  - gr001_basic.C: Using and drawing a simple TGraph.
+  - gr011_2Derrorsfit.C: TGraph2D with errors drawing.
   - h1draw.C: Drawing Options for 1D Histograms.
   - hbars.C: Demo of option bar with histograms.
   - hsimple.C: Simple drawing of a 1D Histograms.
