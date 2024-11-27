@@ -68,6 +68,7 @@ class RDisplay {
 public:
    enum class EPrintFormat {
       kMarkdown,   
+      kHtml
    };
    
    struct RPrintOptions {
@@ -298,8 +299,9 @@ private:
 
    void EnsureCurrentColumnWidth(size_t w);
 
-   std::string AsStringMarkdown(bool considerDots) const;
    std::string AsStringInternal(bool considerDots, const RPrintOptions &options = { EPrintFormat::kMarkdown }) const;
+   std::string AsStringMarkdown(bool considerDots) const;
+   std::string AsStringHtml() const;
 
 public:
    ////////////////////////////////////////////////////////////////////////////
