@@ -77,10 +77,10 @@ endif()
 
 if(MSVC AND NOT win_broken_tests)
   # RBatchGenerator tutorials don't work on Windows at the moment.
-  list(APPEND dataframe_veto tmva/RBatchGenerator_NumPy.py)
-  list(APPEND dataframe_veto tmva/RBatchGenerator_TensorFlow.py)
-  list(APPEND dataframe_veto tmva/RBatchGenerator_PyTorch.py)
-  list(APPEND dataframe_veto tmva/RBatchGenerator_filters_vectors.py)
+  list(APPEND dataframe_veto machine_learning/RBatchGenerator_NumPy.py)
+  list(APPEND dataframe_veto machine_learning/RBatchGenerator_TensorFlow.py)
+  list(APPEND dataframe_veto machine_learning/RBatchGenerator_PyTorch.py)
+  list(APPEND dataframe_veto machine_learning/RBatchGenerator_filters_vectors.py)
   # df036* and df037* seem to trigger OS errors when trying to delete the
   # test files created in the tutorials. It is unclear why.
   list(APPEND dataframe_veto analysis/dataframe/df036_missingBranches.C)
@@ -103,14 +103,14 @@ if (NOT dataframe)
     # RDataFrame tutorial in graphs
     list(APPEND dataframe_veto graphs/timeSeriesFromCSV_TDF.C)
     # TMVA tutorials dependent on RDataFrame
-    list(APPEND dataframe_veto tmva/tmva*.C)
-    list(APPEND dataframe_veto tmva/TMVA_SOFIE_RDataFrame*.C)
-    list(APPEND dataframe_veto tmva/TMVA_SOFIE_RDataFrame*.py)
-    list(APPEND dataframe_veto tmva/TMVA_SOFIE_Inference.py)
-    list(APPEND dataframe_veto tmva/RBatchGenerator_NumPy.py)
-    list(APPEND dataframe_veto tmva/RBatchGenerator_TensorFlow.py)
-    list(APPEND dataframe_veto tmva/RBatchGenerator_PyTorch.py)
-    list(APPEND dataframe_veto tmva/RBatchGenerator_filters_vectors.py)
+    list(APPEND dataframe_veto machine_learning/tmva*.C)
+    list(APPEND dataframe_veto machine_learning/TMVA_SOFIE_RDataFrame*.C)
+    list(APPEND dataframe_veto machine_learning/TMVA_SOFIE_RDataFrame*.py)
+    list(APPEND dataframe_veto machine_learning/TMVA_SOFIE_Inference.py)
+    list(APPEND dataframe_veto machine_learning/RBatchGenerator_NumPy.py)
+    list(APPEND dataframe_veto machine_learning/RBatchGenerator_TensorFlow.py)
+    list(APPEND dataframe_veto machine_learning/RBatchGenerator_PyTorch.py)
+    list(APPEND dataframe_veto machine_learning/RBatchGenerator_filters_vectors.py)
     # RooFit tutorial depending on RDataFrame
     list(APPEND dataframe_veto roofit/rf408*)
 endif()
@@ -181,7 +181,7 @@ if(NOT xrootd)
                   analysis/dataframe/df102_NanoAODDimuonAnalysis.C
                   analysis/dataframe/df103_NanoAODHiggsAnalysis.C
                   analysis/dataframe/df106_HiggsToFourLeptons.C
-                  tmva/tmva103_Application.C
+                  machine_learning/tmva103_Application.C
                   analysis/dataframe/df033_Describe.py
                   analysis/dataframe/df102_NanoAODDimuonAnalysis.py
                   analysis/dataframe/df103_NanoAODHiggsAnalysis.py
@@ -291,15 +291,15 @@ if (NOT webgui)
 endif()
 
 if (NOT ROOT_tmva_FOUND)
-  list(APPEND tmva_veto tmva/*.C tmva/*.py tmva/envelope/*.C tmva/keras/*.C tmva/keras/*.py tmva/pytorch/*.py )
+  list(APPEND tmva_veto machine_learning/*.C machine_learning/*.py machine_learning/envelope/*.C machine_learning/keras/*.C machine_learning/keras/*.py machine_learning/pytorch/*.py )
 else()
   #---These do not need to run for TMVA
-  list(APPEND tmva_veto tmva/createData.C)
+  list(APPEND tmva_veto machine_learning/createData.C)
   if(MSVC AND NOT win_broken_tests)
-    list(APPEND tmva_veto tmva/envelope/classification.C)
+    list(APPEND tmva_veto machine_learning/envelope/classification.C)
   endif()
   #these depends on external packages
-  if (tmva-pymva)
+  if (machine_learning-pymva)
     find_python_module(torch QUIET)
     find_python_module(keras QUIET)
     find_python_module(sonnet QUIET)
@@ -307,34 +307,34 @@ else()
     find_python_module(sklearn QUIET)
   endif()
   if (NOT PY_KERAS_FOUND)
-    list(APPEND tmva_veto tmva/TMVA_SOFIE_Keras.C)
-    list(APPEND tmva_veto tmva/TMVA_SOFIE_Keras_HiggsModel.C)
-    list(APPEND tmva_veto tmva/TMVA_SOFIE_RDataFrame.C)
-    list(APPEND tmva_veto tmva/TMVA_SOFIE_RDataFrame.py)
-    list(APPEND tmva_veto tmva/TMVA_SOFIE_RDataFrame_JIT.C)
-    list(APPEND tmva_veto tmva/TMVA_SOFIE_Models.py)
-    list(APPEND tmva_veto tmva/TMVA_SOFIE_Inference.py)
-    list(APPEND tmva_veto tmva/TMVA_SOFIE_RSofieReader.C)
-    list(APPEND tmva_veto tmva/RBatchGenerator_TensorFlow.py)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Keras.C)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Keras_HiggsModel.C)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.C)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.py)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame_JIT.C)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Models.py)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Inference.py)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
+    list(APPEND tmva_veto machine_learning/RBatchGenerator_TensorFlow.py)
   endif()
   if (NOT PY_SKLEARN_FOUND)
-    list(APPEND tmva_veto tmva/TMVA_SOFIE_Models.py)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Models.py)
   endif()
   if (NOT PY_TORCH_FOUND)
-    list(APPEND tmva_veto tmva/TMVA_SOFIE_PyTorch.C)
-    list(APPEND tmva_veto tmva/RBatchGenerator_PyTorch.py)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_PyTorch.C)
+    list(APPEND tmva_veto machine_learning/RBatchGenerator_PyTorch.py)
   endif()
   #veto this tutorial since it is added directly
-  list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN_Parser.py)
+  list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN_Parser.py)
   if (NOT PY_SONNET_FOUND OR NOT PY_GRAPH_NETS_FOUND)
-    list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN.py)
-    list(APPEND tmva_veto tmva/TMVA_SOFIE_GNN_Application.C)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN.py)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_GNN_Application.C)
   endif()
-  if (NOT tmva-sofie)
-    list(APPEND tmva_veto tmva/TMVA_SOFIE_ONNX.C)
+  if (NOT machine_learning-sofie)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_ONNX.C)
   else()
     #copy ONNX file needed for the tutorial
-    configure_file(${CMAKE_SOURCE_DIR}/tmva/sofie/test/input_models/Linear_16.onnx ${CMAKE_BINARY_DIR}/tutorials/tmva/Linear_16.onnx COPYONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/machine_learning/sofie/test/input_models/Linear_16.onnx ${CMAKE_BINARY_DIR}/tutorials/machine_learning/Linear_16.onnx COPYONLY)
   endif()
 
 endif()
@@ -568,35 +568,35 @@ foreach(tname histfactory-hf001_example
 endforeach()
 
 #--dependency for TMVA tutorials
-set (tmva-TMVAClassificationApplication-depends tutorial-tmva-TMVAClassification)
-set (tmva-TMVAClassificationCategory-depends tutorial-tmva-TMVAClassification)
-set (tmva-TMVAClassificationCategoryApplication-depends tutorial-tmva-TMVAClassificationCategory)
-set (tmva-TMVAMulticlass-depends tutorial-tmva-TMVAMultipleBackgroundExample)
-set (tmva-TMVAMulticlassApplication-depends tutorial-tmva-TMVAMulticlass)
-set (tmva-TMVARegressionApplication-depends tutorial-tmva-TMVARegression)
-set (tmva-TMVACrossValidationRegression-depends tutorial-tmva-TMVARegressionApplication)
-set (tmva-TMVACrossValidationApplication-depends tutorial-tmva-TMVACrossValidation)
-set (tmva-tmva101_Training-depends tutorial-tmva-tmva100_DataPreparation-py)
-set (tmva-tmva102_Testing-depends tutorial-tmva-tmva101_Training-py)
-set (tmva-tmva003_RReader-depends tutorial-tmva-TMVAClassification)
-set (tmva-tmva004_RStandardScaler-depends tutorial-tmva-tmva003_RReader)
+set (machine_learning-TMVAClassificationApplication-depends tutorial-machine_learning-TMVAClassification)
+set (machine_learning-TMVAClassificationCategory-depends tutorial-machine_learning-TMVAClassification)
+set (machine_learning-TMVAClassificationCategoryApplication-depends tutorial-machine_learning-TMVAClassificationCategory)
+set (machine_learning-TMVAMulticlass-depends tutorial-machine_learning-TMVAMultipleBackgroundExample)
+set (machine_learning-TMVAMulticlassApplication-depends tutorial-machine_learning-TMVAMulticlass)
+set (machine_learning-TMVARegressionApplication-depends tutorial-machine_learning-TMVARegression)
+set (machine_learning-TMVACrossValidationRegression-depends tutorial-machine_learning-TMVARegressionApplication)
+set (machine_learning-TMVACrossValidationApplication-depends tutorial-machine_learning-TMVACrossValidation)
+set (machine_learning-tmva101_Training-depends tutorial-machine_learning-tmva100_DataPreparation-py)
+set (machine_learning-tmva102_Testing-depends tutorial-machine_learning-tmva101_Training-py)
+set (machine_learning-tmva003_RReader-depends tutorial-machine_learning-TMVAClassification)
+set (machine_learning-tmva004_RStandardScaler-depends tutorial-machine_learning-tmva003_RReader)
 if (PY_TORCH_FOUND)
-  set (tmva-pytorch-ApplicationClassificationPyTorch-depends tutorial-tmva-pytorch-ClassificationPyTorch-py)
-  set (tmva-pytorch-RegressionPyTorch-depends tutorial-tmva-pytorch-ApplicationClassificationPyTorch-py)
-  set (tmva-pytorch-ApplicationRegressionPyTorch-depends tutorial-tmva-pytorch-RegressionPyTorch-py)
+  set (machine_learning-pytorch-ApplicationClassificationPyTorch-depends tutorial-machine_learning-pytorch-ClassificationPyTorch-py)
+  set (machine_learning-pytorch-RegressionPyTorch-depends tutorial-machine_learning-pytorch-ApplicationClassificationPyTorch-py)
+  set (machine_learning-pytorch-ApplicationRegressionPyTorch-depends tutorial-machine_learning-pytorch-RegressionPyTorch-py)
 endif()
 if (PY_KERAS_FOUND)
-  set (tmva-TMVA_SOFIE_RSofieReader-depends tutorial-tmva-TMVA_Higgs_Classification)
-  set (tmva-TMVA_SOFIE_RDataFrame_JIT-depends tutorial-tmva-TMVA_SOFIE_RSofieReader)
-  set (tmva-TMVA_SOFIE_Keras_HiggsModel-depends tutorial-tmva-TMVA_SOFIE_RDataFrame_JIT)
-  set (tmva-TMVA_SOFIE_RDataFrame-depends tutorial-tmva-TMVA_SOFIE_Keras_HiggsModel)
-  set (tmva-TMVA_SOFIE_Inference-depends tutorial-tmva-TMVA_SOFIE_RDataFrame)
+  set (machine_learning-TMVA_SOFIE_RSofieReader-depends tutorial-machine_learning-TMVA_Higgs_Classification)
+  set (machine_learning-TMVA_SOFIE_RDataFrame_JIT-depends tutorial-machine_learning-TMVA_SOFIE_RSofieReader)
+  set (machine_learning-TMVA_SOFIE_Keras_HiggsModel-depends tutorial-machine_learning-TMVA_SOFIE_RDataFrame_JIT)
+  set (machine_learning-TMVA_SOFIE_RDataFrame-depends tutorial-machine_learning-TMVA_SOFIE_Keras_HiggsModel)
+  set (machine_learning-TMVA_SOFIE_Inference-depends tutorial-machine_learning-TMVA_SOFIE_RDataFrame)
   if (PY_TORCH_FOUND)
-    set (tmva-keras-RegressionKeras-depends tutorial-tmva-pytorch-RegressionPyTorch-py)
-    set (tmva-keras-ClassificationKeras-depends tutorial-tmva-pytorch-ClassificationPyTorch-py)
+    set (machine_learning-keras-RegressionKeras-depends tutorial-machine_learning-pytorch-RegressionPyTorch-py)
+    set (machine_learning-keras-ClassificationKeras-depends tutorial-machine_learning-pytorch-ClassificationPyTorch-py)
   endif()
-  set (tmva-keras-ApplicationRegressionKeras-depends tutorial-tmva-keras-RegressionKeras-py)
-  set (tmva-keras-ApplicationClassificationKeras-depends tutorial-tmva-keras-ClassificationKeras-py)
+  set (machine_learning-keras-ApplicationRegressionKeras-depends tutorial-machine_learning-keras-RegressionKeras-py)
+  set (machine_learning-keras-ApplicationClassificationKeras-depends tutorial-machine_learning-keras-ClassificationKeras-py)
 endif()
 
 #--List long-running tutorials to label them as "longtest"
@@ -613,13 +613,13 @@ set (multithreaded_all_cores
 set (multithreaded
      ${multithreaded_all_cores}
      multicore/mp103*
-     tmva/TMVAMulticlass.C
-     tmva/TMVA_CNN_Classification.C
-     tmva/TMVA_Higgs_Classification.C
-     tmva/TMVA_RNN_Classification.C
-     tmva/TMVA_CNN_Classification.py
-     tmva/TMVA_Higgs_Classification.py
-     tmva/TMVA_RNN_Classification.py
+     machine_learning/TMVAMulticlass.C
+     machine_learning/TMVA_CNN_Classification.C
+     machine_learning/TMVA_Higgs_Classification.C
+     machine_learning/TMVA_RNN_Classification.C
+     machine_learning/TMVA_CNN_Classification.py
+     machine_learning/TMVA_Higgs_Classification.py
+     machine_learning/TMVA_RNN_Classification.py
      )
 file(GLOB multithreaded_all_cores RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded_all_cores})
 file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})
@@ -635,10 +635,10 @@ if(ROOT_geom_FOUND)
 endif()
 # define Python GNN parsing tutorial needed to run before
 if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
-  ROOT_ADD_TEST(tutorial-tmva-TMVA_SOFIE_GNN_Parser COMMAND ${Python3_EXECUTABLE}
-  ${CMAKE_CURRENT_SOURCE_DIR}/tmva/TMVA_SOFIE_GNN_Parser.py
+  ROOT_ADD_TEST(tutorial-machine_learning-TMVA_SOFIE_GNN_Parser COMMAND ${Python3_EXECUTABLE}
+  ${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/TMVA_SOFIE_GNN_Parser.py
   PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
-  set (tmva-TMVA_SOFIE_GNN_Application-depends tutorial-tmva-TMVA_SOFIE_GNN_Parser)
+  set (machine_learning-TMVA_SOFIE_GNN_Application-depends tutorial-machine_learning-TMVA_SOFIE_GNN_Parser)
 endif()
 
 #---Loop over all tutorials and define the corresponding test---------
@@ -794,30 +794,30 @@ if(ROOT_pyroot_FOUND)
 
   find_python_module(xgboost QUIET)
   if(NOT PY_XGBOOST_FOUND OR NOT dataframe)
-    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/tmva10*.py)
+    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/tmva10*.py)
     list(APPEND pyveto ${tmva_veto_py})
   endif()
 
   if(NOT PY_KERAS_FOUND)
-    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/keras/*.py)
+    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/keras/*.py)
     list(APPEND pyveto ${tmva_veto_py})
   elseif(ROOT_ARCHITECTURE MATCHES macosx)
     #veto also keras tutorial on macos due to issue in disabling eager execution on macos
-    list(APPEND pyveto tmva/keras/RegressionKeras.py)
-    list(APPEND pyveto tmva/keras/ApplicationRegressionKeras.py)
-    list(APPEND pyveto tmva/keras/MultiClassKeras.py)
+    list(APPEND pyveto machine_learning/keras/RegressionKeras.py)
+    list(APPEND pyveto machine_learning/keras/ApplicationRegressionKeras.py)
+    list(APPEND pyveto machine_learning/keras/MultiClassKeras.py)
   endif()
 
   if (PY_KERAS_FOUND)
-    set (tmva-TMVA_SOFIE_RDataFrame-py-depends tutorial-tmva-TMVA_SOFIE_Keras_HiggsModel)
+    set (machine_learning-TMVA_SOFIE_RDataFrame-py-depends tutorial-machine_learning-TMVA_SOFIE_Keras_HiggsModel)
   endif()
 
   if(NOT PY_TORCH_FOUND)
-    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/pytorch/*.py)
+    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/pytorch/*.py)
     list(APPEND pyveto ${tmva_veto_py})
   endif()
   # disable PyTorch model file used by TMVA_CNN_Classification.C
-  list(APPEND pyveto tmva/PyTorch_Generate_CNN_Model.py)
+  list(APPEND pyveto machine_learning/PyTorch_Generate_CNN_Model.py)
 
   if(NOT ROOT_geom_FOUND)
     list(APPEND pyveto pyroot/geometry.py)
@@ -850,9 +850,9 @@ if(ROOT_pyroot_FOUND)
   # Avoid a race condition: make sure Python tutorial is run after C++ tutorial
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory)
   set(roofit-rf512_wsfactory_oper-depends tutorial-roofit-rf512_wsfactory_oper)
-  set (tmva-TMVA_Higgs_Classification-depends tutorial-tmva-TMVA_Higgs_Classification)
-  set (tmva-TMVA_CNN_Classification-depends tutorial-tmva-TMVA_CNN_Classification)
-  set (tmva-TMVA_RNN_Classification-depends tutorial-tmva-TMVA_RNN_Classification)
+  set (machine_learning-TMVA_Higgs_Classification-depends tutorial-machine_learning-TMVA_Higgs_Classification)
+  set (machine_learning-TMVA_CNN_Classification-depends tutorial-machine_learning-TMVA_CNN_Classification)
+  set (machine_learning-TMVA_RNN_Classification-depends tutorial-machine_learning-TMVA_RNN_Classification)
 
   #----------------------------------------------------------------------
   # List requirements for python tutorials.
@@ -868,9 +868,9 @@ if(ROOT_pyroot_FOUND)
   file(GLOB requires_pandas  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       analysis/dataframe/df026_AsNumpyArrays.py
       roofit/rf409_NumPyPandasToRooFit.py)
-  file(GLOB requires_keras   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/keras/*.py)
-  file(GLOB requires_torch   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/pytorch/*.py)
-  file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/tmva10*.py)
+  file(GLOB requires_keras   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/keras/*.py)
+  file(GLOB requires_torch   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/pytorch/*.py)
+  file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/tmva10*.py)
   set(fixtureLists requires_numpy requires_numba requires_pandas requires_keras requires_xgboost requires_torch)
 
   # Now set up all the tests
