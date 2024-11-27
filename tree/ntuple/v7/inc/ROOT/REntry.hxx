@@ -134,13 +134,26 @@ private:
       }
    }
 
+   /// This function has linear complexity, only use for more helpful error messages!
+   const std::string &FindFieldName(RFieldToken token) const
+   {
+      for (const auto &[fieldName, index] : fFieldName2Token) {
+         if (index == token.fIndex) {
+            return fieldName;
+         }
+      }
+      // Should never happen, but avoid compiler warning about "returning reference to local temporary object".
+      static const std::string empty = "";
+      return empty;
+   }
+
    template <typename T>
    void EnsureMatchingType(RFieldToken token [[maybe_unused]]) const
    {
       if constexpr (!std::is_void_v<T>) {
          const auto &v = fValues[token.fIndex];
          if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
-            throw RException(R__FAIL("type mismatch for field " + v.GetField().GetQualifiedFieldName() + ": " +
+            throw RException(R__FAIL("type mismatch for field " + FindFieldName(token) + ": " +
                                      v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
          }
       }
