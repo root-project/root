@@ -26,9 +26,10 @@ class TDirectory;
 #include "RooAbsData.h"
 #include "RooDirItem.h"
 
-#include <string_view>
+#include <ROOT/RConfig.hxx> // for R__DEPRECATED
 
 #include <list>
+#include <string_view>
 
 class RooDataSet : public RooAbsData, public RooDirItem {
 public:
@@ -43,9 +44,11 @@ public:
 
     // Constructor for subset of existing dataset
   RooDataSet(RooStringView name, RooStringView title, RooDataSet *data, const RooArgSet& vars,
-             const char *cuts=nullptr, const char* wgtVarName=nullptr);
+             const char *cuts=nullptr, const char* wgtVarName=nullptr)
+  R__DEPRECATED(6,38, "Use RooAbsData::reduce(), or if you need to change the weight column, the universal constructor with the Import(), Cut(), and WeightVar() arguments.");
   RooDataSet(RooStringView name, RooStringView title, RooDataSet *data, const RooArgSet& vars,
-             const RooFormulaVar& cutVar, const char* wgtVarName=nullptr) ;
+             const RooFormulaVar& cutVar, const char* wgtVarName=nullptr)
+  R__DEPRECATED(6,38, "Use RooAbsData::reduce(), or if you need to change the weight column, the universal constructor with the Import(), Cut(), and WeightVar() arguments.");
 
   RooDataSet(RooDataSet const & other, const char* newname=nullptr) ;
   TObject* Clone(const char* newname = "") const override {

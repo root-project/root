@@ -2530,11 +2530,10 @@ public:
       RooFormulaVar wFunc("w", "event weight", "(x*x+10)", x);
 
       // Add column with variable w to previously generated dataset
-      RooRealVar *w = (RooRealVar *)data->addColumn(wFunc);
+      data->addColumn(wFunc);
 
       // Instruct dataset d in interpret w as event weight rather than as observable
-      RooDataSet dataw(data->GetName(), data->GetTitle(), data.get(), *data->get(), nullptr, w->GetName());
-      // data->setWeightVar(*w) ;
+      RooDataSet dataw{data->GetName(), data->GetTitle(), *data->get(), Import(*data), WeightVar("w")};
 
       // U n b i n n e d   M L   f i t   t o   w e i g h t e d   d a t a
       // ---------------------------------------------------------------
