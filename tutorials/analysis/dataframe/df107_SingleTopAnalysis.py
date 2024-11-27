@@ -209,10 +209,10 @@ stack = ROOT.THStack()
 wjets.Scale(1.1) # Corrected normalization derived from a validation region
 for h, color in zip(
         [wjets, twtb, singletop],
-        [(222, 90, 106), (155, 152, 204), (208, 240, 193)]):
+        [(0.87, 0.35, 0.42), (0.61, 0.6, 0.8), (0.82, 0.94, 0.76)]):
     h.SetLineWidth(1)
     h.SetLineColor("black")
-    h.SetFillColor(ROOT.TColor.GetColor(*color))
+    h.SetFillColor(color)
     stack.Add(h)
 stack.Draw("HIST")
 stack.GetXaxis().SetTitle("m_{W(l#nu)+b} [GeV]")
