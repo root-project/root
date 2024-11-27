@@ -22,7 +22,6 @@ class loc:
         self.offset = 0 
 
     def __add__(self, add_value):
-        print("loc add")
         self.offset = self.offset + add_value
         return self
 
@@ -39,6 +38,14 @@ def underflow(histogram):
 def overflow(histogram):
     return histogram.GetNcells() - 1
 
+class rebin:
+    def __init__(self, ngroup, new_name = ""):
+        self.ngroup = ngroup
+        self.new_name = new_name
+
+    def __call__(self, histogram):
+        return histogram.Rebin(self.ngroup, self.new_name)
+
 ## ------------------------------------------------
 ## ------------------------------------------------
 
@@ -46,6 +53,7 @@ def add_uhi_helper(module):
     module.loc = loc
     module.underflow = underflow
     module.overflow = overflow
+    module.rebin = rebin
 
 class PyROOTConfiguration(object):
     """Class for configuring PyROOT"""
