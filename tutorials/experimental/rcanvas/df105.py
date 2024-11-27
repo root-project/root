@@ -191,10 +191,10 @@ frame.drawAxes = True
 stack = ROOT.THStack()
 for h, color in zip(
         [singletop, diboson, ttbar, zjets, wjets],
-        [(208, 240, 193), (195, 138, 145), (155, 152, 204), (248, 206, 104), (222, 90, 106)]):
+        [(0.82, 0.94, 0.76), (0.76, 0.54, 0.57), (0.61, 0.6, 0.8), (0.97, 0.81, 0.41), (0.87, 0.35, 0.42)]):
     h.SetLineWidth(1)
     h.SetLineColor("black")
-    h.SetFillColor(ROOT.TColor.GetColor(*color))
+    h.SetFillColor(color)
     stack.Add(h)
 c.Add[TObjectDrawable]().Set(stack, "HIST SAME")
 
