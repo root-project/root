@@ -18,7 +18,7 @@ R__LOAD_LIBRARY($ROOTSYS/test/libEvent.dll)
 R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
 #endif
 
-void copytree2()
+void tree111_copy()
 {
 
    TString dir = "$ROOTSYS/test/Event.root";
