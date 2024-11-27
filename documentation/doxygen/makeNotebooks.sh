@@ -48,9 +48,9 @@ foam/foam_demopers.C   foam/foam_demo.C
 tree/staff.C   tree/cernbuild.C
 tree/cernstaff.C   tree/cernbuild.C
 hist/hbars.C   tree/cernbuild.C
-pyroot/ntuple1.py   pyroot/hsimple.py
-pyroot/h1draw.py   pyroot/hsimple.py
-pyroot/fit1.py   pyroot/fillrandom.py
+tree/ntuple1.py   hsimple.py
+pyroot/h1draw.py   hsimple.py
+fit/fit1.py   hist/fillrandom.py
 tmva/TMVAClassificationApplication.C   tmva/TMVAClassification.C
 tmva/TMVAClassificationCategory.C   tmva/TMVAClassification.C
 tmva/TMVAClassificationCategoryApplication.C   tmva/TMVAClassificationCategory.C
