@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## Special pdf's: using a product of an (acceptance) efficiency and a pdf as pdf
 ##

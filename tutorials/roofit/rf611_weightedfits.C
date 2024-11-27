@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Likelihood and minimization: Parameter uncertainties for weighted unbinned ML fits
 ///

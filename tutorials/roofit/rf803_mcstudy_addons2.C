@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Validation and MC studies: RooMCStudy - Using the randomizer and profile likelihood add-on models
 ///

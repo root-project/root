@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #510
 ##

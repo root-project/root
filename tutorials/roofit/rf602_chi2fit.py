@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #602
 ##

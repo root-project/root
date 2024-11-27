@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Basic functionality: Calculating chi^2 from histograms and curves in RooPlots, making
 /// histogram of residual and pull distributions

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// A tutorial that explains you how to solve problems with binning effects and
 /// numerical stability in binned fits.

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Basic functionality: adding boxes with parameters, statistics to RooPlots, decorating with arrows, text etc...
 ///

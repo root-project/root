@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook -nodraw
 ## Organization and simultaneous fits: basic use of the 'object factory' associated with a
 ## workspace to rapidly build pdfs functions and their parameter components

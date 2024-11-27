@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Organisation and simultaneous fits: using simultaneous pdfs to describe simultaneous
 /// fits to multiple datasets

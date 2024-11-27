@@ -1,4 +1,4 @@
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ##
 ## 'VALIDATION AND MC STUDIES' RooFit tutorial macro #804

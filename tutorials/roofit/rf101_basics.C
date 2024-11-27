@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Basic functionality: fitting, plotting, toy data generation on one-dimensional PDFs.
 ///

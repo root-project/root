@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -nodraw
 /// Multidimensional models: performing fits in multiple (disjoint) ranges in one or more dimensions
 ///

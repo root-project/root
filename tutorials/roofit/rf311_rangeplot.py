@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## Multidimensional models: projecting pdf and data ranges in continuous observables
 ##

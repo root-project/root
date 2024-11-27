@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Basic functionality: normalization and integration of pdfs, construction of cumulative distribution
 /// monodimensional functions

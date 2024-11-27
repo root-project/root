@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -nodraw
 /// Using the RooCustomizer to create multiple PDFs that share a lot of properties, but have unique parameters for each category.
 /// As an extra complication, some of the new parameters need to be functions

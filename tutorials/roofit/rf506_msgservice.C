@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -nodraw
 /// Organisation and simultaneous fits: tuning and customizing the RooFit message logging facility
 ///

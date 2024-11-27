@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #211
 ## Working a with a p.d.f. with a convolution operator in terms

@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook -nodraw
 ## Data and categories: demonstration of discrete-discrete (invertable) functions
 ##

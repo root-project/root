@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook -nodraw
 ## Organization and simultaneous fits: illustration use of ROOT.RooCustomizer and
 ## ROOT.RooSimWSTool interface in factory workspace tool in a complex standalone B physics example

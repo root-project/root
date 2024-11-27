@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -nodraw
 /// Likelihood and minimization: setting up a chi^2 fit to a binned dataset
 ///

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Basic functionality: numerical 1st,2nd and 3rd order derivatives w.r.t. observables and parameters
 ///

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Validation and MC studies: toy Monte Carlo study that perform cycles of event generation and fitting
 ///

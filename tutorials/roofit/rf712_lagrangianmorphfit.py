@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook -js
 ## Performing a simple fit with RooLagrangianMorphFunc
 ##

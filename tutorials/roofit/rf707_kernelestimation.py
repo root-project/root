@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## Special pdf's: using non-parametric (multi-dimensional) kernel estimation pdfs
 ##

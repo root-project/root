@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook
 /// Addition and convolution: working with a pdf with a convolution operator in terms of a parameter
 ///

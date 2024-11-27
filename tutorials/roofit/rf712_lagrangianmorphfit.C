@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Performing a simple fit with RooLagrangianMorphFunc.
 /// a morphing function is setup as a function of three variables and

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook
 /// Special pdf's: linear interpolation between pdf shapes using the 'Alex Read' algorithm
 ///

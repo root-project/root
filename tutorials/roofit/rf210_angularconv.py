@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## Convolution in cyclical angular observables theta, and
 ## construction of p.d.f in terms of transformed angular

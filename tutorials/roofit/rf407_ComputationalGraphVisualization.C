@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -nodraw
 /// Data and categories: Visualing computational graph model before fitting, and latex printing of lists and sets of RooArgSets after fitting
 ///

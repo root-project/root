@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## Basic functionality: examples on normalization and integration of pdfs, construction
 ## of cumulative distribution functions from monodimensional pdfs

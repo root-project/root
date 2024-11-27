@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -nodraw
 /// Organization and simultaneous fits: RooCustomizer and RooSimWSTool interface in factory
 /// workspace tool in a complex standalone B physics example

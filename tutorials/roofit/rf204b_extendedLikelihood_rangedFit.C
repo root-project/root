@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -nodraw
 /// This macro demonstrates how to set up a fit in two ranges for plain
 /// likelihoods and extended likelihoods.

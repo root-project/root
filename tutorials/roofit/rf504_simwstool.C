@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -nodraw
 /// Organisation and simultaneous fits: using RooSimWSTool to construct a simultaneous pdf
 /// that is built of variations of an input pdf

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Validation and MC studies:
 /// RooMCStudy - using separate fit and generator models, using the chi^2 calculator model

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -nodraw
 /// Organization and simultaneous fits: RooArgSet and RooArgList tools and tricks
 ///

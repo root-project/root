@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## 'SPECIAL PDFS' RooFit tutorial macro #705
 ##

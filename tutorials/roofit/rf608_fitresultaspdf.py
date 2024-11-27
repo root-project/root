@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## Likelihood and minimization: representing the parabolic approximation of the fit as a
 ## multi-variate Gaussian on the parameters of the fitted pdf

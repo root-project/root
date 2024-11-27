@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## Basic functionality: adding boxes with parameters to RooPlots and decorating with arrows, etc...
 ##

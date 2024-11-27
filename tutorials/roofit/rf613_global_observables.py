@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook -js
 ## This tutorial explains the concept of global observables in RooFit, and
 ## showcases how their values can be stored either in the model or in the

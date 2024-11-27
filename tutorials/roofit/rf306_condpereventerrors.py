@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## Multidimensional models: complete example with use of conditional pdf with per-event errors
 ##

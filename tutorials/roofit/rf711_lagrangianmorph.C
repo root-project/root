@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Morphing effective field theory distributions with RooLagrangianMorphFunc
 /// A morphing function as a function of one coefficient is setup and can be used

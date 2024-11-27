@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Special pdf's: unbinned maximum likelihood fit of an efficiency eff(x) function
 ///

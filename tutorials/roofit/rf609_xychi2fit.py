@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## Likelihood and minimization: setting up a chi^2 fit to an unbinned dataset with X,Y,err(Y)
 ## values (and optionally err(X) values)

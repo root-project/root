@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #208
 ## One-dimensional numeric convolution

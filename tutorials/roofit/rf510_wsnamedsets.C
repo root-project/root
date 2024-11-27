@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Organization and simultaneous fits: working with named parameter sets and parameter
 /// snapshots in workspaces

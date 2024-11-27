@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook
 /// Special pdf's: unbinned maximum likelihood fit of an efficiency eff(x) function
 /// to a dataset D(x,cut), cut is a category encoding a selection whose efficiency as function

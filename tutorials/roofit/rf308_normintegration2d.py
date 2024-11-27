@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## Multidimensional models: normalization and  integration of pdfs, construction of
 ## cumulative distribution functions from pdfs in two dimensions

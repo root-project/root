@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## Use Simulation Based Inference (SBI) in multiple dimensions in RooFit.
 ##

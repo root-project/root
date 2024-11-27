@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook
 /// Multidimensional models: multi-dimensional pdfs with conditional pdfs in product
 ///

@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## Addition and convolution: decay function pdfs with optional B physics effects (mixing
 ## and CP violation) that can be analytically convolved with e.g. Gaussian resolution functions

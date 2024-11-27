@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## Multidimensional models: simple uncorrelated multi-dimensional pdfs
 ##

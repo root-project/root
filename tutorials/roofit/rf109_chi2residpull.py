@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## 'BASIC FUNCTIONALITY' RooFit tutorial macro #109
 ## Calculating chi^2 from histograms and curves in ROOT.RooPlots,

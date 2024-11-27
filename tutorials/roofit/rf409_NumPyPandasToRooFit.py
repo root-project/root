@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## Convert between NumPy arrays or Pandas DataFrames and RooDataSets.
 ##

@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## Multidimensional models: multi-dimensional pdfs through composition, e.g. substituting
 ## a pdf parameter with a function that depends on other observables

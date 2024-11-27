@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook -js
 ## Implementing the Barlow-Beeston method for taking into account the statistical
 ## uncertainty of a Monte-Carlo fit template.

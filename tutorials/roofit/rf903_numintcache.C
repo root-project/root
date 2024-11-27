@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Numeric algorithm tuning: caching of slow numeric integrals and parameterization of slow numeric integrals
 ///

@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #303
 ## Use of tailored p.d.f as conditional p.d.fs.s

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Multidimensional models: working with parametrized ranges to define non-rectangular
 /// regions for fitting and integration

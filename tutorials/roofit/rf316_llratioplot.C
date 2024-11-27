@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_roofit
+/// \ingroup tutorial_roofitcore
 /// \notebook -js
 /// Multidimensional models: using the likelihood ratio technique to construct a signal
 /// enhanced one-dimensional projection of a multi-dimensional pdf

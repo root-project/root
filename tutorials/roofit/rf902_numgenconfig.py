@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook -nodraw
 ## Numeric algorithm tuning: configuration and customization of how MC sampling algorithms
 ## on specific pdfs are executed

@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## 'BASIC FUNCTIONALITY' RooFit tutorial macro #105
 ## Demonstration of binding ROOT Math functions as RooFit functions

@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## 'DATA AND CATEGORIES' RooFit tutorial macro #403
 ##

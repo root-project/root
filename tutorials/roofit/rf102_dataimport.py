@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_roofit
+## \ingroup tutorial_roofitcore
 ## \notebook
 ## 'BASIC FUNCTIONALITY' RooFit tutorial macro #102
 ## Importing data from ROOT TTrees and THx histograms
