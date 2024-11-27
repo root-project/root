@@ -17,24 +17,25 @@
 #include "TParallelCoordVar.h"
 #include "TParallelCoordRange.h"
 
-Double_t r1,r2,r3,r4,r5,r6,r7,r8,r9;
+Double_t r1, r2, r3, r4, r5, r6, r7, r8, r9;
 Double_t dr = 3.5;
 TRandom *r;
 
-void generate_random(Int_t i) {
-   r1 = (2*dr*r->Rndm(i))-dr;
-   r2 = (2*dr*r->Rndm(i))-dr;
-   r7 = (2*dr*r->Rndm(i))-dr;
-   r9 = (2*dr*r->Rndm(i))-dr;
-   r4 = (2*dr*r->Rndm(i))-dr;
-   r3 = (2*dr*r->Rndm(i))-dr;
-   r5 = (2*dr*r->Rndm(i))-dr;
-   r6 = (2*dr*r->Rndm(i))-dr;
-   r8 = (2*dr*r->Rndm(i))-dr;
+void generate_random(Int_t i)
+{
+   r1 = (2 * dr * r->Rndm(i)) - dr;
+   r2 = (2 * dr * r->Rndm(i)) - dr;
+   r7 = (2 * dr * r->Rndm(i)) - dr;
+   r9 = (2 * dr * r->Rndm(i)) - dr;
+   r4 = (2 * dr * r->Rndm(i)) - dr;
+   r3 = (2 * dr * r->Rndm(i)) - dr;
+   r5 = (2 * dr * r->Rndm(i)) - dr;
+   r6 = (2 * dr * r->Rndm(i)) - dr;
+   r8 = (2 * dr * r->Rndm(i)) - dr;
 }
 
-void parallelcoord() {
-
+void tree141_parallelcoord()
+{
    TNtuple *nt = nullptr;
 
    Double_t s1x, s1y, s1z;
@@ -46,7 +47,7 @@ void parallelcoord() {
 
    nt = new TNtuple("nt","Demo ntuple","x:y:z:u:v:w");
 
-   for (Int_t i=0; i<20000; i++) {
+   for (Int_t i = 0; i < 20000; i++) {
       r->Sphere(s1x, s1y, s1z, 0.1);
       r->Sphere(s2x, s2y, s2z, 0.2);
       r->Sphere(s3x, s3y, s3z, 0.05);
@@ -72,15 +73,15 @@ void parallelcoord() {
       generate_random(i);
       nt->Fill(r1, r2, r3, r4, r5, r6);
    }
-   nt->Draw("x:y:z:u:v:w","","para",5000);
-   TParallelCoord* para = (TParallelCoord*)gPad->GetListOfPrimitives()->FindObject("ParaCoord");
+   nt->Draw("x:y:z:u:v:w", "", "para", 5000);
+   auto para = (TParallelCoord*)gPad->GetListOfPrimitives()->FindObject("ParaCoord");
    para->SetDotsSpacing(5);
-   TParallelCoordVar* firstaxis = (TParallelCoordVar*)para->GetVarList()->FindObject("x");
-   firstaxis->AddRange(new TParallelCoordRange(firstaxis,0.846018,1.158469));
+   auto firstaxis = (TParallelCoordVar*)para->GetVarList()->FindObject("x");
+   firstaxis->AddRange(new TParallelCoordRange(firstaxis, 0.846018, 1.158469));
    para->AddSelection("violet");
    para->GetCurrentSelection()->SetLineColor(kViolet);
-   firstaxis->AddRange(new TParallelCoordRange(firstaxis,-0.169447,0.169042));
+   firstaxis->AddRange(new TParallelCoordRange(firstaxis, -0.169447, 0.169042));
    para->AddSelection("Orange");
    para->GetCurrentSelection()->SetLineColor(kOrange+9);
-   firstaxis->AddRange(new TParallelCoordRange(firstaxis,-1.263024,-0.755292));
+   firstaxis->AddRange(new TParallelCoordRange(firstaxis, -1.263024, -0.755292));
 }

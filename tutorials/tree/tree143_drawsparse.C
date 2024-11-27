@@ -9,15 +9,13 @@
 ///
 ///  Run as
 /// ~~~
-///    .L $ROOTSYS/tutorials/tree/drawsparse.C+
+///    .L $ROOTSYS/tutorials/tree/tree143_drawsparse.C+
 /// ~~~
 ///
 /// \macro_image
 /// \macro_code
 ///
 /// \author Axel Naumann
-
-
 
 #include "TParallelCoord.h"
 #include "TParallelCoordVar.h"
@@ -100,7 +98,7 @@ void drawsparse_draw(THnSparse* h)
    var->SetTitle("bin content");
 }
 
-void drawsparse()
+void tree143_drawsparse()
 {
    // create a THnSparse and draw it.
 
@@ -108,27 +106,31 @@ void drawsparse()
    Int_t bins[ndims] = {10, 10, 5, 30, 10, 4, 18, 12};
    Double_t xmin[ndims] = {-5., -10., -1000., -3., 0.,   0., 0., 0.};
    Double_t xmax[ndims] = {10., 70., 3000.,   3.,   5.,  2., 2., 5.};
-   THnSparse* hs = new THnSparseD("hs", "Sparse Histogram", ndims, bins, xmin, xmax);
+   auto hs = new THnSparseD("hs", "Sparse Histogram", ndims, bins, xmin, xmax);
 
    // fill it
    Double_t x[ndims];
    for (Long_t i = 0; i < 100000; ++i) {
       for (Int_t d = 0; d < ndims; ++d) {
          switch (d) {
-         case 0: x[d] = gRandom->Gaus()*2 + 3.; break;
-         case 1:
-         case 2:
-         case 3: x[d] = (x[d-1]*x[d-1] - 1.5)/1.5 + (0.5*gRandom->Rndm()); break;
-         default: x[d] = sin(gRandom->Gaus()*i/1000.) + 1.;
+            case 0:
+               x[d] = gRandom->Gaus() * 2 + 3.;
+               break;
+            case 1:
+            case 2:
+            case 3:
+               x[d] = (x[d - 1] * x[d - 1] - 1.5) / 1.5 + (0.5 * gRandom->Rndm());
+               break;
+            default:
+               x[d] = sin(gRandom->Gaus()*i/1000.) + 1.;
          }
       }
       hs->Fill(x);
    }
 
+   auto f = TFile::Open("drawsparse.root", "RECREATE");
 
-   TFile* f = new TFile("drawsparse.root","RECREATE");
-
-   TCanvas* canv = new TCanvas("hDrawSparse", "Drawing a sparse hist");
+   auto canv = new TCanvas("hDrawSparse", "Drawing a sparse hist");
    canv->Divide(2);
 
    // draw it
