@@ -19,15 +19,15 @@
 #include "TRandom.h"
 #include "TSystem.h"
 
-void write()
+void write_vector()
 {
+   auto f = TFile::Open("hvector.root","RECREATE");
 
-   TFile *f = TFile::Open("hvector.root","RECREATE");
-
-   if (!f) { return; }
+   if (!f)
+      return;
 
    // Create one histograms
-   TH1F *hpx = new TH1F("hpx","This is the px distribution",100,-4,4);
+   auto hpx = new TH1F("hpx","This is the px distribution", 100, -4, 4);
    hpx->SetFillColor(48);
 
    std::vector<float> vpx;
@@ -36,19 +36,19 @@ void write()
    std::vector<float> vrand;
 
    // Create a TTree
-   TTree *t = new TTree("tvec","Tree with vectors");
-   t->Branch("vpx",&vpx);
-   t->Branch("vpy",&vpy);
-   t->Branch("vpz",&vpz);
-   t->Branch("vrand",&vrand);
+   TTree *t = new TTree("tvec", "Tree with vectors");
+   t->Branch("vpx", &vpx);
+   t->Branch("vpy", &vpy);
+   t->Branch("vpz", &vpz);
+   t->Branch("vrand", &vrand);
 
    // Create a new canvas.
-   TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example",200,10,700,500);
+   auto c1 = new TCanvas("c1", "Dynamic Filling Example", 200, 10, 700, 500);
 
    gRandom->SetSeed();
    const Int_t kUPDATE = 1000;
    for (Int_t i = 0; i < 25000; i++) {
-      Int_t npx = (Int_t)(gRandom->Rndm(1)*15);
+      Int_t npx = (Int_t)(gRandom->Rndm(1) * 15);
 
       vpx.clear();
       vpy.clear();
@@ -58,8 +58,8 @@ void write()
       for (Int_t j = 0; j < npx; ++j) {
 
          Float_t px,py,pz;
-         gRandom->Rannor(px,py);
-         pz = px*px + py*py;
+         gRandom->Rannor(px, py);
+         pz = px * px + py * py;
          Float_t random = gRandom->Rndm(1);
 
          hpx->Fill(px);
@@ -71,7 +71,8 @@ void write()
 
       }
       if (i && (i%kUPDATE) == 0) {
-         if (i == kUPDATE) hpx->Draw();
+         if (i == kUPDATE)
+            hpx->Draw();
          c1->Modified();
          c1->Update();
          if (gSystem->ProcessEvents())
@@ -85,28 +86,28 @@ void write()
 }
 
 
-void read()
+void read_vector()
 {
+   auto f = TFile::Open("hvector.root", "READ");
 
-   TFile *f = TFile::Open("hvector.root","READ");
+   if (!f)
+      return;
 
-   if (!f) { return; }
-
-   TTree *t; f->GetObject("tvec",t);
+   auto t = f->Get<TTree>("tvec");
 
    std::vector<float> *vpx = nullptr;
 
-  // Create a new canvas.
-   TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example",200,10,700,500);
+   // Create a new canvas.
+   auto c1 = new TCanvas("c1", "Dynamic Filling Example", 200, 10, 700, 500);
 
    const Int_t kUPDATE = 1000;
 
    TBranch *bvpx = nullptr;
-   t->SetBranchAddress("vpx",&vpx,&bvpx);
+   t->SetBranchAddress("vpx", &vpx, &bvpx);
 
 
    // Create one histograms
-   TH1F *h = new TH1F("h","This is the px distribution",100,-4,4);
+   auto h = new TH1F("h", "This is the px distribution", 100, -4, 4);
    h->SetFillColor(48);
 
    for (Int_t i = 0; i < 25000; i++) {
@@ -120,7 +121,8 @@ void read()
 
       }
       if (i && (i%kUPDATE) == 0) {
-         if (i == kUPDATE) h->Draw();
+         if (i == kUPDATE)
+            h->Draw();
          c1->Modified();
          c1->Update();
          if (gSystem->ProcessEvents())
@@ -134,12 +136,10 @@ void read()
 }
 
 
-void hvector()
+void tree121_hvector()
 {
    gBenchmark->Start("hvector");
-
-   write();
-   read();
-
+   write_vector();
+   read_vector();
    gBenchmark->Show("hvector");
 }

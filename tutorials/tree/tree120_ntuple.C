@@ -21,8 +21,8 @@
 #include "TSystem.h"
 #include "TInterpreter.h"
 
-void ntuple1() {
-
+void tree120_ntuple()
+{
    //just in case this script is executed multiple times
    delete gROOT->GetListOfFiles()->FindObject("hsimple.root");
    delete gROOT->GetListOfCanvases()->FindObject("c1");
@@ -34,17 +34,19 @@ void ntuple1() {
    TString dir = gROOT->GetTutorialDir();
    dir.Append("/hsimple.C");
    dir.ReplaceAll("/./","/");
-   if (gBenchmark->GetBench("hsimple") < 0) gInterpreter->LoadMacro(dir.Data());
+   if (gBenchmark->GetBench("hsimple") < 0)
+      gInterpreter->LoadMacro(dir.Data());
    TFile *f1 = (TFile*)gROOT->ProcessLineFast("hsimple(1)");
-   if (!f1) return;
+   if (!f1)
+      return;
    //
    // Create a canvas, with 4 pads
    //
-   TCanvas *c1 = new TCanvas("c1","The Ntuple canvas",200,10,700,780);
-   TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.52,0.48,0.98,21);
-   TPad *pad2 = new TPad("pad2","This is pad2",0.52,0.52,0.98,0.98,21);
-   TPad *pad3 = new TPad("pad3","This is pad3",0.02,0.02,0.48,0.48,21);
-   TPad *pad4 = new TPad("pad4","This is pad4",0.52,0.02,0.98,0.48,1);
+   auto c1 = new TCanvas("c1","The Ntuple canvas",200,10,700,780);
+   auto pad1 = new TPad("pad1","This is pad1",0.02,0.52,0.48,0.98,21);
+   auto pad2 = new TPad("pad2","This is pad2",0.52,0.52,0.98,0.98,21);
+   auto pad3 = new TPad("pad3","This is pad3",0.02,0.02,0.48,0.48,21);
+   auto pad4 = new TPad("pad4","This is pad4",0.52,0.02,0.98,0.48,1);
    pad1->Draw();
    pad2->Draw();
    pad3->Draw();
@@ -59,7 +61,7 @@ void ntuple1() {
    pad1->cd();
    pad1->SetGrid();
    pad1->SetLogy();
-   TNtuple *ntuple = (TNtuple*)f1->Get("ntuple");
+   auto ntuple = f1->Get<TNtuple>("ntuple");
    ntuple->SetLineColor(1);
    ntuple->SetFillStyle(1001);
    ntuple->SetFillColor(45);
@@ -102,7 +104,7 @@ void ntuple1() {
    ntuple->Draw("pz:py:px","pz<6 && pz>4","same");
    ntuple->SetMarkerColor(5);
    ntuple->Draw("pz:py:px","pz<4 && pz>3","same");
-   TPaveText *l4 = new TPaveText(-0.9,0.5,0.9,0.95);
+   auto l4 = new TPaveText(-0.9,0.5,0.9,0.95);
    l4->SetFillColor(42);
    l4->SetTextAlign(12);
    l4->AddText("You can interactively rotate this view in 2 ways:");
