@@ -17,12 +17,12 @@ if (CTEST_BUILD_NAME MATCHES aarch64 AND CTEST_BUILD_NAME MATCHES dbg)
   list(APPEND CTEST_CUSTOM_TESTS_IGNORE
        tutorial-roostats-StandardBayesianNumericalDemo
        tutorial-roostats-OneSidedFrequentistUpperLimitWithBands
-       tutorial-tmva-TMVAClassification
-       tutorial-tmva-TMVARegression
-       tutorial-tmva-TMVAMulticlass
-       tutorial-tmva-TMVAMulticlassApplication
-       tutorial-tmva-TMVARegressionApplication
-       tutorial-tmva-TMVAClassificationApplication
+       tutorial-machine_learning-TMVAClassification
+       tutorial-machine_learning-TMVARegression
+       tutorial-machine_learning-TMVAMulticlass
+       tutorial-machine_learning-TMVAMulticlassApplication
+       tutorial-machine_learning-TMVARegressionApplication
+       tutorial-machine_learning-TMVAClassificationApplication
        tutorial-roostats-TwoSidedFrequentistUpperLimitWithBands)
 endif()
 

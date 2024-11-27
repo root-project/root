@@ -300,7 +300,7 @@ class transformTMVAOutputToHTML:
                         self.iterLines.next()
                         lineIter.next()
                     tmp_str += "<td><b>" + WelcomeHeader.group(1) + "</b></td></tr>"
-                    tmp_str += "<tr><td><img src='https://rawgit.com/root-project/root/master/tutorials/tmva/tmva_logo.svg' width='100%' /><br />"
+                    tmp_str += "<tr><td><img src='https://rawgit.com/root-project/root/master/tutorials/machine_learning/tmva_logo.svg' width='100%' /><br />"
                     tmp_str += "<center><b>" + EndWelcome.group(1) + "</b></center></td></tr>"
                 else:
                     lmatch = re.match(r"\s*(<\w+>\s*)*\s*:\s*(.*)", nextline)
