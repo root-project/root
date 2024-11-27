@@ -16,13 +16,16 @@ import sys
 import traceback
 
 import cppyy
+# \cond INTERNALS
 gbl_namespace = cppyy.gbl
+# \endcond
 
 from ._generic import pythonize_generic
 
 
 def pythonization(class_name, ns='::', is_prefix=False):
     '''
+    \ingroup Pythonizations
     Decorator that allows to pythonize C++ classes. To pythonize means to add
     some extra behaviour to a C++ class that is used from Python via PyROOT,
     so that such a class can be used in an easier / more "pythonic" way.
@@ -131,6 +134,8 @@ def pythonization(class_name, ns='::', is_prefix=False):
         return user_pythonizor
 
     return pythonization_impl
+
+# \cond INTERNALS
 
 def _check_target(target):
     '''
@@ -300,3 +305,4 @@ def _register_pythonizations():
     for _, module_name, _ in  pkgutil.walk_packages(__path__):
         if module_name not in exclude:
             importlib.import_module(__name__ + '.' + module_name)
+# \endcond

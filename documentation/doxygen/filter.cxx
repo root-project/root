@@ -199,7 +199,8 @@ void FilterPythonBox()
                                     "<b>Python interface</b></summary>\n"
                                     "<div class=\"pyrootbox\">\n"
                                     "\\endhtmlonly\n"
-                                    "\\anchor python", class_name.c_str());
+                                    "\\anchor python\n"
+                                    "\\ingroup Pythonizations", class_name.c_str());
       }
       if (gLineString.find("\\endpythondoc") != string::npos)
          ReplaceAll(gLineString, "\\endpythondoc", "\\htmlonly </div> </details> \\endhtmlonly\n*/");
