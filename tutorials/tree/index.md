@@ -1,7 +1,7 @@
 \addtogroup tutorial_tree
  
 @{
-[TTree](classTTree.html) represents a columnar dataset.
+[TTree](classTTree.html) represents a columnar dataset. Used for example by all LHC (Large Hadron Collider) experiments. Trees are optimized for reduced disk space and selecting, high-throughput columnar access with reduced memory usage.
 
 ...
 
