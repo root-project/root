@@ -38,14 +38,18 @@ void HighlightDay(Int_t xhb)
       gPad->Update();
    }
 
-   if (xhb != customhb) day = xhb;
+   if (xhb != customhb)
+      day = xhb;
    TString temp = TString::Format(" %5.1f #circC", hDay->GetBinContent(day));
-   if (hDay->GetBinEntries(day) == 0) temp = " ";
+   if (hDay->GetBinEntries(day) == 0)
+      temp = " ";
    TString m = " ";
-   if (month>0) m = TString::Format("-%02d",month);
+   if (month > 0)
+      m = TString::Format("-%02d", month);
    TString d = " ";
-   if (day>0) d = TString::Format("-%02d",day);
-   info->SetText(2.0, hDay->GetMinimum()*0.8, TString::Format("%4d%s%s%s", year, m.Data(), d.Data(), temp.Data()));
+   if (day > 0)
+      d = TString::Format("-%02d", day);
+   info->SetText(2.0, hDay->GetMinimum() * 0.8, TString::Format("%4d%s%s%s", year, m.Data(), d.Data(), temp.Data()));
    Canvas->GetPad(3)->Modified();
 }
 
@@ -64,7 +68,8 @@ void HighlightMonth(Int_t xhb)
       hDay->SetHighlight();
    }
 
-   if (xhb != customhb) month = xhb;
+   if (xhb != customhb)
+      month = xhb;
    tree->Draw("T:DAY>>hDay", TString::Format("MONTH==%d && YEAR==%d", month, year), "goff");
    hDay->SetTitle(TString::Format("temperature by day (month = %02d, year = %d)", month, year));
    Canvas->GetPad(3)->Modified();
@@ -99,13 +104,16 @@ void HighlightYear(Int_t xhb)
 
 void HighlightTemp(TVirtualPad *pad, TObject *obj, Int_t xhb, Int_t yhb)
 {
-   if (obj == hYear)  HighlightYear(xhb);
-   if (obj == hMonth) HighlightMonth(xhb);
-   if (obj == hDay)   HighlightDay(xhb);
+   if (obj == hYear)
+      HighlightYear(xhb);
+   if (obj == hMonth)
+      HighlightMonth(xhb);
+   if (obj == hDay)
+      HighlightDay(xhb);
    Canvas->Update();
 }
 
-void temperature()
+void tree200_temperature()
 {
    // Read file (data from Global Historical Climatology Network)
    tree = new TTree("tree", "GHCN-Daily");
@@ -115,7 +123,8 @@ void temperature()
    auto dir = gROOT->GetTutorialDir();
    dir.Append("/tree/");
    dir.ReplaceAll("/./","/");
-   if (tree->ReadFile(Form("%stemperature_Prague.dat",dir.Data())) == 0) return;
+   if (tree->ReadFile(Form("%stemperature_Prague.dat", dir.Data())) == 0)
+      return;
 
    // Compute range of years
    tree->GetEntry(0);

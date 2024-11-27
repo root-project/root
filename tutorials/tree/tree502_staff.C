@@ -9,10 +9,11 @@
 ///
 /// \author Rene Brun
 
-void staff() {
+void tree502_staff()
+{
    auto f = TFile::Open("cernstaff.root");
-   TTree *T = nullptr;
-   f->GetObject("T",T);
-   T->Draw("Grade:Age:Cost:Division:Nation","","gl5d");
-   if (gPad) gPad->Print("staff.C.png");
+   auto T = f->Get<TTree>("T");
+   T->Draw("Grade:Age:Cost:Division:Nation", "", "gl5d");
+   if (gPad)
+      gPad->Print("staff.C.png");
 }
