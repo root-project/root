@@ -281,7 +281,7 @@ set(gui_veto fit/fitpanel_playback.C
              graphics/psview.C graphics/gtime.C
              graphics/graph_edit_playback.C
              roostats/ModelInspector.C
-             tree/tvdemo.C
+             legacy/tree/tvdemo.C
              eve/*.C
              webgui/geom/geom_threejs.cxx
              webgui/panel/webpanel.cxx
