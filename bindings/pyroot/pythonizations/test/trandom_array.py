@@ -84,6 +84,7 @@ class TRandomNumpyArrays(unittest.TestCase):
         r.Binomial(size=[2,3], ntot=25, prob=0.123)
         r.BreitWigner(size=[2,3], mean=3, gamma=0.789)
         r.Exp(size=[2,3], tau=1000)
+        r.Gaus(size=[2,3], mean=3, sigma=0.75)
         r.Integer(size=[2,3], imax=10)
         r.Landau(size=[2,3], mean=5, sigma=2)
         r.Poisson(size=[2,3], mean=5)
