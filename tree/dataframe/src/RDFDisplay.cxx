@@ -234,10 +234,48 @@ std::string RDisplay::AsStringInternal(bool considerDots, const RPrintOptions &o
    switch (options.fFormat) {
    case EPrintFormat::kMarkdown:
       return AsStringMarkdown(considerDots);
+   case EPrintFormat::kHtml:
+      return AsStringHtml();
    default:
       R__ASSERT(false);
    }
    return {};
+}
+
+std::string RDisplay::AsStringHtml() const
+{
+   std::stringstream ss;
+   
+   ss << "<table style=\"border: 1px solid black; border-collapse: collapse;\">\n";
+   auto nrRows = fTable.size();
+   std::string elemType = "th";
+   int bgColorIdx = 0;
+   for (size_t rowIndex = 0; rowIndex < nrRows; ++rowIndex) {
+      const auto &row = fTable[rowIndex];
+
+      bool isRowSeparator = std::any_of(row[0].GetRepresentation().begin(), row[0].GetRepresentation().end(), ::isdigit);
+
+      // Alternate rows' background color
+      static const char *bgColors[2] = { "#fff", "#eee" };
+      bgColorIdx = (bgColorIdx + isRowSeparator) & 1;
+      std::string bgColor = bgColors[bgColorIdx];
+
+      if (isRowSeparator) {
+         ss << "  <tr style=\"border-top: 1px dotted; background: " + bgColor + "\">\n";
+      } else {
+         ss << "  <tr style=\"background: " + bgColor + "\">\n";
+      }
+
+      for (const auto &element : row) {
+         ss << "    <" + elemType + " style=\"padding: 1px 4px\">" << element.GetRepresentation() << "</" + elemType + ">\n";
+      }
+      ss << "  </tr>\n";
+
+      elemType = "td";
+   }
+   ss << "</table>";
+
+   return ss.str();
 }
 
 std::string RDisplay::AsStringMarkdown(bool considerDots) const
