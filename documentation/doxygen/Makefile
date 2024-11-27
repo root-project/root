@@ -61,6 +61,7 @@ doxygen: filter pyzdoc
 	$(call MkDir,$(DOXYGEN_EXAMPLE_PATH))
 	$(call MkDir,$(DOXYGEN_NOTEBOOK_PATH))
 	./makehtmlfooter.sh > htmlfooter.html
+	$(Python3_EXECUTABLE) categorise_tutorials.py $(DOXYGEN_SOURCE_DIRECTORY)/tutorials/ > $(DOXYGEN_SOURCE_DIRECTORY)/tutorials/index_categories.md
 	./makeinput.sh
 	doxygen
 	bash ./CleanNamespaces.sh
