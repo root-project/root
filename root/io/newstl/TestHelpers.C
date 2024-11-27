@@ -57,7 +57,7 @@ void fillListOfDir(TList &l) {
       TObjString *obj;
       while ((obj = (TObjString*)next())) {
          const char *file = obj->GetName();
-         cout << "found the directory " << obj->GetName() << endl;
+         cout << "found the directory " << file << endl;
       }
    }
 }
