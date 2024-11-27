@@ -25,11 +25,11 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py PYTHON_DEPS nu
 ROOT_ADD_PYUNITTEST(pyroot_pyz_stl_vector stl_vector.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_stl_set stl_set.py)
 
-# TObject and subclasses pythonisations
+# TObject and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_contains tobject_contains.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_comparisonops tobject_comparisonops.py)
 
-# TClass pythonisations
+# TClass pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tclass_dynamiccast tclass_dynamiccast.py)
 
 # TContext pythonizations
@@ -67,22 +67,22 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tcollection_iterable tcollection_iterable.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tseqcollection_itemaccess tseqcollection_itemaccess.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tseqcollection_listmethods tseqcollection_listmethods.py)
 
-# TIter pythonisations
+# TIter pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_titer_iterator titer_iterator.py)
 
 # TArray and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tarray_len tarray_len.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tarray_getitem tarray_getitem.py)
 
-# TVectorT pythonisations
+# TVectorT pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tvectort_len tvectort_len.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tvectort_getitem tvectort_getitem.py)
 
-# TVector3 pythonisations
+# TVector3 pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tvector3_len tvector3_len.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tvector3_getitem tvector3_getitem.py)
 
-# TString pythonisations
+# TString pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_len tstring_len.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_str_repr tstring_str_repr.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_comparisonops tstring_comparisonops.py)
@@ -90,7 +90,7 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_comparisonops tstring_comparisonops.py)
 # TString converter
 ROOT_ADD_PYUNITTEST(pyroot_conv_tstring tstring_converter.py)
 
-# TObjString pythonisations
+# TObjString pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_len tobjstring_len.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_str_repr tobjstring_str_repr.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobjstring_comparisonops tobjstring_comparisonops.py)

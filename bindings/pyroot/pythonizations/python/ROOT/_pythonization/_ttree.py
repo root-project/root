@@ -32,10 +32,10 @@ a tree as described above if performance is not an issue or when dealing with
 a small dataset. To read and process the entries of a tree in a much faster
 way, please use ROOT::RDataFrame.
 
-Two methods of TTree have been pythonised to facilitate their: TTree::Branch and
+Two methods of TTree have been pythonized to facilitate their: TTree::Branch and
 TTree::SetBranchAddress.
 
-### Pythonisation of TTree::Branch
+### Pythonization of TTree::Branch
 
 The following example shows how we can create different types of branches of a TTree.
 `Branch` links the new branch with a given Python object. It is therefore possible to
@@ -98,7 +98,7 @@ with ROOT.TFile("outfile.root", "RECREATE") as ofile:
     t.Write()
 \endcode
 
-### Pythonisation of TTree::SetBranchAddress
+### Pythonization of TTree::SetBranchAddress
 
 This section is to be considered for advanced users. Simple event
 loops reading tree entries in Python can be performed as shown above.

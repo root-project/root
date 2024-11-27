@@ -101,7 +101,7 @@ class TF1(unittest.TestCase):
 
     def test_evalpar(self):
         """
-        Test the 2D Numpy array pythonisations for TF1::EvalPar
+        Test the 2D Numpy array pythonizations for TF1::EvalPar
         """
         import numpy as np
 
@@ -131,7 +131,7 @@ class TF1(unittest.TestCase):
     
     def test_evalpar_dynamic(self):
         """
-        Test the 2D NumPy pythonisations with dynamic TF1 data dimensions
+        Test the 2D NumPy pythonizations with dynamic TF1 data dimensions
         """
         import numpy as np
 
