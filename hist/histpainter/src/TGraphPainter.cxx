@@ -3788,10 +3788,6 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 
 void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
 {
-
-   Int_t ipt, i;
-   Double_t rwrmin, rwrmax, rwtmin, rwtmax;
-
    TGraphPolar *theGraphPolar = (TGraphPolar*) theGraph;
 
    Int_t theNpoints  = theGraphPolar->GetN();
@@ -3800,14 +3796,29 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    Double_t *theEX   = theGraphPolar->GetEX();
    Double_t *theEY   = theGraphPolar->GetEY();
 
-   if (theNpoints<1) return;
+   if (theNpoints < 1)
+      return;
+
    TString opt = options;
    opt.ToUpper();
 
-   Bool_t nolabel = kFALSE;
-   if (opt.Contains("N")){
-      nolabel = kTRUE;
+   // same is ignored
+   opt.ReplaceAll("SAME","");
+
+   TString polargram_opt;
+
+   if (opt.Contains("N")) {
+      polargram_opt.Append("N");
       opt.ReplaceAll("N","");
+   }
+
+   if (opt.Contains("O")) {
+      polargram_opt.Append("O");
+      opt.ReplaceAll("O","");
+   }
+
+   if (opt.Contains("A")) {
+      opt.ReplaceAll("A","");
    }
 
    TGraphPolargram *thePolargram = theGraphPolar->GetPolargram();
@@ -3815,86 +3826,52 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    // Check for existing TGraphPolargram in the Pad
    if (gPad) {
       // Existing polargram
-      if (thePolargram) if (!gPad->FindObject(thePolargram->GetName())) thePolargram=nullptr;
+      if (thePolargram && !gPad->FindObject(thePolargram))
+         thePolargram = nullptr;
       if (!thePolargram) {
          // Find any other Polargram in the Pad
-         TListIter padObjIter(gPad->GetListOfPrimitives());
-         while (TObject* AnyObj = padObjIter.Next()) {
-            if (TString(AnyObj->ClassName()).CompareTo("TGraphPolargram",
-                                                      TString::kExact)==0)
-            thePolargram = (TGraphPolargram*)AnyObj;
-            theGraphPolar->SetPolargram(thePolargram);
+         TIter padObjIter(gPad->GetListOfPrimitives());
+         while (auto obj = padObjIter()) {
+            if (obj->InheritsFrom(TGraphPolargram::Class())) {
+               thePolargram = static_cast<TGraphPolargram*>(obj);
+               theGraphPolar->SetPolargram(thePolargram);
+            }
          }
       }
    }
 
-   // Get new polargram range if necessary.
+   // Create polargram when not exists
    if (!thePolargram) {
-      // Get range, initialize with first/last value
-      rwrmin = theY[0]; rwrmax = theY[theNpoints-1];
-      rwtmin = theX[0]; rwtmax = theX[theNpoints-1];
-
-      for (ipt = 0; ipt < theNpoints; ipt++) {
-         // Check for errors if available
-         if (theEX) {
-            if (theX[ipt] -theEX[ipt] < rwtmin) rwtmin = theX[ipt]-theEX[ipt];
-            if (theX[ipt] +theEX[ipt] > rwtmax) rwtmax = theX[ipt]+theEX[ipt];
-         } else {
-            if (theX[ipt] < rwtmin) rwtmin=theX[ipt];
-            if (theX[ipt] > rwtmax) rwtmax=theX[ipt];
-         }
-         if (theEY) {
-            if (theY[ipt] -theEY[ipt] < rwrmin) rwrmin = theY[ipt]-theEY[ipt];
-            if (theY[ipt] +theEY[ipt] > rwrmax) rwrmax = theY[ipt]+theEY[ipt];
-         } else {
-            if (theY[ipt] < rwrmin) rwrmin=theY[ipt];
-            if (theY[ipt] > rwrmax) rwrmax=theY[ipt];
-         }
-      }
-      // Add radial and Polar margins.
-      if (rwrmin == rwrmax) rwrmax += 1.;
-      if (rwtmin == rwtmax) rwtmax += 1.;
-      Double_t dr = (rwrmax-rwrmin);
-      Double_t dt = (rwtmax-rwtmin);
-      rwrmax += 0.1*dr;
-      rwrmin -= 0.1*dr;
-
-      // Assume equally spaced points for full 2*Pi.
-      rwtmax += dt/theNpoints;
-   } else {
-      rwrmin = thePolargram->GetRMin();
-      rwrmax = thePolargram->GetRMax();
-      rwtmin = thePolargram->GetTMin();
-      rwtmax = thePolargram->GetTMax();
-   }
-
-   if ((!thePolargram) || theGraphPolar->GetOptionAxis()) {
-      // Draw Polar coord system
-      thePolargram = new TGraphPolargram("Polargram",rwrmin,rwrmax,rwtmin,rwtmax);
+      thePolargram = theGraphPolar->CreatePolargram(opt.Data());
+      if (!thePolargram)
+         return;
       theGraphPolar->SetPolargram(thePolargram);
-      if (opt.Contains("O")) thePolargram->SetBit(TGraphPolargram::kLabelOrtho);
-      else thePolargram->ResetBit(TGraphPolargram::kLabelOrtho);
-      if (nolabel) thePolargram->Draw("N");
-      else         thePolargram->Draw("");
-      theGraphPolar->SetOptionAxis(kFALSE);   //Prevent redrawing
+      thePolargram->Draw(polargram_opt.Data());
    }
+
+   Double_t rwrmin = thePolargram->GetRMin(),
+            rwrmax = thePolargram->GetRMax(),
+            rwtmin = thePolargram->GetTMin(),
+            rwtmax = thePolargram->GetTMax();
 
    // Convert points to polar.
    Double_t *theXpol = theGraphPolar->GetXpol();
    Double_t *theYpol = theGraphPolar->GetYpol();
 
    // Project theta in [0,2*Pi] and radius in [0,1].
-   Double_t radiusNDC = rwrmax-rwrmin;
-   Double_t thetaNDC  = (rwtmax-rwtmin)/(2*TMath::Pi());
+   Double_t radiusNDC = rwrmax - rwrmin;
+   Double_t thetaNDC  = (rwtmax - rwtmin) / (2*TMath::Pi());
 
    // Draw the error bars.
    // Y errors are lines, but X errors are pieces of circles.
    if (opt.Contains("E")) {
-      Double_t c=1;
-      if (thePolargram->IsDegree()) {c=180/TMath::Pi();}
-      if (thePolargram->IsGrad())   {c=100/TMath::Pi();}
+      Double_t c = 1;
+      if (thePolargram->IsDegree())
+         c = 180 / TMath::Pi();
+      if (thePolargram->IsGrad())
+         c = 100 / TMath::Pi();
       if (theEY) {
-         for (i=0; i<theNpoints; i++) {
+         for (Int_t i = 0; i < theNpoints; i++) {
             Double_t eymin, eymax, exmin,exmax;
             exmin = (theY[i]-theEY[i]-rwrmin)/radiusNDC*
                      TMath::Cos(c*(theX[i]-rwtmin)/thetaNDC);
@@ -3909,7 +3886,7 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
          }
       }
       if (theEX) {
-         for (i=0; i<theNpoints; i++) {
+         for (Int_t i = 0; i < theNpoints; i++) {
             Double_t rad    = (theY[i]-rwrmin)/radiusNDC;
             Double_t phimin = c*(theX[i]-theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
             Double_t phimax = c*(theX[i]+theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
@@ -3920,16 +3897,18 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    }
 
    // Draw the graph itself.
-   if (!(gPad->GetLogx()) && !(gPad->GetLogy())) {
-      Double_t a, b, c=1, x1, x2, y1, y2, discr, norm1, norm2, xts, yts;
+   if (!gPad->GetLogx() && !gPad->GetLogy()) {
+      Double_t a, b, c = 1, x1, x2, y1, y2, discr, norm1, norm2, xts, yts;
       Bool_t previouspointin = kFALSE;
       Double_t norm = 0;
       Double_t xt   = 0;
       Double_t yt   = 0 ;
       Int_t j       = -1;
-      if (thePolargram->IsDegree()) {c=180/TMath::Pi();}
-      if (thePolargram->IsGrad())   {c=100/TMath::Pi();}
-      for (i=0; i<theNpoints; i++) {
+      if (thePolargram->IsDegree())
+         c = 180 / TMath::Pi();
+      if (thePolargram->IsGrad())
+         c = 100 / TMath::Pi();
+      for (Int_t i = 0; i < theNpoints; i++) {
          xts  = xt;
          yts  = yt;
          xt   = (theY[i]-rwrmin)/radiusNDC*TMath::Cos(c*(theX[i]-rwtmin)/thetaNDC);
@@ -3999,11 +3978,11 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
          PaintGraph(theGraphPolar, j+1, theXpol, theYpol, opt);
       }
    } else {
-      for (i=0; i<theNpoints; i++) {
+      for (Int_t i = 0; i < theNpoints; i++) {
          theXpol[i] = TMath::Abs((theY[i]-rwrmin)/radiusNDC*TMath::Cos((theX[i]-rwtmin)/thetaNDC)+1);
          theYpol[i] = TMath::Abs((theY[i]-rwrmin)/radiusNDC*TMath::Sin((theX[i]-rwtmin)/thetaNDC)+1);
       }
-      PaintGraph(theGraphPolar, theNpoints, theXpol, theYpol,opt);
+      PaintGraph(theGraphPolar, theNpoints, theXpol, theYpol, opt);
    }
 
    // Paint the title.
@@ -4013,11 +3992,12 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    TPaveText *title = nullptr;
    TIter next(gPad->GetListOfPrimitives());
    while (auto obj = next()) {
-      if (!obj->InheritsFrom(TPaveText::Class())) continue;
-      title = (TPaveText*)obj;
-      if (title->GetName())
-         if (strcmp(title->GetName(),"title")) {title = nullptr; continue;}
-      break;
+      if (!obj->InheritsFrom(TPaveText::Class()))
+         continue;
+      if (obj->GetName() && !strcmp(obj->GetName(),"title")) {
+         title = static_cast<TPaveText *>(obj);
+         break;
+      }
    }
    if (nt == 0 || gStyle->GetOptTitle() <= 0) {
       if (title) delete title;
