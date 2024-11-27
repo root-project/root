@@ -50,9 +50,9 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Examples showing the "histograms' classes" usage.
 
-\defgroup tutorial_dataframe Dataframe tutorials
+\defgroup tutorial_analysis Data analysis tutorials
 \ingroup Tutorials
-\brief These examples show various features of [RDataFrame](classROOT_1_1RDataFrame.html): ROOT's declarative analysis interface.
+\brief Various examples of data analysis workflows.
 
 \defgroup tutorial_exp Experimental API tutorials
 \ingroup Tutorials
@@ -158,9 +158,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Example code which illustrates how to use the TMVA toolkit
 
-\defgroup tutorial_unfold TUnfold tutorials
-\ingroup Tutorials
-\brief Test programs for the classes TUnfold and related
 
 \defgroup tutorial_webcanv TWebCanvas tutorials
 \ingroup Tutorials

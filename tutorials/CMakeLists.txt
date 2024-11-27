@@ -62,7 +62,7 @@ ACLiC.LinkLibs:  1
 ")
 
 #---Tutorials that need substantial network to work------------------
-set(need_network dataframe/df027_SQliteDependencyOverVersion.C)
+set(need_network analysis/dataframe/df027_SQliteDependencyOverVersion.C)
 
 #---Tutorials disabled depending on the build components-------------
 
@@ -83,10 +83,10 @@ if(MSVC AND NOT win_broken_tests)
   list(APPEND dataframe_veto tmva/RBatchGenerator_filters_vectors.py)
   # df036* and df037* seem to trigger OS errors when trying to delete the
   # test files created in the tutorials. It is unclear why.
-  list(APPEND dataframe_veto dataframe/df036_missingBranches.C)
-  list(APPEND dataframe_veto dataframe/df036_missingBranches.py)
-  list(APPEND dataframe_veto dataframe/df037_TTreeEventMatching.C)
-  list(APPEND dataframe_veto dataframe/df037_TTreeEventMatching.py)
+  list(APPEND dataframe_veto analysis/dataframe/df036_missingBranches.C)
+  list(APPEND dataframe_veto analysis/dataframe/df036_missingBranches.py)
+  list(APPEND dataframe_veto analysis/dataframe/df037_TTreeEventMatching.C)
+  list(APPEND dataframe_veto analysis/dataframe/df037_TTreeEventMatching.py)
   # The RooFit SBI tutorials fail on Windows for unknown reasons
   list(APPEND roofit_veto roofit/rf617_simulation_based_inference_multidimensional.py)
 endif()
@@ -99,7 +99,7 @@ list(APPEND roofit_veto roofit/rf615_simulation_based_inference.py)
 
 if (NOT dataframe)
     # RDataFrame
-    list(APPEND dataframe_veto dataframe/*.C dataframe/*.py)
+    list(APPEND dataframe_veto analysis/dataframe/*.C analysis/dataframe/*.py)
     # RDataFrame tutorial in graphs
     list(APPEND dataframe_veto graphs/timeSeriesFromCSV_TDF.C)
     # TMVA tutorials dependent on RDataFrame
@@ -117,17 +117,17 @@ endif()
 
 if(NOT sqlite)
     # RDF+SQlite tutorials
-    list(APPEND dataframe_veto dataframe/*SQlite*)
+    list(APPEND dataframe_veto analysis/dataframe/*SQlite*)
 endif()
 if(NOT davix)
-    list(APPEND dataframe_veto dataframe/df027_SQliteDependencyOverVersion.C)
-    list(APPEND dataframe_veto dataframe/df028_SQliteIPLocation.C)
-    list(APPEND dataframe_veto dataframe/df029_SQlitePlatformDistribution.C)
-    list(APPEND dataframe_veto dataframe/df030_SQliteVersionsOfROOT.C)
+    list(APPEND dataframe_veto analysis/dataframe/df027_SQliteDependencyOverVersion.C)
+    list(APPEND dataframe_veto analysis/dataframe/df028_SQliteIPLocation.C)
+    list(APPEND dataframe_veto analysis/dataframe/df029_SQlitePlatformDistribution.C)
+    list(APPEND dataframe_veto analysis/dataframe/df030_SQliteVersionsOfROOT.C)
 endif()
 
 if(MACOSX_VERSION VERSION_EQUAL 10.13)
-   list(APPEND dataframe_veto dataframe/df103_NanoAODHiggsAnalysis.*)
+   list(APPEND dataframe_veto analysis/dataframe/df103_NanoAODHiggsAnalysis.*)
 endif()
 
 if(NOT geom)
@@ -169,7 +169,7 @@ if(NOT ROOT_xml_FOUND)
 endif()
 
 if(NOT ROOT_unfold_FOUND)
-  list(APPEND xml_veto unfold/*.C)
+  list(APPEND xml_veto analysis/unfold/*.C)
 endif()
 
 if(NOT ROOT_mpi_FOUND)
@@ -177,18 +177,18 @@ if(NOT ROOT_mpi_FOUND)
 endif()
 
 if(NOT xrootd)
-  set(xrootd_veto dataframe/df101_h1Analysis.C
-                  dataframe/df102_NanoAODDimuonAnalysis.C
-                  dataframe/df103_NanoAODHiggsAnalysis.C
-                  dataframe/df106_HiggsToFourLeptons.C
+  set(xrootd_veto analysis/dataframe/df101_h1Analysis.C
+                  analysis/dataframe/df102_NanoAODDimuonAnalysis.C
+                  analysis/dataframe/df103_NanoAODHiggsAnalysis.C
+                  analysis/dataframe/df106_HiggsToFourLeptons.C
                   tmva/tmva103_Application.C
-                  dataframe/df033_Describe.py
-                  dataframe/df102_NanoAODDimuonAnalysis.py
-                  dataframe/df103_NanoAODHiggsAnalysis.py
-                  dataframe/df104_HiggsToTwoPhotons.py
-                  dataframe/df105_WBosonAnalysis.py
-                  dataframe/df106_HiggsToFourLeptons.py
-                  dataframe/df107_SingleTopAnalysis.py
+                  analysis/dataframe/df033_Describe.py
+                  analysis/dataframe/df102_NanoAODDimuonAnalysis.py
+                  analysis/dataframe/df103_NanoAODHiggsAnalysis.py
+                  analysis/dataframe/df104_HiggsToTwoPhotons.py
+                  analysis/dataframe/df105_WBosonAnalysis.py
+                  analysis/dataframe/df106_HiggsToFourLeptons.py
+                  analysis/dataframe/df107_SingleTopAnalysis.py
                   roofit/rf618_mixture_models.py # depends on df106_HiggsToFourLeptons.py
                   experimental/rcanvas/df104.py
                   experimental/rcanvas/df105.py
@@ -356,7 +356,7 @@ if (NOT ROOT_vecgeom_FOUND)
 endif()
 
 if(root7)
-  set(root7_veto dataframe/df013_InspectAnalysis.C
+  set(root7_veto analysis/dataframe/df013_InspectAnalysis.C
                  experimental/browser.cxx
                  experimental/filedialog.cxx
                  experimental/fitpanel.cxx
@@ -381,14 +381,14 @@ if(root7)
   endif()
 else()
   if(MSVC AND NOT win_broken_tests)
-    list(APPEND root7_veto dataframe/df013_InspectAnalysis.C)
+    list(APPEND root7_veto analysis/dataframe/df013_InspectAnalysis.C)
   endif()
   file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ experimental/*.py experimental/*.cxx experimental/*/*.cxx experimental/*.C experimental/*/*.C experimental/rcanvas/*.py experimental/rcanvas/*.cxx)
   list(APPEND root7_veto ${v7_veto_files})
 endif()
 
 if (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64)
-   set(macm1_veto dataframe/df107_SingleTopAnalysis.py)
+   set(macm1_veto analysis/dataframe/df107_SingleTopAnalysis.py)
 endif()
 
 #---These ones are disabled !!! ------------------------------------
@@ -422,17 +422,17 @@ set(extra_veto
 if(MSVC AND NOT llvm13_broken_tests)
   list(APPEND extra_veto
        math/exampleFunction.py
-       dataframe/df002_dataModel.C
-       dataframe/df016_vecOps.C
-       dataframe/df017_vecOpsHEP.C
-       dataframe/df002_dataModel.py
-       dataframe/df016_vecOps.py
-       dataframe/df017_vecOpsHEP.py
-       dataframe/df032_RDFFromNumpy.py
-       dataframe/df035_RDFFromPandas.py)
+       analysis/dataframe/df002_dataModel.C
+       analysis/dataframe/df016_vecOps.C
+       analysis/dataframe/df017_vecOpsHEP.C
+       analysis/dataframe/df002_dataModel.py
+       analysis/dataframe/df016_vecOps.py
+       analysis/dataframe/df017_vecOpsHEP.py
+       analysis/dataframe/df032_RDFFromNumpy.py
+       analysis/dataframe/df035_RDFFromPandas.py)
   if(CMAKE_SIZEOF_VOID_P EQUAL 4)
     list(APPEND extra_veto
-         dataframe/df007_snapshot.C
+         analysis/dataframe/df007_snapshot.C
          graphics/earth.C
          graphs/motorcycle.C
          io/ntuple/ntpl001_staff.C)
@@ -515,12 +515,12 @@ set(returncode_1 math/fit/fit2a.C
                  math/chi2test.C
                  math/r/SimpleFitting.C)
 #---Dependencies------------------------------------------------------
-set(unfold-testUnfold5d-depends tutorial-unfold-testUnfold5c)
-set(unfold-testUnfold5c-depends tutorial-unfold-testUnfold5b)
-set(unfold-testUnfold5b-depends tutorial-unfold-testUnfold5a)
-set(unfold-testUnfold7d-depends tutorial-unfold-testUnfold7c)
-set(unfold-testUnfold7c-depends tutorial-unfold-testUnfold7b)
-set(unfold-testUnfold7b-depends tutorial-unfold-testUnfold7a)
+set(analysis-unfold-testUnfold5d-depends tutorial-analysis-unfold-testUnfold5c)
+set(analysis-unfold-testUnfold5c-depends tutorial-analysis-unfold-testUnfold5b)
+set(analysis-unfold-testUnfold5b-depends tutorial-analysis-unfold-testUnfold5a)
+set(analysis-unfold-testUnfold7d-depends tutorial-analysis-unfold-testUnfold7c)
+set(analysis-unfold-testUnfold7c-depends tutorial-analysis-unfold-testUnfold7b)
+set(analysis-unfold-testUnfold7b-depends tutorial-analysis-unfold-testUnfold7a)
 set(io-xml-xmlmodifyfile-depends tutorial-io-xml-xmlnewfile)
 set(io-xml-xmlreadfile-depends tutorial-io-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
@@ -601,13 +601,13 @@ endif()
 
 #--List long-running tutorials to label them as "longtest"
 set (long_running
-     dataframe/df10[2-7]*
+     analysis/dataframe/df10[2-7]*
      multicore/mp103*)
 file(GLOB long_running RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${long_running})
 #--List multithreaded tutorials to run them serially
 set(NProcessors 4)
 set (multithreaded_all_cores
-     dataframe/df10[2-7]*
+     analysis/dataframe/df10[2-7]*
      experimental/rcanvas/df10*
     )
 set (multithreaded
@@ -758,17 +758,17 @@ if(ROOT_pyroot_FOUND)
   endif()
 
   if(dataframe AND DEFINED ENV{ROOTTEST_IGNORE_PANDAS_PY3})
-    list(APPEND pyveto dataframe/df026_AsNumpyArrays.py)
+    list(APPEND pyveto analysis/dataframe/df026_AsNumpyArrays.py)
   endif()
 
   # Rules specific to distributed RDataFrame
   # Disable distributed RDF tutorials if we didn't check dependencies in the environment first
   if(NOT test_distrdf_pyspark)
-    list(APPEND pyveto dataframe/distrdf001_spark_connection.py)
+    list(APPEND pyveto analysis/dataframe/distrdf001_spark_connection.py)
   endif()
   if(NOT test_distrdf_dask)
-    list(APPEND pyveto dataframe/distrdf002_dask_connection.py)
-    list(APPEND pyveto dataframe/distrdf003_live_visualization.py)
+    list(APPEND pyveto analysis/dataframe/distrdf002_dask_connection.py)
+    list(APPEND pyveto analysis/dataframe/distrdf003_live_visualization.py)
   endif()
   # Use main Python executable to run in PySpark driver and executors
   if(test_distrdf_pyspark)
@@ -786,11 +786,11 @@ if(ROOT_pyroot_FOUND)
     endif()
   endif()
   # These lists keep track of distrdf tutorials, so we can add specific properties later
-  file(GLOB distrdf_spark_tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*spark*)
-  file(GLOB distrdf_dask_tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*dask*)
+  file(GLOB distrdf_spark_tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} analysis/dataframe/*spark*)
+  file(GLOB distrdf_dask_tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} analysis/dataframe/*dask*)
 
   # Disable tutorial showing connection to the HTCondor service at CERN
-  list(APPEND pyveto dataframe/distrdf004_dask_lxbatch.py)
+  list(APPEND pyveto analysis/dataframe/distrdf004_dask_lxbatch.py)
 
   find_python_module(xgboost QUIET)
   if(NOT PY_XGBOOST_FOUND OR NOT dataframe)
@@ -845,7 +845,7 @@ if(ROOT_pyroot_FOUND)
   set(pyroot-fit1-depends tutorial-hist-fillrandom-py)
   set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
   set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite-py)
-  set(roofit-rf618_mixture_models-depends tutorial-dataframe-df106_HiggsToFourLeptons-py)
+  set(roofit-rf618_mixture_models-depends tutorial-analysis-dataframe-df106_HiggsToFourLeptons-py)
 
   # Avoid a race condition: make sure Python tutorial is run after C++ tutorial
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory)
@@ -859,14 +859,14 @@ if(ROOT_pyroot_FOUND)
   # To add a new requirement, add a glob expression that's named requires_<packageName>,
   # and add it to the list "fixtureLists" below.
   file(GLOB requires_numpy   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-      dataframe/df026_AsNumpyArrays.py
-      dataframe/df032_RDFFromNumpy.py
+      analysis/dataframe/df026_AsNumpyArrays.py
+      analysis/dataframe/df032_RDFFromNumpy.py
       math/fit/combinedFit.py
       math/fit/multifit.py
       roofit/rf409_NumPyPandasToRooFit.py)
   file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} pyroot/pyroot004_NumbaDeclare.py)
   file(GLOB requires_pandas  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-      dataframe/df026_AsNumpyArrays.py
+      analysis/dataframe/df026_AsNumpyArrays.py
       roofit/rf409_NumPyPandasToRooFit.py)
   file(GLOB requires_keras   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/keras/*.py)
   file(GLOB requires_torch   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/pytorch/*.py)

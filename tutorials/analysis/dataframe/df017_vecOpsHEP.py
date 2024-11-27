@@ -19,7 +19,7 @@
 import ROOT
 import numpy as np
 
-filename = ROOT.gROOT.GetTutorialDir().Data() + "/dataframe/df017_vecOpsHEP.root"
+filename = ROOT.gROOT.GetTutorialDir().Data() + "/analysis/dataframe/df017_vecOpsHEP.root"
 treename = "myDataset"
 
 def WithPyROOT(filename):
