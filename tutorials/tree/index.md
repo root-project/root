@@ -42,7 +42,7 @@ These examples show how data can be stored to and read back from TTree.
 | tree109_friend.C | Illustrates how to use tree friends |
 | tree113_getval.C | Illustrates how to retrieve tree variables in arrays |
 
-\anchor transformations
+\anchor copy
 ## Copying Trees
 
 These examples shows how to copy the content of trees.
