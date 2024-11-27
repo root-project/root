@@ -32,6 +32,18 @@ or
   root > .x $ROOTSYS/tutorials/benchmarks.C
 ```
 
+## Get started
+
+If you have never used ROOT before and don’t know where to start, we recommend that you first explore the [ROOT introductory course](https://github.com/root-project/student-course). You can also watch the recording of the course, but you should follow the material along on your PC. You also may want to have a look at the documentation of these modules:
+
+- @ref tutorial_hist
+- @ref tutorial_graphs
+- @ref tutorial_fit
+- @ref tutorial_tree
+- @ref tutorial_ntuple
+- @ref tutorial_dataframe
+- @ref tutorial_roofit
+
 The `$ROOTSYS/tutorials` directory includes several sub-directories:
 
 \defgroup tutorial_hist Histograms tutorials
