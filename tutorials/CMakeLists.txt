@@ -161,7 +161,7 @@ if(NOT ROOT_unuran_FOUND)
 endif()
 
 if(NOT ROOT_xml_FOUND)
-  set(xml_veto  xml/*.C
+  set(xml_veto  io/xml/*.C
                 histfactory/*.C   # histfactory requires xml
                 histfactory/*.py
                 roostats/*.C      # most roostats tutorials require xml too,
@@ -203,7 +203,7 @@ endif()
 set(histfactory_veto histfactory/makeExample.C)
 
 if(NOT ROOT_fitsio_FOUND)
-  set(fitsio_veto  fitsio/*.C)
+  set(fitsio_veto  io/fitsio/*.C)
 endif()
 
 if(NOT ROOT_mathmore_FOUND)
@@ -239,7 +239,7 @@ if(NOT ROOT_fftw3_FOUND)
 endif()
 
 if(NOT ROOT_opengl_FOUND)
-  set(opengl_veto tree/staff.C
+  set(opengl_veto io/tree/staff.C
                   gl/*.C)
 endif()
 
@@ -363,13 +363,13 @@ if(root7)
                  v7/fitpanel6.cxx
       )
   if(NOT davix)
-    list(APPEND root7_veto v7/ntuple/ntpl004_dimuon.C)
-    list(APPEND root7_veto v7/ntuple/ntpl011_global_temperatures.C)
+    list(APPEND root7_veto io/ntuple/ntpl004_dimuon.C)
+    list(APPEND root7_veto io/ntuple/ntpl011_global_temperatures.C)
   endif()
   if(NOT dataframe)
-    list(APPEND root7_veto v7/ntuple/ntpl011_global_temperatures.C)
-    list(APPEND root7_veto v7/ntuple/ntpl004_dimuon.C)
-    list(APPEND root7_veto v7/ntuple/ntpl008_import.C)
+    list(APPEND root7_veto io/ntuple/ntpl011_global_temperatures.C)
+    list(APPEND root7_veto io/ntuple/ntpl004_dimuon.C)
+    list(APPEND root7_veto io/ntuple/ntpl008_import.C)
     list(APPEND root7_veto rcanvas/df104.py)
     list(APPEND root7_veto rcanvas/df105.py)
   endif()
@@ -403,18 +403,18 @@ set(extra_veto
   html/*.C
   net/*.C
   legacy/proof/*.C
-  sql/*.C
-  tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
-  tree/tree103_tree.C
-  tree/tree106_tree.C
-  tree/tree108_tree.C
+  io/sql/*.C
+  io/tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
+  io/tree/tree103_tree.C
+  io/tree/tree106_tree.C
+  io/tree/tree108_tree.C
   roostats/rs401d_FeldmanCousins.C  # Takes too much time
   histfactory/ModifyInterpolation.C
-  tree/tree110_copy.C
-  tree/tree111_copy.C
-  tree/tree112_copy.C
-  tree/h1analysis*.C # these are not a tutorial but classes used in run_h1analysis.C
-  tree/h1chain.C
+  io/tree/tree110_copy.C
+  io/tree/tree111_copy.C
+  io/tree/tree112_copy.C
+  io/tree/h1analysis*.C # these are not a tutorial but classes used in run_h1analysis.C
+  io/tree/h1chain.C
   http/*.C
   eve7/*.C
   math/r/rootlogon.C)
@@ -435,7 +435,7 @@ if(MSVC AND NOT llvm13_broken_tests)
          dataframe/df007_snapshot.C
          graphics/earth.C
          graphs/motorcycle.C
-         v7/ntuple/ntpl001_staff.C)
+         io/ntuple/ntpl001_staff.C)
   endif()
 endif()
 
@@ -513,7 +513,7 @@ set(returncode_1 math/fit/fit2a.C
                  hist/cumulative.C
                  hist/hlabels1.C
                  hist/hlabels2.C
-                 tree/h1analysis.C
+                 io/tree/h1analysis.C
                  math/chi2test.C
                  math/r/SimpleFitting.C)
 #---Dependencies------------------------------------------------------
@@ -746,9 +746,9 @@ if(ROOT_pyroot_FOUND)
              legacy/pyroot/*py      # legacy ...
              histfactory/makeQuickModel.py # not a tutorial
              eve/lineset.py         # requires GUI
-             sql/sqlcreatedb.py     # same as the C++ case
-             sql/sqlfilldb.py       # same as the C++ case
-             sql/sqlselect.py       # same as the C++ case
+             io/sql/sqlcreatedb.py     # same as the C++ case
+             io/sql/sqlfilldb.py       # same as the C++ case
+             io/sql/sqlselect.py       # same as the C++ case
              launcher.py            # Not a tutorial
              .enableImplicitMTWrapper.py # Not a tutorial
              )
