@@ -22,8 +22,8 @@ h2 = ROOT.TH1D("h2", "h2", 50, 0, 10)
 f1 = ROOT.TF1("f1", "exp(- x/[0] )")
 f1.SetParameter(0,3)
 
-h1.FillRandom("f1",1900)
-h2.FillRandom("f1", 2000)
+h1.FillRandom(f1, 1900)
+h2.FillRandom(f1, 2000)
 h1.Sumw2()
 h2.Scale(1.9/2.)
 

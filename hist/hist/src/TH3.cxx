@@ -830,15 +830,12 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
 ///
 ///  One can also call TF1::GetRandom to get a random variate from a function.
 
-void TH3::FillRandom(const char *fname, Int_t ntimes, TRandom * rng)
+void TH3::FillRandom(TF1 *fobj, Int_t ntimes, TRandom * rng)
 {
    Int_t bin, binx, biny, binz, ibin, loop;
    Double_t r1, x, y,z, xv[3];
-   //  Search for fname in the list of ROOT defined functions
-   TObject *fobj = gROOT->GetFunction(fname);
-   if (!fobj) { Error("FillRandom", "Unknown function: %s",fname); return; }
    TF3 *f1 = dynamic_cast<TF3*>( fobj );
-   if (!f1) { Error("FillRandom", "Function: %s is not a TF3, is a %s",fname,fobj->IsA()->GetName()); return; }
+   if (!f1) { Error("FillRandom", "Function: %s is not a TF3, is a %s",fobj->GetName(),fobj->IsA()->GetName()); return; }
 
    TAxis & xAxis = fXaxis;
    TAxis & yAxis = fYaxis;
