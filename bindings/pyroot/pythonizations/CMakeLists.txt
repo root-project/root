@@ -87,6 +87,7 @@ set(py_sources
   ROOT/_facade.py
   ROOT/__init__.py
   ROOT/_numbadeclare.py
+  ROOT/_hist.py
   ROOT/_pythonization/__init__.py
   ROOT/_pythonization/_cppinstance.py
   ROOT/_pythonization/_drawables.py

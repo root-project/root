@@ -10,6 +10,7 @@ import cppyy.ll
 
 from ._application import PyROOTApplication
 from ._numbadeclare import _NumbaDeclareDecorator
+from ._hist import _CreateHistogram
 
 from ._pythonization import pythonization
 
@@ -123,7 +124,10 @@ class ROOTFacade(types.ModuleType):
 
         # Create a buffer (LowLevelView) from address
         return cppyy.ll.cast[out_type](addr)
-
+    
+    def CreateHisto(self, name, title, bins, nrange=None, data=None, density=False, weights=None):
+        return _CreateHistogram(name, title, bins, nrange, data, density, weights)
+    
     def _fallback_getattr(self, name):
         # Try:
         # - in the global namespace
