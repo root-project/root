@@ -101,7 +101,7 @@ if (NOT dataframe)
     # RDataFrame
     list(APPEND dataframe_veto dataframe/*.C dataframe/*.py)
     # RDataFrame tutorial in graphs
-    list(APPEND dataframe_veto graphs/timeSeriesFromCSV_TDF.C)
+    list(APPEND dataframe_veto graphs/gr109_timeSeriesFromCSV_TDF.C)
     # TMVA tutorials dependent on RDataFrame
     list(APPEND dataframe_veto tmva/tmva*.C)
     list(APPEND dataframe_veto tmva/TMVA_SOFIE_RDataFrame*.C)
@@ -244,7 +244,7 @@ if(NOT ROOT_opengl_FOUND)
 endif()
 
 if(NOT GRAPHVIZ_FOUND)
-  set(gviz_veto graphs/graphstruct.C)
+  set(gviz_veto graphs/gr016_struct.C)
 endif()
 
 if(NOT TBB_FOUND AND NOT builtin_tbb)
@@ -434,7 +434,7 @@ if(MSVC AND NOT llvm13_broken_tests)
     list(APPEND extra_veto
          dataframe/df007_snapshot.C
          graphics/earth.C
-         graphs/motorcycle.C
+         graphs/gr015_smooth.C
          v7/ntuple/ntpl001_staff.C)
   endif()
 endif()
@@ -504,8 +504,8 @@ set(returncode_1 fit/fit2a.C
                  graphics/earth.C
                  graphics/pavetext.C
                  graphics/tmathtext.C graphics/tmathtext2.C
-                 graphs/exclusiongraph.C
-                 graphs/graphstruct.C
+                 graphs/gr106_exclusiongraph.C
+                 graphs/gr016_struct.C
                  hist/ContourList.C
                  hist/hbars.C
                  hist/th2polyBoxes.C

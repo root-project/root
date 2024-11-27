@@ -28,8 +28,8 @@ void demos() {
    bar->AddButton("fit1",          ".x fit/fit1.C",           "A Simple Fitting Example");
    bar->AddButton("multifit",      ".x fit/multifit.C",       "Fitting in Subranges of Histograms");
    bar->AddButton("h1ReadAndDraw", ".x hist/h1ReadAndDraw.C", "Drawing Options for 1D Histograms");
-   bar->AddButton("graph",         ".x graphs/graph.C",       "Example of a Simple Graph");
-   bar->AddButton("gerrors",       ".x graphs/gerrors.C",     "Example of a Graph with Error Bars");
+   bar->AddButton("graph",         ".x graphs/gr001_basic.C", "Example of a Simple Graph");
+   bar->AddButton("gerrors",       ".x graphs/gr002_err_1gr.C",     "Example of a Graph with Error Bars");
    bar->AddButton("tornado",       ".x graphics/tornado.C",   "Examples of 3-D PolyMarkers");
    bar->AddButton("geometry",      ".x geom/rootgeom.C",      "Example of TGeoManager drawing");
    bar->AddButton("file",          ".x io/file.C",            "The ROOT File Format");
