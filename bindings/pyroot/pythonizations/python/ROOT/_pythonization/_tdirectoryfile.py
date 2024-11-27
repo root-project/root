@@ -80,7 +80,7 @@ def pythonize_tdirectoryfile(klass):
     """
     TDirectoryFile inherits from TDirectory the pythonized attr syntax (__getattr__)
     and WriteObject method.
-    On the other side, the Get() method is pythonised only in TDirectoryFile.
+    On the other side, the Get() method is pythonized only in TDirectoryFile.
     Thus, the situation is now the following:
 
     1) __getattr__ : TDirectory --> TDirectoryFile --> TFile
