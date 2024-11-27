@@ -251,6 +251,9 @@ static bool IsCopyConstructorDeleted(QualType QT)
    }
 
    assert(0 && "did not find a copy constructor?");
+   // Should never happen and the return value is somewhat arbitrary, but we did not see a deleted copy ctor. The user
+   // will be told if the generated code doesn't compile.
+   return false;
 }
 
 void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
