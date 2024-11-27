@@ -46,6 +46,10 @@ class rebin:
     def __call__(self, histogram):
         return histogram.Rebin(self.ngroup, self.new_name)
 
+class sum:
+    def __call__(self, histogram):
+        return histogram.Integral()
+
 ## ------------------------------------------------
 ## ------------------------------------------------
 
@@ -54,6 +58,7 @@ def add_uhi_helper(module):
     module.underflow = underflow
     module.overflow = overflow
     module.rebin = rebin
+    module.sum = sum
 
 class PyROOTConfiguration(object):
     """Class for configuring PyROOT"""

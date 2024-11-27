@@ -41,20 +41,24 @@ def _getbin(self, bin_or_callable):
     print("getitem at", bin)
     return bin
 
+def _slice(self, slice):
+    print(
+        f"Slice object received: start={slice.start}, stop={slice.stop}, step={slice.step}"
+    )
+    if slice.start != None or slice.stop != None:
+        raise NotImplementedError(
+            f"ROOT does not support slicing histograms if start and stop are not None. If you need this functionality please open a github issue (https://github.com/orgs/root-project/root) or a ROOT forum post (https://root-forum.cern.ch/)."
+        )
+    if callable(slice.step):
+        return slice.step(self)
+    elif type(slice.step) is int:
+        raise TypeError("Skipping is not supported as of UHI v0.5.1")
+    return self
 
 def _getitem(self, index):
     if isinstance(index, slice):
         # handle slicing
-        print(
-            f"Slice object received: start={index.start}, stop={index.stop}, step={index.step}"
-        )
-        if index.start != None or index.stop != None:
-            raise NotImplementedError(
-                f"ROOT does not support slicing histograms if start and stop are not None. If you need this functionality please open a github issue (https://github.com/orgs/root-project/root) or a ROOT forum post (https://root-forum.cern.ch/)."
-            )
-        if callable(index.step):
-            return index.step(self)
-        return self
+        return _slice(self, index)
     bin = _getbin(self, index)
     return self.GetBinContent(bin)
 
