@@ -431,7 +431,7 @@ TEST(TClingCallFunc, GH_14425_Virtual)
       GH_14425_Virtual(int m = 1) : fMember(m) {}
       GH_14425_Virtual(const GH_14425_Virtual &) = default;
       GH_14425_Virtual(GH_14425_Virtual &&o) : fMember(o.fMember) { o.fMember = 0; }
-      void f() {}
+      virtual void f() {}
    };
    gInterpreter->Declare(R"cpp(
                            struct GH_14425_Virtual {
@@ -439,7 +439,7 @@ TEST(TClingCallFunc, GH_14425_Virtual)
                               GH_14425_Virtual(int m = 1) : fMember(m) {}
                               GH_14425_Virtual(const GH_14425_Virtual &) = default;
                               GH_14425_Virtual(GH_14425_Virtual &&o) : fMember(o.fMember) { o.fMember = 0; }
-                              void f() {}
+                              virtual void f() {}
                            };
                            int GH_14425_v(GH_14425_Virtual p) { return p.fMember; }
                            )cpp");
