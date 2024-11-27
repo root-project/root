@@ -1,4 +1,4 @@
-\defgroup Pythonizations PyROOT pythonizations
-\brief PyROOT specific pythonizations.
+\defgroup Pythonizations Python interface
+\brief Python-specific functionalities offered by ROOT
 
-This page lists PyROOT specific user functions as well as all the ROOT classes with pythonizations - special, more pythonic interfaces for PyROOT. 
+This page lists the so-called "pythonizations", that is those functionalities offered by ROOT for classes and functions which are specific to Python usage of the package and provide a more pythonic experience.
