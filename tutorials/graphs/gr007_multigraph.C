@@ -1,7 +1,9 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Create and Draw a TMultiGraph.
+/// TMultiGraph is used to combine multiple graphs into one plot. 
+/// Allowing to overlay different graphs can be useful for comparing different datasets
+/// or for plotting multiple related graphs on the same canvas.
 ///
 /// \macro_image
 /// \macro_code
@@ -9,16 +11,16 @@
 /// \author Rene Brun
 
 
-void multigraph()
-{
+void gr007_multigraph() {
    gStyle->SetOptFit();
    auto c1 = new TCanvas("c1","multigraph",700,500);
    c1->SetGrid();
 
-   // draw a frame to define the range
+   //Initialize a TMultiGraph to hold multiple graphs
+   //This ensures the entire dataset from all added graphs is visible without manual range adjustments.
    auto mg = new TMultiGraph();
 
-   // create first graph
+   //Create first graph
    const Int_t n1 = 10;
    Double_t px1[] = {-0.1, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
    Double_t py1[] = {-1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
@@ -31,10 +33,11 @@ void multigraph()
    gr1->Fit("gaus","q");
    auto func1 = (TF1 *) gr1->GetListOfFunctions()->FindObject("gaus");
    func1->SetLineColor(kBlue);
-
+   
+   //Add the first graph to the multigraph
    mg->Add(gr1);
 
-   // create second graph
+   //Create second graph
    const Int_t n2 = 10;
    Float_t x2[]  = {-0.28, 0.005, 0.19, 0.29, 0.45, 0.56,0.65,0.80,0.90,1.01};
    Float_t y2[]  = {2.1,3.86,7,9,10,10.55,9.64,7.26,5.42,2};
@@ -47,13 +50,14 @@ void multigraph()
    gr2->Fit("pol5","q");
    auto func2 = (TF1 *) gr2->GetListOfFunctions()->FindObject("pol5");
    func2->SetLineColor(kRed);
-   func2->SetLineStyle(kDashed);
+   func2->SetLineStyle(2);
 
+   //Add the second graph to the multigraph
    mg->Add(gr2);
 
    mg->Draw("ap");
 
-   //force drawing of canvas to generate the fit TPaveStats
+   //Force drawing of canvas to generate the fit TPaveStats
    c1->Update();
 
    auto stats1 = (TPaveStats*) gr1->GetListOfFunctions()->FindObject("stats");
