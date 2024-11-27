@@ -16,7 +16,9 @@ import sys
 import traceback
 
 import cppyy
+# \cond INTERNALS
 gbl_namespace = cppyy.gbl
+# \endcond
 
 from ._generic import pythonize_generic
 
@@ -73,8 +75,6 @@ def pythonization(class_name, ns='::', is_prefix=False):
         def passes_filter(class_name):
             return class_name in target
         
-# \cond INTERNALS
-
     def pythonization_impl(user_pythonizor):
         '''
         The real decorator. Accepts a user-provided function and decorates it.
@@ -134,6 +134,8 @@ def pythonization(class_name, ns='::', is_prefix=False):
         return user_pythonizor
 
     return pythonization_impl
+
+# \cond INTERNALS
 
 def _check_target(target):
     '''
