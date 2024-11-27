@@ -184,15 +184,4 @@ def cleanup():
         facade.__dict__["app"].keep_polling = False
         facade.__dict__["app"].process_root_events.join()
 
-    if "libROOTPythonizations" in sys.modules:
-
-        from ROOT import PyConfig
-
-        if PyConfig.ShutDown:
-            # Hard teardown: run part of the gROOT shutdown sequence.
-            # Running it here ensures that it is done before any ROOT libraries
-            # are off-loaded, with unspecified order of static object destruction.
-            facade.gROOT.EndOfProcessCleanups()
-
-
 atexit.register(cleanup)
