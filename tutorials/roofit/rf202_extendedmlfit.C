@@ -1,9 +1,9 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Setting up an extended maximum likelihood fit.
+/// \preview  Setting up an extended maximum likelihood fit.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

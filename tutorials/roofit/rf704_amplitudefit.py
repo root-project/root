@@ -1,9 +1,9 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Special pdf's: using a pdf defined by a sum of real-valued amplitude components
+## \preview  Special pdf's: using a pdf defined by a sum of real-valued amplitude components
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

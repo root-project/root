@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook
-/// Example of a Tree where branches are variable length arrays
+/// \preview  Example of a Tree where branches are variable length arrays
 /// A second Tree is created and filled in parallel.
 /// Run this script with
 /// ~~~
@@ -10,8 +10,10 @@
 /// In the function treer, the first Tree is open.
 /// The second Tree is declared friend of the first tree.
 /// TTree::Draw is called with variables from both Trees.
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date September 2016
 /// \author Rene Brun
 
 #include "TFile.h"

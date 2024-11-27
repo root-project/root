@@ -1,10 +1,11 @@
 /// \file
 /// \ingroup tutorial_math
-/// Demo for quantiles (with highlight mode)
+/// \preview  Demo for quantiles (with highlight mode)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date January 2022
 /// \authors Rene Brun, Eddy Offermann, Jan Musinsky
 
 TList *lq = nullptr;

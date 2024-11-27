@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Plot a PDF in disjunct ranges, and get normalisation right.
+## \preview  Plot a PDF in disjunct ranges, and get normalisation right.
 ##
 ## Usually, when comparing a fit to data, one should first plot the data, and then the PDF.
 ## In this case, the PDF is automatically normalised to match the number of data events in the plot.
@@ -10,7 +10,7 @@
 ##
 ## In this tutorial, we show how to explicitly choose the normalisation when plotting using `NormRange()`.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

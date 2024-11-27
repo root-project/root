@@ -1,13 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #211
+## \preview  'ADDITION AND CONVOLUTION' RooFit tutorial macro #211
 ## Working a with a p.d.f. with a convolution operator in terms
 ## of a parameter
 ##
 ## (require ROOT to be compiled with --enable-fftw3)
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

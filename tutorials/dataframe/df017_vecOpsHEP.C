@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// Use RVecs to plot the transverse momentum of selected particles.
+/// \preview  Use RVecs to plot the transverse momentum of selected particles.
 ///
 /// This tutorial shows how VecOps can be used to slim down the programming
 /// model typically adopted in HEP for analysis.
@@ -11,7 +11,7 @@
 /// greater than 100 MeV.
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
 ///
 /// \date March 2018
 /// \authors Danilo Piparo (CERN), Andre Vieira Silva

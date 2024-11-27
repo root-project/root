@@ -1,9 +1,9 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Likelihood and minimization: interactive minimization with MINUIT
+/// \preview  Likelihood and minimization: interactive minimization with MINUIT
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

@@ -1,10 +1,10 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Basic functionality: examples on normalization and integration of pdfs, construction
+## \preview  Basic functionality: examples on normalization and integration of pdfs, construction
 ## of cumulative distribution functions from monodimensional pdfs
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

@@ -1,13 +1,14 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// This example demonstrates how to display a 2D histogram and
+/// \preview  This example demonstrates how to display a 2D histogram and
 /// use TCutG object to select bins for drawing.
 /// Moving TCutG object one can change displayed region of histogram
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date January 2023
 /// \author Sergey Linev
 
 void h2_cut()

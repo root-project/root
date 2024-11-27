@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
-/// Echo object at mouse position and show a graphics line.
+/// \preview  Echo object at mouse position and show a graphics line.
 /// Example of macro called when a mouse event occurs in a pad.
 ///
 /// Example:
@@ -17,8 +17,10 @@
 /// to develop more powerful interactive applications exploiting CLING
 /// as a development engine.
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date February 2023
 /// \authors Rene Brun, Sergey Linev
 
 void exec2()

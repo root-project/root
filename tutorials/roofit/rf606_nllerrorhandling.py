@@ -1,11 +1,11 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #606
+## \preview  'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #606
 ##
 ## Understanding and customizing error handling in likelihood evaluations
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

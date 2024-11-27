@@ -1,10 +1,10 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' RooFit tutorial macro #102
+## \preview  'BASIC FUNCTIONALITY' RooFit tutorial macro #102
 ## Importing data from ROOT TTrees and THx histograms
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

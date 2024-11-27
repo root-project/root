@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook -js
-/// Draw a graph with multiple y errors
+/// \preview  Draw a graph with multiple y errors
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date December 2019
 /// \author Simon Spies
 
 void gmultierrors() {

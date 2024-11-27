@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Tutorial illustrating how to create a plot comparing a Breit Wigner to a Relativistic Breit Wigner
+/// \preview  Tutorial illustrating how to create a plot comparing a Breit Wigner to a Relativistic Breit Wigner
 ///
 /// can be run with:
 ///
@@ -9,9 +9,10 @@
 ///  root[0] .x BreitWigner.C
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date June 2022
 /// \author Jack Lindon
 
 #include "TMath.h"

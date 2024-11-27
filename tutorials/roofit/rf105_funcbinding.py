@@ -1,11 +1,11 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' RooFit tutorial macro #105
+## \preview  'BASIC FUNCTIONALITY' RooFit tutorial macro #105
 ## Demonstration of binding ROOT Math functions as RooFit functions
 ## and pdfs
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

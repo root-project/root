@@ -1,9 +1,9 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Special pdf's: special decay pdf for B physics with mixing and/or CP violation
+/// \preview  Special pdf's: special decay pdf for B physics with mixing and/or CP violation
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

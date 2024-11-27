@@ -1,11 +1,12 @@
 ## \file
 ## \ingroup tutorial_graphs
 ## \notebook -js
-## Bent error bars. Inspired from work of Olivier Couet.
+## \preview  Bent error bars. Inspired from work of Olivier Couet.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ##
+## \date June 2017
 ## \author Alberto Ferro
 
 import ROOT

@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook -js
-/// Strip chart example.
+/// \preview  Strip chart example.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Rene Brun
 
 #include "TStopwatch.h"

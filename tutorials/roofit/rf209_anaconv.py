@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Addition and convolution: decay function pdfs with optional B physics effects (mixing
+## \preview  Addition and convolution: decay function pdfs with optional B physics effects (mixing
 ## and CP violation) that can be analytically convolved with e.g. Gaussian resolution functions
 ##
 ## ```
@@ -10,7 +10,7 @@
 ## pdf3 = decay(t,tau) (x) (f*gauss1(t,m1,s1) + (1-f)*gauss2(t,m1,s1))
 ## ```
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

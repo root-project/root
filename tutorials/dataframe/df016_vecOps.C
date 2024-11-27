@@ -1,13 +1,13 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// Process collections in RDataFrame with the help of RVec.
+/// \preview  Process collections in RDataFrame with the help of RVec.
 ///
 /// This tutorial shows the potential of the VecOps approach for treating collections
 /// stored in datasets, a situation very common in HEP data analysis.
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
 ///
 /// \date February 2018
 /// \author Danilo Piparo (CERN)

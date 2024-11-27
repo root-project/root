@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Example showing the usage of the major special math functions  (gamma, beta, erf)  in ROOT
+/// \preview  Example showing the usage of the major special math functions  (gamma, beta, erf)  in ROOT
 /// To execute the macro type in:
 ///
 /// ~~~{.cpp}
@@ -11,9 +11,10 @@
 /// It will create one canvas with the representation
 /// of the tgamma, lgamma, beta, erf and erfc functions
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2023
 /// \author Magdalena Slawinska
 
 #include "TMath.h"

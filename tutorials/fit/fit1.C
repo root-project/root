@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook
-/// Simple fitting example (1-d histogram with an interpreted function)
+/// \preview  Simple fitting example (1-d histogram with an interpreted function)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Rene Brun
 
 #include "TCanvas.h"

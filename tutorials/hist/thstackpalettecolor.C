@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Palette coloring for histograms' stack is activated thanks to the options `PFC`
+/// \preview  Palette coloring for histograms' stack is activated thanks to the options `PFC`
 /// (Palette Fill Color), `PLC` (Palette Line Color) and `AMC` (Palette Marker Color).
 /// When one of these options is given to `THStack::Draw` the histograms  in the
 /// `THStack` get their color from the current color palette defined by
@@ -11,9 +11,10 @@
 /// In this example four histograms are displayed with palette coloring.
 /// The color of each histogram is picked inside the palette `kOcean`.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date December 2018
 /// \author Olivier Couet
 
 void thstackpalettecolor()

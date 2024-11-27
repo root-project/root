@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook -js
-/// Example for fitting signal/background.
+/// \preview  Example for fitting signal/background.
 /// This example can be executed with:
 ///
 /// ~~~{.cpp}
@@ -9,10 +9,11 @@
 /// root > .x FittingDemo.C+ (using the native complier via ACLIC)
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Rene Brun
 
 #include "TH1.h"

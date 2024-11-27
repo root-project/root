@@ -1,14 +1,15 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// This example compares what the system time function gmtime and localtime give
+/// \preview  This example compares what the system time function gmtime and localtime give
 /// with what gives TGaxis. It can be used as referenced test to check if TGaxis
 /// is working properly.
 /// The original code was developed by Philippe Gras (CEA Saclay. IRFU/SEDI)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date May 2024
 /// \authors Philippe Gras, Bertrand Bellenot, Olivier Couet
 
 #include "TAxis.h"

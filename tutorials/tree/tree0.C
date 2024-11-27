@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook -nodraw
-/// Simple Event class example
+/// \preview  Simple Event class example
 ///
 /// execute as: .x tree0.C++
 ///
@@ -35,8 +35,10 @@
 ///   .class Det
 /// ~~~
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Heiko.Scheit@mpi-hd.mpg.de
 
 #include <TRandom.h>

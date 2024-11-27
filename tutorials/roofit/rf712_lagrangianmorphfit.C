@@ -1,11 +1,11 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Performing a simple fit with RooLagrangianMorphFunc.
+/// \preview  Performing a simple fit with RooLagrangianMorphFunc.
 /// a morphing function is setup as a function of three variables and
 /// a fit is performed on a pseudo-dataset.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

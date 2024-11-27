@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## The W boson mass analysis from the ATLAS Open Data release of 2020, with RDataFrame.
+## \preview  The W boson mass analysis from the ATLAS Open Data release of 2020, with RDataFrame.
 ##
 ## This tutorial is the analysis of the W boson mass taken from the ATLAS Open Data release in 2020
 ## (http://opendata.atlas.cern/release/2020/documentation/). The data was recorded with the ATLAS detector
@@ -14,7 +14,7 @@
 ##
 ## See the [corresponding spec json file](https://github.com/root-project/root/blob/master/tutorials/dataframe/df105_WBosonAnalysis.json).
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

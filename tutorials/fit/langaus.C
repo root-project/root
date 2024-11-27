@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook
-/// Convoluted Landau and Gaussian Fitting Function
+/// \preview  Convoluted Landau and Gaussian Fitting Function
 ///         (using ROOT's Landau and Gauss functions)
 ///
 ///  Based on a Fortran code by R.Fruehwirth (fruhwirth@hephy.oeaw.ac.at)
@@ -18,10 +18,11 @@
 ///  root > .x langaus.C++
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date July 2022
 /// \authors H.Pernegger, Markus Friedl
 
 #include "TH1.h"

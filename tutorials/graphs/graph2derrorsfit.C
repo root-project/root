@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Draw and fit a TGraph2DErrors
+/// \preview  Draw and fit a TGraph2DErrors
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date July 2016
 /// \author Olivier Couet
 
 #include <TMath.h>

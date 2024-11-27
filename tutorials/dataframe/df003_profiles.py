@@ -1,14 +1,14 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## Use TProfiles with RDataFrame.
+## \preview  Use TProfiles with RDataFrame.
 ##
 ## This tutorial illustrates how to use TProfiles in combination with the
 ## RDataFrame. See the documentation of TProfile and TProfile2D to better
 ## understand the analogy of this code with the example one.
 ##
 ## \macro_code
-## \macro_image
+## \macro_image (tcanvas_js)
 ##
 ## \date February 2017
 ## \author Danilo Piparo (CERN)

@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -js
-## Show how NanoAOD files can be processed with RDataFrame.
+## \preview  Show how NanoAOD files can be processed with RDataFrame.
 ##
 ## This tutorial illustrates how NanoAOD files can be processed with ROOT
 ## dataframes. The NanoAOD-like input files are filled with 66 mio. events
@@ -14,7 +14,7 @@
 ##
 ## More details about the dataset can be found on [the CERN Open Data portal](http://opendata.web.cern.ch/record/12341).
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

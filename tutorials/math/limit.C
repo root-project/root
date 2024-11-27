@@ -1,13 +1,14 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebooks
-/// This program demonstrates the computation of 95 % C.L. limits.
+/// \preview  This program demonstrates the computation of 95 % C.L. limits.
 /// It uses a set of randomly created histograms.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Christophe Delaere
 
 #include <iostream>

@@ -1,8 +1,9 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Extended maximum likelihood fit in multiple ranges.
+## \preview  Extended maximum likelihood fit in multiple ranges.
 ##
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

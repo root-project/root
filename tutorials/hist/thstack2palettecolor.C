@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Palette coloring for 2D histograms' stack is activated thanks to the option `PFC`
+/// \preview  Palette coloring for 2D histograms' stack is activated thanks to the option `PFC`
 /// (Palette Fill Color).
 /// When this option is given to `THStack::Draw` the histograms  in the
 /// `THStack` get their color from the current color palette defined by
@@ -11,9 +11,10 @@
 /// In this example four 2D histograms are displayed with palette coloring.
 /// The color of each graph is picked inside the palette number 1.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2022
 /// \author Olivier Couet
 
 void thstack2palettecolor() 

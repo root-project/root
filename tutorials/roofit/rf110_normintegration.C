@@ -1,10 +1,10 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Basic functionality: normalization and integration of pdfs, construction of cumulative distribution
+/// \preview  Basic functionality: normalization and integration of pdfs, construction of cumulative distribution
 /// monodimensional functions
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

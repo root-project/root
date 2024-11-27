@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Show the different kinds of Bessel functions available in ROOT
+/// \preview  Show the different kinds of Bessel functions available in ROOT
 /// To execute the macro type in:
 ///
 /// ~~~{.cpp}
@@ -12,9 +12,10 @@
 /// of the  cylindrical and spherical Bessel functions
 /// regular and modified
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Magdalena Slawinska
 
 #include "TMath.h"

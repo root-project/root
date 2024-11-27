@@ -1,11 +1,11 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Getting Contours From TH2D.
+/// \preview  Getting Contours From TH2D.
 ///
 /// #### Image produced by `.x ContourList.C`
 /// The contours values are drawn next to each contour.
-/// \macro_image
+/// \macro_image (tcanvas_js)
 ///
 /// #### Output produced by `.x ContourList.C`
 /// It shows that 6 contours and 12 graphs were found.
@@ -14,6 +14,7 @@
 /// #### `ContourList.C`
 /// \macro_code
 ///
+/// \date November 2022
 /// \authors Josh de Bever (CSI Medical Physics Group, The University of Western Ontario, London, Ontario, Canada), Olivier Couet
 
 Double_t SawTooth(Double_t x, Double_t WaveLen);

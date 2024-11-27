@@ -1,9 +1,9 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-/// Likelihood and minimization: demonstration of options of the RooFitResult class
+/// \preview  Likelihood and minimization: demonstration of options of the RooFitResult class
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
-/// Evaluate the performance of THnSparse vs TH1/2/3/nF
+/// \preview  Evaluate the performance of THnSparse vs TH1/2/3/nF
 /// for different numbers of dimensions and bins per dimension.
 ///
 /// The script calculates the bandwidth for filling and retrieving
@@ -32,8 +32,10 @@
 ///  root[1] sparsehist()
 /// ~~~
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Axel.Naumann
 
 #include "TH1.h"

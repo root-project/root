@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Example of candle plot showing the whiskers definition.
+/// \preview  Example of candle plot showing the whiskers definition.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date June 2022
 /// \author Georg Troska
 
 void candleplotwhiskers() {

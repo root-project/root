@@ -1,11 +1,11 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'SPECIAL PDFS' RooFit tutorial macro #705
+## \preview  'SPECIAL PDFS' RooFit tutorial macro #705
 ##
 ## Linear interpolation between p.d.f shapes using the 'Alex Read' algorithm
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

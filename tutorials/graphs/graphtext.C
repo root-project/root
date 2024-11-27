@@ -1,14 +1,15 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Draw a graph with text attached to each point.
+/// \preview  Draw a graph with text attached to each point.
 /// The text is drawn in a TExec function attached to the TGraph,
 /// therefore if the a graph's point is
 /// moved interactively, the text will be automatically updated.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date October 2019
 /// \author Olivier Couet
 
 void graphtext() {

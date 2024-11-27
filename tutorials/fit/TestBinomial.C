@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook -js
-/// Perform a fit to a set of data with binomial errors
+/// \preview  Perform a fit to a set of data with binomial errors
 /// like those derived from the division of two histograms.
 /// Three different fits are performed and compared:
 ///
@@ -29,10 +29,11 @@
 ///           .x TestBinomial.C+(100, 1000)
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Rene Brun
 
 #include <TBinomialEfficiencyFitter.h>

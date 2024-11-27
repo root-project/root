@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_tree
-///
+/// \preview 
 /// This tutorial illustrates how to use the highlight mode with trees.
 /// It first creates a TTree from a temperature data set in Prague between 1775
 /// and 2004. Then it defines three pads representing the temperature per year,
@@ -10,6 +10,7 @@
 /// the days plot. Movements on the days' plot will display the exact temperature
 /// for a given day.
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
 /// \date March 2018

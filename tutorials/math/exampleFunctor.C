@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Tutorial illustrating how creating a TF1 class using functor or class member functions
+/// \preview  Tutorial illustrating how creating a TF1 class using functor or class member functions
 ///
 /// can be run with:
 ///
@@ -10,9 +10,10 @@
 ///  root > .x exampleFunctor.C+ with ACLIC
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Lorenzo Moneta
 
 #include "TF1.h"

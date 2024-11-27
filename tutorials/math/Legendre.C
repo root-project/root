@@ -1,13 +1,14 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Example of first few Legendre Polynomials
+/// \preview  Example of first few Legendre Polynomials
 ///
 /// Draws a graph.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Lorenzo Moneta
 
 

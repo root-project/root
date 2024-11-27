@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook
-/// Example illustrating how to draw the n-sigma contour of a Minuit fit.
+/// \preview  Example illustrating how to draw the n-sigma contour of a Minuit fit.
 /// To get the n-sigma contour the ERRDEF parameter in Minuit has to set
 /// to n^2. The fcn function has to be set before the routine is called.
 ///
@@ -10,10 +10,11 @@
 /// The TGraph object is created via the interpreter. The user must cast it
 /// to a TGraph*
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2022
 /// \author Rene Brun
 
 #include <TCanvas.h>

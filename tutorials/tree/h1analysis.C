@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook -header -nodraw
-/// Example of analysis class for the H1 data.
+/// \preview  Example of analysis class for the H1 data.
 ///
 /// This file uses 4 large data sets from the H1 collaboration at DESY Hamburg.
 /// One can access these data sets (277 MBytes) from the standard Root web site
@@ -143,8 +143,10 @@
 ///
 /// call Process as in step B. Of course this works also for local processing.
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2020
 /// \author Rene Brun
 
 #include "h1analysis.h"

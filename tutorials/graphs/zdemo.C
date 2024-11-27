@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// This macro is an example of graphs in log scales with annotations.
+/// \preview  This macro is an example of graphs in log scales with annotations.
 ///
 /// The presented results are predictions of invariant cross-section
 /// of Direct Photons produced at RHIC energies, based on the universality of
@@ -13,9 +13,10 @@
 /// Note that the way greek symbols, super/subscripts are obtained
 /// illustrate the current limitations of Root in this area.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date October 2023
 /// \authors Michael Tokarev, Elena Potrebenikova (JINR Dubna)
 
 #include "TCanvas.h"

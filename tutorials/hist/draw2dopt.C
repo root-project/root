@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Display the various 2-d drawing options
+/// \preview  Display the various 2-d drawing options
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date June 2022
 /// \author Rene Brun
 
 void draw2dopt()

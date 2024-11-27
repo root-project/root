@@ -1,12 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-/// Multidimensional models: multi-dimensional pdfs through composition
+/// \preview  Multidimensional models: multi-dimensional pdfs through composition
 /// e.g. substituting a pdf parameter with a function that depends on other observables
 ///
 ///  `pdf = gauss(x,f(y),s)` with `f(y) = a0 + a1*y`
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

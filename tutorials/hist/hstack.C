@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Example of stacked histograms: class THStack.
+/// \preview  Example of stacked histograms: class THStack.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date December 2022
 /// \author Rene Brun
 
 void hstack()

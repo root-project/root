@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Tutorial illustrating the use of the Student and F distributions
+/// \preview  Tutorial illustrating the use of the Student and F distributions
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Anna Kreshuk
 
 #include "TMath.h"

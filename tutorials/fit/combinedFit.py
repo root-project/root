@@ -1,13 +1,14 @@
 ## \file
 ## \ingroup tutorial_fit
 ## \notebook
-## Combined (simultaneous) fit of two histogram with separate functions
+## \preview  Combined (simultaneous) fit of two histogram with separate functions
 ## and some common parameters
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_output
 ## \macro_code
 ##
+## \date January 2022
 ## \author Jonas Rembser, Lorenzo Moneta (C++ version)
 
 

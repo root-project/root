@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
-///
+/// \preview 
 /// This tutorial demonstrates how the highlight mechanism can be used on an histogram.
 /// A 2D histogram is booked an filled with a random gaussian distribution and
 /// drawn with the "col" option.
@@ -8,6 +8,7 @@
 /// on the histogram open a new canvas displaying the two X and Y projections
 /// at the highlighted bin.
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
 /// \date March 2018

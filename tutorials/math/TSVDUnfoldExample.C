@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-///  Data unfolding using Singular Value Decomposition
+/// \preview   Data unfolding using Singular Value Decomposition
 ///
 /// TSVDUnfold example
 ///
@@ -9,9 +9,10 @@
 ///
 /// Example distribution and smearing model from Tim Adye (RAL)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2024
 /// \authors Kerstin Tackmann, Andreas Hoecker, Heiko Lacker
 
 #include <iostream>

@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Example of CrystalBall Function and its distribution (pdf and cdf)
+/// \preview  Example of CrystalBall Function and its distribution (pdf and cdf)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Lorenzo Moneta
 
 void CrystalBall()  {

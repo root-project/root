@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook
-/// How to write a TClonesArray to a TTree
+/// \preview  How to write a TClonesArray to a TTree
 ///
 /// The following tests can be run
 /// Interactive tests
@@ -18,8 +18,10 @@
 /// root -b -q "tcl.C(1)"
 /// root -b -q "tcl.C++(1)"
 /// ~~~
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2018
 /// \author Rene Brun
 
 #include "TFile.h"

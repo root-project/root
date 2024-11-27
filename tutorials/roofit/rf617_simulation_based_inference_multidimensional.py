@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Use Simulation Based Inference (SBI) in multiple dimensions in RooFit.
+## \preview  Use Simulation Based Inference (SBI) in multiple dimensions in RooFit.
 ##
 ## This tutorial shows how to use SBI in higher dimension in ROOT.
 ## This tutorial transfers the simple concepts of the 1D case introduced in
@@ -20,7 +20,7 @@
 ##
 ## For an introductory background see rf615_simulation_based_inference.py
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

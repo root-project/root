@@ -1,13 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ADDITION AND CONVOLUTION' RooFit tutorial macro #208
+## \preview  'ADDITION AND CONVOLUTION' RooFit tutorial macro #208
 ## One-dimensional numeric convolution
 ## (require ROOT to be compiled with --enable-fftw3)
 ##
 ## pdf = landau(t) (x) gauss(t)
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook
-/// Convert a THnSparse to a TTree using efficient iteration through the THnSparse
+/// \preview  Convert a THnSparse to a TTree using efficient iteration through the THnSparse
 /// and draw a THnSparse using TParallelCoord.
 /// The plot will contain one line for each filled bin,
 /// with the bin's coordinates on each axis, and the bin's content on
@@ -12,9 +12,10 @@
 ///    .L $ROOTSYS/tutorials/tree/drawsparse.C+
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Axel Naumann
 
 

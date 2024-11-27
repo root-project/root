@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Use Morphing in RooFit.
+/// \preview  Use Morphing in RooFit.
 ///
 /// This tutorial shows how to use template morphing inside RooFit. As input we have several
 /// Gaussian distributions. The output is one gaussian, with a specific mean value.
@@ -10,7 +10,7 @@
 ///
 /// Based on example of Kyle Cranmer https://gist.github.com/cranmer/b67830e46d53d5f7cf2d.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

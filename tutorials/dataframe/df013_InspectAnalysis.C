@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// Use callbacks to update a plot and a progress bar during the event loop.
+/// \preview  Use callbacks to update a plot and a progress bar during the event loop.
 ///
 /// Showcase registration of callback functions that act on partial results while
 /// the event-loop is running using `OnPartialResult` and `OnPartialResultSlot`.
 /// This tutorial is not meant to run in batch mode.
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
 /// \date September 2017

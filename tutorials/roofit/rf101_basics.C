@@ -1,11 +1,11 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Basic functionality: fitting, plotting, toy data generation on one-dimensional PDFs.
+/// \preview  Basic functionality: fitting, plotting, toy data generation on one-dimensional PDFs.
 ///
 ///  pdf = gauss(x,m,s)
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

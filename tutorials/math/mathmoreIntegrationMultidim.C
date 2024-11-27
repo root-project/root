@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook -nodraw
-/// Example on the usage of the multidimensional integration algorithm of MathMore
+/// \preview  Example on the usage of the multidimensional integration algorithm of MathMore
 /// Please refer to the web documentation for further details: 
 ///      https://root.cern/manual/math/#numerical-integration
 /// To execute the macro type the following:
@@ -16,10 +16,11 @@
 /// The ROOT configure will automatically find GSL if the script gsl-config (from GSL) is in your PATH,.
 /// otherwise you need to configure root with the options --gsl-incdir and --gsl-libdir.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date August 2024
 /// \authors A. Tolosa-Delgado
 
 double f2(const double * x) {

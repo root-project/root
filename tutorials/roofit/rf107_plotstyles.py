@@ -1,9 +1,9 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Basic functionality: demonstration of various plotting styles of data, functions in a RooPlot
+## \preview  Basic functionality: demonstration of various plotting styles of data, functions in a RooPlot
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

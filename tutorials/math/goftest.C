@@ -1,16 +1,17 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// GoFTest tutorial macro
+/// \preview  GoFTest tutorial macro
 ///
 /// Using Anderson-Darling and Kolmogorov-Smirnov goodness of fit tests
 /// 1 sample test is performed comparing data with a log-normal distribution
 /// and a 2 sample test is done comparing two gaussian data sets.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date November 2023
 /// \author Bartolomeu Rabacal
 
 #include <cassert>

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook
-/// This example illustrates how to make a Tree from variables or arrays
+/// \preview  This example illustrates how to make a Tree from variables or arrays
 /// in a C struct - without a dictionary, by creating the branches for
 /// builtin types (int, float, double) and arrays explicitly.
 /// See tree2a.C for the same example using a class with dictionary
@@ -17,8 +17,10 @@
 /// .x tree2.C   to execute with the Cling interpreter
 /// .x tree2.C++ to execute with native compiler
 /// ~~~
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date October 2019
 /// \author Rene Brun
 
 #include "TFile.h"

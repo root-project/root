@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Example showing how a THStack with candle plot option.
+/// \preview  Example showing how a THStack with candle plot option.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date May 2024
 /// \authors Georg Troska, Olivier Couet
 
 void candleplotstack()

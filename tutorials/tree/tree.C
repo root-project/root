@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook
-/// Display the Tree data structures
+/// \preview  Display the Tree data structures
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2024
 /// \author Rene Brun
 
 void tree() {

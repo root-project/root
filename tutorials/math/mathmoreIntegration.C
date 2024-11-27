@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook -nodraw
-/// Example on the  usage of the adaptive 1D integration algorithm of MathMore
+/// \preview  Example on the  usage of the adaptive 1D integration algorithm of MathMore
 /// it calculates the numerically cumulative integral of a distribution (like in this case the BreitWigner)
 /// to execute the macro type it (you need to compile with AClic)
 ///
@@ -15,10 +15,11 @@
 /// The ROOT configure will automatically find GSL if the script gsl-config (from GSL) is in your PATH,.
 /// otherwise you need to configure root with the options --gsl-incdir and --gsl-libdir.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date November 2024
 /// \authors M. Slawinska, L. Moneta
 
 #include "TMath.h"

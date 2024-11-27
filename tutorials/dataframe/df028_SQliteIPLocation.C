@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -js
-/// Plot the location of ROOT downloads reading a remote sqlite3 file.
+/// \preview  Plot the location of ROOT downloads reading a remote sqlite3 file.
 ///
 /// The world map is held by a TH2Poly histogram which, after filling, will show
 /// the world wide dispersion of ROOT's users.
@@ -14,7 +14,7 @@
 /// <a href="http://www.maxmind.com">http://www.maxmind.com</a>.
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
 ///
 /// \date August 2018
 /// \author Alexandra-Maria Dobrescu

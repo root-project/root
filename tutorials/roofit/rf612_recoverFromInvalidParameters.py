@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Likelihood and minimization: Recover from regions where the function is not defined.
+## \preview  Likelihood and minimization: Recover from regions where the function is not defined.
 ##
 ## We demonstrate improved recovery from disallowed parameters. For this, we use a polynomial PDF of the form
 ## \f[
@@ -11,6 +11,7 @@
 ## this function can be negative, and hence, it cannot be used as a PDF. In this case, RooFit passes
 ## an error to the minimiser, which might try to recover.
 ##
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

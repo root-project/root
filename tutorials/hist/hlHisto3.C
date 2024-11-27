@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_hist
-///
+/// \preview 
 /// This tutorial demonstrates how the highlight mechanism can be used on a ntuple.
 /// The ntuple in `hsimple.root` is drawn with three different selections. Moving
 /// the mouse over the two 1D representation display the on 2D plot the events
 /// contributing to the highlighted bin.
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
 /// \date March 2018

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook
-/// Example macro showing some major probability density functions in ROOT.
+/// \preview  Example macro showing some major probability density functions in ROOT.
 /// The macro shows four of them with
 /// respect to their two variables. In order to run the macro type:
 ///
@@ -9,9 +9,10 @@
 ///   root [0] .x mathcoreStatFunc.C
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date June 2017
 /// \author Andras Zsenei
 
 #include "TF2.h"

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Example of a fit residual plot.
+/// \preview  Example of a fit residual plot.
 ///
 /// Creates a histogram filled with random numbers from a gaussian distribution
 /// and fits it with a standard gaussian function. The result is passed to the `TRatioPlot`
@@ -9,9 +9,10 @@
 /// titles are modified.
 /// Confidence interval bands are automatically drawn on the bottom (but can be disabled by draw option `nobands`).
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date September 2023
 /// \author Paul Gessinger
 
 void ratioplot2() {

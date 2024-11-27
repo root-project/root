@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Example of a canvas showing two histograms with different scales.
+/// \preview  Example of a canvas showing two histograms with different scales.
 /// The second histogram is drawn in a transparent pad
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date November 2022
 /// \author Rene Brun
 
 void transpad()

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook
-/// Fitting of a TGraph2D with a 3D straight line
+/// \preview  Fitting of a TGraph2D with a 3D straight line
 ///
 /// run this macro by doing:
 ///
@@ -9,10 +9,11 @@
 /// root>.x line3Dfit.C+
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Lorenzo Moneta
 
 #include <TMath.h>

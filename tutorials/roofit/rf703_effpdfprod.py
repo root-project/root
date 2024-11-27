@@ -1,9 +1,9 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Special pdf's: using a product of an (acceptance) efficiency and a pdf as pdf
+## \preview  Special pdf's: using a product of an (acceptance) efficiency and a pdf as pdf
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

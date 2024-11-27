@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Show how to shade an area between two graphs
+/// \preview  Show how to shade an area between two graphs
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date July 2016
 /// \author Rene Brun
 
 void graphShade() {

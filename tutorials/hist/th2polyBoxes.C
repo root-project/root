@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// This tutorial illustrates how to create an histogram with polygonal
+/// \preview  This tutorial illustrates how to create an histogram with polygonal
 /// bins (TH2Poly). The bins are boxes.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Olivier Couet
 
 TCanvas *th2polyBoxes() {

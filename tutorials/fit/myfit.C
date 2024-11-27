@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook -js
-/// Get in memory an histogram from a root file and fit a user defined function.
+/// \preview  Get in memory an histogram from a root file and fit a user defined function.
 /// Note that a user defined function must always be defined
 /// as in this example:
 ///  - first parameter: array of variables (in this example only 1-dimension)
@@ -9,10 +9,11 @@
 /// Note also that in case of user defined functions, one must set
 /// an initial value for each parameter.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2022
 /// \author Rene Brun
 
 #include <TCanvas.h>

@@ -1,12 +1,14 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook
-/// TTreeReader simplest example.
+/// \preview  TTreeReader simplest example.
 ///
 /// Read data from hsimple.root (written by hsimple.C)
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date September 2016
 /// \author Anders Eie, 2013
 
 #include "TFile.h"

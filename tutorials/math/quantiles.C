@@ -1,11 +1,12 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook -js
-/// Demo for quantiles
+/// \preview  Demo for quantiles
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2016
 /// \authors Rene Brun, Eddy Offermann
 
 void quantiles() {

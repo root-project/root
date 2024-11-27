@@ -1,12 +1,13 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Convert between NumPy arrays or Pandas DataFrames and RooDataSets.
+## \preview  Convert between NumPy arrays or Pandas DataFrames and RooDataSets.
 ##
 ## This tutorials first how to export a RooDataSet to NumPy arrays or a Pandas
 ## DataFrame, and then it shows you how to create a RooDataSet from a Pandas
 ## DataFrame.
 ##
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

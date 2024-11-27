@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook
-/// Example to fit two histograms at the same time via the Fitter class.
+/// \preview  Example to fit two histograms at the same time via the Fitter class.
 ///
 /// To execute this tutorial, you can do:
 ///
@@ -32,10 +32,11 @@
 ///  root "fit2dHist.C+(12)"
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2024
 /// \authors: Lorenzo Moneta, Rene Brun 18/01/2006
 
 #include "TH2D.h"

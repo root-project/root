@@ -1,11 +1,11 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #601
+## \preview  'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #601
 ##
 ## Interactive minimization with MINUIT
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

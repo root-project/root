@@ -1,10 +1,10 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## Fill a TGraph using RDataFrame.
+## \preview  Fill a TGraph using RDataFrame.
 ##
 ## \macro_code
-## \macro_image
+## \macro_image (tcanvas_js)
 ##
 ## \date July 2018
 ## \authors Enrico Guiraud, Danilo Piparo (CERN), Massimo Tumolo (Politecnico di Torino)

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebook -js
-/// Example showing how to write and read a std vector of ROOT::Math LorentzVector in a ROOT tree.
+/// \preview  Example showing how to write and read a std vector of ROOT::Math LorentzVector in a ROOT tree.
 /// In the write() function a variable number of track Vectors is generated
 /// according to a Poisson distribution with random momentum uniformly distributed
 /// in phi and eta.
@@ -15,10 +15,11 @@
 ///   root[0]: .x  mathcoreVectorCollection.C
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date October 2023
 /// \author Andras Zsenei
 
 #include "TRandom.h"

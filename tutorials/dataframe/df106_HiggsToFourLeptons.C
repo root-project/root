@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// The Higgs to four lepton analysis from the ATLAS Open Data release of 2020, with RDataFrame.
+/// \preview  The Higgs to four lepton analysis from the ATLAS Open Data release of 2020, with RDataFrame.
 ///
 /// This tutorial is the Higgs to four lepton analysis from the ATLAS Open Data release in 2020
 /// (http://opendata.atlas.cern/release/2020/documentation/). The data was taken with the ATLAS detector
@@ -19,7 +19,7 @@
 /// See the [corresponding spec json file](https://github.com/root-project/root/blob/master/tutorials/dataframe/df106_HiggsToFourLeptons_spec.json).
 ///
 /// \macro_code
-/// \macro_image
+/// \macro_image (tcanvas_js)
 ///
 /// \date March 2020, August 2022, August 2023
 /// \authors Stefan Wunsch (KIT, CERN), Julia Mathe (CERN), Marta Czurylo (CERN)

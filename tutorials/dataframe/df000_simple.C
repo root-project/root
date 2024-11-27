@@ -1,12 +1,13 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// Simple RDataFrame example in C++.
+/// \preview  Simple RDataFrame example in C++.
 ///
 /// This tutorial shows a minimal example of RDataFrame. It starts without input
 /// data, generates a new column `x` with random numbers, and finally draws
 /// a histogram for `x`.
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook
-/// Illustrates how to use Tree friends:
+/// \preview  Illustrates how to use Tree friends:
 ///   - create a simple TTree
 ///   - Copy a subset of this TTree to a new TTree
 ///   - Create a Tree Index
@@ -25,9 +25,10 @@
 /// ~~~
 ///
 /// \macro_output
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date August 2016
 /// \author Rene Brun
 
 

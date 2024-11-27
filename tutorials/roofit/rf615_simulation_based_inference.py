@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## Use Simulation Based Inference (SBI) in RooFit.
+## \preview  Use Simulation Based Inference (SBI) in RooFit.
 ##
 ## This tutorial shows how to use SBI in ROOT. As reference distribution we
 ## choose a simple uniform distribution. The target distribution is chosen to
@@ -26,7 +26,7 @@
 ##
 ## In the end we compare the negative logarithmic likelihoods of the learned, morphed and analytical likelihood with minuit and as a plot.
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

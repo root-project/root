@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_fit
 /// \notebook
-/// Generate points distributed with some errors around a circle
+/// \preview  Generate points distributed with some errors around a circle
 /// Fit a circle through the points and draw
 /// To run the script, do, eg
 ///
@@ -11,10 +11,11 @@
 ///   root > .x fitCircle.C++(100000);  with ACLIC
 /// ~~~
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2022
 /// \author Rene Brun
 
 #include "TCanvas.h"

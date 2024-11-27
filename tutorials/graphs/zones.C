@@ -1,13 +1,14 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Example of script showing how to divide a canvas
+/// \preview  Example of script showing how to divide a canvas
 /// into adjacent subpads + axis labels on the top and right side
 /// of the pads.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date July 2016
 /// \author Rene Brun
 
 void zones() {

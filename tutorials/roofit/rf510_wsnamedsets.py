@@ -1,12 +1,12 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #510
+## \preview  'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #510
 ##
 ## Working with named parameter sets and parameter snapshots in
 ## workspaces
 ##
-## \macro_image
+## \macro_image (tcanvas_js)
 ## \macro_code
 ## \macro_output
 ##

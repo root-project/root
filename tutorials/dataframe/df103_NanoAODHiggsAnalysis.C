@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// An example of complex analysis with RDataFrame: reconstructing the Higgs boson.
+/// \preview  An example of complex analysis with RDataFrame: reconstructing the Higgs boson.
 ///
 /// This tutorial is a simplified but yet complex example of an analysis reconstructing
 /// the Higgs boson decaying to two Z bosons from events with four leptons. The data
@@ -27,7 +27,7 @@
 /// datasets with a total size of only 51MB. If the fast mode is disabled, the tutorial runs over
 /// the full dataset with a size of 12GB.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

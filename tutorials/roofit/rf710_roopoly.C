@@ -1,9 +1,9 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Taylor expansion of RooFit functions using the taylorExpand function with RooPolyFunc
+/// \preview  Taylor expansion of RooFit functions using the taylorExpand function with RooPolyFunc
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

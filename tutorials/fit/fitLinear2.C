@@ -10,6 +10,7 @@
 /// \macro_output
 /// \macro_code
 ///
+/// \date January 2022
 /// \author Anna Kreshuk
 
 #include "TLinearFitter.h"

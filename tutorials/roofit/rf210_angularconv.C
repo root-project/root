@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Addition and convolution: convolution in cyclical angular observables theta
+/// \preview  Addition and convolution: convolution in cyclical angular observables theta
 ///
 /// and construction of pdf in terms of transformed angular coordinates, e.g. cos(theta),
 /// where the convolution is performed in theta rather than cos(theta)
@@ -13,7 +13,7 @@
 ///
 /// This tutorial requires FFT3 to be enabled.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 /// \macro_output
 ///

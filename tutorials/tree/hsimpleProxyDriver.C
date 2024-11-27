@@ -1,12 +1,14 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook -nodraw
-/// This is the driver of the hsimpleProxy example.
+/// \preview  This is the driver of the hsimpleProxy example.
 /// It provides the infrastructure to run that code on an ntuple
 /// To be run from the tutorials directory
 ///
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
+/// \date October 2024
 /// \author Rene Brun
 
 void hsimpleProxyDriver()
