@@ -5,7 +5,7 @@
 1. Adjust histogram title drawing with native implementation
 1. Improve float to string convertion when 'g' is specified
 1. Support "same" option for first histogram, draw direcly on pad
-1. Support different angle coordiantes in `TGraphPolargram`
+1. Support different angle coordiantes in `TGraphPolargram`, handle 'N' and 'O' draw options
 1. Fix - handle `TPave` NDC position also when fInit is not set
 1. Fix - correctly position title according to gStyle->GetTitleAlign()
 1. Fix - correctly handle tooltip events for `TGraphPolar`
