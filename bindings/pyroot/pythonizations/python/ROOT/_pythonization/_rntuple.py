@@ -95,7 +95,15 @@ def _RNTupleWriter_Fill(self, *args):
     return self._Fill(*args)
 
 
+def _RNTupleWriter_exit(self, *args):
+    self.CommitDataset()
+    return False
+
+
 @pythonization("RNTupleWriter", ns="ROOT::Experimental")
 def pythonize_RNTupleWriter(klass):
     klass._Fill = klass.Fill
     klass.Fill = _RNTupleWriter_Fill
+
+    klass.__enter__ = lambda writer: writer
+    klass.__exit__ = _RNTupleWriter_exit
