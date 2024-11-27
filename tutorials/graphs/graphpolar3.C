@@ -17,13 +17,13 @@ void graphpolar3()
    Double_t r[1000];
    Double_t theta[1000];
 
-   TF1 *fp1 = new TF1("fplot","cos(x)",rmin,rmax);
+   TF1 fp1("fplot","cos(x)", rmin, rmax);
    for (Int_t ipt = 0; ipt < 1000; ipt++) {
       r[ipt] = ipt*(rmax-rmin)/1000+rmin;
-      theta[ipt] = fp1->Eval(r[ipt]);
+      theta[ipt] = fp1.Eval(r[ipt]);
    }
 
-   TGraphPolar *grP1 = new TGraphPolar(1000, r, theta);
+   auto grP1 = new TGraphPolar(1000, r, theta);
    grP1->SetTitle("");
    grP1->SetLineColor(2);
    grP1->Draw("AOL");
