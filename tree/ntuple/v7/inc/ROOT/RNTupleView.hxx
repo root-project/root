@@ -115,6 +115,7 @@ public:
       : fClusterId(clusterId), fStart(start), fEnd(end) {}
    RIterator begin() const { return RIterator(RClusterIndex(fClusterId, fStart)); }
    RIterator end() const { return RIterator(RClusterIndex(fClusterId, fEnd)); }
+   NTupleSize_t size() const { return fEnd - fStart; }
 };
 
 namespace Internal {
