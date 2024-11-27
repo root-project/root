@@ -19,34 +19,16 @@
    globalThis.main_objects = $draw_objects;
 </script>
 
-<script>
+<script id="main">
 
    JSROOT.setBatchMode(true);
 
-   const doms = [], objs = [],
-         kinds = $draw_kind,
+   const kinds = $draw_kind,
          widths = $draw_widths,
          heights = $draw_heights,
-         keep_as_is = (kinds === 1111) || (kinds === 2222);
-
-   // parse data
-   for (let i = 0; i < globalThis.main_objects.length; ++i)
-      objs[i] = JSROOT.parse(globalThis.main_objects[i]);
-
-   // create HTML elements for drawings
-   for (let i = 0; i < objs.length; ++i) {
-      let dom = document.createElement('div');
-      dom.style.overflow = 'hidden';
-      dom.style.margin = '0';
-      dom.style.padding = '0';
-      dom.style.width = widths[i] + 'px';
-      dom.style.height = heights[i] + 'px';
-      if (i > 0)
-         dom.style['page-break-before'] = (kinds === 1111) ? 'avoid' : 'always';
-      dom.style['page-break-inside'] = 'avoid';
-      document.body.append(dom);
-      doms.push(dom);
-   }
+         num_objects = globalThis.main_objects.length,
+         keep_as_is = (kinds === 1111) || (kinds === 2222),
+         result_div = document.createElement('div');
 
    // remove HTML element with data
    document.getElementById('data').remove();
@@ -54,42 +36,88 @@
    // remove JSROOT script itself
    document.getElementById('jsroot').remove();
 
-   let multi_pdf_args = null, multi_pdf_indx;
+   // place before actual drawings
+   document.body.append(result_div);
+
+   let multi_pdf_args = null, multi_pdf_ind, current_painter, current_dom;
+
+   function appendResult(image_src, svg_code) {
+      if (image_src) {
+         const img = document.createElement('img');
+         img.setAttribute('src', image_src);
+         result_div.appendChild(img);
+      } else {
+         const elem = document.createElement('div');
+         elem.innerHTML = svg_code;
+         result_div.appendChild(elem);
+      }
+   }
 
    async function drawNext(indx) {
-      if (indx >= objs.length)
+      if (indx >= num_objects)
          return true;
 
-      return JSROOT.draw(doms[indx], objs[indx], '').then(painter => {
+      let paint_promise;
+
+      const source_data = globalThis.main_objects[indx];
+
+      if (source_data === 'same') {
+
+         paint_promise = current_painter ? Promise.resolve(current_painter) : Promise.reject(new Error('failure'));
+
+      } else {
+         if (current_dom && !keep_as_is) {
+            JSROOT.cleanup(current_dom);
+            current_dom.innerHTML = '';
+            current_dom.remove();
+            current_dom = null;
+         }
+
+         current_painter = null;
+
+         const current_obj = JSROOT.parse(source_data);
+
+         // create HTML element for drawings
+         current_dom = document.createElement('div');
+         current_dom.style.overflow = 'hidden';
+         current_dom.style.margin = '0';
+         current_dom.style.padding = '0';
+         current_dom.style.width = widths[indx] + 'px';
+         current_dom.style.height = heights[indx] + 'px';
+         if (indx > 0)
+            current_dom.style['page-break-before'] = (kinds === 1111) ? 'avoid' : 'always';
+         current_dom.style['page-break-inside'] = 'avoid';
+         document.body.append(current_dom);
+
+         paint_promise = JSROOT.draw(current_dom, current_obj, '');
+      }
+
+      return paint_promise.then(painter => {
+         if (!current_painter)
+            current_painter = painter;
+
          if (keep_as_is)
             return drawNext(indx + 1);
 
          let kind = kinds[indx], last_page_pdf = false;
-         if ((kind === 'pdf') && (indx < objs.length - 1) && !kinds[indx + 1]) {
+         if ((kind === 'pdf') && (indx < num_objects - 1) && !kinds[indx + 1]) {
             multi_pdf_args = { as_doc: true };
             multi_pdf_indx = indx;
          } else if (!kind && multi_pdf_args) {
             kind = 'pdf';
-            last_page_pdf = (indx === objs.length - 1) || kinds[indx + 1];
+            last_page_pdf = (indx === num_objects - 1) || kinds[indx + 1];
          }
 
          return painter.produceImage(true, kind, multi_pdf_args).then(res => {
-            JSROOT.cleanup(doms[indx]);
-            doms[indx].removeAttribute('style');
-            doms[indx].innerHTML = '';
             if (last_page_pdf) {
-               const img = document.createElement('img');
-               img.setAttribute('src', multi_pdf_args.doc?.output('dataurlstring'));
-               doms[multi_pdf_indx].appendChild(img);
+               appendResult(multi_pdf_args.doc?.output('dataurlstring'));
                multi_pdf_args = null;
             } else if (multi_pdf_args) {
                // do nothing, need to add more pages
             } else if (kind === 'svg') {
-               doms[indx].innerHTML = res;
+               appendResult(null, res);
             } else {
-               const img = document.createElement('img');
-               img.setAttribute('src', res);
-               doms[indx].appendChild(img);
+               appendResult(res);
             }
 
             return drawNext(indx + 1);
@@ -100,24 +128,22 @@
             return drawNext(indx + 1);
 
          // drawing fails - do not try to cleanup
-         doms[indx].removeAttribute('style');
-         doms[indx].innerHTML = '';
+         if (current_dom) {
+            current_dom.innerHTML = '';
+            current_dom.remove();
+            current_dom = null;
+         }
+         current_painter = null;
+
+         if (kinds[indx] === 'svg')
+            appendResult('', 'failure');
+         else
+            appendResult('jsroot;base64,failure');
 
          if (multi_pdf_args) {
-            const img = document.createElement('img');
-            img.setAttribute('src', 'jsroot;base64,failure');
-            doms[multi_pdf_indx].appendChild(img);
-            // no need to try other pages - just cancel
             multi_pdf_args = null;
-            while ((indx < objs.length) && !kinds[indx + 1])
+            while ((indx < num_objects) && !kinds[indx + 1])
                indx++;
-         } else if (kinds[indx] === 'svg') {
-            const elem = document.createElement('svg');
-            doms[indx].appendChild(elem);
-         } else {
-            const img = document.createElement('img');
-            img.setAttribute('src', 'jsroot;base64,failure');
-            doms[indx].appendChild(img);
          }
 
          return drawNext(indx + 1);
@@ -125,6 +151,11 @@
    }
 
    drawNext(0).then(() => {
+      current_dom?.remove();
+
+      // remove main script from dump
+      document.getElementById('main').remove();
+
       if (JSROOT.browser.isFirefox && window && (typeof window.dump == "function")) {
          window.dump(document.body.innerHTML);
          window.dump("###batch###job###done###\n");

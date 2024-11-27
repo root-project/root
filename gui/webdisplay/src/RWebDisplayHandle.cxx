@@ -1074,7 +1074,7 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
         isFirefox = args.GetBrowserKind() == RWebDisplayArgs::kFirefox;
 
    std::vector<std::string> draw_kinds;
-   bool use_browser_draw = false;
+   bool use_browser_draw = false, can_optimize_json = false;
    TString jsonkind;
 
    if (fmts[0] == "s.png") {
@@ -1094,6 +1094,7 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
    } else {
       draw_kinds = fmts;
       jsonkind = TBufferJSON::ToJSON(&draw_kinds, TBufferJSON::kNoSpaces);
+      can_optimize_json = true;
    }
 
    if (!batch_file || !*batch_file)
@@ -1122,10 +1123,15 @@ bool RWebDisplayHandle::ProduceImages(const std::vector<std::string> &fnames, co
    auto jsonw = TBufferJSON::ToJSON(&widths, TBufferJSON::kNoSpaces);
    auto jsonh = TBufferJSON::ToJSON(&heights, TBufferJSON::kNoSpaces);
 
-   std::string mains;
+   std::string mains, prev;
    for (auto &json : jsons) {
       mains.append(mains.empty() ? "[" : ", ");
-      mains.append(json);
+      if (can_optimize_json && (json == prev)) {
+         mains.append("'same'");
+      } else {
+         mains.append(json);
+         prev = json;
+      }
    }
    mains.append("]");
 
@@ -1312,29 +1318,26 @@ try_again:
          if (fmts[n].empty())
             continue;
          if (fmts[n] == "svg") {
-            auto p1 = dumpcont.find("<svg", p);
-            auto p2 = dumpcont.find("</svg></div>", p1 + 4);
-            p = p2 + 6;
+            auto p1 = dumpcont.find("<div><svg", p);
+            auto p2 = dumpcont.find("</svg></div>", p1 + 8);
+            p = p2 + 12;
             std::ofstream ofs(fnames[n]);
             if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
                if (p2 - p1 > 10) {
-                  ofs << dumpcont.substr(p1, p2 - p1 + 6);
-                  ::Info("ProduceImages", "SVG file %s size %d bytes has been created", fnames[n].c_str(), (int) (p2 - p1 + 6));
+                  ofs << dumpcont.substr(p1 + 5, p2 - p1 + 1);
+                  ::Info("ProduceImages", "Image file %s size %d bytes has been created", fnames[n].c_str(), (int) (p2 - p1 + 1));
                } else {
                   ::Error("ProduceImages", "Failure producing %s", fnames[n].c_str());
                }
-            } else {
-               ::Error("ProduceImages", "Fail to extract %s from HTML dump", fnames[n].c_str());
-               return false;
             }
          } else {
-            auto p0 = dumpcont.find("<img src=", p);
+            auto p0 = dumpcont.find("<img src=\"", p);
             auto p1 = dumpcont.find(";base64,", p0 + 8);
-            auto p2 = dumpcont.find("></div>", p1 + 4);
-            p = p2 + 5;
+            auto p2 = dumpcont.find("\">", p1 + 8);
+            p = p2 + 2;
 
             if ((p0 != std::string::npos) && (p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
-               auto base64 = dumpcont.substr(p1+8, p2-p1-9);
+               auto base64 = dumpcont.substr(p1+8, p2-p1-8);
                if ((base64 == "failure") || (base64.length() < 10)) {
                   ::Error("ProduceImages", "Failure producing %s", fnames[n].c_str());
                } else {
@@ -1344,7 +1347,7 @@ try_again:
                   ::Info("ProduceImages", "Image file %s size %d bytes has been created", fnames[n].c_str(), (int) binary.Length());
                }
             } else {
-               ::Error("ProduceImages", "Fail to extract %s from HTML dump", fnames[n].c_str());
+               ::Error("ProduceImages", "Failure producing %s", fnames[n].c_str());
                return false;
             }
          }
