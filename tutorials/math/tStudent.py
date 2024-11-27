@@ -36,7 +36,7 @@ quant = TH1D("quant", "", 9, 0, 0.9)
 
 quant.Fill(
     np.array([(i - 0.5) / 10.0 for i in range(1, 10)]),
-    np.array(ROOT.Math.tdistribution_quantile(0.1 * i, 3.0) for i in range(1, 10)),
+    np.array([ROOT.Math.tdistribution_quantile(0.1 * i, 3.0) for i in range(1, 10)]),
 )
 
 # For each quantile fill with the pdf
