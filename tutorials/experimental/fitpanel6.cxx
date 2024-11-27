@@ -1,10 +1,10 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_exp
 ///
 /// \macro_code
 ///
 /// \date 2019-04-11
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+/// \warning This is part of the experimental API, which might change in the future. Feedback is welcome!
 /// \authors Sergey Linev <S.Linev@gsi.de>, Iliana Betsou <Iliana.Betsou@cern.ch>
 
 /*************************************************************************

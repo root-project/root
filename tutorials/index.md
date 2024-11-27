@@ -54,9 +54,9 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief These examples show various features of [RDataFrame](classROOT_1_1RDataFrame.html): ROOT's declarative analysis interface.
 
-\defgroup tutorial_v7 ROOT 7 tutorials
+\defgroup tutorial_exp Experimental API tutorials
 \ingroup Tutorials
-\brief Various examples showing the ROOT 7 interface.
+\brief Various examples showing the experimental API.
 
 \defgroup tutorial_FOAM FOAM tutorials
 \ingroup Tutorials
@@ -116,7 +116,7 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 
 \defgroup tutorial_io IO tutorials
 \ingroup Tutorials
-\brief These tutorials illustrate some of the capabilities of the ROOT IO subsystem, including TTRee, RNTuple, SQL and XML.
+\brief These tutorials illustrate some of the capabilities of the ROOT IO subsystem, including TTree, RNTuple, SQL and XML.
 
 \defgroup tutorial_math Math tutorials
 \ingroup Tutorials

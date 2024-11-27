@@ -1,11 +1,10 @@
 /// \file
-/// \ingroup tutorial_v7
+/// \ingroup tutorial_exp
 ///
 /// \macro_code
 ///
 /// \date 2015-07-08
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+/// \warning This is part of the experimental API, which might change in the future. Feedback is welcome!
 /// \author Axel Naumann <axel@cern.ch>
 
 /*************************************************************************

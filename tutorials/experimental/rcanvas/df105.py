@@ -11,7 +11,7 @@
 ## By default the analysis runs on a preskimmed dataset to reduce the runtime. The full dataset can be used with
 ## the --full-dataset argument and you can also run only on a fraction of the original dataset using the argument --lumi-scale.
 ##
-## This macro is replica of tutorials/dataframe/df105_WBosonAnalysis.py, but with usage of ROOT7 graphics
+## This macro is replica of tutorials/analysis/dataframe/df105_WBosonAnalysis.py, but with usage of ROOT7 graphics
 ## Run macro with python3 -i df105.py command to get interactive canvas
 ##
 ## \macro_image (rcanvas_js)
