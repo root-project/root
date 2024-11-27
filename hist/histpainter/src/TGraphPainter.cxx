@@ -476,11 +476,16 @@ The drawing options for the polar graphs are the following:
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| "O"      | Polar labels are drawn orthogonally to the polargram radius. |
 | "P"      | Polymarker are drawn at each point position. |
 | "E"      | Draw error bars. |
 | "F"      | Draw fill area (closed polygon). |
+| "L"      | Draw line. |
+| "C"      | Draw curve. |
 | "A"      | Force axis redrawing even if a polargram already exists. |
+| "R"      | Use radians for angle coordinates. |
+| "D"      | Use degrees for angle coordinates. |
+| "G"      | Use grads for angle coordinates. |
+| "O"      | Polar labels are drawn orthogonally to the polargram radius. |
 | "N"      | Disable the display of the polar labels. |
 
 
@@ -503,11 +508,7 @@ Begin_Macro(source)
    grP1->SetMarkerSize(1.);
    grP1->SetMarkerColor(4);
    grP1->SetLineColor(4);
-   grP1->Draw("ALP");
-
-   // Update, otherwise GetPolargram returns 0
-   c46->Update();
-   grP1->GetPolargram()->SetToRadian();
+   grP1->Draw("ARLP");
 }
 End_Macro
 
