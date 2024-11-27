@@ -343,6 +343,13 @@ TEST(TClingCallFunc, GH_14425)
                               GH_14425_Copyable(GH_14425_Copyable &&o) : fMember(o.fMember) { o.fMember = 0; }
                            };
                            int GH_14425_h(GH_14425_Copyable p) { return p.fMember; }
+                           struct GH_14425_TriviallyCopyable {
+                              int fMember;
+                              GH_14425_TriviallyCopyable(int m = 1) : fMember(m) {}
+                              GH_14425_TriviallyCopyable(const GH_14425_TriviallyCopyable &) = default;
+                              GH_14425_TriviallyCopyable(GH_14425_TriviallyCopyable &&o) : fMember(o.fMember) { o.fMember = 0; }
+                           };
+                           int GH_14425_i(GH_14425_TriviallyCopyable p) { return p.fMember; }
                            struct GH_14425_Default {
                               int fMember;
                               GH_14425_Default(GH_14425 p = GH_14425()) : fMember(p.fMember) {}
@@ -381,6 +388,16 @@ TEST(TClingCallFunc, GH_14425)
    EXPECT_EQ(valCopyable, 4);
    // The original value should not have changed; if it did, TClingCallFunc called the move constructor.
    EXPECT_EQ(objCopyable, 4);
+
+   CallFuncRAII CfTriviallyCopyableRAII("", "GH_14425_i", "GH_14425_TriviallyCopyable");
+   CallFunc_t *CfTriviallyCopyable = CfTriviallyCopyableRAII.GetCF();
+   // Cheat a bit: GH_14425_TriviallyCopyable has only one int fMember in memory...
+   int objTriviallyCopyable = 5;
+   gInterpreter->CallFunc_SetArg(CfTriviallyCopyable, &objTriviallyCopyable);
+   int valTriviallyCopyable = gInterpreter->CallFunc_ExecInt(CfTriviallyCopyable, /*address*/ 0);
+   EXPECT_EQ(valTriviallyCopyable, 5);
+   // The original value should not have changed; if it did, TClingCallFunc called the move constructor.
+   EXPECT_EQ(objTriviallyCopyable, 5);
 
    CallFuncRAII CfConstructorDefaultRAII("GH_14425_Default", "GH_14425_Default", "");
    int *valConstructorDefault;
