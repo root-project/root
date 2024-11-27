@@ -3522,11 +3522,17 @@ void TH1::DoFillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stri
 
 void TH1::FillRandom(const char *fname, Int_t ntimes, TRandom * rng)
 {
-   Int_t bin, binx, ibin, loop;
-   Double_t r1, x;
    //   - Search for fname in the list of ROOT defined functions
    TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
    if (!f1) { Error("FillRandom", "Unknown function: %s",fname); return; }
+
+   FillRandom(f1, ntimes, rng);
+}
+
+void TH1::FillRandom(TF1 *f1, Int_t ntimes, TRandom * rng)
+{
+   Int_t bin, binx, ibin, loop;
+   Double_t r1, x;
 
    //   - Allocate temporary space to store the integral and compute integral
 

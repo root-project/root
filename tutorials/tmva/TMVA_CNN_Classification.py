@@ -105,8 +105,8 @@ def MakeImagesTree(n, nh, nw):
         f2.SetParameter(1, ROOT.gRandom.Uniform(3, 7))
         f2.SetParameter(3, ROOT.gRandom.Uniform(3, 7))
 
-        h1.FillRandom("f1", nRndmEvts)
-        h2.FillRandom("f2", nRndmEvts)
+        h1.FillRandom(f1, nRndmEvts)
+        h2.FillRandom(f2, nRndmEvts)
 
         for k in range(nh):
             for l in range(nw):

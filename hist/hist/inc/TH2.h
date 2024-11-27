@@ -83,7 +83,8 @@ public:
    virtual Int_t    Fill(const char *namex, const char *namey, Double_t w);
            void     FillN(Int_t, const Double_t *, const Double_t *, Int_t) override {} //MayNotUse
            void     FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double_t *w, Int_t stride=1) override;
-           void     FillRandom(const char *fname, Int_t ntimes=5000, TRandom *rng = nullptr) override;
+   using TH1::FillRandom;
+           void     FillRandom(TF1 *f1, Int_t ntimes=5000, TRandom *rng = nullptr) override;
            void     FillRandom(TH1 *h, Int_t ntimes=5000, TRandom *rng = nullptr) override;
    virtual void     FitSlicesX(TF1 *f1 = nullptr, Int_t firstybin=0, Int_t lastybin=-1, Int_t cut=0, Option_t *option="QNR", TObjArray* arr = nullptr);
    virtual void     FitSlicesY(TF1 *f1 = nullptr, Int_t firstxbin=0, Int_t lastxbin=-1, Int_t cut=0, Option_t *option="QNR", TObjArray* arr = nullptr);

@@ -107,8 +107,8 @@ def MakeTimeData(n, ntime, ndim):
             f1.SetParameters(1, mean1[j], sigma1[j])
             f2.SetParameters(1, mean2[j], sigma2[j])
 
-            h1.FillRandom("f1", 1000)
-            h2.FillRandom("f2", 1000)
+            h1.FillRandom(f1, 1000)
+            h2.FillRandom(f2, 1000)
 
             for k in range(ntime):
                 # std::cout << j*10+k << "   ";

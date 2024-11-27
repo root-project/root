@@ -62,7 +62,7 @@ for i in range(2, f_sum.GetNpar()):
 w = ROOT.TStopwatch()
 w.Start()
 h_sum = ROOT.TH1D("h_ExpCB", "Exponential Bkg + CrystalBall function", nBins, -5.0, 5.0)
-h_sum.FillRandom("fsum", nEvents)
+h_sum.FillRandom(f_sum, nEvents)
 print("Time to generate {0} events:  ".format(nEvents))
 w.Print()
 
@@ -74,7 +74,7 @@ h_sum.Scale(1.0, "width")
 ROOT.Math.MinimizerOptions.SetDefaultMinimizer("Minuit2")
 c1 = ROOT.TCanvas("Fit", "Fit", 800, 1000)
 # do a least-square fit of the spectrum
-result = h_sum.Fit("fsum", "SQ")
+result = h_sum.Fit(f_sum, "SQ")
 result.Print()
 h_sum.Draw()
 print("Time to fit using ROOT TF1Normsum: ")
