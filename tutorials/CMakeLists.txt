@@ -273,10 +273,10 @@ set(gui_veto math/fit/fitpanel_playback.C
              visualisation/geom/building.C visualisation/geom/cheongwadae.C visualisation/geom/geom*.C visualisation/geom/lego.C visualisation/geom/robot.C visualisation/geom/south_gate.C visualisation/geom/station*.C visualisation/geom/tank.C visualisation/geom/webdemo.C visualisation/geom/web_cms.cxx
              visualisation/gl/glViewerExercise.C visualisation/gl/glViewerLOD.C visualisation/gl/gviz3d.C visualisation/gl/nucleus.C visualisation/gl/viewer3DLocal.C visualisation/gl/viewer3DMaster.C
              visualisation/gui/*.C
-             hist/exec1.C
-             hist/exec2.C
-             hist/tprofile2polyRealistic.C
-             hist/tprofile2polyRealisticModuleError.C
+             hist/hist057_TExec_th1.C
+             hist/hist058_TExec_th2.C
+             hist/hist041_TProfile2Poly_realistic.C
+             hist/hist042_TProfile2Poly_module_error.C
              visualisation/image/*.C
              visualisation/graphics/psview.C visualisation/graphics/gtime.C
              visualisation/graphics/graph_edit_playback.C
@@ -513,13 +513,13 @@ set(returncode_1 math/fit/fit2a.C
                  visualisation/graphics/tmathtext.C visualisation/graphics/tmathtext2.C
                  visualisation/graphs/exclusiongraph.C
                  visualisation/graphs/graphstruct.C
-                 hist/ContourList.C
+                 hist/hist102_TH2_contour_list.C
                  hist/hist006_TH1_bar_charts.C
-                 hist/th2polyBoxes.C
-                 hist/statsEditing.C
-                 hist/cumulative.C
+                 hist/hist037_TH2Poly_boxes.C
+                 hist/hist060_Stats.C
+                 hist/hist014_TH1_cumulative.C
                  hist/hist004_TH1_labels.C
-                 hist/hlabels2.C
+                 hist/hist036_TH2_labels.C
                  io/tree/h1analysis.C
                  math/chi2test.C
                  math/r/SimpleFitting.C)

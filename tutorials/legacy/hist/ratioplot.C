@@ -10,11 +10,7 @@
 /// \date May 2021
 /// \author Olivier Couet
 
-<<<<<<<< HEAD:tutorials/legacy/hist/ratioplot.C
 void ratioplot()
-========
-void hist035_TRatioPlot_manual_ratio()
->>>>>>>> 677335419c (only hist/*.C files change and intorudce new naming convention):tutorials/hist/hist035_TRatioPlot_manual_ratio.C
 {
    // Define two gaussian histograms. Note the X and Y title are defined
    // at booking time using the convention "Hist_title ; X_title ; Y_title"
