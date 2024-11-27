@@ -99,14 +99,23 @@ TEST(RooProdPdf, TestGetPartIntList)
    // Product of all the pdfs.
    auto &prod = static_cast<RooProdPdf &>(*ws.factory("PROD::prod(pdf1, pdf2)"));
 
-   EXPECT_DOUBLE_EQ(prod.getVal({}), 1.0);
-   EXPECT_DOUBLE_EQ(prod.getVal({x}), 1. / a);
-   EXPECT_DOUBLE_EQ(prod.getVal({y}), 1. / b);
-   EXPECT_DOUBLE_EQ(prod.getVal({z}), 1. / c);
-   EXPECT_DOUBLE_EQ(prod.getVal({x, y}), 1. / a / b);
-   EXPECT_DOUBLE_EQ(prod.getVal({x, z}), 1. / a / c);
-   EXPECT_DOUBLE_EQ(prod.getVal({y, z}), 1. / b / c);
-   EXPECT_DOUBLE_EQ(prod.getVal({x, y, z}), 1. / a / b / c);
+   RooArgSet normSetNada{};
+   RooArgSet normSetX{x};
+   RooArgSet normSetY{y};
+   RooArgSet normSetZ{z};
+   RooArgSet normSetXY{x, y};
+   RooArgSet normSetXZ{x, z};
+   RooArgSet normSetYZ{y, z};
+   RooArgSet normSetXYZ{x, y, z};
+
+   EXPECT_DOUBLE_EQ(prod.getVal(normSetNada), 1.0);
+   EXPECT_DOUBLE_EQ(prod.getVal(normSetX), 1. / a);
+   EXPECT_DOUBLE_EQ(prod.getVal(normSetY), 1. / b);
+   EXPECT_DOUBLE_EQ(prod.getVal(normSetZ), 1. / c);
+   EXPECT_DOUBLE_EQ(prod.getVal(normSetXY), 1. / a / b);
+   EXPECT_DOUBLE_EQ(prod.getVal(normSetXZ), 1. / a / c);
+   EXPECT_DOUBLE_EQ(prod.getVal(normSetYZ), 1. / b / c);
+   EXPECT_DOUBLE_EQ(prod.getVal(normSetXYZ), 1. / a / b / c);
 }
 
 TEST(RooProdPdf, TestDepsAreCond)
