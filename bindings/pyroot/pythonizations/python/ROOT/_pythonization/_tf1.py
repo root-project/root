@@ -26,7 +26,7 @@ my_func = ROOT.TF1("my_func", func, -10, 10, npar=2, ndim=2)
 \endcode
 
 Second, after performing the initialisation with a Python functor, the TF1 instance can be evaluated using the Pythonized
-`TF1::EvalPar` function. The pythonization allows passing in 1D(single set of x variables) or 2D(a dataset) NumPy arrays.
+TF1.EvalPar function. The pythonization allows passing in 1D(single set of x variables) or 2D(a dataset) NumPy arrays.
 
 The following example shows how we can create a TF1 instance with a Python function and evaluate it on a dataset:
 
@@ -57,6 +57,22 @@ params = np.array([
 
 # Slice to avoid the dummy column of 10's
 res = rtf1_coulomb.EvalPar(x[:, ::2], params)
+\endcode
+
+The below example defines a TF1 instance using the ROOT constructor, and sets its parameters using the Pythonized TF1.SetParameters function (i.e. without evaluating).
+\code{.py}
+import numpy as np
+
+# for illustration, a sinusoidal function with six parameters
+myFunction = ROOT.TF1("myExampleFunction", "[0] + [1] * x + [2]*sin([3] * x) + [4]*cos([5] * x)", -5, 5)
+
+# declare the parameters as a numpy.array or array.array 
+myParams = np.array([0.04, 0.4, 3.0, 3.14, 1.5, 3.14])
+
+# note: the following line would also work by setting all six parameters equal to 3.0
+# myParams = np.array([3.0] * 6) 
+
+myFunction.SetParameters(myParams)
 \endcode
 
 \endpythondoc
