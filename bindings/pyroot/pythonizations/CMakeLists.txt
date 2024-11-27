@@ -104,6 +104,7 @@ set(py_sources
   ROOT/_pythonization/_tformula.py
   ROOT/_pythonization/_tgraph.py
   ROOT/_pythonization/_th1.py
+  ROOT/_pythonization/_thistpainter.py
   ROOT/_pythonization/_titer.py
   ROOT/_pythonization/_tobject.py
   ROOT/_pythonization/_tobjstring.py
