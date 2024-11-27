@@ -6,7 +6,7 @@
 #include "TObjString.h"
 #include <utility>
 
-void fillListOfDir(TString directory, TList &l) {
+void fillListOfDir(const TString &directory, TList &l) {
    
    void *dir = gSystem->OpenDirectory(directory);
 
