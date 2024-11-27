@@ -224,7 +224,7 @@ Automatic coloring according to the current palette is available as shown in the
 following example:
 
 Begin_Macro(source)
-../../../tutorials/visualisation/graphs/multigraphpalettecolor.C
+../../../tutorials/visualisation/graphs/gr105_multigraphpalettecolor.C
 End_Macro
 
 \anchor MG01f
@@ -324,7 +324,7 @@ overlap. The following example shows how to make them all visible.
 
 
 Begin_Macro(source)
-../../../tutorials/visualisation/graphs/multigraph.C
+../../../tutorials/visualisation/graphs/gr007_multigraph.C
 End_Macro
 
 \anchor MG03

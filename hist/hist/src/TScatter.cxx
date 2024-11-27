@@ -39,7 +39,7 @@ color map and the fourth on the marker size.
 The following example demonstrates how it works:
 
 Begin_Macro(source)
-../../../tutorials/visualisation/graphs/scatter.C
+../../../tutorials/visualisation/graphs/gr006_scatter.C
 End_Macro
 
 ### TScatter's plotting options
