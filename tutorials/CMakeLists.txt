@@ -273,10 +273,10 @@ set(gui_veto fit/fitpanel_playback.C
              geom/building.C geom/cheongwadae.C geom/geom*.C geom/lego.C geom/robot.C geom/south_gate.C geom/station*.C geom/tank.C geom/webdemo.C geom/web_cms.cxx
              gl/glViewerExercise.C gl/glViewerLOD.C gl/gviz3d.C gl/nucleus.C gl/viewer3DLocal.C gl/viewer3DMaster.C
              gui/*.C
-             hist/exec1.C
-             hist/exec2.C
-             hist/tprofile2polyRealistic.C
-             hist/tprofile2polyRealisticModuleError.C
+             hist/hist057_TExec_th1.C
+             hist/hist057_TExec_th2.C
+             hist/hist041_TProfile2Poly_realistic.C
+             hist/hist042_TProfile2Poly_module_error.C
              image/*.C
              graphics/psview.C graphics/gtime.C
              graphics/graph_edit_playback.C
@@ -506,13 +506,13 @@ set(returncode_1 fit/fit2a.C
                  graphics/tmathtext.C graphics/tmathtext2.C
                  graphs/exclusiongraph.C
                  graphs/graphstruct.C
-                 hist/ContourList.C
+                 hist/hist102_TH2_contour_list.C
                  hist/hist006_TH1_bar_charts.C
-                 hist/th2polyBoxes.C
-                 hist/statsEditing.C
-                 hist/cumulative.C
+                 hist/hist037_TH2Poly_boxes.C
+                 hist/hist060_Stats.C
+                 hist/hist014_TH1_cumulative.C
                  hist/hist004_TH1_labels.C
-                 hist/hlabels2.C
+                 hist/hist036_TH2_labels.C
                  tree/h1analysis.C
                  math/chi2test.C
                  r/SimpleFitting.C)
