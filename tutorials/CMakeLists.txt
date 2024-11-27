@@ -410,9 +410,9 @@ set(extra_veto
   tree/tree4.C
   roostats/rs401d_FeldmanCousins.C  # Takes too much time
   histfactory/ModifyInterpolation.C
-  tree/copytree2.C
-  tree/copytree3.C
-  tree/copytree.C
+  tree/tree110_copy.C
+  tree/tree111_copy.C
+  tree/tree112_copy.C
   tree/h1analysis*.C # these are not a tutorial but classes used in run_h1analysis.C
   tree/h1chain.C
   http/*.C
@@ -539,7 +539,7 @@ set(benchmarks-depends tutorial-hsimple
                        tutorial-hist-h1ReadAndDraw
                        tutorial-hist-FirstContour
                        tutorial-geom-na49view
-                       tutorial-tree-ntuple1
+                       tutorial-tree-tree120_ntuple.C
                        tutorial-tree-spider
                        tutorial-io-hadd
                        tutorial-io-loopdir
