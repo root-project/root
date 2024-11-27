@@ -35,6 +35,26 @@ static const std::string DisplayPrintDefaultRows("+-----+----+----+----------+\n
 
 static const std::string DisplayAsStringDefaultRows = DisplayPrintDefaultRows;
 
+static const std::string DisplayAsHtmlDefaultRows(
+"<table>\n"
+"  <tr>\n    <th>Row</th>\n    <th>b1</th>\n    <th>b2</th>\n    <th>b3</th>\n  </tr>\n"
+"  <tr>\n    <td>0</td>\n    <td>0</td>\n    <td>1</td>\n    <td>2.000000</td>\n  </tr>\n"
+"  <tr>\n    <td></td>\n    <td></td>\n    <td>2</td>\n    <td></td>\n  </tr>\n"
+"  <tr>\n    <td></td>\n    <td></td>\n    <td>3</td>\n    <td></td>\n  </tr>\n"
+"  <tr>\n    <td>1</td>\n    <td>0</td>\n    <td>1</td>\n    <td>2.000000</td>\n  </tr>\n"
+"  <tr>\n    <td></td>\n    <td></td>\n    <td>2</td>\n    <td></td>\n  </tr>\n"
+"  <tr>\n    <td></td>\n    <td></td>\n    <td>3</td>\n    <td></td>\n  </tr>\n"
+"  <tr>\n    <td>2</td>\n    <td>0</td>\n    <td>1</td>\n    <td>2.000000</td>\n  </tr>\n"
+"  <tr>\n    <td></td>\n    <td></td>\n    <td>2</td>\n    <td></td>\n  </tr>\n"
+"  <tr>\n    <td></td>\n    <td></td>\n    <td>3</td>\n    <td></td>\n  </tr>\n"
+"  <tr>\n    <td>3</td>\n    <td>0</td>\n    <td>1</td>\n    <td>2.000000</td>\n  </tr>\n"
+"  <tr>\n    <td></td>\n    <td></td>\n    <td>2</td>\n    <td></td>\n  </tr>\n"
+"  <tr>\n    <td></td>\n    <td></td>\n    <td>3</td>\n    <td></td>\n  </tr>\n"
+"  <tr>\n    <td>4</td>\n    <td>0</td>\n    <td>1</td>\n    <td>2.000000</td>\n  </tr>\n"
+"  <tr>\n    <td></td>\n    <td></td>\n    <td>2</td>\n    <td></td>\n  </tr>\n"
+"  <tr>\n    <td></td>\n    <td></td>\n    <td>3</td>\n    <td></td>\n  </tr>\n"
+"</table>");
+
 TEST(RDFDisplayTests, DisplayNoJitDefaultRows)
 {
    RDataFrame rd1(10);
@@ -60,6 +80,7 @@ TEST(RDFDisplayTests, DisplayNoJitDefaultRows)
 
    // Testing the string returned
    EXPECT_EQ(dd->AsString(), DisplayAsStringDefaultRows);
+   EXPECT_EQ(dd->AsString({ RDisplay::EPrintFormat::kHtml }), DisplayAsHtmlDefaultRows);
 }
 
 TEST(RDFDisplayTests, DisplayJitDefaultRows)
