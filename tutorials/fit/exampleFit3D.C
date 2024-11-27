@@ -11,6 +11,8 @@
 ///
 /// \macro_output
 /// \macro_code
+/// \classes ROOT::Fit::BinData, ROOT::Math::WrappedMultiTF1, ROOT::Fit::Fitter
+/// \keywords 3D
 ///
 /// \author Lorenzo Moneta
 

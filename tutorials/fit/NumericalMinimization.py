@@ -9,6 +9,8 @@
 #  randomSeed: = <0 : fixed value: 0 random with seed 0; >0 random with given seed
 #
 #  \macro_code
+#  \classes ROOT::Math::Minimizer, Factory, ROOT::Math::Functor
+#  \keywords minimizer
 #
 #  \author Lorenzo Moneta
 

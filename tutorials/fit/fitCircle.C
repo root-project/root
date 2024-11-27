@@ -14,6 +14,8 @@
 /// \macro_image
 /// \macro_output
 /// \macro_code
+/// \classes TRandom3, ROOT::Math::Functor, ROOT::Fit::Fitter, TArc, ROOT::Fit::FitResult
+/// \keywords circle, 2D
 ///
 /// \author Rene Brun
 
