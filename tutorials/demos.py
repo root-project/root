@@ -9,9 +9,9 @@
 import os, sys
 import ROOT
 
-# To run, do "python <path-to>/demo.py"
+# To run, do "python <path-to>/demos.py"
 
-# enable running from another directory than the one where demo.py resides
+# enable running from another directory than the one where demos.py resides
 workdir = os.path.dirname( sys.argv[0] )
 if workdir:
    os.chdir( workdir )
