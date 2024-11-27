@@ -218,18 +218,29 @@ std::string RDisplay::DashesBetweenLines(size_t lastColToPrint, bool allColumnsF
    return DashesStr;
 }
 
-void RDisplay::Print() const
+void RDisplay::Print(const RPrintOptions &options) const
 {
-   auto ret = AsStringInternal(true);
+   auto ret = AsStringInternal(true, options);
    std::cout << ret;
 }
 
-std::string RDisplay::AsString() const
+std::string RDisplay::AsString(const RPrintOptions &options) const
 {
-   return AsStringInternal(false);
+   return AsStringInternal(false, options);
 }
 
-std::string RDisplay::AsStringInternal(bool considerDots) const
+std::string RDisplay::AsStringInternal(bool considerDots, const RPrintOptions &options) const
+{
+   switch (options.fFormat) {
+   case EPrintFormat::kMarkdown:
+      return AsStringMarkdown(considerDots);
+   default:
+      R__ASSERT(false);
+   }
+   return {};
+}
+
+std::string RDisplay::AsStringMarkdown(bool considerDots) const
 {
    std::stringstream ss;
 
