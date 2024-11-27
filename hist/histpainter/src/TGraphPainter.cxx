@@ -209,7 +209,7 @@ case the line width number is interpreted as:
 The current fill area attributes are used to draw the hatched zone.
 
 Begin_Macro(source)
-../../../tutorials/visualisation/graphs/exclusiongraph.C
+../../../tutorials/visualisation/graphs/gr106_exclusiongraph.C
 End_Macro
 
 \anchor GrP3
@@ -530,11 +530,11 @@ is determined according to the number of objects having palette coloring in
 the current pad.
 
 Begin_Macro(source)
-../../../tutorials/visualisation/graphs/graphpalettecolor.C
+../../../tutorials/visualisation/graphs/gr104_palettecolor.C
 End_Macro
 
 Begin_Macro(source)
-../../../tutorials/visualisation/graphs/multigraphpalettecolor.C
+../../../tutorials/visualisation/graphs/gr105_multigraphpalettecolor.C
 End_Macro
 
 \anchor GrP6
@@ -633,18 +633,18 @@ graphically. Point will be highlighted as "point circle" (presented by
 marker object). Moreover, any highlight (change of point) emits signal
 `TCanvas::Highlighted()` which allows the user to react and call their own
 function. For a better understanding please see also the tutorials
-`$ROOTSYS/tutorials/visualisation/graphs/hlGraph*.C` files.
+`$ROOTSYS/tutorials/visualisation/graphs/gr*_highlight*.C` files.
 
 Highlight mode is switched on/off by `TGraph::SetHighlight()` function
 or interactively from `TGraph` context menu. `TGraph::IsHighlight()` to verify
 whether the highlight mode enabled or disabled, default it is disabled.
 
 ~~~ {.cpp}
-    root [0] .x $ROOTSYS/tutorials/visualisation/graphs/gerrors2.C
+    root [0] .x $ROOTSYS/tutorials/visualisation/graphs/gr003_errors2.C
     root [1] // try SetHighlight() interactively from TGraph context menu
 ~~~
 
-\image html hlgerrors2.gif "Highlight mode for graph"
+\image html hl_gr003_errors2.gif "Highlight mode for graph"
 
 See how it is used
 <a href="classTHistPainter.html#HP30a">highlight mode and user function</a>

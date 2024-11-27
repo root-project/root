@@ -24,7 +24,7 @@ ClassImp(TGraphTime);
 TGraphTime is used to draw a set of objects evolving with nsteps in time between tmin and tmax.
 Each time step has a new list of objects. This list can be identical to
 the list of objects in the previous steps, but with different attributes.
-see example of use in $ROOTSYS/tutorials/visualisation/graphs/gtime.C
+See example of use in $ROOTSYS/tutorials/visualisation/graphs/gr017_time.C
 */
 
 ////////////////////////////////////////////////////////////////////////////////
