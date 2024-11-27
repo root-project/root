@@ -17,6 +17,7 @@
 #include "TRandom.h"
 
 import ROOT
+import numpy as np
 
 c1 = ROOT.TCanvas("c1","hists with different scales",600,400)
 
@@ -24,8 +25,7 @@ ROOT.gStyle.SetOptStat(False)
 
 h1 = ROOT.TH1F("h1","my histogram",100,-3,3)
 
-for i in range(10000) :
-    h1.Fill(ROOT.gRandom.Gaus(0,1))
+h1.Fill(np.array([ROOT.gRandom.Gaus(0, 1) for _ in range(10000)]))
 
 h1.Draw()
 c1.Update()

@@ -17,6 +17,7 @@
 ## \authors Danilo Piparo (CERN), Andre Vieira Silva
 
 import ROOT
+import numpy as np
 
 filename = ROOT.gROOT.GetTutorialDir().Data() + "/dataframe/df017_vecOpsHEP.root"
 treename = "myDataset"
@@ -26,9 +27,15 @@ def WithPyROOT(filename):
     f = ROOT.TFile(filename)
     h = ROOT.TH1F("pt", "With PyROOT", 16, 0, 4)
     for event in f[treename]:
-        for E, px, py in zip(event.E, event.px, event.py):
-            if (E > 100):
-               h.Fill(sqrt(px*px + py*py))
+        h.Fill(
+            np.array(
+                [
+                    sqrt(px * px + py * py)
+                    for E, px, py in zip(event.E, event.px, event.py)
+                    if E > 100
+                ]
+            )
+        )
     h.DrawCopy()
 
 def WithRDataFrameVecOpsJit(treename, filename):
