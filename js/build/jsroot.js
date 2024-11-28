@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '27/11/2024',
+version_date = '28/11/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -142405,7 +142405,13 @@ async function makePDF(svg, args) {
          node.removeAttribute('dy');
       });
 
-      restore_text.forEach(node => { node.innerHTML = node.$originalHTML; node.setAttribute('font-family', node.$originalFont); });
+      restore_text.forEach(node => {
+         node.innerHTML = node.$originalHTML;
+         if (node.$originalFont)
+            node.setAttribute('font-family', node.$originalFont);
+         else
+            node.removeAttribute('font-family');
+      });
 
       const res = args?.as_buffer ? doc.output('arraybuffer') : doc.output('dataurlstring');
       if (nodejs) {
