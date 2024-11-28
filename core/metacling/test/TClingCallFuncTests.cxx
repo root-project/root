@@ -433,6 +433,13 @@ TEST(TClingCallFunc, GH_14425_Virtual)
       GH_14425_Virtual(GH_14425_Virtual &&o) : fMember(o.fMember) { o.fMember = 0; }
       virtual void f() {}
    };
+   struct GH_14425_Virtual_User {
+      int fMember;
+      GH_14425_Virtual_User(int m = 1) : fMember(m) {}
+      GH_14425_Virtual_User(const GH_14425_Virtual_User &o) : fMember(o.fMember) {}
+      GH_14425_Virtual_User(GH_14425_Virtual_User &&o) : fMember(o.fMember) { o.fMember = 0; }
+      virtual void f() {}
+   };
    gInterpreter->Declare(R"cpp(
                            struct GH_14425_Virtual {
                               int fMember;
@@ -442,6 +449,14 @@ TEST(TClingCallFunc, GH_14425_Virtual)
                               virtual void f() {}
                            };
                            int GH_14425_v(GH_14425_Virtual p) { return p.fMember; }
+                           struct GH_14425_Virtual_User {
+                              int fMember;
+                              GH_14425_Virtual_User(int m = 1) : fMember(m) {}
+                              GH_14425_Virtual_User(const GH_14425_Virtual_User &o) : fMember(o.fMember) {}
+                              GH_14425_Virtual_User(GH_14425_Virtual_User &&o) : fMember(o.fMember) { o.fMember = 0; }
+                              virtual void f() {}
+                           };
+                           int GH_14425_vu(GH_14425_Virtual_User p) { return p.fMember; }
                            )cpp");
    CallFuncRAII CfVirtualRAII("", "GH_14425_v", "GH_14425_Virtual");
    CallFunc_t *CfVirtual = CfVirtualRAII.GetCF();
@@ -451,6 +466,15 @@ TEST(TClingCallFunc, GH_14425_Virtual)
    EXPECT_EQ(valVirtual, 2);
    // The original value should not have changed; if it did, TClingCallFunc called the move constructor.
    EXPECT_EQ(objVirtual.fMember, 2);
+
+   CallFuncRAII CfVirtualUserRAII("", "GH_14425_vu", "GH_14425_Virtual_User");
+   CallFunc_t *CfVirtualUser = CfVirtualUserRAII.GetCF();
+   GH_14425_Virtual_User objVirtualUser(3);
+   gInterpreter->CallFunc_SetArg(CfVirtualUser, &objVirtualUser);
+   int valVirtualUser = gInterpreter->CallFunc_ExecInt(CfVirtualUser, /*address*/ 0);
+   EXPECT_EQ(valVirtualUser, 3);
+   // The original value should not have changed; if it did, TClingCallFunc called the move constructor.
+   EXPECT_EQ(objVirtualUser.fMember, 3);
 }
 
 TEST(TClingCallFunc, GH_14425_Templates)
