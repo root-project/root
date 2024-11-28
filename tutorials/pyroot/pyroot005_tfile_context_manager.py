@@ -42,10 +42,11 @@ with TFile.Open("pyroot005_file_1.root", "recreate") as f:
 
 # When the TFile.Close method is called, the current directory is automatically
 # set again to ROOT.gROOT. Objects that were attached to the file inside the
-# context are automatically deleted and made 'None' when the file is closed.
+# context are automatically deleted, so they can't be accessed anymore after
+# the file is closed.
 print("Status after the first TFile context manager:")
 print(" Current directory: '{}'.".format(ROOT.gDirectory.GetName()))
-print(" Accessing 'histo_2' gives: '{}'.\n".format(histo_2))
+# print(histo_2) # the object is deleted at this point, so don't use it anymore!
 
 # Also reading data from a TFile can be done in a context manager. Information
 # stored in the objects of the file can be queried and used inside the context.
