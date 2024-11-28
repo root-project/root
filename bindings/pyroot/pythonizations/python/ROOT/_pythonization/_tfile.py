@@ -77,6 +77,8 @@ def _TFileConstructor(self, *args):
     if len(args) >= 1:
         if self.IsZombie():
             raise OSError('Failed to open file {}'.format(args[0]))
+    import ROOT
+    ROOT.SetOwnership(self, False)
 
 
 def _TFileOpen(klass, *args):

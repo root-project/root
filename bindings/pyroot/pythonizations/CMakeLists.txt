@@ -89,6 +89,7 @@ set(py_sources
   ROOT/_pythonization/_rvec.py
   ROOT/_pythonization/_stl_vector.py
   ROOT/_pythonization/_tarray.py
+  ROOT/_pythonization/_tcanvas.py
   ROOT/_pythonization/_tclass.py
   ROOT/_pythonization/_tclonesarray.py
   ROOT/_pythonization/_tcollection.py
