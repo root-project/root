@@ -1919,9 +1919,9 @@ The first script is:
   axis7->SetLabelOffset(0.01);
   axis7->Draw();
 
-  // one can make axis top->bottom. However because of a problem,
-  // the two x values should not be equal
-  TGaxis *axis8 = new TGaxis(6.5,0.8,6.499,-0.8,0,90,50510,"-");
+  // One can make a vertical axis going top->bottom.
+  // However one need to adjust labels align to avoid overlapping.
+  TGaxis *axis8 = new TGaxis(6.5,0.8,6.5,-0.8,0,90,50510,"-L");
   axis8->SetName("axis8");
   axis8->Draw();
 }

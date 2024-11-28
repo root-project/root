@@ -8,7 +8,8 @@
 ///
 /// \authors Rene Brun, Olivier Couet
 
-void gaxis(){
+void gaxis()
+{
    auto c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,500);
    c1->Range(-10,-1,10,1);
 
@@ -41,8 +42,8 @@ void gaxis(){
    auto axis8 = new TGaxis(8,-0.8,8,0.8,0,9000,50510,"+L");
    axis8->Draw();
 
-   // One can make a vertical axis going top->bottom. However the two x values should be
-   // slightly different to avoid labels overlapping.
-   auto axis9 = new TGaxis(6.5,0.8,6.499,-0.8,0,90,50510,"-");
+   // One can make a vertical axis going top->bottom.
+   // However one need to adjust labels align to avoid overlapping.
+   auto axis9 = new TGaxis(6.5,0.8,6.5,-0.8,0,90,50510,"-L");
    axis9->Draw();
 }
