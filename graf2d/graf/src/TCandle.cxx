@@ -769,8 +769,9 @@ void TCandle::Paint(Option_t *)
       if (doLogY) {
          if (myMedianY[0] > 0) myMedianY[0] = TMath::Log10(myMedianY[0]); else isValid = false;
       }
-
-      SetMarkerStyle(24);
+      Int_t mw = gStyle->GetCandleCircleLineWidth();
+      if (mw == 1) SetMarkerStyle(24);
+      else         SetMarkerStyle(18*mw+17);
       TAttMarker::Modify();
 
       if (isValid) gPad->PaintPolyMarker(1,myMedianX,myMedianY); // A circle for the fMedian
@@ -798,7 +799,9 @@ void TCandle::Paint(Option_t *)
          if (myMeanY[0] > 0) myMeanY[0] = TMath::Log10(myMeanY[0]); else isValid = false;
       }
 
-      SetMarkerStyle(24);
+      Int_t mw = gStyle->GetCandleCircleLineWidth();
+      if (mw == 1) SetMarkerStyle(24);
+      else         SetMarkerStyle(18*mw+17);
       TAttMarker::Modify();
 
       if (isValid) gPad->PaintPolyMarker(1,myMeanX,myMeanY); // A circle for the fMean
@@ -830,7 +833,9 @@ void TCandle::Paint(Option_t *)
       if (IsOption(kPointsAllScat)) { //Draw outliers and "all" values scattered
          SetMarkerStyle(0);
       } else {
-         SetMarkerStyle(5);
+         Int_t mw = gStyle->GetCandleCrossLineWidth();
+         if (mw == 1) SetMarkerStyle(5);
+         else         SetMarkerStyle(18*mw+16);
       }
       TAttMarker::Modify();
       gPad->PaintPolyMarker(fNDrawPoints,fDrawPointsX, fDrawPointsY);

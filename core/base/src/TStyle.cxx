@@ -1964,6 +1964,31 @@ void TStyle::SetCandleBoxRange(Double_t bRange)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set the line width of the circle marker of a candle plot ([1,5]).
+
+void TStyle::SetCandleCircleLineWidth(Int_t CircleLineWidth)
+{
+   if (CircleLineWidth<1 || CircleLineWidth>5) {
+      Error("SetCandleCircleLineWidth", "illegal line width %d. It must be in the range [1,5]\n", (int)CircleLineWidth);
+      fCandleCircleLineWidth = 1;
+   }
+   fCandleCircleLineWidth = CircleLineWidth;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the line width of the cross marker of a candle plot ([1,5]).
+
+void TStyle::SetCandleCrossLineWidth(Int_t CrossLineWidth)
+{
+   if (CrossLineWidth<1 || CrossLineWidth>5) {
+      Error("SetCandleCrossLineWidth", "illegal line width %d. It must be in the range [1,5]\n", (int)CrossLineWidth);
+      fCandleCrossLineWidth = 1;
+   }
+   fCandleCrossLineWidth = CrossLineWidth;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Save the current style in a C++ macro file.
 
 void TStyle::SaveSource(const char *filename, Option_t *option)
