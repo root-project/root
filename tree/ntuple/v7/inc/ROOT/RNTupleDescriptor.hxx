@@ -577,7 +577,7 @@ private:
    std::vector<RExtraTypeInfoDescriptor> fExtraTypeInfoDescriptors;
    std::unique_ptr<RHeaderExtension> fHeaderExtension;
 
-   // We don't expose this publicy because when we add sharded clusters, this interface does not make sense anymore
+   // We don't expose this publicly because when we add sharded clusters, this interface does not make sense anymore
    DescriptorId_t FindClusterId(NTupleSize_t entryIdx) const;
 
 public:
