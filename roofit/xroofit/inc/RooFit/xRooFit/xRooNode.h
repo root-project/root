@@ -304,7 +304,7 @@ public:
    xRooNode components() const; // additive children
    xRooNode factors() const;    // multiplicative children
    xRooNode variations() const; // interpolated children (are bins a form of variation?)
-   xRooNode coefs() const;
+   xRooNode coefs(bool recurse = false) const;
    xRooNode coords(bool setVals = true) const; // will move to the coords in the process if setVals=true
    xRooNode bins() const;
 
@@ -379,16 +379,37 @@ public:
    bool SetXaxis(int nbins, double low, double high) { return SetXaxis("xaxis", "", nbins, low, high); }
    bool SetXaxis(int nbins, const double *bins) { return SetXaxis("xaxis", "", nbins, bins); }
 
-   std::shared_ptr<TStyle> style(TObject *initObject = nullptr, bool autoCreate = true) const;
+   std::shared_ptr<TStyle>
+   style(TObject *initObject = nullptr, bool autoCreate = true) const; // DEPRECATED: TO BE REMOVED
+   xRooNode styles(TObject *initObject = nullptr, bool autoCreate = true) const;
 
    TAxis *GetXaxis() const;
 
    double GetBinData(int bin, const xRooNode &data = "obsData");
    double GetBinContent(int bin) const { return GetBinContents(bin, bin).at(0); }
    std::vector<double> GetBinContents(int binStart = 1, int binEnd = 0) const; // default will get all bins
-   double GetBinError(int bin, const xRooNode &fr = "") const;
-   std::vector<double> GetBinErrors(int binStart = 1, int binEnd = 0, const xRooNode &fr = "") const;
+   double
+   GetBinError(int bin, const xRooNode &fr = "", int nToys = 0, bool errorsHi = false, bool errorsLo = false) const;
+   std::vector<double> GetBinErrors(int binStart = 1, int binEnd = 0, const xRooNode &fr = "", int nToys = 0,
+                                    bool errorsHi = false, bool errorsLo = false) const;
    std::pair<double, double> IntegralAndError(const xRooNode &fr = "", const char *rangeName = nullptr) const;
+
+   std::vector<double> GetBinErrorsHi(int binStart = 1, int binEnd = 0, const xRooNode &fr = "", int nToys = 0) const
+   {
+      return GetBinErrors(binStart, binEnd, fr, nToys, true, false);
+   }
+   std::vector<double> GetBinErrorsLo(int binStart = 1, int binEnd = 0, const xRooNode &fr = "", int nToys = 0) const
+   {
+      return GetBinErrors(binStart, binEnd, fr, nToys, false, true);
+   }
+   double GetBinErrorHi(int bin, const xRooNode &fr = "", int nToys = 0) const
+   {
+      return GetBinError(bin, fr, nToys, true, false);
+   }
+   double GetBinErrorLo(int bin, const xRooNode &fr = "", int nToys = 0) const
+   {
+      return GetBinError(bin, fr, nToys, false, true);
+   }
 
    // methods to access default content and error
    double GetContent() const { return GetBinContent(fBinNumber); }
@@ -401,10 +422,14 @@ public:
    // methods to access content and covariances of the CHILDREN of a node
    std::vector<double> contents() const;
    TMatrixDSym covariances(const xRooNode &fr = "") const;
-
    xRooNLLVar nll(const xRooNode &_data, std::initializer_list<RooCmdArg> nllOpts) const;
    xRooNLLVar nll(const xRooNode &_data, const RooLinkedList &nllOpts) const;
    xRooNLLVar nll(const xRooNode &_data = "") const; // uses xRooFit::createNLLOption for nllOpts
+
+   xRooNLLVar
+   nll(const char *_data,
+       std::initializer_list<RooCmdArg> nllOpts = {}) const; // exists to have sensible exception reporting in python
+                                                             // (rather than conversion errors, which are incorrect)
 
    xRooNode fitResult(const char *opt = "") const;      // todo: make this 'fitResults'
    void SetFitResult(const RooFitResult *fr = nullptr); // null means will load prefit
@@ -443,13 +468,16 @@ public:
    void SetChecked(bool val = true) { Checked(this, val); }
 
    /** @private */
-   xRooNode histo(const xRooNode &vars = "x", const xRooNode &fr = "", bool content = true, bool errors = true) const;
+   xRooNode histo(const xRooNode &vars = "x", const xRooNode &fr = "", bool content = true, bool errors = true,
+                  bool stack = true, bool errorsHi = false, bool errorsLo = false, int nErrorToys = 0) const;
    /** @private */
    xRooNode filter(const xRooNode &range) const;
 
    TGraph *BuildGraph(RooAbsLValue *v = nullptr, bool includeZeros = false, TVirtualPad *fromPad = nullptr) const;
    TH1 *BuildHistogram(RooAbsLValue *v = nullptr, bool empty = false, bool errors = false, int binStart = 1,
-                       int binEnd = 0, const xRooNode &fr = "") const;
+                       int binEnd = 0, const xRooNode &fr = "", bool errorsHi = false, bool errorsLo = false,
+                       int nErrorToys = 0, TH1 *templateHist = nullptr, bool nostack = true,
+                       bool setInterp = false) const;
    xRooNode mainChild() const;
    void Draw(Option_t *opt = "") override; // *MENU*
 
