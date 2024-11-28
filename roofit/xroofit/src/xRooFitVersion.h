@@ -14,4 +14,3 @@
 
 #define GIT_COMMIT_HASH "c9465df"
 #define GIT_COMMIT_DATE "2024-11-28 11:49:25 +0000"
-

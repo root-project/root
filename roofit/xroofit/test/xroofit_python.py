@@ -48,7 +48,9 @@ class XRooFitTests(unittest.TestCase):
 
         # run a limit by creating a hypoSpace over an appropriate range of POI
         hs = w.nll("obsData").hypoSpace("mu",nPoints=0,low=0,high=10) # nPoints=0 means will do an auto-scan for limit
+        f = ROOT.TFile("fitCache.root","RECREATE")
         limits = dict(hs.limits())
+        f.Close()
         for k,v in limits.items():
             print(k,"sigma expected limit =" if k!="obs" else "observed limit =",v.value(),"+/-",v.error())
             # do a basic check that all values and errors are valid
