@@ -41,6 +41,7 @@ These examples show how data can be stored to and read back from TTree.
 | tree108_tree.C | This example writes a tree with objects of the class `Event` |
 | tree109_friend.C | Illustrates how to use tree friends |
 | tree113_getval.C | Illustrates how to retrieve tree variables in arrays |
+| tree114_circular.C | Example of a circular Tree. Circular Trees are interesting in online real time environments to store the results of the last maxEntries events |
 
 \anchor copy
 ## Copying Trees
