@@ -530,9 +530,9 @@ set(io-readCode-depends tutorial-io-importCode)
 set(fit-fit1-depends tutorial-hist-fillrandom)
 set(fit-myfit-depends tutorial-fit-fitslicesy)
 set(foam-foam_demopers-depends tutorial-foam-foam_demo)
-set(tree-staff-depends  tutorial-tree-cernbuild)
-set(tree-cernstaff-depends  tutorial-tree-cernbuild)
-set(hist-hbars-depends  tutorial-tree-cernbuild)
+set(tree-tree502_staff-depends  tutorial-tree-tree500_cernbuild)
+set(tree-tree501_cernstaff-depends  tutorial-tree-tree500_cernbuild)
+set(hist-hbars-depends  tutorial-tree-tree500_cernbuild)
 set(benchmarks-depends tutorial-hsimple
                        tutorial-fit-fit1
                        tutorial-fit-myfit
