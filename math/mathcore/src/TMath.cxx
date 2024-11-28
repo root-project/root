@@ -2134,7 +2134,7 @@ Double_t TMath::Binomial(Int_t n,Int_t k)
 /// for _n_ smaller than 12 either method is acceptable ("Numerical Recipes")
 ///
 /// Note this function is not exactly implementing the cumulative or the complement of the cumulative of the
-/// Binomial distrinution. It is equivalent to ROOT::Math::binomial_cdf_c(k-1,p,n)
+/// Binomial distribution. It is equivalent to ROOT::Math::binomial_cdf_c(k-1,p,n)
 ///
 /// \author Anna Kreshuk
 
