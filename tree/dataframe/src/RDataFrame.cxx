@@ -699,6 +699,7 @@ h.Draw()
 
 The main goal of this package is to support running any RDataFrame application distributedly. Nonetheless, not all
 parts of the RDataFrame API currently work with this package. The subset that is currently available is:
+- Alias
 - AsNumpy
 - Count
 - Define

@@ -89,6 +89,7 @@ class Transformation(Operation):
 
 
 SUPPORTED_OPERATIONS: Dict[str, Union[Action, InstantAction, Transformation]] = {
+    "Alias": Transformation,
     "AsNumpy": AsNumpy,
     "Count": Action,
     "Define": Transformation,
