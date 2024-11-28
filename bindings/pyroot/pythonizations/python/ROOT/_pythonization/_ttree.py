@@ -308,12 +308,26 @@ def _TTree__getattr__(self, key):
         out = cppyy.ll.cast[cast_type](out)
     return out
 
+def _TTree_Constructor(self, *args, **kwargs):
+    """
+    Forward the arguments to the C++ constructor and give up ownership if the
+    TTree is attached to a TFile, which is the owner in that case.
+    """
+    import ROOT
+
+    self._cpp_constructor(*args, **kwargs)
+    tdir = self.GetDirectory()
+    if tdir and type(tdir).__cpp_name__ == "TFile":
+        ROOT.SetOwnership(self, False)
 
 @pythonization("TTree")
 def pythonize_ttree(klass, name):
     # Parameters:
     # klass: class to be pythonized
     # name: string containing the name of the class
+
+    klass._cpp_constructor = klass.__init__
+    klass.__init__ = _TTree_Constructor
 
     # Pythonizations that are common to TTree and its subclasses.
     # To avoid duplicating the same logic in the pythonizors of
@@ -350,3 +364,10 @@ def pythonize_tchain(klass):
     # SetBranchAddress
     klass._OriginalSetBranchAddress = klass.SetBranchAddress
     klass.SetBranchAddress = _SetBranchAddress
+
+@pythonization("TNtuple")
+def pythonize_tchain(klass):
+
+    # The constructor needs to be explicitly pythonized for derived classes.
+    klass._cpp_constructor = klass.__init__
+    klass.__init__ = _TTree_Constructor
