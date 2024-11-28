@@ -191,6 +191,8 @@ public:
    ~RNTupleViewBase() = default;
 
    const RFieldBase &GetField() const { return *fField; }
+   RFieldBase::RBulk CreateBulk() { return fField->CreateBulk(); }
+
    const RFieldBase::RValue &GetValue() const { return fValue; }
    RNTupleGlobalRange GetFieldRange() const
    {
