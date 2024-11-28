@@ -100,6 +100,28 @@ TEST(RNTuple, CollectionView)
       EXPECT_EQ(expected, viewJetsItems(index));
       expected++;
    }
+
+   // The same items can be bulk-read.
+   auto bulk = viewJetsItems.CreateBulk();
+   auto mask = std::make_unique<bool[]>(range.size());
+   std::fill(mask.get(), mask.get() + range.size(), true);
+   std::int32_t *values = static_cast<std::int32_t *>(bulk.ReadBulk(*range.begin(), mask.get(), range.size()));
+   for (std::size_t i = 0; i < range.size(); i++) {
+      EXPECT_EQ(i + 4, values[i]);
+   }
+
+   // The pointer can be adopted by an RVec.
+   ROOT::RVec<std::int32_t> v(values, range.size());
+   ROOT::RVec<std::int32_t> expectedV = {4, 5};
+   EXPECT_TRUE(ROOT::VecOps::All(expectedV == v));
+
+   // Bulk reading can also adopt a provided buffer.
+   auto buffer = std::make_unique<std::int32_t[]>(range.size());
+   bulk.AdoptBuffer(buffer.get(), range.size());
+   bulk.ReadBulk(*range.begin(), mask.get(), range.size());
+   for (std::size_t i = 0; i < range.size(); i++) {
+      EXPECT_EQ(i + 4, buffer[i]);
+   }
 }
 
 TEST(RNTuple, ViewCast)
