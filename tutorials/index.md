@@ -62,6 +62,10 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Examples showing the "Event display classes" usage with ROOT7.
 
+\defgroup tutorial_evegen Event generation tutorials
+\ingroup Tutorials
+\brief Examples showing event generation with pythia and Monte Carlo.
+
 \defgroup tutorial_geom Geometry tutorials
 \ingroup Tutorials
 \brief Various ROOT geometry package examples.
@@ -122,10 +126,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Examples showing how to use TMatrix.
 
-\defgroup tutorial_mc Monte Carlo tutorials
-\ingroup Tutorials
-\brief Monte Carlo examples.
-
 \defgroup tutorial_multicore Multicore tutorials
 \ingroup Tutorials
 \brief These examples aim to illustrate the multicore features of ROOT, such as thread awareness and safety, multithreading and multiprocessing.
@@ -137,10 +137,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \defgroup tutorial_pyroot PyRoot tutorials
 \ingroup Tutorials
 \brief Selected examples illustrating how to use ROOT's Python interface: PyROOT.
-
-\defgroup tutorial_pythia Pythia tutorials
-\ingroup Tutorials
-\brief Examples showing the pythia usage.
 
 \defgroup tutorial_quadp Quadratic programming package.
 \ingroup Tutorials

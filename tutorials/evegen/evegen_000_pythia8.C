@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_pythia
+/// \ingroup tutorial_evegen
 /// pythia8 basic example
 ///
 /// to run, do:
@@ -20,7 +20,7 @@
 #include "TDatabasePDG.h"
 #include "TCanvas.h"
 
-void pythia8(Int_t nev  = 100, Int_t ndeb = 1)
+void evegen_000_pythia8(Int_t nev  = 100, Int_t ndeb = 1)
 {
 // Load libraries
    gSystem->Load("libEG");
