@@ -17,7 +17,7 @@ void FITS_tutorial6()
    TString dir = gROOT->GetTutorialDir();
 
    //Open the table
-   TFITSHDU hdu(dir + "/fitsio/sample4.fits[1]");
+   TFITSHDU hdu(dir + "/io/fitsio/sample4.fits[1]");
 
    // Show columns
    const auto nColumns = hdu.GetTabNColumns();

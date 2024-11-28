@@ -93,7 +93,7 @@ void Read(const std::vector<RNTupleOpenSpec> &ntuples)
    hPx.DrawCopy();
 }
 
-void ntpl012_processor_chain()
+void ntpl012_processor()
 {
    // The ntuples to generate and subsequently process. The model of the first ntuple will be used to construct the
    // entry used by the processor.

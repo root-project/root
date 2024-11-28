@@ -24,7 +24,7 @@ TFile *tree500_cernbuild(Int_t getFile = 0, Int_t print = 1)
    // The input file cern.dat is a copy of the CERN staff data base from 1988
    TString filename = "cernstaff.root";
    TString dir = gROOT->GetTutorialDir();
-   dir.Append("/tree/");
+   dir.Append("/io/tree/");
    dir.ReplaceAll("/./","/");
    FILE *fp = fopen(Form("%scernstaff.dat", dir.Data()), "r");
 

@@ -19,7 +19,7 @@ void FITS_tutorial4()
    TString dir = gROOT->GetTutorialDir();
 
    // Open the table extension number 1)
-   TFITSHDU hdu(dir + "/fitsio/sample2.fits[1][DATAMAX > 2e-15]");
+   TFITSHDU hdu(dir + "/io/fitsio/sample2.fits[1][DATAMAX > 2e-15]");
 
    hdu.Print("T");
 

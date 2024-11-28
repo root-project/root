@@ -121,7 +121,7 @@ void tree200_temperature()
 
    // Read file $ROOTSYS/tutorials/tree/temperature_Prague.dat
    auto dir = gROOT->GetTutorialDir();
-   dir.Append("/tree/");
+   dir.Append("/io/tree/");
    dir.ReplaceAll("/./","/");
    if (tree->ReadFile(Form("%stemperature_Prague.dat", dir.Data())) == 0)
       return;

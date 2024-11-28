@@ -20,7 +20,7 @@ void FITS_tutorial2()
    TString dir = gROOT->GetTutorialDir();
 
    // Open primary HDU from file
-   TFITSHDU hdu(dir + "/fitsio/sample2.fits");
+   TFITSHDU hdu(dir + "/io/fitsio/sample2.fits");
 
    // Dump the HDUs within the FITS file
    // and also their metadata

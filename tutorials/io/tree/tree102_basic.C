@@ -12,7 +12,7 @@
 void tree102_basic()
 {
    TString dir = gROOT->GetTutorialDir();
-   dir.Append("/tree/");
+   dir.Append("/io/tree/");
    dir.ReplaceAll("/./", "/");
 
    auto f = TFile::Open("tree102.root", "RECREATE");

@@ -19,7 +19,7 @@ void FITS_tutorial7()
    TString dir = gROOT->GetTutorialDir();
 
    // Open the table
-   TFITSHDU hdu(dir + "/fitsio/sample5.fits[1]");
+   TFITSHDU hdu(dir + "/io/fitsio/sample5.fits[1]");
 
    // Read the ra, dec, flux_g and brick_primary columns
 

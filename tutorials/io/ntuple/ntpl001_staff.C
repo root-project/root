@@ -41,7 +41,7 @@ constexpr char const* kNTupleFileName = "ntpl001_staff.root";
 
 void Ingest() {
    // The input file cernstaff.dat is a copy of the CERN staff data base from 1988
-   ifstream fin(gROOT->GetTutorialDir() + "/tree/cernstaff.dat");
+   ifstream fin(gROOT->GetTutorialDir() + "/io/tree/cernstaff.dat");
    assert(fin.is_open());
 
    // We create a unique pointer to an empty data model

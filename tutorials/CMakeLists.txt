@@ -521,24 +521,24 @@ set(unfold-testUnfold5b-depends tutorial-unfold-testUnfold5a)
 set(unfold-testUnfold7d-depends tutorial-unfold-testUnfold7c)
 set(unfold-testUnfold7c-depends tutorial-unfold-testUnfold7b)
 set(unfold-testUnfold7b-depends tutorial-unfold-testUnfold7a)
-set(xml-xmlmodifyfile-depends tutorial-xml-xmlnewfile)
-set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
+set(io-xml-xmlmodifyfile-depends tutorial-io-xml-xmlnewfile)
+set(io-xml-xmlreadfile-depends tutorial-io-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
 set(io-readCode-depends tutorial-io-importCode)
 set(math-fit-fit1-depends tutorial-hist-fillrandom)
 set(math-fit-myfit-depends tutorial-math-fit-fitslicesy)
 set(math-foam-foam_demopers-depends tutorial-math-foam-foam_demo)
-set(tree-tree502_staff-depends  tutorial-tree-tree500_cernbuild)
-set(tree-tree501_cernstaff-depends  tutorial-tree-tree500_cernbuild)
-set(hist-hbars-depends  tutorial-tree-tree500_cernbuild)
+set(io-tree-tree502_staff-depends  tutorial-io-tree-tree500_cernbuild)
+set(io-tree-tree501_cernstaff-depends  tutorial-io-tree-tree500_cernbuild)
+set(hist-hbars-depends  tutorial-io-tree-tree500_cernbuild)
 set(benchmarks-depends tutorial-hsimple
                        tutorial-math-fit-fit1
                        tutorial-math-fit-myfit
                        tutorial-hist-h1ReadAndDraw
                        tutorial-hist-FirstContour
                        tutorial-geom-na49view
-                       tutorial-tree-tree120_ntuple.C
-                       tutorial-tree-spider
+                       tutorial-io-tree-tree120_ntuple.C
+                       tutorial-io-tree-spider
                        tutorial-io-hadd
                        tutorial-io-loopdir
                        tutorial-io-copyFiles)

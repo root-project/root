@@ -33,7 +33,7 @@ void FITS_tutorial8()
    // row 215 column "N_CHAN": (66, 130)
    // row 215 column "MATRIX" : (5.8425176E-6, 7.290097E-6, 8.188037E-6, 9.157882E-6, 1.018355E-5, ..)
    TString dir = gROOT->GetTutorialDir();
-   TFITSHDU* hdu = new TFITSHDU(dir + "/fitsio/rmf.fits", 1);
+   TFITSHDU* hdu = new TFITSHDU(dir + "/io/fitsio/rmf.fits", 1);
    int rownum = 214; // FITS tables are indexed starting from 1
    TString colname1 = "F_CHAN";
    TString colname2 = "N_CHAN";

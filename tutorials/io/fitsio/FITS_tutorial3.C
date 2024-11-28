@@ -22,7 +22,7 @@ void FITS_tutorial3()
    auto c = new TCanvas("c1", "FITS tutorial #1", 800, 700);
    c->Divide(2, 3);
    for (auto i : ROOT::TSeqI(1, 6)) {
-      TFITSHDU hdu(dir + "/fitsio/sample3.fits", i);
+      TFITSHDU hdu(dir + "/io/fitsio/sample3.fits", i);
 
       TImage* im = (TImage *)hdu.ReadAsImage(0);
       c->cd(i);

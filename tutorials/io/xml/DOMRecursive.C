@@ -55,7 +55,7 @@ void DOMRecursive()
   TDOMParser *domParser = new TDOMParser();
   TString dir = gROOT->GetTutorialDir();
   domParser->SetValidate(false); // do not validate with DTD
-  domParser->ParseFile(dir+"/xml/person.xml");
+  domParser->ParseFile(dir+"/io/xml/person.xml");
 
   TXMLNode *node = domParser->GetXMLDocument()->GetRootNode();
 

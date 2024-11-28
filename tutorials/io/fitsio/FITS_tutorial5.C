@@ -22,7 +22,7 @@ void FITS_tutorial5()
    TString dir = gROOT->GetTutorialDir();
 
    // Open the table
-   TFITSHDU hdu(dir + "/fitsio/sample4.fits[1]");
+   TFITSHDU hdu(dir + "/io/fitsio/sample4.fits[1]");
 
    // Read vectors at rows 1 and 2 (indices 0 and 1)
    std::array<Upvd_t, 2> vs{Upvd_t(hdu.GetTabRealVectorCell(0, "mag")), Upvd_t(hdu.GetTabRealVectorCell(1, "mag"))};

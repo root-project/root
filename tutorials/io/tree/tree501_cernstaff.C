@@ -11,7 +11,7 @@
 void tree501_cernstaff()
 {
    TString dir = gROOT->GetTutorialDir();
-   dir.Append("/tree/cernstaff.C");
+   dir.Append("/io/tree/cernstaff.C");
    if (gSystem->AccessPathName("cernstaff.root")) {
       gROOT->SetMacroPath(dir);
       gROOT->ProcessLine(".x tree500_cernbuild.C");
