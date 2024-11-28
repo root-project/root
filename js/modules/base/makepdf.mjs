@@ -143,7 +143,13 @@ async function makePDF(svg, args) {
          node.removeAttribute('dy');
       });
 
-      restore_text.forEach(node => { node.innerHTML = node.$originalHTML; node.setAttribute('font-family', node.$originalFont); });
+      restore_text.forEach(node => {
+         node.innerHTML = node.$originalHTML;
+         if (node.$originalFont)
+            node.setAttribute('font-family', node.$originalFont);
+         else
+            node.removeAttribute('font-family');
+      });
 
       const res = args?.as_buffer ? doc.output('arraybuffer') : doc.output('dataurlstring');
       if (nodejs) {

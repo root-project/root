@@ -9,6 +9,7 @@
 1. Fix - handle `TPave` NDC position also when fInit is not set
 1. Fix - correctly position title according to gStyle->GetTitleAlign()
 1. Fix - correctly handle tooltip events for `TGraphPolar`
+1. Fix - font corruption after PDF generation
 
 
 ## Changes in 7.8.0
