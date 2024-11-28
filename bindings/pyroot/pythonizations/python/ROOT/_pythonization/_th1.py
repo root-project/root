@@ -23,6 +23,45 @@ def _imul(self, c):
     return self
 
 
+def _TH1_Constructor(self, *args, **kwargs):
+    """
+    Forward the arguments to the C++ constructor and give up ownership if the
+    TH1 is attached to a TFile, which is the owner in that case.
+    """
+    import ROOT
+
+    self._cpp_constructor(*args, **kwargs)
+    tdir = self.GetDirectory()
+    if tdir and type(tdir).__cpp_name__ == "TFile":
+        ROOT.SetOwnership(self, False)
+
+# The constructors need to be pythonized for each derived class separately:
+
+@pythonization('TH1D')
+def pythonize_th1(klass):
+    klass._cpp_constructor = klass.__init__
+    klass.__init__ = _TH1_Constructor
+
+@pythonization('TH1F')
+def pythonize_th1(klass):
+    klass._cpp_constructor = klass.__init__
+    klass.__init__ = _TH1_Constructor
+
+@pythonization('THDF')
+def pythonize_th1(klass):
+    klass._cpp_constructor = klass.__init__
+    klass.__init__ = _TH1_Constructor
+
+@pythonization('TH2F')
+def pythonize_th1(klass):
+    klass._cpp_constructor = klass.__init__
+    klass.__init__ = _TH1_Constructor
+
+@pythonization('TProfile')
+def pythonize_th1(klass):
+    klass._cpp_constructor = klass.__init__
+    klass.__init__ = _TH1_Constructor
+
 @pythonization('TH1')
 def pythonize_th1(klass):
     # Parameters:
