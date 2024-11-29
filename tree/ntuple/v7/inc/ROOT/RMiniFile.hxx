@@ -110,8 +110,10 @@ private:
       TFile *fFile = nullptr;
       /// Low-level writing using a TFile
       void Write(const void *buffer, size_t nbytes, std::int64_t offset);
-      /// Reserves an RBlob opaque key as data record and returns the offset of the record
-      std::uint64_t ReserveBlobKey(size_t nbytes, size_t len);
+      /// Reserves an RBlob opaque key as data record and returns the offset of the record. If keyBuffer is specified,
+      /// it must be written *before* the returned offset. (Note that the array type is purely documentation, the
+      /// argument is actually just a pointer.)
+      std::uint64_t ReserveBlobKey(size_t nbytes, size_t len, unsigned char keyBuffer[kBlobKeyLen] = nullptr);
       operator bool() const { return fFile; }
    };
 
@@ -159,8 +161,10 @@ private:
       std::uint64_t WriteKey(const void *buffer, std::size_t nbytes, std::size_t len, std::int64_t offset = -1,
                              std::uint64_t directoryOffset = 100, const std::string &className = "",
                              const std::string &objectName = "", const std::string &title = "");
-      /// Reserves an RBlob opaque key as data record and returns the offset of the record
-      std::uint64_t ReserveBlobKey(std::size_t nbytes, std::size_t len);
+      /// Reserves an RBlob opaque key as data record and returns the offset of the record. If keyBuffer is specified,
+      /// it must be written *before* the returned offset. (Note that the array type is purely documentation, the
+      /// argument is actually just a pointer.)
+      std::uint64_t ReserveBlobKey(std::size_t nbytes, std::size_t len, unsigned char keyBuffer[kBlobKeyLen] = nullptr);
       operator bool() const { return fFile; }
    };
 
@@ -224,8 +228,9 @@ public:
    std::uint64_t WriteNTupleFooter(const void *data, size_t nbytes, size_t lenFooter);
    /// Writes a new record as an RBlob key into the file
    std::uint64_t WriteBlob(const void *data, size_t nbytes, size_t len);
-   /// Reserves a new record as an RBlob key in the file.
-   std::uint64_t ReserveBlob(size_t nbytes, size_t len);
+   /// Reserves a new record as an RBlob key in the file. If keyBuffer is specified, it must be written *before* the
+   /// returned offset. (Note that the array type is purely documentation, the argument is actually just a pointer.)
+   std::uint64_t ReserveBlob(size_t nbytes, size_t len, unsigned char keyBuffer[kBlobKeyLen] = nullptr);
    /// Write into a reserved record; the caller is responsible for making sure that the written byte range is in the
    /// previously reserved key.
    void WriteIntoReservedBlob(const void *buffer, size_t nbytes, std::int64_t offset);
