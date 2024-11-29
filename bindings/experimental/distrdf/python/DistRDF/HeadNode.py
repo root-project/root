@@ -105,7 +105,7 @@ class HeadNode(Node, ABC):
 
         # Internal RDataFrame object, useful to expose information such as
         # column names.
-        self._localdf = localdf
+        self.rdf_node = localdf
 
         # A dictionary where the keys are the IDs of the objects to live visualize
         # and the values are the corresponding callback functions 
@@ -119,8 +119,8 @@ class HeadNode(Node, ABC):
         the garbage collector, the cppyy memory regulator and the C++ object
         destructor.
         """
-        if hasattr(self, "_localdf"):
-            del self._localdf
+        if hasattr(self, "rdf_node"):
+            del self.rdf_node
 
     @property
     def npartitions(self) -> Optional[int]:

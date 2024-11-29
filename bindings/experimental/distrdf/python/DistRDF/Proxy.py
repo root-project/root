@@ -59,8 +59,12 @@ def execute_graph(node: Node) -> None:
 
 def _update_internal_df_with_transformation(node:Node, operation: Operation) -> None:
     """Propagate transform operations to the headnode internal RDataFrame"""
-    rdf_operation = getattr(node.get_head()._localdf, operation.name)
-    node.get_head()._localdf = rdf_operation(*operation.args, **operation.kwargs)
+    # The parent node is None only if the node is the head node
+    parent_node = node.parent if node.parent is not None else node
+    # Retrieve correct C++ transformation to call
+    rdf_operation = getattr(parent_node.rdf_node, operation.name)
+    # Call and inject the result in the Python node
+    node.rdf_node = rdf_operation(*operation.args, **operation.kwargs)
 
 def _create_new_node(parent: Node, operation: Operation.Operation) -> Node:
     """Creates a new node and inserts it in the computation graph"""
@@ -253,11 +257,11 @@ class NodeProxy(Proxy):
 
     def GetColumnNames(self):
         """Forward call to the internal RDataFrame object"""
-        return self.proxied_node.get_head()._localdf.GetColumnNames()
+        return self.proxied_node.rdf_node.GetColumnNames()
     
     def GetColumnType(self, column):
         """Forward call to the internal RDataFrame object"""
-        return self.proxied_node.get_head()._localdf.GetColumnType(column)
+        return self.proxied_node.rdf_node.GetColumnType(column)
 
     def _create_new_op(self, *args, **kwargs):
         """
