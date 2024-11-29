@@ -354,14 +354,14 @@ class RNTupleCollectionView {
 
 private:
    Internal::RPageSource *fSource;
-   RField<RNTupleCardinality<std::uint64_t>> fField;
+   std::unique_ptr<RField<RNTupleCardinality<std::uint64_t>>> fField; // TODO(jblomer): fix moving RField
    RFieldBase::RValue fValue;
 
    RNTupleCollectionView(DescriptorId_t fieldId, const std::string &fieldName, Internal::RPageSource *source)
-      : fSource(source), fField(fieldName), fValue(fField.CreateValue())
+      : fSource(source), fField(new RField<RNTupleCardinality<std::uint64_t>>(fieldName)), fValue(fField->CreateValue())
    {
-      fField.SetOnDiskId(fieldId);
-      Internal::CallConnectPageSourceOnField(fField, *source);
+      fField->SetOnDiskId(fieldId);
+      Internal::CallConnectPageSourceOnField(*fField, *source);
    }
 
    static RNTupleCollectionView Create(DescriptorId_t fieldId, Internal::RPageSource *source)
@@ -382,10 +382,10 @@ private:
    DescriptorId_t GetFieldId(std::string_view fieldName)
    {
       auto descGuard = fSource->GetSharedDescriptorGuard();
-      auto fieldId = descGuard->FindFieldId(fieldName, fField.GetOnDiskId());
+      auto fieldId = descGuard->FindFieldId(fieldName, fField->GetOnDiskId());
       if (fieldId == kInvalidDescriptorId) {
          throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in collection '" +
-                                  descGuard->GetQualifiedFieldName(fField.GetOnDiskId()) + "'"));
+                                  descGuard->GetQualifiedFieldName(fField->GetOnDiskId()) + "'"));
       }
       return fieldId;
    }
@@ -400,7 +400,7 @@ public:
    RNTupleClusterRange GetCollectionRange(NTupleSize_t globalIndex) {
       ClusterSize_t size;
       RClusterIndex collectionStart;
-      fField.GetCollectionInfo(globalIndex, &collectionStart, &size);
+      fField->GetCollectionInfo(globalIndex, &collectionStart, &size);
       return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndex(),
                                  collectionStart.GetIndex() + size);
    }
@@ -408,7 +408,7 @@ public:
    {
       ClusterSize_t size;
       RClusterIndex collectionStart;
-      fField.GetCollectionInfo(clusterIndex, &collectionStart, &size);
+      fField->GetCollectionInfo(clusterIndex, &collectionStart, &size);
       return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndex(),
                                  collectionStart.GetIndex() + size);
    }
