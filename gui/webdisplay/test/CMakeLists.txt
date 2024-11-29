@@ -10,7 +10,6 @@
 
 
 # test only can be run if Firefox or Chrome are detected on the system
-if(NOT APPLE)
 if (CHROME_EXECUTABLE OR FIREFOX_EXECUTABLE)
   ROOT_ADD_TEST(test-webgui-ping
                 RUN_SERIAL
@@ -18,5 +17,4 @@ if (CHROME_EXECUTABLE OR FIREFOX_EXECUTABLE)
                 COMMAND root.exe -b -q -l ping.cxx
                 PASSREGEX "PING-PONG TEST COMPLETED"
                 TIMEOUT 300)
-endif()
 endif()
