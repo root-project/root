@@ -996,8 +996,8 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::Write(const v
       throw RException(R__FAIL("WriteBuffer failed."));
 }
 
-std::uint64_t
-ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::WriteKey(const void *buffer, size_t nbytes, size_t len)
+std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::WriteBlobKey(const void *buffer,
+                                                                                         size_t nbytes, size_t len)
 {
    std::uint64_t offsetKey;
    RKeyBlob keyBlob(fFile);
@@ -1165,7 +1165,7 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
             offset = fFileSimple.WriteKey(payload, nBytes, length, -1, RTFHeader::kBEGIN, kBlobClassName);
          }
       } else {
-         offset = fFileProper.WriteKey(payload, nBytes, length);
+         offset = fFileProper.WriteBlobKey(payload, nBytes, length);
       }
       return offset;
    };
@@ -1241,7 +1241,7 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::ReserveBlob(size_
          offset = fFileSimple.WriteKey(/*buffer=*/nullptr, nbytes, len, -1, RTFHeader::kBEGIN, kBlobClassName);
       }
    } else {
-      offset = fFileProper.WriteKey(/*buffer=*/nullptr, nbytes, len);
+      offset = fFileProper.WriteBlobKey(/*buffer=*/nullptr, nbytes, len);
    }
    return offset;
 }
