@@ -101,6 +101,10 @@ A stand-alone version of RNTuple can remove the TFile based writer.
 */
 // clang-format on
 class RNTupleFileWriter {
+public:
+   /// The key length of a blob. It is always a big key (version > 1000) with class name RBlob.
+   static constexpr std::size_t kBlobKeyLen = 42;
+
 private:
    struct RFileProper {
       TFile *fFile = nullptr;
