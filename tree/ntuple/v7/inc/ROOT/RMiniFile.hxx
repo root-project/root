@@ -107,7 +107,7 @@ private:
       /// Low-level writing using a TFile
       void Write(const void *buffer, size_t nbytes, std::int64_t offset);
       /// Writes an RBlob opaque key with the provided buffer as data record and returns the offset of the record
-      std::uint64_t WriteKey(const void *buffer, size_t nbytes, size_t len);
+      std::uint64_t WriteBlobKey(const void *buffer, size_t nbytes, size_t len);
       operator bool() const { return fFile; }
    };
 
