@@ -151,7 +151,11 @@ def main():
     # We also want to upload any successful build, even if it fails testing
     # later on.
     if not pull_request and not args.incremental and not args.coverage:
-        archive_and_upload(yyyy_mm_dd, obj_prefix)
+        try:
+            archive_and_upload(yyyy_mm_dd, obj_prefix)
+        except Exception as err:
+            build_utils.print_warning("failed to upload artifact:", err)
+
 
     if args.binaries:
         create_binaries(args.buildtype)
