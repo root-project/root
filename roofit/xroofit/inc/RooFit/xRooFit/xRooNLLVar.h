@@ -38,7 +38,6 @@ class RooAbsReal;
 class RooAbsPdf;
 class RooAbsData;
 class RooAbsCollection;
-class RooNLLVar;
 class RooConstraintSum;
 class RooRealVar;
 class RooCmdArg;
@@ -93,6 +92,7 @@ public:
 
    class xRooFitResult : public std::shared_ptr<const RooFitResult> {
    public:
+      xRooFitResult(const RooFitResult &fr);
       xRooFitResult(const std::shared_ptr<xRooNode> &in,
                     const std::shared_ptr<xRooNLLVar> &nll = nullptr); // : fNode(in) { }
       const RooFitResult *operator->() const;
@@ -430,19 +430,27 @@ public:
 
    // total nll should be all these values + constraint term + extended term + simTerm [+binnedDataTerm if activated
    // binnedL option]
-   RooNLLVar *mainTerm() const;
+   /*RooAbsReal *mainTerm() const;*/
    RooConstraintSum *constraintTerm() const;
 
+   double mainTermVal() const;
+   double constraintTermVal() const;
+
    double getEntryVal(size_t entry) const; // get the Nll value for a specific entry
-   double extendedTerm() const;
-   double simTerm() const;
-   double binnedDataTerm() const;
+   double extendedTermVal() const;
+   double simTermVal() const;
+   double binnedDataTermVal() const;
    double getEntryBinWidth(size_t entry) const;
 
    double ndof() const;
    double saturatedVal() const;
-   double saturatedConstraintTerm() const;
-   double saturatedMainTerm() const;
+   [[deprecated("Use saturatedConstraintTermVal()")]] double saturatedConstraintTerm() const
+   {
+      return saturatedConstraintTermVal();
+   }
+   double saturatedConstraintTermVal() const;
+   [[deprecated("Use saturatedMainTermVal()")]] double saturatedMainTerm() const { return saturatedMainTermVal(); }
+   double saturatedMainTermVal() const;
    double pgof() const; // a goodness-of-fit pvalue based on profile likelihood of a saturated model
    double mainTermPgof() const;
    double mainTermNdof() const;

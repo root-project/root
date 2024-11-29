@@ -185,6 +185,17 @@ int xRooNLLVar::xRooHypoSpace::AddPoints(const char *parName, size_t nPoints, do
       throw std::runtime_error("Unknown parameter");
    _par->setAttribute("axis");
 
+   if (low < _par->getMin()) {
+      Warning("AddPoints", "low edge of hypoSpace %g below lower bound of parameter: %g. Changing to lower bound", low,
+              _par->getMin());
+      low = _par->getMin();
+   }
+   if (high > _par->getMax()) {
+      Warning("AddPoints", "high edge of hypoSpace %g above upper bound of parameter: %g. Changing to upper bound",
+              high, _par->getMax());
+      high = _par->getMax();
+   }
+
    if (nPoints == 1) {
       _par->setVal((high + low) * 0.5);
       AddPoint();
