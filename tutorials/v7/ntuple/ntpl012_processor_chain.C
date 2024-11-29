@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_ntuple
 /// \notebook
-/// Demonstrate the RNTupleProcessor using multiple RNTuples
+/// Demonstrate the RNTupleProcessor for vertical compositions (chains) of RNTuples
 ///
 /// \macro_image
 /// \macro_code
@@ -93,7 +93,7 @@ void Read(const std::vector<RNTupleOpenSpec> &ntuples)
    hPx.DrawCopy();
 }
 
-void ntpl012_processor()
+void ntpl012_processor_chain()
 {
    // The ntuples to generate and subsequently process. The model of the first ntuple will be used to construct the
    // entry used by the processor.
