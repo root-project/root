@@ -40,8 +40,8 @@ namespace Experimental {
 // clang-format on
 class RNTupleGlobalRange {
 private:
-   NTupleSize_t fStart;
-   NTupleSize_t fEnd;
+   NTupleSize_t fStart = kInvalidNTupleIndex;
+   NTupleSize_t fEnd = kInvalidNTupleIndex;
 
 public:
    class RIterator {
@@ -67,7 +67,9 @@ public:
       bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
    };
 
+   RNTupleGlobalRange() = default;
    RNTupleGlobalRange(NTupleSize_t start, NTupleSize_t end) : fStart(start), fEnd(end) {}
+
    RIterator begin() { return RIterator(fStart); }
    RIterator end() { return RIterator(fEnd); }
    NTupleSize_t size() { return fEnd - fStart; }
@@ -84,9 +86,10 @@ public:
 // clang-format on
 class RNTupleClusterRange {
 private:
-   const DescriptorId_t fClusterId;
-   const ClusterSize_t::ValueType fStart;
-   const ClusterSize_t::ValueType fEnd;
+   DescriptorId_t fClusterId = kInvalidDescriptorId;
+   ClusterSize_t::ValueType fStart = kInvalidClusterIndex;
+   ClusterSize_t::ValueType fEnd = kInvalidClusterIndex;
+
 public:
    class RIterator {
    private:
@@ -111,8 +114,10 @@ public:
       bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
    };
 
+   RNTupleClusterRange() = default;
    RNTupleClusterRange(DescriptorId_t clusterId, ClusterSize_t::ValueType start, ClusterSize_t::ValueType end)
       : fClusterId(clusterId), fStart(start), fEnd(end) {}
+
    RIterator begin() { return RIterator(RClusterIndex(fClusterId, fStart)); }
    RIterator end() { return RIterator(RClusterIndex(fClusterId, fEnd)); }
 };
@@ -349,14 +354,14 @@ class RNTupleCollectionView {
 
 private:
    Internal::RPageSource *fSource;
-   RField<RNTupleCardinality<std::uint64_t>> fField;
+   std::unique_ptr<RField<RNTupleCardinality<std::uint64_t>>> fField; // TODO(jblomer): fix moving RField
    RFieldBase::RValue fValue;
 
    RNTupleCollectionView(DescriptorId_t fieldId, const std::string &fieldName, Internal::RPageSource *source)
-      : fSource(source), fField(fieldName), fValue(fField.CreateValue())
+      : fSource(source), fField(new RField<RNTupleCardinality<std::uint64_t>>(fieldName)), fValue(fField->CreateValue())
    {
-      fField.SetOnDiskId(fieldId);
-      Internal::CallConnectPageSourceOnField(fField, *source);
+      fField->SetOnDiskId(fieldId);
+      Internal::CallConnectPageSourceOnField(*fField, *source);
    }
 
    static RNTupleCollectionView Create(DescriptorId_t fieldId, Internal::RPageSource *source)
@@ -377,10 +382,10 @@ private:
    DescriptorId_t GetFieldId(std::string_view fieldName)
    {
       auto descGuard = fSource->GetSharedDescriptorGuard();
-      auto fieldId = descGuard->FindFieldId(fieldName, fField.GetOnDiskId());
+      auto fieldId = descGuard->FindFieldId(fieldName, fField->GetOnDiskId());
       if (fieldId == kInvalidDescriptorId) {
          throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in collection '" +
-                                  descGuard->GetQualifiedFieldName(fField.GetOnDiskId()) + "'"));
+                                  descGuard->GetQualifiedFieldName(fField->GetOnDiskId()) + "'"));
       }
       return fieldId;
    }
@@ -395,7 +400,7 @@ public:
    RNTupleClusterRange GetCollectionRange(NTupleSize_t globalIndex) {
       ClusterSize_t size;
       RClusterIndex collectionStart;
-      fField.GetCollectionInfo(globalIndex, &collectionStart, &size);
+      fField->GetCollectionInfo(globalIndex, &collectionStart, &size);
       return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndex(),
                                  collectionStart.GetIndex() + size);
    }
@@ -403,7 +408,7 @@ public:
    {
       ClusterSize_t size;
       RClusterIndex collectionStart;
-      fField.GetCollectionInfo(clusterIndex, &collectionStart, &size);
+      fField->GetCollectionInfo(clusterIndex, &collectionStart, &size);
       return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndex(),
                                  collectionStart.GetIndex() + size);
    }
