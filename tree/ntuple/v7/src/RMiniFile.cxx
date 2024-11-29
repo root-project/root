@@ -1189,18 +1189,8 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::Commit()
 std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const void *data, size_t nbytes, size_t len)
 {
    auto writeKey = [this](const void *payload, size_t nBytes, size_t length) {
-      std::uint64_t offset;
-      if (fFileSimple) {
-         if (fIsBare) {
-            offset = fFileSimple.fKeyOffset;
-            fFileSimple.Write(payload, nBytes);
-            fFileSimple.fKeyOffset += nBytes;
-         } else {
-            offset = fFileSimple.WriteBlobKey(payload, nBytes, length);
-         }
-      } else {
-         offset = fFileProper.WriteBlobKey(payload, nBytes, length);
-      }
+      std::uint64_t offset = ReserveBlob(nBytes, length);
+      WriteIntoReservedBlob(payload, nBytes, offset);
       return offset;
    };
 
