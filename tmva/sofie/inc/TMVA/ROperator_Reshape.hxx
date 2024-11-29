@@ -79,7 +79,7 @@ public:
          size_t output_length = ConvertShapeToLength(output_shape);
          // (input_length == output_length) is the easy case : (2,3,4) -> (2,12)
          if (input_length != output_length) {
-            if ((output_length == 0 && fAllowZero == 0) || output_length > INT64_MAX) {
+            if ((output_length == 0 && fAllowZero == 0) || output_length > SIZE_MAX) {
                // in this case value 0 or -1 in shape are automatically corrected
                bool replacementDone = false;
                for (size_t i = 0; i < output_shape.size(); i++) {
