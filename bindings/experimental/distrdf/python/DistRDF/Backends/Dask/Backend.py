@@ -166,7 +166,7 @@ class DaskBackend(Base.BaseBackend):
                                         Callable],
                                         Base.TaskResult],
                         reducer: Callable[[Base.TaskResult, Base.TaskResult], Base.TaskResult],
-                        ) -> Base.TaskResult:
+                        **kwargs) -> Base.TaskResult:
         """
         Performs map-reduce using Dask framework.
 
@@ -177,6 +177,8 @@ class DaskBackend(Base.BaseBackend):
 
             reducer (function): A function that merges two lists that were
                 returned by the mapper.
+
+            **kwargs: options. The only used one is progressBar (default: True)
 
         Returns:
             list: A list representing the values of action nodes returned
@@ -201,7 +203,8 @@ class DaskBackend(Base.BaseBackend):
         # it in this class, it won't be shown. Full details at
         # https://docs.dask.org/en/latest/diagnostics-distributed.html#dask.distributed.progress
         final_results = mergeables_lists.pop().persist()
-        progress(final_results)
+        if kwargs.get("progressBar", True):
+            progress(final_results)
 
         return final_results.compute()
 

@@ -44,7 +44,7 @@ def _managed_tcontext():
         ctxt.__destruct__()
 
 
-def execute_graph(node: Node) -> None:
+def execute_graph(node: Node, progressBar=True) -> None:
     """
     Executes the distributed RDataFrame computation graph the input node
     belongs to. If the node already has a value, this is a no-op.
@@ -55,7 +55,7 @@ def execute_graph(node: Node) -> None:
         with _managed_tcontext():
             # All the information needed to reconstruct the computation graph on
             # the workers is contained in the head node
-            node.get_head().execute_graph()
+            node.get_head().execute_graph(progressBar=progressBar)
 
 def _update_internal_df_with_transformation(node:Node, operation: Operation) -> None:
     """Propagate transform operations to the headnode internal RDataFrame"""

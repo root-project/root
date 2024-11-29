@@ -20,6 +20,7 @@ from typing import Iterable, TYPE_CHECKING
 
 from DistRDF.Backends import build_backends_submodules
 from DistRDF.LiveVisualize import LiveVisualize
+from DistRDF.TaskProgressBar import TaskProgressBar
 
 if TYPE_CHECKING:
     from DistRDF.Proxy import ResultPtrProxy, ResultMapProxy
@@ -48,7 +49,7 @@ def initialize(fun, *args, **kwargs):
     Base.BaseBackend.register_initialization(fun, *args, **kwargs)
 
 
-def RunGraphs(proxies: Iterable) -> int:
+def RunGraphs(proxies: Iterable, progressBar=True) -> int:
     """
     Trigger the execution of multiple RDataFrame computation graphs on a certain
     distributed backend. If the backend doesn't support multiple job
@@ -59,6 +60,8 @@ def RunGraphs(proxies: Iterable) -> int:
         proxies(list): List of action proxies that should be triggered. Only
             actions belonging to different RDataFrame graphs will be
             triggered to avoid useless calls.
+        
+        progressBar: whether to show a progress bar for the whole set of tasks
 
     Return:
         (int): The number of unique computation graphs executed by this call.
@@ -99,7 +102,9 @@ def RunGraphs(proxies: Iterable) -> int:
     # Submit all computation graphs concurrently from multiple Python threads.
     # The submission is not computationally intensive
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(uniqueproxies)) as executor:
-        futures = [executor.submit(execute_graph, proxy.proxied_node) for proxy in uniqueproxies]
+        futures = [executor.submit(execute_graph, proxy.proxied_node, progressBar=None) for proxy in uniqueproxies]
+        if progressBar:
+            TaskProgressBar(futures).run()
         concurrent.futures.wait(futures)
 
     return len(uniqueproxies)
