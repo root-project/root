@@ -319,6 +319,7 @@ void TPave::PaintPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    Double_t x[7],y[7];
    TString opt = option;
    opt.ToLower();
+
    // if pave drawn with the arc option, goes through dedicated function
    if (opt.Contains("arc")) {
       PaintPaveArc(x1,y1,x2,y2,bordersize,option);
@@ -326,7 +327,6 @@ void TPave::PaintPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    }
 
    // normal rectangular pave
-   if (opt.Length() == 0) opt ="br";
    Int_t fillstyle = GetFillStyle();
    Int_t fillcolor = GetFillColor();
    Int_t shadowcolor = GetShadowColor();
@@ -343,32 +343,37 @@ void TPave::PaintPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
       return;
    }
 
+   if (fBorderSize <= 0 || opt.Contains("nb")) return;
+
    Double_t wy = gPad->PixeltoY(0) - gPad->PixeltoY(fBorderSize);
    Double_t wx = gPad->PixeltoX(fBorderSize) - gPad->PixeltoX(0);
-   Int_t mode = 0;
-   //*-*- Draw the frame top right
-   if (opt.Contains("t") && opt.Contains("r")) {
-      mode = 1;
+
+   if (opt.Contains("tr")) {
+      // Draw the shadow top right
       x[0] = x1 + 1.5*wx;     y[0] = y2;
       x[1] = x[0];            y[1] = y2 + wy;
       x[2] = x2 + wx;         y[2] = y[1];
       x[3] = x[2];            y[3] = y1 + 1.5*wy;
       x[4] = x2;              y[4] = y[3];
       x[5] = x[4];            y[5] = y2;
-   }
-   // Draw the frame top left
-   if (opt.Contains("t") && opt.Contains("l")) {
-      mode = 2;
+   } else if (opt.Contains("tl")) {
+      // Draw the shadow top left
       x[0] = x1 - wx;         y[0] = y1 + 1.5*wy;
       x[1] = x[0];            y[1] = y2 + wy;
       x[2] = x2 - 1.5*wx;     y[2] = y[1];
       x[3] = x[2];            y[3] = y2;
       x[4] = x1;              y[4] = y[3];
       x[5] = x1;              y[5] = y[0];
-   }
-   // Draw the frame bottom right
-   if (opt.Contains("b") && opt.Contains("r")) {
-      mode = 3;
+   } else if (opt.Contains("bl")) {
+      // Draw the shadow bottom left
+      x[0] = x1 - wx;         y[0] = y2 - 1.5*wy;
+      x[1] = x[0];            y[1] = y1 - wy;
+      x[2] = x2 - 1.5*wx;     y[2] = y[1];
+      x[3] = x[2];            y[3] = y1;
+      x[4] = x1;              y[4] = y[3];
+      x[5] = x[4];            y[5] = y[0];
+   } else {
+      // Draw the shadow bottom right
       x[0] = x1 + 1.5*wx;     y[0] = y1;
       x[1] = x[0];            y[1] = y1 - wy;
       x[2] = x2 + wx;         y[2] = y[1];
@@ -376,17 +381,7 @@ void TPave::PaintPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
       x[4] = x2;              y[4] = y[3];
       x[5] = x[4];            y[5] = y1;
    }
-   // Draw the frame bottom left
-   if (opt.Contains("b") && opt.Contains("l")) {
-      mode = 4;
-      x[0] = x1 - wx;         y[0] = y2 - 1.5*wy;
-      x[1] = x[0];            y[1] = y1 - wy;
-      x[2] = x2 - 1.5*wx;     y[2] = y[1];
-      x[3] = x[2];            y[3] = y1;
-      x[4] = x1;              y[4] = y[3];
-      x[5] = x[4];            y[5] = y[0];
-   }
-   if (!mode) return;  // nop border mode option specified
+
    for (Int_t i=0;i<6;i++) {
       if (x[i] < gPad->GetX1()) x[i] = gPad->GetX1();
       if (x[i] > gPad->GetX2()) x[i] = gPad->GetX2();
@@ -421,7 +416,7 @@ void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    Int_t i;
    TString opt = option;
    opt.ToLower();
-   if (opt.Length() == 0) opt ="br";
+
    Int_t fillstyle = GetFillStyle();
    Int_t fillcolor = GetFillColor();
    Int_t shadowcolor = GetShadowColor();
@@ -493,13 +488,13 @@ void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    gPad->PaintFillArea(np  , x, y);
    gPad->PaintPolyLine(np+1, x, y);
 
+   if (fBorderSize <= 0 || opt.Contains("nb")) return;
 
-   if (fBorderSize <= 0) return;
+   Double_t wy = fBorderSize;
+   Double_t wx = fBorderSize;
 
-   Double_t wy    = fBorderSize;
-   Double_t wx    = fBorderSize;
-   // Draw the frame top right
    if (opt.Contains("tr")) {
+      // Draw the shadow top right
       px[0] = px2;           py[0] = py1 - r;
       px[1] = px2;           py[1] = py2 + r;
       np = 2;
@@ -522,9 +517,8 @@ void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
       px[np+1] = px2 + wx;    py[np+1] = py1 - r;
       px[np+2] = px[0];       py[np+2] = py[0];
       np += 3;
-   }
-   // Draw the frame top left
-   if (opt.Contains("tl")) {
+   } else if (opt.Contains("tl")) {
+      // Draw the shadow top left
       px[0] = px2 - r;           py[0] = py2;
       px[1] = px1 + r;           py[1] = py2;
       np = 2;
@@ -547,9 +541,32 @@ void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
       px[np+1] = px2 - r;    py[np+1] = py2 - wy;
       px[np+2] = px[0];      py[np+2] = y[0];
       np += 3;
-   }
-   // Draw the frame bottom right
-   if (opt.Contains("br")) {
+   } else if (opt.Contains("bl")) {
+      // Draw the shadow bottom left
+      px[0] = px1;           py[0] = py2 + r;
+      px[1] = px1;           py[1] = py1 - r;
+      np = 2;
+      for (i=0;i<kNPARC;i++) {          //bottom left corner inside
+         px[np] = px1 + r - r*cosa[i];
+         py[np] = py1 + r - r*sina[i];
+         np++;
+      }
+      px[np]   = px1 + r;       py[np]   = py1;
+      px[np+1] = px2 - r;       py[np+1] = py1;
+      px[np+2] = px2 - r;       py[np+2] = py1 + wy;
+      px[np+3] = px1 + r;       py[np+3] = py1 + wy;
+      np += 4;
+      for (i=kNPARC-1;i>=0;i--) {       //bottom left corner outside
+         px[np] = px1 + r - r*cosa[i]*(1+wx/r);
+         py[np] = py1 - r + r*sina[i]*(1+wy/r);
+         np++;
+      }
+      px[np]   = px1 - wx;    py[np]   = py1 - r;
+      px[np+1] = px1 - wx;    py[np+1] = py[0];
+      px[np+2] = px[0];       py[np+2] = py[0];
+      np += 3;
+   } else {
+      // Draw the shadow bottom right (default)
       px[0] = px1 + r;           py[0] = py1;
       px[1] = px2 - r;           py[1] = py1;
       np = 2;
@@ -573,31 +590,7 @@ void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
       px[np+2] = px[0];      py[np+2] = py[0];
       np += 3;
    }
-   // Draw the frame bottom left
-   if (opt.Contains("bl")) {
-      px[0] = px1;           py[0] = py2 + r;
-      px[1] = px1;           py[1] = py1 - r;
-      np = 2;
-      for (i=0;i<kNPARC;i++) {          //bottom left corner inside
-         px[np] = px1 + r - r*cosa[i];
-         py[np] = py1 + r - r*sina[i];
-         np++;
-      }
-      px[np]   = px1 + r;       py[np]   = py1;
-      px[np+1] = px2 - r;       py[np+1] = py1;
-      px[np+2] = px2 - r;       py[np+2] = py1 + wy;
-      px[np+3] = px1 + r;       py[np+3] = py1 + wy;
-      np += 4;
-      for (i=kNPARC-1;i>=0;i--) {       //bottom left corner outside
-         px[np] = px1 + r - r*cosa[i]*(1+wx/r);
-         py[np] = py1 - r + r*sina[i]*(1+wy/r);
-         np++;
-      }
-      px[np]   = px1 - wx;    py[np]   = py1 - r;
-      px[np+1] = px1 - wx;    py[np+1] = py[0];
-      px[np+2] = px[0];       py[np+2] = py[0];
-      np += 3;
-   }
+
    SetFillStyle(1001);
    SetFillColor(shadowcolor);
    TAttFill::Modify();
