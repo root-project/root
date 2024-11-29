@@ -183,47 +183,59 @@ TEST(MiniFile, SimpleKeys)
 
    ASSERT_TRUE(readNextKey());
    EXPECT_STREQ(key->GetClassName(), "TFile");
+   EXPECT_EQ(key->GetSeekKey(), 100);
+   EXPECT_EQ(key->GetSeekPdir(), 0);
 
    ASSERT_TRUE(readNextKey());
    EXPECT_STREQ(key->GetClassName(), "RBlob");
    EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob1);
+   EXPECT_EQ(key->GetSeekPdir(), 100);
    EXPECT_EQ(buffer[offBlob1], blob1);
 
    ASSERT_TRUE(readNextKey());
    EXPECT_STREQ(key->GetClassName(), "RBlob");
    EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob2);
+   EXPECT_EQ(key->GetSeekPdir(), 100);
    EXPECT_EQ(buffer[offBlob2], blob2);
 
    ASSERT_TRUE(readNextKey());
    EXPECT_STREQ(key->GetClassName(), "RBlob");
    EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob3);
+   EXPECT_EQ(key->GetSeekPdir(), 100);
    EXPECT_EQ(buffer[offBlob3], blob3);
 
    ASSERT_TRUE(readNextKey());
    EXPECT_STREQ(key->GetClassName(), "RBlob");
    EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob4);
+   EXPECT_EQ(key->GetSeekPdir(), 100);
    EXPECT_EQ(buffer[offBlob4Write], blob4);
 
    ASSERT_TRUE(readNextKey());
    EXPECT_STREQ(key->GetClassName(), "RBlob");
    EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob5);
+   EXPECT_EQ(key->GetSeekPdir(), 100);
 
    ASSERT_TRUE(readNextKey());
    EXPECT_STREQ(key->GetClassName(), "RBlob");
    EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob6);
+   EXPECT_EQ(key->GetSeekPdir(), 100);
    EXPECT_EQ(buffer[offBlob6], blob6);
 
    ASSERT_TRUE(readNextKey());
    EXPECT_STREQ(key->GetClassName(), "ROOT::RNTuple");
+   EXPECT_EQ(key->GetSeekPdir(), 100);
 
    ASSERT_TRUE(readNextKey());
    // KeysList
+   EXPECT_EQ(key->GetSeekPdir(), 100);
 
    ASSERT_TRUE(readNextKey());
    EXPECT_STREQ(key->GetName(), "StreamerInfo");
+   EXPECT_EQ(key->GetSeekPdir(), 100);
 
    ASSERT_TRUE(readNextKey());
    // FreeSegments
+   EXPECT_EQ(key->GetSeekPdir(), 100);
 
    EXPECT_EQ(offset, size);
 }
