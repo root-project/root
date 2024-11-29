@@ -10300,7 +10300,7 @@ void THistPainter::PaintTitle()
    ptitle->AddText(fH->GetTitle());
    ptitle->SetBit(kCanDelete);
    ptitle->Draw();
-   ptitle->Paint();
+   ptitle->Paint("blNDC");
 
    if(!gPad->IsEditable()) delete ptitle;
 }
