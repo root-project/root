@@ -171,23 +171,22 @@ if(ROOT_opengl_FOUND)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../tutorials/visualisation/graphics/earth.dat earth.dat COPYONLY)
   ROOT_ADD_TEST(test-stressgraphics
                 ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
-                COMMAND stressGraphics -b -k -p=sge
+                COMMAND stressGraphics -b --web=off -k -p=sge
                 FAILREGEX "FAILED|Error in"
                 LABELS longtest)
   ROOT_ADD_TEST(test-stressgraphics-interpreted
-                COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGraphics.cxx
+                COMMAND ${ROOT_root_CMD} -b --web=off -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGraphics.cxx
                 FAILREGEX "FAILED|Error in"
                 DEPENDS test-stressgraphics)
-  # Disabled until the failures on Fedora 41 are addressed
-  # if(CHROME_EXECUTABLE)
-  #   ROOT_ADD_TEST(test-stressgraphics-chrome
-  #                 RUN_SERIAL
-  #                 ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
-  #                 COMMAND stressGraphics -b -k -p=sgc --web=chrome
-  #                 FAILREGEX "FAILED|Error in"
-  #                 LABELS longtest)
-  # endif()
-  if(FIREFOX_EXECUTABLE AND NOT APPLE)
+  if(CHROME_EXECUTABLE)
+    ROOT_ADD_TEST(test-stressgraphics-chrome
+                  RUN_SERIAL
+                  ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
+                  COMMAND stressGraphics -b -k -p=sgc --web=chrome
+                  FAILREGEX "FAILED|Error in"
+                  LABELS longtest)
+  endif()
+  if(FIREFOX_EXECUTABLE)
     ROOT_ADD_TEST(test-stressgraphics-firefox-skip3d
                   RUN_SERIAL
                   ENVIRONMENT LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}
