@@ -114,12 +114,12 @@ if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOU
    ROOT_ADD_TEST(PyMVA-Keras-Classification COMMAND testPyKerasClassification DEPENDS ${PyMVA-Keras-Classification-depends})
 
    # Test PyKeras: Regression
-   if (NOT ROOT_ARCHITECTURE MATCHES macosx)
-      #veto also keras tutorial on macos due to issue in disabling eager execution on macos
+   #if (NOT ROOT_ARCHITECTURE MATCHES macosx)
+   #veto also keras tutorial on macos due to issue in disabling eager execution on macos
       ROOT_EXECUTABLE(testPyKerasRegression testPyKerasRegression.C
          LIBRARIES ${Libraries})
       ROOT_ADD_TEST(PyMVA-Keras-Regression COMMAND testPyKerasRegression DEPENDS ${PyMVA-Keras-Regression-depends})
-   endif()
+   #endif()
 
 
    # Test PyKeras: Multi-class classification

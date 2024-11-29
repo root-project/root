@@ -57,8 +57,12 @@ namespace TMVA {
       std::vector<Double_t> GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress);
       // Get regression values of given event
       std::vector<Float_t>& GetRegressionValues();
+      // Get all regression values for all the events in the data set
+      std::vector<Float_t> GetAllRegressionValues();
       // Get class probabilities of given event
       std::vector<Float_t>& GetMulticlassValues();
+      // Get all multiclass values for all the events in the data set
+      std::vector<Float_t> GetAllMulticlassValues();
 
       const Ranking *CreateRanking() { return nullptr; }
       virtual void TestClassification();
@@ -87,13 +91,16 @@ namespace TMVA {
       TString fUserCodeName;                          // filename of the user script that will be executed before loading the PyTorch model
 
       bool fModelIsSetup = false;                     // flag whether model is loaded, needed for getMvaValue during evaluation
-      float* fVals = nullptr;                         // variables array used for GetMvaValue
-      std::vector<float> fOutput;                     // probability or regression output array used for GetMvaValue
+      std::vector<float> fVals;                       // input variables array
+      std::vector<float> fOutput;                     // model output array
       UInt_t fNVars {0};                              // number of variables
       UInt_t fNOutputs {0};                           // number of outputs (classes or targets)
       TString fFilenameTrainedModel;                  // output filename for trained model
+      PyObject * fPyVals = nullptr;                             // Python array object for input data
+      PyObject * fPyOutput = nullptr;                           // Python array object for output data
 
       void SetupPyTorchModel(Bool_t loadTrainedModel);  // setups the needed variables, loads the model
+      void InitEvaluation(size_t nEvents);              // allocate arrays for evaluation
       UInt_t  GetNumValidationSamples();                // get number of validation events according to given option
 
       ClassDef(MethodPyTorch, 0);

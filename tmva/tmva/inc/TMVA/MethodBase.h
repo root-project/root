@@ -209,6 +209,9 @@ namespace TMVA {
       // same as above but using a provided data set (used by MethodCategory)
       virtual std::vector<Double_t> GetDataMvaValues(DataSet *data = nullptr, Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false);
 
+      virtual std::vector<Float_t> GetAllRegressionValues();
+      virtual std::vector<Float_t> GetAllMulticlassValues();
+
    public:
       // regression response
       const std::vector<Float_t>& GetRegressionValues(const TMVA::Event* const ev){
