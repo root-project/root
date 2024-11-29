@@ -1012,12 +1012,17 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Writ
 }
 
 std::uint64_t
-ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::ReserveBlobKey(std::size_t nbytes, std::size_t len)
+ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::ReserveBlobKey(std::size_t nbytes, std::size_t len,
+                                                                             unsigned char keyBuffer[kBlobKeyLen])
 {
-   unsigned char keyBuffer[kBlobKeyLen];
-   PrepareBlobKey(fKeyOffset, nbytes, len, keyBuffer);
+   if (keyBuffer) {
+      PrepareBlobKey(fKeyOffset, nbytes, len, keyBuffer);
+   } else {
+      unsigned char localKeyBuffer[kBlobKeyLen];
+      PrepareBlobKey(fKeyOffset, nbytes, len, localKeyBuffer);
+      Write(localKeyBuffer, kBlobKeyLen, fKeyOffset);
+   }
 
-   Write(keyBuffer, kBlobKeyLen, fKeyOffset);
    auto offsetData = fKeyOffset + kBlobKeyLen;
    // The next key starts after the data.
    fKeyOffset = offsetData + nbytes;
@@ -1037,7 +1042,9 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::Write(const v
       throw RException(R__FAIL("WriteBuffer failed."));
 }
 
-std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::ReserveBlobKey(size_t nbytes, size_t len)
+std::uint64_t
+ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::ReserveBlobKey(size_t nbytes, size_t len,
+                                                                             unsigned char keyBuffer[kBlobKeyLen])
 {
    std::uint64_t offsetKey;
    RKeyBlob keyBlob(fFile);
@@ -1045,10 +1052,14 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::Rese
    // RKeyBlob will always reserve space for a big key (version >= 1000)
    keyBlob.Reserve(nbytes, &offsetKey);
 
-   unsigned char keyBuffer[kBlobKeyLen];
-   PrepareBlobKey(offsetKey, nbytes, len, keyBuffer);
+   if (keyBuffer) {
+      PrepareBlobKey(offsetKey, nbytes, len, keyBuffer);
+   } else {
+      unsigned char localKeyBuffer[kBlobKeyLen];
+      PrepareBlobKey(offsetKey, nbytes, len, localKeyBuffer);
+      Write(localKeyBuffer, kBlobKeyLen, offsetKey);
+   }
 
-   Write(keyBuffer, kBlobKeyLen, offsetKey);
    auto offsetData = offsetKey + kBlobKeyLen;
 
    return offsetData;
@@ -1245,7 +1256,8 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
    return firstOffset;
 }
 
-std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::ReserveBlob(size_t nbytes, size_t len)
+std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::ReserveBlob(size_t nbytes, size_t len,
+                                                                           unsigned char keyBuffer[kBlobKeyLen])
 {
    // ReserveBlob cannot be used to reserve a multi-key blob
    R__ASSERT(nbytes <= fNTupleAnchor.GetMaxKeySize());
@@ -1256,10 +1268,10 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::ReserveBlob(size_
          offset = fFileSimple.fKeyOffset;
          fFileSimple.fKeyOffset += nbytes;
       } else {
-         offset = fFileSimple.ReserveBlobKey(nbytes, len);
+         offset = fFileSimple.ReserveBlobKey(nbytes, len, keyBuffer);
       }
    } else {
-      offset = fFileProper.ReserveBlobKey(nbytes, len);
+      offset = fFileProper.ReserveBlobKey(nbytes, len, keyBuffer);
    }
    return offset;
 }
