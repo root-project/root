@@ -155,6 +155,8 @@ private:
       std::uint64_t WriteKey(const void *buffer, std::size_t nbytes, std::size_t len, std::int64_t offset = -1,
                              std::uint64_t directoryOffset = 100, const std::string &className = "",
                              const std::string &objectName = "", const std::string &title = "");
+      /// Writes an RBlob opaque key with the provided buffer as data record and returns the offset of the record
+      std::uint64_t WriteBlobKey(const void *buffer, std::size_t nbytes, std::size_t len);
       operator bool() const { return fFile; }
    };
 
