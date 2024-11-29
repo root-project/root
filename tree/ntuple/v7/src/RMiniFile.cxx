@@ -1009,7 +1009,7 @@ ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::WriteKey(const voi
    RTFString strClass{kBlobClassName};
    RTFString strObject;
    RTFString strTitle;
-   RTFKey keyHeader(offset, offset, strClass, strObject, strTitle, len, nbytes);
+   RTFKey keyHeader(offset, RTFHeader::kBEGIN, strClass, strObject, strTitle, len, nbytes);
 
    Write(&keyHeader, keyHeader.GetHeaderSize(), offset);
    offset += keyHeader.GetHeaderSize();
