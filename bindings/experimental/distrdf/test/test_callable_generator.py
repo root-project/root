@@ -73,10 +73,10 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         node = Proxy.NodeProxy(hn)
         # Set of operations to build the graph
         n1 = node.Define("mock_col", "1")
-        n2 = node.Filter("mock_col>0").Filter("mock_col>0")
+        n2 = n1.Filter("mock_col>0").Filter("mock_col>0")
         n4 = n2.Count()
         n5 = n1.Count()
-        n6 = node.Filter("mock_col>0")  # noqa: avoid PEP8 F841
+        n6 = n1.Filter("mock_col>0")  # noqa: avoid PEP8 F841
 
         # Generate and execute the mapper
         graph_dict = hn._generate_graph_dict()
@@ -107,10 +107,10 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
 
         # Set of operations to build the graph
         n1 = node.Define("mock_col", "1")
-        n2 = node.Filter("mock_col>0").Filter("mock_col>0")
+        n2 = n1.Filter("mock_col>0").Filter("mock_col>0")
         n4 = n2.Count()
         n5 = n1.Count()
-        n6 = node.Filter("mock_col>0")  # noqa: avoid PEP8 F841
+        n6 = n1.Filter("mock_col>0")  # noqa: avoid PEP8 F841
 
         # Until here the graph would be:
         # [1, 2, 2, 3, 3, 2]
@@ -152,11 +152,11 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
 
         # Graph nodes
         n1 = node.Define("mock_col", "1")
-        n2 = node.Filter("mock_col>0")
+        n2 = n1.Filter("mock_col>0")
         n3 = n2.Filter("mock_col>0")
         n4 = n3.Count()  # noqa: avoid PEP8 F841
         n5 = n1.Filter("mock_col>0")  # noqa: avoid PEP8 F841
-        n6 = node.Filter("mock_col>0")  # noqa: avoid PEP8 F841
+        n6 = n1.Filter("mock_col>0")  # noqa: avoid PEP8 F841
 
         # Transformation pruning, n5 was earlier a transformation node
         n5 = n1.Count()  # noqa: avoid PEP8 F841
@@ -189,11 +189,11 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
 
         # Graph nodes
         n1 = node.Define("mock_col", "1")
-        n2 = node.Filter("mock_col>0")
+        n2 = n1.Filter("mock_col>0")
         n3 = n2.Filter("mock_col>0")
         n4 = n3.Count()  # noqa: avoid PEP8 F841
         n5 = n1.Filter("mock_col>0")  # noqa: avoid PEP8 F841
-        n6 = node.Filter("mock_col>0")  # noqa: avoid PEP8 F841
+        n6 = n1.Filter("mock_col>0")  # noqa: avoid PEP8 F841
 
         # Remove user references from n4, n3, n2
         n4 = n3 = n2 = None  # noqa: avoid PEP8 F841
@@ -226,11 +226,11 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
 
         # Graph nodes
         n1 = node.Define("mock_col", "1")
-        n2 = node.Filter("mock_col>0")
+        n2 = n1.Filter("mock_col>0")
         n3 = n2.Filter("mock_col>0")
         n4 = n3.Count()  # noqa: avoid PEP8 F841
         n5 = n1.Filter("mock_col>0")  # noqa: avoid PEP8 F841
-        n6 = node.Filter("mock_col>0")  # noqa: avoid PEP8 F841
+        n6 = n1.Filter("mock_col>0")  # noqa: avoid PEP8 F841
 
         # Remove references from n2 (which shouldn't affect the graph)
         n2 = None
@@ -265,12 +265,12 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
 
         # Graph nodes
         n1 = node.Define("mock_col", "1")
-        n2 = node.Filter("mock_col>0")
+        n2 = n1.Filter("mock_col>0")
         n3 = n2.Filter("mock_col>0")
         n4 = n3.Count()  # noqa: avoid PEP8 F841
         n5 = n1.Filter("mock_col>0")
         n6 = n5.Count()
-        n7 = node.Filter("mock_col>0")
+        n7 = n1.Filter("mock_col>0")
 
         # This is to make sure action nodes with
         # already computed values are pruned.
@@ -307,11 +307,11 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
 
         # Graph nodes
         n1 = node.Define("mock_col", "1")
-        n2 = node.Filter("mock_col>0")
+        n2 = n1.Filter("mock_col>0")
         n3 = n2.Filter("mock_col>0")
         n4 = n3.Count()  # noqa: avoid PEP8 F841
         n5 = n1.Count()  # noqa: avoid PEP8 F841
-        n6 = node.Filter("mock_col>0")  # noqa: avoid PEP8 F841
+        n6 = n1.Filter("mock_col>0")  # noqa: avoid PEP8 F841
 
         # Generate and execute the mapper
         graph_dict = hn._generate_graph_dict()
@@ -340,7 +340,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         node = Proxy.NodeProxy(hn)
         # Create three branches
         n1 = node.Define("mock_col", "1")
-        n2 = node.Filter("mock_col>0")
+        n2 = n1.Filter("mock_col>0")
         # Append 1000 nodes per branch
         for i in range(1000):
             n1 = n1.Define(f"mock_col_{i}", "1")
