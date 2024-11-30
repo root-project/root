@@ -247,6 +247,7 @@ jobs:
 
 
   build-windows:
+    needs: [ git_diff ]
     # For any event that is not a PR, the CI will always run. In PRs, the CI
     # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
     if: |
@@ -301,6 +302,7 @@ jobs:
         run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
               python .github/workflows/root-ci-config/build_root.py
                     --buildtype       ${{ matrix.config }}
+                    --clingtest       ${{ needs.git_diff.outputs.interpreter_changed }}
                     --platform        windows10
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
@@ -344,6 +346,7 @@ jobs:
         run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
               python .github/workflows/root-ci-config/build_root.py
                     --buildtype    ${{ matrix.config }}
+                    --clingtest    ${{ needs.git_diff.outputs.interpreter_changed }}
                     --platform     windows10
                     --incremental  false
                     --base_ref     ${{ github.ref_name }}

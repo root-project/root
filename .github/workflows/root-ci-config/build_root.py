@@ -75,9 +75,9 @@ def main():
         # file below overwrites values from above
         **load_config(f'{this_script_dir}/buildconfig/{args.platform}.txt')
     }
-
+    if WINDOWS and pull_request:
+       options_dict["clingtest"] = 'on' if args.clingtest else 'off'
     options = build_utils.cmake_options_from_dict(options_dict)
-
     if WINDOWS:
         options = "-Thost=x64 " + options
 
@@ -195,6 +195,7 @@ def parse_args():
     parser.add_argument("--dockeropts",      default=None,      help="Extra docker options, if any")
     parser.add_argument("--incremental",     default="false",   help="Do incremental build")
     parser.add_argument("--buildtype",       default="Release", help="Release|Debug|RelWithDebInfo")
+    parser.add_argument("--clingtest",       default="false",   help="Build with -Dclingtest=ON for Windows PR CI")
     parser.add_argument("--coverage",        default="false",   help="Create Coverage report in XML")
     parser.add_argument("--sha",             default=None,      help="sha that triggered the event")
     parser.add_argument("--base_ref",        default=None,      help="Ref to target branch")
@@ -210,6 +211,7 @@ def parse_args():
 
     # Set argument to True if matched
     args.incremental = args.incremental.lower() in ('yes', 'true', '1', 'on')
+    args.clingtest = args.clingtest.lower() in ('yes', 'true', '1', 'on')
     args.coverage = args.coverage.lower() in ('yes', 'true', '1', 'on')
     args.binaries = args.binaries.lower() in ('yes', 'true', '1', 'on')
 
