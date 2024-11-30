@@ -116,6 +116,25 @@ class TestVariations:
         for varname, val in zip(expectednames, expectedsums):
             assert sums[varname] == val
 
+    def test_variationsfor_novary(self, payload):
+        connection, backend = payload
+        if backend == "dask":
+            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
+            df = RDataFrame(1, npartitions=1, daskclient=connection)
+        elif backend == "spark":
+            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
+            df = RDataFrame(1, npartitions=1, sparkcontext=connection)
+
+        df = df.Define("x", "1")
+        h = df.Histo1D(("h", "h", 1, 0, 10), "x")
+
+        variations = DistRDF.VariationsFor(h)
+
+        # Only the nominal action was booked, so the result map will only
+        # have that key
+        assert h.GetEntries() == 1
+        assert variations.GetKeys() == ["nominal"]
+
 
 if __name__ == "__main__":
     pytest.main(args=[__file__])
