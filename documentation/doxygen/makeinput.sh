@@ -13,70 +13,90 @@ echo "INPUT = ./mainpage.md                    \\" > Doxyfile_INPUT
 ls $DOXYGEN_PYZDOC_PATH/*.pyzdoc | sed -e "s/$/ \\\\/"  \
 >> Doxyfile_INPUT
 
-echo "        ../../core/base/                 \\" >> Doxyfile_INPUT
-echo "        ../../core/dictgen/              \\" >> Doxyfile_INPUT
-echo "        ../../core/cont/                 \\" >> Doxyfile_INPUT
-echo "        ../../core/foundation/           \\" >> Doxyfile_INPUT
-echo "        ../../core/gui/                  \\" >> Doxyfile_INPUT
-echo "        ../../core/macosx/               \\" >> Doxyfile_INPUT
-echo "        ../../core/meta/                 \\" >> Doxyfile_INPUT
-echo "        ../../core/metacling/            \\" >> Doxyfile_INPUT
-echo "        ../../core/clingutils/           \\" >> Doxyfile_INPUT
-echo "        ../../core/multiproc/            \\" >> Doxyfile_INPUT
-echo "        ../../core/rint/                 \\" >> Doxyfile_INPUT
-echo "        ../../core/testsupport/          \\" >> Doxyfile_INPUT
-echo "        ../../core/thread/               \\" >> Doxyfile_INPUT
-echo "        ../../core/unix/                 \\" >> Doxyfile_INPUT
-echo "        ../../core/winnt/                \\" >> Doxyfile_INPUT
-echo "        ../../core/imt/                  \\" >> Doxyfile_INPUT
-echo "        ../../core/zip/inc/Compression.h \\" >> Doxyfile_INPUT
-echo "        ../../geom/                      \\" >> Doxyfile_INPUT
-echo "        ../../graf2d/asimage/            \\" >> Doxyfile_INPUT
-echo "        ../../graf2d/cocoa/              \\" >> Doxyfile_INPUT
-echo "        ../../graf2d/fitsio/             \\" >> Doxyfile_INPUT
-echo "        ../../graf2d/gpad/               \\" >> Doxyfile_INPUT
-echo "        ../../graf2d/gpadv7/             \\" >> Doxyfile_INPUT
-echo "        ../../graf2d/graf/               \\" >> Doxyfile_INPUT
-echo "        ../../graf2d/gviz/               \\" >> Doxyfile_INPUT
-echo "        ../../graf2d/postscript/         \\" >> Doxyfile_INPUT
-echo "        ../../graf2d/quartz/             \\" >> Doxyfile_INPUT
-echo "        ../../graf2d/win32gdk/           \\" >> Doxyfile_INPUT
-echo "        ../../graf2d/x11/                \\" >> Doxyfile_INPUT
-echo "        ../../graf2d/x11ttf/             \\" >> Doxyfile_INPUT
-echo "        ../../graf3d/eve/                \\" >> Doxyfile_INPUT
-echo "        ../../graf3d/eve7/               \\" >> Doxyfile_INPUT
-echo "        ../../graf3d/g3d/                \\" >> Doxyfile_INPUT
-echo "        ../../graf3d/gl/                 \\" >> Doxyfile_INPUT
-echo "        ../../graf3d/gviz3d/             \\" >> Doxyfile_INPUT
-echo "        ../../gui/                       \\" >> Doxyfile_INPUT
-echo "        ../../hist/                      \\" >> Doxyfile_INPUT
-echo "        ../../html/                      \\" >> Doxyfile_INPUT
-echo "        ../../io/doc/TFile               \\" >> Doxyfile_INPUT
-echo "        ../../io/dcache/                 \\" >> Doxyfile_INPUT
-echo "        ../../io/io/                     \\" >> Doxyfile_INPUT
-echo "        ../../io/sql/                    \\" >> Doxyfile_INPUT
-echo "        ../../io/xml/                    \\" >> Doxyfile_INPUT
-echo "        ../../io/xmlparser/              \\" >> Doxyfile_INPUT
-echo "        ../../main/src/hadd.cxx          \\" >> Doxyfile_INPUT
-echo "        ../../math/                      \\" >> Doxyfile_INPUT
-echo "        ../../montecarlo/                \\" >> Doxyfile_INPUT
-echo "        ../../net/doc/                   \\" >> Doxyfile_INPUT
-echo "        ../../net/auth/                  \\" >> Doxyfile_INPUT
-echo "        ../../net/davix/                 \\" >> Doxyfile_INPUT
-echo "        ../../net/http/                  \\" >> Doxyfile_INPUT
-echo "        ../../net/net/                   \\" >> Doxyfile_INPUT
-echo "        ../../net/netxng/                \\" >> Doxyfile_INPUT
-echo "        ../../net/httpsniff/             \\" >> Doxyfile_INPUT
-echo "        ../../proof/                     \\" >> Doxyfile_INPUT
-echo "        ../../tmva/                      \\" >> Doxyfile_INPUT
-echo "        ../../roofit/                    \\" >> Doxyfile_INPUT
-echo "        ../../tree/                      \\" >> Doxyfile_INPUT
-echo "        ../../sql/                       \\" >> Doxyfile_INPUT
-echo "        ../../tutorials/                 \\" >> Doxyfile_INPUT
-echo "        ../../bindings/tpython/          \\" >> Doxyfile_INPUT
-echo "        ../../bindings/pyroot/           \\" >> Doxyfile_INPUT
-echo "        ../../bindings/pyroot/pythonizations/python/ROOT/_pythonization/__init__.py          \\" >> Doxyfile_INPUT
-echo "        ../../bindings/r/                \\" >> Doxyfile_INPUT
+# echo "        ../../core/base/                 \\" >> Doxyfile_INPUT
+# echo "        ../../core/dictgen/              \\" >> Doxyfile_INPUT
+# echo "        ../../core/cont/                 \\" >> Doxyfile_INPUT
+# echo "        ../../core/foundation/           \\" >> Doxyfile_INPUT
+# echo "        ../../core/gui/                  \\" >> Doxyfile_INPUT
+# echo "        ../../core/macosx/               \\" >> Doxyfile_INPUT
+# echo "        ../../core/meta/                 \\" >> Doxyfile_INPUT
+# echo "        ../../core/metacling/            \\" >> Doxyfile_INPUT
+# echo "        ../../core/clingutils/           \\" >> Doxyfile_INPUT
+# echo "        ../../core/multiproc/            \\" >> Doxyfile_INPUT
+# echo "        ../../core/rint/                 \\" >> Doxyfile_INPUT
+# echo "        ../../core/testsupport/          \\" >> Doxyfile_INPUT
+# echo "        ../../core/thread/               \\" >> Doxyfile_INPUT
+# echo "        ../../core/unix/                 \\" >> Doxyfile_INPUT
+# echo "        ../../core/winnt/                \\" >> Doxyfile_INPUT
+# echo "        ../../core/imt/                  \\" >> Doxyfile_INPUT
+# echo "        ../../core/zip/inc/Compression.h \\" >> Doxyfile_INPUT
+# echo "        ../../geom/                      \\" >> Doxyfile_INPUT
+# echo "        ../../graf2d/asimage/            \\" >> Doxyfile_INPUT
+# echo "        ../../graf2d/cocoa/              \\" >> Doxyfile_INPUT
+# echo "        ../../graf2d/fitsio/             \\" >> Doxyfile_INPUT
+# echo "        ../../graf2d/gpad/               \\" >> Doxyfile_INPUT
+# echo "        ../../graf2d/gpadv7/             \\" >> Doxyfile_INPUT
+# echo "        ../../graf2d/graf/               \\" >> Doxyfile_INPUT
+# echo "        ../../graf2d/gviz/               \\" >> Doxyfile_INPUT
+# echo "        ../../graf2d/postscript/         \\" >> Doxyfile_INPUT
+# echo "        ../../graf2d/quartz/             \\" >> Doxyfile_INPUT
+# echo "        ../../graf2d/win32gdk/           \\" >> Doxyfile_INPUT
+# echo "        ../../graf2d/x11/                \\" >> Doxyfile_INPUT
+# echo "        ../../graf2d/x11ttf/             \\" >> Doxyfile_INPUT
+# echo "        ../../graf3d/eve/                \\" >> Doxyfile_INPUT
+# echo "        ../../graf3d/eve7/               \\" >> Doxyfile_INPUT
+# echo "        ../../graf3d/g3d/                \\" >> Doxyfile_INPUT
+# echo "        ../../graf3d/gl/                 \\" >> Doxyfile_INPUT
+# echo "        ../../graf3d/gviz3d/             \\" >> Doxyfile_INPUT
+# echo "        ../../gui/                       \\" >> Doxyfile_INPUT
+# echo "        ../../hist/                      \\" >> Doxyfile_INPUT
+# echo "        ../../html/                      \\" >> Doxyfile_INPUT
+# echo "        ../../io/doc/TFile               \\" >> Doxyfile_INPUT
+# echo "        ../../io/dcache/                 \\" >> Doxyfile_INPUT
+# echo "        ../../io/io/                     \\" >> Doxyfile_INPUT
+# echo "        ../../io/sql/                    \\" >> Doxyfile_INPUT
+# echo "        ../../io/xml/                    \\" >> Doxyfile_INPUT
+# echo "        ../../io/xmlparser/              \\" >> Doxyfile_INPUT
+# echo "        ../../main/src/hadd.cxx          \\" >> Doxyfile_INPUT
+# echo "        ../../math/                      \\" >> Doxyfile_INPUT
+# echo "        ../../montecarlo/                \\" >> Doxyfile_INPUT
+# echo "        ../../net/doc/                   \\" >> Doxyfile_INPUT
+# echo "        ../../net/auth/                  \\" >> Doxyfile_INPUT
+# echo "        ../../net/davix/                 \\" >> Doxyfile_INPUT
+# echo "        ../../net/http/                  \\" >> Doxyfile_INPUT
+# echo "        ../../net/net/                   \\" >> Doxyfile_INPUT
+# echo "        ../../net/netxng/                \\" >> Doxyfile_INPUT
+# echo "        ../../net/httpsniff/             \\" >> Doxyfile_INPUT
+# echo "        ../../proof/                     \\" >> Doxyfile_INPUT
+# echo "        ../../tmva/                      \\" >> Doxyfile_INPUT
+# echo "        ../../roofit/                    \\" >> Doxyfile_INPUT
+# echo "        ../../tree/                      \\" >> Doxyfile_INPUT
+# echo "        ../../sql/                       \\" >> Doxyfile_INPUT
+
+echo "        ../../tutorials/index.md                 \\" >> Doxyfile_INPUT
+echo "        ../../tutorials/index_categories.md                 \\" >> Doxyfile_INPUT
+
+echo "        ../../tutorials/fit/fitCircle.C                 \\" >> Doxyfile_INPUT
+echo "        ../../tutorials/fit/fit2a.C                 \\" >> Doxyfile_INPUT
+echo "        ../../tutorials/fit/exampleFit3D.C                 \\" >> Doxyfile_INPUT
+echo "        ../../tutorials/fit/NumericalMinimization.py                 \\" >> Doxyfile_INPUT
+
+echo "        ../../graf2d/graf/inc/TArc.h                 \\" >> Doxyfile_INPUT
+echo "        ../../graf2d/graf/inc/TCutG.h                 \\" >> Doxyfile_INPUT
+echo "        ../../hist/hist/inc/Math/WrappedMultiTF1.h                 \\" >> Doxyfile_INPUT
+echo "        ../../math/mathcore/inc/Fit/BinData.h                 \\" >> Doxyfile_INPUT
+echo "        ../../math/mathcore/inc/Fit/FitResult.h                 \\" >> Doxyfile_INPUT
+echo "        ../../math/mathcore/inc/Fit/Fitter.h                 \\" >> Doxyfile_INPUT
+echo "        ../../math/mathcore/inc/Math/Factory.h                 \\" >> Doxyfile_INPUT
+echo "        ../../math/mathcore/inc/Math/Functor.h                 \\" >> Doxyfile_INPUT
+echo "        ../../math/mathcore/inc/Math/Minimizer.h                 \\" >> Doxyfile_INPUT
+echo "        ../../math/mathcore/inc/TRandom3.h                 \\" >> Doxyfile_INPUT
+
+# echo "        ../../tutorials/                 \\" >> Doxyfile_INPUT
+# echo "        ../../bindings/tpython/          \\" >> Doxyfile_INPUT
+# echo "        ../../bindings/pyroot/           \\" >> Doxyfile_INPUT
+# echo "        ../../bindings/pyroot/pythonizations/python/ROOT/_pythonization/__init__.py          \\" >> Doxyfile_INPUT
+# echo "        ../../bindings/r/                \\" >> Doxyfile_INPUT
 
 # echo "        ../../core/clib/                 \\" >> Doxyfile_INPUT
 # echo "        ../../core/lzma/                 \\" >> Doxyfile_INPUT
@@ -88,4 +108,3 @@ echo "        ../../bindings/r/                \\" >> Doxyfile_INPUT
 # echo "        ../../graf3d/x3d/                \\" >> Doxyfile_INPUT
 # echo "        ../../net/rootd/                 \\" >> Doxyfile_INPUT
 # echo "        ../../net/rpdutils/              \\" >> Doxyfile_INPUT
-

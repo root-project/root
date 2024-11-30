@@ -19,6 +19,8 @@
 /// \macro_image
 /// \macro_output
 /// \macro_code
+/// \classes TCutG
+/// \keywords 2D
 ///
 /// \author Rene Brun
 
