@@ -401,7 +401,7 @@ set(extra_veto
   legacy/rootmarks.C          # Instrumentation. Not a standalone tutorial
   multicore/mp_H1_lambdas.C # not a tutorial; used by mp104_processH1.C et al.
   html/*.C
-  legacy/net/*.C
+  net/*.C
   legacy/proof/*.C
   sql/*.C
   tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
