@@ -1,4 +1,4 @@
-# Do not depend on CMake scripts from the rest of the ROOT build
+ # Do not depend on CMake scripts from the rest of the ROOT build
 set(CMAKE_MODULE_PATH "")
 
 #--- Check if we need to build llvm and clang ------------------------------------------------------
