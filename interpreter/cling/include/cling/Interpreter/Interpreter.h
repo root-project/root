@@ -18,6 +18,7 @@
 #include "cling/Interpreter/RuntimeOptions.h"
 
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ExecutionEngine/Orc/AutoLoadEPC.h"
 #include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
 
 #include <cstdlib>
@@ -777,8 +778,8 @@ namespace cling {
     /// managed by m_Executor
     llvm::orc::LLJIT* getExecutionEngine();
 
-    const DynamicLibraryManager* getDynamicLibraryManager() const;
-    DynamicLibraryManager* getDynamicLibraryManager();
+    const llvm::orc::AutoLoadEPC* getClingEPC() const;
+    llvm::orc::AutoLoadEPC* getClingEPC();
 
     const Transaction* getFirstTransaction() const;
     const Transaction* getLastTransaction() const;

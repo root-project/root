@@ -1,6 +1,5 @@
 #include "ForwardDeclPrinter.h"
 
-#include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/AST.h"
 #include "cling/Utils/Output.h"

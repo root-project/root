@@ -7,7 +7,6 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-#include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Value.h"
@@ -24,6 +23,7 @@
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ExecutionEngine/Orc/AutoLoadEPC.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
 #include "llvm/Support/Casting.h"
 
@@ -222,9 +222,9 @@ namespace cling {
         m_Interpreter.unload(/*numberOfTransactions=*/1);
       }
 
-      DynamicLibraryManager* DLM = m_Interpreter.getDynamicLibraryManager();
-      if (DLM->isLibraryLoaded(pathname))
-        DLM->unloadLibrary(pathname);
+      llvm::orc::AutoLoadEPC* EPC = m_Interpreter.getClingEPC();
+      if (EPC->IsDylibLoaded(pathname))
+        EPC->unloadDylib(pathname);
     } else {
       m_MetaProcessor.getOuts() << "!!!ERROR: Transaction for file: " << file
                                 << " has already been unloaded\n";

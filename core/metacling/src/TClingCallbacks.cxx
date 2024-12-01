@@ -13,7 +13,6 @@
 
 #include <ROOT/FoundationUtils.hxx>
 
-#include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/Transaction.h"
@@ -35,7 +34,9 @@
 #include "clang/Serialization/GlobalModuleIndex.h"
 #include "clang/Basic/DiagnosticSema.h"
 
+#include "llvm/ExecutionEngine/Orc/AutoLoadEPC.h"
 #include "llvm/ExecutionEngine/Orc/Core.h"
+#include "llvm/ExecutionEngine/Orc/EPCDynamicLibrarySearchGenerator.h"
 
 #include "llvm/Support/Error.h"
 #include "llvm/Support/FileSystem.h"
@@ -84,77 +85,6 @@ extern "C" {
    void TCling__UnlockCompilationDuringUserCodeExecution(void *state);
 }
 
-class AutoloadLibraryGenerator : public llvm::orc::DefinitionGenerator {
-   const TClingCallbacks &fCallbacks;
-   cling::Interpreter *fInterpreter;
-public:
-   AutoloadLibraryGenerator(cling::Interpreter *interp, const TClingCallbacks& cb)
-      : fCallbacks(cb), fInterpreter(interp) {}
-
-   llvm::Error tryToGenerate(llvm::orc::LookupState &LS, llvm::orc::LookupKind K, llvm::orc::JITDylib &JD,
-                             llvm::orc::JITDylibLookupFlags JDLookupFlags,
-                             const llvm::orc::SymbolLookupSet &Symbols) override
-   {
-      if (!fCallbacks.IsAutoLoadingEnabled())
-         return llvm::Error::success();
-
-      // If we get here, the symbols have not been found in the current process,
-      // so no need to check that again. Instead search for the library that
-      // provides the symbol and create one MaterializationUnit per library to
-      // actually load it if needed.
-      std::unordered_map<std::string, llvm::orc::SymbolNameVector> found;
-
-      // TODO: Do we need to take gInterpreterMutex?
-      // R__LOCKGUARD(gInterpreterMutex);
-
-      for (auto &&KV : Symbols) {
-         llvm::orc::SymbolStringPtr name = KV.first;
-
-         const cling::DynamicLibraryManager &DLM = *fInterpreter->getDynamicLibraryManager();
-
-         std::string libName = DLM.searchLibrariesForSymbol((*name).str(),
-                                                            /*searchSystem=*/true);
-
-         // libNew overrides memory management functions; must never autoload that.
-         assert(libName.find("/libNew.") == std::string::npos && "We must not autoload libNew!");
-
-         // libCling symbols are intentionally hidden from the process, and libCling must not be
-         // dlopened. Instead, symbols must be resolved by specifically querying the dynlib handle of
-         // libCling, which by definition is loaded - else we could not call this code. The handle
-         // is made available as argument to `CreateInterpreter`.
-         assert(libName.find("/libCling.") == std::string::npos && "Must not autoload libCling!");
-
-         if (!libName.empty())
-            found[libName].push_back(name);
-      }
-
-      llvm::orc::SymbolMap loadedSymbols;
-      for (const auto &KV : found) {
-         // Try to load the library which should provide the symbol definition.
-         // TODO: Should this interface with the DynamicLibraryManager directly?
-         if (TCling__LoadLibrary(KV.first.c_str()) < 0) {
-            ROOT::TMetaUtils::Error("AutoloadLibraryMU", "Failed to load library %s", KV.first.c_str());
-         }
-
-         for (const auto &symbol : KV.second) {
-            std::string symbolStr = (*symbol).str();
-            std::string nameForDlsym = ROOT::TMetaUtils::DemangleNameForDlsym(symbolStr);
-
-            void *addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(nameForDlsym);
-            if (addr) {
-               loadedSymbols[symbol] = {llvm::orc::ExecutorAddr::fromPtr(addr), llvm::JITSymbolFlags::Exported};
-            }
-         }
-      }
-
-      if (!loadedSymbols.empty()) {
-         return JD.define(absoluteSymbols(std::move(loadedSymbols)));
-      }
-
-      return llvm::Error::success();
-   }
-};
-
 TClingCallbacks::TClingCallbacks(cling::Interpreter *interp, bool hasCodeGen) : InterpreterCallbacks(interp)
 {
    if (hasCodeGen) {
@@ -162,7 +92,11 @@ TClingCallbacks::TClingCallbacks(cling::Interpreter *interp, bool hasCodeGen) : 
       m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &T);
       fROOTSpecialNamespace = dyn_cast<NamespaceDecl>(T->getFirstDecl().getSingleDecl());
 
-      interp->addGenerator(std::make_unique<AutoloadLibraryGenerator>(interp, *this));
+      auto F = [&] () -> bool { return this->IsAutoLoadingEnabled(); };
+      if (auto DSG =
+               llvm::orc::AutoLoadDynamicLibrarySearchGenerator::GetForTargetProcess(
+                  interp->getClingEPC()->getExecutionSession(), std::move(F)))
+         interp->addGenerator(std::move(*DSG));
    }
 }
 

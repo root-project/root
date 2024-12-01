@@ -15,7 +15,6 @@
 #include "BackendPasses.h"
 #include "EnterUserCodeRAII.h"
 
-#include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Value.h"
@@ -130,7 +129,8 @@ namespace cling {
 
     /// Dynamic library manager object.
     ///
-    DynamicLibraryManager m_DyLibManager;
+    // DynamicLibraryManager m_DyLibManager;
+    llvm::orc::AutoLoadEPC *ClingEPC;
 
   public:
     enum ExecutionResult {
@@ -157,11 +157,12 @@ namespace cling {
     ///\brief Return the LLJIT held by the IncrementalJIT
     llvm::orc::LLJIT* getLLJIT() { return m_JIT ? m_JIT->getLLJIT() : nullptr; }
 
-    const DynamicLibraryManager& getDynamicLibraryManager() const {
-      return const_cast<IncrementalExecutor*>(this)->m_DyLibManager;
+    const llvm::orc::AutoLoadEPC *getClingEPC() const {
+      return const_cast<IncrementalExecutor*>(this)->ClingEPC;
     }
-    DynamicLibraryManager& getDynamicLibraryManager() {
-      return m_DyLibManager;
+
+    llvm::orc::AutoLoadEPC *getClingEPC() {
+      return ClingEPC;
     }
 
     /// Register a DefinitionGenerator to dynamically provide symbols for

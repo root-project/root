@@ -104,7 +104,6 @@ clang/LLVM technology.
 #include "clang/Serialization/GlobalModuleIndex.h"
 
 #include "cling/Interpreter/ClangInternalState.h"
-#include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Value.h"
@@ -114,6 +113,9 @@ clang/LLVM technology.
 #include "cling/Utils/ParserStateRAII.h"
 #include "cling/Utils/SourceNormalization.h"
 #include "cling/Interpreter/Exception.h"
+
+#include "llvm/ExecutionEngine/Orc/AutoLoadEPC.h"
+#include "llvm/ExecutionEngine/Orc/Shared/AutoLoadDylibLookup.h"
 
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/Module.h"
@@ -1600,17 +1602,17 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
    fInterpreter->setCallbacks(std::move(clingCallbacks));
 
    if (!fromRootCling) {
-      cling::DynamicLibraryManager& DLM = *fInterpreter->getDynamicLibraryManager();
+      llvm::orc::AutoLoadEPC& EPC = *fInterpreter->getClingEPC();
       // Make sure cling looks into ROOT's libdir, even if not part of LD_LIBRARY_PATH
       // e.g. because of an RPATH build.
-      DLM.addSearchPath(TROOT::GetSharedLibDir().Data(), /*isUser=*/true,
-                        /*prepend=*/true);
+      EPC.getDylibLookup().addSearchPath(TROOT::GetSharedLibDir().Data(), /*isUser=*/true,
+                                         /*prepend=*/true);
       auto ShouldPermanentlyIgnore = [](llvm::StringRef FileName) -> bool{
          llvm::StringRef stem = llvm::sys::path::stem(FileName);
          return stem.startswith("libNew") || stem.startswith("libcppyy_backend");
       };
       // Initialize the dyld for AutoloadLibraryGenerator.
-      DLM.initializeDyld(ShouldPermanentlyIgnore);
+      EPC.getDylibLookup().initializeDynamicLoader(ShouldPermanentlyIgnore);
    }
 }
 
@@ -2087,7 +2089,7 @@ void TCling::RegisterModule(const char* modulename,
    if (payloadCode)
       code += payloadCode;
 
-   std::string dyLibName = cling::DynamicLibraryManager::getSymbolLocation(triggerFunc);
+   std::string dyLibName = llvm::orc::AutoLoadDynamicLibraryLookup::getSymbolLocation(triggerFunc);
    assert(!llvm::sys::fs::is_symlink_file(dyLibName));
 
    if (dyLibName.empty()) {
@@ -2096,7 +2098,7 @@ void TCling::RegisterModule(const char* modulename,
    }
 
    // The triggerFunc may not be in a shared object but in an executable.
-   bool isSharedLib = cling::DynamicLibraryManager::isSharedLibrary(dyLibName);
+   bool isSharedLib = llvm::orc::AutoLoadDynamicLibraryLookup::isSharedLibrary(dyLibName);
 
    bool wasDlopened = false;
 
@@ -2551,7 +2553,7 @@ Longptr_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
                indent = HandleInterpreterException(GetMetaProcessorImpl(), mod_line, compRes, &result);
             }
          }
-      } else if (cling::DynamicLibraryManager::isSharedLibrary(fname.Data()) &&
+      } else if (llvm::orc::AutoLoadDynamicLibraryLookup::isSharedLibrary(fname.Data()) &&
                  strncmp(sLine.Data(), ".L", 2) != 0) { // .x *.so or *.dll
          if (gSystem->Load(fname) < 0) {
             // Loading failed.
@@ -3144,7 +3146,7 @@ static Bool_t s_IsLibraryLoaded(const char* libname, cling::Interpreter* fInterp
    // Check shared library.
    TString tLibName(libname);
    if (gSystem->FindDynamicLibrary(tLibName, kTRUE))
-      return fInterpreter->getDynamicLibraryManager()->isLibraryLoaded(tLibName.Data());
+      return fInterpreter->getClingEPC()->IsDylibLoaded(tLibName.Data());
    return false;
 }
 
@@ -3187,7 +3189,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
    R__LOCKGUARD(gInterpreterMutex);
 
    //FIXME: if we use llvm::sys::fs::make_absolute all this can go away. See
-   // cling::DynamicLibraryManager.
+   // llvm::orc::AutoLoadDynamicLibraryLookup.
 
    std::string file_name = filename;
    size_t at = std::string::npos;
@@ -3338,7 +3340,7 @@ static int callback_for_dl_iterate_phdr(struct dl_phdr_info *info, size_t size, 
           //has no path
           && strncmp(info->dlpi_name, "[vdso]", 6)
           //the linker does not like to be mmapped
-          //causes a crash in cling::DynamicLibraryManager::loadLibrary())
+          //causes a crash in llvm::orc::AutoLoadDynamicLibraryLookup::loadLibrary())
           //with error message "mmap of entire address space failed: Cannot allocate memory"
           && strncmp(info->dlpi_name, "/libexec/ld-elf.so.1", 20)
 #endif
@@ -3432,9 +3434,9 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
 
    // Tell the interpreter that this library is available; all libraries can be
    // used to resolve symbols.
-   cling::DynamicLibraryManager* DLM = fInterpreter->getDynamicLibraryManager();
-   if (!DLM->isLibraryLoaded(filename)) {
-      DLM->loadLibrary(filename, true /*permanent*/, true /*resolved*/);
+   llvm::orc::AutoLoadEPC* EPC = fInterpreter->getClingEPC();
+   if (!EPC->IsDylibLoaded(filename)) {
+      EPC->loadDylib(filename, true /*permanent*/, true /*resolved*/);
    }
 
 #if defined(R__MACOSX)
@@ -3531,29 +3533,28 @@ Int_t TCling::Load(const char* filename, Bool_t system)
 
    // Used to return 0 on success, 1 on duplicate, -1 on failure, -2 on "fatal".
    R__LOCKGUARD_CLING(gInterpreterMutex);
-   cling::DynamicLibraryManager* DLM = fInterpreter->getDynamicLibraryManager();
-   std::string canonLib = DLM->lookupLibrary(filename);
-   cling::DynamicLibraryManager::LoadLibResult res
-      = cling::DynamicLibraryManager::kLoadLibNotFound;
+   llvm::orc::AutoLoadEPC *EPC = fInterpreter->getClingEPC();
+   std::string canonLib = EPC->lookupDylib(filename);
+   llvm::orc::AutoLoadEPC::LoadLibResult res = llvm::orc::AutoLoadEPC::kLoadLibNotFound;
    if (!canonLib.empty()) {
       if (system)
-         res = DLM->loadLibrary(filename, system, true);
+         res = EPC->loadDylib(filename, system, true);
       else {
          // For the non system libs, we'd like to be able to unload them.
          // FIXME: Here we lose the information about kLoadLibAlreadyLoaded case.
          cling::Interpreter::CompilationResult compRes;
          HandleInterpreterException(GetMetaProcessorImpl(), Form(".L %s", canonLib.c_str()), compRes, /*cling::Value*/nullptr);
          if (compRes == cling::Interpreter::kSuccess)
-            res = cling::DynamicLibraryManager::kLoadLibSuccess;
+            res = llvm::orc::AutoLoadEPC::kLoadLibSuccess;
       }
    }
 
-   if (res == cling::DynamicLibraryManager::kLoadLibSuccess) {
+   if (res == llvm::orc::AutoLoadEPC::kLoadLibSuccess) {
       UpdateListOfLoadedSharedLibraries();
    }
    switch (res) {
-   case cling::DynamicLibraryManager::kLoadLibSuccess: return 0;
-   case cling::DynamicLibraryManager::kLoadLibAlreadyLoaded:  return 1;
+   case llvm::orc::AutoLoadEPC::kLoadLibSuccess: return 0;
+   case llvm::orc::AutoLoadEPC::kLoadLibAlreadyLoaded:  return 1;
    default: break;
    };
    return -1;
@@ -6585,10 +6586,10 @@ bool TCling::LibraryLoadingFailed(const std::string& errmessage, const std::stri
    // This branch is taken when the callback was from DynamicLibraryManager::loadLibrary
       std::string mangled_name = std::string(errMsg.split("undefined symbol: ").second);
       void* res = ((TCling*)gCling)->LazyFunctionCreatorAutoload(mangled_name);
-      cling::DynamicLibraryManager* DLM = fInterpreter->getDynamicLibraryManager();
-      if (res && DLM && (DLM->loadLibrary(libStem, permanent, resolved) == cling::DynamicLibraryManager::kLoadLibSuccess))
-        // Return success when LazyFunctionCreatorAutoload could find mangled_name
-        return true;
+      llvm::orc::AutoLoadEPC *EPC = fInterpreter->getClingEPC();
+      if (res && EPC && (EPC->loadDylib(libStem, permanent, resolved) == llvm::orc::AutoLoadEPC::kLoadLibSuccess))
+         // Return success when LazyFunctionCreatorAutoload could find mangled_name
+         return true;
    } else {
    // The callback is from IncrementalExecutor::diagnoseUnresolvedSymbols
       if ( ((TCling*)gCling)->LazyFunctionCreatorAutoload(errmessage))
@@ -6608,7 +6609,7 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
    if (void* Addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(dlsym_mangled_name))
       return Addr;
 
-   const cling::DynamicLibraryManager &DLM = *GetInterpreterImpl()->getDynamicLibraryManager();
+   const llvm::orc::AutoLoadEPC &EPC = *GetInterpreterImpl()->getClingEPC();
    R__LOCKGUARD(gInterpreterMutex);
 
    auto LibLoader = [](const std::string& LibName) -> bool {
@@ -6620,8 +6621,8 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
      return true; //success.
    };
 
-   std::string libName = DLM.searchLibrariesForSymbol(mangled_name,
-                                                      /*searchSystem=*/ true);
+   std::string libName = EPC.getDylibLookup().searchLibrariesForSymbol(mangled_name,
+                                                                       /*searchSystem=*/true);
 
    assert(!llvm::StringRef(libName).startswith("libNew") &&
           "We must not resolve symbols from libNew!");
@@ -7244,7 +7245,8 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
       }
 
       R__LOCKGUARD(gInterpreterMutex);
-      std::string found = interp->getDynamicLibraryManager()->searchLibrariesForSymbol(SymName, /*searchSystem*/false);
+      std::string found =
+         interp->getClingEPC()->getDylibLookup().searchLibrariesForSymbol(SymName, /*searchSystem*/ false);
       // The expected output is just filename without the full path, which
       // is not very accurate, because our Dyld implementation might find
       // a match in location a/b/c.so and if we return just c.so ROOT might
@@ -7662,8 +7664,8 @@ int TCling::UnloadFile(const char* path) const
 {
    // Modifying the interpreter state needs locking.
    R__LOCKGUARD(gInterpreterMutex);
-   cling::DynamicLibraryManager* DLM = fInterpreter->getDynamicLibraryManager();
-   std::string canonical = DLM->lookupLibrary(path);
+   llvm::orc::AutoLoadEPC *EPC = fInterpreter->getClingEPC();
+   std::string canonical = EPC->lookupDylib(path);
    if (canonical.empty()) {
       canonical = path;
    }
