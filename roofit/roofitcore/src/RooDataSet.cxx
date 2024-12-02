@@ -47,10 +47,8 @@ See RooAbsData::plotOn().
 There are two storage backends:
 - RooVectorDataStore (default): std::vectors in memory. They are fast, but they
 cannot be serialised if the dataset exceeds a size of 1 Gb
-- RooTreeDataStore: Uses a TTree, which can be file backed if a file is opened
-before creating the dataset. This significantly reduces the memory pressure, as the
-baskets of the tree can be written to a file, and only the basket that's currently
-being read stays in RAM.
+- RooTreeDataStore: Uses a TTree under the hood. Note that the TTree is not
+attached to any currently-opened TFile in order to avoid double-ownership.
   - Enable tree-backed storage similar to this:
   ```
   TFile outputFile("filename.root", "RECREATE");
