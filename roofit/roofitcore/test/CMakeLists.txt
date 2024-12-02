@@ -39,7 +39,7 @@ ROOT_ADD_GTEST(testRooRealVar testRooRealVar.cxx LIBRARIES RooFitCore
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testRooRealVar_data1.root)
 
   ROOT_ADD_GTEST(testRooAbsReal testRooAbsReal.cxx
-    LIBRARIES RooFitCore
+    LIBRARIES RooFit RooFitCore
     COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testRooAbsReal_1.root ${CMAKE_CURRENT_SOURCE_DIR}/testRooAbsReal_2.root)
 if(NOT MSVC OR win_broken_tests)
   # Disabled on Windows because it causes the following error:

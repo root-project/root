@@ -56,6 +56,14 @@ The following people have contributed to this new version:
     This pattern was not appropriate for a modern C++ library.
     If you absolutely need the old return type, wrap the call to `format()` inside `new TString{var.format(..)}`. However, this is not recommended.
 
+### Fix for `RooAbsReal::createHistogram()` with extended pdfs
+
+There was a problem with [RooAbsReal::createHistogram()](https://root.cern.ch/doc/master/classRooAbsReal.html#a9451168bb4159899fe1854f591f69814) when using it to get histograms with predicted yields for extended pdfs.
+The `Scale(bool)` argument was always set internally to `false` in case `createHistogram()` was called on an extended pdf. There was no way for the user to override that.
+This meant that one could not get yield histograms that were correctly scaled by the bin volumes using that function.
+This release changes that behavior, meaning the `Scale(bool)` command argument is now respected for extended pdfs.
+
+
 ## IO
 
 * New options have been added to TFileMerger (which can be passed as whitespace-separated TStrings via `TFileMerger::SetMergeOptions`)
