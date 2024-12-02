@@ -553,7 +553,8 @@ const RooArgSet* RooTreeDataStore::get(Int_t index) const
 {
   checkInit() ;
 
-  Int_t ret = const_cast<RooTreeDataStore*>(this)->GetEntry(index, 1);
+  Int_t ret = _tree->GetEntry(index, 1);
+  _cacheTree->GetEntry(index,1);
 
   if(!ret) return nullptr;
 
@@ -805,7 +806,7 @@ RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, bool adjustRange)
 
 
   // Fill values of placeholder
-  for (int i=0 ; i<GetEntries() ; i++) {
+  for (int i=0 ; i < _tree->GetEntries() ; i++) {
     get(i) ;
 
     newVarClone->syncCache(&_vars) ;
@@ -933,7 +934,7 @@ Int_t RooTreeDataStore::numEntries() const
 
 void RooTreeDataStore::reset()
 {
-  Reset() ;
+  _tree->Reset() ;
 }
 
 
@@ -967,7 +968,7 @@ void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, c
   //resetBuffers() ;
 
   // Refill regular and cached variables of current tree from clone
-  for (int i=0 ; i<GetEntries() ; i++) {
+  for (int i=0 ; i < _tree->GetEntries() ; i++) {
     get(i) ;
 
     // Evaluate the cached variables and store the results
@@ -1084,56 +1085,6 @@ void RooTreeDataStore::checkInit() const
   }
 }
 
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Interface function to TTree::GetEntries
-
-Stat_t RooTreeDataStore::GetEntries() const
-{
-   return _tree->GetEntries() ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Interface function to TTree::Reset
-
-void RooTreeDataStore::Reset(Option_t* option)
-{
-   _tree->Reset(option) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Interface function to TTree::Fill
-
-Int_t RooTreeDataStore::Fill()
-{
-   return _tree->Fill() ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Interface function to TTree::GetEntry
-
-Int_t RooTreeDataStore::GetEntry(Int_t entry, Int_t getall)
-{
-   Int_t ret1 = _tree->GetEntry(entry,getall) ;
-   if (!ret1) return 0 ;
-   _cacheTree->GetEntry(entry,getall) ;
-   return ret1 ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-void RooTreeDataStore::Draw(Option_t* option)
-{
-  _tree->Draw(option) ;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class RooTreeDataStore.
 
@@ -1203,7 +1154,7 @@ std::span<const double> RooTreeDataStore::getWeightBatch(std::size_t first, std:
     _weightBuffer = std::make_unique<std::vector<double>>();
     _weightBuffer->reserve(len);
 
-    for (std::size_t i = 0; i < GetEntries(); ++i) {
+    for (int i = 0; i < _tree->GetEntries(); ++i) {
       _weightBuffer->push_back(weight(i));
     }
   }

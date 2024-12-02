@@ -105,16 +105,8 @@ public:
   void restoreAlternateBuffers() ;
 
   // Tree access
-  TTree& tree() { return *_tree ; }
-  const TTree* tree() const override { return _tree ; }
-
-  // Forwarded from TTree
-  Stat_t GetEntries() const;
-  void Reset(Option_t* option=nullptr);
-  Int_t Fill();
-  Int_t GetEntry(Int_t entry = 0, Int_t getall = 0);
-
-  void   Draw(Option_t* option = "") override ;
+  TTree* tree() { return _tree ; }
+  TTree const *tree() const { return _tree ; }
 
   // Constant term  optimizer interface
   void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=nullptr, bool skipZeroWeights=false) override ;
