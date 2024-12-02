@@ -1408,8 +1408,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 
   double scaleFactor(1.0) ;
   if (doExtended) {
-    scaleFactor = pdfSelf->expectedEvents(vars) ;
-    doScaling=false ;
+     scaleFactor = pdfSelf->expectedEvents(vars);
   }
 
   fillHistogram(histo,vars,scaleFactor,intObs,doScaling,projObs,false) ;
