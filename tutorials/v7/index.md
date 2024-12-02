@@ -2,10 +2,10 @@
 
 @{
 
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+\warning This is part of the ROOT 7 Experimental API, which could change in the future.
 
 @}
 
 \defgroup tutorial_rcanvas RCanvas examples
 \ingroup tutorial_v7
-\brief These are RCanvas examples ...
+\brief These are RCanvas examples.

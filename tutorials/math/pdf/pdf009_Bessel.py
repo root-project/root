@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_math
+## \ingroup tutorial_pdf
 ## \notebook
 ## Show the different kinds of Bessel functions available in ROOT
 ## To execute the macro type in:

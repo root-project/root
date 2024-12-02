@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_math
+/// \ingroup tutorial_pdf
 /// \notebook
 /// Test the TMath::LaplaceDist and TMath::LaplaceDistI functions
 ///
@@ -13,7 +13,7 @@
 #include "TF1.h"
 #include "TLegend.h"
 
-void mathLaplace(){
+void pdf000_Laplace(){
    TCanvas *c1=new TCanvas("c1", "TMath::LaplaceDist",600,800);
    c1->Divide(1, 2);
    TVirtualPad *pad1 = c1->cd(1);

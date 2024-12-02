@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_math
+/// \ingroup tutorial_math_legacy
 /// \notebook -nodraw
 /// Example macro of using the TFeldmanCousins class in root.
 ///

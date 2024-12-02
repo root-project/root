@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_math
+/// \ingroup tutorial_pdf
 /// \notebook
 /// Tutorial illustrating the multivariate gaussian random number generation
 ///
@@ -8,7 +8,7 @@
 ///
 /// \author Jorge Lopez
 
-void multivarGaus() {
+void pdf007_multivarGaus() {
   ROOT::Math::GSLRandomEngine rnd;
   rnd.Initialize();
 

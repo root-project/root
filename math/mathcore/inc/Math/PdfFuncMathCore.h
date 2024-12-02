@@ -386,9 +386,9 @@ namespace Math {
 
   /**
 
-  Probability density function of the normal (Gaussian) distribution.
+  Probability density function of the normal (Gaussian) distribution with mean x0 and standard deviation sigma.
 
-  \f[ p(x) = {1 \over \sqrt{2 \pi \sigma^2}} e^{-x^2 / 2\sigma^2} \f]
+  \f[ p(x) = {1 \over \sqrt{2 \pi \sigma^2}} e^{-(x-x_0)^2 / 2\sigma^2} \f]
 
   For detailed description see
   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
@@ -493,9 +493,9 @@ namespace Math {
 
   /**
 
-  Probability density function of the normal (Gaussian) distribution.
+  Probability density function of the normal (Gaussian) distribution with mean x0 and standard deviation sigma.
 
-  \f[ p(x) = {1 \over \sqrt{2 \pi \sigma^2}} e^{-x^2 / 2\sigma^2} \f]
+  \f[ p(x) = {1 \over \sqrt{2 \pi \sigma^2}} e^{-(x-x_0)^2 / 2\sigma^2} \f]
 
   For detailed description see
   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
@@ -552,7 +552,7 @@ namespace Math {
 
   \f[ p_{r}(x) = \frac{\Gamma(\frac{r+1}{2})}{\sqrt{r \pi}\Gamma(\frac{r}{2})} \left( 1+\frac{x^2}{r}\right)^{-(r+1)/2}  \f]
 
-  for \f$k \geq 0\f$. For detailed description see
+  for \f$r \geq 0\f$. For detailed description see
   <A HREF="http://mathworld.wolfram.com/Studentst-Distribution.html">
   Mathworld</A>.
 

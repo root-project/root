@@ -36,13 +36,13 @@ void fit1() {
    // (see <a href="fillrandom.C.nbconvert.ipynb">Filling histograms with random numbers from a function</a>)
    //
    TString dir = gROOT->GetTutorialDir();
-   dir.Append("/fit/");
+   dir.Append("/math/fit/");
    TFile *file = nullptr;
    if (!gSystem->AccessPathName("fillrandom.root")) {
       // file exists
       file = TFile::Open("fillrandom.root");
    } else {
-      gROOT->ProcessLine(Form(".x %s../hist/fillrandom.C(0)",dir.Data()));
+      gROOT->ProcessLine(Form(".x %s../../hist/fillrandom.C(0)",dir.Data()));
       file = TFile::Open("fillrandom.root");
       if (!file) return;
    }

@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_math
+## \ingroup tutorial_pdf
 ## \notebook
 ## Example macro showing some major probability density functions in ROOT.
 ## The macro shows four of them with

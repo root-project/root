@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_math
+/// \ingroup tutorial_math_legacy
 /// \notebook -nodraw
 /// Example of the usage of the TRolke class
 /// The TRolke class computes the profile likelihood

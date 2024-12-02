@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_math
+/// \ingroup tutorial_pdf
 /// \notebook
 /// Tutorial illustrating the use of TMath::GammaDist and TMath::LogNormal
 ///
@@ -8,7 +8,7 @@
 ///
 /// \author Anna Kreshuk
 
-void mathGammaNormal(){
+void pdf006_Gamma_LogNormal(){
    TCanvas *myc = new TCanvas("c1","gamma and lognormal",10,10,600,800);
    myc->Divide(1,2);
    TPad *pad1 = (TPad *)myc->cd(1);

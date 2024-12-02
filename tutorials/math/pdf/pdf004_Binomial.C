@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_math
+/// \ingroup tutorial_pdf
 /// \notebook -nodraw
 /// tutorial illustrating the use of TMath::Binomial
 /// can be run with:
@@ -65,7 +65,7 @@ void binomialFancy() {
   printf("Average Error = %e\n",serr/nmax);
 }
 
-void binomial () {
+void pdf004_Binomial () {
    binomialSimple();
    binomialFancy();
 }

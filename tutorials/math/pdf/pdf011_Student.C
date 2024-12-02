@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_math
+/// \ingroup tutorial_pdf
 /// \notebook
 /// Tutorial illustrating the use of the Student and F distributions
 ///
@@ -15,7 +15,7 @@
 #include "TLegend.h"
 #include "TLegendEntry.h"
 
-void mathStudent()
+void pdf011_Student()
 {
    //drawing the set of student density functions
    //normal(0, 1) density drawn for comparison

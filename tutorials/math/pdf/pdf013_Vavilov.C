@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_math
+/// \ingroup tutorial_pdf
 /// \notebook
 /// Test of the TMath::Vavilov distribution
 ///
@@ -13,7 +13,7 @@
 #include "TRandom.h"
 #include "TGraph.h"
 
-void vavilov()
+void pdf013_Vavilov()
 {
    Int_t n = 1000;
    Double_t *xvalues  = new Double_t[n];

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_math
+/// \ingroup tutorial_pdf
 /// \notebook
 /// Test the TMath::BetaDist and TMath::BetaDistI functions
 ///
@@ -13,7 +13,7 @@
 #include "TF1.h"
 #include "TLegend.h"
 
-void mathBeta() {
+void pdf005_Beta() {
    TCanvas *c1=new TCanvas("c1", "TMath::BetaDist",600,800);
    c1->Divide(1, 2);
    TVirtualPad *pad1 = c1->cd(1);

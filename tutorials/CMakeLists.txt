@@ -67,11 +67,11 @@ set(need_network dataframe/df027_SQliteDependencyOverVersion.C)
 #---Tutorials disabled depending on the build components-------------
 
 if(NOT clad)
-  set(clad_veto fit/minuit2GausFit.C
+  set(clad_veto math/fit/minuit2GausFit.C
                 # TODO: the next veto should not be necessary!
                 # The tutorial should also work without clad.
                 # See https://github.com/root-project/root/issues/15091.
-                fit/exampleFit3D.C
+                math/fit/exampleFit3D.C
   )
 endif()
 
@@ -156,7 +156,7 @@ else()
 endif()
 
 if(NOT ROOT_unuran_FOUND)
-  set(unuran_veto  math/testrandom.C unuran/unuranDemo.C unuran/unuranFoamTest.C
+  set(unuran_veto  math/testrandom.C math/unuran/unuranDemo.C math/unuran/unuranFoamTest.C
                    math/multidimSampling.C)
 endif()
 
@@ -197,7 +197,7 @@ endif()
 
 # variables identifying the package must have the package name  in lower case (it corresponds to the CMake option name)
 if(NOT ROOT_r_FOUND)
-  set(r_veto  r/*.C)
+  set(r_veto  math/r/*.C)
 endif()
 
 set(histfactory_veto histfactory/makeExample.C)
@@ -210,18 +210,18 @@ if(NOT ROOT_mathmore_FOUND)
   set(mathmore_veto
       math/quasirandom.C
       math/exampleMultiRoot.C
-      math/Bessel.C
+      math/pdf/pdf009_Bessel.C
       math/LegendreAssoc.C
       math/Legendre.C
       math/mathmoreIntegration.C
-      math/multivarGaus.C
-      math/tStudent.C
-      math/normalDist.C
+      math/pdf/pdf007_multivarGaus.C
+      math/pdf/pdf012_tStudent.C
+      math/pdf/pdf001_Nornal.C
       roostats/TestNonCentral.C
       roostats/TestNonCentral.py
       math/Legendre.py
-      math/Bessel.py
-      math/tStudent.py)
+      math/pdf/pdf009_Bessel.py
+      math/pdf/pdf012_tStudent.py)
 endif()
 
 if(NOT ROOT_fftw3_FOUND)
@@ -233,9 +233,9 @@ if(NOT ROOT_fftw3_FOUND)
                  roofit/rf210_angularconv.py
                  roofit/rf211_paramconv.py
                  roofit/rf512_wsfactory_oper.py
-                 fft/FFT.C
-                 fit/fitConvolution.C
-                 fit/fitConvolution.py)
+                 math/fft/FFT.C
+                 math/fit/fitConvolution.C
+                 math/fit/fitConvolution.py)
 endif()
 
 if(NOT ROOT_opengl_FOUND)
@@ -268,7 +268,7 @@ if(NOT gdml)
 endif()
 
 #---These ones requires a display to run-----------------------------
-set(gui_veto fit/fitpanel_playback.C
+set(gui_veto math/fit/fitpanel_playback.C
              cocoa/*.C
              geom/building.C geom/cheongwadae.C geom/geom*.C geom/lego.C geom/robot.C geom/south_gate.C geom/station*.C geom/tank.C geom/webdemo.C geom/web_cms.cxx
              gl/glViewerExercise.C gl/glViewerLOD.C gl/gviz3d.C gl/nucleus.C gl/viewer3DLocal.C gl/viewer3DMaster.C
@@ -417,7 +417,7 @@ set(extra_veto
   tree/h1chain.C
   http/*.C
   eve7/*.C
-  r/rootlogon.C)
+  math/r/rootlogon.C)
 
 if(MSVC AND NOT llvm13_broken_tests)
   list(APPEND extra_veto
@@ -500,7 +500,7 @@ if(mpi)
 endif()
 
 #---Special return code------------------------------------------------
-set(returncode_1 fit/fit2a.C
+set(returncode_1 math/fit/fit2a.C
                  graphics/earth.C
                  graphics/pavetext.C
                  graphics/tmathtext.C graphics/tmathtext2.C
@@ -515,7 +515,7 @@ set(returncode_1 fit/fit2a.C
                  hist/hlabels2.C
                  tree/h1analysis.C
                  math/chi2test.C
-                 r/SimpleFitting.C)
+                 math/r/SimpleFitting.C)
 #---Dependencies------------------------------------------------------
 set(unfold-testUnfold5d-depends tutorial-unfold-testUnfold5c)
 set(unfold-testUnfold5c-depends tutorial-unfold-testUnfold5b)
@@ -527,15 +527,15 @@ set(xml-xmlmodifyfile-depends tutorial-xml-xmlnewfile)
 set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
 set(io-readCode-depends tutorial-io-importCode)
-set(fit-fit1-depends tutorial-hist-fillrandom)
-set(fit-myfit-depends tutorial-fit-fitslicesy)
-set(foam-foam_demopers-depends tutorial-foam-foam_demo)
+set(math-fit-fit1-depends tutorial-hist-fillrandom)
+set(math-fit-myfit-depends tutorial-math-fit-fitslicesy)
+set(math-foam-foam_demopers-depends tutorial-math-foam-foam_demo)
 set(tree-tree502_staff-depends  tutorial-tree-tree500_cernbuild)
 set(tree-tree501_cernstaff-depends  tutorial-tree-tree500_cernbuild)
 set(hist-hbars-depends  tutorial-tree-tree500_cernbuild)
 set(benchmarks-depends tutorial-hsimple
-                       tutorial-fit-fit1
-                       tutorial-fit-myfit
+                       tutorial-math-fit-fit1
+                       tutorial-math-fit-myfit
                        tutorial-hist-h1ReadAndDraw
                        tutorial-hist-FirstContour
                        tutorial-geom-na49view
@@ -863,8 +863,8 @@ if(ROOT_pyroot_FOUND)
   file(GLOB requires_numpy   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       dataframe/df026_AsNumpyArrays.py
       dataframe/df032_RDFFromNumpy.py
-      fit/combinedFit.py
-      fit/multifit.py
+      math/fit/combinedFit.py
+      math/fit/multifit.py
       roofit/rf409_NumPyPandasToRooFit.py)
   file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} pyroot/pyroot004_NumbaDeclare.py)
   file(GLOB requires_pandas  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
