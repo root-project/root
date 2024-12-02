@@ -14,14 +14,13 @@
 
 import ROOT
 from array import array
-import numpy as np
 
 
 def makeTH1(trnd, name, mean, sigma):
     """Create ROOT TH1 filled with a Gaussian distribution."""
 
     hh = ROOT.TH1D(name, name, 100, -10, 10)
-    hh.Fill(np.array([trnd.Gaus(mean, sigma) for _ in range(1000)]))
+    hh.Fill(trnd.Gaus(mean, sigma, size=1000))
     return hh
 
 

@@ -10,21 +10,17 @@
 ## \author Jonas Rembser, Aurelie Flandi (C++ version)
 
 import ROOT
-import numpy as np
+
+rng = ROOT.gRandom
 
 # Construction of histogram to fit.
 h_ExpGauss = ROOT.TH1F("h_ExpGauss", "Exponential convoluted by Gaussian", 100, 0.0, 5.0)
-h_ExpGauss.Fill(
-    np.array(
-        [
-            # Gives a alpha of -0.3 in the exp.
-            # Probability density function of the addition of two variables is the
-            # convolution of two density functions.
-            ROOT.gRandom.Exp(1.0 / 0.3) + ROOT.gRandom.Gaus(0.0, 3.0)
-            for _ in range(1000000)
-        ]
-    )
-)
+# Gives a alpha of -0.3 in the exp.
+# Probability density function of the addition of two variables is the
+# convolution of two density functions.
+n = 1000000
+h_ExpGauss.Fill(rng.Exp(1.0 / 0.3, size=n) + rng.Gaus(0.0, 3.0, size=n))
+
 f_conv = ROOT.TF1Convolution("expo", "gaus", -1, 6, True)
 f_conv.SetRange(-1.0, 6.0)
 f_conv.SetNofPointsFFT(1000)

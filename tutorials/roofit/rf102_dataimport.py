@@ -13,7 +13,6 @@
 
 import ROOT
 from array import array
-import numpy as np
 
 
 def makeTH1(trnd):
@@ -21,7 +20,7 @@ def makeTH1(trnd):
     # Create ROOT ROOT.TH1 filled with a Gaussian distribution
 
     hh = ROOT.TH1D("hh", "hh", 25, -10, 10)
-    hh.Fill(np.array([trnd.Gaus(0, 3) for _ in range(100)]))
+    hh.Fill(trnd.Gaus(0, 3, size=100))
     return hh
 
 
