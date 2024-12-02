@@ -20,6 +20,7 @@ from DistRDF import DataFrame
 from DistRDF import HeadNode
 from DistRDF.Backends import Base
 from DistRDF.Backends import Utils
+from DistRDF.TaskProgressBar import TaskProgressBar
 
 try:
     import dask
@@ -184,29 +185,31 @@ class DaskBackend(Base.BaseBackend):
             list: A list representing the values of action nodes returned
             after computation (Map-Reduce).
         """   
-        dmapper = dask.delayed(DaskBackend.dask_mapper)
-        dreducer = dask.delayed(reducer)
+        dmapper = lambda range : self.client.submit(DaskBackend.dask_mapper, range, self.headers, self.shared_libraries, mapper)
+        dreducer = lambda a, b : self.client.submit(reducer, a, b)
 
-        mergeables_lists = [dmapper(range, self.headers, self.shared_libraries, mapper) for range in ranges]
+        mergeables_lists = [dmapper(range) for range in ranges]
+        all_futures = mergeables_lists[:]
 
         while len(mergeables_lists) > 1:
-            mergeables_lists.append(
-                dreducer(mergeables_lists.pop(0), mergeables_lists.pop(0)))
+            reduced = dreducer(mergeables_lists.pop(0), mergeables_lists.pop(0))
+            mergeables_lists.append(reduced)
+            all_futures.append(reduced)
 
         # Here we start the progressbar for the current RDF computation graph
-        # running on the Dask client. This expects a future object, so we need
-        # convert the last delayed object from the list above to a future
-        # through the `persist` call. This also starts the computation in the
-        # background, but the time difference is negligible. The progressbar is
-        # properly shown in the terminal, whereas in the notebook it can be
-        # shown only if it's the last call in a cell. Since we're encapsulating
-        # it in this class, it won't be shown. Full details at
+        # running on the Dask client. The progressbar is properly shown in the
+        # terminal, whereas in the notebook it can be shown only if it's the 
+        # last call in a cell. Since we're encapsulating it in this class, it 
+        # won't be shown. Full details at
         # https://docs.dask.org/en/latest/diagnostics-distributed.html#dask.distributed.progress
-        final_results = mergeables_lists.pop().persist()
-        if kwargs.get("progressBar", True):
+        final_results = mergeables_lists.pop()
+        pbar = kwargs.get("progressBar", True)
+        if isinstance(pbar, TaskProgressBar):
+            pbar.addFutures(all_futures)
+        elif pbar == True:
             progress(final_results)
 
-        return final_results.compute()
+        return final_results.result()
 
     def ProcessAndMergeLive(self,
                             ranges: List[Any],

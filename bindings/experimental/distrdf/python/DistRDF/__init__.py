@@ -102,9 +102,11 @@ def RunGraphs(proxies: Iterable, progressBar=True) -> int:
     # Submit all computation graphs concurrently from multiple Python threads.
     # The submission is not computationally intensive
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(uniqueproxies)) as executor:
-        futures = [executor.submit(execute_graph, proxy.proxied_node, progressBar=None) for proxy in uniqueproxies]
+        pbar = TaskProgressBar() if progressBar else False
+        futures = [executor.submit(execute_graph, proxy.proxied_node, progressBar=pbar) for proxy in uniqueproxies]
         if progressBar:
-            TaskProgressBar(futures).run()
+            pbar.addFutures(futures)
+            pbar.run()
         concurrent.futures.wait(futures)
 
     return len(uniqueproxies)

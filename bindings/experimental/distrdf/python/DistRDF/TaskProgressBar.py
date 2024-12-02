@@ -13,9 +13,11 @@ from __future__ import annotations
 import time
 
 class TaskProgressBar:
-    def __init__(self, tasks, pollInterval=0.5):
+    def __init__(self, tasks=(), pollInterval=0.5):
         self._tasks = list(tasks)
         self._pollInterval = pollInterval
+    def addFutures(self, tasks):
+        self._tasks += tasks
     def run(self) -> None:
         if not self._tasks:
             return
@@ -26,35 +28,47 @@ class TaskProgressBar:
             self._run_basic()
         self._tasks.clear()
     def _run_tqdm(self, tqdm) -> None:
-        total = len(self._tasks)
-        with tqdm(total=total) as pbar:
+        last_total = len(self._tasks)
+        last_ndone = 0
+        with tqdm(total=last_total) as pbar:
             waited = 0
-            last = 0
             while True:
-                ndone = sum(f.done() for f in self._tasks)
-                waited += 1
-                if (ndone != last) or (waited > 10):
-                    pbar.update(ndone-last)
-                    last = ndone
-                    waited = 0
+                states = [f.done() for f in self._tasks]
+                total = len(states)
+                ndone = sum(states)
                 if ndone == total:
                     break
+                waited += 1
+                if last_total != total:
+                    pbar.total = total
+                    pbar.n = ndone
+                    pbar.refresh()
+                    last_total = total
+                    last_ndone = ndone
+                    waited = 0
+                elif (ndone != last_ndone) or (waited > 0):
+                    pbar.update(ndone-last_ndone)
+                    last_ndone = ndone
+                    waited = 0
                 time.sleep(self._pollInterval)
     def _run_basic(self) -> None:
-        total = len(self._tasks)
+        last_total = len(self._tasks)
+        last_ndone = 0
         started = time.monotonic()
         waited = 0
-        last = 0
         interval = int(max(1, 2/self._pollInterval)) # one dot every 2 s
         while True:
-            ndone = sum(f.done() for f in self._tasks)
+            states = [f.done() for f in self._tasks]
+            total = len(states)
+            ndone = sum(states)
             waited += 1
             now = time.monotonic()
-            if ndone != last:
+            if ndone != last_ndone or total != last_total:
                 print(f"after {now-started:.0f}s, {ndone}/{total} done ({ndone/total*100:3.0}%%)", 
                       end = ("\n" if ndone == total else ""),
                       flush=True)
-                last = ndone
+                last_ndone = ndone
+                last_total = total
                 waited = 0
                 if ndone == total:
                     break
