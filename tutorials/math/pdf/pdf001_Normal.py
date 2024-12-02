@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_math
+## \ingroup tutorial_dist
 ## \notebook
 ## Tutorial illustrating the new statistical distributions functions (pdf, cdf and quantile)
 ##

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_math
+/// \ingroup tutorial_pdf
 /// \notebook
 /// Tutorial illustrating how to create a plot comparing a Breit Wigner to a Relativistic Breit Wigner
 ///
@@ -128,7 +128,7 @@ void plotTwoTGraphs(Double_t x[], Double_t y1[], Double_t y2[], const Int_t nPoi
 }
 
 
-void BreitWigner(){
+void pdf008_BreitWigner(){
 
   /////////////////////////////////////////////////////////
   // Define x axis limits and steps for each plotted point

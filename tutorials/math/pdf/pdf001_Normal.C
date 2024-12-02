@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_math
+/// \ingroup tutorial_pdf
 /// \notebook
 /// Tutorial illustrating the new statistical distributions functions (pdf, cdf and quantile)
 ///
@@ -15,7 +15,7 @@
 #include "TLegend.h"
 #include "TAxis.h"
 
-void normalDist() {
+void pdf001_Normal() {
 
    TF1 *pdfunc  = new TF1("pdf","ROOT::Math::normal_pdf(x, [0],[1])",-5,5);
    TF1 *cdfunc  = new TF1("cdf","ROOT::Math::normal_cdf(x, [0],[1])",-5,5);
