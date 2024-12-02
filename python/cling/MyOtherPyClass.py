@@ -1,27 +1,25 @@
-from force_flush import print_flushed
-
-print_flushed( 'creating class MyOtherPyClass ... ' )
+print( 'creating class MyOtherPyClass ... ', flush=True )
 
 class MyOtherPyClass:
    count = 0
 
    def __init__( self ):
-      print_flushed( 'in MyOtherPyClass.__init__' )
+      print( 'in MyOtherPyClass.__init__', flush=True )
       MyOtherPyClass.count += 1
 
    def __del__( self ):
-      print_flushed( 'in MyOtherPyClass.__del__' )
+      print( 'in MyOtherPyClass.__del__', flush=True )
       MyOtherPyClass.count -= 1
 
    def hop( self ):
-      print_flushed( 'hop' )
+      print( 'hop', flush=True )
 
    def duck( self ):
-      print_flushed( 'quack' )
+      print( 'quack', flush=True )
 
 
 # include a class that may interfere with the previous one due to
 # same-named method in it
 class MyYetAnotherPyClass:
    def hop( self ):
-      print_flushed( 'another hop' )
+      print( 'another hop', flush=True )
