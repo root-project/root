@@ -151,6 +151,9 @@
    }
 
    drawNext(0).then(() => {
+
+      appendResult(null, '###batch###job###done###');
+
       current_dom?.remove();
 
       // remove main script from dump
@@ -158,7 +161,6 @@
 
       if (JSROOT.browser.isFirefox && window && (typeof window.dump == "function")) {
          window.dump(document.body.innerHTML);
-         window.dump("###batch###job###done###\n");
          window.close();
       }
    });
