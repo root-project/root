@@ -243,22 +243,30 @@ inline double flexibleInterpSingle(unsigned int code, double low, double high, d
       // meant to be a "parabolic version of log-normal", but it never got
       // implemented. If someone would need it, it could be implemented as doing
       // code 2 in log space.
-   } else if (code == 4) {
+   } else if (code == 4 || code == 6) {
       double x = paramVal;
+      double mod = 1.0;
       if (x >= boundary) {
-         return x * (high - nominal);
+         mod = x * (high - nominal);
       } else if (x <= -boundary) {
-         return x * (nominal - low);
+         mod = x * (nominal - low);
+      } else {
+         // interpolate 6th degree
+         double t = x / boundary;
+         double eps_plus = high - nominal;
+         double eps_minus = nominal - low;
+         double S = 0.5 * (eps_plus + eps_minus);
+         double A = 0.0625 * (eps_plus - eps_minus);
+
+         mod = x * (S + t * A * (15 + t * t * (-10 + t * t * 3)));
       }
 
-      // interpolate 6th degree
-      double t = x / boundary;
-      double eps_plus = high - nominal;
-      double eps_minus = nominal - low;
-      double S = 0.5 * (eps_plus + eps_minus);
-      double A = 0.0625 * (eps_plus - eps_minus);
+      // code 6 is multiplicative version of code 4
+      if (code == 6) {
+         mod *= res;
+      }
+      return mod;
 
-      return x * (S + t * A * (15 + t * t * (-10 + t * t * 3)));
    } else if (code == 5) {
       double x = paramVal;
       double mod = 1.0;
@@ -304,24 +312,6 @@ inline double flexibleInterpSingle(unsigned int code, double low, double high, d
          mod = value;
       }
       return res * (mod - 1.0);
-   } else if (code == 6) {
-      // multiplicative version of code 4 (6th order poly interp with linear extrap)
-
-      double x = paramVal;
-      if (x >= boundary) {
-         return res * (x * (high - nominal) + nominal - 1.);
-      } else if (x <= -boundary) {
-         return res * (x * (nominal - low) + nominal - 1.);
-      }
-
-      // interpolate 6th degree
-      double t = x / boundary;
-      double eps_plus = high - nominal;
-      double eps_minus = nominal - low;
-      double S = 0.5 * (eps_plus + eps_minus);
-      double A = 0.0625 * (eps_plus - eps_minus);
-
-      return res * (x * (S + t * A * (15 + t * t * (-10 + t * t * 3))) + nominal - 1.);
    }
 
    return 0.0;
