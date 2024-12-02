@@ -220,21 +220,18 @@ std::string RDisplay::DashesBetweenLines(size_t lastColToPrint, bool allColumnsF
 
 void RDisplay::Print() const
 {
-   AsStringInternalRet ret = AsStringInternal();
-   for (const auto &msg : ret.fMsgs)
-      Info("Print", "%s\n", msg.c_str());
-   std::cout << ret.fString << std::endl;
+   auto ret = AsStringInternal(true);
+   std::cout << ret;
 }
 
 std::string RDisplay::AsString() const
 {
-   return AsStringInternal().fString;
+   return AsStringInternal(false);
 }
 
-RDisplay::AsStringInternalRet RDisplay::AsStringInternal() const
+std::string RDisplay::AsStringInternal(bool considerDots) const
 {
    std::stringstream ss;
-   AsStringInternalRet ret;
 
    size_t columnsToPrint = fNColumns;
    const size_t columnsToShorten = GetNColumnsToShorten();
@@ -248,13 +245,14 @@ RDisplay::AsStringInternalRet RDisplay::AsStringInternal() const
                // Thus, the first column is only the Row column and the actual first column is printed
          columnsToPrint = 2;
       }
-      ret.fMsgs.push_back(std::string("Only showing ") + std::to_string(columnsToPrint) + " columns out of " +
-                          std::to_string(fNColumns));
+      if (considerDots)
+         Info("Print", "Only showing %zu columns out of %zu\n", columnsToPrint, fNColumns);
+
       allColumnsFit = false;
    }
 
    if (fNMaxCollectionElements < 1)
-      ret.fMsgs.push_back("No collections shown since fNMaxCollectionElements is 0");
+      Info("Print", "No collections shown since fNMaxCollectionElements is 0\n");
 
    auto nrRows = fTable.size();
    ss << DashesBetweenLines(columnsToPrint, allColumnsFit); // Print dashes in the top of the table
@@ -273,11 +271,12 @@ RDisplay::AsStringInternalRet RDisplay::AsStringInternal() const
          const auto &element = row[columnIndex];
          std::string printedElement = "";
 
-         if (element.IsDot()) {
+         // TODO: add a function option to avoid this behavior
+         if (considerDots && element.IsDot()) {
             printedElement = "...";
-         } else if (element.IsPrint()) {
+         } else if (!considerDots || element.IsPrint()) {
             printedElement = element.GetRepresentation();
-         } else {     // IsIgnore
+         } else { // IsIgnore
             // Do nothing, printedElement remains ""
          }
          if (!printedElement.empty()) {
@@ -298,8 +297,7 @@ RDisplay::AsStringInternalRet RDisplay::AsStringInternal() const
    }
    ss << DashesBetweenLines(columnsToPrint, allColumnsFit); // Print dashes in the bottom of the table
 
-   ret.fString = ss.str();
-   return ret;
+   return ss.str();
 }
 
 } // namespace RDF

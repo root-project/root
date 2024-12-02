@@ -412,7 +412,7 @@ TEST(RDFVary, VaryDisplay) // TEST instead of TEST_P because Display is single-t
                   {}, 2)
                .Display<int>({"x"});
    // Display ignores variations, only displays the nominal values
-   EXPECT_EQ(d->AsString(), "+-----+---+\n| Row | x | \n+-----+---+\n| 0   | 0 | \n|     |   | \n+-----+---+\n");
+   EXPECT_EQ(d->AsString(), "+-----+---+\n| Row | x | \n+-----+---+\n| 0   | 0 | \n+-----+---+\n");
    // cannot vary a Display
    EXPECT_THROW(
       try { VariationsFor(d); } catch (const std::logic_error &err) {
