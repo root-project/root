@@ -138,7 +138,6 @@ public:
 
   virtual bool hasFilledCache() const { return false ; }
 
-  virtual const TTree* tree() const { return nullptr ; }
   virtual void dump() {}
 
   virtual void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=nullptr, const char* rangeName=nullptr,
