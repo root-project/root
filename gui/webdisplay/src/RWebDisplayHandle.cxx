@@ -609,11 +609,11 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
 #endif
    if (use_normal) {
       // old browser with standard headless mode
-      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless --no-sandbox --disable-extensions --disable-audio-output $geometry --dump-dom $url 2>/dev/null");
+      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "fork:--headless --no-sandbox --disable-extensions --disable-audio-output $geometry --dump-dom $url");
       fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "fork:--headless --no-sandbox --disable-extensions --disable-audio-output $geometry $url");
    } else {
       // newer version with headless=new mode
-      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless=new --no-sandbox --disable-extensions --disable-audio-output $geometry --dump-dom $url 2>/dev/null");
+      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "fork:--headless=new --no-sandbox --disable-extensions --disable-audio-output $geometry --dump-dom $url");
       fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "fork:--headless=new --no-sandbox --disable-extensions --disable-audio-output $geometry $url");
    }
    fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=\'$url\' >/dev/null 2>/dev/null &");
