@@ -33,30 +33,7 @@ static const std::string DisplayPrintDefaultRows("+-----+----+----+----------+\n
                                                  "|     |    | 3  |          | \n"
                                                  "+-----+----+----+----------+\n");
 
-static const std::string DisplayAsStringDefaultRows("+-----+----+----+----------+\n"
-                                                    "| Row | b1 | b2 | b3       | \n"
-                                                    "+-----+----+----+----------+\n"
-                                                    "| 0   | 0  | 1  | 2.000000 | \n"
-                                                    "|     |    | 2  |          | \n"
-                                                    "|     |    | 3  |          | \n"
-                                                    "+-----+----+----+----------+\n"
-                                                    "| 1   | 0  | 1  | 2.000000 | \n"
-                                                    "|     |    | 2  |          | \n"
-                                                    "|     |    | 3  |          | \n"
-                                                    "+-----+----+----+----------+\n"
-                                                    "| 2   | 0  | 1  | 2.000000 | \n"
-                                                    "|     |    | 2  |          | \n"
-                                                    "|     |    | 3  |          | \n"
-                                                    "+-----+----+----+----------+\n"
-                                                    "| 3   | 0  | 1  | 2.000000 | \n"
-                                                    "|     |    | 2  |          | \n"
-                                                    "|     |    | 3  |          | \n"
-                                                    "+-----+----+----+----------+\n"
-                                                    "| 4   | 0  | 1  | 2.000000 | \n"
-                                                    "|     |    | 2  |          | \n"
-                                                    "|     |    | 3  |          | \n"
-                                                    "|     |    |    |          | \n"
-                                                    "+-----+----+----+----------+\n");
+static const std::string DisplayAsStringDefaultRows = DisplayPrintDefaultRows;
 
 TEST(RDFDisplayTests, DisplayNoJitDefaultRows)
 {
@@ -151,18 +128,7 @@ static const std::string DisplayPrintTwoRows("+-----+----+----+----------+\n"
                                              "|     |    | 3  |          | \n"
                                              "+-----+----+----+----------+\n");
 
-static const std::string DisplayAsStringTwoRows("+-----+----+----+----------+\n"
-                                                "| Row | b1 | b2 | b3       | \n"
-                                                "+-----+----+----+----------+\n"
-                                                "| 0   | 0  | 1  | 2.000000 | \n"
-                                                "|     |    | 2  |          | \n"
-                                                "|     |    | 3  |          | \n"
-                                                "+-----+----+----+----------+\n"
-                                                "| 1   | 0  | 1  | 2.000000 | \n"
-                                                "|     |    | 2  |          | \n"
-                                                "|     |    | 3  |          | \n"
-                                                "|     |    |    |          | \n"
-                                                "+-----+----+----+----------+\n");
+static const std::string DisplayAsStringTwoRows = DisplayPrintTwoRows;
 
 TEST(RDFDisplayTests, DisplayJitTwoRows)
 {
@@ -203,7 +169,6 @@ static const std::string DisplayAsStringOneColumn("+-----+----+\n"
                                                   "| 3   | 0  | \n"
                                                   "+-----+----+\n"
                                                   "| 4   | 0  | \n"
-                                                  "|     |    | \n"
                                                   "+-----+----+\n");
 static const std::string DisplayAsStringTwoColumns("+-----+----+----+\n"
                                                    "| Row | b1 | b2 | \n"
@@ -227,7 +192,6 @@ static const std::string DisplayAsStringTwoColumns("+-----+----+----+\n"
                                                    "| 4   | 0  | 1  | \n"
                                                    "|     |    | 2  | \n"
                                                    "|     |    | 3  | \n"
-                                                   "|     |    |    | \n"
                                                    "+-----+----+----+\n");
 
 TEST(RDFDisplayTests, DisplayAmbiguity)
@@ -244,7 +208,13 @@ TEST(RDFDisplayTests, DisplayAmbiguity)
    EXPECT_EQ(display_2->AsString(), DisplayAsStringTwoColumns);
 }
 
-static const std::string DisplayAsStringString("+-----+-------+\n| Row | b1    | \n+-----+-------+\n| 0   | \"foo\" | \n+-----+-------+\n| 1   | \"foo\" | \n|     |       | \n+-----+-------+\n");
+static const std::string DisplayAsStringString("+-----+-------+\n"
+                                               "| Row | b1    | \n"
+                                               "+-----+-------+\n"
+                                               "| 0   | \"foo\" | \n"
+                                               "+-----+-------+\n"
+                                               "| 1   | \"foo\" | \n"
+                                               "+-----+-------+\n");
 
 TEST(RDFDisplayTests, DisplayPrintString)
 {
@@ -281,7 +251,9 @@ TEST(RDFDisplayTests, CharArray)
    }
 
    const auto str = ROOT::RDataFrame("t", "chararray.root").Display()->AsString();
-   EXPECT_EQ(str, "+-----+-----+\n| Row | str | \n+-----+-----+\n| 0   | asd | \n+-----+-----+\n| 1   | bar | \n|     |     | \n+-----+-----+\n");
+   EXPECT_EQ(
+      str,
+      "+-----+-----+\n| Row | str | \n+-----+-----+\n| 0   | asd | \n+-----+-----+\n| 1   | bar | \n+-----+-----+\n");
 }
 
 TEST(RDFDisplayTests, BoolArray)
@@ -300,7 +272,6 @@ TEST(RDFDisplayTests, BoolArray)
                          "+-----+-------+\n"
                          "| 2   | true  | \n"
                          "|     | false | \n"
-                         "|     |       | \n"
                          "+-----+-------+\n";
    EXPECT_EQ(r->AsString(), expected);
 }
@@ -314,7 +285,6 @@ TEST(RDFDisplayTests, UniquePtr)
                          "| Row | uptr                       | \n"
                          "+-----+----------------------------+\n"
                          "| 0   | std::unique_ptr -> nullptr | \n"
-                         "|     |                            | \n"
                          "+-----+----------------------------+\n";
    EXPECT_EQ(r->AsString(), expected);
 }
@@ -329,7 +299,8 @@ TEST(RDFDisplayTests, SubBranch)
    t.Fill();
    ROOT::RDataFrame df(t);
    const auto res = df.Display()->AsString();
-   const auto expected = "+-----+-----+-----+\n| Row | p.a | p.b | \n+-----+-----+-----+\n| 0   | 42  | 84  | \n|     |     |     | \n+-----+-----+-----+\n";
+   const auto expected =
+      "+-----+-----+-----+\n| Row | p.a | p.b | \n+-----+-----+-----+\n| 0   | 42  | 84  | \n+-----+-----+-----+\n";
    EXPECT_EQ(res, expected);
 }
 
@@ -345,7 +316,8 @@ TEST(RDFDisplayTests, Friends)
   main.AddFriend(&fr);
 
   const auto res = ROOT::RDataFrame(main).Display()->AsString();
-  const auto expected = "+-----+----------+\n| Row | friend.x | \n+-----+----------+\n| 0   | 0        | \n|     |          | \n+-----+----------+\n";
+  const auto expected =
+     "+-----+----------+\n| Row | friend.x | \n+-----+----------+\n| 0   | 0        | \n+-----+----------+\n";
   EXPECT_EQ(res, expected);
 }
 
@@ -454,7 +426,6 @@ static const std::string DisplayAsStringVectors("+-----+----+----+----+----+----
                                                 "|     |    |    |    |    |     |     | 0   | 0    | \n"
                                                 "|     |    |    |    |    |     |     | 0   | 0    | \n"
                                                 "|     |    |    |    |    |     |     | 0   | 0    | \n"
-                                                "|     |    |    |    |    |     |     |     |      | \n"
                                                 "+-----+----+----+----+----+-----+-----+-----+------+\n");
 
 TEST(RDFDisplayTests, Vectors)

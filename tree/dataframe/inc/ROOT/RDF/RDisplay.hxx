@@ -289,12 +289,7 @@ private:
 
    void EnsureCurrentColumnWidth(size_t w);
 
-   struct AsStringInternalRet {
-      std::string fString;
-      std::vector<std::string> fMsgs;
-   };
-
-   AsStringInternalRet AsStringInternal() const;
+   std::string AsStringInternal(bool considerDots) const;
 
 public:
    ////////////////////////////////////////////////////////////////////////////
