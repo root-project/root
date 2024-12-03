@@ -83,7 +83,7 @@ int mp105_processEntryList()
 
    // Run the analysis with a selector
    TString selectorPath = gROOT->GetTutorialDir();
-   selectorPath += "/tree/h1analysisTreeReader.C+";
+   selectorPath += "/io/tree/h1analysisTreeReader.C+";
    std::cout << tutname << "processing the entry list with selector '" << selectorPath << "'\n";
    auto sel = TSelector::GetSelector(selectorPath);
 
