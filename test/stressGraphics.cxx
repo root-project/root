@@ -2699,10 +2699,10 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    // Check if cernstaff.root exists
    gCernstaff = TFile::Open("cernstaff.root");
    if (!gCernstaff) {
-      gCernstaff = TFile::Open("$(ROOTSYS)/tutorials/tree/cernstaff.root");
+      gCernstaff = TFile::Open("$(ROOTSYS)/tutorials/io/tree/cernstaff.root");
       if (!gCernstaff) {
          printf("Create ./cernstaff.root\n");
-         gROOT->Macro("$(ROOTSYS)/tutorials/tree/cernbuild.C(0,0)");
+         gROOT->Macro("$(ROOTSYS)/tutorials/io/tree/tree500_cernbuild.C(0,0)");
          gCernstaff = TFile::Open("cernstaff.root");
          if (!gCernstaff) {
             printf("Could not create ./cernstaff.root\n");
