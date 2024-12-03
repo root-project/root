@@ -40,7 +40,7 @@ import xgboost as xgb
 
 # Get Dataframe from tutorial df106_HiggsToFourLeptons.py
 # Adjust the path if running locally
-df = ROOT.RDataFrame("tree", ROOT.gROOT.GetTutorialDir().Data() + "/dataframe/df106_HiggsToFourLeptons.root")
+df = ROOT.RDataFrame("tree", ROOT.gROOT.GetTutorialDir().Data() + "/analysis/dataframe/df106_HiggsToFourLeptons.root")
 
 # Initialize a dictionary to store counts and weight sums for each category
 results = {}
