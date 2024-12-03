@@ -65,7 +65,7 @@ int main() {
    //
    // Processing the H1 dataset with a selector 
    TString selectorPath = gROOT->GetTutorialDir();
-   selectorPath += "/tree/h1analysisTreeReader.C+";
+   selectorPath += "/io/tree/h1analysisTreeReader.C+";
    gSystem->RedirectOutput(logfile.c_str(), "a", &gRH);
    auto *sel = TSelector::GetSelector(selectorPath);
    auto hListSel = pool.Process(files, *sel, "h42");
