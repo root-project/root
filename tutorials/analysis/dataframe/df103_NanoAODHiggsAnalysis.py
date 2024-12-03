@@ -42,8 +42,8 @@ import os
 ROOT.ROOT.EnableImplicitMT()
 
 # Include necessary header
-higgs_header_path = os.path.join(os.sep, str(ROOT.gROOT.GetTutorialDir()) + os.sep, "dataframe" + os.sep,
-                                 "df103_NanoAODHiggsAnalysis_python.h")
+higgs_header_path = os.path.join(os.sep, str(ROOT.gROOT.GetTutorialDir()) + os.sep, "analysis" + os.sep, 
+                                 "dataframe" + os.sep, "df103_NanoAODHiggsAnalysis_python.h")
 
 ROOT.gInterpreter.Declare('#include "{}"'.format(higgs_header_path))
 

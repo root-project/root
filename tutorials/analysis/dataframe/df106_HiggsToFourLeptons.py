@@ -28,7 +28,7 @@ import os
 ROOT.EnableImplicitMT()
 
 # Create the RDataFrame from the spec json file. The df106_HiggsToFourLeptons_spec.json is provided in the same folder as this tutorial
-dataset_spec = os.path.join(ROOT.gROOT.GetTutorialsDir(), "dataframe", "df106_HiggsToFourLeptons_spec.json")
+dataset_spec = os.path.join(ROOT.gROOT.GetTutorialsDir(), "analysis", "dataframe", "df106_HiggsToFourLeptons_spec.json")
 df = ROOT.RDF.Experimental.FromSpec(dataset_spec)  # Creates a single dataframe for all the samples
 
 # Add the ProgressBar feature
@@ -142,7 +142,7 @@ float ComputeInvariantMass(RVecF pt, RVecF eta, RVecF phi, RVecF e)
 df = df.Define("m4l", "ComputeInvariantMass(goodlep_pt, goodlep_eta, goodlep_phi, goodlep_E)")
 
 # Save data for statistical analysis tutorial (rf618_mixture_models.py) 
-df.Snapshot("tree", ROOT.gROOT.GetTutorialDir().Data() + "/dataframe/df106_HiggsToFourLeptons.root", ["m4l", "sample_category", "weight"])
+df.Snapshot("tree", ROOT.gROOT.GetTutorialDir().Data() + "/analysis/dataframe/df106_HiggsToFourLeptons.root", ["m4l", "sample_category", "weight"])
 
 # Book histograms for the four different samples: data, higgs, zz and other (this is specific to this particular analysis)
 histos = []
