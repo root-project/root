@@ -246,6 +246,11 @@ inline double flexibleInterpSingle(unsigned int code, double low, double high, d
    } else if (code == 4 || code == 6) {
       double x = paramVal;
       double mod = 1.0;
+      if (code == 6) {
+         high /= nominal;
+         low /= nominal;
+         nominal = 1;
+      }
       if (x >= boundary) {
          mod = x * (high - nominal);
       } else if (x <= -boundary) {
