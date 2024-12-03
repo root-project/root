@@ -8819,7 +8819,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    }
 
    if (!done) fFunctions->Add(stats);
-   stats->Paint();
+   stats->Paint(stats->GetOption());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9032,7 +9032,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    }
 
    if (!done) fFunctions->Add(stats);
-   stats->Paint();
+   stats->Paint(stats->GetOption());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9246,7 +9246,7 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
    }
 
    if (!done) fFunctions->Add(stats);
-   stats->Paint();
+   stats->Paint(stats->GetOption());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
