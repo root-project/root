@@ -48,6 +48,8 @@ public:
    virtual void     SetStatFormat(const char *format="6.4g");   // *MENU*
    void             SetOptFit(Int_t fit=1);                     // *MENU*
    void             SetOptStat(Int_t stat=1);                   // *MENU*
+   void             SetOption(Option_t *option="br") override;  // *MENU*
+   void             SetDrawOption(Option_t *option="") override;
    void             SetParent(TObject*obj) override { fParent = obj; }
    void             UseCurrentStyle() override;
 
