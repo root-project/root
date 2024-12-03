@@ -26,12 +26,12 @@ TFile *cernbuild(Int_t get=0) {
       // if the argument get =1 return the file "cernstaff.root"
       // if the file does not exist, it is created
       if (!gSystem->AccessPathName("cernstaff.root",kFileExists)) {
-         hfile = TFile::Open("cernstaff.root"); //in $ROOTSYS/tutorials/tree
+         hfile = TFile::Open("cernstaff.root"); //in $ROOTSYS/tutorials/io/tree
          if (hfile) return hfile;
       }
    }
    //no cernstaff.root file found. Must generate it !
-   //generate cernstaff.root in $ROOTSYS/tutorials/tree if we have write access
+   //generate cernstaff.root in $ROOTSYS/tutorials/io/tree if we have write access
    if (!gSystem->AccessPathName(".",kWritePermission)) {
       //otherwise generate cernstaff.root in the current directory
    } else {
@@ -63,7 +63,7 @@ TFile *cernbuild(Int_t get=0) {
    fclose(fp);
    delete hfile;
    if (get) {
-      //we come here when the script is executed outside $ROOTSYS/tutorials/tree
+      //we come here when the script is executed outside $ROOTSYS/tutorials/io/tree
       hfile = TFile::Open(filename);
       return hfile;
    }
