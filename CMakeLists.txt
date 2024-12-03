@@ -361,7 +361,6 @@ if(NOT ROOT_ENABLE_PROJECTS)
        set(ROOT_ENABLE_PROJECTS "All")
 endif()
 
-set(ROOT_ESSENTIAL_PROJECTS "core;math/mathcore;io;main")
 
 root_add_subdirectory (core)
 root_add_subdirectory (math/mathcore)

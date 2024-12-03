@@ -2100,7 +2100,9 @@ endfunction()
 
 
 function(root_add_subdirectory subdirectory)
-	if(ROOT_ENABLE_PROJECTS STREQUAL "All" OR (ROOT_ENABLE_PROJECTS STREQUAL "Essentials" AND ${subdirectory} IN_LIST ROOT_ESSENTIAL_PROJECTS ))
-		add_subdirectory(${subdirectory})
-	endif()
+  set(ROOT_ESSENTIAL_PROJECTS "core;math/mathcore;io;main")
+
+  if(ROOT_ENABLE_PROJECTS STREQUAL "All" OR (ROOT_ENABLE_PROJECTS STREQUAL "Essentials" AND ${subdirectory} IN_LIST ROOT_ESSENTIAL_PROJECTS ))
+    add_subdirectory(${subdirectory})
+  endif()
 endfunction()
