@@ -19,6 +19,7 @@
 #include "TStyle.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TH3.h"
 #include "TF1.h"
 #include "TPaveStats.h"
 #include "TGaxis.h"
@@ -29,11 +30,13 @@
 #include "TGraphPolar.h"
 #include "TGraphQQ.h"
 #include "TScatter.h"
+#include "TScatter2D.h"
 #include "TPaletteAxis.h"
 #include "TLatex.h"
 #include "TArrow.h"
 #include "TFrame.h"
 #include "TMarker.h"
+#include "TView.h"
 #include "TVirtualPadEditor.h"
 #include "TVirtualX.h"
 #include "TRegexp.h"
@@ -4402,6 +4405,7 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
    double *theX         = theScatter->GetGraph()->GetX();
    double *theY         = theScatter->GetGraph()->GetY();
    int n                = theScatter->GetGraph()->GetN();
+   if (n < 1) return;
    double *theColor     = theScatter->GetColor();
    double *theSize      = theScatter->GetSize();
    double MinMarkerSize = theScatter->GetMinMarkerSize();
@@ -4574,6 +4578,221 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
         y = theY[i];
       }
       gPad->PaintPolyMarker(1,&x,&y);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint a scatter plot
+
+void TGraphPainter::PaintScatter(TScatter2D *theScatter, Option_t* chopt)
+{
+
+   Int_t optionAxis;
+
+   TString opt = chopt;
+   opt.ToUpper();
+
+   if (opt.Contains("A")) optionAxis  = 1;  else optionAxis  = 0;
+
+   TView *view = gPad ? gPad->GetView() : nullptr;
+   if (!view) {
+      Error("PaintScatter", "No TView in current pad");
+      return;
+   }
+
+   double *theX         = theScatter->GetGraph()->GetX();
+   double *theY         = theScatter->GetGraph()->GetY();
+   double *theZ         = theScatter->GetGraph()->GetZ();
+   int n                = theScatter->GetGraph()->GetN();
+   if (n < 1) return;
+   double *theColor     = theScatter->GetColor();
+   double *theSize      = theScatter->GetSize();
+   double MinMarkerSize = theScatter->GetMinMarkerSize();
+   double MaxMarkerSize = theScatter->GetMaxMarkerSize();
+
+   double minx =  DBL_MAX;
+   double maxx = -DBL_MAX;
+   double miny =  DBL_MAX;
+   double maxy = -DBL_MAX;
+   double minz =  DBL_MAX;
+   double maxz = -DBL_MAX;
+   double minc =  DBL_MAX;
+   double maxc = -DBL_MAX;
+   double mins =  DBL_MAX;
+   double maxs = -DBL_MAX;
+   for (int i=0; i<n; i++) {
+      minx = TMath::Min(minx,theX[i]);
+      maxx = TMath::Max(maxx,theX[i]);
+      miny = TMath::Min(miny,theY[i]);
+      maxy = TMath::Max(maxy,theY[i]);
+      minz = TMath::Min(minz,theZ[i]);
+      maxz = TMath::Max(maxz,theZ[i]);
+      if (theColor) {
+         minc = TMath::Min(minc,theColor[i]);
+         maxc = TMath::Max(maxc,theColor[i]);
+      }
+      if (theSize) {
+         mins = TMath::Min(mins,theSize[i]);
+         maxs = TMath::Max(maxs,theSize[i]);
+      }
+   }
+
+   // Make sure minimum and maximum values are different
+   Double_t d, e = 0.1;
+   if (minx == maxx) {
+      if (theX[0] == 0.) {
+         minx = -e;
+         maxx = e;
+      } else {
+         d = TMath::Abs(theX[0]*e);
+         minx = theX[0] - d;
+         maxx = theX[0] + d;
+      }
+   }
+   if (miny == maxy) {
+      if (theY[0] == 0.) {
+         miny = -e;
+         maxy = e;
+      } else {
+         d = TMath::Abs(theY[0]*e);
+         miny = theY[0] - d;
+         maxy = theY[0] + d;
+      }
+   }
+   if (minz == maxz) {
+      if (theZ[0] == 0.) {
+         minz = -e;
+         maxz = e;
+      } else {
+         d = TMath::Abs(theZ[0]*e);
+         minz = theZ[0] - d;
+         maxz = theZ[0] + d;
+      }
+   }
+   if (theColor) {
+      if (minc == maxc) {
+         if (theColor[0] == 0.) {
+            minc = -e;
+            maxc = e;
+         } else {
+            d = TMath::Abs(theColor[0]*e);
+            minc = theColor[0] - d;
+            maxc = theColor[0] + d;
+         }
+      }
+   }
+   if (theSize) {
+      if (mins == maxs) {
+         if (theSize[0] == 0.) {
+            mins = -e;
+            maxs = e;
+         } else {
+            d = TMath::Abs(theSize[0]*e);
+            mins = theSize[0] - d;
+            maxs = theSize[0] + d;
+         }
+      }
+   }
+
+   TH3F *h = theScatter->GetHistogram();
+   if (optionAxis) h->Paint(" ");
+   if (h->GetMinimum() != h->GetMaximum()) {
+      if (minc<h->GetMinimum()) minc = h->GetMinimum();
+      if (maxc>h->GetMaximum()) maxc = h->GetMaximum();
+   }
+
+   // Define and paint palette
+   if (theColor) {
+      TPaletteAxis *palette;
+      TList *functions = theScatter->GetGraph()->GetListOfFunctions();
+      palette = (TPaletteAxis*)functions->FindObject("palette");
+      if (palette) {
+         if (!palette->TestBit(TPaletteAxis::kHasView)) {
+            functions->Remove(palette);
+            delete palette; palette = nullptr;
+         }
+      }
+      if (!palette) {
+         Double_t xup  = gPad->GetUxmax();
+         Double_t x2   = gPad->PadtoX(gPad->GetX2());
+         Double_t ymin = gPad->PadtoY(gPad->GetUymin());
+         Double_t ymax = gPad->PadtoY(gPad->GetUymax());
+         Double_t xr   = 0.05*(gPad->GetX2() - gPad->GetX1());
+         Double_t xmin = gPad->PadtoX(xup +0.1*xr);
+         Double_t xmax = gPad->PadtoX(xup + xr);
+         if (xmax > x2) xmax = gPad->PadtoX(gPad->GetX2()-0.01*xr);
+         palette = new TPaletteAxis(xmin,ymin,xmax,ymax,minc,maxc);
+         palette->SetLabelColor(h->GetZaxis()->GetLabelColor());
+         palette->SetLabelFont(h->GetZaxis()->GetLabelFont());
+         palette->SetLabelOffset(h->GetZaxis()->GetLabelOffset());
+         palette->SetLabelSize(h->GetZaxis()->GetLabelSize());
+         palette->SetTitleOffset(h->GetZaxis()->GetTitleOffset());
+         palette->SetTitleSize(h->GetZaxis()->GetTitleSize());
+         palette->SetNdivisions(h->GetZaxis()->GetNdivisions());
+         palette->SetTitle(h->GetZaxis()->GetTitle());
+         palette->SetTitleColor(h->GetZaxis()->GetTitleColor());
+         palette->SetTitleFont(h->GetZaxis()->GetTitleFont());
+
+         functions->AddFirst(palette);
+      }
+      if (palette) palette->Paint();
+   }
+
+   // Draw markers
+   auto nbcol = gStyle->GetNumberOfColors();
+   int logx = gPad->GetLogx();
+   int logy = gPad->GetLogy();
+   int logz = gPad->GetLogz();
+   int logc = 0;
+   if (theColor && logc) {
+      if (minc>0) minc = log10(minc);
+      if (maxc>0) maxc = log10(maxc);
+   }
+   theScatter->SetMarkerColor(theScatter->GetMarkerColor());
+   theScatter->TAttMarker::Modify();
+   double x,y,z,c,ms;
+   int nc;
+   Double_t temp1[3],temp2[3];
+   for (int i=0; i<n; i++) {
+      if (theColor) {
+         if (logc) {
+            if (theColor[i]>0) c = log10(theColor[i]);
+            else continue;
+         } else {
+            c = theColor[i];
+         }
+         if (c<minc) continue;
+         if (c>maxc) continue;
+         nc = TMath::Nint(((c-minc)/(maxc-minc))*(nbcol-1));
+         if (nc > nbcol-1) nc = nbcol-1;
+         theScatter->SetMarkerColor(gStyle->GetColorPalette(nc));
+      }
+      if (theSize)  {
+         ms = (MaxMarkerSize-MinMarkerSize)*((theSize[i]-mins)/(maxs-mins))+MinMarkerSize;
+         theScatter->SetMarkerSize(ms);
+      }
+      if (theColor || theSize) theScatter->TAttMarker::Modify();
+      if (logx) {
+         if (theX[i]>0) x = log10(theX[i]);
+         else break;
+      } else {
+         x = theX[i];
+      }
+      if (logy) {
+         if (theY[i]>0) y = log10(theY[i]);
+         else break;
+      } else {
+         y = theY[i];
+      }
+      if (logz) {
+         if (theZ[i]>0) z = log10(theZ[i]);
+         else break;
+      } else {
+         z = theZ[i];
+      }
+      temp1[0] = x; temp1[1] = y; temp1[2] = z;
+      view->WCtoNDC(temp1, &temp2[0]);
+      gPad->PaintPolyMarker(1,temp2,temp2+1);
    }
 }
 

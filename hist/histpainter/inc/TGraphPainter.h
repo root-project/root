@@ -27,6 +27,7 @@
 class TGraph;
 class TF1;
 class TScatter;
+class TScatter2D;
 
 class TGraphPainter : public TVirtualGraphPainter {
 
@@ -56,6 +57,7 @@ public:
    void           PaintGraphReverse(TGraph *theGraph, Option_t *option);
    void           PaintGraphSimple(TGraph *theGraph, Option_t *option);
    void           PaintScatter(TScatter *theScatter, Option_t *option) override;
+   void           PaintScatter(TScatter2D *theScatter, Option_t *option) override;
    void           PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double_t *x, const Double_t *y);
    void           PaintStats(TGraph *theGraph, TF1 *fit) override;
    void           SetHighlight(TGraph *theGraph) override;

@@ -1781,3 +1781,37 @@ void TGraph2D::Streamer(TBuffer &b)
       b.WriteClassBuffer(TGraph2D::Class(), this);
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the x/y/z range of the points in this graph
+
+void TGraph2D::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const
+{
+   if (fNpoints <= 0) {
+      xmin = xmax = ymin = ymax = zmin = zmax = 0;
+      return;
+   }
+   xmin = xmax = fX[0];
+   ymin = ymax = fY[0];
+   zmin = zmax = fZ[0];
+
+   Double_t xminl = 0; // Positive minimum. Used in case of log scale along X axis.
+   Double_t yminl = 0; // Positive minimum. Used in case of log scale along Y axis.
+   Double_t zminl = 0; // Positive minimum. Used in case of log scale along Z axis.
+
+   for (Int_t i = 1; i < fNpoints; i++) {
+      if (fX[i] < xmin) xmin = fX[i];
+      if (fX[i] > xmax) xmax = fX[i];
+      if (fY[i] < ymin) ymin = fY[i];
+      if (fY[i] > ymax) ymax = fY[i];
+      if (fZ[i] < zmin) zmin = fZ[i];
+      if (fZ[i] > zmax) zmax = fZ[i];
+      if (zmin>0 && (zminl==0 || zmin<zminl)) zminl = zmin;
+      if (ymin>0 && (yminl==0 || ymin<yminl)) yminl = ymin;
+      if (xmin>0 && (xminl==0 || xmin<xminl)) xminl = xmin;
+   }
+
+   if (gPad && gPad->GetLogz() && zminl>0) zmin = zminl;
+   if (gPad && gPad->GetLogy() && yminl>0) ymin = yminl;
+   if (gPad && gPad->GetLogx() && xminl>0) xmin = xminl;
+}

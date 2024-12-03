@@ -95,6 +95,7 @@ public:
    virtual void          Apply(TF2 *f);
    void          Browse(TBrowser *) override;
    void          Clear(Option_t *option="") override;
+   virtual void          ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const;
    virtual void          DirectoryAutoAdd(TDirectory *);
    Int_t                 DistancetoPrimitive(Int_t px, Int_t py) override;
    void          Draw(Option_t *option="P0") override;
