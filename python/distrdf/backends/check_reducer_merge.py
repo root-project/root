@@ -561,6 +561,24 @@ class TestReducerMerge:
         assert s1.GetMean() == pytest.approx(s1prime1.GetMean(), rel), f"{s1.GetMean()}!={s1prime1.GetMean()}"
         assert s1w.GetMean() == pytest.approx(49.5940, rel), f"{s1w.GetMean()}!=49.5940"
 
+    def test_alias(self, payload):
+        """Test Alias functionality."""
+        # A simple dataframe with ten sequential numbers from 0 to 9
+        connection, backend = payload
+        if backend == "dask":
+            RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
+            df = RDataFrame(10, daskclient=connection)
+        elif backend == "spark":
+            RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
+            df = RDataFrame(10, sparkcontext=connection)
+        df = df.Define("x", "1")
+        df_alias = df.Alias("myalias", "x")
+
+        sum_original = df.Sum("x")
+        sum_alias = df_alias.Sum("myalias")
+
+        assert sum_original.GetValue() == 10.0
+        assert sum_alias.GetValue() == 10.0
 
 if __name__ == "__main__":
     pytest.main(args=[__file__])
