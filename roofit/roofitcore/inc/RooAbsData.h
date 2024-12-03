@@ -300,8 +300,8 @@ public:
     return _namePtr ;
   }
 
-  void SetName(const char* name) override ;
-  void SetNameTitle(const char *name, const char *title) override ;
+  void SetName(const std::string_view name) override ;
+  void SetNameTitle(const std::string_view name, const std::string_view title) override ;
 
   /// Returns a unique ID that is different for every instantiated RooAbsData object.
   /// This ID can be used whether two RooAbsData are the same object, which is safer

@@ -94,7 +94,7 @@ public:
    void  SetEditable(Bool_t on = kTRUE) override { fEditable = on; }             //*TOGGLE*
    Bool_t IsEditable() const override { return fEditable; }
    void  Browse(TBrowser *) override;
-   void  SetTitle(const char *title = "") override;                              // *MENU*
+   void  SetTitle(const std::string_view title = "") override;                              // *MENU*
    const char *GetTitle() const override;
    const char *GetIconName() const override {  return GetTitle(); }
 

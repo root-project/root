@@ -92,9 +92,9 @@ public:
   void SetMarkerColor(Color_t tcolor = 1) ;
   void SetMarkerSize(Size_t msize = 1) ;
   void SetMarkerStyle(Style_t mstyle = 1) ;
-  void SetName(const char *name) override ;
-  void SetTitle(const char *name) override ;
-  void SetNameTitle(const char *name, const char* title) override ;
+  void SetName(const std::string_view name) override ;
+  void SetTitle(const std::string_view title) override ;
+  void SetNameTitle(const std::string_view name, const std::string_view title) override ;
   void SetNdivisions(Int_t n = 510, Option_t* axis = "X") ;
   void SetOption(Option_t* option = " ") ;
   void SetStats(bool stats = true) ;

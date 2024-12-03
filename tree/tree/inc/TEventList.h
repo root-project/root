@@ -63,7 +63,7 @@ public:
    virtual void      Resize(Int_t delta=0);
    virtual void      SetDelta(Int_t delta=100) {fDelta = delta;}
    virtual void      SetDirectory(TDirectory *dir);
-   void      SetName(const char *name) override; // *MENU*
+   void      SetName(const std::string_view name) override; // *MENU*
    virtual void      SetReapplyCut(bool apply = false) {fReapply = apply;}; // *TOGGLE*
    virtual void      Sort();
    virtual void      Subtract(const TEventList *list);

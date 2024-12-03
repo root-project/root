@@ -2227,7 +2227,7 @@ TIterator* RooDataHist::sliceIterator(RooAbsArg& sliceArg, const RooArgSet& othe
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the name of the RooDataHist
 
-void RooDataHist::SetName(const char *name)
+void RooDataHist::SetName(const std::string_view name)
 {
   if (_dir) _dir->GetList()->Remove(this);
   // We need to use the function from RooAbsData, because it already overrides TNamed::SetName
@@ -2239,7 +2239,7 @@ void RooDataHist::SetName(const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the title of this RooDataHist
 
-void RooDataHist::SetNameTitle(const char *name, const char* title)
+void RooDataHist::SetNameTitle(const std::string_view name, const std::string_view title)
 {
   SetName(name);
   SetTitle(title);

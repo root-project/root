@@ -267,7 +267,7 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
       if (frame != nullptr && fPosteriorKeysPdf != nullptr) {
          // draw shading in interval
          if (isEmpty) {
-            frame->SetTitle(nullptr);
+            frame->SetTitle("");
          } else {
             frame->SetTitle(GetTitle());
          }
@@ -321,7 +321,7 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
       if (!isEmpty) {
          contHist->SetTitle(GetTitle());
       } else {
-         contHist->SetTitle(nullptr);
+         contHist->SetTitle("");
       }
 
       contHist->SetStats(false);
@@ -360,7 +360,7 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
       TH1F* hist = reinterpret_cast<TH1F*>(DrawPosteriorHist(options, nullptr, false));
       if (hist == nullptr) return;
       if (isEmpty) {
-         hist->SetTitle(nullptr);
+         hist->SetTitle("");
       } else {
          hist->SetTitle(GetTitle());
       }
@@ -421,7 +421,7 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
       if (!isEmpty) {
          fPosteriorHist->SetTitle(GetTitle());
       } else {
-         fPosteriorHist->SetTitle(nullptr);
+         fPosteriorHist->SetTitle("");
       }
       delete axes;
 
@@ -458,7 +458,7 @@ void MCMCIntervalPlot::DrawTailFractionInterval(const Option_t* options)
       TH1F* hist = reinterpret_cast<TH1F*>(DrawPosteriorHist(options, nullptr, false));
       if (hist == nullptr) return;
       if (isEmpty) {
-         hist->SetTitle(nullptr);
+         hist->SetTitle("");
       } else {
          hist->SetTitle(GetTitle());
       }

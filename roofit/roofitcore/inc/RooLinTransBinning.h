@@ -22,7 +22,7 @@
 class RooLinTransBinning : public RooAbsBinning {
 public:
 
-  RooLinTransBinning(const char* name=nullptr) : RooAbsBinning(name) { }
+  RooLinTransBinning(const std::string_view name="") : RooAbsBinning(name) { }
   RooLinTransBinning(const RooAbsBinning& input, double slope=1.0, double offset=0.0, const char* name=nullptr);
   RooLinTransBinning(const RooLinTransBinning&, const char* name=nullptr);
   RooAbsBinning* clone(const char* name=nullptr) const override { return new RooLinTransBinning(*this,name) ; }

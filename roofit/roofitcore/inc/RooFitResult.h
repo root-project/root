@@ -154,8 +154,8 @@ public:
   bool isIdenticalNoCov(const RooFitResult& other, double tol=1e-6, double tolErr=1e-3, bool verbose=true) const ;
   bool isIdentical(const RooFitResult& other, double tol=1e-6, double tolCorr=1e-4, bool verbose=true) const ;
 
-  void SetName(const char *name) override ;
-  void SetNameTitle(const char *name, const char* title) override ;
+  void SetName(const std::string_view name) override ;
+  void SetNameTitle(const std::string_view name, const std::string_view title) override ;
 
 
 

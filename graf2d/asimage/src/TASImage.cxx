@@ -6294,7 +6294,7 @@ const char *TASImage::GetTitle() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a title for an image.
 
-void TASImage::SetTitle(const char *title)
+void TASImage::SetTitle(const std::string_view title)
 {
    if (fTitle.IsNull()) {
       CreateThumbnail();
@@ -6308,7 +6308,7 @@ void TASImage::SetTitle(const char *title)
    int stop = fTitle.Index("*/") - 1;
 
    if ((start > 0) && (stop - start > 0)) {
-      fTitle.Replace(start, stop - start, title);
+      fTitle.Replace(start, stop - start, title.data());
    }
 }
 

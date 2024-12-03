@@ -364,7 +364,7 @@ void TEventList::SetDirectory(TDirectory *dir)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the name of this TEventList.
 
-void TEventList::SetName(const char *name)
+void TEventList::SetName(const std::string_view name)
 {
    //  TEventLists are named objects in a THashList.
    //  We must update the hashlist if we change the name

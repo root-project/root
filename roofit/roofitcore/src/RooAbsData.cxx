@@ -2488,7 +2488,7 @@ void RooAbsData::setGlobalObservables(RooArgSet const& globalObservables) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooAbsData::SetName(const char* name)
+void RooAbsData::SetName(const std::string_view name)
 {
   TNamed::SetName(name) ;
   auto newPtr = RooNameReg::instance().constPtr(GetName()) ;
@@ -2505,7 +2505,7 @@ void RooAbsData::SetName(const char* name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooAbsData::SetNameTitle(const char *name, const char *title)
+void RooAbsData::SetNameTitle(const std::string_view name, const std::string_view title)
 {
   TNamed::SetTitle(title) ;
   SetName(name);

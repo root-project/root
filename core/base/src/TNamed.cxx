@@ -137,7 +137,7 @@ void TNamed::Print(Option_t *) const
 /// the container must be Rehash()'ed after SetName(). For example the list
 /// of objects in the current directory is a THashList.
 
-void TNamed::SetName(const char *name)
+void TNamed::SetName(const std::string_view name)
 {
    fName = name;
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
@@ -151,7 +151,7 @@ void TNamed::SetName(const char *name)
 /// after SetName(). For example the list of objects in the current
 /// directory is a THashList.
 
-void TNamed::SetNameTitle(const char *name, const char *title)
+void TNamed::SetNameTitle(const std::string_view name, const std::string_view title)
 {
    fName  = name;
    fTitle = title;
@@ -161,7 +161,7 @@ void TNamed::SetNameTitle(const char *name, const char *title)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the title of the TNamed.
 
-void TNamed::SetTitle(const char *title)
+void TNamed::SetTitle(const std::string_view title)
 {
    fTitle = title;
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();

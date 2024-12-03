@@ -80,9 +80,9 @@ public:
 
    virtual const char  *GetName()  const { return fName; }
    virtual const char  *GetTitle() const { return fTitle; }
-   virtual void  SetName (const char *name)  { fName = name; }
-   virtual void  SetTitle(const char *title) { fTitle = title; }
-   virtual void  SetNameTitle(const char *name, const char *title) { SetName(name); SetTitle(title); }
+   virtual void  SetName (const std::string_view name) { fName = name; }
+   virtual void  SetTitle(const std::string_view title) { fTitle = title; }
+   virtual void  SetNameTitle(const std::string_view name, const std::string_view title) { SetName(name); SetTitle(title); }
 
    virtual TGLSceneInfo* CreateSceneInfo(TGLViewerBase* view);
    virtual void          RebuildSceneInfo(TGLRnrCtx& ctx);

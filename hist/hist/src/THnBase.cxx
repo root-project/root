@@ -1193,7 +1193,7 @@ void THnBase::SetBinEdges(Int_t idim, const Double_t* bins)
 /// To insert the character ";" in one of the titles, one should use "#;"
 /// or "#semicolon".
 
-void THnBase::SetTitle(const char *title)
+void THnBase::SetTitle(const std::string_view title)
 {
    fTitle = title;
    fTitle.ReplaceAll("#;",2,"#semicolon",10);

@@ -34,8 +34,7 @@ protected:
 
 public:
    TNamed(): fName(), fTitle() { } // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
-   TNamed(const char *name, const char *title) : fName(name), fTitle(title) { }
-   TNamed(const TString &name, const TString &title) : fName(name), fTitle(title) { }
+   TNamed(const std::string_view name, const std::string_view title) : fName(name), fTitle(title) { }
    TNamed(const TNamed &named);
    TNamed& operator=(const TNamed& rhs);
    virtual ~TNamed();
@@ -48,9 +47,9 @@ public:
             const char  *GetTitle() const override { return fTitle; }
             ULong_t  Hash() const override { return fName.Hash(); }
             Bool_t   IsSortable() const override { return kTRUE; }
-   virtual  void     SetName(const char *name); // *MENU*
-   virtual  void     SetNameTitle(const char *name, const char *title);
-   virtual  void     SetTitle(const char *title=""); // *MENU*
+   virtual  void     SetName(const std::string_view name); // *MENU*
+   virtual  void     SetNameTitle(const std::string_view name, const std::string_view title);
+   virtual  void     SetTitle(const std::string_view title=""); // *MENU*
             void     ls(Option_t *option="") const override;
             void     Print(Option_t *option="") const override;
    virtual  Int_t    Sizeof() const;

@@ -272,7 +272,7 @@ public:
    Bool_t IsVectorized() const { return fVectorized; }
    Bool_t         IsLinear() const { return TestBit(kLinear); }
    void           Print(Option_t *option = "") const override;
-   void           SetName(const char* name) override;
+   void           SetName(const std::string_view name) override;
    void           SetParameter(const char* name, Double_t value);
    void           SetParameter(Int_t param, Double_t value);
    void           SetParameters(const Double_t *params);

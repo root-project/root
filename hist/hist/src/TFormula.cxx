@@ -452,11 +452,11 @@ TFormula::TFormula()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-static bool IsReservedName(const char* name)
+static bool IsReservedName(const std::string_view name)
 {
-   if (strlen(name)!=1) return false;
+   if (name.size()!=1) return false;
    for (auto const & specialName : {"x","y","z","t"}){
-      if (strcmp(name,specialName)==0) return true;
+      if (name==specialName) return true;
    }
    return false;
 }
@@ -2637,12 +2637,12 @@ void TFormula::AddVariables(const TString *vars, const Int_t size)
 /// Set the name of the formula. We need to allow the list of function to
 /// properly handle the hashes.
 
-void TFormula::SetName(const char* name)
+void TFormula::SetName(const std::string_view name)
 {
    if (IsReservedName(name)) {
       Error("SetName", "The name \'%s\' is reserved as a TFormula variable name.\n"
                        "\tThis function will not be renamed.",
-            name);
+            name.data());
    } else {
       // Here we need to remove and re-add to keep the hashes consistent with
       // the underlying names.

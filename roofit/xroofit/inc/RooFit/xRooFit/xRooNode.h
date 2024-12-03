@@ -134,8 +134,8 @@ public:
 
    ~xRooNode() override;
 
-   void SetName(const char *name) override;   // *MENU*
-   void SetTitle(const char *title) override; // *MENU*
+   void SetName(const std::string_view name) override;   // *MENU*
+   void SetTitle(const std::string_view title) override; // *MENU*
 
    /** @private */
    const char *GetNodeType() const;

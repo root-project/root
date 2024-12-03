@@ -505,8 +505,8 @@ public:
     return _namePtr ;
   }
 
-  void SetName(const char* name) override ;
-  void SetNameTitle(const char *name, const char *title) override ;
+  void SetName(const std::string_view name) override ;
+  void SetNameTitle(const std::string_view name, const std::string_view title) override ;
 
   virtual bool importWorkspaceHook(RooWorkspace &ws)
   {

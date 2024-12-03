@@ -2383,7 +2383,7 @@ void TGraph::SetPointY(Int_t i, Double_t y)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set graph name.
-void TGraph::SetName(const char *name)
+void TGraph::SetName(const std::string_view name)
 {
    fName = name;
    if (fHistogram) fHistogram->SetName(name);
@@ -2399,7 +2399,7 @@ void TGraph::SetName(const char *name)
 /// To insert the character `;` in one of the titles, one should use `#;`
 /// or `#semicolon`.
 
-void TGraph::SetTitle(const char* title)
+void TGraph::SetTitle(const std::string_view title)
 {
    fTitle = title;
    fTitle.ReplaceAll("#;",2,"#semicolon",10);
@@ -2419,7 +2419,7 @@ void TGraph::SetTitle(const char* title)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set graph name and title
 
-void TGraph::SetNameTitle(const char *name, const char *title)
+void TGraph::SetNameTitle(const std::string_view name, const std::string_view title)
 {
    SetName(name);
    SetTitle(title);

@@ -174,10 +174,10 @@ void TEveScene::RetransHierarchicallyRecurse(TEveElement* el, const TEveTrans& t
 ////////////////////////////////////////////////////////////////////////////////
 /// Set scene's name.
 
-void TEveScene::SetName(const char* n)
+void TEveScene::SetName(const std::string_view name)
 {
-   TEveElementList::SetName(n);
-   fGLScene->SetName(n);
+   TEveElementList::SetName(name);
+   fGLScene->SetName(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

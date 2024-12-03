@@ -711,7 +711,7 @@ public:
    virtual void     SetRange(Double_t xmin, Double_t ymin,  Double_t xmax, Double_t ymax);
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin,  Double_t xmax, Double_t ymax, Double_t zmax);
    virtual void     SetSavedPoint(Int_t point, Double_t value);
-   void     SetTitle(const char *title = "") override; // *MENU*
+   void     SetTitle(const std::string_view title = "") override; // *MENU*
    virtual void     SetVectorized(Bool_t vectorized)
    {
       if (fType == EFType::kFormula && fFormula)

@@ -108,7 +108,7 @@ public:
    void           SetInitMax(Double_t max) {fMaxInit = max;}
    void           SetLiveRangesUpdate(bool on);
    void           SetLogScale(bool log); // *TOGGLE* *GETTER=GetLogScale
-   void           SetTitle(const char* /*title*/) override {} // To hide TNamed::SetTitle.
+   void           SetTitle(const std::string_view /*title*/) override {} // To hide TNamed::SetTitle.
    void           SetValues(Long64_t length, Double_t* val);
    void           SetX(Double_t x, bool gl);    // Set a new x position in case of a vertical display.
    void           SetY(Double_t y, bool gl);    // Set a new y position in case of a horizontal display.

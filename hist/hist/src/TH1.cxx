@@ -6746,7 +6746,7 @@ void TH1::SetDefaultSumw2(Bool_t sumw2)
 /// To insert the character `;` in one of the titles, one should use `#;`
 /// or `#semicolon`.
 
-void TH1::SetTitle(const char *title)
+void TH1::SetTitle(const std::string_view title)
 {
    fTitle = title;
    fTitle.ReplaceAll("#;",2,"#semicolon",10);
@@ -8992,7 +8992,7 @@ void TH1::SetError(const Double_t *error)
 /// Change the name of this histogram
 ///
 
-void TH1::SetName(const char *name)
+void TH1::SetName(const std::string_view name)
 {
    //  Histograms are named objects in a THashList.
    //  We must update the hashlist if we change the name
@@ -9006,7 +9006,7 @@ void TH1::SetName(const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the name and title of this histogram
 
-void TH1::SetNameTitle(const char *name, const char *title)
+void TH1::SetNameTitle(const std::string_view name, const std::string_view title)
 {
    //  Histograms are named objects in a THashList.
    //  We must update the hashlist if we change the name

@@ -22,7 +22,7 @@
 class RooUniformBinning : public RooAbsBinning {
 public:
 
-  RooUniformBinning(const char* name=nullptr) : RooAbsBinning{name} {}
+  RooUniformBinning(const std::string_view name="") : RooAbsBinning{name} {}
   RooUniformBinning(double xlo, double xhi, Int_t nBins, const char* name=nullptr) ;
   RooUniformBinning(const RooUniformBinning& other, const char* name=nullptr) ;
   RooAbsBinning* clone(const char* name=nullptr) const override { return new RooUniformBinning(*this,name?name:GetName()) ; }

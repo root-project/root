@@ -405,8 +405,8 @@ public:
    virtual void     SetMaximum(Double_t maximum = -1111) { fMaximum = maximum; } // *MENU*
    virtual void     SetMinimum(Double_t minimum = -1111) { fMinimum = minimum; } // *MENU*
 
-           void     SetName(const char *name) override; // *MENU*
-           void     SetNameTitle(const char *name, const char *title) override;
+           void     SetName(const std::string_view name) override; // *MENU*
+           void     SetNameTitle(const std::string_view name, const std::string_view title) override;
    virtual void     SetNdivisions(Int_t n=510, Option_t *axis="X");
    virtual void     SetNormFactor(Double_t factor=1) {fNormFactor = factor;}
    virtual void     SetStats(Bool_t stats=kTRUE); // *MENU*
@@ -416,7 +416,7 @@ public:
    virtual void     SetTitleOffset(Float_t offset=1, Option_t *axis="X");
    virtual void     SetTitleSize(Float_t size=0.02, Option_t *axis="X");
            void     SetStatOverflows(EStatOverflows statOverflows) { fStatOverflows = statOverflows; } ///< See GetStatOverflows for more information.
-           void     SetTitle(const char *title) override;  // *MENU*
+           void     SetTitle(const std::string_view title) override;  // *MENU*
    virtual void     SetXTitle(const char *title) {fXaxis.SetTitle(title);}
    virtual void     SetYTitle(const char *title) {fYaxis.SetTitle(title);}
    virtual void     SetZTitle(const char *title) {fZaxis.SetTitle(title);}

@@ -2966,7 +2966,7 @@ void TChain::SetEventList(TEventList *evlist)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the name of this TChain.
 
-void TChain::SetName(const char* name)
+void TChain::SetName(const std::string_view name)
 {
    if (fGlobalRegistration) {
       // Should this be extended to include the call to TTree::SetName?

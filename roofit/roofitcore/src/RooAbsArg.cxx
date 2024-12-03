@@ -2345,7 +2345,7 @@ void RooAbsArg::wireAllCaches()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooAbsArg::SetName(const char* name)
+void RooAbsArg::SetName(const std::string_view name)
 {
   TNamed::SetName(name) ;
   auto newPtr = RooNameReg::instance().constPtr(GetName()) ;
@@ -2362,7 +2362,7 @@ void RooAbsArg::SetName(const char* name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooAbsArg::SetNameTitle(const char *name, const char *title)
+void RooAbsArg::SetNameTitle(const std::string_view name, const std::string_view title)
 {
   TNamed::SetTitle(title) ;
   SetName(name);

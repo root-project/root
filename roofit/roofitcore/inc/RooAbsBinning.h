@@ -25,8 +25,8 @@ class RooAbsReal ;
 class RooAbsBinning : public TNamed, public RooPrintable {
 public:
 
-  RooAbsBinning(const char* name=nullptr) : TNamed{name, name} {}
-  RooAbsBinning(const RooAbsBinning& other, const char* name=nullptr) : TNamed(name,name), RooPrintable(other) {
+  RooAbsBinning(const std::string_view name="") : TNamed{name, name} {}
+  RooAbsBinning(const RooAbsBinning& other, const std::string_view name="") : TNamed(name,name), RooPrintable(other) {
     // Copy constructor
   }
   TObject* Clone(const char* newname=nullptr) const override { return clone(newname) ; }

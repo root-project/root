@@ -57,7 +57,7 @@ public:
    virtual Int_t   GetNumber()     const {return fNumber;}
    Int_t           GetVisibility() const {return fVisibility;}
    void    Paint(Option_t *option="") override;
-   void    SetName(const char *name) override;
+   void    SetName(const std::string_view /*name*/) override {};
    virtual void    SetPoints(Double_t *points) const ;
    virtual void    SetVisibility(Int_t vis) {fVisibility = vis;} // *MENU*
    void            TransformPoints(Double_t *points, UInt_t NbPnts) const;
@@ -66,7 +66,5 @@ public:
 };
 
 R__EXTERN TNode *gNode;
-
-inline void TShape::SetName(const char *) { }
 
 #endif

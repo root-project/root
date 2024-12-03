@@ -191,10 +191,10 @@ public:
    virtual void          SetPoint(Int_t i, Double_t x, Double_t y);
    virtual void          SetPointX(Int_t i, Double_t x);
    virtual void          SetPointY(Int_t i, Double_t y);
-   void                  SetName(const char *name="") override; // *MENU*
-   void                  SetNameTitle(const char *name="", const char *title="") override;
+   void                  SetName(const std::string_view name="") override; // *MENU*
+   void                  SetNameTitle(const std::string_view name="", const std::string_view title="") override;
    virtual void          SetStats(Bool_t stats=kTRUE); // *MENU*
-   void                  SetTitle(const char *title="") override;    // *MENU*
+   void                  SetTitle(const std::string_view title="") override;    // *MENU*
    virtual void          Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t)=&TGraph::CompareX,
                               Bool_t ascending=kTRUE, Int_t low=0, Int_t high=-1111);
    void                  UseCurrentStyle() override;

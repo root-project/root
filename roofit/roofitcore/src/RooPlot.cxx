@@ -1178,7 +1178,7 @@ double RooPlot::getFitRangeNEvt(double xlo, double xhi) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the name of the RooPlot to 'name'
 
-void RooPlot::SetName(const char *name)
+void RooPlot::SetName(const std::string_view name)
 {
   if (_dir) _dir->GetList()->Remove(this);
   TNamed::SetName(name) ;
@@ -1189,7 +1189,7 @@ void RooPlot::SetName(const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the name and title of the RooPlot to 'name' and 'title'
 
-void RooPlot::SetNameTitle(const char *name, const char* title)
+void RooPlot::SetNameTitle(const std::string_view name, const std::string_view title)
 {
   if (_dir) _dir->GetList()->Remove(this);
   TNamed::SetNameTitle(name,title) ;
@@ -1200,7 +1200,7 @@ void RooPlot::SetNameTitle(const char *name, const char* title)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the title of the RooPlot to 'title'
 
-void RooPlot::SetTitle(const char* title)
+void RooPlot::SetTitle(const std::string_view title)
 {
   TNamed::SetTitle(title) ;
   _hist->SetTitle(title) ;

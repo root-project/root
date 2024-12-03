@@ -83,9 +83,9 @@ public:
    void        Paint(Option_t *option="") override;
    void        RecursiveRemove(TObject *obj) override;
    virtual void        SetMatrix(TRotMatrix *matrix=nullptr) {fMatrix = matrix;}
-   void        SetName(const char *name) override;
+   void        SetName(const std::string_view name) override;
    virtual void        SetParent(TNode *parent);
-   void        SetNameTitle(const char *name, const char *title) override;
+   void        SetNameTitle(const std::string_view name, const std::string_view title) override;
    virtual void        SetPosition( Double_t x=0, Double_t y=0, Double_t z=0) {fX=x; fY=y; fZ=z;}
    virtual void        SetVisibility(Int_t vis=1); // *MENU*
    void        Sizeof3D() const override;

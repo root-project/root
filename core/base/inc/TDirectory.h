@@ -256,7 +256,7 @@ public:
    virtual void        SetBufferSize(Int_t /* bufsize */) {}
    virtual void        SetModified() {}
    virtual void        SetMother(TObject *mother) {fMother = (TObject*)mother;}
-           void        SetName(const char* newname) override;
+           void        SetName(const std::string_view name) override;
    virtual void        SetTRefAction(TObject * /*ref*/, TObject * /*parent*/) {}
    virtual void        SetSeekDir(Long64_t) {}
    virtual void        SetWritable(Bool_t) {}

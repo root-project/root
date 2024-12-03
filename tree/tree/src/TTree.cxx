@@ -9193,7 +9193,7 @@ void TTree::SetMaxTreeSize(Long64_t maxsize)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the name of this tree.
 
-void TTree::SetName(const char* name)
+void TTree::SetName(const std::string_view name)
 {
    if (gPad) {
       gPad->Modified();

@@ -160,12 +160,12 @@ public:
    void                  SetMaximum(Double_t maximum=-1111); // *MENU*
    void                  SetMinimum(Double_t minimum=-1111); // *MENU*
    void                  SetMaxIter(Int_t n=100000) {fMaxIter = n;} // *MENU*
-   void          SetName(const char *name) override; // *MENU*
-   void          SetNameTitle(const char *name, const char *title) override;
+   void          SetName(const std::string_view name) override; // *MENU*
+   void          SetNameTitle(const std::string_view name, const std::string_view title) override;
    void                  SetNpx(Int_t npx=40); // *MENU*
    void                  SetNpy(Int_t npx=40); // *MENU*
    virtual void          SetPoint(Int_t point, Double_t x, Double_t y, Double_t z); // *MENU*
-   void          SetTitle(const char *title="") override; // *MENU*
+   void          SetTitle(const std::string_view title="") override; // *MENU*
 
 
    ClassDefOverride(TGraph2D,1)  //Set of n x[n],y[n],z[n] points with 3-d graphics including Delaunay triangulation

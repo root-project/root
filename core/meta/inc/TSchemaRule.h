@@ -24,7 +24,7 @@ namespace ROOT {
          private:
             TString fDimensions;
          public:
-            TSources(const char *name = nullptr, const char *title = nullptr, const char *dims = nullptr) : TNamed(name,title), fDimensions(dims) {}
+            TSources(const std::string_view name = "", const std::string_view title = "", const std::string_view dims = "") : TNamed(name,title), fDimensions(dims) {}
             const char *GetDimensions() { return fDimensions; }
 
             ClassDefOverride(TSources,2);

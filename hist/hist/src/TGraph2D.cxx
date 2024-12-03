@@ -1638,7 +1638,7 @@ void TGraph2D::SetMinimum(Double_t minimum)
 ////////////////////////////////////////////////////////////////////////////////
 /// Changes the name of this 2D graph
 
-void TGraph2D::SetName(const char *name)
+void TGraph2D::SetName(const std::string_view name)
 {
    //  2D graphs are named objects in a THashList.
    //  We must update the hashlist if we change the name
@@ -1652,7 +1652,7 @@ void TGraph2D::SetName(const char *name)
 /// Change the name and title of this 2D graph
 ///
 
-void TGraph2D::SetNameTitle(const char *name, const char *title)
+void TGraph2D::SetNameTitle(const std::string_view name, const std::string_view title)
 {
    //  2D graphs are named objects in a THashList.
    //  We must update the hashlist if we change the name
@@ -1759,7 +1759,7 @@ void TGraph2D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
 /// g->SetTitle("Graph title; X axis title; Y axis title; Z axis title");
 /// ~~~
 
-void TGraph2D::SetTitle(const char* title)
+void TGraph2D::SetTitle(const std::string_view title)
 {
    fTitle = title;
    if (fHistogram) fHistogram->SetTitle(title);

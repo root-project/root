@@ -69,7 +69,7 @@ public:
    void          Print(Option_t *option="") const override;
    virtual void  SetAlpha(Float_t a) { fAlpha = a; }
    virtual void  SetRGB(Float_t r, Float_t g, Float_t b);
-   void          SetName(const char* name) override;
+   void          SetName(const std::string_view name) override;
 
    static void    InitializeColors();
    static void    HLS2RGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b);

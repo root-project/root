@@ -97,7 +97,7 @@ public:
    virtual void SetMethod(TFunction *m) { fSelectedMethod = m; }
    virtual void SetCalledObject(TObject *o) { fCalledObject = o; }
    virtual void SetSelectedMenuItem(TClassMenuItem *mi) { fSelectedMenuItem = mi; }
-   void SetNameTitle(const char *name, const char *title) override { TNamed::SetNameTitle(name, title); }
+   void SetNameTitle(const std::string_view name, const std::string_view title) override { TNamed::SetNameTitle(name, title); }
    virtual void SetObject(TObject *o) { fSelectedObject = o; }
    virtual void SetPad(TVirtualPad *p) { fSelectedPad = p; }
 

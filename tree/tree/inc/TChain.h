@@ -164,7 +164,7 @@ public:
    virtual void      SetEntryListFile(const char *filename="", Option_t *opt="");
    void      SetEventList(TEventList *evlist) override;
    void      SetMakeClass(Int_t make) override { TTree::SetMakeClass(make); if (fTree) fTree->SetMakeClass(make);}
-   void      SetName(const char *name) override;
+   void      SetName(const std::string_view name) override;
    virtual void      SetPacketSize(Int_t size = 100);
    virtual void      SetProof(bool on = true, bool refresh = false, bool gettreeheader = false);
    void      SetWeight(Double_t w=1, Option_t *option="") override;

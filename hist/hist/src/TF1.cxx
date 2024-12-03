@@ -3555,9 +3555,9 @@ void TF1::SetSavedPoint(Int_t point, Double_t value)
 ///  the function title is "fffffff" and "xxxx" and "yyyy" are the
 ///  titles for the X and Y axis respectively.
 
-void TF1::SetTitle(const char *title)
+void TF1::SetTitle(const std::string_view title)
 {
-   if (!title) return;
+   if (title.empty()) return;
    fTitle = title;
    if (!fHistogram) return;
    fHistogram->SetTitle(title);

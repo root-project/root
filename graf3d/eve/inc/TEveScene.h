@@ -60,7 +60,7 @@ public:
    TGLScenePad* GetGLScene() const { return fGLScene; }
    void SetGLScene(TGLScenePad* s) { fGLScene = s; }
 
-   void SetName(const char* n) override;
+   void SetName(const std::string_view name) override;
    void Paint(Option_t* option = "") override;
 
    void DestroyElementRenderers(TEveElement* element);

@@ -190,7 +190,7 @@ protected:
    void SetBinError(Long64_t bin, Double_t e) { SetBinError2(bin, e*e); }
    void AddBinContent(const Int_t* x, Double_t v = 1.) { AddBinContent(GetBin(x), v); }
    void SetEntries(Double_t entries) { fEntries = entries; }
-   void SetTitle(const char *title) override;
+   void SetTitle(const std::string_view title) override;
 
    std::vector<Double_t> GetBinCenter(const std::vector<Int_t> &idx) const;
 

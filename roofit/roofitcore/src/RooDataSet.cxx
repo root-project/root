@@ -1644,7 +1644,7 @@ void RooDataSet::printArgs(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the name of this dataset into the given name
 
-void RooDataSet::SetName(const char *name)
+void RooDataSet::SetName(const std::string_view name)
 {
   if (_dir) _dir->GetList()->Remove(this);
   // We need to use the function from RooAbsData, because it already overrides TNamed::SetName
@@ -1656,7 +1656,7 @@ void RooDataSet::SetName(const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the title of this dataset into the given name
 
-void RooDataSet::SetNameTitle(const char *name, const char* title)
+void RooDataSet::SetNameTitle(const std::string_view name, const std::string_view title)
 {
   SetName(name);
   SetTitle(title);

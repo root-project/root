@@ -877,7 +877,8 @@ public:
    {
       return (binning() && strlen(binning()->GetTitle())) ? binning()->GetTitle() : GetParent()->GetTitle();
    }
-   void SetTitle(const char *title) override
+
+   void SetTitle(const std::string_view title) override
    {
       if (binning()) {
          const_cast<RooAbsBinning *>(binning())->SetTitle(title);
@@ -5113,21 +5114,21 @@ TGListTree *xRooNode::GetListTree(TBrowser *b) const
    return nullptr;
 }
 
-void xRooNode::SetName(const char *name)
+void xRooNode::SetName(const std::string_view name)
 {
    TNamed::SetName(name);
    if (auto a = get<RooAbsArg>(); a)
-      a->setStringAttribute("alias", name);
+      a->setStringAttribute("alias", name.data());
    for (auto o : *gROOT->GetListOfBrowsers()) {
       if (auto b = dynamic_cast<TBrowser *>(o); b) {
          if (auto item = GetTreeItem(b); item) {
-            item->SetText(name);
+            item->SetText(name.data());
          }
       }
    }
 }
 
-void xRooNode::SetTitle(const char *title)
+void xRooNode::SetTitle(const std::string_view title)
 {
    if (auto o = (get<TNamed>()); o) {
       if (auto c = mainChild(); c.get()) {

@@ -3544,13 +3544,13 @@ void TEfficiency::SetDirectory(TDirectory* dir)
 /// Note: The names of the internal histograms are set to "name + _total" and
 ///      "name + _passed" respectively.
 
-void TEfficiency::SetName(const char* name)
+void TEfficiency::SetName(const std::string_view name)
 {
    TNamed::SetName(name);
 
    //setting the names (appending the correct ending)
-   TString name_total = name + TString("_total");
-   TString name_passed = name + TString("_passed");
+   TString name_total = TString(name) + TString("_total");
+   TString name_passed = TString(name) + TString("_passed");
    fTotalHistogram->SetName(name_total);
    fPassedHistogram->SetName(name_passed);
 }
@@ -3723,12 +3723,12 @@ void TEfficiency::SetStatisticOption(EStatOption option)
 /// Example: Setting the title to "My Efficiency" and label the axis
 ///     pEff->SetTitle("My Efficiency;x label;eff");
 
-void TEfficiency::SetTitle(const char* title)
+void TEfficiency::SetTitle(const std::string_view title)
 {
 
    //setting the titles (looking for the first semicolon and insert the tokens there)
-   TString title_passed = title;
-   TString title_total = title;
+   TString title_passed(title);
+   TString title_total(title);
    Ssiz_t pos = title_passed.First(";");
    if (pos != kNPOS) {
       title_passed.Insert(pos," (passed)");

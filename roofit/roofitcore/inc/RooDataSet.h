@@ -110,8 +110,8 @@ public:
   void printArgs(std::ostream& os) const override;
   void printValue(std::ostream& os) const override;
 
-  void SetName(const char *name) override;
-  void SetNameTitle(const char *name, const char* title) override;
+  void SetName(const std::string_view name) override;
+  void SetNameTitle(const std::string_view name, const std::string_view title) override;
 
   static void cleanup();
 

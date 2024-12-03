@@ -1366,7 +1366,7 @@ RooAbsPdf* RooFitResult::createHessePdf(const RooArgSet& params) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Change name of RooFitResult object
 
-void RooFitResult::SetName(const char *name)
+void RooFitResult::SetName(const std::string_view name)
 {
   if (_dir) _dir->GetList()->Remove(this);
   TNamed::SetName(name) ;
@@ -1377,7 +1377,7 @@ void RooFitResult::SetName(const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change name and title of RooFitResult object
 
-void RooFitResult::SetNameTitle(const char *name, const char* title)
+void RooFitResult::SetNameTitle(const std::string_view name, const std::string_view title)
 {
   if (_dir) _dir->GetList()->Remove(this);
   TNamed::SetNameTitle(name,title) ;

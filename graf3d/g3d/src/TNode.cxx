@@ -690,7 +690,7 @@ void TNode::RecursiveRemove(TObject *obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the name of this Node
 
-void TNode::SetName(const char *name)
+void TNode::SetName(const std::string_view name)
 {
    if (gPad) gPad->Modified();
 
@@ -704,7 +704,7 @@ void TNode::SetName(const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the name and title of this Node
 
-void TNode::SetNameTitle(const char *name, const char *title)
+void TNode::SetNameTitle(const std::string_view name, const std::string_view title)
 {
    if (gPad) gPad->Modified();
 

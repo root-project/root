@@ -1284,7 +1284,7 @@ Int_t TDirectory::SaveObjectAs(const TObject *obj, const char *filename, Option_
 /// DO NOT use this method to 'rename a directory'.
 /// Renaming a directory is currently NOT supported.
 
-void TDirectory::SetName(const char* newname)
+void TDirectory::SetName(const std::string_view newname)
 {
    TNamed::SetName(newname);
 }

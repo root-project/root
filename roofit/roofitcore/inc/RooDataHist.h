@@ -140,8 +140,8 @@ public:
   void printValue(std::ostream& os) const override;
   void printDataHistogram(std::ostream& os, RooRealVar* obs) const;
 
-  void SetName(const char *name) override;
-  void SetNameTitle(const char *name, const char* title) override;
+  void SetName(const std::string_view name) override;
+  void SetNameTitle(const std::string_view name, const std::string_view title) override;
 
   Int_t getIndex(const RooAbsCollection& coord, bool fast = false) const;
   /// \copydoc getIndex(const RooAbsCollection&,bool) const

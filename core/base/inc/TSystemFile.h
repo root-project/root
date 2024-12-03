@@ -53,8 +53,8 @@ public:
    void        DrawClass() const override { }
    TObject    *DrawClone(Option_t *) const override { return nullptr; }
    void        SetDrawOption(Option_t *) override { }
-   void        SetName(const char *name) override { TNamed::SetName(name); }
-   void        SetTitle(const char *title)  override { TNamed::SetTitle(title); }
+   void        SetName(const std::string_view name) override { TNamed::SetName(name); }
+   void        SetTitle(const std::string_view title) override { TNamed::SetTitle(title); }
    void        Delete(Option_t *) override { }
    void        Copy(TObject &) const override { }
 

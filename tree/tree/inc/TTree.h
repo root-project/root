@@ -663,7 +663,7 @@ public:
    virtual void            SetMaxEntryLoop(Long64_t maxev = kMaxEntries) { fMaxEntryLoop = maxev; } // *MENU*
    static  void            SetMaxTreeSize(Long64_t maxsize = 100000000000LL);
    virtual void            SetMaxVirtualSize(Long64_t size = 0) { fMaxVirtualSize = size; } // *MENU*
-           void            SetName(const char* name) override; // *MENU*
+           void            SetName(const std::string_view name) override; // *MENU*
 
    /**
     * @brief Sets the address of the object to be notified when the tree is loaded.

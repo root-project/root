@@ -1824,7 +1824,7 @@ void TColor::RGB2HLS(Int_t r, Int_t g, Int_t b, Int_t &h, Int_t &l, Int_t &s)
 /// Set the color name and change also the name of the "dark" and "bright" associated
 /// colors if they exist.
 
-void TColor::SetName(const char* name)
+void TColor::SetName(const std::string_view name)
 {
    Int_t nd = GetColorByName(TString::Format("%s_dark",fName.Data()).Data());
    Int_t nb = GetColorByName(TString::Format("%s_bright",fName.Data()).Data());
