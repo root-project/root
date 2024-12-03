@@ -4890,7 +4890,7 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
    }
 
    if (!done) functions->Add(stats);
-   stats->Paint();
+   stats->Paint(stats->GetOption());
 }
 
 
