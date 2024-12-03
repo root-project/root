@@ -22,6 +22,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import time
 
 import openstack
 
@@ -253,10 +254,9 @@ def cleanup_previous_build():
 def git_pull(directory: str, repository: str, branch: str):
     returncode = 1
 
-    for _ in range(5):
-        if returncode == 0:
-            break
-
+    max_attempts = 6
+    sleep_time_unit = 3
+    for attempt in range(1, max_attempts+1):
         targetdir = os.path.join(WORKDIR, directory)
         if os.path.exists(os.path.join(targetdir, ".git")):
             returncode = subprocess_with_log(f"""
@@ -269,6 +269,13 @@ def git_pull(directory: str, repository: str, branch: str):
             returncode = subprocess_with_log(f"""
                 git clone --branch {branch} --single-branch {repository} "{targetdir}"
             """)
+        
+        if returncode == 0:
+            return
+
+        sleep_time = sleep_time_unit * attempt
+        build_utils.print_warning(f"""Attempt {attempt}: failed to pull/clone branch. Retrying in {sleep_time} seconds...""")
+        time.sleep(sleep_time)
 
     if returncode != 0:
         die(returncode, f"Failed to pull {branch}")
