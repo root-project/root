@@ -51,8 +51,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # setting some extra variables needed by external projects
-set(ROOT_GLOBAL_SOURCE_DIR "${CMAKE_SOURCE_DIR}")
-set(ROOT_GLOBAL_BINARY_DIR "${CMAKE_BINARY_DIR}")
+set(ROOT_MAIN_SOURCE_DIR "${CMAKE_SOURCE_DIR}")
+set(ROOT_MAIN_BINARY_DIR "${CMAKE_BINARY_DIR}")
 
 # Set permissions for installed folders and subfolders that come from the source tree in case
 # the permissions in the source tree are wrong since the install command will preserve them

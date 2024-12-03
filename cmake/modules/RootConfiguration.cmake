@@ -576,33 +576,33 @@ install(FILES ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h DESTINATION ${CMAKE_INST
 #---Configure and install various files----------------------------------------------------------------------
 execute_Process(COMMAND hostname OUTPUT_VARIABLE BuildNodeInfo OUTPUT_STRIP_TRAILING_WHITESPACE )
 
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/rootrc.in ${ROOT_GLOBAL_BINARY_DIR}/etc/system.rootrc @ONLY NEWLINE_STYLE UNIX)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/rootauthrc.in ${ROOT_GLOBAL_BINARY_DIR}/etc/system.rootauthrc @ONLY NEWLINE_STYLE UNIX)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/rootdaemonrc.in ${ROOT_GLOBAL_BINARY_DIR}/etc/system.rootdaemonrc @ONLY NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/rootrc.in ${ROOT_MAIN_BINARY_DIR}/etc/system.rootrc @ONLY NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/rootauthrc.in ${ROOT_MAIN_BINARY_DIR}/etc/system.rootauthrc @ONLY NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/rootdaemonrc.in ${ROOT_MAIN_BINARY_DIR}/etc/system.rootdaemonrc @ONLY NEWLINE_STYLE UNIX)
 
 # file used in TROOT.cxx, not need in include/ dir and not need to install
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/RConfigOptions.in ginclude/RConfigOptions.h NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/RConfigOptions.in ginclude/RConfigOptions.h NEWLINE_STYLE UNIX)
 
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/Makefile-comp.in config/Makefile.comp NEWLINE_STYLE UNIX)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/Makefile.in config/Makefile.config NEWLINE_STYLE UNIX)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/mimes.unix.in ${ROOT_GLOBAL_BINARY_DIR}/etc/root.mimes NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/Makefile-comp.in config/Makefile.comp NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/Makefile.in config/Makefile.config NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/mimes.unix.in ${ROOT_MAIN_BINARY_DIR}/etc/root.mimes NEWLINE_STYLE UNIX)
 # We need to have class.rules during configuration time to avoid silent error during generation of dictionary:
 # Error in <TClass::ReadRules()>: Cannot find rules
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/etc/class.rules ${ROOT_GLOBAL_BINARY_DIR}/etc/class.rules COPYONLY)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/etc/class.rules ${ROOT_MAIN_BINARY_DIR}/etc/class.rules COPYONLY)
 
 #---Generate the ROOTConfig files to be used by CMake projects-----------------------------------------------
 ROOT_GET_OPTIONS(ROOT_ALL_OPTIONS)
 ROOT_GET_OPTIONS(ROOT_ENABLED_OPTIONS ENABLED)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/cmake/scripts/ROOTConfig-version.cmake.in
-               ${ROOT_GLOBAL_BINARY_DIR}/ROOTConfig-version.cmake @ONLY NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/cmake/scripts/ROOTConfig-version.cmake.in
+               ${ROOT_MAIN_BINARY_DIR}/ROOTConfig-version.cmake @ONLY NEWLINE_STYLE UNIX)
 
 #---Compiler flags (because user apps are a bit dependent on them...)----------------------------------------
 string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cxxflags "${CMAKE_CXX_FLAGS}")
 string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cflags "${CMAKE_C_FLAGS}")
 
 if(MSVC)
-  string(REPLACE "-I${ROOT_GLOBAL_SOURCE_DIR}/cmake/win" "" __cxxflags "${__cxxflags}")
-  string(REPLACE "-I${ROOT_GLOBAL_SOURCE_DIR}/cmake/win" "" __cflags "${__cflags}")
+  string(REPLACE "-I${ROOT_MAIN_SOURCE_DIR}/cmake/win" "" __cxxflags "${__cxxflags}")
+  string(REPLACE "-I${ROOT_MAIN_SOURCE_DIR}/cmake/win" "" __cflags "${__cflags}")
 endif()
 
 if (cxxmodules)
@@ -623,20 +623,20 @@ set(ROOT_CXX_FLAGS \"${__cxxflags}\")
 set(ROOT_C_FLAGS \"${__cflags}\")
 set(ROOT_fortran_FLAGS \"${__fflags}\")
 set(ROOT_EXE_LINKER_FLAGS \"${CMAKE_EXE_LINKER_FLAGS}\")")
-set(ROOT_BINDIR ${ROOT_GLOBAL_BINARY_DIR}/bin CACHE INTERNAL "")
+set(ROOT_BINDIR ${ROOT_MAIN_BINARY_DIR}/bin CACHE INTERNAL "")
 
 #---To be used from the binary tree--------------------------------------------------------------------------
 set(ROOT_INCLUDE_DIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.
-set(ROOT_INCLUDE_DIRS ${ROOT_GLOBAL_BINARY_DIR}/include)
+set(ROOT_INCLUDE_DIRS ${ROOT_MAIN_BINARY_DIR}/include)
 ")
 set(ROOT_LIBRARY_DIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.
-set(ROOT_LIBRARY_DIR ${ROOT_GLOBAL_BINARY_DIR}/lib)
+set(ROOT_LIBRARY_DIR ${ROOT_MAIN_BINARY_DIR}/lib)
 ")
 set(ROOT_BINDIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.
-set(ROOT_BINDIR ${ROOT_GLOBAL_BINARY_DIR}/bin)
+set(ROOT_BINDIR ${ROOT_MAIN_BINARY_DIR}/bin)
 ")
 # Deprecated value ROOT_BINARY_DIR
 set(ROOT_BINARY_DIR_SETUP "
@@ -645,15 +645,15 @@ set(ROOT_BINARY_DIR ${ROOT_BINDIR})
 ")
 set(ROOT_CMAKE_DIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.
-set(ROOT_CMAKE_DIR ${ROOT_GLOBAL_SOURCE_DIR}/cmake)
+set(ROOT_CMAKE_DIR ${ROOT_MAIN_SOURCE_DIR}/cmake)
 ")
 
 get_property(exported_targets GLOBAL PROPERTY ROOT_EXPORTED_TARGETS)
 export(TARGETS ${exported_targets} NAMESPACE ROOT:: FILE ${PROJECT_BINARY_DIR}/ROOTConfig-targets.cmake)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
-               ${ROOT_GLOBAL_BINARY_DIR}/ROOTConfig.cmake @ONLY NEWLINE_STYLE UNIX)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/cmake/scripts/RootUseFile.cmake.in
-               ${ROOT_GLOBAL_BINARY_DIR}/ROOTUseFile.cmake @ONLY NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
+               ${ROOT_MAIN_BINARY_DIR}/ROOTConfig.cmake @ONLY NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/cmake/scripts/RootUseFile.cmake.in
+               ${ROOT_MAIN_BINARY_DIR}/ROOTUseFile.cmake @ONLY NEWLINE_STYLE UNIX)
 
 #---To be used from the install tree--------------------------------------------------------------------------
 # Need to calculate actual relative paths from CMAKEDIR to other locations
@@ -692,20 +692,20 @@ get_filename_component(ROOT_CMAKE_DIR \"\${_thisdir}\" REALPATH)
 ")
 
 # used by ROOTConfig.cmake from the build directory
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/cmake/modules/RootMacros.cmake
-               ${ROOT_GLOBAL_BINARY_DIR}/RootMacros.cmake COPYONLY)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/cmake/modules/RootMacros.cmake
+               ${ROOT_MAIN_BINARY_DIR}/RootMacros.cmake COPYONLY)
 
 # used by roottest to run tests against ROOT build
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/cmake/modules/RootTestDriver.cmake
-               ${ROOT_GLOBAL_BINARY_DIR}/RootTestDriver.cmake COPYONLY)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/cmake/modules/RootTestDriver.cmake
+               ${ROOT_MAIN_BINARY_DIR}/RootTestDriver.cmake COPYONLY)
 
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
-               ${ROOT_GLOBAL_BINARY_DIR}/installtree/ROOTConfig.cmake @ONLY NEWLINE_STYLE UNIX)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/cmake/scripts/RootUseFile.cmake.in
-               ${ROOT_GLOBAL_BINARY_DIR}/installtree/ROOTUseFile.cmake @ONLY NEWLINE_STYLE UNIX)
-install(FILES ${ROOT_GLOBAL_BINARY_DIR}/ROOTConfig-version.cmake
-              ${ROOT_GLOBAL_BINARY_DIR}/installtree/ROOTUseFile.cmake
-              ${ROOT_GLOBAL_BINARY_DIR}/installtree/ROOTConfig.cmake DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
+configure_file(${ROOT_MAIN_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
+               ${ROOT_MAIN_BINARY_DIR}/installtree/ROOTConfig.cmake @ONLY NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/cmake/scripts/RootUseFile.cmake.in
+               ${ROOT_MAIN_BINARY_DIR}/installtree/ROOTUseFile.cmake @ONLY NEWLINE_STYLE UNIX)
+install(FILES ${ROOT_MAIN_BINARY_DIR}/ROOTConfig-version.cmake
+              ${ROOT_MAIN_BINARY_DIR}/installtree/ROOTUseFile.cmake
+              ${ROOT_MAIN_BINARY_DIR}/installtree/ROOTConfig.cmake DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
 install(EXPORT ${CMAKE_PROJECT_NAME}Exports NAMESPACE ROOT:: FILE ROOTConfig-targets.cmake DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
 
 
@@ -727,7 +727,7 @@ endif()
 
 if(WIN32)
   # We cannot use the compiledata.sh script for windows
-  configure_file(${ROOT_GLOBAL_SOURCE_DIR}/cmake/scripts/compiledata.win32.in ${ROOT_GLOBAL_BINARY_DIR}/ginclude/compiledata.h NEWLINE_STYLE UNIX)
+  configure_file(${ROOT_MAIN_SOURCE_DIR}/cmake/scripts/compiledata.win32.in ${ROOT_MAIN_BINARY_DIR}/ginclude/compiledata.h NEWLINE_STYLE UNIX)
 else()
   # Needed by ACLIC, while in ROOT we are using everywhere C++ standard via CMake features that are requested to build target
   set(CMAKE_CXX_ACLIC_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
@@ -736,8 +736,8 @@ else()
     string (REPLACE ";" " " ASAN_EXTRA_CXX_FLAGS_STR "${ASAN_EXTRA_CXX_FLAGS}")
     set(CMAKE_CXX_ACLIC_FLAGS "${CMAKE_CXX_ACLIC_FLAGS} ${ASAN_EXTRA_CXX_FLAGS_STR}")
   endif()
-  execute_process(COMMAND ${ROOT_GLOBAL_SOURCE_DIR}/cmake/unix/compiledata.sh
-    ${ROOT_GLOBAL_BINARY_DIR}/ginclude/compiledata.h "${CMAKE_CXX_COMPILER}"
+  execute_process(COMMAND ${ROOT_MAIN_SOURCE_DIR}/cmake/unix/compiledata.sh
+    ${ROOT_MAIN_BINARY_DIR}/ginclude/compiledata.h "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_ACLIC_FLAGS}"
         "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_LINKER_FLAGS}" "so"
         "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}")
@@ -746,25 +746,25 @@ endif()
 #---Get the values of ROOT_ALL_OPTIONS and CMAKE_CXX_FLAGS provided by the user in the command line
 set(all_features ${ROOT_ALL_OPTIONS})
 set(usercflags ${CMAKE_CXX_FLAGS-CACHED})
-file(REMOVE ${ROOT_GLOBAL_BINARY_DIR}/installtree/root-config)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/root-config.in ${ROOT_GLOBAL_BINARY_DIR}/installtree/root-config @ONLY NEWLINE_STYLE UNIX)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY NEWLINE_STYLE UNIX)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/thisroot.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh @ONLY NEWLINE_STYLE UNIX)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/thisroot.fish ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.fish @ONLY NEWLINE_STYLE UNIX)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/setxrd.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.csh COPYONLY)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/setxrd.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh COPYONLY)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY NEWLINE_STYLE UNIX)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/roots.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots @ONLY NEWLINE_STYLE UNIX)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/rootssh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootssh @ONLY NEWLINE_STYLE UNIX)
+file(REMOVE ${ROOT_MAIN_BINARY_DIR}/installtree/root-config)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/root-config.in ${ROOT_MAIN_BINARY_DIR}/installtree/root-config @ONLY NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/thisroot.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh @ONLY NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/thisroot.fish ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.fish @ONLY NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/setxrd.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.csh COPYONLY)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/setxrd.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh COPYONLY)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/roots.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots @ONLY NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/rootssh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootssh @ONLY NEWLINE_STYLE UNIX)
 if(WIN32)
   set(thisrootbat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.bat)
   set(thisrootps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1)
-  configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/thisroot.bat ${thisrootbat} @ONLY)
-  configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/thisroot.ps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1 @ONLY)
-  configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/root.rc.in ${ROOT_GLOBAL_BINARY_DIR}/etc/root.rc @ONLY)
-  configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/root-manifest.xml.in ${ROOT_GLOBAL_BINARY_DIR}/etc/root-manifest.xml @ONLY)
-  install(FILES ${ROOT_GLOBAL_SOURCE_DIR}/cmake/win/w32pragma.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-  install(FILES ${ROOT_GLOBAL_SOURCE_DIR}/cmake/win/sehmap.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+  configure_file(${ROOT_MAIN_SOURCE_DIR}/config/thisroot.bat ${thisrootbat} @ONLY)
+  configure_file(${ROOT_MAIN_SOURCE_DIR}/config/thisroot.ps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1 @ONLY)
+  configure_file(${ROOT_MAIN_SOURCE_DIR}/config/root.rc.in ${ROOT_MAIN_BINARY_DIR}/etc/root.rc @ONLY)
+  configure_file(${ROOT_MAIN_SOURCE_DIR}/config/root-manifest.xml.in ${ROOT_MAIN_BINARY_DIR}/etc/root-manifest.xml @ONLY)
+  install(FILES ${ROOT_MAIN_SOURCE_DIR}/cmake/win/w32pragma.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+  install(FILES ${ROOT_MAIN_SOURCE_DIR}/cmake/win/sehmap.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 endif()
 
 #--Local root-configure
@@ -775,9 +775,9 @@ set(incdir $ROOTSYS/include)
 set(etcdir $ROOTSYS/etc)
 set(tutdir $ROOTSYS/tutorials)
 set(mandir $ROOTSYS/man)
-configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY NEWLINE_STYLE UNIX)
+configure_file(${ROOT_MAIN_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY NEWLINE_STYLE UNIX)
 if(MSVC)
-  configure_file(${ROOT_GLOBAL_SOURCE_DIR}/config/root-config.bat.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config.bat @ONLY)
+  configure_file(${ROOT_MAIN_SOURCE_DIR}/config/root-config.bat.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config.bat @ONLY)
   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config.bat
   PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
               GROUP_EXECUTE GROUP_READ
@@ -797,7 +797,7 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
                           WORLD_READ
               DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-install(FILES ${ROOT_GLOBAL_BINARY_DIR}/installtree/root-config
+install(FILES ${ROOT_MAIN_BINARY_DIR}/installtree/root-config
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootssh
@@ -806,19 +806,19 @@ install(FILES ${ROOT_GLOBAL_BINARY_DIR}/installtree/root-config
                           WORLD_EXECUTE WORLD_READ
               DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-install(FILES ${ROOT_GLOBAL_BINARY_DIR}/ginclude/RConfigOptions.h
-              ${ROOT_GLOBAL_BINARY_DIR}/ginclude/compiledata.h
+install(FILES ${ROOT_MAIN_BINARY_DIR}/ginclude/RConfigOptions.h
+              ${ROOT_MAIN_BINARY_DIR}/ginclude/compiledata.h
               DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-install(FILES ${ROOT_GLOBAL_BINARY_DIR}/etc/root.mimes
-              ${ROOT_GLOBAL_BINARY_DIR}/etc/system.rootrc
-              ${ROOT_GLOBAL_BINARY_DIR}/etc/system.rootauthrc
-              ${ROOT_GLOBAL_BINARY_DIR}/etc/system.rootdaemonrc
+install(FILES ${ROOT_MAIN_BINARY_DIR}/etc/root.mimes
+              ${ROOT_MAIN_BINARY_DIR}/etc/system.rootrc
+              ${ROOT_MAIN_BINARY_DIR}/etc/system.rootauthrc
+              ${ROOT_MAIN_BINARY_DIR}/etc/system.rootdaemonrc
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 
 if(NOT gnuinstall)
-  install(FILES ${ROOT_GLOBAL_BINARY_DIR}/config/Makefile.comp
-                ${ROOT_GLOBAL_BINARY_DIR}/config/Makefile.config
+  install(FILES ${ROOT_MAIN_BINARY_DIR}/config/Makefile.comp
+                ${ROOT_MAIN_BINARY_DIR}/config/Makefile.config
                 DESTINATION config)
 endif()
 
