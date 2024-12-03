@@ -336,7 +336,7 @@ Iterator TMath::BinarySearch(Iterator first, Iterator last, Element value)
    if ( (pind != last) && (*pind == value) )
       return pind;
    else
-      return ( pind - 1);
+      return ((pind == first) ? pind : pind - 1);
 }
 
 /// Binary search in an array of n values to locate value.
