@@ -161,7 +161,7 @@ if(NOT ROOT_unuran_FOUND)
 endif()
 
 if(NOT ROOT_xml_FOUND)
-  set(xml_veto  xml/*.C
+  set(xml_veto  io/xml/*.C
                 histfactory/*.C   # histfactory requires xml
                 histfactory/*.py
                 roostats/*.C      # most roostats tutorials require xml too,
@@ -190,8 +190,8 @@ if(NOT xrootd)
                   dataframe/df106_HiggsToFourLeptons.py
                   dataframe/df107_SingleTopAnalysis.py
                   roofit/rf618_mixture_models.py # depends on df106_HiggsToFourLeptons.py
-                  rcanvas/df104.py
-                  rcanvas/df105.py
+                  experimental/rcanvas/df104.py
+                  experimental/rcanvas/df105.py
                   )
 endif()
 
@@ -203,7 +203,7 @@ endif()
 set(histfactory_veto histfactory/makeExample.C)
 
 if(NOT ROOT_fitsio_FOUND)
-  set(fitsio_veto  fitsio/*.C)
+  set(fitsio_veto  io/fitsio/*.C)
 endif()
 
 if(NOT ROOT_mathmore_FOUND)
@@ -239,7 +239,7 @@ if(NOT ROOT_fftw3_FOUND)
 endif()
 
 if(NOT ROOT_opengl_FOUND)
-  set(opengl_veto tree/staff.C
+  set(opengl_veto io/tree/staff.C
                   gl/*.C)
 endif()
 
@@ -287,7 +287,7 @@ set(gui_veto math/fit/fitpanel_playback.C
              webgui/panel/webpanel.cxx
              webgui/webwindow/webwindow.cxx)
 if (NOT webgui)
-  list(APPEND gui_veto graphics/save_batch.C rcanvas/df104.py rcanvas/df105.py)
+  list(APPEND gui_veto graphics/save_batch.C experimental/rcanvas/df104.py experimental/rcanvas/df105.py)
 endif()
 
 if (NOT ROOT_tmva_FOUND)
@@ -357,33 +357,33 @@ endif()
 
 if(root7)
   set(root7_veto dataframe/df013_InspectAnalysis.C
-                 v7/browser.cxx
-                 v7/filedialog.cxx
-                 v7/fitpanel.cxx
-                 v7/fitpanel6.cxx
+                 experimental/browser.cxx
+                 experimental/filedialog.cxx
+                 experimental/fitpanel.cxx
+                 experimental/fitpanel6.cxx
       )
   if(NOT davix)
-    list(APPEND root7_veto v7/ntuple/ntpl004_dimuon.C)
-    list(APPEND root7_veto v7/ntuple/ntpl011_global_temperatures.C)
+    list(APPEND root7_veto io/ntuple/ntpl004_dimuon.C)
+    list(APPEND root7_veto io/ntuple/ntpl011_global_temperatures.C)
   endif()
   if(NOT dataframe)
-    list(APPEND root7_veto v7/ntuple/ntpl011_global_temperatures.C)
-    list(APPEND root7_veto v7/ntuple/ntpl004_dimuon.C)
-    list(APPEND root7_veto v7/ntuple/ntpl008_import.C)
-    list(APPEND root7_veto rcanvas/df104.py)
-    list(APPEND root7_veto rcanvas/df105.py)
+    list(APPEND root7_veto io/ntuple/ntpl011_global_temperatures.C)
+    list(APPEND root7_veto io/ntuple/ntpl004_dimuon.C)
+    list(APPEND root7_veto io/ntuple/ntpl008_import.C)
+    list(APPEND root7_veto experimental/rcanvas/df104.py)
+    list(APPEND root7_veto experimental/rcanvas/df105.py)
   endif()
   if(MSVC AND NOT win_broken_tests)
     #---EOS is not supported on Windows
-    list(APPEND root7_veto rcanvas/df104.py)
-    list(APPEND root7_veto rcanvas/df105.py)
-    list(APPEND root7_veto rcanvas/rbox.py)
+    list(APPEND root7_veto experimental/rcanvas/df104.py)
+    list(APPEND root7_veto experimental/rcanvas/df105.py)
+    list(APPEND root7_veto experimental/rcanvas/rbox.py)
   endif()
 else()
   if(MSVC AND NOT win_broken_tests)
     list(APPEND root7_veto dataframe/df013_InspectAnalysis.C)
   endif()
-  file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ v7/*.py v7/*.cxx v7/*/*.cxx v7/*.C v7/*/*.C rcanvas/*.py rcanvas/*.cxx)
+  file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ experimental/*.py experimental/*.cxx experimental/*/*.cxx experimental/*.C experimental/*/*.C experimental/rcanvas/*.py experimental/rcanvas/*.cxx)
   list(APPEND root7_veto ${v7_veto_files})
 endif()
 
@@ -403,18 +403,18 @@ set(extra_veto
   html/*.C
   net/*.C
   legacy/proof/*.C
-  sql/*.C
-  tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
-  tree/tree103_tree.C
-  tree/tree106_tree.C
-  tree/tree108_tree.C
+  io/sql/*.C
+  io/tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
+  io/tree/tree103_tree.C
+  io/tree/tree106_tree.C
+  io/tree/tree108_tree.C
   roostats/rs401d_FeldmanCousins.C  # Takes too much time
   histfactory/ModifyInterpolation.C
-  tree/tree110_copy.C
-  tree/tree111_copy.C
-  tree/tree112_copy.C
-  tree/h1analysis*.C # these are not a tutorial but classes used in run_h1analysis.C
-  tree/h1chain.C
+  io/tree/tree110_copy.C
+  io/tree/tree111_copy.C
+  io/tree/tree112_copy.C
+  io/tree/h1analysis*.C # these are not a tutorial but classes used in run_h1analysis.C
+  io/tree/h1chain.C
   http/*.C
   eve7/*.C
   math/r/rootlogon.C)
@@ -435,7 +435,7 @@ if(MSVC AND NOT llvm13_broken_tests)
          dataframe/df007_snapshot.C
          graphics/earth.C
          graphs/motorcycle.C
-         v7/ntuple/ntpl001_staff.C)
+         io/ntuple/ntpl001_staff.C)
   endif()
 endif()
 
@@ -478,10 +478,8 @@ if(webgui)
   list(APPEND tutorials ${tutorials_webcanv})
 endif()
 if(root7 AND webgui)
-  file(GLOB_RECURSE tutorials_v7 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} v7/*.cxx)
-  list(APPEND tutorials ${tutorials_v7})
-  file(GLOB_RECURSE tutorials_rcanvas RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} rcanvas/*.cxx)
-  list(APPEND tutorials ${tutorials_rcanvas})
+  file(GLOB_RECURSE tutorials_exp RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} experimental/*.cxx)
+  list(APPEND tutorials ${tutorials_exp})
 endif()
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
 
@@ -513,7 +511,7 @@ set(returncode_1 math/fit/fit2a.C
                  hist/cumulative.C
                  hist/hlabels1.C
                  hist/hlabels2.C
-                 tree/h1analysis.C
+                 io/tree/h1analysis.C
                  math/chi2test.C
                  math/r/SimpleFitting.C)
 #---Dependencies------------------------------------------------------
@@ -523,24 +521,24 @@ set(unfold-testUnfold5b-depends tutorial-unfold-testUnfold5a)
 set(unfold-testUnfold7d-depends tutorial-unfold-testUnfold7c)
 set(unfold-testUnfold7c-depends tutorial-unfold-testUnfold7b)
 set(unfold-testUnfold7b-depends tutorial-unfold-testUnfold7a)
-set(xml-xmlmodifyfile-depends tutorial-xml-xmlnewfile)
-set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
+set(io-xml-xmlmodifyfile-depends tutorial-io-xml-xmlnewfile)
+set(io-xml-xmlreadfile-depends tutorial-io-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
 set(io-readCode-depends tutorial-io-importCode)
 set(math-fit-fit1-depends tutorial-hist-fillrandom)
 set(math-fit-myfit-depends tutorial-math-fit-fitslicesy)
 set(math-foam-foam_demopers-depends tutorial-math-foam-foam_demo)
-set(tree-tree502_staff-depends  tutorial-tree-tree500_cernbuild)
-set(tree-tree501_cernstaff-depends  tutorial-tree-tree500_cernbuild)
-set(hist-hbars-depends  tutorial-tree-tree500_cernbuild)
+set(io-tree-tree502_staff-depends  tutorial-io-tree-tree500_cernbuild)
+set(io-tree-tree501_cernstaff-depends  tutorial-io-tree-tree500_cernbuild)
+set(hist-hbars-depends  tutorial-io-tree-tree500_cernbuild)
 set(benchmarks-depends tutorial-hsimple
                        tutorial-math-fit-fit1
                        tutorial-math-fit-myfit
                        tutorial-hist-h1ReadAndDraw
                        tutorial-hist-FirstContour
                        tutorial-geom-na49view
-                       tutorial-tree-tree120_ntuple.C
-                       tutorial-tree-spider
+                       tutorial-io-tree-tree120_ntuple.C
+                       tutorial-io-tree-spider
                        tutorial-io-hadd
                        tutorial-io-loopdir
                        tutorial-io-copyFiles)
@@ -610,7 +608,7 @@ file(GLOB long_running RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${long_running})
 set(NProcessors 4)
 set (multithreaded_all_cores
      dataframe/df10[2-7]*
-     rcanvas/df10*
+     experimental/rcanvas/df10*
     )
 set (multithreaded
      ${multithreaded_all_cores}
@@ -746,9 +744,9 @@ if(ROOT_pyroot_FOUND)
              legacy/pyroot/*py      # legacy ...
              histfactory/makeQuickModel.py # not a tutorial
              eve/lineset.py         # requires GUI
-             sql/sqlcreatedb.py     # same as the C++ case
-             sql/sqlfilldb.py       # same as the C++ case
-             sql/sqlselect.py       # same as the C++ case
+             io/sql/sqlcreatedb.py     # same as the C++ case
+             io/sql/sqlfilldb.py       # same as the C++ case
+             io/sql/sqlselect.py       # same as the C++ case
              launcher.py            # Not a tutorial
              .enableImplicitMTWrapper.py # Not a tutorial
              )

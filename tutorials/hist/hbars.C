@@ -12,15 +12,15 @@ TCanvas *hbars()
 {
    // Try to open first the file cernstaff.root in tutorials/tree directory
    TString filedir = gROOT->GetTutorialDir();
-   filedir += TString("/tree/");
+   filedir += TString("/io/tree/");
    TString filename = "cernstaff.root";
    bool fileNotFound = gSystem->AccessPathName(filename); // note opposite return code
 
    // If file is not found try to generate it using the macro tree/cernbuild.C
    if (fileNotFound) {
-      TString macroName = filedir + "cernbuild.C";
+      TString macroName = filedir + "tree500_cernbuild.C";
       if (!gInterpreter->IsLoaded(macroName)) gInterpreter->LoadMacro(macroName);
-      gROOT->ProcessLineFast("cernbuild()");
+      gROOT->ProcessLineFast("tree500_cernbuild()");
    }
    TFile * f = TFile::Open(filename);
    if (!f) {
