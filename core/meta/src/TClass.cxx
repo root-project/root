@@ -5010,33 +5010,45 @@ const void *TClass::DynamicCast(const TClass *cl, const void *obj, Bool_t up)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a pointer to a newly allocated object of this class.
-/// The class must have a default constructor. For meaning of
-/// defConstructor, see TClass::IsCallingNew().
 ///
-/// If quiet is true, do no issue a message via Error on case
-/// of problems, just return 0.
+/// If quiet is true, do not issue a message via Error in case
+/// of problems, just return `nullptr`.
 ///
-/// The constructor actually called here can be customized by
-/// using the rootcint pragma:
+/// This method is also used by the I/O subsystem to allocate the right amount 
+/// of memory for the objects. If a default constructor is not defined for a 
+/// certain class, some options are available.
+/// The simplest is to define the default I/O constructor, for example
+/// ~~~{.cpp}
+/// class myClass {
+/// public:
+///    myClass() = delete;
+///    myClass(TRootIOCtor *) {/* do something */}
+/// // more code...
+/// };
+/// ~~~
+///
+/// Moreover, the constructor called by TClass::New can be customized by
+/// using a rootcling pragma as follows:
 /// ~~~ {.cpp}
 ///    #pragma link C++ ioctortype UserClass;
 /// ~~~
-/// For example, with this pragma and a class named MyClass,
-/// this method will called the first of the following 3
-/// constructors which exists and is public:
+/// `TClass::New` will then look for a constructor (for a class `MyClass` in the 
+/// following example) in the following order, constructing the object using the
+/// first one in the list that exists and is declared public:
 /// ~~~ {.cpp}
 ///    MyClass(UserClass*);
 ///    MyClass(TRootIOCtor*);
 ///    MyClass(); // Or a constructor with all its arguments defaulted.
 /// ~~~
 ///
-/// When more than one pragma ioctortype is used, the first seen as priority
+/// When more than one `pragma ioctortype` is specified, the priority order is
+/// defined as the definition order; the earliest definitions have higher priority.
 /// For example with:
 /// ~~~ {.cpp}
 ///    #pragma link C++ ioctortype UserClass1;
 ///    #pragma link C++ ioctortype UserClass2;
 /// ~~~
-/// We look in the following order:
+/// ROOT looks for constructors with the following order:
 /// ~~~ {.cpp}
 ///    MyClass(UserClass1*);
 ///    MyClass(UserClass2*);
