@@ -4594,12 +4594,6 @@ void TGraphPainter::PaintScatter(TScatter2D *theScatter, Option_t* chopt)
 
    if (opt.Contains("A")) optionAxis  = 1;  else optionAxis  = 0;
 
-   TView *view = gPad ? gPad->GetView() : nullptr;
-   if (!view) {
-      Error("PaintScatter", "No TView in current pad");
-      return;
-   }
-
    double *theX         = theScatter->GetGraph()->GetX();
    double *theY         = theScatter->GetGraph()->GetY();
    double *theZ         = theScatter->GetGraph()->GetZ();
@@ -4695,10 +4689,15 @@ void TGraphPainter::PaintScatter(TScatter2D *theScatter, Option_t* chopt)
    }
 
    TH3F *h = theScatter->GetHistogram();
-   if (optionAxis) h->Paint(" ");
+   if (optionAxis) h->Draw(" ");
    if (h->GetMinimum() != h->GetMaximum()) {
       if (minc<h->GetMinimum()) minc = h->GetMinimum();
       if (maxc>h->GetMaximum()) maxc = h->GetMaximum();
+   }
+   TView *view = gPad ? gPad->GetView() : nullptr;
+   if (!view) {
+      Error("PaintScatter", "No TView in current pad");
+      return;
    }
 
    // Define and paint palette

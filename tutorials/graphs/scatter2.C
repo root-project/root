@@ -38,6 +38,5 @@ void scatter2()
    scatter->GetYaxis()->SetRangeUser(55.,90.);
    scatter->GetZaxis()->SetRangeUser(0.,10.);
    //scatter->GetCaxis()->SetRangeUser(0.,200.);
-   scatter->GetHistogram()->Draw();
    scatter->Draw();
 }
