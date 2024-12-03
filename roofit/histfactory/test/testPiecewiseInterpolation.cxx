@@ -57,6 +57,26 @@ TEST(PiecewiseInterpolation, AdditiveOrMultiplicative)
       pci2.setAllInterpCodes(code);
       pciBoth.setAllInterpCodes(code);
 
+      // basic check that if param1 and param2 are equal to 1, pci1 and pci2 are equal to high
+      // and pciBoth is equal when the respective parameter is 1
+      param1.setVal(1);
+      EXPECT_FLOAT_EQ(pci1.getVal(), high1.getVal());
+      EXPECT_FLOAT_EQ(pciBoth.getVal(), high1.getVal());
+      param1.setVal(0);
+      param2.setVal(1);
+      EXPECT_FLOAT_EQ(pci2.getVal(), high2.getVal());
+      EXPECT_FLOAT_EQ(pciBoth.getVal(), high2.getVal());
+      param2.setVal(0);
+      // and similarly for -1
+      param1.setVal(-1);
+      EXPECT_FLOAT_EQ(pci1.getVal(), low1.getVal());
+      EXPECT_FLOAT_EQ(pciBoth.getVal(), low1.getVal());
+      param1.setVal(0);
+      param2.setVal(-1);
+      EXPECT_FLOAT_EQ(pci2.getVal(), low2.getVal());
+      EXPECT_FLOAT_EQ(pciBoth.getVal(), low2.getVal());
+      param2.setVal(0);
+
       for (int ibin1 = 0; ibin1 < param1.numBins(); ++ibin1) {
          for (int ibin2 = 0; ibin2 < param2.numBins(); ++ibin2) {
             param1.setBin(ibin1);
