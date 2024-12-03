@@ -6,7 +6,7 @@
 /// The JetEvent class has several collections (TClonesArray)
 /// and other collections (TRefArray) referencing objects
 /// in the TClonesArrays.
-/// The JetEvent class is in $ROOTSYS/tutorials/tree/JetEvent.h,cxx
+/// The JetEvent class is in $ROOTSYS/tutorials/io/tree/JetEvent.h,cxx
 /// to execute the script, do
 /// ~~~
 /// .x tree130_jets.C
@@ -93,7 +93,7 @@ void jets(Int_t nev=100, Int_t npileup=200, Bool_t secondrun = true)
 {
    // Embedding these loads inside the first run of the script is not yet
    // supported in v6
-   // gROOT->ProcessLine(".L $ROOTSYS/tutorials/tree/JetEvent.cxx+");
+   // gROOT->ProcessLine(".L $ROOTSYS/tutorials/io/tree/JetEvent.cxx+");
    write(nev);
    read();
    pileup(npileup);

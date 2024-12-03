@@ -33,7 +33,7 @@ TFile *tree500_cernbuild(Int_t getFile = 0, Int_t print = 1)
       // if the argument getFile =1 return the file "cernstaff.root"
       // if the file does not exist, it is created
       if (!gSystem->AccessPathName(dir + "cernstaff.root", kFileExists)) {
-         hfile = TFile::Open(dir + "cernstaff.root"); //in $ROOTSYS/tutorials/tree
+         hfile = TFile::Open(dir + "cernstaff.root"); //in $ROOTSYS/tutorials/io/tree
          if (hfile)
             return hfile;
       }
@@ -45,7 +45,7 @@ TFile *tree500_cernbuild(Int_t getFile = 0, Int_t print = 1)
       }
    }
    //no cernstaff.root file found. Must generate it !
-   //generate cernstaff.root in $ROOTSYS/tutorials/tree if we have write access
+   //generate cernstaff.root in $ROOTSYS/tutorials/io/tree if we have write access
    if (gSystem->AccessPathName(".", kWritePermission)) {
       printf("you must run the script in a directory with write access\n");
       return 0;
@@ -76,7 +76,7 @@ TFile *tree500_cernbuild(Int_t getFile = 0, Int_t print = 1)
    fclose(fp);
    delete hfile;
    if (getFile) {
-      //we come here when the script is executed outside $ROOTSYS/tutorials/tree
+      //we come here when the script is executed outside $ROOTSYS/tutorials/io/tree
       hfile = TFile::Open(filename);
       return hfile;
    }

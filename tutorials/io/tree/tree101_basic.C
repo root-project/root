@@ -12,10 +12,10 @@
 
 void tree101_basic()
 {
-   // read file $ROOTSYS/tutorials/tree/basic.dat
+   // read file $ROOTSYS/tutorials/io/tree/basic.dat
    // this file has 3 columns of float data
    TString dir = gROOT->GetTutorialDir();
-   dir.Append("/tree/");
+   dir.Append("/io/tree/");
    dir.ReplaceAll("/./", "/");
    ifstream in;
    in.open(TString::Format("%sbasic.dat", dir.Data()));

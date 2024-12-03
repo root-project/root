@@ -9,7 +9,7 @@
 ///
 ///  Run as
 /// ~~~
-///    .L $ROOTSYS/tutorials/tree/tree143_drawsparse.C+
+///    .L $ROOTSYS/tutorials/io/tree/tree143_drawsparse.C+
 /// ~~~
 ///
 /// \macro_image

@@ -34,7 +34,7 @@
 ///
 ///   2. "h1"
 ///
-///      Selector: tutorials/tree/h1analysis.h.C
+///      Selector: tutorials/io/tree/h1analysis.h.C
 ///
 ///      root[] runProof("h1")
 ///
