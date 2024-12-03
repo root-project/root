@@ -12,7 +12,7 @@
 ## By default the analysis runs on a preskimmed dataset to reduce the runtime. The full dataset can be used with
 ## the --full-dataset argument and you can also run only on a fraction of the original dataset using the argument --lumi-scale.
 ##
-## See the [corresponding spec json file](https://github.com/root-project/root/blob/master/tutorials/dataframe/df105_WBosonAnalysis.json).
+## See the [corresponding spec json file](https://github.com/root-project/root/blob/master/tutorials/analysis/dataframe/df105_WBosonAnalysis.json).
 ##
 ## \macro_image
 ## \macro_code

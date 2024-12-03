@@ -16,7 +16,7 @@
 /// Systematic uncertainties for those scale factors are evaluated and the Vary function of RDataFrame is used to
 /// propagate the variations to the final four leptons mass distribution.
 ///
-/// See the [corresponding spec json file](https://github.com/root-project/root/blob/master/tutorials/dataframe/df106_HiggsToFourLeptons_spec.json).
+/// See the [corresponding spec json file](https://github.com/root-project/root/blob/master/tutorials/analysis/dataframe/df106_HiggsToFourLeptons_spec.json).
 ///
 /// \macro_code
 /// \macro_image

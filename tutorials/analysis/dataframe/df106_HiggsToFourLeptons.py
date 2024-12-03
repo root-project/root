@@ -12,7 +12,7 @@
 ## Systematic errors for the MC scale factors are computed and the Vary function of RDataFrame is used for plotting.
 ## The analysis is translated to an RDataFrame workflow processing about 300 MB of simulated events and data.
 ##
-## See the [corresponding spec json file](https://github.com/root-project/root/blob/master/tutorials/dataframe/df106_HiggsToFourLeptons_spec.json).
+## See the [corresponding spec json file](https://github.com/root-project/root/blob/master/tutorials/analysis/dataframe/df106_HiggsToFourLeptons_spec.json).
 ##
 ## \macro_image
 ## \macro_code
