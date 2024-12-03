@@ -13,17 +13,12 @@
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TScatter.h"
-#include "TStyle.h"
-#include "TMath.h"
 #include "TVirtualPad.h"
 #include "TH2.h"
 #include "TVirtualGraphPainter.h"
-#include "strtok.h"
 
 #include <iostream>
-#include <fstream>
 #include <cstring>
-#include <string>
 
 ClassImp(TScatter);
 
@@ -83,8 +78,6 @@ TScatter::TScatter(Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TScatter normal constructor.
-///
-///  if ex or ey are null, the corresponding arrays are preset to zero
 
 TScatter::TScatter(Int_t n, const Double_t *x, const Double_t *y, const Double_t *col, const Double_t *size)
 {
@@ -167,7 +160,7 @@ TH2F *TScatter::GetHistogram() const
 {
    if (!fHistogram) {
       // do not add the histogram to gDirectory
-      // use local TDirectory::TContect that will set temporarly gDirectory to a nullptr and
+      // use local TDirectory::TContext that will set temporarly gDirectory to a nullptr and
       // will avoid that histogram is added in the global directory
       TDirectory::TContext ctx(nullptr);
       double rwxmin, rwymin, rwxmax, rwymax;
