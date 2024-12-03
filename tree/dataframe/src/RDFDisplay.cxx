@@ -220,19 +220,19 @@ std::string RDisplay::DashesBetweenLines(size_t lastColToPrint, bool allColumnsF
 
 void RDisplay::Print() const
 {
-   auto ret = AsStringInternal(true);
-   std::cout << ret;
+   ToStream(std::cout, std::cerr, true);
 }
 
 std::string RDisplay::AsString() const
 {
-   return AsStringInternal(false);
+   std::stringstream ss, ignored;
+   ToStream(ss, ignored, false);
+   (void)ignored;
+   return ss.str();
 }
 
-std::string RDisplay::AsStringInternal(bool considerDots) const
+void RDisplay::ToStream(std::ostream &out, std::ostream &err, bool considerDots) const
 {
-   std::stringstream ss;
-
    size_t columnsToPrint = fNColumns;
    const size_t columnsToShorten = GetNColumnsToShorten();
    bool allColumnsFit = true;
@@ -246,16 +246,16 @@ std::string RDisplay::AsStringInternal(bool considerDots) const
          columnsToPrint = 2;
       }
       if (considerDots)
-         Info("Print", "Only showing %zu columns out of %zu\n", columnsToPrint, fNColumns);
+         err << "Info in <Print>: Only showing " << columnsToPrint << " columns out of " << fNColumns << "\n";
 
       allColumnsFit = false;
    }
 
    if (fNMaxCollectionElements < 1)
-      Info("Print", "No collections shown since fNMaxCollectionElements is 0\n");
+      err << "Info in <Print>: No collections shown since fNMaxCollectionElements is 0\n";
 
    auto nrRows = fTable.size();
-   ss << DashesBetweenLines(columnsToPrint, allColumnsFit); // Print dashes in the top of the table
+   out << DashesBetweenLines(columnsToPrint, allColumnsFit); // Print dashes in the top of the table
    for (size_t rowIndex = 0; rowIndex < nrRows; ++rowIndex) {
       const auto &row = fTable[rowIndex];
 
@@ -264,14 +264,13 @@ std::string RDisplay::AsStringInternal(bool considerDots) const
                               // collections have different size. Thanks to this flag, these rows are just ignored.
       if (std::any_of(row[0].GetRepresentation().begin(), row[0].GetRepresentation().end(), ::isdigit)) {
          // Check if the first column (Row) contains a digit to use it as indication for new row/entry
-         ss << DashesBetweenLines(columnsToPrint, allColumnsFit);
+         out << DashesBetweenLines(columnsToPrint, allColumnsFit);
       }
       stringRow << "| ";
       for (size_t columnIndex = 0; columnIndex < columnsToPrint; ++columnIndex) {
          const auto &element = row[columnIndex];
          std::string printedElement = "";
 
-         // TODO: add a function option to avoid this behavior
          if (considerDots && element.IsDot()) {
             printedElement = "...";
          } else if (!considerDots || element.IsPrint()) {
@@ -292,12 +291,10 @@ std::string RDisplay::AsStringInternal(bool considerDots) const
                                // in the right end of each (non-empty) row.
             stringRow << "... | ";
          }
-         ss << stringRow.str() << "\n";
+         out << stringRow.str() << "\n";
       }
    }
-   ss << DashesBetweenLines(columnsToPrint, allColumnsFit); // Print dashes in the bottom of the table
-
-   return ss.str();
+   out << DashesBetweenLines(columnsToPrint, allColumnsFit); // Print dashes in the bottom of the table
 }
 
 } // namespace RDF

@@ -289,7 +289,7 @@ private:
 
    void EnsureCurrentColumnWidth(size_t w);
 
-   std::string AsStringInternal(bool considerDots) const;
+   void ToStream(std::ostream &out, std::ostream &err, bool considerDots) const;
 
 public:
    ////////////////////////////////////////////////////////////////////////////
