@@ -175,7 +175,7 @@ inline unsigned int getUniformBinning(double low, double high, double val, unsig
    return val >= high ? numBins - 1 : std::abs((val - low) / binWidth);
 }
 
-inline double interpolate1d(double low, double high, double val, unsigned int numBins, double const* vals)
+inline double interpolate1d(double low, double high, double val, unsigned int numBins, double const *vals)
 {
    double binWidth = (high - low) / numBins;
    int idx = val >= high ? numBins - 1 : std::abs((val - low) / binWidth);
@@ -185,9 +185,9 @@ inline double interpolate1d(double low, double high, double val, unsigned int nu
    if (val > low + 0.5 * binWidth && val < high - 0.5 * binWidth) {
       double slope;
       if (val < central) {
-          slope = vals[idx] - vals[idx - 1];
+         slope = vals[idx] - vals[idx - 1];
       } else {
-          slope = vals[idx + 1] - vals[idx];
+         slope = vals[idx + 1] - vals[idx];
       }
       return vals[idx] + slope * (val - central) / binWidth;
    }
@@ -239,26 +239,39 @@ inline double flexibleInterpSingle(unsigned int code, double low, double high, d
       } else {
          return a * std::pow(paramVal, 2) + b * paramVal + c;
       }
-   // According to an old comment in the source code, code 3 was apparently
-   // meant to be a "parabolic version of log-normal", but it never got
-   // implemented. If someone would need it, it could be implemented as doing
-   // code 2 in log space.
-   } else if (code == 4) {
+      // According to an old comment in the source code, code 3 was apparently
+      // meant to be a "parabolic version of log-normal", but it never got
+      // implemented. If someone would need it, it could be implemented as doing
+      // code 2 in log space.
+   } else if (code == 4 || code == 6) {
       double x = paramVal;
+      double mod = 1.0;
+      if (code == 6) {
+         high /= nominal;
+         low /= nominal;
+         nominal = 1;
+      }
       if (x >= boundary) {
-         return x * (high - nominal);
+         mod = x * (high - nominal);
       } else if (x <= -boundary) {
-         return x * (nominal - low);
+         mod = x * (nominal - low);
+      } else {
+         // interpolate 6th degree
+         double t = x / boundary;
+         double eps_plus = high - nominal;
+         double eps_minus = nominal - low;
+         double S = 0.5 * (eps_plus + eps_minus);
+         double A = 0.0625 * (eps_plus - eps_minus);
+
+         mod = x * (S + t * A * (15 + t * t * (-10 + t * t * 3)));
       }
 
-      // interpolate 6th degree
-      double t = x / boundary;
-      double eps_plus = high - nominal;
-      double eps_minus = nominal - low;
-      double S = 0.5 * (eps_plus + eps_minus);
-      double A = 0.0625 * (eps_plus - eps_minus);
+      // code 6 is multiplicative version of code 4
+      if (code == 6) {
+         mod *= res;
+      }
+      return mod;
 
-      return x * (S + t * A * (15 + t * t * (-10 + t * t * 3)));
    } else if (code == 5) {
       double x = paramVal;
       double mod = 1.0;
