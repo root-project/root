@@ -1641,6 +1641,8 @@ class TFramePainter extends ObjectPainter {
       this.axes_drawn = false;
       this.axes2_drawn = false;
       this.keys_handler = null;
+      this._borderMode = gStyle.fFrameBorderMode;
+      this._borderSize = gStyle.fFrameBorderSize;
       this.projection = 0; // different projections
    }
 
@@ -2219,6 +2221,8 @@ class TFramePainter extends ObjectPainter {
       let pr = Promise.resolve(true);
 
       if (!disable_x_draw || !disable_y_draw || draw_grids) {
+         draw_vertical.optionLeft = draw_vertical.invert_side; // text align
+
          const can_adjust_frame = !shrink_forbidden && settings.CanAdjustFrame,
 
          pr1 = draw_horiz.drawAxis(layer, w, h,
@@ -2296,6 +2300,7 @@ class TFramePainter extends ObjectPainter {
       }
 
       if (draw_vertical) {
+         draw_vertical.optionLeft = draw_vertical.invert_side;
          pr2 = draw_vertical.drawAxis(layer, w, h,
                                       draw_vertical.invert_side ? `translate(${w})` : null,
                                       pad?.fTicky ? w : 0, false,
@@ -2330,15 +2335,17 @@ class TFramePainter extends ObjectPainter {
          }
       }
 
-      if (tframe)
+      if (tframe) {
          this.createAttFill({ attr: tframe });
-      else if (this.fillatt === undefined) {
+         this._borderMode = tframe.fBorderMode;
+         this._borderSize = tframe.fBorderSize;
+      } else if (this.fillatt === undefined) {
          if (pad?.fFrameFillColor)
             this.createAttFill({ pattern: pad.fFrameFillStyle, color: pad.fFrameFillColor });
          else if (pad)
             this.createAttFill({ attr: pad });
          else
-            this.createAttFill({ pattern: 1001, color: 0 });
+            this.createAttFill({ pattern: gStyle.fFrameFillStyle, color: gStyle.fFrameFillColor });
 
          // force white color for the canvas frame
          if (!tframe && this.fillatt.empty() && pp?.iscan)
@@ -2349,8 +2356,10 @@ class TFramePainter extends ObjectPainter {
 
       if (!tframe && (pad?.fFrameLineColor !== undefined))
          this.createAttLine({ color: pad.fFrameLineColor, width: pad.fFrameLineWidth, style: pad.fFrameLineStyle });
-      else
+      else if (tframe)
          this.createAttLine({ attr: tframe, color: 'black' });
+      else
+         this.createAttLine({ color: gStyle.fFrameLineColor, width: gStyle.fFrameLineWidth, style: gStyle.fFrameLineStyle });
    }
 
    /** @summary Function called at the end of resize of frame
@@ -2545,9 +2554,8 @@ class TFramePainter extends ObjectPainter {
               .attr('viewBox', `0 0 ${this._frame_width} ${this._frame_height}`);
 
       this.draw_g.selectAll('.frame_deco').remove();
-      const frame = this.getObject();
-      if (frame?.fBorderMode && this.fillatt.hasColor()) {
-         const paths = getBoxDecorations(0, 0, this._frame_width, this._frame_height, frame.fBorderMode, frame.fBorderSize || 2, frame.fBorderSize || 2);
+      if (this._borderMode && this.fillatt.hasColor()) {
+         const paths = getBoxDecorations(0, 0, this._frame_width, this._frame_height, this._borderMode, this._borderSize || 2, this._borderSize || 2);
          this.draw_g.insert('svg:path', '.main_layer')
                     .attr('class', 'frame_deco')
                     .attr('d', paths[0])
@@ -2719,6 +2727,18 @@ class TFramePainter extends ObjectPainter {
 
       menu.addchk(this.isTooltipAllowed(), 'Show tooltips', () => this.setTooltipAllowed('toggle'));
       menu.addAttributesMenu(this, alone ? '' : 'Frame ');
+
+      menu.sub('Border');
+      menu.addSelectMenu('Mode', ['Down', 'Off', 'Up'], this._borderMode + 1, v => {
+         this._borderMode = v - 1;
+         this.interactiveRedraw(true, `exec:SetBorderMode(${v-1})`);
+      }, 'Frame border mode');
+      menu.addSizeMenu('Size', 0, 20, 2, this._borderSize, v => {
+         this._borderSize = v;
+         this.interactiveRedraw(true, `exec:SetBorderSize(${v})`);
+      }, 'Frame border size');
+      menu.endsub();
+
       menu.add('Save to gStyle', () => {
          gStyle.fPadBottomMargin = this.fY1NDC;
          gStyle.fPadTopMargin = 1 - this.fY2NDC;
@@ -2726,6 +2746,8 @@ class TFramePainter extends ObjectPainter {
          gStyle.fPadRightMargin = 1 - this.fX2NDC;
          this.fillatt?.saveToStyle('fFrameFillColor', 'fFrameFillStyle');
          this.lineatt?.saveToStyle('fFrameLineColor', 'fFrameLineWidth', 'fFrameLineStyle');
+         gStyle.fFrameBorderMode = this._borderMode;
+         gStyle.fFrameBorderSize = this._borderSize;
       }, 'Store frame position and graphical attributes to gStyle');
 
       menu.separator();

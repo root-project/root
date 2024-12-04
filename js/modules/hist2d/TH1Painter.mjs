@@ -76,7 +76,7 @@ class TH1Painter extends THistPainter {
       this.scan_xright = right;
 
       const profile = this.isTProfile();
-      let hmin = 0, hmin_nz = 0, hmax = 0, hsum = 0, first = true, value, err;
+      let hmin = 0, hmin_nz = 0, hmax = 0, hsum = 0, first = true, value, errs = { low: 0, up: 0 };
 
       for (let i = 0; i < this.nbinsx; ++i) {
          value = histo.getBinContent(i + 1);
@@ -93,10 +93,11 @@ class TH1Painter extends THistPainter {
             first = false;
          }
 
-         err = this.options.Error ? histo.getBinError(i + 1) : 0;
+         if (this.options.Error)
+            errs = this.getBinErrors(histo, i + 1, value);
 
-         hmin = Math.min(hmin, value - err);
-         hmax = Math.max(hmax, value + err);
+         hmin = Math.min(hmin, value - errs.low);
+         hmax = Math.max(hmax, value + errs.up);
 
          if (f1) {
             // similar code as in THistPainter, line 7196
@@ -507,11 +508,12 @@ class TH1Painter extends THistPainter {
          if (funcs.logx && (x <= 0)) continue;
          const grx = Math.round(funcs.grx(x)),
                y = histo.getBinContent(i+1),
-               yerr = histo.getBinError(i+1);
-         if (funcs.logy && (y-yerr < funcs.scale_ymin)) continue;
+               yerrs = this.getBinErrors(histo, i + 1, y);
+         if (funcs.logy && (y - yerrs.low < funcs.scale_ymin))
+            continue;
 
-         bins1.push({ grx, gry: Math.round(funcs.gry(y + yerr)) });
-         bins2.unshift({ grx, gry: Math.round(funcs.gry(y - yerr)) });
+         bins1.push({ grx, gry: Math.round(funcs.gry(y + yerrs.up)) });
+         bins2.unshift({ grx, gry: Math.round(funcs.gry(y - yerrs.low)) });
       }
 
       const line = this.options.ErrorKind !== 4,
@@ -623,9 +625,9 @@ class TH1Painter extends THistPainter {
             if (startmidx === undefined) startmidx = midx;
             my = Math.round(funcs.gry(bincont));
             if (show_errors) {
-               binerr = histo.getBinError(bin+1);
-               yerr1 = Math.round(my - funcs.gry(bincont + binerr)); // up
-               yerr2 = Math.round(funcs.gry(bincont - binerr) - my); // down
+               binerr = this.getBinErrors(histo, bin + 1, bincont);
+               yerr1 = Math.round(my - funcs.gry(bincont + binerr.up)); // up
+               yerr2 = Math.round(funcs.gry(bincont - binerr.low) - my); // low
             } else
                yerr1 = yerr2 = 20;
 
@@ -934,7 +936,11 @@ class TH1Painter extends THistPainter {
          tips.push(`x = ${xlbl}`, `y = ${funcs.axisAsText('y', cont)}`);
          if (this.options.Error) {
             if (xlbl[0] === '[') tips.push(`error x = ${((x2 - x1) / 2).toPrecision(4)}`);
-            tips.push(`error y = ${histo.getBinError(bin + 1).toPrecision(4)}`);
+            const errs = this.getBinErrors(histo, bin + 1, cont);
+            if (errs.poisson)
+               tips.push(`error low = ${errs.low.toPrecision(4)}`, `error up = ${errs.up.toPrecision(4)}`);
+            else
+               tips.push(`error y = ${errs.up.toPrecision(4)}`);
          }
       } else {
          tips.push(`bin = ${bin+1}`, `x = ${xlbl}`);
@@ -1051,15 +1057,16 @@ class TH1Painter extends THistPainter {
          if (this.markeratt) msize = Math.max(msize, this.markeratt.getFullSize());
 
          if (this.options.Error) {
-            const cont = histo.getBinContent(findbin+1),
-                binerr = histo.getBinError(findbin+1);
+            const cont = histo.getBinContent(findbin + 1),
+                  binerrs = this.getBinErrors(histo, findbin + 1, cont);
 
-            gry1 = Math.round(funcs.gry(cont + binerr)); // up
-            gry2 = Math.round(funcs.gry(cont - binerr)); // down
+            gry1 = Math.round(funcs.gry(cont + binerrs.up)); // up
+            gry2 = Math.round(funcs.gry(cont - binerrs.low)); // low
 
-            if ((cont === 0) && this.isTProfile()) findbin = null;
+            if ((cont === 0) && this.isTProfile())
+               findbin = null;
 
-            const dx = (grx2-grx1)*this.options.errorX;
+            const dx = (grx2 - grx1)*this.options.errorX;
             grx1 = Math.round(midx - dx);
             grx2 = Math.round(midx + dx);
          }

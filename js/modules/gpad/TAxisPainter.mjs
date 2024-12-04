@@ -423,6 +423,8 @@ class TAxisPainter extends ObjectPainter {
      * Therefore one should distinguish when calculated coordinates used for axis drawing itself or for calculation of frame coordinates
      * @private */
    configureAxis(name, min, max, smin, smax, vertical, range, opts) {
+      const axis = this.getObject();
+
       this.name = name;
       this.full_min = min;
       this.full_max = max;
@@ -434,12 +436,13 @@ class TAxisPainter extends ObjectPainter {
       this.noexp_changed = opts.noexp_changed;
       this.symlog = opts.symlog || false;
       this.reverse = opts.reverse || false;
+      // special flag to change align of labels on vertical axis
+      // it is workaround shown in TGaxis docu
+      this.reverseAlign = this.vertical && this.reverse && this.is_gaxis && (axis.fX1 !== axis.fX2);
       this.swap_side = opts.swap_side || false;
       this.fixed_ticks = opts.fixed_ticks || null;
       this.maxTickSize = opts.maxTickSize || 0;
       this.value_axis = opts.value_axis ?? false; // use fMinimum/fMaximum from source object
-
-      const axis = this.getObject();
 
       if (opts.time_scale || axis.fTimeDisplay) {
          this.kind = kAxisTime;
@@ -1111,8 +1114,7 @@ class TAxisPainter extends ObjectPainter {
                if (this.vertical) {
                   arg.x = fix_coord;
                   arg.y = pos;
-                  arg.align = rotate_lbls ? ((side < 0) ? 23 : 20) : ((side < 0) ? 12 : 32);
-
+                  arg.align = rotate_lbls ? (this.optionLeft || this.reverseAlign ? 23 : 21) : (this.optionLeft || this.reverseAlign ? 12 : 32);
                   if (this.cutLabels()) {
                      const gap = labelsFont.size * (rotate_lbls ? 1.5 : 0.6);
                      if ((pos < gap) || (pos > h - gap)) continue;
@@ -1120,7 +1122,7 @@ class TAxisPainter extends ObjectPainter {
                } else {
                   arg.x = pos;
                   arg.y = fix_coord;
-                  arg.align = rotate_lbls ? ((side < 0) ? 12 : 32) : ((side < 0) ? 20 : 23);
+                  arg.align = rotate_lbls ? ((side < 0) ? 12 : 32) : ((side < 0) ? 21 : 23);
                   if (this.log && !this.noexp && !this.vertical && arg.align === 23) {
                      arg.align = 21;
                      arg.y += labelsFont.size;
@@ -1207,7 +1209,8 @@ class TAxisPainter extends ObjectPainter {
       const pad_w = pp?.getPadWidth() || scalingSize || w/0.8, // use factor 0.8 as ratio between frame and pad size
             pad_h = pp?.getPadHeight() || scalingSize || h/0.8,
             // if no external scaling size use scaling as in TGaxis.cxx:1448 - NDC axis length is in the scaling factor
-            tickScalingSize = scalingSize || (this.vertical ? h/pad_h*pad_w : w/pad_w*pad_h);
+            tickScalingSize = scalingSize || (this.vertical ? h/pad_h*pad_w : w/pad_w*pad_h),
+            bit_plus = axis.TestBit(EAxisBits.kTickPlus), bit_minus = axis.TestBit(EAxisBits.kTickMinus);
 
       let tickSize = 0, titleColor, titleFontId, offset;
 
@@ -1216,22 +1219,31 @@ class TAxisPainter extends ObjectPainter {
       if (this.is_gaxis) {
          const optionSize = axis.fChopt.indexOf('S') >= 0;
          this.optionUnlab = axis.fChopt.indexOf('U') >= 0;
-         this.optionMinus = (axis.fChopt.indexOf('-') >= 0) || axis.TestBit(EAxisBits.kTickMinus);
-         this.optionPlus = (axis.fChopt.indexOf('+') >= 0) || axis.TestBit(EAxisBits.kTickPlus);
+         this.optionMinus = (axis.fChopt.indexOf('-') >= 0) || bit_minus;
+         this.optionPlus = (axis.fChopt.indexOf('+') >= 0) || bit_plus;
          this.optionNoopt = (axis.fChopt.indexOf('N') >= 0);  // no ticks position optimization
          this.optionInt = (axis.fChopt.indexOf('I') >= 0);  // integer labels
          this.optionText = (axis.fChopt.indexOf('T') >= 0);  // text scaling?
+         this.optionLeft = (axis.fChopt.indexOf('L') >= 0);  // left text align
+         this.optionRight = (axis.fChopt.indexOf('R') >= 0);  // right text align
+         this.optionCenter = (axis.fChopt.indexOf('C') >= 0);  // center text align
          this.createAttLine({ attr: axis });
          tickSize = optionSize ? axis.fTickSize : 0.03;
          titleColor = this.getColor(axis.fTextColor);
          titleFontId = axis.fTextFont;
          offset = axis.fLabelOffset;
-         if ((this.vertical && axis.fY1 > axis.fY2 && !this.optionMinus) || (!this.vertical && axis.fX1 > axis.fX2))
+         // workaround for old reverse axes where offset is not properly working
+         if (this.reverse && (!this.vertical || (!this.optionMinus && (axis.fX1 !== axis.fX2))))
             offset = -offset;
       } else {
          this.optionUnlab = false;
-         this.optionMinus = this.vertical ^ this.invert_side;
-         this.optionPlus = !this.optionMinus;
+         if (!bit_plus && !bit_minus) {
+            this.optionMinus = this.vertical ^ this.invert_side;
+            this.optionPlus = !this.optionMinus;
+         } else {
+            this.optionPlus = bit_plus;
+            this.optionMinus = bit_minus;
+         }
          this.optionNoopt = false;  // no ticks position optimization
          this.optionInt = false;  // integer labels
          this.optionText = false;

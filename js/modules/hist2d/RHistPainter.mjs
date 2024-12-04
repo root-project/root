@@ -527,6 +527,13 @@ class RHistPainter extends RObjectPainter {
       if (!not_shown) pp.showPadButtons();
    }
 
+   /** @summary Return histo bin errors
+    * @private */
+   getBinErrors(histo, bin /* , binz */) {
+      const err = histo.getBinError(bin);
+      return { low: err, up: err };
+   }
+
    /** @summary get tool tips used in 3d mode */
    get3DToolTip(indx) {
       const histo = this.getHisto(),
