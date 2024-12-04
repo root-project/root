@@ -1,5 +1,6 @@
-import gc
 import ROOT
+import gc
+import os
 import unittest
 
 
@@ -70,6 +71,19 @@ class MemoryStlString(unittest.TestCase):
         # The test is just that the memory regulation works correctly and the
         # application does not segfault
         c = ROOT.TColor(42, 42, 42)
+
+    def test_ttree_clone_in_file_context(self):
+        """Test that CloneTree() doesn't give the ownership to Python when
+        TFile is opened."""
+
+        filename = "test_ttree_clone_in_file_context"
+
+        ttree = ROOT.TTree("tree", "tree")
+
+        with ROOT.TFile(filename, "RECREATE") as infile:
+            ttree_clone = ttree.CloneTree()
+
+        os.remove(filename)
 
 if __name__ == '__main__':
     unittest.main()

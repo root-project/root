@@ -308,6 +308,20 @@ def _TTree__getattr__(self, key):
         out = cppyy.ll.cast[cast_type](out)
     return out
 
+def _TTree_CloneTree(self, *args, **kwargs):
+    """
+    Forward the arguments to the C++ function and give up ownership if the
+    TTree is attached to a TFile, which is the owner in that case.
+    """
+    import ROOT
+
+    out_tree = self._CloneTree(*args, **kwargs)
+    tdir = out_tree.GetDirectory()
+    if tdir and type(tdir).__cpp_name__ == "TFile":
+        ROOT.SetOwnership(out_tree, False)
+
+    return out_tree
+
 def _TTree_Constructor(self, *args, **kwargs):
     """
     Forward the arguments to the C++ constructor and give up ownership if the
@@ -326,8 +340,13 @@ def pythonize_ttree(klass, name):
     # klass: class to be pythonized
     # name: string containing the name of the class
 
+    # Functions that need to drop the ownership if the current directory is a TFile
+
     klass._cpp_constructor = klass.__init__
     klass.__init__ = _TTree_Constructor
+
+    klass._CloneTree = klass.CloneTree
+    klass.CloneTree = _TTree_CloneTree
 
     # Pythonizations that are common to TTree and its subclasses.
     # To avoid duplicating the same logic in the pythonizors of
