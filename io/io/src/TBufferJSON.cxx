@@ -1610,61 +1610,82 @@ void TBufferJSON::JsonWriteCollection(TCollection *col, const TClass *)
    // collection treated as JS Array
    AppendOutput("[");
 
-   bool islist = col->InheritsFrom(TList::Class());
    TMap *map = nullptr;
-   if (col->InheritsFrom(TMap::Class()))
+   TList *lst = nullptr;
+   if (col->InheritsFrom(TList::Class()))
+      lst = dynamic_cast<TList *>(col);
+   else if (col->InheritsFrom(TMap::Class()))
       map = dynamic_cast<TMap *>(col);
 
    TString sopt;
-   if (islist) {
+   Bool_t first = kTRUE;
+
+   if (lst) {
+      // handle TList with extra options
       sopt.Capacity(500);
       sopt = "[";
-   }
 
-   TIter iter(col);
-   TObject *obj;
-   Bool_t first = kTRUE;
-   while ((obj = iter()) != nullptr) {
-      if (!first)
-         AppendOutput(fArraySepar.Data());
+      auto lnk = lst->FirstLink();
+      while (lnk) {
+         if (!first) {
+            AppendOutput(fArraySepar.Data());
+            sopt.Append(fArraySepar.Data());
+         }
 
-      if (map) {
+         WriteObjectAny(lnk->GetObject(), TObject::Class());
+
+         if (dynamic_cast<TObjOptLink *>(lnk)) {
+            sopt.Append("\"");
+            sopt.Append(lnk->GetAddOption());
+            sopt.Append("\"");
+         } else
+            sopt.Append("null");
+
+         lnk = lnk->Next();
+         first = kFALSE;
+      }
+   } else if (map) {
+      // handle TMap with artificial TPair object
+      TIter iter(col);
+      while (auto obj = iter()) {
+         if (!first)
+            AppendOutput(fArraySepar.Data());
+
          // fJsonrCnt++; // do not account map pair as JSON object
          AppendOutput("{", "\"$pair\"");
          AppendOutput(fSemicolon.Data());
          AppendOutput("\"TPair\"");
          AppendOutput(fArraySepar.Data(), "\"first\"");
          AppendOutput(fSemicolon.Data());
-      }
 
-      WriteObjectAny(obj, TObject::Class());
+         WriteObjectAny(obj, TObject::Class());
 
-      if (map) {
          AppendOutput(fArraySepar.Data(), "\"second\"");
          AppendOutput(fSemicolon.Data());
          WriteObjectAny(map->GetValue(obj), TObject::Class());
          AppendOutput("", "}");
+         first = kFALSE;
       }
-
-      if (islist) {
+   } else {
+      TIter iter(col);
+      while (auto obj = iter()) {
          if (!first)
-            sopt.Append(fArraySepar.Data());
-         sopt.Append("\"");
-         sopt.Append(iter.GetOption());
-         sopt.Append("\"");
-      }
+            AppendOutput(fArraySepar.Data());
 
-      first = kFALSE;
+         WriteObjectAny(obj, TObject::Class());
+         first = kFALSE;
+      }
    }
 
    AppendOutput("]");
 
-   if (islist) {
+   if (lst) {
       sopt.Append("]");
       AppendOutput(Stack()->NextMemberSeparator(), "\"opt\"");
       AppendOutput(fSemicolon.Data());
       AppendOutput(sopt.Data());
    }
+
    fValue.Clear();
 }
 
