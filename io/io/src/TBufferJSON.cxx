@@ -1610,12 +1610,8 @@ void TBufferJSON::JsonWriteCollection(TCollection *col, const TClass *)
    // collection treated as JS Array
    AppendOutput("[");
 
-   TMap *map = nullptr;
-   TList *lst = nullptr;
-   if (col->InheritsFrom(TList::Class()))
-      lst = dynamic_cast<TList *>(col);
-   else if (col->InheritsFrom(TMap::Class()))
-      map = dynamic_cast<TMap *>(col);
+   auto map = dynamic_cast<TMap *>(col);
+   auto lst = dynamic_cast<TList *>(col);
 
    TString sopt;
    Bool_t first = kTRUE;
