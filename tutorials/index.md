@@ -138,9 +138,9 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief This tutorial illustrates the use of class TSPlot.
 
-\defgroup tutorial_ml Machine Learning tutorials
+\defgroup tutorial_tmva TMVA tutorials
 \ingroup Tutorials
-\brief Examples showing how to use Machine Learning from ROOT. 
+\brief Example code which illustrates how to use the TMVA toolkit
 
 \defgroup tutorial_webcanv TWebCanvas tutorials
 \ingroup Tutorials
