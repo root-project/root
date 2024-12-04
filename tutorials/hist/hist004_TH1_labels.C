@@ -11,7 +11,7 @@
 /// \date November 2024
 /// \author Rene Brun
 
-void hist004_TH1_labels()
+TCanvas *hist004_TH1_labels()
 {
    // Create the histogram
    const std::array people{"Jean",    "Pierre", "Marie",    "Odile",   "Sebastien", "Fons",  "Rene",
@@ -53,4 +53,6 @@ void hist004_TH1_labels()
    pt->SetTextAlign(12);
    pt->AddText("Use the axis Context Menu LabelsOption");
    pt->Draw();
+
+   return c1;
 }
