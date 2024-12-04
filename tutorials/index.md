@@ -58,10 +58,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Various examples showing the experimental API.
 
-\defgroup tutorial_FOAM FOAM tutorials
-\ingroup Tutorials
-\brief Examples showing how to use FOAM.
-
 \defgroup tutorial_eve Event display tutorials
 \ingroup Tutorials
 \brief Examples showing the "Event display classes" usage.
@@ -122,10 +118,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Examples showing the Math classes.
 
-\defgroup tutorial_mc Monte Carlo tutorials
-\ingroup Tutorials
-\brief Monte Carlo examples.
-
 \defgroup tutorial_multicore Multicore tutorials
 \ingroup Tutorials
 \brief These examples aim to illustrate the multicore features of ROOT, such as thread awareness and safety, multithreading and multiprocessing.
@@ -133,10 +125,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \defgroup tutorial_pyroot PyRoot tutorials
 \ingroup Tutorials
 \brief Selected examples illustrating how to use ROOT's Python interface: PyROOT.
-
-\defgroup tutorial_pythia Pythia tutorials
-\ingroup Tutorials
-\brief Examples showing the pythia usage.
 
 \defgroup tutorial_roostats RooStats Tutorials
 \ingroup Tutorials
@@ -153,7 +141,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \defgroup tutorial_tmva TMVA tutorials
 \ingroup Tutorials
 \brief Example code which illustrates how to use the TMVA toolkit
-
 
 \defgroup tutorial_webcanv TWebCanvas tutorials
 \ingroup Tutorials
