@@ -621,7 +621,7 @@ static size_t findNameEnd(const std::string &full, size_t pos)
 bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
 {
    string_view a( allocname );
-   const static int clalloclen = strlen("class ");
+   constexpr static int clalloclen = strlen("class ");
    if (a.compare(0,clalloclen,"class ") == 0) {
       a.remove_prefix(clalloclen);
    }
@@ -631,7 +631,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
    if (a=="__default_alloc_template<true,0>")   return true;
    if (a=="__malloc_alloc_template<0>")         return true;
 
-   const static int alloclen = strlen("allocator<");
+   constexpr static int alloclen = strlen("allocator<");
    if (a.compare(0,alloclen,"allocator<") != 0) {
       return false;
    }
@@ -680,7 +680,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
    string_view a( allocname );
    RemoveStd(a);
 
-   const static int alloclen = strlen("allocator<");
+   constexpr static int alloclen = strlen("allocator<");
    if (a.compare(0,alloclen,"allocator<") != 0) {
       return false;
    }
@@ -688,7 +688,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
 
    RemoveStd(a);
 
-   const static int pairlen = strlen("pair<");
+   constexpr static int pairlen = strlen("pair<");
    if (a.compare(0,pairlen,"pair<") != 0) {
       return false;
    }
