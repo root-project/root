@@ -1,6 +1,6 @@
 # Example analysis illustrating the use of rootdrawtree / TSimpleAnalysis.
 # Run as:
-#  $ rootdrawtree tutorials/tree/simpleAnalysis.txt
+#  $ rootdrawtree tutorials/io/tree/simpleAnalysis.txt
 
 file_output.root   #the output file in which histograms are stored
 

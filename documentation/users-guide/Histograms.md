@@ -1683,7 +1683,7 @@ You can use a char\* variable type to histogram strings with
 
 ![Using a \*char variable type in TTree::Draw](pictures/0200003C.png)
 
-There is an example in `$ROOTSYS/tutorials/tree/cernstaff.C.`
+There is an example in `$ROOTSYS/tutorials/io/tree/tree502_cernstaff.C.`
 
 If a variable is defined as `char*` it is drawn as a string by default.
 You change that and draw the value of `char[0]` as an integer by

@@ -3150,7 +3150,7 @@ void hlprint()
 
 \image html hlsimple.gif "Highlight mode and simple user function"
 
-For more complex demo please see for example `$ROOTSYS/tutorials/tree/temperature.C` file.
+For more complex demo please see for example `$ROOTSYS/tutorials/io/tree/tree200_temperature.C` file.
 
 */
 
