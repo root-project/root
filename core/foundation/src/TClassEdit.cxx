@@ -621,6 +621,8 @@ static size_t findNameEnd(const std::string &full, size_t pos)
 bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
 {
    string_view a( allocname );
+   // In Windows, allocname might be 'class const std::allocator<int>',
+   // (never 'const class ...'), so we start by stripping the 'class ', if any
    constexpr static int clalloclen = strlen("class ");
    if (a.compare(0,clalloclen,"class ") == 0) {
       a.remove_prefix(clalloclen);
@@ -1537,6 +1539,8 @@ static void ResolveTypedefImpl(const char *tname,
       }
       while (tname[cursor]==' ') ++cursor;
    }
+   // In Windows, we might have 'class const ...' as name,
+   // (never 'const class ...'), so skip the leading 'class ', if any
    if (tname[cursor]=='c' && (cursor+6<len)) {
       if (strncmp(tname+cursor,"class ",6) == 0) {
          cursor += 6;
