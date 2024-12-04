@@ -1763,12 +1763,20 @@ class TH2Painter extends THistPainter {
                let text = (binz === Math.round(binz)) ? binz.toString() : floatToString(binz, gStyle.fPaintTextFormat);
 
                if (show_err) {
-                  const errz = histo.getBinError(histo.getBin(i+1, j+1)),
-                     lble = (errz === Math.round(errz)) ? errz.toString() : floatToString(errz, gStyle.fPaintTextFormat);
-                  if (this.options.TextLine)
-                     text += '\xB1' + lble;
-                  else
-                     text = `#splitmline{${text}}{#pm${lble}}`;
+                  const errs = this.getBinErrors(histo, histo.getBin(i + 1, j + 1), binz);
+                  if (errs.poisson) {
+                     const lble = `-${floatToString(errs.low, gStyle.fPaintTextFormat)}  +${floatToString(errs.up, gStyle.fPaintTextFormat)}`;
+                     if (this.options.TextLine)
+                        text += ' ' + lble;
+                     else
+                        text = `#splitmline{${text}}{${lble}}`;
+                  } else {
+                     const lble = (errs.up === Math.round(errs.up)) ? errs.up.toString() : floatToString(errs.up, gStyle.fPaintTextFormat);
+                     if (this.options.TextLine)
+                        text += '\xB1' + lble;
+                     else
+                        text = `#splitmline{${text}}{#pm${lble}}`;
+                  }
                }
 
                let x, y, width, height;
@@ -1937,7 +1945,7 @@ class TH2Painter extends THistPainter {
                cross += `M${xx},${yy}l${ww},${hh}m0,${-hh}l${-ww},${hh}`;
 
             if ((this.options.BoxStyle === 11) && (ww > 5) && (hh > 5)) {
-               const arr = getBoxDecorations(xx, yy, ww, hh, binz, Math.round(ww*0.1), Math.round(hh*0.1));
+               const arr = getBoxDecorations(xx, yy, ww, hh, binz < 0 ? -1 : 1, Math.round(ww*0.1), Math.round(hh*0.1));
                btn1 += arr[0];
                btn2 += arr[1];
             }
@@ -2144,13 +2152,15 @@ class TH2Painter extends THistPainter {
          return res;
       }, make_marker = (x, y) => {
          if (!markers) {
-            this.createAttMarker({ attr: histo, style: isOption(kPointsAllScat) ? 0 : 5 });
+            const mw = gStyle.fCandleCrossLineWidth ?? 1;
+            this.createAttMarker({ attr: histo, style: isOption(kPointsAllScat) ? 0 : (mw === 1 ? 5 : 18 * mw + 16) });
             this.markeratt.resetPos();
          }
          markers += swapXY ? this.markeratt.create(y, x) : this.markeratt.create(x, y);
       }, make_cmarker = (x, y) => {
          if (!attrcmarkers) {
-            attrcmarkers = this.createAttMarker({ attr: histo, style: 24, std: false });
+            const mw = gStyle.fCandleCircleLineWidth ?? 1;
+            attrcmarkers = this.createAttMarker({ attr: histo, style: (mw === 1 ? 24 : 18 * mw + 17), std: false });
             attrcmarkers.resetPos();
          }
          cmarkers += swapXY ? attrcmarkers.create(y, x) : attrcmarkers.create(x, y);
@@ -2865,8 +2875,9 @@ class TH2Painter extends THistPainter {
    /** @summary Provide text information (tooltips) for histogram bin */
    getBinTooltips(i, j) {
       const histo = this.getHisto(),
-            profile2d = this.matchObjectType(clTProfile2D) && isFunc(histo.getBinEntries);
-      let binz = histo.getBinContent(i+1, j+1);
+            profile2d = this.matchObjectType(clTProfile2D) && isFunc(histo.getBinEntries),
+            bincontent = histo.getBinContent(i+1, j+1);
+      let binz = bincontent;
 
       if (histo.$baseh)
          binz -= histo.$baseh.getBinContent(i+1, j+1);
@@ -2878,8 +2889,11 @@ class TH2Painter extends THistPainter {
                    'content = ' + ((binz === Math.round(binz)) ? binz : floatToString(binz, gStyle.fStatFormat))];
 
       if ((this.options.TextKind === 'E') || profile2d) {
-         const errz = histo.getBinError(histo.getBin(i+1, j+1));
-         lines.push('error = ' + ((errz === Math.round(errz)) ? errz.toString() : floatToString(errz, gStyle.fPaintTextFormat)));
+         const errs = this.getBinErrors(histo, histo.getBin(i + 1, j + 1), bincontent);
+         if (errs.poisson)
+            lines.push('error low = ' + floatToString(errs.low, gStyle.fPaintTextFormat), 'error up = ' + floatToString(errs.up, gStyle.fPaintTextFormat));
+         else
+            lines.push('error = ' + floatToString(errs.up, gStyle.fPaintTextFormat));
       }
 
       if (profile2d) {

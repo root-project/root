@@ -860,8 +860,7 @@ function convertDate(dt) {
 
 /** @summary Box decorations
   * @private */
-function getBoxDecorations(xx, yy, ww, hh, bmode, pww, phh)
-{
+function getBoxDecorations(xx, yy, ww, hh, bmode, pww, phh) {
    const side1 = `M${xx},${yy}h${ww}l${-pww},${phh}h${2*pww-ww}v${hh-2*phh}l${-pww},${phh}z`,
          side2 = `M${xx+ww},${yy+hh}v${-hh}l${-pww},${phh}v${hh-2*phh}h${2*pww-ww}l${-pww},${phh}z`;
    return bmode > 0 ? [side1, side2] : [side2, side1];

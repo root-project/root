@@ -389,7 +389,7 @@ class JSRootMenu {
    /** @summary Add selection menu entries
      * @param {String} name - name of submenu
      * @param {Array} values - array of string entries used as list for selection
-     * @param {String|Number} value - currently elected value, either name or index
+     * @param {String|Number} value - currently selected value, either name or index
      * @param {Function} set_func - function called when item selected, either name or index depending from value parameter
      * @param {String} [title] - optional title for menu items
      * @protected */
@@ -935,6 +935,8 @@ class JSRootMenu {
       this.addSizeMenu('Line width', 1, 10, 1, gStyle.fFrameLineWidth, w => { gStyle.fFrameLineWidth = w; });
       this.addLineStyleMenu('Line style', gStyle.fFrameLineStyle, st => { gStyle.fFrameLineStyle = st; });
       this.addSizeMenu('Border size', 0, 10, 1, gStyle.fFrameBorderSize, sz => { gStyle.fFrameBorderSize = sz; });
+      this.addSelectMenu('Border mode', ['Down', 'Off', 'Up'], gStyle.fFrameBorderMode + 1, v => { gStyle.fFrameBorderMode = v - 1; });
+
       // fFrameBorderMode: 0,
       this.sub('Margins');
       this.addSizeMenu('Bottom', 0, 0.5, 0.05, gStyle.fPadBottomMargin, v => { gStyle.fPadBottomMargin = v; });
