@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_math
+/// \ingroup tutorial_unfold
 /// \notebook
 ///  Data unfolding using Singular Value Decomposition
 ///
