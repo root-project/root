@@ -74,7 +74,7 @@ class TRandomNumpyArrays(unittest.TestCase):
 
     def test_pythonization_arrays(self):
         r = ROOT.TRandom(123)
-        aa=numpy.zeros([2,3,4])
+        aa= np.zeros([2,3,4])
         r.Gaus(4, 0.4, out=aa)
         r.Gaus(4, 0.4)
         r.Gaus(4, 0.4, size=[2,3,4])
