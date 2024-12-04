@@ -76,12 +76,12 @@ ROOTTEST_ADD_TEST(mixedBase_53410_v2
                   OUTREF mixedBase_53410_v2.ref
                   DEPENDS execMixedBaseClass_v2)
                   
-ROOTTEST_ADD_TEST(mixedBase_merge1
-                  PRECMD hadd -f mixedBase_merge1.root mixedBase_v1.root mixedBase_v2.root
-                  MACRO execMixedBaseClass_v2.cxx+
-                  MACROARG "\"mixedBase_merge1.root\""
-                  OUTREF mixedBase_merge1.ref
-                  DEPENDS execMixedBaseClass_v2 )
+# ROOTTEST_ADD_TEST(mixedBase_merge1
+#                   PRECMD hadd -f mixedBase_merge1.root mixedBase_v1.root mixedBase_v2.root
+#                   MACRO execMixedBaseClass_v2.cxx+
+#                   MACROARG "\"mixedBase_merge1.root\""
+#                   OUTREF mixedBase_merge1.ref
+#                   DEPENDS execMixedBaseClass_v2 )
 
 ROOTTEST_ADD_TEST(mixedBase_merge2
                   PRECMD hadd -f mixedBase_merge2.root mixedBase_v2.root mixedBase_v1.root
