@@ -1,9 +1,9 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_tree
 ## \notebook -nodraw
 ## Build ROOT Ntuple from other source.
 ## This program reads the `aptuple.txt' file row by row, then creates
-## the Ntuple by adding row by row.
+## the TNtuple by adding row by row.
 ##
 ## \macro_output
 ## \macro_code
@@ -14,7 +14,7 @@ import sys, os
 from ROOT import TFile, TNtuple, TROOT
 
 
-ifn = os.path.join(str(TROOT.GetTutorialDir()), 'pyroot', 'aptuple.txt')
+ifn = os.path.join(str(TROOT.GetTutorialDir()), 'io', 'tree', 'aptuple.txt')
 ofn = 'aptuple.root'
 
 print('opening file %s ...' % ifn)

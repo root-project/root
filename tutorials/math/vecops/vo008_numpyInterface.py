@@ -1,7 +1,7 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_vecops
 ## \notebook -nodraw
-## This tutorial illustrates the conversion of STL vectors and TVec to numpy
+## This tutorial illustrates the conversion of RVec to numpy
 ## arrays without copying the data.
 ## The memory-adoption is achieved by the dictionary __array_interface__, which
 ## is added dynamically to the Python objects by PyROOT.
@@ -21,8 +21,8 @@ except:
     exit()
 
 # Create a vector ROOT object and assign values
-# Note that this works as well with a TVec
-vec = ROOT.std.vector("float")(2)
+# Note that this works as well with a ROOT.std.vector
+vec = ROOT.RVecF(2) # or ROOT.std.vector("float")(2)
 vec[0] = 1
 vec[1] = 2
 print("Content of the ROOT vector object: {}".format([x for x in vec]))

@@ -734,13 +734,13 @@ if(ROOT_pyroot_FOUND)
 
   # Now python-specific vetos:
   set(pyveto demos.py         # requires GUI
-             pyroot/fit1_py.py      # not a tutorial
+             math/fit/fit1_py.py      # not a tutorial
              gui/gui_simple.py       # requires GUI
-             pyroot/mrt.py          # not really a tutorial
+             io/tree/csv2tntuple.py          # not really a tutorial
              geom/na49geomfile.py # ????
              geom/na49visible.py  # ????
-             pyroot/parse_CSV_file_with_TTree_ReadStream.py # not a tutorial
-             guiui/numberEntry.py  # requires GUI
+             tutorials/io/tree/csv2tree_ReadStream.py # not a tutorial
+             gui/numberEntry.py  # requires GUI
              legacy/pyroot/*py      # legacy ...
              histfactory/makeQuickModel.py # not a tutorial
              eve/lineset.py         # requires GUI
@@ -754,7 +754,7 @@ if(ROOT_pyroot_FOUND)
   if(NOT dataframe
      OR DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3}
      OR (MSVC AND NOT win_broken_tests))
-    list(APPEND pyveto pyroot/pyroot004_NumbaDeclare.py)
+    list(APPEND pyveto analysis/dataframe/df038_NumbaDeclare.py)
   endif()
 
   if(dataframe AND DEFINED ENV{ROOTTEST_IGNORE_PANDAS_PY3})
@@ -838,11 +838,11 @@ if(ROOT_pyroot_FOUND)
   set(tree-ntuple1-depends tutorial-hsimple-py)
   set(hist-h1ReadAndDraw-depends tutorial-hsimple-py)
   set(pyroot-benchmarks-depends tutorial-hsimple-py
-                                tutorial-fit-fit1-py
+                                tutorial-math-fit-fit1-py
                                 tutorial-geom-na49view-py
                                 tutorial-hist-h1ReadAndDraw-py
                                 tutorial-tree-ntuple1-py)
-  set(fit-fit1-depends tutorial-hist-fillrandom-py)
+  set(math-fit-fit1-depends tutorial-hist-fillrandom-py)
   set(geom-na49view-depends tutorial-geom-geometry-py)
   set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite-py)
   set(roofit-rf618_mixture_models-depends tutorial-analysis-dataframe-df106_HiggsToFourLeptons-py)
@@ -864,7 +864,7 @@ if(ROOT_pyroot_FOUND)
       math/fit/combinedFit.py
       math/fit/multifit.py
       roofit/rf409_NumPyPandasToRooFit.py)
-  file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} pyroot/pyroot004_NumbaDeclare.py)
+  file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} analysis/dataframe/df038_NumbaDeclare.py)
   file(GLOB requires_pandas  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       analysis/dataframe/df026_AsNumpyArrays.py
       roofit/rf409_NumPyPandasToRooFit.py)

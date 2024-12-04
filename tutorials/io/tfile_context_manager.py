@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_io
 ## \notebook -nodraw
 ## This tutorial demonstrates the usage of the TFile class as a Python context
 ## manager.
@@ -12,7 +12,7 @@
 import os
 
 import ROOT
-from ROOT import TFile
+from ROOT import TFile, gROOT
 
 # By default, objects of some ROOT types such as `TH1` and its derived types
 # are automatically attached to a ROOT.TDirectory when they are created.
@@ -31,7 +31,9 @@ print("Histogram '{}' is attached to: '{}'.\n".format(histo_1.GetName(), histo_1
 # open a TFile as a Python context manager. In the context, objects can be
 # created, modified and finally written to the file. At the end of the context,
 # the file will be automatically closed.
-with TFile.Open("pyroot005_file_1.root", "recreate") as f:
+path = str(gROOT.GetTutorialDir()) + '/io/'
+filename = path+"tfile_1.root"
+with TFile.Open(filename, "recreate") as f:
     histo_2 = ROOT.TH1F("histo_2", "histo_2", 10, 0, 10)
     # Inside the context, the current directory is the open file
     print("Current directory: '{}'.\n".format(ROOT.gDirectory.GetName()))
@@ -54,11 +56,12 @@ print(" Current directory: '{}'.".format(ROOT.gDirectory.GetName()))
 # automatically closed. This means you should use this pattern as a quick way
 # to get information or modify objects from a certain file, without needing to
 # keep the histograms alive afterwards.
-with TFile.Open("pyroot005_file_1.root", "read") as f:
+
+with TFile.Open(filename, "read") as f:
     # Retrieve histogram using the name given to f.WriteObject in the previous
     # with statement
     histo_2_fromfile = f["my_histogram"]
     print("Retrieved '{}' histogram from file '{}'.\n".format(histo_2_fromfile.GetName(), f.GetName()))
 
 # Cleanup the file created for this tutorial
-os.remove("pyroot005_file_1.root")
+os.remove(filename)
