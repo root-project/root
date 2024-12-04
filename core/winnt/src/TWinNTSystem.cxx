@@ -65,6 +65,7 @@
 #include <bcrypt.h>
 #include <chrono>
 #include <thread>
+#include <cstdio>
 
 #if defined (_MSC_VER) && (_MSC_VER >= 1400)
    #include <intrin.h>
@@ -2629,7 +2630,7 @@ int TWinNTSystem::CopyFile(const char *f, const char *t, Bool_t overwrite)
 
 int TWinNTSystem::Rename(const char *f, const char *t)
 {
-   int ret = ::rename(f, t);
+   int ret = std::rename(f, t);
    GetLastErrorString() = GetError();
    return ret;
 }
