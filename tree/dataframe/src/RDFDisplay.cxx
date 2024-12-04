@@ -267,7 +267,7 @@ std::string RDisplay::AsStringHtml() const
       }
 
       for (const auto &element : row) {
-         ss << "    <" + elemType + " style=\"padding: 1px 4px\">" << element.GetRepresentation() << "</" + elemType + ">\n";
+         ss << "    <" + elemType + " style=\"padding: 1px 4px; border-right: 1px solid\">" << element.GetRepresentation() << "</" + elemType + ">\n";
       }
       ss << "  </tr>\n";
 
