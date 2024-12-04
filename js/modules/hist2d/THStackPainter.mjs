@@ -125,10 +125,12 @@ class THStackPainter extends ObjectPainter {
                j2 = hist.fYaxis.fLast;
             }
          }
+         let err = 0;
          for (let j = j1; j <= j2; ++j) {
             for (let i = i1; i <= i2; ++i) {
-               const val = hist.getBinContent(i, j),
-                     err = witherr ? hist.getBinError(hist.getBin(i, j)) : 0;
+               const val = hist.getBinContent(i, j);
+               if (witherr)
+                  err = hist.getBinError(hist.getBin(i, j));
                if (logscale && (val - err <= 0))
                   continue;
                if (domin && (first || (val - err < res.min)))

@@ -1929,7 +1929,7 @@ function drawBinsError3D(painter, is_v7 = false) {
          zmin = main.z_handle.getScaleMin(),
          zmax = main.z_handle.getScaleMax(),
          test_cutg = painter.options.cutg;
-   let i, j, bin, binz, binerr, x1, y1, x2, y2, z1, z2,
+   let i, j, bin, binz, errs, x1, y1, x2, y2, z1, z2,
        nsegments = 0, lpos = null, binindx = null, lindx = 0;
 
    const check_skip_min = () => {
@@ -1938,7 +1938,7 @@ function drawBinsError3D(painter, is_v7 = false) {
        return !painter.options.ShowEmpty;
    };
 
-    // loop over the points - first loop counts points, second fill arrays
+   // loop over the points - first loop counts points, second fill arrays
    for (let loop = 0; loop < 2; ++loop) {
       for (i = handle.i1; i < handle.i2; ++i) {
          x1 = handle.grx[i];
@@ -1955,14 +1955,14 @@ function drawBinsError3D(painter, is_v7 = false) {
             if (loop === 0) { nsegments += 3; continue; }
 
             bin = histo.getBin(i + 1, j + 1);
-            binerr = histo.getBinError(bin);
+            errs = painter.getBinErrors(histo, bin, binz);
             binindx[lindx / 18] = bin;
 
             y1 = handle.gry[j];
             y2 = handle.gry[j + 1];
 
-            z1 = main.grz((binz - binerr < zmin) ? zmin : binz - binerr);
-            z2 = main.grz((binz + binerr > zmax) ? zmax : binz + binerr);
+            z1 = main.grz((binz - errs.low < zmin) ? zmin : binz - errs.low);
+            z2 = main.grz((binz + errs.up > zmax) ? zmax : binz + errs.up);
 
             lpos[lindx] = x1; lpos[lindx + 3] = x2;
             lpos[lindx + 1] = lpos[lindx + 4] = (y1 + y2) / 2;
