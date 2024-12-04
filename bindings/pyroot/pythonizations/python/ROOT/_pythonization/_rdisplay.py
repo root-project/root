@@ -22,3 +22,4 @@ def pythonize_rdisplay(klass):
         opts.fFormat = ROOT.RDF.RDisplay.EPrintFormat.kHtml
         return klass.AsString(opts)
     klass._repr_html_ = repr
+    klass.__repr__ = klass.AsString
