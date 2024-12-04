@@ -230,18 +230,36 @@ def upload_file(connection: Connection, container: str, dest_object: str, src_fi
     if not os.path.exists(src_file):
         raise Exception(f"No such file: {src_file}")
 
+    def create_object_local():
+        connection.create_object(
+            container=container,
+            name=dest_object,
+            filename=src_file,
+            segment_size=5*gigabyte,
+            **{
+                'X-Delete-After': str(2*week_in_seconds)
+            }
+        )
+
     gigabyte = 1024**3
     week_in_seconds = 60*60*24*7
 
-    connection.create_object(
-        container=container,
-        name=dest_object,
-        filename=src_file,
-        segment_size=5*gigabyte,
-        **{
-            'X-Delete-After': str(2*week_in_seconds)
-        }
-    )
+    max_attempts = 5
+    sleep_time_unit = 4
+    success = False
+    for attempt in range(1, max_attempts+1):
+        try:
+            create_object_local()
+            success = True
+        except:
+            success = False
+            sleep_time = sleep_time_unit * attempt
+            build_utils.print_warning(f"""Attempt {attempt} to upload {src_file} to {dest_object} failed. Retrying in {sleep_time} seconds...""")
+            time.sleep(sleep_time)
+        if success: break
+
+    # We try one last time
+    create_object_local()
 
     print(f"Successfully uploaded to {dest_object}")
 
