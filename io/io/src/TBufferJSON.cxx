@@ -1757,8 +1757,11 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
 
          map->Add(tobj, static_cast<TObject *>(subobj2));
       } else if (lst) {
-         std::string opt = json->at("opt").at(n).get<std::string>();
-         lst->Add(tobj, opt.c_str());
+         auto &elem = json->at("opt").at(n);
+         if (elem.is_null())
+            lst->Add(tobj);
+         else
+            lst->Add(tobj, elem.get<std::string>().c_str());
       } else {
          // generic method, all kinds of TCollection should work
          col->Add(tobj);
