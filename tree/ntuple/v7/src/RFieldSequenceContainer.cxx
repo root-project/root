@@ -35,9 +35,14 @@ ROOT::Experimental::RArrayField::CloneImpl(std::string_view newName) const
 std::size_t ROOT::Experimental::RArrayField::AppendImpl(const void *from)
 {
    std::size_t nbytes = 0;
-   auto arrayPtr = static_cast<const unsigned char *>(from);
-   for (unsigned i = 0; i < fArrayLength; ++i) {
-      nbytes += CallAppendOn(*fSubFields[0], arrayPtr + (i * fItemSize));
+   if (fSubFields[0]->IsSimple()) {
+      GetPrincipalColumnOf(*fSubFields[0])->AppendV(from, fArrayLength);
+      nbytes += fArrayLength * GetPrincipalColumnOf(*fSubFields[0])->GetElement()->GetPackedSize();
+   } else {
+      auto arrayPtr = static_cast<const unsigned char *>(from);
+      for (unsigned i = 0; i < fArrayLength; ++i) {
+         nbytes += CallAppendOn(*fSubFields[0], arrayPtr + (i * fItemSize));
+      }
    }
    return nbytes;
 }
