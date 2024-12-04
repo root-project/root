@@ -26,6 +26,7 @@
 #include <memory>
 #include <string_view>
 #include <algorithm>
+#include <string>
 
 #include "TSpinLockGuard.h"
 
@@ -623,7 +624,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
    string_view a( allocname );
    // In Windows, allocname might be 'class const std::allocator<int>',
    // (never 'const class ...'), so we start by stripping the 'class ', if any
-   constexpr static int clalloclen = strlen("class ");
+   constexpr static int clalloclen = std::char_traits<char>::length("class ");
    if (a.compare(0,clalloclen,"class ") == 0) {
       a.remove_prefix(clalloclen);
    }
@@ -633,7 +634,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
    if (a=="__default_alloc_template<true,0>")   return true;
    if (a=="__malloc_alloc_template<0>")         return true;
 
-   constexpr static int alloclen = strlen("allocator<");
+   constexpr static int alloclen = std::char_traits<char>::length("allocator<");
    if (a.compare(0,alloclen,"allocator<") != 0) {
       return false;
    }
@@ -682,7 +683,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
    string_view a( allocname );
    RemoveStd(a);
 
-   constexpr static int alloclen = strlen("allocator<");
+   constexpr static int alloclen = std::char_traits<char>::length("allocator<");
    if (a.compare(0,alloclen,"allocator<") != 0) {
       return false;
    }
@@ -690,7 +691,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
 
    RemoveStd(a);
 
-   constexpr static int pairlen = strlen("pair<");
+   constexpr static int pairlen = std::char_traits<char>::length("pair<");
    if (a.compare(0,pairlen,"pair<") != 0) {
       return false;
    }
