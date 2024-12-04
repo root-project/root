@@ -1159,26 +1159,6 @@ RooAbsArg* RooDataSet::addColumn(RooAbsArg& var, bool adjustRange)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add a column with the values of the given list of (function)
-/// argument to this dataset. Each function value is calculated for
-/// each event using the observable values of the event in case the
-/// function depends on variables with names that are identical to
-/// the observable names in the dataset
-
-RooArgSet* RooDataSet::addColumns(const RooArgList& varList)
-{
-  auto * holderSet = new RooArgSet{};
-  for(RooAbsArg * var : varList) {
-    holderSet->add(*addColumn(*var));
-  }
-  return holderSet;
-}
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Special plot method for 'X-Y' datasets used in \f$ \chi^2 \f$ fitting.
 /// For general plotting, see RooAbsData::plotOn().
 ///

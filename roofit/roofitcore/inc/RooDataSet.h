@@ -110,7 +110,6 @@ public:
   bool merge(std::list<RooDataSet*> dsetList) ;
 
   virtual RooAbsArg* addColumn(RooAbsArg& var, bool adjustRange=true) ;
-  virtual RooArgSet* addColumns(const RooArgList& varList) ;
 
   void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override;
   void printArgs(std::ostream& os) const override;
