@@ -67,7 +67,7 @@ TableTest::TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols,
    fFile = new TFile("cernstaff.root");
 
    if (!fFile || fFile->IsZombie()) {
-      printf("Please run <ROOT location>/tutorials/tree/cernbuild.C first.");
+      printf("Please run <ROOT location>/tutorials/io/tree/tree500_cernbuild.C first.");
       return;
    }
 

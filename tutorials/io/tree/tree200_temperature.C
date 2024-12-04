@@ -119,7 +119,7 @@ void tree200_temperature()
    tree = new TTree("tree", "GHCN-Daily");
    // data format: YEAR/I:MONTH/I:DAY/I:T/F
 
-   // Read file $ROOTSYS/tutorials/tree/temperature_Prague.dat
+   // Read file $ROOTSYS/tutorials/io/tree/temperature_Prague.dat
    auto dir = gROOT->GetTutorialDir();
    dir.Append("/io/tree/");
    dir.ReplaceAll("/./","/");

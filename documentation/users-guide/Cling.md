@@ -218,7 +218,7 @@ clean up. See "Input/Output".
 You may want to execute a script conditionally inside another script.
 To do it you need to call the interpreter and you can do that with
 `TROOT::ProcessLine()`. The example
-`$ROOTSYS/tutorials/tree/cernstaff.C` calls a script to build the root
+`$ROOTSYS/tutorials/io/tree/tree500_cernstaff.C` calls a script to build the root
 file if it does not exist:
 
 ``` {.cpp}

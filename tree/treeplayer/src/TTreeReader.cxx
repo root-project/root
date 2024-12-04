@@ -30,8 +30,8 @@
  access the information in the dataset.
 
  Example code can be found in
-  - tutorials/tree/hsimpleReader.C
-  - tutorials/tree/h1analysisTreeReader.C
+  - tutorials/io/tree/hsimpleReader.C
+  - tutorials/io/tree/h1analysisTreeReader.C
   - <a href="https://github.com/root-project/roottest/tree/master/root/tree/reader">This example</a>
 
  You can generate a skeleton of `TTreeReaderValue<T>` and `TTreeReaderArray<T>` declarations

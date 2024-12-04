@@ -18,7 +18,7 @@
 /// 1000 entries. The filling and reading is repeated until enough
 /// statistics have been collected.
 ///
-/// tutorials/tree/drawsparse.C shows an example for visualizing a
+/// tutorials/io/tree/tree143_drawsparse.C shows an example for visualizing a
 /// THnSparse. It creates a TTree which is then drawn using
 /// TParallelCoord.
 ///

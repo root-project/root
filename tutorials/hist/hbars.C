@@ -10,7 +10,7 @@
 
 TCanvas *hbars()
 {
-   // Try to open first the file cernstaff.root in tutorials/tree directory
+   // Try to open first the file cernstaff.root in tutorials/io/tree directory
    TString filedir = gROOT->GetTutorialDir();
    filedir += TString("/io/tree/");
    TString filename = "cernstaff.root";
