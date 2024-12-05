@@ -250,7 +250,7 @@ struct RNTupleLocator {
    }
 };
 
-/// Used to specify the underlying RNTuples in RNTupleProcessor and RNTupleReader::OpenFriends()
+/// Used to specify the underlying RNTuples in RNTupleProcessor
 struct RNTupleOpenSpec {
    std::string fNTupleName;
    std::string fStorage;

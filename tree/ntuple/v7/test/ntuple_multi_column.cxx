@@ -416,14 +416,4 @@ TEST(RNTuple, MultiColumnRepresentationFriends)
       *ptrEta = 4.0;
       writer->Fill();
    }
-
-   std::vector<RNTupleOpenSpec> friends{{"ntpl1", fileGuard1.GetPath()}, {"ntpl2", fileGuard2.GetPath()}};
-   auto reader = RNTupleReader::OpenFriends(friends);
-   EXPECT_EQ(2u, reader->GetNEntries());
-   auto viewPt = reader->GetView<float>("ntpl1.pt");
-   EXPECT_FLOAT_EQ(1.0, viewPt(0));
-   EXPECT_FLOAT_EQ(2.0, viewPt(1));
-   auto viewEta = reader->GetView<float>("ntpl2.eta");
-   EXPECT_FLOAT_EQ(3.0, viewEta(0));
-   EXPECT_FLOAT_EQ(4.0, viewEta(1));
 }
