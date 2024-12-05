@@ -1437,6 +1437,15 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
       clingArgsStorage.push_back("-mllvm");
       clingArgsStorage.push_back("-optimize-regalloc=0");
 #endif
+
+#ifdef CLING_WITH_ADAPTIVECPP
+      std::string acppInclude(TROOT::GetIncludeDir() + "/AdaptiveCpp");
+
+      clingArgsStorage.push_back("-isystem");
+      clingArgsStorage.push_back(acppInclude);
+      clingArgsStorage.push_back("-mllvm");
+      clingArgsStorage.push_back("-acpp-sscp");
+#endif
    }
 
    // Process externally passed arguments if present.
