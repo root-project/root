@@ -1649,6 +1649,9 @@ if(experimental_adaptivecpp)
     ROOT_CHECK_CONNECTION_AND_DISABLE_OPTION("experimental_adaptivecpp")
   endif()
   include(SetupAdaptiveCpp)
+
+  add_compile_definitions(CLING_WITH_ADAPTIVECPP)
+
   set(HIPSYCL_NO_FIBERS ON)
   set(WITH_OPENCL_BACKEND OFF)
   set(WITH_LEVEL_ZERO_BACKEND OFF)
