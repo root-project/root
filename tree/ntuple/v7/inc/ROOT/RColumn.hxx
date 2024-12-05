@@ -333,7 +333,7 @@ public:
    std::uint16_t GetBitsOnStorage() const
    {
       assert(fElement);
-      return fElement->GetBitsOnStorage();
+      return static_cast<std::uint16_t>(fElement->GetBitsOnStorage());
    }
    std::optional<std::pair<double, double>> GetValueRange() const
    {
