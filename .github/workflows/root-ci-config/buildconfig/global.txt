@@ -1,3 +1,4 @@
+adaptivecpp=OFF
 alien=OFF
 all=OFF
 arrow=OFF
