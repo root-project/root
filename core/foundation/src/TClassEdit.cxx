@@ -1083,7 +1083,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
                offset += 5;
             }
             static const char* char_traits_s = "char_traits<char>";
-            static const unsigned int char_traits_len = strlen(char_traits_s);
+            static constexpr unsigned int char_traits_len = std::char_traits<char>::length(char_traits_s);
             if (full.compare(offset, char_traits_len, char_traits_s) == 0) {
                offset += char_traits_len;
                if ( full[offset] == '>') {
@@ -1347,7 +1347,7 @@ bool TClassEdit::IsInterpreterDetail(const char *type)
 bool TClassEdit::IsSTLBitset(const char *classname)
 {
    size_t offset = StdLen(classname);
-   if ( strncmp(classname+offset,"bitset<",strlen("bitset<"))==0) return true;
+   if ( strncmp(classname+offset,"bitset<",std::char_traits<char>::length("bitset<"))==0) return true;
    return false;
 }
 
@@ -1426,30 +1426,30 @@ bool TClassEdit::IsStdClass(const char *classname)
 {
    classname += StdLen( classname );
    if ( strcmp(classname,"string")==0 ) return true;
-   if ( strncmp(classname,"bitset<",strlen("bitset<"))==0) return true;
+   if ( strncmp(classname,"bitset<",std::char_traits<char>::length("bitset<"))==0) return true;
    if ( IsStdPair(classname) ) return true;
    if ( strcmp(classname,"allocator")==0) return true;
-   if ( strncmp(classname,"allocator<",strlen("allocator<"))==0) return true;
-   if ( strncmp(classname,"greater<",strlen("greater<"))==0) return true;
-   if ( strncmp(classname,"less<",strlen("less<"))==0) return true;
-   if ( strncmp(classname,"equal_to<",strlen("equal_to<"))==0) return true;
-   if ( strncmp(classname,"hash<",strlen("hash<"))==0) return true;
-   if ( strncmp(classname,"auto_ptr<",strlen("auto_ptr<"))==0) return true;
+   if ( strncmp(classname,"allocator<",std::char_traits<char>::length("allocator<"))==0) return true;
+   if ( strncmp(classname,"greater<",std::char_traits<char>::length("greater<"))==0) return true;
+   if ( strncmp(classname,"less<",std::char_traits<char>::length("less<"))==0) return true;
+   if ( strncmp(classname,"equal_to<",std::char_traits<char>::length("equal_to<"))==0) return true;
+   if ( strncmp(classname,"hash<",std::char_traits<char>::length("hash<"))==0) return true;
+   if ( strncmp(classname,"auto_ptr<",std::char_traits<char>::length("auto_ptr<"))==0) return true;
 
-   if ( strncmp(classname,"vector<",strlen("vector<"))==0) return true;
-   if ( strncmp(classname,"list<",strlen("list<"))==0) return true;
-   if ( strncmp(classname,"forward_list<",strlen("forward_list<"))==0) return true;
-   if ( strncmp(classname,"deque<",strlen("deque<"))==0) return true;
-   if ( strncmp(classname,"map<",strlen("map<"))==0) return true;
-   if ( strncmp(classname,"multimap<",strlen("multimap<"))==0) return true;
-   if ( strncmp(classname,"set<",strlen("set<"))==0) return true;
-   if ( strncmp(classname,"multiset<",strlen("multiset<"))==0) return true;
-   if ( strncmp(classname,"unordered_set<",strlen("unordered_set<"))==0) return true;
-   if ( strncmp(classname,"unordered_multiset<",strlen("unordered_multiset<"))==0) return true;
-   if ( strncmp(classname,"unordered_map<",strlen("unordered_map<"))==0) return true;
-   if ( strncmp(classname,"unordered_multimap<",strlen("unordered_multimap<"))==0) return true;
-   if ( strncmp(classname,"bitset<",strlen("bitset<"))==0) return true;
-   if ( strncmp(classname,"ROOT::VecOps::RVec<",strlen("ROOT::VecOps::RVec<"))==0) return true;
+   if ( strncmp(classname,"vector<",std::char_traits<char>::length("vector<"))==0) return true;
+   if ( strncmp(classname,"list<",std::char_traits<char>::length("list<"))==0) return true;
+   if ( strncmp(classname,"forward_list<",std::char_traits<char>::length("forward_list<"))==0) return true;
+   if ( strncmp(classname,"deque<",std::char_traits<char>::length("deque<"))==0) return true;
+   if ( strncmp(classname,"map<",std::char_traits<char>::length("map<"))==0) return true;
+   if ( strncmp(classname,"multimap<",std::char_traits<char>::length("multimap<"))==0) return true;
+   if ( strncmp(classname,"set<",std::char_traits<char>::length("set<"))==0) return true;
+   if ( strncmp(classname,"multiset<",std::char_traits<char>::length("multiset<"))==0) return true;
+   if ( strncmp(classname,"unordered_set<",std::char_traits<char>::length("unordered_set<"))==0) return true;
+   if ( strncmp(classname,"unordered_multiset<",std::char_traits<char>::length("unordered_multiset<"))==0) return true;
+   if ( strncmp(classname,"unordered_map<",std::char_traits<char>::length("unordered_map<"))==0) return true;
+   if ( strncmp(classname,"unordered_multimap<",std::char_traits<char>::length("unordered_multimap<"))==0) return true;
+   if ( strncmp(classname,"bitset<",std::char_traits<char>::length("bitset<"))==0) return true;
+   if ( strncmp(classname,"ROOT::VecOps::RVec<",std::char_traits<char>::length("ROOT::VecOps::RVec<"))==0) return true;
 
    return false;
 }

@@ -238,7 +238,7 @@ Bool_t TSQLObjectData::ExtractBlobValues()
       fBlobTypeName = name;
    } else {
       fBlobPrefixName = name;
-      separ += strlen(":"); // SQLNameSeparator()
+      separ += std::char_traits<char>::length(":"); // SQLNameSeparator()
       fBlobTypeName = separ;
    }
 

@@ -812,11 +812,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
                fprintf(fp,"#include <%s>\n",declfile+precstl_len);
                listOfHeaders.Add(new TNamed(cl->GetName(),declfile+precstl_len));
             } else if (strncmp(declfile,"/usr/include/",13) == 0) {
-               fprintf(fp,"#include <%s>\n",declfile+strlen("/include/c++/"));
-               listOfHeaders.Add(new TNamed(cl->GetName(),declfile+strlen("/include/c++/")));
+               fprintf(fp,"#include <%s>\n",declfile+std::char_traits<char>::length("/include/c++/"));
+               listOfHeaders.Add(new TNamed(cl->GetName(),declfile+std::char_traits<char>::length("/include/c++/")));
             } else if (strstr(declfile,"/include/c++/") != nullptr) {
-               fprintf(fp,"#include <%s>\n",declfile+strlen("/include/c++/"));
-               listOfHeaders.Add(new TNamed(cl->GetName(),declfile+strlen("/include/c++/")));
+               fprintf(fp,"#include <%s>\n",declfile+std::char_traits<char>::length("/include/c++/"));
+               listOfHeaders.Add(new TNamed(cl->GetName(),declfile+std::char_traits<char>::length("/include/c++/")));
             } else if (strncmp(declfile,rootinclude,rootinclude_len) == 0) {
                fprintf(fp,"#include <%s>\n",declfile+rootinclude_len);
                listOfHeaders.Add(new TNamed(cl->GetName(),declfile+rootinclude_len));
@@ -2461,23 +2461,23 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
 
    if (opt.Contains("lenmax=")) {
       int start = opt.Index("lenmax=");
-      int numpos = start + strlen("lenmax=");
+      int numpos = start + std::char_traits<char>::length("lenmax=");
       int numlen = 0;
       int len = opt.Length();
       while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
       TString num = opt(numpos,numlen);
-      opt.Remove(start,strlen("lenmax")+numlen);
+      opt.Remove(start,std::char_traits<char>::length("lenmax")+numlen);
 
       lenmax = atoi(num.Data());
    }
    if (opt.Contains("colsize=")) {
       int start = opt.Index("colsize=");
-      int numpos = start + strlen("colsize=");
+      int numpos = start + std::char_traits<char>::length("colsize=");
       int numlen = 0;
       int len = opt.Length();
       while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
       TString num = opt(numpos,numlen);
-      opt.Remove(start,strlen("size")+numlen);
+      opt.Remove(start,std::char_traits<char>::length("size")+numlen);
 
       colDefaultSize = atoi(num.Data());
       colPrecision = colDefaultSize;
@@ -2485,19 +2485,19 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    }
    if (opt.Contains("precision=")) {
       int start = opt.Index("precision=");
-      int numpos = start + strlen("precision=");
+      int numpos = start + std::char_traits<char>::length("precision=");
       int numlen = 0;
       int len = opt.Length();
       while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
       TString num = opt(numpos,numlen);
-      opt.Remove(start,strlen("precision")+numlen);
+      opt.Remove(start,std::char_traits<char>::length("precision")+numlen);
 
       colPrecision = atoi(num.Data());
    }
    TString defFormat = Form("%d.%d",colDefaultSize,colPrecision);
    if (opt.Contains("col=")) {
       int start = opt.Index("col=");
-      int numpos = start + strlen("col=");
+      int numpos = start + std::char_traits<char>::length("col=");
       int numlen = 0;
       int len = opt.Length();
       while( (numpos+numlen<len) &&
@@ -2522,7 +2522,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
               || opt[numpos+numlen]=='.'
               || opt[numpos+numlen]==':')) numlen++;
       TString flist = opt(numpos,numlen);
-      opt.Remove(start,strlen("col")+numlen);
+      opt.Remove(start,std::char_traits<char>::length("col")+numlen);
 
       int i = 0;
       while(i<flist.Length() && flist[i]==':') {

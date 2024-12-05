@@ -762,12 +762,12 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
       Double_t h=0;
       if (opt.Contains("H=0.")) {
          int start = opt.Index("H=0.");
-         int numpos = start + strlen("H=0.");
+         int numpos = start + std::char_traits<char>::length("H=0.");
          int numlen = 0;
          int len = opt.Length();
          while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
          TString num = opt(numpos,numlen);
-         opt.Remove(start+strlen("H"),strlen("=0.")+numlen);
+         opt.Remove(start+std::char_traits<char>::length("H"),std::char_traits<char>::length("=0.")+numlen);
          h = atof(num.Data());
          h*=TMath::Power(10, -numlen);
       }

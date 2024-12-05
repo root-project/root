@@ -3836,8 +3836,8 @@ static void PrintElements(const TStreamerInfo *info, const TStreamerInfoActions:
 void TBranchElement::Print(Option_t* option) const
 {
    Int_t nbranches = fBranches.GetEntriesFast();
-   if (strncmp(option,"debugAddress",strlen("debugAddress"))==0) {
-      if (strlen(option)==strlen("debugAddress")) {
+   if (strncmp(option,"debugAddress",std::char_traits<char>::length("debugAddress"))==0) {
+      if (strlen(option)==std::char_traits<char>::length("debugAddress")) {
          Printf("%-24s %-16s %2s %4s %-16s %-16s %8s %8s %s %s\n",
                 "Branch Name", "Streamer Class", "ID", "Type", "Class", "Parent", "pOffset", "fOffset", "fObject", "fOnfileObject");
       }
@@ -3859,7 +3859,7 @@ void TBranchElement::Print(Option_t* option) const
       }
       return;
    }
-   if (strncmp(option,"debugInfo",strlen("debugInfo"))==0)  {
+   if (strncmp(option,"debugInfo",std::char_traits<char>::length("debugInfo"))==0)  {
       Printf("Branch %s uses:",GetName());
       if (fID>=0) {
          // GetInfoImp()->GetElement(fID)->ls();
@@ -3892,7 +3892,7 @@ void TBranchElement::Print(Option_t* option) const
          if (fFillActionSequence) fFillActionSequence->Print(option);
       }
       TString suboption = "debugInfoSub";
-      suboption += (option+strlen("debugInfo"));
+      suboption += (option+std::char_traits<char>::length("debugInfo"));
       for (Int_t i = 0; i < nbranches; ++i) {
          TBranchElement* subbranch = (TBranchElement*)fBranches.At(i);
          subbranch->Print(suboption);

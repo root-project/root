@@ -524,7 +524,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                } else if (TClassEdit::IsStdPair(incName)) {
                   AddInclude(fp, "utility", kTRUE, inclist);
                   ninc += GenerateIncludeForTemplate(fp, incName, inclist, forward, extrainfos);
-               } else if (strncmp(incName.Data(), "auto_ptr<", strlen("auto_ptr<")) == 0) {
+               } else if (strncmp(incName.Data(), "auto_ptr<", std::char_traits<char>::length("auto_ptr<")) == 0) {
                   AddInclude(fp, "memory", kTRUE, inclist);
                   ninc += GenerateIncludeForTemplate(fp, incName, inclist, forward, extrainfos);
                } else if (TClassEdit::IsStdClass(incName)) {

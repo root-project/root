@@ -3836,7 +3836,7 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
                   // nothing to do.
                   break;
             }
-         } else if (strncmp(enamebasic.Data(), "auto_ptr<", strlen("auto_ptr<")) == 0) {
+         } else if (strncmp(enamebasic.Data(), "auto_ptr<", std::char_traits<char>::length("auto_ptr<")) == 0) {
             enamebasic = TMakeProject::UpdateAssociativeToVector(enamebasic);
          }
 
@@ -3986,7 +3986,7 @@ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *ext
       }
       if (TClassEdit::IsStdPair(element->GetTypeName())) {
          TMakeProject::AddInclude( fp, "utility", kTRUE, inclist);
-      } else if (strncmp(element->GetTypeName(),"auto_ptr<",strlen("auto_ptr<"))==0) {
+      } else if (strncmp(element->GetTypeName(),"auto_ptr<",std::char_traits<char>::length("auto_ptr<"))==0) {
          TMakeProject::AddInclude( fp, "memory", kTRUE, inclist);
       } else {
          TString incName( include, strlen(include)-1 );
@@ -4011,7 +4011,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
    // if (fClassVersion == -4) return 0;
    if ((fClass && fClass->GetCollectionType()) || TClassEdit::IsSTLCont(GetName())) return 0;
    if (TClassEdit::IsStdPair(GetName())) return 0;
-   if (strncmp(GetName(),"auto_ptr<",strlen("auto_ptr<"))==0) return 0;
+   if (strncmp(GetName(),"auto_ptr<",std::char_traits<char>::length("auto_ptr<"))==0) return 0;
 
    TClass *cl = TClass::GetClass(GetName());
    if (cl) {
@@ -5838,7 +5838,7 @@ TVirtualStreamerInfo *TStreamerInfo::GenerateInfoForPair(const std::string &firs
 
 TVirtualStreamerInfo *TStreamerInfo::GenerateInfoForPair(const std::string &pairclassname, bool silent, size_t hint_pair_offset, size_t hint_pair_size)
 {
-   const static int pairlen = strlen("pair<");
+   const static int pairlen = std::char_traits<char>::length("pair<");
    if (pairclassname.compare(0, pairlen, "pair<") != 0) {
       if (!silent)
          Error("GenerateInfoForPair", "The class name passed is not a pair: %s", pairclassname.c_str());

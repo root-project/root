@@ -64,6 +64,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <float.h>
+#include <string>
 
 #if defined(GL2PS_HAVE_ZLIB)
 #include <zlib.h>
@@ -4430,8 +4431,8 @@ static int gl2psPrintPDFShaderMask(int obj, int childobj)
                   (int)gl2ps->viewport[2], (int)gl2ps->viewport[3]);
 
   len = (childobj>0)
-    ? strlen("/TrSh sh\n") + (int)log10((double)childobj)+1
-    : strlen("/TrSh0 sh\n");
+    ? std::char_traits<char>::length("/TrSh sh\n") + (int)log10((double)childobj)+1
+    : std::char_traits<char>::length("/TrSh0 sh\n");
 
   offs += fprintf(gl2ps->stream,
                   "/Length %d\n"
