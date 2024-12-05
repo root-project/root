@@ -53,7 +53,10 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 # found before (because the user turned on cuda or tmva-gpu), this will not have
 # an effect, which is fine.
 # (Note that the option is very counter-intuitive: We turn *on* disabling it...)
-set(CMAKE_DISABLE_FIND_PACKAGE_CUDA ON)
+# Special case when we want to build cling with adaptiveCpp
+if(NOT experimental_adaptivecpp)
+  set(CMAKE_DISABLE_FIND_PACKAGE_CUDA ON)
+endif()
 
 # will be set again in case NOT builtin_llvm
 set(LLVM_DIR "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm")
