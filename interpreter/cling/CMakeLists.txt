@@ -8,6 +8,10 @@ else(WIN32)
   cmake_minimum_required(VERSION 3.5)
 endif(WIN32)
 
+if(adaptivecpp)
+  add_compile_definitions(ADAPTIVECPP_ENABLED)
+endif()
+
 # If we are not building as a part of LLVM, build Cling as an
 # standalone project, using LLVM as an external library:
 if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
