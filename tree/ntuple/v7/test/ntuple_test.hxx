@@ -25,7 +25,6 @@
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPagePool.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
-#include <ROOT/RPageSourceFriends.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RRawFile.hxx>
@@ -111,7 +110,6 @@ using RPageSinkBuf = ROOT::Experimental::Internal::RPageSinkBuf;
 using RPageSinkFile = ROOT::Experimental::Internal::RPageSinkFile;
 using RPageSource = ROOT::Experimental::Internal::RPageSource;
 using RPageSourceFile = ROOT::Experimental::Internal::RPageSourceFile;
-using RPageSourceFriends = ROOT::Experimental::Internal::RPageSourceFriends;
 using RPageStorage = ROOT::Experimental::Internal::RPageStorage;
 using RPrepareVisitor = ROOT::Experimental::RPrepareVisitor;
 using RPrintSchemaVisitor = ROOT::Experimental::RPrintSchemaVisitor;

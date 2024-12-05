@@ -20,7 +20,6 @@
 #include <ROOT/RNTupleImtTaskScheduler.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RPageSourceFriends.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 
 #include <TROOT.h>
@@ -111,18 +110,6 @@ ROOT::Experimental::RNTupleReader::Open(std::unique_ptr<RNTupleModel> model, con
 {
    return std::unique_ptr<RNTupleReader>(
       new RNTupleReader(std::move(model), Internal::RPageSourceFile::CreateFromAnchor(ntuple, options), options));
-}
-
-std::unique_ptr<ROOT::Experimental::RNTupleReader>
-ROOT::Experimental::RNTupleReader::OpenFriends(std::span<RNTupleOpenSpec> ntuples, const RNTupleReadOptions &options)
-{
-   std::vector<std::unique_ptr<Internal::RPageSource>> sources;
-   sources.reserve(ntuples.size());
-   for (const auto &n : ntuples) {
-      sources.emplace_back(Internal::RPageSource::Create(n.fNTupleName, n.fStorage, n.fOptions));
-   }
-   return std::unique_ptr<RNTupleReader>(
-      new RNTupleReader(std::make_unique<Internal::RPageSourceFriends>("_friends", sources), options));
 }
 
 const ROOT::Experimental::RNTupleModel &ROOT::Experimental::RNTupleReader::GetModel()

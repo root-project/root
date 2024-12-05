@@ -638,22 +638,4 @@ TEST(RNTupleShow, Friends)
       *bar = 2.72;
       writer->Fill();
    }
-
-   std::vector<RNTupleOpenSpec> friends = {{"ntpl1", fileGuard1.GetPath()}, {"ntpl2", fileGuard2.GetPath()}};
-   auto ntuple = RNTupleReader::OpenFriends(friends);
-   std::ostringstream os;
-   ntuple->Show(0, os);
-   // clang-format off
-   std::string expected{std::string("")
-      + "{\n"
-      + "  \"ntpl1\": {\n"
-      + "    \"foo\": 3.14\n"
-      + "  },\n"
-      + "  \"ntpl2\": {\n"
-      + "    \"bar\": 2.72\n"
-      + "  }\n"
-      + "}\n"
-   };
-   // clang-format on
-   EXPECT_EQ(os.str(), expected);
 }

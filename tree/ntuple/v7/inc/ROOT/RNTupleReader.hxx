@@ -159,11 +159,6 @@ public:
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
    static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model, const RNTuple &ntuple,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
-   /// Open RNTuples as one virtual, horizontally combined ntuple.  The underlying RNTuples must
-   /// have an identical number of entries.  Fields in the combined RNTuple are named with the ntuple name
-   /// as a prefix, e.g. myNTuple1.px and myNTuple2.pt (see tutorial ntpl006_friends)
-   static std::unique_ptr<RNTupleReader>
-   OpenFriends(std::span<RNTupleOpenSpec> ntuples, const RNTupleReadOptions &options = RNTupleReadOptions());
    std::unique_ptr<RNTupleReader> Clone()
    {
       auto options = RNTupleReadOptions{};
