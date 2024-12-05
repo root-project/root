@@ -82,7 +82,7 @@ tutorialWorklist_py: doxygen
 tutorialWorklist_root: doxygen
 
 notebooks: tutorialWorklist_py makeNotebooks.sh
-	cp ../../tutorials/unfold/*.xml ../../tutorials/unfold/*.dtd $(DOXYGEN_NOTEBOOK_PATH)/
+	cp ../../tutorials/analysis/unfold/*.xml ../../tutorials/analysis/unfold/*.dtd $(DOXYGEN_NOTEBOOK_PATH)/
 	bash ./makeNotebooks.sh $< -j$(NJOB)
 	rm -f $(DOXYGEN_NOTEBOOK_PATH)/*.root
 
