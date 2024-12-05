@@ -624,7 +624,8 @@ bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
    string_view a( allocname );
    // In Windows, allocname might be 'class const std::allocator<int>',
    // (never 'const class ...'), so we start by stripping the 'class ', if any
-   constexpr static int clalloclen = std::char_traits<char>::length("class ");
+   constexpr auto length = std::char_traits<char>::length;
+   constexpr static int clalloclen = length("class ");
    if (a.compare(0,clalloclen,"class ") == 0) {
       a.remove_prefix(clalloclen);
    }
@@ -634,7 +635,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
    if (a=="__default_alloc_template<true,0>")   return true;
    if (a=="__malloc_alloc_template<0>")         return true;
 
-   constexpr static int alloclen = std::char_traits<char>::length("allocator<");
+   constexpr static int alloclen = length("allocator<");
    if (a.compare(0,alloclen,"allocator<") != 0) {
       return false;
    }
@@ -683,7 +684,8 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
    string_view a( allocname );
    RemoveStd(a);
 
-   constexpr static int alloclen = std::char_traits<char>::length("allocator<");
+   constexpr auto length = std::char_traits<char>::length;
+   constexpr static int alloclen = length("allocator<");
    if (a.compare(0,alloclen,"allocator<") != 0) {
       return false;
    }
@@ -691,7 +693,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
 
    RemoveStd(a);
 
-   constexpr static int pairlen = std::char_traits<char>::length("pair<");
+   constexpr static int pairlen = length("pair<");
    if (a.compare(0,pairlen,"pair<") != 0) {
       return false;
    }
@@ -1424,32 +1426,33 @@ int TClassEdit::IsSTLCont(const char *type, int testAlloc)
 
 bool TClassEdit::IsStdClass(const char *classname)
 {
+   constexpr auto length = std::char_traits<char>::length;
    classname += StdLen( classname );
    if ( strcmp(classname,"string")==0 ) return true;
-   if ( strncmp(classname,"bitset<",std::char_traits<char>::length("bitset<"))==0) return true;
+   if ( strncmp(classname,"bitset<",length("bitset<"))==0) return true;
    if ( IsStdPair(classname) ) return true;
    if ( strcmp(classname,"allocator")==0) return true;
-   if ( strncmp(classname,"allocator<",std::char_traits<char>::length("allocator<"))==0) return true;
-   if ( strncmp(classname,"greater<",std::char_traits<char>::length("greater<"))==0) return true;
-   if ( strncmp(classname,"less<",std::char_traits<char>::length("less<"))==0) return true;
-   if ( strncmp(classname,"equal_to<",std::char_traits<char>::length("equal_to<"))==0) return true;
-   if ( strncmp(classname,"hash<",std::char_traits<char>::length("hash<"))==0) return true;
-   if ( strncmp(classname,"auto_ptr<",std::char_traits<char>::length("auto_ptr<"))==0) return true;
+   if ( strncmp(classname,"allocator<",length("allocator<"))==0) return true;
+   if ( strncmp(classname,"greater<",length("greater<"))==0) return true;
+   if ( strncmp(classname,"less<",length("less<"))==0) return true;
+   if ( strncmp(classname,"equal_to<",length("equal_to<"))==0) return true;
+   if ( strncmp(classname,"hash<",length("hash<"))==0) return true;
+   if ( strncmp(classname,"auto_ptr<",length("auto_ptr<"))==0) return true;
 
-   if ( strncmp(classname,"vector<",std::char_traits<char>::length("vector<"))==0) return true;
-   if ( strncmp(classname,"list<",std::char_traits<char>::length("list<"))==0) return true;
-   if ( strncmp(classname,"forward_list<",std::char_traits<char>::length("forward_list<"))==0) return true;
-   if ( strncmp(classname,"deque<",std::char_traits<char>::length("deque<"))==0) return true;
-   if ( strncmp(classname,"map<",std::char_traits<char>::length("map<"))==0) return true;
-   if ( strncmp(classname,"multimap<",std::char_traits<char>::length("multimap<"))==0) return true;
-   if ( strncmp(classname,"set<",std::char_traits<char>::length("set<"))==0) return true;
-   if ( strncmp(classname,"multiset<",std::char_traits<char>::length("multiset<"))==0) return true;
-   if ( strncmp(classname,"unordered_set<",std::char_traits<char>::length("unordered_set<"))==0) return true;
-   if ( strncmp(classname,"unordered_multiset<",std::char_traits<char>::length("unordered_multiset<"))==0) return true;
-   if ( strncmp(classname,"unordered_map<",std::char_traits<char>::length("unordered_map<"))==0) return true;
-   if ( strncmp(classname,"unordered_multimap<",std::char_traits<char>::length("unordered_multimap<"))==0) return true;
-   if ( strncmp(classname,"bitset<",std::char_traits<char>::length("bitset<"))==0) return true;
-   if ( strncmp(classname,"ROOT::VecOps::RVec<",std::char_traits<char>::length("ROOT::VecOps::RVec<"))==0) return true;
+   if ( strncmp(classname,"vector<",length("vector<"))==0) return true;
+   if ( strncmp(classname,"list<",length("list<"))==0) return true;
+   if ( strncmp(classname,"forward_list<",length("forward_list<"))==0) return true;
+   if ( strncmp(classname,"deque<",length("deque<"))==0) return true;
+   if ( strncmp(classname,"map<",length("map<"))==0) return true;
+   if ( strncmp(classname,"multimap<",length("multimap<"))==0) return true;
+   if ( strncmp(classname,"set<",length("set<"))==0) return true;
+   if ( strncmp(classname,"multiset<",length("multiset<"))==0) return true;
+   if ( strncmp(classname,"unordered_set<",length("unordered_set<"))==0) return true;
+   if ( strncmp(classname,"unordered_multiset<",length("unordered_multiset<"))==0) return true;
+   if ( strncmp(classname,"unordered_map<",length("unordered_map<"))==0) return true;
+   if ( strncmp(classname,"unordered_multimap<",length("unordered_multimap<"))==0) return true;
+   if ( strncmp(classname,"bitset<",length("bitset<"))==0) return true;
+   if ( strncmp(classname,"ROOT::VecOps::RVec<",length("ROOT::VecOps::RVec<"))==0) return true;
 
    return false;
 }

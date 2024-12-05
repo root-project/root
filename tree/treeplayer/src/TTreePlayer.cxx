@@ -797,6 +797,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    fprintf(fp,"\n// Header file for the classes stored in the TTree if any.\n");
    TList listOfHeaders;
    listOfHeaders.SetOwner();
+   constexpr auto length = std::char_traits<char>::length;
    for (l=0;l<nleaves;l++) {
       TLeaf *leaf = (TLeaf*)leaves->UncheckedAt(l);
       TBranch *branch = leaf->GetBranch();
@@ -812,11 +813,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
                fprintf(fp,"#include <%s>\n",declfile+precstl_len);
                listOfHeaders.Add(new TNamed(cl->GetName(),declfile+precstl_len));
             } else if (strncmp(declfile,"/usr/include/",13) == 0) {
-               fprintf(fp,"#include <%s>\n",declfile+std::char_traits<char>::length("/include/c++/"));
-               listOfHeaders.Add(new TNamed(cl->GetName(),declfile+std::char_traits<char>::length("/include/c++/")));
+               fprintf(fp,"#include <%s>\n",declfile+length("/include/c++/"));
+               listOfHeaders.Add(new TNamed(cl->GetName(),declfile+length("/include/c++/")));
             } else if (strstr(declfile,"/include/c++/") != nullptr) {
-               fprintf(fp,"#include <%s>\n",declfile+std::char_traits<char>::length("/include/c++/"));
-               listOfHeaders.Add(new TNamed(cl->GetName(),declfile+std::char_traits<char>::length("/include/c++/")));
+               fprintf(fp,"#include <%s>\n",declfile+length("/include/c++/"));
+               listOfHeaders.Add(new TNamed(cl->GetName(),declfile+length("/include/c++/")));
             } else if (strncmp(declfile,rootinclude,rootinclude_len) == 0) {
                fprintf(fp,"#include <%s>\n",declfile+rootinclude_len);
                listOfHeaders.Add(new TNamed(cl->GetName(),declfile+rootinclude_len));
@@ -2359,7 +2360,7 @@ void TTreePlayer::RecursiveRemove(TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief Loop on Tree and print entries passing selection. Interactive 
+/// \brief Loop on Tree and print entries passing selection. Interactive
 /// pagination break is on by default.
 /// \param varexp If varexp is 0 (or "") then print only first 8 columns.
 /// If varexp = "*" print all columns. Otherwise a columns selection can
@@ -2449,7 +2450,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
                            Option_t * option,
                            Long64_t nentries, Long64_t firstentry)
 {
-
+   constexpr auto length = std::char_traits<char>::length;
    TString opt = option;
    opt.ToLower();
    UInt_t ui;
@@ -2461,23 +2462,23 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
 
    if (opt.Contains("lenmax=")) {
       int start = opt.Index("lenmax=");
-      int numpos = start + std::char_traits<char>::length("lenmax=");
+      int numpos = start + length("lenmax=");
       int numlen = 0;
       int len = opt.Length();
       while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
       TString num = opt(numpos,numlen);
-      opt.Remove(start,std::char_traits<char>::length("lenmax")+numlen);
+      opt.Remove(start,length("lenmax")+numlen);
 
       lenmax = atoi(num.Data());
    }
    if (opt.Contains("colsize=")) {
       int start = opt.Index("colsize=");
-      int numpos = start + std::char_traits<char>::length("colsize=");
+      int numpos = start + length("colsize=");
       int numlen = 0;
       int len = opt.Length();
       while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
       TString num = opt(numpos,numlen);
-      opt.Remove(start,std::char_traits<char>::length("size")+numlen);
+      opt.Remove(start,length("size")+numlen);
 
       colDefaultSize = atoi(num.Data());
       colPrecision = colDefaultSize;
@@ -2485,19 +2486,19 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
    }
    if (opt.Contains("precision=")) {
       int start = opt.Index("precision=");
-      int numpos = start + std::char_traits<char>::length("precision=");
+      int numpos = start + length("precision=");
       int numlen = 0;
       int len = opt.Length();
       while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
       TString num = opt(numpos,numlen);
-      opt.Remove(start,std::char_traits<char>::length("precision")+numlen);
+      opt.Remove(start,length("precision")+numlen);
 
       colPrecision = atoi(num.Data());
    }
    TString defFormat = Form("%d.%d",colDefaultSize,colPrecision);
    if (opt.Contains("col=")) {
       int start = opt.Index("col=");
-      int numpos = start + std::char_traits<char>::length("col=");
+      int numpos = start + length("col=");
       int numlen = 0;
       int len = opt.Length();
       while( (numpos+numlen<len) &&
@@ -2522,7 +2523,7 @@ Long64_t TTreePlayer::Scan(const char *varexp, const char *selection,
               || opt[numpos+numlen]=='.'
               || opt[numpos+numlen]==':')) numlen++;
       TString flist = opt(numpos,numlen);
-      opt.Remove(start,std::char_traits<char>::length("col")+numlen);
+      opt.Remove(start,length("col")+numlen);
 
       int i = 0;
       while(i<flist.Length() && flist[i]==':') {
