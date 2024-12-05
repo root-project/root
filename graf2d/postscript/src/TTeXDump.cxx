@@ -258,10 +258,13 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    if (fillis==1) {
       SetColor(fFillColor);
       PrintStr("@");
-      PrintStr("\\draw [color=c, fill=c");
       if (fCurrentAlpha != 1.) {
+         PrintStr("\\fill [c");
          PrintStr(", fill opacity=");
          WriteReal(fCurrentAlpha, kFALSE);
+      }
+      else {
+         PrintStr("\\draw [color=c, fill=c");
       }
       PrintStr("] (");
       WriteReal(x1c, kFALSE);
