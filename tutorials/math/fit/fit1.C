@@ -30,61 +30,34 @@ void fit1() {
    c1->GetFrame()->SetBorderMode(-1);
    c1->GetFrame()->SetBorderSize(5);
 
-   gBenchmark->Start("fit1");
-   //
-   // We connect the ROOT file generated in a previous tutorial
-   // (see <a href="fillrandom.C.nbconvert.ipynb">Filling histograms with random numbers from a function</a>)
-   //
-   TString dir = gROOT->GetTutorialDir();
-   dir.Append("/math/fit/");
-   TFile *file = nullptr;
-   if (!gSystem->AccessPathName("fillrandom.root")) {
-      // file exists
-      file = TFile::Open("fillrandom.root");
-   } else {
-      gROOT->ProcessLine(Form(".x %s../../hist/fillrandom.C(0)",dir.Data()));
-      file = TFile::Open("fillrandom.root");
-      if (!file) return;
-   }
-
-   //
-   // The function "ls()" lists the directory contents of this file
-   //
-   file->ls();
-
-   //
-   // Get object "sqroot" from the file. Undefined objects are searched
-   // for using gROOT->FindObject("xxx"), e.g.:
-   // TF1 *sqroot = (TF1*) gROOT.FindObject("sqroot")
-   //
-   TF1 * sqroot = nullptr;
-   file->GetObject("sqroot",sqroot);
-   if (!sqroot){
-      Error("fit1.C","Cannot find object sqroot of type TF1\n");
-      return;
-   }
+   // (for more details, see 
+   // <a href="hist001_TH1_fillrandom_userfunc.C.nbconvert.ipynb">filling histograms with random numbers from a function</a>)
+   TFormula *form1 = new TFormula("form1", "abs(sin(x)/x)");
+   TF1 *sqroot = new TF1("sqroot", "x*gaus(0) + [3]*form1", 0.0, 10.0);
+   sqroot->SetLineColor(4);
+   sqroot->SetLineWidth(6);
+   // Set parameters to the functions "gaus" and "form1".
+   sqroot->SetParameters(10.0, 4.0, 1.0, 20.0);
    sqroot->Print();
+   
+   TH1D *h1d = new TH1D("h1d", "Test random numbers", 200, 0.0, 10.0);
+   h1d->FillRandom("sqroot", 10000);
 
    //
-   // Now get and fit histogram h1f with the function sqroot
+   // Now fit histogram h1d with the function sqroot
    //
-   TH1F* h1f = nullptr;
-   file->GetObject("h1f",h1f);
-   if (!h1f){
-      Error("fit1.C","Cannot find object h1f of type TH1F\n");
-      return;
-   }
-   h1f->SetFillColor(45);
-   h1f->Fit("sqroot");
+   h1d->SetFillColor(45);
+   h1d->Fit("sqroot");
 
    // We now annotate the picture by creating a PaveText object
    // and displaying the list of commands in this macro
    //
+   TString dir = gROOT->GetTutorialDir();
+   dir.Append("/math/fit/");
    TPaveText * fitlabel = new TPaveText(0.6,0.4,0.9,0.75,"NDC");
    fitlabel->SetTextAlign(12);
    fitlabel->SetFillColor(42);
-   fitlabel->ReadFile(Form("%sfit1_C.txt",dir.Data()));
+   fitlabel->ReadFile(Form("%sfit1_C.txt", dir.Data()));
    fitlabel->Draw();
    c1->Update();
-   gBenchmark->Show("fit1");
 }
