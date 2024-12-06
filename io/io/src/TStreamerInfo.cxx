@@ -662,6 +662,7 @@ void TStreamerInfo::Build(Bool_t isTransient)
          }
          cached->SetBit(TStreamerElement::kCache);
          cached->SetNewType( cached->GetType() );
+         cached->SetNewClass( nullptr );
       }
 
       fElements->Add(element);
@@ -2534,6 +2535,7 @@ void TStreamerInfo::BuildOld()
             }
             element->SetBit(TStreamerElement::kCache);
             element->SetNewType( element->GetType() );
+            element->SetNewClass( nullptr ); // Technically we could also consider setting to the type specificed in the rule
             element->SetOffset(infoalloc ? infoalloc->GetOffset(element->GetName()) : 0);
          } else if (rules.HasRuleWithTarget( element->GetName(), kTRUE ) ) {
             // The data member exist in the onfile StreamerInfo and there is a rule
