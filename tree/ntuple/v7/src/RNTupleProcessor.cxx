@@ -349,7 +349,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::LoadEntry()
    }
 
    std::vector<NTupleSize_t> indexEntryNumbers;
-   indexEntryNumbers.reserve(fJoinIndices.size());
+   indexEntryNumbers.resize(fJoinIndices.size());
    if (IsUsingIndex()) {
       for (unsigned i = 0; i < fJoinIndices.size(); ++i) {
          auto &joinIndex = fJoinIndices[i];
