@@ -51,7 +51,7 @@ protected:
 
    void SetUp() override {
       auto model = RNTupleModel::Create();
-      *model->MakeField<std::uint32_t>("nevent", 1);
+      *model->MakeField<std::uint32_t>("nevent") = 1;
       *model->MakeField<float>("pt") = 42;
       *model->MakeField<float>("energy") = 7;
       *model->MakeField<std::string>("tag") = "xyz";
