@@ -92,6 +92,8 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    std::unordered_map<ROOT::Experimental::DescriptorId_t, std::string> fFieldId2QualifiedName;
    std::vector<std::string> fColumnNames;
    std::vector<std::string> fColumnTypes;
+   /// Applies TClassEdit::GetNormalizedName to fColumnTypes
+   std::vector<std::string> fNormalizedColumnTypes;
    /// List of column readers returned by GetColumnReaders() organized by slot. Used to reconnect readers
    /// to new page sources when the files in the chain change.
    std::vector<std::vector<Internal::RNTupleColumnReader *>> fActiveColumnReaders;

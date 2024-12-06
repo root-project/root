@@ -51,6 +51,7 @@ protected:
 
    void SetUp() override {
       auto model = RNTupleModel::Create();
+      *model->MakeField<std::uint32_t>("nevent", 1);
       *model->MakeField<float>("pt") = 42;
       *model->MakeField<float>("energy") = 7;
       *model->MakeField<std::string>("tag") = "xyz";
@@ -81,8 +82,9 @@ TEST_F(RNTupleDSTest, ColTypeNames)
    RNTupleDS ds(fNtplName, fFileName);
 
    auto colNames = ds.GetColumnNames();
-   ASSERT_EQ(15, colNames.size());
+   ASSERT_EQ(16, colNames.size());
 
+   EXPECT_TRUE(ds.HasColumn("nevent"));
    EXPECT_TRUE(ds.HasColumn("pt"));
    EXPECT_TRUE(ds.HasColumn("energy"));
    EXPECT_TRUE(ds.HasColumn("rvec"));
@@ -130,6 +132,19 @@ TEST_F(RNTupleDSTest, CardinalityColumn)
    EXPECT_EQ(*max_njets_jitted3, *max_njets_jitted2);
    EXPECT_EQ(2, *max_njets_jitted);
    EXPECT_EQ(3, *max_rvec2);
+}
+
+// TODO(jblomer): this test will change once collections are read as RVecs in RNTupleDS
+TEST_F(RNTupleDSTest, ReadRVec)
+{
+   auto df = ROOT::Experimental::MakeNTupleDataFrame(fNtplName, fFileName);
+   // jets is currently exposed as std::vector<float> and thus not usable as ROOT::RVec<float>
+   EXPECT_THROW(df.Sum<ROOT::RVec<float>>("jets"), std::runtime_error);
+   // Allow use of float and Float_t interchangibly
+   EXPECT_DOUBLE_EQ(3.0, *df.Sum<std::vector<Float_t>>("jets"));
+   // Allow use of std int types and ROOT int types interchangibly
+   EXPECT_EQ(1U, df.Take<std::uint32_t>("nevent").GetValue()[0]);
+   EXPECT_EQ(1U, df.Take<UInt_t>("nevent").GetValue()[0]);
 }
 
 static void ReadTest(const std::string &name, const std::string &fname)

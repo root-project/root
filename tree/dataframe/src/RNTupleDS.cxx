@@ -277,7 +277,11 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
          auto cardinalityField = std::make_unique<ROOT::Experimental::Internal::RRDFCardinalityField>();
          cardinalityField->SetOnDiskId(fieldId);
          fColumnNames.emplace_back("R_rdf_sizeof_" + std::string(colName));
-         fColumnTypes.emplace_back(cardinalityField->GetTypeName());
+         const auto typeName = cardinalityField->GetTypeName();
+         fColumnTypes.emplace_back(typeName);
+         std::string normalized;
+         TClassEdit::GetNormalizedName(normalized, typeName);
+         fNormalizedColumnTypes.emplace_back(normalized);
          fProtoFields.emplace_back(std::move(cardinalityField));
 
          for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
@@ -359,13 +363,21 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
 
    if (cardinalityField) {
       fColumnNames.emplace_back("R_rdf_sizeof_" + std::string(colName));
-      fColumnTypes.emplace_back(cardinalityField->GetTypeName());
+      const auto typeName = cardinalityField->GetTypeName();
+      fColumnTypes.emplace_back(typeName);
+      std::string normalized;
+      TClassEdit::GetNormalizedName(normalized, typeName);
+      fNormalizedColumnTypes.emplace_back(normalized);
       fProtoFields.emplace_back(std::move(cardinalityField));
    }
 
    fieldInfos.emplace_back(fieldId, nRepetitions);
    fColumnNames.emplace_back(colName);
-   fColumnTypes.emplace_back(valueField->GetTypeName());
+   const auto typeName = valueField->GetTypeName();
+   fColumnTypes.emplace_back(typeName);
+   std::string normalized;
+   TClassEdit::GetNormalizedName(normalized, typeName);
+   fNormalizedColumnTypes.emplace_back(normalized);
    fProtoFields.emplace_back(std::move(valueField));
 }
 
@@ -431,12 +443,29 @@ RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view /* n
 }
 
 std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
-RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std::type_info & /*tid*/)
+RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std::type_info & tid)
 {
    // At this point we can assume that `name` will be found in fColumnNames
-   // TODO(jblomer): check incoming type
    const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
    auto field = fProtoFields[index].get();
+
+   std::string demangled = ROOT::Internal::RDF::DemangleTypeIdName(ti);
+   std::string normalized;
+   TClassEdit::GetNormalizedName(normalized, demangled.c_str());
+   if (normalized != fNormalizedColumnTypes[index]) {
+      std::string err = "The type of column \"";
+      err += name;
+      err += "\" is ";
+      err += fColumnTypes[index];
+      if (fColumnTypes[index] != fNormalizedColumnTypes[index])
+         err += " (= " + fNormalizedColumnTypes[index] + ")";
+      err += " but ";
+      err += demangled;
+      if (demangled != normalized)
+         err += " (= " + normalized + ")";
+      err += " has been selected";
+      throw std::runtime_error(err);
+   }
 
    // Map the field's and subfields' IDs to qualified names so that we can later connect the fields to
    // other page sources from the chain
