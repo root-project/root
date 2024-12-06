@@ -1084,7 +1084,9 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
             if (full.compare(offset, 5, "std::") == 0) {
                offset += 5;
             }
-            static const char* char_traits_s = "char_traits<char>";
+            constexpr auto char_traits_s = "char_traits<char>";
+            // or 
+            // static constexpr char const* const char_traits_s = "char_traits<char>";
             static constexpr unsigned int char_traits_len = std::char_traits<char>::length(char_traits_s);
             if (full.compare(offset, char_traits_len, char_traits_s) == 0) {
                offset += char_traits_len;
