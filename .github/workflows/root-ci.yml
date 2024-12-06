@@ -390,10 +390,11 @@ jobs:
             is_special: true
             property: clang
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
-          - image: ubuntu2404-cuda
-            is_special: true
-            property: gpu
-            extra-runs-on: gpu
+          # Disable GPU builds until the DNS problem is solved  
+          # - image: ubuntu2404-cuda
+          #   is_special: true
+          #   property: gpu
+          #   extra-runs-on: gpu
 
     runs-on:
       - self-hosted
