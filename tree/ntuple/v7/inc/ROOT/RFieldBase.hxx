@@ -176,7 +176,8 @@ private:
    ENTupleStructure fStructure;
    /// For fixed sized arrays, the array length
    std::size_t fNRepetitions;
-   /// A field qualifies as simple if it is both mappable and has no post-read callback
+   /// A field qualifies as simple if it is both mappable (which implies it has a single principal column) and has no
+   /// post-read callback
    bool fIsSimple;
    /// A field that is artificial, ie missing on disk
    bool fIsArtificial = false;
@@ -221,6 +222,7 @@ private:
 
    void SetArtificial()
    {
+      fIsSimple = false;
       fIsArtificial = true;
       for (auto &field : fSubFields) {
          field->SetArtificial();
@@ -376,12 +378,8 @@ protected:
    /// to a single column and has no read callback.
    void Read(NTupleSize_t globalIndex, void *to)
    {
-      if (fIsSimple) {
-         if (!fIsArtificial) {
-            fPrincipalColumn->Read(globalIndex, to);
-         }
-         return;
-      }
+      if (fIsSimple)
+         return (void)fPrincipalColumn->Read(globalIndex, to);
 
       if (!fIsArtificial) {
          if (fTraits & kTraitMappable)
@@ -398,12 +396,8 @@ protected:
    /// to a single column and has no read callback.
    void Read(RClusterIndex clusterIndex, void *to)
    {
-      if (fIsSimple) {
-         if (!fIsArtificial) {
-            fPrincipalColumn->Read(clusterIndex, to);
-         }
-         return;
-      }
+      if (fIsSimple)
+         return (void)fPrincipalColumn->Read(clusterIndex, to);
 
       if (!fIsArtificial) {
          if (fTraits & kTraitMappable)

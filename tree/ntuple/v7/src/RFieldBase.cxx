@@ -879,7 +879,7 @@ size_t ROOT::Experimental::RFieldBase::AddReadCallback(ReadCallback_t func)
 void ROOT::Experimental::RFieldBase::RemoveReadCallback(size_t idx)
 {
    fReadCallbacks.erase(fReadCallbacks.begin() + idx);
-   fIsSimple = (fTraits & kTraitMappable) && fReadCallbacks.empty();
+   fIsSimple = (fTraits & kTraitMappable) && !fIsArtificial && fReadCallbacks.empty();
 }
 
 void ROOT::Experimental::RFieldBase::AutoAdjustColumnTypes(const RNTupleWriteOptions &options)
