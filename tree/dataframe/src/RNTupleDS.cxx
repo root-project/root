@@ -449,7 +449,7 @@ RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std:
    const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
    auto field = fProtoFields[index].get();
 
-   std::string demangled = ROOT::Internal::RDF::DemangleTypeIdName(ti);
+   std::string demangled = ROOT::Internal::RDF::DemangleTypeIdName(tid);
    std::string normalized;
    TClassEdit::GetNormalizedName(normalized, demangled.c_str());
    if (normalized != fNormalizedColumnTypes[index]) {
