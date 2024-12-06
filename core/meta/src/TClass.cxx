@@ -7403,7 +7403,7 @@ void TClass::RemoveStreamerInfo(Int_t slot)
    if (fStreamerInfo->GetSize() >= slot) {
       R__LOCKGUARD(gInterpreterMutex);
       TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)fStreamerInfo->At(slot);
-      fStreamerInfo->RemoveAt(fClassVersion);
+      fStreamerInfo->RemoveAt(slot);
       if (fLastReadInfo.load() == info)
          fLastReadInfo = nullptr;
       if (fCurrentInfo.load() == info)
