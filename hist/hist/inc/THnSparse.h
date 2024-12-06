@@ -48,17 +48,6 @@ class THnSparse: public THnBase {
 
  protected:
 
-   THnSparse();
-   THnSparse(const char* name, const char* title, Int_t dim,
-             const Int_t* nbins, const Double_t* xmin, const Double_t* xmax,
-             Int_t chunksize);
-   THnSparse(const char* name, const char* title,
-             const std::vector<TAxis*>& axes,
-             Int_t chunksize);
-   THnSparse(const char* name, const char* title,
-             const std::vector<TAxis>& axes,
-             Int_t chunksize);
-
    THnSparseCompactBinCoord* GetCompactCoord() const;
    THnSparseArrayChunk* GetChunk(Int_t idx) const {
       return (THnSparseArrayChunk*) fBinContent[idx]; }
@@ -79,6 +68,15 @@ class THnSparse: public THnBase {
    void InitStorage(Int_t* nbins, Int_t chunkSize) override;
 
  public:
+
+   THnSparse();
+   THnSparse(const char* name, const char* title, Int_t dim,
+             const Int_t* nbins, const Double_t* xmin = nullptr, const Double_t* xmax = nullptr,
+             Int_t chunksize = 1024 * 16);
+   THnSparse(const char* name, const char* title,
+             const std::vector<TAxis>& axes,
+             Int_t chunksize = 1024 * 16);
+
    ~THnSparse() override;
 
    static THnSparse* CreateSparse(const char* name, const char* title,
@@ -213,20 +211,7 @@ class THnSparse: public THnBase {
 template <class CONT>
 class THnSparseT: public THnSparse {
  public:
-   THnSparseT() {}
-   THnSparseT(const char* name, const char* title, Int_t dim,
-              const Int_t* nbins, const Double_t* xmin = nullptr,
-              const Double_t* xmax = nullptr, Int_t chunksize = 1024 * 16):
-      THnSparse(name, title, dim, nbins, xmin, xmax, chunksize) {}
-   THnSparseT(const char* name, const char* title,
-              std::vector<TAxis*> axes,
-              Int_t chunksize = 1024 * 16):
-     THnSparse(name, title, axes, chunksize) {}
-   THnSparseT(const char* name, const char* title,
-             std::vector<TAxis> axes,
-             Int_t chunksize = 1024 * 16):
-     THnSparse(name, title, axes, chunksize) {}
-
+   using THnSparse::THnSparse;
 
    TArray* GenerateArray() const override { return new CONT(GetChunkSize()); }
  private:

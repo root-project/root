@@ -65,8 +65,6 @@ protected:
     THnBase(const char *name, const char *title, Int_t dim, const Int_t *nbins, const Double_t *xmin,
             const Double_t *xmax);
 
-    THnBase(const char* name, const char* title, const std::vector<TAxis*>& axes);
-
     THnBase(const char* name, const char* title, const std::vector<TAxis>& axes);
 
     THnBase(const char *name, const char *title, Int_t dim, const Int_t *nbins,
