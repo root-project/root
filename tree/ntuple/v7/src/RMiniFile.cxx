@@ -470,8 +470,8 @@ struct RTFKeyList {
    explicit RTFKeyList(std::uint32_t nKeys) : fNKeys(nKeys) {}
 };
 
-/// A streamed TFile object
-struct RTFFile {
+/// A streamed TDirectory (TFile) object
+struct RTFDirectory {
    RUInt16BE fClassVersion{5};
    RTFDatetime fDateC;
    RTFDatetime fDateM;
@@ -491,13 +491,13 @@ struct RTFFile {
       } fInfoLong;
    };
 
-   RTFFile() : fInfoShort() {}
+   RTFDirectory() : fInfoShort() {}
 
    // In case of a short TFile record (<2G), 3 padding ints are written after the UUID
    std::uint32_t GetSize() const
    {
       if (fClassVersion >= 1000)
-         return sizeof(RTFFile);
+         return sizeof(RTFDirectory);
       return 18 + sizeof(fInfoShort);
    }
 
@@ -602,7 +602,7 @@ namespace Internal {
 /// and the TFile record need to be updated
 struct RTFileControlBlock {
    RTFHeader fHeader;
-   RTFFile fFileRecord;
+   RTFDirectory fFileRecord;
    std::uint64_t fSeekNTuple{0}; // Remember the offset for the keys list
    std::uint64_t fSeekFileRecord{0};
 };
@@ -692,7 +692,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
    offset += name.GetSize();
    ReadBuffer(&name, 1, offset);
    offset += name.GetSize();
-   RTFFile file;
+   RTFDirectory file;
    ReadBuffer(&file, sizeof(file), offset);
 
    RUInt32BE nKeys;
@@ -1445,7 +1445,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileSkeleton(int def
 
    // First record of the file: the TFile object at offset 100
    RTFKey keyRoot(100, 0, strTFile, strFileName, strEmpty,
-                  sizeof(RTFFile) + strFileName.GetSize() + strEmpty.GetSize() + uuid.GetSize());
+                  sizeof(RTFDirectory) + strFileName.GetSize() + strEmpty.GetSize() + uuid.GetSize());
    std::uint32_t nbytesName = keyRoot.fKeyLen + strFileName.GetSize() + 1;
    fFileSimple.fControlBlock->fFileRecord.fNBytesName = nbytesName;
    fFileSimple.fControlBlock->fHeader.SetNbytesName(nbytesName);
