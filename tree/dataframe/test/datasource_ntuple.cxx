@@ -137,7 +137,8 @@ TEST_F(RNTupleDSTest, CardinalityColumn)
 // TODO(jblomer): this test will change once collections are read as RVecs in RNTupleDS
 TEST_F(RNTupleDSTest, ReadRVec)
 {
-   auto df = ROOT::Experimental::MakeNTupleDataFrame(fNtplName, fFileName);
+   auto df = ROOT::RDF::Experimental::FromRNTuple(fNtplName, fFileName);
+
    // jets is currently exposed as std::vector<float> and thus not usable as ROOT::RVec<float>
    EXPECT_THROW(df.Sum<ROOT::RVec<float>>("jets"), std::runtime_error);
    // Allow use of float and Float_t interchangibly
