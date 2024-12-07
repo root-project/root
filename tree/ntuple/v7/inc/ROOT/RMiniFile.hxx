@@ -72,6 +72,12 @@ private:
    /// Used when the file turns out to be a TFile container
    RResult<RNTuple> GetNTupleProper(std::string_view ntupleName);
 
+   /// Searches for a key with the given name and type in the key index of the directory starting at offsetDir.
+   /// The offset points to the start of the TDirectory DATA section, without the key and without the name and title
+   /// of the TFile record (the root directory).
+   /// Return 0 if the key was not found. Otherwise returns the offset of found key.
+   std::uint64_t SearchInDirectory(std::uint64_t &offsetDir, std::string_view keyName, std::string_view typeName);
+
 public:
    RMiniFileReader() = default;
    /// Uses the given raw file to read byte ranges
