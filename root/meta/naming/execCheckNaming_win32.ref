@@ -27,13 +27,13 @@ Check TClassEdit::ShortType
 @map<TObject*,int,less<TObject*>,allocator<pair<TObject* const,int> > >@ --> @map<TObject*,int>@
 @map<TObject*,int,less<TObject*>,allocator<pair<TObject*const,int> > >@ --> @map<TObject*,int>@
 @list<int,allocator<int> >@ --> @list<int>@
-@typeid(set<int>)@ --> @set<int,struct std::less<int>,allocator<int> >@
-@typeid(list<int>)@ --> @list<int,allocator<int> >@
-@typeid(deque<int>)@ --> @deque<int,allocator<int> >@
-@typeid(vector<int>)@ --> @vector<int,allocator<int> >@
+@typeid(set<int>)@ --> @set<int,struct std::less<int> >@
+@typeid(list<int>)@ --> @list<int>@
+@typeid(deque<int>)@ --> @deque<int>@
+@typeid(vector<int>)@ --> @vector<int>@
 @typeid(map<int,float>)@ --> @map<int,float,struct std::less<int>,allocator<struct std::pair<int const,float> > >@
 @typeid(multimap<int,float>)@ --> @multimap<int,float,struct std::less<int>,allocator<struct std::pair<int const,float> > >@
-@typeid(unordered_set<int>)@ --> @unordered_set<int,struct std::hash<int>,struct std::equal_to<int>,allocator<int> >@
+@typeid(unordered_set<int>)@ --> @unordered_set<int,struct std::hash<int>,struct std::equal_to<int> >@
 @typeid(unordered_map<int,float>)@ --> @unordered_map<int,float,struct std::hash<int>,struct std::equal_to<int>,allocator<struct std::pair<int const,float> > >@
 @typeid(unordered_multimap<int,float>)@ --> @unordered_multimap<int,float,struct std::hash<int>,struct std::equal_to<int>,allocator<struct std::pair<int const,float> > >@
 (int) 0
