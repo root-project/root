@@ -676,6 +676,48 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTuple(std::string_view ntuple
    return GetNTupleBare(ntupleName);
 }
 
+/// Searches for a key with the given name and type in the key index of the given directory.
+/// Return 0 if the key was not found.
+std::uint64_t ROOT::Experimental::Internal::RMiniFileReader::SearchInDirectory(std::uint64_t &offsetDir,
+                                                                               std::string_view keyName,
+                                                                               std::string_view typeName)
+{
+   RTFDirectory directory;
+   ReadBuffer(&directory, sizeof(directory), offsetDir);
+
+   RTFKey key;
+   RUInt32BE nKeys;
+   std::uint64_t offset = directory.GetSeekKeys();
+   ReadBuffer(&key, sizeof(key), offset);
+   offset += key.fKeyLen;
+   ReadBuffer(&nKeys, sizeof(nKeys), offset);
+   offset += sizeof(nKeys);
+
+   for (unsigned int i = 0; i < nKeys; ++i) {
+      ReadBuffer(&key, sizeof(key), offset);
+      auto offsetNextKey = offset + key.fKeyLen;
+
+      offset += key.GetHeaderSize();
+      RTFString name;
+      ReadBuffer(&name, 1, offset);
+      ReadBuffer(&name, name.GetSize(), offset);
+      if (std::string_view(name.fData, name.fLName) != typeName) {
+         offset = offsetNextKey;
+         continue;
+      }
+      offset += name.GetSize();
+      ReadBuffer(&name, 1, offset);
+      ReadBuffer(&name, name.GetSize(), offset);
+      if (std::string_view(name.fData, name.fLName) == keyName) {
+         return key.GetSeekKey();
+      }
+      offset = offsetNextKey;
+   }
+
+   // Not found
+   return 0;
+}
+
 ROOT::Experimental::RResult<ROOT::RNTuple>
 ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view ntupleName)
 {
@@ -687,45 +729,18 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
    ReadBuffer(&key, sizeof(key), fileHeader.fBEGIN);
    // Skip over the entire key length, including the class name, object name, and title stored in it.
    std::uint64_t offset = fileHeader.fBEGIN + key.fKeyLen;
-   // Skip over the name and title of the TNamed preceding the TFile entry.
+   // Skip over the name and title of the TNamed preceding the TFile (root TDirectory) entry.
    ReadBuffer(&name, 1, offset);
    offset += name.GetSize();
    ReadBuffer(&name, 1, offset);
    offset += name.GetSize();
-   RTFDirectory file;
-   ReadBuffer(&file, sizeof(file), offset);
 
-   RUInt32BE nKeys;
-   offset = file.GetSeekKeys();
-   ReadBuffer(&key, sizeof(key), offset);
-   offset += key.fKeyLen;
-   ReadBuffer(&nKeys, sizeof(nKeys), offset);
-   offset += sizeof(nKeys);
-   bool found = false;
-   for (unsigned int i = 0; i < nKeys; ++i) {
-      ReadBuffer(&key, sizeof(key), offset);
-      auto offsetNextKey = offset + key.fKeyLen;
-
-      offset += key.GetHeaderSize();
-      ReadBuffer(&name, 1, offset);
-      ReadBuffer(&name, name.GetSize(), offset);
-      if (std::string_view(name.fData, name.fLName) != kNTupleClassName) {
-         offset = offsetNextKey;
-         continue;
-      }
-      offset += name.GetSize();
-      ReadBuffer(&name, 1, offset);
-      ReadBuffer(&name, name.GetSize(), offset);
-      if (std::string_view(name.fData, name.fLName) == ntupleName) {
-         found = true;
-         break;
-      }
-      offset = offsetNextKey;
-   }
-   if (!found) {
+   offset = SearchInDirectory(offset, ntupleName, kNTupleClassName);
+   if (offset == 0) {
       return R__FAIL("no RNTuple named '" + std::string(ntupleName) + "' in file '" + fRawFile->GetUrl() + "'");
    }
 
+   ReadBuffer(&key, sizeof(key), offset);
    offset = key.GetSeekKey() + key.fKeyLen;
 
    // size of a RTFNTuple version 2 (min supported version); future anchor versions can grow.
