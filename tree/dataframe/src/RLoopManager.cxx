@@ -90,6 +90,24 @@ std::string &GetCodeToJit()
    return code;
 }
 
+std::string &GetCodeToDeclare()
+{
+   static std::string code;
+   return code;
+}
+using JitHelperFunc = void(RLoopManager *, std::shared_ptr<RNodeBase> *, RColumnRegister *, const ColumnNames_t &,
+                           void *, void *);
+std::unordered_map<std::string, JitHelperFunc *> &GetJitHelperFuncMap()
+{
+   static std::unordered_map<std::string, JitHelperFunc *> map;
+   return map;
+}
+std::unordered_map<std::string, std::string> &GetJitHelperNameMap()
+{
+   static std::unordered_map<std::string, std::string> map;
+   return map;
+}
+
 void ThrowIfNSlotsChanged(unsigned int nSlots)
 {
    const auto currentSlots = RDFInternal::GetNSlots();
@@ -786,6 +804,26 @@ void RLoopManager::Jit()
                                                         : " in less than 1ms.");
 }
 
+void RLoopManager::RunDeferredCalls()
+{
+   if (!fJitHelperCalls.empty()) {
+      R__READ_LOCKGUARD(ROOT::gCoreMutex); // methods are thread-safe but funcMap isn't (yet)
+      TStopwatch s2;
+      s2.Start();
+      auto &funcMap = GetJitHelperFuncMap();
+      for (auto &call : fJitHelperCalls) {
+         assert(funcMap.find(call.functionId) != funcMap.end());
+         funcMap[call.functionId](this, call.prevNodeOnHeap, call.colRegister, call.colNames, call.wkJittedNode,
+                                  call.argument);
+      }
+      s2.Stop();
+      R__LOG_INFO(RDFLogChannel()) << "Deferred calls (" << fJitHelperCalls.size() << ") completed"
+                                   << (s2.RealTime() > 1e-3 ? " in " + std::to_string(s2.RealTime()) + " seconds."
+                                                            : " in less than 1ms.");
+      fJitHelperCalls.clear();
+   }
+}
+
 /// Trigger counting of number of children nodes for each node of the functional graph.
 /// This is done once before starting the event loop. Each action sends an `increase children count` signal
 /// upstream, which is propagated until RLoopManager. Each time a node receives the signal, in increments its
@@ -808,12 +846,12 @@ void RLoopManager::Run(bool jit)
    // Change value of TTree::GetMaxTreeSize only for this scope. Revert when #6640 will be solved.
    MaxTreeSizeRAII ctxtmts;
 
-   R__LOG_INFO(RDFLogChannel()) << "Starting event loop number " << fNRuns << '.';
-
    ThrowIfNSlotsChanged(GetNSlots());
 
    if (jit)
       Jit();
+
+   RunDeferredCalls();
 
    InitNodes();
 
@@ -932,6 +970,43 @@ void RLoopManager::ToJitExec(const std::string &code) const
 {
    R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
    GetCodeToJit().append(code);
+}
+
+void RLoopManager::RegisterJitHelperCall(const std::string &funcCode, std::shared_ptr<RNodeBase> *prevNodeOnHeap,
+                                         ROOT::Internal::RDF::RColumnRegister *colRegister,
+                                         const std::vector<std::string> &colNames, void *wkJittedNode, void *argument)
+{
+   auto &nameMap = GetJitHelperNameMap();
+   auto &funcMap = GetJitHelperFuncMap();
+   {
+      R__READ_LOCKGUARD(ROOT::gCoreMutex);
+      auto match = nameMap.find(funcCode);
+      if (match != nameMap.end()) {
+         R__LOG_DEBUG(0, RDFLogChannel()) << "JitHelper " << match->second << " already defined";
+         fJitHelperCalls.emplace_back(match->second, prevNodeOnHeap, colRegister, colNames, wkJittedNode, argument);
+         return;
+      }
+   }
+
+   {
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+      std::string registerId = "jitNodeRegistrator_" + std::to_string(nameMap.size());
+      nameMap[funcCode] = registerId;
+      R__LOG_DEBUG(0, RDFLogChannel()) << "JitHelper new " << registerId << " defined for funcCode " << funcCode;
+      // step 1: register function (now)
+      std::string toDeclare = "namespace R_rdf {\n  void " + registerId + funcCode + "\n}\n";
+      ROOT::Internal::RDF::InterpreterDeclare(toDeclare);
+      std::stringstream registration;
+      registration
+         << "(*(reinterpret_cast<std::unordered_map<std::string,void "
+            "(*)(ROOT::Detail::RDF::RLoopManager*,std::shared_ptr<ROOT::Detail::RDF::RNodeBase> "
+            "*,ROOT::Internal::RDF::RColumnRegister *, const std::vector<std::string> & colNames, void*,void*)>*>(";
+      registration << PrettyPrintAddr((void *)(&funcMap));
+      registration << ")))[\"" << registerId << "\"] = R_rdf::" << registerId << ";\n";
+      std::string registrationStr = registration.str();
+      GetCodeToJit().append(registrationStr);
+      fJitHelperCalls.emplace_back(registerId, prevNodeOnHeap, colRegister, colNames, wkJittedNode, argument);
+   }
 }
 
 void RLoopManager::RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f)
