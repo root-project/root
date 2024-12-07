@@ -30,6 +30,7 @@
 #include "TEntryList.h"
 #include "TFile.h"
 #include "TFriendElement.h"
+#include "TInterpreter.h"
 #include "TROOT.h" // IsImplicitMTEnabled, gCoreMutex, R__*_LOCKGUARD
 #include "TTreeReader.h"
 #include "TTree.h" // For MaxTreeSizeRAII. Revert when #6640 will be solved.
@@ -88,6 +89,24 @@ std::string &GetCodeToJit()
 {
    static std::string code;
    return code;
+}
+
+std::string &GetCodeToDeclare()
+{
+   static std::string code;
+   return code;
+}
+using JitHelperFunc = void(RLoopManager *, std::shared_ptr<RNodeBase> *, RColumnRegister *, const ColumnNames_t &,
+                           void *, void *);
+std::unordered_map<std::string, JitHelperFunc *> &GetJitHelperFuncMap()
+{
+   static std::unordered_map<std::string, JitHelperFunc *> map;
+   return map;
+}
+std::unordered_map<std::string, std::string> &GetJitHelperNameMap()
+{
+   static std::unordered_map<std::string, std::string> map;
+   return map;
 }
 
 void ThrowIfNSlotsChanged(unsigned int nSlots)
@@ -766,24 +785,73 @@ void RLoopManager::Jit()
 {
    {
       R__READ_LOCKGUARD(ROOT::gCoreMutex);
-      if (GetCodeToJit().empty()) {
+      if (GetCodeToJit().empty() && GetCodeToDeclare().empty()) {
+         RunDeferredCalls();
          R__LOG_INFO(RDFLogChannel()) << "Nothing to jit and execute.";
          return;
       }
    }
 
-   const std::string code = []() {
+   std::string codeToDeclare, code;
+   {
       R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
-      return std::move(GetCodeToJit());
-   }();
+      codeToDeclare.swap(GetCodeToDeclare());
+      code.swap(GetCodeToJit());
+   };
 
    TStopwatch s;
    s.Start();
-   RDFInternal::InterpreterCalc(code, "RLoopManager::Run");
+   if (!codeToDeclare.empty()) {
+      ROOT::Internal::RDF::InterpreterDeclare(codeToDeclare);
+      auto &funcMap = GetJitHelperFuncMap();
+      auto &nameMap = GetJitHelperNameMap();
+      auto clinfo = gInterpreter->ClassInfo_Factory("R_rdf");
+      assert(gInterpreter->ClassInfo_IsValid(clinfo));
+      for (auto &codeAndName : nameMap) {
+         JitHelperFunc *&addr = funcMap[codeAndName.second];
+         if (!addr) {
+            // fast fetch of the address via gInterpreter
+            // (faster than gInterpreter->Evaluate(function name, ret), ret->GetAsPointer())
+            auto declid = gInterpreter->GetFunction(clinfo, codeAndName.second.c_str());
+            assert(declid);
+            auto minfo = gInterpreter->MethodInfo_Factory(declid);
+            assert(gInterpreter->MethodInfo_IsValid(minfo));
+            auto mname = gInterpreter->MethodInfo_GetMangledName(minfo);
+            addr = reinterpret_cast<JitHelperFunc *>(gInterpreter->FindSym(mname));
+            gInterpreter->MethodInfo_Delete(minfo);
+         }
+      }
+      gInterpreter->ClassInfo_Delete(clinfo);
+   }
+   if (!code.empty()) {
+      RDFInternal::InterpreterCalc(code, "RLoopManager::Run");
+   }
    s.Stop();
    R__LOG_INFO(RDFLogChannel()) << "Just-in-time compilation phase completed"
                                 << (s.RealTime() > 1e-3 ? " in " + std::to_string(s.RealTime()) + " seconds."
                                                         : " in less than 1ms.");
+
+   RunDeferredCalls();
+}
+
+void RLoopManager::RunDeferredCalls()
+{
+   if (!fJitHelperCalls.empty()) {
+      R__READ_LOCKGUARD(ROOT::gCoreMutex); // methods are thread-safe but funcMap isn't (yet)
+      TStopwatch s2;
+      s2.Start();
+      auto &funcMap = GetJitHelperFuncMap();
+      for (auto &call : fJitHelperCalls) {
+         assert(funcMap.find(call.functionId) != funcMap.end());
+         funcMap[call.functionId](this, call.prevNodeOnHeap, call.colRegister, call.colNames, call.wkJittedNode,
+                                  call.argument);
+      }
+      s2.Stop();
+      R__LOG_INFO(RDFLogChannel()) << "Deferred calls (" << fJitHelperCalls.size() << ") completed"
+                                   << (s2.RealTime() > 1e-3 ? " in " + std::to_string(s2.RealTime()) + " seconds."
+                                                            : " in less than 1ms.");
+      fJitHelperCalls.clear();
+   }
 }
 
 /// Trigger counting of number of children nodes for each node of the functional graph.
@@ -808,12 +876,12 @@ void RLoopManager::Run(bool jit)
    // Change value of TTree::GetMaxTreeSize only for this scope. Revert when #6640 will be solved.
    MaxTreeSizeRAII ctxtmts;
 
-   R__LOG_INFO(RDFLogChannel()) << "Starting event loop number " << fNRuns << '.';
-
    ThrowIfNSlotsChanged(GetNSlots());
 
    if (jit)
       Jit();
+
+   RunDeferredCalls();
 
    InitNodes();
 
@@ -932,6 +1000,33 @@ void RLoopManager::ToJitExec(const std::string &code) const
 {
    R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
    GetCodeToJit().append(code);
+}
+
+void RLoopManager::RegisterJitHelperCall(const std::string &funcCode, std::shared_ptr<RNodeBase> *prevNodeOnHeap,
+                                         ROOT::Internal::RDF::RColumnRegister *colRegister,
+                                         const std::vector<std::string> &colNames, void *wkJittedNode, void *argument)
+{
+   auto &nameMap = GetJitHelperNameMap();
+   {
+      R__READ_LOCKGUARD(ROOT::gCoreMutex);
+      auto match = nameMap.find(funcCode);
+      if (match != nameMap.end()) {
+         R__LOG_DEBUG(0, RDFLogChannel()) << "JitHelper " << match->second << " already defined";
+         fJitHelperCalls.emplace_back(match->second, prevNodeOnHeap, colRegister, colNames, wkJittedNode, argument);
+         return;
+      }
+   }
+
+   {
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+      std::string registerId = "jitNodeRegistrator_" + std::to_string(nameMap.size());
+      nameMap[funcCode] = registerId;
+      R__LOG_DEBUG(0, RDFLogChannel()) << "JitHelper new " << registerId << " defined for funcCode " << funcCode;
+      // step 1: register function (now)
+      std::string toDeclare = "namespace R_rdf {\n  void " + registerId + funcCode + "\n}\n";
+      GetCodeToDeclare().append(toDeclare);
+      fJitHelperCalls.emplace_back(registerId, prevNodeOnHeap, colRegister, colNames, wkJittedNode, argument);
+   }
 }
 
 void RLoopManager::RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f)

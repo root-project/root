@@ -50,6 +50,7 @@ class RActionBase;
 class RVariationBase;
 class RDefinesWithReaders;
 class RVariationsWithReaders;
+class RColumnRegister;
 
 namespace GraphDrawing {
 class GraphCreatorHelper;
@@ -201,6 +202,27 @@ class RLoopManager : public RNodeBase {
    std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RVariationsWithReaders>>>
       fUniqueVariationsWithReaders;
 
+   // deferred function calls to Jitted functions
+   struct DeferredJitCall {
+      std::string functionId;
+      std::shared_ptr<RNodeBase> *prevNodeOnHeap;
+      ROOT::Internal::RDF::RColumnRegister *colRegister;
+      std::vector<std::string> colNames;
+      void *wkJittedNode, *argument;
+      DeferredJitCall(const std::string &id, std::shared_ptr<RNodeBase> *prevNode,
+                      ROOT::Internal::RDF::RColumnRegister *cols, const std::vector<std::string> &colnames,
+                      void *wkNodePtr, void *arg)
+         : functionId(id),
+           prevNodeOnHeap(prevNode),
+           colRegister(cols),
+           colNames(colnames),
+           wkJittedNode(wkNodePtr),
+           argument(arg)
+      {
+      }
+   };
+   std::vector<DeferredJitCall> fJitHelperCalls;
+
 public:
    RLoopManager(const ColumnNames_t &defaultColumns = {});
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
@@ -217,6 +239,7 @@ public:
    ~RLoopManager() override;
 
    void Jit();
+   void RunDeferredCalls();
    RLoopManager *GetLoopManagerUnchecked() final { return this; }
    void Run(bool jit = true);
    const ColumnNames_t &GetDefaultColumnNames() const;
@@ -240,6 +263,9 @@ public:
    void IncrChildrenCount() final { ++fNChildren; }
    void StopProcessing() final { ++fNStopsReceived; }
    void ToJitExec(const std::string &) const;
+   void RegisterJitHelperCall(const std::string &funcBody, std::shared_ptr<RNodeBase> *prevNodeOnHeap,
+                              ROOT::Internal::RDF::RColumnRegister *colRegister,
+                              const std::vector<std::string> &colNames, void *wkJittedPtr, void *argument = nullptr);
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
    unsigned int GetNRuns() const { return fNRuns; }
    bool HasDataSourceColumnReaders(std::string_view col, const std::type_info &ti) const;
