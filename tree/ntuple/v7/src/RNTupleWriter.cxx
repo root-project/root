@@ -92,14 +92,20 @@ ROOT::Experimental::RNTupleWriter::Recreate(std::initializer_list<std::pair<std:
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
-ROOT::Experimental::RNTupleWriter::Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName, TFile &file,
-                                          const RNTupleWriteOptions &options)
+ROOT::Experimental::RNTupleWriter::Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
+                                          TDirectory &fileOrDirectory, const RNTupleWriteOptions &options)
 {
-   if (!file.IsBinary())
+   auto file = fileOrDirectory.GetFile();
+   if (!file) {
+      throw RException(R__FAIL("RNTupleWriter only supports writing to a ROOT file. Cannot write into a directory "
+                               "that is not backed by a file"));
+   }
+   if (!file->IsBinary()) {
       throw RException(R__FAIL("RNTupleWriter only supports writing to a ROOT file. Cannot write into " +
-                               std::string(file.GetName())));
+                               std::string(file->GetName())));
+   }
 
-   auto sink = std::make_unique<Internal::RPageSinkFile>(ntupleName, file, options);
+   auto sink = std::make_unique<Internal::RPageSinkFile>(ntupleName, fileOrDirectory, options);
    return Create(std::move(model), std::move(sink), options);
 }
 

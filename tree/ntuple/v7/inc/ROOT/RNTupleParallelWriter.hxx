@@ -24,7 +24,7 @@
 #include <string_view>
 #include <vector>
 
-class TFile;
+class TDirectory;
 
 namespace ROOT {
 namespace Experimental {
@@ -86,7 +86,7 @@ public:
                                                           const RNTupleWriteOptions &options = RNTupleWriteOptions());
    /// Append an ntuple to the existing file, which must not be accessed while data is filled into any created context.
    static std::unique_ptr<RNTupleParallelWriter> Append(std::unique_ptr<RNTupleModel> model,
-                                                        std::string_view ntupleName, TFile &file,
+                                                        std::string_view ntupleName, TDirectory &fileOrDirectory,
                                                         const RNTupleWriteOptions &options = RNTupleWriteOptions());
 
    ~RNTupleParallelWriter();
