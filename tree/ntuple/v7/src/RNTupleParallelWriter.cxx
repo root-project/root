@@ -167,13 +167,13 @@ ROOT::Experimental::RNTupleParallelWriter::Recreate(std::unique_ptr<RNTupleModel
 
 std::unique_ptr<ROOT::Experimental::RNTupleParallelWriter>
 ROOT::Experimental::RNTupleParallelWriter::Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
-                                                  TFile &file, const RNTupleWriteOptions &options)
+                                                  TDirectory &fileOrDirectory, const RNTupleWriteOptions &options)
 {
    if (!options.GetUseBufferedWrite()) {
       throw RException(R__FAIL("parallel writing requires buffering"));
    }
 
-   auto sink = std::make_unique<Internal::RPageSinkFile>(ntupleName, file, options);
+   auto sink = std::make_unique<Internal::RPageSinkFile>(ntupleName, fileOrDirectory, options);
    // Cannot use std::make_unique because the constructor of RNTupleParallelWriter is private.
    return std::unique_ptr<RNTupleParallelWriter>(new RNTupleParallelWriter(std::move(model), std::move(sink)));
 }

@@ -198,6 +198,25 @@ TEST(RNTuple, WriteReadInlinedModel)
    EXPECT_FLOAT_EQ(3.2, (*readvpz)[2]);
 }
 
+TEST(RNTuple, WriteReadSubdir)
+{
+   FileRaii fileGuard("test_ntuple_writeread_subdir.root");
+
+   auto model = RNTupleModel::Create();
+   *model->MakeField<float>("pt") = 137.0;
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto dir = file->mkdir("foo");
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *dir);
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("/foo/ntpl", fileGuard.GetPath());
+   EXPECT_EQ(1U, reader->GetNEntries());
+   reader->LoadEntry(0);
+   EXPECT_FLOAT_EQ(137.0, *reader->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
+}
+
 TEST(RNTuple, FileAnchor)
 {
    FileRaii fileGuard("test_ntuple_file_anchor.root");

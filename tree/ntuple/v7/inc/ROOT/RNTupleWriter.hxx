@@ -32,7 +32,7 @@
 #include <string_view>
 #include <utility>
 
-class TFile;
+class TDirectory;
 
 namespace ROOT {
 namespace Experimental {
@@ -94,7 +94,7 @@ public:
             std::string_view storage, const RNTupleWriteOptions &options = RNTupleWriteOptions());
    /// Throws an exception if the model is null.
    static std::unique_ptr<RNTupleWriter> Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
-                                                TFile &file,
+                                                TDirectory &fileOrDirectory,
                                                 const RNTupleWriteOptions &options = RNTupleWriteOptions());
    RNTupleWriter(const RNTupleWriter &) = delete;
    RNTupleWriter &operator=(const RNTupleWriter &) = delete;
