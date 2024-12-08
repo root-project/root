@@ -64,6 +64,19 @@ fIntegral(0), fIntegralStatus(kNoInt)
    fAxes.SetOwner();
 }
 
+THnBase::THnBase(const char* name, const char* title, const std::vector<TAxis>& axes):
+  TNamed(name, title), fNdimensions(axes.size()), fAxes(axes.size()), fBrowsables(axes.size()),
+  fEntries(0), fTsumw(0), fTsumw2(-1.), fTsumwx(axes.size()), fTsumwx2(axes.size()),
+  fIntegral(0), fIntegralStatus(kNoInt)
+{
+  size_t i{};
+  for (auto& a: axes)
+    fAxes.AddAtAndExpand(a.Clone(), i++);
+  // Assuming SetTitle is done by TNamed.
+  fAxes.SetOwner();
+}
+
+
 THnBase::THnBase(const char *name, const char *title, Int_t dim, const Int_t *nbins,
                  const std::vector<std::vector<double>> &xbins)
    : TNamed(name, title), fNdimensions(dim), fAxes(dim), fBrowsables(dim), fEntries(0), fTsumw(0), fTsumw2(-1.),

@@ -54,9 +54,6 @@ TAxis::TAxis()
    fXmax    = 1;
    fFirst   = 0;
    fLast    = 0;
-   fParent  = nullptr;
-   fLabels  = nullptr;
-   fModLabs = nullptr;
    fBits2   = 0;
    fTimeDisplay = false;
 }
@@ -66,9 +63,6 @@ TAxis::TAxis()
 
 TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup)
 {
-   fParent  = nullptr;
-   fLabels  = nullptr;
-   fModLabs = nullptr;
    Set(nbins,xlow,xup);
 }
 
@@ -77,11 +71,12 @@ TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup)
 
 TAxis::TAxis(Int_t nbins,const Double_t *xbins)
 {
-   fParent  = nullptr;
-   fLabels  = nullptr;
-   fModLabs = nullptr;
    Set(nbins,xbins);
 }
+
+TAxis::TAxis(std::vector<double> const &bins):
+  TAxis(bins.size()-1, bins.data())
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.

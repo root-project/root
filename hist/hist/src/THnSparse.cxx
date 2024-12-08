@@ -611,6 +611,27 @@ THnSparse::THnSparse(const char* name, const char* title, Int_t dim,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Construct a THnSparse with chunksize as the size of the chunks.
+/// "axes" is a vector of TAxis, its size sets the number of dimensions.
+/// This method is convenient for passing the Axes on the fly:
+/// auto h0= new THnSparseI{"h0", "", {{100, -50., 50.}, {50, -1000., 1000.}}};
+
+THnSparse::THnSparse(const char* name, const char* title,
+                     const std::vector<TAxis>& axes,
+                     Int_t chunksize):
+THnBase(name, title, axes),
+  fChunkSize(chunksize), fFilledBins(0), fCompactCoord(nullptr)
+{
+  const size_t dim=axes.size();
+  auto nbins=new Int_t[dim];
+  for (size_t i=0; i<dim; i++)
+    nbins[i]=axes.at(i).GetNbins();
+  fCompactCoord = new THnSparseCompactBinCoord(dim, nbins);
+  fBinContent.SetOwner();
+  delete[] nbins;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Destruct a THnSparse
 
 THnSparse::~THnSparse() {
