@@ -31,8 +31,7 @@
 # \macro_output
 # \macro_code
 #
-# \author Lorenzo Moneta
-# \translator Piper Wright Parker McKann
+# \author Lorenzo Moneta (C++ version), and P. P. (Python translation)
 
 import ROOT
 from ROOT import RooStats, RooFit

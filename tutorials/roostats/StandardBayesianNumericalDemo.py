@@ -23,7 +23,7 @@
 # \macro_output
 # \macro_code
 #
-# \author Kyle Cranmer
+# \author Kyle Cranmer (C++ version), and P. P. (Python translation)
 
 import ROOT
 from ROOT import RooFit, RooStats

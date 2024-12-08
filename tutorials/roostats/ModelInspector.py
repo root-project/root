@@ -36,8 +36,8 @@
 #     - fixes from Bertrand Bellenot for scrolling window for many parameters
 #  - Version 3, April 2024
 #     - translation from C++ macros to python3
-# \author Kyle Cranmer
-# \translator P. P.
+#
+# \author Kyle Cranmer (C++ version), and P. P. (Python translation)
 
 import sys
 import ROOT

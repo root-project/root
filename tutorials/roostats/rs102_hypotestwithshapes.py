@@ -15,7 +15,7 @@
 # \macro_output
 # \macro_code
 #
-# \author Kyle Cranmer
+# \author Kyle Cranmer (C++ version), and P. P. (Python translation)
 
 # use this order for safety on library loading
 import ROOT

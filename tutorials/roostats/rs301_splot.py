@@ -21,7 +21,7 @@
 # \macro_code
 # \macro_output
 #
-# \authors P. P., Kyle Cranmer (C++ version)
+# \authors Kyle Cranmer (C++ version), and P. P. (Python translation)
 
 
 import ROOT

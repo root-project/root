@@ -18,7 +18,7 @@
 # \macro_output
 # \macro_code
 #
-# \authors Sven Kreiss, Kyle Cranmer
+# \authors Sven Kreiss, Kyle Cranmer (C++ version), and P. P. (Python translation)
 
 
 import ROOT

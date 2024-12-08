@@ -26,7 +26,7 @@
 # \macro_output
 # \macro_code
 #
-# \author Lorenzo Moneta
+# \author Lorenzo Moneta (C++ version), and P. P. (Python translation)
 
 from warnings import warn
 from gc import collect

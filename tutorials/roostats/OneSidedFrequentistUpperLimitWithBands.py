@@ -102,7 +102,7 @@
 # \macro_output
 # \macro_code
 #
-# \authors Kyle Cranmer, Haichen Wang, Daniel Whiteson
+# \authors Kyle Cranmer (C++ version), Haichen Wang, Daniel Whiteson, and P. P. (Python translation)
 
 import ROOT
 from ROOT import RooStats, RooFit
