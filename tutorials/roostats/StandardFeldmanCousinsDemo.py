@@ -30,156 +30,151 @@
 # \author Kyle Cranmer
 
 
-import ROOT 
+import ROOT
 from ROOT import RooFit, RooStats
 
-TFile = 		 ROOT.TFile
-TROOT = 		 ROOT.TROOT
-TH1F = 		 ROOT.TH1F
-TSystem = 		 ROOT.TSystem
+TFile = ROOT.TFile
+TROOT = ROOT.TROOT
+TH1F = ROOT.TH1F
+TSystem = ROOT.TSystem
 
-RooWorkspace = 		 ROOT.RooWorkspace
-RooAbsData = 		 ROOT.RooAbsData
+RooWorkspace = ROOT.RooWorkspace
+RooAbsData = ROOT.RooAbsData
 
-ModelConfig = 		 RooFit.ModelConfig
-FeldmanCousins = 		 RooStats.FeldmanCousins
-ToyMCSampler = 		 RooStats.ToyMCSampler
-PointSetInterval = 		 RooStats.PointSetInterval
-ConfidenceBelt = 		 RooStats.ConfidenceBelt
+ModelConfig = RooFit.ModelConfig
+FeldmanCousins = RooStats.FeldmanCousins
+ToyMCSampler = RooStats.ToyMCSampler
+PointSetInterval = RooStats.PointSetInterval
+ConfidenceBelt = RooStats.ConfidenceBelt
 
 RooArgSet = ROOT.RooArgSet
 TCanvas = ROOT.TCanvas
 
-def StandardFeldmanCousinsDemo(infile = "", workspaceName = "combined",
-                                modelConfigName = "ModelConfig", dataName = "obsData"):
+
+def StandardFeldmanCousinsDemo(infile="", workspaceName="combined", modelConfigName="ModelConfig", dataName="obsData"):
+
+    # -------------------------------------------------------
+    # First part is just to access a user-defined file
+    # or create the standard example file if it doesn't exist
+    filename = ""
+    if infile == "":
+        filename = "results/example_combined_GaussExample_model.root"
+        fileExist = not ROOT.gSystem.AccessPathName(filename)  # note opposite return code
+        # if file does not exists generate with histfactory
+        if not fileExist:
+            # ifdef _WIN32
+            print(f"HistFactory file cannot be generated on Windows - exit")
+            return
+            # endif
+            # Normally this would be run on the command line
+            print(f"will run standard hist2workspace example")
+            ROOT.gROOT.ProcessLine(".! prepareHistFactory .")
+            ROOT.gROOT.ProcessLine(".! hist2workspace config/example.xml")
+            print(f"\n\n---------------------")
+            print(f"Done creating example input")
+            print(f"---------------------\n\n")
+
+    else:
+        filename = infile
+
+    # Try to open the file
+    file = TFile.Open(filename)
+
+    # if input file was specified byt not found, quit
+    if not file:
+        print(f"StandardRooStatsDemoMacro: Input file {filename} is not found")
+        return
+
+    # -------------------------------------------------------
+    # Tutorial starts here
+    # -------------------------------------------------------
+
+    # get the workspace out of the file
+    w = file.Get(workspaceName)
+    if not w:
+        print(f"workspace not found")
+        return
+
+    # get the modelConfig out of the file
+    mc = w.obj(modelConfigName)
+
+    # get the modelConfig out of the file
+    data = w.data(dataName)
+
+    # make sure ingredients are found
+    if not data or not mc:
+        w.Print()
+        print(f"data or ModelConfig was not found")
+        return
+
+    # -------------------------------------------------------
+    # create and use the FeldmanCousins tool
+    # to find and plot the 95% confidence interval
+    # on the parameter of interest as specified
+    # in the model config
+    fc = FeldmanCousins(data, mc)
+    fc.SetConfidenceLevel(0.95)  # 95% interval
+    # fc.AdditionalNToysFactor(0.1); # to speed up the result
+    fc.UseAdaptiveSampling(True)  # speed it up a bit
+    fc.SetNBins(10)  # set how many points per parameter of interest to scan
+    fc.CreateConfBelt(True)  # save the information in the belt for plotting
+
+    # Since this tool needs to throw toy MC the PDF needs to be
+    # extended or the tool needs to know how many entries in a dataset
+    # per pseudo experiment.
+    # In the 'number counting form' where the entries in the dataset
+    # are counts, and not values of discriminating variables, the
+    # datasets typically only have one entry and the PDF is not
+    # extended.
+    if not mc.GetPdf().canBeExtended():
+        if data.numEntries() == 1:
+            fc.FluctuateNumDataEntries(False)
+        else:
+            print(f"Not sure what to do about this model")
+
+    # We can use PROOF to speed things along in parallel
+    #  pc = ProofConfig(w, 1, "workers=4", kFALSE);
+    #  toymcsampler = fc.GetTestStatSampler()
+    #  toymcsampler.SetProofConfig(pc) # enable proof
+
+    # Now get the interval
+    interval = fc.GetInterval()
+    belt = fc.GetConfidenceBelt()
+
+    # print out the interval on the first Parameter of Interest
+    firstPOI = mc.GetParametersOfInterest().first()
+    print(
+        f"\n95% interval on {firstPOI.GetName()} is : [{interval.LowerLimit(firstPOI)}, ",
+        interval.UpperLimit(firstPOI),
+        "] ",
+    )
+
+    # ---------------------------------------------
+    # No nice plots yet, so plot the belt by hand
+
+    # Ask the calculator which points were scanned
+    parameterScan = fc.GetPointsToScan()
+    tmpPoint = RooArgSet()
+
+    # make a histogram of parameter vs. threshold
+    histOfThresholds = TH1F("histOfThresholds", "", parameterScan.numEntries(), firstPOI.getMin(), firstPOI.getMax())
+
+    # loop through the points that were tested and ask confidence belt
+    # what the upper/lower thresholds were.
+    # For FeldmanCousins, the lower cut off is always 0
+    for i in range(parameterScan.numEntries()):
+        tmpPoint = parameterScan.get(i).clone("temp")
+        arMax = belt.GetAcceptanceRegionMax(tmpPoint)
+        arMin = belt.GetAcceptanceRegionMax(tmpPoint)
+        poiVal = tmpPoint.getRealValue(firstPOI.GetName())
+        histOfThresholds.Fill(poiVal, arMax)
+
+    histOfThresholds.SetMinimum(0)
+    c_belt = TCanvas("c_belt", "c_belt")
+    histOfThresholds.Draw()
+    c_belt.Update()
+    c_belt.Draw()
+    c_belt.SaveAs("StandardFeldmanCousinsDemo.1.belt.png")
 
 
-   
-   # -------------------------------------------------------
-   # First part is just to access a user-defined file
-   # or create the standard example file if it doesn't exist
-   filename = ""
-   if infile == "":
-      filename = "results/example_combined_GaussExample_model.root"
-      fileExist = not ROOT.gSystem.AccessPathName(filename) # note opposite return code
-      # if file does not exists generate with histfactory
-      if not fileExist:
-         #ifdef _WIN32
-         print(f"HistFactory file cannot be generated on Windows - exit")
-         return
-         #endif
-         # Normally this would be run on the command line
-         print(f"will run standard hist2workspace example")
-         ROOT.gROOT.ProcessLine(".! prepareHistFactory .")
-         ROOT.gROOT.ProcessLine(".! hist2workspace config/example.xml")
-         print(f"\n\n---------------------")
-         print(f"Done creating example input")
-         print(f"---------------------\n\n")
-         
-      
-   else:
-      filename = infile
-   
-   # Try to open the file
-   file = TFile.Open(filename)
-   
-   # if input file was specified byt not found, quit
-   if not file:
-      print(f"StandardRooStatsDemoMacro: Input file {filename} is not found")
-      return
-      
-   
-   # -------------------------------------------------------
-   # Tutorial starts here
-   # -------------------------------------------------------
-   
-   # get the workspace out of the file
-   w = file.Get(workspaceName)
-   if not w:
-      print(f"workspace not found")
-      return
-      
-   
-   # get the modelConfig out of the file
-   mc = w.obj(modelConfigName)
-   
-   # get the modelConfig out of the file
-   data = w.data(dataName)
-   
-   # make sure ingredients are found
-   if not data or not mc:
-      w.Print()
-      print(f"data or ModelConfig was not found")
-      return
-      
-   
-   # -------------------------------------------------------
-   # create and use the FeldmanCousins tool
-   # to find and plot the 95% confidence interval
-   # on the parameter of interest as specified
-   # in the model config
-   fc = FeldmanCousins(data, mc)
-   fc.SetConfidenceLevel(0.95) # 95% interval
-   # fc.AdditionalNToysFactor(0.1); # to speed up the result
-   fc.UseAdaptiveSampling(True) # speed it up a bit
-   fc.SetNBins(10)              # set how many points per parameter of interest to scan
-   fc.CreateConfBelt(True)      # save the information in the belt for plotting
-   
-   # Since this tool needs to throw toy MC the PDF needs to be
-   # extended or the tool needs to know how many entries in a dataset
-   # per pseudo experiment.
-   # In the 'number counting form' where the entries in the dataset
-   # are counts, and not values of discriminating variables, the
-   # datasets typically only have one entry and the PDF is not
-   # extended.
-   if not mc.GetPdf().canBeExtended():
-      if (data.numEntries() == 1):
-         fc.FluctuateNumDataEntries(False)
-      else:
-         print(f"Not sure what to do about this model")
-      
-   
-   # We can use PROOF to speed things along in parallel
-   #  pc = ProofConfig(w, 1, "workers=4", kFALSE);
-   #  toymcsampler = fc.GetTestStatSampler()
-   #  toymcsampler.SetProofConfig(pc) # enable proof
-   
-   # Now get the interval
-   interval = fc.GetInterval()
-   belt = fc.GetConfidenceBelt()
-   
-   # print out the interval on the first Parameter of Interest
-   firstPOI = mc.GetParametersOfInterest().first()
-   print(f"\n95% interval on {firstPOI.GetName()} is : [{interval.LowerLimit(firstPOI)}, ",
-          interval.UpperLimit(firstPOI), "] ")
-   
-   # ---------------------------------------------
-   # No nice plots yet, so plot the belt by hand
-   
-   # Ask the calculator which points were scanned
-   parameterScan = fc.GetPointsToScan()
-   tmpPoint = RooArgSet() 
-   
-   # make a histogram of parameter vs. threshold
-   histOfThresholds = \
-   TH1F("histOfThresholds", "", parameterScan.numEntries(), firstPOI.getMin(), firstPOI.getMax())
-   
-   # loop through the points that were tested and ask confidence belt
-   # what the upper/lower thresholds were.
-   # For FeldmanCousins, the lower cut off is always 0
-   for i in range( parameterScan.numEntries() ):
-      tmpPoint = parameterScan.get(i).clone("temp")
-      arMax = belt.GetAcceptanceRegionMax(tmpPoint)
-      arMin = belt.GetAcceptanceRegionMax(tmpPoint)
-      poiVal = tmpPoint.getRealValue(firstPOI.GetName())
-      histOfThresholds.Fill(poiVal, arMax)
-      
-   histOfThresholds.SetMinimum(0)
-   c_belt = TCanvas("c_belt", "c_belt")
-   histOfThresholds.Draw()
-   c_belt.Update()
-   c_belt.Draw()
-   c_belt.SaveAs("StandardFeldmanCousinsDemo.1.belt.png")
-   
-StandardFeldmanCousinsDemo(infile = "", workspaceName = "combined",
-                                modelConfigName = "ModelConfig", dataName = "obsData")
+StandardFeldmanCousinsDemo(infile="", workspaceName="combined", modelConfigName="ModelConfig", dataName="obsData")
