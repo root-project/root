@@ -712,7 +712,7 @@ def ModelInspector(infile="", workspaceName="combined", modelConfigName="ModelCo
     else:
         filename = infile
 
-    # Bad behaviour of varialbe, workspace, modelconfig. They get unset after its first call(being whatever)
+    # Bad behaviour of variable, workspace, modelconfig. They get unset after its first call(being whatever)
     # if we declare pointer to the file, workspace, modelconfig, so everything seems to work-out fine.
     Declare = ROOT.gInterpreter.Declare
     Declare(

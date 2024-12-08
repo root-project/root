@@ -108,7 +108,7 @@ def StandardHistFactoryPlotsWithCategories(
     # Try to open the file
     file = TFile.Open(filename)
 
-    # if input file was specified byt not found, quit
+    # if input file was specified but not found, quit
     if not file:
         print(f"StandardRooStatsDemoMacro: Input file {filename} is not found")
         return
@@ -262,7 +262,7 @@ def StandardHistFactoryPlotsWithCategories(
                 # notes: obs is RooRealVar / obstmp is RooArgSet
                 #       pdftmp.expectedEvents receives RooArgSet as an argument
                 #       in C++ automatic conversion is possible.
-                #       in python the conversino is not possible.
+                #       in python the conversion is not possible.
                 # C-code : normCount = pdftmp->expectedEvents(*obs);
                 # Python : normCount = pdftmp.expectedEvents(obs) #doesn't work properly
                 # RooArgSet(obs) doesn´t reproduce well the results

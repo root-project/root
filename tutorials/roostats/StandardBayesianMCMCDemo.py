@@ -48,7 +48,7 @@ ProposalHelper = RooStats.ProposalHelper
 RooFitResult = ROOT.RooFitResult
 
 
-# general Structure definion
+# general Structure definition
 class Struct:
     def __init__(self, **entries):
         self.__dict__.update(entries)
@@ -90,7 +90,7 @@ def StandardBayesianMCMCDemo(infile="", workspaceName="combined", modelConfigNam
     # Try to open the file
     file = TFile.Open(filename)
 
-    # if input file was specified byt not found, quit
+    # if input file was specified but not found, quit
     if not file:
         print(f"StandardRooStatsDemoMacro: Input file {filename} is not found")
         return
