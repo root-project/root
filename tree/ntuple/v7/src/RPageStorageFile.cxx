@@ -29,8 +29,8 @@
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <RVersion.h>
+#include <TDirectory.h>
 #include <TError.h>
-#include <TFile.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -59,11 +59,11 @@ ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntup
    fWriter = RNTupleFileWriter::Recreate(ntupleName, path, RNTupleFileWriter::EContainerFormat::kTFile, options);
 }
 
-ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, TFile &file,
+ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, TDirectory &fileOrDirectory,
                                                            const RNTupleWriteOptions &options)
    : RPageSinkFile(ntupleName, options)
 {
-   fWriter = RNTupleFileWriter::Append(ntupleName, file, options.GetMaxKeySize());
+   fWriter = RNTupleFileWriter::Append(ntupleName, fileOrDirectory, options.GetMaxKeySize());
 }
 
 ROOT::Experimental::Internal::RPageSinkFile::~RPageSinkFile() {}

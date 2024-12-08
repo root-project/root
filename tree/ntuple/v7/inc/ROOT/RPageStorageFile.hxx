@@ -31,7 +31,7 @@
 #include <string>
 #include <utility>
 
-class TFile;
+class TDirectory;
 
 namespace ROOT {
 class RNTuple; // for making RPageSourceFile a friend of RNTuple
@@ -99,7 +99,7 @@ protected:
 
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
-   RPageSinkFile(std::string_view ntupleName, TFile &file, const RNTupleWriteOptions &options);
+   RPageSinkFile(std::string_view ntupleName, TDirectory &fileOrDirectory, const RNTupleWriteOptions &options);
    RPageSinkFile(const RPageSinkFile &) = delete;
    RPageSinkFile &operator=(const RPageSinkFile &) = delete;
    RPageSinkFile(RPageSinkFile &&) = default;
