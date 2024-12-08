@@ -22,41 +22,6 @@
 
 
 import ROOT
-from ROOT import RooStats, RooFit
-
-TFile = ROOT.TFile
-TROOT = ROOT.TROOT
-TH1F = ROOT.TH1F
-TF1 = ROOT.TF1
-TCanvas = ROOT.TCanvas
-TStopwatch = ROOT.TStopwatch
-
-RooWorkspace = ROOT.RooWorkspace
-RooAbsData = ROOT.RooAbsData
-RooRandom = ROOT.RooRandom
-RooRealSumPdf = ROOT.RooRealSumPdf
-RooNumIntConfig = ROOT.RooNumIntConfig
-
-ModelConfig = RooStats.ModelConfig
-ToyMCImportanceSampler = RooStats.ToyMCImportanceSampler
-HypoTestResult = RooStats.HypoTestResult
-HypoTestPlot = RooStats.HypoTestPlot
-SamplingDistribution = RooStats.SamplingDistribution
-ProfileLikelihoodTestStat = RooStats.ProfileLikelihoodTestStat
-SimpleLikelihoodRatioTestStat = RooStats.SimpleLikelihoodRatioTestStat
-ProfileLikelihoodCalculator = RooStats.ProfileLikelihoodCalculator
-LikelihoodInterval = RooStats.LikelihoodInterval
-LikelihoodIntervalPlot = RooStats.LikelihoodIntervalPlot
-
-FrequentistCalculator = RooStats.FrequentistCalculator
-TSystem = ROOT.TSystem
-
-vector = ROOT.vector
-
-ToyMCSampler = RooStats.ToyMCSampler
-ProofConfig = RooStats.ProofConfig
-TString = ROOT.TString
-kBlack = ROOT.kBlack
 
 
 def StandardFrequentistDiscovery(
@@ -86,10 +51,6 @@ def StandardFrequentistDiscovery(
         fileExist = not ROOT.gSystem.AccessPathName(filename)  # note opposite return code
         # if file does not exists generate with histfactory
         if not fileExist:
-            # ifdef _WIN32
-            print(f"HistFactory file cannot be generated on Windows - exit")
-            return -1
-            # endif
             # Normally this would be run on the command line
             print(f"will run standard hist2workspace example")
             ROOT.gROOT.ProcessLine(".!  prepareHistFactory .")
@@ -102,7 +63,7 @@ def StandardFrequentistDiscovery(
         filename = infile
 
     # Try to open the file
-    file = TFile.Open(filename)
+    file = ROOT.TFile.Open(filename)
 
     # if input file was specified but not found, quit
     if not file:
@@ -113,7 +74,7 @@ def StandardFrequentistDiscovery(
     # Tutorial starts here
     # -------------------------------------------------------
 
-    mn_t = TStopwatch()
+    mn_t = ROOT.TStopwatch()
     mn_t.Start()
 
     # get the workspace out of the file
@@ -123,10 +84,10 @@ def StandardFrequentistDiscovery(
         return -1.0
 
     # get the modelConfig out of the file
-    mc = w.obj(modelConfigNameSB)
+    mc = w[modelConfigNameSB]
 
     # get the data out of the file
-    data = w.data(dataName)
+    data = w[dataName]
 
     # make sure ingredients are found
     if not data or not mc:
@@ -145,13 +106,13 @@ def StandardFrequentistDiscovery(
     # ----------------------------------------------------
     # Configure a ProfileLikelihoodTestStat and a SimpleLikelihoodRatioTestStat
     # to use simultaneously with ToyMCSampler
-    plts = ProfileLikelihoodTestStat(mc.GetPdf())
+    plts = ROOT.RooStats.ProfileLikelihoodTestStat(mc.GetPdf())
     plts.SetOneSidedDiscovery(True)
     plts.SetVarName("q_0/2")
 
     # ----------------------------------------------------
     # configure the ToyMCImportanceSampler with two test statistics
-    toymcs = ToyMCSampler(plts, 50)
+    toymcs = ROOT.RooStats.ToyMCSampler(plts, 50)
 
     # Since this tool needs to throw toy MC the PDF needs to be
     # extended or the tool needs to know how many entries in a dataset
@@ -168,11 +129,11 @@ def StandardFrequentistDiscovery(
 
     # We can use PROOF to speed things along in parallel
     # pc = ProofConfig(w, 2, "user@yourfavoriteproofcluster", False);
-    pc = ProofConfig(w, 2, "", False)
+    pc = ROOT.RooStats.ProofConfig(w, 2, "", False)
     # toymcs.SetProofConfig(pc);    # enable proof
 
     # instantiate the calculator
-    freqCalc = FrequentistCalculator(data, mc, mcNull, toymcs)
+    freqCalc = ROOT.RooStats.FrequentistCalculator(data, mc, mcNull, toymcs)
     freqCalc.SetToys(toys, toys)  # null toys, alt toys
 
     # Run the calculator and print result
@@ -188,8 +149,8 @@ def StandardFrequentistDiscovery(
     print(f"total real time: ", mn_t.RealTime())
 
     # plot
-    c1 = TCanvas()
-    plot = HypoTestPlot(freqCalcResult, 100, -0.49, 9.51)
+    c1 = ROOT.TCanvas()
+    plot = ROOT.RooStats.HypoTestPlot(freqCalcResult, 100, -0.49, 9.51)
     plot.SetLogYaxis(True)
     plot.Draw()
     c1.Update()
@@ -198,7 +159,7 @@ def StandardFrequentistDiscovery(
 
     # adding chi2 to plot a different plot.
     # plot 1 and plot 2 have problems at HypoTestPlot.AddTF1
-    c2 = TCanvas("myc2", "myc2")
+    c2 = ROOT.TCanvas("myc2", "myc2")
     nPOI = 1
     # g =  TF1("g", TString.Format("1*ROOT::Math::chisquared_pdf(2*x,{},0)".format( nPOI)), 0, 9) # doesn´t work properly
     scale_ctte = 0.2
@@ -206,9 +167,9 @@ def StandardFrequentistDiscovery(
         f"""TF1 *g = new TF1("g", TString::Format("{scale_ctte}*ROOT::Math::chisquared_pdf(2*x,%d,0)", {nPOI}), 0, 9);"""
     )
     g = ROOT.g
-    g.SetLineColor(kBlack)
+    g.SetLineColor(ROOT.kBlack)
     g.SetLineStyle(7)
-    plot2 = HypoTestPlot(freqCalcResult, 100, -0.49, 9.51)
+    plot2 = ROOT.RooStats.HypoTestPlot(freqCalcResult, 100, -0.49, 9.51)
     tmptitle = f"#chi^{{2}}(2x,{nPOI})"
     plot2.AddTF1(g, tmptitle, "SAME")
     plot2.SetLogYaxis(True)

@@ -29,24 +29,6 @@
 
 import ROOT
 
-TFile = ROOT.TFile
-TROOT = ROOT.TROOT
-TCanvas = ROOT.TCanvas
-TMath = ROOT.TMath
-TSystem = ROOT.TSystem
-RooWorkspace = ROOT.RooWorkspace
-RooAbsData = ROOT.RooAbsData
-from ROOT import RooStats
-
-ModelConfig = RooStats.ModelConfig
-MCMCCalculator = RooStats.MCMCCalculator
-MCMCInterval = RooStats.MCMCInterval
-MCMCIntervalPlot = RooStats.MCMCIntervalPlot
-SequentialProposal = RooStats.SequentialProposal
-ProposalHelper = RooStats.ProposalHelper
-
-RooFitResult = ROOT.RooFitResult
-
 
 # general Structure definition
 class Struct:
@@ -88,7 +70,7 @@ def StandardBayesianMCMCDemo(infile="", workspaceName="combined", modelConfigNam
     else:
         filename = infile
     # Try to open the file
-    file = TFile.Open(filename)
+    file = ROOT.TFile.Open(filename)
 
     # if input file was specified but not found, quit
     if not file:
@@ -120,26 +102,26 @@ def StandardBayesianMCMCDemo(infile="", workspaceName="combined", modelConfigNam
 
     # Want an efficient proposal function
     # default is uniform.
-    """ 
+    """
    #
    # this one is based on the covariance matrix of fit
    fit = mc.GetPdf().fitTo(data,Save())
    ProposalHelper ph
    ph.SetVariables((RooArgSet&)fit.floatParsFinal())
    ph.SetCovMatrix(fit.covarianceMatrix())
-   ph.SetUpdateProposalParameters(kTRUE) # auto-create mean vars and add mappings
+   ph.SetUpdateProposalParameters(True) # auto-create mean vars and add mappings
    ph.SetCacheSize(100)
    pf = ph.GetProposalFunction()
    """
 
     # this proposal function seems fairly robust
-    sp = SequentialProposal(0.1)
+    sp = ROOT.RooStats.SequentialProposal(0.1)
     # -------------------------------------------------------
     # create and use the MCMCCalculator
     # to find and plot the 95% credible interval
     # on the parameter of interest as specified
     # in the model config
-    mcmc = MCMCCalculator(data, mc)
+    mcmc = ROOT.RooStats.MCMCCalculator(data, mc)
     mcmc.SetConfidenceLevel(optMCMC.confLevel)  # 95% interval
     #  mcmc.SetProposalFunction(*pf);
     mcmc.SetProposalFunction(sp)
@@ -148,7 +130,7 @@ def StandardBayesianMCMCDemo(infile="", workspaceName="combined", modelConfigNam
 
     # default is the shortest interval.
     (optMCMC.intervalType == 0)
-    mcmc.SetIntervalType(MCMCInterval.kShortest)  # for shortest interval (not really needed)
+    mcmc.SetIntervalType(ROOT.RooStats.MCMCInterval.kShortest)  # for shortest interval (not really needed)
     (optMCMC.intervalType == 1)
     mcmc.SetLeftSideTailFraction(0.5)  # for central interval
     (optMCMC.intervalType == 2)
@@ -163,24 +145,23 @@ def StandardBayesianMCMCDemo(infile="", workspaceName="combined", modelConfigNam
     interval = mcmc.GetInterval()
 
     # make a plot
-    c1 = TCanvas("IntervalPlot")
-    plot = MCMCIntervalPlot(interval)
+    c1 = ROOT.TCanvas("IntervalPlot")
+    plot = ROOT.RooStats.MCMCIntervalPlot(interval)
     plot.Draw()
 
-    c2 = TCanvas("extraPlots")
+    c2 = ROOT.TCanvas("extraPlots")
     list = mc.GetNuisanceParameters()
     if list.getSize() > 1:
         n = list.getSize()
-        ny = TMath.CeilNint(ROOT.sqrt(n))
-        nx = TMath.CeilNint(ROOT.double(n) / ny)
+        ny = ROOT.TMath.CeilNint(ROOT.sqrt(n))
+        nx = ROOT.TMath.CeilNint(ROOT.double(n) / ny)
         c2.Divide(nx, ny)
 
     # draw a scatter plot of chain results for poi vs each nuisance parameters
-    it = mc.GetNuisanceParameters().createIterator()
     nuis = ROOT.kNone
     iPad = 1  # iPad, that's funny
 
-    while nuis := it.Next():
+    for nuis in mc.GetNuisanceParameters():
         c2.cd(iPad)
         iPad += 1
         plot.DrawChainScatter(firstPOI, nuis)
@@ -193,8 +174,6 @@ def StandardBayesianMCMCDemo(infile="", workspaceName="combined", modelConfigNam
 
     c1.SaveAs("StandardBayesianMCMCDemo.1.IntervalPlot.png")
     c2.SaveAs("StandardBayesianMCMCDemo.2.extraPlots.png")
-
-    input("Press Enter to continue...\n")
 
 
 StandardBayesianMCMCDemo("", "combined", "ModelConfig", "obsData")

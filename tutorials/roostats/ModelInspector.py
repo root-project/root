@@ -41,86 +41,6 @@
 
 import sys
 import ROOT
-from ROOT import RooFit, RooStats
-
-
-TGButton = ROOT.TGButton
-TRootEmbeddedCanvas = ROOT.TRootEmbeddedCanvas
-# TGLayout = 		 ROOT.TGLayout
-TF1 = ROOT.TF1
-TMath = ROOT.TMath
-TSystem = ROOT.TSystem
-TCanvas = ROOT.TCanvas
-TGTextEntry = ROOT.TGTextEntry
-TGLabel = ROOT.TGLabel
-# TGTripleSlider = 		 ROOT.TGTripleSlider
-RooWorkspace = ROOT.RooWorkspace
-TFile = ROOT.TFile
-RooArgSet = ROOT.RooArgSet
-TList = ROOT.TList
-RooAbsPdf = ROOT.RooAbsPdf
-RooRealVar = ROOT.RooRealVar
-RooPlot = ROOT.RooPlot
-TGButton = ROOT.TGButton
-RooFitResult = ROOT.RooFitResult
-TROOT = ROOT.TROOT
-RooSimultaneous = ROOT.RooSimultaneous
-RooCategory = ROOT.RooCategory
-
-TGMainFrame = ROOT.TGMainFrame
-TGLayoutHints = ROOT.TGLayoutHints
-ModelConfig = RooFit.ModelConfig
-RooAbsData = ROOT.RooAbsData
-vector = ROOT.vector
-char = ROOT.char
-Double_t = ROOT.Double_t
-string = ROOT.string
-strcmp = ROOT.strcmp
-TGTripleHSlider = ROOT.TGTripleHSlider
-TGTextButton = ROOT.TGTextButton
-TGCanvas = ROOT.TGCanvas
-TGVerticalFrame = ROOT.TGVerticalFrame
-TGHorizontalFrame = ROOT.TGHorizontalFrame
-TGTextBuffer = ROOT.TGTextBuffer
-TGCheckButton = ROOT.TGCheckButton
-gClient = ROOT.gClient
-RooMsgService = ROOT.RooMsgService
-nullptr = ROOT.nullptr
-kDeepCleanup = ROOT.kDeepCleanup
-kLHintsExpandX = ROOT.kLHintsExpandX
-kLHintsExpandY = ROOT.kLHintsExpandY
-kButtonUp = ROOT.kButtonUp
-kLHintsTop = ROOT.kLHintsTop
-kLHintsCenterX = ROOT.kLHintsCenterX
-kLHintsLeft = ROOT.kLHintsLeft
-kLHintsRight = ROOT.kLHintsRight
-kFixedSize = ROOT.kFixedSize
-kLHintsExpandX = ROOT.kLHintsExpandX
-kLHintsExpandY = ROOT.kLHintsExpandY
-kDoubleScaleBoth = ROOT.kDoubleScaleBoth
-kHorizontalFrame = ROOT.kHorizontalFrame
-kFALSE = ROOT.kFALSE
-kRed = ROOT.kRed
-kGreen = ROOT.kGreen
-kBlue = ROOT.kBlue
-kYellow = ROOT.kYellow
-Form = ROOT.Form
-RooAbsData = ROOT.RooAbsData
-MarkerSize = RooFit.MarkerSize
-Cut = RooFit.Cut
-DataError = RooFit.DataError
-LineColor = RooFit.LineColor
-LineWidth = RooFit.LineWidth
-Normalization = RooFit.Normalization
-RooAbsReal = ROOT.RooAbsReal
-Save = RooFit.Save
-VisualizeError = RooFit.VisualizeError
-FillColor = RooFit.FillColor
-TGFont = ROOT.TGFont
-
-TPyDispatcher = ROOT.TPyDispatcher
-
-# gTQSender = ROOT.gTQSender
 
 from enum import Enum
 
@@ -137,7 +57,7 @@ class ETestCommandIdentifiers(Enum):
 ETestCmdId = ETestCommandIdentifiers
 
 
-class ModelInspectorGUI(TGMainFrame):
+class ModelInspectorGUI(ROOT.TGMainFrame):
     # private:
     # -fCanvas 	 = TRootEmbeddedCanvas()
     # -fLcan 	 = TGLayoutHints()
@@ -201,28 +121,22 @@ class ModelInspectorGUI(TGMainFrame):
 
         te = ROOT.BindObject(self.gTQSender, ROOT.TGTextEntry)
         Id = te.WidgetId()
-        match (Id):
-            case ETestCmdId.HId1.value:
-                fHslider1.SetPosition(atof(self.fTbh1.GetString()), self.fHslider1.GetMaxPosition())
-                pass
-            case ETestCmdId.HId2.value:
-                fHslider1.SetPointerPosition(atof(self.fTbh2.GetString()))
-                pass
-            case ETestCmdId.HId3.value:
-                fHslider1.SetPosition(self.fHslider1.GetMinPosition(), atof(self.fTbh1.GetString()))
-                pass
-            case _:
-                pass
+        if Id == ETestCmdId.HId1.value:
+            fHslider1.SetPosition(atof(self.fTbh1.GetString()), self.fHslider1.GetMaxPosition())
+        elif Id == ETestCmdId.HId2.value:
+            fHslider1.SetPointerPosition(atof(self.fTbh2.GetString()))
+        elif Id == ETestCmdId.HId3.value:
+            fHslider1.SetPosition(self.fHslider1.GetMinPosition(), atof(self.fTbh1.GetString()))
 
         self.DoSlider()
 
     # ______________________________________________________________________________
     def DoFit(self):
-        self.fFitRes = self.fMC.GetPdf().fitTo(self.fData, Save())
+        self.fFitRes = self.fMC.GetPdf().fitTo(self.fData, Save=True)
 
         for it in self.fSliderMap:
             param = self.fWS.var(it.second)
-            param = self.fFitRes.floatParsFinal().find(it.second)
+            param = self.fFitRes.floatParsFinal().find(it.second.Data())
             it.first.SetPosition(param.getVal() - param.getError(), param.getVal() + param.getError())
             it.first.SetPointerPosition(param.getVal())
 
@@ -240,9 +154,9 @@ class ModelInspectorGUI(TGMainFrame):
 
         # char buf[32];
 
-        simPdf = nullptr
+        simPdf = ROOT.nullptr
         numCats = 0
-        if strcmp(self.fMC.GetPdf().ClassName(), "RooSimultaneous") == 0:
+        if str(self.fMC.GetPdf().ClassName()) == "RooSimultaneous":
             simPdf = self.fMC.GetPdf()
             channelCat = simPdf.indexCat()
             numCats = channelCat.numTypes()
@@ -275,7 +189,7 @@ class ModelInspectorGUI(TGMainFrame):
                 self.fWS.var(name).setVal(it.first.GetMaxPosition())
                 param = self.fWS.var(name)
                 self.fLabelMap[it.first].SetText(
-                    Form(
+                    ROOT.Form(
                         "{:s} = {:.3}f [{:.3}f,{:.3}f]".format(
                             param.GetName(),
                             it.first.GetPointerPosition(),
@@ -286,7 +200,9 @@ class ModelInspectorGUI(TGMainFrame):
                 )
 
             normCount = self.fMC.GetPdf().expectedEvents(self.fMC.GetObservables())
-            self.fMC.GetPdf().plotOn(self.fPlot, LineColor(kRed), Normalization(normCount, RooAbsReal.NumEvent))
+            self.fMC.GetPdf().plotOn(
+                self.fPlot, ROOT.RooFit.Normalization(normCount, ROOT.RooAbsReal.NumEvent), LineColor="r"
+            )
 
             # low loop
             # it0 = self.fSliderMap.begin()
@@ -295,7 +211,9 @@ class ModelInspectorGUI(TGMainFrame):
                 self.fWS.var(name).setVal(it.first.GetMinPosition())
 
             normCount = self.fMC.GetPdf().expectedEvents(self.fMC.GetObservables())
-            self.fMC.GetPdf().plotOn(self.fPlot, LineColor(kGreen), Normalization(normCount, RooAbsReal.NumEvent))
+            self.fMC.GetPdf().plotOn(
+                self.fPlot, ROOT.RooFit.Normalization(normCount, ROOT.RooAbsReal.NumEvent), LineColor="g"
+            )
 
             # central loop
             # it0 = self.fSliderMap.begin()
@@ -304,7 +222,9 @@ class ModelInspectorGUI(TGMainFrame):
                 self.fWS.var(name).setVal(it.first.GetPointerPosition())
 
             normCount = self.fMC.GetPdf().expectedEvents(self.fMC.GetObservables())
-            self.fMC.GetPdf().plotOn(self.fPlot, LineColor(kBlue), Normalization(normCount, RooAbsReal.NumEvent))
+            self.fMC.GetPdf().plotOn(
+                self.fPlot, ROOT.RooFit.Normalization(normCount, ROOT.RooAbsReal.NumEvent), LineColor="b"
+            )
             self.fPlot.Draw()
 
             self.fCanvas.GetCanvas().Modified()
@@ -346,23 +266,20 @@ class ModelInspectorGUI(TGMainFrame):
                 self.fPlotList[frameIndex - 1] = self.fPlot
                 # plotlist[(frameIndex - 1)] = fPlot
 
-                # little note: RooAbsData.None = 2, see documentation.
-                #              however that is an invalid syntax in python.
-                #              instead we use getattr(RooAbsData, "None") built-in function
-                msglevel = RooMsgService.instance().globalKillBelow()
-                RooMsgService.instance().setGlobalKillBelow(RooFit.WARNING)
+                msglevel = ROOT.RooMsgService.instance().globalKillBelow()
+                ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
                 # """
                 self.fData.plotOn(
                     self.fPlot,
-                    MarkerSize(1),
-                    Cut(Form("{:s}=={:s}::{:s}".format(channelCat.GetName(), channelCat.GetName(), str(catName)))),
-                    DataError(getattr(RooAbsData, "None")),
+                    MarkerSize=1,
+                    Cut=ROOT.Form("{:s}=={:s}::{:s}".format(channelCat.GetName(), channelCat.GetName(), str(catName))),
+                    DataError="None",
                 )
                 # """
 
                 # self.fData.plotOn(self.fPlot)
 
-                RooMsgService.instance().setGlobalKillBelow(msglevel)
+                ROOT.RooMsgService.instance().setGlobalKillBelow(msglevel)
 
                 # normCount = Double_t()
 
@@ -373,7 +290,7 @@ class ModelInspectorGUI(TGMainFrame):
                     self.fWS.var(name).setVal(it.first.GetMaxPosition())
                     param = self.fWS.var(name)  # RooRealVar
                     self.fLabelMap[it.first].SetText(
-                        Form(
+                        ROOT.Form(
                             "{:s} = {:.3f} [{:.3f},{:.3f}]".format(
                                 param.GetName(),
                                 it.first.GetPointerPosition(),
@@ -385,7 +302,12 @@ class ModelInspectorGUI(TGMainFrame):
                 # normCount = pdftmp.expectedEvents(obs)
                 normCount = pdftmp.expectedEvents(obstmp)
                 # normCount = pdftmp.expectedEvents(RooArgSet(obs))
-                pdftmp.plotOn(self.fPlot, LineColor(kRed), LineWidth(2), Normalization(normCount, RooAbsReal.NumEvent))
+                pdftmp.plotOn(
+                    self.fPlot,
+                    ROOT.RooFit.Normalization(normCount, ROOT.RooAbsReal.NumEvent),
+                    LineColor="r",
+                    LineWidth=2,
+                )
 
                 # low loop
                 # it0 = self.fSliderMap.begin()
@@ -394,7 +316,7 @@ class ModelInspectorGUI(TGMainFrame):
                     self.fWS.var(name).setVal(it.first.GetMinPosition())
                     param = self.fWS.var(name)
                     self.fLabelMap[it.first].SetText(
-                        Form(
+                        ROOT.Form(
                             "{:s} = {:.3f} [{:.3f},{:.3f}]".format(
                                 param.GetName(),
                                 it.first.GetPointerPosition(),
@@ -407,7 +329,10 @@ class ModelInspectorGUI(TGMainFrame):
                 # normCount = pdftmp.expectedEvents(RooArgSet(obs))
                 normCount = pdftmp.expectedEvents(obstmp)
                 pdftmp.plotOn(
-                    self.fPlot, LineColor(kGreen), LineWidth(2), Normalization(normCount, RooAbsReal.NumEvent)
+                    self.fPlot,
+                    ROOT.RooFit.Normalization(normCount, ROOT.RooAbsReal.NumEvent),
+                    LineColor="g",
+                    LineWidth=2,
                 )
 
                 # central loop
@@ -417,7 +342,7 @@ class ModelInspectorGUI(TGMainFrame):
                     self.fWS.var(name).setVal(it.first.GetPointerPosition())
                     param = self.fWS.var(name)
                     self.fLabelMap[it.first].SetText(
-                        Form(
+                        ROOT.Form(
                             "{:s} = {:.3f} [{:.3f},{:.3f}]".format(
                                 param.GetName(),
                                 it.first.GetPointerPosition(),
@@ -436,29 +361,37 @@ class ModelInspectorGUI(TGMainFrame):
                     global gpdftmp
                     gpdftmp = pdftmp
                     pdftmp.plotOn(
-                        self.fPlot, LineColor(kBlue), LineWidth(2), Normalization(normCount, RooAbsReal.NumEvent)
+                        self.fPlot,
+                        ROOT.RooFit.Normalization(normCount, ROOT.RooAbsReal.NumEvent),
+                        LineColor="b",
+                        LineWidth=2,
                     )
                     # pdftmp.plotOn(self.fPlot)
                 else:
                     pdftmp.plotOn(
                         self.fPlot,
-                        Normalization(normCount, RooAbsReal.NumEvent),
-                        VisualizeError(self.fFitRes, self.fMC.GetNuisanceParameters()),
-                        FillColor(kYellow),
+                        ROOT.RooFit.Normalization(normCount, ROOT.RooAbsReal.NumEvent),
+                        ROOT.RooFit.VisualizeError(self.fFitRes, self.fMC.GetNuisanceParameters()),
+                        FillColor="y",
                     )
                     pdftmp.plotOn(
-                        self.fPlot, LineColor(kBlue), LineWidth(2), Normalization(normCount, RooAbsReal.NumEvent)
+                        self.fPlot,
+                        ROOT.RooFit.Normalization(normCount, ROOT.RooAbsReal.NumEvent),
+                        LineColor="b",
+                        LineWidth=2,
                     )
-                    msglevel = RooMsgService.instance().globalKillBelow()
-                    RooMsgService.instance().setGlobalKillBelow(RooFit.WARNING)
+                    msglevel = ROOT.RooMsgService.instance().globalKillBelow()
+                    ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.WARNING)
                     self.fData.plotOn(
                         self.fPlot,
-                        MarkerSize(1),
-                        Cut(Form("{:s}=={:s}::{:s}".format(channelCat.GetName(), channelCat.GetName(), str(catName)))),
-                        DataError(getattr(RooAbsData, "None")),
+                        MarkerSize=1,
+                        Cut=ROOT.Form(
+                            "{:s}=={:s}::{:s}".format(channelCat.GetName(), channelCat.GetName(), str(catName))
+                        ),
+                        DataError="None",
                     )
 
-                    RooMsgService.instance().setGlobalKillBelow(msglevel)
+                    ROOT.RooMsgService.instance().setGlobalKillBelow(msglevel)
 
                 self.fPlot.Draw()
 
@@ -505,33 +438,33 @@ class ModelInspectorGUI(TGMainFrame):
         self.fMC = mc
         self.fData = data
         # --- Principal Members ---
-        self.fCanvas = TRootEmbeddedCanvas()
-        self.fLcan = TGLayoutHints()
-        self.fFitFcn = TF1()
-        self.fPlot = RooPlot()
-        self.fFile = TFile()
-        self.fFitRes = RooFitResult()
+        self.fCanvas = ROOT.TRootEmbeddedCanvas()
+        self.fLcan = ROOT.TGLayoutHints()
+        self.fFitFcn = ROOT.TF1()
+        self.fPlot = ROOT.RooPlot()
+        self.fFile = ROOT.TFile()
+        self.fFitRes = ROOT.RooFitResult()
         # -
-        self.fSliderList = TList()
-        self.fFrameList = TList()
-        self.fPlotList = vector("RooPlot *")()
-        self.fSliderMap = ROOT.map("TGTripleHSlider *", " TString ")()  # it is an instance
+        self.fSliderList = ROOT.TList()
+        self.fFrameList = ROOT.TList()
+        self.fPlotList = ROOT.std.vector("RooPlot *")()
+        self.fSliderMap = ROOT.std.map("TGTripleHSlider *", " TString ")()  # it is an instance
         # -
         # -TSliderMap =    ROOT.map(TGTripleHSlider , char )   # it is a type
-        self.fLabelMap = ROOT.map("TGTripleHSlider*", "TGLabel *")()
+        self.fLabelMap = ROOT.std.map("TGTripleHSlider*", "TGLabel *")()
         # -
-        self.fFitButton = TGButton()
-        self.fExitButton = TGTextButton()
+        self.fFitButton = ROOT.TGButton()
+        self.fExitButton = ROOT.TGTextButton()
         # -
         # -# BB: a TGCanvas and a vertical frame are needed for using scrollbars
-        self.fCan = TGCanvas()
-        self.fVFrame = TGVerticalFrame()
+        self.fCan = ROOT.TGCanvas()
+        self.fVFrame = ROOT.TGVerticalFrame()
         # -
-        self.fHframe0 = self.fHframe1 = self.fHframe2 = TGHorizontalFrame()
-        self.fBly = self.fBfly1 = self.fBfly2 = self.fBfly3 = TGLayoutHints()
-        self.fHslider1 = TGTripleHSlider()
-        self.fTbh1 = self.fTbh2 = self.fTbh3 = TGTextBuffer()
-        self.fCheck1 = self.fCheck2 = TGCheckButton()
+        self.fHframe0 = self.fHframe1 = self.fHframe2 = ROOT.TGHorizontalFrame()
+        self.fBly = self.fBfly1 = self.fBfly2 = self.fBfly3 = ROOT.TGLayoutHints()
+        self.fHslider1 = ROOT.TGTripleHSlider()
+        self.fTbh1 = self.fTbh2 = self.fTbh3 = ROOT.TGTextBuffer()
+        self.fCheck1 = self.fCheck2 = ROOT.TGCheckButton()
         # -------------------------------------------end of members---------------------
         # debugging
         # global gself
@@ -539,13 +472,13 @@ class ModelInspectorGUI(TGMainFrame):
         #
         # super(TGMainFrame, self).__init__(gClient.GetRoot(), 500, 500)
         # Initialize TGMainFrame and saving its pointers
-        super().__init__(gClient.GetRoot(), 500, 500)
+        super().__init__(ROOT.gClient.GetRoot(), 500, 500)
         self.gTQSender = ROOT.gTQSender
         self.gApplication = ROOT.gApplication
 
-        RooMsgService.instance().getStream(1).removeTopic(RooFit.NumIntegration)
+        ROOT.RooMsgService.instance().getStream(1).removeTopic(ROOT.RooFit.NumIntegration)
 
-        simPdf = nullptr
+        simPdf = ROOT.nullptr
         numCats = 1
         # if (strcmp(fMC.GetPdf().ClassName(), "RooSimultaneous") == 0) : non-pythonic syntax
         if self.fMC.GetPdf().ClassName() == "RooSimultaneous":  # simple, pythonic syntax
@@ -557,13 +490,13 @@ class ModelInspectorGUI(TGMainFrame):
         else:
             print(f"Is not a simultaneous PDF")
 
-        self.fFitRes = nullptr
-        self.SetCleanup(kDeepCleanup)
+        self.fFitRes = ROOT.nullptr
+        self.SetCleanup(ROOT.kDeepCleanup)
 
         # Create an embedded canvas and add it to the main frame with center at x and y
         # and with 30 pixel margin all around
-        self.fCanvas = TRootEmbeddedCanvas("Canvas", self, 600, 400)
-        self.fLcan = TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 10, 10, 10, 10)
+        self.fCanvas = ROOT.TRootEmbeddedCanvas("Canvas", self, 600, 400)
+        self.fLcan = ROOT.TGLayoutHints(ROOT.kLHintsExpandX | ROOT.kLHintsExpandY, 10, 10, 10, 10)
         self.AddFrame(self.fCanvas, self.fLcan)
         self.fPlotList.resize(numCats)
         # plotlist = self.fPlotList(numCats) # instead we create an instance of the template
@@ -574,26 +507,26 @@ class ModelInspectorGUI(TGMainFrame):
                 self.fCanvas.GetCanvas().cd(i + 1).SetGrid()
 
         # return
-        self.fHframe0 = TGHorizontalFrame(self, 0, 0, 0)
+        self.fHframe0 = ROOT.TGHorizontalFrame(self, 0, 0, 0)
 
-        self.fCheck1 = TGCheckButton(self.fHframe0, "&Constrained", ETestCmdId.HCId1.value)
-        self.fCheck2 = TGCheckButton(self.fHframe0, "&Relative", ETestCmdId.HCId2.value)
-        self.fCheck1.SetState(kButtonUp)
-        self.fCheck2.SetState(kButtonUp)
+        self.fCheck1 = ROOT.TGCheckButton(self.fHframe0, "&Constrained", ETestCmdId.HCId1.value)
+        self.fCheck2 = ROOT.TGCheckButton(self.fHframe0, "&Relative", ETestCmdId.HCId2.value)
+        self.fCheck1.SetState(ROOT.kButtonUp)
+        self.fCheck2.SetState(ROOT.kButtonUp)
         self.fCheck1.SetToolTipText("Pointer position constrained to slider sides")
         self.fCheck2.SetToolTipText("Pointer position relative to slider position")
 
         self.fHframe0.Resize(200, 50)
 
-        self.fHframe2 = TGHorizontalFrame(self, 0, 0, 0)
+        self.fHframe2 = ROOT.TGHorizontalFrame(self, 0, 0, 0)
 
-        dp_DoFit = TPyDispatcher(self.DoFit)
-        self.fFitButton = TGTextButton(self.fHframe2, "&Fit")
+        dp_DoFit = ROOT.TPyDispatcher(self.DoFit)
+        self.fFitButton = ROOT.TGTextButton(self.fHframe2, "&Fit")
         self.fFitButton.SetFont("Helvetica")
         self.fFitButton.Connect("Clicked()", "TPyDispatcher", dp_DoFit, "Dispatch()")
 
-        dp_DoExit = TPyDispatcher(self.DoExit)
-        self.fExitButton = TGTextButton(self.fHframe2, "&Exit")
+        dp_DoExit = ROOT.TPyDispatcher(self.DoExit)
+        self.fExitButton = ROOT.TGTextButton(self.fHframe2, "&Exit")
         self.fExitButton.SetFont("Helvetica")
         # self.fExitButton.Connect( "Clicked()", "TPyDispatcher", dp_DoExit , "Dispatch()")
         # doesn't work properly. Break segmentation violation. Full crash.
@@ -603,19 +536,19 @@ class ModelInspectorGUI(TGMainFrame):
         # self.Connect("CloseWindow()", "TPyDispatcher", dp_CloseWindow, "Dispatch()")
         self.DontCallClose()
 
-        dp_HandleButtons = TPyDispatcher(self.HandleButtons)
+        dp_HandleButtons = ROOT.TPyDispatcher(self.HandleButtons)
         self.fCheck1.Connect("Clicked()", "TPyDispatcher", dp_HandleButtons, "Dispatch()")
         self.fCheck2.Connect("Clicked()", "TPyDispatcher", dp_HandleButtons, "Dispatch()")
 
         self.fHframe2.Resize(100, 25)
 
         # --- layout for buttons: top align, equally expand horizontally
-        self.fBly = TGLayoutHints(kLHintsTop | kLHintsExpandX, 5, 5, 5, 5)
+        self.fBly = ROOT.TGLayoutHints(ROOT.kLHintsTop | ROOT.kLHintsExpandX, 5, 5, 5, 5)
 
         # --- layout for the frame: place at bottom, right aligned
-        self.fBfly1 = TGLayoutHints(kLHintsTop | kLHintsCenterX, 5, 5, 5, 5)
-        self.fBfly2 = TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5)
-        self.fBfly3 = TGLayoutHints(kLHintsTop | kLHintsRight, 5, 5, 5, 5)
+        self.fBfly1 = ROOT.TGLayoutHints(ROOT.kLHintsTop | ROOT.kLHintsCenterX, 5, 5, 5, 5)
+        self.fBfly2 = ROOT.TGLayoutHints(ROOT.kLHintsTop | ROOT.kLHintsLeft, 5, 5, 5, 5)
+        self.fBfly3 = ROOT.TGLayoutHints(ROOT.kLHintsTop | ROOT.kLHintsRight, 5, 5, 5, 5)
 
         self.fHframe2.AddFrame(self.fFitButton, self.fBfly2)
         self.fHframe2.AddFrame(self.fExitButton, self.fBfly3)
@@ -625,15 +558,15 @@ class ModelInspectorGUI(TGMainFrame):
 
         # Loop over POI & NP, create slider
         # need maps of NP->slider? or just slider->NP
-        parameters = RooArgSet()
+        parameters = ROOT.RooArgSet()
         parameters.add(self.fMC.GetParametersOfInterest())
         parameters.add(self.fMC.GetNuisanceParameters())
         # it = parameters.createIterator() # unnecessary
-        param = nullptr
+        param = ROOT.nullptr
         # BB: This is the part needed in order to have scrollbars
-        self.fCan = TGCanvas(self, 100, 100, kFixedSize)
-        self.AddFrame(self.fCan, TGLayoutHints(kLHintsExpandY | kLHintsExpandX))
-        self.fVFrame = TGVerticalFrame(self.fCan.GetViewPort(), 10, 10)
+        self.fCan = ROOT.TGCanvas(self, 100, 100, ROOT.kFixedSize)
+        self.AddFrame(self.fCan, ROOT.TGLayoutHints(ROOT.kLHintsExpandY | ROOT.kLHintsExpandX))
+        self.fVFrame = ROOT.TGVerticalFrame(self.fCan.GetViewPort(), 10, 10)
         self.fCan.SetContainer(self.fVFrame)
         # And that's it!
         # Obviously, the parent of other subframes is now fVFrame instead of "self"...
@@ -641,26 +574,26 @@ class ModelInspectorGUI(TGMainFrame):
         # while (param := it.Next()): #unnecessary
         for param in parameters:
             print(f"Adding Slider for ", param.GetName())
-            hframek = TGHorizontalFrame(self.fVFrame, 0, 0, 0)
+            hframek = ROOT.TGHorizontalFrame(self.fVFrame, 0, 0, 0)
 
-            hlabel = TGLabel(
-                hframek, Form("{:s} = {:.3f} +{:.3f}".format(param.GetName(), param.getVal(), param.getError()))
+            hlabel = ROOT.TGLabel(
+                hframek, ROOT.Form("{:s} = {:.3f} +{:.3f}".format(param.GetName(), param.getVal(), param.getError()))
             )
 
-            hsliderk = TGTripleHSlider(
+            hsliderk = ROOT.TGTripleHSlider(
                 hframek,
                 0,
-                kDoubleScaleBoth,
+                ROOT.kDoubleScaleBoth,
                 ETestCmdId.HSId1.value,
-                kHorizontalFrame,
-                self.GetDefaultFrameBackground(),
-                kFALSE,
-                kFALSE,
-                kFALSE,
-                kFALSE,
+                ROOT.kHorizontalFrame,
+                ROOT.TGFrame.GetDefaultFrameBackground(),
+                False,
+                False,
+                False,
+                False,
             )
 
-            dp_DoSlider = TPyDispatcher(self.DoSlider)
+            dp_DoSlider = ROOT.TPyDispatcher(self.DoSlider)
             hsliderk.Connect("PointerPositionChanged()", "TPyDispatcher", dp_DoSlider, "Dispatch()")
             hsliderk.Connect("PositionChanged()", "TPyDispatcher", dp_DoSlider, "Dispatch()")
             hsliderk.SetRange(param.getMin(), param.getMax())

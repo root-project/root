@@ -26,28 +26,7 @@
 # \author Kyle Cranmer (C++ version), and P. P. (Python translation)
 
 import ROOT
-from ROOT import RooFit, RooStats
 import time
-
-TFile = ROOT.TFile
-TString = ROOT.TString
-TCanvas = ROOT.TCanvas
-TROOT = ROOT.TROOT
-RooWorkspace = ROOT.RooWorkspace
-RooAbsData = ROOT.RooAbsData
-RooRealVar = ROOT.RooRealVar
-
-
-RooUniform = ROOT.RooUniform
-ModelConfig = RooStats.ModelConfig
-BayesianCalculator = RooStats.BayesianCalculator
-SimpleInterval = RooStats.SimpleInterval
-RooAbsReal = ROOT.RooAbsReal
-RooPlot = ROOT.RooPlot
-TSystem = ROOT.TSystem
-
-
-MinimizerOptions = ROOT.Math.MinimizerOptions
 
 
 class Struct:
@@ -83,7 +62,7 @@ def StandardBayesianNumericalDemo(
 
     # option definitions
     confLevel = optBayes.confLevel
-    integrationType = TString(optBayes.integrationType)
+    integrationType = ROOT.TString(optBayes.integrationType)
     nToys = optBayes.nToys
     scanPosterior = optBayes.scanPosterior
     plotPosterior = optBayes.plotPosterior
@@ -114,7 +93,7 @@ def StandardBayesianNumericalDemo(
         filename = infile
 
     # Try to open the file
-    file = TFile.Open(filename)
+    file = ROOT.TFile.Open(filename)
 
     # if input file was specified but not found, quit
     if not file:
@@ -152,7 +131,7 @@ def StandardBayesianNumericalDemo(
     # before we do that, we must specify our prior
     # it belongs in the model config, but it may not have
     # been specified
-    prior = RooUniform("prior", "", mc.GetParametersOfInterest())
+    prior = ROOT.RooUniform("prior", "", mc.GetParametersOfInterest())
     w.Import(prior)
     mc.SetPriorPdf(w.pdf("prior"))
 
@@ -164,10 +143,10 @@ def StandardBayesianNumericalDemo(
         res(
             pdf.fitTo(
                 data,
-                Save(true),
-                Minimizer(MinimizerOptions.DefaultMinimizerType().c_str()),
-                Hesse(true),
-                PrintLevel(MinimizerOptions.DefaultPrintLevel() - 1),
+                Save=True,
+                Minimizer=MinimizerOptions.DefaultMinimizerType(),
+                Hesse=True,
+                PrintLevel=MinimizerOptions.DefaultPrintLevel() - 1,
             )
         )
 
@@ -180,7 +159,7 @@ def StandardBayesianNumericalDemo(
             v.setMax(TMath.Min(v.getMax(), v.getVal() + nSigmaNuisance * v.getError()))
             print(f"setting interval for nuisance  {v.GetName()} : [ {v.getMin()} , {v.getMax()}  ] \n")
 
-    bayesianCalc = BayesianCalculator(data, mc)
+    bayesianCalc = ROOT.RooStats.BayesianCalculator(data, mc)
     bayesianCalc.SetConfidenceLevel(confLevel)  # 95% interval
 
     # default of the calculator is central interval.  here use shortest , central or upper limit depending on input
@@ -230,14 +209,14 @@ def StandardBayesianNumericalDemo(
     # by reducing the number of points to plot - do 50
 
     # ignore errors of PDF if is zero
-    RooAbsReal.setEvalErrorLoggingMode(RooAbsReal.Ignore)
+    ROOT.RooAbsReal.setEvalErrorLoggingMode("Ignore")
 
     # Stop timer
     t1 = time.time()
     print("Standard Bayesian Numerical Algorithm was performed in :")
     print("{:2f} seconds. ".format(t1 - t0))
     print(f"\nDrawing plot of posterior function.....")
-    c1 = TCanvas()
+    c1 = ROOT.TCanvas()
     # always plot using number of scan points
     bayesianCalc.SetScanOfPosterior(nScanPoints)
 

@@ -409,6 +409,7 @@ set(extra_veto
   io/tree/tree106_tree.C
   io/tree/tree108_tree.C
   roostats/rs401d_FeldmanCousins.C  # Takes too much time
+  roostats/rs401d_FeldmanCousins.py  # Takes too much time
   histfactory/ModifyInterpolation.C
   io/tree/tree110_copy.C
   io/tree/tree111_copy.C

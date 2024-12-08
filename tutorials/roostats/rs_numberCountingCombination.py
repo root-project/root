@@ -27,21 +27,9 @@
 #
 # \author Kyle Cranmer (C++ version), and P. P. (Python translation)
 
+import numpy as np
 import ROOT
-from ROOT import RooStats, RooFit
-import cppyy
-import ctypes
 
-ProfileLikelihoodCalculator = RooStats.ProfileLikelihoodCalculator
-NumberCountingPdfFactory = RooStats.NumberCountingPdfFactory
-ConfInterval = RooStats.ConfInterval
-HypoTestResult = RooStats.HypoTestResult
-LikelihoodIntervalPlot = RooStats.LikelihoodIntervalPlot
-RooRealVar = ROOT.RooRealVar
-TCanvas = ROOT.TCanvas
-
-RooWorkspace = ROOT.RooWorkspace
-RooArgSet = ROOT.RooArgSet
 
 # use this order for safety on library loading
 
@@ -80,12 +68,9 @@ def rs_numberCountingCombination_expected():
     #          alternatively you can use cppyy:
     #          cppyy.cppdef("double s[2]";")
     #          s_c = cppyy.gbl.s
-    s = [20.0, 10.0]  # expected signal
-    s_c = (ctypes.c_double * len(s))(*s)
-    b = [100.0, 100.0]  # expected background
-    b_c = (ctypes.c_double * len(b))(*b)
-    db = [0.0100, 0.0100]  # fractional background uncertainty
-    db_c = (ctypes.c_double * len(db))(*db)
+    s = np.array([20.0, 10.0])  # expected signal
+    b = np.array([100.0, 100.0])  # expected background
+    db = np.array([0.0100, 0.0100])  # fractional background uncertainty
 
     # Step 2, use a RooStats factory to build a PDF for a
     # number counting combination and add it to the workspace.
@@ -93,8 +78,8 @@ def rs_numberCountingCombination_expected():
     # to the signal contribution in the individual channels.
     # The model neglects correlations in background uncertainty,
     # but they could be added without much change to the example.
-    f = NumberCountingPdfFactory()
-    wspace = RooWorkspace()
+    f = ROOT.RooStats.NumberCountingPdfFactory()
+    wspace = ROOT.RooWorkspace()
     # debugging
     global gf, gwspace
     gf = f
@@ -102,17 +87,13 @@ def rs_numberCountingCombination_expected():
     global gs  # list
     gs = s
     # return
-    cppyy.cppdef("double s[2] = {20., 10.} ;")
-    s_cpp = cppyy.gbl.s
 
-    # f.AddModel(s 2, wspace, "TopLevelPdf", "masterSignal") # doesn't function well
-    # f.AddModel(s_cpp, 2, wspace, "TopLevelPdf", "masterSignal")  # do function well
-    f.AddModel(s_c, 2, wspace, "TopLevelPdf", "masterSignal")  # do function well
+    f.AddModel(s, 2, wspace, "TopLevelPdf", "masterSignal")
 
     # Step 3, use a RooStats factory to add datasets to the workspace.
     # Step 3a.
     # Add the expected data to the workspace
-    f.AddExpData(s_c, b_c, db_c, 2, wspace, "ExpectedNumberCountingData")
+    f.AddExpData(s, b, db, 2, wspace, "ExpectedNumberCountingData")
 
     # see below for a printout of the workspace
     #  wspace->Print();  #uncomment to see structure of workspace
@@ -123,16 +104,16 @@ def rs_numberCountingCombination_expected():
     # Step 4, Define the null hypothesis for the calculator
     # Here you need to know the name of the variables corresponding to hypothesis.
     mu = wspace.var("masterSignal")
-    poi = RooArgSet(mu)
-    nullParams = RooArgSet("nullParams")
+    poi = ROOT.RooArgSet(mu)
+    nullParams = ROOT.RooArgSet("nullParams")
     nullParams.addClone(mu)
     # here we explicitly set the value of the parameters for the null
     nullParams.setRealValue("masterSignal", 0)
 
     # Step 5, Create a calculator for doing the hypothesis test.
     # because this is a
-    plc = ProfileLikelihoodCalculator(
-        wspace.data("ExpectedNumberCountingData"), wspace.pdf("TopLevelPdf"), poi, 0.05, nullParams
+    plc = ROOT.RooStats.ProfileLikelihoodCalculator(
+        wspace["ExpectedNumberCountingData"], wspace["TopLevelPdf"], poi, 0.05, nullParams
     )
 
     # Step 6, Use the Calculator to get a HypoTestResult
@@ -165,8 +146,8 @@ def rs_numberCountingCombination_expected():
     lower = lrint.LowerLimit(mu)
     upper = lrint.UpperLimit(mu)
 
-    c1 = TCanvas("myc1", "myc1")
-    lrPlot = LikelihoodIntervalPlot(lrint)
+    c1 = ROOT.TCanvas("myc1", "myc1")
+    lrPlot = ROOT.RooStats.LikelihoodIntervalPlot(lrint)
     lrPlot.SetMaximum(3.0)
     lrPlot.Draw()
     c1.Update()
@@ -214,11 +195,11 @@ def rs_numberCountingCombination_expected():
    # Here's an example of what is in the workspace
    #  wspace.Print();
    RooWorkspace(NumberCountingWS) Number Counting WS contents
-   
+
    variables
    ---------
    (x_0,masterSignal,expected_s_0,b_0,y_0,tau_0,x_1,expected_s_1,b_1,y_1,tau_1)
-   
+
    p.d.f.s
    -------
    RooProdPdf.joint[ pdfs=(sigRegion_0,sideband_0,sigRegion_1,sideband_1) ] = 2.20148e-08
@@ -226,7 +207,7 @@ def rs_numberCountingCombination_expected():
    RooPoisson.sideband_0[ x=y_0 mean=bTau_0 ] = 0.00398939
    RooPoisson.sigRegion_1[ x=x_1 mean=splusb_1 ] = 0.0380088
    RooPoisson.sideband_1[ x=y_1 mean=bTau_1 ] = 0.00398939
-   
+
    functions
    --------
    RooAddition.splusb_0[ set1=(s_0,b_0) set2=() ] = 120
@@ -235,11 +216,11 @@ def rs_numberCountingCombination_expected():
    RooAddition.splusb_1[ set1=(s_1,b_1) set2=() ] = 110
    RooProduct.s_1[ compRSet=(masterSignal,expected_s_1) compCSet=() ] = 10
    RooProduct.bTau_1[ compRSet=(b_1,tau_1) compCSet=() ] = 10000
-   
+
    datasets
    --------
    RooDataSet.ExpectedNumberCountingData(x_0,y_0,x_1,y_1)
-   
+
    embedded pre-calculated expensive components
    -------------------------------------------
    """

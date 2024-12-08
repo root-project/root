@@ -24,32 +24,6 @@
 
 
 import ROOT
-from ROOT import RooStats, RooFit
-
-TFile = ROOT.TFile
-TROOT = ROOT.TROOT
-TH1F = ROOT.TH1F
-TCanvas = ROOT.TCanvas
-TSystem = ROOT.TSystem
-TF1 = ROOT.TF1
-TSystem = ROOT.TSystem
-
-# include "RooWorkspace.h"
-# include "RooAbsData.h"
-RooArgSet = ROOT.RooArgSet
-Form = ROOT.Form
-
-ModelConfig = RooStats.ModelConfig
-FeldmanCousins = RooStats.FeldmanCousins
-ToyMCSampler = RooStats.ToyMCSampler
-PointSetInterval = RooStats.PointSetInterval
-ConfidenceBelt = RooStats.ConfidenceBelt
-
-ProfileLikelihoodCalculator = RooStats.ProfileLikelihoodCalculator
-LikelihoodInterval = RooStats.LikelihoodInterval
-ProfileLikelihoodTestStat = RooStats.ProfileLikelihoodTestStat
-SamplingDistribution = RooStats.SamplingDistribution
-SamplingDistPlot = RooStats.SamplingDistPlot
 
 
 useProof = False  # flag to control whether to use Proof
@@ -91,7 +65,7 @@ def StandardTestStatDistributionDemo(
         filename = infile
 
     # Try to open the file
-    file = TFile.Open(filename)
+    file = ROOT.TFile.Open(filename)
 
     # if input file was specified but not found, quit
     if not file:
@@ -108,10 +82,10 @@ def StandardTestStatDistributionDemo(
         return
 
     # get the modelConfig out of the file
-    mc = w.obj(modelConfigName)
+    mc = w[modelConfigName]
 
     # get the modelConfig out of the file
-    data = w.data(dataName)
+    data = w[dataName]
 
     # make sure ingredients are found
     if not data or not mc:
@@ -123,7 +97,7 @@ def StandardTestStatDistributionDemo(
     # -------------------------------------------------------
     # Now find the upper limit based on the asymptotic results
     firstPOI = mc.GetParametersOfInterest().first()
-    plc = ProfileLikelihoodCalculator(data, mc)
+    plc = ROOT.RooStats.ProfileLikelihoodCalculator(data, mc)
     interval = plc.GetInterval()
     plcUpperLimit = interval.UpperLimit(firstPOI)
     del interval
@@ -136,18 +110,18 @@ def StandardTestStatDistributionDemo(
 
     # -------------------------------------------------------
     # create the test stat sampler
-    ts = ProfileLikelihoodTestStat(mc.GetPdf())
+    ts = ROOT.RooStats.ProfileLikelihoodTestStat(mc.GetPdf())
 
     # to avoid effects from boundary and simplify asymptotic comparison, set min=-max
     if allowNegativeMu:
         firstPOI.setMin(-1 * firstPOI.getMax())
 
     # temporary RooArgSet
-    poi = RooArgSet()
+    poi = ROOT.RooArgSet()
     poi.add(mc.GetParametersOfInterest())
 
     # create and configure the ToyMCSampler
-    sampler = ToyMCSampler(ts, nToyMC)
+    sampler = ROOT.RooStats.ToyMCSampler(ts, nToyMC)
     sampler.SetPdf(mc.GetPdf())
     sampler.SetObservables(mc.GetObservables())
     sampler.SetGlobalObservables(mc.GetGlobalObservables())
@@ -163,27 +137,27 @@ def StandardTestStatDistributionDemo(
         sampler.SetProofConfig(pc)  # enable proof
 
     firstPOI.setVal(plcUpperLimit)
-    allParameters = RooArgSet()
+    allParameters = ROOT.RooArgSet()
     allParameters.add(mc.GetParametersOfInterest())
     allParameters.add(mc.GetNuisanceParameters())
     allParameters.Print("v")
 
     sampDist = sampler.GetSamplingDistribution(allParameters)
-    plot = SamplingDistPlot()
+    plot = ROOT.RooStats.SamplingDistPlot()
     plot.AddSamplingDistribution(sampDist)
     plot.GetTH1F(sampDist).GetYaxis().SetTitle(
-        Form("f(-log #lambda(#mu={:2f}) | #mu={:2f})".format(plcUpperLimit, plcUpperLimit))
+        "f(-log #lambda(#mu={:2f}) | #mu={:2f})".format(plcUpperLimit, plcUpperLimit)
     )
-    plot.SetAxisTitle(Form("-log #lambda(#mu={:2f})".format(plcUpperLimit)))
+    plot.SetAxisTitle("-log #lambda(#mu={:2f})".format(plcUpperLimit))
 
-    c1 = TCanvas("c1")
+    c1 = ROOT.TCanvas("c1")
     c1.SetLogy()
     plot.Draw()
     MIN = plot.GetTH1F(sampDist).GetXaxis().GetXmin()
     MAX = plot.GetTH1F(sampDist).GetXaxis().GetXmax()
 
-    tmp_Form = Form("2*ROOT::Math::chisquared_pdf(2*x,{:f},0)".format(nPOI))
-    f = TF1("f", tmp_Form, MIN, MAX)
+    tmp_Form = "2*ROOT::Math::chisquared_pdf(2*x,{:f},0)".format(nPOI)
+    f = ROOT.TF1("f", tmp_Form, MIN, MAX)
 
     f.Draw("same")
     c1.Update()

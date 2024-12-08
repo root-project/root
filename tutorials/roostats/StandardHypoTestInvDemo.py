@@ -34,52 +34,7 @@
 # \author Lorenzo Moneta (C++ version), and P. P. (Python translation)
 
 import ROOT
-from ROOT import RooStats, RooFit
 import os
-
-TFile = ROOT.TFile
-RooWorkspace = ROOT.RooWorkspace
-RooAbsPdf = ROOT.RooAbsPdf
-RooRealVar = ROOT.RooRealVar
-RooDataSet = ROOT.RooDataSet
-RooRandom = ROOT.RooRandom
-TGraphErrors = ROOT.TGraphErrors
-TGraphAsymmErrors = ROOT.TGraphAsymmErrors
-TCanvas = ROOT.TCanvas
-TLine = ROOT.TLine
-TROOT = ROOT.TROOT
-TSystem = ROOT.TSystem
-
-AsymptoticCalculator = RooStats.AsymptoticCalculator
-HybridCalculator = RooStats.HybridCalculator
-FrequentistCalculator = RooStats.FrequentistCalculator
-ToyMCSampler = RooStats.ToyMCSampler
-HypoTestPlot = RooStats.HypoTestPlot
-
-NumEventsTestStat = RooStats.NumEventsTestStat
-ProfileLikelihoodTestStat = RooStats.ProfileLikelihoodTestStat
-SimpleLikelihoodRatioTestStat = RooStats.SimpleLikelihoodRatioTestStat
-RatioOfProfiledLikelihoodsTestStat = RooStats.RatioOfProfiledLikelihoodsTestStat
-MaxLikelihoodEstimateTestStat = RooStats.MaxLikelihoodEstimateTestStat
-NumEventsTestStat = RooStats.NumEventsTestStat
-
-HypoTestInverter = RooStats.HypoTestInverter
-HypoTestInverterResult = RooStats.HypoTestInverterResult
-HypoTestInverterPlot = RooStats.HypoTestInverterPlot
-
-TString = ROOT.TString
-
-std = ROOT.std
-
-# include "RooStats/ModelConfig.h"
-RooAbsData = ROOT.RooAbsData
-Info = ROOT.Info
-RooArgSet = ROOT.RooArgSet
-TStopwatch = ROOT.TStopwatch
-nullptr = ROOT.nullptr
-RooMsgService = ROOT.RooMsgService
-TMath = ROOT.TMath
-double = ROOT.double
 
 
 # structure defining the options
@@ -88,7 +43,7 @@ class HypoTestInvOptions:
     plotHypoTestResult = True  # plot test statistic result at each point
     writeResult = True  # write HypoTestInverterResult in a file
     resultFileName = (
-        TString()
+        ROOT.TString()
     )  # file with results (by default is built automatically using the workspace input file name)
     optimize = True  # optimize evaluation of test statistic
     useVectorStore = True  # convert data to use  roofit data store
@@ -135,24 +90,24 @@ large_declaration = """ \
 namespace RooStats{
 
 class HypoTestInvTool {
-   
+
    public:
    HypoTestInvTool();
    ~HypoTestInvTool(){};
-   
+
    HypoTestInverterResult *RunInverter(RooWorkspace *w, const char *modelSBName, const char *modelBName,
    const char *dataName, int type, int testStatType, bool useCLs, int npoints,
    double poimin, double poimax, int ntoys, bool useNumberCounting = false,
    const char *nuisPriorName = 0);
-   
+
    void AnalyzeResult(HypoTestInverterResult *r, int calculatorType, int testStatType, bool useCLs, int npoints,
    const char *fileNameBase = 0);
-   
+
    void SetParameter(const char *name, const char *value);
    void SetParameter(const char *name, bool value);
    void SetParameter(const char *name, int value);
    void SetParameter(const char *name, double value);
-   
+
    //private:
    public:
    bool mPlotHypoTestResult;
@@ -191,11 +146,10 @@ RooStats::HypoTestInvTool::HypoTestInvTool()
 
 """
 ROOT.gInterpreter.Declare(large_declaration)
-RooStats.HypoTestInvTool = ROOT.RooStats.HypoTestInvTool
 
 
 # Expanding definitions of class: HypoTestInvTool into HypoTestInvTool_plus
-class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
+class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
     # RooStats.HypoTestInvTool.SetParameter(name,  value):
     def SetParameter(self, name, value):  # SetParameter is polymorphic.
         if (type(name) is str) and (type(value) is str):
@@ -203,25 +157,25 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
             # set boolean parameters
             #
 
-            s_name = std.string(name)
+            s_name = ROOT.std.string(name)
 
-            if s_name.find("PlotHypoTestResult") != std.string.npos:
+            if s_name.find("PlotHypoTestResult") != ROOT.std.string.npos:
                 self.mPlotHypoTestResult = value
-            if s_name.find("WriteResult") != std.string.npos:
+            if s_name.find("WriteResult") != ROOT.std.string.npos:
                 self.mWriteResult = value
-            if s_name.find("Optimize") != std.string.npos:
+            if s_name.find("Optimize") != ROOT.std.string.npos:
                 self.mOptimize = value
-            if s_name.find("UseVectorStore") != std.string.npos:
+            if s_name.find("UseVectorStore") != ROOT.std.string.npos:
                 self.mUseVectorStore = value
-            if s_name.find("GenerateBinned") != std.string.npos:
+            if s_name.find("GenerateBinned") != ROOT.std.string.npos:
                 self.mGenerateBinned = value
-            if s_name.find("UseProof") != std.string.npos:
+            if s_name.find("UseProof") != ROOT.std.string.npos:
                 self.mUseProof = value
-            if s_name.find("EnableDetailedOutput") != std.string.npos:
+            if s_name.find("EnableDetailedOutput") != ROOT.std.string.npos:
                 self.mEnableDetOutput = value
-            if s_name.find("Rebuild") != std.string.npos:
+            if s_name.find("Rebuild") != ROOT.std.string.npos:
                 self.mRebuild = value
-            if s_name.find("ReuseAltToys") != std.string.npos:
+            if s_name.find("ReuseAltToys") != ROOT.std.string.npos:
                 self.mReuseAltToys = value
 
             return
@@ -235,21 +189,21 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
             # set integer parameters
             #
 
-            s_name = std.string(name)
+            s_name = ROOT.std.string(name)
 
-            if s_name.find("NWorkers") != std.string.npos:
+            if s_name.find("NWorkers") != ROOT.std.string.npos:
                 self.mNWorkers = value
-            if s_name.find("NToyToRebuild") != std.string.npos:
+            if s_name.find("NToyToRebuild") != ROOT.std.string.npos:
                 self.mNToyToRebuild = value
-            if s_name.find("RebuildParamValues") != std.string.npos:
+            if s_name.find("RebuildParamValues") != ROOT.std.string.npos:
                 self.mRebuildParamValues = value
-            if s_name.find("PrintLevel") != std.string.npos:
+            if s_name.find("PrintLevel") != ROOT.std.string.npos:
                 self.mPrintLevel = value
-            if s_name.find("InitialFit") != std.string.npos:
+            if s_name.find("InitialFit") != ROOT.std.string.npos:
                 self.mInitialFit = value
-            if s_name.find("RandomSeed") != std.string.npos:
+            if s_name.find("RandomSeed") != ROOT.std.string.npos:
                 self.mRandomSeed = value
-            if s_name.find("AsimovBins") != std.string.npos:
+            if s_name.find("AsimovBins") != ROOT.std.string.npos:
                 self.mAsimovBins = value
 
             return
@@ -263,11 +217,11 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
             # set double precision parameters
             #
 
-            s_name = std.string(name)
+            s_name = ROOT.std.string(name)
 
-            if s_name.find("NToysRatio") != std.string.npos:
+            if s_name.find("NToysRatio") != ROOT.std.string.npos:
                 self.mNToysRatio = value
-            if s_name.find("MaxPOI") != std.string.npos:
+            if s_name.find("MaxPOI") != ROOT.std.string.npos:
                 self.mMaxPoi = value
 
             return
@@ -281,20 +235,20 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
             # set string parameters
             #
 
-            s_name = std.string(name)
+            s_name = ROOT.std.string(name)
 
-            if s_name.find("MassValue") != std.string.npos:
+            if s_name.find("MassValue") != ROOT.std.string.npos:
                 global gselfmMassValue
                 gselfmMassValue = self.mMassValue
                 self.mMassValue = value  # (self.mMassValue).assign(value)
-            if s_name.find("MinimizerType") != std.string.npos:
+            if s_name.find("MinimizerType") != ROOT.std.string.npos:
                 self.mMassValue = value  # self.mMinimizerType.assign(value)
-            if s_name.find("ResultFileName") != std.string.npos:
+            if s_name.find("ResultFileName") != ROOT.std.string.npos:
                 self.mResultFileName = value
 
             return
 
-    RooStats.HypoTestInvTool.SetParameter = SetParameter
+    ROOT.RooStats.HypoTestInvTool.SetParameter = SetParameter
 
     # --piece of code moved forwards...-
     # ---
@@ -320,7 +274,7 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
         upperLimit = r.UpperLimit()
         ulError = r.UpperLimitEstimatedError()
 
-        # std::cout << "DEBUG : [ " << lowerLimit << " , " << upperLimit << "  ] " << std::endl;
+        # ROOT.std::cout << "DEBUG : [ " << lowerLimit << " , " << upperLimit << "  ] " << ROOT.std::endl;
 
         if lowerLimit < upperLimit * (1.0 - 1.0e-4) and lowerLimit != 0:
             print(f"The computed lower limit is: ", lowerLimit, " +/- ", llError)
@@ -338,7 +292,7 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
         # detailed output
         if self.mEnableDetOutput:
             self.mWriteResult = True
-            Info("StandardHypoTestInvDemo", "detailed output will be written in output result file")
+            ROOT.Info("StandardHypoTestInvDemo", "detailed output will be written in output result file")
 
         # write result in a file
         if r != ROOT.kNone and self.mWriteResult:
@@ -348,7 +302,9 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
             limitType = "CLs" if (useCLs) else "Cls+b"
             scanType = "auto" if (npoints < 0) else "grid"
             if self.mResultFileName.IsNull():
-                self.mResultFileName = TString.Format("%s_%s_%s_ts%d_", calcType, limitType, scanType, testStatType)
+                self.mResultFileName = ROOT.TString.Format(
+                    "%s_%s_%s_ts%d_", calcType, limitType, scanType, testStatType
+                )
                 # strip the / from the filename
                 if self.mMassValue.size() > 0:
                     self.mResultFileName += self.mMassValue
@@ -371,7 +327,7 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
             r.Write()
             if ulDist:
                 ulDist.Write()
-            Info(
+            ROOT.Info(
                 "StandardHypoTestInvDemo",
                 "HypoTestInverterResult has been written in the file %s",
                 self.mResultFileName.Data(),
@@ -393,11 +349,11 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
         plotTitle = "{} CL Scan for workspace {}".format(str(typeName), resultName)
         global gr
         gr = r
-        plot = HypoTestInverterPlot("HTI_Result_Plot", plotTitle, r)
+        plot = ROOT.RooStats.HypoTestInverterPlot("HTI_Result_Plot", plotTitle, r)
 
         # plot in a new canvas with style
         c1Name = "{}_Scan".format(typeName)
-        c1 = TCanvas(c1Name)
+        c1 = ROOT.TCanvas(c1Name)
         c1.SetLogy(False)
 
         plot.Draw("CLb 2CL")  # plot all and Clb
@@ -413,10 +369,10 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
 
         # plot test statistics distributions for the two hypothesis
         if self.mPlotHypoTestResult:
-            c2 = TCanvas("c2")
+            c2 = ROOT.TCanvas("c2")
             if nEntries > 1:
-                ny = TMath.CeilNint(TMath.Sqrt(nEntries))
-                nx = TMath.CeilNint(double(nEntries) / ny)
+                ny = ROOT.TMath.CeilNint(ROOT.TMath.Sqrt(nEntries))
+                nx = ROOT.TMath.CeilNint(float(nEntries) / ny)
                 c2.Divide(nx, ny)
 
             for i in range(nEntries):
@@ -431,7 +387,7 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
 
         ROOT.gPad = c1
 
-    RooStats.HypoTestInvTool.AnalyzeResult = AnalyzeResult
+    ROOT.RooStats.HypoTestInvTool.AnalyzeResult = AnalyzeResult
 
     # internal routine to run the inverter
     # RooStats.HypoTestInvTool.RunInverter
@@ -464,7 +420,7 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
             print(f"Using data set ", dataName)
 
         if self.mUseVectorStore:
-            RooAbsData.setDefaultStorageType(RooAbsData.Vector)
+            ROOT.RooAbsData.setDefaultStorageType(ROOT.RooAbsData.Vector)
             data.convertToVectorStore()
 
         # get models from WS
@@ -490,7 +446,9 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
             return 0
 
         if not sbModel.GetSnapshot():
-            Info("StandardHypoTestInvDemo", "Model {} has no snapshot  - make one using model poi".format(modelSBName))
+            ROOT.Info(
+                "StandardHypoTestInvDemo", "Model {} has no snapshot  - make one using model poi".format(modelSBName)
+            )
             sbModel.SetSnapshot(sbModel.GetParametersOfInterest())
 
         # case of no systematics
@@ -502,16 +460,16 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
                     f"StandardHypoTestInvDemo",
                     "  -  Switch off all systematics by setting them constant to their initial values",
                 )
-                RooStats.SetAllConstant(nuisPar)
+                ROOT.RooStats.SetAllConstant(nuisPar)
 
             if bModel:
                 bnuisPar = bModel.GetNuisanceParameters()
                 if bnuisPar:
-                    RooStats.SetAllConstant(bnuisPar)
+                    ROOT.RooStats.SetAllConstant(bnuisPar)
 
         if (not bModel) or (bModel == sbModel):
-            Info("StandardHypoTestInvDemo", "The background model  {} does not exist".format(modelBName))
-            Info("StandardHypoTestInvDemo", "Copy it from ModelConfig {} and set POI to zero".format(modelSBName))
+            ROOT.Info("StandardHypoTestInvDemo", "The background model  {} does not exist".format(modelBName))
+            ROOT.Info("StandardHypoTestInvDemo", "Copy it from ModelConfig {} and set POI to zero".format(modelSBName))
             bModel = sbModel.Clone()
             bModel.SetName(modelSBName + "_with_poi_0")
             var = bModel.GetParametersOfInterest().first()
@@ -519,11 +477,11 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
                 return 0
             oldval = var.getVal()
             var.setVal(0)
-            bModel.SetSnapshot(RooArgSet(var))
+            bModel.SetSnapshot(ROOT.RooArgSet(var))
             var.setVal(oldval)
         else:
             if not bModel.GetSnapshot():
-                Info(
+                ROOT.Info(
                     "StandardHypoTestInvDemo",
                     "Model %s has no snapshot  - make one using model poi and 0 values ",
                     modelBName,
@@ -532,7 +490,7 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
                 if var:
                     oldval = var.getVal()
                     var.setVal(0)
-                    bModel.SetSnapshot(RooArgSet(var))
+                    bModel.SetSnapshot(ROOT.RooArgSet(var))
                     var.setVal(oldval)
                 else:
                     Error("StandardHypoTestInvDemo", "Model %s has no valid poi", modelBName)
@@ -558,7 +516,7 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
                     )
 
         # save all initial parameters of the model including the global observables
-        initialParameters = RooArgSet()
+        initialParameters = ROOT.RooArgSet()
         allParams = sbModel.GetPdf().getParameters(data)
         allParams.snapshot(initialParameters)
 
@@ -570,7 +528,7 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
         print("StandardHypoTestInvDemo : POI initial value:   ", poi.GetName(), " = ", poi.getVal())
 
         # fit the data first (need to use constraint )
-        tw = TStopwatch()
+        tw = ROOT.TStopwatch()
 
         doFit = self.mInitialFit
         if testStatType == 0 and self.mInitialFit == -1:
@@ -584,7 +542,7 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
         else:
             ROOT.Math.MinimizerOptions.SetDefaultMinimizer(str(self.mMinimizerType))
 
-        Info(
+        ROOT.Info(
             "StandardHypoTestInvDemo",
             "Using {} as minimizer for computing the test statistic".format(
                 str(ROOT.Math.MinimizerOptions.DefaultMinimizerType())
@@ -597,7 +555,7 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
             # and the nuisance parameters nominal values will be set to the fit value.
             # This is relevant when using LEP test statistics
 
-            Info("StandardHypoTestInvDemo", " Doing a first fit to the observed data ")
+            ROOT.Info("StandardHypoTestInvDemo", " Doing a first fit to the observed data ")
             constrainParams = RooArgSet()
             if sbModel.GetNuisanceParameters():
                 constrainParams.add(sbModel.GetNuisanceParameters())
@@ -646,13 +604,13 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
         # print a message in case of LEP test statistics because it affects result by doing or not doing a fit
         if testStatType == 0:
             if not doFit:
-                Info(
+                ROOT.Info(
                     "StandardHypoTestInvDemo",
                     "Using LEP test statistic - an initial fit is not done and the TS will use "
                     + "the nuisances at the model value",
                 )
             else:
-                Info(
+                ROOT.Info(
                     "StandardHypoTestInvDemo",
                     "Using LEP test statistic - an initial fit has been done and the TS will use "
                     + "the nuisances at the best fit value",
@@ -660,15 +618,15 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
 
         # build test statistics and hypotest calculators for running the inverter
 
-        slrts = SimpleLikelihoodRatioTestStat(sbModel.GetPdf(), bModel.GetPdf())
+        slrts = ROOT.RooStats.SimpleLikelihoodRatioTestStat(sbModel.GetPdf(), bModel.GetPdf())
 
         # null parameters must includes snapshot of poi plus the nuisance values
-        nullParams = RooArgSet(sbModel.GetSnapshot())
+        nullParams = ROOT.RooArgSet(sbModel.GetSnapshot())
         if sbModel.GetNuisanceParameters():
             nullParams.add(sbModel.GetNuisanceParameters())
         if sbModel.GetSnapshot():
             slrts.SetNullParameters(nullParams)
-            altParams = RooArgSet(bModel.GetSnapshot())
+            altParams = ROOT.RooArgSet(bModel.GetSnapshot())
         if bModel.GetNuisanceParameters():
             altParams.add(bModel.GetNuisanceParameters())
         if bModel.GetSnapshot():
@@ -677,21 +635,21 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
             slrts.EnableDetailedOutput()
 
         # ratio of profile likelihood - need to pass snapshot for the alt
-        ropl = RatioOfProfiledLikelihoodsTestStat(sbModel.GetPdf(), bModel.GetPdf(), bModel.GetSnapshot())
+        ropl = ROOT.RooStats.RatioOfProfiledLikelihoodsTestStat(sbModel.GetPdf(), bModel.GetPdf(), bModel.GetSnapshot())
         ropl.SetSubtractMLE(False)
         if testStatType == 11:
             ropl.SetSubtractMLE(True)
         ropl.SetPrintLevel(self.mPrintLevel)
-        ropl.SetMinimizer(self.mMinimizerType)
+        ropl.SetMinimizer(self.mMinimizerType.c_str())
         if self.mEnableDetOutput:
             ropl.EnableDetailedOutput()
 
-        profll = ProfileLikelihoodTestStat(sbModel.GetPdf())
+        profll = ROOT.RooStats.ProfileLikelihoodTestStat(sbModel.GetPdf())
         if testStatType == 3:
             profll.SetOneSided(True)
         if testStatType == 4:
             profll.SetSigned(True)
-        profll.SetMinimizer(self.mMinimizerType)
+        profll.SetMinimizer(self.mMinimizerType.c_str())
         profll.SetPrintLevel(self.mPrintLevel)
         if self.mEnableDetOutput:
             profll.EnableDetailedOutput()
@@ -708,26 +666,26 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
         if self.mMaxPoi > 0:
             poi.setMax(self.mMaxPoi)  # increase limit
 
-        maxll = MaxLikelihoodEstimateTestStat(sbModel.GetPdf(), poi)
-        nevtts = NumEventsTestStat()
+        maxll = ROOT.RooStats.MaxLikelihoodEstimateTestStat(sbModel.GetPdf(), poi)
+        nevtts = ROOT.RooStats.NumEventsTestStat()
 
-        AsymptoticCalculator.SetPrintLevel(self.mPrintLevel)
+        ROOT.RooStats.AsymptoticCalculator.SetPrintLevel(self.mPrintLevel)
 
         # create the HypoTest calculator class
-        hc = nullptr
+        hc = ROOT.nullptr
         if Type == 0:
-            hc = FrequentistCalculator(data, bModel, sbModel)
+            hc = ROOT.RooStats.FrequentistCalculator(data, bModel, sbModel)
         elif Type == 1:
-            hc = HybridCalculator(data, bModel, sbModel)
+            hc = ROOT.RooStats.HybridCalculator(data, bModel, sbModel)
         # elif (Type == 2 ):
         #    hc = AsymptoticCalculator(data, bModel, sbModel, false, self.mAsimovBins)
         # elif (Type == 3 ):
         #    hc = AsymptoticCalculator(data, bModel, sbModel, True, self.mAsimovBins)  # for using
         # Asimov data generated with nominal values
         elif Type == 2:
-            hc = AsymptoticCalculator(data, bModel, sbModel, False)
+            hc = ROOT.RooStats.AsymptoticCalculator(data, bModel, sbModel, False)
         elif Type == 3:
-            hc = AsymptoticCalculator(
+            hc = ROOT.RooStats.AsymptoticCalculator(
                 data, bModel, sbModel, True
             )  # for using Asimov data generated with nominal values
         else:
@@ -771,19 +729,19 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
                 # for not extended pdf
                 if not useNumberCounting:
                     nEvents = data.numEntries()
-                    Info(
+                    ROOT.Info(
                         "StandardHypoTestInvDemo",
                         "Pdf is not extended: number of events to generate taken  from observed data set is {nEvents}",
                     )
                     toymcs.SetNEventsPerToy(nEvents)
                 else:
-                    Info("StandardHypoTestInvDemo", "using a number counting pdf")
+                    ROOT.Info("StandardHypoTestInvDemo", "using a number counting pdf")
                     toymcs.SetNEventsPerToy(1)
 
             toymcs.SetTestStatistic(testStat)
 
             if data.isWeighted() and not self.mGenerateBinned:
-                Info(
+                ROOT.Info(
                     "StandardHypoTestInvDemo",
                     (
                         "Data set is weighted, nentries = {} and sum of weights = {:8.1f} but toy"
@@ -834,7 +792,7 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
                     nuisPdf = w.pdf(nuisPriorName)
                 # use prior defined first in bModel (then in SbModel)
                 if not nuisPdf:
-                    Info(
+                    ROOT.Info(
                         "StandardHypoTestInvDemo",
                         "No nuisance pdf given for the HybridCalculator - try to deduce  pdf from the model",
                     )
@@ -846,7 +804,7 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
                 if not nuisPdf:
                     if bModel.GetPriorPdf():
                         nuisPdf = bModel.GetPriorPdf()
-                        Info(
+                        ROOT.Info(
                             "StandardHypoTestInvDemo",
                             "No nuisance pdf given - try to use %s that is defined as a prior pdf in the B model",
                             nuisPdf.GetName(),
@@ -860,7 +818,7 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
                         return 0
 
                 assert nuisPdf
-                Info("StandardHypoTestInvDemo", "Using as nuisance Pdf ... ")
+                ROOT.Info("StandardHypoTestInvDemo", "Using as nuisance Pdf ... ")
                 nuisPdf.Print()
 
                 nuisParams = (
@@ -898,9 +856,9 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
             #    hc.StoreFitInfo(True)
 
         # Get the result
-        RooMsgService.instance().getStream(1).removeTopic(RooFit.NumIntegration)
+        ROOT.RooMsgService.instance().getStream(1).removeTopic(ROOT.RooFit.NumIntegration)
 
-        calc = HypoTestInverter(hc)
+        calc = ROOT.RooStats.HypoTestInverter(hc)
         calc.SetConfidenceLevel(optHTInv.confLevel)
 
         calc.UseCLs(useCLs)
@@ -908,7 +866,7 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
 
         # can speed up using proof-lite
         if self.mUseProof:
-            pc = ProofConfig(w, self.mNWorkers, "", kFALSE)
+            pc = ProofConfig(w, self.mNWorkers, "", False)
             toymcs.SetProofConfig(pc)  # enable proof
 
         if npoints > 0:
@@ -976,7 +934,7 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
                     RooStats.SetAllConstant(poiModel, False)
 
             print(f"StandardHypoTestInvDemo: Initial parameters used for rebuilding: ")
-            RooStats.PrintListContent(allParams, std.cout)
+            RooStats.PrintListContent(allParams, ROOT.std.cout)
 
             calc.SetCloseProof(1)
             tw.Start()
@@ -1032,12 +990,12 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
 
         return r
 
-    RooStats.HypoTestInvTool.RunInverter = RunInverter
+    ROOT.RooStats.HypoTestInvTool.RunInverter = RunInverter
 
 
 # end class HypoTestInvTool
 # Loading new definitions of HypoTestInvTool_plus into HypoTestInvTool ...
-RooStats.HypoTestInvTool = HypoTestInvTool_plus
+ROOT.RooStats.HypoTestInvTool = HypoTestInvTool_plus
 # Could seem redundant but it would help you if you want expand new-new definitions.
 
 
@@ -1102,7 +1060,7 @@ def StandardHypoTestInvDemo(
     nToyRatio            ratio of S+B/B toys (default is 2)
     """
 
-    filename = TString(infile)
+    filename = ROOT.TString(infile)
     if filename.IsNull():
         filename = "results/example_combined_GaussExample_model.root"
         fileExist = not ROOT.gSystem.AccessPathName(filename)  # note opposite return code
@@ -1123,14 +1081,14 @@ def StandardHypoTestInvDemo(
         filename = infile
 
     # Try to open the file
-    file = TFile.Open(filename)
+    file = ROOT.TFile.Open(filename)
 
     # if input file was specified but not found, quit
     if not file:
         print(f"StandardRooStatsDemoMacro: Input file {filename} is not found")
         return
 
-    calc = RooStats.HypoTestInvTool()  # instance of HypoTestInvTool
+    calc = ROOT.RooStats.HypoTestInvTool()  # instance of HypoTestInvTool
     # calc = HypoTestInvTool_plus()           # instance of HypoTestInvTool
 
     # set parameters

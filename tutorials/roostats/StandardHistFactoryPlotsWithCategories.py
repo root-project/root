@@ -38,39 +38,6 @@
 
 
 import ROOT
-from ROOT import RooStats, RooFit
-
-TFile = ROOT.TFile
-TROOT = ROOT.TROOT
-TCanvas = ROOT.TCanvas
-TList = ROOT.TList
-TMath = ROOT.TMath
-TSystem = ROOT.TSystem
-RooWorkspace = ROOT.RooWorkspace
-RooAbsData = ROOT.RooAbsData
-RooRealVar = ROOT.RooRealVar
-RooPlot = ROOT.RooPlot
-RooSimultaneous = ROOT.RooSimultaneous
-RooCategory = ROOT.RooCategory
-
-ModelConfig = RooStats.ModelConfig
-ProfileInspector = RooStats.ProfileInspector
-
-TFile = ROOT.TFile
-strcmp = ROOT.strcmp
-Form = ROOT.Form
-MarkerSize = RooFit.MarkerSize
-Cut = RooFit.Cut
-DataError = RooFit.DataError
-RooArgSet = ROOT.RooArgSet
-LineWidth = RooFit.LineWidth
-Normalization = RooFit.Normalization
-RooAbsReal = ROOT.RooAbsReal
-LineColor = RooFit.LineColor
-kRed = ROOT.kRed
-kDashed = ROOT.kDashed
-LineStyle = RooFit.LineStyle
-kGreen = ROOT.kGreen
 
 
 def StandardHistFactoryPlotsWithCategories(
@@ -90,10 +57,6 @@ def StandardHistFactoryPlotsWithCategories(
         fileExist = not ROOT.gSystem.AccessPathName(filename)  # note opposite return code
         # if file does not exists generate with histfactory
         if not fileExist:
-            # ifdef _WIN32
-            print(f"HistFactory file cannot be generated on Windows - exit")
-            return
-            # endif
             # Normally this would be run on the command line
             print(f"will run standard hist2workspace example")
             ROOT.gROOT.ProcessLine(".! prepareHistFactory .")
@@ -106,7 +69,7 @@ def StandardHistFactoryPlotsWithCategories(
         filename = infile
 
     # Try to open the file
-    file = TFile.Open(filename)
+    file = ROOT.TFile.Open(filename)
 
     # if input file was specified but not found, quit
     if not file:
@@ -139,7 +102,7 @@ def StandardHistFactoryPlotsWithCategories(
     # now use the profile inspector
 
     obs = mc.GetObservables().first()
-    List = TList()
+    List = ROOT.TList()
 
     firstPOI = mc.GetParametersOfInterest().first()
 
@@ -155,7 +118,7 @@ def StandardHistFactoryPlotsWithCategories(
     print(f" check expectedData by category")
     simData = ROOT.kNone
     simPdf = ROOT.kNone
-    if strcmp(mc.GetPdf().ClassName(), "RooSimultaneous") == 0:
+    if str(mc.GetPdf().ClassName()) == "RooSimultaneous":
         print(f"Is a simultaneous PDF")
         simPdf = mc.GetPdf()
     else:
@@ -168,18 +131,18 @@ def StandardHistFactoryPlotsWithCategories(
         obstmppdftmp.getObservables(mc.GetObservables())
         obs = obstmp.first()
         frame = obs.frame()
-        print(Form("%s==%s.%s", channelCat.GetName(), channelCat.GetName(), str(catName)))
+        print("{0}=={0}::{1}".format(channelCat.GetName(), catName))
         print(catName, " ", channelCat.getLabel())
         data.plotOn(
             frame,
-            MarkerSize(1),
-            Cut(Form("%s==%s::%s", channelCat.GetName(), channelCat.GetName(), str(catName))),
-            DataError(getattr(RooAbsData, "None")),
+            MarkerSize=1,
+            Cut="{0}=={0}::{1}".format(channelCat.GetName(), catName),
+            DataError="None",
         )
 
-        normCount = data.sumEntries(Form("%s==%s::%s", channelCat.GetName(), channelCat.GetName(), str(catName)))
+        normCount = data.sumEntries("{0}=={0}::{1}".format(channelCat.GetName(), catName))
 
-        pdftmp.plotOn(frame, LineWidth(2), Normalization(normCount, RooAbsReal.NumEvent))
+        pdftmp.plotOn(frame, Normalization(normCount, ROOT.RooAbsReal.NumEvent), LineWidth=2)
         frame.Draw()
         print("expected events = ", mc.GetPdf().expectedEvents(data.get()))
         return
@@ -187,9 +150,7 @@ def StandardHistFactoryPlotsWithCategories(
     nPlots = 0
     if not simPdf:
 
-        it = mc.GetNuisanceParameters().createIterator()
-        var = ROOT.kNone
-        while (var := it.Next()) != ROOT.kNone:
+        for var in mc.GetNuisanceParameters():
             frame = obs.frame()
             frame.SetYTitle(var.GetName())
             data.plotOn(frame, MarkerSize(1))
@@ -221,28 +182,29 @@ def StandardHistFactoryPlotsWithCategories(
 
             obs = obstmp.first()
 
-            it = mc.GetNuisanceParameters().createIterator()
-            var = ROOT.kNone
-            while nPlots < nPlotsMax and (var := it.Next()):
-                c2 = TCanvas("c2")
+            for var in mc.GetNuisanceParameters():
+
+                if nPlots >= nPlotsMax:
+                    break
+
+                c2 = ROOT.TCanvas("c2")
                 frame = obs.frame()
-                frame.SetName(Form("frame{:d}".format(nPlots)))
+                frame.SetName(f"frame{nPlots}")
                 frame.SetYTitle(var.GetName())
 
-                print(Form("{}=={}.{}".format(channelCat.GetName(), channelCat.GetName(), str(catName))))
+                cut = "{0}=={0}::{1}".format(channelCat.GetName(), catName)
+                print(cut)
                 print(catName, " ", channelCat.getLabel())
                 data.plotOn(
                     frame,
-                    MarkerSize(1),
-                    Cut(Form("{}=={}::{}".format(channelCat.GetName(), channelCat.GetName(), str(catName)))),
-                    DataError(getattr(RooAbsData, "None")),
+                    MarkerSize=1,
+                    Cut=cut,
+                    DataError="None",
                 )
 
-                normCount = data.sumEntries(
-                    Form("{}=={}::{}".format(channelCat.GetName(), channelCat.GetName(), str(catName)))
-                )
+                normCount = data.sumEntries(cut)
 
-                if strcmp(var.GetName(), "Lumi") == 0:
+                if str(var.GetName()) == "Lumi":
                     print(f"working on lumi")
                     var.setVal(w.var("nominalLumi").getVal())
                     var.Print()
@@ -269,9 +231,9 @@ def StandardHistFactoryPlotsWithCategories(
                 # instead, we have to use obstmp
                 # normCount = pdftmp.expectedEvents(RooArgSet(obstmp)) #doesn´t work properly
                 normCount = pdftmp.expectedEvents(obstmp)
-                pdftmp.plotOn(frame, LineWidth(2), Normalization(normCount, RooAbsReal.NumEvent))
+                pdftmp.plotOn(frame, ROOT.RooFit.Normalization(normCount, ROOT.RooAbsReal.NumEvent), LineWidth=2)
 
-                if strcmp(var.GetName(), "Lumi") == 0:
+                if str(var.GetName()) == "Lumi":
                     print(f"working on lumi")
                     var.setVal(w.var("nominalLumi").getVal() + 0.05)
                     var.Print()
@@ -284,13 +246,13 @@ def StandardHistFactoryPlotsWithCategories(
                 normCount = pdftmp.expectedEvents(obstmp)
                 pdftmp.plotOn(
                     frame,
-                    LineWidth(2),
-                    LineColor(kRed),
-                    LineStyle(kDashed),
-                    Normalization(normCount, RooAbsReal.NumEvent),
+                    ROOT.RooFit.Normalization(normCount, ROOT.RooAbsReal.NumEvent),
+                    LineWidth=2,
+                    LineColor="r",
+                    LineStyle="--",
                 )
 
-                if strcmp(var.GetName(), "Lumi") == 0:
+                if str(var.GetName()) == "Lumi":
                     print(f"working on lumi")
                     var.setVal(w.var("nominalLumi").getVal() - 0.05)
                     var.Print()
@@ -303,14 +265,14 @@ def StandardHistFactoryPlotsWithCategories(
                 normCount = pdftmp.expectedEvents(obstmp)
                 pdftmp.plotOn(
                     frame,
-                    LineWidth(2),
-                    LineColor(kGreen),
-                    LineStyle(kDashed),
-                    Normalization(normCount, RooAbsReal.NumEvent),
+                    ROOT.RooFit.Normalization(normCount, ROOT.RooAbsReal.NumEvent),
+                    LineWidth=2,
+                    LineColor="g",
+                    LineStyle="--",
                 )
 
                 # set them back to normal
-                if strcmp(var.GetName(), "Lumi") == 0:
+                if str(var.GetName()) == "Lumi":
                     print(f"working on lumi")
                     var.setVal(w.var("nominalLumi").getVal())
                     var.Print()
@@ -325,24 +287,18 @@ def StandardHistFactoryPlotsWithCategories(
                 frame.Draw()
                 c2.Update()
                 c2.Draw()
-                c2.SaveAs(
-                    Form(
-                        "StandardHistFactoryPlotsWithCategories.1.{}_{}_{}.png".format(
-                            str(catName), obs.GetName(), var.GetName()
-                        )
-                    )
-                )
+                c2.SaveAs(f"StandardHistFactoryPlotsWithCategories.1.{catName}_{obs.GetName()}_{var.GetName()}.png")
                 del c2
 
     # -------------------------------------------------------
 
     # now make plots
-    c1 = TCanvas("c1", "ProfileInspectorDemo", 800, 200)
+    c1 = ROOT.TCanvas("c1", "ProfileInspectorDemo", 800, 200)
     if List.GetSize() > 4:
         n = List.GetSize()
         nx = int(sqrt(n))
-        ny = TMath.CeilNint(n / nx)
-        nx = TMath.CeilNint(sqrt(n))
+        ny = ROOT.TMath.CeilNint(n / nx)
+        nx = ROOT.TMath.CeilNint(sqrt(n))
         c1.Divide(ny, nx)
     else:
         c1.Divide(List.GetSize())

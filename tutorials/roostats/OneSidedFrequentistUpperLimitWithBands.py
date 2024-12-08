@@ -105,28 +105,6 @@
 # \authors Kyle Cranmer (C++ version), Haichen Wang, Daniel Whiteson, and P. P. (Python translation)
 
 import ROOT
-from ROOT import RooStats, RooFit
-
-TFile = ROOT.TFile
-TROOT = ROOT.TROOT
-TH1F = ROOT.TH1F
-TCanvas = ROOT.TCanvas
-
-RooWorkspace = ROOT.RooWorkspace
-RooSimultaneous = ROOT.RooSimultaneous
-RooAbsData = ROOT.RooAbsData
-
-ModelConfig = RooStats.ModelConfig
-FeldmanCousins = RooStats.FeldmanCousins
-ToyMCSampler = RooStats.ToyMCSampler
-PointSetInterval = RooStats.PointSetInterval
-ConfidenceBelt = RooStats.ConfidenceBelt
-# RooStatsUtils = 		 ROOT.RooStatsUtils
-ProfileLikelihoodTestStat = RooStats.ProfileLikelihoodTestStat
-
-RooArgSet = ROOT.RooArgSet
-Extended = RooFit.Extended
-RooDataSet = ROOT.RooDataSet
 
 useProof = False  # flag to control whether to use Proof
 nworkers = 0  # number of workers (default use all available cores)
@@ -152,10 +130,6 @@ def OneSidedFrequentistUpperLimitWithBands(
         fileExist = not ROOT.gSystem.AccessPathName(filename)  # note opposite return code
         # if file does not exists generate with histfactory
         if not fileExist:
-            # ifdef _WIN32
-            print(f"HistFactory file cannot be generated on Windows - exit")
-            return
-            # endif
             # Normally this would be run on the command line
             print(f"will run standard hist2workspace example")
             ROOT.gROOT.ProcessLine(".not  prepareHistFactory .")
@@ -168,7 +142,7 @@ def OneSidedFrequentistUpperLimitWithBands(
         filename = infile
 
     # Try to open the file
-    file = TFile.Open(filename)
+    file = ROOT.TFile.Open(filename)
 
     # if input file was specified but not found, quit
     if not file:
@@ -216,7 +190,7 @@ def OneSidedFrequentistUpperLimitWithBands(
     # in the model config
     # REMEMBER, we will change the test statistic
     # so this is NOT a Feldman-Cousins interval
-    fc = FeldmanCousins(data, mc)
+    fc = ROOT.RooStats.FeldmanCousins(data, mc)
     fc.SetConfidenceLevel(confidenceLevel)
     fc.AdditionalNToysFactor(
         0.5
@@ -276,17 +250,19 @@ def OneSidedFrequentistUpperLimitWithBands(
     )
 
     # get observed UL and value of test statistic evaluated there
-    tmpPOI = RooArgSet(firstPOI)
+    tmpPOI = ROOT.RooArgSet(firstPOI)
     observedUL = interval.UpperLimit(firstPOI)
     firstPOI.setVal(observedUL)
     obsTSatObsUL = fc.GetTestStatSampler().EvaluateTestStatistic(data, tmpPOI)
 
     # Ask the calculator which points were scanned
     parameterScan = fc.GetPointsToScan()
-    tmpPoint = RooArgSet()
+    tmpPoint = ROOT.RooArgSet()
 
     # make a histogram of parameter vs. threshold
-    histOfThresholds = TH1F("histOfThresholds", "", parameterScan.numEntries(), firstPOI.getMin(), firstPOI.getMax())
+    histOfThresholds = ROOT.TH1F(
+        "histOfThresholds", "", parameterScan.numEntries(), firstPOI.getMin(), firstPOI.getMax()
+    )
     histOfThresholds.GetXaxis().SetTitle(firstPOI.GetName())
     histOfThresholds.GetYaxis().SetTitle("Threshold")
 
@@ -300,7 +276,7 @@ def OneSidedFrequentistUpperLimitWithBands(
         poiVal = tmpPoint.getRealValue(firstPOI.GetName())
         histOfThresholds.Fill(poiVal, arMax)
 
-    c1 = TCanvas()
+    c1 = ROOT.TCanvas()
     c1.Divide(2)
     c1.cd(1)
     histOfThresholds.SetMinimum(0)
@@ -317,7 +293,7 @@ def OneSidedFrequentistUpperLimitWithBands(
     profile = nll.createProfile(mc.GetParametersOfInterest())
     firstPOI.setVal(0.0)
     profile.getVal()  # this will do fit and set nuisance parameters to profiled values
-    poiAndNuisance = RooArgSet()
+    poiAndNuisance = ROOT.RooArgSet()
     if mc.GetNuisanceParameters():
         poiAndNuisance.add(mc.GetNuisanceParameters())
     poiAndNuisance.add(mc.GetParametersOfInterest())
@@ -326,7 +302,7 @@ def OneSidedFrequentistUpperLimitWithBands(
     print(f"\nWill use these parameter points to generate pseudo data for bkg only")
     paramsToGenerateData.Print("v")
 
-    unconditionalObs = RooArgSet()
+    unconditionalObs = ROOT.RooArgSet()
     unconditionalObs.add(mc.GetObservables())
     unconditionalObs.add(mc.GetGlobalObservables())  # comment this out for the original conditional ensemble
 
@@ -334,7 +310,7 @@ def OneSidedFrequentistUpperLimitWithBands(
     CLbinclusive = 0
 
     # Now we generate background only and find distribution of upper limits
-    histOfUL = TH1F("histOfUL", "", 100, 0, firstPOI.getMax())
+    histOfUL = ROOT.TH1F("histOfUL", "", 100, 0, firstPOI.getMax())
     histOfUL.GetXaxis().SetTitle("Upper Limit (background only)")
     histOfUL.GetYaxis().SetTitle("Entries")
     for imc in range(nToyMC):
@@ -344,7 +320,7 @@ def OneSidedFrequentistUpperLimitWithBands(
         w.loadSnapshot("paramsToGenerateData")
         #    poiAndNuisance->Print("v");
 
-        toyData = RooDataSet()
+        toyData = ROOT.RooDataSet()
         # debugging
         global gmc
         gmc = mc
@@ -357,7 +333,7 @@ def OneSidedFrequentistUpperLimitWithBands(
                 print(f"Not sure what to do about this model")
         else:
             # print("generating extended dataset")
-            toyData = mc.GetPdf().generate(mc.GetObservables(), Extended())
+            toyData = mc.GetPdf().generate(mc.GetObservables(), Extended=True)
 
         # generate global observables
         # need to be careful for simpdf
@@ -423,7 +399,7 @@ def OneSidedFrequentistUpperLimitWithBands(
             else:
                 break
 
-        """ 
+        """
       #
       # loop over points in belt to find upper limit for this toy data
       thisUL = 0
@@ -440,11 +416,11 @@ def OneSidedFrequentistUpperLimitWithBands(
          firstPOI.setVal( histOfThresholds.GetBinCenter(i+1))
          #   double thisTS = profile->getVal();
          thisTS = fc.GetTestStatSampler().EvaluateTestStatistic(toyData,tmpPOI)
-         
+
          #   cout << "poi = " << firstPOI->getVal()
          # = ROOT.Double_t() << " max is " << arMax << " this profile = " << thisTS << endl;
          #      cout << "thisTS = " << thisTS<<endl;
-         
+
          # NOTE: need to add a small epsilon term for single precision vs. double precision
 #         if(thisTS<=arMax + 1e-7){
 #            thisUL = firstPOI->getVal();
@@ -453,7 +429,7 @@ def OneSidedFrequentistUpperLimitWithBands(
 #         }
 #      }
 #      */
-#         
+#
       """
 
         histOfUL.Fill(thisUL)
@@ -487,15 +463,15 @@ def OneSidedFrequentistUpperLimitWithBands(
     cumulative.SetContent(bins)
     band2sigDown = band1sigDown = bandMedian = band1sigUp = band2sigUp = ROOT.Double_t()
     for i in range(cumulative.GetNbinsX()):
-        if bins[i] < RooStats.SignificanceToPValue(2):
+        if bins[i] < ROOT.RooStats.SignificanceToPValue(2):
             band2sigDown = cumulative.GetBinCenter(i)
-        if bins[i] < RooStats.SignificanceToPValue(1):
+        if bins[i] < ROOT.RooStats.SignificanceToPValue(1):
             band1sigDown = cumulative.GetBinCenter(i)
         if bins[i] < 0.5:
             bandMedian = cumulative.GetBinCenter(i)
-        if bins[i] < RooStats.SignificanceToPValue(-1):
+        if bins[i] < ROOT.RooStats.SignificanceToPValue(-1):
             band1sigUp = cumulative.GetBinCenter(i)
-        if bins[i] < RooStats.SignificanceToPValue(-2):
+        if bins[i] < ROOT.RooStats.SignificanceToPValue(-2):
             band2sigUp = cumulative.GetBinCenter(i)
 
     print(f"-2 sigma  band ", band2sigDown)

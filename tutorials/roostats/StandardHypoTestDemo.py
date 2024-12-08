@@ -30,48 +30,9 @@
 
 from warnings import warn
 from gc import collect
+import numpy as np
 
 import ROOT
-from ROOT import RooStats, RooFit
-import ctypes
-
-TFile = ROOT.TFile
-RooWorkspace = ROOT.RooWorkspace
-RooAbsPdf = ROOT.RooAbsPdf
-RooRealVar = ROOT.RooRealVar
-RooDataSet = ROOT.RooDataSet
-RooRandom = ROOT.RooRandom
-TGraphErrors = ROOT.TGraphErrors
-TGraphAsymmErrors = ROOT.TGraphAsymmErrors
-TCanvas = ROOT.TCanvas
-TLine = ROOT.TLine
-TSystem = ROOT.TSystem
-TROOT = ROOT.TROOT
-
-TMath = ROOT.TMath
-
-Info = ROOT.Info
-TString = ROOT.TString
-RooArgSet = ROOT.RooArgSet
-
-AsymptoticCalculator = RooStats.AsymptoticCalculator
-HybridCalculator = RooStats.HybridCalculator
-FrequentistCalculator = RooStats.FrequentistCalculator
-ToyMCSampler = RooStats.ToyMCSampler
-HypoTestPlot = RooStats.HypoTestPlot
-HypoTestCalculatorGeneric = RooStats.HypoTestCalculatorGeneric
-
-NumEventsTestStat = RooStats.NumEventsTestStat
-ProfileLikelihoodTestStat = RooStats.ProfileLikelihoodTestStat
-SimpleLikelihoodRatioTestStat = RooStats.SimpleLikelihoodRatioTestStat
-RatioOfProfiledLikelihoodsTestStat = RooStats.RatioOfProfiledLikelihoodsTestStat
-MaxLikelihoodEstimateTestStat = RooStats.MaxLikelihoodEstimateTestStat
-
-HypoTestInverter = RooStats.HypoTestInverter
-HypoTestInverterResult = RooStats.HypoTestInverterResult
-HypoTestInverterPlot = RooStats.HypoTestInverterPlot
-
-HypoTestResult = RooStats.HypoTestResult
 
 
 class Struct:
@@ -144,9 +105,9 @@ def StandardHypoTestDemo(
     # disable - can cause some problems
     # ToyMCSampler::SetAlwaysUseMultiGen(True);
 
-    SimpleLikelihoodRatioTestStat.SetAlwaysReuseNLL(True)
-    ProfileLikelihoodTestStat.SetAlwaysReuseNLL(True)
-    RatioOfProfiledLikelihoodsTestStat.SetAlwaysReuseNLL(True)
+    ROOT.RooStats.SimpleLikelihoodRatioTestStat.SetAlwaysReuseNLL(True)
+    ROOT.RooStats.ProfileLikelihoodTestStat.SetAlwaysReuseNLL(True)
+    ROOT.RooStats.RatioOfProfiledLikelihoodsTestStat.SetAlwaysReuseNLL(True)
 
     # RooRandom::randomGenerator()->SetSeed(0);
 
@@ -178,7 +139,7 @@ def StandardHypoTestDemo(
         filename = infile
 
     # Try to open the file
-    file = TFile.Open(filename)
+    file = ROOT.TFile.Open(filename)
 
     # if input file was specified but not found, quit
     if not file:
@@ -227,8 +188,8 @@ def StandardHypoTestDemo(
                 RooStats.SetAllConstant(bnuisPar)
 
     if not bModel:
-        Info("StandardHypoTestInvDemo", "The background model {} does not exist".format(modelBName))
-        Info("StandardHypoTestInvDemo", "Copy it from ModelConfig {} and set POI to zero".format(modelSBName))
+        ROOT.Info("StandardHypoTestInvDemo", "The background model {} does not exist".format(modelBName))
+        ROOT.Info("StandardHypoTestInvDemo", "Copy it from ModelConfig {} and set POI to zero".format(modelSBName))
         bModel = sbModel.Clone()
         bModel.SetName(modelSBName + "B_only")
         var = bModel.GetParametersOfInterest().first()
@@ -237,11 +198,11 @@ def StandardHypoTestDemo(
         oldval = var.getVal()
         var.setVal(0)
         # bModel->SetSnapshot( RooArgSet(*var, *w->var("lumi"))  );
-        bModel.SetSnapshot(RooArgSet(var))
+        bModel.SetSnapshot(ROOT.RooArgSet(var))
         var.setVal(oldval)
 
     if not sbModel.GetSnapshot() or (poiValue > 0):
-        Info("StandardHypoTestDemo", "Model {} has no snapshot  - make one using model poi".format(modelSBName))
+        ROOT.Info("StandardHypoTestDemo", "Model {} has no snapshot  - make one using model poi".format(modelSBName))
         var = sbModel.GetParametersOfInterest().first()
         if not var:
             return
@@ -249,27 +210,27 @@ def StandardHypoTestDemo(
         if poiValue > 0:
             var.setVal(poiValue)
         # sbModel->SetSnapshot( RooArgSet(*var, *w->var("lumi") ) );
-        sbModel.SetSnapshot(RooArgSet(var))
+        sbModel.SetSnapshot(ROOT.RooArgSet(var))
         if poiValue > 0:
             var.setVal(oldval)
         # sbModel->SetSnapshot( *sbModel->GetParametersOfInterest() );
 
     # part 1, hypothesis testing
-    slrts = SimpleLikelihoodRatioTestStat(bModel.GetPdf(), sbModel.GetPdf())
+    slrts = ROOT.RooStats.SimpleLikelihoodRatioTestStat(bModel.GetPdf(), sbModel.GetPdf())
     # null parameters must include snapshot of poi plus the nuisance values
-    nullParams = RooArgSet(bModel.GetSnapshot())
+    nullParams = ROOT.RooArgSet(bModel.GetSnapshot())
     if bModel.GetNuisanceParameters():
         nullParams.add(bModel.GetNuisanceParameters())
 
     slrts.SetNullParameters(nullParams)
-    altParams = RooArgSet(sbModel.GetSnapshot())
+    altParams = ROOT.RooArgSet(sbModel.GetSnapshot())
     if sbModel.GetNuisanceParameters():
         altParams.add(sbModel.GetNuisanceParameters())
     slrts.SetAltParameters(altParams)
 
-    profll = ProfileLikelihoodTestStat(bModel.GetPdf())
+    profll = ROOT.RooStats.ProfileLikelihoodTestStat(bModel.GetPdf())
 
-    ropl = RatioOfProfiledLikelihoodsTestStat(bModel.GetPdf(), sbModel.GetPdf(), sbModel.GetSnapshot())
+    ropl = ROOT.RooStats.RatioOfProfiledLikelihoodsTestStat(bModel.GetPdf(), sbModel.GetPdf(), sbModel.GetSnapshot())
     ropl.SetSubtractMLE(False)
 
     if testStatType == 3:
@@ -285,16 +246,16 @@ def StandardHypoTestDemo(
     # slrts.SetReuseNLL(mOptimize);
     # ropl.SetReuseNLL(mOptimize);
 
-    AsymptoticCalculator.SetPrintLevel(printLevel)
+    ROOT.RooStats.AsymptoticCalculator.SetPrintLevel(printLevel)
 
     # hypoCalc = HypoTestCalculatorGeneric.__smartptr__ # unnecessary
     # note here Null is B and Alt is S+B
     if calcType == 0:
-        hypoCalc = FrequentistCalculator(data, sbModel, bModel)
+        hypoCalc = ROOT.RooStats.FrequentistCalculator(data, sbModel, bModel)
     elif calcType == 1:
-        hypoCalc = HybridCalculator(data, sbModel, bModel)
+        hypoCalc = ROOT.RooStats.HybridCalculator(data, sbModel, bModel)
     elif calcType == 2:
-        hypoCalc = AsymptoticCalculator(data, sbModel, bModel)
+        hypoCalc = ROOT.RooStats.AsymptoticCalculator(data, sbModel, bModel)
 
     if calcType == 0:
         hypoCalc.SetToys(ntoys, int(ntoys / nToysRatio))
@@ -321,19 +282,19 @@ def StandardHypoTestDemo(
             nuisPdf = w.pdf(nuisPriorName)
         # use prior defined first in bModel (then in SbModel)
         if not nuisPdf:
-            Info(
+            ROOT.Info(
                 "StandardHypoTestDemo",
                 "No nuisance pdf given for the HybridCalculator - try to deduce  pdf from the   model",
             )
             if bModel.GetPdf() and bModel.GetObservables():
-                nuisPdf = RooStats.MakeNuisancePdf(bModel, "nuisancePdf_bmodel")
+                nuisPdf = ROOT.RooStats.MakeNuisancePdf(bModel, "nuisancePdf_bmodel")
             else:
-                nuisPdf = RooStats.MakeNuisancePdf(sbModel, "nuisancePdf_sbmodel")
+                nuisPdf = ROOT.RooStats.MakeNuisancePdf(sbModel, "nuisancePdf_sbmodel")
 
         if not nuisPdf:
             if bModel.GetPriorPdf():
                 nuisPdf = bModel.GetPriorPdf()
-                Info(
+                ROOT.Info(
                     "StandardHypoTestDemo",
                     "No nuisance pdf given - try to use %s that is defined as a prior pdf in the B model",
                     nuisPdf.GetName(),
@@ -347,14 +308,14 @@ def StandardHypoTestDemo(
                 return
 
         assert nuisPdf
-        Info("StandardHypoTestDemo", "Using as nuisance Pdf ... ")
+        ROOT.Info("StandardHypoTestDemo", "Using as nuisance Pdf ... ")
         nuisPdf.Print()
 
         nuisParams = (
             bModel.GetNuisanceParameters() if bModel.GetNuisanceParameters() else sbModel.GetNuisanceParameters()
         )
-        np = nuisPdf.getObservables(nuisParams)
-        if np.getSize() == 0:
+        nuisParsInPdf = nuisPdf.getObservables(nuisParams)
+        if nuisParsInPdf.getSize() == 0:
             warn(
                 "StandardHypoTestDemo",
                 "Prior nuisance does not depend on nuisance parameters. They will be smeared in their full range",
@@ -379,13 +340,13 @@ def StandardHypoTestDemo(
         # for not extended pdf
         if not useNC:
             nEvents = int(data.numEntries())
-            Info(
+            ROOT.Info(
                 "StandardHypoTestDemo",
                 "Pdf is not extended: number of events to generate taken  from observed data set is {nEvents}",
             )
             sampler.SetNEventsPerToy(nEvents)
         else:
-            Info("StandardHypoTestDemo", "using a number counting pdf")
+            ROOT.Info("StandardHypoTestDemo", "using a number counting pdf")
             sampler.SetNEventsPerToy(1)
 
     if data.isWeighted() and not generateBinned:
@@ -394,14 +355,14 @@ def StandardHypoTestDemo(
         )
         msgfmt += "generation is unbinned - it would be faster to set generateBinned to True\n"
 
-        Info("StandardHypoTestDemo", msgfmt)
+        ROOT.Info("StandardHypoTestDemo", msgfmt)
 
     if generateBinned:
         sampler.SetGenerateBinned(generateBinned)
 
     # use PROOF
     if useProof:
-        pc = ProofConfig(w, 0, "", ROOT.kFALSE)
+        pc = ProofConfig(w, 0, "", False)
         sampler.SetProofConfig(pc)  # enable proof
 
     # set the test statistic
@@ -424,8 +385,8 @@ def StandardHypoTestDemo(
     collect()  # Trigger the garbage collector gc.collector()
 
     if calcType != 2:
-        c1 = TCanvas("myc1", "myc1")
-        plot = HypoTestPlot(htr, 100)
+        c1 = ROOT.TCanvas("myc1", "myc1")
+        plot = ROOT.RooStats.HypoTestPlot(htr, 100)
         plot.SetLogYaxis(True)
         plot.Draw()
         c1.Update()
@@ -439,21 +400,17 @@ def StandardHypoTestDemo(
     if calcType != 2:
 
         altDist = htr.GetAltDistribution()
-        htExp = HypoTestResult("Expected Result")
+        htExp = ROOT.RooStats.HypoTestResult("Expected Result")
         htExp.Append(htr)
         # find quantiles in alt (S+B) distribution
-        p = [ROOT.double() for i in range(5)]
-        q = [0.5 for i in range(5)]
+        p = np.array([i for i in range(5)], dtype=float)
+        q = np.array([0.5 for i in range(5)], dtype=float)
         for i in range(5):
             sig = -2 + i
             p[i] = ROOT.Math.normal_cdf(sig, 1)
 
-        p_c = (ctypes.c_double * len(p))(*p)
-        q_c = (ctypes.c_double * len(q))(*q)
         values = altDist.GetSamplingDistribution()
-        values_c = (ctypes.c_double * len(values))(*values)
-        # TMath.Quantiles(values.size(), 5, values, q, p, False) # doesn´t function properly
-        TMath.Quantiles(values.size(), 5, values_c, q_c, p_c, False)
+        ROOT.TMath.Quantiles(values.size(), 5, values.data(), q, p, False)
 
         for i in range(5):
             htExp.SetTestStatisticData(q[i])
@@ -473,7 +430,9 @@ def StandardHypoTestDemo(
             for i in range(5):
                 sig = -2 + i
                 # sigma is inverted here
-                pval = AsymptoticCalculator.GetExpectedPValues(htr.NullPValue(), htr.AlternatePValue(), -sig, False)
+                pval = ROOT.RooStats.AsymptoticCalculator.GetExpectedPValues(
+                    htr.NullPValue(), htr.AlternatePValue(), -sig, False
+                )
                 print(
                     " Expected p -value and significance at ",
                     sig,
@@ -489,24 +448,26 @@ def StandardHypoTestDemo(
 
     if enableDetOutput:
         writeResult = True
-        Info("StandardHypoTestDemo", "Detailed output will be written in output result file")
+        ROOT.Info("StandardHypoTestDemo", "Detailed output will be written in output result file")
 
     if htr != ROOT.kNone and writeResult:
 
         # write to a file the results
         calcTypeName = "Freq" if (calcType == 0) else ("Hybr" if (calcType == 1) else ("Asym"))
-        resultFileName = TString.Format("{}_HypoTest_ts{}_".format(calcTypeName, testStatType))
+        resultFileName = ROOT.TString.Format("{}_HypoTest_ts{}_".format(calcTypeName, testStatType))
         # strip the / from the filename
 
-        name = TString(infile)
+        name = ROOT.TString(infile)
         name.Replace(0, name.Last("/") + 1, "")
         resultFileName += name
 
-        fileOut = TFile(str(resultFileName), "RECREATE")
+        fileOut = ROOT.TFile(str(resultFileName), "RECREATE")
 
         htr.Write()
 
-        Info("StandardHypoTestDemo", "HypoTestResult has been written in the file {}".format(resultFileName.Data()))
+        ROOT.Info(
+            "StandardHypoTestDemo", "HypoTestResult has been written in the file {}".format(resultFileName.Data())
+        )
 
         fileOut.Close()
 

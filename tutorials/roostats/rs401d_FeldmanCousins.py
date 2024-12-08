@@ -15,74 +15,12 @@
 # \author Kyle Cranmer (C++ version), and P. P. (Python translation)
 
 import ROOT
-from ROOT import RooStats, RooFit
-
-ConfInterval = RooStats.ConfInterval
-FeldmanCousins = RooStats.FeldmanCousins
-ProfileLikelihoodCalculator = RooStats.ProfileLikelihoodCalculator
-MCMCCalculator = RooStats.MCMCCalculator
-UniformProposal = RooStats.UniformProposal
-LikelihoodIntervalPlot = RooStats.LikelihoodIntervalPlot
-MCMCIntervalPlot = RooStats.MCMCIntervalPlot
-MCMCInterval = RooStats.MCMCInterval
-
-RooDataSet = ROOT.RooDataSet
-RooDataHist = ROOT.RooDataHist
-RooRealVar = ROOT.RooRealVar
-RooConstVar = ROOT.RooConstVar
-RooAddition = ROOT.RooAddition
-RooProduct = ROOT.RooProduct
-RooProdPdf = ROOT.RooProdPdf
-RooAddPdf = ROOT.RooAddPdf
-
-TROOT = ROOT.TROOT
-RooPolynomial = ROOT.RooPolynomial
-RooRandom = ROOT.RooRandom
-
-RooProfileLL = ROOT.RooProfileLL
-
-RooPlot = ROOT.RooPlot
-
-TCanvas = ROOT.TCanvas
-TH1F = ROOT.TH1F
-TH2F = ROOT.TH2F
-TTree = ROOT.TTree
-TMarker = ROOT.TMarker
-TStopwatch = ROOT.TStopwatch
-
-RooArgSet = ROOT.RooArgSet
-
-RooArgSet = ROOT.RooArgSet
-RooArgList = ROOT.RooArgList
-RooMsgService = ROOT.RooMsgService
-kFALSE = ROOT.kFALSE
-Binning = RooFit.Binning
-YVar = RooFit.YVar
-Scaling = RooFit.Scaling
-kBlue = ROOT.kBlue
-Extended = RooFit.Extended
-Components = RooFit.Components
-LineColor = RooFit.LineColor
-kGreen = ROOT.kGreen
-kRed = ROOT.kRed
-kBlue = ROOT.kBlue
-RooWorkspace = ROOT.RooWorkspace
-ModelConfig = RooFit.ModelConfig
-kTRUE = ROOT.kTRUE
-kMagenta = ROOT.kMagenta
-
-
-ROOT.gInterpreter.ProcessLine(""".L NuMuToNuE_Oscillation.cxx+""")
-NuMuToNuE_Oscillation = ROOT.NuMuToNuE_Oscillation
-
-
-# use this order for safety on library loading
 
 
 def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
 
     # to time the macro
-    t = TStopwatch()
+    t = ROOT.TStopwatch()
     t.Start()
 
     # Taken from Feldman & Cousins paper, Phys.Rev.D57:3873-3889,1998.
@@ -105,17 +43,15 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
     # have an expected additional contribution of 100 events due to $\nu\mu \rightarrow \nu e$ oscillations.
 
     # Make signal model model
-    E = RooRealVar("E", "", 15, 10, 60, "GeV")
-    L = RooRealVar("L", "", 0.800, 0.600, 1.0, "km")  # need these units in formula
-    deltaMSq = RooRealVar("deltaMSq", "#Delta m^{2}", 40, 1, 300, "eV/c^{2}")
-    sinSq2theta = RooRealVar("sinSq2theta", "sin^{2}(2#theta)", 0.006, 0.0, 0.02)
+    E = ROOT.RooRealVar("E", "", 15, 10, 60, "GeV")
+    L = ROOT.RooRealVar("L", "", 0.800, 0.600, 1.0, "km")  # need these units in formula
+    deltaMSq = ROOT.RooRealVar("deltaMSq", "#Delta m^{2}", 40, 1, 300, "eV/c^{2}")
+    sinSq2theta = ROOT.RooRealVar("sinSq2theta", "sin^{2}(2#theta)", 0.006, 0.0, 0.02)
     # RooRealVar deltaMSq("deltaMSq","#Delta m^{2}",40,20,70,"eV/c^{2}");
     #  RooRealVar sinSq2theta("sinSq2theta","sin^{2}(2#theta)", .006,.001,.01);
     # PDF for oscillation only describes deltaMSq dependence, sinSq2theta goes into sigNorm
-    # 1) The code for this PDF was created by issuing these commands
-    #    root [0] RooClassFactory x
-    #    root [1] x.makePdf("NuMuToNuE_Oscillation","L,E,deltaMSq","","pow(sin(1.27*deltaMSq*L/E),2)")
-    PnmuTone = NuMuToNuE_Oscillation("PnmuTone", "P(#nu_{#mu} #rightarrow #nu_{e}", L, E, deltaMSq)
+    oscillationFormula = "std::pow(std::sin(1.27 * x[2] * x[0] / x[1]), 2)"
+    PnmuTone = ROOT.RooGenericPdf("PnmuTone", "P(#nu_{#mu} #rightarrow #nu_{e}", oscillationFormula, [L, E, deltaMSq])
 
     # only E is observable, so create the signal model by integrating out L
     sigModel = PnmuTone.createProjection(L)
@@ -130,10 +66,12 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
     # an independent copy of PnmuTone not to interfere with the original.
 
     # Independent copy for Integral
-    EPrime = RooRealVar("EPrime", "", 15, 10, 60, "GeV")
-    LPrime = RooRealVar("LPrime", "", 0.800, 0.600, 1.0, "km")  # need these units in formula
-    PnmuTonePrime = NuMuToNuE_Oscillation("PnmuTonePrime", "P(#nu_#mu #rightarrow #nu_e", LPrime, EPrime, deltaMSq)
-    intProbToOscInExp = PnmuTonePrime.createIntegral(RooArgSet(EPrime, LPrime))
+    EPrime = ROOT.RooRealVar("EPrime", "", 15, 10, 60, "GeV")
+    LPrime = ROOT.RooRealVar("LPrime", "", 0.800, 0.600, 1.0, "km")  # need these units in formula
+    PnmuTonePrime = ROOT.RooGenericPdf(
+        "PnmuTonePrime", "P(#nu_{#mu} #rightarrow #nu_{e}", oscillationFormula, [LPrime, EPrime, deltaMSq]
+    )
+    intProbToOscInExp = PnmuTonePrime.createIntegral([EPrime, LPrime])
 
     # Getting the flux is a bit tricky.  It is more clear to include a cross section term that is not
     # explicitly referred to in the text, eg.
@@ -142,32 +80,32 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
     # maxEventsInBin * 1% chance per bin =  100 events / bin
     # therefore maxEventsInBin = 10,000.
     # for 5 bins, this means maxEventsTot = 50,000
-    maxEventsTot = RooConstVar("maxEventsTot", "maximum number of sinal events", 50000)
-    inverseArea = RooConstVar(
+    maxEventsTot = ROOT.RooConstVar("maxEventsTot", "maximum number of sinal events", 50000)
+    inverseArea = ROOT.RooConstVar(
         "inverseArea",
         "1/(#Delta E #Delta L)",
         1.0 / (EPrime.getMax() - EPrime.getMin()) / (LPrime.getMax() - LPrime.getMin()),
     )
 
     # $sigNorm = maxEventsTot \cdot \int dE dL \frac{P_{oscillate\ in\ experiment}}{Area} \cdot {sin}^2(2\theta)$
-    sigNorm = RooProduct("sigNorm", "", RooArgSet(maxEventsTot, intProbToOscInExp, inverseArea, sinSq2theta))
+    sigNorm = ROOT.RooProduct("sigNorm", "", [maxEventsTot, intProbToOscInExp, inverseArea, sinSq2theta])
     # bkg = 5 bins * 100 events / bin
-    bkgNorm = RooConstVar("bkgNorm", "normalization for background", 500)
+    bkgNorm = ROOT.RooConstVar("bkgNorm", "normalization for background", 500)
 
     # flat background (0th order polynomial, so no arguments for coefficients)
-    bkgEShape = RooPolynomial("bkgEShape", "flat bkg shape", E)
+    bkgEShape = ROOT.RooPolynomial("bkgEShape", "flat bkg shape", E)
 
     # total model
-    model = RooAddPdf("model", "", RooArgList(sigModel, bkgEShape), RooArgList(sigNorm, bkgNorm))
+    model = ROOT.RooAddPdf("model", "", [sigModel, bkgEShape], [sigNorm, bkgNorm])
 
     # for debugging, check model tree
     #  model.printCompactTree();
     #  model.graphVizTree("model.dot");
 
     # turn off some messages
-    RooMsgService.instance().setStreamStatus(0, kFALSE)
-    RooMsgService.instance().setStreamStatus(1, kFALSE)
-    RooMsgService.instance().setStreamStatus(2, kFALSE)
+    ROOT.RooMsgService.instance().setStreamStatus(0, False)
+    ROOT.RooMsgService.instance().setStreamStatus(1, False)
+    ROOT.RooMsgService.instance().setStreamStatus(2, False)
 
     # --------------------------------------
     # n events in data to data, simply sum of sig+bkg
@@ -175,19 +113,19 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
     print("generate toy data with nEvents = ", nEventsData)
     # adjust random seed to get a toy dataset similar to one in paper.
     # Found by trial and error (3 trials, so not very "fine tuned")
-    RooRandom.randomGenerator().SetSeed(3)
+    ROOT.RooRandom.randomGenerator().SetSeed(3)
     # create a toy dataset
-    data = model.generate(RooArgSet(E), nEventsData)
+    data = model.generate(E, nEventsData)
 
     # --------------------------------------
     # make some plots
-    dataCanvas = TCanvas("dataCanvas")
+    dataCanvas = ROOT.TCanvas("dataCanvas")
     dataCanvas.Divide(2, 2)
 
     # plot the PDF
     dataCanvas.cd(1)
-    hh = PnmuTone.createHistogram("hh", E, Binning(40), YVar(L, Binning(40)), Scaling(kFALSE))
-    hh.SetLineColor(kBlue)
+    hh = PnmuTone.createHistogram("hh", E, ROOT.RooFit.YVar(L, ROOT.RooFit.Binning(40)), Binning=40, Scaling=False)
+    hh.SetLineColor(ROOT.kBlue)
     hh.SetTitle("True Signal Model")
     hh.Draw("surf")
     dataCanvas.Update()
@@ -197,10 +135,10 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
     dataCanvas.cd(2)
     Eframe = E.frame()
     data.plotOn(Eframe)
-    model.fitTo(data, Extended())
+    model.fitTo(data, Extended=True)
     model.plotOn(Eframe)
-    model.plotOn(Eframe, Components(sigModel), LineColor(kRed))
-    model.plotOn(Eframe, Components(bkgEShape), LineColor(kGreen))
+    model.plotOn(Eframe, Components=sigModel, LineColor="r")
+    model.plotOn(Eframe, Components=bkgEShape, LineColor="g")
     model.plotOn(Eframe)
     Eframe.SetTitle("toy data with best fit model (and sig+bkg components)")
     Eframe.Draw()
@@ -210,11 +148,13 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
 
     # plot the likelihood function
     dataCanvas.cd(3)
-    nll = model.createNLL(data, Extended(True))
-    pll = RooProfileLL("pll", "", nll, RooArgSet(deltaMSq, sinSq2theta))
+    nll = model.createNLL(data, Extended=True)
+    pll = ROOT.RooProfileLL("pll", "", nll, [deltaMSq, sinSq2theta])
     # hhh = nll.createHistogram("hhh",sinSq2theta, Binning(40), YVar(deltaMSq,Binning(40)))
-    hhh = pll.createHistogram("hhh", sinSq2theta, Binning(40), YVar(deltaMSq, Binning(40)), Scaling(kFALSE))
-    hhh.SetLineColor(kBlue)
+    hhh = pll.createHistogram(
+        "hhh", sinSq2theta, ROOT.RooFit.YVar(deltaMSq, ROOT.RooFit.Binning(40)), Binning=40, Scaling=False
+    )
+    hhh.SetLineColor(ROOT.kBlue)
     hhh.SetTitle("Likelihood Function")
     hhh.Draw("surf")
 
@@ -225,10 +165,10 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
     # --------------------------------------------------------------
     # show use of Feldman-Cousins utility in RooStats
     # set the distribution creator, which encodes the test statistic
-    parameters = RooArgSet(deltaMSq, sinSq2theta)
-    w = RooWorkspace()
+    parameters = ROOT.RooArgSet(deltaMSq, sinSq2theta)
+    w = ROOT.RooWorkspace()
 
-    modelConfig = ModelConfig()
+    modelConfig = ROOT.RooFit.ModelConfig()
     modelConfig.SetWorkspace(w)
     modelConfig.SetPdf(model)
     modelConfig.SetParametersOfInterest(parameters)
@@ -256,14 +196,14 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
 
     if doMCMC:
         # turn some messages back on
-        RooMsgService.instance().setStreamStatus(0, kTRUE)
-        RooMsgService.instance().setStreamStatus(1, kTRUE)
+        RooMsgService.instance().setStreamStatus(0, True)
+        RooMsgService.instance().setStreamStatus(1, True)
 
-        mcmcWatch = TStopwatch()
+        mcmcWatch = ROOT.TStopwatch()
         mcmcWatch.Start()
 
-        axisList = RooArgList(deltaMSq, sinSq2theta)
-        mc = MCMCCalculator(data, modelConfig)
+        axisList = ROOT.RooArgList(deltaMSq, sinSq2theta)
+        mc = ROOT.RooStats.MCMCCalculator(data, modelConfig)
         mc.SetNumIters(5000)
         mc.SetNumBurnInSteps(100)
         mc.SetUseKeys(True)
@@ -310,7 +250,7 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
             level = 0.5
             forContour.SetContour(1, level)
             forContour.SetLineWidth(2)
-            forContour.SetLineColor(kRed)
+            forContour.SetLineColor(ROOT.kRed)
             forContour.Draw("cont2,same")
 
     mcPlot = ROOT.kNone

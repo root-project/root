@@ -31,24 +31,6 @@
 
 
 import ROOT
-from ROOT import RooFit, RooStats
-
-TFile = ROOT.TFile
-TROOT = ROOT.TROOT
-TH1F = ROOT.TH1F
-TSystem = ROOT.TSystem
-
-RooWorkspace = ROOT.RooWorkspace
-RooAbsData = ROOT.RooAbsData
-
-ModelConfig = RooFit.ModelConfig
-FeldmanCousins = RooStats.FeldmanCousins
-ToyMCSampler = RooStats.ToyMCSampler
-PointSetInterval = RooStats.PointSetInterval
-ConfidenceBelt = RooStats.ConfidenceBelt
-
-RooArgSet = ROOT.RooArgSet
-TCanvas = ROOT.TCanvas
 
 
 def StandardFeldmanCousinsDemo(infile="", workspaceName="combined", modelConfigName="ModelConfig", dataName="obsData"):
@@ -62,10 +44,6 @@ def StandardFeldmanCousinsDemo(infile="", workspaceName="combined", modelConfigN
         fileExist = not ROOT.gSystem.AccessPathName(filename)  # note opposite return code
         # if file does not exists generate with histfactory
         if not fileExist:
-            # ifdef _WIN32
-            print(f"HistFactory file cannot be generated on Windows - exit")
-            return
-            # endif
             # Normally this would be run on the command line
             print(f"will run standard hist2workspace example")
             ROOT.gROOT.ProcessLine(".! prepareHistFactory .")
@@ -78,7 +56,7 @@ def StandardFeldmanCousinsDemo(infile="", workspaceName="combined", modelConfigN
         filename = infile
 
     # Try to open the file
-    file = TFile.Open(filename)
+    file = ROOT.TFile.Open(filename)
 
     # if input file was specified but not found, quit
     if not file:
@@ -112,7 +90,7 @@ def StandardFeldmanCousinsDemo(infile="", workspaceName="combined", modelConfigN
     # to find and plot the 95% confidence interval
     # on the parameter of interest as specified
     # in the model config
-    fc = FeldmanCousins(data, mc)
+    fc = ROOT.RooStats.FeldmanCousins(data, mc)
     fc.SetConfidenceLevel(0.95)  # 95% interval
     # fc.AdditionalNToysFactor(0.1); # to speed up the result
     fc.UseAdaptiveSampling(True)  # speed it up a bit
@@ -133,7 +111,7 @@ def StandardFeldmanCousinsDemo(infile="", workspaceName="combined", modelConfigN
             print(f"Not sure what to do about this model")
 
     # We can use PROOF to speed things along in parallel
-    #  pc = ProofConfig(w, 1, "workers=4", kFALSE);
+    #  pc = ProofConfig(w, 1, "workers=4", False);
     #  toymcsampler = fc.GetTestStatSampler()
     #  toymcsampler.SetProofConfig(pc) # enable proof
 
@@ -154,10 +132,12 @@ def StandardFeldmanCousinsDemo(infile="", workspaceName="combined", modelConfigN
 
     # Ask the calculator which points were scanned
     parameterScan = fc.GetPointsToScan()
-    tmpPoint = RooArgSet()
+    tmpPoint = ROOT.RooArgSet()
 
     # make a histogram of parameter vs. threshold
-    histOfThresholds = TH1F("histOfThresholds", "", parameterScan.numEntries(), firstPOI.getMin(), firstPOI.getMax())
+    histOfThresholds = ROOT.TH1F(
+        "histOfThresholds", "", parameterScan.numEntries(), firstPOI.getMin(), firstPOI.getMax()
+    )
 
     # loop through the points that were tested and ask confidence belt
     # what the upper/lower thresholds were.
@@ -170,7 +150,7 @@ def StandardFeldmanCousinsDemo(infile="", workspaceName="combined", modelConfigN
         histOfThresholds.Fill(poiVal, arMax)
 
     histOfThresholds.SetMinimum(0)
-    c_belt = TCanvas("c_belt", "c_belt")
+    c_belt = ROOT.TCanvas("c_belt", "c_belt")
     histOfThresholds.Draw()
     c_belt.Update()
     c_belt.Draw()
