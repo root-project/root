@@ -706,7 +706,7 @@ std::uint64_t ROOT::Experimental::Internal::RMiniFileReader::SearchInDirectory(s
 }
 
 ROOT::Experimental::RResult<ROOT::RNTuple>
-ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view ntupleName)
+ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view ntuplePath)
 {
    RTFHeader fileHeader;
    ReadBuffer(&fileHeader, sizeof(fileHeader), 0);
@@ -721,6 +721,25 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
    offset += name.GetSize();
    ReadBuffer(&name, 1, offset);
    offset += name.GetSize();
+
+   // split ntupleName by '/' character to open datasets in subdirectories.
+   std::string ntuplePathTail(ntuplePath);
+   if (!ntuplePathTail.empty() && ntuplePathTail[0] == '/')
+      ntuplePathTail = ntuplePathTail.substr(1);
+   auto pos = std::string::npos;
+   while ((pos = ntuplePathTail.find('/')) != std::string::npos) {
+      auto directoryName = ntuplePathTail.substr(0, pos);
+      ntuplePathTail.erase(0, pos + 1);
+
+      offset = SearchInDirectory(offset, directoryName, "TDirectory");
+      if (offset == 0) {
+         return R__FAIL("no directory named '" + std::string(directoryName) + "' in file '" + fRawFile->GetUrl() + "'");
+      }
+      ReadBuffer(&key, sizeof(key), offset);
+      offset = key.GetSeekKey() + key.fKeyLen;
+   }
+   // no more '/' delimiter in ntuplePath
+   auto ntupleName = ntuplePathTail;
 
    offset = SearchInDirectory(offset, ntupleName, kNTupleClassName);
    if (offset == 0) {

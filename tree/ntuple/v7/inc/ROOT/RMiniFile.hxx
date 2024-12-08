@@ -69,8 +69,9 @@ private:
 
    /// Used when the file container turns out to be a bare file
    RResult<RNTuple> GetNTupleBare(std::string_view ntupleName);
-   /// Used when the file turns out to be a TFile container
-   RResult<RNTuple> GetNTupleProper(std::string_view ntupleName);
+   /// Used when the file turns out to be a TFile container. The ntuplePath variable is either the ntuple name
+   /// or an ntuple name preceded by a directory (`myNtuple` or `foo/bar/myNtuple` or `/foo/bar/myNtuple`)
+   RResult<RNTuple> GetNTupleProper(std::string_view ntuplePath);
 
    /// Searches for a key with the given name and type in the key index of the directory starting at offsetDir.
    /// The offset points to the start of the TDirectory DATA section, without the key and without the name and title
