@@ -223,11 +223,9 @@ public:
    static std::unique_ptr<RNTupleFileWriter> Recreate(std::string_view ntupleName, std::string_view path,
                                                       EContainerFormat containerFormat,
                                                       const RNTupleWriteOptions &options);
-   /// Add a new RNTuple identified by ntupleName to the existing TFile.
-   static std::unique_ptr<RNTupleFileWriter> Append(std::string_view ntupleName, TFile &file, std::uint64_t maxKeySize);
-   /// Add a new RNTuple identified by ntupleName to the existing directory, which must be a directory in a file.
+   /// The directory parameter can also be a TFile object (TFile inherits from TDirectory).
    static std::unique_ptr<RNTupleFileWriter>
-   Append(std::string_view ntupleName, TDirectory &directory, std::uint64_t maxKeySize);
+   Append(std::string_view ntupleName, TDirectory &fileOrDirectory, std::uint64_t maxKeySize);
 
    RNTupleFileWriter(const RNTupleFileWriter &other) = delete;
    RNTupleFileWriter(RNTupleFileWriter &&other) = delete;

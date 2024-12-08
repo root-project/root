@@ -1165,28 +1165,18 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupl
 }
 
 std::unique_ptr<ROOT::Experimental::Internal::RNTupleFileWriter>
-ROOT::Experimental::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, TFile &file,
+ROOT::Experimental::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, TDirectory &fileOrDirectory,
                                                         std::uint64_t maxKeySize)
 {
-   assert(file.IsBinary());
-
-   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize));
-   writer->fFileProper.fFile = &file;
-   return writer;
-}
-
-std::unique_ptr<ROOT::Experimental::Internal::RNTupleFileWriter>
-ROOT::Experimental::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, TDirectory &directory,
-                                                        std::uint64_t maxKeySize)
-{
-   TFile *file = directory.GetFile();
+   TFile *file = fileOrDirectory.GetFile();
    if (!file)
       throw RException(R__FAIL("invalid attempt to add an RNTuple to a directory that is not backed by a file"));
    assert(file->IsBinary());
 
    auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize));
    writer->fFileProper.fFile = file;
-   writer->fFileProper.fDirectory = &directory;
+   if (file != &fileOrDirectory)
+      writer->fFileProper.fDirectory = &fileOrDirectory;
    return writer;
 }
 
