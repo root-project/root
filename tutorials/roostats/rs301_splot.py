@@ -1,5 +1,5 @@
 # \file
-# \ingroup roostats_python_tutorials
+# \ingroup tutorial_roostats
 # \notebook -js
 # SPlot tutorial
 #
