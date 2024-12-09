@@ -131,7 +131,12 @@ public:
    {
    }
 
-   ~RVecDS()
+   // Rule of five
+   RVecDS(const RVecDS &) = delete;
+   RVecDS &operator=(const RVecDS &) = delete;
+   RVecDS(RVecDS &&) = delete;
+   RVecDS &operator=(RVecDS &&) = delete;
+   ~RVecDS() final
    {
       for (auto &&ptrHolderv : fPointerHolders) {
          for (auto &&ptrHolder : ptrHolderv) {

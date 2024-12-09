@@ -115,6 +115,12 @@ protected:
    virtual std::string AsString() { return "generic data source"; };
 
 public:
+   RDataSource() = default;
+   // Rule of five
+   RDataSource(const RDataSource &) = delete;
+   RDataSource &operator=(const RDataSource &) = delete;
+   RDataSource(RDataSource &&) = delete;
+   RDataSource &operator=(RDataSource &&) = delete;
    virtual ~RDataSource() = default;
 
    // clang-format off

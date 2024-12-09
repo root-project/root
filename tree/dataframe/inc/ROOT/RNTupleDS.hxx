@@ -155,7 +155,12 @@ public:
    RNTupleDS(std::string_view ntupleName, std::string_view fileName);
    RNTupleDS(ROOT::RNTuple *ntuple);
    RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames);
-   ~RNTupleDS();
+   // Rule of five
+   RNTupleDS(const RNTupleDS &) = delete;
+   RNTupleDS &operator=(const RNTupleDS &) = delete;
+   RNTupleDS(RNTupleDS &&) = delete;
+   RNTupleDS &operator=(RNTupleDS &&) = delete;
+   ~RNTupleDS() final;
 
    void SetNSlots(unsigned int nSlots) final;
    std::size_t GetNFiles() const final { return fFileNames.empty() ? 1 : fFileNames.size(); }

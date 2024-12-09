@@ -112,8 +112,14 @@ public:
    RCsvDS(std::string_view fileName, const ROptions &options);
    RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL,
           std::unordered_map<std::string, char> &&colTypes = {});
+   // Rule of five
+   RCsvDS(const RCsvDS &) = delete;
+   RCsvDS &operator=(const RCsvDS &) = delete;
+   RCsvDS(RCsvDS &&) = delete;
+   RCsvDS &operator=(RCsvDS &&) = delete;
+   ~RCsvDS() final;
+
    void Finalize() final;
-   ~RCsvDS();
    std::size_t GetNFiles() const final { return 1; }
    const std::vector<std::string> &GetColumnNames() const final;
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
