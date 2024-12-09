@@ -7246,7 +7246,7 @@ void TTree::Print(Option_t* option) const
    if (!option)
       option = "";
 
-   if (strncmp(option,"clusters",strlen("clusters"))==0) {
+   if (strncmp(option,"clusters",std::char_traits<char>::length("clusters"))==0) {
       Printf("%-16s %-16s %-16s %8s %20s",
              "Cluster Range #", "Entry Start", "Last Entry", "Size", "Number of clusters");
       Int_t index= 0;

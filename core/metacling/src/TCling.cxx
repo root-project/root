@@ -4096,7 +4096,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload, Bool_t silent)
    // Handle the special case of 'tuple' where we ignore the real implementation
    // details and just overlay a 'simpler'/'simplistic' version that is easy
    // for the I/O to understand and handle.
-   if (strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
+   if (strncmp(cl->GetName(),"tuple<",std::char_traits<char>::length("tuple<"))==0) {
       if (!reload)
          name = AlternateTuple(cl->GetName(), fInterpreter->getLookupHelper(), silent);
       if (reload || name.empty()) {

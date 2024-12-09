@@ -3220,7 +3220,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
             return pairinfo->GetClass();
       } else {
          //  Check if we have an STL container that might provide it.
-         static const size_t slen = strlen("pair");
+         static constexpr size_t slen = std::char_traits<char>::length("pair");
          static const char *associativeContainer[] = { "map", "unordered_map", "multimap",
             "unordered_multimap", "set", "unordered_set", "multiset", "unordered_multiset" };
          for(auto contname : associativeContainer) {

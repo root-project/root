@@ -2425,7 +2425,7 @@ void TBranch::Print(Option_t *option) const
    }
    Printf("*Baskets :%9d : Basket Size=%11d bytes  Compression= %6.2f     *",fWriteBasket,fBasketSize,cx);
 
-   if (strncmp(option,"basketsInfo",strlen("basketsInfo"))==0) {
+   if (strncmp(option,"basketsInfo",std::char_traits<char>::length("basketsInfo"))==0) {
       Int_t nbaskets = fWriteBasket;
       for (Int_t i=0;i<nbaskets;i++) {
          Printf("*Basket #%4d  entry=%6lld  pos=%6lld  size=%5d",

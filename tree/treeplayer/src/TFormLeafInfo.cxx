@@ -1020,7 +1020,7 @@ TFormLeafInfoNumerical::TFormLeafInfoNumerical(TVirtualCollectionProxy *collecti
       if (fKind == TStreamerInfo::kOffsetL + TStreamerInfo::kChar) {
          // Could be a bool
          if (strcmp( collection->GetCollectionClass()->GetName(), "vector<bool>") == 0
-             || strncmp( collection->GetCollectionClass()->GetName(), "bitset<", strlen("bitset<") ) ==0 ) {
+             || strncmp( collection->GetCollectionClass()->GetName(), "bitset<", std::char_traits<char>::length("bitset<") ) ==0 ) {
             fIsBool = true;
             fKind = (EDataType)18;
          }

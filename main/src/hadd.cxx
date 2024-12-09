@@ -211,7 +211,7 @@ int main( int argc, char **argv )
          ++ffirst;
       } else if ( strcmp(argv[a],"-cachesize=") == 0 ) {
          int size;
-         static const size_t arglen = strlen("-cachesize=");
+         static constexpr size_t arglen = std::char_traits<char>::length("-cachesize=");
          auto parseResult = ROOT::FromHumanReadableSize(argv[a]+arglen,size);
          if (parseResult == ROOT::EFromHumanReadableSize::kParseFail) {
             std::cerr << "Error: could not parse the cache size passed after -cachesize: "

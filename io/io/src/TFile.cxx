@@ -3086,7 +3086,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       if (info->IsA() != TStreamerInfo::Class()) {
          continue;
       }
-      if (strncmp(info->GetName(), "auto_ptr<", strlen("auto_ptr<")) == 0) {
+      if (strncmp(info->GetName(), "auto_ptr<", std::char_traits<char>::length("auto_ptr<")) == 0) {
          continue;
       }
       TClass *cl = TClass::GetClass(info->GetName());
@@ -4129,7 +4129,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
    TString opts(options);
    Int_t ito = opts.Index("TIMEOUT=");
    if (ito != kNPOS) {
-      TString sto = opts(ito + strlen("TIMEOUT="), opts.Length());
+      TString sto = opts(ito + std::char_traits<char>::length("TIMEOUT="), opts.Length());
       while (!(sto.IsDigit()) && !(sto.IsNull())) { sto.Remove(sto.Length()-1,1); }
       if (!(sto.IsNull())) {
          // Timeout in millisecs
