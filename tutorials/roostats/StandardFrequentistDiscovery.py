@@ -127,11 +127,6 @@ def StandardFrequentistDiscovery(
         else:
             print(f"Not sure what to do about this model")
 
-    # We can use PROOF to speed things along in parallel
-    # pc = ProofConfig(w, 2, "user@yourfavoriteproofcluster", False);
-    pc = ROOT.RooStats.ProofConfig(w, 2, "", False)
-    # toymcs.SetProofConfig(pc);    # enable proof
-
     # instantiate the calculator
     freqCalc = ROOT.RooStats.FrequentistCalculator(data, mc, mcNull, toymcs)
     freqCalc.SetToys(toys, toys)  # null toys, alt toys

@@ -52,8 +52,6 @@ class HypoTestInvOptions:
     # to their nominal values)
     nToysRatio = 2  # ratio Ntoys S+b/ntoysB
     maxPOI = -1  # max value used of POI (in case of auto scan)
-    useProof = False  # use Proof Lite when using toys (for freq or hybrid)
-    nworkers = 0  # number of worker for ProofLite (default use all available cores)
     enableDetailedOutput = (
         False  # enable detailed output with all fit information for each toys (output will be written in result file)
     )
@@ -67,7 +65,6 @@ class HypoTestInvOptions:
     # Otherwise the rebuild will be performed using
     initialFit = -1  # do a first fit to the model (-1 : default, 0 skip fit, 1 do always fit)
     randomSeed = -1  # random seed (if = -1: use default value, if = 0 always random )
-    # NOTE: Proof uses automatically a random seed
 
     nAsimovBins = 0  # number of bins in observables used for Asimov data sets (0 is the default and it is given by
     # workspace, typically is 100)
@@ -115,11 +112,9 @@ class HypoTestInvTool {
    bool mOptimize;
    bool mUseVectorStore;
    bool mGenerateBinned;
-   bool mUseProof;
    bool mRebuild;
    bool mReuseAltToys;
    bool mEnableDetOutput;
-   int mNWorkers;
    int mNToyToRebuild;
    int mRebuildParamValues;
    int mPrintLevel;
@@ -138,7 +133,7 @@ class HypoTestInvTool {
 
 RooStats::HypoTestInvTool::HypoTestInvTool()
    : mPlotHypoTestResult(true), mWriteResult(false), mOptimize(true), mUseVectorStore(true), mGenerateBinned(false),
-     mUseProof(false), mEnableDetOutput(false), mRebuild(false), mReuseAltToys(false), mNWorkers(4),
+     mEnableDetOutput(false), mRebuild(false), mReuseAltToys(false),
      mNToyToRebuild(100), mRebuildParamValues(0), mPrintLevel(0), mInitialFit(-1), mRandomSeed(-1), mNToysRatio(2),
      mMaxPoi(-1), mAsimovBins(0), mMassValue(""), mMinimizerType(""), mResultFileName()
 {
@@ -169,8 +164,6 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
                 self.mUseVectorStore = value
             if s_name.find("GenerateBinned") != ROOT.std.string.npos:
                 self.mGenerateBinned = value
-            if s_name.find("UseProof") != ROOT.std.string.npos:
-                self.mUseProof = value
             if s_name.find("EnableDetailedOutput") != ROOT.std.string.npos:
                 self.mEnableDetOutput = value
             if s_name.find("Rebuild") != ROOT.std.string.npos:
@@ -191,8 +184,6 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
 
             s_name = ROOT.std.string(name)
 
-            if s_name.find("NWorkers") != ROOT.std.string.npos:
-                self.mNWorkers = value
             if s_name.find("NToyToRebuild") != ROOT.std.string.npos:
                 self.mNToyToRebuild = value
             if s_name.find("RebuildParamValues") != ROOT.std.string.npos:
@@ -864,11 +855,6 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
         calc.UseCLs(useCLs)
         calc.SetVerbose(True)
 
-        # can speed up using proof-lite
-        if self.mUseProof:
-            pc = ProofConfig(w, self.mNWorkers, "", False)
-            toymcs.SetProofConfig(pc)  # enable proof
-
         if npoints > 0:
             if poimin > poimax:
                 # if no min/max given scan between MLE and +4 sigma
@@ -936,7 +922,6 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
             print(f"StandardHypoTestInvDemo: Initial parameters used for rebuilding: ")
             RooStats.PrintListContent(allParams, ROOT.std.cout)
 
-            calc.SetCloseProof(1)
             tw.Start()
             limDist = calc.GetUpperLimitDistribution(True, self.mNToyToRebuild)
             print(f"Time to rebuild distributions :")
@@ -1052,7 +1037,6 @@ def StandardHypoTestInvDemo(
     extra options are available as global parameters of the macro. They major ones are:
 
     plotHypoTestResult   plot result of tests at each point (TS distributions) (default is True)
-    useProof             use Proof   (default is True)
     writeResult          write result of scan (default is True)
     rebuild              rebuild scan for expected limits (require extra toys) (default is False)
     generateBinned       generate binned data sets for toys (default is False) - be careful not to activate with
@@ -1099,9 +1083,7 @@ def StandardHypoTestInvDemo(
     calc.SetParameter("GenerateBinned", optHTInv.generateBinned)
     calc.SetParameter("NToysRatio", optHTInv.nToysRatio)
     calc.SetParameter("MaxPOI", optHTInv.maxPOI)
-    calc.SetParameter("UseProof", optHTInv.useProof)
     calc.SetParameter("EnableDetailedOutput", optHTInv.enableDetailedOutput)
-    calc.SetParameter("NWorkers", optHTInv.nworkers)
     calc.SetParameter("Rebuild", optHTInv.rebuild)
     calc.SetParameter("ReuseAltToys", optHTInv.reuseAltToys)
     calc.SetParameter("NToyToRebuild", optHTInv.nToyToRebuild)

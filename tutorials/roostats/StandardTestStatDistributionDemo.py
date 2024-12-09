@@ -26,9 +26,6 @@
 import ROOT
 
 
-useProof = False  # flag to control whether to use Proof
-nworkers = 0  # number of workers (default use all available cores)
-
 # -------------------------------------------------------
 # The actual macro
 
@@ -131,10 +128,6 @@ def StandardTestStatDistributionDemo(
 
     firstPOI.setVal(plcUpperLimit)  # set POI value for generation
     sampler.SetParametersForTestStat(mc.GetParametersOfInterest())  # set POI value for evaluation
-
-    if useProof:
-        pc = ProofConfig(w, nworkers, "", False)
-        sampler.SetProofConfig(pc)  # enable proof
 
     firstPOI.setVal(plcUpperLimit)
     allParameters = ROOT.RooArgSet()

@@ -110,11 +110,6 @@ def StandardFeldmanCousinsDemo(infile="", workspaceName="combined", modelConfigN
         else:
             print(f"Not sure what to do about this model")
 
-    # We can use PROOF to speed things along in parallel
-    #  pc = ProofConfig(w, 1, "workers=4", False);
-    #  toymcsampler = fc.GetTestStatSampler()
-    #  toymcsampler.SetProofConfig(pc) # enable proof
-
     # Now get the interval
     interval = fc.GetInterval()
     belt = fc.GetConfidenceBelt()

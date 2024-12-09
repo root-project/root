@@ -16,7 +16,6 @@
 #  - demonstrates usage of different test statistics
 #  - explains subtle choices in the prior used for hybrid methods
 #  - demonstrates usage of different priors for the nuisance parameters
-#  - demonstrates usage of PROOF
 #
 # The basic setup here is that a main measurement has observed x events with an
 # expectation of s+b.  One can choose an ad hoc prior for the uncertainty on b,
@@ -112,10 +111,6 @@ protected:
 #   4. RooStats ToyMC version of 2. & 3.
 #   5. RooStats ToyMC with an equivalent test statistic
 #   6. RooStats ToyMC with simultaneous control & main measurement
-
-# It takes ~4 min without PROOF and ~2 min with PROOF on 4 cores.
-# Of course, everything looks nicer with more toys, which takes longer.
-
 
 t = ROOT.TStopwatch()
 t.Start()
@@ -426,9 +421,6 @@ sb_modelXY.SetParametersOfInterest(w.set("poi"))
 w.var("s").setVal(50.0)
 # IMPORTANT
 sb_modelXY.SetSnapshot(w.set("poi"))
-
-# without this print, their can be a crash when using PROOF.  Strange.
-#  w.Print()
 
 # Test statistics like the profile likelihood ratio
 # (or the ratio of profiled likelihoods (Tevatron) or the MLE for s)

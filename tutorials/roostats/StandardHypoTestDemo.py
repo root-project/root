@@ -45,10 +45,9 @@ HypoTestOptions = Struct(
     noSystematics=False,  # ratio Ntoys Null/ntoys ALT
     nToysRatio=4,  # change poi snapshot value for S+B model (needed for expected p0 values)
     poiValue=-1,
-    printLevel=0,  # for binned generation
-    generateBinned=False,  # use Proof
-    useProof=False,  # for detailed output
-    enableDetailedOutput=True,
+    printLevel=0,
+    generateBinned=False,  # for binned generation
+    enableDetailedOutput=True,  # for detailed output
 )
 
 optHT = HypoTestOptions
@@ -72,7 +71,6 @@ def StandardHypoTestDemo(
     poiValue = optHT.poiValue  # change poi snapshot value for S+B model (needed for expected p0 values)
     printLevel = optHT.printLevel
     generateBinned = optHT.generateBinned  # for binned generation
-    useProof = optHT.useProof  # use Proof
     enableDetOutput = optHT.enableDetailedOutput
 
     # Other Parameter to pass in tutorial
@@ -359,11 +357,6 @@ def StandardHypoTestDemo(
 
     if generateBinned:
         sampler.SetGenerateBinned(generateBinned)
-
-    # use PROOF
-    if useProof:
-        pc = ProofConfig(w, 0, "", False)
-        sampler.SetProofConfig(pc)  # enable proof
 
     # set the test statistic
     if testStatType == 0:

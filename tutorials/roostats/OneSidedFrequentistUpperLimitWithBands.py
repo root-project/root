@@ -52,13 +52,6 @@
 # Building the confidence belt can be computationally expensive.  Once it is built,
 # one could save it to a file and use it in a separate step.
 #
-# We can use PROOF to speed things along in parallel, however,
-# the test statistic has to be installed on the workers
-# so either turn off PROOF or include the modified test statistic
-# in your `$ROOTSYS/roofit/roostats/inc` directory,
-# add the additional line to the LinkDef.h file,
-# and recompile root.
-#
 # Note, if you have a boundary on the parameter of interest (eg. cross-section)
 # the threshold on the one-sided test statistic starts off very small because we
 # are only including downward fluctuations.  You can see the threshold in these printouts:
@@ -105,9 +98,6 @@
 # \authors Kyle Cranmer (C++ version), Haichen Wang, Daniel Whiteson, and P. P. (Python translation)
 
 import ROOT
-
-useProof = False  # flag to control whether to use Proof
-nworkers = 0  # number of workers (default use all available cores)
 
 # -------------------------------------------------------
 # The actual macro
@@ -224,16 +214,6 @@ def OneSidedFrequentistUpperLimitWithBands(
             fc.FluctuateNumDataEntries(False)
         else:
             print(f"Not sure what to do about this model")
-
-    # We can use PROOF to speed things along in parallel
-    # However, the test statistic has to be installed on the workers
-    # so either turn off PROOF or include the modified test statistic
-    # in your `$ROOTSYS/roofit/roostats/inc` directory,
-    # add the additional line to the LinkDef.h file,
-    # and recompile root.
-    if useProof:
-        pc = ProofConfig(w, nworkers, "", False)
-        toymcsampler.SetProofConfig(pc)  # enable proof
 
     if mc.GetGlobalObservables():
         print(f"will use global observables for unconditional ensemble")
