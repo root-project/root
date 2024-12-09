@@ -125,7 +125,12 @@ public:
    {
    }
 
-   ~RLazyDS()
+   // Rule of five
+   RLazyDS(const RLazyDS &) = delete;
+   RLazyDS &operator=(const RLazyDS &) = delete;
+   RLazyDS(RLazyDS &&) = delete;
+   RLazyDS &operator=(RLazyDS &&) = delete;
+   ~RLazyDS() final
    {
       for (auto &&ptrHolderv : fPointerHolders) {
          for (auto &&ptrHolder : ptrHolderv) {
