@@ -279,6 +279,15 @@ def _TTree__getattr__(self, key):
         out = cppyy.ll.cast[cast_type](out)
     return out
 
+def _should_give_up_ownership(object):
+    """
+    Ownership of objects which automatically register to a directory should be
+    left to C++, except if the object is gROOT.
+    """
+    import ROOT
+    tdir = object.GetDirectory()
+    return bool(tdir) and tdir is not ROOT.gROOT
+
 def _TTree_CloneTree(self, *args, **kwargs):
     """
     Forward the arguments to the C++ function and give up ownership if the
@@ -287,8 +296,7 @@ def _TTree_CloneTree(self, *args, **kwargs):
     import ROOT
 
     out_tree = self._CloneTree(*args, **kwargs)
-    tdir = out_tree.GetDirectory()
-    if tdir and type(tdir).__cpp_name__ == "TFile":
+    if _should_give_up_ownership(out_tree):
         ROOT.SetOwnership(out_tree, False)
 
     return out_tree
@@ -301,8 +309,14 @@ def _TTree_Constructor(self, *args, **kwargs):
     import ROOT
 
     self._cpp_constructor(*args, **kwargs)
-    tdir = self.GetDirectory()
-    if tdir and type(tdir).__cpp_name__ == "TFile":
+    if _should_give_up_ownership(self):
+        ROOT.SetOwnership(self, False)
+
+def _SetDirectory_SetOwnership_TTree(self, dir):
+    self._Original_SetDirectory_TTree(dir)
+    if dir:
+        # If we are actually registering with a directory, give ownership to C++
+        import ROOT
         ROOT.SetOwnership(self, False)
 
 @pythonization("TTree")
@@ -337,6 +351,9 @@ def pythonize_ttree(klass, name):
     # Branch
     klass._OriginalBranch = klass.Branch
     klass.Branch = _Branch
+
+    klass._Original_SetDirectory_TTree = klass.SetDirectory
+    klass.SetDirectory = _SetDirectory_SetOwnership_TTree
 
 
 @pythonization("TChain")
