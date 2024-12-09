@@ -28,7 +28,6 @@
 #include <string>
 
 class TDirectory;
-class TFile;
 class TFileMergeInfo;
 class TVirtualStreamerInfo;
 
@@ -110,15 +109,13 @@ A stand-alone version of RNTuple can remove the TFile based writer.
 class RNTupleFileWriter {
 private:
    struct RFileProper {
-      /// If fDirectory is set, fFile is equal to fDirectory->GetFile()
-      TFile *fFile = nullptr;
       /// A sub directory in fFile or nullptr if the data is stored in the root directory of the file
       TDirectory *fDirectory = nullptr;
       /// Low-level writing using a TFile
       void Write(const void *buffer, size_t nbytes, std::int64_t offset);
       /// Writes an RBlob opaque key with the provided buffer as data record and returns the offset of the record
       std::uint64_t WriteKey(const void *buffer, size_t nbytes, size_t len);
-      operator bool() const { return fFile; }
+      operator bool() const { return fDirectory; }
    };
 
    struct RFileSimple {
