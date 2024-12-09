@@ -1983,6 +1983,7 @@ void TStyle::SetCandleCrossLineWidth(Int_t CrossLineWidth)
    if (CrossLineWidth<1 || CrossLineWidth>5) {
       Error("SetCandleCrossLineWidth", "illegal line width %d. It must be in the range [1,5]\n", (int)CrossLineWidth);
       fCandleCrossLineWidth = 1;
+      return;
    }
    fCandleCrossLineWidth = CrossLineWidth;
 }
