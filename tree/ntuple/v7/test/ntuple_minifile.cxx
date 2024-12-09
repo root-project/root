@@ -1,6 +1,7 @@
 #include "ntuple_test.hxx"
 #include <TKey.h>
 #include <TTree.h>
+#include <TUUID.h>
 #include <TVector2.h>
 #include <TVector3.h>
 #include <TVirtualStreamerInfo.h>
@@ -726,4 +727,22 @@ TEST(MiniFile, StreamerInfo)
       EXPECT_STREQ("TVector2", vecInfos[1]->GetName());
       EXPECT_STREQ("TVector3", vecInfos[2]->GetName());
    }
+}
+
+TEST(MiniFile, UUID)
+{
+   FileRaii fileGuard("test_ntuple_minifile_uuid.root");
+
+   RNTupleWriteOptions options;
+   auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
+   char header = 'h';
+   char footer = 'f';
+   writer->WriteNTupleHeader(&header, 1, 1);
+   writer->WriteNTupleFooter(&footer, 1, 1);
+   writer->Commit();
+
+   auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+   TUUID uuid;
+   uuid.SetUUID("00000000-0000-0000-0000-000000000000");
+   EXPECT_NE(uuid, f->GetUUID());
 }

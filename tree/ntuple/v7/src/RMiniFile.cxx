@@ -28,11 +28,13 @@
 #include <TFile.h>
 #include <TKey.h>
 #include <TObjString.h>
+#include <TUUID.h>
 #include <TVirtualStreamerInfo.h>
 
 #include <xxhash.h>
 
 #include <algorithm>
+#include <cassert>
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
@@ -512,9 +514,15 @@ struct RTFFile {
 /// A zero UUID stored at the end of the TFile record
 struct RTFUUID {
    RUInt16BE fVersionClass{1};
-   unsigned char fUUID[16] = {0};
+   unsigned char fUUID[16];
 
-   RTFUUID() = default;
+   RTFUUID()
+   {
+      TUUID uuid;
+      char *buffer = reinterpret_cast<char *>(this);
+      uuid.FillBuffer(buffer);
+      assert(reinterpret_cast<RTFUUID *>(buffer) <= (this + 1));
+   }
    std::uint32_t GetSize() const { return sizeof(RTFUUID); }
 };
 
