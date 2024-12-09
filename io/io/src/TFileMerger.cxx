@@ -125,6 +125,15 @@ void TFileMerger::Reset()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Closes output file
+
+void TFileMerger::CloseOutputFile()
+{
+   fOutFileWasExplicitlyClosed = true;
+   SafeDelete(fOutputFile);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Add file to file merger.
 
 Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
@@ -291,6 +300,7 @@ Bool_t TFileMerger::OutputFile(const char *outputfile, Bool_t force)
 {
    Bool_t res = OutputFile(outputfile,(force?"RECREATE":"CREATE"),1); // 1 is the same as the default from the TFile constructor.
    fExplicitCompLevel = kFALSE;
+   fOutFileWasExplicitlyClosed = false;
    return res;
 }
 
@@ -1086,7 +1096,7 @@ Bool_t TFileMerger::OpenExcessFiles()
 
 void TFileMerger::RecursiveRemove(TObject *obj)
 {
-   if (obj == fOutputFile) {
+   if (obj == fOutputFile && !fOutFileWasExplicitlyClosed) {
       Fatal("RecursiveRemove","Output file of the TFile Merger (targeting %s) has been deleted (likely due to a TTree larger than 100Gb)", fOutputFilename.Data());
    }
 
