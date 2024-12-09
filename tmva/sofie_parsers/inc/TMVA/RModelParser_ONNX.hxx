@@ -11,6 +11,7 @@
 namespace onnx {
 class NodeProto;
 class GraphProto;
+class ModelProto;
 } // namespace onnx
 
 namespace TMVA {
@@ -68,8 +69,13 @@ public:
    std::unique_ptr<ROperator> ParseOperator(const size_t /*index*/, const onnx::GraphProto & /*graphproto*/,
                                             const std::vector<size_t> & /*nodes*/);
 
+   // check a graph for missing operators
+   void CheckGraph(const onnx::GraphProto & g, int & level, std::map<std::string, int> & missingOperators);
+
    // parse the ONNX graph
    void ParseONNXGraph(RModel & model, const onnx::GraphProto & g, std::string  name = "");
+
+   std::unique_ptr<onnx::ModelProto> LoadModel(std::string filename);
 
 public:
 
@@ -77,6 +83,8 @@ public:
 
    RModel Parse(std::string filename, bool verbose = false);
 
+   // check the model for missing operators - return false in case some operator implementation is missing
+   bool CheckModel(std::string filename, bool verbose = false);
 
    ~RModelParser_ONNX();
 };
