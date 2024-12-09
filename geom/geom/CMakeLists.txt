@@ -67,6 +67,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
     TVirtualGeoPainter.h
     TVirtualGeoTrack.h
     TVirtualMagField.h
+    Tessellated/TBVH.h
+    Tessellated/TGeoMeshLoading.h
+    Tessellated/TOctant.h
+    Tessellated/TOctree.h
+    Tessellated/TGeoTriangle.h
+    Tessellated/TGeoTriangleMesh.h
+    Tessellated/TPartitioningI.h
   SOURCES
     src/TGDMLMatrix.cxx
     src/TGeoArb8.cxx
@@ -121,6 +128,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
     src/TVirtualGeoPainter.cxx
     src/TVirtualGeoTrack.cxx
     src/TVirtualMagField.cxx
+    src/Tessellated/TBVH.cxx
+    src/Tessellated/TGeoMeshLoading.cxx
+    src/Tessellated/TOctant.cxx
+    src/Tessellated/TOctree.cxx
+    src/Tessellated/TGeoTriangle.cxx
+    src/Tessellated/TGeoTriangleMesh.cxx
   DEPENDENCIES
     Thread
     RIO

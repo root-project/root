@@ -76,8 +76,13 @@
 #pragma link C++ class TGeoPolygon + ;
 #pragma link C++ class TGeoXtru + ;
 #pragma link C++ class ROOT::Geom::Vertex_t + ;
-#pragma link C++ class TGeoFacet + ;
-#pragma link C++ class TGeoTessellated + ;
+#pragma link C++ class TGeoTessellated - ;
+#pragma link C++ class Tessellated::TGeoTriangleMesh - ;
+#pragma link C++ class Tessellated::TGeoTriangle + ;
+#pragma link C++ class Tessellated::TOctree + ;
+#pragma link C++ class Tessellated::TOctant + ;
+#pragma link C++ class Tessellated::TPartitioningI + ;
+#pragma link C++ class Tessellated::TBVH + ;
 #pragma link C++ class TGeoShapeAssembly + ;
 #pragma link C++ class TGeoScaledShape + ;
 #pragma link C++ class TGeoVolume - ;

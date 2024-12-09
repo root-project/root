@@ -35,6 +35,7 @@
 #include "TGeoXtru.h"
 #include "TGeoCompositeShape.h"
 #include "TGeoTessellated.h"
+#include "Tessellated/TGeoMeshLoading.h"
 #include "TGeoPhysicalNode.h"
 
 Bool_t comments = kTRUE;
@@ -1356,7 +1357,8 @@ void tessellated()
    TGeoMedium *med = new TGeoMedium("MED", 1, mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP", med, 10, 10, 10);
    gGeoManager->SetTopVolume(top);
-   TGeoTessellated *tsl = new TGeoTessellated("triaconthaedron", 30);
+   Tessellated::MeshBuilder tslbuilder;
+   TGeoTessellated *tsl = new TGeoTessellated("triaconthaedron");
    const Double_t sqrt5 = TMath::Sqrt(5.);
    std::vector<Tessellated::Vertex_t> vert;
    vert.reserve(120);
@@ -1481,36 +1483,37 @@ void tessellated()
    vert.emplace_back(0, 0.5 * (-1 - sqrt5), 1);
    vert.emplace_back(0.5 * (-1 + sqrt5), 0.5 * (-1 - sqrt5), 0);
 
-   tsl->AddFacet(vert[0], vert[1], vert[2], vert[3]);
-   tsl->AddFacet(vert[4], vert[7], vert[6], vert[5]);
-   tsl->AddFacet(vert[8], vert[9], vert[10], vert[11]);
-   tsl->AddFacet(vert[12], vert[15], vert[14], vert[13]);
-   tsl->AddFacet(vert[16], vert[17], vert[18], vert[19]);
-   tsl->AddFacet(vert[20], vert[21], vert[22], vert[23]);
-   tsl->AddFacet(vert[24], vert[25], vert[26], vert[27]);
-   tsl->AddFacet(vert[28], vert[29], vert[30], vert[31]);
-   tsl->AddFacet(vert[32], vert[35], vert[34], vert[33]);
-   tsl->AddFacet(vert[36], vert[39], vert[38], vert[37]);
-   tsl->AddFacet(vert[40], vert[41], vert[42], vert[43]);
-   tsl->AddFacet(vert[44], vert[45], vert[46], vert[47]);
-   tsl->AddFacet(vert[48], vert[51], vert[50], vert[49]);
-   tsl->AddFacet(vert[52], vert[55], vert[54], vert[53]);
-   tsl->AddFacet(vert[56], vert[57], vert[58], vert[59]);
-   tsl->AddFacet(vert[60], vert[63], vert[62], vert[61]);
-   tsl->AddFacet(vert[64], vert[67], vert[66], vert[65]);
-   tsl->AddFacet(vert[68], vert[71], vert[70], vert[69]);
-   tsl->AddFacet(vert[72], vert[73], vert[74], vert[75]);
-   tsl->AddFacet(vert[76], vert[77], vert[78], vert[79]);
-   tsl->AddFacet(vert[80], vert[81], vert[82], vert[83]);
-   tsl->AddFacet(vert[84], vert[87], vert[86], vert[85]);
-   tsl->AddFacet(vert[88], vert[89], vert[90], vert[91]);
-   tsl->AddFacet(vert[92], vert[93], vert[94], vert[95]);
-   tsl->AddFacet(vert[96], vert[99], vert[98], vert[97]);
-   tsl->AddFacet(vert[100], vert[101], vert[102], vert[103]);
-   tsl->AddFacet(vert[104], vert[107], vert[106], vert[105]);
-   tsl->AddFacet(vert[108], vert[111], vert[110], vert[109]);
-   tsl->AddFacet(vert[112], vert[113], vert[114], vert[115]);
-   tsl->AddFacet(vert[116], vert[117], vert[118], vert[119]);
+   tslbuilder.AddFacet(vert[0], vert[1], vert[2], vert[3]);
+   tslbuilder.AddFacet(vert[4], vert[7], vert[6], vert[5]);
+   tslbuilder.AddFacet(vert[8], vert[9], vert[10], vert[11]);
+   tslbuilder.AddFacet(vert[12], vert[15], vert[14], vert[13]);
+   tslbuilder.AddFacet(vert[16], vert[17], vert[18], vert[19]);
+   tslbuilder.AddFacet(vert[20], vert[21], vert[22], vert[23]);
+   tslbuilder.AddFacet(vert[24], vert[25], vert[26], vert[27]);
+   tslbuilder.AddFacet(vert[28], vert[29], vert[30], vert[31]);
+   tslbuilder.AddFacet(vert[32], vert[35], vert[34], vert[33]);
+   tslbuilder.AddFacet(vert[36], vert[39], vert[38], vert[37]);
+   tslbuilder.AddFacet(vert[40], vert[41], vert[42], vert[43]);
+   tslbuilder.AddFacet(vert[44], vert[45], vert[46], vert[47]);
+   tslbuilder.AddFacet(vert[48], vert[51], vert[50], vert[49]);
+   tslbuilder.AddFacet(vert[52], vert[55], vert[54], vert[53]);
+   tslbuilder.AddFacet(vert[56], vert[57], vert[58], vert[59]);
+   tslbuilder.AddFacet(vert[60], vert[63], vert[62], vert[61]);
+   tslbuilder.AddFacet(vert[64], vert[67], vert[66], vert[65]);
+   tslbuilder.AddFacet(vert[68], vert[71], vert[70], vert[69]);
+   tslbuilder.AddFacet(vert[72], vert[73], vert[74], vert[75]);
+   tslbuilder.AddFacet(vert[76], vert[77], vert[78], vert[79]);
+   tslbuilder.AddFacet(vert[80], vert[81], vert[82], vert[83]);
+   tslbuilder.AddFacet(vert[84], vert[87], vert[86], vert[85]);
+   tslbuilder.AddFacet(vert[88], vert[89], vert[90], vert[91]);
+   tslbuilder.AddFacet(vert[92], vert[93], vert[94], vert[95]);
+   tslbuilder.AddFacet(vert[96], vert[99], vert[98], vert[97]);
+   tslbuilder.AddFacet(vert[100], vert[101], vert[102], vert[103]);
+   tslbuilder.AddFacet(vert[104], vert[107], vert[106], vert[105]);
+   tslbuilder.AddFacet(vert[108], vert[111], vert[110], vert[109]);
+   tslbuilder.AddFacet(vert[112], vert[113], vert[114], vert[115]);
+   tslbuilder.AddFacet(vert[116], vert[117], vert[118], vert[119]);
+   tsl->SetMesh(tslbuilder.CreateMesh());
 
    TGeoVolume *vol = new TGeoVolume("TRIACONTHAEDRON", tsl, med);
    vol->SetLineColor(randomColor());

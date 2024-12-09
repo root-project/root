@@ -13,6 +13,7 @@
 #include <TRandom3.h>
 #include <TGeoManager.h>
 #include <TGeoTessellated.h>
+#include <Tessellated/TGeoTriangleMesh.h>
 
 //______________________________________________________________________________
 int randomColor()
@@ -47,10 +48,20 @@ void visualizeWavefrontObj(const char *dot_obj_file = "", bool check = false)
    TGeoVolume *top = gGeoManager->MakeBox("TOP", med, 10, 10, 10);
    gGeoManager->SetTopVolume(top);
 
-   auto tsl = TGeoTessellated::ImportFromObjFormat(sfile.Data(), check);
-   if (!tsl)
+   auto mesh = Tessellated::ImportMeshFromObjFormat(sfile.Data(), Tessellated::TGeoTriangleMesh::LengthUnit::kCentiMeter);
+   if (!mesh) {
       return;
-   tsl->ResizeCenter(5.);
+   }
+   if (check) {
+      bool fixTriangleOrientation = true;
+      bool verbose = false;
+      mesh->CheckClosure(fixTriangleOrientation, verbose);
+   }
+   mesh->ResizeCenter(5.);
+
+   auto tsl = new TGeoTessellated(); 
+   tsl->SetMesh(std::move(mesh));
+
 
    TGeoVolume *vol = new TGeoVolume(name, tsl, med);
    vol->SetLineColor(randomColor());

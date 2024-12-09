@@ -1041,14 +1041,7 @@ int RGeomDescription::CountShapeFaces(TGeoShape *shape)
       return radiusSegments * (heightSegments + 1) * ((hype->GetRmin() > 0.) ? 4 : 2);
    } else if (shape->IsA() == TGeoTessellated::Class()) {
       auto tess = (TGeoTessellated *)shape;
-      int numfaces = 0;
-      for (int i = 0; i < tess->GetNfacets(); ++i) {
-         if (tess->GetFacet(i).GetNvert() == 4)
-            numfaces += 2;
-         else
-            numfaces += 1;
-      }
-      return numfaces;
+      return tess->GetTriangleMesh()->GetNumberOfTriangles();
    } else if (shape->IsA() == TGeoScaledShape::Class()) {
       auto scaled = (TGeoScaledShape *)shape;
       return CountShapeFaces(scaled->GetShape());

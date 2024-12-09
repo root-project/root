@@ -1,7 +1,8 @@
 // @(#)root/geom:$Id$// Author: Andrei Gheata   24/10/01
 
 // Contains() and DistFromOutside/Out() implemented by Mihaela Gheata
-
+// navigation functionality implemented by Ben Salisbury
+// DOI: 10.1051/epjconf/202533701022
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -13,693 +14,680 @@
 /** \class TGeoTessellated
 \ingroup Geometry_classes
 
-Tessellated solid class. It is composed by a set of planar faces having triangular or
-quadrilateral shape. The class does not provide navigation functionality, it just wraps the data
-for the composing faces.
+Tessellated solid class. It is composed by a set of planar faces having triangular
+shape. Uses ray-casting methods to compute navigation functionality (analog to 
+G4TessellatedSolid). 
+As the processing for the navigation functionality scales with the number of
+triangle faces, a partitioning structure such as the Tessellated::TOctree or the
+Tessellated::TBVH structures may be used to speed up processing. The benefits are not
+guaranteed. Indeed, they may come with significant processing overhead for simple (low 
+triangle count) shapes.
+
+
 */
 
-#include <iostream>
-#include <sstream>
-
-#include "TGeoManager.h"
-#include "TGeoMatrix.h"
-#include "TGeoVolume.h"
-#include "TVirtualGeoPainter.h"
 #include "TGeoTessellated.h"
-#include "TBuffer3D.h"
-#include "TBuffer3DTypes.h"
-#include "TMath.h"
 
-#include <array>
-#include <vector>
+#include <cmath>    // for sqrt, abs
+#include <iostream> // for operator<<, basic_ostream, basic_ostream...
+#include <limits>   // for numeric_limits
+#include <numeric>  // for iota, accumulate
+#include <utility>  // for move
 
+#include "TBuffer.h"        // for TBuffer
+#include "TBuffer3D.h"      // for TBuffer3D, TBuffer3D::kRaw, TBuffer3D::k...
+#include "TBuffer3DTypes.h" // for TBuffer3DTypes, TBuffer3DTypes::kGeneric
+#include "TClass.h"         // for TClass
+#include "TGeoShape.h"      // for TGeoShape
+#include "TString.h"        // for operator<<
+#include "Tessellated/TGeoTriangle.h"      // for TGeoTriangle::TriangleIntersection_t, TTria...
+#include "TVector3.h"       // for TVector3, operator*, operator+
 
-using Vertex_t = Tessellated::Vertex_t;
+class TGeoMatrix;
+///////////////////////////////////////////////////////////////////////////////
+ClassImp(TGeoTessellated);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compact consecutive equal vertices
+/// default constructor
 
-int TGeoFacet::CompactFacet(Vertex_t *vert, int nvertices)
+TGeoTessellated::TGeoTessellated() : TGeoBBox(), fMesh(nullptr), fPartitioningStruct(nullptr)
 {
-   // Compact the common vertices and return new facet
-   if (nvertices < 2)
-      return nvertices;
-   int nvert = nvertices;
-   int i = 0;
-   while (i < nvert) {
-      if (vert[(i + 1) % nvert] == vert[i]) {
-         // shift last vertices left by one element
-         for (int j = i + 2; j < nvert; ++j)
-            vert[j - 1] = vert[j];
-         nvert--;
-      }
-      i++;
-   }
-   return nvert;
+   fTimer.Stop();
+   fTimer.Reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if a connected neighbour facet has compatible normal
+/// default constructor
 
-bool TGeoFacet::IsNeighbour(const TGeoFacet &other, bool &flip) const
+TGeoTessellated::TGeoTessellated(const char *name) : TGeoBBox(name, 0,0,0), fMesh(nullptr), fPartitioningStruct(nullptr)
 {
-
-   // Find a connecting segment
-   bool neighbour = false;
-   int line1[2], line2[2];
-   int npoints = 0;
-   for (int i = 0; i < fNvert; ++i) {
-      auto ivert = fIvert[i];
-      // Check if the other facet has the same vertex
-      for (int j = 0; j < other.GetNvert(); ++j) {
-         if (ivert == other[j]) {
-            line1[npoints] = i;
-            line2[npoints] = j;
-            if (++npoints == 2) {
-               neighbour = true;
-               bool order1 = line1[1] == line1[0] + 1;
-               bool order2 = line2[1] == (line2[0] + 1) % other.GetNvert();
-               flip = (order1 == order2);
-               return neighbour;
-            }
-         }
-      }
-   }
-   return neighbour;
+   fTimer.Stop();
+   fTimer.Reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor. In case nfacets is zero, it is user's responsibility to
-/// call CloseShape once all faces are defined.
+/// destructor
 
-TGeoTessellated::TGeoTessellated(const char *name, int nfacets) : TGeoBBox(name, 0, 0, 0)
+TGeoTessellated::~TGeoTessellated()
 {
-   fNfacets = nfacets;
-   if (nfacets)
-      fFacets.reserve(nfacets);
+   std::cout << "TGeoTessellated " << fMesh->GetMeshFile() << " took Real time " << fTimer.RealTime() << " s, CPU time "
+             << fTimer.CpuTime() << "s" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor providing directly the array of vertices. Facets have to be added
-/// providing vertex indices rather than coordinates.
+/// Set the mesh by passing ownership of mesh to TGeoTessellated
 
-TGeoTessellated::TGeoTessellated(const char *name, const std::vector<Vertex_t> &vertices) : TGeoBBox(name, 0, 0, 0)
+void TGeoTessellated::SetMesh(std::unique_ptr<TGeoTriangleMesh> mesh)
 {
-   fVertices = vertices;
-   fNvert = fVertices.size();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add a vertex checking for duplicates, returning the vertex index
-
-int TGeoTessellated::AddVertex(Vertex_t const &vert)
-{
-   constexpr double tolerance = 1.e-10;
-   auto vertexHash = [&](Vertex_t const &vertex) {
-      // Compute hash for the vertex
-      long hash = 0;
-      // helper function to generate hash from integer numbers
-      auto hash_combine = [](long seed, const long value) {
-         return seed ^ (std::hash<long>{}(value) + 0x9e3779b9 + (seed << 6) + (seed >> 2));
-      };
-      for (int i = 0; i < 3; i++) {
-         // use tolerance to generate int with the desired precision from a real number for hashing
-         hash = hash_combine(hash, std::roundl(vertex[i] / tolerance));
-      }
-      return hash;
-   };
-
-   auto hash = vertexHash(vert);
-   bool isAdded = false;
-   int ivert = -1;
-   // Get the compatible vertices
-   auto range = fVerticesMap.equal_range(hash);
-   for (auto it = range.first; it != range.second; ++it) {
-      ivert = it->second;
-      if (fVertices[ivert] == vert) {
-         isAdded = true;
-         break;
-      }
-   }
-   if (!isAdded) {
-      ivert = fVertices.size();
-      fVertices.push_back(vert);
-      fVerticesMap.insert(std::make_pair(hash, ivert));
-   }
-   return ivert;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Adding a triangular facet from vertex positions in absolute coordinates
-
-bool TGeoTessellated::AddFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2)
-{
-   if (fDefined) {
-      Error("AddFacet", "Shape %s already fully defined. Not adding", GetName());
-      return false;
-   }
-
-   Vertex_t vert[3];
-   vert[0] = pt0;
-   vert[1] = pt1;
-   vert[2] = pt2;
-   int nvert = TGeoFacet::CompactFacet(vert, 3);
-   if (nvert < 3) {
-      Error("AddFacet", "Triangular facet at index %d degenerated. Not adding.", GetNfacets());
-      return false;
-   }
-   int ind[3];
-   for (auto i = 0; i < 3; ++i)
-      ind[i] = AddVertex(vert[i]);
-   fNseg += 3;
-   fFacets.emplace_back(ind[0], ind[1], ind[2]);
-
-   if (fNfacets > 0 && GetNfacets() == fNfacets)
-      CloseShape();
-   return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Adding a triangular facet from indices of vertices
-
-bool TGeoTessellated::AddFacet(int i0, int i1, int i2)
-{
-   if (fDefined) {
-      Error("AddFacet", "Shape %s already fully defined. Not adding", GetName());
-      return false;
-   }
-   if (fVertices.empty()) {
-      Error("AddFacet", "Shape %s Cannot add facets by indices without vertices. Not adding", GetName());
-      return false;
-   }
-
-   fNseg += 3;
-   fFacets.emplace_back(i0, i1, i2);
-   return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Adding a quadrilateral facet from vertex positions in absolute coordinates
-
-bool TGeoTessellated::AddFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2, const Vertex_t &pt3)
-{
-   if (fDefined) {
-      Error("AddFacet", "Shape %s already fully defined. Not adding", GetName());
-      return false;
-   }
-   Vertex_t vert[4];
-   vert[0] = pt0;
-   vert[1] = pt1;
-   vert[2] = pt2;
-   vert[3] = pt3;
-   int nvert = TGeoFacet::CompactFacet(vert, 4);
-   if (nvert < 3) {
-      Error("AddFacet", "Quadrilateral facet at index %d degenerated. Not adding.", GetNfacets());
-      return false;
-   }
-
-   int ind[4];
-   for (auto i = 0; i < nvert; ++i)
-      ind[i] = AddVertex(vert[i]);
-   fNseg += nvert;
-   if (nvert == 3)
-      fFacets.emplace_back(ind[0], ind[1], ind[2]);
-   else
-      fFacets.emplace_back(ind[0], ind[1], ind[2], ind[3]);
-
-   if (fNfacets > 0 && GetNfacets() == fNfacets)
-      CloseShape(false);
-   return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Adding a quadrilateral facet from indices of vertices
-
-bool TGeoTessellated::AddFacet(int i0, int i1, int i2, int i3)
-{
-   if (fDefined) {
-      Error("AddFacet", "Shape %s already fully defined. Not adding", GetName());
-      return false;
-   }
-   if (fVertices.empty()) {
-      Error("AddFacet", "Shape %s Cannot add facets by indices without vertices. Not adding", GetName());
-      return false;
-   }
-
-   fNseg += 4;
-   fFacets.emplace_back(i0, i1, i2, i3);
-   return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Compute normal for a given facet
-
-Vertex_t TGeoTessellated::FacetComputeNormal(int ifacet, bool &degenerated) const
-{
-   // Compute normal using non-zero segments
-   constexpr double kTolerance = 1.e-20;
-   auto const &facet = fFacets[ifacet];
-   int nvert = facet.GetNvert();
-   degenerated = true;
-   Vertex_t normal;
-   for (int i = 0; i < nvert - 1; ++i) {
-      Vertex_t e1 = fVertices[facet[i + 1]] - fVertices[facet[i]];
-      if (e1.Mag2() < kTolerance)
-         continue;
-      for (int j = i + 1; j < nvert; ++j) {
-         Vertex_t e2 = fVertices[facet[(j + 1) % nvert]] - fVertices[facet[j]];
-         if (e2.Mag2() < kTolerance)
-            continue;
-         normal = Vertex_t::Cross(e1, e2);
-         // e1 and e2 may be colinear
-         if (normal.Mag2() < kTolerance)
-            continue;
-         normal.Normalize();
-         degenerated = false;
-         break;
-      }
-      if (!degenerated)
-         break;
-   }
-   return normal;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check validity of facet
-
-bool TGeoTessellated::FacetCheck(int ifacet) const
-{
-   constexpr double kTolerance = 1.e-10;
-   auto const &facet = fFacets[ifacet];
-   int nvert = facet.GetNvert();
-   bool degenerated = true;
-   FacetComputeNormal(ifacet, degenerated);
-   if (degenerated) {
-      std::cout << "Facet: " << ifacet << " is degenerated\n";
-      return false;
-   }
-
-   // Compute surface area
-   double surfaceArea = 0.;
-   for (int i = 1; i < nvert - 1; ++i) {
-      Vertex_t e1 = fVertices[facet[i]] - fVertices[facet[0]];
-      Vertex_t e2 = fVertices[facet[i + 1]] - fVertices[facet[0]];
-      surfaceArea += 0.5 * Vertex_t::Cross(e1, e2).Mag();
-   }
-   if (surfaceArea < kTolerance) {
-      std::cout << "Facet: " << ifacet << " has zero surface area\n";
-      return false;
-   }
-
-   return true;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Close the shape: calculate bounding box and compact vertices
-
-void TGeoTessellated::CloseShape(bool check, bool fixFlipped, bool verbose)
-{
-   // Compute bounding box
-   fDefined = true;
-   fNvert = fVertices.size();
-   fNfacets = fFacets.size();
+   // fTimer.Start(kFALSE);
+   fMesh = std::move(mesh);
+   fUsedTriangles.resize(fMesh->Triangles().size());
+   std::iota(fUsedTriangles.begin(), fUsedTriangles.end(), 0);
    ComputeBBox();
-   // Cleanup the vertex map
-   std::multimap<long, int>().swap(fVerticesMap);
 
-   if (fVertices.size() > 0) {
-      if (!check)
-         return;
-
-      // Check facets
-      for (auto i = 0; i < fNfacets; ++i)
-         FacetCheck(i);
-
-      fClosedBody = CheckClosure(fixFlipped, verbose);
-   }
+   // fTimer.Stop();
+   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check closure of the solid and check/fix flipped normals
+/// Does the geometry contain the point represented with
+/// \param[in] pointa
+/// \return Bool_t
 
-bool TGeoTessellated::CheckClosure(bool fixFlipped, bool verbose)
+bool TGeoTessellated::Contains(const Double_t *pointa) const
 {
-   int *nn = new int[fNfacets];
-   bool *flipped = new bool[fNfacets];
-   bool hasorphans = false;
-   bool hasflipped = false;
-   for (int i = 0; i < fNfacets; ++i) {
-      nn[i] = 0;
-      flipped[i] = false;
+   fTimer.Start(kFALSE);
+   if (!TGeoBBox::Contains(pointa)) {
+      fTimer.Stop();
+      return false;
    }
 
-   for (int icrt = 0; icrt < fNfacets; ++icrt) {
-      // all neighbours checked?
-      if (nn[icrt] >= fFacets[icrt].GetNvert())
-         continue;
-      for (int i = icrt + 1; i < fNfacets; ++i) {
-         bool isneighbour = fFacets[icrt].IsNeighbour(fFacets[i], flipped[i]);
-         if (isneighbour) {
-            if (flipped[icrt])
-               flipped[i] = !flipped[i];
-            if (flipped[i])
-               hasflipped = true;
-            nn[icrt]++;
-            nn[i]++;
-            if (nn[icrt] == fFacets[icrt].GetNvert())
-               break;
-         }
-      }
-      if (nn[icrt] < fFacets[icrt].GetNvert())
-         hasorphans = true;
+   TVector3 point(pointa);
+
+   if (fPartitioningStruct != nullptr) {
+      bool result = fPartitioningStruct->IsPointContained(point);
+      fTimer.Stop();
+      return result;
    }
 
-   if (hasorphans && verbose) {
-      Error("Check", "Tessellated solid %s has following not fully connected facets:", GetName());
-      for (int icrt = 0; icrt < fNfacets; ++icrt) {
-         if (nn[icrt] < fFacets[icrt].GetNvert())
-            std::cout << icrt << " (" << fFacets[icrt].GetNvert() << " edges, " << nn[icrt] << " neighbours)\n";
-      }
-   }
-   fClosedBody = !hasorphans;
-   int nfixed = 0;
-   if (hasflipped) {
-      if (verbose)
-         Warning("Check", "Tessellated solid %s has following facets with flipped normals:", GetName());
-      for (int icrt = 0; icrt < fNfacets; ++icrt) {
-         if (flipped[icrt]) {
-            if (verbose)
-               std::cout << icrt << "\n";
-            if (fixFlipped) {
-               fFacets[icrt].Flip();
-               nfixed++;
-            }
-         }
-      }
-      if (nfixed && verbose)
-         Info("Check", "Automatically flipped %d facets to match first defined facet", nfixed);
-   }
-   delete[] nn;
-   delete[] flipped;
+   TVector3 dir{0.0, 0.0, 1.0};
+   std::vector<TGeoTriangleMesh::IntersectedTriangle_t> indir{};
+   std::vector<TGeoTriangleMesh::IntersectedTriangle_t> oppdir{};
+   fMesh->FindClosestIntersectedTriangles(point, dir, fUsedTriangles, indir, oppdir);
 
-   return !hasorphans;
+   if (indir.empty() || oppdir.empty()) {
+      if ((!indir.empty() && indir[0].fIntersection.fDistance < TGeoShape::Tolerance() * 10) ||
+          (!oppdir.empty() && oppdir[0].fIntersection.fDistance < TGeoShape::Tolerance() * 10)) {
+         fTimer.Stop();
+         return true;
+      }
+      fTimer.Stop();
+      return false;
+   }
+
+   if (indir[0].fIntersection.fDirDotNormal > 0 && oppdir[0].fIntersection.fDirDotNormal < 0) {
+      fTimer.Stop();
+      return true;
+   }
+
+   fTimer.Stop();
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute bounding box
+/// Distance from point pointa to geometry surface in direction dira from the inside
+///
+/// \param[in] pointa
+/// \param[in] dira
+/// \param[in] iact
+/// \param[in] step
+/// \param[out] safe
+/// \return Double_t
+///
 
-void TGeoTessellated::ComputeBBox()
+Double_t
+TGeoTessellated::DistFromInside(const Double_t *pointa, const Double_t *dira, Int_t iact, Double_t step, Double_t *safe) const
 {
-   const double kBig = TGeoShape::Big();
-   double vmin[3] = {kBig, kBig, kBig};
-   double vmax[3] = {-kBig, -kBig, -kBig};
-   for (const auto &facet : fFacets) {
-      for (int i = 0; i < facet.GetNvert(); ++i) {
-         for (int j = 0; j < 3; ++j) {
-            vmin[j] = TMath::Min(vmin[j], fVertices[facet[i]].operator[](j));
-            vmax[j] = TMath::Max(vmax[j], fVertices[facet[i]].operator[](j));
-         }
+   fTimer.Start(kFALSE);
+   if (safe != nullptr) {
+      *safe = TGeoShape::Big();
+
+      if (iact < 3) {
+         *safe = Safety(pointa, true);
+      }
+      if (iact == 0) {
+         fTimer.Stop();
+         return TGeoShape::Big();
+      }
+      if (iact == 1 && step < *safe) {
+         fTimer.Stop();
+         return step; // TGeoShape::Big(); // if one reads the description returning Big is wrong
       }
    }
-   fDX = 0.5 * (vmax[0] - vmin[0]);
-   fDY = 0.5 * (vmax[1] - vmin[1]);
-   fDZ = 0.5 * (vmax[2] - vmin[2]);
-   for (int i = 0; i < 3; ++i)
-      fOrigin[i] = 0.5 * (vmax[i] + vmin[i]);
-}
 
-////////////////////////////////////////////////////////////////////////////////
-/// Returns numbers of vertices, segments and polygons composing the shape mesh.
+   TVector3 point(pointa);
+   TVector3 dir{dira};
 
-void TGeoTessellated::GetMeshNumbers(int &nvert, int &nsegs, int &npols) const
-{
-   nvert = fNvert;
-   nsegs = fNseg;
-   npols = GetNfacets();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Creates a TBuffer3D describing *this* shape.
-/// Coordinates are in local reference frame.
-
-TBuffer3D *TGeoTessellated::MakeBuffer3D() const
-{
-   const int nvert = fNvert;
-   const int nsegs = fNseg;
-   const int npols = GetNfacets();
-   auto buff = new TBuffer3D(TBuffer3DTypes::kGeneric, nvert, 3 * nvert, nsegs, 3 * nsegs, npols, 6 * npols);
-   if (buff) {
-      SetPoints(buff->fPnts);
-      SetSegsAndPols(*buff);
+   if (fPartitioningStruct != nullptr) {
+      auto result = fPartitioningStruct->DistanceInDirection(point, dir, true);
+      fTimer.Stop();
+      return result;
    }
-   return buff;
-}
 
-////////////////////////////////////////////////////////////////////////////////
-/// Prints basic info
+   std::vector<TGeoTriangleMesh::IntersectedTriangle_t> indir{};
+   std::vector<TGeoTriangleMesh::IntersectedTriangle_t> oppdir{};
+   fMesh->FindClosestIntersectedTriangles(point, dir, fUsedTriangles, indir, oppdir);
+   size_t size = indir.size();
+   size_t counter = 0;
 
-void TGeoTessellated::Print(Option_t *) const
-{
-   std::cout << "=== Tessellated shape " << GetName() << " having " << GetNvertices() << " vertices and "
-             << GetNfacets() << " facets\n";
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Fills TBuffer3D structure for segments and polygons.
-
-void TGeoTessellated::SetSegsAndPols(TBuffer3D &buff) const
-{
-   const int c = GetBasicColor();
-   int *segs = buff.fSegs;
-   int *pols = buff.fPols;
-
-   int indseg = 0; // segment internal data index
-   int indpol = 0; // polygon internal data index
-   int sind = 0;   // segment index
-   for (const auto &facet : fFacets) {
-      auto nvert = facet.GetNvert();
-      pols[indpol++] = c;
-      pols[indpol++] = nvert;
-      for (auto j = 0; j < nvert; ++j) {
-         int k = (j + 1) % nvert;
-         // segment made by next consecutive points
-         segs[indseg++] = c;
-         segs[indseg++] = facet[j];
-         segs[indseg++] = facet[k];
-         // add segment to current polygon and increment segment index
-         pols[indpol + nvert - j - 1] = sind++;
+   while (counter < size) {
+      if (indir[counter].fIntersection.fDirDotNormal < 0) {
+         ++counter;
+      } else {
+         fTimer.Stop();
+         return indir[counter].fIntersection.fDistance;
       }
-      indpol += nvert;
    }
+   if ((!oppdir.empty() && oppdir[0].fIntersection.fDirDotNormal > 0) || (oppdir.empty() && indir.empty())) {
+      fTimer.Stop();
+      return 0;
+   }
+
+   std::cerr
+      << "TGeoTessellated::DistFromInside((" << pointa[0] << "," << pointa[1] << ", " << pointa[2] << "),"
+      << "(" << dira[0] << "," << dira[1] << ", " << dira[2] << "),...) found " << indir.size()
+      << " triangles in direction, or all triangles are parallel to direction (even though we are in the geometry)"
+      << " -> We must be hitting the edge of two triangles. We reshoot from a slightly moved point" << std::endl;
+   TVector3 orthogonal = dir.Orthogonal();
+   orthogonal.SetMag(1e-6);
+   Double_t npointa[3] = {point.X() - orthogonal.X(), point.Y() - orthogonal.Y(), point.Z() - orthogonal.Z()};
+   fTimer.Stop();
+   return DistFromInside(npointa, dira, iact, step, safe);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill tessellated points to an array.
+/// Distance from point pointa to geometry surface in direction dira from the outside
+///
+/// \param[in] pointa
+/// \param[in] dira
+/// \param[in] iact
+/// \param[in] step
+/// \param[out] safe
+/// \return Double_t
+///
 
-void TGeoTessellated::SetPoints(double *points) const
+Double_t
+TGeoTessellated::DistFromOutside(const Double_t *pointa, const Double_t *dira, Int_t iact, Double_t step, Double_t *safe) const
 {
-   int ind = 0;
-   for (const auto &vertex : fVertices) {
-      vertex.CopyTo(&points[ind]);
-      ind += 3;
+   fTimer.Start(kFALSE);
+   if (safe != nullptr) {
+      *safe = TGeoShape::Big();
+
+      if (iact < 3) {
+         *safe = Safety(pointa, false);
+      }
+      if (iact == 0) {
+         fTimer.Stop();
+         return TGeoShape::Big();
+      }
+      if (iact == 1 && step < *safe) {
+         fTimer.Stop();
+         return  TGeoShape::Big(); // might be misinterpreting the description, but returning Big seems wrong, should be step
+      }
    }
+
+   TVector3 point(pointa);
+   TVector3 dir{dira};
+   dir.SetMag(1);
+
+   if (fPartitioningStruct != nullptr) {
+      auto result = fPartitioningStruct->DistanceInDirection(point, dir, false);
+      fTimer.Stop();
+      return result;
+   }
+   
+   TVector3 tmpoffset = dir*-1;
+   tmpoffset.SetMag(2*TGeoShape::Tolerance());
+   TVector3 newpoint = point+tmpoffset;
+   std::vector<TGeoTriangleMesh::IntersectedTriangle_t> indir{};
+   std::vector<TGeoTriangleMesh::IntersectedTriangle_t> oppdir{};
+   fMesh->FindClosestIntersectedTriangles(newpoint, dir, fUsedTriangles, indir, oppdir);
+   size_t size = indir.size();
+   size_t counter = 0;
+
+   while (counter < size) {
+      if (indir[counter].fIntersection.fDirDotNormal <= TGeoShape::Tolerance()) {
+         fTimer.Stop();
+         return indir[counter].fIntersection.fDistance-2*TGeoShape::Tolerance();
+      } else {
+         ++counter;
+      }
+   }
+
+   if (size > 0 && oppdir.empty()) {
+      std::cerr << "TGeoTessellated::DistFromOutside((" << pointa[0] << "," << pointa[1] << ", " << pointa[2] << "), ("
+                << dira[0] << "," << dira[1] << ", " << dira[2] << "),...) found " << indir.size()
+                << " triangles in direction, but all facing towards direction -> We must be hitting the edge of two "
+                   "triangles. We reshoot from a slightly moved point"
+                << std::endl;
+      TVector3 orthogonal = dir.Orthogonal();
+      orthogonal.SetMag(1e-6);
+      Double_t npointa[3] = {point.X() - orthogonal.X(), point.Y() - orthogonal.Y(), point.Z() - orthogonal.Z()};
+      fTimer.Stop();
+      return DistFromOutside(npointa, dira, iact, step, safe);
+   }
+   fTimer.Stop();
+      
+   return TGeoShape::Big();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill tessellated points in float.
+/// Calculate the shortest distance from point pointa to the surface of the geometry
+///
+/// \param[in] pointa
+/// \param[in] inside
+/// \return Double_t
+///
 
-void TGeoTessellated::SetPoints(Float_t *points) const
+Double_t TGeoTessellated::Safety(const Double_t *pointa, bool inside) const
 {
-   int ind = 0;
-   for (const auto &vertex : fVertices) {
-      points[ind++] = vertex.x();
-      points[ind++] = vertex.y();
-      points[ind++] = vertex.z();
+   fTimer.Start(kFALSE);
+   if (inside == false && TGeoBBox::Contains(pointa) == false) {
+      Double_t result = TGeoBBox::Safety(pointa, inside);
+      fTimer.Stop();
+      return result;
+   }
+
+   if (fPartitioningStruct != nullptr) {
+      Double_t result = fPartitioningStruct->GetSafetyDistance(TVector3{pointa});
+      fTimer.Stop();
+      return result;
+   }
+   Double_t result = fMesh->FindClosestTriangleInMesh(TVector3{pointa}, fUsedTriangles).fClosestPointInfo.fDistance;
+   fTimer.Stop();
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the normal of the surface closest to point pointa
+///
+/// \param[in] pointa
+/// \param[in] dira
+/// \param[out] norm
+///
+/// ComputeNormal can return different results when using partitioning structures
+/// and when not, or different partitioning structures. Reason is, that for
+/// points where the closest point lies on the edge of two triangles, the chosen
+/// triangle can differ and with it the found normal.
+
+void TGeoTessellated::ComputeNormal(const Double_t *pointa, const Double_t *dira, Double_t *norm) const
+{
+
+   fTimer.Start(kFALSE);
+   TVector3 point(pointa);
+   TVector3 dir{dira};
+
+   TVector3 trianglenormal{0, 0, 0};
+
+   if (fPartitioningStruct != nullptr) {
+      TGeoTriangleMesh::ClosestTriangle_t closesTGeoTriangle = fPartitioningStruct->GetClosestTriangle(point);
+      trianglenormal = closesTGeoTriangle.fTriangle->Normal();
+   } else {
+      TGeoTriangleMesh::ClosestTriangle_t closesTGeoTriangle = fMesh->FindClosestTriangleInMesh(point, fUsedTriangles);
+      trianglenormal = closesTGeoTriangle.fTriangle->Normal();
+   }
+   norm[0] = trianglenormal[0];
+   norm[1] = trianglenormal[1];
+   norm[2] = trianglenormal[2];
+
+   Double_t ndotd = norm[0] * dir[0] + norm[1] * dir[1] + norm[2] * dir[2];
+   if (ndotd < 0.0) {
+      norm[0] = -norm[0];
+      norm[1] = -norm[1];
+      norm[2] = -norm[2];
+   }
+   fTimer.Stop();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the volume of the geometry
+///
+/// \return Double_t
+///
+
+Double_t TGeoTessellated::Capacity() const
+{
+   auto triangles = fMesh->Triangles();
+   auto capacity =
+      std::accumulate(triangles.begin(), triangles.end(), 0.0, [](Double_t acapacity, const TGeoTriangle &triangle) {
+         return acapacity + (triangle.Center().Dot(triangle.Normal()) * triangle.Area());
+      });
+
+   return (std::abs(capacity) / 3.0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TODO: Purpose of function unclear, returning nullptr
+///
+/// \param shape
+/// \param matrix
+/// \return TGeoShape*
+///
+
+TGeoShape *TGeoTessellated::GetMakeRuntimeShape(TGeoShape * /*shape*/, TGeoMatrix * /*matrix*/) const
+{
+   return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TODO: Purpose of function unclear, returning false
+///
+/// @return Bool_t
+///
+
+Bool_t TGeoTessellated::IsCylType() const
+{
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TODO: Purpose of function unclear, returning TGeoBBox::IsValidBox()
+/// Return whether the bounding box is a valid box, as a mesh in general is
+/// not a box
+///
+
+Bool_t TGeoTessellated::IsValidBox() const
+{
+   return TGeoBBox::IsValidBox();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Compute bounding cylinder containing the geometry
+///
+/// \param[out] param 0. inner cylinder radius, 1. outer cylinder radius
+///                   2. phi start, 3. phi end
+///
+
+void TGeoTessellated::GetBoundingCylinder(Double_t *param) const
+{
+   // fTimer.Start(kFALSE);
+   param[0] = 0.;
+   param[1] = sqrt(fDX * fDX + fDY * fDY + fDZ * fDZ);
+   param[2] = 0.;
+   param[3] = 360.;
+   // fTimer.Stop();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Size of TGeoTessellated instance in bytes
+/// \return Int_t
+///
+
+Int_t TGeoTessellated::GetByteCount() const
+{
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TODO: Purpose of function unclear, returning false
+/// \param intl
+/// \param list
+/// \return Bool_t
+///
+
+Bool_t TGeoTessellated::GetPointsOnSegments(Int_t /*intl*/, Double_t * /*list*/) const
+{
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print information about object
+///
+
+void TGeoTessellated::InspectShape() const
+{
+   std::cout << " TGeoTessellated " << GetName() << " read from " << fMesh->GetMeshFile()
+             << " ; NTriangles = " << fMesh->Triangles().size() << " and using " << fUsedTriangles.size()
+             << " Triangles\n"
+             << " bounding box: X(" << -fDX << "," << fDX << "), Y(" << -fDY << "," << fDY << "), Z(" << -fDZ << ","
+             << fDZ << ")";
+
+   std::cout << ", Origin is: (";
+   for (auto value : fOrigin) {
+      std::cout << value << " ";
+   }
+   std::cout << ")\n";
+
+   if (fPartitioningStruct) {
+      std::cout << "Partitioning structure exists." << std::endl;
+      fPartitioningStruct->Print();
+   } else {
+      std::cout << "No partitioning structure exists." << std::endl;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Resize the shape by scaling vertices within maxsize and center to origin
 
-void TGeoTessellated::ResizeCenter(double maxsize)
+void TGeoTessellated::ResizeCenter(Double_t maxsize)
 {
-   using Vector3_t = Vertex_t;
-
-   if (!fDefined) {
-      Error("ResizeCenter", "Not all faces are defined");
-      return;
-   }
-   Vector3_t origin(fOrigin[0], fOrigin[1], fOrigin[2]);
-   double maxedge = TMath::Max(TMath::Max(fDX, fDY), fDZ);
-   double scale = maxsize / maxedge;
-   for (size_t i = 0; i < fVertices.size(); ++i) {
-      fVertices[i] = scale * (fVertices[i] - origin);
-   }
-   fOrigin[0] = fOrigin[1] = fOrigin[2] = 0;
-   fDX *= scale;
-   fDY *= scale;
-   fDZ *= scale;
+   fMesh->ResizeCenter(maxsize);
+   ComputeBBox();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fills a static 3D buffer and returns a reference.
+/// Compute bounding box containing the full geometry
+///
 
-const TBuffer3D &TGeoTessellated::GetBuffer3D(int reqSections, Bool_t localFrame) const
+void TGeoTessellated::ComputeBBox()
 {
-   static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
+   Double_t min_val = -std::numeric_limits<double>::max();
+   Double_t max_val = std::numeric_limits<double>::max();
+   TVector3 min{max_val, max_val, max_val};
+   TVector3 max{min_val, min_val, min_val};
+   TVector3 mid;
+   fMesh->ExtremaOfMeshHull(min, max);
 
-   FillBuffer3D(buffer, reqSections, localFrame);
+   mid = ((min + max) * (1.0 / 2.0));
+   fOrigin[0] = mid.X();
+   fOrigin[1] = mid.Y();
+   fOrigin[2] = mid.Z();
 
-   const int nvert = fNvert;
-   const int nsegs = fNseg;
-   const int npols = GetNfacets();
-
-   if (reqSections & TBuffer3D::kRawSizes) {
-      if (buffer.SetRawSizes(nvert, 3 * nvert, nsegs, 3 * nsegs, npols, 6 * npols)) {
-         buffer.SetSectionsValid(TBuffer3D::kRawSizes);
-      }
-   }
-   if ((reqSections & TBuffer3D::kRaw) && buffer.SectionsValid(TBuffer3D::kRawSizes)) {
-      SetPoints(buffer.fPnts);
-      if (!buffer.fLocalFrame) {
-         TransformPoints(buffer.fPnts, buffer.NbPnts());
-      }
-
-      SetSegsAndPols(buffer);
-      buffer.SetSectionsValid(TBuffer3D::kRaw);
-   }
-
-   return buffer;
+   fDX = (max.X() - fOrigin[0]);
+   fDY = (max.Y() - fOrigin[1]);
+   fDZ = (max.Z() - fOrigin[2]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Reads a single tessellated solid from an .obj file.
+/// Fill a TBuffer3D with all geometry vertices and segments
+/// Not final. Creates a segment several times, but this is the easiest implementation for now
+/// \param[out] b buffer to be filled
+/// \param[in] reqSections
+/// \param[in] localFrame
 
-TGeoTessellated *TGeoTessellated::ImportFromObjFormat(const char *objfile, bool check, bool verbose)
+void TGeoTessellated::FillBuffer3D(TBuffer3D &b, Int_t reqSections, Bool_t localFrame) const
 {
-   using std::vector, std::string, std::ifstream, std::stringstream, std::endl;
+   TGeoShape::FillBuffer3D(b, reqSections, localFrame);
+   if (reqSections != TBuffer3D::kNone) {
+      size_t npnts = fMesh->Points().size();
 
-   vector<Vertex_t> vertices;
-   vector<string> sfacets;
+      std::vector<UInt_t> indices;
+      fMesh->TriangleMeshIndices(indices);
 
-   struct FacetInd_t {
-      int i0 = -1;
-      int i1 = -1;
-      int i2 = -1;
-      int i3 = -1;
-      int nvert = 0;
-      FacetInd_t(int a, int b, int c)
-      {
-         i0 = a;
-         i1 = b;
-         i2 = c;
-         nvert = 3;
-      };
-      FacetInd_t(int a, int b, int c, int d)
-      {
-         i0 = a;
-         i1 = b;
-         i2 = c;
-         i3 = d;
-         nvert = 4;
-      };
-   };
+      size_t nseg = indices.size();
+      size_t ntriangles = fMesh->Triangles().size();
+      const UInt_t NumberOfCoordinates = 3;
+      b.SetRawSizes(static_cast<UInt_t>(npnts), static_cast<UInt_t>(NumberOfCoordinates * npnts),
+                    static_cast<UInt_t>(nseg), static_cast<UInt_t>(3 * nseg), static_cast<UInt_t>(ntriangles),
+                    static_cast<UInt_t>(5 * ntriangles));
 
-   vector<FacetInd_t> facets;
-   // List of geometric vertices, with (x, y, z [,w]) coordinates, w is optional and defaults to 1.0.
-   // struct vtx_t { double x = 0; double y = 0; double z = 0; double w = 1; };
+      if (((reqSections & TBuffer3D::kRawSizes) != 0) || ((reqSections & TBuffer3D::kRaw) != 0)) {
+         FillBuffer3DWithPoints(b);
 
-   // Texture coordinates in u, [,v ,w]) coordinates, these will vary between 0 and 1. v, w are optional and default to
-   // 0.
-   // struct tex_t { double u; double v; double w; };
-
-   // List of vertex normals in (x,y,z) form; normals might not be unit vectors.
-   // struct vn_t { double x; double y; double z; };
-
-   // Parameter space vertices in ( u [,v] [,w] ) form; free form geometry statement
-   // struct vp_t { double u; double v; double w; };
-
-   // Faces are defined using lists of vertex, texture and normal indices which start at 1.
-   // Polygons such as quadrilaterals can be defined by using more than three vertex/texture/normal indices.
-   //     f v1//vn1 v2//vn2 v3//vn3 ...
-
-   // Records starting with the letter "l" specify the order of the vertices which build a polyline.
-   //     l v1 v2 v3 v4 v5 v6 ...
-
-   string line;
-   int ind[4] = {0};
-   ifstream file(objfile);
-   if (!file.is_open()) {
-      ::Error("TGeoTessellated::ImportFromObjFormat", "Unable to open %s", objfile);
-      return nullptr;
-   }
-
-   while (getline(file, line)) {
-      stringstream ss(line);
-      string tag;
-
-      // We ignore everything which is not a vertex or a face
-      if (line.rfind('v', 0) == 0 && line.rfind("vt", 0) != 0 && line.rfind("vn", 0) != 0 && line.rfind("vn", 0) != 0) {
-         // Decode the vertex
-         double pos[4] = {0, 0, 0, 1};
-         ss >> tag >> pos[0] >> pos[1] >> pos[2] >> pos[3];
-         vertices.emplace_back(pos[0] * pos[3], pos[1] * pos[3], pos[2] * pos[3]);
-      }
-
-      else if (line.rfind('f', 0) == 0) {
-         // Decode the face
-         ss >> tag;
-         string word;
-         sfacets.clear();
-         while (ss >> word)
-            sfacets.push_back(word);
-         if (sfacets.size() > 4 || sfacets.size() < 3) {
-            ::Error("TGeoTessellated::ImportFromObjFormat", "Detected face having unsupported %zu vertices",
-                    sfacets.size());
-            return nullptr;
+         if (!b.fLocalFrame) {
+            TransformPoints(b.fPnts, b.NbPnts());
          }
-         int nvert = 0;
-         for (auto &sword : sfacets) {
-            stringstream ssword(sword);
-            string token;
-            getline(ssword, token, '/'); // just need the vertex index, which is the first token
-            // Convert string token to integer
 
-            ind[nvert++] = stoi(token) - 1;
-            if (ind[nvert - 1] < 0) {
-               ::Error("TGeoTessellated::ImportFromObjFormat", "Unsupported relative vertex index definition in %s",
-                       objfile);
-               return nullptr;
-            }
-         }
-         if (nvert == 3)
-            facets.emplace_back(ind[0], ind[1], ind[2]);
-         else
-            facets.emplace_back(ind[0], ind[1], ind[2], ind[3]);
+         FillBuffer3DWithSegmentsAndPols(b, indices);
+
+         b.SetSectionsValid(TBuffer3D::kRawSizes | TBuffer3D::kRaw);
       }
    }
+}
 
-   int nvertices = (int)vertices.size();
-   int nfacets = (int)facets.size();
-   if (nfacets < 3) {
-      ::Error("TGeoTessellated::ImportFromObjFormat", "Not enough faces detected in %s", objfile);
-      return nullptr;
+////////////////////////////////////////////////////////////////////////////////
+/// Fill a TBuffer3D with the geometry vertices
+///
+/// \param[out] b buffer to be filled
+///
+
+void TGeoTessellated::FillBuffer3DWithPoints(TBuffer3D &b) const
+{
+   UInt_t pointcounter = 0;
+
+   for (const auto &point : fMesh->Points()) {
+      b.fPnts[pointcounter++] = point.X();
+      b.fPnts[pointcounter++] = point.Y();
+      b.fPnts[pointcounter++] = point.Z();
    }
+}
 
-   string sobjfile(objfile);
-   if (verbose)
-      std::cout << "Read " << nvertices << " vertices and " << nfacets << " facets from " << sobjfile << endl;
+////////////////////////////////////////////////////////////////////////////////
+/// Helper function to fill a TBuffer3D with the geometry segments
+///
+/// \param[out] b buffer to be filled
+/// \param[in] indices
+///
 
-   auto tsl = new TGeoTessellated(sobjfile.erase(sobjfile.find_last_of('.')).c_str(), vertices);
+void TGeoTessellated::FillBuffer3DWithSegmentsAndPols(TBuffer3D &b, const std::vector<UInt_t> &indices) const
+{
+   auto segmentcounter = 0;
+   auto polcounter = 0;
+   for (UInt_t index = 0; index < indices.size(); index += 3) {
+      b.fPols[polcounter++] = 0; // color
+      b.fPols[polcounter++] = 3; // number of segments
 
-   for (int i = 0; i < nfacets; ++i) {
-      auto facet = facets[i];
-      if (facet.nvert == 3)
-         tsl->AddFacet(facet.i0, facet.i1, facet.i2);
-      else
-         tsl->AddFacet(facet.i0, facet.i1, facet.i2, facet.i3);
+      auto segindex = (index / 3);
+
+      b.fSegs[segindex * 9] = 0;                                          // color
+      b.fSegs[segindex * 9 + 1] = static_cast<Int_t>(indices[index]);     // segment point one
+      b.fSegs[segindex * 9 + 2] = static_cast<Int_t>(indices[index + 1]); // segment point two
+
+      b.fSegs[segindex * 9 + 3] = 0;                                      // color
+      b.fSegs[segindex * 9 + 4] = static_cast<Int_t>(indices[index + 1]); // segment point one
+      b.fSegs[segindex * 9 + 5] = static_cast<Int_t>(indices[index + 2]); // segment point two
+
+      b.fSegs[segindex * 9 + 6] = 0;                                      // color
+      b.fSegs[segindex * 9 + 7] = static_cast<Int_t>(indices[index + 2]); // segment point one
+      b.fSegs[segindex * 9 + 8] = static_cast<Int_t>(indices[index]);     // segment point two
+
+      // The pols ordere defines the openglviewer primitive orientation
+      // if wrongly choosen, this can lead to seeing into a object
+      segmentcounter += 3;
+      b.fPols[polcounter++] = segmentcounter - 1;
+      b.fPols[polcounter++] = segmentcounter - 2;
+      b.fPols[polcounter++] = segmentcounter - 3;
    }
-   tsl->CloseShape(check, true, verbose);
-   tsl->Print();
-   return tsl;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///  return a static TBuffer3D instance containing the geometry vertices and segments
+///
+/// \param[in] reqSections
+/// \param[in] localFrame
+/// \return const TBuffer3D&
+///
+
+const TBuffer3D &TGeoTessellated::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
+{
+   static TBuffer3D buf(TBuffer3DTypes::kGeneric);
+   FillBuffer3D(buf, reqSections, localFrame);
+   return buf;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a 3D Buffer containing geometry vertices and segments
+///
+/// \return TBuffer3D*
+///
+
+TBuffer3D *TGeoTessellated::MakeBuffer3D() const
+{
+   // fTimer.Start(kFALSE);
+   TBuffer3D *buf = new TBuffer3D(TBuffer3DTypes::kGeneric);
+   FillBuffer3D(*buf, TBuffer3D::kCore | TBuffer3D::kRawSizes | TBuffer3D::kRaw, kFALSE);
+   // fTimer.Stop();
+   return buf;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Populate array of Double_t with meshpoints
+///
+/// \param[out] points
+///
+
+void TGeoTessellated::SetPoints(Double_t *points) const
+{
+   std::size_t pointcounter{0};
+   for (const auto &point : fMesh->Points()) {
+      points[pointcounter++] = point.X();
+      points[pointcounter++] = point.Y();
+      points[pointcounter++] = point.Z();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Populate array of Floath_t with meshpoints
+///
+/// \param[out] points
+///
+
+void TGeoTessellated::SetPoints(Float_t *points) const
+{
+   std::size_t pointcounter{0};
+   for (const auto &point : fMesh->Points()) {
+      points[pointcounter++] = point.X();
+      points[pointcounter++] = point.Y();
+      points[pointcounter++] = point.Z();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Provide number of vertices, number of segments and number of pols
+///
+/// \param[out] nvert
+/// \param[out] nsegs
+/// \param[out] npols
+///
+
+void TGeoTessellated::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
+{
+   nvert = GetNmeshVertices();
+   npols = GetTriangleMesh()->Triangles().size();
+   nsegs = npols * 3;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Stream TGeoTessellated object into buffer
+///
+/// \param[out] R__b buffer to be filled with object
+///
+
+void TGeoTessellated::Streamer(TBuffer &R__b)
+{
+   if (R__b.IsReading()) {
+      TGeoTessellated::Class()->ReadBuffer(R__b, this);
+      fMesh->Streamer(R__b);
+
+      fUsedTriangles.resize(fMesh->Triangles().size());
+      std::iota(fUsedTriangles.begin(), fUsedTriangles.end(), 0);
+
+      if (fPartitioningStruct != nullptr) {
+         fPartitioningStruct->TPartitioningI::SetTriangleMesh(fMesh.get());
+      }
+   } else {
+      TGeoTessellated::Class()->WriteBuffer(R__b, this);
+      TGeoTriangleMesh::Class()->WriteBuffer(R__b, fMesh.get());
+   }
+   ComputeBBox();
 }

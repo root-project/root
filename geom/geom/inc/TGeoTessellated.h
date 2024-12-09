@@ -1,5 +1,4 @@
-// @(#)root/geom:$Id$
-// Author: Andrei Gheata   20/12/19
+// @(#)root/geom:$Id$// Author: Andrei Gheata   20/12/19
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -12,125 +11,89 @@
 #ifndef ROOT_TGeoTessellated
 #define ROOT_TGeoTessellated
 
-#include <map>
-#include "TGeoVector3.h"
-#include "TGeoTypedefs.h"
-#include "TGeoBBox.h"
+#include <memory> // for unique_ptr
+#include <vector> // for vector
 
-class TGeoFacet {
-public:
-   using Vertex_t = Tessellated::Vertex_t;
-   using VertexVec_t = Tessellated::VertexVec_t;
+#include "Rtypes.h"         // for THashConsistencyHolder, ClassDefOverride
+#include "RtypesCore.h"     // for Double_t, Bool_t, Int_t, UInt_t, kTRUE
+#include "TGeoBBox.h"       // for TGeoBBox
+#include "TStopwatch.h"     // for TStopwatch
 
-private:
-   int fIvert[4] = {0, 0, 0, 0}; // Vertex indices in the array
-   int fNvert = 0;               // number of vertices (can be 3 or 4)
+#include "Tessellated/TPartitioningI.h" // for TPartitioningI
+#include "Tessellated/TGeoTriangleMesh.h"  // for TGeoTriangleMesh
 
-private:
-   void SetVertices(int nvert = 0, int i0 = -1, int i1 = -1, int i2 = -1, int i3 = -1)
-   {
-      fNvert = nvert;
-      fIvert[0] = i0;
-      fIvert[1] = i1;
-      fIvert[2] = i2;
-      fIvert[3] = i3;
-   }
-
-public:
-   TGeoFacet() {}
-   TGeoFacet(int i0, int i1, int i2) { SetVertices(3, i0, i1, i2); }
-   TGeoFacet(int i0, int i1, int i2, int i3) { SetVertices(4, i0, i1, i2, i3); }
-
-   int operator[](int ivert) const { return fIvert[ivert]; }
-   static int CompactFacet(Vertex_t *vert, int nvertices);
-   int GetNvert() const { return fNvert; }
-
-   void Flip()
-   {
-      int iv = fIvert[0];
-      fIvert[0] = fIvert[2];
-      fIvert[2] = iv;
-   }
-   bool IsNeighbour(const TGeoFacet &other, bool &flip) const;
-};
+class TBuffer3D;
+class TBuffer;
+class TClass;
+class TGeoMatrix;
+class TGeoShape;
+class TMemberInspector;
 
 class TGeoTessellated : public TGeoBBox {
 
-public:
-   using Vertex_t = Tessellated::Vertex_t;
+   using TPartitioningI = Tessellated::TPartitioningI;
+   using TGeoTriangleMesh = Tessellated::TGeoTriangleMesh;
+   using TGeoTriangle = Tessellated::TGeoTriangle;
 
 private:
-   int fNfacets = 0;                      // Number of facets
-   int fNvert = 0;                        // Number of vertices
-   int fNseg = 0;                         // Number of segments
-   bool fDefined = false;                 //! Shape fully defined
-   bool fClosedBody = false;              // The faces are making a closed body
-   std::vector<Vertex_t> fVertices;       // List of vertices
-   std::vector<TGeoFacet> fFacets;        // List of facets
-   std::multimap<long, int> fVerticesMap; //! Temporary map used to deduplicate vertices
+   std::unique_ptr<TGeoTriangleMesh> fMesh{nullptr};                ///<  triangle mesh
+   std::unique_ptr<TPartitioningI> fPartitioningStruct{nullptr}; ///<  partitioning structure
+   std::vector<UInt_t> fUsedTriangles{};                         ///<! vector of indices of valid triangles
+   mutable TStopwatch fTimer{}; ///<! timer to help determine timeconsuming TGeoTessellated instances
 
-   TGeoTessellated(const TGeoTessellated &) = delete;
-   TGeoTessellated &operator=(const TGeoTessellated &) = delete;
+private:
+   void FillBuffer3DWithPoints(TBuffer3D &b) const;
+   void FillBuffer3DWithSegmentsAndPols(TBuffer3D &b, const std::vector<UInt_t> &indices) const;
+
+protected:
+   virtual void FillBuffer3D(TBuffer3D &b, Int_t reqSections, Bool_t localFrame) const override;
 
 public:
-   // constructors
-   TGeoTessellated() {}
-   TGeoTessellated(const char *name, int nfacets = 0);
-   TGeoTessellated(const char *name, const std::vector<Vertex_t> &vertices);
-   // destructor
-   ~TGeoTessellated() override {}
+   TGeoTessellated();
+   TGeoTessellated(const char *);
+   virtual ~TGeoTessellated() override;
 
-   void ComputeBBox() override;
-   void CloseShape(bool check = true, bool fixFlipped = true, bool verbose = true);
+   virtual Bool_t Contains(const Double_t *pointa) const override;
+   virtual Double_t DistFromInside(const Double_t *pointa, const Double_t *dira, Int_t iact, Double_t step,
+                                   Double_t *safe) const override;
+   virtual Double_t DistFromOutside(const Double_t *pointa, const Double_t *dira, Int_t iact, Double_t step,
+                                    Double_t *safe) const override;
+   virtual Double_t Safety(const Double_t *pointa, bool inside) const override;
 
-   bool AddFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2);
-   bool AddFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2, const Vertex_t &pt3);
-   bool AddFacet(int i1, int i2, int i3);
-   bool AddFacet(int i1, int i2, int i3, int i4);
-   int AddVertex(const Vertex_t &vert);
-
-   bool FacetCheck(int ifacet) const;
-   Vertex_t FacetComputeNormal(int ifacet, bool &degenerated) const;
-
-   int GetNfacets() const { return fFacets.size(); }
-   int GetNsegments() const { return fNseg; }
-   int GetNvertices() const { return fNvert; }
-   bool IsClosedBody() const { return fClosedBody; }
-   Bool_t IsConvex() const final { return kFALSE; }
-   bool IsDefined() const { return fDefined; }
-
-   const TGeoFacet &GetFacet(int i) const { return fFacets[i]; }
-   const Vertex_t &GetVertex(int i) const { return fVertices[i]; }
-
+   virtual void ComputeBBox() override;
+   virtual void ComputeNormal(const Double_t *pointa, const Double_t *dira, Double_t *norm) const override;
+   virtual void GetBoundingCylinder(Double_t *param) const override;
+   virtual void InspectShape() const override;
+   virtual Int_t GetByteCount() const override;
+   virtual Double_t Capacity() const override;
+   virtual TGeoShape *GetMakeRuntimeShape(TGeoShape *shape, TGeoMatrix *matrix) const override;
+   virtual Bool_t IsCylType() const override;
+   virtual Bool_t IsValidBox() const override;
+   virtual Bool_t GetPointsOnSegments(Int_t intl, Double_t *list) const override;
+   virtual TBuffer3D *MakeBuffer3D() const override;
+   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const override;
    int DistancetoPrimitive(int, int) override { return 99999; }
-   const TBuffer3D &GetBuffer3D(int reqSections, Bool_t localFrame) const override;
-   void GetMeshNumbers(int &nvert, int &nsegs, int &npols) const override;
-   int GetNmeshVertices() const override { return fNvert; }
-   void InspectShape() const override {}
-   TBuffer3D *MakeBuffer3D() const override;
-   void Print(Option_t *option = "") const override;
    void SavePrimitive(std::ostream &, Option_t *) override {}
-   void SetPoints(double *points) const override;
-   void SetPoints(Float_t *points) const override;
-   void SetSegsAndPols(TBuffer3D &buff) const override;
    void Sizeof3D() const override {}
 
-   /// Resize and center the shape in a box of size maxsize
-   void ResizeCenter(double maxsize);
+   void SetPoints(Double_t *points) const override;
+   void SetPoints(Float_t *points) const override;
+   void GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const override;
+   Int_t GetNmeshVertices() const override { return GetTriangleMesh()->Points().size(); }
 
-   /// Flip all facets
-   void FlipFacets()
+   virtual void SetMesh(std::unique_ptr<TGeoTriangleMesh> mesh);
+   TGeoTriangleMesh const *GetTriangleMesh() const { return fMesh.get(); }
+   const std::vector<UInt_t> &GetUsedTriangleIndices() const { return fUsedTriangles; }
+
+   void SetPartitioningStruct(std::unique_ptr<TPartitioningI> &partitioningStruct)
    {
-      for (auto facet : fFacets)
-         facet.Flip();
+      fPartitioningStruct.reset(partitioningStruct.release());
    }
+   TPartitioningI const *GetPartitioningStruct() const { return fPartitioningStruct.get(); }
 
-   bool CheckClosure(bool fixFlipped = true, bool verbose = true);
+   void ResizeCenter(Double_t maxsize);
 
-   /// Reader from .obj format
-   static TGeoTessellated *ImportFromObjFormat(const char *objfile, bool check = false, bool verbose = false);
-
-   ClassDefOverride(TGeoTessellated, 1) // tessellated shape class
+   ClassDefOverride(TGeoTessellated, 1)
 };
 
-#endif
+#endif /*ROOT_TGeoTessellated*/

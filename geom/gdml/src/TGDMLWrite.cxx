@@ -160,6 +160,7 @@ See that function for details.
 #include "TGeoOpticalSurface.h"
 #include "TMap.h"
 #include "TObjString.h"
+#include "Tessellated/TGeoTriangleMesh.h"
 #include <cstdlib>
 #include <string>
 #include <map>
@@ -1755,9 +1756,10 @@ XMLNodePointer_t TGDMLWrite::CreateTessellatedN(TGeoTessellated *geoShape)
 {
    // add all vertices to the define section
    TString genname = GenName(geoShape->GetName(), TString::Format("%p", geoShape));
-   for (int i = 0; i < geoShape->GetNvertices(); ++i) {
-      auto vertex = geoShape->GetVertex(i);
-      TString posName = TString::Format("%s_%d", genname.Data(), i);
+   const Tessellated::TGeoTriangleMesh *mesh = geoShape->GetTriangleMesh();
+   for (size_t i = 0; i < mesh->GetNumberOfVertices(); ++i) {
+      auto vertex = mesh->Point(i);
+      TString posName = TString::Format("%s_%zu", genname.Data(), i);
       Xyz nodPos;
       nodPos.x = vertex[0];
       nodPos.y = vertex[1];
@@ -1770,17 +1772,14 @@ XMLNodePointer_t TGDMLWrite::CreateTessellatedN(TGeoTessellated *geoShape)
    fGdmlE->NewAttr(mainN, nullptr, "lunit", fDefault_lunit);
 
    XMLNodePointer_t childN;
-   for (Int_t it = 0; it < geoShape->GetNfacets(); it++) {
+   for (size_t it = 0; it < mesh->GetNumberOfTriangles(); it++) {
       // add section child node
-      auto facet = geoShape->GetFacet(it);
-      bool triangular = facet.GetNvert() == 3;
-      TString ntype = (triangular) ? "triangular" : "quadrangular";
+      auto facet = mesh->TriangleAt(it);
+      TString ntype = "triangular";
       childN = fGdmlE->NewChild(nullptr, nullptr, ntype.Data(), nullptr);
-      fGdmlE->NewAttr(childN, nullptr, "vertex1", TString::Format("%s_%d", genname.Data(), facet[0]));
-      fGdmlE->NewAttr(childN, nullptr, "vertex2", TString::Format("%s_%d", genname.Data(), facet[1]));
-      fGdmlE->NewAttr(childN, nullptr, "vertex3", TString::Format("%s_%d", genname.Data(), facet[2]));
-      if (!triangular)
-         fGdmlE->NewAttr(childN, nullptr, "vertex4", TString::Format("%s_%d", genname.Data(), facet[3]));
+      fGdmlE->NewAttr(childN, nullptr, "vertex1", TString::Format("%s_%d", genname.Data(), facet.Index(0)));
+      fGdmlE->NewAttr(childN, nullptr, "vertex2", TString::Format("%s_%d", genname.Data(), facet.Index(1)));
+      fGdmlE->NewAttr(childN, nullptr, "vertex3", TString::Format("%s_%d", genname.Data(), facet.Index(2)));
       fGdmlE->NewAttr(childN, nullptr, "type", "ABSOLUTE");
       fGdmlE->AddChild(mainN, childN);
    }

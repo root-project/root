@@ -1,0 +1,100 @@
+// @(#)root/geom:$Id$// Author: Ben Salisbury   21/11/24
+
+/*************************************************************************
+ * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef TBVH_HH
+#define TBVH_HH
+
+#include <memory>  // for unique_ptr
+#include <utility> // for pair
+#include <vector>  // for vector
+
+#include "Rtypes.h"           // for THashConsistencyHolder, ClassDefOverride
+#include "RtypesCore.h"       // for Double_t, Bool_t, Int_t, kFALSE, UInt_t
+#include "TPartitioningI.h"   // for TPartitioningI
+#include "TGeoTriangle.h"     // for TGeoTriangle
+#include "TGeoTriangleMesh.h" // for TGeoTriangleMesh, TGeoTriangleMesh::ClosestTri...
+#include "TVector3.h"         // for TVector3
+
+#include <bvh/v2/bvh.h>
+#include <bvh/v2/vec.h>
+#include <bvh/v2/ray.h>
+#include <bvh/v2/node.h>
+#include <bvh/v2/default_builder.h>
+#include <bvh/v2/thread_pool.h>
+#include <bvh/v2/executor.h>
+#include <bvh/v2/stack.h>
+#include <bvh/v2/tri.h>
+
+class TBuffer;
+class TClass;
+class TMemberInspector;
+
+namespace Tessellated {
+
+class TBVH : public TPartitioningI {
+private:
+   using Scalar = Double_t;
+   using Vec3 = bvh::v2::Vec<Scalar, 3>;
+   using BBox = bvh::v2::BBox<Scalar, 3>;
+   using Tri = bvh::v2::Tri<Scalar, 3>;
+   using Node = bvh::v2::Node<Scalar, 3>;
+   using Bvh = bvh::v2::Bvh<Node>;
+   using Ray = bvh::v2::Ray<Scalar, 3>;
+   using PrecomputedTri = bvh::v2::PrecomputedTri<Scalar>;
+   using Quality = bvh::v2::DefaultBuilder<Node>::Quality;
+
+   std::unique_ptr<bvh::v2::Bvh<Node>> fBVH{nullptr}; ///< bounding volume hierarchy structure
+   Quality fBVHQuality{Quality::Medium};              ///< quality for bvh building
+   std::vector<PrecomputedTri> fPrecomputedTris{};    ///< precomputed triangles for quicker intersection tests
+
+private:
+   // structure keeping cost (value) for a BVH index
+   struct BVHPrioElement_t {
+      size_t bvh_node_id;
+      Double_t value;
+   };
+
+   // A priority queue for BVHPrioElement_t with an additional clear method
+   // for quick reset
+   template <typename Comparator>
+   class BVHPrioQueue : public std::priority_queue<BVHPrioElement_t, std::vector<BVHPrioElement_t>, Comparator> {
+   public:
+      using std::priority_queue<BVHPrioElement_t, std::vector<BVHPrioElement_t>,
+                                Comparator>::priority_queue; // constructor inclusion
+
+      // convenience method to quickly clear/reset the queue (instead of having to pop one by one)
+      void clear() { this->c.clear(); }
+   };
+
+private:
+   void BuildBVH();
+   void ResetInternalState();
+   const TGeoTriangle *GetIntersectedTriangle(Ray &ray) const;
+
+public:
+   TBVH() = default;
+   virtual ~TBVH() override = default;
+
+   virtual void SetTriangleMesh(const TGeoTriangleMesh *trianglemesh) override;
+   virtual void SetBVHQuality(bvh::v2::DefaultBuilder<Node>::Quality quality);
+
+   virtual Bool_t IsPointContained(const TVector3 &point) const override;
+   virtual Double_t GetSafetyDistance(const TVector3 &point) const override;
+   virtual TGeoTriangleMesh::ClosestTriangle_t GetClosestTriangle(const TVector3 &point) const override;
+   virtual Double_t
+   DistanceInDirection(const TVector3 &origin, const TVector3 &direction, Bool_t isorigininside) override;
+
+   virtual void Print(Option_t *opt = nullptr) const override;
+
+   ClassDefOverride(TBVH, 1)
+};
+}; // namespace Tessellated
+
+#endif /*TBVH_HH*/
