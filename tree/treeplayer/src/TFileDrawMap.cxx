@@ -66,7 +66,7 @@ then all keys with names = "uv*" in a second pass, etc.
 #include "TMath.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
-#include "TH1.h"
+#include "TH2.h"
 #include "TBox.h"
 #include "TKey.h"
 #include "TRegexp.h"
@@ -90,13 +90,11 @@ TFileDrawMap::TFileDrawMap() :TNamed()
 /// TFileDrawMap normal constructor.
 /// see descriptions of arguments above
 
-TFileDrawMap::TFileDrawMap(const TFile *file, const char *keys, Option_t *option)
+TFileDrawMap::TFileDrawMap(const TFile *file, const char *keys, Option_t *)
          : TNamed("TFileDrawMap","")
 {
-   fFile     = (TFile*)file;
+   fFile     = (TFile*) file;
    fKeys     = keys;
-   fOption   = option;
-   fOption.ToLower();
    SetBit(kCanDelete);
 
    //create histogram used to draw the map frame
@@ -106,31 +104,27 @@ TFileDrawMap::TFileDrawMap(const TFile *file, const char *keys, Option_t *option
    } else {
       fXsize = 1000;
    }
-   fFrame = new TH1D("hmapframe","",1000,0,fXsize);
+   fYsize = 1 + Int_t(file->GetEND()/fXsize);
+
+   fFrame = new TH2D("hmapframe","",100,0,fXsize,100,0,fYsize);
    fFrame->SetDirectory(nullptr);
    fFrame->SetBit(TH1::kNoStats);
    fFrame->SetBit(kCanDelete);
-   fFrame->SetMinimum(0);
    if (fXsize > 1000) {
       fFrame->GetYaxis()->SetTitle("MBytes");
    } else {
       fFrame->GetYaxis()->SetTitle("KBytes");
    }
    fFrame->GetXaxis()->SetTitle("Bytes");
-   fYsize = 1 + Int_t(file->GetEND()/fXsize);
-   fFrame->SetMaximum(fYsize);
-   fFrame->GetYaxis()->SetLimits(0,fYsize);
 
-   //bool show = false;
-   if (gPad) {
+   if (gPad)
       gPad->Clear();
-      //show = gPad->GetCanvas()->GetShowEventStatus();
-   }
+
+   fFrame->Draw("axis");
    Draw();
-   if (gPad) {
-      //if (!show) gPad->GetCanvas()->ToggleEventStatus();
+
+   if (gPad)
       gPad->Update();
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -488,22 +482,8 @@ void TFileDrawMap::InspectObject()
 
 void TFileDrawMap::Paint(Option_t *)
 {
-   // draw map frame
-   if (!fOption.Contains("same")) {
-      gPad->Clear();
-      //just in case axis Y has been unzoomed
-      if (fFrame->GetMaximumStored() < -1000) {
-         fFrame->SetMaximum(fYsize+1);
-         fFrame->SetMinimum(0);
-         fFrame->GetYaxis()->SetLimits(0,fYsize+1);
-      }
-      fFrame->Paint();
-   }
-
    //draw keys
    PaintDir(fFile, fKeys.Data());
-
-   fFrame->Draw("sameaxis");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -573,13 +553,15 @@ void TFileDrawMap::PaintDir(TDirectory *dir, const char *keys)
       if (cl && cl->InheritsFrom(TTree::Class())) {
          TTree *tree = (TTree*)gDirectory->Get(key->GetName());
          TIter nextb(tree->GetListOfLeaves());
-         TLeaf *leaf;
-         while ((leaf = (TLeaf*)nextb())) {
+         while (auto leaf = (TLeaf*)nextb()) {
             TBranch *branch = leaf->GetBranch();
             color = branch->GetFillColor();
             if (color == 0) {
-               gPad->IncrementPaletteColor(1, "pfc");
-               color = gPad->NextPaletteColor();
+               if (fBranchColors.find(branch) == fBranchColors.end()) {
+                  gPad->IncrementPaletteColor(1, "pfc");
+                  fBranchColors[branch] = gPad->NextPaletteColor();
+               }
+               color = fBranchColors[branch];
             }
             box.SetFillColor(color);
             Int_t nbaskets = branch->GetMaxBaskets();
@@ -592,6 +574,7 @@ void TFileDrawMap::PaintDir(TDirectory *dir, const char *keys)
          }
       }
    }
+
    // draw the box for Keys list
    box.SetFillColor(50);
    box.SetFillStyle(1001);
