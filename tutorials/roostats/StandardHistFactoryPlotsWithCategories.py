@@ -309,6 +309,8 @@ def StandardHistFactoryPlotsWithCategories(
     c1.Draw()
     c1.SaveAs("StandardHistFactoryPlotsWithCategories.2.pdf")
 
+    file.Close()
+
 
 StandardHistFactoryPlotsWithCategories(
     infile="", workspaceName="combined", modelConfigName="ModelConfig", dataName="obsData"
