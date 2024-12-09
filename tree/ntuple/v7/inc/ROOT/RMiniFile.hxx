@@ -28,7 +28,6 @@
 #include <string>
 
 class TDirectory;
-class TFile;
 class TFileMergeInfo;
 class TVirtualStreamerInfo;
 
@@ -114,8 +113,6 @@ public:
 
 private:
    struct RFileProper {
-      /// If fDirectory is set, fFile is equal to fDirectory->GetFile()
-      TFile *fFile = nullptr;
       /// A sub directory in fFile or nullptr if the data is stored in the root directory of the file
       TDirectory *fDirectory = nullptr;
       /// Low-level writing using a TFile
@@ -124,7 +121,7 @@ private:
       /// it must be written *before* the returned offset. (Note that the array type is purely documentation, the
       /// argument is actually just a pointer.)
       std::uint64_t ReserveBlobKey(size_t nbytes, size_t len, unsigned char keyBuffer[kBlobKeyLen] = nullptr);
-      operator bool() const { return fFile; }
+      operator bool() const { return fDirectory; }
    };
 
    struct RFileSimple {
