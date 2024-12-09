@@ -1,7 +1,7 @@
 # Author: Giacomo Parolini CERN  12/2024
 
 ################################################################################
-# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.                      #
+# Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.                      #
 # All rights reserved.                                                         #
 #                                                                              #
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
