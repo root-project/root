@@ -213,44 +213,56 @@ def _FillWithNumpyArray(self, *args):
         return self._Fill(*args)
 
 
-def _TH1_Constructor(self, *args, **kwargs):
+def _should_give_up_ownership(object):
+    """
+    Ownership of objects which automatically register to a directory should be
+    left to C++, except if the object is gROOT.
+    """
+    import ROOT
+    tdir = object.GetDirectory()
+    return bool(tdir) and tdir is not ROOT.gROOT
+
+
+def _constructor_releasing_ownership(self, *args, **kwargs):
     """
     Forward the arguments to the C++ constructor and give up ownership if the
-    TH1 is attached to a TFile, which is the owner in that case.
+    object is attached to a directory, which is then the owner. The only
+    exception is when the owner is gROOT, to avoid introducing a
+    backwards-incompatible change.
     """
     import ROOT
 
     self._cpp_constructor(*args, **kwargs)
-    tdir = self.GetDirectory()
-    if tdir and type(tdir).__cpp_name__ == "TFile":
+    if _should_give_up_ownership(self):
         ROOT.SetOwnership(self, False)
 
+
+def inject_constructor_releasing_ownership(klass):
+    klass._cpp_constructor = klass.__init__
+    klass.__init__ = _constructor_releasing_ownership
+
+
 # The constructors need to be pythonized for each derived class separately:
+_th1_derived_classes_to_pythonize = [
+    "TH1C",
+    "TH1S",
+    "TH1I",
+    "TH1L",
+    "TH1F",
+    "TH1D",
+    "TH1K",
+    "TProfile",
+]
 
-@pythonization('TH1D')
-def pythonize_th1(klass):
-    klass._cpp_constructor = klass.__init__
-    klass.__init__ = _TH1_Constructor
+for klass in _th1_derived_classes_to_pythonize:
+    pythonization(klass)(inject_constructor_releasing_ownership)
 
-@pythonization('TH1F')
-def pythonize_th1(klass):
-    klass._cpp_constructor = klass.__init__
-    klass.__init__ = _TH1_Constructor
-
-@pythonization('THDF')
-def pythonize_th1(klass):
-    klass._cpp_constructor = klass.__init__
-    klass.__init__ = _TH1_Constructor
-
-@pythonization('TH2F')
-def pythonize_th1(klass):
-    klass._cpp_constructor = klass.__init__
-    klass.__init__ = _TH1_Constructor
-
-@pythonization('TProfile')
-def pythonize_th1(klass):
-    klass._cpp_constructor = klass.__init__
-    klass.__init__ = _TH1_Constructor
+def _SetDirectory_SetOwnership(self, dir):
+    self._Original_SetDirectory(dir)
+    if dir:
+        # If we are actually registering with a directory, give ownership to C++
+        import ROOT
+        ROOT.SetOwnership(self, False)
 
 @pythonization('TH1')
 def pythonize_th1(klass):
@@ -263,3 +275,6 @@ def pythonize_th1(klass):
     # Support hist.Fill(numpy_array) and hist.Fill(numpy_array, numpy_array)
     klass._Fill = klass.Fill
     klass.Fill = _FillWithNumpyArray
+
+    klass._Original_SetDirectory = klass.SetDirectory
+    klass.SetDirectory = _SetDirectory_SetOwnership
