@@ -1037,9 +1037,8 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Writ
 void ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::Write(const void *buffer, size_t nbytes,
                                                                          std::int64_t offset)
 {
-   R__ASSERT(fFile);
-   fFile->Seek(offset);
-   bool rv = fFile->WriteBuffer((char *)(buffer), nbytes);
+   fDirectory->GetFile()->Seek(offset);
+   bool rv = fDirectory->GetFile()->WriteBuffer((char *)(buffer), nbytes);
    if (rv)
       throw RException(R__FAIL("WriteBuffer failed."));
 }
@@ -1048,7 +1047,7 @@ std::uint64_t
 ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::WriteKey(const void *buffer, size_t nbytes, size_t len)
 {
    std::uint64_t offsetKey;
-   RKeyBlob keyBlob(fFile);
+   RKeyBlob keyBlob(fDirectory->GetFile());
    // Since it is unknown beforehand if offsetKey is beyond the 2GB limit or not,
    // RKeyBlob will always reserve space for a big key (version >= 1000)
    keyBlob.Reserve(nbytes, &offsetKey);
@@ -1150,9 +1149,7 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Append(std::string_view ntupleN
    assert(file->IsBinary());
 
    auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize));
-   writer->fFileProper.fFile = file;
-   if (file != &fileOrDirectory)
-      writer->fFileProper.fDirectory = &fileOrDirectory;
+   writer->fFileProper.fDirectory = &fileOrDirectory;
    return writer;
 }
 
@@ -1166,16 +1163,15 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::Commit()
 {
    if (fFileProper) {
       // Easy case, the ROOT file header and the RNTuple streaming is taken care of by TFile
-      TDirectory *d = fFileProper.fDirectory ? fFileProper.fDirectory : fFileProper.fFile;
-      d->WriteObject(&fNTupleAnchor, fNTupleName.c_str());
+      fFileProper.fDirectory->WriteObject(&fNTupleAnchor, fNTupleName.c_str());
 
       // Make sure the streamer info records used in the RNTuple are written to the file
       TBufferFile buf(TBuffer::kWrite);
-      buf.SetParent(fFileProper.fFile);
+      buf.SetParent(fFileProper.fDirectory->GetFile());
       for (auto [_, info] : fStreamerInfoMap)
          buf.TagStreamerInfo(info);
 
-      fFileProper.fFile->Write();
+      fFileProper.fDirectory->GetFile()->Write();
       return;
    }
 
