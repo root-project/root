@@ -102,13 +102,19 @@ set(py_sources
   ROOT/_pythonization/_tcontext.py
   ROOT/_pythonization/_tdirectory.py
   ROOT/_pythonization/_tdirectoryfile.py
+  ROOT/_pythonization/_tefficiency.py
+  ROOT/_pythonization/_tentrylist.py
+  ROOT/_pythonization/_teventlist.py
   ROOT/_pythonization/_tf1.py
   ROOT/_pythonization/_tf2.py
   ROOT/_pythonization/_tf3.py
   ROOT/_pythonization/_tfile.py
   ROOT/_pythonization/_tformula.py
   ROOT/_pythonization/_tgraph.py
+  ROOT/_pythonization/_tgraph2d.py
   ROOT/_pythonization/_th1.py
+  ROOT/_pythonization/_th2.py
+  ROOT/_pythonization/_th3.py
   ROOT/_pythonization/_thistpainter.py
   ROOT/_pythonization/_titer.py
   ROOT/_pythonization/_tobject.py
