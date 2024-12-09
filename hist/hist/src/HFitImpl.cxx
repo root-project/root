@@ -760,14 +760,15 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
       //for robust fitting, see if # of good points is defined
       // decode parameters for robust fitting
       Double_t h=0;
+      constexpr auto length = std::char_traits<char>::length;
       if (opt.Contains("H=0.")) {
          int start = opt.Index("H=0.");
-         int numpos = start + strlen("H=0.");
+         int numpos = start + length("H=0.");
          int numlen = 0;
          int len = opt.Length();
          while( (numpos+numlen<len) && isdigit(opt[numpos+numlen]) ) numlen++;
          TString num = opt(numpos,numlen);
-         opt.Remove(start+strlen("H"),strlen("=0.")+numlen);
+         opt.Remove(start+length("H"),length("=0.")+numlen);
          h = atof(num.Data());
          h*=TMath::Power(10, -numlen);
       }
