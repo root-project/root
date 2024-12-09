@@ -1971,6 +1971,7 @@ void TStyle::SetCandleCircleLineWidth(Int_t CircleLineWidth)
    if (CircleLineWidth<1 || CircleLineWidth>5) {
       Error("SetCandleCircleLineWidth", "illegal line width %d. It must be in the range [1,5]\n", (int)CircleLineWidth);
       fCandleCircleLineWidth = 1;
+      return;
    }
    fCandleCircleLineWidth = CircleLineWidth;
 }
