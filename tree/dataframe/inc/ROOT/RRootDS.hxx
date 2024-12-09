@@ -44,7 +44,13 @@ protected:
 
 public:
    RRootDS(std::string_view treeName, std::string_view fileNameGlob);
-   ~RRootDS();
+   // Rule of five
+   RRootDS(const RRootDS &) = delete;
+   RRootDS &operator=(const RRootDS &) = delete;
+   RRootDS(RRootDS &&) = delete;
+   RRootDS &operator=(RRootDS &&) = delete;
+   ~RRootDS() final;
+
    std::size_t GetNFiles() const final;
    std::string GetTypeName(std::string_view colName) const final;
    const std::vector<std::string> &GetColumnNames() const final;

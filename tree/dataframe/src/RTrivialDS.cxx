@@ -39,10 +39,6 @@ RTrivialDS::RTrivialDS() : fSize(std::numeric_limits<ULong64_t>::max()), fSkipEv
 {
 }
 
-RTrivialDS::~RTrivialDS()
-{
-}
-
 const std::vector<std::string> &RTrivialDS::GetColumnNames() const
 {
    return fColNames;
