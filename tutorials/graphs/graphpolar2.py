@@ -2,14 +2,12 @@
 ## \ingroup tutorial_graphs
 ## \notebook
 ##
-## This script shows how to divide a canvas
-## into adjacent subpads and put on axis labels on the top and right side
-## of their pads.
+## Creates and draws a polar graph with PI axis.
 ##
 ## \macro_image
 ## \macro_code
 ##
-## \author Rene Brun
+## \author Olivier Couet
 ## \translator P. P.
 
 
@@ -17,7 +15,9 @@ import ROOT
 import ctypes
 
 #classes
-TH2F = ROOT.TH2F
+TGraphPolar = ROOT.TGraphPolar
+TMath = ROOT.TMath
+
 TCanvas = ROOT.TCanvas
 TH1F = ROOT.TH1F
 TGraph = ROOT.TGraph
@@ -69,38 +69,47 @@ gROOT = ROOT.gROOT
 
 
 # void
-def zones() :
+def graphpolar2() :
 
-   gStyle.SetOptStat(0)
+   global CPol
+   CPol = TCanvas("CPol", "TGraphPolar Example", 500, 500)
+   
+   theta = [ 0. ] * 8 # Double_t*
+   radius = [ 0. ] * 8 # Double_t*
+   etheta = [ 0. ] * 8 # Double_t*
+   eradius = [ 0. ] * 8 # Double_t*
+   
+   #   for (int i = 0; i < 8; i++) {
+   for i in range(0, 8, 1):
+      theta[i] = (i + 1) * (TMath.Pi() / 4.)
+      radius[i] = (i + 1) * 0.05
+      etheta[i] = TMath.Pi() / 8.
+      eradius[i] = 0.05
+   
+   #to c-types
+   theta = to_c( theta )
+   radius = to_c( radius )
+   etheta = to_c( etheta )
+   eradius = to_c( eradius )
+   
+   global grP1
+   grP1 = TGraphPolar(8, theta, radius, etheta, eradius)
+   grP1.SetTitle("")
+   
+   grP1.SetMarkerStyle(20)
+   grP1.SetMarkerSize(2.)
+   grP1.SetMarkerColor(4)
+   grP1.SetLineColor(2)
+   grP1.SetLineWidth(3)
 
-   global c1
-   c1 = TCanvas("c1", "multipads", 900, 700)
-   c1.Divide(2, 2, 0, 0)
-
-   global h1, h2, h3, h4
-   h1 = TH2F("h1", "test1", 10, 0, 1, 20, 0, 20)
-   h2 = TH2F("h2", "test2", 10, 0, 1, 20, 0, 100)
-   h3 = TH2F("h3", "test3", 10, 0, 1, 20, -1, 1)
-   h4 = TH2F("h4", "test4", 10, 0, 1, 20, 0, 1000)
+   grP1.Draw("PE")
    
-   c1.cd(1)
-   gPad.SetTickx(2)
-   h1.Draw()
+   CPol.Update()
    
-   c1.cd(2)
-   gPad.SetTickx(2)
-   gPad.SetTicky(2)
-   h2.GetYaxis().SetLabelOffset(0.01)
-   h2.Draw()
-   
-   c1.cd(3)
-   h3.Draw()
-   
-   c1.cd(4)
-   gPad.SetTicky(2)
-   h4.Draw()
+   if (grP1.GetPolargram()) :
+      grP1.GetPolargram().SetToRadian()
    
 
 
 if __name__ == "__main__":
-   zones()
+   graphpolar2()

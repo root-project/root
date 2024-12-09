@@ -2,9 +2,7 @@
 ## \ingroup tutorial_graphs
 ## \notebook
 ##
-## This script shows how to divide a canvas
-## into adjacent subpads and put on axis labels on the top and right side
-## of their pads.
+## Draws a simple graph.
 ##
 ## \macro_image
 ## \macro_code
@@ -17,7 +15,7 @@ import ROOT
 import ctypes
 
 #classes
-TH2F = ROOT.TH2F
+TGraph = ROOT.TGraph
 TCanvas = ROOT.TCanvas
 TH1F = ROOT.TH1F
 TGraph = ROOT.TGraph
@@ -49,7 +47,7 @@ c_double = ctypes.c_double
 def to_c( ls ):
    return (c_double * len(ls) )( * ls )
 def printf(string, *args):
-   print( string % args )
+   print( string % args , end = "")
 def sprintf(buffer, string, *args):
    buffer = string % args 
    return buffer
@@ -69,38 +67,42 @@ gROOT = ROOT.gROOT
 
 
 # void
-def zones() :
-
-   gStyle.SetOptStat(0)
+def graph() :
 
    global c1
-   c1 = TCanvas("c1", "multipads", 900, 700)
-   c1.Divide(2, 2, 0, 0)
+   c1 = TCanvas("c1", "A Simple Graph Example", 200, 10, 700, 500)
+   c1.SetGrid()
+   
+   n = 20
+   x, y = [ to_c( [0.]*n ) for _ in range(2) ]
+   #   for (Int_t i = 0; i < n; i++) {
+   for i in range(0, n, 1):
+      x[i] = i * 0.1
+      y[i] = 10 * sin(x[i] + 0.2)
+      printf(" i %i %f %f \n", i, x[i], y[i])
+      
 
-   global h1, h2, h3, h4
-   h1 = TH2F("h1", "test1", 10, 0, 1, 20, 0, 20)
-   h2 = TH2F("h2", "test2", 10, 0, 1, 20, 0, 100)
-   h3 = TH2F("h3", "test3", 10, 0, 1, 20, -1, 1)
-   h4 = TH2F("h4", "test4", 10, 0, 1, 20, 0, 1000)
+   global gr
+   gr = TGraph(n, x, y)
+
+   #Setting-up.
+   gr.SetLineColor(2)
+   gr.SetLineWidth(4)
+   gr.SetMarkerColor(4)
+   gr.SetMarkerStyle(21)
+   gr.SetTitle("a simple graph")
+   gr.GetXaxis().SetTitle("X title")
+   gr.GetYaxis().SetTitle("Y title")
    
-   c1.cd(1)
-   gPad.SetTickx(2)
-   h1.Draw()
+   #Draw on canvas.
+   gr.Draw("ACP")
    
-   c1.cd(2)
-   gPad.SetTickx(2)
-   gPad.SetTicky(2)
-   h2.GetYaxis().SetLabelOffset(0.01)
-   h2.Draw()
-   
-   c1.cd(3)
-   h3.Draw()
-   
-   c1.cd(4)
-   gPad.SetTicky(2)
-   h4.Draw()
+   # TCanvas::Update() draws the frame, after which one can change it
+   c1.Update()
+   c1.GetFrame().SetBorderSize(12)
+   c1.Modified()
    
 
 
 if __name__ == "__main__":
-   zones()
+   graph()
