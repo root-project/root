@@ -1515,7 +1515,7 @@ void TGenCollectionProxy__VectorCreateIterators(void *obj, void **begin_arena, v
       return;
    }
    *begin_arena = vec->data();
-   *end_arena = vec->data() + vec->size(); // We can not dereference the end iterator at all.
+   *end_arena = vec->data() + vec->size();
 
 }
 
