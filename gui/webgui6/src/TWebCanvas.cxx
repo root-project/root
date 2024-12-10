@@ -328,6 +328,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
                             {"TEllipse", true, true},  // can be handled via TWebPainter, disable for large number of primitives (like in greyscale.C)
                             {"TText"},
                             {"TLatex"},
+                            {"TLink"},
                             {"TAnnotation"},
                             {"TMathText"},
                             {"TMarker"},
