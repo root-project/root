@@ -1539,6 +1539,7 @@ set(ROOT_TEST_DRIVER ${CMAKE_CURRENT_LIST_DIR}/RootTestDriver.cmake)
 #                       )
 #
 function(ROOT_ADD_TEST test)
+  # FIXME: We should re-enable the tests per component after fixing their dependencies.
   if(ROOT_ENABLE_PROJECTS NOT STREQUAL "All" )
     return()
   endif()
