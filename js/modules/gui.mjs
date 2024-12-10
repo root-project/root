@@ -42,6 +42,11 @@ function readStyleFromURL(url) {
       }
    }
 
+   if (d.has('scale')) {
+      const s = parseInt(d.get('scale'));
+      settings.CanvasScale = Number.isInteger(s) ? s : 2;
+   }
+
    const b = d.get('batch');
    if (b !== undefined) {
       setBatchMode(d !== 'off');

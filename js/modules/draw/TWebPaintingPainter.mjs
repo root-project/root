@@ -1,5 +1,8 @@
 import { getColor } from '../base/colors.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { pointer as d3_pointer } from '../d3.mjs';
+import { urlClassPrefix } from '../core.mjs';
+import { assignContextMenu } from '../gui/menu.mjs';
 
 
 /** @summary Draw direct TVirtualX commands into SVG
@@ -9,16 +12,44 @@ class TWebPaintingPainter extends ObjectPainter {
 
    /** @summary Update TWebPainting object */
    updateObject(obj) {
-      if (!this.matchObjectType(obj)) return false;
+      if (!this.matchObjectType(obj))
+         return false;
       this.assignObject(obj);
       return true;
+   }
+
+   /** @summary Provides menu header */
+   getMenuHeader() {
+      return this.getObject()?.fClassName || 'TWebPainting';
+   }
+
+   /** @summary Fill context menu
+    * @desc Create only header, items will be requested from server */
+   fillContextMenu(menu) {
+      const cl = this.getMenuHeader();
+      menu.header(cl, `${urlClassPrefix}${cl}.html`);
+      return true;
+   }
+
+   /** @summary Mouse click handler
+    * @desc Redirect mouse click events to the ROOT application
+    * @private */
+   handleMouseClick(evnt) {
+      const pos = d3_pointer(evnt, this.draw_g.node()),
+            pp = this.getPadPainter(),
+            rect = pp?.getPadRect();
+
+      if (pp && rect && this.snapid)
+         pp.selectObjectPainter(this, { x: pos[0] + rect.x, y: pos[1] + rect.y });
+         // pp.deliverWebCanvasEvent('click', pos[0] + rect.x, pos[1] + rect.y, this.snapid);
    }
 
    /** @summary draw TWebPainting object */
    async redraw() {
       const obj = this.getObject(), func = this.getAxisToSvgFunc();
 
-      if (!obj?.fOper || !func) return;
+      if (!obj?.fOper || !func)
+         return this;
 
       let indx = 0, attr = {}, lastpath = null, lastkind = 'none', d = '',
           oper, npoints, n;
@@ -26,15 +57,17 @@ class TWebPaintingPainter extends ObjectPainter {
       const arr = obj.fOper.split(';'),
       check_attributes = kind => {
          if (kind === lastkind)
-            return this;
+            return;
 
          if (lastpath) {
             lastpath.attr('d', d); // flush previous
-            d = ''; lastpath = null; lastkind = 'none';
+            d = '';
+            lastpath = null;
+            lastkind = 'none';
          }
 
          if (!kind)
-            return this;
+            return;
 
          lastkind = kind;
          lastpath = this.draw_g.append('svg:path').attr('d', ''); // placeholder for 'd' to have it always in front
@@ -43,7 +76,6 @@ class TWebPaintingPainter extends ObjectPainter {
             case 'l': lastpath.call(this.lineatt.func).style('fill', 'none'); break;
             case 'm': lastpath.call(this.markeratt.func); break;
          }
-         return this;
       }, read_attr = (str, names) => {
          let lastp = 0;
          const obj = { _typename: 'any' };
@@ -79,12 +111,11 @@ class TWebPaintingPainter extends ObjectPainter {
                   check_attributes((oper === 'b') ? 'f' : 'l');
 
                   const x1 = func.x(obj.fBuf[indx++]),
-                      y1 = func.y(obj.fBuf[indx++]),
-                      x2 = func.x(obj.fBuf[indx++]),
-                      y2 = func.y(obj.fBuf[indx++]);
+                        y1 = func.y(obj.fBuf[indx++]),
+                        x2 = func.x(obj.fBuf[indx++]),
+                        y2 = func.y(obj.fBuf[indx++]);
 
                   d += `M${x1},${y1}h${x2-x1}v${y2-y1}h${x1-x2}z`;
-
                   continue;
                }
                case 'l':
@@ -159,7 +190,13 @@ class TWebPaintingPainter extends ObjectPainter {
 
       this.createG();
 
-      return process(-1).then(() => check_attributes());
+      return process(-1).then(() => {
+         check_attributes();
+         assignContextMenu(this);
+         if (!this.isBatchMode())
+            this.draw_g.on('click', evnt => this.handleMouseClick(evnt));
+         return this;
+      });
    }
 
    static async draw(dom, obj) {
@@ -169,5 +206,6 @@ class TWebPaintingPainter extends ObjectPainter {
    }
 
 } // class TWebPaintingPainter
+
 
 export { TWebPaintingPainter };
