@@ -40,7 +40,6 @@ TEST(TFile, WriteObjectVector)
 {
     auto filename{"tfile_writeobject_vector.root"};
     auto vec_name{"object name"}; // Decided arbitrarily
-    auto vec_title{"object title"}; // Default title for non-TObject-derived instances
 
     {
         std::vector<int> myvec{1,2,3,4,5};
@@ -62,7 +61,7 @@ TEST(TFile, WriteObjectVector)
     }
 
     EXPECT_STREQ(retkey->GetName(), vec_name);
-    EXPECT_STREQ(retkey->GetTitle(), vec_title);
+    EXPECT_STREQ(retkey->GetTitle(), ""); // Objects that don't derive from TObject have no title
 
     input.Close();
     gSystem->Unlink(filename);
