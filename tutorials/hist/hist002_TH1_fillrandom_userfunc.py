@@ -34,7 +34,7 @@ h1d = ROOT.TH1D("h1d", "Test random numbers", 200, rangeMin, rangeMax)
 h1d.FillRandom("sqroot", 10000)
 
 # Open a ROOT file and save the formula, function and histogram
-with ROOT.TFile.Open("fillrandom.root", "RECREATE") as myFile:
+with ROOT.TFile.Open("fillrandom_userfunc_py.root", "RECREATE") as myFile:
    myFile.WriteObject(form1, form1.GetName())
    myFile.WriteObject(sqroot, sqroot.GetName())
    myFile.WriteObject(h1d, h1d.GetName())
