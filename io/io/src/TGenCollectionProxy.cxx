@@ -1514,13 +1514,8 @@ void TGenCollectionProxy__VectorCreateIterators(void *obj, void **begin_arena, v
       *end_arena = 0;
       return;
    }
-   *begin_arena = &(*vec->begin());
-#ifdef R__VISUAL_CPLUSPLUS
-   *end_arena = &(*(vec->end()-1)) + 1; // On windows we can not dererence the end iterator at all.
-#else
-   // coverity[past_the_end] Safe on other platforms
-   *end_arena = &(*vec->end());
-#endif
+   *begin_arena = vec->data();
+   *end_arena = vec->data() + vec->size(); // We can not dereference the end iterator at all.
 
 }
 

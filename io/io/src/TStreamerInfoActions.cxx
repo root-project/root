@@ -2241,7 +2241,7 @@ namespace TStreamerInfoActions
             return 0;
          }
 #endif
-         T *begin = &(*vec->begin());
+         T *begin = vec->data();
          buf.ReadFastArray(begin, nvalues);
 
          buf.CheckByteCount(start,count,config->fTypeName);
@@ -2260,7 +2260,7 @@ namespace TStreamerInfoActions
          Int_t nvalues = vec->size();
          buf.WriteInt(nvalues);
 
-         T *begin = &(*vec->begin());
+         T *begin = vec->data();
          buf.WriteFastArray(begin, nvalues);
 
          buf.SetByteCount(start);
@@ -2286,7 +2286,7 @@ namespace TStreamerInfoActions
             return 0;
          }
 #endif
-         float *begin = &(*vec->begin());
+         float *begin = vec->data();
          buf.ReadFastArrayFloat16(begin, nvalues);
 
          buf.CheckByteCount(start,count,config->fTypeName);
@@ -2304,7 +2304,7 @@ namespace TStreamerInfoActions
          Int_t nvalues = vec->size();
          buf.WriteInt(nvalues);
 
-         float *begin = &(*vec->begin());
+         float *begin = vec->data();
          buf.WriteFastArrayFloat16(begin, nvalues);
 
          buf.SetByteCount(start);
@@ -2330,7 +2330,7 @@ namespace TStreamerInfoActions
             return 0;
          }
 #endif
-         double *begin = &(*vec->begin());
+         double *begin = vec->data();
          buf.ReadFastArrayDouble32(begin, nvalues);
 
          buf.CheckByteCount(start,count,config->fTypeName);
@@ -2348,7 +2348,7 @@ namespace TStreamerInfoActions
          Int_t nvalues = vec->size();
          buf.WriteInt(nvalues);
 
-         double *begin = &(*vec->begin());
+         double *begin = vec->data();
          buf.WriteFastArrayDouble32(begin, nvalues);
 
          buf.SetByteCount(start);
