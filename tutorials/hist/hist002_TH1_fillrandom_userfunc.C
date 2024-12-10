@@ -36,7 +36,7 @@ void hist002_TH1_fillrandom_userfunc()
    h1d.FillRandom("sqroot", 10000);
 
    // Open a ROOT file and save the formula, function and histogram
-   auto myFile = std::unique_ptr<TFile>(TFile::Open("fillrandom.root", "RECREATE"));
+   auto myFile = std::unique_ptr<TFile>(TFile::Open("fillrandom_userfunc.root", "RECREATE"));
    myFile->WriteObject(&form1, form1.GetName());
    myFile->WriteObject(&sqroot, sqroot.GetName());
    myFile->WriteObject(&h1d, h1d.GetName());
