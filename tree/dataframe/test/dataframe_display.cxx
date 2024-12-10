@@ -35,6 +35,7 @@ static const std::string DisplayPrintDefaultRows("+-----+----+----+----------+\n
 
 static const std::string DisplayAsStringDefaultRows = DisplayPrintDefaultRows;
 
+// clang-format off
 static const std::string DisplayAsHtmlDefaultRows(
 "<table style=\"border: 1px solid black; border-collapse: collapse;\">\n"
 "  <tr style=\"background: #fff\">\n    <th style=\"padding: 1px 4px; border-right: 1px solid\">Row</th>\n    <th style=\"padding: 1px 4px; border-right: 1px solid\">b1</th>\n    <th style=\"padding: 1px 4px; border-right: 1px solid\">b2</th>\n    <th style=\"padding: 1px 4px; border-right: 1px solid\">b3</th>\n  </tr>\n"
@@ -56,6 +57,7 @@ static const std::string DisplayAsHtmlDefaultRows(
 "  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px; border-right: 1px solid\"></td>\n    <td style=\"padding: 1px 4px; border-right: 1px solid\"></td>\n    <td style=\"padding: 1px 4px; border-right: 1px solid\"></td>\n    <td style=\"padding: 1px 4px; border-right: 1px solid\"></td>\n  </tr>\n"
 "</table>"
 );
+// clang-format on
 
 TEST(RDFDisplayTests, DisplayNoJitDefaultRows)
 {
@@ -82,7 +84,7 @@ TEST(RDFDisplayTests, DisplayNoJitDefaultRows)
 
    // Testing the string returned
    EXPECT_EQ(dd->AsString(), DisplayAsStringDefaultRows);
-   EXPECT_EQ(dd->AsString({ RDisplay::EPrintFormat::kHtml }), DisplayAsHtmlDefaultRows);
+   EXPECT_EQ(dd->AsString({RDisplay::EPrintFormat::kHtml}), DisplayAsHtmlDefaultRows);
 }
 
 TEST(RDFDisplayTests, DisplayJitDefaultRows)
@@ -110,7 +112,7 @@ TEST(RDFDisplayTests, DisplayJitDefaultRows)
 
    // Testing the string returned
    EXPECT_EQ(dd->AsString(), DisplayAsStringDefaultRows);
-   EXPECT_EQ(dd->AsString({ RDisplay::EPrintFormat::kHtml }), DisplayAsHtmlDefaultRows);
+   EXPECT_EQ(dd->AsString({RDisplay::EPrintFormat::kHtml}), DisplayAsHtmlDefaultRows);
 }
 
 TEST(RDFDisplayTests, DisplayRegexDefaultRows)
@@ -138,7 +140,7 @@ TEST(RDFDisplayTests, DisplayRegexDefaultRows)
 
    // Testing the string returned
    EXPECT_EQ(dd->AsString(), DisplayAsStringDefaultRows);
-   EXPECT_EQ(dd->AsString({ RDisplay::EPrintFormat::kHtml }), DisplayAsHtmlDefaultRows);
+   EXPECT_EQ(dd->AsString({RDisplay::EPrintFormat::kHtml}), DisplayAsHtmlDefaultRows);
 }
 
 static const std::string DisplayPrintTwoRows("+-----+----+----+----------+\n"
@@ -155,6 +157,7 @@ static const std::string DisplayPrintTwoRows("+-----+----+----+----------+\n"
 
 static const std::string DisplayAsStringTwoRows = DisplayPrintTwoRows;
 
+// clang-format off
 static const std::string DisplayAsHtmlTwoRows(
 "<table style=\"border: 1px solid black; border-collapse: collapse;\">\n"
 "  <tr style=\"background: #fff\">\n    <th style=\"padding: 1px 4px; border-right: 1px solid\">Row</th>\n    <th style=\"padding: 1px 4px; border-right: 1px solid\">b1</th>\n    <th style=\"padding: 1px 4px; border-right: 1px solid\">b2</th>\n    <th style=\"padding: 1px 4px; border-right: 1px solid\">b3</th>\n  </tr>\n"
@@ -167,6 +170,7 @@ static const std::string DisplayAsHtmlTwoRows(
 "  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px; border-right: 1px solid\"></td>\n    <td style=\"padding: 1px 4px; border-right: 1px solid\"></td>\n    <td style=\"padding: 1px 4px; border-right: 1px solid\"></td>\n    <td style=\"padding: 1px 4px; border-right: 1px solid\"></td>\n  </tr>\n"
 "</table>"
 );
+// clang-format on
 
 TEST(RDFDisplayTests, DisplayJitTwoRows)
 {
@@ -232,6 +236,7 @@ static const std::string DisplayAsStringTwoColumns("+-----+----+----+\n"
                                                    "|     |    | 3  | \n"
                                                    "+-----+----+----+\n");
 
+// clang-format off
 static const std::string DisplayAsHtmlTwoColumns(
 "<table style=\"border: 1px solid black; border-collapse: collapse;\">\n"
 "  <tr style=\"background: #fff\">\n    <th style=\"padding: 1px 4px; border-right: 1px solid\">Row</th>\n    <th style=\"padding: 1px 4px; border-right: 1px solid\">b1</th>\n    <th style=\"padding: 1px 4px; border-right: 1px solid\">b2</th>\n  </tr>\n"
@@ -253,7 +258,7 @@ static const std::string DisplayAsHtmlTwoColumns(
 "  <tr style=\"background: #eee\">\n    <td style=\"padding: 1px 4px; border-right: 1px solid\"></td>\n    <td style=\"padding: 1px 4px; border-right: 1px solid\"></td>\n    <td style=\"padding: 1px 4px; border-right: 1px solid\"></td>\n  </tr>\n"
 "</table>"
 );
-
+// clang-format on
 
 TEST(RDFDisplayTests, DisplayAmbiguity)
 {
@@ -267,7 +272,7 @@ TEST(RDFDisplayTests, DisplayAmbiguity)
 
    EXPECT_EQ(display_1->AsString(), DisplayAsStringOneColumn);
    EXPECT_EQ(display_2->AsString(), DisplayAsStringTwoColumns);
-   EXPECT_EQ(display_2->AsString({ ROOT::RDF::RDisplay::EPrintFormat::kHtml }), DisplayAsHtmlTwoColumns);
+   EXPECT_EQ(display_2->AsString({ROOT::RDF::RDisplay::EPrintFormat::kHtml}), DisplayAsHtmlTwoColumns);
 }
 
 static const std::string DisplayAsStringString("+-----+-------+\n"
@@ -278,6 +283,7 @@ static const std::string DisplayAsStringString("+-----+-------+\n"
                                                "| 1   | \"foo\" | \n"
                                                "+-----+-------+\n");
 
+// clang-format off
 static const std::string DisplayAsHtmlString(
 "<table style=\"border: 1px solid black; border-collapse: collapse;\">\n"
 "  <tr style=\"background: #fff\">\n    <th style=\"padding: 1px 4px; border-right: 1px solid\">Row</th>\n    <th style=\"padding: 1px 4px; border-right: 1px solid\">b1</th>\n  </tr>\n"
@@ -286,6 +292,7 @@ static const std::string DisplayAsHtmlString(
 "  <tr style=\"background: #fff\">\n    <td style=\"padding: 1px 4px; border-right: 1px solid\"></td>\n    <td style=\"padding: 1px 4px; border-right: 1px solid\"></td>\n  </tr>\n"
 "</table>"
 );
+// clang-format on
 
 TEST(RDFDisplayTests, DisplayPrintString)
 {
@@ -305,7 +312,7 @@ TEST(RDFDisplayTests, DisplayPrintString)
 
    // Testing the string returned
    EXPECT_EQ(dd->AsString(), DisplayAsStringString);
-   EXPECT_EQ(dd->AsString({ ROOT::RDF::RDisplay::EPrintFormat::kHtml }), DisplayAsHtmlString);
+   EXPECT_EQ(dd->AsString({ROOT::RDF::RDisplay::EPrintFormat::kHtml}), DisplayAsHtmlString);
 }
 
 TEST(RDFDisplayTests, CharArray)
