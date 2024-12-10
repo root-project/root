@@ -771,6 +771,17 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       } else if (obj->InheritsFrom(TPaveText::Class())) {
          if (strcmp(obj->GetName(), "title") == 0)
             title = static_cast<TPaveText *>(obj);
+      } else if (obj->InheritsFrom(TButton::Class())) {
+         auto btn = (TButton *) obj;
+         auto text = dynamic_cast<TText *> (btn->GetListOfPrimitives()->First());
+         if (text) {
+            text->SetTitle(btn->GetTitle());
+            text->SetTextSize(btn->GetTextSize());
+            text->SetTextFont(btn->GetTextFont());
+            text->SetTextAlign(btn->GetTextAlign());
+            text->SetTextColor(btn->GetTextColor());
+            text->SetTextAngle(btn->GetTextAngle());
+         }
       }
    }
 
@@ -2048,7 +2059,9 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             auto btn = (TButton *) pad;
             const char *mthd = btn->GetMethod();
             if (mthd && *mthd) {
-               TVirtualPad::TContext ctxt(gROOT->GetSelectedPad(), kTRUE, kTRUE);
+               auto cpad = gROOT->GetSelectedPad();
+               if (cpad)
+                  cpad->cd();
                gROOT->ProcessLine(mthd);
             }
             return kTRUE;
