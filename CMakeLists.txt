@@ -542,27 +542,29 @@ if(runtime_cxxmodules)
     set(modules_idx_cmd COMMAND ${ld_library_path}=${library_output_dir}:$ENV{${ld_library_path}}
                                 ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
   endif()
-  if(ROOT_ENABLE_PROJECTS STREQUAL "All")   
+
+  set(INDEX_DEPS "Hist Tree Gpad Graf HistPainter")
+
+  add_custom_target(modules_idx_dependencies)
+  set(MODULES_IDX_DEPS_LIST "Cling;Hist;Tree;Gpad;Graf;HistPainter;move_artifacts")
+  foreach(modules_idx_dep ${MODULES_IDX_DEPS_LIST})
+    if(TARGET ${modules_idx_dep})
+      add_dependencies(modules_idx_dependencies ${modules_idx_dep})
+    endif()
+  endforeach()
+
   add_custom_command(OUTPUT ${library_output_dir}/modules.idx
-                     COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
-                     ${modules_idx_cmd}
-                     WORKING_DIRECTORY ${library_output_dir}
-                       DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts
-                             ${modules_idx_deps})
-  else()
-  add_custom_command(OUTPUT ${library_output_dir}/modules.idx
-                     COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
-                     ${modules_idx_cmd}
-                     WORKING_DIRECTORY ${library_output_dir}
-                       DEPENDS $<TARGET_FILE:root.exe> Cling  move_artifacts
-                             ${modules_idx_deps})
-  endif()
+         COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
+         ${modules_idx_cmd}
+         WORKING_DIRECTORY ${library_output_dir}
+     DEPENDS $<TARGET_FILE:root.exe> modules_idx_dependencies
+           ${modules_idx_deps})
+
   add_custom_target(modules_idx ALL DEPENDS ${library_output_dir}/modules.idx)
   add_dependencies(modules_idx ${modules_idx_deps})
   set_property(TARGET modules_idx PROPERTY modules_idx_file ${library_output_dir}/modules.idx)
   set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${library_output_dir}/modules.timestamp")
 endif()
-
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 if(ROOT_ENABLE_PROJECTS STREQUAL "All")
