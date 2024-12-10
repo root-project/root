@@ -295,8 +295,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
 ///  WARNING: in name avoid special characters like '^','$','.' that are used
 ///  by the regular expression parser (see TRegexp).
 
-TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir)
-     : TNamed(name, "object title")
+TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory *motherDir) : TNamed(name, "")
 {
    R__ASSERT(obj && cl);
 
