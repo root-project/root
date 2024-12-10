@@ -888,12 +888,12 @@ class ObjectPainter extends BasePainter {
    /** @summary Fill context menu for the object
      * @private */
    fillContextMenu(menu) {
-      const name = this.getObjectName();
-      let cl = this.getClassName();
-      const p = cl.lastIndexOf('::');
-      if (p > 0) cl = cl.slice(p+2);
-      const hdr = (cl && name) ? `${cl}:${name}` : (cl || name || 'object'),
-            url = (p < 0) ? `${urlClassPrefix}${cl}.html` : '';
+      const cl = this.getClassName(),
+            name = this.getObjectName(),
+            p = cl.lastIndexOf('::'),
+            cl0 = (p > 0) ? cl.slice(p+2) : cl,
+            hdr = (cl0 && name) ? `${cl0}:${name}` : (cl0 || name || 'object'),
+            url = cl ? `${urlClassPrefix}${cl.replaceAll('::', '_1_1')}.html` : '';
 
       menu.header(hdr, url);
 
@@ -1378,7 +1378,7 @@ class ObjectPainter extends BasePainter {
       if (!this.snapid || !canvp || canvp?._readonly || !canvp?._websocket)
          return menu;
 
-      function DoExecMenu(arg) {
+      function doExecMenu(arg) {
          const execp = menu.exec_painter || this,
                cp = execp.getCanvPainter(),
                item = menu.exec_items[parseInt(arg)];
@@ -1392,16 +1392,18 @@ class ObjectPainter extends BasePainter {
             return;
          }
 
-         if (isFunc(cp?.executeObjectMethod))
-            if (cp.executeObjectMethod(execp, item, item.$execid)) return;
+         if (isFunc(cp?.executeObjectMethod) && cp.executeObjectMethod(execp, item, item.$execid))
+            return;
 
          item.fClassName = execp.getClassName();
          if ((item.$execid.indexOf('#x') > 0) || (item.$execid.indexOf('#y') > 0) || (item.$execid.indexOf('#z') > 0))
             item.fClassName = clTAxis;
 
-         if (execp.executeMenuCommand(item)) return;
+         if (execp.executeMenuCommand(item))
+            return;
 
-         if (!item.$execid) return;
+         if (!item.$execid)
+            return;
 
          if (!item.fArgs) {
             if (cp?.v7canvas)
@@ -1422,9 +1424,10 @@ class ObjectPainter extends BasePainter {
          });
       }
 
-      const DoFillMenu = (_menu, _reqid, _resolveFunc, reply) => {
+      const doFillMenu = (_menu, _reqid, _resolveFunc, reply) => {
          // avoid multiple call of the callback after timeout
-         if (menu._got_menu) return;
+         if (menu._got_menu)
+            return;
          menu._got_menu = true;
 
          if (reply && (_reqid !== reply.fId))
@@ -1456,16 +1459,18 @@ class ObjectPainter extends BasePainter {
                }
 
                if ((item.fChecked === undefined) || (item.fChecked < 0))
-                  _menu.add(item.fName, n, DoExecMenu);
+                  _menu.add(item.fName, n, doExecMenu);
                else
-                  _menu.addchk(item.fChecked, item.fName, n, DoExecMenu);
+                  _menu.addchk(item.fChecked, item.fName, n, doExecMenu);
             }
 
-            if (lastclname) _menu.endsub();
+            if (lastclname)
+               _menu.endsub();
          }
 
          _resolveFunc(_menu);
       },
+
       reqid = this.getSnapId(kind);
 
       menu._got_menu = false;
@@ -1484,9 +1489,9 @@ class ObjectPainter extends BasePainter {
          }
 
          // set timeout to avoid menu hanging
-         setTimeout(() => DoFillMenu(menu, reqid, handleResolve), 2000);
+         setTimeout(() => doFillMenu(menu, reqid, handleResolve), 2000);
 
-         canvp.submitMenuRequest(this, kind, reqid).then(lst => DoFillMenu(menu, reqid, handleResolve, lst));
+         canvp.submitMenuRequest(this, kind, reqid).then(lst => doFillMenu(menu, reqid, handleResolve, lst));
       });
    }
 

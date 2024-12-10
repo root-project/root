@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '4/12/2024',
+version_date = '10/12/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -208,6 +208,8 @@ settings = {
    CanvasWidth: 1200,
    /** @summary Default canvas height */
    CanvasHeight: 800,
+   /** @summary Canvas pixel ratio between viewport and display, default 1 */
+   CanvasScale: 1,
    /** @summary Enable or disable tooltips, default on */
    Tooltip: !nodejs,
    /** @summary Time in msec for appearance of tooltips, 0 - no animation */
