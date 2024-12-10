@@ -3,7 +3,7 @@ c1 = TCanvas( 'c1', 'The Fit Canvas' )
 c1.SetGridx()
 c1.SetGridy()
 
-fill = TFile( 'fillrandom.root' )
+fill = TFile( 'fillrandom_userfunc.root' )
 fill.ls()
 sqroot.Print()
 
