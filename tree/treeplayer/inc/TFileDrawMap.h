@@ -47,6 +47,8 @@ protected:
    virtual void     PaintDir(TDirectory *dir, const char *keys);
    virtual TObject *GetObject();
 
+   TString GetRecentInfo();
+
 public:
    TFileDrawMap();
    TFileDrawMap(const TFile *file, const char *keys, Option_t *option = "");
@@ -56,7 +58,6 @@ public:
    Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
    virtual void  DrawObject(); // *MENU*
    virtual void  DumpObject(); // *MENU*
-   void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    char *GetObjectInfo(Int_t px, Int_t py) const override;
    virtual void  InspectObject(); // *MENU*
    void  Paint(Option_t *option) override;
