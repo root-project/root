@@ -812,8 +812,11 @@ class RPadPainter extends RObjectPainter {
    /** @summary Redraw legend object
     * @desc Used when object attributes are changed to ensure that legend is up to date
     * @private */
-   async redrawLegend() {
-   }
+   async redrawLegend() {}
+
+   /** @summary Deliver mouse move or click event to the web canvas
+     * @private */
+   deliverWebCanvasEvent() {}
 
    /** @summary Redraw pad means redraw ourself
      * @return {Promise} when redrawing ready */

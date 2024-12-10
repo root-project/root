@@ -407,6 +407,13 @@ function create3DControl(fp) {
 
    const frame_painter = fp, obj_painter = fp.getMainPainter();
 
+   if (fp.access3dKind() === constants.Embed3D.Embed) {
+      // tooltip scaling only need when GL canvas embed into
+      const scale = fp.getCanvPainter()?.getPadScale();
+      if (scale)
+         fp.control.tooltip?.setScale(scale);
+   }
+
    fp.control.processMouseMove = function(intersects) {
       let tip = null, mesh = null, zoom_mesh = null;
       const handle_tooltip = frame_painter.isTooltipAllowed();
@@ -521,7 +528,7 @@ function create3DScene(render3d, x3dscale, y3dscale, orthographic) {
       disposeThreejsObject(this.toplevel);
       delete this.tooltip_mesh;
       delete this.toplevel;
-      if (this.control) this.control.HideTooltip();
+      this.control?.hideTooltip();
 
       const newtop = new THREE.Object3D();
       this.scene.add(newtop);
@@ -568,7 +575,7 @@ function create3DScene(render3d, x3dscale, y3dscale, orthographic) {
    }).then(r => {
       this.renderer = r;
 
-      this.webgl = (r.jsroot_render3d === constants.Render3D.WebGL);
+      this.webgl = r.jsroot_render3d === constants.Render3D.WebGL;
       this.add3dCanvas(sz, r.jsroot_dom, this.webgl);
 
       this.first_render_tm = 0;
@@ -706,9 +713,11 @@ function resize3D() {
 
    this.apply3dSize(sz);
 
-   if ((this.scene_width === sz.width) && (this.scene_height === sz.height)) return false;
+   if ((this.scene_width === sz.width) && (this.scene_height === sz.height))
+      return false;
 
-   if ((sz.width < 10) || (sz.height < 10)) return false;
+   if ((sz.width < 10) || (sz.height < 10))
+      return false;
 
    this.scene_width = sz.width;
    this.scene_height = sz.height;

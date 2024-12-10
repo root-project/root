@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '4/12/2024',
+version_date = '10/12/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -216,6 +216,8 @@ settings = {
    CanvasWidth: 1200,
    /** @summary Default canvas height */
    CanvasHeight: 800,
+   /** @summary Canvas pixel ratio between viewport and display, default 1 */
+   CanvasScale: 1,
    /** @summary Enable or disable tooltips, default on */
    Tooltip: !nodejs,
    /** @summary Time in msec for appearance of tooltips, 0 - no animation */
@@ -8506,7 +8508,8 @@ function getElementRect(elem, sizearg) {
 /** @summary Calculate absolute position of provided element in canvas
   * @private */
 function getAbsPosInCanvas(sel, pos) {
-   if (!pos) return pos;
+   if (!pos)
+      return pos;
 
    while (!sel.empty() && !sel.classed('root_canvas')) {
       const cl = sel.attr('class');
@@ -13065,12 +13068,12 @@ class ObjectPainter extends BasePainter {
    /** @summary Fill context menu for the object
      * @private */
    fillContextMenu(menu) {
-      const name = this.getObjectName();
-      let cl = this.getClassName();
-      const p = cl.lastIndexOf('::');
-      if (p > 0) cl = cl.slice(p+2);
-      const hdr = (cl && name) ? `${cl}:${name}` : (cl || name || 'object'),
-            url = (p < 0) ? `${urlClassPrefix}${cl}.html` : '';
+      const cl = this.getClassName(),
+            name = this.getObjectName(),
+            p = cl.lastIndexOf('::'),
+            cl0 = (p > 0) ? cl.slice(p+2) : cl,
+            hdr = (cl0 && name) ? `${cl0}:${name}` : (cl0 || name || 'object'),
+            url = cl ? `${urlClassPrefix}${cl.replaceAll('::', '_1_1')}.html` : '';
 
       menu.header(hdr, url);
 
@@ -13555,7 +13558,7 @@ class ObjectPainter extends BasePainter {
       if (!this.snapid || !canvp || canvp?._readonly || !canvp?._websocket)
          return menu;
 
-      function DoExecMenu(arg) {
+      function doExecMenu(arg) {
          const execp = menu.exec_painter || this,
                cp = execp.getCanvPainter(),
                item = menu.exec_items[parseInt(arg)];
@@ -13569,16 +13572,18 @@ class ObjectPainter extends BasePainter {
             return;
          }
 
-         if (isFunc(cp?.executeObjectMethod))
-            if (cp.executeObjectMethod(execp, item, item.$execid)) return;
+         if (isFunc(cp?.executeObjectMethod) && cp.executeObjectMethod(execp, item, item.$execid))
+            return;
 
          item.fClassName = execp.getClassName();
          if ((item.$execid.indexOf('#x') > 0) || (item.$execid.indexOf('#y') > 0) || (item.$execid.indexOf('#z') > 0))
             item.fClassName = clTAxis;
 
-         if (execp.executeMenuCommand(item)) return;
+         if (execp.executeMenuCommand(item))
+            return;
 
-         if (!item.$execid) return;
+         if (!item.$execid)
+            return;
 
          if (!item.fArgs) {
             if (cp?.v7canvas)
@@ -13599,9 +13604,10 @@ class ObjectPainter extends BasePainter {
          });
       }
 
-      const DoFillMenu = (_menu, _reqid, _resolveFunc, reply) => {
+      const doFillMenu = (_menu, _reqid, _resolveFunc, reply) => {
          // avoid multiple call of the callback after timeout
-         if (menu._got_menu) return;
+         if (menu._got_menu)
+            return;
          menu._got_menu = true;
 
          if (reply && (_reqid !== reply.fId))
@@ -13633,16 +13639,18 @@ class ObjectPainter extends BasePainter {
                }
 
                if ((item.fChecked === undefined) || (item.fChecked < 0))
-                  _menu.add(item.fName, n, DoExecMenu);
+                  _menu.add(item.fName, n, doExecMenu);
                else
-                  _menu.addchk(item.fChecked, item.fName, n, DoExecMenu);
+                  _menu.addchk(item.fChecked, item.fName, n, doExecMenu);
             }
 
-            if (lastclname) _menu.endsub();
+            if (lastclname)
+               _menu.endsub();
          }
 
          _resolveFunc(_menu);
       },
+
       reqid = this.getSnapId(kind);
 
       menu._got_menu = false;
@@ -13661,9 +13669,9 @@ class ObjectPainter extends BasePainter {
          }
 
          // set timeout to avoid menu hanging
-         setTimeout(() => DoFillMenu(menu, reqid, handleResolve), 2000);
+         setTimeout(() => doFillMenu(menu, reqid, handleResolve), 2000);
 
-         canvp.submitMenuRequest(this, kind, reqid).then(lst => DoFillMenu(menu, reqid, handleResolve, lst));
+         canvp.submitMenuRequest(this, kind, reqid).then(lst => doFillMenu(menu, reqid, handleResolve, lst));
       });
    }
 
@@ -56677,11 +56685,13 @@ const Handling3DDrawings = {
      * @private */
    access3dKind(new_value) {
       const svg = this.getPadSvg();
-      if (svg.empty()) return -1;
+      if (svg.empty())
+         return -1;
 
       // returns kind of currently created 3d canvas
       const kind = svg.property('can3d');
-      if (new_value !== undefined) svg.property('can3d', new_value);
+      if (new_value !== undefined)
+         svg.property('can3d', new_value);
       return ((kind === null) || (kind === undefined)) ? -1 : kind;
    },
 
@@ -56700,7 +56710,7 @@ const Handling3DDrawings = {
          else if (browser.isFirefox)
             can3d = constants$1.Embed3D.Embed;
          else if (browser.chromeVersion > 95)
-         // version 96 works partially, 97 works fine
+            // version 96 works partially, 97 works fine
             can3d = constants$1.Embed3D.Embed;
          else
             can3d = constants$1.Embed3D.Overlay;
@@ -56747,14 +56757,22 @@ const Handling3DDrawings = {
          // while 3D canvas uses area also for the axis labels, extend area relative to normal frame
          const dx = Math.round(size.width*0.07), dy = Math.round(size.height*0.05);
 
-         size.x = Math.max(0, size.x-dx);
-         size.y = Math.max(0, size.y-dy);
+         size.x = Math.max(0, size.x - dx);
+         size.y = Math.max(0, size.y - dy);
          size.width = Math.min(size.width + 2*dx, rect.width - size.x);
          size.height = Math.min(size.height + 2*dy, rect.height - size.y);
       }
 
-      if (can3d === 1)
+      if (can3d === constants$1.Embed3D.Overlay) {
          size = getAbsPosInCanvas(this.getPadSvg(), size);
+         const scale = this.getCanvPainter().getPadScale();
+         if (scale && scale !== 1) {
+            size.x /= scale;
+            size.y /= scale;
+            size.width /= scale;
+            size.height /= scale;
+         }
+      }
 
       return size;
    },
@@ -57097,6 +57115,7 @@ class TooltipFor3D {
       this.parent = prnt || getDocument().body;
       this.canvas = canvas; // we need canvas to recalculate mouse events
       this.abspos = !prnt;
+      this.scale = 1;
    }
 
    /** @summary check parent */
@@ -57107,10 +57126,16 @@ class TooltipFor3D {
       }
    }
 
+   /** @summary set scaling factor */
+   setScale(v) {
+      this.scale = v;
+   }
+
    /** @summary extract position from event
      * @desc can be used to process it later when event is gone */
    extract_pos(e) {
-      if (isObject(e) && (e.u !== undefined) && (e.l !== undefined)) return e;
+      if (isObject(e) && (e.u !== undefined) && (e.l !== undefined))
+         return e;
       const res = { u: 0, l: 0 };
       if (this.abspos) {
          res.l = e.pageX;
@@ -57119,6 +57144,8 @@ class TooltipFor3D {
          res.l = e.offsetX;
          res.u = e.offsetY;
       }
+      res.l /= this.scale;
+      res.u /= this.scale;
       return res;
    }
 
@@ -57126,7 +57153,8 @@ class TooltipFor3D {
      * @desc event is delivered from canvas,
      * but position should be calculated relative to the element where tooltip is placed */
    pos(e) {
-      if (!this.tt) return;
+      if (!this.tt)
+         return;
 
       const pos = this.extract_pos(e);
       if (!this.abspos) {
@@ -57168,10 +57196,12 @@ class TooltipFor3D {
 
    /** @summary Show tooltip */
    show(v /* , mouse_pos, status_func */) {
-      if (!v) return this.hide();
+      if (!v)
+         return this.hide();
 
       if (isObject(v) && (v.lines || v.line)) {
-         if (v.only_status) return this.hide();
+         if (v.only_status)
+            return this.hide();
 
          if (v.line)
             v = v.line;
@@ -57396,7 +57426,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       delete this.mouse_zoom_mesh;
    };
 
-   control.HideTooltip = function() {
+   control.hideTooltip = function() {
       this.tooltip.hide();
    };
 
@@ -57615,7 +57645,6 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       this.cursor_changed = false;
       if (tip && this.painter?.isTooltipAllowed()) {
          this.tooltip.checkParent(this.painter.selectDom().node());
-
          this.tooltip.show(tip, mouse);
          this.tooltip.pos(this.tmout_ttpos);
       } else {
@@ -64303,11 +64332,13 @@ const TooltipHandler = {
          }
       }
 
-      let nhints = 0, nexact = 0, maxlen = 0, lastcolor1 = 0, usecolor1 = false, textheight = 11;
+      let nhints = 0, nexact = 0, maxlen = 0, lastcolor1 = 0, usecolor1 = false;
       const hmargin = 3, wmargin = 3, hstep = 1.2,
             frame_rect = this.getFrameRect(),
             pp = this.getPadPainter(),
             pad_width = pp?.getPadWidth(),
+            scale = this.getCanvPainter()?.getPadScale() ?? 1,
+            textheight = (pnt?.touch ? 15 : 11) * scale,
             font = new FontHandler(160, textheight),
             disable_tootlips = !this.isTooltipAllowed() || !this.tooltip_enabled;
 
@@ -64319,10 +64350,8 @@ const TooltipHandler = {
       // collect tooltips from pad painter - it has list of all drawn objects
       const hints = pp?.processPadTooltipEvent(pnt) ?? [];
 
-      if (pp?._deliver_webcanvas_events && pp?.is_active_pad && pnt && isFunc(pp?.deliverWebCanvasEvent))
-         pp.deliverWebCanvasEvent('move', frame_rect.x + pnt.x, frame_rect.y + pnt.y, hints);
-
-      if (pnt?.touch) textheight = 15;
+      if (pnt && frame_rect)
+         pp.deliverWebCanvasEvent('move', frame_rect.x + pnt.x, frame_rect.y + pnt.y, hints ? hints[0]?.painter?.snapid : '');
 
       for (let n = 0; n < hints.length; ++n) {
          const hint = hints[n];
@@ -64356,7 +64385,8 @@ const TooltipHandler = {
          hint.height = Math.round(hint.lines.length * textheight * hstep + 2 * hmargin - textheight * (hstep - 1));
 
          if ((hint.color1 !== undefined) && (hint.color1 !== 'none')) {
-            if ((lastcolor1 !== 0) && (lastcolor1 !== hint.color1)) usecolor1 = true;
+            if ((lastcolor1 !== 0) && (lastcolor1 !== hint.color1))
+               usecolor1 = true;
             lastcolor1 = hint.color1;
          }
       }
@@ -64387,21 +64417,27 @@ const TooltipHandler = {
          if (!hint) hint = hints[k];
 
          // select exact hint if this is the only one
-         if (hints[k].exact && (nexact < 2) && (!hint || !hint.exact)) { hint = hints[k]; break; }
+         if (hints[k].exact && (nexact < 2) && (!hint || !hint.exact)) {
+            hint = hints[k];
+            break;
+         }
 
-         if (!pnt || (hints[k].x === undefined) || (hints[k].y === undefined)) continue;
+         if (!pnt || (hints[k].x === undefined) || (hints[k].y === undefined))
+            continue;
 
          const dist2 = (pnt.x - hints[k].x) ** 2 + (pnt.y - hints[k].y) ** 2;
          if (dist2 < best_dist2) { best_dist2 = dist2; best_hint = hints[k]; }
       }
 
-      if ((!hint || !hint.exact) && (best_dist2 < 400)) hint = best_hint;
+      if ((!hint || !hint.exact) && (best_dist2 < 400))
+         hint = best_hint;
 
       if (hint) {
          name = (hint.lines && hint.lines.length > 1) ? hint.lines[0] : hint.name;
          title = hint.title || '';
          info = hint.line;
-         if (!info && hint.lines) info = hint.lines.slice(1).join(' ');
+         if (!info && hint.lines)
+            info = hint.lines.slice(1).join(' ');
       }
 
       this.showObjectStatus(name, title, info, coordinates);
@@ -64433,7 +64469,7 @@ const TooltipHandler = {
             .property('hints_pad', this.getPadName());
 
       let viewmode = hintsg.property('viewmode') || '',
-         actualw = 0, posx = pnt.x + frame_rect.hint_delta_x;
+          actualw = 0, posx = pnt.x + frame_rect.hint_delta_x;
 
       if (show_only_best || (nhints === 1)) {
          viewmode = 'single';
@@ -64503,7 +64539,8 @@ const TooltipHandler = {
                   n = -1;
                }
             }
-            if ((gapminx === -1111) && (gapmaxx === -1111)) gapminx = gapmaxx = hint.x;
+            if ((gapminx === -1111) && (gapmaxx === -1111))
+               gapminx = gapmaxx = hint.x;
             gapminx = Math.min(gapminx, hint.x);
             gapmaxx = Math.min(gapmaxx, hint.x);
          }
@@ -68948,7 +68985,7 @@ const PadButtonsHandler = {
                         item.tooltip + (iscan ? '' : (` on pad ${this.this_pad_name}`)) + (item.keyname ? ` (keyshortcut ${item.keyname})` : ''), false);
 
             if (group.property('vertical'))
-                svg.attr('x', y).attr('y', x);
+               svg.attr('x', y).attr('y', x);
             else
                svg.attr('x', x).attr('y', y);
 
@@ -69121,6 +69158,9 @@ class TPadPainter extends ObjectPainter {
 
    /** @summary get pad height */
    getPadHeight() { return this._pad_height || 0; }
+
+   /** @summary get pad height */
+   getPadScale() { return this._pad_scale || 1; }
 
    /** @summary get pad rect */
    getPadRect() {
@@ -69517,35 +69557,36 @@ class TPadPainter extends ObjectPainter {
 
       svg.style('filter', settings.DarkMode || this.pad?.$dark ? 'invert(100%)' : null);
 
-      svg.attr('viewBox', `0 0 ${rect.width} ${rect.height}`)
-         .attr('preserveAspectRatio', 'none')  // we do not preserve relative ratio
-         .property('height_factor', factor)
-         .property('draw_x', 0)
-         .property('draw_y', 0)
-         .property('draw_width', rect.width)
-         .property('draw_height', rect.height);
-
+      this._pad_scale = settings.CanvasScale || 1;
       this._pad_x = 0;
       this._pad_y = 0;
-      this._pad_width = rect.width;
-      this._pad_height = rect.height;
+      this._pad_width = rect.width * this._pad_scale;
+      this._pad_height = rect.height * this._pad_scale;
+
+      svg.attr('viewBox', `0 0 ${this._pad_width} ${this._pad_height}`)
+         .attr('preserveAspectRatio', 'none')  // we do not preserve relative ratio
+         .property('height_factor', factor)
+         .property('draw_x', this._pad_x)
+         .property('draw_y', this._pad_y)
+         .property('draw_width', this._pad_width)
+         .property('draw_height', this._pad_height);
 
       this.addPadBorder(svg, frect);
 
-      this.setFastDrawing(rect.width * (1 - this.pad.fLeftMargin - this.pad.fRightMargin), rect.height * (1 - this.pad.fBottomMargin - this.pad.fTopMargin));
+      this.setFastDrawing(this._pad_width * (1 - this.pad.fLeftMargin - this.pad.fRightMargin), this._pad_height * (1 - this.pad.fBottomMargin - this.pad.fTopMargin));
 
       if (this.alignButtons && btns)
-         this.alignButtons(btns, rect.width, rect.height);
+         this.alignButtons(btns, this._pad_width, this._pad_height);
 
       let dt = info.selectChild('.canvas_date');
       if (!gStyle.fOptDate)
          dt.remove();
        else {
          if (dt.empty())
-             dt = info.append('text').attr('class', 'canvas_date');
-         const posy = Math.round(rect.height * (1 - gStyle.fDateY)),
+            dt = info.append('text').attr('class', 'canvas_date');
+         const posy = Math.round(this._pad_height * (1 - gStyle.fDateY)),
                date = new Date();
-         let posx = Math.round(rect.width * gStyle.fDateX);
+         let posx = Math.round(this._pad_width * gStyle.fDateX);
          if (!is_batch && (posx < 25))
             posx = 25;
          if (gStyle.fOptDate > 3)
@@ -69702,6 +69743,7 @@ class TPadPainter extends ObjectPainter {
              .property('draw_width', w)
              .property('draw_height', h);
 
+      this._pad_scale = 1; // subpads always use scale 1 while placed inside canvas viewBox
       this._pad_x = x;
       this._pad_y = y;
       this._pad_width = w;
@@ -69718,7 +69760,7 @@ class TPadPainter extends ObjectPainter {
       }
 
       if (this.alignButtons && btns)
-         this.alignButtons(btns, w, h);
+         this.alignButtons(btns, this._pad_width, this._pad_height);
 
       return pad_visible;
    }
@@ -70718,7 +70760,7 @@ class TPadPainter extends ObjectPainter {
       first.fPrimitives = null; // primitives are not interesting, they are disabled in IO
 
       // if there are execs in the pad, deliver events to the server
-      this._deliver_webcanvas_events = first.fExecs?.arr?.length > 0;
+      this._deliver_move_events = first.fExecs?.arr?.length > 0;
 
       if (this.snapid === undefined) {
          // first time getting snap, create all gui elements first
@@ -70855,7 +70897,8 @@ class TPadPainter extends ObjectPainter {
             fp.cleanFrameDrawings();
             fp.redraw();
          }
-         if (isFunc(this.removePadButtons)) this.removePadButtons();
+         if (isFunc(this.removePadButtons))
+            this.removePadButtons();
          this.addPadButtons(true);
       }
 
@@ -70871,16 +70914,16 @@ class TPadPainter extends ObjectPainter {
 
    /** @summary Deliver mouse move or click event to the web canvas
      * @private */
-   deliverWebCanvasEvent(kind, x, y, hints) {
-      if (!this._deliver_webcanvas_events || !this.is_active_pad || this.doingDraw() || x === undefined || y === undefined) return;
+   deliverWebCanvasEvent(kind, x, y, snapid) {
+      if (!this.is_active_pad || this.doingDraw() || x === undefined || y === undefined)
+         return;
+      if ((kind === 'move') && !this._deliver_move_events)
+         return;
       const cp = this.getCanvPainter();
-      if (!cp || !cp._websocket || !cp._websocket.canSend(2) || cp._readonly) return;
+      if (!cp || !cp._websocket || !cp._websocket.canSend(2) || cp._readonly)
+         return;
 
-      let selobj_snapid = '';
-      if (hints && hints[0] && hints[0].painter?.snapid)
-         selobj_snapid = hints[0].painter.snapid.toString();
-
-      const msg = JSON.stringify([this.snapid, kind, x.toString(), y.toString(), selobj_snapid]);
+      const msg = JSON.stringify([this.snapid, kind, x.toString(), y.toString(), snapid ? snapid.toString() : '']);
 
       cp.sendWebsocket(`EVENT:${msg}`);
    }
@@ -71197,16 +71240,24 @@ class TPadPainter extends ObjectPainter {
                         .attr('href', dataUrl);
       }, 'pads');
 
-      let width = elem.property('draw_width'), height = elem.property('draw_height');
+      let width = elem.property('draw_width'),
+          height = elem.property('draw_height'),
+          viewBox = '';
       if (use_frame) {
          const fp = this.getFramePainter();
          width = fp.getFrameWidth();
          height = fp.getFrameHeight();
       }
+      const scale = this.getCanvPainter()?.getPadScale() ?? 1;
+      if (scale !== 1) {
+         viewBox = `viewBox="0 0 ${width} ${height}"`;
+         width = Math.round(width / scale);
+         height = Math.round(height / scale);
+      }
 
       const arg = (file_format === 'pdf')
-         ? { node: elem.node(), width, height, reset_tranform: use_frame }
-         : compressSVG(`<svg width="${width}" height="${height}" xmlns="${nsSVG}">${elem.node().innerHTML}</svg>`);
+         ? { node: elem.node(), width, height, scale, reset_tranform: use_frame }
+         : compressSVG(`<svg width="${width}" height="${height}" ${viewBox} xmlns="${nsSVG}">${elem.node().innerHTML}</svg>`);
 
       return svgToImage(arg, file_format, args).then(res => {
          // reactivate border
@@ -71276,10 +71327,16 @@ class TPadPainter extends ObjectPainter {
                const shown = [];
                this.painters.forEach((pp, indx) => {
                   const obj = pp?.getObject();
-                  if (!obj || (shown.indexOf(obj) >= 0)) return;
-                  let name = isFunc(pp.getClassName) ? pp.getClassName() : (obj._typename || '');
-                  if (name) name += '::';
-                  name += isFunc(pp.getObjectName) ? pp.getObjectName() : (obj.fName || `item${indx}`);
+                  if (!obj || (shown.indexOf(obj) >= 0))
+                     return;
+                  let name = '';
+                  if (isFunc(pp.getMenuHeader))
+                     name = pp.getMenuHeader();
+                  else {
+                     name = isFunc(pp.getClassName) ? pp.getClassName() : (obj._typename || '');
+                     if (name) name += '::';
+                     name += isFunc(pp.getObjectName) ? pp.getObjectName() : (obj.fName || `item${indx}`);
+                  }
                   menu.add(name, indx, this.itemContextMenu);
                   shown.push(obj);
                });
@@ -73045,7 +73102,7 @@ class TPavePainter extends ObjectPainter {
                         arg.y = texty + 0.05 * stepy;
                         arg.height = 0.9*stepy;
                         // prevent expand of normal title on full width
-                        // if (this.isTitle()  && (halign === 2) && (arg.width > 0.1*pad_width) && (arg.width < 0.7*pad_width)) {
+                        // if (this.isTitle() && (halign === 2) && (arg.width > 0.1*pad_width) && (arg.width < 0.7*pad_width)) {
                         //   arg.width -= 0.02*pad_width;
                         //   arg.x = 0.01*pad_width;
                         // }
@@ -80453,6 +80510,13 @@ function create3DControl(fp) {
 
    const frame_painter = fp, obj_painter = fp.getMainPainter();
 
+   if (fp.access3dKind() === constants$1.Embed3D.Embed) {
+      // tooltip scaling only need when GL canvas embed into
+      const scale = fp.getCanvPainter()?.getPadScale();
+      if (scale)
+         fp.control.tooltip?.setScale(scale);
+   }
+
    fp.control.processMouseMove = function(intersects) {
       let tip = null, mesh = null, zoom_mesh = null;
       const handle_tooltip = frame_painter.isTooltipAllowed();
@@ -80567,7 +80631,7 @@ function create3DScene(render3d, x3dscale, y3dscale, orthographic) {
       disposeThreejsObject(this.toplevel);
       delete this.tooltip_mesh;
       delete this.toplevel;
-      if (this.control) this.control.HideTooltip();
+      this.control?.hideTooltip();
 
       const newtop = new THREE.Object3D();
       this.scene.add(newtop);
@@ -80614,7 +80678,7 @@ function create3DScene(render3d, x3dscale, y3dscale, orthographic) {
    }).then(r => {
       this.renderer = r;
 
-      this.webgl = (r.jsroot_render3d === constants$1.Render3D.WebGL);
+      this.webgl = r.jsroot_render3d === constants$1.Render3D.WebGL;
       this.add3dCanvas(sz, r.jsroot_dom, this.webgl);
 
       this.first_render_tm = 0;
@@ -80752,9 +80816,11 @@ function resize3D() {
 
    this.apply3dSize(sz);
 
-   if ((this.scene_width === sz.width) && (this.scene_height === sz.height)) return false;
+   if ((this.scene_width === sz.width) && (this.scene_height === sz.height))
+      return false;
 
-   if ((sz.width < 10) || (sz.height < 10)) return false;
+   if ((sz.width < 10) || (sz.height < 10))
+      return false;
 
    this.scene_width = sz.width;
    this.scene_height = sz.height;
@@ -142621,13 +142687,9 @@ async function makePDF(svg, args) {
       };
    }
 
-
-   let doc;
-
    const orientation = (svg.width < svg.height) ? 'portrait' : 'landscape';
 
-   if (args?.as_doc)
-      doc = args?.doc;
+   let doc = args?.as_doc ? args.doc : null;
 
    if (doc) {
       doc.addPage({
@@ -147498,6 +147560,11 @@ function readStyleFromURL(url) {
          if (Number.isInteger(optimize))
             settings.OptimizeDraw = optimize;
       }
+   }
+
+   if (d.has('scale')) {
+      const s = parseInt(d.get('scale'));
+      settings.CanvasScale = Number.isInteger(s) ? s : 2;
    }
 
    const b = d.get('batch');
@@ -155032,16 +155099,44 @@ class TWebPaintingPainter extends ObjectPainter {
 
    /** @summary Update TWebPainting object */
    updateObject(obj) {
-      if (!this.matchObjectType(obj)) return false;
+      if (!this.matchObjectType(obj))
+         return false;
       this.assignObject(obj);
       return true;
+   }
+
+   /** @summary Provides menu header */
+   getMenuHeader() {
+      return this.getObject()?.fClassName || 'TWebPainting';
+   }
+
+   /** @summary Fill context menu
+    * @desc Create only header, items will be requested from server */
+   fillContextMenu(menu) {
+      const cl = this.getMenuHeader();
+      menu.header(cl, `${urlClassPrefix}${cl}.html`);
+      return true;
+   }
+
+   /** @summary Mouse click handler
+    * @desc Redirect mouse click events to the ROOT application
+    * @private */
+   handleMouseClick(evnt) {
+      const pos = pointer(evnt, this.draw_g.node()),
+            pp = this.getPadPainter(),
+            rect = pp?.getPadRect();
+
+      if (pp && rect && this.snapid)
+         pp.selectObjectPainter(this, { x: pos[0] + rect.x, y: pos[1] + rect.y });
+         // pp.deliverWebCanvasEvent('click', pos[0] + rect.x, pos[1] + rect.y, this.snapid);
    }
 
    /** @summary draw TWebPainting object */
    async redraw() {
       const obj = this.getObject(), func = this.getAxisToSvgFunc();
 
-      if (!obj?.fOper || !func) return;
+      if (!obj?.fOper || !func)
+         return this;
 
       let indx = 0, attr = {}, lastpath = null, lastkind = 'none', d = '',
           oper, npoints, n;
@@ -155049,15 +155144,17 @@ class TWebPaintingPainter extends ObjectPainter {
       const arr = obj.fOper.split(';'),
       check_attributes = kind => {
          if (kind === lastkind)
-            return this;
+            return;
 
          if (lastpath) {
             lastpath.attr('d', d); // flush previous
-            d = ''; lastpath = null; lastkind = 'none';
+            d = '';
+            lastpath = null;
+            lastkind = 'none';
          }
 
          if (!kind)
-            return this;
+            return;
 
          lastkind = kind;
          lastpath = this.draw_g.append('svg:path').attr('d', ''); // placeholder for 'd' to have it always in front
@@ -155066,7 +155163,6 @@ class TWebPaintingPainter extends ObjectPainter {
             case 'l': lastpath.call(this.lineatt.func).style('fill', 'none'); break;
             case 'm': lastpath.call(this.markeratt.func); break;
          }
-         return this;
       }, read_attr = (str, names) => {
          let lastp = 0;
          const obj = { _typename: 'any' };
@@ -155102,12 +155198,11 @@ class TWebPaintingPainter extends ObjectPainter {
                   check_attributes((oper === 'b') ? 'f' : 'l');
 
                   const x1 = func.x(obj.fBuf[indx++]),
-                      y1 = func.y(obj.fBuf[indx++]),
-                      x2 = func.x(obj.fBuf[indx++]),
-                      y2 = func.y(obj.fBuf[indx++]);
+                        y1 = func.y(obj.fBuf[indx++]),
+                        x2 = func.x(obj.fBuf[indx++]),
+                        y2 = func.y(obj.fBuf[indx++]);
 
                   d += `M${x1},${y1}h${x2-x1}v${y2-y1}h${x1-x2}z`;
-
                   continue;
                }
                case 'l':
@@ -155182,7 +155277,13 @@ class TWebPaintingPainter extends ObjectPainter {
 
       this.createG();
 
-      return process(-1).then(() => check_attributes());
+      return process(-1).then(() => {
+         check_attributes();
+         assignContextMenu(this);
+         if (!this.isBatchMode())
+            this.draw_g.on('click', evnt => this.handleMouseClick(evnt));
+         return this;
+      });
    }
 
    static async draw(dom, obj) {
@@ -160540,8 +160641,11 @@ class RPadPainter extends RObjectPainter {
    /** @summary Redraw legend object
     * @desc Used when object attributes are changed to ensure that legend is up to date
     * @private */
-   async redrawLegend() {
-   }
+   async redrawLegend() {}
+
+   /** @summary Deliver mouse move or click event to the web canvas
+     * @private */
+   deliverWebCanvasEvent() {}
 
    /** @summary Redraw pad means redraw ourself
      * @return {Promise} when redrawing ready */

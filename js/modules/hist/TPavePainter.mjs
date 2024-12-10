@@ -613,7 +613,7 @@ class TPavePainter extends ObjectPainter {
                         arg.y = texty + 0.05 * stepy;
                         arg.height = 0.9*stepy;
                         // prevent expand of normal title on full width
-                        // if (this.isTitle()  && (halign === 2) && (arg.width > 0.1*pad_width) && (arg.width < 0.7*pad_width)) {
+                        // if (this.isTitle() && (halign === 2) && (arg.width > 0.1*pad_width) && (arg.width < 0.7*pad_width)) {
                         //   arg.width -= 0.02*pad_width;
                         //   arg.x = 0.01*pad_width;
                         // }
