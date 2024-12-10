@@ -18,5 +18,5 @@ h1d = ROOT.TH1D("h1d", "Test random numbers", nbinsx = 200, xlow = 0.0, xup = 10
 h1d.FillRandom("gaus", 10000)
 
 # Open a ROOT file and save the histogram
-with ROOT.TFile.Open("fillrandom.root", "RECREATE") as myfile:
+with ROOT.TFile.Open("fillrandom_py.root", "RECREATE") as myfile:
    myfile.WriteObject(h1d, h1d.GetName())
