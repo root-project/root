@@ -30,6 +30,7 @@
 #include "TEntryList.h"
 #include "TFile.h"
 #include "TFriendElement.h"
+#include "TInterpreter.h"
 #include "TROOT.h" // IsImplicitMTEnabled, gCoreMutex, R__*_LOCKGUARD
 #include "TTreeReader.h"
 #include "TTree.h" // For MaxTreeSizeRAII. Revert when #6640 will be solved.
@@ -790,6 +791,7 @@ void RLoopManager::Jit()
    {
       R__READ_LOCKGUARD(ROOT::gCoreMutex);
       if (GetCodeToJit().empty() && GetCodeToDeclare().empty()) {
+         RunDeferredCalls();
          R__LOG_INFO(RDFLogChannel()) << "Nothing to jit and execute.";
          return;
       }
@@ -804,12 +806,37 @@ void RLoopManager::Jit()
 
    TStopwatch s;
    s.Start();
-   ROOT::Internal::RDF::InterpreterDeclare(codeToDeclare);
-   RDFInternal::InterpreterCalc(code, "RLoopManager::Run");
+   if (!codeToDeclare.empty()) {
+      ROOT::Internal::RDF::InterpreterDeclare(codeToDeclare);
+      auto &funcMap = GetJitHelperFuncMap();
+      auto &nameMap = GetJitHelperNameMap();
+      auto clinfo = gInterpreter->ClassInfo_Factory("R_rdf");
+      assert(gInterpreter->ClassInfo_IsValid(clinfo));
+      for (auto & codeAndName : nameMap) {
+         JitHelperFunc * & addr = funcMap[codeAndName.second];
+         if (!addr) {
+            // fast fetch of the address via gInterpreter
+            // (faster than gInterpreter->Evaluate(function name, ret), ret->GetAsPointer())
+            auto declid = gInterpreter->GetFunction(clinfo, codeAndName.second.c_str());
+            assert(declid);
+            auto minfo  = gInterpreter->MethodInfo_Factory(declid);
+            assert(gInterpreter->MethodInfo_IsValid(minfo));
+            auto mname = gInterpreter->MethodInfo_GetMangledName(minfo);
+            addr = reinterpret_cast<JitHelperFunc *>(gInterpreter->FindSym(mname));
+            gInterpreter->MethodInfo_Delete(minfo);
+         }
+      }
+      gInterpreter->ClassInfo_Delete(clinfo);
+   }
+   if (!code.empty()) {
+      RDFInternal::InterpreterCalc(code, "RLoopManager::Run");
+   }
    s.Stop();
    R__LOG_INFO(RDFLogChannel()) << "Just-in-time compilation phase completed"
                                 << (s.RealTime() > 1e-3 ? " in " + std::to_string(s.RealTime()) + " seconds."
                                                         : " in less than 1ms.");
+
+   RunDeferredCalls();
 }
 
 void RLoopManager::RunDeferredCalls()
@@ -985,7 +1012,6 @@ void RLoopManager::RegisterJitHelperCall(const std::string &funcCode, std::share
                                          const std::vector<std::string> &colNames, void *wkJittedNode, void *argument)
 {
    auto &nameMap = GetJitHelperNameMap();
-   auto &funcMap = GetJitHelperFuncMap();
    {
       R__READ_LOCKGUARD(ROOT::gCoreMutex);
       auto match = nameMap.find(funcCode);
@@ -1004,15 +1030,6 @@ void RLoopManager::RegisterJitHelperCall(const std::string &funcCode, std::share
       // step 1: register function (now)
       std::string toDeclare = "namespace R_rdf {\n  void " + registerId + funcCode + "\n}\n";
       GetCodeToDeclare().append(toDeclare);
-      std::stringstream registration;
-      registration
-         << "(*(reinterpret_cast<std::unordered_map<std::string,void "
-            "(*)(ROOT::Detail::RDF::RLoopManager*,std::shared_ptr<ROOT::Detail::RDF::RNodeBase> "
-            "*,ROOT::Internal::RDF::RColumnRegister *, const std::vector<std::string> & colNames, void*,void*)>*>(";
-      registration << PrettyPrintAddr((void *)(&funcMap));
-      registration << ")))[\"" << registerId << "\"] = R_rdf::" << registerId << ";\n";
-      std::string registrationStr = registration.str();
-      GetCodeToJit().append(registrationStr);
       fJitHelperCalls.emplace_back(registerId, prevNodeOnHeap, colRegister, colNames, wkJittedNode, argument);
    }
 }
