@@ -161,6 +161,7 @@ bool RooBinIntegrator::checkLimits() const
 double RooBinIntegrator::integral(const double *)
 {
   assert(isValid());
+  if (_function->getDimension() < 1) return 0.;
 
   ROOT::Math::KahanSum<double> sum;
 
