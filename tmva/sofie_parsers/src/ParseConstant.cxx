@@ -58,20 +58,54 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
                throw std::runtime_error("TMVA::SOFIE ONNX Parser ConstantOfShape has invalid tensor size " + std::to_string(length));
          }
          switch(output_type) {
-            // need to use raw_data() to get the tensor values
+         // to get the tensor values one needs to use the given data types or the raw_data.
+         // it depends how the operator was created. We cannot get size of the raw_data
+         case ETensorType::INT32: {
+            std::vector<int32_t> values(length);
+            if (t.int32_data_size() == int(length)) {
+               for (size_t i = 0; i < length; i++)
+                  values[i] = t.int32_data(i);
+            } else {
+               auto raw_data_ptr = reinterpret_cast<int32_t *>(const_cast<char *>(t.raw_data().c_str()));
+               std::memcpy(values.data(), raw_data_ptr, length * sizeof(int32_t));
+            }
+            op.reset(new ROperator_Constant<int32_t>("int32_t", values, shape, input_name, output_name));
+            break;
+         }
          case ETensorType::INT64: {
             std::vector<int64_t> values(length);
-            // case empty shape with length=1 represents scalars
-            auto raw_data_ptr = reinterpret_cast<int64_t *>(const_cast<char *>(t.raw_data().c_str()));
-            std::memcpy(values.data(), raw_data_ptr, length * sizeof(int64_t));
+            if (t.int64_data_size() == int(length)) {
+               for (size_t i = 0; i < length; i++)
+                  values[i] = t.int64_data(i);
+            } else  { // cannot get size of raw data : assume is ok
+               auto raw_data_ptr = reinterpret_cast<int64_t *>(const_cast<char *>(t.raw_data().c_str()));
+               std::memcpy(values.data(), raw_data_ptr, length * sizeof(int64_t));
+            }
             op.reset(new ROperator_Constant<int64_t>("int64_t", values, shape, input_name, output_name));
             break;
          }
          case ETensorType::FLOAT: {
             std::vector<float> values(length);
-            auto raw_data_ptr = reinterpret_cast<float *>(const_cast<char *>(t.raw_data().c_str()));
-            std::memcpy(values.data(), raw_data_ptr, length * sizeof(float));
+             if (t.float_data_size() == int(length)) {
+               for (size_t i = 0; i < length; i++)
+                  values[i] = t.float_data(i);
+            } else {
+               auto raw_data_ptr = reinterpret_cast<float *>(const_cast<char *>(t.raw_data().c_str()));
+               std::memcpy(values.data(), raw_data_ptr, length * sizeof(float));
+            }
             op.reset(new ROperator_Constant<float>("float",values, shape, input_name, output_name));
+            break;
+         }
+         case ETensorType::DOUBLE: {
+            std::vector<double> values(length);
+             if (t.double_data_size() == int(length)) {
+               for (size_t i = 0; i < length; i++)
+                  values[i] = t.double_data(i);
+            } else {
+               auto raw_data_ptr = reinterpret_cast<double *>(const_cast<char *>(t.raw_data().c_str()));
+               std::memcpy(values.data(), raw_data_ptr, length * sizeof(double));
+            }
+            op.reset(new ROperator_Constant<double>("double",values, shape, input_name, output_name));
             break;
          }
          case ETensorType::BOOL: {

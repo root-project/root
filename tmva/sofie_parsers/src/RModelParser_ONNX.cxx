@@ -79,6 +79,7 @@ extern ParserFuncSignature ParseTopK;
 extern ParserFuncSignature ParseTile;
 extern ParserFuncSignature ParseSplit;
 extern ParserFuncSignature ParseIf;
+extern ParserFuncSignature ParsePad;
 // Decalaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseConvTransposeAdd;
@@ -213,6 +214,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Tile", ParseTile);
    RegisterOperator("Split", ParseSplit);
    RegisterOperator("If", ParseIf);
+   RegisterOperator("Pad", ParsePad);
 }
 
 // Destructor of the parser
@@ -367,7 +369,7 @@ void RModelParser_ONNX::CheckGraph(const onnx::GraphProto & graph, int & level, 
       const std::string opType =  node.op_type();
       if (fVerbose) {
          std::cout << "\tOperator " << i << " : " << opType << " (" << node.name() << "), " << graph.node(i).input_size()
-                      << " inputs : {"
+                      << " inputs : {";
             for (int j = 0; j < graph.node(i).input_size(); j++) {
                std::cout << graph.node(i).input(j);
                if (j < graph.node(i).input_size() - 1)
