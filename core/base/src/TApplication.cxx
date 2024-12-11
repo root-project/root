@@ -1339,6 +1339,7 @@ void TApplication::Help(const char *line)
          Printf("   Ctrl+D           : quit ROOT (if empty line)");
          Printf("   Ctrl+C           : send kSigInt interrupt signal");
          Printf("   Ctrl+Z           : send kSigStop pause job signal");
+         Printf("   Ctrl+\\           : send kSigQuit quit job signal");
 
          Printf("   Arrow_Down       : navigate downwards in command history [Ctrl+N]");
          Printf("   Arrow_Up         : navigate upwards in command history [Ctrl+P]");
