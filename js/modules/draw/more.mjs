@@ -1,4 +1,4 @@
-import { BIT, isFunc, clTLatex, clTMathText, clTAnnotation } from '../core.mjs';
+import { BIT, isFunc, clTLatex, clTLink, clTMathText, clTAnnotation } from '../core.mjs';
 import { BasePainter, makeTranslate, DrawOptions } from '../base/BasePainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
 import { assignContextMenu } from '../gui/menu.mjs';
@@ -69,7 +69,13 @@ async function drawText() {
               .then(() => this.drawText(arg))
               .then(() => this.finishTextDrawing())
               .then(() => {
-      if (this.isBatchMode()) return this;
+      if (this.isBatchMode())
+         return this;
+
+      if (pp.isButton() && !pp.isEditable()) {
+         this.draw_g.on('click', () => this.getCanvPainter().selectActivePad(pp));
+         return this;
+      }
 
       this.pos_dx = this.pos_dy = 0;
 
@@ -116,6 +122,11 @@ async function drawText() {
             this.interactiveRedraw('pad', `exec:SetTitle("${t}")`);
          }));
       };
+
+      if (this.matchObjectType(clTLink)) {
+         this.draw_g.style('cursor', 'pointer')
+                    .on('click', () => this.submitCanvExec('ExecuteEvent(kButton1Up, 0, 0);;'));
+      }
 
       return this;
    });

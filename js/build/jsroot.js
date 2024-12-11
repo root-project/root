@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '10/12/2024',
+version_date = '11/12/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1090,7 +1090,7 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTPaveLabel = 'TPaveLabel', clTPaveClass = 'TPaveClass', clTDiamond = 'TDiamond',
       clTLegend = 'TLegend', clTLegendEntry = 'TLegendEntry',
       clTPaletteAxis = 'TPaletteAxis', clTImagePalette = 'TImagePalette',
-      clTText = 'TText', clTLatex = 'TLatex', clTMathText = 'TMathText', clTAnnotation = 'TAnnotation',
+      clTText = 'TText', clTLink = 'TLink', clTLatex = 'TLatex', clTMathText = 'TMathText', clTAnnotation = 'TAnnotation',
       clTColor = 'TColor', clTLine = 'TLine', clTBox = 'TBox', clTPolyLine = 'TPolyLine',
       clTPolyLine3D = 'TPolyLine3D', clTPolyMarker3D = 'TPolyMarker3D',
       clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTFrame = 'TFrame', clTAttCanvas = 'TAttCanvas',
@@ -1202,12 +1202,12 @@ function create$1(typename, target) {
       case clTText:
          create$1(clTNamed, obj);
          create$1(clTAttText, obj);
-         extend$1(obj, { fLimitFactorSize: 3, fOriginSize: 0.04 });
+         extend$1(obj, { fX: 0, fY: 0 });
          break;
       case clTLatex:
          create$1(clTText, obj);
          create$1(clTAttLine, obj);
-         extend$1(obj, { fX: 0, fY: 0 });
+         extend$1(obj, { fLimitFactorSize: 3, fOriginSize: 0.04 });
          break;
       case clTObjString:
          create$1(clTObject, obj);
@@ -1981,6 +1981,7 @@ clTLatex: clTLatex,
 clTLegend: clTLegend,
 clTLegendEntry: clTLegendEntry,
 clTLine: clTLine,
+clTLink: clTLink,
 clTList: clTList,
 clTMap: clTMap,
 clTMathText: clTMathText,
@@ -60516,7 +60517,8 @@ function detectRightButton(event) {
 /** @summary Add move handlers for drawn element
   * @private */
 function addMoveHandler(painter, enabled = true, hover_handler = false) {
-   if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g) return;
+   if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g)
+      return;
 
    if (painter.getPadPainter()?.isEditable() === false)
       enabled = false;
@@ -60533,7 +60535,8 @@ function addMoveHandler(painter, enabled = true, hover_handler = false) {
       return;
    }
 
-   if (painter.draw_g.property('assigned_move')) return;
+   if (painter.draw_g.property('assigned_move'))
+      return;
 
    const drag_move = drag().subject(Object);
    let not_changed = true, move_disabled = false;
@@ -69084,22 +69087,19 @@ class TPadPainter extends ObjectPainter {
    isRoot6() { return true; }
 
    /** @summary Returns true if pad is editable */
-   isEditable() {
-      return this.pad?.fEditable ?? true;
-   }
+   isEditable() { return this.pad?.fEditable ?? true; }
+
+   /** @summary Returns true if button */
+   isButton() { return this.matchObjectType(clTButton); }
 
    /** @summary Returns SVG element for the pad itself
     * @private */
-   svg_this_pad() {
-      return this.getPadSvg(this.this_pad_name);
-   }
+   svg_this_pad() { return this.getPadSvg(this.this_pad_name); }
 
    /** @summary Returns main painter on the pad
      * @desc Typically main painter is TH1/TH2 object which is drawing axes
     * @private */
-   getMainPainter() {
-      return this.main_painter_ref || null;
-   }
+   getMainPainter() { return this.main_painter_ref || null; }
 
    /** @summary Assign main painter on the pad
      * @desc Typically main painter is TH1/TH2 object which is drawing axes
@@ -69809,7 +69809,7 @@ class TPadPainter extends ObjectPainter {
          delete this.$userInteractive;
       }
 
-      if (this.isBatchMode() || this.iscan)
+      if (this.isBatchMode() || this.iscan || !this.isEditable())
          return;
 
       const svg_can = this.getCanvSvg(),
@@ -69827,11 +69827,11 @@ class TPadPainter extends ObjectPainter {
          minwidth: 20, minheight: 20,
          move_resize: (_x, _y, _w, _h) => {
             const x0 = this.pad.fAbsXlowNDC,
-                y0 = this.pad.fAbsYlowNDC,
-                scale_w = _w / width / this.pad.fAbsWNDC,
-                scale_h = _h / height / this.pad.fAbsHNDC,
-                shift_x = _x / width - x0,
-                shift_y = 1 - (_y + _h) / height - y0;
+                  y0 = this.pad.fAbsYlowNDC,
+                  scale_w = _w / width / this.pad.fAbsWNDC,
+                  scale_h = _h / height / this.pad.fAbsHNDC,
+                  shift_x = _x / width - x0,
+                  shift_y = 1 - (_y + _h) / height - y0;
             this.forEachPainterInPad(p => {
                p.pad.fAbsXlowNDC += (p.pad.fAbsXlowNDC - x0) * (scale_w - 1) + shift_x;
                p.pad.fAbsYlowNDC += (p.pad.fAbsYlowNDC - y0) * (scale_h - 1) + shift_y;
@@ -70404,6 +70404,12 @@ class TPadPainter extends ObjectPainter {
       this.pad.fY1 = obj.fY1;
       this.pad.fY2 = obj.fY2;
 
+      // this is main coordinates for subpad relative to canvas
+      this.pad.fAbsWNDC = obj.fAbsWNDC;
+      this.pad.fAbsHNDC = obj.fAbsHNDC;
+      this.pad.fAbsXlowNDC = obj.fAbsXlowNDC;
+      this.pad.fAbsYlowNDC = obj.fAbsYlowNDC;
+
       this.pad.fLeftMargin = obj.fLeftMargin;
       this.pad.fRightMargin = obj.fRightMargin;
       this.pad.fBottomMargin = obj.fBottomMargin;
@@ -70423,9 +70429,10 @@ class TPadPainter extends ObjectPainter {
          this.checkSpecialsInPrimitives(obj);
 
       const fp = this.getFramePainter();
-      if (fp) fp.updateAttributes(!fp.$modifiedNDC);
+      fp?.updateAttributes(!fp.$modifiedNDC);
 
-      if (!obj.fPrimitives) return false;
+      if (!obj.fPrimitives)
+         return false;
 
       let isany = false, p = 0;
       for (let n = 0; n < obj.fPrimitives.arr?.length; ++n) {
@@ -70433,7 +70440,8 @@ class TPadPainter extends ObjectPainter {
             continue;
          while (p < this.painters.length) {
             const op = this.painters[p++];
-            if (!op._primitive) continue;
+            if (!op._primitive)
+               continue;
             if (op.updateObject(obj.fPrimitives.arr[n], obj.fPrimitives.opt[n]))
                isany = true;
             break;
@@ -70861,9 +70869,10 @@ class TPadPainter extends ObjectPainter {
             const sub = this.painters[k];
 
             // skip secondary painters or painters without snapid
-            if (!isStr(sub.snapid) || sub.isSecondary()) continue; // look only for painters with snapid
+            if (!isStr(sub.snapid) || sub.isSecondary())
+               continue; // look only for painters with snapid
 
-            const prim = snap.fPrimitives.find(prim => (prim.fObjectID === sub.snapid && !prim.$checked));
+            const prim = snap.fPrimitives.find(prim => ((prim.fObjectID === sub.snapid) && !prim.$checked));
             if (prim) {
                isanyfound = true;
                prim.$checked = true;
@@ -142792,6 +142801,7 @@ drawFuncs = { lst: [
    { name: clTPad, icon: 'img_canvas', func: TPadPainter.draw, opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: fPrimitives, noappend: true },
    { name: 'TSlider', icon: 'img_canvas', func: TPadPainter.draw },
    { name: clTButton, icon: 'img_canvas', func: TPadPainter.draw },
+   { name: 'TInspectCanvas', icon: 'img_canvas', sameas: clTCanvas },
    { name: clTFrame, icon: 'img_frame', draw: () => import_canvas().then(h => h.drawTFrame) },
    { name: clTPave, icon: 'img_pavetext', class: () => Promise.resolve().then(function () { return TPavePainter$1; }).then(h => h.TPavePainter) },
    { name: clTPaveText, sameas: clTPave },
@@ -142805,6 +142815,7 @@ drawFuncs = { lst: [
    { name: clTLatex, icon: 'img_text', draw: () => import_more().then(h => h.drawText), direct: true },
    { name: clTMathText, sameas: clTLatex },
    { name: clTText, sameas: clTLatex },
+   { name: clTLink, sameas: clTText },
    { name: clTAnnotation, sameas: clTLatex },
    { name: /^TH1/, icon: 'img_histo1d', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;C;B;B1;A;TEXT;LEGO;same', ctrl: 'l', expand_item: fFunctions, for_derived: true },
    { name: clTProfile, icon: 'img_profile', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';E0;E1;E2;p;AH;hist;projx;projxb;projxc=e;projxw', expand_item: fFunctions },
@@ -147871,7 +147882,13 @@ async function drawText$1() {
               .then(() => this.drawText(arg))
               .then(() => this.finishTextDrawing())
               .then(() => {
-      if (this.isBatchMode()) return this;
+      if (this.isBatchMode())
+         return this;
+
+      if (pp.isButton() && !pp.isEditable()) {
+         this.draw_g.on('click', () => this.getCanvPainter().selectActivePad(pp));
+         return this;
+      }
 
       this.pos_dx = this.pos_dy = 0;
 
@@ -147918,6 +147935,11 @@ async function drawText$1() {
             this.interactiveRedraw('pad', `exec:SetTitle("${t}")`);
          }));
       };
+
+      if (this.matchObjectType(clTLink)) {
+         this.draw_g.style('cursor', 'pointer')
+                    .on('click', () => this.submitCanvExec('ExecuteEvent(kButton1Up, 0, 0);;'));
+      }
 
       return this;
    });
@@ -159888,9 +159910,10 @@ class RPadPainter extends RObjectPainter {
    isRoot6() { return false; }
 
    /** @summary Returns true if pad is editable */
-   isEditable() {
-      return true;
-   }
+   isEditable() { return true; }
+
+      /** @summary Returns true if button */
+   isButton() { return false; }
 
   /** @summary Returns SVG element for the pad itself
     * @private */
@@ -167230,6 +167253,7 @@ exports.clTLatex = clTLatex;
 exports.clTLegend = clTLegend;
 exports.clTLegendEntry = clTLegendEntry;
 exports.clTLine = clTLine;
+exports.clTLink = clTLink;
 exports.clTList = clTList;
 exports.clTMap = clTMap;
 exports.clTMathText = clTMathText;
