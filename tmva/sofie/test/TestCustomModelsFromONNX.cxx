@@ -300,6 +300,8 @@
 #include "Tile5D_FromONNX.hxx"
 #include "input_models/references/Tile5D.ref.hxx"
 
+#include "Pad_FromONNX.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -2898,4 +2900,21 @@ TEST(ONNX, Tile5D) {
       for (size_t i = 0; i < output.size(); ++i) {
          EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
       }
+}
+TEST(ONNX, Pad) {
+   // add constant pad values of zeros
+   // input tensor [1,2,2] and pad in (1,0),(0,1),(2,1) -> with shape (2,3,5)
+   std::vector<float> input = {1,2,3,4};
+   std::vector<float> correct = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 3,
+       4, 0, 0, 0, 0, 0, 0, 0};
+   TMVA_SOFIE_Pad::Session s("Pad_FromONNX.dat");
+   std::vector<float> output(s.infer(input.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), correct.size());
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_EQ(output[i], correct[i]);
+   }
 }
