@@ -702,9 +702,12 @@ parts of the RDataFrame API currently work with this package. The subset that is
 - Alias
 - AsNumpy
 - Count
+- DefaultValueFor
 - Define
 - DefinePerSample
 - Filter
+- FilterAvailable
+- FilterMissing
 - Graph
 - Histo[1,2,3]D
 - HistoND
