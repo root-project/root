@@ -18,8 +18,8 @@
 
 #include "RooAbsIntegrator.h"
 #include "RooNumIntConfig.h"
+#include "Math/Util.h"
 #include <vector>
-#include <list>
 
 class RooBinIntegrator : public RooAbsIntegrator {
 public:
@@ -50,7 +50,9 @@ protected:
    std::vector<std::vector<double>> _binb; ///<! list of bin boundaries
    mutable Int_t _numBins = 0;             ///<! Size of integration range
 
-   bool _useIntegrandLimits = false; ///< If true limits of function binding are ued
+   bool _useIntegrandLimits = false; ///< If true limits of function binding are used
+
+   void recursive_integration(const UInt_t d, const double delta, const std::vector<double> center, ROOT::Math::KahanSum<double>& sum);
 
    double *xvec(double xx)
    {
