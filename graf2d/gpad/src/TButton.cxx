@@ -101,6 +101,8 @@ TButton::TButton(): TPad()
    fLogy    = kFALSE;
    SetEditable(kFALSE);
    fFocused = kFALSE;
+   for (UChar_t n = 0; n < 128; ++n)
+      fValidPattern[n] = n;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -123,6 +125,8 @@ TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1
    fLogy    = 0;
    SetEditable(kFALSE);
    fFocused = kFALSE;
+   for (UChar_t n = 0; n < 128; ++n)
+      fValidPattern[n] = n;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,8 +134,12 @@ TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1
 
 TButton::~TButton()
 {
-   if (fPrimitives) fPrimitives->Delete();
+   for (UChar_t n = 0; n < 128; ++n)
+      fValidPattern[n] = 255 - n;
+   if (fPrimitives)
+      fPrimitives->Delete();
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this button with its current attributes.
@@ -157,6 +165,7 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 
    auto cdpad = gROOT->GetSelectedPad();
+   auto patt = fValidPattern;
    HideToolTip(event);
 
    switch (event) {
@@ -198,11 +207,18 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Up:
       SetCursor(kWatch);
       if (fFocused) {
-         TVirtualPad::TContext ctxt(cdpad, kTRUE, kTRUE);
+         if (cdpad) cdpad->cd();
          gROOT->ProcessLine(GetMethod());
       }
       //check case where pressing a button deletes itself
-      if (ROOT::Detail::HasBeenDeleted(this)) return;
+      if (ROOT::Detail::HasBeenDeleted(this))
+         return;
+
+      // extra check when simple one does not work
+      for (UChar_t n = 0; n < 128; ++n)
+         if (patt[n] != n)
+            return;
+
       SetBorderMode(1);
       Modified();
       Update();
