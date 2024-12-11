@@ -1,5 +1,5 @@
-#ifndef TMVA_SOFIE_ROPERATOR_Swish
-#define TMVA_SOFIE_ROPERATOR_Swish
+#ifndef TMVA_SOFIE_ROPERATOR_Split
+#define TMVA_SOFIE_ROPERATOR_Split
 
 #include "TMVA/SOFIE_common.hxx"
 #include "TMVA/ROperator.hxx"
