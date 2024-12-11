@@ -55,6 +55,7 @@ def pythonization(class_name, ns='::', is_prefix=False):
     Returns:
         function: function that receives the user-defined function and
             decorates it.
+
     '''
 
     # Type check and parsing of target argument.

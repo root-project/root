@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_graphs
 ## \notebook
 ## This macro is an example of graphs in log scales with annotations.
 ##

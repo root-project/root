@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_tree
 ## This function provides an example of how one might
 ## massage a csv data file to read into a ROOT TTree
 ## via TTree::ReadStream.  This could be useful if the
@@ -122,6 +122,9 @@ def parse_CSV_file_with_TTree_ReadStream(tree_name, afile):
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print("Usage: %s file_to_parse.dat" % sys.argv[0])
-        sys.exit(1)
-    parse_CSV_file_with_TTree_ReadStream("example_tree", sys.argv[1])
+        print("Using default data file example_data.dat")
+        filename = os.path.join(str(ROOT.TROOT.GetTutorialDir()), 'io', 'tree', 'example_data.dat')
+        parse_CSV_file_with_TTree_ReadStream("example_tree", filename)
+    else:
+        parse_CSV_file_with_TTree_ReadStream("example_tree", sys.argv[1])
 

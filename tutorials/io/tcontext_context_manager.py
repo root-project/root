@@ -1,9 +1,9 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_io
 ## \notebook -nodraw
 ## This tutorial demonstrates the usage of the TContext class as a Python context
 ## manager. This functionality is related with how TFile works, so it is
-## suggested to also take a look at the pyroot005 tutorial.
+## suggested to also take a look at the tfile_context_manager.py tutorial.
 ##
 ## \macro_code
 ## \macro_output
@@ -11,14 +11,16 @@
 ## \date March 2022
 ## \author Vincenzo Eduardo Padulano CERN/UPV
 import os
+import sys
 
 import ROOT
-from ROOT import TDirectory, TFile
+from ROOT import TDirectory, TFile, gROOT
 
 # Sometimes it is useful to have multiple open files at once. In such cases,
 # the current directory will always be the file that was open last.
-file_1 = TFile("pyroot006_file_1.root", "recreate")
-file_2 = TFile("pyroot006_file_2.root", "recreate")
+path = str(gROOT.GetTutorialDir()) + '/io/'
+file_1 = TFile(path+"tcontext_1.root", "recreate")
+file_2 = TFile(path+"tcontext_2.root", "recreate")
 print("Current directory: '{}'.\n".format(ROOT.gDirectory.GetName()))
 # Changing directory into another file can be safely done through a TContext
 # context manager.
@@ -43,15 +45,17 @@ if file_1.IsOpen() and file_2.IsOpen():
 #   this context, rather than to the global ROOT.gROOT
 # Remember that the TContext must be initialized before the TFile, otherwise the
 # current directory would already be set to the file opened for this context.
-with TDirectory.TContext(), TFile("pyroot006_file_3.root", "recreate") as f:
+with TDirectory.TContext(), TFile(path+"tcontext_3.root", "recreate") as f:
     print("Current directory: '{}'.\n".format(ROOT.gDirectory.GetName()))
     histo_2 = ROOT.TH1F("histo_2", "histo_2", 10, 0, 10)
     f.WriteObject(histo_2, "another_histogram")
 
 print("Current directory: '{}'.\n".format(ROOT.gDirectory.GetName()))
 
+
 # Cleanup the files created for this tutorial
 file_1.Close();
 file_2.Close();
+
 for i in range(1, 4):
-    os.remove("pyroot006_file_{}.root".format(i))
+    os.remove(path+"tcontext_{}.root".format(i))

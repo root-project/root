@@ -1,10 +1,11 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_gui
 ## A Simple GUI Example
 ##
 ## \macro_code
 ##
 ## \author Wim Lavrijsen
+from __future__ import print_function
 
 import os, sys, ROOT
 

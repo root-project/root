@@ -38,19 +38,18 @@ while read notebook dependencies; do
     done
   fi
 done <<EOF
-math/testUnfold5d.C   math/testUnfold5a.C math/testUnfold5b.C math/testUnfold5c.C
-xml/xmlreadfile.C   xml/xmlnewfile.C
+math/unfold/testUnfold5d.C   math/unfold/testUnfold5a.C math/unfold/testUnfold5b.C math/unfold/testUnfold5c.C
+io/xml/xmlreadfile.C   io/xml/xmlnewfile.C
 roofit/rf503_wspaceread.C   roofit/rf502_wspacewrite.C roofit/rf502_wspacewrite.py
 io/readCode.C   io/importCode.C
-fit/fit1.C   hist/fillrandom.C
-fit/myfit.C   fit/fitslicesy.C
-foam/foam_demopers.C   foam/foam_demo.C
-tree/staff.C   tree/cernbuild.C
-tree/cernstaff.C   tree/cernbuild.C
-hist/hbars.C   tree/cernbuild.C
-pyroot/ntuple1.py   pyroot/hsimple.py
-pyroot/h1draw.py   pyroot/hsimple.py
-pyroot/fit1.py   pyroot/fillrandom.py
+math/fit/fit1.C   hist/fillrandom.C
+math/fit/myfit.C   math/fit/fitslicesy.C
+math/foam/foam_demopers.C   math/foam/foam_demo.C
+io/tree/tree502_staff.C   io/tree/tree501_cernbuild.C
+io/tree/tree501_cernstaff.C   io/tree/tree500_cernbuild.C
+hist/hbars.C   io/tree/tree501_cernbuild.C
+io/tree/ntuple1.py   hsimple.py
+math/fit/fit1.py   hist/fillrandom.py
 tmva/TMVAClassificationApplication.C   tmva/TMVAClassification.C
 tmva/TMVAClassificationCategory.C   tmva/TMVAClassification.C
 tmva/TMVAClassificationCategoryApplication.C   tmva/TMVAClassificationCategory.C

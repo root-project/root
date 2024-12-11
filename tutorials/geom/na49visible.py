@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_geom
 ## Set visibility attributes for the NA49 geometry
 ## Set Shape attributes
 ##

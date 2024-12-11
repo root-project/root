@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_gui
 ## Example frame with one box where the user can increase or decrease a number
 ## and the shown value will be updated accordingly.
 ##

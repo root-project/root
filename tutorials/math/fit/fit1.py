@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_fit
 ## \notebook
 ## Fit example.
 ##
@@ -57,7 +57,7 @@ h1f.Fit( 'sqroot' )
 fitlabel = TPaveText( 0.6, 0.3, 0.9, 0.80, 'NDC' )
 fitlabel.SetTextAlign( 12 )
 fitlabel.SetFillColor( 42 )
-fitlabel.ReadFile(path.join(str(gROOT.GetTutorialDir()), 'pyroot', 'fit1_py.py'))
+fitlabel.ReadFile(path.join(str(gROOT.GetTutorialDir()), 'math', 'fit', 'fit1_py.py'))
 fitlabel.Draw()
 c1.Update()
 gBenchmark.Show( 'fit1' )
