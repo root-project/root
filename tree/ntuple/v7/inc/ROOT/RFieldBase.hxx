@@ -17,6 +17,7 @@
 #define ROOT7_RFieldBase
 
 #include <ROOT/RColumn.hxx>
+#include <ROOT/RNTupleRange.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <cstddef>
@@ -771,6 +772,9 @@ public:
       }
       return GetValuePtrAt(offset);
    }
+
+   /// Overload to read all elements in the given cluster range.
+   void *ReadBulk(RNTupleClusterRange range) { return ReadBulk(*range.begin(), nullptr, range.size()); }
 };
 
 namespace Internal {
