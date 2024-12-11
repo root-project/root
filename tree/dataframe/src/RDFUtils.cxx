@@ -342,8 +342,11 @@ void InterpreterDeclare(const std::string &code)
    }
 }
 
-Long64_t InterpreterCalc(const std::string &code, const std::string &context)
+void InterpreterCalc(const std::string &code, const std::string &context)
 {
+   if (code.empty())
+      return;
+
    R__LOG_DEBUG(10, RDFLogChannel()) << "Jitting and executing the following code:\n\n" << code << '\n';
 
    TInterpreter::EErrorCode errorCode(TInterpreter::kNoError); // storage for cling errors
@@ -374,8 +377,6 @@ Long64_t InterpreterCalc(const std::string &code, const std::string &context)
 
       callCalc(subs);
    }
-
-   return 0; // we used to forward the return value of Calc, but that's not possible anymore.
 }
 
 bool IsInternalColumn(std::string_view colName)

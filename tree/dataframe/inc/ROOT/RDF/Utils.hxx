@@ -196,8 +196,7 @@ void InterpreterDeclare(const std::string &code);
 
 /// Jit code in the interpreter with TInterpreter::Calc, throw in case of errors.
 /// The optional `context` parameter, if present, is mentioned in the error message.
-/// The pointer returned by the call to TInterpreter::Calc is returned in case of success.
-Long64_t InterpreterCalc(const std::string &code, const std::string &context = "");
+void InterpreterCalc(const std::string &code, const std::string &context = "");
 
 /// Whether custom column with name colName is an "internal" column such as rdfentry_ or rdfslot_
 bool IsInternalColumn(std::string_view colName);
