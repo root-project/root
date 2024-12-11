@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_dataframe
 ## \notebook -nodraw
 ## This tutorial illustrates how PyROOT supports declaring C++ callables from
 ## Python callables making them, for example, usable with RDataFrame. The feature

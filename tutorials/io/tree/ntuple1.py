@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_pyroot
+## \ingroup tutorial_tree
 ## \notebook
 ## Ntuple drawing example.
 ##

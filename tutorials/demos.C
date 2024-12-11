@@ -25,8 +25,8 @@ void demos() {
    bar->AddButton("formula1",      ".x graphics/formula1.C",  "Simple Formula and Functions");
    bar->AddButton("surfaces",      ".x graphs/surfaces.C",    "Surface Drawing Options");
    bar->AddButton("fillrandom",    ".x hist/fillrandom.C",    "Histograms with Random Numbers from a Function");
-   bar->AddButton("fit1",          ".x fit/fit1.C",           "A Simple Fitting Example");
-   bar->AddButton("multifit",      ".x fit/multifit.C",       "Fitting in Subranges of Histograms");
+   bar->AddButton("fit1", ".x math/fit/fit1.C", "A Simple Fitting Example");
+   bar->AddButton("multifit", ".x math/fit/multifit.C", "Fitting in Subranges of Histograms");
    bar->AddButton("h1ReadAndDraw", ".x hist/h1ReadAndDraw.C", "Drawing Options for 1D Histograms");
    bar->AddButton("graph",         ".x graphs/graph.C",       "Example of a Simple Graph");
    bar->AddButton("gerrors",       ".x graphs/gerrors.C",     "Example of a Graph with Error Bars");
@@ -34,8 +34,8 @@ void demos() {
    bar->AddButton("geometry",      ".x geom/rootgeom.C",      "Example of TGeoManager drawing");
    bar->AddButton("file",          ".x io/file.C",            "The ROOT File Format");
    bar->AddButton("fildir",        ".x io/fildir.C",          "The ROOT File, Directories and Keys");
-   bar->AddButton("tree",          ".x tree/tree.C",          "The Tree Data Structure");
-   bar->AddButton("ntuple1",       ".x tree/ntuple1.C",       "Ntuples and Selections");
+   bar->AddButton("tree", ".x io/tree/tree.C", "The Tree Data Structure");
+   bar->AddButton("ntuple1", ".x io/tree/ntuple1.C", "Ntuples and Selections");
    bar->AddButton("benchmarks",    ".x legacy/benchmarks.C",  "Runs several tests and produces an benchmark report");
    bar->AddButton("rootmarks",     ".x legacy/rootmarks.C",   "Prints an Estimated ROOTMARKS for Your Machine");
    bar->SetButtonWidth(90);

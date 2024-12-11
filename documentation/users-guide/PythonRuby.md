@@ -480,7 +480,7 @@ available, such that it can be used directly. Otherwise, a
 
 The simplest way of setting a callback to Python from Cling, e.g. for a
 button, is by providing the execution string. See for example
-`tutorials/pyroot/demo.py` that comes with the ROOT installation:
+`tutorials/demo.py` that comes with the ROOT installation:
 
 ``` {.cpp}
 # [..]
