@@ -162,7 +162,7 @@ with ROOT.TFile('outfile.root') as infile:
 from libROOTPythonizations import GetBranchAttr, BranchPyz
 from ._rvec import _array_interface_dtype_map, _get_cpp_type_from_numpy_type
 from . import pythonization
-
+from ROOT._pythonization._memory_utils import _should_give_up_ownership, _constructor_releasing_ownership, _SetDirectory_SetOwnership
 
 # TTree iterator
 def _TTree__iter__(self):
@@ -308,15 +308,6 @@ def _TTree__getattr__(self, key):
         out = cppyy.ll.cast[cast_type](out)
     return out
 
-def _should_give_up_ownership(object):
-    """
-    Ownership of objects which automatically register to a directory should be
-    left to C++, except if the object is gROOT.
-    """
-    import ROOT
-    tdir = object.GetDirectory()
-    return bool(tdir) and tdir is not ROOT.gROOT
-
 def _TTree_CloneTree(self, *args, **kwargs):
     """
     Forward the arguments to the C++ function and give up ownership if the
@@ -330,24 +321,6 @@ def _TTree_CloneTree(self, *args, **kwargs):
 
     return out_tree
 
-def _TTree_Constructor(self, *args, **kwargs):
-    """
-    Forward the arguments to the C++ constructor and give up ownership if the
-    TTree is attached to a TFile, which is the owner in that case.
-    """
-    import ROOT
-
-    self._cpp_constructor(*args, **kwargs)
-    if _should_give_up_ownership(self):
-        ROOT.SetOwnership(self, False)
-
-def _SetDirectory_SetOwnership_TTree(self, dir):
-    self._Original_SetDirectory_TTree(dir)
-    if dir:
-        # If we are actually registering with a directory, give ownership to C++
-        import ROOT
-        ROOT.SetOwnership(self, False)
-
 @pythonization("TTree")
 def pythonize_ttree(klass, name):
     # Parameters:
@@ -357,7 +330,7 @@ def pythonize_ttree(klass, name):
     # Functions that need to drop the ownership if the current directory is a TFile
 
     klass._cpp_constructor = klass.__init__
-    klass.__init__ = _TTree_Constructor
+    klass.__init__ = _constructor_releasing_ownership
 
     klass._CloneTree = klass.CloneTree
     klass.CloneTree = _TTree_CloneTree
@@ -381,8 +354,8 @@ def pythonize_ttree(klass, name):
     klass._OriginalBranch = klass.Branch
     klass.Branch = _Branch
 
-    klass._Original_SetDirectory_TTree = klass.SetDirectory
-    klass.SetDirectory = _SetDirectory_SetOwnership_TTree
+    klass._Original_SetDirectory = klass.SetDirectory
+    klass.SetDirectory = _SetDirectory_SetOwnership
 
 
 @pythonization("TChain")
@@ -406,4 +379,4 @@ def pythonize_tchain(klass):
 
     # The constructor needs to be explicitly pythonized for derived classes.
     klass._cpp_constructor = klass.__init__
-    klass.__init__ = _TTree_Constructor
+    klass.__init__ = _constructor_releasing_ownership

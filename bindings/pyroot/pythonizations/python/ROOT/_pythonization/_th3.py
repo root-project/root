@@ -9,30 +9,7 @@
 ################################################################################
 
 from . import pythonization
-
-
-def _should_give_up_ownership(object):
-    """
-    Ownership of objects which automatically register to a directory should be
-    left to C++, except if the object is gROOT.
-    """
-    import ROOT
-    tdir = object.GetDirectory()
-    return bool(tdir) and tdir is not ROOT.gROOT
-
-
-def _constructor_releasing_ownership(self, *args, **kwargs):
-    """
-    Forward the arguments to the C++ constructor and give up ownership if the
-    object is attached to a directory, which is then the owner. The only
-    exception is when the owner is gROOT, to avoid introducing a
-    backwards-incompatible change.
-    """
-    import ROOT
-
-    self._cpp_constructor(*args, **kwargs)
-    if _should_give_up_ownership(self):
-        ROOT.SetOwnership(self, False)
+from ROOT._pythonization._memory_utils import _constructor_releasing_ownership, _SetDirectory_SetOwnership
 
 
 def inject_constructor_releasing_ownership(klass):
