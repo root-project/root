@@ -71,7 +71,7 @@ void* TEmulatedMapProxy::At(UInt_t idx)
    // Return the address of the value at index 'idx'.
    if ( fEnv && fEnv->fObject )   {
       PCont_t c = PCont_t(fEnv->fObject);
-      return idx<(c->size()/fValDiff) ? ((char*)&(*c->begin())) + idx*fValDiff : 0;
+      return (idx<(c->size() / fValDiff)) ? (c->data() + idx * fValDiff) : 0;
    }
    Fatal("TEmulatedMapProxy","At> Logic error - no proxy object set.");
    return 0;
