@@ -65,7 +65,7 @@ TEST(RNTupleExporter, ExportToFiles)
    auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
    auto res = Internal::RNTupleExporter::ExportPages(*source);
 
-   EXPECT_EQ(res.fNPagesExported, 3);
+   EXPECT_EQ(res.fExportedFileNames.size(), 3);
 
    FileRaii pageVecIdx("./cluster_0_vec-0_page_0_elems_100_comp_505.page");
    FileRaii pageVec("./cluster_0_vec._0-0_page_0_elems_2000_comp_505.page");
@@ -140,7 +140,7 @@ TEST(RNTupleExporter, ExportToFilesWithChecksum)
    opts.fFlags |= Internal::RExportPagesOptions::kIncludeChecksums;
    auto res = Internal::RNTupleExporter::ExportPages(*source, opts);
 
-   EXPECT_EQ(res.fNPagesExported, 3);
+   EXPECT_EQ(res.fExportedFileNames.size(), 3);
 
    FileRaii pageVecIdx("./cluster_0_vec-0_page_0_elems_10_comp_0.page");
    FileRaii pageVec("./cluster_0_vec._0-0_page_0_elems_60_comp_0.page");
@@ -192,7 +192,7 @@ TEST(RNTupleExporter, ExportToFilesManyPages)
    auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
    auto res = Internal::RNTupleExporter::ExportPages(*source);
 
-   EXPECT_EQ(res.fNPagesExported, 14);
+   EXPECT_EQ(res.fExportedFileNames.size(), 14);
 
    for (const auto &file : res.fExportedFileNames)
       std::remove(file.c_str());
@@ -209,7 +209,6 @@ TEST(RNTupleExporter, EmptySource)
    auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
    auto res = Internal::RNTupleExporter::ExportPages(*source);
 
-   EXPECT_EQ(res.fNPagesExported, 0);
    EXPECT_EQ(res.fExportedFileNames.size(), 0);
 }
 
@@ -252,7 +251,7 @@ TEST(RNTupleExporter, ExportToFilesCustomPath)
    opts.fOutputPath = kDirName;
    auto res = Internal::RNTupleExporter::ExportPages(*source, opts);
 
-   EXPECT_EQ(res.fNPagesExported, 3);
+   EXPECT_EQ(res.fExportedFileNames.size(), 3);
 
    FileRaii pageVecIdx(kDirName / "cluster_0_vec-0_page_0_elems_100_comp_505.page");
    FileRaii pageVec(kDirName / "cluster_0_vec._0-0_page_0_elems_2000_comp_505.page");
