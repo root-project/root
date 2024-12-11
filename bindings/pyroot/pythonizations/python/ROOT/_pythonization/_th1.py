@@ -167,7 +167,7 @@ Further examples can be found in the tutorials:
 """
 
 from . import pythonization
-
+from ROOT._pythonization._memory_utils import _constructor_releasing_ownership, _SetDirectory_SetOwnership
 
 # Multiplication by constant
 
@@ -213,30 +213,6 @@ def _FillWithNumpyArray(self, *args):
         return self._Fill(*args)
 
 
-def _should_give_up_ownership(object):
-    """
-    Ownership of objects which automatically register to a directory should be
-    left to C++, except if the object is gROOT.
-    """
-    import ROOT
-    tdir = object.GetDirectory()
-    return bool(tdir) and tdir is not ROOT.gROOT
-
-
-def _constructor_releasing_ownership(self, *args, **kwargs):
-    """
-    Forward the arguments to the C++ constructor and give up ownership if the
-    object is attached to a directory, which is then the owner. The only
-    exception is when the owner is gROOT, to avoid introducing a
-    backwards-incompatible change.
-    """
-    import ROOT
-
-    self._cpp_constructor(*args, **kwargs)
-    if _should_give_up_ownership(self):
-        ROOT.SetOwnership(self, False)
-
-
 def inject_constructor_releasing_ownership(klass):
     klass._cpp_constructor = klass.__init__
     klass.__init__ = _constructor_releasing_ownership
@@ -257,12 +233,6 @@ _th1_derived_classes_to_pythonize = [
 for klass in _th1_derived_classes_to_pythonize:
     pythonization(klass)(inject_constructor_releasing_ownership)
 
-def _SetDirectory_SetOwnership(self, dir):
-    self._Original_SetDirectory(dir)
-    if dir:
-        # If we are actually registering with a directory, give ownership to C++
-        import ROOT
-        ROOT.SetOwnership(self, False)
 
 @pythonization('TH1')
 def pythonize_th1(klass):
