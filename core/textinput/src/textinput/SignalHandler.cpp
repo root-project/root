@@ -28,4 +28,10 @@ namespace textinput {
     raise(SIGTSTP);
 #endif
   }
+  void
+  SignalHandler::EmitCtrlBackslash() {
+#ifndef _WIN32
+     raise(SIGQUIT);
+#endif
+  }
 }

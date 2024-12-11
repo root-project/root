@@ -81,6 +81,7 @@ namespace textinput {
       case 'y' - 0x60: return C(Editor::kCmdPaste);
       case 'z' - 0x60:
         return C(In, Editor::kCKControl);
+      case 0x1c: return C(In, Editor::kCKControl); // ctrl+backslash
       case 0x1f: return C(Editor::kCmdUndo);
       case 0x7f: // Backspace key (with Alt, or no modifier) on Unix, Del on MacOS
         if (HadEscPending) {
