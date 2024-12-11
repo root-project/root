@@ -174,7 +174,7 @@ protected:
 
 public:
    REveCaloData(const char* n="REveCaloData", const char* t="");
-   ~REveCaloData() override {}
+   ~REveCaloData() override;
 
    void    FillImpliedSelectedSet(Set_t& impSelSet, const std::set<int>& sec_idcs) override;
 
@@ -220,7 +220,7 @@ public:
    Bool_t   GetWrapTwoPi() const { return fWrapTwoPi; }
    void     SetWrapTwoPi(Bool_t w) { fWrapTwoPi=w; }
 
-   void     SetSelector(REveCaloDataSelector* iSelector) { fSelector.reset(iSelector); }
+   void     SetSelector(REveCaloDataSelector* iSelector);
    REveCaloDataSelector* GetSelector() { return fSelector.get(); }
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
