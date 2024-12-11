@@ -34,6 +34,7 @@ ROOTTEST_ADD_TEST(test_MergeChangeComp_first
                   PRECMD ${ROOT_root_CMD} -q -b -l "merge_gen_input_tuples.C(\"test_comp_in_ff_1.root\", \"test_comp_in_ff_2.root\")"
                   COMMAND ${ROOT_hadd_CMD} -ff test_comp_out_ff.root test_comp_in_ff_2.root test_comp_in_ff_1.root
                   POSTCMD ${ROOT_root_CMD} -q -b -l "merge_changeComp_check_output.C(101, 101, \"test_comp_out_ff.root\", \"test_comp_in_ff_1.root\", \"test_comp_in_ff_2.root\")"
+)
 
 ROOTTEST_ADD_TEST(test_TreeChangeComp
                   COPY_TO_BUILDDIR hadd_gen_input_tree.C hadd_check_comp_tree.C
@@ -56,6 +57,7 @@ ROOTTEST_ADD_TEST(test_MergeCMSOpenDataRNTuples
                   COPY_TO_BUILDDIR hadd_check_cms.C cms_opendata_0_100.root cms_opendata_100_200.root cms_opendata_0_200.root
                   COMMAND ${ROOT_hadd_CMD} -f cms_opendata_merged.root cms_opendata_0_100.root cms_opendata_100_200.root
                   POSTCMD ${ROOT_root_CMD} -q -b -l "hadd_check_cms.C(\"cms_opendata_merged.root\", \"cms_opendata_0_200.root\")"
+)
 
 ################################################################
 #                 argument parsing tests                       #
