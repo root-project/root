@@ -317,7 +317,8 @@ function detectRightButton(event) {
 /** @summary Add move handlers for drawn element
   * @private */
 function addMoveHandler(painter, enabled = true, hover_handler = false) {
-   if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g) return;
+   if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g)
+      return;
 
    if (painter.getPadPainter()?.isEditable() === false)
       enabled = false;
@@ -334,7 +335,8 @@ function addMoveHandler(painter, enabled = true, hover_handler = false) {
       return;
    }
 
-   if (painter.draw_g.property('assigned_move')) return;
+   if (painter.draw_g.property('assigned_move'))
+      return;
 
    const drag_move = d3_drag().subject(Object);
    let not_changed = true, move_disabled = false;
