@@ -20,6 +20,7 @@ class TButton : public TPad, public TAttText {
 private:
    Bool_t fFocused;     ///< If cursor is in...
    Bool_t fFraming;     ///< True if you want a frame to be painted when pressed
+   UChar_t fValidPattern[128];  ///<! pattern in memory to detect button deletion
 
    TButton(const TButton &) = delete;
    TButton &operator=(const TButton &) = delete;
