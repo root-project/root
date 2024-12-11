@@ -37,24 +37,34 @@ public:
    class RIterator {
    private:
       NTupleSize_t fIndex = kInvalidNTupleIndex;
+
    public:
       using iterator = RIterator;
       using iterator_category = std::forward_iterator_tag;
       using value_type = NTupleSize_t;
       using difference_type = NTupleSize_t;
-      using pointer = NTupleSize_t*;
-      using reference = NTupleSize_t&;
+      using pointer = NTupleSize_t *;
+      using reference = NTupleSize_t &;
 
       RIterator() = default;
       explicit RIterator(NTupleSize_t index) : fIndex(index) {}
       ~RIterator() = default;
 
-      iterator  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
-      iterator& operator++()    /* prefix */         { ++fIndex; return *this; }
-      reference operator* ()                         { return fIndex; }
-      pointer   operator->()                         { return &fIndex; }
-      bool      operator==(const iterator& rh) const { return fIndex == rh.fIndex; }
-      bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
+      iterator operator++(int) /* postfix */
+      {
+         auto r = *this;
+         fIndex++;
+         return r;
+      }
+      iterator &operator++() /* prefix */
+      {
+         ++fIndex;
+         return *this;
+      }
+      reference operator*() { return fIndex; }
+      pointer operator->() { return &fIndex; }
+      bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
+      bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
    };
 
    RNTupleGlobalRange(NTupleSize_t start, NTupleSize_t end) : fStart(start), fEnd(end) {}
@@ -63,7 +73,6 @@ public:
    NTupleSize_t size() const { return fEnd - fStart; }
    bool IsValid() const { return (fStart != kInvalidNTupleIndex) && (fEnd != kInvalidNTupleIndex); }
 };
-
 
 // clang-format off
 /**
@@ -77,32 +86,45 @@ private:
    const DescriptorId_t fClusterId;
    const ClusterSize_t::ValueType fStart;
    const ClusterSize_t::ValueType fEnd;
+
 public:
    class RIterator {
    private:
       RClusterIndex fIndex;
+
    public:
       using iterator = RIterator;
       using iterator_category = std::forward_iterator_tag;
       using value_type = RClusterIndex;
       using difference_type = RClusterIndex;
-      using pointer = RClusterIndex*;
-      using reference = RClusterIndex&;
+      using pointer = RClusterIndex *;
+      using reference = RClusterIndex &;
 
       RIterator() = default;
       explicit RIterator(RClusterIndex index) : fIndex(index) {}
       ~RIterator() = default;
 
-      iterator  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
-      iterator& operator++()    /* prefix */         { fIndex++; return *this; }
-      reference operator* ()                         { return fIndex; }
-      pointer   operator->()                         { return &fIndex; }
-      bool      operator==(const iterator& rh) const { return fIndex == rh.fIndex; }
-      bool      operator!=(const iterator& rh) const { return fIndex != rh.fIndex; }
+      iterator operator++(int) /* postfix */
+      {
+         auto r = *this;
+         fIndex++;
+         return r;
+      }
+      iterator &operator++() /* prefix */
+      {
+         fIndex++;
+         return *this;
+      }
+      reference operator*() { return fIndex; }
+      pointer operator->() { return &fIndex; }
+      bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
+      bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
    };
 
    RNTupleClusterRange(DescriptorId_t clusterId, ClusterSize_t::ValueType start, ClusterSize_t::ValueType end)
-      : fClusterId(clusterId), fStart(start), fEnd(end) {}
+      : fClusterId(clusterId), fStart(start), fEnd(end)
+   {
+   }
    RIterator begin() const { return RIterator(RClusterIndex(fClusterId, fStart)); }
    RIterator end() const { return RIterator(RClusterIndex(fClusterId, fEnd)); }
    NTupleSize_t size() const { return fEnd - fStart; }
