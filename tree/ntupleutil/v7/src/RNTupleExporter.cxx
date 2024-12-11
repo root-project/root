@@ -23,6 +23,14 @@
 
 namespace ROOT::Experimental::Internal {
 
+namespace {
+
+ROOT::Experimental::RLogChannel &RNTupleExporterLog()
+{
+   static RLogChannel sLog("ROOT.RNTupleExporter");
+   return sLog;
+}
+
 struct RColumnExportInfo {
    const RColumnDescriptor *fColDesc;
    const RFieldDescriptor *fFieldDesc;
@@ -31,15 +39,18 @@ struct RColumnExportInfo {
    RColumnExportInfo(const RNTupleDescriptor &desc, const RColumnDescriptor &colDesc, const RFieldDescriptor &fieldDesc)
       : fColDesc(&colDesc),
         fFieldDesc(&fieldDesc),
+        // NOTE: we don't need to keep the column representation index into account because exactly 1 representation
+        // is active per page, so there is no risk of name collisions.
         fQualifiedName(desc.GetQualifiedFieldName(fieldDesc.GetId()) + '-' + std::to_string(colDesc.GetIndex()))
    {
    }
 };
 
-static void AddColumnsFromField(std::vector<RColumnExportInfo> &vec, const RNTupleDescriptor &desc,
-                                const RFieldDescriptor &fieldDesc)
+void AddColumnsFromField(std::vector<RColumnExportInfo> &vec, const RNTupleDescriptor &desc,
+                         const RFieldDescriptor &fieldDesc)
 {
-   R__LOG_DEBUG(1) << "processing field \"" << desc.GetQualifiedFieldName(fieldDesc.GetId()) << "\"";
+   R__LOG_DEBUG(1, RNTupleExporterLog()) << "processing field \"" << desc.GetQualifiedFieldName(fieldDesc.GetId())
+                                         << "\"";
 
    for (const auto &subfieldDesc : desc.GetFieldIterable(fieldDesc)) {
       if (subfieldDesc.IsProjectedField())
@@ -51,6 +62,8 @@ static void AddColumnsFromField(std::vector<RColumnExportInfo> &vec, const RNTup
       AddColumnsFromField(vec, desc, subfieldDesc);
    }
 }
+
+} // namespace
 
 RExportPagesResult RNTupleExporter::ExportPages(RPageSource &source, const RExportPagesOptions &options)
 {
@@ -83,13 +96,16 @@ RExportPagesResult RNTupleExporter::ExportPages(RPageSource &source, const RExpo
       for (const auto &colInfo : columnInfos) {
          DescriptorId_t columnId = colInfo.fColDesc->GetPhysicalId();
          const auto &pages = clusterDesc.GetPageRange(columnId);
-         const auto &colRange =clusterDesc.GetColumnRange(columnId);
+         const auto &colRange = clusterDesc.GetColumnRange(columnId);
          std::uint64_t pageIdx = 0;
          if (reportFilenames)
             res.fExportedFileNames.reserve(res.fExportedFileNames.size() + pages.fPageInfos.size());
 
-         R__LOG_DEBUG(0) << "exporting column \"" << colInfo.fQualifiedName << "\" (" << pages.fPageInfos.size()
-                         << " pages)";
+         R__LOG_DEBUG(0, RNTupleExporterLog())
+            << "exporting column \"" << colInfo.fQualifiedName << "\" (" << pages.fPageInfos.size() << " pages)";
+
+         // We should never try to export a suppressed column range
+         assert(!colRange.fIsSuppressed || pages.fPageInfos.empty());
 
          for (const auto &pageInfo : pages.fPageInfos) {
             ROnDiskPage::Key key{columnId, pageIdx};
@@ -116,7 +132,7 @@ RExportPagesResult RNTupleExporter::ExportPages(RPageSource &source, const RExpo
       clusterId = desc->FindNextClusterId(clusterId);
    }
 
-   R__LOG_DEBUG(0) << "exported " << res.fNPagesExported << " pages.";
+   R__LOG_INFO(RNTupleExporterLog()) << "exported " << res.fNPagesExported << " pages.";
 
    return res;
 }
