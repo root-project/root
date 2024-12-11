@@ -71,6 +71,11 @@ TEST(RNTupleBulk, Complex)
    for (int i = 0; i < 10; ++i) {
       EXPECT_FLOAT_EQ((i % 2 == 0) ? 0.0 : float(i), SArr10[i].a);
    }
+
+   auto SArrAll = static_cast<CustomStruct *>(bulk.ReadBulk(RClusterIndex(0, 0), nullptr, 10));
+   for (int i = 0; i < 10; ++i) {
+      EXPECT_FLOAT_EQ(float(i), SArrAll[i].a);
+   }
 }
 
 TEST(RNTupleBulk, CardinalityField)

@@ -620,7 +620,7 @@ std::size_t ROOT::Experimental::RFieldBase::ReadBulkImpl(const RBulkSpec &bulkSp
    std::size_t nRead = 0;
    for (std::size_t i = 0; i < bulkSpec.fCount; ++i) {
       // Value not needed
-      if (!bulkSpec.fMaskReq[i])
+      if (bulkSpec.fMaskReq && !bulkSpec.fMaskReq[i])
          continue;
 
       // Value already present
