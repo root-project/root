@@ -17,7 +17,7 @@ TEST(RNTupleBulk, Simple)
    RFieldBase::RBulk bulk = reader->GetModel().CreateBulk("int");
 
    auto mask = std::make_unique<bool[]>(10);
-   std::fill(mask.get(), mask.get() + 10, true);
+   std::fill(mask.get(), mask.get() + 10, false /* the optimization for simple fields should ignore the mask */);
    auto intArr5 = static_cast<int *>(bulk.ReadBulk(RClusterIndex(0, 0), mask.get(), 5));
    for (int i = 0; i < 5; ++i) {
       EXPECT_EQ(i, intArr5[i]);
