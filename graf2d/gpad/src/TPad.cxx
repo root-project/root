@@ -3435,8 +3435,8 @@ void TPad::FillCollideGridTH1(TObject *o)
             else         y2l = fUymin;
          }
          y2 = (Int_t)((y2l-fY1)/ys);
-         for (j=y1; j<=y2; j++) {
-         NotFree(x1, j);
+         for (j=y1; j<y2; j++) {
+            NotFree(x1, j);
          }
       }
       x1l = h->GetBinLowEdge(i);
