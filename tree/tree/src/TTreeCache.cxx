@@ -902,7 +902,7 @@ bool TTreeCache::ProcessMiss(Long64_t pos, int len)
       mcentry.fIndex = cumulative;
       cumulative += mcentry.fIO.fLen;
    }
-   fMissCache->fData.reserve(cumulative);
+   fMissCache->fData.resize(cumulative);
    // printf("Reading %lu bytes into miss cache for %lu entries.\n", cumulative, fEntries->size());
    fNMissReadPref += fMissCache->fEntries.size();
    fFile->ReadBuffers(&(fMissCache->fData[0]), &(positions[0]), &(lengths[0]), fMissCache->fEntries.size());
