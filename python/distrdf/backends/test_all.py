@@ -13,6 +13,7 @@ from check_histo_write import *
 from check_distribute_headers_sharedlibs_files import *
 from check_inv_mass import *
 from check_live_visualize import *
+from check_missing_values import *
 from check_reducer_merge import *
 from check_rungraphs import *
 from check_variations import *
