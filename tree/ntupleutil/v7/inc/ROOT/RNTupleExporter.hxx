@@ -27,9 +27,10 @@ struct RExportPagesOptions {
    enum RExportPageFlags {
       kNone = 0x0,
       kIncludeChecksums = 0x1,   
-      kReportExportedFileNames = 0x2,
+      /// If enabled, the exporter will report the current progress on the stderr
+      kShowProgressBar = 0x2,
 
-      kDefaults = kReportExportedFileNames
+      kDefaults = kShowProgressBar
    };
 
    std::filesystem::path fOutputPath = ".";
@@ -37,8 +38,6 @@ struct RExportPagesOptions {
 };
 
 struct RExportPagesResult {
-   int fNPagesExported;
-   // This only gets filled if kReportExportedFileNames was part of the options flags
    std::vector<std::string> fExportedFileNames;
 };
 

@@ -63,6 +63,21 @@ void AddColumnsFromField(std::vector<RColumnExportInfo> &vec, const RNTupleDescr
    }
 }
 
+int CountPages(const RNTupleDescriptor &desc, std::span<const RColumnExportInfo> columns)
+{
+   int nPages = 0;
+   DescriptorId_t clusterId = desc.FindClusterId(0, 0);
+   while (clusterId != kInvalidDescriptorId) {
+      const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
+      for (const auto &colInfo : columns) {
+         const auto &pages = clusterDesc.GetPageRange(colInfo.fColDesc->GetPhysicalId());
+         nPages += pages.fPageInfos.size();
+      }
+      clusterId = desc.FindNextClusterId(clusterId);
+   }
+   return nPages;
+}
+
 } // namespace
 
 RExportPagesResult RNTupleExporter::ExportPages(RPageSource &source, const RExportPagesOptions &options)
@@ -86,10 +101,15 @@ RExportPagesResult RNTupleExporter::ExportPages(RPageSource &source, const RExpo
       columnSet.emplace(colInfo.fColDesc->GetPhysicalId());
    }
 
-   bool reportFilenames = (options.fFlags & RExportPagesOptions::kReportExportedFileNames) != 0;
+   const auto nPages = CountPages(desc.GetRef(), columnInfos);
+
+   const bool showProgress = (options.fFlags & RExportPagesOptions::kShowProgressBar) != 0;
+   res.fExportedFileNames.reserve(nPages);
 
    // Iterate over the clusters in order and dump pages
    DescriptorId_t clusterId = desc->FindClusterId(0, 0);
+   int pagesExported = 0;
+   int prevIntPercent = 0;
    while (clusterId != kInvalidDescriptorId) {
       const auto &clusterDesc = desc->GetClusterDescriptor(clusterId);
       const RCluster *cluster = clusterPool.GetCluster(clusterId, columnSet);
@@ -98,8 +118,6 @@ RExportPagesResult RNTupleExporter::ExportPages(RPageSource &source, const RExpo
          const auto &pages = clusterDesc.GetPageRange(columnId);
          const auto &colRange = clusterDesc.GetColumnRange(columnId);
          std::uint64_t pageIdx = 0;
-         if (reportFilenames)
-            res.fExportedFileNames.reserve(res.fExportedFileNames.size() + pages.fPageInfos.size());
 
          R__LOG_DEBUG(0, RNTupleExporterLog())
             << "exporting column \"" << colInfo.fQualifiedName << "\" (" << pages.fPageInfos.size() << " pages)";
@@ -115,24 +133,33 @@ RExportPagesResult RNTupleExporter::ExportPages(RPageSource &source, const RExpo
             const void *pageBuf = onDiskPage->GetAddress();
             const auto maybeChecksumSize = (options.fFlags & RExportPagesOptions::kIncludeChecksums) ? 8 : 0;
             const std::uint64_t pageBufSize = pageInfo.fLocator.fBytesOnStorage + maybeChecksumSize;
-            std::ostringstream ss{options.fOutputPath, std::ios_base::ate};
+            std::ostringstream ss{options.fOutputPath.string(), std::ios_base::ate};
             ss << "/cluster_" << clusterDesc.GetId() << "_" << colInfo.fQualifiedName << "_page_" << pageIdx
                << "_elems_" << pageInfo.fNElements << "_comp_" << colRange.fCompressionSettings << ".page";
             const auto outFileName = ss.str();
             std::ofstream outFile{outFileName, std::ios_base::binary};
             outFile.write(reinterpret_cast<const char *>(pageBuf), pageBufSize);
 
-            if (reportFilenames)
-               res.fExportedFileNames.push_back(outFileName);
+            res.fExportedFileNames.push_back(outFileName);
 
-            ++pageIdx;
-            ++res.fNPagesExported;
+            ++pageIdx, ++pagesExported;
+
+            if (showProgress) {
+               int intPercent = static_cast<int>(100.f * pagesExported / res.fExportedFileNames.size());
+               if (intPercent != prevIntPercent) {
+                  fprintf(stderr, "\rExport progress: %02d%%", intPercent);
+                  if (intPercent == 100)
+                     fprintf(stderr, "\n");
+                  prevIntPercent = intPercent;
+               }
+            }
          }
       }
       clusterId = desc->FindNextClusterId(clusterId);
    }
 
-   R__LOG_INFO(RNTupleExporterLog()) << "exported " << res.fNPagesExported << " pages.";
+   assert(res.fExportedFileNames.size() == static_cast<size_t>(pagesExported));
+   R__LOG_INFO(RNTupleExporterLog()) << "exported " << res.fExportedFileNames.size() << " pages.";
 
    return res;
 }
