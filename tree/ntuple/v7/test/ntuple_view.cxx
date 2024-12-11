@@ -103,9 +103,7 @@ TEST(RNTuple, CollectionView)
 
    // The same items can be bulk-read.
    auto bulk = viewJetsItems.CreateBulk();
-   auto mask = std::make_unique<bool[]>(range.size());
-   std::fill(mask.get(), mask.get() + range.size(), true);
-   std::int32_t *values = static_cast<std::int32_t *>(bulk.ReadBulk(*range.begin(), mask.get(), range.size()));
+   std::int32_t *values = static_cast<std::int32_t *>(bulk.ReadBulk(range));
    for (std::size_t i = 0; i < range.size(); i++) {
       EXPECT_EQ(i + 4, values[i]);
    }
@@ -118,7 +116,7 @@ TEST(RNTuple, CollectionView)
    // Bulk reading can also adopt a provided buffer.
    auto buffer = std::make_unique<std::int32_t[]>(range.size());
    bulk.AdoptBuffer(buffer.get(), range.size());
-   bulk.ReadBulk(*range.begin(), mask.get(), range.size());
+   bulk.ReadBulk(range);
    for (std::size_t i = 0; i < range.size(); i++) {
       EXPECT_EQ(i + 4, buffer[i]);
    }
