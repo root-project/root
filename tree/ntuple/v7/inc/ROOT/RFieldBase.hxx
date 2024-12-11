@@ -740,7 +740,7 @@ public:
    /// Reads 'size' values from the associated field, starting from 'firstIndex'. Note that the index is given
    /// relative to a certain cluster. The return value points to the array of read objects.
    /// The 'maskReq' parameter is a bool array of at least 'size' elements. Only objects for which the mask is
-   /// true are guaranteed to be read in the returned value array.
+   /// true are guaranteed to be read in the returned value array. A 'nullptr' means to read all elements.
    void *ReadBulk(RClusterIndex firstIndex, const bool *maskReq, std::size_t size)
    {
       if (!ContainsRange(firstIndex, size))
