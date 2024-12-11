@@ -941,12 +941,11 @@ TEST(Packing, Real32QuantFloat)
             }
          }
       } else {
-         const auto k = 0.5 * (kMax - kMin) / ((1ull << bitWidth) - 1) + kMin;
+         const auto maxErr = (kMax - kMin) / ((1ull << bitWidth) - 1);
          for (int i = 0; i < N; ++i) {
             element.Pack(packed.get(), inputs, i);
             element.Unpack(outputs, packed.get(), i);
             for (int j = 0; j < i; ++j) {
-               const float maxErr = std::abs(k) + std::abs(inputs[i]);
                EXPECT_NEAR(outputs[j], inputs[j], maxErr);
             }
          }
@@ -1067,12 +1066,11 @@ TEST(Packing, Real32QuantDouble)
             }
          }
       } else {
-         const auto k = 0.5 * (kMax - kMin) / ((1ull << bitWidth) - 1) + kMin;
+         const auto maxErr = (kMax - kMin) / ((1ull << bitWidth) - 1);
          for (int i = 0; i < N; ++i) {
             element.Pack(packed.get(), inputs, i);
             element.Unpack(outputs, packed.get(), i);
             for (int j = 0; j < i; ++j) {
-               const double maxErr = std::abs(k) + std::abs(inputs[i]);
                EXPECT_NEAR(outputs[j], inputs[j], maxErr);
             }
          }
