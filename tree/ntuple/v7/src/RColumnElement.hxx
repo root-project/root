@@ -16,6 +16,7 @@
 #include <cassert>
 #include <limits>
 #include <type_traits>
+#include <cmath>
 
 // NOTE: some tests might define R__LITTLE_ENDIAN to simulate a different-endianness machine
 #ifndef R__LITTLE_ENDIAN
@@ -1057,8 +1058,8 @@ int UnquantizeReals(T *dst, const Quantized_t *src, std::size_t count, double mi
    const double scale = (max - min) / quantMax;
    const std::size_t unusedBits = sizeof(Quantized_t) * 8 - nQuantBits;
    const double eps = std::numeric_limits<double>::epsilon();
-   const double emin = -eps * scale + min;
-   const double emax = (static_cast<double>(quantMax) + eps) * scale + min;
+   const double emin = min - std::abs(min) * eps;
+   const double emax = max + std::abs(max) * eps;
 
    int nOutOfRange = 0;
 
@@ -1101,6 +1102,9 @@ public:
    {
       R__ASSERT(min >= std::numeric_limits<T>::lowest());
       R__ASSERT(max <= std::numeric_limits<T>::max());
+      // Disallow denormal, NaN and infinity
+      R__ASSERT(std::isnormal(min) || min == 0.0);
+      R__ASSERT(std::isnormal(max) || max == 0.0);
       fValueRange = {min, max};
    }
 
