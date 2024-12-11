@@ -456,6 +456,9 @@ double RooSimultaneous::evaluate() const
    if (canBeExtended()) {
       auto &pdf = static_cast<RooAbsPdf const &>(proxy->arg());
 
+      nEvtTot = 0;
+      nEvtCat = 0;
+
       for (auto *proxy2 : static_range_cast<RooRealProxy *>(_pdfProxyList)) {
          auto &pdf2 = static_cast<RooAbsPdf const &>(proxy2->arg());
          if(!pdf2.canBeExtended()) {
@@ -467,7 +470,9 @@ double RooSimultaneous::evaluate() const
          }
          const double nEvt = pdf2.expectedEvents(_normSet);
          nEvtTot += nEvt;
-         if (&pdf2 == &pdf) {
+         if (strcmp(proxy->GetName(),proxy2->GetName())==0) {
+            // matching proxy by name rather than arg ptr, b.c.
+            // possible to have same pdf used in different states
             nEvtCat += nEvt;
          }
       }
