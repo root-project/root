@@ -292,7 +292,7 @@ void BroadcastTensor(ContT data, const std::vector<size_t>& shape, const std::ve
    if (shape.front() == targetShape.front() && shape.back() == 1 && size > 1) {
       size_t bsize = targetShape.back();
       // compute the size of the data to broadcast
-      for (size_t k = size-2; k >=0; k--) {
+      for (int k = int(size)-2; k >=0; k--) {
          if (shape[k] != 1) break;
          bsize *= targetShape[k];
       }
