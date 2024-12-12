@@ -304,6 +304,10 @@
 
 #include "Where_FromONNX.hxx"
 
+#include "Sin_FromONNX.hxx"
+
+#include "Cos_FromONNX.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -2936,5 +2940,51 @@ TEST(ONNX, Where) {
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); i++) {
       EXPECT_EQ(output[i], correct[i]);
+   }
+}
+float outputs[] = {0.406200, 0.111242, 0.770231, 0.940162, 0.260436, -0.258742,
+                   0.304129, 0.999899, 0.256423, 0.410855, 0.843406, 0.862500};
+
+TEST(ONNX, Sin)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing some random input
+   std::vector<float> input({
+     -0.786738,-0.197796,-0.187787,0.142758,0.876096,-0.653239,0.145444,-1.107658,2.259171,-0.947054,-0.506689,1.801250
+   });
+
+   TMVA_SOFIE_Sin::Session s("Sin_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), input.size());
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - std::sin(input[i])), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Cos)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the random input
+   std::vector<float> input({
+     1.152504,-1.459324,0.691594,0.347690,-1.307323,1.832516,-1.261772,0.014224,1.311477,1.147405,-0.567206,-0.530606
+   });
+
+   TMVA_SOFIE_Cos::Session s("Cos_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), input.size());
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - std::cos(input[i])), TOLERANCE);
    }
 }

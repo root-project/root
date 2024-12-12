@@ -65,6 +65,16 @@ ParserFuncSignature ParseLog = [](RModelParser_ONNX &parser, const onnx::NodePro
    return ParseBasicUnary<EBasicUnaryOperator::kLog>(parser, nodeproto);
 };
 
+// Parse Sin
+ParserFuncSignature ParseSin = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   return ParseBasicUnary<EBasicUnaryOperator::kSin>(parser, nodeproto);
+};
+
+// Parse Cos
+ParserFuncSignature ParseCos = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   return ParseBasicUnary<EBasicUnaryOperator::kCos>(parser, nodeproto);
+};
+
 } // namespace SOFIE
 } // namespace Experimental
 } // namespace TMVA
