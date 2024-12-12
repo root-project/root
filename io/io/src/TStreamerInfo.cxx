@@ -4620,11 +4620,11 @@ void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule
             TString newName = objstr->String();
             TString realDataName;
             if ( TDataMember* dm = fClass->GetDataMember( newName ) ) {
-               TRealData::GetName(realDataName,dm);
-               newel = new TStreamerArtificial(realDataName,"",
-                                               fClass->GetDataMemberOffset(newName),
+               TRealData::GetName(realDataName, dm);
+               newel = new TStreamerArtificial(realDataName, "",
+                                               fClass->GetDataMemberOffset(realDataName),
                                                TStreamerInfo::kArtificial,
-                                               fClass->GetDataMember( newName )->GetTypeName());
+                                               dm->GetTypeName());
                newel->SetReadFunc( rule->GetReadFunctionPointer() );
                newel->SetReadRawFunc( rule->GetReadRawFunctionPointer() );
                toAdd.push_back(newel);
@@ -4637,11 +4637,11 @@ void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule
                if (objstr) {
                   newName = objstr->String();
                   if ( TDataMember* dm = fClass->GetDataMember( newName ) ) {
-                     TRealData::GetName(realDataName,dm);
-                     newel = new TStreamerArtificial(realDataName,"",
-                                                     fClass->GetDataMemberOffset(newName),
+                     TRealData::GetName(realDataName, dm);
+                     newel = new TStreamerArtificial(realDataName, "",
+                                                     fClass->GetDataMemberOffset(realDataName),
                                                      TStreamerInfo::kArtificial,
-                                                     fClass->GetDataMember( newName )->GetTypeName());
+                                                     dm->GetTypeName());
                      toAdd.push_back(newel);
                   }
                }
