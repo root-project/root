@@ -302,6 +302,8 @@
 
 #include "Pad_FromONNX.hxx"
 
+#include "Where_FromONNX.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -2909,6 +2911,24 @@ TEST(ONNX, Pad) {
        4, 0, 0, 0, 0, 0, 0, 0};
    TMVA_SOFIE_Pad::Session s("Pad_FromONNX.dat");
    std::vector<float> output(s.infer(input.data()));
+
+   // Checking the output size
+   EXPECT_EQ(output.size(), correct.size());
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); i++) {
+      EXPECT_EQ(output[i], correct[i]);
+   }
+}
+TEST(ONNX, Where) {
+   // test of Where using [[1,2]] and [[3,4],[5,6],[7,8]] with condition [[true],[false],[true]] -> [[1,2],[5,6],[1,2]]
+   // test also the broadcast of boolean tensors
+   std::vector<float> input1 = {1,2};
+   std::vector<float> input2 = {3,4,5,6};
+   bool cond[] = {true, false, true}; // need to pass arrays for booleans
+   std::vector<float> correct = {1,2,5,6,1,2};
+   TMVA_SOFIE_Where::Session s("Where_FromONNX.dat");
+   std::vector<float> output(s.infer(input1.data(), input2.data(), cond));
 
    // Checking the output size
    EXPECT_EQ(output.size(), correct.size());

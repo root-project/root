@@ -46,7 +46,7 @@ RFunction_Update::RFunction_Update(FunctionTarget target, GraphType gType): fTar
     }
 }
 
-// add inpuit tensors, order of provided shapes must be the same as in fInputTensors
+// add input tensors, order of provided shapes must be the same as in fInputTensors
 void RFunction_Update::AddInputTensors(const std::vector<std::vector<std::size_t>>& inputShapes) {
     for(long unsigned int i=0; i<inputShapes.size(); ++i) {
         function_block->AddInputTensorInfo(fInputTensors[i],ETensorType::FLOAT, inputShapes[i]);
