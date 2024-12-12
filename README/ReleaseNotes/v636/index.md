@@ -64,6 +64,8 @@ The following people have contributed to this new version:
     [RNTupleMergeOptions](https://root.cern/doc/v634/structROOT_1_1Experimental_1_1Internal_1_1RNTupleMergeOptions.html));
   * "rntuple.ErrBehavior=(Abort|Skip)": RNTuple-specific option that specifies the behavior of the RNTupleMerger on error (see link above);
   * "rntuple.ExtraVerbose": RNTuple-specific option that tells the RNTupleMerger to emit more information during the merge process.
+* New attribute for I/O customization rules: `CanIgnore`.  When using this attribute the rule will be ignored
+if the input is missing from the schema/class-layout they apply to instead of issue a `Warning`
 
 ## RDataFrame
 

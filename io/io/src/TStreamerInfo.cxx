@@ -4580,19 +4580,23 @@ void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule
       TIter input(sources);
       TObject *src;
       while((src = input())) {
+         auto canIgnore = [](const ROOT::TSchemaRule *r) {
+            if (r->GetAttributes()[0] != 0) {
+               TString attr( r->GetAttributes() );
+               attr.ToLower();
+               return attr.Contains("canignore");
+            } else
+               return false;
+         };
          if ( !GetElements()->FindObject(src->GetName()) ) {
             // Missing source.
-#if 0 // Don't warn about not activating the rule.  If don't warn the user can
-      // have more flexibility in specifying when the rule applies and relying
-      // on both the version number *and* the presence of the source members.
-      // Activating this warning would for example mean that we need to carefully
-      // tweak $ROOTSYS/etc/class.rules.
-            TString ruleStr;
-            rule->AsString(ruleStr);
-            Warning("InsertArtificialElements","For class %s in StreamerInfo %d is missing the source data member %s when trying to apply the rule:\n   %s",
-                   GetName(),GetClassVersion(),src->GetName(),ruleStr.Data());
-            rule = 0;
-#endif
+            if (!canIgnore(rule)) {
+               TString ruleStr;
+               rule->AsString(ruleStr);
+               Warning("InsertArtificialElements","For class %s in StreamerInfo %d is missing the source data member %s when trying to apply the rule:\n   %s",
+                     GetName(),GetClassVersion(),src->GetName(),ruleStr.Data());
+            }
+            rule = nullptr;
             break;
          }
       }
