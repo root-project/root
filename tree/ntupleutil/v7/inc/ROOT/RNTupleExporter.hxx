@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -23,29 +23,31 @@ namespace ROOT::Experimental::Internal {
 
 class RPageSource;
 
-struct RExportPagesOptions {
-   enum RExportPageFlags {
-      kNone = 0x0,
-      kIncludeChecksums = 0x1,   
-      /// If enabled, the exporter will report the current progress on the stderr
-      kShowProgressBar = 0x2,
-
-      kDefaults = kShowProgressBar
-   };
-
-   std::filesystem::path fOutputPath = ".";
-   std::uint64_t fFlags = kDefaults;
-};
-
-struct RExportPagesResult {
-   std::vector<std::string> fExportedFileNames;
-};
-
 class RNTupleExporter {
 public:
+   struct RPagesOptions {
+      enum RExportPageFlags {
+         kNone = 0x0,
+         kIncludeChecksums = 0x1,
+         /// If enabled, the exporter will report the current progress on the stderr
+         kShowProgressBar = 0x2,
+
+         kDefaults = kShowProgressBar
+      };
+
+      std::filesystem::path fOutputPath;
+      std::uint64_t fFlags;
+
+      RPagesOptions() : fOutputPath("."), fFlags(kDefaults) {}
+   };
+
+   struct RPagesResult {
+      std::vector<std::string> fExportedFileNames;
+   };
+
    /// Given a page source, writes all its pages to individual files (1 per page).
    /// If the source is not already attached, it will be attached by this process.
-   static RExportPagesResult ExportPages(RPageSource &source, const RExportPagesOptions &options = {});
+   static RPagesResult ExportPages(RPageSource &source, const RPagesOptions &options = {});
 };
 
 } // namespace ROOT::Experimental::Internal
