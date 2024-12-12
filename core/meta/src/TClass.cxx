@@ -3557,7 +3557,7 @@ Longptr_t TClass::GetDataMemberOffset(const char *name) const
          return info->GetOffset(name);
       }
    }
-   return 0;
+   return TVirtualStreamerInfo::kMissing;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
