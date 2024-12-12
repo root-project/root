@@ -1082,7 +1082,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
          case TStreamerInfo::kAnyP:    // Class*  not derived from TObject with no comment field NOTE:: Re-added by Phil
          case TStreamerInfo::kAnyP+TStreamerInfo::kOffsetL: {
             DOLOOP {
-               b.ReadFastArray((void**)(arr[k]+ioffset),cle,compinfo[i]->fLength,isPreAlloc,pstreamer);
+               b.ReadFastArray((void**)(arr[k]+ioffset), newCle ? newCle : cle, compinfo[i]->fLength, isPreAlloc, pstreamer, cle);
             }
          }
          continue;
