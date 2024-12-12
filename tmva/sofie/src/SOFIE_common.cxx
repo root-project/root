@@ -375,6 +375,23 @@ std::vector<size_t>  UTILITY::UnidirectionalBroadcastShape(std::vector<size_t> s
    }
 }
 
+// UNidirectional boradcast specializaiton for vector<bool>
+
+// specialization for vector of boolean
+void UTILITY::UnidirectionalBroadcast(const std::vector<bool> & data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, std::vector<bool> & broadcastedData)
+ {
+   // Prepend shape with ones
+   auto ncdata = const_cast<std::vector<bool> &>(data);
+   if (shape.size() < targetShape.size()) {
+      size_t targetSize = targetShape.size();
+      std::vector<size_t> newShape(targetSize, 1);
+      size_t offset = targetSize - shape.size();
+      std::copy(shape.begin(), shape.end(), newShape.begin() + offset);
+      UTILITY::BroadcastTensor<bool, std::vector<bool> &>(ncdata, newShape, targetShape, broadcastedData);
+   }
+   UTILITY::BroadcastTensor<bool, std::vector<bool> &>(ncdata, shape, targetShape, broadcastedData);
+}
+
 std::string UTILITY::Clean_name(std::string input_tensor_name){
    std::string s (input_tensor_name);
    std::replace( s.begin(), s.end(), '-', '_');
