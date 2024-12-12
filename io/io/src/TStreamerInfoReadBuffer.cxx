@@ -1380,7 +1380,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
 
          case TStreamerInfo::kAny+TStreamerInfo::kOffsetL: {
             DOLOOP {
-               b.ReadFastArray((void*)(arr[k]+ioffset),cle,compinfo[i]->fLength,pstreamer);
+               b.ReadFastArray((void*)(arr[k]+ioffset), newCle ? newCle : cle, compinfo[i]->fLength, pstreamer, cle);
             }
             continue;
          }
