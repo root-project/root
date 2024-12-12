@@ -16,7 +16,8 @@
 #ifndef ROOT7_RNTupleExporter
 #define ROOT7_RNTupleExporter
 
-#include <filesystem>
+#include <cstdint>
+#include <string>
 #include <vector>
 
 namespace ROOT::Experimental::Internal {
@@ -35,7 +36,7 @@ public:
          kDefaults = kShowProgressBar
       };
 
-      std::filesystem::path fOutputPath;
+      std::string fOutputPath;
       std::uint64_t fFlags;
 
       RPagesOptions() : fOutputPath("."), fFlags(kDefaults) {}

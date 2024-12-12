@@ -3,6 +3,7 @@
 #include <ROOT/RNTupleModel.hxx>
 
 #include "ntupleutil_test.hxx"
+#include <filesystem>
 
 using namespace ROOT::Experimental;
 
@@ -268,7 +269,7 @@ TEST(RNTupleExporter, ExportToFilesCustomPath)
    }
 
    // create tmp directory
-   static const std::filesystem::path kDirName = "rntuple_exporter_custom_path";
+   static const std::string kDirName = "rntuple_exporter_custom_path";
    bool ok = std::filesystem::create_directory(kDirName);
    if (!ok) {
       FAIL() << "failed to create directory " << kDirName;
@@ -286,9 +287,9 @@ TEST(RNTupleExporter, ExportToFilesCustomPath)
 
    EXPECT_EQ(res.fExportedFileNames.size(), 3);
 
-   FileRaii pageVecIdx(kDirName / "cluster_0_vec-0_page_0_elems_100_comp_505.page");
-   FileRaii pageVec(kDirName / "cluster_0_vec._0-0_page_0_elems_2000_comp_505.page");
-   FileRaii pageFlt(kDirName / "cluster_0_flt-0_page_0_elems_100_comp_505.page");
+   FileRaii pageVecIdx(kDirName + "/cluster_0_vec-0_page_0_elems_100_comp_505.page");
+   FileRaii pageVec(kDirName + "/cluster_0_vec._0-0_page_0_elems_2000_comp_505.page");
+   FileRaii pageFlt(kDirName + "/cluster_0_flt-0_page_0_elems_100_comp_505.page");
 
    EXPECT_TRUE(std::find(res.fExportedFileNames.begin(), res.fExportedFileNames.end(), pageFlt.GetPath()) !=
                res.fExportedFileNames.end());
