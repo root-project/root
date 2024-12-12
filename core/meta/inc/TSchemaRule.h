@@ -27,6 +27,8 @@ namespace ROOT {
             TSources(const char *name = nullptr, const char *title = nullptr, const char *dims = nullptr) : TNamed(name,title), fDimensions(dims) {}
             const char *GetDimensions() { return fDimensions; }
 
+            const char* GetTypeName() { return GetTitle(); }
+
             ClassDefOverride(TSources,2);
          };
 
