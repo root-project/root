@@ -6,7 +6,7 @@
 /// is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -80,9 +80,9 @@ int CountPages(const RNTupleDescriptor &desc, std::span<const RColumnExportInfo>
 
 } // namespace
 
-RExportPagesResult RNTupleExporter::ExportPages(RPageSource &source, const RExportPagesOptions &options)
+RNTupleExporter::RPagesResult RNTupleExporter::ExportPages(RPageSource &source, const RPagesOptions &options)
 {
-   RExportPagesResult res = {};
+   RPagesResult res = {};
 
    // make sure the source is attached
    source.Attach();
@@ -103,7 +103,7 @@ RExportPagesResult RNTupleExporter::ExportPages(RPageSource &source, const RExpo
 
    const auto nPages = CountPages(desc.GetRef(), columnInfos);
 
-   const bool showProgress = (options.fFlags & RExportPagesOptions::kShowProgressBar) != 0;
+   const bool showProgress = (options.fFlags & RPagesOptions::kShowProgressBar) != 0;
    res.fExportedFileNames.reserve(nPages);
 
    // Iterate over the clusters in order and dump pages
@@ -131,7 +131,8 @@ RExportPagesResult RNTupleExporter::ExportPages(RPageSource &source, const RExpo
 
             // dump the page
             const void *pageBuf = onDiskPage->GetAddress();
-            const auto maybeChecksumSize = (options.fFlags & RExportPagesOptions::kIncludeChecksums) ? 8 : 0;
+            const bool incChecksum = (options.fFlags & RPagesOptions::kIncludeChecksums) != 0 && pageInfo.fHasChecksum;
+            const std::size_t maybeChecksumSize = incChecksum * 8;
             const std::uint64_t pageBufSize = pageInfo.fLocator.fBytesOnStorage + maybeChecksumSize;
             std::ostringstream ss{options.fOutputPath.string(), std::ios_base::ate};
             ss << "/cluster_" << clusterDesc.GetId() << "_" << colInfo.fQualifiedName << "_page_" << pageIdx
