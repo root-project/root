@@ -193,9 +193,9 @@ endif()
 # Compile .py files
 foreach(py_source ${py_sources})
   add_custom_command(TARGET ${libname}
+                      POST_BUILD
                       COMMAND ${Python3_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source}
                       COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source}
-                      DEPENDS ${localruntimedir}/${py_source}
                       COMMENT "Compiling PyROOT source ${py_source} for Python ${Python3_VERSION}")
 endforeach()
 
