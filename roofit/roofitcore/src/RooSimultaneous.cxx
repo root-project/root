@@ -454,7 +454,6 @@ double RooSimultaneous::evaluate() const
 
    // Calculate relative weighting factor for sim-pdfs of all extendable components
    if (canBeExtended()) {
-      auto &pdf = static_cast<RooAbsPdf const &>(proxy->arg());
 
       nEvtTot = 0;
       nEvtCat = 0;
@@ -470,9 +469,9 @@ double RooSimultaneous::evaluate() const
          }
          const double nEvt = pdf2.expectedEvents(_normSet);
          nEvtTot += nEvt;
-         if (strcmp(proxy->GetName(),proxy2->GetName())==0) {
-            // matching proxy by name rather than arg ptr, b.c.
-            // possible to have same pdf used in different states
+         if (proxy == proxy2) {
+            // Matching by proxy by pointer rather than pdfs, because it's
+            // possible to have the same pdf used in different states.
             nEvtCat += nEvt;
          }
       }
