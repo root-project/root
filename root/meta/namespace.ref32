@@ -15,7 +15,7 @@ OBJ: TFunction	globalFunc
 OBJ: TFunction	globalFuncInline	
 TFile**		fornamespace.root	
  TFile*		fornamespace.root	
-  KEY: Outer::Inner::Cl	cl;1	object title
+  KEY: Outer::Inner::Cl	cl;1	
 
 StreamerInfo for class: Outer::Inner::Cl, version=1, checksum=0xc5ae9b03
   Outer::Inner::InInner<int> I               offset=  0 type=62                     
