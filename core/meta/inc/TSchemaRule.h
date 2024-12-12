@@ -23,13 +23,46 @@ namespace ROOT {
          class TSources : public TNamed {
          private:
             TString fDimensions;
+            Int_t fPointerLevel = 0;
+
          public:
-            TSources(const char *name = nullptr, const char *title = nullptr, const char *dims = nullptr) : TNamed(name,title), fDimensions(dims) {}
-            const char *GetDimensions() { return fDimensions; }
+            TSources(const char *name = nullptr, const char *title = nullptr, const char *dims = nullptr)
+               : TNamed(name, title), fDimensions(dims)
+            {
+               if (fTitle.Length())
+                  while (fTitle[fTitle.Length() - fPointerLevel - 1] == '*')
+                     ++fPointerLevel;
+               if (fPointerLevel)
+                  fTitle.Remove(fTitle.Length() - fPointerLevel);
+            }
 
-            const char* GetTypeName() { return GetTitle(); }
+            const char *GetDimensions() const { return fDimensions; }
 
-            ClassDefOverride(TSources,2);
+            bool IsPointer() const { return fPointerLevel > 0; }
+
+            Int_t GetPointerLevel() const { return fPointerLevel; }
+
+            const char* GetUnderlyingTypeName() const
+            {
+               return fTitle;
+            }
+
+            // The source can be declared with:
+            //   "%s %s%s;", GetTypeForDeclaration().Data(), GetName(), GetDimensions);
+            TString GetTypeForDeclaration()
+            {
+               TString type = fTitle;
+               for(Int_t s = 0; s < fPointerLevel; ++s)
+                  type.Append('*');
+               return type;
+            }
+
+            void SetTitle(const char *) override
+            {
+               Fatal("SetTitle", "Changing the type represented by a TSources is not supported.");
+            }
+
+            ClassDefOverride(TSources, 3);
          };
 
          typedef enum
