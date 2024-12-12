@@ -9,7 +9,6 @@
 #include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleWriter.hxx>
-#include <filesystem>
 
 /**
  * An RAII wrapper around an open temporary file on disk. It cleans up the
@@ -27,7 +26,7 @@ public:
    ~FileRaii()
    {
       if (!fPreserveFile)
-         std::filesystem::remove(fPath.c_str());
+         std::remove(fPath.c_str());
    }
    std::string GetPath() const { return fPath; }
 
