@@ -3593,23 +3593,19 @@ TRealData* TClass::GetRealData(const char* name) const
 
    // Try ignoring the array dimensions.
    std::string::size_type firstBracket = givenName.find_first_of("[");
-   if (firstBracket != std::string::npos) {
-      // -- We are looking for an array data member.
-      std::string nameNoDim(givenName.substr(0, firstBracket));
-      TObjLink* lnk = fRealData->FirstLink();
-      while (lnk) {
-         TObject* obj = lnk->GetObject();
-         std::string objName(obj->GetName());
-         std::string::size_type pos = objName.find_first_of("[");
-         // Only match arrays to arrays for now.
-         if (pos != std::string::npos) {
-            objName.erase(pos);
-            if (objName == nameNoDim) {
-               return static_cast<TRealData*>(obj);
-            }
-         }
-         lnk = lnk->Next();
+   std::string nameNoDim(givenName.substr(0, firstBracket));
+   TObjLink* lnk = fRealData->FirstLink();
+   while (lnk) {
+      TObject* obj = lnk->GetObject();
+      std::string objName(obj->GetName());
+      std::string::size_type pos = objName.find_first_of("[");
+      if (pos != std::string::npos) {
+         objName.erase(pos);
       }
+      if (objName == nameNoDim) {
+         return static_cast<TRealData*>(obj);
+      }
+      lnk = lnk->Next();
    }
 
    // Now try it as a pointer.
