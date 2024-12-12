@@ -1,7 +1,7 @@
 {
 #ifdef R__B64
    std::vector<int> data;
-   data.resize(  (100*1024*1024+404780)/4);
+   data.resize(  (100*1024*1024+408620)/4);
    std::vector<float> smalldata;
    smalldata.resize( 3 );
 
