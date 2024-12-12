@@ -253,6 +253,62 @@ namespace {
       TStreamerInfo* fInfo;
    };
 
+   decltype(auto) GetSourceType(ROOT::TSchemaRule::TSources *s)
+   {
+      std::string localtypename(s->GetUnderlyingTypeName());
+      Int_t ndim = 0;
+      Int_t memType = TVirtualStreamerInfo::kNoType;
+      auto memClass = TClass::GetClass(localtypename.c_str());
+      bool isStdArray = memClass && TClassEdit::IsStdArray(memClass->GetName());
+      if (isStdArray) {
+         std::array<Int_t, 5> localMaxIndices;
+         TClassEdit::GetStdArrayProperties(memClass->GetName(),
+                                          localtypename,
+                                          localMaxIndices,
+                                          ndim);
+         memClass = TClass::GetClass(localtypename.c_str());
+      }
+      if (memClass) {
+         //cached->SetNewType( cached->GetType() );
+         if (s->GetPointerLevel()) {
+            if (memClass->IsTObject()) {
+               memType = TVirtualStreamerInfo::kObjectP;
+            } else if (memClass->GetCollectionProxy()) {
+               memType = TVirtualStreamerInfo::kSTLp;
+            } else {
+               memType = TVirtualStreamerInfo::kAnyP;
+            }
+         } else {
+            if (memClass->IsTObject()) {
+               memType = TVirtualStreamerInfo::kObject;
+            } else if (memClass->GetCollectionProxy()) {
+               memType = TVirtualStreamerInfo::kSTL;
+            } else {
+               memType = TVirtualStreamerInfo::kAny;
+            }
+         }
+         if ((!s->GetPointerLevel() || memType == TVirtualStreamerInfo::kSTLp) &&
+             (isStdArray ? ndim >0 : s->GetDimensions()[0]))
+         {
+            memType += TVirtualStreamerInfo::kOffsetL;
+         }
+      } else {
+         auto d = gROOT->GetType(localtypename.c_str());
+         memType = d->GetType();
+         if (s->GetDimensions()[0])
+            memType += TVirtualStreamerInfo::kOffsetL;
+         if (s->GetPointerLevel())
+            memType += TVirtualStreamerInfo::kOffsetP;
+      }
+      return std::make_pair(memClass, memType);
+   }
+
+   void UpdateFromRule(ROOT::TSchemaRule::TSources *s, TStreamerElement *element)
+   {
+      auto [memClass, memType] = GetSourceType(s);
+      element->SetNewType( memType );
+      element->SetNewClass( memClass );
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -661,8 +717,13 @@ void TStreamerInfo::Build(Bool_t isTransient)
             element = writecopy;
          }
          cached->SetBit(TStreamerElement::kCache);
-         cached->SetNewType( cached->GetType() );
-         cached->SetNewClass( nullptr );
+         // Get one of the potentially many rules applicable
+         // We should check that we don't have a second rule
+         auto r = rules.GetRuleWithSource( element->GetName() );
+         assert(r && r->GetSource());
+         auto s = (ROOT::TSchemaRule::TSources*)(r->GetSource()->FindObject( element->GetName() ));
+         assert(s);
+         UpdateFromRule(s, cached);
       }
 
       fElements->Add(element);
@@ -2534,8 +2595,16 @@ void TStreamerInfo::BuildOld()
                writecopy->SetOffset(element->GetOffset());
             }
             element->SetBit(TStreamerElement::kCache);
-            element->SetNewType( element->GetType() );
-            element->SetNewClass( nullptr ); // Technically we could also consider setting to the type specificed in the rule
+
+            // Get one of the potentially many rules applicable
+            // We should check that we don't have a second rule
+            auto r = rules.GetRuleWithSource(element->GetName());
+            assert(r && r->GetSource());
+            auto s = (ROOT::TSchemaRule::TSources *)(r->GetSource()->FindObject(element->GetName()));
+            assert(s);
+
+            UpdateFromRule(s, element);
+
             element->SetOffset(infoalloc ? infoalloc->GetOffset(element->GetName()) : 0);
          } else if (rules.HasRuleWithTarget( element->GetName(), kTRUE ) ) {
             // The data member exist in the onfile StreamerInfo and there is a rule
