@@ -18,6 +18,7 @@ TEST(RNTuple, Limits_ManyFields)
 {
    // Writing and reading a model with 100k integer fields takes around 2.2s and seems to have slightly more than linear
    // complexity (200k fields take 7.5s).
+   // Peak RSS is around 750MB.
    FileRaii fileGuard("test_ntuple_limits_manyFields.root");
 
    static constexpr int NumFields = 100'000;
@@ -53,6 +54,7 @@ TEST(RNTuple, Limits_ManyClusters)
 {
    // Writing and reading 500k clusters takes around 3.3s and seems to have benign scaling behavior.
    // (1M clusters take around 6.6s).
+   // Peak RSS is around 850MB.
    FileRaii fileGuard("test_ntuple_limits_manyClusters.root");
 
    static constexpr int NumClusters = 500'000;
@@ -88,6 +90,7 @@ TEST(RNTuple, Limits_ManyClusterGroups)
 {
    // Writing and reading 25k cluster groups takes around 1.7s and seems to have quadratic complexity
    // (50k cluster groups takes around 6.5s).
+   // Peak RSS is around 275MB.
    FileRaii fileGuard("test_ntuple_limits_manyClusterGroups.root");
 
    static constexpr int NumClusterGroups = 25'000;
@@ -123,6 +126,7 @@ TEST(RNTuple, Limits_ManyPages)
 {
    // Writing and reading 1M pages (of two elements each) takes around 1.3 and seems to have benign scaling behavior
    // (2M pages take 2.6s).
+   // Peak RSS is around 600MB.
    FileRaii fileGuard("test_ntuple_limits_manyPages.root");
 
    static constexpr int NumPages = 1'000'000;
@@ -164,6 +168,7 @@ TEST(RNTuple, Limits_ManyPagesOneEntry)
 {
    // Writing and reading 1M pages (of four elements each) takes around 2.4s and seems to have benign scaling behavior
    // (2M pages take around 4.8s).
+   // Peak RSS is around 625MB.
    FileRaii fileGuard("test_ntuple_limits_manyPagesOneEntry.root");
 
    static constexpr int NumPages = 1'000'000;
@@ -207,6 +212,7 @@ TEST(RNTuple, DISABLED_Limits_LargePage)
 {
    // Writing and reading one page with 600M elements takes around 18s and seems to have linear complexity
    // (900M elements take 27s)
+   // Peak RSS is around 14 GB.
    FileRaii fileGuard("test_ntuple_limits_largePage.root");
 
    // clang-format off
@@ -255,6 +261,7 @@ TEST(RNTuple, DISABLED_Limits_LargePageOneEntry)
 {
    // Writing and reading one page with 100M elements takes around 1.7s and seems to have linear complexity (200M
    // elements take 3.5s, 400M elements take around 7s).
+   // Peak RSS is around 1.4GB.
    FileRaii fileGuard("test_ntuple_limits_largePageOneEntry.root");
 
    static constexpr int NumElements = 100'000'000;
