@@ -18,8 +18,7 @@ private:
    int fBatchSize = -1;
    long fReadPos = 0;  // reading file position
 
-   std::unordered_map<std::string, InputTensorInfo>
-      fInputTensorInfos; // input tensors where shape may not fully defined or other graph inputs?
+   std::unordered_map<std::string, InputTensorInfo> fInputTensorInfos; // input tensors where shape may not fully defined or other graph inputs?
    std::unordered_map<std::string, TensorInfo> fReadyInputTensorInfos; // input tensors where shape is full defined
    std::unordered_map<std::string, InitializedTensor> fInitializedTensors;
    std::unordered_map<std::string, TensorInfo> fIntermediateTensorInfos;
@@ -110,7 +109,10 @@ public:
    // Check if a tensor is initialized
    bool IsInitializedTensor(const std::string &name) const;
    bool IsDynamicTensor(const std::string &name) const;
-   bool IsInputTensor(const std::string &name) const;
+   // Check if tensor is a input dynamic tensor (without a specified shape, based on Sim structure
+   bool IsDimInputTensor(const std::string &name) const;
+   // check if tensor is a fully specified input tensor
+   bool IsReadyInputTensor(const std::string &name) const;
 
    // Add intermediate tensor
    void AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<Dim> dim_shape);

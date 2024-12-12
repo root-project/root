@@ -194,9 +194,13 @@ bool RModel::IsDynamicTensor(const std::string& tensorName) const {
    std::string name = UTILITY::Clean_name(tensorName);
    return fDynamicTensorInfos.find(name) != fDynamicTensorInfos.end();
 }
-bool RModel::IsInputTensor(const std::string& tensorName) const {
+bool RModel::IsDimInputTensor(const std::string& tensorName) const {
    std::string name = UTILITY::Clean_name(tensorName);
    return fInputTensorInfos.find(name) != fInputTensorInfos.end();
+}
+bool RModel::IsReadyInputTensor(const std::string& tensorName) const {
+   std::string name = UTILITY::Clean_name(tensorName);
+   return fReadyInputTensorInfos.find(name) != fReadyInputTensorInfos.end();
 }
 
 // generic addition of a tensor
@@ -506,7 +510,7 @@ std::string RModel::GenerateInferSignature(bool isdecl) {
    int i_input = 0;
    for (auto &name : fInputTensorNames) {
       // if is a dynamic tensor pass initial parameters
-      if (IsInputTensor(name)) {
+      if (IsDimInputTensor(name)) {
          auto shape = GetDynamicTensorShape(name);
          for (auto &d : shape) {
             std::string pName = d.param;

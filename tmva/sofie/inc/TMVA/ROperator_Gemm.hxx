@@ -130,7 +130,7 @@ namespace SOFIE{
                throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNC + " is not found in model");
             }
          }
-         if (model.IsDynamicTensor(fNA) || model.IsInputTensor(fNA) ) {
+         if (model.IsDynamicTensor(fNA) || model.IsDimInputTensor(fNA) ) {
             fShapeA = model.GetDynamicTensorShape(fNA);
             fIsDynamic = true;
          } else {
@@ -144,7 +144,7 @@ namespace SOFIE{
             appendOne = true;
          }
 
-         if (model.IsDynamicTensor(fNB) || model.IsInputTensor(fNB)) {
+         if (model.IsDynamicTensor(fNB) || model.IsDimInputTensor(fNB)) {
             fShapeB = model.GetDynamicTensorShape(fNB);
             fIsDynamic = true;
          }
