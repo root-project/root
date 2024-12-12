@@ -51,33 +51,6 @@ struct BinaryOperatorTrait<T, Pow> {
    static T Func (T t1, T t2) { return std::pow(t1,t2);}
 };
 
-template <typename T>
-struct TensorType {};
-template<>
-struct TensorType<float> {
-   static const std::string Name() { return "float"; }
-};
-template<>
-struct TensorType<double> {
-   static const std::string Name() { return "double"; }
-};
-template<>
-struct TensorType<int64_t> {
-   static const std::string Name() { return "int64_t"; }
-};
-template<>
-struct TensorType<int32_t> {
-   static const std::string Name() { return "int32_t"; }
-};
-template<>
-struct TensorType<uint32_t> {
-   static const std::string Name() { return "uint32_t"; }
-};
-template<>
-struct TensorType<uint64_t> {
-   static const std::string Name() { return "uint64_t"; }
-};
-
 template<typename T, EBasicBinaryOperator Op>
 class ROperator_BasicBinary final : public ROperator{
 private:

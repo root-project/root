@@ -80,6 +80,7 @@ extern ParserFuncSignature ParseTile;
 extern ParserFuncSignature ParseSplit;
 extern ParserFuncSignature ParseIf;
 extern ParserFuncSignature ParsePad;
+extern ParserFuncSignature ParseWhere;
 // Decalaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseConvTransposeAdd;
@@ -215,6 +216,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Split", ParseSplit);
    RegisterOperator("If", ParseIf);
    RegisterOperator("Pad", ParsePad);
+   RegisterOperator("Where", ParseWhere);
 }
 
 // Destructor of the parser
@@ -450,9 +452,10 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
       std::string input_name = valueinfoproto.name();
 
       ETensorType type = static_cast<ETensorType>(valueinfoproto.type().tensor_type().elem_type());
-      if (type != ETensorType::FLOAT && type != ETensorType::INT32 && type != ETensorType::INT64) {
-         throw std::runtime_error("TMVA::SOFIE Data type in input tensor " + input_name + " not supported!\n");
-      }
+      // why we have this??? we can support all input types
+      //if (type != ETensorType::FLOAT && type != ETensorType::INT32 && type != ETensorType::INT64) {
+      //   throw std::runtime_error("TMVA::SOFIE Data type in input tensor " + input_name + " not supported!\n");
+      //}
 
       std::vector<Dim> fShape;
       bool existParam = false;
