@@ -423,3 +423,27 @@ TEST(RooSimultaneous, PartiallyExtendedPdfs)
 
    std::cout << ws.pdf("simPdf")->getVal() << std::endl;
 }
+
+// Make sure that one can use the same extended pdf instance for different
+// channels, and the RooSimultaneous will still evaluate correctly.
+TEST(RooSimultaneous, DuplicateExtendedPdfs)
+{
+   RooWorkspace ws;
+
+   ws.factory("Uniform::u_a(x[0, 10])");
+   ws.factory("Uniform::u_b(x)");
+   ws.factory("ExtendPdf::pdf_a(u_a, n[1000, 100, 10000])");
+   ws.factory("ExtendPdf::pdf_b(u_b, n)");
+
+   ws.factory("SIMUL::simPdf( c[A=0,B=1], A=pdf_a, B=pdf_a)");
+   ws.factory("SIMUL::simPdfRef( c, A=pdf_a, B=pdf_b)");
+
+   RooArgSet normSet{*ws.var("x")};
+
+   RooAbsPdf &simPdf = *ws.pdf("simPdf");
+   RooAbsPdf &simPdfRef = *ws.pdf("simPdfRef");
+   double simPdfVal = simPdf.getVal(normSet);
+
+   EXPECT_FLOAT_EQ(simPdfVal, 0.05);
+   EXPECT_DOUBLE_EQ(simPdfVal, simPdfRef.getVal(normSet));
+}
