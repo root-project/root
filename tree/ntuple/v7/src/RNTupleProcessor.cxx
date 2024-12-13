@@ -125,11 +125,6 @@ ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(const RNTuple
    fPageSource = Internal::RPageSource::Create(ntuple.fNTupleName, ntuple.fStorage);
    fPageSource->Attach();
 
-   if (fPageSource->GetNEntries() == 0) {
-      throw RException(R__FAIL("specified RNTuple \"" + ntuple.fNTupleName + "\" at path \"" + ntuple.fStorage +
-                               "\" does not contain any entries"));
-   }
-
    model.Freeze();
    fEntry = model.CreateEntry();
 
