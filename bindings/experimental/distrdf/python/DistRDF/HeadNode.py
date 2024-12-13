@@ -483,7 +483,7 @@ class TreeHeadNode(HeadNode):
             # Depending on the cluster setup, this may still be quite costly, so
             # we decide to pay the price only if the user explicitly requested
             # warning logging.
-            clusters, entries = Ranges.get_clusters_and_entries(self.subtreenames[0], self.inputfiles[0])
+            clusters, entries = ROOT.Internal.TreeUtils.GetClustersAndEntries(self.subtreenames[0], self.inputfiles[0])
             # The file could contain an empty tree. In that case, the estimate will not be computed.
             if entries > 0:
                 partitionsperfile = self.npartitions / len(self.inputfiles)
@@ -663,7 +663,7 @@ class RDatasetSpecHeadNode(HeadNode):
             # Depending on the cluster setup, this may still be quite costly, so
             # we decide to pay the price only if the user explicitly requested
             # warning logging.
-            clusters, entries = Ranges.get_clusters_and_entries(
+            clusters, entries = ROOT.Internal.TreeUtils.GetClustersAndEntries(
                 self.subtreenames[0], self.inputfiles[0])
             # The file could contain an empty tree. In that case, the estimate will not be computed.
             if entries > 0:
