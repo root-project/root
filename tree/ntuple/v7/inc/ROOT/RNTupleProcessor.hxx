@@ -122,8 +122,8 @@ protected:
    //////////////////////////////////////////////////////////////////////////
    /// \brief Advance the processor to the next available entry.
    ///
-   /// \return The updated number of entries processed so far after advancing, or kInvalidNTupleIndex if the last
-   /// (global) entry has been processed.
+   /// \return The number of the entry loaded after advancing, or kInvalidNTupleIndex if there was no entry to advance
+   /// to.
    ///
    /// Checks if the end of the currently connected RNTuple is reached. If this is the case, either the next RNTuple
    /// is connected or the iterator has reached the end.
@@ -132,6 +132,13 @@ protected:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Fill the entry with values belonging to the current entry number.
    virtual void LoadEntry() = 0;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Set the local (i.e. relative to the page source currently openend) entry number. Used by
+   /// `RNTupleProcessor::RIterator`.
+   ///
+   /// \param[in] entryNumber
+   void SetLocalEntryNumber(NTupleSize_t entryNumber) { fLocalEntryNumber = entryNumber; }
 
    RNTupleProcessor(const std::vector<RNTupleOpenSpec> &ntuples)
       : fNTuples(ntuples), fNEntriesProcessed(0), fCurrentNTupleNumber(0), fLocalEntryNumber(0)
@@ -178,7 +185,7 @@ public:
    class RIterator {
    private:
       RNTupleProcessor &fProcessor;
-      NTupleSize_t fNEntriesProcessed;
+      NTupleSize_t fCurrentEntryNumber;
 
    public:
       using iterator_category = std::forward_iterator_tag;
@@ -188,14 +195,21 @@ public:
       using pointer = REntry *;
       using reference = const REntry &;
 
-      RIterator(RNTupleProcessor &processor, NTupleSize_t globalEntryNumber)
-         : fProcessor(processor), fNEntriesProcessed(globalEntryNumber)
+      RIterator(RNTupleProcessor &processor, NTupleSize_t entryNumber)
+         : fProcessor(processor), fCurrentEntryNumber(entryNumber)
       {
+         // This constructor is called with kInvalidNTupleIndex for RNTupleProcessor::end(). In that case, we already
+         // know there is nothing to advance to.
+         if (fCurrentEntryNumber != kInvalidNTupleIndex) {
+            fProcessor.SetLocalEntryNumber(fCurrentEntryNumber);
+            fCurrentEntryNumber = fProcessor.Advance();
+         }
       }
 
       iterator operator++()
       {
-         fNEntriesProcessed = fProcessor.Advance();
+         fProcessor.SetLocalEntryNumber(fCurrentEntryNumber + 1);
+         fCurrentEntryNumber = fProcessor.Advance();
          return *this;
       }
 
@@ -214,11 +228,11 @@ public:
 
       friend bool operator!=(const iterator &lh, const iterator &rh)
       {
-         return lh.fNEntriesProcessed != rh.fNEntriesProcessed;
+         return lh.fCurrentEntryNumber != rh.fCurrentEntryNumber;
       }
       friend bool operator==(const iterator &lh, const iterator &rh)
       {
-         return lh.fNEntriesProcessed == rh.fNEntriesProcessed;
+         return lh.fCurrentEntryNumber == rh.fCurrentEntryNumber;
       }
    };
 

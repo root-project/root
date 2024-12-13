@@ -30,14 +30,13 @@ TEST_F(RNTupleProcessorTest, Base)
    int nEntries = 0;
 
    for (const auto &entry : *proc) {
-      EXPECT_FLOAT_EQ(static_cast<float>(proc->GetNEntriesProcessed()), *entry.GetPtr<float>("x"));
+      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
+      EXPECT_EQ(nEntries - 1, proc->GetLocalEntryNumber());
 
-      std::vector<float> yExp{static_cast<float>(proc->GetNEntriesProcessed()),
-                              static_cast<float>(proc->GetNEntriesProcessed() * 2)};
+      EXPECT_FLOAT_EQ(static_cast<float>(nEntries - 1), *entry.GetPtr<float>("x"));
+
+      std::vector<float> yExp{static_cast<float>(nEntries - 1), static_cast<float>((nEntries - 1) * 2)};
       EXPECT_EQ(yExp, *entry.GetPtr<std::vector<float>>("y"));
-
-      EXPECT_EQ(proc->GetNEntriesProcessed(), proc->GetLocalEntryNumber());
-      ++nEntries;
    }
    EXPECT_EQ(nEntries, 5);
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
@@ -55,8 +54,10 @@ TEST_F(RNTupleProcessorTest, BaseWithModel)
    int nEntries = 0;
 
    for (const auto &entry : *proc) {
-      EXPECT_FLOAT_EQ(static_cast<float>(proc->GetNEntriesProcessed()), *fldX);
-      EXPECT_EQ(proc->GetNEntriesProcessed(), proc->GetLocalEntryNumber());
+      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
+      EXPECT_EQ(nEntries - 1, proc->GetLocalEntryNumber());
+
+      EXPECT_FLOAT_EQ(static_cast<float>(nEntries - 1), *fldX);
 
       try {
          entry.GetPtr<std::vector<float>>("y");
@@ -64,7 +65,6 @@ TEST_F(RNTupleProcessorTest, BaseWithModel)
       } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: y"));
       }
-      ++nEntries;
    }
    EXPECT_EQ(nEntries, 5);
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
@@ -82,8 +82,10 @@ TEST_F(RNTupleProcessorTest, BaseWithBareModel)
    int nEntries = 0;
 
    for (const auto &entry : *proc) {
-      EXPECT_FLOAT_EQ(static_cast<float>(proc->GetNEntriesProcessed()), *entry.GetPtr<float>("x"));
-      EXPECT_EQ(proc->GetNEntriesProcessed(), proc->GetLocalEntryNumber());
+      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
+      EXPECT_EQ(nEntries - 1, proc->GetLocalEntryNumber());
+
+      EXPECT_FLOAT_EQ(static_cast<float>(nEntries - 1), *entry.GetPtr<float>("x"));
 
       try {
          entry.GetPtr<std::vector<float>>("y");
@@ -91,7 +93,6 @@ TEST_F(RNTupleProcessorTest, BaseWithBareModel)
       } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: y"));
       }
-      ++nEntries;
    }
    EXPECT_EQ(nEntries, 5);
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());

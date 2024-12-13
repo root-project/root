@@ -97,7 +97,9 @@ TEST_F(RNTupleJoinProcessorTest, Basic)
 
    int nEntries = 0;
    for (const auto &entry : *proc) {
-      EXPECT_EQ(proc->GetLocalEntryNumber(), nEntries++);
+      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
+      EXPECT_EQ(nEntries - 1, proc->GetLocalEntryNumber());
+      ;
 
       auto i = entry.GetPtr<int>("i");
       EXPECT_EQ(proc->GetLocalEntryNumber() * 2, *i);
@@ -123,7 +125,8 @@ TEST_F(RNTupleJoinProcessorTest, Aligned)
    int nEntries = 0;
    std::vector<float> yExpected;
    for (auto &entry : *proc) {
-      EXPECT_EQ(proc->GetLocalEntryNumber(), nEntries++);
+      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
+      EXPECT_EQ(nEntries - 1, proc->GetLocalEntryNumber());
 
       auto i = entry.GetPtr<int>("i");
 
