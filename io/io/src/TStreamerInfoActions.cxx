@@ -1760,7 +1760,9 @@ namespace TStreamerInfoActions
             // Read the class version and byte count from the buffer.
             UInt_t start = 0;
             UInt_t count = 0;
-            buf.ReadVersion(&pos, &count, config->fInfo->IsA());
+            buf.ReadVersion(&start, &count, cl);
+            // Loop over the entries in the clones array or the STL container.
+            //for (Int_t k = 0; k < narr; ++k) {
 
                Int_t* counter = (Int_t*) ((char *) addr /*entry pointer*/ + eoffset /*entry offset*/ + config->fCompInfo->fMethod /*counter offset*/);
                // And call the private streamer, passing it the buffer, the object, and the counter.
@@ -1788,7 +1790,7 @@ namespace TStreamerInfoActions
          // Read the class version and byte count from the buffer.
          UInt_t start = 0;
          UInt_t count = 0;
-         buf.ReadVersion(&start, &count, config->fInfo->IsA());
+         buf.ReadVersion(&start, &count, cl);
          if (fileVersion > 51508) {
             // -- Newer versions allow polymorphic pointers.
             // Loop over the entries in the clones array or the STL container.
