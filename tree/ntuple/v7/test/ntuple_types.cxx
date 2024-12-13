@@ -1918,7 +1918,7 @@ TEST(RNTuple, TClass)
          auto viewKlass = ntuple->GetView<DerivedA>("klass");
          FAIL() << "GetView<a_base_class_of_T> should throw";
       } catch (const RException& err) {
-         EXPECT_THAT(err.what(), testing::HasSubstr("No on-disk field information"));
+         EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
       }
    }
 }
