@@ -388,6 +388,59 @@ struct RenamedMember {
    EXPECT_EVALUATE_EQ("ptrRenamedMember->fInt3", 93);
 }
 
+TEST(RNTupleEvolution, RenamedMemberClass)
+{
+   // RNTuple currently does not support automatic schema evolution when a class is renamed.
+   FileRaii fileGuard("test_ntuple_evolution_renamed_member_class.root");
+
+   WriteOldInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+struct RenamedMemberClass1 {
+   int fInt = 1;
+};
+struct RenamedMemberClass {
+   RenamedMemberClass1 fMember;
+};
+)"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "RenamedMemberClass").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      // Reset / close the writer and flush the file.
+      {
+         // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
+         // See also https://github.com/root-project/root/issues/9371
+         ROOT::TestSupport::CheckDiagsRAII diagRAII;
+         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                               /*matchFullMessage=*/false);
+         writer.reset();
+      }
+   });
+
+   ASSERT_TRUE(gInterpreter->Declare(R"(
+struct RenamedMemberClass2 {
+   int fInt = 1;
+};
+struct RenamedMemberClass {
+   RenamedMemberClass2 fMember;
+};
+)"));
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   try {
+      reader->GetModel();
+      FAIL() << "model reconstruction should fail";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
+   }
+}
+
 TEST(RNTupleEvolution, AddedBaseClass)
 {
    FileRaii fileGuard("test_ntuple_evolution_added_base_class.root");
@@ -526,6 +579,63 @@ struct AddedSecondBaseDerived : public AddedSecondBaseFirst, public AddedSecondB
    EXPECT_EVALUATE_EQ("ptrAddedSecondBaseDerived->fDerived", 93);
 }
 
+TEST(RNTupleEvolution, PrependSecondBaseClass)
+{
+   // For RNTuple, this case looks like the first base class was renamed. It would be confusing for users to
+   // automatically evolve this case, even if the member fields and on-disk columns are compatible.
+   FileRaii fileGuard("test_ntuple_evolution_prepend_second_base_class.root");
+
+   WriteOldInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+struct PrependSecondBaseFirst {
+   int fFirstBase = 1;
+};
+struct PrependSecondBaseDerived : public PrependSecondBaseFirst {
+   int fDerived = 3;
+};
+)"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "PrependSecondBaseDerived").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      // Reset / close the writer and flush the file.
+      {
+         // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
+         // See also https://github.com/root-project/root/issues/9371
+         ROOT::TestSupport::CheckDiagsRAII diagRAII;
+         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                               /*matchFullMessage=*/false);
+         writer.reset();
+      }
+   });
+
+   ASSERT_TRUE(gInterpreter->Declare(R"(
+struct PrependSecondBaseFirst {
+   int fFirstBase = 1;
+};
+struct PrependSecondBaseSecond {
+   int fSecondBase = 2;
+};
+struct PrependSecondBaseDerived : public PrependSecondBaseSecond, public PrependSecondBaseFirst {
+   int fDerived = 3;
+};
+)"));
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   try {
+      reader->GetModel();
+      FAIL() << "model reconstruction should fail";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
+   }
+}
+
 TEST(RNTupleEvolution, RemovedBaseClass)
 {
    FileRaii fileGuard("test_ntuple_evolution_removed_base_class.root");
@@ -592,4 +702,57 @@ struct RemovedBaseDerived : public RemovedBaseIntermediate {
    reader->LoadEntry(1);
    EXPECT_EVALUATE_EQ("ptrRemovedBaseDerived->fIntermediate", 82);
    EXPECT_EVALUATE_EQ("ptrRemovedBaseDerived->fDerived", 93);
+}
+
+TEST(RNTupleEvolution, RenamedBaseClass)
+{
+   // RNTuple currently does not support automatic schema evolution when a class is renamed.
+   FileRaii fileGuard("test_ntuple_evolution_renamed_base_class.root");
+
+   WriteOldInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+struct RenamedBase1 {
+   int fBase = 1;
+};
+struct RenamedBaseDerived : public RenamedBase1 {
+   int fDerived = 2;
+};
+)"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "RenamedBaseDerived").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      // Reset / close the writer and flush the file.
+      {
+         // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
+         // See also https://github.com/root-project/root/issues/9371
+         ROOT::TestSupport::CheckDiagsRAII diagRAII;
+         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                               /*matchFullMessage=*/false);
+         writer.reset();
+      }
+   });
+
+   ASSERT_TRUE(gInterpreter->Declare(R"(
+struct RenamedBase2 {
+   int fBase = 1;
+};
+struct RenamedBaseDerived : public RenamedBase2 {
+   int fDerived = 2;
+};
+)"));
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   try {
+      reader->GetModel();
+      FAIL() << "model reconstruction should fail";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
+   }
 }
