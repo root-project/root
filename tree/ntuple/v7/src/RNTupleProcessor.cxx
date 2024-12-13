@@ -403,32 +403,42 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::Advan
 
 void ROOT::Experimental::RNTupleJoinProcessor::LoadEntry()
 {
+   // Read the values of the primary ntuple. If no index is used (i.e., the join is aligned), also read the values of
+   // auxiliary ntuples.
+   for (const auto &[_, fieldContext] : fFieldContexts) {
+      if (!fieldContext.IsAuxiliary() || !IsUsingIndex()) {
+         auto &value = fEntry->GetValue(fieldContext.fToken);
+         value.Read(fLocalEntryNumber);
+      }
+   }
+
+   // If no index is used (i.e., the join is aligned), there's nothing left to do.
+   if (!IsUsingIndex())
+      return;
+
+   // Collect the values of the join fields for this entry.
    std::vector<void *> valPtrs;
    valPtrs.reserve(fJoinFieldTokens.size());
-
    for (const auto &token : fJoinFieldTokens) {
       auto ptr = fEntry->GetPtr<void>(token);
       valPtrs.push_back(ptr.get());
    }
 
+   // Find the index entry number corresponding to the join field values for each auxiliary ntuple.
    std::vector<NTupleSize_t> indexEntryNumbers;
-   indexEntryNumbers.resize(fJoinIndices.size());
-   if (IsUsingIndex()) {
-      for (unsigned i = 0; i < fJoinIndices.size(); ++i) {
-         auto &joinIndex = fJoinIndices[i];
-         if (!joinIndex->IsBuilt())
-            joinIndex->Build();
+   indexEntryNumbers.reserve(fJoinIndices.size());
+   for (unsigned i = 0; i < fJoinIndices.size(); ++i) {
+      auto &joinIndex = fJoinIndices[i];
+      if (!joinIndex->IsBuilt())
+         joinIndex->Build();
 
-         indexEntryNumbers[i] = joinIndex->GetFirstEntryNumber(valPtrs);
-      }
+      indexEntryNumbers.push_back(joinIndex->GetFirstEntryNumber(valPtrs));
    }
 
-   for (auto &[fieldName, fieldContext] : fFieldContexts) {
-      if (!fieldContext.IsAuxiliary() || !IsUsingIndex()) {
-         auto &value = fEntry->GetValue(fieldContext.fToken);
-         value.Read(fLocalEntryNumber);
+   // For each auxiliary field, load its value according to the entry number we just found of the ntuple it belongs to.
+   for (const auto &[_, fieldContext] : fFieldContexts) {
+      if (!fieldContext.IsAuxiliary())
          continue;
-      }
 
       auto &value = fEntry->GetValue(fieldContext.fToken);
       if (indexEntryNumbers[fieldContext.fNTupleIdx - 1] == kInvalidNTupleIndex) {
