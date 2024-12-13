@@ -2,6 +2,26 @@
 
 #include <ROOT/RNTupleProcessor.hxx>
 
+TEST(RNTupleProcessor, EmptyNTuple)
+{
+   FileRaii fileGuard("test_ntuple_processor_empty.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<float>("x");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+   }
+
+   RNTupleOpenSpec ntuple{"ntuple", fileGuard.GetPath()};
+   auto proc = RNTupleProcessor::Create(ntuple);
+
+   int nEntries = 0;
+   for (const auto &_ : *proc) {
+      nEntries++;
+   }
+   EXPECT_EQ(0, nEntries);
+   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+}
+
 class RNTupleProcessorTest : public testing::Test {
 protected:
    const std::string fFileName = "test_ntuple_processor.root";
