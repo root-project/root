@@ -92,6 +92,8 @@ protected:
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
    /// If set, checksums will be calculated and written for every page.
    bool fEnablePageChecksums = true;
+   /// If set, identical pages are deduplicated and aliased on disk. Requires page checksums.
+   bool fEnableSamePageMerging = true;
    /// Specifies the max size of a payload storeable into a single TKey. When writing an RNTuple to a ROOT file,
    /// any payload whose size exceeds this will be split into multiple keys.
    std::uint64_t fMaxKeySize = kDefaultMaxKeySize;
@@ -137,7 +139,16 @@ public:
 
    bool GetEnablePageChecksums() const { return fEnablePageChecksums; }
    /// Note that turning off page checksums will also turn off the same page merging optimization (see tuning.md)
-   void SetEnablePageChecksums(bool val) { fEnablePageChecksums = val; }
+   void SetEnablePageChecksums(bool val)
+   {
+      fEnablePageChecksums = val;
+      if (!fEnablePageChecksums) {
+         fEnableSamePageMerging = false;
+      }
+   }
+
+   bool GetEnableSamePageMerging() const { return fEnableSamePageMerging; }
+   void SetEnableSamePageMerging(bool val);
 
    std::uint64_t GetMaxKeySize() const { return fMaxKeySize; }
 };

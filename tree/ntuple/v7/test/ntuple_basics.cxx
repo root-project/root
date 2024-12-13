@@ -432,6 +432,26 @@ TEST(RNTuple, PageSize)
    EXPECT_EQ(20, col0_pages.fPageInfos.size());
 }
 
+TEST(RNTupleWriteOptions, SamePageMergingChecksum)
+{
+   RNTupleWriteOptions options;
+   options.SetEnableSamePageMerging(false);
+   // Should not have turned off page checksums
+   EXPECT_TRUE(options.GetEnablePageChecksums());
+
+   options.SetEnableSamePageMerging(true);
+   options.SetEnablePageChecksums(false);
+   // Should have automatically turned off same page merging
+   EXPECT_FALSE(options.GetEnableSamePageMerging());
+
+   try {
+      options.SetEnableSamePageMerging(true);
+      FAIL() << "enable same page merging should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("requires page checksums"));
+   }
+}
+
 TEST(RNTuple, EmptyString)
 {
    // empty storage string

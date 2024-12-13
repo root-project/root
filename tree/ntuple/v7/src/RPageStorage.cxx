@@ -1014,7 +1014,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageV(
       locatorIndexes.reserve(locatorIndexes.size() + rangeSize);
 
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-         if (!fFeatures.fCanMergePages || !sealedPageIt->GetHasChecksum()) {
+         if (!fFeatures.fCanMergePages || !fOptions->GetEnableSamePageMerging() || !sealedPageIt->GetHasChecksum()) {
             mask.emplace_back(true);
             locatorIndexes.emplace_back(iLocator++);
             continue;

@@ -76,6 +76,14 @@ void ROOT::Experimental::RNTupleWriteOptions::SetMaxUnzippedPageSize(std::size_t
    fMaxUnzippedPageSize = val;
 }
 
+void ROOT::Experimental::RNTupleWriteOptions::SetEnableSamePageMerging(bool val)
+{
+   if (val && !fEnablePageChecksums) {
+      throw RException(R__FAIL("same page merging requires page checksums, which were previously disabled"));
+   }
+   fEnableSamePageMerging = val;
+}
+
 std::size_t ROOT::Experimental::RNTupleWriteOptions::GetPageBufferBudget() const
 {
    if (fPageBufferBudget != 0)
