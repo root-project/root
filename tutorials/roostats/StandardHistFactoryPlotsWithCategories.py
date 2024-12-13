@@ -102,7 +102,7 @@ def StandardHistFactoryPlotsWithCategories(
     # now use the profile inspector
 
     obs = mc.GetObservables().first()
-    List = ROOT.TList()
+    frameList = []
 
     firstPOI = mc.GetParametersOfInterest().first()
 
@@ -160,7 +160,7 @@ def StandardHistFactoryPlotsWithCategories(
             mc.GetPdf().plotOn(frame, LineColor(kRed), LineStyle(kDashed), LineWidth(1))
             var.setVal(-1)
             mc.GetPdf().plotOn(frame, LineColor(kGreen), LineStyle(kDashed), LineWidth(1))
-            List.Add(frame)
+            frameList.append(frame)
             var.setVal(0)
 
     else:
@@ -279,7 +279,7 @@ def StandardHistFactoryPlotsWithCategories(
                 else:
                     var.setVal(0)
 
-                List.Add(frame)
+                frameList.append(frame)
 
                 # quit making plots
                 nPlots += 1
@@ -294,17 +294,17 @@ def StandardHistFactoryPlotsWithCategories(
 
     # now make plots
     c1 = ROOT.TCanvas("c1", "ProfileInspectorDemo", 800, 200)
-    if List.GetSize() > 4:
-        n = List.GetSize()
-        nx = int(sqrt(n))
-        ny = ROOT.TMath.CeilNint(n / nx)
-        nx = ROOT.TMath.CeilNint(sqrt(n))
+    nFrames = len(frameList)
+    if nFrames > 4:
+        nx = int(sqrt(nFrames))
+        ny = ROOT.TMath.CeilNint(nFrames / nx)
+        nx = ROOT.TMath.CeilNint(sqrt(nFrames))
         c1.Divide(ny, nx)
     else:
-        c1.Divide(List.GetSize())
-    for i in range(List.GetSize()):
+        c1.Divide(nFrames)
+    for i in range(nFrames):
         c1.cd(i + 1)
-        List.At(i).Draw()
+        frameList[i].Draw()
         c1.Update()
     c1.Draw()
     c1.SaveAs("StandardHistFactoryPlotsWithCategories.2.pdf")
