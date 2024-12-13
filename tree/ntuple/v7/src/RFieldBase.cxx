@@ -302,9 +302,12 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    if (continueOnError)
       createContextGuard.SetContinueOnError(true);
 
-   auto fnFail = [&fieldName, &canonicalType](const std::string &errMsg) -> RResult<std::unique_ptr<RFieldBase>> {
+   auto fnFail = [&fieldName,
+                  &canonicalType](const std::string &errMsg,
+                                  RInvalidField::RCategory cat =
+                                     RInvalidField::RCategory::kTypeError) -> RResult<std::unique_ptr<RFieldBase>> {
       if (createContext.GetContinueOnError()) {
-         return std::unique_ptr<RFieldBase>(std::make_unique<RInvalidField>(fieldName, canonicalType, errMsg));
+         return std::unique_ptr<RFieldBase>(std::make_unique<RInvalidField>(fieldName, canonicalType, errMsg, cat));
       } else {
          return R__FAIL(errMsg);
       }
@@ -566,8 +569,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    } catch (RException &e) {
       auto error = e.GetError();
       if (createContext.GetContinueOnError()) {
-         return std::unique_ptr<RFieldBase>(
-            std::make_unique<RInvalidField>(fieldName, canonicalType, error.GetReport()));
+         return std::unique_ptr<RFieldBase>(std::make_unique<RInvalidField>(fieldName, canonicalType, error.GetReport(),
+                                                                            RInvalidField::RCategory::kGeneric));
       } else {
          return error;
       }
@@ -578,7 +581,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          result->fTypeAlias = typeAlias;
       return result;
    }
-   return R__FORWARD_RESULT(fnFail("unknown type: " + canonicalType));
+   return R__FORWARD_RESULT(fnFail("unknown type: " + canonicalType, RInvalidField::RCategory::kUnknownType));
 }
 
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
