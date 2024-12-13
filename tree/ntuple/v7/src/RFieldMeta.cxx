@@ -200,6 +200,7 @@ void ROOT::Experimental::RClassField::ReadInClusterImpl(RClusterIndex clusterInd
 
 void ROOT::Experimental::RClassField::BeforeConnectPageSource(Internal::RPageSource &pageSource)
 {
+   // This can happen for added base classes or non-simple members.
    if (GetOnDiskId() == kInvalidDescriptorId) {
       return;
    }

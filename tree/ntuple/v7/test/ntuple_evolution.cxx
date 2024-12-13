@@ -145,6 +145,75 @@ struct AddedMember {
    EXPECT_EVALUATE_EQ("ptrAddedMember->fInt3", 93);
 }
 
+TEST(RNTupleEvolution, AddedMemberObject)
+{
+   FileRaii fileGuard("test_ntuple_evolution_added_member_object.root");
+
+   WriteOldInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+struct AddedMemberObjectI {
+   int fInt;
+};
+struct AddedMemberObject {
+   AddedMemberObjectI fMember1{1};
+   AddedMemberObjectI fMember3{3};
+};
+)"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "AddedMemberObject").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+      DeclarePointer("AddedMemberObject", "ptrAddedMemberObject", ptr);
+      ProcessLine("ptrAddedMemberObject->fMember1.fInt = 71;");
+      ProcessLine("ptrAddedMemberObject->fMember3.fInt = 93;");
+      writer->Fill();
+
+      // Reset / close the writer and flush the file.
+      {
+         // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
+         // See also https://github.com/root-project/root/issues/9371
+         ROOT::TestSupport::CheckDiagsRAII diagRAII;
+         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                               /*matchFullMessage=*/false);
+         writer.reset();
+      }
+   });
+
+   ASSERT_TRUE(gInterpreter->Declare(R"(
+struct AddedMemberObjectI {
+   int fInt;
+};
+struct AddedMemberObject {
+   AddedMemberObjectI fMember1{1};
+   AddedMemberObjectI fMember2{2};
+   AddedMemberObjectI fMember3{3};
+};
+)"));
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(2, reader->GetNEntries());
+
+   void *ptr = reader->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
+   DeclarePointer("AddedMemberObject", "ptrAddedMemberObject", ptr);
+
+   reader->LoadEntry(0);
+   EXPECT_EVALUATE_EQ("ptrAddedMemberObject->fMember1.fInt", 1);
+   EXPECT_EVALUATE_EQ("ptrAddedMemberObject->fMember2.fInt", 2);
+   EXPECT_EVALUATE_EQ("ptrAddedMemberObject->fMember3.fInt", 3);
+
+   reader->LoadEntry(1);
+   EXPECT_EVALUATE_EQ("ptrAddedMemberObject->fMember1.fInt", 71);
+   EXPECT_EVALUATE_EQ("ptrAddedMemberObject->fMember2.fInt", 2);
+   EXPECT_EVALUATE_EQ("ptrAddedMemberObject->fMember3.fInt", 93);
+}
+
 TEST(RNTupleEvolution, RemovedMember)
 {
    FileRaii fileGuard("test_ntuple_evolution_removed_member.root");
