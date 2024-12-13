@@ -87,6 +87,7 @@ public:
    RInvalidField(std::string_view name, std::string_view type, std::string_view error)
       : RFieldBase(name, type, ENTupleStructure::kLeaf, false /* isSimple */), fError(error)
    {
+      fTraits |= kTraitInvalidField;
    }
 
    const std::string &GetError() const { return fError; }
