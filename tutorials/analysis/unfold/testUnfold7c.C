@@ -785,7 +785,7 @@ void testUnfold7c()
      subc[2]->cd();
      DrawPadReco(histMcRecCO,histMcbgrRecCO,histDataRecCO,
                  histOutputAgorep[i],histProbCO,histRhoAgorep[i]);
-     c3c->SaveAs(TString::Format("iterative%d.eps",nIter[i]));
+     c3c->SaveAs(TString::Format("iterative%d.png",nIter[i]));
   }
   int iAgoLastFit=table.size();
 
