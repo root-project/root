@@ -210,11 +210,10 @@ void ROOT::Experimental::RClassField::BeforeConnectPageSource(Internal::RPageSou
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
       const RNTupleDescriptor &desc = descriptorGuard.GetRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
-      // Check that we have the same type; only then we perform automatic schema evolution.
-      // TODO: should this throw? Right now, we allow reading back a field hierarchy with a different type as long as
-      // all columns match...
+      // Check that we have the same type.
       if (GetTypeName() != fieldDesc.GetTypeName())
-         return;
+         throw RException(R__FAIL("incompatible type name for field " + GetFieldName() + ": " + GetTypeName() +
+                                  " vs. " + fieldDesc.GetTypeName()));
 
       for (auto linkId : fieldDesc.GetLinkIds()) {
          const auto &subFieldDesc = desc.GetFieldDescriptor(linkId);
