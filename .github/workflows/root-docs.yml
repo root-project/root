@@ -234,7 +234,7 @@ jobs:
       run: |
         pwd
         ls -l ${DOC_LOCATION}
-        aws s3 cp ${DOC_LOCATION}/rootdoc.tar s3://root/99999_${PR_NUMBER}/rootdoc.tar
+        aws --endpoint-url https://s3.cern.ch s3 sync --delete ${DOC_LOCATION}/rootdoc_TMP s3://root/doc-test/
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
