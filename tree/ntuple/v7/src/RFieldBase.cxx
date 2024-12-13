@@ -282,12 +282,13 @@ ROOT::Experimental::RFieldBase::Check(const std::string &fieldName, const std::s
 
    std::vector<RCheckResult> result;
    for (const auto &f : fieldZero) {
-      auto invalidField = dynamic_cast<const RInvalidField *>(&f);
-      if (!invalidField)
+      bool isInvalidField = f.GetTraits() & RFieldBase::kTraitInvalidField;
+      if (!isInvalidField)
          continue;
 
+      const auto &invalidField = static_cast<const RInvalidField &>(f);
       result.emplace_back(
-         RCheckResult{invalidField->GetQualifiedFieldName(), invalidField->GetTypeName(), invalidField->GetError()});
+         RCheckResult{invalidField.GetQualifiedFieldName(), invalidField.GetTypeName(), invalidField.GetError()});
    }
    return result;
 }

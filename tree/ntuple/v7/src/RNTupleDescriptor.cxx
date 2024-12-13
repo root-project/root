@@ -93,7 +93,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
          for (auto id : fLinkIds) {
             const auto &memberDesc = ntplDesc.GetFieldDescriptor(id);
             auto field = memberDesc.CreateField(ntplDesc, continueOnError);
-            if (dynamic_cast<RInvalidField *>(field.get()))
+            if (field->GetTraits() & RFieldBase::kTraitInvalidField)
                return field;
             memberFields.emplace_back(std::move(field));
          }
@@ -106,7 +106,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
             throw RException(R__FAIL("unsupported untyped collection for field \"" + GetFieldName() + "\""));
          }
          auto itemField = ntplDesc.GetFieldDescriptor(fLinkIds[0]).CreateField(ntplDesc, continueOnError);
-         if (dynamic_cast<RInvalidField *>(itemField.get()))
+         if (itemField->GetTraits() & RFieldBase::kTraitInvalidField)
             return itemField;
          auto collectionField = RVectorField::CreateUntyped(GetFieldName(), std::move(itemField));
          collectionField->SetOnDiskId(fFieldId);
@@ -628,7 +628,7 @@ ROOT::Experimental::RNTupleDescriptor::CreateModel(const RCreateModelOptions &op
    bool continueOnError = options.fForwardCompatible;
    for (const auto &topDesc : GetTopLevelFields()) {
       auto field = topDesc.CreateField(*this, continueOnError);
-      if (dynamic_cast<RInvalidField *>(field.get()))
+      if (field->GetTraits() & RFieldBase::kTraitInvalidField)
          continue;
 
       if (options.fReconstructProjections && topDesc.IsProjectedField()) {
