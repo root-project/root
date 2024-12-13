@@ -165,8 +165,7 @@ double RooBinIntegrator::integral(const double *)
    
    ROOT::Math::KahanSum<double> sum;
    
-   std::vector<double> center(_function->getDimension());
-   recursive_integration(0,1.,center.data(),sum);
+   recursive_integration(0,1.,sum);
    
    return sum.Sum();
 }
@@ -175,23 +174,22 @@ double RooBinIntegrator::integral(const double *)
  * @brief It performs recursively for loops to calculate N-dimensional integration
  * @param d the current recursivity depth (dimension currently being for-looped)
  * @param delta the (d-1)-dimensional bin width/area/volume/hypervolume...
- * @param center a raw array (non-owned, already allocated with length N) that will contain the N-dimensional bin center coordinate
  * @param sum the resulting integral where to accumulate the integral, passed by reference
  */
-void RooBinIntegrator::recursive_integration(const UInt_t d, const double delta, double* const center, ROOT::Math::KahanSum<double>& sum) {
+void RooBinIntegrator::recursive_integration(const UInt_t d, const double delta, ROOT::Math::KahanSum<double>& sum) {
    const std::vector<double>& binb = _binb[d];
    const bool isLastDim = d+1 == _function->getDimension();
    for (unsigned int ibin=0; ibin < binb.size() - 1; ++ibin) {
       const double hi = binb[ibin + 1];
       const double lo = binb[ibin];
       const double mid = (hi+lo)/2.;
-      center[d] = mid;
+      _x[d] = mid;
       if (isLastDim) {
-         const double binInt = integrand(center)*(hi-lo)*delta;
+         const double binInt = integrand(_x.data())*(hi-lo)*delta;
          sum += binInt ;
       }
       else {
-         recursive_integration(d+1, (hi-lo)*delta, center, sum);
+         recursive_integration(d+1, (hi-lo)*delta, sum);
       }
    }
 }

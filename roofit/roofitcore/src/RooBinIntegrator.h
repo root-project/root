@@ -54,26 +54,7 @@ protected:
 
    void recursive_integration(const UInt_t d, const double delta, double* const center, ROOT::Math::KahanSum<double>& sum);
 
-   double *xvec(double xx)
-   {
-      _x[0] = xx;
-      return _x.data();
-   }
-   double *xvec(double xx, double yy)
-   {
-      _x[0] = xx;
-      _x[1] = yy;
-      return _x.data();
-   }
-   double *xvec(double xx, double yy, double zz)
-   {
-      _x[0] = xx;
-      _x[1] = yy;
-      _x[2] = zz;
-      return _x.data();
-   }
-
-   std::vector<double> _x; ///<! do not persist
+   std::vector<double> _x; ///<! do not persist, store here N-dimensional evaluation point when integrating
 };
 
 #endif
