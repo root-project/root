@@ -114,18 +114,26 @@ protected:
 
 public:
    static constexpr std::uint32_t kInvalidTypeVersion = -1U;
-   /// No constructor needs to be called, i.e. any bit pattern in the allocated memory represents a valid type
-   /// A trivially constructible field has a no-op ConstructValue() implementation
-   static constexpr int kTraitTriviallyConstructible = 0x01;
-   /// The type is cleaned up just by freeing its memory. I.e. the destructor performs a no-op.
-   static constexpr int kTraitTriviallyDestructible = 0x02;
-   /// A field of a fundamental type that can be directly mapped via `RField<T>::Map()`, i.e. maps as-is to a single
-   /// column
-   static constexpr int kTraitMappable = 0x04;
-   /// The TClass checksum is set and valid
-   static constexpr int kTraitTypeChecksum = 0x08;
-   /// Shorthand for types that are both trivially constructible and destructible
-   static constexpr int kTraitTrivialType = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
+   enum {
+      /// No constructor needs to be called, i.e. any bit pattern in the allocated memory represents a valid type
+      /// A trivially constructible field has a no-op ConstructValue() implementation
+      kTraitTriviallyConstructible = 0x01,
+      /// The type is cleaned up just by freeing its memory. I.e. the destructor performs a no-op.
+      kTraitTriviallyDestructible = 0x02,
+      /// A field of a fundamental type that can be directly mapped via `RField<T>::Map()`, i.e. maps as-is to a single
+      /// column
+      kTraitMappable = 0x04,
+      /// The TClass checksum is set and valid
+      kTraitTypeChecksum = 0x08,
+      /// This field is an instance of RInvalidField and can be safely static_cast to it
+      kTraitInvalidField = 0x10,
+      /// This field is a user defined type that was missing dictionaries and was reconstructed from the on-disk
+      /// information
+      kTraitEmulatedField = 0x20,
+
+      /// Shorthand for types that are both trivially constructible and destructible
+      kTraitTrivialType = kTraitTriviallyConstructible | kTraitTriviallyDestructible
+   };
 
    using ColumnRepresentation_t = std::vector<ENTupleColumnType>;
 
@@ -136,7 +144,11 @@ public:
    ///               |      --> ConnectedToSource ---> [*]
    ///               |                             |
    ///               -------------------------------
-   enum class EState { kUnconnected, kConnectedToSink, kConnectedToSource };
+   enum class EState {
+      kUnconnected,
+      kConnectedToSink,
+      kConnectedToSource
+   };
 
    /// Some fields have multiple possible column representations, e.g. with or without split encoding.
    /// All column representations supported for writing also need to be supported for reading. In addition,
@@ -253,7 +265,7 @@ protected:
    /// Contains all columns of all representations in order of representation and column index.
    std::vector<std::unique_ptr<Internal::RColumn>> fAvailableColumns;
    /// Properties of the type that allow for optimizations of collections of that type
-   int fTraits = 0;
+   std::uint32_t fTraits = 0;
    /// A typedef or using name that was used when creating the field
    std::string fTypeAlias;
    /// List of functions to be called after reading a value
@@ -529,7 +541,7 @@ public:
    /// As a rule of thumb, the alignment is equal to the size of the type. There are, however, various exceptions
    /// to this rule depending on OS and CPU architecture. So enforce the alignment to be explicitly spelled out.
    virtual size_t GetAlignment() const = 0;
-   int GetTraits() const { return fTraits; }
+   std::uint32_t GetTraits() const { return fTraits; }
    bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
 
    const std::string &GetFieldName() const { return fName; }
