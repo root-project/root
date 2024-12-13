@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_multicore
+/// \ingroup tutorial_tree
 /// \notebook -nodraw
 /// Fill n-tuples in distinct workers.
 /// This tutorial illustrates the basics of how it's possible with ROOT to
@@ -30,7 +30,7 @@ void fillRandom(TNtuple &ntuple, TRandom3 &rndm, UInt_t n)
       ntuple.Fill(rndm.Gaus());
 }
 
-Int_t mp101_fillNtuples()
+Int_t mp_fillNtuples()
 {
 
    // No nuisance for batch execution

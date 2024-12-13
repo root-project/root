@@ -131,7 +131,7 @@ if(MACOSX_VERSION VERSION_EQUAL 10.13)
 endif()
 
 if(NOT geom)
-  set(geom_veto visualisation/geom/*.C geom/*.C)
+  set(geom_veto visualisation/geom/*.C geom/*.C visualisation/geom/gdml/*.C)
 endif()
 
 if(NOT ROOT_proof_FOUND)
@@ -248,19 +248,19 @@ if(NOT GRAPHVIZ_FOUND)
 endif()
 
 if(NOT TBB_FOUND AND NOT builtin_tbb)
-  set(tbb_veto  multicore/mtbb*.C)
+  set(tbb_veto  analysis/mtbb*.C io/tree/mtbb*.C)
 endif()
 
 if(NOT ROOT_imt_FOUND)
-  set(imt_veto multicore/imt*.C multicore/mt*.C)
+  set(imt_veto io/tree/imt*.C io/tree/mt*.C analysis/mt*.C)
 endif()
 if(MSVC)
   #---Multiproc is not supported on Windows
-  set(imt_veto ${imt_veto} multicore/mp*.C multicore/mtbb201_parallelHistoFill.C)
+  set(imt_veto ${imt_veto} analysis/mp*.C io/tree/mp*.C legacy/multicore/mp*.C  multicore/mp*.C ./analysis/mtbb_parallelHistoFill.C)
 endif()
 
 if(ROOT_CLASSIC_BUILD)
-  set(classic_veto multicore/mp104_*.C multicore/mp105_*.C)
+  set(classic_veto legacy/multicore/mp_*.C analysis/mp_*.C io/tree/mp_*.C)
 endif()
 
 if(NOT gdml)
@@ -319,7 +319,7 @@ else()
     list(APPEND tmva_veto machine_learning/RBatchGenerator_TensorFlow.py)
   endif()
   if (NOT PY_SKLEARN_FOUND)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Models.py)
+    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_Models.py roofit/rf617_simulation_based_inference_multidimensional.py)
   endif()
   if (NOT PY_TORCH_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_PyTorch.C)
@@ -400,7 +400,7 @@ set(extra_veto
   rootlogon.C          # Helper macro
   rootlogoff.C         # Helper macro
   legacy/rootmarks.C          # Instrumentation. Not a standalone tutorial
-  multicore/mp_H1_lambdas.C # not a tutorial; used by mp104_processH1.C et al.
+  legacy/multicore/mp_H1_lambdas.C # not a tutorial; used by mp104_processH1.C et al.
   html/*.C
   legacy/net/*.C
   legacy/proof/*.C
@@ -552,9 +552,8 @@ set(benchmarks-depends tutorial-hsimple
                        tutorial-io-loopdir
                        tutorial-io-copyFiles)
 set(visualisation-geom-na49view-depends tutorial-visualisation-geom-geometry)
-set(multicore-mt102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mt101_fillNtuples)
-set(multicore-mp102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mp101_fillNtuples)
-set(multicore-mp105_processEntryList-depends tutorial-multicore-mp104_processH1)
+set(io-tree-mt_readNtuplesFillHistosAndFit-depends tutorial-io-tree-mt_fillNtuples)
+set(io-tree-mp_readNtuplesFillHistosAndFit-depends tutorial-io-tree-mp_fillNtuples)
 
 #--many histfactory and roostats tutorials depending on having creating the file first with histfactory and example_combined_GaussExample_model.root
 foreach(tname histfactory-hf001_example
@@ -611,7 +610,7 @@ endif()
 #--List long-running tutorials to label them as "longtest"
 set (long_running
      analysis/dataframe/df10[2-7]*
-     multicore/mp103*)
+     analysis/mp_processSelector.C)
 file(GLOB long_running RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${long_running})
 #--List multithreaded tutorials to run them serially
 set(NProcessors 4)
@@ -621,7 +620,7 @@ set (multithreaded_all_cores
     )
 set (multithreaded
      ${multithreaded_all_cores}
-     multicore/mp103*
+     analysis/mp_processSelector.C
      machine_learning/TMVAMulticlass.C
      machine_learning/TMVA_CNN_Classification.C
      machine_learning/TMVA_Higgs_Classification.C
@@ -804,7 +803,7 @@ if(ROOT_pyroot_FOUND)
 
   find_python_module(xgboost QUIET)
   if(NOT PY_XGBOOST_FOUND OR NOT dataframe)
-    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/tmva10*.py)
+    file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} machine_learning/tmva10*.py roofit/rf618_mixture_models.py)
     list(APPEND pyveto ${tmva_veto_py})
   endif()
 

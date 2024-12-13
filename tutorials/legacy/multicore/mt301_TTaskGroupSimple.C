@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_multicore
+/// \ingroup tutorial_legacy
 /// \notebook -js
 /// Shows how to run items of work asynchronously with a TTaskGroup.
 ///
