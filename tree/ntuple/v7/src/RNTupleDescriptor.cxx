@@ -78,7 +78,8 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
    // For forward compatibility, we allow this case and return an InvalidField.
    if (GetStructure() == ENTupleStructure::kUnknown) {
       if (continueOnError) {
-         auto invalidField = std::make_unique<RInvalidField>(GetFieldName(), GetTypeName(), "");
+         auto invalidField = std::make_unique<RInvalidField>(GetFieldName(), GetTypeName(), "",
+                                                             RInvalidField::RCategory::kUnknownStructure);
          invalidField->SetOnDiskId(fFieldId);
          return invalidField;
       } else {
@@ -124,7 +125,8 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
       return field;
    } catch (RException &ex) {
       if (continueOnError)
-         return std::make_unique<RInvalidField>(GetFieldName(), GetTypeName(), ex.GetError().GetReport());
+         return std::make_unique<RInvalidField>(GetFieldName(), GetTypeName(), ex.GetError().GetReport(),
+                                                RInvalidField::RCategory::kGeneric);
       else
          throw ex;
    }
