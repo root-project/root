@@ -176,10 +176,12 @@ private:
    ENTupleStructure fStructure;
    /// For fixed sized arrays, the array length
    std::size_t fNRepetitions;
-   /// A field qualifies as simple if it is both mappable (which implies it has a single principal column) and has no
-   /// post-read callback
+   /// A field qualifies as simple if it is mappable (which implies it has a single principal column),
+   /// and it is not an artificial field and has no post-read callback
    bool fIsSimple;
-   /// A field that is artificial, ie missing on disk
+   /// A field that is not backed on disk but computed, e.g. a default-constructed missing field or
+   /// a field whose data is created by I/O customization rules. Subfields of artificial fields are
+   /// artificial, too.
    bool fIsArtificial = false;
    /// When the columns are connected to a page source or page sink, the field represents a field id in the
    /// corresponding RNTuple descriptor. This on-disk ID is set in RPageSink::Create() for writing and by
