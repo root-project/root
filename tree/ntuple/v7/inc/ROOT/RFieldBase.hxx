@@ -265,7 +265,7 @@ protected:
    std::uint32_t fOnDiskTypeChecksum = 0;
    /// Pointers into the static vector GetColumnRepresentations().GetSerializationTypes() when
    /// SetColumnRepresentatives is called.  Otherwise (if empty) GetColumnRepresentatives() returns a vector
-   /// with a single element, the default representation.
+   /// with a single element, the default representation.  Always empty for artificial fields.
    std::vector<std::reference_wrapper<const ColumnRepresentation_t>> fColumnRepresentatives;
 
    /// Factory method for the field's type. The caller owns the returned pointer
@@ -552,7 +552,8 @@ public:
    DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
    void SetOnDiskId(DescriptorId_t id);
 
-   /// Returns the fColumnRepresentative pointee or, if unset, the field's default representative
+   /// Returns the fColumnRepresentative pointee or, if unset (always the case for artificial fields), the field's
+   /// default representative
    RColumnRepresentations::Selection_t GetColumnRepresentatives() const;
    /// Fixes a column representative. This can only be done _before_ connecting the field to a page sink.
    /// Otherwise, or if the provided representation is not in the list of GetColumnRepresentations,
