@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_multicore
+/// \ingroup tutorial_tree
 /// \notebook
 /// Read n-tuples in distinct workers, fill histograms, merge them and fit.
 /// Knowing that other facilities like TProcessExecutor might be more adequate for
@@ -13,7 +13,7 @@
 /// \date January 2016
 /// \author Danilo Piparo
 
-Int_t mt102_readNtuplesFillHistosAndFit()
+Int_t mt_readNtuplesFillHistosAndFit()
 {
 
    // No nuisance for batch execution

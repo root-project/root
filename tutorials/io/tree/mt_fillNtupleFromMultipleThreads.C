@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_multicore
+/// \ingroup tutorial_tree
 /// \notebook
 /// Fill the same TNtuple from different threads.
 /// This tutorial illustrates the basics of how it's possible with ROOT
@@ -10,7 +10,7 @@
 /// \date May 2017
 /// \author Guilherme Amadio
 
-void mt103_fillNtupleFromMultipleThreads()
+void mt_fillNtupleFromMultipleThreads()
 {
    // Avoid unnecessary output
    gROOT->SetBatch();

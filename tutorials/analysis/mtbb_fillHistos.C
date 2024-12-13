@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_multicore
+/// \ingroup tutorial_analysis
 /// \notebook
 /// Fill histograms in parallel and write them on file.
 /// This example expresses the parallelism of the mt001_fillHistos.C tutorial
@@ -16,7 +16,7 @@ const UInt_t nNumbers = 20000000U;
 // The number of workers
 const UInt_t nThreads = 4U;
 
-Int_t mtbb001_fillHistos()
+Int_t mtbb_fillHistos()
 {
    // We define our work item
    auto workItem = [](UInt_t workerID) {

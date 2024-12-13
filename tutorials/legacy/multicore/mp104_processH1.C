@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_multicore
+/// \ingroup tutorial_legacy
 /// \notebook -nodraw
 /// Illustrate the usage of the multiproc to process the H1 analysis
 /// example.
