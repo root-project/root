@@ -202,7 +202,7 @@ public:
       iterator operator++(int)
       {
          auto obj = *this;
-         obj.fNEntriesProcessed = fProcessor.Advance();
+         ++(*this);
          return obj;
       }
 
