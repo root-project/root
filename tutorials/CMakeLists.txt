@@ -429,7 +429,8 @@ if(MSVC AND NOT llvm13_broken_tests)
        analysis/dataframe/df016_vecOps.py
        analysis/dataframe/df017_vecOpsHEP.py
        analysis/dataframe/df032_RDFFromNumpy.py
-       analysis/dataframe/df035_RDFFromPandas.py)
+       analysis/dataframe/df035_RDFFromPandas.py
+       analysis/unfold/testUnfold7c.C)
   if(CMAKE_SIZEOF_VOID_P EQUAL 4)
     list(APPEND extra_veto
          analysis/dataframe/df007_snapshot.C
