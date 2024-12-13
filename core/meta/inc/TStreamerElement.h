@@ -52,8 +52,6 @@ protected:
    Double_t         fXmax;            //!Maximum of data member if a range is specified  [xmin,xmax,nbits]
    Double_t         fFactor;          //!Conversion factor if a range is specified fFactor = (1<<nbits/(xmax-xmin)
 
-   friend class TStreamerSTL;
-
 public:
 
    enum ESTLtype {
@@ -411,7 +409,6 @@ public:
    Bool_t         CannotSplit() const override;
    Bool_t         IsaPointer() const override;
    Bool_t         IsBase() const override;
-   TClass        *GetClassPointer() const override;
    Int_t          GetSTLtype() const {return fSTLtype;}
    Int_t          GetCtype()   const {return fCtype;}
    const char    *GetInclude() const override;
