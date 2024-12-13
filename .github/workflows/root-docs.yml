@@ -194,7 +194,7 @@ jobs:
               export DOXYGEN_OUTPUT_DIRECTORY=${DOC_LOCATION}/${DOC_DIR}_TMP
 
               cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
-              make -j$(nproc)
+              make -j `nproc --all`
 
               if [ -d "${DOC_LOCATION}/${DOC_DIR}/html" ]; then
                 rm -rf "${DOC_LOCATION}/${DOC_DIR}/html"
