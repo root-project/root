@@ -955,7 +955,7 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
       f->ConnectPageSource(pageSource);
    }
 
-   // TODO: Do we need to set fColumnRepresentatives?
+   // Do not generate columns nor set fColumnRepresentatives for artificial fields.
    if (!fIsArtificial) {
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
       const RNTupleDescriptor &desc = descriptorGuard.GetRef();
