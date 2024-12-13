@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_multicore
+/// \ingroup tutorial_tree
 /// \notebook -js
 /// Read n-tuples in distinct workers, fill histograms, merge them and fit.
 /// We express parallelism with multiprocessing as it is done with multithreading
@@ -10,7 +10,7 @@
 /// \date January 2016
 /// \author Danilo Piparo
 
-Int_t mp102_readNtuplesFillHistosAndFit()
+Int_t mp_readNtuplesFillHistosAndFit()
 {
 
    // No nuisance for batch execution

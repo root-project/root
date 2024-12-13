@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_multicore
+/// \ingroup tutorial_analysis
 /// \notebook -js
 /// Parallel fill of a histogram
 /// This tutorial shows how a histogram can be filled in parallel
@@ -13,7 +13,7 @@
 
 const UInt_t poolSize = 4U;
 
-Int_t mp201_parallelHistoFill()
+Int_t mp_parallelHistoFill()
 {
    TH1::AddDirectory(false);
    ROOT::TProcessExecutor pool(poolSize);

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_multicore
+/// \ingroup tutorial_tree
 /// \notebook
 /// Illustrate the usage of the TTreeProcessorMT::Process method.
 /// Such method provides an implicit parallelisation of the reading and processing of a TTree.
@@ -16,7 +16,7 @@
 /// \date 26/09/2016
 /// \author Enric Tejedor
 
-int imt101_parTreeProcessing()
+int imt_parTreeProcessing()
 {
    // First enable implicit multi-threading globally, so that the implicit parallelisation is on.
    // The parameter of the call specifies the number of threads to use.

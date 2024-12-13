@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_multicore
+/// \ingroup tutorial_analysis
 /// \notebook
 /// Fill histograms in parallel and write them on file.
 /// The simplest meaningful possible example which shows ROOT thread awareness.
@@ -15,7 +15,7 @@ const UInt_t nNumbers = 20000000U;
 // The number of workers
 const UInt_t nWorkers = 4U;
 
-Int_t mt001_fillHistos()
+Int_t mt_fillHistos()
 {
 
    // The first, fundamental operation to be performed in order to make ROOT

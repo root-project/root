@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_multicore
+/// \ingroup tutorial_analysis
 /// \notebook -nodraw
 /// Illustrate the usage of the multiproc TSelector interfaces with the h1 analysis
 /// example.
@@ -25,7 +25,7 @@ const std::vector<std::string> files = {file0,
                                         "http://root.cern/files/h1/dstarp1b.root",
                                         "http://root.cern/files/h1/dstarp2.root"};
 
-int mp103_processSelector()
+int mp_processSelector()
 {
 
    // MacOSX may generate connection to WindowServer errors

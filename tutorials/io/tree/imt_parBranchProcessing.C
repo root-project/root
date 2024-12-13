@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_multicore
+/// \ingroup tutorial_tree
 /// \notebook
 /// Demonstrate how to activate and use the implicit parallelisation of TTree::GetEntry.
 /// Such parallelisation creates one task per top-level branch of the tree being read.
@@ -12,7 +12,7 @@
 /// \date 26/09/2016
 /// \author Enric Tejedor
 
-int imt001_parBranchProcessing()
+int imt_parBranchProcessing()
 {
    // First enable implicit multi-threading globally, so that the implicit parallelisation is on.
    // The parameter of the call specifies the number of threads to use.

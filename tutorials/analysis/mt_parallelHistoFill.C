@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_multicore
+/// \ingroup tutorial_analysis
 /// \notebook
 /// Parallel fill of a histogram.
 /// This tutorial shows how a histogram can be filled in parallel
@@ -18,7 +18,7 @@
 
 const UInt_t poolSize = 4U;
 
-Int_t mt201_parallelHistoFill()
+Int_t mt_parallelHistoFill()
 {
    ROOT::EnableThreadSafety();
 

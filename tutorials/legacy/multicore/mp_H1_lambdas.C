@@ -1,8 +1,8 @@
 /// \file
-/// \ingroup tutorial_multicore
+/// \ingroup tutorial_legacy
 /// \notebook -nodraw
 /// Lambdas used to check and fit the result of the H1 analysis.
-/// Used by mp104_processH1.C, mp105_processEntryList.C and roottest/root/multicore/tProcessExecutorH1Test.C
+/// Used by mp104_processH1.C and roottest/root/multicore/tProcessExecutorH1Test.cpp
 ///
 /// \macro_code
 ///
