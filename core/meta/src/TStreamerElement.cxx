@@ -480,10 +480,8 @@ void TStreamerElement::ls(Option_t *) const
 void TStreamerElement::SetArrayDim(Int_t dim)
 {
    fArrayDim = dim;
-   if (dim) {
-      fType += TVirtualStreamerInfo::kOffsetL;
-      fNewType += TVirtualStreamerInfo::kOffsetL;
-   }
+   if (dim) fType += TVirtualStreamerInfo::kOffsetL;
+   fNewType = fType;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1717,10 +1715,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
       fCtype = proxy.GetType();
       if (proxy.HasPointers()) fCtype += TVirtualStreamerInfo::kOffsetP;
    }
-   if (TStreamerSTL::IsaPointer()) {
-      fType = TVirtualStreamerInfo::kSTLp;
-      fNewType = fType;
-   }
+   if (TStreamerSTL::IsaPointer()) fType = TVirtualStreamerInfo::kSTLp;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1799,10 +1794,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
       }
    }
 
-   if (TStreamerSTL::IsaPointer()) {
-      fType = TVirtualStreamerInfo::kSTLp;
-      fNewType = fType;
-   }
+   if (TStreamerSTL::IsaPointer()) fType = TVirtualStreamerInfo::kSTLp;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
