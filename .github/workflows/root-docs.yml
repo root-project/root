@@ -227,6 +227,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install awscli
+        aws configure set default.s3.max_concurrent_requests 200
         aws configure list
 
     - name: Sync to S3
