@@ -154,16 +154,14 @@ ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(const RNTuple
 
 ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::Advance()
 {
-   ++fNEntriesProcessed;
-
-   if (fNEntriesProcessed >= fPageSource->GetNEntries()) {
+   if (fLocalEntryNumber == kInvalidNTupleIndex || fLocalEntryNumber >= fPageSource->GetNEntries()) {
       return kInvalidNTupleIndex;
    }
 
-   ++fLocalEntryNumber;
    LoadEntry();
 
-   return fNEntriesProcessed;
+   fNEntriesProcessed++;
+   return fLocalEntryNumber;
 }
 
 //------------------------------------------------------------------------------
@@ -227,9 +225,10 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::Conn
 
 ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::Advance()
 {
-   ++fNEntriesProcessed;
+   if (fLocalEntryNumber == kInvalidNTupleIndex)
+      return kInvalidNTupleIndex;
 
-   if (++fLocalEntryNumber >= fPageSource->GetNEntries()) {
+   if (fLocalEntryNumber >= fPageSource->GetNEntries()) {
       do {
          if (++fCurrentNTupleNumber >= fNTuples.size()) {
             return kInvalidNTupleIndex;
@@ -240,9 +239,10 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::Adva
       fLocalEntryNumber = 0;
    }
 
-   fEntry->Read(fLocalEntryNumber);
+   LoadEntry();
 
-   return fNEntriesProcessed;
+   fNEntriesProcessed++;
+   return fLocalEntryNumber;
 }
 
 //------------------------------------------------------------------------------
@@ -389,16 +389,14 @@ void ROOT::Experimental::RNTupleJoinProcessor::ConnectFields()
 
 ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::Advance()
 {
-   ++fNEntriesProcessed;
-
-   if (fNEntriesProcessed >= fPageSource->GetNEntries()) {
+   if (fLocalEntryNumber == kInvalidNTupleIndex || fLocalEntryNumber >= fPageSource->GetNEntries()) {
       return kInvalidNTupleIndex;
    }
 
-   ++fLocalEntryNumber;
    LoadEntry();
 
-   return fNEntriesProcessed;
+   fNEntriesProcessed++;
+   return fLocalEntryNumber;
 }
 
 void ROOT::Experimental::RNTupleJoinProcessor::LoadEntry()

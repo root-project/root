@@ -87,10 +87,11 @@ TEST_F(RNTupleChainProcessorTest, SingleNTuple)
    int nEntries = 0;
    auto proc = RNTupleProcessor::CreateChain(ntuples);
    for (const auto &entry : *proc) {
+      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
+      EXPECT_EQ(nEntries - 1, proc->GetLocalEntryNumber());
+
       auto x = entry.GetPtr<float>("x");
-      EXPECT_FLOAT_EQ(static_cast<float>(proc->GetNEntriesProcessed()), *x);
-      EXPECT_EQ(proc->GetNEntriesProcessed(), proc->GetLocalEntryNumber());
-      ++nEntries;
+      EXPECT_FLOAT_EQ(static_cast<float>(proc->GetLocalEntryNumber()), *x);
    }
    EXPECT_EQ(nEntries, 5);
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
@@ -103,20 +104,19 @@ TEST_F(RNTupleChainProcessorTest, Basic)
    std::uint64_t nEntries = 0;
    auto proc = RNTupleProcessor::CreateChain(ntuples);
    for (const auto &entry : *proc) {
-      auto x = entry.GetPtr<float>("x");
-      EXPECT_EQ(static_cast<float>(proc->GetNEntriesProcessed()), *x);
-
-      auto y = entry.GetPtr<std::vector<float>>("y");
-      std::vector<float> yExp = {static_cast<float>(proc->GetNEntriesProcessed()), static_cast<float>(nEntries * 2)};
-      EXPECT_EQ(yExp, *y);
-
+      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
       if (proc->GetCurrentNTupleNumber() == 0) {
-         EXPECT_EQ(proc->GetLocalEntryNumber(), proc->GetNEntriesProcessed());
+         EXPECT_EQ(nEntries - 1, proc->GetLocalEntryNumber());
       } else {
-         EXPECT_EQ(proc->GetLocalEntryNumber() + 5, proc->GetNEntriesProcessed());
+         EXPECT_EQ(nEntries - 1, proc->GetLocalEntryNumber() + 5);
       }
 
-      ++nEntries;
+      auto x = entry.GetPtr<float>("x");
+      EXPECT_EQ(static_cast<float>(nEntries - 1), *x);
+
+      auto y = entry.GetPtr<std::vector<float>>("y");
+      std::vector<float> yExp = {static_cast<float>(nEntries - 1), static_cast<float>((nEntries - 1) * 2)};
+      EXPECT_EQ(yExp, *y);
    }
    EXPECT_EQ(nEntries, 8);
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
@@ -132,7 +132,7 @@ TEST_F(RNTupleChainProcessorTest, WithModel)
    auto proc = RNTupleProcessor::CreateChain(ntuples, std::move(model));
    for (const auto &entry : *proc) {
       auto x = entry.GetPtr<float>("x");
-      EXPECT_EQ(static_cast<float>(proc->GetNEntriesProcessed()), *x);
+      EXPECT_EQ(static_cast<float>(proc->GetNEntriesProcessed() - 1), *x);
 
       try {
          entry.GetPtr<std::vector<float>>("y");
@@ -153,8 +153,8 @@ TEST_F(RNTupleChainProcessorTest, WithBareModel)
    auto proc = RNTupleProcessor::CreateChain(ntuples, std::move(model));
    for (const auto &entry : *proc) {
       auto y = entry.GetPtr<std::vector<float>>("y");
-      std::vector<float> yExp = {static_cast<float>(proc->GetNEntriesProcessed()),
-                                 static_cast<float>(proc->GetNEntriesProcessed() * 2)};
+      std::vector<float> yExp = {static_cast<float>(proc->GetNEntriesProcessed() - 1),
+                                 static_cast<float>((proc->GetNEntriesProcessed() - 1) * 2)};
       EXPECT_EQ(yExp, *y);
 
       try {
@@ -173,9 +173,9 @@ TEST_F(RNTupleChainProcessorTest, MissingFields)
    auto proc = RNTupleProcessor::CreateChain(ntuples);
    auto entry = proc->begin();
 
-   while (proc->GetNEntriesProcessed() < 4) {
+   while (proc->GetNEntriesProcessed() < 5) {
       auto x = (*entry).GetPtr<float>("x");
-      EXPECT_EQ(static_cast<float>(proc->GetNEntriesProcessed()), *x);
+      EXPECT_EQ(static_cast<float>(proc->GetNEntriesProcessed() - 1), *x);
       entry++;
    }
 
