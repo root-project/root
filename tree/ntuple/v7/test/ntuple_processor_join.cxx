@@ -13,7 +13,8 @@ protected:
    {
       // The first ntuple is unaligned (fewer entries, but still ordered) with respect to the second and third.
       // The second and third ntuples are aligned with respect to each other.
-      // The fourth ntuple is larger than the first ntuple and its entries shuffled on field 'i'.
+      // The fourth ntuple has its entries shuffled on field 'i'. It has all entries present in the first ntuple (plus
+      // additional), but not all entries present in the second or third.
       {
          auto model = RNTupleModel::Create();
          auto fldI = model->MakeField<int>("i");
@@ -22,9 +23,10 @@ protected:
          auto fldX = model->MakeField<float>("x");
          auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleNames[0], fFileNames[0]);
 
-         for (*fldI = 0; *fldI < 10; ++(*fldI)) {
-            *fldJ = *fldI / 2;
-            *fldK = *fldJ / 2;
+         for (unsigned i = 0; i < 5; ++i) {
+            *fldI = i * 2;
+            *fldJ = i;
+            *fldK = i / 2;
             *fldX = *fldI * 0.5f;
             ntuple->Fill();
          }
@@ -35,11 +37,10 @@ protected:
          auto fldY = model->MakeField<std::vector<float>>("y");
          auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleNames[1], fFileNames[1]);
 
-         for (*fldI = 0; *fldI < 10; ++(*fldI)) {
-            if (*fldI % 2 == 1) {
-               *fldY = {static_cast<float>(*fldI * 0.2), 3.14, static_cast<float>(*fldI * 1.3)};
-               ntuple->Fill();
-            }
+         for (unsigned i = 0; i < 10; ++i) {
+            *fldI = i;
+            *fldY = {static_cast<float>(*fldI * 0.2), 3.14, static_cast<float>(*fldI * 1.3)};
+            ntuple->Fill();
          }
       }
       {
@@ -48,11 +49,10 @@ protected:
          auto fldZ = model->MakeField<float>("z");
          auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleNames[2], fFileNames[2]);
 
-         for (*fldI = 0; *fldI < 10; ++(*fldI)) {
-            if (*fldI % 2 == 1) {
-               *fldZ = *fldI * 2.f;
-               ntuple->Fill();
-            }
+         for (unsigned i = 0; i < 10; ++i) {
+            *fldI = i;
+            *fldZ = *fldI * 2.f;
+            ntuple->Fill();
          }
       }
       {
@@ -63,14 +63,12 @@ protected:
          auto fldA = model->MakeField<float>("a");
          auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleNames[3], fFileNames[3]);
 
-         for (const auto &i : {3, 14, 9, 8, 11, 10, 0, 13, 1, 5, 6, 12, 2, 4, 7}) {
+         for (const auto &i : {4, 14, 8, 11, 10, 0, 13, 1, 5, 6, 12, 2, 7}) {
             *fldI = i;
             *fldJ = *fldI / 2;
             *fldK = *fldJ / 2;
-            if (*fldI % 2 == 1) {
-               *fldA = *fldI * 0.1f;
-               ntuple->Fill();
-            }
+            *fldA = *fldI * 0.1f;
+            ntuple->Fill();
          }
       }
    }
@@ -95,15 +93,17 @@ TEST_F(RNTupleJoinProcessorTest, Basic)
 
    ntuples = {{fNTupleNames[0], fFileNames[0]}};
 
-   int nEntries = 0;
    auto proc = RNTupleProcessor::CreateJoin(ntuples, {});
+
+   int nEntries = 0;
    for (const auto &entry : *proc) {
+      EXPECT_EQ(proc->GetLocalEntryNumber(), nEntries++);
+
       auto i = entry.GetPtr<int>("i");
-      EXPECT_EQ(proc->GetNEntriesProcessed(), *i);
-      ++nEntries;
+      EXPECT_EQ(proc->GetLocalEntryNumber() * 2, *i);
    }
-   EXPECT_EQ(nEntries, 10);
-   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+
+   EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleJoinProcessorTest, Aligned)
@@ -120,21 +120,20 @@ TEST_F(RNTupleJoinProcessorTest, Aligned)
 
    auto proc = RNTupleProcessor::CreateJoin(ntuples, {});
 
-   std::vector<float> yExpected;
-
    int nEntries = 0;
+   std::vector<float> yExpected;
    for (auto &entry : *proc) {
+      EXPECT_EQ(proc->GetLocalEntryNumber(), nEntries++);
+
       auto i = entry.GetPtr<int>("i");
 
       yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
       EXPECT_EQ(yExpected, *entry.GetPtr<std::vector<float>>("y"));
 
       EXPECT_FLOAT_EQ(*i * 2.f, *entry.GetPtr<float>("ntuple3.z"));
-
-      ++nEntries;
    }
-   EXPECT_EQ(nEntries, 5);
-   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+
+   EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleJoinProcessorTest, IdenticalFieldNames)
@@ -145,8 +144,11 @@ TEST_F(RNTupleJoinProcessorTest, IdenticalFieldNames)
 
    auto i = proc->GetEntry().GetPtr<int>("i");
    for (auto &entry : *proc) {
+      EXPECT_NE(i, entry.GetPtr<int>("ntuple3.i"));
       EXPECT_EQ(*i, *entry.GetPtr<int>("ntuple3.i"));
    }
+
+   EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
@@ -160,21 +162,17 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
    auto x = proc->GetEntry().GetPtr<float>("x");
    auto y = proc->GetEntry().GetPtr<std::vector<float>>("ntuple2.y");
    std::vector<float> yExpected;
-   for (auto &entry : *proc) {
-      EXPECT_FLOAT_EQ(nEntries, *entry.GetPtr<int>("i"));
+   for ([[maybe_unused]] auto &entry : *proc) {
+      EXPECT_EQ(proc->GetLocalEntryNumber(), nEntries++);
 
+      EXPECT_FLOAT_EQ(proc->GetLocalEntryNumber() * 2, *i);
       EXPECT_FLOAT_EQ(*i * 0.5f, *x);
 
-      if (*i % 2 == 1) {
-         yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
-         EXPECT_EQ(yExpected, *entry.GetPtr<std::vector<float>>("ntuple2.y"));
-      } else {
-         yExpected = {};
-         EXPECT_EQ(yExpected, *y);
-      }
-
-      ++nEntries;
+      yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
+      EXPECT_EQ(yExpected, *y);
    }
+
+   EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
@@ -209,19 +207,41 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
    auto i = proc->GetEntry().GetPtr<int>("i");
    auto x = proc->GetEntry().GetPtr<float>("x");
    auto a = proc->GetEntry().GetPtr<float>("ntuple4.a");
-   for (auto &entry : *proc) {
-      EXPECT_FLOAT_EQ(nEntries, *entry.GetPtr<int>("i"));
+   for ([[maybe_unused]] auto &entry : *proc) {
+      EXPECT_EQ(proc->GetLocalEntryNumber(), nEntries++);
 
+      EXPECT_FLOAT_EQ(proc->GetLocalEntryNumber() * 2, *i);
       EXPECT_FLOAT_EQ(*i * 0.5f, *x);
-
-      if (*i % 2 == 1) {
-         EXPECT_EQ(*i * 0.1f, *entry.GetPtr<float>("ntuple4.a"));
-      } else {
-         EXPECT_EQ(0.f, *a);
-      }
-
-      ++nEntries;
+      EXPECT_EQ(*i * 0.1f, *a);
    }
+
+   EXPECT_EQ(5, proc->GetNEntriesProcessed());
+}
+
+TEST_F(RNTupleJoinProcessorTest, MissingEntries)
+{
+   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[3], fFileNames[3]}};
+
+   auto proc = RNTupleProcessor::CreateJoin(ntuples, {"i"});
+
+   int nEntries = 0;
+   auto i = proc->GetEntry().GetPtr<int>("i");
+   auto a = proc->GetEntry().GetPtr<float>("ntuple4.a");
+   std::vector<float> yExpected;
+   for ([[maybe_unused]] auto &entry : *proc) {
+      EXPECT_EQ(proc->GetLocalEntryNumber(), nEntries++);
+
+      EXPECT_FLOAT_EQ(proc->GetLocalEntryNumber(), *i);
+
+      if (*i == 3 || *i == 9) {
+         EXPECT_EQ(0.f, *a) << "entries with i=3 and i=9 are missing from ntuple4, ntuple4.a should have been "
+                               "default-initialized";
+      } else {
+         EXPECT_EQ(*i * 0.1f, *a);
+      }
+   }
+
+   EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleJoinProcessorTest, WithModel)
@@ -246,26 +266,22 @@ TEST_F(RNTupleJoinProcessorTest, WithModel)
 
    auto proc = RNTupleProcessor::CreateJoin(ntuples, {"i"}, std::move(models));
 
-   std::vector<float> yExpected;
    int nEntries = 0;
+   std::vector<float> yExpected;
    for (auto &entry : *proc) {
-      EXPECT_EQ(nEntries, *i);
+      EXPECT_EQ(proc->GetLocalEntryNumber(), nEntries++);
+
+      EXPECT_EQ(proc->GetLocalEntryNumber() * 2, *i);
       EXPECT_EQ(*entry.GetPtr<int>("i"), *i);
 
       EXPECT_FLOAT_EQ(*i * 0.5f, *x);
       EXPECT_FLOAT_EQ(*entry.GetPtr<float>("x"), *x);
 
-      if (*i % 2 == 1) {
-         yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
-         EXPECT_EQ(yExpected, *y);
-         EXPECT_EQ(*entry.GetPtr<std::vector<float>>("ntuple2.y"), *y);
-         EXPECT_FLOAT_EQ(static_cast<float>(*i * 2.f), *z);
-         EXPECT_FLOAT_EQ(*entry.GetPtr<float>("ntuple3.z"), *z);
-      } else {
-         yExpected = {};
-         EXPECT_EQ(yExpected, *y);
-         EXPECT_EQ(0., *z);
-      }
+      yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
+      EXPECT_EQ(yExpected, *y);
+      EXPECT_EQ(*entry.GetPtr<std::vector<float>>("ntuple2.y"), *y);
+      EXPECT_FLOAT_EQ(static_cast<float>(*i * 2.f), *z);
+      EXPECT_FLOAT_EQ(*entry.GetPtr<float>("ntuple3.z"), *z);
 
       try {
          entry.GetPtr<float>("ntuple2.z");
@@ -273,7 +289,7 @@ TEST_F(RNTupleJoinProcessorTest, WithModel)
       } catch (const RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: ntuple2.z"));
       }
-
-      ++nEntries;
    }
+
+   EXPECT_EQ(5, proc->GetNEntriesProcessed());
 }
