@@ -533,7 +533,7 @@ TEST(RPageSinkBuf, Basics)
    FileRaii fileGuard("test_ntuple_sinkbuf_basics.root");
    {
       RNTupleWriteOptions options;
-      options.SetEnablePageChecksums(false); // disable same page merging
+      options.SetEnableSamePageMerging(false);
       options.SetMaxUnzippedPageSize(32 * 1024);
       options.SetUseBufferedWrite(true);
       TestModel bufModel;
@@ -1076,7 +1076,7 @@ TEST(RPageSink, SamePageMerging)
       *model->MakeField<float>("px") = 1.0;
       *model->MakeField<float>("py") = 1.0;
       RNTupleWriteOptions options;
-      options.SetEnablePageChecksums(enable);
+      options.SetEnableSamePageMerging(enable);
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
       writer->Fill();
       writer.reset();
