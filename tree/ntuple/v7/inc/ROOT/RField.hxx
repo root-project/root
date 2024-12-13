@@ -74,23 +74,38 @@ public:
 /// Also used when deserializing a field that contains unknown values that may come from
 /// future RNTuple versions (e.g. an unknown Structure)
 class RInvalidField final : public RFieldBase {
+public:
+   enum class RCategory {
+      /// Generic unrecoverable error
+      kGeneric,
+      /// The type given to RFieldBase::Create was invalid
+      kTypeError,
+      /// The type given to RFieldBase::Create was unknown
+      kUnknownType,
+      /// The field could not be created because its descriptor had an unknown structural role
+      kUnknownStructure
+   };
+
+private:
    std::string fError;
+   RCategory fCategory;
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
-      return std::make_unique<RInvalidField>(newName, GetTypeName(), fError);
+      return std::make_unique<RInvalidField>(newName, GetTypeName(), fError, fCategory);
    }
    void ConstructValue(void *) const final {}
 
 public:
-   RInvalidField(std::string_view name, std::string_view type, std::string_view error)
-      : RFieldBase(name, type, ENTupleStructure::kLeaf, false /* isSimple */), fError(error)
+   RInvalidField(std::string_view name, std::string_view type, std::string_view error, RCategory category)
+      : RFieldBase(name, type, ENTupleStructure::kLeaf, false /* isSimple */), fError(error), fCategory(category)
    {
       fTraits |= kTraitInvalidField;
    }
 
    const std::string &GetError() const { return fError; }
+   RCategory GetCategory() const { return fCategory; }
 
    size_t GetValueSize() const final { return 0; }
    size_t GetAlignment() const final { return 0; }
