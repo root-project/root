@@ -270,7 +270,7 @@ void FourBinInstructional(bool doBayesian = false, bool doFeldmanCousins = false
    ProposalHelper ph;
    ph.SetVariables((RooArgSet &)fit->floatParsFinal());
    ph.SetCovMatrix(fit->covarianceMatrix());
-   ph.SetUpdateProposalParameters(kTRUE); // auto-create mean vars and add mappings
+   ph.SetUpdateProposalParameters(true); // auto-create mean vars and add mappings
    ph.SetCacheSize(100);
    ProposalFunction *pf = ph.GetProposalFunction();
 

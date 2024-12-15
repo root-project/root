@@ -1,5 +1,5 @@
 # \file
-# \ingroup roostats_python_tutorials
+# \ingroup tutorial_roostats
 # \notebook -js
 # SPlot tutorial
 #
@@ -21,10 +21,11 @@
 # \macro_code
 # \macro_output
 #
-# \authors P. P., Kyle Cranmer (C++ version)
+# \authors Kyle Cranmer (C++ version), and P. P. (Python translation)
 
 
 import ROOT
+
 
 def AddModel(wspace):
 
@@ -85,7 +86,6 @@ def AddModel(wspace):
 
     # make the 2-d model
     qcdModel = ROOT.RooProdPdf("qcdModel", "2-d model for QCD", [qcdMassModel, qcdIsolationModel])
-
 
     # combined model
     # These variables represent the number of Z or QCD events
@@ -170,7 +170,7 @@ def DoSPlot(wspace):
 
     for i in range(10):
         print("Weight for event: ", i, sData.GetSWeight(i, "zYield"))
-        print("qcd Weight: ", sData.GetSWeight(i, "qcdYield"))  
+        print("qcd Weight: ", sData.GetSWeight(i, "qcdYield"))
         print("Total Weight: ", sData.GetSumOfEventSWeight(i))
 
     # import this new dataset with sWeights

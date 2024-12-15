@@ -248,7 +248,7 @@ fit = wspace["model"].fitTo(data, Save=True)
 ph = ROOT.RooStats.ProposalHelper()
 ph.SetVariables(fit.floatParsFinal())
 ph.SetCovMatrix(fit.covarianceMatrix())
-ph.SetUpdateProposalParameters(ROOT.kTRUE)  # auto-create mean vars and add mappings
+ph.SetUpdateProposalParameters(True)  # auto-create mean vars and add mappings
 ph.SetCacheSize(100)
 pf = ph.GetProposalFunction()
 

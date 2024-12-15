@@ -225,7 +225,7 @@ parameterScan = fc.GetPointsToScan()
 
 # make a histogram of parameter vs. threshold
 histOfThresholds = ROOT.TH1F("histOfThresholds", "", parameterScan.numEntries(), firstPOI.getMin(), firstPOI.getMax())
-histOfThresholds.SetDirectory(ROOT.nullptr) # so th histogram doesn't get attached to the file with the workspace
+histOfThresholds.SetDirectory(ROOT.nullptr)  # so th histogram doesn't get attached to the file with the workspace
 histOfThresholds.GetXaxis().SetTitle(firstPOI.GetName())
 histOfThresholds.GetYaxis().SetTitle("Threshold")
 
@@ -272,7 +272,7 @@ CLbinclusive = 0
 
 # Now we generate background only and find distribution of upper limits
 histOfUL = ROOT.TH1F("histOfUL", "", 100, 0, firstPOI.getMax())
-histOfUL.SetDirectory(ROOT.nullptr) # make sure the histogram doesn't get attached to the file with the workspace
+histOfUL.SetDirectory(ROOT.nullptr)  # make sure the histogram doesn't get attached to the file with the workspace
 histOfUL.GetXaxis().SetTitle("Upper Limit (background only)")
 histOfUL.GetYaxis().SetTitle("Entries")
 for imc in range(nToyMC):
