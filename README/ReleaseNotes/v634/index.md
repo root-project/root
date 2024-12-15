@@ -651,3 +651,15 @@ More than 200 items were addressed for this release. The full list is:
 * [[ROOT-5843](https://its.cern.ch/jira/browse/ROOT-5843)] - List of loaded libraries
 * [[ROOT-5439](https://its.cern.ch/jira/browse/ROOT-5439)] - Dump-output of TH1 not showing pointerness of fArray
 * [[ROOT-2345](https://its.cern.ch/jira/browse/ROOT-2345)] - Optimize TMatrixDSparse operation kAtA
+
+## Release 6.34.02
+
+Published on December 16, 2024
+
+### Items addressed in this release
+
+This release includes a few minor fixes in RDataFrame and RooFit, besides the item below. Moreover, built-in Davix was patched to build with GCC14 while waiting for the new Davix release.
+
+* [[#17222](https://github.com/root-project/root/issues/12460)] - Regression in Python ownership for histograms within subdirectories with ROOT 6.34.00
+
+## HEAD of the v6-34-00-patches branch
