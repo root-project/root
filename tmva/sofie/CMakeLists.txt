@@ -55,6 +55,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_SubGraph.hxx
    TMVA/ROperator_Pad.hxx
    TMVA/ROperator_Where.hxx
+   TMVA/ROperator_Einsum.hxx
    TMVA/SOFIE_common.hxx
    TMVA/SOFIEHelpers.hxx
 
