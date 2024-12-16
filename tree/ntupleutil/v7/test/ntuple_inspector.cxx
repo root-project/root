@@ -42,7 +42,7 @@ TEST(RNTupleInspector, CreateFromString)
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
    EXPECT_EQ(inspector->GetDescriptor()->GetName(), "ntuple");
 
-   EXPECT_THROW(RNTupleInspector::Create("nonexistent", fileGuard.GetPath()), ROOT::Experimental::RException);
+   EXPECT_THROW(RNTupleInspector::Create("nonexistent", fileGuard.GetPath()), ROOT::RException);
 }
 
 TEST(RNTupleInspector, CompressionSettings)
@@ -287,7 +287,7 @@ TEST(RNTupleInspector, ColumnInfoCompressed)
 
    EXPECT_EQ(totalOnDiskSize, inspector->GetCompressedSize());
 
-   EXPECT_THROW(inspector->GetColumnInspector(42), ROOT::Experimental::RException);
+   EXPECT_THROW(inspector->GetColumnInspector(42), ROOT::RException);
 }
 
 TEST(RNTupleInspector, ColumnInfoUncompressed)
@@ -605,7 +605,7 @@ TEST(RNTupleInspector, PageSizeDistribution)
 
    // Requesting a histogram for a column with a physical ID not present in the given RNTuple should throw
    EXPECT_THROW(inspector->GetPageSizeDistribution(inspector->GetDescriptor()->GetNPhysicalColumns() + 1),
-                ROOT::Experimental::RException);
+                ROOT::RException);
 
    // Requesting a histogram for a column type not present in the given RNTuple should give an empty histogram
    auto nonExistingTypeHisto = inspector->GetPageSizeDistribution(EColumnType::kReal32);
@@ -653,9 +653,8 @@ TEST(RNTupleInspector, FieldInfoCompressed)
    EXPECT_EQ(topFieldInfo.GetCompressedSize(), subFieldOnDiskSize);
    EXPECT_EQ(topFieldInfo.GetUncompressedSize(), subFieldInMemorySize);
 
-   EXPECT_THROW(inspector->GetFieldTreeInspector("invalid_field"), ROOT::Experimental::RException);
-   EXPECT_THROW(inspector->GetFieldTreeInspector(inspector->GetDescriptor()->GetNFields()),
-                ROOT::Experimental::RException);
+   EXPECT_THROW(inspector->GetFieldTreeInspector("invalid_field"), ROOT::RException);
+   EXPECT_THROW(inspector->GetFieldTreeInspector(inspector->GetDescriptor()->GetNFields()), ROOT::RException);
 }
 
 TEST(RNTupleInspector, FieldInfoUncompressed)

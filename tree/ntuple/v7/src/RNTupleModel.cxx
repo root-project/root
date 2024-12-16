@@ -52,7 +52,7 @@ ROOT::Experimental::Internal::GetProjectedFieldsOfModel(ROOT::Experimental::RNTu
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RResult<void>
+ROOT::RResult<void>
 ROOT::Experimental::Internal::RProjectedFields::EnsureValidMapping(const RFieldBase *target, const FieldMap_t &fieldMap)
 {
    auto source = fieldMap.at(target);
@@ -125,7 +125,7 @@ ROOT::Experimental::Internal::RProjectedFields::EnsureValidMapping(const RFieldB
    return R__FAIL("field mapping structure mismatch: " + source->GetFieldName() + " --> " + target->GetFieldName());
 }
 
-ROOT::Experimental::RResult<void>
+ROOT::RResult<void>
 ROOT::Experimental::Internal::RProjectedFields::Add(std::unique_ptr<RFieldBase> field, const FieldMap_t &fieldMap)
 {
    auto result = EnsureValidMapping(field.get(), fieldMap);
@@ -201,9 +201,8 @@ void ROOT::Experimental::RNTupleModel::RUpdater::AddField(std::unique_ptr<RField
    fOpenChangeset.fAddedFields.emplace_back(fieldp);
 }
 
-ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleModel::RUpdater::AddProjectedField(std::unique_ptr<RFieldBase> field,
-                                                              FieldMappingFunc_t mapping)
+ROOT::RResult<void> ROOT::Experimental::RNTupleModel::RUpdater::AddProjectedField(std::unique_ptr<RFieldBase> field,
+                                                                                  FieldMappingFunc_t mapping)
 {
    auto fieldp = field.get();
    auto result = fOpenChangeset.fModel.AddProjectedField(std::move(field), mapping);
@@ -376,7 +375,7 @@ void ROOT::Experimental::RNTupleModel::RegisterSubfield(std::string_view qualifi
    fRegisteredSubfields.emplace(qualifiedFieldName);
 }
 
-ROOT::Experimental::RResult<void>
+ROOT::RResult<void>
 ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> field, FieldMappingFunc_t mapping)
 {
    EnsureNotFrozen();

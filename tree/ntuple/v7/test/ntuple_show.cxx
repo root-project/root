@@ -123,7 +123,7 @@ TEST(RNTupleShow, BasicTypes)
    try {
       ntuple2->LoadEntry(2);
       FAIL() << "loading a non-existing entry should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("entry with index 2 out of bounds"));
    }
 }

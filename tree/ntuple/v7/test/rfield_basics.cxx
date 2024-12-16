@@ -48,7 +48,7 @@ TEST(RField, ValidNaming)
    try {
       RFieldBase::Create("x.y", "float").Unwrap();
       FAIL() << "creating a field with an invalid name should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("name 'x.y' cannot contain character '.'"));
    }
 
@@ -57,7 +57,7 @@ TEST(RField, ValidNaming)
    try {
       field->Clone("x.y");
       FAIL() << "cloning a field with an invalid name should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("name 'x.y' cannot contain character '.'"));
    }
 }

@@ -30,7 +30,7 @@ ROOT::Experimental::RLogChannel &ROOT::Experimental::NTupleLog() {
    return sLog;
 }
 
-ROOT::Experimental::RResult<void>
+ROOT::RResult<void>
 ROOT::Experimental::Internal::EnsureValidNameForRNTuple(std::string_view name, std::string_view where)
 {
    using codeAndRepr = std::pair<const char *, const char *>;

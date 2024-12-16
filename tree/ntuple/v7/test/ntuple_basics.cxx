@@ -23,7 +23,7 @@ TEST(RNTuple, ReconstructModel)
    try {
       source.SetEntryRange({0, source.GetNEntries() + 1});
       FAIL() << "invalid entry range should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid entry range"));
    }
    // Should not throw
@@ -33,7 +33,7 @@ TEST(RNTuple, ReconstructModel)
    try {
       modelReconstructed->GetDefaultEntry().GetPtr<float>("xyz");
       FAIL() << "invalid field name should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name"));
    }
    auto vecPtr = modelReconstructed->GetDefaultEntry().GetPtr<std::vector<std::vector<float>>>("nnlo");
@@ -52,7 +52,7 @@ TEST(RNTuple, ReconstructModel)
    try {
       modelReconstructedBare->GetDefaultEntry();
       FAIL() << "getting the default entry of a bare model should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("bare model"));
    }
 }
@@ -439,13 +439,13 @@ TEST(RNTuple, EmptyString)
       auto model = RNTupleModel::Create();
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", "");
       FAIL() << "empty writer storage location should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("empty storage location"));
    }
    try {
       auto ntuple = RNTupleReader::Open("myNTuple", "");
       FAIL() << "empty reader storage location should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("empty storage location"));
    }
 
@@ -454,13 +454,13 @@ TEST(RNTuple, EmptyString)
       auto model = RNTupleModel::Create();
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "", "file.root");
       FAIL() << "empty RNTuple name should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("empty RNTuple name"));
    }
    try {
       auto ntuple = RNTupleReader::Open("", "file.root");
       FAIL() << "empty RNTuple name should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("empty RNTuple name"));
    }
 }
@@ -471,7 +471,7 @@ TEST(RNTuple, NullSafety)
    try {
       model->AddField(nullptr);
       FAIL() << "null fields should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("null field"));
    }
 }
@@ -490,13 +490,13 @@ TEST(RNTuple, ModelId)
    try {
       m1->SetDescription("abc");
       FAIL() << "changing frozen model should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
    }
    try {
       m1->MakeField<float>("pt");
       FAIL() << "changing frozen model should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
    }
 
@@ -531,7 +531,7 @@ TEST(RNTuple, Entry)
    try {
       m1->CreateEntry();
       FAIL() << "creating entry of unfrozen model should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to create entry"));
    }
    m1->Freeze();
@@ -548,7 +548,7 @@ TEST(RNTuple, Entry)
    try {
       ntuple->Fill(*e2);
       FAIL() << "filling with wrong entry should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("mismatch between entry and model"));
    }
 }
@@ -567,13 +567,13 @@ TEST(RNTuple, BareEntry)
       try {
          model.GetDefaultEntry();
          FAIL() << "accessing default entry of bare model should throw";
-      } catch (const RException &err) {
+      } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to use default entry of bare model"));
       }
       try {
          model.GetDefaultEntry().GetPtr<float>("pt");
          FAIL() << "accessing default entry of bare model should throw";
-      } catch (const RException &err) {
+      } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to use default entry of bare model"));
       }
 
@@ -711,9 +711,9 @@ TEST(REntry, Basics)
       EXPECT_STREQ("pt", v.GetField().GetFieldName().c_str());
    }
 
-   EXPECT_THROW(e->GetToken(""), ROOT::Experimental::RException);
-   EXPECT_THROW(e->GetToken("eta"), ROOT::Experimental::RException);
-   EXPECT_THROW(model->GetToken("eta"), ROOT::Experimental::RException);
+   EXPECT_THROW(e->GetToken(""), ROOT::RException);
+   EXPECT_THROW(e->GetToken("eta"), ROOT::RException);
+   EXPECT_THROW(model->GetToken("eta"), ROOT::RException);
 
    EXPECT_EQ("float", e->GetTypeName("pt"));
    EXPECT_EQ("float", e->GetTypeName(model->GetToken("pt")));
@@ -735,14 +735,14 @@ TEST(REntry, Basics)
    auto model2 = RNTupleModel::Create();
    model2->MakeField<float>("pt");
    model2->Freeze();
-   EXPECT_THROW(e->GetPtr<void>(model2->GetToken("pt")), ROOT::Experimental::RException);
-   EXPECT_THROW(e->GetPtr<void>(model2->GetDefaultEntry().GetToken("pt")), ROOT::Experimental::RException);
+   EXPECT_THROW(e->GetPtr<void>(model2->GetToken("pt")), ROOT::RException);
+   EXPECT_THROW(e->GetPtr<void>(model2->GetDefaultEntry().GetToken("pt")), ROOT::RException);
    std::shared_ptr<double> ptrDouble;
-   EXPECT_THROW(e->BindValue("pt", ptrDouble), ROOT::Experimental::RException);
+   EXPECT_THROW(e->BindValue("pt", ptrDouble), ROOT::RException);
 
    // Default constructed tokens cannot be used
    ROOT::Experimental::REntry::RFieldToken token;
-   EXPECT_THROW(e->GetPtr<void>(token), ROOT::Experimental::RException);
+   EXPECT_THROW(e->GetPtr<void>(token), ROOT::RException);
 
    float pt;
    e->BindRawPtr("pt", &pt);
@@ -773,7 +773,7 @@ TEST(RFieldBase, CreateObject)
       delete static_cast<int *>(p.get()); // avoid release
    }
 
-   EXPECT_THROW(RField<int>("name").CreateObject<float>(), RException);
+   EXPECT_THROW(RField<int>("name").CreateObject<float>(), ROOT::RException);
 
    auto ptrClass = RField<LowPrecisionFloats>("name").CreateObject<LowPrecisionFloats>();
    EXPECT_DOUBLE_EQ(1.0, ptrClass->b);
@@ -790,7 +790,7 @@ TEST(RNTupleWriter, ForbidModelWithSubfields)
    try {
       auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       FAIL() << "should not able to create a writer using a model with registered subfields";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(),
                   testing::HasSubstr("cannot create an RNTupleWriter from a model with registered subfields"));
    }
@@ -803,7 +803,7 @@ TEST(RNTupleWriter, ForbidNonRootTFiles)
    auto model = RNTupleModel::Create();
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
    // Opening an XML TFile should fail
-   EXPECT_THROW(RNTupleWriter::Append(std::move(model), "ntpl", *file), RException);
+   EXPECT_THROW(RNTupleWriter::Append(std::move(model), "ntpl", *file), ROOT::RException);
 }
 
 TEST(RNTupleWriter, ForbiddenCharactersInRNTupleName)
@@ -816,7 +816,7 @@ TEST(RNTupleWriter, ForbiddenCharactersInRNTupleName)
       try {
          auto writer = RNTupleWriter::Recreate(RNTupleModel::Create(), name, fileGuard.GetPath());
          FAIL() << "Should not be able to create an RNTuple with name '" << name << "'.";
-      } catch (const RException &err) {
+      } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(),
                      testing::HasSubstr("RNTuple name '" + std::string(name) + "' cannot contain character"));
       }
@@ -831,7 +831,7 @@ TEST(RNTuple, ForbiddenCharactersInField)
       try {
          auto field = RFieldBase::Create(name, "int").Unwrap();
          FAIL() << "Should not be able to create an RNTuple field with name '" << name << "'.";
-      } catch (const RException &err) {
+      } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("Field name '" + std::string(name) + "' cannot contain character"));
       }
    }
@@ -846,7 +846,7 @@ TEST(RNTuple, ForbiddenCharactersInModelField)
       try {
          auto field = model->MakeField<int>(name);
          FAIL() << "Should not be able to create an RNTuple field with name '" << name << "'.";
-      } catch (const RException &err) {
+      } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("Field name '" + std::string(name) + "' cannot contain character"));
       }
    }

@@ -262,7 +262,7 @@ TEST(RNTupleParallelWriter, Options)
       auto model = RNTupleModel::CreateBare();
       RNTupleParallelWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
       FAIL() << "should require buffered writing";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("parallel writing requires buffering"));
    }
 
@@ -271,7 +271,7 @@ TEST(RNTupleParallelWriter, Options)
       auto model = RNTupleModel::CreateBare();
       RNTupleParallelWriter::Append(std::move(model), "f", *file, options);
       FAIL() << "should require buffered writing";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("parallel writing requires buffering"));
    }
 }
@@ -287,7 +287,7 @@ TEST(RNTupleParallelWriter, ForbidModelWithSubfields)
    try {
       auto writer = RNTupleParallelWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       FAIL() << "should not able to create a writer using a model with registered subfields";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(),
                   testing::HasSubstr("cannot create an RNTupleWriter from a model with registered subfields"));
    }
@@ -340,7 +340,7 @@ TEST(RNTupleParallelWriter, ExplicitCommit)
    auto entry = ctx->CreateEntry();
    ctx->Fill(*entry);
 
-   EXPECT_THROW(writer->CommitDataset(), RException);
+   EXPECT_THROW(writer->CommitDataset(), ROOT::RException);
    ctx.reset();
 
    writer->CommitDataset();

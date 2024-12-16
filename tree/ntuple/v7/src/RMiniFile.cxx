@@ -660,8 +660,7 @@ static size_t ComputeNumChunks(size_t nbytes, size_t maxChunkSize)
 
 ROOT::Experimental::Internal::RMiniFileReader::RMiniFileReader(ROOT::Internal::RRawFile *rawFile) : fRawFile(rawFile) {}
 
-ROOT::Experimental::RResult<ROOT::RNTuple>
-ROOT::Experimental::Internal::RMiniFileReader::GetNTuple(std::string_view ntupleName)
+ROOT::RResult<ROOT::RNTuple> ROOT::Experimental::Internal::RMiniFileReader::GetNTuple(std::string_view ntupleName)
 {
    char ident[4];
    ReadBuffer(ident, 4, 0);
@@ -713,8 +712,7 @@ std::uint64_t ROOT::Experimental::Internal::RMiniFileReader::SearchInDirectory(s
    return 0;
 }
 
-ROOT::Experimental::RResult<ROOT::RNTuple>
-ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view ntuplePath)
+ROOT::RResult<ROOT::RNTuple> ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view ntuplePath)
 {
    RTFHeader fileHeader;
    ReadBuffer(&fileHeader, sizeof(fileHeader), 0);
@@ -792,8 +790,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
                        ntuple->fNBytesFooter, ntuple->fLenFooter, ntuple->fMaxKeySize);
 }
 
-ROOT::Experimental::RResult<ROOT::RNTuple>
-ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view ntupleName)
+ROOT::RResult<ROOT::RNTuple> ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view ntupleName)
 {
    RBareFileHeader fileHeader;
    ReadBuffer(&fileHeader, sizeof(fileHeader), 0);

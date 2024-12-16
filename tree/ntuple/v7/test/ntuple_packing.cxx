@@ -872,7 +872,7 @@ TEST(Packing, Real32QuantFloat)
 
       f[3] = 11.f;
       // should throw out of range
-      EXPECT_THROW(element.Pack(out, f, std::size(f)), RException);
+      EXPECT_THROW(element.Pack(out, f, std::size(f)), ROOT::RException);
    }
 
    {
@@ -997,7 +997,7 @@ TEST(Packing, Real32QuantDouble)
 
       f[3] = 11.f;
       // should throw out of range
-      EXPECT_THROW(element.Pack(out, f, std::size(f)), RException);
+      EXPECT_THROW(element.Pack(out, f, std::size(f)), ROOT::RException);
    }
 
    {

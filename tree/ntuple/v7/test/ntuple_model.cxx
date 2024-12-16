@@ -8,13 +8,13 @@ TEST(RNTupleModel, EnforceValidFieldNames)
    try {
       auto field3 = model->MakeField<float>("");
       FAIL() << "empty string as field name should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("name cannot be empty string"));
    }
    try {
       auto field3 = model->MakeField<float>("pt.pt");
       FAIL() << "field name with periods should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("name 'pt.pt' cannot contain character '.'"));
    }
 
@@ -24,7 +24,7 @@ TEST(RNTupleModel, EnforceValidFieldNames)
    try {
       model->MakeField<float>("pt");
       FAIL() << "repeated field names should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
    }
 
@@ -32,7 +32,7 @@ TEST(RNTupleModel, EnforceValidFieldNames)
    try {
       model->AddField(std::make_unique<RField<float>>("pt"));
       FAIL() << "repeated field names should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
    }
 }
@@ -77,25 +77,25 @@ TEST(RNTupleModel, GetField)
    try {
       m->GetConstField("nonexistent");
       FAIL() << "invalid field name should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
    }
    try {
       m->GetConstField("");
       FAIL() << "empty field name should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
    }
    try {
       m->GetMutableFieldZero();
       FAIL() << "GetMutableFieldZero should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("frozen model"));
    }
    try {
       m->GetMutableField("x");
       FAIL() << "GetMutableField should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("frozen model"));
    }
    EXPECT_EQ("", m->GetConstFieldZero().GetQualifiedFieldName());
@@ -204,28 +204,28 @@ TEST(RNTupleModel, RegisterSubfield)
    try {
       model->RegisterSubfield("struct.a");
       FAIL() << "attempting to re-register subfield should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("subfield \"struct.a\" already registered"));
    }
 
    try {
       model->RegisterSubfield("struct.doesnotexist");
       FAIL() << "attempting to register a nonexistent subfield should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("could not find subfield \"struct.doesnotexist\" in model"));
    }
 
    try {
       model->RegisterSubfield("struct");
       FAIL() << "attempting to register a top-level field as subfield should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("cannot register top-level field \"struct\" as a subfield"));
    }
 
    try {
       model->RegisterSubfield("structVec._0.s");
       FAIL() << "attempting to register a subfield in a collection should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(
          err.what(),
          testing::HasSubstr(
@@ -238,7 +238,7 @@ TEST(RNTupleModel, RegisterSubfield)
    try {
       model->RegisterSubfield("struct.v1");
       FAIL() << "attempting to register a subfield in a frozen model should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
    }
 
@@ -287,7 +287,7 @@ TEST(RNTupleModel, RegisterSubfield)
       *defaultEntry.GetPtr<std::vector<float>>("struct.v1");
       *entry->GetPtr<std::vector<float>>("struct.v1");
       FAIL() << "subfields not explicitly registered shouldn't be present in the entry";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: struct.v1"));
    }
 }
@@ -299,7 +299,7 @@ TEST(RNTupleModel, RegisterSubfieldBare)
    model->RegisterSubfield("struct.a");
    model->Freeze();
 
-   EXPECT_THROW(model->GetDefaultEntry(), RException);
+   EXPECT_THROW(model->GetDefaultEntry(), ROOT::RException);
 
    const auto entry = model->CreateEntry();
    EXPECT_TRUE(entry->GetPtr<float>("struct.a"));
@@ -324,7 +324,7 @@ TEST(RNTupleModel, Expire)
    try {
       model->Expire();
       FAIL() << "attempting expire unfrozen model should fail";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to expire unfrozen model"));
    }
 
@@ -343,21 +343,21 @@ TEST(RNTupleModel, Expire)
    EXPECT_TRUE(model->GetRegisteredSubfields().empty());
    EXPECT_TRUE(model->GetDescription().empty());
 
-   EXPECT_THROW(model->MakeField<float>("E"), RException);
-   EXPECT_THROW(model->AddField(RFieldBase::Create("E", "float").Unwrap()), RException);
-   EXPECT_THROW(model->RegisterSubfield("struct.a"), RException);
+   EXPECT_THROW(model->MakeField<float>("E"), ROOT::RException);
+   EXPECT_THROW(model->AddField(RFieldBase::Create("E", "float").Unwrap()), ROOT::RException);
+   EXPECT_THROW(model->RegisterSubfield("struct.a"), ROOT::RException);
    EXPECT_THROW(model->AddProjectedField(RFieldBase::Create("a", "float").Unwrap(),
                                          [](const std::string &) { return "struct.a"; }),
-                RException);
-   EXPECT_THROW(model->CreateEntry(), RException);
-   EXPECT_THROW(model->CreateBareEntry(), RException);
-   EXPECT_THROW(model->CreateBulk("struct"), RException);
-   EXPECT_THROW(model->GetMutableFieldZero(), RException);
-   EXPECT_THROW(model->GetMutableField("struct"), RException);
-   EXPECT_THROW(model->SetDescription("x"), RException);
+                ROOT::RException);
+   EXPECT_THROW(model->CreateEntry(), ROOT::RException);
+   EXPECT_THROW(model->CreateBareEntry(), ROOT::RException);
+   EXPECT_THROW(model->CreateBulk("struct"), ROOT::RException);
+   EXPECT_THROW(model->GetMutableFieldZero(), ROOT::RException);
+   EXPECT_THROW(model->GetMutableField("struct"), ROOT::RException);
+   EXPECT_THROW(model->SetDescription("x"), ROOT::RException);
 
    FileRaii fileGuard("test_ntuple_model_expire.root");
-   EXPECT_THROW(RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath()), RException);
+   EXPECT_THROW(RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath()), ROOT::RException);
    auto writer = RNTupleWriter::Recreate(std::move(clone), "ntpl", fileGuard.GetPath());
    writer.reset();
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
@@ -382,10 +382,10 @@ TEST(RNTupleModel, ExpireWithWriter)
    EXPECT_EQ(1u, writer->GetLastCommitted());
    EXPECT_EQ(1u, writer->GetLastCommittedClusterGroup());
 
-   EXPECT_THROW(writer->Fill(), RException);
-   EXPECT_THROW(writer->FlushColumns(), RException);
-   EXPECT_THROW(writer->CreateEntry(), RException);
-   EXPECT_THROW(writer->CreateModelUpdater(), RException);
+   EXPECT_THROW(writer->Fill(), ROOT::RException);
+   EXPECT_THROW(writer->FlushColumns(), ROOT::RException);
+   EXPECT_THROW(writer->CreateEntry(), ROOT::RException);
+   EXPECT_THROW(writer->CreateModelUpdater(), ROOT::RException);
 
    EXPECT_FLOAT_EQ(1.0, *writer->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
 }
