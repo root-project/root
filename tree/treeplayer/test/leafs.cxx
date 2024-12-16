@@ -127,8 +127,6 @@ TEST(TTreeReaderLeafs, LeafList) {
    EXPECT_EQ(6u, vec.GetSize());
    {
       using namespace ROOT::TestSupport;
-      CheckDiagsRAII diagRAII;
-      diagRAII.requiredDiag(kError, "Setup", "Missing TClass object for", false);
       EXPECT_FLOAT_EQ(13., arr[1]);
       EXPECT_DOUBLE_EQ(43., arrU[1]);
    }
