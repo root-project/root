@@ -308,6 +308,11 @@
 
 #include "Cos_FromONNX.hxx"
 
+#include "Einsum_matmul_FromONNX.hxx"
+#include "Einsum_dotprod_FromONNX.hxx"
+#include "Einsum_3_FromONNX.hxx"
+#include "Einsum_4_FromONNX.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -2942,8 +2947,6 @@ TEST(ONNX, Where) {
       EXPECT_EQ(output[i], correct[i]);
    }
 }
-float outputs[] = {0.406200, 0.111242, 0.770231, 0.940162, 0.260436, -0.258742,
-                   0.304129, 0.999899, 0.256423, 0.410855, 0.843406, 0.862500};
 
 TEST(ONNX, Sin)
 {
@@ -2986,5 +2989,82 @@ TEST(ONNX, Cos)
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - std::cos(input[i])), TOLERANCE);
+   }
+}
+// tests of Einsum operator
+TEST(ONNX, Einsum_matmul)
+{
+   std::vector<float> input1{1, 2, 3, 4};
+   std::vector<float> input2{5, 6, 7, 8};
+   std::vector<float> correct_output = {19, 22, 43, 50};
+
+   TMVA_SOFIE_Einsum_matmul::Session s("Einsum_matmul_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input1.data(), input2.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), 4);
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_EQ(output[i], correct_output[i]);
+   }
+}
+// test dot prod using Einsum
+TEST(ONNX, Einsum_dotprod)
+{
+   std::vector<float> input1{1, 2, 3};
+   std::vector<float> input2{5, 6, 7};
+   std::vector<float> correct_output {5 +  12 + 21};
+
+   TMVA_SOFIE_Einsum_dotprod::Session s("Einsum_dotprod_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input1.data(), input2.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), 1);
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_EQ(output[i], correct_output[i]);
+   }
+}
+// test tensor contraction of rank 3 tensors
+TEST(ONNX, Einsum_3)
+{
+   // test abc,abd->ad   [2,2,3] , [2,2,3] -> [2,3]
+   std::vector<float> input1 {1.,2.,3,4,5,6,7,8,9,10,11,12};
+   std::vector<float> input2 {1.,2.,3,4,5,6,7,8,9,10,11,12};
+   std::vector<float> correct_output {66. , 87. , 108., 498.,  555., 612. };
+
+
+   TMVA_SOFIE_Einsum_3::Session s("Einsum_dotprod_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input1.data(), input2.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), 6);
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_EQ(output[i], correct_output[i]);
+   }
+}
+// test tensor contraction of rank 4 tensors
+TEST(ONNX, Einsum_4)
+{
+   // test abcd,abed->abce  [2,1,2,3] , [2,1,3,3] -> [2,1,2,3]
+   std::vector<float> input1 {1.,2.,3,4,5,6,7,8,9,10,11,12};
+   std::vector<float> input2 {1.,2.,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18};
+   std::vector<float> correct_output { 14., 32.,  50., 32.,  77.,  122.,
+                                      266., 338., 410., 365., 464., 563. };
+
+
+   TMVA_SOFIE_Einsum_4::Session s("Einsum_4_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input1.data(), input2.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), 12);
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_EQ(output[i], correct_output[i]);
    }
 }
