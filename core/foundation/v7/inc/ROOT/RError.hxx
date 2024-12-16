@@ -20,8 +20,10 @@
 #include <cstddef>
 #include <memory>
 #include <new>
+#include <optional>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -38,12 +40,15 @@ class RError {
 public:
    struct RLocation {
       RLocation() = default;
-      RLocation(const char *func, const char *file, int line) : fFunction(func), fSourceFile(file), fSourceLine(line) {}
+      RLocation(const char *func, const char *file, unsigned int line)
+         : fFunction(func), fSourceFile(file), fSourceLine(line)
+      {
+      }
 
       // TODO(jblomer) use std::source_location as of C++20
       const char *fFunction;
       const char *fSourceFile;
-      int fSourceLine;
+      unsigned int fSourceLine;
    };
 
 private:
@@ -54,11 +59,11 @@ private:
 
 public:
    /// Used by R__FAIL
-   RError(const std::string &message, RLocation &&sourceLocation);
+   RError(std::string_view message, RLocation &&sourceLocation);
    /// Used by R__FORWARD_RESULT
    void AddFrame(RLocation &&sourceLocation);
    /// Add more information to the diagnostics
-   void AppendToMessage(const std::string &info) { fMessage += info; }
+   void AppendToMessage(std::string_view info) { fMessage += info; }
    /// Format a dignostics report, e.g. for an exception message
    std::string GetReport() const;
    const std::vector<RLocation> &GetStackTrace() const { return fStackTrace; }
@@ -113,7 +118,7 @@ public:
 
    ~RResultBase() noexcept(false);
 
-   RError *GetError() { return fError.get(); }
+   std::optional<RError> GetError() const { return fError ? *fError : std::optional<RError>(); }
    /// Throws an RException with fError
    void Throw();
 
