@@ -131,9 +131,9 @@ std::shared_ptr<void> GetInitializedTensorData(onnx::TensorProto * tensorproto, 
 #ifdef R__BYTESWAP
       std::memcpy(data.get(), tensorproto->raw_data().c_str(), length * sizeof(T));
 #else
-      for (std::size_t k = 0; k < fLength; ++k)
-         (reinterpret_cast<uint32_t *>(data.get()))[k] =
-            Rbswap_32((reinterpret_cast<const uint32_t *>(tensorproto->raw_data().c_str()))[k]);
+      for (std::size_t k = 0; k < length; ++k)
+         (reinterpret_cast<typename RByteSwap<sizeof(T)>::value_type *>(data.get()))[k] =
+            RByteSwap<sizeof(T)>::bswap((reinterpret_cast<const typename RByteSwap<sizeof(T)>::value_type *>(tensorproto->raw_data().c_str()))[k]);
 #endif
    } else {
       ExtractDataFromTP<T>::Copy(tensorproto, data.get());
