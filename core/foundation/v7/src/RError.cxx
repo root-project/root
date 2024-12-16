@@ -29,7 +29,7 @@ std::string ROOT::RError::GetReport() const
    return report;
 }
 
-ROOT::RError::RError(const std::string &message, RLocation &&sourceLocation) : fMessage(message)
+ROOT::RError::RError(std::string_view message, RLocation &&sourceLocation) : fMessage(message)
 
 {
    // Avoid frequent reallocations as we move up the call stack
