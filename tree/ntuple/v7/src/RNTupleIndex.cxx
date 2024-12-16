@@ -26,7 +26,7 @@ CastValuePtr(void *valuePtr, const ROOT::Experimental::RFieldBase &field)
    case 2: value = *reinterpret_cast<std::uint16_t *>(valuePtr); break;
    case 4: value = *reinterpret_cast<std::uint32_t *>(valuePtr); break;
    case 8: value = *reinterpret_cast<std::uint64_t *>(valuePtr); break;
-   default: throw ROOT::Experimental::RException(R__FAIL("value size not supported"));
+   default: throw ROOT::RException(R__FAIL("value size not supported"));
    }
 
    return value;

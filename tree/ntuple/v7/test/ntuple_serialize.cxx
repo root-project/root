@@ -30,14 +30,14 @@ TEST(RNTuple, SerializeString)
    try {
       RNTupleSerializer::DeserializeString(nullptr, 0, s).Unwrap();
       FAIL() << "too small buffer should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
 
    try {
       RNTupleSerializer::DeserializeString(buffer, 6, s).Unwrap();
       FAIL() << "too small buffer should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
 
@@ -58,7 +58,7 @@ TEST(RNTuple, SerializeColumnType)
    try {
       RNTupleSerializer::SerializeColumnType(type, buffer);
       FAIL() << "unexpected column type should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("unexpected column type"));
    }
 
@@ -82,7 +82,7 @@ TEST(RNTuple, SerializeFieldStructure)
    try {
       RNTupleSerializer::SerializeFieldStructure(structure, buffer);
       FAIL() << "unexpected field structure value should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("unexpected field structure"));
    }
 
@@ -106,7 +106,7 @@ TEST(RNTuple, SerializeExtraTypeInfoId)
    try {
       RNTupleSerializer::SerializeExtraTypeInfoId(id, buffer);
       FAIL() << "unexpected field structure value should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("unexpected extra type info"));
    }
 
@@ -128,7 +128,7 @@ TEST(RNTuple, SerializeEnvelope)
    try {
       RNTupleSerializer::DeserializeEnvelope(nullptr, 0, 137).Unwrap();
       FAIL() << "too small envelope should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
 
@@ -147,7 +147,7 @@ TEST(RNTuple, SerializeEnvelope)
    try {
       RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope), 137).Unwrap();
       FAIL() << "XxHash-3 mismatch should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("XxHash-3"));
    }
 #ifndef R__BYTESWAP
@@ -161,7 +161,7 @@ TEST(RNTuple, SerializeEnvelope)
    try {
       RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope), 138).Unwrap();
       FAIL() << "unsupported envelope type should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("envelope type mismatch"));
    }
 #ifndef R__BYTESWAP
@@ -175,7 +175,7 @@ TEST(RNTuple, SerializeEnvelope)
    try {
       RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope) - 1, 137).Unwrap();
       FAIL() << "too small envelope buffer should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("envelope buffer size too small"));
    }
 
@@ -188,7 +188,7 @@ TEST(RNTuple, SerializeEnvelope)
    try {
       RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope), 137).Unwrap();
       FAIL() << "too small envelope buffer should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid envelope, too short"));
    }
 
@@ -214,7 +214,7 @@ TEST(RNTuple, SerializeFrame)
    try {
       RNTupleSerializer::DeserializeFrameHeader(nullptr, 0, frameSize).Unwrap();
       FAIL() << "too small frame should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
 
@@ -223,7 +223,7 @@ TEST(RNTuple, SerializeFrame)
    try {
       RNTupleSerializer::SerializeFramePostscript(buffer, 7);
       FAIL() << "too small frame should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
    EXPECT_EQ(0u, RNTupleSerializer::SerializeFramePostscript(buffer, 10));
@@ -231,7 +231,7 @@ TEST(RNTuple, SerializeFrame)
    try {
       RNTupleSerializer::DeserializeFrameHeader(buffer, 8, frameSize).Unwrap();
       FAIL() << "too small frame should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
    EXPECT_EQ(8u, RNTupleSerializer::DeserializeFrameHeader(buffer, 10, frameSize, nitems).Unwrap());
@@ -242,7 +242,7 @@ TEST(RNTuple, SerializeFrame)
    try {
       RNTupleSerializer::SerializeFramePostscript(buffer, 11);
       FAIL() << "too small frame should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
    EXPECT_EQ(0u, RNTupleSerializer::SerializeFramePostscript(buffer, 14));
@@ -250,7 +250,7 @@ TEST(RNTuple, SerializeFrame)
    try {
       RNTupleSerializer::DeserializeFrameHeader(buffer, 11, frameSize, nitems).Unwrap();
       FAIL() << "too short list frame should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
    EXPECT_EQ(12u, RNTupleSerializer::DeserializeFrameHeader(buffer, 14, frameSize, nitems).Unwrap());
@@ -274,7 +274,7 @@ TEST(RNTuple, SerializeLongFrame)
    try {
       RNTupleSerializer::DeserializeFrameHeader(buffer.get(), payloadSize, frameSize).Unwrap();
       FAIL() << "too small frame should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
    EXPECT_EQ(12u, RNTupleSerializer::DeserializeFrameHeader(buffer.get(), bufSize, frameSize, nitems).Unwrap());
@@ -304,7 +304,7 @@ TEST(RNTuple, SerializeFeatureFlags)
    try {
       RNTupleSerializer::SerializeFeatureFlags(flags, buffer);
       FAIL() << "negative feature flag should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("out of bounds"));
    }
 
@@ -318,14 +318,14 @@ TEST(RNTuple, SerializeFeatureFlags)
    try {
       RNTupleSerializer::DeserializeFeatureFlags(nullptr, 0, flags).Unwrap();
       FAIL() << "too small buffer should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
 
    try {
       RNTupleSerializer::DeserializeFeatureFlags(buffer, 12, flags).Unwrap();
       FAIL() << "too small buffer should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
 }
@@ -344,13 +344,13 @@ TEST(RNTuple, SerializeLocator)
    try {
       RNTupleSerializer::DeserializeLocator(buffer, 3, locator).Unwrap();
       FAIL() << "too short locator buffer should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
    try {
       RNTupleSerializer::DeserializeLocator(buffer, 11, locator).Unwrap();
       FAIL() << "too short locator buffer should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
    EXPECT_EQ(12u, RNTupleSerializer::DeserializeLocator(buffer, 12, locator).Unwrap());
@@ -414,7 +414,7 @@ TEST(RNTuple, SerializeEnvelopeLink)
    try {
       RNTupleSerializer::DeserializeEnvelopeLink(buffer, 3, link).Unwrap();
       FAIL() << "too short envelope link buffer should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
 
@@ -438,7 +438,7 @@ TEST(RNTuple, SerializeClusterSummary)
    try {
       RNTupleSerializer::DeserializeClusterSummary(buffer, 23, reco).Unwrap();
       FAIL() << "too short cluster summary should fail";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
    EXPECT_EQ(24u, RNTupleSerializer::DeserializeClusterSummary(buffer, 24, reco).Unwrap());
@@ -451,7 +451,7 @@ TEST(RNTuple, SerializeClusterSummary)
    try {
       RNTupleSerializer::DeserializeClusterSummary(buffer, 24, reco).Unwrap();
       FAIL() << "sharded cluster flag should fail";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("sharded"));
    }
 
@@ -460,7 +460,7 @@ TEST(RNTuple, SerializeClusterSummary)
    try {
       RNTupleSerializer::SerializeClusterSummary(summary, buffer);
       FAIL() << "overesized cluster should fail";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("exceed"));
    }
 }
@@ -482,7 +482,7 @@ TEST(RNTuple, SerializeClusterGroup)
    try {
       RNTupleSerializer::DeserializeClusterGroup(buffer, 47, reco).Unwrap();
       FAIL() << "too short cluster group should fail";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
    EXPECT_EQ(48u, RNTupleSerializer::DeserializeClusterGroup(buffer, 48, reco).Unwrap());

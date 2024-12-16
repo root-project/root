@@ -69,7 +69,7 @@ public:
 
 } // anonymous namespace
 
-ROOT::Experimental::RResult<void>
+ROOT::RResult<void>
 ROOT::Experimental::RNTupleImporter::RCStringTransformation::Transform(const RImportBranch &branch, RImportField &field)
 {
    *reinterpret_cast<std::string *>(field.fFieldBuffer) = reinterpret_cast<const char *>(branch.fBranchBuffer.get());
@@ -127,7 +127,7 @@ ROOT::Experimental::RNTupleImporter::Create(TTree *sourceTree, std::string_view 
    return importer;
 }
 
-ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::InitDestination(std::string_view destFileName)
+ROOT::RResult<void> ROOT::Experimental::RNTupleImporter::InitDestination(std::string_view destFileName)
 {
    fDestFileName = destFileName;
    fDestFile = std::unique_ptr<TFile>(TFile::Open(fDestFileName.c_str(), "UPDATE"));
@@ -158,7 +158,7 @@ void ROOT::Experimental::RNTupleImporter::ResetSchema()
    fEntry = nullptr;
 }
 
-ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSchema()
+ROOT::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSchema()
 {
    ResetSchema();
 

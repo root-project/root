@@ -68,7 +68,6 @@ using RColumnElementBase = ROOT::Experimental::Internal::RColumnElementBase;
 using RColumnSwitch = ROOT::Experimental::RColumnSwitch;
 using ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder;
 using RFieldDescriptorBuilder = ROOT::Experimental::Internal::RFieldDescriptorBuilder;
-using RException = ROOT::Experimental::RException;
 template <class T>
 using RField = ROOT::Experimental::RField<T>;
 using RFieldBase = ROOT::Experimental::RFieldBase;
@@ -114,8 +113,6 @@ using RPageStorage = ROOT::Experimental::Internal::RPageStorage;
 using RPrepareVisitor = ROOT::Experimental::RPrepareVisitor;
 using RPrintSchemaVisitor = ROOT::Experimental::RPrintSchemaVisitor;
 using RRawFile = ROOT::Internal::RRawFile;
-template <class T>
-using RResult = ROOT::Experimental::RResult<T>;
 using EContainerFormat = RNTupleFileWriter::EContainerFormat;
 
 /**

@@ -2,8 +2,6 @@
 /// \ingroup Base ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-12-11
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
@@ -21,8 +19,7 @@
 #include <string>
 #include <utility>
 
-
-std::string ROOT::Experimental::RError::GetReport() const
+std::string ROOT::RError::GetReport() const
 {
    auto report = fMessage + "\nAt:\n";
    for (const auto &loc : fStackTrace) {
@@ -32,9 +29,7 @@ std::string ROOT::Experimental::RError::GetReport() const
    return report;
 }
 
-ROOT::Experimental::RError::RError(
-   const std::string &message, RLocation &&sourceLocation)
-   : fMessage(message)
+ROOT::RError::RError(const std::string &message, RLocation &&sourceLocation) : fMessage(message)
 
 {
    // Avoid frequent reallocations as we move up the call stack
@@ -42,12 +37,12 @@ ROOT::Experimental::RError::RError(
    AddFrame(std::move(sourceLocation));
 }
 
-void ROOT::Experimental::RError::AddFrame(RLocation &&sourceLocation)
+void ROOT::RError::AddFrame(RLocation &&sourceLocation)
 {
    fStackTrace.emplace_back(sourceLocation);
 }
 
-ROOT::Experimental::RResultBase::~RResultBase() noexcept(false)
+ROOT::RResultBase::~RResultBase() noexcept(false)
 {
    if (R__unlikely(fError && !fIsChecked)) {
       // Prevent from throwing if the object is deconstructed in the course of stack unwinding for another exception
@@ -64,7 +59,7 @@ ROOT::Experimental::RResultBase::~RResultBase() noexcept(false)
    }
 }
 
-void ROOT::Experimental::RResultBase::Throw()
+void ROOT::RResultBase::Throw()
 {
-   throw ROOT::Experimental::RException(*fError);
+   throw ROOT::RException(*fError);
 }

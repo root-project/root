@@ -64,7 +64,7 @@ TEST(RField, ForceNativeMode)
    ASSERT_TRUE(cl != nullptr);
 
    EXPECT_FALSE(cl->CanSplit());
-   EXPECT_THROW(RFieldBase::Create("f", "CustomStreamer").Unwrap(), RException);
+   EXPECT_THROW(RFieldBase::Create("f", "CustomStreamer").Unwrap(), ROOT::RException);
 
    cl->CreateAttributeMap();
    cl->GetAttributeMap()->AddProperty("rntuple.streamerMode", "false");
@@ -115,11 +115,11 @@ TEST(RField, UnsupportedStreamed)
 {
    using ROOT::Experimental::RStreamerField;
    auto success = std::make_unique<RStreamerField>("name", "std::vector<int>");
-   EXPECT_THROW(RStreamerField("name", "int"), RException); // no TClass of fundamental types
+   EXPECT_THROW(RStreamerField("name", "int"), ROOT::RException); // no TClass of fundamental types
 
    // Streamer fields cannot be added through MakeField<T> but only through RFieldBase::CreateField()
    auto model = RNTupleModel::Create();
-   EXPECT_THROW(model->MakeField<CustomStreamerForceStreamed>("f"), RException);
+   EXPECT_THROW(model->MakeField<CustomStreamerForceStreamed>("f"), ROOT::RException);
 }
 
 TEST(RField, StreamerPoly)

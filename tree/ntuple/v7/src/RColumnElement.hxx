@@ -134,7 +134,7 @@ inline void ByteSwapIfNecessary<unsigned char>(unsigned char &)
 template <typename DestT, typename SourceT>
 inline void EnsureValidRange(SourceT val [[maybe_unused]])
 {
-   using ROOT::Experimental::RException;
+   using ROOT::RException;
 
    if constexpr (!std::is_integral_v<DestT> || !std::is_integral_v<SourceT>)
       return;
@@ -594,9 +594,8 @@ class RColumnElement : public RColumnElementBase {
 public:
    RColumnElement() : RColumnElementBase(sizeof(CppT))
    {
-      throw ROOT::Experimental::RException(
-         R__FAIL(std::string("internal error: no column mapping for this C++ type: ") + typeid(CppT).name() + " --> " +
-                 GetColumnTypeName(ColumnT)));
+      throw ROOT::RException(R__FAIL(std::string("internal error: no column mapping for this C++ type: ") +
+                                     typeid(CppT).name() + " --> " + GetColumnTypeName(ColumnT)));
    }
 
    RIdentifier GetIdentifier() const final { return RIdentifier{typeid(CppT), EColumnType::kUnknown}; }
@@ -1123,9 +1122,9 @@ public:
       const int nOutOfRange =
          Quantize::QuantizeReals(quantized.get(), reinterpret_cast<const T *>(src), count, min, max, fBitsOnStorage);
       if (nOutOfRange) {
-         throw RException(R__FAIL(std::to_string(nOutOfRange) +
-                                  " values were found of of range for quantization while packing (range is [" +
-                                  std::to_string(min) + ", " + std::to_string(max) + "])"));
+         throw ROOT::RException(R__FAIL(std::to_string(nOutOfRange) +
+                                        " values were found of of range for quantization while packing (range is [" +
+                                        std::to_string(min) + ", " + std::to_string(max) + "])"));
       }
       Internal::BitPacking::PackBits(dst, quantized.get(), count, sizeof(Quantize::Quantized_t), fBitsOnStorage);
    }

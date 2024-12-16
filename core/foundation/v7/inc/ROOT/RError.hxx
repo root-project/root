@@ -2,8 +2,6 @@
 /// \ingroup Base ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-12-11
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
@@ -28,11 +26,10 @@
 #include <vector>
 
 namespace ROOT {
-namespace Experimental {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RError
+\class ROOT::RError
 \ingroup Base
 \brief Captures diagnostics related to a ROOT runtime error
 */
@@ -41,10 +38,9 @@ class RError {
 public:
    struct RLocation {
       RLocation() = default;
-      RLocation(const char *func, const char *file, int line)
-         : fFunction(func), fSourceFile(file), fSourceLine(line) {}
+      RLocation(const char *func, const char *file, int line) : fFunction(func), fSourceFile(file), fSourceLine(line) {}
 
-      // TODO(jblomer) use std::source_location once available
+      // TODO(jblomer) use std::source_location as of C++20
       const char *fFunction;
       const char *fSourceFile;
       int fSourceLine;
@@ -70,7 +66,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RException
+\class ROOT::RException
 \ingroup Base
 \brief Base class for all ROOT issued exceptions
 */
@@ -84,7 +80,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RResultBase
+\class ROOT::RResultBase
 \ingroup Base
 \brief Common handling of the error case for RResult<T> (T != void) and RResult<void>
 
@@ -134,7 +130,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RResult
+\class ROOT::RResult
 \ingroup Base
 \brief The class is used as a return type for operations that can fail; wraps a value of type T or an RError
 
@@ -287,12 +283,12 @@ public:
 };
 
 /// Short-hand to return an RResult<T> in an error state; the RError is implicitly converted into RResult<T>
-#define R__FAIL(msg) ROOT::Experimental::RError(msg, {R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__})
+#define R__FAIL(msg) ROOT::RError(msg, {R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__})
 /// Short-hand to return an RResult<T> value from a subroutine to the calling stack frame
 #define R__FORWARD_RESULT(res) std::move(res.Forward({R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__}))
 /// Short-hand to return an RResult<T> in an error state (i.e. after checking)
 #define R__FORWARD_ERROR(res) res.ForwardError(std::move(res), {R__LOG_PRETTY_FUNCTION, __FILE__, __LINE__})
-} // namespace Experimental
+
 } // namespace ROOT
 
 #endif

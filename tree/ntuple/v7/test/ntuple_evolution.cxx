@@ -436,7 +436,7 @@ struct RenamedMemberClass {
    try {
       reader->GetModel();
       FAIL() << "model reconstruction should fail";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
    }
 }
@@ -631,7 +631,7 @@ struct PrependSecondBaseDerived : public PrependSecondBaseSecond, public Prepend
    try {
       reader->GetModel();
       FAIL() << "model reconstruction should fail";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
    }
 }
@@ -686,7 +686,7 @@ struct AddedIntermediateDerived : public AddedIntermediate {
    try {
       reader->GetModel();
       FAIL() << "model reconstruction should fail";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
    }
 }
@@ -809,7 +809,7 @@ struct RemovedIntermediateDerived : public RemovedIntermediateBase {
    try {
       reader->GetModel();
       FAIL() << "model reconstruction should fail";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
    }
 }
@@ -862,7 +862,7 @@ struct RenamedBaseDerived : public RenamedBase2 {
    try {
       reader->GetModel();
       FAIL() << "model reconstruction should fail";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
    }
 }
@@ -921,7 +921,7 @@ struct RenamedIntermediateDerived : public RenamedIntermediate2 {
    try {
       reader->GetModel();
       FAIL() << "model reconstruction should fail";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
    }
 }

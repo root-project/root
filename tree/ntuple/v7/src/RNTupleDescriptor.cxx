@@ -575,7 +575,7 @@ std::vector<std::uint64_t> ROOT::Experimental::RNTupleDescriptor::GetFeatureFlag
    return result;
 }
 
-ROOT::Experimental::RResult<void>
+ROOT::RResult<void>
 ROOT::Experimental::RNTupleDescriptor::AddClusterGroupDetails(DescriptorId_t clusterGroupId,
                                                               std::vector<RClusterDescriptor> &clusterDescs)
 {
@@ -606,8 +606,7 @@ ROOT::Experimental::RNTupleDescriptor::AddClusterGroupDetails(DescriptorId_t clu
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleDescriptor::DropClusterGroupDetails(DescriptorId_t clusterGroupId)
+ROOT::RResult<void> ROOT::Experimental::RNTupleDescriptor::DropClusterGroupDetails(DescriptorId_t clusterGroupId)
 {
    auto iter = fClusterGroupDescriptors.find(clusterGroupId);
    if (iter == fClusterGroupDescriptors.end())
@@ -704,7 +703,7 @@ ROOT::Experimental::RClusterGroupDescriptor ROOT::Experimental::RClusterGroupDes
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RClusterDescriptorBuilder::CommitColumnRange(
+ROOT::RResult<void> ROOT::Experimental::Internal::RClusterDescriptorBuilder::CommitColumnRange(
    DescriptorId_t physicalId, std::uint64_t firstElementIndex, std::uint32_t compressionSettings,
    const RClusterDescriptor::RPageRange &pageRange)
 {
@@ -722,7 +721,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RClusterDescript
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<void>
+ROOT::RResult<void>
 ROOT::Experimental::Internal::RClusterDescriptorBuilder::MarkSuppressedColumnRange(DescriptorId_t physicalId)
 {
    if (fCluster.fColumnRanges.count(physicalId) > 0)
@@ -736,7 +735,7 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::MarkSuppressedColumnRan
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<void>
+ROOT::RResult<void>
 ROOT::Experimental::Internal::RClusterDescriptorBuilder::CommitSuppressedColumnRanges(const RNTupleDescriptor &desc)
 {
    for (auto &[_, columnRange] : fCluster.fColumnRanges) {
@@ -836,7 +835,7 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges
    return *this;
 }
 
-ROOT::Experimental::RResult<ROOT::Experimental::RClusterDescriptor>
+ROOT::RResult<ROOT::Experimental::RClusterDescriptor>
 ROOT::Experimental::Internal::RClusterDescriptorBuilder::MoveDescriptor()
 {
    if (fCluster.fClusterId == kInvalidDescriptorId)
@@ -876,7 +875,7 @@ ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder::FromSummary(
    return builder;
 }
 
-ROOT::Experimental::RResult<ROOT::Experimental::RClusterGroupDescriptor>
+ROOT::RResult<ROOT::Experimental::RClusterGroupDescriptor>
 ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder::MoveDescriptor()
 {
    if (fClusterGroup.fClusterGroupId == kInvalidDescriptorId)
@@ -888,7 +887,7 @@ ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder::MoveDescriptor()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::RResult<ROOT::Experimental::RExtraTypeInfoDescriptor>
+ROOT::RResult<ROOT::Experimental::RExtraTypeInfoDescriptor>
 ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder::MoveDescriptor()
 {
    if (fExtraTypeInfo.fContentId == EExtraTypeInfoIds::kInvalid)
@@ -900,7 +899,7 @@ ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder::MoveDescriptor()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::RResult<void>
+ROOT::RResult<void>
 ROOT::Experimental::Internal::RNTupleDescriptorBuilder::EnsureFieldExists(DescriptorId_t fieldId) const
 {
    if (fDescriptor.fFieldDescriptors.count(fieldId) == 0)
@@ -908,7 +907,7 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::EnsureFieldExists(Descri
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleDescriptorBuilder::EnsureValidDescriptor() const
+ROOT::RResult<void> ROOT::Experimental::Internal::RNTupleDescriptorBuilder::EnsureValidDescriptor() const
 {
    // Reuse field name validity check
    auto validName = ROOT::Experimental::Internal::EnsureValidNameForRNTuple(fDescriptor.GetName(), "Field");
@@ -974,7 +973,7 @@ void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::SetFeature(unsigned
    fDescriptor.fFeatureFlags.insert(flag);
 }
 
-ROOT::Experimental::RResult<ROOT::Experimental::RColumnDescriptor>
+ROOT::RResult<ROOT::Experimental::RColumnDescriptor>
 ROOT::Experimental::Internal::RColumnDescriptorBuilder::MakeDescriptor() const
 {
    if (fColumn.GetLogicalId() == kInvalidDescriptorId)
@@ -1023,7 +1022,7 @@ ROOT::Experimental::Internal::RFieldDescriptorBuilder::FromField(const RFieldBas
    return fieldDesc;
 }
 
-ROOT::Experimental::RResult<ROOT::Experimental::RFieldDescriptor>
+ROOT::RResult<ROOT::Experimental::RFieldDescriptor>
 ROOT::Experimental::Internal::RFieldDescriptorBuilder::MakeDescriptor() const
 {
    if (fField.GetId() == kInvalidDescriptorId) {
@@ -1055,7 +1054,7 @@ void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddField(const RFie
    }
 }
 
-ROOT::Experimental::RResult<void>
+ROOT::RResult<void>
 ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId)
 {
    auto fieldExists = RResult<void>::Success();
@@ -1080,9 +1079,8 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddFieldLink(DescriptorI
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<void>
-ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddFieldProjection(DescriptorId_t sourceId,
-                                                                           DescriptorId_t targetId)
+ROOT::RResult<void> ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddFieldProjection(DescriptorId_t sourceId,
+                                                                                               DescriptorId_t targetId)
 {
    auto fieldExists = RResult<void>::Success();
    if (!(fieldExists = EnsureFieldExists(sourceId)))
@@ -1109,8 +1107,7 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddFieldProjection(Descr
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<void>
-ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&columnDesc)
+ROOT::RResult<void> ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&columnDesc)
 {
    const auto fieldId = columnDesc.GetFieldId();
    const auto columnIndex = columnDesc.GetIndex();
@@ -1164,7 +1161,7 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(RColumnDescrip
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<void>
+ROOT::RResult<void>
 ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddClusterGroup(RClusterGroupDescriptor &&clusterGroup)
 {
    const auto id = clusterGroup.GetId();
@@ -1216,8 +1213,7 @@ void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::ShiftAliasColumns(s
    }
 }
 
-ROOT::Experimental::RResult<void>
-ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddCluster(RClusterDescriptor &&clusterDesc)
+ROOT::RResult<void> ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddCluster(RClusterDescriptor &&clusterDesc)
 {
    auto clusterId = clusterDesc.GetId();
    if (fDescriptor.fClusterDescriptors.count(clusterId) > 0)
@@ -1226,7 +1222,7 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddCluster(RClusterDescr
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<void>
+ROOT::RResult<void>
 ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc)
 {
    // Make sure we have no duplicates

@@ -20,13 +20,13 @@ struct IsCollectionProxy<CyclicCollectionProxy> : std::true_type {
 
 TEST(RNTuple, TClass) {
    auto modelFail = RNTupleModel::Create();
-   EXPECT_THROW(modelFail->MakeField<RNoDictionary>("nodict"), ROOT::Experimental::RException);
+   EXPECT_THROW(modelFail->MakeField<RNoDictionary>("nodict"), ROOT::RException);
 
    auto model = RNTupleModel::Create();
    auto ptrKlass = model->MakeField<CustomStruct>("klass");
 
    // TDatime would be a supported class layout but it is blocked due to its custom streamer
-   EXPECT_THROW(model->MakeField<TDatime>("datime"), RException);
+   EXPECT_THROW(model->MakeField<TDatime>("datime"), ROOT::RException);
 
    FileRaii fileGuard("test_ntuple_tclass.root");
    auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
@@ -35,12 +35,12 @@ TEST(RNTuple, TClass) {
 TEST(RNTuple, CyclicClass)
 {
    auto modelFail = RNTupleModel::Create();
-   EXPECT_THROW(modelFail->MakeField<Cyclic>("cyclic"), ROOT::Experimental::RException);
+   EXPECT_THROW(modelFail->MakeField<Cyclic>("cyclic"), ROOT::RException);
 
    CyclicCollectionProxy ccp;
    auto cl = TClass::GetClass("CyclicCollectionProxy");
    cl->CopyCollectionProxy(ccp);
-   EXPECT_THROW(RFieldBase::Create("f", "CyclicCollectionProxy").Unwrap(), ROOT::Experimental::RException);
+   EXPECT_THROW(RFieldBase::Create("f", "CyclicCollectionProxy").Unwrap(), ROOT::RException);
 }
 
 TEST(RNTuple, DiamondInheritance)
@@ -50,7 +50,7 @@ TEST(RNTuple, DiamondInheritance)
    {
       auto model = RNTupleModel::Create();
       auto d = model->MakeField<DuplicateBaseD>("d");
-      EXPECT_THROW(model->MakeField<DiamondVirtualD>("vd"), RException);
+      EXPECT_THROW(model->MakeField<DiamondVirtualD>("vd"), ROOT::RException);
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       d->DuplicateBaseB::a = 1.0;
       d->DuplicateBaseC::a = 1.5;
@@ -75,7 +75,7 @@ TEST(RNTuple, DiamondInheritance)
 TEST(RTNuple, TObject)
 {
    // Ensure that TObject cannot be accidentally handled through the generic RClassField field
-   EXPECT_THROW(ROOT::Experimental::RClassField("obj", "TObject"), RException);
+   EXPECT_THROW(ROOT::Experimental::RClassField("obj", "TObject"), ROOT::RException);
 
    FileRaii fileGuard("test_ntuple_tobject.root");
    {
@@ -139,7 +139,7 @@ TEST(RTNuple, TObjectReferenced)
       writer->Fill();
 
       ptrObject->SetBit(TObject::kIsReferenced);
-      EXPECT_THROW(writer->Fill(), RException);
+      EXPECT_THROW(writer->Fill(), ROOT::RException);
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
@@ -149,7 +149,7 @@ TEST(RTNuple, TObjectReferenced)
    reader->LoadEntry(0);
    EXPECT_EQ(0u, ptrObject->GetUniqueID());
    ptrObject->SetBit(TObject::kIsReferenced);
-   EXPECT_THROW(reader->LoadEntry(0), RException);
+   EXPECT_THROW(reader->LoadEntry(0), ROOT::RException);
 }
 
 TEST(RTNuple, TObjectShow)

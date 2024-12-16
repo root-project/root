@@ -75,7 +75,7 @@ TEST(RNTupleChainProcessor, EmptySpec)
    try {
       auto proc = RNTupleProcessor::CreateChain(ntuples);
       FAIL() << "creating a processor without at least one RNTuple should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("at least one RNTuple must be provided"));
    }
 }
@@ -137,7 +137,7 @@ TEST_F(RNTupleChainProcessorTest, WithModel)
       try {
          entry.GetPtr<std::vector<float>>("y");
          FAIL() << "fields not specified by the provided model shoud not be part of the entry";
-      } catch (const RException &err) {
+      } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: y"));
       }
    }
@@ -160,7 +160,7 @@ TEST_F(RNTupleChainProcessorTest, WithBareModel)
       try {
          entry.GetPtr<float>("x");
          FAIL() << "fields not specified by the provided model shoud not be part of the entry";
-      } catch (const RException &err) {
+      } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: x"));
       }
    }
@@ -182,7 +182,7 @@ TEST_F(RNTupleChainProcessorTest, MissingFields)
    try {
       entry++;
       FAIL() << "having missing fields in subsequent ntuples should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field \"y\" not found in current RNTuple"));
    }
 }
@@ -204,7 +204,7 @@ TEST_F(RNTupleChainProcessorTest, EmptyNTuples)
    try {
       auto proc = RNTupleProcessor::CreateChain(ntuples);
       FAIL() << "creating a processor where the first RNTuple does not contain any entries should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("first RNTuple does not contain any entries"));
    }
 

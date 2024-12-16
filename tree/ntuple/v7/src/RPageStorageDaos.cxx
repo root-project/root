@@ -103,7 +103,7 @@ RDaosURI ParseDaosURI(std::string_view uri)
    std::regex re("daos://([^/]+)/(.+)");
    std::cmatch m;
    if (!std::regex_match(uri.data(), m, re))
-      throw ROOT::Experimental::RException(R__FAIL("Invalid DAOS pool URI."));
+      throw ROOT::RException(R__FAIL("Invalid DAOS pool URI."));
    return {m[1], m[2]};
 }
 
@@ -171,8 +171,7 @@ struct RDaosContainerNTupleLocator {
 
       anchor.Deserialize(buffer.get(), anchorSize).Unwrap();
       if (anchor.fVersionEpoch != ROOT::RNTuple::kVersionEpoch) {
-         throw ROOT::Experimental::RException(
-            R__FAIL("unsupported RNTuple epoch version: " + std::to_string(anchor.fVersionEpoch)));
+         throw ROOT::RException(R__FAIL("unsupported RNTuple epoch version: " + std::to_string(anchor.fVersionEpoch)));
       }
 
       builder.SetOnDiskHeaderSize(anchor.fNBytesHeader);
@@ -210,7 +209,7 @@ struct RDaosContainerNTupleLocator {
       if (int err = loc.InitNTupleDescriptorBuilder(cont, builder); !err) {
          if (ntupleName.empty() || ntupleName != builder.GetDescriptor().GetName()) {
             // Hash already taken by a differently-named ntuple.
-            throw ROOT::Experimental::RException(
+            throw ROOT::RException(
                R__FAIL("LocateNTuple: ntuple name '" + ntupleName + "' unavailable in this container."));
          }
       }
@@ -241,7 +240,7 @@ std::uint32_t ROOT::Experimental::Internal::RDaosNTupleAnchor::Serialize(void *b
    return RNTupleSerializer::SerializeString(fObjClass, nullptr) + 32;
 }
 
-ROOT::Experimental::RResult<std::uint32_t>
+ROOT::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RDaosNTupleAnchor::Deserialize(const void *buffer, std::uint32_t bufSize)
 {
    if (bufSize < 32)
@@ -296,7 +295,7 @@ void ROOT::Experimental::Internal::RPageSinkDaos::InitImpl(unsigned char *serial
    fNTupleAnchor.fObjClass = opts ? opts->GetObjectClass() : RNTupleWriteOptionsDaos().GetObjectClass();
    auto oclass = RDaosObject::ObjClassId(fNTupleAnchor.fObjClass);
    if (oclass.IsUnknown())
-      throw ROOT::Experimental::RException(R__FAIL("Unknown object class " + fNTupleAnchor.fObjClass));
+      throw ROOT::RException(R__FAIL("Unknown object class " + fNTupleAnchor.fObjClass));
 
    size_t cageSz = opts ? opts->GetMaxCageSize() : RNTupleWriteOptionsDaos().GetMaxCageSize();
    size_t pageSz = opts ? opts->GetMaxUnzippedPageSize() : RNTupleWriteOptionsDaos().GetMaxUnzippedPageSize();
@@ -414,7 +413,7 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPa
    {
       Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
       if (int err = fDaosContainer->WriteV(writeRequests))
-         throw ROOT::Experimental::RException(R__FAIL("WriteV: error" + std::string(d_errstr(err))));
+         throw ROOT::RException(R__FAIL("WriteV: error" + std::string(d_errstr(err))));
    }
 
    fCounters->fNPageCommitted.Add(nPages);
@@ -511,12 +510,12 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceD
 
    auto [locator, descBuilder] = RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName);
    if (!locator.IsValid())
-      throw ROOT::Experimental::RException(
+      throw ROOT::RException(
          R__FAIL("Attach: requested ntuple '" + fNTupleName + "' is not present in DAOS container."));
 
    auto oclass = RDaosObject::ObjClassId(locator.fAnchor->fObjClass);
    if (oclass.IsUnknown())
-      throw ROOT::Experimental::RException(R__FAIL("Attach: unknown object class " + locator.fAnchor->fObjClass));
+      throw ROOT::RException(R__FAIL("Attach: unknown object class " + locator.fAnchor->fObjClass));
 
    fDaosContainer->SetDefaultObjectClass(oclass);
    fNTupleIndex = locator.GetIndex();
@@ -618,8 +617,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t colum
 
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
       if (pageInfo.fLocator.fReserved & EDaosLocatorFlags::kCagedPage) {
-         throw ROOT::Experimental::RException(
-            R__FAIL("accessing caged pages is only supported in conjunction with cluster cache"));
+         throw ROOT::RException(R__FAIL("accessing caged pages is only supported in conjunction with cluster cache"));
       }
 
       directReadBuffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
@@ -760,7 +758,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
    {
       Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
       if (int err = fDaosContainer->ReadV(readRequests))
-         throw ROOT::Experimental::RException(R__FAIL("ReadV: error" + std::string(d_errstr(err))));
+         throw ROOT::RException(R__FAIL("ReadV: error" + std::string(d_errstr(err))));
    }
    fCounters->fNReadV.Inc();
    fCounters->fNRead.Add(readRequests.size());

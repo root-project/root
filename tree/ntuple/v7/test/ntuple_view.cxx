@@ -232,25 +232,25 @@ TEST(RNTuple, MissingViewNames)
    try {
       auto badView = ntuple->GetView<float>("pT");
       FAIL() << "missing field names should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'pT' in RNTuple 'myNTuple'"));
    }
    try {
       auto badView = ntuple->GetCollectionView("Moun");
       FAIL() << "missing field names should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'Moun' in RNTuple 'myNTuple'"));
    }
    try {
       auto badView = viewMuon.GetView<float>("badField");
       FAIL() << "missing field names should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badField' in collection 'Muon'"));
    }
    try {
       auto badView = viewMuon.GetCollectionView("badC");
       FAIL() << "missing field names should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badC' in collection 'Muon'"));
    }
 }
@@ -487,7 +487,7 @@ TEST(RNTuple, ViewOutOfBounds)
       auto viewJets = reader->GetView<std::int32_t>("foo");
       viewJets(3);
       FAIL() << "accessing an out-of-bounds entry with a view should throw";
-   } catch (const RException &ex) {
+   } catch (const ROOT::RException &ex) {
       EXPECT_THAT(ex.what(), testing::HasSubstr("out of bounds"));
    }
 }
@@ -529,7 +529,7 @@ TEST(RNTuple, ViewFieldIteration)
    try {
       viewEmpty.GetFieldRange();
       FAIL() << "accessing the field range of a view on an empty field should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field iteration over empty fields is unsupported"));
    }
 }

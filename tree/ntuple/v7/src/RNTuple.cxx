@@ -34,11 +34,11 @@ void ROOT::RNTuple::Streamer(TBuffer &buf)
 
       std::uint64_t onDiskChecksum;
       if (static_cast<std::size_t>(buf.BufferSize()) < buf.Length() + sizeof(onDiskChecksum))
-         throw Experimental::RException(R__FAIL("the buffer containing RNTuple is too small to contain the checksum!"));
+         throw RException(R__FAIL("the buffer containing RNTuple is too small to contain the checksum!"));
       buf >> onDiskChecksum;
 
       if (expectedChecksum != onDiskChecksum)
-         throw Experimental::RException(R__FAIL("checksum mismatch in RNTuple anchor"));
+         throw RException(R__FAIL("checksum mismatch in RNTuple anchor"));
 
       R__ASSERT(buf.GetParent() && buf.GetParent()->InheritsFrom("TFile"));
       fFile = static_cast<TFile *>(buf.GetParent());

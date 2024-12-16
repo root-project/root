@@ -83,7 +83,7 @@ TEST(RNTupleProjection, CatchInvalidMappings)
    try {
       model->AddProjectedField(std::move(f1), [](const std::string &) { return "na"; }).ThrowOnError();
       FAIL() << "mapping to unknown field should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no such field"));
    }
 
@@ -99,7 +99,7 @@ TEST(RNTupleProjection, CatchInvalidMappings)
                              })
          .ThrowOnError();
       FAIL() << "mapping to unknown field should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no such field"));
    }
 
@@ -107,7 +107,7 @@ TEST(RNTupleProjection, CatchInvalidMappings)
    try {
       model->AddProjectedField(std::move(f3), [](const std::string &) { return "met"; }).ThrowOnError();
       FAIL() << "mapping with structural mismatch should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field mapping structural mismatch"));
    }
 
@@ -115,7 +115,7 @@ TEST(RNTupleProjection, CatchInvalidMappings)
    try {
       model->AddProjectedField(std::move(f4), [](const std::string &) { return "met"; }).ThrowOnError();
       FAIL() << "mapping without matching type should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field mapping type mismatch"));
    }
 
@@ -132,7 +132,7 @@ TEST(RNTupleProjection, CatchInvalidMappings)
                              })
          .ThrowOnError();
       FAIL() << "mapping of variant should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("unsupported field mapping "));
    }
 
@@ -140,7 +140,7 @@ TEST(RNTupleProjection, CatchInvalidMappings)
    try {
       model->AddProjectedField(std::move(f6), [](const std::string &) { return "lorentz._0"; }).ThrowOnError();
       FAIL() << "mapping across fixed-size array should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("unsupported field mapping "));
    }
 
@@ -155,7 +155,7 @@ TEST(RNTupleProjection, CatchInvalidMappings)
                              })
          .ThrowOnError();
       FAIL() << "mapping scrambling the source structure should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field mapping structure mismatch"));
    }
 }
@@ -179,7 +179,7 @@ TEST(RNTupleProjection, CatchReaderWithProjectedFields)
    try {
       auto reader = RNTupleReader::Open(std::move(modelRead), "A", fileGuard.GetPath());
       FAIL() << "creating a reader with a model with projected fields should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("model has projected fields"));
    }
 }

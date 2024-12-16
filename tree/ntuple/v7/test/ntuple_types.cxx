@@ -153,9 +153,9 @@ TEST(RNTuple, ArrayField)
    EXPECT_EQ((10 * sizeof(std::vector<float[3]>)), otherField->GetValueSize());
 
    // Malformed type names
-   EXPECT_THROW(RFieldBase::Create("test", "unsigned int[]").Unwrap(), ROOT::Experimental::RException);
-   EXPECT_THROW(RFieldBase::Create("test", "unsigned int [[2").Unwrap(), ROOT::Experimental::RException);
-   EXPECT_THROW(RFieldBase::Create("test", "unsigned[2] int[10").Unwrap(), ROOT::Experimental::RException);
+   EXPECT_THROW(RFieldBase::Create("test", "unsigned int[]").Unwrap(), ROOT::RException);
+   EXPECT_THROW(RFieldBase::Create("test", "unsigned int [[2").Unwrap(), ROOT::RException);
+   EXPECT_THROW(RFieldBase::Create("test", "unsigned[2] int[10").Unwrap(), ROOT::RException);
 
    unsigned char charArray[] = {0x00, 0x01, 0x02, 0x03};
 
@@ -603,13 +603,13 @@ TEST(RNTuple, StdMap)
    auto mapMapField = RField<std::map<char, std::map<int, CustomStruct>>>("mapMapField");
    EXPECT_STREQ("std::map<char,std::map<std::int32_t,CustomStruct>>", mapMapField.GetTypeName().c_str());
 
-   EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::map<char>").Unwrap(), RException);
-   EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::map<char, std::string, int>").Unwrap(), RException);
+   EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::map<char>").Unwrap(), ROOT::RException);
+   EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::map<char, std::string, int>").Unwrap(), ROOT::RException);
 
    auto invalidInnerField = RFieldBase::Create("someIntField", "int").Unwrap();
    EXPECT_THROW(std::make_unique<ROOT::Experimental::RMapField>("myInvalidMap", "std::map<char, int>",
                                                                 std::move(invalidInnerField)),
-                RException);
+                ROOT::RException);
 
    FileRaii fileGuard("test_ntuple_rfield_stdmap.root");
    {
@@ -697,8 +697,9 @@ TEST(RNTuple, StdUnorderedMap)
    EXPECT_LE((alignof(std::unordered_map<char, int64_t>)), field.GetAlignment());
    EXPECT_LE((alignof(std::unordered_map<char, int64_t>)), otherField->GetAlignment());
 
-   EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::unordered_map<char>").Unwrap(), RException);
-   EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::unordered_map<char, std::string, int>").Unwrap(), RException);
+   EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::unordered_map<char>").Unwrap(), ROOT::RException);
+   EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::unordered_map<char, std::string, int>").Unwrap(),
+                ROOT::RException);
 
    FileRaii fileGuard("test_ntuple_rfield_stdunorderedmap.root");
    {
@@ -1643,13 +1644,13 @@ TEST(RNTuple, UnsupportedStdTypes)
    try {
       auto field = RField<std::weak_ptr<int>>("myWeakPtr");
       FAIL() << "should not be able to make a std::weak_ptr field";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<int> is not supported"));
    }
    try {
       auto field = RField<std::vector<std::weak_ptr<int>>>("weak_ptr_vec");
       FAIL() << "should not be able to make a std::vector<std::weak_ptr> field";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<int> is not supported"));
    }
 }
@@ -1666,7 +1667,7 @@ TEST(RNTuple, Casting)
    fldF->SetColumnRepresentatives({{EColumnType::kReal32}});
    try {
       fldF->SetColumnRepresentatives({{EColumnType::kBit}});
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid column representative"));
    }
 
@@ -1688,7 +1689,7 @@ TEST(RNTuple, Casting)
       model->AddField(std::move(f));
       auto reader = RNTupleReader::Open(std::move(model), "ntuple", fileGuard.GetPath());
       FAIL() << "should not be able fix column representation when model is connected to a page source";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(),
                   testing::HasSubstr("fixed column representative only valid when connecting to a page sink"));
    }
@@ -1698,7 +1699,7 @@ TEST(RNTuple, Casting)
       auto fieldCast = modelB->MakeField<float>("i1");
       auto reader = RNTupleReader::Open(std::move(modelB), "ntuple", fileGuard.GetPath());
       FAIL() << "should not be able to cast int to float";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("On-disk column types"));
       EXPECT_THAT(err.what(), testing::HasSubstr("cannot be matched"));
    }
@@ -1917,7 +1918,7 @@ TEST(RNTuple, TClass)
       try {
          auto viewKlass = ntuple->GetView<DerivedA>("klass");
          FAIL() << "GetView<a_base_class_of_T> should throw";
-      } catch (const RException& err) {
+      } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
       }
    }
@@ -2093,8 +2094,7 @@ TEST(RNTuple, TVirtualCollectionProxy)
    SimpleCollectionProxy<StructUsingCollectionProxy<StructUsingCollectionProxy<float>>> proxyNested;
 
    // `RProxiedCollectionField` instantiated but no collection proxy set (yet)
-   EXPECT_THROW(RField<StructUsingCollectionProxy<float>>("hasTraitButNoCollectionProxySet"),
-                ROOT::Experimental::RException);
+   EXPECT_THROW(RField<StructUsingCollectionProxy<float>>("hasTraitButNoCollectionProxySet"), ROOT::RException);
 
    auto klassC = TClass::GetClass("StructUsingCollectionProxy<char>");
    klassC->CopyCollectionProxy(proxyC);
@@ -2109,8 +2109,7 @@ TEST(RNTuple, TVirtualCollectionProxy)
    // set
    auto klassI = TClass::GetClass("StructUsingCollectionProxy<int>");
    klassI->CopyCollectionProxy(SimpleCollectionProxy<StructUsingCollectionProxy<int>>{});
-   EXPECT_THROW(RField<StructUsingCollectionProxy<int>>("noTraitButCollectionProxySet"),
-                ROOT::Experimental::RException);
+   EXPECT_THROW(RField<StructUsingCollectionProxy<int>>("noTraitButCollectionProxySet"), ROOT::RException);
 
    auto field = RField<StructUsingCollectionProxy<float>>("c");
    EXPECT_EQ(sizeof(StructUsingCollectionProxy<float>), field.GetValueSize());

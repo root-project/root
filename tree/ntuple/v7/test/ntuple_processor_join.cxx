@@ -87,7 +87,7 @@ TEST_F(RNTupleJoinProcessorTest, Basic)
    try {
       auto proc = RNTupleProcessor::CreateJoin(ntuples, {});
       FAIL() << "creating a processor without at least one RNTuple should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("at least one RNTuple must be provided"));
    }
 
@@ -112,7 +112,7 @@ TEST_F(RNTupleJoinProcessorTest, Aligned)
       std::vector<RNTupleOpenSpec> ntuples = {{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[0], fFileNames[0]}};
       auto proc = RNTupleProcessor::CreateJoin(ntuples, {});
       FAIL() << "ntuples with the same name cannot be joined horizontally";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("horizontal joining of RNTuples with the same name is not allowed"));
    }
 
@@ -182,14 +182,14 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
    try {
       RNTupleProcessor::CreateJoin(ntuples, {"i", "j", "k", "l", "m"});
       FAIL() << "trying to create a join processor with more than four join fields should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("a maximum of four join fields is allowed"));
    }
 
    try {
       RNTupleProcessor::CreateJoin(ntuples, {"i", "i"});
       FAIL() << "trying to create a join processor with duplicate join fields should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("join fields must be unique"));
    }
 
@@ -197,7 +197,7 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
       std::vector<RNTupleOpenSpec> unfitNTuples = {{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}};
       RNTupleProcessor::CreateJoin(unfitNTuples, {"i", "j", "k"});
       FAIL() << "trying to create a join processor where not all join fields are present should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("could not find join field \"j\" in RNTuple \"ntuple2\""));
    }
 
@@ -286,7 +286,7 @@ TEST_F(RNTupleJoinProcessorTest, WithModel)
       try {
          entry.GetPtr<float>("ntuple2.z");
          FAIL() << "should not be able to access values from fields not present in the provided models";
-      } catch (const RException &err) {
+      } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: ntuple2.z"));
       }
    }

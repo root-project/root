@@ -24,7 +24,7 @@ TEST(RNTupleCompat, Epoch)
    try {
       pageSource->Attach();
       FAIL() << "opening an RNTuple with different epoch version should fail";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("unsupported RNTuple epoch version"));
    }
 }
@@ -62,7 +62,7 @@ TEST(RNTupleCompat, FeatureFlag)
    try {
       pageSource->Attach();
       FAIL() << "opening an RNTuple that uses an unsupported feature should fail";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("unsupported format feature: 137"));
    }
 }
@@ -200,7 +200,7 @@ TEST(RNTupleCompat, FutureColumnType)
 
    {
       // Creating a model not in fwd-compatible mode should fail
-      EXPECT_THROW(desc.CreateModel(), RException);
+      EXPECT_THROW(desc.CreateModel(), ROOT::RException);
    }
 
    {
@@ -209,7 +209,7 @@ TEST(RNTupleCompat, FutureColumnType)
       auto model = desc.CreateModel(modelOpts);
 
       // The future column should not show up in the model
-      EXPECT_THROW(model->GetConstField("futureColumn"), RException);
+      EXPECT_THROW(model->GetConstField("futureColumn"), ROOT::RException);
 
       const auto &floatFld = model->GetConstField("float");
       EXPECT_EQ(floatFld.GetTypeName(), "float");
@@ -252,7 +252,7 @@ TEST(RNTupleCompat, FutureColumnType_Nested)
 
    {
       // Creating a model not in fwd-compatible mode should fail
-      EXPECT_THROW(desc.CreateModel(), RException);
+      EXPECT_THROW(desc.CreateModel(), ROOT::RException);
    }
 
    {
@@ -261,7 +261,7 @@ TEST(RNTupleCompat, FutureColumnType_Nested)
       auto model = desc.CreateModel(modelOpts);
 
       // The future column should not show up in the model
-      EXPECT_THROW(model->GetConstField("future"), RException);
+      EXPECT_THROW(model->GetConstField("future"), ROOT::RException);
 
       const auto &floatFld = model->GetConstField("float");
       EXPECT_EQ(floatFld.GetTypeName(), "float");
@@ -314,7 +314,7 @@ TEST(RNTupleCompat, FutureFieldStructuralRole)
    EXPECT_EQ(fdesc.GetLogicalColumnIds().size(), 0);
 
    // Attempting to create a model with default options should fail
-   EXPECT_THROW(desc.CreateModel(), RException);
+   EXPECT_THROW(desc.CreateModel(), ROOT::RException);
 
    auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
    modelOpts.fForwardCompatible = true;
@@ -322,7 +322,7 @@ TEST(RNTupleCompat, FutureFieldStructuralRole)
    try {
       model->GetConstField("future");
       FAIL() << "trying to get a field with unknown role should fail";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
    }
 }
@@ -351,7 +351,7 @@ TEST(RNTupleCompat, FutureFieldStructuralRole_Nested)
    EXPECT_EQ(fdesc.GetLogicalColumnIds().size(), 0);
 
    // Attempting to create a model with default options should fail
-   EXPECT_THROW(desc.CreateModel(), RException);
+   EXPECT_THROW(desc.CreateModel(), ROOT::RException);
 
    auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
    modelOpts.fForwardCompatible = true;
@@ -361,7 +361,7 @@ TEST(RNTupleCompat, FutureFieldStructuralRole_Nested)
    try {
       model->GetConstField("record");
       FAIL() << "trying to get a field with unknown role should fail";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
    }
 }
@@ -420,7 +420,7 @@ TEST(RNTupleCompat, UnknownLocatorType)
    try {
       reader->LoadEntry(0);
       FAIL() << "trying to read a field with an unknown locator should fail";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("tried to read a page with an unknown locator"));
    }
 }

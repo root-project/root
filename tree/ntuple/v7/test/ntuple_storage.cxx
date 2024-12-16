@@ -98,7 +98,7 @@ TEST(RNTuple, Basics)
    try {
       ntuple->LoadEntry(3);
       FAIL() << "loading a non-existing entry should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("entry with index 3 out of bounds"));
    }
 }
@@ -147,32 +147,32 @@ TEST(RNTuple, InvalidWriteOptions)
    try {
       options.SetInitialUnzippedPageSize(0);
       FAIL() << "should not allow zero initial page size";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("initial page size"));
    }
    try {
       options.SetMaxUnzippedPageSize(0);
       FAIL() << "should not allow zero-sized page";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("maximum page size"));
    }
    try {
       options.SetMaxUnzippedPageSize(10);
       FAIL() << "should not allow undersized pages";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("must not be larger than"));
    }
    try {
       options.SetMaxUnzippedClusterSize(40);
       FAIL() << "should not allow undersized cluster";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("must not be larger than"));
    }
    options.SetApproxZippedClusterSize(5);
    try {
       options.SetMaxUnzippedClusterSize(7);
       FAIL() << "should not allow undersized cluster";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("must not be larger than"));
    }
 
@@ -184,7 +184,7 @@ TEST(RNTuple, InvalidWriteOptions)
    try {
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
       FAIL() << "should not allow undersized pages";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too small for at least one element"));
    }
    options.SetApproxZippedClusterSize(10 * 1000 * 1000);
@@ -333,7 +333,7 @@ TEST(RNTuple, WritePageBudgetLimit)
    try {
       RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
       FAIL() << "too small page buffer budget should fail";
-   } catch (const RException &e) {
+   } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), testing::HasSubstr("page buffer memory budget too small"));
    }
 

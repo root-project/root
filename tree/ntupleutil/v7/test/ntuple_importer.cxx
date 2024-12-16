@@ -27,12 +27,12 @@ TEST(RNTupleImporter, Empty)
 
    auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
    importer->SetIsQuiet(true);
-   EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
+   EXPECT_THROW(importer->Import(), ROOT::RException);
    importer->SetNTupleName("ntuple");
    importer->Import();
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(0U, reader->GetNEntries());
-   EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
+   EXPECT_THROW(importer->Import(), ROOT::RException);
 }
 
 TEST(RNTupleImporter, CreateFromTree)
@@ -49,12 +49,12 @@ TEST(RNTupleImporter, CreateFromTree)
 
    auto importer = RNTupleImporter::Create(tree, fileGuard.GetPath());
    importer->SetIsQuiet(true);
-   EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
+   EXPECT_THROW(importer->Import(), ROOT::RException);
    importer->SetNTupleName("ntuple");
    importer->Import();
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(0U, reader->GetNEntries());
-   EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
+   EXPECT_THROW(importer->Import(), ROOT::RException);
 }
 
 TEST(RNTupleImporter, CreateFromChain)
@@ -91,7 +91,7 @@ TEST(RNTupleImporter, CreateFromChain)
 
    auto importer1 = RNTupleImporter::Create(namedChain, chainFileGuard.GetPath());
    importer1->SetIsQuiet(true);
-   EXPECT_THROW(importer1->Import(), ROOT::Experimental::RException);
+   EXPECT_THROW(importer1->Import(), ROOT::RException);
    importer1->SetNTupleName("ntuple");
    importer1->Import();
 
@@ -102,7 +102,7 @@ TEST(RNTupleImporter, CreateFromChain)
    EXPECT_EQ(42, viewA(0));
    EXPECT_EQ(43, viewA(1));
 
-   EXPECT_THROW(importer1->Import(), ROOT::Experimental::RException);
+   EXPECT_THROW(importer1->Import(), ROOT::RException);
 
    TChain unnamedChain;
    unnamedChain.Add((treeFileGuard.GetPath() + "?#tree1").c_str());
@@ -215,7 +215,7 @@ TEST(RNTupleImporter, ConvertDotsInBranchNames)
    importer->SetIsQuiet(true);
    importer->SetNTupleName("ntuple");
 
-   EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
+   EXPECT_THROW(importer->Import(), ROOT::RException);
 
    importer->SetConvertDotsInBranchNames(true);
    importer->Import();

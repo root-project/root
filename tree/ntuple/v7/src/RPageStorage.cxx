@@ -59,8 +59,7 @@ void ROOT::Experimental::Internal::RPageStorage::RSealedPage::ChecksumIfEnabled(
    RNTupleSerializer::SerializeXxHash3(charBuf, GetDataSize(), xxhash3, checksumBuf);
 }
 
-ROOT::Experimental::RResult<void>
-ROOT::Experimental::Internal::RPageStorage::RSealedPage::VerifyChecksumIfEnabled() const
+ROOT::RResult<void> ROOT::Experimental::Internal::RPageStorage::RSealedPage::VerifyChecksumIfEnabled() const
 {
    if (!fHasChecksum)
       return RResult<void>::Success();
@@ -71,7 +70,7 @@ ROOT::Experimental::Internal::RPageStorage::RSealedPage::VerifyChecksumIfEnabled
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<std::uint64_t> ROOT::Experimental::Internal::RPageStorage::RSealedPage::GetChecksum() const
+ROOT::RResult<std::uint64_t> ROOT::Experimental::Internal::RPageStorage::RSealedPage::GetChecksum() const
 {
    if (!fHasChecksum)
       return R__FAIL("invalid attempt to extract non-existing page checksum");
@@ -525,13 +524,13 @@ void ROOT::Experimental::Internal::RPageSource::EnableDefaultMetrics(const std::
          })});
 }
 
-ROOT::Experimental::RResult<ROOT::Experimental::Internal::RPage>
+ROOT::RResult<ROOT::Experimental::Internal::RPage>
 ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element)
 {
    return UnsealPage(sealedPage, element, *fPageAllocator);
 }
 
-ROOT::Experimental::RResult<ROOT::Experimental::Internal::RPage>
+ROOT::RResult<ROOT::Experimental::Internal::RPage>
 ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element,
                                                       RPageAllocator &pageAlloc)
 {

@@ -69,7 +69,7 @@ public:
    {
       if (std::find(fCreateContext.fClassesOnStack.begin(), fCreateContext.fClassesOnStack.end(), cl) !=
           fCreateContext.fClassesOnStack.end()) {
-         throw ROOT::Experimental::RException(R__FAIL("cyclic class definition: " + cl));
+         throw ROOT::RException(R__FAIL("cyclic class definition: " + cl));
       }
       fCreateContext.fClassesOnStack.emplace_back(cl);
    }
@@ -263,7 +263,7 @@ std::string ROOT::Experimental::RFieldBase::GetQualifiedFieldName() const
    return result;
 }
 
-ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
+ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
 ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
 {
    auto typeAlias = Internal::GetNormalizedTypeName(typeName);
@@ -292,7 +292,7 @@ ROOT::Experimental::RFieldBase::Check(const std::string &fieldName, const std::s
    return result;
 }
 
-ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
+ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
 ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &canonicalType,
                                        const std::string &typeAlias, bool continueOnError)
 {

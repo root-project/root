@@ -18,8 +18,8 @@ TEST(RNTupleChecksum, VerifyOnRead)
       auto viewPx = reader->GetView<float>("px");
       auto viewPy = reader->GetView<float>("py");
       auto viewPz = reader->GetView<float>("pz");
-      EXPECT_THROW(viewPx(0), RException);
-      EXPECT_THROW(viewPy(0), RException);
+      EXPECT_THROW(viewPx(0), ROOT::RException);
+      EXPECT_THROW(viewPy(0), ROOT::RException);
       EXPECT_FLOAT_EQ(3.0, viewPz(0));
    }
 }
@@ -44,7 +44,7 @@ TEST(RNTupleChecksum, VerifyOnReadImt)
    try {
       viewPz(0);
       FAIL() << "now even reading pz should fail because pages are unsealed in parallel";
-   } catch (const RException &e) {
+   } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), testing::HasSubstr("page checksum"));
    }
 }
@@ -80,8 +80,8 @@ TEST(RNTupleChecksum, VerifyOnLoad)
    // no exception
    pageSource->LoadSealedPage(pzColId, index, sealedPage);
 
-   EXPECT_THROW(pageSource->LoadSealedPage(pxColId, index, sealedPage), RException);
-   EXPECT_THROW(pageSource->LoadSealedPage(pyColId, index, sealedPage), RException);
+   EXPECT_THROW(pageSource->LoadSealedPage(pxColId, index, sealedPage), ROOT::RException);
+   EXPECT_THROW(pageSource->LoadSealedPage(pyColId, index, sealedPage), ROOT::RException);
 }
 
 TEST(RNTupleChecksum, OmitPageChecksum)
@@ -151,7 +151,7 @@ TEST(RNTupleChecksum, Merge)
    try {
       merger.Merge(sourcePtrs, *destination);
       FAIL() << "merging should fail due to checksum error";
-   } catch (const RException &e) {
+   } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), testing::HasSubstr("page checksum"));
    }
 }

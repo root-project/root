@@ -230,12 +230,12 @@ private:
    /// The list of transformations to be performed for every entry
    std::vector<std::unique_ptr<RImportTransformation>> fImportTransformations;
 
-   ROOT::Experimental::RResult<void> InitDestination(std::string_view destFileName);
+   ROOT::RResult<void> InitDestination(std::string_view destFileName);
 
    void ResetSchema();
    /// Sets up the connection from TTree branches to RNTuple fields, including initialization of the memory
    /// buffers used for reading and writing.
-   RResult<void> PrepareSchema();
+   ROOT::RResult<void> PrepareSchema();
    void ReportSchema();
 
 public:

@@ -75,7 +75,7 @@ TEST(RNTuple, VariantLimits)
       "             char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,"
       "             char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,"
       "             char,char,char,char,char,char,char,char,char,char,char,char,char,char>"),
-      RException);
+      ROOT::RException);
 
    using HugeVariant_t =
       std::variant<char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,

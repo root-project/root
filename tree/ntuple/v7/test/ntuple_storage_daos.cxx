@@ -78,7 +78,7 @@ TEST_F(RPageStorageDaos, Basics)
    try {
       ntuple->LoadEntry(3);
       FAIL() << "loading a non-existing entry should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("entry with index 3 out of bounds"));
    }
 }
@@ -137,7 +137,7 @@ TEST_F(RPageStorageDaos, Options)
       try {
          auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, daosUri, options);
          FAIL() << "unknown object class should throw";
-      } catch (const RException &err) {
+      } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("UNKNOWN"));
       }
    }
@@ -216,7 +216,7 @@ TEST_F(RPageStorageDaos, MultipleNTuplesPerContainer)
    }
 
    // Nonexistent ntuple
-   EXPECT_THROW(RNTupleReader::Open("ntuple3", daosUri), ROOT::Experimental::RException);
+   EXPECT_THROW(RNTupleReader::Open("ntuple3", daosUri), ROOT::RException);
 }
 
 TEST_F(RPageStorageDaos, DisabledSamePageMerging)
@@ -304,7 +304,7 @@ TEST_F(RPageStorageDaos, CagedPages)
       options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOff);
       auto ntuple = RNTupleReader::Open(ntupleName, daosUri, options);
       // Attempt to read a caged page data when cluster cache is disabled.
-      EXPECT_THROW(ntuple->LoadEntry(1), ROOT::Experimental::RException);
+      EXPECT_THROW(ntuple->LoadEntry(1), ROOT::RException);
 
       // However, loading a single sealed page should work
       auto pageSource = RPageSource::Create(ntupleName, daosUri, options);
@@ -345,7 +345,7 @@ TEST_F(RPageStorageDaos, Checksum)
       auto viewPx = reader->GetView<float>("px");
       auto viewPy = reader->GetView<float>("py");
       auto viewPz = reader->GetView<float>("pz");
-      EXPECT_THROW(viewPz(0), RException); // we run under IMT, even the valid column should fail
+      EXPECT_THROW(viewPz(0), ROOT::RException); // we run under IMT, even the valid column should fail
    }
 
    auto reader = RNTupleReader::Open("ntpl", daosUri);
@@ -354,8 +354,8 @@ TEST_F(RPageStorageDaos, Checksum)
    auto viewPx = reader->GetView<float>("px");
    auto viewPy = reader->GetView<float>("py");
    auto viewPz = reader->GetView<float>("pz");
-   EXPECT_THROW(viewPx(0), RException);
-   EXPECT_THROW(viewPy(0), RException);
+   EXPECT_THROW(viewPx(0), ROOT::RException);
+   EXPECT_THROW(viewPy(0), ROOT::RException);
    EXPECT_FLOAT_EQ(3.0, viewPz(0));
 
    DescriptorId_t pxColId;
@@ -375,7 +375,7 @@ TEST_F(RPageStorageDaos, Checksum)
    constexpr std::size_t bufSize = 12;
    unsigned char buffer[bufSize];
    sealedPage.SetBuffer(buffer);
-   EXPECT_THROW(pageSource->LoadSealedPage(pxColId, index, sealedPage), RException);
-   EXPECT_THROW(pageSource->LoadSealedPage(pyColId, index, sealedPage), RException);
+   EXPECT_THROW(pageSource->LoadSealedPage(pxColId, index, sealedPage), ROOT::RException);
+   EXPECT_THROW(pageSource->LoadSealedPage(pyColId, index, sealedPage), ROOT::RException);
 }
 #endif

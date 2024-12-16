@@ -23,26 +23,25 @@ namespace {
 void EnsureValidTunables(std::size_t zippedClusterSize, std::size_t unzippedClusterSize,
                          std::size_t initialUnzippedPageSize, std::size_t maxUnzippedPageSize)
 {
-   using RException = ROOT::Experimental::RException;
    if (zippedClusterSize == 0) {
-      throw RException(R__FAIL("invalid target cluster size: 0"));
+      throw ROOT::RException(R__FAIL("invalid target cluster size: 0"));
    }
    if (initialUnzippedPageSize == 0) {
-      throw RException(R__FAIL("invalid initial page size: 0"));
+      throw ROOT::RException(R__FAIL("invalid initial page size: 0"));
    }
    if (maxUnzippedPageSize == 0) {
-      throw RException(R__FAIL("invalid maximum page size: 0"));
+      throw ROOT::RException(R__FAIL("invalid maximum page size: 0"));
    }
    if (zippedClusterSize > unzippedClusterSize) {
-      throw RException(R__FAIL("compressed target cluster size must not be larger than "
-                               "maximum uncompressed cluster size"));
+      throw ROOT::RException(R__FAIL("compressed target cluster size must not be larger than "
+                                     "maximum uncompressed cluster size"));
    }
    if (initialUnzippedPageSize > maxUnzippedPageSize) {
-      throw RException(R__FAIL("initial page size must not be larger than maximum page size"));
+      throw ROOT::RException(R__FAIL("initial page size must not be larger than maximum page size"));
    }
    if (maxUnzippedPageSize > unzippedClusterSize) {
-      throw RException(R__FAIL("maximum page size must not be larger than "
-                               "maximum uncompressed cluster size"));
+      throw ROOT::RException(R__FAIL("maximum page size must not be larger than "
+                                     "maximum uncompressed cluster size"));
    }
 }
 
