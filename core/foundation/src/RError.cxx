@@ -24,7 +24,7 @@ std::string ROOT::RError::GetReport() const
    auto report = fMessage + "\nAt:\n";
    for (const auto &loc : fStackTrace) {
       report += "  " + std::string(loc.fFunction) + " [" + std::string(loc.fSourceFile) + ":" +
-         std::to_string(loc.fSourceLine) + "]\n";
+                std::to_string(loc.fSourceLine) + "]\n";
    }
    return report;
 }

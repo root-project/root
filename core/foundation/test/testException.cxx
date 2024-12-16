@@ -16,8 +16,8 @@ struct ComplexReturnType {
    ComplexReturnType() { gNCopies++; }
    ComplexReturnType(const ComplexReturnType &) { gNCopies++; }
    ComplexReturnType(ComplexReturnType &&other) = default;
-   ComplexReturnType &operator= (const ComplexReturnType &) { return *this; }
-   ComplexReturnType &operator= (ComplexReturnType &&other) = default;
+   ComplexReturnType &operator=(const ComplexReturnType &) { return *this; }
+   ComplexReturnType &operator=(ComplexReturnType &&other) = default;
 };
 int ComplexReturnType::gNCopies = 0;
 
@@ -71,7 +71,6 @@ public:
 
 } // anonymous namespace
 
-
 TEST(Exception, Report)
 {
    try {
@@ -84,14 +83,12 @@ TEST(Exception, Report)
    }
 }
 
-
 TEST(Exception, ForwardResult)
 {
    auto res = TestChain(true);
    ASSERT_TRUE(static_cast<bool>(res));
    EXPECT_EQ(42, res.Inspect());
 }
-
 
 TEST(Exception, ForwardError)
 {
@@ -105,13 +102,11 @@ TEST(Exception, ForwardError)
    EXPECT_THROW(TestChainMultiTypes(false), ROOT::RException);
 }
 
-
 TEST(Exception, DiscardReturnValue)
 {
    EXPECT_THROW(TestFailure(), ROOT::RException);
    EXPECT_NO_THROW(TestSuccess());
 }
-
 
 TEST(Exception, CheckReturnValue)
 {
@@ -119,7 +114,6 @@ TEST(Exception, CheckReturnValue)
    EXPECT_FALSE(rv);
    // No exception / crash when the scope closes
 }
-
 
 TEST(Exception, DoubleThrow)
 {
@@ -135,7 +129,7 @@ TEST(Exception, DoubleThrow)
       // throw an exception itself. In this test, we verify that rv surpresses throwing an exception if another
       // exception is currently active.
       throw ExceptionX("something else went wrong");
-   } catch (const ExceptionX&) {
+   } catch (const ExceptionX &) {
       // This will only catch ExceptionX but not RException. In case rv mistakenly throws an exception,
       // we would notice the test failure by a crash of the unit test.
    }
@@ -176,7 +170,7 @@ TEST(Exception, MoveOnlyReturnType)
    // auto copy_inner = res.Inspect();
 
    // This will compile, but we only have read-only access
-   const auto& copy_inner = res.Inspect();
+   const auto &copy_inner = res.Inspect();
    EXPECT_EQ(1, *copy_inner);
 
    // Instead, Unwrap is required to get ownership of the move-only type
