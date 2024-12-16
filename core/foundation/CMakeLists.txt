@@ -14,6 +14,7 @@ set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   TClassEdit.h
   TError.h
   ThreadLocalStorage.h
+  ROOT/RError.hxx
   ROOT/RLogger.hxx
   ROOT/RNotFn.hxx
   ROOT/RRangeCast.hxx
@@ -27,6 +28,7 @@ set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
 set(FOUNDATION_SOURCES
   src/FoundationUtils.cxx
   src/RConversionRuleParser.cxx
+  src/RError.cxx
   src/RLogger.cxx
   src/StringUtils.cxx
   src/TClassEdit.cxx
@@ -35,20 +37,11 @@ set(FOUNDATION_SOURCES
 
 set(FOUNDATION_HEADER_DIRS inc/)
 
-if(root7)
-  set_property(TARGET Core APPEND PROPERTY DICT_HEADERS ROOT/RError.hxx)
-  list(APPEND FOUNDATION_SOURCES
-    v7/src/RError.cxx)
-  list(APPEND FOUNDATION_HEADER_DIRS v7/inc/)
-  ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
-endif()
-
 target_sources(Core PRIVATE ${FOUNDATION_SOURCES})
 
 target_include_directories(Core
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
   PRIVATE
     res
 )

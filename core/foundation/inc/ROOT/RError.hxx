@@ -1,5 +1,5 @@
 /// \file ROOT/RError.hxx
-/// \ingroup Base ROOT7
+/// \ingroup Base
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2019-12-11
 
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RError
-#define ROOT7_RError
+#ifndef ROOT_RError
+#define ROOT_RError
 
 #include <ROOT/RConfig.hxx> // for R__[un]likely
 #include <ROOT/RLogger.hxx> // for R__LOG_PRETTY_FUNCTION
@@ -78,6 +78,7 @@ public:
 // clang-format on
 class RException : public std::runtime_error {
    RError fError;
+
 public:
    explicit RException(const RError &error) : std::runtime_error(error.GetReport()), fError(error) {}
    const RError &GetError() const { return fError; }
@@ -105,7 +106,8 @@ protected:
    explicit RResultBase(RError &&error) : fError(std::make_unique<RError>(std::move(error))) {}
 
    /// Used by the RResult<T> bool operator
-   bool Check() {
+   bool Check()
+   {
       fIsChecked = true;
       return !fError;
    }
@@ -113,8 +115,8 @@ protected:
 public:
    RResultBase(const RResultBase &other) = delete;
    RResultBase(RResultBase &&other) = default;
-   RResultBase &operator =(const RResultBase &other) = delete;
-   RResultBase &operator =(RResultBase &&other) = default;
+   RResultBase &operator=(const RResultBase &other) = delete;
+   RResultBase &operator=(RResultBase &&other) = default;
 
    ~RResultBase() noexcept(false);
 
@@ -123,10 +125,10 @@ public:
    void Throw();
 
    /// Used by R__FORWARD_ERROR in order to keep track of the stack trace.
-   static RError ForwardError(RResultBase &&result, RError::RLocation &&sourceLocation) {
+   static RError ForwardError(RResultBase &&result, RError::RLocation &&sourceLocation)
+   {
       if (!result.fError) {
-         return RError("internal error: attempt to forward error of successful operation",
-                       std::move(sourceLocation));
+         return RError("internal error: attempt to forward error of successful operation", std::move(sourceLocation));
       }
       result.fError->AddFrame(std::move(sourceLocation));
       return *result.fError;
@@ -198,7 +200,8 @@ private:
    T fValue;
 
    // Ensure accessor methods throw in case of errors
-   inline void ThrowOnError() {
+   inline void ThrowOnError()
+   {
       if (R__unlikely(fError)) {
          // Accessors can be wrapped in a try-catch block, so throwing the
          // exception here is akin to checking the error.
@@ -218,13 +221,14 @@ public:
 
    RResult(const RResult &other) = delete;
    RResult(RResult &&other) = default;
-   RResult &operator =(const RResult &other) = delete;
-   RResult &operator =(RResult &&other) = default;
+   RResult &operator=(const RResult &other) = delete;
+   RResult &operator=(RResult &&other) = default;
 
    ~RResult() = default;
 
    /// Used by R__FORWARD_RESULT in order to keep track of the stack trace in case of errors
-   RResult &Forward(RError::RLocation &&sourceLocation) {
+   RResult &Forward(RError::RLocation &&sourceLocation)
+   {
       if (fError)
          fError->AddFrame(std::move(sourceLocation));
       return *this;
@@ -232,7 +236,8 @@ public:
 
    /// If the operation was successful, returns a const reference to the inner type.
    /// If there was an error, Inspect() instead throws an exception.
-   const T &Inspect() {
+   const T &Inspect()
+   {
       ThrowOnError();
       return fValue;
    }
@@ -244,7 +249,8 @@ public:
    /// RResult in an unspecified state.
    ///
    /// If there was an error, Unwrap() instead throws an exception.
-   T Unwrap() {
+   T Unwrap()
+   {
       ThrowOnError();
       return std::move(fValue);
    }
@@ -265,13 +271,14 @@ public:
 
    RResult(const RResult &other) = delete;
    RResult(RResult &&other) = default;
-   RResult &operator =(const RResult &other) = delete;
-   RResult &operator =(RResult &&other) = default;
+   RResult &operator=(const RResult &other) = delete;
+   RResult &operator=(RResult &&other) = default;
 
    ~RResult() = default;
 
    /// Used by R__FORWARD_RESULT in order to keep track of the stack trace in case of errors
-   RResult &Forward(RError::RLocation &&sourceLocation) {
+   RResult &Forward(RError::RLocation &&sourceLocation)
+   {
       if (fError)
          fError->AddFrame(std::move(sourceLocation));
       return *this;
@@ -279,7 +286,8 @@ public:
 
    /// Short-hand method to throw an exception in the case of errors. Does nothing for
    /// successful RResults.
-   void ThrowOnError() {
+   void ThrowOnError()
+   {
       if (!Check())
          Throw();
    }
