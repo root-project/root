@@ -981,7 +981,7 @@ using Quantized_t = std::uint32_t;
 [[maybe_unused]] inline std::size_t LeadingZeroes(std::uint32_t x)
 {
    if (x == 0)
-      return 64;
+      return 32;
 
 #ifdef _MSC_VER
    unsigned long idx = 0;
@@ -996,7 +996,7 @@ using Quantized_t = std::uint32_t;
 [[maybe_unused]] inline std::size_t TrailingZeroes(std::uint32_t x)
 {
    if (x == 0)
-      return 64;
+      return 32;
 
 #ifdef _MSC_VER
    unsigned long idx = 0;
