@@ -660,6 +660,9 @@ Published on December 16, 2024
 
 This release includes a few minor fixes in RDataFrame and RooFit, besides the item below. Moreover, built-in Davix was patched to build with GCC14 while waiting for the new Davix release.
 
-* [[#17222](https://github.com/root-project/root/issues/12460)] - Regression in Python ownership for histograms within subdirectories with ROOT 6.34.00
+* [[#17145](https://github.com/root-project/root/issues/17145)] - Distributed RDataFrame cannot deal with same column name in different branches
+- [[#17190](https://github.com/root-project/root/issues/17190)] - Compiler error with GCC 14.2.0 related to Davix
+* [[#17222](https://github.com/root-project/root/issues/17222)] - Regression in Python ownership for histograms within subdirectories with ROOT 6.34.00
+- [[#17223](https://github.com/root-project/root/issues/17223)] - TFileMerger leaves files open resulting in corrupt metadata
 
 ## HEAD of the v6-34-00-patches branch
