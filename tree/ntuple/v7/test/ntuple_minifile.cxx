@@ -698,7 +698,7 @@ TEST(MiniFile, Failures)
    try {
       anchor = reader.GetNTuple("No such RNTuple").Inspect();
       FAIL() << "bad RNTuple names should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named 'No such RNTuple' in file '" + fileGuard.GetPath()));
    }
 }
@@ -716,7 +716,7 @@ TEST(MiniFile, KeyClassName)
    try {
       auto readerFail = RNTupleReader::Open("Events", fileGuard.GetPath());
       FAIL() << "RNTuple should only open Events key of type `RNTuple`";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named 'Events' in file"));
    }
 }

@@ -94,13 +94,13 @@ TEST(RNTuple, ModelExtensionInvalidUse)
       modelUpdater->BeginUpdate();
       auto d = modelUpdater->MakeField<double>("d");
       // Cannot fill if the model is not frozen
-      EXPECT_THROW(ntuple->Fill(), ROOT::Experimental::RException);
+      EXPECT_THROW(ntuple->Fill(), ROOT::RException);
       // Trying to create an entry should throw if model is not frozen
-      EXPECT_THROW((void)ntuple->GetModel().CreateEntry(), ROOT::Experimental::RException);
+      EXPECT_THROW((void)ntuple->GetModel().CreateEntry(), ROOT::RException);
       modelUpdater->CommitUpdate();
 
       // Using an entry that does not match the model should throw
-      EXPECT_THROW(ntuple->Fill(*entry), ROOT::Experimental::RException);
+      EXPECT_THROW(ntuple->Fill(*entry), ROOT::RException);
 
       ntuple->Fill();
       auto entry2 = ntuple->GetModel().CreateEntry();

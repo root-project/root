@@ -16,7 +16,7 @@ TEST(RFieldDescriptorBuilder, MakeDescriptorErrors)
    // -- here we check the error cases
 
    // must set field id
-   RResult<RFieldDescriptor> fieldDescRes = RFieldDescriptorBuilder().MakeDescriptor();
+   auto fieldDescRes = RFieldDescriptorBuilder().MakeDescriptor();
    ASSERT_FALSE(fieldDescRes) << "default constructed dangling descriptors should throw";
    EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("invalid field id"));
 
@@ -54,17 +54,17 @@ TEST(RNTupleDescriptorBuilder, CatchBadLinks)
       .Unwrap());
    try {
       descBuilder.AddFieldLink(1, 0);
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("cannot make FieldZero a child field"));
    }
    try {
       descBuilder.AddFieldLink(1, 1);
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("cannot make field '1' a child of itself"));
    }
    try {
       descBuilder.AddFieldLink(1, 10);
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("child field with id '10' doesn't exist in NTuple"));
    }
 }
@@ -98,34 +98,34 @@ TEST(RNTupleDescriptorBuilder, CatchBadProjections)
 
    try {
       descBuilder.AddFieldProjection(1, 4);
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("doesn't exist"));
    }
    try {
       descBuilder.AddFieldProjection(4, 2);
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("doesn't exist"));
    }
    try {
       descBuilder.AddFieldProjection(1, 0);
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("cannot make FieldZero a projected field"));
    }
    try {
       descBuilder.AddFieldProjection(2, 2);
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("projection of itself"));
    }
 
    descBuilder.AddFieldProjection(1, 2);
    try {
       descBuilder.AddFieldProjection(2, 1);
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("projection of an already projected field"));
    }
    try {
       descBuilder.AddFieldProjection(3, 2);
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("has already a projection source"));
    }
 }
@@ -160,7 +160,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    colBuilder2.LogicalColumnId(1).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(42).Index(0);
    try {
       descBuilder.AddColumn(colBuilder2.MakeDescriptor().Unwrap()).ThrowOnError();
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("doesn't exist"));
    }
 
@@ -168,7 +168,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    colBuilder3.LogicalColumnId(0).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(1).Index(0);
    try {
       descBuilder.AddColumn(colBuilder3.MakeDescriptor().Unwrap()).ThrowOnError();
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("column index clash"));
    }
 
@@ -176,7 +176,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    colBuilder4.LogicalColumnId(1).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(2).Index(1);
    try {
       descBuilder.AddColumn(colBuilder4.MakeDescriptor().Unwrap()).ThrowOnError();
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("out of bounds column index"));
    }
 
@@ -185,7 +185,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    colBuilder5.LogicalColumnId(1).PhysicalColumnId(0).BitsOnStorage(64).Type(falseType).FieldId(2).Index(0);
    try {
       descBuilder.AddColumn(colBuilder5.MakeDescriptor().Unwrap()).ThrowOnError();
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("alias column type mismatch"));
    }
 
@@ -202,7 +202,7 @@ TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
    descBuilder.SetNTuple("", "");
    try {
       descBuilder.EnsureValidDescriptor();
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("name cannot be empty string"));
    }
    descBuilder.SetNTuple("something", "");

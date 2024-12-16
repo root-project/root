@@ -216,7 +216,7 @@ TEST(RNTupleBulk, Adopted)
 
    auto buf2 = std::make_unique<ROOT::RVecI[]>(10);
    bulkI.AdoptBuffer(buf2.get(), 5);
-   EXPECT_THROW(bulkI.ReadBulk(RClusterIndex(0, 0), mask.get(), 10), RException);
+   EXPECT_THROW(bulkI.ReadBulk(RClusterIndex(0, 0), mask.get(), 10), ROOT::RException);
    bulkI.ReadBulk(RClusterIndex(0, 0), mask.get(), 5);
    for (int i = 0; i < 5; ++i) {
       EXPECT_EQ(i, buf2[i].size());

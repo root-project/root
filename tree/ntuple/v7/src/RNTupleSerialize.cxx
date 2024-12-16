@@ -37,9 +37,6 @@
 #include <set>
 #include <unordered_map>
 
-template <typename T>
-using RResult = ROOT::Experimental::RResult<T>;
-
 namespace {
 using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
 
@@ -122,8 +119,8 @@ std::uint32_t SerializeFieldList(const ROOT::Experimental::RNTupleDescriptor &de
    return pos - base;
 }
 
-RResult<std::uint32_t> DeserializeField(const void *buffer, std::uint64_t bufSize,
-                                        ROOT::Experimental::Internal::RFieldDescriptorBuilder &fieldDesc)
+ROOT::RResult<std::uint32_t> DeserializeField(const void *buffer, std::uint64_t bufSize,
+                                              ROOT::Experimental::Internal::RFieldDescriptorBuilder &fieldDesc)
 {
    using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
 
@@ -268,8 +265,8 @@ std::uint32_t SerializeColumnsOfFields(const ROOT::Experimental::RNTupleDescript
    return pos - base;
 }
 
-RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSize,
-                                         ROOT::Experimental::Internal::RColumnDescriptorBuilder &columnDesc)
+ROOT::RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSize,
+                                               ROOT::Experimental::Internal::RColumnDescriptorBuilder &columnDesc)
 {
    using ROOT::Experimental::EColumnType;
 
@@ -358,8 +355,9 @@ std::uint32_t SerializeExtraTypeInfoList(const ROOT::Experimental::RNTupleDescri
    return pos - base;
 }
 
-RResult<std::uint32_t> DeserializeExtraTypeInfo(const void *buffer, std::uint64_t bufSize,
-                                                ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder &desc)
+ROOT::RResult<std::uint32_t>
+DeserializeExtraTypeInfo(const void *buffer, std::uint64_t bufSize,
+                         ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder &desc)
 {
    using ROOT::Experimental::EExtraTypeInfoIds;
 
@@ -435,8 +433,6 @@ std::uint32_t SerializeLocatorPayloadObject64(const ROOT::Experimental::RNTupleL
 void DeserializeLocatorPayloadObject64(const unsigned char *buffer, std::uint32_t sizeofLocatorPayload,
                                        ROOT::Experimental::RNTupleLocator &locator)
 {
-   using ROOT::Experimental::RException;
-
    auto &data = locator.fPosition.emplace<ROOT::Experimental::RNTupleLocatorObject64>();
    if (sizeofLocatorPayload == 12) {
       std::uint32_t bytesOnStorage;
@@ -447,7 +443,7 @@ void DeserializeLocatorPayloadObject64(const unsigned char *buffer, std::uint32_
       RNTupleSerializer::DeserializeUInt64(buffer, locator.fBytesOnStorage);
       RNTupleSerializer::DeserializeUInt64(buffer + sizeof(std::uint64_t), data.fLocation);
    } else {
-      throw RException(R__FAIL("invalid DAOS locator payload size: " + std::to_string(sizeofLocatorPayload)));
+      throw ROOT::RException(R__FAIL("invalid DAOS locator payload size: " + std::to_string(sizeofLocatorPayload)));
    }
 }
 
@@ -492,8 +488,8 @@ std::uint32_t SerializeAliasColumnsOfFields(const ROOT::Experimental::RNTupleDes
    return pos - base;
 }
 
-RResult<std::uint32_t> DeserializeAliasColumn(const void *buffer, std::uint64_t bufSize,
-                                              std::uint32_t &physicalColumnId, std::uint32_t &fieldId)
+ROOT::RResult<std::uint32_t> DeserializeAliasColumn(const void *buffer, std::uint64_t bufSize,
+                                                    std::uint32_t &physicalColumnId, std::uint32_t &fieldId)
 {
    auto base = reinterpret_cast<const unsigned char *>(buffer);
    auto bytes = base;
@@ -527,9 +523,9 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeXxHash3(
    return 8;
 }
 
-RResult<void> ROOT::Experimental::Internal::RNTupleSerializer::VerifyXxHash3(const unsigned char *data,
-                                                                             std::uint64_t length,
-                                                                             std::uint64_t &xxhash3)
+ROOT::RResult<void> ROOT::Experimental::Internal::RNTupleSerializer::VerifyXxHash3(const unsigned char *data,
+                                                                                   std::uint64_t length,
+                                                                                   std::uint64_t &xxhash3)
 {
    auto checksumReal = XXH3_64bits(data, length);
    DeserializeUInt64(data + length, xxhash3);
@@ -538,7 +534,7 @@ RResult<void> ROOT::Experimental::Internal::RNTupleSerializer::VerifyXxHash3(con
    return RResult<void>::Success();
 }
 
-RResult<void>
+ROOT::RResult<void>
 ROOT::Experimental::Internal::RNTupleSerializer::VerifyXxHash3(const unsigned char *data, std::uint64_t length)
 {
    std::uint64_t xxhash3;
@@ -647,9 +643,9 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeString(c
    return sizeof(std::uint32_t) + val.length();
 }
 
-RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeString(const void *buffer,
-                                                                                          std::uint64_t bufSize,
-                                                                                          std::string &val)
+ROOT::RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeString(const void *buffer,
+                                                                                                std::uint64_t bufSize,
+                                                                                                std::string &val)
 {
    if (bufSize < sizeof(std::uint32_t))
       return R__FAIL("string buffer too short");
@@ -709,7 +705,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(ROOT::Exper
    }
 }
 
-RResult<std::uint32_t>
+ROOT::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(const void *buffer,
                                                                        ROOT::Experimental::EColumnType &type)
 {
@@ -774,7 +770,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFieldStructure(ROOT::E
    }
 }
 
-RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFieldStructure(
+ROOT::RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFieldStructure(
    const void *buffer, ROOT::Experimental::ENTupleStructure &structure)
 {
    using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
@@ -803,7 +799,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeExtraTypeInfoId(ROOT::
    }
 }
 
-RResult<std::uint32_t>
+ROOT::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializeExtraTypeInfoId(const void *buffer,
                                                                             ROOT::Experimental::EExtraTypeInfoIds &id)
 {
@@ -855,7 +851,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelope
    return SerializeEnvelopePostscript(envelope, size, xxhash3);
 }
 
-RResult<std::uint32_t>
+ROOT::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelope(const void *buffer, std::uint64_t bufSize,
                                                                      std::uint16_t expectedType, std::uint64_t &xxhash3)
 {
@@ -888,9 +884,9 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelope(const void 
    return sizeof(typeAndSize);
 }
 
-RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelope(const void *buffer,
-                                                                                            std::uint64_t bufSize,
-                                                                                            std::uint16_t expectedType)
+ROOT::RResult<std::uint32_t>
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelope(const void *buffer, std::uint64_t bufSize,
+                                                                     std::uint16_t expectedType)
 {
    std::uint64_t xxhash3;
    return R__FORWARD_RESULT(DeserializeEnvelope(buffer, bufSize, expectedType, xxhash3));
@@ -930,7 +926,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFramePos
    return 0;
 }
 
-ROOT::Experimental::RResult<std::uint32_t>
+ROOT::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFrameHeader(const void *buffer, std::uint64_t bufSize,
                                                                         std::uint64_t &frameSize, std::uint32_t &nitems)
 {
@@ -964,7 +960,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFrameHeader(const vo
    return bytes - reinterpret_cast<const unsigned char *>(buffer);
 }
 
-ROOT::Experimental::RResult<std::uint32_t>
+ROOT::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFrameHeader(const void *buffer, std::uint64_t bufSize,
                                                                         std::uint64_t &frameSize)
 {
@@ -996,7 +992,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFeatureFlags(const std
    return (flags.size() * sizeof(std::int64_t));
 }
 
-RResult<std::uint32_t>
+ROOT::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFeatureFlags(const void *buffer, std::uint64_t bufSize,
                                                                          std::vector<std::uint64_t> &flags)
 {
@@ -1058,9 +1054,9 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(const RNTupleL
    return size;
 }
 
-RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeLocator(const void *buffer,
-                                                                                           std::uint64_t bufSize,
-                                                                                           RNTupleLocator &locator)
+ROOT::RResult<std::uint32_t>
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializeLocator(const void *buffer, std::uint64_t bufSize,
+                                                                    RNTupleLocator &locator)
 {
    if (bufSize < sizeof(std::int32_t))
       return R__FAIL("too short locator");
@@ -1110,7 +1106,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopeLink(const REn
    return size;
 }
 
-RResult<std::uint32_t>
+ROOT::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelopeLink(const void *buffer, std::uint64_t bufSize,
                                                                          REnvelopeLink &envelopeLink)
 {
@@ -1151,7 +1147,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterSummary(const R
    return size;
 }
 
-RResult<std::uint32_t>
+ROOT::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializeClusterSummary(const void *buffer, std::uint64_t bufSize,
                                                                            RClusterSummary &clusterSummary)
 {
@@ -1202,7 +1198,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterGroup(const RCl
    return size;
 }
 
-RResult<std::uint32_t>
+ROOT::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializeClusterGroup(const void *buffer, std::uint64_t bufSize,
                                                                          RClusterGroup &clusterGroup)
 {
@@ -1351,7 +1347,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
    return static_cast<std::uint32_t>(pos - base);
 }
 
-RResult<std::uint32_t>
+ROOT::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(const void *buffer, std::uint64_t bufSize,
                                                                               RNTupleDescriptorBuilder &descBuilder)
 {
@@ -1635,7 +1631,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooter(void *buffer,
    return size;
 }
 
-ROOT::Experimental::RResult<void>
+ROOT::RResult<void>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializeHeader(const void *buffer, std::uint64_t bufSize,
                                                                    RNTupleDescriptorBuilder &descBuilder)
 {
@@ -1692,7 +1688,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeHeader(const void *b
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<void>
+ROOT::RResult<void>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *buffer, std::uint64_t bufSize,
                                                                    RNTupleDescriptorBuilder &descBuilder)
 {
@@ -1767,10 +1763,10 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<void>
-ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void *buffer, std::uint64_t bufSize,
-                                                                     DescriptorId_t clusterGroupId,
-                                                                     RNTupleDescriptor &desc)
+ROOT::RResult<void> ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void *buffer,
+                                                                                         std::uint64_t bufSize,
+                                                                                         DescriptorId_t clusterGroupId,
+                                                                                         RNTupleDescriptor &desc)
 {
    auto base = reinterpret_cast<const unsigned char *>(buffer);
    auto bytes = base;
@@ -1918,7 +1914,7 @@ std::string ROOT::Experimental::Internal::RNTupleSerializer::SerializeStreamerIn
    return std::string{buffer.Buffer(), static_cast<UInt_t>(buffer.Length())};
 }
 
-ROOT::Experimental::RResult<ROOT::Experimental::Internal::RNTupleSerializer::StreamerInfoMap_t>
+ROOT::RResult<ROOT::Experimental::Internal::RNTupleSerializer::StreamerInfoMap_t>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializeStreamerInfos(const std::string &extraTypeInfoContent)
 {
    StreamerInfoMap_t infoMap;

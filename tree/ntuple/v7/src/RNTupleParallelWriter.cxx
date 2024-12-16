@@ -27,7 +27,6 @@ namespace {
 
 using ROOT::Experimental::DescriptorId_t;
 using ROOT::Experimental::NTupleSize_t;
-using ROOT::Experimental::RException;
 using ROOT::Experimental::RExtraTypeInfoDescriptor;
 using ROOT::Experimental::RNTupleDescriptor;
 using ROOT::Experimental::RNTupleModel;
@@ -77,21 +76,21 @@ public:
    void InitImpl(RNTupleModel &) final {}
    void UpdateSchema(const RNTupleModelChangeset &, NTupleSize_t) final
    {
-      throw RException(R__FAIL("UpdateSchema not supported via RPageSynchronizingSink"));
+      throw ROOT::RException(R__FAIL("UpdateSchema not supported via RPageSynchronizingSink"));
    }
    void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &) final
    {
-      throw RException(R__FAIL("UpdateExtraTypeInfo not supported via RPageSynchronizingSink"));
+      throw ROOT::RException(R__FAIL("UpdateExtraTypeInfo not supported via RPageSynchronizingSink"));
    }
 
    void CommitSuppressedColumn(ColumnHandle_t handle) final { fInnerSink->CommitSuppressedColumn(handle); }
    void CommitPage(ColumnHandle_t, const RPage &) final
    {
-      throw RException(R__FAIL("should never commit single pages via RPageSynchronizingSink"));
+      throw ROOT::RException(R__FAIL("should never commit single pages via RPageSynchronizingSink"));
    }
    void CommitSealedPage(DescriptorId_t, const RSealedPage &) final
    {
-      throw RException(R__FAIL("should never commit sealed pages via RPageSynchronizingSink"));
+      throw ROOT::RException(R__FAIL("should never commit sealed pages via RPageSynchronizingSink"));
    }
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final
    {
@@ -102,11 +101,11 @@ public:
    void CommitStagedClusters(std::span<RStagedCluster> clusters) final { fInnerSink->CommitStagedClusters(clusters); }
    void CommitClusterGroup() final
    {
-      throw RException(R__FAIL("should never commit cluster group via RPageSynchronizingSink"));
+      throw ROOT::RException(R__FAIL("should never commit cluster group via RPageSynchronizingSink"));
    }
    void CommitDatasetImpl() final
    {
-      throw RException(R__FAIL("should never commit dataset via RPageSynchronizingSink"));
+      throw ROOT::RException(R__FAIL("should never commit dataset via RPageSynchronizingSink"));
    }
 
    RSinkGuard GetSinkGuard() final { return RSinkGuard(fMutex); }

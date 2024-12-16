@@ -25,7 +25,7 @@ TEST(RNTuple, TypeCastInvalid)
 
    auto castModelInvalid = RNTupleModel::Create();
    castModelInvalid->MakeField<int>("x");
-   EXPECT_THROW(RNTupleReader::Open(std::move(castModelInvalid), "ntpl", fileGuard.GetPath()), RException);
+   EXPECT_THROW(RNTupleReader::Open(std::move(castModelInvalid), "ntpl", fileGuard.GetPath()), ROOT::RException);
 
    auto castModel = RNTupleModel::Create();
    castModel->MakeField<double>("x");
@@ -381,7 +381,7 @@ TEST(RNTuple, TypeCastChar)
    try {
       reader->LoadEntry(2);
       FAIL() << "value out of range should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("value out of range"));
    }
 }
@@ -500,7 +500,7 @@ TEST(RNTuple, TypeCastInt8)
    try {
       reader->LoadEntry(2);
       FAIL() << "value out of range should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("value out of range"));
    }
 }
@@ -619,7 +619,7 @@ TEST(RNTuple, TypeCastUInt8)
    try {
       reader->LoadEntry(2);
       FAIL() << "value out of range should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("value out of range"));
    }
 }
@@ -732,7 +732,7 @@ TEST(RNTuple, TypeCastInt16)
    try {
       reader->LoadEntry(2);
       FAIL() << "value out of range should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("value out of range"));
    }
 }
@@ -845,7 +845,7 @@ TEST(RNTuple, TypeCastUInt16)
    try {
       reader->LoadEntry(2);
       FAIL() << "value out of range should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("value out of range"));
    }
 }
@@ -958,7 +958,7 @@ TEST(RNTuple, TypeCastInt32)
    try {
       reader->LoadEntry(2);
       FAIL() << "value out of range should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("value out of range"));
    }
 }
@@ -1071,7 +1071,7 @@ TEST(RNTuple, TypeCastUInt32)
    try {
       reader->LoadEntry(2);
       FAIL() << "value out of range should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("value out of range"));
    }
 }
@@ -1184,7 +1184,7 @@ TEST(RNTuple, TypeCastInt64)
    try {
       reader->LoadEntry(2);
       FAIL() << "value out of range should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("value out of range"));
    }
 }
@@ -1297,7 +1297,7 @@ TEST(RNTuple, TypeCastUInt64)
    try {
       reader->LoadEntry(2);
       FAIL() << "value out of range should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("value out of range"));
    }
 }

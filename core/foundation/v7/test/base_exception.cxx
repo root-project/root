@@ -8,10 +8,6 @@
 #include <memory>
 #include <stdexcept>
 
-using RException = ROOT::Experimental::RException;
-template<typename T>
-using RResult = ROOT::Experimental::RResult<T>;
-
 namespace {
 
 /// Used to verify that wrapped return values are not unnecessarily copied
@@ -25,37 +21,37 @@ struct ComplexReturnType {
 };
 int ComplexReturnType::gNCopies = 0;
 
-static ROOT::Experimental::RResult<void> TestFailure()
+static ROOT::RResult<void> TestFailure()
 {
    return R__FAIL("test failure");
 }
 
-static ROOT::Experimental::RResult<void> TestSuccess()
+static ROOT::RResult<void> TestSuccess()
 {
-   return ROOT::Experimental::RResult<void>::Success();
+   return ROOT::RResult<void>::Success();
 }
 
-static ROOT::Experimental::RResult<void> TestSuccessOrFailure(bool succeed)
+static ROOT::RResult<void> TestSuccessOrFailure(bool succeed)
 {
    if (succeed)
       return R__FORWARD_RESULT(TestSuccess());
    return R__FORWARD_RESULT(TestFailure());
 }
 
-static ROOT::Experimental::RResult<int> TestSyscall(bool succeed)
+static ROOT::RResult<int> TestSyscall(bool succeed)
 {
    if (succeed)
       return 42;
    return R__FAIL("failure");
 }
 
-static ROOT::Experimental::RResult<int> TestChain(bool succeed)
+static ROOT::RResult<int> TestChain(bool succeed)
 {
    auto rv = TestSyscall(succeed);
    return R__FORWARD_RESULT(rv);
 }
 
-static ROOT::Experimental::RResult<int> TestChainMultiTypes(bool succeed)
+static ROOT::RResult<int> TestChainMultiTypes(bool succeed)
 {
    auto rv = TestSuccessOrFailure(succeed);
    if (!rv)
@@ -63,7 +59,7 @@ static ROOT::Experimental::RResult<int> TestChainMultiTypes(bool succeed)
    return 0;
 }
 
-static ROOT::Experimental::RResult<ComplexReturnType> TestComplex()
+static ROOT::RResult<ComplexReturnType> TestComplex()
 {
    return ComplexReturnType();
 }
@@ -81,7 +77,7 @@ TEST(Exception, Report)
    try {
       TestChain(false);
       EXPECT_TRUE(false) << "Above line should have thrown!";
-   } catch (const RException& e) {
+   } catch (const ROOT::RException &e) {
       ASSERT_EQ(2U, e.GetError().GetStackTrace().size());
       EXPECT_THAT(e.GetError().GetStackTrace().at(0).fFunction, ::testing::HasSubstr("TestSyscall(bool)"));
       EXPECT_THAT(e.GetError().GetStackTrace().at(1).fFunction, ::testing::HasSubstr("TestChain(bool)"));
@@ -99,20 +95,20 @@ TEST(Exception, ForwardResult)
 
 TEST(Exception, ForwardError)
 {
-   EXPECT_THROW(TestSuccessOrFailure(false), RException);
+   EXPECT_THROW(TestSuccessOrFailure(false), ROOT::RException);
    EXPECT_NO_THROW(TestSuccessOrFailure(true));
 
    auto res = TestChainMultiTypes(true);
    ASSERT_TRUE(static_cast<bool>(res));
    EXPECT_EQ(0, res.Inspect());
 
-   EXPECT_THROW(TestChainMultiTypes(false), RException);
+   EXPECT_THROW(TestChainMultiTypes(false), ROOT::RException);
 }
 
 
 TEST(Exception, DiscardReturnValue)
 {
-   EXPECT_THROW(TestFailure(), RException);
+   EXPECT_THROW(TestFailure(), ROOT::RException);
    EXPECT_NO_THROW(TestSuccess());
 }
 
@@ -128,9 +124,10 @@ TEST(Exception, CheckReturnValue)
 TEST(Exception, DoubleThrow)
 {
    // We have to suppress a warning because of the double throw.
-   ROOT::TestSupport::FilterDiagsRAII filterDiags{ [](int /*severity*/, bool, const char* /*location*/, const char* msg) {
-      EXPECT_STREQ(msg, "unhandled RResult exception during stack unwinding");
-   }};
+   ROOT::TestSupport::FilterDiagsRAII filterDiags{
+      [](int /*severity*/, bool, const char * /*location*/, const char *msg) {
+         EXPECT_STREQ(msg, "unhandled RResult exception during stack unwinding");
+      }};
 
    try {
       auto rv = TestFailure();
@@ -149,7 +146,7 @@ TEST(Exception, VoidThrowOnError)
    // no throw on success
    TestSuccess().ThrowOnError();
    // throw on failure
-   EXPECT_THROW(TestFailure().ThrowOnError(), RException);
+   EXPECT_THROW(TestFailure().ThrowOnError(), ROOT::RException);
 }
 
 TEST(Exception, Syscall)
@@ -157,11 +154,11 @@ TEST(Exception, Syscall)
    auto fd = TestSyscall(true);
    if (!fd) {
       // In production code, we would expect error handling code other than throw
-      EXPECT_THROW(fd.Throw(), RException);
+      EXPECT_THROW(fd.Throw(), ROOT::RException);
    }
    EXPECT_EQ(42, fd.Inspect());
 
-   EXPECT_THROW(TestSyscall(false).Inspect(), RException);
+   EXPECT_THROW(TestSyscall(false).Inspect(), ROOT::RException);
 }
 
 TEST(Exception, ComplexReturnType)
@@ -172,9 +169,7 @@ TEST(Exception, ComplexReturnType)
 
 TEST(Exception, MoveOnlyReturnType)
 {
-   auto TestMoveOnly = []() -> RResult<std::unique_ptr<int>> {
-      return std::make_unique<int>(1);
-   };
+   auto TestMoveOnly = []() -> ROOT::RResult<std::unique_ptr<int>> { return std::make_unique<int>(1); };
    auto res = TestMoveOnly();
 
    // Using Inspect to make a copy won't compile

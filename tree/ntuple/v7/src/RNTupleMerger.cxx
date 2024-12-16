@@ -315,7 +315,7 @@ static bool IsSplitOrUnsplitVersionOf(EColumnType a, EColumnType b)
 
 /// Compares the top level fields of `dst` and `src` and determines whether they can be merged or not.
 /// In addition, returns the differences between `dst` and `src`'s structures
-static RResult<RDescriptorsComparison>
+static ROOT::RResult<RDescriptorsComparison>
 CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor &src)
 {
    // Cases:
@@ -475,7 +475,7 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
    // TODO(gparolini): we should exhaustively check the field tree rather than just the top level fields,
    // in case the user forgets to change the version number on one field.
 
-   return RResult(res);
+   return ROOT::RResult(res);
 }
 
 // Applies late model extension to `destination`, adding all `newFields` to it.
@@ -880,7 +880,7 @@ RNTupleMerger::RNTupleMerger()
 #endif
 }
 
-RResult<void>
+ROOT::RResult<void>
 RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination, const RNTupleMergeOptions &mergeOptsIn)
 {
    RNTupleMergeOptions mergeOpts = mergeOptsIn;

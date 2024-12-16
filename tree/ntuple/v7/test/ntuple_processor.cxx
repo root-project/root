@@ -61,7 +61,7 @@ TEST_F(RNTupleProcessorTest, BaseWithModel)
       try {
          entry.GetPtr<std::vector<float>>("y");
          FAIL() << "fields not present in the model passed to the processor shouldn't be readable";
-      } catch (const RException &err) {
+      } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: y"));
       }
       ++nEntries;
@@ -88,7 +88,7 @@ TEST_F(RNTupleProcessorTest, BaseWithBareModel)
       try {
          entry.GetPtr<std::vector<float>>("y");
          FAIL() << "fields not present in the model passed to the processor shouldn't be readable";
-      } catch (const RException &err) {
+      } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: y"));
       }
       ++nEntries;
