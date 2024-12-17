@@ -24,10 +24,6 @@ if(roofit_legacy_eval_backend AND NOT MSVC)
   add_subdirectory(xroofit)
 endif()
 
-generateManual(hist2workspaceMan
-               ${CMAKE_CURRENT_SOURCE_DIR}/histfactory/src/hist2workspace-argparse.py
-               ${CMAKE_BINARY_DIR}/man/hist2workspace.1)
-
 set(roofit_etc_files
   etc/HistFactorySchema.dtd
   etc/RooFitHS3_wsfactoryexpressions.json
