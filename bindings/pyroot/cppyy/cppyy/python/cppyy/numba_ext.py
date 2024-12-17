@@ -17,9 +17,7 @@ import numba.core.typing as nb_typing
 
 from llvmlite import ir
 from numba.extending import make_attribute_wrapper
-import itertools
 import re
-import inspect
 
 # setuptools entry point for Numba
 def _init_extension():
@@ -72,7 +70,7 @@ def resolve_const_types(val):
     return re.match(r'const\s+(.+)\s*\*', val).group(1)
 
 def cpp2numba(val):
-    if type(val) != str:
+    if not isinstance(val, str):
         # TODO: distinguish ptr/ref/byval
         # TODO: Only metaclasses/proxies end up here since
         #  ref cases makes the RETURN_TYPE from reflex a string
@@ -114,7 +112,7 @@ def numba2cpp(val):
 
 def numba_arg_convertor(args):
     args_cpp = []
-    for i, arg in enumerate(list(args)):
+    for arg in list(args):
         # If the user explicitly passes an argument using numba CPointer, the regex match is used
         # to detect the pass by reference since the dispatcher always returns typeref[val*]
         match = re.search(r"typeref\[(.*?)\*\]", str(arg))
@@ -128,7 +126,7 @@ def numba_arg_convertor(args):
 
 def to_ref(type_list):
     ref_list = []
-    for i, l in enumerate(type_list):
+    for l in type_list:
         ref_list.append(l + '&')
     return ref_list
 
@@ -165,9 +163,8 @@ def cpp2ir(val):
         elif val != "char*" and val[-1] == "*":
             if val.startswith('const'):
                 return ir.PointerType(cpp2ir(resolve_const_types(val)))
-            else:
-                type_2 = _cpp2ir[val[:-1]]
-                return ir.PointerType(type_2)
+            type_2 = _cpp2ir[val[:-1]]
+            return ir.PointerType(type_2)
 
 #
 # C++ function pointer -> Numba
@@ -197,7 +194,8 @@ class CppFunctionNumbaType(nb_types.Callable):
         except KeyError:
             pass
 
-        ol = CppFunctionNumbaType(self._func.__overload__(numba_arg_convertor(args)), self._is_method)
+        ol = CppFunctionNumbaType(
+                self._func.__overload__(numba_arg_convertor(args)), self._is_method)
 
         thistype = None
         if self._is_method:
@@ -222,7 +220,8 @@ class CppFunctionNumbaType(nb_types.Callable):
 
         @nb_iutils.lower_builtin(ol, *args)
         def lower_external_call(context, builder, sig, args,
-                ty=nb_types.ExternalFunctionPointer(extsig, ol.get_pointer), pyval=self._func, is_method=self._is_method):
+                ty=nb_types.ExternalFunctionPointer(extsig, ol.get_pointer),
+                pyval=self._func, is_method=self._is_method):
             ptrty = context.get_function_pointer_type(ty)
             ptrval = context.add_dynamic_addr(
                 builder, ty.get_pointer(pyval), info=str(pyval))
@@ -237,9 +236,11 @@ class CppFunctionNumbaType(nb_types.Callable):
     def get_impl_key(self, sig):
         return self._impl_keys[sig.args]
 
-    #TODO : Remove the redundancy of __overload__ matching and use this function to only obtain the address given the matched overload
+    # TODO: Remove the redundancy of __overload__ matching and use this function
+    # to only obtain the address given the matched overload
     def get_pointer(self, func):
-        if func is None: func = self._func
+        if func is None:
+            func = self._func
 
         ol = func.__overload__(numba_arg_convertor(self.sig.args))
 
@@ -340,14 +341,14 @@ class CppClassFieldResolver(nb_tmpl.AttributeTemplate):
 
         try:
             f = getattr(typ._scope, attr)
-            if type(f) == cpp_types.Function:
+            if isinstance(f, cpp_types.Function):
                 ft = CppFunctionNumbaType(f, is_method=True)
         except AttributeError:
             pass
 
         try:
             f = typ._scope.__dict__[attr]
-            if type(f) == cpp_types.DataMember:
+            if isinstance(f, cpp_types.DataMember):
                 ct = f.__cpp_reflex__(cpp_refl.TYPE)
                 ft = cpp2numba(ct)
         except AttributeError:
@@ -363,7 +364,7 @@ def cppclass_getattr_impl(context, builder, typ, val, attr):
     # TODO: the following relies on the fact that numba will first lower the
     # field access, then immediately lower the call; and that the `val` loads
     # the struct representing the C++ object. Neither need be stable.
-    if attr in typ._scope.__dict__ and type(typ._scope.__dict__[attr]) == cpp_types.DataMember:
+    if attr in typ._scope.__dict__ and isinstance(typ._scope.__dict__[attr], cpp_types.DataMember):
         dm = typ._scope.__dict__[attr]
         ct = dm.__cpp_reflex__(cpp_refl.TYPE)
         offset = dm.__cpp_reflex__(cpp_refl.OFFSET)
@@ -435,7 +436,8 @@ class ImplClassValueModel(ImplAggregateValueModel):
       # struct is split in a series of byte members to get the total size right
       # and to allow addressing at the correct offsets.
         if self._data_type is None:
-            self._data_type = ir.LiteralStructType([ir_byte for i in range(self._sizeof)], packed=True)
+            self._data_type = \
+                    ir.LiteralStructType([ir_byte for i in range(self._sizeof)], packed=True)
         return self._data_type
 
   # return: representation used for return argument.
@@ -482,11 +484,11 @@ def typeof_scope(val, c, q = Qualified.default):
     member_methods = dict()
 
     for name, field in val.__dict__.items():
-        if type(field) == cpp_types.DataMember:
+        if isinstance(field, cpp_types.DataMember):
             data_members.append(CppDataMemberInfo(
                 name, field.__cpp_reflex__(cpp_refl.OFFSET), field.__cpp_reflex__(cpp_refl.TYPE))
             )
-        elif type(field) == cpp_types.Function:
+        elif isinstance(field, cpp_types.Function):
             member_methods[name] = field.__cpp_reflex__(cpp_refl.RETURN_TYPE)
 
   # TODO: this refresh is needed b/c the scope type is registered as a
@@ -521,13 +523,13 @@ def typeof_scope(val, c, q = Qualified.default):
           # value: representation inside function body. Maybe stored in stack.
           #        The representation here are flexible.
             def get_value_type(self):
-              # the C++ object, b/c through a proxy, is always accessed by pointer; it is represented
-              # as a pointer to POD to allow indexing by Numba for data member type checking, but the
-              # address offsetting for loading data member values is independent (see get(), below),
-              # so the exact layout need not match a POD
+              # the C++ object, b/c through a proxy, is always accessed by pointer; it is
+              # represented as a pointer to POD to allow indexing by Numba for data member
+              # type checking, but the address offsetting for loading data member values is
+              # independent (see get(), below), so the exact layout need not match a POD
 
-              # TODO: this doesn't work for real PODs, b/c those are unpacked into their elements and
-              # passed through registers
+              # TODO: this doesn't work for real PODs, b/c those are unpacked into their elements
+              # and passed through registers
                 return ir.PointerType(super(ImplClassModel, self).get_value_type())
 
           # argument: representation used for function argument. Needs to be builtin type,
@@ -609,14 +611,13 @@ def typeof_scope(val, c, q = Qualified.default):
 
         global cppyy_from_voidptr
 
-        if type(val) == ir.Constant:
+        if isinstance(val, ir.Constant):
             if val.constant == ir.Undefined:
                 assert not "Value passed to instance boxing is undefined"
                 return NULL
 
         implclass = make_implclass(c.context, c.builder, typ)
         classobj = c.pyapi.unserialize(c.pyapi.serialize_object(cpp_types.Instance))
-        pyobj = c.context.get_argument_type(nb_types.pyobject)
 
         box_list = []
 
@@ -630,7 +631,8 @@ def typeof_scope(val, c, q = Qualified.default):
         box_res = c.pyapi.call_function_objargs(
             classobj, tuple(box_list)
         )
-        # Required for nopython mode, numba nrt requres each member box call to decref since it steals the reference
+        # Required for nopython mode, numba nrt requres each member box call to decref
+        # since it steals the reference
         for i in box_list:
             c.pyapi.decref(i)
 

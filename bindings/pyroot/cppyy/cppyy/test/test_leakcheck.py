@@ -2,12 +2,6 @@ import py, os, sys
 from pytest import mark, skip
 from .support import setup_make, pylong, pyunicode
 
-currpath = py.path.local(__file__).dirpath()
-test_dct = str(currpath.join("datatypesDict"))
-
-def setup_module(mod):
-    setup_make("datatypes")
-
 nopsutil = False
 try:
     import psutil
@@ -19,9 +13,6 @@ except ImportError:
 class TestLEAKCHECK:
     def setup_class(cls):
         import cppyy, psutil
-
-        cls.test_dct = test_dct
-        cls.memory = cppyy.load_reflection_info(cls.test_dct)
 
         cls.process = psutil.Process(os.getpid())
 
@@ -46,27 +37,41 @@ class TestLEAKCHECK:
       # function that is to be found on each call python-side
         tmpl_args = kwds.pop('tmpl_args', None)
 
-      # warmup function (TOOD: why doesn't once suffice?)
-        for i in range(8):   # actually, 2 seems to be enough
-            if tmpl_args is None:
-                getattr(scope, func)(*args, **kwds)
-            else:
-                getattr(scope, func)[tmpl_args](*args, **kwds)
+      # warmup function
+        gc.collect()
+        if tmpl_args is None:
+            getattr(scope, func)(*args, **kwds)
+        else:
+            getattr(scope, func)[tmpl_args](*args, **kwds)
 
       # number of iterations
         N = 100000
 
+      # The use of arena's, free-lists, etc. means that checking rss remains
+      # unreliable, unless looking for consistent jumps, so the leak check will
+      # be run M times and only considered failed if it "leaks" every time. In
+      # actual practice, the number of fails is 0, 1, or M. Note that the total
+      # number of gc objects tracked is always required to remain the same.
+        M = 3
+
       # leak check
-        gc.collect()
-        last = self.process.memory_info().rss
+        fail = 0
+        for i in range(M):
+            gc.collect()
+            pre = len(gc.get_objects())
+            last = self.process.memory_info().rss
 
-        if tmpl_args is None:
-            self.runit(N, scope, func, *args, **kwds)
-        else:
-            self.runit_template(N, scope, func, tmpl_args, *args, **kwds)
+            if tmpl_args is None:
+                self.runit(N, scope, func, *args, **kwds)
+            else:
+                self.runit_template(N, scope, func, tmpl_args, *args, **kwds)
 
-        gc.collect()
-        assert last == self.process.memory_info().rss
+            gc.collect()
+            assert len(gc.get_objects()) == pre
+            if last < self.process.memory_info().rss:
+                fail += 1
+
+        assert fail < M
 
     def test01_free_functions(self):
         """Leak test of free functions"""
@@ -228,6 +233,7 @@ class TestLEAKCHECK:
         self.check_func(cppyy.gbl, '__dir__', cppyy.gbl)
 
     def test07_string_handling(self):
+        """Leak check of returning an std::string by value"""
 
         import cppyy
 
@@ -235,14 +241,34 @@ class TestLEAKCHECK:
         namespace LeakCheck {
         class Leaker {
         public:
-             const std::string leak_string(std::size_t size) const {
-                  std::string result;
-                  result.reserve(size);
-                  return result;
-             }
+            const std::string leak_string(std::size_t size) const {
+                std::string result;
+                result.reserve(size);
+                return result;
+            }
         }; }""")
 
         ns = cppyy.gbl.LeakCheck
 
         obj = ns.Leaker()
         self.check_func(obj, 'leak_string', 2048)
+
+    def test08_list_creation(self):
+        """Leak check of creating a python list from an std::list"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace LeakCheck {
+            std::list<int> list_by_value() { return std::list<int>(3); }
+        } """)
+
+        ns = cppyy.gbl.LeakCheck
+
+        def wrapped_list_by_value():
+            return list(ns.list_by_value())
+
+        ns.leak_list = wrapped_list_by_value
+
+        self.check_func(ns, 'leak_list')
+
