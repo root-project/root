@@ -11,7 +11,10 @@
 #include <gtest/gtest.h>
 
 #include <numeric> // std::numeric_limits
+#include <random>
+#include <string>
 #include <thread>  // std::thread::hardware_concurrency
+#include <vector>
 
 template <typename T0, typename T1>
 void expect_vec_eq(const T0 &v1, const T1 &v2)
@@ -1093,11 +1096,216 @@ TEST_P(RDFMissingBranchesVec, DefaultValueForSimpleVariation)
    }
 }
 
+struct RDFIndexedFriendsOrder : public ::testing::TestWithParam<std::pair<bool, bool>> {
+
+   constexpr static auto fMainTreeName{"main_tree"};
+   constexpr static auto fAuxTreeName{"aux_tree"};
+   constexpr static auto fSmallAuxTreename{"aux_tree_small"};
+
+   constexpr static std::uint32_t fNEntries{1000};
+   constexpr static std::uint32_t fNEntriesPerFile{100};
+
+   constexpr static std::uint32_t fNEntriesSmall{100};
+   constexpr static std::uint32_t fNEntriesPerFileSmall{10};
+
+   std::vector<std::uint32_t> fEvtNumberAuxSmall{};
+   std::vector<std::string> fFileNames{};
+   const unsigned int fNSlots;
+
+   RDFIndexedFriendsOrder() : fNSlots(GetParam().first ? std::min(4u, std::thread::hardware_concurrency()) : 1u)
+   {
+      if (GetParam().first)
+         ROOT::EnableImplicitMT(fNSlots);
+   }
+
+   void SetUp() override
+   {
+      std::random_device rd;
+      std::mt19937 g{rd()};
+
+      std::vector<std::uint32_t> evtNumberMain(fNEntries);
+      std::iota(evtNumberMain.begin(), evtNumberMain.end(), 0u);
+      if (GetParam().second) {
+         // Create same list of event numbers, but shuffled differently
+         // This simulates the most extreme (and complex) case for horizontal
+         // composition of two chains: global join.
+         std::shuffle(evtNumberMain.begin(), evtNumberMain.end(), g);
+      }
+
+      std::vector<std::uint32_t> evtNumberAux(fNEntries);
+      std::iota(evtNumberAux.begin(), evtNumberAux.end(), 0u);
+      if (GetParam().second) {
+         // Create same list of event numbers, but shuffled differently
+         // This simulates the most extreme (and complex) case for horizontal
+         // composition of two chains: global join.
+         std::shuffle(evtNumberAux.begin(), evtNumberAux.end(), g);
+      }
+
+      fEvtNumberAuxSmall = std::vector<std::uint32_t>(fNEntriesSmall);
+      std::sample(evtNumberMain.begin(), evtNumberMain.end(), fEvtNumberAuxSmall.begin(), fEvtNumberAuxSmall.size(), g);
+      if (!GetParam().second) {
+         // Sort for the case of aligned join
+         std::sort(fEvtNumberAuxSmall.begin(), fEvtNumberAuxSmall.end());
+         // If the index is not being built with the first entry with value zero, TChainIndex will print a spurious
+         // warning
+         fEvtNumberAuxSmall[0] = 0;
+      }
+
+      for (std::uint32_t chainOffset{}, smallChainOffset{}; chainOffset < fNEntries;
+           chainOffset += fNEntriesPerFile, smallChainOffset += fNEntriesPerFileSmall) {
+
+         std::string filename{"file_main_" + std::to_string(chainOffset) + ".root"};
+         fFileNames.push_back(filename);
+
+         TFile f(filename.c_str(), "RECREATE");
+
+         TTree mainTree{fMainTreeName, fMainTreeName};
+         std::uint32_t evtMain;
+         std::uint32_t x;
+         mainTree.Branch("evt_number", &evtMain);
+         mainTree.Branch("x", &x);
+
+         TTree auxTree{fAuxTreeName, fAuxTreeName};
+         std::uint32_t evtAux;
+         std::uint32_t y;
+         auxTree.Branch("evt_number", &evtAux);
+         auxTree.Branch("y", &y);
+
+         for (std::uint32_t i = 0; i < fNEntriesPerFile; i++) {
+            evtMain = evtNumberMain.at(chainOffset + i);
+            x = evtMain;
+
+            evtAux = evtNumberAux.at(chainOffset + i);
+            y = evtAux;
+
+            mainTree.Fill();
+            auxTree.Fill();
+         }
+
+         // This tree is smaller, its event number branch is a random sample of
+         // the main event number branch
+         TTree auxTreeSmall{fSmallAuxTreename, fSmallAuxTreename};
+         std::uint32_t evtAuxSmall;
+         std::uint32_t z;
+         auxTreeSmall.Branch("evt_number", &evtAuxSmall);
+         auxTreeSmall.Branch("z", &z);
+
+         for (std::uint32_t i = 0; i < fNEntriesPerFileSmall; i++) {
+            evtAuxSmall = fEvtNumberAuxSmall.at(smallChainOffset + i);
+            z = evtAuxSmall;
+
+            auxTreeSmall.Fill();
+         }
+
+         f.Write();
+      }
+   }
+
+   void TearDown() override
+   {
+      for (auto &&fileName : fFileNames)
+         std::remove(fileName.c_str());
+   }
+
+   ~RDFIndexedFriendsOrder() override
+   {
+      if (GetParam().first)
+         ROOT::DisableImplicitMT();
+   }
+};
+
+TEST_P(RDFIndexedFriendsOrder, GlobalJoinSameCardinality)
+{
+   // The error regarding a wrong order of the index column values when building
+   // the TChainIndex should only be displayed once, whether in single or multi
+   // threaded mode.
+   TChain mainChain{fMainTreeName};
+   for (const auto &fn : fFileNames) {
+      mainChain.Add(fn.c_str());
+   }
+
+   TChain auxChain{fAuxTreeName};
+   for (const auto &fn : fFileNames) {
+      auxChain.Add(fn.c_str());
+   }
+   {
+      if (GetParam().second) {
+         // The error messages should only be printed here, the first time the
+         // index is built by the user
+         ROOT::TestSupport::CheckDiagsRAII diagRAII;
+         diagRAII.requiredDiag(kError, "TChainIndex::TChainIndex", "The indices in files of this chain aren't sorted.");
+         diagRAII.requiredDiag(kError, "TTreePlayer::BuildIndex",
+                               "Creating a TChainIndex unsuccessful - switching to TTreeIndex");
+         auxChain.BuildIndex("evt_number");
+      } else {
+         auxChain.BuildIndex("evt_number");
+      }
+   }
+   mainChain.AddFriend(&auxChain);
+
+   // The error message from the TChainIndex should not be duplicated by RDataFrame
+   ROOT::RDataFrame df{mainChain};
+
+   auto takeX = df.FilterAvailable("y").Take<std::uint32_t>("x");
+
+   std::vector<std::uint32_t> expectedX(fNEntries);
+   std::iota(expectedX.begin(), expectedX.end(), 0u);
+   auto valuesX = *takeX;
+   std::sort(valuesX.begin(), valuesX.end());
+
+   // Even after switching from TChainIndex to TTreeIndex, the matching should
+   // happen as expected.
+   expect_vec_eq(expectedX, valuesX);
+}
+
+TEST_P(RDFIndexedFriendsOrder, GlobalJoinDifferentCardinality)
+{
+   TChain mainChain{fMainTreeName};
+   for (const auto &fn : fFileNames) {
+      mainChain.Add(fn.c_str());
+   }
+
+   TChain auxChain{fSmallAuxTreename};
+   for (const auto &fn : fFileNames) {
+      auxChain.Add(fn.c_str());
+   }
+   {
+      if (GetParam().second) {
+         // The error messages should only be printed here, the first time the
+         // index is built by the user
+         ROOT::TestSupport::CheckDiagsRAII diagRAII;
+         diagRAII.requiredDiag(kError, "TChainIndex::TChainIndex", "The indices in files of this chain aren't sorted.");
+         diagRAII.requiredDiag(kError, "TTreePlayer::BuildIndex",
+                               "Creating a TChainIndex unsuccessful - switching to TTreeIndex");
+         auxChain.BuildIndex("evt_number");
+      } else {
+         auxChain.BuildIndex("evt_number");
+      }
+   }
+   mainChain.AddFriend(&auxChain);
+
+   // The cardinality is different: the auxiliary chain is smaller than the main chain.
+   ROOT::RDataFrame df{mainChain};
+
+   auto takeX = df.FilterAvailable("z").Take<std::uint32_t>("x");
+
+   auto expectedX = fEvtNumberAuxSmall;
+   std::sort(expectedX.begin(), expectedX.end());
+   auto valuesX = *takeX;
+   std::sort(valuesX.begin(), valuesX.end());
+
+   // Even after switching from TChainIndex to TTreeIndex, the matching should
+   // happen as expected.
+   expect_vec_eq(expectedX, valuesX);
+}
+
 // run single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFMissingBranches, ::testing::Values(false));
 INSTANTIATE_TEST_SUITE_P(Seq, RDFIndexNoMatchSimple,
                          ::testing::Values(std::make_pair(false, false), std::make_pair(false, true)));
 INSTANTIATE_TEST_SUITE_P(Seq, RDFMissingBranchesVec, ::testing::Values(false));
+INSTANTIATE_TEST_SUITE_P(Seq, RDFIndexedFriendsOrder,
+                         ::testing::Values(std::make_pair(false, false), std::make_pair(false, true)));
 
 // run multi-thread tests
 #ifdef R__USE_IMT
@@ -1105,4 +1313,6 @@ INSTANTIATE_TEST_SUITE_P(MT, RDFMissingBranches, ::testing::Values(true));
 INSTANTIATE_TEST_SUITE_P(MT, RDFIndexNoMatchSimple,
                          ::testing::Values(std::make_pair(true, false), std::make_pair(true, true)));
 INSTANTIATE_TEST_SUITE_P(MT, RDFMissingBranchesVec, ::testing::Values(true));
+INSTANTIATE_TEST_SUITE_P(MT, RDFIndexedFriendsOrder,
+                         ::testing::Values(std::make_pair(true, false), std::make_pair(true, true)));
 #endif
