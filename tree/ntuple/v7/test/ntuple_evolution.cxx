@@ -1,62 +1,13 @@
 #include "ntuple_test.hxx"
 
+#include "ntuple_fork.hxx"
+
 #include <TInterpreter.h>
 
-#include <functional>
-#include <sstream>
 #include <string>
 #include <string_view>
 
-#include <unistd.h>
-#include <sys/wait.h>
-
 namespace {
-// These helpers are split into an *Impl function and a macro to check for and propagate fatal failures to the caller.
-
-void WriteOldInForkImpl(std::function<void(void)> old)
-{
-   pid_t pid = fork();
-   if (pid == -1) {
-      FAIL() << "fork() failed";
-   }
-
-   if (pid == 0) {
-      old();
-      if (::testing::Test::HasFatalFailure())
-         exit(EXIT_FAILURE);
-      exit(EXIT_SUCCESS);
-   }
-
-   int wstatus;
-   if (waitpid(pid, &wstatus, 0) == -1) {
-      FAIL() << "waitpid() failed";
-   } else if (!WIFEXITED(wstatus) || WEXITSTATUS(wstatus) != 0) {
-      FAIL() << "child did not exit successfully";
-   }
-}
-
-#define WriteOldInFork(old)                   \
-   do {                                       \
-      WriteOldInForkImpl(old);                \
-      if (::testing::Test::HasFatalFailure()) \
-         return;                              \
-   } while (0)
-
-void DeclarePointerImpl(std::string_view type, std::string_view variable, void *ptr)
-{
-   auto ptrString = std::to_string(reinterpret_cast<std::uintptr_t>(ptr));
-   std::ostringstream ptrDeclare;
-   ptrDeclare << type << " *" << variable << " = ";
-   ptrDeclare << "reinterpret_cast<" << type << " *>(" << ptrString << ");";
-   ASSERT_TRUE(gInterpreter->Declare(ptrDeclare.str().c_str()));
-}
-
-#define DeclarePointer(type, variable, ptr)    \
-   do {                                        \
-      DeclarePointerImpl(type, variable, ptr); \
-      if (::testing::Test::HasFatalFailure())  \
-         return;                               \
-   } while (0)
 
 void EvaluateIntImpl(const char *expression, int *value)
 {
@@ -74,26 +25,13 @@ void EvaluateIntImpl(const char *expression, int *value)
       EXPECT_EQ(expected, _value);               \
    } while (0)
 
-void ProcessLineImpl(const char *line)
-{
-   TInterpreter::EErrorCode error = TInterpreter::kNoError;
-   gInterpreter->ProcessLine(line, &error);
-   ASSERT_EQ(error, TInterpreter::kNoError);
-}
-
-#define ProcessLine(line)                     \
-   do {                                       \
-      ProcessLineImpl(line);                  \
-      if (::testing::Test::HasFatalFailure()) \
-         return;                              \
-   } while (0)
 } // namespace
 
 TEST(RNTupleEvolution, AddedMember)
 {
    FileRaii fileGuard("test_ntuple_evolution_added_member.root");
 
-   WriteOldInFork([&] {
+   ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
 
@@ -149,7 +87,7 @@ TEST(RNTupleEvolution, AddedMemberObject)
 {
    FileRaii fileGuard("test_ntuple_evolution_added_member_object.root");
 
-   WriteOldInFork([&] {
+   ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
 
@@ -218,7 +156,7 @@ TEST(RNTupleEvolution, RemovedMember)
 {
    FileRaii fileGuard("test_ntuple_evolution_removed_member.root");
 
-   WriteOldInFork([&] {
+   ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
 
@@ -274,7 +212,7 @@ TEST(RNTupleEvolution, ReorderedMembers)
 {
    FileRaii fileGuard("test_ntuple_evolution_reordered_members.root");
 
-   WriteOldInFork([&] {
+   ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
 
@@ -334,7 +272,7 @@ TEST(RNTupleEvolution, RenamedMember)
    // version (which is simply ignored) and an added member (which is defaulted).
    FileRaii fileGuard("test_ntuple_evolution_renamed_member.root");
 
-   WriteOldInFork([&] {
+   ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
 
@@ -393,7 +331,7 @@ TEST(RNTupleEvolution, RenamedMemberClass)
    // RNTuple currently does not support automatic schema evolution when a class is renamed.
    FileRaii fileGuard("test_ntuple_evolution_renamed_member_class.root");
 
-   WriteOldInFork([&] {
+   ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
 
@@ -445,7 +383,7 @@ TEST(RNTupleEvolution, AddedBaseClass)
 {
    FileRaii fileGuard("test_ntuple_evolution_added_base_class.root");
 
-   WriteOldInFork([&] {
+   ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
 
@@ -514,7 +452,7 @@ TEST(RNTupleEvolution, AddedSecondBaseClass)
 {
    FileRaii fileGuard("test_ntuple_evolution_added_second_base_class.root");
 
-   WriteOldInFork([&] {
+   ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
 
@@ -585,7 +523,7 @@ TEST(RNTupleEvolution, PrependSecondBaseClass)
    // automatically evolve this case, even if the member fields and on-disk columns are compatible.
    FileRaii fileGuard("test_ntuple_evolution_prepend_second_base_class.root");
 
-   WriteOldInFork([&] {
+   ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
 
@@ -640,7 +578,7 @@ TEST(RNTupleEvolution, AddedIntermediateClass)
 {
    FileRaii fileGuard("test_ntuple_evolution_added_intermediate_class.root");
 
-   WriteOldInFork([&] {
+   ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
 
@@ -695,7 +633,7 @@ TEST(RNTupleEvolution, RemovedBaseClass)
 {
    FileRaii fileGuard("test_ntuple_evolution_removed_base_class.root");
 
-   WriteOldInFork([&] {
+   ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
 
@@ -763,7 +701,7 @@ TEST(RNTupleEvolution, RemovedIntermediateClass)
 {
    FileRaii fileGuard("test_ntuple_evolution_removed_intermediate_class.root");
 
-   WriteOldInFork([&] {
+   ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
 
@@ -819,7 +757,7 @@ TEST(RNTupleEvolution, RenamedBaseClass)
    // RNTuple currently does not support automatic schema evolution when a class is renamed.
    FileRaii fileGuard("test_ntuple_evolution_renamed_base_class.root");
 
-   WriteOldInFork([&] {
+   ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
 
@@ -872,7 +810,7 @@ TEST(RNTupleEvolution, RenamedIntermediateClass)
    // RNTuple currently does not support automatic schema evolution when a class is renamed.
    FileRaii fileGuard("test_ntuple_evolution_renamed_intermediate_class.root");
 
-   WriteOldInFork([&] {
+   ExecInFork([&] {
       // The child process writes the file and exits, but the file must be preserved to be read by the parent.
       fileGuard.PreserveFile();
 
