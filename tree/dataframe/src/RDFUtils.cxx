@@ -34,9 +34,9 @@
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;
 
-ROOT::Experimental::RLogChannel &ROOT::Detail::RDF::RDFLogChannel()
+ROOT::RLogChannel &ROOT::Detail::RDF::RDFLogChannel()
 {
-   static ROOT::Experimental::RLogChannel c("ROOT.RDF");
+   static RLogChannel c("ROOT.RDF");
    return c;
 }
 

@@ -50,11 +50,12 @@ struct RNTupleCardinality {
    ValueType fValue;
 };
 
+class RLogChannel;
+
 namespace Experimental {
 
-class RLogChannel;
 /// Log channel for RNTuple diagnostics.
-RLogChannel &NTupleLog();
+ROOT::RLogChannel &NTupleLog();
 
 // clang-format off
 /**

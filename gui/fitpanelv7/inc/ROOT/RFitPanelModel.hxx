@@ -26,11 +26,11 @@ class TF1;
 class TFitResult;
 
 namespace ROOT {
+class RLogChannel;
 namespace Experimental {
 
-class RLogChannel;
 /// Log channel for FitPanel diagnostics.
-RLogChannel &FitPanelLog();
+ROOT::RLogChannel &FitPanelLog();
 
 /** Data structure for the fit panel */
 
