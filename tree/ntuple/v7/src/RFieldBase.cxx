@@ -278,7 +278,7 @@ ROOT::Experimental::RFieldBase::Check(const std::string &fieldName, const std::s
    auto canonicalType = Internal::GetNormalizedTypeName(GetCanonicalTypeName(typeAlias));
 
    RFieldZero fieldZero;
-   RCreateFieldOptions cfOpts {};
+   RCreateFieldOptions cfOpts{};
    cfOpts.fReturnInvalidOnError = true;
    fieldZero.Attach(RFieldBase::Create(fieldName, canonicalType, typeAlias, cfOpts).Unwrap());
 

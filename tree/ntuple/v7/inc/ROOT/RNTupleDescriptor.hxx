@@ -120,7 +120,8 @@ public:
 
    /// In general, we create a field simply from the C++ type name. For untyped fields, however, we potentially need
    /// access to sub fields, which is provided by the ntuple descriptor argument.
-   std::unique_ptr<RFieldBase> CreateField(const RNTupleDescriptor &ntplDesc, const RCreateFieldOptions &options = {}) const;
+   std::unique_ptr<RFieldBase>
+   CreateField(const RNTupleDescriptor &ntplDesc, const RCreateFieldOptions &options = {}) const;
 
    DescriptorId_t GetId() const { return fFieldId; }
    std::uint32_t GetFieldVersion() const { return fFieldVersion; }
@@ -474,7 +475,10 @@ public:
 };
 
 /// Used in RExtraTypeInfoDescriptor
-enum class EExtraTypeInfoIds { kInvalid, kStreamerInfo };
+enum class EExtraTypeInfoIds {
+   kInvalid,
+   kStreamerInfo
+};
 
 // clang-format off
 /**

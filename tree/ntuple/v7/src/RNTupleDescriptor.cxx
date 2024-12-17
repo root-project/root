@@ -92,6 +92,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
       switch (GetStructure()) {
       case ENTupleStructure::kRecord: {
          std::vector<std::unique_ptr<RFieldBase>> memberFields;
+         memberFields.reserve(fLinkIds.size());
          for (auto id : fLinkIds) {
             const auto &memberDesc = ntplDesc.GetFieldDescriptor(id);
             auto field = memberDesc.CreateField(ntplDesc, options);
@@ -119,10 +120,24 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
    }
 
    try {
-      auto field = RFieldBase::Create(GetFieldName(), GetTypeAlias().empty() ? GetTypeName() : GetTypeAlias()).Unwrap();
+      const auto &fieldName = GetFieldName();
+      const auto &typeName = GetTypeAlias().empty() ? GetTypeName() : GetTypeAlias();
+      // NOTE: Unwrap() here may throw an exception, hence the try block.
+      // If options.fReturnInvalidOnError is false we just rethrow it, otherwise we return an InvalidField wrapping the
+      // error.
+      auto field = RFieldBase::Create(fieldName, typeName).Unwrap();
       field->SetOnDiskId(fFieldId);
-      for (auto &f : *field)
-         f.SetOnDiskId(ntplDesc.FindFieldId(f.GetFieldName(), f.GetParent()->GetOnDiskId()));
+
+      for (auto &subfield : *field) {
+         const auto subfieldId = ntplDesc.FindFieldId(subfield.GetFieldName(), subfield.GetParent()->GetOnDiskId());
+         subfield.SetOnDiskId(subfieldId);
+         if (subfield.GetTraits() & RFieldBase::kTraitInvalidField) {
+            auto &invalidField = static_cast<RInvalidField &>(subfield);
+            // A subfield being invalid "infects" its entire ancestry.
+            return invalidField.Clone(fieldName);
+         }
+      }
+
       return field;
    } catch (RException &ex) {
       if (options.fReturnInvalidOnError)
