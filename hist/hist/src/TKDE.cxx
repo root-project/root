@@ -884,6 +884,9 @@ void TKDE::SetBinCountData() {
       }
       fBinCount.clear();
    }
+   if (fSumOfCounts == 0) {
+      Warning("SetBinCountData()", "Empty sum of counts, might lead to nan/inf errors when normalizing.");
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
