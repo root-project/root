@@ -584,8 +584,7 @@ if(ROOT_ENABLE_PROJECTS STREQUAL "All")
 	install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 endif()
 
-#if(runtime_cxxmodules)
-if(runtime_cxxmodules AND ROOT_ENABLE_PROJECTS STREQUAL "All")
+if(runtime_cxxmodules AND TARGET hsimple)
   add_dependencies(hsimple modules_idx)
 endif()
 
