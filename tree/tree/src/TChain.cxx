@@ -1667,7 +1667,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
          TTree* t = fe->GetTree();
          if (!t) continue;
          if (t->GetTreeIndex()) {
-            t->GetTreeIndex()->UpdateFormulaLeaves(nullptr);
+            t->GetTreeIndex()->UpdateFormulaLeaves(GetTree());
          }
          if (t->GetTree() && t->GetTree()->GetTreeIndex()) {
             t->GetTree()->GetTreeIndex()->UpdateFormulaLeaves(GetTree());
