@@ -1442,7 +1442,7 @@ if(builtin_veccore)
 endif()
 
 if(builtin_veccore)
-  set(VecCore_VERSION "0.7.0")
+  set(VecCore_VERSION "0.8.2")
   set(VecCore_PROJECT "VecCore-${VecCore_VERSION}")
   set(VecCore_SRC_URI "${lcgpackages}/${VecCore_PROJECT}.tar.gz")
   set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/externals")
@@ -1450,7 +1450,7 @@ if(builtin_veccore)
 
   ExternalProject_Add(VECCORE
     URL     ${VecCore_SRC_URI}
-    URL_HASH SHA256=61d9fc4be815c5c98088c2796763d3ed82ba4bad5a69b7892c1c2e7e1e53d311
+    URL_HASH SHA256=1268bca92acf00acd9775f1e79a2da7b1d902733d17e283e0dd5e02c41ac9666
     BUILD_IN_SOURCE 0
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
