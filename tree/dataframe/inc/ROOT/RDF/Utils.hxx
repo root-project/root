@@ -37,9 +37,7 @@ namespace RDF {
 using ColumnNames_t = std::vector<std::string>;
 }
 
-namespace Experimental {
 class RLogChannel;
-}
 
 namespace RDF {
 class RDataSource;
@@ -50,7 +48,7 @@ namespace RDF {
 
 using ROOT::RDF::ColumnNames_t;
 
-ROOT::Experimental::RLogChannel &RDFLogChannel();
+ROOT::RLogChannel &RDFLogChannel();
 
 // fwd decl for ColumnName2ColumnTypeName
 class RDefineBase;
