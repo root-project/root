@@ -112,10 +112,32 @@ ROOT::Experimental::RNTupleReader::Open(std::unique_ptr<RNTupleModel> model, con
       new RNTupleReader(std::move(model), Internal::RPageSourceFile::CreateFromAnchor(ntuple, options), options));
 }
 
+std::unique_ptr<ROOT::Experimental::RNTupleReader>
+ROOT::Experimental::RNTupleReader::Open(const RNTupleDescriptor::RCreateModelOptions &createModelOpts,
+                                        std::string_view ntupleName, std::string_view storage,
+                                        const RNTupleReadOptions &options)
+{
+   auto reader = std::unique_ptr<RNTupleReader>(
+      new RNTupleReader(Internal::RPageSource::Create(ntupleName, storage, options), options));
+   reader->fCreateModelOptions = createModelOpts;
+   return reader;
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleReader>
+ROOT::Experimental::RNTupleReader::Open(const RNTupleDescriptor::RCreateModelOptions &createModelOpts,
+                                        const ROOT::RNTuple &ntuple, const RNTupleReadOptions &options)
+{
+   auto reader = std::unique_ptr<RNTupleReader>(
+      new RNTupleReader(Internal::RPageSourceFile::CreateFromAnchor(ntuple, options), options));
+   reader->fCreateModelOptions = createModelOpts;
+   return reader;
+}
+
 const ROOT::Experimental::RNTupleModel &ROOT::Experimental::RNTupleReader::GetModel()
 {
    if (!fModel) {
-      fModel = fSource->GetSharedDescriptorGuard()->CreateModel();
+      fModel = fSource->GetSharedDescriptorGuard()->CreateModel(
+         fCreateModelOptions.value_or(RNTupleDescriptor::RCreateModelOptions{}));
       ConnectModel(*fModel);
    }
    return *fModel;
@@ -140,7 +162,8 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       {
          auto descriptorGuard = fSource->GetSharedDescriptorGuard();
          name = descriptorGuard->GetName();
-         fullModel = descriptorGuard->CreateModel();
+         fullModel =
+            descriptorGuard->CreateModel(fCreateModelOptions.value_or(RNTupleDescriptor::RCreateModelOptions{}));
       }
 
       for (int i = 0; i < (width / 2 + width % 2 - 4); ++i)
