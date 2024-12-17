@@ -880,6 +880,13 @@ CPPYY_IMPL_BASIC_CONVERTER_NI(
 CPPYY_IMPL_BASIC_CHAR_CONVERTER(Char,  char,          CHAR_MIN,  CHAR_MAX)
 CPPYY_IMPL_BASIC_CHAR_CONVERTER(UChar, unsigned char,        0, UCHAR_MAX)
 
+PyObject* CPyCppyy::SCharAsIntConverter::FromMemory(void* address)
+{
+// special case to be used with arrays: return a Python int instead of str
+// (following the same convention as module array.array)
+    return PyInt_FromLong((long)*((signed char*)address));
+}
+
 PyObject* CPyCppyy::UCharAsIntConverter::FromMemory(void* address)
 {
 // special case to be used with arrays: return a Python int instead of str
@@ -3428,6 +3435,7 @@ public:
         gf["unsigned char"] =               (cf_t)+[](cdims_t) { static UCharConverter c{};          return &c; };
         gf["const unsigned char&"] =        (cf_t)+[](cdims_t) { static ConstUCharRefConverter c{};  return &c; };
         gf["unsigned char&"] =              (cf_t)+[](cdims_t) { static UCharRefConverter c{};       return &c; };
+        gf["SCharAsInt"] =                  (cf_t)+[](cdims_t) { static SCharAsIntConverter c{};     return &c; };
         gf["UCharAsInt"] =                  (cf_t)+[](cdims_t) { static UCharAsIntConverter c{};     return &c; };
         gf["wchar_t"] =                     (cf_t)+[](cdims_t) { static WCharConverter c{};          return &c; };
         gf["char16_t"] =                    (cf_t)+[](cdims_t) { static Char16Converter c{};         return &c; };
@@ -3481,11 +3489,12 @@ public:
 
     // pointer/array factories
         gf["bool ptr"] =                    (cf_t)+[](cdims_t d) { return new BoolArrayConverter{d}; };
-        gf["const signed char[]"] =         (cf_t)+[](cdims_t d) { return new SCharArrayConverter{d}; };
-        gf["signed char[]"] =               gf["const signed char[]"];
+        gf["signed char ptr"] =             (cf_t)+[](cdims_t d) { return new SCharArrayConverter{d}; };
         gf["signed char**"] =               (cf_t)+[](cdims_t)   { return new SCharArrayConverter{{UNKNOWN_SIZE, UNKNOWN_SIZE}}; };
         gf["const unsigned char*"] =        (cf_t)+[](cdims_t d) { return new UCharArrayConverter{d}; };
         gf["unsigned char ptr"] =           (cf_t)+[](cdims_t d) { return new UCharArrayConverter{d}; };
+        gf["SCharAsInt*"] =                 gf["signed char ptr"];
+        gf["SCharAsInt[]"] =                gf["signed char ptr"];
         gf["UCharAsInt*"] =                 gf["unsigned char ptr"];
         gf["UCharAsInt[]"] =                gf["unsigned char ptr"];
 #if __cplusplus > 201402L

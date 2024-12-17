@@ -998,7 +998,7 @@ template<> struct typecode_traits<bool> {
 template<> struct typecode_traits<char> {
     static constexpr const char* format = "b"; static constexpr const char* name = "char"; };
 template<> struct typecode_traits<signed char> {
-    static constexpr const char* format = "b"; static constexpr const char* name = "signed char"; };
+    static constexpr const char* format = "b"; static constexpr const char* name = "SCharAsInt"; };
 template<> struct typecode_traits<unsigned char> {
     static constexpr const char* format = "B"; static constexpr const char* name = "UCharAsInt"; };
 #if __cplusplus > 201402L

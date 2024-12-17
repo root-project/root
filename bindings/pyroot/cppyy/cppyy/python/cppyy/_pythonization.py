@@ -1,6 +1,8 @@
 """ Pythonization API.
 """
 
+import re
+
 __all__ = [
     'add_pythonization',
     'remove_pythonization',
@@ -79,7 +81,6 @@ def rename_attribute(match_class, orig_attribute, new_attribute, keep_orig=False
                 return delattr(obj, self.attr)
 
         def __init__(self, match_class, orig_attribute, new_attribute, keep_orig):
-            import re
             self.match_class = re.compile(match_class)
             self.match_attr = re.compile(orig_attribute)
             self.new_attr = new_attribute
@@ -98,7 +99,6 @@ def rename_attribute(match_class, orig_attribute, new_attribute, keep_orig=False
 # def rename_attribute(match_class, orig_attribute, new_attribute, keep_orig=False):
 #     class method_pythonizor:
 #         def __init__(self, match_class, orig_attribute, new_attribute, keep_orig):
-#             import re
 #             self.match_class = re.compile(match_class)
 #             self.match_attr = re.compile(orig_attribute)
 #             self.new_attr = new_attribute
@@ -125,7 +125,6 @@ def rename_attribute(match_class, orig_attribute, new_attribute, keep_orig=False
 def add_overload(match_class, match_method, overload):
     class method_pythonizor(object):
         def __init__(self, match_class, match_method, overload):
-            import re
             self.match_class = re.compile(match_class)
             self.match_method = re.compile(match_method)
             self.overload = overload
@@ -134,21 +133,20 @@ def add_overload(match_class, match_method, overload):
             if not self.match_class.match(name):
                 return
             for k in dir(obj): #.__dict__:
-               try:
-                   tmp = getattr(obj, k)
-               except:
-                   continue
-               if self.match_method.match(k):
-                   try:
-                       tmp.__add_overload__(overload)
-                   except AttributeError: pass
+                try:
+                    tmp = getattr(obj, k)
+                except AttributeError:
+                    continue
+                if self.match_method.match(k):
+                    try:
+                        tmp.__add_overload__(overload)
+                    except AttributeError: pass
     return method_pythonizor(match_class, match_method, overload)
 
 
 def compose_method(match_class, match_method, g):
     class composition_pythonizor(object):
         def __init__(self, match_class, match_method, g):
-            import re
             self.match_class = re.compile(match_class)
             self.match_method = re.compile(match_method)
             self.g = g
@@ -162,7 +160,7 @@ def compose_method(match_class, match_method, g):
                     continue
                 try:
                     f = getattr(obj, k)
-                except:
+                except AttributeError:
                     continue
                 def make_fun(f, g):
                     def h(self, *args, **kwargs):
@@ -176,7 +174,6 @@ def compose_method(match_class, match_method, g):
 def set_method_property(match_class, match_method, prop, value):
     class method_pythonizor(object):
         def __init__(self, match_class, match_method, prop, value):
-            import re
             self.match_class = re.compile(match_class)
             self.match_method = re.compile(match_method)
             self.prop = prop
@@ -188,7 +185,7 @@ def set_method_property(match_class, match_method, prop, value):
             for k in dir(obj): #.__dict__:
                 try:
                     tmp = getattr(obj, k)
-                except:
+                except AttributeError:
                     continue
                 if self.match_method.match(k):
                     setattr(tmp, self.prop, self.value)
@@ -198,7 +195,6 @@ def set_method_property(match_class, match_method, prop, value):
 def make_property(match_class, match_get, match_set=None, match_del=None, prop_name=None):
     class property_pythonizor(object):
         def __init__(self, match_class, match_get, match_set, match_del, prop_name):
-            import re
             self.match_class = re.compile(match_class)
 
             self.match_get = re.compile(match_get)
@@ -222,10 +218,14 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
 
             self.match_many = match_many_getters
             if not (self.match_many or prop_name):
-                raise ValueError("If not matching properties by regex, need a property name with exactly one substitution field")
+                raise ValueError(
+                    "If not matching properties by regex, "
+                    "need a property name with exactly one substitution field")
             if self.match_many and prop_name:
                 if prop_name.format(').!:(') == prop_name:
-                    raise ValueError("If matching properties by regex and providing a property name, the name needs exactly one substitution field")
+                    raise ValueError(
+                        "If matching properties by regex and providing a property name, "
+                        "the name needs exactly one substitution field")
 
             self.prop_name = prop_name
 
@@ -263,7 +263,7 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
                 match = self.match_get.match(k)
                 try:
                     tmp = getattr(obj, k)
-                except:
+                except AttributeError:
                     continue
                 if match and hasattr(tmp, '__call__'):
                     if self.match_many:
@@ -278,7 +278,7 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
                     match = self.match_set.match(k)
                     try:
                         tmp = getattr(obj, k)
-                    except:
+                    except AttributeError:
                         continue
                     if match and hasattr(tmp, '__call__'):
                         if self.match_many:
@@ -293,7 +293,7 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
                     match = self.match_del.match(k)
                     try:
                         tmp = getattr(obj, k)
-                    except:
+                    except AttributeError:
                         continue
                     if match and hasattr(tmp, '__call__'):
                         if self.match_many:
@@ -313,7 +313,6 @@ def make_property(match_class, match_get, match_set=None, match_del=None, prop_n
             names += list(named_deleters.keys())
             names = set(names)
 
-            properties = []
             for name in names:
                 if name in named_getters:
                     fget = self.make_get_del_proxy(named_getters[name])

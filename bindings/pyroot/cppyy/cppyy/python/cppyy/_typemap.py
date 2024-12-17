@@ -2,7 +2,9 @@
     for typedef-ed C++ builtin types.
 """
 
+import ctypes
 import sys
+import types
 
 def _create_mapper(cls, extra_dct=None):
     def mapper(name, scope):
@@ -13,7 +15,8 @@ def _create_mapper(cls, extra_dct=None):
             cppname = name
             modname = 'cppyy.gbl'
         dct = {'__cpp_name__' : cppname, '__module__' : modname}
-        if extra_dct: dct.update(extra_dct)
+        if extra_dct:
+            dct.update(extra_dct)
         return type(name, (cls,), dct)
     return mapper
 
@@ -46,7 +49,15 @@ def with_metaclass(meta, *bases):
     class metaclass(type):
 
         def __new__(cls, name, this_bases, d):
-            return meta(name, bases, d)
+            if sys.version_info[:2] >= (3, 7):
+                # This version introduced PEP 560 that requires a bit
+                # of extra care (we mimic what is done by __build_class__).
+                resolved_bases = types.resolve_bases(bases)
+                if resolved_bases is not bases:
+                    d['__orig_bases__'] = bases
+            else:
+                resolved_bases = bases
+            return meta(name, resolved_bases, d)
 
         @classmethod
         def __prepare__(cls, name, this_bases):
@@ -55,9 +66,10 @@ def with_metaclass(meta, *bases):
 # --- end from six.py
 
 class _BoolMeta(type):
-    def __call__(self, val = bool()):
-        if val: return True
-        else: return False
+    def __call__(cls, val = bool()):
+        if val:
+            return True
+        return False
 
 class _Bool(with_metaclass(_BoolMeta, object)):
     pass
@@ -99,7 +111,6 @@ def initialize(backend):
         tm[tp] = float_tm
 
     # void*
-    import ctypes
     def voidp_init(self, arg=0):
         import cppyy, ctypes
         if arg == cppyy.nullptr: arg = 0

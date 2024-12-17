@@ -366,8 +366,9 @@ class TestNUMBA:
         cppyy.cppdef("""
         int64_t& ref_add(int64_t x, int64_t y) {
         int64_t c = x + y;
-        static int64_t result = c;
-        return c;
+        static int64_t result = 0;
+        result = c;
+        return result;
         }
         """)
 

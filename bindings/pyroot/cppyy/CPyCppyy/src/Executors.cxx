@@ -508,6 +508,7 @@ PyObject* CPyCppyy::name##ArrayExecutor::Execute(                            \
 }
 
 CPPYY_IMPL_ARRAY_EXEC(Bool,     bool,                    )
+CPPYY_IMPL_ARRAY_EXEC(SChar,    signed char,             )
 CPPYY_IMPL_ARRAY_EXEC(UChar,    unsigned char,           )
 #if __cplusplus > 201402L
 CPPYY_IMPL_ARRAY_EXEC(Byte,     std::byte,               )
@@ -632,24 +633,9 @@ PyObject* CPyCppyy::InstanceExecutor::Execute(
 CPyCppyy::IteratorExecutor::IteratorExecutor(Cppyy::TCppType_t klass) :
     InstanceExecutor(klass)
 {
-    fFlags |= CPPInstance::kNoWrapConv;     // adds to flags from base class
+    fFlags |= CPPInstance::kNoMemReg | CPPInstance::kNoWrapConv;     // adds to flags from base class
 }
 
-//----------------------------------------------------------------------------
-PyObject* CPyCppyy::IteratorExecutor::Execute(
-    Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
-{
-    PyObject* iter = this->InstanceExecutor::Execute(method, self, ctxt);
-    if (iter && ctxt->fPyContext) {
-    // set life line to tie iterator life time to the container (which may
-    // be a temporary)
-        std::ostringstream attr_name;
-        attr_name << "__" << (intptr_t)iter;
-        if (PyObject_SetAttrString(ctxt->fPyContext, (char*)attr_name.str().c_str(), iter))
-            PyErr_Clear();
-    }
-    return iter;
-}
 
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::InstanceRefExecutor::Execute(
@@ -1090,7 +1076,8 @@ public:
         gf["const char*&"] =                (ef_t)+[](cdims_t) { static CStringRefExecutor e{};     return &e; };
         gf["char*&"] =                      gf["const char*&"];
         gf["const signed char*"] =          gf["const char*"];
-        gf["signed char*"] =                gf["char*"];
+        //gf["signed char*"] =                gf["char*"];
+        gf["signed char ptr"] =             (ef_t)+[](cdims_t d) { return new SCharArrayExecutor{d};    };
         gf["wchar_t*"] =                    (ef_t)+[](cdims_t) { static WCStringExecutor e{};    return &e;};
         gf["char16_t*"] =                   (ef_t)+[](cdims_t) { static CString16Executor e{};   return &e;};
         gf["char32_t*"] =                   (ef_t)+[](cdims_t) { static CString32Executor e{};   return &e;};
