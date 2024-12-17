@@ -981,12 +981,13 @@ using Quantized_t = std::uint32_t;
 [[maybe_unused]] inline std::size_t LeadingZeroes(std::uint32_t x)
 {
    if (x == 0)
-      return 64;
+      return 32;
 
 #ifdef _MSC_VER
    unsigned long idx = 0;
-   _BitScanForward(&idx, x);
-   return static_cast<std::size_t>(idx);
+   if (_BitScanReverse(&idx, x))
+      return static_cast<std::size_t>(31 - idx);
+   return 32;
 #else
    return static_cast<std::size_t>(__builtin_clzl(x));
 #endif
@@ -995,12 +996,13 @@ using Quantized_t = std::uint32_t;
 [[maybe_unused]] inline std::size_t TrailingZeroes(std::uint32_t x)
 {
    if (x == 0)
-      return 64;
+      return 32;
 
 #ifdef _MSC_VER
    unsigned long idx = 0;
-   _BitScanReverse(&idx, x);
-   return static_cast<std::size_t>(idx);
+   if (_BitScanForward(&idx, x))
+      return static_cast<std::size_t>(idx);
+   return 32;
 #else
    return static_cast<std::size_t>(__builtin_ctzl(x));
 #endif
