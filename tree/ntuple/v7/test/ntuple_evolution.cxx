@@ -866,3 +866,62 @@ struct RenamedBaseDerived : public RenamedBase2 {
       EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
    }
 }
+
+TEST(RNTupleEvolution, RenamedIntermediateClass)
+{
+   // RNTuple currently does not support automatic schema evolution when a class is renamed.
+   FileRaii fileGuard("test_ntuple_evolution_renamed_intermediate_class.root");
+
+   WriteOldInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+struct RenamedIntermediateBase {
+   int fBase = 1;
+};
+struct RenamedIntermediate1 : public RenamedIntermediateBase {
+   int fInteremdiate = 2;
+};
+struct RenamedIntermediateDerived : public RenamedIntermediate1 {
+   int fDerived = 3;
+};
+)"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "RenamedIntermediateDerived").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      // Reset / close the writer and flush the file.
+      {
+         // TStreamerInfo::Build will report a warning for interpreted classes (but only for base classes).
+         // See also https://github.com/root-project/root/issues/9371
+         ROOT::TestSupport::CheckDiagsRAII diagRAII;
+         diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                               /*matchFullMessage=*/false);
+         writer.reset();
+      }
+   });
+
+   ASSERT_TRUE(gInterpreter->Declare(R"(
+struct RenamedIntermediateBase {
+   int fBase = 1;
+};
+struct RenamedIntermediate2 : public RenamedIntermediateBase {
+   int fInteremdiate = 2;
+};
+struct RenamedIntermediateDerived : public RenamedIntermediate2 {
+   int fDerived = 3;
+};
+)"));
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   try {
+      reader->GetModel();
+      FAIL() << "model reconstruction should fail";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("incompatible type name for field"));
+   }
+}
