@@ -494,6 +494,10 @@ ROOT::Experimental::DescriptorId_t ROOT::Experimental::RNTupleDescriptor::FindCl
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindNextClusterId(DescriptorId_t clusterId) const
 {
+   // TODO(jblomer): we may want to shortcut the common case and check if clusterId + 1 contains
+   // firstEntryInNextCluster. This shortcut would currently always trigger. We do not want, however, to depend
+   // on the linearity of the descriptor IDs, so we should only enable the shortcut if we can ensure that the
+   // binary search code path remains tested.
    const auto &clusterDesc = GetClusterDescriptor(clusterId);
    const auto firstEntryInNextCluster = clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries();
    return FindClusterId(firstEntryInNextCluster);
@@ -502,6 +506,10 @@ ROOT::Experimental::RNTupleDescriptor::FindNextClusterId(DescriptorId_t clusterI
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindPrevClusterId(DescriptorId_t clusterId) const
 {
+   // TODO(jblomer): we may want to shortcut the common case and check if clusterId - 1 contains
+   // firstEntryInNextCluster. This shortcut would currently always trigger. We do not want, however, to depend
+   // on the linearity of the descriptor IDs, so we should only enable the shortcut if we can ensure that the
+   // binary search code path remains tested.
    const auto &clusterDesc = GetClusterDescriptor(clusterId);
    if (clusterDesc.GetFirstEntryIndex() == 0)
       return kInvalidDescriptorId;
