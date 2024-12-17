@@ -697,7 +697,7 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
                 continue;    // did not set implicit conversion, so don't try again
 
             PyObject* result = methods[i]->Call(im_self, args, nargsf, kwds, &ctxt);
-            if (result != 0) {
+            if (result) {
             // success: update the dispatch map for subsequent calls
                 if (!memoized_pc)
                     dispatchMap.push_back(std::make_pair(sighash, methods[i]));

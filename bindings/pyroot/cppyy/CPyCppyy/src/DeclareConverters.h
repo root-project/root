@@ -72,6 +72,11 @@ protected:                                                                   \
 CPPYY_DECLARE_BASIC_CONVERTER(Long);
 CPPYY_DECLARE_BASIC_CONVERTER(Bool);
 CPPYY_DECLARE_BASIC_CONVERTER(Char);
+class SCharAsIntConverter : public CharConverter {
+public:
+    using CharConverter::CharConverter;
+    virtual PyObject* FromMemory(void*);
+};
 CPPYY_DECLARE_BASIC_CONVERTER(UChar);
 class UCharAsIntConverter : public UCharConverter {
 public:

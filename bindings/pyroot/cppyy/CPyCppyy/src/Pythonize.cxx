@@ -1237,7 +1237,7 @@ PyObject* STLStringDecode(CPPInstance* self, PyObject* args, PyObject* kwds)
         return nullptr;
 
     char* keywords[] = {(char*)"encoding", (char*)"errors", (char*)nullptr};
-    const char* encoding; const char* errors;
+    const char* encoding = nullptr; const char* errors = nullptr;
     if (!PyArg_ParseTupleAndKeywords(args, kwds,
             const_cast<char*>("s|s"), keywords, &encoding, &errors))
         return nullptr;

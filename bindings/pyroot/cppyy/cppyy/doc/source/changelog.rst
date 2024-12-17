@@ -10,8 +10,8 @@ See :doc:`packages <packages>`, for details on the package structure.
 PyPy support lags CPython support.
 
 
-master
-------
+2024-12-16: 3.5.0
+-----------------
 
 * Fix buffering problems with std::string_view's on Python str objects
 * Fix potential buffering problems in creation of initializer lists
@@ -25,6 +25,10 @@ master
 * Extend API to define executor and converter aliases
 * Use importlib.metadata instead of pkg_resources for py3.11 and later
 * Added out-of-bounds handling for small char-based enums
+* Fixed a leak check in the generic STL iterator protocol
+* Represent arrays of ``signed char`` as low level views returning bytes
+* Improve memory regulator's handling of smart pointers
+* Version PCHs with the C++ standard version
 * Fixes for py3.12 and py3.13
 * Upgrade backend to Clang16
 

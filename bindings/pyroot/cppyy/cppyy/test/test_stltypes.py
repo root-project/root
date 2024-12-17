@@ -789,6 +789,34 @@ class TestSTLVECTOR:
         for f, d in zip(x, v):
             assert f == d
 
+    def test24_byte_vectors(self):
+        """Vectors of "byte" types should return low level views"""
+
+        import cppyy
+        import cppyy.types
+
+        vector = cppyy.gbl.std.vector
+
+        for ctype in ('unsigned char', 'signed char', 'int8_t', 'uint8_t'):
+            vc = vector[ctype](range(10))
+            data = vc.data()
+
+            assert type(data) == cppyy.types.LowLevelView
+            assert len(data) == 10
+
+            for i, d in enumerate(data):
+                assert d == i
+
+        for ctype in ('signed char', 'int8_t'):
+            vc = vector[ctype](range(-5, 5, 1))
+            data = vc.data()
+
+            assert type(data) == cppyy.types.LowLevelView
+            assert len(data) == 10
+
+            for i, d in zip(range(-5, 5, 1), data):
+                assert d == i
+
 
 class TestSTLSTRING:
     def setup_class(cls):
