@@ -179,41 +179,47 @@ public:
       std::memcpy(to, from, elemSize);
    }
 
-   void ReadV(const NTupleSize_t globalIndex, const ClusterSize_t::ValueType count, void *to)
+   void ReadV(NTupleSize_t globalIndex, ClusterSize_t::ValueType count, void *to)
    {
-      if (!fReadPageRef.Get().Contains(globalIndex)) {
-         MapPage(globalIndex);
-      }
-      NTupleSize_t idxInPage = globalIndex - fReadPageRef.Get().GetGlobalRangeFirst();
-
       const auto elemSize = fElement->GetSize();
-      const void *from = static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) + idxInPage * elemSize;
-      if (globalIndex + count <= fReadPageRef.Get().GetGlobalRangeLast() + 1) {
-         std::memcpy(to, from, elemSize * count);
-      } else {
-         ClusterSize_t::ValueType nBatch = fReadPageRef.Get().GetNElements() - idxInPage;
-         std::memcpy(to, from, elemSize * nBatch);
-         auto tail = static_cast<unsigned char *>(to) + nBatch * elemSize;
-         ReadV(globalIndex + nBatch, count - nBatch, tail);
+      auto tail = static_cast<unsigned char *>(to);
+
+      while (count > 0) {
+         if (!fReadPageRef.Get().Contains(globalIndex)) {
+            MapPage(globalIndex);
+         }
+         const NTupleSize_t idxInPage = globalIndex - fReadPageRef.Get().GetGlobalRangeFirst();
+
+         const void *from = static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) + idxInPage * elemSize;
+         const ClusterSize_t::ValueType nBatch = std::min(fReadPageRef.Get().GetNElements() - idxInPage, count);
+
+         std::memcpy(tail, from, elemSize * nBatch);
+
+         tail += nBatch * elemSize;
+         count -= nBatch;
+         globalIndex += nBatch;
       }
    }
 
-   void ReadV(RClusterIndex clusterIndex, const ClusterSize_t::ValueType count, void *to)
+   void ReadV(RClusterIndex clusterIndex, ClusterSize_t::ValueType count, void *to)
    {
-      if (!fReadPageRef.Get().Contains(clusterIndex)) {
-         MapPage(clusterIndex);
-      }
-      NTupleSize_t idxInPage = clusterIndex.GetIndex() - fReadPageRef.Get().GetClusterRangeFirst();
-
       const auto elemSize = fElement->GetSize();
-      const void *from = static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) + idxInPage * elemSize;
-      if (clusterIndex.GetIndex() + count <= fReadPageRef.Get().GetClusterRangeLast() + 1) {
-         std::memcpy(to, from, elemSize * count);
-      } else {
-         ClusterSize_t::ValueType nBatch = fReadPageRef.Get().GetNElements() - idxInPage;
-         std::memcpy(to, from, elemSize * nBatch);
-         auto tail = static_cast<unsigned char *>(to) + nBatch * elemSize;
-         ReadV(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() + nBatch), count - nBatch, tail);
+      auto tail = static_cast<unsigned char *>(to);
+
+      while (count > 0) {
+         if (!fReadPageRef.Get().Contains(clusterIndex)) {
+            MapPage(clusterIndex);
+         }
+         NTupleSize_t idxInPage = clusterIndex.GetIndex() - fReadPageRef.Get().GetClusterRangeFirst();
+
+         const void *from = static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) + idxInPage * elemSize;
+         const ClusterSize_t::ValueType nBatch = std::min(count, fReadPageRef.Get().GetNElements() - idxInPage);
+
+         std::memcpy(tail, from, elemSize * nBatch);
+
+         tail += nBatch * elemSize;
+         count -= nBatch;
+         clusterIndex = RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() + nBatch);
       }
    }
 
