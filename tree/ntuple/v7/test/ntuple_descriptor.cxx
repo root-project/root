@@ -6,11 +6,11 @@ TEST(RFieldDescriptorBuilder, MakeDescriptorErrors)
 {
    // minimum requirements for making a field descriptor from scratch
    RFieldDescriptor fieldDesc = RFieldDescriptorBuilder()
-      .FieldId(1)
-      .Structure(ENTupleStructure::kCollection)
-      .FieldName("someField")
-      .MakeDescriptor()
-      .Unwrap();
+                                   .FieldId(1)
+                                   .Structure(ENTupleStructure::kCollection)
+                                   .FieldName("someField")
+                                   .MakeDescriptor()
+                                   .Unwrap();
 
    // MakeDescriptor() returns an RResult<RFieldDescriptor>
    // -- here we check the error cases
@@ -21,18 +21,13 @@ TEST(RFieldDescriptorBuilder, MakeDescriptorErrors)
    EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("invalid field id"));
 
    // must set field structure
-   fieldDescRes = RFieldDescriptorBuilder()
-      .FieldId(1)
-      .MakeDescriptor();
+   fieldDescRes = RFieldDescriptorBuilder().FieldId(1).MakeDescriptor();
    ASSERT_FALSE(fieldDescRes) << "field descriptors without structure should throw";
    EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("invalid field structure"));
 
    // must set field name
-   fieldDescRes = RFieldDescriptorBuilder()
-      .FieldId(1)
-      .ParentId(1)
-      .Structure(ENTupleStructure::kCollection)
-      .MakeDescriptor();
+   fieldDescRes =
+      RFieldDescriptorBuilder().FieldId(1).ParentId(1).Structure(ENTupleStructure::kCollection).MakeDescriptor();
    ASSERT_FALSE(fieldDescRes) << "unnamed field descriptors should throw";
    EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("name cannot be empty string"));
 }
@@ -40,18 +35,15 @@ TEST(RFieldDescriptorBuilder, MakeDescriptorErrors)
 TEST(RNTupleDescriptorBuilder, CatchBadLinks)
 {
    RNTupleDescriptorBuilder descBuilder;
+   descBuilder.AddField(
+      RFieldDescriptorBuilder().FieldId(0).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
    descBuilder.AddField(RFieldDescriptorBuilder()
-      .FieldId(0)
-      .Structure(ENTupleStructure::kRecord)
-      .MakeDescriptor()
-      .Unwrap());
-   descBuilder.AddField(RFieldDescriptorBuilder()
-      .FieldId(1)
-      .FieldName("field")
-      .TypeName("int32_t")
-      .Structure(ENTupleStructure::kLeaf)
-      .MakeDescriptor()
-      .Unwrap());
+                           .FieldId(1)
+                           .FieldName("field")
+                           .TypeName("int32_t")
+                           .Structure(ENTupleStructure::kLeaf)
+                           .MakeDescriptor()
+                           .Unwrap());
    try {
       descBuilder.AddFieldLink(1, 0);
    } catch (const ROOT::RException &err) {
@@ -374,11 +366,11 @@ TEST(RFieldDescriptorIterable, IterateOverFieldNames)
    auto top_level_fields = ntuple_desc.GetTopLevelFields();
 
    // iterate over child field ranges
-   const auto& float_vec_desc = *top_level_fields.begin();
+   const auto &float_vec_desc = *top_level_fields.begin();
    EXPECT_EQ(float_vec_desc.GetFieldName(), std::string("jets"));
    auto float_vec_child_range = ntuple_desc.GetFieldIterable(float_vec_desc);
    std::vector<std::string> child_names{};
-   for (auto& child_field: float_vec_child_range) {
+   for (auto &child_field : float_vec_child_range) {
       child_names.push_back(child_field.GetFieldName());
       // check the empty range
       auto float_child_range = ntuple_desc.GetFieldIterable(child_field);
@@ -390,7 +382,7 @@ TEST(RFieldDescriptorIterable, IterateOverFieldNames)
    // check if canonical iterator methods work
    auto iter = top_level_fields.begin();
    std::advance(iter, 2);
-   const auto& bool_vec_vec_desc = *iter;
+   const auto &bool_vec_vec_desc = *iter;
    EXPECT_EQ(bool_vec_vec_desc.GetFieldName(), std::string("bool_vec_vec"));
 
    child_names.clear();
@@ -456,7 +448,6 @@ TEST(RFieldDescriptorIterable, SortByLambda)
    EXPECT_EQ(sorted_by_typename[2], std::string("jets"));
    EXPECT_EQ(sorted_by_typename[3], std::string("bool_vec_vec"));
 }
-
 
 TEST(RColumnDescriptorIterable, IterateOverColumns)
 {
