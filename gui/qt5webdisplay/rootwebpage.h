@@ -16,12 +16,10 @@
 #include <QWebEnginePage>
 
 namespace ROOT {
-namespace Experimental {
 class RLogChannel;
 }
-}
 
-ROOT::Experimental::RLogChannel &QtWebDisplayLog();
+ROOT::RLogChannel &QtWebDisplayLog();
 
 class RootWebPage : public QWebEnginePage {
    Q_OBJECT

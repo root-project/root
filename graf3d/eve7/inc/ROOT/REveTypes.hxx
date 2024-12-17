@@ -23,10 +23,9 @@ typedef ULong_t Pixel_t; // from GuiTypes.h
 class TString;
 
 namespace ROOT {
+class RLogChannel;
 namespace Experimental {
 typedef unsigned int ElementId_t;
-
-class RLogChannel;
 
 //==============================================================================
 // Exceptions, string functions
@@ -62,7 +61,7 @@ inline std::ostream& operator <<(std::ostream &s, const REveException &e)
 { s << e.what(); return s; }
 
 /// Log channel for Eve diagnostics.
-RLogChannel &REveLog();
+ROOT::RLogChannel &REveLog();
 
 } // namespace Experimental
 } // namespace ROOT

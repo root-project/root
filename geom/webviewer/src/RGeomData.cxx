@@ -46,9 +46,9 @@
 #include <algorithm>
 #include <array>
 
-ROOT::Experimental::RLogChannel &ROOT::RGeomLog()
+ROOT::RLogChannel &ROOT::RGeomLog()
 {
-   static ROOT::Experimental::RLogChannel sLog("ROOT.Geom");
+   static RLogChannel sLog("ROOT.Geom");
    return sLog;
 }
 

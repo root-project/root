@@ -43,8 +43,9 @@ using namespace std::string_literals;
 using namespace ROOT::Experimental;
 
 namespace {
-RLogChannel &CanvasPainerLog() {
-   static RLogChannel sLog("ROOT.CanvasPainer");
+ROOT::RLogChannel &CanvasPainerLog()
+{
+   static ROOT::RLogChannel sLog("ROOT.CanvasPainer");
    return sLog;
 }
 }

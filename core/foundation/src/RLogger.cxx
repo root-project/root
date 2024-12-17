@@ -22,21 +22,19 @@
 #include <memory>
 #include <vector>
 
-using namespace ROOT::Experimental;
-
 // pin vtable
-RLogHandler::~RLogHandler() {}
+ROOT::RLogHandler::~RLogHandler() {}
 
 namespace {
-class RLogHandlerDefault : public RLogHandler {
+class RLogHandlerDefault : public ROOT::RLogHandler {
 public:
    // Returns false if further emission of this log entry should be suppressed.
-   bool Emit(const RLogEntry &entry) override;
+   bool Emit(const ROOT::RLogEntry &entry) override;
 };
 
-inline bool RLogHandlerDefault::Emit(const RLogEntry &entry)
+inline bool RLogHandlerDefault::Emit(const ROOT::RLogEntry &entry)
 {
-   constexpr static int numLevels = static_cast<int>(ELogLevel::kDebug) + 1;
+   constexpr static int numLevels = static_cast<int>(ROOT::ELogLevel::kDebug) + 1;
    int cappedLevel = std::min(static_cast<int>(entry.fLevel), numLevels - 1);
    constexpr static std::array<const char *, numLevels> sTag{
       {"{unset-error-level please report}", "FATAL", "Error", "Warning", "Info", "Debug"}};
@@ -53,19 +51,19 @@ inline bool RLogHandlerDefault::Emit(const RLogEntry &entry)
       strm << " in " << entry.fLocation.fFuncName;
 
    static constexpr const int errorLevelOld[] = {kFatal /*unset*/, kFatal, kError, kWarning, kInfo, kInfo /*debug*/};
-   (*::GetErrorHandler())(errorLevelOld[cappedLevel], entry.fLevel == ELogLevel::kFatal, strm.str().c_str(),
+   (*::GetErrorHandler())(errorLevelOld[cappedLevel], entry.fLevel == ROOT::ELogLevel::kFatal, strm.str().c_str(),
                           entry.fMessage.c_str());
    return true;
 }
 } // unnamed namespace
 
-RLogManager &RLogManager::Get()
+ROOT::RLogManager &ROOT::RLogManager::Get()
 {
    static RLogManager instance(std::make_unique<RLogHandlerDefault>());
    return instance;
 }
 
-std::unique_ptr<RLogHandler> RLogManager::Remove(RLogHandler *handler)
+std::unique_ptr<ROOT::RLogHandler> ROOT::RLogManager::Remove(RLogHandler *handler)
 {
    auto iter = std::find_if(fHandlers.begin(), fHandlers.end(), [&](const std::unique_ptr<RLogHandler> &handlerPtr) {
       return handlerPtr.get() == handler;
@@ -79,7 +77,7 @@ std::unique_ptr<RLogHandler> RLogManager::Remove(RLogHandler *handler)
    return {};
 }
 
-bool RLogManager::Emit(const RLogEntry &entry)
+bool ROOT::RLogManager::Emit(const ROOT::RLogEntry &entry)
 {
    auto channel = entry.fChannel;
 

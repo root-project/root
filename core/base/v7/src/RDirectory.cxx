@@ -17,7 +17,8 @@
 
 #include <ROOT/RLogger.hxx>
 
-ROOT::Experimental::RLogChannel &ROOT::Experimental::IOLog() {
+ROOT::RLogChannel &ROOT::Experimental::IOLog()
+{
    static RLogChannel sLog("ROOT.IO");
    return sLog;
 }

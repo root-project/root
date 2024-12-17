@@ -20,13 +20,10 @@ class THttpServer;
 
 namespace ROOT {
 
-namespace Experimental {
 class RLogChannel;
-} // namespace Experimental
 
 /// Log channel for WebGUI diagnostics.
-ROOT::Experimental::RLogChannel &WebGUILog();
-
+ROOT::RLogChannel &WebGUILog();
 
 class RWebWindow;
 
@@ -106,7 +103,7 @@ public:
    {
       return !IsHeadless() &&
              ((GetBrowserKind() == kOn) || (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) ||
-              (GetBrowserKind() == kEdge) || (GetBrowserKind() == kSafari) || (GetBrowserKind() == kFirefox) || 
+              (GetBrowserKind() == kEdge) || (GetBrowserKind() == kSafari) || (GetBrowserKind() == kFirefox) ||
               (GetBrowserKind() == kDefault) || (GetBrowserKind() == kCustom));
    }
 

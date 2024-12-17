@@ -25,7 +25,7 @@ namespace ROOT::Experimental::Internal {
 
 namespace {
 
-ROOT::Experimental::RLogChannel &RNTupleExporterLog()
+ROOT::RLogChannel &RNTupleExporterLog()
 {
    static RLogChannel sLog("ROOT.RNTupleExporter");
    return sLog;

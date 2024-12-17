@@ -31,13 +31,10 @@ class TGeoVolume;
 namespace ROOT {
 
 class RGeomBrowserIter;
-
-namespace Experimental {
 class RLogChannel;
-} // namespace Experimental
 
 /// Log channel for Geomviewer diagnostics.
-Experimental::RLogChannel &RGeomLog();
+RLogChannel &RGeomLog();
 
 /** Base description of geometry node, required only to build hierarchy */
 

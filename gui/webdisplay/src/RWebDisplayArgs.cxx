@@ -21,9 +21,9 @@
 
 using namespace ROOT;
 
-ROOT::Experimental::RLogChannel &ROOT::WebGUILog()
+ROOT::RLogChannel &ROOT::WebGUILog()
 {
-   static ROOT::Experimental::RLogChannel sLog("ROOT.WebGUI");
+   static RLogChannel sLog("ROOT.WebGUI");
    return sLog;
 }
 

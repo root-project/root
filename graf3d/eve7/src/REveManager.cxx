@@ -65,7 +65,7 @@ struct MIR_TL_Data_t
    }
 };
 
-thread_local std::vector<RLogEntry> gEveLogEntries;
+thread_local std::vector<ROOT::RLogEntry> gEveLogEntries;
 thread_local MIR_TL_Data_t gMIRData;
 
 /** \class REveManager

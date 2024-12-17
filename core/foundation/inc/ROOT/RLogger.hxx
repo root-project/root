@@ -2,8 +2,6 @@
 /// \ingroup Base ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-03-29
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
@@ -13,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RLogger
-#define ROOT7_RLogger
+#ifndef ROOT_RLogger
+#define ROOT_RLogger
 
 #include <atomic>
 #include <list>
@@ -25,7 +23,6 @@
 #include <utility>
 
 namespace ROOT {
-namespace Experimental {
 
 class RLogEntry;
 class RLogManager;
@@ -317,7 +314,6 @@ inline ELogLevel RLogChannel::GetEffectiveVerbosity(const RLogManager &mgr) cons
    return fVerbosity;
 }
 
-} // namespace Experimental
 } // namespace ROOT
 
 #if defined(_MSC_VER)
@@ -341,28 +337,27 @@ inline ELogLevel RLogChannel::GetEffectiveVerbosity(const RLogManager &mgr) cons
  - Use `(condition) && RLogBuilder(...)` instead of `if (condition) RLogBuilder(...)`
  to prevent "ambiguous else" in invocations such as `if (something) R__LOG_DEBUG()...`.
  */
-#define R__LOG_TO_CHANNEL(SEVERITY, CHANNEL)                                                                        \
-   ((SEVERITY < ROOT::Experimental::ELogLevel::kInfo + 0) ||                                                        \
-     ROOT::Experimental::Internal::GetChannelOrManager(CHANNEL).GetEffectiveVerbosity(                              \
-        ROOT::Experimental::RLogManager::Get()) >= SEVERITY) &&                                                     \
-      ROOT::Experimental::Detail::RLogBuilder(SEVERITY, ROOT::Experimental::Internal::GetChannelOrManager(CHANNEL), \
-                                              __FILE__, __LINE__, R__LOG_PRETTY_FUNCTION)
+#define R__LOG_TO_CHANNEL(SEVERITY, CHANNEL)                                                                     \
+   ((SEVERITY < ROOT::ELogLevel::kInfo + 0) ||                                                                   \
+    ROOT::Internal::GetChannelOrManager(CHANNEL).GetEffectiveVerbosity(ROOT::RLogManager::Get()) >= SEVERITY) && \
+      ROOT::Detail::RLogBuilder(SEVERITY, ROOT::Internal::GetChannelOrManager(CHANNEL), __FILE__, __LINE__,      \
+                                R__LOG_PRETTY_FUNCTION)
 
 /// \name LogMacros
 /// Macros to log diagnostics.
 /// ~~~ {.cpp}
-///     R__LOG_INFO(ROOT::Experimental::HistLog()) << "all we know is " << 42;
+///     R__LOG_INFO(ROOT::HistLog()) << "all we know is " << 42;
 ///
 ///     RLogScopedVerbosity verbose(kDebug + 5);
 ///     const int decreasedInfoLevel = 5;
 ///     R__LOG_DEBUG(ROOT::WebGUILog(), decreasedInfoLevel) << "nitty-gritty details";
 /// ~~~
 ///\{
-#define R__LOG_FATAL(...) R__LOG_TO_CHANNEL(ROOT::Experimental::ELogLevel::kFatal, __VA_ARGS__)
-#define R__LOG_ERROR(...) R__LOG_TO_CHANNEL(ROOT::Experimental::ELogLevel::kError, __VA_ARGS__)
-#define R__LOG_WARNING(...) R__LOG_TO_CHANNEL(ROOT::Experimental::ELogLevel::kWarning, __VA_ARGS__)
-#define R__LOG_INFO(...) R__LOG_TO_CHANNEL(ROOT::Experimental::ELogLevel::kInfo, __VA_ARGS__)
-#define R__LOG_DEBUG(DEBUGLEVEL, ...) R__LOG_TO_CHANNEL(ROOT::Experimental::ELogLevel::kDebug + DEBUGLEVEL, __VA_ARGS__)
+#define R__LOG_FATAL(...) R__LOG_TO_CHANNEL(ROOT::ELogLevel::kFatal, __VA_ARGS__)
+#define R__LOG_ERROR(...) R__LOG_TO_CHANNEL(ROOT::ELogLevel::kError, __VA_ARGS__)
+#define R__LOG_WARNING(...) R__LOG_TO_CHANNEL(ROOT::ELogLevel::kWarning, __VA_ARGS__)
+#define R__LOG_INFO(...) R__LOG_TO_CHANNEL(ROOT::ELogLevel::kInfo, __VA_ARGS__)
+#define R__LOG_DEBUG(DEBUGLEVEL, ...) R__LOG_TO_CHANNEL(ROOT::ELogLevel::kDebug + DEBUGLEVEL, __VA_ARGS__)
 ///\}
 
 #endif

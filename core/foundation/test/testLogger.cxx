@@ -7,16 +7,14 @@
 #include <memory>
 #include <vector>
 
-using namespace ROOT::Experimental;
-
 struct TestLogger {
-   class Handler : public RLogHandler {
+   class Handler : public ROOT::RLogHandler {
       TestLogger *fLogger;
 
    public:
       Handler(TestLogger &logger) : fLogger(&logger) {}
 
-      bool Emit(const RLogEntry &entry) override
+      bool Emit(const ROOT::RLogEntry &entry) override
       {
          fLogger->fLogEntries.emplace_back(entry);
          // Stop emission.
@@ -24,17 +22,17 @@ struct TestLogger {
       }
    };
 
-   std::vector<RLogEntry> fLogEntries;
+   std::vector<ROOT::RLogEntry> fLogEntries;
    Handler *fHandler;
 
    TestLogger()
    {
       auto uptr = std::make_unique<Handler>(*this);
       fHandler = uptr.get();
-      RLogManager::Get().PushFront(std::move(uptr));
+      ROOT::RLogManager::Get().PushFront(std::move(uptr));
    }
 
-   ~TestLogger() { RLogManager::Get().Remove(fHandler); }
+   ~TestLogger() { ROOT::RLogManager::Get().Remove(fHandler); }
 
    size_t size() const { return fLogEntries.size(); }
    bool empty() const { return fLogEntries.empty(); }
@@ -43,10 +41,10 @@ struct TestLogger {
 TEST(Logger, EmittedEntry)
 {
    TestLogger testLogger;
-   auto prevErrors = RLogManager::Get().GetNumErrors();
-   auto prevWarnings = RLogManager::Get().GetNumWarnings();
+   auto prevErrors = ROOT::RLogManager::Get().GetNumErrors();
+   auto prevWarnings = ROOT::RLogManager::Get().GetNumWarnings();
 
-   RLogChannel channel("TheChannel");
+   ROOT::RLogChannel channel("TheChannel");
 
    // clang-format off
    R__LOG_ERROR(channel) << "The text"; auto logLine = __LINE__;
@@ -54,15 +52,15 @@ TEST(Logger, EmittedEntry)
 
    // Check manager's emission
    EXPECT_EQ(testLogger.size(), 1);
-   EXPECT_EQ(RLogManager::Get().GetNumErrors(), prevErrors + 1);
-   EXPECT_EQ(RLogManager::Get().GetNumWarnings(), prevWarnings);
+   EXPECT_EQ(ROOT::RLogManager::Get().GetNumErrors(), prevErrors + 1);
+   EXPECT_EQ(ROOT::RLogManager::Get().GetNumWarnings(), prevWarnings);
 
    // Check emitted RLogEntry
    EXPECT_EQ(testLogger.fLogEntries[0].fChannel->GetName(), "TheChannel");
    EXPECT_NE(testLogger.fLogEntries[0].fLocation.fFile.find("testLogger.cxx"), std::string::npos);
    EXPECT_NE(testLogger.fLogEntries[0].fLocation.fFuncName.find("EmittedEntry"), std::string::npos);
    EXPECT_EQ(testLogger.fLogEntries[0].fLocation.fLine, logLine);
-   EXPECT_EQ(testLogger.fLogEntries[0].fLevel, ELogLevel::kError);
+   EXPECT_EQ(testLogger.fLogEntries[0].fLevel, ROOT::ELogLevel::kError);
    EXPECT_EQ(testLogger.fLogEntries[0].fMessage, "The text");
    EXPECT_TRUE(testLogger.fLogEntries[0].IsError());
    EXPECT_FALSE(testLogger.fLogEntries[0].IsWarning());
@@ -72,11 +70,11 @@ TEST(Logger, RLogManagerCounts)
 {
    TestLogger testLogger;
    // Check diag counts of RLogManager.
-   auto initialWarnings = RLogManager::Get().GetNumWarnings();
-   auto initialErrors = RLogManager::Get().GetNumErrors();
+   auto initialWarnings = ROOT::RLogManager::Get().GetNumWarnings();
+   auto initialErrors = ROOT::RLogManager::Get().GetNumErrors();
    R__LOG_ERROR() << "emitted";
-   EXPECT_EQ(RLogManager::Get().GetNumWarnings(), initialWarnings);
-   EXPECT_EQ(RLogManager::Get().GetNumErrors(), initialErrors + 1);
+   EXPECT_EQ(ROOT::RLogManager::Get().GetNumWarnings(), initialWarnings);
+   EXPECT_EQ(ROOT::RLogManager::Get().GetNumErrors(), initialErrors + 1);
 }
 
 TEST(Logger, RLogDiagCounter)
@@ -85,7 +83,7 @@ TEST(Logger, RLogDiagCounter)
    R__LOG_ERROR() << "emitted"; // before RAII, should not be counted.
    R__LOG_ERROR() << "emitted"; // before RAII, should not be counted.
    // Check counter seeing what was emitted during its lifetime.
-   RLogScopedDiagCount counter;
+   ROOT::RLogScopedDiagCount counter;
    EXPECT_EQ(counter.GetAccumulatedWarnings(), 0);
    EXPECT_EQ(counter.GetAccumulatedErrors(), 0);
    EXPECT_FALSE(counter.HasWarningOccurred());
@@ -103,27 +101,27 @@ TEST(Logger, RLogDiagCounter)
 
 TEST(Logger, RLogScopedVerbositySuppress)
 {
-   RLogChannel channel("ABC");
+   ROOT::RLogChannel channel("ABC");
 
-   auto initialLogLevel = RLogManager::Get().GetVerbosity();
+   auto initialLogLevel = ROOT::RLogManager::Get().GetVerbosity();
    auto initialLogLevelABC = channel.GetVerbosity();
-   EXPECT_EQ(initialLogLevel, ELogLevel::kWarning);
-   EXPECT_EQ(initialLogLevelABC, ELogLevel::kUnset);
+   EXPECT_EQ(initialLogLevel, ROOT::ELogLevel::kWarning);
+   EXPECT_EQ(initialLogLevelABC, ROOT::ELogLevel::kUnset);
 
    {
       // Test simple suppression.
       TestLogger testLogger;
       R__LOG_WARNING(channel) << "emitted";
       EXPECT_EQ(testLogger.size(), 1);
-      RLogScopedVerbosity suppress(ELogLevel::kError);
+      ROOT::RLogScopedVerbosity suppress(ROOT::ELogLevel::kError);
       R__LOG_WARNING(channel) << "suppressed";
       EXPECT_EQ(testLogger.size(), 1);
    }
    {
       // Test channel specific suppression given global higher verbosity.
       TestLogger testLogger;
-      RLogScopedVerbosity suppressGlobal(ELogLevel::kInfo);
-      RLogScopedVerbosity suppress(channel, ELogLevel::kError);
+      ROOT::RLogScopedVerbosity suppressGlobal(ROOT::ELogLevel::kInfo);
+      ROOT::RLogScopedVerbosity suppress(channel, ROOT::ELogLevel::kError);
       R__LOG_WARNING(channel) << "suppressed";
       R__LOG_INFO(channel) << "suppressed, too";
       EXPECT_TRUE(testLogger.empty());
@@ -138,16 +136,16 @@ TEST(Logger, RLogScopedVerbositySuppress)
    {
       // Check unrelated channel.
       TestLogger testLogger;
-      RLogChannel channel123("123");
-      RLogScopedVerbosity suppress(channel123, ELogLevel::kFatal);
+      ROOT::RLogChannel channel123("123");
+      ROOT::RLogScopedVerbosity suppress(channel123, ROOT::ELogLevel::kFatal);
       R__LOG_ERROR(channel) << "emitted";
       EXPECT_EQ(testLogger.size(), 1);
    }
    {
       // Check global vs specific suppression.
       TestLogger testLogger;
-      RLogScopedVerbosity suppressGlobal(ELogLevel::kDebug);
-      RLogScopedVerbosity suppress(channel, ELogLevel::kError);
+      ROOT::RLogScopedVerbosity suppressGlobal(ROOT::ELogLevel::kDebug);
+      ROOT::RLogScopedVerbosity suppress(channel, ROOT::ELogLevel::kError);
       R__LOG_WARNING(channel) << "suppressed";
       EXPECT_TRUE(testLogger.empty());
       R__LOG_WARNING() << "emitted";
@@ -155,18 +153,18 @@ TEST(Logger, RLogScopedVerbositySuppress)
    }
 
    // Check that levels have returned to values before RAII.
-   EXPECT_EQ(RLogManager::Get().GetVerbosity(), initialLogLevel);
+   EXPECT_EQ(ROOT::RLogManager::Get().GetVerbosity(), initialLogLevel);
    EXPECT_EQ(channel.GetVerbosity(), initialLogLevelABC);
 }
 
 TEST(Logger, RLogScopedVerbosityVerbose)
 {
-   RLogChannel channel("ABC");
+   ROOT::RLogChannel channel("ABC");
 
-   auto initialLogLevel = RLogManager::Get().GetVerbosity();
+   auto initialLogLevel = ROOT::RLogManager::Get().GetVerbosity();
    auto initialLogLevelABC = channel.GetVerbosity();
-   EXPECT_EQ(initialLogLevel, ELogLevel::kWarning);
-   EXPECT_EQ(initialLogLevelABC, ELogLevel::kUnset);
+   EXPECT_EQ(initialLogLevel, ROOT::ELogLevel::kWarning);
+   EXPECT_EQ(initialLogLevelABC, ROOT::ELogLevel::kUnset);
 
    {
       // Test same diag level as verbosity, in channel and global, before and after RAII.
@@ -175,7 +173,7 @@ TEST(Logger, RLogScopedVerbosityVerbose)
       EXPECT_TRUE(testLogger.empty());
       R__LOG_DEBUG(0) << "suppressed";
       EXPECT_TRUE(testLogger.empty());
-      RLogScopedVerbosity verbose(ELogLevel::kDebug);
+      ROOT::RLogScopedVerbosity verbose(ROOT::ELogLevel::kDebug);
       R__LOG_DEBUG(0, channel) << "emitted";
       EXPECT_EQ(testLogger.size(), 1);
       R__LOG_DEBUG(0) << "emitted";
@@ -192,7 +190,7 @@ TEST(Logger, RLogScopedVerbosityVerbose)
       EXPECT_EQ(testLogger.size(), 1);
       R__LOG_WARNING() << "emitted";
       EXPECT_EQ(testLogger.size(), 2);
-      RLogScopedVerbosity verbose(channel, ELogLevel::kDebug);
+      ROOT::RLogScopedVerbosity verbose(channel, ROOT::ELogLevel::kDebug);
       R__LOG_DEBUG(0, channel) << "emitted";
       EXPECT_EQ(testLogger.size(), 3);
       R__LOG_WARNING(channel) << "emitted, too";
@@ -209,7 +207,7 @@ TEST(Logger, RLogScopedVerbosityVerbose)
       EXPECT_TRUE(testLogger.empty());
       R__LOG_DEBUG(0, channel) << "suppressed, second";
       EXPECT_TRUE(testLogger.empty());
-      RLogScopedVerbosity verbose(channel, ELogLevel::kInfo);
+      ROOT::RLogScopedVerbosity verbose(channel, ROOT::ELogLevel::kInfo);
       R__LOG_INFO(channel) << "emitted";
       EXPECT_EQ(testLogger.size(), 1);
       R__LOG_DEBUG(0, channel) << "suppressed, third";
@@ -218,8 +216,8 @@ TEST(Logger, RLogScopedVerbosityVerbose)
    {
       // Test verbosity change on other channel not influcing this one.
       TestLogger testLogger;
-      RLogChannel otherChannel("123");
-      RLogScopedVerbosity verbose(otherChannel, ELogLevel::kDebug);
+      ROOT::RLogChannel otherChannel("123");
+      ROOT::RLogScopedVerbosity verbose(otherChannel, ROOT::ELogLevel::kDebug);
       R__LOG_DEBUG(0, channel) << "suppressed";
       EXPECT_TRUE(testLogger.empty());
       R__LOG_DEBUG(0, otherChannel) << "emitted";
@@ -227,15 +225,15 @@ TEST(Logger, RLogScopedVerbosityVerbose)
    }
 
    // Check that levels have returned to values before RAII.
-   EXPECT_EQ(RLogManager::Get().GetVerbosity(), initialLogLevel);
+   EXPECT_EQ(ROOT::RLogManager::Get().GetVerbosity(), initialLogLevel);
    EXPECT_EQ(channel.GetVerbosity(), initialLogLevelABC);
 }
 
 TEST(Logger, ExtraVerbosityLevels)
 {
    TestLogger testLogger;
-   RLogChannel channel("channel");
-   RLogScopedVerbosity verbose(channel, ELogLevel::kDebug + 50);
+   ROOT::RLogChannel channel("channel");
+   ROOT::RLogScopedVerbosity verbose(channel, ROOT::ELogLevel::kDebug + 50);
 
    R__LOG_DEBUG(0, channel) << "emitted";
    EXPECT_EQ(testLogger.size(), 1);
@@ -254,7 +252,7 @@ TEST(Logger, ExtraVerbosityLevels)
 TEST(Logger, SuppressStreamEval)
 {
    TestLogger testLogger;
-   RLogChannel channel("channel");
+   ROOT::RLogChannel channel("channel");
    bool wasEvaluated = false;
    R__LOG_DEBUG(0, channel) << "It's debug, this should not be called!" << [&]() -> int {
       wasEvaluated = true;
@@ -285,7 +283,7 @@ TEST(Logger, ROOTErrorHandlerDiagString)
 {
    auto prevErrorHandler = GetErrorHandler();
    SetErrorHandler(testErrorHandler);
-   RLogChannel channel("ROOT.checkChannelName");
+   ROOT::RLogChannel channel("ROOT.checkChannelName");
 
    // clang-format off
    R__LOG_ERROR(channel) << "check message " << 42; auto lineNumber = __LINE__;

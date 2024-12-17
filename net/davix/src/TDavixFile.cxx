@@ -81,9 +81,9 @@ static Context* davix_context_s = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::RLogChannel &TDavixLogChannel()
+ROOT::RLogChannel &TDavixLogChannel()
 {
-   static ROOT::Experimental::RLogChannel sLog("ROOT.TDavix");
+   static ROOT::RLogChannel sLog("ROOT.TDavix");
    return sLog;
 }
 

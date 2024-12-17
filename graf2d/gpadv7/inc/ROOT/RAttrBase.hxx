@@ -14,11 +14,13 @@
 #include <ROOT/RDrawable.hxx>
 
 namespace ROOT {
-namespace Experimental {
 
 class RLogChannel;
+
+namespace Experimental {
+
 /// Log channel for GPad diagnostics.
-RLogChannel &GPadLog();
+ROOT::RLogChannel &GPadLog();
 
 /** \class RAttrBase
 \ingroup GpadROOT7
