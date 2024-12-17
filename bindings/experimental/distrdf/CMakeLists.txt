@@ -27,6 +27,7 @@ set(py_sources
   DistRDF/Backends/Dask/__init__.py
   DistRDF/Backends/Dask/Backend.py
   DistRDF/LiveVisualize.py
+  DistRDF/TaskProgressBar.py
 )
 
 # Add custom rules to copy the Python sources into the build directory

@@ -182,7 +182,7 @@ class HeadNode(Node, ABC):
     def _handle_returned_values(self, values: TaskResult) -> Iterable:
         pass
 
-    def _execute_and_retrieve_results(self, mapper, local_nodes) -> TaskResult:
+    def _execute_and_retrieve_results(self, mapper, local_nodes, **kwargs) -> TaskResult:
         if self.drawables_dict is not None:
             # Prepare a dictionary with additional information for live visualization
             drawables_info_dict = {
@@ -200,11 +200,11 @@ class HeadNode(Node, ABC):
                 # Filter: Only include nodes requested by the user
                 if node.node_id in self.drawables_dict
             }
-            return self.backend.ProcessAndMergeLive(self._build_ranges(), mapper, distrdf_reducer, drawables_info_dict)
+            return self.backend.ProcessAndMergeLive(self._build_ranges(), mapper, distrdf_reducer, drawables_info_dict, **kwargs)
         else:
-            return self.backend.ProcessAndMerge(self._build_ranges(), mapper, distrdf_reducer)
+            return self.backend.ProcessAndMerge(self._build_ranges(), mapper, distrdf_reducer, **kwargs)
 
-    def execute_graph(self) -> None:
+    def execute_graph(self, **kwargs) -> None:
         """
         Executes an RDataFrame computation graph on a distributed backend.
 
@@ -248,7 +248,7 @@ class HeadNode(Node, ABC):
         # Execute graph distributedly and return the aggregated results from all tasks
         # using the appropriate backend method based on whether or not live visualization is enabled
         try:
-            returned_values = self._execute_and_retrieve_results(mapper, local_nodes)
+            returned_values = self._execute_and_retrieve_results(mapper, local_nodes, **kwargs)
         finally:
             # Cleanup the current execution artifacts from the caches on the workers
             self.backend.cleanup_cache(self.exec_id)
