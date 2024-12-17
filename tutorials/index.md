@@ -94,10 +94,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief These tutorials illustrate the main features of RooStats.
 
-\defgroup tutorial_sql SQL tutorials
-\ingroup Tutorials
-\brief Examples showing the SQL classes.
-
 \defgroup tutorial_ml Machine Learning tutorials
 \ingroup Tutorials
 \brief Examples showing how to use Machine Learning from ROOT. 
