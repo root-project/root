@@ -1453,16 +1453,16 @@ void clang::InitializePreprocessor(Preprocessor &PP,
   for (unsigned i = 0, e = InitOpts.MacroIncludes.size(); i != e; ++i)
     AddImplicitIncludeMacros(Builder, InitOpts.MacroIncludes[i]);
 
-  // Process -include-pch/-include-pth directives.
-  if (!InitOpts.ImplicitPCHInclude.empty())
-    AddImplicitIncludePCH(Builder, PP, PCHContainerRdr,
-                          InitOpts.ImplicitPCHInclude);
-
   // Process -include directives.
   for (unsigned i = 0, e = InitOpts.Includes.size(); i != e; ++i) {
     const std::string &Path = InitOpts.Includes[i];
     AddImplicitInclude(Builder, Path);
   }
+
+  //// Process -include-pch/-include-pth directives.
+  //if (!InitOpts.ImplicitPCHInclude.empty())
+    //AddImplicitIncludePCH(Builder, PP, PCHContainerRdr,
+                          //InitOpts.ImplicitPCHInclude);
 
   // Instruct the preprocessor to skip the preamble.
   PP.setSkipMainFilePreamble(InitOpts.PrecompiledPreambleBytes.first,

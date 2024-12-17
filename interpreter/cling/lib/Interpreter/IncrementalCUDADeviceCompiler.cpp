@@ -19,6 +19,7 @@
 #include "llvm/Support/Process.h"
 #include "llvm/Support/Program.h"
 #include "llvm/Support/raw_ostream.h"
+#include <iostream>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/Support/TargetSelect.h>
@@ -28,6 +29,7 @@
 #include <algorithm>
 #include <bitset>
 #include <optional>
+#include <ostream>
 #include <string>
 #include <system_error>
 
@@ -59,6 +61,8 @@ namespace cling {
             std::string("--cuda-gpu-arch=sm_")
                 .append(std::to_string(m_CuArgs->smVersion)),
             "--cuda-device-only"};
+    argv.push_back("-isystem");
+    argv.push_back("/home/lukas/sft/ws/root-project/build/Debug-no-modules/etc/cling/lib/clang/18/include/cuda_wrappers");
 
     addHeaderSearchPathFlags(argv, CI.getHeaderSearchOptsPtr());
 
@@ -81,6 +85,20 @@ namespace cling {
 
     std::transform(argv.begin(), argv.end(), argvChar.begin(),
                    [&](const std::string& s) { return s.c_str(); });
+
+    // TODO investigate where the -include-pch is added
+    // This is a problem for builds without modules
+    for (auto& el : argvChar) {
+      //std::cout << el << std::endl;   
+      if (el != nullptr && std::string(el) == "-include-pch") {
+        el = nullptr; 
+        break;
+      }
+    }
+    //for (auto& el : argvChar) {
+      //std::cout << el << std::endl;   
+  //}
+    //argvChar[15] = nullptr;
 
     // argv list have to finish with a nullptr.
     argvChar.push_back(nullptr);
