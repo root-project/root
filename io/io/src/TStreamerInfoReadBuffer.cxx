@@ -326,15 +326,21 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, const TCompInfo *c
       }
 
       // skip Class *  not derived from TObject with comment field  //->
-      case TStreamerInfo::kSkip + TStreamerInfo::kAnyp: {
+      case TStreamerInfo::kSkip + TStreamerInfo::kAnyp:
+      case TStreamerInfo::kSkip + TStreamerInfo::kAnyp + TStreamerInfo::kOffsetL:
+      {
          DOLOOP {
-            b.SkipObjectAny();
+            for (Int_t j=0;j<compinfo->fLength;j++) {
+               b.SkipObjectAny();
+            }
          }
          break;
       }
 
       // skip Class*   not derived from TObject
-      case TStreamerInfo::kSkip + TStreamerInfo::kAnyP: {
+      case TStreamerInfo::kSkip + TStreamerInfo::kAnyP:
+      case TStreamerInfo::kSkip + TStreamerInfo::kAnyP + TStreamerInfo::kOffsetL:
+      {
          DOLOOP {
             for (Int_t j=0;j<compinfo->fLength;j++) {
                b.SkipObjectAny();
@@ -344,9 +350,13 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, const TCompInfo *c
       }
 
       // skip Any Class not derived from TObject
-      case TStreamerInfo::kSkip + TStreamerInfo::kAny:    {
+      case TStreamerInfo::kSkip + TStreamerInfo::kAny:
+      case TStreamerInfo::kSkip + TStreamerInfo::kAny + TStreamerInfo::kOffsetL:
+      {
          DOLOOP {
-            b.SkipObjectAny();
+            for (Int_t j=0;j<compinfo->fLength;j++) {
+               b.SkipObjectAny();
+            }
          }
          break;
       }
@@ -369,10 +379,13 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, const TCompInfo *c
       }
 
       case TStreamerInfo::kSkip + TStreamerInfo::kStreamLoop:
+      case TStreamerInfo::kSkip + TStreamerInfo::kStreamLoop + TStreamerInfo::kOffsetL:
       case TStreamerInfo::kSkip + TStreamerInfo::kStreamer: {
          DOLOOP {
-            b.SkipObjectAny();
+            for (Int_t j=0;j<compinfo->fLength;j++) {
+              b.SkipObjectAny();
             }
+         }
          break;
       }
       default:
