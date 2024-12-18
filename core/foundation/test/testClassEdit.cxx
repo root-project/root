@@ -269,8 +269,8 @@ TEST(TClassEdit, ResolveTypedef)
    EXPECT_STRNE("::testPoint", TClassEdit::ResolveTypedef("::testPointXX").c_str());
    gInterpreter->Declare("typedef const int mytype_t;");
    gInterpreter->Declare("typedef const int cmytype_t;");
-   EXPECT_STREQ("const int", TClassEdit::ResolveTypedef("mytype_t"));
-   EXPECT_STREQ("const int", TClassEdit::ResolveTypedef("cmytype_t"));
+   EXPECT_STREQ("const int", TClassEdit::ResolveTypedef("mytype_t").c_str());
+   EXPECT_STREQ("const int", TClassEdit::ResolveTypedef("cmytype_t").c_str());
 }
 
 // ROOT-11000
