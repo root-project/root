@@ -267,8 +267,8 @@ void MakePlots(RooWorkspace &ws)
    auto& data = static_cast<RooDataSet&>(*ws.data("dataWithSWeights"));
 
    // create weighted data sets
-   RooDataSet dataw_z{data.GetName(), data.GetTitle(), &data, *data.get(), nullptr, "zYield_sw"};
-   RooDataSet dataw_qcd{data.GetName(), data.GetTitle(), &data, *data.get(), nullptr, "qcdYield_sw"};
+   RooDataSet dataw_z{data.GetName(), data.GetTitle(), *data.get(), Import(data), WeightVar("zYield_sw")};
+   RooDataSet dataw_qcd{data.GetName(), data.GetTitle(), *data.get(), Import(data), WeightVar("qcdYield_sw")};
 
 
    // this shouldn't be necessary, need to fix something with workspace
