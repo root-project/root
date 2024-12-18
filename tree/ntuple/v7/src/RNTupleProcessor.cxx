@@ -123,7 +123,6 @@ ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(const RNTuple
    : RNTupleProcessor({ntuple})
 {
    fPageSource = Internal::RPageSource::Create(ntuple.fNTupleName, ntuple.fStorage);
-   fPageSource->Attach();
 
    model.Freeze();
    fEntry = model.CreateEntry();
@@ -141,13 +140,14 @@ ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(const RNTuple
       }
 
       auto fieldContext = RFieldContext(field.Clone(field.GetFieldName()), token);
-      ConnectField(fieldContext, *fPageSource, *fEntry);
       fFieldContexts.try_emplace(field.GetFieldName(), std::move(fieldContext));
    }
 }
 
 ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::Advance()
 {
+   Connect();
+
    if (fLocalEntryNumber == kInvalidNTupleIndex || fLocalEntryNumber >= fPageSource->GetNEntries()) {
       return kInvalidNTupleIndex;
    }
@@ -156,6 +156,20 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::Adv
 
    fNEntriesProcessed++;
    return fLocalEntryNumber;
+}
+
+void ROOT::Experimental::RNTupleSingleProcessor::Connect()
+{
+   if (fIsConnected)
+      return;
+
+   fPageSource->Attach();
+
+   for (auto &[_, fieldContext] : fFieldContexts) {
+      ConnectField(fieldContext, *fPageSource, *fEntry);
+   }
+
+   fIsConnected = true;
 }
 
 //------------------------------------------------------------------------------
