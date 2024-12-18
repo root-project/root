@@ -1547,17 +1547,13 @@ static void ResolveTypedefImpl(const char *tname,
    }
    // In Windows, we might have 'class const ...' as name,
    // (never 'const class ...'), so skip the leading 'class ', if any
-   if (tname[cursor]=='c' && (cursor+6<len)) {
-      if (strncmp(tname+cursor,"class ",6) == 0) {
-         cursor += 6;
-      }
+   if (strncmp(tname+cursor,"class ",6) == 0) {
+      cursor += 6;
    }
-   if (tname[cursor]=='c' && (cursor+6<len)) {
-      if (strncmp(tname+cursor,"const ",6) == 0) {
-         cursor += 6;
-         if (modified) result += "const ";
-         constprefix = true;
-      }
+   if (strncmp(tname+cursor,"const ",6) == 0) {
+      cursor += 6;
+      if (modified) result += "const ";
+      constprefix = true;
    }
 
    if (len > 2 && strncmp(tname+cursor,"::",2) == 0) {
