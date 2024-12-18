@@ -1502,15 +1502,23 @@ namespace {
           bool ReadLanguageOptions(const LangOptions &LangOpts,
                                    bool /*Complain*/,
                                    bool /*AllowCompatibleDifferences*/) override {
-            //m_Invocation.getLangOpts() = LangOpts;
+            m_Invocation.getLangOpts() = LangOpts;
             m_ReadLang = true;
             return false;
           }
           bool ReadTargetOptions(const TargetOptions &TargetOpts,
                                  bool /*Complain*/,
                                  bool /*AllowCompatibleDifferences*/) override {
-            //m_Invocation.getTargetOpts() = TargetOpts;
-            m_ReadTarget = true;
+          // latest uncomment
+            m_Invocation.getTargetOpts() = TargetOpts;
+            auto& to = m_Invocation.getTargetOpts();
+            //to.Features.clear();
+            //to.CodeModel = "default";
+            //to.CodeObjectVersion = llvm::COV_5;
+            //to.LargeDataThreshold = 0;
+            to.SDKVersion = VersionTuple(12,0);
+            //to.HLSLEntry = "";
+            //m_ReadTarget = true;
             return false;
           }
           bool ReadPreprocessorOptions(
@@ -1519,39 +1527,39 @@ namespace {
               std::string& /*SuggestedPredefines*/) override {
             // Import selected options, e.g. don't overwrite ImplicitPCHInclude.
             PreprocessorOptions& myPP = m_Invocation.getPreprocessorOpts();
-            //insertBehind(myPP.Macros, PPOpts.Macros);
-            //insertBehind(myPP.Includes, PPOpts.Includes);
-            //insertBehind(myPP.MacroIncludes, PPOpts.MacroIncludes);
+            insertBehind(myPP.Macros, PPOpts.Macros);
+            insertBehind(myPP.Includes, PPOpts.Includes);
+            insertBehind(myPP.MacroIncludes, PPOpts.MacroIncludes);
             return false;
           }
         };
-        //PCHListener listener(Invocation);
-        //if (ASTReader::readASTFileControlBlock(PCHFile,
-                                               //CI->getFileManager(),
-                                               //CI->getModuleCache(),
-                                               //CI->getPCHContainerReader(),
-                                               //false [>FindModuleFileExt<],
-                                               //listener,
-                                         //[>ValidateDiagnosticOptions=<]false)) {
+        PCHListener listener(Invocation);
+        if (ASTReader::readASTFileControlBlock(PCHFile,
+                                               CI->getFileManager(),
+                                               CI->getModuleCache(),
+                                               CI->getPCHContainerReader(),
+                                               false /*FindModuleFileExt*/,
+                                               listener,
+                                         /*ValidateDiagnosticOptions=*/false)) {
           // When running interactively pass on the info that the PCH
           // has failed so that IncrmentalParser::Initialize won't try again.
-          //if (!HasInput && llvm::sys::Process::StandardInIsUserInput()) {
-            //const unsigned ID = Diags->getCustomDiagID(
-                                       //clang::DiagnosticsEngine::Level::Error,
-                                       //"Problems loading PCH: '%0'.");
+          if (!HasInput && llvm::sys::Process::StandardInIsUserInput()) {
+            const unsigned ID = Diags->getCustomDiagID(
+                                       clang::DiagnosticsEngine::Level::Error,
+                                       "Problems loading PCH: '%0'.");
             
-            //Diags->Report(ID) << PCHFile;
-            //// If this was the only error, then don't let it stop anything
-            //if (Diags->getClient()->getNumErrors() == 1)
-              //Diags->Reset(true);
-            //// Clear the include so no one else uses it.
-            //std::string().swap(PCHFile);
-          //}
+            Diags->Report(ID) << PCHFile;
+            // If this was the only error, then don't let it stop anything
+            if (Diags->getClient()->getNumErrors() == 1)
+              Diags->Reset(true);
+            // Clear the include so no one else uses it.
+            std::string().swap(PCHFile);
+          }
         }
         // All we care about is if Language and Target options were successful.
-        //InitLang = !listener.m_ReadLang;
-        //InitTarget = !listener.m_ReadTarget;
-      //}
+        InitLang = !listener.m_ReadLang;
+        InitTarget = !listener.m_ReadTarget;
+      }
     }
 
     FrontendOptions& FrontendOpts = Invocation.getFrontendOpts();
