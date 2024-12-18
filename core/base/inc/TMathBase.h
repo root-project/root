@@ -327,7 +327,9 @@ inline Double_t TMath::Range(Double_t lb, Double_t ub, Double_t x)
 /// The values in the iterators range are supposed to be sorted
 /// prior to this call.  If match is found, function returns
 /// position of element.  If no match found, function gives nearest
-/// element smaller than value.
+/// element smaller than value. If the value is smaller than the
+/// smallest element in the list, it returns this first element,
+/// i.e. the smallest element of the list.
 template <typename Iterator, typename Element>
 Iterator TMath::BinarySearch(Iterator first, Iterator last, Element value)
 {
