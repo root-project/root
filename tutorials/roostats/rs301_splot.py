@@ -199,8 +199,8 @@ def MakePlots(wspace):
     data = wspace["dataWithSWeights"]
 
     # create weighted data sets
-    dataw_qcd = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data, data.get(), "", "qcdYield_sw")
-    dataw_z = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data, data.get(), "", "zYield_sw")
+    dataw_qcd = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data.get(), Import=data, WeightVar="qcdYield_sw")
+    dataw_z = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data.get(), Import=data, WeightVar="zYield_sw")
 
     # plot invMass for data with full model and individual components overlaid
     # cdata = TCanvas()
