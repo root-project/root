@@ -33,7 +33,7 @@ define MkDir
 	+@[ -d $1 ] || mkdir -p $1
 endef
 
-all: filter folders mathjax js images doxygen notebooks rootWork
+all: filter folders mathjax js images doxygen
 
 filter:
 	`root-config --cxx` -o filter filter.cxx -std=c++14 -O2
@@ -72,17 +72,6 @@ doxygen: filter pyzdoc
 
 collaborationDiagrams:
 	bash ./makeCollaborationDiagrams.sh
-
-tutorialWorklist_py: doxygen
-tutorialWorklist_root: doxygen
-
-notebooks: tutorialWorklist_py makeNotebooks.sh
-	cp ../../tutorials/analysis/unfold/*.xml ../../tutorials/analysis/unfold/*.dtd $(DOXYGEN_NOTEBOOK_PATH)/
-	bash ./makeNotebooks.sh $< -j$(NJOB)
-	rm -f $(DOXYGEN_NOTEBOOK_PATH)/*.root
-
-rootWork: tutorialWorklist_root
-	xargs -L 1 -P 12 root < $<
 
 clean:
 	rm -rf $(DOXYGEN_OUTPUT_DIRECTORY) tutorialWorklist_py tutorialWorklist_root CleanNamespaces.sh
