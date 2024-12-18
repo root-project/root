@@ -98,11 +98,11 @@ TEST_F(RNTupleJoinProcessorTest, Basic)
    int nEntries = 0;
    for (const auto &entry : *proc) {
       EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetLocalEntryNumber());
+      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
       ;
 
       auto i = entry.GetPtr<int>("i");
-      EXPECT_EQ(proc->GetLocalEntryNumber() * 2, *i);
+      EXPECT_EQ(proc->GetCurrentEntryNumber() * 2, *i);
    }
 
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
@@ -126,7 +126,7 @@ TEST_F(RNTupleJoinProcessorTest, Aligned)
    std::vector<float> yExpected;
    for (auto &entry : *proc) {
       EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetLocalEntryNumber());
+      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
 
       auto i = entry.GetPtr<int>("i");
 
@@ -166,9 +166,9 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
    auto y = proc->GetEntry().GetPtr<std::vector<float>>("ntuple2.y");
    std::vector<float> yExpected;
    for ([[maybe_unused]] auto &entry : *proc) {
-      EXPECT_EQ(proc->GetLocalEntryNumber(), nEntries++);
+      EXPECT_EQ(proc->GetCurrentEntryNumber(), nEntries++);
 
-      EXPECT_FLOAT_EQ(proc->GetLocalEntryNumber() * 2, *i);
+      EXPECT_FLOAT_EQ(proc->GetCurrentEntryNumber() * 2, *i);
       EXPECT_FLOAT_EQ(*i * 0.5f, *x);
 
       yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
@@ -211,9 +211,9 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
    auto x = proc->GetEntry().GetPtr<float>("x");
    auto a = proc->GetEntry().GetPtr<float>("ntuple4.a");
    for ([[maybe_unused]] auto &entry : *proc) {
-      EXPECT_EQ(proc->GetLocalEntryNumber(), nEntries++);
+      EXPECT_EQ(proc->GetCurrentEntryNumber(), nEntries++);
 
-      EXPECT_FLOAT_EQ(proc->GetLocalEntryNumber() * 2, *i);
+      EXPECT_FLOAT_EQ(proc->GetCurrentEntryNumber() * 2, *i);
       EXPECT_FLOAT_EQ(*i * 0.5f, *x);
       EXPECT_EQ(*i * 0.1f, *a);
    }
@@ -232,9 +232,9 @@ TEST_F(RNTupleJoinProcessorTest, MissingEntries)
    auto a = proc->GetEntry().GetPtr<float>("ntuple4.a");
    std::vector<float> yExpected;
    for ([[maybe_unused]] auto &entry : *proc) {
-      EXPECT_EQ(proc->GetLocalEntryNumber(), nEntries++);
+      EXPECT_EQ(proc->GetCurrentEntryNumber(), nEntries++);
 
-      EXPECT_FLOAT_EQ(proc->GetLocalEntryNumber(), *i);
+      EXPECT_FLOAT_EQ(proc->GetCurrentEntryNumber(), *i);
 
       if (*i == 3 || *i == 9) {
          EXPECT_EQ(0.f, *a) << "entries with i=3 and i=9 are missing from ntuple4, ntuple4.a should have been "
@@ -272,9 +272,9 @@ TEST_F(RNTupleJoinProcessorTest, WithModel)
    int nEntries = 0;
    std::vector<float> yExpected;
    for (auto &entry : *proc) {
-      EXPECT_EQ(proc->GetLocalEntryNumber(), nEntries++);
+      EXPECT_EQ(proc->GetCurrentEntryNumber(), nEntries++);
 
-      EXPECT_EQ(proc->GetLocalEntryNumber() * 2, *i);
+      EXPECT_EQ(proc->GetCurrentEntryNumber() * 2, *i);
       EXPECT_EQ(*entry.GetPtr<int>("i"), *i);
 
       EXPECT_FLOAT_EQ(*i * 0.5f, *x);
