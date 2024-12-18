@@ -2484,9 +2484,9 @@ ULong_t TColor::RGB2Pixel(Int_t r, Int_t g, Int_t b)
    if (b > 255) b = 255;
 
    ColorStruct_t color;
-   color.fRed   = UShort_t(r * 257);  // 65535/255
-   color.fGreen = UShort_t(g * 257);
-   color.fBlue  = UShort_t(b * 257);
+   color.fRed   = UShort_t(r * 256);  // 65536/256
+   color.fGreen = UShort_t(g * 256);
+   color.fBlue  = UShort_t(b * 256);
    color.fMask  = kDoRed | kDoGreen | kDoBlue;
    gVirtualX->AllocColor(gVirtualX->GetColormap(), color);
    return color.fPixel;
@@ -2517,9 +2517,13 @@ void TColor::Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b)
    ColorStruct_t color;
    color.fPixel = pixel;
    gVirtualX->QueryColor(gVirtualX->GetColormap(), color);
-   r = color.fRed / 257;
-   g = color.fGreen / 257;
-   b = color.fBlue / 257;
+   // color is between 0 and 65535 inclusive.
+   // We need to move it to the 0 to 255 range (inclusive).
+   // So we need to resample the 65536 values into 256 indices.
+   // This would mean equal blocks of 256 high-res values per color index.
+   r = color.fRed / 256;
+   g = color.fGreen / 256;
+   b = color.fBlue / 256;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
