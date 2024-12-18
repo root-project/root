@@ -33,7 +33,7 @@ define MkDir
 	+@[ -d $1 ] || mkdir -p $1
 endef
 
-all: filter folders mathjax js images doxygen replaceCollaborationDiagrams notebooks rootWork
+all: filter folders mathjax js images doxygen notebooks rootWork
 
 filter:
 	`root-config --cxx` -o filter filter.cxx -std=c++14 -O2
@@ -72,9 +72,6 @@ doxygen: filter pyzdoc
 
 collaborationDiagrams:
 	bash ./makeCollaborationDiagrams.sh
-
-replaceCollaborationDiagrams: doxygen collaborationDiagrams
-	bash ./modifyClassWebpages.sh -j$(NJOB)
 
 tutorialWorklist_py: doxygen
 tutorialWorklist_root: doxygen
