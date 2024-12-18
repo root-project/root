@@ -305,6 +305,9 @@ AutoDict_*.cxx
 
 # /root/io/evolution/versions/lhcb/
 
+# /root/io/evolution/rules/
+/root/io/evolution/rules/*.root
+
 # /root/io/fakeClass/
 /root/io/fakeClass/little.root
 /root/io/fakeClass/*.out
