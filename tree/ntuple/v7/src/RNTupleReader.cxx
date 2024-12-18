@@ -167,8 +167,12 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       {
          auto descriptorGuard = fSource->GetSharedDescriptorGuard();
          name = descriptorGuard->GetName();
-         fullModel =
-            descriptorGuard->CreateModel(fCreateModelOptions.value_or(RNTupleDescriptor::RCreateModelOptions{}));
+         RNTupleDescriptor::RCreateModelOptions opts;
+         opts.fCreateBare = true;
+         // When printing the schema we always try to reconstruct the whole thing even when we are missing the
+         // dictionaries.
+         opts.fEmulateUnknownTypes = true;
+         fullModel = descriptorGuard->CreateModel(opts);
       }
 
       for (int i = 0; i < (width / 2 + width % 2 - 4); ++i)
