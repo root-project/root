@@ -88,10 +88,10 @@ TEST_F(RNTupleChainProcessorTest, SingleNTuple)
    auto proc = RNTupleProcessor::CreateChain(ntuples);
    for (const auto &entry : *proc) {
       EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetLocalEntryNumber());
+      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
 
       auto x = entry.GetPtr<float>("x");
-      EXPECT_FLOAT_EQ(static_cast<float>(proc->GetLocalEntryNumber()), *x);
+      EXPECT_FLOAT_EQ(static_cast<float>(proc->GetCurrentEntryNumber()), *x);
    }
    EXPECT_EQ(nEntries, 5);
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
@@ -105,11 +105,7 @@ TEST_F(RNTupleChainProcessorTest, Basic)
    auto proc = RNTupleProcessor::CreateChain(ntuples);
    for (const auto &entry : *proc) {
       EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      if (proc->GetCurrentNTupleNumber() == 0) {
-         EXPECT_EQ(nEntries - 1, proc->GetLocalEntryNumber());
-      } else {
-         EXPECT_EQ(nEntries - 1, proc->GetLocalEntryNumber() + 5);
-      }
+      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
 
       auto x = entry.GetPtr<float>("x");
       EXPECT_EQ(static_cast<float>(nEntries - 1), *x);
@@ -219,4 +215,41 @@ TEST_F(RNTupleChainProcessorTest, EmptyNTuples)
    }
    EXPECT_EQ(nEntries, 8);
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+}
+
+namespace ROOT::Experimental::Internal {
+struct RNTupleProcessorEntryLoader {
+   static NTupleSize_t LoadEntry(RNTupleProcessor &processor, NTupleSize_t entryNumber)
+   {
+      return processor.LoadEntry(entryNumber);
+   }
+};
+} // namespace ROOT::Experimental::Internal
+
+TEST_F(RNTupleChainProcessorTest, LoadRandomEntry)
+{
+   using ROOT::Experimental::Internal::RNTupleProcessorEntryLoader;
+
+   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}};
+
+   auto proc = RNTupleProcessor::CreateChain(ntuples);
+   auto x = proc->GetEntry().GetPtr<float>("x");
+
+   RNTupleProcessorEntryLoader::LoadEntry(*proc, 3);
+   EXPECT_EQ(3.f, *x);
+   EXPECT_EQ(0, proc->GetCurrentNTupleNumber());
+
+   RNTupleProcessorEntryLoader::LoadEntry(*proc, 7);
+   EXPECT_EQ(7.f, *x);
+   EXPECT_EQ(1, proc->GetCurrentNTupleNumber());
+
+   RNTupleProcessorEntryLoader::LoadEntry(*proc, 6);
+   EXPECT_EQ(6.f, *x);
+   EXPECT_EQ(1, proc->GetCurrentNTupleNumber());
+
+   RNTupleProcessorEntryLoader::LoadEntry(*proc, 2);
+   EXPECT_EQ(2.f, *x);
+   EXPECT_EQ(0, proc->GetCurrentNTupleNumber());
+
+   EXPECT_EQ(ROOT::Experimental::kInvalidNTupleIndex, RNTupleProcessorEntryLoader::LoadEntry(*proc, 8));
 }

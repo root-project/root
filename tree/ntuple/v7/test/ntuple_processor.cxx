@@ -51,7 +51,7 @@ TEST_F(RNTupleProcessorTest, Base)
 
    for (const auto &entry : *proc) {
       EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetLocalEntryNumber());
+      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
 
       EXPECT_FLOAT_EQ(static_cast<float>(nEntries - 1), *entry.GetPtr<float>("x"));
 
@@ -75,7 +75,7 @@ TEST_F(RNTupleProcessorTest, BaseWithModel)
 
    for (const auto &entry : *proc) {
       EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetLocalEntryNumber());
+      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
 
       EXPECT_FLOAT_EQ(static_cast<float>(nEntries - 1), *fldX);
 
@@ -103,7 +103,7 @@ TEST_F(RNTupleProcessorTest, BaseWithBareModel)
 
    for (const auto &entry : *proc) {
       EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
-      EXPECT_EQ(nEntries - 1, proc->GetLocalEntryNumber());
+      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
 
       EXPECT_FLOAT_EQ(static_cast<float>(nEntries - 1), *entry.GetPtr<float>("x"));
 
