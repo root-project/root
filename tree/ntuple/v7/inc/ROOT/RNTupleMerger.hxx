@@ -55,6 +55,15 @@ struct RSealedPageMergeData;
 
 class RClusterPool;
 
+/// Set of merging options to pass to RNTupleMerger.
+/// If you're using the merger through TFileMerger you need to give it string-based options instead.
+/// Here is the mapping for the TFileMerger options:
+///   - "rnt:MergingMode=(Filter|Union|...)" -> sets fMergingMode
+///   - "rnt:ErrBehavior=(Abort|Skip|...)"   -> sets fErrBehavior
+///   - "rnt:ExtraVerbose"                   -> sets fExtraVerbose to true
+/// Rules about the string-based options:
+///   1. there must be no space between the separators (i.e. `:` and `=`)
+///   2. all string matching is case insensitive
 struct RNTupleMergeOptions {
    /// If `fCompressionSettings == kNTupleUnknownCompression` (the default), the merger will not change the
    /// compression of any of its sources (fast merging). Otherwise, all sources will be converted to the specified
