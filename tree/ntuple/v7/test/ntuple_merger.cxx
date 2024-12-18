@@ -8,6 +8,8 @@
 #include <zlib.h>
 #include "gmock/gmock.h"
 
+using ROOT::TestSupport::CheckDiagsRAII;
+
 namespace {
 
 // Reads an integer from a little-endian 4 byte buffer
@@ -1441,7 +1443,7 @@ TEST_P(RNTupleMergerCheckEncoding, CorrectEncoding)
       fileMerger.AddFile(nt2.get());
       // If `useDefaultComp` is true, it's as if we were calling hadd without a -f* flag
       if (useDefaultComp)
-         fileMerger.SetMergeOptions(TString("default_compression"));
+         fileMerger.SetMergeOptions(TString("rnt:DefaultCompression"));
       fileMerger.Merge();
 
       EXPECT_TRUE(VerifyPageCompression(fileGuard3.GetPath(), expectedComp));
@@ -1479,3 +1481,92 @@ INSTANTIATE_TEST_SUITE_P(Seq, RNTupleMergerCheckEncoding,
                             ::testing::Values(0, 101, 207, 404, 505),
                             // use default compression
                             ::testing::Values(true, false)));
+
+TEST(RNTupleMerger, MergeAsymmetric1TFileMerger)
+{
+   // Exactly the same test as MergeAsymmetric1, but passing through TFileMerger.
+
+   // Write two test ntuples to be merged
+   FileRaii fileGuard1("test_ntuple_merge_in_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldFoo = model->MakeField<int>("foo");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldFoo = i * 123;
+         ntuple->Fill();
+      }
+   }
+
+   FileRaii fileGuard2("test_ntuple_merge_in_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldBar = model->MakeField<int>("bar");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      for (size_t i = 0; i < 10; ++i) {
+         *fieldBar = i * 765;
+         ntuple->Fill();
+      }
+   }
+
+   // Now merge the inputs
+   FileRaii fileGuard3("test_ntuple_merge_out.root");
+   {
+      // Gather the input sources
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs;
+      for (const auto &s : sources) {
+         sourcePtrs.push_back(s.get());
+      }
+
+      // Now Merge the inputs
+      // We expect this to fail in Filter and Strict mode since the fields between the sources do NOT match
+      {
+         auto nt1 = std::unique_ptr<TFile>(TFile::Open(fileGuard1.GetPath().c_str()));
+         auto nt2 = std::unique_ptr<TFile>(TFile::Open(fileGuard2.GetPath().c_str()));
+         TFileMerger fileMerger(kFALSE, kFALSE);
+         fileMerger.OutputFile(fileGuard3.GetPath().c_str(), "RECREATE");
+         fileMerger.AddFile(nt1.get());
+         fileMerger.AddFile(nt2.get());
+         fileMerger.SetMergeOptions(TString("rnt:MergingMode=Filter"));
+         CheckDiagsRAII diags;
+         diags.requiredDiag(kError, "TFileMerger::Merge", "error during merge", false);
+         diags.requiredDiag(kError, "RNTuple::Merge", "missing the following field", false);
+         diags.requiredDiag(kError, "TFileMerger::MergeRecursive", "Could NOT merge RNTuples!", false);
+         diags.optionalDiag(kWarning, "TFileMerger::MergeRecursive", "Merging RNTuples is experimental", false);
+         auto res = fileMerger.Merge();
+         EXPECT_FALSE(res);
+      }
+      {
+         auto nt1 = std::unique_ptr<TFile>(TFile::Open(fileGuard1.GetPath().c_str()));
+         auto nt2 = std::unique_ptr<TFile>(TFile::Open(fileGuard2.GetPath().c_str()));
+         TFileMerger fileMerger(kFALSE, kFALSE);
+         fileMerger.OutputFile(fileGuard3.GetPath().c_str(), "RECREATE");
+         fileMerger.AddFile(nt1.get());
+         fileMerger.AddFile(nt2.get());
+         fileMerger.SetMergeOptions(TString("rnt:MergingMode=Strict"));
+         CheckDiagsRAII diags;
+         diags.requiredDiag(kError, "TFileMerger::Merge", "error during merge", false);
+         diags.requiredDiag(kError, "RNTuple::Merge", "missing the following field", false);
+         diags.requiredDiag(kError, "TFileMerger::MergeRecursive", "Could NOT merge RNTuples!", false);
+         diags.optionalDiag(kWarning, "TFileMerger::MergeRecursive", "Merging RNTuples is experimental", false);
+         auto res = fileMerger.Merge();
+         EXPECT_FALSE(res);
+      }
+      {
+         auto nt1 = std::unique_ptr<TFile>(TFile::Open(fileGuard1.GetPath().c_str()));
+         auto nt2 = std::unique_ptr<TFile>(TFile::Open(fileGuard2.GetPath().c_str()));
+         TFileMerger fileMerger(kFALSE, kFALSE);
+         fileMerger.OutputFile(fileGuard3.GetPath().c_str(), "RECREATE");
+         fileMerger.AddFile(nt1.get());
+         fileMerger.AddFile(nt2.get());
+         fileMerger.SetMergeOptions(TString("rnt:MergingMode=Union"));
+         CheckDiagsRAII diags;
+         diags.optionalDiag(kWarning, "TFileMerger::MergeRecursive", "Merging RNTuples is experimental", false);
+         auto res = fileMerger.Merge();
+         EXPECT_TRUE(res);
+      }
+   }
+}

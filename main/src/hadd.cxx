@@ -674,10 +674,10 @@ int main(int argc, char **argv)
          else
             newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
          delete firstInput;
-         fileMerger.SetMergeOptions(TString("first_source_compression"));
+         fileMerger.SetMergeOptions(TString("rnt:FirstSrcCompression"));
       } else {
          newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
-         fileMerger.SetMergeOptions(TString("default_compression"));
+         fileMerger.SetMergeOptions(TString("rnt:DefaultCompression"));
       }
    }
    if (verbosity > 1) {
