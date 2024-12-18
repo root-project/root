@@ -290,6 +290,12 @@ class RNTupleSingleProcessor : public RNTupleProcessor {
    friend class RNTupleProcessor;
 
 private:
+   bool fIsConnected = false;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Connects the page source of the underlying RNTuple.
+   void Connect();
+
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Constructs a new RNTupleProcessor for processing a single RNTuple.
    ///
@@ -300,7 +306,7 @@ private:
    NTupleSize_t Advance() final;
 
 public:
-   void LoadEntry() { fEntry->Read(fLocalEntryNumber); }
+   void LoadEntry() final { fEntry->Read(fLocalEntryNumber); }
 };
 
 // clang-format off
