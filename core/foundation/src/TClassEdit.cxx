@@ -1556,8 +1556,8 @@ static void ResolveTypedefImpl(const char *tname,
       if (strncmp(tname+cursor,"const ",6) == 0) {
          cursor += 6;
          if (modified) result += "const ";
+         constprefix = true;
       }
-      constprefix = true;
    }
 
    if (len > 2 && strncmp(tname+cursor,"::",2) == 0) {
