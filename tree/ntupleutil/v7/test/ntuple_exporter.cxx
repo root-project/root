@@ -6,6 +6,7 @@
 #include <filesystem>
 
 using namespace ROOT::Experimental;
+using ROOT::Experimental::Internal::RNTupleExporter;
 
 namespace {
 
@@ -90,7 +91,7 @@ TEST(RNTupleExporter, ExportToFiles)
 
    // Now export the pages
    auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto res = Internal::RNTupleExporter::ExportPages(*source);
+   auto res = RNTupleExporter::ExportPages(*source);
 
    EXPECT_EQ(res.fExportedFileNames.size(), 3);
 
@@ -129,9 +130,9 @@ TEST(RNTupleExporter, ExportToFilesWithChecksum)
 
    // Now export the pages
    auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto opts = Internal::RNTupleExporter::RPagesOptions();
-   opts.fFlags |= Internal::RNTupleExporter::RPagesOptions::kIncludeChecksums;
-   auto res = Internal::RNTupleExporter::ExportPages(*source, opts);
+   auto opts = RNTupleExporter::RPagesOptions();
+   opts.fFlags |= RNTupleExporter::RPagesOptions::kIncludeChecksums;
+   auto res = RNTupleExporter::ExportPages(*source, opts);
 
    EXPECT_EQ(res.fExportedFileNames.size(), 3);
 
@@ -170,9 +171,9 @@ TEST(RNTupleExporter, ExportToFilesWithNoChecksum)
 
    // Now export the pages
    auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto opts = Internal::RNTupleExporter::RPagesOptions();
-   opts.fFlags |= Internal::RNTupleExporter::RPagesOptions::kIncludeChecksums;
-   auto res = Internal::RNTupleExporter::ExportPages(*source, opts);
+   auto opts = RNTupleExporter::RPagesOptions();
+   opts.fFlags |= RNTupleExporter::RPagesOptions::kIncludeChecksums;
+   auto res = RNTupleExporter::ExportPages(*source, opts);
 
    EXPECT_EQ(res.fExportedFileNames.size(), 3);
 
@@ -224,7 +225,7 @@ TEST(RNTupleExporter, ExportToFilesManyPages)
 
    // Now export the pages
    auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto res = Internal::RNTupleExporter::ExportPages(*source);
+   auto res = RNTupleExporter::ExportPages(*source);
 
    EXPECT_EQ(res.fExportedFileNames.size(), 14);
 
@@ -241,7 +242,7 @@ TEST(RNTupleExporter, EmptySource)
    }
 
    auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto res = Internal::RNTupleExporter::ExportPages(*source);
+   auto res = RNTupleExporter::ExportPages(*source);
 
    EXPECT_EQ(res.fExportedFileNames.size(), 0);
 }
@@ -281,9 +282,9 @@ TEST(RNTupleExporter, ExportToFilesCustomPath)
 
    // Now export the pages
    auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto opts = Internal::RNTupleExporter::RPagesOptions();
+   auto opts = RNTupleExporter::RPagesOptions();
    opts.fOutputPath = kDirName;
-   auto res = Internal::RNTupleExporter::ExportPages(*source, opts);
+   auto res = RNTupleExporter::ExportPages(*source, opts);
 
    EXPECT_EQ(res.fExportedFileNames.size(), 3);
 
@@ -300,4 +301,80 @@ TEST(RNTupleExporter, ExportToFilesCustomPath)
 
    for (const auto &fname : res.fExportedFileNames)
       EXPECT_TRUE(std::filesystem::exists(fname));
+}
+
+TEST(RNTupleExporter, ExportToFilesWhitelist)
+{
+   // Dump pages of a regular RNTuple with checksums. Should not include checksums in the output.
+   // Also keep only columns of type `kIndex64`.
+   FileRaii fileGuard("ntuple_exporter_whitelist.root");
+
+   // Create RNTuple to export
+   CreateExportRNTuple(fileGuard.GetPath(), kWithChecksums);
+
+   // Now export the pages
+   auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
+   auto opts = RNTupleExporter::RPagesOptions();
+   opts.fFilterType = RNTupleExporter::EFilterType::kWhitelist;
+   opts.fFilter.insert(EColumnType::kIndex64);
+   auto res = RNTupleExporter::ExportPages(*source, opts);
+
+   // Should only have exported the page for the index column
+   EXPECT_EQ(res.fExportedFileNames.size(), 1);
+
+   FileRaii pageVecIdx("./cluster_0_vec-0_page_0_elems_10_comp_0.page");
+   FileRaii pageVec("./cluster_0_vec._0-0_page_0_elems_60_comp_0.page");
+   FileRaii pageFlt("./cluster_0_flt-0_page_0_elems_10_comp_0.page");
+
+   EXPECT_FALSE(std::find(res.fExportedFileNames.begin(), res.fExportedFileNames.end(), pageFlt.GetPath()) !=
+               res.fExportedFileNames.end());
+   EXPECT_FALSE(std::find(res.fExportedFileNames.begin(), res.fExportedFileNames.end(), pageVec.GetPath()) !=
+               res.fExportedFileNames.end());
+   EXPECT_TRUE(std::find(res.fExportedFileNames.begin(), res.fExportedFileNames.end(), pageVecIdx.GetPath()) !=
+               res.fExportedFileNames.end());
+
+   // check the file contents
+   auto vecIdxBytes = ReadFileToString(pageVecIdx.GetPath().c_str());
+   EXPECT_EQ(vecIdxBytes.length(), kVecIdxBytesLenNoChecksums);
+   EXPECT_EQ(memcmp(vecIdxBytes.data(), kVecIdxBytes, vecIdxBytes.length()), 0);
+}
+
+TEST(RNTupleExporter, ExportToFilesBlacklist)
+{
+   // Dump pages of a regular RNTuple with checksums. Should not include checksums in the output.
+   // Also discard columns of type `kIndex64`.
+   FileRaii fileGuard("ntuple_exporter_blacklist.root");
+
+   // Create RNTuple to export
+   CreateExportRNTuple(fileGuard.GetPath(), kWithChecksums);
+
+   // Now export the pages
+   auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
+   auto opts = RNTupleExporter::RPagesOptions();
+   opts.fFilterType = RNTupleExporter::EFilterType::kBlacklist;
+   opts.fFilter.insert(EColumnType::kIndex64);
+   auto res = RNTupleExporter::ExportPages(*source, opts);
+
+   // Should not have exported the page for the index column
+   EXPECT_EQ(res.fExportedFileNames.size(), 2);
+
+   FileRaii pageVecIdx("./cluster_0_vec-0_page_0_elems_10_comp_0.page");
+   FileRaii pageVec("./cluster_0_vec._0-0_page_0_elems_60_comp_0.page");
+   FileRaii pageFlt("./cluster_0_flt-0_page_0_elems_10_comp_0.page");
+
+   EXPECT_TRUE(std::find(res.fExportedFileNames.begin(), res.fExportedFileNames.end(), pageFlt.GetPath()) !=
+               res.fExportedFileNames.end());
+   EXPECT_TRUE(std::find(res.fExportedFileNames.begin(), res.fExportedFileNames.end(), pageVec.GetPath()) !=
+               res.fExportedFileNames.end());
+   EXPECT_FALSE(std::find(res.fExportedFileNames.begin(), res.fExportedFileNames.end(), pageVecIdx.GetPath()) !=
+               res.fExportedFileNames.end());
+
+   // check the file contents
+   auto fltBytes = ReadFileToString(pageFlt.GetPath().c_str());
+   EXPECT_EQ(fltBytes.length(), kFltBytesLenNoChecksums);
+   EXPECT_EQ(memcmp(fltBytes.data(), kFltBytes, fltBytes.length()), 0);
+
+   auto vecBytes = ReadFileToString(pageVec.GetPath().c_str());
+   EXPECT_EQ(vecBytes.length(), kVecBytesLenNoChecksums);
+   EXPECT_EQ(memcmp(vecBytes.data(), kVecBytes, vecBytes.length()), 0);
 }
