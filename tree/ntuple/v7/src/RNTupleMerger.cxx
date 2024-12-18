@@ -35,11 +35,62 @@
 #include <algorithm>
 #include <deque>
 #include <inttypes.h> // for PRIu64
+#include <initializer_list>
 #include <unordered_map>
 #include <vector>
 
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Internal;
+
+// TFile options parsing
+// -------------------------------------------------------------------------------------
+static bool BeginsWithDelimitedWord(const TString &str, const char *word)
+{
+   const Ssiz_t wordLen = strlen(word);
+   if (str.Length() < wordLen)
+      return false;
+   if (!str.BeginsWith(word, TString::ECaseCompare::kIgnoreCase))
+      return false;
+   return str.Length() == wordLen || str(wordLen) == ' ';
+}
+
+template <typename T>
+static std::optional<T> ParseStringOption(const TString &opts, const char *pattern,
+                                          std::initializer_list<std::pair<const char *, T>> validValues)
+{
+   const Ssiz_t patternLen = strlen(pattern);
+   assert(pattern[patternLen - 1] == '='); // we want to parse options with the format `rnt:option=Value`
+   if (auto idx = opts.Index(pattern, 0, TString::ECaseCompare::kIgnoreCase);
+       idx >= 0 && opts.Length() > idx + patternLen) {
+      auto sub = TString(opts(idx + patternLen, opts.Length() - idx - patternLen));
+      for (const auto &[name, value] : validValues) {
+         if (BeginsWithDelimitedWord(sub, name)) {
+            return value;
+         }
+      }
+   }
+   return std::nullopt;
+}
+
+static std::optional<ENTupleMergingMode> ParseOptionMergingMode(const TString &opts)
+{
+   return ParseStringOption<ENTupleMergingMode>(opts, "rnt:MergingMode=",
+                                                {
+                                                   {"Filter", ENTupleMergingMode::kFilter},
+                                                   {"Union", ENTupleMergingMode::kUnion},
+                                                   {"Strict", ENTupleMergingMode::kStrict},
+                                                });
+}
+
+static std::optional<ENTupleMergeErrBehavior> ParseOptionErrBehavior(const TString &opts)
+{
+   return ParseStringOption<ENTupleMergeErrBehavior>(opts, "rnt:ErrBehavior=",
+                                                     {
+                                                        {"Abort", ENTupleMergeErrBehavior::kAbort},
+                                                        {"Skip", ENTupleMergeErrBehavior::kSkip},
+                                                     });
+}
+// -------------------------------------------------------------------------------------
 
 // Entry point for TFileMerger. Internally calls RNTupleMerger::Merge().
 Long64_t ROOT::RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
@@ -78,13 +129,13 @@ try {
       // pointer we just got.
    }
 
-   const bool defaultComp = mergeInfo->fOptions.Contains("default_compression");
-   const bool firstSrcComp = mergeInfo->fOptions.Contains("first_source_compression");
+   const bool defaultComp = mergeInfo->fOptions.Contains("rnt:DefaultCompression");
+   const bool firstSrcComp = mergeInfo->fOptions.Contains("rnt:FirstSrcCompression");
+   const bool extraVerbose = mergeInfo->fOptions.Contains("rnt:ExtraVerbose");
    if (defaultComp && firstSrcComp) {
-      // this should never happen through hadd, but a user may call RNTuple::Merge() from custom code...
-      Warning(
-         "RNTuple::Merge",
-         "Passed both options \"default_compression\" and \"first_source_compression\": only the latter will apply.");
+      // this should never happen through hadd, but a user may call RNTuple::Merge() from custom code.
+      Warning("RNTuple::Merge", "Passed both options \"rnt:DefaultCompression\" and \"rnt:FirstSrcCompression\": "
+                                "only the latter will apply.");
    }
    int compression = kNTupleUnknownCompression;
    if (firstSrcComp) {
@@ -167,6 +218,13 @@ try {
    RNTupleMerger merger;
    RNTupleMergeOptions mergerOpts;
    mergerOpts.fCompressionSettings = compression;
+   mergerOpts.fExtraVerbose = extraVerbose;
+   if (auto mergingMode = ParseOptionMergingMode(mergeInfo->fOptions)) {
+      mergerOpts.fMergingMode = *mergingMode;
+   }
+   if (auto errBehavior = ParseOptionErrBehavior(mergeInfo->fOptions)) {
+      mergerOpts.fErrBehavior = *errBehavior;
+   }
    merger.Merge(sourcePtrs, *destination, mergerOpts).ThrowOnError();
 
    // Provide the caller with a merged anchor object (even though we've already
