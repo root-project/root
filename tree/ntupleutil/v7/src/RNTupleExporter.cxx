@@ -47,7 +47,8 @@ struct RColumnExportInfo {
 };
 
 void AddColumnsFromField(std::vector<RColumnExportInfo> &vec, const RNTupleDescriptor &desc,
-                         const RFieldDescriptor &fieldDesc)
+                         const RFieldDescriptor &fieldDesc, const std::unordered_set<EColumnType> &filter,
+                         RNTupleExporter::EFilterType filterType)
 {
    R__LOG_DEBUG(1, RNTupleExporterLog()) << "processing field \"" << desc.GetQualifiedFieldName(fieldDesc.GetId())
                                          << "\"";
@@ -57,9 +58,12 @@ void AddColumnsFromField(std::vector<RColumnExportInfo> &vec, const RNTupleDescr
          continue;
 
       for (const auto &colDesc : desc.GetColumnIterable(subfieldDesc)) {
-         vec.emplace_back(desc, colDesc, subfieldDesc);
+         bool filterHasType = filter.find(colDesc.GetType()) != filter.end();
+         bool isFiltered = (filterType == RNTupleExporter::EFilterType::kBlacklist) == filterHasType;
+         if (!isFiltered)
+            vec.emplace_back(desc, colDesc, subfieldDesc);
       }
-      AddColumnsFromField(vec, desc, subfieldDesc);
+      AddColumnsFromField(vec, desc, subfieldDesc, filter, filterType);
    }
 }
 
@@ -92,7 +96,7 @@ RNTupleExporter::RPagesResult RNTupleExporter::ExportPages(RPageSource &source, 
 
    // Collect column info
    std::vector<RColumnExportInfo> columnInfos;
-   AddColumnsFromField(columnInfos, desc.GetRef(), desc->GetFieldZero());
+   AddColumnsFromField(columnInfos, desc.GetRef(), desc->GetFieldZero(), options.fFilter, options.fFilterType);
 
    // Collect ColumnSet for the cluster pool query
    RCluster::ColumnSet_t columnSet;

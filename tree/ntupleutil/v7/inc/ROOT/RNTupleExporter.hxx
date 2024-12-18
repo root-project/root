@@ -19,6 +19,9 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <unordered_set>
+
+#include <ROOT/RNTupleUtil.hxx>
 
 namespace ROOT::Experimental::Internal {
 
@@ -26,6 +29,13 @@ class RPageSource;
 
 class RNTupleExporter {
 public:
+   enum class EFilterType {
+      /// Skip all columns whose type is contained in `fFilter`
+      kBlacklist,
+      /// Only include columns whose type is contained in `fFilter`
+      kWhitelist   
+   };
+   
    struct RPagesOptions {
       enum RExportPageFlags {
          kNone = 0x0,
@@ -38,6 +48,12 @@ public:
 
       std::string fOutputPath;
       std::uint64_t fFlags;
+
+      /// Optional filter that determines which columns are included or excluded from being exported.
+      /// By default, export all columns. If you only want to include certain column types, add them
+      /// to this set and change fFilterType to kWhitelist.
+      std::unordered_set<EColumnType> fFilter;
+      EFilterType fFilterType = EFilterType::kBlacklist;
 
       RPagesOptions() : fOutputPath("."), fFlags(kDefaults) {}
    };
