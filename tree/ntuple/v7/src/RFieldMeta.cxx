@@ -1038,9 +1038,9 @@ std::size_t ROOT::Experimental::RVariantField::AppendImpl(const void *from)
       nbytes += CallAppendOn(*fSubFields[tag - 1], reinterpret_cast<const unsigned char *>(from) + fVariantOffset);
       index = fNWritten[tag - 1]++;
    }
-   RColumnSwitch varSwitch(ClusterSize_t(index), tag);
+   Internal::RColumnSwitch varSwitch(ClusterSize_t(index), tag);
    fPrincipalColumn->Append(&varSwitch);
-   return nbytes + sizeof(RColumnSwitch);
+   return nbytes + sizeof(Internal::RColumnSwitch);
 }
 
 void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
@@ -1070,12 +1070,12 @@ ROOT::Experimental::RVariantField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RVariantField::GenerateColumns()
 {
-   GenerateColumnsImpl<RColumnSwitch>();
+   GenerateColumnsImpl<Internal::RColumnSwitch>();
 }
 
 void ROOT::Experimental::RVariantField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<RColumnSwitch>(desc);
+   GenerateColumnsImpl<Internal::RColumnSwitch>(desc);
 }
 
 void ROOT::Experimental::RVariantField::ConstructValue(void *where) const
