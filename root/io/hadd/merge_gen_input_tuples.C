@@ -14,8 +14,6 @@ void merge_gen_input_tuples(const char *fname1 = "test_rntuple_input1.root", con
 {
    using namespace ROOT::Experimental;
 
-   auto noPrereleaseWarning = RLogScopedVerbosity(NTupleLog(), ROOT::Experimental::ELogLevel::kError);
-
    {
       auto model = RNTupleModel::Create();
       auto fi = model->MakeField<int>("I");

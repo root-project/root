@@ -10,15 +10,11 @@
 
 void basics()
 {
-   using ROOT::Experimental::RLogScopedVerbosity;
    using ROOT::Experimental::RNTupleModel;
    using ROOT::Experimental::RNTupleWriter;
    using ROOT::Experimental::RNTupleReader;
 
    const std::string kFileName{"test_rntuple_basics.root"s};
-
-   auto noPrereleaseWarning = RLogScopedVerbosity(ROOT::Experimental::NTupleLog(),
-                                                  ROOT::Experimental::ELogLevel::kError);
 
    {
       auto model = RNTupleModel::Create();
