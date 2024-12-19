@@ -86,7 +86,7 @@ protected:
    void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
-   RPageRef LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::Experimental::ClusterSize_t::ValueType) final
+   RPageRef LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::Experimental::NTupleSize_t) final
    {
       return RPageRef();
    }
