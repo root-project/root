@@ -156,19 +156,16 @@ constexpr DescriptorId_t kInvalidDescriptorId = std::uint64_t(-1);
 class RClusterIndex {
 private:
    DescriptorId_t fClusterId = kInvalidDescriptorId;
-   ClusterSize_t::ValueType fIndex = kInvalidClusterIndex;
+   NTupleSize_t fIndex = kInvalidClusterIndex;
 
 public:
    RClusterIndex() = default;
    RClusterIndex(const RClusterIndex &other) = default;
    RClusterIndex &operator=(const RClusterIndex &other) = default;
-   constexpr RClusterIndex(DescriptorId_t clusterId, ClusterSize_t::ValueType index)
-      : fClusterId(clusterId), fIndex(index)
-   {
-   }
+   constexpr RClusterIndex(DescriptorId_t clusterId, NTupleSize_t index) : fClusterId(clusterId), fIndex(index) {}
 
-   RClusterIndex operator+(ClusterSize_t::ValueType off) const { return RClusterIndex(fClusterId, fIndex + off); }
-   RClusterIndex operator-(ClusterSize_t::ValueType off) const { return RClusterIndex(fClusterId, fIndex - off); }
+   RClusterIndex operator+(NTupleSize_t off) const { return RClusterIndex(fClusterId, fIndex + off); }
+   RClusterIndex operator-(NTupleSize_t off) const { return RClusterIndex(fClusterId, fIndex - off); }
    RClusterIndex operator++(int) /* postfix */
    {
       auto r = *this;
@@ -184,7 +181,7 @@ public:
    bool operator!=(RClusterIndex other) const { return !(*this == other); }
 
    DescriptorId_t GetClusterId() const { return fClusterId; }
-   ClusterSize_t::ValueType GetIndex() const { return fIndex; }
+   NTupleSize_t GetIndex() const { return fIndex; }
 };
 
 /// RNTupleLocator payload that is common for object stores using 64bit location information.
