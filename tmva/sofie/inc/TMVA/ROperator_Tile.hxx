@@ -51,12 +51,17 @@ public:
       }
       fShapeInput=model.GetTensorShape(fNInput);
 
-         // Retrieve the data pointer for the repeats tensor
+      // if repeats vector is not initialized we cannot deduce shape of output
+      // not support for time being this case
+      if (!model.IsInitializedTensor(fNRepeats)) {
+         throw std::runtime_error("TMVA SOFIE Tile Op: non-initialized repeats input is not supported");
+      }
+
+      // Retrieve the data pointer for the repeats tensor
       auto repptr = model.GetInitializedTensorData(fNRepeats);
       // Cast the raw pointer to the appropriate type (size_t*)
-      auto repeat_shape = static_cast<size_t*>(repptr.get());
-
-      if (repeat_shape == nullptr) {
+      auto repeats_data = static_cast<int64_t*>(repptr.get());
+      if (repeats_data == nullptr) {
         throw std::runtime_error("Failed to retrieve the data for the repeats tensor.");
       }
       // Get the shape of the repeats tensor to determine the number of elements
@@ -66,12 +71,18 @@ public:
          throw std::runtime_error("Repeats tensor is not 1D.");
       }
       size_t num_elements = repeats_shape[0];
-      // Convert the data to a vector
-      std::vector<size_t> repeats_vector(repeat_shape, repeat_shape + num_elements);
+      // Convert the data to a vector of size_t
+      std::vector<size_t> repeats_vector(num_elements);
+      std::copy(repeats_data, repeats_data + num_elements, repeats_vector.begin());
+
 
       fShapeY = ShapeInference({fShapeInput,repeats_vector})[0];
 
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNInput), fShapeY);
+
+      if (model.Verbose())
+         std::cout <<  "Tile: " << fNInput << " " << ConvertShapeToString(fShapeInput) << " -> " << fNY << " with shape " << ConvertShapeToString(fShapeY)
+            << " given repeats " << ConvertShapeToString(repeats_vector) << std::endl;
    }
 
    std::string Generate(std::string OpName){
@@ -89,17 +100,13 @@ public:
       std::string output = "tensor_" + fNY;
       out << "///-------- Tile operator\n";
       out << "{\n"; // add scope to re-use same names
-      out << "std::vector<int> input_shape = " << ConvertShapeToString(fShapeInput) << ";\n";
-      std::vector<size_t> repeats = fShapeY;
-      for (size_t i = 0; i < repeats.size(); i++)
-         repeats[i] /= fShapeInput[i];
+      out << "const int input_shape[" << fShapeInput.size() << "] = " << ConvertShapeToString(fShapeInput) << ";\n";
 
-      out << "std::vector<int> repeats = " << ConvertShapeToString(repeats) << ";\n";
       out << "int inputLength = " << ConvertShapeToLength(fShapeInput) << ";\n";
       out << "int s = 1;\n";
       // loop from inverse dim order
       out << "for (int i = " << fShapeInput.size()-1 << "; i >=0; i--) {\n";
-      out << SP << "int r = repeats[i];\n";
+      out << SP << "int r = tensor_" << fNRepeats << "[i];\n";
       // we cannot exclude case where repeats=1 since we need offset
       //out << SP << "if (r == 1 && i < " << fShapeInput.size()-1 <<  ") continue;\n";
       out << SP << "int i_offset = 0, o_offset = 0;\n";
