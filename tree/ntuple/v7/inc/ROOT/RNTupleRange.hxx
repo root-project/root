@@ -84,8 +84,8 @@ public:
 class RNTupleClusterRange {
 private:
    const DescriptorId_t fClusterId;
-   const ClusterSize_t::ValueType fStart;
-   const ClusterSize_t::ValueType fEnd;
+   const NTupleSize_t fStart;
+   const NTupleSize_t fEnd;
 
 public:
    class RIterator {
@@ -121,7 +121,7 @@ public:
       bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
    };
 
-   RNTupleClusterRange(DescriptorId_t clusterId, ClusterSize_t::ValueType start, ClusterSize_t::ValueType end)
+   RNTupleClusterRange(DescriptorId_t clusterId, NTupleSize_t start, NTupleSize_t end)
       : fClusterId(clusterId), fStart(start), fEnd(end)
    {
    }
