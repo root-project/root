@@ -177,7 +177,7 @@ ROOT::Experimental::RColumnDescriptor ROOT::Experimental::RColumnDescriptor::Clo
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfoExtended
-ROOT::Experimental::RClusterDescriptor::RPageRange::Find(ClusterSize_t::ValueType idxInCluster) const
+ROOT::Experimental::RClusterDescriptor::RPageRange::Find(NTupleSize_t idxInCluster) const
 {
    const auto N = fCumulativeNElements.size();
    R__ASSERT(N > 0);
@@ -711,7 +711,7 @@ ROOT::RResult<void> ROOT::Experimental::Internal::RClusterDescriptorBuilder::Com
       return R__FAIL("column ID mismatch");
    if (fCluster.fColumnRanges.count(physicalId) > 0)
       return R__FAIL("column ID conflict");
-   RClusterDescriptor::RColumnRange columnRange{physicalId, firstElementIndex, ClusterSize_t{0}};
+   RClusterDescriptor::RColumnRange columnRange{physicalId, firstElementIndex, 0};
    columnRange.fCompressionSettings = compressionSettings;
    for (const auto &pi : pageRange.fPageInfos) {
       columnRange.fNElements += pi.fNElements;
