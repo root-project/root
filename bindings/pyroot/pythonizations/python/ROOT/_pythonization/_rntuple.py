@@ -24,14 +24,24 @@ def _REntry_GetPtr(self, key):
 
 
 def _REntry_getitem(self, key):
-    ptr = self.GetPtr(key)
-    return ptr.get()[0]
+    ptr_proxy = self.GetPtr(key)
+    # Most types held by a shared_ptr are exposed by cppyy as the type of the
+    # pointee, so we need to get the smart pointer before dereferencing. This
+    # does not happen for smart pointers to fundamental types.
+    real_smartptr = ptr_proxy.__smartptr__() if ptr_proxy.__smartptr__() is not None else ptr_proxy
+    return real_smartptr.__deref__()
 
 
 def _REntry_setitem(self, key, value):
-    ptr = self.GetPtr(key)
-    ptr.get()[0] = value
-
+    ptr_proxy = self.GetPtr(key)
+    # Most types held by a shared_ptr are exposed by cppyy as the type of the
+    # pointee, so we need to get the smart pointer before dereferencing. This
+    # does not happen for smart pointers to fundamental types.
+    real_smartptr = ptr_proxy.__smartptr__() if ptr_proxy.__smartptr__() is not None else ptr_proxy
+    # ref-assignment is not supported by cppyy (and it also does not apply well
+    # to Python in general), so we use a helper.
+    import ROOT
+    ROOT.Experimental.Internal.AssignValueToPointee(value, real_smartptr)
 
 @pythonization("REntry", ns="ROOT::Experimental")
 def pythonize_REntry(klass):

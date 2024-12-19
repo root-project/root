@@ -20,6 +20,7 @@
 
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <variant>
 
 #include <ROOT/RError.hxx>
@@ -288,6 +289,14 @@ static_assert(kTestLocatorType < RNTupleLocator::ELocatorType::kLastSerializable
 
 /// Check whether a given string is a valid name according to the RNTuple specification
 RResult<void> EnsureValidNameForRNTuple(std::string_view name, std::string_view where);
+
+/// Helper for the Python interface to perform the assignment to the pointee of a shared_ptr.
+template <typename T, typename U>
+void AssignValueToPointee(T &&value, std::shared_ptr<U> &ptr)
+{
+   static_assert(std::is_convertible_v<T, U>, "Cannot convert type of input argument to type of the pointee.");
+   *ptr = std::forward<T>(value);
+}
 
 } // namespace Internal
 
