@@ -239,7 +239,7 @@ if(NOT ROOT_fftw3_FOUND)
 endif()
 
 if(NOT ROOT_opengl_FOUND)
-  set(opengl_veto io/tree/staff.C
+  set(opengl_veto io/tree/tree502_staff.C
                   visualisation/gl/*.C)
 endif()
 
