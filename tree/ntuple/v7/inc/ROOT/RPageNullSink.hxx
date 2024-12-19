@@ -48,6 +48,8 @@ public:
       return descriptor;
    }
 
+   NTupleSize_t GetNEntries() const final { return 0; }
+
    void ConnectFields(const std::vector<RFieldBase *> &fields, NTupleSize_t firstEntry)
    {
       auto connectField = [&](RFieldBase &f) { CallConnectPageSinkOnField(f, *this, firstEntry); };
