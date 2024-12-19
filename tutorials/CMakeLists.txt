@@ -403,6 +403,12 @@ set(extra_veto
   eve7/*.C
   r/rootlogon.C)
 
+if(MSVC)
+  # disable run_h1analysis.C because of Endpoint Security HTTP traffic scanning,
+  # which is corrupting the data on Windows
+  list(APPEND extra_veto tree/run_h1analysis.C)
+endif()
+
 if(MSVC AND NOT llvm13_broken_tests)
   list(APPEND extra_veto
        math/exampleFunction.py
