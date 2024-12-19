@@ -343,7 +343,7 @@ TEST(RNTuple, ModelExtensionSubFields)
    EXPECT_EQ(structFldView(7), extStructFldView(7));
 
    // Check that the column ranges for model-extended subfields are properly constructed by iterating over their view.
-   // For improper column ranges, the global field range would go until the value of kInvalidClusterIndex and result in
+   // For improper column ranges, the global field range would go until the value of kInvalidNTupleIndex and result in
    // an out-of-bounds error.
    auto vecStructElemView = ntuple->GetView<float>("structFld.v2._0._0");
    auto extVecStructElemView = ntuple->GetView<float>("extStructFld.v2._0._0");
