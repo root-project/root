@@ -95,7 +95,7 @@ public:
    void ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to) final
    {
       RClusterIndex collectionStart;
-      ClusterSize_t size;
+      NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
       *static_cast<std::size_t *>(to) = size;
    }
@@ -104,7 +104,7 @@ public:
    void ReadInClusterImpl(ROOT::Experimental::RClusterIndex clusterIndex, void *to) final
    {
       RClusterIndex collectionStart;
-      ClusterSize_t size;
+      NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, &size);
       *static_cast<std::size_t *>(to) = size;
    }

@@ -270,11 +270,11 @@ class RCardinalityField : public RFieldBase {
    friend class RNTupleCollectionView; // to access GetCollectionInfo()
 
 private:
-   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
+   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, NTupleSize_t *size)
    {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
-   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size)
+   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, NTupleSize_t *size)
    {
       fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
    }
@@ -367,7 +367,7 @@ public:
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final
    {
       RClusterIndex collectionStart;
-      ClusterSize_t size;
+      NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
       *static_cast<RNTupleCardinality<SizeT> *>(to) = size;
    }
@@ -376,7 +376,7 @@ public:
    void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final
    {
       RClusterIndex collectionStart;
-      ClusterSize_t size;
+      NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, &size);
       *static_cast<RNTupleCardinality<SizeT> *>(to) = size;
    }
@@ -384,14 +384,14 @@ public:
    std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final
    {
       RClusterIndex collectionStart;
-      ClusterSize_t collectionSize;
+      NTupleSize_t collectionSize;
       fPrincipalColumn->GetCollectionInfo(bulkSpec.fFirstIndex, &collectionStart, &collectionSize);
 
       auto typedValues = static_cast<RNTupleCardinality<SizeT> *>(bulkSpec.fValues);
       typedValues[0] = collectionSize;
 
       auto lastOffset = collectionStart.GetIndex() + collectionSize;
-      ClusterSize_t::ValueType nRemainingEntries = bulkSpec.fCount - 1;
+      NTupleSize_t nRemainingEntries = bulkSpec.fCount - 1;
       std::size_t nEntries = 1;
       while (nRemainingEntries > 0) {
          NTupleSize_t nItemsUntilPageEnd;
