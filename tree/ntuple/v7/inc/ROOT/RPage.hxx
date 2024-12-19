@@ -79,8 +79,7 @@ private:
 
 public:
    RPage() = default;
-   RPage(void *buffer, RPageAllocator *pageAllocator, ClusterSize_t::ValueType elementSize,
-         ClusterSize_t::ValueType maxElements)
+   RPage(void *buffer, RPageAllocator *pageAllocator, std::uint32_t elementSize, std::uint32_t maxElements)
       : fBuffer(buffer), fPageAllocator(pageAllocator), fElementSize(elementSize), fMaxElements(maxElements)
    {}
    RPage(const RPage &) = delete;
@@ -125,10 +124,8 @@ public:
    std::uint32_t GetMaxElements() const { return fMaxElements; }
    NTupleSize_t GetGlobalRangeFirst() const { return fRangeFirst; }
    NTupleSize_t GetGlobalRangeLast() const { return fRangeFirst + NTupleSize_t(fNElements) - 1; }
-   ClusterSize_t::ValueType GetClusterRangeFirst() const { return fRangeFirst - fClusterInfo.GetIndexOffset(); }
-   ClusterSize_t::ValueType GetClusterRangeLast() const {
-      return GetClusterRangeFirst() + NTupleSize_t(fNElements) - 1;
-   }
+   NTupleSize_t GetClusterRangeFirst() const { return fRangeFirst - fClusterInfo.GetIndexOffset(); }
+   NTupleSize_t GetClusterRangeLast() const { return GetClusterRangeFirst() + NTupleSize_t(fNElements) - 1; }
    const RClusterInfo& GetClusterInfo() const { return fClusterInfo; }
 
    bool Contains(NTupleSize_t globalIndex) const {
@@ -139,7 +136,7 @@ public:
    {
       if (fClusterInfo.GetId() != clusterIndex.GetClusterId())
          return false;
-      auto clusterRangeFirst = ClusterSize_t(fRangeFirst - fClusterInfo.GetIndexOffset());
+      auto clusterRangeFirst = fRangeFirst - fClusterInfo.GetIndexOffset();
       return (clusterIndex.GetIndex() >= clusterRangeFirst) &&
              (clusterIndex.GetIndex() < clusterRangeFirst + fNElements);
    }
@@ -151,7 +148,7 @@ public:
    /// nElements in the page.
    /// When reading a page from disk, GrowUnchecked is used to set the actual number of elements. In this case, the
    /// return value is ignored.
-   void *GrowUnchecked(ClusterSize_t::ValueType nElements)
+   void *GrowUnchecked(std::uint32_t nElements)
    {
       assert(fNElements + nElements <= fMaxElements);
       auto offset = GetNBytes();
