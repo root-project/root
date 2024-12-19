@@ -65,7 +65,7 @@ using RClusterDescriptorBuilder = ROOT::Experimental::Internal::RClusterDescript
 using RClusterGroupDescriptorBuilder = ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder;
 using RColumnDescriptorBuilder = ROOT::Experimental::Internal::RColumnDescriptorBuilder;
 using RColumnElementBase = ROOT::Experimental::Internal::RColumnElementBase;
-using RColumnSwitch = ROOT::Experimental::RColumnSwitch;
+using RColumnSwitch = ROOT::Experimental::Internal::RColumnSwitch;
 using ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder;
 using RFieldDescriptorBuilder = ROOT::Experimental::Internal::RFieldDescriptorBuilder;
 template <class T>

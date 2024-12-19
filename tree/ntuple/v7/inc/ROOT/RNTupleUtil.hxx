@@ -148,19 +148,6 @@ constexpr ClusterSize_t kInvalidClusterIndex(std::uint64_t(-1));
 
 constexpr int kUnknownCompressionSettings = -1;
 
-/// Holds the index and the tag of a kSwitch column
-class RColumnSwitch {
-private:
-   ClusterSize_t fIndex;
-   std::uint32_t fTag = 0;
-
-public:
-   RColumnSwitch() = default;
-   RColumnSwitch(ClusterSize_t index, std::uint32_t tag) : fIndex(index), fTag(tag) {}
-   ClusterSize_t GetIndex() const { return fIndex; }
-   std::uint32_t GetTag() const { return fTag; }
-};
-
 /// Uniquely identifies a physical column within the scope of the current process, used to tag pages
 using ColumnId_t = std::int64_t;
 constexpr ColumnId_t kInvalidColumnId = -1;
@@ -252,6 +239,20 @@ struct RNTupleLocator {
 };
 
 namespace Internal {
+
+/// Holds the index and the tag of a kSwitch column
+class RColumnSwitch {
+private:
+   ClusterSize_t fIndex;
+   std::uint32_t fTag = 0;
+
+public:
+   RColumnSwitch() = default;
+   RColumnSwitch(ClusterSize_t index, std::uint32_t tag) : fIndex(index), fTag(tag) {}
+   ClusterSize_t GetIndex() const { return fIndex; }
+   std::uint32_t GetTag() const { return fTag; }
+};
+
 template <typename T>
 auto MakeAliasedSharedPtr(T *rawPtr)
 {
