@@ -309,7 +309,7 @@ public:
    ~RNTupleCollectionView() = default;
 
    RNTupleClusterRange GetCollectionRange(NTupleSize_t globalIndex) {
-      ClusterSize_t size;
+      NTupleSize_t size;
       RClusterIndex collectionStart;
       fField.GetCollectionInfo(globalIndex, &collectionStart, &size);
       return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndex(),
@@ -317,7 +317,7 @@ public:
    }
    RNTupleClusterRange GetCollectionRange(RClusterIndex clusterIndex)
    {
-      ClusterSize_t size;
+      NTupleSize_t size;
       RClusterIndex collectionStart;
       fField.GetCollectionInfo(clusterIndex, &collectionStart, &size);
       return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndex(),

@@ -183,11 +183,11 @@ public:
    size_t GetValueSize() const final { return fProxy->Sizeof(); }
    size_t GetAlignment() const final { return alignof(std::max_align_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
-   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
+   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, NTupleSize_t *size) const
    {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
-   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
+   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, NTupleSize_t *size) const
    {
       fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
    }

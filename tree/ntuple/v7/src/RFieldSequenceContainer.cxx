@@ -259,7 +259,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
    auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(to);
 
    // Read collection info for this entry
-   ClusterSize_t nItems;
+   NTupleSize_t nItems;
    RClusterIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
    char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
@@ -342,7 +342,7 @@ std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSp
 
    // Get size of the first RVec of the bulk
    RClusterIndex firstItemIndex;
-   ClusterSize_t collectionSize;
+   NTupleSize_t collectionSize;
    this->GetCollectionInfo(bulkSpec.fFirstIndex, &firstItemIndex, &collectionSize);
    *beginPtr = itemValueArray;
    *sizePtr = collectionSize;
@@ -352,7 +352,7 @@ std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSp
    // We optimistically assume that bulkSpec.fAuxData is already large enough to hold all the item values in the
    // given range. If not, we'll fix up the pointers afterwards.
    auto lastOffset = firstItemIndex.GetIndex() + collectionSize;
-   ClusterSize_t::ValueType nRemainingValues = bulkSpec.fCount - 1;
+   NTupleSize_t nRemainingValues = bulkSpec.fCount - 1;
    std::size_t nValues = 1;
    std::size_t nItems = collectionSize;
    while (nRemainingValues > 0) {
@@ -530,7 +530,7 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
 {
    auto typedValue = static_cast<std::vector<char> *>(to);
 
-   ClusterSize_t nItems;
+   NTupleSize_t nItems;
    RClusterIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
@@ -648,7 +648,7 @@ void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(NTupleSize_t 
 {
    auto typedValue = static_cast<std::vector<bool> *>(to);
 
-   ClusterSize_t nItems;
+   NTupleSize_t nItems;
    RClusterIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 

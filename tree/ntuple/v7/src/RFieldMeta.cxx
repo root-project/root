@@ -513,7 +513,7 @@ std::size_t ROOT::Experimental::RProxiedCollectionField::AppendImpl(const void *
 
 void ROOT::Experimental::RProxiedCollectionField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
-   ClusterSize_t nItems;
+   NTupleSize_t nItems;
    RClusterIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
@@ -685,7 +685,7 @@ std::size_t ROOT::Experimental::RStreamerField::AppendImpl(const void *from)
 void ROOT::Experimental::RStreamerField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
    RClusterIndex collectionStart;
-   ClusterSize_t nbytes;
+   NTupleSize_t nbytes;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nbytes);
 
    TBufferFile buffer(TBuffer::kRead, nbytes);

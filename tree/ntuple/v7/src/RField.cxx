@@ -480,7 +480,7 @@ void ROOT::Experimental::RField<std::string>::ReadGlobalImpl(ROOT::Experimental:
 {
    auto typedValue = static_cast<std::string *>(to);
    RClusterIndex collectionStart;
-   ClusterSize_t nChars;
+   NTupleSize_t nChars;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nChars);
    if (nChars == 0) {
       typedValue->clear();
@@ -744,7 +744,7 @@ std::size_t ROOT::Experimental::RNullableField::AppendValue(const void *from)
 ROOT::Experimental::RClusterIndex ROOT::Experimental::RNullableField::GetItemIndex(NTupleSize_t globalIndex)
 {
    RClusterIndex collectionStart;
-   ClusterSize_t collectionSize;
+   NTupleSize_t collectionSize;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &collectionSize);
    return (collectionSize == 0) ? RClusterIndex() : collectionStart;
 }
