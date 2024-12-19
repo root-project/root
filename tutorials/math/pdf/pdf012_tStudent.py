@@ -18,7 +18,6 @@
 
 from ROOT import TH1D, TF1, TCanvas, kRed, kBlue
 import ROOT
-import numpy as np
 
 
 # This is the way to force load of MathMore in Cling
@@ -34,10 +33,9 @@ cum = TF1("cum", "ROOT::Math::tdistribution_cdf(x,3.0)", a, b)
 # Create the histogram and fill it with the quantiles
 quant = TH1D("quant", "", 9, 0, 0.9)
 
-quant.Fill(
-    np.array([(i - 0.5) / 10.0 for i in range(1, 10)]),
-    np.array([ROOT.Math.tdistribution_quantile(0.1 * i, 3.0) for i in range(1, 10)]),
-)
+for i in range(1, 10):
+    c = ROOT.Math.tdistribution_quantile(0.1 * i, 3.0)
+    quant.SetBinContent(i, c)
 
 # For each quantile fill with the pdf
 xx = []

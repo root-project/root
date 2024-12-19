@@ -82,6 +82,9 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tvectort_getitem tvectort_getitem.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tvector3_len tvector3_len.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tvector3_getitem tvector3_getitem.py)
 
+# TRandom pythonizations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_trandom_numpy trandom_array.py)
+
 # TString pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_len tstring_len.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tstring_str_repr tstring_str_repr.py)
