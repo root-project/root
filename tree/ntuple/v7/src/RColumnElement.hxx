@@ -772,8 +772,7 @@ public:
          element.fIndex = RByteSwap<8>::bswap(element.fIndex);
          element.fTag = RByteSwap<4>::bswap(element.fTag);
 #endif
-         dstArray[i] = ROOT::Experimental::Internal::RColumnSwitch(ROOT::Experimental::ClusterSize_t{element.fIndex},
-                                                                   element.fTag);
+         dstArray[i] = ROOT::Experimental::Internal::RColumnSwitch(element.fIndex, element.fTag);
       }
    }
 

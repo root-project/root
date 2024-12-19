@@ -1038,7 +1038,7 @@ std::size_t ROOT::Experimental::RVariantField::AppendImpl(const void *from)
       nbytes += CallAppendOn(*fSubFields[tag - 1], reinterpret_cast<const unsigned char *>(from) + fVariantOffset);
       index = fNWritten[tag - 1]++;
    }
-   Internal::RColumnSwitch varSwitch(ClusterSize_t(index), tag);
+   Internal::RColumnSwitch varSwitch(index, tag);
    fPrincipalColumn->Append(&varSwitch);
    return nbytes + sizeof(Internal::RColumnSwitch);
 }
