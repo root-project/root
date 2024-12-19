@@ -1452,7 +1452,7 @@ void clang::InitializePreprocessor(Preprocessor &PP,
   // any -include directives.
   for (unsigned i = 0, e = InitOpts.MacroIncludes.size(); i != e; ++i)
     AddImplicitIncludeMacros(Builder, InitOpts.MacroIncludes[i]);
-  
+
   // Process -include-pch/-include-pth directives.
   if (!InitOpts.ImplicitPCHInclude.empty())
     AddImplicitIncludePCH(Builder, PP, PCHContainerRdr,

@@ -61,8 +61,6 @@ namespace cling {
             std::string("--cuda-gpu-arch=sm_")
                 .append(std::to_string(m_CuArgs->smVersion)),
             "--cuda-device-only"};
-    argv.push_back("-isystem");
-    argv.push_back("/home/lukas/sft/ws/root-project/build/Debug-no-modules/etc/cling/lib/clang/18/include/cuda_wrappers");
 
     addHeaderSearchPathFlags(argv, CI.getHeaderSearchOptsPtr());
 
@@ -86,8 +84,8 @@ namespace cling {
     std::transform(argv.begin(), argv.end(), argvChar.begin(),
                    [&](const std::string& s) { return s.c_str(); });
 
-    // TODO investigate where the -include-pch is added
-    // This is a problem for builds without modules
+    // TODO investigate where the -include-pch argument without a file 
+    // is added from. This is a problem for builds without modules.
     for (auto& el : argvChar) {
       //std::cout << el << std::endl;   
       if (el != nullptr && std::string(el) == "-include-pch") {
@@ -95,10 +93,6 @@ namespace cling {
         break;
       }
     }
-    //for (auto& el : argvChar) {
-      //std::cout << el << std::endl;   
-  //}
-    //argvChar[15] = nullptr;
 
     // argv list have to finish with a nullptr.
     argvChar.push_back(nullptr);
@@ -219,6 +213,13 @@ namespace cling {
 
       if (e.Group == clang::frontend::IncludeDirGroup::Angled)
         argv.push_back("-I" + e.Path);
+
+      // make sure the cuda_wrappers directory is added as system include
+      // TODO ensure that this is the correct way to do that  
+      if (e.Group == clang::frontend::IncludeDirGroup::System) {
+        argv.push_back("-isystem");
+        argv.push_back(e.Path);
+      }
     }
   }
 

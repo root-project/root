@@ -118,7 +118,7 @@ def makepch():
    ret = subprocess.call(command.split(), env=my_env)
    if ret == 0:
       shutil.move("allDict_rdict.pch",pchFileName)
-      # os.unlink("allDict.cxx")
+      os.unlink("allDict.cxx")
 
    return ret
 
