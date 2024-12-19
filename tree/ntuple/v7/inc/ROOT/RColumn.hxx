@@ -179,7 +179,7 @@ public:
       std::memcpy(to, from, elemSize);
    }
 
-   void ReadV(NTupleSize_t globalIndex, ClusterSize_t::ValueType count, void *to)
+   void ReadV(NTupleSize_t globalIndex, NTupleSize_t count, void *to)
    {
       const auto elemSize = fElement->GetSize();
       auto tail = static_cast<unsigned char *>(to);
@@ -191,7 +191,7 @@ public:
          const NTupleSize_t idxInPage = globalIndex - fReadPageRef.Get().GetGlobalRangeFirst();
 
          const void *from = static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) + idxInPage * elemSize;
-         const ClusterSize_t::ValueType nBatch = std::min(fReadPageRef.Get().GetNElements() - idxInPage, count);
+         const NTupleSize_t nBatch = std::min(fReadPageRef.Get().GetNElements() - idxInPage, count);
 
          std::memcpy(tail, from, elemSize * nBatch);
 
@@ -201,7 +201,7 @@ public:
       }
    }
 
-   void ReadV(RClusterIndex clusterIndex, ClusterSize_t::ValueType count, void *to)
+   void ReadV(RClusterIndex clusterIndex, NTupleSize_t count, void *to)
    {
       const auto elemSize = fElement->GetSize();
       auto tail = static_cast<unsigned char *>(to);
@@ -213,7 +213,7 @@ public:
          NTupleSize_t idxInPage = clusterIndex.GetIndex() - fReadPageRef.Get().GetClusterRangeFirst();
 
          const void *from = static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) + idxInPage * elemSize;
-         const ClusterSize_t::ValueType nBatch = std::min(count, fReadPageRef.Get().GetNElements() - idxInPage);
+         const NTupleSize_t nBatch = std::min(count, fReadPageRef.Get().GetNElements() - idxInPage);
 
          std::memcpy(tail, from, elemSize * nBatch);
 
@@ -280,7 +280,7 @@ public:
    }
 
    /// For offset columns only, look at the two adjacent values that define a collection's coordinates
-   void GetCollectionInfo(const NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *collectionSize)
+   void GetCollectionInfo(const NTupleSize_t globalIndex, RClusterIndex *collectionStart, NTupleSize_t *collectionSize)
    {
       NTupleSize_t idxStart = 0;
       NTupleSize_t idxEnd;
@@ -303,7 +303,7 @@ public:
       *collectionStart = RClusterIndex(fReadPageRef.Get().GetClusterInfo().GetId(), idxStart);
    }
 
-   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *collectionSize)
+   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, NTupleSize_t *collectionSize)
    {
       auto index = clusterIndex.GetIndex();
       auto idxStart = (index == 0) ? 0 : *Map<ClusterSize_t>(clusterIndex - 1);
