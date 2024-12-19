@@ -52,7 +52,8 @@ public:
       /// Note that the comment character must not be part of the data, e.g. in strings.
       char fComment = '\0';
       /// Impose column names. This can be used if a header is missing or if the header has unparsable or
-      /// unwanted column names.
+      /// unwanted column names. If this list is not empty, it must contain exactly as many elements as
+      /// the number of columns in the CSV file.
       std::vector<std::string> fColumnNames;
       /// Specify custom column types, accepts an unordered map with keys being column name, values being type alias
       /// ('O' for boolean, 'D' for double, 'L' for Long64_t, 'T' for std::string)

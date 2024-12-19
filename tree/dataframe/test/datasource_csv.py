@@ -19,7 +19,7 @@ class DataSourceCSV(unittest.TestCase):
         """Test the construction with keyword arguments"""
         df = ROOT.RDF.FromCSV('RCsvDS_test_parsing.csv', delimiter = ' ', leftTrim = True, rightTrim = True,
                               skipFirstNLines = 1, skipLastNLines = 2, comment = '#',
-                              columnNames = ['FirstName', 'LastName'])
+                              columnNames = ['FirstName', 'LastName', '', ''])
         self.assertEqual(1, df.Count().GetValue())
         self.assertEqual('Harry', df.Take['string']('FirstName').at(0))
 
