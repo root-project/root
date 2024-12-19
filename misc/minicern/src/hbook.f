@@ -373,7 +373,6 @@
       ENDIF
   10  CHMAIL='//'//CHTOP(NCHTOP)
       CALL HCDIR(CHMAIL,' ')
-
   99  RETURN
       END
 
