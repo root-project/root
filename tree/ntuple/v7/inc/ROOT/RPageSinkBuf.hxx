@@ -133,6 +133,8 @@ public:
 
    const RNTupleDescriptor &GetDescriptor() const final;
 
+   NTupleSize_t GetNEntries() const final { return fInnerSink->GetNEntries(); }
+
    void InitImpl(RNTupleModel &model) final;
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
    void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) final;
