@@ -237,7 +237,7 @@ public:
       /// The global index of the first column element in the cluster
       NTupleSize_t fFirstElementIndex = kInvalidNTupleIndex;
       /// The number of column elements in the cluster
-      ClusterSize_t fNElements = kInvalidClusterIndex;
+      NTupleSize_t fNElements = kInvalidNTupleIndex;
       /// The usual format for ROOT compression settings (see Compression.h).
       /// The pages of a particular column in a particular cluster are all compressed with the same settings.
       int fCompressionSettings = kUnknownCompressionSettings;
@@ -301,12 +301,12 @@ public:
       };
       struct RPageInfoExtended : RPageInfo {
          /// Index (in cluster) of the first element in page.
-         ClusterSize_t::ValueType fFirstInPage = 0;
+         NTupleSize_t fFirstInPage = 0;
          /// Page number in the corresponding RPageRange.
          NTupleSize_t fPageNo = 0;
 
          RPageInfoExtended() = default;
-         RPageInfoExtended(const RPageInfo &pi, ClusterSize_t::ValueType i, NTupleSize_t n)
+         RPageInfoExtended(const RPageInfo &pi, NTupleSize_t i, NTupleSize_t n)
             : RPageInfo(pi), fFirstInPage(i), fPageNo(n)
          {
          }
@@ -328,7 +328,7 @@ public:
       }
 
       /// Find the page in the RPageRange that contains the given element. The element must exist.
-      RPageInfoExtended Find(ClusterSize_t::ValueType idxInCluster) const;
+      RPageInfoExtended Find(NTupleSize_t idxInCluster) const;
 
       DescriptorId_t fPhysicalColumnId = kInvalidDescriptorId;
       std::vector<RPageInfo> fPageInfos;
@@ -344,7 +344,7 @@ private:
    /// Clusters can be swapped by adjusting the entry offsets
    NTupleSize_t fFirstEntryIndex = kInvalidNTupleIndex;
    // TODO(jblomer): change to std::uint64_t
-   ClusterSize_t fNEntries = kInvalidClusterIndex;
+   NTupleSize_t fNEntries = kInvalidNTupleIndex;
 
    std::unordered_map<DescriptorId_t, RColumnRange> fColumnRanges;
    std::unordered_map<DescriptorId_t, RPageRange> fPageRanges;
@@ -364,7 +364,7 @@ public:
 
    DescriptorId_t GetId() const { return fClusterId; }
    NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
-   ClusterSize_t GetNEntries() const { return fNEntries; }
+   NTupleSize_t GetNEntries() const { return fNEntries; }
    const RColumnRange &GetColumnRange(DescriptorId_t physicalId) const { return fColumnRanges.at(physicalId); }
    const RPageRange &GetPageRange(DescriptorId_t physicalId) const { return fPageRanges.at(physicalId); }
    /// Returns an iterator over pairs { columnId, columnRange }. The iteration order is unspecified.
