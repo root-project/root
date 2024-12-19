@@ -236,13 +236,13 @@ namespace Internal {
 /// Holds the index and the tag of a kSwitch column
 class RColumnSwitch {
 private:
-   ClusterSize_t fIndex;
+   NTupleSize_t fIndex;
    std::uint32_t fTag = 0;
 
 public:
    RColumnSwitch() = default;
-   RColumnSwitch(ClusterSize_t index, std::uint32_t tag) : fIndex(index), fTag(tag) {}
-   ClusterSize_t GetIndex() const { return fIndex; }
+   RColumnSwitch(NTupleSize_t index, std::uint32_t tag) : fIndex(index), fTag(tag) {}
+   NTupleSize_t GetIndex() const { return fIndex; }
    std::uint32_t GetTag() const { return fTag; }
 };
 
