@@ -1,0 +1,1 @@
+ROOT_ADD_GTEST(testJSONInterface testJSONInterface.cxx LIBRARIES RooFitJSONInterface Matrix)

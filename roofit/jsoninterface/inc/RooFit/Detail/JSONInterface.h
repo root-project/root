@@ -13,7 +13,11 @@
 #ifndef RooFit_Detail_JSONInterface_h
 #define RooFit_Detail_JSONInterface_h
 
+#include <ROOT/RSpan.hxx>
+
 #include <iostream>
+#include <map>
+#include <unordered_map>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -247,6 +251,39 @@ std::vector<T> &operator<<(std::vector<T> &v, RooFit::Detail::JSONNode const &n)
    }
    v << n.children();
    return v;
+}
+
+inline RooFit::Detail::JSONNode &operator<<(RooFit::Detail::JSONNode &n, std::span<const double> v)
+{
+   n.fill_seq(v);
+   return n;
+}
+
+inline RooFit::Detail::JSONNode &operator<<(RooFit::Detail::JSONNode &n, std::span<const float> v)
+{
+   n.fill_seq(v);
+   return n;
+}
+
+template <class Key, class T, class Hash, class KeyEqual, class Allocator>
+RooFit::Detail::JSONNode &
+operator<<(RooFit::Detail::JSONNode &n, const std::unordered_map<Key, T, Hash, KeyEqual, Allocator> &m)
+{
+   n.set_map();
+   for (const auto &it : m) {
+      n[it.first] << it.second;
+   }
+   return n;
+}
+
+template <class Key, class T, class Compare, class Allocator>
+RooFit::Detail::JSONNode &operator<<(RooFit::Detail::JSONNode &n, const std::map<Key, T, Compare, Allocator> &m)
+{
+   n.set_map();
+   for (const auto &it : m) {
+      n[it.first] << it.second;
+   }
+   return n;
 }
 
 template <>
