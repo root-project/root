@@ -266,7 +266,7 @@ public:
 
       struct RColumnInfo {
          RClusterDescriptor::RPageRange fPageRange;
-         ClusterSize_t fNElements = kInvalidClusterIndex;
+         NTupleSize_t fNElements = kInvalidNTupleIndex;
          bool fIsSuppressed = false;
       };
 
@@ -697,8 +697,8 @@ protected:
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(RCluster *cluster);
    // Returns a page from storage if not found in the page pool. Should be able to handle zero page locators.
-   virtual RPageRef LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
-                                 ClusterSize_t::ValueType idxInCluster) = 0;
+   virtual RPageRef
+   LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, NTupleSize_t idxInCluster) = 0;
 
    /// Prepare a page range read for the column set in `clusterKey`.  Specifically, pages referencing the
    /// `kTypePageZero` locator are filled in `pageZeroMap`; otherwise, `perPageFunc` is called for each page. This is

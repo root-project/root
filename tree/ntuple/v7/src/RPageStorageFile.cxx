@@ -412,8 +412,7 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadSealedPage(DescriptorId_
 
 ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t columnHandle,
-                                                            const RClusterInfo &clusterInfo,
-                                                            ClusterSize_t::ValueType idxInCluster)
+                                                            const RClusterInfo &clusterInfo, NTupleSize_t idxInCluster)
 {
    const auto columnId = columnHandle.fPhysicalId;
    const auto clusterId = clusterInfo.fClusterId;
