@@ -144,7 +144,6 @@ struct RClusterSize {
    ValueType fValue;
 };
 using ClusterSize_t = RClusterSize;
-constexpr ClusterSize_t kInvalidClusterIndex(std::uint64_t(-1));
 
 constexpr int kUnknownCompressionSettings = -1;
 
@@ -156,7 +155,7 @@ constexpr DescriptorId_t kInvalidDescriptorId = std::uint64_t(-1);
 class RClusterIndex {
 private:
    DescriptorId_t fClusterId = kInvalidDescriptorId;
-   NTupleSize_t fIndex = kInvalidClusterIndex;
+   NTupleSize_t fIndex = kInvalidNTupleIndex;
 
 public:
    RClusterIndex() = default;

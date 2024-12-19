@@ -785,7 +785,7 @@ void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalInde
    bool isValidValue = static_cast<bool>(*ptr);
 
    auto itemIndex = GetItemIndex(globalIndex);
-   bool isValidItem = itemIndex.GetIndex() != kInvalidClusterIndex;
+   bool isValidItem = itemIndex.GetIndex() != kInvalidNTupleIndex;
 
    void *valuePtr = nullptr;
    if (isValidValue)
@@ -874,7 +874,7 @@ void ROOT::Experimental::ROptionalField::ReadGlobalImpl(NTupleSize_t globalIndex
 {
    auto engagementPtr = GetEngagementPtr(to);
    auto itemIndex = GetItemIndex(globalIndex);
-   if (itemIndex.GetIndex() == kInvalidClusterIndex) {
+   if (itemIndex.GetIndex() == kInvalidNTupleIndex) {
       if (*engagementPtr && !(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible))
          fItemDeleter->operator()(to, true /* dtorOnly */);
       *engagementPtr = false;
