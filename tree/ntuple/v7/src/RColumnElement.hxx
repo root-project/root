@@ -717,13 +717,13 @@ public:
 };
 
 template <>
-class RColumnElement<ROOT::Experimental::RColumnSwitch, EColumnType::kUnknown> : public RColumnElementBase {
+class RColumnElement<ROOT::Experimental::Internal::RColumnSwitch, EColumnType::kUnknown> : public RColumnElementBase {
 public:
-   static constexpr std::size_t kSize = sizeof(ROOT::Experimental::RColumnSwitch);
+   static constexpr std::size_t kSize = sizeof(ROOT::Experimental::Internal::RColumnSwitch);
    RColumnElement() : RColumnElementBase(kSize) {}
    RIdentifier GetIdentifier() const final
    {
-      return RIdentifier{typeid(ROOT::Experimental::RColumnSwitch), EColumnType::kUnknown};
+      return RIdentifier{typeid(ROOT::Experimental::Internal::RColumnSwitch), EColumnType::kUnknown};
    }
 };
 
@@ -733,7 +733,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <>
-class RColumnElement<ROOT::Experimental::RColumnSwitch, EColumnType::kSwitch> : public RColumnElementBase {
+class RColumnElement<ROOT::Experimental::Internal::RColumnSwitch, EColumnType::kSwitch> : public RColumnElementBase {
 private:
    struct RSwitchElement {
       std::uint64_t fIndex;
@@ -742,14 +742,14 @@ private:
 
 public:
    static constexpr bool kIsMappable = false;
-   static constexpr std::size_t kSize = sizeof(ROOT::Experimental::RColumnSwitch);
+   static constexpr std::size_t kSize = sizeof(ROOT::Experimental::Internal::RColumnSwitch);
    static constexpr std::size_t kBitsOnStorage = 96;
    RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
    bool IsMappable() const final { return kIsMappable; }
 
    void Pack(void *dst, const void *src, std::size_t count) const final
    {
-      auto srcArray = reinterpret_cast<const ROOT::Experimental::RColumnSwitch *>(src);
+      auto srcArray = reinterpret_cast<const ROOT::Experimental::Internal::RColumnSwitch *>(src);
       auto dstArray = reinterpret_cast<unsigned char *>(dst);
       for (std::size_t i = 0; i < count; ++i) {
          RSwitchElement element{srcArray[i].GetIndex(), srcArray[i].GetTag()};
@@ -764,7 +764,7 @@ public:
    void Unpack(void *dst, const void *src, std::size_t count) const final
    {
       auto srcArray = reinterpret_cast<const unsigned char *>(src);
-      auto dstArray = reinterpret_cast<ROOT::Experimental::RColumnSwitch *>(dst);
+      auto dstArray = reinterpret_cast<ROOT::Experimental::Internal::RColumnSwitch *>(dst);
       for (std::size_t i = 0; i < count; ++i) {
          RSwitchElement element;
          memcpy(&element, srcArray + i * 12, 12);
@@ -772,14 +772,14 @@ public:
          element.fIndex = RByteSwap<8>::bswap(element.fIndex);
          element.fTag = RByteSwap<4>::bswap(element.fTag);
 #endif
-         dstArray[i] =
-            ROOT::Experimental::RColumnSwitch(ROOT::Experimental::ClusterSize_t{element.fIndex}, element.fTag);
+         dstArray[i] = ROOT::Experimental::Internal::RColumnSwitch(ROOT::Experimental::ClusterSize_t{element.fIndex},
+                                                                   element.fTag);
       }
    }
 
    RIdentifier GetIdentifier() const final
    {
-      return RIdentifier{typeid(ROOT::Experimental::RColumnSwitch), EColumnType::kSwitch};
+      return RIdentifier{typeid(ROOT::Experimental::Internal::RColumnSwitch), EColumnType::kSwitch};
    }
 };
 
