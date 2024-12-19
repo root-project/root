@@ -148,10 +148,6 @@ constexpr ClusterSize_t kInvalidClusterIndex(std::uint64_t(-1));
 
 constexpr int kUnknownCompressionSettings = -1;
 
-/// Uniquely identifies a physical column within the scope of the current process, used to tag pages
-using ColumnId_t = std::int64_t;
-constexpr ColumnId_t kInvalidColumnId = -1;
-
 /// Distriniguishes elements of the same type within a descriptor, e.g. different fields
 using DescriptorId_t = std::uint64_t;
 constexpr DescriptorId_t kInvalidDescriptorId = std::uint64_t(-1);
