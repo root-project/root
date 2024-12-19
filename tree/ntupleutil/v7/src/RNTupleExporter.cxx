@@ -47,20 +47,25 @@ struct RColumnExportInfo {
 };
 
 struct RAddColumnsResult {
-   int fNColsTotal;
-   int fNColsFilteredOut;
+   int fNColsTotal = 0;
 
    RAddColumnsResult &operator+=(const RAddColumnsResult &other)
    {
       fNColsTotal += other.fNColsTotal;
-      fNColsFilteredOut += other.fNColsFilteredOut;
       return *this;
    }
 };
 
+template <typename T>
+bool ItemIsFilteredOut(const RNTupleExporter::RFilter<T> &filter, const T &item)
+{
+   bool filterHasType = filter.fSet.find(item) != filter.fSet.end();
+   bool isFiltered = (filter.fType == RNTupleExporter::EFilterType::kBlacklist) == filterHasType;
+   return isFiltered;
+}
+
 RAddColumnsResult AddColumnsFromField(std::vector<RColumnExportInfo> &vec, const RNTupleDescriptor &desc,
-                                      const RFieldDescriptor &fieldDesc, const std::unordered_set<EColumnType> &filter,
-                                      RNTupleExporter::EFilterType filterType)
+                                      const RFieldDescriptor &fieldDesc, const RNTupleExporter::RPagesOptions &options)
 {
    R__LOG_DEBUG(1, RNTupleExporterLog()) << "processing field \"" << desc.GetQualifiedFieldName(fieldDesc.GetId())
                                          << "\"";
@@ -72,14 +77,13 @@ RAddColumnsResult AddColumnsFromField(std::vector<RColumnExportInfo> &vec, const
          continue;
 
       for (const auto &colDesc : desc.GetColumnIterable(subfieldDesc)) {
-         bool filterHasType = filter.find(colDesc.GetType()) != filter.end();
-         bool isFiltered = (filterType == RNTupleExporter::EFilterType::kBlacklist) == filterHasType;
-         if (!isFiltered)
+         // Filter columns by type
+         bool typeIsFiltered = ItemIsFilteredOut(options.fColumnTypeFilter, colDesc.GetType());
+         if (!typeIsFiltered)
             vec.emplace_back(desc, colDesc, subfieldDesc);
-         res.fNColsFilteredOut += isFiltered;
          res.fNColsTotal += 1;
       }
-      res += AddColumnsFromField(vec, desc, subfieldDesc, filter, filterType);
+      res += AddColumnsFromField(vec, desc, subfieldDesc, options);
    }
 
    return res;
@@ -114,8 +118,7 @@ RNTupleExporter::RPagesResult RNTupleExporter::ExportPages(RPageSource &source, 
 
    // Collect column info
    std::vector<RColumnExportInfo> columnInfos;
-   const RAddColumnsResult addColRes =
-      AddColumnsFromField(columnInfos, desc.GetRef(), desc->GetFieldZero(), options.fFilter, options.fFilterType);
+   const RAddColumnsResult addColRes = AddColumnsFromField(columnInfos, desc.GetRef(), desc->GetFieldZero(), options);
 
    // Collect ColumnSet for the cluster pool query
    RCluster::ColumnSet_t columnSet;
@@ -185,10 +188,12 @@ RNTupleExporter::RPagesResult RNTupleExporter::ExportPages(RPageSource &source, 
    assert(res.fExportedFileNames.size() == static_cast<size_t>(pagesExported));
    std::ostringstream ss;
    ss << "exported " << res.fExportedFileNames.size() << " pages (";
-   if (options.fFilter.empty())
+   if (options.fColumnTypeFilter.fSet.empty()) {
       ss << addColRes.fNColsTotal << " columns)";
-   else
-      ss << addColRes.fNColsFilteredOut << "/" << addColRes.fNColsTotal << " columns filtered out)";
+   } else {
+      auto nColsFilteredOut = addColRes.fNColsTotal - columnInfos.size();
+      ss << nColsFilteredOut << "/" << addColRes.fNColsTotal << " columns filtered out)";
+   }
    R__LOG_INFO(RNTupleExporterLog()) << ss.str();
 
    return res;

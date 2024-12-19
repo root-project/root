@@ -30,10 +30,16 @@ class RPageSource;
 class RNTupleExporter {
 public:
    enum class EFilterType {
-      /// Skip all columns whose type is contained in `fFilter`
+      /// Don't export items contained in the filter's set
       kBlacklist,
-      /// Only include columns whose type is contained in `fFilter`
+      /// Export only items contained in the filter's set
       kWhitelist   
+   };
+
+   template <typename T>
+   struct RFilter {
+      std::unordered_set<T> fSet;
+      EFilterType fType = EFilterType::kBlacklist;
    };
    
    struct RPagesOptions {
@@ -51,9 +57,8 @@ public:
 
       /// Optional filter that determines which columns are included or excluded from being exported.
       /// By default, export all columns. If you only want to include certain column types, add them
-      /// to this set and change fFilterType to kWhitelist.
-      std::unordered_set<EColumnType> fFilter;
-      EFilterType fFilterType = EFilterType::kBlacklist;
+      /// to `fColumnTypeFilter.fSet` and change `fColumnTypeFilter.fType` to kWhitelist.
+      RFilter<EColumnType> fColumnTypeFilter;
 
       RPagesOptions() : fOutputPath("."), fFlags(kDefaults) {}
    };

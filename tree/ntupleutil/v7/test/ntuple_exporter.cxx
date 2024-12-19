@@ -315,8 +315,8 @@ TEST(RNTupleExporter, ExportToFilesWhitelist)
    // Now export the pages
    auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
    auto opts = RNTupleExporter::RPagesOptions();
-   opts.fFilterType = RNTupleExporter::EFilterType::kWhitelist;
-   opts.fFilter.insert(EColumnType::kIndex64);
+   opts.fColumnTypeFilter.fType = RNTupleExporter::EFilterType::kWhitelist;
+   opts.fColumnTypeFilter.fSet.insert(EColumnType::kIndex64);
    auto res = RNTupleExporter::ExportPages(*source, opts);
 
    // Should only have exported the page for the index column
@@ -327,9 +327,9 @@ TEST(RNTupleExporter, ExportToFilesWhitelist)
    FileRaii pageFlt("./cluster_0_flt-0_page_0_elems_10_comp_0.page");
 
    EXPECT_FALSE(std::find(res.fExportedFileNames.begin(), res.fExportedFileNames.end(), pageFlt.GetPath()) !=
-               res.fExportedFileNames.end());
+                res.fExportedFileNames.end());
    EXPECT_FALSE(std::find(res.fExportedFileNames.begin(), res.fExportedFileNames.end(), pageVec.GetPath()) !=
-               res.fExportedFileNames.end());
+                res.fExportedFileNames.end());
    EXPECT_TRUE(std::find(res.fExportedFileNames.begin(), res.fExportedFileNames.end(), pageVecIdx.GetPath()) !=
                res.fExportedFileNames.end());
 
@@ -351,8 +351,8 @@ TEST(RNTupleExporter, ExportToFilesBlacklist)
    // Now export the pages
    auto source = Internal::RPageSource::Create("ntuple", fileGuard.GetPath());
    auto opts = RNTupleExporter::RPagesOptions();
-   opts.fFilterType = RNTupleExporter::EFilterType::kBlacklist;
-   opts.fFilter.insert(EColumnType::kIndex64);
+   opts.fColumnTypeFilter.fType = RNTupleExporter::EFilterType::kBlacklist;
+   opts.fColumnTypeFilter.fSet.insert(EColumnType::kIndex64);
    auto res = RNTupleExporter::ExportPages(*source, opts);
 
    // Should not have exported the page for the index column
@@ -367,7 +367,7 @@ TEST(RNTupleExporter, ExportToFilesBlacklist)
    EXPECT_TRUE(std::find(res.fExportedFileNames.begin(), res.fExportedFileNames.end(), pageVec.GetPath()) !=
                res.fExportedFileNames.end());
    EXPECT_FALSE(std::find(res.fExportedFileNames.begin(), res.fExportedFileNames.end(), pageVecIdx.GetPath()) !=
-               res.fExportedFileNames.end());
+                res.fExportedFileNames.end());
 
    // check the file contents
    auto fltBytes = ReadFileToString(pageFlt.GetPath().c_str());
