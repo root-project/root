@@ -94,9 +94,9 @@ private:
             return fGlobalFirstElement < other.fGlobalFirstElement;
 
          assert(fClusterFirstElement.GetClusterId() != kInvalidDescriptorId &&
-                fClusterFirstElement.GetIndex() != kInvalidClusterIndex);
+                fClusterFirstElement.GetIndex() != kInvalidNTupleIndex);
          assert(other.fClusterFirstElement.GetClusterId() != kInvalidDescriptorId &&
-                other.fClusterFirstElement.GetIndex() != kInvalidClusterIndex);
+                other.fClusterFirstElement.GetIndex() != kInvalidNTupleIndex);
          if (fClusterFirstElement.GetClusterId() == other.fClusterFirstElement.GetClusterId())
             return fClusterFirstElement.GetIndex() < other.fClusterFirstElement.GetIndex();
          return fClusterFirstElement.GetClusterId() < other.fClusterFirstElement.GetClusterId();

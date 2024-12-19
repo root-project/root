@@ -178,7 +178,7 @@ protected:
    void CommitClusterImpl() final { fNWritten = 0; }
 
    /// Given the index of the nullable field, returns the corresponding global index of the subfield or,
-   /// if it is null, returns kInvalidClusterIndex
+   /// if it is null, returns kInvalidNTupleIndex
    RClusterIndex GetItemIndex(NTupleSize_t globalIndex);
 
    RNullableField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
