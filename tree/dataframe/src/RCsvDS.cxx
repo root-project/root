@@ -164,12 +164,18 @@ void RCsvDS::RewindToData()
 
 void RCsvDS::FillHeaders(const std::string &line)
 {
+   const auto columns = ParseColumns(line);
+
    if (!fOptions.fColumnNames.empty()) {
+      if (fOptions.fColumnNames.size() != columns.size()) {
+         auto msg = std::string("Error: passed ") + std::to_string(fOptions.fColumnNames.size()) +
+                    " column names for a CSV file containing " + std::to_string(columns.size()) + " columns!";
+         throw std::runtime_error(msg);
+      }
       std::swap(fHeaders, fOptions.fColumnNames);
       return;
    }
 
-   auto columns = ParseColumns(line);
    fHeaders.reserve(columns.size());
    for (auto &col : columns) {
       fHeaders.emplace_back(col);
@@ -222,6 +228,11 @@ void RCsvDS::FillRecord(const std::string &line, Record_t &record)
 void RCsvDS::GenerateHeaders(size_t size)
 {
    if (!fOptions.fColumnNames.empty()) {
+      if (fOptions.fColumnNames.size() != size) {
+         auto msg = std::string("Error: passed ") + std::to_string(fOptions.fColumnNames.size()) +
+                    " column names for a CSV file containing " + std::to_string(size) + " columns!";
+         throw std::runtime_error(msg);
+      }
       std::swap(fHeaders, fOptions.fColumnNames);
       return;
    }
@@ -671,6 +682,6 @@ RDataFrame FromCSV(std::string_view fileName, bool readHeaders, char delimiter, 
    return rdf;
 }
 
-} // ns RDF
+} // namespace RDF
 
-} // ns ROOT
+} // namespace ROOT
