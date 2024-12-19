@@ -251,15 +251,6 @@ struct RNTupleLocator {
    }
 };
 
-/// Used to specify the underlying RNTuples in RNTupleProcessor
-struct RNTupleOpenSpec {
-   std::string fNTupleName;
-   std::string fStorage;
-   RNTupleReadOptions fOptions;
-
-   RNTupleOpenSpec(std::string_view n, std::string_view s) : fNTupleName(n), fStorage(s) {}
-};
-
 namespace Internal {
 template <typename T>
 auto MakeAliasedSharedPtr(T *rawPtr)
