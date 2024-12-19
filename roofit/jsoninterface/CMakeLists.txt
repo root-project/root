@@ -52,3 +52,5 @@ if(builtin_nlohmannjson)
 else()
   target_link_libraries(RooFitJSONInterface PRIVATE nlohmann_json::nlohmann_json)
 endif()
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)
