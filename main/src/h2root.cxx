@@ -312,7 +312,7 @@ int main(int argc, char **argv)
 
    int lun = 10;
 #ifndef WIN32
-   hropen(lun,PASSCHAR("example"),PASSCHAR(file_in),PASSCHAR("px"),record_size,ier,7,strlen(file_in),2);
+   hropen(lun,PASSCHAR("example"),PASSCHAR(file_in),PASSCHAR("pxc"),record_size,ier,7,strlen(file_in),2);
 #else
    hropen(lun,PASSCHAR("example"),PASSCHAR(file_in),PASSCHAR("px"),record_size,ier);
 #endif
