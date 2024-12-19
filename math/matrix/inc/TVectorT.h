@@ -76,6 +76,12 @@ public:
    inline          Element  *GetMatrixArray  ()       { return fElements; }
    inline const    Element  *GetMatrixArray  () const { return fElements; }
 
+   // For compatibility with STL classes
+   inline          std::size_t size() const { return fNrows; }
+
+   inline          Element  *data()       { return fElements; }
+   inline const    Element  *data() const { return fElements; }
+
    inline void     Invalidate ()       { SetBit(kStatus); }
    inline void     MakeValid  ()       { ResetBit(kStatus); }
    inline Bool_t   IsValid    () const { return !TestBit(kStatus); }
