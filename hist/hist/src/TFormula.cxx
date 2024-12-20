@@ -2263,7 +2263,9 @@ void TFormula::ProcessFormula(TString &formula)
          map<TString, Double_t>::iterator constIt = fConsts.find(fun.GetName());
          if (constIt != fConsts.end()) {
             TString pattern = TString::Format("{%s}", fun.GetName());
-            TString value = TString::Format("%lf", (*constIt).second);
+            // #17225: we take into account LC_LOCALE settings for which the decimal separator
+            // is , instead of ., e.g. de_AT.UTF-8
+            TString value = TString::Format("%lf", (*constIt).second).ReplaceAll(",", ".");
             formula.ReplaceAll(pattern, value);
             fun.fFound = true;
             // std::cout << "constant with name " << fun.GetName() << " is found " << std::endl;
