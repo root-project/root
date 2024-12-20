@@ -207,10 +207,15 @@ namespace Internal {
 
 /// The in-memory representation of a 32bit or 64bit on-disk index column. Wraps the integer in a
 /// named type so that templates can distinguish between integer data columns and index columns.
-struct RColumnIndex {
+class RColumnIndex {
+public:
    using ValueType = std::uint64_t;
 
-   RColumnIndex() : fValue(0) {}
+private:
+   ValueType fValue = 0;
+
+public:
+   RColumnIndex() = default;
    explicit constexpr RColumnIndex(ValueType value) : fValue(value) {}
    RColumnIndex &operator=(const ValueType value)
    {
@@ -229,8 +234,6 @@ struct RColumnIndex {
       return result;
    }
    operator ValueType() const { return fValue; }
-
-   ValueType fValue;
 };
 
 /// Holds the index and the tag of a kSwitch column
