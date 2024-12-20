@@ -758,6 +758,7 @@ if(ROOT_pyroot_FOUND)
              io/sql/sqlselect.py       # same as the C++ case
              launcher.py            # Not a tutorial
              .enableImplicitMTWrapper.py # Not a tutorial
+             roostats/CreateExampleFile.py # the file is created by the C++ counterpart and we want no conflict
              )
 
   if(NOT dataframe
