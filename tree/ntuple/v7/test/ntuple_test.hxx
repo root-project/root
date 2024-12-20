@@ -53,7 +53,7 @@
 #include <variant>
 #include <vector>
 
-using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
+using ROOT::Experimental::Internal::RColumnIndex;
 using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
 using EColumnType = ROOT::Experimental::EColumnType;
 using ROOT::Experimental::EExtraTypeInfoIds;

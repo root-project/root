@@ -111,8 +111,8 @@ std::unique_ptr<ROOT::Experimental::Internal::RColumnElementBase>
 ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType onDiskType)
 {
    switch (onDiskType) {
-   case EColumnType::kIndex64: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex64>>();
-   case EColumnType::kIndex32: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex32>>();
+   case EColumnType::kIndex64: return std::make_unique<RColumnElement<RColumnIndex, EColumnType::kIndex64>>();
+   case EColumnType::kIndex32: return std::make_unique<RColumnElement<RColumnIndex, EColumnType::kIndex32>>();
    case EColumnType::kSwitch: return std::make_unique<RColumnElement<RColumnSwitch, EColumnType::kSwitch>>();
    case EColumnType::kByte: return std::make_unique<RColumnElement<std::byte, EColumnType::kByte>>();
    case EColumnType::kChar: return std::make_unique<RColumnElement<char, EColumnType::kChar>>();
@@ -129,10 +129,8 @@ ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType onD
    case EColumnType::kUInt16: return std::make_unique<RColumnElement<std::uint16_t, EColumnType::kUInt16>>();
    case EColumnType::kInt8: return std::make_unique<RColumnElement<std::int8_t, EColumnType::kInt8>>();
    case EColumnType::kUInt8: return std::make_unique<RColumnElement<std::uint8_t, EColumnType::kUInt8>>();
-   case EColumnType::kSplitIndex64:
-      return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kSplitIndex64>>();
-   case EColumnType::kSplitIndex32:
-      return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kSplitIndex32>>();
+   case EColumnType::kSplitIndex64: return std::make_unique<RColumnElement<RColumnIndex, EColumnType::kSplitIndex64>>();
+   case EColumnType::kSplitIndex32: return std::make_unique<RColumnElement<RColumnIndex, EColumnType::kSplitIndex32>>();
    case EColumnType::kSplitReal64: return std::make_unique<RColumnElement<double, EColumnType::kSplitReal64>>();
    case EColumnType::kSplitReal32: return std::make_unique<RColumnElement<float, EColumnType::kSplitReal32>>();
    case EColumnType::kSplitInt64: return std::make_unique<RColumnElement<std::int64_t, EColumnType::kSplitInt64>>();
@@ -181,8 +179,8 @@ ROOT::Experimental::Internal::GenerateColumnElement(std::type_index inMemoryType
       return GenerateColumnElementInternal<float>(onDiskType);
    } else if (inMemoryType == std::type_index(typeid(double))) {
       return GenerateColumnElementInternal<double>(onDiskType);
-   } else if (inMemoryType == std::type_index(typeid(ClusterSize_t))) {
-      return GenerateColumnElementInternal<ClusterSize_t>(onDiskType);
+   } else if (inMemoryType == std::type_index(typeid(RColumnIndex))) {
+      return GenerateColumnElementInternal<RColumnIndex>(onDiskType);
    } else if (inMemoryType == std::type_index(typeid(RColumnSwitch))) {
       return GenerateColumnElementInternal<RColumnSwitch>(onDiskType);
    } else if (inMemoryType == std::type_index(typeid(RTestFutureColumn))) {

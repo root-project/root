@@ -117,33 +117,6 @@ enum ENTupleStructure : std::uint16_t { kInvalid, kLeaf, kCollection, kRecord, k
 /// Integer type long enough to hold the maximum number of entries in a column
 using NTupleSize_t = std::uint64_t;
 constexpr NTupleSize_t kInvalidNTupleIndex = std::uint64_t(-1);
-/// Wrap the integer in a struct in order to avoid template specialization clash with std::uint64_t
-struct RClusterSize {
-   using ValueType = std::uint64_t;
-
-   RClusterSize() : fValue(0) {}
-   explicit constexpr RClusterSize(ValueType value) : fValue(value) {}
-   RClusterSize &operator=(const ValueType value)
-   {
-      fValue = value;
-      return *this;
-   }
-   RClusterSize &operator+=(const ValueType value)
-   {
-      fValue += value;
-      return *this;
-   }
-   RClusterSize operator++(int)
-   {
-      auto result = *this;
-      fValue++;
-      return result;
-   }
-   operator ValueType() const { return fValue; }
-
-   ValueType fValue;
-};
-using ClusterSize_t = RClusterSize;
 
 constexpr int kUnknownCompressionSettings = -1;
 
@@ -231,6 +204,34 @@ struct RNTupleLocator {
 };
 
 namespace Internal {
+
+/// The in-memory representation of a 32bit or 64bit on-disk index column. Wraps the integer in a
+/// named type so that templates can distinguish between integer data columns and index columns.
+struct RColumnIndex {
+   using ValueType = std::uint64_t;
+
+   RColumnIndex() : fValue(0) {}
+   explicit constexpr RColumnIndex(ValueType value) : fValue(value) {}
+   RColumnIndex &operator=(const ValueType value)
+   {
+      fValue = value;
+      return *this;
+   }
+   RColumnIndex &operator+=(const ValueType value)
+   {
+      fValue += value;
+      return *this;
+   }
+   RColumnIndex operator++(int)
+   {
+      auto result = *this;
+      fValue++;
+      return result;
+   }
+   operator ValueType() const { return fValue; }
+
+   ValueType fValue;
+};
 
 /// Holds the index and the tag of a kSwitch column
 class RColumnSwitch {

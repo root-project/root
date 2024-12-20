@@ -171,7 +171,7 @@ private:
 
    TClass *fClass = nullptr;
    Internal::RNTupleSerializer::StreamerInfoMap_t fStreamerInfos; ///< streamer info records seen during writing
-   ClusterSize_t fIndex;                                          ///< number of bytes written in the current cluster
+   Internal::RColumnIndex fIndex;                                 ///< number of bytes written in the current cluster
 
 private:
    // Note that className may be different from classp->GetName(), e.g. through different canonicalization of RNTuple
@@ -395,7 +395,8 @@ public:
       std::size_t nEntries = 1;
       while (nRemainingEntries > 0) {
          NTupleSize_t nItemsUntilPageEnd;
-         auto offsets = fPrincipalColumn->MapV<ClusterSize_t>(bulkSpec.fFirstIndex + nEntries, nItemsUntilPageEnd);
+         auto offsets =
+            fPrincipalColumn->MapV<Internal::RColumnIndex>(bulkSpec.fFirstIndex + nEntries, nItemsUntilPageEnd);
          std::size_t nBatch = std::min(nRemainingEntries, nItemsUntilPageEnd);
          for (std::size_t i = 0; i < nBatch; ++i) {
             typedValues[nEntries + i] = offsets[i] - lastOffset;

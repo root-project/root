@@ -287,17 +287,17 @@ public:
       // Try to avoid jumping back to the previous page and jumping back to the previous cluster
       if (R__likely(globalIndex > 0)) {
          if (R__likely(fReadPageRef.Get().Contains(globalIndex - 1))) {
-            idxStart = *Map<ClusterSize_t>(globalIndex - 1);
-            idxEnd = *Map<ClusterSize_t>(globalIndex);
+            idxStart = *Map<RColumnIndex>(globalIndex - 1);
+            idxEnd = *Map<RColumnIndex>(globalIndex);
             if (R__unlikely(fReadPageRef.Get().GetClusterInfo().GetIndexOffset() == globalIndex))
                idxStart = 0;
          } else {
-            idxEnd = *Map<ClusterSize_t>(globalIndex);
+            idxEnd = *Map<RColumnIndex>(globalIndex);
             auto selfOffset = fReadPageRef.Get().GetClusterInfo().GetIndexOffset();
-            idxStart = (globalIndex == selfOffset) ? 0 : *Map<ClusterSize_t>(globalIndex - 1);
+            idxStart = (globalIndex == selfOffset) ? 0 : *Map<RColumnIndex>(globalIndex - 1);
          }
       } else {
-         idxEnd = *Map<ClusterSize_t>(globalIndex);
+         idxEnd = *Map<RColumnIndex>(globalIndex);
       }
       *collectionSize = idxEnd - idxStart;
       *collectionStart = RClusterIndex(fReadPageRef.Get().GetClusterInfo().GetId(), idxStart);
@@ -306,8 +306,8 @@ public:
    void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, NTupleSize_t *collectionSize)
    {
       auto index = clusterIndex.GetIndex();
-      auto idxStart = (index == 0) ? 0 : *Map<ClusterSize_t>(clusterIndex - 1);
-      auto idxEnd = *Map<ClusterSize_t>(clusterIndex);
+      auto idxStart = (index == 0) ? 0 : *Map<RColumnIndex>(clusterIndex - 1);
+      auto idxEnd = *Map<RColumnIndex>(clusterIndex);
       *collectionSize = idxEnd - idxStart;
       *collectionStart = RClusterIndex(clusterIndex.GetClusterId(), idxStart);
    }

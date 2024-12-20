@@ -742,7 +742,7 @@ static std::optional<std::type_index> ColumnInMemoryType(std::string_view fieldT
 {
    if (onDiskType == EColumnType::kIndex32 || onDiskType == EColumnType::kSplitIndex32 ||
        onDiskType == EColumnType::kIndex64 || onDiskType == EColumnType::kSplitIndex64)
-      return typeid(ClusterSize_t);
+      return typeid(ROOT::Experimental::Internal::RColumnIndex);
 
    if (onDiskType == EColumnType::kSwitch)
       return typeid(ROOT::Experimental::Internal::RColumnSwitch);

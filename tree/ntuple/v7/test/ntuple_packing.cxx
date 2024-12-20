@@ -29,7 +29,7 @@ struct Helper {
 };
 
 template <typename NarrowT, EColumnType ColumnT>
-struct Helper<ClusterSize_t, NarrowT, ColumnT> {
+struct Helper<RColumnIndex, NarrowT, ColumnT> {
    using Pod_t = std::uint64_t;
    using Narrow_t = NarrowT;
    static constexpr EColumnType kColumnType = ColumnT;
@@ -65,8 +65,8 @@ using PackingIntTypes = ::testing::Types<Helper<std::int64_t, std::int64_t, ECol
                                          Helper<std::uint16_t, std::uint16_t, EColumnType::kSplitUInt16>>;
 TYPED_TEST_SUITE(PackingInt, PackingIntTypes);
 
-using PackingIndexTypes = ::testing::Types<Helper<ClusterSize_t, std::uint32_t, EColumnType::kSplitIndex32>,
-                                           Helper<ClusterSize_t, std::uint64_t, EColumnType::kSplitIndex64>>;
+using PackingIndexTypes = ::testing::Types<Helper<RColumnIndex, std::uint32_t, EColumnType::kSplitIndex32>,
+                                           Helper<RColumnIndex, std::uint64_t, EColumnType::kSplitIndex64>>;
 TYPED_TEST_SUITE(PackingIndex, PackingIndexTypes);
 
 TEST(Packing, Bitfield)
@@ -158,7 +158,7 @@ TEST(Packing, RColumnSwitch)
    element->Pack(nullptr, nullptr, 0);
    element->Unpack(nullptr, nullptr, 0);
 
-   RColumnSwitch s1(ClusterSize_t{0xaa}, 0x55);
+   RColumnSwitch s1(RColumnIndex{0xaa}, 0x55);
    unsigned char out[12];
    element->Pack(out, &s1, 1);
    RColumnSwitch s2;
@@ -224,7 +224,7 @@ TYPED_TEST(PackingIndex, SplitIndex)
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
    using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
-   auto element = RColumnElementBase::Generate<ClusterSize_t>(TestFixture::Helper_t::kColumnType);
+   auto element = RColumnElementBase::Generate<RColumnIndex>(TestFixture::Helper_t::kColumnType);
    element->Pack(nullptr, nullptr, 0);
    element->Unpack(nullptr, nullptr, 0);
 
@@ -266,7 +266,7 @@ AddReal32QuantField(RNTupleModel &model, const std::string &fieldName, std::size
 namespace {
 
 // Test writing index32/64 columns
-class RFieldTestIndexColumn final : public ROOT::Experimental::RSimpleField<ClusterSize_t> {
+class RFieldTestIndexColumn final : public ROOT::Experimental::RSimpleField<RColumnIndex> {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -279,7 +279,10 @@ protected:
    }
 
 public:
-   explicit RFieldTestIndexColumn(std::string_view name) : RSimpleField(name, "ROOT::Experimental::RClusterSize") {}
+   explicit RFieldTestIndexColumn(std::string_view name)
+      : RSimpleField(name, "ROOT::Experimental::Internal::RColumnIndex")
+   {
+   }
    RFieldTestIndexColumn(RFieldTestIndexColumn &&other) = default;
    RFieldTestIndexColumn &operator=(RFieldTestIndexColumn &&other) = default;
    ~RFieldTestIndexColumn() override = default;
@@ -329,8 +332,8 @@ TEST(Packing, OnDiskEncoding)
       *e->GetPtr<float>("float") = std::nextafterf(1.f, 2.f);   // 0 01111111 00000000000000000000001 == 0x3f800001
       *e->GetPtr<float>("float16") = std::nextafterf(1.f, 2.f); // 0 01111111 00000000000000000000001 == 0x3f800001
       *e->GetPtr<double>("double") = std::nextafter(1., 2.);    // 0x3ff0 0000 0000 0001
-      *e->GetPtr<ClusterSize_t>("index32") = 39916801;          // 0x0261 1501
-      *e->GetPtr<ClusterSize_t>("index64") = 0x0706050403020100L;
+      *e->GetPtr<RColumnIndex>("index32") = 39916801;           // 0x0261 1501
+      *e->GetPtr<RColumnIndex>("index64") = 0x0706050403020100L;
       *e->GetPtr<float>("float32Trunc") = -3.75f; // 1 10000000 11100000000000000000000 == 0xC0700000
       *e->GetPtr<float>("float32Quant") = 0.69f;  // quantized to 88 == 0b1011000
       e->GetPtr<std::string>("str")->assign("abc");
@@ -346,8 +349,8 @@ TEST(Packing, OnDiskEncoding)
       *e->GetPtr<float>("float") = std::nextafterf(1.f, 0.f);     // 0 01111110 11111111111111111111111 = 0x3f7fffff
       *e->GetPtr<float>("float16") = std::nextafterf(0.1f, 0.2f); // 0 01111011 10011001100110011001110 = 0x3dccccce
       *e->GetPtr<double>("double") = std::numeric_limits<double>::max(); // 0x7fef ffff ffff ffff
-      *e->GetPtr<ClusterSize_t>("index32") = 39916808;                   // d(previous) == 7
-      *e->GetPtr<ClusterSize_t>("index64") = 0x070605040302010DL;        // d(previous) == 13
+      *e->GetPtr<RColumnIndex>("index32") = 39916808;                    // d(previous) == 7
+      *e->GetPtr<RColumnIndex>("index64") = 0x070605040302010DL;         // d(previous) == 13
       *e->GetPtr<float>("float32Trunc") = 1.875f; // 0 01111111 11100000000000000000000 == 0x3ff00000
       *e->GetPtr<float>("float32Quant") = 0.875f; // quantized to 111: 0b1101111
       e->GetPtr<std::string>("str")->assign("de");
