@@ -53,6 +53,7 @@
 #@hasroot7@ R__HAS_ROOT7 /**/
 #@use_less_includes@ R__LESS_INCLUDES /**/
 #@hastbb@ R__HAS_TBB /**/
+#@hasgeom@ R__HAS_GEOM /**/
 
 #if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
 #ifndef VECCORE_ENABLE_VC
