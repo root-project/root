@@ -84,6 +84,7 @@ extern ParserFuncSignature ParseIf;
 extern ParserFuncSignature ParsePad;
 extern ParserFuncSignature ParseWhere;
 extern ParserFuncSignature ParseEinsum;
+extern ParserFuncSignature ParseRandom;
 // Declaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseConvTransposeAdd;
@@ -223,6 +224,10 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Pad", ParsePad);
    RegisterOperator("Where", ParseWhere);
    RegisterOperator("Einsum", ParseEinsum);
+   RegisterOperator("RandomNormal", ParseRandom);
+   RegisterOperator("RandomNormalLike", ParseRandom);
+   RegisterOperator("RandomUniform", ParseRandom);
+   RegisterOperator("RandomUniformLike", ParseRandom);
 }
 
 // Destructor of the parser
