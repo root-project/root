@@ -84,7 +84,7 @@ std::string ConvertTypeToString(ETensorType type){
          return "bool";
       }
       default:{
-         return "other";
+         return "other_" + std::to_string( (int) type);
       }
    }
 }

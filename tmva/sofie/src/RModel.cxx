@@ -489,6 +489,18 @@ void RModel::GenerateIntermediateTensorInfo() {
    }
 }
 
+// generate code for specific operator declarations  to be defined in the Session class
+void RModel::GenerateOperatorDeclarations() {
+   std::string strcode;
+   for (auto & op : fOperators) {
+      strcode += op->GenerateDeclCode();
+   }
+   if (strcode.empty()) return;
+   fGC += "\n//---- operator declarations \n";
+   fGC += strcode;
+   fGC += "\n";
+}
+
 void RModel::GenerateDynamicTensorInfo() {
     fGC += "//---- allocate the intermediate dynamic tensors\n";
     std::stringstream out;
@@ -633,8 +645,12 @@ void RModel::GenerateSessionCode()
          fGC += "struct Session_" + fName + " {\n";
    }
 
+   // generate code for declaring the initialized tensors
    GenerateInitializedTensorInfo();
+   // generate the declaring the intermediate tensors
    GenerateIntermediateTensorInfo();
+   // generate code for declarations of some specific operators
+   GenerateOperatorDeclarations();
 
    // add subgraph session
    if (!fSubGraphs.empty()) fGC += "//   subgraph sessions\n";
@@ -642,6 +658,7 @@ void RModel::GenerateSessionCode()
       fGC += "Session_" + graph->fName + "  fSession_" + graph->fName + ";\n";
    }
 
+   // Generate code for Session constructor
    if (fUseSession) {
       std::string sessionName = "Session";
       if (fIsSubGraph)
@@ -695,7 +712,7 @@ void RModel::GenerateSessionCode()
 
       fGC += "}\n\n";
    }
-
+   // generate the inference code
    GenerateOutput();
 
    // end of session

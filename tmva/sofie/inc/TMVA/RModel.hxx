@@ -148,6 +148,9 @@ protected:
    void GenerateIntermediateTensorInfo();
    // generate code for the dynamic tensors
    void GenerateDynamicTensorInfo();
+   // generate code for declarations needed by operators
+   void GenerateOperatorDeclarations();
+   // generate code for inference
    void GenerateOutput();
    // Generate all session code
    void GenerateSessionCode();
