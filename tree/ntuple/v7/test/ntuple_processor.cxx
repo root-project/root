@@ -15,7 +15,7 @@ TEST(RNTupleProcessor, EmptyNTuple)
    auto proc = RNTupleProcessor::Create(ntuple);
 
    int nEntries = 0;
-   for (const auto &_ : *proc) {
+   for ([[maybe_unused]] const auto &entry : *proc) {
       nEntries++;
    }
    EXPECT_EQ(0, nEntries);
