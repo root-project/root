@@ -1585,7 +1585,7 @@ void TClass::Init(const char *name, Version_t cversion,
       TDictionary::DeclId_t decl {};
       if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName, decl, /* autoload = */ kTRUE)) {
          gInterpreter->SetClassInfo(this, kFALSE, silent, decl);   // sets fClassInfo pointer
-      if (fClassInfo) {
+         if (fClassInfo) {
             // This should be moved out of GetCheckSum itself however the last time
             // we tried this cause problem, in particular in the end-of-process operation.
             // fCheckSum = GetCheckSum(kLatestCheckSum);
