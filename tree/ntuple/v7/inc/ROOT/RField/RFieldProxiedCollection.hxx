@@ -150,7 +150,7 @@ protected:
    RCollectionIterableOnce::RIteratorFuncs fIFuncsRead;
    RCollectionIterableOnce::RIteratorFuncs fIFuncsWrite;
    std::size_t fItemSize;
-   ClusterSize_t fNWritten;
+   Internal::RColumnIndex fNWritten;
 
    /// Constructor used when the value type of the collection is not known in advance, i.e. in the case of custom
    /// collections.

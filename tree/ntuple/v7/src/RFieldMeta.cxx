@@ -541,12 +541,12 @@ ROOT::Experimental::RProxiedCollectionField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RProxiedCollectionField::GenerateColumns()
 {
-   GenerateColumnsImpl<ClusterSize_t>();
+   GenerateColumnsImpl<Internal::RColumnIndex>();
 }
 
 void ROOT::Experimental::RProxiedCollectionField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<ClusterSize_t>(desc);
+   GenerateColumnsImpl<Internal::RColumnIndex>(desc);
 }
 
 void ROOT::Experimental::RProxiedCollectionField::ConstructValue(void *where) const
@@ -706,12 +706,12 @@ ROOT::Experimental::RStreamerField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RStreamerField::GenerateColumns()
 {
-   GenerateColumnsImpl<ClusterSize_t, std::byte>();
+   GenerateColumnsImpl<Internal::RColumnIndex, std::byte>();
 }
 
 void ROOT::Experimental::RStreamerField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<ClusterSize_t, std::byte>(desc);
+   GenerateColumnsImpl<Internal::RColumnIndex, std::byte>(desc);
 }
 
 void ROOT::Experimental::RStreamerField::ConstructValue(void *where) const
