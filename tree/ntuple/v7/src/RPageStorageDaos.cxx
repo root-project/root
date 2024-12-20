@@ -111,8 +111,8 @@ RDaosURI ParseDaosURI(std::string_view uri)
 /// the attribute key under which the cage is stored and the offset within that cage to access the page.
 std::pair<uint32_t, uint32_t> DecodeDaosPagePosition(const ROOT::Experimental::RNTupleLocatorObject64 &address)
 {
-   auto position = static_cast<uint32_t>(address.fLocation & 0xFFFFFFFF);
-   auto offset = static_cast<uint32_t>(address.fLocation >> 32);
+   auto position = static_cast<uint32_t>(address.GetLocation() & 0xFFFFFFFF);
+   auto offset = static_cast<uint32_t>(address.GetLocation() >> 32);
    return {position, offset};
 }
 
@@ -528,7 +528,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceD
       zipBuffer = MakeUninitArray<unsigned char>(cgDesc.GetPageListLocator().fBytesOnStorage);
       fDaosContainer->ReadSingleAkey(
          zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, oidPageList, kDistributionKeyDefault,
-         cgDesc.GetPageListLocator().GetPosition<RNTupleLocatorObject64>().fLocation, kCidMetadata);
+         cgDesc.GetPageListLocator().GetPosition<RNTupleLocatorObject64>().GetLocation(), kCidMetadata);
       RNTupleDecompressor::Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage,
                                  cgDesc.GetPageListLength(), buffer.get());
 
@@ -578,8 +578,9 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(DescriptorId_
       fDaosContainer->ReadSingleAkey(cageHeadBuffer.get(), bufSize, daosKey.fOid, daosKey.fDkey, daosKey.fAkey);
       memcpy(const_cast<void *>(sealedPage.GetBuffer()), cageHeadBuffer.get() + offset, sealedPage.GetBufferSize());
    } else {
-      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(
-         fNTupleIndex, clusterId, physicalColumnId, pageInfo.fLocator.GetPosition<RNTupleLocatorObject64>().fLocation);
+      RDaosKey daosKey =
+         GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, physicalColumnId,
+                                             pageInfo.fLocator.GetPosition<RNTupleLocatorObject64>().GetLocation());
       fDaosContainer->ReadSingleAkey(const_cast<void *>(sealedPage.GetBuffer()), sealedPage.GetBufferSize(),
                                      daosKey.fOid, daosKey.fDkey, daosKey.fAkey);
    }
@@ -621,7 +622,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t colum
 
       directReadBuffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
       RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(
-         fNTupleIndex, clusterId, columnId, pageInfo.fLocator.GetPosition<RNTupleLocatorObject64>().fLocation);
+         fNTupleIndex, clusterId, columnId, pageInfo.fLocator.GetPosition<RNTupleLocatorObject64>().GetLocation());
       fDaosContainer->ReadSingleAkey(directReadBuffer.get(), sealedPage.GetBufferSize(), daosKey.fOid, daosKey.fDkey,
                                      daosKey.fAkey);
       fCounters->fNPageRead.Inc();
