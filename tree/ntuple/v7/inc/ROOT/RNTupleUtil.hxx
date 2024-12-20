@@ -159,9 +159,15 @@ public:
 /// RNTupleLocator payload that is common for object stores using 64bit location information.
 /// This might not contain the full location of the content. In particular, for page locators this information may be
 /// used in conjunction with the cluster and column ID.
-struct RNTupleLocatorObject64 {
+class RNTupleLocatorObject64 {
+private:
    std::uint64_t fLocation = 0;
+
+public:
+   RNTupleLocatorObject64() = default;
+   explicit RNTupleLocatorObject64(std::uint64_t location) : fLocation(location) {}
    bool operator==(const RNTupleLocatorObject64 &other) const { return fLocation == other.fLocation; }
+   std::uint64_t GetLocation() const { return fLocation; }
 };
 
 /// Generic information about the physical location of data. Values depend on the concrete storage type.  E.g.,
