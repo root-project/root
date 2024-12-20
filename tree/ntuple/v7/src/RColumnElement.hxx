@@ -706,13 +706,13 @@ public:
 };
 
 template <>
-class RColumnElement<ROOT::Experimental::ClusterSize_t, EColumnType::kUnknown> : public RColumnElementBase {
+class RColumnElement<ROOT::Experimental::Internal::RColumnIndex, EColumnType::kUnknown> : public RColumnElementBase {
 public:
-   static constexpr std::size_t kSize = sizeof(ROOT::Experimental::ClusterSize_t);
+   static constexpr std::size_t kSize = sizeof(ROOT::Experimental::Internal::RColumnIndex);
    RColumnElement() : RColumnElementBase(kSize) {}
    RIdentifier GetIdentifier() const final
    {
-      return RIdentifier{typeid(ROOT::Experimental::ClusterSize_t), EColumnType::kUnknown};
+      return RIdentifier{typeid(ROOT::Experimental::Internal::RColumnIndex), EColumnType::kUnknown};
    }
 };
 
@@ -1442,13 +1442,13 @@ DECLARE_RCOLUMNELEMENT_SPEC(double, EColumnType::kSplitReal64, 64, RColumnElemen
 DECLARE_RCOLUMNELEMENT_SPEC(double, EColumnType::kReal32, 32, RColumnElementCastLE, <double, float>);
 DECLARE_RCOLUMNELEMENT_SPEC(double, EColumnType::kSplitReal32, 32, RColumnElementSplitLE, <double, float>);
 
-DECLARE_RCOLUMNELEMENT_SPEC(ROOT::Experimental::ClusterSize_t, EColumnType::kIndex64, 64, RColumnElementLE,
+DECLARE_RCOLUMNELEMENT_SPEC(ROOT::Experimental::Internal::RColumnIndex, EColumnType::kIndex64, 64, RColumnElementLE,
                             <std::uint64_t>);
-DECLARE_RCOLUMNELEMENT_SPEC(ROOT::Experimental::ClusterSize_t, EColumnType::kIndex32, 32, RColumnElementCastLE,
+DECLARE_RCOLUMNELEMENT_SPEC(ROOT::Experimental::Internal::RColumnIndex, EColumnType::kIndex32, 32, RColumnElementCastLE,
                             <std::uint64_t, std::uint32_t>);
-DECLARE_RCOLUMNELEMENT_SPEC(ROOT::Experimental::ClusterSize_t, EColumnType::kSplitIndex64, 64,
+DECLARE_RCOLUMNELEMENT_SPEC(ROOT::Experimental::Internal::RColumnIndex, EColumnType::kSplitIndex64, 64,
                             RColumnElementDeltaSplitLE, <std::uint64_t, std::uint64_t>);
-DECLARE_RCOLUMNELEMENT_SPEC(ROOT::Experimental::ClusterSize_t, EColumnType::kSplitIndex32, 32,
+DECLARE_RCOLUMNELEMENT_SPEC(ROOT::Experimental::Internal::RColumnIndex, EColumnType::kSplitIndex32, 32,
                             RColumnElementDeltaSplitLE, <std::uint64_t, std::uint32_t>);
 
 template <>

@@ -357,7 +357,8 @@ std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSp
    std::size_t nItems = collectionSize;
    while (nRemainingValues > 0) {
       NTupleSize_t nElementsUntilPageEnd;
-      const auto offsets = fPrincipalColumn->MapV<ClusterSize_t>(bulkSpec.fFirstIndex + nValues, nElementsUntilPageEnd);
+      const auto offsets =
+         fPrincipalColumn->MapV<Internal::RColumnIndex>(bulkSpec.fFirstIndex + nValues, nElementsUntilPageEnd);
       const std::size_t nBatch = std::min(nRemainingValues, nElementsUntilPageEnd);
       for (std::size_t i = 0; i < nBatch; ++i) {
          const auto size = offsets[i] - lastOffset;
@@ -400,12 +401,12 @@ ROOT::Experimental::RRVecField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RRVecField::GenerateColumns()
 {
-   GenerateColumnsImpl<ClusterSize_t>();
+   GenerateColumnsImpl<Internal::RColumnIndex>();
 }
 
 void ROOT::Experimental::RRVecField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<ClusterSize_t>(desc);
+   GenerateColumnsImpl<Internal::RColumnIndex>(desc);
 }
 
 void ROOT::Experimental::RRVecField::ConstructValue(void *where) const
@@ -574,12 +575,12 @@ ROOT::Experimental::RVectorField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RVectorField::GenerateColumns()
 {
-   GenerateColumnsImpl<ClusterSize_t>();
+   GenerateColumnsImpl<Internal::RColumnIndex>();
 }
 
 void ROOT::Experimental::RVectorField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<ClusterSize_t>(desc);
+   GenerateColumnsImpl<Internal::RColumnIndex>(desc);
 }
 
 void ROOT::Experimental::RVectorField::RVectorDeleter::operator()(void *objPtr, bool dtorOnly)
@@ -671,12 +672,12 @@ ROOT::Experimental::RField<std::vector<bool>>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<std::vector<bool>>::GenerateColumns()
 {
-   GenerateColumnsImpl<ClusterSize_t>();
+   GenerateColumnsImpl<Internal::RColumnIndex>();
 }
 
 void ROOT::Experimental::RField<std::vector<bool>>::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<ClusterSize_t>(desc);
+   GenerateColumnsImpl<Internal::RColumnIndex>(desc);
 }
 
 std::vector<ROOT::Experimental::RFieldBase::RValue>

@@ -191,9 +191,7 @@ TEST(RColumnElementEndian, DeltaSplit)
 #ifndef R__BYTESWAP
    GTEST_SKIP() << "Skipping test on big endian node";
 #else
-   using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
-
-   RColumnElement<ClusterSize_t, EColumnType::kSplitIndex32> element;
+   RColumnElement<ROOT::Experimental::Internal::RColumnIndex, EColumnType::kSplitIndex32> element;
    EXPECT_EQ(element.IsMappable(), false);
 
    RPageSinkMock sink1(element);

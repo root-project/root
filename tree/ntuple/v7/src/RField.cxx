@@ -58,7 +58,7 @@ ROOT::Experimental::RCardinalityField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RCardinalityField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<ClusterSize_t>(desc);
+   GenerateColumnsImpl<Internal::RColumnIndex>(desc);
 }
 
 void ROOT::Experimental::RCardinalityField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
@@ -458,12 +458,12 @@ ROOT::Experimental::RField<std::string>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<std::string>::GenerateColumns()
 {
-   GenerateColumnsImpl<ClusterSize_t, char>();
+   GenerateColumnsImpl<Internal::RColumnIndex, char>();
 }
 
 void ROOT::Experimental::RField<std::string>::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<ClusterSize_t, char>(desc);
+   GenerateColumnsImpl<Internal::RColumnIndex, char>(desc);
 }
 
 std::size_t ROOT::Experimental::RField<std::string>::AppendImpl(const void *from)
@@ -719,18 +719,18 @@ ROOT::Experimental::RNullableField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RNullableField::GenerateColumns()
 {
-   GenerateColumnsImpl<ClusterSize_t>();
+   GenerateColumnsImpl<Internal::RColumnIndex>();
 }
 
 void ROOT::Experimental::RNullableField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<ClusterSize_t>(desc);
+   GenerateColumnsImpl<Internal::RColumnIndex>(desc);
 }
 
 std::size_t ROOT::Experimental::RNullableField::AppendNull()
 {
    fPrincipalColumn->Append(&fNWritten);
-   return sizeof(ClusterSize_t);
+   return sizeof(Internal::RColumnIndex);
 }
 
 std::size_t ROOT::Experimental::RNullableField::AppendValue(const void *from)
@@ -738,7 +738,7 @@ std::size_t ROOT::Experimental::RNullableField::AppendValue(const void *from)
    auto nbytesItem = CallAppendOn(*fSubFields[0], from);
    fNWritten++;
    fPrincipalColumn->Append(&fNWritten);
-   return sizeof(ClusterSize_t) + nbytesItem;
+   return sizeof(Internal::RColumnIndex) + nbytesItem;
 }
 
 ROOT::Experimental::RClusterIndex ROOT::Experimental::RNullableField::GetItemIndex(NTupleSize_t globalIndex)
