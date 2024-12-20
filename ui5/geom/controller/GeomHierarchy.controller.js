@@ -27,7 +27,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
    "use strict";
 
-   /** @summary Central geometry viewer contoller
+   /** @summary Central geometry viewer controller
     * @desc All TGeo functionality is loaded after main ui5 rendering is performed,
     * To start drawing, following stages should be completed:
     *    - ui5 element is rendered (onAfterRendering is called)
@@ -59,7 +59,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       configure(args) {
          this.jsroot = args.jsroot;
-         this.websocket = args.websocket; // special channel created from main conection
+         this.websocket = args.websocket; // special channel created from main connection
          this.viewer = args.viewer;
          this.standalone = args.standalone;
          this.websocket.setReceiver(this);
@@ -134,10 +134,28 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             }));
          }
 
+         this._columnResized = 0;
+
          // catch re-rendering of the table to assign handlers
          t.addEventDelegate({
-            onAfterRendering: function() { this.assignRowHandlers(); }
+            onAfterRendering() {
+               this.assignRowHandlers();
+               if (this._columnResized < 1) return;
+               this._columnResized = 0;
+               let fullsz = 4;
+
+               t.getColumns().forEach(col => {
+                  if (col.getVisible()) fullsz += 4 + col.$().width();
+               });
+
+               this.viewer?.byId('geomViewerApp').getAggregation('_navMaster').setWidth(fullsz + 'px');
+            }
          }, this);
+
+         t.attachEvent("columnResize", {}, evnt => {
+            this._columnResized++;
+         }, this);
+
       },
 
       /** @summary invoked when visibility checkbox clicked */
@@ -205,7 +223,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return ttt?.id ?? -1;
       },
 
-      /** @summary Return arrys of ids for this row  */
+      /** @summary Return arrays of ids for this row  */
       getRowIds(row) {
          let ctxt = row.getBindingContext();
          if (!ctxt) return null;
@@ -273,7 +291,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onWebsocketMsg(handle, msg /*, offset */) {
 
          // binary data can be send only as addition to draw message
-         // here data can be placed in the queue and processed when all other prerequicities are done
+         // here data can be placed in the queue and processed when all other prerequisites are done
          if (typeof msg != "string")
             return console.error("Geom hierarchy not uses binary messages len = " + mgs.byteLength);
 
@@ -445,7 +463,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.selectedStack = this.getStackByPath(this.fullModel, path);
       },
 
-      /** @summary Show special message insted of nodes hierarchy */
+      /** @summary Show special message instead of nodes hierarchy */
       showTextInBrowser(text) {
          let br = this.byId("treeTable");
          br.collapseAll();
@@ -466,7 +484,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @summary Show found nodes in the browser, used for offline */
       showFoundNodes(matches) {
-
          let br = this.byId("treeTable"), nodes = [];
          for (let k = 0; k < matches.length; ++k)
             this.viewer?.appendStackToTree(nodes, matches[k].stack, matches[k].color, matches[k].material);
@@ -482,7 +499,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @summary method called from geom painter when specific node need to be activated in the browser
        * @desc Due to complex indexing in TreeTable it is not trivial to select special node */
       activateInTreeTable(itemname) {
-
          if (!itemname || !this.model) return;
 
          let index = this.model.expandNodeByPath(itemname),
@@ -515,7 +531,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.doReload(false);
       },
 
-      /** @summary when new query entered in the seach field */
+      /** @summary when new query entered in the search field */
       onSearch(oEvt, direct) {
 
          let query = (typeof oEvt == 'string' && direct) ? oEvt : oEvt.getSource().getValue();
@@ -537,7 +553,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @summary when click cell on tree table */
       onCellClick(oEvent) {
-
          let tt = this.byId("treeTable"),
              first = tt.getFirstVisibleRow() || 0,
              rowindx = oEvent.getParameters().rowIndex - first,

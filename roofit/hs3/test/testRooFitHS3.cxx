@@ -9,6 +9,7 @@
 #include <RooCategory.h>
 #include <RooConstVar.h>
 #include <RooExponential.h>
+#include <RooGenericPdf.h>
 #include <RooGaussian.h>
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
@@ -18,6 +19,7 @@
 #include <RooMultiVarGaussian.h>
 #include <RooPoisson.h>
 #include <RooProdPdf.h>
+#include <RooRealIntegral.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
@@ -29,7 +31,7 @@
 namespace {
 
 // If the JSON files should be written out for debugging purpose.
-const bool writeJsonFiles = true;
+const bool writeJsonFiles = false;
 
 // Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
 // will be written out and read back, and then the values of the old and new
@@ -39,10 +41,33 @@ int validate(RooWorkspace &ws1, std::string const &argName, bool exact = true)
 {
    RooWorkspace ws2;
 
+   const std::string json1 = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+   RooJSONFactoryWSTool{ws2}.importJSONfromString(json1);
+
+   // Export the re-imported workspace back to JSON, and compare the first JSON
+   // with the second one. They should be identical.
+   const std::string json2 = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
+   EXPECT_EQ(json2, json1) << argName;
+
    if (writeJsonFiles) {
-      RooJSONFactoryWSTool{ws1}.exportJSON(argName + ".json");
+      RooJSONFactoryWSTool{ws1}.exportJSON(argName + "_1.json");
+      RooJSONFactoryWSTool{ws2}.exportJSON(argName + "_2.json");
    }
-   RooJSONFactoryWSTool{ws2}.importJSONfromString(RooJSONFactoryWSTool{ws1}.exportJSONtoString());
+
+   // It would be nice to do a similar closure check for the original and for
+   // the re-imported workspace. However, there is no way to compare workspaces
+   // for equality. But we can still check that the objects in the workspace
+   // have at least the same name.
+   RooArgSet comps1 = ws1.components();
+   RooArgSet comps2 = ws2.components();
+   EXPECT_EQ(comps2.size(), comps1.size());
+
+   comps1.sort();
+   comps2.sort();
+
+   for (std::size_t i = 0; i < comps1.size(); ++i) {
+      EXPECT_STREQ(comps1[i]->GetName(), comps2[i]->GetName());
+   }
 
    RooRealVar &x1 = *ws1.var("x");
    RooRealVar &x2 = *ws2.var("x");
@@ -162,12 +187,11 @@ TEST(RooFitHS3, RooCBShape)
    EXPECT_EQ(status, 0);
 }
 
-/// Test that the IO of pdfs that contain RooConstVars works.
+/// Test that the IO of pdfs that contain literal RooConstVars works.
 TEST(RooFitHS3, RooConstVar)
 {
    RooRealVar x{"x", "x", 100, 0, 1000};
-   RooConstVar mean{"mean", "mean", 100};
-   int status = validate(RooPoisson{"pdf_with_const_var", "pdf_with_const_var", x, mean});
+   int status = validate(RooPoisson{"pdf_with_const_var", "pdf_with_const_var", x, RooFit::RooConst(100.)});
    EXPECT_EQ(status, 0);
 }
 
@@ -183,18 +207,18 @@ TEST(RooFitHS3, RooExponential)
    EXPECT_EQ(status, 0);
 }
 
-TEST(RooFitHS3, RooExpPoly)
+TEST(RooFitHS3, RooLegacyExpPoly)
 {
    // To silence the numeric integration
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    // Test different values for "lowestOrder"
    int status = 0;
-   status = validate({"ExpPoly::exppoly0(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10], a_2[0.01, -10, 10]}, 0)"});
+   status = validate({"LegacyExpPoly::exppoly0(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10], a_2[0.01, -10, 10]}, 0)"});
    EXPECT_EQ(status, 0);
-   status = validate({"ExpPoly::exppoly1(x[0, 10], {a_1[-0.1, -10, 10], a_2[0.003, -10, 10]}, 1)"});
+   status = validate({"LegacyExpPoly::exppoly1(x[0, 10], {a_1[-0.1, -10, 10], a_2[0.003, -10, 10]}, 1)"});
    EXPECT_EQ(status, 0);
-   status = validate({"ExpPoly::exppoly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)"});
+   status = validate({"LegacyExpPoly::exppoly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)"});
    EXPECT_EQ(status, 0);
 }
 
@@ -323,10 +347,34 @@ TEST(RooFitHS3, RooPolynomial)
    EXPECT_EQ(status, 0);
 }
 
-TEST(RooFitHS3, RooPower)
+TEST(RooFitHS3, RooPowerSum)
 {
    int status = 0;
-   status = validate({"Power::power(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10]}, {1.0, 2.0})"});
+   status = validate({"PowerSum::power(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10]}, {1.0, 2.0})"});
+   EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooRealIntegral)
+{
+   int status = 0;
+
+   RooRealVar v1("v1", "v1", 0.6, 0., 1.);
+   RooRealVar v2("v2", "v2", 1.0, 0., 2.);
+   RooGenericPdf formula{"formula", "2 * x[0] * x[1]", {v1, v2}};
+   RooArgSet funcNormSet{v1, v2};
+   RooRealIntegral integ{"integ", "integ", formula, v2};
+   RooRealIntegral integWithNormSet{"integ_with_norm_set", "integ_with_norm_set", formula, v2, &funcNormSet};
+
+   RooRealVar x("x", "x", -8, 8);
+   RooRealVar sigma("sigma", "sigma", 0.3, 0.1, 10);
+
+   RooGaussian pdfContainingIntegralA("pdf_containing_integral_a", "pdf_containing_integral_a", x, integ, sigma);
+   status = validate(pdfContainingIntegralA);
+   EXPECT_EQ(status, 0);
+
+   RooGaussian pdfContainingIntegralB("pdf_containing_integral_b", "pdf_containing_integral_b", x, integWithNormSet,
+                                      sigma);
+   status = validate(pdfContainingIntegralB);
    EXPECT_EQ(status, 0);
 }
 

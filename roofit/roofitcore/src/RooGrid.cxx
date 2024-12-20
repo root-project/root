@@ -307,7 +307,7 @@ void RooGrid::refine(double alpha)
       if (value(i,j) > 0) {
    oldg = grid_tot_j/value(i,j);
    /* damped change */
-   _weight[i] = TMath::Power(((oldg-1.0)/oldg/log(oldg)), alpha);
+   _weight[i] = std::pow(((oldg-1.0)/oldg/log(oldg)), alpha);
       }
       tot_weight += _weight[i];
     }

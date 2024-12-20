@@ -558,7 +558,7 @@ Int_t TDSetElement::Lookup(Bool_t force)
          // Check the plugin the first time
          xNetPluginOK = 0;
          if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
-            !strcmp(h->GetClass(),"TXNetFile") && h->LoadPlugin() == 0)
+            !strcmp(h->GetClass(),"TNetXNGFile") && h->LoadPlugin() == 0)
             xNetPluginOK = 1;
       }
       doit = (xNetPluginOK == 1) ? kTRUE : kFALSE;

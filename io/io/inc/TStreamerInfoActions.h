@@ -175,7 +175,7 @@ namespace TStreamerInfoActions {
 
    typedef std::vector<TConfiguredAction> ActionContainer_t;
    class TActionSequence : public TObject {
-      TActionSequence() {};
+      TActionSequence() = delete;
    public:
       enum class EStatusBits {
          kVectorPtrLooper = BIT(14)
@@ -216,7 +216,9 @@ namespace TStreamerInfoActions {
 
       TActionSequence *CreateCopy();
       static TActionSequence *CreateReadMemberWiseActions(TVirtualStreamerInfo *info, TVirtualCollectionProxy &proxy);
+      static TActionSequence *CreateReadMemberWiseActions(TVirtualStreamerInfo &info, TLoopConfiguration *loopConfig);  // 2nd arg should be unique_ptr
       static TActionSequence *CreateWriteMemberWiseActions(TVirtualStreamerInfo *info, TVirtualCollectionProxy &proxy);
+      static TActionSequence *CreateWriteMemberWiseActions(TVirtualStreamerInfo &info, TLoopConfiguration *loopConfig);  // 2nd arg should be unique_ptr
       TActionSequence *CreateSubSequence(const std::vector<Int_t> &element_ids, size_t offset);
 
       TActionSequence *CreateSubSequence(const TIDs &element_ids, size_t offset, SequenceGetter_t create);

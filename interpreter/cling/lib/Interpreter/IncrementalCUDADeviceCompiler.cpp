@@ -105,7 +105,7 @@ namespace cling {
   void IncrementalCUDADeviceCompiler::setCuArgs(
       const clang::LangOptions& langOpts,
       const cling::InvocationOptions& invocationOptions,
-      const clang::codegenoptions::DebugInfoKind debugInfo,
+      const llvm::codegenoptions::DebugInfoKind debugInfo,
       const llvm::Triple hostTriple) {
     std::string cppStdVersion;
     // Set the c++ standard. Just one condition is possible.
@@ -117,6 +117,8 @@ namespace cling {
       cppStdVersion = "-std=c++1z";
     if (langOpts.CPlusPlus20)
       cppStdVersion = "-std=c++20";
+    if (langOpts.CPlusPlus23)
+      cppStdVersion = "-std=c++23";
 
     if (cppStdVersion.empty())
       llvm::errs()
@@ -132,9 +134,9 @@ namespace cling {
     // FIXME : Should not reduce the fine granulated debug options to a simple.
     // -g
     bool debug = false;
-    if (debugInfo == clang::codegenoptions::DebugLineTablesOnly ||
-        debugInfo == clang::codegenoptions::LimitedDebugInfo ||
-        debugInfo == clang::codegenoptions::FullDebugInfo)
+    if (debugInfo == llvm::codegenoptions::DebugLineTablesOnly ||
+        debugInfo == llvm::codegenoptions::LimitedDebugInfo ||
+        debugInfo == llvm::codegenoptions::FullDebugInfo)
       debug = true;
 
     // FIXME : Cling has problems to detect these arguments.
@@ -309,7 +311,7 @@ namespace cling {
     llvm::legacy::PassManager pass;
     // it's important to use the type assembler
     // object file is not supported and do not make sense
-    llvm::CodeGenFileType FileType = llvm::CGFT_AssemblyFile;
+    llvm::CodeGenFileType FileType = llvm::CodeGenFileType::AssemblyFile;
 
     if (targetMachine->addPassesToEmitFile(pass, dest, /*DwoOut*/ nullptr,
                                            FileType)) {

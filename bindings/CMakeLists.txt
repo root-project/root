@@ -6,9 +6,7 @@
 
 if(pyroot)
   add_subdirectory(pyroot)
-  add_subdirectory(tpython)
   add_subdirectory(jupyroot)
-  add_subdirectory(jsmva)
 
   if(dataframe)
     message(STATUS "Distributed RDataFrame enabled")
@@ -17,6 +15,10 @@ if(pyroot)
     message(STATUS "Requirements to enable distributed RDataFrame:")
     message(STATUS "    dataframe: required:ON, actual:${dataframe}")
   endif()
+endif()
+
+if(tpython)
+  add_subdirectory(tpython)
 endif()
 
 if(r)

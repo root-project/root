@@ -34,7 +34,7 @@ namespace TMVA {
       UInt_t                 fNMin;
       UInt_t                 fNMax;
 
-      mutable MsgLogger*    fLogger;
+      mutable MsgLogger*    fLogger; //!
       MsgLogger& Log() const { return *fLogger; }
 
       ClassDef(QuickMVAProbEstimator,0); // Interface to different separation criteria used in training algorithms

@@ -1,5 +1,8 @@
 import { getColor } from '../base/colors.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { pointer as d3_pointer } from '../d3.mjs';
+import { urlClassPrefix } from '../core.mjs';
+import { assignContextMenu } from '../gui/menu.mjs';
 
 
 /** @summary Draw direct TVirtualX commands into SVG
@@ -9,33 +12,65 @@ class TWebPaintingPainter extends ObjectPainter {
 
    /** @summary Update TWebPainting object */
    updateObject(obj) {
-      if (!this.matchObjectType(obj)) return false;
+      if (!this.matchObjectType(obj))
+         return false;
       this.assignObject(obj);
       return true;
+   }
+
+   /** @summary Provides menu header */
+   getMenuHeader() {
+      return this.getObject()?.fClassName || 'TWebPainting';
+   }
+
+   /** @summary Fill context menu
+    * @desc Create only header, items will be requested from server */
+   fillContextMenu(menu) {
+      const cl = this.getMenuHeader();
+      menu.header(cl, `${urlClassPrefix}${cl}.html`);
+      return true;
+   }
+
+   /** @summary Mouse click handler
+    * @desc Redirect mouse click events to the ROOT application
+    * @private */
+   handleMouseClick(evnt) {
+      const pos = d3_pointer(evnt, this.draw_g.node()),
+            pp = this.getPadPainter(),
+            rect = pp?.getPadRect();
+
+      if (pp && rect && this.snapid)
+         pp.selectObjectPainter(this, { x: pos[0] + rect.x, y: pos[1] + rect.y });
+         // pp.deliverWebCanvasEvent('click', pos[0] + rect.x, pos[1] + rect.y, this.snapid);
    }
 
    /** @summary draw TWebPainting object */
    async redraw() {
       const obj = this.getObject(), func = this.getAxisToSvgFunc();
 
-      if (!obj?.fOper || !func) return;
+      if (!obj?.fOper || !func)
+         return this;
 
       let indx = 0, attr = {}, lastpath = null, lastkind = 'none', d = '',
           oper, npoints, n;
 
       const arr = obj.fOper.split(';'),
       check_attributes = kind => {
-         if (kind === lastkind) return;
+         if (kind === lastkind)
+            return;
 
          if (lastpath) {
             lastpath.attr('d', d); // flush previous
-            d = ''; lastpath = null; lastkind = 'none';
+            d = '';
+            lastpath = null;
+            lastkind = 'none';
          }
 
-         if (!kind) return;
+         if (!kind)
+            return;
 
          lastkind = kind;
-         lastpath = this.draw_g.append('svg:path');
+         lastpath = this.draw_g.append('svg:path').attr('d', ''); // placeholder for 'd' to have it always in front
          switch (kind) {
             case 'f': lastpath.call(this.fillatt.func); break;
             case 'l': lastpath.call(this.lineatt.func).style('fill', 'none'); break;
@@ -76,12 +111,11 @@ class TWebPaintingPainter extends ObjectPainter {
                   check_attributes((oper === 'b') ? 'f' : 'l');
 
                   const x1 = func.x(obj.fBuf[indx++]),
-                      y1 = func.y(obj.fBuf[indx++]),
-                      x2 = func.x(obj.fBuf[indx++]),
-                      y2 = func.y(obj.fBuf[indx++]);
+                        y1 = func.y(obj.fBuf[indx++]),
+                        x2 = func.x(obj.fBuf[indx++]),
+                        y2 = func.y(obj.fBuf[indx++]);
 
                   d += `M${x1},${y1}h${x2-x1}v${y2-y1}h${x1-x2}z`;
-
                   continue;
                }
                case 'l':
@@ -117,30 +151,31 @@ class TWebPaintingPainter extends ObjectPainter {
 
                      const height = (attr.fTextSize > 1) ? attr.fTextSize : this.getPadPainter().getPadHeight() * attr.fTextSize,
                            group = this.draw_g.append('svg:g');
-                     let angle = attr.fTextAngle,
-                         txt = arr[k].slice(1);
 
-                     if (angle >= 360) angle -= Math.floor(angle/360) * 360;
+                     return this.startTextDrawingAsync(attr.fTextFont, height, group).then(() => {
+                        let text = arr[k].slice(1),
+                            angle = attr.fTextAngle;
+                        if (angle >= 360)
+                           angle -= Math.floor(angle/360) * 360;
 
-                     this.startTextDrawing(attr.fTextFont, height, group);
+                        if (oper === 'h') {
+                           let res = '';
+                           for (n = 0; n < text.length; n += 2)
+                              res += String.fromCharCode(parseInt(text.slice(n, n+2), 16));
+                           text = res;
+                        }
 
-                     if (oper === 'h') {
-                        let res = '';
-                        for (n = 0; n < txt.length; n += 2)
-                           res += String.fromCharCode(parseInt(txt.slice(n, n+2), 16));
-                        txt = res;
-                     }
+                        // todo - correct support of angle
+                        this.drawText({ align: attr.fTextAlign,
+                                        x: func.x(obj.fBuf[indx++]),
+                                        y: func.y(obj.fBuf[indx++]),
+                                        rotate: -angle,
+                                        text,
+                                        color: getColor(attr.fTextColor),
+                                        latex: 0, draw_g: group });
 
-                     // todo - correct support of angle
-                     this.drawText({ align: attr.fTextAlign,
-                                     x: func.x(obj.fBuf[indx++]),
-                                     y: func.y(obj.fBuf[indx++]),
-                                     rotate: -angle,
-                                     text: txt,
-                                     color: getColor(attr.fTextColor),
-                                     latex: 0, draw_g: group });
-
-                     return this.finishTextDrawing(group).then(() => process(k));
+                        return this.finishTextDrawing(group);
+                     }).then(() => process(k));
                   }
                   continue;
                }
@@ -155,7 +190,13 @@ class TWebPaintingPainter extends ObjectPainter {
 
       this.createG();
 
-      return process(-1).then(() => { check_attributes(); return this; });
+      return process(-1).then(() => {
+         check_attributes();
+         assignContextMenu(this);
+         if (!this.isBatchMode())
+            this.draw_g.on('click', evnt => this.handleMouseClick(evnt));
+         return this;
+      });
    }
 
    static async draw(dom, obj) {
@@ -165,5 +206,6 @@ class TWebPaintingPainter extends ObjectPainter {
    }
 
 } // class TWebPaintingPainter
+
 
 export { TWebPaintingPainter };

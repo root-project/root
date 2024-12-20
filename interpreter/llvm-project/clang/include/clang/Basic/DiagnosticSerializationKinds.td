@@ -62,7 +62,7 @@ def err_ast_file_out_of_date : Error<
   "%select{PCH|module|AST}0 file '%1' is out of date and "
   "needs to be rebuilt%select{|: %3}2">, DefaultFatal;
 def err_ast_file_invalid : Error<
-  "file '%1' is not a valid precompiled %select{PCH|module|AST}0 file">, DefaultFatal;
+  "file '%1' is not a valid precompiled %select{PCH|module|AST}0 file: %2">, DefaultFatal;
 def note_module_file_imported_by : Note<
   "imported by %select{|module '%2' in }1'%0'">;
 def err_module_file_not_module : Error<
@@ -75,6 +75,7 @@ def note_module_file_conflict : Note<
 
 def remark_module_import : Remark<
   "importing module '%0'%select{| into '%3'}2 from '%1'">,
+  ShowInSystemHeader,
   InGroup<ModuleImport>;
 
 def err_imported_module_not_found : Error<
@@ -127,6 +128,9 @@ def warn_module_system_bit_conflict : Warning<
   "module file '%0' was validated as a system module and is now being imported "
   "as a non-system module; any difference in diagnostic options will be ignored">,
   InGroup<ModuleConflict>;
+
+def err_failed_to_find_module_file : Error<
+  "failed to find module file for module '%0'">;
 } // let CategoryName
 
 let CategoryName = "AST Serialization Issue" in {

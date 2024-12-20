@@ -189,7 +189,7 @@ public:
 
    virtual Bool_t   Add(TF1 *h1, Double_t c1=1, Option_t *option="");
    virtual Bool_t   Add(const TH1 *h1, Double_t c1=1);
-   virtual Bool_t   Add(const TH1 *h, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
+   virtual Bool_t   Add(const TH1 *h, const TH1 *h2, Double_t c1=1, Double_t c2=1);
    virtual void     AddBinContent(Int_t bin);
    virtual void     AddBinContent(Int_t bin, Double_t w);
    static  void     AddDirectory(Bool_t add=kTRUE);
@@ -207,7 +207,7 @@ public:
            Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
    virtual Bool_t   Divide(TF1 *f1, Double_t c1=1);
    virtual Bool_t   Divide(const TH1 *h1);
-   virtual Bool_t   Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+   virtual Bool_t   Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option="");
            void     Draw(Option_t *option = "") override;
    virtual TH1     *DrawCopy(Option_t *option="", const char * name_postfix = "_copy") const;
    virtual TH1     *DrawNormalized(Option_t *option="", Double_t norm=1) const;
@@ -222,7 +222,8 @@ public:
    virtual Int_t    Fill(const char *name, Double_t w);
    virtual void     FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride=1);
    virtual void     FillN(Int_t, const Double_t *, const Double_t *, const Double_t *, Int_t) {}
-   virtual void     FillRandom(const char *fname, Int_t ntimes=5000, TRandom * rng = nullptr);
+   virtual void     FillRandom(TF1 *f1, Int_t ntimes=5000, TRandom * rng = nullptr);
+           void     FillRandom(const char *fname, Int_t ntimes=5000, TRandom * rng = nullptr);
    virtual void     FillRandom(TH1 *h, Int_t ntimes=5000, TRandom * rng = nullptr);
    virtual Int_t    FindBin(Double_t x, Double_t y=0, Double_t z=0);
    virtual Int_t    FindFixBin(Double_t x, Double_t y=0, Double_t z=0) const;
@@ -304,7 +305,7 @@ public:
 
    TVirtualHistPainter *GetPainter(Option_t *option="");
 
-   virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum = nullptr);
+   virtual Int_t    GetQuantiles(Int_t n, Double_t *xp, const Double_t *p = nullptr);
    virtual Double_t GetRandom(TRandom * rng = nullptr) const;
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t GetStdDev(Int_t axis=1) const;
@@ -346,7 +347,7 @@ public:
            Long64_t Merge(TCollection *list, Option_t * option);
    virtual Bool_t   Multiply(TF1 *f1, Double_t c1=1);
    virtual Bool_t   Multiply(const TH1 *h1);
-   virtual Bool_t   Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+   virtual Bool_t   Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option="");
            void     Paint(Option_t *option = "") override;
            void     Print(Option_t *option = "") const override;
    virtual void     PutStats(Double_t *stats);
@@ -358,7 +359,7 @@ public:
    virtual void     ResetStats();
            void     SaveAs(const char *filename = "hist", Option_t *option = "") const override;  // *MENU*
            void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
-   virtual void     Scale(Double_t c1=1, Option_t *option="");
+   virtual void     Scale(Double_t c1=1, Option_t *option="");  // *MENU*
    virtual void     SetAxisColor(Color_t color=1, Option_t *axis="X");
    virtual void     SetAxisRange(Double_t xmin, Double_t xmax, Option_t *axis="X");
    virtual void     SetBarOffset(Float_t offset=0.25) {fBarOffset = Short_t(1000*offset);}
@@ -384,6 +385,7 @@ public:
    virtual void     SetContent(const Double_t *content);
    virtual void     SetContour(Int_t nlevels, const Double_t *levels = nullptr);
    virtual void     SetContourLevel(Int_t level, Double_t value);
+   virtual void     SetColors(Color_t linecolor = -1, Color_t markercolor = -1, Color_t fillcolor = -1);
    static  void     SetDefaultBufferSize(Int_t buffersize=1000);
    static  void     SetDefaultSumw2(Bool_t sumw2=kTRUE);
    virtual void     SetDirectory(TDirectory *dir);
@@ -630,7 +632,12 @@ public:
    TH1F& operator=(const TH1F &h1);
    ~TH1F() override;
 
+   /// Increment bin content by 1.
+   /// Passing an out-of-range bin leads to undefined behavior
    void     AddBinContent(Int_t bin) override {++fArray[bin];}
+   /// Increment bin content by a weight w.
+   /// \warning The value of w is cast to `Float_t` before being added.
+   /// Passing an out-of-range bin leads to undefined behavior
    void     AddBinContent(Int_t bin, Double_t w) override
                           { fArray[bin] += Float_t (w); }
    void     Copy(TObject &hnew) const override;
@@ -673,7 +680,11 @@ public:
    TH1D& operator=(const TH1D &h1);
    ~TH1D() override;
 
+   /// Increment bin content by 1.
+   /// Passing an out-of-range bin leads to undefined behavior
    void     AddBinContent(Int_t bin) override {++fArray[bin];}
+   /// Increment bin content by a weight w
+   /// Passing an out-of-range bin leads to undefined behavior
    void     AddBinContent(Int_t bin, Double_t w) override
                           {fArray[bin] += Double_t (w);}
    void     Copy(TObject &hnew) const override;

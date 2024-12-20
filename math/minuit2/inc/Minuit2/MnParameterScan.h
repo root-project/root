@@ -33,8 +33,6 @@ public:
 
    MnParameterScan(const FCNBase &, const MnUserParameters &, double);
 
-   ~MnParameterScan() {}
-
    // returns pairs of (x,y) points, x=parameter Value, y=function Value of FCN
    std::vector<std::pair<double, double>>
    operator()(unsigned int par, unsigned int maxsteps = 41, double low = 0., double high = 0.);

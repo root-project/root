@@ -26,7 +26,7 @@ def getWorkspace(mode):
 
     if mode != 2:
         # Create empty workspace workspace
-        w = ROOT.RooWorkspace("w", 1)
+        w = ROOT.RooWorkspace("w")
 
         # Make a difficult to normalize  pdf in 3 dimensions that is
         # integrated numerically.

@@ -595,7 +595,14 @@ Long_t TDataMember::Property() const
    if (!fInfo || !gCling->DataMemberInfo_IsValid(fInfo)) return 0;
    int prop  = gCling->DataMemberInfo_Property(fInfo);
    int propt = gCling->DataMemberInfo_TypeProperty(fInfo);
-   t->fProperty = prop|propt;
+   t->fProperty = (prop | propt) & ~(kIsPublic | kIsProtected | kIsPrivate);
+   // Set to the strictest access of the member and the type
+   if ((prop | propt) & kIsPrivate)
+      t->fProperty |= kIsPrivate;
+   else if ((prop | propt) & kIsProtected)
+      t->fProperty |= kIsProtected;
+   else
+      t->fProperty |= kIsPublic;
 
    t->fFullTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeName(fInfo));
    t->fTrueTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeTrueName(fInfo));

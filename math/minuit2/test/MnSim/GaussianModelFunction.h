@@ -80,9 +80,7 @@ public:
 
    */
 
-   GaussianModelFunction(const std::vector<double> &params) : ParametricFunction(params) { assert(params.size() == 1); }
-
-   ~GaussianModelFunction() override {}
+   GaussianModelFunction(std::span<const double> params) : ParametricFunction(params) { assert(params.size() == 1); }
 
    /**
 
@@ -97,7 +95,7 @@ public:
 
    */
 
-   double operator()(const std::vector<double> &x) const override
+   double operator()(std::vector<double> const &x) const override
    {
 
       assert(x.size() == 3);
@@ -128,7 +126,7 @@ public:
 
    */
 
-   double operator()(const std::vector<double> &x, const std::vector<double> &param) const override
+   double operator()(std::vector<double> const &x, std::vector<double> const &param) const override
    {
 
       constexpr double two_pi = 2 * 3.14159265358979323846; // M_PI is not standard
@@ -148,10 +146,10 @@ public:
 
    double Up() const override { return 1.0; }
 
-   std::vector<double> GetGradient(const std::vector<double> &x) const override
+   std::vector<double> GetGradient(std::vector<double> const &x) const override
    {
 
-      const std::vector<double> &param = GetParameters();
+      std::span<const double> param = GetParameters();
       assert(param.size() == 1);
       std::vector<double> grad(x.size());
 

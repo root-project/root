@@ -87,7 +87,7 @@ public:
 
    */
 
-   virtual std::vector<double> Elements(const std::vector<double> &par) const = 0;
+   virtual std::vector<double> Elements(std::vector<double> const &par) const = 0;
 
    /**
 
@@ -129,7 +129,7 @@ public:
 
    */
 
-   double operator()(const std::vector<double> &par) const override
+   double operator()(std::vector<double> const &par) const override
    {
 
       double chiSquare = 0.0;

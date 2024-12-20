@@ -41,7 +41,13 @@ public:
    RTrivialDS(ULong64_t size, bool skipEvenEntries = false);
    /// This ctor produces a data-source that returns infinite entries
    RTrivialDS();
-   ~RTrivialDS();
+   // Rule of five
+   RTrivialDS(const RTrivialDS &) = delete;
+   RTrivialDS &operator=(const RTrivialDS &) = delete;
+   RTrivialDS(RTrivialDS &&) = delete;
+   RTrivialDS &operator=(RTrivialDS &&) = delete;
+   ~RTrivialDS() final = default;
+
    const std::vector<std::string> &GetColumnNames() const final;
    bool HasColumn(std::string_view colName) const final;
    std::string GetTypeName(std::string_view) const final;

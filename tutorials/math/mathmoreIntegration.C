@@ -162,8 +162,8 @@ void  DrawCumulative(double x1, double x2, int n = 100){
    cum0->SetLineColor(kBlack);
    cum0->SetTitle("BreitWigner - the cumulative");
    cum0->SetStats(false);
-   cum1->SetLineStyle(2);
-   cum2->SetLineStyle(3);
+   cum1->SetLineStyle(kDashed);
+   cum2->SetLineStyle(kDotted);
    cum1->SetLineColor(kBlue);
    cum2->SetLineColor(kRed);
    c1->cd(1);

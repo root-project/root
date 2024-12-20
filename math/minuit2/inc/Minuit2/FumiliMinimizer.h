@@ -60,8 +60,6 @@ public:
 
    FumiliMinimizer() : fMinSeedGen(MnSeedGenerator()), fMinBuilder(FumiliBuilder()) {}
 
-   ~FumiliMinimizer() override {}
-
    /**
 
       Accessor to the seed generator of the minimizer.
@@ -87,9 +85,6 @@ public:
 
    FunctionMinimum Minimize(const FCNBase &, const MnUserParameterState &, const MnStrategy &, unsigned int maxfcn = 0,
                             double toler = 0.1) const override;
-
-   FunctionMinimum Minimize(const FCNGradientBase &, const MnUserParameterState &, const MnStrategy &,
-                                    unsigned int maxfcn = 0, double toler = 0.1) const override;
 
    using ModularFunctionMinimizer::Minimize;
 

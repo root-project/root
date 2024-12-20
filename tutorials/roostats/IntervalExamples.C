@@ -30,7 +30,6 @@
 #include "RooStats/MCMCIntervalPlot.h"
 #include "RooStats/LikelihoodIntervalPlot.h"
 
-#include "RooStats/ProofConfig.h"
 #include "RooStats/ToyMCSampler.h"
 
 #include "RooRandom.h"
@@ -105,12 +104,6 @@ void IntervalExamples()
    // Here, we consider only ensembles with 100 events
    // The PDF could be extended and this could be removed
    fc.FluctuateNumDataEntries(false);
-
-   // Proof
-   //  ProofConfig pc(*wspace, 4, "workers=4", kFALSE);    // proof-lite
-   // ProofConfig pc(w, 8, "localhost");    // proof cluster at "localhost"
-   //  ToyMCSampler* toymcsampler = (ToyMCSampler*) fc.GetTestStatSampler();
-   //  toymcsampler->SetProofConfig(&pc);     // enable proof
 
    PointSetInterval *interval = (PointSetInterval *)fc.GetInterval();
 

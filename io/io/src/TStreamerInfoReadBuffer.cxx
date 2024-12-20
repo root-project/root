@@ -1183,7 +1183,29 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                            Int_t nobjects;
                            b >> nobjects;
                            env = newProxy->Allocate(nobjects,true);
-                           subinfo->ReadBufferSTL(b,newProxy,nobjects,/* offset */ 0, vers>=7 );
+                           if (!nobjects && (vers>=7)) {
+                              // Do nothing but in version 6 of TStreamerInfo and below,
+                              // we were calling ReadBuffer for empty collection.
+                           } else {
+                              TStreamerInfoActions::TActionSequence *actions = nullptr;
+                              if (newProxy != oldProxy) {
+                                 actions = newProxy->GetConversionReadMemberWiseActions( oldProxy->GetValueClass(), vClVersion );
+                              } else {
+                                 actions = oldProxy->GetReadMemberWiseActions( vClVersion );
+                              }
+                              char startbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+                              char endbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+                              void *begin = &(startbuf[0]);
+                              void *end = &(endbuf[0]);
+                              newProxy->GetFunctionCreateIterators(/* read = */ kTRUE)(env, &begin, &end, newProxy);
+                              // We can not get here with a split vector of pointer, so we can indeed assume
+                              // that actions->fConfiguration != null.
+                              b.ApplySequence(*actions, begin, end);
+                              if (begin != &(startbuf[0])) {
+                                 // assert(end != endbuf);
+                                 newProxy->GetFunctionDeleteTwoIterators()(begin,end);
+                              }
+                           }
                            newProxy->Commit(env);
                         }
                      }
@@ -1271,7 +1293,30 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                            Int_t nobjects;
                            b >> nobjects;
                            void* env = newProxy->Allocate(nobjects,true);
-                           subinfo->ReadBufferSTL(b,newProxy,nobjects,/* offset */ 0, vers >= 7);
+                           if (!nobjects && (vers>=7)) {
+                              // Do nothing but in version 6 of TStreamerInfo and below,
+                              // we were calling ReadBuffer for empty collection.
+                           } else {
+                              TStreamerInfoActions::TActionSequence *actions = nullptr;
+                              if (newProxy != oldProxy) {
+                                 actions = newProxy->GetConversionReadMemberWiseActions( oldProxy->GetValueClass(), vClVersion );
+                              } else {
+                                 actions = oldProxy->GetReadMemberWiseActions( vClVersion );
+                              }
+
+                              char startbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+                              char endbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+                              void *begin_iter = &(startbuf[0]);
+                              void *end_iter = &(endbuf[0]);
+                              newProxy->GetFunctionCreateIterators(/* read = */ kTRUE)(env, &begin_iter, &end_iter, newProxy);
+                              // We can not get here with a split vector of pointer, so we can indeed assume
+                              // that actions->fConfiguration != null.
+                              b.ApplySequence(*actions, begin_iter, end_iter);
+                              if (begin_iter != &(startbuf[0])) {
+                                 // assert(end != endbuf);
+                                 newProxy->GetFunctionDeleteTwoIterators()(begin_iter,end_iter);
+                              }
+                           }
                            newProxy->Commit(env);
                         }
                      }
@@ -1381,7 +1426,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
             //  Backward compatibility. Some TStreamerElement's where without
             //  Streamer but were not removed from element list
             UInt_t start,count;
-            Version_t v = b.ReadVersion(&start, &count, cle);
+            Version_t v = b.ReadVersion(&start, &count, this->IsA());
             if (fOldVersion<3){   // case of old TStreamerInfo
                if (aElement->IsBase() && aElement->IsA()!=TStreamerBase::Class()) {
                   b.SetBufferOffset(start);  //it was no byte count

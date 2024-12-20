@@ -93,7 +93,7 @@ RooWorkspace *getWorkspace(Int_t mode)
    if (mode != 2) {
 
       // Create empty workspace workspace
-      w = new RooWorkspace("w", 1);
+      w = new RooWorkspace("w");
 
       // Make a difficult to normalize  pdf in 3 dimensions that is integrated numerically.
       w->factory("EXPR::model('1/((x-a)*(x-a)+0.01)+1/((y-a)*(y-a)+0.01)+1/"

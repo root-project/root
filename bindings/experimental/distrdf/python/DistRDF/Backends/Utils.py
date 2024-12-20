@@ -15,6 +15,7 @@ import logging
 import os
 
 from functools import singledispatch
+import pathlib
 from typing import Iterable, Set, Tuple
 
 import ROOT
@@ -45,7 +46,7 @@ def extend_include_path(include_path: str) -> None:
     logger.debug("ROOT include paths:\n{}".format(root_includepath))
 
 
-def declare_headers(headers_to_include: Iterable[str]) -> None:
+def distribute_headers(headers_to_include: Iterable[str]) -> None:
     """
     Declares all required headers using the ROOT's C++ Interpreter.
 
@@ -67,7 +68,7 @@ def declare_headers(headers_to_include: Iterable[str]) -> None:
             raise e(msg)
 
 
-def declare_shared_libraries(libraries_to_include: Iterable[str]) -> None:
+def distribute_shared_libraries(libraries_to_include: Iterable[str]) -> None:
     """
     Declares all required shared libraries using the ROOT's C++
     Interpreter.
@@ -122,7 +123,8 @@ def get_paths_set_from_string(path_string: str) -> Set[str]:
         return {path_string}
 
 
-def check_pcm_in_library_path(shared_library_path: str) -> Tuple[Set[str], Set[str]]:
+def check_pcm_in_library_path(shared_library_path: str) -> Tuple[set[str], set[str]]:
+    
     """
     Retrieves paths to shared libraries and pcm file(s) in a directory.
 
@@ -134,25 +136,86 @@ def check_pcm_in_library_path(shared_library_path: str) -> Tuple[Set[str], Set[s
         list, list: Two lists, the first with all paths to pcm files, the
             second with all paths to shared libraries.
     """
+    
+    shared_library_formats = ('.so', '.dll', '.dylib')
+    
+    if shared_library_path.endswith(shared_library_formats): 
+        shared_library_dir = os.path.dirname(os.path.abspath(shared_library_path))
+    
+    else:
+        shared_library_dir = os.path.abspath(shared_library_path)
+
     all_paths = get_paths_set_from_string(
-        shared_library_path
+        shared_library_dir
     )
 
+    # Avoid adding all libraries stored in a given directory 
+    # Instead only add the libraries listed by the user
+    
+    libname_stated = ""
+    
+    if shared_library_path.endswith(shared_library_formats): 
+        libname_stated = pathlib.PurePosixPath(shared_library_path).stem
+
     pcm_paths = {
+        filepath        
+        for filepath in all_paths
+        if (filepath.endswith(".pcm") and filepath.startswith(os.path.join(shared_library_dir, libname_stated)))
+    }
+    
+    libraries_paths = {
         filepath
         for filepath in all_paths
-        if filepath.endswith(".pcm")
+        if (filepath.endswith(shared_library_formats) and filepath.startswith(os.path.join(shared_library_dir, libname_stated)))
     }
+    
+    return pcm_paths, libraries_paths
 
-    shared_library_formats = (".so", ".dll", ".dylib")
-    libraries_path = {
-        filepath
-        for filepath in all_paths
-        if filepath.endswith(shared_library_formats)
-    }
+def register_files(paths_to_files):
+    
+    files_to_distribute = set()
+    if isinstance(paths_to_files, str):
+        files_to_distribute.update(get_paths_set_from_string(paths_to_files))
+    else:
+        for path_to_file in paths_to_files:
+            sanatized_path_to_file = get_paths_set_from_string(path_to_file)
+            files_to_distribute.update(sanatized_path_to_file)
+            
+    return files_to_distribute
 
-    return pcm_paths, libraries_path
+def register_headers(paths_to_headers):
+        
+    headers_to_distribute = set()
+    
+    if isinstance(paths_to_headers, str):
+        headers_to_distribute = (get_paths_set_from_string(paths_to_headers))
+    else: 
+        for path_to_header in paths_to_headers:
+            sanatized_path_to_header = get_paths_set_from_string(path_to_header)
+            headers_to_distribute.update(sanatized_path_to_header)
+    
+    distribute_headers(headers_to_distribute)
+    return headers_to_distribute
+    
+def register_shared_libs(paths_to_shared_libraries):
+    
+    libraries_to_distribute = set()
+    pcms_to_distribute = set()
+    
+    if isinstance(paths_to_shared_libraries, str):
+        pcms_to_distribute, libraries_to_distribute = (
+        check_pcm_in_library_path(paths_to_shared_libraries))
 
+    else:
+        for path_string in paths_to_shared_libraries:
+            pcm, libraries = check_pcm_in_library_path(
+                path_string
+            ) 
+            libraries_to_distribute.update(libraries)
+            pcms_to_distribute.update(pcm)
+        
+    distribute_shared_libraries(libraries_to_distribute)
+    return libraries_to_distribute, pcms_to_distribute
 
 @singledispatch
 def get_mergeablevalue(resultptr):

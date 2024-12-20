@@ -479,12 +479,14 @@ static PyObject* meta_getattro(PyObject* pyclass, PyObject* pyname)
     // try all outstanding using namespaces in turn to find the attribute (will cache
     // locally later; TODO: doing so may cause pathological cases)
         for (auto pyref : *klass->fImp.fUsing) {
-            PyObject* pyuscope = PyWeakref_GetObject(pyref);
+            PyObject* pyuscope = CPyCppyy_GetWeakRef(pyref);
             if (pyuscope) {
                 attr = PyObject_GetAttr(pyuscope, pyname);
-                if (attr) break;
-                PyErr_Clear();
+                if (!attr) PyErr_Clear();
+                Py_DECREF(pyuscope);
             }
+            if (attr)
+                break;
         }
     }
 
@@ -666,9 +668,6 @@ PyTypeObject CPPScope_Type = {
 #if PY_VERSION_HEX >= 0x03040000
         | Py_TPFLAGS_TYPE_SUBCLASS
 #endif
-#if PY_VERSION_HEX >= 0x03120000
-        | Py_TPFLAGS_MANAGED_DICT | Py_TPFLAGS_HAVE_GC
-#endif
         ,                          // tp_flags
     (char*)"CPyCppyy metatype (internal)",        // tp_doc
     0,                             // tp_traverse
@@ -709,6 +708,9 @@ PyTypeObject CPPScope_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x030c0000
     , 0                           // tp_watched
+#endif
+#if PY_VERSION_HEX >= 0x030d0000
+    , 0                           // tp_versions_used
 #endif
 };
 

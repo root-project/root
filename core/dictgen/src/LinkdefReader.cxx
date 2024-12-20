@@ -47,7 +47,7 @@ std::map<std::string, LinkdefReader::EPragmaNames> LinkdefReader::fgMapPragmaNam
 std::map<std::string, LinkdefReader::ECppNames> LinkdefReader::fgMapCppNames;
 
 struct LinkdefReader::Options {
-   Options() : fNoStreamer(0), fNoInputOper(0), fUseByteCount(0), fVersionNumber(-1) {}
+   Options() : fNoStreamer(0), fNoInputOper(0), fUseByteCount(0), fVersionNumber(-1), fRNTupleSerializationMode(0) {}
 
    int fNoStreamer;
    int fNoInputOper;
@@ -56,6 +56,7 @@ struct LinkdefReader::Options {
       int fRequestStreamerInfo;
    };
    int fVersionNumber;
+   int fRNTupleSerializationMode; // 0: unset, -1: enforce streamed, 1: enforce native
 };
 
 /*
@@ -406,6 +407,8 @@ bool LinkdefReader::AddRule(const std::string& ruletype,
                   if (options->fNoInputOper) csr.SetRequestNoInputOperator(true);
                   if (options->fRequestStreamerInfo) csr.SetRequestStreamerInfo(true);
                   if (options->fVersionNumber >= 0) csr.SetRequestedVersionNumber(options->fVersionNumber);
+                  if (options->fRNTupleSerializationMode != 0)
+                     csr.SetRequestedRNTupleSerializationMode(options->fRNTupleSerializationMode);
                }
                if (csr.RequestStreamerInfo() && csr.RequestNoStreamer()) {
                   std::cerr << "Warning: " << localIdentifier << " option + mutual exclusive with -, + prevails\n";
@@ -660,6 +663,7 @@ public:
        *   nomap: (ignored by roocling; prevents entry in ROOT's rootmap file)
        *   stub: (ignored by rootcling was a directly for CINT code generation)
        *   version(x): sets the version number of the class to x
+       *   rntuple[un]split: enforce split/unsplit encoding in RNTuple
        */
 
       // We assume that the first toke in option or options
@@ -681,7 +685,45 @@ public:
          } else if (tok.getIdentifierInfo()->getName() == "nostreamer") options.fNoStreamer = 1;
          else if (tok.getIdentifierInfo()->getName() == "noinputoper") options.fNoInputOper = 1;
          else if (tok.getIdentifierInfo()->getName() == "evolution") options.fRequestStreamerInfo = 1;
-         else if (tok.getIdentifierInfo()->getName() == "stub") {
+         else if (tok.getIdentifierInfo()->getName() == "rntupleStreamerMode") {
+            clang::Token start = tok;
+            PP.Lex(tok);
+            if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::l_paren)) {
+               Error("Error: missing left parenthesis after rntupleStreamerMode.", start, PP);
+               return false;
+            }
+            PP.Lex(tok);
+            clang::Token boolval = tok;
+            if (tok.isNot(clang::tok::eod))
+               PP.Lex(tok);
+            if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::r_paren)) {
+               Error("Error: missing right parenthesis after rntupleStreamerMode.", start, PP);
+               return false;
+            }
+            if (!boolval.getIdentifierInfo()) {
+               Error("Error: Malformed rntupleStreamerMode option (either 'true' or 'false').", boolval, PP);
+            }
+
+            if (boolval.getIdentifierInfo()->getName() == "false") {
+               if (options.fRNTupleSerializationMode == -1) {
+                  Error("Error: Can only specify a single rntuple option "
+                        "(either rntupleStreamerMode(true) or rntupleStreamerMode(false))",
+                        boolval, PP);
+               } else {
+                  options.fRNTupleSerializationMode = 1;
+               }
+            } else if (boolval.getIdentifierInfo()->getName() == "true") {
+               if (options.fRNTupleSerializationMode == 1) {
+                  Error("Error: Can only specify a single rntuple option "
+                        "(either rntupleStreamerMode(true) or rntupleStreamerMode(false))",
+                        boolval, PP);
+               } else {
+                  options.fRNTupleSerializationMode = -1;
+               }
+            } else {
+               Error("Error: Malformed rntupleStreamerMode option (either 'true' or 'false').", boolval, PP);
+            }
+         } else if (tok.getIdentifierInfo()->getName() == "stub") {
             // This was solely for CINT dictionary, ignore for now.
             // options.fUseStubs = 1;
          } else if (tok.getIdentifierInfo()->getName() == "version") {
@@ -1040,7 +1082,7 @@ bool LinkdefReader::Parse(SelectionRules &sr, llvm::StringRef code, const std::v
    clang::Token tok;
    do {
       PP.Lex(tok);
-   } while (tok.isNot(clang::tok::eof));
+   } while (tok.isNot(clang::tok::annot_repl_input_end));
 
    fSelectionRules = nullptr;
    return 0 == DClient.getNumErrors();

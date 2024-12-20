@@ -59,6 +59,7 @@ data = ROOT.RooDataSet("data", "data", {x, y})
 # that is the variable 'x'
 
 model_obs = model.getObservables(data)
+ROOT.SetOwnership(model_obs, True)
 model_obs.Print("v")
 
 # Get list of parameters
@@ -66,11 +67,13 @@ model_obs.Print("v")
 
 # Get list of parameters, list of observables
 model_params = model.getParameters({x})
+ROOT.SetOwnership(model_params, True)
 model_params.Print("v")
 
 # Get list of parameters, a dataset
 # (Gives identical results to operation above)
 model_params2 = model.getParameters(data)
+ROOT.SetOwnership(model_params2, True)
 model_params2.Print()
 
 # Get list of components
@@ -78,6 +81,7 @@ model_params2.Print()
 
 # Get list of component objects, top-level node
 model_comps = model.getComponents()
+ROOT.SetOwnership(model_comps, True)
 model_comps.Print("v")
 
 # Modifications to structure of composites
@@ -106,6 +110,7 @@ cust.replaceArg(sig, sigsum)
 # the build process so when cust_clone is deleted so will all other
 # nodes that were created in the process.
 cust_clone = cust.build(ROOT.kTRUE)
+ROOT.SetOwnership(cust_clone, True)
 
 # Print structure of clone of model with sig.sigsum replacement.
 cust_clone.Print("t")

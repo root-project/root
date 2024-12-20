@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_math
 /// \notebooks
-/// This program demonstrates the computation of 95 % C.L. limits.
+/// This program demonstrates the computation of 95 % confidence level (CL) limits.
 /// It uses a set of randomly created histograms.
 ///
 /// \macro_image

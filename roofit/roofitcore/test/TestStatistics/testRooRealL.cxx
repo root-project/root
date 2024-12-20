@@ -29,7 +29,7 @@
 #include <RooDataHist.h>
 #include <RooRealSumPdf.h>
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
-#include <RooNLLVar.h>
+#include "../../src/RooNLLVar.h"
 #endif
 #include <RooRealVar.h>
 
@@ -139,7 +139,6 @@ TEST_P(RooRealL, getValRooAddition)
    count_NLL_components(nll.get());
 }
 
-#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 TEST_P(RooRealL, getValRooConstraintSumAddition)
 {
    // modified from
@@ -179,12 +178,9 @@ TEST_P(RooRealL, getValRooConstraintSumAddition)
    w.import(*dh_sig_down);
    w.factory("HistFunc::hf_sig(x,dh_sig)");
    w.factory("HistFunc::hf_bkg(x,dh_bkg)");
-   w.factory("HistFunc::hf_sig_up(x,dh_sig_up)");
-   w.factory("HistFunc::hf_sig_down(x,dh_sig_down)");
-   w.factory("PiecewiseInterpolation::pi_sig(hf_sig,hf_sig_down,hf_sig_up,alpha[-5,5])");
 
-   w.factory("ASUM::model(mu[1,0,5]*pi_sig,nu[1]*hf_bkg)");
-   w.factory("Gaussian::constraint(alpha,0,1)");
+   w.factory("ASUM::model(mu[1,0,5]*hf_sig,nu[1]*hf_bkg)");
+   w.factory("Gaussian::constraint(mu,2.,1.)");
    w.factory("PROD::model2(model,constraint)");
 
    RooAbsPdf *pdf = w.pdf("model2");
@@ -195,7 +191,6 @@ TEST_P(RooRealL, getValRooConstraintSumAddition)
    check_NLL_type(nll.get());
    count_NLL_components(nll.get());
 }
-#endif // !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 
 TEST_P(RooRealL, setVal)
 {

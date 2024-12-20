@@ -469,6 +469,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
           cxcoutI(HistFactory) << "making normFactor: " << norm.GetName() << endl;
           // remove "doRatio" and name can be changed when ws gets imported to the combined model.
           emplace<RooRealVar>(proto, varname, norm.GetVal(), norm.GetLow(), norm.GetHigh());
+          proto.var(varname)->setError(0); // ensure factor is assigned an initial error, even if its zero
         }
 
         prodNames.push_back(varname);
@@ -602,7 +603,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
        assert(lowVec.size() == params.size());
 
        FlexibleInterpVar interp( (interpName).c_str(), "", params, 1., lowVec, highVec);
-       interp.setAllInterpCodes(4); // LM: change to 4 (piece-wise linear to 6th order polynomial interpolation + linear extrapolation )
+       interp.setAllInterpCodes(4); // LM: change to 4 (piece-wise exponential to 6th order polynomial interpolation + exponential extrapolation )
        //interp.setAllInterpCodes(0); // simple linear interpolation
        proto.import(interp); // params have already been imported in first loop of this function
     } else{
@@ -1479,7 +1480,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
       RooAbsPdf* model = ch->pdf("model_"+channel_name);
       if(!model) cout <<"failed to find model for channel"<<endl;
-      //      cout << "int = " << model->createIntegral(*obsN)->getVal() << endl;;
+      //      cout << "int = " << model->createIntegral(*obsN)->getVal() << endl;
       models.push_back(model);
       globalObs.add(*ch->set("globalObservables"), /*silent=*/true); // silent because observables might exist in other channel.
 

@@ -30,6 +30,12 @@
 typedef RooArgList* pRooArgList ;
 typedef RooLinkedList* pRooLinkedList ;
 
+namespace RooFit {
+namespace Detail {
+class RooFixedProdPdf;
+}
+}
+
 class RooProdPdf : public RooAbsPdf {
 public:
 
@@ -75,8 +81,7 @@ public:
   bool isDirectGenSafe(const RooAbsArg& arg) const override ;
 
   // Constraint management
-  RooArgSet* getConstraints(const RooArgSet& observables, RooArgSet& constrainedParams,
-                            bool stripDisconnected, bool removeConstraintsFromPdf=false) const override ;
+  RooArgSet* getConstraints(const RooArgSet& observables, RooArgSet const& constrainedParams, RooArgSet &pdfParams) const override ;
 
   std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
   std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
@@ -98,6 +103,25 @@ public:
   RooArgSet* findPdfNSet(RooAbsPdf const& pdf) const ;
 
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
+
+  // The cache object. Internal, do not use.
+  class CacheElem final : public RooAbsCacheElement {
+  public:
+    CacheElem() : _isRearranged(false) { }
+    // Payload
+    RooArgList _partList ;
+    RooArgList _numList ;
+    RooArgList _denList ;
+    RooArgList _ownedList ;
+    std::vector<std::unique_ptr<RooArgSet>> _normList;
+    bool _isRearranged ;
+    std::unique_ptr<RooAbsReal> _rearrangedNum{};
+    std::unique_ptr<RooAbsReal> _rearrangedDen{};
+    // Cache management functions
+    RooArgList containedArgs(Action) override ;
+    void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) override ;
+    void writeToStream(std::ostream& os) const ;
+  } ;
 
 private:
 
@@ -132,25 +156,6 @@ private:
   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; } ;
   void setCacheAndTrackHints(RooArgSet&) override ;
 
-  // The cache object
-  class CacheElem final : public RooAbsCacheElement {
-  public:
-    CacheElem() : _isRearranged(false) { }
-    // Payload
-    RooArgList _partList ;
-    RooArgList _numList ;
-    RooArgList _denList ;
-    RooArgList _ownedList ;
-    std::vector<std::unique_ptr<RooArgSet>> _normList;
-    bool _isRearranged ;
-    std::unique_ptr<RooAbsReal> _rearrangedNum{};
-    std::unique_ptr<RooAbsReal> _rearrangedDen{};
-    // Cache management functions
-    RooArgList containedArgs(Action) override ;
-    void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) override ;
-    void writeToStream(std::ostream& os) const ;
-  } ;
-
   std::unique_ptr<CacheElem> createCacheElem(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName=nullptr) const;
 
   mutable RooObjCacheManager _cacheMgr ; //! The cache manager
@@ -164,7 +169,7 @@ private:
 
 
   friend class RooProdGenContext ;
-  friend class RooFixedProdPdf ;
+  friend class RooFit::Detail::RooFixedProdPdf ;
   RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=nullptr,
                                   const RooArgSet *auxProto=nullptr, bool verbose= false) const override ;
 
@@ -191,5 +196,73 @@ private:
   ClassDefOverride(RooProdPdf,6) // PDF representing a product of PDFs
 };
 
+namespace RooFit {
+namespace Detail {
+
+/// A RooProdPdf with a fixed normalization set can be replaced by this class.
+/// Its purpose is to provide the right client-server interface for the
+/// evaluation of RooProdPdf cache elements that were created for a given
+/// normalization set.
+class RooFixedProdPdf : public RooAbsPdf {
+public:
+   RooFixedProdPdf(std::unique_ptr<RooProdPdf> &&prodPdf, RooArgSet const &normSet);
+   RooFixedProdPdf(const RooFixedProdPdf &other, const char *name = nullptr);
+
+   inline TObject *clone(const char *newname) const override { return new RooFixedProdPdf(*this, newname); }
+
+   inline bool selfNormalized() const override { return true; }
+
+   inline bool canComputeBatchWithCuda() const override { return true; }
+
+   inline void doEval(RooFit::EvalContext &ctx) const override { _prodPdf->doEvalImpl(this, *_cache, ctx); }
+
+   inline ExtendMode extendMode() const override { return _prodPdf->extendMode(); }
+   inline double expectedEvents(const RooArgSet * /*nset*/) const override
+   {
+      return _prodPdf->expectedEvents(&_normSet);
+   }
+   inline std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet * /*nset*/) const override
+   {
+      return _prodPdf->createExpectedEventsFunc(&_normSet);
+   }
+
+   // Analytical Integration handling
+   inline bool forceAnalyticalInt(const RooAbsArg &dep) const override { return _prodPdf->forceAnalyticalInt(dep); }
+   inline Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet *normSet,
+                                        const char *rangeName = nullptr) const override
+   {
+      return _prodPdf->getAnalyticalIntegralWN(allVars, analVars, normSet, rangeName);
+   }
+   inline Int_t
+   getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &numVars, const char *rangeName = nullptr) const override
+   {
+      return _prodPdf->getAnalyticalIntegral(allVars, numVars, rangeName);
+   }
+   inline double analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName) const override
+   {
+      return _prodPdf->analyticalIntegralWN(code, normSet, rangeName);
+   }
+   inline double analyticalIntegral(Int_t code, const char *rangeName = nullptr) const override
+   {
+      return _prodPdf->analyticalIntegral(code, rangeName);
+   }
+
+   RooProdPdf::CacheElem const &cache() const { return *_cache; }
+
+private:
+   void initialize();
+
+   inline double evaluate() const override { return _prodPdf->calculate(*_cache); }
+
+   RooArgSet _normSet;
+   std::unique_ptr<RooProdPdf::CacheElem> _cache;
+   RooSetProxy _servers;
+   std::unique_ptr<RooProdPdf> _prodPdf;
+
+   ClassDefOverride(RooFit::Detail::RooFixedProdPdf, 0);
+};
+
+} // namespace Detail
+} // namespace RooFit
 
 #endif

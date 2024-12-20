@@ -14,7 +14,7 @@
 \file Batches.h
 \class Batch
 \class Batches
-\ingroup RooBatchCompute
+\ingroup roofit_dev_docs_batchcompute
 
 These classes encapsulate the necessary data for the computations.
 They are lightweight objects designed to be passed by value and also flexible,

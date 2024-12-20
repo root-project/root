@@ -306,6 +306,15 @@ std::string makeValidVarName(std::string const &in)
    return out;
 }
 
+/// Replace all occurrences of `what` with `with` inside of `inOut`.
+void replaceAll(std::string &inOut, std::string_view what, std::string_view with)
+{
+   for (std::string::size_type pos{}; inOut.npos != (pos = inOut.find(what.data(), pos, what.length()));
+        pos += with.length()) {
+      inOut.replace(pos, what.length(), with.data(), with.length());
+   }
+}
+
 } // namespace Detail
 } // namespace RooFit
 

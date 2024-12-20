@@ -59,6 +59,8 @@ public:
 
    ~TGraphAsymmErrors() override;
 
+   virtual void
+   AddPointError(Double_t x, Double_t y, Double_t exl = 0., Double_t exh = 0., Double_t eyl = 0., Double_t eyh = 0.);
    void    Apply(TF1 *f) override;
    virtual void    BayesDivide(const TH1* pass, const TH1* total, Option_t *opt="");
    virtual void    Divide(const TH1* pass, const TH1* total, Option_t *opt="cp");

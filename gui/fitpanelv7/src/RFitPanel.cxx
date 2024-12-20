@@ -347,9 +347,9 @@ void RFitPanel::AssignHistogram(std::shared_ptr<RH1D> &hist)
 ////////////////////////////////////////////////////////////////////////////////
 /// Show FitPanel
 
-void RFitPanel::Show(const std::string &where)
+void RFitPanel::Show(const RWebDisplayArgs &args)
 {
-   GetWindow()->Show(where);
+   RWebWindow::ShowWindow(GetWindow(), args);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

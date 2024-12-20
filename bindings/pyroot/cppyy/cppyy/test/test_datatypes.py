@@ -1038,10 +1038,10 @@ class TestDATATYPES:
         struct Comparable1 {
             Comparable1(int i) : fInt(i) {}
             int fInt;
-            static bool __eq__(const Comparable1& self, const Comparable1& other){
+            static bool __eq__(const Comparable1& self, const Comparable1& other) {
                 return self.fInt == other.fInt;
             }
-            static bool __ne__(const Comparable1& self, const Comparable1& other){
+            static bool __ne__(const Comparable1& self, const Comparable1& other) {
                 return self.fInt != other.fInt;
             }
         };
@@ -1049,10 +1049,10 @@ class TestDATATYPES:
         struct Comparable2 {
             Comparable2(int i) : fInt(i) {}
             int fInt;
-            bool __eq__(const Comparable2& other){
+            bool __eq__(const Comparable2& other) {
                 return fInt == other.fInt;
             }
-            bool __ne__(const Comparable2& other){
+            bool __ne__(const Comparable2& other) {
                 return fInt != other.fInt;
             }
         }; }""")

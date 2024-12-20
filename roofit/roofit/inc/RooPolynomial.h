@@ -48,10 +48,6 @@ public:
    // pdf is a reducer node because it doesn't depend on the observables.
    bool isReducerNode() const override { return _coefList.empty(); }
 
-   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-   std::string buildCallToAnalyticIntegral(Int_t code, const char *rangeName,
-                                           RooFit::Detail::CodeSquashContext &ctx) const override;
-
 protected:
    RooRealProxy _x;
    RooListProxy _coefList;

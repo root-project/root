@@ -1610,61 +1610,78 @@ void TBufferJSON::JsonWriteCollection(TCollection *col, const TClass *)
    // collection treated as JS Array
    AppendOutput("[");
 
-   bool islist = col->InheritsFrom(TList::Class());
-   TMap *map = nullptr;
-   if (col->InheritsFrom(TMap::Class()))
-      map = dynamic_cast<TMap *>(col);
+   auto map = dynamic_cast<TMap *>(col);
+   auto lst = dynamic_cast<TList *>(col);
 
    TString sopt;
-   if (islist) {
+   Bool_t first = kTRUE;
+
+   if (lst) {
+      // handle TList with extra options
       sopt.Capacity(500);
       sopt = "[";
-   }
 
-   TIter iter(col);
-   TObject *obj;
-   Bool_t first = kTRUE;
-   while ((obj = iter()) != nullptr) {
-      if (!first)
-         AppendOutput(fArraySepar.Data());
+      auto lnk = lst->FirstLink();
+      while (lnk) {
+         if (!first) {
+            AppendOutput(fArraySepar.Data());
+            sopt.Append(fArraySepar.Data());
+         }
 
-      if (map) {
+         WriteObjectAny(lnk->GetObject(), TObject::Class());
+
+         if (dynamic_cast<TObjOptLink *>(lnk)) {
+            sopt.Append("\"");
+            sopt.Append(lnk->GetAddOption());
+            sopt.Append("\"");
+         } else
+            sopt.Append("null");
+
+         lnk = lnk->Next();
+         first = kFALSE;
+      }
+   } else if (map) {
+      // handle TMap with artificial TPair object
+      TIter iter(col);
+      while (auto obj = iter()) {
+         if (!first)
+            AppendOutput(fArraySepar.Data());
+
          // fJsonrCnt++; // do not account map pair as JSON object
          AppendOutput("{", "\"$pair\"");
          AppendOutput(fSemicolon.Data());
          AppendOutput("\"TPair\"");
          AppendOutput(fArraySepar.Data(), "\"first\"");
          AppendOutput(fSemicolon.Data());
-      }
 
-      WriteObjectAny(obj, TObject::Class());
+         WriteObjectAny(obj, TObject::Class());
 
-      if (map) {
          AppendOutput(fArraySepar.Data(), "\"second\"");
          AppendOutput(fSemicolon.Data());
          WriteObjectAny(map->GetValue(obj), TObject::Class());
          AppendOutput("", "}");
+         first = kFALSE;
       }
-
-      if (islist) {
+   } else {
+      TIter iter(col);
+      while (auto obj = iter()) {
          if (!first)
-            sopt.Append(fArraySepar.Data());
-         sopt.Append("\"");
-         sopt.Append(iter.GetOption());
-         sopt.Append("\"");
-      }
+            AppendOutput(fArraySepar.Data());
 
-      first = kFALSE;
+         WriteObjectAny(obj, TObject::Class());
+         first = kFALSE;
+      }
    }
 
    AppendOutput("]");
 
-   if (islist) {
+   if (lst) {
       sopt.Append("]");
       AppendOutput(Stack()->NextMemberSeparator(), "\"opt\"");
       AppendOutput(fSemicolon.Data());
       AppendOutput(sopt.Data());
    }
+
    fValue.Clear();
 }
 
@@ -1757,8 +1774,11 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
 
          map->Add(tobj, static_cast<TObject *>(subobj2));
       } else if (lst) {
-         std::string opt = json->at("opt").at(n).get<std::string>();
-         lst->Add(tobj, opt.c_str());
+         auto &elem = json->at("opt").at(n);
+         if (elem.is_null())
+            lst->Add(tobj);
+         else
+            lst->Add(tobj, elem.get<std::string>().c_str());
       } else {
          // generic method, all kinds of TCollection should work
          col->Add(tobj);
@@ -3268,7 +3288,7 @@ void TBufferJSON::JsonWriteFastArray(const T *arr, Long64_t arrsize, const char 
    if (arrsize > maxElements)
    {
       Fatal("JsonWriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", arrsize, maxElements);
-      return; // In case the user re-routes the error handler to not die when Fatal is called)
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
    TStreamerElement *elem = Stack()->fElem;

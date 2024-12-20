@@ -6598,10 +6598,12 @@ void TMinuit::mnrazz(Double_t ynew, Double_t *pnew, Double_t *y, Int_t &jh, Int_
 L40:
    return;
 L45:
-   Printf("  FUNCTION VALUE DOES NOT SEEM TO DEPEND ON ANY OF THE %d VARIABLE PARAMETERS.",fNpar);
-   Printf("          VERIFY THAT STEP SIZES ARE BIG ENOUGH AND CHECK FCN LOGIC.");
-   Printf(" *******************************************************************************");
-   Printf(" *******************************************************************************");
+   if (fISW[4] >= 0) {
+      Printf("  FUNCTION VALUE DOES NOT SEEM TO DEPEND ON ANY OF THE %d VARIABLE PARAMETERS.",fNpar);
+      Printf("          VERIFY THAT STEP SIZES ARE BIG ENOUGH AND CHECK FCN LOGIC.");
+      Printf(" *******************************************************************************");
+      Printf(" *******************************************************************************");
+   }
    goto L40;
 }
 

@@ -499,11 +499,12 @@ void TGeoNode::SaveAttributes(std::ostream &out)
 
 void TGeoNode::SetUserExtension(TGeoExtension *ext)
 {
-   if (fUserExtension)
-      fUserExtension->Release();
+   TGeoExtension* tmp = fUserExtension;
    fUserExtension = nullptr;
    if (ext)
       fUserExtension = ext->Grab();
+   if (tmp)
+      tmp->Release();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -516,11 +517,12 @@ void TGeoNode::SetUserExtension(TGeoExtension *ext)
 
 void TGeoNode::SetFWExtension(TGeoExtension *ext)
 {
-   if (fFWExtension)
-      fFWExtension->Release();
+   TGeoExtension* tmp = fFWExtension;
    fFWExtension = nullptr;
    if (ext)
       fFWExtension = ext->Grab();
+   if (tmp)
+      tmp->Release();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

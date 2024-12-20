@@ -136,7 +136,7 @@ namespace ROOT {
     * \class ROOT::TThreadedObject
     * \brief A wrapper to make object instances thread private, lazily.
     * \tparam T Class of the object to be made thread private (e.g. TH1F)
-    * \ingroup Multicore
+    * \ingroup Parallelism
     *
     * A wrapper which makes objects thread private. The methods of the underlying
     * object can be invoked via the arrow operator. The object is created in

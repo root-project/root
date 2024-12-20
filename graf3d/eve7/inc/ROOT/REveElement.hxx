@@ -15,6 +15,7 @@
 #include <ROOT/REveTypes.hxx>
 #include <ROOT/REveVector.hxx>
 #include <ROOT/REveProjectionBases.hxx>
+#include "TString.h"
 
 #include <memory>
 #include <list>
@@ -190,7 +191,7 @@ public:
 
    TClass *IsA() const;
 
-   virtual void ExportToCINT(const char *var_name); // *MENU*
+   virtual void ExportToInterpreter(const char *var_name); // *MENU*
 
    virtual Bool_t AcceptElement(REveElement *el);
 
@@ -328,9 +329,9 @@ public:
       kCBColorSelection =  BIT(0), // Main color or select/hilite state changed.
       kCBTransBBox      =  BIT(1), // Transformation matrix or bounding-box changed.
       kCBObjProps       =  BIT(2), // Object changed, requires dropping its display-lists.
-      kCBVisibility     =  BIT(3),  // Rendering of self/children changed.
-      kCBElementAdded   =  BIT(4) // Element was added to a new parent.
-      // kCBElementRemoved = BIT()  // Element was removed from a parent.
+      kCBVisibility     =  BIT(3), // Rendering of self/children changed.
+      kCBElementAdded   =  BIT(4)  // Element was added to a new parent.
+      // kCBElementRemoved = BIT() // Element was removed from a parent.
 
       // Deletions are handled in a special way in REveManager::PreDeleteElement().
    };
@@ -339,16 +340,25 @@ protected:
    UChar_t      fChangeBits{0};  //!
    Char_t       fDestructing{kNone}; //!
 
+   static thread_local REveElement *stlMirAlpha;
+   static thread_local int          stlMirError;
+   static thread_local std::string  stlMirErrorString;
+   static void ClearMirContext();
+   static void SetMirContext(REveElement *el);
+   static void SetMirError(int error, std::string_view err_str="");
+   static void AppendMirErrorString(std::string_view err_str);
+
 public:
    void StampColorSelection() { AddStamp(kCBColorSelection); }
    void StampTransBBox()      { AddStamp(kCBTransBBox); }
-   void StampObjProps()       { AddStamp(kCBObjProps); }
-   void StampObjPropsPreChk() { if ( ! (fChangeBits & kCBObjProps)) AddStamp(kCBObjProps); }
+   void StampObjProps()       { if ( ! (fChangeBits & kCBObjProps)) AddStamp(kCBObjProps); }
    void StampVisibility()     { AddStamp(kCBVisibility); }
    void StampElementAdded()   { AddStamp(kCBElementAdded); }
    // void StampElementRemoved() { AddStamp(kCBElementRemoved); }
    virtual void AddStamp(UChar_t bits);
    virtual void ClearStamps() { fChangeBits = 0; }
+   // Default stamp for object properties -- the most common case.
+   void Stamp() { StampObjProps(); }
 
    UChar_t GetChangeBits() const { return fChangeBits; }
 

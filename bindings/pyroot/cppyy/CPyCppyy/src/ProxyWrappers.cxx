@@ -499,11 +499,9 @@ PyObject* CPyCppyy::GetScopeProxy(Cppyy::TCppScope_t scope)
 // Retrieve scope proxy from the known ones.
     PyClassMap_t::iterator pci = gPyClasses.find(scope);
     if (pci != gPyClasses.end()) {
-        PyObject* pyclass = PyWeakref_GetObject(pci->second);
-        if (pyclass != Py_None) {
-            Py_INCREF(pyclass);
+        PyObject* pyclass = CPyCppyy_GetWeakRef(pci->second);
+        if (pyclass)
             return pyclass;
-        }
     }
 
     return nullptr;
@@ -836,29 +834,42 @@ PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
     if (!pyclass)
         return nullptr;                 // error has been set in CreateScopeProxy
 
-    bool isRef   = flags & CPPInstance::kIsReference;
-    bool isValue = flags & CPPInstance::kIsValue;
+    bool noReg      = flags & (CPPInstance::kNoMemReg|CPPInstance::kNoWrapConv);
+    bool isRef      = flags & CPPInstance::kIsReference;
+    void* r_address = isRef ? (address ? *(void**)address : nullptr) : address;
 
-// TODO: make sure that a consistent address is used (may have to be done in BindCppObject)
-    if (address && !isValue /* always fresh */ && !(flags & (CPPInstance::kNoWrapConv|CPPInstance::kNoMemReg))) {
-        PyObject* oldPyObject = MemoryRegulator::RetrievePyObject(
-            isRef ? *(void**)address : address, pyclass);
-
-    // ptr-ptr requires old object to be a reference to enable re-use
-        if (oldPyObject && (!(flags & CPPInstance::kIsPtrPtr) ||
-                ((CPPInstance*)oldPyObject)->fFlags & CPPInstance::kIsReference)) {
-            return oldPyObject;
-        }
-    }
-
-// if smart, instantiate a Python-side object of the underlying type, carrying the smartptr
-    PyObject* smart_type = (flags != CPPInstance::kNoWrapConv && (((CPPClass*)pyclass)->fFlags & CPPScope::kIsSmart)) ? pyclass : nullptr;
+// check whether the object to be bound is a smart pointer that needs embedding
+    PyObject* smart_type = (!(flags & CPPInstance::kNoWrapConv) && \
+                            (((CPPClass*)pyclass)->fFlags & CPPScope::kIsSmart)) ? pyclass : nullptr;
     if (smart_type) {
         pyclass = CreateScopeProxy(((CPPSmartClass*)smart_type)->fUnderlyingType);
         if (!pyclass) {
         // simply restore and expose as the actual smart pointer class
             pyclass = smart_type;
             smart_type = nullptr;
+        }
+    }
+
+// TODO: make sure that a consistent address is used (may have to be done in BindCppObject)
+    if (address && !(flags & CPPInstance::kIsValue) /* always fresh */ && !noReg) {
+        PyObject* oldPyObject = MemoryRegulator::RetrievePyObject(r_address, pyclass);
+
+    // embedded smart pointers are registered with the class of the underlying type, b/c
+    // there is no Python proxy for the smart pointer itself in that case; check whether
+    // the result found matches the smart-ness and if so, whether the smart pointer found
+    // is the same as the one requested (note: ptr-ptr requires old object to be a
+    // reference to enable re-use)
+        if (oldPyObject) {
+            CPPInstance* o_pyobj = ((CPPInstance*)oldPyObject);
+
+            if ((bool)smart_type == o_pyobj->IsSmart() && \
+                    r_address == (smart_type ? o_pyobj->GetObjectRaw() : o_pyobj->GetObject()) && \
+                    (!(flags & CPPInstance::kIsPtrPtr) || (o_pyobj->fFlags & CPPInstance::kIsReference))) {
+                Py_DECREF(pyclass);
+                return oldPyObject;
+            } else {      // reference or naked v.s. smart pointer mismatch
+                Py_DECREF(oldPyObject);
+            }
         }
     }
 
@@ -877,9 +888,10 @@ PyObject* CPyCppyy::BindCppObjectNoCast(Cppyy::TCppObject_t address,
         if (smart_type)
             pyobj->SetSmart(smart_type);
 
-    // do not register null pointers, references (?), or direct usage of smart pointers or iterators
-        if (address && !isRef && !(flags & (CPPInstance::kNoWrapConv|CPPInstance::kNoMemReg)))
-            MemoryRegulator::RegisterPyObject(pyobj, pyobj->GetObject());
+    // do not register null pointers, references (regulated objects can be referenced, but
+    // referenced objects can not be regulated), or direct usage of smart pointers or iterators
+        if (address && !isRef && !noReg)
+            MemoryRegulator::RegisterPyObject(pyobj, smart_type ? pyobj->GetObjectRaw() : pyobj->GetObject());
     }
 
 // successful completion; wrap exception options to make them raiseable, normal return otherwise

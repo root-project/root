@@ -23,7 +23,9 @@
 
 #include "TNamed.h"
 
-class TH1;
+#include <map>
+
+class TH2;
 class TFile;
 class TDirectory;
 class TBox;
@@ -32,12 +34,12 @@ class TBranch;
 class TFileDrawMap : public TNamed {
 
 protected:
-   TFile         *fFile;           ///< Pointer to the file
-   TH1           *fFrame;          ///< Histogram used to draw the map frame
-   TString        fKeys;           ///< List of keys
-   TString        fOption;         ///< Drawing options
-   Int_t          fXsize;          ///< Size in bytes of X axis
-   Int_t          fYsize;          ///< Size in K/Mbytes of Y axis
+   TFile         *fFile = nullptr;      ///<! Pointer to the file, cannot be persistent
+   std::map<TBranch*, Int_t> fBranchColors; ///<! map of generated colors for the branches
+   TH2           *fFrame = nullptr;     ///< Histogram used to draw the map frame
+   TString        fKeys;                ///< List of keys
+   Int_t          fXsize = 0;           ///< Size in bytes of X axis
+   Int_t          fYsize = 0;           ///< Size in K/Mbytes of Y axis
 
    virtual void     DrawMarker(Int_t marker, Long64_t eseek);
    virtual bool     GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TString &info) const;
@@ -45,21 +47,22 @@ protected:
    virtual void     PaintDir(TDirectory *dir, const char *keys);
    virtual TObject *GetObject();
 
+   TString GetRecentInfo();
+
 public:
    TFileDrawMap();
-   TFileDrawMap(const TFile *file, const char *keys, Option_t *option);
+   TFileDrawMap(const TFile *file, const char *keys, Option_t *option = "");
    ~TFileDrawMap() override;
 
    virtual void  AnimateTree(const char *branches=""); // *MENU*
    Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
    virtual void  DrawObject(); // *MENU*
    virtual void  DumpObject(); // *MENU*
-   void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    char *GetObjectInfo(Int_t px, Int_t py) const override;
    virtual void  InspectObject(); // *MENU*
    void  Paint(Option_t *option) override;
 
-   ClassDefOverride(TFileDrawMap,1);  //Draw a 2-d map of the objects in a file
+   ClassDefOverride(TFileDrawMap,2);  //Draw a 2-d map of the objects in a file
 };
 
 #endif

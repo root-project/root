@@ -16,7 +16,6 @@
 ///  - demonstrates usage of different test statistics
 ///  - explains subtle choices in the prior used for hybrid methods
 ///  - demonstrates usage of different priors for the nuisance parameters
-///  - demonstrates usage of PROOF
 ///
 /// The basic setup here is that a main measurement has observed x events with an
 /// expectation of s+b.  One can choose an ad hoc prior for the uncertainty on b,
@@ -130,9 +129,6 @@ void HybridInstructional(int ntoys = 6000)
    //   5. RooStats ToyMC with an equivalent test statistic
    //   6. RooStats ToyMC with simultaneous control & main measurement
 
-   // It takes ~4 min without PROOF and ~2 min with PROOF on 4 cores.
-   // Of course, everything looks nicer with more toys, which takes longer.
-
    TStopwatch t;
    t.Start();
    TCanvas *c = new TCanvas;
@@ -154,14 +150,6 @@ void HybridInstructional(int ntoys = 6000)
    // verbose progress messages.  We start by keeping track
    // of the current threshold on messages.
    RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
-
-   // Use PROOF-lite on multi-core machines
-   ProofConfig *pc = NULL;
-   // uncomment below if you want to use PROOF
-   // ~~~
-   // pc = new ProofConfig(*w, 4, "workers=4", kFALSE); // machine with 4 cores
-   // pc = new ProofConfig(*w, 2, "workers=2", kFALSE); // machine with 2 cores
-   // ~~~
 
    // ----------------------------------------------------
    // P A R T   2  :  D I R E C T   I N T E G R A T I O N
@@ -333,11 +321,6 @@ void HybridInstructional(int ntoys = 6000)
    //  hc1.ForcePriorNuisanceNull(*w->pdf("lognorm_prior"));
    // ~~~
 
-   // enable proof
-   // NOTE: This test statistic is defined in this macro, and is not
-   // working with PROOF currently.  Luckily test stat is fast to evaluate.
-   //  `if(pc) toymcs1->SetProofConfig(pc);`
-
    // these lines save current msg level and then kill any messages below ERROR
    RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
    // Get the result
@@ -385,10 +368,6 @@ void HybridInstructional(int ntoys = 6000)
    //  hc2.ForcePriorNuisanceAlt(*w->pdf("lognorm_prior"));
    //  hc2.ForcePriorNuisanceNull(*w->pdf("lognorm_prior"));
    // ~~~
-
-   // enable proof
-   if (pc)
-      toymcs2->SetProofConfig(pc);
 
    // these lines save current msg level and then kill any messages below ERROR
    RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
@@ -444,9 +423,6 @@ void HybridInstructional(int ntoys = 6000)
    w->var("s")->setVal(50.0); // IMPORTANT
    sb_modelXY.SetSnapshot(*w->set("poi"));
 
-   // without this print, their can be a crash when using PROOF.  Strange.
-   //  w->Print();
-
    // Test statistics like the profile likelihood ratio
    // (or the ratio of profiled likelihoods (Tevatron) or the MLE for s)
    // will now work, since the nuisance parameter b is constrained by y.
@@ -494,10 +470,6 @@ void HybridInstructional(int ntoys = 6000)
    toymcs3->SetTestStatistic(&profll);
    // toymcs3->SetTestStatistic(&ropl);
    // toymcs3->SetTestStatistic(&mlets);
-
-   // enable proof
-   if (pc)
-      toymcs3->SetProofConfig(pc);
 
    // these lines save current msg level and then kill any messages below ERROR
    RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);

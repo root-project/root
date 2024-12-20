@@ -2,10 +2,12 @@
 #define ROOT7_RNTuple_Test_CustomStruct
 
 #include <RtypesCore.h> // for Double32_t
+#include <TObject.h>
 #include <TRootIOCtor.h>
 #include <TVirtualCollectionProxy.h>
 
 #include <chrono>
+#include <stdexcept>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -34,7 +36,7 @@ struct CustomStruct {
    std::vector<float> v1;
    std::vector<std::vector<float>> v2;
    std::string s;
-   std::byte b{0};
+   std::byte b{};
 
    bool operator<(const CustomStruct &c) const { return a < c.a && v1 < c.v1 && v2 < c.v2 && s < c.s; }
 
@@ -202,6 +204,8 @@ struct StructWithTransientString {
 struct StructWithIORules : StructWithIORulesBase {
    StructWithTransientString s;
    float c = 0.0f; //! transient member
+   float checksumA = 0.0f;   //! transient member, edited by checksum based rule
+   float checksumB = 137.0f; //! transient member, skipped by checksum based rule due to checksum mismatch
 
    StructWithIORules() = default;
    StructWithIORules(float _a, char _c[4]) : StructWithIORulesBase{_a, 0.0f}, s{{_c[0], _c[1], _c[2], _c[3]}, {}} {}
@@ -280,6 +284,25 @@ struct DuplicateBaseC : public BaseA {
 
 struct DuplicateBaseD : public DuplicateBaseB, public DuplicateBaseC {
    float d = 0.0;
+};
+
+class Left {
+public:
+   float x = 1.0;
+   virtual ~Left() = default;
+   ClassDef(Left, 1)
+};
+
+class DerivedFromLeftAndTObject : public Left, public TObject {
+public:
+   virtual ~DerivedFromLeftAndTObject() = default;
+   ClassDefOverride(DerivedFromLeftAndTObject, 1)
+};
+
+struct ThrowForVariant {
+   ThrowForVariant() = default;
+   ThrowForVariant(const ThrowForVariant &) { throw std::runtime_error("copy ctor"); }
+   ThrowForVariant &operator=(const ThrowForVariant &) = default;
 };
 
 #endif

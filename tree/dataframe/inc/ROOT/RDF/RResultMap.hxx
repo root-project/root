@@ -211,17 +211,16 @@ template <typename T>
 std::unique_ptr<RMergeableVariations<T>> GetMergeableValue(ROOT::RDF::Experimental::RResultMap<T> &rmap)
 {
    rmap.RunEventLoopIfNeeded();
-
-   std::unique_ptr<RMergeableVariationsBase> mVariationsBase;
    if (rmap.fVariedAction != nullptr) {
-      auto mValueBase = rmap.fVariedAction->GetMergeableValue();
-      mVariationsBase.reset(static_cast<RMergeableVariationsBase *>(mValueBase.release())); // downcast unique_ptr
+      std::unique_ptr<RMergeableVariationsBase> mVariationsBase{
+         static_cast<RMergeableVariationsBase *>(rmap.fVariedAction->GetMergeableValue().release())};
+      mVariationsBase->AddNominal(rmap.fNominalAction->GetMergeableValue());
+      return std::make_unique<RMergeableVariations<T>>(std::move(*mVariationsBase));
    } else {
-      mVariationsBase = std::unique_ptr<RMergeableVariationsBase>({}, {});
+      auto ret = std::make_unique<RMergeableVariations<T>>();
+      ret->AddNominal(rmap.fNominalAction->GetMergeableValue());
+      return ret;
    }
-   mVariationsBase->AddNominal(rmap.fNominalAction->GetMergeableValue());
-
-   return std::make_unique<RMergeableVariations<T>>(std::move(*mVariationsBase));
 }
 } // namespace RDF
 } // namespace Detail

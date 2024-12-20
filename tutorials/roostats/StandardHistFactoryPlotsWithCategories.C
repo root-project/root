@@ -89,7 +89,7 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
    // Try to open the file
    TFile *file = TFile::Open(filename);
 
-   // if input file was specified byt not found, quit
+   // if input file was specified but not found, quit
    if (!file) {
       cout << "StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
@@ -123,7 +123,7 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
    // now use the profile inspector
 
    RooRealVar *obs = (RooRealVar *)mc->GetObservables()->first();
-   TList *list = new TList();
+   std::vector<RooPlot *> frameList;
 
    RooRealVar *firstPOI = dynamic_cast<RooRealVar *>(mc->GetParametersOfInterest()->first());
 
@@ -182,7 +182,7 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
          mc->GetPdf()->plotOn(frame, LineColor(kRed), LineStyle(kDashed), LineWidth(1));
          var->setVal(-1);
          mc->GetPdf()->plotOn(frame, LineColor(kGreen), LineStyle(kDashed), LineWidth(1));
-         list->Add(frame);
+         frameList.push_back(frame);
          var->setVal(0);
       }
 
@@ -206,9 +206,9 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
 
          obs = ((RooRealVar *)obstmp->first());
 
-         TIter it = mc->GetNuisanceParameters()->createIterator();
-         RooRealVar *var = NULL;
-         while (nPlots < nPlotsMax && (var = (RooRealVar *)it.Next())) {
+         for (auto *var : static_range_cast<RooRealVar*>(*mc->GetNuisanceParameters())) {
+            if (nPlots == nPlotsMax) break;
+
             TCanvas *c2 = new TCanvas("c2");
             RooPlot *frame = obs->frame();
             frame->SetName(Form("frame%d", nPlots));
@@ -275,7 +275,7 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
                var->setVal(0);
             }
 
-            list->Add(frame);
+            frameList.push_back(frame);
 
             // quit making plots
             ++nPlots;
@@ -291,16 +291,16 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
 
    // now make plots
    TCanvas *c1 = new TCanvas("c1", "ProfileInspectorDemo", 800, 200);
-   if (list->GetSize() > 4) {
-      double n = list->GetSize();
-      int nx = (int)sqrt(n);
-      int ny = TMath::CeilNint(n / nx);
-      nx = TMath::CeilNint(sqrt(n));
+   int nFrames = frameList.size();
+   if (nFrames > 4) {
+      int nx = (int)sqrt(nFrames);
+      int ny = TMath::CeilNint(nFrames / nx);
+      nx = TMath::CeilNint(sqrt(nFrames));
       c1->Divide(ny, nx);
    } else
-      c1->Divide(list->GetSize());
-   for (int i = 0; i < list->GetSize(); ++i) {
+      c1->Divide(nFrames);
+   for (int i = 0; i < nFrames; ++i) {
       c1->cd(i + 1);
-      list->At(i)->Draw();
+      frameList[i]->Draw();
    }
 }

@@ -36,7 +36,7 @@ A diamond has line attributes (see TAttLine) and fill area attributes (see TAttF
 Like for the class TPaveText, a TDiamond may have one or more line(s) of text inside.
 
 Begin_Macro(source)
-../../../tutorials/graphics/diamond.C
+../../../tutorials/visualisation/graphics/diamond.C
 End_Macro
 */
 

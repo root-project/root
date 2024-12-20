@@ -22,12 +22,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitXRooFit
         RooFit
         RooFitHS3
         RooStats
+        FitPanel
         DEPENDENCIES
         Gui
         Ged
         RooFitCore
+        FitPanel
         LINKDEF
         inc/LinkDef.h
         )
 
 target_include_directories(RooFitXRooFit PRIVATE inc/RooFit)
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)

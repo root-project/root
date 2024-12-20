@@ -47,6 +47,8 @@ public:
    TGraph2DAsymmErrors(const TGraph2DAsymmErrors&);
    TGraph2DAsymmErrors& operator=(const TGraph2DAsymmErrors&);
    ~TGraph2DAsymmErrors() override;
+   virtual void AddPointError(Double_t x, Double_t y, Double_t z, Double_t exl = 0., Double_t exh = 0.,
+                              Double_t eyl = 0., Double_t eyh = 0., Double_t ezl = 0., Double_t ezh = 0.);
    Double_t        GetErrorX(Int_t bin) const override;
    Double_t        GetErrorY(Int_t bin) const override;
    Double_t        GetErrorZ(Int_t bin) const override;

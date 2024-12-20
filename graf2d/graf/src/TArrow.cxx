@@ -37,7 +37,7 @@ Once an arrow is drawn on the screen:
 - One can click on any other arrow part to move the entire arrow.
 
 Begin_Macro(source)
-../../../tutorials/graphics/arrows.C
+../../../tutorials/visualisation/graphics/arrows.C
 End_Macro
 */
 

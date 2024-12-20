@@ -226,7 +226,7 @@ void FourBinInstructional(bool doBayesian = false, bool doFeldmanCousins = false
    modelConfig->SetParametersOfInterest(*wspace->set("poi"));
    modelConfig->SetNuisanceParameters(*wspace->set("nuis"));
    wspace->import(*modelConfig);
-   wspace->writeToFile("FourBin.root");
+   // wspace->writeToFile("FourBin.root");
 
    // -------------------------------------------------
    // If you want to see the covariance matrix uncomment
@@ -270,7 +270,7 @@ void FourBinInstructional(bool doBayesian = false, bool doFeldmanCousins = false
    ProposalHelper ph;
    ph.SetVariables((RooArgSet &)fit->floatParsFinal());
    ph.SetCovMatrix(fit->covarianceMatrix());
-   ph.SetUpdateProposalParameters(kTRUE); // auto-create mean vars and add mappings
+   ph.SetUpdateProposalParameters(true); // auto-create mean vars and add mappings
    ph.SetCacheSize(100);
    ProposalFunction *pf = ph.GetProposalFunction();
 

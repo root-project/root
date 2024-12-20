@@ -20,32 +20,32 @@ namespace clang {
 namespace interp {
 class Block;
 class Record;
+struct InitMap;
 struct Descriptor;
 enum PrimType : unsigned;
 
 using DeclTy = llvm::PointerUnion<const Decl *, const Expr *>;
+using InitMapPtr = std::optional<std::pair<bool, std::shared_ptr<InitMap>>>;
 
 /// Invoked whenever a block is created. The constructor method fills in the
 /// inline descriptors of all fields and array elements. It also initializes
 /// all the fields which contain non-trivial types.
-using BlockCtorFn = void (*)(Block *Storage, char *FieldPtr, bool IsConst,
+using BlockCtorFn = void (*)(Block *Storage, std::byte *FieldPtr, bool IsConst,
                              bool IsMutable, bool IsActive,
-                             Descriptor *FieldDesc);
+                             const Descriptor *FieldDesc);
 
 /// Invoked when a block is destroyed. Invokes the destructors of all
 /// non-trivial nested fields of arrays and records.
-using BlockDtorFn = void (*)(Block *Storage, char *FieldPtr,
-                             Descriptor *FieldDesc);
+using BlockDtorFn = void (*)(Block *Storage, std::byte *FieldPtr,
+                             const Descriptor *FieldDesc);
 
 /// Invoked when a block with pointers referencing it goes out of scope. Such
 /// blocks are persisted: the move function copies all inline descriptors and
 /// non-trivial fields, as existing pointers might need to reference those
 /// descriptors. Data is not copied since it cannot be legally read.
-using BlockMoveFn = void (*)(Block *Storage, char *SrcFieldPtr,
-                             char *DstFieldPtr, Descriptor *FieldDesc);
-
-/// Object size as used by the interpreter.
-using InterpSize = unsigned;
+using BlockMoveFn = void (*)(Block *Storage, const std::byte *SrcFieldPtr,
+                             std::byte *DstFieldPtr,
+                             const Descriptor *FieldDesc);
 
 /// Inline descriptor embedded in structures and arrays.
 ///
@@ -72,7 +72,7 @@ struct InlineDescriptor {
   /// Flag indicating if the field is mutable (if in a record).
   unsigned IsFieldMutable : 1;
 
-  Descriptor *Desc;
+  const Descriptor *Desc;
 };
 
 /// Describes a memory block created by an allocation site.
@@ -81,13 +81,13 @@ private:
   /// Original declaration, used to emit the error message.
   const DeclTy Source;
   /// Size of an element, in host bytes.
-  const InterpSize ElemSize;
+  const unsigned ElemSize;
   /// Size of the storage, in host bytes.
-  const InterpSize Size;
-  // Size of the metadata.
-  const InterpSize MDSize;
+  const unsigned Size;
+  /// Size of the metadata.
+  const unsigned MDSize;
   /// Size of the allocation (storage + metadata), in host bytes.
-  const InterpSize AllocSize;
+  const unsigned AllocSize;
 
   /// Value to denote arrays of unknown size.
   static constexpr unsigned UnknownSizeMark = (unsigned)-1;
@@ -96,13 +96,13 @@ public:
   /// Token to denote structures of unknown size.
   struct UnknownSize {};
 
-  using MetadataSize = std::optional<InterpSize>;
+  using MetadataSize = std::optional<unsigned>;
   static constexpr MetadataSize InlineDescMD = sizeof(InlineDescriptor);
 
   /// Pointer to the record, if block contains records.
-  Record *const ElemRecord = nullptr;
+  const Record *const ElemRecord = nullptr;
   /// Descriptor of the array element.
-  Descriptor *const ElemDesc = nullptr;
+  const Descriptor *const ElemDesc = nullptr;
   /// Flag indicating if the block is mutable.
   const bool IsConst = false;
   /// Flag indicating if a field is mutable.
@@ -111,6 +111,8 @@ public:
   const bool IsTemporary = false;
   /// Flag indicating if the block is an array.
   const bool IsArray = false;
+  /// Flag indicating if this is a dummy descriptor.
+  const bool IsDummy = false;
 
   /// Storage management methods.
   const BlockCtorFn CtorFn = nullptr;
@@ -129,17 +131,21 @@ public:
   Descriptor(const DeclTy &D, PrimType Type, bool IsTemporary, UnknownSize);
 
   /// Allocates a descriptor for an array of composites.
-  Descriptor(const DeclTy &D, Descriptor *Elem, MetadataSize MD,
+  Descriptor(const DeclTy &D, const Descriptor *Elem, MetadataSize MD,
              unsigned NumElems, bool IsConst, bool IsTemporary, bool IsMutable);
 
   /// Allocates a descriptor for an array of composites of unknown size.
-  Descriptor(const DeclTy &D, Descriptor *Elem, bool IsTemporary, UnknownSize);
+  Descriptor(const DeclTy &D, const Descriptor *Elem, bool IsTemporary,
+             UnknownSize);
 
   /// Allocates a descriptor for a record.
-  Descriptor(const DeclTy &D, Record *R, MetadataSize MD, bool IsConst,
+  Descriptor(const DeclTy &D, const Record *R, MetadataSize MD, bool IsConst,
              bool IsTemporary, bool IsMutable);
 
+  Descriptor(const DeclTy &D, MetadataSize MD);
+
   QualType getType() const;
+  QualType getElemQualType() const;
   SourceLocation getLocation() const;
 
   const Decl *asDecl() const { return Source.dyn_cast<const Decl *>(); }
@@ -177,6 +183,8 @@ public:
 
   /// Checks if the descriptor is of an array of primitives.
   bool isPrimitiveArray() const { return IsArray && !ElemDesc; }
+  /// Checks if the descriptor is of an array of composites.
+  bool isCompositeArray() const { return IsArray && ElemDesc; }
   /// Checks if the descriptor is of an array of zero size.
   bool isZeroSizeArray() const { return Size == 0; }
   /// Checks if the descriptor is of an array of unknown size.
@@ -187,12 +195,13 @@ public:
 
   /// Checks if the descriptor is of an array.
   bool isArray() const { return IsArray; }
+  /// Checks if the descriptor is of a record.
+  bool isRecord() const { return !IsArray && ElemRecord; }
+  /// Checks if this is a dummy descriptor.
+  bool isDummy() const { return IsDummy; }
 };
 
 /// Bitfield tracking the initialisation status of elements of primitive arrays.
-/// A pointer to this is embedded at the end of all primitive arrays.
-/// If the map was not yet created and nothing was initialized, the pointer to
-/// this structure is 0. If the object was fully initialized, the pointer is -1.
 struct InitMap final {
 private:
   /// Type packing bits.
@@ -200,26 +209,29 @@ private:
   /// Bits stored in a single field.
   static constexpr uint64_t PER_FIELD = sizeof(T) * CHAR_BIT;
 
-  /// Initializes the map with no fields set.
-  InitMap(unsigned N);
-
-  /// Returns a pointer to storage.
-  T *data();
-  const T *data() const;
-
 public:
-  /// Initializes an element. Returns true when object if fully initialized.
-  bool initialize(unsigned I);
-
-  /// Checks if an element was initialized.
-  bool isInitialized(unsigned I) const;
-
-  /// Allocates a map holding N elements.
-  static InitMap *allocate(unsigned N);
+  /// Initializes the map with no fields set.
+  explicit InitMap(unsigned N);
 
 private:
-  /// Number of fields initialized.
+  friend class Pointer;
+
+  /// Returns a pointer to storage.
+  T *data() { return Data.get(); }
+  const T *data() const { return Data.get(); }
+
+  /// Initializes an element. Returns true when object if fully initialized.
+  bool initializeElement(unsigned I);
+
+  /// Checks if an element was initialized.
+  bool isElementInitialized(unsigned I) const;
+
+  static constexpr size_t numFields(unsigned N) {
+    return (N + PER_FIELD - 1) / PER_FIELD;
+  }
+  /// Number of fields not initialized.
   unsigned UninitFields;
+  std::unique_ptr<T[]> Data;
 };
 
 } // namespace interp

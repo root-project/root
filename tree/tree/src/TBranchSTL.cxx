@@ -602,8 +602,9 @@ bool TBranchSTL::IsFolder() const
 
 void TBranchSTL::Print(const char *option) const
 {
-   if (strncmp(option,"debugAddress",strlen("debugAddress"))==0) {
-      if (strlen(GetName())>24) Printf("%-24s\n%-24s ", GetName(),"");
+   constexpr auto length = std::char_traits<char>::length;
+   if (strncmp(option,"debugAddress",length("debugAddress"))==0) {
+      if (length(GetName())>24) Printf("%-24s\n%-24s ", GetName(),"");
       else Printf("%-24s ", GetName());
 
       TBranchElement *parent = dynamic_cast<TBranchElement*>(GetMother()->GetSubBranch(this));
@@ -620,7 +621,7 @@ void TBranchSTL::Print(const char *option) const
          TBranch *br = (TBranch *)fBranches.UncheckedAt(i);
          br->Print("debugAddressSub");
       }
-   } else if (strncmp(option,"debugInfo",strlen("debugInfo"))==0)  {
+   } else if (strncmp(option,"debugInfo",length("debugInfo"))==0)  {
       Printf("Branch %s uses:\n",GetName());
       if (fID>=0) {
          GetInfo()->GetElement(fID)->ls();

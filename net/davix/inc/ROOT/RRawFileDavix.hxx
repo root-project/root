@@ -46,7 +46,6 @@ public:
    RRawFileDavix(std::string_view url, RRawFile::ROptions options);
    ~RRawFileDavix();
    std::unique_ptr<RRawFile> Clone() const final;
-   int GetFeatures() const final { return kFeatureHasSize; }
 };
 
 } // namespace Internal

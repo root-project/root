@@ -206,7 +206,7 @@ modelConfig.SetPriorPdf(wspace["prior"])
 modelConfig.SetParametersOfInterest(wspace.set("poi"))
 modelConfig.SetNuisanceParameters(wspace.set("nuis"))
 wspace.Import(modelConfig)
-wspace.writeToFile("FourBin.root")
+# wspace.writeToFile("FourBin.root")
 
 # -------------------------------------------------
 # If you want to see the covariance matrix uncomment
@@ -248,7 +248,7 @@ fit = wspace["model"].fitTo(data, Save=True)
 ph = ROOT.RooStats.ProposalHelper()
 ph.SetVariables(fit.floatParsFinal())
 ph.SetCovMatrix(fit.covarianceMatrix())
-ph.SetUpdateProposalParameters(ROOT.kTRUE)  # auto-create mean vars and add mappings
+ph.SetUpdateProposalParameters(True)  # auto-create mean vars and add mappings
 ph.SetCacheSize(100)
 pf = ph.GetProposalFunction()
 

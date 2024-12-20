@@ -218,7 +218,7 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace *w, ModelConfig *mc, RooAbsDat
       TGLabel *hlabel =
          new TGLabel(hframek, Form("%s = %.3f +%.3f", param->GetName(), param->getVal(), param->getError()));
       TGTripleHSlider *hsliderk = new TGTripleHSlider(hframek, 190, kDoubleScaleBoth, HSId1, kHorizontalFrame,
-                                                      GetDefaultFrameBackground(), kFALSE, kFALSE, kFALSE, kFALSE);
+                                                      GetDefaultFrameBackground(), False, False, False, False);
       hsliderk->Connect("PointerPositionChanged()", "ModelInspectorGUI", this, "DoSlider()");
       hsliderk->Connect("PositionChanged()", "ModelInspectorGUI", this, "DoSlider()");
       hsliderk->SetRange(param->getMin(), param->getMax());
@@ -508,7 +508,7 @@ void ModelInspector(const char *infile = "", const char *workspaceName = "combin
    // Try to open the file
    TFile *file = TFile::Open(filename);
 
-   // if input file was specified byt not found, quit
+   // if input file was specified but not found, quit
    if (!file) {
       cout << "StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;

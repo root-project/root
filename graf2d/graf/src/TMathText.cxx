@@ -36,13 +36,13 @@ do it. The syntax is the same as the TeX's one.
 The following example demonstrate how to use TMathText:
 
 Begin_Macro(source)
-../../../tutorials/graphics/tmathtext.C
+../../../tutorials/visualisation/graphics/tmathtext.C
 End_Macro
 
 The list of all available symbols is given in the following example:
 
 Begin_Macro
-../../../tutorials/graphics/tmathtext2.C
+../../../tutorials/visualisation/graphics/tmathtext2.C
 End_Macro
 
 #### Limitation:

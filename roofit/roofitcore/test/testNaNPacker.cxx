@@ -101,6 +101,47 @@ TEST(RooNaNPacker, CanPackStuffIntoNaNs)
       dumpFloats(rnp._payload);
 }
 
+#if !defined(_MSC_VER) || defined(_WIN64) || defined(NDEBUG) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+
+// Demonstrate value preserving behavior after arithmetic on packed NaNs.
+TEST(RooNaNPacker, PackedNaNPreservedAfterArithmetic)
+{
+   RooNaNPacker rnp, rnp2;
+   rnp.setPayload(1.337f);
+   EXPECT_TRUE(rnp.isNaNWithPayload());
+
+   // multiply the packed NaN by 1 and use the result as rnp2's NaN with payload
+   rnp2._payload = 1. * rnp.getNaNWithPayload();
+   EXPECT_TRUE(rnp2.isNaNWithPayload());
+   EXPECT_EQ(rnp.getPayload(), rnp2.getPayload());
+
+   // multiply the packed NaN by -1
+   rnp2._payload = -1. * rnp.getNaNWithPayload();
+   EXPECT_TRUE(rnp2.isNaNWithPayload());
+   // minus signs on the NaN don't affect the payload
+   EXPECT_EQ(rnp.getPayload(), rnp2.getPayload());
+
+   // multiply the packed NaN by 4242
+   rnp2._payload = 4242. * rnp.getNaNWithPayload();
+   EXPECT_TRUE(rnp2.isNaNWithPayload());
+   // random multiplicative values on the NaN don't affect it all either
+   EXPECT_EQ(rnp.getPayload(), rnp2.getPayload());
+
+   // add 4242 to the packed NaN
+   rnp2._payload = rnp.getNaNWithPayload() + 4242.;
+   EXPECT_TRUE(rnp2.isNaNWithPayload());
+   // addition also has no effect, the NaN retains its bits
+   EXPECT_EQ(rnp.getPayload(), rnp2.getPayload());
+
+   // divide packed NaN by 1337, subtract 20 and take the modulo of 38 before calculating the sine of all this
+   rnp2._payload = std::sin(std::fmod((rnp.getNaNWithPayload() / 1337. - 20.), 38.));
+   EXPECT_TRUE(rnp2.isNaNWithPayload());
+   // nothing can harm the PackedNaN
+   EXPECT_EQ(rnp.getPayload(), rnp2.getPayload());
+}
+
+#endif // !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+
 /// Fit a simple linear function, that starts in the negative.
 TEST(RooNaNPacker, FitSimpleLinear)
 {
@@ -254,7 +295,6 @@ TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff)
    for (auto tryRecover : std::initializer_list<double>{0., 10.}) {
       params.assign(evilValues);
 
-      RooMinimizer::cleanup();
       RooMinimizer minim(*nll);
       minim.setRecoverFromNaNStrength(tryRecover);
       minim.setPrintLevel(-1);

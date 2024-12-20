@@ -11,6 +11,9 @@
 
 
 class RooRealVar(object):
+
+    __cpp_name__ = 'RooRealVar'
+
     def bins(self, range_name=None):
         """Return the binning of this RooRealVar as a numpy array."""
 

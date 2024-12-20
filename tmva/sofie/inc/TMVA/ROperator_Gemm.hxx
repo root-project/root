@@ -70,27 +70,42 @@ namespace SOFIE{
       template <typename U>
       std::vector<std::vector<U>> DoShapeInference(const std::vector<std::vector<U>> & input){
          if (input.size() > 3) throw std::runtime_error("TMVA SOFIE Gemm Op Shape Inference only need 2 or 3 input tensor");
+         // accept tensor with input dimensions > 2
+         // example: A = (d1,d2,...,N1,N2)  B = (d1,d2,...,N2,N3)    --> Y = (d1,d2,..,N1,N3)
          for (auto& i: input){
-            if (i.size() > 2){
-               throw std::runtime_error("TMVA SOFIE Gemm Op Shape Inference only accept input tensor with 2 dimensions");
+            if (i.size() < 2){
+               throw std::runtime_error("TMVA SOFIE Gemm Op Shape Inference only accept input tensor with >=2 dimensions");
             }
          }
+
          std::vector<std::vector<U>> ret;
+         // when there are 3 inputs shape of Y is the one of C
          if (input.size() == 3){
             ret.push_back(input[2]);   //shape of C is shape of Y
             return ret;
          }
-         std::vector<U> s_a(input[0]);
-         std::vector<U> s_b(input[1]);
+         // ioffset cannot be less than 2
+         int ioffset = input[0].size()-2;  // in case of tensors with dim > 2
+
+         std::vector<U> s_a(input[0].begin() + ioffset, input[0].begin() + ioffset + 2);
+         std::vector<U> s_b(input[1].begin() + ioffset, input[1].begin() + ioffset + 2);
+         // reverse in case of transpose
          if (fAttrTransA){
             std::reverse(s_a.begin(), s_a.end());
          }
          if (fAttrTransB){
             std::reverse(s_b.begin(), s_b.end());
          }
-         std::vector<U> s_y(2);
-         s_y[0] = s_a[0];
-         s_y[1] = s_b[1];
+         std::vector<U> s_y;
+         s_y.reserve(input[0].size());
+         if (input[0].size() > 2 && input[1].size() == input[0].size()) {
+            // in case of dim > 2 first dimensions are equal to input ones
+            for (size_t i = 0; i < input[0].size()-2; i++)
+               s_y.push_back(input[0][i]);
+         }
+
+         s_y.push_back(s_a[0]);
+         s_y.push_back(s_b[1]);
          ret.push_back(s_y);
          return ret;
       }
@@ -118,13 +133,15 @@ namespace SOFIE{
          if (model.IsDynamicTensor(fNA) || model.IsInputTensor(fNA) ) {
             fShapeA = model.GetDynamicTensorShape(fNA);
             fIsDynamic = true;
-         }
-         else {
+         } else {
             auto shapeA_int = model.GetTensorShape(fNA);
-            // don't think this is needed?
-            if (shapeA_int.size() == 1)
-               shapeA_int = {1,shapeA_int[0]};
             fShapeA = ConvertShapeToDim(shapeA_int);
+         }
+         // case A is of dim1 we prepend a 1 but we need to remove later
+         bool appendOne = false;
+         if (fShapeA.size() == 1) {
+            fShapeA.insert(fShapeA.begin(), Dim(1));
+            appendOne = true;
          }
 
          if (model.IsDynamicTensor(fNB) || model.IsInputTensor(fNB)) {
@@ -135,12 +152,12 @@ namespace SOFIE{
             auto shapeB_int = model.GetTensorShape(fNB);
             fShapeB = ConvertShapeToDim(shapeB_int);
          }
-         if (fShapeA.size() != 2)
-            throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNA +
-                                       " is not of 2 dimensions: A " +  ConvertDynamicShapeToString(fShapeA));
-         if (fShapeB.size() != 2)
-               throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNB +
-                                       " is not of 2 dimensions: B " +  ConvertDynamicShapeToString(fShapeB));
+         // assume if not shape is 2 that extra values are 1.
+         // we need to implement MatMul case where we stack matrices (see numpy.matmul)
+
+         if (fShapeA.size() != fShapeB.size())
+              throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensors have not compatible shapes. A " +
+               ConvertDynamicShapeToString(fShapeA) + " B " + ConvertDynamicShapeToString(fShapeB) );
 
          fShapeY = DynamicShapeInference({fShapeA, fShapeB})[0];
          std::vector<size_t> shapeY;
@@ -166,9 +183,6 @@ namespace SOFIE{
             //   broadcast_needed = false;
             //}
 
-            // std::cout << "doing broadcast " << broadcast_needed << " use session " << model.UseSession() <<
-            //    " shape C " << ConvertShapeToString(fShapeC) << " shape Y " << ConvertShapeToString(fShapeY)
-            //                << std::endl;
 
             if (broadcast_needed) {
                if (!model.UseSession()) {
@@ -199,10 +213,26 @@ namespace SOFIE{
             }
          }
 
+         if (appendOne) {
+            // remove appended value of 1
+            if (fIsDynamic)
+               fShapeY.erase(fShapeY.begin());
+            else
+               shapeY.erase(shapeY.begin());
+         }
+
          if (!fIsDynamic)
             model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), shapeY);
          else
             model.AddDynamicTensor(fNY, model.GetTensorType(fNA), fShapeY);
+
+         if (model.Verbose()){
+            std::cout << "Gemm (or MatMul) " << " ---> " << fNY << " shape ";
+            if (fIsDynamic)
+               std::cout << ConvertDynamicShapeToString(fShapeY) << std::endl;
+            else
+               std::cout << ConvertShapeToString(shapeY) << std::endl;
+         }
 
          model.AddNeededStdLib("algorithm");
 
@@ -230,62 +260,100 @@ namespace SOFIE{
          return out.str();
       }
 
-      std::string Generate(std::string OpName){
-         OpName = "op_" + OpName;
+      std::string Generate(std::string opName){
+         opName = "op_" + opName;
 
          if (fShapeA.empty() || fShapeB.empty() || fShapeY.empty() || (fNC != "" && fShapeC.empty())) {
             throw std::runtime_error("TMVA SOFIE Gemm Op called to Generate without being initialized first");
          }
          std::stringstream out;
          out << "\n//--------- Gemm\n";
-         out << SP << "char " << OpName << "_transA = " << (fAttrTransA ? "\'t\'" : "\'n\'") << ";\n";
-         out << SP << "char " << OpName << "_transB = " << (fAttrTransB ? "\'t\'" : "\'n\'") << ";\n";
+         out << SP << "char " << opName << "_transA = " << (fAttrTransA ? "\'t\'" : "\'n\'") << ";\n";
+         out << SP << "char " << opName << "_transB = " << (fAttrTransB ? "\'t\'" : "\'n\'") << ";\n";
+         // need to consider case A and B have dim > 2 (for MatMul)
+         int64_t dimA = fShapeA.size();
+         int64_t dimB = fShapeB.size();
+         int64_t dimY = fShapeY.size();
+         if (dimA != dimB || dimA != dimY) {
+             throw std::runtime_error("TMVA SOFIE Gemm(MatMul) has invalid shape for inputs or output");
+         }
+         auto m = (fAttrTransA ? fShapeA[dimA-1].GetVal() : fShapeA[dimA-2].GetVal());
+         auto n = (fAttrTransB ? fShapeB[dimB-2].GetVal() : fShapeB[dimB-1].GetVal());
+         auto k = (fAttrTransA ? fShapeA[dimA-2].GetVal() : fShapeA[dimA-1].GetVal());
+         std::vector<Dim> sY = {fShapeY[dimY-2], fShapeY[dimY-1]};
+         std::vector<Dim> sA;
+         for (int64_t i = 0; i < dimY-2; i++) {
+            sA.push_back(fShapeY[i]);
+         }
+         auto lengthGemm = ConvertDynamicShapeToLength(sY); // size of the Gemm operation
+         auto lengthExtra = ConvertDynamicShapeToLength(sA); // extra length in case input tensors are of dim>2 (MatMul)
 
-         auto m = (fAttrTransA ? fShapeA[1].GetVal() : fShapeA[0].GetVal());
-         auto n = (fAttrTransB ? fShapeB[0].GetVal() : fShapeB[1].GetVal());
-         auto k = (fAttrTransA ? fShapeA[0].GetVal() : fShapeA[1].GetVal());
-         auto length = ConvertDynamicShapeToLength(fShapeY);
+         out << SP << "int " << opName << "_m = " << m << ";\n";
+         out << SP << "int " << opName << "_n = " << n << ";\n";
+         out << SP << "int " << opName << "_k = " << k << ";\n";
+         out << SP << "float " << opName << "_alpha = " << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrAlpha << ";\n";
+         out << SP << "float " << opName << "_beta = " << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrBeta << ";\n";
+         out << SP << "int " << opName << "_lda = " << (fAttrTransA ? m : k) << ";\n";
+         out << SP << "int " << opName << "_ldb = " << (fAttrTransB ? k : n) << ";\n";
 
-         out << SP << "int " << OpName << "_m = " << m << ";\n";
-         out << SP << "int " << OpName << "_n = " << n << ";\n";
-         out << SP << "int " << OpName << "_k = " << k << ";\n";
-         out << SP << "float " << OpName << "_alpha = " << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrAlpha << ";\n";
-         out << SP << "float " << OpName << "_beta = " << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrBeta << ";\n";
-         out << SP << "int " << OpName << "_lda = " << (fAttrTransA ? m : k) << ";\n";
-         out << SP << "int " << OpName << "_ldb = " << (fAttrTransB ? k : n) << ";\n";
          // case bias is present
          if (!fNC.empty()){
             if (fNC2 == fNC) {
                // add a check in case broadcasting was not needed or done outside of session
+               // C should have smaller dimension of Y
                if (!fIsDynamic) {
-                  if (std::stoi(ConvertDynamicShapeToLength(fShapeY)) != static_cast<int>(ConvertShapeToLength(fShapeC)))
-                     throw std::runtime_error("TMVA SOFIE Gemm Op " + OpName + " Bias tensor has not correct size "
-                            + ConvertShapeToString(fShapeC) + " output length " + length);
+                  if (std::stoi(lengthGemm) != static_cast<int>(ConvertShapeToLength(fShapeC)))
+                     throw std::runtime_error("TMVA SOFIE Gemm Op " + opName + " Bias tensor has not correct size "
+                            + ConvertShapeToString(fShapeC) + " output length " + lengthGemm);
                } else {
-                  // add a dynamic check
-                  out << SP << "assert(" << length << " != " <<  ConvertShapeToLength(fShapeC) << ");\n";
+                  // add a dynamic check (C should not be a dynamic tensor)
+                  out << SP << "assert(" << lengthGemm << " != " <<  ConvertShapeToLength(fShapeC) << ");\n";
                }
             }
-            out << SP << "std::copy(" << "tensor_" << fNC2 << ", " << "tensor_" << fNC2 << " + " << length << ", " << "tensor_" << fNY << ");\n";
          } else {
             //in this case fAttrBeta needs to be equal to zero otherwise second time we run we will use
             // the previous result
             if (fAttrBeta != 0) {
-               throw std::runtime_error("TMVA SOFIE Gemm Op " + OpName + " Bias tensor is not present but beta value in Gemm is not zero");
+               throw std::runtime_error("TMVA SOFIE Gemm Op " + opName + " Bias tensor is not present but beta value in Gemm is not zero");
             }
          }
-         if (fType == "float"){
-            out << SP << "BLAS::sgemm_(&" << OpName << "_transB, &" << OpName << "_transA, &" << OpName
-             << "_n, &" << OpName << "_m, &" << OpName << "_k, &" << OpName << "_alpha, " << "tensor_" << fNB
-             << ", &" << OpName << "_ldb, " << "tensor_" << fNA << ", &" << OpName << "_lda, &" << OpName << "_beta, " << "tensor_" << fNY << ", &"
-             << OpName << "_n);\n";
-          }
 
-          return out.str();
-
+         // include MatMul case where we stack the Gemm operations
+         // exclude case where we have only 1's in the additional dims
+         bool doStackMul = dimY > 2 && ( fIsDynamic  || std::stoi(lengthExtra) > 1);
+         if (doStackMul) {
+            out << SP << "size_t " << opName << "_yoffset = 0;\n"; // needed if we stack the gemm operations
+            out << SP << "for (int i = 0; i < " << lengthExtra << "; i++){\n";
+            out << SP;
+         }
+         // in the case of bias
+         if (!fNC.empty()){
+            out << SP << "std::copy(" << "tensor_" << fNC2 << ", " << "tensor_" << fNC2 << " + " << lengthGemm << ", "
+               << "tensor_" << fNY;
+            if (doStackMul) out << " + " << opName << "_yoffset";
+            out << ");\n";
          }
 
-         std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Gemv") }; }
+
+         if (fType == "float"){
+
+            out << SP << "BLAS::sgemm_(&" << opName << "_transB, &" << opName << "_transA, &" << opName
+             << "_n, &" << opName << "_m, &" << opName << "_k, &" << opName << "_alpha, " << "tensor_" << fNB
+             << ", &" << opName << "_ldb, " << "tensor_" << fNA << ", &" << opName << "_lda, &" << opName << "_beta, "
+             << "tensor_" << fNY;
+             if (doStackMul) out << " + " << opName << "_yoffset";
+             out << ", &" << opName << "_n);\n";
+         }
+
+         if (doStackMul) {
+            out << SP << SP <<  opName << "_yoffset += " << lengthGemm << ";\n";
+            out << "}\n"; // end of loop on the stacked multiplications
+         }
+
+         return out.str();
+      }
+
+      std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Gemv") }; }
 
    };
 

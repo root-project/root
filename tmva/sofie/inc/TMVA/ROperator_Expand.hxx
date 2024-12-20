@@ -75,6 +75,8 @@ public:
       }
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
       fType = ConvertTypeToString(model.GetTensorType(fNX));
+      if (model.Verbose())
+         std::cout << "Expand - output is with shape " << ConvertShapeToString(fShapeY) << std::endl;
    }
 
    std::string GenerateInitCode() override {

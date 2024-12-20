@@ -59,7 +59,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     RooStats/ProfileInspector.h
     RooStats/ProfileLikelihoodCalculator.h
     RooStats/ProfileLikelihoodTestStat.h
-    RooStats/ProofConfig.h
     RooStats/ProposalFunction.h
     RooStats/ProposalHelper.h
     RooStats/RatioOfProfiledLikelihoodsTestStat.h
@@ -74,7 +73,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     RooStats/TestStatSampler.h
     RooStats/ToyMCImportanceSampler.h
     RooStats/ToyMCSampler.h
-    RooStats/ToyMCStudy.h
     RooStats/UniformProposal.h
     RooStats/UpperLimitMCSModule.h
   SOURCES
@@ -122,7 +120,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     src/SPlot.cxx
     src/ToyMCImportanceSampler.cxx
     src/ToyMCSampler.cxx
-    src/ToyMCStudy.cxx
     src/UniformProposal.cxx
     src/UpperLimitMCSModule.cxx
   DICTIONARY_OPTIONS

@@ -636,7 +636,7 @@ void TEveBrowser::EveMenu(Int_t id)
          if (gSystem->Load("libRHtml") >= 0)
          {
             StartEmbedding(1);
-            gROOT->ProcessLine(Form("new TGHtmlBrowser(\"http://root.cern.ch/root/html/ClassIndex.html\", \
+            gROOT->ProcessLine(Form("new TGHtmlBrowser(\"https://root.cern/doc/master/classes.html\", \
                               (const TGWindow *)0x%zx)", (size_t)gClient->GetRoot()));
             StopEmbedding();
             SetTabTitle("HTML", 1);

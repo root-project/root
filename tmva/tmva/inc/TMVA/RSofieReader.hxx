@@ -113,7 +113,12 @@ public:
          if (gSystem->Load("libPyMVA") < 0) {
             throw std::runtime_error("RSofieReader: cannot use SOFIE with Keras since libPyMVA is missing");
          }
-         parserCode += "{\nTMVA::Experimental::SOFIE::RModel model = TMVA::Experimental::SOFIE::PyKeras::Parse(\"" + path + "\"); \n";
+         // assume batch size is first entry in first input !
+         std::string batch_size = "-1";
+         if (!inputShapes.empty() && ! inputShapes[0].empty())
+            batch_size = std::to_string(inputShapes[0][0]);
+         parserCode += "{\nTMVA::Experimental::SOFIE::RModel model = TMVA::Experimental::SOFIE::PyKeras::Parse(\"" + path +
+                       "\"," + batch_size + "); \n";
       }
       else if (type == kPt) {
          // use PyTorch direct parser
@@ -148,6 +153,17 @@ public:
          parserCode += "TMVA::Experimental::SOFIE::RModel & model = *modelPtr;\n";
       }
 
+       // add custom operators if needed
+      if (fCustomOperators.size() > 0) {
+
+         for (auto & op : fCustomOperators) {
+            parserCode += "{ auto p = new TMVA::Experimental::SOFIE::ROperator_Custom<float>(\""
+                      + op.fOpName + "\"," + op.fInputNames + "," + op.fOutputNames + "," + op.fOutputShapes + ",\"" + op.fFileName + "\");\n";
+            parserCode += "std::unique_ptr<TMVA::Experimental::SOFIE::ROperator> op(p);\n";
+            parserCode += "model.AddOperator(std::move(op));\n}\n";
+         }
+      }
+
       int batchSize = 1;
       if (inputShapes.size() > 0 && inputShapes[0].size() > 0) {
          batchSize = inputShapes[0][0];
@@ -156,9 +172,16 @@ public:
       if (verbose) std::cout << "generating the code with batch size = " << batchSize << " ...\n";
 
       parserCode += "model.Generate(TMVA::Experimental::SOFIE::Options::kDefault,"
-                   + ROOT::Math::Util::ToString(batchSize) + "); \n";
+                   + ROOT::Math::Util::ToString(batchSize) + ", 0, " + std::to_string(verbose) + "); \n";
+
+      if (verbose) {
+         parserCode += "model.PrintRequiredInputTensors();\n";
+         parserCode += "model.PrintIntermediateTensors();\n";
+         parserCode += "model.PrintOutputTensors();\n";
+      }
 
       // add custom operators if needed
+#if 0
       if (fCustomOperators.size() > 0) {
          if (verbose) {
             parserCode += "model.PrintRequiredInputTensors();\n";
@@ -174,6 +197,7 @@ public:
          parserCode += "model.Generate(TMVA::Experimental::SOFIE::Options::kDefault,"
                    + ROOT::Math::Util::ToString(batchSize) + "); \n";
       }
+#endif
       if (verbose > 1)
          parserCode += "model.PrintGenerated(); \n";
       parserCode += "model.OutputGenerated();\n";
@@ -257,7 +281,7 @@ public:
       fInitialized = true;
    }
 
-   // Add custum operator
+   // Add custom operator
     void AddCustomOperator(const std::string &opName, const std::string &inputNames, const std::string & outputNames,
       const std::string & outputShapes, const std::string & fileName) {
          if (fInitialized)  std::cout << "WARNING: Model is already loaded and initialised. It must be done after adding the custom operators" << std::endl;

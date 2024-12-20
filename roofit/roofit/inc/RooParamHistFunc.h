@@ -24,9 +24,8 @@
 class RooParamHistFunc : public RooAbsReal {
 public:
   RooParamHistFunc() {} ;
-  RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, bool paramRelative=true);
-  RooParamHistFunc(const char *name, const char *title, const RooAbsArg& x, RooDataHist& dh, bool paramRelative=true);
-  RooParamHistFunc(const char *name, const char *title, RooDataHist& dh, const RooParamHistFunc& paramSource, bool paramRelative=true) ;
+  RooParamHistFunc(const char *name, const char *title, RooDataHist &dh, const RooAbsArg &x,
+                   const RooParamHistFunc *paramSource = nullptr, bool paramRelative = true);
   RooParamHistFunc(const RooParamHistFunc& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooParamHistFunc(*this,newname); }
 
@@ -44,9 +43,10 @@ public:
   double getNominal(Int_t ibin) const ;
   double getNominalError(Int_t ibin) const ;
 
+  const RooArgList& xList() const { return _x ; }
   const RooArgList& paramList() const { return _p ; }
-
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+  const RooDataHist& dataHist() const { return _dh ; }
+  bool relParam() const { return _relParam; }
 
  protected:
 

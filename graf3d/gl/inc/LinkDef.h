@@ -10,7 +10,7 @@
 
 #include "RConfigure.h"
 
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link off all globals;
 #pragma link off all classes;
@@ -148,6 +148,8 @@
 
 #pragma link C++ class TGLFont;
 #pragma link C++ class TGLFontManager;
+
+#pragma link C++ class TGLSdfFontMaker;
 
 #pragma link C++ namespace Rgl;
 

@@ -83,8 +83,6 @@ struct HypoTestInvOptions {
                                 // to their nominal values)
    double nToysRatio = 2;       // ratio Ntoys S+b/ntoysB
    double maxPOI = -1;          // max value used of POI (in case of auto scan)
-   bool useProof = false;       // use Proof Lite when using toys (for freq or hybrid)
-   int nworkers = 0;            // number of worker for ProofLite (default use all available cores)
    bool enableDetailedOutput =
       false; // enable detailed output with all fit information for each toys (output will be written in result file)
    bool rebuild = false;       // re-do extra toys for computing expected limits and rebuild test stat
@@ -97,7 +95,6 @@ struct HypoTestInvOptions {
                                // Otherwise the rebuild will be performed using
    int initialFit = -1;        // do a first  fit to the model (-1 : default, 0 skip fit, 1 do always fit)
    int randomSeed = -1;        // random seed (if = -1: use default value, if = 0 always random )
-                               // NOTE: Proof uses automatically a random seed
 
    int nAsimovBins = 0; // number of bins in observables used for Asimov data sets (0 is the default and it is given by
                         // workspace, typically is 100)
@@ -144,11 +141,9 @@ private:
    bool mOptimize;
    bool mUseVectorStore;
    bool mGenerateBinned;
-   bool mUseProof;
    bool mRebuild;
    bool mReuseAltToys;
    bool mEnableDetOutput;
-   int mNWorkers;
    int mNToyToRebuild;
    int mRebuildParamValues;
    int mPrintLevel;
@@ -167,7 +162,7 @@ private:
 
 RooStats::HypoTestInvTool::HypoTestInvTool()
    : mPlotHypoTestResult(true), mWriteResult(false), mOptimize(true), mUseVectorStore(true), mGenerateBinned(false),
-     mUseProof(false), mEnableDetOutput(false), mRebuild(false), mReuseAltToys(false), mNWorkers(4),
+     mEnableDetOutput(false), mRebuild(false), mReuseAltToys(false),
      mNToyToRebuild(100), mRebuildParamValues(0), mPrintLevel(0), mInitialFit(-1), mRandomSeed(-1), mNToysRatio(2),
      mMaxPoi(-1), mAsimovBins(0), mMassValue(""), mMinimizerType(""), mResultFileName()
 {
@@ -191,8 +186,6 @@ void RooStats::HypoTestInvTool::SetParameter(const char *name, bool value)
       mUseVectorStore = value;
    if (s_name.find("GenerateBinned") != std::string::npos)
       mGenerateBinned = value;
-   if (s_name.find("UseProof") != std::string::npos)
-      mUseProof = value;
    if (s_name.find("EnableDetailedOutput") != std::string::npos)
       mEnableDetOutput = value;
    if (s_name.find("Rebuild") != std::string::npos)
@@ -211,8 +204,6 @@ void RooStats::HypoTestInvTool::SetParameter(const char *name, int value)
 
    std::string s_name(name);
 
-   if (s_name.find("NWorkers") != std::string::npos)
-      mNWorkers = value;
    if (s_name.find("NToyToRebuild") != std::string::npos)
       mNToyToRebuild = value;
    if (s_name.find("RebuildParamValues") != std::string::npos)
@@ -305,7 +296,6 @@ void StandardHypoTestInvDemo(const char *infile = nullptr, const char *wsName = 
      extra options are available as global parameters of the macro. They major ones are:
 
      plotHypoTestResult   plot result of tests at each point (TS distributions) (default is true)
-     useProof             use Proof   (default is true)
      writeResult          write result of scan (default is true)
      rebuild              rebuild scan for expected limits (require extra toys) (default is false)
      generateBinned       generate binned data sets for toys (default is false) - be careful not to activate with
@@ -336,7 +326,7 @@ void StandardHypoTestInvDemo(const char *infile = nullptr, const char *wsName = 
    // Try to open the file
    TFile *file = TFile::Open(filename);
 
-   // if input file was specified byt not found, quit
+   // if input file was specified but not found, quit
    if (!file) {
       cout << "StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
@@ -352,9 +342,7 @@ void StandardHypoTestInvDemo(const char *infile = nullptr, const char *wsName = 
    calc.SetParameter("GenerateBinned", optHTInv.generateBinned);
    calc.SetParameter("NToysRatio", optHTInv.nToysRatio);
    calc.SetParameter("MaxPOI", optHTInv.maxPOI);
-   calc.SetParameter("UseProof", optHTInv.useProof);
    calc.SetParameter("EnableDetailedOutput", optHTInv.enableDetailedOutput);
-   calc.SetParameter("NWorkers", optHTInv.nworkers);
    calc.SetParameter("Rebuild", optHTInv.rebuild);
    calc.SetParameter("ReuseAltToys", optHTInv.reuseAltToys);
    calc.SetParameter("NToyToRebuild", optHTInv.nToyToRebuild);
@@ -942,12 +930,6 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
    calc.UseCLs(useCLs);
    calc.SetVerbose(true);
 
-   // can speed up using proof-lite
-   if (mUseProof) {
-      ProofConfig pc(*w, mNWorkers, "", kFALSE);
-      toymcs->SetProofConfig(&pc); // enable proof
-   }
-
    if (npoints > 0) {
       if (poimin > poimax) {
          // if no min/max given scan between MLE and +4 sigma
@@ -1008,7 +990,6 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
       std::cout << "StandardHypoTestInvDemo: Initial parameters used for rebuilding: ";
       RooStats::PrintListContent(*allParams, std::cout);
 
-      calc.SetCloseProof(true);
       tw.Start();
       SamplingDistribution *limDist = calc.GetUpperLimitDistribution(true, mNToyToRebuild);
       std::cout << "Time to rebuild distributions " << std::endl;

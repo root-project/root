@@ -42,9 +42,20 @@
 //- data ---------------------------------------------------------------------
 ClassImp(TPyReturn);
 
+namespace {
+   class PyGILRAII {
+      PyGILState_STATE m_GILState;
+   public:
+      PyGILRAII() : m_GILState(PyGILState_Ensure()) { }
+      ~PyGILRAII() { PyGILState_Release(m_GILState); }
+   };
+}
+
 //- constructors/destructor --------------------------------------------------
 TPyReturn::TPyReturn()
 {
+   PyGILRAII gilRaii;
+
    // Construct a TPyReturn object from Py_None.
    Py_INCREF(Py_None);
    fPyObject = Py_None;
@@ -56,6 +67,8 @@ TPyReturn::TPyReturn()
 
 TPyReturn::TPyReturn(PyObject *pyobject)
 {
+   PyGILRAII gilRaii;
+
    if (!pyobject) {
       Py_INCREF(Py_None);
       fPyObject = Py_None;
@@ -68,6 +81,8 @@ TPyReturn::TPyReturn(PyObject *pyobject)
 
 TPyReturn::TPyReturn(const TPyReturn &other)
 {
+   PyGILRAII gilRaii;
+
    Py_INCREF(other.fPyObject);
    fPyObject = other.fPyObject;
 }
@@ -77,6 +92,8 @@ TPyReturn::TPyReturn(const TPyReturn &other)
 
 TPyReturn &TPyReturn::operator=(const TPyReturn &other)
 {
+   PyGILRAII gilRaii;
+
    if (this != &other) {
       Py_INCREF(other.fPyObject);
       Py_DECREF(fPyObject);
@@ -91,12 +108,16 @@ TPyReturn &TPyReturn::operator=(const TPyReturn &other)
 
 TPyReturn::~TPyReturn()
 {
+   PyGILRAII gilRaii;
+
    Py_DECREF(fPyObject);
 }
 
 //- public members -----------------------------------------------------------
 TPyReturn::operator char *() const
 {
+   PyGILRAII gilRaii;
+
    // Cast python return value to C-style string (may fail).
    return (char *)((const char *)*this);
 }
@@ -106,6 +127,8 @@ TPyReturn::operator char *() const
 
 TPyReturn::operator const char *() const
 {
+   PyGILRAII gilRaii;
+
    if (fPyObject == Py_None) // for void returns
       return 0;
 
@@ -123,6 +146,8 @@ TPyReturn::operator const char *() const
 
 TPyReturn::operator Char_t() const
 {
+   PyGILRAII gilRaii;
+
    std::string s = operator const char *();
    if (s.size())
       return s[0];
@@ -135,6 +160,8 @@ TPyReturn::operator Char_t() const
 
 TPyReturn::operator Long_t() const
 {
+   PyGILRAII gilRaii;
+
    Long_t l = PyLong_AsLong(fPyObject);
 
    if (PyErr_Occurred())
@@ -148,6 +175,8 @@ TPyReturn::operator Long_t() const
 
 TPyReturn::operator ULong_t() const
 {
+   PyGILRAII gilRaii;
+
    ULong_t ul = PyLong_AsUnsignedLong(fPyObject);
 
    if (PyErr_Occurred())
@@ -161,6 +190,8 @@ TPyReturn::operator ULong_t() const
 
 TPyReturn::operator Double_t() const
 {
+   PyGILRAII gilRaii;
+
    Double_t d = PyFloat_AsDouble(fPyObject);
 
    if (PyErr_Occurred())
@@ -175,6 +206,8 @@ TPyReturn::operator Double_t() const
 
 TPyReturn::operator void *() const
 {
+   PyGILRAII gilRaii;
+
    if (fPyObject == Py_None)
       return 0;
 
@@ -186,6 +219,8 @@ TPyReturn::operator void *() const
 
 TPyReturn::operator PyObject *() const
 {
+   PyGILRAII gilRaii;
+
    if (fPyObject == Py_None)
       return 0;
 

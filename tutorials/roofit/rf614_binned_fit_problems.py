@@ -110,7 +110,7 @@ disableBinIntegrator(expo)
 
 # Let's not look at another example: a power law \f[x^a\f].
 a = ROOT.RooRealVar("a", "a", -0.3, -5.0, 5.0)
-powerlaw = ROOT.RooPower("powerlaw", "powerlaw", x, ROOT.RooFit.RooConst(1.0), a)
+powerlaw = ROOT.RooPowerSum("powerlaw", "powerlaw", x, ROOT.RooFit.RooConst(1.0), a)
 powerlaw_data = generateBinnedAsimov(powerlaw, x, 10000)
 
 # Again, if you do a vanilla fit, you'll get a bias

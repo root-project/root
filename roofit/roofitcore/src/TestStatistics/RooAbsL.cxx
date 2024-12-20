@@ -13,6 +13,7 @@
 #include <RooFit/TestStatistics/RooAbsL.h>
 #include "ConstantTermsOptimizer.h"
 #include "RooAbsData.h"
+#include "RooAbsDataStore.h" // complete class for access in constOptimizeTestStatistic
 
 // for dynamic casts in init_clones:
 #include "RooAbsRealLValue.h"
@@ -241,10 +242,45 @@ std::unique_ptr<RooArgSet> RooAbsL::getParameters()
 
 void RooAbsL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)
 {
-   // to be further implemented, this is just a first test implementation
-   if (opcode == RooAbsArg::Activate) {
+   if (data_.get()->hasFilledCache() && opcode == RooAbsArg::Activate) {
+      opcode = RooAbsArg::ValueChange;
+   }
+
+   switch (opcode) {
+   case RooAbsArg::Activate:
+      oocxcoutI((TObject *)nullptr, Optimization)
+         << "RooAbsL::constOptimizeTestStatistic(" << GetName()
+         << ") optimizing evaluation of test statistic by finding all nodes in p.d.f that depend exclusively"
+         << " on observables and constant parameters and precalculating their values" << std::endl;
       ConstantTermsOptimizer::enableConstantTermsOptimization(pdf_.get(), normSet_.get(), data_.get(),
                                                               doAlsoTrackingOpt);
+      break;
+
+   case RooAbsArg::DeActivate:
+      oocxcoutI((TObject *)nullptr, Optimization)
+         << "RooAbsL::constOptimizeTestStatistic(" << GetName()
+         << ") deactivating optimization of constant terms in test statistic" << std::endl;
+      ConstantTermsOptimizer::disableConstantTermsOptimization(pdf_.get(), normSet_.get(), data_.get());
+      break;
+
+   case RooAbsArg::ConfigChange:
+      oocxcoutI((TObject *)nullptr, Optimization)
+         << "RooAbsL::constOptimizeTestStatistic(" << GetName()
+         << ") one ore more parameter were changed from constant to floating or vice versa, "
+         << "re-evaluating constant term optimization" << std::endl;
+      ConstantTermsOptimizer::disableConstantTermsOptimization(pdf_.get(), normSet_.get(), data_.get());
+      ConstantTermsOptimizer::enableConstantTermsOptimization(pdf_.get(), normSet_.get(), data_.get(),
+                                                              doAlsoTrackingOpt);
+      break;
+
+   case RooAbsArg::ValueChange:
+      oocxcoutI((TObject *)nullptr, Optimization)
+         << "RooAbsL::constOptimizeTestStatistic(" << GetName()
+         << ") the value of one ore more constant parameter were changed re-evaluating constant term optimization"
+         << std::endl;
+      // Request a forcible cache update of all cached nodes
+      data_.get()->store()->forceCacheUpdate();
+      break;
    }
 }
 

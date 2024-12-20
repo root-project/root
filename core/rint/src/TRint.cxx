@@ -560,13 +560,6 @@ void TRint::PrintLogo(Bool_t lite)
       }
       Printf("   %s\n", TString('-', lenLongest).Data());
    }
-
-#ifdef R__UNIX
-   // Popdown X logo, only if started with -splash option
-   for (int i = 0; i < Argc(); i++)
-      if (!strcmp(Argv(i), "-splash"))
-         kill(getppid(), SIGUSR1);
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

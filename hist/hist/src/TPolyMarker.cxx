@@ -30,7 +30,7 @@ See TMarker for the list of possible marker types.
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TPolyMarker::TPolyMarker(): TObject()
+TPolyMarker::TPolyMarker()
 {
    fN = 0;
    fX = fY = nullptr;
@@ -41,7 +41,6 @@ TPolyMarker::TPolyMarker(): TObject()
 /// Constructor.
 
 TPolyMarker::TPolyMarker(Int_t n, Option_t *option)
-      :TObject(), TAttMarker()
 {
    fOption = option;
    SetBit(kCanDelete);
@@ -61,7 +60,6 @@ TPolyMarker::TPolyMarker(Int_t n, Option_t *option)
 /// Constructor.
 
 TPolyMarker::TPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option)
-      :TObject(), TAttMarker()
 {
    fOption = option;
    SetBit(kCanDelete);
@@ -84,7 +82,6 @@ TPolyMarker::TPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option)
 /// Constructor.
 
 TPolyMarker::TPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option)
-      :TObject(), TAttMarker()
 {
    fOption = option;
    SetBit(kCanDelete);

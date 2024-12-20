@@ -17,7 +17,6 @@
 #include <RooBinWidthFunction.h>
 #include <RooCategory.h>
 #include <RooDataHist.h>
-#include <RooExpPoly.h>
 #include <RooExponential.h>
 #include <RooFit/Detail/JSONInterface.h>
 #include <RooFitHS3/JSONIO.h>
@@ -25,6 +24,7 @@
 #include <RooGenericPdf.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
+#include <RooLegacyExpPoly.h>
 #include <RooLognormal.h>
 #include <RooMultiVarGaussian.h>
 #include <RooPoisson.h>
@@ -34,9 +34,12 @@
 #include <RooRealVar.h>
 #include <RooTFnBinding.h>
 #include <RooWorkspace.h>
+#include <RooRealIntegral.h>
 
 #include <TF1.h>
 #include <TH1.h>
+
+#include "JSONIOUtils.h"
 
 #include "static_execute.h"
 
@@ -231,18 +234,49 @@ public:
    }
 };
 
+class RooRealIntegralFactory : public RooFit::JSONIO::Importer {
+public:
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      RooAbsReal *func = tool->requestArg<RooAbsReal>(p, "integrand");
+      auto vars = tool->requestArgList<RooAbsReal>(p, "variables");
+      RooArgSet normSet;
+      RooArgSet const *normSetPtr = nullptr;
+      if (p.has_child("normalization")) {
+         normSet.add(tool->requestArgSet<RooAbsReal>(p, "normalization"));
+         normSetPtr = &normSet;
+      }
+      std::string domain;
+      bool hasDomain = p.has_child("domain");
+      if (hasDomain) {
+         domain = p["domain"].val();
+      }
+      // todo: at some point, take care of integrator configurations
+      tool->wsEmplace<RooRealIntegral>(name, *func, vars, normSetPtr, static_cast<RooNumIntConfig *>(nullptr),
+                                       hasDomain ? domain.c_str() : nullptr);
+      return true;
+   }
+};
+
 class RooLogNormalFactory : public RooFit::JSONIO::Importer {
 public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
-      RooAbsReal *mu = tool->requestArg<RooAbsReal>(p, "mu");
-      RooAbsReal *sigma = tool->requestArg<RooAbsReal>(p, "sigma");
 
-      // TODO: check if the pdf was originally exported by ROOT, in which case
-      // it can be imported back without using the standard parametrization.
-      tool->wsEmplace<RooLognormal>(name, *x, *mu, *sigma, true);
+      // Same mechanism to undo the parameter transformation as in the
+      // RooExponentialFactory (see comments in that class for more info).
+      const std::string muName = p["mu"].val();
+      const std::string sigmaName = p["sigma"].val();
+      const bool isTransformed = endsWith(muName, "_lognormal_log");
+      const std::string suffixToRemove = isTransformed ? "_lognormal_log" : "";
+      RooAbsReal *mu = tool->request<RooAbsReal>(removeSuffix(muName, suffixToRemove), name);
+      RooAbsReal *sigma = tool->request<RooAbsReal>(removeSuffix(sigmaName, suffixToRemove), name);
+
+      tool->wsEmplace<RooLognormal>(name, *x, *mu, *sigma, !isTransformed);
+
       return true;
    }
 };
@@ -253,16 +287,50 @@ public:
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
-      RooAbsReal *c = tool->requestArg<RooAbsReal>(p, "c");
 
-      // TODO: check if the pdf was originally exported by ROOT, in which case
-      // it can be imported back without using the standard parametrization.
-      tool->wsEmplace<RooExponential>(name, *x, *c, true);
+      // If the parameter name ends with the "_exponential_inverted" suffix,
+      // this means that it was exported from a RooFit object where the
+      // parameter first needed to be transformed on export to match the HS3
+      // specification. But when re-importing such a parameter, we can simply
+      // skip the transformation and use the original RooFit parameter without
+      // the suffix.
+      //
+      // A concrete example: take the following RooFit pdf in the factory language:
+      //
+      //    "Exponential::exponential_1(x[0, 10], c[-0.1])"
+      //
+      //  It defines en exponential exp(c * x). However, in HS3 the exponential
+      //  is defined as exp(-c * x), to RooFit would export these dictionaries
+      //  to the JSON:
+      //
+      //  {
+      //      "name": "exponential_1",             // HS3 exponential_dist with transformed parameter
+      //      "type": "exponential_dist",
+      //      "x": "x",
+      //      "c": "c_exponential_inverted"
+      //  },
+      //  {
+      //      "name": "c_exponential_inverted",    // transformation function created on-the-fly on export
+      //      "type": "generic_function",
+      //      "expression": "-c"
+      //  }
+      //
+      //  On import, we can directly take the non-transformed parameter, which is
+      //  we check for the suffix and optionally remove it from the requested
+      //  name next:
+
+      const std::string constParamName = p["c"].val();
+      const bool isInverted = endsWith(constParamName, "_exponential_inverted");
+      const std::string suffixToRemove = isInverted ? "_exponential_inverted" : "";
+      RooAbsReal *c = tool->request<RooAbsReal>(removeSuffix(constParamName, suffixToRemove), name);
+
+      tool->wsEmplace<RooExponential>(name, *x, *c, !isInverted);
+
       return true;
    }
 };
 
-class RooExpPolyFactory : public RooFit::JSONIO::Importer {
+class RooLegacyExpPolyFactory : public RooFit::JSONIO::Importer {
 public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
@@ -288,7 +356,7 @@ public:
          ++order;
       }
 
-      tool->wsEmplace<RooExpPoly>(name, *x, coefs, lowestOrder);
+      tool->wsEmplace<RooLegacyExpPoly>(name, *x, coefs, lowestOrder);
       return true;
    }
 };
@@ -477,14 +545,26 @@ public:
       const RooArg_t *pdf = static_cast<const RooArg_t *>(func);
       elem["type"] << key();
       TString expression(pdf->expression());
+      std::vector<std::pair<RooAbsArg *, std::size_t>> paramsWithIndex;
+      paramsWithIndex.reserve(pdf->nParameters());
       for (size_t i = 0; i < pdf->nParameters(); ++i) {
-         RooAbsArg *par = pdf->getParameter(i);
-         std::stringstream ss_1;
-         ss_1 << "x[" << i << "]";
-         std::stringstream ss_2;
-         ss_2 << "@" << i << "";
-         expression.ReplaceAll(ss_1.str().c_str(), par->GetName());
-         expression.ReplaceAll(ss_2.str().c_str(), par->GetName());
+         paramsWithIndex.emplace_back(pdf->getParameter(i), i);
+      }
+      std::sort(paramsWithIndex.begin(), paramsWithIndex.end());
+      // If the tokens follow the "x[#]" convention, the square braces enclosing each number
+      // ensures that there is a unique mapping between the token and parameter name
+      for (auto [par, idx] : paramsWithIndex) {
+         expression.ReplaceAll(("x[" + std::to_string(idx) + "]").c_str(), par->GetName());
+      }
+      // If the tokens follow the "@#" convention, the numbers are not enclosed by braces.
+      // So there may be tokens with numbers whose lower place value forms a subset string of ones with a higher place value,
+      // e.g. "@1" is a subset of "@10".
+      // So the names of these parameters must be applied descending from the highest place value
+      // in order to ensure each parameter name is uniquely applied to its token.
+      for (auto it = paramsWithIndex.rbegin(); it != paramsWithIndex.rend(); ++it) {
+         RooAbsArg* par = it->first;
+         std::size_t idx = it->second;
+         expression.ReplaceAll(("@" + std::to_string(idx)).c_str(), par->GetName());
       }
       elem["expression"] << expression.Data();
       return true;
@@ -513,12 +593,12 @@ public:
    }
 };
 
-class RooExpPolyStreamer : public RooFit::JSONIO::Exporter {
+class RooLegacyExpPolyStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override;
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
-      auto *pdf = static_cast<const RooExpPoly *>(func);
+      auto *pdf = static_cast<const RooLegacyExpPoly *>(func);
       elem["type"] << key();
       elem["x"] << pdf->x().GetName();
       auto &coefs = elem["coefficients"].set_seq();
@@ -562,12 +642,12 @@ public:
       auto &m0 = pdf->getMedian();
       auto &k = pdf->getShapeK();
 
-      if(pdf->useStandardParametrization()) {
+      if (pdf->useStandardParametrization()) {
          elem["mu"] << m0.GetName();
          elem["sigma"] << k.GetName();
       } else {
-         elem["mu"] << tool->exportTransformed(&m0, "lognormal", "log", "log(%s)");
-         elem["sigma"] << tool->exportTransformed(&k, "lognormal", "log", "log(%s)");
+         elem["mu"] << tool->exportTransformed(&m0, "_lognormal_log", "log(%s)");
+         elem["sigma"] << tool->exportTransformed(&k, "_lognormal_log", "log(%s)");
       }
 
       return true;
@@ -586,7 +666,7 @@ public:
       if (pdf->negateCoefficient()) {
          elem["c"] << c.GetName();
       } else {
-         elem["c"] << tool->exportTransformed(&c, "exponential", "inverted", "-%s");
+         elem["c"] << tool->exportTransformed(&c, "_exponential_inverted", "-%s");
       }
 
       return true;
@@ -628,6 +708,25 @@ public:
    }
 };
 
+class RooRealIntegralStreamer : public RooFit::JSONIO::Exporter {
+public:
+   std::string const &key() const override;
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   {
+      auto *integral = static_cast<const RooRealIntegral *>(func);
+      elem["type"] << key();
+      elem["integrand"] << integral->integrand().GetName();
+      if (integral->intRange()) {
+         elem["domain"] << integral->intRange();
+      }
+      RooJSONFactoryWSTool::fillSeq(elem["variables"], integral->intVars());
+      if (RooArgSet const *funcNormSet = integral->funcNormSet()) {
+         RooJSONFactoryWSTool::fillSeq(elem["normalization"], *funcNormSet);
+      }
+      return true;
+   }
+};
+
 #define DEFINE_EXPORTER_KEY(class_name, name)    \
    std::string const &class_name::key() const    \
    {                                             \
@@ -638,7 +737,7 @@ public:
 DEFINE_EXPORTER_KEY(RooAddPdfStreamer, "mixture_dist");
 DEFINE_EXPORTER_KEY(RooBinSamplingPdfStreamer, "binsampling");
 DEFINE_EXPORTER_KEY(RooBinWidthFunctionStreamer, "binwidth");
-DEFINE_EXPORTER_KEY(RooExpPolyStreamer, "exp_poly_dist");
+DEFINE_EXPORTER_KEY(RooLegacyExpPolyStreamer, "legacy_exp_poly_dist");
 DEFINE_EXPORTER_KEY(RooExponentialStreamer, "exponential_dist");
 template <>
 DEFINE_EXPORTER_KEY(RooFormulaArgStreamer<RooFormulaVar>, "generic_function");
@@ -653,6 +752,7 @@ DEFINE_EXPORTER_KEY(RooPolynomialStreamer, "polynomial_dist");
 DEFINE_EXPORTER_KEY(RooRealSumFuncStreamer, "weighted_sum");
 DEFINE_EXPORTER_KEY(RooRealSumPdfStreamer, "weighted_sum_dist");
 DEFINE_EXPORTER_KEY(RooTFnBindingStreamer, "generic_function");
+DEFINE_EXPORTER_KEY(RooRealIntegralStreamer, "integral");
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // instantiate all importers and exporters
@@ -664,7 +764,7 @@ STATIC_EXECUTE([]() {
    registerImporter<RooAddPdfFactory>("mixture_dist", false);
    registerImporter<RooBinSamplingPdfFactory>("binsampling_dist", false);
    registerImporter<RooBinWidthFunctionFactory>("binwidth", false);
-   registerImporter<RooExpPolyFactory>("exp_poly_dist", false);
+   registerImporter<RooLegacyExpPolyFactory>("legacy_exp_poly_dist", false);
    registerImporter<RooExponentialFactory>("exponential_dist", false);
    registerImporter<RooFormulaArgFactory<RooFormulaVar>>("generic_function", false);
    registerImporter<RooFormulaArgFactory<RooGenericPdf>>("generic_dist", false);
@@ -676,11 +776,12 @@ STATIC_EXECUTE([]() {
    registerImporter<RooPolynomialFactory>("polynomial_dist", false);
    registerImporter<RooRealSumPdfFactory>("weighted_sum_dist", false);
    registerImporter<RooRealSumFuncFactory>("weighted_sum", false);
+   registerImporter<RooRealIntegralFactory>("integral", false);
 
    registerExporter<RooAddPdfStreamer>(RooAddPdf::Class(), false);
    registerExporter<RooBinSamplingPdfStreamer>(RooBinSamplingPdf::Class(), false);
    registerExporter<RooBinWidthFunctionStreamer>(RooBinWidthFunction::Class(), false);
-   registerExporter<RooExpPolyStreamer>(RooExpPoly::Class(), false);
+   registerExporter<RooLegacyExpPolyStreamer>(RooLegacyExpPoly::Class(), false);
    registerExporter<RooExponentialStreamer>(RooExponential::Class(), false);
    registerExporter<RooFormulaArgStreamer<RooFormulaVar>>(RooFormulaVar::Class(), false);
    registerExporter<RooFormulaArgStreamer<RooGenericPdf>>(RooGenericPdf::Class(), false);
@@ -693,6 +794,7 @@ STATIC_EXECUTE([]() {
    registerExporter<RooRealSumFuncStreamer>(RooRealSumFunc::Class(), false);
    registerExporter<RooRealSumPdfStreamer>(RooRealSumPdf::Class(), false);
    registerExporter<RooTFnBindingStreamer>(RooTFnBinding::Class(), false);
+   registerExporter<RooRealIntegralStreamer>(RooRealIntegral::Class(), false);
 });
 
 } // namespace

@@ -1,4 +1,4 @@
-import { clTPaletteAxis, isFunc, create } from '../core.mjs';
+import { clTPaletteAxis, isFunc, create, kNoZoom } from '../core.mjs';
 import { getColorPalette } from '../base/colors.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { TGraphPainter } from './TGraphPainter.mjs';
@@ -10,7 +10,7 @@ class TScatterPainter extends TGraphPainter {
 
    constructor(dom, obj) {
       super(dom, obj);
-      this._need_2dhist = true;
+      this._is_scatter = true;
       this._not_adjust_hrange = true;
    }
 
@@ -24,7 +24,7 @@ class TScatterPainter extends TGraphPainter {
     * @private */
    async drawAxisHisto() {
       const histo = this.createHistogram();
-      return TH2Painter.draw(this.getDom(), histo, this.options.Axis);
+      return TH2Painter.draw(this.getDrawDom(), histo, this.options.Axis + ';IGNORE_PALETTE');
    }
 
   /** @summary Provide palette, create if necessary
@@ -33,9 +33,7 @@ class TScatterPainter extends TGraphPainter {
       const gr = this.getGraph();
       let pal = gr?.fFunctions?.arr?.find(func => (func._typename === clTPaletteAxis));
 
-      if (pal) return pal;
-
-      if (gr) {
+      if (!pal && gr) {
          pal = create(clTPaletteAxis);
 
          const fp = this.get_main();
@@ -47,7 +45,8 @@ class TScatterPainter extends TGraphPainter {
       return pal;
    }
 
-   /** @summary Update TScatter members */
+   /** @summary Update TScatter members
+    * @private */
    _updateMembers(scatter, obj) {
       scatter.fBits = obj.fBits;
       scatter.fTitle = obj.fTitle;
@@ -57,14 +56,38 @@ class TScatterPainter extends TGraphPainter {
       scatter.fMargin = obj.fMargin;
       scatter.fMinMarkerSize = obj.fMinMarkerSize;
       scatter.fMaxMarkerSize = obj.fMaxMarkerSize;
-      super._updateMembers(scatter.fGraph, obj.fGraph);
+      return super._updateMembers(scatter.fGraph, obj.fGraph);
+   }
+
+   /** @summary Return Z axis used for palette drawing
+    * @private */
+   getZaxis() {
+      return this.getHistogram()?.fZaxis;
+   }
+
+   /** @summary Checks if it makes sense to zoom inside specified axis range */
+   canZoomInside(axis, min, max) {
+      if (axis !== 'z')
+         return super.canZoomInside(axis, min, max);
+
+      const levels = this.fContour?.getLevels();
+      if (!levels)
+         return false;
+      // match at least full color level inside
+      for (let i = 0; i < levels.length - 1; ++i) {
+         if ((min <= levels[i]) && (max >= levels[i+1]))
+            return true;
+      }
+      return false;
    }
 
    /** @summary Actual drawing of TScatter */
    async drawGraph() {
       const fpainter = this.get_main(),
-          hpainter = this.getMainPainter(),
-          scatter = this.getObject();
+            hpainter = this.getMainPainter(),
+            scatter = this.getObject(),
+            hist = this.getHistogram();
+
       let scale = 1, offset = 0;
       if (!fpainter || !hpainter || !scatter) return;
 
@@ -86,12 +109,19 @@ class TScatterPainter extends TGraphPainter {
          }
          if (maxc <= minc)
             maxc = minc < 0 ? 0.9*minc : (minc > 0 ? 1.1*minc : 1);
+         else if ((minc > 0) && (minc < 0.3*maxc))
+            minc = 0;
          this.fContour = new HistContour(minc, maxc);
          this.fContour.createNormal(30);
          this.fContour.configIndicies(0, 0);
 
          fpainter.zmin = minc;
          fpainter.zmax = maxc;
+
+         if (!fpainter.zoomChangedInteractive('z') && hist && hist.fMinimum !== kNoZoom && hist.fMaximum !== kNoZoom) {
+            fpainter.zoom_zmin = hist.fMinimum;
+            fpainter.zoom_zmax = hist.fMaximum;
+         }
       }
 
       if (scatter.fSize) {
@@ -111,9 +141,13 @@ class TScatterPainter extends TGraphPainter {
 
       this.createG(!fpainter.pad_layer);
 
-      const funcs = fpainter.getGrFuncs();
+      const funcs = fpainter.getGrFuncs(),
+            is_zoom = (fpainter.zoom_zmin !== fpainter.zoom_zmax) && scatter.fColor;
 
       for (let i = 0; i < this.bins.length; ++i) {
+         if (is_zoom && ((scatter.fColor[i] < fpainter.zoom_zmin) || (scatter.fColor[i] > fpainter.zoom_zmax)))
+            continue;
+
          const pnt = this.bins[i],
                grx = funcs.grx(pnt.x),
                gry = funcs.gry(pnt.y),

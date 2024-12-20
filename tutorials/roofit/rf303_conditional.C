@@ -91,6 +91,8 @@ void rf303_conditional()
 
 RooDataSet *makeFakeDataXY()
 {
+   TRandom3 trnd{};
+
    RooRealVar x("x", "x", -10, 10);
    RooRealVar y("y", "y", -10, 10);
    RooArgSet coord(x, y);
@@ -98,8 +100,8 @@ RooDataSet *makeFakeDataXY()
    RooDataSet *d = new RooDataSet("d", "d", RooArgSet(x, y));
 
    for (int i = 0; i < 10000; i++) {
-      double tmpy = gRandom->Gaus(0, 10);
-      double tmpx = gRandom->Gaus(0.5 * tmpy, 1);
+      double tmpy = trnd.Gaus(0, 10);
+      double tmpx = trnd.Gaus(0.5 * tmpy, 1);
       if (fabs(tmpy) < 10 && fabs(tmpx) < 10) {
          x.setVal(tmpx);
          y.setVal(tmpy);

@@ -145,3 +145,25 @@ TEST(TTreeRegressions, LeafLongString)
    t.GetEntry(2);
    EXPECT_EQ(strlen(s), 999);
 }
+
+// Issue ROOT-9961
+TEST(TTreeRegressions, PrintTopOnly)
+{
+   TTree tree("newtree", "");
+   tree.Branch("brancha", 0, "brancha/I");
+   tree.Branch("branchb", 0, "branchb/I");
+
+   testing::internal::CaptureStdout();
+
+   tree.Print("toponly");
+
+   const std::string output = testing::internal::GetCapturedStdout();
+   const auto ref = "******************************************************************************\n"
+                    "*Tree    :newtree   :                                                        *\n"
+                    "*Entries :        0 : Total =            1285 bytes  File  Size =          0 *\n"
+                    "*        :          : Tree compression factor =   1.00                       *\n"
+                    "******************************************************************************\n"
+                    "branch: brancha                      0\n"
+                    "branch: branchb                      0\n";
+   EXPECT_EQ(output, ref);
+}

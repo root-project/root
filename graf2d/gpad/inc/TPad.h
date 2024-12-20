@@ -168,6 +168,8 @@ public:
    Double_t          AbsPixeltoX(Int_t px) override { return fAbsPixeltoXk + px*fPixeltoX; }
    Double_t          AbsPixeltoY(Int_t py) override { return fAbsPixeltoYk + py*fPixeltoY; }
    virtual void      AbsPixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y);
+   void              Add(TObject *obj, Option_t *opt = "", Bool_t modified = kTRUE) override;
+   void              AddFirst(TObject *obj, Option_t *opt = "", Bool_t modified = kTRUE) override;
    void              AddExec(const char *name, const char *command) override;
    virtual void      AutoExec();
    void              Browse(TBrowser *b) override;
@@ -314,6 +316,7 @@ public:
    virtual void      RangeChanged() { Emit("RangeChanged()"); } // *SIGNAL*
    void              RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax) override;
    void              RecursiveRemove(TObject *obj) override;
+   TObject          *Remove(TObject *obj, Bool_t modified = kTRUE) override;
    void              RedrawAxis(Option_t *option="") override;
    void              ResetView3D(TObject *view=nullptr) override { fPadView3D=view; }
    void              ResizePad(Option_t *option="") override;

@@ -163,19 +163,6 @@ TFumiliMinimizer::~TFumiliMinimizer()
    if (fFumili) delete fFumili;
 }
 
-TFumiliMinimizer::TFumiliMinimizer(const TFumiliMinimizer &) :
-   Minimizer()
-{
-   // Implementation of copy constructor (it is private).
-}
-
-TFumiliMinimizer & TFumiliMinimizer::operator = (const TFumiliMinimizer &rhs)
-{
-   // Implementation of assignment operator (private)
-   if (this == &rhs) return *this;  // time saving self-test
-   return *this;
-}
-
 
 
 void TFumiliMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) {

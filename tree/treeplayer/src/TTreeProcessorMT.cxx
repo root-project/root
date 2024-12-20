@@ -287,7 +287,8 @@ void TTreeView::MakeChain(const std::vector<std::string> &treeNames, const std::
 std::unique_ptr<TTreeReader>
 TTreeView::GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::string> &treeNames,
                          const std::vector<std::string> &fileNames, const ROOT::TreeUtils::RFriendInfo &friendInfo,
-                         const TEntryList &entryList, const std::vector<Long64_t> &nEntries)
+                         const TEntryList &entryList, const std::vector<Long64_t> &nEntries,
+                         const std::vector<std::string> &suppressErrorsForMissingBranches)
 {
    const bool hasEntryList = entryList.GetN() > 0;
    const bool usingLocalEntries = friendInfo.fFriendNames.empty() && !hasEntryList;
@@ -306,7 +307,8 @@ TTreeView::GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::st
          }
       }
    }
-   auto reader = std::make_unique<TTreeReader>(fChain.get(), fEntryList.get());
+   auto reader = std::make_unique<TTreeReader>(fChain.get(), fEntryList.get(), /*warnAboutLongerFriends*/ false,
+                                               suppressErrorsForMissingBranches);
    reader->SetEntriesRange(start, end);
    return reader;
 }
@@ -409,12 +411,14 @@ TTreeProcessorMT::TTreeProcessorMT(const std::vector<std::string_view> &filename
 /// \param[in] entries List of entry numbers to process.
 /// \param[in] nThreads Number of threads to create in the underlying thread-pool. The semantics of this argument are
 ///                     the same as for TThreadExecutor.
-TTreeProcessorMT::TTreeProcessorMT(TTree &tree, const TEntryList &entries, UInt_t nThreads)
+TTreeProcessorMT::TTreeProcessorMT(TTree &tree, const TEntryList &entries, UInt_t nThreads,
+                                   const std::vector<std::string> &suppressErrorsForMissingBranches)
    : fFileNames(Internal::TreeUtils::GetFileNamesFromTree(tree)),
      fTreeNames(Internal::TreeUtils::GetTreeFullPaths(tree)),
      fEntryList(entries),
      fFriendInfo(Internal::TreeUtils::GetFriendInfo(tree, /*retrieveEntries*/ true)),
-     fPool(nThreads)
+     fPool(nThreads),
+     fSuppressErrorsForMissingBranches(suppressErrorsForMissingBranches)
 {
    ROOT::EnableThreadSafety();
 }
@@ -425,12 +429,14 @@ TTreeProcessorMT::TTreeProcessorMT(TTree &tree, const TEntryList &entries, UInt_
 /// \param[in] nThreads Number of threads to create in the underlying thread-pool. The semantics of this argument are
 ///                     the same as for TThreadExecutor.
 /// \param[in] globalRange Global entry range to process, {begin (inclusive), end (exclusive)}.
-TTreeProcessorMT::TTreeProcessorMT(TTree &tree, UInt_t nThreads, const EntryRange &globalRange)
+TTreeProcessorMT::TTreeProcessorMT(TTree &tree, UInt_t nThreads, const EntryRange &globalRange,
+                                   const std::vector<std::string> &suppressErrorsForMissingBranches)
    : fFileNames(Internal::TreeUtils::GetFileNamesFromTree(tree)),
      fTreeNames(Internal::TreeUtils::GetTreeFullPaths(tree)),
      fFriendInfo(Internal::TreeUtils::GetFriendInfo(tree, /*retrieveEntries*/ true)),
      fPool(nThreads),
-     fGlobalRange(globalRange)
+     fGlobalRange(globalRange),
+     fSuppressErrorsForMissingBranches(suppressErrorsForMissingBranches)
 {
 }
 
@@ -478,8 +484,8 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    // Per-file processing in case we retrieved all cluster info upfront
    auto processFileUsingGlobalClusters = [&](std::size_t fileIdx) {
       auto processCluster = [&](const EntryRange &c) {
-         auto r =
-            fTreeView->GetTreeReader(c.first, c.second, fTreeNames, fFileNames, fFriendInfo, fEntryList, allEntries);
+         auto r = fTreeView->GetTreeReader(c.first, c.second, fTreeNames, fFileNames, fFriendInfo, fEntryList,
+                                           allEntries, fSuppressErrorsForMissingBranches);
          func(*r);
       };
       fPool.Foreach(processCluster, allClusters[fileIdx]);
@@ -494,7 +500,8 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
       const auto &clusters = clustersAndEntries.first[0];
       const auto &entries = clustersAndEntries.second[0];
       auto processCluster = [&](const EntryRange &c) {
-         auto r = fTreeView->GetTreeReader(c.first, c.second, treeNames, fileNames, fFriendInfo, fEntryList, {entries});
+         auto r = fTreeView->GetTreeReader(c.first, c.second, treeNames, fileNames, fFriendInfo, fEntryList, {entries},
+                                           fSuppressErrorsForMissingBranches);
          func(*r);
       };
       fPool.Foreach(processCluster, clusters);

@@ -3527,7 +3527,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // ======= Generate the rootcling command line
    TString rcling = "rootcling";
    PrependPathName(TROOT::GetBinDir(), rcling);
-   rcling += " -v0 \"--lib-list-prefix=";
+   rcling += " \"--lib-list-prefix=";
    rcling += mapfile;
    rcling += "\" -f \"";
    rcling.Append(dict).Append("\" ");
@@ -4318,9 +4318,12 @@ TString TSystem::SplitAclicMode(const char *filename, TString &aclicMode,
          delete []fname;
          return "";
       } else if (s2) {
-         s2--;
-         while (s2 && *s2 == ' ') s2--;
-         s2++;
+         if (s2 > fname) {
+            // Skip/trim spaces
+            s2--;
+            while (s2 > fname && *s2 == ' ') s2--;
+            s2++;
+         }
          io = s2; // ssave = *s2;
          *s2 = 0;
       } else

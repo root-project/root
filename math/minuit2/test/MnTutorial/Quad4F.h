@@ -18,11 +18,7 @@ namespace Minuit2 {
 class Quad4F : public FCNBase {
 
 public:
-   Quad4F() {}
-
-   ~Quad4F() override {}
-
-   double operator()(const std::vector<double> &par) const override
+   double operator()(std::vector<double> const &par) const override
    {
 
       double x = par[0];
@@ -42,11 +38,7 @@ private:
 class Quad4FGrad : public FCNGradientBase {
 
 public:
-   Quad4FGrad() {}
-
-   ~Quad4FGrad() override {}
-
-   double operator()(const std::vector<double> &par) const override
+   double operator()(std::vector<double> const &par) const override
    {
 
       double x = par[0];
@@ -57,7 +49,7 @@ public:
       return ((1. / 70.) * (21 * x * x + 20 * y * y + 19 * z * z - 14 * x * z - 20 * y * z) + w * w);
    }
 
-   std::vector<double> Gradient(const std::vector<double> &par) const override
+   std::vector<double> Gradient(std::vector<double> const &par) const override
    {
 
       double x = par[0];

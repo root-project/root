@@ -17,7 +17,6 @@
 #include "TMVA/DNN/Architectures/Reference.h"
 #include "TestRecurrentForwardPass.h"
 //#include "gtest/gtest.h"
-//#include "gmock/gmock.h"
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::RNN;

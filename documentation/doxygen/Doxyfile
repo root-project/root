@@ -247,7 +247,7 @@ MULTILINE_CPP_IS_BRIEF = NO
 # documentation blocks is shown as doxygen documentation.
 # The default value is: YES.
 
-PYTHON_DOCSTRING       = YES
+PYTHON_DOCSTRING       = NO
 
 # If the INHERIT_DOCS tag is set to YES then an undocumented member inherits the
 # documentation from any documented member that it re-implements.
@@ -1076,7 +1076,7 @@ EXCLUDE_PATTERNS       = */G__* \
                          */src/lexertk.hpp \
                          *.xml \
                          *.dtd \
-                         */tutorials/webgui/qt5web/* \
+                         */tutorials/visualisation/webgui/qt5web/* \
                          */math/mathcore/src/CDT*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names

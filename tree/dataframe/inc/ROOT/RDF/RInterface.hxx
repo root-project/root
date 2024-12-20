@@ -16,6 +16,7 @@
 #include "ROOT/RDF/HistoModels.hxx"
 #include "ROOT/RDF/InterfaceUtils.hxx"
 #include "ROOT/RDF/RColumnRegister.hxx"
+#include "ROOT/RDF/RDefaultValueFor.hxx"
 #include "ROOT/RDF/RDefine.hxx"
 #include "ROOT/RDF/RDefinePerSample.hxx"
 #include "ROOT/RDF/RFilter.hxx"
@@ -24,6 +25,7 @@
 #include "ROOT/RDF/RLazyDSImpl.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRange.hxx"
+#include "ROOT/RDF/RFilterWithMissingValues.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RDF/RDFDescription.hxx"
 #include "ROOT/RDF/RVariationsDescription.hxx"
@@ -87,8 +89,10 @@ namespace Internal {
 namespace RDF {
 class GraphCreatorHelper;
 void ChangeEmptyEntryRange(const ROOT::RDF::RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
+void ChangeBeginAndEndEntries(const RNode &node, Long64_t begin, Long64_t end);
 void ChangeSpec(const ROOT::RDF::RNode &node, ROOT::RDF::Experimental::RDatasetSpec &&spec);
 void TriggerRun(ROOT::RDF::RNode node);
+std::string GetDataSourceLabel(const ROOT::RDF::RNode &node);
 } // namespace RDF
 } // namespace Internal
 
@@ -120,8 +124,9 @@ class RInterface : public RInterfaceBase {
 
    friend void RDFInternal::TriggerRun(RNode node);
    friend void RDFInternal::ChangeEmptyEntryRange(const RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
+   friend void RDFInternal::ChangeBeginAndEndEntries(const RNode &node, Long64_t start, Long64_t end);
    friend void RDFInternal::ChangeSpec(const RNode &node, ROOT::RDF::Experimental::RDatasetSpec &&spec);
-
+   friend std::string ROOT::Internal::RDF::GetDataSourceLabel(const RNode &node);
    std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this RInterface.
 
 public:
@@ -293,6 +298,106 @@ public:
                                     fLoopManager->GetTree(), fDataSource);
 
       return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), *fLoopManager, fColRegister);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Discard entries with missing values
+   /// \param[in] column Column name whose entries with missing values should be discarded
+   /// \return The filter node of the computation graph
+   ///
+   /// This operation is useful in case an entry of the dataset is incomplete,
+   /// i.e. if one or more of the columns do not have valid values. If the value
+   /// of the input column is missing for an entry, the entire entry will be
+   /// discarded from the rest of this branch of the computation graph.
+   ///
+   /// Use cases include:
+   /// * When processing multiple files, one or more of them is missing a column
+   /// * In horizontal joining with entry matching, a certain dataset has no
+   ///   match for the current entry.
+   ///
+   /// ### Example usage:
+   ///
+   /// \code{.py}
+   /// # Assume a dataset with columns [idx, x] matching another dataset with
+   /// # columns [idx, y]. For idx == 42, the right-hand dataset has no match
+   /// df = ROOT.RDataFrame(dataset)
+   /// df_nomissing = df.FilterAvailable("idx").Define("z", "x + y")
+   /// colz = df_nomissing.Take[int]("z")
+   /// \endcode
+   ///
+   /// \code{.cpp}
+   /// // Assume a dataset with columns [idx, x] matching another dataset with
+   /// // columns [idx, y]. For idx == 42, the right-hand dataset has no match
+   /// ROOT::RDataFrame df{dataset};
+   /// auto df_nomissing = df.FilterAvailable("idx")
+   ///                       .Define("z", [](int x, int y) { return x + y; }, {"x", "y"});
+   /// auto colz = df_nomissing.Take<int>("z");
+   /// \endcode
+   ///
+   /// \note See FilterMissing() if you want to keep only the entries with
+   ///       missing values instead.
+   RInterface<RDFDetail::RFilterWithMissingValues<Proxied>, DS_t> FilterAvailable(std::string_view column)
+   {
+      const auto columns = ColumnNames_t{column.data()};
+      CheckAndFillDSColumns(columns, TTraits::TypeList<void>{});
+      // For now disable this functionality in case of an empty data source and
+      // the column name was not defined previously.
+      if (ROOT::Internal::RDF::GetDataSourceLabel(*this) == "EmptyDS")
+         GetValidatedColumnNames(1, columns);
+      using F_t = RDFDetail::RFilterWithMissingValues<Proxied>;
+      auto filterPtr = std::make_shared<F_t>(/*discardEntry*/ true, fProxiedPtr, fColRegister, columns);
+      return RInterface<F_t, DS_t>(std::move(filterPtr), *fLoopManager, fColRegister);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Keep only the entries that have missing values.
+   /// \param[in] column Column name whose entries with missing values should be kept
+   /// \return The filter node of the computation graph
+   ///
+   /// This operation is useful in case an entry of the dataset is incomplete,
+   /// i.e. if one or more of the columns do not have valid values. It only
+   /// keeps the entries for which the value of the input column is missing.
+   ///
+   /// Use cases include:
+   /// * When processing multiple files, one or more of them is missing a column
+   /// * In horizontal joining with entry matching, a certain dataset has no
+   ///   match for the current entry.
+   ///
+   /// ### Example usage:
+   ///
+   /// \code{.py}
+   /// # Assume a dataset made of two files vertically chained together, one has
+   /// # column "x" and the other has column "y"
+   /// df = ROOT.RDataFrame(dataset)
+   /// df_valid_col_x = df.FilterMissing("y")
+   /// df_valid_col_y = df.FilterMissing("x")
+   /// display_x = df_valid_col_x.Display(("x",))
+   /// display_y = df_valid_col_y.Display(("y",))
+   /// \endcode
+   ///
+   /// \code{.cpp}
+   /// // Assume a dataset made of two files vertically chained together, one has
+   /// // column "x" and the other has column "y"
+   /// ROOT.RDataFrame df{dataset};
+   /// auto df_valid_col_x = df.FilterMissing("y");
+   /// auto df_valid_col_y = df.FilterMissing("x");
+   /// auto display_x = df_valid_col_x.Display<int>({"x"});
+   /// auto display_y = df_valid_col_y.Display<int>({"y"});
+   /// \endcode
+   ///
+   /// \note See FilterAvailable() if you want to discard the entries in case
+   ///       there is a missing value instead.
+   RInterface<RDFDetail::RFilterWithMissingValues<Proxied>, DS_t> FilterMissing(std::string_view column)
+   {
+      const auto columns = ColumnNames_t{column.data()};
+      CheckAndFillDSColumns(columns, TTraits::TypeList<void>{});
+      // For now disable this functionality in case of an empty data source and
+      // the column name was not defined previously.
+      if (ROOT::Internal::RDF::GetDataSourceLabel(*this) == "EmptyDS")
+         GetValidatedColumnNames(1, columns);
+      using F_t = RDFDetail::RFilterWithMissingValues<Proxied>;
+      auto filterPtr = std::make_shared<F_t>(/*discardEntry*/ false, fProxiedPtr, fColRegister, columns);
+      return RInterface<F_t, DS_t>(std::move(filterPtr), *fLoopManager, fColRegister);
    }
 
    // clang-format off
@@ -528,6 +633,72 @@ public:
       newCols.AddDefine(std::move(jittedDefine));
 
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
+
+      return newInterface;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief In case the value in the given column is missing, provide a default value
+   /// \tparam T The type of the column
+   /// \param[in] column Column name where missing values should be replaced by the given default value
+   /// \param[in] defaultValue Value to provide instead of a missing value
+   /// \return The node of the graph that will provide a default value
+   ///
+   /// This operation is useful in case an entry of the dataset is incomplete,
+   /// i.e. if one or more of the columns do not have valid values. It does not
+   /// modify the values of the column, but in case any entry is missing, it
+   /// will provide the default value to downstream nodes instead.
+   ///
+   /// Use cases include:
+   /// * When processing multiple files, one or more of them is missing a column
+   /// * In horizontal joining with entry matching, a certain dataset has no
+   ///   match for the current entry.
+   ///
+   /// ### Example usage:
+   ///
+   /// \code{.cpp}
+   /// // Assume a dataset with columns [idx, x] matching another dataset with
+   /// // columns [idx, y]. For idx == 42, the right-hand dataset has no match
+   /// ROOT::RDataFrame df{dataset};
+   /// auto df_default = df.DefaultValueFor("y", 33)
+   ///                     .Define("z", [](int x, int y) { return x + y; }, {"x", "y"});
+   /// auto colz = df_default.Take<int>("z");
+   /// \endcode
+   ///
+   /// \code{.py}
+   /// df = ROOT.RDataFrame(dataset)
+   /// df_default = df.DefaultValueFor("y", 33).Define("z", "x + y")
+   /// colz = df_default.Take[int]("z")
+   /// \endcode
+   template <typename T>
+   RInterface<Proxied, DS_t> DefaultValueFor(std::string_view column, const T &defaultValue)
+   {
+      constexpr auto where{"DefaultValueFor"};
+      RDFInternal::CheckForNoVariations(where, column, fColRegister);
+      // For now disable this functionality in case of an empty data source and
+      // the column name was not defined previously.
+      if (ROOT::Internal::RDF::GetDataSourceLabel(*this) == "EmptyDS")
+         RDFInternal::CheckForDefinition(where, column, fColRegister, fLoopManager->GetBranchNames(),
+                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      const auto validColumnNames = ColumnNames_t{column.data()};
+      CheckAndFillDSColumns(validColumnNames, TTraits::TypeList<T>{});
+
+      // Declare return type to the interpreter, for future use by jitted actions
+      auto retTypeName = RDFInternal::TypeID2TypeName(typeid(T));
+      if (retTypeName.empty()) {
+         // The type is not known to the interpreter.
+         // We must not error out here, but if/when this column is used in jitted code
+         const auto demangledType = RDFInternal::DemangleTypeIdName(typeid(T));
+         retTypeName = "CLING_UNKNOWN_TYPE_" + demangledType;
+      }
+
+      auto newColumn = std::make_shared<ROOT::Internal::RDF::RDefaultValueFor<T>>(
+         column, retTypeName, defaultValue, validColumnNames, fColRegister, *fLoopManager);
+
+      RDFInternal::RColumnRegister newCols(fColRegister);
+      newCols.AddDefine(std::move(newColumn));
+
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols));
 
       return newInterface;
    }
@@ -1182,8 +1353,8 @@ public:
          fullTreeName, filename, colListNoAliasesWithSizeBranches, /*checkFile*/ false));
 
       auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
-         colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr,
-         colListNoAliasesWithSizeBranches.size());
+         colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr, colListNoAliasesWithSizeBranches.size(),
+         options.fVector2RVec);
 
       if (!options.fLazy)
          *resPtr;
@@ -1207,7 +1378,7 @@ public:
                                                  std::string_view columnNameRegexp = "",
                                                  const RSnapshotOptions &options = RSnapshotOptions())
    {
-      const auto definedColumns = fColRegister.GetNames();
+      const auto definedColumns = fColRegister.GenerateColumnNames();
       auto *tree = fLoopManager->GetTree();
       const auto treeBranchNames = tree != nullptr ? ROOT::Internal::TreeUtils::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
       const auto dsColumns = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
@@ -1326,7 +1497,7 @@ public:
       const auto validColumnNames =
          GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
       const auto colTypes = GetValidatedArgTypes(validColumnNames, fColRegister, fLoopManager->GetTree(), fDataSource,
-                                                 "Cache", /*vector2rvec=*/false);
+                                                 "Cache", /*vector2RVec=*/false);
       for (const auto &colType : colTypes)
          cacheCall << colType << ", ";
       if (!columnListWithoutSizeColumns.empty())
@@ -1350,7 +1521,7 @@ public:
    /// is empty, all columns are selected. See the previous overloads for more information.
    RInterface<RLoopManager> Cache(std::string_view columnNameRegexp = "")
    {
-      const auto definedColumns = fColRegister.GetNames();
+      const auto definedColumns = fColRegister.GenerateColumnNames();
       auto *tree = fLoopManager->GetTree();
       const auto treeBranchNames =
          tree != nullptr ? ROOT::Internal::TreeUtils::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
@@ -2628,7 +2799,7 @@ public:
       // certainly does not contain named filters.
       // The number 4 takes into account the implicit columns for entry and slot number
       // and their aliases (2 + 2, i.e. {r,t}dfentry_ and {r,t}dfslot_)
-      if (std::is_same<Proxied, RLoopManager>::value && fColRegister.GetNames().size() > 4)
+      if (std::is_same<Proxied, RLoopManager>::value && fColRegister.GenerateColumnNames().size() > 4)
          returnEmptyReport = true;
 
       auto rep = std::make_shared<RCutFlowReport>();

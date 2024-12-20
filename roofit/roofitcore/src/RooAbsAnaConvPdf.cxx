@@ -62,7 +62,7 @@
 
 #include "RooAbsAnaConvPdf.h"
 
-#include "RooNormalizedPdf.h"
+#include "RooFit/Detail/RooNormalizedPdf.h"
 #include "RooMsgService.h"
 #include "Riostream.h"
 #include "RooResolutionModel.h"
@@ -677,7 +677,7 @@ RooAbsAnaConvPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Co
       std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf *>(_convSet[0].Clone()));
       ctx.compileServers(*pdfClone, normSet);
 
-      auto newArg = std::make_unique<RooNormalizedPdf>(*pdfClone, normSet);
+      auto newArg = std::make_unique<RooFit::Detail::RooNormalizedPdf>(*pdfClone, normSet);
 
       // The direct servers are this pdf and the normalization integral, which
       // don't need to be compiled further.
@@ -717,7 +717,7 @@ RooAbsAnaConvPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Co
    ctx.compileServers(*pdfClone, normSet);
 
    // Finally, this RooAbsAnaConvPdf needs to be normalized
-   auto newArg = std::make_unique<RooNormalizedPdf>(*pdfClone, normSet);
+   auto newArg = std::make_unique<RooFit::Detail::RooNormalizedPdf>(*pdfClone, normSet);
 
    // The direct servers are this pdf and the normalization integral, which
    // don't need to be compiled further.

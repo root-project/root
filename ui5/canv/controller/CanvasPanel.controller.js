@@ -13,7 +13,14 @@ sap.ui.define([
          if (this.canvas_painter && dom?.children.length && !this._mainChild) {
             this._mainChild = dom.lastChild;
             dom.removeChild(this._mainChild);
+            this.canvas_painter._ignore_resize = true; // ignore possible resize events
          }
+      },
+
+      rememberAreaSize() {
+         this._prev_w = this.getView().$().width();
+         this._prev_h = this.getView().$().height();
+         this.invokeResizeTimeout(100); // we expect some changes, at the same time ignore resize
       },
 
       onBeforeRendering() {
@@ -31,9 +38,11 @@ sap.ui.define([
 
       onAfterRendering() {
          // workaround for openui5 problem - called before actual dimension of HTML element is assigned
-         // using timeout and resize event to handle it correctly
+         // issue longer resize timeout
+         // normall ui5 resize event with short timeout should follow very fast
+         // only then one can check size of element and perform rendering
          this._has_after_rendering = true;
-         this.invokeResizeTimeout(10);
+         this.invokeResizeTimeout(300);
       },
 
       hasValidSize() {
@@ -41,15 +50,15 @@ sap.ui.define([
       },
 
       invokeResizeTimeout(tmout) {
-        if (this.resize_tmout) {
+         if (this.resize_tmout) {
             clearTimeout(this.resize_tmout);
             delete this.resize_tmout;
-        }
+         }
 
-        if (this.hasValidSize() && this._has_after_rendering)
-           this.onResizeTimeout();
-        else
-           this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), tmout);
+         if (this.canvas_painter)
+            this.canvas_painter._ignore_resize = true; // ignore possible resize events
+
+         this.resize_tmout = setTimeout(() => this.onResizeTimeout(), tmout);
       },
 
       /** @summary Set fixed size for canvas container */
@@ -77,14 +86,21 @@ sap.ui.define([
       onResizeTimeout() {
          delete this.resize_tmout;
 
+         // do nothing, for the moment rendering not yet finished
+         if (this._has_after_rendering === false)
+            return;
+
          if (!this.hasValidSize())
-             return this.invokeResizeTimeout(5000); // very rare check if something changed
+            return this.invokeResizeTimeout(5000); // very rare check if something changed
+
+         if (this.canvas_painter)
+            this.canvas_painter._ignore_resize = false;
 
          let check_resize = true;
 
          if (this._has_after_rendering) {
 
-            this._has_after_rendering = false;
+            delete this._has_after_rendering;
             check_resize = false;
 
             let dom = this.getView().getDomRef();
@@ -107,18 +123,42 @@ sap.ui.define([
                this.canvas_painter.setPadName('');
             }
 
-            if (this.canvas_painter && this.canvas_painter._window_handle) {
+            if (this.canvas_painter?._window_handle) {
                this.canvas_painter.useWebsocket(this.canvas_painter._window_handle);
                delete this.canvas_painter._window_handle;
             }
          }
 
-         if (this.canvas_painter && check_resize)
-            this.canvas_painter.checkCanvasResize();
+         if (check_resize) {
+            if (this._prev_w && this._prev_h) {
+               const dw = this._prev_w - this.getView().$().width(),
+                     dh = this._prev_h - this.getView().$().height();
+               delete this._prev_w;
+               delete this._prev_h;
+               if (this.resizeBrowser(dw, dh))
+                  return this.invokeResizeTimeout(100);
+            }
+
+            this.canvas_painter?.checkCanvasResize();
+         }
+      },
+
+      resizeBrowser(delta_w, delta_h) {
+         if (!this.canvas_painter?.resizeBrowser ||
+              this.canvas_painter?.embed_canvas ||
+              typeof window !== 'object')
+              return;
+         const wbig = window.outerWidth,
+               hbig = window.outerHeight;
+
+         if (wbig && hbig && (delta_w || delta_h)) {
+            this.canvas_painter.resizeBrowser(Math.max(100, wbig + delta_w), Math.max(100, hbig + delta_h));
+            return true;
+         }
       },
 
       onInit() {
-         ResizeHandler.register(this.getView(), this.invokeResizeTimeout.bind(this, 200));
+         ResizeHandler.register(this.getView(), () => this.invokeResizeTimeout(10));
       },
 
       onExit() {

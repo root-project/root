@@ -482,10 +482,10 @@ long TClingMethodInfo::Property() const
          property |= kIsPublic;
          break;
       case clang::AS_protected:
-         property |= kIsProtected;
+         property |= kIsProtected | kIsNotReacheable;
          break;
       case clang::AS_private:
-         property |= kIsPrivate;
+         property |= kIsPrivate | kIsNotReacheable;
          break;
       case clang::AS_none:
          if (declAccess->getDeclContext()->isNamespace())
@@ -493,7 +493,13 @@ long TClingMethodInfo::Property() const
          break;
       default:
          // IMPOSSIBLE
+         assert(false && "Unexpected value for the access property value in Clang");
          break;
+   }
+
+   if (!(property & kIsNotReacheable)) {
+      if (! ROOT::TMetaUtils::IsDeclReacheable(*fd))
+         property |= kIsNotReacheable;
    }
 
    if (fd->isConstexpr())
@@ -513,7 +519,7 @@ long TClingMethodInfo::Property() const
       if (md->isVirtual()) {
          property |= kIsVirtual;
       }
-      if (md->isPure()) {
+      if (md->isPureVirtual()) {
          property |= kIsPureVirtual;
       }
       if (const clang::CXXConstructorDecl *cd =

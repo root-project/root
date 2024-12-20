@@ -65,7 +65,7 @@ void LegendreAssoc()
    L[0]->SetMinimum(-2);
    L[0]->SetTitle("Associate Legendre Polynomials");
    for (int nu = 0; nu < 5; nu++) {
-      L[nu]->SetLineStyle(1);
+      L[nu]->SetLineStyle(kSolid);
       L[nu]->SetLineWidth(2);
       L[nu]->SetLineColor(nu+1);
    }
@@ -84,7 +84,7 @@ void LegendreAssoc()
    SL[0]->SetMinimum(-1);
    SL[0]->SetTitle("Spherical Legendre Polynomials");
    for (int nu = 0; nu < 5; nu++) {
-      SL[nu]->SetLineStyle(1);
+      SL[nu]->SetLineStyle(kSolid);
       SL[nu]->SetLineWidth(2);
       SL[nu]->SetLineColor(nu+1);
    }

@@ -178,8 +178,11 @@ public:
    virtual TClass*     EvalClass() const;
 
    template<typename T> T EvalInstance(Int_t i=0, const char *stringStack[] = nullptr);
+   /// \brief Double_t template specialization of EvalInstance
    virtual Double_t       EvalInstance(Int_t i=0, const char *stringStack[] = nullptr) {return EvalInstance<Double_t>(i, stringStack); }
+   /// \brief Long64_t template specialization of EvalInstance
    virtual Long64_t       EvalInstance64(Int_t i=0, const char *stringStack[] = nullptr) {return EvalInstance<Long64_t>(i, stringStack); }
+   /// \brief LongDouble_t template specialization of EvalInstance
    virtual LongDouble_t   EvalInstanceLD(Int_t i=0, const char *stringStack[] = nullptr) {return EvalInstance<LongDouble_t>(i, stringStack); }
 
    virtual const char *EvalStringInstance(Int_t i=0);

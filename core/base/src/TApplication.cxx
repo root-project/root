@@ -376,7 +376,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          fprintf(stderr, "ROOT ./configure options:\n%s\n", gROOT->GetConfigOptions());
          Terminate(0);
       } else if (!strcmp(argv[i], "-a")) {
-         fprintf(stderr, "ROOT splash screen is not visible with root.exe, use root instead.");
+         fprintf(stderr, "ROOT splash screen is not visible with root.exe, use root instead.\n");
          Terminate(0);
       } else if (!strcmp(argv[i], "-b")) {
          MakeBatch();
@@ -541,8 +541,12 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
                   fFiles->Add(new TNamed("NOT FOUND!", argv[i]));
                   // only warn if we're plain root,
                   // other progs might have their own params
-                  if (!strcmp(gROOT->GetName(), "Rint"))
-                     Warning("GetOptions", "macro %s not found", fname.Data());
+                  if (!strcmp(gROOT->GetName(), "Rint")) {
+                     Error("GetOptions", "macro %s not found", fname.Data());
+                     // Return 2 as the Python interpreter does in case the macro
+                     // is not found.
+                     Terminate(2);
+                  }
                }
             }
          }
@@ -1032,10 +1036,8 @@ Steps to reproduce the behavior:
 -->
 
 ### Setup
-```
 )"+GetSetup()+
-R"(```
-
+R"(
 <!--
 Please specify also how you obtained ROOT, such as `dnf install` / binary download / you built it yourself.
 -->
@@ -1243,7 +1245,8 @@ void TApplication::Help(const char *line)
       Printf(" ==============================================================================");
       Printf("   .L <filename>[flags]: load the given file with optional flags like\n"
              "                         + to compile or ++ to force recompile.\n"
-             "                         Type .? TSystem::CompileMacro for a list of all flags.");
+             "                         Type .? TSystem::CompileMacro for a list of all flags.\n"
+             "                         <filename> can also be a shared library; skip flags.");
       Printf("   .(x|X) <filename>[flags](args) :\n"
              "                         same as .L <filename>[flags] and runs then a function\n"
              "                         with signature: ret_type filename(args).");
@@ -1256,6 +1259,7 @@ void TApplication::Help(const char *line)
              "                         Specifying '::Member' is optional.");
       Printf("   .help edit          : show line editing shortcuts (or .?)");
       Printf("   .license            : show license");
+      Printf("   .libraries          : show loaded libraries");
       Printf("   .ls                 : list contents of current TDirectory");
       Printf("   .pwd                : show current TDirectory, pad and style");
       Printf("   .quit (or .exit)    : quit ROOT (long form of .q)");
@@ -1725,6 +1729,12 @@ Longptr_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
       gROOT->GetListOfClasses()->Delete();
       // fall through
 #endif
+   }
+
+   if (!strcmp(line, ".libraries")) {
+      // List the loaded libraries
+      gSystem->ListLibraries();
+      return 0;
    }
 
    if (sync)

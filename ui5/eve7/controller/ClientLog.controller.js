@@ -40,12 +40,13 @@ sap.ui.define([
 
 			this.oMessageView.addStyleClass("sapUiSizeCompact");
 
+			let cntrlr = this;
 			let oBackButton = new Button({
 				icon: "sap-icon://nav-back",
 				visible: false,
 				press: function ()
 				{
-					that.oMessageView.navigateBack();
+					cntrlr.oMessageView.navigateBack();
 					this.setVisible(false);
 				}
 			});

@@ -212,8 +212,7 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
   // Copy named sets
   for (map<string,RooArgSet>::const_iterator iter3 = other._namedSets.begin() ; iter3 != other._namedSets.end() ; ++iter3) {
     // Make RooArgSet with equivalent content of this workspace
-    std::unique_ptr<RooArgSet> tmp{static_cast<RooArgSet*>(_allOwnedNodes.selectCommon(iter3->second))};
-    _namedSets[iter3->first].add(*tmp) ;
+    _namedSets[iter3->first].add(*std::unique_ptr<RooArgSet>{_allOwnedNodes.selectCommon(iter3->second)});
   }
 
   // Copy generic objects
@@ -2473,7 +2472,7 @@ void RooWorkspace::Streamer(TBuffer &R__b)
          node->setExpensiveObjectCache(_eocache);
          node->setWorkspace(*this);
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
-         if (node->IsA()->InheritsFrom(RooAbsOptTestStatistic::Class())) {
+         if (dynamic_cast<RooAbsOptTestStatistic *>(node)) {
             RooAbsOptTestStatistic *tmp = static_cast<RooAbsOptTestStatistic *>(node);
             if (tmp->isSealed() && tmp->sealNotice() && strlen(tmp->sealNotice()) > 0) {
                cout << "RooWorkspace::Streamer(" << GetName() << ") " << node->ClassName() << "::" << node->GetName()
@@ -2942,9 +2941,4 @@ void RooWorkspace::RecursiveRemove(TObject *removedObj)
    }
 
    _eocache.RecursiveRemove(removedObj); // RooExpensiveObjectCache
-}
-
-TIterator *RooWorkspace::componentIterator() const
-{
-   return new RooLinkedListIter(_allOwnedNodes.makeLegacyIterator());
 }

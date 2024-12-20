@@ -1,6 +1,7 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/TSeq.hxx"
 #include "ROOT/RTrivialDS.hxx"
+#include "Compression.h"
 #include "TH1F.h"
 #include "TRandom.h"
 #include "TSystem.h"
@@ -32,20 +33,20 @@ TEST(Cache, FundType)
 
 TEST(Cache, Ambiguity)
 {
-// This test verifies that the correct method is called and there is no ambiguity between the JIT call to Cache using
-// a column list as a parameter and the JIT call to Cache using the Regexp.
-ROOT::RDataFrame tdf(5);
-int i = 1;
-auto d = tdf.Define("c0", [&i]() { return i++; }).Define("c1", []() { return 1.; });
+   // This test verifies that the correct method is called and there is no ambiguity between the JIT call to Cache using
+   // a column list as a parameter and the JIT call to Cache using the Regexp.
+   ROOT::RDataFrame tdf(5);
+   int i = 1;
+   auto d = tdf.Define("c0", [&i]() { return i++; }).Define("c1", []() { return 1.; });
 
-auto cached_1 = d.Cache({"c0"});
-auto cached_2 = d.Cache({"c0", "c1"});
+   auto cached_1 = d.Cache({"c0"});
+   auto cached_2 = d.Cache({"c0", "c1"});
 
-auto c_1 = cached_1.Count();
-auto c_2 = cached_2.Count();
+   auto c_1 = cached_1.Count();
+   auto c_2 = cached_2.Count();
 
-EXPECT_EQ(5UL, *c_1);
-EXPECT_EQ(5UL, *c_2);
+   EXPECT_EQ(5UL, *c_1);
+   EXPECT_EQ(5UL, *c_2);
 }
 
 /*
@@ -142,9 +143,10 @@ TEST(Cache, InternalColumnsSnapshot)
    auto colName = "tdfMySecretcol_";
    auto orig = tdf.Define(colName, [&f]() { return f++; }).Define("dummy", []() { return 0.f; });
    auto cached = orig.Cache<float, float>({colName, "dummy"});
-   auto snapshot = cached.Snapshot("t", "InternalColumnsSnapshot.root", "", {"RECREATE", ROOT::kZLIB, 0, 0, 99, false});
+   auto snapshot = cached.Snapshot("t", "InternalColumnsSnapshot.root", "",
+                                   {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 0, 0, 99, false});
 
-   auto op = [&](){
+   auto op = [&]() {
       testing::internal::CaptureStderr();
       snapshot->Mean<ULong64_t>(colName);
    };
@@ -205,10 +207,11 @@ TEST(Cache, evtCounter)
    const std::vector<ULong64_t> evenE_ref{0, 2};
    const std::vector<ULong64_t> allE_ref{0, 1};
 
-   auto test = [&](std::string_view entryColName){
-      auto c0 = ROOT::RDataFrame(4).Alias("entry", entryColName)
-                  .Filter([](ULong64_t e) { return 0 == e % 2; }, {"entry"})
-                  .Cache<ULong64_t>({"entry"});
+   auto test = [&](std::string_view entryColName) {
+      auto c0 = ROOT::RDataFrame(4)
+                   .Alias("entry", entryColName)
+                   .Filter([](ULong64_t e) { return 0 == e % 2; }, {"entry"})
+                   .Cache<ULong64_t>({"entry"});
       auto evenE = c0.Take<ULong64_t>("entry");
       for (auto i : {0, 1}) {
          EXPECT_EQ(evenE->at(i), evenE_ref[i]);
@@ -221,7 +224,6 @@ TEST(Cache, evtCounter)
 
    test("tdfentry_");
    test("rdfentry_");
-
 }
 
 TEST(Cache, Regex)
@@ -253,7 +255,7 @@ TEST(Cache, Regex)
    std::string base("col_");
    for (auto i : ROOT::TSeqI(128)) {
       auto colName = base + std::to_string(i);
-      n = n.Define(colName, [](){return 0;});
+      n = n.Define(colName, []() { return 0; });
    }
    const auto df_even_cols = n.Cache(".*[02468]$").GetColumnNames();
 
@@ -265,7 +267,7 @@ TEST(Cache, Regex)
    std::size_t cursor = 0u;
    for (auto &&col : df_even_cols) {
       EXPECT_TRUE(col == evenColNames[cursor]) << "Checking even columns. An error was encountered: expecting "
-                                              << evenColNames[cursor] << " but found " << col;
+                                               << evenColNames[cursor] << " but found " << col;
       ++cursor;
    }
 

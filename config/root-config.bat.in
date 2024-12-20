@@ -44,8 +44,8 @@ set srcdir=@top_srcdir@
 rem convert forward slashes to backslashes
 set srcdir=!srcdir:/=\!
 
-set cflags=-nologo @BLDCFLAGS@ -EHsc- -W3 -D_WIN32
-set cxxflags=-nologo @BLDCXXFLAGS@ -EHsc- -W3 -D_WIN32
+set cflags=@__cflags@
+set cxxflags=@__cxxflags@
 if "@BLDCFLAGS@"=="-MDd" (
     set cflags=!cflags! -Od -Z7
     set cxxflags=!cxxflags! -Od -Z7
@@ -204,7 +204,7 @@ if "!out!"=="" (
    echo.
    goto print_help
 )
-echo !out!
+echo|set /p=!out!
 
 exit /b !err!
 

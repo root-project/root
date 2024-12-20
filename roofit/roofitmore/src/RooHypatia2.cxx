@@ -77,7 +77,7 @@
  * make it concave, and re-enable the tails. Especially \f$ \beta \f$ needs to be close to zero.
  *
  * ## Relation to RooIpatia2
- * This implementation is largely based on RooIpatia2, https://gitlab.cern.ch/lhcb/Urania/blob/master/PhysFit/P2VV/src/RooIpatia2.cxx,
+ * This implementation is largely based on RooIpatia2, https://gitlab.cern.ch/lhcb/Urania/-/blob/master/PhysFit/B2DXFitters/src/RooIpatia2.cxx,
  * but there are differences:
  * - At construction time, the Hypatia implementation checks if the range of parameters extends into regions where
  *   the function might be undefined.

@@ -73,7 +73,7 @@ ClassImp(TProfile3D);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for Profile3D histograms.
 
-TProfile3D::TProfile3D() : TH3D()
+TProfile3D::TProfile3D()
 {
    fTsumwt = fTsumwt2 = 0;
    fScaling = kFALSE;

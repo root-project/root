@@ -21,7 +21,6 @@
 #include "Minuit2/MnUserTransformation.h"
 #include "Minuit2/MnUserFcn.h"
 #include "Minuit2/FCNBase.h"
-#include "Minuit2/FCNGradientBase.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnLineSearch.h"
@@ -32,119 +31,27 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-// #include "Minuit2/MnUserParametersPrint.h"
-
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, const std::vector<double> &par,
-                                                   const std::vector<double> &err, unsigned int stra,
-                                                   unsigned int maxfcn, double toler) const
-{
-   // minimize from FCNBase and std::vector of double's for parameter values and errors (step sizes)
-   MnUserParameterState st(par, err);
-   MnStrategy strategy(stra);
-   return Minimize(fcn, st, strategy, maxfcn, toler);
-}
-
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, const std::vector<double> &par,
-                                                   const std::vector<double> &err, unsigned int stra,
-                                                   unsigned int maxfcn, double toler) const
-{
-   // minimize from FCNGradientBase (use analytical gradient provided in FCN)
-   // and std::vector of double's for parameter values and errors (step sizes)
-   MnUserParameterState st(par, err);
-   MnStrategy strategy(stra);
-   return Minimize(fcn, st, strategy, maxfcn, toler);
-}
-
-// move nrow before cov to avoid ambiguities when using default parameters
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, const std::vector<double> &par,
-                                                   unsigned int nrow, const std::vector<double> &cov, unsigned int stra,
-                                                   unsigned int maxfcn, double toler) const
-{
-   // minimize from FCNBase using std::vector for parameter error and
-   // an std::vector of size n*(n+1)/2 for the covariance matrix  and n (rank of cov matrix)
-
-   MnUserParameterState st(par, cov, nrow);
-   MnStrategy strategy(stra);
-   return Minimize(fcn, st, strategy, maxfcn, toler);
-}
-
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, const std::vector<double> &par,
-                                                   unsigned int nrow, const std::vector<double> &cov, unsigned int stra,
-                                                   unsigned int maxfcn, double toler) const
-{
-   // minimize from FCNGradientBase (use analytical gradient provided in FCN)
-   // using std::vector for parameter error and
-   // an std::vector of size n*(n+1)/2 for the covariance matrix  and n (rank of cov matrix)
-
-   MnUserParameterState st(par, cov, nrow);
-   MnStrategy strategy(stra);
-   return Minimize(fcn, st, strategy, maxfcn, toler);
-}
-
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, const MnUserParameters &upar,
-                                                   const MnStrategy &strategy, unsigned int maxfcn, double toler) const
-{
-   // minimize from FCNBase and MnUserParameters object
-
-   MnUserParameterState st(upar);
-   return Minimize(fcn, st, strategy, maxfcn, toler);
-}
-
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, const MnUserParameters &upar,
-                                                   const MnStrategy &strategy, unsigned int maxfcn, double toler) const
-{
-   // minimize from FCNGradientBase (use analytical gradient provided in FCN)  and MnUserParameters object
-
-   MnUserParameterState st(upar);
-   return Minimize(fcn, st, strategy, maxfcn, toler);
-}
-
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, const MnUserParameters &upar,
-                                                   const MnUserCovariance &cov, const MnStrategy &strategy,
-                                                   unsigned int maxfcn, double toler) const
-{
-   // minimize from FCNBase and MnUserParameters and MnUserCovariance objects
-
-   MnUserParameterState st(upar, cov);
-   return Minimize(fcn, st, strategy, maxfcn, toler);
-}
-
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, const MnUserParameters &upar,
-                                                   const MnUserCovariance &cov, const MnStrategy &strategy,
-                                                   unsigned int maxfcn, double toler) const
-{
-   // minimize from FCNGradientBase (use analytical gradient provided in FCN)  and
-   // MnUserParameters MnUserCovariance objects
-
-   MnUserParameterState st(upar, cov);
-   return Minimize(fcn, st, strategy, maxfcn, toler);
-}
-
 FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, const MnUserParameterState &st,
                                                    const MnStrategy &strategy, unsigned int maxfcn, double toler) const
 {
-   // minimize from a FCNBase and a MnUserparameterState - interface used by all the previous ones
-   // based on FCNBase. Create in this case a NumericalGradient calculator
-   // Create the minuit FCN wrapper (MnUserFcn) containing the transformation (int<->ext)
+   if (!fcn.HasGradient()) {
+      // minimize from a FCNBase and a MnUserparameterState - interface used by all the previous ones
+      // based on FCNBase. Create in this case a NumericalGradient calculator
+      // Create the minuit FCN wrapper (MnUserFcn) containing the transformation (int<->ext)
 
-   // need MnUserFcn for difference int-ext parameters
-   MnUserFcn mfcn(fcn, st.Trafo());
-   Numerical2PGradientCalculator gc(mfcn, st.Trafo(), strategy);
+      // need MnUserFcn for difference int-ext parameters
+      MnUserFcn mfcn(fcn, st.Trafo());
+      Numerical2PGradientCalculator gc(mfcn, st.Trafo(), strategy);
 
-   unsigned int npar = st.VariableParameters();
-   if (maxfcn == 0)
-      maxfcn = 200 + 100 * npar + 5 * npar * npar;
-   MinimumSeed mnseeds = SeedGenerator()(mfcn, gc, st, strategy);
+      unsigned int npar = st.VariableParameters();
+      if (maxfcn == 0)
+         maxfcn = 200 + 100 * npar + 5 * npar * npar;
+      MinimumSeed mnseeds = SeedGenerator()(mfcn, gc, st, strategy);
 
-   return Minimize(mfcn, gc, mnseeds, strategy, maxfcn, toler);
-}
-
-// use Gradient here
-FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, const MnUserParameterState &st,
-                                                   const MnStrategy &strategy, unsigned int maxfcn, double toler) const
-{
-   // minimize from a FCNGradientBase and a MnUserParameterState -
-   // interface based on FCNGradientBase (external/analytical gradients)
+      return Minimize(mfcn, gc, mnseeds, strategy, maxfcn, toler);
+   }
+   // minimize from a function with gradient and a MnUserParameterState -
+   // interface based on function with gradient (external/analytical gradients)
    // Create in this case an AnalyticalGradient calculator
    // Create the minuit FCN wrapper (MnUserFcn) containing the transformation (int<->ext)
 
@@ -164,9 +71,7 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, c
 
    // compute seed (will use internally numerical gradient in case calculator does not implement g2 computations)
    MinimumSeed mnseeds = SeedGenerator()(mfcn, *gc, st, strategy);
-   auto minimum = Minimize(mfcn, *gc, mnseeds, strategy, maxfcn, toler);
-
-   return minimum;
+   return Minimize(mfcn, *gc, mnseeds, strategy, maxfcn, toler);
 }
 
 FunctionMinimum ModularFunctionMinimizer::Minimize(const MnFcn &mfcn, const GradientCalculator &gc,

@@ -151,6 +151,14 @@ RooSimultaneous::RooSimultaneous(const char *name, const char *title, std::map<s
 {
 }
 
+/// For internal use in RooFit.
+RooSimultaneous::RooSimultaneous(const char *name, const char *title,
+                                 RooFit::Detail::FlatMap<std::string, RooAbsPdf *> const &pdfMap,
+                                 RooAbsCategoryLValue &inIndexCat)
+   : RooSimultaneous(name, title, RooFit::Detail::flatMapToStdMap(pdfMap), inIndexCat)
+{
+}
+
 RooSimultaneous::RooSimultaneous(const char *name, const char *title, RooSimultaneous::InitializationOutput &&initInfo)
    : RooAbsPdf(name, title),
      _plotCoefNormSet("!plotCoefNormSet", "plotCoefNormSet", this, false, false),
@@ -414,10 +422,6 @@ bool RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
   return false ;
 }
 
-
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Examine the pdf components and check if one of them can be extended or must be extended.
 /// It is enough to have one component that can be extended or must be extended to return the flag in
@@ -425,39 +429,16 @@ bool RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 
 RooAbsPdf::ExtendMode RooSimultaneous::extendMode() const
 {
-  bool anyCanExtend(false) ;
-  bool anyMustExtend(false) ;
+   bool anyCanExtend = false;
 
-  for (Int_t i=0 ; i<_numPdf ; i++) {
-    RooRealProxy* proxy = static_cast<RooRealProxy*>(_pdfProxyList.At(i));
-    if (proxy) {
-      RooAbsPdf* pdf = static_cast<RooAbsPdf*>(proxy->absArg()) ;
-      //cout << " now processing pdf " << pdf->GetName() << endl;
-      if (pdf->canBeExtended()) {
-         //cout << "RooSim::extendedMode(" << GetName() << ") component " << pdf->GetName() << " can be extended"
-         //     << endl;
-         anyCanExtend = true;
-      }
-      if (pdf->mustBeExtended()) {
-         //cout << "RooSim::extendedMode(" << GetName() << ") component " << pdf->GetName() << " MUST be extended" << endl;
-         anyMustExtend = true;
-      }
-    }
-  }
-  if (anyMustExtend) {
-    //cout << "RooSim::extendedMode(" << GetName() << ") returning MustBeExtended" << endl ;
-    return MustBeExtended ;
-  }
-  if (anyCanExtend) {
-    //cout << "RooSim::extendedMode(" << GetName() << ") returning CanBeExtended" << endl ;
-    return CanBeExtended ;
-  }
-  //cout << "RooSim::extendedMode(" << GetName() << ") returning CanNotBeExtended" << endl ;
-  return CanNotBeExtended ;
+   for (auto *proxy : static_range_cast<RooRealProxy *>(_pdfProxyList)) {
+      auto &pdf = static_cast<RooAbsPdf const&>(proxy->arg());
+      if (pdf.mustBeExtended())
+         return MustBeExtended;
+      anyCanExtend |= pdf.canBeExtended();
+   }
+   return anyCanExtend ? CanBeExtended : CanNotBeExtended;
 }
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the current value:
@@ -465,29 +446,42 @@ RooAbsPdf::ExtendMode RooSimultaneous::extendMode() const
 
 double RooSimultaneous::evaluate() const
 {
-  // Retrieve the proxy by index name
-  RooRealProxy* proxy = static_cast<RooRealProxy*>(_pdfProxyList.FindObject(_indexCat.label())) ;
+   // Retrieve the proxy by index name
+   RooRealProxy *proxy = static_cast<RooRealProxy *>(_pdfProxyList.FindObject(_indexCat.label()));
 
-  //assert(proxy!=0) ;
-  if (proxy==nullptr) return 0 ;
+   double nEvtTot = 1.0;
+   double nEvtCat = 1.0;
 
-  // Calculate relative weighting factor for sim-pdfs of all extendable components
-  double catFrac(1) ;
-  if (canBeExtended()) {
-    double nEvtCat = (static_cast<RooAbsPdf*>(proxy->absArg()))->expectedEvents(_normSet) ;
+   // Calculate relative weighting factor for sim-pdfs of all extendable components
+   if (canBeExtended()) {
 
-    double nEvtTot(0) ;
-    for(auto * proxy2 : static_range_cast<RooRealProxy*>(_pdfProxyList)) {
-      nEvtTot += (static_cast<RooAbsPdf*>(proxy2->absArg()))->expectedEvents(_normSet) ;
-    }
-    catFrac=nEvtCat/nEvtTot ;
-  }
+      nEvtTot = 0;
+      nEvtCat = 0;
 
-  // Return the selected PDF value, normalized by the number of index states
-  return (static_cast<RooAbsPdf*>(proxy->absArg()))->getVal(_normSet)*catFrac ;
+      for (auto *proxy2 : static_range_cast<RooRealProxy *>(_pdfProxyList)) {
+         auto &pdf2 = static_cast<RooAbsPdf const &>(proxy2->arg());
+         if(!pdf2.canBeExtended()) {
+            // If one of the pdfs can't be expected, reset the normalization
+            // factor to one and break out of the loop.
+            nEvtTot = 1.0;
+            nEvtCat = 1.0;
+            break;
+         }
+         const double nEvt = pdf2.expectedEvents(_normSet);
+         nEvtTot += nEvt;
+         if (proxy == proxy2) {
+            // Matching by proxy by pointer rather than pdfs, because it's
+            // possible to have the same pdf used in different states.
+            nEvtCat += nEvt;
+         }
+      }
+   }
+   double catFrac = nEvtCat / nEvtTot;
+
+   // Return the selected PDF value, normalized by the relative number of
+   // expected events if applicable.
+   return *proxy * catFrac;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the number of expected events: If the index is in nset,
@@ -1054,13 +1048,14 @@ RooFit::OwningPtr<RooDataSet> RooSimultaneous::generateSimGlobal(const RooArgSet
       // Get pdf associated with state from simpdf
       RooAbsPdf* pdftmp = getPdf(nameIdx.first);
 
-      // Generate only global variables defined by the pdf associated with this state
       RooArgSet globtmp;
       pdftmp->getObservables(&whatVars, globtmp) ;
-      std::unique_ptr<RooDataSet> tmp{pdftmp->generate(globtmp,1)};
 
-      // Transfer values to output placeholder
-      globClone.assign(*tmp->get(0)) ;
+      // If there are any, generate only global variables defined by the pdf
+      // associated with this state and transfer values to output placeholder.
+      if (!globtmp.empty()) {
+        globClone.assign(*std::unique_ptr<RooDataSet>{pdftmp->generate(globtmp,1)}->get(0)) ;
+      }
     }
     data->add(globClone) ;
   }
@@ -1166,6 +1161,18 @@ RooArgSet const& RooSimultaneous::flattenedCatList() const
 
 namespace {
 
+void markObs(RooAbsArg *arg, std::string const &prefix, RooArgSet const &normSet)
+{
+   for (RooAbsArg *server : arg->servers()) {
+      if (server->isFundamental() && normSet.find(*server)) {
+         markObs(server, prefix, normSet);
+         server->setAttribute("__obs__");
+      } else if (!server->isFundamental()) {
+         markObs(server, prefix, normSet);
+      }
+   }
+}
+
 void prefixArgs(RooAbsArg *arg, std::string const &prefix, RooArgSet const &normSet)
 {
    if (!arg->getStringAttribute("__prefix__")) {
@@ -1175,7 +1182,6 @@ void prefixArgs(RooAbsArg *arg, std::string const &prefix, RooArgSet const &norm
    for (RooAbsArg *server : arg->servers()) {
       if (server->isFundamental() && normSet.find(*server)) {
          prefixArgs(server, prefix, normSet);
-         server->setAttribute("__obs__");
       } else if (!server->isFundamental()) {
          prefixArgs(server, prefix, normSet);
       }
@@ -1204,7 +1210,7 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
 
       auto pdfClone = RooHelpers::cloneTreeWithSameParameters(static_cast<RooAbsPdf const &>(proxy->arg()), &normSet);
 
-      prefixArgs(pdfClone.get(), prefix, normSet);
+      markObs(pdfClone.get(), prefix, normSet);
 
       std::unique_ptr<RooArgSet> pdfNormSet(
          static_cast<RooArgSet *>(std::unique_ptr<RooArgSet>(pdfClone->getVariables())->selectByAttrib("__obs__", true)));
@@ -1216,6 +1222,15 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
       RooFit::Detail::CompileContext pdfContext{*pdfNormSet};
       pdfContext.setLikelihoodMode(ctx.likelihoodMode());
       auto *pdfFinal = pdfContext.compile(*pdfClone, *newSimPdf, *pdfNormSet);
+
+      // We can only prefix the observables after everything related the
+      // compiling of the compute graph for the normalization set is done. This
+      // is because of a subtlety in conditional RooProdPdfs, which stores the
+      // normalization sets for the individual pdfs in RooArgSets that are
+      // disconnected from the computation graph, so we have no control over
+      // them. An alternative would be to use recursive server re-direction,
+      // but this has more performance overhead.
+      prefixArgs(pdfFinal, prefix, normSet);
 
       pdfFinal->fixAddCoefNormalization(*pdfNormSet, false);
 

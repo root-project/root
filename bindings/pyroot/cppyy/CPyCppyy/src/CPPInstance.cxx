@@ -230,6 +230,13 @@ void CPyCppyy::op_dealloc_nofree(CPPInstance* pyobj) {
 
 namespace CPyCppyy {
 
+//----------------------------------------------------------------------------
+static int op_traverse(CPPInstance* /*pyobj*/, visitproc /*visit*/, void* /*arg*/)
+{
+    return 0;
+}
+
+
 //= CPyCppyy object proxy null-ness checking =================================
 static int op_nonzero(CPPInstance* self)
 {
@@ -339,7 +346,7 @@ static PyObject* op_reshape(CPPInstance* self, PyObject* shape)
     Py_RETURN_NONE;
 }
 
-static PyObject* op_getitem(CPPInstance* self, PyObject* pyidx)
+static PyObject* op_item(CPPInstance* self, Py_ssize_t idx)
 {
 // In C, it is common to represent an array of structs as a pointer to the first
 // object in the array. If the caller indexes a pointer to an object that does not
@@ -350,10 +357,6 @@ static PyObject* op_getitem(CPPInstance* self, PyObject* pyidx)
         PyErr_Format(PyExc_TypeError, "%s object does not support indexing", Py_TYPE(self)->tp_name);
         return nullptr;
     }
-
-    Py_ssize_t idx = PyInt_AsSsize_t(pyidx);
-    if (idx == (Py_ssize_t)-1 && PyErr_Occurred())
-        return nullptr;
 
     if (idx < 0) {
     // this is debatable, and probably should not care, but the use case is pretty
@@ -383,6 +386,21 @@ static PyObject* op_getitem(CPPInstance* self, PyObject* pyidx)
     return BindCppObjectNoCast(indexed_obj, ((CPPClass*)Py_TYPE(self))->fCppType, flags);
 }
 
+//- sequence methods --------------------------------------------------------
+static PySequenceMethods op_as_sequence = {
+    0,                             // sq_length
+    0,                             // sq_concat
+    0,                             // sq_repeat
+    (ssizeargfunc)op_item,         // sq_item
+    0,                             // sq_slice
+    0,                             // sq_ass_item
+    0,                             // sq_ass_slice
+    0,                             // sq_contains
+    0,                             // sq_inplace_concat
+    0,                             // sq_inplace_repeat
+};
+
+
 //----------------------------------------------------------------------------
 static PyMethodDef op_methods[] = {
     {(char*)"__destruct__", (PyCFunction)op_destruct, METH_NOARGS,
@@ -391,8 +409,6 @@ static PyMethodDef op_methods[] = {
       (char*)"dispatch to selected overload"},
     {(char*)"__smartptr__", (PyCFunction)op_get_smartptr, METH_NOARGS,
       (char*)"get associated smart pointer, if any"},
-    {(char*)"__getitem__",  (PyCFunction)op_getitem, METH_O,
-      (char*)"pointer dereferencing"},
     {(char*)"__reshape__",  (PyCFunction)op_reshape, METH_O,
         (char*)"cast pointer to 1D array type"},
     {(char*)nullptr, nullptr, 0, nullptr}
@@ -425,7 +441,7 @@ static int op_clear(CPPInstance* pyobj)
 // Garbage collector clear of held python member objects; this is a good time
 // to safely remove this object from the memory regulator.
     if (pyobj->fFlags & CPPInstance::kIsRegulated)
-        MemoryRegulator::UnregisterPyObject(pyobj, (PyObject*)Py_TYPE((PyObject*)pyobj));;
+        MemoryRegulator::UnregisterPyObject(pyobj, (PyObject*)Py_TYPE((PyObject*)pyobj));
 
     return 0;
 }
@@ -1034,7 +1050,7 @@ PyTypeObject CPPInstance_Type = {
     0,                             // tp_as_async / tp_compare
     (reprfunc)op_repr,             // tp_repr
     &op_as_number,                 // tp_as_number
-    0,                             // tp_as_sequence
+    &op_as_sequence,               // tp_as_sequence
     0,                             // tp_as_mapping
     (hashfunc)op_hash,             // tp_hash
     0,                             // tp_call
@@ -1044,13 +1060,10 @@ PyTypeObject CPPInstance_Type = {
     0,                             // tp_as_buffer
     Py_TPFLAGS_DEFAULT |
         Py_TPFLAGS_BASETYPE |
-        Py_TPFLAGS_CHECKTYPES
-#if PY_VERSION_HEX >= 0x03120000
-        | Py_TPFLAGS_MANAGED_DICT | Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_MANAGED_WEAKREF
-#endif
-        ,                          // tp_flags
+        Py_TPFLAGS_CHECKTYPES |
+        Py_TPFLAGS_HAVE_GC,        // tp_flags
     (char*)"cppyy object proxy (internal)", // tp_doc
-    0,                             // tp_traverse
+    (traverseproc)op_traverse,     // tp_traverse
     (inquiry)op_clear,             // tp_clear
     (richcmpfunc)op_richcompare,   // tp_richcompare
     0,                             // tp_weaklistoffset
@@ -1088,6 +1101,9 @@ PyTypeObject CPPInstance_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x030c0000
     , 0                           // tp_watched
+#endif
+#if PY_VERSION_HEX >= 0x030d0000
+    , 0                           // tp_versions_used
 #endif
 };
 

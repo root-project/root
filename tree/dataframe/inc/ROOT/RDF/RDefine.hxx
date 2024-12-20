@@ -70,11 +70,23 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    /// The map key is the full variation name, e.g. "pt:up".
    std::unordered_map<std::string, std::unique_ptr<RDefineBase>> fVariedDefines;
 
+   template <typename ColType>
+   auto GetValueChecked(unsigned int slot, std::size_t readerIdx, Long64_t entry) -> ColType &
+   {
+      if (auto *val = fValues[slot][readerIdx]->template TryGet<ColType>(entry))
+         return *val;
+
+      throw std::out_of_range{"RDataFrame: Define could not retrieve value for column '" + fColumnNames[readerIdx] +
+                              "' for entry " + std::to_string(entry) +
+                              ". You can use the DefaultValueFor operation to provide a default value, or "
+                              "FilterAvailable/FilterMissing to discard/keep entries with missing values instead."};
+   }
+
    template <typename... ColTypes, std::size_t... S>
    void UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>, NoneTag)
    {
       fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
-         fExpression(fValues[slot][S]->template Get<ColTypes>(entry)...);
+         fExpression(GetValueChecked<ColTypes>(slot, S, entry)...);
       (void)entry; // avoid unused parameter warning (gcc 12.1)
    }
 
@@ -82,7 +94,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    void UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>, SlotTag)
    {
       fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
-         fExpression(slot, fValues[slot][S]->template Get<ColTypes>(entry)...);
+         fExpression(slot, GetValueChecked<ColTypes>(slot, S, entry)...);
       (void)entry; // avoid unused parameter warning (gcc 12.1)
    }
 
@@ -91,7 +103,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>, SlotAndEntryTag)
    {
       fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
-         fExpression(slot, entry, fValues[slot][S]->template Get<ColTypes>(entry)...);
+         fExpression(slot, entry, GetValueChecked<ColTypes>(slot, S, entry)...);
    }
 
 public:

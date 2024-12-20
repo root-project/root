@@ -272,47 +272,13 @@ openbsd)
    auxcflags="${cxxversionflag}"
    auxlibs="-lm -lstdc++"
    ;;
-macosx)
-   # MacOS X with gcc (GNU cc v3.1) and possible fink (fink.sf.net)
-   macosx_major=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1 | sed -e 's/^[[:space:]]*//'`
-   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
-   # cannot find the one linked to libGraf if relocated after built
-   if [ $macosx_major -eq 10 -a $macosx_minor -le 4 ]; then
-      rootlibs="$rootlibs -lfreetype"
-   fi
-   if [ $macosx_major -eq 10 -a $macosx_minor -le 3 ]; then
-      finkdir=`which fink 2>&1 | sed -ne "s/\/bin\/fink//p"`
-      auxcflags=`[ -d ${finkdir}/include ] && echo -I${finkdir}/include`
-      auxcflags="-Wno-long-double $auxcflags"
-      auxlibs="-lm `[ -d ${finkdir}/lib ] && echo -L${finkdir}/lib` -ldl"
-      forcelibs=$rootulibs
-      forceglibs=$rootuglibs
-      forceevelibs=$rootuevelibs
-   else
-      auxcflags="${cxxversionflag} -m32"
-      auxldflags="-m32"
-      auxlibs="-lm -ldl"
-   fi
-   ;;
 macosxicc)
    # MacOS X with Intel icc compiler
-   macosx_major=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1 | sed -e 's/^[[:space:]]*//'`
-   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
-   # cannot find the one linked to libGraf if relocated after built
-   if [ $macosx_major -eq 10 -a $macosx_minor -le 4 ]; then
-      rootlibs="$rootlibs -lfreetype"
-   fi
    auxcflags="${cxxversionflag}"
    auxlibs="-lm -ldl"
    ;;
 macosx64|macosxarm64)
    # MacOS X with gcc (GNU cc v4.x) in 64 bit mode
-   macosx_major=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 1 | sed -e 's/^[[:space:]]*//'`
-   macosx_minor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
-   # cannot find the one linked to libGraf if relocated after built
-   if [ $macosx_major -eq 10 -a $macosx_minor -le 4 ]; then
-      rootlibs="$rootlibs -lfreetype"
-   fi
    auxcflags="${cxxversionflag} -m64"
    auxldflags="-m64"
    auxlibs="-lm -ldl"
@@ -387,17 +353,11 @@ openbsd* | linux*)
    done
    ;;
 macosx*)
-   if [ \( $macosx_major -eq 10 -a $macosx_minor -ge 5 \) -o $macosx_major -gt 10  ]; then
-      auxcflags="-pthread $auxcflags"
-      auxlibs="-lpthread $auxlibs"
-   else
-      auxlibs="-lpthread $auxlibs"
-   fi
+   auxcflags="-pthread $auxcflags"
+   auxlibs="-lpthread $auxlibs"
    for f in $features ; do
       if test "x$f" = "xrpath" ; then
-         if [ \( $macosx_major -eq 10 -a $macosx_minor -ge 5 \) -o $macosx_major -gt 10  ]; then
-            auxlibs="-Wl,-rpath,$libdir $auxlibs"
-         fi
+         auxlibs="-Wl,-rpath,$libdir $auxlibs"
       fi
       if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"

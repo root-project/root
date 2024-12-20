@@ -78,6 +78,7 @@ TGPicturePool& TGPicturePool::operator=(const TGPicturePool& pp)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get a picture from the picture pool. Picture must be freed using
 /// TGPicturePool::FreePicture(). If picture is not found 0 is returned.
+/// \param name Name of the file containing the picture
 
 const TGPicture *TGPicturePool::GetPicture(const char *name)
 {
@@ -127,6 +128,19 @@ const TGPicture *TGPicturePool::GetPicture(const char *name)
    delete [] picnam;
    delete img;
    fPicList->Add(pic);
+   return pic;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Like TGPicturePool::GetPicture() but, instead of returning null when the 
+/// picture is not found, it returns a valid empty picture.
+
+const TGPicture *TGPicturePool::GetPictureOrEmpty(const char *name)
+{
+   static const TGPicture fEmptyPic { "Empty" };
+   const TGPicture *pic = GetPicture(name);
+   if (!pic)
+      pic = &fEmptyPic;
    return pic;
 }
 

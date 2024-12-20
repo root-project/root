@@ -31,6 +31,7 @@
 #include "TRegexp.h"
 
 #include <memory>
+#include <optional>
 
 // pin vtable
 ROOT::Internal::TVirtualCollectionReader::~TVirtualCollectionReader() {}
@@ -45,7 +46,8 @@ namespace {
       TClonesArray* GetCA(ROOT::Detail::TBranchProxy* proxy) {
          if (!proxy->Read()){
             fReadStatus = TTreeReaderValueBase::kReadError;
-            Error("TClonesReader::GetCA()", "Read error in TBranchProxy.");
+            if (!proxy->GetSuppressErrorsForMissingBranch())
+               Error("TClonesReader::GetCA()", "Read error in TBranchProxy.");
             return nullptr;
          }
          fReadStatus = TTreeReaderValueBase::kReadSuccess;
@@ -74,7 +76,8 @@ namespace {
       TVirtualCollectionProxy* GetCP(ROOT::Detail::TBranchProxy* proxy) {
          if (!proxy->Read()) {
             fReadStatus = TTreeReaderValueBase::kReadError;
-            Error("TSTLReader::GetCP()", "Read error in TBranchProxy.");
+            if (!proxy->GetSuppressErrorsForMissingBranch())
+               Error("TSTLReader::GetCP()", "Read error in TBranchProxy.");
             return nullptr;
          }
          if (!proxy->GetWhere()) {
@@ -112,7 +115,8 @@ namespace {
       TVirtualCollectionProxy* GetCP(ROOT::Detail::TBranchProxy* proxy) {
          if (!proxy->Read()) {
             fReadStatus = TTreeReaderValueBase::kReadError;
-            Error("TCollectionLessSTLReader::GetCP()", "Read error in TBranchProxy.");
+            if (!proxy->GetSuppressErrorsForMissingBranch())
+               Error("TCollectionLessSTLReader::GetCP()", "Read error in TBranchProxy.");
             return nullptr;
          }
          if (!proxy->GetWhere()) {
@@ -161,7 +165,8 @@ namespace {
       TVirtualCollectionProxy* GetCP(ROOT::Detail::TBranchProxy* proxy) {
          if (!proxy->Read()){
             fReadStatus = TTreeReaderValueBase::kReadError;
-            Error("TObjectArrayReader::GetCP()", "Read error in TBranchProxy.");
+            if (!proxy->GetSuppressErrorsForMissingBranch())
+               Error("TObjectArrayReader::GetCP()", "Read error in TBranchProxy.");
             return nullptr;
          }
          fReadStatus = TTreeReaderValueBase::kReadSuccess;
@@ -313,7 +318,8 @@ namespace {
       TVirtualCollectionProxy* GetCP (ROOT::Detail::TBranchProxy *proxy) {
          if (!proxy->Read()){
             fReadStatus = TTreeReaderValueBase::kReadError;
-            Error("TBasicTypeArrayReader::GetCP()", "Read error in TBranchProxy.");
+            if (!proxy->GetSuppressErrorsForMissingBranch())
+               Error("TBasicTypeArrayReader::GetCP()", "Read error in TBranchProxy.");
             return nullptr;
          }
          fReadStatus = TTreeReaderValueBase::kReadSuccess;
@@ -427,10 +433,17 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
    // Search for the branchname, determine what it contains, and wire the
    // TBranchProxy representing it to us so we can access its data.
 
+   // Tell the branch proxy to suppress the errors for missing branch if this
+   // branch name is found in the list of suppressions
+   const bool suppressErrorsForThisBranch =
+      (std::find(fTreeReader->fSuppressErrorsForMissingBranches.cbegin(),
+                 fTreeReader->fSuppressErrorsForMissingBranches.cend(),
+                 fBranchName.Data()) != fTreeReader->fSuppressErrorsForMissingBranches.cend());
+
    TDictionary* branchActualType = nullptr;
    TBranch* branch = nullptr;
    TLeaf *myLeaf = nullptr;
-   if (!GetBranchAndLeaf(branch, myLeaf, branchActualType))
+   if (!GetBranchAndLeaf(branch, myLeaf, branchActualType, suppressErrorsForThisBranch))
       return;
 
    if (!fDict) {
@@ -470,37 +483,35 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
             membername = branch->GetName();
          }
       }
-      auto director = fTreeReader->fDirector;
+      auto *director = fTreeReader->fDirector.get();
       // Determine if the branch is actually in a Friend TTree and if so which.
       if (branch->GetTree() != fTreeReader->GetTree()->GetTree()) {
          // It is in a friend, let's find the 'index' in the list of friend ...
-         int index = -1;
-         int current = 0;
-         for(auto fe : TRangeDynCast<TFriendElement>( fTreeReader->GetTree()->GetTree()->GetListOfFriends())) {
+         std::optional<std::size_t> index;
+         std::size_t current{};
+         auto &&friends = fTreeReader->GetTree()->GetTree()->GetListOfFriends();
+         for (auto fe : TRangeDynCast<TFriendElement>(friends)) {
             if (branch->GetTree() == fe->GetTree()) {
                index = current;
+               break;
             }
             ++current;
          }
-         if (index == -1) {
-            Error("TTreeReaderArrayBase::CreateProxy()", "The branch %s is contained in a Friend TTree that is not directly attached to the main.\n"
+         if (!index.has_value()) {
+            Error("TTreeReaderArrayBase::CreateProxy()",
+                  "The branch %s is contained in a Friend TTree that is not directly attached to the main.\n"
                   "This is not yet supported by TTreeReader.",
                   fBranchName.Data());
             return;
          }
-         TFriendProxy *feproxy = nullptr;
-         if ((size_t)index < fTreeReader->fFriendProxies.size()) {
-            feproxy = fTreeReader->fFriendProxies.at(index);
-         }
-         if (!feproxy) {
-            feproxy = new ROOT::Internal::TFriendProxy(director, fTreeReader->GetTree(), index);
-            fTreeReader->fFriendProxies.resize(index+1);
-            fTreeReader->fFriendProxies.at(index) = feproxy;
-         }
-         director = feproxy->GetDirector();
+
+         auto &&friendProxy = fTreeReader->AddFriendProxy(index.value());
+         director = friendProxy.GetDirector();
       }
-      namedProxy = new TNamedBranchProxy(director, branch, fBranchName, membername);
-      fTreeReader->AddProxy(namedProxy);
+      fTreeReader->AddProxy(
+         std::make_unique<TNamedBranchProxy>(director, branch, fBranchName, membername, suppressErrorsForThisBranch));
+
+      namedProxy = fTreeReader->FindProxy(fBranchName);
       fProxy = namedProxy->GetProxy();
       if (fProxy)
          fSetupStatus = kSetupMatch;
@@ -581,15 +592,21 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
 ////////////////////////////////////////////////////////////////////////////////
 /// Determine the branch / leaf and its type; reset fProxy / fSetupStatus on error.
 
-bool ROOT::Internal::TTreeReaderArrayBase::GetBranchAndLeaf(TBranch* &branch, TLeaf* &myLeaf,
-                                                            TDictionary* &branchActualType) {
+bool ROOT::Internal::TTreeReaderArrayBase::GetBranchAndLeaf(TBranch *&branch, TLeaf *&myLeaf,
+                                                            TDictionary *&branchActualType,
+                                                            bool suppressErrorsForMissingBranch)
+{
    myLeaf = nullptr;
    branch = fTreeReader->GetTree()->GetBranch(fBranchName);
    if (branch)
       return true;
 
    if (!fBranchName.Contains(".")) {
-      Error("TTreeReaderArrayBase::GetBranchAndLeaf()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+      if (!suppressErrorsForMissingBranch) {
+         Error("TTreeReaderArrayBase::GetBranchAndLeaf()",
+               "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.",
+               fBranchName.Data());
+      }
       fSetupStatus = kSetupMissingBranch;
       fProxy = nullptr;
       return false;
@@ -599,8 +616,12 @@ bool ROOT::Internal::TTreeReaderArrayBase::GetBranchAndLeaf(TBranch* &branch, TL
    TString leafName (fBranchName(leafNameExpression));
    TString branchName = fBranchName(0, fBranchName.Length() - leafName.Length());
    branch = fTreeReader->GetTree()->GetBranch(branchName);
-   if (!branch){
-      Error("TTreeReaderArrayBase::GetBranchAndLeaf()", "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+   if (!branch) {
+      if (!suppressErrorsForMissingBranch) {
+         Error("TTreeReaderArrayBase::GetBranchAndLeaf()",
+               "The tree does not have a branch called %s. You could check with TTree::Print() for available branches.",
+               fBranchName.Data());
+      }
       fSetupStatus = kSetupMissingBranch;
       fProxy = nullptr;
       return false;
@@ -608,7 +629,12 @@ bool ROOT::Internal::TTreeReaderArrayBase::GetBranchAndLeaf(TBranch* &branch, TL
 
    myLeaf = branch->GetLeaf(TString(leafName(1, leafName.Length())));
    if (!myLeaf){
-      Error("TTreeReaderArrayBase::GetBranchAndLeaf()", "The tree does not have a branch, nor a sub-branch called %s. You could check with TTree::Print() for available branches.", fBranchName.Data());
+      if (!suppressErrorsForMissingBranch) {
+         Error("TTreeReaderArrayBase::GetBranchAndLeaf()",
+               "The tree does not have a branch, nor a sub-branch called %s. You could check with TTree::Print() for "
+               "available branches.",
+               fBranchName.Data());
+      }
       fSetupStatus = kSetupMissingBranch;
       fProxy = nullptr;
       return false;
@@ -639,9 +665,6 @@ bool ROOT::Internal::TTreeReaderArrayBase::GetBranchAndLeaf(TBranch* &branch, TL
    }
    return true;
 }
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the TVirtualCollectionReader object for our branch.

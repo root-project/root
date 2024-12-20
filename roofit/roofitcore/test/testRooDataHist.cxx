@@ -740,9 +740,10 @@ TEST_P(WeightsTest, VectorizedWeights)
    }
 
    std::vector<double> weightsGetVal(nVals);
+   RooArgSet normSet{x};
    for (std::size_t i = 0; i < nVals; ++i) {
       x.setVal(xVals[i]);
-      weightsGetVal[i] = absReal->getVal(x);
+      weightsGetVal[i] = absReal->getVal(normSet);
    }
    x.setVal(0.0);
 

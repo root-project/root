@@ -6,7 +6,7 @@ import { kChar, kShort, kInt, kFloat,
          kUChar, kUShort, kUInt,
          kLong64, kULong64, kBool, kFloat16,
          kOffsetL, kOffsetP, kObject, kAny, kObjectp, kTString,
-         kStreamer, kStreamLoop, kSTLp, kSTL, clTBasket,
+         kStreamer, kStreamLoop, kSTLp, kSTL, kBaseClass, clTBasket,
          R__unzip, TBuffer, createStreamerElement, createMemberStreamer } from './io.mjs';
 import * as jsroot_math from './base/math.mjs';
 
@@ -260,7 +260,7 @@ function getBranchObjectClass(branch, tree, with_clones = false, with_leafs = fa
       return branch.fClonesName;
 
    const s_elem = findBrachStreamerElement(branch, tree.$file);
-   if ((branch.fType === kBaseClassNode) && s_elem && (s_elem.fTypeName === 'BASE'))
+   if ((branch.fType === kBaseClassNode) && s_elem && (s_elem.fTypeName === kBaseClass))
       return s_elem.fName;
 
    if (branch.fType === kObjectNode) {
@@ -581,7 +581,7 @@ class TDrawVariable {
    is_dummy() { return (this.branches.length === 0) && !this.func; }
 
    /** @summary Produce variable
-     * @desc after reading tree braches into the object, calculate variable value */
+     * @desc after reading tree branches into the object, calculate variable value */
    produce(obj) {
       this.length = 1;
       this.isarray = false;
@@ -1111,7 +1111,7 @@ class TDrawSelector extends TSelector {
       if (this.hist || !this.vars[0].buf) return;
 
       if (this.dump_values) {
-         // just create array where dumped valus will be collected
+         // just create array where dumped values will be collected
          this.hist = [];
 
          // reassign fill method
@@ -1282,7 +1282,7 @@ class TDrawSelector extends TSelector {
    }
 
     /** @summary function used when all branches can be read as array
-      * @desc most typical usage - histogramming of single branch */
+      * @desc most typical usage - histogram filling of single branch */
    ProcessArraysFunc(/* entry */) {
       if (this.arr_limit || this.graph) {
          const var0 = this.vars[0],
@@ -1490,7 +1490,7 @@ function defineMemberTypeName(file, parent_class, member_name) {
 
    let elem = null;
    for (let k = 0; k < arr.length; ++k) {
-      if (arr[k].fTypeName === 'BASE') {
+      if (arr[k].fTypeName === kBaseClass) {
          const res = defineMemberTypeName(file, arr[k].fName, member_name);
          if (res) return res;
       } else
@@ -1759,7 +1759,7 @@ async function treeProcess(tree, selector, args) {
             }
 
             const elem = findBrachStreamerElement(br, handle.file);
-            if (elem?.fTypeName === 'BASE') {
+            if (elem?.fTypeName === kBaseClass) {
                // if branch is data of base class, map it to original target
                if (br.fTotBytes && !AddBranchForReading(br, target_object, target_name, read_mode)) return false;
                if (!ScanBranches(br.fBranches, master_target, chld_kind)) return false;

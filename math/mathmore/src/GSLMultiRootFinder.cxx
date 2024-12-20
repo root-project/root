@@ -99,18 +99,6 @@ GSLMultiRootFinder::~GSLMultiRootFinder()
    if (fSolver) delete fSolver;
 }
 
-GSLMultiRootFinder::GSLMultiRootFinder(const GSLMultiRootFinder &)
-{
-}
-
-GSLMultiRootFinder & GSLMultiRootFinder::operator = (const GSLMultiRootFinder &rhs)
-{
-   // dummy operator=
-   if (this == &rhs) return *this;  // time saving self-test
-
-   return *this;
-}
-
 void GSLMultiRootFinder::SetType(const char * name) {
    // set type using a string
    std::pair<bool,int> type = GetType(name);

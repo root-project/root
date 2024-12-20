@@ -61,6 +61,13 @@ RRootDS::~RRootDS()
    }
 }
 
+std::size_t RRootDS::GetNFiles() const
+{
+   if (auto files = fModelChain.GetListOfFiles())
+      return files->GetEntries();
+   return 0;
+}
+
 std::string RRootDS::GetTypeName(std::string_view colName) const
 {
    if (!HasColumn(colName)) {

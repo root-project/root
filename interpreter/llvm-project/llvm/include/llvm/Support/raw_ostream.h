@@ -414,8 +414,8 @@ private:
 /// Call the appropriate insertion operator, given an rvalue reference to a
 /// raw_ostream object and return a stream of the same type as the argument.
 template <typename OStream, typename T>
-std::enable_if_t<!std::is_reference<OStream>::value &&
-                     std::is_base_of<raw_ostream, OStream>::value,
+std::enable_if_t<!std::is_reference_v<OStream> &&
+                     std::is_base_of_v<raw_ostream, OStream>,
                  OStream &&>
 operator<<(OStream &&OS, const T &Value) {
   OS << Value;
@@ -614,6 +614,8 @@ public:
   /// information about the error is put into EC, and the stream should be
   /// immediately destroyed.
   raw_fd_stream(StringRef Filename, std::error_code &EC);
+
+  raw_fd_stream(int fd, bool shouldClose);
 
   /// This reads the \p Size bytes into a buffer pointed by \p Ptr.
   ///

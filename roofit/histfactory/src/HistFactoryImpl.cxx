@@ -58,6 +58,8 @@ void configureConstrainedGammas(RooArgList const &gammas, std::span<const double
       // Set reasonable ranges
       gamma.setMax(1. + 5. * sigmaRel);
       gamma.setMin(0.);
+      // Set initial error too
+      gamma.setError(sigmaRel);
 
       // Give reasonable starting point for pre-fit errors by setting it to the
       // absolute sigma Mostly useful for pre-fit plotting.

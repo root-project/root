@@ -9,13 +9,7 @@
 ################################################################################
 
 r"""
-/**
-\class TDirectoryFile
-\brief \parblock \endparblock
-\htmlonly
-<div class="pyrootbox">
-\endhtmlonly
-## PyROOT
+\pythondoc TDirectoryFile
 
 In the same way as for TDirectory, it is possible to inspect the content of a
 TDirectoryFile object from Python as if the subdirectories and objects it
@@ -49,10 +43,8 @@ with the following syntax:
 # Write object obj with identifier 'keyName'
 d.WriteObject(obj, 'keyName')
 \endcode
-\htmlonly
-</div>
-\endhtmlonly
-*/
+
+\endpythondoc
 """
 
 from . import pythonization
@@ -88,7 +80,7 @@ def pythonize_tdirectoryfile(klass):
     """
     TDirectoryFile inherits from TDirectory the pythonized attr syntax (__getattr__)
     and WriteObject method.
-    On the other side, the Get() method is pythonised only in TDirectoryFile.
+    On the other side, the Get() method is pythonized only in TDirectoryFile.
     Thus, the situation is now the following:
 
     1) __getattr__ : TDirectory --> TDirectoryFile --> TFile

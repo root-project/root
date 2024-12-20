@@ -18,8 +18,9 @@ void candleplot() {
    auto h2 = new TH2I("h2","Machine B",12,dateBegin.Convert(),dateEnd.Convert(),1000,0,1000);
 
    h1->GetXaxis()->SetTimeDisplay(1);
-   h1->GetXaxis()->SetTimeFormat("%m/%y");
-   h1->GetXaxis()->SetTitle("Date [month/year]");
+   h1->GetXaxis()->SetTimeFormat("%d/%m/%y");
+   h1->GetXaxis()->SetNdivisions(-6);
+   h1->GetXaxis()->SetTitle("Date [day/month/year]");
 
    float Rand;
    for (int i = dateBegin.Convert(); i < dateEnd.Convert(); i+=86400*30) {

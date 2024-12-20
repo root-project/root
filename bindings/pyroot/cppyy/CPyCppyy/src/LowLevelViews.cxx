@@ -817,38 +817,62 @@ static PyObject* ll_reshape(CPyCppyy::LowLevelView* self, PyObject* shape)
 
 
 //---------------------------------------------------------------------------
-static PyObject* ll_array(CPyCppyy::LowLevelView* self, PyObject* args, PyObject* /* kwds */)
+static PyObject* ll_array(CPyCppyy::LowLevelView* self, PyObject* args, PyObject* kwds)
 {
 // Construct a numpy array from the lowlevelview (w/o copy if possible); this
 // uses the Python methods to avoid depending on numpy directly
 
 // Expect as most a dtype from the arguments;
-    static PyObject* ctmod = PyImport_ImportModule("numpy");    // ref-count kept
-    if (!ctmod)
+    static PyObject* npmod = PyImport_ImportModule("numpy");    // ref-count kept
+    if (!npmod)
         return nullptr;
 
-// expect possible dtype from the arguments, otherwie take it from the type code
-    PyObject* dtype;
-    if (!args || PyTuple_GET_SIZE(args) != 1) {
-        PyObject* npdtype = PyObject_GetAttr(ctmod, CPyCppyy::PyStrings::gDType);
-        PyObject* typecode = ll_typecode(self, nullptr);
-        dtype = PyObject_CallFunctionObjArgs(npdtype, typecode, nullptr);
-        Py_DECREF(typecode);
-        Py_DECREF(npdtype);
-    } else {
-        dtype = PyTuple_GET_ITEM(args, 0);
-        Py_INCREF(dtype);
+    bool docopy = false;
+    if (kwds) {
+        PyObject* pycp = PyObject_GetItem(kwds, CPyCppyy::PyStrings::gCopy);
+        if (!pycp) {
+            PyErr_SetString(PyExc_TypeError, "__array__ only supports the \"copy\" keyword");
+            return nullptr;
+        }
+
+        docopy = PyObject_IsTrue(pycp);
+        Py_DECREF(pycp);
     }
 
-    if (!dtype)
-        return nullptr;
+    if (!docopy) {           // view requested
+    // expect possible dtype from the arguments, otherwise take it from the type code
+        PyObject* dtype;
+        if (!args || PyTuple_GET_SIZE(args) != 1) {
+            PyObject* npdtype = PyObject_GetAttr(npmod, CPyCppyy::PyStrings::gDType);
+            PyObject* typecode = ll_typecode(self, nullptr);
+            dtype = PyObject_CallFunctionObjArgs(npdtype, typecode, nullptr);
+            Py_DECREF(typecode);
+            Py_DECREF(npdtype);
+        } else {
+            dtype = PyTuple_GET_ITEM(args, 0);
+            Py_INCREF(dtype);
+        }
 
-    PyObject* npfrombuf = PyObject_GetAttr(ctmod, CPyCppyy::PyStrings::gFromBuffer);
-    PyObject* view = PyObject_CallFunctionObjArgs(npfrombuf, (PyObject*)self, dtype, nullptr);
-    Py_DECREF(dtype);
-    Py_DECREF(npfrombuf);
+        if (!dtype)
+            return nullptr;
 
-    return view;
+        PyObject* npfrombuf = PyObject_GetAttr(npmod, CPyCppyy::PyStrings::gFromBuffer);
+        PyObject* view = PyObject_CallFunctionObjArgs(npfrombuf, (PyObject*)self, dtype, nullptr);
+        Py_DECREF(dtype);
+        Py_DECREF(npfrombuf);
+
+        return view;
+
+    } else {                 // copy requested
+        PyObject* npcopy = PyObject_GetAttr(npmod, CPyCppyy::PyStrings::gCopy);
+        PyObject* newarr = PyObject_CallFunctionObjArgs(npcopy, (PyObject*)self, nullptr);
+        Py_DECREF(npcopy);
+
+        return newarr;
+    }
+
+// never get here
+    return nullptr;
 }
 
 
@@ -959,6 +983,9 @@ PyTypeObject LowLevelView_Type = {
 #if PY_VERSION_HEX >= 0x030c0000
     , 0                            // tp_watched
 #endif
+#if PY_VERSION_HEX >= 0x030d0000
+    , 0                            // tp_versions_used
+#endif
 };
 
 } // namespace CPyCppyy
@@ -971,7 +998,7 @@ template<> struct typecode_traits<bool> {
 template<> struct typecode_traits<char> {
     static constexpr const char* format = "b"; static constexpr const char* name = "char"; };
 template<> struct typecode_traits<signed char> {
-    static constexpr const char* format = "b"; static constexpr const char* name = "signed char"; };
+    static constexpr const char* format = "b"; static constexpr const char* name = "SCharAsInt"; };
 template<> struct typecode_traits<unsigned char> {
     static constexpr const char* format = "B"; static constexpr const char* name = "UCharAsInt"; };
 #if __cplusplus > 201402L

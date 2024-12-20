@@ -61,18 +61,6 @@ Interpolator::~Interpolator()
    if (fInterp) delete fInterp;
 }
 
-Interpolator::Interpolator(const Interpolator &)
-{
-}
-
-Interpolator & Interpolator::operator = (const Interpolator &rhs)
-{
-   // dummy (private) assignment
-   if (this == &rhs) return *this;  // time saving self-test
-
-   return *this;
-}
-
 bool Interpolator::SetData(unsigned int ndata, const double * x, const double *y) {
    // set the interpolation data
    return fInterp->Init(ndata, x, y);

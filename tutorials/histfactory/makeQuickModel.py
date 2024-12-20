@@ -8,7 +8,6 @@
 # as well as potentially uncertainties on those
 # values, and returns a fitted signal value
 # and errors
-from __future__ import print_function
 
 
 def main():

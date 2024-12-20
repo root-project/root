@@ -18,19 +18,26 @@ using namespace std::string_literals;
 
 using namespace ROOT;
 
+/** \class ROOT::RGeomHierarchy
+\ingroup webwidgets
+
+\brief Web-based %ROOT geometry hierarchy viewer
+*/
+
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
 RGeomHierarchy::RGeomHierarchy(RGeomDescription &desc, bool use_server_threads) : fDesc(desc)
 {
    fWebWindow = RWebWindow::Create();
-   fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
-
-   fWebWindow->SetDefaultPage("file:rootui5sys/geom/index.html");
-   fWebWindow->SetGeometry(600, 900); // configure predefined window geometry
-
    if (use_server_threads)
       fWebWindow->UseServerThreads();
+
+   fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
+   fWebWindow->SetDefaultPage("file:rootui5sys/geom/index.html");
+   fWebWindow->SetGeometry(600, 900); // configure predefined window geometry
 
    fDesc.AddSignalHandler(this, [this](const std::string &kind) { ProcessSignal(kind); });
 }

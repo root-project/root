@@ -76,7 +76,8 @@ public:
    /** Sets the entire buffer to a constant value */
    void            SetConstVal(const AFloat constVal);
 
-   operator AFloat * () const;
+   inline operator AFloat * () const { return data(); }
+   AFloat * data() const;
 
    inline AFloat & operator[](size_t index);
    inline AFloat   operator[](size_t index) const;
@@ -131,7 +132,8 @@ public:
    /** Return sub-buffer of the current buffer. */
    TCudaDeviceBuffer GetSubBuffer(size_t offset, size_t size);
    /** Convert to raw device data pointer.*/
-   operator AFloat * () const;
+   inline operator AFloat * () const { return data(); }
+   AFloat * data() const;
 
    void CopyFrom(const TCudaHostBuffer<AFloat> &) const;
    void CopyTo(const TCudaHostBuffer<AFloat> &)   const;

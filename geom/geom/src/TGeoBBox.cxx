@@ -207,50 +207,6 @@ TGeoBBox::TGeoBBox(Double_t *param) : TGeoShape("")
 TGeoBBox::~TGeoBBox() {}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if 2 positioned boxes overlap.
-
-Bool_t
-TGeoBBox::AreOverlapping(const TGeoBBox *box1, const TGeoMatrix *mat1, const TGeoBBox *box2, const TGeoMatrix *mat2)
-{
-   Double_t master[3];
-   Double_t local[3];
-   Double_t ldir1[3], ldir2[3];
-   const Double_t *o1 = box1->GetOrigin();
-   const Double_t *o2 = box2->GetOrigin();
-   // Convert center of first box to the local frame of second
-   mat1->LocalToMaster(o1, master);
-   mat2->MasterToLocal(master, local);
-   if (TGeoBBox::Contains(local, box2->GetDX(), box2->GetDY(), box2->GetDZ(), o2))
-      return kTRUE;
-   Double_t distsq = (local[0] - o2[0]) * (local[0] - o2[0]) + (local[1] - o2[1]) * (local[1] - o2[1]) +
-                     (local[2] - o2[2]) * (local[2] - o2[2]);
-   // Compute distance between box centers and compare with max value
-   Double_t rmaxsq = (box1->GetDX() + box2->GetDX()) * (box1->GetDX() + box2->GetDX()) +
-                     (box1->GetDY() + box2->GetDY()) * (box1->GetDY() + box2->GetDY()) +
-                     (box1->GetDZ() + box2->GetDZ()) * (box1->GetDZ() + box2->GetDZ());
-   if (distsq > rmaxsq + TGeoShape::Tolerance())
-      return kFALSE;
-   // We are still not sure: shoot a ray from the center of "1" towards the
-   // center of 2.
-   Double_t dir[3];
-   mat1->LocalToMaster(o1, ldir1);
-   mat2->LocalToMaster(o2, ldir2);
-   distsq = 1. / TMath::Sqrt(distsq);
-   dir[0] = (ldir2[0] - ldir1[0]) * distsq;
-   dir[1] = (ldir2[1] - ldir1[1]) * distsq;
-   dir[2] = (ldir2[2] - ldir1[2]) * distsq;
-   mat1->MasterToLocalVect(dir, ldir1);
-   mat2->MasterToLocalVect(dir, ldir2);
-   // Distance to exit from o1
-   Double_t dist1 = TGeoBBox::DistFromInside(o1, ldir1, box1->GetDX(), box1->GetDY(), box1->GetDZ(), o1);
-   // Distance to enter from o2
-   Double_t dist2 = TGeoBBox::DistFromOutside(local, ldir2, box2->GetDX(), box2->GetDY(), box2->GetDZ(), o2);
-   if (dist1 > dist2)
-      return kTRUE;
-   return kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Computes capacity of the shape in [length^3].
 
 Double_t TGeoBBox::Capacity() const

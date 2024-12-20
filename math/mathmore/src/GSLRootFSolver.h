@@ -64,10 +64,6 @@ public:
 
   gsl_root_fsolver * Solver() const { return fSolver; }
 
-
-protected:
-
-
 private:
 
   gsl_root_fsolver *fSolver;

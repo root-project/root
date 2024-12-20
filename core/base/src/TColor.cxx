@@ -63,6 +63,7 @@ The color creation and management class.
   - [Basic colors](\ref C01)
   - [The color wheel](\ref C02)
   - [Bright and dark colors](\ref C03)
+  - [Accessible Color Schemes](\ref C031)
   - [Gray scale view of of canvas with colors](\ref C04)
   - [Color palettes](\ref C05)
   - [High quality predefined palettes](\ref C06)
@@ -181,18 +182,35 @@ simplest is to define an other white color not attached to the color index 0:
 
 \anchor C03
 ## Bright and dark colors
-The dark and bright color are used to give 3-D effects when drawing various
-boxes (see TWbox, TPave, TPaveText, TPaveLabel, etc).
+Dark and bright colors are used to add 3D effects to graphical objects like
+TWbox, TPave, TPaveText, TPaveLabel, etc. and in colored lego plots.
 
-  - The dark colors have an index = color_index+100
-  - The bright colors have an index = color_index+150
-  - Two static functions return the bright and dark color number
-    corresponding to a color index. If the bright or dark color does not
-    exist, they are created:
-   ~~~ {.cpp}
-      Int_t dark   = TColor::GetColorDark(color_index);
-      Int_t bright = TColor::GetColorBright(color_index);
-   ~~~
+Two static functions are available that return the bright or dark color number corresponding
+to a given color index. If these variants don't already exist, they are created as needed:
+~~~ {.cpp}
+   Int_t dark   = TColor::GetColorDark(color_index);
+   Int_t bright = TColor::GetColorBright(color_index);
+~~~
+
+\anchor C031
+## Accessible Color Schemes
+Choosing an appropriate color scheme is essential for making results easy to understand and
+interpret. Factors like colorblindness and converting colors to grayscale for publications
+can impact accessibility. Furthermore, results should be aesthetically pleasing. The following
+three color schemes, recommended by M. Petroff in [arXiv:2107.02270v2](https://arxiv.org/pdf/2107.02270)
+and available on [GitHub](https://github.com/mpetroff/accessible-color-cycles)
+under the MIT License, meet these criteria.
+
+These three color schemes are available as color sets with 6, 8, and 10 colors, named
+`kP[6, 8, 10]ColorName`. For example, `kP6Red` represents the red color within the P6 color scheme
+(`P` for Petroff or Preferred).
+
+Begin_Macro
+../../../tutorials/visualisation/graphics/accessiblecolorschemes.C
+End_Macro
+
+The example thstackcolorscheme.C illustrates how to use these color schemes in THStack drawings.
+It also demonstrates that they are effective in grayscale.
 
 \anchor C04
 ## Grayscale view of of canvas with colors
@@ -294,7 +312,7 @@ display plots using different palettes on the same pad.
 The tutorial multipalette.C illustrates this feature.
 
 Begin_Macro(source)
-../../../tutorials/graphs/multipalette.C
+../../../tutorials/visualisation/graphs/multipalette.C
 End_Macro
 
 \since **6.26:**
@@ -340,8 +358,9 @@ As explained in [Crameri, F., Shephard, G.E. & Heron, P.J. The misuse of colour 
 Nat Commun 11, 5444 (2020)](https://doi.org/10.1038/s41467-020-19160-7) some color maps
 can visually distord data, specially for people with colour-vision deficiencies.
 
-For instance one can immediately see the [disadvantages of the Rainbow color map](https://root.cern.ch/rainbow-color-map),
-which is misleading for colour-blinded people in a 2D plot (not so much in a 3D surfaces).
+For instance one can immediately see the [disadvantages of the Rainbow color
+map](https://root.cern.ch/rainbow-color-map), which is misleading for colour-blinded people in a 2D plot (not so much in
+a 3D surfaces).
 
 The `kCMYK` palette, is also not great because it's dark, then lighter, then
 half-dark again. Some others, like `kAquamarine`, have almost no contrast therefore it would
@@ -1033,7 +1052,7 @@ Or if you prefer to activate GL for a single canvas `c`, then use `c->SetSupport
 The following macro gives an example of transparency usage:
 
 Begin_Macro(source)
-../../../tutorials/graphics/transparency.C
+../../../tutorials/visualisation/graphics/transparency.C
 End_Macro
 
 */
@@ -1051,6 +1070,7 @@ TColor::TColor(): TNamed()
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal color constructor. Initialize a color structure.
 /// Compute the RGB and HLS color components.
+/// The color title is set to its hexadecimal value.
 
 TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
                Float_t a)
@@ -1090,6 +1110,7 @@ TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
    SetRGB(r, g, b);
    fAlpha = a;
    gDefinedColors++;
+   SetTitle(AsHexString());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1216,6 +1237,38 @@ void TColor::InitializeColors()
       new TColor(19,.95,.95,.95,"grey19");
       new TColor(50, 0.83,0.35,0.33);
 
+      // define the Petroff color schemes
+      new TColor(kGrape,    111./255.,  45./255., 168./255., "kGrape");
+      new TColor(kBrown,    165./255.,  42./255.,  42./255., "kBrown");
+      new TColor(kAsh,      178./255., 190./255., 181./255., "kAsh");
+
+      new TColor(kP6Blue,    87./255., 144./255., 252./255., "kP6Blue");
+      new TColor(kP6Yellow, 248./255., 156./255.,  32./255., "kP6Yellow");
+      new TColor(kP6Red,    228./255.,  37./255.,  54./255., "kP6Red");
+      new TColor(kP6Grape,  150./255.,  74./255., 139./255., "kP6Grape");
+      new TColor(kP6Gray,   156./255., 156./255., 161./255., "kP6Gray");
+      new TColor(kP6Violet, 122./255.,  33./255., 221./255., "kP6Violet");
+
+      new TColor(kP8Blue,    24./255.,  69./255., 251./255., "kP8Blue");
+      new TColor(kP8Orange,        1.,  94./255.,   2./255., "kP8Orange");
+      new TColor(kP8Red,    201./255.,  31./255.,  22./255., "kP8Red");
+      new TColor(kP8Pink,   200./255.,  73./255., 169./255., "kP8Pink");
+      new TColor(kP8Green,  173./255., 173./255., 125./255., "kP8Green");
+      new TColor(kP8Cyan,   134./255., 200./255., 221./255., "kP8Cyan");
+      new TColor(kP8Azure,   87./255., 141./255., 255./255., "kP8Azure");
+      new TColor(kP8Gray,   101./255.,  99./255., 100./255., "kP8Gray");
+
+      new TColor(kP10Blue,    63./255., 144./255., 218./255., "kP10Blue");
+      new TColor(kP10Yellow,        1., 169./255.,  14./255., "kP10Yellow");
+      new TColor(kP10Red,    189./255.,  31./255.,   1./255., "kP10Red");
+      new TColor(kP10Gray,   148./255., 164./255., 162./255., "kP10Gray");
+      new TColor(kP10Violet, 131./255.,  45./255., 182./255., "kP10Violet");
+      new TColor(kP10Brown,  169./255., 107./255.,  89./255., "kP10Brown");
+      new TColor(kP10Orange, 231./255.,  99./255.,        0., "kP10Orange");
+      new TColor(kP10Green,  185./255., 172./255., 112./255., "kP10Green");
+      new TColor(kP10Ash,    113./255., 117./255., 129./255., "kP10Ash");
+      new TColor(kP10Cyan,   146./255., 218./255., 221./255., "kP10Cyan");
+
       // Initialize the Pretty Palette Spectrum Violet->Red
       //   The color model used here is based on the HLS model which
       //   is much more suitable for creating palettes than RGB.
@@ -1332,7 +1385,6 @@ void TColor::CreateColorsCircle(Int_t offset, const char *name, UChar_t *rgb)
       TColor *color = gROOT->GetColor(colorn);
       if (!color) {
          color = new TColor(colorn,rgb[3*n]/255.,rgb[3*n+1]/255.,rgb[3*n+2]/255.);
-         color->SetTitle(color->AsHexString());
          if      (n>10) colorname.Form("%s+%d",name,n-10);
          else if (n<10) colorname.Form("%s-%d",name,10-n);
          else           colorname.Form("%s",name);
@@ -1352,7 +1404,6 @@ void TColor::CreateColorsRectangle(Int_t offset, const char *name, UChar_t *rgb)
       TColor *color = gROOT->GetColor(colorn);
       if (!color) {
          color = new TColor(colorn,rgb[3*n]/255.,rgb[3*n+1]/255.,rgb[3*n+2]/255.);
-         color->SetTitle(color->AsHexString());
          if      (n>9) colorname.Form("%s+%d",name,n-9);
          else if (n<9) colorname.Form("%s-%d",name,9-n);
          else          colorname.Form("%s",name);
@@ -1769,8 +1820,34 @@ void TColor::RGB2HLS(Int_t r, Int_t g, Int_t b, Int_t &h, Int_t &l, Int_t &s)
    s = (Int_t) (satur * 255.0f);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// Initialize this color and its associated colors.
+/// Set the color name and change also the name of the "dark" and "bright" associated
+/// colors if they exist.
+
+void TColor::SetName(const char* name)
+{
+   Int_t nd = GetColorByName(TString::Format("%s_dark",fName.Data()).Data());
+   Int_t nb = GetColorByName(TString::Format("%s_bright",fName.Data()).Data());
+
+   fName = name;
+
+   auto colors = (TObjArray*) gROOT->GetListOfColors();
+
+   if (nd >= 0) {
+      TColor *colord = (TColor*)colors->At(nd);
+      colord->TNamed::SetName(TString::Format("%s_dark",fName.Data()).Data());
+   }
+
+   if (nb >= 0) {
+      TColor *colorb = (TColor*)colors->At(nb);
+      colorb->TNamed::SetName(TString::Format("%s_bright",fName.Data()).Data());
+   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize this color and its "dark" and "bright" associated colors.
 
 void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
 {
@@ -1782,6 +1859,7 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
    if (fRed < 0) return;
 
    RGBtoHLS(r, g, b, fHue, fLight, fSaturation);
+   SetTitle(AsHexString());
 
    Int_t nplanes = 16;
    if (gVirtualX) gVirtualX->GetPlanes(nplanes);
@@ -1793,26 +1871,32 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
 #endif
       Allocate();
 
-   if (fNumber > 50) return;
-
-   // now define associated colors for WBOX shading
+   // change the dark and bright associated colors if they exist
    Float_t dr, dg, db, lr, lg, lb;
 
+   // get the list of all defined colors
+   auto colors = (TObjArray*) gROOT->GetListOfColors();
+
    // set dark color
-   HLStoRGB(fHue, 0.7f*fLight, fSaturation, dr, dg, db);
-   TColor *dark = gROOT->GetColor(100+fNumber);
-   if (dark) {
-      if (nplanes > 8) dark->SetRGB(dr, dg, db);
-      else             dark->SetRGB(0.3f,0.3f,0.3f);
+   Int_t nd = GetColorByName(TString::Format("%s_dark",GetName()).Data());
+   if (nd >= 0) {
+      HLStoRGB(fHue, 0.7f*fLight, fSaturation, dr, dg, db);
+      TColor *colord = (TColor*)colors->At(nd);
+      if (nplanes > 8) colord->SetRGB(dr, dg, db);
+      else             colord->SetRGB(0.3f,0.3f,0.3f);
+      colord->SetTitle(colord->AsHexString());
    }
 
-   // set light color
-   HLStoRGB(fHue, 1.2f*fLight, fSaturation, lr, lg, lb);
-   TColor *light = gROOT->GetColor(150+fNumber);
-   if (light) {
-      if (nplanes > 8) light->SetRGB(lr, lg, lb);
-      else             light->SetRGB(0.8f,0.8f,0.8f);
+   // set bright color
+   Int_t nb = GetColorByName(TString::Format("%s_bright",GetName()).Data());
+   if (nb >= 0) {
+      HLStoRGB(fHue, 1.2f*fLight, fSaturation, lr, lg, lb);
+      TColor *colorb = (TColor*)colors->At(nb);
+      if (nplanes > 8) colorb->SetRGB(lr, lg, lb);
+      else             colorb->SetRGB(0.8f,0.8f,0.8f);
+      colorb->SetTitle(colorb->AsHexString());
    }
+
    gDefinedColors++;
 }
 
@@ -1822,7 +1906,6 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
 void TColor::Allocate()
 {
    if (gVirtualX && !gROOT->IsBatch())
-
       gVirtualX->SetRGB(fNumber, GetRed(), GetGreen(), GetBlue());
 }
 
@@ -1992,81 +2075,95 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b, Float_t a)
 Int_t TColor::GetColorByName(const char *colorname)
 {
    TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
-   const Int_t ncolors = colors->GetSize();
-   TColor *color = nullptr;
-   TString colname;
-
-   for (Int_t i = 0; i<ncolors; i++) {
-      color = (TColor*)colors->At(i);
-      if (color) {
-         colname = color->GetName();
-         if (!colname.CompareTo(colorname)) return i;
-      }
+   if (auto color = static_cast<TColor *>(colors->FindObject(colorname))) {
+      return color->GetNumber();
+   } else {
+     return -1;
    }
-
-   return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function: Returns the bright color number corresponding to n
-/// If the TColor object does not exist, it is created.
-/// The convention is that the bright color nb = n+150
+/// If the TColor object does not exist, it is created at a free color index.
 
 Int_t TColor::GetColorBright(Int_t n)
 {
    if (n < 0) return -1;
 
    // Get list of all defined colors
-   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+   auto colors = (TObjArray*) gROOT->GetListOfColors();
    Int_t ncolors = colors->GetSize();
+
    // Get existing color at index n
    TColor *color = nullptr;
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
 
+   // in case color is not named, assign a unique name.
+   if (strlen(color->GetName()) == 0)
+      color->SetName(TString::Format("Color%d",n).Data());
+
+   // check if the bright color already exists, if yes return it
+   TString nameb = TString::Format("%s_bright",color->GetName()).Data();
+   Int_t nb = GetColorByName(nameb.Data());
+   TColor *colorb = nullptr;
+   if (nb >= 0) {
+      colorb = (TColor*)colors->At(nb);
+      return colorb->GetNumber();
+   }
+
    //Get the rgb of the new bright color corresponding to color n
    Float_t r,g,b;
    HLStoRGB(color->GetHue(), 1.2f*color->GetLight(), color->GetSaturation(), r, g, b);
 
-   //Build the bright color (unless the slot nb is already used)
-   Int_t nb = n+150;
-   TColor *colorb = nullptr;
-   if (nb < ncolors) colorb = (TColor*)colors->At(nb);
-   if (colorb) return nb;
+   //Build the bright color
+   nb = GetFirstFreeColorIndex();
    colorb = new TColor(nb,r,g,b);
-   colorb->SetName(TString::Format("%s_bright",color->GetName()).Data());
+   colorb->SetName(nameb.Data());
+   colorb->SetTitle(colorb->AsHexString());
    colors->AddAtAndExpand(colorb,nb);
    return nb;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function: Returns the dark color number corresponding to n
-/// If the TColor object does not exist, it is created.
-/// The convention is that the dark color nd = n+100
+/// If the TColor object does not exist, it is created at a free color index.
 
 Int_t TColor::GetColorDark(Int_t n)
 {
    if (n < 0) return -1;
 
    // Get list of all defined colors
-   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+   auto colors = (TObjArray*) gROOT->GetListOfColors();
    Int_t ncolors = colors->GetSize();
+
    // Get existing color at index n
    TColor *color = nullptr;
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
 
+   // in case color is not named, assign a unique name.
+   if (strlen(color->GetName()) == 0)
+      color->SetName(TString::Format("Color%d",n).Data());
+
+   // check if the dark color already exists, if yes return it
+   TString named = TString::Format("%s_dark",color->GetName()).Data();
+   Int_t nd = GetColorByName(named.Data());
+   TColor *colord = nullptr;
+   if (nd >= 0) {
+      colord = (TColor*)colors->At(nd);
+      return colord->GetNumber();
+   }
+
    //Get the rgb of the new dark color corresponding to color n
    Float_t r,g,b;
    HLStoRGB(color->GetHue(), 0.7f*color->GetLight(), color->GetSaturation(), r, g, b);
 
-   //Build the dark color (unless the slot nd is already used)
-   Int_t nd = n+100;
-   TColor *colord = nullptr;
-   if (nd < ncolors) colord = (TColor*)colors->At(nd);
-   if (colord) return nd;
+   //Build the dark color
+   nd = GetFirstFreeColorIndex();
    colord = new TColor(nd,r,g,b);
-   colord->SetName(TString::Format("%s_dark",color->GetName()).Data());
+   colord->SetName(named.Data());
+   colord->SetTitle(colord->AsHexString());
    colors->AddAtAndExpand(colord,nd);
    return nd;
 }
@@ -2257,8 +2354,9 @@ Int_t TColor::GetRadialGradient(Double_t radius, const std::vector<Int_t> &color
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function: Returns a free color index which can be used to define
-/// a user custom color.
+/// Static function: Returns the free color index greater than the highest defined color
+/// index. All the color indices after this index are also free. It can be used to
+/// define a user custom color.
 ///
 /// ~~~ {.cpp}
 ///   Int_t ci = TColor::GetFreeColorIndex();
@@ -2268,6 +2366,27 @@ Int_t TColor::GetRadialGradient(Double_t radius, const std::vector<Int_t> &color
 Int_t TColor::GetFreeColorIndex()
 {
    return gHighestColorIndex+1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function: Returns the first free color greater in the list of colors.
+/// index. It can be used to define a user custom color.
+///
+/// ~~~ {.cpp}
+///   Int_t ci = TColor::GetFirstFreeColorIndex();
+///   auto color = new TColor(ci, 0.1, 0.2, 0.3);
+/// ~~~
+
+Int_t TColor::GetFirstFreeColorIndex()
+{
+   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+   const Int_t ncolors = colors->GetSize();
+   TColor *color = nullptr;
+   for (Int_t i = kP10Cyan+1; i<ncolors; i++) {
+      color = (TColor*)colors->At(i);
+      if (!color) return i;
+   }
+   return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2365,9 +2484,9 @@ ULong_t TColor::RGB2Pixel(Int_t r, Int_t g, Int_t b)
    if (b > 255) b = 255;
 
    ColorStruct_t color;
-   color.fRed   = UShort_t(r * 257);  // 65535/255
-   color.fGreen = UShort_t(g * 257);
-   color.fBlue  = UShort_t(b * 257);
+   color.fRed   = UShort_t(r * 256);  // 65536/256
+   color.fGreen = UShort_t(g * 256);
+   color.fBlue  = UShort_t(b * 256);
    color.fMask  = kDoRed | kDoGreen | kDoBlue;
    gVirtualX->AllocColor(gVirtualX->GetColormap(), color);
    return color.fPixel;
@@ -2398,9 +2517,13 @@ void TColor::Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b)
    ColorStruct_t color;
    color.fPixel = pixel;
    gVirtualX->QueryColor(gVirtualX->GetColormap(), color);
-   r = color.fRed / 257;
-   g = color.fGreen / 257;
-   b = color.fBlue / 257;
+   // color is between 0 and 65535 inclusive.
+   // We need to move it to the 0 to 255 range (inclusive).
+   // So we need to resample the 65536 values into 256 indices.
+   // This would mean equal blocks of 256 high-res values per color index.
+   r = color.fRed / 256;
+   g = color.fGreen / 256;
+   b = color.fBlue / 256;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

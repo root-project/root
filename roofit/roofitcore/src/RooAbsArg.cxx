@@ -777,25 +777,6 @@ bool RooAbsArg::getObservables(const RooAbsCollection* dataList, RooArgSet& outp
 }
 
 
-/// \deprecated Use getObservables()
-RooFit::OwningPtr<RooArgSet> RooAbsArg::getDependents(const RooArgSet &set) const
-{
-   return getObservables(set);
-}
-
-/// \deprecated Use getObservables()
-RooFit::OwningPtr<RooArgSet> RooAbsArg::getDependents(const RooAbsData *set) const
-{
-   return getObservables(set);
-}
-
-/// \deprecated Use getObservables()
-RooFit::OwningPtr<RooArgSet> RooAbsArg::getDependents(const RooArgSet *depList) const
-{
-   return getObservables(depList);
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a RooArgSet with all components (branch nodes) of the
 /// expression tree headed by this object.
@@ -2533,23 +2514,6 @@ std::unique_ptr<RooAbsArg> RooAbsArg::compileForNormSet(RooArgSet const & normSe
    return newArg;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// This function defines a translation for each RooAbsReal based object that can be used
-/// to express the class as simple C++ code. The function adds the code represented by
-/// each class as an std::string (that is later concatenated with code strings from translate calls)
-/// to form the C++ code that AD tools can understand. Any class that wants to support AD, has to
-/// implement this function.
-///
-/// \param[in] ctx An object to manage auxiliary information for code-squashing. Also takes the
-/// code string that this class outputs into the squashed code through the 'addToCodeBody' function.
-void RooAbsArg::translate(RooFit::Detail::CodeSquashContext & /*ctx*/) const
-{
-   std::stringstream errorMsg;
-   errorMsg << "Translate function for class \"" << ClassName() << "\" has not yet been implemented.";
-   coutE(Minimization) << errorMsg.str() << std::endl;
-   throw std::runtime_error(errorMsg.str().c_str());
-}
 
 /// Sets the token for retrieving results in the BatchMode. For internal use only.
 void RooAbsArg::setDataToken(std::size_t index)

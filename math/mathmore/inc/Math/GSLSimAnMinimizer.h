@@ -85,25 +85,6 @@ namespace ROOT {
       */
       ~GSLSimAnMinimizer() override;
 
-   private:
-      // usually copying is non trivial, so we make this unaccessible
-
-      /**
-         Copy constructor
-      */
-      GSLSimAnMinimizer(const GSLSimAnMinimizer &) : ROOT::Math::BasicMinimizer() {}
-
-      /**
-         Assignment operator
-      */
-      GSLSimAnMinimizer &operator=(const GSLSimAnMinimizer &rhs)
-      {
-         if (this == &rhs)
-            return *this; // time saving self-test
-         return *this;
-      }
-
-   public:
       /// method to perform the minimization
       bool Minimize() override;
 

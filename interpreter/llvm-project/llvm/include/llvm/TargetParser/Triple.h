@@ -96,6 +96,7 @@ public:
     hsail64,        // AMD HSAIL with 64-bit pointers
     spir,           // SPIR: standard portable IR for OpenCL 32-bit version
     spir64,         // SPIR: standard portable IR for OpenCL 64-bit version
+    spirv,          // SPIR-V with logical memory layout.
     spirv32,        // SPIR-V with 32-bit pointers
     spirv64,        // SPIR-V with 64-bit pointers
     kalimba,        // Kalimba: generic kalimba
@@ -111,6 +112,7 @@ public:
   enum SubArchType {
     NoSubArch,
 
+    ARMSubArch_v9_5a,
     ARMSubArch_v9_4a,
     ARMSubArch_v9_3a,
     ARMSubArch_v9_2a,
@@ -162,6 +164,7 @@ public:
     SPIRVSubArch_v13,
     SPIRVSubArch_v14,
     SPIRVSubArch_v15,
+    SPIRVSubArch_v16,
   };
   enum VendorType {
     UnknownVendor,
@@ -175,7 +178,6 @@ public:
     MipsTechnologies,
     NVIDIA,
     CSR,
-    Myriad,
     AMD,
     Mesa,
     SUSE,
@@ -185,8 +187,6 @@ public:
   enum OSType {
     UnknownOS,
 
-    Ananas,
-    CloudABI,
     Darwin,
     DragonFly,
     FreeBSD,
@@ -199,10 +199,10 @@ public:
     NetBSD,
     OpenBSD,
     Solaris,
+    UEFI,
     Win32,
     ZOS,
     Haiku,
-    Minix,
     RTEMS,
     NaCl,       // Native Client
     AIX,
@@ -215,15 +215,18 @@ public:
     TvOS,       // Apple tvOS
     WatchOS,    // Apple watchOS
     DriverKit,  // Apple DriverKit
+    XROS,       // Apple XROS
     Mesa3D,
-    Contiki,
     AMDPAL,     // AMD PAL Runtime
     HermitCore, // HermitCore Unikernel/Multikernel
     Hurd,       // GNU/Hurd
     WASI,       // Experimental WebAssembly OS
     Emscripten,
     ShaderModel, // DirectX ShaderModel
-    LastOSType = ShaderModel
+    LiteOS,
+    Serenity,
+    Vulkan,      // Vulkan SPIR-V
+    LastOSType = Vulkan
   };
   enum EnvironmentType {
     UnknownEnvironment,
@@ -274,7 +277,9 @@ public:
     Mesh,
     Amplification,
 
-    LastEnvironmentType = Amplification
+    OpenHOS,
+
+    LastEnvironmentType = OpenHOS
   };
   enum ObjectFormatType {
     UnknownObjectFormat,
@@ -407,6 +412,10 @@ public:
   /// Parse the version number as with getOSVersion.
   VersionTuple getDriverKitVersion() const;
 
+  /// Parse the Vulkan version number from the OSVersion and SPIR-V version
+  /// (SubArch).  This should only be called with Vulkan SPIR-V triples.
+  VersionTuple getVulkanVersion() const;
+
   /// @}
   /// @name Direct Component Access
   /// @{
@@ -417,9 +426,6 @@ public:
 
   /// Get the architecture (first) component of the triple.
   StringRef getArchName() const;
-
-  /// Get the architecture name based on Kind and SubArch.
-  StringRef getArchName(ArchType Kind, SubArchType SubArch = NoSubArch) const;
 
   /// Get the vendor (second) component of the triple.
   StringRef getVendorName() const;
@@ -434,6 +440,12 @@ public:
   /// Get the operating system and optional environment components as a single
   /// string (separated by a '-' if the environment component is present).
   StringRef getOSAndEnvironmentName() const;
+
+  /// Get the version component of the environment component as a single
+  /// string (the version after the environment).
+  ///
+  /// For example, "fooos1.2.3" would return "1.2.3".
+  StringRef getEnvironmentVersionString() const;
 
   /// @}
   /// @name Convenience Predicates
@@ -509,14 +521,17 @@ public:
     return getSubArch() == Triple::ARMSubArch_v7k;
   }
 
+  /// Is this an Apple XROS triple.
+  bool isXROS() const { return getOS() == Triple::XROS; }
+
   /// Is this an Apple DriverKit triple.
   bool isDriverKit() const { return getOS() == Triple::DriverKit; }
 
   bool isOSzOS() const { return getOS() == Triple::ZOS; }
 
-  /// Is this a "Darwin" OS (macOS, iOS, tvOS, watchOS, or DriverKit).
+  /// Is this a "Darwin" OS (macOS, iOS, tvOS, watchOS, XROS, or DriverKit).
   bool isOSDarwin() const {
-    return isMacOSX() || isiOS() || isWatchOS() || isDriverKit();
+    return isMacOSX() || isiOS() || isWatchOS() || isDriverKit() || isXROS();
   }
 
   bool isSimulatorEnvironment() const {
@@ -570,13 +585,14 @@ public:
            Env == Triple::GNUX32;
   }
 
-  bool isOSContiki() const {
-    return getOS() == Triple::Contiki;
-  }
-
   /// Tests whether the OS is Haiku.
   bool isOSHaiku() const {
     return getOS() == Triple::Haiku;
+  }
+
+  /// Tests whether the OS is UEFI.
+  bool isUEFI() const {
+    return getOS() == Triple::UEFI;
   }
 
   /// Tests whether the OS is Windows.
@@ -670,6 +686,10 @@ public:
     return getOS() == Triple::AIX;
   }
 
+  bool isOSSerenity() const {
+    return getOS() == Triple::Serenity;
+  }
+
   /// Tests whether the OS uses the ELF binary format.
   bool isOSBinFormatELF() const {
     return getObjectFormat() == Triple::ELF;
@@ -740,12 +760,39 @@ public:
     return getEnvironment() == Triple::Musl ||
            getEnvironment() == Triple::MuslEABI ||
            getEnvironment() == Triple::MuslEABIHF ||
-           getEnvironment() == Triple::MuslX32;
+           getEnvironment() == Triple::MuslX32 ||
+           getEnvironment() == Triple::OpenHOS || isOSLiteOS();
   }
+
+  /// Tests whether the target is OHOS
+  /// LiteOS default enviroment is also OHOS, but omited on triple.
+  bool isOHOSFamily() const { return isOpenHOS() || isOSLiteOS(); }
+
+  bool isOpenHOS() const { return getEnvironment() == Triple::OpenHOS; }
+
+  bool isOSLiteOS() const { return getOS() == Triple::LiteOS; }
 
   /// Tests whether the target is DXIL.
   bool isDXIL() const {
     return getArch() == Triple::dxil;
+  }
+
+  bool isShaderModelOS() const {
+    return getOS() == Triple::ShaderModel;
+  }
+
+  bool isVulkanOS() const { return getOS() == Triple::Vulkan; }
+
+  bool isShaderStageEnvironment() const {
+    EnvironmentType Env = getEnvironment();
+    return Env == Triple::Pixel || Env == Triple::Vertex ||
+           Env == Triple::Geometry || Env == Triple::Hull ||
+           Env == Triple::Domain || Env == Triple::Compute ||
+           Env == Triple::Library || Env == Triple::RayGeneration ||
+           Env == Triple::Intersection || Env == Triple::AnyHit ||
+           Env == Triple::ClosestHit || Env == Triple::Miss ||
+           Env == Triple::Callable || Env == Triple::Mesh ||
+           Env == Triple::Amplification;
   }
 
   /// Tests whether the target is SPIR (32- or 64-bit).
@@ -753,9 +800,15 @@ public:
     return getArch() == Triple::spir || getArch() == Triple::spir64;
   }
 
-  /// Tests whether the target is SPIR-V (32/64-bit).
+  /// Tests whether the target is SPIR-V (32/64-bit/Logical).
   bool isSPIRV() const {
-    return getArch() == Triple::spirv32 || getArch() == Triple::spirv64;
+    return getArch() == Triple::spirv32 || getArch() == Triple::spirv64 ||
+           getArch() == Triple::spirv;
+  }
+
+  /// Tests whether the target is SPIR-V Logical
+  bool isSPIRVLogical() const {
+    return getArch() == Triple::spirv;
   }
 
   /// Tests whether the target is NVPTX (32- or 64-bit).
@@ -789,6 +842,7 @@ public:
             getEnvironment() == Triple::MuslEABI ||
             getEnvironment() == Triple::EABIHF ||
             getEnvironment() == Triple::GNUEABIHF ||
+            getEnvironment() == Triple::OpenHOS ||
             getEnvironment() == Triple::MuslEABIHF || isAndroid()) &&
            isOSBinFormatELF();
   }
@@ -846,10 +900,14 @@ public:
                : PointerWidth == 64;
   }
 
+  /// Tests whether the target is 32-bit LoongArch.
+  bool isLoongArch32() const { return getArch() == Triple::loongarch32; }
+
+  /// Tests whether the target is 64-bit LoongArch.
+  bool isLoongArch64() const { return getArch() == Triple::loongarch64; }
+
   /// Tests whether the target is LoongArch (32- and 64-bit).
-  bool isLoongArch() const {
-    return getArch() == Triple::loongarch32 || getArch() == Triple::loongarch64;
-  }
+  bool isLoongArch() const { return isLoongArch32() || isLoongArch64(); }
 
   /// Tests whether the target is MIPS 32-bit (little and big endian).
   bool isMIPS32() const {
@@ -886,8 +944,17 @@ public:
   bool isPPC64ELFv2ABI() const {
     return (getArch() == Triple::ppc64 &&
             ((getOS() == Triple::FreeBSD &&
-            (getOSMajorVersion() >= 13 || getOSVersion().empty())) ||
-            getOS() == Triple::OpenBSD || isMusl()));
+              (getOSMajorVersion() >= 13 || getOSVersion().empty())) ||
+             getOS() == Triple::OpenBSD || isMusl()));
+  }
+
+  /// Tests whether the target 32-bit PowerPC uses Secure PLT.
+  bool isPPC32SecurePlt() const {
+    return ((getArch() == Triple::ppc || getArch() == Triple::ppcle) &&
+            ((getOS() == Triple::FreeBSD &&
+              (getOSMajorVersion() >= 13 || getOSVersion().empty())) ||
+             getOS() == Triple::NetBSD || getOS() == Triple::OpenBSD ||
+             isMusl()));
   }
 
   /// Tests whether the target is 32-bit RISC-V.
@@ -959,8 +1026,18 @@ public:
   }
 
   /// Tests whether the target uses emulated TLS as default.
+  ///
+  /// Note: Android API level 29 (10) introduced ELF TLS.
   bool hasDefaultEmulatedTLS() const {
-    return isAndroid() || isOSOpenBSD() || isWindowsCygwinEnvironment();
+    return (isAndroid() && isAndroidVersionLT(29)) || isOSOpenBSD() ||
+           isWindowsCygwinEnvironment() || isOHOSFamily();
+  }
+
+  /// True if the target supports both general-dynamic and TLSDESC, and TLSDESC
+  /// is enabled by default.
+  bool hasDefaultTLSDESC() const {
+    // TODO: Improve check for other platforms, like Android, and RISC-V
+    return false;
   }
 
   /// Tests whether the target uses -data-sections as default.
@@ -1069,6 +1146,9 @@ public:
   /// Get the canonical name for the \p Kind architecture.
   static StringRef getArchTypeName(ArchType Kind);
 
+  /// Get the architecture name based on \p Kind and \p SubArch.
+  static StringRef getArchName(ArchType Kind, SubArchType SubArch = NoSubArch);
+
   /// Get the "prefix" canonical name for the \p Kind architecture. This is the
   /// prefix used by the architecture specific builtins, and is suitable for
   /// passing to \see Intrinsic::getIntrinsicForClangBuiltin().
@@ -1084,6 +1164,9 @@ public:
 
   /// Get the canonical name for the \p Kind environment.
   static StringRef getEnvironmentTypeName(EnvironmentType Kind);
+
+  /// Get the name for the \p Object format.
+  static StringRef getObjectFormatTypeName(ObjectFormatType ObjectFormat);
 
   /// @}
   /// @name Static helpers for converting alternate architecture names.

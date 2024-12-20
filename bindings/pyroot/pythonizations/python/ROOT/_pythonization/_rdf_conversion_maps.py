@@ -25,7 +25,7 @@ FUNDAMENTAL_PYTHON_TYPES = {
 TREE_TO_NUMBA = {
     'C': 'str', 
     'Char_t': 'int',
-    'UChat_t': 'unsigned int',
+    'UChar_t': 'unsigned int',
     'Short_t': 'int',
     'UShort_t': 'unsigned int',
     'Int_t': 'int',
@@ -60,7 +60,6 @@ NUMPY_TO_TREE = {
     numpy.int16 : 'Int_t',
     numpy.int32: 'Int_t',
     numpy.int64 : 'Long_t',
-    numpy.float_ : 'Float_t',
     numpy.float32 : 'Float_t',
     numpy.float64 : 'Double_t',
 }

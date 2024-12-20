@@ -30,8 +30,7 @@ namespace ROOT {
 
 // GSLSimAnMinimizer implementation
 
-GSLSimAnMinimizer::GSLSimAnMinimizer( int /* ROOT::Math::EGSLSimAnMinimizerType type */ ) :
-   BasicMinimizer()
+GSLSimAnMinimizer::GSLSimAnMinimizer( int /* ROOT::Math::EGSLSimAnMinimizerType type */ )
 {
    // Constructor implementation : create GSLMultiFit wrapper object
 

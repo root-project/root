@@ -18,11 +18,11 @@
 #include "X86InstrInfo.h"
 #include "X86MachineFunctionInfo.h"
 #include "X86Subtarget.h"
-#include "llvm/Analysis/EHPersonalities.h"
 #include "llvm/CodeGen/LivePhysRegs.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/Passes.h" // For IDs of passes that are preserved.
+#include "llvm/IR/EHPersonalities.h"
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/Target/TargetMachine.h"
 using namespace llvm;
@@ -49,7 +49,7 @@ public:
   const X86MachineFunctionInfo *X86FI = nullptr;
   const X86FrameLowering *X86FL = nullptr;
 
-  bool runOnMachineFunction(MachineFunction &Fn) override;
+  bool runOnMachineFunction(MachineFunction &MF) override;
 
   MachineFunctionProperties getRequiredProperties() const override {
     return MachineFunctionProperties().set(
@@ -77,7 +77,7 @@ private:
   /// placed into separate block guarded by check for al register(for SystemV
   /// abi).
   void ExpandVastartSaveXmmRegs(
-      MachineBasicBlock *MBB,
+      MachineBasicBlock *EntryBlk,
       MachineBasicBlock::iterator VAStartPseudoInstr) const;
 };
 char X86ExpandPseudo::ID = 0;
@@ -264,6 +264,7 @@ bool X86ExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
   MachineInstr &MI = *MBBI;
   unsigned Opcode = MI.getOpcode();
   const DebugLoc &DL = MBBI->getDebugLoc();
+  bool HasEGPR = STI->hasEGPR();
   switch (Opcode) {
   default:
     return false;
@@ -466,10 +467,14 @@ bool X86ExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
     Register Reg0 = TRI->getSubReg(Reg, X86::sub_mask_0);
     Register Reg1 = TRI->getSubReg(Reg, X86::sub_mask_1);
 
-    auto MIBLo = BuildMI(MBB, MBBI, DL, TII->get(X86::KMOVWkm))
-      .addReg(Reg0, RegState::Define | getDeadRegState(DstIsDead));
-    auto MIBHi = BuildMI(MBB, MBBI, DL, TII->get(X86::KMOVWkm))
-      .addReg(Reg1, RegState::Define | getDeadRegState(DstIsDead));
+    auto MIBLo =
+        BuildMI(MBB, MBBI, DL,
+                TII->get(HasEGPR ? X86::KMOVWkm_EVEX : X86::KMOVWkm))
+            .addReg(Reg0, RegState::Define | getDeadRegState(DstIsDead));
+    auto MIBHi =
+        BuildMI(MBB, MBBI, DL,
+                TII->get(HasEGPR ? X86::KMOVWkm_EVEX : X86::KMOVWkm))
+            .addReg(Reg1, RegState::Define | getDeadRegState(DstIsDead));
 
     for (int i = 0; i < X86::AddrNumOperands; ++i) {
       MIBLo.add(MBBI->getOperand(1 + i));
@@ -500,8 +505,10 @@ bool X86ExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
     Register Reg0 = TRI->getSubReg(Reg, X86::sub_mask_0);
     Register Reg1 = TRI->getSubReg(Reg, X86::sub_mask_1);
 
-    auto MIBLo = BuildMI(MBB, MBBI, DL, TII->get(X86::KMOVWmk));
-    auto MIBHi = BuildMI(MBB, MBBI, DL, TII->get(X86::KMOVWmk));
+    auto MIBLo = BuildMI(MBB, MBBI, DL,
+                         TII->get(HasEGPR ? X86::KMOVWmk_EVEX : X86::KMOVWmk));
+    auto MIBHi = BuildMI(MBB, MBBI, DL,
+                         TII->get(HasEGPR ? X86::KMOVWmk_EVEX : X86::KMOVWmk));
 
     for (int i = 0; i < X86::AddrNumOperands; ++i) {
       MIBLo.add(MBBI->getOperand(i));
@@ -549,19 +556,23 @@ bool X86ExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
   case TargetOpcode::ICALL_BRANCH_FUNNEL:
     ExpandICallBranchFunnel(&MBB, MBBI);
     return true;
+#define GET_EGPR_IF_ENABLED(OPC) (STI->hasEGPR() ? OPC##_EVEX : OPC)
   case X86::PLDTILECFGV: {
-    MI.setDesc(TII->get(X86::LDTILECFG));
+    MI.setDesc(TII->get(GET_EGPR_IF_ENABLED(X86::LDTILECFG)));
     return true;
   }
   case X86::PTILELOADDV:
   case X86::PTILELOADDT1V: {
     for (unsigned i = 2; i > 0; --i)
       MI.removeOperand(i);
-    unsigned Opc =
-        Opcode == X86::PTILELOADDV ? X86::TILELOADD : X86::TILELOADDT1;
+    unsigned Opc = Opcode == X86::PTILELOADDV
+                       ? GET_EGPR_IF_ENABLED(X86::TILELOADD)
+                       : GET_EGPR_IF_ENABLED(X86::TILELOADDT1);
     MI.setDesc(TII->get(Opc));
     return true;
   }
+  case X86::PTCMMIMFP16PSV:
+  case X86::PTCMMRLFP16PSV:
   case X86::PTDPBSSDV:
   case X86::PTDPBSUDV:
   case X86::PTDPBUSDV:
@@ -573,6 +584,8 @@ bool X86ExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
       MI.removeOperand(i);
     unsigned Opc;
     switch (Opcode) {
+    case X86::PTCMMIMFP16PSV:  Opc = X86::TCMMIMFP16PS; break;
+    case X86::PTCMMRLFP16PSV:  Opc = X86::TCMMRLFP16PS; break;
     case X86::PTDPBSSDV:   Opc = X86::TDPBSSD; break;
     case X86::PTDPBSUDV:   Opc = X86::TDPBSUD; break;
     case X86::PTDPBUSDV:   Opc = X86::TDPBUSD; break;
@@ -588,9 +601,10 @@ bool X86ExpandPseudo::ExpandMI(MachineBasicBlock &MBB,
   case X86::PTILESTOREDV: {
     for (int i = 1; i >= 0; --i)
       MI.removeOperand(i);
-    MI.setDesc(TII->get(X86::TILESTORED));
+    MI.setDesc(TII->get(GET_EGPR_IF_ENABLED(X86::TILESTORED)));
     return true;
   }
+#undef GET_EGPR_IF_ENABLED
   case X86::PTILEZEROV: {
     for (int i = 2; i > 0; --i) // Remove row, col
       MI.removeOperand(i);

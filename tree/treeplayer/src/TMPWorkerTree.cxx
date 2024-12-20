@@ -310,11 +310,15 @@ Int_t TMPWorkerTree::LoadTree(UInt_t code, MPCodeBufPair &msg, Long64_t &start, 
       UInt_t nBunch = nEntries / fNWorkers;
       UInt_t rangeN = nProcessed % fNWorkers;
       start = rangeN * nBunch;
-      if (rangeN < (fNWorkers - 1)) {
+      if (start >= nEntries) {
+         start = finish = nEntries;
+      }
+      else if (rangeN < (fNWorkers - 1)) {
          finish = (rangeN+1)*nBunch;
       } else {
          finish = nEntries;
       }
+
 
       //process tree
       tree = fTree;
@@ -389,7 +393,9 @@ Int_t TMPWorkerTree::LoadTree(UInt_t code, MPCodeBufPair &msg, Long64_t &start, 
          if(nEntries % fNWorkers) nBunch++;
          UInt_t rangeN = nProcessed % fNWorkers;
          start = rangeN * nBunch;
-         if(rangeN < (fNWorkers-1))
+         if (start >= nEntries)
+            start = finish = nEntries;
+         else if(rangeN < (fNWorkers-1))
             finish = (rangeN+1)*nBunch;
          else
             finish = nEntries;
@@ -409,12 +415,14 @@ Int_t TMPWorkerTree::LoadTree(UInt_t code, MPCodeBufPair &msg, Long64_t &start, 
          if (code == MPCode::kProcRange) {
             // example: for 21 entries, 4 workers we want ranges 0-5, 5-10, 10-15, 15-21
             // and this worker must take the rangeN-th range
-            ULong64_t nEntries = (*enl)->GetN();
+            Long64_t nEntries = (*enl)->GetN();
             UInt_t nBunch = nEntries / fNWorkers;
             if (nEntries % fNWorkers) nBunch++;
             UInt_t rangeN = nProcessed % fNWorkers;
             start = rangeN * nBunch;
-            if (rangeN < (fNWorkers - 1))
+            if (start >= nEntries) {
+               start = finish = nEntries;
+            } else if (rangeN < (fNWorkers - 1))
                finish = (rangeN + 1) * nBunch;
             else
                finish = nEntries;

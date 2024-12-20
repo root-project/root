@@ -16,7 +16,7 @@ copying of 'evaluation macros' necessary anymore !
 
 All the evaluation macros are now part of the TMVA library libTMVA.so
 
-Example scripts of how to run TMVA are available in $ROOTSYS/tutorials/tmva/
+Example scripts of how to run TMVA are available in $ROOTSYS/tutorials/machine_learning/
 !!!!!
 
 After 2013 TMVA was completely integrated into ROOT and is now released as part of it.
@@ -31,7 +31,7 @@ System requirements:
 ========================================================================================
 Getting Started:
 ----------------
-  Example scripts of how to run TMVA are availabe in $ROOTSYS/tutorials/tmva/
+  Example scripts of how to run TMVA are availabe in $ROOTSYS/tutorials/machine_learning/
 
   please simply copy one of those scripts to you 'work' directory
 

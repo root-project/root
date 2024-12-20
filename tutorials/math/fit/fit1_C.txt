@@ -1,0 +1,12 @@
+   TCanvas * c1 = new TCanvas("c1","Canvas");
+   c1->SetGridx();
+   c1->SetGridy();
+   TF1 *sqroot = new TF1("sqroot", "x*gaus(0) + [3]*form1", 0.0, 10.0);
+   sqroot->SetLineColor(4);
+   sqroot->SetLineWidth(6);
+   sqroot->SetParameters(10.0, 4.0, 1.0, 20.0);
+   sqroot->Print();
+
+   TH1D *h1d = new TH1D("h1d", "Test random numbers", 200, 0.0, 10.0);
+   h1d->FillRandom("sqroot", 10000);
+   h1d->Fit("sqroot");

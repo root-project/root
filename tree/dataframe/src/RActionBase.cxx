@@ -16,8 +16,11 @@ using namespace ROOT::Internal::RDF;
 
 RActionBase::RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, const RColumnRegister &colRegister,
                          const std::vector<std::string> &prevVariations)
-   : fLoopManager(lm), fNSlots(lm->GetNSlots()), fColumnNames(colNames),
-     fVariations(Union(prevVariations, colRegister.GetVariationDeps(fColumnNames))), fColRegister(colRegister)
+   : fLoopManager(lm),
+     fColumnNames(colNames),
+     fNSlots(lm->GetNSlots()),
+     fVariations(Union(prevVariations, colRegister.GetVariationDeps(fColumnNames))),
+     fColRegister(colRegister)
 {
 }
 

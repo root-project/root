@@ -28,7 +28,7 @@ In extended mode, a
 \f$ N_\mathrm{expect} - N_\mathrm{observed}*log(N_\mathrm{expect}) \f$ term is added.
 **/
 
-#include <RooNLLVar.h>
+#include "RooNLLVar.h"
 
 #include <RooAbsData.h>
 #include <RooAbsDataStore.h>
@@ -39,7 +39,7 @@ In extended mode, a
 #include <RooMsgService.h>
 #include <RooNaNPacker.h>
 #include <RooProdPdf.h>
-#include <RooRealMPFE.h>
+#include "RooRealMPFE.h"
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
 
@@ -47,8 +47,6 @@ In extended mode, a
 #include "Math/Util.h"
 
 #include <algorithm>
-
-ClassImp(RooNLLVar)
 
 RooNLLVar::~RooNLLVar() {}
 

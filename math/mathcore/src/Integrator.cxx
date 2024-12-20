@@ -163,7 +163,7 @@ VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::
          // plugin manager requires a string
          std::string typeName = GetName(type);
 
-         ig = reinterpret_cast<ROOT::Math::VirtualIntegratorOneDim *>( h->ExecPlugin(5,typeName.c_str(), rule, absTol, relTol, size ) );
+         ig = reinterpret_cast<ROOT::Math::VirtualIntegratorOneDim *>( h->ExecPlugin(5,typeName.c_str(), rule, absTol, relTol, (size_t) size ) );
          assert(ig != nullptr);
       }
 #ifdef DEBUG

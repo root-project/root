@@ -16,19 +16,20 @@
 #ifndef ROO_DATA_HIST
 #define ROO_DATA_HIST
 
-#include "RooAbsData.h"
-#include "RooDirItem.h"
-#include "RooArgSet.h"
+#include <RooAbsData.h>
+#include <RooArgSet.h>
+#include <RooDirItem.h>
+#include <RooGlobalFunc.h>
 
-#include <string_view>
-#include "Rtypes.h"
+#include <Rtypes.h>
 
-#include <map>
-#include <vector>
-#include <string>
 #include <functional>
+#include <map>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <unordered_map>
+#include <vector>
 
 class TAxis ;
 class RooAbsArg;
@@ -46,9 +47,14 @@ public:
   RooDataHist(RooStringView name, RooStringView title, const RooArgList& vars, const TH1* hist, double initWgt=1.0) ;
   RooDataHist(RooStringView name, RooStringView title, const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> histMap, double initWgt=1.0) ;
   RooDataHist(RooStringView name, RooStringView title, const RooArgList& vars, RooCategory& indexCat, std::map<std::string,RooDataHist*> dhistMap, double wgt=1.0) ;
-  //RooDataHist(const char *name, const char *title, const RooArgList& vars, double initWgt=1.0) ;
   RooDataHist(RooStringView name, RooStringView title, const RooArgList& vars, const RooCmdArg& arg1, const RooCmdArg& arg2={}, const RooCmdArg& arg3={},
         const RooCmdArg& arg4={},const RooCmdArg& arg5={},const RooCmdArg& arg6={},const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;
+
+  /// For internal use in RooFit.
+  template<class Val_t>
+  inline RooDataHist(RooStringView name, RooStringView title, const RooArgList& vars, RooCategory& indexCat, RooFit::Detail::FlatMap<std::string,Val_t> const& histMap, double initWgt=1.0)
+    : RooDataHist(name, title, vars, indexCat, RooFit::Detail::flatMapToStdMap(histMap), initWgt) {}
+
   RooDataHist& operator=(const RooDataHist&) = delete;
 
   RooDataHist(const RooDataHist& other, const char* newname = nullptr) ;
@@ -206,14 +212,15 @@ public:
 
   std::vector<std::unique_ptr<const RooAbsBinning>> const& getBinnings() const { return _lvbins; }
 
+  int arraySize()   const { return _arrSize; }  
   double const* weightArray()   const { return _wgt; }
   double const* wgtErrLoArray() const { return _errLo; }
   double const* wgtErrHiArray() const { return _errHi; }
   double const* sumW2Array()    const { return _sumw2; }
 
-  std::string calculateTreeIndexForCodeSquash(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx,
+  std::string calculateTreeIndexForCodeSquash(RooAbsArg const *klass, RooFit::Experimental::CodegenContext &ctx,
                                               const RooAbsCollection &coords, bool reverse = false) const;
-  std::string declWeightArrayForCodeSquash(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx,
+  std::string declWeightArrayForCodeSquash(RooFit::Experimental::CodegenContext &ctx,
                                            bool correctForBinSize) const;
 
   protected:
@@ -226,7 +233,7 @@ public:
 
   void initialize(const char* binningName=nullptr,bool fillTree=true) ;
   std::unique_ptr<RooAbsData> reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=nullptr,
-                  std::size_t nStart=0, std::size_t nStop=std::numeric_limits<std::size_t>::max()) override;
+                  std::size_t nStart=0, std::size_t nStop=std::numeric_limits<std::size_t>::max()) const override;
   double interpolateDim(int iDim, double xval, size_t centralIdx, int intOrder, bool correctForBinSize, bool cdfBoundaries) ;
   const std::vector<double>& calculatePartialBinVolume(const RooArgSet& dimSet) const ;
   void checkBinBounds() const;

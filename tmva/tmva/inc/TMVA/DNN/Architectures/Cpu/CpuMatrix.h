@@ -163,8 +163,8 @@ public:
 
    /** Return raw pointer to the elements stored contiguously in column-major
     *  order. */
-   AFloat *GetRawDataPointer() { return fBuffer; }
-   const AFloat *GetRawDataPointer() const { return fBuffer; }
+   AFloat *GetRawDataPointer() { return fBuffer.data(); }
+   const AFloat *GetRawDataPointer() const { return fBuffer.data(); }
 
    static Executor &GetThreadExecutor() { return TMVA::Config::Instance().GetThreadExecutor(); }
 

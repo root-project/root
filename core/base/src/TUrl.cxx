@@ -195,7 +195,7 @@ tryfile:
       // allow url of form: "proto://"
    } else {
       if (defaultIsFile) {
-         const std::size_t bufferSize = strlen("file:") + strlen(u0) + 1;
+         const std::size_t bufferSize = std::char_traits<char>::length("file:") + strlen(u0) + 1;
          char *newu = new char [bufferSize];
          snprintf(newu, bufferSize, "file:%s", u0);
          delete [] u0;
@@ -573,7 +573,7 @@ void TUrl::Print(Option_t *) const
 
 TObjArray *TUrl::GetSpecialProtocols()
 {
-   static std::atomic_bool usedEnv = ATOMIC_VAR_INIT(false);
+   static std::atomic_bool usedEnv { false };
 
    if (!gEnv) {
       R__LOCKGUARD(gROOTMutex);

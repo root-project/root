@@ -1,7 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-///
 /// When an histogram is drawn with the option `COLZ`, a palette is automatically drawn
 /// vertically on the right side of the plot. It is possible to move and resize this
 /// vertical palette as shown on the left plot. The right plot demonstrates that, when the

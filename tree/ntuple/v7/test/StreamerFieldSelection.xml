@@ -1,0 +1,6 @@
+<lcgdict>
+  <selection>
+    <class name="ForceNativeXML" rntupleStreamerMode="false" noStreamer="true" />
+    <class name="ForceStreamedXML" rntupleStreamerMode="true" />
+  </selection>
+</lcgdict>

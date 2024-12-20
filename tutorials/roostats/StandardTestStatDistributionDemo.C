@@ -48,9 +48,6 @@
 using namespace RooFit;
 using namespace RooStats;
 
-bool useProof = false; // flag to control whether to use Proof
-int nworkers = 0;      // number of workers (default use all available cores)
-
 // -------------------------------------------------------
 // The actual macro
 
@@ -88,7 +85,7 @@ void StandardTestStatDistributionDemo(const char *infile = "", const char *works
    // Try to open the file
    TFile *file = TFile::Open(filename);
 
-   // if input file was specified byt not found, quit
+   // if input file was specified but not found, quit
    if (!file) {
       cout << "StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
@@ -156,11 +153,6 @@ void StandardTestStatDistributionDemo(const char *infile = "", const char *works
    }
    firstPOI->setVal(plcUpperLimit);                                  // set POI value for generation
    sampler.SetParametersForTestStat(*mc->GetParametersOfInterest()); // set POI value for evaluation
-
-   if (useProof) {
-      ProofConfig pc(*w, nworkers, "", false);
-      sampler.SetProofConfig(&pc); // enable proof
-   }
 
    firstPOI->setVal(plcUpperLimit);
    RooArgSet allParameters;

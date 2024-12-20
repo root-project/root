@@ -1,9 +1,4 @@
-// For backward compatibility only
-#ifdef __CINT__
-#include <multiset>
-#else
 #include <set>
-#endif
 #include <string>
 
 #pragma create TClass multiset<int>;

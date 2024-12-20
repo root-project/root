@@ -75,7 +75,7 @@ Begin_Macro(source)
    TView *view = TView::CreateView(1);
    view->SetRange(0,0,0,2,2,2);
    const Int_t n = 500;
-   r = new TRandom();
+   auto r = new TRandom();
    Double_t x, y, z;
    TPolyLine3D *l = new TPolyLine3D(n);
    for (Int_t i=0;i<n;i++) {

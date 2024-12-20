@@ -10,7 +10,7 @@
 #include "Minuit2/MnApplication.h"
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/ModularFunctionMinimizer.h"
-#include "Minuit2/FCNGradientBase.h"
+#include "Minuit2/FCNBase.h"
 #include "Minuit2/MnPrint.h"
 
 namespace ROOT {
@@ -20,14 +20,7 @@ namespace Minuit2 {
 // constructor from non-gradient functions
 MnApplication::MnApplication(const FCNBase &fcn, const MnUserParameterState &state, const MnStrategy &stra,
                              unsigned int nfcn)
-   : fFCN(fcn), fState(state), fStrategy(stra), fNumCall(nfcn), fUseGrad(false)
-{
-}
-
-// constructor from functions
-MnApplication::MnApplication(const FCNGradientBase &fcn, const MnUserParameterState &state, const MnStrategy &stra,
-                             unsigned int nfcn)
-   : fFCN(fcn), fState(state), fStrategy(stra), fNumCall(nfcn), fUseGrad(true)
+   : fFCN(fcn), fState(state), fStrategy(stra), fNumCall(nfcn)
 {
 }
 
@@ -43,11 +36,8 @@ FunctionMinimum MnApplication::operator()(unsigned int maxfcn, double toler)
       maxfcn = 200 + 100 * npar + 5 * npar * npar;
 
    const FCNBase &fcn = Fcnbase();
-   assert(!fUseGrad || dynamic_cast<const FCNGradientBase *>(&fcn) != nullptr);
 
-   FunctionMinimum min =
-      fUseGrad ? Minimizer().Minimize(static_cast<const FCNGradientBase &>(fcn), fState, fStrategy, maxfcn, toler)
-               : Minimizer().Minimize(fcn, fState, fStrategy, maxfcn, toler);
+   FunctionMinimum min = Minimizer().Minimize(fcn, fState, fStrategy, maxfcn, toler);
    fNumCall += min.NFcn();
    fState = min.UserState();
 

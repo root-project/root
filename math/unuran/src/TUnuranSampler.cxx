@@ -30,7 +30,7 @@
 
 ClassImp(TUnuranSampler);
 
-TUnuranSampler::TUnuranSampler() : ROOT::Math::DistSampler(),
+TUnuranSampler::TUnuranSampler() :
    fOneDim(false),
    fDiscrete(false),
    fHasMode(false), fHasArea(false),

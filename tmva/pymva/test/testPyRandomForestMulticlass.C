@@ -16,7 +16,7 @@ int testPyRandomForestMulticlass(){
    TString fname = "./tmva_example_multiple_background.root";
    if (gSystem->AccessPathName(fname)){  // file does not exist in local directory
       std::cout << "Create multiclass test data..." << std::endl;
-      TString createDataMacro = TString(gROOT->GetTutorialsDir()) + "/tmva/createData.C";
+      TString createDataMacro = TString(gROOT->GetTutorialsDir()) + "/machine_learning/createData.C";
       gROOT->ProcessLine(TString::Format(".L %s",createDataMacro.Data()));
       gROOT->ProcessLine("create_MultipleBackground(200)");
       std::cout << "Created " << fname << " for tests of the multiclass features" << std::endl;

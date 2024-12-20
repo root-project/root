@@ -28,8 +28,15 @@ private:
 public:
    using NonCopiable_t = RNonCopiable;
    constexpr const static auto fgColumnName = "nonCopiable";
-   RNonCopiableColumnDS(){};
-   ~RNonCopiableColumnDS() override {};
+
+   RNonCopiableColumnDS() = default;
+   // Rule of five
+   RNonCopiableColumnDS(const RNonCopiableColumnDS &) = delete;
+   RNonCopiableColumnDS &operator=(const RNonCopiableColumnDS &) = delete;
+   RNonCopiableColumnDS(RNonCopiableColumnDS &&) = delete;
+   RNonCopiableColumnDS &operator=(RNonCopiableColumnDS &&) = delete;
+   ~RNonCopiableColumnDS() final = default;
+
    const std::vector<std::string> &GetColumnNames() const final { return fColNames; };
    bool HasColumn(std::string_view colName) const final { return colName == fColNames[0]; };
    std::string GetTypeName(std::string_view) const final { return "RNonCopiable"; };

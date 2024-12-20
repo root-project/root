@@ -84,13 +84,13 @@ void RestoreGlobalPrintLevel(int) {}
 #endif
 
 Minuit2Minimizer::Minuit2Minimizer(ROOT::Minuit2::EMinimizerType type)
-   : Minimizer(), fDim(0), fMinimizer(nullptr), fMinuitFCN(nullptr), fMinimum(nullptr)
+   : fDim(0), fMinimizer(nullptr), fMinuitFCN(nullptr), fMinimum(nullptr)
 {
    // Default constructor implementation depending on minimizer type
    SetMinimizerType(type);
 }
 
-Minuit2Minimizer::Minuit2Minimizer(const char *type) : Minimizer(), fDim(0), fMinimizer(nullptr), fMinuitFCN(nullptr), fMinimum(nullptr)
+Minuit2Minimizer::Minuit2Minimizer(const char *type) : fDim(0), fMinimizer(nullptr), fMinuitFCN(nullptr), fMinimum(nullptr)
 {
    // constructor from a string
 
@@ -153,19 +153,6 @@ Minuit2Minimizer::~Minuit2Minimizer()
       delete fMinimum;
 }
 
-Minuit2Minimizer::Minuit2Minimizer(const Minuit2Minimizer &) : ROOT::Math::Minimizer()
-{
-   // Implementation of copy constructor.
-}
-
-Minuit2Minimizer &Minuit2Minimizer::operator=(const Minuit2Minimizer &rhs)
-{
-   // Implementation of assignment operator.
-   if (this == &rhs)
-      return *this; // time saving self-test
-   return *this;
-}
-
 void Minuit2Minimizer::Clear()
 {
    // delete the state in case of consecutive minimizations
@@ -202,6 +189,31 @@ bool Minuit2Minimizer::SetVariable(unsigned int ivar, const std::string &name, d
       return false;
    }
    fState.RemoveLimits(ivar);
+
+   return true;
+}
+
+/** set initial second derivatives
+ */
+bool Minuit2Minimizer::SetCovarianceDiag(std::span<const double> d2, unsigned int n)
+{
+   MnPrint print("Minuit2Minimizer::SetCovarianceDiag", PrintLevel());
+
+   std::vector<double> cov(n * (n + 1) / 2);
+
+   for (unsigned int i = 0; i < n; i++) {
+      for (unsigned int j = i; j < n; j++)
+         cov[i + j * (j + 1) / 2] = (i == j) ? d2[i] : 0.;
+   }
+
+   return Minuit2Minimizer::SetCovariance(cov, n);
+}
+
+bool Minuit2Minimizer::SetCovariance(std::span<const double> cov, unsigned int nrow)
+{
+   MnPrint print("Minuit2Minimizer::SetCovariance", PrintLevel());
+
+   fState.AddCovariance({cov, nrow});
 
    return true;
 }
@@ -409,7 +421,7 @@ void Minuit2Minimizer::SetFunction(const ROOT::Math::IMultiGenFunction &func)
    }
 }
 
-void Minuit2Minimizer::SetHessianFunction(std::function<bool(const std::vector<double> &, double *)> hfunc)
+void Minuit2Minimizer::SetHessianFunction(std::function<bool(std::span<const double>, double *)> hfunc)
 {
    // for Fumili not supported for the time being
    if (fUseFumili) return;
@@ -549,16 +561,8 @@ bool Minuit2Minimizer::Minimize()
 
    const ROOT::Minuit2::MnStrategy strategy = customizedStrategy(strategyLevel, fOptions);
 
-   const ROOT::Minuit2::FCNGradientBase *gradFCN = dynamic_cast<const ROOT::Minuit2::FCNGradientBase *>(fMinuitFCN);
-   if (gradFCN != nullptr) {
-      // use gradient
-      // SetPrintLevel(3);
-      ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*gradFCN, fState, strategy, maxfcn, tol);
-      fMinimum = new ROOT::Minuit2::FunctionMinimum(min);
-   } else {
-      ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*GetFCN(), fState, strategy, maxfcn, tol);
-      fMinimum = new ROOT::Minuit2::FunctionMinimum(min);
-   }
+   ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*fMinuitFCN, fState, strategy, maxfcn, tol);
+   fMinimum = new ROOT::Minuit2::FunctionMinimum(min);
 
    // check if Hesse needs to be run. We do it when is requested (IsValidError() == true , set by SetParabError(true) in fitConfig)
    // (IsValidError() means the flag to get correct error from the Minimizer is set (Minimizer::SetValidError())
@@ -595,7 +599,7 @@ bool Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum &min)
    int debugLevel = PrintLevel();
    if (debugLevel >= 3) {
 
-      const std::vector<ROOT::Minuit2::MinimumState> &iterationStates = min.States();
+      std::span<const ROOT::Minuit2::MinimumState> iterationStates = min.States();
       std::cout << "Number of iterations " << iterationStates.size() << std::endl;
       for (unsigned int i = 0; i < iterationStates.size(); ++i) {
          // std::cout << iterationStates[i] << std::endl;
@@ -663,7 +667,7 @@ bool Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum &min)
       PrintResults();
 
    // set the minimum values in the fValues vector
-   const std::vector<MinuitParameter> &paramsObj = fState.MinuitParameters();
+   std::span<const MinuitParameter> paramsObj = fState.MinuitParameters();
    if (paramsObj.empty())
       return false;
    assert(fDim == paramsObj.size());
@@ -713,7 +717,7 @@ void Minuit2Minimizer::PrintResults()
 const double *Minuit2Minimizer::Errors() const
 {
    // return error at minimum (set to zero for fixed and constant params)
-   const std::vector<MinuitParameter> &paramsObj = fState.MinuitParameters();
+   std::span<const MinuitParameter> paramsObj = fState.MinuitParameters();
    if (paramsObj.empty())
       return nullptr;
    assert(fDim == paramsObj.size());

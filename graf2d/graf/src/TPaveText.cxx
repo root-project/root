@@ -29,7 +29,6 @@
 
 ClassImp(TPaveText);
 
-
 /** \class TPaveText
 \ingroup BasicGraphics
 
@@ -50,7 +49,7 @@ of a line.
 
 Example:
 Begin_Macro(source)
-../../../tutorials/graphics/pavetext.C
+../../../tutorials/visualisation/graphics/pavetext.C
 End_Macro
 
 GetListOfLines can also be used to retrieve all the lines in the TPaveText as
@@ -826,12 +825,12 @@ void TPaveText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
 void TPaveText::SetAllWith(const char *text, Option_t *option, Double_t value)
 {
-   TString opt=option;
+   TString opt = option;
    opt.ToLower();
-   TText *line;
    TIter next(fLines);
-   while ((line = (TText*) next())) {
-      if (strstr(line->GetTitle(),text)) {
+   while (auto obj = next()) {
+      auto line = dynamic_cast<TText *> (obj);
+      if (line && strstr(line->GetTitle(),text)) {
          if (opt == "align") line->SetTextAlign(Int_t(value));
          if (opt == "color") line->SetTextColor(Int_t(value));
          if (opt == "font")  line->SetTextFont(Int_t(value));

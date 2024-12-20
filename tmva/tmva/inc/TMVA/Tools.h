@@ -224,7 +224,7 @@ namespace TMVA {
 
       // variables
       const TString fRegexp;
-      mutable MsgLogger*    fLogger;
+      mutable MsgLogger*    fLogger; //!
       MsgLogger& Log() const { return *fLogger; }
       static std::atomic<Tools*> fgTools;
 

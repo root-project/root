@@ -489,23 +489,6 @@ void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void RooProduct::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   std::string result;
-   // Build a (node1 * node2 * node3 * ...) like expression.
-   result = '(';
-   for (RooAbsArg* item : _compRSet) {
-      RooConstVar *constItem = dynamic_cast<RooConstVar *>(item);
-      if (constItem && constItem->getValV(nullptr) == 1)
-         continue;
-      result += ctx.getResult(*item) + "*";
-   }
-   result.back() = ')';
-   ctx.addResult(this, result);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Customized printing of arguments of a RooProduct to more intuitively reflect the contents of the
 /// product operator construction
 

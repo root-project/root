@@ -45,7 +45,7 @@ target_compile_options(GLEW PRIVATE ${GLEW_DEFINITIONS})
 target_include_directories(GLEW INTERFACE $<BUILD_INTERFACE:${GLEW_INCLUDE_DIR}>)
 target_link_libraries(GLEW PRIVATE OpenGL::GL OpenGL::GLU)
 
-add_library(GLEW::GLEW ALIAS GLEW)
+target_link_libraries(GLEW::GLEW INTERFACE GLEW)
 
 set(GLEW_LIBRARY $<TARGET_FILE:GLEW> CACHE INTERNAL "")
 set(GLEW_LIBRARIES GLEW::GLEW CACHE INTERNAL "")

@@ -442,8 +442,7 @@ if(tmva-gpu)
     target_sources(TMVA PRIVATE
                    src/DNN/Architectures/Cudnn/TensorDataLoader.cxx
                    src/DNN/Architectures/Cudnn.cu)
-    target_include_directories(TMVA PRIVATE ${CUDNN_INCLUDE_DIRS} )
-    target_link_libraries(TMVA PRIVATE ${CUDNN_LIBRARIES})
+    target_link_libraries(TMVA PRIVATE ROOT::cuDNN)
   else()
     message(STATUS "cuDNN not found or disabled - use only Cuda+Cublas for TMVA Deep Learning on GPU")
   endif()
@@ -459,13 +458,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils
   TMVA/RInferenceUtils.hxx
   TMVA/RBDT.hxx
   TMVA/RSofieReader.hxx
-  TMVA/RBatchGenerator.hxx
-  TMVA/RBatchLoader.hxx
-  TMVA/RChunkLoader.hxx
-  TMVA/TreeInference/PythonHelpers.hxx
-  TMVA/TreeInference/BranchlessTree.hxx
-  TMVA/TreeInference/Forest.hxx
-  TMVA/TreeInference/Objectives.hxx
+  TMVA/BatchGenerator/RBatchGenerator.hxx
+  TMVA/BatchGenerator/RBatchLoader.hxx
+  TMVA/BatchGenerator/RChunkLoader.hxx
 
   SOURCES
 

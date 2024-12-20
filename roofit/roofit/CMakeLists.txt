@@ -39,8 +39,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooDecay.h
     RooDstD0BG.h
     RooExponential.h
-    RooExpPoly.h
-    RooPower.h
+    RooLegacyExpPoly.h
+    RooPowerSum.h
     RooFunctor1DBinding.h
     RooFunctorBinding.h
     RooGamma.h
@@ -66,6 +66,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooParamHistFunc.h
     RooPoisson.h
     RooPolynomial.h
+    RooPyBind.h
     RooSpline.h
     RooStepFunction.h
     RooTFnBinding.h
@@ -102,8 +103,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooDecay.cxx
     src/RooDstD0BG.cxx
     src/RooExponential.cxx
-    src/RooExpPoly.cxx
-    src/RooPower.cxx
+    src/RooLegacyExpPoly.cxx
+        src/RooPowerSum.cxx
     src/RooFunctor1DBinding.cxx
     src/RooFunctorBinding.cxx
     src/RooGamma.cxx

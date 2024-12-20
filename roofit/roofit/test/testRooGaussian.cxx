@@ -13,7 +13,7 @@ TEST(RooGaussian, AnalyticalIntegral)
   constexpr double prec = 1.E-8;
   constexpr double oneSig = 0.682689492137;
   constexpr double twoSig = 0.954499736104;
-  constexpr double thrSig = 0.997300203937;
+  constexpr double thresholdSig = 0.997300203937;
 
   RooRealVar x("x", "x", 0.);
   RooRealVar mean("mean", "mean", 0.);
@@ -44,13 +44,13 @@ TEST(RooGaussian, AnalyticalIntegral)
       //Test central quantiles
       runTest(-1., 1., oneSig);
       runTest(-2., 2., twoSig);
-      runTest(-3., 3., thrSig);
+      runTest(-3., 3., thresholdSig);
 
       //Positive & negative, but one close to zero:
       runTest(0., 1., oneSig/2.);
       runTest(-0., 1., oneSig/2.);
       runTest(-2., 1.E-8, twoSig/2.);
-      runTest(-1.E-9, 3., thrSig/2.);
+      runTest(-1.E-9, 3., thresholdSig/2.);
 
       //Far from zero
       runTest(5., 11., 2.8665157E-7);

@@ -19,9 +19,7 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-//#include "Minuit2/MnPrint.h"
-
-std::vector<double> ParametricFunction::GetGradient(const std::vector<double> &x) const
+std::vector<double> ParametricFunction::GetGradient(std::vector<double> const &x) const
 {
    // calculate the numerical gradient (using Numerical2PGradientCalculator)
 

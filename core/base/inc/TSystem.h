@@ -178,13 +178,19 @@ struct MemInfo_t {
    Int_t     fMemTotal;    // total RAM in MB
    Int_t     fMemUsed;     // used RAM in MB
    Int_t     fMemFree;     // free RAM in MB
+   Int_t     fMemAvailable; // available RAM in MB
+   Int_t     fMemCached; // cached RAM in MB
+   Int_t     fMemBuffer; // buffer RAM in MB
+   Int_t     fMemShared; // shared RAM in MB
    Int_t     fSwapTotal;   // total swap in MB
    Int_t     fSwapUsed;    // used swap in MB
    Int_t     fSwapFree;    // free swap in MB
-   MemInfo_t() : fMemTotal(0), fMemUsed(0), fMemFree(0),
-                 fSwapTotal(0), fSwapUsed(0), fSwapFree(0) { }
+   Int_t     fSwapCached; // cached swap in MB
+   Int_t     fSReclaimable; // slab that might be reclaimed
+   MemInfo_t() : fMemTotal(0), fMemUsed(0), fMemFree(0), fMemAvailable(0), fMemCached(0), fMemBuffer(0), fMemShared(0),
+                 fSwapTotal(0), fSwapUsed(0), fSwapFree(0), fSwapCached(0), fSReclaimable(0){ }
    virtual ~MemInfo_t() { }
-   ClassDef(MemInfo_t, 1); // Memory utilization information.
+   ClassDef(MemInfo_t, 2); // Memory utilization information.
 };
 
 struct ProcInfo_t {

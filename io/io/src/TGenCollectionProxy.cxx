@@ -325,16 +325,15 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent,
    fKind = kNoType_t;
 
    // Let's treat the unique_ptr case
-   bool nameChanged = false;
-   std::string intype = TClassEdit::GetNameForIO(inside.c_str(), TClassEdit::EModType::kNone, &nameChanged);
+   std::string intype = TClassEdit::GetNameForIO(inside, TClassEdit::EModType::kNone);
 
-   bool isPointer = nameChanged; // unique_ptr is considered a pointer
+   bool isPointer = false;
    // The incoming name is normalized (it comes from splitting the name of a TClass),
    // so all we need to do is drop the last trailing star (if any) and record that information.
-   if (!nameChanged && intype[intype.length()-1] == '*') {
+   if (intype.back() == '*') {
       isPointer = true;
       intype.pop_back();
-      if (intype[intype.length()-1] == '*') {
+      if (intype.back() == '*') {
          // The value is a pointer to a pointer
          if (!silent)
             Warning("TGenCollectionProxy::Value::Value", "I/O not supported for collection of pointer to pointer: %s", inside_type.c_str());
@@ -1515,13 +1514,8 @@ void TGenCollectionProxy__VectorCreateIterators(void *obj, void **begin_arena, v
       *end_arena = 0;
       return;
    }
-   *begin_arena = &(*vec->begin());
-#ifdef R__VISUAL_CPLUSPLUS
-   *end_arena = &(*(vec->end()-1)) + 1; // On windows we can not dererence the end iterator at all.
-#else
-   // coverity[past_the_end] Safe on other platforms
-   *end_arena = &(*vec->end());
-#endif
+   *begin_arena = vec->data();
+   *end_arena = vec->data() + vec->size();
 
 }
 

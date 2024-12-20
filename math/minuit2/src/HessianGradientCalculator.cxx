@@ -28,7 +28,7 @@ namespace Minuit2 {
 FunctionGradient HessianGradientCalculator::operator()(const MinimumParameters &par) const
 {
    // use initial gradient as starting point
-   InitialGradientCalculator gc(fFcn, fTransformation, fStrategy);
+   InitialGradientCalculator gc(fFcn, fTransformation);
    FunctionGradient gra = gc(par);
 
    return (*this)(par, gra);
@@ -53,18 +53,6 @@ unsigned int HessianGradientCalculator::Ncycle() const
 {
    // return number of calculation cycles (defined in strategy)
    return Strategy().HessianGradientNCycles();
-}
-
-double HessianGradientCalculator::StepTolerance() const
-{
-   // return tolerance on step size (defined in strategy)
-   return Strategy().GradientStepTolerance();
-}
-
-double HessianGradientCalculator::GradTolerance() const
-{
-   // return gradient tolerance (defines in strategy)
-   return Strategy().GradientTolerance();
 }
 
 std::pair<FunctionGradient, MnAlgebraicVector>

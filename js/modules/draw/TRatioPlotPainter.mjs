@@ -166,7 +166,6 @@ class TRatioPlotPainter extends ObjectPainter {
          low_p.getRootPad().fTicky = tick_y;
 
          const arr = [];
-         let currpad;
 
          // add missing lines in old ratio painter
          if ((ratio.fGridlinePositions.length > 0) && (ratio.fGridlines.length < ratio.fGridlinePositions.length)) {
@@ -182,18 +181,15 @@ class TRatioPlotPainter extends ObjectPainter {
                   line.fY1 = line.fY2 = gridy;
                   line.fLineStyle = 2;
                   ratio.fGridlines.push(line);
-                  if (currpad === undefined)
-                     currpad = this.selectCurrentPad(ratio.fLowerPad.fName);
-                  arr.push(TLinePainter.draw(this.getDom(), line));
+                  arr.push(TLinePainter.draw(low_p, line));
                }
             });
          }
 
-         return Promise.all(arr).then(() => {
-            if (currpad !== undefined)
-               this.selectCurrentPad(currpad);
-            return low_fp.zoom(up_fp.scale_xmin, up_fp.scale_xmax);
-         });
+         return Promise.all(arr)
+                       .then(() => low_fp.zoomSingle('x', up_fp.scale_xmin, up_fp.scale_xmax))
+                       .then(changed => { return changed ? true : low_p.redrawPad(); })
+                       .then(() => this);
       });
    }
 

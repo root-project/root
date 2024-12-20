@@ -33,7 +33,7 @@ In extended mode, a
 #include <RooNaNPacker.h>
 #include <RooFit/Evaluator.h>
 
-#include "RooFit/Detail/BatchModeDataHelpers.h"
+#include "../RooFit/BatchModeDataHelpers.h"
 
 namespace RooFit {
 namespace TestStatistics {
@@ -63,8 +63,8 @@ RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended e
       evaluator_ = std::make_unique<RooFit::Evaluator>(*pdf_, evalBackend.value() == RooFit::EvalBackend::Value::Cuda);
       std::stack<std::vector<double>>{}.swap(_vectorBuffers);
       auto dataSpans =
-         RooFit::Detail::BatchModeDataHelpers::getDataSpans(*data, "", nullptr, /*skipZeroWeights=*/true,
-                                                            /*takeGlobalObservablesFromData=*/false, _vectorBuffers);
+         RooFit::BatchModeDataHelpers::getDataSpans(*data, "", nullptr, /*skipZeroWeights=*/true,
+                                                    /*takeGlobalObservablesFromData=*/false, _vectorBuffers);
       for (auto const &item : dataSpans) {
          evaluator_->setInput(item.first->GetName(), item.second, false);
       }
@@ -192,6 +192,7 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
    // expensive than that, we tolerate the additional cost...
    ROOT::Math::KahanSum<double> result;
    double sumWeight;
+   auto numEvalErrorsBefore = RooAbsReal::numEvalErrors();
 
    // Do not reevaluate likelihood if parameters nor event range have changed
    if (!paramTracker_->hasChanged(true) && events == lastSection_ &&
@@ -228,8 +229,12 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
       pdf_->wireAllCaches();
    }
 
-   cachedResult_ = result;
-   lastSection_ = events;
+   if ((RooAbsReal::evalErrorLoggingMode() == RooAbsReal::CollectErrors ||
+        RooAbsReal::evalErrorLoggingMode() == RooAbsReal::CountErrors) &&
+       numEvalErrorsBefore == RooAbsReal::numEvalErrors()) {
+      cachedResult_ = result;
+      lastSection_ = events;
+   }
    return result;
 }
 

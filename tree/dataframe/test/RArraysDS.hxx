@@ -32,7 +32,7 @@ public:
 };
 
 /// A RDataSource to test the `#var` feature
-class RArraysDS : public ROOT::RDF::RDataSource {
+class RArraysDS final : public ROOT::RDF::RDataSource {
    std::vector<int> fVar = {42};
    std::vector<std::string> fColumnNames = {"R_rdf_sizeof_var", "var"};
    std::vector<std::pair<ULong64_t, ULong64_t>> fRanges = {{0ull, 1ull}};
@@ -40,6 +40,14 @@ class RArraysDS : public ROOT::RDF::RDataSource {
    bool IsSizeColumn(std::string_view colName) const { return colName.substr(0, 13) == "R_rdf_sizeof_"; }
 
 public:
+   RArraysDS() = default;
+   // Rule of five
+   RArraysDS(const RArraysDS &) = delete;
+   RArraysDS &operator=(const RArraysDS &) = delete;
+   RArraysDS(RArraysDS &&) = delete;
+   RArraysDS &operator=(RArraysDS &&) = delete;
+   ~RArraysDS() final = default;
+
    void SetNSlots(unsigned int) final { }
 
    const std::vector<std::string> &GetColumnNames() const final { return fColumnNames; }

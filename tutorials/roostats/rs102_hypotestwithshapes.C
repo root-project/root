@@ -137,7 +137,7 @@ void AddModel(RooWorkspace *wks)
    // Introduce ratio of signal efficiency to nominal signal efficiency.
    // This is useful if you want to do limits on cross section.
    RooRealVar ratioSigEff("ratioSigEff", "ratio of signal efficiency to nominal signal efficiency", 1., 0., 2);
-   ratioSigEff.setConstant(kTRUE);
+   ratioSigEff.setConstant(true);
 
    // finally the signal fraction is the product of the terms above.
    RooProduct fsig("fsig", "fraction of signal events", RooArgSet(mu, ratioSigEff, fsigExpected));
@@ -228,9 +228,9 @@ void MakePlots(RooWorkspace *wks)
    // --------------------------------------
    // Make plots for the Alternate hypothesis, eg. let mu float
 
-   mu->setConstant(kFALSE);
+   mu->setConstant(false);
 
-   model->fitTo(*data, Save(kTRUE), Minos(kFALSE), Hesse(kFALSE), PrintLevel(-1));
+   model->fitTo(*data, Save(true), Minos(false), Hesse(false), PrintLevel(-1));
 
    // plot sig candidates, full model, and individual components
    new TCanvas();
@@ -249,9 +249,9 @@ void MakePlots(RooWorkspace *wks)
    // Do Fit to the Null hypothesis.  Eg. fix mu=0
 
    mu->setVal(0);          // set signal fraction to 0
-   mu->setConstant(kTRUE); // set constant
+   mu->setConstant(true); // set constant
 
-   model->fitTo(*data, Save(kTRUE), Minos(kFALSE), Hesse(kFALSE), PrintLevel(-1));
+   model->fitTo(*data, Save(true), Minos(false), Hesse(false), PrintLevel(-1));
 
    // plot signal candidates with background model and components
    new TCanvas();

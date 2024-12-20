@@ -828,8 +828,8 @@ void TGRootIDE::Build()
    fURL->Connect("ReturnPressed()", "TGRootIDE", this, "URLChanged()");
 
    fComboBox->AddEntry("http://root.cern", 1);
-   fComboBox->AddEntry("http://root.cern/root/htmldoc/ClassIndex.html", 2);
-   fURL->SetText("http://root.cern/root/htmldoc/ClassIndex.html");
+   fComboBox->AddEntry("https://root.cern/doc/master/classes.html", 2);
+   fURL->SetText("https://root.cern/doc/master/classes.html");
 
    fComboBox->Select(0);
    fComboBox->Connect("Selected(char *)", "TGRootIDE", this, "Selected(char *)");
@@ -846,7 +846,7 @@ void TGRootIDE::Build()
 
    fGuiHtml->Connect("MouseOver(char *)", "TGRootIDE", this, "MouseOver(char *)");
    fGuiHtml->Connect("MouseDown(char *)", "TGRootIDE", this, "MouseDown(char *)");
-   Selected("http://root.cern/root/htmldoc/ClassIndex.html");
+   Selected("https://root.cern/doc/master/classes.html");
    fGuiHtml->Layout();
 
    tf = fTab->AddTab("Untitled");
@@ -1267,19 +1267,14 @@ void TGRootIDE::InterruptMacro()
 
 void TGRootIDE::About()
 {
-#ifdef R__UNIX
-   TString rootx = TROOT::GetBinDir() + "/root -a &";
-   gSystem->Exec(rootx);
-#else
 #ifdef WIN32
    new TWin32SplashThread(kTRUE);
 #else
    char str[32];
-   sprintf(str, "About ROOT %s...", gROOT->GetVersion());
+   snprintf(str, 32, "About ROOT %s...", gROOT->GetVersion());
    TRootHelpDialog *hd = new TRootHelpDialog(this, str, 600, 400);
    hd->SetText(gHelpAbout);
    hd->Popup();
-#endif
 #endif
 }
 

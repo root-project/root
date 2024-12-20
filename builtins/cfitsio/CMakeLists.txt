@@ -1,0 +1,59 @@
+# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
+
+set(CFITSIO_VERSION 4.4.0)
+
+set(CFITSIO_PREFIX ${CMAKE_BINARY_DIR}/CFITSIO-prefix)
+set(CFITSIO_LIBRARIES ${CFITSIO_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
+
+if(NOT WIN32)
+  set(CFITSIO_C_FLAGS -fPIC)
+endif()
+
+if(WIN32 AND NOT CMAKE_GENERATOR MATCHES Ninja)
+  if(winrtdebug)
+    set(CFITSIO_BUILD_COMMAND_FLAGS "--config Debug")
+  else()
+    set(CFITSIO_BUILD_COMMAND_FLAGS "--config Release")
+  endif()
+endif()
+
+ExternalProject_Add(
+  BUILTIN_CFITSIO
+  PREFIX ${CFITSIO_PREFIX}
+  URL https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio-${CFITSIO_VERSION}.tar.gz
+  URL_HASH SHA256=95900cf95ae760839e7cb9678a7b2fad0858d6ac12234f934bd1cb6bfc246ba9
+  CMAKE_ARGS -G ${CMAKE_GENERATOR}
+             -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+             -DCMAKE_C_FLAGS=${CFITSIO_C_FLAGS}
+             -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+             -DCMAKE_INSTALL_LIBDIR=<INSTALL_DIR>/lib
+             -DBUILD_SHARED_LIBS=OFF
+             -DUSE_CURL=OFF
+             -DZLIB_FOUND=TRUE
+             -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIRS}
+             -DZLIB_LIBRARIES=$<TARGET_FILE:ZLIB::ZLIB>
+  # Skip the find_package(ZLIB REQUIRED), because we feed CFITSIO our own ZLIB flags.
+  PATCH_COMMAND git apply --ignore-space-change --ignore-whitespace
+                ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-no-find-zlib.diff
+                ${CMAKE_CURRENT_SOURCE_DIR}/no-fortran-wrapper.diff
+  BUILD_COMMAND ${CMAKE_COMMAND} --build . ${CFITSIO_BUILD_COMMAND_FLAGS}
+  INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${CFITSIO_BUILD_COMMAND_FLAGS} --target install
+  LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
+  BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
+  TIMEOUT 600
+)
+
+add_dependencies(BUILTIN_CFITSIO ZLIB::ZLIB)
+
+add_dependencies(CFITSIO::CFITSIO BUILTIN_CFITSIO)
+set(CFITSIO_INCLUDE_DIRS ${CFITSIO_PREFIX}/include)
+file(MAKE_DIRECTORY ${CFITSIO_INCLUDE_DIRS})
+set_target_properties(CFITSIO::CFITSIO PROPERTIES
+    IMPORTED_LOCATION ${CFITSIO_LIBRARIES}
+    INTERFACE_INCLUDE_DIRECTORIES ${CFITSIO_INCLUDE_DIRS}
+    INTERFACE_LINK_LIBRARIES ZLIB::ZLIB
+)

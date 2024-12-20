@@ -386,9 +386,9 @@ namespace Math {
 
   /**
 
-  Probability density function of the normal (Gaussian) distribution.
+  Probability density function of the normal (Gaussian) distribution with mean x0 and standard deviation sigma.
 
-  \f[ p(x) = {1 \over \sqrt{2 \pi \sigma^2}} e^{-x^2 / 2\sigma^2} \f]
+  \f[ p(x) = {1 \over \sqrt{2 \pi \sigma^2}} e^{-(x-x_0)^2 / 2\sigma^2} \f]
 
   For detailed description see
   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
@@ -402,7 +402,7 @@ namespace Math {
   inline double gaussian_pdf(double x, double sigma = 1, double x0 = 0) {
 
     double tmp = (x-x0)/sigma;
-    return (1.0/(std::sqrt(2 * M_PI) * std::fabs(sigma))) * std::exp(-tmp*tmp/2);
+    return (1.0/(std::sqrt(2 * M_PI) * std::abs(sigma))) * std::exp(-tmp*tmp/2);
   }
 
    /**
@@ -485,7 +485,7 @@ namespace Math {
     if ((x-x0) <= 0)
       return 0.0;
     double tmp = (std::log((x-x0)) - m)/s;
-    return 1.0 / ((x-x0) * std::fabs(s) * std::sqrt(2 * M_PI)) * std::exp(-(tmp * tmp) /2);
+    return 1.0 / ((x-x0) * std::abs(s) * std::sqrt(2 * M_PI)) * std::exp(-(tmp * tmp) /2);
   }
 
 
@@ -493,9 +493,9 @@ namespace Math {
 
   /**
 
-  Probability density function of the normal (Gaussian) distribution.
+  Probability density function of the normal (Gaussian) distribution with mean x0 and standard deviation sigma.
 
-  \f[ p(x) = {1 \over \sqrt{2 \pi \sigma^2}} e^{-x^2 / 2\sigma^2} \f]
+  \f[ p(x) = {1 \over \sqrt{2 \pi \sigma^2}} e^{-(x-x_0)^2 / 2\sigma^2} \f]
 
   For detailed description see
   <A HREF="http://mathworld.wolfram.com/NormalDistribution.html">
@@ -510,7 +510,7 @@ namespace Math {
     // Inlined to enable clad-auto-derivation for this function.
 
     double tmp = (x-x0)/sigma;
-    return (1.0/(std::sqrt(2 * M_PI) * std::fabs(sigma))) * std::exp(-tmp*tmp/2);
+    return (1.0/(std::sqrt(2 * M_PI) * std::abs(sigma))) * std::exp(-tmp*tmp/2);
 
   }
 
@@ -552,7 +552,7 @@ namespace Math {
 
   \f[ p_{r}(x) = \frac{\Gamma(\frac{r+1}{2})}{\sqrt{r \pi}\Gamma(\frac{r}{2})} \left( 1+\frac{x^2}{r}\right)^{-(r+1)/2}  \f]
 
-  for \f$k \geq 0\f$. For detailed description see
+  for \f$r \geq 0\f$. For detailed description see
   <A HREF="http://mathworld.wolfram.com/Studentst-Distribution.html">
   Mathworld</A>.
 

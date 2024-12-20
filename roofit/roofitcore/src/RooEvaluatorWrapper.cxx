@@ -118,7 +118,7 @@ bool RooEvaluatorWrapper::setData(RooAbsData &data, bool /*cloneData*/)
 
    std::stack<std::vector<double>>{}.swap(_vectorBuffers);
    bool skipZeroWeights = !_pdf || !_pdf->getAttribute("BinnedLikelihoodActive");
-   _dataSpans = RooFit::Detail::BatchModeDataHelpers::getDataSpans(
+   _dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(
       *_data, _rangeName, dynamic_cast<RooSimultaneous const *>(_pdf), skipZeroWeights, _takeGlobalObservablesFromData,
       _vectorBuffers);
    if (!isInitializing && _dataSpans.size() != oldSize) {

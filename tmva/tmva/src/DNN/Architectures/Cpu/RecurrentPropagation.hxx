@@ -35,12 +35,6 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
                                           TCpuMatrix<AFloat> & input_gradient)
 -> TCpuMatrix<AFloat> &
 {
-   // std::cout << "Recurrent Propo" << std::endl;
-   // TMVA_DNN_PrintTCpuMatrix(df,"DF");
-   // TMVA_DNN_PrintTCpuMatrix(state_gradients_backward,"State grad");
-   // TMVA_DNN_PrintTCpuMatrix(input_weight_gradients,"input w grad");
-   // TMVA_DNN_PrintTCpuMatrix(state,"state");
-   // TMVA_DNN_PrintTCpuMatrix(input,"input");
 
    // Compute element-wise product.
    //Hadamard(df, state_gradients_backward);  // B x H

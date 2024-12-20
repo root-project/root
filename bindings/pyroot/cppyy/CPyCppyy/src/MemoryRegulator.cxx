@@ -206,7 +206,7 @@ bool CPyCppyy::MemoryRegulator::UnregisterPyObject(CPPInstance* pyobj, PyObject*
     if (!(pyobj && pyclass))
         return false;
 
-    Cppyy::TCppObject_t cppobj = pyobj->GetObject();
+    Cppyy::TCppObject_t cppobj = pyobj->IsSmart() ? pyobj->GetObjectRaw() : pyobj->GetObject();
     if (!cppobj)
         return false;
 

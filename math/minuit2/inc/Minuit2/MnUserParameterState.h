@@ -14,6 +14,8 @@
 #include "Minuit2/MnUserCovariance.h"
 #include "Minuit2/MnGlobalCorrelationCoeff.h"
 
+#include <ROOT/RSpan.hxx>
+
 #include <vector>
 #include <string>
 
@@ -42,14 +44,14 @@ public:
    }
 
    /// construct from user parameters (before minimization)
-   MnUserParameterState(const std::vector<double> &, const std::vector<double> &);
+   MnUserParameterState(std::span<const double>, std::span<const double>);
 
    MnUserParameterState(const MnUserParameters &);
 
    /// construct from user parameters + covariance (before minimization)
-   MnUserParameterState(const std::vector<double> &, const std::vector<double> &, unsigned int);
+   MnUserParameterState(std::span<const double>, std::span<const double>, unsigned int);
 
-   MnUserParameterState(const std::vector<double> &, const MnUserCovariance &);
+   MnUserParameterState(std::span<const double>, const MnUserCovariance &);
 
    MnUserParameterState(const MnUserParameters &, const MnUserCovariance &);
 
@@ -100,6 +102,9 @@ public:
    void Add(const std::string &name, double val, double err, double, double);
    // add const Parameter
    void Add(const std::string &, double);
+
+   // add covariance matrix
+   void AddCovariance(const MnUserCovariance &);
 
    // interaction via external number of Parameter
    void Fix(unsigned int);

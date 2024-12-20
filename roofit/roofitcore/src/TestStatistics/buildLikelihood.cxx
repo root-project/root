@@ -39,17 +39,22 @@ namespace RooFit {
  * global observables) and "sum" (over multiple components of the other types). These classes provide ways to compute
  * their components in parallelizable chunks that can be used by the calculator classes as they see fit.
  *
- * On top of the likelihood classes, we also provide for convenience a likelihood builder buildLikelihood, as a free
- * function in the namespace. This function analyzes the pdf and automatically constructs the proper likelihood, built
- * up from the available RooAbsL subclasses.
+ * On top of the likelihood classes, we also provide for convenience a likelihood builder `NLLFactory`. This factory
+ * analyzes the pdf and automatically constructs the proper likelihood, built up from the available RooAbsL subclasses.
+ * Options, like specifying constraint terms or global observables, can be passed using method chaining. The
+ * `NLLFactory::build` method finally returns the constructed likelihood as a RooRealL object that can be fit to using
+ * RooMinimizer.
  *
  * The calculator "Wrapper" classes are abstract interfaces. These can be implemented for different kinds of algorithms,
- * or with different kinds of optimization "back-ends" in mind. In an upcoming PR, we will introduce the fork-based
- * multi-processing implementation based on RooFit::MultiProcess. Other possible implementations could use the GPU or
- * external tools like TensorFlow.
+ * or with different kinds of optimization "back-ends" in mind. Two fork-based multi-processing implementations based
+ * on RooFit::MultiProcess are available, one to calculate the gradient of the likelihood in parallel and one for the
+ * likelihood itself. The likelihood can also be calculated serially.
  *
  * The coupling of all these classes to RooMinimizer is made via the MinuitFcnGrad class, which owns the Wrappers that
  * calculate the likelihood components.
+ * 
+ * More extensive documentation is available at
+ * https://github.com/root-project/root/blob/master/roofit/doc/developers/test_statistics.md
  */
 namespace TestStatistics {
 

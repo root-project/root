@@ -45,9 +45,6 @@ void buildAPI_XML_TestModel(TString prefix)
 
    HistFactory::Measurement meas("Test", "API_XML_TestModel");
 
-   // do not fit, just export the workspace
-   meas.SetExportOnly(true);
-
    // put output in separate sub-directory
    meas.SetOutputFilePrefix(prefix.Data());
 
@@ -348,7 +345,7 @@ private:
 
          if (bAllowForError) {
             if (!TMath::AreEqualAbs(arg1->getVal(), arg2->getVal(),
-                                    TMath::Max(fTolerance, 0.1 * TMath::Min(arg1->getError(), arg2->getError())))) {
+                                    std::max(fTolerance, 0.1 * std::min(arg1->getError(), arg2->getError())))) {
                Warning("CompareParameters",
                        "parameters with name \"%s\" have different values: %.3f +/- %.3f vs %.3f +/- %.3f",
                        arg1->GetName(), arg1->getVal(), arg1->getError(), arg2->getVal(), arg2->getError());
@@ -469,7 +466,11 @@ private:
    }
 };
 
+#ifdef HISTFACTORY_XML
 TEST(HistFactory, PdfComparison)
+#else
+TEST(HistFactory, DISABLED_PdfComparison)
+#endif
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 

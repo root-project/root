@@ -17,22 +17,21 @@
 #ifndef ROOT_RZip
 #define ROOT_RZip
 
-extern "C" unsigned long R__crc32(unsigned long crc, const unsigned char* buf, unsigned int len);
+extern "C" unsigned long R__crc32(unsigned long crc, const unsigned char *buf, unsigned int len);
 
 extern "C" unsigned long R__memcompress(char *tgt, unsigned long tgtsize, char *src, unsigned long srcsize);
 
-extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, ROOT::RCompressionSetting::EAlgorithm::EValues);
+extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep,
+                                        ROOT::RCompressionSetting::EAlgorithm::EValues algorithm);
 
-/**
- * This is a historical definition, prior to ROOT supporting multiple algorithms in a single file.  Use
- * R__zipMultipleAlgorithm instead.
- */
-extern "C" void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep);
+
+extern "C" ROOT::RCompressionSetting::EAlgorithm::EValues R__getCompressionAlgorithm(const unsigned char *buf, 
+                                                                                     size_t bufsize);
 
 extern "C" void R__unzip(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
 
 extern "C" int R__unzip_header(int *srcsize, unsigned char *src, int *tgtsize);
 
-enum { kMAXZIPBUF = 0xffffff };
+enum { kMAXZIPBUF = 0xffffff }; // 16 MB
 
 #endif

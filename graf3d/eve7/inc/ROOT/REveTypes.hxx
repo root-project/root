@@ -13,13 +13,15 @@
 #ifndef ROOT7_REveTypes
 #define ROOT7_REveTypes
 
-#include "GuiTypes.h" // For Pixel_t only, to be changed.
+#include "RtypesCore.h"
 
-#include "TString.h"
+#include <string>
+#include <ostream>
 
-#include <sstream>
-#include <iostream>
-class TGeoManager;
+typedef ULong_t Pixel_t; // from GuiTypes.h
+
+class TString;
+
 namespace ROOT {
 namespace Experimental {
 typedef unsigned int ElementId_t;
@@ -42,10 +44,12 @@ class REveException : public std::exception {
    std::string fWhat;
 public:
    REveException() = default;
-   explicit REveException(const std::string &s) : fWhat(s) {}
+   explicit REveException(std::string_view s) : fWhat(s) {}
    ~REveException() noexcept override {}
-   void append(const std::string &s) { fWhat.append(s); }
+   void append(std::string_view s) { fWhat.append(s); }
 
+   operator const std::string&() const noexcept { return fWhat; }
+   const std::string &str() const noexcept { return fWhat; }
    const char *what() const noexcept override { return fWhat.c_str(); }
 };
 
@@ -53,6 +57,9 @@ REveException operator+(const REveException &s1, const std::string &s2);
 REveException operator+(const REveException &s1, const TString &s2);
 REveException operator+(const REveException &s1, const char *s2);
 REveException operator+(const REveException &s1, ElementId_t x);
+
+inline std::ostream& operator <<(std::ostream &s, const REveException &e)
+{ s << e.what(); return s; }
 
 /// Log channel for Eve diagnostics.
 RLogChannel &REveLog();

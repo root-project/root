@@ -664,7 +664,7 @@ def getBuiltinHeaderPath(library_path):
 
 
 def main(argv=None):
-    """
+    r"""
     Takes a set of C++ header files and generate a JSON output file describing
     the objects found in them. This output is intended to support more
     convenient access to a set of cppyy-supported bindings.

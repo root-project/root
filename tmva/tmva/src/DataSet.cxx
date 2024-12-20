@@ -820,6 +820,7 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
       delete[] metVals[i];
    delete[] metVals;
 
+   tree->ResetBranchAddresses();
    return tree;
 }
 

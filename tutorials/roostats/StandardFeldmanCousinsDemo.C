@@ -74,7 +74,7 @@ void StandardFeldmanCousinsDemo(const char *infile = "", const char *workspaceNa
    // Try to open the file
    TFile *file = TFile::Open(filename);
 
-   // if input file was specified byt not found, quit
+   // if input file was specified but not found, quit
    if (!file) {
       cout << "StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
@@ -129,11 +129,6 @@ void StandardFeldmanCousinsDemo(const char *infile = "", const char *workspaceNa
       else
          cout << "Not sure what to do about this model" << endl;
    }
-
-   // We can use PROOF to speed things along in parallel
-   //  ProofConfig pc(*w, 1, "workers=4", kFALSE);
-   //  ToyMCSampler*  toymcsampler = (ToyMCSampler*) fc.GetTestStatSampler();
-   //  toymcsampler->SetProofConfig(&pc); // enable proof
 
    // Now get the interval
    PointSetInterval *interval = fc.GetInterval();

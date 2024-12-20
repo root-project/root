@@ -83,8 +83,8 @@ void rf709_BarlowBeeston()
   // ***** Case 1 - 'Barlow Beeston' *****
 
   // Construct parameterized histogram shapes for signal and background
-  RooParamHistFunc p_ph_sig1("p_ph_sig","p_ph_sig",*dh_sig);
-  RooParamHistFunc p_ph_bkg1("p_ph_bkg","p_ph_bkg",*dh_bkg);
+  RooParamHistFunc p_ph_sig1("p_ph_sig","p_ph_sig",*dh_sig, x);
+  RooParamHistFunc p_ph_bkg1("p_ph_bkg","p_ph_bkg",*dh_bkg, x);
 
   RooRealVar Asig1("Asig","Asig",1,0.01,5000);
   RooRealVar Abkg1("Abkg","Abkg",1,0.01,5000);
@@ -115,8 +115,8 @@ void rf709_BarlowBeeston()
   // This allows bin 0 to fluctuate up and down.
   // Then, the SAME parameters are connected to the background histogram, so the bins fluctuate
   // synchronously. This reduces the number of parameters.
-  RooParamHistFunc p_ph_sig2("p_ph_sig2", "p_ph_sig2", *dh_sig);
-  RooParamHistFunc p_ph_bkg2("p_ph_bkg2", "p_ph_bkg2", *dh_bkg, p_ph_sig2, true);
+  RooParamHistFunc p_ph_sig2("p_ph_sig2", "p_ph_sig2", *dh_sig, x);
+  RooParamHistFunc p_ph_bkg2("p_ph_bkg2", "p_ph_bkg2", *dh_bkg, x, &p_ph_sig2, true);
 
   RooRealVar Asig2("Asig","Asig",1,0.01,5000);
   RooRealVar Abkg2("Abkg","Abkg",1,0.01,5000);

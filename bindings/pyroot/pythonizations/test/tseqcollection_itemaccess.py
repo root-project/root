@@ -1,7 +1,6 @@
 import unittest
 
 import ROOT
-from libcppyy import SetOwnership
 
 
 class TSeqCollectionItemAccess(unittest.TestCase):
@@ -19,7 +18,7 @@ class TSeqCollectionItemAccess(unittest.TestCase):
         for _ in range(self.num_elems):
             o = ROOT.TObject()
             # Prevent immediate deletion of C++ TObjects
-            SetOwnership(o, False)
+            ROOT.SetOwnership(o, False)
             sc.Add(o)
 
         return sc

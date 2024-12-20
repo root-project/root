@@ -43,7 +43,7 @@ TDrawSelector.prototype.ShowProgress = function(value) {
       msg = `TTree draw ${(value * 100).toFixed(ndig)} % `;
    }
 
-   showProgress(msg, -1, () => { this._break = 1; });
+   showProgress(msg, 0, () => { this._break = 1; });
    return ret;
 };
 
@@ -101,7 +101,7 @@ async function treeDrawProgress(obj, final) {
    // while TTree reading not synchronized with drawing,
    // next portion can appear before previous is drawn
    // critical is last drawing which should wait for previous one
-   // therefore last_pr is kept as inidication that promise is not yet processed
+   // therefore last_pr is kept as indication that promise is not yet processed
 
    if (!this.last_pr) this.last_pr = Promise.resolve(true);
 
@@ -242,7 +242,7 @@ function createTreePlayer(player) {
          if (!Number.isInteger(args.firstentry)) delete args.firstentry;
       }
 
-      /* if (args.drawopt) */ cleanup(this.drawid);
+      cleanup(this.drawid);
 
       args.drawid = this.drawid;
 

@@ -60,8 +60,8 @@
 import ROOT
 
 # Silence info output for this tutorial
-ROOT.RooMsgService.instance().getStream(1).removeTopic(ROOT.RooFit.Minimization);
-ROOT.RooMsgService.instance().getStream(1).removeTopic(ROOT.RooFit.Fitting);
+ROOT.RooMsgService.instance().getStream(1).removeTopic(ROOT.RooFit.Minimization)
+ROOT.RooMsgService.instance().getStream(1).removeTopic(ROOT.RooFit.Fitting)
 
 # Setting up the model and creating toy dataset
 # ---------------------------------------------

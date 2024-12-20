@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link C++ class TSQLFile-;
 #pragma link C++ class TBufferSQL2;

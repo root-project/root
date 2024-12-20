@@ -43,8 +43,6 @@
 *  utilities of classes TGeoManager, TGeoVolume and TGeoNode can be called via the
 *  context menu.
 *
-* see http://root.cern.ch/root/htmldoc/gif/t_browser.jpg
-*
 *   --- Drawing the geometry
 *
 *    Any logical volume can be drawn via TGeoVolume::Draw() member function.
@@ -56,16 +54,12 @@
 *     This is the default behavior. The number of levels to be drawn can be changed
 *     via TGeoManager::SetVisLevel(Int_t level) method.
 *
-* see http://root.cern.ch/root/htmldoc/gif/t_frame0.jpg
-*
 *  opt=1 - the final leaves (e.g. daughters with no containment) of the branch
 *     starting from volume are drawn down to the current number of levels.
 *                                      WARNING : This mode is memory consuming
 *     depending of the size of geometry, so drawing from top level within this mode
 *     should be handled with care for expensive geometries. In future there will be
 *     a limitation on the maximum number of nodes to be visualized.
-*
-* see http://root.cern.ch/root/htmldoc/gif/t_frame1.jpg
 *
 *  opt=2 - only the clicked volume is visualized. This is automatically set by
 *     TGeoVolume::DrawOnly() method
@@ -80,8 +74,6 @@
 *         TGeoManager::SetBombX(Double_t bomb) and corresponding Y and Z.
 *  - 2  - bomb in cylindrical coordinates. Only the bomb factors on Z and R
 *         are considered
-*
-* see http://root.cern.ch/root/htmldoc/gif/t_frameexpl.jpg
 *
 *  - 3  - bomb in radial spherical coordinate : TGeoManager::SetBombR()
 *
@@ -104,16 +96,12 @@
 *  It also computes the closest distance to any boundary. The point will be drawn
 *  in red.
 *
-* see http://root.cern.ch/root/htmldoc/gif/t_checkpoint.jpg
-*
 *   2. Shooting random points.
 *    Can be called from TGeoVolume::RandomPoints() (context menu function) and
 *  it will draw this volume with current visualization settings. Random points
 *  are generated in the bounding box of the top drawn volume. The points are
 *  classified and drawn with the color of their deepest container. Only points
 *  in visible nodes will be drawn.
-*
-* see http://root.cern.ch/root/htmldoc/gif/t_random1.jpg
 *
 *
 *   3. Raytracing.
@@ -122,8 +110,6 @@
 *  directions. The intersections with displayed nodes will appear as segments
 *  having the color of the touched node. Drawn geometry will be then made invisible
 *  in order to enhance rays.
-*
-* see http://root.cern.ch/root/htmldoc/gif/t_random2.jpg
 *
 *    IMPORTANT NOTE
 *    To be compiled, this program requires a Fortran compiler supporting

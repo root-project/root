@@ -136,7 +136,7 @@
 #include "TProofProgressMemoryPlot.h"
 #include "TObjString.h"
 
-#include "proof/getProof.C"
+#include "legacy/proof/getProof.C"
 
 #define PT_NUMTEST 29
 

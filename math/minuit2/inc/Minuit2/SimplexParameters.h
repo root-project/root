@@ -14,6 +14,8 @@
 
 #include "Minuit2/MnMatrix.h"
 
+#include <ROOT/RSpan.hxx>
+
 #include <vector>
 #include <utility>
 
@@ -29,8 +31,8 @@ namespace Minuit2 {
 class SimplexParameters {
 
 public:
-   SimplexParameters(const std::vector<std::pair<double, MnAlgebraicVector>> &simpl, unsigned int jh, unsigned int jl)
-      : fSimplexParameters(simpl), fJHigh(jh), fJLow(jl)
+   SimplexParameters(std::span<const std::pair<double, MnAlgebraicVector>> simpl, unsigned int jh, unsigned int jl)
+      : fSimplexParameters(simpl.begin(), simpl.end()), fJHigh(jh), fJLow(jl)
    {
    }
 

@@ -13,19 +13,19 @@
 
 import ROOT
 from array import array
+import numpy as np
 
 
-def makeTH1():
+def makeTH1(trnd):
 
     # Create ROOT ROOT.TH1 filled with a Gaussian distribution
 
     hh = ROOT.TH1D("hh", "hh", 25, -10, 10)
-    for i in range(100):
-        hh.Fill(ROOT.gRandom.Gaus(0, 3))
+    hh.Fill(np.array([trnd.Gaus(0, 3) for _ in range(100)]))
     return hh
 
 
-def makeTTree():
+def makeTTree(trnd):
     # Create ROOT ROOT.TTree filled with a Gaussian distribution in x and a
     # uniform distribution in y
 
@@ -35,11 +35,12 @@ def makeTTree():
     tree.Branch("x", px, "x/D")
     tree.Branch("y", py, "y/D")
     for i in range(100):
-        px[0] = ROOT.gRandom.Gaus(0, 3)
-        py[0] = ROOT.gRandom.Uniform() * 30 - 15
+        px[0] = trnd.Gaus(0, 3)
+        py[0] = trnd.Uniform() * 30 - 15
         tree.Fill()
     return tree
 
+trnd = ROOT.TRandom3()
 
 ############################
 # Importing ROOT histograms
@@ -47,7 +48,7 @@ def makeTTree():
 # Import ROOT TH1 into a RooDataHist
 # ---------------------------------------------------------
 # Create a ROOT TH1 histogram
-hh = makeTH1()
+hh = makeTH1(trnd)
 
 # Declare observable x
 x = ROOT.RooRealVar("x", "x", -10, 10)
@@ -90,7 +91,7 @@ gauss.plotOn(frame2)
 # -----------------------------------------------------------
 # Import ROOT TTree into a RooDataSet
 
-tree = makeTTree()
+tree = makeTTree(trnd)
 
 # Define 2nd observable y
 y = ROOT.RooRealVar("y", "y", -10, 10)

@@ -4,7 +4,7 @@ import { makeTranslate } from '../base/BasePainter.mjs';
 import { EAxisBits, TAxisPainter } from '../gpad/TAxisPainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
-import { assignContextMenu } from '../gui/menu.mjs';
+import { assignContextMenu, kNoReorder } from '../gui/menu.mjs';
 import { getHPainter } from '../gui/display.mjs';
 import { proivdeEvalPar } from '../base/func.mjs';
 
@@ -134,13 +134,13 @@ class TGaxisPainter extends TAxisPainter {
 
       return this.drawAxis(this.getG(), Math.abs(w), Math.abs(h), makeTranslate(this.gaxis_x, this.gaxis_y) || '').then(() => {
          addMoveHandler(this);
-         assignContextMenu(this);
+         assignContextMenu(this, kNoReorder);
          return this;
       });
    }
 
-   /** @summary Fill TGaxis context */
-   fillContextMenu(menu) {
+   /** @summary Fill TGaxis context menu items */
+   fillContextMenuItems(menu) {
       menu.addTAxisMenu(EAxisBits, this, this.getObject(), '');
    }
 

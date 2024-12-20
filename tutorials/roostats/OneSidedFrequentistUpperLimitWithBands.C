@@ -126,9 +126,6 @@
 using namespace RooFit;
 using namespace RooStats;
 
-bool useProof = false; // flag to control whether to use Proof
-int nworkers = 0;      // number of workers (default use all available cores)
-
 // -------------------------------------------------------
 // The actual macro
 
@@ -165,7 +162,7 @@ void OneSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
    // Try to open the file
    TFile *file = TFile::Open(filename);
 
-   // if input file was specified byt not found, quit
+   // if input file was specified but not found, quit
    if (!file) {
       cout << "StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
@@ -242,17 +239,6 @@ void OneSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
          fc.FluctuateNumDataEntries(false);
       else
          cout << "Not sure what to do about this model" << endl;
-   }
-
-   // We can use PROOF to speed things along in parallel
-   // However, the test statistic has to be installed on the workers
-   // so either turn off PROOF or include the modified test statistic
-   // in your `$ROOTSYS/roofit/roostats/inc` directory,
-   // add the additional line to the LinkDef.h file,
-   // and recompile root.
-   if (useProof) {
-      ProofConfig pc(*w, nworkers, "", false);
-      toymcsampler->SetProofConfig(&pc); // enable proof
    }
 
    if (mc->GetGlobalObservables()) {

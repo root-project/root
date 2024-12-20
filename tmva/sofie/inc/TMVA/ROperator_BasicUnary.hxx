@@ -87,6 +87,14 @@ public:
       out << SP << "}\n";
       return out.str();
    }
+
+   std::vector<std::string> GetStdLibs() override {
+      if (Op == EBasicUnaryOperator::kSqrt || Op == EBasicUnaryOperator::kExp || Op == EBasicUnaryOperator::kLog) {
+         return { std::string("cmath") };
+      } else {
+         return {};
+      }
+   }
 };
 
 } // namespace SOFIE

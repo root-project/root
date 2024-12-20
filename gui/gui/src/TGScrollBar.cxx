@@ -304,9 +304,15 @@ Bool_t TGScrollBarElement::HandleCrossing(Event_t *event)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
-
+/// \param p The parent window
+/// \param w The scrollbar width
+/// \param h The scrollbar height
+/// \param options A bitmask of options (\see EFrameType)
+/// \param back The background color
+/// \param headPicName Filename of the "head" picture (e.g. left arrow for a horizontal scrollbar)
+/// \param tailPicName Filename of the "tail" picture (e.g. right arrow for a horizontal scrollbar)
 TGScrollBar::TGScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
-                         UInt_t options, Pixel_t back) :
+                         UInt_t options, Pixel_t back, const char *headPicName, const char *tailPicName) :
    TGFrame(p, w, h, options | kOwnBackground, back),
    fX0(0), fY0(0), fXp(0), fYp(0), fDragging(kFALSE), fGrabPointer(kTRUE),
    fRange(0), fPsize(0), fPos(0), fSliderSize(0), fSliderRange(0),
@@ -323,6 +329,31 @@ TGScrollBar::TGScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
       SetBackgroundPixmap(GetBckgndPixmap());
    SetWindowName();
    AddInput(kEnterWindowMask | kLeaveWindowMask);
+
+   fHeadPic = fClient->GetPictureOrEmpty(headPicName);
+   fTailPic = fClient->GetPictureOrEmpty(tailPicName);
+
+   fHead   = new TGScrollBarElement(this, fHeadPic, fgScrollBarWidth, fgScrollBarWidth,
+                                    kRaisedFrame);
+   fTail   = new TGScrollBarElement(this, fTailPic, fgScrollBarWidth, fgScrollBarWidth,
+                                    kRaisedFrame);
+   fSlider = new TGScrollBarElement(this, 0, fgScrollBarWidth, 50,
+                                    kRaisedFrame);
+
+   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier, kButtonPressMask |
+                         kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
+
+   fDragging = kFALSE;
+   fX0 = fY0 = (fgScrollBarWidth = TMath::Max(fgScrollBarWidth, 5));
+   fPos = 0;
+
+   fSliderSize  = 50;
+   fSliderRange = 1;
+
+   fHead->SetEditDisabled(kEditDisable | kEditDisableGrab);
+   fTail->SetEditDisabled(kEditDisable | kEditDisableGrab);
+   fSlider->SetEditDisabled(kEditDisable | kEditDisableGrab);
+   fEditDisabled = kEditDisableLayout | kEditDisableBtnEnable;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -428,39 +459,11 @@ void TGScrollBar::ChangeBackground(Pixel_t back)
 
 TGHScrollBar::TGHScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                            UInt_t options, ULong_t back) :
-    TGScrollBar(p, w, h, options, back)
+    TGScrollBar(p, w, h, options, back, "arrow_left.xpm", "arrow_right.xpm")
 {
-   fHeadPic = fClient->GetPicture("arrow_left.xpm");
-   fTailPic = fClient->GetPicture("arrow_right.xpm");
-
-   if (!fHeadPic || !fTailPic) {
-      Error("TGHScrollBar", "arrow_*.xpm not found");
-      return;
-   }
-   fHead   = new TGScrollBarElement(this, fHeadPic, fgScrollBarWidth, fgScrollBarWidth,
-                                    kRaisedFrame);
-   fTail   = new TGScrollBarElement(this, fTailPic, fgScrollBarWidth, fgScrollBarWidth,
-                                    kRaisedFrame);
-   fSlider = new TGScrollBarElement(this, 0, fgScrollBarWidth, 50,
-                                    kRaisedFrame);
-
-   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier, kButtonPressMask |
-                         kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
-
-   fDragging = kFALSE;
-   fX0 = fY0 = (fgScrollBarWidth = TMath::Max(fgScrollBarWidth, 5));
-   fPos = 0;
-
    fRange = TMath::Max((Int_t) w - (fgScrollBarWidth << 1), 1);
    fPsize = fRange >> 1;
-
-   fSliderSize  = 50;
-   fSliderRange = 1;
-
-   fHead->SetEditDisabled(kEditDisable | kEditDisableGrab);
-   fTail->SetEditDisabled(kEditDisable | kEditDisableGrab);
-   fSlider->SetEditDisabled(kEditDisable | kEditDisableGrab);
-   fEditDisabled = kEditDisableLayout | kEditDisableHeight | kEditDisableBtnEnable;
+   fEditDisabled |= kEditDisableHeight;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -685,39 +688,11 @@ void TGHScrollBar::SetPosition(Int_t pos)
 
 TGVScrollBar::TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                            UInt_t options, ULong_t back) :
-    TGScrollBar(p, w, h, options, back)
+    TGScrollBar(p, w, h, options, back, "arrow_up.xpm", "arrow_down.xpm")
 {
-   fHeadPic = fClient->GetPicture("arrow_up.xpm");
-   fTailPic = fClient->GetPicture("arrow_down.xpm");
-
-   if (!fHeadPic || !fTailPic) {
-      Error("TGVScrollBar", "arrow_*.xpm not found");
-      return;
-   }
-   fHead   = new TGScrollBarElement(this, fHeadPic, fgScrollBarWidth, fgScrollBarWidth,
-                                    kRaisedFrame);
-   fTail   = new TGScrollBarElement(this, fTailPic, fgScrollBarWidth, fgScrollBarWidth,
-                                    kRaisedFrame);
-   fSlider = new TGScrollBarElement(this, 0, fgScrollBarWidth, 50,
-                                    kRaisedFrame);
-
-   gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier, kButtonPressMask |
-                         kButtonReleaseMask | kPointerMotionMask, kNone, kNone);
-
-   fDragging = kFALSE;
-   fX0 = fY0 = (fgScrollBarWidth = TMath::Max(fgScrollBarWidth, 5));
-   fPos = 0;
-
    fRange = TMath::Max((Int_t) h - (fgScrollBarWidth << 1), 1);
    fPsize = fRange >> 1;
-
-   fSliderSize  = 50;
-   fSliderRange = 1;
-
-   fHead->SetEditDisabled(kEditDisable | kEditDisableGrab);
-   fTail->SetEditDisabled(kEditDisable | kEditDisableGrab);
-   fSlider->SetEditDisabled(kEditDisable | kEditDisableGrab);
-   fEditDisabled = kEditDisableLayout | kEditDisableWidth | kEditDisableBtnEnable;
+   fEditDisabled |= kEditDisableWidth;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

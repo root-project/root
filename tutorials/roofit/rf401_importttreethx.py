@@ -1,7 +1,6 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
 ## 'DATA AND CATEGORIES' RooFit tutorial macro #401
 ##
 ## Overview of advanced option for importing data from ROOT ROOT.TTree and ROOT.THx histograms
@@ -15,19 +14,18 @@
 
 import ROOT
 from array import array
+import numpy as np
 
 
-def makeTH1(name, mean, sigma):
+def makeTH1(trnd, name, mean, sigma):
     """Create ROOT TH1 filled with a Gaussian distribution."""
 
     hh = ROOT.TH1D(name, name, 100, -10, 10)
-    for i in range(1000):
-        hh.Fill(ROOT.gRandom.Gaus(mean, sigma))
-
+    hh.Fill(np.array([trnd.Gaus(mean, sigma) for _ in range(1000)]))
     return hh
 
 
-def makeTTree():
+def makeTTree(trnd):
     """Create ROOT ROOT.TTree filled with a Gaussian distribution in x and a uniform distribution in y."""
 
     tree = ROOT.TTree("tree", "tree")
@@ -40,22 +38,23 @@ def makeTTree():
     tree.Branch("z", pz, "z/D")
     tree.Branch("i", pi, "i/I")
     for i in range(100):
-        px[0] = ROOT.gRandom.Gaus(0, 3)
-        py[0] = ROOT.gRandom.Uniform() * 30 - 15
-        pz[0] = ROOT.gRandom.Gaus(0, 5)
+        px[0] = trnd.Gaus(0, 3)
+        py[0] = trnd.Uniform() * 30 - 15
+        pz[0] = trnd.Gaus(0, 5)
         pi[0] = i % 3
         tree.Fill()
 
     return tree
 
+trnd = ROOT.TRandom3()
 
 # Import multiple TH1 into a RooDataHist
 # ----------------------------------------------------------
 
 # Create thee ROOT ROOT.TH1 histograms
-hh_1 = makeTH1("hh1", 0, 3)
-hh_2 = makeTH1("hh2", -3, 1)
-hh_3 = makeTH1("hh3", +3, 4)
+hh_1 = makeTH1(trnd, "hh1", 0, 3)
+hh_2 = makeTH1(trnd, "hh2", -3, 1)
+hh_3 = makeTH1(trnd, "hh3", +3, 4)
 
 # Declare observable x
 x = ROOT.RooRealVar("x", "x", -10, 10)
@@ -77,7 +76,7 @@ dh2.Print()
 # Importing a ROOT TTree into a RooDataSet with cuts
 # --------------------------------------------------------------------
 
-tree = makeTTree()
+tree = makeTTree(trnd)
 
 # Define observables y,z
 y = ROOT.RooRealVar("y", "y", -10, 10)

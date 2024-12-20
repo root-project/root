@@ -20,11 +20,25 @@
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////
 
-// Bindings
-#include "TPyReturn.h"
-
 // ROOT
 #include "TObject.h"
+
+#include <any>
+#include <cstdint>
+
+// Python
+struct _object;
+typedef _object PyObject;
+
+namespace ROOT {
+namespace Internal {
+
+// Internal helper for PyROOT to swap with an object is at a specific address.
+template<class T>
+inline void SwapWithObjAtAddr(T &a, std::intptr_t b) { std::swap(a, *reinterpret_cast<T*>(b)); }
+
+}
+}
 
 class TPython {
 
@@ -42,10 +56,7 @@ public:
    static void ExecScript(const char *name, int argc = 0, const char **argv = nullptr);
 
    // execute a python statement (e.g. "import ROOT" )
-   static Bool_t Exec(const char *cmd);
-
-   // evaluate a python expression (e.g. "1+1")
-   static const TPyReturn Eval(const char *expr);
+   static Bool_t Exec(const char *cmd, std::any *result = nullptr, std::string const& resultName="_anyresult");
 
    // bind a ROOT object with, at the python side, the name "label"
    static Bool_t Bind(TObject *object, const char *label);

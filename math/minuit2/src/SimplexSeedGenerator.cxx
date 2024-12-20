@@ -20,7 +20,7 @@ namespace ROOT {
 namespace Minuit2 {
 
 MinimumSeed SimplexSeedGenerator::
-operator()(const MnFcn &fcn, const GradientCalculator &, const MnUserParameterState &st, const MnStrategy &stra) const
+operator()(const MnFcn &fcn, const GradientCalculator &, const MnUserParameterState &st, const MnStrategy &) const
 {
    // create starting state for Simplex, which corresponds to the initial parameter values
    // using the simple Initial gradient calculator (does not use any FCN function calls)
@@ -33,7 +33,7 @@ operator()(const MnFcn &fcn, const GradientCalculator &, const MnUserParameterSt
       x(i) = st.IntParameters()[i];
    double fcnmin = fcn(x);
    MinimumParameters pa(x, fcnmin);
-   InitialGradientCalculator igc(fcn, st.Trafo(), stra);
+   InitialGradientCalculator igc(fcn, st.Trafo());
    FunctionGradient dgrad = igc(pa);
    MnAlgebraicSymMatrix mat(n);
    double dcovar = 1.;

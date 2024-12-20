@@ -242,9 +242,11 @@ public:
 
    std::string GetKind() const override { return "catched"s; }
 
-   std::string GetUrl() override { return fWindow->GetUrl(false); }
+   std::string GetUrl() override { return fWindow ? fWindow->GetUrl(false) : ""s; }
 
    std::string GetTitle() override { return fCatchedKind; }
+
+   bool IsValid() override { return fWindow != nullptr; }
 
    RBrowserCatchedWidget(const std::string &name, RWebWindow *win, const std::string &kind) :
       RBrowserWidget(name),
@@ -261,6 +263,8 @@ using namespace ROOT;
 
 /** \class ROOT::RBrowser
 \ingroup rbrowser
+\ingroup webwidgets
+
 \brief Web-based %ROOT files and objects browser
 
 \image html v7_rbrowser.png
@@ -320,6 +324,14 @@ RBrowser::RBrowser(bool use_rcanvas)
       return widget ? true : false;
    });
 
+   fWebWindow->GetManager()->SetDeleteCallback([this](RWebWindow &win) -> void {
+      for (auto &widget : fWidgets) {
+         auto catched = dynamic_cast<RBrowserCatchedWidget *>(widget.get());
+         if (catched && (catched->fWindow == &win))
+            catched->fWindow = nullptr;
+      }
+   });
+
    Show();
 
    // add first canvas by default
@@ -339,8 +351,10 @@ RBrowser::RBrowser(bool use_rcanvas)
 
 RBrowser::~RBrowser()
 {
-   if (fWebWindow)
+   if (fWebWindow) {
       fWebWindow->GetManager()->SetShowCallback(nullptr);
+      fWebWindow->GetManager()->SetDeleteCallback(nullptr);
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -749,8 +763,20 @@ std::string RBrowser::NewWidgetMsg(std::shared_ptr<RBrowserWidget> &widget)
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Check if any widget was modified and update if necessary
 
-void RBrowser::CheckWidgtesModified()
+void RBrowser::CheckWidgtesModified(unsigned connid)
 {
+   std::vector<std::string> del_names;
+
+   for (auto &widget : fWidgets)
+      if (!widget->IsValid())
+         del_names.push_back(widget->GetName());
+
+   if (!del_names.empty())
+      fWebWindow->Send(connid, "CLOSE_WIDGETS:"s + TBufferJSON::ToJSON(&del_names, TBufferJSON::kNoSpaces).Data());
+
+   for (auto name : del_names)
+      CloseTab(name);
+
    for (auto &widget : fWidgets)
       widget->CheckModified();
 }
@@ -867,7 +893,7 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
             widget->RefreshFromLogs(sPrompt + msg, GetRootLogs());
       }
 
-      CheckWidgtesModified();
+      CheckWidgtesModified(connid);
    } else if (kind == "GETHISTORY") {
 
       auto history = GetRootHistory();
@@ -896,6 +922,7 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
             if ((arr->size() == 6) && (arr->at(5) == "RUN")) {
                ProcessSaveFile(editor->fFileName, editor->fContent);
                ProcessRunMacro(editor->fFileName);
+               CheckWidgtesModified(connid);
             }
          }
       }

@@ -6,6 +6,9 @@ on: pull_request
   # pull_request:
   #   branches: [ $default-branch ]
 
+permissions:
+  contents: read
+
 jobs:
   clang-format:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
@@ -21,8 +24,8 @@ jobs:
       BASE_COMMIT: ${{ github.event.pull_request.base.sha }}
     steps:
     - uses: actions/checkout@v4
-    - name: Fetch base_ref HEAD
-      run: git fetch --depth=1 origin +refs/heads/${{github.base_ref}}:refs/remotes/origin/${{github.base_ref}}
+    - name: Fetch base sha
+      run: git fetch --depth=1 origin +${{github.event.pull_request.base.sha}}:origin/base_sha
     - name: install clang-format
       run: sudo apt-get install -y clang-format
     - name: run clang-format script

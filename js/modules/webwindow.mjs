@@ -54,7 +54,6 @@ class LongPollSocket {
       if (kind === 'connect') {
          url += this.raw ? '?raw_connect' : '?txt_connect';
          if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
-         console.log(`longpoll connect ${url} raw = ${this.raw}`);
          this.connid = 'connect';
       } else if (kind === 'close') {
          if ((this.connid === null) || (this.connid === 'close')) return;
@@ -63,7 +62,7 @@ class LongPollSocket {
          this.connid = 'close';
          reqmode = 'text;sync'; // use sync mode to close connection before browser window closed
       } else if ((this.connid === null) || (typeof this.connid !== 'number')) {
-         if (!browser.qt5) console.error('No connection');
+         if (!browser.qt5 && !browser.qt6) console.error('No connection');
       } else {
          url += '?connection=' + this.connid;
          if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
@@ -94,12 +93,12 @@ class LongPollSocket {
             // raw mode - all kind of reply data packed into binary buffer
             // first 4 bytes header 'txt:' or 'bin:'
             // after the 'bin:' there is length of optional text argument like 'bin:14  :optional_text'
-            // and immedaitely after text binary data. Server sends binary data so, that offset should be multiple of 8
+            // and immediately after text binary data. Server sends binary data so, that offset should be multiple of 8
 
             const u8Arr = new Uint8Array(res);
             let str = '', i = 0, offset = u8Arr.length;
             if (offset < 4) {
-               if (!browser.qt5) console.error(`longpoll got short message in raw mode ${offset}`);
+               if (!browser.qt5 && !browser.qt6) console.error(`longpoll got short message in raw mode ${offset}`);
                return this.handle.processRequest(null);
             }
 
@@ -226,7 +225,7 @@ class FileDumpSocket {
       this.nextOperation();
    }
 
-   /** @summary Emulate send - just cound operation */
+   /** @summary Emulate send - just count operation */
    send(/* str */) {
       if (this.protocol[this.cnt] === 'send') {
          this.cnt++;
@@ -272,9 +271,9 @@ class WebWindowHandle {
    constructor(socket_kind, credits) {
       this.kind = socket_kind;
       this.state = 0;
-      this.credits = credits || 10;
+      this.credits = Math.max(3, credits || 10);
       this.cansend = this.credits;
-      this.ackn = this.credits;
+      this.ackn = this.credits; // this number will be send to server with first message
       this.send_seq = 1; // sequence counter of send messages
       this.recv_seq = 0; // sequence counter of received messages
    }
@@ -296,7 +295,7 @@ class WebWindowHandle {
 
    /** @summary Set callbacks receiver.
      * @param {object} obj - object with receiver functions
-     * @param {function} obj.onWebsocketMsg - called when new data receieved from RWebWindow
+     * @param {function} obj.onWebsocketMsg - called when new data received from RWebWindow
      * @param {function} obj.onWebsocketOpened - called when connection established
      * @param {function} obj.onWebsocketClosed - called when connection closed
      * @param {function} obj.onWebsocketError - called when get error via the connection */
@@ -441,7 +440,7 @@ class WebWindowHandle {
    }
 
    /** @summary Send only last message of specified kind during defined time interval.
-     * @desc Idea is to prvent sending multiple messages of similar kind and overload connection
+     * @desc Idea is to prevent sending multiple messages of similar kind and overload connection
      * Instead timeout is started after which only last specified message will be send
      * @private */
    sendLast(kind, tmout, msg) {
@@ -470,7 +469,7 @@ class WebWindowHandle {
    }
 
    /** @summary Send keep-alive message.
-     * @desc Only for internal use, only when used with websockets
+     * @desc Only for internal use, only when used with web sockets
      * @private */
    keepAlive() {
       delete this.timerid;
@@ -480,7 +479,7 @@ class WebWindowHandle {
    /** @summary Request server to resize window
      * @desc For local displays like CEF or qt5 only server can do this */
    resizeWindow(w, h) {
-      if (browser.qt5 || browser.cef3)
+      if (browser.qt5 || browser.qt6 || browser.cef3)
          this.send(`RESIZE=${w},${h}`, 0);
       else if ((typeof window !== 'undefined') && isFunc(window?.resizeTo))
          window.resizeTo(w, h);
@@ -563,18 +562,26 @@ class WebWindowHandle {
       return args;
    }
 
-   /** @summary Create configured socket for current object.
+   /** @summary Connect to the server
+     * @param [href] - optional URL to widget, use document URL instead
      * @private */
    connect(href) {
       this.close();
-      if (!href && this.href) href = this.href;
+
+      if (href) {
+         this._secondary = true;
+         this.setHRef(href);
+      }
+
+      href = this.href;
 
       let ntry = 0;
 
       const retry_open = first_time => {
          if (this.state !== 0) return;
 
-         if (!first_time) console.log(`try connect window again ${new Date().toString()}`);
+         if (!first_time)
+            console.log(`try connect window again ${new Date().toString()}`);
 
          if (this._websocket) {
             this._websocket.close();
@@ -583,8 +590,10 @@ class WebWindowHandle {
 
          if (!href) {
             href = window.location.href;
-            if (href && href.indexOf('#') > 0) href = href.slice(0, href.indexOf('#'));
-            if (href && href.lastIndexOf('/') > 0) href = href.slice(0, href.lastIndexOf('/') + 1);
+            if (href && href.indexOf('#') > 0)
+               href = href.slice(0, href.indexOf('#'));
+            if (href && href.lastIndexOf('/') > 0)
+               href = href.slice(0, href.lastIndexOf('/') + 1);
          }
          this.href = href;
          ntry++;
@@ -601,8 +610,8 @@ class WebWindowHandle {
             console.log(`configure protocol log ${path}`);
          } else if ((this.kind === 'websocket') && first_time) {
             path = path.replace('http://', 'ws://').replace('https://', 'wss://') + 'root.websocket';
-            path += '?' + this.getConnArgs(ntry);
             console.log(`configure websocket ${path}`);
+            path += '?' + this.getConnArgs(ntry);
             this._websocket = new WebSocket(path);
          } else {
             path += 'root.longpoll';
@@ -616,8 +625,8 @@ class WebWindowHandle {
             if (ntry > 2) showProgress();
             this.state = 1;
 
-            const key = this.key || '';
-            this.send(`READY=${key}`, 0); // need to confirm connection
+            const reply = (this._secondary ? '' : 'generate_key;') + (this.key || '');
+            this.send(`READY=${reply}`, 0); // need to confirm connection and request new key
             this.invokeReceiver(false, 'onWebsocketOpened');
          };
 
@@ -683,7 +692,7 @@ class WebWindowHandle {
             if (this.key && sessionKey) {
                const client_hash = HMAC(this.key, msg.slice(i0+1));
                if (server_hash !== client_hash)
-                  return console.log(`Failure checking server md5 sum ${server_hash}`);
+                  return console.log(`Failure checking server HMAC sum ${server_hash}`);
             }
 
             if (seq_id <= this.recv_seq)
@@ -696,21 +705,16 @@ class WebWindowHandle {
             msg = msg.slice(i4 + 1);
 
             if (chid === 0) {
-               console.log(`GET chid=0 message ${msg}`);
+               // console.log(`GET chid=0 message ${msg}`);
                if (msg === 'CLOSE') {
                   this.close(true); // force closing of socket
                   this.invokeReceiver(true, 'onWebsocketClosed');
                } else if (msg.indexOf('NEW_KEY=') === 0) {
-                  const newkey = msg.slice(8);
-                  this.close(true);
-                  let href = (typeof document !== 'undefined') ? document.URL : null;
-                  if (isStr(href) && (typeof window !== 'undefined') && window?.history) {
-                     const p = href.indexOf('?key=');
-                     if (p > 0) href = href.slice(0, p);
-                     window.history.replaceState(window.history.state, undefined, `${href}?key=${newkey}`);
-                  } else if (typeof sessionStorage !== 'undefined')
-                     sessionStorage.setItem('RWebWindow_Key', newkey);
-                  location.reload(true);
+                  this.new_key = msg.slice(8);
+                  console.log('get new key', this.new_key);
+                  this.storeKeyInUrl();
+                  if (this._ask_reload)
+                     this.askReload(true);
                }
             } else if (msg.slice(0, 10) === '$$binary$$') {
                this.next_binary = chid;
@@ -720,7 +724,7 @@ class WebWindowHandle {
             else
                this.provideData(chid, msg);
 
-            if (this.ackn > 7)
+            if (this.ackn > Math.max(2, this.credits*0.7))
                this.send('READY', 0); // send dummy message to server
          };
 
@@ -749,21 +753,33 @@ class WebWindowHandle {
       retry_open(true); // call for the first time
    }
 
-   /** @summary Send newkey request to application
-     * @desc If server creates newkey and response - webpage will be reaload
-     * After key generation done, connection will not be working any longer
-     * WARNING - only call when you know that you are doing
+   /** @summary Ask to reload web widget
+     * @desc If new key already exists - reload immediately
+     * Otherwise request server to generate new key - and then reload page
+     * WARNING - call only when knowing that you are doing
      * @private */
-   askReload() {
-      this.send('GENERATE_KEY', 0);
+   askReload(force) {
+      if (this.new_key || force) {
+         this.close(true);
+         if (typeof location !== 'undefined')
+            location.reload(true);
+      } else {
+         this._ask_reload = true;
+         this.send('GENERATE_KEY', 0);
+      }
    }
 
-   /** @summary Instal Ctrl-R handler to realod web window
+   /** @summary Instal Ctrl-R handler to reload web window
      * @desc Instead of default window reload invokes {@link askReload} method
      * WARNING - only call when you know that you are doing
      * @private */
    addReloadKeyHandler() {
-      if (this.kind === 'file') return;
+      if ((this.kind === 'file') || this._handling_reload)
+         return;
+
+      // this websocket will handle reload
+      // embed widgets should not call this method
+      this._handling_reload = true;
 
       window.addEventListener('keydown', evnt => {
          if (((evnt.key === 'R') || (evnt.key === 'r')) && evnt.ctrlKey) {
@@ -773,6 +789,44 @@ class WebWindowHandle {
             this.askReload();
           }
       });
+   }
+
+   /** @summary Replace widget URL with new key
+     * @private */
+   storeKeyInUrl() {
+      // do not modify document URLs by secondary widgets
+      if (this._secondary)
+         return;
+
+      let href = (typeof document !== 'undefined') ? document.URL : null;
+
+      if (this._can_modify_url && isStr(href) && (typeof window !== 'undefined')) {
+         let prefix = '&key=', p = href.indexOf(prefix);
+         if (p < 0) {
+            prefix = '?key=';
+            p = href.indexOf(prefix);
+         }
+         if ((p > 0) && this.new_key) {
+            const p1 = href.indexOf('#', p+1), p2 = href.indexOf('&', p+1),
+                  pp = (p1 < 0) ? p2 : (p2 < 0 ? p1 : Math.min(p1, p2));
+            href = href.slice(0, p) + prefix + this.new_key + (pp < 0 ? '' : href.slice(pp));
+            window.history?.replaceState(window.history.state, undefined, href);
+         }
+      }
+
+      if (typeof sessionStorage !== 'undefined') {
+         sessionStorage.setItem('RWebWindow_SessionKey', sessionKey);
+         sessionStorage.setItem('RWebWindow_Key', this.new_key);
+      }
+   }
+
+   /** @summary Create new instance of same kind
+    * @private */
+   createNewInstance(url) {
+      const handle = new WebWindowHandle(this.kind);
+      handle._secondary = true;
+      handle.setHRef(this.getHRef(url));
+      return handle;
    }
 
 } // class WebWindowHandle
@@ -798,10 +852,10 @@ async function connectWebWindow(arg) {
    let d_key, d_token, new_key;
 
    if (!arg.href) {
-      let href = (typeof document !== 'undefined') ? document.URL : '';
+      let href = (typeof document !== 'undefined') ? document.URL : '', s_key;
       const p = href.indexOf('#');
       if (p > 0) {
-         sessionKey = href.slice(p+1);
+         s_key = href.slice(p + 1);
          href = href.slice(0, p);
       }
 
@@ -809,21 +863,21 @@ async function connectWebWindow(arg) {
       d_key = d.get('key');
       d_token = d.get('token');
 
+      if (d_key && s_key && (s_key.length > 20)) {
+         sessionKey = s_key;
+
+         if (typeof window !== 'undefined')
+            window.history?.replaceState(window.history.state, undefined, href);
+      }
+
       if (typeof sessionStorage !== 'undefined') {
          new_key = sessionStorage.getItem('RWebWindow_Key');
          sessionStorage.removeItem('RWebWindow_Key');
-         if (new_key) console.log(`Use key ${new_key} from session storage`);
 
          if (sessionKey)
             sessionStorage.setItem('RWebWindow_SessionKey', sessionKey);
          else
             sessionKey = sessionStorage.getItem('RWebWindow_SessionKey') || '';
-      }
-
-      // hide key and any following parameters from URL, chrome do not allows to close browser with changed URL
-      if (d_key && !d.has('headless') && isStr(href) && (typeof window !== 'undefined') && window?.history) {
-         const p = href.indexOf('?key=');
-         if (p > 0) window.history.replaceState(window.history.state, undefined, href.slice(0, p));
       }
 
       // special holder script, prevents headless chrome browser from too early exit
@@ -835,6 +889,8 @@ async function connectWebWindow(arg) {
 
       if (arg.platform === 'qt5')
          browser.qt5 = true;
+      else if (arg.platform === 'qt6')
+         browser.qt6 = true;
       else if (arg.platform === 'cef3')
          browser.cef3 = true;
 
@@ -854,7 +910,7 @@ async function connectWebWindow(arg) {
    }
 
    if (!arg.socket_kind) {
-      if (browser.qt5)
+      if (browser.qt5 || browser.qt6)
          arg.socket_kind = 'rawlongpoll';
       else if (browser.cef3)
          arg.socket_kind = 'longpoll';
@@ -868,6 +924,7 @@ async function connectWebWindow(arg) {
    const main = new Promise(resolveFunc => {
       const handle = new WebWindowHandle(arg.socket_kind, arg.credits);
       handle.setUserArgs(arg.user_args);
+      handle._can_modify_url = !!d_key; // if key appears in URL, we can put there new key
       if (arg.href)
          handle.setHRef(arg.href); // apply href now  while connect can be called from other place
       else {
@@ -875,11 +932,10 @@ async function connectWebWindow(arg) {
          handle.token = d_token;
       }
 
-      if (window) {
+      if (typeof window !== 'undefined') {
          window.onbeforeunload = () => handle.close(true);
-         if (browser.qt5) window.onqt5unload = window.onbeforeunload;
+         if (browser.qt5 || browser.qt6) window.onqt5unload = window.onbeforeunload;
       }
-
 
       if (arg.receiver) {
          // when receiver exists, it handles itself callbacks

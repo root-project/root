@@ -560,21 +560,6 @@ double ParamHistFunc::evaluate() const
   return getParameter().getVal();
 }
 
-void ParamHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   auto const &n = _numBinsPerDim;
-
-   // check if _numBins needs to be filled
-   if (n.x == 0) {
-      _numBinsPerDim = getNumBinsPerDim(_dataVars);
-   }
-
-   std::string const &idx = _dataSet.calculateTreeIndexForCodeSquash(this, ctx, _dataVars, true);
-   std::string const &paramNames = ctx.buildArg(_paramSet);
-
-   ctx.addResult(this, paramNames + "[" + idx + "]");
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Find all bins corresponding to the values of the observables in `evalData`, and evaluate
 /// the associated parameters.
@@ -718,25 +703,28 @@ std::list<double>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double
 /// as the recursive division strategy of RooCurve cannot deal efficiently
 /// with the vertical lines that occur in a non-interpolated histogram
 
-std::list<double>* ParamHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
-                    double xhi) const
+std::list<double> *ParamHistFunc::binBoundaries(RooAbsRealLValue &obs, double xlo, double xhi) const
 {
-  // copied and edited from RooHistFunc
-  RooAbsLValue* lvarg = &obs;
+   // copied and edited from RooHistFunc
+   RooAbsLValue *lvarg = &obs;
 
-  // Retrieve position of all bin boundaries
-  const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr);
-  double* boundaries = binning->array() ;
-
-  std::list<double>* hint = new std::list<double> ;
-
-  // Construct array with pairs of points positioned epsilon to the left and
-  // right of the bin boundaries
-  for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
-    if (boundaries[i]>=xlo && boundaries[i]<=xhi) {
-      hint->push_back(boundaries[i]) ;
-    }
-  }
-
-  return hint ;
+   // look for variable in the DataHist, and if found, return the binning
+   std::string varName = dynamic_cast<TObject *>(lvarg)->GetName();
+   RooArgSet const &vars = *_dataSet.get(); // guaranteed to be in the same order as the binnings vector
+   auto &binnings = _dataSet.getBinnings();
+   for (size_t i = 0; i < vars.size(); i++) {
+      if (varName == vars[i]->GetName()) {
+         // found the variable, return its binning
+         double *boundaries = binnings.at(i)->array();
+         std::list<double> *hint = new std::list<double>;
+         for (int j = 0; j < binnings.at(i)->numBoundaries(); j++) {
+            if (boundaries[j] >= xlo && boundaries[j] <= xhi) {
+               hint->push_back(boundaries[j]);
+            }
+         }
+         return hint;
+      }
+   }
+   // variable not found, return null
+   return nullptr;
 }

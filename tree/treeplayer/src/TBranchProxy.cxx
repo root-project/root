@@ -18,12 +18,39 @@ of the autoloading of branches as well as all the generic setup routine.
 #include "TLeaf.h"
 #include "TBranchElement.h"
 #include "TBranchObject.h"
+#include "TCollection.h" // TRangeStaticCast
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
+#include "ROOT/InternalTreeUtils.hxx" // GetFileNamesFromTree, GetTreeFullPaths
+
+#include <string>
+#include <string_view>
 
 ClassImp(ROOT::Detail::TBranchProxy);
 
 using namespace ROOT::Internal;
+
+namespace {
+/**
+ * \brief Find if the input branch name is the prefix for other sub-branches in the same tree.
+ */
+bool AreThereSubBranches(std::string_view parentBrName, TTree &tree)
+{
+   const std::string prefix = [&parentBrName]() {
+      if (parentBrName.back() == '.')
+         return std::string(parentBrName);
+      return std::string(parentBrName) + '.';
+   }();
+
+   for (auto *leaf : ROOT::Detail::TRangeStaticCast<TLeaf>(tree.GetListOfLeaves()))
+      // Compares the prefix string with the leaf name, checking if the first
+      // `prefix.size()` characters match those of the prefix, i.e. if the leaf
+      // name starts with the prefix
+      if (prefix.compare(0, prefix.size(), leaf->GetName(), prefix.size()) == 0)
+         return true;
+   return false;
+}
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -138,13 +165,30 @@ static std::string GetFriendBranchName(TTree* directorTree, TBranch* branch, con
 /// Constructor taking the branch name, possibly of a friended tree.
 /// Used by TTreeReaderValue in place of TFriendProxy.
 
-ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char* branchname, TBranch* branch, const char* membername) :
-   fDirector(boss), fInitialized(false), fIsMember(membername != nullptr && membername[0]), fIsClone(false), fIsaPointer(false),
-   fHasLeafCount(false), fBranchName(GetFriendBranchName(boss->GetTree(), branch, branchname)), fParent(nullptr), fDataMember(membername),
-   fClassName(""), fClass(nullptr), fElement(nullptr), fMemberOffset(0), fOffset(0), fArrayLength(1),
-   fBranch(nullptr), fBranchCount(nullptr),
-   fNotify(this),
-   fRead(-1), fWhere(nullptr),fCollection(nullptr)
+ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector *boss, const char *branchname, TBranch *branch,
+                                         const char *membername, bool suppressMissingBranchError)
+   : fDirector(boss),
+     fInitialized(false),
+     fIsMember(membername != nullptr && membername[0]),
+     fIsClone(false),
+     fIsaPointer(false),
+     fHasLeafCount(false),
+     fSuppressMissingBranchError(suppressMissingBranchError),
+     fBranchName(GetFriendBranchName(boss->GetTree(), branch, branchname)),
+     fParent(nullptr),
+     fDataMember(membername),
+     fClassName(""),
+     fClass(nullptr),
+     fElement(nullptr),
+     fMemberOffset(0),
+     fOffset(0),
+     fArrayLength(1),
+     fBranch(nullptr),
+     fBranchCount(nullptr),
+     fNotify(this),
+     fRead(-1),
+     fWhere(nullptr),
+     fCollection(nullptr)
 {
    // Constructor.
 
@@ -275,13 +319,19 @@ bool ROOT::Detail::TBranchProxy::Setup()
       // its mother's name
       fBranch = fDirector->GetTree()->GetBranch(fBranchName.Data());
       if (!fBranch) {
-         // FIXME
-         // While fixing ROOT-10019, this error was added to give to the user an even better experience
-         // in presence of a problem.
-         // It is not easy to distinguish the cases where this error is "expected"
-         // For now we do not print anything - see conversation here: https://github.com/root-project/root/pull/3746
-         //auto treeName = fDirector->GetTree()->GetName();
-         //::Error("TBranchProxy::Setup", "%s", Form("Unable to find branch %s in tree %s.\n",fBranchName.Data(), treeName));
+         if (!fSuppressMissingBranchError && !AreThereSubBranches(fBranchName.View(), *fDirector->GetTree())) {
+            // The next error refers specifically to the situation where the branch identified by fBranchName
+            // is not present and that is not expected. An example is when traversing a chain of files, the branch
+            // is missing from the file that we are switching into.
+            // Conversely, there are situations where the missing branch is indeed expected. A notable example is when
+            // the TTree contains a split object, the branch referring to the whole object type will actually be elided
+            // and will not be found by `TTree::GetBranch`, only the data members will be present as sub branches.
+            auto *tree = fDirector->GetTree()->GetTree(); // Double GetTree to extract the current TTree being processed
+            Error("TBranchProxy::Setup()", "%s",
+                  Form("Branch '%s' is not available from tree '%s' in file '%s'.", fBranchName.Data(),
+                       ROOT::Internal::TreeUtils::GetTreeFullPaths(*tree)[0].c_str(),
+                       ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree)[0].c_str()));
+         }
          return false;
       }
 

@@ -22,6 +22,18 @@
 
 #include <fstream>
 
+TEST(TClingUtilsTests, GetCppName)
+{
+   using namespace ROOT::TMetaUtils;
+
+   // Test for converting a string to a valid C/C++ variable name
+   std::string validVarName;
+   GetCppName(validVarName,
+              "some+input-string*with/special&characters123+-*/&%|^><=~.()[]{};#?`!,$:\"@\'\\@abc$and spaces");
+   ASSERT_EQ(validVarName, "somepLinputmIstringmUwithdIspecialaNcharacters123pLmImUdIaNpEoRhAgRlEeQwAdOoPcPoBcBlBrBsChS"
+                           "qMbTnOcOdAcLdQaTsQfIaTabcdAandsPspaces");
+}
+
 TEST(TClingUtilsTests, GetRealPath)
 {
 #ifndef R__WIN32

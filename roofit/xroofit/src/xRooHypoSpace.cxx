@@ -37,7 +37,7 @@
 #include "RooStats/HypoTestInverterResult.h"
 #include "TEnv.h"
 
-BEGIN_XROOFIT_NAMESPACE;
+BEGIN_XROOFIT_NAMESPACE
 
 xRooNLLVar::xRooHypoSpace::xRooHypoSpace(const char *name, const char *title)
    : TNamed(name, title), fPars(std::make_shared<RooArgSet>())
@@ -185,6 +185,17 @@ int xRooNLLVar::xRooHypoSpace::AddPoints(const char *parName, size_t nPoints, do
       throw std::runtime_error("Unknown parameter");
    _par->setAttribute("axis");
 
+   if (low < _par->getMin()) {
+      Warning("AddPoints", "low edge of hypoSpace %g below lower bound of parameter: %g. Changing to lower bound", low,
+              _par->getMin());
+      low = _par->getMin();
+   }
+   if (high > _par->getMax()) {
+      Warning("AddPoints", "high edge of hypoSpace %g above upper bound of parameter: %g. Changing to upper bound",
+              high, _par->getMax());
+      high = _par->getMax();
+   }
+
    if (nPoints == 1) {
       _par->setVal((high + low) * 0.5);
       AddPoint();
@@ -293,14 +304,16 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
       sType.ReplaceAll("plr", "ts");
    }
 
-   if (p && high <= low) {
+   if (high < low || (high == low && nPoints != 1)) {
       // take from parameter
       low = p->getMin("scan");
       high = p->getMax("scan");
-      ::Info("xRooHypoSpace::scan", "Using %s range: %g - %g", p->GetName(), low, high);
    }
    if (!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
       p->setRange("scan", low, high);
+   }
+   if (p->hasRange("scan")) {
+      ::Info("xRooHypoSpace::scan", "Using %s scan range: %g - %g", p->GetName(), p->getMin("scan"), p->getMax("scan"));
    }
 
    bool doObs = false;
@@ -398,7 +411,7 @@ int xRooNLLVar::xRooHypoSpace::scan(const char *type, size_t nPoints, double low
    return out;
 }
 
-std::map<std::string, std::pair<double, double>>
+std::map<std::string, xRooNLLVar::xValueWithError>
 xRooNLLVar::xRooHypoSpace::limits(const char *opt, const std::vector<double> &nSigmas, double relUncert)
 {
 
@@ -410,7 +423,7 @@ xRooNLLVar::xRooHypoSpace::limits(const char *opt, const std::vector<double> &nS
 
    scan(opt, nSigmas, relUncert);
 
-   std::map<std::string, std::pair<double, double>> out;
+   std::map<std::string, xRooNLLVar::xValueWithError> out;
    for (auto nSigma : nSigmas) {
       auto lim = limit(opt, nSigma);
       if (lim.second < 0)
@@ -511,6 +524,11 @@ xRooNLLVar::xRooHypoPoint &xRooNLLVar::xRooHypoSpace::AddPoint(const char *coord
              v && std::abs(v->getVal() - out.alt_poi().getRealValue(v->GetName())) > 1e-12) {
             match = false;
             break;
+         } else if (auto cat = dynamic_cast<RooAbsCategory *>(c);
+                    cat && cat->getCurrentIndex() ==
+                              out.alt_poi().getCatIndex(cat->GetName(), std::numeric_limits<int>().max())) {
+            match = false;
+            break;
          }
       }
       if (!match)
@@ -523,6 +541,11 @@ xRooNLLVar::xRooHypoPoint &xRooNLLVar::xRooHypoSpace::AddPoint(const char *coord
          }
          if (auto v = dynamic_cast<RooAbsReal *>(c);
              v && std::abs(v->getVal() - out.coords->getRealValue(v->GetName())) > 1e-12) {
+            match = false;
+            break;
+         } else if (auto cat = dynamic_cast<RooAbsCategory *>(c);
+                    cat && cat->getCurrentIndex() ==
+                              out.alt_poi().getCatIndex(cat->GetName(), std::numeric_limits<int>().max())) {
             match = false;
             break;
          }
@@ -1283,7 +1306,7 @@ std::shared_ptr<TMultiGraph> xRooNLLVar::xRooHypoSpace::graphs(const char *opt)
    return out;
 }
 
-std::pair<double, double> xRooNLLVar::xRooHypoSpace::GetLimit(const TGraph &pValues, double target)
+xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoSpace::GetLimit(const TGraph &pValues, double target)
 {
 
    if (std::isnan(target)) {
@@ -1311,7 +1334,7 @@ std::pair<double, double> xRooNLLVar::xRooHypoSpace::GetLimit(const TGraph &pVal
 
    // simple linear extrapolation to critical value ... return nan if problem
    if (gr->GetN() < 2) {
-      return std::pair(std::numeric_limits<double>::quiet_NaN(), 0);
+      return std::pair<double, double>(std::numeric_limits<double>::quiet_NaN(), 0);
    }
 
    double alpha = log(target);
@@ -1906,4 +1929,4 @@ RooStats::HypoTestInverterResult *xRooNLLVar::xRooHypoSpace::result()
    return out;
 }
 
-END_XROOFIT_NAMESPACE;
+END_XROOFIT_NAMESPACE

@@ -17,12 +17,13 @@
 #endif
 
 #include "TObject.h"
+#include "TVirtualMapFile.h"
 
 class TDirectory;
 class TList;
 class TMapRec;
 
-class TMapFile : public TObject {
+class TMapFile : public TVirtualMapFile {
 
 friend class TMapRec;
 
@@ -84,7 +85,7 @@ public:
    void     operator delete(void *vp);
 
    void          Browse(TBrowser *b) override;
-   void          Close(Option_t *option = "");
+   void          Close(Option_t *option = "") override;
    void         *GetBaseAddr() const { return (void *)fBaseAddr; }
    void         *GetBreakval() const;
    TDirectory   *GetDirectory() const {return fDirectory;}

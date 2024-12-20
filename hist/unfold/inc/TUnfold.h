@@ -1,9 +1,12 @@
 // Author: Stefan Schmitt
 // DESY, 13/10/08
 
-//  Version 17.6,  updated doxygen-style comments, add one argument for scanLCurve
+//  Version 17.9, add new methods GetDF(), GetSURE(), ScanSURE(), GetSqrtEvEmatrix()
 //
 //  History:
+//    Version 17.8, add new method GetDXDY() for histograms
+//    Version 17.7, updates in the TUnfold implementation
+//    Version 17.6,  updated doxygen-style comments, add one argument for scanLCurve
 //    Version 17.5, fix memory leak and other bugs
 //    Version 17.4, in parallel to changes in TUnfoldBinning
 //    Version 17.3, in parallel to changes in TUnfoldBinning
@@ -89,16 +92,17 @@
 
 #include <TH1D.h>
 #include <TH2D.h>
+#include <TGraph.h>
 #include <TObject.h>
 #include <TArrayI.h>
 #include <TSpline.h>
 #include <TMatrixDSparse.h>
 #include <TMatrixD.h>
+#include <TObjArray.h>
 #include <TString.h>
 
-#define TUnfold_VERSION "V17.6"
+#define TUnfold_VERSION "V17.9"
 #define TUnfold_CLASS_VERSION 17
-
 
 class TUnfold : public TObject {
  private:
@@ -171,7 +175,7 @@ class TUnfold : public TObject {
    /// type of regularisation
    ERegMode fRegMode;
  private:
-   /// number of input bins which are dropped because they have error=0
+   /// number of input bins which are dropped because they have error=nullptr
    Int_t fIgnoredBins;
    /// machine accuracy used to determine matrix rank after eigenvalue analysis
    Double_t fEpsMatrix;
@@ -283,9 +287,16 @@ public:
    // scan the L curve using successive calls to DoUnfold(Double_t) at various tau
    virtual Int_t ScanLcurve(Int_t nPoint,Double_t tauMin,
                             Double_t tauMax,TGraph **lCurve,
-			                   TSpline **logTauX=nullptr,TSpline **logTauY=nullptr,
+                            TSpline **logTauX=nullptr,TSpline **logTauY=nullptr,
                             TSpline **logTauCurvature=nullptr);
-
+   // minimize Stein's unbiased risk estimator using successive calls to DoUnfold at various tau. Optionally, the contributions to SURE (DF and Chi2A) or the L-curve are saved
+   virtual Int_t ScanSURE(Int_t nPoint,Double_t tauMin,
+                          Double_t tauMax,
+                          TGraph **logTauSURE=nullptr,
+                          TGraph **df_chi2A=nullptr,
+                          TGraph **lCurve=nullptr);
+   // calculate square roots of the Eigenvalues of the Error matrix
+   TVectorD GetSqrtEvEmatrix(void) const;
    // access unfolding results
    Double_t GetTau(void) const;
    void GetOutput(TH1 *output,const Int_t *binMap=nullptr) const;
@@ -293,6 +304,9 @@ public:
    void GetRhoIJ(TH2 *rhoij,const Int_t *binMap=nullptr) const;
    Double_t GetRhoI(TH1 *rhoi,const Int_t *binMap=nullptr,TH2 *invEmat=nullptr) const;
    void GetFoldedOutput(TH1 *folded,const Int_t *binMap=nullptr) const;
+
+   double GetDF(void) const; // effective number of degrees of freedom
+   double GetSURE(void) const; // Stein's unbiased risk estimator
 
    // access input parameters
    void GetProbabilityMatrix(TH2 *A,EHistMap histmap) const;
@@ -305,6 +319,8 @@ public:
    void GetLsquared(TH2 *lsquared) const;
 
    // access various properties of the result
+   /// get matrix connecting input and output changes
+   void GetDXDY(TH2 *dxdy) const;
    /// get maximum global correlation determined in recent unfolding
    inline Double_t GetRhoMax(void) const { return fRhoMax; }
    /// get average global correlation determined in recent unfolding

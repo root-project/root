@@ -33,7 +33,6 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Transforms/IPO/SampleContextTracker.h"
-#include <list>
 #include <map>
 #include <set>
 #include <sstream>
@@ -42,8 +41,10 @@
 #include <unordered_set>
 #include <vector>
 
+namespace llvm {
 extern cl::opt<bool> EnableCSPreInliner;
 extern cl::opt<bool> UseContextCostForPreInliner;
+} // namespace llvm
 
 using namespace llvm;
 using namespace sampleprof;
@@ -188,10 +189,12 @@ class ProfiledBinary {
   std::string Path;
   // Path of the debug info binary.
   std::string DebugBinaryPath;
-  // Path of symbolizer path which should be pointed to binary with debug info.
-  StringRef SymbolizerPath;
   // The target triple.
   Triple TheTriple;
+  // Path of symbolizer path which should be pointed to binary with debug info.
+  StringRef SymbolizerPath;
+  // Options used to configure the symbolizer
+  symbolize::LLVMSymbolizer::Options SymbolizerOpts;
   // The runtime base address that the first executable segment is loaded at.
   uint64_t BaseAddress = 0;
   // The runtime base address that the first loadabe segment is loaded at.
@@ -216,11 +219,19 @@ class ProfiledBinary {
   // A map of mapping function name to BinaryFunction info.
   std::unordered_map<std::string, BinaryFunction> BinaryFunctions;
 
+  // Lookup BinaryFunctions using the function name's MD5 hash. Needed if the
+  // profile is using MD5.
+  std::unordered_map<uint64_t, BinaryFunction *> HashBinaryFunctions;
+
   // A list of binary functions that have samples.
   std::unordered_set<const BinaryFunction *> ProfiledFunctions;
 
   // GUID to Elf symbol start address map
   DenseMap<uint64_t, uint64_t> SymbolStartAddrs;
+
+  // These maps are for temporary use of warning diagnosis.
+  DenseSet<int64_t> AddrsWithMultipleSymbols;
+  DenseSet<std::pair<uint64_t, uint64_t>> AddrsWithInvalidInstruction;
 
   // Start address to Elf symbol GUID map
   std::unordered_multimap<uint64_t, uint64_t> StartAddrToSymMap;
@@ -302,7 +313,7 @@ class ProfiledBinary {
 
   // Set up disassembler and related components.
   void setUpDisassembler(const ELFObjectFileBase *Obj);
-  void setupSymbolizer();
+  symbolize::LLVMSymbolizer::Options getSymbolizerOpts() const;
 
   // Load debug info of subprograms from DWARF section.
   void loadSymbolsFromDWARF(ObjectFile &Obj);
@@ -472,12 +483,18 @@ public:
   void setProfiledFunctions(std::unordered_set<const BinaryFunction *> &Funcs) {
     ProfiledFunctions = Funcs;
   }
-
-  BinaryFunction *getBinaryFunction(StringRef FName) {
-    auto I = BinaryFunctions.find(FName.str());
-    if (I == BinaryFunctions.end())
+  
+  BinaryFunction *getBinaryFunction(FunctionId FName) {
+    if (FName.isStringRef()) {
+      auto I = BinaryFunctions.find(FName.str());
+      if (I == BinaryFunctions.end())
+        return nullptr;
+      return &I->second;
+    }
+    auto I = HashBinaryFunctions.find(FName.getHashCode());
+    if (I == HashBinaryFunctions.end())
       return nullptr;
-    return &I->second;
+    return I->second;
   }
 
   uint32_t getFuncSizeForContext(const ContextTrieNode *ContextNode) {
@@ -493,7 +510,7 @@ public:
   SampleContextFrameVector
   getFrameLocationStack(uint64_t Address, bool UseProbeDiscriminator = false) {
     InstructionPointer IP(this, Address);
-    return symbolize(IP, true, UseProbeDiscriminator);
+    return symbolize(IP, SymbolizerOpts.UseSymbolTable, UseProbeDiscriminator);
   }
 
   const SampleContextFrameVector &
@@ -515,7 +532,7 @@ public:
 
   void flushSymbolizer() { Symbolizer.reset(); }
 
-  MissingFrameInferrer* getMissingContextInferrer() {
+  MissingFrameInferrer *getMissingContextInferrer() {
     return MissingContextInferrer.get();
   }
 
@@ -552,7 +569,7 @@ public:
         InlineContextStack.clear();
         continue;
       }
-      InlineContextStack.emplace_back(Callsite.first,
+      InlineContextStack.emplace_back(FunctionId(Callsite.first),
                                       LineLocation(Callsite.second, 0));
     }
   }

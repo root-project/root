@@ -43,7 +43,7 @@ FunctionMinimum ScanBuilder::Minimum(const MnFcn &mfcn, const GradientCalculator
    MinimumParameters mp(x, dirin, amin);
    MinimumState st(mp, 0., mfcn.NumOfCalls());
 
-   return FunctionMinimum(seed, std::vector<MinimumState>(1, st), mfcn.Up());
+   return FunctionMinimum(seed, {&st, 1}, mfcn.Up());
 }
 
 } // namespace Minuit2

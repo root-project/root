@@ -181,11 +181,7 @@ public:
 
    void queueExport(RooAbsArg const &arg) { _serversToExport.push_back(&arg); }
 
-   RooFit::Detail::JSONNode &createAdHoc(const std::string &toplevel, const std::string &name);
-   RooAbsReal *importTransformed(const std::string &name, const std::string &tag, const std::string &operation_name,
-                                 const std::string &formula);
-   std::string exportTransformed(const RooAbsReal *original, const std::string &tag, const std::string &operation_name,
-                                 const std::string &formula);
+   std::string exportTransformed(const RooAbsReal *original, const std::string &suffix, const std::string &formula);
 
    void setAttribute(const std::string &obj, const std::string &attrib);
    bool hasAttribute(const std::string &obj, const std::string &attrib);
@@ -197,6 +193,20 @@ private:
    T *requestImpl(const std::string &objname);
 
    void exportObject(RooAbsArg const &func, std::set<std::string> &exportedObjectNames);
+
+   // To export multiple objects sorted alphabetically
+   template <class T>
+   void exportObjects(T const &args, std::set<std::string> &exportedObjectNames)
+   {
+      RooArgSet argSet;
+      for (RooAbsArg const *arg : args) {
+         argSet.add(*arg);
+      }
+      argSet.sort();
+      for (RooAbsArg *arg : argSet) {
+         exportObject(*arg, exportedObjectNames);
+      }
+   }
 
    void exportData(RooAbsData const &data);
    RooJSONFactoryWSTool::CombinedData exportCombinedData(RooAbsData const &data);

@@ -81,8 +81,8 @@ or from anywhere after adding the macro directory
 to ROOT's macro search path:
 \begin{codeexample}
 \begin{tmvacode}
-> root -l $ROOTSYS/tutorials/tmva/TMVAClassification.C
-> echo "Unix.*.Root.MacroPath: $ROOTSYS/tutorials/tmva" >> ~/.rootrc
+> root -l $ROOTSYS/tutorials/machine_learning/TMVAClassification.C
+> echo "Unix.*.Root.MacroPath: $ROOTSYS/tutorials/machine_learning" >> ~/.rootrc
 > root -l TMVAClassification.C
 \end{tmvacode}
 \caption[.]{\codeexampleCaptionSize Running the example \code{TMVAClassification.C}.}
@@ -91,7 +91,7 @@ to ROOT's macro search path:
 It is also possible to explicitly select the MVA methods to be processed:
 \begin{codeexample}
 \begin{tmvacode}
-> root -l '$ROOTSYS/tutorials/tmva/TMVAClassification.C("Fisher","BDT")'
+> root -l '$ROOTSYS/tutorials/machine_learning/TMVAClassification.C("Fisher","BDT")'
 \end{tmvacode}
 \caption[.]{\codeexampleCaptionSize Running the example \code{TMVAClassification.C} and processing only the Fisher and BDTclassifier. Multiple classifiers are separated by commas. The others macros can be called accordingly.}
 \end{codeexample}

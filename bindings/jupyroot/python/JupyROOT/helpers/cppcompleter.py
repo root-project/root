@@ -70,7 +70,7 @@ class CppCompleter(object):
     ...     print(suggestion.replace("\\t"," "))
     <BLANKLINE>
     Bool_t Add(TF1* h1, Double_t c1 = 1, Option_t* option = "")
-    Bool_t Add(const TH1* h, const TH1* h2, Double_t c1 = 1, Double_t c2 = 1)  // *MENU*
+    Bool_t Add(const TH1* h, const TH1* h2, Double_t c1 = 1, Double_t c2 = 1)
     Bool_t Add(const TH1* h1, Double_t c1 = 1)
     >>> for suggestion in comp._completeImpl("TROOT::Is"):
     ...     print(suggestion)

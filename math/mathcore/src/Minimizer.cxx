@@ -10,6 +10,25 @@
 namespace ROOT {
 namespace Math {
 
+/** set initial second derivatives
+ */
+bool Minimizer::SetCovarianceDiag(std::span<const double> g2, unsigned int n)
+{
+   MATH_UNUSED(g2);
+   MATH_UNUSED(n);
+   return false;
+}
+
+/** set initial values for covariance/error matrix
+    The covariance matrix must be provided in compressed form (row-major ordered upper traingular part)
+*/
+bool Minimizer::SetCovariance(std::span<const double> cov, unsigned int nrow)
+{
+   MATH_UNUSED(cov);
+   MATH_UNUSED(nrow);
+   return false;
+}
+
 /// set a new upper/lower limited variable (override if minimizer supports them ) otherwise as default set an unlimited
 /// variable
 bool Minimizer::SetLimitedVariable(unsigned int ivar, const std::string &name, double val, double step, double lower,

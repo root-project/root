@@ -22,10 +22,11 @@
 #include "TAxis.h"
 #include "RooPlot.h"
 #include "RooFitResult.h"
-using namespace RooFit;
 
 void rf403_weightedevts()
 {
+   using namespace RooFit;
+
    // C r e a t e   o b s e r v a b l e   a n d   u n w e i g h t e d   d a t a s e t
    // -------------------------------------------------------------------------------
 
@@ -46,13 +47,13 @@ void rf403_weightedevts()
    RooFormulaVar wFunc("w", "event weight", "(x*x+10)", x);
 
    // Add column with variable w to previously generated dataset
-   RooRealVar *w = (RooRealVar *)data->addColumn(wFunc);
+   data->addColumn(wFunc);
 
    // Dataset d is now a dataset with two observable (x,w) with 1000 entries
    data->Print();
 
-   // Instruct dataset wdata in interpret w as event weight rather than as observable
-   RooDataSet wdata(data->GetName(), data->GetTitle(), data.get(), *data->get(), 0, w->GetName());
+   // Create a new dataset wdata where w is interpreted as event weight rather than as observable
+   RooDataSet wdata(data->GetName(), data->GetTitle(), *data->get(), Import(*data), WeightVar("w"));
 
    // Dataset d is now a dataset with one observable (x) with 1000 entries and a sum of weights of ~430K
    wdata.Print();

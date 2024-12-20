@@ -1225,7 +1225,7 @@ void RGeomDescription::ResetRndrInfos()
 ///  }
 ///
 ///  In JSROOT one loads data from JSON file and call `build` function to
-///  produce three.js model. Also see example in tutorials/webgui/geom/ folder
+///  produce three.js model. Also see example in tutorials/visualisation/webgui/geom/ folder
 
 std::string RGeomDescription::ProduceJson(bool all_nodes)
 {

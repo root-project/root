@@ -36,6 +36,7 @@ CPYCPPYY_EXPORT Converter* CreateConverter(const std::string& fullType, cdims_t 
 CPYCPPYY_EXPORT void DestroyConverter(Converter* p);
 typedef Converter* (*cf_t)(cdims_t d);
 CPYCPPYY_EXPORT bool RegisterConverter(const std::string& name, cf_t fac);
+CPYCPPYY_EXPORT bool RegisterConverterAlias(const std::string& name, const std::string& target);
 CPYCPPYY_EXPORT bool UnregisterConverter(const std::string& name);
 
 

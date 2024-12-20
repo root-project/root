@@ -62,8 +62,6 @@ call HypoTestInverter::UseCLs().
 #include "TCanvas.h"
 #include "TGraphErrors.h"
 
-#include "RooStats/ProofConfig.h"
-
 #include <cassert>
 #include <cmath>
 #include <memory>
@@ -81,8 +79,6 @@ double HypoTestInverter::fgAbsAccuracy = 0.05;
 double HypoTestInverter::fgRelAccuracy = 0.05;
 std::string HypoTestInverter::fgAlgo = "logSecant";
 
-bool HypoTestInverter::fgCloseProof = false;
-
 // helper class to wrap the functionality of the various HypoTestCalculators
 
 template<class HypoTestType>
@@ -91,13 +87,6 @@ struct HypoTestWrapper {
    static void SetToys(HypoTestType * h, int toyNull, int toyAlt) { h->SetToys(toyNull,toyAlt); }
 
 };
-
-////////////////////////////////////////////////////////////////////////////////
-/// set flag to close proof for every new run
-
-void HypoTestInverter::SetCloseProof(bool flag) {
-   fgCloseProof  = flag;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// get  the variable to scan
@@ -511,8 +500,6 @@ HypoTestInverterResult* HypoTestInverter::GetInterval() const {
       if (!ret)
          oocoutE(nullptr,Eval) << "HypoTestInverter::GetInterval - error running an auto scan " << std::endl;
    }
-
-   if (fgCloseProof) ProofConfig::CloseProof();
 
    return static_cast<HypoTestInverterResult*> (fResults->Clone());
 }

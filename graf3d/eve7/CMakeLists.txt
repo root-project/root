@@ -29,6 +29,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     ROOT/REveGeoPolyShape.hxx
     ROOT/REveGeoShapeExtract.hxx
     ROOT/REveGeoShape.hxx
+    ROOT/REveGeoTopNode.hxx
     ROOT/REveGluTess.hxx
     ROOT/REveJetCone.hxx
     ROOT/REveEllipsoid.hxx
@@ -52,6 +53,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     ROOT/REveSystem.hxx
     ROOT/REveTableInfo.hxx
     ROOT/REveTableProxyBuilder.hxx
+    ROOT/REveText.hxx
     ROOT/REveTrack.hxx
     ROOT/REveTrackProjected.hxx
     ROOT/REveTrackPropagator.hxx
@@ -91,6 +93,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     src/REveGeoPolyShape.cxx
     src/REveGeoShape.cxx
     src/REveGeoShapeExtract.cxx
+    src/REveGeoTopNode.cxx
     src/REveGluTess.cxx
     src/REveJetCone.cxx
     src/REveEllipsoid.cxx
@@ -113,6 +116,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     src/REveStraightLineSet.cxx
     src/REveTableInfo.cxx
     src/REveTableProxyBuilder.cxx
+    src/REveText.cxx
     src/REveTrack.cxx
     src/REveTrackProjected.cxx
     src/REveTrackPropagator.cxx
@@ -132,6 +136,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     TreePlayer
     RCsg
     ROOTWebDisplay
+    ROOTBrowserv7
+    ROOTGeomViewer
   ${EXTRA_DICT_OPTS}
 )
 

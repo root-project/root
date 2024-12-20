@@ -1,4 +1,4 @@
-//===-- RISCV.td - Describe the RISCV Target Machine -------*- tablegen -*-===//
+//===-- RISCV.td - Describe the RISC-V Target Machine ------*- tablegen -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -31,11 +31,18 @@ include "RISCVInstrInfo.td"
 include "GISel/RISCVRegisterBanks.td"
 
 //===----------------------------------------------------------------------===//
+// RISC-V macro fusions.
+//===----------------------------------------------------------------------===//
+
+include "RISCVMacroFusion.td"
+
+//===----------------------------------------------------------------------===//
 // RISC-V Scheduling Models
 //===----------------------------------------------------------------------===//
 
 include "RISCVSchedRocket.td"
 include "RISCVSchedSiFive7.td"
+include "RISCVSchedSiFiveP400.td"
 include "RISCVSchedSyntacoreSCR1.td"
 
 //===----------------------------------------------------------------------===//

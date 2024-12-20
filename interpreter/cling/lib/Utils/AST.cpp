@@ -1403,9 +1403,9 @@ namespace utils {
     // TODO: Find a way to avoid creating new types, if the input is already
     // fully qualified.
     if (prefix) {
-      // We intentionally always use ETK_None, we never want
+      // We intentionally always use ElaboratedTypeKeyword::None, we never want
       // the keyword (humm ... what about anonymous types?)
-      QT = Ctx.getElaboratedType(ETK_None,prefix,QT);
+      QT = Ctx.getElaboratedType(ElaboratedTypeKeyword::None, prefix, QT);
       QT = Ctx.getQualifiedType(QT, prefix_qualifiers);
     } else if (original_prefix) {
       QT = Ctx.getQualifiedType(QT, prefix_qualifiers);
@@ -1501,7 +1501,15 @@ namespace utils {
         // No definition, no lookup result.
         return;
       }
-      S->LookupQualifiedName(R, const_cast<DeclContext*>(primaryWithin));
+      bool res =
+          S->LookupQualifiedName(R, const_cast<DeclContext*>(primaryWithin));
+
+      // If the lookup fails and the context is a namespace, try to lookup in
+      // the namespaces by setting NotForRedeclaration.
+      if (!res && primaryWithin->isNamespace()) {
+        R.setRedeclarationKind(Sema::NotForRedeclaration);
+        S->LookupQualifiedName(R, const_cast<DeclContext*>(primaryWithin));
+      }
     }
   }
 
@@ -1735,9 +1743,9 @@ namespace utils {
 
     }
     if (prefix) {
-      // We intentionally always use ETK_None, we never want
+      // We intentionally always use ElaboratedTypeKeyword::None, we never want
       // the keyword (humm ... what about anonymous types?)
-      QT = Ctx.getElaboratedType(ETK_None,prefix,QT);
+      QT = Ctx.getElaboratedType(ElaboratedTypeKeyword::None, prefix, QT);
     }
     if (prefix_qualifiers) {
       QT = Ctx.getQualifiedType(QT, prefix_qualifiers);

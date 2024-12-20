@@ -27,20 +27,21 @@ class CPPInstance {
 public:
     enum EFlags {
         kDefault     = 0x0000,
-        kNoWrapConv  = 0x0001,
-        kIsOwner     = 0x0002,
-        kIsExtended  = 0x0004,
-        kIsReference = 0x0008,
-        kIsRValue    = 0x0010,
-        kIsLValue    = 0x0020,
-        kIsValue     = 0x0040,
-        kIsPtrPtr    = 0x0080,
-        kIsArray     = 0x0100,
-        kIsSmartPtr  = 0x0200,
-        kNoMemReg    = 0x0400,
-        kHasLifeLine = 0x0800,
-        kIsRegulated = 0x1000,
-        kIsActual    = 0x2000 };
+        kNoWrapConv  = 0x0001,    // use type as-is (eg. no smart ptr wrap)
+        kIsOwner     = 0x0002,    // Python instance owns C++ object/memory
+        kIsExtended  = 0x0004,    // has extended data
+        kIsValue     = 0x0008,    // was created from a by-value return
+        kIsReference = 0x0010,    // represents one indirection
+        kIsArray     = 0x0020,    // represents an array of objects
+        kIsSmartPtr  = 0x0040,    // is or embeds a smart pointer
+        kIsPtrPtr    = 0x0080,    // represents two indirections
+        kIsRValue    = 0x0100,    // can be used as an r-value
+        kIsLValue    = 0x0200,    // can be used as an l-value
+        kNoMemReg    = 0x0400,    // do not register with memory regulator
+        kIsRegulated = 0x0800,    // is registered with memory regulator
+        kIsActual    = 0x1000,    // has been downcasted to actual type
+        kHasLifeLine = 0x2000,    // has a life line set
+    };
 
 public:                 // public, as the python C-API works with C structs
     PyObject_HEAD

@@ -79,6 +79,8 @@ public:
    virtual void     AbsCoordinates(Bool_t set) = 0;
    virtual Double_t AbsPixeltoX(Int_t px) = 0;
    virtual Double_t AbsPixeltoY(Int_t py) = 0;
+   virtual void     Add(TObject *obj, Option_t *opt = "", Bool_t modified = kTRUE) = 0;
+   virtual void     AddFirst(TObject *obj, Option_t *opt = "", Bool_t modified = kTRUE) = 0;
    virtual void     AddExec(const char *name, const char *command) = 0;
    virtual TLegend *BuildLegend(Double_t x1=0.3, Double_t y1=0.21, Double_t x2=0.3, Double_t y2=0.21, const char *title="", Option_t *option = "") = 0;
    virtual TVirtualPad* cd(Int_t subpadnumber=0) = 0;
@@ -200,6 +202,7 @@ public:
    virtual void     RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax) = 0;
    virtual void     RangeAxisChanged() { Emit("RangeAxisChanged()"); } // *SIGNAL*
            void     RecursiveRemove(TObject *obj) override = 0;
+   virtual TObject *Remove(TObject *obj, Bool_t modified = kTRUE) = 0;
    virtual void     RedrawAxis(Option_t *option="") = 0;
    virtual void     ResetView3D(TObject *view = nullptr) = 0;
    virtual void     ResizePad(Option_t *option="") = 0;

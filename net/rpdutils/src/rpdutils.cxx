@@ -3782,7 +3782,7 @@ int RpdAuthenticate()
          gClientOld = 0;
       }
 
-      // If this is a rootd contacted via a TXNetFile we need to
+      // If this is a rootd contacted via a TNetXNGFile we need to
       // receive again the buffer
       if (gService == kROOTD && kind == kROOTD_PROTOCOL) {
          if (NetRecv(buf, kMAXRECVBUF, kind) < 0) {
@@ -3968,7 +3968,7 @@ int RpdProtocol(int ServType)
       readbuf = 0;
       if (buf) delete[] buf;
    } else if (ServType == kROOTD && kind == 0 && len == 0) {
-      // TNetFile via TXNetFile: receive client protocol
+      // TNetFile via TNetXNGFile: receive client protocol
       // read first next 12 bytes and discard them
       int llen = 12;
       char *buf = new char[llen];
@@ -3983,7 +3983,7 @@ int RpdProtocol(int ServType)
       int type = htonl(8);
       if (NetSendRaw(&type,sizeof(type)) < 0) {
          NetSend(kErrFatal, kROOTD_ERR);
-         ErrorInfo("RpdProtocol: error sending type to TXNetFile");
+         ErrorInfo("RpdProtocol: error sending type to TNetXNGFile");
          return -1;
       }
       // Now read the client protocol

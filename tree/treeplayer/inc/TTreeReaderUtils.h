@@ -42,14 +42,26 @@ namespace Internal {
 
    class TNamedBranchProxy {
    public:
-      TNamedBranchProxy(): fDict(nullptr), fContentDict(nullptr) {}
-      TNamedBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* fullname, const char* membername):
-         fProxy(boss, fullname, branch, membername), fDict(nullptr), fContentDict(nullptr), fFullName(fullname) {}
+      TNamedBranchProxy() : fDict(nullptr), fContentDict(nullptr) {}
+      TNamedBranchProxy(TBranchProxyDirector *boss, TBranch *branch, const char *fullname, const char *membername,
+                        bool suppressMissingBranchError)
+         : fProxy(boss, fullname, branch, membername, suppressMissingBranchError),
+           fDict(nullptr),
+           fContentDict(nullptr),
+           fFullName(fullname)
+      {
+      }
 
       // Constructor for friend case, the fullname (containing the name of the friend tree) may be different
       // from the lookup name (without the name of the friend)
-      TNamedBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* fullname, const char* proxyname, const char* membername):
-         fProxy(boss, proxyname, branch, membername), fDict(nullptr), fContentDict(nullptr), fFullName(fullname) {}
+      TNamedBranchProxy(TBranchProxyDirector *boss, TBranch *branch, const char *fullname, const char *proxyname,
+                        const char *membername, bool suppressMissingBranchError)
+         : fProxy(boss, proxyname, branch, membername, suppressMissingBranchError),
+           fDict(nullptr),
+           fContentDict(nullptr),
+           fFullName(fullname)
+      {
+      }
 
       const char* GetName() const { return fFullName.c_str(); }
       const Detail::TBranchProxy* GetProxy() const { return &fProxy; }

@@ -51,17 +51,18 @@ protected:
 public:
    TPrincipal();
    ~TPrincipal() override;
-   TPrincipal(Int_t nVariables, Option_t *opt="ND");
+   TPrincipal(Long64_t nVariables, Option_t *opt="ND");
 
    virtual void       AddRow(const Double_t *x);
    void       Browse(TBrowser *b) override;
    void       Clear(Option_t *option="") override;
+   /// Return the covariance matrix. \note Only the lower diagonal of the covariance matrix is computed by the class
    const TMatrixD    *GetCovarianceMatrix() const {return &fCovarianceMatrix;}
    const TVectorD    *GetEigenValues() const      {return &fEigenValues;}
    const TMatrixD    *GetEigenVectors() const     {return &fEigenVectors;}
    TList             *GetHistograms() const {return fHistograms;}
    const TVectorD    *GetMeanValues() const       {return &fMeanValues;}
-   const Double_t    *GetRow(Int_t row);
+   const Double_t    *GetRow(Long64_t row);
    const TVectorD    *GetSigmas() const           {return &fSigmas;}
    const TVectorD    *GetUserData() const         {return &fUserData;}
    Bool_t             IsFolder() const override { return kTRUE;}

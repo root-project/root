@@ -115,6 +115,12 @@ protected:
    virtual std::string AsString() { return "generic data source"; };
 
 public:
+   RDataSource() = default;
+   // Rule of five
+   RDataSource(const RDataSource &) = delete;
+   RDataSource &operator=(const RDataSource &) = delete;
+   RDataSource(RDataSource &&) = delete;
+   RDataSource &operator=(RDataSource &&) = delete;
    virtual ~RDataSource() = default;
 
    // clang-format off
@@ -123,6 +129,9 @@ public:
    /// pass different slot values when calling methods concurrently.
    // clang-format on
    virtual void SetNSlots(unsigned int nSlots) = 0;
+
+   /// \brief Returns the number of files from which the dataset is constructed
+   virtual std::size_t GetNFiles() const { return 0; }
 
    // clang-format off
    /// \brief Returns a reference to the collection of the dataset's column names

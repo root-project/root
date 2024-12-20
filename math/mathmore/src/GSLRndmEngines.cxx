@@ -392,7 +392,7 @@ namespace Math {
 
    /////////////////////////////////////////////////////////////////////////////
 
-   GSLRngMT::GSLRngMT() : GSLRandomEngine()
+   GSLRngMT::GSLRngMT()
    {
       SetType(new GSLRngWrapper(gsl_rng_mt19937));
       Initialize();
@@ -400,35 +400,35 @@ namespace Math {
 
 
    // old ranlux - equivalent to TRandom1
-   GSLRngRanLux::GSLRngRanLux() : GSLRandomEngine()
+   GSLRngRanLux::GSLRngRanLux()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlux) );
       Initialize();
    }
 
    // second generation of Ranlux (single precision version - luxury 1)
-   GSLRngRanLuxS1::GSLRngRanLuxS1() : GSLRandomEngine()
+   GSLRngRanLuxS1::GSLRngRanLuxS1()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlxs1) );
       Initialize();
    }
 
    // second generation of Ranlux (single precision version - luxury 2)
-   GSLRngRanLuxS2::GSLRngRanLuxS2() : GSLRandomEngine()
+   GSLRngRanLuxS2::GSLRngRanLuxS2()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlxs2) );
       Initialize();
    }
 
    // double precision  version - luxury 1
-   GSLRngRanLuxD1::GSLRngRanLuxD1() : GSLRandomEngine()
+   GSLRngRanLuxD1::GSLRngRanLuxD1()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlxd1) );
       Initialize();
    }
 
    // double precision  version - luxury 2
-   GSLRngRanLuxD2::GSLRngRanLuxD2() : GSLRandomEngine()
+   GSLRngRanLuxD2::GSLRngRanLuxD2()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlxd2) );
       Initialize();
@@ -436,7 +436,7 @@ namespace Math {
 
    /////////////////////////////////////////////////////////////////////////////
 
-   GSLRngTaus::GSLRngTaus() : GSLRandomEngine()
+   GSLRngTaus::GSLRngTaus()
    {
       SetType(new GSLRngWrapper(gsl_rng_taus2) );
       Initialize();
@@ -444,7 +444,7 @@ namespace Math {
 
    /////////////////////////////////////////////////////////////////////////////
 
-   GSLRngGFSR4::GSLRngGFSR4() : GSLRandomEngine()
+   GSLRngGFSR4::GSLRngGFSR4()
    {
       SetType(new GSLRngWrapper(gsl_rng_gfsr4) );
       Initialize();
@@ -452,7 +452,7 @@ namespace Math {
 
    /////////////////////////////////////////////////////////////////////////////
 
-   GSLRngCMRG::GSLRngCMRG() : GSLRandomEngine()
+   GSLRngCMRG::GSLRngCMRG()
    {
       SetType(new GSLRngWrapper(gsl_rng_cmrg) );
       Initialize();
@@ -460,7 +460,7 @@ namespace Math {
 
    /////////////////////////////////////////////////////////////////////////////
 
-   GSLRngMRG::GSLRngMRG() : GSLRandomEngine()
+   GSLRngMRG::GSLRngMRG()
    {
       SetType(new GSLRngWrapper(gsl_rng_mrg) );
       Initialize();
@@ -469,7 +469,7 @@ namespace Math {
 
    /////////////////////////////////////////////////////////////////////////////
 
-   GSLRngRand::GSLRngRand() : GSLRandomEngine()
+   GSLRngRand::GSLRngRand()
    {
       SetType(new GSLRngWrapper(gsl_rng_rand) );
       Initialize();
@@ -477,7 +477,7 @@ namespace Math {
 
    /////////////////////////////////////////////////////////////////////////////
 
-   GSLRngRanMar::GSLRngRanMar() : GSLRandomEngine()
+   GSLRngRanMar::GSLRngRanMar()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranmar) );
       Initialize();
@@ -485,7 +485,7 @@ namespace Math {
 
    /////////////////////////////////////////////////////////////////////////////
 
-   GSLRngMinStd::GSLRngMinStd() : GSLRandomEngine()
+   GSLRngMinStd::GSLRngMinStd()
    {
       SetType(new GSLRngWrapper(gsl_rng_minstd) );
       Initialize();
@@ -493,7 +493,7 @@ namespace Math {
 
 
    // for extra engines based on ROOT
-   GSLRngMixMax::GSLRngMixMax() : GSLRandomEngine()
+   GSLRngMixMax::GSLRngMixMax()
    {
       SetType(new GSLRngWrapper(gsl_rng_mixmax) );
       Initialize(); // this creates the gsl_rng structure

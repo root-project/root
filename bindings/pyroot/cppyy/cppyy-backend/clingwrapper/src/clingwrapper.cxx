@@ -625,7 +625,8 @@ Cppyy::TCppType_t Cppyy::GetActualClass(TCppType_t klass, TCppObject_t obj)
 #endif
 
     TClass* clActual = cr->GetActualClass((void*)obj);
-    if (clActual && clActual != cr.GetClass()) {
+    // The additional check using TClass::GetClassInfo is to prevent returning classes of which the Interpreter has no info
+    if (clActual && clActual != cr.GetClass() && clActual->GetClassInfo()) {
         auto itt = g_name2classrefidx.find(clActual->GetName());
         if (itt != g_name2classrefidx.end())
             return (TCppType_t)itt->second;
@@ -682,7 +683,7 @@ bool Cppyy::IsComplete(const std::string& type_name)
 Cppyy::TCppObject_t Cppyy::Allocate(TCppType_t type)
 {
     TClassRef& cr = type_from_handle(type);
-    return (TCppObject_t)malloc(gInterpreter->ClassInfo_Size(cr->GetClassInfo()));
+    return (TCppObject_t)::operator new(gInterpreter->ClassInfo_Size(cr->GetClassInfo()));
 }
 
 void Cppyy::Deallocate(TCppType_t /* type */, TCppObject_t instance)
@@ -710,10 +711,11 @@ void Cppyy::Destruct(TCppType_t type, TCppObject_t instance)
         else {
             auto ib = sHasOperatorDelete.find(type);
             if (ib == sHasOperatorDelete.end()) {
-                sHasOperatorDelete[type] = (bool)cr->GetListOfAllPublicMethods()->FindObject("operator delete");
-                ib = sHasOperatorDelete.find(type);
+               TFunction *f = (TFunction *)cr->GetMethodAllAny("operator delete");
+               sHasOperatorDelete[type] = (bool)(f && (f->Property() & kIsPublic));
+               ib = sHasOperatorDelete.find(type);
             }
-            ib->second ? cr->Destructor((void*)instance) : free((void*)instance);
+            ib->second ? cr->Destructor((void *)instance) : ::operator delete((void *)instance);
         }
     }
 }

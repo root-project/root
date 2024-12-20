@@ -13,7 +13,7 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-MnUserParameters::MnUserParameters(const std::vector<double> &par, const std::vector<double> &err)
+MnUserParameters::MnUserParameters(std::span<const double> par, std::span<const double> err)
    : fTransformation(par, err)
 {
 }

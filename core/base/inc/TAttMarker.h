@@ -47,7 +47,7 @@ public:
    static Style_t GetMarkerStyleBase(Style_t style);
    static Width_t GetMarkerLineWidth(Style_t style);
 
-   ClassDef(TAttMarker,2);  //Marker attributes
+   ClassDef(TAttMarker,3);  //Marker attributes
 };
 
    enum EMarkerStyle {kDot=1, kPlus, kStar, kCircle=4, kMultiply=5,

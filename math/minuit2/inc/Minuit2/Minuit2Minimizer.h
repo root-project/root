@@ -69,20 +69,6 @@ public:
    */
    ~Minuit2Minimizer() override;
 
-private:
-   // usually copying is non trivial, so we make this unaccessible
-
-   /**
-      Copy constructor
-   */
-   Minuit2Minimizer(const Minuit2Minimizer &);
-
-   /**
-      Assignment operator
-   */
-   Minuit2Minimizer &operator=(const Minuit2Minimizer &rhs);
-
-public:
    // clear resources (parameters) for consecutives minimizations
    void Clear() override;
 
@@ -90,7 +76,7 @@ public:
    void SetFunction(const ROOT::Math::IMultiGenFunction &func) override;
 
    /// set the function implementing Hessian computation
-   void SetHessianFunction(std::function<bool(const std::vector<double> &, double *)> hfunc) override;
+   void SetHessianFunction(std::function<bool(std::span<const double>, double *)> hfunc) override;
 
    /// set free variable
    bool SetVariable(unsigned int ivar, const std::string &name, double val, double step) override;
@@ -305,6 +291,12 @@ protected:
 
    // internal function to compute Minos errors
    int RunMinosError(unsigned int i, double &errLow, double &errUp, int runopt);
+
+   /// set initial second derivatives
+   virtual bool SetCovarianceDiag(std::span<const double> d2, unsigned int n) override;
+
+   /// set initial covariance matrix
+   bool SetCovariance(std::span<const double> cov, unsigned int nrow) override;
 
 private:
    unsigned int fDim; // dimension of the function to be minimized

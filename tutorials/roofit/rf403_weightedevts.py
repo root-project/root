@@ -1,7 +1,6 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
 ## 'DATA AND CATEGORIES' RooFit tutorial macro #403
 ##
 ## Using weights in unbinned datasets
@@ -13,7 +12,6 @@
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C version)
 
-from __future__ import print_function
 import ROOT
 
 
@@ -28,7 +26,7 @@ x.setBins(40)
 p0 = ROOT.RooPolynomial("px", "px", x)
 
 # Sample 1000 events from pdf
-data = p0.generate({x}, 1000)
+data = p0.generate(x, 1000)
 
 # Calculate weight and make dataset weighted
 # --------------------------------------------------
@@ -37,14 +35,14 @@ data = p0.generate({x}, 1000)
 wFunc = ROOT.RooFormulaVar("w", "event weight", "(x*x+10)", [x])
 
 # Add column with variable w to previously generated dataset
-w = data.addColumn(wFunc)
+data.addColumn(wFunc)
 
 # Dataset d is now a dataset with two observable (x,w) with 1000 entries
 data.Print()
 
-# Instruct dataset wdata in interpret w as event weight rather than as
-# observable
-wdata = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data, data.get(), "", w.GetName())
+# Create a new dataset wdata where w is interpreted as event weight rather than
+# as observable
+wdata = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data.get(), Import=data, WeightVar="w")
 
 # Dataset d is now a dataset with one observable (x) with 1000 entries and
 # a sum of weights of ~430K
@@ -102,10 +100,10 @@ p2.plotOn(frame)
 genPdf = ROOT.RooGenericPdf("genPdf", "x*x+10", [x])
 
 # Sample a dataset with the same number of events as data
-data2 = genPdf.generate({x}, 1000)
+data2 = genPdf.generate(x, 1000)
 
 # Sample a dataset with the same number of weights as data
-data3 = genPdf.generate({x}, 43000)
+data3 = genPdf.generate(x, 43000)
 
 # Fit the 2nd order polynomial to both unweighted datasets and save the
 # results for comparison

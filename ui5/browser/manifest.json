@@ -1,5 +1,5 @@
 {
-	"_version": "6.25.01",
+	"_version": "6.33.01",
 	"sap.app": {
 		"id": "rootui5.browser",
 		"type": "application"
@@ -13,7 +13,7 @@
 			"id": "Browser"
 		},
 		"dependencies": {
-			"minUI5Version": "1.82.0",
+			"minUI5Version": "1.98.0",
 			"libs": {
 				"sap.ui.layout": {},
 				"sap.ui.core": {},

@@ -165,14 +165,14 @@ namespace Math {
 
    //----------------------------------------------------
    // generator based on Sobol sequence
-   GSLQRngSobol::GSLQRngSobol() : GSLQuasiRandomEngine()
+   GSLQRngSobol::GSLQRngSobol()
    {
       SetType(new GSLQRngWrapper(gsl_qrng_sobol));
    }
 
 
    // generator based on Bratley-Fox,Niederreiter sequence
-   GSLQRngNiederreiter2::GSLQRngNiederreiter2() : GSLQuasiRandomEngine()
+   GSLQRngNiederreiter2::GSLQRngNiederreiter2()
    {
       SetType(new GSLQRngWrapper(gsl_qrng_niederreiter_2) );
    }

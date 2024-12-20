@@ -50,7 +50,7 @@
 #include <sstream>
 #include <string>
 #include <cstring>
-
+#include <memory>
 
 static const std::string VERSION = "0.2.0";
 
@@ -972,8 +972,8 @@ Long64_t TDavixFile::DavixReadBuffers(Davix_fd *fd, char *buf, Long64_t *pos, In
 {
    DavixError *davixErr = NULL;
    Double_t start_time = eventStart();
-   DavIOVecInput in[nbuf];
-   DavIOVecOuput out[nbuf];
+   auto in = std::make_unique<DavIOVecInput[]>(nbuf);
+   auto out = std::make_unique<DavIOVecOuput[]>(nbuf);
 
    int lastPos = 0;
    for (Int_t i = 0; i < nbuf; ++i) {
@@ -983,7 +983,7 @@ Long64_t TDavixFile::DavixReadBuffers(Davix_fd *fd, char *buf, Long64_t *pos, In
       lastPos += len[i];
    }
 
-   Long64_t ret = d_ptr->davixPosix->preadVec(fd, in, out, nbuf, &davixErr);
+   Long64_t ret = d_ptr->davixPosix->preadVec(fd, in.get(), out.get(), nbuf, &davixErr);
    if (ret < 0) {
       Error("DavixReadBuffers", "can not read data with davix: %s (%d)",
             davixErr->getErrMsg().c_str(), davixErr->getStatus());

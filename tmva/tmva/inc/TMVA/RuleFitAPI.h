@@ -190,7 +190,7 @@ namespace TMVA {
       ERFProgram           fRFProgram;   ///< what to run
       TString              fModelType;   ///< model type string
 
-      mutable MsgLogger    fLogger;      ///< message logger
+      mutable MsgLogger    fLogger;      ///<! message logger
 
       ClassDef(RuleFitAPI,0);        // Friedman's RuleFit method
 

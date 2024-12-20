@@ -528,7 +528,7 @@ std::string RSysFile::GetContent(const std::string &kind)
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Provide top entries for file system
-/// On windows it is list of existing drivers, on Linux it is "Files system" and "Home"
+/// On windows it is list of existing drivers, on Linux it is "File system" and "Home"
 
 RElementPath_t RSysFile::ProvideTopEntries(std::shared_ptr<RGroup> &comp, const std::string &workdir)
 {
@@ -552,9 +552,9 @@ RElementPath_t RSysFile::ProvideTopEntries(std::shared_ptr<RGroup> &comp, const 
       delete volumes;
 
    } else {
-      comp->Add(std::make_shared<Browsable::RWrapper>("Files system", std::make_unique<RSysFile>("/")));
+      comp->Add(std::make_shared<Browsable::RWrapper>("File system", std::make_unique<RSysFile>("/")));
 
-      seldir = "/Files system"s + seldir;
+      seldir = "/File system"s + seldir;
 
       std::string homedir = gSystem->UnixPathName(gSystem->HomeDirectory());
 
@@ -581,7 +581,7 @@ RElementPath_t RSysFile::GetWorkingPath(const std::string &workdir)
    if (volumes) {
       delete volumes;
    } else {
-      seldir = "/Files system"s + seldir;
+      seldir = "/File system"s + seldir;
    }
 
    return RElement::ParsePath(seldir);

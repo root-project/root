@@ -55,8 +55,8 @@ ClassImp(TGraphPolargram);
 /// TGraphPolargram Constructor.
 
 TGraphPolargram::TGraphPolargram(const char* name, Double_t rmin, Double_t rmax,
-                                 Double_t tmin, Double_t tmax):
-                                 TNamed(name,"Polargram")
+                                 Double_t tmin, Double_t tmax, const char *opt):
+                                 TNamed(name, "Polargram")
 {
    Init();
    fNdivRad          = 508;
@@ -66,6 +66,22 @@ TGraphPolargram::TGraphPolargram(const char* name, Double_t rmin, Double_t rmax,
    fRwrmin           = rmin;
    fRwtmin           = tmin;
    fRwtmax           = tmax;
+
+   TString s = opt;
+   s.ToUpper();
+   if (s.Contains("R")) {
+      fRadian = kTRUE;
+      fRwtmin = 0;
+      fRwtmax = 2*TMath::Pi();
+   } else if (s.Contains("D")) {
+      fDegree = kTRUE;
+      fRwtmin = 0;
+      fRwtmax = 360;
+   } else if (s.Contains("G")) {
+      fGrad   = kTRUE;
+      fRwtmin = 0;
+      fRwtmax = 200;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -348,22 +364,21 @@ void TGraphPolargram::Init()
 
 void TGraphPolargram::Paint(Option_t * chopt)
 {
-   Int_t optionpoldiv, optionraddiv;
-   Bool_t optionLabels = kTRUE;
-
    TString opt = chopt;
    opt.ToUpper();
 
-   if(opt.Contains('P')) optionpoldiv=1; else optionpoldiv=0;
-   if(opt.Contains('R')) optionraddiv=1; else optionraddiv=0;
-   if(opt.Contains('O')) SetBit(TGraphPolargram::kLabelOrtho);
-   else ResetBit(TGraphPolargram::kLabelOrtho);
-   if(!opt.Contains('P') && !opt.Contains('R')) optionpoldiv=optionraddiv=1;
-   if(opt.Contains('N')) optionLabels = kFALSE;
+   Bool_t optionpoldiv = opt.Contains('P'),
+          optionraddiv = opt.Contains('R'),
+          optionLabels = !opt.Contains('N');
 
-   if(optionraddiv) PaintRadialDivisions(kTRUE);
-   else PaintRadialDivisions(kFALSE);
-   if(optionpoldiv) PaintPolarDivisions(optionLabels);
+   if (!optionpoldiv && !optionraddiv)
+      optionpoldiv = optionraddiv = kTRUE;
+
+   SetBit(TGraphPolargram::kLabelOrtho, opt.Contains('O'));
+
+   PaintRadialDivisions(optionraddiv);
+   if (optionpoldiv)
+      PaintPolarDivisions(optionLabels);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -154,8 +154,6 @@
 #include "RooAbsCategory.h"
 #include "RooAbsArg.h"
 #include "RooAbsPdf.h"
-#include "RooArgSet.h"
-#include "RooArgList.h"
 #include "RooMsgService.h"
 #include "RooHelpers.h"
 
@@ -305,7 +303,7 @@ void RooCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& splitC
 
 void RooCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCat)
 {
-  if (_splitArgList.FindObject(arg.GetName())) {
+  if (_splitArgList.find(arg.GetName())) {
     oocoutE(nullptr, InputArguments) << "RooCustomizer(" << _masterPdf->GetName() << ") ERROR: multiple splitting rules defined for "
            << arg.GetName() << " only using first rule" << endl ;
     return ;
@@ -317,8 +315,8 @@ void RooCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCa
     return ;
   }
 
-  _splitArgList.Add(const_cast<RooAbsArg *>(&arg));
-  _splitCatList.Add(const_cast<RooAbsCategory *>(&splitCat));
+  _splitArgList.add(arg);
+  _splitCatList.add(splitCat);
 }
 
 
@@ -328,14 +326,14 @@ void RooCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCa
 
 void RooCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst)
 {
-  if (_replaceArgList.FindObject(orig.GetName())) {
+  if (_replaceArgList.find(orig.GetName())) {
     oocoutE(nullptr, InputArguments) << "RooCustomizer(" << _masterPdf->GetName() << ") ERROR: multiple replacement rules defined for "
     << orig.GetName() << " only using first rule" << endl ;
     return ;
   }
 
-  _replaceArgList.Add(const_cast<RooAbsArg *>(&orig));
-  _replaceSubList.Add(const_cast<RooAbsArg *>(&subst));
+  _replaceArgList.add(orig);
+  _replaceSubList.add(subst);
 }
 
 
@@ -419,9 +417,9 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
 
   //   cout << "loop over " << nodeList.size() << " nodes" << endl ;
   for (auto node : nodeList) {
-    RooAbsArg* theSplitArg = !_sterile?static_cast<RooAbsArg*>(_splitArgList.FindObject(node->GetName())):nullptr ;
+    RooAbsArg* theSplitArg = !_sterile?static_cast<RooAbsArg*>(_splitArgList.find(node->GetName())):nullptr ;
     if (theSplitArg) {
-      RooAbsCategory* splitCat = static_cast<RooAbsCategory*>(_splitCatList.At(_splitArgList.IndexOf(theSplitArg))) ;
+      RooAbsCategory* splitCat = static_cast<RooAbsCategory*>(_splitCatList.at(_splitArgList.index(theSplitArg))) ;
       if (verbose) {
    oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName()
                << "): tree node " << node->GetName() << " is split by category " << splitCat->GetName() << endl ;
@@ -495,9 +493,9 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
       masterNodesToBeSplit.add(*node) ;
     }
 
-    RooAbsArg* ReplaceArg = static_cast<RooAbsArg*>(_replaceArgList.FindObject(node->GetName())) ;
+    RooAbsArg* ReplaceArg = static_cast<RooAbsArg*>(_replaceArgList.find(node->GetName())) ;
     if (ReplaceArg) {
-      RooAbsArg* substArg = static_cast<RooAbsArg*>(_replaceSubList.At(_replaceArgList.IndexOf(ReplaceArg))) ;
+      RooAbsArg* substArg = static_cast<RooAbsArg*>(_replaceSubList.at(_replaceArgList.index(ReplaceArg))) ;
       if (verbose) {
    oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName()
                << "): tree node " << node->GetName() << " will be replaced by " << substArg->GetName() << endl ;
@@ -614,19 +612,19 @@ void RooCustomizer::printMultiline(ostream& os, Int_t /*content*/, bool /*verbos
   os << indent << "RooCustomizer for " << _masterPdf->GetName() << (_sterile?" (sterile)":"") << endl ;
 
   Int_t i;
-  Int_t nsplit = _splitArgList.GetSize();
+  Int_t nsplit = _splitArgList.size();
   if (nsplit>0) {
     os << indent << "  Splitting rules:" << endl ;
     for (i=0 ; i<nsplit ; i++) {
-      os << indent << "   " << _splitArgList.At(i)->GetName() << " is split by " << _splitCatList.At(i)->GetName() << endl ;
+      os << indent << "   " << _splitArgList.at(i)->GetName() << " is split by " << _splitCatList.at(i)->GetName() << endl ;
     }
   }
 
-  Int_t nrepl = _replaceArgList.GetSize() ;
+  Int_t nrepl = _replaceArgList.size() ;
   if (nrepl>0) {
     os << indent << "  Replacement rules:" << endl ;
     for (i=0 ; i<nrepl ; i++) {
-      os << indent << "   " << _replaceSubList.At(i)->GetName() << " replaces " << _replaceArgList.At(i)->GetName() << endl ;
+      os << indent << "   " << _replaceSubList.at(i)->GetName() << " replaces " << _replaceArgList.at(i)->GetName() << endl ;
     }
   }
 

@@ -12,8 +12,7 @@
 #define HISTFACTORY_HISTREF_H
 
 #include <memory>
-
-class TH1;
+#include <TH1.h>
 
 namespace RooStats{
 namespace HistFactory {

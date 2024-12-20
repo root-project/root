@@ -27,6 +27,8 @@ class RooDataSet(object):
     \endcode
     """
 
+    __cpp_name__ = 'RooDataSet'
+
     @cpp_signature(
         "RooDataSet(std::string_view name, std::string_view title, const RooArgSet& vars, const RooCmdArg& arg1, const RooCmdArg& arg2={},"
         "    const RooCmdArg& arg3={}, const RooCmdArg& arg4={},const RooCmdArg& arg5={},"

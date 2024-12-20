@@ -259,7 +259,7 @@ namespace RooStats {
       ///
       /// Set the fraction delta such that
       /// topCutoff (a) is considered == bottomCutoff (b) iff
-      /// (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2))
+      /// (std::abs(a - b) < std::abs(fDelta * (a + b)/2))
       /// when determining the confidence interval by Keys
       virtual void SetDelta(double delta)
       {
@@ -322,7 +322,7 @@ namespace RooStats {
       double fEpsilon = DEFAULT_EPSILON; ///< acceptable error for Keys interval determination
 
       double fDelta = DEFAULT_DELTA; ///< topCutoff (a) considered == bottomCutoff (b) iff
-                                     ///< (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2));
+                                     ///< (std::abs(a - b) < std::abs(fDelta * (a + b)/2));
                                      ///< Theoretically, the Abs is not needed here, but
                                      ///< floating-point arithmetic does not always work
                                      ///< perfectly, and the Abs doesn't hurt

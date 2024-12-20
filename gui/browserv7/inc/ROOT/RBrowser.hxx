@@ -71,7 +71,7 @@ protected:
 
    void AddInitWidget(const std::string &kind);
 
-   void CheckWidgtesModified();
+   void CheckWidgtesModified(unsigned connid);
 
    void ProcessPostponedRequests();
 

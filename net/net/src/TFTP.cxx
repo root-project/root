@@ -933,7 +933,7 @@ Bool_t TFTP::OpenDirectory(const char *dir, Bool_t print)
    }
 
    Int_t what;
-   char  mess[1024];;
+   char  mess[1024];
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("OpenDirectory", "error receiving opendir confirmation");
@@ -968,7 +968,7 @@ void TFTP::FreeDirectory(Bool_t print)
    }
 
    Int_t what;
-   char  mess[1024];;
+   char  mess[1024];
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("FreeDirectory", "error receiving freedir confirmation");
@@ -1002,7 +1002,7 @@ const char *TFTP::GetDirEntry(Bool_t print)
    }
 
    Int_t what;
-   char  mess[1024];;
+   char  mess[1024];
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("GetDirEntry", "error receiving dir entry confirmation");
@@ -1048,7 +1048,7 @@ Int_t TFTP::GetPathInfo(const char *path, FileStat_t &buf, Bool_t print)
    }
 
    Int_t what;
-   char  mess[1024];;
+   char  mess[1024];
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("GetPathInfo", "error receiving fstat confirmation");
@@ -1128,7 +1128,7 @@ Bool_t TFTP::AccessPathName(const char *path, EAccessMode mode, Bool_t print)
    }
 
    Int_t what;
-   char  mess[1024];;
+   char  mess[1024];
 
    if (fSocket->Recv(mess, sizeof(mess), what) < 0) {
       Error("AccessPathName", "error receiving access confirmation");

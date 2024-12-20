@@ -258,7 +258,7 @@ namespace Internal {
 
    bool TTreeProxyGenerator::NeedToEmulate(TClass *cl, UInt_t /* level */)
    {
-      return cl!=nullptr && cl->TestBit(TClass::kIsEmulation);
+      return cl && (cl->GetState() <= TClass::kEmulated);
    }
 
    ////////////////////////////////////////////////////////////////////////////////

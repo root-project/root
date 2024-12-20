@@ -83,6 +83,10 @@ public:
    void AddInstance(Float_t a, Float_t b, Float_t c);
    void AddInstanceMat4(const Float_t* mat4);
 
+   void AddBox(const Float_t* verts) { AddFreeBox(verts); }
+   void AddBox(Float_t a, Float_t b, Float_t c, Float_t w, Float_t h, Float_t d) { AddInstanceScaled(a, b, c, w, h, d); }
+   void AddBox(Float_t a, Float_t b, Float_t c) { AddInstance(a, b, c);}
+
    void AddCone(const REveVector& pos, const REveVector& dir, Float_t r);
    void AddEllipticCone(const REveVector& pos, const REveVector& dir, Float_t r, Float_t r2, Float_t angle=0);
 

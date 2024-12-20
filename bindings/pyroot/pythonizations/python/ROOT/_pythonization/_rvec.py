@@ -9,13 +9,7 @@
 ################################################################################
 
 r"""
-/**
-\class ROOT::VecOps::RVec
-\brief \parblock \endparblock
-\htmlonly
-<div class="pyrootbox">
-\endhtmlonly
-## PyROOT
+\pythondoc ROOT::VecOps::RVec
 
 The ROOT::RVec class has additional features in Python, which allow to adopt memory
 from Numpy arrays and vice versa. The purpose of these features is the copyless
@@ -59,10 +53,7 @@ npy[0] = 42
 print(rvec) # { 42.000000, 2.0000000, 3.0000000 }
 \endcode
 
-\htmlonly
-</div>
-\endhtmlonly
-*/
+\endpythondoc
 """
 
 from . import pythonization
@@ -71,14 +62,15 @@ import sys
 
 
 _array_interface_dtype_map = {
-    "float": "f",
+    "Long64_t": "i",
+    "ULong64_t": "u",
     "double": "f",
+    "float": "f",
     "int": "i",
     "long": "i",
-    "Long64_t": "i",
+    "unsigned char": "b",
     "unsigned int": "u",
     "unsigned long": "u",
-    "ULong64_t": "u",
 }
 
 

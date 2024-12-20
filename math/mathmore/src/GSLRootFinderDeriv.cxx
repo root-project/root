@@ -61,20 +61,6 @@ GSLRootFinderDeriv::~GSLRootFinderDeriv()
    if (fFunction) delete fFunction;
 }
 
-GSLRootFinderDeriv::GSLRootFinderDeriv(const GSLRootFinderDeriv &) : IRootFinderMethod()
-{
-}
-
-GSLRootFinderDeriv & GSLRootFinderDeriv::operator = (const GSLRootFinderDeriv &rhs)
-{
-   // private operator=
-   if (this == &rhs) return *this;  // time saving self-test
-
-   return *this;
-}
-
-
-
 
 bool GSLRootFinderDeriv::SetFunction(  GSLFuncPointer f, GSLFuncPointer df, GSLFdFPointer Fdf, void * p, double xstart) {
    fStatus = -1;

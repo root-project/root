@@ -12,6 +12,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TClassEdit.h"
+#include "TDictAttributeMap.h"
 #include "TVirtualStreamerInfo.h"
 #include "TStreamer.h"
 #include "TVirtualIsAProxy.h"
@@ -261,7 +262,7 @@ namespace Internal {
                                           GetDeclFileLine(),
                                           GetImplFileLine());
          if (fPragmaBits & TClassTable::kHasCustomStreamerMember) {
-            fClass->SetBit(TClass::kHasCustomStreamerMember);
+            fClass->fHasCustomStreamerMember = true;
          }
          fClass->SetNew(fNew);
          fClass->SetNewArray(fNewArray);
@@ -290,6 +291,18 @@ namespace Internal {
 
          CreateRuleSet( fReadRules, true );
          CreateRuleSet( fReadRawRules, false );
+
+         if (fPragmaBits & (TClassTable::kNtplForceNativeMode | TClassTable::kNtplForceStreamerMode)) {
+            fClass->CreateAttributeMap();
+            // The force-split and force-unsplit flags are mutually exclusive
+            assert(!((fPragmaBits & TClassTable::kNtplForceNativeMode) &&
+                     (fPragmaBits & TClassTable::kNtplForceStreamerMode)));
+            if (fPragmaBits & TClassTable::kNtplForceNativeMode) {
+               fClass->GetAttributeMap()->AddProperty("rntuple.streamerMode", "false");
+            } else if (fPragmaBits & TClassTable::kNtplForceStreamerMode) {
+               fClass->GetAttributeMap()->AddProperty("rntuple.streamerMode", "true");
+            }
+         }
       }
       return fClass;
    }
@@ -436,7 +449,7 @@ namespace Internal {
       // Set the info for the CollectionProxy and take ownership of the object
       // being passed
 
-      delete fCollectionProxyInfo;;
+      delete fCollectionProxyInfo;
       fCollectionProxyInfo = info;
    }
 

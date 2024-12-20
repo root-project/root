@@ -77,9 +77,7 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraph2DErrors default constructor
 
-TGraph2DErrors::TGraph2DErrors(): TGraph2D()
-{
-}
+TGraph2DErrors::TGraph2DErrors() {}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -191,6 +189,16 @@ TGraph2DErrors &TGraph2DErrors::operator=(const TGraph2DErrors &g)
    }
    return *this;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add a point with errorbars to the graph.
+
+void TGraph2DErrors::AddPointError(Double_t x, Double_t y, Double_t z, Double_t ex, Double_t ey, Double_t ez)
+{
+   AddPoint(x, y, z); // this will increase fNpoints by one
+   SetPointError(fNpoints - 1, ex, ey, ez);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is called by Graph2DFitChisquare.
 /// It returns the error along X at point i.

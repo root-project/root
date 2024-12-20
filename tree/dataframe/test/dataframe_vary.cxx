@@ -12,11 +12,6 @@
 
 #include <gtest/gtest.h>
 
-// Backward compatibility for gtest version < 1.10.0
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
-
 using ROOT::RDF::Experimental::VariationsFor;
 
 class RDFVary : public ::testing::TestWithParam<bool> {
@@ -417,7 +412,7 @@ TEST(RDFVary, VaryDisplay) // TEST instead of TEST_P because Display is single-t
                   {}, 2)
                .Display<int>({"x"});
    // Display ignores variations, only displays the nominal values
-   EXPECT_EQ(d->AsString(), "+-----+---+\n| Row | x | \n+-----+---+\n| 0   | 0 | \n|     |   | \n+-----+---+\n");
+   EXPECT_EQ(d->AsString(), "+-----+---+\n| Row | x | \n+-----+---+\n| 0   | 0 | \n+-----+---+\n");
    // cannot vary a Display
    EXPECT_THROW(
       try { VariationsFor(d); } catch (const std::logic_error &err) {

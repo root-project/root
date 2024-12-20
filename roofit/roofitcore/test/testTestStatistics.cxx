@@ -13,7 +13,7 @@
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
-#include <RooNLLVar.h>
+#include "../src/RooNLLVar.h"
 #endif
 #include <RooPlot.h>
 #include <RooPolyVar.h>
@@ -24,7 +24,7 @@
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 
-#include <ROOT/TestSupport.hxx>
+#include <TMath.h>
 
 #include "gtest_wrapper.h"
 
@@ -82,7 +82,7 @@ private:
 TEST_P(TestStatisticTest, IntegrateBins)
 {
    RooWorkspace ws;
-   ws.factory("Power::pow(x[0.1, 5.1], {1.0}, {a[-0.3, -5., 5.]})");
+   ws.factory("PowerSum::pow(x[0.1, 5.1], {1.0}, {a[-0.3, -5., 5.]})");
 
    RooRealVar &x = *ws.var("x");
    RooRealVar &a = *ws.var("a");
@@ -128,7 +128,7 @@ TEST_P(TestStatisticTest, IntegrateBins)
 TEST_P(TestStatisticTest, IntegrateBins_SubRange)
 {
    RooWorkspace ws;
-   ws.factory("Power::pow(x[0.1, 5.1], {1.0}, {a[-0.3, -5., 5.]})");
+   ws.factory("PowerSum::pow(x[0.1, 5.1], {1.0}, {a[-0.3, -5., 5.]})");
 
    RooRealVar &x = *ws.var("x");
    RooRealVar &a = *ws.var("a");
@@ -177,7 +177,7 @@ TEST_P(TestStatisticTest, IntegrateBins_SubRange)
 TEST_P(TestStatisticTest, IntegrateBins_CustomBinning)
 {
    RooWorkspace ws;
-   ws.factory("Power::pow(x[1.0, 5.], {1.0}, {a[-0.3, -5., 5.]})");
+   ws.factory("PowerSum::pow(x[1.0, 5.], {1.0}, {a[-0.3, -5., 5.]})");
 
    RooRealVar &x = *ws.var("x");
    RooRealVar &a = *ws.var("a");
@@ -230,7 +230,7 @@ TEST_P(TestStatisticTest, IntegrateBins_CustomBinning)
 TEST_P(TestStatisticTest, IntegrateBins_RooDataHist)
 {
    RooWorkspace ws;
-   ws.factory("Power::pow(x[0.1, 5.0], {1.0}, {a[-0.3, -5., 5.]})");
+   ws.factory("PowerSum::pow(x[0.1, 5.0], {1.0}, {a[-0.3, -5., 5.]})");
 
    RooRealVar &x = *ws.var("x");
    RooRealVar &a = *ws.var("a");
@@ -291,14 +291,7 @@ TEST_P(TestStatisticTest, EmptyData)
    std::unique_ptr<RooDataSet> data{model.generate(x, 0)};
    std::unique_ptr<RooDataHist> dataHist{data->binnedClone()};
 
-   {
-      // We expect errors in the Hessian calculation because the likelihood is
-      // constant.
-      ROOT::TestSupport::CheckDiagsRAII checkDiag;
-      checkDiag.requiredDiag(kWarning, "ROOT::Math::Fitter::CalculateHessErrors", "Error when calculating Hessian");
-
-      model.fitTo(*data, _evalBackend, RooFit::PrintLevel(-1));
-   }
+   model.fitTo(*data, _evalBackend, RooFit::PrintLevel(-1));
 
    EXPECT_EQ(mean.getVal(), meanOrigVal) << "Fitting an empty RooDataSet changed \"mean\" value!";
    EXPECT_EQ(sigma.getVal(), sigmaOrigVal) << "Fitting an empty RooDataSet changed \"sigma\" value!";
@@ -309,14 +302,7 @@ TEST_P(TestStatisticTest, EmptyData)
    mean.setError(0.0);
    sigma.setError(0.0);
 
-   {
-      // We expect errors in the Hessian calculation because the likelihood is
-      // constant (same as above for the RooDataSet).
-      ROOT::TestSupport::CheckDiagsRAII checkDiag;
-      checkDiag.requiredDiag(kWarning, "ROOT::Math::Fitter::CalculateHessErrors", "Error when calculating Hessian");
-
-      model.fitTo(*dataHist, _evalBackend, RooFit::PrintLevel(-1));
-   }
+   model.fitTo(*dataHist, _evalBackend, RooFit::PrintLevel(-1));
 
    EXPECT_EQ(mean.getVal(), meanOrigVal) << "Fitting an empty RooDataSet changed \"mean\" value!";
    EXPECT_EQ(sigma.getVal(), sigmaOrigVal) << "Fitting an empty RooDataSet changed \"sigma\" value!";
@@ -329,7 +315,7 @@ TEST(RooChi2Var, IntegrateBins)
    RooRandom::randomGenerator()->SetSeed(1337ul);
 
    RooWorkspace ws;
-   ws.factory("Power::pow(x[0.1, 5.1], {1.0}, {a[-0.3, -5., 5.]})");
+   ws.factory("PowerSum::pow(x[0.1, 5.1], {1.0}, {a[-0.3, -5., 5.]})");
 
    RooRealVar &x = *ws.var("x");
    RooRealVar &a = *ws.var("a");
@@ -700,3 +686,110 @@ INSTANTIATE_TEST_SUITE_P(RooNLLVarBinnedL, OffsetBinTest,
                             ss << (std::get<5>(paramInfo.param) ? "BinnedL" : "");
                             return ss.str();
                          });
+
+// Test if the data can be correctly reset for both individual and simultaneous
+// pdfs.
+TEST(NLL, SetData)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace workspace;
+   workspace.factory("Gaussian::pdf_1(x[-10, 10], mu[0, -10, 10], sigma[1, 0.1, 10])");
+   workspace.factory("SIMUL::pdf(index_cat[A=0], A=pdf_1)");
+
+   RooAbsPdf &pdf1 = *workspace.pdf("pdf_1");
+   RooAbsPdf &pdf = *workspace.pdf("pdf");
+   RooRealVar &x = *workspace.var("x");
+   RooAbsCategory &cat = *workspace.cat("index_cat");
+
+   {
+      // Build simple single-entry datasets so that it's easy to know the
+      // reference result.
+      const double xa = 0.0;
+      const double xb = 1.0;
+
+      RooDataSet data1a{"data_1_a", "data_1_a", {x, cat}};
+      x.setVal(xa);
+      data1a.add({x, cat});
+      workspace.import(data1a);
+
+      RooDataSet data1b{"data_1_b", "data_1_b", {x, cat}};
+      x.setVal(xb);
+      data1b.add({x, cat});
+      workspace.import(data1b);
+   }
+   RooAbsData &data1a = *workspace.data("data_1_a");
+   RooAbsData &data1b = *workspace.data("data_1_b");
+
+   std::unique_ptr<RooAbsReal> nll1{pdf1.createNLL(data1a)};
+   std::unique_ptr<RooAbsReal> nllSim{pdf.createNLL(data1a)};
+
+   double val1A = nll1->getVal();
+   double valSimA = nllSim->getVal();
+
+   nll1->setData(data1b);
+   nllSim->setData(data1b);
+
+   double val1B = nll1->getVal();
+   double valSimB = nllSim->getVal();
+
+   // Make sure the combined and single channel pdfs give consistent results.
+   EXPECT_DOUBLE_EQ(val1A, valSimA);
+   EXPECT_DOUBLE_EQ(val1B, valSimB);
+
+   // The dataset was built in such a way that the updated NLL is shifted by
+   // 0.5, so this is what we analytically expect.
+   EXPECT_DOUBLE_EQ(valSimB, valSimA + 0.5);
+}
+
+// In some frameworks like CMS combine, all constraints are contained in a
+// single RooProdPdf, even if the constrained parameters are not used in this
+// pdf. The RooFit logic to figure out constrained parameters should however
+// now be confused by this, and not strip away these parameters from the list
+// of constrained parameters.
+TEST(CreateNLL, CombineStyleConstraints)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::g_main_1(x_1[0., -10, 10], mu_1[0., -10, 10], 1.0)");
+   ws.factory("Gaussian::g_main_2(x_2[0., -10, 10], mu_2[0., -10, 10], 1.0)");
+   ws.factory("Gaussian::g_constr_1(mu_1, 0.0, 1.0)");
+   ws.factory("Gaussian::g_constr_2(mu_2, 0.0, 1.0)");
+
+   // The RooProdPdf model_1 will contain all the constraints, also the one
+   // that applies to g_main_1. This is the corner case that this test is
+   // covering.
+   ws.factory("PROD::model_1(g_main_1, g_constr_1, g_constr_2)");
+   ws.factory("PROD::model_2(g_main_2)");
+   ws.factory("SIMUL::model(cat[A=0, B=1], A=model_1, B=model_2)");
+
+   auto &x1 = *ws.var("x_1");
+   auto &x2 = *ws.var("x_2");
+   auto &cat = *ws.cat("cat");
+   auto &model = static_cast<RooSimultaneous &>(*ws.pdf("model"));
+
+   RooArgSet vars{x1, x2, cat};
+   RooDataSet data{"data", "data", vars};
+   cat.setIndex(0);
+   data.add(vars);
+   cat.setIndex(1);
+   data.add(vars);
+
+   RooArgSet parameters;
+   model.getParameters(data.get(), parameters);
+
+   model.getAllConstraints(*data.get(), parameters, true);
+
+   EXPECT_EQ(parameters.size(), 2);
+   EXPECT_EQ(parameters.find("mu_1"), ws.var("mu_1"));
+   EXPECT_EQ(parameters.find("mu_2"), ws.var("mu_2"));
+
+   // Now, try it out in the context of createNLL
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(data)};
+   const double proba = TMath::Gaus(0, 0, 1, true);
+   const double nChannels = model.indexCat().size();
+   //                                     main Gaussians                one constraint per channel
+   const double refNllVal = -nChannels * (std::log(proba / nChannels) + std::log(proba));
+   EXPECT_FLOAT_EQ(nll->getVal(), refNllVal);
+}

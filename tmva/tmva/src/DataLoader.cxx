@@ -298,6 +298,13 @@ void TMVA::DataLoader::AddEvent( const TString& className, Types::ETreeType tt,
 
    fATreeType   = clIndex;
    fATreeWeight = weight;
+   if (event.size() > fATreeEvent.size()) {
+      Error("TMVA::DataLoader::AddEvent", "Number of variables defined through DataLoader::AddVariable (%zu) is inconsistent"
+       "with number of variables given to DataLoader::Add*Event (%zu)."
+       "Please check your variable definitions and statement ordering."
+       "This event will not be added.", fATreeEvent.size(), event.size());
+      return;
+   }
    for (UInt_t ivar=0; ivar<event.size(); ivar++) fATreeEvent[ivar] = event[ivar];
 
    if(tt==Types::kTraining) fTrainAssignTree[clIndex]->Fill();

@@ -217,23 +217,20 @@ def trigger_computation_graph(
     """
     if exec_id not in _ACTIONS_REGISTER or exec_id.rdf_uuid == "RNTuple":
         # Fill the cache with the future results
-        actions = generate_computation_graph(graph, starting_node, range_id)
-        _ACTIONS_REGISTER[exec_id] = actions
+        _ACTIONS_REGISTER[exec_id] = generate_computation_graph(graph, starting_node, range_id)
     else:
         # Create clones according to different types of actions
-        actions = [
+        _ACTIONS_REGISTER[exec_id] = [
             Utils.clone_action(action, range_id)
             for action in _ACTIONS_REGISTER[exec_id]
         ]
 
-    # Trigger computation graph with the GIL released
-    rnode = ROOT.RDF.AsRNode(starting_node)
     ROOT.Internal.RDF.TriggerRun.__release_gil__ = True
-    ROOT.Internal.RDF.TriggerRun(rnode)
+    ROOT.Internal.RDF.TriggerRun(ROOT.RDF.AsRNode(starting_node))
 
     # Return a list of objects that can be later merged. In most cases this
     # is still made of RResultPtrs that will then be used as input arguments
     # to `ROOT::RDF::Detail::GetMergeableValue`. For `AsNumpy`, it returns
     # an instance of `AsNumpyResult`. For `Snapshot`, it returns a
     # `SnapshotResult`
-    return actions
+    return _ACTIONS_REGISTER[exec_id]

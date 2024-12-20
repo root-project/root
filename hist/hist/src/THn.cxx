@@ -183,13 +183,13 @@ THn::THn(const char* name, const char* title,
          Int_t dim, const Int_t* nbins,
          const Double_t* xmin, const Double_t* xmax):
    THnBase(name, title, dim, nbins, xmin, xmax),
-   fSumw2(dim, nbins, kTRUE /*overflow*/),
-   fCoordBuf() {
+   fSumw2(dim, nbins, kTRUE /*overflow*/)
+{
 }
 
 THn::THn(const char *name, const char *title, Int_t dim, const Int_t *nbins,
          const std::vector<std::vector<double>> &xbins)
-   : THnBase(name, title, dim, nbins, xbins), fSumw2(dim, nbins, kTRUE /*overflow*/), fCoordBuf()
+   : THnBase(name, title, dim, nbins, xbins), fSumw2(dim, nbins, kTRUE /*overflow*/)
 {
 }
 

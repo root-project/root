@@ -201,7 +201,7 @@ public: // Public Interface
    Int_t   AutoLoad(const std::type_info& typeinfo, Bool_t knowDictNotLoaded = kFALSE) final;
    Int_t   AutoParse(const char* cls) final;
    void*   LazyFunctionCreatorAutoload(const std::string& mangled_name);
-   bool   LibraryLoadingFailed(const std::string&, const std::string&, bool, bool);
+   bool    LibraryLoadingFailed(const std::string&, const std::string&, bool, bool);
    Bool_t  IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* nsDecl);
    void    ClearFileBusy() final;
    void    ClearStack() final; // Delete existing temporary values
@@ -227,6 +227,7 @@ public: // Public Interface
    void    InspectMembers(TMemberInspector&, const void* obj, const TClass* cl, Bool_t isTransient) final;
    Bool_t  IsLoaded(const char* filename) const final;
    Bool_t  IsLibraryLoaded(const char* libname) const final;
+   bool    IsValid() const final;
    Bool_t  HasPCMForLibrary(const char *libname) const final;
    Int_t   Load(const char* filenam, Bool_t system = kFALSE) final;
    void    LoadMacro(const char* filename, EErrorCode* error = nullptr) final;
@@ -270,7 +271,7 @@ public: // Public Interface
    void    UpdateListOfGlobals() final;
    void    UpdateListOfGlobalFunctions() final;
    void    UpdateListOfTypes() final;
-   void    SetClassInfo(TClass* cl, Bool_t reload = kFALSE, TDictionary::DeclId_t decl = nullptr) final;
+   void    SetClassInfo(TClass* cl, Bool_t reload = kFALSE, Bool_t silent = kFALSE, TDictionary::DeclId_t decl = nullptr) final;
 
    ECheckClassInfo CheckClassInfo(const char *name, TDictionary::DeclId_t &decl, Bool_t autoload, Bool_t isClassOrNamespaceOnly = kFALSE) final;
 

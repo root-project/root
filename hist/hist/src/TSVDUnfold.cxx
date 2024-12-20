@@ -72,8 +72,7 @@ ClassImp(TSVDUnfold);
 /// Alternative constructor
 /// User provides data and MC test spectra, as well as detector response matrix, diagonal covariance matrix of measured spectrum built from the uncertainties on measured spectrum
 
-TSVDUnfold::TSVDUnfold( const TH1D *bdat, const TH1D *bini, const TH1D *xini, const TH2D *Adet )
-: TObject     (),
+TSVDUnfold::TSVDUnfold( const TH1D *bdat, const TH1D *bini, const TH1D *xini, const TH2D *Adet ) :
 fNdim       (0),
 fDdim       (2),
 fNormalize  (kFALSE),
@@ -125,8 +124,7 @@ fMatToyMode (kFALSE)
 /// Initialisation of TSVDUnfold
 /// User provides data and MC test spectra, as well as detector response matrix and the covariance matrix of the measured distribution
 
-TSVDUnfold::TSVDUnfold( const TH1D *bdat, TH2D* Bcov, const TH1D *bini, const TH1D *xini, const TH2D *Adet )
-: TObject     (),
+TSVDUnfold::TSVDUnfold( const TH1D *bdat, TH2D* Bcov, const TH1D *bini, const TH1D *xini, const TH2D *Adet ) :
 fNdim       (0),
 fDdim       (2),
 fNormalize  (kFALSE),

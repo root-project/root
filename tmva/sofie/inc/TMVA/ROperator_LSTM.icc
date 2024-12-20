@@ -80,7 +80,7 @@ auto ROperator_LSTM<T>::Initialize(RModel &model)
 				float *original_bias = static_cast<float*>(original_data.get());
 				float *new_bias = new float[4 * num_directions * seq_length * batch_size * fAttrHiddenSize];
 				for (size_t gate = 0; gate < 4; gate++) {
-					float sum[fAttrHiddenSize];
+					std::vector<float> sum(fAttrHiddenSize);
 					for (size_t direction = 0; direction < num_directions; direction++) {
 						size_t offset = direction * 8 * fAttrHiddenSize + gate * fAttrHiddenSize;
 						for (size_t h = 0; h < fAttrHiddenSize; h++) {
@@ -91,7 +91,7 @@ auto ROperator_LSTM<T>::Initialize(RModel &model)
 								size_t bias_offset = gate * num_directions * seq_length * batch_size * fAttrHiddenSize
 									+ direction * seq_length * batch_size * fAttrHiddenSize
 									+ seq * batch_size * fAttrHiddenSize + batch * fAttrHiddenSize;
-								std::copy(sum, sum + fAttrHiddenSize, new_bias + bias_offset);
+								std::copy(sum.begin(), sum.end(), new_bias + bias_offset);
 							}
 						}
 					}
@@ -266,7 +266,7 @@ std::string ROperator_LSTM<T>::GenerateSessionMembersCode(std::string opName)
    out << "std::vector<" << fType << "> fVec_" << opName << "_cell_gate = std::vector<" << fType << ">(" << hs_size << ");\n";
    if (fAttrInputForget == 0)
       out << "std::vector<" << fType << "> fVec_" << opName << "_forget_gate = std::vector<" << fType << ">(" << hs_size << ");\n";
-   // cell state     
+   // cell state
    out << "std::vector<" << fType << "> fVec_" << opName << "_cell_state = std::vector<" << fType << ">(" << hs_size << ");\n";
    out << "std::vector<" << fType << "> fVec_" << opName << "_new_cell_state = std::vector<" << fType << ">(" << hs_size << ");\n";
    // hiddden state
@@ -294,7 +294,7 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
    if (fAttrLayout == 0) {
       out << SP << fType << " *" << OpName << "_input = tensor_" << fNX << ";\n";
    } else {
-      if (fUseSession) 
+      if (fUseSession)
          out << SP << fType << " * " << OpName << "_input = fVec_" << OpName << "_input.data();\n";
       else
          out << SP << fType << "  " << OpName << "_input[" << seq_length * batch_size * input_size << "] = {0};\n";

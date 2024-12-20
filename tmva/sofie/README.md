@@ -69,17 +69,92 @@ model.Generate(Options::kNoWeightFile);
 Other such options includes `Options::kNoSession` (for not generating the Session class, and instead keeping the infer function independent).
 SOFIE also supports generating inference code with RDataFrame as inputs, refer to the tutorials below for examples.
 
+## Supported ONNX operators
+
+Here is the updated list of supported ONNX operators
+
+- [x] Add
+- [x] AveragePool
+- [x] BatchNormalization
+- [x] Cast
+- [x] Concat
+- [x] Constant
+- [x] ConstantOfShape
+- [x] Conv
+- [x] ConvTranspose
+- [x] Elu
+- [x] Equal
+- [x] Erf
+- [x] Exp
+- [x] Expand
+- [x] EyeLike
+- [x] Flatten
+- [x] Gather
+- [x] Gemm
+- [x] GlobalAveragePool
+- [x] Greater
+- [x] GreaterOrEqual
+- [x] GRU
+- [x] Identity
+- [x] If
+- [x] LayerNormalization
+- [x] LeakyRelu
+- [x] Less
+- [x] LessOrEqual
+- [x] Log
+- [x] LSTM
+- [x] MatMul
+- [x] Max
+- [x] MaxPool
+- [x] Mean
+- [x] Min
+- [x] Mul
+- [x] Neg
+- [x] Pool
+- [x] Pow
+- [x] Range
+- [x] Reciprocal
+- [x] ReduceMean
+- [x] ReduceProd
+- [x] ReduceSum
+- [x] ReduceSumSquare
+- [x] Relu
+- [x] Reshape
+- [x] RNN
+- [x] Selu
+- [x] Sigmoid
+- [x] Slice
+- [x] Softmax
+- [x] Split
+- [x] Sqrt
+- [x] Squeeze
+- [x] Tanh
+- [x] Tile
+- [x] TopK
+- [x] Transpose
+- [x] Unsqueeze
+
+The above operators are supported for tensors of the following types:
+
+- [x] float
+- [x] double
+- [x] int32
+- [x] int64
+- [x] bool (for comparison operators)
+
+
+
 
 ## Additional Links
 
 - **Tutorials**
-    - [TMVA_SOFIE_Inference](https://github.com/root-project/root/blob/master/tutorials/tmva/TMVA_SOFIE_Inference.py)
-    - [TMVA_SOFIE_Keras](https://github.com/root-project/root/blob/master/tutorials/tmva/TMVA_SOFIE_Keras.C)
-    - [TMVA_SOFIE_Keras_HiggsModel](https://github.com/root-project/root/blob/master/tutorials/tmva/TMVA_SOFIE_Keras_HiggsModel.C)
-    - [TMVA_SOFIE_ONNX](https://github.com/root-project/root/blob/master/tutorials/tmva/TMVA_SOFIE_ONNX.C)
-    - [TMVA_SOFIE_PyTorch](https://github.com/root-project/root/blob/master/tutorials/tmva/TMVA_SOFIE_PyTorch.C)
-    - [TMVA_SOFIE_RDataFrame](https://github.com/root-project/root/blob/master/tutorials/tmva/TMVA_SOFIE_RDataFrame.C)
-    - [TMVA_SOFIE_RDataFrame](https://github.com/root-project/root/blob/master/tutorials/tmva/TMVA_SOFIE_RDataFrame.py)
-    - [TMVA_SOFIE_RDataFrame_JIT](https://github.com/root-project/root/blob/master/tutorials/tmva/TMVA_SOFIE_RDataFrame_JIT.C)
-    - [TMVA_SOFIE_RSofieReader](https://github.com/root-project/root/blob/master/tutorials/tmva/TMVA_SOFIE_RSofieReader.C)
+    - [TMVA_SOFIE_Inference](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_Inference.py)
+    - [TMVA_SOFIE_Keras](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_Keras.C)
+    - [TMVA_SOFIE_Keras_HiggsModel](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_Keras_HiggsModel.C)
+    - [TMVA_SOFIE_ONNX](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_ONNX.C)
+    - [TMVA_SOFIE_PyTorch](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_PyTorch.C)
+    - [TMVA_SOFIE_RDataFrame](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_RDataFrame.C)
+    - [TMVA_SOFIE_RDataFrame](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_RDataFrame.py)
+    - [TMVA_SOFIE_RDataFrame_JIT](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_RDataFrame_JIT.C)
+    - [TMVA_SOFIE_RSofieReader](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_RSofieReader.C)
 

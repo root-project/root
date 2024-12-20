@@ -414,7 +414,7 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromXML( void* wghtnode )
       }
       ch = gTools().GetNextChild(ch);
    }
-   fout.close();;
+   fout.close();
 
    // Here we create a dummy tree necessary to create a minimal NN
    // to be used for testing, evaluation and application
@@ -511,9 +511,9 @@ void TMVA::MethodTMlpANN::GetHelpMessage() const
    Log() << Endl;
    Log() << "Detailed information is available here:" << Endl;
    if (gConfig().WriteOptionsReference()) {
-      Log() << "<a href=\"http://root.cern/root/html/TMultiLayerPerceptron.html\">";
-      Log() << "http://root.cern/root/html/TMultiLayerPerceptron.html</a>" << Endl;
+      Log() << "<a href=\"https://root.cern/doc/master/classTMultiLayerPerceptron.html\">";
+      Log() << "https://root.cern/doc/master/classTMultiLayerPerceptron.html</a>" << Endl;
    }
-   else Log() << "http://root.cern/root/html/TMultiLayerPerceptron.html" << Endl;
+   else Log() << "https://root.cern/doc/master/classTMultiLayerPerceptron.html" << Endl;
    Log() << Endl;
 }

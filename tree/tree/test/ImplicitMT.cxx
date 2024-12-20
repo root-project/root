@@ -1,3 +1,4 @@
+#include "TChain.h"
 #include "TFile.h"
 #include "TROOT.h"
 #include "TSystem.h"
@@ -26,6 +27,34 @@ TEST(TTreeImplicitMT, flushBaskets)
    t.Write(); // This invokes FlushBaskets!
    f.Close();
    gSystem->Unlink(ofileName);
+}
+
+//# 8720
+TEST(TChainImplicitMT, propagateToTTree)
+{
+   ROOT::DisableImplicitMT();
+
+   const auto fname0 = "propagateToTTree0.root";
+   const auto fname1 = "propagateToTTree1.root";
+   for (const auto fname : {fname0, fname1}) {
+      TFile f(fname, "RECREATE");
+      TTree t("e", "e");
+      t.Fill();
+      t.Write();
+      EXPECT_FALSE(t.GetImplicitMT());
+   }
+
+   TChain c("e");
+   c.SetImplicitMT(true);
+   c.Add(fname0);
+   c.Add(fname1);
+   c.LoadTree(0);
+   EXPECT_TRUE(c.GetTree()->GetImplicitMT());
+   c.LoadTree(1);
+   EXPECT_TRUE(c.GetTree()->GetImplicitMT());
+
+   gSystem->Unlink(fname0);
+   gSystem->Unlink(fname1);
 }
 
 #endif // R__USE_IMT

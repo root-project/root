@@ -153,7 +153,7 @@ void TMVA::RuleFitParams::Init()
    //
    // summarize weights
    //
-   fNEveEffPath = 0;;
+   fNEveEffPath = 0;
    for (UInt_t ie=fPathIdx1; ie<fPathIdx2+1; ie++) {
       fNEveEffPath += fRuleFit->GetTrainingEventWeight(ie);
    }

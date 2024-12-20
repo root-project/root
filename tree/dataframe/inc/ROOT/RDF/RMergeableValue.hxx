@@ -568,8 +568,8 @@ type-erased RMergeableValueBase objects.
 */
 class RMergeableVariationsBase : public RMergeableValueBase {
 protected:
-   std::vector<std::string> fKeys;
-   std::vector<std::unique_ptr<RMergeableValueBase>> fValues;
+   std::vector<std::string> fKeys{};
+   std::vector<std::unique_ptr<RMergeableValueBase>> fValues{};
 
 public:
    /**
@@ -591,6 +591,7 @@ public:
    {
    }
    RMergeableVariationsBase &operator=(RMergeableVariationsBase &&) = delete;
+   ~RMergeableVariationsBase() override = default;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Constructor that initializes data members.
@@ -660,6 +661,7 @@ public:
    RMergeableVariations &operator=(const RMergeableVariations &) = delete;
    RMergeableVariations(RMergeableVariations &&) = delete;
    RMergeableVariations &operator=(RMergeableVariations &&) = delete;
+   ~RMergeableVariations() final = default;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Constructor that initializes data members.

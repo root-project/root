@@ -37,7 +37,10 @@ void rf609_xychi2fit()
    RooRealVar y("y", "y", -10, 200);
    RooDataSet dxy("dxy", "dxy", {x, y}, StoreError({x, y}));
 
+   TRandom3 trnd{};
+
    // Fill an example dataset with X,err(X),Y,err(Y) values
+   RooArgSet vars{x, y};
    for (int i = 0; i <= 10; i++) {
 
       // Set X value and error
@@ -45,10 +48,10 @@ void rf609_xychi2fit()
       x.setError(i < 5 ? 0.5 / 1. : 1.0 / 1.);
 
       // Set Y value and error
-      y = x.getVal() * x.getVal() + 4 * fabs(gRandom->Gaus());
+      y = x.getVal() * x.getVal() + 4 * std::abs(trnd.Gaus());
       y.setError(sqrt(y.getVal()));
 
-      dxy.add({x, y});
+      dxy.add(vars);
    }
 
    // P e r f o r m   c h i 2   f i t   t o   X + / - d x   a n d   Y + / - d Y   v a l u e s

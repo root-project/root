@@ -85,6 +85,7 @@ static Int_t    gTraceCapacity = 10, gTraceIndex = 0,
 
 // Used in NewDelete.cxx; set by TMapFile.
 ROOT::Internal::FreeIfTMapFile_t *ROOT::Internal::gFreeIfTMapFile = nullptr;
+ROOT::Internal::GetMapFileMapllocDesc_t *ROOT::Internal::gGetMapFileMallocDesc = nullptr;
 void *ROOT::Internal::gMmallocDesc = nullptr; //is used and set in TMapFile
 
 

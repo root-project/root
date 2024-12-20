@@ -162,11 +162,11 @@ TGTable::TGTable(const TGWindow *p, Int_t id, TVirtualTableInterface *interface,
    fCurrentRange = new TTableRange();
    fDataRange = new TTableRange();
    fGotoRange = new TTableRange();
-   TGLayoutHints *hints = 0;
-   fCellHintsList = new TList(hints);
-   fRHdrHintsList = new TList(hints);
-   fCHdrHintsList = new TList(hints);
-   fMainHintsList = new TList(hints);
+
+   fCellHintsList = new TList();
+   fRHdrHintsList = new TList();
+   fCHdrHintsList = new TList();
+   fMainHintsList = new TList();
 
    // To be done: GetBackground colors for .rootrc
    SetBackgroundColor(GetWhitePixel());

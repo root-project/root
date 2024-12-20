@@ -365,10 +365,10 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
          bool canSelfReference = CanSelfReference(fBranchClass);
          if (fBranchClass.GetClass()->IsTObject()) {
             if (canSelfReference) SetBit(kBranchObject);
-            hasCustomStreamer = (!fBranchClass.GetClass()->GetCollectionProxy() && fBranchClass.GetClass()->TestBit(TClass::kHasCustomStreamerMember));
+            hasCustomStreamer = (!fBranchClass.GetClass()->GetCollectionProxy() && fBranchClass.GetClass()->HasCustomStreamerMember());
          } else {
             if (canSelfReference) SetBit(kBranchAny);
-            hasCustomStreamer = !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != nullptr || fBranchClass.GetClass()->TestBit(TClass::kHasCustomStreamerMember));
+            hasCustomStreamer = !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != nullptr || fBranchClass.GetClass()->HasCustomStreamerMember());
          }
          if (hasCustomStreamer) {
             fType = -1;
@@ -2560,11 +2560,9 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
 
          if (fID < 0) {
             cl = new TClass(fBranchClass.GetClassName(), fClassVersion);
-            cl->SetBit(TClass::kIsEmulation);
             className = cl->GetName();
          } else {
             cl = new TClass(className, fClassVersion);
-            cl->SetBit(TClass::kIsEmulation);
             className = cl->GetName();
          }
       }
@@ -3837,9 +3835,10 @@ static void PrintElements(const TStreamerInfo *info, const TStreamerInfoActions:
 
 void TBranchElement::Print(Option_t* option) const
 {
+   constexpr auto length = std::char_traits<char>::length;
    Int_t nbranches = fBranches.GetEntriesFast();
-   if (strncmp(option,"debugAddress",strlen("debugAddress"))==0) {
-      if (strlen(option)==strlen("debugAddress")) {
+   if (strncmp(option,"debugAddress",length("debugAddress"))==0) {
+      if (strlen(option)==length("debugAddress")) {
          Printf("%-24s %-16s %2s %4s %-16s %-16s %8s %8s %s %s\n",
                 "Branch Name", "Streamer Class", "ID", "Type", "Class", "Parent", "pOffset", "fOffset", "fObject", "fOnfileObject");
       }
@@ -3861,7 +3860,7 @@ void TBranchElement::Print(Option_t* option) const
       }
       return;
    }
-   if (strncmp(option,"debugInfo",strlen("debugInfo"))==0)  {
+   if (strncmp(option,"debugInfo",length("debugInfo"))==0)  {
       Printf("Branch %s uses:",GetName());
       if (fID>=0) {
          // GetInfoImp()->GetElement(fID)->ls();
@@ -3894,7 +3893,7 @@ void TBranchElement::Print(Option_t* option) const
          if (fFillActionSequence) fFillActionSequence->Print(option);
       }
       TString suboption = "debugInfoSub";
-      suboption += (option+strlen("debugInfo"));
+      suboption += (option+length("debugInfo"));
       for (Int_t i = 0; i < nbranches; ++i) {
          TBranchElement* subbranch = (TBranchElement*)fBranches.At(i);
          subbranch->Print(suboption);
@@ -5734,7 +5733,7 @@ void TBranchElement::SetReadLeavesPtr()
       fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesCustomStreamer;
    } else if (fType == 0 && fID == -1) {
       // top-level branch.
-      bool hasCustomStreamer = fBranchClass.GetClass() && !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != nullptr || fBranchClass.GetClass()->TestBit(TClass::kHasCustomStreamerMember));
+      bool hasCustomStreamer = fBranchClass.GetClass() && !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != nullptr || fBranchClass.GetClass()->HasCustomStreamerMember());
       if (hasCustomStreamer) {
          // We are in the case where the object did *not* have a custom
          // Streamer when the TTree was written but now *does* have a custom

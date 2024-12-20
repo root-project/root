@@ -17,7 +17,6 @@
 #include "RooStats/SamplingDistribution.h"
 #include "RooStats/TestStatistic.h"
 #include "RooStats/ModelConfig.h"
-#include "RooStats/ProofConfig.h"
 
 #include "RooWorkspace.h"
 #include "RooMsgService.h"
@@ -226,9 +225,6 @@ class ToyMCSampler: public TestStatSampler {
          fAdaptiveLowLimit = low_threshold;
       }
 
-      /// calling with argument or nullptr deactivates proof
-      void SetProofConfig(ProofConfig *pc = nullptr) { fProofConfig = pc; }
-
       void SetProtoData(const RooDataSet* d) { fProtoData = d; }
 
    protected:
@@ -273,8 +269,6 @@ class ToyMCSampler: public TestStatSampler {
       double fAdaptiveHighLimit;
 
       const RooDataSet *fProtoData = nullptr; ///< in dev
-
-      ProofConfig *fProofConfig = nullptr; ///<!
 
       mutable NuisanceParametersSampler *fNuisanceParametersSampler = nullptr; ///<!
 

@@ -67,7 +67,7 @@ modelConfig.SetName("ModelConfig")
 wspace.Import(modelConfig)
 wspace.Import(dataOrig)
 wspace.SetName("w")
-wspace.writeToFile("rs101_ws.root")
+# wspace.writeToFile("rs101_ws.root")
 
 # Make sure we reference the data in the workspace from now on
 data = wspace[dataOrig.GetName()]

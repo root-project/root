@@ -15,7 +15,6 @@ if(proof)
 endif()
 
 if(webgui)
-   add_subdirectory(webdisplay)
    if(cefweb)
       add_subdirectory(cefdisplay)
    endif()
@@ -25,11 +24,15 @@ if(webgui)
    if(qt6web)
       add_subdirectory(qt6webdisplay)
    endif()
+
+   add_subdirectory(webdisplay)
+
    add_subdirectory(webgui6)
 
+   add_subdirectory(browsable)
+   add_subdirectory(browserv7)
+
    if(root7)
-      add_subdirectory(browsable)
-      add_subdirectory(browserv7)
       add_subdirectory(canvaspainter)
       add_subdirectory(fitpanelv7)
    endif()

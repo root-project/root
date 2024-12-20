@@ -167,6 +167,7 @@ public:
    virtual void     InspectMembers(TMemberInspector&, const void* obj, const TClass* cl, Bool_t isTransient) = 0;
    virtual Bool_t   IsLoaded(const char *filename) const = 0;
    virtual Bool_t   IsLibraryLoaded(const char *libname) const = 0;
+   virtual bool     IsValid() const = 0;
    virtual Bool_t   HasPCMForLibrary(const char *libname) const = 0;
    virtual Int_t    Load(const char *filenam, Bool_t system = kFALSE) = 0;
    virtual void     LoadMacro(const char *filename, EErrorCode *error = nullptr) = 0;
@@ -208,7 +209,7 @@ public:
    virtual void     UpdateListOfGlobals() = 0;
    virtual void     UpdateListOfGlobalFunctions() = 0;
    virtual void     UpdateListOfTypes() = 0;
-   virtual void     SetClassInfo(TClass *cl, Bool_t reload = kFALSE, TDictionary::DeclId_t decl = nullptr) = 0;
+   virtual void     SetClassInfo(TClass *cl, Bool_t reload = kFALSE, Bool_t silent = kFALSE, TDictionary::DeclId_t decl = nullptr) = 0;
 
    enum ECheckClassInfo {
       kUnknown = 0, // backward compatible with false
@@ -226,7 +227,6 @@ public:
    virtual void     UpdateListOfMethods(TClass *cl) const = 0;
    virtual TString  GetMangledName(TClass *cl, const char *method, const char *params, Bool_t objectIsConst = kFALSE) = 0;
    virtual TString  GetMangledNameWithPrototype(TClass *cl, const char *method, const char *proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) = 0;
-   virtual void     GetInterpreterTypeName(const char *name, std::string &output, Bool_t full = kFALSE) = 0;
    virtual void    *GetInterfaceMethod(TClass *cl, const char *method, const char *params, Bool_t objectIsConst = kFALSE) = 0;
    virtual void    *GetInterfaceMethodWithPrototype(TClass *cl, const char *method, const char *proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) = 0;
            void     Execute(const char *function, const char *params, int *error = nullptr) override = 0;

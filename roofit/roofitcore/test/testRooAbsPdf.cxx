@@ -389,8 +389,10 @@ TEST(RooAbsPdf, NormSetChange)
 
    RooAddition add("add", "add", {gauss});
 
+   RooArgSet normSet{x};
+
    double v1 = add.getVal();
-   double v2 = add.getVal(x);
+   double v2 = add.getVal(normSet);
 
    // The change of normalization set should trigger a recomputation of the
    // value, so val2 should be different from val1. }

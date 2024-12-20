@@ -1,7 +1,6 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-##
 ## 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #606
 ##
 ## Understanding and customizing error handling in likelihood evaluations

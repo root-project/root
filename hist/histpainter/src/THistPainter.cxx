@@ -90,7 +90,7 @@
 - [The error bars options](\ref HP09)
 - [The bar chart option](\ref HP100)
 - [The "BAR" and "HBAR" options](\ref HP10)
-- [The SCATter plot option](\ref HP11)
+- [The SCATter plot option (legacy draw option)](\ref HP11)
 - [The ARRow option](\ref HP12)
 - [The BOX option](\ref HP13)
 - [The COLor option  (default for 2D and 3D histograms)](\ref HP14)
@@ -225,23 +225,21 @@ using `TH1::GetOption`:
 | "E"      | Draw error bars. |
 | "AXIS"   | Draw only axis. |
 | "AXIG"   | Draw only grid (if the grid is requested). |
-| \anchor OPTHIST "HIST"   | When an histogram has errors it is visualized by default with error bars. To visualize it without errors use the option "HIST" together with the required option (eg "hist same c").  The "HIST" option can also be used to plot only the histogram and not the associated function(s). |
-| "FUNC"   | When an histogram has a fitted function, this option allows to draw the fit result only. |
-| "SAME"   | Superimpose on previous picture in the same pad. |
-| "SAMES"  | Same as "SAME" and draw the statistics box|
-| "PFC"    | Palette Fill Color: histogram's fill color is taken in the current palette. |
-| "PLC"    | Palette Line Color: histogram's line color is taken in the current palette. |
-| "PMC"    | Palette Marker Color: histogram's marker color is taken in the current palette. |
-| "LEGO"   | Draw a lego plot with hidden line removal. |
-| "LEGO1"  | Draw a lego plot with hidden surface removal. |
-| "LEGO2"  | Draw a lego plot using colors to show the cell contents When the option "0" is used with any LEGO option, the empty bins are not drawn.|
-| "LEGO3"  | Draw a lego plot with hidden surface removal, like LEGO1 but the border lines of each lego-bar are not drawn.|
-| "LEGO4"  | Draw a lego plot with hidden surface removal, like LEGO1 but without the shadow effect on each lego-bar.|
-| "TEXT"   | Draw bin contents as text (format set via `gStyle->SetPaintTextFormat`).|
-| "TEXTnn" | Draw bin contents as text at angle nn (0 < nn <= 90). |
-| "X+"     | The X-axis is drawn on the top side of the plot. |
-| "Y+"     | The Y-axis is drawn on the right side of the plot. |
-| "MIN0"   | Set minimum value for the Y axis to 0, equivalent to gStyle->SetHistMinimumZero(). |
+| \anchor OPTHIST "HIST"   | When an histogram has errors it is visualized by default with error bars. To visualize it
+without errors use the option "HIST" together with the required option (eg "hist same c").  The "HIST" option can also
+be used to plot only the histogram and not the associated function(s). | | "FUNC"   | When an histogram has a fitted
+function, this option allows to draw the fit result only. | | "SAME"   | Superimpose on previous picture in the same
+pad. | | "SAMES"  | Same as "SAME" and draw the statistics box| | "PFC"    | Palette Fill Color: histogram's fill color
+is taken in the current palette. | | "PLC"    | Palette Line Color: histogram's line color is taken in the current
+palette. | | "PMC"    | Palette Marker Color: histogram's marker color is taken in the current palette. | | "LEGO"   |
+Draw a lego plot with hidden line removal. | | "LEGO1"  | Draw a lego plot with hidden surface removal. | | "LEGO2"  |
+Draw a lego plot using colors to show the cell contents When the option "0" is used with any LEGO option, the empty bins
+are not drawn.| | "LEGO3"  | Draw a lego plot with hidden surface removal, like LEGO1 but the border lines of each
+lego-bar are not drawn.| | "LEGO4"  | Draw a lego plot with hidden surface removal, like LEGO1 but without the shadow
+effect on each lego-bar.| | "TEXT"   | Draw bin contents as text (format set via `gStyle->SetPaintTextFormat`).| |
+"TEXTnn" | Draw bin contents as text at angle nn (0 < nn <= 90). | | "X+"     | The X-axis is drawn on the top side of
+the plot. | | "Y+"     | The Y-axis is drawn on the right side of the plot. | | "MIN0"   | Set minimum value for the Y
+axis to 0, equivalent to gStyle->SetHistMinimumZero(). |
 
 \anchor HP01b
 #### Options supported for 1D histograms
@@ -249,27 +247,21 @@ using `TH1::GetOption`:
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
 | " "      | Default.                                                          |
-| "AH"     | Draw histogram without axis. "A" can be combined with any drawing option. For instance, "AC" draws the histogram as a smooth Curve without axis.|
-| "]["     | When this option is selected the first and last vertical lines of the histogram are not drawn.|
-| "B"      | Bar chart option.|
-| "BAR"    | Like option "B", but bars can be drawn with a 3D effect.|
-| "HBAR"   | Like option "BAR", but bars are drawn horizontally.|
-| "C"      | Draw a smooth Curve through the histogram bins.|
-| "E0"     | Draw error bars. Markers are drawn for bins with 0 contents. Combined with E1 or E2 it avoids error bars clipping|
-| "E1"     | Draw error bars with perpendicular lines at the edges.|
-| "E2"     | Draw error bars with rectangles.|
-| "E3"     | Draw a fill area through the end points of the vertical error bars.|
-| "E4"     | Draw a smoothed filled area through the end points of the error bars.|
-| "E5"     | Like E3 but ignore the bins with 0 contents.|
-| "E6"     | Like E4 but ignore the bins with 0 contents.|
-| "X0"     | When used with one of the "E" option, it suppress the error bar along X as `gStyle->SetErrorX(0)` would do.|
-| "L"      | Draw a line through the bin contents.|
-| "P"      | Draw current marker at each bin except empty bins.|
-| "P*"     | Draw a star marker at each bin except empty bins.|
-| "P0"     | Draw current marker at each bin including empty bins.|
-| "PIE"    | Draw histogram as a Pie Chart.|
-| "*H"     | Draw histogram with a * at each bin.|
-| "LF2"    | Draw histogram like with option "L" but with a fill area. Note that "L" draws also a fill area if the hist fill color is set but the fill area corresponds to the histogram contour.|
+| "AH"     | Draw histogram without axis. "A" can be combined with any drawing option. For instance, "AC" draws the
+histogram as a smooth Curve without axis.| | "]["     | When this option is selected the first and last vertical lines
+of the histogram are not drawn.| | "B"      | Bar chart option.| | "BAR"    | Like option "B", but bars can be drawn
+with a 3D effect.| | "HBAR"   | Like option "BAR", but bars are drawn horizontally.| | "C"      | Draw a smooth Curve
+through the histogram bins.| | "E0"     | Draw error bars. Markers are drawn for bins with 0 contents. Combined with E1
+or E2 it avoids error bars clipping| | "E1"     | Draw error bars with perpendicular lines at the edges.| | "E2"     |
+Draw error bars with rectangles.| | "E3"     | Draw a fill area through the end points of the vertical error bars.| |
+"E4"     | Draw a smoothed filled area through the end points of the error bars.| | "E5"     | Like E3 but ignore the
+bins with 0 contents.| | "E6"     | Like E4 but ignore the bins with 0 contents.| | "X0"     | When used with one of the
+"E" option, it suppress the error bar along X as `gStyle->SetErrorX(0)` would do.| | "L"      | Draw a line through the
+bin contents.| | "P"      | Draw current marker at each bin except empty bins.| | "P*"     | Draw a star marker at each
+bin except empty bins.| | "P0"     | Draw current marker at each bin including empty bins.| | "PIE"    | Draw histogram
+as a Pie Chart.| | "*H"     | Draw histogram with a * at each bin.| | "LF2"    | Draw histogram like with option "L" but
+with a fill area. Note that "L" draws also a fill area if the hist fill color is set but the fill area corresponds to
+the histogram contour.|
 
 
 \anchor HP01c
@@ -279,53 +271,44 @@ using `TH1::GetOption`:
 |--------------|------------------------------------------------------------------|
 | " "          | Default (color plot).|
 | "ARR"        | Arrow mode. Shows gradient between adjacent cells.|
-| "BOX"        | A box is drawn for each cell with surface proportional to the content's absolute value. A negative content is marked with a X. |
-| "BOX1"       | A button is drawn for each cell with surface proportional to content's absolute value. A sunken button is drawn for negative values a raised one for positive.|
-| "COL"        | A box is drawn for each cell with a color scale varying with contents. All the none empty bins are painted. Empty bins are not painted unless some bins have a negative content because in that case the null bins might be not empty.  `TProfile2D` histograms are handled differently because, for this type of 2D histograms, it is possible to know if an empty bin has been filled or not. So even if all the bins' contents are positive some empty bins might be painted. And vice versa, if some bins have a negative content some empty bins might be not painted (default).|
-| "COLZ"       | Same as "COL". In addition the color palette is also drawn.|
-| "COL2"       | Alternative rendering algorithm to "COL". Can significantly improve rendering performance for large, non-sparse 2-D histograms.|
-| "COLZ2"      | Same as "COL2". In addition the color palette is also drawn.|
-| "Z CJUST"   | In combination with colored options "COL","CONT0" etc: Justify labels in the color palette at color boundaries. For more details see `TPaletteAxis`|
-| "CANDLE"     | Draw a candle plot along X axis.|
-| "CANDLEX"    | Same as "CANDLE".|
-| "CANDLEY"    | Draw a candle plot along Y axis.|
-| "CANDLEXn"   | Draw a candle plot along X axis. Different candle-styles with n from 1 to 6.|
-| "CANDLEYn"   | Draw a candle plot along Y axis. Different candle-styles with n from 1 to 6.|
-| "VIOLIN"     | Draw a violin plot along X axis.|
-| "VIOLINX"    | Same as "VIOLIN".|
-| "VIOLINY"    | Draw a violin plot along Y axis.|
-| "VIOLINXn"   | Draw a violin plot along X axis. Different violin-styles with n being 1 or 2.|
-| "VIOLINYn"   | Draw a violin plot along Y axis. Different violin-styles with n being 1 or 2.|
-| "CONT"       | Draw a contour plot (same as CONT0).|
-| "CONT0"      | Draw a contour plot using surface colors to distinguish contours.|
-| "CONT1"      | Draw a contour plot using line styles to distinguish contours.|
-| "CONT2"      | Draw a contour plot using the same line style for all contours.|
-| "CONT3"      | Draw a contour plot using fill area colors.|
-| "CONT4"      | Draw a contour plot using surface colors (SURF option at theta = 0).|
-| "LIST"       | Generate a list of TGraph objects for each contour.|
-| "SAME0"      | Same as "SAME" but do not use the z-axis range of the first plot. |
-| "SAMES0"     | Same as "SAMES" but do not use the z-axis range of the first plot. |
-| "CYL"        | Use Cylindrical coordinates. The X coordinate is mapped on the angle and the Y coordinate on the cylinder length.|
-| "POL"        | Use Polar coordinates. The X coordinate is mapped on the angle and the Y coordinate on the radius.|
-| "SPH"        | Use Spherical coordinates. The X coordinate is mapped on the latitude and the Y coordinate on the longitude.|
-| "PSR"        | Use PseudoRapidity/Phi coordinates. The X coordinate is mapped on Phi.|
-| "SURF"       | Draw a surface plot with hidden line removal.|
-| "SURF1"      | Draw a surface plot with hidden surface removal.|
-| "SURF2"      | Draw a surface plot using colors to show the cell contents.|
-| "SURF3"      | Same as SURF with in addition a contour view drawn on the top.|
-| "SURF4"      | Draw a surface using Gouraud shading.|
-| "SURF5"      | Same as SURF3 but only the colored contour is drawn. Used with option CYL, SPH or PSR it allows to draw colored contours on a sphere, a cylinder or a in pseudo rapidity space. In cartesian or polar coordinates, option SURF3 is used.|
-| "AITOFF"     | Draw a contour via an AITOFF projection.|
-| "MERCATOR"   | Draw a contour via an Mercator projection.|
-| "SINUSOIDAL" | Draw a contour via an Sinusoidal projection.|
-| "PARABOLIC"  | Draw a contour via an Parabolic projection.|
-| "MOLLWEIDE"  | Draw a contour via an Mollweide projection.|
-| "LEGO9"      | Draw the 3D axis only. Mainly needed for internal use |
-| "FB"         | With LEGO or SURFACE, suppress the Front-Box.|
-| "BB"         | With LEGO or SURFACE, suppress the Back-Box.|
-| "A"          | With LEGO or SURFACE, suppress the axis.|
-| "SCAT"       | Draw a scatter-plot (deprecated option).|
-| "[cutg]"     | Draw only the sub-range selected by the TCutG named "cutg".|
+| "BOX"        | A box is drawn for each cell with surface proportional to the content's absolute value. A negative
+content is marked with a X. | | "BOX1"       | A button is drawn for each cell with surface proportional to content's
+absolute value. A sunken button is drawn for negative values a raised one for positive.| | "COL"        | A box is drawn
+for each cell with a color scale varying with contents. All the none empty bins are painted. Empty bins are not painted
+unless some bins have a negative content because in that case the null bins might be not empty.  `TProfile2D` histograms
+are handled differently because, for this type of 2D histograms, it is possible to know if an empty bin has been filled
+or not. So even if all the bins' contents are positive some empty bins might be painted. And vice versa, if some bins
+have a negative content some empty bins might be not painted (default).| | "COLZ"       | Same as "COL". In addition the
+color palette is also drawn.| | "COL2"       | Alternative rendering algorithm to "COL". Can significantly improve
+rendering performance for large, non-sparse 2-D histograms.| | "COLZ2"      | Same as "COL2". In addition the color
+palette is also drawn.| | "Z CJUST"   | In combination with colored options "COL","CONT0" etc: Justify labels in the
+color palette at color boundaries. For more details see `TPaletteAxis`| | "CANDLE"     | Draw a candle plot along X
+axis.| | "CANDLEX"    | Same as "CANDLE".| | "CANDLEY"    | Draw a candle plot along Y axis.| | "CANDLEXn"   | Draw a
+candle plot along X axis. Different candle-styles with n from 1 to 6.| | "CANDLEYn"   | Draw a candle plot along Y axis.
+Different candle-styles with n from 1 to 6.| | "VIOLIN"     | Draw a violin plot along X axis.| | "VIOLINX"    | Same as
+"VIOLIN".| | "VIOLINY"    | Draw a violin plot along Y axis.| | "VIOLINXn"   | Draw a violin plot along X axis.
+Different violin-styles with n being 1 or 2.| | "VIOLINYn"   | Draw a violin plot along Y axis. Different violin-styles
+with n being 1 or 2.| | "CONT"       | Draw a contour plot (same as CONT0).| | "CONT0"      | Draw a contour plot using
+surface colors to distinguish contours.| | "CONT1"      | Draw a contour plot using line styles to distinguish
+contours.| | "CONT2"      | Draw a contour plot using the same line style for all contours.| | "CONT3"      | Draw a
+contour plot using fill area colors.| | "CONT4"      | Draw a contour plot using surface colors (SURF option at theta =
+0).| | "LIST"       | Generate a list of TGraph objects for each contour.| | "SAME0"      | Same as "SAME" but do not
+use the z-axis range of the first plot. | | "SAMES0"     | Same as "SAMES" but do not use the z-axis range of the first
+plot. | | "CYL"        | Use Cylindrical coordinates. The X coordinate is mapped on the angle and the Y coordinate on
+the cylinder length.| | "POL"        | Use Polar coordinates. The X coordinate is mapped on the angle and the Y
+coordinate on the radius.| | "SPH"        | Use Spherical coordinates. The X coordinate is mapped on the latitude and
+the Y coordinate on the longitude.| | "PSR"        | Use PseudoRapidity/Phi coordinates. The X coordinate is mapped on
+Phi.| | "SURF"       | Draw a surface plot with hidden line removal.| | "SURF1"      | Draw a surface plot with hidden
+surface removal.| | "SURF2"      | Draw a surface plot using colors to show the cell contents.| | "SURF3"      | Same as
+SURF with in addition a contour view drawn on the top.| | "SURF4"      | Draw a surface using Gouraud shading.| |
+"SURF5"      | Same as SURF3 but only the colored contour is drawn. Used with option CYL, SPH or PSR it allows to draw
+colored contours on a sphere, a cylinder or a in pseudo rapidity space. In cartesian or polar coordinates, option SURF3
+is used.| | "AITOFF"     | Draw a contour via an AITOFF projection.| | "MERCATOR"   | Draw a contour via an Mercator
+projection.| | "SINUSOIDAL" | Draw a contour via an Sinusoidal projection.| | "PARABOLIC"  | Draw a contour via an
+Parabolic projection.| | "MOLLWEIDE"  | Draw a contour via an Mollweide projection.| | "LEGO9"      | Draw the 3D axis
+only. Mainly needed for internal use | | "FB"         | With LEGO or SURFACE, suppress the Front-Box.| | "BB"         |
+With LEGO or SURFACE, suppress the Back-Box.| | "A"          | With LEGO or SURFACE, suppress the axis.| | "SCAT" | Draw
+a scatter-plot (legacy draw option).| | "[cutg]"     | Draw only the sub-range selected by the TCutG named "cutg".|
 
 
 \anchor HP01d
@@ -334,13 +317,12 @@ using `TH1::GetOption`:
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
 | " "      | Default (color plot).|
-| "ISO"    | Draw a Gouraud shaded 3d iso surface through a 3d histogram. It paints one surface at the value computed as follow: `SumOfWeights/(NbinsX*NbinsY*NbinsZ)`.|
-| "BOX"    | Draw a for each cell with volume proportional to the content's absolute value. An hidden line removal algorithm is used|
-| "BOX1"   | Same as BOX but an hidden surface removal algorithm is used|
-| "BOX2"   | The boxes' colors are picked in the current palette according to the bins' contents|
-| "BOX2Z"  | Same as "BOX2". In addition the color palette is also drawn.|
-| "BOX3"   | Same as BOX1, but the border lines of each lego-bar are not drawn.|
-| "LEGO"   | Same as `BOX`.|
+| "ISO"    | Draw a Gouraud shaded 3d iso surface through a 3d histogram. It paints one surface at the value computed as
+follow: `SumOfWeights/(NbinsX*NbinsY*NbinsZ)`.| | "BOX"    | Draw a for each cell with volume proportional to the
+content's absolute value. An hidden line removal algorithm is used| | "BOX1"   | Same as BOX but an hidden surface
+removal algorithm is used| | "BOX2"   | The boxes' colors are picked in the current palette according to the bins'
+contents| | "BOX2Z"  | Same as "BOX2". In addition the color palette is also drawn.| | "BOX3"   | Same as BOX1, but the
+border lines of each lego-bar are not drawn.| | "LEGO"   | Same as `BOX`.|
 
 
 \anchor HP01e
@@ -351,10 +333,10 @@ using `TH1::GetOption`:
 | " "        | Default, the histograms are drawn on top of each other (as lego plots for 2D histograms).|
 | "NOSTACK"  | Histograms in the stack are all paint in the same pad as if the option `SAME` had been specified.|
 | "NOSTACKB" | Histograms are  drawn next to each other as bar charts.|
-| "PADS"     | The current pad/canvas is subdivided into a number of pads equal to the number of histograms in the stack and each histogram is paint into a separate pad.|
-| "PFC"      | Palette Fill Color: stack's fill color is taken in the current palette. |
-| "PLC"      | Palette Line Color: stack's line color is taken in the current palette. |
-| "PMC"      | Palette Marker Color: stack's marker color is taken in the current palette. |
+| "PADS"     | The current pad/canvas is subdivided into a number of pads equal to the number of histograms in the stack
+and each histogram is paint into a separate pad.| | "PFC"      | Palette Fill Color: stack's fill color is taken in the
+current palette. | | "PLC"      | Palette Line Color: stack's line color is taken in the current palette. | | "PMC" |
+Palette Marker Color: stack's marker color is taken in the current palette. |
 
 
 
@@ -693,10 +675,10 @@ to `gStyle->SetOptFit(111)`
 | "E2"     | Error rectangles are drawn.|
 | "E3"     | A filled area is drawn through the end points of the vertical error bars.|
 | "E4"     | A smoothed filled area is drawn through the end points of the vertical error bars.|
-| "E0"     | Draw error bars. Markers are drawn for bins with 0 contents. Combined with E1 or E2 it avoids error bars clipping|
-| "E5"     | Like E3 but ignore the bins with 0 contents.|
-| "E6"     | Like E4 but ignore the bins with 0 contents.|
-| "X0"     | When used with one of the "E" option, it suppress the error bar along X as `gStyle->SetErrorX(0)` would do.|
+| "E0"     | Draw error bars. Markers are drawn for bins with 0 contents. Combined with E1 or E2 it avoids error bars
+clipping| | "E5"     | Like E3 but ignore the bins with 0 contents.| | "E6"     | Like E4 but ignore the bins with 0
+contents.| | "X0"     | When used with one of the "E" option, it suppress the error bar along X as
+`gStyle->SetErrorX(0)` would do.|
 
 Begin_Macro(source)
 {
@@ -835,7 +817,7 @@ the option `SAME`. They allow to plot the histograms next to each other.
 
 
 \anchor HP11
-### The SCATter plot option
+### The SCATter plot option (legacy draw option)
 
 \attention
 Use of option `SCAT` has been deprecated. It was the default drawing option for 2D and
@@ -863,7 +845,7 @@ Begin_Macro(source)
       hscat->Fill(px,5*py);
       hscat->Fill(3+0.5*px,2*py-10.);
    }
-   hscat->Draw("scat=0.5");
+   hscat->Draw("scat=0.5"); // This a legacy draw option. Please consider using TScatter
 }
 End_Macro
 
@@ -959,7 +941,7 @@ Begin_Macro(source)
 End_Macro
 
 When the option `SAME` (or "SAMES") is used with the option `BOX`,
-the boxes' sizes are computing taking the previous plots into account. The range
+the boxes' sizes are computed taking the previous plots into account. The range
 along the Z axis is imposed by the first plot (the one without option
 `SAME`); therefore the order in which the plots are done is relevant.
 
@@ -1134,7 +1116,7 @@ End_Macro
 \since **ROOT version 6.09/01:**
 
 When the option SAME (or "SAMES") is used with the option COL, the boxes' color
-are computing taking the previous plots into account. The range along the Z axis
+are computed taking the previous plots into account. The range along the Z axis
 is imposed by the first plot (the one without option SAME); therefore the order
 in which the plots are done is relevant. Same as [in the `BOX` option](\ref HP13), one can use
 `SAME0` (or `SAMES0`) to opt out of this imposition.
@@ -1894,7 +1876,7 @@ sky maps or exposure maps (earth.C).
 | "PARABOLIC"  | Draw a contour via an Parabolic projection.|
 
 Begin_Macro(source)
-../../../tutorials/graphics/earth.C
+../../../tutorials/visualisation/graphics/earth.C
 End_Macro
 
 
@@ -1911,9 +1893,9 @@ following options:
 | "LEGO"   | Draw a lego plot using the hidden lines removal technique.|
 | "LEGO1"  | Draw a lego plot using the hidden surface removal technique.|
 | "LEGO2"  | Draw a lego plot using colors to show the cell contents.|
-| "LEGO3"  | Draw a lego plot with hidden surface removal, like LEGO1 but the border lines of each lego-bar are not drawn.|
-| "LEGO4"  | Draw a lego plot with hidden surface removal, like LEGO1 but without the shadow effect on each lego-bar.|
-| "0"      | When used with any LEGO option, the empty bins are not drawn.|
+| "LEGO3"  | Draw a lego plot with hidden surface removal, like LEGO1 but the border lines of each lego-bar are not
+drawn.| | "LEGO4"  | Draw a lego plot with hidden surface removal, like LEGO1 but without the shadow effect on each
+lego-bar.| | "0"      | When used with any LEGO option, the empty bins are not drawn.|
 
 
 See the limitations with [the option "SAME"](\ref HP060a).
@@ -2017,8 +1999,8 @@ The height of the mesh is proportional to the cell content.
 | "SURF3"  | Same as `SURF` with an additional filled contour plot on top.|
 | "SURF4"  | Draw a surface using the Gouraud shading technique.|
 | "SURF5"  | Used with one of the options CYL, PSR and CYL this option allows to draw a filled contour plot.|
-| "SURF6"  | This option should not be used directly. It is used internally when the CONT is used with option the option SAME on a 3D plot.|
-| "SURF7"  | Same as `SURF2` with an additional line contour plot on top.|
+| "SURF6"  | This option should not be used directly. It is used internally when the CONT is used with option the option
+SAME on a 3D plot.| | "SURF7"  | Same as `SURF2` with an additional line contour plot on top.|
 
 
 
@@ -2192,10 +2174,10 @@ options allow to draw a lego or a surface in other coordinates systems.
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| "CYL"    | Use Cylindrical coordinates. The X coordinate is mapped on the angle and the Y coordinate on the cylinder length.|
-| "POL"    | Use Polar coordinates. The X coordinate is mapped on the angle and the Y coordinate on the radius.|
-| "SPH"    | Use Spherical coordinates. The X coordinate is mapped on the latitude and the Y coordinate on the longitude.|
-| "PSR"    | Use PseudoRapidity/Phi coordinates. The X coordinate is mapped on Phi.|
+| "CYL"    | Use Cylindrical coordinates. The X coordinate is mapped on the angle and the Y coordinate on the cylinder
+length.| | "POL"    | Use Polar coordinates. The X coordinate is mapped on the angle and the Y coordinate on the
+radius.| | "SPH"    | Use Spherical coordinates. The X coordinate is mapped on the latitude and the Y coordinate on the
+longitude.| | "PSR"    | Use PseudoRapidity/Phi coordinates. The X coordinate is mapped on Phi.|
 
 
 
@@ -2335,7 +2317,7 @@ The following options are supported:
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| "SCAT"   | Draw a scatter plot (deprecated).|
+| "SCAT"   | Draw a scatter plot (legacy draw option).|
 | "COL"    | Draw a color plot. All the bins are painted even the empty bins (default).|
 | "COLZ"   | Same as "COL". In addition the color palette is also drawn.|
 | "0"      | When used with any COL options, the empty bins are not drawn.|
@@ -2522,9 +2504,9 @@ The following value of `ncolors` give access to:
     if ncolors = 51 and colors=0, a Deep Sea palette is used.
     if ncolors = 52 and colors=0, a Grey Scale palette is used.
     if ncolors = 53 and colors=0, a Dark Body Radiator palette is used.
-    if ncolors = 54 and colors=0, a two-color hue palette palette is used.(dark blue through neutral gray to bright yellow)
-    if ncolors = 55 and colors=0, a Rain Bow palette is used.
-    if ncolors = 56 and colors=0, an inverted Dark Body Radiator palette is used.
+    if ncolors = 54 and colors=0, a two-color hue palette palette is used.(dark blue through neutral gray to bright
+yellow) if ncolors = 55 and colors=0, a Rain Bow palette is used. if ncolors = 56 and colors=0, an inverted Dark Body
+Radiator palette is used.
 
 
 If `ncolors > 0 && colors == 0`, the default palette is used with a maximum of ncolors.
@@ -2579,13 +2561,13 @@ End_Macro
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| "SCAT"   | Draw a scatter plot (deprecated).|
-| "ISO"    | Draw a Gouraud shaded 3d iso surface through a 3d histogram. It paints one surface at the value computed as follow: `SumOfWeights/(NbinsX*NbinsY*NbinsZ)`|
-| "BOX"    | Draw a for each cell with volume proportional to the content's absolute value. An hidden line removal algorithm is used|
-| "BOX1"   | Same as BOX but an hidden surface removal algorithm is used|
-| "BOX2"   | Same as "COL". The boxes' colors are picked in the current palette according to the bins' contents (default)|
-| "BOX2Z"  | Same as "BOX2". In addition the color palette is also drawn.|
-| "BOX3"   | Same as BOX1, but the border lines of each lego-bar are not drawn.|
+| "SCAT"   | Draw a scatter plot (legacy draw option).|
+| "ISO"    | Draw a Gouraud shaded 3d iso surface through a 3d histogram. It paints one surface at the value computed as
+follow: `SumOfWeights/(NbinsX*NbinsY*NbinsZ)`| | "BOX"    | Draw a for each cell with volume proportional to the
+content's absolute value. An hidden line removal algorithm is used| | "BOX1"   | Same as BOX but an hidden surface
+removal algorithm is used| | "BOX2"   | Same as "COL". The boxes' colors are picked in the current palette according to
+the bins' contents (default)| | "BOX2Z"  | Same as "BOX2". In addition the color palette is also drawn.| | "BOX3"   |
+Same as BOX1, but the border lines of each lego-bar are not drawn.|
 
 Note that instead of `BOX` one can also use `LEGO`.
 
@@ -2604,7 +2586,7 @@ Begin_Macro(source)
       z = x*x + y*y;
       h3scat->Fill(x,y,z);
    }
-   h3scat->Draw();
+   h3scat->Draw("SCAT"); // This a legacy draw option
 }
 End_Macro
 
@@ -2918,7 +2900,7 @@ The supported option is:
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| "GLCOL"  | H3 is drawn using semi-transparent colored boxes.  See `$ROOTSYS/tutorials/gl/glvox1.C`.|
+| "GLCOL"  | H3 is drawn using semi-transparent colored boxes.  See `$ROOTSYS/tutorials/visualisation/gl/glvox1.C`.|
 
 
 
@@ -2959,7 +2941,7 @@ The supported option is:
 \anchor HP29e
 #### Parametric surfaces
 
-`$ROOTSYS/tutorials/gl/glparametric.C` shows how to create parametric
+`$ROOTSYS/tutorials/visualisation/gl/glparametric.C` shows how to create parametric
 equations and visualize the surface.
 
 \anchor HP29f
@@ -3150,7 +3132,7 @@ void hlprint()
 
 \image html hlsimple.gif "Highlight mode and simple user function"
 
-For more complex demo please see for example `$ROOTSYS/tutorials/tree/temperature.C` file.
+For more complex demo please see for example `$ROOTSYS/tutorials/io/tree/tree200_temperature.C` file.
 
 */
 
@@ -5075,7 +5057,6 @@ void THistPainter::PaintBar(Option_t *)
       } else {
          umin = xmin + bar*(xmax-xmin)/10.;
          umax = xmax - bar*(xmax-xmin)/10.;
-         //box.SetFillColor(hcolor+150); //bright
          box.SetFillColor(TColor::GetColorBright(hcolor)); //bright
          box.PaintBox(xmin,ymin,umin,ymax);
          box.SetFillColor(hcolor);
@@ -6785,7 +6766,7 @@ void THistPainter::PaintFrame()
    if (Hoption.Lego || Hoption.Surf || Hoption.Tri ||
        Hoption.Contour == 14 || Hoption.Error >= 100) {
       TObject *frame = gPad->FindObject("TFrame");
-      if (frame) gPad->GetListOfPrimitives()->Remove(frame);
+      if (frame) gPad->Remove(frame);
       return;
    }
 
@@ -8820,7 +8801,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    }
 
    if (!done) fFunctions->Add(stats);
-   stats->Paint();
+   stats->Paint(stats->GetOption());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9033,7 +9014,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    }
 
    if (!done) fFunctions->Add(stats);
-   stats->Paint();
+   stats->Paint(stats->GetOption());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9247,7 +9228,7 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
    }
 
    if (!done) fFunctions->Add(stats);
-   stats->Paint();
+   stats->Paint(stats->GetOption());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -10301,7 +10282,7 @@ void THistPainter::PaintTitle()
    ptitle->AddText(fH->GetTitle());
    ptitle->SetBit(kCanDelete);
    ptitle->Draw();
-   ptitle->Paint();
+   ptitle->Paint("blNDC");
 
    if(!gPad->IsEditable()) delete ptitle;
 }

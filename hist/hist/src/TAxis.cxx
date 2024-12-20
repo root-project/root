@@ -47,16 +47,13 @@ See examples of various axis representations drawn by class TGaxis.
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TAxis::TAxis(): TNamed(), TAttAxis()
+TAxis::TAxis()
 {
    fNbins   = 1;
    fXmin    = 0;
    fXmax    = 1;
    fFirst   = 0;
    fLast    = 0;
-   fParent  = nullptr;
-   fLabels  = nullptr;
-   fModLabs = nullptr;
    fBits2   = 0;
    fTimeDisplay = false;
 }
@@ -64,24 +61,22 @@ TAxis::TAxis(): TNamed(), TAttAxis()
 ////////////////////////////////////////////////////////////////////////////////
 /// Axis constructor for axis with fix bin size
 
-TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup): TNamed(), TAttAxis()
+TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup)
 {
-   fParent  = nullptr;
-   fLabels  = nullptr;
-   fModLabs = nullptr;
    Set(nbins,xlow,xup);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Axis constructor for variable bin size
 
-TAxis::TAxis(Int_t nbins,const Double_t *xbins): TNamed(), TAttAxis()
+TAxis::TAxis(Int_t nbins,const Double_t *xbins)
 {
-   fParent  = nullptr;
-   fLabels  = nullptr;
-   fModLabs = nullptr;
    Set(nbins,xbins);
 }
+
+TAxis::TAxis(std::vector<double> const &bins):
+  TAxis(bins.size()-1, bins.data())
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
@@ -536,13 +531,14 @@ Double_t TAxis::GetBinUpEdge(Int_t bin) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return bin width
+///
+/// If `bin > fNbins` (overflow bin) or `bin < 1` (underflow bin), the returned bin width is `(fXmax - fXmin) / fNbins`.
 
 Double_t TAxis::GetBinWidth(Int_t bin) const
 {
    if (fNbins <= 0) return 0;
-   if (fXbins.fN <= 0)  return (fXmax - fXmin) / Double_t(fNbins);
-   if (bin >fNbins) bin = fNbins;
-   if (bin <1 ) bin = 1;
+   if (fXbins.fN <= 0 || bin >fNbins || bin <1)
+      return (fXmax - fXmin) / Double_t(fNbins);
    return fXbins.fArray[bin] - fXbins.fArray[bin-1];
 }
 
@@ -1033,6 +1029,7 @@ void TAxis::ChangeLabelByValue(Double_t labValue, Double_t labAngle, Double_t la
 ///
 ///  \param first First bin of the range.
 ///  \param last  Last bin of the range.
+///
 ///  To set a range using the axis coordinates, use TAxis::SetRangeUser.
 ///
 ///  If `first == last == 0` or if `first > last` or if the range specified does
@@ -1044,6 +1041,9 @@ void TAxis::ChangeLabelByValue(Double_t labValue, Double_t labAngle, Double_t la
 ///  If the range specified partially intersects with `[0, fNbins + 1]`, then the
 ///  intersection range is accepted. For instance, if `first == -2` and `last == fNbins`,
 ///  the accepted range will be `[0, fNbins]` (`fFirst = 0` and `fLast = fNbins`).
+///
+///  If `last > fNbins`, the overflow bin is included in the range and will be displayed during drawing.
+///  If `first < 1`, the underflow bin is included in the range and will be displayed during drawing.
 ///
 ///  \note For historical reasons, SetRange(0,0) resets the range even though bin 0 is
 ///       technically reserved for the underflow; in order to set the range of the axis
@@ -1062,9 +1062,7 @@ void TAxis::SetRange(Int_t first, Int_t last)
       fLast = fNbins;
       SetBit(kAxisRange, false);
    } else {
-      if (first<0) Warning("TAxis::SetRange","first < 0, 0 is used");
       fFirst = std::max(first, 0);
-      if (last>nCells) Warning("TAxis::SetRange","last > fNbins+1, fNbins+1 is used");
       fLast = std::min(last, nCells);
       SetBit(kAxisRange, true);
    }
@@ -1073,9 +1071,12 @@ void TAxis::SetRange(Int_t first, Int_t last)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Set the viewing range for the axis from ufirst to ulast (in user coordinates,
+///  Set the viewing range for the axis from `ufirst` to `ulast` (in user coordinates,
 ///  that is, the "natural" axis coordinates).
 ///  To set a range using the axis bin numbers, use TAxis::SetRange.
+///
+///  If `ulast > fXmax`, the overflow bin is included in the range and will be displayed during drawing.
+///  If `ufirst < fXmin`, the underflow bin is included in the range and will be displayed during drawing.
 
 void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
 {
@@ -1089,8 +1090,6 @@ void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
          return;
       }
    }
-   if (ufirst<fXmin) Warning("TAxis::SetRangeUser","ufirst < fXmin, fXmin is used");
-   if (ulast>fXmax) Warning("TAxis::SetRangeUser","ulast > fXmax, fXmax is used");
    Int_t ifirst = FindFixBin(ufirst);
    Int_t ilast = FindFixBin(ulast);
    // fixes for numerical error and for https://savannah.cern.ch/bugs/index.php?99777

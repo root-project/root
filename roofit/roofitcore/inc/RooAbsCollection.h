@@ -130,6 +130,7 @@ public:
   bool addOwned(std::unique_ptr<RooAbsArg> var, bool silent=false);
   virtual RooAbsArg *addClone(const RooAbsArg& var, bool silent=false) ;
   virtual bool replace(const RooAbsArg& var1, const RooAbsArg& var2) ;
+  bool replace(RooAbsArg* var1, std::unique_ptr<RooAbsArg> var2) ;
   virtual bool remove(const RooAbsArg& var, bool silent=false, bool matchByNameOnly=false) ;
   virtual void removeAll() ;
 
@@ -247,29 +248,6 @@ public:
   /// Check if this and other collection have common entries
   bool overlaps(const RooAbsCollection& otherColl) const {
     return overlaps(otherColl._list.begin(), otherColl._list.end());
-  }
-
-  /// TIterator-style iteration over contained elements.
-  /// \note These iterators are slow. Use begin() and end() or
-  /// range-based for loop instead.
-  inline TIterator* createIterator(bool dir = kIterForward) const
-  R__DEPRECATED(6,34, "begin(), end() and range-based for loops.") {
-    // Create and return an iterator over the elements in this collection
-    return new RooLinkedListIter(makeLegacyIterator(dir));
-  }
-
-  /// TIterator-style iteration over contained elements.
-  /// \note This iterator is slow. Use begin() and end() or range-based for loop instead.
-  RooLinkedListIter iterator(bool dir = kIterForward) const
-  R__DEPRECATED(6,34, "begin(), end() and range-based for loops.") {
-    return RooLinkedListIter(makeLegacyIterator(dir));
-  }
-
-  /// One-time forward iterator.
-  /// \note Use begin() and end() or range-based for loop instead.
-  RooFIter fwdIterator() const
-  R__DEPRECATED(6,34, "begin(), end() and range-based for loops.") {
-    return RooFIter(makeLegacyIterator());
   }
 
   const_iterator begin() const {
@@ -430,17 +408,10 @@ protected:
 
 private:
 
-#if ROOT_VERSION_CODE < ROOT_VERSION(6, 34, 00)
-  // TODO: Remove this friend declaration and function in 6.34, where it's not
-  // needed anymore because the deprecated legacy iterators will be removed.
-  friend class RooWorkspace;
-  std::unique_ptr<LegacyIterator_t> makeLegacyIterator (bool forward = true) const;
-#else
-#error "Please remove this unneeded code."
-#endif
+  bool replaceImpl(const RooAbsArg& var1, const RooAbsArg& var2);
 
   using HashAssistedFind = RooFit::Detail::HashAssistedFind;
-  mutable std::unique_ptr<HashAssistedFind> _hashAssistedFind; ///<!
+  mutable HashAssistedFind *_hashAssistedFind = nullptr; ///<!
   std::size_t _sizeThresholdForMapSearch = 100; ///<!
 
   void insert(RooAbsArg*);

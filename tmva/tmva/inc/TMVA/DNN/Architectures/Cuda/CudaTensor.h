@@ -191,14 +191,14 @@ public:
    size_t GetNDim() const {return fNDim;}
    size_t GetSize() const {return fSize;}
 
-   const AFloat * GetDataPointer() const {return fElementBuffer;}
-   AFloat       * GetDataPointer()       {return fElementBuffer;}
-   const AFloat * GetData() const {return fElementBuffer;}
-   AFloat       * GetData()       {return fElementBuffer;}
+   const AFloat * GetDataPointer() const {return fElementBuffer.data();}
+   AFloat       * GetDataPointer()       {return fElementBuffer.data();}
+   const AFloat * GetData() const {return fElementBuffer.data();}
+   AFloat       * GetData()       {return fElementBuffer.data();}
 
    const AFloat * GetDataPointerAt(size_t i ) const {
-      return (const_cast<TCudaDeviceBuffer<AFloat>&>(fElementBuffer)).GetSubBuffer(i * GetFirstStride(), GetFirstStride() ); }
-   AFloat       * GetDataPointerAt(size_t i )       {return fElementBuffer.GetSubBuffer(i * GetFirstStride(), GetFirstStride() ); }
+      return const_cast<TCudaDeviceBuffer<AFloat>&>(fElementBuffer).GetSubBuffer(i * GetFirstStride(), GetFirstStride() ).data(); }
+   AFloat       * GetDataPointerAt(size_t i )       {return fElementBuffer.GetSubBuffer(i * GetFirstStride(), GetFirstStride() ).data(); }
 
 
    const TCudaDeviceBuffer<AFloat> & GetDeviceBuffer()     const {return fElementBuffer;}
@@ -224,9 +224,9 @@ public:
 
       std::unique_ptr<AFloat[]> hostBufferThis(new AFloat[fSize]);
       std::unique_ptr<AFloat[]> hostBufferOther(new AFloat[fSize]);
-      cudaMemcpy(hostBufferThis.get(), fElementBuffer, fSize * sizeof(AFloat),
+      cudaMemcpy(hostBufferThis.get(), fElementBuffer.data(), fSize * sizeof(AFloat),
                  cudaMemcpyDeviceToHost);
-      cudaMemcpy(hostBufferOther.get(), other.GetDeviceBuffer(), fSize * sizeof(AFloat),
+      cudaMemcpy(hostBufferOther.get(), other.GetDeviceBuffer().data(), fSize * sizeof(AFloat),
                  cudaMemcpyDeviceToHost);
 
       for (size_t i = 0; i < fSize; i++) {
@@ -240,7 +240,7 @@ public:
 
 
       std::unique_ptr<AFloat[]> hostBufferThis(new AFloat[fSize]);
-      cudaMemcpy(hostBufferThis.get(), fElementBuffer, fSize * sizeof(AFloat),
+      cudaMemcpy(hostBufferThis.get(), fElementBuffer.data(), fSize * sizeof(AFloat),
                  cudaMemcpyDeviceToHost);
 
       for (size_t i = 0; i < fSize; i++) {
@@ -387,7 +387,7 @@ public:
       size_t offset = (GetLayout() == MemoryLayout::RowMajor) ?
          i * ncols + j  : j * nrows + i;
 
-      AFloat * elementPointer = fElementBuffer + offset;
+      AFloat * elementPointer = fElementBuffer.data() + offset;
       return TCudaDeviceReference<AFloat>(elementPointer);
    }
    // element access ( for debugging)
@@ -401,7 +401,7 @@ public:
             i * fStrides[0] + j * fStrides[1] + k :
             i * fStrides[2] + k * fStrides[1] + j;
 
-      AFloat * elementPointer = fElementBuffer + offset;
+      AFloat * elementPointer = fElementBuffer.data() + offset;
 
       return TCudaDeviceReference<AFloat>(elementPointer);
    }
@@ -416,7 +416,7 @@ public:
             i * fStrides[0] + j * fStrides[1] + k * fStrides[2] + l:
             l * fStrides[3] + k * fStrides[2] + j * fStrides[1] + i;
 
-      AFloat * elementPointer = fElementBuffer + offset;
+      AFloat * elementPointer = fElementBuffer.data() + offset;
 
       return TCudaDeviceReference<AFloat>(elementPointer);
    }

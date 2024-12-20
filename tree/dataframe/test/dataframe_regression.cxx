@@ -10,11 +10,6 @@
 
 #include "gtest/gtest.h"
 
-// Backward compatibility for gtest version < 1.10.0
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
-
 // Fixture for all tests in this file. If parameter is true, run with implicit MT, else run sequentially
 class RDFRegressionTests : public ::testing::TestWithParam<bool> {
 protected:
@@ -277,6 +272,63 @@ TEST_P(RDFRegressionTests, UseAfterDeleteOfSampleCallbacks)
    df.Book<>(MyHelper{}, {});
    // trigger an event loop that will invoke registered sample callbacks (in a well-behaved program, none should run)
    df.Count().GetValue();
+}
+
+// #16475
+struct DatasetGuard {
+   DatasetGuard(std::string_view treeName, std::string_view fileName) : fTreeName(treeName), fFileName(fileName)
+   {
+      TFile f{fFileName.c_str(), "recreate"};
+      TTree t{fTreeName.c_str(), fTreeName.c_str()};
+      int x{};
+      t.Branch("x", &x, "x/I");
+      for (auto i = 0; i < 10; i++) {
+         x = i;
+         t.Fill();
+      }
+      f.Write();
+   }
+   DatasetGuard(const DatasetGuard &) = delete;
+   DatasetGuard &operator=(const DatasetGuard &) = delete;
+   DatasetGuard(DatasetGuard &&) = delete;
+   DatasetGuard &operator=(DatasetGuard &&) = delete;
+   ~DatasetGuard() { std::remove(fFileName.c_str()); }
+   std::string fTreeName;
+   std::string fFileName;
+};
+
+TEST_P(RDFRegressionTests, FileNameQuery)
+{
+   DatasetGuard dataset{"events", "dataframe_regression_filenamequery.root"};
+   constexpr auto fileNameWithQuery{"dataframe_regression_filenamequery.root?myq=xyz"};
+   ROOT::RDataFrame df{dataset.fTreeName, fileNameWithQuery};
+   EXPECT_EQ(df.Count().GetValue(), 10);
+}
+
+TEST_P(RDFRegressionTests, FileNameWildcardQuery)
+{
+   DatasetGuard dataset{"events", "dataframe_regression_filenamewildcardquery.root"};
+   constexpr auto fileNameWithQuery{"dataframe_regress?on_filenamewildcardquery.root?myq=xyz"};
+   ROOT::RDataFrame df{dataset.fTreeName, fileNameWithQuery};
+   EXPECT_EQ(df.Count().GetValue(), 10);
+}
+
+TEST_P(RDFRegressionTests, FileNameQueryNoExt)
+{
+   DatasetGuard dataset{"events", "dataframe_regression_filenamequerynoext"};
+   constexpr auto fileNameWithQuery{"dataframe_regression_filenamequerynoext?myq=xyz"};
+   ROOT::RDataFrame df{dataset.fTreeName, fileNameWithQuery};
+   EXPECT_EQ(df.Count().GetValue(), 10);
+}
+
+TEST_P(RDFRegressionTests, EmptyFileList)
+{
+   try {
+      ROOT::RDataFrame df{"", {}};
+   } catch (const std::invalid_argument &e) {
+      const std::string expected{"RDataFrame: empty list of input files."};
+      EXPECT_EQ(e.what(), expected);
+   }
 }
 
 // run single-thread tests

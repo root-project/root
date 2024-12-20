@@ -61,7 +61,9 @@ class ROOTModule(unittest.TestCase):
 
         v = ROOT.__version__
         self.assertTrue(type(v) == str)
-        self.assertIn("/", v)
+        # Fix for #14068: we take into account the different way of expressing the version
+        # number before and starting with 6.32.00
+        self.assertIn("/", v) if ROOT.gROOT.GetVersionInt() < 63200 else self.assertNotIn("/", v)
         self.assertIn(".", v)
         self.assertEqual(v, ROOT.gROOT.GetVersion())
 

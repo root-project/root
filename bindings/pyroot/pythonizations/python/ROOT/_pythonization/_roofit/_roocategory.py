@@ -11,7 +11,7 @@
 ################################################################################
 
 
-from ._utils import _dict_to_std_map, cpp_signature
+from ._utils import cpp_signature
 
 
 class RooCategory(object):
@@ -28,14 +28,18 @@ class RooCategory(object):
     \endcode
     """
 
+    __cpp_name__ = 'RooCategory'
+
     @cpp_signature("RooCategory(const char* name, const char* title, const std::map<std::string, int>& allowedStates);")
     def __init__(self, *args, **kwargs):
         r"""The RooCategory constructor is pythonized for converting python dict to std::map.
         The instances in the dict must correspond to the template argument in std::map of the constructor.
         """
-        # Redefinition of `RooCategory` constructor for converting python dict to std::map.
-        if len(args) > 2 and isinstance(args[2], dict):
-            args = list(args)
-            args[2] = _dict_to_std_map(args[2], {"std::string": "int"})
+        # Redefinition of `RooCategory` constructor for taking input from a dictionary.
+        if len(args) == 3 and len(kwargs) == 0 and isinstance(args[2], dict):
+            self._init(args[0], args[1])
+            for label, index in args[2].items():
+                self.defineType(label, index)
+            return
 
         self._init(*args, **kwargs)

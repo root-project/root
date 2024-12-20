@@ -41,5 +41,7 @@ if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
   target_link_libraries(rootcling_stage1 util procstat)
 endif()
 
-set_target_properties(rootcling_stage1 PROPERTIES RUNTIME_OUTPUT_DIRECTORY src)
+if(NOT (WIN32 AND CMAKE_GENERATOR MATCHES Ninja))
+  set_target_properties(rootcling_stage1 PROPERTIES RUNTIME_OUTPUT_DIRECTORY src)
+endif()
 add_dependencies(rootcling_stage1 ClingUtils)

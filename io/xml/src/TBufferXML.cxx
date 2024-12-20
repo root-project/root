@@ -2165,7 +2165,7 @@ R__ALWAYS_INLINE void TBufferXML::XmlWriteFastArray(const T *arr, Long64_t n)
    if (n < 0 || n > maxElements)
    {
       Fatal("XmlWriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", n, maxElements);
-      return; // In case the user re-routes the error handler to not die when Fatal is called)
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
    BeforeIOoperation();
    if (n <= 0)

@@ -59,7 +59,7 @@ MnUserCovariance MnCovarianceSqueeze::operator()(const MnUserCovariance &cov, un
       return result;
    }
 
-   return MnUserCovariance(std::vector<double>(squeezed.Data(), squeezed.Data() + squeezed.size()), squeezed.Nrow());
+   return MnUserCovariance({squeezed.Data(), squeezed.size()}, squeezed.Nrow());
 }
 
 MinimumError MnCovarianceSqueeze::operator()(const MinimumError &err, unsigned int n) const

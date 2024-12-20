@@ -7,7 +7,7 @@
  *                                                                    *
  **********************************************************************/
 
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link off all globals;
 #pragma link off all classes;
@@ -38,7 +38,6 @@
 #pragma link C++ class ROOT::Minuit2::MnUserParameterState;
 #pragma link C++ class ROOT::Minuit2::MnUserParameters;
 #pragma link C++ class ROOT::Minuit2::MnStrategy;
-#pragma link C++ class ROOT::Minuit2::FunctionMinimizer;
 #pragma link C++ class ROOT::Minuit2::ModularFunctionMinimizer;
 #pragma link C++ class ROOT::Minuit2::VariableMetricMinimizer;
 #pragma link C++ class ROOT::Minuit2::SimplexMinimizer;

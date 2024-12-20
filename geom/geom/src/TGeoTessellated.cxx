@@ -304,7 +304,7 @@ bool TGeoTessellated::FacetCheck(int ifacet) const
    double surfaceArea = 0.;
    for (int i = 1; i < nvert - 1; ++i) {
       Vertex_t e1 = fVertices[facet[i]] - fVertices[facet[0]];
-      Vertex_t e2 = GetVertex(i + 1) - GetVertex(0);
+      Vertex_t e2 = fVertices[facet[i + 1]] - fVertices[facet[0]];
       surfaceArea += 0.5 * Vertex_t::Cross(e1, e2).Mag();
    }
    if (surfaceArea < kTolerance) {

@@ -37,7 +37,7 @@ pad2.GetFrame().SetBorderMode(-1)
 pad2.GetFrame().SetBorderSize(5)
 h1f = ROOT.TH1F("h1f","Test random numbers",200,0,10)
 h1f.SetFillColor(45)
-h1f.FillRandom("sqroot",10000)
+h1f.FillRandom(sqroot,10000)
 h1f.Draw()
 c1.Update()
 

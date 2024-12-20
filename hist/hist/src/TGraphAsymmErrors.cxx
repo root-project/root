@@ -69,9 +69,7 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphAsymmErrors default constructor.
 
-TGraphAsymmErrors::TGraphAsymmErrors(): TGraph()
-{
-}
+TGraphAsymmErrors::TGraphAsymmErrors() {}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -187,7 +185,6 @@ TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t 
 /// in vx and vy.
 
 TGraphAsymmErrors::TGraphAsymmErrors(const TVectorF  &vx, const TVectorF  &vy, const TVectorF  &vexl, const TVectorF  &vexh, const TVectorF  &veyl, const TVectorF  &veyh)
-                  :TGraph()
 {
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!TGraph::CtorAllocate()) return;
@@ -217,7 +214,6 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TVectorF  &vx, const TVectorF  &vy, c
 /// in vx and vy.
 
 TGraphAsymmErrors::TGraphAsymmErrors(const TVectorD &vx, const TVectorD &vy, const TVectorD &vexl, const TVectorD &vexh, const TVectorD &veyl, const TVectorD &veyh)
-                  :TGraph()
 {
    fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
    if (!TGraph::CtorAllocate()) return;
@@ -252,7 +248,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *h)
       fEXlow[i]  = h->GetBinWidth(i+1)*gStyle->GetErrorX();
       fEXhigh[i] = fEXlow[i];
       fEYlow[i]  = h->GetBinErrorLow(i+1);
-      fEYhigh[i] = h->GetBinErrorUp(i+1);;
+      fEYhigh[i] = h->GetBinErrorUp(i+1);
    }
 }
 
@@ -447,6 +443,15 @@ TGraphAsymmErrors::~TGraphAsymmErrors()
 
 Double_t** TGraphAsymmErrors::Allocate(Int_t size) {
    return AllocateArrays(6, size);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add a point with asymmetric errorbars to the graph.
+
+void TGraphAsymmErrors::AddPointError(Double_t x, Double_t y, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh)
+{
+   AddPoint(x, y);
+   SetPointError(fNpoints - 1, exl, exh, eyl, eyh);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

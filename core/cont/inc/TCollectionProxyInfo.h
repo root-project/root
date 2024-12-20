@@ -143,13 +143,8 @@ namespace Detail {
                *end_arena = nullptr;
                return;
             }
-            *begin_arena = &(*c->begin());
-#ifdef R__VISUAL_CPLUSPLUS
-            *end_arena = &(*(c->end()-1)) + 1; // On windows we can not dererence the end iterator at all.
-#else
-            // coverity[past_the_end] Safe on other platforms
-            *end_arena = &(*c->end());
-#endif
+            *begin_arena = c->data();
+            *end_arena = c->data() + c->size(); // We can not dereference the end iterator at all.
          }
          static void* copy(void *dest, const void *source) {
             *(void**)dest = *(void**)(const_cast<void*>(source));
@@ -837,8 +832,10 @@ namespace Detail {
             if (iter->first.fIndex != c->size()) {
                iter->second = c->test(iter->first.fIndex);
                ++(iter->first.fIndex);
+               return &(iter->second);
+            } else {
+               return nullptr;
             }
-            return &(iter->second);
          }
          static void destruct1(void *iter_ptr) {
             iterator *start = (iterator *)(iter_ptr);

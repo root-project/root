@@ -38,6 +38,8 @@ public:
 
    TGraphPolargram *GetPolargram() {return fPolargram;}
 
+   TGraphPolargram *CreatePolargram(const char *opt);
+
    void             Draw(Option_t* options = "") override;
    Bool_t           GetOptionAxis() {return fOptionAxis;}
    void             SetMaxRadial(Double_t maximum = 1); //*MENU*

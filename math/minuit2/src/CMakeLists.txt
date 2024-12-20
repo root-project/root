@@ -33,7 +33,6 @@ set(MINUIT2_HEADERS
     FumiliStandardChi2FCN.h
     FumiliStandardMaximumLikelihoodFCN.h
     FunctionGradient.h
-    FunctionMinimizer.h
     FunctionMinimum.h
     GenericFunction.h
     GradientCalculator.h

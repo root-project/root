@@ -131,7 +131,19 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Adds the column defined up to the node
-   void AddDefinedColumns(const std::vector<std::string> &columns) { fDefinedColumns = columns; }
+   void AddDefinedColumns(const std::vector<std::string_view> &columns)
+   {
+      // TODO: Converting the string_views for backward compatibility.
+      // Since they are names of defined columns, they were added to the
+      // register of column names of the RLoopManager object by the
+      // RColumnRegister, so we could also change fDefinedColumns to only
+      // store string_views
+      fDefinedColumns.clear();
+      fDefinedColumns.reserve(columns.size());
+      for (const auto &col : columns) {
+         fDefinedColumns.push_back(std::string(col));
+      };
+   }
 
    std::string GetColor() const { return fColor; }
    unsigned int GetID() const { return fID; }

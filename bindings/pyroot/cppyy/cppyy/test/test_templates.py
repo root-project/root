@@ -1276,6 +1276,36 @@ class TestTEMPLATED_TYPEDEFS:
         assert cppyy.gbl.FailedTypeDeducer.B['double']().result() == 5.
         assert cppyy.gbl.FailedTypeDeducer.B[int]().result()      == 5
 
+    def test06_type_deduction_and_scoping(self):
+        """Possible shadowing of types used in template construction"""
+
+        import cppyy
+
+        cppyy.cppdef(r"""
+        namespace ShadowX {
+          class ShadowC {};
+        }
+
+        namespace ShadowY {
+          namespace ShadowZ {
+            template <typename T> void f() {}
+          }
+
+          namespace ShadowX {
+            class ShadowD {};
+          }
+        }""")
+
+        ns = cppyy.gbl.ShadowY.ShadowZ
+        C = cppyy.gbl.ShadowX.ShadowC
+
+      # lookup of shadowed class will fail
+        raises(TypeError, ns.f.__getitem__(C.__cpp_name__))
+
+      # direct instantiation now succeeds
+        ns.f[C]()
+        ns.f['::'+C.__cpp_name__]()
+
 
 class TestTEMPLATE_TYPE_REDUCTION:
     def setup_class(cls):

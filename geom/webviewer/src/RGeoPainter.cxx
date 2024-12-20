@@ -13,6 +13,7 @@
 #include "TGeoVolume.h"
 #include "TGeoManager.h"
 #include "TVirtualPad.h"
+#include "TGeoTrack.h"
 
 using namespace ROOT;
 
@@ -23,6 +24,41 @@ RGeoPainter::RGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
 }
 
 RGeoPainter::~RGeoPainter() {}
+
+TVirtualGeoTrack *RGeoPainter::AddTrack(Int_t id, Int_t pdgcode, TObject *particle)
+{
+   return (TVirtualGeoTrack *)(new TGeoTrack(id, pdgcode, nullptr, particle));
+}
+
+void RGeoPainter::AddTrackPoint(Double_t *point, Double_t *box, Bool_t reset)
+{
+   static Int_t npoints = 0;
+   static Double_t xmin[3] = {0, 0, 0};
+   static Double_t xmax[3] = {0, 0, 0};
+   Int_t i;
+   if (reset) {
+      memset(box, 0, 6 * sizeof(Double_t));
+      memset(xmin, 0, 3 * sizeof(Double_t));
+      memset(xmax, 0, 3 * sizeof(Double_t));
+      npoints = 0;
+      return;
+   }
+   if (npoints == 0) {
+      for (i = 0; i < 3; i++)
+         xmin[i] = xmax[i] = 0;
+      npoints++;
+   }
+   npoints++;
+   Double_t ninv = 1. / Double_t(npoints);
+   for (i = 0; i < 3; i++) {
+      box[i] += ninv * (point[i] - box[i]);
+      if (point[i] < xmin[i])
+         xmin[i] = point[i];
+      if (point[i] > xmax[i])
+         xmax[i] = point[i];
+      box[i + 3] = 0.5 * (xmax[i] - xmin[i]);
+   }
+}
 
 void RGeoPainter::SetTopVisible(Bool_t on)
 {

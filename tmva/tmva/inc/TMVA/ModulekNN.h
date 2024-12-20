@@ -160,7 +160,7 @@ namespace TMVA {
          EventVec fEvent; // vector of all events used to build tree and analysis
          VarMap   fVar;   // sorted map of variables in each dimension for all event types
 
-         mutable MsgLogger* fLogger;   // message logger
+         mutable MsgLogger* fLogger;   //! message logger
          MsgLogger& Log() const { return *fLogger; }
       };
 

@@ -65,6 +65,17 @@ namespace RDF {
 class RDisplay {
    template<typename T>
    friend class ROOT::Internal::RDF::DisplayHelper;
+
+public:
+   enum class EPrintFormat {
+      kMarkdown,
+      kHtml
+   };
+
+   struct RPrintOptions {
+      EPrintFormat fFormat;
+   };
+
 private:
    using VecStr_t = std::vector<std::string>;
    using DElement_t = ROOT::Internal::RDF::RDisplayElement;
@@ -289,6 +300,10 @@ private:
 
    void EnsureCurrentColumnWidth(size_t w);
 
+   std::string AsStringInternal(bool considerDots, const RPrintOptions &options = {EPrintFormat::kMarkdown}) const;
+   std::string AsStringMarkdown(bool considerDots) const;
+   std::string AsStringHtml() const;
+
 public:
    ////////////////////////////////////////////////////////////////////////////
    /// Creates an RDisplay to print the event values
@@ -302,11 +317,11 @@ public:
    ///
    /// Collections are shortened to the first and last element. The overall width
    /// is shortened to a fixed number of columns that should fit the screen width.
-   void Print() const;
+   void Print(const RPrintOptions &options = {EPrintFormat::kMarkdown}) const;
 
    ////////////////////////////////////////////////////////////////////////////
    /// Returns the representation as a string
-   std::string AsString() const;
+   std::string AsString(const RPrintOptions &options = {EPrintFormat::kMarkdown}) const;
 };
 
 } // namespace RDF

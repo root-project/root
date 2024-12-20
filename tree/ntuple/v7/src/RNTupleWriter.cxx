@@ -25,6 +25,7 @@
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 
+#include <TFile.h>
 #include <TROOT.h>
 
 #include <utility>
@@ -47,8 +48,7 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::Experimen
 ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
 {
    try {
-      CommitCluster(true /* commitClusterGroup */);
-      fFillContext.fSink->CommitDataset();
+      CommitDataset();
    } catch (const RException &err) {
       R__LOG_ERROR(NTupleLog()) << "failure committing ntuple: " << err.GetError().GetReport();
    }
@@ -58,6 +58,9 @@ std::unique_ptr<ROOT::Experimental::RNTupleWriter>
 ROOT::Experimental::RNTupleWriter::Create(std::unique_ptr<RNTupleModel> model,
                                           std::unique_ptr<Internal::RPageSink> sink, const RNTupleWriteOptions &options)
 {
+   if (model->GetRegisteredSubfields().size() > 0) {
+      throw RException(R__FAIL("cannot create an RNTupleWriter from a model with registered subfields"));
+   }
    if (options.GetUseBufferedWrite()) {
       sink = std::make_unique<Internal::RPageSinkBuf>(std::move(sink));
    }
@@ -89,10 +92,20 @@ ROOT::Experimental::RNTupleWriter::Recreate(std::initializer_list<std::pair<std:
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
-ROOT::Experimental::RNTupleWriter::Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName, TFile &file,
-                                          const RNTupleWriteOptions &options)
+ROOT::Experimental::RNTupleWriter::Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
+                                          TDirectory &fileOrDirectory, const RNTupleWriteOptions &options)
 {
-   auto sink = std::make_unique<Internal::RPageSinkFile>(ntupleName, file, options);
+   auto file = fileOrDirectory.GetFile();
+   if (!file) {
+      throw RException(R__FAIL("RNTupleWriter only supports writing to a ROOT file. Cannot write into a directory "
+                               "that is not backed by a file"));
+   }
+   if (!file->IsBinary()) {
+      throw RException(R__FAIL("RNTupleWriter only supports writing to a ROOT file. Cannot write into " +
+                               std::string(file->GetName())));
+   }
+
+   auto sink = std::make_unique<Internal::RPageSinkFile>(ntupleName, fileOrDirectory, options);
    return Create(std::move(model), std::move(sink), options);
 }
 
@@ -102,6 +115,24 @@ void ROOT::Experimental::RNTupleWriter::CommitClusterGroup()
       return;
    fFillContext.fSink->CommitClusterGroup();
    fLastCommittedClusterGroup = GetNEntries();
+}
+
+ROOT::Experimental::RNTupleModel &ROOT::Experimental::RNTupleWriter::GetUpdatableModel()
+{
+   if (fFillContext.fModel->IsExpired()) {
+      throw RException(R__FAIL("invalid attempt to update expired model"));
+   }
+   return *fFillContext.fModel;
+}
+
+void ROOT::Experimental::RNTupleWriter::CommitDataset()
+{
+   if (fFillContext.GetModel().IsExpired())
+      return;
+
+   CommitCluster(true /* commitClusterGroup */);
+   fFillContext.fSink->CommitDataset();
+   fFillContext.fModel->Expire();
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>

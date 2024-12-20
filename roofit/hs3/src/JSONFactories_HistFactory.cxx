@@ -360,9 +360,6 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
                                                                             overall_high);
          v.setAllInterpCodes(4); // default HistFactory interpCode
          normElems.add(v);
-      } else {
-         RooConstVar interp(interpName.c_str(), "", 1.);
-         ws.import(interp);
       }
       if (!histNps.empty()) {
          auto &v = tool.wsEmplace<PiecewiseInterpolation>("histoSys_" + prefixedName, hf, histoLo, histoHi, histNps);
@@ -671,14 +668,24 @@ void addNormFactor(RooRealVar const *par, Sample &sample, RooWorkspace *ws)
       sample.normfactors.emplace_back(*par);
 }
 
+namespace {
+
+bool verbose = false;
+
+}
+
 bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname, const RooRealSumPdf *sumpdf,
                           JSONNode &elem)
 {
    RooWorkspace *ws = tool->workspace();
    RooArgSet customModifiers;
 
-   if (!sumpdf)
+   if (!sumpdf) {
+      if (verbose) {
+         std::cout << pdfname << " is not a sumpdf" << std::endl;
+      }
       return false;
+   }
 
    std::string channelName = pdfname;
    erasePrefix(channelName, "model_");
@@ -686,6 +693,9 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
 
    for (RooAbsArg *sample : sumpdf->funcList()) {
       if (!dynamic_cast<RooProduct *>(sample) && !dynamic_cast<RooRealSumPdf *>(sample)) {
+         if (verbose)
+            std::cout << "sample " << sample->GetName() << " is no RooProduct or RooRealSumPdf in " << pdfname
+                      << std::endl;
          return false;
       }
    }
@@ -700,7 +710,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
 
    for (size_t sampleidx = 0; sampleidx < sumpdf->funcList().size(); ++sampleidx) {
       PiecewiseInterpolation *pip = nullptr;
-      RooStats::HistFactory::FlexibleInterpVar *fip = nullptr;
+      std::vector<RooStats::HistFactory::FlexibleInterpVar *> fips;
       std::vector<ParamHistFunc *> phfs;
 
       const auto func = sumpdf->funcList().at(sampleidx);
@@ -743,7 +753,10 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             updateObservables(hf->dataHist());
          } else if (auto phf = dynamic_cast<ParamHistFunc *>(e)) {
             phfs.push_back(phf);
-         } else if (!fip && (fip = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(e))) {
+         } else if (auto fip = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(e)) {
+            // some (modified) histfactory models have several instances of FlexibleInterpVar
+            // we collect and merge them here
+            fips.push_back(fip);
          } else if (!pip && (pip = dynamic_cast<PiecewiseInterpolation *>(e))) {
          } else if (auto real = dynamic_cast<RooAbsReal *>(e)) {
             sample.otherElements.push_back(real);
@@ -761,15 +774,19 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       sortByName(sample.normfactors);
 
       // sort and configure the normsys
-      if (fip) {
+      for (auto *fip : fips) {
          for (size_t i = 0; i < fip->variables().size(); ++i) {
             RooAbsArg *var = fip->variables().at(i);
             std::string sysname(var->GetName());
             erasePrefix(sysname, "alpha_");
-            sample.normsys.emplace_back(sysname, var, fip->high()[i], fip->low()[i], findConstraint(var)->IsA());
+            const auto *constraint = findConstraint(var);
+            if (!constraint)
+               RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(var->GetName()));
+            sample.normsys.emplace_back(sysname, var, fip->high()[i], fip->low()[i],
+                                        constraint ? constraint->IsA() : nullptr);
          }
-         sortByName(sample.normsys);
       }
+      sortByName(sample.normsys);
 
       // sort and configure the histosys
       if (pip) {
@@ -779,7 +796,10 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             erasePrefix(sysname, "alpha_");
             if (auto lo = dynamic_cast<RooHistFunc *>(pip->lowList().at(i))) {
                if (auto hi = dynamic_cast<RooHistFunc *>(pip->highList().at(i))) {
-                  sample.histosys.emplace_back(sysname, var, lo, hi, findConstraint(var)->IsA());
+                  const auto *constraint = findConstraint(var);
+                  if (!constraint)
+                     RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(var->GetName()));
+                  sample.histosys.emplace_back(sysname, var, lo, hi, constraint ? constraint->IsA() : nullptr);
                }
             }
          }
@@ -1011,8 +1031,17 @@ public:
    {
       RooRealSumPdf *sumpdf = nullptr;
       for (RooAbsArg *v : prodpdf->pdfList()) {
-         sumpdf = dynamic_cast<RooRealSumPdf *>(v);
+         auto thispdf = dynamic_cast<RooRealSumPdf *>(v);
+         if (thispdf) {
+            if (!sumpdf)
+               sumpdf = thispdf;
+            else
+               return false;
+         }
       }
+      if (!sumpdf)
+         return false;
+
       return tryExportHistFactory(tool, prodpdf->GetName(), sumpdf, elem);
    }
    std::string const &key() const override

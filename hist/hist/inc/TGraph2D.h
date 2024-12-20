@@ -91,6 +91,8 @@ public:
    TGraph2D& operator=(const TGraph2D &);
 
    virtual void          AddPoint(Double_t x, Double_t y, Double_t z) { SetPoint(fNpoints, x, y, z); } ///< Append a new point to the graph.
+   virtual void          Add(TF2 *f, Double_t c1=1);
+   virtual void          Apply(TF2 *f);
    void          Browse(TBrowser *) override;
    void          Clear(Option_t *option="") override;
    virtual void          DirectoryAutoAdd(TDirectory *);

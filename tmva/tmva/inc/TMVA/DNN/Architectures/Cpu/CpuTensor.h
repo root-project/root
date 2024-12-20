@@ -138,8 +138,8 @@ public:
 
    /** Return raw pointer to the elements stored contiguously in column-major
     *  order. */
-   AFloat *GetRawDataPointer() { return *(this->GetContainer()); }
-   const AFloat *GetRawDataPointer() const { return *(this->GetContainer()); }
+   AFloat *GetRawDataPointer() { return this->GetContainer()->data(); }
+   const AFloat *GetRawDataPointer() const { return this->GetContainer()->data(); }
 
    // for same API as CudaTensor (device buffer is the CpuBuffer)
    const TCpuBuffer<AFloat> & GetDeviceBuffer()     const {return *(this->GetContainer());}
@@ -242,7 +242,7 @@ public:
       // set all the tensor contents to zero
       void Zero()
       {
-         AFloat *data = *(this->GetContainer());
+         AFloat *data = this->GetContainer()->data();
          for (size_t i = 0; i < this->GetSize(); ++i)
             data[i] = 0;
       }

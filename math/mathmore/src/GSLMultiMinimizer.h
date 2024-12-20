@@ -102,23 +102,11 @@ public:
       if (fVec != 0) gsl_vector_free(fVec);
    }
 
-private:
-   // usually copying is non trivial, so we make this unaccessible
-
-   /**
-      Copy constructor
-   */
-   GSLMultiMinimizer(const GSLMultiMinimizer &) {}
-
-   /**
-      Assignment operator
-   */
-   GSLMultiMinimizer & operator = (const GSLMultiMinimizer & rhs)  {
-      if (this == &rhs) return *this;  // time saving self-test
-      return *this;
-   }
-
-public:
+   // usually copying is non trivial, so we delete this
+   GSLMultiMinimizer(const GSLMultiMinimizer &) = delete;
+   GSLMultiMinimizer & operator = (const GSLMultiMinimizer & rhs) = delete;
+   GSLMultiMinimizer(GSLMultiMinimizer &&) = delete;
+   GSLMultiMinimizer & operator = (GSLMultiMinimizer && rhs) = delete;
 
    /**
       set the function to be minimize the initial minimizer parameters,

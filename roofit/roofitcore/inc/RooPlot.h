@@ -45,10 +45,8 @@ public:
   using Items = std::vector<std::pair<TObject*,std::string>>;
 
   RooPlot() ;
-  RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, double xmin, double xmax, Int_t nBins) ;
   RooPlot(const RooAbsRealLValue &var, double xmin, double xmax, Int_t nBins);
-  RooPlot(double xmin, double xmax);
-  RooPlot(double xmin, double xmax, double ymin, double ymax);
+  RooPlot(double xmin, double xmax, int nBins=100);
   RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2);
   RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
      double xmin, double xmax, double ymin, double ymax);

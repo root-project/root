@@ -29,6 +29,14 @@ using namespace std::string_literals;
 
 using namespace ROOT;
 
+
+/** \class ROOT::RGeomViewer
+\ingroup webwidgets
+
+\brief Web-based %ROOT geometry viewer
+*/
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 

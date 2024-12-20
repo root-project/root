@@ -746,7 +746,34 @@ class TestSTLVECTOR:
         assert mv.itemsize == cppyy.sizeof(cppyy.gbl.ArrayLike.Vector3f)
         assert mv.nbytes   == cppyy.sizeof(cppyy.gbl.ArrayLike.Vector3f) * len(v)
 
-    def test22_copy_conversion(self):
+    def test22_polymorphic(self):
+        """Vector of polymorphic types should auto-cast"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace Polymorphic {
+        class vertex {
+        public:
+          virtual ~vertex() {}
+        };
+
+        class Mvertex : public vertex {};
+
+        class vCont {
+        public:
+          virtual ~vCont() { for (auto& v: verts) delete v; }
+          std::vector<vertex*> verts { new vertex(), new Mvertex() };
+          const std::vector<vertex*>& vertices() { return verts; }
+        }; }""")
+
+        ns = cppyy.gbl.Polymorphic
+        cont = ns.vCont()
+        verts = cont.vertices()
+
+        assert len([x for x in verts if isinstance(x, ns.Mvertex)]) == 1
+
+    def test23_copy_conversion(self):
         """Vector given an array of different type should copy convert"""
 
         import cppyy
@@ -761,6 +788,34 @@ class TestSTLVECTOR:
 
         for f, d in zip(x, v):
             assert f == d
+
+    def test24_byte_vectors(self):
+        """Vectors of "byte" types should return low level views"""
+
+        import cppyy
+        import cppyy.types
+
+        vector = cppyy.gbl.std.vector
+
+        for ctype in ('unsigned char', 'signed char', 'int8_t', 'uint8_t'):
+            vc = vector[ctype](range(10))
+            data = vc.data()
+
+            assert type(data) == cppyy.types.LowLevelView
+            assert len(data) == 10
+
+            for i, d in enumerate(data):
+                assert d == i
+
+        for ctype in ('signed char', 'int8_t'):
+            vc = vector[ctype](range(-5, 5, 1))
+            data = vc.data()
+
+            assert type(data) == cppyy.types.LowLevelView
+            assert len(data) == 10
+
+            for i, d in zip(range(-5, 5, 1), data):
+                assert d == i
 
 
 class TestSTLSTRING:
@@ -1677,9 +1732,9 @@ class TestSTLDEQUE:
         """Return by value of a deque used to crash"""
 
         import cppyy
-        assert cppyy.cppdef("""std::deque<long double> f() {
+        assert cppyy.cppdef("""std::deque<long double> emptyf() {
             std::deque<long double> d; d.push_back(0); return d ; }""")
-        x = cppyy.gbl.f()
+        x = cppyy.gbl.emptyf()
         assert x
         del x
 

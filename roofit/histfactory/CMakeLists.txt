@@ -96,12 +96,7 @@ endif()
 # can't build hist2workspace without xml.
 if(xml)
   ROOT_EXECUTABLE(hist2workspace hist2workspace.cxx LIBRARIES HistFactory)
-
-  #---Createhist2workspaceCommandLineOptions------------------------------------------------------------------
-  generateHeader(hist2workspace
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/hist2workspace-argparse.py
-    ${CMAKE_BINARY_DIR}/ginclude/hist2workspaceCommandLineOptionsHelp.h
-  )
+  target_compile_definitions(HistFactory PUBLIC HISTFACTORY_XML)
 endif()
 
 if(MSVC)

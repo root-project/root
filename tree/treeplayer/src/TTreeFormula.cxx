@@ -52,7 +52,7 @@
 #include <typeinfo>
 #include <algorithm>
 
-const Int_t kMaxLen     = 1024;
+const Int_t kMaxLen     = 2048;
 
 /** \class TTreeFormula
 Used to pass a selection expression to the Tree drawing routine. See TTree::Draw
@@ -280,7 +280,7 @@ void TTreeFormula::Init(const char*name, const char* expression)
       }
    }
 
-   // Create a list of uniques branches to load.
+   // Create a list of unique branches to load.
    for(k=0; k<fNcodes ; k++) {
       TLeaf *leaf = k <= fLeaves.GetLast() ? (TLeaf*)fLeaves.UncheckedAt(k) : nullptr;
       TBranch *branch = nullptr;
@@ -828,8 +828,22 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
          alias = fTree->GetFriendAlias(leaf->GetBranch()->GetTree());
       }
    }
-   if (alias) snprintf(scratch,kMaxLen-1,"%s.%s",alias,leaf->GetName());
-   else if (leaf) strlcpy(scratch,leaf->GetName(),kMaxLen);
+   Int_t leafname_len = 0;
+   if (alias) {
+      leafname_len = strlen(alias) + strlen(leaf->GetName()) + 1;
+      snprintf(scratch,kMaxLen-1,"%s.%s",alias,leaf->GetName()); // does not null-terminate if truncation happens
+   }
+   else if (leaf) {
+      leafname_len = strlen(leaf->GetName());
+      strlcpy(scratch,leaf->GetName(),kMaxLen); // null-terminates if truncation happens
+   }
+   if (leafname_len > kMaxLen - 1) {
+      Error("TTreeFormula",
+            "Length of leafname (%d) exceeds maximum allowed by the buffer (%d), formula will be truncated.",
+             leafname_len, kMaxLen - 1);
+      return -1;
+   }
+
 
    TTree *tleaf = realtree;
    if (leaf) {
@@ -1327,7 +1341,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
 
                   clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leaf,0);
                }
-               TClass * inside_cl = clones->GetClass();
+               TClass * inside_cl = clones ? clones->GetClass() : nullptr;
                cl = inside_cl;
 
             }
@@ -2676,9 +2690,9 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
 ///  - Leaf_name[index].Action().OtherAction(param)
 ///  - Leaf_name[index].Action()[val].OtherAction(param)
 ///
-/// The expected returns values are
+/// The expected returned values are
 /// -  -2 :  the name has been recognized but won't be usable
-/// -  -1 :  the name has not been recognized
+/// -  -1 :  the name has not been recognized, or is too long, or tree does not exist.
 /// -  >=0 :  the name has been recognized, return the internal code for this name.
 
 Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
@@ -2688,7 +2702,10 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
    if (!fTree) return -1;
 
    fNpar = 0;
-   if (name.Length() > kMaxLen) return -1;
+   if (name.Length() > kMaxLen) {
+        Error("TTreeFormula", "The length of the variable name (%d) exceeds the maximum allowed (%d)", name.Length(), kMaxLen);
+        return -1;
+   }
    Int_t i,k;
 
    if (name == "Entry$") {
@@ -3735,8 +3752,13 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
    if (fNeedLoading) {                                                                          \
       fNeedLoading = false;                                                                     \
       TBranch *br = leaf->GetBranch();                                                          \
-      Long64_t tentry = br->GetTree()->GetReadEntry();                                          \
-      R__LoadBranch(br,tentry,fQuickLoad);                                                      \
+      if (br && br->GetTree()) {                                                                \
+         Long64_t tentry = br->GetTree()->GetReadEntry();                                       \
+         R__LoadBranch(br,tentry,fQuickLoad);                                                   \
+      } else {                                                                                  \
+        Error("TTreeFormula::TT_EVAL_INIT",                                                     \
+          "Could not init branch associated to this leaf (%s).", leaf->GetName());              \
+      }                                                                                         \
    }                                                                                            \
                                                                                                 \
    if (fAxis) {                                                                                 \
@@ -3775,12 +3797,22 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
    if (willLoad) {                                                                              \
       TBranch *branch = (TBranch*)fBranches.UncheckedAt(code);                                  \
       if (branch) {                                                                             \
-         Long64_t treeEntry = branch->GetTree()->GetReadEntry();                                \
-         R__LoadBranch(branch,treeEntry,fQuickLoad);                                            \
+         if (branch->GetTree()) {                                                               \
+            Long64_t treeEntry = branch->GetTree()->GetReadEntry();                             \
+            R__LoadBranch(branch,treeEntry,fQuickLoad);                                         \
+         } else {                                                                               \
+            Error("TTreeFormula::TT_EVAL_INIT_LOOP",                                            \
+                  "Could not init branch associated to this leaf (%s).", leaf->GetName());      \
+         }                                                                                      \
       } else if (fDidBooleanOptimization) {                                                     \
          branch = leaf->GetBranch();                                                            \
-         Long64_t treeEntry = branch->GetTree()->GetReadEntry();                                \
-         if (branch->GetReadEntry() != treeEntry) branch->GetEntry( treeEntry );                \
+         if (branch->GetTree()) {                                                               \
+            Long64_t treeEntry = branch->GetTree()->GetReadEntry();                             \
+            if (branch->GetReadEntry() != treeEntry) branch->GetEntry( treeEntry );             \
+         } else {                                                                               \
+            Error("TTreeFormula::TT_EVAL_INIT_LOOP",                                            \
+                  "Could not init branch associated to this leaf (%s).", leaf->GetName());      \
+         }                                                                                      \
       }                                                                                         \
    } else {                                                                                     \
       /* In the cases where we are behind (i.e. right of) a potential boolean optimization      \
@@ -3788,8 +3820,13 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
          result in the branch being potentially not read in. */                                 \
       if (fDidBooleanOptimization) {                                                            \
          TBranch *br = leaf->GetBranch();                                                       \
-         Long64_t treeEntry = br->GetTree()->GetReadEntry();                                    \
-         if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );                        \
+         if (br->GetTree()) {                                                                   \
+            Long64_t treeEntry = br->GetTree()->GetReadEntry();                                 \
+            if (br->GetReadEntry() != treeEntry) br->GetEntry( treeEntry );                     \
+         } else {                                                                               \
+            Error("TTreeFormula::TT_EVAL_INIT_LOOP",                                            \
+                  "Could not init branch associated to this leaf (%s).", leaf->GetName());      \
+         }                                                                                      \
       }                                                                                         \
    }                                                                                            \
    if (real_instance>=fNdata[code]) return 0;
@@ -3935,8 +3972,12 @@ template<> inline LongDouble_t TTreeFormula::GetConstant(Int_t k) {
 }
 template<> inline Long64_t TTreeFormula::GetConstant(Int_t k) { return (Long64_t)GetConstant<LongDouble_t>(k); }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Evaluate this treeformula.
+////////////////////////////////////////////////////////////////////////////
+/// \brief Evaluate this treeformula
+/// \tparam T The type used to interpret the numbers then used for the operations
+/// \param instance iteration instance
+/// \param stringStackArg formula as string
+/// \return the result of the evaluation
 
 template<typename T>
 T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
@@ -4804,7 +4845,7 @@ char *TTreeFormula::PrintValue(Int_t mode) const
 
 char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) const
 {
-   const int kMAXLENGTH = 1024;
+   const int kMAXLENGTH = kMaxLen;
    static char value[kMAXLENGTH];
 
    if (mode == -2) {
@@ -5311,7 +5352,7 @@ void TTreeFormula::ResetDimensions() {
       }
 
       // Add up the cumulative size
-      for (k = fNdimensions[i]; (k > 0); k--) {
+      for (k = fNdimensions[i] - 1; (k > 0); k--) {
          // NOTE: When support for inside variable dimension is added this
          // will become inaccurate (since one of the value in the middle of the chain
          // is unknown until GetNdata is called.
@@ -5362,7 +5403,7 @@ bool TTreeFormula::LoadCurrentDim() {
    for (Int_t i=0;i<fNcodes;i++) {
       if (fCodes[i] < 0) continue;
 
-      // NOTE: Currently only the leafcount can indicates a dimension that
+      // NOTE: Currently only the leafcount can indicate a dimension that
       // is physically variable.  So only the left-most dimension is variable.
       // When an API is introduced to be able to determine a variable inside dimensions
       // one would need to add a way to recalculate the values of fCumulSizes for this
@@ -5373,7 +5414,7 @@ bool TTreeFormula::LoadCurrentDim() {
       // variable (expected for the first one) can NOT be done via negative values of
       // fCumulSizes.
 
-      TLeaf *leaf = (TLeaf*)fLeaves.UncheckedAt(i);
+      TLeaf *leaf = i <= fLeaves.GetLast() ? (TLeaf *)fLeaves.UncheckedAt(i) : nullptr;
       if (!leaf) {
          switch(fLookupType[i]) {
             case kDirect:

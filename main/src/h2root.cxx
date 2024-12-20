@@ -294,7 +294,7 @@ int main(int argc, char **argv)
    if (argc > 2) {
       file_out=argv[2];
    } else {
-      Int_t nchf = strlen(file_in)+strlen(".root")+1;
+      Int_t nchf = strlen(file_in)+std::char_traits<char>::length(".root")+1;
       file_out= new char[nchf];
       strlcpy(file_out,file_in,nchf);
       char *dot = strrchr(file_out,'.');

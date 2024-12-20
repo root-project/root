@@ -47,10 +47,8 @@ See RooAbsData::plotOn().
 There are two storage backends:
 - RooVectorDataStore (default): std::vectors in memory. They are fast, but they
 cannot be serialised if the dataset exceeds a size of 1 Gb
-- RooTreeDataStore: Uses a TTree, which can be file backed if a file is opened
-before creating the dataset. This significantly reduces the memory pressure, as the
-baskets of the tree can be written to a file, and only the basket that's currently
-being read stays in RAM.
+- RooTreeDataStore: Uses a TTree under the hood. Note that the TTree is not
+attached to any currently-opened TFile in order to avoid double-ownership.
   - Enable tree-backed storage similar to this:
   ```
   TFile outputFile("filename.root", "RECREATE");
@@ -121,62 +119,7 @@ using std::endl, std::string, std::map, std::list, std::ifstream, std::ofstream,
 
 ClassImp(RooDataSet);
 
-#ifndef USEMEMPOOLFORDATASET
 void RooDataSet::cleanup() {}
-#else
-
-#include "MemPoolForRooSets.h"
-
-RooDataSet::MemPool* RooDataSet::memPool() {
-  RooSentinel::activate();
-  static auto * memPool = new RooDataSet::MemPool();
-  return memPool;
-}
-
-void RooDataSet::cleanup() {
-  auto pool = memPool();
-  pool->teardown();
-
-  //The pool will have to leak if it's not empty at this point.
-  if (pool->empty())
-    delete pool;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Overloaded new operator guarantees that all RooDataSets allocated with new
-/// have a unique address, a property that is exploited in several places
-/// in roofit to quickly index contents on normalization set pointers.
-/// The memory pool only allocates space for the class itself. The elements
-/// stored in the set are stored outside the pool.
-
-void* RooDataSet::operator new (size_t bytes)
-{
-  //This will fail if a derived class uses this operator
-  assert(sizeof(RooDataSet) == bytes);
-
-  return memPool()->allocate(bytes);
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Memory is owned by pool, we need to do nothing to release it
-
-void RooDataSet::operator delete (void* ptr)
-{
-  // Decrease use count in pool that ptr is on
-  if (memPool()->deallocate(ptr))
-    return;
-
-  std::cerr << __func__ << " " << ptr << " is not in any of the pools." << std::endl;
-
-  // Not part of any pool; use global op delete:
-  ::operator delete(ptr);
-}
-
-#endif
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for persistence
@@ -494,14 +437,14 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
 
     // process StoreError requests
     if (errorSet) {
-      std::unique_ptr<RooArgSet> intErrorSet{static_cast<RooArgSet*>(_vars.selectCommon(*errorSet))};
+      std::unique_ptr<RooArgSet> intErrorSet{_vars.selectCommon(*errorSet)};
       intErrorSet->setAttribAll("StoreError") ;
       for(RooAbsArg* arg : *intErrorSet) {
         arg->attachToStore(*_dstore) ;
       }
     }
     if (asymErrorSet) {
-      std::unique_ptr<RooArgSet> intAsymErrorSet{static_cast<RooArgSet*>(_vars.selectCommon(*asymErrorSet))};
+      std::unique_ptr<RooArgSet> intAsymErrorSet{_vars.selectCommon(*asymErrorSet)};
       intAsymErrorSet->setAttribAll("StoreAsymError") ;
       for(RooAbsArg* arg : *intAsymErrorSet) {
         arg->attachToStore(*_dstore) ;
@@ -553,7 +496,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
          if (!impTree) {
             std::stringstream ss;
             ss << "RooDataSet::ctor(" << GetName() << ") ERROR file '" << fname
-               << "' does not contain a TTree named '" << tname << "'";;
+               << "' does not contain a TTree named '" << tname << "'";
             const std::string errMsg = ss.str();
             coutE(InputArguments) << errMsg << std::endl;
             throw std::invalid_argument(errMsg);
@@ -574,19 +517,6 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
       }
    }
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor of an empty data set from a RooArgSet defining the dimensions
-/// of the data space.
-/// \deprecated Use the more explicit `RooDataSet(name, title, vars, RooFit::WeightVar(wgtVarName))`.
-
-RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName)
-  : RooDataSet(name,title,vars, RooFit::WeightVar(wgtVarName))
-{
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of a data set from (part of) an existing data
@@ -663,73 +593,6 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset
              const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName)
   : RooDataSet{name, title, dset, vars, cutVar.expression(), wgtVarName} {}
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor of a data set from (part of) an ROOT TTree. The dimensions
-/// of the data set are defined by the 'vars' RooArgSet. For each dimension
-/// specified, the TTree must have a branch with the same name. For category
-/// branches, this branch should contain the numeric index value. Real dimensions
-/// can be constructed from either 'double' or 'Float_t' tree branches. In the
-/// latter case, an automatic conversion is applied.
-///
-/// The 'cutVar' formula variable
-/// is used to select the subset of data points to be copied.
-/// For subsets without selection on the data points, or involving cuts
-/// operating exclusively and directly on the data set dimensions, the equivalent
-/// constructor with a string based cut expression is recommended.
-
-RooDataSet::RooDataSet(RooStringView name, RooStringView title, TTree *theTree,
-    const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName)
-  : RooDataSet{name, title, theTree, vars, cutVar.expression(), wgtVarName} {}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor of a data set from (part of) a ROOT TTree.
-///
-/// \param[in] name Name of this dataset.
-/// \param[in] title Title for e.g. plotting.
-/// \param[in] theTree Tree to be imported.
-/// \param[in] vars Defines the columns of the data set. For each dimension
-/// specified, the TTree must have a branch with the same name. For category
-/// branches, this branch should contain the numeric index value. Real dimensions
-/// can be constructed from either 'double' or 'Float_t' tree branches. In the
-/// latter case, an automatic conversion is applied.
-/// \param[in] cuts Optional RooFormula expression to select the subset of the data points
-/// to be imported. The cut expression can refer to any variable in `vars`.
-/// \warning The expression only evaluates variables that are also in `vars`.
-/// Passing e.g.
-/// ```
-/// RooDataSet("data", "data", tree, RooArgSet(x), "x>y")
-/// ```
-/// Will load `x` from the tree, but leave `y` at an undefined value.
-/// If other expressions are needed, such as intermediate formula objects, use
-/// RooDataSet::RooDataSet(const char*,const char*,TTree*,const RooArgSet&,const RooFormulaVar&,const char*)
-/// \param[in] wgtVarName Name of the variable in `vars` that represents an event weight.
-RooDataSet::RooDataSet(RooStringView name, RooStringView title, TTree* theTree,
-    const RooArgSet& vars, const char* cuts, const char* wgtVarName) :
-  RooAbsData(name,title,vars)
-{
-  // Create tree version of datastore
-  auto tstore = std::make_unique<RooTreeDataStore>(name,title,_vars,*theTree,cuts,wgtVarName);
-
-  // Convert to vector datastore if needed
-  if (defaultStorageType==Tree) {
-    _dstore = std::move(tstore);
-  } else if (defaultStorageType==Vector) {
-    _dstore = std::make_unique<RooVectorDataStore>(name,title,_vars,wgtVarName);
-    static_cast<RooVectorDataStore&>(*_dstore).append(*tstore) ;
-  }
-
-  appendToDir(this,true) ;
-
-  initialize(wgtVarName) ;
-  TRACE_CREATE;
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
@@ -774,8 +637,8 @@ RooFit::OwningPtr<RooAbsData> RooDataSet::emptyClone(const char* newName, const 
    RooArgSet asymErrorSet;
 
    for(RooAbsArg *var : vars2) {
-      if(var->getAttribute("StoreError")) errorSet.add(*var);;
-      if(var->getAttribute("StoreAsymError")) asymErrorSet.add(*var);;
+      if(var->getAttribute("StoreError")) errorSet.add(*var);
+      if(var->getAttribute("StoreAsymError")) asymErrorSet.add(*var);
    }
 
    using namespace RooFit;
@@ -817,7 +680,7 @@ void RooDataSet::initialize(const char* wgtVarName)
 /// Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
 
 std::unique_ptr<RooAbsData> RooDataSet::reduceEng(const RooArgSet &varSubset, const RooFormulaVar *cutVar,
-                                                  const char *cutRange, std::size_t nStart, std::size_t nStop)
+                                                  const char *cutRange, std::size_t nStart, std::size_t nStop) const
 {
    checkInit();
    RooArgSet tmp(varSubset);

@@ -24,6 +24,7 @@
 #include "TNamed.h"
 #include "TAttAxis.h"
 #include "TArrayD.h"
+#include <vector>
 
 class THashList;
 class TAxisModLab;
@@ -40,9 +41,9 @@ private:
    UShort_t     fBits2;         ///<  Second bit status word
    Bool_t       fTimeDisplay;   ///<  On/off displaying time values instead of numerics
    TString      fTimeFormat;    ///<  Date&time format, ex: 09/12/99 12:34:00
-   TObject     *fParent;        ///<! Object owning this axis
-   THashList   *fLabels;        ///<  List of labels
-   TList       *fModLabs;       ///<  List of modified labels
+   TObject     *fParent = nullptr;  ///<! Object owning this axis
+   THashList   *fLabels = nullptr;  ///<  List of labels
+   TList       *fModLabs = nullptr; ///<  List of modified labels
 
    /// TAxis extra status bits (stored in fBits2)
    enum {
@@ -79,6 +80,7 @@ public:
    TAxis();
    TAxis(Int_t nbins, Double_t xmin, Double_t xmax);
    TAxis(Int_t nbins, const Double_t *xbins);
+   TAxis(std::vector<double> const &bins);
    TAxis(const TAxis &axis);
    ~TAxis() override;
    TAxis& operator=(const TAxis&);

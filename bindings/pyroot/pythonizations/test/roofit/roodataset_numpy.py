@@ -47,7 +47,7 @@ class TestRooDataSetNumpy(unittest.TestCase):
         # Create a data set with a derived weight
         wFunc = ROOT.RooFormulaVar("w", "event weight", "(x*x+10)", [x])
         w = data.addColumn(wFunc)
-        wdata = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data, data.get(), "", w.GetName())
+        wdata = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data.get(), Import=data, WeightVar=w.GetName())
 
         self.assertEqual(set(wdata.to_numpy().keys()), {"x", "cat", "w"})
 
@@ -96,7 +96,7 @@ class TestRooDataSetNumpy(unittest.TestCase):
         w = data.addColumn(wFunc)
 
         # Instruct dataset wdata to use w as event weight and not observable
-        wdata = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data, data.get(), "", w.GetName())
+        wdata = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data.get(), Import=data, WeightVar=w.GetName())
 
         np_data = wdata.to_numpy()
 
@@ -136,7 +136,7 @@ class TestRooDataSetNumpy(unittest.TestCase):
         cat.defineType("plus", +1)
 
         # Use manual loop because we had some problems with numpys boolean
-        # comparisions in the past (see GitHub issue #12162).
+        # comparisons in the past (see GitHub issue #12162).
         n_in_range = 0
         for i in range(n_events):
             in_x_range = data["x"][i] <= x.getMax() and data["x"][i] >= x.getMin()
@@ -150,7 +150,7 @@ class TestRooDataSetNumpy(unittest.TestCase):
         self.assertEqual(dataset_numpy.numEntries(), n_in_range)
 
     def test_non_contiguous_arrays(self):
-        """Test whether the import also works with non-continguous arrays.
+        """Test whether the import also works with non-contiguous arrays.
         Covers GitHub issue #13605.
         """
 

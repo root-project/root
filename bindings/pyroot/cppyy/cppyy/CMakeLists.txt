@@ -24,8 +24,8 @@ file(COPY ${cppyyPySrcDir} DESTINATION ${localruntimedir})
 
 # Compile .py files
 foreach(py_source ${py_sources})
-  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source})")
-  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source})")
+  install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source})")
+  install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source})")
 endforeach()
 
 # Install Python sources and bytecode

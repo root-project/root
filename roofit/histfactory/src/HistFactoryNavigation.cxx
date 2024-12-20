@@ -230,7 +230,7 @@ namespace RooStats {
       for( std::map< std::string, RooAbsReal*>::iterator itr = SampleFunctionMap.begin();
       itr != SampleFunctionMap.end(); ++itr) {
    std::string sample_name = itr->first;
-   label_print_width = TMath::Max(label_print_width, (int)sample_name.size()+2);
+   label_print_width = std::max(label_print_width, (int)sample_name.size()+2);
       }
       */
 
@@ -253,7 +253,7 @@ namespace RooStats {
 
       // Make the line break as a set of "===============" ...
       std::string line_break;
-      int high_bin = _maxBinToPrint==-1 ? num_bins : TMath::Min(_maxBinToPrint, (int)num_bins);
+      int high_bin = _maxBinToPrint==-1 ? num_bins : std::min(_maxBinToPrint, (int)num_bins);
       int low_bin = _minBinToPrint==-1 ? 1 : _minBinToPrint;
       int break_length = (high_bin - low_bin + 1) * _bin_print_width;
       break_length += _label_print_width;
@@ -291,10 +291,10 @@ namespace RooStats {
       for( std::map< std::string, RooAbsReal*>::iterator itr = SampleFunctionMap.begin();
       itr != SampleFunctionMap.end(); ++itr) {
    std::string sample_name = itr->first;
-   _label_print_width = TMath::Max(_label_print_width, (int)sample_name.size()+2);
+   _label_print_width = std::max(_label_print_width, (int)sample_name.size()+2);
       }
 
-      _label_print_width = TMath::Max( _label_print_width, (int)channel.size() + 7);
+      _label_print_width = std::max( _label_print_width, (int)channel.size() + 7);
     }
 
 
@@ -595,7 +595,7 @@ namespace RooStats {
       std::vector<std::string> sample_list;
 
       std::map< std::string, RooAbsReal*> sample_map = fChannelSampleFunctionMap[channel];
-      std::map< std::string, RooAbsReal*>::iterator itr = sample_map.begin();;
+      std::map< std::string, RooAbsReal*>::iterator itr = sample_map.begin();
       for( ; itr != sample_map.end(); ++itr) {
    sample_list.push_back( itr->first );
       }
@@ -964,7 +964,7 @@ namespace RooStats {
    // For gamma_stat_*, the sigma is named *_sigma
    std::string sigmaName;
    if( parameter.find("alpha_")!=std::string::npos ) {
-     sigmaName = "1";;
+     sigmaName = "1";
    }
    else if( parameter.find("gamma_stat_")!=std::string::npos ) {
      sigmaName = parameter + "_sigma";
@@ -990,7 +990,7 @@ namespace RooStats {
      throw hf_exc();
    }
    double tau_val = tauVar->getVal();
-   sigma = 1.0 / TMath::Sqrt( tau_val );
+   sigma = 1.0 / std::sqrt( tau_val );
       }
       else {
    std::cout << "Error: Encountered unknown constraint type for Stat Uncertainties: "
@@ -1077,7 +1077,7 @@ namespace RooStats {
       {
         for (auto *component : static_range_cast<RooAbsReal*>(components)) {
           std::string NodeName = component->GetName();
-          label_print_width = TMath::Max(label_print_width, static_cast<int>(NodeName.size())+2);
+          label_print_width = std::max(label_print_width, static_cast<int>(NodeName.size())+2);
         }
       }
 
@@ -1115,7 +1115,7 @@ namespace RooStats {
       }
       /////
       std::string line_break;
-      int high_bin = _maxBinToPrint==-1 ? num_bins : TMath::Min(_maxBinToPrint, (int)num_bins);
+      int high_bin = _maxBinToPrint==-1 ? num_bins : std::min(_maxBinToPrint, (int)num_bins);
       int low_bin = _minBinToPrint==-1 ? 1 : _minBinToPrint;
       int break_length = (high_bin - low_bin + 1) * bin_print_width;
       break_length += label_print_width;

@@ -1,28 +1,27 @@
 // Author: Jonas Rembser, CERN  02/2021
 
-#include <RooCrystalBall.h>
 #include <RooCBShape.h>
-
-#include <RooRealVar.h>
+#include <RooCrystalBall.h>
 #include <RooDataSet.h>
-#include <RooGenericPdf.h>
-#include <RooNumIntConfig.h>
-#include <RooFormulaVar.h>
 #include <RooFitResult.h>
-
+#include <RooFormulaVar.h>
+#include <RooGenericPdf.h>
+#include <RooHelpers.h>
+#include <RooNumIntConfig.h>
 #include <RooPlot.h>
+#include <RooRealVar.h>
 
+#include <iostream>
 #include <numeric>
 #include <string>
-#include <iostream>
 
 // You can also validate by comparing with the RooDSCBShape and RooSDSCBShape
 // classes that are floating around in the RooFit user community.
 // Some commented-out lines are kept on purpose in this test to make this as
 // easy as possible.
 //
-//#include "RooDSCBShape.h"
-//#include "RooSDSCBShape.h"
+// #include "RooDSCBShape.h"
+// #include "RooSDSCBShape.h"
 
 #include "gtest/gtest.h"
 
@@ -113,15 +112,9 @@ TEST(RooCrystalBall, SingleTailAndFullySymmetric)
    auto formulaOnlyRightTail = makeCrystalBallFormulaOnlyRightTail();
    auto formulaFullySymmetric = makeCrystalBallFormulaFullySymmetric();
 
-   // Note: Ownership bug. Deleting this might crash on Mac.
-   // Therefore, it will leak because we are testing not the
-   // GenericPdf.
-   auto crystalBallOnlyLeftTailRef =
-      new RooGenericPdf("cbBallRef", formulaOnlyLeftTail.c_str(), RooArgSet(x, x0, sigma, alpha, n));
-   auto crystalBallOnlyRightTailRef =
-      new RooGenericPdf("cbBallRef", formulaOnlyRightTail.c_str(), RooArgSet(x, x0, sigma, alpha, n));
-   auto crystalBallFullySymmetricRef =
-      new RooGenericPdf("cbBallRef", formulaFullySymmetric.c_str(), RooArgSet(x, x0, sigma, alpha, n));
+   RooGenericPdf crystalBallOnlyLeftTailRef{"cbBallRef", formulaOnlyLeftTail.c_str(), {x, x0, sigma, alpha, n}};
+   RooGenericPdf crystalBallOnlyRightTailRef{"cbBallRef", formulaOnlyRightTail.c_str(), {x, x0, sigma, alpha, n}};
+   RooGenericPdf crystalBallFullySymmetricRef{"cbBallRef", formulaFullySymmetric.c_str(), {x, x0, sigma, alpha, n}};
 
    for (double theX : {-100., -50., -10., -1., 0., 1., 10., 50., 100.}) {
       for (double theX0 : {-100., -10., 0., 10., 20., 30., 100., 150.}) {
@@ -134,25 +127,25 @@ TEST(RooCrystalBall, SingleTailAndFullySymmetric)
                   alpha = theAlpha;
                   n = theN;
 
-                  EXPECT_FLOAT_EQ(crystalBallOnlyLeftTail.getVal(), crystalBallOnlyLeftTailRef->getVal())
+                  EXPECT_FLOAT_EQ(crystalBallOnlyLeftTail.getVal(), crystalBallOnlyLeftTailRef.getVal())
                      << theX << " " << theX0 << " " << theSigma << " " << theAlpha << " " << theN;
 
                   // Compare left tail only version with RooCBShape which should match
-                  EXPECT_FLOAT_EQ(crystalBallOnlyLeftTailOld.getVal(), crystalBallOnlyLeftTailRef->getVal())
+                  EXPECT_FLOAT_EQ(crystalBallOnlyLeftTailOld.getVal(), crystalBallOnlyLeftTailRef.getVal())
                      << theX << " " << theX0 << " " << theSigma << " " << theAlpha << " " << theN;
 
-                  EXPECT_FLOAT_EQ(crystalBallOnlyRightTail.getVal(), crystalBallOnlyRightTailRef->getVal())
+                  EXPECT_FLOAT_EQ(crystalBallOnlyRightTail.getVal(), crystalBallOnlyRightTailRef.getVal())
                      << theX << " " << theX0 << " " << theSigma << " " << theAlpha << " " << theN;
 
                   // Compare right tail only version with RooCBShape which should match
-                  EXPECT_FLOAT_EQ(crystalBallOnlyRightTailOld.getVal(), crystalBallOnlyRightTailRef->getVal())
+                  EXPECT_FLOAT_EQ(crystalBallOnlyRightTailOld.getVal(), crystalBallOnlyRightTailRef.getVal())
                      << theX << " " << theX0 << " " << theSigma << " " << theAlpha << " " << theN;
 
-                  EXPECT_FLOAT_EQ(crystalBallFullySymmetric.getVal(), crystalBallFullySymmetricRef->getVal())
+                  EXPECT_FLOAT_EQ(crystalBallFullySymmetric.getVal(), crystalBallFullySymmetricRef.getVal())
                      << theX << " " << theX0 << " " << theSigma << " " << theAlpha << " " << theN;
 
                   // Compare fully symmetric version with RooSDSCBShape which should match
-                  // EXPECT_FLOAT_EQ(crystalBallFullySymmetricOld.getVal(), crystalBallFullySymmetricRef->getVal())
+                  // EXPECT_FLOAT_EQ(crystalBallFullySymmetricOld.getVal(), crystalBallFullySymmetricRef.getVal())
                   //  << theX << " " << theX0 << " " << theSigma << " " << theAlpha << " " << theN;
                }
             }
@@ -177,11 +170,7 @@ TEST(RooCrystalBall, DoubleSided)
 
    auto formula = makeCrystalBallFormulaDoubleSided();
 
-   // Note: Ownership bug. Deleting this might crash on Mac.
-   // Therefore, it will leak because we are testing not the
-   // GenericPdf.
-   auto crystalBallRef =
-      new RooGenericPdf("crystalBallRef", formula.c_str(), RooArgSet(x, x0, sigma, alphaL, nL, alphaR, nR));
+   RooGenericPdf crystalBallRef{"crystalBallRef", formula.c_str(), {x, x0, sigma, alphaL, nL, alphaR, nR}};
 
    for (double theX : {-100., -50., -10., -1., 0., 1., 10., 50., 100.}) {
       for (double theX0 : {-100., -10., 0., 10., 20., 30., 100., 150.}) {
@@ -198,11 +187,11 @@ TEST(RooCrystalBall, DoubleSided)
                         alphaR = theAlphaR;
                         nR = theNR;
 
-                        EXPECT_FLOAT_EQ(crystalBall.getVal(), crystalBallRef->getVal())
+                        EXPECT_FLOAT_EQ(crystalBall.getVal(), crystalBallRef.getVal())
                            << theX << " " << theX0 << " " << theSigma << " " << theAlphaL << " " << theNL << " "
                            << theAlphaR << " " << theNR;
 
-                        // EXPECT_FLOAT_EQ(crystalBallOld.getVal(), crystalBallRef->getVal())
+                        // EXPECT_FLOAT_EQ(crystalBallOld.getVal(), crystalBallRef.getVal())
                         //    << theX << " " << theX0 << " " << theSigma << " " << theAlphaL << " " << theNL << " "
                         //    << theAlphaR << " " << theNR;
                      }
@@ -216,14 +205,10 @@ TEST(RooCrystalBall, DoubleSided)
 
 TEST(RooCrystalBall, FullyParametrized)
 {
-   MAKE_CRYSTAL_BALL_AND_VARS
+   MAKE_CRYSTAL_BALL_AND_VARS;
    auto formula = makeCrystalBallFormula();
 
-   // Note: Ownership bug. Deleting this might crash on Mac.
-   // Therefore, it will leak because we are testing not the
-   // GenericPdf.
-   auto crystalBallRef =
-      new RooGenericPdf("crystalBallRef", formula.c_str(), RooArgSet(x, x0, sigmaL, alphaL, nL, sigmaR, alphaR, nR));
+   RooGenericPdf crystalBallRef{"crystalBallRef", formula.c_str(), {x, x0, sigmaL, alphaL, nL, sigmaR, alphaR, nR}};
 
    for (double theX : {-100., -50., -10., -1., 0., 1., 10., 50., 100.}) {
       for (double theX0 : {-100., -10., 0., 10., 20., 30., 100., 150.}) {
@@ -242,7 +227,7 @@ TEST(RooCrystalBall, FullyParametrized)
                            alphaR = theAlphaR;
                            nR = theNR;
 
-                           EXPECT_FLOAT_EQ(crystalBall.getVal(), crystalBallRef->getVal())
+                           EXPECT_FLOAT_EQ(crystalBall.getVal(), crystalBallRef.getVal())
                               << theX << " " << theX0 << " " << theSigmaL << " " << theAlphaL << " " << theNL << " "
                               << theSigmaR << " " << theAlphaR << " " << theNR;
                         }
@@ -257,7 +242,9 @@ TEST(RooCrystalBall, FullyParametrized)
 
 TEST(RooCrystalBall, Integral)
 {
-   MAKE_CRYSTAL_BALL_AND_VARS
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+
+   MAKE_CRYSTAL_BALL_AND_VARS;
 
    x.setRange(-199., 199);
 
@@ -341,7 +328,9 @@ TEST(RooCrystalBall, Integral)
 
 TEST(RooCrystalBall, Generator)
 {
-   MAKE_CRYSTAL_BALL_AND_VARS
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING};
+
+   MAKE_CRYSTAL_BALL_AND_VARS;
 
    ASSERT_FALSE(x0.isConstant());
 

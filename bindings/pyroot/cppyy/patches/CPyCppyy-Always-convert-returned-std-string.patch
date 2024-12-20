@@ -49,7 +49,7 @@ index 1f3e43152e..70d8f72596 100644
 -    return BindCppObjectNoCast((void*)result, sSTLStringScope, CPPInstance::kIsOwner);
 +    PyObject* pyresult =
 +        CPyCppyy_PyText_FromStringAndSize(result->c_str(), result->size());
-+    ::operator delete(result); // calls Cppyy::CallO which calls ::operator new
++    delete result; // Cppyy::CallO allocates and constructs a string, so it must be properly destroyed
 +
 +    return pyresult;
  }
@@ -89,8 +89,8 @@ index 3ab4c8b3a1..ae0e31cac8 100644
      }
 +#endif
  
-     // This pythonization is disabled for ROOT because it is a bit buggy
- #if 0
+     if (Cppyy::IsAggregate(((CPPClass*)pyclass)->fCppType) && name.compare(0, 5, "std::", 5) != 0) {
+     // create a pseudo-constructor to allow initializer-style object creation
 -- 
 2.44.0
 
