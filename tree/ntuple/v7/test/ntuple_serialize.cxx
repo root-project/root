@@ -379,7 +379,7 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(locator.fType, RNTupleLocator::kTypeDAOS);
    EXPECT_EQ(locator.fBytesOnStorage, 420420U);
    EXPECT_EQ(locator.fReserved, 0x5a);
-   EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().fLocation);
+   EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
 
    locator.fBytesOnStorage = static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1;
    EXPECT_EQ(20u, RNTupleSerializer::SerializeLocator(locator, buffer));
@@ -388,7 +388,7 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(locator.fType, RNTupleLocator::kTypeDAOS);
    EXPECT_EQ(locator.fBytesOnStorage, static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
    EXPECT_EQ(locator.fReserved, 0x5a);
-   EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().fLocation);
+   EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
 
    std::int32_t *head = reinterpret_cast<std::int32_t *>(buffer);
 #ifndef R__BYTESWAP
