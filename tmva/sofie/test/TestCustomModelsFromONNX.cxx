@@ -313,6 +313,9 @@
 #include "Einsum_3_FromONNX.hxx"
 #include "Einsum_4_FromONNX.hxx"
 
+#include "RandomUniform_FromONNX.hxx"
+#include "RandomNormal_FromONNX.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -3066,5 +3069,38 @@ TEST(ONNX, Einsum_4)
    // Checking output
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_EQ(output[i], correct_output[i]);
+   }
+}
+TEST(ONNX, RandomUniform)
+{
+   // output of gRandom->Uniform(10,20) with seed 111 - > shape(2,3)
+   std::vector<float> correct_output = {16.1217, 11.2076, 11.6907, 13.0179, 14.3606, 18.5391};
+
+   TMVA_SOFIE_RandomUniform::Session s("RandomUniform_FromONNX.dat");
+
+   std::vector<float> output = s.infer();
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
+   }
+}
+
+TEST(ONNX, RandomNormal)
+{
+    // output of gRandom->Gaus(1,3) with seed 111 - > shape(2,3)
+   std::vector<float> correct_output = {-0.808389, -0.985581, 0.616354, 2.1887, 1.13927, -0.228048};
+
+   TMVA_SOFIE_RandomNormal::Session s("RandomNormal_FromONNX.dat");
+
+   std::vector<float> output = s.infer();
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
    }
 }

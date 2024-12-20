@@ -43,7 +43,7 @@ protected:
 
    std::unordered_set<std::string> fNeededBlasRoutines;
 
-   const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
+   const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath","memory"};
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
    std::unordered_set<std::string> fCustomOpHeaders;
 
