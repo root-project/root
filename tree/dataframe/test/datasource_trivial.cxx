@@ -47,14 +47,18 @@ TEST(RTrivialDS, ColumnReaders)
    RTrivialDS tds(32);
    const auto nSlots = 4U;
    tds.SetNSlots(nSlots);
-   auto vals = tds.GetColumnReaders<ULong64_t>("col0");
+   std::vector<std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>> vals;
+   vals.reserve(nSlots);
+   for (auto i = 0U; i < nSlots; i++) {
+      vals.push_back(tds.GetColumnReaders(i, "col0", typeid(ULong64_t)));
+   }
    tds.Initialize();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
    for (auto &&range : ranges) {
       for (auto i : ROOT::TSeq<ULong64_t>(range.first, range.second)) {
          tds.SetEntry(slot, i);
-         auto val = **vals[slot];
+         auto val = *vals[slot]->TryGet<ULong64_t>(i);
          EXPECT_EQ(i, val);
       }
       slot++;
@@ -68,7 +72,7 @@ TEST(RTrivialDS, ColumnReadersWrongType)
    tds.SetNSlots(nSlots);
    int res = 1;
    try {
-      auto vals = tds.GetColumnReaders<float>("col0");
+      tds.GetColumnReaders(/*slot*/ 0, "col0", typeid(float));
    } catch (const std::runtime_error &e) {
       EXPECT_STREQ("The type specified for the column \"col0\" is not ULong64_t.", e.what());
       res = 0;

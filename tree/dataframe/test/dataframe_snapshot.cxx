@@ -1008,6 +1008,7 @@ TEST(RDFSnapshotMore, TClonesArray)
 // ROOT-10702
 TEST(RDFSnapshotMore, CompositeTypeWithNameClash)
 {
+   GTEST_SKIP() << "Skipping test with interpreted class without std::type_info.";
    const auto fname = "snap_compositetypewithnameclash.root";
    gInterpreter->Declare("struct Int { int x; };");
    ROOT::RDataFrame df(3);
