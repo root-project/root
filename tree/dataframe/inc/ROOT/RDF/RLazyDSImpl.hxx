@@ -24,6 +24,16 @@
 #include <utility> // std::index_sequence
 #include <vector>
 
+namespace ROOT::Internal::RDF {
+class R__CLING_PTRCHECK(off) RLazyDSColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
+   ROOT::Internal::TDS::TPointerHolder *fPtr;
+   void *GetImpl(Long64_t) final { return fPtr->GetPointer(); }
+
+public:
+   RLazyDSColumnReader(ROOT::Internal::TDS::TPointerHolder *ptr) : fPtr(ptr) {}
+};
+} // namespace ROOT::Internal::RDF
+
 namespace ROOT {
 
 namespace RDF {
@@ -52,34 +62,10 @@ class RLazyDS final : public ROOT::RDF::RDataSource {
    std::vector<PointerHolderPtrs_t> fPointerHolders;
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges{};
 
-   Record_t GetColumnReadersImpl(std::string_view colName, const std::type_info &id) final
+   Record_t GetColumnReadersImpl(std::string_view, const std::type_info &) final
    {
-      auto colNameStr = std::string(colName);
-      // This could be optimised and done statically
-      const auto idName = ROOT::Internal::RDF::TypeID2TypeName(id);
-      auto it = fColTypesMap.find(colNameStr);
-      if (fColTypesMap.end() == it) {
-         std::string err = "The specified column name, \"" + colNameStr + "\" is not known to the data source.";
-         throw std::runtime_error(err);
-      }
-
-      const auto colIdName = it->second;
-      if (colIdName != idName) {
-         std::string err = "Column " + colNameStr + " has type " + colIdName +
-                           " while the id specified is associated to type " + idName;
-         throw std::runtime_error(err);
-      }
-
-      const auto colBegin = fColNames.begin();
-      const auto colEnd = fColNames.end();
-      const auto namesIt = std::find(colBegin, colEnd, colName);
-      const auto index = std::distance(colBegin, namesIt);
-
-      Record_t ret(fNSlots);
-      for (auto slot : ROOT::TSeqU(fNSlots)) {
-         ret[slot] = fPointerHolders[index][slot]->GetPointerAddr();
-      }
-      return ret;
+      // We use the new API
+      return {};
    }
 
    size_t GetEntriesNumber() { return std::get<0>(fColumns)->size(); }
@@ -205,6 +191,30 @@ public:
    }
 
    std::string GetLabel() final { return "LazyDS"; }
+
+   std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
+   GetColumnReaders(unsigned int slot, std::string_view colName, const std::type_info &tid) final
+   {
+      auto colTypeIt = fColTypesMap.find(std::string(colName));
+      if (colTypeIt == fColTypesMap.end()) {
+         throw std::runtime_error("The specified column name, \"" + std::string(colName) +
+                                  "\" is not known to the data source.");
+      }
+
+      const auto typeName = ROOT::Internal::RDF::TypeID2TypeName(tid);
+      if (colTypeIt->second != typeName) {
+         throw std::runtime_error("Column " + std::string(colName) + " has type " + colTypeIt->second +
+                                  " while the id specified is associated to type " + typeName);
+      }
+
+      if (auto colNameIt = std::find(fColNames.begin(), fColNames.end(), colName); colNameIt != fColNames.end()) {
+         const auto index = std::distance(fColNames.begin(), colNameIt);
+         return std::make_unique<ROOT::Internal::RDF::RLazyDSColumnReader>(fPointerHolders[index][slot]);
+      }
+
+      throw std::runtime_error("Could not find column name \"" + std::string(colName) +
+                               "\" in available column names.");
+   }
 };
 
 } // ns RDF

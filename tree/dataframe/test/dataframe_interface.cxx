@@ -484,9 +484,9 @@ TEST(RDataFrameInterface, TypeUnknownToInterpreter)
    auto df = ROOT::RDataFrame(1).Define("res", make_s);
    bool hasThrown = false;
    std::stringstream ss;
-   ss << "The type of custom column \"res\" (" << symbol << ") is not known to the interpreter, " <<
-         "but a just-in-time-compiled Snapshot call requires this column. Make sure to create " <<
-         "and load ROOT dictionaries for this column's class.";
+   ss << "No runtime type information is available for column \"res\" with type name \"" << symbol
+      << "\". Thus, it cannot be written to disk with Snapshot. Make sure to generate and load ROOT dictionaries for "
+         "the type of this column.";
    EXPECT_RUNTIME_ERROR_WITH_MSG(
       df.Snapshot("result", "RESULT2.root"),
       ss.str().c_str());

@@ -144,6 +144,7 @@ std::string
 ColumnName2ColumnTypeName(const std::string &colName, TTree *, RDataSource *, RDefineBase *, bool vector2RVec = true);
 
 char TypeName2ROOTTypeName(const std::string &b);
+char TypeID2ROOTTypeName(const std::type_info &tid);
 
 unsigned int GetNSlots();
 

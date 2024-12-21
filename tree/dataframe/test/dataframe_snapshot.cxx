@@ -16,6 +16,7 @@
 #include <TTreeReaderArray.h>
 
 #include "DummyHeader.hxx"
+#include "DataFrameSnapshotUtils.hxx"
 
 using namespace ROOT;              // RDataFrame
 using namespace ROOT::RDF;         // RInterface
@@ -1005,17 +1006,17 @@ TEST(RDFSnapshotMore, TClonesArray)
    ReadWriteTClonesArray();
 }
 
-// ROOT-10702
+// https://its.cern.ch/jira/browse/ROOT-10702
 TEST(RDFSnapshotMore, CompositeTypeWithNameClash)
 {
-   const auto fname = "snap_compositetypewithnameclash.root";
-   gInterpreter->Declare("struct Int { int x; };");
-   ROOT::RDataFrame df(3);
-   auto snap_df = df.Define("i", "Int{-1};").Define("x", [] { return 1; }).Snapshot("t", fname);
+   constexpr auto fName{"snap_compositetypewithnameclash.root"};
+   struct FileGuard {
+      ~FileGuard() { std::remove(fName); }
+   } _;
+   ROOT::RDataFrame df{3};
+   auto snap_df = df.Define("i", [] { return Int{-1}; }).Define("x", [] { return 1; }).Snapshot("t", fName);
    EXPECT_EQ(snap_df->Sum<int>("x").GetValue(), 3); // prints -3 if the wrong "x" is written out
    EXPECT_EQ(snap_df->Sum<int>("i.x").GetValue(), -3);
-
-   gSystem->Unlink(fname);
 }
 
 // Test that we error out gracefully in case the output file specified for a Snapshot cannot be opened

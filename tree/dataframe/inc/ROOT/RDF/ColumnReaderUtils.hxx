@@ -19,6 +19,7 @@
 #include "RLoopManager.hxx"
 #include "RVariationBase.hxx"
 #include "RVariationReader.hxx"
+#include <ROOT/RDF/Utils.hxx>
 
 #include <ROOT/RDataSource.hxx>
 #include <ROOT/TypeTraits.hxx>
@@ -80,6 +81,12 @@ GetColumnReaders(unsigned int, TTreeReader *, TypeList<>, const RColumnReadersIn
 {
    return {};
 }
+
+std::vector<RDFDetail::RColumnReaderBase *>
+GetUntypedColumnReaders(unsigned int slot, TTreeReader *treeReader, ROOT::Internal::RDF::RColumnRegister &colRegister,
+                        ROOT::Detail::RDF::RLoopManager &lm, const std::vector<std::string> &colNames,
+                        const std::vector<const std::type_info *> &colTypeIDs,
+                        const std::string &variationName = "nominal");
 
 } // namespace RDF
 } // namespace Internal

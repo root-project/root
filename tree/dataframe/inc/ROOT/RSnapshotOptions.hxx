@@ -29,8 +29,6 @@ enum class ESnapshotOutputFormat {
 struct RSnapshotOptions {
    using ECAlgo = ROOT::RCompressionSetting::EAlgorithm::EValues;
    RSnapshotOptions() = default;
-   RSnapshotOptions(const RSnapshotOptions &) = default;
-   RSnapshotOptions(RSnapshotOptions &&) = default;
    RSnapshotOptions(std::string_view mode, ECAlgo comprAlgo, int comprLevel, int autoFlush, int splitLevel, bool lazy,
                     bool overwriteIfExists = false, bool vector2RVec = true, int basketSize = -1,
                     ESnapshotOutputFormat outputFormat = ESnapshotOutputFormat::kDefault)
