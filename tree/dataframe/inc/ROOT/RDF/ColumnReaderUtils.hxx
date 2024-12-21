@@ -20,6 +20,7 @@
 #include "RTreeColumnReader.hxx"
 #include "RVariationBase.hxx"
 #include "RVariationReader.hxx"
+#include <ROOT/RDF/Utils.hxx>
 
 #include <ROOT/RDataSource.hxx>
 #include <ROOT/TypeTraits.hxx>
@@ -71,6 +72,12 @@ struct RColumnReadersInfo {
    RLoopManager &fLoopManager;
 };
 
+struct RColumnReadersUntypedSnapshotInfo {
+   const std::vector<std::string> &fColNames;
+   RColumnRegister &fColRegister;
+   RLoopManager &fLoopManager;
+};
+
 /// Create a group of column readers, one per type in the parameter pack.
 template <typename... ColTypes>
 std::array<RDFDetail::RColumnReaderBase *, sizeof...(ColTypes)>
@@ -95,6 +102,13 @@ GetColumnReaders(unsigned int, TTreeReader *, TypeList<>, const RColumnReadersIn
 {
    return {};
 }
+
+RDFDetail::RColumnReaderBase *GetUntypedColumnReader(unsigned int slot, RColumnReaderBase *defineOrVariationReader,
+                                                     RLoopManager &lm, TTreeReader *r, const std::string &colName);
+
+std::vector<RDFDetail::RColumnReaderBase *> GetUntypedColumnReaders(unsigned int slot, TTreeReader *r,
+                                                                    const RColumnReadersUntypedSnapshotInfo &colInfo,
+                                                                    const std::string &variationName = "nominal");
 
 } // namespace RDF
 } // namespace Internal

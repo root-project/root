@@ -1844,6 +1844,160 @@ public:
    }
 };
 
+void SetBranchesUntypedHelper(TTree *inputTree, TTree &outputTree, const std::string &inName, const std::string &name,
+                              TBranch *&branch, void *&branchAddress, void *address, RBranchSet &outputBranches);
+
+/// Helper object for a single-thread Snapshot action, no template needed
+class R__CLING_PTRCHECK(off) UntypedSnapshotHelper final : public RActionImpl<UntypedSnapshotHelper> {
+   std::string fFileName;
+   std::string fDirName;
+   std::string fTreeName;
+   RSnapshotOptions fOptions;
+   std::unique_ptr<TFile> fOutputFile;
+   std::unique_ptr<TTree> fOutputTree; // must be a ptr because TTrees are not copy/move constructible
+   bool fBranchAddressesNeedReset{true};
+   ColumnNames_t fInputBranchNames; // This contains the resolved aliases
+   ColumnNames_t fOutputBranchNames;
+   TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitTask`)
+   // TODO we might be able to unify fBranches, fBranchAddresses and fOutputBranches
+   std::vector<TBranch *> fBranches;     // Addresses of branches in output, non-null only for the ones holding C arrays
+   std::vector<void *> fBranchAddresses; // Addresses of objects associated to output branches
+   RBranchSet fOutputBranches;
+   std::vector<bool> fIsDefine;
+
+public:
+   UntypedSnapshotHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
+                         const ColumnNames_t &vbnames, const ColumnNames_t &bnames, const RSnapshotOptions &options,
+                         std::vector<bool> &&isDefine)
+      : fFileName(filename),
+        fDirName(dirname),
+        fTreeName(treename),
+        fOptions(options),
+        fInputBranchNames(vbnames),
+        fOutputBranchNames(ReplaceDotWithUnderscore(bnames)),
+        fBranches(vbnames.size(), nullptr),
+        fBranchAddresses(vbnames.size(), nullptr),
+        fIsDefine(std::move(isDefine))
+   {
+      ValidateSnapshotOutput(fOptions, fTreeName, fFileName);
+   }
+
+   UntypedSnapshotHelper(const UntypedSnapshotHelper &) = delete;
+   UntypedSnapshotHelper(UntypedSnapshotHelper &&) = default;
+   ~UntypedSnapshotHelper()
+   {
+      if (!fTreeName.empty() /*not moved from*/ && !fOutputFile /* did not run */ && fOptions.fLazy)
+         Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+   }
+
+   void InitTask(TTreeReader *r, unsigned int /* slot */)
+   {
+      if (r)
+         fInputTree = r->GetTree();
+      fBranchAddressesNeedReset = true;
+   }
+
+   void Exec(unsigned int /* slot */, const std::vector<void *> &values)
+   {
+      if (!fBranchAddressesNeedReset) {
+         UpdateCArraysPtrs(values);
+      } else {
+         SetBranches(values);
+         fBranchAddressesNeedReset = false;
+      }
+
+      fOutputTree->Fill();
+   }
+
+   void UpdateCArraysPtrs(const std::vector<void *> & /*values*/)
+   {
+      // // This code deals with branches which hold C arrays of variable size. It can happen that the buffers
+      // // associated to those is re-allocated. As a result the value of the pointer can change therewith
+      // // leaving associated to the branch of the output tree an invalid pointer.
+      // // With this code, we set the value of the pointer in the output branch anew when needed.
+      // // Nota bene: the extra ",0" after the invocation of SetAddress, is because that method returns void and
+      // // we need an int for the expander list.
+      // int expander[] = {(fBranches[S] && fBranchAddresses[S] != GetData(values)
+      //                    ? fBranches[S]->SetAddress(GetData(values)),
+      //                    fBranchAddresses[S] = GetData(values), 0 : 0, 0)...,
+      //                   0};
+      // (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
+   }
+
+   void SetBranches(const std::vector<void *> &values)
+   {
+      // create branches in output tree
+      auto &&nValues = values.size();
+      for (decltype(nValues) i{}; i < nValues; i++) {
+         SetBranchesUntypedHelper(fInputTree, *fOutputTree, fInputBranchNames[i], fOutputBranchNames[i], fBranches[i],
+                                  fBranchAddresses[i], values[i], fOutputBranches);
+      }
+      fOutputBranches.AssertNoNullBranchAddresses();
+   }
+
+   void Initialize()
+   {
+      fOutputFile.reset(
+         TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/"",
+                     ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel)));
+      if (!fOutputFile)
+         throw std::runtime_error("Snapshot: could not create output file " + fFileName);
+
+      TDirectory *outputDir = fOutputFile.get();
+      if (!fDirName.empty()) {
+         TString checkupdate = fOptions.fMode;
+         checkupdate.ToLower();
+         if (checkupdate == "update")
+            outputDir = fOutputFile->mkdir(fDirName.c_str(), "", true); // do not overwrite existing directory
+         else
+            outputDir = fOutputFile->mkdir(fDirName.c_str());
+      }
+
+      fOutputTree =
+         std::make_unique<TTree>(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/outputDir);
+
+      if (fOptions.fAutoFlush)
+         fOutputTree->SetAutoFlush(fOptions.fAutoFlush);
+   }
+
+   void Finalize()
+   {
+      assert(fOutputTree != nullptr);
+      assert(fOutputFile != nullptr);
+
+      // use AutoSave to flush TTree contents because TTree::Write writes in gDirectory, not in fDirectory
+      fOutputTree->AutoSave("flushbaskets");
+      // must destroy the TTree first, otherwise TFile will delete it too leading to a double delete
+      fOutputTree.reset();
+      fOutputFile->Close();
+   }
+
+   std::string GetActionName() { return "UntypedSnapshot"; }
+
+   ROOT::RDF::SampleCallback_t GetSampleCallback() final
+   {
+      return [this](unsigned int, const RSampleInfo &) mutable { fBranchAddressesNeedReset = true; };
+   }
+
+   /**
+    * @brief Create a new SnapshotHelper with a different output file name
+    *
+    * @param newName A type-erased string with the output file name
+    * @return SnapshotHelper
+    *
+    * This MakeNew implementation is tied to the cloning feature of actions
+    * of the computation graph. In particular, cloning a Snapshot node usually
+    * also involves changing the name of the output file, otherwise the cloned
+    * Snapshot would overwrite the same file.
+    */
+   UntypedSnapshotHelper MakeNew(void *newName)
+   {
+      const std::string finalName = *reinterpret_cast<const std::string *>(newName);
+      return UntypedSnapshotHelper{
+         finalName, fDirName, fTreeName, fInputBranchNames, fOutputBranchNames, fOptions, std::vector<bool>(fIsDefine)};
+   }
+};
+
 template <typename Acc, typename Merge, typename R, typename T, typename U,
           bool MustCopyAssign = std::is_same<R, U>::value>
 class R__CLING_PTRCHECK(off) AggregateHelper

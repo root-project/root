@@ -27,6 +27,19 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
+/// RTreeColumnReader specialization for TTree values read via TTreeReaderUntypedValue
+class R__CLING_PTRCHECK(off) RTreeUntypedColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
+   std::unique_ptr<TTreeReaderUntypedValue> fTreeValue;
+
+   void *GetImpl(Long64_t) final { return fTreeValue->Get(); }
+
+public:
+   RTreeUntypedColumnReader(TTreeReader &r, std::string_view colName, std::string_view typeName)
+      : fTreeValue(std::make_unique<TTreeReaderUntypedValue>(r, colName, typeName))
+   {
+   }
+};
+
 /// RTreeColumnReader specialization for TTree values read via TTreeReaderValues
 template <typename T>
 class R__CLING_PTRCHECK(off) RTreeColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
