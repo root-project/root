@@ -10017,3 +10017,9 @@ Option_t* TTreeFriendLeafIter::GetOption() const
    if (fLeafIter) return fLeafIter->GetOption();
    return "";
 }
+
+TBranch *ROOT::Internal::TreeUtils::CallBranchImpRef(TTree &tree, const char *branchname, TClass *ptrClass,
+                                                     EDataType datatype, void *addobj, Int_t bufsize, Int_t splitlevel)
+{
+   return tree.BranchImpRef(branchname, ptrClass, datatype, addobj, bufsize, splitlevel);
+}

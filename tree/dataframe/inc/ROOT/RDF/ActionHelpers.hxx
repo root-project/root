@@ -81,6 +81,7 @@ using Hist_t = ::TH1D;
 class RBranchSet {
    std::vector<TBranch *> fBranches;
    std::vector<std::string> fNames;
+   std::vector<bool> fIsCArray;
 
 public:
    TBranch *Get(const std::string &name) const
@@ -91,7 +92,14 @@ public:
       return fBranches[std::distance(fNames.begin(), it)];
    }
 
-   void Insert(const std::string &name, TBranch *address)
+   bool IsCArray(const std::string &name) const
+   {
+      if (auto it = std::find(fNames.begin(), fNames.end(), name); it != fNames.end())
+         return fIsCArray[std::distance(fNames.begin(), it)];
+      return false;
+   }
+
+   void Insert(const std::string &name, TBranch *address, bool isCArray = false)
    {
       if (address == nullptr) {
          throw std::logic_error("Trying to insert a null branch address.");
@@ -104,12 +112,14 @@ public:
       }
       fNames.emplace_back(name);
       fBranches.emplace_back(address);
+      fIsCArray.push_back(isCArray);
    }
 
    void Clear()
    {
       fBranches.clear();
       fNames.clear();
+      fIsCArray.clear();
    }
 
    void AssertNoNullBranchAddresses()
@@ -1613,9 +1623,10 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
    }
 }
 
-void SetEmptyBranchesHelper(TTree *inputTree, TTree &outputTree, RBranchSet &outputBranches,
-                            const std::string &inputBranchName, const std::string &outputBranchName,
-                            const std::type_info &typeInfo, int basketSize);
+void SetBranchesHelper(TTree *inputTree, TTree &outputTree, RBranchSet &outputBranches, int basketSize,
+                       const std::string &inputBranchName, const std::string &outputBranchName,
+                       const std::type_info &valueTypeID, void *valueAddress, TBranch *&actionHelperBranchPtr,
+                       void *&actionHelperBranchPtrAddress);
 
 /// Ensure that the TTree with the resulting snapshot can be written to the target TFile. This means checking that the
 /// TFile can be opened in the mode specified in `opts`, deleting any existing TTrees in case
@@ -1736,9 +1747,13 @@ public:
    void SetEmptyBranches(TTree *inputTree, TTree &outputTree, std::index_sequence<S...>)
    {
       RBranchSet outputBranches{};
+      void *dummyValueAddress{};
+      TBranch *dummyTBranchPtr{};
+      void *dummyTBranchAddress{};
       // We use the expander trick rather than a fold expression to avoid incurring in the bracket depth limit of clang
-      int expander[] = {(SetEmptyBranchesHelper(inputTree, outputTree, outputBranches, fInputBranchNames[S],
-                                                fOutputBranchNames[S], typeid(ColTypes), fOptions.fBasketSize),
+      int expander[] = {(SetBranchesHelper(inputTree, outputTree, outputBranches, fOptions.fBasketSize,
+                                           fInputBranchNames[S], fOutputBranchNames[S], typeid(ColTypes),
+                                           dummyValueAddress, dummyTBranchPtr, dummyTBranchAddress),
                          0)...,
                         0};
       (void)expander;
@@ -1983,10 +1998,14 @@ public:
    template <std::size_t... S>
    void SetEmptyBranches(TTree *inputTree, TTree &outputTree, std::index_sequence<S...>)
    {
+      void *dummyValueAddress{};
+      TBranch *dummyTBranchPtr{};
+      void *dummyTBranchAddress{};
       RBranchSet outputBranches{};
       // We use the expander trick rather than a fold expression to avoid incurring in the bracket depth limit of clang
-      int expander[] = {(SetEmptyBranchesHelper(inputTree, outputTree, outputBranches, fInputBranchNames[S],
-                                                fOutputBranchNames[S], typeid(ColTypes), fOptions.fBasketSize),
+      int expander[] = {(SetBranchesHelper(inputTree, outputTree, outputBranches, fOptions.fBasketSize,
+                                           fInputBranchNames[S], fOutputBranchNames[S], typeid(ColTypes),
+                                           dummyValueAddress, dummyTBranchPtr, dummyTBranchAddress),
                          0)...,
                         0};
       (void)expander;
@@ -2226,6 +2245,136 @@ public:
                                    fOutputLoopManager,
                                    std::vector<bool>(fIsDefine)};
    }
+};
+
+class R__CLING_PTRCHECK(off) UntypedSnapshotTTreeHelper final : public RActionImpl<UntypedSnapshotTTreeHelper> {
+   std::string fFileName;
+   std::string fDirName;
+   std::string fTreeName;
+   RSnapshotOptions fOptions;
+   std::unique_ptr<TFile> fOutputFile;
+   std::unique_ptr<TTree> fOutputTree; // must be a ptr because TTrees are not copy/move constructible
+   bool fBranchAddressesNeedReset{true};
+   ColumnNames_t fInputBranchNames; // This contains the resolved aliases
+   ColumnNames_t fOutputBranchNames;
+   TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitTask`)
+   // TODO we might be able to unify fBranches, fBranchAddresses and fOutputBranches
+   std::vector<TBranch *> fBranches;     // Addresses of branches in output, non-null only for the ones holding C arrays
+   std::vector<void *> fBranchAddresses; // Addresses of objects associated to output branches
+   RBranchSet fOutputBranches;
+   std::vector<bool> fIsDefine;
+   ROOT::Detail::RDF::RLoopManager *fOutputLoopManager;
+   ROOT::Detail::RDF::RLoopManager *fInputLoopManager;
+   std::vector<const std::type_info *> fInputColumnTypeIDs; // Types for the input columns
+
+public:
+   UntypedSnapshotTTreeHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
+                              const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
+                              const RSnapshotOptions &options, std::vector<bool> &&isDefine,
+                              ROOT::Detail::RDF::RLoopManager *loopManager, ROOT::Detail::RDF::RLoopManager *inputLM,
+                              const std::vector<const std::type_info *> &colTypeIDs);
+
+   UntypedSnapshotTTreeHelper(const UntypedSnapshotTTreeHelper &) = delete;
+   UntypedSnapshotTTreeHelper &operator=(const UntypedSnapshotTTreeHelper &) = delete;
+   UntypedSnapshotTTreeHelper(UntypedSnapshotTTreeHelper &&) = default;
+   UntypedSnapshotTTreeHelper &operator=(UntypedSnapshotTTreeHelper &&) = default;
+   ~UntypedSnapshotTTreeHelper() final;
+
+   void InitTask(TTreeReader *, unsigned int);
+
+   void Exec(unsigned int, const std::vector<void *> &values);
+
+   void UpdateCArraysPtrs(const std::vector<void *> &values);
+
+   void SetBranches(const std::vector<void *> &values);
+
+   void SetEmptyBranches(TTree *inputTree, TTree &outputTree);
+
+   void Initialize();
+
+   void Finalize();
+
+   std::string GetActionName() { return "Snapshot"; }
+
+   ROOT::RDF::SampleCallback_t GetSampleCallback() final
+   {
+      return [this](unsigned int, const RSampleInfo &) mutable { fBranchAddressesNeedReset = true; };
+   }
+
+   UntypedSnapshotTTreeHelper MakeNew(void *newName, std::string_view /*variation*/ = "nominal");
+};
+
+class R__CLING_PTRCHECK(off) UntypedSnapshotTTreeHelperMT final : public RActionImpl<UntypedSnapshotTTreeHelperMT> {
+
+   // IMT-specific data members
+
+   unsigned int fNSlots;
+   std::unique_ptr<ROOT::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
+   std::vector<std::shared_ptr<ROOT::TBufferMergerFile>> fOutputFiles;
+   std::vector<std::unique_ptr<TTree>> fOutputTrees;
+   std::vector<int> fBranchAddressesNeedReset; // vector<bool> does not allow concurrent writing of different elements
+   std::vector<TTree *> fInputTrees; // Current input trees, one per slot. Set at initialization time (`InitTask`)
+   // Addresses of branches in output per slot, non-null only for the ones holding C arrays
+   std::vector<std::vector<TBranch *>> fBranches;
+   // Addresses of objects associated to output branches per slot, non-null only for the ones holding C arrays
+   std::vector<std::vector<void *>> fBranchAddresses;
+   std::vector<RBranchSet> fOutputBranches; // Unique set of output branches, one per slot.
+
+   // Attributes of the output TTree
+
+   std::string fFileName;
+   std::string fDirName;
+   std::string fTreeName;
+   TFile *fOutputFile; // Non-owning view on the output file
+   RSnapshotOptions fOptions;
+   std::vector<std::string> fOutputBranchNames;
+
+   // Attributes related to the computation graph
+
+   ROOT::Detail::RDF::RLoopManager *fOutputLoopManager;
+   ROOT::Detail::RDF::RLoopManager *fInputLoopManager;
+   std::vector<std::string> fInputBranchNames;              // This contains the resolved aliases
+   std::vector<const std::type_info *> fInputColumnTypeIDs; // Types for the input columns
+
+   std::vector<bool> fIsDefine;
+
+public:
+   UntypedSnapshotTTreeHelperMT(unsigned int nSlots, std::string_view filename, std::string_view dirname,
+                                std::string_view treename, const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
+                                const RSnapshotOptions &options, std::vector<bool> &&isDefine,
+                                ROOT::Detail::RDF::RLoopManager *loopManager, ROOT::Detail::RDF::RLoopManager *inputLM,
+                                const std::vector<const std::type_info *> &colTypeIDs);
+
+   UntypedSnapshotTTreeHelperMT(const UntypedSnapshotTTreeHelperMT &) = delete;
+   UntypedSnapshotTTreeHelperMT &operator=(const UntypedSnapshotTTreeHelperMT &) = delete;
+   UntypedSnapshotTTreeHelperMT(UntypedSnapshotTTreeHelperMT &&) = default;
+   UntypedSnapshotTTreeHelperMT &operator=(UntypedSnapshotTTreeHelperMT &&) = default;
+   ~UntypedSnapshotTTreeHelperMT() final;
+
+   void InitTask(TTreeReader *r, unsigned int slot);
+
+   void FinalizeTask(unsigned int slot);
+
+   void Exec(unsigned int slot, const std::vector<void *> &values);
+
+   void UpdateCArraysPtrs(unsigned int slot, const std::vector<void *> &values);
+
+   void SetBranches(unsigned int slot, const std::vector<void *> &values);
+
+   void SetEmptyBranches(TTree *inputTree, TTree &outputTree);
+
+   void Initialize();
+
+   void Finalize();
+
+   std::string GetActionName() { return "Snapshot"; }
+
+   ROOT::RDF::SampleCallback_t GetSampleCallback() final
+   {
+      return [this](unsigned int slot, const RSampleInfo &) mutable { fBranchAddressesNeedReset[slot] = 1; };
+   }
+
+   UntypedSnapshotTTreeHelperMT MakeNew(void *newName, std::string_view /*variation*/ = "nominal");
 };
 
 template <typename Acc, typename Merge, typename R, typename T, typename U,
