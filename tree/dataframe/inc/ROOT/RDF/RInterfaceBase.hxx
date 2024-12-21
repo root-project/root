@@ -148,6 +148,13 @@ protected:
          RDFInternal::AddDSColumns(validCols, *fLoopManager, *dataSource, typeList, fColRegister);
    }
 
+   void CheckAndFillDSColumns(const std::vector<std::string> &colNames,
+                              const std::vector<const std::type_info *> &colTypeIDs)
+   {
+      if (auto dataSource = GetDataSource())
+         RDFInternal::AddDSColumns(colNames, *fLoopManager, *dataSource, colTypeIDs, fColRegister);
+   }
+
    /// Create RAction object, return RResultPtr for the action
    /// Overload for the case in which all column types were specified (no jitting).
    /// For most actions, `r` and `helperArg` will refer to the same object, because the only argument to forward to

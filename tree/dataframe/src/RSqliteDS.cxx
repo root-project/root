@@ -455,24 +455,10 @@ const std::vector<std::string> &RSqliteDS::GetColumnNames() const
 
 ////////////////////////////////////////////////////////////////////////////
 /// Activates the given column's result value.
-RDataSource::Record_t RSqliteDS::GetColumnReadersImpl(std::string_view name, const std::type_info &ti)
+RDataSource::Record_t RSqliteDS::GetColumnReadersImpl(std::string_view, const std::type_info &)
 {
-   const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
-   const auto type = fColumnTypes[index];
-
-   if ((type == ETypes::kInteger && typeid(Long64_t) != ti) || (type == ETypes::kReal && typeid(double) != ti) ||
-       (type == ETypes::kText && typeid(std::string) != ti) ||
-       (type == ETypes::kBlob && typeid(std::vector<unsigned char>) != ti) ||
-       (type == ETypes::kNull && typeid(void *) != ti)) {
-      std::string errmsg = "The type selected for column \"";
-      errmsg += name;
-      errmsg += "\" does not correspond to column type, which is ";
-      errmsg += GetTypeName(name);
-      throw std::runtime_error(errmsg);
-   }
-
-   fValues[index].fIsActive = true;
-   return std::vector<void *>{fNSlots, &fValues[index].fPtr};
+   // We use the new API
+   return {};
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -605,3 +591,26 @@ void RSqliteDS::SqliteError(int errcode)
 } // namespace RDF
 
 } // namespace ROOT
+
+std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
+ROOT::RDF::RSqliteDS::GetColumnReaders(unsigned int, std::string_view colName, const std::type_info &tid)
+{
+   auto colNameIt = std::find(fColumnNames.begin(), fColumnNames.end(), colName);
+   if (colNameIt == fColumnNames.end())
+      throw std::runtime_error("Column \"" + std::string(colName) + "\" is not available in the SQLite table.");
+
+   const auto index = std::distance(fColumnNames.begin(), colNameIt);
+   const auto type = fColumnTypes[index];
+
+   if ((type == ETypes::kInteger && typeid(Long64_t) != tid) || (type == ETypes::kReal && typeid(double) != tid) ||
+       (type == ETypes::kText && typeid(std::string) != tid) ||
+       (type == ETypes::kBlob && typeid(std::vector<unsigned char>) != tid) ||
+       (type == ETypes::kNull && typeid(void *) != tid)) {
+      throw std::runtime_error("The type selected for column \"" + std::string(colName) +
+                               "\" does not correspond to column type, which is \"" + GetTypeName(colName) + "\".");
+   }
+
+   fValues[index].fIsActive = true;
+
+   return std::make_unique<ROOT::Internal::RDF::RSqliteDSColumnReader>(fValues[index].fPtr);
+}

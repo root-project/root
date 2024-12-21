@@ -1067,3 +1067,42 @@ void RemoveRNTupleSubFields(ColumnNames_t &columnNames)
 } // namespace RDF
 } // namespace Internal
 } // namespace ROOT
+
+namespace {
+void AddDataSourceColumn(const std::string &colName, const std::type_info &typeID, ROOT::Detail::RDF::RLoopManager &lm,
+                         ROOT::RDF::RDataSource &ds, ROOT::Internal::RDF::RColumnRegister &colRegister)
+{
+
+   if (colRegister.IsDefineOrAlias(colName))
+      return;
+
+   if (lm.HasDataSourceColumnReaders(colName, typeID))
+      return;
+
+   if (!ds.HasColumn(colName) &&
+       lm.GetSuppressErrorsForMissingBranches().find(colName) == lm.GetSuppressErrorsForMissingBranches().end())
+      return;
+
+   const auto nSlots = lm.GetNSlots();
+   std::vector<std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>> colReaders;
+   colReaders.reserve(nSlots);
+   // TODO consider changing the interface so we return all of these for all slots in one go
+   for (auto slot = 0u; slot < nSlots; ++slot)
+      colReaders.emplace_back(
+         ROOT::Internal::RDF::CreateColumnReader(ds, slot, colName, typeID, /*treeReader*/ nullptr));
+
+   lm.AddDataSourceColumnReaders(colName, std::move(colReaders), typeID);
+}
+} // namespace
+
+void ROOT::Internal::RDF::AddDSColumns(const std::vector<std::string> &colNames, ROOT::Detail::RDF::RLoopManager &lm,
+                                       ROOT::RDF::RDataSource &ds,
+                                       const std::vector<const std::type_info *> &colTypeIDs,
+                                       ROOT::Internal::RDF::RColumnRegister &colRegister)
+{
+   auto nCols = colNames.size();
+   assert(nCols == colTypeIDs.size() && "Must provide exactly one column type for each column to create");
+   for (decltype(nCols) i{}; i < nCols; i++) {
+      AddDataSourceColumn(colNames[i], *colTypeIDs[i], lm, ds, colRegister);
+   }
+}
