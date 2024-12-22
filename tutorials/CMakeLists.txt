@@ -571,8 +571,8 @@ foreach(tname histfactory-hf001_example
               roostats-StandardProfileLikelihoodDemo
               roostats-StandardTestStatDistributionDemo
               roostats-TwoSidedFrequentistUpperLimitWithBands)
-  set(${tname}-depends tutorial-roostats-CreateExampleFile)
-  set(${tname}-py-depends tutorial-roostats-CreateExampleFile)
+  set(${tname}-depends tutorial-roostats-CreateExampleFile-py)
+  set(${tname}-py-depends tutorial-roostats-CreateExampleFile-py)
 endforeach()
 
 #--dependency for TMVA tutorials
@@ -757,7 +757,6 @@ if(ROOT_pyroot_FOUND)
              io/sql/sqlselect.py       # same as the C++ case
              launcher.py            # Not a tutorial
              .enableImplicitMTWrapper.py # Not a tutorial
-             roostats/CreateExampleFile.py # the file is created by the C++ counterpart and we want no conflict
              )
 
   if(NOT dataframe
@@ -859,9 +858,10 @@ if(ROOT_pyroot_FOUND)
   # Avoid a race condition: make sure Python tutorial is run after C++ tutorial
   set(roofit-rf104_classfactory-depends tutorial-roofit-rf104_classfactory)
   set(roofit-rf512_wsfactory_oper-depends tutorial-roofit-rf512_wsfactory_oper)
-  set (machine_learning-TMVA_Higgs_Classification-depends tutorial-machine_learning-TMVA_Higgs_Classification)
-  set (machine_learning-TMVA_CNN_Classification-depends tutorial-machine_learning-TMVA_CNN_Classification)
-  set (machine_learning-TMVA_RNN_Classification-depends tutorial-machine_learning-TMVA_RNN_Classification)
+  set(machine_learning-TMVA_Higgs_Classification-depends tutorial-machine_learning-TMVA_Higgs_Classification)
+  set(machine_learning-TMVA_CNN_Classification-depends tutorial-machine_learning-TMVA_CNN_Classification)
+  set(machine_learning-TMVA_RNN_Classification-depends tutorial-machine_learning-TMVA_RNN_Classification)
+  set(roostats-CreateExampleFile-depends tutorial-roostats-CreateExampleFile)
 
   #----------------------------------------------------------------------
   # List requirements for python tutorials.
