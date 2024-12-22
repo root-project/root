@@ -572,7 +572,6 @@ foreach(tname histfactory-hf001_example
               roostats-StandardTestStatDistributionDemo
               roostats-TwoSidedFrequentistUpperLimitWithBands)
   set(${tname}-depends tutorial-roostats-CreateExampleFile-py)
-  set(${tname}-py-depends tutorial-roostats-CreateExampleFile-py)
 endforeach()
 
 #--dependency for TMVA tutorials
