@@ -647,11 +647,14 @@ void TStreamerInfo::Build(Bool_t isTransient)
                // decided to keep the file format unchanged and to always
                // store the enum constant as an int.
                auto memType = enumdesc->GetUnderlyingType();
-               if (TDataType::GetDataType(memType)->Size() > 4) // 4 is the onfile space for an Int_t.
-                  Warning(
+               if (TDataType::GetDataType(memType)->Size() > 4) {
+                  // 4 is the onfile space for an Int_t.
+                  Error(
                      "Build",
-                     "The underlying type (%s) for the enum %s is larger than 4 bytes and may result in data loss.",
-                     TDataType::GetTypeName(memType), dm->GetFullTypeName());
+                     "Discarding %s %s::%s because the underlying type (%s) for the enum %s is larger than 4 bytes and may result in data loss.",
+                      dmFull, GetName(), dmName, TDataType::GetTypeName(memType), dm->GetFullTypeName());
+                  continue;
+               }
                element->SetType(TStreamerInfo::kInt);
             }
          }
