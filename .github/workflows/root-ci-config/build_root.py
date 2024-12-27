@@ -535,7 +535,7 @@ def relatedrepo_GetClosestMatch(repo_name: str, origin: str, upstream: str):
     if current_head == "latest-stable":
       # Resolve the 'latest-stable' branch to the latest merged head/tag
       current_head = get_stdout_subprocess(f"""
-           git --git-dir={gitdir} for-each-ref --points-at=latest-stable^2 --format=%\(refname:short\))
+           git --git-dir={gitdir} for-each-ref --points-at=latest-stable^2 --format=%\(refname:short\)
            """, "Failed capture of lastest-stable underlying branch name")
       return fetch_url, current_head
 
