@@ -554,7 +554,7 @@ Int_t TStreamerInfo::ReadBufferArtificial(TBuffer &b, const T &arr,
    // Process the result
    if (readfunc) {
       TVirtualObject obj(0);
-      TVirtualArray *objarr = ((TBufferFile&)b).PeekDataCache();
+      TVirtualArray *objarr = b.PeekDataCache();
       if (objarr) {
          obj.fClass = objarr->fClass;
 
@@ -795,7 +795,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
 
       if (R__TestUseCache<T>(aElement)) {
          Int_t bufpos = b.Length();
-         if (((TBufferFile&)b).PeekDataCache()==0) {
+         if (b.PeekDataCache()==0) {
             Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",thisVar->GetName(),aElement->GetName());
             thisVar->ReadBufferSkip(b,arr,compinfo[i],compinfo[i]->fType+TStreamerInfo::kSkip,aElement,narr,eoffset);
          } else {
@@ -803,9 +803,9 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
                printf("ReadBuffer, class:%s, name=%s, fType[%d]=%d,"
                   " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
                   fClass->GetName(),aElement->GetName(),i,compinfo[i]->fType,
-                  aElement->ClassName(),b.Length(),arr[0], eoffset,((TBufferFile&)b).PeekDataCache()->GetObjectAt(0));
+                  aElement->ClassName(),b.Length(),arr[0], eoffset,b.PeekDataCache()->GetObjectAt(0));
             }
-            thisVar->ReadBuffer(b,*((TBufferFile&)b).PeekDataCache(),compinfo,i,i+1,narr,eoffset, arrayMode);
+            thisVar->ReadBuffer(b,*b.PeekDataCache(),compinfo,i,i+1,narr,eoffset, arrayMode);
          }
          if (aElement->TestBit(TStreamerElement::kRepeat)) { b.SetBufferOffset(bufpos); }
          continue;
@@ -1699,10 +1699,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
          }
 
          case TStreamerInfo::kCacheNew:
-            ((TBufferFile&)b).PushDataCache( new TVirtualArray( aElement->GetClassPointer(), narr ) );
+            b.PushDataCache( new TVirtualArray( aElement->GetClassPointer(), narr ) );
             continue;
          case TStreamerInfo::kCacheDelete:
-            delete ((TBufferFile&)b).PopDataCache();
+            delete b.PopDataCache();
             continue;
 
          case -1:

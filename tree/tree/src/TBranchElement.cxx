@@ -64,10 +64,10 @@ namespace {
       }
    }
    struct R__PushCache {
-      TBufferFile &fBuffer;
+      TBuffer &fBuffer;
       TVirtualArray *fOnfileObject;
 
-      R__PushCache(TBufferFile &b, TVirtualArray *in, UInt_t size) : fBuffer(b), fOnfileObject(in) {
+      R__PushCache(TBuffer &b, TVirtualArray *in, UInt_t size) : fBuffer(b), fOnfileObject(in) {
          if (fOnfileObject) {
             fOnfileObject->SetSize(size);
             fBuffer.PushDataCache( fOnfileObject );
@@ -2744,7 +2744,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
             if (clones->IsZombie()) {
                return -1;
             }
-            R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,ndata);
+            R__PushCache onfileObject(b,fOnfileObject,ndata);
 
             char **arr = (char **)clones->GetObjectRef();
             char **end = arr + fNdata;
@@ -2757,7 +2757,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
 
             auto ndata = GetNdata();
 
-            R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,ndata);
+            R__PushCache onfileObject(b,fOnfileObject,ndata);
             TVirtualCollectionProxy *proxy = GetCollectionProxy();
             TVirtualCollectionProxy::TPushPop helper(proxy, fObject);
 
@@ -2767,7 +2767,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
             // Apply the unattached rules; by definition they do not need any
             // input from a buffer.
             TBufferFile b(TBufferFile::kRead, 1);
-            R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,fNdata);
+            R__PushCache onfileObject(b,fOnfileObject,fNdata);
             b.ApplySequence(*fReadActionSequence, fObject);
          }
       }
@@ -4289,7 +4289,7 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
    }
    fNdata = n;
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1);
+   R__PushCache onfileObject(b,fOnfileObject,1);
 
    // Note: Proxy-helper needs to "embrace" the entire
    //       streaming of this STL container if the container
@@ -4379,7 +4379,7 @@ void TBranchElement::ReadLeavesCollectionSplitPtrMember(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,fNdata);
+   R__PushCache onfileObject(b,fOnfileObject,fNdata);
 
    TStreamerInfo *info = GetInfoImp();
    if (info == nullptr) return;
@@ -4411,7 +4411,7 @@ void TBranchElement::ReadLeavesCollectionSplitVectorPtrMember(TBuffer& b)
    if (!fNdata) {
       return;
    }
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,fNdata);
+   R__PushCache onfileObject(b,fOnfileObject,fNdata);
 
    TStreamerInfo *info = GetInfoImp();
    if (info == nullptr) return;
@@ -4442,7 +4442,7 @@ void TBranchElement::ReadLeavesCollectionMember(TBuffer& b)
    if (!fNdata) {
       return;
    }
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,fNdata);
+   R__PushCache onfileObject(b,fOnfileObject,fNdata);
 
    TStreamerInfo *info = GetInfoImp();
    if (info == nullptr) return;
@@ -4522,7 +4522,7 @@ void TBranchElement::ReadLeavesClonesMember(TBuffer& b)
 
    // Note, we could (possibly) save some more, by configuring the action
    // based on the value of fOnfileObject rather than pushing in on a stack.
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,fNdata);
+   R__PushCache onfileObject(b,fOnfileObject,fNdata);
 
    char **arr = (char **)clones->GetObjectRef();
    char **end = arr + fNdata;
@@ -4547,7 +4547,7 @@ void TBranchElement::ReadLeavesMember(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1);
+   R__PushCache onfileObject(b,fOnfileObject,1);
    // If not a TClonesArray or STL container master branch
    // or sub-branch and branch inherits from tobject,
    // then register with the buffer so that pointers are
@@ -4599,7 +4599,7 @@ void TBranchElement::ReadLeavesMemberBranchCount(TBuffer& b)
    if (!info) {
       return;
    }
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1); // Here we have a single object that contains a variable size C-style array.
+   R__PushCache onfileObject(b,fOnfileObject,1); // Here we have a single object that contains a variable size C-style array.
                                                                  // Since info is not null, fReadActionSequence is not null either.
    b.ApplySequence(*fReadActionSequence, fObject);
 }
@@ -4634,7 +4634,7 @@ void TBranchElement::ReadLeavesMemberCounter(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1);
+   R__PushCache onfileObject(b,fOnfileObject,1);
 
    // Since info is not null, fReadActionSequence is not null either.
    b.ApplySequence(*fReadActionSequence, fObject);
@@ -4655,7 +4655,7 @@ void TBranchElement::ReadLeavesCustomStreamer(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1);
+   R__PushCache onfileObject(b,fOnfileObject,1);
    fBranchClass->Streamer(fObject,b);
 }
 
