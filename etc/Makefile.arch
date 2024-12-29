@@ -259,6 +259,15 @@ LDFLAGS       = $(OPT)
 SOFLAGS       = -shared
 endif
 
+ifeq ($(ARCH),linuxloong64)
+# loong64 Linux with gcc and glibc
+CXX           = g++
+CXXFLAGS      = $(OPT) -Wall -fPIC
+LD            = g++
+LDFLAGS       = $(OPT)
+SOFLAGS       = -shared
+endif
+
 ifeq ($(ARCH),freebsd4)
 # FreeBSD with glibc
 CXX           = g++

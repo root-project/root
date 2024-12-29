@@ -262,6 +262,10 @@ linuxriscv64)
    # RISC-V Linux
    auxlibs="-lm -ldl -rdynamic"
    ;;
+linuxloong64)
+   # loong64 Linux
+   auxlibs="-lm -ldl -rdynamic"
+   ;;
 freebsd*)
    # FreeBSD
    auxcflags="${cxxversionflag}"
