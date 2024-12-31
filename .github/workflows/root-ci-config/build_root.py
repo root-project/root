@@ -33,7 +33,8 @@ from build_utils import (
     calc_options_hash,
     subprocess_with_log,
     subprocess_with_capture,
-    upload_file
+    upload_file,
+    is_macos
 )
 import build_utils
 
@@ -92,7 +93,7 @@ def main():
     # Differentiate between macos versions: it's possible to have the same label
     # for different macos versions, especially different minor versions.
     macos_version_prefix = ''
-    if 'Darwin' == platform.system():
+    if is_macos():
         macos_version_tuple = platform.mac_ver()
         macos_version = macos_version_tuple[0]
         macos_version_prefix = f'{macos_version}/'

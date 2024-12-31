@@ -7,6 +7,7 @@ import sys
 import textwrap
 import datetime
 import time
+import platform
 from functools import wraps
 from hashlib import sha1
 from http import HTTPStatus
@@ -16,6 +17,9 @@ from collections import namedtuple
 
 from openstack.connection import Connection
 from requests import get
+
+def is_macos():
+    return 'Darwin' == platform.system()
 
 class SimpleTimer:
     def __init__(self):
@@ -72,7 +76,7 @@ class Tracer:
     @github_log_group("To replicate this build locally")
     def print(self) -> None:
         if self.trace != "":
-            if self.image:
+            if self.image and not is_macos():
                 print(f"""\
 # Grab the image and set up the python virtual environment:
 docker run {' '.join(self.docker_opts)} -it registry.cern.ch/root-ci/{self.image}:buildready
