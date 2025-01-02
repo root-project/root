@@ -30,8 +30,6 @@ as a MIGRAD minimization step is executed for each function evaluation
 #include "RooMsgService.h"
 #include "RooRealVar.h"
 
-using std::endl;
-
 ClassImp(RooProfileLL);
 
 
@@ -121,7 +119,7 @@ RooFit::OwningPtr<RooAbsReal> RooProfileLL::createProfile(const RooArgSet& param
 
 void RooProfileLL::initializeMinimizer() const
 {
-  coutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") Creating instance of MINUIT" << endl ;
+  coutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") Creating instance of MINUIT" << std::endl;
 
   bool smode = RooMsgService::instance().silentMode() ;
   RooMsgService::instance().setSilentMode(true) ;
@@ -192,7 +190,7 @@ void RooProfileLL::validateAbsMin() const
       if (_paramFixed[par->GetName()] != par->isConstant()) {
    cxcoutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") constant status of parameter " << par->GetName() << " has changed from "
             << (_paramFixed[par->GetName()]?"fixed":"floating") << " to " << (par->isConstant()?"fixed":"floating")
-            << ", recalculating absolute minimum" << endl ;
+            << ", recalculating absolute minimum" << std::endl;
    _absMinValid = false ;
    break ;
       }
@@ -203,7 +201,7 @@ void RooProfileLL::validateAbsMin() const
   // If we don't have the absolute minimum w.r.t all observables, calculate that first
   if (!_absMinValid) {
 
-    cxcoutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") determining minimum likelihood for current configurations w.r.t all observable" << endl ;
+    cxcoutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") determining minimum likelihood for current configurations w.r.t all observable" << std::endl;
 
 
     if (!_minimizer) {
@@ -235,7 +233,7 @@ void RooProfileLL::validateAbsMin() const
     _paramAbsMin.removeAll() ;
 
     // Only store non-constant parameters here!
-    _paramAbsMin.addClone(*std::unique_ptr<RooArgSet>{static_cast<RooArgSet*>(_par.selectByAttrib("Constant",false))});
+    _paramAbsMin.addClone(*std::unique_ptr<RooArgSet>{_par.selectByAttrib("Constant", false)});
 
     _obsAbsMin.addClone(_obs) ;
 
@@ -253,7 +251,7 @@ void RooProfileLL::validateAbsMin() const
                                << static_cast<RooAbsReal const*>(arg)->getVal() ;
         first=false ;
       }
-      ccxcoutI(Minimization) << ")" << endl ;
+      ccxcoutI(Minimization) << ")" << std::endl;
     }
 
     // Restore original parameter values

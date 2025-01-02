@@ -105,7 +105,7 @@ int calcAsymptoticCorrectedCovariance(RooAbsReal &pdf, RooMinimizer &minimizer, 
    const RooArgList &floated = rw->floatParsFinal();
    RooArgSet allparams;
    logpdf.getParameters(data.get(), allparams);
-   std::unique_ptr<RooArgSet> floatingparams{static_cast<RooArgSet *>(allparams.selectByAttrib("Constant", false))};
+   std::unique_ptr<RooArgSet> floatingparams{allparams.selectByAttrib("Constant", false)};
 
    const double eps = 1.0e-4;
 
@@ -341,8 +341,8 @@ std::unique_ptr<RooAbsArg> createSimultaneousNLL(RooSimultaneous const &simPdf, 
 
       if (RooAbsPdf *pdf = simPdf.getPdf(catName.c_str())) {
          auto name = std::string("nll_") + pdf->GetName();
-         std::unique_ptr<RooArgSet> observables(
-            static_cast<RooArgSet *>(std::unique_ptr<RooArgSet>(pdf->getVariables())->selectByAttrib("__obs__", true)));
+         std::unique_ptr<RooArgSet> observables{
+            std::unique_ptr<RooArgSet>(pdf->getVariables())->selectByAttrib("__obs__", true)};
          // In a simultaneous fit, it is allowed that only a subset of the pdfs
          // are extended. Therefore, we have to make sure that we don't request
          // extended NLL objects for channels that can't be extended.

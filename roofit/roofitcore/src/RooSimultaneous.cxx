@@ -1212,8 +1212,8 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
 
       markObs(pdfClone.get(), prefix, normSet);
 
-      std::unique_ptr<RooArgSet> pdfNormSet(
-         static_cast<RooArgSet *>(std::unique_ptr<RooArgSet>(pdfClone->getVariables())->selectByAttrib("__obs__", true)));
+      std::unique_ptr<RooArgSet> pdfNormSet{
+         std::unique_ptr<RooArgSet>(pdfClone->getVariables())->selectByAttrib("__obs__", true)};
 
       if (rangeName) {
          pdfClone->setNormRange(RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, catName).c_str());
