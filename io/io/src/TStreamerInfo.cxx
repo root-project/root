@@ -4981,13 +4981,16 @@ void* TStreamerInfo::New(void *obj)
 
       // Skip elements for which we do not have any class
       // information.  FIXME: Document how this could happen.
-      TClass* cle = element->GetClassPointer();
-      if (!cle) {
+      TClass* cle = element->GetNewClass();
+      if (!cle)
+         cle = element->GetClassPointer();
+      if (!cle)
          continue;
-      }
 
       char* eaddr = p + element->GetOffset();
-      Int_t etype = element->GetType();
+      Int_t etype = element->GetNewType();
+      if (etype == TStreamerInfo::kNoType)
+         etype = element->GetType();
 
       //cle->GetStreamerInfo(); //necessary in case "->" is not specified
 
@@ -5167,7 +5170,9 @@ void TStreamerInfo::DestructorImpl(void* obj, Bool_t dtorOnly)
       char* eaddr = p + ele->GetOffset();
 
 
-      Int_t etype = ele->GetType();
+      Int_t etype = ele->GetNewType(); // in memory type
+      if (etype == TStreamerInfo::kNoType)
+         etype = ele->GetType();
 
       switch(etype) {
          case TStreamerInfo::kOffsetP + TStreamerInfo::kBool:   DeleteBasicPointer(eaddr,ele,Bool_t);  continue;
@@ -5190,8 +5195,11 @@ void TStreamerInfo::DestructorImpl(void* obj, Bool_t dtorOnly)
 
 
 
-      TClass* cle = ele->GetClassPointer();
-      if (!cle) continue;
+      TClass* cle = ele->GetNewClass(); // in memory type
+      if (!cle)
+         cle = ele->GetClassPointer();
+      if (!cle)
+         continue;
 
 
       if (etype == kObjectp || etype == kAnyp) {
