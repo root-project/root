@@ -257,15 +257,24 @@ namespace {
    {
       std::string localtypename(s->GetUnderlyingTypeName());
       Int_t ndim = 0;
+      Int_t totaldim = 0;
       Int_t memType = TVirtualStreamerInfo::kNoType;
+      Int_t datasize = 1;
       auto memClass = TClass::GetClass(localtypename.c_str());
+      std::vector<Int_t> dimensions;
       bool isStdArray = memClass && TClassEdit::IsStdArray(memClass->GetName());
       if (isStdArray) {
+         totaldim = 1;
          std::array<Int_t, 5> localMaxIndices;
          TClassEdit::GetStdArrayProperties(memClass->GetName(),
                                           localtypename,
                                           localMaxIndices,
                                           ndim);
+         for(Int_t i = 0; i < ndim; ++i) {
+            auto d = localMaxIndices[i];
+            dimensions.push_back(d);
+            totaldim *= d;
+         }
          memClass = TClass::GetClass(localtypename.c_str());
       }
       if (memClass) {
@@ -292,22 +301,56 @@ namespace {
          {
             memType += TVirtualStreamerInfo::kOffsetL;
          }
+         datasize = memClass->GetClassSize();
       } else {
          auto d = gROOT->GetType(localtypename.c_str());
-         memType = d->GetType();
-         if (s->GetDimensions()[0])
+         if (d) {
+            memType = d->GetType();
+            datasize = d->Size();
+         }
+         if (s->GetDimensions()[0]) {
             memType += TVirtualStreamerInfo::kOffsetL;
+         }
          if (s->GetPointerLevel())
             memType += TVirtualStreamerInfo::kOffsetP;
       }
-      return std::make_pair(memClass, memType);
+      if (s->GetDimensions()[0]) {
+         if (!totaldim)
+            totaldim = 1;
+         auto dims = s->GetDimensions();
+         while(*dims == '[') {
+            ++dims;
+            uint32_t res = 0;
+            do {
+               if (!isdigit(*dims))
+                  break;
+               if (res * 10 < res) {
+                  Error("GetSourceType", "Could not parse dimension string %s", s->GetDimensions());
+                  break;
+               }
+               res *= 10;
+               res += *dims - '0';
+            } while (*++dims);
+            dimensions.push_back(res);
+            totaldim *= res;
+         }
+      }
+      return std::make_tuple(memClass, memType, datasize, dimensions, totaldim);
    }
 
    void UpdateFromRule(ROOT::TSchemaRule::TSources *s, TStreamerElement *element)
    {
-      auto [memClass, memType] = GetSourceType(s);
+      auto [memClass, memType, datasize, dimensions, totaldim] = GetSourceType(s);
       element->SetNewType( memType );
       element->SetNewClass( memClass );
+      // We can not change the recorded dimensions.  Let's check that
+      // the total number of elements is still the same.
+      if (totaldim != element->GetArrayLength()) {
+         Error("UpdateFromRule",
+               "The number of elements in the rule (%d) does not match the number of elements in the element (%d)",
+               totaldim, element->GetArrayLength());
+      }
+      element->SetSize(totaldim ? totaldim * datasize : datasize);
    }
 }
 
@@ -4701,7 +4744,7 @@ void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule
             break;
          } else {
             // The source exists, let's check if it has the expected type.
-            auto [memClass, memType] = GetSourceType(src);
+            auto [memClass, memType, datasize, dimensions, totaldim] = GetSourceType(src);
             if ((memClass != source_element->GetNewClass() || memType != source_element->GetNewType())
                 && (memType != TVirtualStreamerInfo::kNoContextMenu && memType != TVirtualStreamerInfo::kNoType))
             {
