@@ -52,7 +52,7 @@ namespace RooFit {
  *
  * The coupling of all these classes to RooMinimizer is made via the MinuitFcnGrad class, which owns the Wrappers that
  * calculate the likelihood components.
- * 
+ *
  * More extensive documentation is available at
  * https://github.com/root-project/root/blob/master/roofit/doc/developers/test_statistics.md
  */
@@ -97,7 +97,8 @@ RooArgSet getConstraintsSet(RooAbsPdf *pdf, RooAbsData *data, RooArgSet constrai
          global_observables.removeAll();
       }
       std::unique_ptr<RooArgSet> allVars{pdf->getVariables()};
-      global_observables.add(*dynamic_cast<RooArgSet *>(allVars->selectByAttrib(global_observables_tag.c_str(), true)));
+      global_observables.add(
+         *std::unique_ptr<RooArgSet>{allVars->selectByAttrib(global_observables_tag.c_str(), true)});
       oocoutI(nullptr, Minimization) << "User-defined specification of global observables definition with tag named '"
                                      << global_observables_tag << "'" << std::endl;
    } else if (global_observables.empty()) {
@@ -109,7 +110,7 @@ RooArgSet getConstraintsSet(RooAbsPdf *pdf, RooAbsData *data, RooArgSet constrai
             << "p.d.f. provides built-in specification of global observables definition with tag named '"
             << defGlobObsTag << "'" << std::endl;
          std::unique_ptr<RooArgSet> allVars{pdf->getVariables()};
-         global_observables.add(*dynamic_cast<RooArgSet *>(allVars->selectByAttrib(defGlobObsTag, true)));
+         global_observables.add(*std::unique_ptr<RooArgSet>{allVars->selectByAttrib(defGlobObsTag, true)});
       }
    }
 
