@@ -19,6 +19,8 @@
 
 #include "RooAbsMCStudyModule.h"
 
+#include <memory>
+
 class RooChi2MCSModule : public RooAbsMCStudyModule {
 public:
 
@@ -32,16 +34,13 @@ public:
   bool processAfterFit(Int_t /*sampleNum*/) override  ;
 
 private:
+   std::unique_ptr<RooDataSet> _data;    // Summary dataset to store results
+   std::unique_ptr<RooRealVar> _chi2;    // Chi^2 of function w.r.t. data
+   std::unique_ptr<RooRealVar> _ndof;    // Number of degrees of freedom
+   std::unique_ptr<RooRealVar> _chi2red; // Reduced Chi^2 w.r.t data
+   std::unique_ptr<RooRealVar> _prob;    // Probability of chi^2,nDOF combination
 
-  RooDataSet* _data = nullptr;    // Summary dataset to store results
-  RooRealVar* _chi2 = nullptr;    // Chi^2 of function w.r.t. data
-  RooRealVar* _ndof = nullptr;    // Number of degrees of freedom
-  RooRealVar* _chi2red = nullptr; // Reduced Chi^2 w.r.t data
-  RooRealVar* _prob = nullptr;    // Probability of chi^2,nDOF combination
-
-  ClassDefOverride(RooChi2MCSModule,0) // MCStudy module to calculate chi2 between binned data and fit
-} ;
-
+   ClassDefOverride(RooChi2MCSModule, 0) // MCStudy module to calculate chi2 between binned data and fit
+};
 
 #endif
-
