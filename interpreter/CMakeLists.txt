@@ -2,6 +2,10 @@
 set(CMAKE_MODULE_PATH "")
 
 #--- Check if we need to build llvm and clang ------------------------------------------------------
+if (builtin_llvm AND NOT builtin_clang)
+  message(FATAL_ERROR "Cannot enable builtin LLVM, but provide external Clang")
+endif()
+
 if (NOT builtin_clang)
   message(WARNING "Due to ROOT-specific patches you need a special version of clang. You cannot use vanilla clang.")
 endif()
