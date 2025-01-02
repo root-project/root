@@ -953,7 +953,7 @@ void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, c
 
   _cacheOwner = owner ;
 
-  std::unique_ptr<RooArgSet> constExprVarSet{static_cast<RooArgSet*>(newVarSet.selectByAttrib("ConstantExpression",true))};
+  std::unique_ptr<RooArgSet> constExprVarSet{newVarSet.selectByAttrib("ConstantExpression", true)};
 
   bool doTreeFill = (_cachedVars.empty()) ;
 
