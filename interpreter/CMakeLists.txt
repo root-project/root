@@ -462,18 +462,18 @@ endif(builtin_llvm)
 
 if (builtin_clang)
   if (builtin_llvm)
-    # For builtin LLVM this is set in interpreter/llvm-project/llvm/CMakeLists.txt
     set(Clang_DIR "${LLVM_BINARY_DIR}/tools/clang/")
   else()
     set(Clang_DIR "${CMAKE_BINARY_DIR}/interpreter/llvm-project/clang/")
-    set(Clang_Config_ExtraPathHints "${Clang_DIR}cmake/modules/CMakeFiles")
   endif()
   set(CLANG_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}/interpreter/llvm-project/clang/include
     ${Clang_DIR}/include
     CACHE STRING "Clang include directories.")
+  # FIXME: This is due to a downstream patch!
+  set(CLANG_CMAKE_DIR "${Clang_DIR}/lib/cmake/clang/")
 else()
-  set(Clang_DIR "${LLVM_BINARY_DIR}/lib/cmake/clang/")
+  set(CLANG_CMAKE_DIR "${LLVM_BINARY_DIR}/lib/cmake/clang/")
 endif()
 
 # Reset the compiler flags after compiling LLVM and Clang
