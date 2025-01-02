@@ -676,8 +676,11 @@ TClass *TStreamerBase::GetClassPointer() const
 
 Int_t TStreamerBase::GetSize() const
 {
-   TClass *cl = GetClassPointer();
-   if (cl) return cl->Size();
+   TClass *cl = GetNewClass();
+   if (!cl)
+      cl = GetClassPointer();
+   if (cl)
+      return cl->Size();
    return 0;
 }
 
@@ -1281,10 +1284,14 @@ const char *TStreamerObject::GetInclude() const
 
 Int_t TStreamerObject::GetSize() const
 {
-   TClass *cl = GetClassPointer();
+   TClass *cl = GetNewClass();
+   if (!cl)
+      cl = GetClassPointer();
    Int_t classSize = 8;
-   if (cl) classSize = cl->Size();
-   if (fArrayLength) return fArrayLength*classSize;
+   if (cl)
+      classSize = cl->Size();
+   if (fArrayLength)
+      return fArrayLength * classSize;
    return classSize;
 }
 
@@ -1374,10 +1381,14 @@ const char *TStreamerObjectAny::GetInclude() const
 
 Int_t TStreamerObjectAny::GetSize() const
 {
-   TClass *cl = GetClassPointer();
+   TClass *cl = GetNewClass();
+   if (!cl)
+      cl = GetClassPointer();
    Int_t classSize = 8;
-   if (cl) classSize = cl->Size();
-   if (fArrayLength) return fArrayLength*classSize;
+   if (cl)
+      classSize = cl->Size();
+   if (fArrayLength)
+      return fArrayLength * classSize;
    return classSize;
 }
 
@@ -1906,7 +1917,9 @@ Int_t TStreamerSTL::GetSize() const
    // Since the STL collection might or might not be emulated and that the
    // sizeof the object depends on this, let's just always retrieve the
    // current size!
-   TClass *cl = GetClassPointer();
+   TClass *cl = GetNewClass();
+   if (!cl)
+      cl = GetClassPointer();
    UInt_t size = 0;
    if (cl==nullptr) {
       if (!TestBit(kWarned)) {
