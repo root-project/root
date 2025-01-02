@@ -120,7 +120,7 @@ bool RooChi2MCSModule::processAfterFit(Int_t /*sampleNum*/)
 
   std::unique_ptr<RooAbsReal> chi2Var{fitModel()->createChi2(*binnedData,RooFit::Extended(extendedGen()),RooFit::DataError(RooAbsData::SumW2))};
 
-  std::unique_ptr<RooArgSet> floatPars{static_cast<RooArgSet*>(fitParams()->selectByAttrib("Constant",false))};
+  std::unique_ptr<RooArgSet> floatPars{fitParams()->selectByAttrib("Constant",false)};
 
   _chi2->setVal(chi2Var->getVal()) ;
   _ndof->setVal(binnedData->numEntries()-floatPars->size()-1) ;

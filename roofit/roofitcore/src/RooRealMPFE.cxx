@@ -169,7 +169,7 @@ void RooRealMPFE::initVars()
 
   // Retrieve non-constant parameters
   auto vars = _arg->getParameters(RooArgSet());
-  //RooArgSet* ncVars = (RooArgSet*) vars->selectByAttrib("Constant",false) ;
+  // RooArgSet *ncVars = vars->selectByAttrib("Constant", false);
   RooArgList varList(*vars) ;
 
   // Save in lists

@@ -636,7 +636,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
     _paramAbsMin.removeAll() ;
 
     // Only store non-constant parameters here!
-    std::unique_ptr<RooArgSet> tmp{(RooArgSet*) _par.selectByAttrib("Constant",false)};
+    std::unique_ptr<RooArgSet> tmp{_par.selectByAttrib("Constant",false)};
     _paramAbsMin.addClone(*tmp) ;
 
     _obsAbsMin.addClone(_obs) ;

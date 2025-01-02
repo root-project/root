@@ -140,6 +140,11 @@ public:
   using RooAbsCollection::selectCommon;
   using RooAbsCollection::snapshot;
 
+  /// Use RooAbsCollection::selectByAttrib(), but return as RooArgSet.
+  RooArgSet* selectByAttrib(const char* name, bool value) const {
+    return static_cast<RooArgSet*>(RooAbsCollection::selectByAttrib(name, value));
+  }
+
   /// Use RooAbsCollection::selectByName(), but return as RooArgSet.
   inline RooArgSet* selectByName(const char* nameList, bool verbose=false) const {
     return static_cast<RooArgSet*>(RooAbsCollection::selectByName(nameList, verbose));
