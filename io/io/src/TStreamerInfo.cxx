@@ -738,6 +738,21 @@ void TStreamerInfo::Build(Bool_t isTransient)
          if (!isTransient)
             Error("Build","Could you create a TStreamerInfo for %s\n",TString::Format("%s@@%d",GetName(),GetClassVersion()).Data());
       } else {
+         // Need to find the source of rules where an implicit conversion is requested.
+         if (rules) {
+            TIter next(infoalloc->fElements);
+            TStreamerElement *alloc_element;
+            while ((alloc_element = (TStreamerElement *)next())) {
+               if (rules.HasRuleWithSource(alloc_element->GetName(), kTRUE)) {
+                  auto r = rules.GetRuleWithSource(alloc_element->GetName());
+                  assert(r && r->GetSource());
+                  auto s = (ROOT::TSchemaRule::TSources*)(r->GetSource()->FindObject( alloc_element->GetName() ));
+                  assert(s);
+                  UpdateFromRule(s, alloc_element);
+               }
+            }
+         }
+
          // Tell clone we should rerun BuildOld
          infoalloc->SetBit(kBuildOldUsed,false);
          // Temporarily mark it as built to avoid the BuildCheck from removing
@@ -2566,6 +2581,20 @@ void TStreamerInfo::BuildOld()
                if (!infoalloc) {
                   Error("BuildOld","Unable to create the StreamerInfo for %s.",TString::Format("%s@@%d",GetName(),GetOnFileClassVersion()).Data());
                } else {
+                  // Need to find the source of rules where an implicit conversion is requested.
+                  if (rules) {
+                     TIter alloc_next(infoalloc->fElements);
+                     TStreamerElement *alloc_element;
+                     while ((alloc_element = (TStreamerElement *)alloc_next())) {
+                        if (rules.HasRuleWithSource(alloc_element->GetName(), kTRUE)) {
+                           auto r = rules.GetRuleWithSource(alloc_element->GetName());
+                           assert(r && r->GetSource());
+                           auto s = (ROOT::TSchemaRule::TSources*)(r->GetSource()->FindObject( alloc_element->GetName() ));
+                           assert(s);
+                           UpdateFromRule(s, alloc_element);
+                        }
+                     }
+                  }
                   infoalloc->SetBit(kBuildOldUsed,false);
                   infoalloc->BuildCheck();
                   infoalloc->BuildOld();
