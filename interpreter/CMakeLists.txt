@@ -470,8 +470,7 @@ if (builtin_clang)
     ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/clang/include
     ${CLANG_BINARY_DIR}/include
     CACHE STRING "Clang include directories.")
-  # FIXME: This is due to a downstream patch!
-  set(CLANG_CMAKE_DIR "${CLANG_BINARY_DIR}/lib/cmake/clang/")
+  set(CLANG_CMAKE_DIR "${CMAKE_BINARY_DIR}/lib/cmake/clang/")
 else()
   set(CLANG_CMAKE_DIR "${LLVM_BINARY_DIR}/lib/cmake/clang/")
 endif()
