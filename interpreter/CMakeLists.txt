@@ -56,7 +56,7 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 set(CMAKE_DISABLE_FIND_PACKAGE_CUDA ON)
 
 # will be set again in case NOT builtin_llvm
-set(LLVM_DIR "${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm")
+set(LLVM_DIR "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm")
 if (clad)
   set(CLING_BUILD_PLUGINS ON)
 endif()
@@ -239,8 +239,8 @@ if(builtin_llvm)
     unset(CMAKE_MESSAGE_LOG_LEVEL)
   endif()
 
-  set(LLVM_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/llvm-project/llvm/include
-    ${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm/include
+  set(LLVM_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/include
+    ${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm/include
     CACHE STRING "LLVM include directories."
     )
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/cmake/modules")
@@ -464,10 +464,10 @@ if (builtin_clang)
   if (builtin_llvm)
     set(CLANG_BINARY_DIR "${LLVM_BINARY_DIR}/tools/clang/")
   else()
-    set(CLANG_BINARY_DIR "${CMAKE_BINARY_DIR}/interpreter/llvm-project/clang/")
+    set(CLANG_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/clang/")
   endif()
   set(CLANG_INCLUDE_DIRS
-    ${CMAKE_SOURCE_DIR}/interpreter/llvm-project/clang/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/clang/include
     ${CLANG_BINARY_DIR}/include
     CACHE STRING "Clang include directories.")
   # FIXME: This is due to a downstream patch!
@@ -521,7 +521,7 @@ if (builtin_cling)
   add_subdirectory(cling EXCLUDE_FROM_ALL)
   add_dependencies(CLING ${CLING_LIBRARIES})
 
-  set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include CACHE STRING "")
+  set(CLING_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/cling/include CACHE STRING "")
 
 
 
