@@ -253,7 +253,7 @@ namespace {
       TStreamerInfo* fInfo;
    };
 
-   decltype(auto) GetSourceType(ROOT::TSchemaRule::TSources *s)
+   decltype(auto) GetSourceType(const ROOT::TSchemaRule::TSources *s, const TStreamerElement *element)
    {
       std::string localtypename(s->GetUnderlyingTypeName());
       Int_t ndim = 0;
@@ -335,20 +335,28 @@ namespace {
             totaldim *= res;
          }
       }
+      if (element->GetType() == TStreamerInfo::kStreamLoop &&
+          (memType == TStreamerInfo::kAnyp || memType == TStreamerInfo::kAnyP
+          || memType == TStreamerInfo::kObjectp || memType == TStreamerInfo::kObjectP))
+      {
+         memType = TStreamerInfo::kStreamLoop;
+      }
+      if (element->GetType() == TStreamerInfo::kStreamer)
+         memType = element->GetType();
       return std::make_tuple(memClass, memType, datasize, dimensions, totaldim);
    }
 
-   void UpdateFromRule(ROOT::TSchemaRule::TSources *s, TStreamerElement *element)
+   void UpdateFromRule(const TStreamerInfo *info, const ROOT::TSchemaRule::TSources *s, TStreamerElement *element)
    {
-      auto [memClass, memType, datasize, dimensions, totaldim] = GetSourceType(s);
+      auto [memClass, memType, datasize, dimensions, totaldim] = GetSourceType(s, element);
       element->SetNewType( memType );
       element->SetNewClass( memClass );
       // We can not change the recorded dimensions.  Let's check that
       // the total number of elements is still the same.
       if (totaldim != element->GetArrayLength()) {
          Error("UpdateFromRule",
-               "The number of elements in the rule (%d) does not match the number of elements in the element (%d)",
-               totaldim, element->GetArrayLength());
+               "For %s::%s the number of array elements in the rule (%d) does not match the number in the StreamerElement (%d)",
+               info->GetName(), element->GetFullName(), totaldim, element->GetArrayLength());
       }
       element->SetSize(totaldim ? totaldim * datasize : datasize);
    }
@@ -766,7 +774,7 @@ void TStreamerInfo::Build(Bool_t isTransient)
          assert(r && r->GetSource());
          auto s = (ROOT::TSchemaRule::TSources*)(r->GetSource()->FindObject( element->GetName() ));
          assert(s);
-         UpdateFromRule(s, cached);
+         UpdateFromRule(this, s, cached);
       }
 
       fElements->Add(element);
@@ -791,7 +799,7 @@ void TStreamerInfo::Build(Bool_t isTransient)
                   assert(r && r->GetSource());
                   auto s = (ROOT::TSchemaRule::TSources*)(r->GetSource()->FindObject( alloc_element->GetName() ));
                   assert(s);
-                  UpdateFromRule(s, alloc_element);
+                  UpdateFromRule(this, s, alloc_element);
                }
             }
          }
@@ -2634,7 +2642,7 @@ void TStreamerInfo::BuildOld()
                            assert(r && r->GetSource());
                            auto s = (ROOT::TSchemaRule::TSources*)(r->GetSource()->FindObject( alloc_element->GetName() ));
                            assert(s);
-                           UpdateFromRule(s, alloc_element);
+                           UpdateFromRule(this, s, alloc_element);
                         }
                      }
                   }
@@ -2675,7 +2683,7 @@ void TStreamerInfo::BuildOld()
             auto s = (ROOT::TSchemaRule::TSources *)(r->GetSource()->FindObject(element->GetName()));
             assert(s);
 
-            UpdateFromRule(s, element);
+            UpdateFromRule(this, s, element);
 
             element->SetOffset(infoalloc ? infoalloc->GetOffset(element->GetName()) : 0);
          } else if (rules.HasRuleWithTarget( element->GetName(), kTRUE ) ) {
@@ -4748,7 +4756,7 @@ void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule
             }
          } else {
             // The source exists, let's check if it has the expected type.
-            auto [memClass, memType, datasize, dimensions, totaldim] = GetSourceType(src);
+            auto [memClass, memType, datasize, dimensions, totaldim] = GetSourceType(src, source_element);
             if ((memClass != source_element->GetNewClass() || memType != source_element->GetNewType())
                 && (memType != TVirtualStreamerInfo::kNoContextMenu && memType != TVirtualStreamerInfo::kNoType))
             {
