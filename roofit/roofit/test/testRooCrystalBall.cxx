@@ -10,6 +10,7 @@
 #include <RooNumIntConfig.h>
 #include <RooPlot.h>
 #include <RooRealVar.h>
+#include <RooWorkspace.h>
 
 #include <iostream>
 #include <numeric>
@@ -25,16 +26,19 @@
 
 #include "gtest/gtest.h"
 
-#define MAKE_CRYSTAL_BALL_AND_VARS                         \
-   RooRealVar x("x", "x", 0., -200., 200.);                \
-   RooRealVar x0("x0", "x0", 100., -200., 200.);           \
-   RooRealVar sigmaL("sigmaL", "sigmaL", 2., 1.E-6, 100.); \
-   RooRealVar sigmaR("sigmaR", "sigmaR", 2., 1.E-6, 100.); \
-   RooRealVar alphaL("aL", "aL", 1., 1.E-6, 100.);         \
-   RooRealVar alphaR("aR", "aR", 1., 1.E-6, 100.);         \
-   RooRealVar nL("nL", "nL", 1., 1.E-6, 100.);             \
-   RooRealVar nR("nR", "nR", 1., 1.E-6, 100.);             \
-   RooCrystalBall crystalBall("crystalBall", "crystalBall", x, x0, sigmaL, sigmaR, alphaL, nL, alphaR, nR);
+std::unique_ptr<RooWorkspace> makeWorkspace()
+{
+   auto ws = std::make_unique<RooWorkspace>();
+   ws->factory("CrystalBall::crystalBall(x[0., -200., 200.], "
+               "x0[100., -200., 200.], "
+               "sigmaL[2., 1.E-6, 100.], "
+               "sigmaR[2., 1.E-6, 100.], "
+               "aL[1., 1.E-6, 100.], "
+               "nL[1., 1.E-6, 100.], "
+               "aR[1., 1.E-6, 100.], "
+               "nR[1., 1.E-6, 100.])");
+   return ws;
+}
 
 std::string makeCrystalBallFormulaOnlyLeftTail()
 {
@@ -159,18 +163,18 @@ TEST(RooCrystalBall, DoubleSided)
    RooRealVar x("x", "x", 0., -200., 200.);
    RooRealVar x0("x0", "x0", 100., -200., 200.);
    RooRealVar sigma("sigma", "sigma", 2., 1.E-6, 100.);
-   RooRealVar alphaL("aL", "aL", 1., 1.E-6, 100.);
-   RooRealVar alphaR("aR", "aR", 1., 1.E-6, 100.);
+   RooRealVar aL("aL", "aL", 1., 1.E-6, 100.);
+   RooRealVar aR("aR", "aR", 1., 1.E-6, 100.);
    RooRealVar nL("nL", "nL", 1., 1.E-6, 100.);
    RooRealVar nR("nR", "nR", 1., 1.E-6, 100.);
 
    // in the symmetric Gaussian core case, we also compare with the old implementation `RooDSCBShape`
-   RooCrystalBall crystalBall("crystalBall", "crystalBall", x, x0, sigma, alphaL, nL, alphaR, nR);
-   // RooDSCBShape crystalBallOld("crystalBallOld", "crystalBallOld", x, x0, sigma, alphaL, nL, alphaR, nR);
+   RooCrystalBall crystalBall("crystalBall", "crystalBall", x, x0, sigma, aL, nL, aR, nR);
+   // RooDSCBShape crystalBallOld("crystalBallOld", "crystalBallOld", x, x0, sigma, aL, nL, aR, nR);
 
    auto formula = makeCrystalBallFormulaDoubleSided();
 
-   RooGenericPdf crystalBallRef{"crystalBallRef", formula.c_str(), {x, x0, sigma, alphaL, nL, alphaR, nR}};
+   RooGenericPdf crystalBallRef{"crystalBallRef", formula.c_str(), {x, x0, sigma, aL, nL, aR, nR}};
 
    for (double theX : {-100., -50., -10., -1., 0., 1., 10., 50., 100.}) {
       for (double theX0 : {-100., -10., 0., 10., 20., 30., 100., 150.}) {
@@ -182,9 +186,9 @@ TEST(RooCrystalBall, DoubleSided)
                         x = theX;
                         x0 = theX0;
                         sigma = theSigma;
-                        alphaL = theAlphaL;
+                        aL = theAlphaL;
                         nL = theNL;
-                        alphaR = theAlphaR;
+                        aR = theAlphaR;
                         nR = theNR;
 
                         EXPECT_FLOAT_EQ(crystalBall.getVal(), crystalBallRef.getVal())
@@ -205,10 +209,20 @@ TEST(RooCrystalBall, DoubleSided)
 
 TEST(RooCrystalBall, FullyParametrized)
 {
-   MAKE_CRYSTAL_BALL_AND_VARS;
+   auto ws = makeWorkspace();
+   auto &x = *ws->var("x");
+   auto &x0 = *ws->var("x0");
+   auto &sigmaL = *ws->var("sigmaL");
+   auto &sigmaR = *ws->var("sigmaR");
+   auto &aL = *ws->var("aL");
+   auto &aR = *ws->var("aR");
+   auto &nL = *ws->var("nL");
+   auto &nR = *ws->var("nR");
+   auto &crystalBall = *ws->pdf("crystalBall");
+
    auto formula = makeCrystalBallFormula();
 
-   RooGenericPdf crystalBallRef{"crystalBallRef", formula.c_str(), {x, x0, sigmaL, alphaL, nL, sigmaR, alphaR, nR}};
+   RooGenericPdf crystalBallRef{"crystalBallRef", formula.c_str(), {x, x0, sigmaL, aL, nL, sigmaR, aR, nR}};
 
    for (double theX : {-100., -50., -10., -1., 0., 1., 10., 50., 100.}) {
       for (double theX0 : {-100., -10., 0., 10., 20., 30., 100., 150.}) {
@@ -221,10 +235,10 @@ TEST(RooCrystalBall, FullyParametrized)
                            x = theX;
                            x0 = theX0;
                            sigmaL = theSigmaL;
-                           alphaL = theAlphaL;
+                           aL = theAlphaL;
                            nL = theNL;
                            sigmaR = theSigmaR;
-                           alphaR = theAlphaR;
+                           aR = theAlphaR;
                            nR = theNR;
 
                            EXPECT_FLOAT_EQ(crystalBall.getVal(), crystalBallRef.getVal())
@@ -244,24 +258,33 @@ TEST(RooCrystalBall, Integral)
 {
    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
 
-   MAKE_CRYSTAL_BALL_AND_VARS;
+   auto ws = makeWorkspace();
+   auto &x = *ws->var("x");
+   auto &x0 = *ws->var("x0");
+   auto &sigmaL = *ws->var("sigmaL");
+   auto &sigmaR = *ws->var("sigmaR");
+   auto &aL = *ws->var("aL");
+   auto &aR = *ws->var("aR");
+   auto &nL = *ws->var("nL");
+   auto &nR = *ws->var("nR");
+   auto &crystalBall = *ws->pdf("crystalBall");
 
    x.setRange(-199., 199);
 
-   RooCrystalBall crystalBallNumInt(crystalBall);
+   std::unique_ptr<RooAbsPdf> crystalBallNumInt{static_cast<RooAbsPdf *>(crystalBall.clone())};
 
    RooNumIntConfig intConfig(*RooAbsReal::defaultIntegratorConfig());
    intConfig.setEpsAbs(1.E-15);
    intConfig.setEpsRel(1.E-12);
 
    intConfig.getConfigSection("RooIntegrator1D").setRealValue("maxSteps", 100);
-   crystalBallNumInt.setIntegratorConfig(intConfig);
-   crystalBallNumInt.forceNumInt(true);
+   crystalBallNumInt->setIntegratorConfig(intConfig);
+   crystalBallNumInt->forceNumInt(true);
 
    std::unique_ptr<RooAbsReal> integral{crystalBall.createIntegral(x)};
    std::unique_ptr<RooAbsReal> integralRanged{crystalBall.createIntegral(x, "integrationRange")};
-   std::unique_ptr<RooAbsReal> numInt{crystalBallNumInt.createIntegral(x)};
-   std::unique_ptr<RooAbsReal> numIntRanged{crystalBallNumInt.createIntegral(x, "integrationRange")};
+   std::unique_ptr<RooAbsReal> numInt{crystalBallNumInt->createIntegral(x)};
+   std::unique_ptr<RooAbsReal> numIntRanged{crystalBallNumInt->createIntegral(x, "integrationRange")};
 
    for (double theX0 : {0.}) {
       for (double theSigmaL : {10., 20.}) {
@@ -273,10 +296,10 @@ TEST(RooCrystalBall, Integral)
                      for (double theNR : {1.0 - 0.3e-05, 0.3}) {
                         x0 = theX0;
                         sigmaL = theSigmaL;
-                        alphaL = theAlphaL;
+                        aL = theAlphaL;
                         nL = theNL;
                         sigmaR = theSigmaR;
-                        alphaR = theAlphaR;
+                        aR = theAlphaR;
                         nR = theNR;
 
                         // We want to hit all cases here to completely cover the analytical integral function.
@@ -330,16 +353,25 @@ TEST(RooCrystalBall, Generator)
 {
    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING};
 
-   MAKE_CRYSTAL_BALL_AND_VARS;
+   auto ws = makeWorkspace();
+   auto &x = *ws->var("x");
+   auto &x0 = *ws->var("x0");
+   auto &sigmaL = *ws->var("sigmaL");
+   auto &sigmaR = *ws->var("sigmaR");
+   auto &aL = *ws->var("aL");
+   auto &aR = *ws->var("aR");
+   auto &nL = *ws->var("nL");
+   auto &nR = *ws->var("nR");
+   auto &crystalBall = *ws->pdf("crystalBall");
 
    ASSERT_FALSE(x0.isConstant());
 
    x0 = 100.;
    sigmaL = 10.;
-   alphaL = 1.;
+   aL = 1.;
    nL = 0.2;
    sigmaR = 20.;
-   alphaR = 1.3;
+   aR = 1.3;
    nR = 0.1;
 
    std::unique_ptr<RooPlot> frame{x.frame(RooFit::Title("RooCrystalBall"))};
@@ -354,10 +386,10 @@ TEST(RooCrystalBall, Generator)
 
    x0 = 50.;
    sigmaL = 20.;
-   alphaL = 1.5;
+   aL = 1.5;
    nL = 0.5;
    sigmaR = 10.;
-   alphaR = 1.0;
+   aR = 1.0;
    nR = 0.2;
 
    frame = std::unique_ptr<RooPlot>{x.frame(RooFit::Title("RooCrystalBall"))};
