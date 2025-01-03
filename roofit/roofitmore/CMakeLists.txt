@@ -67,4 +67,4 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   target_compile_options(RooFitMore PUBLIC -fno-math-errno)
 endif()
 
-#ROOT_ADD_TEST_SUBDIRECTORY(test)
+ROOT_ADD_TEST_SUBDIRECTORY(test)
