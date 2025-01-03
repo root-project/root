@@ -1,10 +1,6 @@
 
 Processing execReadFile.C...
 Warning in <TClass::Init>: no dictionary for class Inside is available
-Info in <TKey::ReadObjectAny>: Using Converter StreamerInfo from Values to Track
-Info in <TKey::ReadObjectAny>: Using Converter StreamerInfo from vector<int> to vector<float>
-Info in <TKey::ReadObjectAny>: Using Converter StreamerInfo from vector<Values> to vector<Track>
-Info in <TKey::ReadObjectAny>: Using Converter StreamerInfo from map<string,int> to map<string,long>
 Reading a Track.
 Single value
  x=7 y=9
@@ -162,11 +158,6 @@ Reading a vector<Values> into a vector<Track>.
 Reading a Holder object.
 Holder:
 Holder::fX 2
-Info in <TKey::ReadObjectAny>: Using Converter StreamerInfo from Values to Track
-Info in <TKey::ReadObjectAny>: Using Converter StreamerInfo from vector<int> to list<float>
-Info in <TKey::ReadObjectAny>: Using Converter StreamerInfo from vector<Values> to list<Track>
-Info in <TKey::ReadObjectAny>: Using Converter StreamerInfo from map<string,int> to map<string,long>
-Info in <TKey::ReadObjectAny>: Using Converter StreamerInfo from Holder to listHolder
 Single value
  x=22 y=44
 Holder::fVec :
@@ -371,11 +362,6 @@ Reading a vector<Values> into a list<Track>.
 Reading a listHolder object.
 listHolder:
 listHolder::fX 2
-Info in <TKey::ReadObjectAny>: Using Converter StreamerInfo from Values to Track
-Info in <TKey::ReadObjectAny>: Using Converter StreamerInfo from vector<int> to set<float>
-Info in <TKey::ReadObjectAny>: Using Converter StreamerInfo from vector<Values> to set<Track>
-Info in <TKey::ReadObjectAny>: Using Converter StreamerInfo from map<string,int> to map<string,long>
-Info in <TKey::ReadObjectAny>: Using Converter StreamerInfo from Holder to setHolder
 Single value
  x=22 y=44
 listHolder::fVec :
