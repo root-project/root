@@ -4731,17 +4731,21 @@ void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule
       {
          auto source_element = dynamic_cast<TStreamerElement *>(GetElements()->FindObject(src->GetName()));
          if (!source_element) {
-            // Missing source.
-            if (!canIgnore(rule)) {
-               TString ruleStr;
-               rule->AsString(ruleStr);
-               Warning("InsertArtificialElements",
-                       "For class %s in StreamerInfo %d is missing the source data member %s when trying to apply the "
-                       "rule:\n   %s",
-                       GetName(), GetClassVersion(), src->GetName(), ruleStr.Data());
+            // It might still be in one the base classes.
+            if (fClass->GetListOfRealData() && !fClass->GetListOfRealData()->FindObject(src->GetName()))
+            {
+               // Missing source.
+               if (!canIgnore(rule)) {
+                  TString ruleStr;
+                  rule->AsString(ruleStr);
+                  Warning("InsertArtificialElements",
+                        "For class %s in StreamerInfo %d is missing the source data member `%s` when trying to apply the "
+                        "rule:\n   %s",
+                        GetName(), GetClassVersion(), src->GetName(), ruleStr.Data());
+               }
+               rule = nullptr;
+               break;
             }
-            rule = nullptr;
-            break;
          } else {
             // The source exists, let's check if it has the expected type.
             auto [memClass, memType, datasize, dimensions, totaldim] = GetSourceType(src);
