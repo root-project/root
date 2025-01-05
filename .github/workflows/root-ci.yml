@@ -381,11 +381,12 @@ jobs:
             is_special: true
             property: march_native
             overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo", "CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native", "fortran=OFF"]
-          - image: alma9
-            is_special: true
-            property: arm64
-            overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo"]
-            architecture: ARM64
+          # Disable until the arm builders are back
+          # - image: alma9
+          #   is_special: true
+          #   property: arm64
+          #   overrides: ["CMAKE_BUILD_TYPE=RelWithDebInfo"]
+          #   architecture: ARM64
           - image: alma9-clang
             is_special: true
             property: clang
