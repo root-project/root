@@ -69,6 +69,8 @@ The calculator can generate Asimov datasets from two kinds of PDFs:
 
 #include "TStopwatch.h"
 
+#include <ROOT/RSpan.hxx>
+
 using namespace RooStats;
 using std::cout, std::endl, std::string, std::unique_ptr;
 
@@ -919,43 +921,51 @@ void FillBins(const RooAbsPdf & pdf, const RooArgList &obs, RooAbsData & data, i
 
 }
 
-// Forward declaration.
-bool SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs);
-
-////////////////////////////////////////////////////////////////////////////////
-/// Inpspect a product pdf to find all the Poisson or Gaussian parts to set the observed
-/// values to expected ones.
-
-bool setObsToExpectedProdPdf(RooProdPdf &prod, const RooArgSet &obs)
+bool setObsToExpected(std::span<RooAbsArg *> servers, const RooArgSet &obs, std::string const &errPrefix)
 {
-    bool ret = true; 
-    for (auto *a : prod.pdfList()) {
-        if (!a->dependsOn(obs)) continue;
-        RooPoisson *pois = nullptr;
-        RooGaussian *gauss = nullptr;
-        RooMultiVarGaussian *mvgauss = nullptr;
-        if ((pois = dynamic_cast<RooPoisson *>(a)) != nullptr) {
-            ret &= SetObsToExpected(*pois, obs);
-            pois->setNoRounding(true);  //needed since expected value is not an integer
-        } else if ((gauss = dynamic_cast<RooGaussian *>(a)) != nullptr) {
-            ret &= SetObsToExpected(*gauss, obs);
-        } else if ((mvgauss = dynamic_cast<RooMultiVarGaussian *>(a)) != nullptr) {
-            ret &= SetObsToExpected(*mvgauss, obs);
-        } else {
-           // should try to add also lognormal case ?
-            if (RooProdPdf *subprod = dynamic_cast<RooProdPdf *>(a)) {
-               ret &= setObsToExpectedProdPdf(*subprod, obs);
-            } else {
-            oocoutE(nullptr, InputArguments)
-               << "Illegal term in counting model: "
-               << "the PDF " << a->GetName() << " depends on the observables, but is not a Poisson, Gaussian or Product"
-               << endl;
+   RooRealVar *myobs = nullptr;
+   RooAbsReal *myexp = nullptr;
+   for (RooAbsArg *a : servers) {
+      if (obs.contains(*a)) {
+         if (myobs != nullptr) {
+            oocoutF(nullptr,Generation) << errPrefix << "Has two observables ?? " << std::endl;
             return false;
+         }
+         myobs = dynamic_cast<RooRealVar *>(a);
+         if (myobs == nullptr) {
+            oocoutF(nullptr,Generation) << errPrefix << "Observable is not a RooRealVar??" << std::endl;
+            return false;
+         }
+      } else {
+         if (!a->isConstant() ) {
+            if (myexp != nullptr) {
+               oocoutE(nullptr,Generation) << errPrefix << "Has two non-const arguments  " << std::endl;
+               return false;
             }
-        }
-    }
+            myexp = dynamic_cast<RooAbsReal *>(a);
+            if (myexp == nullptr) {
+               oocoutF(nullptr,Generation) << errPrefix << "Expected is not a RooAbsReal??" << std::endl;
+               return false;
+            }
+         }
+      }
+   }
+   if (myobs == nullptr)  {
+      oocoutF(nullptr,Generation) << errPrefix << "No observable?" << std::endl;
+      return false;
+   }
+   if (myexp == nullptr) {
+      oocoutF(nullptr,Generation) << errPrefix << "No observable?" << std::endl;
+      return false;
+   }
 
-    return ret;
+   myobs->setVal(myexp->getVal());
+
+   if (fgPrintLevel() > 2) {
+      std::cout << "SetObsToExpected : setting " << myobs->GetName() << " to expected value " << myexp->getVal() << " of " << myexp->GetName() << std::endl;
+   }
+
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -968,50 +978,62 @@ bool setObsToExpectedProdPdf(RooProdPdf &prod, const RooArgSet &obs)
 
 bool SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs)
 {
-   RooRealVar *myobs = nullptr;
-   RooAbsReal *myexp = nullptr;
-   const char * pdfName = pdf.ClassName();
+   std::string const &errPrefix = "AsymptoticCalculator::SetObsExpected( " + std::string{pdf.ClassName()} + " ) : ";
+   std::vector<RooAbsArg *> servers;
    for (RooAbsArg *a : pdf.servers()) {
-      if (obs.contains(*a)) {
-         if (myobs != nullptr) {
-            oocoutF(nullptr,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Has two observables ?? " << endl;
-            return false;
-         }
-         myobs = dynamic_cast<RooRealVar *>(a);
-         if (myobs == nullptr) {
-            oocoutF(nullptr,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Observable is not a RooRealVar??" << endl;
-            return false;
-         }
-      } else {
-         if (!a->isConstant() ) {
-            if (myexp != nullptr) {
-               oocoutE(nullptr,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Has two non-const arguments  " << endl;
-               return false;
-            }
-            myexp = dynamic_cast<RooAbsReal *>(a);
-            if (myexp == nullptr) {
-               oocoutF(nullptr,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : Expected is not a RooAbsReal??" << endl;
-               return false;
-            }
-         }
-      }
+      servers.emplace_back(a);
    }
-   if (myobs == nullptr)  {
-      oocoutF(nullptr,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : No observable?" << endl;
-      return false;
-   }
-   if (myexp == nullptr) {
-      oocoutF(nullptr,Generation) << "AsymptoticCalculator::SetObsExpected( " << pdfName << " ) : No observable?" << endl;
-      return false;
-   }
+   return setObsToExpected(servers, obs, errPrefix);
+}
 
-   myobs->setVal(myexp->getVal());
+bool setObsToExpectedMultiVarGauss(RooMultiVarGaussian &mvgauss, const RooArgSet &obs)
+{
+   // In the case of the multi-variate Gaussian, we need to iterate over the
+   // dimensions and treat the servers for each dimension separately.
 
-   if (fgPrintLevel() > 2) {
-      std::cout << "SetObsToExpected : setting " << myobs->GetName() << " to expected value " << myexp->getVal() << " of " << myexp->GetName() << std::endl;
+   std::string const &errPrefix = "AsymptoticCalculator::SetObsExpected( " + std::string{mvgauss.ClassName()} + " ) : ";
+   std::vector<RooAbsArg *> servers{nullptr, nullptr};
+   bool ret = true;
+   for (std::size_t iDim = 0; iDim < mvgauss.xVec().size(); ++iDim) {
+      servers[0] = &mvgauss.xVec()[iDim];
+      servers[1] = &mvgauss.muVec()[iDim];
+      ret &= setObsToExpected(servers, obs, errPrefix + " : dim " + std::to_string(iDim) + " ");
    }
+   return ret;
+}
 
-   return true;
+////////////////////////////////////////////////////////////////////////////////
+/// Inpspect a product pdf to find all the Poisson or Gaussian parts to set the observed
+/// values to expected ones.
+
+bool setObsToExpectedProdPdf(RooProdPdf &prod, const RooArgSet &obs)
+{
+    bool ret = true;
+    for (auto *a : prod.pdfList()) {
+        if (!a->dependsOn(obs)) continue;
+        RooPoisson *pois = nullptr;
+        RooGaussian *gauss = nullptr;
+        RooMultiVarGaussian *mvgauss = nullptr;
+        // should try to add also lognormal case ?
+        if ((pois = dynamic_cast<RooPoisson *>(a)) != nullptr) {
+            ret &= SetObsToExpected(*pois, obs);
+            pois->setNoRounding(true);  //needed since expected value is not an integer
+        } else if ((gauss = dynamic_cast<RooGaussian *>(a)) != nullptr) {
+            ret &= SetObsToExpected(*gauss, obs);
+        } else if ((mvgauss = dynamic_cast<RooMultiVarGaussian *>(a)) != nullptr) {
+            ret &= setObsToExpectedMultiVarGauss(*mvgauss, obs);
+        } else if (RooProdPdf *subprod = dynamic_cast<RooProdPdf *>(a)) {
+            ret &= setObsToExpectedProdPdf(*subprod, obs);
+        } else {
+        oocoutE(nullptr, InputArguments)
+           << "Illegal term in counting model: "
+           << "the PDF " << a->GetName() << " depends on the observables, but is not a Poisson, Gaussian or Product"
+           << endl;
+        return false;
+        }
+    }
+
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1039,7 +1061,7 @@ RooAbsData *GenerateCountingAsimovData(RooAbsPdf & pdf, const RooArgSet & observ
     } else if ((gauss = dynamic_cast<RooGaussian *>(&pdf)) != nullptr) {
         r = SetObsToExpected(*gauss, observables);
     } else if ((mvgauss = dynamic_cast<RooMultiVarGaussian *>(&pdf)) != nullptr) {
-        r = SetObsToExpected(*mvgauss, observables);
+        r = setObsToExpectedMultiVarGauss(*mvgauss, observables);
     } else {
        oocoutE(nullptr,InputArguments) << "A counting model pdf must be either a RooProdPdf or a RooPoisson or a RooGaussian" << endl;
     }
