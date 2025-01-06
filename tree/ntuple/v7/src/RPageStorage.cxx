@@ -1014,11 +1014,13 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageV(
       locatorIndexes.reserve(locatorIndexes.size() + rangeSize);
 
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-         if (!fFeatures.fCanMergePages || !fOptions->GetEnableSamePageMerging() || !sealedPageIt->GetHasChecksum()) {
+         if (!fFeatures.fCanMergePages || !fOptions->GetEnableSamePageMerging()) {
             mask.emplace_back(true);
             locatorIndexes.emplace_back(iLocator++);
             continue;
          }
+         // Same page merging requires page checksums - this is checked in the write options
+         R__ASSERT(sealedPageIt->GetHasChecksum());
 
          const auto chk = sealedPageIt->GetChecksum().Unwrap();
          auto itr = originalPages.find(chk);
