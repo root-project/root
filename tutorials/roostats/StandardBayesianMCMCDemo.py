@@ -57,7 +57,7 @@ def StandardBayesianMCMCDemo(infile="", workspaceName="combined", modelConfigNam
     filename = ""
     if infile == "":
         filename = "results/example_combined_GaussExample_model.root"
-        fileExist = ROOT.gSystem.AccessPathName(filename)
+        fileExist = not ROOT.gSystem.AccessPathName(filename) # note opposite return code
         # if file does not exists generate with histfactory
         if not fileExist:
             # Normally this would be run on the command line
