@@ -74,7 +74,20 @@ using std::cout, std::endl, std::string, std::unique_ptr;
 
 ClassImp(RooStats::AsymptoticCalculator);
 
-int AsymptoticCalculator::fgPrintLevel = 1;
+namespace {
+
+/// Control print level  (0 minimal, 1 normal, 2 debug).
+int &fgPrintLevel()
+{
+
+   static int val = 1;
+   return val;
+}
+
+// Forward declaration.
+double EvaluateNLL(RooStats::ModelConfig const &modelConfig, RooAbsData &data, const RooArgSet *poiSet = nullptr);
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// set print level (static function)
@@ -84,7 +97,7 @@ int AsymptoticCalculator::fgPrintLevel = 1;
 ///  - 2 debug
 
 void AsymptoticCalculator::SetPrintLevel(int level) {
-   fgPrintLevel = level;
+   fgPrintLevel() = level;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +115,7 @@ AsymptoticCalculator::AsymptoticCalculator(
 {
    if (!Initialize()) return;
 
-   int verbose = fgPrintLevel;
+   int verbose = fgPrintLevel();
    // try to guess default configuration
    // (this part should be only in constructor because the null snapshot might change during HypoTestInversion
    const RooArgSet * nullSnapshot = GetNullModel()->GetSnapshot();
@@ -130,7 +143,7 @@ AsymptoticCalculator::AsymptoticCalculator(
 
 bool AsymptoticCalculator::Initialize() const {
 
-   int verbose = fgPrintLevel;
+   int verbose = fgPrintLevel();
    if (verbose >= 0)
       oocoutP(nullptr,Eval) << "AsymptoticCalculator::Initialize...." << std::endl;
 
@@ -286,11 +299,11 @@ bool AsymptoticCalculator::Initialize() const {
    return true;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+namespace {
 
-double AsymptoticCalculator::EvaluateNLL(RooStats::ModelConfig const& modelConfig, RooAbsData& data, const RooArgSet *poiSet)
+double EvaluateNLL(RooStats::ModelConfig const& modelConfig, RooAbsData& data, const RooArgSet *poiSet)
 {
-    int verbose = fgPrintLevel;
+    int verbose = fgPrintLevel();
 
     RooAbsPdf &pdf = *modelConfig.GetPdf();
 
@@ -452,6 +465,8 @@ double AsymptoticCalculator::EvaluateNLL(RooStats::ModelConfig const& modelConfi
     return val;
 }
 
+} // namespace
+
 ////////////////////////////////////////////////////////////////////////////////
 /// It performs an hypothesis tests using the likelihood function
 /// and computes the p values for the null and the alternate using the asymptotic
@@ -462,7 +477,7 @@ double AsymptoticCalculator::EvaluateNLL(RooStats::ModelConfig const& modelConfi
 /// first one
 
 HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
-   int verbose = fgPrintLevel;
+   int verbose = fgPrintLevel();
 
    // re-initialized the calculator in case it is needed (pdf or data modified)
    if (!fIsInitialized) {
@@ -772,7 +787,6 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    HypoTestResult* res = new HypoTestResult(resultname.c_str(), pnull, palt);
 
    if (verbose > 0) {
-      //std::cout
       oocoutP(nullptr, Eval) << "poi = " << muTest->getVal() << " qmu = " << qmu << " qmu_A = " << qmu_A
                              << " sigma = " << muTest->getVal() / sqrtqmu_A << "  CLsplusb = " << pnull
                              << " CLb = " << palt << " CLs = " << res->CLs() << std::endl;
@@ -837,17 +851,14 @@ double AsymptoticCalculator::GetExpectedPValues(double pnull, double palt, doubl
    return  2*ROOT::Math::normal_cdf_c( brf.Root(),1.);
 }
 
-// void GetExpectedLimit(double nsigma, double alpha, double &clsblimit, double &clslimit) {
-//    // get expected limit
-//    double
-// }
+namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
-/// fill bins by looping recursively on observables
+/// Fill bins by looping recursively on observables.
 
-void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs, RooAbsData & data, int &index,  double &binVolume, int &ibin) {
+void FillBins(const RooAbsPdf & pdf, const RooArgList &obs, RooAbsData & data, int &index,  double &binVolume, int &ibin) {
 
-   bool debug = (fgPrintLevel >= 2);
+   bool debug = (fgPrintLevel() >= 2);
 
    RooRealVar * v = dynamic_cast<RooRealVar*>(&(obs[index]) );
    if (!v) return;
@@ -908,11 +919,14 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
 
 }
 
+// Forward declaration.
+bool SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs);
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Inpspect a product pdf to find all the Poisson or Gaussian parts to set the observed
 /// values to expected ones.
 
-bool AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs)
+bool setObsToExpectedProdPdf(RooProdPdf &prod, const RooArgSet &obs)
 {
     bool ret = true; 
     for (auto *a : prod.pdfList()) {
@@ -929,9 +943,8 @@ bool AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &o
             ret &= SetObsToExpected(*mvgauss, obs);
         } else {
            // should try to add also lognormal case ?
-            RooProdPdf *subprod = dynamic_cast<RooProdPdf *>(a);
-            if (subprod) {
-            ret &= SetObsToExpected(*subprod, obs);
+            if (RooProdPdf *subprod = dynamic_cast<RooProdPdf *>(a)) {
+               ret &= setObsToExpectedProdPdf(*subprod, obs);
             } else {
             oocoutE(nullptr, InputArguments)
                << "Illegal term in counting model: "
@@ -953,7 +966,7 @@ bool AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &o
 /// need to iterate on the components of the Poisson to get n and nu (nu can be a RooAbsReal)
 /// (code from G. Petrucciani and extended by L.M.)
 
-bool AsymptoticCalculator::SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs)
+bool SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs)
 {
    RooRealVar *myobs = nullptr;
    RooAbsReal *myexp = nullptr;
@@ -994,7 +1007,7 @@ bool AsymptoticCalculator::SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs
 
    myobs->setVal(myexp->getVal());
 
-   if (fgPrintLevel > 2) {
+   if (fgPrintLevel() > 2) {
       std::cout << "SetObsToExpected : setting " << myobs->GetName() << " to expected value " << myexp->getVal() << " of " << myexp->GetName() << std::endl;
    }
 
@@ -1006,19 +1019,19 @@ bool AsymptoticCalculator::SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs
 /// This function assumes that the pdf is a RooPoisson or can be decomposed in a product of RooPoisson,
 /// or is a RooGaussian. Otherwise, we cannot know how to make the Asimov data sets.
 
-RooAbsData * AsymptoticCalculator::GenerateCountingAsimovData(RooAbsPdf & pdf, const RooArgSet & observables,  const RooRealVar & , RooCategory * channelCat) {
+RooAbsData *GenerateCountingAsimovData(RooAbsPdf & pdf, const RooArgSet & observables,  const RooRealVar & , RooCategory * channelCat) {
     RooArgSet obs(observables);
     RooProdPdf *prod = dynamic_cast<RooProdPdf *>(&pdf);
     RooPoisson *pois = nullptr;
     RooGaussian *gauss = nullptr;
     RooMultiVarGaussian *mvgauss = nullptr;
 
-    if (fgPrintLevel > 1)
+    if (fgPrintLevel() > 1)
        std::cout << "generate counting Asimov data for pdf of type " << pdf.ClassName() << std::endl;
 
     bool r = false;
     if (prod != nullptr) {
-        r = SetObsToExpected(*prod, observables);
+        r = setObsToExpectedProdPdf(*prod, observables);
     } else if ((pois = dynamic_cast<RooPoisson *>(&pdf)) != nullptr) {
         r = SetObsToExpected(*pois, observables);
         // we need in this case to set Poisson to real values
@@ -1036,8 +1049,8 @@ RooAbsData * AsymptoticCalculator::GenerateCountingAsimovData(RooAbsPdf & pdf, c
        icat = channelCat->getCurrentIndex();
     }
 
-    RooDataSet *ret = new RooDataSet(std::string("CountingAsimovData") + std::to_string(icat),
-                                     std::string("CountingAsimovData") + std::to_string(icat), obs);
+    RooDataSet *ret = new RooDataSet("CountingAsimovData" + std::to_string(icat),
+                                     "CountingAsimovData" + std::to_string(icat), obs);
     ret->add(obs);
     return ret;
 }
@@ -1048,9 +1061,9 @@ RooAbsData * AsymptoticCalculator::GenerateCountingAsimovData(RooAbsPdf & pdf, c
 // TODO: (possibility to change number of bins)
 // TODO: implement integration over bin content
 
-RooAbsData * AsymptoticCalculator::GenerateAsimovDataSinglePdf(const RooAbsPdf & pdf, const RooArgSet & allobs,  const RooRealVar & weightVar, RooCategory * channelCat) {
+RooAbsData * GenerateAsimovDataSinglePdf(const RooAbsPdf & pdf, const RooArgSet & allobs,  const RooRealVar & weightVar, RooCategory * channelCat) {
 
-   int printLevel = fgPrintLevel;
+   int printLevel = fgPrintLevel();
 
    // Get observables defined by the pdf associated with this state
    std::unique_ptr<RooArgSet> obs(pdf.getObservables(allobs) );
@@ -1122,13 +1135,15 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovDataSinglePdf(const RooAbsPdf &
 
 }
 
+} // namespace
+
 ////////////////////////////////////////////////////////////////////////////////
 /// generate the asimov data for the observables (not the global ones)
 /// need to deal with the case of a sim pdf
 
 RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, const RooArgSet & observables  )  {
 
-   int printLevel = fgPrintLevel;
+   int printLevel = fgPrintLevel();
 
    RooRealVar weightVar{"binWeightAsimov", "binWeightAsimov", 1, 0, 1.e30};
 
@@ -1203,7 +1218,7 @@ RooAbsData * AsymptoticCalculator::GenerateAsimovData(const RooAbsPdf & pdf, con
 
 RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const ModelConfig & model, const  RooArgSet & paramValues, RooArgSet & asimovGlobObs, const RooArgSet * genPoiValues )  {
 
-   int verbose = fgPrintLevel;
+   int verbose = fgPrintLevel();
 
 
    RooArgSet  poi(*model.GetParametersOfInterest());
@@ -1310,7 +1325,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
 
 RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, const  RooArgSet & allParamValues, RooArgSet & asimovGlobObs)  {
 
-   int verbose = fgPrintLevel;
+   int verbose = fgPrintLevel();
 
    TStopwatch tw;
    tw.Start();
@@ -1518,7 +1533,6 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
             std::cerr << "Observables: " << std::endl;
             cgobs->Print("V");
          }
-//         rrv.setVal(match->getVal());
       }
 
       // make a snapshot of global observables
