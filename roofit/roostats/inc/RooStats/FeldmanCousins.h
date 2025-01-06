@@ -120,7 +120,7 @@ namespace RooStats {
       bool fCreateBelt;                     ///< controls use if ConfidenceBelt should be saved to a TFile
 
    protected:
-      ClassDefOverride(FeldmanCousins,2)   // Interface for tools setting limits (producing confidence intervals)
+      ClassDefOverride(FeldmanCousins,0)   // Interface for tools setting limits (producing confidence intervals)
    };
 }
 
