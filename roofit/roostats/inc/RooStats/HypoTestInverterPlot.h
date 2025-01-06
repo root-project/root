@@ -73,7 +73,7 @@ namespace RooStats {
 
    protected:
 
-      ClassDefOverride(HypoTestInverterPlot,1)  // HypoTestInverterPlot class
+      ClassDefOverride(HypoTestInverterPlot,0)  // HypoTestInverterPlot class
 
    };
 }

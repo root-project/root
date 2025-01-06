@@ -119,7 +119,7 @@ namespace RooStats {
       static bool SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs);
 
    protected:
-      ClassDefOverride(AsymptoticCalculator,2)
+      ClassDefOverride(AsymptoticCalculator,0)
 
    private:
 
