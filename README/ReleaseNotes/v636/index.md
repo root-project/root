@@ -12,6 +12,24 @@ For more information, see:
 
 The following people have contributed to this new version:
 
+ Bertrand Bellenot, CERN/EP-SFT,\
+ Jakob Blomer, CERN/EP-SFT,\
+ Philippe Canal, FNAL,\
+ Mattias Ellert, Uppsala University,\
+ Florine de Geus, CERN/University of Twente,\
+ Fernando Hueso Gonzalez, University of Valencia,\
+ Alberto Mecca, University of Turin,\
+ Lorenzo Moneta, CERN/EP-SFT,\
+ Mark Owen, University of Glasgow,\
+ Vincenzo Eduardo Padulano, CERN/EP-SFT,\
+ Giacomo Parolini, CERN/EP-SFT,\
+ Danilo Piparo, CERN/EP-SFT,\
+ Jonas Rembser, CERN/EP-SFT,\
+ Manuel Tobias Schiller, University of Glasgow,\
+ Surya Somayyajula, UMass Amherst,\
+ Petr Stepanov, @petrstepanov,\
+ Dongliang Zhang, University of Science and Technology of China
+
 ## Deprecation and Removal
 
 * The RooFit legacy interfaces that were deprecated in ROOT 6.34 and scheduled for removal in ROOT 6.36 are removed. See the RooFit section in the 6.34 release notes for a full list.
