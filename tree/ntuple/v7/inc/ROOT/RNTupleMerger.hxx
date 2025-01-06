@@ -56,10 +56,10 @@ struct RSealedPageMergeData;
 class RClusterPool;
 
 struct RNTupleMergeOptions {
-   /// If `fCompressionSettings == kUnknownCompressionSettings` (the default), the merger will not change the
+   /// If `fCompressionSettings == kNTupleUnknownCompression` (the default), the merger will not change the
    /// compression of any of its sources (fast merging). Otherwise, all sources will be converted to the specified
    /// compression algorithm and level.
-   int fCompressionSettings = kUnknownCompressionSettings;
+   int fCompressionSettings = kNTupleUnknownCompression;
    /// Determines how the merging treats sources with different models (\see ENTupleMergingMode).
    ENTupleMergingMode fMergingMode = ENTupleMergingMode::kFilter;
    /// Determines how the Merge function behaves upon merging errors
