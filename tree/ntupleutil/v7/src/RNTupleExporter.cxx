@@ -159,7 +159,7 @@ RNTupleExporter::RPagesResult RNTupleExporter::ExportPages(RPageSource &source, 
             const void *pageBuf = onDiskPage->GetAddress();
             const bool incChecksum = (options.fFlags & RPagesOptions::kIncludeChecksums) != 0 && pageInfo.fHasChecksum;
             const std::size_t maybeChecksumSize = incChecksum * 8;
-            const std::uint64_t pageBufSize = pageInfo.fLocator.GetBytesOnStorage() + maybeChecksumSize;
+            const std::uint64_t pageBufSize = pageInfo.fLocator.GetNBytesOnStorage() + maybeChecksumSize;
             std::ostringstream ss{options.fOutputPath, std::ios_base::ate};
             ss << "/cluster_" << clusterDesc.GetId() << "_" << colInfo.fQualifiedName << "_page_" << pageIdx
                << "_elems_" << pageInfo.fNElements << "_comp_" << colRange.fCompressionSettings << ".page";

@@ -918,12 +918,18 @@ TEST(RPageStorageFile, MultiKeyBlob_Pages)
       auto ntupleComp = RNTupleReader::Open(std::move(modelComp), "myNTuple", fileGuardComp.GetPath());
 
       // Verify that the pages are larger than maxKeySize
-      EXPECT_GT(
-         ntupleComp->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0).fPageInfos[0].fLocator.GetBytesOnStorage(),
-         kMaxKeySize);
-      EXPECT_GT(
-         ntupleUcmp->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0).fPageInfos[0].fLocator.GetBytesOnStorage(),
-         kMaxKeySize);
+      EXPECT_GT(ntupleComp->GetDescriptor()
+                   .GetClusterDescriptor(0)
+                   .GetPageRange(0)
+                   .fPageInfos[0]
+                   .fLocator.GetNBytesOnStorage(),
+                kMaxKeySize);
+      EXPECT_GT(ntupleUcmp->GetDescriptor()
+                   .GetClusterDescriptor(0)
+                   .GetPageRange(0)
+                   .fPageInfos[0]
+                   .fLocator.GetNBytesOnStorage(),
+                kMaxKeySize);
 
       TRandom3 rnd(42);
       for (int i = 0; i < 100000; ++i) {

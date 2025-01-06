@@ -504,7 +504,7 @@ TEST(RColumnDescriptorIterable, IterateOverColumns)
    EXPECT_EQ(desc.GetNLogicalColumns(), counter);
 }
 
-TEST(RClusterDescriptor, GetBytesOnStorage)
+TEST(RClusterDescriptor, GetNBytesOnStorage)
 {
    auto model = RNTupleModel::Create();
    auto fldJets = model->MakeField<std::vector<float>>("jets");
@@ -526,7 +526,7 @@ TEST(RClusterDescriptor, GetBytesOnStorage)
 
    auto clusterID = desc.FindClusterId(0, 0);
    ASSERT_NE(ROOT::Experimental::kInvalidDescriptorId, clusterID);
-   EXPECT_EQ(8 + 8 + 8 + 3, desc.GetClusterDescriptor(clusterID).GetBytesOnStorage());
+   EXPECT_EQ(8 + 8 + 8 + 3, desc.GetClusterDescriptor(clusterID).GetNBytesOnStorage());
 }
 
 TEST(RNTupleDescriptor, Clone)
