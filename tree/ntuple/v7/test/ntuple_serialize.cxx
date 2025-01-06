@@ -334,8 +334,8 @@ TEST(RNTuple, SerializeLocator)
 {
    unsigned char buffer[20];
    RNTupleLocator locator;
-   locator.fPosition = 1U;
-   locator.fBytesOnStorage = 2;
+   locator.SetPosition(1U);
+   locator.SetBytesOnStorage(2);
 
    EXPECT_EQ(12u, RNTupleSerializer::SerializeLocator(locator, nullptr));
    EXPECT_EQ(12u, RNTupleSerializer::SerializeLocator(locator, buffer));
@@ -355,39 +355,39 @@ TEST(RNTuple, SerializeLocator)
    }
    EXPECT_EQ(12u, RNTupleSerializer::DeserializeLocator(buffer, 12, locator).Unwrap());
    EXPECT_EQ(1u, locator.GetPosition<std::uint64_t>());
-   EXPECT_EQ(2u, locator.fBytesOnStorage);
-   EXPECT_EQ(RNTupleLocator::kTypeFile, locator.fType);
+   EXPECT_EQ(2u, locator.GetBytesOnStorage());
+   EXPECT_EQ(RNTupleLocator::kTypeFile, locator.GetType());
 
-   locator.fBytesOnStorage = std::numeric_limits<std::int32_t>::max();
+   locator.SetBytesOnStorage(std::numeric_limits<std::int32_t>::max());
    EXPECT_EQ(12u, RNTupleSerializer::SerializeLocator(locator, buffer));
    EXPECT_EQ(12u, RNTupleSerializer::DeserializeLocator(buffer, 12, locator).Unwrap());
-   EXPECT_EQ(std::numeric_limits<std::int32_t>::max(), locator.fBytesOnStorage);
-   locator.fBytesOnStorage = static_cast<std::uint64_t>(std::numeric_limits<std::int32_t>::max()) + 1;
+   EXPECT_EQ(std::numeric_limits<std::int32_t>::max(), locator.GetBytesOnStorage());
+   locator.SetBytesOnStorage(static_cast<std::uint64_t>(std::numeric_limits<std::int32_t>::max()) + 1);
    EXPECT_EQ(20u, RNTupleSerializer::SerializeLocator(locator, buffer));
    EXPECT_EQ(20u, RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap());
-   EXPECT_EQ(static_cast<std::uint64_t>(std::numeric_limits<std::int32_t>::max()) + 1, locator.fBytesOnStorage);
+   EXPECT_EQ(static_cast<std::uint64_t>(std::numeric_limits<std::int32_t>::max()) + 1, locator.GetBytesOnStorage());
    EXPECT_EQ(1u, locator.GetPosition<std::uint64_t>());
-   EXPECT_EQ(RNTupleLocator::kTypeFile, locator.fType);
+   EXPECT_EQ(RNTupleLocator::kTypeFile, locator.GetType());
 
-   locator.fType = RNTupleLocator::kTypeDAOS;
-   locator.fPosition.emplace<RNTupleLocatorObject64>(RNTupleLocatorObject64{1337U});
-   locator.fBytesOnStorage = 420420U;
-   locator.fReserved = 0x5a;
+   locator.SetType(RNTupleLocator::kTypeDAOS);
+   locator.SetPosition(RNTupleLocatorObject64{1337U});
+   locator.SetBytesOnStorage(420420U);
+   locator.SetReserved(0x5a);
    EXPECT_EQ(16u, RNTupleSerializer::SerializeLocator(locator, buffer));
    locator = RNTupleLocator{};
    EXPECT_EQ(16u, RNTupleSerializer::DeserializeLocator(buffer, 16, locator).Unwrap());
-   EXPECT_EQ(locator.fType, RNTupleLocator::kTypeDAOS);
-   EXPECT_EQ(locator.fBytesOnStorage, 420420U);
-   EXPECT_EQ(locator.fReserved, 0x5a);
+   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeDAOS);
+   EXPECT_EQ(locator.GetBytesOnStorage(), 420420U);
+   EXPECT_EQ(locator.GetReserved(), 0x5a);
    EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
 
-   locator.fBytesOnStorage = static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1;
+   locator.SetBytesOnStorage(static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
    EXPECT_EQ(20u, RNTupleSerializer::SerializeLocator(locator, buffer));
    locator = RNTupleLocator{};
    EXPECT_EQ(20u, RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap());
-   EXPECT_EQ(locator.fType, RNTupleLocator::kTypeDAOS);
-   EXPECT_EQ(locator.fBytesOnStorage, static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
-   EXPECT_EQ(locator.fReserved, 0x5a);
+   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeDAOS);
+   EXPECT_EQ(locator.GetBytesOnStorage(), static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
+   EXPECT_EQ(locator.GetReserved(), 0x5a);
    EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
 
    std::int32_t *head = reinterpret_cast<std::int32_t *>(buffer);
@@ -398,15 +398,15 @@ TEST(RNTuple, SerializeLocator)
    *head = (0x3 << 24) | *head;
 #endif
    RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap();
-   EXPECT_EQ(locator.fType, RNTupleLocator::kTypeUnknown);
+   EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeUnknown);
 }
 
 TEST(RNTuple, SerializeEnvelopeLink)
 {
    RNTupleSerializer::REnvelopeLink link;
    link.fLength = 42;
-   link.fLocator.fPosition = 137U;
-   link.fLocator.fBytesOnStorage = 7;
+   link.fLocator.SetPosition(137U);
+   link.fLocator.SetBytesOnStorage(7);
 
    unsigned char buffer[20];
    EXPECT_EQ(20u, RNTupleSerializer::SerializeEnvelopeLink(link, nullptr));
@@ -472,8 +472,8 @@ TEST(RNTuple, SerializeClusterGroup)
    group.fEntrySpan = 84600;
    group.fNClusters = 42;
    group.fPageListEnvelopeLink.fLength = 42;
-   group.fPageListEnvelopeLink.fLocator.fPosition = 137U;
-   group.fPageListEnvelopeLink.fLocator.fBytesOnStorage = 7;
+   group.fPageListEnvelopeLink.fLocator.SetPosition(137U);
+   group.fPageListEnvelopeLink.fLocator.SetBytesOnStorage(7);
 
    unsigned char buffer[52];
    ASSERT_EQ(48u, RNTupleSerializer::SerializeClusterGroup(group, nullptr));
@@ -492,7 +492,8 @@ TEST(RNTuple, SerializeClusterGroup)
    EXPECT_EQ(group.fPageListEnvelopeLink.fLength, reco.fPageListEnvelopeLink.fLength);
    EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.GetPosition<std::uint64_t>(),
              reco.fPageListEnvelopeLink.fLocator.GetPosition<std::uint64_t>());
-   EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fBytesOnStorage, reco.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
+   EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.GetBytesOnStorage(),
+             reco.fPageListEnvelopeLink.fLocator.GetBytesOnStorage());
 
    // Test frame evolution
    auto pos = buffer;
@@ -511,7 +512,8 @@ TEST(RNTuple, SerializeClusterGroup)
    EXPECT_EQ(group.fPageListEnvelopeLink.fLength, reco.fPageListEnvelopeLink.fLength);
    EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.GetPosition<std::uint64_t>(),
              reco.fPageListEnvelopeLink.fLocator.GetPosition<std::uint64_t>());
-   EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.fBytesOnStorage, reco.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
+   EXPECT_EQ(group.fPageListEnvelopeLink.fLocator.GetBytesOnStorage(),
+             reco.fPageListEnvelopeLink.fLocator.GetBytesOnStorage());
    std::uint16_t remainder;
    RNTupleSerializer::DeserializeUInt16(buffer + 48, remainder);
    EXPECT_EQ(7u, remainder);
@@ -682,19 +684,19 @@ TEST(RNTuple, SerializeFooter)
    pageRange.fPhysicalColumnId = 17;
    // Two pages adding up to 100 elements, one with checksum one without
    pageInfo.fNElements = 40;
-   pageInfo.fLocator.fPosition = 7000U;
+   pageInfo.fLocator.SetPosition(7000U);
    pageInfo.fHasChecksum = true;
    pageRange.fPageInfos.emplace_back(pageInfo);
    pageInfo.fNElements = 60;
-   pageInfo.fLocator.fPosition = 8000U;
+   pageInfo.fLocator.SetPosition(8000U);
    pageInfo.fHasChecksum = false;
    pageRange.fPageInfos.emplace_back(pageInfo);
    clusterBuilder.CommitColumnRange(17, 0, 100, pageRange);
    builder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
    RClusterGroupDescriptorBuilder cgBuilder;
    RNTupleLocator cgLocator;
-   cgLocator.fPosition = 1337U;
-   cgLocator.fBytesOnStorage = 42;
+   cgLocator.SetPosition(1337U);
+   cgLocator.SetBytesOnStorage(42);
    cgBuilder.ClusterGroupId(256).PageListLength(137).PageListLocator(cgLocator).NClusters(1).EntrySpan(100);
    std::vector<DescriptorId_t> clusterIds{84};
    cgBuilder.AddSortedClusters(clusterIds);
@@ -734,7 +736,7 @@ TEST(RNTuple, SerializeFooter)
    EXPECT_EQ(1u, clusterGroupDesc.GetNClusters());
    EXPECT_EQ(137u, clusterGroupDesc.GetPageListLength());
    EXPECT_EQ(1337u, clusterGroupDesc.GetPageListLocator().GetPosition<std::uint64_t>());
-   EXPECT_EQ(42u, clusterGroupDesc.GetPageListLocator().fBytesOnStorage);
+   EXPECT_EQ(42u, clusterGroupDesc.GetPageListLocator().GetBytesOnStorage());
    EXPECT_EQ(1u, desc.GetNClusters());
    EXPECT_EQ(0u, desc.GetNActiveClusters());
 
@@ -745,7 +747,7 @@ TEST(RNTuple, SerializeFooter)
    EXPECT_EQ(1u, verify.GetNClusters());
    EXPECT_EQ(137u, verify.GetPageListLength());
    EXPECT_EQ(1337u, verify.GetPageListLocator().GetPosition<std::uint64_t>());
-   EXPECT_EQ(42u, verify.GetPageListLocator().fBytesOnStorage);
+   EXPECT_EQ(42u, verify.GetPageListLocator().GetBytesOnStorage());
 
    EXPECT_EQ(1u, desc.GetNActiveClusters());
    const auto &clusterDesc = desc.GetClusterDescriptor(0);

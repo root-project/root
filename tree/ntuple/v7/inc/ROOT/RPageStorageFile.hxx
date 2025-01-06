@@ -41,7 +41,7 @@ class RRawFile;
 }
 
 namespace Experimental {
-struct RNTupleLocator;
+class RNTupleLocator;
 
 namespace Internal {
 class RClusterPool;
