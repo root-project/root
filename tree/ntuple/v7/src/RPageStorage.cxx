@@ -268,7 +268,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
             RSealedPage sealedPage;
             sealedPage.SetNElements(pi.fNElements);
             sealedPage.SetHasChecksum(pi.fHasChecksum);
-            sealedPage.SetBufferSize(pi.fLocator.fBytesOnStorage + pi.fHasChecksum * kNBytesPageChecksum);
+            sealedPage.SetBufferSize(pi.fLocator.GetBytesOnStorage() + pi.fHasChecksum * kNBytesPageChecksum);
             sealedPage.SetBuffer(onDiskPage->GetAddress());
             R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
 
@@ -319,10 +319,10 @@ void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
       const auto &pageRange = clusterDesc.GetPageRange(physicalColumnId);
       NTupleSize_t pageNo = 0;
       for (const auto &pageInfo : pageRange.fPageInfos) {
-         if (pageInfo.fLocator.fType == RNTupleLocator::kTypePageZero) {
+         if (pageInfo.fLocator.GetType() == RNTupleLocator::kTypePageZero) {
             pageZeroMap.Register(
                ROnDiskPage::Key{physicalColumnId, pageNo},
-               ROnDiskPage(const_cast<void *>(RPage::GetPageZeroBuffer()), pageInfo.fLocator.fBytesOnStorage));
+               ROnDiskPage(const_cast<void *>(RPage::GetPageZeroBuffer()), pageInfo.fLocator.GetBytesOnStorage()));
          } else {
             perPageFunc(physicalColumnId, pageNo, pageInfo);
          }
@@ -386,7 +386,7 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
       clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
    }
 
-   if (clusterInfo.fPageInfo.fLocator.fType == RNTupleLocator::kTypeUnknown)
+   if (clusterInfo.fPageInfo.fLocator.GetType() == RNTupleLocator::kTypeUnknown)
       throw RException(R__FAIL("tried to read a page with an unknown locator"));
 
    UpdateLastUsedCluster(clusterInfo.fClusterId);
@@ -422,7 +422,7 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
       clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
    }
 
-   if (clusterInfo.fPageInfo.fLocator.fType == RNTupleLocator::kTypeUnknown)
+   if (clusterInfo.fPageInfo.fLocator.GetType() == RNTupleLocator::kTypeUnknown)
       throw RException(R__FAIL("tried to read a page with an unknown locator"));
 
    UpdateLastUsedCluster(clusterInfo.fClusterId);

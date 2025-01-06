@@ -919,10 +919,10 @@ TEST(RPageStorageFile, MultiKeyBlob_Pages)
 
       // Verify that the pages are larger than maxKeySize
       EXPECT_GT(
-         ntupleComp->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0).fPageInfos[0].fLocator.fBytesOnStorage,
+         ntupleComp->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0).fPageInfos[0].fLocator.GetBytesOnStorage(),
          kMaxKeySize);
       EXPECT_GT(
-         ntupleUcmp->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0).fPageInfos[0].fLocator.fBytesOnStorage,
+         ntupleUcmp->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0).fPageInfos[0].fLocator.GetBytesOnStorage(),
          kMaxKeySize);
 
       TRandom3 rnd(42);
@@ -1089,8 +1089,8 @@ TEST(RPageSink, SamePageMerging)
       const auto pyColId = desc.FindPhysicalColumnId(desc.FindFieldId("py"), 0, 0);
       const auto clusterId = desc.FindClusterId(pxColId, 0);
       const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
-      EXPECT_EQ(enable, clusterDesc.GetPageRange(pxColId).Find(0).fLocator.fPosition ==
-                           clusterDesc.GetPageRange(pyColId).Find(0).fLocator.fPosition);
+      EXPECT_EQ(enable, clusterDesc.GetPageRange(pxColId).Find(0).fLocator.GetPosition<std::uint64_t>() ==
+                           clusterDesc.GetPageRange(pyColId).Find(0).fLocator.GetPosition<std::uint64_t>());
 
       auto viewPx = reader->GetView<float>("px");
       auto viewPy = reader->GetView<float>("py");

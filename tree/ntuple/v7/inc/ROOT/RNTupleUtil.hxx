@@ -173,8 +173,8 @@ public:
 /// Generic information about the physical location of data. Values depend on the concrete storage type.  E.g.,
 /// for a local file `fPosition` might be a 64bit file offset. Referenced objects on storage can be compressed
 /// and therefore we need to store their actual size.
-/// TODO(jblomer): consider moving this to `RNTupleDescriptor`
-struct RNTupleLocator {
+class RNTupleLocator {
+public:
    /// Values for the _Type_ field in non-disk locators.  Serializable types must have the MSb == 0; see
    /// `doc/BinaryFormatSpecification.md` for details
    enum ELocatorType : std::uint8_t {
@@ -188,6 +188,7 @@ struct RNTupleLocator {
       kTypeUnknown,
    };
 
+private:
    std::uint64_t fBytesOnStorage = 0;
    /// Simple on-disk locators consisting of a 64-bit offset use variant type `uint64_t`; extended locators have
    /// `fPosition.index()` > 0
@@ -198,14 +199,32 @@ struct RNTupleLocator {
    /// Reserved for use by concrete storage backends
    std::uint8_t fReserved = 0;
 
+public:
+   RNTupleLocator() = default;
+
    bool operator==(const RNTupleLocator &other) const
    {
       return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage && fType == other.fType;
    }
+
+   std::uint64_t GetBytesOnStorage() const { return fBytesOnStorage; }
+   ELocatorType GetType() const { return fType; }
+   std::uint8_t GetReserved() const { return fReserved; }
+
+   void SetBytesOnStorage(std::uint64_t bytesOnStorage) { fBytesOnStorage = bytesOnStorage; }
+   void SetType(ELocatorType type) { fType = type; }
+   void SetReserved(std::uint8_t reserved) { fReserved = reserved; }
+
    template <typename T>
-   const T &GetPosition() const
+   T GetPosition() const
    {
       return std::get<T>(fPosition);
+   }
+
+   template <typename T>
+   void SetPosition(T position)
+   {
+      fPosition = position;
    }
 };
 

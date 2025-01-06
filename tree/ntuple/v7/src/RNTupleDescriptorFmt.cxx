@@ -129,12 +129,12 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
          const auto &pageRange = cluster.second.GetPageRange(column.second.GetPhysicalId());
          auto idx = cluster2Idx[cluster.first];
          for (const auto &page : pageRange.fPageInfos) {
-            bytesOnStorage += page.fLocator.fBytesOnStorage;
+            bytesOnStorage += page.fLocator.GetBytesOnStorage();
             bytesInMemory += page.fNElements * elementSize;
-            clusters[idx].fBytesOnStorage += page.fLocator.fBytesOnStorage;
+            clusters[idx].fBytesOnStorage += page.fLocator.GetBytesOnStorage();
             clusters[idx].fBytesInMemory += page.fNElements * elementSize;
             ++clusters[idx].fNPages;
-            info.fBytesOnStorage += page.fLocator.fBytesOnStorage;
+            info.fBytesOnStorage += page.fLocator.GetBytesOnStorage();
             ++info.fNPages;
             ++nPages;
          }
