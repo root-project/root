@@ -321,7 +321,7 @@ public:
    }
 
    template <typename... CmdArgs_t>
-   std::unique_ptr<RooFitResult> fitTo(RooAbsData &data, CmdArgs_t const &...cmdArgs)
+   std::unique_ptr<RooFitResult> fitTo(RooAbsData &data, CmdArgs_t const &...cmdArgs) const
    {
       return fitToImpl(data, *RooFit::Detail::createCmdList(&cmdArgs...));
    }
@@ -362,7 +362,7 @@ protected:
 
 private:
    std::unique_ptr<RooAbsReal> createNLLImpl(RooAbsData &data, const RooLinkedList &cmdList) const;
-   std::unique_ptr<RooFitResult> fitToImpl(RooAbsData &data, const RooLinkedList &cmdList);
+   std::unique_ptr<RooFitResult> fitToImpl(RooAbsData &data, const RooLinkedList &cmdList) const;
 
    ClassDefOverride(ModelConfig,
                     6); ///< A class that holds configuration information for a model using a workspace as a store
