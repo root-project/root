@@ -247,7 +247,7 @@ TEST(RNTuple, DISABLED_Limits_LargePage)
    EXPECT_EQ(reader->GetNEntries(), NumElements);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
    EXPECT_EQ(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), 1);
-   EXPECT_GT(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos[0].fLocator.GetBytesOnStorage(),
+   EXPECT_GT(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos[0].fLocator.GetNBytesOnStorage(),
              static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()));
 
    auto id = model.GetDefaultEntry().GetPtr<std::uint64_t>("id");

@@ -373,7 +373,7 @@ class RPageSinkTestLocator : public RPageSinkFile {
       RNTupleLocator result;
       result.SetPosition(payload);
       result.SetType(ROOT::Experimental::Internal::kTestLocatorType);
-      result.SetBytesOnStorage(sealedPage.GetDataSize());
+      result.SetNBytesOnStorage(sealedPage.GetDataSize());
       return result;
    }
 

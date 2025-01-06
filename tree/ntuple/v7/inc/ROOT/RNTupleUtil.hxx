@@ -189,7 +189,7 @@ public:
    };
 
 private:
-   std::uint64_t fBytesOnStorage = 0;
+   std::uint64_t fNBytesOnStorage = 0;
    /// Simple on-disk locators consisting of a 64-bit offset use variant type `uint64_t`; extended locators have
    /// `fPosition.index()` > 0
    std::variant<std::uint64_t, RNTupleLocatorObject64> fPosition{};
@@ -204,14 +204,14 @@ public:
 
    bool operator==(const RNTupleLocator &other) const
    {
-      return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage && fType == other.fType;
+      return fPosition == other.fPosition && fNBytesOnStorage == other.fNBytesOnStorage && fType == other.fType;
    }
 
-   std::uint64_t GetBytesOnStorage() const { return fBytesOnStorage; }
+   std::uint64_t GetNBytesOnStorage() const { return fNBytesOnStorage; }
    ELocatorType GetType() const { return fType; }
    std::uint8_t GetReserved() const { return fReserved; }
 
-   void SetBytesOnStorage(std::uint64_t bytesOnStorage) { fBytesOnStorage = bytesOnStorage; }
+   void SetNBytesOnStorage(std::uint64_t nBytesOnStorage) { fNBytesOnStorage = nBytesOnStorage; }
    void SetType(ELocatorType type) { fType = type; }
    void SetReserved(std::uint8_t reserved) { fReserved = reserved; }
 

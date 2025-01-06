@@ -578,7 +578,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t
          RPageStorage::RSealedPage &sealedPage = sealedPages[pageIdx];
          sealedPage.SetNElements(pageInfo.fNElements);
          sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
-         sealedPage.SetBufferSize(pageInfo.fLocator.GetBytesOnStorage() + checksumSize);
+         sealedPage.SetBufferSize(pageInfo.fLocator.GetNBytesOnStorage() + checksumSize);
          sealedPage.SetBuffer(onDiskPage->GetAddress());
          // TODO(gparolini): more graceful error handling (skip the page?)
          sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
@@ -659,12 +659,12 @@ static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnMer
 
       const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
       const auto nElements = nClusterEntries * nRepetitions;
-      const auto bytesOnStorage = colElement->GetPackedSize(nElements);
+      const auto nBytesOnStorage = colElement->GetPackedSize(nElements);
       constexpr auto kPageSizeLimit = 256 * 1024;
       // TODO(gparolini): consider coalescing the last page if its size is less than some threshold
-      const size_t nPages = bytesOnStorage / kPageSizeLimit + !!(bytesOnStorage % kPageSizeLimit);
+      const size_t nPages = nBytesOnStorage / kPageSizeLimit + !!(nBytesOnStorage % kPageSizeLimit);
       for (size_t i = 0; i < nPages; ++i) {
-         const auto pageSize = (i < nPages - 1) ? kPageSizeLimit : bytesOnStorage - kPageSizeLimit * (nPages - 1);
+         const auto pageSize = (i < nPages - 1) ? kPageSizeLimit : nBytesOnStorage - kPageSizeLimit * (nPages - 1);
          const auto checksumSize = RPageStorage::kNBytesPageChecksum;
          const auto bufSize = pageSize + checksumSize;
          auto &buffer = sealedPageData.fBuffers.emplace_back(new unsigned char[bufSize]);

@@ -373,7 +373,7 @@ public:
    {
       return fColumnRanges.find(physicalId) != fColumnRanges.end();
    }
-   std::uint64_t GetBytesOnStorage() const;
+   std::uint64_t GetNBytesOnStorage() const;
 };
 
 class RClusterDescriptor::RColumnRangeIterable {
