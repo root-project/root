@@ -159,7 +159,7 @@ TEST(RNTupleParallelWriter, Staged)
 TEST(RNTupleParallelWriter, StagedMultiColumn)
 {
    // Based on MultiColumnRepresentationSimple from ntuple_multi_column.cxx
-   using ROOT::Experimental::kUnknownCompressionSettings;
+   using ROOT::Experimental::kNTupleUnknownCompression;
    FileRaii fileGuard("test_ntuple_parallel_staged_multi_column.root");
 
    {
@@ -217,7 +217,7 @@ TEST(RNTupleParallelWriter, StagedMultiColumn)
    EXPECT_TRUE(clusterDesc0.GetColumnRange(colDesc16.GetPhysicalId()).fIsSuppressed);
    EXPECT_EQ(1u, clusterDesc0.GetColumnRange(colDesc16.GetPhysicalId()).fNElements);
    EXPECT_EQ(0u, clusterDesc0.GetColumnRange(colDesc16.GetPhysicalId()).fFirstElementIndex);
-   EXPECT_EQ(kUnknownCompressionSettings, clusterDesc0.GetColumnRange(colDesc16.GetPhysicalId()).fCompressionSettings);
+   EXPECT_EQ(kNTupleUnknownCompression, clusterDesc0.GetColumnRange(colDesc16.GetPhysicalId()).fCompressionSettings);
 
    const auto &clusterDesc1 = desc.GetClusterDescriptor(1);
    EXPECT_FALSE(clusterDesc1.GetColumnRange(colDesc16.GetPhysicalId()).fIsSuppressed);
@@ -226,7 +226,7 @@ TEST(RNTupleParallelWriter, StagedMultiColumn)
    EXPECT_TRUE(clusterDesc1.GetColumnRange(colDesc32.GetPhysicalId()).fIsSuppressed);
    EXPECT_EQ(1u, clusterDesc1.GetColumnRange(colDesc32.GetPhysicalId()).fNElements);
    EXPECT_EQ(1u, clusterDesc1.GetColumnRange(colDesc32.GetPhysicalId()).fFirstElementIndex);
-   EXPECT_EQ(kUnknownCompressionSettings, clusterDesc1.GetColumnRange(colDesc32.GetPhysicalId()).fCompressionSettings);
+   EXPECT_EQ(kNTupleUnknownCompression, clusterDesc1.GetColumnRange(colDesc32.GetPhysicalId()).fCompressionSettings);
 
    const auto &clusterDesc2 = desc.GetClusterDescriptor(2);
    EXPECT_FALSE(clusterDesc2.GetColumnRange(colDesc32.GetPhysicalId()).fIsSuppressed);
@@ -235,7 +235,7 @@ TEST(RNTupleParallelWriter, StagedMultiColumn)
    EXPECT_TRUE(clusterDesc2.GetColumnRange(colDesc16.GetPhysicalId()).fIsSuppressed);
    EXPECT_EQ(1u, clusterDesc2.GetColumnRange(colDesc16.GetPhysicalId()).fNElements);
    EXPECT_EQ(2u, clusterDesc2.GetColumnRange(colDesc16.GetPhysicalId()).fFirstElementIndex);
-   EXPECT_EQ(kUnknownCompressionSettings, clusterDesc2.GetColumnRange(colDesc16.GetPhysicalId()).fCompressionSettings);
+   EXPECT_EQ(kNTupleUnknownCompression, clusterDesc2.GetColumnRange(colDesc16.GetPhysicalId()).fCompressionSettings);
 
    auto ptrPx = reader->GetModel().GetDefaultEntry().GetPtr<float>("px");
    reader->LoadEntry(0);

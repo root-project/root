@@ -2,7 +2,7 @@
 
 TEST(RNTuple, MultiColumnRepresentationSimple)
 {
-   using ROOT::Experimental::kUnknownCompressionSettings;
+   using ROOT::Experimental::kNTupleUnknownCompression;
    FileRaii fileGuard("test_ntuple_multi_column_representation_simple.root");
 
    {
@@ -53,7 +53,7 @@ TEST(RNTuple, MultiColumnRepresentationSimple)
    EXPECT_TRUE(clusterDesc0.GetColumnRange(colDesc16.GetPhysicalId()).fIsSuppressed);
    EXPECT_EQ(1u, clusterDesc0.GetColumnRange(colDesc16.GetPhysicalId()).fNElements);
    EXPECT_EQ(0u, clusterDesc0.GetColumnRange(colDesc16.GetPhysicalId()).fFirstElementIndex);
-   EXPECT_EQ(kUnknownCompressionSettings, clusterDesc0.GetColumnRange(colDesc16.GetPhysicalId()).fCompressionSettings);
+   EXPECT_EQ(kNTupleUnknownCompression, clusterDesc0.GetColumnRange(colDesc16.GetPhysicalId()).fCompressionSettings);
 
    const auto &clusterDesc1 = desc.GetClusterDescriptor(1);
    EXPECT_FALSE(clusterDesc1.GetColumnRange(colDesc16.GetPhysicalId()).fIsSuppressed);
@@ -62,7 +62,7 @@ TEST(RNTuple, MultiColumnRepresentationSimple)
    EXPECT_TRUE(clusterDesc1.GetColumnRange(colDesc32.GetPhysicalId()).fIsSuppressed);
    EXPECT_EQ(1u, clusterDesc1.GetColumnRange(colDesc32.GetPhysicalId()).fNElements);
    EXPECT_EQ(1u, clusterDesc1.GetColumnRange(colDesc32.GetPhysicalId()).fFirstElementIndex);
-   EXPECT_EQ(kUnknownCompressionSettings, clusterDesc1.GetColumnRange(colDesc32.GetPhysicalId()).fCompressionSettings);
+   EXPECT_EQ(kNTupleUnknownCompression, clusterDesc1.GetColumnRange(colDesc32.GetPhysicalId()).fCompressionSettings);
 
    const auto &clusterDesc2 = desc.GetClusterDescriptor(2);
    EXPECT_FALSE(clusterDesc2.GetColumnRange(colDesc32.GetPhysicalId()).fIsSuppressed);
@@ -71,7 +71,7 @@ TEST(RNTuple, MultiColumnRepresentationSimple)
    EXPECT_TRUE(clusterDesc2.GetColumnRange(colDesc16.GetPhysicalId()).fIsSuppressed);
    EXPECT_EQ(1u, clusterDesc2.GetColumnRange(colDesc16.GetPhysicalId()).fNElements);
    EXPECT_EQ(2u, clusterDesc2.GetColumnRange(colDesc16.GetPhysicalId()).fFirstElementIndex);
-   EXPECT_EQ(kUnknownCompressionSettings, clusterDesc2.GetColumnRange(colDesc16.GetPhysicalId()).fCompressionSettings);
+   EXPECT_EQ(kNTupleUnknownCompression, clusterDesc2.GetColumnRange(colDesc16.GetPhysicalId()).fCompressionSettings);
 
    auto ptrPx = reader->GetModel().GetDefaultEntry().GetPtr<float>("px");
    reader->LoadEntry(0);
@@ -142,7 +142,6 @@ TEST(RNTuple, MultiColumnRepresentationSimple)
 
 TEST(RNTuple, MultiColumnRepresentationString)
 {
-   using ROOT::Experimental::kUnknownCompressionSettings;
    FileRaii fileGuard("test_ntuple_multi_column_representation_string.root");
 
    {
@@ -186,7 +185,6 @@ TEST(RNTuple, MultiColumnRepresentationString)
 
 TEST(RNTuple, MultiColumnRepresentationVector)
 {
-   using ROOT::Experimental::kUnknownCompressionSettings;
    FileRaii fileGuard("test_ntuple_multi_column_representation_vector.root");
 
    {
@@ -233,7 +231,6 @@ TEST(RNTuple, MultiColumnRepresentationVector)
 
 TEST(RNTuple, MultiColumnRepresentationMany)
 {
-   using ROOT::Experimental::kUnknownCompressionSettings;
    FileRaii fileGuard("test_ntuple_multi_column_representation_many.root");
 
    {
