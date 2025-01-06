@@ -458,7 +458,7 @@ std::unique_ptr<RooAbsReal> ModelConfig::createNLLImpl(RooAbsData &data, const R
  *
  * See ModelConfig::createNLL() for more information.
  */
-std::unique_ptr<RooFitResult> ModelConfig::fitToImpl(RooAbsData &data, const RooLinkedList &cmdList)
+std::unique_ptr<RooFitResult> ModelConfig::fitToImpl(RooAbsData &data, const RooLinkedList &cmdList) const
 {
    std::vector<RooCmdArg> cmdArgs;
    auto finalCmdList = finalizeCmdList(*this, cmdList, cmdArgs);
