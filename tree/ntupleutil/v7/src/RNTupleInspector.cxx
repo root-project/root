@@ -88,7 +88,7 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
          const auto &pageRange = clusterDescriptor.GetPageRange(colId);
 
          for (const auto &page : pageRange.fPageInfos) {
-            compressedPageSizes.emplace_back(page.fLocator.fBytesOnStorage);
+            compressedPageSizes.emplace_back(page.fLocator.GetBytesOnStorage());
             fUncompressedSize += page.fNElements * elemSize;
          }
       }

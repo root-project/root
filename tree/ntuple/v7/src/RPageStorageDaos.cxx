@@ -345,9 +345,9 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageImpl(DescriptorId_t
    }
 
    RNTupleLocator result;
-   result.fPosition = EncodeDaosPagePosition(offsetData);
-   result.fBytesOnStorage = sealedPage.GetDataSize();
-   result.fType = RNTupleLocator::kTypeDAOS;
+   result.SetType(RNTupleLocator::kTypeDAOS);
+   result.SetBytesOnStorage(sealedPage.GetDataSize());
+   result.SetPosition(EncodeDaosPagePosition(offsetData));
    fCounters->fNPageCommitted.Inc();
    fCounters->fSzWritePayload.Add(sealedPage.GetBufferSize());
    fNBytesCurrentCluster += sealedPage.GetBufferSize();
@@ -398,10 +398,10 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPa
          it->second.Insert(daosKey.fAkey, pageIov);
 
          RNTupleLocator locator;
-         locator.fPosition = EncodeDaosPagePosition(positionIndex, positionOffset);
-         locator.fBytesOnStorage = s.GetDataSize();
-         locator.fType = RNTupleLocator::kTypeDAOS;
-         locator.fReserved = locatorFlags;
+         locator.SetType(RNTupleLocator::kTypeDAOS);
+         locator.SetBytesOnStorage(s.GetDataSize());
+         locator.SetPosition(EncodeDaosPagePosition(positionIndex, positionOffset));
+         locator.SetReserved(locatorFlags);
          locators.push_back(locator);
 
          positionOffset += s.GetBufferSize();
@@ -441,9 +441,9 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitClusterGroupImpl(unsigned cha
       daos_obj_id_t{kOidLowPageList, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)}, kDistributionKeyDefault,
       offsetData, kCidMetadata);
    RNTupleLocator result;
-   result.fPosition = RNTupleLocatorObject64{offsetData};
-   result.fBytesOnStorage = szPageListZip;
-   result.fType = RNTupleLocator::kTypeDAOS;
+   result.SetType(RNTupleLocator::kTypeDAOS);
+   result.SetBytesOnStorage(szPageListZip);
+   result.SetPosition(RNTupleLocatorObject64{offsetData});
    fCounters->fSzWritePayload.Add(static_cast<int64_t>(szPageListZip));
    return result;
 }
@@ -525,11 +525,11 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceD
 
    for (const auto &cgDesc : desc.GetClusterGroupIterable()) {
       buffer = MakeUninitArray<unsigned char>(cgDesc.GetPageListLength());
-      zipBuffer = MakeUninitArray<unsigned char>(cgDesc.GetPageListLocator().fBytesOnStorage);
+      zipBuffer = MakeUninitArray<unsigned char>(cgDesc.GetPageListLocator().GetBytesOnStorage());
       fDaosContainer->ReadSingleAkey(
-         zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, oidPageList, kDistributionKeyDefault,
+         zipBuffer.get(), cgDesc.GetPageListLocator().GetBytesOnStorage(), oidPageList, kDistributionKeyDefault,
          cgDesc.GetPageListLocator().GetPosition<RNTupleLocatorObject64>().GetLocation(), kCidMetadata);
-      RNTupleDecompressor::Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage,
+      RNTupleDecompressor::Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().GetBytesOnStorage(),
                                  cgDesc.GetPageListLength(), buffer.get());
 
       RNTupleSerializer::DeserializePageList(buffer.get(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc);
@@ -555,19 +555,19 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(DescriptorId_
       pageInfo = clusterDescriptor.GetPageRange(physicalColumnId).Find(clusterIndex.GetIndex());
    }
 
-   sealedPage.SetBufferSize(pageInfo.fLocator.fBytesOnStorage + pageInfo.fHasChecksum * kNBytesPageChecksum);
+   sealedPage.SetBufferSize(pageInfo.fLocator.GetBytesOnStorage() + pageInfo.fHasChecksum * kNBytesPageChecksum);
    sealedPage.SetNElements(pageInfo.fNElements);
    sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
    if (!sealedPage.GetBuffer())
       return;
 
-   if (pageInfo.fLocator.fType == RNTupleLocator::kTypePageZero) {
+   if (pageInfo.fLocator.GetType() == RNTupleLocator::kTypePageZero) {
       assert(!pageInfo.fHasChecksum);
       memcpy(const_cast<void *>(sealedPage.GetBuffer()), RPage::GetPageZeroBuffer(), sealedPage.GetBufferSize());
       return;
    }
 
-   if (pageInfo.fLocator.fReserved & EDaosLocatorFlags::kCagedPage) {
+   if (pageInfo.fLocator.GetReserved() & EDaosLocatorFlags::kCagedPage) {
       // Suboptimal but hard to do differently: we load the full cage up to and including the requested page.
       // In practice, individual LoadSealedPage calls are rare and usually full clusters are buffered.
       // The support for extracting individual pages from a cage makes testing easier, however.
@@ -600,7 +600,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t colum
    const auto elementSize = element->GetSize();
    const auto elementInMemoryType = element->GetIdentifier().fInMemoryType;
 
-   if (pageInfo.fLocator.fType == RNTupleLocator::kTypePageZero) {
+   if (pageInfo.fLocator.GetType() == RNTupleLocator::kTypePageZero) {
       auto pageZero = fPageAllocator->NewPage(elementSize, pageInfo.fNElements);
       pageZero.GrowUnchecked(pageInfo.fNElements);
       memset(pageZero.GetBuffer(), 0, pageZero.GetNBytes());
@@ -612,11 +612,11 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t colum
    RSealedPage sealedPage;
    sealedPage.SetNElements(pageInfo.fNElements);
    sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
-   sealedPage.SetBufferSize(pageInfo.fLocator.fBytesOnStorage + pageInfo.fHasChecksum * kNBytesPageChecksum);
+   sealedPage.SetBufferSize(pageInfo.fLocator.GetBytesOnStorage() + pageInfo.fHasChecksum * kNBytesPageChecksum);
    std::unique_ptr<unsigned char[]> directReadBuffer; // only used if cluster pool is turned off
 
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
-      if (pageInfo.fLocator.fReserved & EDaosLocatorFlags::kCagedPage) {
+      if (pageInfo.fLocator.GetReserved() & EDaosLocatorFlags::kCagedPage) {
          throw ROOT::RException(R__FAIL("accessing caged pages is only supported in conjunction with cluster cache"));
       }
 
@@ -699,10 +699,10 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
             uint32_t position, offset;
             std::tie(position, offset) = DecodeDaosPagePosition(pageLocator.GetPosition<RNTupleLocatorObject64>());
             auto [itLoc, _] = onDiskPages.emplace(position, std::vector<RDaosSealedPageLocator>());
-            auto pageBufferSize = pageLocator.fBytesOnStorage + pageInfo.fHasChecksum * kNBytesPageChecksum;
+            auto pageBufferSize = pageLocator.GetBytesOnStorage() + pageInfo.fHasChecksum * kNBytesPageChecksum;
 
-            itLoc->second.push_back(
-               {clusterId, physicalColumnId, pageNo, position, offset, pageLocator.fBytesOnStorage, pageBufferSize});
+            itLoc->second.push_back({clusterId, physicalColumnId, pageNo, position, offset,
+                                     pageLocator.GetBytesOnStorage(), pageBufferSize});
             ++nPages;
             clusterBufSz += pageBufferSize;
          });

@@ -578,7 +578,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t
          RPageStorage::RSealedPage &sealedPage = sealedPages[pageIdx];
          sealedPage.SetNElements(pageInfo.fNElements);
          sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
-         sealedPage.SetBufferSize(pageInfo.fLocator.fBytesOnStorage + checksumSize);
+         sealedPage.SetBufferSize(pageInfo.fLocator.GetBytesOnStorage() + checksumSize);
          sealedPage.SetBuffer(onDiskPage->GetAddress());
          // TODO(gparolini): more graceful error handling (skip the page?)
          sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
