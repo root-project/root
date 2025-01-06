@@ -268,7 +268,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
             RSealedPage sealedPage;
             sealedPage.SetNElements(pi.fNElements);
             sealedPage.SetHasChecksum(pi.fHasChecksum);
-            sealedPage.SetBufferSize(pi.fLocator.GetBytesOnStorage() + pi.fHasChecksum * kNBytesPageChecksum);
+            sealedPage.SetBufferSize(pi.fLocator.GetNBytesOnStorage() + pi.fHasChecksum * kNBytesPageChecksum);
             sealedPage.SetBuffer(onDiskPage->GetAddress());
             R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
 
@@ -322,7 +322,7 @@ void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
          if (pageInfo.fLocator.GetType() == RNTupleLocator::kTypePageZero) {
             pageZeroMap.Register(
                ROnDiskPage::Key{physicalColumnId, pageNo},
-               ROnDiskPage(const_cast<void *>(RPage::GetPageZeroBuffer()), pageInfo.fLocator.GetBytesOnStorage()));
+               ROnDiskPage(const_cast<void *>(RPage::GetPageZeroBuffer()), pageInfo.fLocator.GetNBytesOnStorage()));
          } else {
             perPageFunc(physicalColumnId, pageNo, pageInfo);
          }

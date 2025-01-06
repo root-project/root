@@ -231,7 +231,7 @@ ROOT::Experimental::RClusterDescriptor::RPageRange::ExtendToFitColumnRange(const
       RPageInfo PI;
       PI.fNElements = std::min(nElementsPerPage, nRemainingElements);
       PI.fLocator.SetType(RNTupleLocator::kTypePageZero);
-      PI.fLocator.SetBytesOnStorage(element.GetPackedSize(PI.fNElements));
+      PI.fLocator.SetNBytesOnStorage(element.GetPackedSize(PI.fNElements));
       pageInfos.emplace_back(PI);
       nRemainingElements -= PI.fNElements;
    }
@@ -248,12 +248,12 @@ bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor
           fNEntries == other.fNEntries && fColumnRanges == other.fColumnRanges && fPageRanges == other.fPageRanges;
 }
 
-std::uint64_t ROOT::Experimental::RClusterDescriptor::GetBytesOnStorage() const
+std::uint64_t ROOT::Experimental::RClusterDescriptor::GetNBytesOnStorage() const
 {
    std::uint64_t nbytes = 0;
    for (const auto &pr : fPageRanges) {
       for (const auto &pi : pr.second.fPageInfos) {
-         nbytes += pi.fLocator.GetBytesOnStorage();
+         nbytes += pi.fLocator.GetNBytesOnStorage();
       }
    }
    return nbytes;

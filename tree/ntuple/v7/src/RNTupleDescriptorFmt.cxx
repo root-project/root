@@ -29,8 +29,8 @@ struct ClusterInfo {
    std::uint64_t fFirstEntry = 0;
    std::uint32_t fNPages = 0;
    std::uint32_t fNEntries = 0;
-   std::uint32_t fBytesOnStorage = 0;
-   std::uint32_t fBytesInMemory = 0;
+   std::uint32_t fNBytesOnStorage = 0;
+   std::uint32_t fNBytesInMemory = 0;
 
    bool operator==(const ClusterInfo &other) const { return fFirstEntry == other.fFirstEntry; }
 
@@ -43,7 +43,7 @@ struct ColumnInfo {
    ROOT::Experimental::DescriptorId_t fFieldId = 0;
    std::uint64_t fNElements = 0;
    std::uint64_t fNPages = 0;
-   std::uint64_t fBytesOnStorage = 0;
+   std::uint64_t fNBytesOnStorage = 0;
    std::uint32_t fElementSize = 0;
    std::uint32_t fColumnIndex = 0;
    std::uint16_t fRepresentationIndex = 0;
@@ -94,8 +94,8 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       clusters.emplace_back(info);
    }
 
-   std::uint64_t bytesOnStorage = 0;
-   std::uint64_t bytesInMemory = 0;
+   std::uint64_t nBytesOnStorage = 0;
+   std::uint64_t nBytesInMemory = 0;
    std::uint64_t nPages = 0;
    int compression = -1;
    for (const auto &column : fColumnDescriptors) {
@@ -129,12 +129,12 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
          const auto &pageRange = cluster.second.GetPageRange(column.second.GetPhysicalId());
          auto idx = cluster2Idx[cluster.first];
          for (const auto &page : pageRange.fPageInfos) {
-            bytesOnStorage += page.fLocator.GetBytesOnStorage();
-            bytesInMemory += page.fNElements * elementSize;
-            clusters[idx].fBytesOnStorage += page.fLocator.GetBytesOnStorage();
-            clusters[idx].fBytesInMemory += page.fNElements * elementSize;
+            nBytesOnStorage += page.fLocator.GetNBytesOnStorage();
+            nBytesInMemory += page.fNElements * elementSize;
+            clusters[idx].fNBytesOnStorage += page.fLocator.GetNBytesOnStorage();
+            clusters[idx].fNBytesInMemory += page.fNElements * elementSize;
             ++clusters[idx].fNPages;
-            info.fBytesOnStorage += page.fLocator.GetBytesOnStorage();
+            info.fNBytesOnStorage += page.fLocator.GetNBytesOnStorage();
             ++info.fNPages;
             ++nPages;
          }
@@ -153,16 +153,15 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    output << "  # Alias Columns:  " << GetNLogicalColumns() - GetNPhysicalColumns() << "\n";
    output << "  # Pages:          " << nPages << "\n";
    output << "  # Clusters:       " << GetNClusters() << "\n";
-   output << "  Size on storage:  " << bytesOnStorage << " B"
-          << "\n";
+   output << "  Size on storage:  " << nBytesOnStorage << " B" << "\n";
    output << "  Compression rate: " << std::fixed << std::setprecision(2)
-          << float(bytesInMemory) / float(bytesOnStorage) << "\n";
+          << float(nBytesInMemory) / float(nBytesOnStorage) << "\n";
    output << "  Header size:      " << headerSize << " B"
           << "\n";
    output << "  Footer size:      " << footerSize << " B"
           << "\n";
    output << "  Meta-data / data: " << std::fixed << std::setprecision(3)
-          << float(headerSize + footerSize) / float(bytesOnStorage) << "\n";
+          << float(headerSize + footerSize) / float(nBytesOnStorage) << "\n";
    output << "------------------------------------------------------------\n";
    output << "CLUSTER DETAILS\n";
    output << "------------------------------------------------------------" << std::endl;
@@ -171,13 +170,10 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    for (unsigned int i = 0; i < clusters.size(); ++i) {
       output << "  # " << std::setw(5) << i << "   Entry range:     [" << clusters[i].fFirstEntry << ".."
              << clusters[i].fFirstEntry + clusters[i].fNEntries - 1 << "]  --  " << clusters[i].fNEntries << "\n";
-      output << "         "
-             << "   # Pages:         " << clusters[i].fNPages << "\n";
-      output << "         "
-             << "   Size on storage: " << clusters[i].fBytesOnStorage << " B\n";
-      output << "         "
-             << "   Compression:     " << std::fixed << std::setprecision(2)
-             << float(clusters[i].fBytesInMemory) / float(float(clusters[i].fBytesOnStorage)) << std::endl;
+      output << "         " << "   # Pages:         " << clusters[i].fNPages << "\n";
+      output << "         " << "   Size on storage: " << clusters[i].fNBytesOnStorage << " B\n";
+      output << "         " << "   Compression:     " << std::fixed << std::setprecision(2)
+             << float(clusters[i].fNBytesInMemory) / float(float(clusters[i].fNBytesOnStorage)) << std::endl;
    }
 
    output << "------------------------------------------------------------\n";
@@ -189,7 +185,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    }
    std::sort(columns.begin(), columns.end());
    for (const auto &col : columns) {
-      auto avgPageSize = (col.fNPages == 0) ? 0 : (col.fBytesOnStorage / col.fNPages);
+      auto avgPageSize = (col.fNPages == 0) ? 0 : (col.fNBytesOnStorage / col.fNPages);
       auto avgElementsPerPage = (col.fNPages == 0) ? 0 : (col.fNElements / col.fNPages);
       std::string nameAndType = std::string("  ") + col.fFieldName + " [#" + std::to_string(col.fColumnIndex);
       if (col.fRepresentationIndex > 0)
@@ -205,9 +201,9 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       output << "    # Pages:             " << col.fNPages << "\n";
       output << "    Avg elements / page: " << avgElementsPerPage << "\n";
       output << "    Avg page size:       " << avgPageSize << " B\n";
-      output << "    Size on storage:     " << col.fBytesOnStorage << " B\n";
+      output << "    Size on storage:     " << col.fNBytesOnStorage << " B\n";
       output << "    Compression:         " << std::fixed << std::setprecision(2)
-             << float(col.fElementSize * col.fNElements) / float(col.fBytesOnStorage) << "\n";
+             << float(col.fElementSize * col.fNElements) / float(col.fNBytesOnStorage) << "\n";
       output << "............................................................" << std::endl;
    }
 }
