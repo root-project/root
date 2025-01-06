@@ -729,7 +729,7 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::MarkSuppressedColumnRan
 
    RClusterDescriptor::RColumnRange columnRange;
    columnRange.fPhysicalColumnId = physicalId;
-   columnRange.fCompressionSettings = kUnknownCompressionSettings;
+   columnRange.fCompressionSettings = kNTupleUnknownCompression;
    columnRange.fIsSuppressed = true;
    fCluster.fColumnRanges[physicalId] = columnRange;
    return RResult<void>::Success();

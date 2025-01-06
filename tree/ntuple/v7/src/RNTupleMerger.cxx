@@ -86,7 +86,7 @@ try {
          "RNTuple::Merge",
          "Passed both options \"default_compression\" and \"first_source_compression\": only the latter will apply.");
    }
-   int compression = kUnknownCompressionSettings;
+   int compression = kNTupleUnknownCompression;
    if (firstSrcComp) {
       // user passed -ff or -fk: use the same compression as the first RNTuple we find in the sources.
       // (do nothing here, the compression will be fetched below)
@@ -113,7 +113,7 @@ try {
       }
 
       auto source = RPageSourceFile::CreateFromAnchor(*anchor);
-      if (compression == kUnknownCompressionSettings) {
+      if (compression == kNTupleUnknownCompression) {
          // Get the compression of this RNTuple and use it as the output compression.
          // We currently assume all column ranges have the same compression, so we just peek at the first one.
          source->Attach();
@@ -145,7 +145,7 @@ try {
    }
 
    RNTupleWriteOptions writeOpts;
-   assert(compression != kUnknownCompressionSettings);
+   assert(compression != kNTupleUnknownCompression);
    writeOpts.SetCompression(compression);
    auto destination = std::make_unique<RPageSinkFile>(ntupleName, *outFile, writeOpts);
 
@@ -886,7 +886,7 @@ RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination, c
    RNTupleMergeOptions mergeOpts = mergeOptsIn;
    {
       const auto dstCompSettings = destination.GetWriteOptions().GetCompression();
-      if (mergeOpts.fCompressionSettings == kUnknownCompressionSettings) {
+      if (mergeOpts.fCompressionSettings == kNTupleUnknownCompression) {
          mergeOpts.fCompressionSettings = dstCompSettings;
       } else if (mergeOpts.fCompressionSettings != dstCompSettings) {
          return R__FAIL(std::string("The compression given to RNTupleMergeOptions is different from that of the "
