@@ -66,7 +66,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern/d
 - [Working with collections](\ref collections)
 - [Transformations: manipulating data](\ref transformations)
 - [Actions: getting results](\ref actions)
-- [Distributed execution in Python](\ref distrdf)
+- [Distributed execution in Python](classROOT_1_1RDataFrame.html#distrdf)
 - [Performance tips and parallel execution](\ref parallel-execution)
 - [More features](\ref more-features)
    - [Systematic variations](\ref systematics)
@@ -85,7 +85,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern/d
    - [Creating an RDataFrame from a dataset specification file](\ref rdf-from-spec)
    - [Adding a progress bar](\ref progressbar)
    - [Working with missing values in the dataset](\ref missing-values)
-- [Efficient analysis in Python](\ref python)
+- [Python interface](classROOT_1_1RDataFrame.html#python) 
 - <a class="el" href="classROOT_1_1RDataFrame.html#reference" onclick="javascript:toggleInherit('pub_methods_classROOT_1_1RDF_1_1RInterface')">Class reference</a>
 
 \anchor cheatsheet
@@ -1054,7 +1054,7 @@ Similarly, `Histo1D("x")` requires just-in-time compilation after the type of `x
 should be preferred for performance-critical applications.
 
 Python applications cannot easily specify template parameters or pass C++ callables to RDataFrame.
-See [Efficient analysis in Python](#python) for possible ways to speed up hot paths in this case.
+See [Python interface](classROOT_1_1RDataFrame.html#python) for possible ways to speed up hot paths in this case.
 
 Just-in-time compilation happens once, right before starting an event loop. To reduce the runtime cost of this step, make sure to book all operations *for all RDataFrame computation graphs*
 before the first event loop is triggered: just-in-time compilation will happen once for all code required to be generated up to that point, also across different computation graphs.
@@ -1626,7 +1626,7 @@ ROOT::RDF::Experimental::AddProgressBar(df);
 
 Alternatively, RDataFrame can be cast to an RNode first, giving the user more flexibility 
 For example, it can be called at any computational node, such as Filter or Define, not only the head node,
-with no change to the ProgressBar function itself (please see the [Efficient analysis in Python](#python) 
+with no change to the ProgressBar function itself (please see the [Python interface](classROOT_1_1RDataFrame.html#python) 
 section for appropriate usage in Python): 
 ~~~{.cpp}
 ROOT::RDataFrame df("tree", "file.root");
