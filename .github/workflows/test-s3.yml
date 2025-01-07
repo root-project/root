@@ -75,8 +75,8 @@ jobs:
         python -m pip install --upgrade pip
         pip install awscli
 
-    # - name: Sync to S3
-    #   run: 'touch ${TEST_FILE_NAME} && aws s3 cp ${TEST_FILE_NAME} s3://root/s3-test/'
+    - name: Sync to S3
+      run: 'touch ${TEST_FILE_NAME} && aws s3 cp ${TEST_FILE_NAME} s3://root/s3-test/'
 
     #   env:
     #     TEST_FILE_NAME: 'gha_test.txt'
