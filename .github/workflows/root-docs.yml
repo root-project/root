@@ -228,18 +228,16 @@ jobs:
         python -m pip install --upgrade pip
         pip install awscli
         aws configure set default.s3.max_concurrent_requests 200
-        aws configure list
 
     - name: Sync to S3
       env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_WEB }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_WEB }}
-        AWS_REGION: "eu-west-1"
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_ENDPOINT_URL: https://s3.cern.ch/
       run: |
         pwd
         ls -l ${DOC_LOCATION}
-        aws s3 cp ${DOC_LOCATION}/rootdoc_TMP s3://root/doc-test/ --recursive
+        aws s3 sync ${DOC_LOCATION}/rootdoc_TMP s3://root/doc-test/ 
 #        aws https://s3.cern.ch s3 sync ${DOC_LOCATION}/rootdoc_TMP s3://root/doc-test/
 
     # DEST="s3://root/99999_${PR_NUMBER:-}" # if PR, upload in s3://root/99999_<prnumber>
