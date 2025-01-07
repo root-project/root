@@ -20,11 +20,11 @@ class SimpleCollectionProxy : public TVirtualCollectionProxy {
       if constexpr (CollectionKind == ROOT::kSTLvector) {
          // An iterator on an array-backed container is just a pointer; thus, it can be directly stored in `*xyz_arena`,
          // saving one dereference (see TVirtualCollectionProxy documentation)
-         *begin_arena = &(*vec.begin());
-         *end_arena = &(*vec.end());
+         *begin_arena = vec.data();
+         *end_arena = vec.data() + vec.size();
       } else {
-         static_cast<IteratorData *>(*begin_arena)->ptr = &(*vec.begin());
-         static_cast<IteratorData *>(*end_arena)->ptr = &(*vec.end());
+         static_cast<IteratorData *>(*begin_arena)->ptr = vec.data();
+         static_cast<IteratorData *>(*end_arena)->ptr = vec.data() + vec.size();
       }
    }
 
