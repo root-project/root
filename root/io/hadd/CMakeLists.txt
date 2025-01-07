@@ -63,7 +63,7 @@ ROOTTEST_ADD_TEST(test_MergeCMSOpenDataRNTuples
 #                 argument parsing tests                       #
 ################################################################
 ROOTTEST_ADD_TEST(test_hadd_args_gen_input
-                  COPY_TO_BUILDDIR hadd_gen_input_tree.C
+                  COPY_TO_BUILDDIR hadd_gen_input_tree.C hadd_args_verify.C
                   PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_in.root
                   COMMAND ${ROOT_root_CMD} -q -b -l "hadd_gen_input_tree.C(\"hadd_args_in.root\")"
 )
@@ -73,6 +73,7 @@ ROOTTEST_ADD_TEST(test_hadd_args_n0
                   PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_n0_out.root
                   COMMAND ${ROOT_hadd_CMD} -n0 hadd_args_n0_out.root hadd_args_in.root
                   OUTREF hadd_args_n0.ref
+                  POSTCMD ${ROOT_root_CMD} -q -b -l "hadd_args_verify.C(\"hadd_args_n0_out.root\")"
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_na
@@ -87,6 +88,7 @@ ROOTTEST_ADD_TEST(test_hadd_args_n_1
                   PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_n_1_out.root
                   COMMAND ${ROOT_hadd_CMD} -n=1 hadd_args_n_1_out.root hadd_args_in.root
                   OUTREF hadd_args_n_1.ref
+                  POSTCMD ${ROOT_root_CMD} -q -b -l "hadd_args_verify.C(\"hadd_args_n0_out.root\")"
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_jfa
@@ -108,6 +110,7 @@ ROOTTEST_ADD_TEST(test_hadd_args_j
                   PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_j_out.root
                   COMMAND ${ROOT_hadd_CMD} -j hadd_args_j_out.root hadd_args_in.root
                   PASSRC 0
+                  POSTCMD ${ROOT_root_CMD} -q -b -l "hadd_args_verify.C(\"hadd_args_n0_out.root\")"
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_ff_dbg_j_2
@@ -115,6 +118,7 @@ ROOTTEST_ADD_TEST(test_hadd_args_ff_dbg_j_2
                   PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_ff_dbg_j_2_out.root
                   COMMAND ${ROOT_hadd_CMD} -ff hadd_args_ff_dbg_j_2_out.root hadd_args_in.root hadd_args_in.root -dbg -j 2
                   OUTREF hadd_args_ff_dbg_j_2.ref
+                  POSTCMD ${ROOT_root_CMD} -q -b -l "hadd_args_verify.C(\"hadd_args_n0_out.root\")"
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_minusminus
@@ -122,6 +126,7 @@ ROOTTEST_ADD_TEST(test_hadd_args_minusminus
                   PRECMD ${CMAKE_COMMAND} -E rm -f -- --hadd_args_out.root
                   COMMAND ${ROOT_hadd_CMD} -f0 -- --hadd_args_out.root hadd_args_in.root
                   OUTREF hadd_args_minusminus.ref
+                  POSTCMD ${ROOT_root_CMD} -q -b -l "hadd_args_verify.C(\"hadd_args_n0_out.root\")"
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_minusminus2
@@ -130,6 +135,7 @@ ROOTTEST_ADD_TEST(test_hadd_args_minusminus2
                   COMMAND ${ROOT_hadd_CMD} -f --hadd_args2_out.root -- hadd_args_in.root
                   PASSREGEX "Warning in <hadd>: unknown flag: --hadd_args2_out.root"
                   PASSRC 1
+                  POSTCMD ${ROOT_root_CMD} -q -b -l "hadd_args_verify.C(\"hadd_args_n0_out.root\")"
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_multiple_pos
@@ -144,6 +150,7 @@ ROOTTEST_ADD_TEST(test_hadd_args_cachesize
                   PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_cachesize_out.root
                   COMMAND ${ROOT_hadd_CMD} hadd_args_cachesize_out.root hadd_args_in.root -cachesize 100M -f
                   OUTREF hadd_args_cachesize.ref
+                  POSTCMD ${ROOT_root_CMD} -q -b -l "hadd_args_verify.C(\"hadd_args_n0_out.root\")"
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_missing_arg
