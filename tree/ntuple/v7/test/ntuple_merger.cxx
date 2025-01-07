@@ -1443,7 +1443,7 @@ TEST_P(RNTupleMergerCheckEncoding, CorrectEncoding)
       fileMerger.AddFile(nt2.get());
       // If `useDefaultComp` is true, it's as if we were calling hadd without a -f* flag
       if (useDefaultComp)
-         fileMerger.SetMergeOptions(TString("rnt:DefaultCompression"));
+         fileMerger.SetMergeOptions(TString("DefaultCompression"));
       fileMerger.Merge();
 
       EXPECT_TRUE(VerifyPageCompression(fileGuard3.GetPath(), expectedComp));
@@ -1530,7 +1530,7 @@ TEST(RNTupleMerger, MergeAsymmetric1TFileMerger)
          fileMerger.OutputFile(fileGuard3.GetPath().c_str(), "RECREATE");
          fileMerger.AddFile(nt1.get());
          fileMerger.AddFile(nt2.get());
-         fileMerger.SetMergeOptions(TString("rnt:MergingMode=Filter"));
+         fileMerger.SetMergeOptions(TString("rntuple.MergingMode=Filter"));
          CheckDiagsRAII diags;
          diags.requiredDiag(kError, "TFileMerger::Merge", "error during merge", false);
          diags.requiredDiag(kError, "RNTuple::Merge", "missing the following field", false);
@@ -1546,7 +1546,7 @@ TEST(RNTupleMerger, MergeAsymmetric1TFileMerger)
          fileMerger.OutputFile(fileGuard3.GetPath().c_str(), "RECREATE");
          fileMerger.AddFile(nt1.get());
          fileMerger.AddFile(nt2.get());
-         fileMerger.SetMergeOptions(TString("rnt:MergingMode=Strict"));
+         fileMerger.SetMergeOptions(TString("rntuple.MergingMode=Strict"));
          CheckDiagsRAII diags;
          diags.requiredDiag(kError, "TFileMerger::Merge", "error during merge", false);
          diags.requiredDiag(kError, "RNTuple::Merge", "missing the following field", false);
@@ -1562,7 +1562,7 @@ TEST(RNTupleMerger, MergeAsymmetric1TFileMerger)
          fileMerger.OutputFile(fileGuard3.GetPath().c_str(), "RECREATE");
          fileMerger.AddFile(nt1.get());
          fileMerger.AddFile(nt2.get());
-         fileMerger.SetMergeOptions(TString("rnt:MergingMode=Union"));
+         fileMerger.SetMergeOptions(TString("rntuple.MergingMode=Union"));
          CheckDiagsRAII diags;
          diags.optionalDiag(kWarning, "TFileMerger::MergeRecursive", "Merging RNTuples is experimental", false);
          auto res = fileMerger.Merge();
