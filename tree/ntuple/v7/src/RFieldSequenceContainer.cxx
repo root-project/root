@@ -49,18 +49,28 @@ std::size_t ROOT::Experimental::RArrayField::AppendImpl(const void *from)
 
 void ROOT::Experimental::RArrayField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
-   auto arrayPtr = static_cast<unsigned char *>(to);
-   for (unsigned i = 0; i < fArrayLength; ++i) {
-      CallReadOn(*fSubFields[0], globalIndex * fArrayLength + i, arrayPtr + (i * fItemSize));
+   if (fSubFields[0]->IsSimple()) {
+      GetPrincipalColumnOf(*fSubFields[0])->ReadV(globalIndex * fArrayLength, fArrayLength, to);
+   } else {
+      auto arrayPtr = static_cast<unsigned char *>(to);
+      for (unsigned i = 0; i < fArrayLength; ++i) {
+         CallReadOn(*fSubFields[0], globalIndex * fArrayLength + i, arrayPtr + (i * fItemSize));
+      }
    }
 }
 
 void ROOT::Experimental::RArrayField::ReadInClusterImpl(RClusterIndex clusterIndex, void *to)
 {
-   auto arrayPtr = static_cast<unsigned char *>(to);
-   for (unsigned i = 0; i < fArrayLength; ++i) {
-      CallReadOn(*fSubFields[0], RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() * fArrayLength + i),
-                 arrayPtr + (i * fItemSize));
+   if (fSubFields[0]->IsSimple()) {
+      GetPrincipalColumnOf(*fSubFields[0])
+         ->ReadV(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() * fArrayLength), fArrayLength, to);
+   } else {
+      auto arrayPtr = static_cast<unsigned char *>(to);
+      for (unsigned i = 0; i < fArrayLength; ++i) {
+         CallReadOn(*fSubFields[0],
+                    RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() * fArrayLength + i),
+                    arrayPtr + (i * fItemSize));
+      }
    }
 }
 
