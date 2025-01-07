@@ -76,7 +76,7 @@ jobs:
         touch ${TEST_FILE_NAME} 
         ls
         which aws
-        aws s3 cp ${TEST_FILE_NAME} s3://root/s3-test/'
+        aws s3 cp ${TEST_FILE_NAME} s3://root/s3-test/
 
       env:
         TEST_FILE_NAME: 'gha_test.txt'
