@@ -182,9 +182,6 @@ std::shared_ptr<ROOT::Experimental::RNTupleFillContext> ROOT::Experimental::RNTu
    std::lock_guard g(fMutex);
 
    auto model = fModel->Clone();
-
-   // TODO: Think about honoring RNTupleWriteOptions::SetUseBufferedWrite(false); this requires synchronization on every
-   // call to CommitPage() *and* preparing multiple cluster descriptors in parallel!
    auto sink = std::make_unique<Internal::RPageSinkBuf>(std::make_unique<RPageSynchronizingSink>(*fSink, fSinkMutex));
 
    // Cannot use std::make_shared because the constructor of RNTupleFillContext is private. Also it would mean that the
