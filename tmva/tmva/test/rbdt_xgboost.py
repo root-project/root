@@ -1,12 +1,8 @@
-# XGBoost has to be imported before ROOT to avoid crashes because of clashing
-# std::regexp symbols that are exported by cppyy.
-# See also: https://github.com/wlav/cppyy/issues/227
-import xgboost
-
 import unittest
 import ROOT
 import numpy as np
 import json
+import xgboost
 
 np.random.seed(1234)
 

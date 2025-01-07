@@ -23,7 +23,6 @@
 #include <algorithm>
 #include <array>
 #include <locale>        // for wstring_convert
-#include <regex>
 #include <utility>
 #include <sstream>
 #if __cplusplus > 201402L
@@ -57,8 +56,6 @@ namespace CPyCppyy {
     extern PyObject* gNullPtrObject;
     extern PyObject* gDefaultObject;
 
-// regular expression for matching function pointer
-    static std::regex s_fnptr("\\(:*\\*&*\\)");
 }
 
 #if PY_VERSION_HEX < 0x03000000
@@ -3307,15 +3304,15 @@ CPyCppyy::Converter* CPyCppyy::CreateConverter(const std::string& fullType, cdim
        // -- CLING WORKAROUND
                 result = selectInstanceCnv(klass, cpd, dims, isConst, control);
         }
-    } else {
-        std::smatch sm;
-        if (std::regex_search(resolvedType, sm, s_fnptr)) {
-        // this is a function pointer
-            auto pos1 = sm.position(0);
-            auto pos2 = resolvedType.rfind(')');
-            result = new FunctionPointerConverter(
-                resolvedType.substr(0, pos1), resolvedType.substr(pos1+sm.length(), pos2-1));
-        }
+    } else if (resolvedType.find("(*)") != std::string::npos ||
+               (resolvedType.find("::*)") != std::string::npos)) {
+    // this is a function pointer
+    // TODO: find better way of finding the type
+        auto pos1 = resolvedType.find('(');
+        auto pos2 = resolvedType.find("*)");
+        auto pos3 = resolvedType.rfind(')');
+        result = new FunctionPointerConverter(
+            resolvedType.substr(0, pos1), resolvedType.substr(pos2+2, pos3-pos2-1));
     }
 
     if (!result && cpd == "&&") {
