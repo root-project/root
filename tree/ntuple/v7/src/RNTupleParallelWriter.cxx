@@ -21,7 +21,9 @@
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 
+#include <TDirectory.h>
 #include <TError.h>
+#include <TFile.h>
 
 namespace {
 
@@ -168,6 +170,16 @@ std::unique_ptr<ROOT::Experimental::RNTupleParallelWriter>
 ROOT::Experimental::RNTupleParallelWriter::Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
                                                   TDirectory &fileOrDirectory, const RNTupleWriteOptions &options)
 {
+   auto file = fileOrDirectory.GetFile();
+   if (!file) {
+      throw RException(
+         R__FAIL("RNTupleParallelWriter only supports writing to a ROOT file. Cannot write into a directory "
+                 "that is not backed by a file"));
+   }
+   if (!file->IsBinary()) {
+      throw RException(R__FAIL("RNTupleParallelWriter only supports writing to a ROOT file. Cannot write into " +
+                               std::string(file->GetName())));
+   }
    if (!options.GetUseBufferedWrite()) {
       throw RException(R__FAIL("parallel writing requires buffering"));
    }
