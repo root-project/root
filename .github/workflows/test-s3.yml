@@ -82,7 +82,7 @@ jobs:
       run: |
         touch ${TEST_FILE_NAME} 
         ls
-        echo ${MYTEST}
+        echo The non existing secret is *${MYTEST}*
         which aws
         aws s3 cp ${TEST_FILE_NAME} s3://root/s3-test/
 
