@@ -6,8 +6,7 @@
 /// \macro_image (tcanvas_js)
 /// \macro_code
 ///
-/// \date November 2024
-/// \author Georg Troska, Alexandr Prozorov
+/// \author Georg Troska
 
 void hist047_Graphics_candle_decay()
 {

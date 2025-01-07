@@ -53,7 +53,7 @@ Explore the examples below for [different histogram classes](group__Histograms.h
 
 | **Tutorial**             |    **Description**         |
 |--------------------------|----------------------------|
-| hist000_TH1_first.C      | First example              |
+| hist000_TH1_first.C      |First example.              |
 
 \anchor th1
 
@@ -63,26 +63,26 @@ These examples shows some of the ratioplots
 
 | **Tutorial**             |    **Description**         |
 |--------------------------|----------------------------|
-|hist000_TH1_first.C|Hello World example for TH1|
-|hist001_TH1_fillrandom.C|Fill a 1D histogram with random values using predefined functions|
+|hist000_TH1_first.C|Hello World example for TH1.|
+|hist001_TH1_fillrandom.C|Fill a 1D histogram with random values using predefined functions.|
 |hist002_TH1_fillrandom_userfunc.C|Fill a 1D histogram from a user-defined parametric function.|
-|hist003_TH1_draw.C|Draw a 1D histogram to a canvas.|
+|hist003_TH1_draw.C|Draw a 1D histogram to a canva.|
 |hist004_TH1_labels.C|1D histograms with alphanumeric labels.|
-|hist005_TH1_palettecolor.C|Palette coloring for TH1|
-|hist006_TH1_bar_charts.C|Draw 1D histograms as bar charts|
+|hist005_TH1_palettecolor.C|Palette coloring for TH1.|
+|hist006_TH1_bar_charts.C|Draw 1D histograms as bar charts.|
 |hist007_TH1_liveupdate.C|Histograms filled and drawn in a loop.|
-|hist008_TH1_zoom.C|Changing the Range on the X-Axis of a Histogram|
-|hist009_TH1_normalize.C|Normalizing a Histogram|
-|hist010_TH1_two_scales.C|Example of macro illustrating how to superimpose two histograms|
-|hist011_TH1_legend_autoplaced.C|The legend can be placed automatically in the current pad in an empty space|
-|hist012_TH1_hksimple.C|Illustrates the advantages of a TH1K histogram|
-|hist013_TH1_rebin.C|Rebin a variable bin-width histogram.|
+|hist008_TH1_zoom.C|Change the range of an axis in a Histogram.|
+|hist009_TH1_normalize.C|Normalizing a Histogram.|
+|hist010_TH1_two_scales.C|Draw two histograms on one canva using different y-axis scales.|
+|hist011_TH1_legend_autoplaced.C|Automatic placing of the legend.|
+|hist012_TH1_hksimple.C|Dynamic filling of TH1K histograms.|
+|hist013_TH1_rebin.C|Create a variable bin-width histogram and change bin sizes.|
 |hist014_TH1_cumulative.C|Illustrate use of the TH1::GetCumulative method.|
-|hist015_TH1_read_and_draw.C|Read a 1-D histogram from a ROOT File and draw it.|
-|hist016_TH1_different_scales_canvas.C|Example of a canvas showing two histograms with different scales.|
+|hist015_TH1_read_and_draw.C|Read a 1D histogram from a ROOT File and draw it.|
+|hist016_TH1_different_scales_canvas.C|Draw two histograms on one canva using different y-axis scales.|
 |hist017_TH1_smooth.C|Histogram smoothing.|
-|hist101_TH1_autobinning.C|Fill multiple histograms with different functions and automatic binning.|
 |hist060_Stats.C|Edit statistics box.|
+|hist101_TH1_autobinning.C|Fill multiple histograms with different functions and automatic binning.|
 
 \anchor th2
 
@@ -90,12 +90,12 @@ These examples shows some of the ratioplots
 
 | **Tutorial**             |    **Description**         |
 |--------------------------|----------------------------|
-|hist018_TH2_cutg.C|This example demonstrates how to display a 2D histogram and|
-|hist019_TH2_projection.C|This example demonstrates how to display a histogram and its two projections.|
-|hist020_TH2_draw.C|Display the various 2-d drawing options|
-|hist021_TH2_reverse_axis.C|Example showing an histogram with reverse axis.|
-|hist022_TH2_palette.C|When an histogram is drawn with the option `COLZ`, a palette is automatically drawn|
-|hist102_TH2_contour_list.C|Getting Contours From TH2D.|
+|hist018_TH2_cutg.C|Use TCutG object to select bins for drawing a region of a 2D histogram.|
+|hist019_TH2_projection.C|Display a histogram and its two projections.|
+|hist020_TH2_draw.C|Display 2D histogram drawing options.|
+|hist021_TH2_reverse_axis.C|Histogram with reverse axis.|
+|hist022_TH2_palette.C|Automatic placing of a color palette via option `COLZ`.|
+|hist102_TH2_contour_list.C|Get contours from a 2D histogram.|
 
 \anchor thstack
 
@@ -103,12 +103,12 @@ These examples shows some of the ratioplots
 
 | **Tutorial**             |    **Description**         |
 |--------------------------|----------------------------|
-|hist023_THStack_simple.C|Example of stacked histograms: class THStack.|
-|hist024_THStack_pads.C|Drawing stack histograms on subpads.|
-|hist025_THStack_2d_palette_color.C|Palette coloring for 2D histograms' stack is activated thanks to the option `PFC`|
-|hist026_THStack_color_scheme.C|This example demonstrates how to use the accessible color schemes with THStack.|
-|hist027_THStack_palette_color.C|Palette coloring for histograms' stack is activated thanks to the options `PFC`|
-|hist028_THStack_multicolor.C|Use a THStack to show a 2-D hist with cells with different colors.|
+|hist023_THStack_simple.C|Stack histograms with class THStack.|
+|hist024_THStack_pads.C|Draw stack histograms on subpads.|
+|hist025_THStack_2d_palette_color.C|Display multiple 2D histograms picking colors within palette 1.|
+|hist026_THStack_color_scheme.C|Use accessible color schemes with THStack.|
+|hist027_THStack_palette_color.C|Display multiple 1D histograms picking colors within palette kOcean.|
+|hist028_THStack_multicolor.C|Use a THStack to show a 2D histogram with cells with different colors.|
 
 \anchor ratioplots
 
@@ -116,13 +116,13 @@ These examples shows some of the ratioplots
 
 | **Tutorial**             |    **Description**         |
 |--------------------------|----------------------------|
-|hist029_TRatioPlot_simple.C|Example creating a simple ratio plot of two histograms using the `pois` division option.|
-|hist030_TRatioPlot_residual.C|Example of a fit residual plot.|
-|hist031_TRatioPlot_residual_fit.C|Example which shows how you can get the graph of the lower plot and set the y axis range for it.|
-|hist032_TRatioPlot_fit_lines.C|Example that shows custom dashed lines on the lower plot, specified by a vector of floats.|
-|hist033_TRatioPlot_fit_confidence.C|Example that shows how you can set the colors of the confidence interval bands by using|
-|hist034_TRatioPlot_fit_margin.C|Example showing a fit residual plot, where the separation margin has been set to 0.|
-|hist035_TRatioPlot_manual_ratio.C|Example displaying two histograms and their ratio. This macro does not use the|
+|hist029_TRatioPlot_simple.C|Create a simple ratio plot of two histograms using the `pois` division option.|
+|hist030_TRatioPlot_residual.C|Create a fit residual plot.|
+|hist031_TRatioPlot_residual_fit.C|Create a fit residual plot and set the y-axis range for it.|
+|hist032_TRatioPlot_fit_lines.C|Set custom dashed lines specified by a vector of floats.|
+|hist033_TRatioPlot_fit_confidence.C|Set the colors of the confidence interval bands by using|
+|hist034_TRatioPlot_fit_margin.C|Create a fit residual plot, where the separation margin has been set to 0.|
+|hist035_TRatioPlot_manual_ratio.C|Display two histograms and their ratio.|
 
 \anchor tpoly
 
@@ -130,14 +130,14 @@ These examples shows some of the ratioplots
 
 | **Tutorial**             |    **Description**         |
 |--------------------------|----------------------------|
-|hist037_TH2Poly_boxes.C|This tutorial illustrates how to create an histogram with polygonal|
-|hist038_TH2Poly_honeycomb.C|This tutorial illustrates how to create an histogram with hexagonal|
-|hist039_TH2Poly_usa.C|This tutorial illustrates how to create an histogram with polygonal|
-|hist040_TH2Poly_europe.C|This tutorial illustrates how to create an histogram with polygonal|
-|hist041_TProfile2Poly_realistic.C|Different charges depending on region|
-|hist042_TProfile2Poly_module_error.C|Simulate faulty detector panel w.r.t. particle charge|
+|hist037_TH2Poly_boxes.C|Create a histogram with polygonal bins (TH2Poly).|
+|hist038_TH2Poly_honeycomb.C|Create a histogram with hexagonal bins (TH2Poly).|
+|hist039_TH2Poly_usa.C|Create a histogram with polygonal bins (TH2Poly). The initial data represent the USA map.|
+|hist040_TH2Poly_europe.C|Create a histogram with polygonal bins (TH2Poly). The initial data represent the Europe map.|
+|hist041_TProfile2Poly_realistic.C|Create a histogram with polygonal bins representing different particle charges in a detectior.|
+|hist042_TProfile2Poly_module_error.C|Create a histogram with polygonal bins simulating a faulty detector panel w.r.t. particle charge.|
 |hist056_TPolyMarker_contour.C|Make a contour plot and get the first contour in a TPolyMarker.|
-|hist104_TH2Poly_fibonacci.C|A TH2Poly build with Fibonacci numbers.|
+|hist104_TH2Poly_fibonacci.C|Create a histogram representing the "Fibonacci spiral".|
 
 \anchor graphics
 
@@ -145,19 +145,19 @@ These examples shows some of the ratioplots
 
 | **Tutorial**             |    **Description**         |
 |--------------------------|----------------------------|
-|hist043_Graphics_highlight.C|This tutorial demonstrates how the highlight mechanism can be used on an histogram.|
-|hist044_Graphics_highlight2D.C|This tutorial demonstrates how the highlight mechanism can be used on an histogram.|
-|hist045_Graphics_highlight_ntuple.C|This tutorial demonstrates how the highlight mechanism can be used on a ntuple.|
-|hist046_Graphics_highlight1D.C|This tutorial demonstrates how the highlight mechanism can be used on an histogram.|
-|hist047_Graphics_candle_decay.C|Candle Decay, illustrate a time development of a certain value.|
-|hist048_Graphics_candle_hist.C|Example showing how to combine the various candle plot options.|
-|hist049_Graphics_candle_plot.C|Example of candle plot with 2-D histograms.|
-|hist050_Graphics_candle_plot_options.C|Example showing how to combine the various candle plot options.|
-|hist051_Graphics_candle_plot_stack.C|Example showing how a THStack with candle plot option.|
-|hist052_Graphics_candle_plot_whiskers.C|Example of candle plot showing the whiskers definition.|
-|hist053_Graphics_candle_scaled.C|Candle Scaled, illustrates what scaling does on candle and violin charts.|
+|hist043_Graphics_highlight.C|Use the highlight mechanism to update the title of a histogram in real time.|
+|hist044_Graphics_highlight2D.C|Use the highlight mechanism to displaying the X and Y projections at a bin in real time.|
+|hist045_Graphics_highlight_ntuple.C|Use the highlight mechanism to display which events of an ntuple contribute to a bin.|
+|hist046_Graphics_highlight1D.C|Use the highlight mechanism to zoom on a histogram.|
+|hist047_Graphics_candle_decay.C|Candle plot illustrating a time development of a certain value.|
+|hist048_Graphics_candle_hist.C|Illustrate candle plot options.|
+|hist049_Graphics_candle_plot.C|Create a candle plot with 2-D histograms.|
+|hist050_Graphics_candle_plot_options.C|Illustrate more candle plot options.|
+|hist051_Graphics_candle_plot_stack.C|Create a THStack with candle plot option.|
+|hist052_Graphics_candle_plot_whiskers.C|Create a candle plot showing the whiskers definition.|
+|hist053_Graphics_candle_scaled.C|Illustrate what scaling effects on candle and violin charts.|
 |hist054_Graphics_logscales.C|Draw parametric functions with log scales.|
-|hist055_Graphics_xyplot.C|Example showing how to produce a plot with an orthogonal axis system|
+|hist055_Graphics_xyplot.C|Draw a curve in an orthogonal axis system.|
 
 \anchor texec
 
