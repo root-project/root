@@ -40,6 +40,7 @@ Explore the examples below for [different histogram classes](group__Histograms.h
 - [Introduction](\ref introduction)
 - [TH1 Histograms](\ref th1)
 - [TH2 Histograms](\ref th2)
+- [ThnSparse] (\ref thnsparse)
 - [THStack](\ref thstack)
 - [TRatio plots](\ref ratioplots)
 - [TPoly](\ref tpoly)
@@ -61,28 +62,28 @@ Explore the examples below for [different histogram classes](group__Histograms.h
 
 These examples shows some of the ratioplots
 
-| **Tutorial**             |    **Description**         |
-|--------------------------|----------------------------|
-|hist000_TH1_first.C|Hello World example for TH1.|
-|hist001_TH1_fillrandom.C|Fill a 1D histogram with random values using predefined functions.|
-|hist002_TH1_fillrandom_userfunc.C|Fill a 1D histogram from a user-defined parametric function.|
-|hist003_TH1_draw.C|Draw a 1D histogram to a canva.|
-|hist004_TH1_labels.C|1D histograms with alphanumeric labels.|
-|hist005_TH1_palettecolor.C|Palette coloring for TH1.|
-|hist006_TH1_bar_charts.C|Draw 1D histograms as bar charts.|
-|hist007_TH1_liveupdate.C|Histograms filled and drawn in a loop.|
-|hist008_TH1_zoom.C|Change the range of an axis in a Histogram.|
-|hist009_TH1_normalize.C|Normalizing a Histogram.|
-|hist010_TH1_two_scales.C|Draw two histograms on one canva using different y-axis scales.|
-|hist011_TH1_legend_autoplaced.C|Automatic placing of the legend.|
-|hist012_TH1_hksimple.C|Dynamic filling of TH1K histograms.|
-|hist013_TH1_rebin.C|Create a variable bin-width histogram and change bin sizes.|
-|hist014_TH1_cumulative.C|Illustrate use of the TH1::GetCumulative method.|
-|hist015_TH1_read_and_draw.C|Read a 1D histogram from a ROOT File and draw it.|
-|hist016_TH1_different_scales_canvas.C|Draw two histograms on one canva using different y-axis scales.|
-|hist017_TH1_smooth.C|Histogram smoothing.|
-|hist060_Stats.C|Edit statistics box.|
-|hist101_TH1_autobinning.C|Fill multiple histograms with different functions and automatic binning.|
+| **Tutorial**             ||    **Description**         |
+|-------------|-------------|----------------------------|
+|hist000_TH1_first.C||Hello World example for TH1.|
+|hist001_TH1_fillrandom.C|hist001_TH1_fillrandom.py|Fill a 1D histogram with random values using predefined functions.|
+|hist002_TH1_fillrandom_userfunc.C||Fill a 1D histogram from a user-defined parametric function.|
+|hist003_TH1_draw.C||Draw a 1D histogram to a canva.|
+|hist004_TH1_labels.C||1D histograms with alphanumeric labels.|
+|hist005_TH1_palettecolor.C||Palette coloring for TH1.|
+|hist006_TH1_bar_charts.C||Draw 1D histograms as bar charts.|
+|hist007_TH1_liveupdate.C|hist007_TH1_liveupdate.py|Histograms filled and drawn in a loop.|
+|hist008_TH1_zoom.C||Change the range of an axis in a Histogram.|
+|hist009_TH1_normalize.C||Normalizing a Histogram.|
+|hist010_TH1_two_scales.C|hist010_TH1_two_scales.py|Draw two histograms on one canva using different y-axis scales.|
+|hist011_TH1_legend_autoplaced.C||Automatic placing of the legend.|
+|hist012_TH1_hksimple.C||Dynamic filling of TH1K histograms.|
+|hist013_TH1_rebin.C||Create a variable bin-width histogram and change bin sizes.|
+|hist014_TH1_cumulative.C||Illustrate use of the TH1::GetCumulative method.|
+|hist015_TH1_read_and_draw.C|hist015_TH1_read_and_draw.py|Read a 1D histogram from a ROOT File and draw it.|
+|hist016_TH1_different_scales_canvas.C||Draw two histograms on one canva using different y-axis scales.|
+|hist017_TH1_smooth.C||Histogram smoothing.|
+|hist060_TH1_Stats.C||Edit statistics box.|
+|hist101_TH1_autobinning.C||Fill multiple histograms with different functions and automatic binning.|
 
 \anchor th2
 
@@ -99,6 +100,13 @@ These examples shows some of the ratioplots
 
 \anchor thstack
 
+## THnSparse
+| **Tutorial**             |    **Description**         |
+|--------------------------|----------------------------|
+|hist103_THnSparse_hist.C|Evaluate the performance of THnSparse vs TH1/2/3/n.|
+
+\anchor thnsparse
+
 ## THStack
 
 | **Tutorial**             |    **Description**         |
@@ -114,15 +122,15 @@ These examples shows some of the ratioplots
 
 ## Ratio plots
 
-| **Tutorial**             |    **Description**         |
-|--------------------------|----------------------------|
-|hist029_TRatioPlot_simple.C|Create a simple ratio plot of two histograms using the `pois` division option.|
-|hist030_TRatioPlot_residual.C|Create a fit residual plot.|
-|hist031_TRatioPlot_residual_fit.C|Create a fit residual plot and set the y-axis range for it.|
-|hist032_TRatioPlot_fit_lines.C|Set custom dashed lines specified by a vector of floats.|
-|hist033_TRatioPlot_fit_confidence.C|Set the colors of the confidence interval bands by using|
-|hist034_TRatioPlot_fit_margin.C|Create a fit residual plot, where the separation margin has been set to 0.|
-|hist035_TRatioPlot_manual_ratio.C|Display two histograms and their ratio.|
+| **Tutorial**             ||    **Description**         |
+|------------|--------------|----------------------------|
+|hist029_TRatioPlot_simple.C|hist029_TRatioPlot_simple.py|Create a simple ratio plot of two histograms using the `pois` division option.|
+|hist030_TRatioPlot_residual.C|hist030_TRatioPlot_residual.py|Create a fit residual plot.|
+|hist031_TRatioPlot_residual_fit.C|hist031_TRatioPlot_residual_fit.py|Create a fit residual plot and set the y-axis range for it.|
+|hist032_TRatioPlot_fit_lines.C|hist032_TRatioPlot_fit_lines.py|Set custom dashed lines specified by a vector of floats.|
+|hist033_TRatioPlot_fit_confidence.C|hist033_TRatioPlot_fit_confidence.py|Set the colors of the confidence interval bands by using|
+|hist034_TRatioPlot_fit_margin.C|hist034_TRatioPlot_fit_margin.py|Create a fit residual plot, where the separation margin has been set to 0.|
+|hist035_TRatioPlot_manual_ratio.C|hist035_TRatioPlot_manual_ratio.py|Display two histograms and their ratio.|
 
 \anchor tpoly
 
@@ -163,11 +171,11 @@ These examples shows some of the ratioplots
 
 ## TExec
 
-| **Tutorial**             |    **Description**         |
-|--------------------------|----------------------------|
-|hist057_TExec_th1.C|Echo object at mouse position.|
-|hist058_TExec_th2.C|Echo object at mouse position and show a graphics line.|
-|hist105_TExec_dynamic_slice.C|Show the slice of a TH2 following the mouse position.|
+| **Tutorial**             ||    **Description**         |
+|------------|--------------|----------------------------|
+|hist057_TExec_th1.C||Echo object at mouse position.|
+|hist058_TExec_th2.C||Echo object at mouse position and show a graphics line.|
+|hist105_TExec_dynamic_slice.C|hist105_TExec_dynamic_slice.py|Show the slice of a TH2 following the mouse position.|
 
 \anchor alltutorials
 

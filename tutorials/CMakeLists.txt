@@ -534,7 +534,7 @@ set(io-xml-xmlmodifyfile-depends tutorial-io-xml-xmlnewfile)
 set(io-xml-xmlreadfile-depends tutorial-io-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
 set(io-readCode-depends tutorial-io-importCode)
-set(math-fit-fit1-depends tutorial-hist-fillrandom)
+set(math-fit-fit1-depends tutorial-hist-hist001_TH1_fillrandom)
 set(math-fit-myfit-depends tutorial-math-fit-fitslicesy)
 set(math-foam-foam_demopers-depends tutorial-math-foam-foam_demo)
 set(io-tree-tree502_staff-depends  tutorial-io-tree-tree500_cernbuild)
@@ -543,8 +543,8 @@ set(hist-hbars-depends  tutorial-io-tree-tree500_cernbuild)
 set(benchmarks-depends tutorial-hsimple
                        tutorial-math-fit-fit1
                        tutorial-math-fit-myfit
-                       tutorial-hist-h1ReadAndDraw
-                       tutorial-hist-FirstContour
+                       tutorial-hist-hist015_TH1_read_and_draw
+                       tutorial-hist-hist056_TPolyMarker_contour
                        tutorial-visualisation-geom-na49view
                        tutorial-io-tree-tree120_ntuple.C
                        tutorial-io-tree-spider
@@ -847,9 +847,9 @@ if(ROOT_pyroot_FOUND)
   set(pyroot-benchmarks-depends tutorial-hsimple-py
                                 tutorial-math-fit-fit1-py
                                 tutorial-visualisation-geom-na49view-py
-                                tutorial-hist-h1ReadAndDraw-py
+                                tutorial-hist-hist015_TH1_read_and_draw-py
                                 tutorial-tree-ntuple1-py)
-  set(math-fit-fit1-depends tutorial-hist-fillrandom-py)
+  set(math-fit-fit1-depends tutorial-hist-hist001_TH1_fillrandom-py)
   set(visualisation-geom-na49view-depends tutorial-visualisation-geom-geometry-py)
   set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite-py)
   set(roofit-rf618_mixture_models-depends tutorial-analysis-dataframe-df106_HiggsToFourLeptons-py)
