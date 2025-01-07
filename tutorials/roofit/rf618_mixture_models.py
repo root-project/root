@@ -205,8 +205,3 @@ del pdf_learned_extended
 del n_pred
 del llh
 del nll_ratio
-
-import sys
-
-# Hack to bypass ClearProxiedObjects()
-del sys.modules["libROOTPythonizations"]

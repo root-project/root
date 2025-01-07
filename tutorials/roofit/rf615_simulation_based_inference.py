@@ -271,8 +271,3 @@ del nll_morph
 del nllr_learned
 del nll_gauss
 del workspace
-
-import sys
-
-# Hack to bypass ClearProxiedObjects()
-del sys.modules["libROOTPythonizations"]
