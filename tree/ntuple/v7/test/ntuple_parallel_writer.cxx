@@ -293,6 +293,16 @@ TEST(RNTupleParallelWriter, ForbidModelWithSubfields)
    }
 }
 
+TEST(RNTupleParallelWriter, ForbidNonRootTFiles)
+{
+   FileRaii fileGuard("test_ntuple_parallel_forbid_xml.xml");
+
+   auto model = RNTupleModel::Create();
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   // Opening an XML TFile should fail
+   EXPECT_THROW(RNTupleParallelWriter::Append(std::move(model), "ntpl", *file), ROOT::RException);
+}
+
 TEST(RNTupleFillContext, FlushColumns)
 {
    FileRaii fileGuard("test_ntuple_context_flush.root");
