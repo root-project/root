@@ -62,8 +62,8 @@ jobs:
     # Install AWS CLI before syncing to S3
     - name: Install AWS CLI
       run: |
-        python3 -m pip install --upgrade pip
-        pip install awscli
+        python3 -m pip3 install --upgrade pip3
+        pip3 install awscli
 
     - name: Sync to S3
       run: |
