@@ -212,14 +212,15 @@ jobs:
       run: |
         tarname=${DOC_DIR}.tar
         tar cf $tarname ${DOC_DIR}
+        gzip $tarname
 
     #Upload to GitHub as an artifact (optional)
-    - name: Upload tar file
+    - name: Upload tar file for GH
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
-        name: rootdoc.tar
-        path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar
+        name: rootdoc.tar.gz
+        path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.gz
         if-no-files-found: error
 
     # Install AWS CLI before syncing to S3
@@ -229,7 +230,7 @@ jobs:
         pip install awscli
         aws configure set default.s3.max_concurrent_requests 200
 
-    - name: Sync to S3
+    - name: Sync documentation to S3
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -238,50 +239,5 @@ jobs:
         pwd
         ls -l ${DOC_LOCATION}
         aws s3 sync ${DOC_LOCATION}/rootdoc_TMP s3://root/doc-test/rootdoc_TMP
-#        aws https://s3.cern.ch s3 sync ${DOC_LOCATION}/rootdoc_TMP s3://root/doc-test/
 
-    # DEST="s3://root/99999_${PR_NUMBER:-}" # if PR, upload in s3://root/99999_<prnumber>
-    # aws --endpoint-url https://s3.cern.ch s3 sync --delete build/99999_${PR_NUMBER:-} ${DEST}
-
-    # OpenStack upload works somehow like this
-    # - name: Install OpenStack CLI
-    #   run: |
-    #     dnf install -y python3-openstackclient
-    #     pip install --upgrade openstacksdk
-
-    # - name: Upload Documentation to OpenStack Swift
-    #   run: |
-    #     openstack container create rootdoc
-    #     openstack object create rootdoc ${{env.DOC_LOCATION}}/${{env.DOC_DIR}} --recursive
-
-    # - name: Update deployment status (success)
-    #   if: success()
-    #   uses: chrnorm/deployment-status@releases/v1
-    #   with:
-    #     token: ${{ secrets.GITHUB_TOKEN }}
-    #     target_url: https://adrianduesselberg/rootdoc/index.html  # Replace with the actual URL
-    #     state: 'success'
-    #     deployment_id: ${{ steps.test.outputs.deployment_id }}
-
-    # - name: Sync HTML to the server
-    #   shell: bash
-    #   run: |
-    #     docdir=${{env.DOC_DIR}}
-
-    #     # Check if the docdir contains 'html'
-    #     if [[ "$docdir" == *html* ]]; then
-    #       rsync --delete -a $docdir/ root.cern.ch:/var/www/root/root/$docdir
-    #       ret=$?
-    #     else
-    #       rsync --delete --exclude release-notes.html -a $docdir/ root.cern.ch:/var/www/root/doc/$docdir
-    #       ret=$?
-    #     fi
-
-    #     # upload the archives if necessary
-    #     if [[ "$docdir" != "master" && "$docdir" != "html602" ]]; then
-    #       scp $tarnamegz root.cern.ch:/var/www/root/download/
-    #       scp $tarnamexz2 root.cern.ch:/var/www/root/download/
-    #     fi
-
-    #     # Exit with the return status of the rsync command
-    #     exit $ret
+   
