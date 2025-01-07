@@ -402,22 +402,22 @@ Int_t TAxis::FindFixBin(const char *label) const
 ////////////////////////////////////////////////////////////////////////////////
 Int_t TAxis::DoFindFixBin(Double_t x) const
 {
-   int bin = 0;
    if (!fXbins.fN) {        //*-* fix bins
-      bin = 1 + int (fNbins * (x-fXmin)/(fXmax-fXmin) );
-      // apply correction when x  is at the bin edge value
-      // (computed as in GetBinLowEdge) a numerical error in the
-      // above division can cause a migration in a neighbour bin.
-      double binwidth = (fXmax - fXmin) / Double_t(fNbins);
-      double upEdge = fXmin + (bin) * binwidth;
-      double lowEdge = fXmin + (bin - 1) * binwidth;
-      if (upEdge <= x) bin += 1;
-      if (lowEdge > x) bin -= 1;
-   } else {                  //*-* variable bin sizes
-      //for (bin =1; x >= fXbins.fArray[bin]; bin++);
-      bin = 1 + TMath::BinarySearch(fXbins.fN,fXbins.fArray,x);
+      // shift x and fXmax by fXmin:
+      x = x - fXmin;
+      const double b = fXmax - fXmin;
+      const double s = fNbins * x; // scaled version of x
+      double m = std::floor(s / b);
+      // iterative correction in case of floating point errors due to floating point division
+      while (m * b > s) // if left bin boundary is greater then x, decrement
+         m = m - 1;
+      while ((m + 1) * b <= s) //if right bin boundary is smaller or equal, increment
+         m = m + 1;
+      return 1 + Int_t(m);
+   } else { //*-* variable bin sizes
+      // for (bin =1; x >= fXbins.fArray[bin]; bin++);
+      return 1 + TMath::BinarySearch(fXbins.fN, fXbins.fArray, x);
    }
-   return bin;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
