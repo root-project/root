@@ -79,6 +79,7 @@ jobs:
       run: |
         touch ${TEST_FILE_NAME}
         aws s3 cp ${TEST_FILE_NAME} s3://root/s3-test/
+        
       env:
         TEST_FILE_NAME: "gha_test_"${{ github.event.pull_request.number }}".txt"
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_WEB }}
