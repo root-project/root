@@ -60,8 +60,16 @@ def _RNTupleModel_CreateBare(*args):
     return ROOT.Experimental.RNTupleModel._CreateBare()
 
 
+def _RNTupleModel_CreateEntry(self):
+    raise RuntimeError(
+        "creating entries from model is not supported in Python, call CreateEntry on the reader or writer"
+    )
+
+
 def _RNTupleModel_GetDefaultEntry(self):
-    raise RuntimeError("default entries are not supported in Python, call CreateEntry")
+    raise RuntimeError(
+        "default entries are not supported in Python, call CreateEntry on the reader or writer"
+    )
 
 
 class _RNTupleModel_MakeField(MethodTemplateWrapper):
@@ -78,6 +86,8 @@ def pythonize_RNTupleModel(klass):
     klass._CreateBare = klass.CreateBare
     klass.CreateBare = _RNTupleModel_CreateBare
 
+    klass.CreateBareEntry = _RNTupleModel_CreateEntry
+    klass.CreateEntry = _RNTupleModel_CreateEntry
     klass.GetDefaultEntry = _RNTupleModel_GetDefaultEntry
 
     klass.MakeField = MethodTemplateGetter(klass.MakeField, _RNTupleModel_MakeField)
