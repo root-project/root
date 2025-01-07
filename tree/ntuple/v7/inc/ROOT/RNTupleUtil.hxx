@@ -17,7 +17,6 @@
 #define ROOT7_RNTupleUtil
 
 #include <cstdint>
-
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -25,7 +24,6 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RLogger.hxx>
-#include <ROOT/RNTupleReadOptions.hxx>
 
 namespace ROOT {
 
