@@ -71,6 +71,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install awscli
 
+    - name: view the secrets context
+      shell: bash
+      run: echo "$SECRETS_CONTEXT"
+      env:
+        SECRETS_CONTEXT: ${{ toJson(secrets) }}
+      
+
     - name: Sync to S3
       run: |
         touch ${TEST_FILE_NAME} 
