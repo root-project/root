@@ -93,6 +93,18 @@ def pythonize_RNTupleModel(klass):
     klass.MakeField = MethodTemplateGetter(klass.MakeField, _RNTupleModel_MakeField)
 
 
+def _RNTupleReader_Open(maybe_model, *args):
+    if (
+        hasattr(type(maybe_model), "__cpp_name__")
+        and type(maybe_model).__cpp_name__ == "ROOT::Experimental::RNTupleModel"
+    ):
+        # In Python, the user cannot create REntries directly from a model, so we can safely clone it and avoid destructively passing the user argument.
+        maybe_model = maybe_model.Clone()
+    import ROOT
+
+    return ROOT.Experimental.RNTupleReader._Open(maybe_model, *args)
+
+
 def _RNTupleReader_LoadEntry(self, *args):
     if len(args) < 2:
         raise ValueError(
@@ -103,8 +115,31 @@ def _RNTupleReader_LoadEntry(self, *args):
 
 @pythonization("RNTupleReader", ns="ROOT::Experimental")
 def pythonize_RNTupleReader(klass):
+    klass._Open = klass.Open
+    klass.Open = _RNTupleReader_Open
+
     klass._LoadEntry = klass.LoadEntry
     klass.LoadEntry = _RNTupleReader_LoadEntry
+
+
+def _RNTupleWriter_Append(model, *args):
+    # In Python, the user cannot create REntries directly from a model, so we can safely clone it and avoid destructively passing the user argument.
+    model = model.Clone()
+    import ROOT
+
+    return ROOT.Experimental.RNTupleWriter._Append(model, *args)
+
+
+def _RNTupleWriter_Recreate(model_or_fields, *args):
+    if (
+        hasattr(type(model_or_fields), "__cpp_name__")
+        and type(model_or_fields).__cpp_name__ == "ROOT::Experimental::RNTupleModel"
+    ):
+        # In Python, the user cannot create REntries directly from a model, so we can safely clone it and avoid destructively passing the user argument.
+        model_or_fields = model_or_fields.Clone()
+    import ROOT
+
+    return ROOT.Experimental.RNTupleWriter._Recreate(model_or_fields, *args)
 
 
 def _RNTupleWriter_Fill(self, *args):
@@ -122,6 +157,11 @@ def _RNTupleWriter_exit(self, *args):
 
 @pythonization("RNTupleWriter", ns="ROOT::Experimental")
 def pythonize_RNTupleWriter(klass):
+    klass._Append = klass.Append
+    klass.Append = _RNTupleWriter_Append
+    klass._Recreate = klass.Recreate
+    klass.Recreate = _RNTupleWriter_Recreate
+
     klass._Fill = klass.Fill
     klass.Fill = _RNTupleWriter_Fill
 
