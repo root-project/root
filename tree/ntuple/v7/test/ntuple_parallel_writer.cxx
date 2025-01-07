@@ -289,7 +289,7 @@ TEST(RNTupleParallelWriter, ForbidModelWithSubfields)
       FAIL() << "should not able to create a writer using a model with registered subfields";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(),
-                  testing::HasSubstr("cannot create an RNTupleWriter from a model with registered subfields"));
+                  testing::HasSubstr("cannot create an RNTupleParallelWriter from a model with registered subfields"));
    }
 }
 
