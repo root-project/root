@@ -231,15 +231,16 @@ jobs:
         aws configure list
 
     - name: Sync to S3
-      run: |
-        pwd
-        ls -l ${DOC_LOCATION}
-        aws --endpoint-url https://s3.cern.ch s3 sync --delete ${DOC_LOCATION}/rootdoc_TMP s3://root/doc-test/
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_WEB }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_WEB }}
         AWS_REGION: "eu-west-1"
         AWS_ENDPOINT_URL: https://s3.cern.ch/
+      run: |
+        pwd
+        ls -l ${DOC_LOCATION}
+        aws s3 cp ${DOC_LOCATION}/rootdoc_TMP s3://root/doc-test/
+#        aws --endpoint-url https://s3.cern.ch s3 sync ${DOC_LOCATION}/rootdoc_TMP s3://root/doc-test/
 
     # DEST="s3://root/99999_${PR_NUMBER:-}" # if PR, upload in s3://root/99999_<prnumber>
     # aws --endpoint-url https://s3.cern.ch s3 sync --delete build/99999_${PR_NUMBER:-} ${DEST}
