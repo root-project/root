@@ -61,8 +61,8 @@ A collection of building block examples for your analysis.
 | df022_useKahan.C | | Implement a custom action that evaluates a Kahan sum. |
 | df023_aggregate.C | | Use the Aggregate action to specify arbitrary data aggregations. |
 | df025_RNode.C | | Manipulate RDF objects in functions, loops and conditional branches.|
-| df036_missingBranches.C |  | Deal with missing values due to a missing branch when switching to a new file in a chain. |
-| df037_TTreeEventMatching.C |  | Deal with missing values due to not finding a matching event in an auxiliary dataset. |
+| df036_missingBranches.C | df036_missingBranches.py | Deal with missing values due to a missing branch when switching to a new file in a chain. |
+| df037_TTreeEventMatching.C | df037_TTreeEventMatching.py | Deal with missing values due to not finding a matching event in an auxiliary dataset. |
 
 
 \anchor readwrite
