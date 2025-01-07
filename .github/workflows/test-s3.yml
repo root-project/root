@@ -81,9 +81,7 @@ jobs:
     - name: Sync to S3
       run: |
         touch ${TEST_FILE_NAME};
-        ls;
         echo The fake secret is +++${MYTEST}+++;
-        which aws;
         aws s3 cp ${TEST_FILE_NAME} s3://root/s3-test/;
 
       env:
