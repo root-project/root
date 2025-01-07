@@ -180,6 +180,7 @@ public:
 
    NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
    const RNTupleModel &GetModel();
+   std::unique_ptr<REntry> CreateEntry();
 
    /// Returns a cached copy of the page source descriptor. The returned pointer remains valid until the next call
    /// to LoadEntry or to any of the views returned from the reader.

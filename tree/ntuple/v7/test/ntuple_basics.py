@@ -25,7 +25,7 @@ class RNTupleBasics(unittest.TestCase):
 
         reader = RNTupleReader.Open("ntpl", "test_ntuple_py_write_read.root")
         self.assertEqual(reader.GetNEntries(), 1)
-        entry = reader.GetModel().CreateEntry()
+        entry = reader.CreateEntry()
         reader.LoadEntry(0, entry)
         self.assertEqual(entry["f"], 42)
         self.assertEqual(entry["mystr"], "string stored in RNTuple")

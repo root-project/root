@@ -143,6 +143,11 @@ const ROOT::Experimental::RNTupleModel &ROOT::Experimental::RNTupleReader::GetMo
    return *fModel;
 }
 
+std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleReader::CreateEntry()
+{
+   return GetModel().CreateEntry();
+}
+
 void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output) const
 {
    // TODO(lesimon): In a later version, these variables may be defined by the user or the ideal width may be read out
