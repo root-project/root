@@ -17,6 +17,7 @@
 #define ROOT7_RNTupleReader
 
 #include <ROOT/RConfig.hxx> // for R__unlikely
+#include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
@@ -37,7 +38,6 @@ namespace ROOT {
 class RNTuple;
 
 namespace Experimental {
-class REntry;
 
 /// Listing of the different options that can be printed by RNTupleReader::GetInfo()
 enum class ENTupleInfo {
