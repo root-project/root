@@ -65,18 +65,6 @@ jobs:
       # code of the `if`.
       run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
 
-    - name: Dump GitHub context
-      env:
-        GITHUB_CONTEXT: ${{ toJSON(github) }}
-        JOB_CONTEXT: ${{ toJSON(job) }}
-        ENV_CONTEXT: ${{ toJSON(env) }}
-      run: |
-        echo "$GITHUB_CONTEXT"
-        echo "--------------------------"
-        echo "$JOB_CONTEXT"
-        echo "--------------------------"
-        echo "$ENV_CONTEXT"
-
     # Install AWS CLI before syncing to S3
     - name: Install AWS CLI
       run: |
@@ -84,7 +72,11 @@ jobs:
         pip install awscli
 
     - name: Sync to S3
-      run: 'touch ${TEST_FILE_NAME} && aws s3 cp ${TEST_FILE_NAME} s3://root/s3-test/'
+      run: |
+        touch ${TEST_FILE_NAME} 
+        ls
+        which aws
+        aws s3 cp ${TEST_FILE_NAME} s3://root/s3-test/'
 
       env:
         TEST_FILE_NAME: 'gha_test.txt'
