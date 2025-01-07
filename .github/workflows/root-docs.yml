@@ -1,13 +1,6 @@
 name: 'ROOT Docs'
 
 on:
-#   # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
-#   pull_request:
-#     branches:
-#       - '**'
-#     paths-ignore:
-#       - 'doc/**'
-#       - 'documentation/**'
 
   # Allows nightly builds to trigger one run for each branch easily, by
   # providing the relevant branch as "default" value here:
@@ -30,31 +23,11 @@ on:
         type: string
         required: true
         default: master
-      base_ref:
-        description: ... to ... (can have same value)
-        type: string
-        required: true
-        default: master
       incremental:
         description: 'Do incremental build'
         type: boolean
         required: true
         default: true
-      binaries:
-        description: Create binary packages and upload them as artifacts
-        type: boolean
-        required: true
-        default: false
-      buildtype:
-        description: The CMAKE_BUILD_TYPE to use for non-Windows.
-        type: choice
-        options:
-        - Debug
-        - RelWithDebInfo
-        - Release
-        - MinSizeRel
-        default: Debug
-        required: true
       docu_input: # TODO: overwrite makeinput.sh with these args
         description: Folders to build documentation for. All folders are built if empty.
         type: string
@@ -72,7 +45,6 @@ jobs:
       PLATFORM: alma9
       DOC_DIR: rootdoc
       DOC_LOCATION: /github/home
-      PR_NUMBER: ${{ github.event.pull_request.number }}
 
     permissions:
       contents: read
@@ -136,34 +108,6 @@ jobs:
         done
         cat "$CONFIGFILE" || true
 
-    - name: Dump GitHub context
-      env:
-        GITHUB_CONTEXT: ${{ toJSON(github) }}
-      run: echo "$GITHUB_CONTEXT"
-
-
-    - name: Print debug info
-      run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
-              ls -la
-            '
-
-    - name: Pull Request Build
-      if: github.event_name == 'pull_request'
-      env:
-        INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
-        GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
-      run: ".github/workflows/root-ci-config/build_root.py
-                        --buildtype       Release
-                        --platform        alma9
-                        --dockeropts      '--security-opt label=disable --rm'
-                        --incremental     $INCREMENTAL
-                        --base_ref        ${{ github.base_ref }}
-                        --sha             ${{ github.sha }}
-                        --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
-                        --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
-                        --head_sha        ${{ github.event.pull_request.head.sha }}
-                        --repository      ${{ github.server_url }}/${{ github.repository }}
-                  "
     # - name: Nightly build
     #   if:   github.event_name == 'schedule'
     #   run: ".github/workflows/root-ci-config/build_root.py
@@ -181,9 +125,9 @@ jobs:
                   --buildtype      Release
                   --platform       alma9
                   --incremental    ${{ inputs.incremental }}
-                  --base_ref       ${{ inputs.base_ref }}
+                  --base_ref       ${{ inputs.head_ref }}
                   --head_ref       ${{ inputs.head_ref }}
-                  --binaries       ${{ inputs.binaries }}
+                  --binaries       false
                   --repository     ${{ github.server_url }}/${{ github.repository }}
            "
 
@@ -219,7 +163,7 @@ jobs:
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
-        name: rootdoc.tar.gz
+        name: ${DOC_DIR}.tar.gz
         path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.gz
         if-no-files-found: error
 
@@ -238,6 +182,6 @@ jobs:
       run: |
         pwd
         ls -l ${DOC_LOCATION}
-        aws s3 sync ${DOC_LOCATION}/rootdoc_TMP s3://root/doc-test/rootdoc_TMP
+        aws s3 sync ${DOC_LOCATION}/${DOC_DIR}_TMP s3://root/doc-test/${{ inputs.head_ref }}
 
    
