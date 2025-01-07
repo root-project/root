@@ -75,11 +75,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install awscli
 
-    - name: Sync to S3
-      run: 'touch ${TEST_FILE_NAME} && aws s3 cp ${TEST_FILE_NAME} s3://root/s3-test/'
+    # - name: Sync to S3
+    #   run: 'touch ${TEST_FILE_NAME} && aws s3 cp ${TEST_FILE_NAME} s3://root/s3-test/'
 
-      env:
-        TEST_FILE_NAME: 'gha_test.txt'
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_WEB }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_WEB }}
-        AWS_ENDPOINT_URL: https://s3.cern.ch/
+    #   env:
+    #     TEST_FILE_NAME: 'gha_test.txt'
+    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_WEB }}
+    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_WEB }}
+    #     AWS_ENDPOINT_URL: https://s3.cern.ch/
