@@ -1399,7 +1399,7 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
       if (glast) {where = glast; temp = glast->FindObject(name);}
    }
    if (!temp && gDirectory) {
-      temp  = gDirectory->Get(name);
+      gDirectory->GetObject(name, temp);
       where = gDirectory;
    }
    if (!temp && gPad) {
