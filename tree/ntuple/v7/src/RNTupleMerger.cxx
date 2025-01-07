@@ -59,7 +59,7 @@ static std::optional<T> ParseStringOption(const TString &opts, const char *patte
                                           std::initializer_list<std::pair<const char *, T>> validValues)
 {
    const Ssiz_t patternLen = strlen(pattern);
-   assert(pattern[patternLen - 1] == '='); // we want to parse options with the format `rnt:option=Value`
+   assert(pattern[patternLen - 1] == '='); // we want to parse options with the format `option=Value`
    if (auto idx = opts.Index(pattern, 0, TString::ECaseCompare::kIgnoreCase);
        idx >= 0 && opts.Length() > idx + patternLen) {
       auto sub = TString(opts(idx + patternLen, opts.Length() - idx - patternLen));
@@ -74,7 +74,7 @@ static std::optional<T> ParseStringOption(const TString &opts, const char *patte
 
 static std::optional<ENTupleMergingMode> ParseOptionMergingMode(const TString &opts)
 {
-   return ParseStringOption<ENTupleMergingMode>(opts, "rnt:MergingMode=",
+   return ParseStringOption<ENTupleMergingMode>(opts, "rntuple.MergingMode=",
                                                 {
                                                    {"Filter", ENTupleMergingMode::kFilter},
                                                    {"Union", ENTupleMergingMode::kUnion},
@@ -84,7 +84,7 @@ static std::optional<ENTupleMergingMode> ParseOptionMergingMode(const TString &o
 
 static std::optional<ENTupleMergeErrBehavior> ParseOptionErrBehavior(const TString &opts)
 {
-   return ParseStringOption<ENTupleMergeErrBehavior>(opts, "rnt:ErrBehavior=",
+   return ParseStringOption<ENTupleMergeErrBehavior>(opts, "rntuple.ErrBehavior=",
                                                      {
                                                         {"Abort", ENTupleMergeErrBehavior::kAbort},
                                                         {"Skip", ENTupleMergeErrBehavior::kSkip},
@@ -129,12 +129,12 @@ try {
       // pointer we just got.
    }
 
-   const bool defaultComp = mergeInfo->fOptions.Contains("rnt:DefaultCompression");
-   const bool firstSrcComp = mergeInfo->fOptions.Contains("rnt:FirstSrcCompression");
-   const bool extraVerbose = mergeInfo->fOptions.Contains("rnt:ExtraVerbose");
+   const bool defaultComp = mergeInfo->fOptions.Contains("DefaultCompression");
+   const bool firstSrcComp = mergeInfo->fOptions.Contains("FirstSrcCompression");
+   const bool extraVerbose = mergeInfo->fOptions.Contains("rntuple.ExtraVerbose");
    if (defaultComp && firstSrcComp) {
       // this should never happen through hadd, but a user may call RNTuple::Merge() from custom code.
-      Warning("RNTuple::Merge", "Passed both options \"rnt:DefaultCompression\" and \"rnt:FirstSrcCompression\": "
+      Warning("RNTuple::Merge", "Passed both options \"DefaultCompression\" and \"FirstSrcCompression\": "
                                 "only the latter will apply.");
    }
    int compression = kNTupleUnknownCompression;
