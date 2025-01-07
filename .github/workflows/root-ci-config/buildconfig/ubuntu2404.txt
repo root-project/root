@@ -1,3 +1,0 @@
-pythia8=OFF
-tmva-sofie=ON
-ccache=On

@@ -1,0 +1,86 @@
+name: 'ROOT S3 Example'
+
+on:
+  # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
+  pull_request:
+    branches:
+      - '**'
+    paths-ignore:
+      - 'doc/**'
+      - 'documentation/**'
+
+  # Allows nightly builds to trigger one run for each branch easily, by
+  # providing the relevant branch as "default" value here:
+  workflow_call:
+    inputs:
+      head_ref:
+        type: string
+        default: master
+      base_ref:
+        type: string
+        default: master
+      ref_name:
+        type: string
+        default: master
+
+  workflow_dispatch:
+    inputs:
+      head_ref:
+        description: rebase from ...
+        type: string
+        required: true
+        default: master
+    
+jobs:
+  s3-example:
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
+
+    env:
+      PLATFORM: alma9
+
+    permissions:
+      contents: read
+
+    container:
+      image: registry.cern.ch/root-ci/alma9:buildready # ALSO UPDATE BELOW!
+      options: '--security-opt label=disable --rm --name s3test' # ALSO UPDATE BELOW!
+      env:
+        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+        OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+        OS_AUTH_TYPE: 'v3applicationcredential'
+        OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+        OS_IDENTITY_API_VERSION: 3
+        OS_INTERFACE: 'public'
+        OS_REGION_NAME: 'cern'
+        PYTHONUNBUFFERED: true
+
+    steps:
+
+    - name: Set up Python Virtual Env
+      # if the `if` expr is false, `if` still has exit code 0.
+      # if the `if` block is entered, the block's exit code becomes the exit
+      # code of the `if`.
+      run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
+
+    - name: Print debug info
+      run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
+              ls -la
+            '
+    # Install AWS CLI before syncing to S3
+    - name: Install AWS CLI
+      run: |
+        python -m pip install --upgrade pip
+        pip install awscli
+
+    - name: Sync to S3
+      run: |
+        touch ${TEST_FILE_NAME}
+        aws s3 cp ${TEST_FILE_NAME} s3://root/s3-test/
+      env:
+        TEST_FILE_NAME: "gha_test_"${{ github.event.pull_request.number }}".txt"
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_WEB }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_WEB }}
+        AWS_ENDPOINT_URL: https://s3.cern.ch/
