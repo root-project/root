@@ -26,7 +26,7 @@ pad3.Draw()
 #
 File = "py-hsimple.root"
 if (ROOT.gSystem.AccessPathName(File)) :
-    ROOT.Info("h1ReadAndDraw.py", File+" does not exist")
+    ROOT.Info("hist015_TH1_read_and_draw.py", File+" does not exist")
     exit()
 
 example = TFile(File)
@@ -84,3 +84,6 @@ pave.AddText( 'X and Y axis' )
 pave.AddText( 'You can modify bin contents' )
 pave.Draw()
 c1.Update()
+
+if (example.IsOpen()):
+    example.Close()

@@ -438,15 +438,15 @@ is determined according to the number of objects having palette coloring in
 the current pad.
 
 Begin_Macro(source)
-../../../tutorials/hist/histpalettecolor.C
+../../../tutorials/hist/hist005_TH1_palettecolor.C
 End_Macro
 
 Begin_Macro(source)
-../../../tutorials/hist/thstackpalettecolor.C
+../../../tutorials/hist/hist027_THStack_palette_color.C
 End_Macro
 
 Begin_Macro(source)
-../../../tutorials/hist/thstack2palettecolor.C
+../../../tutorials/hist/hist025_THStack_2d_palette_color.C
 End_Macro
 
 \anchor HP06
@@ -788,7 +788,7 @@ End_Macro
 When the option `bar` or `hbar` is specified, a bar chart is drawn. A vertical
 bar-chart is drawn with the options `bar`, `bar0`, `bar1`, `bar2`, `bar3`, `bar4`.
 An horizontal bar-chart is drawn with the options `hbar`, `hbar0`, `hbar1`,
-`hbar2`, `hbar3`, `hbar4` (hbars.C).
+`hbar2`, `hbar3`, `hbar4` (hist006_TH1_bar_charts.C).
 
 - The bar is filled with the histogram fill color.
 - The left side of the bar is drawn with a light fill color.
@@ -803,7 +803,7 @@ An horizontal bar-chart is drawn with the options `hbar`, `hbar0`, `hbar1`,
 When an histogram has errors the option ["HIST"](\ref OPTHIST) together with the `(h)bar` option.
 
 Begin_Macro(source)
-../../../tutorials/hist/hbars.C
+../../../tutorials/hist/hist006_TH1_bar_charts.C
 End_Macro
 
 To control the bar width (default is the bin width) `TH1::SetBarWidth()`
@@ -1275,7 +1275,7 @@ X (option `CANDLE` or `CANDLEX`) or Y (option `CANDLEY`).
 Each TH1 is represented as one candle.
 
 Begin_Macro(source)
-../../../tutorials/hist/candleplotwhiskers.C
+../../../tutorials/hist/hist052_Graphics_candle_plot_whiskers.C
 End_Macro
 
 The candle reduces the information coming from a whole distribution into few values.
@@ -1502,7 +1502,7 @@ Also the color, the line width, the size of the points and so on can be changed 
 standard attribute setting methods such as SetLineColor() SetLineWidth().
 
 Begin_Macro(source)
-../../../tutorials/hist/candleplot.C
+../../../tutorials/hist/hist049_Graphics_candle_plot.C
 End_Macro
 
 \anchor HP140b
@@ -1600,7 +1600,7 @@ End_Macro
 The next example illustrates a time development of a certain value:
 
 Begin_Macro(source)
-../../../tutorials/hist/candledecay.C
+../../../tutorials/hist/hist047_Graphics_candle_decay.C
 End_Macro
 
 
@@ -1856,10 +1856,10 @@ To access the first graph in the list one should do:
     TGraph *gr1 = (TGraph*)list->First();
 
 
-The following example (ContourList.C) shows how to use this functionality.
+The following example (hist102_TH2_contour_list.C) shows how to use this functionality.
 
 Begin_Macro(source)
-../../../tutorials/hist/ContourList.C
+../../../tutorials/hist/hist102_TH2_contour_list.C
 End_Macro
 
 \anchor HP16b
@@ -2363,10 +2363,10 @@ End_Macro
 
 Rectangular bins are a frequent case. The special version of
 the `AddBin` method allows to define them more easily like
-shown in the following example (th2polyBoxes.C).
+shown in the following example (hist037_TH2Poly_boxes.C).
 
 Begin_Macro(source)
-../../../tutorials/hist/th2polyBoxes.C
+../../../tutorials/hist/hist037_TH2Poly_boxes.C
 End_Macro
 
 One `TH2Poly` bin can be a list of polygons. Such bins are defined
@@ -2721,10 +2721,10 @@ If the option `PADS` is specified, the current pad/canvas is
 subdivided into a number of pads equal to the number of histograms and each
 histogram is paint into a separate pad.
 
-The following example shows various types of stacks (hstack.C).
+The following example shows various types of stacks (hist023_THStack_simple.C).
 
 Begin_Macro(source)
-../../../tutorials/hist/hstack.C
+../../../tutorials/hist/hist023_THStack_simple.C
 End_Macro
 
 The option `nostackb` allows to draw the histograms next to each
@@ -3051,8 +3051,8 @@ highlight mode is on, mouse movement over the bin will be represented
 graphically. Bin will be highlighted as "bin box" (presented by box
 object). Moreover, any highlight (change of bin) emits signal
 `TCanvas::Highlighted()` which allows the user to react and call their own
-function. For a better understanding see also the tutorials
-`$ROOTSYS/tutorials/hist/hlHisto*.C` files.
+function. For a better understanding see also the tutorial `hist043` to `hist046`
+lacated in `$ROOTSYS/tutorials/hist/`.
 
 Highlight mode is switched on/off by `TH1::SetHighlight()` function
 or interactively from `TH1` context menu. `TH1::IsHighlight()` to verify

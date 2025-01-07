@@ -105,7 +105,7 @@ End_Macro
 A more complex example:
 
 Begin_Macro(source)
-../../../tutorials/hist/hstack.C
+../../../tutorials/hist/hist023_THStack_simple.C
 End_Macro
 
 Note that picking is supported for all drawing modes.
@@ -117,17 +117,16 @@ Stacks of 2D histograms can also be painted as violin plots, combinations of can
 violin plots are possible as well:
 
 Begin_Macro(source)
-../../../tutorials/hist/candleplotstack.C
+../../../tutorials/hist/hist051_Graphics_candle_plot_stack.C
 End_Macro
 
 Automatic coloring according to the current palette is available as shown in the
 following example:
 
 Begin_Macro(source)
-../../../tutorials/hist/thstackpalettecolor.C
+../../../tutorials/hist/hist027_THStack_palette_color.C
 End_Macro
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor with name and title

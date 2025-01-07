@@ -516,7 +516,7 @@ set(returncode_1 math/fit/fit2a.C
                  hist/hist102_TH2_contour_list.C
                  hist/hist006_TH1_bar_charts.C
                  hist/hist037_TH2Poly_boxes.C
-                 hist/hist060_Stats.C
+                 hist/hist060_TH1_Stats.C
                  hist/hist014_TH1_cumulative.C
                  hist/hist004_TH1_labels.C
                  hist/hist036_TH2_labels.C
@@ -539,7 +539,7 @@ set(math-fit-myfit-depends tutorial-math-fit-fitslicesy)
 set(math-foam-foam_demopers-depends tutorial-math-foam-foam_demo)
 set(io-tree-tree502_staff-depends  tutorial-io-tree-tree500_cernbuild)
 set(io-tree-tree501_cernstaff-depends  tutorial-io-tree-tree500_cernbuild)
-set(hist-hbars-depends  tutorial-io-tree-tree500_cernbuild)
+set(hist-hist006_TH1_bar_charts-depends  tutorial-io-tree-tree500_cernbuild)
 set(benchmarks-depends tutorial-hsimple
                        tutorial-math-fit-fit1
                        tutorial-math-fit-myfit
@@ -842,13 +842,13 @@ if(ROOT_pyroot_FOUND)
   message(STATUS "${nAfterVeto}/${nTotal} python tutorials have been activated.")
 
   #---Python tutorials dependencies--------------------------------------
-  set(tree-ntuple1-depends tutorial-hsimple-py)
-  set(hist-h1ReadAndDraw-depends tutorial-hsimple-py)
+  set(io-tree-ntuple1-depends tutorial-hsimple-py)
+  set(hist-hist015_TH1_read_and_draw-depends tutorial-hsimple-py)
   set(pyroot-benchmarks-depends tutorial-hsimple-py
                                 tutorial-math-fit-fit1-py
                                 tutorial-visualisation-geom-na49view-py
                                 tutorial-hist-hist015_TH1_read_and_draw-py
-                                tutorial-tree-ntuple1-py)
+                                tutorial-io-tree-ntuple1-py)
   set(math-fit-fit1-depends tutorial-hist-hist001_TH1_fillrandom-py)
   set(visualisation-geom-na49view-depends tutorial-visualisation-geom-geometry-py)
   set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite-py)

@@ -130,7 +130,7 @@ These examples shows some of the ratioplots
 |hist032_TRatioPlot_fit_lines.C|hist032_TRatioPlot_fit_lines.py|Set custom dashed lines specified by a vector of floats.|
 |hist033_TRatioPlot_fit_confidence.C|hist033_TRatioPlot_fit_confidence.py|Set the colors of the confidence interval bands by using|
 |hist034_TRatioPlot_fit_margin.C|hist034_TRatioPlot_fit_margin.py|Create a fit residual plot, where the separation margin has been set to 0.|
-|hist035_TRatioPlot_manual_ratio.C|hist035_TRatioPlot_manual_ratio.py|Display two histograms and their ratio.|
+
 
 \anchor tpoly
 
