@@ -22,6 +22,8 @@ class RNTupleBasics(unittest.TestCase):
             entry["f"] = 42
             entry["mystr"] = "string stored in RNTuple"
             writer.Fill(entry)
+        # The model should not have been destroyed (a clone has been used).
+        self.assertFalse(model.IsFrozen())
 
         reader = RNTupleReader.Open("ntpl", "test_ntuple_py_write_read.root")
         self.assertEqual(reader.GetNEntries(), 1)
