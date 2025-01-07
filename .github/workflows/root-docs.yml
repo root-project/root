@@ -193,7 +193,7 @@ jobs:
               source ${DOC_LOCATION}/ROOT-CI/build/bin/thisroot.sh
               export DOXYGEN_OUTPUT_DIRECTORY=${DOC_LOCATION}/${DOC_DIR}_TMP
 
-              cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
+              cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen_s3
               make -j `nproc --all`
 
               if [ -d "${DOC_LOCATION}/${DOC_DIR}/html" ]; then
@@ -239,8 +239,8 @@ jobs:
       run: |
         pwd
         ls -l ${DOC_LOCATION}
-#        aws s3 cp ${DOC_LOCATION}/rootdoc_TMP s3://root/doc-test/ --recursive
-        aws https://s3.cern.ch s3 sync ${DOC_LOCATION}/rootdoc_TMP s3://root/doc-test/
+        aws s3 cp ${DOC_LOCATION}/rootdoc_TMP s3://root/doc-test/ --recursive
+#        aws https://s3.cern.ch s3 sync ${DOC_LOCATION}/rootdoc_TMP s3://root/doc-test/
 
     # DEST="s3://root/99999_${PR_NUMBER:-}" # if PR, upload in s3://root/99999_<prnumber>
     # aws --endpoint-url https://s3.cern.ch s3 sync --delete build/99999_${PR_NUMBER:-} ${DEST}
