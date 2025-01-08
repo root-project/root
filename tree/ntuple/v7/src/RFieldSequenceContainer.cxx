@@ -592,6 +592,7 @@ void ROOT::Experimental::RVectorField::RVectorDeleter::operator()(void *objPtr, 
 {
    auto vecPtr = static_cast<std::vector<char> *>(objPtr);
    if (fItemDeleter) {
+      R__ASSERT(fItemSize > 0);
       R__ASSERT((vecPtr->size() % fItemSize) == 0);
       auto nItems = vecPtr->size() / fItemSize;
       for (std::size_t i = 0; i < nItems; ++i) {
@@ -613,6 +614,7 @@ std::vector<ROOT::Experimental::RFieldBase::RValue>
 ROOT::Experimental::RVectorField::SplitValue(const RValue &value) const
 {
    auto vec = value.GetPtr<std::vector<char>>();
+   R__ASSERT(fItemSize > 0);
    R__ASSERT((vec->size() % fItemSize) == 0);
    auto nItems = vec->size() / fItemSize;
    std::vector<RValue> result;

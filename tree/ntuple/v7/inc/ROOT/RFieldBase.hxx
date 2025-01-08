@@ -69,8 +69,9 @@ This is and can only be partially enforced through C++.
 */
 // clang-format on
 class RFieldBase {
-   friend class ROOT::Experimental::RClassField;                             // to mark members as artificial
-   friend class ROOT::Experimental::RNTupleJoinProcessor;                    // needs ConstuctValue
+   friend class ROOT::Experimental::RClassField;          // to mark members as artificial
+   friend class ROOT::Experimental::RNTupleJoinProcessor; // needs ConstuctValue
+   friend class ROOT::Experimental::RFieldDescriptor;
    friend struct ROOT::Experimental::Internal::RFieldCallbackInjector;       // used for unit tests
    friend struct ROOT::Experimental::Internal::RFieldRepresentationModifier; // used for unit tests
    friend void Internal::CallFlushColumnsOnField(RFieldBase &);
@@ -473,9 +474,14 @@ protected:
    /// normalized type name and type alias
    /// TODO(jalopezg): this overload may eventually be removed leaving only the `RFieldBase::Create()` that takes a
    /// single type name
-   static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &canonicalType,
-                                                      const std::string &typeAlias,
-                                                      const RCreateFieldOptions &options = {});
+   static RResult<std::unique_ptr<RFieldBase>>
+   Create(const std::string &fieldName, const std::string &canonicalType, const std::string &typeAlias,
+          const RCreateFieldOptions &options = {}, const RNTupleDescriptor *desc = nullptr,
+          DescriptorId_t fieldId = kInvalidDescriptorId);
+
+   static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &typeAlias,
+                                                      const RCreateFieldOptions &options, const RNTupleDescriptor *desc,
+                                                      DescriptorId_t fieldId);
 
 public:
    template <bool IsConstT>
@@ -511,7 +517,8 @@ public:
    std::unique_ptr<RFieldBase> Clone(std::string_view newName) const;
 
    /// Factory method to resurrect a field from the stored on-disk type information
-   static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &typeName);
+   static RResult<std::unique_ptr<RFieldBase>>
+   Create(const std::string &fieldName, const std::string &typeName, const RCreateFieldOptions &options = {});
 
    /// Checks if the given type is supported by RNTuple. In case of success, the result vector is empty.
    /// Otherwise there is an error record for each failing sub field (sub type).
