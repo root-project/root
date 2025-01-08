@@ -22,7 +22,7 @@ void rose_image()
 {
    TString dir = TROOT::GetTutorialDir();
 
-   TImage *img = TImage::Open(dir + "/image/rose512.jpg");
+   TImage *img = TImage::Open(dir + "/visualisation/image/rose512.jpg");
 
    if (!img) {
       printf("Could not create an image... exit\n");
