@@ -1676,10 +1676,15 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
 
          Double_t hmin = 0., hmax = 0.;
 
-         if (r.zx1 == r.zx2)
-            hist->GetXaxis()->SetRange(0, 0);
-         else
-            hist->GetXaxis()->SetRangeUser(r.zx1, r.zx2);
+         auto setAxisRange = [](TAxis *ax, Double_t r1, Double_t r2) {
+            if (r1 != r2)
+               ax->SetRangeUser(r1, r2);
+            else if ((ax->GetFirst() == ax->GetLast()) || ((ax->GetFirst() > 0) && (ax->GetLast() <= ax->GetNbins())))
+               // only if no underflow/overflow bins selected - let reset
+               ax->SetRange(0, 0);
+         };
+
+         setAxisRange(hist->GetXaxis(), r.zx1, r.zx2);
 
          if (hist->GetDimension() == 1) {
             hmin = r.zy1;
@@ -1689,10 +1694,8 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
                hmin = pad->fLogy ? TMath::Power(pad->fLogy < 2 ? 10 : pad->fLogy, r.uy1) : r.uy1;
                hmax = pad->fLogy ? TMath::Power(pad->fLogy < 2 ? 10 : pad->fLogy, r.uy2) : r.uy2;
             }
-         } else if (r.zy1 == r.zy2) {
-            hist->GetYaxis()->SetRange(0, 0);
          } else {
-            hist->GetYaxis()->SetRangeUser(r.zy1, r.zy2);
+            setAxisRange(hist->GetYaxis(), r.zy1, r.zy2);
          }
 
          if (hist->GetDimension() == 2) {
@@ -1704,11 +1707,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
                hmax = r.uz2;
             }
          } else if (hist->GetDimension() == 3) {
-            if (r.zz1 == r.zz2) {
-               hist->GetZaxis()->SetRange(0, 0);
-            } else {
-              hist->GetZaxis()->SetRangeUser(r.zz1, r.zz2);
-            }
+            setAxisRange(hist->GetZaxis(), r.zz1, r.zz2);
          }
 
          if (hmin == hmax)
