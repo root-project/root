@@ -220,11 +220,7 @@ public:
          return obj;
       }
 
-      reference operator*()
-      {
-         fProcessor.LoadEntry();
-         return *fProcessor.fEntry;
-      }
+      reference operator*() { return *fProcessor.fEntry; }
 
       friend bool operator!=(const iterator &lh, const iterator &rh)
       {
