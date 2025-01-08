@@ -58,7 +58,7 @@ jobs:
       # code of the `if`.
       run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
 
-      - name: Set up directory name and tar filenames
+    - name: Set up directory name and tar filenames
       run: |
         echo TAR_NAME=html${BASE_REF}.tar >> $GITHUB_ENV
         echo DOCDIR_NAME=${BASE_REF} >> $GITHUB_ENV
@@ -169,7 +169,7 @@ jobs:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_ENDPOINT_URL: https://s3.cern.ch/
-        
+
       run: |
         pwd
         ls -l
