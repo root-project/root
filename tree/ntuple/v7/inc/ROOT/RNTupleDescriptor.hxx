@@ -50,9 +50,6 @@ class RNTupleModel;
 
 namespace Internal {
 class RColumnElementBase;
-} // namespace Internal
-
-namespace Internal {
 class RColumnDescriptorBuilder;
 class RClusterDescriptorBuilder;
 class RClusterGroupDescriptorBuilder;
@@ -608,6 +605,9 @@ public:
       bool fForwardCompatible = false;
       /// If true, the model will be created without a default entry (bare model).
       bool fCreateBare = false;
+      /// If true, fields with a user defined type that have no available dictionaries will be reconstructed
+      /// as record fields from the on-disk information; otherwise, they will cause an error.
+      bool fEmulateUnknownTypes = false;
    };
 
    RNTupleDescriptor() = default;

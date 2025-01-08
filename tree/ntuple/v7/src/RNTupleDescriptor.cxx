@@ -125,7 +125,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
       // NOTE: Unwrap() here may throw an exception, hence the try block.
       // If options.fReturnInvalidOnError is false we just rethrow it, otherwise we return an InvalidField wrapping the
       // error.
-      auto field = RFieldBase::Create(fieldName, typeName).Unwrap();
+      auto field = RFieldBase::Create(fieldName, typeName, typeName, options, &ntplDesc, fFieldId).Unwrap();
       field->SetOnDiskId(fFieldId);
 
       for (auto &subfield : *field) {
@@ -643,8 +643,9 @@ ROOT::Experimental::RNTupleDescriptor::CreateModel(const RCreateModelOptions &op
    fieldZero->SetOnDiskId(GetFieldZeroId());
    auto model =
       options.fCreateBare ? RNTupleModel::CreateBare(std::move(fieldZero)) : RNTupleModel::Create(std::move(fieldZero));
-   RCreateFieldOptions createFieldOpts;
+   RCreateFieldOptions createFieldOpts{};
    createFieldOpts.fReturnInvalidOnError = options.fForwardCompatible;
+   createFieldOpts.fEmulateUnknownTypes = options.fEmulateUnknownTypes;
    for (const auto &topDesc : GetTopLevelFields()) {
       auto field = topDesc.CreateField(*this, createFieldOpts);
       if (field->GetTraits() & RFieldBase::kTraitInvalidField)

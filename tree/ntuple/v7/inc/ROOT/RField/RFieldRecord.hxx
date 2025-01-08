@@ -36,10 +36,19 @@ namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
 
+namespace Internal {
+std::unique_ptr<RFieldBase> CreateEmulatedField(std::string_view fieldName,
+                                                std::vector<std::unique_ptr<RFieldBase>> itemFields,
+                                                std::string_view emulatedFromType);
+}
+
 /// The field for an untyped record. The subfields are stored consequitively in a memory block, i.e.
 /// the memory layout is identical to one that a C++ struct would have
 class RRecordField : public RFieldBase {
-private:
+   friend std::unique_ptr<RFieldBase> Internal::CreateEmulatedField(std::string_view fieldName,
+                                                                    std::vector<std::unique_ptr<RFieldBase>> itemFields,
+                                                                    std::string_view emulatedFromType);
+
    class RRecordDeleter : public RDeleter {
    private:
       std::vector<std::unique_ptr<RDeleter>> fItemDeleters;
@@ -54,6 +63,11 @@ private:
    };
 
    RRecordField(std::string_view name, const RRecordField &source); // Used by CloneImpl()
+
+   /// If `emulatedFromType` is non-empty, this field was created as a replacement for a ClassField that we lack a
+   /// dictionary for and reconstructed from the on-disk information.
+   RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<RFieldBase>> itemFields,
+                std::string_view emulatedFromType);
 
 protected:
    std::size_t fMaxAlignment = 1;
