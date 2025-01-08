@@ -2,27 +2,8 @@ name: 'ROOT Docs'
 
 on:
 
-  # Allows nightly builds to trigger one run for each branch easily, by
-  # providing the relevant branch as "default" value here:
-  workflow_call:
-    inputs:
-      head_ref:
-        type: string
-        default: master
-      base_ref:
-        type: string
-        default: master
-      ref_name:
-        type: string
-        default: master
-
   workflow_dispatch:
     inputs:
-      head_ref:
-        description: rebase from ...
-        type: string
-        required: true
-        default: master
       incremental:
         description: 'Do incremental build'
         type: boolean
@@ -45,7 +26,9 @@ jobs:
       PLATFORM: alma9
       DOC_DIR: rootdoc
       DOC_LOCATION: /github/home
-      TARNAME: html${{ inputs.head_ref }}.tar
+      BASE_REF: master
+      WEB_DIR_NAME: master
+      TAR_NAME: htmlmaster.tar
 
     permissions:
       contents: read
@@ -75,6 +58,13 @@ jobs:
       # code of the `if`.
       run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
 
+      - name: Set up directory name and tar filenames
+      run: |
+        echo TAR_NAME=html${BASE_REF}.tar >> $GITHUB_ENV
+        echo DOCDIR_NAME=${BASE_REF} >> $GITHUB_ENV
+
+
+
     # TODO: install latest versions in image on root-ci-images
     - name: Install Doxygen 1.10.0
       run : |
@@ -92,7 +82,7 @@ jobs:
     - name: Apply option overrides
       if: ${{ github.event_name != 'schedule' }}
       env:
-        OVERRIDES: "testing=off roottest=off minimal=on" # can be removed if this workflow is merged with root-ci.yml
+        OVERRIDES: "testing=off roottest=off minimal=on"
         CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/alma9.txt'
       shell: bash
       run: |
@@ -113,10 +103,10 @@ jobs:
     #   if:   github.event_name == 'schedule'
     #   run: ".github/workflows/root-ci-config/build_root.py
     #               --buildtype      Release
-    #               --platform       alma9
+    #               --platform       ${{ env.PLATFORM }}
     #               --incremental    false
     #               --binaries       false
-    #               --base_ref       ${{ inputs.ref_name }}
+    #               --base_ref       ${BASE_REF}
     #               --repository     ${{ github.server_url }}/${{ github.repository }}
     #         "
 
@@ -124,10 +114,10 @@ jobs:
       if:   github.event_name == 'workflow_dispatch'
       run: ".github/workflows/root-ci-config/build_root.py
                   --buildtype      Release
-                  --platform       alma9
+                  --platform       ${{ env.PLATFORM }}
                   --incremental    ${{ inputs.incremental }}
-                  --base_ref       ${{ inputs.head_ref }}
-                  --head_ref       ${{ inputs.head_ref }}
+                  --base_ref       ${BASE_REF}
+                  --head_ref       ${BASE_REF}
                   --binaries       false
                   --repository     ${{ github.server_url }}/${{ github.repository }}
            "
@@ -155,16 +145,16 @@ jobs:
       working-directory: ${{ env.DOC_LOCATION }}
       shell: bash
       run: |
-        tar cf ${TARNAME} ${DOC_DIR}
-        gzip ${TARNAME
+        tar cf ${TAR_NAME} ${DOC_DIR}
+        gzip ${TAR_NAME}
 
     #Upload to GitHub as an artifact (optional)
     - name: Upload tar file for GH
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${{env.TARNAME}}.gz
-        path: ${{env.DOC_LOCATION}}/${{env.TARNAME}}.gz
+        name: ${{env.TAR_NAME}}.gz
+        path: ${{env.DOC_LOCATION}}/${{env.TAR_NAME}}.gz
         if-no-files-found: error
 
     - name: Install AWS CLI
@@ -174,13 +164,15 @@ jobs:
         aws configure set default.s3.max_concurrent_requests 200
 
     - name: Sync documentation to S3
+      working-directory: ${{ env.DOC_LOCATION }}
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         AWS_ENDPOINT_URL: https://s3.cern.ch/
+        
       run: |
         pwd
-        ls -l ${DOC_LOCATION}
-        aws s3 sync ${DOC_LOCATION}/${DOC_DIR}_TMP s3://root/doc-test/${{ inputs.head_ref }}
-
+        ls -l
+        aws s3 sync ${DOC_DIR}_TMP s3://root/doc-test/${WEB_DIR_NAME}
+        aws s3 sync ${TAR_NAME}.gz s3://root/download-test/${TAR_NAME}.gz
    
