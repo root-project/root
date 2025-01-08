@@ -53,6 +53,18 @@ The following people have contributed to this new version:
 
 ## IO
 
+* New options have been added to TFileMerger (which can be passed as whitespace-separated TStrings via `TFileMerger::SetMergeOptions`)
+  * "FirstSrcCompression": when merging multiple files, instructs the class-specific merger to use the same compression as the 
+    first object of the destination's class as the destination's compression. Currently only recognized by the RNTuple merger;
+  * "DefaultCompression": specifies that the merged output should use the class-specific default compression. Currently only
+    meaningful for RNTuple, which has a default compression different from the TFile's default compression (ZSTD instead of ZLIB).
+    This option is automatically set by `hadd` when no other compression option is specified;
+  * "rntuple.MergingMode=(Filter|Union|Strict)": RNTuple-specific option that specifies the merging mode that should be used by
+    the RNTupleMerger (see 
+    [RNTupleMergeOptions](https://root.cern/doc/v634/structROOT_1_1Experimental_1_1Internal_1_1RNTupleMergeOptions.html));
+  * "rntuple.ErrBehavior=(Abort|Skip)": RNTuple-specific option that specifies the behavior of the RNTupleMerger on error (see link above);
+  * "rntuple.ExtraVerbose": RNTuple-specific option that tells the RNTupleMerger to emit more information during the merge process.
+
 ## RDataFrame
 
 ## Tutorials and Code Examples
