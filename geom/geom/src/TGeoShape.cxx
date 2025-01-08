@@ -280,8 +280,7 @@ TGeoShape::EInside TGeoShape::Inside(const Double_t *point) const
    constexpr EInside kTable[4] = { kOutside, kSurface, kSurface, kInside };
    constexpr double dir[3] = {1., 0., 0.};
    double pt_push[3], pt_pull[3], norm[3];
-   // Deal with non-constness of ComputeNormal for the moment
-   ((TGeoShape *)this)->ComputeNormal(point, &dir[0], norm);
+   ComputeNormal(point, &dir[0], norm);
    // Move the point back and forth along the normal and check if the Contains changes
    for (auto i = 0; i < 3; ++i) {
       pt_push[i] = point[i] + 10. * TGeoShape::Tolerance() * norm[i];
