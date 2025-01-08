@@ -101,7 +101,7 @@ public:
    virtual Double_t Capacity() const = 0;
    void CheckShape(Int_t testNo, Int_t nsamples = 10000, Option_t *option = "");
    virtual void ComputeBBox() = 0;
-   virtual void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) = 0;
+   virtual void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const = 0;
    virtual void ComputeNormal_v(const Double_t *, const Double_t *, Double_t *, Int_t) {}
    virtual Bool_t Contains(const Double_t *point) const = 0;
    virtual void Contains_v(const Double_t *, Bool_t *, Int_t) const {}
