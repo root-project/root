@@ -123,23 +123,25 @@ jobs:
            "
 
     - name: Run Doxygen
+      working-directory: ${{ env.DOC_LOCATION }}
       shell: bash
       run: |
-              source ${DOC_LOCATION}/ROOT-CI/build/bin/thisroot.sh
-              export DOXYGEN_OUTPUT_DIRECTORY=${DOC_LOCATION}/${DOC_DIR}_TMP
+              source ROOT-CI/build/bin/thisroot.sh
+              export DOXYGEN_OUTPUT_DIRECTORY=${DOC_DIR}_TMP
 
-              cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen_s3
+              cd ROOT-CI/src/documentation/doxygen_s3
               make -j `nproc --all`
 
-              if [ -d "${DOC_LOCATION}/${DOC_DIR}/html" ]; then
-                rm -rf "${DOC_LOCATION}/${DOC_DIR}/html"
+              export HTML_DIR=${DOXYGEN_OUTPUT_DIRECTORY}/html
+              if [ -d ${HTML_DIR} ]; then
+                rm -rf "${HTML_DIR}"
               fi
-              mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html/* ${DOC_LOCATION}/${DOC_DIR}
+              ls -1 ${HTML_DIR}/ | while read file; do mv -f ${HTML_DIR}/$file ${DOC_DIR}/ ; done
 
-              if [ -d ${DOC_LOCATION}/${DOC_DIR}/notebooks ]; then
-                rm -rf "${DOC_LOCATION}/${DOC_DIR}/notebooks"
+              if [ -d ${DOC_DIR}/notebooks ]; then
+                rm -rf "${DOC_DIR}/notebooks"
               fi
-              mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}
+              mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_DIR}
 
     - name: Create documentation archives
       working-directory: ${{ env.DOC_LOCATION }}
