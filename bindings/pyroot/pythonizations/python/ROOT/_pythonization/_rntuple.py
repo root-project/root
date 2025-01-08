@@ -29,11 +29,10 @@ def _REntry_CallGetPtr(self, key):
 
 def _REntry_getitem(self, key):
     ptr_proxy = self._CallGetPtr(key)
-    # Most types held by a shared_ptr are exposed by cppyy as the type of the
-    # pointee, so we need to get the smart pointer before dereferencing. This
-    # does not happen for smart pointers to fundamental types.
-    real_smartptr = ptr_proxy.__smartptr__() if ptr_proxy.__smartptr__() is not None else ptr_proxy
-    return real_smartptr.__deref__()
+    if type(ptr_proxy).__cpp_name__.startswith("std::shared_ptr"):
+        return ptr_proxy.__deref__()
+    # Otherwise, for non-fundamental types, cppyy already returns the pointee.
+    return ptr_proxy
 
 
 def _REntry_setitem(self, key, value):
