@@ -530,9 +530,18 @@ void ROOT::Experimental::RRecordField::RRecordField::AttachItemFields(
    fSize += GetItemPadding(fSize, fMaxAlignment);
 }
 
+std::unique_ptr<ROOT::Experimental::RFieldBase>
+ROOT::Experimental::Internal::CreateEmulatedField(std::string_view fieldName,
+                                                  std::vector<std::unique_ptr<RFieldBase>> itemFields,
+                                                  std::string_view emulatedFromType)
+{
+   return std::unique_ptr<RFieldBase>(new RRecordField(fieldName, std::move(itemFields), emulatedFromType));
+}
+
 ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
-                                               std::vector<std::unique_ptr<RFieldBase>> itemFields)
-   : ROOT::Experimental::RFieldBase(fieldName, "", ENTupleStructure::kRecord, false /* isSimple */)
+                                               std::vector<std::unique_ptr<RFieldBase>> itemFields,
+                                               std::string_view emulatedFromType)
+   : ROOT::Experimental::RFieldBase(fieldName, emulatedFromType, ENTupleStructure::kRecord, false /* isSimple */)
 {
    fTraits |= kTraitTrivialType;
    fOffsets.reserve(itemFields.size());
@@ -544,9 +553,16 @@ ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
       fTraits &= item->GetTraits();
       Attach(std::move(item));
    }
+   fTraits |= !emulatedFromType.empty() * kTraitEmulatedField;
    // Trailing padding: although this is implementation-dependent, most add enough padding to comply with the
    // requirements of the type with strictest alignment
    fSize += GetItemPadding(fSize, fMaxAlignment);
+}
+
+ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
+                                               std::vector<std::unique_ptr<RFieldBase>> itemFields)
+   : ROOT::Experimental::RRecordField(fieldName, std::move(itemFields), "")
+{
 }
 
 std::size_t ROOT::Experimental::RRecordField::GetItemPadding(std::size_t baseOffset, std::size_t itemAlignment) const

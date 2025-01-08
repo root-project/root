@@ -21,6 +21,9 @@ namespace ROOT::Experimental {
 struct RCreateFieldOptions {
    /// If true, failing to create a field will return a RInvalidField instead of throwing an exception.
    bool fReturnInvalidOnError = false;
+   /// If true, fields with a user defined type that have no available dictionaries will be reconstructed
+   /// as record fields from the on-disk information; otherwise, they will cause an error.
+   bool fEmulateUnknownTypes = false;
 };
 
 } // namespace ROOT::Experimental
