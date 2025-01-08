@@ -103,6 +103,7 @@ public:
       }
    }
 
+   RooFit::EvalBackend const &evalBackend() { return _evalBackend; }
    RooWorkspace &ws() { return _ws; }
    RooDataSet &data() { return *_data; }
    RooDataSet &dataWithMeanSigmaGlobs() { return *_dataWithMeanSigmaGlobs; }
@@ -323,7 +324,7 @@ TEST_P(GlobsTest, ResetDataToWrongData)
    wrongData->setGlobalObservables({gm, gs});
 
    // check that the fit works when using the dataset with the correct values
-   std::unique_ptr<RooAbsReal> nll{model.createNLL(dataWithMeanSigmaGlobs())};
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(dataWithMeanSigmaGlobs(), EvalBackend(evalBackend()))};
    auto res2 = minimize(model, *nll, dataWithMeanSigmaGlobs(), minimizerCfg());
    EXPECT_TRUE(res1->isIdentical(*res2)) << "fitting an model with internal "
                                             "constraints in a RooPrdPdf gave a different result when global "
@@ -362,7 +363,7 @@ TEST_P(GlobsTest, ResetDataToCorrectData)
    resetParameters();
 
    // check that the fit doesn't work when using the dataset with the wrong values
-   std::unique_ptr<RooAbsReal> nll{model.createNLL(*wrongData)};
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(*wrongData, EvalBackend(evalBackend()))};
    auto res2 = minimize(model, *nll, *wrongData, minimizerCfg());
    EXPECT_TRUE(isNotIdentical(*res1, *res2)) << "fitting an model with internal "
                                                 "constraints in a RooPrdPdf ignored the global "
@@ -426,8 +427,8 @@ TEST_P(GlobsTest, ResetDataButSourceFromModel)
    resetParameters();
 
    // check that the fit works when using the dataset with the correct values
-   std::unique_ptr<RooAbsReal> nll{
-      model.createNLL(dataWithMeanSigmaGlobs(), GlobalObservablesSource("model"), GlobalObservables(gm, gs))};
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(dataWithMeanSigmaGlobs(), GlobalObservablesSource("model"),
+                                                   GlobalObservables(gm, gs), EvalBackend(evalBackend()))};
    auto res2 = minimize(model, *nll, dataWithMeanSigmaGlobs(), minimizerCfg());
    EXPECT_TRUE(res1->isIdentical(*res2));
 
