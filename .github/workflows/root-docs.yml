@@ -174,5 +174,5 @@ jobs:
         pwd
         ls -l
         aws s3 sync ${DOC_DIR}_TMP s3://root/doc-test/${WEB_DIR_NAME}
-        aws s3 sync ${TAR_NAME}.gz s3://root/download-test/${TAR_NAME}.gz
+        aws s3 cp ${TAR_NAME}.gz s3://root/download-test/
    
