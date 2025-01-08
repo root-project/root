@@ -342,7 +342,6 @@ std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSp
 
    // Get size of the first RVec of the bulk
    RClusterIndex firstItemIndex;
-   RClusterIndex collectionStart;
    ClusterSize_t collectionSize;
    this->GetCollectionInfo(bulkSpec.fFirstIndex, &firstItemIndex, &collectionSize);
    *beginPtr = itemValueArray;
