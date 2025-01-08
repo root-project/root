@@ -63,6 +63,13 @@ public:
       kGeoHype = BIT(30),
       kGeoSavePrimitive = BIT(20)
    };
+
+   enum EInside {
+      kInside  = 1,
+      kOutside = 2,
+      kSurface = 3
+   };
+
    virtual void ClearThreadData() const {}
    virtual void CreateThreadData(Int_t) {}
 
@@ -126,6 +133,7 @@ public:
    const char *GetName() const override;
    virtual Int_t GetNmeshVertices() const { return 0; }
    const char *GetPointerName() const;
+   virtual EInside Inside(const Double_t *point) const;
    virtual Bool_t IsAssembly() const { return kFALSE; }
    virtual Bool_t IsComposite() const { return kFALSE; }
    virtual Bool_t IsCylType() const = 0;
