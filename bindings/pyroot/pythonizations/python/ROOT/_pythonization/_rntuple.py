@@ -13,6 +13,10 @@ from ._pyz_utils import MethodTemplateGetter, MethodTemplateWrapper
 
 
 def _REntry_GetPtr(self, key):
+    raise RuntimeError("GetPtr is not supported in Python, use indexing")
+
+
+def _REntry_CallGetPtr(self, key):
     # key can be either a RFieldToken already or a string. In the latter case, get a token to use it twice.
     if (
         not hasattr(type(key), "__cpp_name__")
@@ -24,7 +28,7 @@ def _REntry_GetPtr(self, key):
 
 
 def _REntry_getitem(self, key):
-    ptr_proxy = self.GetPtr(key)
+    ptr_proxy = self._CallGetPtr(key)
     # Most types held by a shared_ptr are exposed by cppyy as the type of the
     # pointee, so we need to get the smart pointer before dereferencing. This
     # does not happen for smart pointers to fundamental types.
@@ -33,7 +37,7 @@ def _REntry_getitem(self, key):
 
 
 def _REntry_setitem(self, key, value):
-    ptr_proxy = self.GetPtr(key)
+    ptr_proxy = self._CallGetPtr(key)
     # Most types held by a shared_ptr are exposed by cppyy as the type of the
     # pointee, so we need to get the smart pointer before dereferencing. This
     # does not happen for smart pointers to fundamental types.
@@ -47,6 +51,7 @@ def _REntry_setitem(self, key, value):
 def pythonize_REntry(klass):
     klass._GetPtr = klass.GetPtr
     klass.GetPtr = _REntry_GetPtr
+    klass._CallGetPtr = _REntry_CallGetPtr
 
     klass.__getitem__ = _REntry_getitem
     klass.__setitem__ = _REntry_setitem
