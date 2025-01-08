@@ -24,7 +24,7 @@ jobs:
 
     env:
       PLATFORM: alma9
-      DOC_DIR: rootdoc
+      DOC_DIR: master
       DOC_LOCATION: /github/home
       BASE_REF: master
       WEB_DIR_NAME: master
@@ -134,7 +134,7 @@ jobs:
               if [ -d "${DOC_LOCATION}/${DOC_DIR}/html" ]; then
                 rm -rf "${DOC_LOCATION}/${DOC_DIR}/html"
               fi
-              mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOC_LOCATION}/${DOC_DIR}
+              mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html/* ${DOC_LOCATION}/${DOC_DIR}
 
               if [ -d ${DOC_LOCATION}/${DOC_DIR}/notebooks ]; then
                 rm -rf "${DOC_LOCATION}/${DOC_DIR}/notebooks"
@@ -173,6 +173,6 @@ jobs:
       run: |
         pwd
         ls -l
-        aws s3 sync ${DOC_DIR}_TMP s3://root/doc-test/${WEB_DIR_NAME}
+        aws s3 sync ${DOC_DIR} s3://root/doc-test/${WEB_DIR_NAME}
         aws s3 cp ${TAR_NAME}.gz s3://root/download-test/
    
