@@ -33,7 +33,7 @@ define MkDir
 	+@[ -d $1 ] || mkdir -p $1
 endef
 
-all: filter folders mathjax js images doxygen replaceCollaborationDiagrams rootWork
+all: filter folders mathjax js images doxygen replaceCollaborationDiagrams
 
 filter:
 	`root-config --cxx` -o filter filter.cxx -std=c++14 -O2
@@ -79,8 +79,6 @@ replaceCollaborationDiagrams: doxygen collaborationDiagrams
 tutorialWorklist_py: doxygen
 tutorialWorklist_root: doxygen
 
-rootWork: tutorialWorklist_root
-	xargs -L 1 -P 12 root < $<
 
 clean:
 	rm -rf $(DOXYGEN_OUTPUT_DIRECTORY) tutorialWorklist_py tutorialWorklist_root CleanNamespaces.sh
