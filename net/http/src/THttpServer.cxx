@@ -196,13 +196,18 @@ THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"
    fDrawPage = fJSROOTSYS + "/files/draw.htm";
 
    TRootSniffer *sniff = nullptr;
-   if (basic_sniffer) {
+   if (!basic_sniffer) {
+      static const TClass *snifferClass = TClass::GetClass("TRootSnifferFull");
+      if (snifferClass && snifferClass->IsLoaded())
+         sniff = (TRootSniffer *)snifferClass->New();
+      else
+         ::Warning("THttpServer::THttpServer", "Fail to load TRootSnifferFull class, use basic functionality");
+   }
+
+   if (!sniff) {
       sniff = new TRootSniffer();
       sniff->SetScanGlobalDir(kFALSE);
       sniff->CreateOwnTopFolder(); // use dedicated folder
-   } else {
-      static const TClass *snifferClass = TClass::GetClass("TRootSnifferFull");
-      sniff = (TRootSniffer *)snifferClass->New();
    }
 
    SetSniffer(sniff);
