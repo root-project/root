@@ -72,14 +72,15 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
 
          nElems += columnRange.fNElements;
 
-         if (fCompressionSettings == -1) {
-            fCompressionSettings = columnRange.fCompressionSettings.value();
-         } else if (fCompressionSettings != columnRange.fCompressionSettings.value()) {
+         if (!fCompressionSettings && columnRange.fCompressionSettings) {
+            fCompressionSettings = *columnRange.fCompressionSettings;
+         } else if (fCompressionSettings && columnRange.fCompressionSettings &&
+                    (*fCompressionSettings != *columnRange.fCompressionSettings)) {
             // Note that currently all clusters and columns are compressed with the same settings and it is not yet
             // possible to do otherwise. This means that currently, this exception should never be thrown, but this
             // could change in the future.
             throw RException(R__FAIL("compression setting mismatch between column ranges (" +
-                                     std::to_string(fCompressionSettings) + " vs " +
+                                     std::to_string(*fCompressionSettings) + " vs " +
                                      std::to_string(*columnRange.fCompressionSettings) +
                                      ") for column with physical ID " + std::to_string(colId)));
          }
@@ -165,8 +166,8 @@ ROOT::Experimental::RNTupleInspector::Create(std::string_view ntupleName, std::s
 
 std::string ROOT::Experimental::RNTupleInspector::GetCompressionSettingsAsString() const
 {
-   int algorithm = fCompressionSettings / 100;
-   int level = fCompressionSettings - (algorithm * 100);
+   int algorithm = fCompressionSettings.value() / 100;
+   int level = fCompressionSettings.value() - (algorithm * 100);
 
    return RCompressionSetting::AlgorithmToString(static_cast<RCompressionSetting::EAlgorithm::EValues>(algorithm)) +
           " (level " + std::to_string(level) + ")";

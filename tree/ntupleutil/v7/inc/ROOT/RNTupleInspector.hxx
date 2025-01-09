@@ -27,6 +27,7 @@
 #include <iostream>
 #include <memory>
 #include <numeric>
+#include <optional>
 #include <regex>
 #include <vector>
 
@@ -134,7 +135,7 @@ public:
 private:
    std::unique_ptr<Internal::RPageSource> fPageSource;
    std::unique_ptr<RNTupleDescriptor> fDescriptor;
-   int fCompressionSettings = -1;
+   std::optional<std::uint32_t> fCompressionSettings;
    std::uint64_t fCompressedSize = 0;
    std::uint64_t fUncompressedSize = 0;
 
@@ -212,7 +213,7 @@ public:
    ///
    /// \note Here, we assume that the compression settings are consistent across all clusters and columns. If this is
    /// not the case, an exception will be thrown when RNTupleInspector::Create is called.
-   int GetCompressionSettings() const { return fCompressionSettings; }
+   int GetCompressionSettings() const { return fCompressionSettings.value(); }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get a string describing compression settings of the RNTuple being inspected.
