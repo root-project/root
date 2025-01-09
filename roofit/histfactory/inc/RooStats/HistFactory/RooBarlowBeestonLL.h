@@ -25,7 +25,6 @@ namespace RooStats{
 class RooBarlowBeestonLL : public RooAbsReal {
 public:
 
-  RooBarlowBeestonLL() ;
   RooBarlowBeestonLL(const char *name, const char *title, RooAbsReal& nll /*, const RooArgSet& observables*/);
   RooBarlowBeestonLL(const RooBarlowBeestonLL& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooBarlowBeestonLL(*this,newname); }
