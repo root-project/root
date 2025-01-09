@@ -127,7 +127,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
       // Protect against multiple extended terms
       coutW(InputArguments) << "RooProdPdf::RooProdPdf(" << GetName()
              << ") multiple components with extended terms detected,"
-             << " product will not be extendible." << endl ;
+             << " product will not be extendable." << endl ;
       _extendedIndex=-1 ;
     } else {
       _extendedIndex=_pdfList.index(&pdf2) ;
@@ -335,7 +335,7 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
   if (numExtended>1) {
     coutW(InputArguments) << "RooProdPdf::RooProdPdf(" << GetName()
            << ") WARNING: multiple components with extended terms detected,"
-           << " product will not be extendible." << endl ;
+           << " product will not be extendable." << endl ;
     _extendedIndex = -1 ;
   }
 
@@ -1199,7 +1199,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
   }
 
-  // Do not rearrage terms if numerator and denominator are effectively empty
+  // Do not rearrange terms if numerator and denominator are effectively empty
   if (nomList.empty()) {
     return ;
   }
@@ -1886,7 +1886,7 @@ void RooProdPdf::addPdfs(RooAbsCollection const& pdfs)
    if (numExtended>1) {
       coutW(InputArguments) << "RooProdPdf::addPdfs(" << GetName()
                             << ") WARNING: multiple components with extended terms detected,"
-                            << " product will not be extendible." << endl ;
+                            << " product will not be extendable." << endl ;
       _extendedIndex = -1 ;
    }
 

@@ -325,7 +325,7 @@ RooMultiVarGaussian::AnaIntData& RooMultiVarGaussian::anaIntData(Int_t code) con
   vector<int> map2;
   decodeCode(code,map1,map2) ;
 
-  // Rearrage observables so that all non-integrated observables
+  // Rearrange observables so that all non-integrated observables
   // go first (preserving relative order) and all integrated observables
   // go last (preserving relative order)
   TMatrixDSym S11;

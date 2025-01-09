@@ -455,7 +455,7 @@ void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
 
    // RooConstVars are not a thing in HS3, and also for RooFit they are not
    // that important: they are just constants. So we don't need to remember
-   // any intormation about them.
+   // any information about them.
    if (dynamic_cast<RooConstVar const *>(arg)) {
       return;
    }
