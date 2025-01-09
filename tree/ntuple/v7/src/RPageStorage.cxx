@@ -942,8 +942,8 @@ void ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const
          R__ASSERT(columnRange.fPhysicalColumnId == i);
          const auto &pageRange = cluster.GetPageRange(i);
          R__ASSERT(pageRange.fPhysicalColumnId == i);
-         clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex, columnRange.fCompressionSettings,
-                                          pageRange);
+         clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex,
+                                          columnRange.fCompressionSettings.value(), pageRange);
          fOpenColumnRanges[i].fFirstElementIndex += columnRange.fNElements;
       }
       fDescriptorBuilder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
@@ -1111,7 +1111,8 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitStagedClusters(std
             clusterBuilder.MarkSuppressedColumnRange(colId);
          } else {
             clusterBuilder.CommitColumnRange(colId, fOpenColumnRanges[colId].fFirstElementIndex,
-                                             fOpenColumnRanges[colId].fCompressionSettings, columnInfo.fPageRange);
+                                             fOpenColumnRanges[colId].fCompressionSettings.value(),
+                                             columnInfo.fPageRange);
             fOpenColumnRanges[colId].fFirstElementIndex += columnInfo.fNElements;
          }
       }

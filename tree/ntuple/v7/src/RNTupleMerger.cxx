@@ -189,8 +189,8 @@ try {
                   inFile->GetName());
             return -1;
          }
-         compression = (*firstColRange).fCompressionSettings;
-         Info("RNTuple::Merge", "Using the first RNTuple's compression: %d", compression);
+         compression = (*firstColRange).fCompressionSettings.value();
+         Info("RNTuple::Merge", "Using the first RNTuple's compression: %u", *compression);
       }
       sources.push_back(std::move(source));
    }
@@ -611,7 +611,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t
       sealedPages.resize(pages.fPageInfos.size());
 
       // Each column range potentially has a distinct compression settings
-      const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).fCompressionSettings;
+      const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).fCompressionSettings.value();
       const bool needsCompressionChange = colRangeCompressionSettings != mergeData.fMergeOpts.fCompressionSettings;
       if (needsCompressionChange && mergeData.fMergeOpts.fExtraVerbose)
          Info("RNTuple::Merge", "Column %s: changing source compression from %d to %d", column.fColumnName.c_str(),
