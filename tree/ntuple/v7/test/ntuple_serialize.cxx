@@ -1088,8 +1088,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    const auto columnRange0_1 = clusterDesc0.GetColumnRange(columnIds[1]);
    const auto columnRange0_2 = clusterDesc0.GetColumnRange(columnIds[2]);
    const auto columnRange0_3 = clusterDesc0.GetColumnRange(columnIds[3]);
-   RClusterDescriptor::RColumnRange expect0_0{0, 0, 1, -1, true};
-   RClusterDescriptor::RColumnRange expect0_1{1, 0, 0, -1, true};
+   RClusterDescriptor::RColumnRange expect0_0{0, 0, 1, {}, true};
+   RClusterDescriptor::RColumnRange expect0_1{1, 0, 0, {}, true};
    RClusterDescriptor::RColumnRange expect0_2{2, 0, 1, 505, false};
    RClusterDescriptor::RColumnRange expect0_3{3, 0, 0, 505, false};
    EXPECT_EQ(expect0_0, columnRange0_0);
@@ -1112,8 +1112,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    const auto columnRange1_3 = clusterDesc1.GetColumnRange(columnIds[3]);
    RClusterDescriptor::RColumnRange expect1_0{0, 1, 1, 505, false};
    RClusterDescriptor::RColumnRange expect1_1{1, 0, 3, 505, false};
-   RClusterDescriptor::RColumnRange expect1_2{2, 1, 1, -1, true};
-   RClusterDescriptor::RColumnRange expect1_3{3, 0, 3, -1, true};
+   RClusterDescriptor::RColumnRange expect1_2{2, 1, 1, {}, true};
+   RClusterDescriptor::RColumnRange expect1_3{3, 0, 3, {}, true};
    EXPECT_EQ(expect1_0, columnRange1_0);
    EXPECT_EQ(expect1_1, columnRange1_1);
    EXPECT_EQ(expect1_2, columnRange1_2);
@@ -1367,8 +1367,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
    EXPECT_EQ(0u, clusterDesc0.GetFirstEntryIndex());
    const auto columnRange0_0 = clusterDesc0.GetColumnRange(columnIds[0]);
    const auto columnRange0_1 = clusterDesc0.GetColumnRange(columnIds[1]);
-   RClusterDescriptor::RColumnRange expect0_0{0, 0, 1, -1, false};
-   RClusterDescriptor::RColumnRange expect0_1{1, 0, 1, -1, true};
+   RClusterDescriptor::RColumnRange expect0_0{0, 0, 1, {}, false};
+   RClusterDescriptor::RColumnRange expect0_1{1, 0, 1, {}, true};
    EXPECT_EQ(expect0_0, columnRange0_0);
    EXPECT_EQ(expect0_1, columnRange0_1);
 
@@ -1377,7 +1377,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
    const auto columnRange1_0 = clusterDesc1.GetColumnRange(columnIds[0]);
    const auto columnRange1_1 = clusterDesc1.GetColumnRange(columnIds[1]);
    RClusterDescriptor::RColumnRange expect1_0{0, 1, 2, 505, false};
-   RClusterDescriptor::RColumnRange expect1_1{1, 1, 2, -1, true};
+   RClusterDescriptor::RColumnRange expect1_1{1, 1, 2, {}, true};
    EXPECT_EQ(expect1_0, columnRange1_0);
    EXPECT_EQ(expect1_1, columnRange1_1);
 
@@ -1385,7 +1385,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
    EXPECT_EQ(3u, clusterDesc2.GetFirstEntryIndex());
    const auto columnRange2_0 = clusterDesc2.GetColumnRange(columnIds[0]);
    const auto columnRange2_1 = clusterDesc2.GetColumnRange(columnIds[1]);
-   RClusterDescriptor::RColumnRange expect2_0{0, 3, 1, -1, true};
+   RClusterDescriptor::RColumnRange expect2_0{0, 3, 1, {}, true};
    RClusterDescriptor::RColumnRange expect2_1{1, 3, 1, 505, false};
    EXPECT_EQ(expect2_0, columnRange2_0);
    EXPECT_EQ(expect2_1, columnRange2_1);
@@ -1492,7 +1492,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
    const auto columnRange0_0 = clusterDesc0.GetColumnRange(columnIds[0]);
    const auto columnRange0_1 = clusterDesc0.GetColumnRange(columnIds[1]);
    RClusterDescriptor::RColumnRange expect0_0{0, 0, 1, 505, false};
-   RClusterDescriptor::RColumnRange expect0_1{1, 0, 1, -1, true};
+   RClusterDescriptor::RColumnRange expect0_1{1, 0, 1, {}, true};
    EXPECT_EQ(expect0_0, columnRange0_0);
    EXPECT_EQ(expect0_1, columnRange0_1);
 
@@ -1500,7 +1500,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
    EXPECT_EQ(1u, clusterDesc1.GetFirstEntryIndex());
    const auto columnRange1_0 = clusterDesc1.GetColumnRange(columnIds[0]);
    const auto columnRange1_1 = clusterDesc1.GetColumnRange(columnIds[1]);
-   RClusterDescriptor::RColumnRange expect1_0{0, 1, 1, -1, true};
+   RClusterDescriptor::RColumnRange expect1_0{0, 1, 1, {}, true};
    RClusterDescriptor::RColumnRange expect1_1{1, 1, 1, 505, false};
    EXPECT_EQ(expect1_0, columnRange1_0);
    EXPECT_EQ(expect1_1, columnRange1_1);

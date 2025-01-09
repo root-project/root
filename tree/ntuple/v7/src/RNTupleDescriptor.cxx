@@ -709,8 +709,7 @@ ROOT::RResult<void> ROOT::Experimental::Internal::RClusterDescriptorBuilder::Com
       return R__FAIL("column ID mismatch");
    if (fCluster.fColumnRanges.count(physicalId) > 0)
       return R__FAIL("column ID conflict");
-   RClusterDescriptor::RColumnRange columnRange{physicalId, firstElementIndex, 0};
-   columnRange.fCompressionSettings = compressionSettings;
+   RClusterDescriptor::RColumnRange columnRange{physicalId, firstElementIndex, 0, compressionSettings};
    for (const auto &pi : pageRange.fPageInfos) {
       columnRange.fNElements += pi.fNElements;
    }
@@ -727,7 +726,6 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::MarkSuppressedColumnRan
 
    RClusterDescriptor::RColumnRange columnRange;
    columnRange.fPhysicalColumnId = physicalId;
-   columnRange.fCompressionSettings = kNTupleUnknownCompression;
    columnRange.fIsSuppressed = true;
    fCluster.fColumnRanges[physicalId] = columnRange;
    return RResult<void>::Success();
