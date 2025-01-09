@@ -172,8 +172,8 @@ public:
          size_t outputSize = ConvertShapeToLength(fShapeOutput);
          std::vector<int64_t> outputData(outputSize);
          std::vector<size_t> inputStride = UTILITY::ComputeStrideFromShape(fShapeInput);
-         // perform slice using a recursive function
-         auto sliceRecursive = [&](size_t iax, size_t & outputIdx, size_t & inputOffset) {
+         // perform slice using a recursive function- need to use two lambda functions for this
+         auto sliceRecursive = [&](size_t iaxis, size_t & outIdx, size_t & inOffset) {
             auto slice_impl = [&](size_t iax, size_t & outputIdx, size_t & inputOffset, auto & sliceRecImpl) {
                // compute indices
                std::vector<IType> indices;
@@ -192,7 +192,7 @@ public:
                   }
                }
             };
-            slice_impl(iax, outputIdx, inputOffset,slice_impl);
+            slice_impl(iaxis, outIdx, inOffset,slice_impl);
          };
          size_t idx = 0;
          size_t offset = 0;

@@ -139,9 +139,13 @@ public:
       out<<SP<<"std::vector<std::vector<std::pair<float,int>>>groupElements;\n";
       out<<SP<<"for (size_t i = 0; i < "<<length<<"; i++) {\n";
       //main logic
-      out<<SP<<SP<<"size_t tempitr=0, j=0;\n";
+      out<<SP<<SP<<"size_t tempitr = 0, jtmp = 0;\n";
       out<<SP<<SP<<"std::vector<std::pair<float,int>>elements;\n";
-      out<<SP<<SP<<"while(tempitr < "<<groupSize<<"){\n         elements.push_back({tensor_"<<fNX<<"[i+tempitr]"<<",tempitr});\n"<<SP<<SP<<SP<<"j++;\n"<<"         tempitr = j*"<<jump<<";\n"<<"\n"<<"      }\n";
+      out<<SP<<SP<<"while(tempitr < "<<groupSize<<"){\n";
+      out<<SP<<SP<<SP<<"elements.push_back({tensor_"<<fNX<<"[i+tempitr]"<<",tempitr});\n";
+      out<<SP<<SP<<SP<<"jtmp++;\n";
+      out<<SP<<SP<<SP<<"tempitr = jtmp * " <<jump<<";\n";
+      out<<SP<<SP<<"}\n";
       if (fAttrSorted) {
          if (fAttrLargest) {
             out<<SP<<SP << "std::sort(elements.begin(),elements.end(),[](std::pair<float,int>a,std::pair<float,int>b){return "
@@ -154,18 +158,22 @@ public:
 
       out<<SP<<SP<<"itr++;\n";
       out<<SP<<SP<<"std::vector<std::pair<float,int>>kelems;\n";
-      out<<SP<<SP<<"for (int j = 0; j < " << fK <<"; j++){\n         kelems.push_back({elements[j].first,elements[j].second});\n"<<SP<<SP<<"}\n";
+      out<<SP<<SP<<"for (int j = 0; j < " << fK <<"; j++){\n";
+      out<<SP<<SP<<SP<<"kelems.push_back({elements[j].first,elements[j].second});\n";
+      out<<SP<<SP<<"}\n";
       out<<SP<<SP<<"groupElements.push_back(kelems);\n";
-      out<<SP<<SP<<"if(itr == "<<numOfCheckersInGrp<<"){\n         itr = 0;\n         i += "<<groupSize-numOfCheckersInGrp/*to compensate the default i++*/<<";\n";
-         out<<SP<<SP<<SP<<"for (size_t j = 0; j < groupElements[0].size(); j++) {\n";
-            out<<SP<<SP<<SP<<SP<<"for(size_t k = 0; k < groupElements.size(); k++) {\n";
-            out<<SP<<SP<<SP<<SP<<SP<<"tensor_"<<fNVal<<"[p] = (groupElements[k][j].first);\n";
-            out<<SP<<SP<<SP<<SP<<SP<<"tensor_"<<fNInd<<"[p++] = (groupElements[k][j].second);\n";
-            out<<SP<<SP<<SP<<SP<<"}\n";// end for
-         out<<SP<<SP<<SP<<"}\n";// end for
-         out<<SP<<SP<<SP<<"groupElements.clear();\n";
+      out<<SP<<SP<<"if(itr == "<<numOfCheckersInGrp<<"){\n";
+      out<<SP<<SP<<SP<<"itr = 0;\n";
+      out<<SP<<SP<<SP<<"i += "<<groupSize-numOfCheckersInGrp/*to compensate the default i++*/  <<";\n";
+      out<<SP<<SP<<SP<<"for (size_t j = 0; j < groupElements[0].size(); j++) {\n";
+      out<<SP<<SP<<SP<<SP<<"for(size_t k = 0; k < groupElements.size(); k++) {\n";
+      out<<SP<<SP<<SP<<SP<<SP<<"tensor_"<<fNVal<<"[p] = (groupElements[k][j].first);\n";
+      out<<SP<<SP<<SP<<SP<<SP<<"tensor_"<<fNInd<<"[p++] = (groupElements[k][j].second);\n";
+      out<<SP<<SP<<SP<<SP<<"}\n";// end for on k
+      out<<SP<<SP<<SP<<"}\n";// end for on j
+      out<<SP<<SP<<SP<<"groupElements.clear();\n";
       out<<SP<<SP<<"}\n";//end if
-      out<<SP<<"\n}\n"; // end for
+      out<<SP<<"\n}\n"; // end for on i (input elements)
       out << SP << "}\n"; // end operator scope
       return out.str();
    }
