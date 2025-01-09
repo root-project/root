@@ -2269,7 +2269,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   }
 
 
-  // Take out data-projected dependens from projectedVars
+  // Take out data-projected dependents from projectedVars
   RooArgSet* projDataNeededVars = nullptr ;
   if (o.projData) {
     projDataNeededVars = projectedVars.selectCommon(projDataVars);

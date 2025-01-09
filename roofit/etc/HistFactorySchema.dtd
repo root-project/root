@@ -61,7 +61,7 @@ of the model in the channel setup. Typically the NormFactor for xsec measurement
 >
 
 <!-- Top element for channels. InputFile, HistoName and HistoPath
-can be set at this level in which case they will become defaul to
+can be set at this level in which case they will become default to
 all subsequent elements. Otherwise they can be set in individual
 subelements -->
 <!ELEMENT Channel (Data*,StatErrorConfig*,Sample+)>

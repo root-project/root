@@ -122,7 +122,7 @@
    <li><tt>RooFFTConvPdf</tt> - Automatically put sampling windows of 'resolution model' p.d.f. centered around zero, even if fit range of convolution observable does not bracket zero. Improve internal efficiency<br><br>
    <li><tt>RooAbsData</tt> - Add ability to plot efficiency distribution with correct binomial errors given a RooRealVar and a RooCategory category observable encoding distribution and accept/reject state respectively. See <tt>rf701_efficiencyfit.C</tt> for details <br><br>
    <li><tt>RooAbsPdf</tt> - Included extended ML term <em>by default</em> in fit if p.d.f is extendable. You can still use <tt>Extended()</tt> to override default behavior. Do not run MINOS by default anymore if no fit options are provided.<br><br>
-   <li><tt>RooProfileLL</tt> - Add option to always start minimization from global minimimum (takes more time, but improves reproducibility). Can now profile multi-core paralellized likelihoods as well.<br><br>
+   <li><tt>RooProfileLL</tt> - Add option to always start minimization from global minimum (takes more time, but improves reproducibility). Can now profile multi-core paralellized likelihoods as well.<br><br>
    <li><tt>RooRealSumPdf</tt> - Enable plotting of component p.d.f.s using same scheme as <tt>RooAddPdf</tt>, i.e. just use the <tt>Components()</tt> specified in <tt>plotOn()</tt>.<br><br>
    <li><tt>RooExpensiveObjectCache</tt> - New cache manager for sharing and storing of expensive components cached by operator p.d.f.s <br><br>
    <li><tt>RooMCStudy</tt> - Add <tt>Silence()</tt> argument to constructor to request minimal verbosity during running<br><br>

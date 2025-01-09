@@ -34,7 +34,7 @@ public:
   ///            performed when evaluating the function. In this case, the
   ///            effect RooWrapperPdf is not to change the evaluated values,
   ///            but only to wrap the function in something that is of type
-  ///            RooAbsPdf, which can be useful if some interface reqiures it.
+  ///            RooAbsPdf, which can be useful if some interface requires it.
   /// to pass a PDF, it only makes sense for non-PDF functions.
   RooWrapperPdf(const char *name, const char *title, RooAbsReal& inputFunction, bool selfNormalized=false) :
     RooAbsPdf(name, title),

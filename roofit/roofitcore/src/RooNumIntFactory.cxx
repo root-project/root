@@ -70,7 +70,7 @@ void RooNumIntFactory::init() {
 #ifdef R__HAS_MATHMORE
   int iret = gSystem->Load("libRooFitMore");
   if (iret < 0) {
-     oocoutE(nullptr, Integration) << " RooNumIntFactory::Init : libRooFitMore cannot be loaded. GSL integrators will not beavailable ! " << std::endl;
+     oocoutE(nullptr, Integration) << " RooNumIntFactory::Init : libRooFitMore cannot be loaded. GSL integrators will not be available ! " << std::endl;
   }
 #endif
 }

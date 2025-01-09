@@ -1789,7 +1789,7 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet& observables, RooArgSet& optim
 
   // Terminate call if this node was already processed (tree structure may be cyclical)
   // LM : RooLinkedList::findArg looks by name and not but by object pointer,
-  //  should one use RooLinkedList::FindObject (look byt pointer) instead of findArg when
+  //  should one use RooLinkedList::FindObject (look by pointer) instead of findArg when
   // tree contains nodes with the same name ?
   // Add an info message if the require node does not exist but a different node already exists with same name
 
@@ -2247,7 +2247,7 @@ bool RooAbsArg::addOwnedComponents(const RooAbsCollection& comps)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Take ownership of the contents of 'comps'. Different from the overload that
-/// taked the RooArgSet by `const&`, this version can also take an owning
+/// takes the RooArgSet by `const&`, this version can also take an owning
 /// RooArgSet without error, because the ownership will not be ambiguous afterwards.
 
 bool RooAbsArg::addOwnedComponents(RooAbsCollection&& comps)

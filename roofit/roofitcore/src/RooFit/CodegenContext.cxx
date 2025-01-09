@@ -149,7 +149,7 @@ void CodegenContext::addToCodeBody(std::string const &in, bool isScopeIndep /* =
 std::unique_ptr<CodegenContext::LoopScope> CodegenContext::beginLoop(RooAbsArg const *in)
 {
    pushScope();
-   unsigned loopLevel = _code.size() - 2; // substract global + function scope.
+   unsigned loopLevel = _code.size() - 2; // subtract global + function scope.
    std::string idx = "loopIdx" + std::to_string(loopLevel);
 
    std::vector<TNamed const *> vars;

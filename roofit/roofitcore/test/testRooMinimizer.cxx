@@ -152,7 +152,7 @@ TEST_P(EvalBackendParametrizedTest, RF601)
    std::unique_ptr<RooFitResult> r2{m.save()};
 
    // The tolerance parameter is necessary because not all backends give
-   // exaclty the same results: when using AD, the final result is slightly
+   // exactly the same results: when using AD, the final result is slightly
    // different.
    const double tol = 1e-4;
 
