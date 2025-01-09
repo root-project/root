@@ -27,8 +27,6 @@ endif()
 
 set(roofit_etc_files
   etc/HistFactorySchema.dtd
-  etc/RooFitHS3_wsfactoryexpressions.json
-  etc/RooFitHS3_wsexportkeys.json
 )
 
 foreach(roofit_etc_file ${roofit_etc_files})
