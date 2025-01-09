@@ -74,12 +74,14 @@ void Read(const std::vector<RNTupleOpenSpec> &ntuples)
    // Access to the entry values in this case can be achieved through RNTupleProcessor::GetEntry() or through its
    // iterator.
    auto processor = RNTupleProcessor::CreateChain(ntuples, std::move(model));
+   int prevProcessorNumber{-1};
 
    for (const auto &entry : *processor) {
       // The RNTupleProcessor provides some additional bookkeeping information. The local entry number is reset each
       // a new ntuple in the chain is opened for processing.
-      if (processor->GetLocalEntryNumber() == 0) {
-         std::cout << "Processing " << ntuples.at(processor->GetCurrentNTupleNumber()).fNTupleName << " ("
+      if (static_cast<int>(processor->GetCurrentProcessorNumber()) > prevProcessorNumber) {
+         prevProcessorNumber = processor->GetCurrentProcessorNumber();
+         std::cout << "Processing " << ntuples.at(prevProcessorNumber).fNTupleName << " ("
                    << processor->GetNEntriesProcessed() << " total entries processed so far)" << std::endl;
       }
 
