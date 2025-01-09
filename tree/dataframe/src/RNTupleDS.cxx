@@ -756,8 +756,3 @@ ROOT::RDF::Experimental::FromRNTuple(std::string_view ntupleName, const std::vec
 {
    return ROOT::RDataFrame(std::make_unique<ROOT::Experimental::RNTupleDS>(ntupleName, fileNames));
 }
-
-ROOT::RDataFrame ROOT::RDF::Experimental::FromRNTuple(ROOT::RNTuple *ntuple)
-{
-   return ROOT::RDataFrame(std::make_unique<ROOT::Experimental::RNTupleDS>(ntuple));
-}
