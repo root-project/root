@@ -1,4 +1,6 @@
-{
+namespace {
+
+auto RooFitHS3_wsfactoryexpressions = R"({
     "ARGUS_dist": {
         "class": "RooArgusBG",
         "arguments": [
@@ -58,7 +60,7 @@
             "mean",
             "sigma"
         ]
-    },    
+    },
     "interpolation0d": {
         "class": "RooStats::HistFactory::FlexibleInterpVar",
         "arguments": [
@@ -117,8 +119,10 @@
     },
     "crystalball_doublesided_dist": {
         "class": "RooCrystalBall",
-	"arguments": [
-	    "m", "m0", "sigma_L", "sigma_R", "alpha_L", "n_L", "alpha_R", "n_R"
-	]
-    }    
-}
+        "arguments": [
+            "m", "m0", "sigma_L", "sigma_R", "alpha_L", "n_L", "alpha_R", "n_R"
+        ]
+    }
+})";
+
+} // namespace

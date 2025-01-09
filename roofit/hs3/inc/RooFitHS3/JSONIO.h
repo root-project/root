@@ -100,9 +100,11 @@ int removeExporters(const std::string &needle);
 void printImporters();
 void printExporters();
 
+void loadFactoryExpressions(std::istream &is);
 void loadFactoryExpressions(const std::string &fname);
 void clearFactoryExpressions();
 void printFactoryExpressions();
+void loadExportKeys(std::istream &is);
 void loadExportKeys(const std::string &fname);
 void clearExportKeys();
 void printExportKeys();
