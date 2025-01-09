@@ -188,7 +188,7 @@ void TGeoCone::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoCone::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoCone::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    Double_t safr, safe, phi;
    memset(norm, 0, 3 * sizeof(Double_t));
@@ -1434,7 +1434,7 @@ void TGeoConeSeg::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoConeSeg::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoConeSeg::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    Double_t saf[3];
    Double_t ro1 = 0.5 * (fRmin1 + fRmin2);

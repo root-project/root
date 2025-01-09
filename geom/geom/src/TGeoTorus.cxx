@@ -185,7 +185,7 @@ void TGeoTorus::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoTorus::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoTorus::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    Double_t phi = TMath::ATan2(point[1], point[0]);
    if (fDphi < 360) {

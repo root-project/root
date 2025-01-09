@@ -1,0 +1,153 @@
+<?xml version="1.0"?>
+<gdml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://service-spi.web.cern.ch/service-spi/app/releases/GDML/schema/gdml.xsd">
+  <define>
+    <position name="CS_1inTOPpos" x="0" y="0" z="0" unit="cm"/>
+  </define>
+    <isotope N="14" Z="7" name="Nitrogen140x7fd78af69c80">
+      <atom unit="g/mole" value="14.0031"/>
+    </isotope>
+    <isotope N="15" Z="7" name="Nitrogen150x7fd78af69cc0">
+      <atom unit="g/mole" value="15.0001"/>
+    </isotope>
+    <element name="Nitrogen0x7fd78b011ec0">
+      <fraction n="0.99632" ref="Nitrogen140x7fd78af69c80"/>
+      <fraction n="0.00368" ref="Nitrogen150x7fd78af69cc0"/>
+    </element>
+    <isotope N="16" Z="8" name="Oxygen160x7fd78af69b00">
+      <atom unit="g/mole" value="15.9949"/>
+    </isotope>
+    <isotope N="17" Z="8" name="Oxygen170x7fd78af69b80">
+      <atom unit="g/mole" value="16.9991"/>
+    </isotope>
+    <isotope N="18" Z="8" name="Oxygen180x7fd78af69bc0">
+      <atom unit="g/mole" value="17.9992"/>
+    </isotope>
+    <element name="Oxygen0x7fd78c08f4c0">
+      <fraction n="0.99757" ref="Oxygen160x7fd78af69b00"/>
+      <fraction n="0.00038" ref="Oxygen170x7fd78af69b80"/>
+      <fraction n="0.00205" ref="Oxygen180x7fd78af69bc0"/>
+    </element>
+    <isotope N="36" Z="18" name="AR360x7fd78ad67300">
+      <atom unit="g/mole" value="35.9675"/>
+    </isotope>
+    <isotope N="38" Z="18" name="AR380x7fd78ad67340">
+      <atom unit="g/mole" value="37.9627"/>
+    </isotope>
+    <isotope N="40" Z="18" name="AR400x7fd78ad67380">
+      <atom unit="g/mole" value="39.9624"/>
+    </isotope>
+    <element name="ARGON0x7fd78b011f80">
+      <fraction n="0.003365" ref="AR360x7fd78ad67300"/>
+      <fraction n="0.000632" ref="AR380x7fd78ad67340"/>
+      <fraction n="0.996003" ref="AR400x7fd78ad67380"/>
+    </element>
+    <isotope N="1" Z="1" name="H10x7fd78af69a80">
+      <atom unit="g/mole" value="1.00782503081372"/>
+    </isotope>
+    <isotope N="2" Z="1" name="H20x7fd78af69ac0">
+      <atom unit="g/mole" value="2.01410199966617"/>
+    </isotope>
+    <element name="HYDROGEN0x7fd78c08f400">
+      <fraction n="0.999885" ref="H10x7fd78af69a80"/>
+      <fraction n="0.000115" ref="H20x7fd78af69ac0"/>
+    </element>
+    <material name="materials_Air0x7fd78adb5900" state="gas">
+      <T unit="K" value="293.15"/>
+      <P unit="pascal" value="101325.009296588"/>
+      <MEE unit="eV" value="85.5379282211832"/>
+      <D unit="g/cm3" value="0.001214"/>
+      <fraction n="0.7494" ref="Nitrogen0x7fd78b011ec0"/>
+      <fraction n="0.2369" ref="Oxygen0x7fd78c08f4c0"/>
+      <fraction n="0.0129" ref="ARGON0x7fd78b011f80"/>
+      <fraction n="0.0008" ref="HYDROGEN0x7fd78c08f400"/>
+    </material>
+  <materials/>
+  <solids>
+    <box name="TOP" x="2000" y="2000" z="3000" lunit="cm"/>
+    <tube aunit="deg" deltaphi="360" lunit="mm" name="muonBase_MUON10x7fd78af8e9c0" rmax="8100" rmin="2950" startphi="0" z="21720"/>
+    <polycone aunit="deg" deltaphi="360" lunit="mm" name="muonBase_MUON20x7fd78af8eb80" startphi="0">
+      <zplane rmax="2950" rmin="1086" z="-10860"/>
+      <zplane rmax="2950" rmin="1086" z="-10500"/>
+      <zplane rmax="2950" rmin="1130" z="-10500"/>
+      <zplane rmax="2950" rmin="1130" z="-10165"/>
+      <zplane rmax="2950" rmin="1041.1" z="-10165"/>
+      <zplane rmax="2950" rmin="700" z="-6835"/>
+      <zplane rmax="2950" rmin="675" z="-6610"/>
+      <zplane rmax="2950" rmin="675" z="-6590"/>
+      <zplane rmax="2950" rmin="105" z="-6500"/>
+      <zplane rmax="2950" rmin="89.3" z="-5541"/>
+      <zplane rmax="2725" rmin="89.3" z="-5541"/>
+      <zplane rmax="2725" rmin="89.3" z="-5265"/>
+    </polycone>
+    <union name="muonBase_MUON00x7fd78aeaac40">
+      <first ref="muonBase_MUON10x7fd78af8e9c0"/>
+      <second ref="muonBase_MUON20x7fd78af8eb80"/>
+    </union>
+    <polycone aunit="deg" deltaphi="360" lunit="mm" name="muonBase_MUON30x7fd78af8ed40" startphi="0">
+      <zplane rmax="2725" rmin="89.3" z="5265"/>
+      <zplane rmax="2725" rmin="89.3" z="5541"/>
+      <zplane rmax="2950" rmin="89.3" z="5541"/>
+      <zplane rmax="2950" rmin="105" z="6500"/>
+      <zplane rmax="2950" rmin="675" z="6590"/>
+      <zplane rmax="2950" rmin="675" z="6610"/>
+      <zplane rmax="2950" rmin="700" z="6835"/>
+      <zplane rmax="2950" rmin="1041.1" z="10165"/>
+      <zplane rmax="2950" rmin="1130" z="10165"/>
+      <zplane rmax="2950" rmin="1130" z="10500"/>
+      <zplane rmax="2950" rmin="1086" z="10500"/>
+      <zplane rmax="2950" rmin="1086" z="10860"/>
+    </polycone>
+    <union name="muonBase_MUON_shape_0x7fd793d10b800x7fd78aeaad20">
+      <first ref="muonBase_MUON00x7fd78aeaac40"/>
+      <second ref="muonBase_MUON30x7fd78af8ed40"/>
+    </union>
+    <polycone aunit="deg" deltaphi="360" lunit="mm" name="mf_ME_shape_0x7fd793e3a7000x7fd78af76600" startphi="0">
+      <zplane rmax="2725" rmin="89.3" z="5265"/>
+      <zplane rmax="2725" rmin="89.3" z="5541"/>
+      <zplane rmax="2950" rmin="89.3" z="5541"/>
+      <zplane rmax="2950" rmin="105" z="6500"/>
+      <zplane rmax="3800" rmin="665.69" z="6500"/>
+      <zplane rmax="3800" rmin="675" z="6590"/>
+      <zplane rmax="3800" rmin="675" z="6610"/>
+      <zplane rmax="8100" rmin="675" z="6610"/>
+      <zplane rmax="8100" rmin="700" z="6835"/>
+      <zplane rmax="8100" rmin="1041.1" z="10165"/>
+      <zplane rmax="8100" rmin="1130" z="10165"/>
+      <zplane rmax="8100" rmin="1130" z="10500"/>
+      <zplane rmax="8100" rmin="1086" z="10500"/>
+      <zplane rmax="8100" rmin="1086" z="10860"/>
+    </polycone>
+  </solids>
+  <structure>
+    <volume name="mf_MEP0x7fd78b7fe840">
+      <materialref ref="materials_Air0x7fd78adb5900"/>
+      <solidref ref="mf_ME_shape_0x7fd793e3a7000x7fd78af76600"/>
+      <auxiliary auxtype="gammaECut" auxunit="MeV" auxvalue="0.00099"/>
+      <auxiliary auxtype="electronECut" auxunit="MeV" auxvalue="0.0153873"/>
+      <auxiliary auxtype="positronECut" auxunit="MeV" auxvalue="0.0150913"/>
+      <auxiliary auxtype="protonECut" auxunit="MeV" auxvalue="1"/>
+    </volume>
+    <volume name="muonBase_MUON0x7fd78b810b40">
+      <materialref ref="materials_Air0x7fd78adb5900"/>
+      <solidref ref="muonBase_MUON_shape_0x7fd793d10b800x7fd78aeaad20"/>
+      <physvol copynumber="1" name="mf_MEP_10x7fd7881a10f0">
+        <volumeref ref="mf_MEP0x7fd78b7fe840"/>
+      </physvol>
+      <auxiliary auxtype="gammaECut" auxunit="MeV" auxvalue="0.00099"/>
+      <auxiliary auxtype="electronECut" auxunit="MeV" auxvalue="0.0155647"/>
+      <auxiliary auxtype="positronECut" auxunit="MeV" auxvalue="0.0152645"/>
+      <auxiliary auxtype="protonECut" auxunit="MeV" auxvalue="1"/>
+    </volume>
+    <volume name="TOP">
+      <materialref ref="materials_Air0x7fd78adb5900"/>
+      <solidref ref="TOP"/>
+      <physvol name="CS_1" copynumber="1">
+        <volumeref ref="muonBase_MUON0x7fd78b810b40"/>
+        <positionref ref="CS_1inTOPpos"/>
+      </physvol>
+    </volume>
+  </structure>
+  <setup name="default" version="1.0">
+    <world ref="TOP"/>
+  </setup>
+</gdml>

@@ -229,7 +229,7 @@ void TGeoSphere::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoSphere::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoSphere::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    Double_t rxy2 = point[0] * point[0] + point[1] * point[1];
    Double_t r2 = rxy2 + point[2] * point[2];

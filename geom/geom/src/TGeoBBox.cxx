@@ -217,7 +217,7 @@ Double_t TGeoBBox::Capacity() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Computes normal to closest surface from POINT.
 
-void TGeoBBox::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoBBox::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    memset(norm, 0, 3 * sizeof(Double_t));
    Double_t saf[3];

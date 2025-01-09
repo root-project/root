@@ -462,7 +462,7 @@ Double_t TGeoArb8::GetClosestEdge(const Double_t *point, Double_t *vert, Int_t &
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoArb8::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoArb8::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    Double_t safc;
    Double_t x0, y0, z0, x1, y1, z1, x2, y2, z2;

@@ -138,7 +138,7 @@ void TGeoTrd2::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoTrd2::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoTrd2::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    Double_t safe, safemin;
    Double_t fx = 0.5 * (fDx1 - fDx2) / fDz;
