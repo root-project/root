@@ -1,4 +1,6 @@
-{
+namespace {
+
+auto RooFitHS3_wsexportkeys = R"({
     "RooAddition": {
         "type": "sum",
         "proxies": {
@@ -112,4 +114,6 @@
             "x": "x"
         }
     }
-}
+})";
+
+} // namespace
