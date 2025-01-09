@@ -86,10 +86,6 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Examples showing the Math classes.
 
-\defgroup tutorial_multicore Multicore tutorials
-\ingroup Tutorials
-\brief These examples aim to illustrate the multicore features of ROOT, such as thread awareness and safety, multithreading and multiprocessing.
-
 \defgroup tutorial_roostats RooStats Tutorials
 \ingroup Tutorials
 \brief These tutorials illustrate the main features of RooStats.
