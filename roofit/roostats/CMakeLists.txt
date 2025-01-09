@@ -48,7 +48,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     RooStats/MCMCInterval.h
     RooStats/MCMCIntervalPlot.h
     RooStats/MetropolisHastings.h
-    RooStats/MinNLLTestStat.h
     RooStats/ModelConfig.h
     RooStats/NeymanConstruction.h
     RooStats/NumberCountingPdfFactory.h
