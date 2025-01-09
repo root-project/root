@@ -75,12 +75,14 @@ class TH1Painter extends THistPainter {
       this.scan_xleft = left;
       this.scan_xright = right;
 
-      const profile = this.isTProfile();
+      const is_profile = this.isTProfile(),
+            imin = Math.min(0, left),
+            imax = Math.max(this.nbinsx, right);
       let hmin = 0, hmin_nz = 0, hmax = 0, hsum = 0, first = true, value, errs = { low: 0, up: 0 };
 
-      for (let i = 0; i < this.nbinsx; ++i) {
+      for (let i = imin; i < imax; ++i) {
          value = histo.getBinContent(i + 1);
-         hsum += profile ? histo.fBinEntries[i + 1] : value;
+         hsum += is_profile ? histo.fBinEntries[i + 1] : value;
 
          if ((i < left) || (i >= right))
             continue;
@@ -112,7 +114,7 @@ class TH1Painter extends THistPainter {
       }
 
       // account overflow/underflow bins
-      if (profile)
+      if (is_profile)
          hsum += histo.fBinEntries[0] + histo.fBinEntries[this.nbinsx + 1];
       else
          hsum += histo.getBinContent(0) + histo.getBinContent(this.nbinsx + 1);
@@ -733,7 +735,7 @@ class TH1Painter extends THistPainter {
 
             lastbin = (i === right);
 
-            if (lastbin && (left<right))
+            if (lastbin && (left < right))
                gry = curry;
             else {
                y = histo.getBinContent(i+1);
