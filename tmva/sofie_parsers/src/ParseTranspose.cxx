@@ -33,6 +33,13 @@ ParserFuncSignature ParseTranspose = [](RModelParser_ONNX &parser, const onnx::N
          op.reset(new ROperator_Transpose<float>(nodeproto.input(0), nodeproto.output(0)));
       }
       break;
+   case ETensorType::INT64:
+      if (!attr_perm.empty()) {
+         op.reset(new ROperator_Transpose<int64_t>(attr_perm, nodeproto.input(0), nodeproto.output(0)));
+      } else {
+         op.reset(new ROperator_Transpose<int64_t>(nodeproto.input(0), nodeproto.output(0)));
+      }
+      break;
    default:
       throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Transpose does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));

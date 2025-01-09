@@ -93,11 +93,11 @@ public:
          // Copy shape of X[axis + 1, ..., axis + r) to shape of Y[axis + q, ... q + r - 1)
          std::copy(fShapeX.begin() + fAttrAxis + 1, fShapeX.end(), fShapeY.begin() + fAttrAxis + q);
       }
-      // case input is known (type is an integer) and input indices is a scalar
-      if (model.IsInitializedTensor(fNX) && q == 0 && r == 1 && fIndices.size() > 0) {
+      // case input is known (type is an integer) and input indices is a scalar (or vector of size 1)
+      if (model.IsInitializedTensor(fNX) && q <= 1 && r == 1 && fIndices.size() > 0) {
          if (model.GetTensorType(fNX) == ETensorType::INT64) {
             auto inputData = static_cast<int64_t*>(model.GetInitializedTensorData(fNX).get());
-            // if q =0 and r = 1 output length = 1 (it is a scalar)
+            // if q <=1 and r = 1 output length = 1 (it is a scalar)
             std::vector<int64_t> outputData(ConvertShapeToLength(fShapeY));
             outputData[0] = inputData[fIndices[0]];
             model.AddConstantTensor(fNY, fShapeY, outputData.data());

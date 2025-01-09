@@ -72,10 +72,45 @@ public:
       }
       std::vector<std::vector<size_t>> inputs = { fShapeData };
       fShapeOutput = ShapeInference(inputs).front();
-      model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
+      if (model.IsInitializedTensor(fNData)) {
+         fIsOutputConstant = true;
+         // case input is a constant or initialized tensor we perform here the transpose
+         auto inStrides = UTILITY::ComputeStrideFromShape(fShapeData);
+         auto outStrides = UTILITY::ComputeStrideFromShape(fShapeOutput);
+         size_t length = ConvertShapeToLength(fShapeOutput);
+         auto inputData = static_cast<T*>(model.GetInitializedTensorData(fNData).get());
+         size_t dim = fShapeData.size();
+         std::vector<size_t> outputIdx(dim);
+         std::vector<T> outputData(length);
+         for (size_t i = 0; i < length; i++) {
+            outputIdx[0] = i / outStrides[0];
+            for (size_t j = 1; j < dim; j++) {
+               outputIdx[j] = (i % outStrides[j-1]) / outStrides[j];
+            }
+            // compute input index
+            size_t inputIndex = 0;
+            for (size_t j = 0; j < dim; j++) {
+               // find value in fAtrrPerm corresponding to j
+               int k = std::find(fAttrPerm.begin(), fAttrPerm.end(), j) - fAttrPerm.begin();
+               inputIndex += outputIdx[k] * inStrides[j];
+            }
+            outputData[i] = inputData[inputIndex];
+         }
+         model.AddConstantTensor<T>(fNOutput, fShapeOutput, outputData.data());
+         if (model.Verbose()) {
+            std::cout << "Transpose: output is a constant tensor " << ConvertShapeToString(fShapeOutput) << " : "
+               << ConvertValuesToString(outputData) << std::endl;
+         }
+      } else {
+         model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
+         if (model.Verbose()) {
+            std::cout << "Transpose ---> " << fNOutput << " " <<  ConvertShapeToString(fShapeOutput) << std::endl;
+         }
+      }
    }
 
    std::string Generate(std::string OpName){
+      if (fIsOutputConstant) return "";  //no op for constant tensors
       OpName = "op_" + OpName;
       if (fShapeData.empty() || fShapeOutput.empty()){
          throw std::runtime_error("TMVA SOFIE Transpose Op called to Generate without being initialized first");
