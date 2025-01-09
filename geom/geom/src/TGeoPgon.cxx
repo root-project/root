@@ -287,7 +287,7 @@ void TGeoPgon::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoPgon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoPgon::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    memset(norm, 0, 3 * sizeof(Double_t));
    Double_t phi1 = 0, phi2 = 0, c1 = 0, s1 = 0, c2 = 0, s2 = 0;

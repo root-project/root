@@ -74,7 +74,7 @@ TGeoHalfSpace::~TGeoHalfSpace() {}
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoHalfSpace::ComputeNormal(const Double_t * /*point*/, const Double_t *dir, Double_t *norm)
+void TGeoHalfSpace::ComputeNormal(const Double_t * /*point*/, const Double_t *dir, Double_t *norm) const
 {
    memcpy(norm, fN, 3 * sizeof(Double_t));
    if (norm[0] * dir[0] + norm[1] * dir[1] + norm[2] * dir[2] < 0) {
