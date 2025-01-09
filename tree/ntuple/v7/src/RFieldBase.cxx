@@ -278,7 +278,9 @@ ROOT::Experimental::RFieldBase::Check(const std::string &fieldName, const std::s
    auto canonicalType = Internal::GetNormalizedTypeName(GetCanonicalTypeName(typeAlias));
 
    RFieldZero fieldZero;
-   fieldZero.Attach(RFieldBase::Create(fieldName, canonicalType, typeAlias, true /* continueOnError */).Unwrap());
+   RCreateFieldOptions cfOpts {};
+   cfOpts.fReturnInvalidOnError = true;
+   fieldZero.Attach(RFieldBase::Create(fieldName, canonicalType, typeAlias, cfOpts).Unwrap());
 
    std::vector<RCheckResult> result;
    for (const auto &f : fieldZero) {
@@ -295,11 +297,11 @@ ROOT::Experimental::RFieldBase::Check(const std::string &fieldName, const std::s
 
 ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
 ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &canonicalType,
-                                       const std::string &typeAlias, bool continueOnError)
+                                       const std::string &typeAlias, const RCreateFieldOptions &options)
 {
    thread_local CreateContext createContext;
    CreateContextGuard createContextGuard(createContext);
-   if (continueOnError)
+   if (options.fReturnInvalidOnError)
       createContextGuard.SetContinueOnError(true);
 
    auto fnFail = [&fieldName,

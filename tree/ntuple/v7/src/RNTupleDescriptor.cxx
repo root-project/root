@@ -66,7 +66,8 @@ ROOT::Experimental::RFieldDescriptor ROOT::Experimental::RFieldDescriptor::Clone
 }
 
 std::unique_ptr<ROOT::Experimental::RFieldBase>
-ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc, bool continueOnError) const
+ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc,
+                                                  const RCreateFieldOptions &options) const
 {
    if (GetStructure() == ENTupleStructure::kStreamer) {
       auto streamerField = std::make_unique<RStreamerField>(GetFieldName(), GetTypeName());
@@ -77,7 +78,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
    // The structure may be unknown if the descriptor comes from a deserialized field with an unknown structural role.
    // For forward compatibility, we allow this case and return an InvalidField.
    if (GetStructure() == ENTupleStructure::kUnknown) {
-      if (continueOnError) {
+      if (options.fReturnInvalidOnError) {
          auto invalidField = std::make_unique<RInvalidField>(GetFieldName(), GetTypeName(), "",
                                                              RInvalidField::RCategory::kUnknownStructure);
          invalidField->SetOnDiskId(fFieldId);
@@ -93,7 +94,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
          std::vector<std::unique_ptr<RFieldBase>> memberFields;
          for (auto id : fLinkIds) {
             const auto &memberDesc = ntplDesc.GetFieldDescriptor(id);
-            auto field = memberDesc.CreateField(ntplDesc, continueOnError);
+            auto field = memberDesc.CreateField(ntplDesc, options);
             if (field->GetTraits() & RFieldBase::kTraitInvalidField)
                return field;
             memberFields.emplace_back(std::move(field));
@@ -106,7 +107,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
          if (fLinkIds.size() != 1) {
             throw RException(R__FAIL("unsupported untyped collection for field \"" + GetFieldName() + "\""));
          }
-         auto itemField = ntplDesc.GetFieldDescriptor(fLinkIds[0]).CreateField(ntplDesc, continueOnError);
+         auto itemField = ntplDesc.GetFieldDescriptor(fLinkIds[0]).CreateField(ntplDesc, options);
          if (itemField->GetTraits() & RFieldBase::kTraitInvalidField)
             return itemField;
          auto collectionField = RVectorField::CreateUntyped(GetFieldName(), std::move(itemField));
@@ -124,7 +125,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
          f.SetOnDiskId(ntplDesc.FindFieldId(f.GetFieldName(), f.GetParent()->GetOnDiskId()));
       return field;
    } catch (RException &ex) {
-      if (continueOnError)
+      if (options.fReturnInvalidOnError)
          return std::make_unique<RInvalidField>(GetFieldName(), GetTypeName(), ex.GetError().GetReport(),
                                                 RInvalidField::RCategory::kGeneric);
       else
@@ -627,9 +628,10 @@ ROOT::Experimental::RNTupleDescriptor::CreateModel(const RCreateModelOptions &op
    fieldZero->SetOnDiskId(GetFieldZeroId());
    auto model =
       options.fCreateBare ? RNTupleModel::CreateBare(std::move(fieldZero)) : RNTupleModel::Create(std::move(fieldZero));
-   bool continueOnError = options.fForwardCompatible;
+   RCreateFieldOptions createFieldOpts;
+   createFieldOpts.fReturnInvalidOnError = options.fForwardCompatible;
    for (const auto &topDesc : GetTopLevelFields()) {
-      auto field = topDesc.CreateField(*this, continueOnError);
+      auto field = topDesc.CreateField(*this, createFieldOpts);
       if (field->GetTraits() & RFieldBase::kTraitInvalidField)
          continue;
 
