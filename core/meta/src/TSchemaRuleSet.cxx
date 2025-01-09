@@ -113,7 +113,7 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
    bool streamerInfosTest;
    {
      R__LOCKGUARD(gInterpreterMutex);
-     streamerInfosTest = (fClass->GetStreamerInfos()==nullptr || fClass->GetStreamerInfos()->IsEmpty());
+     streamerInfosTest = !(fClass->GetStreamerInfos()==nullptr || fClass->GetStreamerInfos()->IsEmpty());
    }
    if (rule->GetTarget()  && fClass->GetState() > TClass::kEmulated && streamerInfosTest)
    {
