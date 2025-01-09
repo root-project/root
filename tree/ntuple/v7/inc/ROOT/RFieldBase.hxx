@@ -17,6 +17,7 @@
 #define ROOT7_RFieldBase
 
 #include <ROOT/RColumn.hxx>
+#include <ROOT/RCreateFieldOptions.hxx>
 #include <ROOT/RNTupleRange.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
@@ -473,7 +474,8 @@ protected:
    /// TODO(jalopezg): this overload may eventually be removed leaving only the `RFieldBase::Create()` that takes a
    /// single type name
    static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &canonicalType,
-                                                      const std::string &typeAlias, bool continueOnError = false);
+                                                      const std::string &typeAlias,
+                                                      const RCreateFieldOptions &options = {});
 
 public:
    template <bool IsConstT>
@@ -510,6 +512,7 @@ public:
 
    /// Factory method to resurrect a field from the stored on-disk type information
    static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &typeName);
+
    /// Checks if the given type is supported by RNTuple. In case of success, the result vector is empty.
    /// Otherwise there is an error record for each failing sub field (sub type).
    static std::vector<RCheckResult> Check(const std::string &fieldName, const std::string &typeName);
