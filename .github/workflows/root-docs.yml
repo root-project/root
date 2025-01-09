@@ -132,6 +132,9 @@ jobs:
               cd ROOT-CI/src/documentation/doxygen_s3
               make -j `nproc --all`
 
+              pwd
+              ls -l
+
               export HTML_DIR=${DOXYGEN_OUTPUT_DIRECTORY}/html
               if [ -d ${HTML_DIR} ]; then
                 rm -rf "${HTML_DIR}"
