@@ -271,24 +271,7 @@ Int_t TGeoShape::ShapeDistancetoPrimitive(Int_t numpoints, Int_t px, Int_t py) c
 
 TGeoShape::EInside TGeoShape::Inside(const Double_t *point) const
 {
-   // This emulates the Inside funtionality in Geant4 and VecGeom, i.e instead of
-   // just 'inside' and 'outside', points closer to the shape surface by less than
-   // TGeoShape::Tolerance() (1.e-9 mm) are considered on surface.
-   // This function is expensive because it costs 2 * Contains + 1 * GetNormal calls
-
-   // Compute the normal in the point, along a radial direction
-   constexpr EInside kTable[4] = { kOutside, kSurface, kSurface, kInside };
-   constexpr double dir[3] = {1., 0., 0.};
-   double pt_push[3], pt_pull[3], norm[3];
-   ComputeNormal(point, &dir[0], norm);
-   // Move the point back and forth along the normal and check if the Contains changes
-   for (auto i = 0; i < 3; ++i) {
-      pt_push[i] = point[i] + 10. * TGeoShape::Tolerance() * norm[i];
-      pt_pull[i] = point[i] - 10. * TGeoShape::Tolerance() * norm[i];
-   }
-   int in_push = Contains(pt_push);
-   int in_pull = Contains(pt_pull);
-   return kTable[in_push + 2 * in_pull];
+   return tgeo_impl::Inside(point, this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

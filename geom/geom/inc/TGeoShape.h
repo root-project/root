@@ -179,4 +179,30 @@ public:
    ClassDefOverride(TGeoShape, 2) // base class for shapes
 };
 
+namespace tgeo_impl {
+/// @brief Generic implementation of the inside function using just Contains and GetNormal
+template <typename Solid>
+TGeoShape::EInside Inside(const Double_t *point, Solid const *solid)
+{
+   // This emulates the Inside funtionality in Geant4 and VecGeom, i.e instead of
+   // just 'inside' and 'outside', points closer to the shape surface by less than
+   // TGeoShape::Tolerance() (1.e-9 mm) are considered on surface.
+   // This function is expensive because it costs 2 * Contains + 1 * GetNormal calls
+
+   // Compute the normal in the point, along a radial direction
+   constexpr TGeoShape::EInside kTable[4] = { TGeoShape::kOutside, TGeoShape::kSurface, TGeoShape::kSurface, TGeoShape::kInside };
+   constexpr double dir[3] = {1., 0., 0.};
+   double pt_push[3], pt_pull[3], norm[3];
+   solid->ComputeNormal(point, &dir[0], norm);
+   // Move the point back and forth along the normal and check if the Contains changes
+   for (auto i = 0; i < 3; ++i) {
+      pt_push[i] = point[i] + 10. * TGeoShape::Tolerance() * norm[i];
+      pt_pull[i] = point[i] - 10. * TGeoShape::Tolerance() * norm[i];
+   }
+   int in_push = solid->Contains(pt_push);
+   int in_pull = solid->Contains(pt_pull);
+   return kTable[in_push + 2 * in_pull];
+}
+} // namespace tgeo_impl
+
 #endif
