@@ -240,7 +240,8 @@ public:
       NTupleSize_t fNElements = kInvalidNTupleIndex;
       /// The usual format for ROOT compression settings (see Compression.h).
       /// The pages of a particular column in a particular cluster are all compressed with the same settings.
-      int fCompressionSettings = kNTupleUnknownCompression;
+      /// If unset, the compression settings are undefined (for suppressed columns).
+      std::optional<std::uint32_t> fCompressionSettings;
       /// Suppressed columns have an empty page range and unknown compression settings.
       /// Their element index range, however, is aligned with the corresponding column of the
       /// primary column representation (see Section "Suppressed Columns" in the specification)

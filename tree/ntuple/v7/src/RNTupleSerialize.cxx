@@ -1582,7 +1582,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
                pos += SerializeLocator(pi.fLocator, *where);
             }
             pos += SerializeInt64(columnRange.fFirstElementIndex, *where);
-            pos += SerializeUInt32(columnRange.fCompressionSettings, *where);
+            pos += SerializeUInt32(columnRange.fCompressionSettings.value(), *where);
          }
 
          pos += SerializeFramePostscript(buffer ? innerFrame : nullptr, pos - innerFrame);

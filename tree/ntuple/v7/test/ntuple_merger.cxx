@@ -800,13 +800,13 @@ TEST(RNTupleMerger, MergeThroughTBufferMerger)
    EXPECT_EQ(reader->GetNEntries(), 10);
 }
 
-static bool VerifyPageCompression(const std::string_view fileName, int expectedComp)
+static bool VerifyPageCompression(const std::string_view fileName, std::uint32_t expectedComp)
 {
    // Check that the advertised compression is correct
    bool ok = true;
    {
       auto reader = RNTupleReader::Open("ntuple", fileName);
-      auto compSettings = reader->GetDescriptor().GetClusterDescriptor(0).GetColumnRange(0).fCompressionSettings;
+      auto compSettings = *reader->GetDescriptor().GetClusterDescriptor(0).GetColumnRange(0).fCompressionSettings;
       if (compSettings != expectedComp) {
          std::cerr << "Advertised compression is wrong: " << compSettings << " instead of " << expectedComp << "\n";
          ok = false;
@@ -826,7 +826,8 @@ static bool VerifyPageCompression(const std::string_view fileName, int expectedC
    source->LoadSealedPage(0, {0, 0}, sealedPage);
 
    // size_t uncompSize = sealedPage.GetNElements() * colElement->GetSize();
-   int compAlgo = R__getCompressionAlgorithm((const unsigned char *)sealedPage.GetBuffer(), sealedPage.GetDataSize());
+   std::uint32_t compAlgo =
+      R__getCompressionAlgorithm((const unsigned char *)sealedPage.GetBuffer(), sealedPage.GetDataSize());
    if (compAlgo == ROOT::RCompressionSetting::EAlgorithm::kUndefined)
       compAlgo = 0;
    if (compAlgo != (expectedComp / 100)) {
