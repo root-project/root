@@ -273,10 +273,10 @@ set(gui_veto math/fit/fitpanel_playback.C
              visualisation/geom/building.C visualisation/geom/cheongwadae.C visualisation/geom/geom*.C visualisation/geom/lego.C visualisation/geom/robot.C visualisation/geom/south_gate.C visualisation/geom/station*.C visualisation/geom/tank.C visualisation/geom/webdemo.C visualisation/geom/web_cms.cxx
              visualisation/gl/glViewerExercise.C visualisation/gl/glViewerLOD.C visualisation/gl/gviz3d.C visualisation/gl/nucleus.C visualisation/gl/viewer3DLocal.C visualisation/gl/viewer3DMaster.C
              visualisation/gui/*.C
-             hist/exec1.C
-             hist/exec2.C
-             hist/tprofile2polyRealistic.C
-             hist/tprofile2polyRealisticModuleError.C
+             hist/hist057_TExec_th1.C
+             hist/hist058_TExec_th2.C
+             hist/hist041_TProfile2Poly_realistic.C
+             hist/hist042_TProfile2Poly_module_error.C
              visualisation/image/*.C
              visualisation/graphics/psview.C visualisation/graphics/gtime.C
              visualisation/graphics/graph_edit_playback.C
@@ -513,13 +513,13 @@ set(returncode_1 math/fit/fit2a.C
                  visualisation/graphics/tmathtext.C visualisation/graphics/tmathtext2.C
                  visualisation/graphs/exclusiongraph.C
                  visualisation/graphs/graphstruct.C
-                 hist/ContourList.C
+                 hist/hist102_TH2_contour_list.C
                  hist/hist006_TH1_bar_charts.C
-                 hist/th2polyBoxes.C
-                 hist/statsEditing.C
-                 hist/cumulative.C
+                 hist/hist037_TH2Poly_boxes.C
+                 hist/hist060_TH1_Stats.C
+                 hist/hist014_TH1_cumulative.C
                  hist/hist004_TH1_labels.C
-                 hist/hlabels2.C
+                 hist/hist036_TH2_labels.C
                  io/tree/h1analysis.C
                  math/chi2test.C
                  math/r/SimpleFitting.C)
@@ -534,17 +534,17 @@ set(io-xml-xmlmodifyfile-depends tutorial-io-xml-xmlnewfile)
 set(io-xml-xmlreadfile-depends tutorial-io-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
 set(io-readCode-depends tutorial-io-importCode)
-set(math-fit-fit1-depends tutorial-hist-fillrandom)
+set(math-fit-fit1-depends tutorial-hist-hist001_TH1_fillrandom)
 set(math-fit-myfit-depends tutorial-math-fit-fitslicesy)
 set(math-foam-foam_demopers-depends tutorial-math-foam-foam_demo)
 set(io-tree-tree502_staff-depends  tutorial-io-tree-tree500_cernbuild)
 set(io-tree-tree501_cernstaff-depends  tutorial-io-tree-tree500_cernbuild)
-set(hist-hbars-depends  tutorial-io-tree-tree500_cernbuild)
+set(hist-hist006_TH1_bar_charts-depends  tutorial-io-tree-tree500_cernbuild)
 set(benchmarks-depends tutorial-hsimple
                        tutorial-math-fit-fit1
                        tutorial-math-fit-myfit
-                       tutorial-hist-h1ReadAndDraw
-                       tutorial-hist-FirstContour
+                       tutorial-hist-hist015_TH1_read_and_draw
+                       tutorial-hist-hist056_TPolyMarker_contour
                        tutorial-visualisation-geom-na49view
                        tutorial-io-tree-tree120_ntuple.C
                        tutorial-io-tree-spider
@@ -842,14 +842,14 @@ if(ROOT_pyroot_FOUND)
   message(STATUS "${nAfterVeto}/${nTotal} python tutorials have been activated.")
 
   #---Python tutorials dependencies--------------------------------------
-  set(tree-ntuple1-depends tutorial-hsimple-py)
-  set(hist-h1ReadAndDraw-depends tutorial-hsimple-py)
+  set(io-tree-ntuple1-depends tutorial-hsimple-py)
+  set(hist-hist015_TH1_read_and_draw-depends tutorial-hsimple-py)
   set(pyroot-benchmarks-depends tutorial-hsimple-py
                                 tutorial-math-fit-fit1-py
                                 tutorial-visualisation-geom-na49view-py
-                                tutorial-hist-h1ReadAndDraw-py
-                                tutorial-tree-ntuple1-py)
-  set(math-fit-fit1-depends tutorial-hist-fillrandom-py)
+                                tutorial-hist-hist015_TH1_read_and_draw-py
+                                tutorial-io-tree-ntuple1-py)
+  set(math-fit-fit1-depends tutorial-hist-hist001_TH1_fillrandom-py)
   set(visualisation-geom-na49view-depends tutorial-visualisation-geom-geometry-py)
   set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite-py)
   set(roofit-rf618_mixture_models-depends tutorial-analysis-dataframe-df106_HiggsToFourLeptons-py)

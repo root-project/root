@@ -57,7 +57,7 @@ Available options are for `option`:
 | diffsig    | subtracts the histograms and divides by the uncertainty |
 
 Begin_Macro(source)
-../../../tutorials/hist/ratioplot1.C
+../../../tutorials/hist/hist029_TRatioPlot_simple.C
 End_Macro
 
 ## Fit residuals
@@ -73,7 +73,7 @@ the function value as the error.
 
 
 Begin_Macro(source)
-../../../tutorials/hist/ratioplot2.C
+../../../tutorials/hist/hist030_TRatioPlot_residual.C
 End_Macro
 
 ## Error options for difference divided by uncertainty and fit residual
@@ -82,8 +82,8 @@ options to the `option` argument.
 
 | Option     | Description                                                  |
 | ---------- | ------------------------------------------------------------ |
-| errasym    | Uses calculated asymmetric errors from `TH1::GetBinErrorUp`/`TH1::GetBinErrorLow`. Note that you need to set `TH1::SetBinErrorOption` first |
-| errfunc    | Uses \f$ \sqrt{f(x)} \f$ as the error |
+| errasym    | Uses calculated asymmetric errors from `TH1::GetBinErrorUp`/`TH1::GetBinErrorLow`. Note that you need to
+set `TH1::SetBinErrorOption` first | | errfunc    | Uses \f$ \sqrt{f(x)} \f$ as the error |
 
 The asymmetric error case uses the upper or lower error depending on the relative size
 of the bin contents, or the bin content and the function value.
@@ -97,7 +97,6 @@ is responsible for the range, which enables you to modify the range.
 
 \image html gpad_ratioplot.png
 */
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TRatioPlot default constructor
@@ -522,7 +521,7 @@ void TRatioPlot::SetRightMargin(Float_t margin)
 /// \param margin The new margin
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/hist/ratioplot6.C
+/// ../../../tutorials/hist/hist034_TRatioPlot_fit_margin.C
 /// End_Macro
 
 void TRatioPlot::SetSeparationMargin(Float_t margin)
@@ -700,7 +699,7 @@ void TRatioPlot::Draw(Option_t *option)
 /// graphs are only created then.
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/hist/ratioplot3.C
+/// ../../../tutorials/hist/hist031_TRatioPlot_residual_fit.C
 /// End_Macro
 
 TGraph *TRatioPlot::GetLowerRefGraph() const
@@ -1665,7 +1664,7 @@ void TRatioPlot::SetConfidenceLevels(Double_t c1, Double_t c2)
 /// \param gridlines Vector of y positions for the dashes lines
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/hist/ratioplot4.C
+/// ../../../tutorials/hist/hist032_TRatioPlot_fit_lines.C
 /// End_Macro
 
 void TRatioPlot::SetGridlines(std::vector<double> gridlines)
@@ -1695,7 +1694,7 @@ void TRatioPlot::SetGridlines(Double_t *gridlines, Int_t numGridlines)
 /// \param ci2 Color of the 2 sigma band
 /// Sets the color of the 1 and 2 sigma bands in the fit residual case.
 /// Begin_Macro(source)
-/// ../../../tutorials/hist/ratioplot5.C
+/// ../../../tutorials/hist/hist033_TRatioPlot_fit_confidence.C
 /// End_Macro
 
 void TRatioPlot::SetConfidenceIntervalColors(Color_t ci1, Color_t ci2)

@@ -314,7 +314,7 @@ only with histograms because the labels'definition is stored in `TAxis`.
 The following example demonstrates how to create such labels.
 
 Begin_Macro(source)
-../../../tutorials/hist/hlabels2.C
+../../../tutorials/hist/hist036_TH2_labels.C
 End_Macro
 
 Because the alphanumeric labels are usually longer that the numeric labels, their

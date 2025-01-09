@@ -187,7 +187,7 @@ The following example illustrate this facility. Only the width and height of the
 legend is specified in percentage of the pad size.
 
 Begin_Macro(source)
-../../../tutorials/hist/legendautoplaced.C
+../../../tutorials/hist/hist011_TH1_legend_autoplaced.C
 End_Macro
 
 */
