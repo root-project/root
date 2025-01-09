@@ -9,6 +9,7 @@
 #include <RooDataSet.h>
 #include <RooExtendPdf.h>
 #include <RooFitResult.h>
+#include <RooGlobalFunc.h>
 #include <RooHelpers.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
