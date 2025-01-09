@@ -2644,11 +2644,37 @@ class TFramePainter extends ObjectPainter {
             }
             menu.input('Enter zoom range like: [min, max]', `[${min}, ${max}]`).then(v => {
                const arr = JSON.parse(v);
-               if (arr && Array.isArray(arr) && (arr.length === 2))
-                  this.zoomSingle(kind, arr[0], arr[1], true);
+               if (arr && Array.isArray(arr) && (arr.length === 2)) {
+                  let flag = false;
+                  if (arr[0] < faxis.fXmin) {
+                     faxis.fFirst = 0;
+                     flag = true;
+                  } else
+                     faxis.fFirst = 1;
+                  if (arr[1] > faxis.fXmax) {
+                     faxis.fLast = faxis.fNbins + 1;
+                     flag = true;
+                  } else
+                     faxis.fLast = faxis.fNbins;
+                  if (flag !== faxis.TestBit(EAxisBits.kAxisRange))
+                     faxis.InvertBit(EAxisBits.kAxisRange);
+                  hist_painter?.scanContent();
+                  this.zoomSingle(kind, arr[0], arr[1], true).then(res => {
+                     if (!res && flag)
+                        this.interactiveRedraw('pad');
+                  });
+               }
             });
          });
-         menu.add('Unzoom', () => this.unzoom(kind));
+         menu.add('Unzoom', () => {
+            this.unzoomSingle(kind).then(res => {
+               if (!res && (faxis.fFirst !== faxis.fLast)) {
+                  faxis.fFirst = faxis.fLast = 0;
+                  hist_painter?.scanContent();
+                  this.interactiveRedraw('pad');
+               }
+            });
+         });
          if (handle?.value_axis && isFunc(wrk?.accessMM)) {
             menu.add('Minimum', () => {
                menu.input(`Enter minimum value or ${kNoZoom} as default`, wrk.accessMM(true), 'float').then(v => {

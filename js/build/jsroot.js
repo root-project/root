@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '11/12/2024',
+version_date = '9/01/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1544,6 +1544,7 @@ function getMethods(typename, obj) {
       if (typeof m.TestBit === 'undefined') {
          m.TestBit = function(f) { return (this.fBits & f) !== 0; };
          m.InvertBit = function(f) { this.fBits = this.fBits ^ (f & 0xffffff); };
+         m.SetBit = function(f, on = true) { this.fBits = on ? this.fBits | f : this.fBits & ~f; };
       }
    }
 
@@ -1815,14 +1816,32 @@ function getMethods(typename, obj) {
 
    if (typename === clTAxis) {
       m.GetBinLowEdge = function(bin) {
-         if (this.fNbins <= 0) return 0;
-         if ((this.fXbins.length > 0) && (bin > 0) && (bin <= this.fNbins)) return this.fXbins[bin-1];
-         return this.fXmin + (bin-1) * (this.fXmax - this.fXmin) / this.fNbins;
+         if (this.fNbins <= 0)
+            return 0;
+         if (this.fXbins.length) {
+            if ((bin > 0) && (bin <= this.fNbins + 1))
+               return this.fXbins[bin - 1];
+            if (bin === 0) // underflow
+               return 2 * this.fXbins[0] - this.fXbins[1];
+            if (bin === this.fNbins + 2) // right border of overflow bin
+               return 2 * this.fXbins[bin - 2] - this.fXbins[bin - 3];
+            return 0;
+         }
+         return this.fXmin + (bin - 1) * (this.fXmax - this.fXmin) / this.fNbins;
       };
       m.GetBinCenter = function(bin) {
-         if (this.fNbins <= 0) return 0;
-         if ((this.fXbins.length > 0) && (bin > 0) && (bin < this.fNbins)) return (this.fXbins[bin-1] + this.fXbins[bin])/2;
-         return this.fXmin + (bin-0.5) * (this.fXmax - this.fXmin) / this.fNbins;
+         if (this.fNbins <= 0)
+            return 0;
+         if (this.fXbins.length) {
+            if ((bin > 0) && (bin <= this.fNbins))
+               return (this.fXbins[bin - 1] + this.fXbins[bin]) / 2;
+            if (bin === 0) // underflow
+               return 1.5 * this.fXbins[0] - 0.5 * this.fXbins[1];
+            if (bin === this.fNbins + 1) // overflow
+               return 1.5 * this.fXbins[bin - 1] - 0.5 * this.fXbins[bin - 2];
+            return 0;
+         }
+         return this.fXmin + (bin - 0.5) * (this.fXmax - this.fXmin) / this.fNbins;
       };
    }
 
@@ -66587,11 +66606,37 @@ class TFramePainter extends ObjectPainter {
             }
             menu.input('Enter zoom range like: [min, max]', `[${min}, ${max}]`).then(v => {
                const arr = JSON.parse(v);
-               if (arr && Array.isArray(arr) && (arr.length === 2))
-                  this.zoomSingle(kind, arr[0], arr[1], true);
+               if (arr && Array.isArray(arr) && (arr.length === 2)) {
+                  let flag = false;
+                  if (arr[0] < faxis.fXmin) {
+                     faxis.fFirst = 0;
+                     flag = true;
+                  } else
+                     faxis.fFirst = 1;
+                  if (arr[1] > faxis.fXmax) {
+                     faxis.fLast = faxis.fNbins + 1;
+                     flag = true;
+                  } else
+                     faxis.fLast = faxis.fNbins;
+                  if (flag !== faxis.TestBit(EAxisBits.kAxisRange))
+                     faxis.InvertBit(EAxisBits.kAxisRange);
+                  hist_painter?.scanContent();
+                  this.zoomSingle(kind, arr[0], arr[1], true).then(res => {
+                     if (!res && flag)
+                        this.interactiveRedraw('pad');
+                  });
+               }
             });
          });
-         menu.add('Unzoom', () => this.unzoom(kind));
+         menu.add('Unzoom', () => {
+            this.unzoomSingle(kind).then(res => {
+               if (!res && (faxis.fFirst !== faxis.fLast)) {
+                  faxis.fFirst = faxis.fLast = 0;
+                  hist_painter?.scanContent();
+                  this.interactiveRedraw('pad');
+               }
+            });
+         });
          if (handle?.value_axis && isFunc(wrk?.accessMM)) {
             menu.add('Minimum', () => {
                menu.input(`Enter minimum value or ${kNoZoom} as default`, wrk.accessMM(true), 'float').then(v => {
@@ -70614,61 +70659,47 @@ class TPadPainter extends ObjectPainter {
    /** @summary Function called when drawing next snapshot from the list
      * @return {Promise} for drawing of the snap
      * @private */
-   async drawNextSnap(lst, indx) {
+   async drawNextSnap(lst, pindx, indx) {
       if (indx === undefined) {
          indx = -1;
-         this._snaps_map = {}; // to control how much snaps are drawn
-         this._num_primitives = lst ? lst.length : 0;
+         this._num_primitives = lst?.length ?? 0;
       }
 
       ++indx; // change to the next snap
 
-      if (!lst || (indx >= lst.length)) {
-         delete this._snaps_map;
+      if (!lst || (indx >= lst.length))
          return this;
-      }
 
       const snap = lst[indx];
 
       // gStyle object
       if (snap.fKind === webSnapIds.kStyle) {
          this.processSnapStyle(snap);
-         return this.drawNextSnap(lst, indx); // call next
+         return this.drawNextSnap(lst, pindx, indx); // call next
       }
 
       // list of colors
       if (snap.fKind === webSnapIds.kColors) {
          this.processSnapColors(snap);
-         return this.drawNextSnap(lst, indx); // call next
+         return this.drawNextSnap(lst, pindx, indx); // call next
       }
 
-      const snapid = snap.fObjectID,
-            is_frame = (snap.fKind === webSnapIds.kObject) && (snap.fSnapshot?._typename === clTFrame);
-      let cnt = (this._snaps_map[snapid] || 0) + 1,
-          objpainter = null;
+      // try to locate existing object painter, only allowed when redrawing pad snap
+      let objpainter = null;
+      if ((pindx !== undefined) && (pindx < this.painters.length)) {
+         while ((pindx < this.painters.length) && (!this.painters[pindx].snapid || this.painters[pindx].isSecondary()))
+            pindx++;
 
-      this._snaps_map[snapid] = cnt; // check how many objects with same snapid drawn, use them again
-
-      // first appropriate painter for the object
-      // if same object drawn twice, two painters will exists
-      for (let k = 0; k < this.painters.length; ++k) {
-         const subp = this.painters[k];
-         if (subp.snapid === snapid) {
-            if (--cnt === 0) {
-               objpainter = subp;
-               break;
-            }
-         } else if (is_frame && !subp.snapid && (subp === this.getFramePainter())) {
-            // workaround for the case when frame created afterwards by server
-            subp.snapid = snapid;
+         const subp = pindx < this.painters.length ? this.painters[pindx++] : null;
+         if (subp && (subp.snapid === snap.fObjectID))
             objpainter = subp;
-            break;
-         }
+         else
+            console.warn(`Mismatch in snapid between painter ${subp?.snapid} and primitive ${snap.fObjectID} kind ${snap.fKind}`);
       }
 
       if (objpainter) {
          if (snap.fKind === webSnapIds.kSubPad) // sub-pad
-            return objpainter.redrawPadSnap(snap).then(() => this.drawNextSnap(lst, indx));
+            return objpainter.redrawPadSnap(snap).then(() => this.drawNextSnap(lst, pindx, indx));
 
          let promise;
 
@@ -70680,7 +70711,7 @@ class TPadPainter extends ObjectPainter {
                promise = objpainter.redraw();
          }
 
-         return getPromise(promise).then(() => this.drawNextSnap(lst, indx)); // call next
+         return getPromise(promise).then(() => this.drawNextSnap(lst, pindx, indx)); // call next
       }
 
       if (snap.fKind === webSnapIds.kSubPad) { // sub-pad
@@ -70710,7 +70741,7 @@ class TPadPainter extends ObjectPainter {
          // we select current pad, where all drawing is performed
          return padpainter.drawNextSnap(snap.fPrimitives).then(() => {
             padpainter.addPadInteractive();
-            return this.drawNextSnap(lst, indx); // call next
+            return this.drawNextSnap(lst, pindx, indx); // call next
          });
       }
 
@@ -70718,11 +70749,11 @@ class TPadPainter extends ObjectPainter {
       if (((snap.fKind === webSnapIds.kObject) || (snap.fKind === webSnapIds.kSVG)) && (snap.fOption !== '__ignore_drawing__')) {
          return this.drawObject(this, snap.fSnapshot, snap.fOption).then(objpainter => {
             this.addObjectPainter(objpainter, lst, indx);
-            return this.drawNextSnap(lst, indx);
+            return this.drawNextSnap(lst, pindx, indx);
          });
       }
 
-      return this.drawNextSnap(lst, indx);
+      return this.drawNextSnap(lst, pindx, indx);
    }
 
    /** @summary Return painter with specified id
@@ -70834,84 +70865,63 @@ class TPadPainter extends ObjectPainter {
        else
          this.createPadSvg(true);
 
-      const matchPrimitive = (painters, primitives, class_name, obj_name) => {
-         const painter = painters.find(p => {
-            if (p.snapid === undefined) return false;
-            if (!p.matchObjectType(class_name)) return false;
-            if (obj_name && (!p.getObject() || (p.getObject().fName !== obj_name))) return false;
-            return true;
-         });
-         if (!painter) return;
-         const primitive = primitives.find(pr => {
-            if ((pr.fKind !== 1) || !pr.fSnapshot || (pr.fSnapshot._typename !== class_name)) return false;
-            if (obj_name && (pr.fSnapshot.fName !== obj_name)) return false;
-            return true;
-         });
-         if (!primitive) return;
+      let missmatch = false;
 
-         // force painter to use new object id
-         if (painter.snapid !== primitive.fObjectID)
-            painter.snapid = primitive.fObjectID;
-      };
-
-      // check if frame or title was recreated, we could reassign handlers for them directly
-      // while this is temporary objects, which can be recreated very often, try to catch such situation ourself
+      // match painters with new list of primitives
       if (!snap.fWithoutPrimitives) {
-         matchPrimitive(this.painters, snap.fPrimitives, clTFrame);
-         matchPrimitive(this.painters, snap.fPrimitives, clTPaveText, kTitle);
-      }
-
-      let isanyfound = false, isanyremove = false;
-
-      // find and remove painters which no longer exists in the list
-      if (!snap.fWithoutPrimitives) {
-         for (let k = 0; k < this.painters.length; ++k) {
+         let i = 0, k = 0;
+         while (k < this.painters.length) {
             const sub = this.painters[k];
 
-            // skip secondary painters or painters without snapid
-            if (!isStr(sub.snapid) || sub.isSecondary())
+            // skip check secondary painters or painters without snapid
+            if (!isStr(sub.snapid) || sub.isSecondary()) {
+               k++;
                continue; // look only for painters with snapid
+            }
 
-            const prim = snap.fPrimitives.find(prim => ((prim.fObjectID === sub.snapid) && !prim.$checked));
-            if (prim) {
-               isanyfound = true;
-               prim.$checked = true;
+            if (i >= snap.fPrimitives.length)
+               break;
+
+            const prim = snap.fPrimitives[i];
+
+            // only real objects drawing checked for existing painters
+            if ((prim.fKind !== webSnapIds.kSubPad) && (prim.fKind !== webSnapIds.kObject) && (prim.fKind !== webSnapIds.kSVG)) {
+               i++;
+               continue; // look only for primitives of real objects
+            }
+
+            if (prim.fObjectID === sub.snapid) {
+               i++;
+               k++;
             } else {
-               // remove painter which does not found in the list of snaps
-               k = this.removePrimitive(k); // index modified
-               isanyremove = true;
-               if (k === -111) {
-                  // main painter is removed - do full cleanup and redraw
-                  isanyfound = false;
-                  break;
-               }
+               missmatch = true;
+               break;
             }
          }
+
+         let cnt = 1000;
+         // remove painters without primitives, limit number of checks
+         while (!missmatch && (k < this.painters.length) && (--cnt >= 0)) {
+            if (this.removePrimitive(k) === -111)
+               missmatch = true;
+         }
+         if (cnt < 0)
+            missmatch = true;
       }
 
-      if (isanyremove)
+      if (missmatch) {
          delete this.pads_cache;
 
-      if (!isanyfound && !snap.fWithoutPrimitives) {
-         // TODO: maybe just remove frame painter?
-         const fp = this.getFramePainter(),
-               old_painters = this.painters;
+         const old_painters = this.painters;
          this.painters = [];
-         old_painters.forEach(objp => {
-            if (fp !== objp) objp.cleanup();
-         });
+         old_painters.forEach(objp => objp.cleanup());
          delete this.main_painter_ref;
-         if (fp) {
-            this.painters.push(fp);
-            fp.cleanFrameDrawings();
-            fp.redraw();
-         }
          if (isFunc(this.removePadButtons))
             this.removePadButtons();
          this.addPadButtons(true);
       }
 
-      return this.drawNextSnap(snap.fPrimitives).then(() => {
+      return this.drawNextSnap(snap.fPrimitives, missmatch ? undefined : 0).then(() => {
          this.addPadInteractive();
          if (getActivePad() === this)
             this.getCanvPainter()?.producePadEvent('padredraw', this);
@@ -74028,7 +74038,7 @@ class TPavePainter extends ObjectPainter {
          if (this.stored && !obj.fInit && (this.stored.fX1 === obj.fX1) &&
              (this.stored.fX2 === obj.fX2) && (this.stored.fY1 === obj.fY1) && (this.stored.fY2 === obj.fY2)) {
             // case when source object not initialized and original coordinates are not changed
-            // take over only modified NDC coordinate, used in tutorials/visualisation/graphics/canvas.C
+            // take over only modified NDC coordinate, used in tutorials/graphics/canvas.C
             if (this.stored.fX1NDC !== obj.fX1NDC) pave.fX1NDC = obj.fX1NDC;
             if (this.stored.fX2NDC !== obj.fX2NDC) pave.fX2NDC = obj.fX2NDC;
             if (this.stored.fY1NDC !== obj.fY1NDC) pave.fY1NDC = obj.fY1NDC;
@@ -74331,7 +74341,8 @@ class THistDrawOptions {
 
       const d = new DrawOptions(opt);
 
-      if (hdim === 1) this.decodeSumw2(histo, true);
+      if (hdim === 1)
+         this.decodeSumw2(histo, true);
 
       this.ndim = hdim || 1; // keep dimensions, used for now in GED
 
@@ -74396,14 +74407,32 @@ class THistDrawOptions {
       if (d.check('OPTSTAT', true)) this.optstat = d.partAsInt();
       if (d.check('OPTFIT', true)) this.optfit = d.partAsInt();
 
-      if ((this.optstat || this.optstat) && histo?.TestBit(kNoStats))
-         histo?.InvertBit(kNoStats);
+      if (this.optstat || this.optfit)
+         histo?.SetBit(kNoStats, false);
+
+      if (d.check('ALLBINS') && histo) {
+         histo.fXaxis.fFirst = 0;
+         histo.fXaxis.fLast = histo.fXaxis.fNbins + 1;
+         histo.fXaxis.SetBit(EAxisBits.kAxisRange);
+         if (this.ndim > 1) {
+            histo.fYaxis.fFirst = 0;
+            histo.fYaxis.fLast = histo.fYaxis.fNbins + 1;
+            histo.fYaxis.SetBit(EAxisBits.kAxisRange);
+         }
+         if (this.ndim > 2) {
+            histo.fZaxis.fFirst = 0;
+            histo.fZaxis.fLast = histo.fZaxis.fNbins + 1;
+            histo.fZaxis.SetBit(EAxisBits.kAxisRange);
+         }
+      }
 
       if (d.check('NOSTAT')) this.NoStat = true;
       if (d.check('STAT')) this.ForceStat = true;
 
-      if (d.check('NOTOOLTIP') && painter) painter.setTooltipAllowed(false);
-      if (d.check('TOOLTIP') && painter) painter.setTooltipAllowed(true);
+      if (d.check('NOTOOLTIP'))
+         painter?.setTooltipAllowed(false);
+      if (d.check('TOOLTIP'))
+         painter?.setTooltipAllowed(true);
 
       if (d.check('SYMLOGX', true)) this.SymlogX = d.partAsInt(0, 3);
       if (d.check('SYMLOGY', true)) this.SymlogY = d.partAsInt(0, 3);
@@ -75447,6 +75476,13 @@ class THistPainter extends ObjectPainter {
       this.nbinsx = histo.fXaxis.fNbins;
       this.xmin = histo.fXaxis.fXmin;
       this.xmax = histo.fXaxis.fXmax;
+      if (histo.fXaxis.TestBit(EAxisBits.kAxisRange) && (histo.fXaxis.fFirst !== histo.fXaxis.fLast)) {
+         if (histo.fXaxis.fFirst === 0)
+            this.xmin = histo.fXaxis.GetBinLowEdge(0);
+         if (histo.fXaxis.fLast === this.nbinsx + 1)
+            this.xmax = histo.fXaxis.GetBinLowEdge(this.nbinsx + 2);
+      }
+
       assignTAxisFuncs(histo.fXaxis);
 
       this.ymin = histo.fYaxis.fXmin;
@@ -75461,6 +75497,12 @@ class THistPainter extends ObjectPainter {
 
       if (ndim > 1) {
          this.nbinsy = histo.fYaxis.fNbins;
+         if (histo.fYaxis.TestBit(EAxisBits.kAxisRange) && (histo.fYaxis.fFirst !== histo.fYaxis.fLast)) {
+            if (histo.fYaxis.fFirst === 0)
+               this.ymin = histo.fYaxis.GetBinLowEdge(0);
+            if (histo.fYaxis.fLast === this.nbinsy + 1)
+               this.ymax = histo.fYaxis.GetBinLowEdge(this.nbinsy + 2);
+         }
          assignTAxisFuncs(histo.fYaxis);
 
          this.zmin = histo.fZaxis.fXmin;
@@ -75474,6 +75516,12 @@ class THistPainter extends ObjectPainter {
 
       if (ndim > 2) {
          this.nbinsz = histo.fZaxis.fNbins;
+         if (histo.fZaxis.TestBit(EAxisBits.kAxisRange) && (histo.fZaxis.fFirst !== histo.fZaxis.fLast)) {
+            if (histo.fZaxis.fFirst === 0)
+               this.zmin = histo.fZaxis.GetBinLowEdge(0);
+            if (histo.fZaxis.fLast === this.nbinsz + 1)
+               this.zmax = histo.fZaxis.GetBinLowEdge(this.nbinsz + 2);
+         }
          assignTAxisFuncs(histo.fZaxis);
        }
    }
@@ -75817,8 +75865,10 @@ class THistPainter extends ObjectPainter {
       let indx = 0, taxis = this.getAxis(axis);
       const nbin = this[`nbins${axis}`] ?? 0;
 
-      if (this.options.second_x && axis === 'x') axis = 'x2';
-      if (this.options.second_y && axis === 'y') axis = 'y2';
+      if (this.options.second_x && axis === 'x')
+         axis = 'x2';
+      if (this.options.second_y && axis === 'y')
+         axis = 'y2';
       const main = this.getFramePainter(),
             min = main ? main[`zoom_${axis}min`] : 0,
             max = main ? main[`zoom_${axis}max`] : 0;
@@ -75829,8 +75879,8 @@ class THistPainter extends ObjectPainter {
          else
             indx = taxis.FindBin(max, (add || 0) + 0.5);
          if (indx < 0)
-            indx = 0; else
-         if (indx > nbin)
+            indx = 0;
+         else if (indx > nbin)
             indx = nbin;
       } else
          indx = (side === 'left') ? 0 : nbin;
@@ -75839,15 +75889,22 @@ class THistPainter extends ObjectPainter {
       // TAxis object of histogram, where user range can be stored
       if (taxis) {
          if ((taxis.fFirst === taxis.fLast) || !taxis.TestBit(EAxisBits.kAxisRange) ||
-             ((taxis.fFirst <= 1) && (taxis.fLast >= nbin))) taxis = undefined;
+             ((taxis.fFirst === 1) && (taxis.fLast === nbin)))
+               taxis = null;
       }
 
       if (side === 'left') {
-         if (indx < 0) indx = 0;
-         if (taxis && (taxis.fFirst > 1) && (indx < taxis.fFirst)) indx = taxis.fFirst - 1;
+         indx = Math.max(indx, 0);
+         if (taxis && (taxis.fFirst > 1) && (indx < taxis.fFirst))
+            indx = taxis.fFirst - 1;
+         else if (taxis?.fFirst === 0) // showing underflow bin
+            indx = -1;
       } else {
-         if (indx > nbin) indx = nbin;
-         if (taxis && (taxis.fLast <= nbin) && (indx>taxis.fLast)) indx = taxis.fLast;
+         indx = Math.min(indx, nbin);
+         if (taxis && (taxis.fLast <= nbin) && (indx > taxis.fLast))
+            indx = taxis.fLast;
+         else if (taxis?.fLast === nbin + 1)
+            indx = nbin + 1;
       }
 
       return indx;
@@ -76567,8 +76624,8 @@ class THistPainter extends ObjectPainter {
 
       let i, j, x, y, binz, binarea;
 
-      res.grx = new Float32Array(res.i2+1);
-      res.gry = new Float32Array(res.j2+1);
+      res.grx = res.i1 < 0 ? {} : new Float32Array(res.i2 + 1);
+      res.gry = res.j1 < 0 ? {} : new Float32Array(res.j2 + 1);
 
       if ((typeof histo.fBarOffset === 'number') && (typeof histo.fBarWidth === 'number') &&
            (histo.fBarOffset || histo.fBarWidth !== 1000)) {
@@ -76590,8 +76647,8 @@ class THistPainter extends ObjectPainter {
 
       if (args.original) {
          res.original = true;
-         res.origx = new Float32Array(res.i2+1);
-         res.origy = new Float32Array(res.j2+1);
+         res.origx = res.i1 < 0 ? {} : new Float32Array(res.i2 + 1);
+         res.origy = res.j1 < 0 ? {} : new Float32Array(res.j2 + 1);
       }
 
       if (args.pixel_density)
@@ -82619,12 +82676,14 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       this.scan_xleft = left;
       this.scan_xright = right;
 
-      const profile = this.isTProfile();
+      const is_profile = this.isTProfile(),
+            imin = Math.min(0, left),
+            imax = Math.max(this.nbinsx, right);
       let hmin = 0, hmin_nz = 0, hmax = 0, hsum = 0, first = true, value, errs = { low: 0, up: 0 };
 
-      for (let i = 0; i < this.nbinsx; ++i) {
+      for (let i = imin; i < imax; ++i) {
          value = histo.getBinContent(i + 1);
-         hsum += profile ? histo.fBinEntries[i + 1] : value;
+         hsum += is_profile ? histo.fBinEntries[i + 1] : value;
 
          if ((i < left) || (i >= right))
             continue;
@@ -82656,7 +82715,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       }
 
       // account overflow/underflow bins
-      if (profile)
+      if (is_profile)
          hsum += histo.fBinEntries[0] + histo.fBinEntries[this.nbinsx + 1];
       else
          hsum += histo.getBinContent(0) + histo.getBinContent(this.nbinsx + 1);
@@ -83277,7 +83336,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
             lastbin = (i === right);
 
-            if (lastbin && (left<right))
+            if (lastbin && (left < right))
                gry = curry;
             else {
                y = histo.getBinContent(i+1);
@@ -159980,6 +160039,9 @@ class RPadPainter extends RObjectPainter {
    /** @summary get pad height */
    getPadHeight() { return this._pad_height || 0; }
 
+   /** @summary get pad height */
+   getPadScale() { return this._pad_scale || 1; }
+
    /** @summary return pad log state x or y are allowed */
    getPadLog(name) { return false; }
 
@@ -160808,7 +160870,8 @@ class RPadPainter extends RObjectPainter {
          if (this.painters.indexOf(objpainter) < 0)
             this.painters.push(objpainter);
          objpainter.assignSnapId(lst[indx].fObjectID);
-         if (!objpainter.rstyle) objpainter.rstyle = lst[indx].fStyle || this.rstyle;
+         if (!objpainter.rstyle)
+            objpainter.rstyle = lst[indx].fStyle || this.rstyle;
       }
    }
 
@@ -160866,11 +160929,10 @@ class RPadPainter extends RObjectPainter {
    /** @summary Function called when drawing next snapshot from the list
      * @return {Promise} with pad painter when ready
      * @private */
-   async drawNextSnap(lst, indx) {
+   async drawNextSnap(lst, pindx, indx) {
       if (indx === undefined) {
          indx = -1;
          // flag used to prevent immediate pad redraw during first draw
-         this._snaps_map = {}; // to control how much snaps are drawn
          this._num_primitives = lst ? lst.length : 0;
          this._auto_color_cnt = 0;
       }
@@ -160880,27 +160942,68 @@ class RPadPainter extends RObjectPainter {
       ++indx; // change to the next snap
 
       if (!lst || indx >= lst.length) {
-         delete this._snaps_map;
          delete this._auto_color_cnt;
          return this;
       }
 
-      const snap = lst[indx],
-            snapid = snap.fObjectID;
-      let cnt = this._snaps_map[snapid],
-          objpainter = null;
-
-      if (cnt) cnt++; else cnt=1;
-      this._snaps_map[snapid] = cnt; // check how many objects with same snapid drawn, use them again
+      const snap = lst[indx];
 
       // empty object, no need to do something, take next
-      if (snap.fDummy) return this.drawNextSnap(lst, indx);
+      if (snap.fDummy)
+         return this.drawNextSnap(lst, pindx, indx);
 
-      // first appropriate painter for the object
-      // if same object drawn twice, two painters will exists
-      for (let k = 0; k < this.painters.length; ++k) {
-         if (this.painters[k].snapid === snapid)
-            if (--cnt === 0) { objpainter = this.painters[k]; break; }
+      if (snap._typename === `${nsREX}TObjectDisplayItem`) {
+         // identifier used in TObjectDrawable
+
+         if (snap.fKind === webSnapIds.kStyle) {
+            Object.assign(gStyle, snap.fObject);
+            return this.drawNextSnap(lst, pindx, indx);
+         }
+
+         if (snap.fKind === webSnapIds.kColors) {
+            const colors = [], arr = snap.fObject.arr;
+            for (let n = 0; n < arr.length; ++n) {
+               const name = arr[n].fString, p = name.indexOf('=');
+               if (p > 0)
+                  colors[parseInt(name.slice(0, p))] = convertColor(name.slice(p+1));
+            }
+
+            this.root_colors = colors;
+            // set global list of colors
+            // adoptRootColors(ListOfColors);
+            return this.drawNextSnap(lst, pindx, indx);
+         }
+
+         if (snap.fKind === webSnapIds.kPalette) {
+            const arr = snap.fObject.arr, palette = [];
+            for (let n = 0; n < arr.length; ++n)
+               palette[n] = arr[n].fString;
+            this.custom_palette = new ColorPalette(palette);
+            return this.drawNextSnap(lst, pindx, indx);
+         }
+
+         if (snap.fKind === webSnapIds.kFont)
+            return this.drawNextSnap(lst, pindx, indx);
+
+         if (!this.getFramePainter()) {
+            // draw dummy frame which is not provided by RCanvas
+            return this.drawObject(this, { _typename: clTFrame, $dummy: true }, '')
+                       .then(() => this.drawNextSnap(lst, pindx, indx - 1));
+         }
+
+         this.extractTObjectProp(snap);
+      }
+
+      // try to locate existing object painter, only allowed when redrawing pad snap
+      let objpainter = null;
+      if ((pindx !== undefined) && (pindx < this.painters.length)) {
+         while ((pindx < this.painters.length) && (!this.painters[pindx].snapid || this.painters[pindx].isSecondary()))
+            pindx++;
+         const subp = pindx < this.painters.length ? this.painters[pindx++] : null;
+         if (subp && (subp.snapid === snap.fObjectID))
+            objpainter = subp;
+         else
+            console.warn(`Mismatch in snapid between painter ${subp?.snapid} and primitive ${snap.fObjectID}`);
       }
 
       if (objpainter) {
@@ -160908,19 +161011,16 @@ class RPadPainter extends RObjectPainter {
             // sub-pad
             return objpainter.redrawPadSnap(snap).then(ppainter => {
                this.addObjectPainter(ppainter, lst, indx);
-               return this.drawNextSnap(lst, indx);
+               return this.drawNextSnap(lst, pindx, indx);
             });
          }
-
-         if (snap._typename === `${nsREX}TObjectDisplayItem`)
-            this.extractTObjectProp(snap);
 
          let promise;
 
          if (objpainter.updateObject(snap.fDrawable || snap.fObject || snap, snap.fOption || '', true))
             promise = objpainter.redraw();
 
-         return getPromise(promise).then(() => this.drawNextSnap(lst, indx)); // call next
+         return getPromise(promise).then(() => this.drawNextSnap(lst, pindx, indx)); // call next
       }
 
       if (snap._typename === `${nsREX}RPadDisplayItem`) { // sub-pad
@@ -160933,61 +161033,22 @@ class RPadPainter extends RObjectPainter {
 
          padpainter.createPadSvg();
 
-         if (snap.fPrimitives && snap.fPrimitives.length > 0)
+         if (snap.fPrimitives?.length)
             padpainter.addPadButtons();
 
          return padpainter.drawNextSnap(snap.fPrimitives).then(() => {
             padpainter.addPadInteractive();
-            return this.drawNextSnap(lst, indx);
+            return this.drawNextSnap(lst, pindx, indx);
          });
       }
 
       // will be used in addToPadPrimitives to assign style to sub-painters
-      this.next_rstyle = lst[indx].fStyle || this.rstyle;
-
-      if (snap._typename === `${nsREX}TObjectDisplayItem`) {
-         // identifier used in RObjectDrawable
-         const webSnapIds = { kNone: 0, kObject: 1, kColors: 4, kStyle: 5, kPalette: 6 };
-
-         if (snap.fKind === webSnapIds.kStyle) {
-            Object.assign(gStyle, snap.fObject);
-            return this.drawNextSnap(lst, indx);
-         }
-
-         if (snap.fKind === webSnapIds.kColors) {
-            const ListOfColors = [], arr = snap.fObject.arr;
-            for (let n = 0; n < arr.length; ++n) {
-               const name = arr[n].fString, p = name.indexOf('=');
-               if (p > 0)
-                  ListOfColors[parseInt(name.slice(0, p))] = convertColor(name.slice(p+1));
-            }
-
-            this.root_colors = ListOfColors;
-            // set global list of colors
-            // adoptRootColors(ListOfColors);
-            return this.drawNextSnap(lst, indx);
-         }
-
-         if (snap.fKind === webSnapIds.kPalette) {
-            const arr = snap.fObject.arr, palette = [];
-            for (let n = 0; n < arr.length; ++n)
-               palette[n] = arr[n].fString;
-            this.custom_palette = new ColorPalette(palette);
-            return this.drawNextSnap(lst, indx);
-         }
-
-         if (!this.getFramePainter()) {
-            return this.drawObject(this, { _typename: clTFrame, $dummy: true }, '')
-                       .then(() => this.drawNextSnap(lst, indx-1));
-         } // call same object again
-
-         this.extractTObjectProp(snap);
-      }
+      this.next_rstyle = snap.fStyle || this.rstyle;
 
       // TODO - fDrawable is v7, fObject from v6, maybe use same data member?
       return this.drawObject(this, snap.fDrawable || snap.fObject || snap, snap.fOption || '').then(objpainter => {
          this.addObjectPainter(objpainter, lst, indx);
-         return this.drawNextSnap(lst, indx);
+         return this.drawNextSnap(lst, pindx, indx);
       });
    }
 
@@ -161071,53 +161132,59 @@ class RPadPainter extends RObjectPainter {
          this.createPadSvg(true);
 
 
-      let isanyfound = false, isanyremove = false;
+      let missmatch = false, i = 0, k = 0;
 
-      // find and remove painters which no longer exists in the list
-      for (let k = 0; k < this.painters.length; ++k) {
-         let sub = this.painters[k];
-         if (sub.snapid === undefined) continue; // look only for painters with snapid
+      // match painters with new list of primitives
+      while (k < this.painters.length) {
+         const sub = this.painters[k];
 
-         snap.fPrimitives.forEach(prim => {
-            if (sub && (prim.fObjectID === sub.snapid)) {
-               sub = null; isanyfound = true;
-            }
-         });
+         // skip check secondary painters or painters without snapid
+         // also frame painter will be excluded here
+         if (!isStr(sub.snapid) || sub.isSecondary()) {
+            k++;
+            continue; // look only for painters with snapid
+         }
 
-         if (sub) {
-            // remove painter which does not found in the list of snaps
-            this.painters.splice(k--, 1);
-            sub.cleanup(); // cleanup such painter
-            isanyremove = true;
-            if (this.main_painter_ref === sub)
-               delete this.main_painter_ref;
+         if (i >= snap.fPrimitives.length)
+            break;
+
+         const prim = snap.fPrimitives[i];
+         // ignore primitives without snapid or which are not produce drawings
+         if (prim.fDummy || !prim.fObjectID || ((prim._typename === `${nsREX}TObjectDisplayItem`) && ((prim.fKind === webSnapIds.kStyle) || (prim.fKind === webSnapIds.kColors) || (prim.fKind === webSnapIds.kPalette) || (prim.fKind === webSnapIds.kFont)))) {
+            i++;
+            continue;
+         }
+
+         if (prim.fObjectID === sub.snapid) {
+            i++;
+            k++;
+         } else {
+            missmatch = true;
+            break;
          }
       }
 
-      if (isanyremove)
-         delete this.pads_cache;
+      let cnt = 1000;
+      // remove painters without primitives, limit number of checks
+      while (!missmatch && (k < this.painters.length) && (--cnt >= 0)) {
+         if (this.removePrimitive(k) === -111)
+            missmatch = true;
+      }
+      if (cnt < 0)
+         missmatch = true;
 
-      if (!isanyfound) {
-         let fp = this.getFramePainter();
-         // cannot preserve ROOT6 frame - it must be recreated
-         if (fp?.is_root6()) fp = null;
-         for (let k = 0; k < this.painters.length; ++k) {
-            if (fp !== this.painters[k])
-               this.painters[k].cleanup();
-         }
+      if (missmatch) {
+         delete this.pads_cache;
+         const old_painters = this.painters;
          this.painters = [];
+         old_painters.forEach(objp => objp.cleanup());
          delete this.main_painter_ref;
-         if (fp) {
-            this.painters.push(fp);
-            fp.cleanFrameDrawings();
-            fp.redraw(); // need to create all layers again
-         }
          if (isFunc(this.removePadButtons))
             this.removePadButtons();
          this.addPadButtons(true);
       }
 
-      return this.drawNextSnap(snap.fPrimitives).then(() => {
+      return this.drawNextSnap(snap.fPrimitives, missmatch ? undefined : 0).then(() => {
          this.addPadInteractive();
          if (getActivePad() === this)
             this.getCanvPainter()?.producePadEvent('padredraw', this);

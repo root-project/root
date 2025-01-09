@@ -1530,7 +1530,7 @@ class TPavePainter extends ObjectPainter {
          if (this.stored && !obj.fInit && (this.stored.fX1 === obj.fX1) &&
              (this.stored.fX2 === obj.fX2) && (this.stored.fY1 === obj.fY1) && (this.stored.fY2 === obj.fY2)) {
             // case when source object not initialized and original coordinates are not changed
-            // take over only modified NDC coordinate, used in tutorials/visualisation/graphics/canvas.C
+            // take over only modified NDC coordinate, used in tutorials/graphics/canvas.C
             if (this.stored.fX1NDC !== obj.fX1NDC) pave.fX1NDC = obj.fX1NDC;
             if (this.stored.fX2NDC !== obj.fX2NDC) pave.fX2NDC = obj.fX2NDC;
             if (this.stored.fY1NDC !== obj.fY1NDC) pave.fY1NDC = obj.fY1NDC;

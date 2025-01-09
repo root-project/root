@@ -102,7 +102,8 @@ class THistDrawOptions {
 
       const d = new DrawOptions(opt);
 
-      if (hdim === 1) this.decodeSumw2(histo, true);
+      if (hdim === 1)
+         this.decodeSumw2(histo, true);
 
       this.ndim = hdim || 1; // keep dimensions, used for now in GED
 
@@ -167,14 +168,32 @@ class THistDrawOptions {
       if (d.check('OPTSTAT', true)) this.optstat = d.partAsInt();
       if (d.check('OPTFIT', true)) this.optfit = d.partAsInt();
 
-      if ((this.optstat || this.optstat) && histo?.TestBit(kNoStats))
-         histo?.InvertBit(kNoStats);
+      if (this.optstat || this.optfit)
+         histo?.SetBit(kNoStats, false);
+
+      if (d.check('ALLBINS') && histo) {
+         histo.fXaxis.fFirst = 0;
+         histo.fXaxis.fLast = histo.fXaxis.fNbins + 1;
+         histo.fXaxis.SetBit(EAxisBits.kAxisRange);
+         if (this.ndim > 1) {
+            histo.fYaxis.fFirst = 0;
+            histo.fYaxis.fLast = histo.fYaxis.fNbins + 1;
+            histo.fYaxis.SetBit(EAxisBits.kAxisRange);
+         }
+         if (this.ndim > 2) {
+            histo.fZaxis.fFirst = 0;
+            histo.fZaxis.fLast = histo.fZaxis.fNbins + 1;
+            histo.fZaxis.SetBit(EAxisBits.kAxisRange);
+         }
+      }
 
       if (d.check('NOSTAT')) this.NoStat = true;
       if (d.check('STAT')) this.ForceStat = true;
 
-      if (d.check('NOTOOLTIP') && painter) painter.setTooltipAllowed(false);
-      if (d.check('TOOLTIP') && painter) painter.setTooltipAllowed(true);
+      if (d.check('NOTOOLTIP'))
+         painter?.setTooltipAllowed(false);
+      if (d.check('TOOLTIP'))
+         painter?.setTooltipAllowed(true);
 
       if (d.check('SYMLOGX', true)) this.SymlogX = d.partAsInt(0, 3);
       if (d.check('SYMLOGY', true)) this.SymlogY = d.partAsInt(0, 3);
@@ -1218,6 +1237,13 @@ class THistPainter extends ObjectPainter {
       this.nbinsx = histo.fXaxis.fNbins;
       this.xmin = histo.fXaxis.fXmin;
       this.xmax = histo.fXaxis.fXmax;
+      if (histo.fXaxis.TestBit(EAxisBits.kAxisRange) && (histo.fXaxis.fFirst !== histo.fXaxis.fLast)) {
+         if (histo.fXaxis.fFirst === 0)
+            this.xmin = histo.fXaxis.GetBinLowEdge(0);
+         if (histo.fXaxis.fLast === this.nbinsx + 1)
+            this.xmax = histo.fXaxis.GetBinLowEdge(this.nbinsx + 2);
+      }
+
       assignTAxisFuncs(histo.fXaxis);
 
       this.ymin = histo.fYaxis.fXmin;
@@ -1232,6 +1258,12 @@ class THistPainter extends ObjectPainter {
 
       if (ndim > 1) {
          this.nbinsy = histo.fYaxis.fNbins;
+         if (histo.fYaxis.TestBit(EAxisBits.kAxisRange) && (histo.fYaxis.fFirst !== histo.fYaxis.fLast)) {
+            if (histo.fYaxis.fFirst === 0)
+               this.ymin = histo.fYaxis.GetBinLowEdge(0);
+            if (histo.fYaxis.fLast === this.nbinsy + 1)
+               this.ymax = histo.fYaxis.GetBinLowEdge(this.nbinsy + 2);
+         }
          assignTAxisFuncs(histo.fYaxis);
 
          this.zmin = histo.fZaxis.fXmin;
@@ -1245,6 +1277,12 @@ class THistPainter extends ObjectPainter {
 
       if (ndim > 2) {
          this.nbinsz = histo.fZaxis.fNbins;
+         if (histo.fZaxis.TestBit(EAxisBits.kAxisRange) && (histo.fZaxis.fFirst !== histo.fZaxis.fLast)) {
+            if (histo.fZaxis.fFirst === 0)
+               this.zmin = histo.fZaxis.GetBinLowEdge(0);
+            if (histo.fZaxis.fLast === this.nbinsz + 1)
+               this.zmax = histo.fZaxis.GetBinLowEdge(this.nbinsz + 2);
+         }
          assignTAxisFuncs(histo.fZaxis);
        }
    }
@@ -1588,8 +1626,10 @@ class THistPainter extends ObjectPainter {
       let indx = 0, taxis = this.getAxis(axis);
       const nbin = this[`nbins${axis}`] ?? 0;
 
-      if (this.options.second_x && axis === 'x') axis = 'x2';
-      if (this.options.second_y && axis === 'y') axis = 'y2';
+      if (this.options.second_x && axis === 'x')
+         axis = 'x2';
+      if (this.options.second_y && axis === 'y')
+         axis = 'y2';
       const main = this.getFramePainter(),
             min = main ? main[`zoom_${axis}min`] : 0,
             max = main ? main[`zoom_${axis}max`] : 0;
@@ -1600,8 +1640,8 @@ class THistPainter extends ObjectPainter {
          else
             indx = taxis.FindBin(max, (add || 0) + 0.5);
          if (indx < 0)
-            indx = 0; else
-         if (indx > nbin)
+            indx = 0;
+         else if (indx > nbin)
             indx = nbin;
       } else
          indx = (side === 'left') ? 0 : nbin;
@@ -1610,15 +1650,22 @@ class THistPainter extends ObjectPainter {
       // TAxis object of histogram, where user range can be stored
       if (taxis) {
          if ((taxis.fFirst === taxis.fLast) || !taxis.TestBit(EAxisBits.kAxisRange) ||
-             ((taxis.fFirst <= 1) && (taxis.fLast >= nbin))) taxis = undefined;
+             ((taxis.fFirst === 1) && (taxis.fLast === nbin)))
+               taxis = null;
       }
 
       if (side === 'left') {
-         if (indx < 0) indx = 0;
-         if (taxis && (taxis.fFirst > 1) && (indx < taxis.fFirst)) indx = taxis.fFirst - 1;
+         indx = Math.max(indx, 0);
+         if (taxis && (taxis.fFirst > 1) && (indx < taxis.fFirst))
+            indx = taxis.fFirst - 1;
+         else if (taxis?.fFirst === 0) // showing underflow bin
+            indx = -1;
       } else {
-         if (indx > nbin) indx = nbin;
-         if (taxis && (taxis.fLast <= nbin) && (indx>taxis.fLast)) indx = taxis.fLast;
+         indx = Math.min(indx, nbin);
+         if (taxis && (taxis.fLast <= nbin) && (indx > taxis.fLast))
+            indx = taxis.fLast;
+         else if (taxis?.fLast === nbin + 1)
+            indx = nbin + 1;
       }
 
       return indx;
@@ -2338,8 +2385,8 @@ class THistPainter extends ObjectPainter {
 
       let i, j, x, y, binz, binarea;
 
-      res.grx = new Float32Array(res.i2+1);
-      res.gry = new Float32Array(res.j2+1);
+      res.grx = res.i1 < 0 ? {} : new Float32Array(res.i2 + 1);
+      res.gry = res.j1 < 0 ? {} : new Float32Array(res.j2 + 1);
 
       if ((typeof histo.fBarOffset === 'number') && (typeof histo.fBarWidth === 'number') &&
            (histo.fBarOffset || histo.fBarWidth !== 1000)) {
@@ -2361,8 +2408,8 @@ class THistPainter extends ObjectPainter {
 
       if (args.original) {
          res.original = true;
-         res.origx = new Float32Array(res.i2+1);
-         res.origy = new Float32Array(res.j2+1);
+         res.origx = res.i1 < 0 ? {} : new Float32Array(res.i2 + 1);
+         res.origy = res.j1 < 0 ? {} : new Float32Array(res.j2 + 1);
       }
 
       if (args.pixel_density)
