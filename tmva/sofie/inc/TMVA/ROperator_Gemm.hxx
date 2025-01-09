@@ -99,9 +99,22 @@ namespace SOFIE{
          std::vector<U> s_y;
          s_y.reserve(input[0].size());
          if (input[0].size() > 2 && input[1].size() == input[0].size()) {
-            // in case of dim > 2 first dimensions are equal to input ones
-            for (size_t i = 0; i < input[0].size()-2; i++)
+            // in case of dim > 2 first dimensions are equal to the input ones not
+            // equal to 1 (e.g. (1,2,3) * (2,3,4) -> (2,2,4))
+            for (size_t i = 0; i < input[0].size()-2; i++) {
+               Dim valueA = input[0][i];
+               Dim valueB = input[1][i];
+               if (valueA.GetVal() != valueB.GetVal()) {
+                  if (valueB.GetVal() == "1")
+                     s_y.push_back(input[0][i]);
+                  else if (valueA.GetVal() == "1")
+                     s_y.push_back(input[1][i]);
+                  else
+                     throw std::runtime_error("TMVA SOFIE Gemm Op - invalid input shapes " + valueA.GetVal() + " and "
+                        + valueB.GetVal());
+               }
                s_y.push_back(input[0][i]);
+            }
          }
 
          s_y.push_back(s_a[0]);
@@ -138,10 +151,10 @@ namespace SOFIE{
             fShapeA = ConvertShapeToDim(shapeA_int);
          }
          // case A is of dim1 we prepend a 1 but we need to remove later
-         bool appendOne = false;
+         bool prependOne = false;
          if (fShapeA.size() == 1) {
             fShapeA.insert(fShapeA.begin(), Dim(1));
-            appendOne = true;
+            prependOne = true;
          }
 
          if (model.IsDynamicTensor(fNB) || model.IsDimInputTensor(fNB)) {
@@ -152,12 +165,25 @@ namespace SOFIE{
             auto shapeB_int = model.GetTensorShape(fNB);
             fShapeB = ConvertShapeToDim(shapeB_int);
          }
+         // case B is dim1 we append a 1 but we need to remove later
+         bool appendOne = false;
+         if (fShapeB.size() == 1) {
+            fShapeB.insert(fShapeB.end(), Dim(1));
+            appendOne = true;
+         }
          // assume if not shape is 2 that extra values are 1.
-         // we need to implement MatMul case where we stack matrices (see numpy.matmul)
+         // implement also MatMul case where we stack matrices (see numpy.matmul)
+         if (fShapeA.size() != fShapeB.size()) {
+            // if different dimensions we prepend 1 values
+            if (fShapeA.size() < fShapeB.size()) {
+               fShapeA.insert(fShapeA.begin(), fShapeB.size()-fShapeA.size(), Dim(1));
+            } else if (fShapeB.size() < fShapeA.size()) {
+               fShapeB.insert(fShapeB.begin(), fShapeA.size()-fShapeB.size(), Dim(1));
+            }
+         }
 
-         if (fShapeA.size() != fShapeB.size())
-              throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensors have not compatible shapes. A " +
-               ConvertDynamicShapeToString(fShapeA) + " B " + ConvertDynamicShapeToString(fShapeB) );
+            //   throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensors have not compatible shapes. A " +
+            //    ConvertDynamicShapeToString(fShapeA) + " B " + ConvertDynamicShapeToString(fShapeB) );
 
          fShapeY = DynamicShapeInference({fShapeA, fShapeB})[0];
          std::vector<size_t> shapeY;
@@ -213,12 +239,18 @@ namespace SOFIE{
             }
          }
 
-         if (appendOne) {
-            // remove appended value of 1
+         // remove appended or prepended value of 1
+         if (prependOne) {
             if (fIsDynamic)
                fShapeY.erase(fShapeY.begin());
             else
                shapeY.erase(shapeY.begin());
+         }
+         if (appendOne) {
+            if (fIsDynamic)
+               fShapeY.erase(fShapeY.end()-1);
+            else
+               shapeY.erase(shapeY.end()-1);
          }
 
          if (!fIsDynamic)
@@ -281,6 +313,7 @@ namespace SOFIE{
          auto n = (fAttrTransB ? fShapeB[dimB-2].GetVal() : fShapeB[dimB-1].GetVal());
          auto k = (fAttrTransA ? fShapeA[dimA-2].GetVal() : fShapeA[dimA-1].GetVal());
          std::vector<Dim> sY = {fShapeY[dimY-2], fShapeY[dimY-1]};
+         // extra dimensions in case of stacked MatMul
          std::vector<Dim> sA;
          for (int64_t i = 0; i < dimY-2; i++) {
             sA.push_back(fShapeY[i]);

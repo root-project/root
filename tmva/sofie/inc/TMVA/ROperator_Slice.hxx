@@ -28,9 +28,9 @@ private:
    std::vector<size_t> fShapeOutput;   // output shape data
    // saved Start/End.Steps are corrected from initial ONNX for negative/default values
    // and are available for each axis
-   std::vector<size_t> fStart;         // starting values of slices
-   std::vector<size_t> fEnd;           // End values of slices
-   std::vector<size_t> fSteps;         // step values of slices
+   std::vector<IType> fStart;         // starting values of slices
+   std::vector<IType> fEnd;           // End values of slices
+   std::vector<IType> fSteps;         // step values of slices
 
    std::vector<std::vector<IType>> fAttributes; // attributes for the version <=10 case
 
@@ -45,19 +45,11 @@ public:
       fNOutput(UTILITY::Clean_name(nameOutput))
    {
     fNames.resize(4);
+    // axes and steps can be optional
     for (size_t i = 0; i < names.size(); ++i) {
         fNames[i] = UTILITY::Clean_name(names[i]);
     }
 
-    if (names.size() == 3) {
-      if (names[2] != "axes") { //steps provided instead of axis
-         fNames[3] = fNames[2];
-         fNames[2] = "";
-      }
-      else { // steps not provided
-         fNames[3] = "";
-      }
-    }
    }
    // ctor for versions < 10
    ROperator_Slice(std::string nameData, std::vector<IType> starts, std::vector<IType> ends, std::vector<IType> axes, std::string nameOutput)
@@ -99,41 +91,39 @@ public:
 
       std::vector<std::vector<IType>> itensors(4);
       if (fNames.size() > 0) {
-      // loop on the extra 2 or 3 or 4 inputs
-      for (size_t i = 0; i < fNames.size(); ++i) {
-        if (!fNames[i].empty()) {
-         // std::cout << " i " << i << " getting data for tensor " << fNames[i] << std::endl;
-         auto dptr = model.GetInitializedTensorData(fNames[i]);
-         auto tensor = static_cast<IType *>(dptr.get());
-         auto vec = model.GetTensorShape(fNames[i]);
-         assert(vec.size() == 1);
-         itensors[i] = std::vector<IType>(tensor, tensor + vec[0]);
-        }
-        else {
-         switch (i)
-         {
-         case 2: // missing axes
-            itensors[2] = std::vector<IType>(fShapeInput.size());
-            std::iota(itensors[2].begin(), itensors[2].end(), 0);
-            break;
-         case 3: // missing steps
-            itensors[3] = std::vector<IType>(itensors[0].size(), 1);
-         default:
-            break;
+         // loop on the extra 2 or 3 or 4 inputs
+         for (size_t i = 0; i < fNames.size(); ++i) {
+            if (!fNames[i].empty()) {
+               // std::cout << " i " << i << " getting data for tensor " << fNames[i] << std::endl;
+               auto dptr = model.GetInitializedTensorData(fNames[i]);
+               auto tensor = static_cast<IType *>(dptr.get());
+               auto vec = model.GetTensorShape(fNames[i]);
+               assert(vec.size() == 1);
+               itensors[i] = std::vector<IType>(tensor, tensor + vec[0]);
+            } else {
+               switch (i) {
+               case 2: // missing axes
+                  itensors[2] = std::vector<IType>(fShapeInput.size());
+                  std::iota(itensors[2].begin(), itensors[2].end(), 0);
+                  break;
+               case 3: // missing steps
+                  itensors[3] = std::vector<IType>(itensors[0].size(), 1);
+               default: break;
+               }
+            }
          }
-        }
-      }
       } else {
-          assert (fAttributes.size() > 1);
-          for (size_t i = 0; i < fAttributes.size(); i++) {
-              itensors[i] = fAttributes[i];
-          }
+         assert(fAttributes.size() > 1);
+         for (size_t i = 0; i < fAttributes.size(); i++) {
+            itensors[i] = fAttributes[i];
+         }
       }
       size_t dim = fShapeInput.size();
 
-      fSteps = std::vector<size_t>(dim, 1);
-      fStart = std::vector<size_t>(dim, 0);
-      fEnd = fShapeInput;
+      fSteps = std::vector<IType>(dim, 1);
+      fStart = std::vector<IType>(dim, 0);
+      fEnd = std::vector<IType>(dim, 0);
+      std::copy(fShapeInput.begin(), fShapeInput.end(), fEnd.begin());
 
       auto istart = itensors[0];
       auto iend = itensors[1];
@@ -143,40 +133,88 @@ public:
       // make tensor axis
       // if iaxes.size is =0 tensor axis is missing and use defaults
       if (iaxes.size() > 0) {
-        for (size_t i = 0; i < iaxes.size(); i++) {
+         for (size_t i = 0; i < iaxes.size(); i++) {
             // negative axes - they count from the back
             if (iaxes[i] < 0) iaxes[i] = dim + iaxes[i];
-            size_t jaxis = static_cast<size_t>(iaxes[i]);
-            assert(jaxis < dim);
-            size_t imax = fShapeInput[jaxis];
-            // find start/end/step for given axis
-            IType start = (istart[i] >= 0) ? istart[i] : imax + istart[i];
-            if (start < 0) start = 0;
-            if (start > static_cast<IType>(imax))
-               start = imax;
-            fStart[jaxis] = start;
-            IType ie = (iend[i] >= 0) ? iend[i] : imax + iend[i];
-            if (ie < 0)  ie = 0;
-            if (ie > static_cast<IType>(imax))
-               ie = imax;
-            fEnd[jaxis] = ie;
+            if (iaxes[i] < 0 || iaxes[i] >= static_cast<IType>(dim))
+               throw std::runtime_error("TMVA Slice Op : invalid axis value " + std::to_string(iaxes[i]) +
+                  " for  " + std::to_string(i));
 
-            if (isteps.size() > 0) {
-               if (isteps[i] < 0) {
-                  // to be done
-                  throw std::runtime_error("TMVA Slice Op : negative steps not supported");
-               }
-               fSteps[jaxis] = isteps[i];
-               assert(fSteps[jaxis] > 0 && fSteps[jaxis] < fShapeInput[jaxis]);
+            size_t iAxisDim = fShapeInput[iaxes[i]];
+            // find start/end/step for given axis
+            // check step size for clamping starting/end value
+            if (istart[i] < 0) istart[i] = iAxisDim + istart[i];
+            if (iend[i] < 0) iend[i] = iAxisDim + iend[i];
+            if (istart[i] < 0) istart[i] = 0;
+            if (isteps[i] > 0) {
+               if (istart[i] > static_cast<IType>(iAxisDim)) istart[i] = static_cast<IType>(iAxisDim);
+               if (iend[i] < 0) iend[i] = 0;
+               if (iend[i] > static_cast<IType>(iAxisDim)) iend[i] = static_cast<IType>(iAxisDim);
+            } else if (isteps[i] < 0) {
+               if (istart[i] > static_cast<IType>(iAxisDim)-1) istart[i] = static_cast<IType>(iAxisDim) -1;
+               if (iend[i] < -1) iend[i] = -1;
+               if (iend[i] > static_cast<IType>(iAxisDim)-1) iend[i] = static_cast<IType>(iAxisDim) -1;
+            } else {
+               throw std::runtime_error("TMVA Slice Op : invalid step value " + std::to_string(isteps[i]) +
+                  " for  " + std::to_string(i));
             }
-        }
+            fStart[iaxes[i]] = istart[i];
+            fEnd[iaxes[i]] = iend[i];
+            fSteps[iaxes[i]] = isteps[i];
+         }
       }
 
       fShapeOutput = ShapeInference({fShapeInput})[0];
-      model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
+      // case input is a constant tensor and of int64 type
+      if (model.IsInitializedTensor(fNData) && model.GetTensorType(fNData) == ETensorType::INT64) {
+         fIsOutputConstant = true;
+         auto inputData = static_cast<int64_t*>(model.GetInitializedTensorData(fNData).get());
+         size_t outputSize = ConvertShapeToLength(fShapeOutput);
+         std::vector<int64_t> outputData(outputSize);
+         std::vector<size_t> inputStride = UTILITY::ComputeStrideFromShape(fShapeInput);
+         // perform slice using a recursive function
+         auto sliceRecursive = [&](size_t iax, size_t & outputIdx, size_t & inputOffset) {
+            auto slice_impl = [&](size_t iax, size_t & outputIdx, size_t & inputOffset, auto & sliceRecImpl) {
+               // compute indices
+               std::vector<IType> indices;
+               for (IType i = fStart[iax]; (fSteps[iax] > 0) ? i < fEnd[iax] : i > fEnd[iax]; i += fSteps[iax] )
+                  indices.push_back(i);
+               if (iax == dim-1) { // last axis
+                  for (size_t i = 0; i < indices.size(); i++) {
+                     outputData[outputIdx] = inputData[inputOffset + indices[i]];
+                     outputIdx++;
+                  }
+                  return;
+               } else {
+                  for (size_t i = 0; i < indices.size(); i++) {
+                     size_t offset = inputOffset + inputStride[iax]*indices[i];
+                     sliceRecImpl(iax+1, outputIdx, offset,sliceRecImpl);
+                  }
+               }
+            };
+            slice_impl(iax, outputIdx, inputOffset,slice_impl);
+         };
+         size_t idx = 0;
+         size_t offset = 0;
+         sliceRecursive(0, idx, offset);
+
+         model.AddConstantTensor<int64_t>(fNOutput, fShapeOutput, outputData.data());
+         if (model.Verbose()) {
+            std::cout << "Slice: output is a constant tensor " << ConvertShapeToString(fShapeOutput) << " : "
+                     << ConvertValuesToString(outputData) << std::endl;
+         }
+      }
+      else {
+         model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
+         if (model.Verbose()) {
+            std::cout << "Slice ---> " << fNOutput << " " <<  ConvertShapeToString(fShapeOutput) << std::endl;
+         }
+      }
    }
 
    std::string Generate(std::string OpName){
+      if (fIsOutputConstant) return "";  //no op for constant tensors
+
       OpName = "op_" + OpName;
       if (fShapeInput.empty() || fShapeOutput.empty()){
          throw std::runtime_error("TMVA SOFIE Slice Op called to Generate without being initialized first");
