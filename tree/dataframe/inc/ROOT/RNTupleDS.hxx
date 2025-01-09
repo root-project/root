@@ -191,7 +191,6 @@ namespace RDF {
 namespace Experimental {
 RDataFrame FromRNTuple(std::string_view ntupleName, std::string_view fileName);
 RDataFrame FromRNTuple(std::string_view ntupleName, const std::vector<std::string> &fileNames);
-RDataFrame FromRNTuple(ROOT::RNTuple *ntuple);
 } // namespace Experimental
 } // namespace RDF
 
