@@ -1176,7 +1176,7 @@ shorthand that automatically generates tags 0 to N-1 (in this case 0 and 1).
       interfaces might still evolve and improve based on user feedback. We expect that some aspects of the related
       programming model will be streamlined in future versions.
 
-\note Currently, the results of a Snapshot(), Report() or Display() call cannot be varied (i.e. it is not possible to
+\note Currently, the results of a Snapshot() or Display() call cannot be varied (i.e. it is not possible to
       call \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" on them. These limitations will be lifted in future releases.
 
 See the Vary() method for more information and [this tutorial](https://root.cern/doc/master/df106__HiggsToFourLeptons_8C.html) 
