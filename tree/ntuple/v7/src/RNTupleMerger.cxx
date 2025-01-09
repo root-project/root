@@ -255,7 +255,7 @@ struct RChangeCompressionFunc {
       sealConf.fElement = &fDstColElement;
       sealConf.fPage = &page;
       sealConf.fBuffer = fBuffer;
-      sealConf.fCompressionSetting = fMergeOptions.fCompressionSettings;
+      sealConf.fCompressionSetting = fMergeOptions.fCompressionSettings.value();
       sealConf.fWriteChecksum = fSealedPage.GetHasChecksum();
       auto refSealedPage = RPageSink::SealPage(sealConf);
       fSealedPage = refSealedPage;
@@ -612,10 +612,11 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t
 
       // Each column range potentially has a distinct compression settings
       const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).fCompressionSettings.value();
-      const bool needsCompressionChange = colRangeCompressionSettings != mergeData.fMergeOpts.fCompressionSettings;
+      const bool needsCompressionChange =
+         colRangeCompressionSettings != mergeData.fMergeOpts.fCompressionSettings.value();
       if (needsCompressionChange && mergeData.fMergeOpts.fExtraVerbose)
          Info("RNTuple::Merge", "Column %s: changing source compression from %d to %d", column.fColumnName.c_str(),
-              colRangeCompressionSettings, mergeData.fMergeOpts.fCompressionSettings);
+              colRangeCompressionSettings, mergeData.fMergeOpts.fCompressionSettings.value());
 
       size_t pageBufferBaseIdx = sealedPageData.fBuffers.size();
       // If the column range already has the right compression we don't need to allocate any new buffer, so we don't
@@ -944,12 +945,12 @@ RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination, c
    RNTupleMergeOptions mergeOpts = mergeOptsIn;
    {
       const auto dstCompSettings = destination.GetWriteOptions().GetCompression();
-      if (mergeOpts.fCompressionSettings == kNTupleUnknownCompression) {
+      if (!mergeOpts.fCompressionSettings) {
          mergeOpts.fCompressionSettings = dstCompSettings;
-      } else if (mergeOpts.fCompressionSettings != dstCompSettings) {
+      } else if (*mergeOpts.fCompressionSettings != dstCompSettings) {
          return R__FAIL(std::string("The compression given to RNTupleMergeOptions is different from that of the "
                                     "sink! (opts: ") +
-                        std::to_string(mergeOpts.fCompressionSettings) + ", sink: " + std::to_string(dstCompSettings) +
+                        std::to_string(*mergeOpts.fCompressionSettings) + ", sink: " + std::to_string(dstCompSettings) +
                         ") This is currently unsupported.");
       }
    }

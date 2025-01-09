@@ -65,10 +65,10 @@ class RClusterPool;
 ///   1. there must be no space between the separators (i.e. `:` and `=`)
 ///   2. all string matching is case insensitive
 struct RNTupleMergeOptions {
-   /// If `fCompressionSettings == kNTupleUnknownCompression` (the default), the merger will not change the
+   /// If fCompressionSettings is empty (the default), the merger will not change the
    /// compression of any of its sources (fast merging). Otherwise, all sources will be converted to the specified
    /// compression algorithm and level.
-   int fCompressionSettings = kNTupleUnknownCompression;
+   std::optional<std::uint32_t> fCompressionSettings;
    /// Determines how the merging treats sources with different models (\see ENTupleMergingMode).
    ENTupleMergingMode fMergingMode = ENTupleMergingMode::kFilter;
    /// Determines how the Merge function behaves upon merging errors
