@@ -194,7 +194,7 @@ public:
 
    std::string GetActionName() { return "Count"; }
 
-   CountHelper MakeNew(void *newResult)
+   CountHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<ULong64_t> *>(newResult);
       return CountHelper(result, fCounts.size());
@@ -226,7 +226,13 @@ public:
 
    std::string GetActionName() { return "Report"; }
 
-   // TODO implement MakeNew. Requires some smartness in passing the appropriate previous node.
+   ReportHelper MakeNew(void *newResult, std::string_view variation = "nominal")
+   {
+      auto &&result = *static_cast<std::shared_ptr<RCutFlowReport> *>(newResult);
+      return ReportHelper{result,
+                          std::static_pointer_cast<RNode_t>(fNode->GetVariedFilter(std::string(variation))).get(),
+                          fReturnEmptyReport};
+   }
 };
 
 /// This helper fills TH1Ds for which no axes were specified by buffering the fill values to pick good axes limits.
@@ -330,7 +336,7 @@ public:
       return std::string(fResultHist->IsA()->GetName()) + "\\n" + std::string(fResultHist->GetName());
    }
 
-   BufferedFillHelper MakeNew(void *newResult)
+   BufferedFillHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<Hist_t> *>(newResult);
       result->Reset();
@@ -548,7 +554,7 @@ public:
    }
 
    template <typename H = HIST>
-   FillHelper MakeNew(void *newResult)
+   FillHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<H> *>(newResult);
       ResetIfPossible(result.get());
@@ -636,7 +642,7 @@ public:
 
    Result_t &PartialUpdate(unsigned int slot) { return *fGraphs[slot]; }
 
-   FillTGraphHelper MakeNew(void *newResult)
+   FillTGraphHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<TGraph> *>(newResult);
       result->Set(0);
@@ -742,7 +748,7 @@ public:
 
    Result_t &PartialUpdate(unsigned int slot) { return *fGraphAsymmErrors[slot]; }
 
-   FillTGraphAsymmErrorsHelper MakeNew(void *newResult)
+   FillTGraphAsymmErrorsHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<TGraphAsymmErrors> *>(newResult);
       result->Set(0);
@@ -808,7 +814,7 @@ public:
 
    std::string GetActionName() { return "Take"; }
 
-   TakeHelper MakeNew(void *newResult)
+   TakeHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<COLL> *>(newResult);
       result->clear();
@@ -861,7 +867,7 @@ public:
 
    std::string GetActionName() { return "Take"; }
 
-   TakeHelper MakeNew(void *newResult)
+   TakeHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<std::vector<T>> *>(newResult);
       result->clear();
@@ -906,7 +912,7 @@ public:
 
    std::string GetActionName() { return "Take"; }
 
-   TakeHelper MakeNew(void *newResult)
+   TakeHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<COLL> *>(newResult);
       result->clear();
@@ -958,7 +964,7 @@ public:
 
    std::string GetActionName() { return "Take"; }
 
-   TakeHelper MakeNew(void *newResult)
+   TakeHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<typename decltype(fColls)::value_type *>(newResult);
       result->clear();
@@ -1033,7 +1039,7 @@ public:
 
    std::string GetActionName() { return "Min"; }
 
-   MinHelper MakeNew(void *newResult)
+   MinHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<ResultType> *>(newResult);
       return MinHelper(result, fMins.size());
@@ -1083,7 +1089,7 @@ public:
 
    std::string GetActionName() { return "Max"; }
 
-   MaxHelper MakeNew(void *newResult)
+   MaxHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<ResultType> *>(newResult);
       return MaxHelper(result, fMaxs.size());
@@ -1166,7 +1172,7 @@ public:
 
    std::string GetActionName() { return "Sum"; }
 
-   SumHelper MakeNew(void *newResult)
+   SumHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<ResultType> *>(newResult);
       *result = NeutralElement(*result, -1);
@@ -1217,7 +1223,7 @@ public:
 
    std::string GetActionName() { return "Mean"; }
 
-   MeanHelper MakeNew(void *newResult)
+   MeanHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<double> *>(newResult);
       return MeanHelper(result, fSums.size());
@@ -1265,7 +1271,7 @@ public:
 
    std::string GetActionName() { return "StdDev"; }
 
-   StdDevHelper MakeNew(void *newResult)
+   StdDevHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<double> *>(newResult);
       return StdDevHelper(result, fCounts.size());
@@ -1624,7 +1630,7 @@ public:
     * also involves changing the name of the output file, otherwise the cloned
     * Snapshot would overwrite the same file.
     */
-   SnapshotHelper MakeNew(void *newName)
+   SnapshotHelper MakeNew(void *newName, std::string_view /*variation*/ = "nominal")
    {
       const std::string finalName = *reinterpret_cast<const std::string *>(newName);
       return SnapshotHelper{
@@ -1810,7 +1816,7 @@ public:
     * also involves changing the name of the output file, otherwise the cloned
     * Snapshot would overwrite the same file.
     */
-   SnapshotHelperMT MakeNew(void *newName)
+   SnapshotHelperMT MakeNew(void *newName, std::string_view /*variation*/ = "nominal")
    {
       const std::string finalName = *reinterpret_cast<const std::string *>(newName);
       return SnapshotHelperMT{fNSlots,           finalName,          fDirName, fTreeName,
@@ -1879,7 +1885,7 @@ public:
 
    std::string GetActionName() { return "Aggregate"; }
 
-   AggregateHelper MakeNew(void *newResult)
+   AggregateHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<U> *>(newResult);
       return AggregateHelper(fAggregate, fMerge, result, fAggregators.size());

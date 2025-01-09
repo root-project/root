@@ -168,14 +168,15 @@ public:
 
    std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&results) final
    {
-      const auto nVariations = GetVariations().size();
+      auto &&variations = GetVariations();
+      auto &&nVariations = variations.size();
       assert(results.size() == nVariations);
 
       std::vector<Helper> helpers;
       helpers.reserve(nVariations);
 
-      for (auto &&res : results)
-         helpers.emplace_back(fHelper.CallMakeNew(res));
+      for (decltype(nVariations) i{}; i < nVariations; i++)
+         helpers.emplace_back(fHelper.CallMakeNew(results[i], variations[i]));
 
       return std::unique_ptr<RActionBase>(new RVariedAction<Helper, PrevNode, ColumnTypes_t>{
          std::move(helpers), GetColumnNames(), fPrevNodePtr, GetColRegister()});
