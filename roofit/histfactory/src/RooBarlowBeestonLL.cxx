@@ -39,17 +39,8 @@
 
 #include <TMath.h>
 
-using std::runtime_error;
 
 ClassImp(RooStats::HistFactory::RooBarlowBeestonLL);
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-/// Default constructor. Should only be used by proof.
-RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL() : RooAbsReal("RooBarlowBeestonLL", "RooBarlowBeestonLL")
-{
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -240,7 +231,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
       if( ChannelBinDataMap.find(channel_name) == ChannelBinDataMap.end() ) {
    std::cout << "Error: channel with name: " << channel_name
         << " not found in BinDataMap" << std::endl;
-   throw runtime_error("BinDataMap");
+   throw std::runtime_error("BinDataMap");
       }
       double nData = ChannelBinDataMap[channel_name].at(bin_index);
       cache.nData = nData;
@@ -414,7 +405,7 @@ double RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
     if( _barlowCache.find( channel_name ) == _barlowCache.end() ) {
       std::cout << "Error: channel: " << channel_name
       << " not found in barlow Cache" << std::endl;
-      throw runtime_error("Channel not in barlow cache");
+      throw std::runtime_error("Channel not in barlow cache");
     }
 
     std::vector< BarlowCache >& channel_cache = _barlowCache[ channel_name ];
@@ -519,11 +510,11 @@ double RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
      std::cout << "Warning: Discriminant (B*B - 4AC) < 0" << std::endl;
      std::cout << "Warning: Taking B*B - 4*A*C == 0" << std::endl;
      discrim=0;
-     //throw runtime_error("BarlowBeestonLL::evaluate() : B*B - 4AC < 0");
+     //throw std::runtime_error("BarlowBeestonLL::evaluate() : B*B - 4AC < 0");
    }
    if( A <= 0 ) {
      std::cout << "Warning: A <= 0" << std::endl;
-     throw runtime_error("BarlowBeestonLL::evaluate() : A < 0");
+     throw std::runtime_error("BarlowBeestonLL::evaluate() : A < 0");
    }
 
    gamma_hat_hat = ( -1*B + std::sqrt(discrim) ) / (2*A);
@@ -538,7 +529,7 @@ double RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
       // Check for NAN
       if( TMath::IsNaN(gamma_hat_hat) ) {
    std::cout << "ERROR: gamma hat hat is NAN" << std::endl;
-   throw runtime_error("BarlowBeestonLL::evaluate() : gamma hat hat is NAN");
+   throw std::runtime_error("BarlowBeestonLL::evaluate() : gamma hat hat is NAN");
       }
 
       if( gamma_hat_hat <= 0 ) {

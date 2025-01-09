@@ -34,18 +34,6 @@ ClassImp(RooProfileLL);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-/// Should only be used by proof.
-
-RooProfileLL::RooProfileLL()
-   : RooAbsReal("RooProfileLL", "RooProfileLL"),
-     _obs("paramOfInterest", "Parameters of interest", this),
-     _par("nuisanceParam", "Nuisance parameters", this, false, false)
-{
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Constructor of profile likelihood given input likelihood nll w.r.t
 /// the given set of variables. The input log likelihood is minimized w.r.t
 /// to all other variables of the likelihood at each evaluation and the
