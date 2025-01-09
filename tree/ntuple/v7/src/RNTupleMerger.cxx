@@ -137,7 +137,7 @@ try {
       Warning("RNTuple::Merge", "Passed both options \"DefaultCompression\" and \"FirstSrcCompression\": "
                                 "only the latter will apply.");
    }
-   int compression = kNTupleUnknownCompression;
+   std::optional<std::uint32_t> compression;
    if (firstSrcComp) {
       // user passed -ff or -fk: use the same compression as the first RNTuple we find in the sources.
       // (do nothing here, the compression will be fetched below)
@@ -147,7 +147,7 @@ try {
    } else {
       // user passed no compression-related options: use default
       compression = RCompressionSetting::EDefaults::kUseGeneralPurpose;
-      Info("RNTuple::Merge", "Using the default compression: %d", compression);
+      Info("RNTuple::Merge", "Using the default compression: %u", *compression);
    }
 
    // The remaining entries are the input files
@@ -164,7 +164,7 @@ try {
       }
 
       auto source = RPageSourceFile::CreateFromAnchor(*anchor);
-      if (compression == kNTupleUnknownCompression) {
+      if (!compression) {
          // Get the compression of this RNTuple and use it as the output compression.
          // We currently assume all column ranges have the same compression, so we just peek at the first one.
          source->Attach();
@@ -196,8 +196,8 @@ try {
    }
 
    RNTupleWriteOptions writeOpts;
-   assert(compression != kNTupleUnknownCompression);
-   writeOpts.SetCompression(compression);
+   assert(compression);
+   writeOpts.SetCompression(*compression);
    auto destination = std::make_unique<RPageSinkFile>(ntupleName, *outFile, writeOpts);
 
    // If we already have an existing RNTuple, copy over its descriptor to support incremental merging
@@ -217,7 +217,7 @@ try {
    // Now merge
    RNTupleMerger merger;
    RNTupleMergeOptions mergerOpts;
-   mergerOpts.fCompressionSettings = compression;
+   mergerOpts.fCompressionSettings = *compression;
    mergerOpts.fExtraVerbose = extraVerbose;
    if (auto mergingMode = ParseOptionMergingMode(mergeInfo->fOptions)) {
       mergerOpts.fMergingMode = *mergingMode;
