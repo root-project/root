@@ -109,3 +109,6 @@ c1.cd()
 c1.Update()
 gStyle.SetStatColor(19)
 gBenchmark.Show('ntuple1')
+
+if (f1.IsOpen()):
+    f1.Close()

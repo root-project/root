@@ -2,7 +2,8 @@
 /// \ingroup tutorial_gui
 /// Example of using signal/slot in TCanvas/TPad to get feedback about processed events.
 /// Note that slots can be either functions or class methods.
-/// Compare this with tutorials $ROOTSYS/tutorials/hist/exec1.C and $ROOTSYS/tutorials/hist/exec2.C.
+/// Compare this with tutorials $ROOTSYS/tutorials/hist/hist057_TExec_th1.C and
+/// $ROOTSYS/tutorials/hist/hist058_TExec_th2.C.
 ///
 /// \macro_code
 ///

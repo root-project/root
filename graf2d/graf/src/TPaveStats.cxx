@@ -218,10 +218,9 @@ to `gStyle->SetOptFit(111)`
 The following example show how to remove and add a line in a statistics box.
 
 Begin_Macro(source)
-../../../tutorials/hist/statsEditing.C
+../../../tutorials/hist/hist036_TH2_labels.C
 End_Macro
 */
-
 
 const UInt_t kTakeStyle = BIT(17); //see TStyle::SetOptFit/Stat
 

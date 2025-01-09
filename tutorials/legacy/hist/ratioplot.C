@@ -7,6 +7,7 @@
 /// \macro_image
 /// \macro_code
 ///
+/// \date May 2021
 /// \author Olivier Couet
 
 void ratioplot()
