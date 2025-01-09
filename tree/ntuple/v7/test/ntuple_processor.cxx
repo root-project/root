@@ -69,7 +69,7 @@ TEST_F(RNTupleProcessorTest, BaseWithModel)
    auto model = RNTupleModel::Create();
    auto fldX = model->MakeField<float>("x");
 
-   auto proc = RNTupleProcessor::Create(ntuple, *model);
+   auto proc = RNTupleProcessor::Create(ntuple, std::move(model));
 
    int nEntries = 0;
 
@@ -97,7 +97,7 @@ TEST_F(RNTupleProcessorTest, BaseWithBareModel)
    auto model = RNTupleModel::CreateBare();
    model->MakeField<float>("x");
 
-   auto proc = RNTupleProcessor::Create(ntuple, *model);
+   auto proc = RNTupleProcessor::Create(ntuple, std::move(model));
 
    int nEntries = 0;
 

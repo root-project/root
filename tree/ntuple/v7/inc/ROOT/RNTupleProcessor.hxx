@@ -126,9 +126,11 @@ protected:
    // Maps the (qualified) field name to its corresponding field context.
    std::unordered_map<std::string, RFieldContext> fFieldContexts;
 
-   NTupleSize_t fNEntriesProcessed;  //< Total number of entries processed so far
-   std::size_t fCurrentNTupleNumber; //< Index of the currently open RNTuple
-   NTupleSize_t fCurrentEntryNumber; //< Current processor entry number
+   std::unique_ptr<RNTupleModel> fModel;
+
+   NTupleSize_t fNEntriesProcessed = 0;  //< Total number of entries processed so far
+   std::size_t fCurrentNTupleNumber = 0; //< Index of the currently open RNTuple
+   NTupleSize_t fCurrentEntryNumber = 0; //< Current processor entry number
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Creates and connects a concrete field to the current page source, based on its proto field.
@@ -142,8 +144,16 @@ protected:
    /// \return `entryNumber` if the entry was successfully loaded, `kInvalidNTupleIndex` otherwise.
    virtual NTupleSize_t LoadEntry(NTupleSize_t entryNumber) = 0;
 
-   RNTupleProcessor(const std::vector<RNTupleOpenSpec> &ntuples)
-      : fNTuples(ntuples), fNEntriesProcessed(0), fCurrentNTupleNumber(0), fCurrentEntryNumber(0)
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Create a new base RNTupleProcessor.
+   ///
+   /// \param[in] ntuples The input RNTuples for processing
+   /// \param[in] model The RNTupleModel representing the entries returned by the processor.
+   ///
+   /// \note Before processing, a model *must* exist. However, this is handled downstream by the RNTupleProcessor's
+   /// factory functions (CreateSingle, CreateChain and CreateJoin) and constructors.
+   RNTupleProcessor(const std::vector<RNTupleOpenSpec> &ntuples, std::unique_ptr<RNTupleModel> model)
+      : fNTuples(ntuples), fModel(std::move(model))
    {
    }
 
@@ -169,6 +179,8 @@ public:
    ///
    /// When only one RNTuple is present in the processor chain, the return value is equal to GetGlobalEntryNumber.
    NTupleSize_t GetCurrentEntryNumber() const { return fCurrentEntryNumber; }
+
+   const RNTupleModel &GetModel() const { return *fModel; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Returns a reference to the entry used by the processor.
@@ -235,8 +247,8 @@ public:
    RIterator begin() { return RIterator(*this, 0); }
    RIterator end() { return RIterator(*this, kInvalidNTupleIndex); }
 
-   static std::unique_ptr<RNTupleProcessor> Create(const RNTupleOpenSpec &ntuple);
-   static std::unique_ptr<RNTupleProcessor> Create(const RNTupleOpenSpec &ntuple, RNTupleModel &model);
+   static std::unique_ptr<RNTupleProcessor>
+   Create(const RNTupleOpenSpec &ntuple, std::unique_ptr<RNTupleModel> model = nullptr);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create a new RNTuple processor chain for vertical concatenation of RNTuples.
@@ -298,7 +310,7 @@ private:
    ///
    /// \param[in] ntuple The source specification (name and storage location) for the RNTuple to process.
    /// \param[in] model The model that specifies which fields should be read by the processor.
-   RNTupleSingleProcessor(const RNTupleOpenSpec &ntuple, RNTupleModel &model);
+   RNTupleSingleProcessor(const RNTupleOpenSpec &ntuple, std::unique_ptr<RNTupleModel> model);
 };
 
 // clang-format off
@@ -355,7 +367,6 @@ class RNTupleJoinProcessor : public RNTupleProcessor {
    friend class RNTupleProcessor;
 
 private:
-   std::unique_ptr<RNTupleModel> fJoinModel;
    std::vector<std::unique_ptr<Internal::RPageSource>> fAuxiliaryPageSources;
    /// Tokens representing the join fields present in the main RNTuple
    std::vector<REntry::RFieldToken> fJoinFieldTokens;
