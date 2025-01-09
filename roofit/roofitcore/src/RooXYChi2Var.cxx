@@ -116,7 +116,7 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char *title, RooAbsReal &func
       auto &extPdf = static_cast<RooAbsPdf const &>(func);
       if (!extPdf.canBeExtended()) {
          throw std::runtime_error(
-            Form("RooXYChi2Var::RooXYChi2Var(%s) ERROR: Input p.d.f. must be extendible", GetName()));
+            Form("RooXYChi2Var::RooXYChi2Var(%s) ERROR: Input p.d.f. must be extendable", GetName()));
       }
    }
 

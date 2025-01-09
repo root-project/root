@@ -492,7 +492,7 @@ auto flatMapToStdMap(FlatMap<Key_t, Val_t> const& flatMap) {
    return out;
 }
 
-// Internal variant of Slice(), Import(), and Link(), that take flat maps instad of std::map.
+// Internal variant of Slice(), Import(), and Link(), that take flat maps instead of std::map.
 RooCmdArg SliceFlatMap(FlatMap<RooCategory *, std::string> const &args);
 RooCmdArg ImportFlatMap(FlatMap<std::string, RooDataHist *> const &args);
 RooCmdArg ImportFlatMap(FlatMap<std::string, TH1 *> const &args);

@@ -21,7 +21,7 @@ channels with different numbers of bins in the histograms and no additional scri
 to make it so that the combined model can be sent to tools that generate pseudo-experiments with ToyMC.
 
 In problems with >20 bins and few systematics this can lead to a 15x speed increase and dramatic improvements
-in memory consuption.  For problems with many systematics (where the fit takes a substantial portion of the time)
+in memory consumption.  For problems with many systematics (where the fit takes a substantial portion of the time)
 the reduction in overhead can still lead to a ~4x speed increase.
 
 The hist2workspace executable now takes a flag to switch between the two forms:
