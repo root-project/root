@@ -34,9 +34,6 @@ RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const uns
    }
 }
 
-// outlined to pin virtual table
-RFilterBase::~RFilterBase() {}
-
 bool RFilterBase::HasName() const
 {
    return !fName.empty();
@@ -61,3 +58,6 @@ void RFilterBase::InitNode()
    if (!fName.empty()) // if this is a named filter we care about its report count
       ResetReportCount();
 }
+
+// outlined to pin virtual table
+ROOT::Detail::RDF::RFilterBase::~RFilterBase() = default;

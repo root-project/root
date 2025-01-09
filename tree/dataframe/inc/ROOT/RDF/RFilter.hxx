@@ -80,9 +80,14 @@ public:
       fLoopManager->Register(this);
    }
 
+   // Rule of five
+
    RFilter(const RFilter &) = delete;
    RFilter &operator=(const RFilter &) = delete;
-   ~RFilter() {
+   RFilter(RFilter &&) = delete;
+   RFilter &operator=(RFilter &&) = delete;
+   ~RFilter() final
+   {
       // must Deregister objects from the RLoopManager here, before the fPrevNode data member is destroyed:
       // otherwise if fPrevNode is the RLoopManager, it will be destroyed before the calls to Deregister happen.
       fLoopManager->Deregister(this);

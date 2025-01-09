@@ -205,7 +205,7 @@ public:
    RLoopManager &operator=(const RLoopManager &) = delete;
    RLoopManager(RLoopManager &&) = delete;
    RLoopManager &operator=(RLoopManager &&) = delete;
-   ~RLoopManager() = default;
+   ~RLoopManager() override;
 
    void JitDeclarations();
    void Jit();
