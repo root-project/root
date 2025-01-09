@@ -1,6 +1,8 @@
 name: 'ROOT Docs'
 
 on:
+  schedule:
+    - cron: '0 1 * * *'
 
   workflow_dispatch:
     inputs:
@@ -97,19 +99,7 @@ jobs:
         done
         cat "$CONFIGFILE" || true
 
-    # - name: Nightly build
-    #   if:   github.event_name == 'schedule'
-    #   run: ".github/workflows/root-ci-config/build_root.py
-    #               --buildtype      Release
-    #               --platform       ${{ env.PLATFORM }}
-    #               --incremental    false
-    #               --binaries       false
-    #               --base_ref       ${BASE_REF}
-    #               --repository     ${{ github.server_url }}/${{ github.repository }}
-    #         "
-
-    - name: Workflow dispatch
-      if:   github.event_name == 'workflow_dispatch'
+    - name: Build ROOT
       run: ".github/workflows/root-ci-config/build_root.py
                   --buildtype      Release
                   --platform       ${{ env.PLATFORM }}
