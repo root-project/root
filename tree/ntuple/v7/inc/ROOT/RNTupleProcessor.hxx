@@ -79,6 +79,9 @@ entry. Additional bookkeeping information can be obtained through the RNTuplePro
 // clang-format on
 class RNTupleProcessor {
    friend struct ROOT::Experimental::Internal::RNTupleProcessorEntryLoader; // for unit tests
+   friend class RNTupleSingleProcessor;
+   friend class RNTupleChainProcessor;
+   friend class RNTupleJoinProcessor;
 
 protected:
    // clang-format off
@@ -128,9 +131,9 @@ protected:
 
    std::unique_ptr<RNTupleModel> fModel;
 
-   NTupleSize_t fNEntriesProcessed = 0;  //< Total number of entries processed so far
-   std::size_t fCurrentNTupleNumber = 0; //< Index of the currently open RNTuple
-   NTupleSize_t fCurrentEntryNumber = 0; //< Current processor entry number
+   NTupleSize_t fNEntriesProcessed = 0;     //< Total number of entries processed so far
+   NTupleSize_t fCurrentEntryNumber = 0;    //< Current processor entry number
+   std::size_t fCurrentProcessorNumber = 0; //< Number of the currently open inner processor
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Creates and connects a concrete field to the current page source, based on its proto field.
@@ -143,6 +146,16 @@ protected:
    ///
    /// \return `entryNumber` if the entry was successfully loaded, `kInvalidNTupleIndex` otherwise.
    virtual NTupleSize_t LoadEntry(NTupleSize_t entryNumber) = 0;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Points processor entry's field values to those in the provided entry.
+   ///
+   /// \param[in] entry The entry whose field values to use.
+   virtual void SetEntryPointers(const REntry &entry) = 0;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get the total number of entries in this processor
+   virtual NTupleSize_t GetNEntries() = 0;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create a new base RNTupleProcessor.
@@ -166,19 +179,17 @@ public:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries processed so far.
-   ///
-   /// When only one RNTuple is present in the processor chain, the return value is equal to GetLocalEntryNumber.
    NTupleSize_t GetNEntriesProcessed() const { return fNEntriesProcessed; }
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the index to the RNTuple currently being processed, according to the sources specified upon creation.
-   std::size_t GetCurrentNTupleNumber() const { return fCurrentNTupleNumber; }
+   /// \brief Get the entry number that is currently being processed.
+   NTupleSize_t GetCurrentEntryNumber() const { return fCurrentEntryNumber; }
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the entry number local to the RNTuple that is currently being processed.
+   /// \brief Get the number of the inner processor currently being read.
    ///
-   /// When only one RNTuple is present in the processor chain, the return value is equal to GetGlobalEntryNumber.
-   NTupleSize_t GetCurrentEntryNumber() const { return fCurrentEntryNumber; }
+   /// This method is only relevant for the RNTupleChainProcessor. For the other processors, 0 is always returned.
+   std::size_t GetCurrentProcessorNumber() const { return fCurrentProcessorNumber; }
 
    const RNTupleModel &GetModel() const { return *fModel; }
 
@@ -186,7 +197,6 @@ public:
    /// \brief Returns a reference to the entry used by the processor.
    ///
    /// \return A reference to the entry used by the processor.
-   ///
    const REntry &GetEntry() const { return *fEntry; }
 
    // clang-format off
@@ -213,7 +223,7 @@ public:
          : fProcessor(processor), fCurrentEntryNumber(entryNumber)
       {
          // This constructor is called with kInvalidNTupleIndex for RNTupleProcessor::end(). In that case, we already
-         // know there is nothing to advance to.
+         // know there is nothing to load.
          if (fCurrentEntryNumber != kInvalidNTupleIndex) {
             fCurrentEntryNumber = fProcessor.LoadEntry(fCurrentEntryNumber);
          }
@@ -232,7 +242,7 @@ public:
          return obj;
       }
 
-      reference operator*() { return *fProcessor.fEntry; }
+      reference operator*() { return fProcessor.GetEntry(); }
 
       friend bool operator!=(const iterator &lh, const iterator &rh)
       {
@@ -260,6 +270,17 @@ public:
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
    CreateChain(const std::vector<RNTupleOpenSpec> &ntuples, std::unique_ptr<RNTupleModel> model = nullptr);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Create a new RNTuple processor chain for vertical concatenation of previously created processors.
+   ///
+   /// \param[in] innerProcessors A list with the processors to chain.
+   /// \param[in] model An RNTupleModel specifying which fields can be read by the processor. If no model is provided,
+   /// one will be created based on the descriptor of the first ntuple specified.
+   ///
+   /// \return A pointer to the newly created RNTupleProcessor.
+   static std::unique_ptr<RNTupleProcessor> CreateChain(std::vector<std::unique_ptr<RNTupleProcessor>> innerProcessors,
+                                                        std::unique_ptr<RNTupleModel> model = nullptr);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create a new RNTuple processor for horizontallly concatenated RNTuples.
@@ -300,10 +321,23 @@ private:
    void Connect();
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Load the entry identified by the provided entry number.
+   /// \brief Load the entry identified by the provided (global) entry number (i.e., considering all RNTuples in this
+   /// processor).
    ///
    /// \sa ROOT::Experimental::RNTupleProcessor::LoadEntry
    NTupleSize_t LoadEntry(NTupleSize_t entryNumber) final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \sa ROOT::Experimental::RNTupleProcessor::SetEntryPointers.
+   void SetEntryPointers(const REntry &entry) final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get the total number of entries in this processor.
+   NTupleSize_t GetNEntries() final
+   {
+      Connect();
+      return fPageSource->GetNEntries();
+   }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Constructs a new RNTupleProcessor for processing a single RNTuple.
@@ -324,6 +358,7 @@ class RNTupleChainProcessor : public RNTupleProcessor {
    friend class RNTupleProcessor;
 
 private:
+   std::vector<std::unique_ptr<RNTupleProcessor>> fInnerProcessors;
    std::vector<NTupleSize_t> fInnerNEntries;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -334,15 +369,14 @@ private:
    NTupleSize_t LoadEntry(NTupleSize_t entryNumber) final;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Connect an RNTuple for processing.
+   /// \sa ROOT::Experimental::RNTupleProcessor::SetEntryPointers.
+   void SetEntryPointers(const REntry &) final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get the total number of entries in this processor.
    ///
-   /// \param[in] ntupleNumber Which RNTuple (according to the initial specified order) to connect.
-   ///
-   /// \return The number of entries in the newly-connected RNTuple.
-   ///
-   /// Creates and attaches new page source for the specified RNTuple, and connects the fields that are known by
-   /// the processor to it.
-   NTupleSize_t ConnectNTuple(std::size_t ntupleNumber);
+   /// \note This requires opening all underlying RNTuples being processed in the chain, and could become costly!
+   NTupleSize_t GetNEntries() final;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Constructs a new RNTupleChainProcessor.
@@ -353,7 +387,8 @@ private:
    /// specified, it is created from the descriptor of the first RNTuple specified in `ntuples`.
    ///
    /// RNTuples are processed in the order in which they are specified.
-   RNTupleChainProcessor(const std::vector<RNTupleOpenSpec> &ntuples, std::unique_ptr<RNTupleModel> model = nullptr);
+   RNTupleChainProcessor(std::vector<std::unique_ptr<RNTupleProcessor>> processors,
+                         std::unique_ptr<RNTupleModel> model);
 };
 
 // clang-format off
@@ -379,6 +414,14 @@ private:
    ///
    /// \sa ROOT::Experimental::RNTupleProcessor::LoadEntry
    NTupleSize_t LoadEntry(NTupleSize_t entryNumber) final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \sa ROOT::Experimental::RNTupleProcessor::SetEntryPointers.
+   void SetEntryPointers(const REntry &) final;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get the total number of entries in this processor.
+   NTupleSize_t GetNEntries() final { return fPageSource->GetNEntries(); }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Constructs a new RNTupleJoinProcessor.
