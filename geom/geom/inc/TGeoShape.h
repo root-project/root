@@ -65,7 +65,7 @@ public:
    };
 
    enum EInside {
-      kInside  = 1,
+      kInside = 1,
       kOutside = 2,
       kSurface = 3
    };
@@ -190,7 +190,8 @@ TGeoShape::EInside Inside(const Double_t *point, Solid const *solid)
    // This function is expensive because it costs 2 * Contains + 1 * GetNormal calls
 
    // Compute the normal in the point, along a radial direction
-   constexpr TGeoShape::EInside kTable[4] = { TGeoShape::kOutside, TGeoShape::kSurface, TGeoShape::kSurface, TGeoShape::kInside };
+   constexpr TGeoShape::EInside kTable[4] = {TGeoShape::kOutside, TGeoShape::kSurface, TGeoShape::kSurface,
+                                             TGeoShape::kInside};
    constexpr double dir[3] = {1., 0., 0.};
    double pt_push[3], pt_pull[3], norm[3];
    solid->ComputeNormal(point, &dir[0], norm);
