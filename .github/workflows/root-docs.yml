@@ -134,6 +134,9 @@ jobs:
 
               pwd
               ls -l
+              echo ${DOXYGEN_OUTPUT_DIRECTORY}
+              ls -l ${DOXYGEN_OUTPUT_DIRECTORY}
+              ls -l ${DOXYGEN_OUTPUT_DIRECTORY}/html
 
               export HTML_DIR=${DOXYGEN_OUTPUT_DIRECTORY}/html
               if [ -d ${HTML_DIR} ]; then
@@ -185,4 +188,3 @@ jobs:
         ls -l
         aws s3 sync ${DOC_DIR} s3://root/doc-test/${WEB_DIR_NAME}
         aws s3 cp ${TAR_NAME}.gz s3://root/download-test/
-   
