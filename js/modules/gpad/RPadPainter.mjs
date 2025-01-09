@@ -7,7 +7,7 @@ import { selectActivePad, getActivePad } from '../base/ObjectPainter.mjs';
 import { registerForResize, saveFile } from '../gui/utils.mjs';
 import { BrowserLayout, getHPainter } from '../gui/display.mjs';
 import { createMenu, closeMenu } from '../gui/menu.mjs';
-import { PadButtonsHandler } from './TPadPainter.mjs';
+import { PadButtonsHandler, webSnapIds } from './TPadPainter.mjs';
 
 
 /**
@@ -128,6 +128,9 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary get pad height */
    getPadHeight() { return this._pad_height || 0; }
+
+   /** @summary get pad height */
+   getPadScale() { return this._pad_scale || 1; }
 
    /** @summary return pad log state x or y are allowed */
    getPadLog(name) { return false; }
@@ -957,7 +960,8 @@ class RPadPainter extends RObjectPainter {
          if (this.painters.indexOf(objpainter) < 0)
             this.painters.push(objpainter);
          objpainter.assignSnapId(lst[indx].fObjectID);
-         if (!objpainter.rstyle) objpainter.rstyle = lst[indx].fStyle || this.rstyle;
+         if (!objpainter.rstyle)
+            objpainter.rstyle = lst[indx].fStyle || this.rstyle;
       }
    }
 
@@ -1015,11 +1019,10 @@ class RPadPainter extends RObjectPainter {
    /** @summary Function called when drawing next snapshot from the list
      * @return {Promise} with pad painter when ready
      * @private */
-   async drawNextSnap(lst, indx) {
+   async drawNextSnap(lst, pindx, indx) {
       if (indx === undefined) {
          indx = -1;
          // flag used to prevent immediate pad redraw during first draw
-         this._snaps_map = {}; // to control how much snaps are drawn
          this._num_primitives = lst ? lst.length : 0;
          this._auto_color_cnt = 0;
       }
@@ -1029,27 +1032,68 @@ class RPadPainter extends RObjectPainter {
       ++indx; // change to the next snap
 
       if (!lst || indx >= lst.length) {
-         delete this._snaps_map;
          delete this._auto_color_cnt;
          return this;
       }
 
-      const snap = lst[indx],
-            snapid = snap.fObjectID;
-      let cnt = this._snaps_map[snapid],
-          objpainter = null;
-
-      if (cnt) cnt++; else cnt=1;
-      this._snaps_map[snapid] = cnt; // check how many objects with same snapid drawn, use them again
+      const snap = lst[indx];
 
       // empty object, no need to do something, take next
-      if (snap.fDummy) return this.drawNextSnap(lst, indx);
+      if (snap.fDummy)
+         return this.drawNextSnap(lst, pindx, indx);
 
-      // first appropriate painter for the object
-      // if same object drawn twice, two painters will exists
-      for (let k = 0; k < this.painters.length; ++k) {
-         if (this.painters[k].snapid === snapid)
-            if (--cnt === 0) { objpainter = this.painters[k]; break; }
+      if (snap._typename === `${nsREX}TObjectDisplayItem`) {
+         // identifier used in TObjectDrawable
+
+         if (snap.fKind === webSnapIds.kStyle) {
+            Object.assign(gStyle, snap.fObject);
+            return this.drawNextSnap(lst, pindx, indx);
+         }
+
+         if (snap.fKind === webSnapIds.kColors) {
+            const colors = [], arr = snap.fObject.arr;
+            for (let n = 0; n < arr.length; ++n) {
+               const name = arr[n].fString, p = name.indexOf('=');
+               if (p > 0)
+                  colors[parseInt(name.slice(0, p))] = convertColor(name.slice(p+1));
+            }
+
+            this.root_colors = colors;
+            // set global list of colors
+            // adoptRootColors(ListOfColors);
+            return this.drawNextSnap(lst, pindx, indx);
+         }
+
+         if (snap.fKind === webSnapIds.kPalette) {
+            const arr = snap.fObject.arr, palette = [];
+            for (let n = 0; n < arr.length; ++n)
+               palette[n] = arr[n].fString;
+            this.custom_palette = new ColorPalette(palette);
+            return this.drawNextSnap(lst, pindx, indx);
+         }
+
+         if (snap.fKind === webSnapIds.kFont)
+            return this.drawNextSnap(lst, pindx, indx);
+
+         if (!this.getFramePainter()) {
+            // draw dummy frame which is not provided by RCanvas
+            return this.drawObject(this, { _typename: clTFrame, $dummy: true }, '')
+                       .then(() => this.drawNextSnap(lst, pindx, indx - 1));
+         }
+
+         this.extractTObjectProp(snap);
+      }
+
+      // try to locate existing object painter, only allowed when redrawing pad snap
+      let objpainter = null;
+      if ((pindx !== undefined) && (pindx < this.painters.length)) {
+         while ((pindx < this.painters.length) && (!this.painters[pindx].snapid || this.painters[pindx].isSecondary()))
+            pindx++;
+         const subp = pindx < this.painters.length ? this.painters[pindx++] : null;
+         if (subp && (subp.snapid === snap.fObjectID))
+            objpainter = subp;
+         else
+            console.warn(`Mismatch in snapid between painter ${subp?.snapid} and primitive ${snap.fObjectID}`);
       }
 
       if (objpainter) {
@@ -1057,19 +1101,16 @@ class RPadPainter extends RObjectPainter {
             // sub-pad
             return objpainter.redrawPadSnap(snap).then(ppainter => {
                this.addObjectPainter(ppainter, lst, indx);
-               return this.drawNextSnap(lst, indx);
+               return this.drawNextSnap(lst, pindx, indx);
             });
          }
-
-         if (snap._typename === `${nsREX}TObjectDisplayItem`)
-            this.extractTObjectProp(snap);
 
          let promise;
 
          if (objpainter.updateObject(snap.fDrawable || snap.fObject || snap, snap.fOption || '', true))
             promise = objpainter.redraw();
 
-         return getPromise(promise).then(() => this.drawNextSnap(lst, indx)); // call next
+         return getPromise(promise).then(() => this.drawNextSnap(lst, pindx, indx)); // call next
       }
 
       if (snap._typename === `${nsREX}RPadDisplayItem`) { // sub-pad
@@ -1082,61 +1123,22 @@ class RPadPainter extends RObjectPainter {
 
          padpainter.createPadSvg();
 
-         if (snap.fPrimitives && snap.fPrimitives.length > 0)
+         if (snap.fPrimitives?.length)
             padpainter.addPadButtons();
 
          return padpainter.drawNextSnap(snap.fPrimitives).then(() => {
             padpainter.addPadInteractive();
-            return this.drawNextSnap(lst, indx);
+            return this.drawNextSnap(lst, pindx, indx);
          });
       }
 
       // will be used in addToPadPrimitives to assign style to sub-painters
-      this.next_rstyle = lst[indx].fStyle || this.rstyle;
-
-      if (snap._typename === `${nsREX}TObjectDisplayItem`) {
-         // identifier used in RObjectDrawable
-         const webSnapIds = { kNone: 0, kObject: 1, kColors: 4, kStyle: 5, kPalette: 6 };
-
-         if (snap.fKind === webSnapIds.kStyle) {
-            Object.assign(gStyle, snap.fObject);
-            return this.drawNextSnap(lst, indx);
-         }
-
-         if (snap.fKind === webSnapIds.kColors) {
-            const ListOfColors = [], arr = snap.fObject.arr;
-            for (let n = 0; n < arr.length; ++n) {
-               const name = arr[n].fString, p = name.indexOf('=');
-               if (p > 0)
-                  ListOfColors[parseInt(name.slice(0, p))] = convertColor(name.slice(p+1));
-            }
-
-            this.root_colors = ListOfColors;
-            // set global list of colors
-            // adoptRootColors(ListOfColors);
-            return this.drawNextSnap(lst, indx);
-         }
-
-         if (snap.fKind === webSnapIds.kPalette) {
-            const arr = snap.fObject.arr, palette = [];
-            for (let n = 0; n < arr.length; ++n)
-               palette[n] = arr[n].fString;
-            this.custom_palette = new ColorPalette(palette);
-            return this.drawNextSnap(lst, indx);
-         }
-
-         if (!this.getFramePainter()) {
-            return this.drawObject(this, { _typename: clTFrame, $dummy: true }, '')
-                       .then(() => this.drawNextSnap(lst, indx-1));
-         } // call same object again
-
-         this.extractTObjectProp(snap);
-      }
+      this.next_rstyle = snap.fStyle || this.rstyle;
 
       // TODO - fDrawable is v7, fObject from v6, maybe use same data member?
       return this.drawObject(this, snap.fDrawable || snap.fObject || snap, snap.fOption || '').then(objpainter => {
          this.addObjectPainter(objpainter, lst, indx);
-         return this.drawNextSnap(lst, indx);
+         return this.drawNextSnap(lst, pindx, indx);
       });
    }
 
@@ -1220,53 +1222,59 @@ class RPadPainter extends RObjectPainter {
          this.createPadSvg(true);
 
 
-      let isanyfound = false, isanyremove = false;
+      let missmatch = false, i = 0, k = 0;
 
-      // find and remove painters which no longer exists in the list
-      for (let k = 0; k < this.painters.length; ++k) {
-         let sub = this.painters[k];
-         if (sub.snapid === undefined) continue; // look only for painters with snapid
+      // match painters with new list of primitives
+      while (k < this.painters.length) {
+         const sub = this.painters[k];
 
-         snap.fPrimitives.forEach(prim => {
-            if (sub && (prim.fObjectID === sub.snapid)) {
-               sub = null; isanyfound = true;
-            }
-         });
+         // skip check secondary painters or painters without snapid
+         // also frame painter will be excluded here
+         if (!isStr(sub.snapid) || sub.isSecondary()) {
+            k++;
+            continue; // look only for painters with snapid
+         }
 
-         if (sub) {
-            // remove painter which does not found in the list of snaps
-            this.painters.splice(k--, 1);
-            sub.cleanup(); // cleanup such painter
-            isanyremove = true;
-            if (this.main_painter_ref === sub)
-               delete this.main_painter_ref;
+         if (i >= snap.fPrimitives.length)
+            break;
+
+         const prim = snap.fPrimitives[i];
+         // ignore primitives without snapid or which are not produce drawings
+         if (prim.fDummy || !prim.fObjectID || ((prim._typename === `${nsREX}TObjectDisplayItem`) && ((prim.fKind === webSnapIds.kStyle) || (prim.fKind === webSnapIds.kColors) || (prim.fKind === webSnapIds.kPalette) || (prim.fKind === webSnapIds.kFont)))) {
+            i++;
+            continue;
+         }
+
+         if (prim.fObjectID === sub.snapid) {
+            i++;
+            k++;
+         } else {
+            missmatch = true;
+            break;
          }
       }
 
-      if (isanyremove)
-         delete this.pads_cache;
+      let cnt = 1000;
+      // remove painters without primitives, limit number of checks
+      while (!missmatch && (k < this.painters.length) && (--cnt >= 0)) {
+         if (this.removePrimitive(k) === -111)
+            missmatch = true;
+      }
+      if (cnt < 0)
+         missmatch = true;
 
-      if (!isanyfound) {
-         let fp = this.getFramePainter();
-         // cannot preserve ROOT6 frame - it must be recreated
-         if (fp?.is_root6()) fp = null;
-         for (let k = 0; k < this.painters.length; ++k) {
-            if (fp !== this.painters[k])
-               this.painters[k].cleanup();
-         }
+      if (missmatch) {
+         delete this.pads_cache;
+         const old_painters = this.painters;
          this.painters = [];
+         old_painters.forEach(objp => objp.cleanup());
          delete this.main_painter_ref;
-         if (fp) {
-            this.painters.push(fp);
-            fp.cleanFrameDrawings();
-            fp.redraw(); // need to create all layers again
-         }
          if (isFunc(this.removePadButtons))
             this.removePadButtons();
          this.addPadButtons(true);
       }
 
-      return this.drawNextSnap(snap.fPrimitives).then(() => {
+      return this.drawNextSnap(snap.fPrimitives, missmatch ? undefined : 0).then(() => {
          this.addPadInteractive();
          if (getActivePad() === this)
             this.getCanvPainter()?.producePadEvent('padredraw', this);

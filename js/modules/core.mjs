@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '11/12/2024',
+version_date = '9/01/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1536,6 +1536,7 @@ function getMethods(typename, obj) {
       if (typeof m.TestBit === 'undefined') {
          m.TestBit = function(f) { return (this.fBits & f) !== 0; };
          m.InvertBit = function(f) { this.fBits = this.fBits ^ (f & 0xffffff); };
+         m.SetBit = function(f, on = true) { this.fBits = on ? this.fBits | f : this.fBits & ~f; };
       }
    }
 
@@ -1807,14 +1808,32 @@ function getMethods(typename, obj) {
 
    if (typename === clTAxis) {
       m.GetBinLowEdge = function(bin) {
-         if (this.fNbins <= 0) return 0;
-         if ((this.fXbins.length > 0) && (bin > 0) && (bin <= this.fNbins)) return this.fXbins[bin-1];
-         return this.fXmin + (bin-1) * (this.fXmax - this.fXmin) / this.fNbins;
+         if (this.fNbins <= 0)
+            return 0;
+         if (this.fXbins.length) {
+            if ((bin > 0) && (bin <= this.fNbins + 1))
+               return this.fXbins[bin - 1];
+            if (bin === 0) // underflow
+               return 2 * this.fXbins[0] - this.fXbins[1];
+            if (bin === this.fNbins + 2) // right border of overflow bin
+               return 2 * this.fXbins[bin - 2] - this.fXbins[bin - 3];
+            return 0;
+         }
+         return this.fXmin + (bin - 1) * (this.fXmax - this.fXmin) / this.fNbins;
       };
       m.GetBinCenter = function(bin) {
-         if (this.fNbins <= 0) return 0;
-         if ((this.fXbins.length > 0) && (bin > 0) && (bin < this.fNbins)) return (this.fXbins[bin-1] + this.fXbins[bin])/2;
-         return this.fXmin + (bin-0.5) * (this.fXmax - this.fXmin) / this.fNbins;
+         if (this.fNbins <= 0)
+            return 0;
+         if (this.fXbins.length) {
+            if ((bin > 0) && (bin <= this.fNbins))
+               return (this.fXbins[bin - 1] + this.fXbins[bin]) / 2;
+            if (bin === 0) // underflow
+               return 1.5 * this.fXbins[0] - 0.5 * this.fXbins[1];
+            if (bin === this.fNbins + 1) // overflow
+               return 1.5 * this.fXbins[bin - 1] - 0.5 * this.fXbins[bin - 2];
+            return 0;
+         }
+         return this.fXmin + (bin - 0.5) * (this.fXmax - this.fXmin) / this.fNbins;
       };
    }
 

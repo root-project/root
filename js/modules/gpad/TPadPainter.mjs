@@ -1770,61 +1770,47 @@ class TPadPainter extends ObjectPainter {
    /** @summary Function called when drawing next snapshot from the list
      * @return {Promise} for drawing of the snap
      * @private */
-   async drawNextSnap(lst, indx) {
+   async drawNextSnap(lst, pindx, indx) {
       if (indx === undefined) {
          indx = -1;
-         this._snaps_map = {}; // to control how much snaps are drawn
-         this._num_primitives = lst ? lst.length : 0;
+         this._num_primitives = lst?.length ?? 0;
       }
 
       ++indx; // change to the next snap
 
-      if (!lst || (indx >= lst.length)) {
-         delete this._snaps_map;
+      if (!lst || (indx >= lst.length))
          return this;
-      }
 
       const snap = lst[indx];
 
       // gStyle object
       if (snap.fKind === webSnapIds.kStyle) {
          this.processSnapStyle(snap);
-         return this.drawNextSnap(lst, indx); // call next
+         return this.drawNextSnap(lst, pindx, indx); // call next
       }
 
       // list of colors
       if (snap.fKind === webSnapIds.kColors) {
          this.processSnapColors(snap);
-         return this.drawNextSnap(lst, indx); // call next
+         return this.drawNextSnap(lst, pindx, indx); // call next
       }
 
-      const snapid = snap.fObjectID,
-            is_frame = (snap.fKind === webSnapIds.kObject) && (snap.fSnapshot?._typename === clTFrame);
-      let cnt = (this._snaps_map[snapid] || 0) + 1,
-          objpainter = null;
+      // try to locate existing object painter, only allowed when redrawing pad snap
+      let objpainter = null;
+      if ((pindx !== undefined) && (pindx < this.painters.length)) {
+         while ((pindx < this.painters.length) && (!this.painters[pindx].snapid || this.painters[pindx].isSecondary()))
+            pindx++;
 
-      this._snaps_map[snapid] = cnt; // check how many objects with same snapid drawn, use them again
-
-      // first appropriate painter for the object
-      // if same object drawn twice, two painters will exists
-      for (let k = 0; k < this.painters.length; ++k) {
-         const subp = this.painters[k];
-         if (subp.snapid === snapid) {
-            if (--cnt === 0) {
-               objpainter = subp;
-               break;
-            }
-         } else if (is_frame && !subp.snapid && (subp === this.getFramePainter())) {
-            // workaround for the case when frame created afterwards by server
-            subp.snapid = snapid;
+         const subp = pindx < this.painters.length ? this.painters[pindx++] : null;
+         if (subp && (subp.snapid === snap.fObjectID))
             objpainter = subp;
-            break;
-         }
+         else
+            console.warn(`Mismatch in snapid between painter ${subp?.snapid} and primitive ${snap.fObjectID} kind ${snap.fKind}`);
       }
 
       if (objpainter) {
          if (snap.fKind === webSnapIds.kSubPad) // sub-pad
-            return objpainter.redrawPadSnap(snap).then(() => this.drawNextSnap(lst, indx));
+            return objpainter.redrawPadSnap(snap).then(() => this.drawNextSnap(lst, pindx, indx));
 
          let promise;
 
@@ -1836,7 +1822,7 @@ class TPadPainter extends ObjectPainter {
                promise = objpainter.redraw();
          }
 
-         return getPromise(promise).then(() => this.drawNextSnap(lst, indx)); // call next
+         return getPromise(promise).then(() => this.drawNextSnap(lst, pindx, indx)); // call next
       }
 
       if (snap.fKind === webSnapIds.kSubPad) { // sub-pad
@@ -1866,7 +1852,7 @@ class TPadPainter extends ObjectPainter {
          // we select current pad, where all drawing is performed
          return padpainter.drawNextSnap(snap.fPrimitives).then(() => {
             padpainter.addPadInteractive();
-            return this.drawNextSnap(lst, indx); // call next
+            return this.drawNextSnap(lst, pindx, indx); // call next
          });
       }
 
@@ -1874,11 +1860,11 @@ class TPadPainter extends ObjectPainter {
       if (((snap.fKind === webSnapIds.kObject) || (snap.fKind === webSnapIds.kSVG)) && (snap.fOption !== '__ignore_drawing__')) {
          return this.drawObject(this, snap.fSnapshot, snap.fOption).then(objpainter => {
             this.addObjectPainter(objpainter, lst, indx);
-            return this.drawNextSnap(lst, indx);
+            return this.drawNextSnap(lst, pindx, indx);
          });
       }
 
-      return this.drawNextSnap(lst, indx);
+      return this.drawNextSnap(lst, pindx, indx);
    }
 
    /** @summary Return painter with specified id
@@ -1990,84 +1976,63 @@ class TPadPainter extends ObjectPainter {
        else
          this.createPadSvg(true);
 
-      const matchPrimitive = (painters, primitives, class_name, obj_name) => {
-         const painter = painters.find(p => {
-            if (p.snapid === undefined) return false;
-            if (!p.matchObjectType(class_name)) return false;
-            if (obj_name && (!p.getObject() || (p.getObject().fName !== obj_name))) return false;
-            return true;
-         });
-         if (!painter) return;
-         const primitive = primitives.find(pr => {
-            if ((pr.fKind !== 1) || !pr.fSnapshot || (pr.fSnapshot._typename !== class_name)) return false;
-            if (obj_name && (pr.fSnapshot.fName !== obj_name)) return false;
-            return true;
-         });
-         if (!primitive) return;
+      let missmatch = false;
 
-         // force painter to use new object id
-         if (painter.snapid !== primitive.fObjectID)
-            painter.snapid = primitive.fObjectID;
-      };
-
-      // check if frame or title was recreated, we could reassign handlers for them directly
-      // while this is temporary objects, which can be recreated very often, try to catch such situation ourself
+      // match painters with new list of primitives
       if (!snap.fWithoutPrimitives) {
-         matchPrimitive(this.painters, snap.fPrimitives, clTFrame);
-         matchPrimitive(this.painters, snap.fPrimitives, clTPaveText, kTitle);
-      }
-
-      let isanyfound = false, isanyremove = false;
-
-      // find and remove painters which no longer exists in the list
-      if (!snap.fWithoutPrimitives) {
-         for (let k = 0; k < this.painters.length; ++k) {
+         let i = 0, k = 0;
+         while (k < this.painters.length) {
             const sub = this.painters[k];
 
-            // skip secondary painters or painters without snapid
-            if (!isStr(sub.snapid) || sub.isSecondary())
+            // skip check secondary painters or painters without snapid
+            if (!isStr(sub.snapid) || sub.isSecondary()) {
+               k++;
                continue; // look only for painters with snapid
+            }
 
-            const prim = snap.fPrimitives.find(prim => ((prim.fObjectID === sub.snapid) && !prim.$checked));
-            if (prim) {
-               isanyfound = true;
-               prim.$checked = true;
+            if (i >= snap.fPrimitives.length)
+               break;
+
+            const prim = snap.fPrimitives[i];
+
+            // only real objects drawing checked for existing painters
+            if ((prim.fKind !== webSnapIds.kSubPad) && (prim.fKind !== webSnapIds.kObject) && (prim.fKind !== webSnapIds.kSVG)) {
+               i++;
+               continue; // look only for primitives of real objects
+            }
+
+            if (prim.fObjectID === sub.snapid) {
+               i++;
+               k++;
             } else {
-               // remove painter which does not found in the list of snaps
-               k = this.removePrimitive(k); // index modified
-               isanyremove = true;
-               if (k === -111) {
-                  // main painter is removed - do full cleanup and redraw
-                  isanyfound = false;
-                  break;
-               }
+               missmatch = true;
+               break;
             }
          }
+
+         let cnt = 1000;
+         // remove painters without primitives, limit number of checks
+         while (!missmatch && (k < this.painters.length) && (--cnt >= 0)) {
+            if (this.removePrimitive(k) === -111)
+               missmatch = true;
+         }
+         if (cnt < 0)
+            missmatch = true;
       }
 
-      if (isanyremove)
+      if (missmatch) {
          delete this.pads_cache;
 
-      if (!isanyfound && !snap.fWithoutPrimitives) {
-         // TODO: maybe just remove frame painter?
-         const fp = this.getFramePainter(),
-               old_painters = this.painters;
+         const old_painters = this.painters;
          this.painters = [];
-         old_painters.forEach(objp => {
-            if (fp !== objp) objp.cleanup();
-         });
+         old_painters.forEach(objp => objp.cleanup());
          delete this.main_painter_ref;
-         if (fp) {
-            this.painters.push(fp);
-            fp.cleanFrameDrawings();
-            fp.redraw();
-         }
          if (isFunc(this.removePadButtons))
             this.removePadButtons();
          this.addPadButtons(true);
       }
 
-      return this.drawNextSnap(snap.fPrimitives).then(() => {
+      return this.drawNextSnap(snap.fPrimitives, missmatch ? undefined : 0).then(() => {
          this.addPadInteractive();
          if (getActivePad() === this)
             this.getCanvPainter()?.producePadEvent('padredraw', this);
@@ -2679,4 +2644,4 @@ class TPadPainter extends ObjectPainter {
 
 } // class TPadPainter
 
-export { TPadPainter, PadButtonsHandler, clTButton, kIsGrayscale, createWebObjectOptions };
+export { TPadPainter, PadButtonsHandler, clTButton, kIsGrayscale, createWebObjectOptions, webSnapIds };
