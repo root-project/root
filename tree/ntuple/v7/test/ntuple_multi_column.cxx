@@ -2,7 +2,6 @@
 
 TEST(RNTuple, MultiColumnRepresentationSimple)
 {
-   using ROOT::Experimental::kNTupleUnknownCompression;
    FileRaii fileGuard("test_ntuple_multi_column_representation_simple.root");
 
    {
