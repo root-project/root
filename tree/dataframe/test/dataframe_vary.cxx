@@ -1068,7 +1068,7 @@ struct MyCounter : public ROOT::Detail::RDF::RActionImpl<MyCounter> {
 
    std::string GetActionName() const { return "MyCounter"; }
 
-   MyCounter MakeNew(void *newResult)
+   MyCounter MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<int> *>(newResult);
       return MyCounter(result, fPerThreadResults.size());
@@ -1453,21 +1453,17 @@ TEST_P(RDFVary, VaryReduce)
    EXPECT_EQ(hs["x:1"], 55);
 }
 
-// Varying Reports is not implemented yet, tracked by https://github.com/root-project/root/issues/10551
 TEST_P(RDFVary, VaryReport)
 {
-   auto h = ROOT::RDataFrame(10)
-               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
-               .Filter([](int x) { return x > 5; }, {"x"}, "before")
-               .Vary(
-                  "x",
-                  [](int x) {
-                     return ROOT::RVecI{x - 1, x + 1};
-                  },
-                  {"x"}, 2)
-               .Filter([](int x) { return x > 7; }, {"x"}, "after")
-               .Report();
-   auto &report = *h;
+   auto rep = ROOT::RDataFrame(10)
+                 .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+                 .Filter([](int x) { return x > 5; }, {"x"}, "before")
+                 .Vary("x", [](int x) { return ROOT::RVecI{x - 1, x + 1}; }, {"x"}, {"down", "up"})
+                 .Filter([](int x) { return x > 7; }, {"x"}, "after")
+                 .Report();
+
+   auto reps = VariationsFor(rep);
+   auto &&report = reps["nominal"];
 
    EXPECT_EQ(report["before"].GetAll(), 10);
    EXPECT_FLOAT_EQ(report["before"].GetEff(), 40.);
@@ -1475,14 +1471,24 @@ TEST_P(RDFVary, VaryReport)
    EXPECT_EQ(report["after"].GetAll(), 4);
    EXPECT_FLOAT_EQ(report["after"].GetEff(), 50.);
    EXPECT_EQ(report["after"].GetPass(), 2);
-   EXPECT_THROW(
-      try { VariationsFor(h); } catch (const std::logic_error &err) {
-         const auto msg = "The MakeNew method is not implemented for this action helper (Report). "
-                          "Cannot Vary its result.";
-         EXPECT_STREQ(err.what(), msg);
-         throw;
-      },
-      std::logic_error);
+
+   auto &&report_up = reps["x:up"];
+
+   EXPECT_EQ(report_up["before"].GetAll(), 10);
+   EXPECT_FLOAT_EQ(report_up["before"].GetEff(), 40.);
+   EXPECT_EQ(report_up["before"].GetPass(), 4);
+   EXPECT_EQ(report_up["after"].GetAll(), 4);
+   EXPECT_FLOAT_EQ(report_up["after"].GetEff(), 75.);
+   EXPECT_EQ(report_up["after"].GetPass(), 3);
+
+   auto &&report_down = reps["x:down"];
+
+   EXPECT_EQ(report_down["before"].GetAll(), 10);
+   EXPECT_FLOAT_EQ(report_down["before"].GetEff(), 40.);
+   EXPECT_EQ(report_down["before"].GetPass(), 4);
+   EXPECT_EQ(report_down["after"].GetAll(), 4);
+   EXPECT_FLOAT_EQ(report_down["after"].GetEff(), 25.);
+   EXPECT_EQ(report_down["after"].GetPass(), 1);
 }
 
 TEST_P(RDFVary, VaryStdDev)
@@ -1630,7 +1636,7 @@ struct HelperWithCallback : ROOT::Detail::RDF::RActionImpl<HelperWithCallback> {
       return callback;
    }
 
-   HelperWithCallback MakeNew(void *newResult)
+   HelperWithCallback MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto newHelper = HelperWithCallback();
       newHelper.fResult = *static_cast<std::shared_ptr<Result_t> *>(newResult);
