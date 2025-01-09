@@ -72,7 +72,6 @@
 #pragma link C++ class RooStats::NumEventsTestStat+;
 #pragma link C++ class RooStats::SimpleLikelihoodRatioTestStat+;
 #pragma link C++ class RooStats::MaxLikelihoodEstimateTestStat+;
-#pragma link C++ class RooStats::MinNLLTestStat+;
 
 #pragma link C++ class RooStats::SamplingDistribution+;
 #pragma link C++ class RooStats::NeymanConstruction+;
