@@ -117,9 +117,6 @@ enum ENTupleStructure : std::uint16_t { kInvalid, kLeaf, kCollection, kRecord, k
 using NTupleSize_t = std::uint64_t;
 constexpr NTupleSize_t kInvalidNTupleIndex = std::uint64_t(-1);
 
-/// Regular, known compression settings have the form algorithm * 100 + level, e.g. 101, 505, ...
-constexpr int kNTupleUnknownCompression = -1;
-
 /// Distriniguishes elements of the same type within a descriptor, e.g. different fields
 using DescriptorId_t = std::uint64_t;
 constexpr DescriptorId_t kInvalidDescriptorId = std::uint64_t(-1);

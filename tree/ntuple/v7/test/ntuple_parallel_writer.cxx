@@ -159,7 +159,6 @@ TEST(RNTupleParallelWriter, Staged)
 TEST(RNTupleParallelWriter, StagedMultiColumn)
 {
    // Based on MultiColumnRepresentationSimple from ntuple_multi_column.cxx
-   using ROOT::Experimental::kNTupleUnknownCompression;
    FileRaii fileGuard("test_ntuple_parallel_staged_multi_column.root");
 
    {
