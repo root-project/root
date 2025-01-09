@@ -59,7 +59,7 @@ public:
    // clang-format on
 
 protected:
-   int fCompression{RCompressionSetting::EDefaults::kUseGeneralPurpose};
+   std::uint32_t fCompression{RCompressionSetting::EDefaults::kUseGeneralPurpose};
    /// Approximation of the target compressed cluster size
    std::size_t fApproxZippedClusterSize = 128 * 1024 * 1024;
    /// Memory limit for committing a cluster: with very high compression ratio, we need a limit
@@ -103,8 +103,8 @@ public:
    virtual ~RNTupleWriteOptions() = default;
    virtual std::unique_ptr<RNTupleWriteOptions> Clone() const;
 
-   int GetCompression() const { return fCompression; }
-   void SetCompression(int val) { fCompression = val; }
+   std::uint32_t GetCompression() const { return fCompression; }
+   void SetCompression(std::uint32_t val) { fCompression = val; }
    void SetCompression(RCompressionSetting::EAlgorithm::EValues algorithm, int compressionLevel)
    {
       fCompression = CompressionSettings(algorithm, compressionLevel);
