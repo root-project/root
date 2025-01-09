@@ -1305,3 +1305,6 @@ ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, const std::vec
                                "\" in file \"" + inFile->GetName() + "\".");
 }
 #endif
+
+// outlined to pin virtual table
+ROOT::Detail::RDF::RLoopManager::~RLoopManager() = default;

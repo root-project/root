@@ -26,4 +26,4 @@ void RRangeBase::InitNode()
 }
 
 // outlined to pin virtual table
-RRangeBase::~RRangeBase() { }
+ROOT::Detail::RDF::RRangeBase::~RRangeBase() = default;
