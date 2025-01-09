@@ -127,7 +127,7 @@ jobs:
       shell: bash
       run: |
               source ROOT-CI/build/bin/thisroot.sh
-              export DOXYGEN_OUTPUT_DIRECTORY=${DOC_DIR}_TMP
+              export DOXYGEN_OUTPUT_DIRECTORY=${DOC_DIR}
 
               cd ROOT-CI/src/documentation/doxygen_s3
               make -j `nproc --all`
@@ -147,6 +147,11 @@ jobs:
       working-directory: ${{ env.DOC_LOCATION }}
       shell: bash
       run: |
+        pwd
+        ls -l
+        echo ${DOC_DIR}
+        echo ${TAR_NAME}
+        ls -l ${DOC_DIR}
         tar cf ${TAR_NAME} ${DOC_DIR}
         gzip ${TAR_NAME}
 
