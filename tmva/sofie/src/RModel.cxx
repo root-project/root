@@ -408,44 +408,64 @@ void RModel::InitializeSubGraph(std::shared_ptr<RModel>  graph) {
 
 }
 
-void RModel::GenerateInitializedTensorInfo() {
-    if (!fInitializedTensors.empty())
-      fGC += "// initialized tensors\n";
-    for (auto& i: fInitializedTensors) {
+// Function to generate the code for declaring and initializing constant tensors
+// This is for tensors which are not part of weight files and can be created from the Constant operator
+template <typename T>
+std::string GenerateConstantTensorCode(const std::pair<std::string, InitializedTensor> &t)
+{
+   std::stringstream strs;
+   std::string type = ConvertTypeToString(t.second.type());
+   size_t length = ConvertShapeToLength(t.second.shape());
+   // avoid using stack sizes for constant tensors to reduce compilation time
+   bool allocateOnStack = (length > 100) ? false : true;
 
-         size_t length = ConvertShapeToLength(i.second.shape());
-            // in case we are not using weight files or for tensor created from Constant operator
-         if (!fUseWeightFile || i.second.IsConstantTensor() ) {
-            //std::cout << "write tensor " << i.first << std::endl;
-            std::stringstream strs;
-            if (i.second.type() == ETensorType::FLOAT) {
-               strs << "float tensor_" << i.first << "[" << length << "] = {";
-               float const *data = i.second.data<float>();
-               for (size_t idx = 0; idx < length; idx++) {
-                  strs << std::setprecision(std::numeric_limits<float>::max_digits10) << data[idx];
-                  if (idx < length-1) strs << ", ";
-               }
-               strs << "};\n";
-            }
-            else if (i.second.type() == ETensorType::INT64) {
-               strs << "int64_t tensor_" << i.first << "[" << length << "] = {";
-               int64_t const *data = i.second.data<int64_t>();
-               for (size_t idx = 0; idx < length; idx++) {
-                  strs << data[idx];
-                  if (idx < length-1) strs << ", ";
-               }
-               strs << "};\n";
-            }
-            fGC += strs.str();
-         }
+   const T *data = t.second.data<T>();
+
+   // and check if all values are the same
+   bool sameData = false;
+   // for non stack allocation check if data are the same
+   if (!allocateOnStack && length > 1) {
+      size_t idx = 1;
+      do {
+         sameData = (data[idx] == data[idx - 1]);
+         idx++;
+      } while (sameData && idx < length);
+   }
+   if (allocateOnStack) {
+      strs << type << " tensor_" << t.first << "[" << length << "] = " << ConvertValuesToString(length, data) << ";\n";
+   } else {
+      strs << "std::vector<" << type << "> fTensor_" << t.first << " = ";
+      if (sameData)
+         strs << "std::vector<" << type << ">(" << length << ", " << ConvertValToString(data[0]) << ");\n";
+      else {
+         strs << ConvertValuesToString(length, data) << ";\n";
+      }
+      strs << "const " << type << " * tensor_" + t.first + " = fTensor_" + t.first + ".data();\n";
+   }
+   return strs.str();
+}
+
+void RModel::GenerateInitializedTensorInfo()
+{
+   if (!fInitializedTensors.empty())
+      fGC += "// initialized tensors\n";
+
+   for (auto &i : fInitializedTensors) {
+      if (!fUseWeightFile || i.second.IsConstantTensor()) {
+         if (i.second.type() == ETensorType::FLOAT)
+            fGC += GenerateConstantTensorCode<float>(i);
+         else if (i.second.type() == ETensorType::INT64)
+            fGC += GenerateConstantTensorCode<int64_t>(i);
+
+      } else {
          // case of tensors which are read from a file
-         else {
-            if (i.second.type() == ETensorType::FLOAT) {
-               fGC += "std::vector<float> fTensor_" + i.first + " = std::vector<float>(" + std::to_string(length) + ");\n";
-               fGC += "float * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
-            }
+         size_t length = ConvertShapeToLength(i.second.shape());
+         if (i.second.type() == ETensorType::FLOAT) {
+            fGC += "std::vector<float> fTensor_" + i.first + " = std::vector<float>(" + std::to_string(length) + ");\n";
+            fGC += "float * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
          }
-    }
+      }
+   }
 }
 
 void RModel::GenerateIntermediateTensorInfo() {

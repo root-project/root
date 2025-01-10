@@ -15,6 +15,7 @@
 #include <regex>
 #include <sstream>
 #include <iostream>
+#include <iomanip>
 #include <cassert>
 
 namespace TMVA{
@@ -111,16 +112,28 @@ std::string ConvertDynamicShapeToString(std::vector<Dim> shape);
 
 std::string ConvertDynamicShapeToLength(std::vector<Dim> shape);
 
-// convert list of values in a string
+template<class T>
+std::string ConvertValToString(T value) {
+   std::stringstream ret;
+   if (std::is_floating_point_v<T>)
+      ret << std::setprecision(std::numeric_limits<T>::max_digits10);
+   ret << value;
+   return ret.str();
+}
+
+
+// convert list of values in a string taking into account the precision
 template<class T>
 std::string ConvertValuesToString(size_t n, const T * data) {
    std::stringstream ret;
-   ret << "[ ";
+   ret << "{ ";
    for (size_t i = 0; i < n; i++) {
+      if (std::is_floating_point_v<T>)
+         ret << std::setprecision(std::numeric_limits<T>::max_digits10);
       ret << data[i];
       if (i < n-1) ret << ", ";
    }
-   ret << "]";
+   ret << "}";
    return ret.str();
 }
 template<class T>
