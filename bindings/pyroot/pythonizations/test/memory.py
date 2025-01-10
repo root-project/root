@@ -95,8 +95,14 @@ class MemoryStlString(unittest.TestCase):
             with ROOT.TFile(filename, "recreate") as f:
                 f.mkdir("subdir")
                 f.cd("subdir")
+
+                # Create object by calling the constructor
                 x = klass(*args)
                 x.Write()
+
+                # Create object by using the "virtual constructor" TObject::Clone()
+                x_clone = x.Clone()
+                x_clone.Write()
         finally:
             os.remove(filename)
 
