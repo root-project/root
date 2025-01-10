@@ -54,7 +54,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     src/HistFactoryNavigation.cxx
     src/HistRef.cxx
     src/HistoToWorkspaceFactoryFast.cxx
-    src/JSONTool.cxx
     src/LinInterpVar.cxx
     src/MakeModelAndMeasurementsFast.cxx
     src/Measurement.cxx
@@ -81,7 +80,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     Graf
     Gpad
     RooStats
-    RooFitJSONInterface
   ${EXTRA_DICT_OPTS}
 )
 
