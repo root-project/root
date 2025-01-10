@@ -28,7 +28,7 @@ mkdir -p ~/.jupyter
 # List dependencies below in the form
 # <Notebook with dependencies> <dependency> [<dependency> ...]
 while read notebook dependencies; do
-	if grep -q ${notebook} $inputFile; then
+  if grep -q ${notebook} $inputFile; then
     for dependency in $dependencies; do
       cmd=$(grep $dependency $inputFile)
       if [ -n "$cmd" ]; then
@@ -61,5 +61,6 @@ EOF
 # Run rest in parallel
 xargs -L 1 -P ${nJobs:-1} ${Python3_EXECUTABLE:-python3} < $inputFile
 
-rm ${inputFile}.back
-
+if [ -e "${inputFile}.back" ]; then
+    rm "${inputFile}.back"
+fi
