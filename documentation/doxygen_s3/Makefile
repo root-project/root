@@ -83,8 +83,6 @@ tutorialWorklist_root: doxygen
 
 notebooks: tutorialWorklist_py makeNotebooks.sh
 	cp ../../tutorials/analysis/unfold/*.xml ../../tutorials/analysis/unfold/*.dtd $(DOXYGEN_NOTEBOOK_PATH)/
-	bash ./makeNotebooks.sh $< -j$(NJOB)
-	rm -f $(DOXYGEN_NOTEBOOK_PATH)/*.root
 
 rootWork: tutorialWorklist_root
 	xargs -L 1 -P 12 root < $<
