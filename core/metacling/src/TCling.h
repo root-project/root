@@ -195,6 +195,7 @@ public: // Public Interface
    TCling(const char* name, const char* title, const char* const argv[], void *interpLibHandle);
 
    void    AddIncludePath(const char* path) final;
+   void    SetIncludePath(const char* path) final;
    void   *GetAutoLoadCallBack() const final { return fAutoLoadCallBack; }
    void   *SetAutoLoadCallBack(void* cb) final { void* prev = fAutoLoadCallBack; fAutoLoadCallBack = cb; return prev; }
    Int_t   AutoLoad(const char *classname, Bool_t knowDictNotLoaded = kFALSE) final;

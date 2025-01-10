@@ -375,7 +375,10 @@ public:
 
   /// Add an additional search path.
   void AddSearchPath(const DirectoryLookup &dir, bool isAngled);
-
+  
+  /// Remove search path.
+  void RemoveSearchPath(const DirectoryLookup &dir, bool isAngled);
+  
   /// Add an additional system search path.
   void AddSystemSearchPath(const DirectoryLookup &dir) {
     SearchDirs.push_back(dir);

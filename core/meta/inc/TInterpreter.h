@@ -137,6 +137,7 @@ public:
    virtual ~TInterpreter() { }
 
    virtual void     AddIncludePath(const char *path) = 0;
+   virtual void     SetIncludePath(const char *path) = 0;
    virtual void    *SetAutoLoadCallBack(void* /*cb*/) { return nullptr; }
    virtual void    *GetAutoLoadCallBack() const { return nullptr; }
    virtual Int_t    AutoLoad(const char *classname, Bool_t knowDictNotLoaded = kFALSE) = 0;

@@ -438,12 +438,16 @@ namespace cling {
     ///
     bool isUniqueName(llvm::StringRef name);
 
-    ///\brief Adds multiple include paths separated by a delimter.
+    ///\brief Adds multiple include paths separated by a delimiter.
     ///
     ///\param[in] PathsStr - Path(s)
     ///\param[in] Delim - Delimiter to separate paths or NULL if a single path
     ///
     void AddIncludePaths(llvm::StringRef PathsStr, const char* Delim = ":");
+    
+    ///\brief Unsets preexisting include paths.
+    ///
+    void ResetIncludePaths();
 
     ///\brief Adds a single include path (-I).
     ///

@@ -284,6 +284,11 @@ public:
                bool IsFramework, bool IgnoreSysRoot) {
     UserEntries.emplace_back(Path, Group, IsFramework, IgnoreSysRoot);
   }
+  
+  /// ResetPaths - Removes all paths from the user entries list.
+  void ResetPaths() {
+    UserEntries.clear();
+  }
 
   /// AddSystemHeaderPrefix - Override whether \#include directives naming a
   /// path starting with \p Prefix should be considered as naming a system

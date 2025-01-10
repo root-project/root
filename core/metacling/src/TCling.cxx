@@ -1323,7 +1323,7 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
 #ifndef R__WIN32
    PreIncludes += "#include <cassert>\n";
 #endif
-   PreIncludes += "using namespace std;\n";
+         PreIncludes += "using namespace std;\n";
    clingInterp.declare(PreIncludes);
 }
 
@@ -2684,6 +2684,23 @@ void TCling::AddIncludePath(const char *path)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// \brief Replaces current list of directories with a single path in which the
+///        interpreter looks for include files.
+/// \param[in] path The path to the directory.
+/// \note Only one path item can be specified at a time, i.e. "path1:path2" is
+///       \b NOT supported.
+/// \warning Only the path to the directory should be specified, without
+///          prepending the \c -I prefix, i.e.
+///          <tt>gCling->AddIncludePath("/path/to/my/includes")</tt>. If the
+///          \c -I prefix is used it will be ignored.
+void TCling::SetIncludePath(const char *path)
+{
+   R__LOCKGUARD(gInterpreterMutex);
+   fInterpreter->ResetIncludePaths();
+   AddIncludePath(path);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Visit all members over members, recursing over base classes.
 
 void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
@@ -3073,14 +3090,6 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
                                  insp, isTransient);
       }
    } // loop over bases
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if constructor exited correctly, ie the instance is in a valid state
-/// \return true if there is a compiler instance available, false otherwise
-bool TCling::IsValid() const
-{
-   return fInterpreter->getCI() != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

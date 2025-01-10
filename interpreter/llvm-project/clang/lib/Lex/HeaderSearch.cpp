@@ -127,6 +127,16 @@ void HeaderSearch::AddSearchPath(const DirectoryLookup &dir, bool isAngled) {
   SystemDirIdx++;
 }
 
+void HeaderSearch::RemoveSearchPath(const DirectoryLookup &dir, bool isAngled) {
+  auto position = std::find(SearchDirs.begin(), SearchDirs.end(), dir);
+  auto idx = std::distance(SearchDirs.begin(), position);
+  SearchDirs.erase(position);
+  SearchDirsUsage.erase(SearchDirsUsage.begin() + idx);
+  if (!isAngled)
+    AngledDirIdx--;
+  SystemDirIdx--;
+}
+
 std::vector<bool> HeaderSearch::computeUserEntryUsage() const {
   std::vector<bool> UserEntryUsage(HSOpts->UserEntries.size());
   for (unsigned I = 0, E = SearchDirsUsage.size(); I < E; ++I) {

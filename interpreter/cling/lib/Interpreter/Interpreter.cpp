@@ -651,6 +651,28 @@ namespace cling {
     if (m_CUDACompiler)
       m_CUDACompiler->getPTXInterpreter()->AddIncludePaths(PathStr, Delm);
   }
+  
+  void Interpreter::ResetIncludePaths() {
+    CompilerInstance* CI = getCI();
+    HeaderSearchOptions& HOpts = CI->getHeaderSearchOpts();
+    
+    Preprocessor& PP = CI->getPreprocessor();
+    SourceManager& SM = PP.getSourceManager();
+    FileManager& FM = SM.getFileManager();
+    HeaderSearch& HSearch = PP.getHeaderSearchInfo();
+    const bool isFramework = false;
+    // Remove old entries from Preprocessor
+    size_t Idx = HOpts.UserEntries.size();
+    for (const size_t N = HOpts.UserEntries.size(); Idx < N; ++Idx) {
+      const HeaderSearchOptions::Entry& E = HOpts.UserEntries[Idx];
+      if (auto DE = FM.getOptionalDirectoryRef(E.Path))
+        HSearch.RemoveSearchPath(DirectoryLookup(*DE, SrcMgr::C_User, isFramework),
+                              E.Group == frontend::Angled);
+    }
+    HOpts.ResetPaths();
+    if (m_CUDACompiler)
+      m_CUDACompiler->getPTXInterpreter()->ResetIncludePaths();
+  }
 
   void Interpreter::AddIncludePath(llvm::StringRef PathsStr) {
     return AddIncludePaths(PathsStr, nullptr);
