@@ -3,6 +3,7 @@ name: 'ROOT Docs'
 on:
   schedule:
     - cron: '0 1 * * *'
+    - cron: '0 12 * * *'
 
   workflow_dispatch:
     inputs:
@@ -99,7 +100,8 @@ jobs:
         done
         cat "$CONFIGFILE" || true
 
-    - name: Build ROOT
+    - name: Build ROOT - Workflow Dispatch
+      if:   github.event_name == 'workflow_dispatch'
       run: ".github/workflows/root-ci-config/build_root.py
                   --buildtype      Release
                   --platform       ${{ env.PLATFORM }}
@@ -107,8 +109,18 @@ jobs:
                   --base_ref       ${BASE_REF}
                   --head_ref       ${BASE_REF}
                   --binaries       false
-                  --repository     ${{ github.server_url }}/${{ github.repository }}
-           "
+                  --repository     ${{ github.server_url }}/${{ github.repository }}"
+
+    - name: Build ROOT - Schedule
+      if:   github.event_name == 'schedule'
+      run: ".github/workflows/root-ci-config/build_root.py
+                  --buildtype      Release
+                  --platform       ${{ env.PLATFORM }}
+                  --incremental    false
+                  --base_ref       ${BASE_REF}
+                  --head_ref       ${BASE_REF}
+                  --binaries       false
+                  --repository     ${{ github.server_url }}/${{ github.repository }}"
 
     - name: Run Doxygen
       working-directory: ${{ env.DOC_LOCATION }}
@@ -132,7 +144,7 @@ jobs:
         gzip ${TAR_NAME}
         ls -l
 
-    #Upload to GitHub as an artifact (optional)
+    #Upload to GitHub as an artifact
     - name: Upload tar file for GH
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
