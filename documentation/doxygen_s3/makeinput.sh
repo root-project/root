@@ -14,22 +14,22 @@ ls $DOXYGEN_PYZDOC_PATH/*.pyzdoc | sed -e "s/$/ \\\\/"  \
 >> Doxyfile_INPUT
 
 echo "        ../../core/base/                 \\" >> Doxyfile_INPUT
-# echo "        ../../core/dictgen/              \\" >> Doxyfile_INPUT
-# echo "        ../../core/cont/                 \\" >> Doxyfile_INPUT
-# echo "        ../../core/foundation/           \\" >> Doxyfile_INPUT
-# echo "        ../../core/gui/                  \\" >> Doxyfile_INPUT
-# echo "        ../../core/macosx/               \\" >> Doxyfile_INPUT
-# echo "        ../../core/meta/                 \\" >> Doxyfile_INPUT
-# echo "        ../../core/metacling/            \\" >> Doxyfile_INPUT
-# echo "        ../../core/clingutils/           \\" >> Doxyfile_INPUT
-# echo "        ../../core/multiproc/            \\" >> Doxyfile_INPUT
-# echo "        ../../core/rint/                 \\" >> Doxyfile_INPUT
-# echo "        ../../core/testsupport/          \\" >> Doxyfile_INPUT
-# echo "        ../../core/thread/               \\" >> Doxyfile_INPUT
-# echo "        ../../core/unix/                 \\" >> Doxyfile_INPUT
-# echo "        ../../core/winnt/                \\" >> Doxyfile_INPUT
-# echo "        ../../core/imt/                  \\" >> Doxyfile_INPUT
-# echo "        ../../core/zip/inc/Compression.h \\" >> Doxyfile_INPUT
+echo "        ../../core/dictgen/              \\" >> Doxyfile_INPUT
+echo "        ../../core/cont/                 \\" >> Doxyfile_INPUT
+echo "        ../../core/foundation/           \\" >> Doxyfile_INPUT
+echo "        ../../core/gui/                  \\" >> Doxyfile_INPUT
+echo "        ../../core/macosx/               \\" >> Doxyfile_INPUT
+echo "        ../../core/meta/                 \\" >> Doxyfile_INPUT
+echo "        ../../core/metacling/            \\" >> Doxyfile_INPUT
+echo "        ../../core/clingutils/           \\" >> Doxyfile_INPUT
+echo "        ../../core/multiproc/            \\" >> Doxyfile_INPUT
+echo "        ../../core/rint/                 \\" >> Doxyfile_INPUT
+echo "        ../../core/testsupport/          \\" >> Doxyfile_INPUT
+echo "        ../../core/thread/               \\" >> Doxyfile_INPUT
+echo "        ../../core/unix/                 \\" >> Doxyfile_INPUT
+echo "        ../../core/winnt/                \\" >> Doxyfile_INPUT
+echo "        ../../core/imt/                  \\" >> Doxyfile_INPUT
+echo "        ../../core/zip/inc/Compression.h \\" >> Doxyfile_INPUT
 # echo "        ../../geom/                      \\" >> Doxyfile_INPUT
 # echo "        ../../graf2d/asimage/            \\" >> Doxyfile_INPUT
 # echo "        ../../graf2d/cocoa/              \\" >> Doxyfile_INPUT
@@ -49,7 +49,7 @@ echo "        ../../core/base/                 \\" >> Doxyfile_INPUT
 # echo "        ../../graf3d/gl/                 \\" >> Doxyfile_INPUT
 # echo "        ../../graf3d/gviz3d/             \\" >> Doxyfile_INPUT
 # echo "        ../../gui/                       \\" >> Doxyfile_INPUT
-# echo "        ../../hist/                      \\" >> Doxyfile_INPUT
+echo "        ../../hist/                      \\" >> Doxyfile_INPUT
 # echo "        ../../html/                      \\" >> Doxyfile_INPUT
 # echo "        ../../io/doc/TFile               \\" >> Doxyfile_INPUT
 # echo "        ../../io/dcache/                 \\" >> Doxyfile_INPUT
@@ -72,7 +72,7 @@ echo "        ../../core/base/                 \\" >> Doxyfile_INPUT
 # echo "        ../../roofit/                    \\" >> Doxyfile_INPUT
 # echo "        ../../tree/                      \\" >> Doxyfile_INPUT
 # echo "        ../../sql/                       \\" >> Doxyfile_INPUT
-# echo "        ../../tutorials/                 \\" >> Doxyfile_INPUT
+echo "        ../../tutorials/hist                 \\" >> Doxyfile_INPUT
 # echo "        ../../bindings/tpython/          \\" >> Doxyfile_INPUT
 # echo "        ../../bindings/pyroot/           \\" >> Doxyfile_INPUT
 # echo "        ../../bindings/pyroot/pythonizations/python/ROOT/_pythonization/__init__.py          \\" >> Doxyfile_INPUT
