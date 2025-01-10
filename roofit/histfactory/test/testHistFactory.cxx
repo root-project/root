@@ -27,8 +27,6 @@
 #include <TCanvas.h>
 #include <gtest/gtest.h>
 
-#include "../src/JSONTool.h"
-
 #include "../../roofitcore/test/gtest_wrapper.h"
 
 #include <set>
@@ -513,59 +511,6 @@ void setInitialFitParameters(RooWorkspace &ws, MakeModelMode makeModelMode)
    }
 }
 
-TEST_P(HFFixture, HistFactoryJSONTool)
-{
-   const MakeModelMode makeModelMode = std::get<0>(GetParam());
-
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-
-   if (writeJsonFiles) {
-      RooStats::HistFactory::JSONTool{*_measurement}.PrintJSON(_name + "_1.json");
-   }
-   std::stringstream ss;
-   RooStats::HistFactory::JSONTool{*_measurement}.PrintJSON(ss);
-
-   RooWorkspace wsFromJson{"ws1"};
-   RooJSONFactoryWSTool{wsFromJson}.importJSONfromString(ss.str());
-
-   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
-   EXPECT_TRUE(mc != nullptr);
-
-   auto *mcFromJson = dynamic_cast<RooStats::ModelConfig *>(wsFromJson.obj("ModelConfig"));
-   EXPECT_TRUE(mcFromJson != nullptr);
-
-   RooAbsPdf *pdf = mc->GetPdf();
-   EXPECT_TRUE(pdf != nullptr);
-
-   RooAbsPdf *pdfFromJson = mcFromJson->GetPdf();
-   EXPECT_TRUE(pdfFromJson != nullptr);
-
-   RooAbsData *data = ws->data("obsData");
-   EXPECT_TRUE(data != nullptr);
-
-   RooAbsData *dataFromJson = wsFromJson.data("obsData");
-   EXPECT_TRUE(dataFromJson != nullptr);
-
-   RooArgSet const &globs = *mc->GetGlobalObservables();
-   RooArgSet const &globsFromJson = *mcFromJson->GetGlobalObservables();
-
-   setInitialFitParameters(*ws, makeModelMode);
-   setInitialFitParameters(wsFromJson, makeModelMode);
-
-   using namespace RooFit;
-   using Res = std::unique_ptr<RooFitResult>;
-
-   Res result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()), GlobalObservables(globs),
-                         PrintLevel(-1), Save())};
-
-   Res resultFromJson{pdfFromJson->fitTo(*dataFromJson, Strategy(1), Minos(*mcFromJson->GetParametersOfInterest()),
-                                         GlobalObservables(globsFromJson), PrintLevel(-1), Save())};
-
-   // Do also the reverse comparison to check that the set of constant parameters matches
-   EXPECT_TRUE(result->isIdentical(*resultFromJson));
-   EXPECT_TRUE(resultFromJson->isIdentical(*result));
-}
-
 TEST_P(HFFixture, HS3ClosureLoop)
 {
    const MakeModelMode makeModelMode = std::get<0>(GetParam());
@@ -580,7 +525,7 @@ TEST_P(HFFixture, HS3ClosureLoop)
 
    std::string const &js = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
    if (writeJsonFiles) {
-      RooJSONFactoryWSTool{*ws}.exportJSON(_name + "_2.json");
+      RooJSONFactoryWSTool{*ws}.exportJSON(_name + "_1.json");
    }
 
    RooWorkspace wsFromJson("new");
@@ -590,7 +535,7 @@ TEST_P(HFFixture, HS3ClosureLoop)
    std::string const &js3 = RooJSONFactoryWSTool{wsFromJson}.exportJSONtoString();
 
    if (writeJsonFiles) {
-      RooJSONFactoryWSTool{wsFromJson}.exportJSON(_name + "_3.json");
+      RooJSONFactoryWSTool{wsFromJson}.exportJSON(_name + "_2.json");
    }
 
    // Chack that JSON > WS > JSON doesn't change the JSON

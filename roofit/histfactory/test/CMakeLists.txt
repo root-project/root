@@ -13,7 +13,7 @@ if(NOT MSVC OR win_broken_tests)
 endif()
 
 ROOT_ADD_GTEST(testHistFactory testHistFactory.cxx
-  LIBRARIES RooFitCore RooFit RooStats HistFactory RooFitHS3
+  LIBRARIES RooFitCore RooFit RooStats HistFactory RooFitHS3 RooFitJSONInterface
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/ref_6.16_example_UsingC_channel1_meas_model.root ${CMAKE_CURRENT_SOURCE_DIR}/ref_6.16_example_UsingC_combined_meas_model.root)
 
 if(clad)
