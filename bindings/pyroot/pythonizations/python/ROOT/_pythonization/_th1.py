@@ -167,7 +167,7 @@ Further examples can be found in the tutorials:
 """
 
 from . import pythonization
-from ROOT._pythonization._memory_utils import _constructor_releasing_ownership, _SetDirectory_SetOwnership
+from ROOT._pythonization._memory_utils import inject_constructor_releasing_ownership, inject_clone_releasing_ownership, _SetDirectory_SetOwnership
 
 # Multiplication by constant
 
@@ -213,11 +213,6 @@ def _FillWithNumpyArray(self, *args):
         return self._Fill(*args)
 
 
-def inject_constructor_releasing_ownership(klass):
-    klass._cpp_constructor = klass.__init__
-    klass.__init__ = _constructor_releasing_ownership
-
-
 # The constructors need to be pythonized for each derived class separately:
 _th1_derived_classes_to_pythonize = [
     "TH1C",
@@ -248,3 +243,5 @@ def pythonize_th1(klass):
 
     klass._Original_SetDirectory = klass.SetDirectory
     klass.SetDirectory = _SetDirectory_SetOwnership
+
+    inject_clone_releasing_ownership(klass)

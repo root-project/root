@@ -9,12 +9,7 @@
 ################################################################################
 
 from . import pythonization
-from ROOT._pythonization._memory_utils import _constructor_releasing_ownership, _SetDirectory_SetOwnership
-
-
-def inject_constructor_releasing_ownership(klass):
-    klass._cpp_constructor = klass.__init__
-    klass.__init__ = _constructor_releasing_ownership
+from ROOT._pythonization._memory_utils import inject_constructor_releasing_ownership
 
 
 # The constructors need to be pythonized for each derived class separately:
