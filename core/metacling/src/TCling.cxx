@@ -1323,7 +1323,7 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
 #ifndef R__WIN32
    PreIncludes += "#include <cassert>\n";
 #endif
-         PreIncludes += "using namespace std;\n";
+   PreIncludes += "using namespace std;\n";
    clingInterp.declare(PreIncludes);
 }
 
@@ -3090,6 +3090,14 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
                                  insp, isTransient);
       }
    } // loop over bases
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if constructor exited correctly, ie the instance is in a valid state
+/// \return true if there is a compiler instance available, false otherwise
+bool TCling::IsValid() const
+{
+   return fInterpreter->getCI() != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
