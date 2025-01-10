@@ -40,7 +40,7 @@ Explore the examples below for [different histogram classes](group__Histograms.h
 - [Introduction](\ref introduction)
 - [TH1 Histograms](\ref th1)
 - [TH2 Histograms](\ref th2)
-- [ThnSparse] (\ref thnsparse)
+- [THnSparse] (\ref thnsparse)
 - [THStack](\ref thstack)
 - [TRatio plots](\ref ratioplots)
 - [TPoly](\ref tpoly)
