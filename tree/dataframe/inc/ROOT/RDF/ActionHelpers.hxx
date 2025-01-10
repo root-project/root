@@ -1518,8 +1518,18 @@ public:
    SnapshotHelper(SnapshotHelper &&) = default;
    ~SnapshotHelper()
    {
-      if (!fTreeName.empty() /*not moved from*/ && !fOutputFile /* did not run */ && fOptions.fLazy)
-         Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+      if (!fTreeName.empty() /*not moved from*/ && !fOutputFile /* did not run */ && fOptions.fLazy) {
+         const auto fileOpenMode = [&]() {
+            TString checkupdate = fOptions.fMode;
+            checkupdate.ToLower();
+            return checkupdate == "update" ? "updated" : "created";
+         }();
+         Warning("Snapshot",
+                 "A lazy Snapshot action was booked but never triggered. The tree '%s' in output file '%s' was not %s. "
+                 "In case it was desired instead, remember to trigger the Snapshot operation, by storing "
+                 "its result in a variable and for example calling the GetValue() method on it.",
+                 fTreeName.c_str(), fFileName.c_str(), fileOpenMode);
+      }
    }
 
    void InitTask(TTreeReader *r, unsigned int /* slot */)
@@ -1673,8 +1683,18 @@ public:
    ~SnapshotHelperMT()
    {
       if (!fTreeName.empty() /*not moved from*/ && fOptions.fLazy && !fOutputFiles.empty() &&
-          std::all_of(fOutputFiles.begin(), fOutputFiles.end(), [](const auto &f) { return !f; }) /* never run */)
-         Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+          std::all_of(fOutputFiles.begin(), fOutputFiles.end(), [](const auto &f) { return !f; }) /* never run */) {
+         const auto fileOpenMode = [&]() {
+            TString checkupdate = fOptions.fMode;
+            checkupdate.ToLower();
+            return checkupdate == "update" ? "updated" : "created";
+         }();
+         Warning("Snapshot",
+                 "A lazy Snapshot action was booked but never triggered. The tree '%s' in output file '%s' was not %s. "
+                 "In case it was desired instead, remember to trigger the Snapshot operation, by storing "
+                 "its result in a variable and for example calling the GetValue() method on it.",
+                 fTreeName.c_str(), fFileName.c_str(), fileOpenMode);
+      }
    }
 
    void InitTask(TTreeReader *r, unsigned int slot)

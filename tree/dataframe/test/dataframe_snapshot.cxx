@@ -715,7 +715,11 @@ void BookLazySnapshot()
 
 TEST(RDFSnapshotMore, LazyNotTriggered)
 {
-   ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot", "A lazy Snapshot action was booked but never triggered.");
+   ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot",
+                       "A lazy Snapshot action was booked but never triggered. The tree 't' in output file "
+                       "'lazysnapshotnottriggered_shouldnotbecreated.root' was not created. "
+                       "In case it was desired instead, remember to trigger the Snapshot operation, by "
+                       "storing its result in a variable and for example calling the GetValue() method on it.");
 }
 
 RResultPtr<RInterface<RLoopManager, void>> ReturnLazySnapshot(const char *fname)
@@ -1286,7 +1290,11 @@ TEST(RDFSnapshotMore, JittedSnapshotAndAliasedColumns)
 TEST(RDFSnapshotMore, LazyNotTriggeredMT)
 {
    ROOT::EnableImplicitMT(4);
-   ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot", "A lazy Snapshot action was booked but never triggered.");
+   ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot",
+                       "A lazy Snapshot action was booked but never triggered. The tree 't' in output file "
+                       "'lazysnapshotnottriggered_shouldnotbecreated.root' was not created. "
+                       "In case it was desired instead, remember to trigger the Snapshot operation, by "
+                       "storing its result in a variable and for example calling the GetValue() method on it.");
    ROOT::DisableImplicitMT();
 }
 
