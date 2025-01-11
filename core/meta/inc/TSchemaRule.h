@@ -13,6 +13,11 @@
 class TBuffer;
 class TVirtualObject;
 class TObjArray;
+namespace ROOT {
+namespace Internal {
+   struct TSchemaHelper;
+}
+}
 
 namespace ROOT {
 
@@ -76,6 +81,7 @@ namespace ROOT {
          typedef void (*ReadRawFuncPtr_t)( char*, TBuffer&);
 
          TSchemaRule();
+         TSchemaRule(RuleType_t type, const char *targetClass, const ROOT::Internal::TSchemaHelper& helper);
          virtual ~TSchemaRule();
 
          TSchemaRule( const TSchemaRule& rhs );
