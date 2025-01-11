@@ -2650,6 +2650,7 @@ int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootP
 ////////////////////////////////////////////////////////////////////////////////
 
 int GenerateFullDict(std::ostream &dictStream,
+                     std::string dictName,
                      cling::Interpreter &interp,
                      RScanner &scan,
                      const ROOT::TMetaUtils::RConstructorTypes &ctorTypes,
@@ -2794,6 +2795,11 @@ int GenerateFullDict(std::ostream &dictStream,
       ROOT::Internal::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy,
                                                       EmitStreamerInfo);
    }
+
+   std::vector<std::string> standaloneTargets;
+   ROOT::TMetaUtils::WriteStandaloneReadRules(dictStream, false, standaloneTargets, interp);
+   ROOT::TMetaUtils::WriteStandaloneReadRules(dictStream, true, standaloneTargets, interp);
+   ROOT::TMetaUtils::WriteRulesRegistration(dictStream, dictName, standaloneTargets);
 
    if (!gDriverConfig->fBuildingROOTStage1) {
       EmitTypedefs(scan.fSelectedTypedefs);
@@ -4962,6 +4968,7 @@ int RootClingMain(int argc,
       }
    } else {
       rootclingRetCode += GenerateFullDict(*splitDictStream,
+                                 modGen.GetDictionaryName(),
                                  interp,
                                  scan,
                                  constructorTypes,

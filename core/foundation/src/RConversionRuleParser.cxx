@@ -864,7 +864,7 @@ namespace ROOT
       //////////////////////////////////////////////////////////////////////////
 
       for( it = gReadRules.begin(); it != gReadRules.end(); ++it ) {
-         for( rule = it->second.begin(); rule != it->second.end(); ++rule ) {
+         for( rule = it->second.fRules.begin(); rule != it->second.fRules.end(); ++rule ) {
             attr = rule->find( "include" );
             if( attr == rule->end() ) continue;
             TSchemaRuleProcessor::SplitList( attr->second, tmp );
@@ -877,7 +877,7 @@ namespace ROOT
       //////////////////////////////////////////////////////////////////////////
 
       for( it = gReadRawRules.begin(); it != gReadRawRules.end(); ++it ) {
-         for( rule = it->second.begin(); rule != it->second.end(); ++rule ) {
+         for( rule = it->second.fRules.begin(); rule != it->second.fRules.end(); ++rule ) {
             attr = rule->find( "include" );
             if( attr == rule->end() ) continue;
             TSchemaRuleProcessor::SplitList( attr->second, tmp );
@@ -923,10 +923,10 @@ namespace ROOT
       if( it == gReadRules.end() ) {
          std::list<SchemaRuleMap_t> lst;
          lst.push_back( rule );
-         gReadRules[normalizedTargetName] = lst;
+         gReadRules[normalizedTargetName].fRules = lst;
       }
       else
-         it->second.push_back( rule );
+         it->second.fRules.push_back( rule );
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -958,10 +958,10 @@ namespace ROOT
       if( it == gReadRawRules.end() ) {
          std::list<SchemaRuleMap_t> lst;
          lst.push_back( rule );
-         gReadRawRules[normalizedTargetName] = lst;
+         gReadRawRules[normalizedTargetName].fRules = lst;
       }
       else
-         it->second.push_back( rule );
+         it->second.fRules.push_back( rule );
    }
 
 

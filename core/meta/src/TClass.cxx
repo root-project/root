@@ -1719,6 +1719,22 @@ void TClass::Init(const char *name, Version_t cversion,
       // std::pairs have implicit conversions
       GetSchemaRules(kTRUE);
    }
+   for(auto ruletype : {ROOT::TSchemaRule::kReadRule, ROOT::TSchemaRule::kReadRawRule}) {
+      auto &registry = GetReadRulesRegistry(ruletype);
+      auto rulesiter = registry.find(GetName());
+      if (rulesiter != registry.end()) {
+         auto rset = GetSchemaRules( kTRUE );
+         for(const auto &helper : rulesiter->second) {
+            auto rule = new ROOT::TSchemaRule(ruletype, GetName(), helper);
+            TString errmsg;
+            if( !rset->AddRule( rule, ROOT::Detail::TSchemaRuleSet::kCheckAll, &errmsg ) ) {
+               Warning( "Init", "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because %s.",
+                        GetName(), helper.fVersion.c_str(), helper.fTarget.c_str(), errmsg.Data() );
+               delete rule;
+            }
+         }
+      }
+   }
 
    ResetBit(kLoading);
 }
@@ -1993,6 +2009,20 @@ void TClass::AdoptSchemaRules( ROOT::Detail::TSchemaRuleSet *rules )
    delete fSchemaRules;
    fSchemaRules = rules;
    fSchemaRules->SetClass( this );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the registry for the unassigned read rules.
+
+TClass::SchemaHelperMap_t &TClass::GetReadRulesRegistry(ROOT::TSchemaRule::RuleType_t type)
+{
+   if (type == ROOT::TSchemaRule::kReadRule) {
+      static SchemaHelperMap_t gReadRulesRegistry;
+      return gReadRulesRegistry;
+   } else {
+      static SchemaHelperMap_t gReadRawRulesRegistry;
+      return gReadRawRulesRegistry;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5010,8 +5040,8 @@ const void *TClass::DynamicCast(const TClass *cl, const void *obj, Bool_t up)
 /// If quiet is true, do not issue a message via Error in case
 /// of problems, just return `nullptr`.
 ///
-/// This method is also used by the I/O subsystem to allocate the right amount 
-/// of memory for the objects. If a default constructor is not defined for a 
+/// This method is also used by the I/O subsystem to allocate the right amount
+/// of memory for the objects. If a default constructor is not defined for a
 /// certain class, some options are available.
 /// The simplest is to define the default I/O constructor, for example
 /// ~~~{.cpp}
@@ -5028,7 +5058,7 @@ const void *TClass::DynamicCast(const TClass *cl, const void *obj, Bool_t up)
 /// ~~~ {.cpp}
 ///    #pragma link C++ ioctortype UserClass;
 /// ~~~
-/// `TClass::New` will then look for a constructor (for a class `MyClass` in the 
+/// `TClass::New` will then look for a constructor (for a class `MyClass` in the
 /// following example) in the following order, constructing the object using the
 /// first one in the list that exists and is declared public:
 /// ~~~ {.cpp}
@@ -7364,6 +7394,38 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
    arr->AddAtAndExpand( info, info->GetClassVersion() );
 
    return info;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Register a set of read rules for a target class.
+///
+/// Rules will end up here if they are created in a dictionary file that does not
+/// contain the dictionary for the target class.
+
+void TClass::RegisterReadRules(ROOT::TSchemaRule::RuleType_t type,
+                               const char *classname, std::vector<::ROOT::Internal::TSchemaHelper> &&rules)
+{
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   auto cl = TClass::GetClass(classname, false, false);
+   if (cl) {
+      auto rset = cl->GetSchemaRules( kTRUE );
+      for(const auto &it : rules) {
+         auto rule = new ROOT::TSchemaRule(type, cl->GetName(), it);
+         TString errmsg;
+         if( !rset->AddRule( rule, ROOT::Detail::TSchemaRuleSet::kCheckAll, &errmsg ) ) {
+            ::Warning( "TGenericClassInfo", "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because %s.",
+                        cl->GetName(), it.fVersion.c_str(), it.fTarget.c_str(), errmsg.Data() );
+            delete rule;
+         }
+      }
+   } else {
+      auto &registry = GetReadRulesRegistry(type);
+      auto ans = registry.try_emplace(classname, std::move(rules));
+      if (!ans.second) {
+         ans.first->second.insert(ans.first->second.end(), rules.begin(), rules.end());
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

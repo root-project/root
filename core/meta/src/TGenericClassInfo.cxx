@@ -331,27 +331,10 @@ namespace Internal {
       TString errmsg;
       std::vector<Internal::TSchemaHelper>::iterator it;
       for( it = vect.begin(); it != vect.end(); ++it ) {
-         rule = new TSchemaRule();
-         rule->SetTarget( it->fTarget );
-         rule->SetTargetClass( fClass->GetName() );
-         rule->SetSourceClass( it->fSourceClass );
-         rule->SetSource( it->fSource );
-         rule->SetCode( it->fCode );
-         rule->SetVersion( it->fVersion );
-         rule->SetChecksum( it->fChecksum );
-         rule->SetEmbed( it->fEmbed );
-         rule->SetInclude( it->fInclude );
-         rule->SetAttributes( it->fAttributes );
+         rule = new TSchemaRule(ProcessReadRules ? TSchemaRule::kReadRule : TSchemaRule::kReadRawRule,
+                                fClass->GetName(), *it);
 
-         if( ProcessReadRules ) {
-            rule->SetRuleType( TSchemaRule::kReadRule );
-            rule->SetReadFunctionPointer( (TSchemaRule::ReadFuncPtr_t)it->fFunctionPtr );
-         }
-         else {
-            rule->SetRuleType( TSchemaRule::kReadRawRule );
-            rule->SetReadRawFunctionPointer( (TSchemaRule::ReadRawFuncPtr_t)it->fFunctionPtr );
-         }
-         if( !rset->AddRule( rule, TSchemaRuleSet::kCheckAll, &errmsg ) ) {
+          if( !rset->AddRule( rule, TSchemaRuleSet::kCheckAll, &errmsg ) ) {
             ::Warning( "TGenericClassInfo", "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because %s.",
                         GetClassName(), it->fVersion.c_str(), it->fTarget.c_str(), errmsg.Data() );
             delete rule;
