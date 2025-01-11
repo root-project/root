@@ -22,6 +22,7 @@
 
 #include "TDictionary.h"
 #include "TString.h"
+#include "TSchemaRule.h"
 
 #ifdef R__LESS_INCLUDES
 class TObjArray;
@@ -36,6 +37,7 @@ class TObjArray;
 #include <cstddef>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 #include <atomic>
@@ -72,6 +74,7 @@ namespace ROOT {
    }
    namespace Internal {
       class TCheckHashRecursiveRemoveConsistency;
+      struct TSchemaHelper;
    }
 }
 
@@ -361,6 +364,9 @@ protected:
    void GetMissingDictionariesWithRecursionCheck(TCollection &result, TCollection &visited, bool recurse);
    void GetMissingDictionariesForPairElements(TCollection &result, TCollection &visited, bool recurse);
 
+   using SchemaHelperMap_t = std::unordered_map<std::string, std::vector<ROOT::Internal::TSchemaHelper>>;
+   static SchemaHelperMap_t &GetReadRulesRegistry(ROOT::TSchemaRule::RuleType_t type);
+
 public:
    TClass();
    TClass(const char *name, Bool_t silent = kFALSE);
@@ -539,6 +545,7 @@ public:
    Long_t             Property() const override;
    Int_t              ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
    Int_t              ReadBuffer(TBuffer &b, void *pointer);
+   static void        RegisterReadRules(ROOT::TSchemaRule::RuleType_t, const char *classname, std::vector<::ROOT::Internal::TSchemaHelper> &&rules);
    void               RegisterStreamerInfo(TVirtualStreamerInfo *info);
    void               RemoveStreamerInfo(Int_t slot);
    void               ReplaceWith(TClass *newcl) const;
