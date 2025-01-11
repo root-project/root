@@ -83,7 +83,7 @@ jobs:
     - name: Apply option overrides
       if: ${{ github.event_name != 'schedule' }}
       env:
-        OVERRIDES: ["testing=Off", "roottest=Off", "minimal=On"]
+        OVERRIDES: "TESTING=Off ROOTTEST=Off MINIMAL=On"
         CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/alma9.txt'
       shell: bash
       run: |
