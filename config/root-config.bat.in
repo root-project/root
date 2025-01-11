@@ -53,6 +53,9 @@ if "@BLDCFLAGS@"=="-MDd" (
     set cflags=!cflags! -O2
     set cxxflags=!cxxflags! -O2
 )
+rem add double-quotes to allow PowerShell usage like: Invoke-Expression "cl test.cpp $(root-config --cflags --libs)"
+set cxxflags=!cxxflags:-FIw32pragma.h=-FI"w32pragma.h"!
+set cxxflags=!cxxflags:-FIsehmap.h=-FI"sehmap.h"!
 
 set rootglibs=libGui.lib
 set rootevelibs=libEve.lib libEG.lib libGeom.lib libGed.lib libRGL.lib
