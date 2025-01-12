@@ -2691,7 +2691,7 @@ void TCling::AddIncludePath(const char *path)
 ///       \b NOT supported.
 /// \warning Only the path to the directory should be specified, without
 ///          prepending the \c -I prefix, i.e.
-///          <tt>gCling->AddIncludePath("/path/to/my/includes")</tt>. If the
+///          <tt>gCling->SetIncludePath("/path/to/my/includes")</tt>. If the
 ///          \c -I prefix is used it will be ignored.
 void TCling::SetIncludePath(const char *path)
 {
