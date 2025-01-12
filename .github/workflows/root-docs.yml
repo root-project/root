@@ -81,9 +81,8 @@ jobs:
         which qhelpgenerator-qt5
 
     - name: Apply option overrides
-      if: ${{ github.event_name != 'schedule' }}
       env:
-        OVERRIDES: "TESTING=Off ROOTTEST=Off MINIMAL=On"
+        OVERRIDES: "testing=Off roottest=Off minimal=On"
         CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/alma9.txt'
       shell: bash
       run: |
