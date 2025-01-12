@@ -127,7 +127,7 @@ void HeaderSearch::AddSearchPath(const DirectoryLookup &dir, bool isAngled) {
   SystemDirIdx++;
 }
 
-void HeaderSearch::RemoveSearchPath(const DirectoryLookup &dir, bool isAngled) {
+void HeaderSearch::RemoveSearchPath(DirectoryLookup &dir, bool isAngled) {
   auto position = std::find(SearchDirs.begin(), SearchDirs.end(), dir);
   auto idx = std::distance(SearchDirs.begin(), position);
   SearchDirs.erase(position);
