@@ -1865,8 +1865,9 @@ class TFramePainter extends ObjectPainter {
             this[`zoom_${name}min`] = axis.fFirst > 1 ? axis.GetBinLowEdge(axis.fFirst) : axis.fXmin;
             this[`zoom_${name}max`] = axis.fLast < axis.fNbins ? axis.GetBinLowEdge(axis.fLast + 1) : axis.fXmax;
             // reset user range for main painter
-            axis.InvertBit(EAxisBits.kAxisRange);
-            axis.fFirst = 1; axis.fLast = axis.fNbins;
+            axis.SetBit(EAxisBits.kAxisRange, false);
+            axis.fFirst = 1;
+            axis.fLast = axis.fNbins;
          }
       }
    }
@@ -2656,8 +2657,7 @@ class TFramePainter extends ObjectPainter {
                      flag = true;
                   } else
                      faxis.fLast = faxis.fNbins;
-                  if (flag !== faxis.TestBit(EAxisBits.kAxisRange))
-                     faxis.InvertBit(EAxisBits.kAxisRange);
+                  faxis.SetBit(EAxisBits.kAxisRange, flag);
                   hist_painter?.scanContent();
                   this.zoomSingle(kind, arr[0], arr[1], true).then(res => {
                      if (!res && flag)
@@ -2707,15 +2707,14 @@ class TFramePainter extends ObjectPainter {
             menu.endsub();
          }
          menu.addchk(faxis.TestBit(EAxisBits.kMoreLogLabels), 'More log', flag => {
-            faxis.InvertBit(EAxisBits.kMoreLogLabels);
+            faxis.SetBit(EAxisBits.kMoreLogLabels, flag);
             if (hist_painter?.snapid && (kind.length === 1))
                hist_painter.interactiveRedraw('pad', `exec:SetMoreLogLabels(${flag})`, kind);
             else
                this.interactiveRedraw('pad');
          });
          menu.addchk(handle?.noexp ?? faxis.TestBit(EAxisBits.kNoExponent), 'No exponent', flag => {
-            if (flag !== faxis.TestBit(EAxisBits.kNoExponent))
-               faxis.InvertBit(EAxisBits.kNoExponent);
+            faxis.SetBit(EAxisBits.kNoExponent, flag);
             if (handle) handle.noexp_changed = true;
             this[`${kind}_noexp_changed`] = true;
             if (hist_painter?.snapid && (kind.length === 1))

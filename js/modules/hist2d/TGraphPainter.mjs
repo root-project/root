@@ -1186,8 +1186,8 @@ class TGraphPainter extends ObjectPainter {
    testEditable(arg) {
       const obj = this.getGraph();
       if (!obj) return false;
-      if ((arg === 'toggle') || ((arg !== undefined) && (!arg !== obj.TestBit(kNotEditable))))
-         obj.InvertBit(kNotEditable);
+      if ((arg === 'toggle') || (arg !== undefined))
+         obj.SetBit(kNotEditable, !arg);
       return !obj.TestBit(kNotEditable);
    }
 
@@ -1595,8 +1595,8 @@ class TGraphPainter extends ObjectPainter {
       painter.createBins();
       painter.createStat();
       const graph = painter.getGraph();
-      if (!settings.DragGraphs && graph && !graph.TestBit(kNotEditable))
-         graph.InvertBit(kNotEditable);
+      if (!settings.DragGraphs)
+         graph?.SetBit(kNotEditable, true);
 
       let promise = Promise.resolve();
 
