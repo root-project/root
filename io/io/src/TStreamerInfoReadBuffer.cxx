@@ -1362,7 +1362,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
             continue;
 
          case TStreamerInfo::kObject: // Class derived from TObject
-            if (cle->IsStartingWithTObject() && cle->GetState() > TClass::kEmulated) {
+            if (cle == newCle && cle->IsStartingWithTObject() && cle->GetState() > TClass::kEmulated) {
                DOLOOP {((TObject*)(arr[k]+ioffset))->Streamer(b);}
                continue; // intentionally inside the if statement.
                       // if the class does not start with its TObject part (or does
