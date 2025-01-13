@@ -501,7 +501,7 @@ if (builtin_cling)
     set(CLING_CXXFLAGS " ${LLVM_DEFS} -DNOMINMAX -D_XKEYCHECK_H")
   else()
     # FIXME: Work hard to remove -Wno-shadow and -Wno-unused-parameter
-    set(CLING_CXXFLAGS " ${LLVM_DEFS} -fno-strict-aliasing -Wwrite-strings -Wno-shadow -Wno-unused-parameter -Wno-deprecated-declarations")
+    set(CLING_CXXFLAGS " ${LLVM_DEFS} -fno-strict-aliasing -Wwrite-strings -Wno-shadow -Wno-unused-parameter")
   endif()
 
   # Set the flags in the parent scope for the rest of the cling-based libraries in ROOT.
