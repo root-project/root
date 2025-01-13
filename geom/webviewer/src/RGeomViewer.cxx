@@ -163,7 +163,8 @@ void RGeomViewer::Update()
    if (fWebHierarchy)
       fWebHierarchy->Update();
 
-   SendGeometry(0);
+   if (fWebWindow && (fWebWindow->NumConnections() > 0))
+      SendGeometry();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -233,8 +234,7 @@ void RGeomViewer::SetDrawOptions(const std::string &opt)
 /// In this case method executed asynchronously - it returns immediately and image will stored shortly afterwards when
 /// received from the client Height and width parameters are ignored in that case and derived from actual drawing size
 /// in the browser. Another possibility is to invoke headless browser, providing positive width and height parameter
-/// explicitely
-///
+/// explicitly
 
 void RGeomViewer::SaveImage(const std::string &fname, int width, int height)
 {
