@@ -257,6 +257,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
          continue;
       const auto &columnInfos = fActivePhysicalColumns.GetColumnInfos(columnId);
 
+      allElements.reserve(allElements.size() + columnInfos.size());
       for (const auto &info : columnInfos) {
          allElements.emplace_back(GenerateColumnElement(info.fElementId));
 
@@ -857,6 +858,8 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
    }
 
    const auto nColumns = descriptor.GetNPhysicalColumns();
+   fOpenColumnRanges.reserve(fOpenColumnRanges.size() + (nColumns - nColumnsBeforeUpdate));
+   fOpenPageRanges.reserve(fOpenPageRanges.size() + (nColumns - nColumnsBeforeUpdate));
    for (DescriptorId_t i = nColumnsBeforeUpdate; i < nColumns; ++i) {
       RClusterDescriptor::RColumnRange columnRange;
       columnRange.fPhysicalColumnId = i;
@@ -899,8 +902,10 @@ void ROOT::Experimental::Internal::RPagePersistentSink::InitImpl(RNTupleModel &m
    projectedFields.GetFieldZero().SetOnDiskId(0);
 
    RNTupleModelChangeset initialChangeset{model};
+   initialChangeset.fAddedFields.reserve(fieldZero.GetSubFields().size());
    for (auto f : fieldZero.GetSubFields())
       initialChangeset.fAddedFields.emplace_back(f);
+   initialChangeset.fAddedProjectedFields.reserve(projectedFields.GetFieldZero().GetSubFields().size());
    for (auto f : projectedFields.GetFieldZero().GetSubFields())
       initialChangeset.fAddedProjectedFields.emplace_back(f);
    UpdateSchema(initialChangeset, 0U);
@@ -1135,6 +1140,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitClusterGroup()
 
    const auto nClusters = descriptor.GetNActiveClusters();
    std::vector<DescriptorId_t> physClusterIDs;
+   physClusterIDs.reserve(nClusters);
    for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
       physClusterIDs.emplace_back(fSerializationContext.MapClusterId(i));
    }
@@ -1158,6 +1164,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitClusterGroup()
          .NClusters(nClusters - fNextClusterInGroup);
    }
    std::vector<DescriptorId_t> clusterIds;
+   clusterIds.reserve(nClusters);
    for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
       clusterIds.emplace_back(i);
    }
