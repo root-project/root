@@ -1,9 +1,13 @@
 #include "TClass.h"
 #include "TFile.h"
+#include "TList.h"
+#include "TObjString.h"
 #include "TStreamerInfo.h"
 
 #include <limits>
 #include <type_traits>
+#include <list>
+#include <string>
 
 struct A {
   float f = 1.1;
@@ -16,6 +20,16 @@ struct B {
 struct C {
   long long f = 5;
 };
+
+struct RooLikeList : public TList {
+   ClassDef(RooLikeList, 2);
+};
+
+void Feed(TList &l, std::vector<const char*> names)
+{
+   for(auto name : names)
+      l.Add(new TObjString(name));
+}
 
 struct Old
 {
@@ -36,6 +50,25 @@ struct Old
    A fArrayS[3] = {41.5, 42.6, 43.7};
    A fArraySB[3] = {51.5, 52.6, 53.7};
    A fArraySC[3] = {61.5, 62.6, 63.7};
+   RooLikeList fListImplicit;
+   RooLikeList fListExplicit;
+   RooLikeList fListImplicitExplicit;
+
+   Old() {
+      Feed(fListImplicit, {"a1", "a2", "a3"});
+      Feed(fListExplicit, {"b1", "b2", "b3"});
+      Feed(fListImplicitExplicit, {"c1", "c2", "c3"});
+   }
+
+   ~Old()
+   {
+      delete fPtr;
+      delete fPtrB;
+      delete fPtrC;
+      fListImplicit.Delete();
+      fListExplicit.Delete();
+      fListImplicitExplicit.Delete();
+   }
 };
 
 struct New
@@ -65,6 +98,20 @@ struct New
 
    // This member has intentionally no correspoinding member in the input
    C fArrayNew[3];
+
+   TList fListImplicit;
+   TList fListExplicit;
+   std::list<std::string> fListImplicitExplicit;
+
+   ~New()
+   {
+      delete fPtr;
+      delete fPtrB;
+      delete fPtrC;
+      fListImplicit.Delete();
+      fListExplicit.Delete();
+   }
+
 };
 
 
@@ -79,7 +126,7 @@ void examine(double a, bool trailing = true)
 }
 
 template<typename T>
-void examine(T &a, bool trailing = true)
+void examine(const T &a, bool trailing = true)
 {
    std::cout << "The " << TClass::GetClass(typeid(T))->GetName();
    std::cout << " value is: " << a.f;
@@ -88,7 +135,7 @@ void examine(T &a, bool trailing = true)
 }
 
 template <typename T>
-void examine(T *p, bool trailing = true)
+void examine(T * const p, bool trailing = true)
 {
    std::cout << "The " << TClass::GetClass(typeid(T))->GetName() << "* value is: ";
    if (p)
@@ -115,6 +162,42 @@ void examine_array(std::array<T, N> arr, bool trailing = true)
 {
    examine_array<T, N>(arr.data(), trailing);
 }
+
+void examine_items(const TList &l, bool trailing = true)
+{
+   for(auto str : TRangeDynCast<TObjString>(l)) {
+      std::cout << "   " << str->String();
+      if (trailing)
+         std::cout << '\n';
+      else
+         std::cout << "   ";
+   }
+}
+
+void examine(const TList &l, bool trailing = true)
+{
+   std::cout << "The TList values are:\n";
+   examine_items(l, trailing);
+}
+
+void examine(const RooLikeList &l, bool trailing = true)
+{
+   std::cout << "The RooLikeList values are:\n";
+   examine_items(l, trailing);
+}
+
+void examine(const std::list<std::string> &l, bool trailing = true)
+{
+   std::cout << "The std::list<std::string> values are:\n";
+   for(auto str : l) {
+      std::cout << "   " << str;
+      if (trailing)
+         std::cout << '\n';
+      else
+         std::cout << "   ";
+   }
+}
+
 
 template<typename T, typename V>
 bool test_value(T in, V ref)
@@ -180,21 +263,80 @@ bool check_array(std::array<T, N> &arr, V ref)
    return check_array<T, N, V>(arr.data(), ref);
 }
 
+bool check(const TList &l, std::vector<const char*> ref)
+{
+   bool error = false;
+   size_t i = 0;
+   for(auto str : TRangeDynCast<TObjString>(l)) {
+      error = error || (strcmp(str->String(), ref[i]) != 0);
+      ++i;
+   }
+   if (i != ref.size())
+      error = true;
+
+   examine(l);
+   if (error) {
+      std::cout << " and is incorrect, expected values: ";
+      for(const auto &v : ref)
+         std::cout << v << " ";
+      std::cout << '\n';
+   } else
+      std::cout << " and is correct.\n";
+   return !error;
+}
+
+bool check(const std::list<std::string> &l, std::vector<const char*> ref)
+{
+   bool error = false;
+   size_t i = 0;
+   for(auto str : l) {
+      error = error || (str != ref[i]);
+      ++i;
+   }
+   if (i != ref.size())
+      error = true;
+
+   examine(l);
+   if (error) {
+      std::cout << " and is incorrect, expected values: ";
+      for(const auto &v : ref)
+         std::cout << v << " ";
+      std::cout << '\n';
+   } else
+      std::cout << " and is correct.\n";
+   return !error;
+}
+
 void printAddress(void *obj, const char *name, void *member)
 {
    std::cout << "For object " << obj << " " << name << " is " << member << '\n';
+}
+
+void MoveTo(TList &input, TList &output)
+{
+   for(auto str : TRangeDynCast<TObjString>(&input))
+      output.Add(str);
+   input.Clear();
+}
+
+void CopyTo(const TList &input, std::list<std::string> &output)
+{
+   for(auto str : TRangeDynCast<TObjString>(&input))
+      output.push_back(str->String().Data());
 }
 
 #ifdef __ROOTCLING__
 #pragma link C++ class A+;
 #pragma link C++ class B+;
 #pragma link C++ class C+;
+#pragma link C++ class RooLikeList+;
 #pragma link C++ class Old+;
 #pragma link C++ class New+;
 #pragma read sourceClass="A" targetClass="B";
 #pragma read sourceClass="A" targetClass="C";
 #pragma read sourceClass="B" targetClass="C";
 #pragma read sourceClass="Old" targetClass="New";
+#pragma read sourceClass="RooLikeList" targetClass="TList";
 
 #pragma read sourceClass="Old" targetClass="New" source="float fInt" target="fInt" version="[1-]" \
    code="{ fInt = onfile.fInt - 1; }"
@@ -243,6 +385,14 @@ void printAddress(void *obj, const char *name, void *member)
 
 #pragma read sourceClass="Old" targetClass="New" source="A fArrayNew[3]" target="fArrayNew" version="[1-]" \
   code="{ examine_array<A,3>(onfile.fArrayNew); for(size_t i = 0; i < 3; ++i) fArrayNew[i].f = onfile.fArrayNew[i].f; }"
+
+// Lists
+#pragma read sourceClass="Old" targetClass="New" source="RooLikeList fListExplicit" target="fListExplicit" version="[1-]" \
+  code="{ examine(onfile.fListExplicit); MoveTo(onfile.fListExplicit, fListExplicit); }"
+
+#pragma read sourceClass="Old" targetClass="New" source="TList fListImplicitExplicit" target="fListImplicitExplicit" version="[1-]" \
+  code="{ examine(onfile.fListImplicitExplicit); CopyTo(onfile.fListImplicitExplicit, fListImplicitExplicit); onfile.fListImplicitExplicit.Delete(); }"
+
 
 #endif
 
@@ -299,6 +449,10 @@ int readfile(const char *filename = "sourcetypes.root")
    res = res && check_array(n->fArrayS, std::vector<float>{41.5, 42.6, 43.7});
    res = res && check_array(n->fArraySB, std::vector<float>{51.5, 52.6, 53.7});
    res = res && check_array(n->fArraySC, std::vector<int>{61, 62, 63});
+
+   res = res && check(n->fListImplicit, {"a1", "a2", "a3"});
+   res = res && check(n->fListExplicit, {"b1", "b2", "b3"});
+   res = res && check(n->fListImplicitExplicit, {"c1", "c2", "c3"});
 
    return !res; // 0 is success.
 }
