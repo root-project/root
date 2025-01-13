@@ -161,8 +161,9 @@ RNTupleExporter::RPagesResult RNTupleExporter::ExportPages(RPageSource &source, 
             const std::size_t maybeChecksumSize = incChecksum * 8;
             const std::uint64_t pageBufSize = pageInfo.fLocator.GetNBytesOnStorage() + maybeChecksumSize;
             std::ostringstream ss{options.fOutputPath, std::ios_base::ate};
+            assert(colRange.fCompressionSettings);
             ss << "/cluster_" << clusterDesc.GetId() << "_" << colInfo.fQualifiedName << "_page_" << pageIdx
-               << "_elems_" << pageInfo.fNElements << "_comp_" << colRange.fCompressionSettings.value() << ".page";
+               << "_elems_" << pageInfo.fNElements << "_comp_" << *colRange.fCompressionSettings << ".page";
             const auto outFileName = ss.str();
             std::ofstream outFile{outFileName, std::ios_base::binary};
             outFile.write(reinterpret_cast<const char *>(pageBuf), pageBufSize);
