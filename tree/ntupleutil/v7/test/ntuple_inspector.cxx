@@ -62,7 +62,7 @@ TEST(RNTupleInspector, CompressionSettings)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   EXPECT_EQ(207, inspector->GetCompressionSettings());
+   EXPECT_EQ(207, *inspector->GetCompressionSettings());
    EXPECT_EQ("LZMA (level 7)", inspector->GetCompressionSettingsAsString());
 }
 
@@ -94,7 +94,19 @@ TEST(RNTupleInspector, UnknownCompression)
    }
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(505, inspector->GetCompressionSettings());
+   EXPECT_EQ(505, *inspector->GetCompressionSettings());
+}
+
+TEST(RNTupleInspector, Empty)
+{
+   FileRaii fileGuard("test_ntuple_inspector_empty.root");
+   {
+      auto writer = RNTupleWriter::Recreate(RNTupleModel::Create(), "ntuple", fileGuard.GetPath());
+   }
+
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+   EXPECT_FALSE(inspector->GetCompressionSettings());
+   EXPECT_EQ("unknown", inspector->GetCompressionSettingsAsString());
 }
 
 TEST(RNTupleInspector, SizeUncompressedSimple)

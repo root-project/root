@@ -68,7 +68,7 @@ auto rntuple = std::unique_ptr<RNTuple>(file->Get<RNTuple>("NTupleName"));
 auto inspector = RNTupleInspector::Create(*rntuple);
 
 std::cout << "The compression factor is " << inspector->GetCompressionFactor()
-          << " using compression settings " << inspector->GetCompressionSettings()
+          << " using compression settings " << inspector->GetCompressionSettingsAsString()
           << std::endl;
 ~~~
 */
@@ -135,7 +135,7 @@ public:
 private:
    std::unique_ptr<Internal::RPageSource> fPageSource;
    std::unique_ptr<RNTupleDescriptor> fDescriptor;
-   std::optional<std::uint32_t> fCompressionSettings;
+   std::optional<std::uint32_t> fCompressionSettings; ///< The compression settings are unknown for an empty ntuple
    std::uint64_t fCompressedSize = 0;
    std::uint64_t fUncompressedSize = 0;
 
@@ -210,10 +210,11 @@ public:
    ///
    /// \return The integer representation (\f$algorithm * 10 + level\f$, where \f$algorithm\f$ follows
    /// ROOT::RCompressionSetting::ELevel::EValues) of the compression settings used for the inspected RNTuple.
+   /// Empty for an empty ntuple.
    ///
    /// \note Here, we assume that the compression settings are consistent across all clusters and columns. If this is
    /// not the case, an exception will be thrown when RNTupleInspector::Create is called.
-   int GetCompressionSettings() const { return fCompressionSettings.value(); }
+   std::optional<std::uint32_t> GetCompressionSettings() const { return fCompressionSettings; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get a string describing compression settings of the RNTuple being inspected.
