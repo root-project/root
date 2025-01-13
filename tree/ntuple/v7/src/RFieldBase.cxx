@@ -97,6 +97,14 @@ void ROOT::Experimental::Internal::CallConnectPageSourceOnField(RFieldBase &fiel
    field.ConnectPageSource(source);
 }
 
+ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
+ROOT::Experimental::Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &canonicalType,
+                                                  const std::string &typeAlias, const RCreateFieldOptions &options,
+                                                  const RNTupleDescriptor *desc, DescriptorId_t fieldId)
+{
+   return RFieldBase::Create(fieldName, canonicalType, typeAlias, options, desc, fieldId);
+}
+
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RFieldBase::RColumnRepresentations::RColumnRepresentations()
@@ -181,7 +189,7 @@ void ROOT::Experimental::RFieldBase::RBulk::Reset(RNTupleLocalIndex firstIndex, 
          throw RException(R__FAIL("invalid attempt to bulk read beyond the adopted buffer"));
       }
       ReleaseValues();
-      fValues = operator new(size * fValueSize);
+      fValues = operator new(size *fValueSize);
 
       if (!(fField->GetTraits() & RFieldBase::kTraitTriviallyConstructible)) {
          for (std::size_t i = 0; i < size; ++i) {
@@ -503,8 +511,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
             Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">", options, desc, maybeGetChildId(0))
                .Unwrap();
 
-         // We use the type names of subfields of the newly created item fields to create the map's type name to ensure
-         // the inner type names are properly normalized.
+         // We use the type names of subfields of the newly created item fields to create the map's type name to
+         // ensure the inner type names are properly normalized.
          auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
          auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
 
@@ -519,8 +527,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
             Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">", options, desc, maybeGetChildId(0))
                .Unwrap();
 
-         // We use the type names of subfields of the newly created item fields to create the map's type name to ensure
-         // the inner type names are properly normalized.
+         // We use the type names of subfields of the newly created item fields to create the map's type name to
+         // ensure the inner type names are properly normalized.
          auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
          auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
 
@@ -535,8 +543,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
             Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">", options, desc, maybeGetChildId(0))
                .Unwrap();
 
-         // We use the type names of subfields of the newly created item fields to create the map's type name to ensure
-         // the inner type names are properly normalized.
+         // We use the type names of subfields of the newly created item fields to create the map's type name to
+         // ensure the inner type names are properly normalized.
          auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
          auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
 
@@ -552,8 +560,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
             Create("_0", "std::pair<" + innerTypes[0] + "," + innerTypes[1] + ">", options, desc, maybeGetChildId(0))
                .Unwrap();
 
-         // We use the type names of subfields of the newly created item fields to create the map's type name to ensure
-         // the inner type names are properly normalized.
+         // We use the type names of subfields of the newly created item fields to create the map's type name to
+         // ensure the inner type names are properly normalized.
          auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
          auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
 
