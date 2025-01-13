@@ -22,7 +22,8 @@ std::string ReadFileToString(const char *fname)
    fseek(f, 0, SEEK_SET);
    std::string str;
    str.resize(size);
-   fread(str.data(), 1, size, f);
+   size_t bytesRead = fread(str.data(), 1, size, f);
+   R__ASSERT(bytesRead == size);
    fclose(f);
    return str;
 }
