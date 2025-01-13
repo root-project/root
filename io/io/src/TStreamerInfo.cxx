@@ -288,10 +288,13 @@ namespace {
                memType = TVirtualStreamerInfo::kAnyP;
             }
          } else {
-            if (memClass->IsTObject()) {
-               memType = TVirtualStreamerInfo::kObject;
-            } else if (memClass->GetCollectionProxy()) {
+            if (memClass->GetCollectionProxy()) {
                memType = TVirtualStreamerInfo::kSTL;
+            } else if(memClass->IsTObject() && memClass == element->GetClassPointer()) {
+               // If there is a change in the class type, we can't use the TObject::Streamer
+               // virtual function: it would streame the data using the in-memory type rather
+               // than the onfile type.
+               memType = TVirtualStreamerInfo::kObject;
             } else {
                memType = TVirtualStreamerInfo::kAny;
             }
@@ -349,6 +352,13 @@ namespace {
    void UpdateFromRule(const TStreamerInfo *info, const ROOT::TSchemaRule::TSources *s, TStreamerElement *element)
    {
       auto [memClass, memType, datasize, dimensions, totaldim] = GetSourceType(s, element);
+      if (element->GetType() == TVirtualStreamerInfo::kObject && memClass != element->GetClassPointer())
+      {
+         // If there is a change in the class type, we can't use the TObject::Streamer
+         // virtual function: it would streame the data using the in-memory type rather
+         // than the onfile type.
+         element->SetType(TVirtualStreamerInfo::kAny);
+      }
       element->SetNewType( memType );
       element->SetNewClass( memClass );
       // We can not change the recorded dimensions.  Let's check that
