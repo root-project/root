@@ -125,7 +125,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
       // NOTE: Unwrap() here may throw an exception, hence the try block.
       // If options.fReturnInvalidOnError is false we just rethrow it, otherwise we return an InvalidField wrapping the
       // error.
-      auto field = RFieldBase::Create(fieldName, typeName, typeName, options, &ntplDesc, fFieldId).Unwrap();
+      auto field = Internal::CallFieldBaseCreate(fieldName, typeName, typeName, options, &ntplDesc, fFieldId).Unwrap();
       field->SetOnDiskId(fFieldId);
 
       for (auto &subfield : *field) {

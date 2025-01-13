@@ -42,11 +42,15 @@ struct RFieldCallbackInjector;
 struct RFieldRepresentationModifier;
 class RPageSink;
 class RPageSource;
-// TODO(jblomer): find a better way to not have these four methods in the RFieldBase public API
+// TODO(jblomer): find a better way to not have these methods in the RFieldBase public API
 void CallFlushColumnsOnField(RFieldBase &);
 void CallCommitClusterOnField(RFieldBase &);
 void CallConnectPageSinkOnField(RFieldBase &, RPageSink &, NTupleSize_t firstEntry = 0);
 void CallConnectPageSourceOnField(RFieldBase &, RPageSource &);
+ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
+CallFieldBaseCreate(const std::string &fieldName, const std::string &canonicalType, const std::string &typeAlias,
+                    const RCreateFieldOptions &options, const RNTupleDescriptor *desc, DescriptorId_t fieldId);
+
 } // namespace Internal
 
 namespace Detail {
@@ -70,14 +74,18 @@ This is and can only be partially enforced through C++.
 // clang-format on
 class RFieldBase {
    friend class ROOT::Experimental::RClassField;                             // to mark members as artificial
-   friend class ROOT::Experimental::RNTupleJoinProcessor;                    // needs ConstuctValue
-   friend class ROOT::Experimental::RFieldDescriptor;
+   friend class ROOT::Experimental::RNTupleJoinProcessor;                    // needs ConstructValue
    friend struct ROOT::Experimental::Internal::RFieldCallbackInjector;       // used for unit tests
    friend struct ROOT::Experimental::Internal::RFieldRepresentationModifier; // used for unit tests
    friend void Internal::CallFlushColumnsOnField(RFieldBase &);
    friend void Internal::CallCommitClusterOnField(RFieldBase &);
    friend void Internal::CallConnectPageSinkOnField(RFieldBase &, Internal::RPageSink &, NTupleSize_t);
    friend void Internal::CallConnectPageSourceOnField(RFieldBase &, Internal::RPageSource &);
+   friend ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
+   Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &canonicalType,
+                                 const std::string &typeAlias, const RCreateFieldOptions &options,
+                                 const RNTupleDescriptor *desc, DescriptorId_t fieldId);
+
    using ReadCallback_t = std::function<void(void *)>;
 
 protected:
@@ -480,7 +488,8 @@ protected:
           const RCreateFieldOptions &options = {}, const RNTupleDescriptor *desc = nullptr,
           DescriptorId_t fieldId = kInvalidDescriptorId);
 
-   /// Same as the above overload of Create, but infers the normalized type name and the canonical type name from `typeName`.
+   /// Same as the above overload of Create, but infers the normalized type name and the canonical type name from
+   /// `typeName`.
    static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &typeName,
                                                       const RCreateFieldOptions &options, const RNTupleDescriptor *desc,
                                                       DescriptorId_t fieldId);
