@@ -177,6 +177,7 @@ private:
    std::string fProtocol;                           ///<! protocol
    std::string fUserArgs;                           ///<! arbitrary JSON code, which is accessible via conn.getUserArgs() method
    std::shared_ptr<void> fClearOnClose;             ///<! entry which is cleared when last connection is closed
+   static std::string gJSROOTsettings;              ///<! custom settings for JSROOT
 
    std::shared_ptr<RWebWindowWSHandler> CreateWSHandler(std::shared_ptr<RWebWindowsManager> mgr, unsigned id, double tmout);
 
@@ -424,6 +425,8 @@ public:
    static bool IsFileDialogMessage(const std::string &msg);
 
    static bool EmbedFileDialog(const std::shared_ptr<RWebWindow> &window, unsigned connid, const std::string &args);
+
+   static void SetJSROOTSettings(const std::string &json);
 };
 
 } // namespace ROOT
