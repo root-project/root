@@ -531,7 +531,7 @@ with lower precision than `Real32` and `SplitReal32`.
 It is an IEEE-754 single precision float with some of the mantissa's least significant bits truncated.
 
 The `Real32Quant` type column is a variable-sized real column that is internally represented as an integer within
-a specified range of values. For this column type, flag 0x10 (column with range) is always set (see paragraphs below).
+a specified range of values. For this column type, flag 0x02 (column with range) is always set (see paragraphs below).
 
 Future versions of the file format may introduce additional column types
 without changing the minimum version of the header or introducing a feature flag.
