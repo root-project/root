@@ -595,11 +595,9 @@ ROOT::Experimental::RNTupleDescriptor::AddClusterGroupDetails(DescriptorId_t clu
          return R__FAIL("invalid attempt to re-populate existing cluster");
       }
    }
-   std::sort(clusterIds.begin(), clusterIds.end(),
-             [this](DescriptorId_t a, DescriptorId_t b)
-             {
-                return fClusterDescriptors[a].GetFirstEntryIndex() < fClusterDescriptors[b].GetFirstEntryIndex();
-             });
+   std::sort(clusterIds.begin(), clusterIds.end(), [this](DescriptorId_t a, DescriptorId_t b) {
+      return fClusterDescriptors[a].GetFirstEntryIndex() < fClusterDescriptors[b].GetFirstEntryIndex();
+   });
    auto cgBuilder = Internal::RClusterGroupDescriptorBuilder::FromSummary(iter->second);
    cgBuilder.AddSortedClusters(clusterIds);
    iter->second = cgBuilder.MoveDescriptor().Unwrap();
@@ -949,10 +947,9 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RNTupleDescr
    for (const auto &[id, _] : fDescriptor.fClusterGroupDescriptors)
       fDescriptor.fSortedClusterGroupIds.emplace_back(id);
    std::sort(fDescriptor.fSortedClusterGroupIds.begin(), fDescriptor.fSortedClusterGroupIds.end(),
-             [this](DescriptorId_t a, DescriptorId_t b)
-             {
-               return fDescriptor.fClusterGroupDescriptors[a].GetMinEntry() <
-                      fDescriptor.fClusterGroupDescriptors[b].GetMinEntry();
+             [this](DescriptorId_t a, DescriptorId_t b) {
+                return fDescriptor.fClusterGroupDescriptors[a].GetMinEntry() <
+                       fDescriptor.fClusterGroupDescriptors[b].GetMinEntry();
              });
    RNTupleDescriptor result;
    std::swap(result, fDescriptor);
