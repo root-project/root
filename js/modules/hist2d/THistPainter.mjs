@@ -425,11 +425,12 @@ class THistDrawOptions {
          if ((axis === 'fZaxis') && (hdim < 3) && !this.Lego && !this.Surf)
             return;
          let flag = d.check(opt);
-         if (pad && pad['$'+opt]) { flag = true; pad['$'+opt] = undefined; }
-         if (flag && histo) {
-            if (!histo[axis].TestBit(bit))
-               histo[axis].InvertBit(bit);
+         if (pad && pad['$'+opt]) {
+            flag = true;
+            pad['$'+opt] = undefined;
          }
+         if (flag && histo)
+            histo[axis].SetBit(bit, true);
       };
 
       check_axis_bit('OTX', 'fXaxis', EAxisBits.kOppositeTitle);
@@ -1099,13 +1100,13 @@ class THistPainter extends ObjectPainter {
 
          // copy histogram bits
          if (histo.TestBit(kNoStats) !== obj.TestBit(kNoStats)) {
-            histo.InvertBit(kNoStats);
+            histo.SetBit(kNoStats, obj.TestBit(kNoStats));
             // here check only stats bit
-            if (statpainter) statpainter.Enabled = !histo.TestBit(kNoStats) && !this.options.NoStat; // && (!this.options.Same || this.options.ForceStat)
+            if (statpainter)
+               statpainter.Enabled = !histo.TestBit(kNoStats) && !this.options.NoStat; // && (!this.options.Same || this.options.ForceStat)
          }
 
-         if (histo.TestBit(kIsZoomed) !== obj.TestBit(kIsZoomed))
-            histo.InvertBit(kIsZoomed);
+         histo.SetBit(kIsZoomed, obj.TestBit(kIsZoomed));
 
          // special treatment for web canvas - also name can be changed
          if (this.snapid !== undefined) {
@@ -1679,9 +1680,12 @@ class THistPainter extends ObjectPainter {
       let res = false;
 
       const unzoomTAxis = obj => {
-         if (!obj || !obj.TestBit(EAxisBits.kAxisRange)) return false;
-         if (obj.fFirst === obj.fLast) return false;
-         if ((obj.fFirst <= 1) && (obj.fLast >= obj.fNbins)) return false;
+         if (!obj || !obj.TestBit(EAxisBits.kAxisRange))
+            return false;
+         if (obj.fFirst === obj.fLast)
+            return false;
+         if ((obj.fFirst <= 1) && (obj.fLast >= obj.fNbins))
+            return false;
          obj.InvertBit(EAxisBits.kAxisRange);
          return true;
       },
@@ -1726,15 +1730,15 @@ class THistPainter extends ObjectPainter {
       menu.input(`Enter user range for axis ${arg} like [1,${taxis.fNbins}]`, curr).then(res => {
          if (!res) return;
          res = JSON.parse(res);
-         if (!res || (res.length !== 2)) return;
-         const first = parseInt(res[0]), last = parseInt(res[1]);
-         if (!Number.isInteger(first) || !Number.isInteger(last)) return;
+         if (!res || (res.length !== 2))
+            return;
+         const first = parseInt(res[0]),
+               last = parseInt(res[1]);
+         if (!Number.isInteger(first) || !Number.isInteger(last))
+            return;
          taxis.fFirst = first;
          taxis.fLast = last;
-
-         const newflag = (taxis.fFirst < taxis.fLast) && (taxis.fFirst >= 1) && (taxis.fLast <= taxis.fNbins);
-         if (newflag !== taxis.TestBit(EAxisBits.kAxisRange))
-            taxis.InvertBit(EAxisBits.kAxisRange);
+         taxis.SetBit(EAxisBits.kAxisRange, (taxis.fFirst < taxis.fLast) && (taxis.fFirst >= 1) && (taxis.fLast <= taxis.fNbins));
 
          this.interactiveRedraw();
       });

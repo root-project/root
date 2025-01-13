@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '9/01/2025',
+version_date = '13/01/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -61563,9 +61563,9 @@ class JSRootMenu {
 
       this.sub('Labels');
       this.addchk(faxis.TestBit(EAxisBits.kCenterLabels), 'Center',
-            arg => { faxis.InvertBit(EAxisBits.kCenterLabels); painter.interactiveRedraw('pad', `exec:CenterLabels(${arg})`, kind); });
+            arg => { faxis.SetBit(EAxisBits.kCenterLabels, arg); painter.interactiveRedraw('pad', `exec:CenterLabels(${arg})`, kind); });
       this.addchk(faxis.TestBit(EAxisBits.kLabelsVert), 'Rotate',
-            arg => { faxis.InvertBit(EAxisBits.kLabelsVert); painter.interactiveRedraw('pad', `exec:SetBit(TAxis::kLabelsVert,${arg})`, kind); });
+            arg => { faxis.SetBit(EAxisBits.kLabelsVert, arg); painter.interactiveRedraw('pad', `exec:SetBit(TAxis::kLabelsVert,${arg})`, kind); });
       this.addColorMenu('Color', faxis.fLabelColor,
             arg => { faxis.fLabelColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetLabelColor'), kind); });
       this.addSizeMenu('Offset', -0.02, 0.1, 0.01, faxis.fLabelOffset,
@@ -61601,20 +61601,21 @@ class JSRootMenu {
          });
       });
       this.addchk(faxis.TestBit(EAxisBits.kCenterTitle), 'Center',
-            arg => { faxis.InvertBit(EAxisBits.kCenterTitle); painter.interactiveRedraw('pad', `exec:CenterTitle(${arg})`, kind); });
+            arg => { faxis.SetBit(EAxisBits.kCenterTitle, arg); painter.interactiveRedraw('pad', `exec:CenterTitle(${arg})`, kind); });
       if (!painter?.snapid) {
          this.addchk(faxis.TestBit(EAxisBits.kOppositeTitle), 'Opposite',
-                () => { faxis.InvertBit(EAxisBits.kOppositeTitle); painter.redrawPad(); });
+                arg => { faxis.SetBit(EAxisBits.kOppositeTitle, arg); painter.redrawPad(); });
       }
       this.addchk(faxis.TestBit(EAxisBits.kRotateTitle), 'Rotate',
-            arg => { faxis.InvertBit(EAxisBits.kRotateTitle); painter.interactiveRedraw('pad', is_gaxis ? `exec:SetBit(TAxis::kRotateTitle, ${arg})` : `exec:RotateTitle(${arg})`, kind); });
-      if (is_gaxis) {
-         this.addColorMenu('Color', faxis.fTextColor,
-               arg => { faxis.fTextColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind); });
-      } else {
-         this.addColorMenu('Color', faxis.fTitleColor,
-               arg => { faxis.fTitleColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind); });
-      }
+            arg => { faxis.SetBit(EAxisBits.kRotateTitle, arg); painter.interactiveRedraw('pad', is_gaxis ? `exec:SetBit(TAxis::kRotateTitle, ${arg})` : `exec:RotateTitle(${arg})`, kind); });
+      this.addColorMenu('Color', is_gaxis ? faxis.fTextColor : faxis.fTitleColor, arg => {
+         if (is_gaxis)
+            faxis.fTextColor = arg;
+         else
+            faxis.fTitleColor = arg;
+
+         painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind);
+      });
       this.addSizeMenu('Offset', 0, 3, 0.2, faxis.fTitleOffset,
                       arg => { faxis.fTitleOffset = arg; painter.interactiveRedraw('pad', `exec:SetTitleOffset(${arg})`, kind); });
       a = faxis.fTitleSize >= 1;
@@ -63423,8 +63424,8 @@ class TAxisPainter extends ObjectPainter {
 
          const axis = this.getObject(), axis2 = this.source_axis,
                setBit = (bit, on) => {
-                  if (axis && axis.TestBit(bit) !== on) axis.InvertBit(bit);
-                  if (axis2 && axis2.TestBit(bit) !== on) axis2.InvertBit(bit);
+                  axis?.SetBit(bit, on);
+                  axis2?.SetBit(bit, on);
                };
 
          this.titleOffset = (vertical ? new_x : new_y) / offset_k;
@@ -65827,8 +65828,9 @@ class TFramePainter extends ObjectPainter {
             this[`zoom_${name}min`] = axis.fFirst > 1 ? axis.GetBinLowEdge(axis.fFirst) : axis.fXmin;
             this[`zoom_${name}max`] = axis.fLast < axis.fNbins ? axis.GetBinLowEdge(axis.fLast + 1) : axis.fXmax;
             // reset user range for main painter
-            axis.InvertBit(EAxisBits.kAxisRange);
-            axis.fFirst = 1; axis.fLast = axis.fNbins;
+            axis.SetBit(EAxisBits.kAxisRange, false);
+            axis.fFirst = 1;
+            axis.fLast = axis.fNbins;
          }
       }
    }
@@ -66618,8 +66620,7 @@ class TFramePainter extends ObjectPainter {
                      flag = true;
                   } else
                      faxis.fLast = faxis.fNbins;
-                  if (flag !== faxis.TestBit(EAxisBits.kAxisRange))
-                     faxis.InvertBit(EAxisBits.kAxisRange);
+                  faxis.SetBit(EAxisBits.kAxisRange, flag);
                   hist_painter?.scanContent();
                   this.zoomSingle(kind, arr[0], arr[1], true).then(res => {
                      if (!res && flag)
@@ -66669,15 +66670,14 @@ class TFramePainter extends ObjectPainter {
             menu.endsub();
          }
          menu.addchk(faxis.TestBit(EAxisBits.kMoreLogLabels), 'More log', flag => {
-            faxis.InvertBit(EAxisBits.kMoreLogLabels);
+            faxis.SetBit(EAxisBits.kMoreLogLabels, flag);
             if (hist_painter?.snapid && (kind.length === 1))
                hist_painter.interactiveRedraw('pad', `exec:SetMoreLogLabels(${flag})`, kind);
             else
                this.interactiveRedraw('pad');
          });
          menu.addchk(handle?.noexp ?? faxis.TestBit(EAxisBits.kNoExponent), 'No exponent', flag => {
-            if (flag !== faxis.TestBit(EAxisBits.kNoExponent))
-               faxis.InvertBit(EAxisBits.kNoExponent);
+            faxis.SetBit(EAxisBits.kNoExponent, flag);
             if (handle) handle.noexp_changed = true;
             this[`${kind}_noexp_changed`] = true;
             if (hist_painter?.snapid && (kind.length === 1))
@@ -69474,7 +69474,8 @@ class TPadPainter extends ObjectPainter {
    /** @summary Set grayscale mode for the canvas
      * @private */
    setGrayscale(flag) {
-      if (!this.iscan) return;
+      if (!this.iscan)
+         return;
 
       let changed = false;
 
@@ -71456,8 +71457,8 @@ class TPadPainter extends ObjectPainter {
 
       if (d.check('NOZOOMX')) this.options.NoZoomX = true;
       if (d.check('NOZOOMY')) this.options.NoZoomY = true;
-      if (d.check('GRAYSCALE') && !pad.TestBit(kIsGrayscale))
-          pad.InvertBit(kIsGrayscale);
+      if (d.check('GRAYSCALE'))
+         pad.SetBit(kIsGrayscale, true);
 
       function forEach(func, p) {
          if (!p) p = pad;
@@ -72335,9 +72336,7 @@ class TCanvasPainter extends TPadPainter {
                axes.push({ axis, f: axis.fFirst, l: axis.fLast, b: axis.fBits });
                axis.fFirst = main.getSelectIndex(name, 'left', 1);
                axis.fLast = main.getSelectIndex(name, 'right');
-               const has_range = (axis.fFirst > 0) || (axis.fLast < axis.fNbins);
-               if (has_range !== axis.TestBit(EAxisBits.kAxisRange))
-                  axis.InvertBit(EAxisBits.kAxisRange);
+               axis.SetBit(EAxisBits.kAxisRange, (axis.fFirst > 0) || (axis.fLast < axis.fNbins));
             }
          };
 
@@ -74664,11 +74663,12 @@ class THistDrawOptions {
          if ((axis === 'fZaxis') && (hdim < 3) && !this.Lego && !this.Surf)
             return;
          let flag = d.check(opt);
-         if (pad && pad['$'+opt]) { flag = true; pad['$'+opt] = undefined; }
-         if (flag && histo) {
-            if (!histo[axis].TestBit(bit))
-               histo[axis].InvertBit(bit);
+         if (pad && pad['$'+opt]) {
+            flag = true;
+            pad['$'+opt] = undefined;
          }
+         if (flag && histo)
+            histo[axis].SetBit(bit, true);
       };
 
       check_axis_bit('OTX', 'fXaxis', EAxisBits.kOppositeTitle);
@@ -75338,13 +75338,13 @@ class THistPainter extends ObjectPainter {
 
          // copy histogram bits
          if (histo.TestBit(kNoStats) !== obj.TestBit(kNoStats)) {
-            histo.InvertBit(kNoStats);
+            histo.SetBit(kNoStats, obj.TestBit(kNoStats));
             // here check only stats bit
-            if (statpainter) statpainter.Enabled = !histo.TestBit(kNoStats) && !this.options.NoStat; // && (!this.options.Same || this.options.ForceStat)
+            if (statpainter)
+               statpainter.Enabled = !histo.TestBit(kNoStats) && !this.options.NoStat; // && (!this.options.Same || this.options.ForceStat)
          }
 
-         if (histo.TestBit(kIsZoomed$1) !== obj.TestBit(kIsZoomed$1))
-            histo.InvertBit(kIsZoomed$1);
+         histo.SetBit(kIsZoomed$1, obj.TestBit(kIsZoomed$1));
 
          // special treatment for web canvas - also name can be changed
          if (this.snapid !== undefined) {
@@ -75918,9 +75918,12 @@ class THistPainter extends ObjectPainter {
       let res = false;
 
       const unzoomTAxis = obj => {
-         if (!obj || !obj.TestBit(EAxisBits.kAxisRange)) return false;
-         if (obj.fFirst === obj.fLast) return false;
-         if ((obj.fFirst <= 1) && (obj.fLast >= obj.fNbins)) return false;
+         if (!obj || !obj.TestBit(EAxisBits.kAxisRange))
+            return false;
+         if (obj.fFirst === obj.fLast)
+            return false;
+         if ((obj.fFirst <= 1) && (obj.fLast >= obj.fNbins))
+            return false;
          obj.InvertBit(EAxisBits.kAxisRange);
          return true;
       },
@@ -75965,15 +75968,15 @@ class THistPainter extends ObjectPainter {
       menu.input(`Enter user range for axis ${arg} like [1,${taxis.fNbins}]`, curr).then(res => {
          if (!res) return;
          res = JSON.parse(res);
-         if (!res || (res.length !== 2)) return;
-         const first = parseInt(res[0]), last = parseInt(res[1]);
-         if (!Number.isInteger(first) || !Number.isInteger(last)) return;
+         if (!res || (res.length !== 2))
+            return;
+         const first = parseInt(res[0]),
+               last = parseInt(res[1]);
+         if (!Number.isInteger(first) || !Number.isInteger(last))
+            return;
          taxis.fFirst = first;
          taxis.fLast = last;
-
-         const newflag = (taxis.fFirst < taxis.fLast) && (taxis.fFirst >= 1) && (taxis.fLast <= taxis.fNbins);
-         if (newflag !== taxis.TestBit(EAxisBits.kAxisRange))
-            taxis.InvertBit(EAxisBits.kAxisRange);
+         taxis.SetBit(EAxisBits.kAxisRange, (taxis.fFirst < taxis.fLast) && (taxis.fFirst >= 1) && (taxis.fLast <= taxis.fNbins));
 
          this.interactiveRedraw();
       });
@@ -77509,12 +77512,9 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          }
 
          if (first < last) {
-            const axis = p.fXaxis;
-            axis.fFirst = first;
-            axis.fLast = last;
-
-            if (((axis.fFirst === 1) && (axis.fLast === axis.fNbins)) === axis.TestBit(EAxisBits.kAxisRange))
-               axis.InvertBit(EAxisBits.kAxisRange);
+            p.fXaxis.fFirst = first;
+            p.fXaxis.fLast = last;
+            p.fXaxis.SetBit(EAxisBits.kAxisRange, (first !== 1) || (last !== p.fXaxis.fNbins));
          }
 
          // reset statistic before display
@@ -84344,8 +84344,7 @@ class TH3Painter extends THistPainter {
       this.draw_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
 
       this.transferFunc = this.findFunction(clTF1, 'TransferFunction');
-      if (this.transferFunc && !this.transferFunc.TestBit(BIT(9))) // TF1::kNotDraw
-         this.transferFunc.InvertBit(BIT(9));
+      this.transferFunc?.SetBit(BIT(9), true); // TF1::kNotDraw
    }
 
    /** @summary Count TH3 statistic */
@@ -149459,8 +149458,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
    testEditable(arg) {
       const obj = this.getGraph();
       if (!obj) return false;
-      if ((arg === 'toggle') || ((arg !== undefined) && (!arg !== obj.TestBit(kNotEditable))))
-         obj.InvertBit(kNotEditable);
+      if ((arg === 'toggle') || (arg !== undefined))
+         obj.SetBit(kNotEditable, !arg);
       return !obj.TestBit(kNotEditable);
    }
 
@@ -149868,8 +149867,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       painter.createBins();
       painter.createStat();
       const graph = painter.getGraph();
-      if (!settings.DragGraphs && graph && !graph.TestBit(kNotEditable))
-         graph.InvertBit(kNotEditable);
+      if (!settings.DragGraphs)
+         graph?.SetBit(kNotEditable, true);
 
       let promise = Promise.resolve();
 

@@ -900,8 +900,8 @@ class TAxisPainter extends ObjectPainter {
 
          const axis = this.getObject(), axis2 = this.source_axis,
                setBit = (bit, on) => {
-                  if (axis && axis.TestBit(bit) !== on) axis.InvertBit(bit);
-                  if (axis2 && axis2.TestBit(bit) !== on) axis2.InvertBit(bit);
+                  axis?.SetBit(bit, on);
+                  axis2?.SetBit(bit, on);
                };
 
          this.titleOffset = (vertical ? new_x : new_y) / offset_k;

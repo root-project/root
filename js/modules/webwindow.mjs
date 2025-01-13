@@ -1,4 +1,4 @@
-import { httpRequest, createHttpRequest, loadScript, decodeUrl,
+import { settings, httpRequest, createHttpRequest, loadScript, decodeUrl,
          browser, setBatchMode, isBatchMode, isObject, isFunc, isStr, btoa_func } from './core.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5 } from './gui/utils.mjs';
 import { sha256, sha256_2 } from './base/sha256.mjs';
@@ -897,7 +897,8 @@ async function connectWebWindow(arg) {
       if (arg.batch === undefined)
          arg.batch = d.has('headless');
 
-      if (arg.batch) setBatchMode(true);
+      if (arg.batch)
+         setBatchMode(true);
 
       if (!arg.socket_kind)
          arg.socket_kind = d.get('ws');
@@ -917,6 +918,9 @@ async function connectWebWindow(arg) {
       else
          arg.socket_kind = 'websocket';
    }
+
+   if (arg.settings)
+      Object.assign(settings, arg.settings);
 
    // only for debug purposes
    // arg.socket_kind = 'longpoll';
@@ -963,7 +967,8 @@ async function connectWebWindow(arg) {
       handle.connect();
    });
 
-   if (!arg.ui5) return main;
+   if (!arg.ui5)
+      return main;
 
    return Promise.all([main, loadOpenui5(arg)]).then(arr => arr[0]);
 }

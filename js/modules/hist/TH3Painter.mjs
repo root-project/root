@@ -52,8 +52,7 @@ class TH3Painter extends THistPainter {
       this.draw_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
 
       this.transferFunc = this.findFunction(clTF1, 'TransferFunction');
-      if (this.transferFunc && !this.transferFunc.TestBit(BIT(9))) // TF1::kNotDraw
-         this.transferFunc.InvertBit(BIT(9));
+      this.transferFunc?.SetBit(BIT(9), true); // TF1::kNotDraw
    }
 
    /** @summary Count TH3 statistic */

@@ -585,7 +585,8 @@ class TPadPainter extends ObjectPainter {
    /** @summary Set grayscale mode for the canvas
      * @private */
    setGrayscale(flag) {
-      if (!this.iscan) return;
+      if (!this.iscan)
+         return;
 
       let changed = false;
 
@@ -2567,8 +2568,8 @@ class TPadPainter extends ObjectPainter {
 
       if (d.check('NOZOOMX')) this.options.NoZoomX = true;
       if (d.check('NOZOOMY')) this.options.NoZoomY = true;
-      if (d.check('GRAYSCALE') && !pad.TestBit(kIsGrayscale))
-          pad.InvertBit(kIsGrayscale);
+      if (d.check('GRAYSCALE'))
+         pad.SetBit(kIsGrayscale, true);
 
       function forEach(func, p) {
          if (!p) p = pad;

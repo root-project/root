@@ -678,12 +678,9 @@ class TH2Painter extends THistPainter {
          }
 
          if (first < last) {
-            const axis = p.fXaxis;
-            axis.fFirst = first;
-            axis.fLast = last;
-
-            if (((axis.fFirst === 1) && (axis.fLast === axis.fNbins)) === axis.TestBit(EAxisBits.kAxisRange))
-               axis.InvertBit(EAxisBits.kAxisRange);
+            p.fXaxis.fFirst = first;
+            p.fXaxis.fLast = last;
+            p.fXaxis.SetBit(EAxisBits.kAxisRange, (first !== 1) || (last !== p.fXaxis.fNbins));
          }
 
          // reset statistic before display
