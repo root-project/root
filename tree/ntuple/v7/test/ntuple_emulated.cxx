@@ -347,4 +347,10 @@ struct Inner {
       ASSERT_NE(inner->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
       ASSERT_EQ(inner->GetSubFields().size(), 0);
    }
+
+   // Now test loading entries with a reader
+   RNTupleDescriptor::RCreateModelOptions cmOpts;
+   cmOpts.fEmulateUnknownTypes = true;
+   reader = RNTupleReader::Open(cmOpts, "ntpl", fileGuard.GetPath());
+   reader->LoadEntry(0);
 }
