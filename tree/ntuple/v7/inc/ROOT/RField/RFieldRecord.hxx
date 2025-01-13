@@ -113,7 +113,11 @@ public:
    ~RRecordField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const final { return fSize; }
+   size_t GetValueSize() const final
+   {
+      // The minimum size is 1 to support having vectors of empty records
+      return std::max<size_t>(1ul, fSize);
+   }
    size_t GetAlignment() const final { return fMaxAlignment; }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 
