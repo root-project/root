@@ -16,7 +16,7 @@ using namespace ROOT::Experimental;
 
 ROOT::RLogChannel &ROOT::Experimental::GPadLog()
 {
-   static RLogChannel sLog("ROOT.GPad");
+   static ROOT::RLogChannel sLog("ROOT.GPad");
    return sLog;
 }
 

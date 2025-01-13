@@ -48,7 +48,7 @@
 
 ROOT::RLogChannel &ROOT::RGeomLog()
 {
-   static RLogChannel sLog("ROOT.Geom");
+   static ROOT::RLogChannel sLog("ROOT.Geom");
    return sLog;
 }
 
