@@ -296,6 +296,13 @@ class RGeomDescription {
 
    int IsPhysNodeVisible(const std::vector<int> &stack);
 
+   /** clear drawing data without locking mutex */
+   void _ClearDrawData()
+   {
+      fDrawJson.clear();
+      fSearchJson.clear();
+   }
+
 public:
    RGeomDescription() = default;
 
@@ -311,51 +318,131 @@ public:
    TVirtualMutex *GetMutex() const { return fMutex; }
 
    /** Set maximal number of nodes which should be selected for drawing */
-   void SetMaxVisNodes(int cnt) { TLockGuard lock(fMutex); fCfg.maxnumnodes = cnt; }
+   void SetMaxVisNodes(int cnt)
+   {
+      TLockGuard lock(fMutex);
+      fCfg.maxnumnodes = cnt;
+      _ClearDrawData();
+   }
    /** Returns maximal visible number of nodes, ignored when non-positive */
-   int GetMaxVisNodes() const { TLockGuard lock(fMutex); return fCfg.maxnumnodes; }
+   int GetMaxVisNodes() const
+   {
+      TLockGuard lock(fMutex);
+      return fCfg.maxnumnodes;
+   }
 
    /** Set maximal number of faces which should be selected for drawing */
-   void SetMaxVisFaces(int cnt) { TLockGuard lock(fMutex); fCfg.maxnumfaces = cnt; }
+   void SetMaxVisFaces(int cnt)
+   {
+      TLockGuard lock(fMutex);
+      fCfg.maxnumfaces = cnt;
+      _ClearDrawData();
+   }
    /** Returns maximal visible number of faces, ignored when non-positive */
-   int GetMaxVisFaces() const { TLockGuard lock(fMutex); return fCfg.maxnumfaces; }
+   int GetMaxVisFaces() const
+   {
+      TLockGuard lock(fMutex);
+      return fCfg.maxnumfaces;
+   }
 
    /** Set maximal visible level */
-   void SetVisLevel(int lvl = 3) { TLockGuard lock(fMutex); fCfg.vislevel = lvl; }
+   void SetVisLevel(int lvl = 3)
+   {
+      TLockGuard lock(fMutex);
+      fCfg.vislevel = lvl;
+      _ClearDrawData();
+   }
    /** Returns maximal visible level */
-   int GetVisLevel() const { TLockGuard lock(fMutex); return fCfg.vislevel; }
+   int GetVisLevel() const
+   {
+      TLockGuard lock(fMutex);
+      return fCfg.vislevel;
+   }
 
    /** Set draw options as string for JSROOT TGeoPainter */
-   void SetTopVisible(bool on = true) { TLockGuard lock(fMutex); fCfg.showtop = on; }
+   void SetTopVisible(bool on = true)
+   {
+      TLockGuard lock(fMutex);
+      fCfg.showtop = on;
+      _ClearDrawData();
+   }
    /** Returns draw options, used for JSROOT TGeoPainter */
-   bool GetTopVisible() const { TLockGuard lock(fMutex); return fCfg.showtop; }
+   bool GetTopVisible() const
+   {
+      TLockGuard lock(fMutex);
+      return fCfg.showtop;
+   }
 
    /** Instruct to build binary 3D model already on the server (true) or send TGeoShape as is to client, which can build model itself */
-   void SetBuildShapes(int lvl = 1) { TLockGuard lock(fMutex); fCfg.build_shapes = lvl; }
+   void SetBuildShapes(int lvl = 1)
+   {
+      TLockGuard lock(fMutex);
+      fCfg.build_shapes = lvl;
+      _ClearDrawData();
+   }
    /** Returns true if binary 3D model build already by C++ server (default) */
-   int IsBuildShapes() const { TLockGuard lock(fMutex); return fCfg.build_shapes; }
+   int IsBuildShapes() const
+   {
+      TLockGuard lock(fMutex);
+      return fCfg.build_shapes;
+   }
 
    /** Set number of segments for cylindrical shapes, if 0 - default value will be used */
-   void SetNSegments(int n = 0) { TLockGuard lock(fMutex); fCfg.nsegm = n; }
+   void SetNSegments(int n = 0)
+   {
+      TLockGuard lock(fMutex);
+      fCfg.nsegm = n;
+      _ClearDrawData();
+   }
    /** Return of segments for cylindrical shapes, if 0 - default value will be used */
-   int GetNSegments() const { TLockGuard lock(fMutex); return fCfg.nsegm; }
+   int GetNSegments() const
+   {
+      TLockGuard lock(fMutex);
+      return fCfg.nsegm;
+   }
 
    /** Set draw options as string for JSROOT TGeoPainter */
-   void SetDrawOptions(const std::string &opt = "") { TLockGuard lock(fMutex); fCfg.drawopt = opt; }
+   void SetDrawOptions(const std::string &opt = "")
+   {
+      TLockGuard lock(fMutex);
+      fCfg.drawopt = opt;
+      _ClearDrawData();
+   }
    /** Returns draw options, used for JSROOT TGeoPainter */
-   std::string GetDrawOptions() const { TLockGuard lock(fMutex); return fCfg.drawopt; }
+   std::string GetDrawOptions() const
+   {
+      TLockGuard lock(fMutex);
+      return fCfg.drawopt;
+   }
 
    /** Set JSON compression level for data transfer */
-   void SetJsonComp(int comp = 0) { TLockGuard lock(fMutex); fJsonComp = comp; }
+   void SetJsonComp(int comp = 0)
+   {
+      TLockGuard lock(fMutex);
+      fJsonComp = comp;
+      _ClearDrawData();
+   }
    /** Returns JSON compression level for data transfer */
-   int GetJsonComp() const  { TLockGuard lock(fMutex); return fJsonComp; }
+   int GetJsonComp() const
+   {
+      TLockGuard lock(fMutex);
+      return fJsonComp;
+   }
 
    /** Set preference of offline operations.
     * Server provides more info to client from the begin on to avoid communication */
-   void SetPreferredOffline(bool on) { TLockGuard lock(fMutex); fPreferredOffline = on; }
+   void SetPreferredOffline(bool on)
+   {
+      TLockGuard lock(fMutex);
+      fPreferredOffline = on;
+   }
    /** Is offline operations preferred.
     * After get full description, client can do most operations without extra requests */
-   bool IsPreferredOffline() const { TLockGuard lock(fMutex); return fPreferredOffline; }
+   bool IsPreferredOffline() const
+   {
+      TLockGuard lock(fMutex);
+      return fPreferredOffline;
+   }
 
    /** Get top node path */
    const std::vector<int>& GetSelectedStack() const { return fSelectedStack; }
