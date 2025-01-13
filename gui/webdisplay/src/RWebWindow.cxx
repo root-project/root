@@ -49,6 +49,8 @@ RWebWindow::WebConn::~WebConn()
 }
 
 
+std::string RWebWindow::gJSROOTsettings = "";
+
 
 /** \class ROOT::RWebWindow
 \ingroup webdisplay
@@ -2090,4 +2092,17 @@ std::string RWebWindow::HMAC(const std::string &key, const std::string &sessionK
    sha256_update(&hash3, (const unsigned char *) m2digest.data(), m2digest.length());
 
    return get_digest(hash3, true);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+/// Set JSROOT settings as json string
+/// Will be applied for any web window at the connection time
+/// Can be used to chang `settings` object of JSROOT like:
+/// ~~~ {.cpp}
+/// ROOT::RWebWindow::SetJSROOTSettings("{ ToolBar: false, CanEnlarge: false }");
+/// ~~~
+
+void RWebWindow::SetJSROOTSettings(const std::string &json)
+{
+   gJSROOTsettings = json;
 }
