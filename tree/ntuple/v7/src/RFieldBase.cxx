@@ -272,12 +272,11 @@ std::string ROOT::Experimental::RFieldBase::GetQualifiedFieldName() const
 }
 
 ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
-ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &typeName,
-                                       const RCreateFieldOptions &options)
+ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
 {
    auto typeAlias = Internal::GetNormalizedTypeName(typeName);
    auto canonicalType = Internal::GetNormalizedTypeName(GetCanonicalTypeName(typeAlias));
-   return R__FORWARD_RESULT(RFieldBase::Create(fieldName, canonicalType, typeAlias, options));
+   return R__FORWARD_RESULT(RFieldBase::Create(fieldName, canonicalType, typeAlias, RCreateFieldOptions{}));
 }
 
 ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
