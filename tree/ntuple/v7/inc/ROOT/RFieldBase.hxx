@@ -69,8 +69,8 @@ This is and can only be partially enforced through C++.
 */
 // clang-format on
 class RFieldBase {
-   friend class ROOT::Experimental::RClassField;          // to mark members as artificial
-   friend class ROOT::Experimental::RNTupleJoinProcessor; // needs ConstuctValue
+   friend class ROOT::Experimental::RClassField;                             // to mark members as artificial
+   friend class ROOT::Experimental::RNTupleJoinProcessor;                    // needs ConstuctValue
    friend class ROOT::Experimental::RFieldDescriptor;
    friend struct ROOT::Experimental::Internal::RFieldCallbackInjector;       // used for unit tests
    friend struct ROOT::Experimental::Internal::RFieldRepresentationModifier; // used for unit tests
@@ -471,7 +471,8 @@ protected:
    virtual void OnConnectPageSource() {}
 
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
-   /// normalized type name and type alias
+   /// normalized type name and type alias.
+   /// `desc` and `fieldId` must be passed if `options.fEmulateUnknownTypes` is true, otherwise they can be left blank.
    /// TODO(jalopezg): this overload may eventually be removed leaving only the `RFieldBase::Create()` that takes a
    /// single type name
    static RResult<std::unique_ptr<RFieldBase>>
@@ -479,7 +480,8 @@ protected:
           const RCreateFieldOptions &options = {}, const RNTupleDescriptor *desc = nullptr,
           DescriptorId_t fieldId = kInvalidDescriptorId);
 
-   static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &typeAlias,
+   /// Same as the above overload of Create, but infers the normalized type name and the canonical type name from `typeName`.
+   static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &typeName,
                                                       const RCreateFieldOptions &options, const RNTupleDescriptor *desc,
                                                       DescriptorId_t fieldId);
 

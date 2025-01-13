@@ -296,7 +296,7 @@ ROOT::Experimental::RFieldBase::Check(const std::string &fieldName, const std::s
 
    std::vector<RCheckResult> result;
    for (const auto &f : fieldZero) {
-      bool isInvalidField = f.GetTraits() & RFieldBase::kTraitInvalidField;
+      const bool isInvalidField = f.GetTraits() & RFieldBase::kTraitInvalidField;
       if (!isInvalidField)
          continue;
 
@@ -333,10 +333,10 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
 
    std::unique_ptr<ROOT::Experimental::RFieldBase> result;
 
-   const auto maybeGetChildId = [desc, fieldId](int childIdx) {
+   const auto maybeGetChildId = [desc, fieldId](int childId) {
       if (desc) {
          const auto &fieldDesc = desc->GetFieldDescriptor(fieldId);
-         return fieldDesc.GetLinkIds()[childIdx];
+         return fieldDesc.GetLinkIds().at(childId);
       } else {
          return kInvalidDescriptorId;
       }
