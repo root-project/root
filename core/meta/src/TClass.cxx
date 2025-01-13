@@ -6918,10 +6918,17 @@ void TClass::StreamerTObject(const TClass* pThis, void *object, TBuffer &b, cons
 ////////////////////////////////////////////////////////////////////////////////
 /// Case of TObjects when fIsOffsetStreamerSet is known to have been set.
 
-void TClass::StreamerTObjectInitialized(const TClass* pThis, void *object, TBuffer &b, const TClass * /* onfile_class */)
+void TClass::StreamerTObjectInitialized(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class)
 {
-   TObject *tobj = (TObject*)((Longptr_t)object + pThis->fOffsetStreamer);
-   tobj->Streamer(b);
+   if (R__likely(onfile_class == nullptr || pThis == onfile_class)) {
+      TObject *tobj = (TObject*)((Longptr_t)object + pThis->fOffsetStreamer);
+      tobj->Streamer(b);
+   } else {
+      // This is the case where we are reading an object of a derived class
+      // but the class is not the same as the one we are streaming.
+      // We need to call the Streamer of the base class.
+      StreamerTObjectEmulated(pThis, object, b, onfile_class);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
