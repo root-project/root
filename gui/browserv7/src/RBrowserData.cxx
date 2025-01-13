@@ -34,7 +34,7 @@ using namespace std::string_literals;
 
 ROOT::RLogChannel &ROOT::BrowserLog()
 {
-   static RLogChannel sLog("ROOT.Browser");
+   static ROOT::RLogChannel sLog("ROOT.Browser");
    return sLog;
 }
 

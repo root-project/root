@@ -23,7 +23,7 @@ using namespace ROOT;
 
 ROOT::RLogChannel &ROOT::WebGUILog()
 {
-   static RLogChannel sLog("ROOT.WebGUI");
+   static ROOT::RLogChannel sLog("ROOT.WebGUI");
    return sLog;
 }
 
