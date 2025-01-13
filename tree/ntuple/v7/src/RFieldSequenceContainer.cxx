@@ -546,6 +546,7 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
    }
 
    // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md
+   R__ASSERT(fItemSize > 0);
    const auto oldNItems = typedValue->size() / fItemSize;
    const bool canRealloc = oldNItems < nItems;
    bool allDeallocated = false;
