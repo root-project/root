@@ -111,6 +111,8 @@ protected:
       auto user_args = fWindow.GetUserArgs();
       if (!user_args.empty())
          more_args.append("user_args: "s + user_args + ","s);
+      if (!RWebWindow::gJSROOTsettings.empty())
+         more_args.append("settings: "s + RWebWindow::gJSROOTsettings + ","s);
       if (!more_args.empty()) {
          std::string search = "connectWebWindow({"s;
          std::string replace = search + more_args;
