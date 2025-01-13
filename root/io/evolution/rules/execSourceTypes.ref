@@ -22,6 +22,14 @@ The A[3] values are:
    51.5  52.6  53.7  
 The B[3] values are:
    61.5  62.6  63.7  
+The RooLikeList values are:
+   b1
+   b2
+   b3
+The TList values are:
+   c1
+   c2
+   c3
 The double value is: 0 and is correct.
 The double value is: 3 and is correct.
 The double value is: 5 and is correct.
@@ -44,4 +52,19 @@ The B[3] values are:
    51.5  52.6  53.7   and is correct.
 The C[3] values are:
    61  62  63   and is correct.
+The TList values are:
+   a1
+   a2
+   a3
+ and is correct.
+The TList values are:
+   b1
+   b2
+   b3
+ and is correct.
+The std::list<std::string> values are:
+   c1
+   c2
+   c3
+ and is correct.
 (int) 0
