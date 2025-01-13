@@ -3410,21 +3410,21 @@ Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClas
    //We attempt to recover if a version count was not written
    Version_t v = ReadVersion(&start,&count);
 
-   if (count) {
-      TStreamerInfo *sinfo = nullptr;
-      if( onFileClass ) {
-         sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, v );
-         if( !sinfo )
-            return 0;
-      }
-
+   TStreamerInfo *sinfo = nullptr;
+   if( onFileClass ) {
+      sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, v );
+      if( !sinfo )
+         return 0;
+   }
+   if (!sinfo)
       sinfo = (TStreamerInfo*)cl->GetStreamerInfo(v);
+
+   if (count) {
       ApplySequence(*(sinfo->GetReadObjectWiseActions()), object);
       if (sinfo->IsRecovered()) count=0;
       CheckByteCount(start,count,cl);
    } else {
       SetBufferOffset(start);
-      TStreamerInfo *sinfo = ((TStreamerInfo*)cl->GetStreamerInfo());
       ApplySequence(*(sinfo->GetReadObjectWiseActions()), object);
    }
    return 0;
