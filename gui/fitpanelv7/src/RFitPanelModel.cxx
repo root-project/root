@@ -21,7 +21,7 @@
 
 ROOT::RLogChannel &ROOT::Experimental::FitPanelLog()
 {
-   static RLogChannel sLog("ROOT.FitPanel");
+   static ROOT::RLogChannel sLog("ROOT.FitPanel");
    return sLog;
 }
 

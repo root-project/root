@@ -43,7 +43,7 @@
 
 ROOT::RLogChannel &CefWebDisplayLog()
 {
-   static RLogChannel sChannel("ROOT.CefWebDisplay");
+   static ROOT::RLogChannel sChannel("ROOT.CefWebDisplay");
    return sChannel;
 }
 

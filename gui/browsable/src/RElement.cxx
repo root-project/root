@@ -19,7 +19,7 @@ using namespace std::string_literals;
 
 ROOT::RLogChannel &ROOT::BrowsableLog()
 {
-   static RLogChannel sLog("ROOT.Browsable");
+   static ROOT::RLogChannel sLog("ROOT.Browsable");
    return sLog;
 }
 

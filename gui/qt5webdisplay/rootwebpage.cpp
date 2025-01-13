@@ -19,7 +19,7 @@
 
 ROOT::RLogChannel &QtWebDisplayLog()
 {
-   static RLogChannel sChannel("ROOT.QtWebDisplay");
+   static ROOT::RLogChannel sChannel("ROOT.QtWebDisplay");
    return sChannel;
 }
 
