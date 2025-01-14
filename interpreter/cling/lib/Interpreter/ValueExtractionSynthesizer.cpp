@@ -24,12 +24,10 @@
 
 // Implements the CValueExtractionPrinter interface.
 extern "C" {
-    CLING_LIB_EXPORT
-    void cling_SetValueNoAlloc(void * /*cling::Value* V*/) {
-    }
-    CLING_LIB_EXPORT
-    void cling_SetValueWithAlloc(void * /*cling::Value* V*/) {
-    }
+CLING_LIB_EXPORT
+void cling_SetValueNoAlloc(void* /*cling::Value* V*/) {}
+CLING_LIB_EXPORT
+void cling_SetValueWithAlloc(void* /*cling::Value* V*/) {}
 }
 
 using namespace clang;
@@ -451,7 +449,7 @@ namespace {
       if (!(NSD = utils::Lookup::Namespace(m_Sema, "cling")))
         return VSError(m_Sema, E, "cling namespace");
     }
-    
+
     LookupResult R(*m_Sema, &m_Context->Idents.get("setValueNoAlloc"),
                    SourceLocation(), Sema::LookupOrdinaryName,
                    Sema::ForVisibleRedeclaration);
