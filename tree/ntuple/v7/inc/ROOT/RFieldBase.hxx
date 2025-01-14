@@ -369,7 +369,7 @@ protected:
    /// column type exists.
    virtual std::size_t AppendImpl(const void *from);
    virtual void ReadGlobalImpl(NTupleSize_t globalIndex, void *to);
-   virtual void ReadInClusterImpl(RClusterIndex clusterIndex, void *to);
+   virtual void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to);
 
    /// Write the given value into columns. The value object has to be of the same type as the field.
    /// Returns the number of uncompressed bytes written.
@@ -396,16 +396,16 @@ protected:
    /// Populate a single value with data from the field. The memory location pointed to by to needs to be of the
    /// fitting type. The fast path is conditioned by the field qualifying as simple, i.e. maps as-is
    /// to a single column and has no read callback.
-   void Read(RClusterIndex clusterIndex, void *to)
+   void Read(RNTupleLocalIndex localIndex, void *to)
    {
       if (fIsSimple)
-         return (void)fPrincipalColumn->Read(clusterIndex, to);
+         return (void)fPrincipalColumn->Read(localIndex, to);
 
       if (!fIsArtificial) {
          if (fTraits & kTraitMappable)
-            fPrincipalColumn->Read(clusterIndex, to);
+            fPrincipalColumn->Read(localIndex, to);
          else
-            ReadInClusterImpl(clusterIndex, to);
+            ReadInClusterImpl(localIndex, to);
       }
       if (R__unlikely(!fReadCallbacks.empty()))
          InvokeReadCallbacks(to);
@@ -423,7 +423,7 @@ protected:
 
    /// Allow derived classes to call Append and Read on other (sub) fields.
    static std::size_t CallAppendOn(RFieldBase &other, const void *from) { return other.Append(from); }
-   static void CallReadOn(RFieldBase &other, RClusterIndex clusterIndex, void *to) { other.Read(clusterIndex, to); }
+   static void CallReadOn(RFieldBase &other, RNTupleLocalIndex localIndex, void *to) { other.Read(localIndex, to); }
    static void CallReadOn(RFieldBase &other, NTupleSize_t globalIndex, void *to) { other.Read(globalIndex, to); }
    static void *CallCreateObjectRawPtrOn(RFieldBase &other) { return other.CreateObjectRawPtr(); }
 
@@ -670,7 +670,7 @@ public:
 
    std::size_t Append() { return fField->Append(fObjPtr.get()); }
    void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr.get()); }
-   void Read(RClusterIndex clusterIndex) { fField->Read(clusterIndex, fObjPtr.get()); }
+   void Read(RNTupleLocalIndex localIndex) { fField->Read(localIndex, fObjPtr.get()); }
    void Bind(std::shared_ptr<void> objPtr) { fObjPtr = objPtr; }
    void BindRawPtr(void *rawPtr);
    /// Replace the current object pointer by a pointer to a new object constructed by the field
@@ -696,7 +696,7 @@ struct RFieldBase::RBulkSpec {
    /// independent of the provided masks.
    static const std::size_t kAllSet = std::size_t(-1);
 
-   RClusterIndex fFirstIndex; ///< Start of the bulk range
+   RNTupleLocalIndex fFirstIndex; ///< Start of the bulk range
    std::size_t fCount = 0;    ///< Size of the bulk range
    /// A bool array of size fCount, indicating the required values in the requested range
    const bool *fMaskReq = nullptr;
@@ -726,7 +726,7 @@ private:
    bool fIsAdopted = false;            ///< True if the user provides the memory buffer for fValues
    std::unique_ptr<bool[]> fMaskAvail; ///< Masks invalid values in the array
    std::size_t fNValidValues = 0;      ///< The sum of non-zero elements in the fMask
-   RClusterIndex fFirstIndex;          ///< Index of the first value of the array
+   RNTupleLocalIndex fFirstIndex;      ///< Index of the first value of the array
    /// Reading arrays of complex values may require additional memory, for instance for the elements of
    /// arrays of vectors. A pointer to the fAuxData array is passed to the field's BulkRead method.
    /// The RBulk class does not modify the array in-between calls to the field's BulkRead method.
@@ -735,10 +735,10 @@ private:
    void ReleaseValues();
    /// Sets a new range for the bulk. If there is enough capacity, the fValues array will be reused.
    /// Otherwise a new array is allocated. After reset, fMaskAvail is false for all values.
-   void Reset(RClusterIndex firstIndex, std::size_t size);
+   void Reset(RNTupleLocalIndex firstIndex, std::size_t size);
    void CountValidValues();
 
-   bool ContainsRange(RClusterIndex firstIndex, std::size_t size) const
+   bool ContainsRange(RNTupleLocalIndex firstIndex, std::size_t size) const
    {
       if (firstIndex.GetClusterId() != fFirstIndex.GetClusterId())
          return false;
@@ -767,7 +767,7 @@ public:
    /// relative to a certain cluster. The return value points to the array of read objects.
    /// The 'maskReq' parameter is a bool array of at least 'size' elements. Only objects for which the mask is
    /// true are guaranteed to be read in the returned value array. A 'nullptr' means to read all elements.
-   void *ReadBulk(RClusterIndex firstIndex, const bool *maskReq, std::size_t size)
+   void *ReadBulk(RNTupleLocalIndex firstIndex, const bool *maskReq, std::size_t size)
    {
       if (!ContainsRange(firstIndex, size))
          Reset(firstIndex, size);

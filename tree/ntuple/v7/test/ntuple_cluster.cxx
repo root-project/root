@@ -69,7 +69,9 @@ public:
       auto descriptorGuard = GetExclDescriptorGuard();
       descriptorGuard.MoveIn(descBuilder.MoveDescriptor());
    }
-   void LoadSealedPage(ROOT::Experimental::DescriptorId_t, ROOT::Experimental::RClusterIndex, RSealedPage &) final {}
+   void LoadSealedPage(ROOT::Experimental::DescriptorId_t, ROOT::Experimental::RNTupleLocalIndex, RSealedPage &) final
+   {
+   }
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final
    {
       std::vector<std::unique_ptr<RCluster>> result;

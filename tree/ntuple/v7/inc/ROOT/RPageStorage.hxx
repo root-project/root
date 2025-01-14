@@ -780,7 +780,7 @@ public:
    virtual RPageRef LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex);
    /// Another version of `LoadPage` that allows to specify cluster-relative indexes.
    /// Returns a default-constructed RPage for suppressed columns.
-   virtual RPageRef LoadPage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex);
+   virtual RPageRef LoadPage(ColumnHandle_t columnHandle, RNTupleLocalIndex localIndex);
 
    /// Read the packed and compressed bytes of a page into the memory buffer provided by `sealedPage`. The sealed page
    /// can be used subsequently in a call to `RPageSink::CommitSealedPage`.
@@ -788,7 +788,7 @@ public:
    /// `nullptr`, no data will be copied but the returned size information can be used by the caller to allocate a large
    /// enough buffer and call `LoadSealedPage` again.
    virtual void
-   LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) = 0;
+   LoadSealedPage(DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) = 0;
 
    /// Populates all the pages of the given cluster ids and columns; it is possible that some columns do not
    /// contain any pages.  The page source may load more columns than the minimal necessary set from `columns`.

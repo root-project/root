@@ -314,11 +314,11 @@ TEST_F(RPageStorageDaos, CagedPages)
       const auto clusterId = desc->FindClusterId(colId, 0);
 
       RPageStorage::RSealedPage sealedPage;
-      pageSource->LoadSealedPage(colId, RClusterIndex{clusterId, 0}, sealedPage);
+      pageSource->LoadSealedPage(colId, RNTupleLocalIndex{clusterId, 0}, sealedPage);
       EXPECT_GT(sealedPage.GetNElements(), 0);
       auto pageBuf = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
       sealedPage.SetBuffer(pageBuf.get());
-      pageSource->LoadSealedPage(colId, RClusterIndex{clusterId, 0}, sealedPage);
+      pageSource->LoadSealedPage(colId, RNTupleLocalIndex{clusterId, 0}, sealedPage);
 
       auto colType = desc->GetColumnDescriptor(colId).GetType();
       auto elem = ROOT::Experimental::Internal::RColumnElementBase::Generate<std::uint32_t>(colType);
@@ -369,7 +369,7 @@ TEST_F(RPageStorageDaos, Checksum)
       pyColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("py"), 0, 0);
       clusterId = descGuard->FindClusterId(pxColId, 0);
    }
-   RClusterIndex index{clusterId, 0};
+   RNTupleLocalIndex index{clusterId, 0};
 
    RPageStorage::RSealedPage sealedPage;
    constexpr std::size_t bufSize = 12;

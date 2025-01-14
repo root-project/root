@@ -168,14 +168,14 @@ public:
       std::memcpy(to, from, elemSize);
    }
 
-   void Read(RClusterIndex clusterIndex, void *to)
+   void Read(RNTupleLocalIndex localIndex, void *to)
    {
-      if (!fReadPageRef.Get().Contains(clusterIndex)) {
-         MapPage(clusterIndex);
+      if (!fReadPageRef.Get().Contains(localIndex)) {
+         MapPage(localIndex);
       }
       const auto elemSize = fElement->GetSize();
       void *from = static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) +
-                   (clusterIndex.GetIndexInCluster() - fReadPageRef.Get().GetClusterRangeFirst()) * elemSize;
+                   (localIndex.GetIndexInCluster() - fReadPageRef.Get().GetClusterRangeFirst()) * elemSize;
       std::memcpy(to, from, elemSize);
    }
 
@@ -201,16 +201,16 @@ public:
       }
    }
 
-   void ReadV(RClusterIndex clusterIndex, NTupleSize_t count, void *to)
+   void ReadV(RNTupleLocalIndex localIndex, NTupleSize_t count, void *to)
    {
       const auto elemSize = fElement->GetSize();
       auto tail = static_cast<unsigned char *>(to);
 
       while (count > 0) {
-         if (!fReadPageRef.Get().Contains(clusterIndex)) {
-            MapPage(clusterIndex);
+         if (!fReadPageRef.Get().Contains(localIndex)) {
+            MapPage(localIndex);
          }
-         NTupleSize_t idxInPage = clusterIndex.GetIndexInCluster() - fReadPageRef.Get().GetClusterRangeFirst();
+         NTupleSize_t idxInPage = localIndex.GetIndexInCluster() - fReadPageRef.Get().GetClusterRangeFirst();
 
          const void *from = static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) + idxInPage * elemSize;
          const NTupleSize_t nBatch = std::min(count, fReadPageRef.Get().GetNElements() - idxInPage);
@@ -219,7 +219,7 @@ public:
 
          tail += nBatch * elemSize;
          count -= nBatch;
-         clusterIndex = RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndexInCluster() + nBatch);
+         localIndex = RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() + nBatch);
       }
    }
 
@@ -231,10 +231,10 @@ public:
    }
 
    template <typename CppT>
-   CppT *Map(RClusterIndex clusterIndex)
+   CppT *Map(RNTupleLocalIndex localIndex)
    {
       NTupleSize_t nItems;
-      return MapV<CppT>(clusterIndex, nItems);
+      return MapV<CppT>(localIndex, nItems);
    }
 
    template <typename CppT>
@@ -250,19 +250,19 @@ public:
    }
 
    template <typename CppT>
-   CppT *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   CppT *MapV(RNTupleLocalIndex localIndex, NTupleSize_t &nItems)
    {
-      if (!fReadPageRef.Get().Contains(clusterIndex)) {
-         MapPage(clusterIndex);
+      if (!fReadPageRef.Get().Contains(localIndex)) {
+         MapPage(localIndex);
       }
       // +1 to go from 0-based indexing to 1-based number of items
-      nItems = fReadPageRef.Get().GetClusterRangeLast() - clusterIndex.GetIndexInCluster() + 1;
+      nItems = fReadPageRef.Get().GetClusterRangeLast() - localIndex.GetIndexInCluster() + 1;
       return reinterpret_cast<CppT *>(static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) +
-                                      (clusterIndex.GetIndexInCluster() - fReadPageRef.Get().GetClusterRangeFirst()) *
+                                      (localIndex.GetIndexInCluster() - fReadPageRef.Get().GetClusterRangeFirst()) *
                                          sizeof(CppT));
    }
 
-   NTupleSize_t GetGlobalIndex(RClusterIndex clusterIndex)
+   NTupleSize_t GetGlobalIndex(RNTupleLocalIndex clusterIndex)
    {
       if (!fReadPageRef.Get().Contains(clusterIndex)) {
          MapPage(clusterIndex);
@@ -270,17 +270,18 @@ public:
       return fReadPageRef.Get().GetClusterInfo().GetIndexOffset() + clusterIndex.GetIndexInCluster();
    }
 
-   RClusterIndex GetClusterIndex(NTupleSize_t globalIndex)
+   RNTupleLocalIndex GetClusterIndex(NTupleSize_t globalIndex)
    {
       if (!fReadPageRef.Get().Contains(globalIndex)) {
          MapPage(globalIndex);
       }
-      return RClusterIndex(fReadPageRef.Get().GetClusterInfo().GetId(),
-                           globalIndex - fReadPageRef.Get().GetClusterInfo().GetIndexOffset());
+      return RNTupleLocalIndex(fReadPageRef.Get().GetClusterInfo().GetId(),
+                               globalIndex - fReadPageRef.Get().GetClusterInfo().GetIndexOffset());
    }
 
    /// For offset columns only, look at the two adjacent values that define a collection's coordinates
-   void GetCollectionInfo(const NTupleSize_t globalIndex, RClusterIndex *collectionStart, NTupleSize_t *collectionSize)
+   void
+   GetCollectionInfo(const NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, NTupleSize_t *collectionSize)
    {
       NTupleSize_t idxStart = 0;
       NTupleSize_t idxEnd;
@@ -300,23 +301,24 @@ public:
          idxEnd = *Map<RColumnIndex>(globalIndex);
       }
       *collectionSize = idxEnd - idxStart;
-      *collectionStart = RClusterIndex(fReadPageRef.Get().GetClusterInfo().GetId(), idxStart);
+      *collectionStart = RNTupleLocalIndex(fReadPageRef.Get().GetClusterInfo().GetId(), idxStart);
    }
 
-   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, NTupleSize_t *collectionSize)
+   void
+   GetCollectionInfo(RNTupleLocalIndex localIndex, RNTupleLocalIndex *collectionStart, NTupleSize_t *collectionSize)
    {
-      auto index = clusterIndex.GetIndexInCluster();
-      auto idxStart = (index == 0) ? 0 : *Map<RColumnIndex>(clusterIndex - 1);
-      auto idxEnd = *Map<RColumnIndex>(clusterIndex);
+      auto index = localIndex.GetIndexInCluster();
+      auto idxStart = (index == 0) ? 0 : *Map<RColumnIndex>(localIndex - 1);
+      auto idxEnd = *Map<RColumnIndex>(localIndex);
       *collectionSize = idxEnd - idxStart;
-      *collectionStart = RClusterIndex(clusterIndex.GetClusterId(), idxStart);
+      *collectionStart = RNTupleLocalIndex(localIndex.GetClusterId(), idxStart);
    }
 
    /// Get the currently active cluster id
-   void GetSwitchInfo(NTupleSize_t globalIndex, RClusterIndex *varIndex, std::uint32_t *tag)
+   void GetSwitchInfo(NTupleSize_t globalIndex, RNTupleLocalIndex *varIndex, std::uint32_t *tag)
    {
       auto varSwitch = Map<RColumnSwitch>(globalIndex);
-      *varIndex = RClusterIndex(fReadPageRef.Get().GetClusterInfo().GetId(), varSwitch->GetIndex());
+      *varIndex = RNTupleLocalIndex(fReadPageRef.Get().GetClusterInfo().GetId(), varSwitch->GetIndex());
       *tag = varSwitch->GetTag();
    }
 
@@ -324,12 +326,12 @@ public:
    void CommitSuppressed();
 
    void MapPage(NTupleSize_t globalIndex) { R__ASSERT(TryMapPage(globalIndex)); }
-   void MapPage(RClusterIndex clusterIndex) { R__ASSERT(TryMapPage(clusterIndex)); }
+   void MapPage(RNTupleLocalIndex localIndex) { R__ASSERT(TryMapPage(localIndex)); }
    bool TryMapPage(NTupleSize_t globalIndex);
-   bool TryMapPage(RClusterIndex clusterIndex);
+   bool TryMapPage(RNTupleLocalIndex localIndex);
 
    bool ReadPageContains(NTupleSize_t globalIndex) const { return fReadPageRef.Get().Contains(globalIndex); }
-   bool ReadPageContains(RClusterIndex clusterIndex) const { return fReadPageRef.Get().Contains(clusterIndex); }
+   bool ReadPageContains(RNTupleLocalIndex localIndex) const { return fReadPageRef.Get().Contains(localIndex); }
 
    void MergeTeams(RColumn &other);
 

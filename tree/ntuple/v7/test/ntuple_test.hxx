@@ -53,13 +53,13 @@
 #include <variant>
 #include <vector>
 
+using ROOT::Experimental::RNTupleLocalIndex;
 using ROOT::Experimental::Internal::RColumnIndex;
 using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
 using EColumnType = ROOT::Experimental::EColumnType;
 using ROOT::Experimental::EExtraTypeInfoIds;
 using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
 using NTupleSize_t = ROOT::Experimental::NTupleSize_t;
-using RClusterIndex = ROOT::Experimental::RClusterIndex;
 using RClusterDescriptor = ROOT::Experimental::RClusterDescriptor;
 using RClusterDescriptorBuilder = ROOT::Experimental::Internal::RClusterDescriptorBuilder;
 using RClusterGroupDescriptorBuilder = ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder;

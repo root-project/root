@@ -70,7 +70,7 @@ TEST(RNTupleChecksum, VerifyOnLoad)
       pzColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("pz"), 0, 0);
       clusterId = descGuard->FindClusterId(pxColId, 0);
    }
-   RClusterIndex index{clusterId, 0};
+   RNTupleLocalIndex index{clusterId, 0};
 
    constexpr std::size_t bufSize = 12;
    pageSource->LoadSealedPage(pzColId, index, sealedPage);
@@ -108,7 +108,7 @@ TEST(RNTupleChecksum, OmitPageChecksum)
    EXPECT_FALSE(pageInfo.fHasChecksum);
 
    RPageStorage::RSealedPage sealedPage;
-   pageSource->LoadSealedPage(pxColId, RClusterIndex{clusterId, 0}, sealedPage);
+   pageSource->LoadSealedPage(pxColId, RNTupleLocalIndex{clusterId, 0}, sealedPage);
    EXPECT_FALSE(sealedPage.GetHasChecksum());
    EXPECT_EQ(4u, sealedPage.GetBufferSize());
 

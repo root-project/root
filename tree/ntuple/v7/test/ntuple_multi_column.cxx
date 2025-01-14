@@ -368,10 +368,10 @@ TEST(RNTuple, MultiColumnRepresentationBulk)
 
    auto mask = std::make_unique<bool[]>(1);
    mask[0] = true;
-   auto arr = static_cast<float *>(bulk.ReadBulk(RClusterIndex(0, 0), mask.get(), 1));
+   auto arr = static_cast<float *>(bulk.ReadBulk(RNTupleLocalIndex(0, 0), mask.get(), 1));
    EXPECT_FLOAT_EQ(1.0, arr[0]);
 
-   arr = static_cast<float *>(bulk.ReadBulk(RClusterIndex(1, 0), mask.get(), 1));
+   arr = static_cast<float *>(bulk.ReadBulk(RNTupleLocalIndex(1, 0), mask.get(), 1));
    EXPECT_FLOAT_EQ(2.0, arr[0]);
 }
 

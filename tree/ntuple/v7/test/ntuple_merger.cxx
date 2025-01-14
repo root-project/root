@@ -56,7 +56,7 @@ TEST(RPageStorage, ReadSealedPages)
    auto columnId = source.GetSharedDescriptorGuard()->FindPhysicalColumnId(fieldId, 0, 0);
 
    // Check first cluster consisting of a single entry
-   RClusterIndex index(source.GetSharedDescriptorGuard()->FindClusterId(columnId, 0), 0);
+   RNTupleLocalIndex index(source.GetSharedDescriptorGuard()->FindClusterId(columnId, 0), 0);
    RPageStorage::RSealedPage sealedPage;
    source.LoadSealedPage(columnId, index, sealedPage);
    ASSERT_EQ(1U, sealedPage.GetNElements());
@@ -79,10 +79,10 @@ TEST(RPageStorage, ReadSealedPages)
    std::uint32_t firstElementInPage = 0;
    for (const auto &pi : pageRange.fPageInfos) {
       sealedPage.SetBuffer(nullptr);
-      source.LoadSealedPage(columnId, RClusterIndex(clusterId, firstElementInPage), sealedPage);
+      source.LoadSealedPage(columnId, RNTupleLocalIndex(clusterId, firstElementInPage), sealedPage);
       buffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
       sealedPage.SetBuffer(buffer.get());
-      source.LoadSealedPage(columnId, RClusterIndex(clusterId, firstElementInPage), sealedPage);
+      source.LoadSealedPage(columnId, RNTupleLocalIndex(clusterId, firstElementInPage), sealedPage);
       ASSERT_GE(sealedPage.GetBufferSize(), 12U);
       ASSERT_GE(sealedPage.GetDataSize(), 4U);
       EXPECT_EQ(firstElementInPage, ReadRawInt(sealedPage.GetBuffer()));

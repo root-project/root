@@ -174,7 +174,7 @@ void ROOT::Experimental::RFieldBase::RBulk::ReleaseValues()
    operator delete(fValues);
 }
 
-void ROOT::Experimental::RFieldBase::RBulk::Reset(RClusterIndex firstIndex, std::size_t size)
+void ROOT::Experimental::RFieldBase::RBulk::Reset(RNTupleLocalIndex firstIndex, std::size_t size)
 {
    if (fCapacity < size) {
       if (fIsAdopted) {
@@ -216,7 +216,7 @@ void ROOT::Experimental::RFieldBase::RBulk::AdoptBuffer(void *buf, std::size_t c
 
    fMaskAvail = std::make_unique<bool[]>(capacity);
 
-   fFirstIndex = RClusterIndex();
+   fFirstIndex = RNTupleLocalIndex();
 
    fIsAdopted = true;
 }
@@ -609,9 +609,9 @@ void ROOT::Experimental::RFieldBase::ReadGlobalImpl(ROOT::Experimental::NTupleSi
    R__ASSERT(false);
 }
 
-void ROOT::Experimental::RFieldBase::ReadInClusterImpl(RClusterIndex clusterIndex, void *to)
+void ROOT::Experimental::RFieldBase::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
 {
-   ReadGlobalImpl(fPrincipalColumn->GetGlobalIndex(clusterIndex), to);
+   ReadGlobalImpl(fPrincipalColumn->GetGlobalIndex(localIndex), to);
 }
 
 std::size_t ROOT::Experimental::RFieldBase::ReadBulkImpl(const RBulkSpec &bulkSpec)
