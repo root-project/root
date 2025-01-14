@@ -9,7 +9,6 @@ tmva-cudnn=ON
 tmva-pymva=ON
 fortran=OFF
 gdml=OFF
-mysql=OFF
 spectrum=OFF
 sqlite=OFF
 test_distrdf_dask=OFF
