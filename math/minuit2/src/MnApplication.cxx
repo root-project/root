@@ -37,7 +37,18 @@ FunctionMinimum MnApplication::operator()(unsigned int maxfcn, double toler)
 
    const FCNBase &fcn = Fcnbase();
 
+
+   if (npar == 0) {
+      double fval = fcn(fState.Params());
+      print.Info("Function has zero parameters - returning current function value - ",fval);
+      // create a valid Minuit-Parameter object with just the function value
+      MinimumParameters mparams(fval, MinimumParameters::MnValid);
+      MinimumState mstate(mparams, 0., 1 );
+      return FunctionMinimum( MinimumSeed(mstate, fState.Trafo()), fcn.Up());
+   }
+
    FunctionMinimum min = Minimizer().Minimize(fcn, fState, fStrategy, maxfcn, toler);
+
    fNumCall += min.NFcn();
    fState = min.UserState();
 
