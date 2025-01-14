@@ -59,9 +59,18 @@ else()
   )
 endif()
 
+list(APPEND ADAPTIVE_CPP_PATCHES_LIST "0001-Handle-Expected-T-from-TempFile-create-to-prevent-po.patch")
+set(ADAPTIVE_CPP_PATCH_COMMAND
+  ${CMAKE_COMMAND} -E copy_directory
+  ${CMAKE_CURRENT_SOURCE_DIR}/patches <SOURCE_DIR>
+  && git checkout <SOURCE_DIR>
+  && git apply --ignore-space-change --ignore-whitespace ${ADAPTIVE_CPP_PATCHES_LIST}
+)
+
 ExternalProject_Add(
   adaptiveCpp
   UPDATE_COMMAND ""
+  PATCH_COMMAND ${ADAPTIVE_CPP_PATCH_COMMAND}
   CMAKE_ARGS ${ADAPTIVE_CPP_CMAKE_ARGS}
   BUILD_COMMAND ${CMAKE_COMMAND} --build .
   INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
