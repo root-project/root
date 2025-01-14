@@ -19,6 +19,8 @@
 
 #include "TTabCom.h"
 
+#include "gtest/gtest.h"
+
 #include <string>
 
 TEST(TTabComTests, Sanity)
