@@ -123,8 +123,8 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
             continue;
 
          info.fNElements += columnRange.fNElements;
-         if (compression == -1) {
-            compression = columnRange.fCompressionSettings.value();
+         if (compression == -1 && columnRange.fCompressionSettings) {
+            compression = *columnRange.fCompressionSettings;
          }
          const auto &pageRange = cluster.second.GetPageRange(column.second.GetPhysicalId());
          auto idx = cluster2Idx[cluster.first];

@@ -255,7 +255,7 @@ struct RChangeCompressionFunc {
       sealConf.fElement = &fDstColElement;
       sealConf.fPage = &page;
       sealConf.fBuffer = fBuffer;
-      sealConf.fCompressionSetting = fMergeOptions.fCompressionSettings.value();
+      sealConf.fCompressionSetting = *fMergeOptions.fCompressionSettings;
       sealConf.fWriteChecksum = fSealedPage.GetHasChecksum();
       auto refSealedPage = RPageSink::SealPage(sealConf);
       fSealedPage = refSealedPage;
