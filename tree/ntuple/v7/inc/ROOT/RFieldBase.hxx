@@ -742,8 +742,8 @@ private:
    {
       if (firstIndex.GetClusterId() != fFirstIndex.GetClusterId())
          return false;
-      return (firstIndex.GetIndex() >= fFirstIndex.GetIndex()) &&
-             ((firstIndex.GetIndex() + size) <= (fFirstIndex.GetIndex() + fSize));
+      return (firstIndex.GetIndexInCluster() >= fFirstIndex.GetIndexInCluster()) &&
+             ((firstIndex.GetIndexInCluster() + size) <= (fFirstIndex.GetIndexInCluster() + fSize));
    }
 
    void *GetValuePtrAt(std::size_t idx) const { return reinterpret_cast<unsigned char *>(fValues) + idx * fValueSize; }
@@ -773,7 +773,7 @@ public:
          Reset(firstIndex, size);
 
       // We may read a sub range of the currently available range
-      auto offset = firstIndex.GetIndex() - fFirstIndex.GetIndex();
+      auto offset = firstIndex.GetIndexInCluster() - fFirstIndex.GetIndexInCluster();
 
       if (fNValidValues == fSize)
          return GetValuePtrAt(offset);

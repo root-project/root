@@ -137,8 +137,8 @@ public:
       if (fClusterInfo.GetId() != clusterIndex.GetClusterId())
          return false;
       auto clusterRangeFirst = fRangeFirst - fClusterInfo.GetIndexOffset();
-      return (clusterIndex.GetIndex() >= clusterRangeFirst) &&
-             (clusterIndex.GetIndex() < clusterRangeFirst + fNElements);
+      return (clusterIndex.GetIndexInCluster() >= clusterRangeFirst) &&
+             (clusterIndex.GetIndexInCluster() < clusterRangeFirst + fNElements);
    }
 
    void* GetBuffer() const { return fBuffer; }

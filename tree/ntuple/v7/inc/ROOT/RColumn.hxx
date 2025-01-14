@@ -175,7 +175,7 @@ public:
       }
       const auto elemSize = fElement->GetSize();
       void *from = static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) +
-                   (clusterIndex.GetIndex() - fReadPageRef.Get().GetClusterRangeFirst()) * elemSize;
+                   (clusterIndex.GetIndexInCluster() - fReadPageRef.Get().GetClusterRangeFirst()) * elemSize;
       std::memcpy(to, from, elemSize);
    }
 
@@ -210,7 +210,7 @@ public:
          if (!fReadPageRef.Get().Contains(clusterIndex)) {
             MapPage(clusterIndex);
          }
-         NTupleSize_t idxInPage = clusterIndex.GetIndex() - fReadPageRef.Get().GetClusterRangeFirst();
+         NTupleSize_t idxInPage = clusterIndex.GetIndexInCluster() - fReadPageRef.Get().GetClusterRangeFirst();
 
          const void *from = static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) + idxInPage * elemSize;
          const NTupleSize_t nBatch = std::min(count, fReadPageRef.Get().GetNElements() - idxInPage);
@@ -219,7 +219,7 @@ public:
 
          tail += nBatch * elemSize;
          count -= nBatch;
-         clusterIndex = RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() + nBatch);
+         clusterIndex = RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndexInCluster() + nBatch);
       }
    }
 
@@ -256,9 +256,9 @@ public:
          MapPage(clusterIndex);
       }
       // +1 to go from 0-based indexing to 1-based number of items
-      nItems = fReadPageRef.Get().GetClusterRangeLast() - clusterIndex.GetIndex() + 1;
+      nItems = fReadPageRef.Get().GetClusterRangeLast() - clusterIndex.GetIndexInCluster() + 1;
       return reinterpret_cast<CppT *>(static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) +
-                                      (clusterIndex.GetIndex() - fReadPageRef.Get().GetClusterRangeFirst()) *
+                                      (clusterIndex.GetIndexInCluster() - fReadPageRef.Get().GetClusterRangeFirst()) *
                                          sizeof(CppT));
    }
 
@@ -267,7 +267,7 @@ public:
       if (!fReadPageRef.Get().Contains(clusterIndex)) {
          MapPage(clusterIndex);
       }
-      return fReadPageRef.Get().GetClusterInfo().GetIndexOffset() + clusterIndex.GetIndex();
+      return fReadPageRef.Get().GetClusterInfo().GetIndexOffset() + clusterIndex.GetIndexInCluster();
    }
 
    RClusterIndex GetClusterIndex(NTupleSize_t globalIndex)
@@ -305,7 +305,7 @@ public:
 
    void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, NTupleSize_t *collectionSize)
    {
-      auto index = clusterIndex.GetIndex();
+      auto index = clusterIndex.GetIndexInCluster();
       auto idxStart = (index == 0) ? 0 : *Map<RColumnIndex>(clusterIndex - 1);
       auto idxEnd = *Map<RColumnIndex>(clusterIndex);
       *collectionSize = idxEnd - idxStart;

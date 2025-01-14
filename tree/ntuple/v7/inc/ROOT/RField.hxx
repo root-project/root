@@ -380,7 +380,7 @@ protected:
       auto typedValues = static_cast<RNTupleCardinality<SizeT> *>(bulkSpec.fValues);
       typedValues[0] = collectionSize;
 
-      auto lastOffset = collectionStart.GetIndex() + collectionSize;
+      auto lastOffset = collectionStart.GetIndexInCluster() + collectionSize;
       NTupleSize_t nRemainingEntries = bulkSpec.fCount - 1;
       std::size_t nEntries = 1;
       while (nRemainingEntries > 0) {
