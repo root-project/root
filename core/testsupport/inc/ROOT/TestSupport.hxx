@@ -22,10 +22,9 @@
 #include "TError.h"
 #include "TInterpreter.h"
 
+#include <iostream>
 #include <stdexcept>
 #include <vector>
-
-#include "gtest/gtest.h"
 
 namespace ROOT {
 namespace TestSupport {
