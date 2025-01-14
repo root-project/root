@@ -191,10 +191,10 @@ void ROOT::Experimental::RClassField::ReadGlobalImpl(NTupleSize_t globalIndex, v
    }
 }
 
-void ROOT::Experimental::RClassField::ReadInClusterImpl(RClusterIndex clusterIndex, void *to)
+void ROOT::Experimental::RClassField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
 {
    for (unsigned i = 0; i < fSubFields.size(); i++) {
-      CallReadOn(*fSubFields[i], clusterIndex, static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
+      CallReadOn(*fSubFields[i], localIndex, static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
    }
 }
 
@@ -514,7 +514,7 @@ std::size_t ROOT::Experimental::RProxiedCollectionField::AppendImpl(const void *
 void ROOT::Experimental::RProxiedCollectionField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
    NTupleSize_t nItems;
-   RClusterIndex collectionStart;
+   RNTupleLocalIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
    TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), to);
@@ -684,7 +684,7 @@ std::size_t ROOT::Experimental::RStreamerField::AppendImpl(const void *from)
 
 void ROOT::Experimental::RStreamerField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
-   RClusterIndex collectionStart;
+   RNTupleLocalIndex collectionStart;
    NTupleSize_t nbytes;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nbytes);
 
@@ -1045,7 +1045,7 @@ std::size_t ROOT::Experimental::RVariantField::AppendImpl(const void *from)
 
 void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
-   RClusterIndex variantIndex;
+   RNTupleLocalIndex variantIndex;
    std::uint32_t tag;
    fPrincipalColumn->GetSwitchInfo(globalIndex, &variantIndex, &tag);
    R__ASSERT(tag < 256);

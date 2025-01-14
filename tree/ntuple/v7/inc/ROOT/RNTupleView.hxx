@@ -161,9 +161,9 @@ public:
       return RNTupleViewBase<T>::fValue.template GetRef<T>();
    }
 
-   const T &operator()(RClusterIndex clusterIndex)
+   const T &operator()(RNTupleLocalIndex localIndex)
    {
-      RNTupleViewBase<T>::fValue.Read(clusterIndex);
+      RNTupleViewBase<T>::fValue.Read(localIndex);
       return RNTupleViewBase<T>::fValue.template GetRef<T>();
    }
 };
@@ -204,7 +204,7 @@ public:
    ~RNTupleView() = default;
 
    void operator()(NTupleSize_t globalIndex) { fValue.Read(globalIndex); }
-   void operator()(RClusterIndex clusterIndex) { fValue.Read(clusterIndex); }
+   void operator()(RNTupleLocalIndex localIndex) { fValue.Read(localIndex); }
 };
 
 // clang-format off
@@ -250,7 +250,7 @@ public:
    RNTupleGlobalRange GetFieldRange() const { return fFieldRange; }
 
    const T &operator()(NTupleSize_t globalIndex) { return *fField.Map(globalIndex); }
-   const T &operator()(RClusterIndex clusterIndex) { return *fField.Map(clusterIndex); }
+   const T &operator()(RNTupleLocalIndex localIndex) { return *fField.Map(localIndex); }
 };
 
 // clang-format off
@@ -310,16 +310,17 @@ public:
 
    RNTupleClusterRange GetCollectionRange(NTupleSize_t globalIndex) {
       NTupleSize_t size;
-      RClusterIndex collectionStart;
+      RNTupleLocalIndex collectionStart;
       fField.GetCollectionInfo(globalIndex, &collectionStart, &size);
       return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndexInCluster(),
                                  collectionStart.GetIndexInCluster() + size);
    }
-   RNTupleClusterRange GetCollectionRange(RClusterIndex clusterIndex)
+
+   RNTupleClusterRange GetCollectionRange(RNTupleLocalIndex localIndex)
    {
       NTupleSize_t size;
-      RClusterIndex collectionStart;
-      fField.GetCollectionInfo(clusterIndex, &collectionStart, &size);
+      RNTupleLocalIndex collectionStart;
+      fField.GetCollectionInfo(localIndex, &collectionStart, &size);
       return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndexInCluster(),
                                  collectionStart.GetIndexInCluster() + size);
    }
@@ -354,9 +355,9 @@ public:
       return fValue.GetRef<std::uint64_t>();
    }
 
-   std::uint64_t operator()(RClusterIndex clusterIndex)
+   std::uint64_t operator()(RNTupleLocalIndex localIndex)
    {
-      fValue.Read(clusterIndex);
+      fValue.Read(localIndex);
       return fValue.GetRef<std::uint64_t>();
    }
 };

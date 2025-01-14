@@ -46,14 +46,14 @@ TEST(Pages, Pool)
          EXPECT_EQ(10U, pageRef.Get().GetClusterRangeFirst());
          EXPECT_EQ(19U, pageRef.Get().GetClusterRangeLast());
 
-         auto pageRef2 =
-            pool.GetPage(RPagePool::RKey{1, std::type_index(typeid(void))}, ROOT::Experimental::RClusterIndex(0, 15));
+         auto pageRef2 = pool.GetPage(RPagePool::RKey{1, std::type_index(typeid(void))},
+                                      ROOT::Experimental::RNTupleLocalIndex(0, 15));
          EXPECT_TRUE(pageRef2.Get().IsNull());
-         pageRef2 =
-            pool.GetPage(RPagePool::RKey{1, std::type_index(typeid(int))}, ROOT::Experimental::RClusterIndex(2, 15));
+         pageRef2 = pool.GetPage(RPagePool::RKey{1, std::type_index(typeid(int))},
+                                 ROOT::Experimental::RNTupleLocalIndex(2, 15));
          EXPECT_TRUE(pageRef2.Get().IsNull());
-         pageRef2 =
-            pool.GetPage(RPagePool::RKey{1, std::type_index(typeid(void))}, ROOT::Experimental::RClusterIndex(2, 15));
+         pageRef2 = pool.GetPage(RPagePool::RKey{1, std::type_index(typeid(void))},
+                                 ROOT::Experimental::RNTupleLocalIndex(2, 15));
          EXPECT_FALSE(pageRef2.Get().IsNull());
       }
 

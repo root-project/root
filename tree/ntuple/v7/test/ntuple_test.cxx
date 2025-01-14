@@ -25,7 +25,7 @@ void CreateCorruptedRNTuple(const std::string &uri)
    const auto pyColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("py"), 0, 0);
    const auto pzColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("pz"), 0, 0);
    const auto clusterId = descGuard->FindClusterId(pxColId, 0);
-   RClusterIndex index{clusterId, 0};
+   RNTupleLocalIndex index{clusterId, 0};
 
    constexpr std::size_t bufSize = sizeof(float) + RPageStorage::kNBytesPageChecksum;
    unsigned char pxBuffer[bufSize];

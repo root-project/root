@@ -383,15 +383,16 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceF
 }
 
 void ROOT::Experimental::Internal::RPageSourceFile::LoadSealedPage(DescriptorId_t physicalColumnId,
-                                                                   RClusterIndex clusterIndex, RSealedPage &sealedPage)
+                                                                   RNTupleLocalIndex localIndex,
+                                                                   RSealedPage &sealedPage)
 {
-   const auto clusterId = clusterIndex.GetClusterId();
+   const auto clusterId = localIndex.GetClusterId();
 
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    {
       auto descriptorGuard = GetSharedDescriptorGuard();
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
-      pageInfo = clusterDescriptor.GetPageRange(physicalColumnId).Find(clusterIndex.GetIndexInCluster());
+      pageInfo = clusterDescriptor.GetPageRange(physicalColumnId).Find(localIndex.GetIndexInCluster());
    }
 
    sealedPage.SetBufferSize(pageInfo.fLocator.GetNBytesOnStorage() + pageInfo.fHasChecksum * kNBytesPageChecksum);
@@ -454,7 +455,7 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t colum
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
 
       auto cachedPageRef =
-         fPagePool.GetPage(RPagePool::RKey{columnId, elementInMemoryType}, RClusterIndex(clusterId, idxInCluster));
+         fPagePool.GetPage(RPagePool::RKey{columnId, elementInMemoryType}, RNTupleLocalIndex(clusterId, idxInCluster));
       if (!cachedPageRef.Get().IsNull())
          return cachedPageRef;
 

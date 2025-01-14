@@ -87,13 +87,13 @@ TEST(RNTuple, CollectionView)
    EXPECT_EQ(2, viewJets(1));
    EXPECT_EQ(0, viewJets(2));
    EXPECT_EQ(4, viewJets(3));
-   EXPECT_EQ(4, viewJets(RClusterIndex(1, 1)));
+   EXPECT_EQ(4, viewJets(RNTupleLocalIndex(1, 1)));
 
    // Via the collection range, we can get the items.
    auto range = viewJets.GetCollectionRange(1);
    EXPECT_EQ(2, range.size());
-   EXPECT_EQ(RClusterIndex(0, 3), *range.begin());
-   EXPECT_EQ(RClusterIndex(0, 5), *range.end());
+   EXPECT_EQ(RNTupleLocalIndex(0, 3), *range.begin());
+   EXPECT_EQ(RNTupleLocalIndex(0, 5), *range.end());
 
    std::int32_t expected = 4;
    for (auto &&index : range) {

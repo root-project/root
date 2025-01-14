@@ -136,7 +136,7 @@ ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, NTupleSize_t globalIn
 }
 
 ROOT::Experimental::Internal::RPageRef
-ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, RClusterIndex clusterIndex)
+ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, RNTupleLocalIndex localIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    auto itrPageSet = fLookupByKey.find(key);
@@ -144,12 +144,12 @@ ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, RClusterIndex cluster
       return RPageRef();
    assert(!itrPageSet->second.empty());
 
-   auto itrEntryIdx = itrPageSet->second.upper_bound(RPagePosition(clusterIndex));
+   auto itrEntryIdx = itrPageSet->second.upper_bound(RPagePosition(localIndex));
    if (itrEntryIdx == itrPageSet->second.begin())
       return RPageRef();
 
    --itrEntryIdx;
-   if (fEntries[itrEntryIdx->second].fPage.Contains(clusterIndex)) {
+   if (fEntries[itrEntryIdx->second].fPage.Contains(localIndex)) {
       if (fEntries[itrEntryIdx->second].fRefCounter == 0)
          RemoveFromUnusedPages(fEntries[itrEntryIdx->second].fPage);
       fEntries[itrEntryIdx->second].fRefCounter++;

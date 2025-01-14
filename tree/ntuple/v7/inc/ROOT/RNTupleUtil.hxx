@@ -122,38 +122,43 @@ using DescriptorId_t = std::uint64_t;
 constexpr DescriptorId_t kInvalidDescriptorId = std::uint64_t(-1);
 
 /// Addresses a column element or field item relative to a particular cluster, instead of a global NTupleSize_t index
-class RClusterIndex {
+class RNTupleLocalIndex {
 private:
    DescriptorId_t fClusterId = kInvalidDescriptorId;
    NTupleSize_t fIndexInCluster = kInvalidNTupleIndex;
 
 public:
-   RClusterIndex() = default;
-   RClusterIndex(const RClusterIndex &other) = default;
-   RClusterIndex &operator=(const RClusterIndex &other) = default;
-   constexpr RClusterIndex(DescriptorId_t clusterId, NTupleSize_t indexInCluster)
+   RNTupleLocalIndex() = default;
+   RNTupleLocalIndex(const RNTupleLocalIndex &other) = default;
+   RNTupleLocalIndex &operator=(const RNTupleLocalIndex &other) = default;
+   constexpr RNTupleLocalIndex(DescriptorId_t clusterId, NTupleSize_t indexInCluster)
       : fClusterId(clusterId), fIndexInCluster(indexInCluster)
    {
    }
 
-   RClusterIndex operator+(NTupleSize_t off) const { return RClusterIndex(fClusterId, fIndexInCluster + off); }
-   RClusterIndex operator-(NTupleSize_t off) const { return RClusterIndex(fClusterId, fIndexInCluster - off); }
-   RClusterIndex operator++(int) /* postfix */
+   RNTupleLocalIndex operator+(NTupleSize_t off) const { return RNTupleLocalIndex(fClusterId, fIndexInCluster + off); }
+
+   RNTupleLocalIndex operator-(NTupleSize_t off) const { return RNTupleLocalIndex(fClusterId, fIndexInCluster - off); }
+
+   RNTupleLocalIndex operator++(int) /* postfix */
    {
       auto r = *this;
       fIndexInCluster++;
       return r;
    }
-   RClusterIndex &operator++() /* prefix */
+
+   RNTupleLocalIndex &operator++() /* prefix */
    {
       ++fIndexInCluster;
       return *this;
    }
-   bool operator==(RClusterIndex other) const
+
+   bool operator==(RNTupleLocalIndex other) const
    {
       return fClusterId == other.fClusterId && fIndexInCluster == other.fIndexInCluster;
    }
-   bool operator!=(RClusterIndex other) const { return !(*this == other); }
+
+   bool operator!=(RNTupleLocalIndex other) const { return !(*this == other); }
 
    DescriptorId_t GetClusterId() const { return fClusterId; }
    NTupleSize_t GetIndexInCluster() const { return fIndexInCluster; }

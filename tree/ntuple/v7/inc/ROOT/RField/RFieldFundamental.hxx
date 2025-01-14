@@ -331,14 +331,14 @@ public:
    ~RField() final = default;
 
    T *Map(NTupleSize_t globalIndex) { return reinterpret_cast<T *>(this->BaseType::Map(globalIndex)); }
-   T *Map(RClusterIndex clusterIndex) { return reinterpret_cast<T *>(this->BaseType::Map(clusterIndex)); }
+   T *Map(RNTupleLocalIndex localIndex) { return reinterpret_cast<T *>(this->BaseType::Map(localIndex)); }
    T *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems)
    {
       return reinterpret_cast<T *>(this->BaseType::MapV(globalIndex, nItems));
    }
-   T *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   T *MapV(RNTupleLocalIndex localIndex, NTupleSize_t &nItems)
    {
-      return reinterpret_cast<T *>(this->BaseType::MapV(clusterIndex, nItems));
+      return reinterpret_cast<T *>(this->BaseType::MapV(localIndex, nItems));
    }
 };
 
