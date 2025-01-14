@@ -479,7 +479,7 @@ std::size_t ROOT::Experimental::RField<std::string>::AppendImpl(const void *from
 void ROOT::Experimental::RField<std::string>::ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to)
 {
    auto typedValue = static_cast<std::string *>(to);
-   RClusterIndex collectionStart;
+   RNTupleLocalIndex collectionStart;
    NTupleSize_t nChars;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nChars);
    if (nChars == 0) {
@@ -579,10 +579,10 @@ void ROOT::Experimental::RRecordField::ReadGlobalImpl(NTupleSize_t globalIndex, 
    }
 }
 
-void ROOT::Experimental::RRecordField::ReadInClusterImpl(RClusterIndex clusterIndex, void *to)
+void ROOT::Experimental::RRecordField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
 {
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
-      CallReadOn(*fSubFields[i], clusterIndex, static_cast<unsigned char *>(to) + fOffsets[i]);
+      CallReadOn(*fSubFields[i], localIndex, static_cast<unsigned char *>(to) + fOffsets[i]);
    }
 }
 
@@ -681,12 +681,12 @@ void ROOT::Experimental::RBitsetField::ReadGlobalImpl(NTupleSize_t globalIndex, 
    }
 }
 
-void ROOT::Experimental::RBitsetField::ReadInClusterImpl(RClusterIndex clusterIndex, void *to)
+void ROOT::Experimental::RBitsetField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
 {
    auto *asULongArray = static_cast<Word_t *>(to);
    bool elementValue;
    for (std::size_t i = 0; i < fN; ++i) {
-      fPrincipalColumn->Read(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndexInCluster() * fN) + i,
+      fPrincipalColumn->Read(RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * fN) + i,
                              &elementValue);
       Word_t mask = static_cast<Word_t>(1) << (i % kBitsPerWord);
       Word_t bit = static_cast<Word_t>(elementValue) << (i % kBitsPerWord);
@@ -741,12 +741,12 @@ std::size_t ROOT::Experimental::RNullableField::AppendValue(const void *from)
    return sizeof(Internal::RColumnIndex) + nbytesItem;
 }
 
-ROOT::Experimental::RClusterIndex ROOT::Experimental::RNullableField::GetItemIndex(NTupleSize_t globalIndex)
+ROOT::Experimental::RNTupleLocalIndex ROOT::Experimental::RNullableField::GetItemIndex(NTupleSize_t globalIndex)
 {
-   RClusterIndex collectionStart;
+   RNTupleLocalIndex collectionStart;
    NTupleSize_t collectionSize;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &collectionSize);
-   return (collectionSize == 0) ? RClusterIndex() : collectionStart;
+   return (collectionSize == 0) ? RNTupleLocalIndex() : collectionStart;
 }
 
 void ROOT::Experimental::RNullableField::AcceptVisitor(Detail::RFieldVisitor &visitor) const

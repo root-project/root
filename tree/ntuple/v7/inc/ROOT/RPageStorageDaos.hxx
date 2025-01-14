@@ -173,7 +173,7 @@ public:
    RPageSourceDaos(std::string_view ntupleName, std::string_view uri, const RNTupleReadOptions &options);
    ~RPageSourceDaos() override;
 
-   void LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) final;
+   void LoadSealedPage(DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
 

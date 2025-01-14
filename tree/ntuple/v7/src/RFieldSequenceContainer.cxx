@@ -59,17 +59,17 @@ void ROOT::Experimental::RArrayField::ReadGlobalImpl(NTupleSize_t globalIndex, v
    }
 }
 
-void ROOT::Experimental::RArrayField::ReadInClusterImpl(RClusterIndex clusterIndex, void *to)
+void ROOT::Experimental::RArrayField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
 {
    if (fSubFields[0]->IsSimple()) {
       GetPrincipalColumnOf(*fSubFields[0])
-         ->ReadV(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndexInCluster() * fArrayLength),
+         ->ReadV(RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * fArrayLength),
                  fArrayLength, to);
    } else {
       auto arrayPtr = static_cast<unsigned char *>(to);
       for (unsigned i = 0; i < fArrayLength; ++i) {
          CallReadOn(*fSubFields[0],
-                    RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndexInCluster() * fArrayLength + i),
+                    RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * fArrayLength + i),
                     arrayPtr + (i * fItemSize));
       }
    }
@@ -261,7 +261,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
 
    // Read collection info for this entry
    NTupleSize_t nItems;
-   RClusterIndex collectionStart;
+   RNTupleLocalIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
    char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
    const std::size_t oldSize = *sizePtr;
@@ -342,7 +342,7 @@ std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSp
    auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(bulkSpec.fValues);
 
    // Get size of the first RVec of the bulk
-   RClusterIndex firstItemIndex;
+   RNTupleLocalIndex firstItemIndex;
    NTupleSize_t collectionSize;
    this->GetCollectionInfo(bulkSpec.fFirstIndex, &firstItemIndex, &collectionSize);
    *beginPtr = itemValueArray;
@@ -533,7 +533,7 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
    auto typedValue = static_cast<std::vector<char> *>(to);
 
    NTupleSize_t nItems;
-   RClusterIndex collectionStart;
+   RNTupleLocalIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
    if (fSubFields[0]->IsSimple()) {
@@ -651,7 +651,7 @@ void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(NTupleSize_t 
    auto typedValue = static_cast<std::vector<bool> *>(to);
 
    NTupleSize_t nItems;
-   RClusterIndex collectionStart;
+   RNTupleLocalIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
    typedValue->resize(nItems);
@@ -802,23 +802,23 @@ void ROOT::Experimental::RArrayAsRVecField::ReadGlobalImpl(ROOT::Experimental::N
    }
 }
 
-void ROOT::Experimental::RArrayAsRVecField::ReadInClusterImpl(ROOT::Experimental::RClusterIndex clusterIndex, void *to)
+void ROOT::Experimental::RArrayAsRVecField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
 {
    auto [beginPtr, _, __] = GetRVecDataMembers(to);
    auto rvecBeginPtr = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
 
-   const auto &clusterId = clusterIndex.GetClusterId();
-   const auto &indexInCluster = clusterIndex.GetIndexInCluster();
+   const auto &clusterId = localIndex.GetClusterId();
+   const auto &indexInCluster = localIndex.GetIndexInCluster();
 
    if (fSubFields[0]->IsSimple()) {
       GetPrincipalColumnOf(*fSubFields[0])
-         ->ReadV(RClusterIndex(clusterId, indexInCluster * fArrayLength), fArrayLength, rvecBeginPtr);
+         ->ReadV(RNTupleLocalIndex(clusterId, indexInCluster * fArrayLength), fArrayLength, rvecBeginPtr);
       return;
    }
 
    // Read the new values into the collection elements
    for (std::size_t i = 0; i < fArrayLength; ++i) {
-      CallReadOn(*fSubFields[0], RClusterIndex(clusterId, indexInCluster * fArrayLength + i),
+      CallReadOn(*fSubFields[0], RNTupleLocalIndex(clusterId, indexInCluster * fArrayLength + i),
                  rvecBeginPtr + (i * fItemSize));
    }
 }

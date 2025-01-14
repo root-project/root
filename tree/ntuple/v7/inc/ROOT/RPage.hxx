@@ -132,13 +132,13 @@ public:
       return (globalIndex >= fRangeFirst) && (globalIndex < fRangeFirst + NTupleSize_t(fNElements));
    }
 
-   bool Contains(RClusterIndex clusterIndex) const
+   bool Contains(RNTupleLocalIndex localIndex) const
    {
-      if (fClusterInfo.GetId() != clusterIndex.GetClusterId())
+      if (fClusterInfo.GetId() != localIndex.GetClusterId())
          return false;
       auto clusterRangeFirst = fRangeFirst - fClusterInfo.GetIndexOffset();
-      return (clusterIndex.GetIndexInCluster() >= clusterRangeFirst) &&
-             (clusterIndex.GetIndexInCluster() < clusterRangeFirst + fNElements);
+      return (localIndex.GetIndexInCluster() >= clusterRangeFirst) &&
+             (localIndex.GetIndexInCluster() < clusterRangeFirst + fNElements);
    }
 
    void* GetBuffer() const { return fBuffer; }

@@ -139,7 +139,7 @@ protected:
 
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
-   void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final;
+   void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
    void BeforeConnectPageSource(Internal::RPageSource &pageSource) final;
    void OnConnectPageSource() final;
 
@@ -223,7 +223,7 @@ protected:
 
    std::size_t AppendImpl(const void *from) final { return CallAppendOn(*fSubFields[0], from); }
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubFields[0], globalIndex, to); }
-   void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final { CallReadOn(*fSubFields[0], clusterIndex, to); }
+   void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final { CallReadOn(*fSubFields[0], localIndex, to); }
 
 public:
    REnumField(std::string_view fieldName, std::string_view enumName);
@@ -270,13 +270,13 @@ class RCardinalityField : public RFieldBase {
    friend class RNTupleCollectionView; // to access GetCollectionInfo()
 
 private:
-   void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, NTupleSize_t *size)
+   void GetCollectionInfo(NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, NTupleSize_t *size)
    {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
-   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, NTupleSize_t *size)
+   void GetCollectionInfo(RNTupleLocalIndex localIndex, RNTupleLocalIndex *collectionStart, NTupleSize_t *size)
    {
-      fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
+      fPrincipalColumn->GetCollectionInfo(localIndex, collectionStart, size);
    }
 
 protected:
@@ -320,9 +320,9 @@ public:
    ~RSimpleField() override = default;
 
    T *Map(NTupleSize_t globalIndex) { return fPrincipalColumn->Map<T>(globalIndex); }
-   T *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<T>(clusterIndex); }
+   T *Map(RNTupleLocalIndex localIndex) { return fPrincipalColumn->Map<T>(localIndex); }
    T *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) { return fPrincipalColumn->MapV<T>(globalIndex, nItems); }
-   T *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems) { return fPrincipalColumn->MapV<T>(clusterIndex, nItems); }
+   T *MapV(RNTupleLocalIndex localIndex, NTupleSize_t &nItems) { return fPrincipalColumn->MapV<T>(localIndex, nItems); }
 
    size_t GetValueSize() const final { return sizeof(T); }
    size_t GetAlignment() const final { return alignof(T); }
@@ -356,24 +356,24 @@ protected:
    /// Get the number of elements of the collection identified by globalIndex
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final
    {
-      RClusterIndex collectionStart;
+      RNTupleLocalIndex collectionStart;
       NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
       *static_cast<RNTupleCardinality<SizeT> *>(to) = size;
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
-   void ReadInClusterImpl(RClusterIndex clusterIndex, void *to) final
+   void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final
    {
-      RClusterIndex collectionStart;
+      RNTupleLocalIndex collectionStart;
       NTupleSize_t size;
-      fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, &size);
+      fPrincipalColumn->GetCollectionInfo(localIndex, &collectionStart, &size);
       *static_cast<RNTupleCardinality<SizeT> *>(to) = size;
    }
 
    std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final
    {
-      RClusterIndex collectionStart;
+      RNTupleLocalIndex collectionStart;
       NTupleSize_t collectionSize;
       fPrincipalColumn->GetCollectionInfo(bulkSpec.fFirstIndex, &collectionStart, &collectionSize);
 

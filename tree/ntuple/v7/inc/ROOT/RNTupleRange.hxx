@@ -90,43 +90,43 @@ private:
 public:
    class RIterator {
    private:
-      RClusterIndex fIndex;
+      RNTupleLocalIndex fLocalIndex;
 
    public:
       using iterator = RIterator;
       using iterator_category = std::forward_iterator_tag;
-      using value_type = RClusterIndex;
-      using difference_type = RClusterIndex;
-      using pointer = RClusterIndex *;
-      using reference = RClusterIndex &;
+      using value_type = RNTupleLocalIndex;
+      using difference_type = RNTupleLocalIndex;
+      using pointer = RNTupleLocalIndex *;
+      using reference = RNTupleLocalIndex &;
 
       RIterator() = default;
-      explicit RIterator(RClusterIndex index) : fIndex(index) {}
+      explicit RIterator(RNTupleLocalIndex localIndex) : fLocalIndex(localIndex) {}
       ~RIterator() = default;
 
       iterator operator++(int) /* postfix */
       {
          auto r = *this;
-         fIndex++;
+         fLocalIndex++;
          return r;
       }
       iterator &operator++() /* prefix */
       {
-         fIndex++;
+         fLocalIndex++;
          return *this;
       }
-      reference operator*() { return fIndex; }
-      pointer operator->() { return &fIndex; }
-      bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
-      bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
+      reference operator*() { return fLocalIndex; }
+      pointer operator->() { return &fLocalIndex; }
+      bool operator==(const iterator &rh) const { return fLocalIndex == rh.fLocalIndex; }
+      bool operator!=(const iterator &rh) const { return fLocalIndex != rh.fLocalIndex; }
    };
 
    RNTupleClusterRange(DescriptorId_t clusterId, NTupleSize_t start, NTupleSize_t end)
       : fClusterId(clusterId), fStart(start), fEnd(end)
    {
    }
-   RIterator begin() const { return RIterator(RClusterIndex(fClusterId, fStart)); }
-   RIterator end() const { return RIterator(RClusterIndex(fClusterId, fEnd)); }
+   RIterator begin() const { return RIterator(RNTupleLocalIndex(fClusterId, fStart)); }
+   RIterator end() const { return RIterator(RNTupleLocalIndex(fClusterId, fEnd)); }
    NTupleSize_t size() const { return fEnd - fStart; }
 };
 
