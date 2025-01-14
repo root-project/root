@@ -449,7 +449,6 @@ namespace {
       if (!(NSD = utils::Lookup::Namespace(m_Sema, "cling")))
         return VSError(m_Sema, E, "cling namespace");
     }
-
     LookupResult R(*m_Sema, &m_Context->Idents.get("setValueNoAlloc"),
                    SourceLocation(), Sema::LookupOrdinaryName,
                    Sema::ForVisibleRedeclaration);
