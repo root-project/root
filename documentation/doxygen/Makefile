@@ -62,7 +62,8 @@ doxygen: filter pyzdoc
 	$(call MkDir,$(DOXYGEN_EXAMPLE_PATH))
 	$(call MkDir,$(DOXYGEN_NOTEBOOK_PATH))
 	./makehtmlfooter.sh > htmlfooter.html
-	./makeinput.sh
+	cmake -S ./ -B /tmp/ -DDOCU_LOCATION=$(DOXYGEN_OUTPUT_DIRECTORY)
+	cp /tmp/Doxyfile.dox ./Doxyfile
 	doxygen
 	bash ./CleanNamespaces.sh
 	gzip $(DOXYGEN_IMAGE_PATH)/ROOT.tag
