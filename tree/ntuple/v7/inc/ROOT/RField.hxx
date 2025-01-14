@@ -353,16 +353,6 @@ protected:
    }
    void ConstructValue(void *where) const final { new (where) RNTupleCardinality<SizeT>(0); }
 
-public:
-   static std::string TypeName() { return "ROOT::RNTupleCardinality<" + RField<SizeT>::TypeName() + ">"; }
-   explicit RField(std::string_view name) : RCardinalityField(name, TypeName()) {}
-   RField(RField &&other) = default;
-   RField &operator=(RField &&other) = default;
-   ~RField() final = default;
-
-   size_t GetValueSize() const final { return sizeof(RNTupleCardinality<SizeT>); }
-   size_t GetAlignment() const final { return alignof(RNTupleCardinality<SizeT>); }
-
    /// Get the number of elements of the collection identified by globalIndex
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final
    {
@@ -407,6 +397,16 @@ public:
       }
       return RBulkSpec::kAllSet;
    }
+
+public:
+   static std::string TypeName() { return "ROOT::RNTupleCardinality<" + RField<SizeT>::TypeName() + ">"; }
+   explicit RField(std::string_view name) : RCardinalityField(name, TypeName()) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() final = default;
+
+   size_t GetValueSize() const final { return sizeof(RNTupleCardinality<SizeT>); }
+   size_t GetAlignment() const final { return alignof(RNTupleCardinality<SizeT>); }
 };
 
 /// TObject requires special handling of the fBits and fUniqueID members
