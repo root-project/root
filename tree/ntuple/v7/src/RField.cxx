@@ -686,7 +686,7 @@ void ROOT::Experimental::RBitsetField::ReadInClusterImpl(RClusterIndex clusterIn
    auto *asULongArray = static_cast<Word_t *>(to);
    bool elementValue;
    for (std::size_t i = 0; i < fN; ++i) {
-      fPrincipalColumn->Read(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() * fN) + i,
+      fPrincipalColumn->Read(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndexInCluster() * fN) + i,
                              &elementValue);
       Word_t mask = static_cast<Word_t>(1) << (i % kBitsPerWord);
       Word_t bit = static_cast<Word_t>(elementValue) << (i % kBitsPerWord);
@@ -785,7 +785,7 @@ void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalInde
    bool isValidValue = static_cast<bool>(*ptr);
 
    auto itemIndex = GetItemIndex(globalIndex);
-   bool isValidItem = itemIndex.GetIndex() != kInvalidNTupleIndex;
+   bool isValidItem = itemIndex.GetIndexInCluster() != kInvalidNTupleIndex;
 
    void *valuePtr = nullptr;
    if (isValidValue)
@@ -874,7 +874,7 @@ void ROOT::Experimental::ROptionalField::ReadGlobalImpl(NTupleSize_t globalIndex
 {
    auto engagementPtr = GetEngagementPtr(to);
    auto itemIndex = GetItemIndex(globalIndex);
-   if (itemIndex.GetIndex() == kInvalidNTupleIndex) {
+   if (itemIndex.GetIndexInCluster() == kInvalidNTupleIndex) {
       if (*engagementPtr && !(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible))
          fItemDeleter->operator()(to, true /* dtorOnly */);
       *engagementPtr = false;
