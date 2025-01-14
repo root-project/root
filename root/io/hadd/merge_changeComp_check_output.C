@@ -33,7 +33,7 @@ int merge_changeComp_check_output(int expectedCompressionRNT, int expectedCompre
    auto clusterIter = desc->GetClusterIterable();
    for (const auto &clusterDesc : clusterIter) {
       // check advertised compression
-      int advertisedCompression = clusterDesc.GetColumnRange(0).fCompressionSettings;
+      int advertisedCompression = clusterDesc.GetColumnRange(0).fCompressionSettings.value();
       if (advertisedCompression != expectedCompressionRNT) {
          std::cerr << "Expected advertised compression to be " << expectedCompressionRNT << " but it is "
                    << advertisedCompression << "\n";
