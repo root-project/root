@@ -63,12 +63,13 @@ void ROOT::Experimental::RArrayField::ReadInClusterImpl(RClusterIndex clusterInd
 {
    if (fSubFields[0]->IsSimple()) {
       GetPrincipalColumnOf(*fSubFields[0])
-         ->ReadV(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() * fArrayLength), fArrayLength, to);
+         ->ReadV(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndexInCluster() * fArrayLength),
+                 fArrayLength, to);
    } else {
       auto arrayPtr = static_cast<unsigned char *>(to);
       for (unsigned i = 0; i < fArrayLength; ++i) {
          CallReadOn(*fSubFields[0],
-                    RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() * fArrayLength + i),
+                    RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndexInCluster() * fArrayLength + i),
                     arrayPtr + (i * fItemSize));
       }
    }
@@ -351,7 +352,7 @@ std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSp
    // Set the size of the remaining RVecs of the bulk, going page by page through the RNTuple offset column.
    // We optimistically assume that bulkSpec.fAuxData is already large enough to hold all the item values in the
    // given range. If not, we'll fix up the pointers afterwards.
-   auto lastOffset = firstItemIndex.GetIndex() + collectionSize;
+   auto lastOffset = firstItemIndex.GetIndexInCluster() + collectionSize;
    NTupleSize_t nRemainingValues = bulkSpec.fCount - 1;
    std::size_t nValues = 1;
    std::size_t nItems = collectionSize;
@@ -807,17 +808,17 @@ void ROOT::Experimental::RArrayAsRVecField::ReadInClusterImpl(ROOT::Experimental
    auto rvecBeginPtr = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
 
    const auto &clusterId = clusterIndex.GetClusterId();
-   const auto &clusterIndexIndex = clusterIndex.GetIndex();
+   const auto &indexInCluster = clusterIndex.GetIndexInCluster();
 
    if (fSubFields[0]->IsSimple()) {
       GetPrincipalColumnOf(*fSubFields[0])
-         ->ReadV(RClusterIndex(clusterId, clusterIndexIndex * fArrayLength), fArrayLength, rvecBeginPtr);
+         ->ReadV(RClusterIndex(clusterId, indexInCluster * fArrayLength), fArrayLength, rvecBeginPtr);
       return;
    }
 
    // Read the new values into the collection elements
    for (std::size_t i = 0; i < fArrayLength; ++i) {
-      CallReadOn(*fSubFields[0], RClusterIndex(clusterId, clusterIndexIndex * fArrayLength + i),
+      CallReadOn(*fSubFields[0], RClusterIndex(clusterId, indexInCluster * fArrayLength + i),
                  rvecBeginPtr + (i * fItemSize));
    }
 }

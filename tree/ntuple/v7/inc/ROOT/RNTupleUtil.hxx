@@ -125,32 +125,38 @@ constexpr DescriptorId_t kInvalidDescriptorId = std::uint64_t(-1);
 class RClusterIndex {
 private:
    DescriptorId_t fClusterId = kInvalidDescriptorId;
-   NTupleSize_t fIndex = kInvalidNTupleIndex;
+   NTupleSize_t fIndexInCluster = kInvalidNTupleIndex;
 
 public:
    RClusterIndex() = default;
    RClusterIndex(const RClusterIndex &other) = default;
    RClusterIndex &operator=(const RClusterIndex &other) = default;
-   constexpr RClusterIndex(DescriptorId_t clusterId, NTupleSize_t index) : fClusterId(clusterId), fIndex(index) {}
+   constexpr RClusterIndex(DescriptorId_t clusterId, NTupleSize_t indexInCluster)
+      : fClusterId(clusterId), fIndexInCluster(indexInCluster)
+   {
+   }
 
-   RClusterIndex operator+(NTupleSize_t off) const { return RClusterIndex(fClusterId, fIndex + off); }
-   RClusterIndex operator-(NTupleSize_t off) const { return RClusterIndex(fClusterId, fIndex - off); }
+   RClusterIndex operator+(NTupleSize_t off) const { return RClusterIndex(fClusterId, fIndexInCluster + off); }
+   RClusterIndex operator-(NTupleSize_t off) const { return RClusterIndex(fClusterId, fIndexInCluster - off); }
    RClusterIndex operator++(int) /* postfix */
    {
       auto r = *this;
-      fIndex++;
+      fIndexInCluster++;
       return r;
    }
    RClusterIndex &operator++() /* prefix */
    {
-      ++fIndex;
+      ++fIndexInCluster;
       return *this;
    }
-   bool operator==(RClusterIndex other) const { return fClusterId == other.fClusterId && fIndex == other.fIndex; }
+   bool operator==(RClusterIndex other) const
+   {
+      return fClusterId == other.fClusterId && fIndexInCluster == other.fIndexInCluster;
+   }
    bool operator!=(RClusterIndex other) const { return !(*this == other); }
 
    DescriptorId_t GetClusterId() const { return fClusterId; }
-   NTupleSize_t GetIndex() const { return fIndex; }
+   NTupleSize_t GetIndexInCluster() const { return fIndexInCluster; }
 };
 
 /// RNTupleLocator payload that is common for object stores using 64bit location information.

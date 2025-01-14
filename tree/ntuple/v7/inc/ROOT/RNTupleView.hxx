@@ -312,16 +312,16 @@ public:
       NTupleSize_t size;
       RClusterIndex collectionStart;
       fField.GetCollectionInfo(globalIndex, &collectionStart, &size);
-      return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndex(),
-                                 collectionStart.GetIndex() + size);
+      return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndexInCluster(),
+                                 collectionStart.GetIndexInCluster() + size);
    }
    RNTupleClusterRange GetCollectionRange(RClusterIndex clusterIndex)
    {
       NTupleSize_t size;
       RClusterIndex collectionStart;
       fField.GetCollectionInfo(clusterIndex, &collectionStart, &size);
-      return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndex(),
-                                 collectionStart.GetIndex() + size);
+      return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndexInCluster(),
+                                 collectionStart.GetIndexInCluster() + size);
    }
 
    /// Raises an exception if there is no field with the given name.
