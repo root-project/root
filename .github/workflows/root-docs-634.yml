@@ -1,0 +1,12 @@
+
+name: 'ROOT Docs 6.34'
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+    - cron: '0 12 * * *'
+
+jobs:
+  run_nightlies:
+    uses: root-project/root/.github/workflows/root-docs-ci.yml@v6-34-00-patches
+    secrets: inherit
