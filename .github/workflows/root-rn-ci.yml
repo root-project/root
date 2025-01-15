@@ -28,7 +28,15 @@ jobs:
         run: sudo apt-get -y install pandoc
 
       - name: Create Release Notes
-        run: python relnotes_gh.py root ${{ inputs.branch }}
+        run: |
+          echo *** Directory
+          pwd
+          echo *** Content
+          ls
+          echo *** Running the command
+          python relnotes_gh.py root ${{ inputs.branch }}
+          echo *** New Content
+          ls
 
       - name: Install AWS CLI
         run: |
