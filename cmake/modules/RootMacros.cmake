@@ -1508,7 +1508,7 @@ set(ROOT_TEST_DRIVER ${CMAKE_CURRENT_LIST_DIR}/RootTestDriver.cmake)
 #                        [LABELS label1 label2]
 #                        [PYTHON_DEPS numpy numba keras torch ...] # List of python packages required to run this test.
 #                                                              A fixture will be added the tries to import them before the test starts.
-#                        [PROPERTIES prop1 value1 prop2 value2...] 
+#                        [PROPERTIES prop1 value1 prop2 value2...]
 #                       )
 #
 function(ROOT_ADD_TEST test)
@@ -1745,18 +1745,15 @@ function(ROOT_ADD_TEST test)
     set_tests_properties(${test} PROPERTIES LABELS "${ARG_LABELS}")
   endif()
 
-  if(ARG_PYTHON_DEPS)
-    foreach(python_dep ${ARG_PYTHON_DEPS})
-      if(NOT TEST test-import-${python_dep})
-        add_test(NAME test-import-${python_dep} COMMAND ${Python3_EXECUTABLE} -c "import ${python_dep}")
-        set_tests_properties(test-import-${python_dep} PROPERTIES FIXTURES_SETUP requires_${python_dep})
-      endif()
-      list(APPEND fixtures "requires_${python_dep}")
-    endforeach()
-    if(fixtures)
-      set_tests_properties(${test} PROPERTIES FIXTURES_REQUIRED "${fixtures}")
+  foreach(python_dep ${ARG_PYTHON_DEPS})
+    string(TOUPPER ${python_dep} python_dep_upper)
+    find_python_module(${python_dep_upper} QUIET)
+    if(NOT PY_${python_dep_upper}_FOUND)
+      set_property(TEST ${test} PROPERTY DISABLED True)
+      message(STATUS "Disabling ${test} because ${python_dep} cannot be imported.")
+      continue()
     endif()
-  endif()
+  endforeach()
 
   if(ARG_RUN_SERIAL)
     set_property(TEST ${test} PROPERTY RUN_SERIAL true)
