@@ -354,3 +354,57 @@ struct Inner {
    reader = RNTupleReader::Open(cmOpts, "ntpl", fileGuard.GetPath());
    reader->LoadEntry(0);
 }
+
+TEST(RNTupleEmulated, EmulatedFields_Write)
+{
+   // Write a RNTuple with user-defined types, read it as emulated fields and try to write it back.
+   // It should fail.
+
+   FileRaii fileGuard("test_ntuple_emulated_write.root");
+
+   ExecInFork([&] {
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+struct Inner {
+   int fFlt = 42;
+   
+   ClassDefNV(Inner, 2);
+};
+
+struct Outer {
+   std::vector<Inner> fInners;
+   
+   ClassDefNV(Outer, 2);
+};
+)"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("f", "Outer").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
+      // See also https://github.com/root-project/root/issues/9371
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning, "TStreamerInfo::Build", "has no streamer or dictionary",
+                            /*matchFullMessage=*/false);
+      writer.reset();
+   });
+
+   RNTupleDescriptor::RCreateModelOptions cmOpts;
+   cmOpts.fEmulateUnknownTypes = true;
+   auto reader = RNTupleReader::Open(cmOpts, "ntpl", fileGuard.GetPath());
+   reader->LoadEntry(0);
+
+   // Try to write it back
+   FileRaii fileGuard2("test_ntuple_emulated_write2.root");
+   auto model = reader->GetModel().Clone();
+   try {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard2.GetPath());
+      FAIL() << "Creating a RNTupleWriter with emulated fields should fail.";
+   } catch (const ROOT::RException &ex) {
+      EXPECT_THAT(ex.GetError().GetReport(), testing::HasSubstr("unsupported"));
+   }
+}
