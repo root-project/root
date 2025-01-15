@@ -56,8 +56,8 @@ TEST(RNTupleZip, Small)
 TEST(RNTupleZip, Large)
 {
    constexpr unsigned int N = kMAXZIPBUF + 32;
-   auto zipBuffer = std::make_unique<unsigned char[]>(N);
-   auto unzipBuffer = std::make_unique<char[]>(N);
+   auto zipBuffer = MakeUninitArray<unsigned char>(N);
+   auto unzipBuffer = MakeUninitArray<char>(N);
    std::string data(N, 'x');
 
    RNTupleCompressor compressor;
@@ -88,8 +88,8 @@ TEST(RNTupleZip, Large)
 TEST(RNTupleZip, LargeWithOutputBuffer)
 {
    constexpr unsigned int N = kMAXZIPBUF + 32;
-   auto zipBuffer = std::make_unique<unsigned char[]>(N);
-   auto unzipBuffer = std::make_unique<char[]>(N);
+   auto zipBuffer = MakeUninitArray<unsigned char>(N);
+   auto unzipBuffer = MakeUninitArray<char>(N);
    std::string data(N, 'x');
 
    RNTupleCompressor compressor;

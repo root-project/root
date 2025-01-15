@@ -535,7 +535,7 @@ TEST(Packing, Real32TruncFloat)
       float f[N];
       for (int i = 0; i < N; ++i)
          f[i] = -2097176.7f;
-      auto out2 = std::make_unique<unsigned char[]>(BitPacking::MinBufSize(N, kBitsOnStorage));
+      auto out2 = MakeUninitArray<unsigned char>(BitPacking::MinBufSize(N, kBitsOnStorage));
       element.Pack(out2.get(), f, N);
 
       float fout[N];
@@ -556,7 +556,7 @@ TEST(Packing, Real32TruncFloat)
       for (int i = 0; i < N; ++i)
          f[i] = 2.f + (0.000001f * i);
 
-      auto out = std::make_unique<unsigned char[]>(BitPacking::MinBufSize(N, kBitsOnStorage));
+      auto out = MakeUninitArray<unsigned char>(BitPacking::MinBufSize(N, kBitsOnStorage));
       element.Pack(out.get(), f, N);
 
       float fout[N];
@@ -582,7 +582,7 @@ TEST(Packing, Real32TruncFloat)
          inputs[i] = dist(rng);
       }
 
-      auto packed = std::make_unique<std::uint8_t[]>(BitPacking::MinBufSize(N, bitWidth));
+      auto packed = MakeUninitArray<std::uint8_t>(BitPacking::MinBufSize(N, bitWidth));
 
       float outputs[N];
       for (int i = 0; i < N; ++i) {
@@ -694,7 +694,7 @@ TEST(Packing, Real32TruncDouble)
       double f[N];
       for (int i = 0; i < N; ++i)
          f[i] = -2097176.7f;
-      auto out2 = std::make_unique<unsigned char[]>(BitPacking::MinBufSize(N, kBitsOnStorage));
+      auto out2 = MakeUninitArray<unsigned char>(BitPacking::MinBufSize(N, kBitsOnStorage));
       element.Pack(out2.get(), f, N);
 
       double fout[N];
@@ -715,7 +715,7 @@ TEST(Packing, Real32TruncDouble)
       for (int i = 0; i < N; ++i)
          f[i] = 2.f + (0.000001f * i);
 
-      auto out = std::make_unique<unsigned char[]>(BitPacking::MinBufSize(N, kBitsOnStorage));
+      auto out = MakeUninitArray<unsigned char>(BitPacking::MinBufSize(N, kBitsOnStorage));
       element.Pack(out.get(), f, N);
 
       double fout[N];
@@ -741,7 +741,7 @@ TEST(Packing, Real32TruncDouble)
          inputs[i] = dist(rng);
       }
 
-      auto packed = std::make_unique<std::uint8_t[]>(BitPacking::MinBufSize(N, bitWidth));
+      auto packed = MakeUninitArray<std::uint8_t>(BitPacking::MinBufSize(N, bitWidth));
 
       double outputs[N];
       for (int i = 0; i < N; ++i) {
@@ -795,14 +795,14 @@ TEST(Packing, RealQuantize)
 
       constexpr auto N = 10000;
       constexpr auto kNbits = 20;
-      auto inputs = std::make_unique<decltype(min)[]>(N);
+      auto inputs = MakeUninitArray<decltype(min)>(N);
       for (int i = 0; i < N; ++i)
          inputs.get()[i] = dist(rng);
 
-      auto quant = std::make_unique<Quantized_t[]>(N);
+      auto quant = MakeUninitArray<Quantized_t>(N);
       QuantizeReals(quant.get(), inputs.get(), N, min, max, kNbits);
 
-      auto unquant = std::make_unique<decltype(min)[]>(N);
+      auto unquant = MakeUninitArray<decltype(min)>(N);
       UnquantizeReals(unquant.get(), quant.get(), N, min, max, kNbits);
 
       for (int i = 0; i < N; ++i)
@@ -816,14 +816,14 @@ TEST(Packing, RealQuantize)
 
       constexpr auto N = 10000;
       constexpr auto kNbits = 8;
-      auto inputs = std::make_unique<decltype(min)[]>(N);
+      auto inputs = MakeUninitArray<decltype(min)>(N);
       for (int i = 0; i < N; ++i)
          inputs.get()[i] = dist(rng);
 
-      auto quant = std::make_unique<Quantized_t[]>(N);
+      auto quant = MakeUninitArray<Quantized_t>(N);
       QuantizeReals(quant.get(), inputs.get(), N, min, max, kNbits);
 
-      auto unquant = std::make_unique<decltype(min)[]>(N);
+      auto unquant = MakeUninitArray<decltype(min)>(N);
       UnquantizeReals(unquant.get(), quant.get(), N, min, max, kNbits);
 
       for (int i = 0; i < N; ++i)
@@ -929,7 +929,7 @@ TEST(Packing, Real32QuantFloat)
          inputs[i] = dist(rng);
       }
 
-      auto packed = std::make_unique<std::uint8_t[]>(BitPacking::MinBufSize(N, bitWidth));
+      auto packed = MakeUninitArray<std::uint8_t>(BitPacking::MinBufSize(N, bitWidth));
       float outputs[N];
 
       if (bitWidth == 1) {
@@ -1054,7 +1054,7 @@ TEST(Packing, Real32QuantDouble)
          inputs[i] = dist(rng);
       }
 
-      auto packed = std::make_unique<std::uint8_t[]>(BitPacking::MinBufSize(N, bitWidth));
+      auto packed = MakeUninitArray<std::uint8_t>(BitPacking::MinBufSize(N, bitWidth));
       double outputs[N];
 
       if (bitWidth == 1) {

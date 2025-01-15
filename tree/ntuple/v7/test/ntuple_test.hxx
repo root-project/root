@@ -115,6 +115,8 @@ using RPrintSchemaVisitor = ROOT::Experimental::RPrintSchemaVisitor;
 using RRawFile = ROOT::Internal::RRawFile;
 using EContainerFormat = RNTupleFileWriter::EContainerFormat;
 
+using ROOT::Experimental::Internal::MakeUninitArray;
+
 /**
  * An RAII wrapper around an open temporary file on disk. It cleans up the guarded file when the wrapper object
  * goes out of scope.
