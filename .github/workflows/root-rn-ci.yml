@@ -12,6 +12,8 @@ on:
 jobs:
   create_release_notes:
     runs-on: ubuntu-latest
+    env:
+      WORKDIR: /home/runner/work/root
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,13 +24,14 @@ jobs:
         uses: actions/setup-python@v5
 
       - name: Download Release Notes creation script
+        working-directory: ${{ env.WORKDIR }}
         run: wget https://raw.githubusercontent.com/root-project/rootspi/refs/heads/master/rdoc/relnotes_gh.py
 
       - name: Setup Pandoc
         run: sudo apt-get -y install pandoc
 
       - name: Create Release Notes
-        working-directory: /home/runner/work/root
+        working-directory: ${{ env.WORKDIR }}
         run: |
           echo *** Directory
           pwd
@@ -50,7 +53,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_ENDPOINT_URL: https://s3.cern.ch/
-        working-directory: /home/runner/work/root
+        working-directory: ${{ env.WORKDIR }}
         run: |
           echo *** Directory
           pwd
