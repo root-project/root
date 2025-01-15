@@ -28,6 +28,7 @@ jobs:
         run: sudo apt-get -y install pandoc
 
       - name: Create Release Notes
+        working-directory: /home/runner/work/root
         run: |
           echo *** Directory
           pwd
@@ -49,9 +50,12 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_ENDPOINT_URL: https://s3.cern.ch/
-  
+        working-directory: /home/runner/work/root
         run: |
+          echo *** Directory
           pwd
-          ls -l
+          echo *** Content
+          ls
+          echo *** Running the command
           echo aws s3 sync `ls -1|grep -v relnotes|grep -v root` s3://root/doc-test/
           
