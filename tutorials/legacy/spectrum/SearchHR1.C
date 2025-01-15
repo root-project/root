@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_spectrum
-/// \notebook
 /// Example to illustrate high resolution peak searching function (class TSpectrum).
 ///
 /// \macro_output

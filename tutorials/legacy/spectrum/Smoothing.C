@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_spectrum
-/// \notebook
 /// Example to illustrate smoothing using Markov algorithm (class TSpectrum).
 ///
 /// \macro_image

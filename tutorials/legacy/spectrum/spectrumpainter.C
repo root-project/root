@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_spectrum
-/// \notebook
 /// Examples showing how to use TSpectrum2Painter (the SPEC option)
 ///
 /// \macro_image

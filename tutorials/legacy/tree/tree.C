@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_tree
-/// \notebook
 /// Display the Tree data structures
 ///
 /// \macro_image

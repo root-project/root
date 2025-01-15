@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_legacy
-/// \notebook -js
 /// Shows how to run items of work asynchronously with a TTaskGroup.
 ///
 /// \macro_code

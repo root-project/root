@@ -1,6 +1,5 @@
 ## \file
 ## \ingroup tutorial_hist_legacy
-## \notebook
 ## Display two histograms and their ratio.
 ##
 ## This program illustrates how to plot two histograms and their

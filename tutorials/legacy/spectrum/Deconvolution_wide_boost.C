@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_spectrum
-/// \notebook
 /// Example to illustrate deconvolution function (class TSpectrum).
 ///
 /// \macro_image

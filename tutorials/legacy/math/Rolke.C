@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_math_legacy
-/// \notebook -nodraw
 /// Example of the usage of the TRolke class
 /// The TRolke class computes the profile likelihood
 /// confidence limits for 7 different model assumptions

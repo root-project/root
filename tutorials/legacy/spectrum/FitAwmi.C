@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_spectrum
-/// \notebook
 /// This macro fits the source spectrum using the AWMI algorithm
 /// from the "TSpectrumFit" class ("TSpectrum" class is used to find peaks).
 ///

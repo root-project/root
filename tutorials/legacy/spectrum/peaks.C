@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_spectrum
-/// \notebook
 /// Illustrates how to find peaks in histograms.
 ///
 /// This script generates a random number of gaussian peaks
