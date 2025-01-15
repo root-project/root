@@ -61,6 +61,11 @@ ROOT::Experimental::RNTupleWriter::Create(std::unique_ptr<RNTupleModel> model,
    if (model->GetRegisteredSubfields().size() > 0) {
       throw RException(R__FAIL("cannot create an RNTupleWriter from a model with registered subfields"));
    }
+   for (const auto &field : model->GetConstFieldZero()) {
+      if (field.GetTraits() & RFieldBase::kTraitEmulatedField)
+         throw RException(
+            R__FAIL("creating a RNTupleWriter from a model containing emulated fields is currently unsupported."));
+   }
    if (options.GetUseBufferedWrite()) {
       sink = std::make_unique<Internal::RPageSinkBuf>(std::move(sink));
    }
