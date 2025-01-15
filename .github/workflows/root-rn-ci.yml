@@ -33,13 +33,13 @@ jobs:
       - name: Create Release Notes
         working-directory: ${{ env.WORKDIR }}
         run: |
-          echo *** Directory
+          echo +++ Directory
           pwd
-          echo *** Content
+          echo +++ Content
           ls
-          echo *** Running the command
+          echo +++ Running the command
           python relnotes_gh.py root ${{ inputs.branch }}
-          echo *** New Content
+          echo +++ New Content
           ls
 
       - name: Install AWS CLI
@@ -55,10 +55,11 @@ jobs:
           AWS_ENDPOINT_URL: https://s3.cern.ch/
         working-directory: ${{ env.WORKDIR }}
         run: |
-          echo *** Directory
+          echo +++ Directory
           pwd
-          echo *** Content
+          echo +++ Content
           ls
-          echo *** Running the command
-          echo aws s3 sync `ls -1|grep -v relnotes|grep -v root` s3://root/doc-test/
+          echo +++ Running the command
+          export DIRNAME=`ls -1|grep -v relnotes|grep -v root`
+          aws s3 sync ${DIRNAME}/ s3://root/doc-test/${DIRNAME}
           
