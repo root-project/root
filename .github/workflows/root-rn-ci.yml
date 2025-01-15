@@ -30,7 +30,7 @@ jobs:
       - name: Create Release Notes
         run: python relnotes_gh.py root ${{ inputs.branch }}
 
-        - name: Install AWS CLI
+      - name: Install AWS CLI
         run: |
           python -m pip install --upgrade pip
           pip install awscli
