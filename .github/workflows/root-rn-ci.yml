@@ -1,4 +1,4 @@
-name: 'ROOT Release Notes'
+name: 'ROOT Release Notes TEST'
 
 on:
   workflow_dispatch:
