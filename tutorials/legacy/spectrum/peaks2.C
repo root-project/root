@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_spectrum
-/// \notebook
 /// Example to illustrate the 2-d peak finder (class TSpectrum2).
 ///
 /// This script generates a random number of 2-d gaussian peaks

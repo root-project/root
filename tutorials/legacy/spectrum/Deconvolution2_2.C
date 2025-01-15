@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_spectrum
-/// \notebook
 /// Example to illustrate the Gold deconvolution (class TSpectrum2).
 ///
 /// \macro_image

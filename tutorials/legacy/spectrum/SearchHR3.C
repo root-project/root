@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_spectrum
-/// \notebook
 /// Example to illustrate the influence of number of iterations in deconvolution
 /// in high resolution peak searching function (class TSpectrum).
 ///

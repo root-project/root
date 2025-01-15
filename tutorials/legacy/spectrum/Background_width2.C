@@ -1,6 +1,5 @@
 /// \file
 /// \ingroup tutorial_spectrum
-/// \notebook
 /// Example to illustrate the influence of the clipping window width on the
 /// estimated background.
 ///
