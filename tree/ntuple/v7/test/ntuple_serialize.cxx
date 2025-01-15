@@ -534,7 +534,7 @@ TEST(RNTuple, SerializeEmptyHeader)
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeader(nullptr, desc);
    EXPECT_GT(context.GetHeaderSize(), 0);
-   auto buffer = std::make_unique<unsigned char []>(context.GetHeaderSize());
+   auto buffer = MakeUninitArray<unsigned char>(context.GetHeaderSize());
    context = RNTupleSerializer::SerializeHeader(buffer.get(), desc);
 
    RNTupleSerializer::DeserializeHeader(buffer.get(), context.GetHeaderSize(), builder);
@@ -626,7 +626,7 @@ TEST(RNTuple, SerializeHeader)
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeader(nullptr, desc);
    EXPECT_GT(context.GetHeaderSize(), 0);
-   auto buffer = std::make_unique<unsigned char []>(context.GetHeaderSize());
+   auto buffer = MakeUninitArray<unsigned char>(context.GetHeaderSize());
    context = RNTupleSerializer::SerializeHeader(buffer.get(), desc);
 
    RNTupleSerializer::DeserializeHeader(buffer.get(), context.GetHeaderSize(), builder);
@@ -705,7 +705,7 @@ TEST(RNTuple, SerializeFooter)
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeader(nullptr, desc);
    EXPECT_GT(context.GetHeaderSize(), 0);
-   auto bufHeader = std::make_unique<unsigned char []>(context.GetHeaderSize());
+   auto bufHeader = MakeUninitArray<unsigned char>(context.GetHeaderSize());
    context = RNTupleSerializer::SerializeHeader(bufHeader.get(), desc);
 
    std::vector<DescriptorId_t> physClusterIDs;
@@ -717,12 +717,12 @@ TEST(RNTuple, SerializeFooter)
 
    auto sizePageList = RNTupleSerializer::SerializePageList(nullptr, desc, physClusterIDs, context);
    EXPECT_GT(sizePageList, 0);
-   auto bufPageList = std::make_unique<unsigned char []>(sizePageList);
+   auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
    EXPECT_EQ(sizePageList, RNTupleSerializer::SerializePageList(bufPageList.get(), desc, physClusterIDs, context));
 
    auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context);
    EXPECT_GT(sizeFooter, 0);
-   auto bufFooter = std::make_unique<unsigned char []>(sizeFooter);
+   auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
    EXPECT_EQ(sizeFooter, RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context));
 
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
@@ -799,7 +799,7 @@ TEST(RNTuple, SerializeFooterXHeader)
 
    auto context = RNTupleSerializer::SerializeHeader(nullptr, builder.GetDescriptor());
    EXPECT_GT(context.GetHeaderSize(), 0);
-   auto bufHeader = std::make_unique<unsigned char[]>(context.GetHeaderSize());
+   auto bufHeader = MakeUninitArray<unsigned char>(context.GetHeaderSize());
    context = RNTupleSerializer::SerializeHeader(bufHeader.get(), builder.GetDescriptor());
 
    builder.BeginHeaderExtension();
@@ -876,7 +876,7 @@ TEST(RNTuple, SerializeFooterXHeader)
    auto desc = builder.MoveDescriptor();
    auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context);
    EXPECT_GT(sizeFooter, 0);
-   auto bufFooter = std::make_unique<unsigned char[]>(sizeFooter);
+   auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
    EXPECT_EQ(sizeFooter, RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context));
 
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
@@ -1033,17 +1033,17 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
 
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeader(nullptr, desc);
-   auto bufHeader = std::make_unique<unsigned char[]>(context.GetHeaderSize());
+   auto bufHeader = MakeUninitArray<unsigned char>(context.GetHeaderSize());
    context = RNTupleSerializer::SerializeHeader(bufHeader.get(), desc);
 
    std::vector<DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17)};
    context.MapClusterGroupId(137);
    auto sizePageList = RNTupleSerializer::SerializePageList(nullptr, desc, physClusterIDs, context);
-   auto bufPageList = std::make_unique<unsigned char[]>(sizePageList);
+   auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
    RNTupleSerializer::SerializePageList(bufPageList.get(), desc, physClusterIDs, context);
 
    auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context);
-   auto bufFooter = std::make_unique<unsigned char[]>(sizeFooter);
+   auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
    RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context);
 
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
@@ -1219,17 +1219,17 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
 
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeader(nullptr, desc);
-   auto bufHeader = std::make_unique<unsigned char[]>(context.GetHeaderSize());
+   auto bufHeader = MakeUninitArray<unsigned char>(context.GetHeaderSize());
    context = RNTupleSerializer::SerializeHeader(bufHeader.get(), desc);
 
    std::vector<DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17)};
    context.MapClusterGroupId(137);
    auto sizePageList = RNTupleSerializer::SerializePageList(nullptr, desc, physClusterIDs, context);
-   auto bufPageList = std::make_unique<unsigned char[]>(sizePageList);
+   auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
    RNTupleSerializer::SerializePageList(bufPageList.get(), desc, physClusterIDs, context);
 
    auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context);
-   auto bufFooter = std::make_unique<unsigned char[]>(sizeFooter);
+   auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
    RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context);
 
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
@@ -1278,7 +1278,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
                        .Unwrap());
 
    auto context = RNTupleSerializer::SerializeHeader(nullptr, builder.GetDescriptor());
-   auto bufHeader = std::make_unique<unsigned char[]>(context.GetHeaderSize());
+   auto bufHeader = MakeUninitArray<unsigned char>(context.GetHeaderSize());
    context = RNTupleSerializer::SerializeHeader(bufHeader.get(), builder.GetDescriptor());
 
    // First cluster
@@ -1347,11 +1347,11 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
                                               context.MapClusterId(19)};
    context.MapClusterGroupId(137);
    auto sizePageList = RNTupleSerializer::SerializePageList(nullptr, desc, physClusterIDs, context);
-   auto bufPageList = std::make_unique<unsigned char[]>(sizePageList);
+   auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
    RNTupleSerializer::SerializePageList(bufPageList.get(), desc, physClusterIDs, context);
 
    auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context);
-   auto bufFooter = std::make_unique<unsigned char[]>(sizeFooter);
+   auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
    RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context);
 
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
@@ -1423,7 +1423,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
                         .Unwrap());
 
    auto context = RNTupleSerializer::SerializeHeader(nullptr, builder.GetDescriptor());
-   auto bufHeader = std::make_unique<unsigned char[]>(context.GetHeaderSize());
+   auto bufHeader = MakeUninitArray<unsigned char>(context.GetHeaderSize());
    context = RNTupleSerializer::SerializeHeader(bufHeader.get(), builder.GetDescriptor());
 
    // First cluster
@@ -1470,11 +1470,11 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
    std::vector<DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17)};
    context.MapClusterGroupId(137);
    auto sizePageList = RNTupleSerializer::SerializePageList(nullptr, desc, physClusterIDs, context);
-   auto bufPageList = std::make_unique<unsigned char[]>(sizePageList);
+   auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
    RNTupleSerializer::SerializePageList(bufPageList.get(), desc, physClusterIDs, context);
 
    auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context);
-   auto bufFooter = std::make_unique<unsigned char[]>(sizeFooter);
+   auto bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
    RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context);
 
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);

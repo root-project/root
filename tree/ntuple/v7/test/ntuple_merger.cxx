@@ -62,7 +62,7 @@ TEST(RPageStorage, ReadSealedPages)
    ASSERT_EQ(1U, sealedPage.GetNElements());
    ASSERT_EQ(4U, sealedPage.GetDataSize());
    ASSERT_EQ(12U, sealedPage.GetBufferSize());
-   auto buffer = std::make_unique<unsigned char[]>(sealedPage.GetBufferSize());
+   auto buffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
    sealedPage.SetBuffer(buffer.get());
    source.LoadSealedPage(columnId, index, sealedPage);
    ASSERT_EQ(1U, sealedPage.GetNElements());
@@ -80,7 +80,7 @@ TEST(RPageStorage, ReadSealedPages)
    for (const auto &pi : pageRange.fPageInfos) {
       sealedPage.SetBuffer(nullptr);
       source.LoadSealedPage(columnId, RClusterIndex(clusterId, firstElementInPage), sealedPage);
-      buffer = std::make_unique<unsigned char[]>(sealedPage.GetBufferSize());
+      buffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
       sealedPage.SetBuffer(buffer.get());
       source.LoadSealedPage(columnId, RClusterIndex(clusterId, firstElementInPage), sealedPage);
       ASSERT_GE(sealedPage.GetBufferSize(), 12U);
@@ -821,7 +821,7 @@ static bool VerifyPageCompression(const std::string_view fileName, std::uint32_t
    const auto colElement = ROOT::Experimental::Internal::RColumnElementBase::Generate(columnDesc.GetType());
    ROOT::Experimental::Internal::RPageStorage::RSealedPage sealedPage;
    source->LoadSealedPage(0, {0, 0}, sealedPage);
-   auto buffer = std::make_unique<unsigned char[]>(sealedPage.GetBufferSize());
+   auto buffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
    sealedPage.SetBuffer(buffer.get());
    source->LoadSealedPage(0, {0, 0}, sealedPage);
 
