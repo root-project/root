@@ -660,7 +660,7 @@ similar `X` and `Y` ranges.
 }                           // use "tri1 p0" to generate the right one
 ```
 
-A more complete example is `$ROOTSYS/tutorials/fit/graph2dfit.C` that
+A more complete example is `$ROOTSYS/tutorials/math/fit/graph2dfit.C` that
 produces the next figure.
 
 ![Output of macro graph2dfit.C](pictures/0300005C.png)
