@@ -14,29 +14,29 @@ TEST(RNTupleEmulated, EmulatedFields_Simple)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-struct Inner {
+struct Inner_Simple {
    int fInt1 = 1;
    int fInt2 = 2;
 
-   ClassDefNV(Inner, 2);
+   ClassDefNV(Inner_Simple, 2);
 };
 
-struct Outer {
+struct Outer_Simple {
    int fInt1 = 1;
-   Inner fInner;
+   Inner_Simple fInner;
 
-   ClassDefNV(Outer, 2);
+   ClassDefNV(Outer_Simple, 2);
 };
 )"));
 
       auto model = RNTupleModel::Create();
-      model->AddField(RFieldBase::Create("f", "Outer").Unwrap());
+      model->AddField(RFieldBase::Create("f", "Outer_Simple").Unwrap());
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
 
       void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
-      DeclarePointer("Outer", "ptrOuter", ptr);
+      DeclarePointer("Outer_Simple", "ptrOuter", ptr);
 
       ProcessLine("ptrOuter->fInner.fInt1 = 71;");
       ProcessLine("ptrOuter->fInner.fInt2 = 82;");
@@ -72,7 +72,7 @@ struct Outer {
       ASSERT_NE(model, nullptr);
 
       const auto &outer = model->GetConstField("f");
-      ASSERT_EQ(outer.GetTypeName(), "Outer");
+      ASSERT_EQ(outer.GetTypeName(), "Outer_Simple");
       ASSERT_EQ(outer.GetStructure(), ENTupleStructure::kRecord);
       ASSERT_EQ(outer.GetSubFields().size(), 2);
 
@@ -80,7 +80,7 @@ struct Outer {
       ASSERT_EQ(subfields[0]->GetFieldName(), "fInt1");
 
       const auto *inner = subfields[1];
-      ASSERT_EQ(inner->GetTypeName(), "Inner");
+      ASSERT_EQ(inner->GetTypeName(), "Inner_Simple");
       ASSERT_EQ(inner->GetFieldName(), "fInner");
       ASSERT_EQ(inner->GetStructure(), ENTupleStructure::kRecord);
       ASSERT_NE(inner->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
@@ -107,32 +107,32 @@ TEST(RNTupleEmulated, EmulatedFields_Vecs)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-struct Inner {
+struct Inner_Vecs {
    float fFlt;
 
-   ClassDefNV(Inner, 2);
+   ClassDefNV(Inner_Vecs, 2);
 };
 
-struct Outer {
-   std::vector<Inner> fInners;
-   Inner fInner;
+struct Outer_Vecs {
+   std::vector<Inner_Vecs> fInners;
+   Inner_Vecs fInner;
    int f;
 
-   ClassDefNV(Outer, 2);
+   ClassDefNV(Outer_Vecs, 2);
 };
 )"));
 
       auto model = RNTupleModel::Create();
-      model->AddField(RFieldBase::Create("outers", "std::vector<Outer>").Unwrap());
+      model->AddField(RFieldBase::Create("outers", "std::vector<Outer_Vecs>").Unwrap());
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
 
       void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("outers").get();
-      DeclarePointer("std::vector<Outer>", "ptrOuters", ptr);
+      DeclarePointer("std::vector<Outer_Vecs>", "ptrOuters", ptr);
 
-      ProcessLine("ptrOuters->push_back(Outer{});");
-      ProcessLine("(*ptrOuters)[0].fInners.push_back(Inner{42.f});");
+      ProcessLine("ptrOuters->push_back(Outer_Vecs{});");
+      ProcessLine("(*ptrOuters)[0].fInners.push_back(Inner_Vecs{42.f});");
       ProcessLine("(*ptrOuters)[0].fInner.fFlt = 84.f;");
       writer->Fill();
 
@@ -165,13 +165,13 @@ struct Outer {
       ASSERT_NE(model, nullptr);
 
       const auto &outers = model->GetConstField("outers");
-      ASSERT_EQ(outers.GetTypeName(), "std::vector<Outer>");
+      ASSERT_EQ(outers.GetTypeName(), "std::vector<Outer_Vecs>");
       ASSERT_EQ(outers.GetStructure(), ENTupleStructure::kCollection);
       ASSERT_EQ(outers.GetSubFields().size(), 1);
 
       const auto subfields = outers.GetSubFields();
       const auto *outer = subfields[0];
-      ASSERT_EQ(outer->GetTypeName(), "Outer");
+      ASSERT_EQ(outer->GetTypeName(), "Outer_Vecs");
       ASSERT_EQ(outer->GetStructure(), ENTupleStructure::kRecord);
       ASSERT_NE(outer->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
 
@@ -179,7 +179,7 @@ struct Outer {
       ASSERT_EQ(outersubfields.size(), 3);
 
       const auto *inners = outersubfields[0];
-      ASSERT_EQ(inners->GetTypeName(), "std::vector<Inner>");
+      ASSERT_EQ(inners->GetTypeName(), "std::vector<Inner_Vecs>");
       ASSERT_EQ(inners->GetFieldName(), "fInners");
       ASSERT_EQ(inners->GetStructure(), ENTupleStructure::kCollection);
       ASSERT_EQ(inners->GetSubFields().size(), 1);
@@ -187,7 +187,7 @@ struct Outer {
 
       const auto innersubfields = inners->GetSubFields();
       const auto *inner = innersubfields[0];
-      ASSERT_EQ(inner->GetTypeName(), "Inner");
+      ASSERT_EQ(inner->GetTypeName(), "Inner_Vecs");
       ASSERT_EQ(inner->GetStructure(), ENTupleStructure::kRecord);
       ASSERT_EQ(inner->GetSubFields().size(), 1);
       ASSERT_EQ(inner->GetSubFields()[0]->GetFieldName(), "fFlt");
@@ -211,18 +211,18 @@ TEST(RNTupleEmulated, EmulatedFields_EmptyStruct)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-struct Inner {
-   ClassDefNV(Inner, 2);
+struct Inner_EmptyStruct {
+   ClassDefNV(Inner_EmptyStruct, 2);
 };
 
-struct Outer {
-   Inner fInner;
-   ClassDefNV(Outer, 2);
+struct Outer_EmptyStruct {
+   Inner_EmptyStruct fInner;
+   ClassDefNV(Outer_EmptyStruct, 2);
 };
 )"));
 
       auto model = RNTupleModel::Create();
-      model->AddField(RFieldBase::Create("f", "Outer").Unwrap());
+      model->AddField(RFieldBase::Create("f", "Outer_EmptyStruct").Unwrap());
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
@@ -256,13 +256,13 @@ struct Outer {
       ASSERT_NE(model, nullptr);
 
       const auto &outer = model->GetConstField("f");
-      ASSERT_EQ(outer.GetTypeName(), "Outer");
+      ASSERT_EQ(outer.GetTypeName(), "Outer_EmptyStruct");
       ASSERT_EQ(outer.GetStructure(), ENTupleStructure::kRecord);
       ASSERT_EQ(outer.GetSubFields().size(), 1);
 
       const auto subfields = outer.GetSubFields();
       const auto *inner = subfields[0];
-      ASSERT_EQ(inner->GetTypeName(), "Inner");
+      ASSERT_EQ(inner->GetTypeName(), "Inner_EmptyStruct");
       ASSERT_EQ(inner->GetFieldName(), "fInner");
       ASSERT_EQ(inner->GetStructure(), ENTupleStructure::kRecord);
       ASSERT_NE(inner->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
@@ -287,23 +287,23 @@ TEST(RNTupleEmulated, EmulatedFields_EmptyVec)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-struct Inner {
-   ClassDefNV(Inner, 2);
+struct Inner_EmptyVec {
+   ClassDefNV(Inner_EmptyVec, 2);
 };
 )"));
 
       auto model = RNTupleModel::Create();
-      model->AddField(RFieldBase::Create("f", "std::vector<Inner>").Unwrap());
+      model->AddField(RFieldBase::Create("f", "std::vector<Inner_EmptyVec>").Unwrap());
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
 
       void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("f").get();
-      DeclarePointer("std::vector<Inner>", "ptrInners", ptr);
+      DeclarePointer("std::vector<Inner_EmptyVec>", "ptrInners", ptr);
 
-      ProcessLine("ptrInners->push_back(Inner{});");
-      ProcessLine("ptrInners->push_back(Inner{});");
-      ProcessLine("ptrInners->push_back(Inner{});");
+      ProcessLine("ptrInners->push_back(Inner_EmptyVec{});");
+      ProcessLine("ptrInners->push_back(Inner_EmptyVec{});");
+      ProcessLine("ptrInners->push_back(Inner_EmptyVec{});");
 
       // TStreamerInfo::Build will report a warning for interpreted classes (but only for members).
       // See also https://github.com/root-project/root/issues/9371
@@ -334,14 +334,14 @@ struct Inner {
       ASSERT_NE(model, nullptr);
 
       const auto &outer = model->GetConstField("f");
-      ASSERT_EQ(outer.GetTypeName(), "std::vector<Inner>");
+      ASSERT_EQ(outer.GetTypeName(), "std::vector<Inner_EmptyVec>");
       ASSERT_EQ(outer.GetStructure(), ENTupleStructure::kCollection);
       ASSERT_EQ(outer.GetSubFields().size(), 1);
       ASSERT_EQ(outer.GetTraits() & RFieldBase::kTraitEmulatedField, 0);
 
       const auto subfields = outer.GetSubFields();
       const auto *inner = subfields[0];
-      ASSERT_EQ(inner->GetTypeName(), "Inner");
+      ASSERT_EQ(inner->GetTypeName(), "Inner_EmptyVec");
       ASSERT_EQ(inner->GetFieldName(), "_0");
       ASSERT_EQ(inner->GetStructure(), ENTupleStructure::kRecord);
       ASSERT_NE(inner->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
@@ -366,21 +366,21 @@ TEST(RNTupleEmulated, EmulatedFields_Write)
       fileGuard.PreserveFile();
 
       ASSERT_TRUE(gInterpreter->Declare(R"(
-struct Inner {
+struct Inner_Write {
    int fFlt = 42;
    
-   ClassDefNV(Inner, 2);
+   ClassDefNV(Inner_Write, 2);
 };
 
-struct Outer {
-   std::vector<Inner> fInners;
+struct Outer_Write {
+   std::vector<Inner_Write> fInners;
    
-   ClassDefNV(Outer, 2);
+   ClassDefNV(Outer_Write, 2);
 };
 )"));
 
       auto model = RNTupleModel::Create();
-      model->AddField(RFieldBase::Create("f", "Outer").Unwrap());
+      model->AddField(RFieldBase::Create("f", "Outer_Write").Unwrap());
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
