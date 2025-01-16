@@ -174,7 +174,7 @@ End_Macro
 2D graphs can be fitted as shown by the following example:
 
 Begin_Macro(source)
-../../../tutorials/fit/graph2dfit.C
+../../../tutorials/math/fit/graph2dfit.C
 End_Macro
 
 \anchor G2D023
