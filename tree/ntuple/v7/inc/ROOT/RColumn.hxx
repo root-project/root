@@ -39,7 +39,7 @@ namespace ROOT::Experimental::Internal {
 // clang-format on
 class RColumn {
 private:
-   EColumnType fType;
+   ENTupleColumnType fType;
    /// Columns belonging to the same field are distinguished by their order.  E.g. for an std::string field, there is
    /// the offset column with index 0 and the character value column with index 1.
    std::uint32_t fIndex;
@@ -74,7 +74,7 @@ private:
    /// Points into fTeam to the column that successfully returned the last page.
    std::size_t fLastGoodTeamIdx = 0;
 
-   RColumn(EColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex);
+   RColumn(ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex);
 
    /// Used when trying to append to a full write page. If possible, expand the page. Otherwise, flush and reset
    /// to the minimal size.
@@ -105,7 +105,8 @@ private:
 
 public:
    template <typename CppT>
-   static std::unique_ptr<RColumn> Create(EColumnType type, std::uint32_t columnIdx, std::uint16_t representationIdx)
+   static std::unique_ptr<RColumn>
+   Create(ENTupleColumnType type, std::uint32_t columnIdx, std::uint16_t representationIdx)
    {
       auto column = std::unique_ptr<RColumn>(new RColumn(type, columnIdx, representationIdx));
       column->fElement = RColumnElementBase::Generate<CppT>(type);
@@ -337,7 +338,7 @@ public:
 
    NTupleSize_t GetNElements() const { return fNElements; }
    RColumnElementBase *GetElement() const { return fElement.get(); }
-   EColumnType GetType() const { return fType; }
+   ENTupleColumnType GetType() const { return fType; }
    std::uint16_t GetBitsOnStorage() const
    {
       assert(fElement);

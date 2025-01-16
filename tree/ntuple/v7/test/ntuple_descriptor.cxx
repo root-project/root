@@ -151,7 +151,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
                            .Unwrap());
    descBuilder.AddFieldLink(0, 1);
    descBuilder.AddFieldLink(0, 2);
-   EColumnType colType{EColumnType::kInt32};
+   ENTupleColumnType colType{ENTupleColumnType::kInt32};
    RColumnDescriptorBuilder colBuilder1;
    colBuilder1.LogicalColumnId(0).PhysicalColumnId(0).BitsOnStorage(32).Type(colType).FieldId(1).Index(0);
    descBuilder.AddColumn(colBuilder1.MakeDescriptor().Unwrap()).ThrowOnError();
@@ -181,7 +181,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    }
 
    RColumnDescriptorBuilder colBuilder5;
-   EColumnType falseType(EColumnType::kInt64);
+   ENTupleColumnType falseType(ENTupleColumnType::kInt64);
    colBuilder5.LogicalColumnId(1).PhysicalColumnId(0).BitsOnStorage(64).Type(falseType).FieldId(2).Index(0);
    try {
       descBuilder.AddColumn(colBuilder5.MakeDescriptor().Unwrap()).ThrowOnError();
@@ -226,7 +226,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                             .LogicalColumnId(0)
                             .PhysicalColumnId(0)
                             .BitsOnStorage(32)
-                            .Type(EColumnType::kInt32)
+                            .Type(ENTupleColumnType::kInt32)
                             .FieldId(1)
                             .Index(0)
                             .MakeDescriptor()
@@ -254,7 +254,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                             .LogicalColumnId(1)
                             .PhysicalColumnId(1)
                             .BitsOnStorage(64)
-                            .Type(EColumnType::kInt64)
+                            .Type(ENTupleColumnType::kInt64)
                             .FieldId(3)
                             .Index(0)
                             .FirstElementIndex(1002)
@@ -273,7 +273,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                             .LogicalColumnId(2)
                             .PhysicalColumnId(2)
                             .BitsOnStorage(1)
-                            .Type(EColumnType::kBit)
+                            .Type(ENTupleColumnType::kBit)
                             .FieldId(4)
                             .Index(0)
                             .FirstElementIndex(1100)
@@ -291,7 +291,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                             .LogicalColumnId(3)
                             .PhysicalColumnId(1)
                             .BitsOnStorage(64)
-                            .Type(EColumnType::kInt64)
+                            .Type(ENTupleColumnType::kInt64)
                             .FieldId(5)
                             .Index(0)
                             .MakeDescriptor()

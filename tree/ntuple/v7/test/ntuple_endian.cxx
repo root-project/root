@@ -20,7 +20,7 @@
 #include <memory>
 #include <vector>
 
-using ROOT::Experimental::EColumnType;
+using ROOT::Experimental::ENTupleColumnType;
 using ROOT::Experimental::NTupleSize_t;
 using ROOT::Experimental::RNTupleDescriptor;
 using ROOT::Experimental::RNTupleModel;
@@ -118,7 +118,7 @@ TEST(RColumnElementEndian, ByteCopy)
 #ifndef R__BYTESWAP
    GTEST_SKIP() << "Skipping test on big endian node";
 #else
-   RColumnElement<float, EColumnType::kReal32> element;
+   RColumnElement<float, ENTupleColumnType::kReal32> element;
    EXPECT_EQ(element.IsMappable(), false);
 
    RPageSinkMock sink1(element);
@@ -143,7 +143,7 @@ TEST(RColumnElementEndian, Cast)
 #ifndef R__BYTESWAP
    GTEST_SKIP() << "Skipping test on big endian node";
 #else
-   RColumnElement<std::int64_t, EColumnType::kInt32> element;
+   RColumnElement<std::int64_t, ENTupleColumnType::kInt32> element;
    EXPECT_EQ(element.IsMappable(), false);
 
    RPageSinkMock sink1(element);
@@ -171,7 +171,7 @@ TEST(RColumnElementEndian, Split)
 #ifndef R__BYTESWAP
    GTEST_SKIP() << "Skipping test on big endian node";
 #else
-   RColumnElement<double, EColumnType::kSplitReal64> splitElement;
+   RColumnElement<double, ENTupleColumnType::kSplitReal64> splitElement;
 
    RPageSinkMock sink1(splitElement);
    unsigned char buf1[] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
@@ -195,7 +195,7 @@ TEST(RColumnElementEndian, DeltaSplit)
 #ifndef R__BYTESWAP
    GTEST_SKIP() << "Skipping test on big endian node";
 #else
-   RColumnElement<ROOT::Experimental::Internal::RColumnIndex, EColumnType::kSplitIndex32> element;
+   RColumnElement<ROOT::Experimental::Internal::RColumnIndex, ENTupleColumnType::kSplitIndex32> element;
    EXPECT_EQ(element.IsMappable(), false);
 
    RPageSinkMock sink1(element);
@@ -223,7 +223,7 @@ TEST(RColumnElementEndian, Real32Trunc)
 #ifndef R__BYTESWAP
    GTEST_SKIP() << "Skipping test on big endian node";
 #else
-   RColumnElement<float, EColumnType::kReal32Trunc> element;
+   RColumnElement<float, ENTupleColumnType::kReal32Trunc> element;
    element.SetBitsOnStorage(12);
 
    RPageSinkMock sink1(element);

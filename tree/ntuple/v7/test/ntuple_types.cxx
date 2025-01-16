@@ -918,19 +918,19 @@ TEST(RNTuple, Int64)
    auto model = RNTupleModel::Create();
 
    auto f1 = std::make_unique<RField<std::int64_t>>("i1");
-   f1->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kInt64}});
+   f1->SetColumnRepresentatives({{ROOT::Experimental::ENTupleColumnType::kInt64}});
    model->AddField(std::move(f1));
 
    auto f2 = std::make_unique<RField<std::int64_t>>("i2");
-   f2->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitInt64}});
+   f2->SetColumnRepresentatives({{ROOT::Experimental::ENTupleColumnType::kSplitInt64}});
    model->AddField(std::move(f2));
 
    auto f3 = std::make_unique<RField<std::uint64_t>>("i3");
-   f3->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kUInt64}});
+   f3->SetColumnRepresentatives({{ROOT::Experimental::ENTupleColumnType::kUInt64}});
    model->AddField(std::move(f3));
 
    auto f4 = std::make_unique<RField<std::uint64_t>>("i4");
-   f4->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitUInt64}});
+   f4->SetColumnRepresentatives({{ROOT::Experimental::ENTupleColumnType::kSplitUInt64}});
    model->AddField(std::move(f4));
 
    {
@@ -945,13 +945,13 @@ TEST(RNTuple, Int64)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    const auto &desc = reader->GetDescriptor();
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kInt64,
+   EXPECT_EQ(ROOT::Experimental::ENTupleColumnType::kInt64,
              (*desc.GetColumnIterable(desc.FindFieldId("i1")).begin()).GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt64,
+   EXPECT_EQ(ROOT::Experimental::ENTupleColumnType::kSplitInt64,
              (*desc.GetColumnIterable(desc.FindFieldId("i2")).begin()).GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kUInt64,
+   EXPECT_EQ(ROOT::Experimental::ENTupleColumnType::kUInt64,
              (*desc.GetColumnIterable(desc.FindFieldId("i3")).begin()).GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitUInt64,
+   EXPECT_EQ(ROOT::Experimental::ENTupleColumnType::kSplitUInt64,
              (*desc.GetColumnIterable(desc.FindFieldId("i4")).begin()).GetType());
    reader->LoadEntry(0);
    EXPECT_EQ(std::numeric_limits<std::int64_t>::max() - 137,
@@ -988,19 +988,19 @@ TEST(RNTuple, Int32)
    auto model = RNTupleModel::Create();
 
    auto f1 = std::make_unique<RField<std::int32_t>>("i1");
-   f1->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kInt32}});
+   f1->SetColumnRepresentatives({{ROOT::Experimental::ENTupleColumnType::kInt32}});
    model->AddField(std::move(f1));
 
    auto f2 = std::make_unique<RField<std::int32_t>>("i2");
-   f2->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitInt32}});
+   f2->SetColumnRepresentatives({{ROOT::Experimental::ENTupleColumnType::kSplitInt32}});
    model->AddField(std::move(f2));
 
    auto f3 = std::make_unique<RField<std::uint32_t>>("i3");
-   f3->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kUInt32}});
+   f3->SetColumnRepresentatives({{ROOT::Experimental::ENTupleColumnType::kUInt32}});
    model->AddField(std::move(f3));
 
    auto f4 = std::make_unique<RField<std::uint32_t>>("i4");
-   f4->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitUInt32}});
+   f4->SetColumnRepresentatives({{ROOT::Experimental::ENTupleColumnType::kSplitUInt32}});
    model->AddField(std::move(f4));
 
    {
@@ -1015,13 +1015,13 @@ TEST(RNTuple, Int32)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    const auto &desc = reader->GetDescriptor();
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kInt32,
+   EXPECT_EQ(ROOT::Experimental::ENTupleColumnType::kInt32,
              (*desc.GetColumnIterable(desc.FindFieldId("i1")).begin()).GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt32,
+   EXPECT_EQ(ROOT::Experimental::ENTupleColumnType::kSplitInt32,
              (*desc.GetColumnIterable(desc.FindFieldId("i2")).begin()).GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kUInt32,
+   EXPECT_EQ(ROOT::Experimental::ENTupleColumnType::kUInt32,
              (*desc.GetColumnIterable(desc.FindFieldId("i3")).begin()).GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitUInt32,
+   EXPECT_EQ(ROOT::Experimental::ENTupleColumnType::kSplitUInt32,
              (*desc.GetColumnIterable(desc.FindFieldId("i4")).begin()).GetType());
    reader->LoadEntry(0);
    EXPECT_EQ(std::numeric_limits<std::int32_t>::max() - 137,
@@ -1058,19 +1058,19 @@ TEST(RNTuple, Int16)
    auto model = RNTupleModel::Create();
 
    auto f1 = std::make_unique<RField<std::int16_t>>("i1");
-   f1->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kInt16}});
+   f1->SetColumnRepresentatives({{ROOT::Experimental::ENTupleColumnType::kInt16}});
    model->AddField(std::move(f1));
 
    auto f2 = std::make_unique<RField<std::int16_t>>("i2");
-   f2->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitInt16}});
+   f2->SetColumnRepresentatives({{ROOT::Experimental::ENTupleColumnType::kSplitInt16}});
    model->AddField(std::move(f2));
 
    auto f3 = std::make_unique<RField<std::uint16_t>>("i3");
-   f3->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kUInt16}});
+   f3->SetColumnRepresentatives({{ROOT::Experimental::ENTupleColumnType::kUInt16}});
    model->AddField(std::move(f3));
 
    auto f4 = std::make_unique<RField<std::uint16_t>>("i4");
-   f4->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitUInt16}});
+   f4->SetColumnRepresentatives({{ROOT::Experimental::ENTupleColumnType::kSplitUInt16}});
    model->AddField(std::move(f4));
 
    {
@@ -1085,13 +1085,13 @@ TEST(RNTuple, Int16)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    const auto &desc = reader->GetDescriptor();
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kInt16,
+   EXPECT_EQ(ROOT::Experimental::ENTupleColumnType::kInt16,
              (*desc.GetColumnIterable(desc.FindFieldId("i1")).begin()).GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt16,
+   EXPECT_EQ(ROOT::Experimental::ENTupleColumnType::kSplitInt16,
              (*desc.GetColumnIterable(desc.FindFieldId("i2")).begin()).GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kUInt16,
+   EXPECT_EQ(ROOT::Experimental::ENTupleColumnType::kUInt16,
              (*desc.GetColumnIterable(desc.FindFieldId("i3")).begin()).GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitUInt16,
+   EXPECT_EQ(ROOT::Experimental::ENTupleColumnType::kSplitUInt16,
              (*desc.GetColumnIterable(desc.FindFieldId("i4")).begin()).GetType());
    reader->LoadEntry(0);
    EXPECT_EQ(std::numeric_limits<std::int16_t>::max() - 137,
@@ -1277,11 +1277,11 @@ TEST(RNTuple, Double)
    auto model = RNTupleModel::Create();
 
    auto f1 = std::make_unique<RField<double>>("d1");
-   f1->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kReal64}});
+   f1->SetColumnRepresentatives({{ROOT::Experimental::ENTupleColumnType::kReal64}});
    model->AddField(std::move(f1));
 
    auto f2 = std::make_unique<RField<double>>("d2");
-   f2->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitReal64}});
+   f2->SetColumnRepresentatives({{ROOT::Experimental::ENTupleColumnType::kSplitReal64}});
    model->AddField(std::move(f2));
 
    {
@@ -1294,9 +1294,9 @@ TEST(RNTuple, Double)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    const auto &desc = reader->GetDescriptor();
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kReal64,
+   EXPECT_EQ(ROOT::Experimental::ENTupleColumnType::kReal64,
              (*desc.GetColumnIterable(desc.FindFieldId("d1")).begin()).GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitReal64,
+   EXPECT_EQ(ROOT::Experimental::ENTupleColumnType::kSplitReal64,
              (*desc.GetColumnIterable(desc.FindFieldId("d2")).begin()).GetType());
    reader->LoadEntry(0);
    EXPECT_DOUBLE_EQ(1.0, *reader->GetModel().GetDefaultEntry().GetPtr<double>("d1"));
@@ -1310,11 +1310,11 @@ TEST(RNTuple, Float)
    auto model = RNTupleModel::Create();
 
    auto f1 = std::make_unique<RField<float>>("f1");
-   f1->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kReal32}});
+   f1->SetColumnRepresentatives({{ROOT::Experimental::ENTupleColumnType::kReal32}});
    model->AddField(std::move(f1));
 
    auto f2 = std::make_unique<RField<float>>("f2");
-   f2->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitReal32}});
+   f2->SetColumnRepresentatives({{ROOT::Experimental::ENTupleColumnType::kSplitReal32}});
    model->AddField(std::move(f2));
 
    {
@@ -1327,9 +1327,9 @@ TEST(RNTuple, Float)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    const auto &desc = reader->GetDescriptor();
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kReal32,
+   EXPECT_EQ(ROOT::Experimental::ENTupleColumnType::kReal32,
              (*desc.GetColumnIterable(desc.FindFieldId("f1")).begin()).GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitReal32,
+   EXPECT_EQ(ROOT::Experimental::ENTupleColumnType::kSplitReal32,
              (*desc.GetColumnIterable(desc.FindFieldId("f2")).begin()).GetType());
    reader->LoadEntry(0);
    EXPECT_FLOAT_EQ(1.0, *reader->GetModel().GetDefaultEntry().GetPtr<float>("f1"));
@@ -1660,13 +1660,13 @@ TEST(RNTuple, Casting)
    FileRaii fileGuard("test_ntuple_casting.root");
 
    auto fldI1 = RFieldBase::Create("i1", "std::int32_t").Unwrap();
-   fldI1->SetColumnRepresentatives({{EColumnType::kInt32}});
+   fldI1->SetColumnRepresentatives({{ENTupleColumnType::kInt32}});
    auto fldI2 = RFieldBase::Create("i2", "std::int32_t").Unwrap();
-   fldI2->SetColumnRepresentatives({{EColumnType::kSplitInt32}});
+   fldI2->SetColumnRepresentatives({{ENTupleColumnType::kSplitInt32}});
    auto fldF = ROOT::Experimental::RFieldBase::Create("F", "float").Unwrap();
-   fldF->SetColumnRepresentatives({{EColumnType::kReal32}});
+   fldF->SetColumnRepresentatives({{ENTupleColumnType::kReal32}});
    try {
-      fldF->SetColumnRepresentatives({{EColumnType::kBit}});
+      fldF->SetColumnRepresentatives({{ENTupleColumnType::kBit}});
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid column representative"));
    }
@@ -1685,7 +1685,7 @@ TEST(RNTuple, Casting)
    try {
       auto model = RNTupleModel::Create();
       auto f = ROOT::Experimental::RFieldBase::Create("i1", "std::int32_t").Unwrap();
-      f->SetColumnRepresentatives({{EColumnType::kInt32}});
+      f->SetColumnRepresentatives({{ENTupleColumnType::kInt32}});
       model->AddField(std::move(f));
       auto reader = RNTupleReader::Open(std::move(model), "ntuple", fileGuard.GetPath());
       FAIL() << "should not be able fix column representation when model is connected to a page source";
@@ -1720,12 +1720,12 @@ TEST(RNTuple, HalfPrecisionFloat)
    // TODO: Add std::float16 tests once available (from C++23)
    auto f1Fld = RFieldBase::Create("f1", "float").Unwrap();
    dynamic_cast<RField<float> *>(f1Fld.get())->SetHalfPrecision();
-   EXPECT_EQ(EColumnType::kReal16, f1Fld->GetColumnRepresentatives()[0][0]);
+   EXPECT_EQ(ENTupleColumnType::kReal16, f1Fld->GetColumnRepresentatives()[0][0]);
    EXPECT_EQ("float", f1Fld->GetTypeName());
 
    auto fVecFld = RFieldBase::Create("fVec", "std::vector<float>").Unwrap();
    dynamic_cast<RField<float> *>(fVecFld->GetSubFields()[0])->SetHalfPrecision();
-   EXPECT_EQ(EColumnType::kReal16, fVecFld->GetSubFields()[0]->GetColumnRepresentatives()[0][0]);
+   EXPECT_EQ(ENTupleColumnType::kReal16, fVecFld->GetSubFields()[0]->GetColumnRepresentatives()[0][0]);
 
    auto model = RNTupleModel::Create();
    model->AddField(std::move(f1Fld));
@@ -1746,10 +1746,10 @@ TEST(RNTuple, HalfPrecisionFloat)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
 
-   EXPECT_EQ(4, ROOT::Experimental::Internal::RColumnElementBase::Generate(EColumnType::kReal16)->GetSize());
+   EXPECT_EQ(4, ROOT::Experimental::Internal::RColumnElementBase::Generate(ENTupleColumnType::kReal16)->GetSize());
 
    const auto &desc = reader->GetDescriptor();
-   EXPECT_EQ(EColumnType::kReal16, (*desc.GetColumnIterable(desc.FindFieldId("f1")).begin()).GetType());
+   EXPECT_EQ(ENTupleColumnType::kReal16, (*desc.GetColumnIterable(desc.FindFieldId("f1")).begin()).GetType());
 
    auto f1 = reader->GetModel().GetDefaultEntry().GetPtr<float>("f1");
    auto fVec = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<float>>("fVec");
@@ -1770,7 +1770,7 @@ TEST(RNTuple, Double32)
    FileRaii fileGuard("test_ntuple_double32.root");
 
    auto fldD1 = RFieldBase::Create("d1", "double").Unwrap();
-   fldD1->SetColumnRepresentatives({{EColumnType::kReal32}});
+   fldD1->SetColumnRepresentatives({{ENTupleColumnType::kReal32}});
    auto fldD2 = RFieldBase::Create("d2", "Double32_t").Unwrap();
    EXPECT_EQ("Double32_t", fldD2->GetTypeAlias());
 
@@ -1803,9 +1803,9 @@ TEST(RNTuple, Double32)
    }
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(EColumnType::kReal32, reader->GetModel().GetConstField("d1").GetColumnRepresentatives()[0][0]);
+   EXPECT_EQ(ENTupleColumnType::kReal32, reader->GetModel().GetConstField("d1").GetColumnRepresentatives()[0][0]);
    EXPECT_EQ("", reader->GetModel().GetConstField("d1").GetTypeAlias());
-   EXPECT_EQ(EColumnType::kSplitReal32, reader->GetModel().GetConstField("d2").GetColumnRepresentatives()[0][0]);
+   EXPECT_EQ(ENTupleColumnType::kSplitReal32, reader->GetModel().GetConstField("d2").GetColumnRepresentatives()[0][0]);
    EXPECT_EQ("Double32_t", reader->GetModel().GetConstField("d2").GetTypeAlias());
    auto d1 = reader->GetModel().GetDefaultEntry().GetPtr<double>("d1");
    auto d2 = reader->GetModel().GetDefaultEntry().GetPtr<double>("d2");
@@ -2251,10 +2251,12 @@ TEST(RNTuple, RColumnRepresentations)
    EXPECT_EQ(RColumnRepresentations::Selection_t{RFieldBase::ColumnRepresentation_t()},
              colReps1.GetDeserializationTypes());
 
-   RColumnRepresentations colReps2({{EColumnType::kReal64}, {EColumnType::kSplitReal64}},
-                                   {{EColumnType::kReal32}, {EColumnType::kReal16}});
-   EXPECT_EQ(RFieldBase::ColumnRepresentation_t({EColumnType::kReal64}), colReps2.GetSerializationDefault());
-   EXPECT_EQ(RColumnRepresentations::Selection_t(
-                {{EColumnType::kReal64}, {EColumnType::kSplitReal64}, {EColumnType::kReal32}, {EColumnType::kReal16}}),
+   RColumnRepresentations colReps2({{ENTupleColumnType::kReal64}, {ENTupleColumnType::kSplitReal64}},
+                                   {{ENTupleColumnType::kReal32}, {ENTupleColumnType::kReal16}});
+   EXPECT_EQ(RFieldBase::ColumnRepresentation_t({ENTupleColumnType::kReal64}), colReps2.GetSerializationDefault());
+   EXPECT_EQ(RColumnRepresentations::Selection_t({{ENTupleColumnType::kReal64},
+                                                  {ENTupleColumnType::kSplitReal64},
+                                                  {ENTupleColumnType::kReal32},
+                                                  {ENTupleColumnType::kReal16}}),
              colReps2.GetDeserializationTypes());
 }
