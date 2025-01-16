@@ -33,7 +33,7 @@ public:
       /// Don't export items contained in the filter's set
       kBlacklist,
       /// Export only items contained in the filter's set
-      kWhitelist   
+      kWhitelist
    };
 
    template <typename T>
@@ -41,7 +41,7 @@ public:
       std::unordered_set<T> fSet;
       EFilterType fType = EFilterType::kBlacklist;
    };
-   
+
    struct RPagesOptions {
       enum RExportPageFlags {
          kNone = 0x0,
@@ -58,7 +58,7 @@ public:
       /// Optional filter that determines which columns are included or excluded from being exported.
       /// By default, export all columns. If you only want to include certain column types, add them
       /// to `fColumnTypeFilter.fSet` and change `fColumnTypeFilter.fType` to kWhitelist.
-      RFilter<EColumnType> fColumnTypeFilter;
+      RFilter<ENTupleColumnType> fColumnTypeFilter;
 
       RPagesOptions() : fOutputPath("."), fFlags(kDefaults) {}
    };

@@ -35,7 +35,7 @@ class TVirtualStreamerInfo;
 namespace ROOT {
 namespace Experimental {
 
-enum class EColumnType;
+enum class ENTupleColumnType;
 enum class EExtraTypeInfoIds;
 class RClusterDescriptor;
 class RNTupleDescriptor;
@@ -214,11 +214,11 @@ public:
    /// While we could just interpret the enums as ints, we make the translation explicit
    /// in order to avoid accidentally changing the on-disk numbers when adjusting the enum classes.
    static std::uint32_t SerializeFieldStructure(ROOT::Experimental::ENTupleStructure structure, void *buffer);
-   static std::uint32_t SerializeColumnType(ROOT::Experimental::EColumnType type, void *buffer);
+   static std::uint32_t SerializeColumnType(ROOT::Experimental::ENTupleColumnType type, void *buffer);
    static std::uint32_t SerializeExtraTypeInfoId(ROOT::Experimental::EExtraTypeInfoIds id, void *buffer);
    static RResult<std::uint32_t>
    DeserializeFieldStructure(const void *buffer, ROOT::Experimental::ENTupleStructure &structure);
-   static RResult<std::uint32_t> DeserializeColumnType(const void *buffer, ROOT::Experimental::EColumnType &type);
+   static RResult<std::uint32_t> DeserializeColumnType(const void *buffer, ROOT::Experimental::ENTupleColumnType &type);
    static RResult<std::uint32_t>
    DeserializeExtraTypeInfoId(const void *buffer, ROOT::Experimental::EExtraTypeInfoIds &id);
 

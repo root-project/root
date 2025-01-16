@@ -888,16 +888,16 @@ void ROOT::Experimental::RFieldBase::AutoAdjustColumnTypes(const RNTupleWriteOpt
       ColumnRepresentation_t rep = GetColumnRepresentations().GetSerializationDefault();
       for (auto &colType : rep) {
          switch (colType) {
-         case EColumnType::kSplitIndex64: colType = EColumnType::kIndex64; break;
-         case EColumnType::kSplitIndex32: colType = EColumnType::kIndex32; break;
-         case EColumnType::kSplitReal64: colType = EColumnType::kReal64; break;
-         case EColumnType::kSplitReal32: colType = EColumnType::kReal32; break;
-         case EColumnType::kSplitInt64: colType = EColumnType::kInt64; break;
-         case EColumnType::kSplitInt32: colType = EColumnType::kInt32; break;
-         case EColumnType::kSplitInt16: colType = EColumnType::kInt16; break;
-         case EColumnType::kSplitUInt64: colType = EColumnType::kUInt64; break;
-         case EColumnType::kSplitUInt32: colType = EColumnType::kUInt32; break;
-         case EColumnType::kSplitUInt16: colType = EColumnType::kUInt16; break;
+         case ENTupleColumnType::kSplitIndex64: colType = ENTupleColumnType::kIndex64; break;
+         case ENTupleColumnType::kSplitIndex32: colType = ENTupleColumnType::kIndex32; break;
+         case ENTupleColumnType::kSplitReal64: colType = ENTupleColumnType::kReal64; break;
+         case ENTupleColumnType::kSplitReal32: colType = ENTupleColumnType::kReal32; break;
+         case ENTupleColumnType::kSplitInt64: colType = ENTupleColumnType::kInt64; break;
+         case ENTupleColumnType::kSplitInt32: colType = ENTupleColumnType::kInt32; break;
+         case ENTupleColumnType::kSplitInt16: colType = ENTupleColumnType::kInt16; break;
+         case ENTupleColumnType::kSplitUInt64: colType = ENTupleColumnType::kUInt64; break;
+         case ENTupleColumnType::kSplitUInt32: colType = ENTupleColumnType::kUInt32; break;
+         case ENTupleColumnType::kSplitUInt16: colType = ENTupleColumnType::kUInt16; break;
          default: break;
          }
       }
@@ -905,7 +905,7 @@ void ROOT::Experimental::RFieldBase::AutoAdjustColumnTypes(const RNTupleWriteOpt
    }
 
    if (fTypeAlias == "Double32_t")
-      SetColumnRepresentatives({{EColumnType::kSplitReal32}});
+      SetColumnRepresentatives({{ENTupleColumnType::kSplitReal32}});
 }
 
 void ROOT::Experimental::RFieldBase::ConnectPageSink(Internal::RPageSink &pageSink, NTupleSize_t firstEntry)

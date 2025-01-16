@@ -983,7 +983,7 @@ ROOT::Experimental::Internal::RColumnDescriptorBuilder::MakeDescriptor() const
    // as we have no idea what the valid range is.
    // In general, reading the metadata of an unknown column is fine, it becomes an error only when
    // we try to read the actual data contained in it.
-   if (fColumn.GetType() != EColumnType::kUnknown) {
+   if (fColumn.GetType() != ENTupleColumnType::kUnknown) {
       const auto [minBits, maxBits] = RColumnElementBase::GetValidBitRange(fColumn.GetType());
       if (fColumn.GetBitsOnStorage() < minBits || fColumn.GetBitsOnStorage() > maxBits)
          return R__FAIL("invalid column bit width");

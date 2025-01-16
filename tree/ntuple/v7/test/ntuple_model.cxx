@@ -67,13 +67,13 @@ TEST(RNTupleModel, GetField)
    auto m = RNTupleModel::Create();
    m->MakeField<int>("x");
    m->MakeField<CustomStruct>("cs");
-   m->GetMutableField("cs.v1._0").SetColumnRepresentatives({{EColumnType::kReal32}});
+   m->GetMutableField("cs.v1._0").SetColumnRepresentatives({{ENTupleColumnType::kReal32}});
    m->Freeze();
    EXPECT_EQ(m->GetConstField("x").GetFieldName(), "x");
    EXPECT_EQ(m->GetConstField("x").GetTypeName(), "std::int32_t");
    EXPECT_EQ(m->GetConstField("cs.v1").GetFieldName(), "v1");
    EXPECT_EQ(m->GetConstField("cs.v1").GetTypeName(), "std::vector<float>");
-   EXPECT_EQ(m->GetConstField("cs.v1._0").GetColumnRepresentatives()[0][0], EColumnType::kReal32);
+   EXPECT_EQ(m->GetConstField("cs.v1._0").GetColumnRepresentatives()[0][0], ENTupleColumnType::kReal32);
    try {
       m->GetConstField("nonexistent");
       FAIL() << "invalid field name should throw";
@@ -149,10 +149,10 @@ TEST(RNTupleModel, Clone)
 
    for (auto &f : model->GetMutableFieldZero()) {
       if (f.GetTypeName() == "float") {
-         f.SetColumnRepresentatives({{EColumnType::kReal32}});
+         f.SetColumnRepresentatives({{ENTupleColumnType::kReal32}});
       }
       if (f.GetTypeName() == "std::uint32_t") {
-         f.SetColumnRepresentatives({{EColumnType::kUInt32}});
+         f.SetColumnRepresentatives({{ENTupleColumnType::kUInt32}});
       }
    }
 
@@ -161,10 +161,10 @@ TEST(RNTupleModel, Clone)
 
    for (const auto &f : clone->GetConstFieldZero()) {
       if (f.GetTypeName() == "float") {
-         EXPECT_EQ(EColumnType::kReal32, f.GetColumnRepresentatives()[0][0]);
+         EXPECT_EQ(ENTupleColumnType::kReal32, f.GetColumnRepresentatives()[0][0]);
       }
       if (f.GetTypeName() == "std::uint32_t") {
-         EXPECT_EQ(EColumnType::kUInt32, f.GetColumnRepresentatives()[0][0]);
+         EXPECT_EQ(ENTupleColumnType::kUInt32, f.GetColumnRepresentatives()[0][0]);
       }
    }
    EXPECT_TRUE(clone->GetConstField("struct").GetTraits() & RFieldBase::kTraitTypeChecksum);
