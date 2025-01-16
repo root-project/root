@@ -57,7 +57,7 @@ ROOT::RLogChannel &NTupleLog();
 
 // clang-format off
 /**
-\class ROOT::Experimental::EColumnType
+\class ROOT::Experimental::ENTupleColumnType
 \ingroup NTuple
 \brief The available trivial, native content types of a column
 
@@ -71,7 +71,7 @@ When changed, remember to update
   - RNTupleSerializer::[Des|S]erializeColumnType
 */
 // clang-format on
-enum class EColumnType {
+enum class ENTupleColumnType {
    kUnknown = 0,
    // type for root columns of (nested) collections; offsets are relative to the current cluster
    kIndex64,
@@ -299,8 +299,8 @@ std::unique_ptr<T[]> MakeUninitArray(std::size_t size)
    return std::unique_ptr<T[]>(new T[size]);
 }
 
-inline constexpr EColumnType kTestFutureType =
-   static_cast<EColumnType>(std::numeric_limits<std::underlying_type_t<EColumnType>>::max() - 1);
+inline constexpr ENTupleColumnType kTestFutureType =
+   static_cast<ENTupleColumnType>(std::numeric_limits<std::underlying_type_t<ENTupleColumnType>>::max() - 1);
 
 inline constexpr ENTupleStructure kTestFutureFieldStructure =
    static_cast<ENTupleStructure>(std::numeric_limits<std::underlying_type_t<ENTupleStructure>>::max() - 1);

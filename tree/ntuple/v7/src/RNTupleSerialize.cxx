@@ -268,7 +268,7 @@ std::uint32_t SerializeColumnsOfFields(const ROOT::Experimental::RNTupleDescript
 ROOT::RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSize,
                                                ROOT::Experimental::Internal::RColumnDescriptorBuilder &columnDesc)
 {
-   using ROOT::Experimental::EColumnType;
+   using ROOT::Experimental::ENTupleColumnType;
 
    auto base = reinterpret_cast<const unsigned char *>(buffer);
    auto bytes = base;
@@ -280,7 +280,7 @@ ROOT::RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t
    bytes += result.Unwrap();
 
    // Initialize properly for SerializeColumnType
-   EColumnType type{EColumnType::kIndex32};
+   ENTupleColumnType type{ENTupleColumnType::kIndex32};
    std::uint16_t bitsOnStorage;
    std::uint32_t fieldId;
    std::uint16_t flags;
@@ -669,41 +669,38 @@ ROOT::RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::De
    return sizeof(std::uint32_t) + length;
 }
 
-std::uint32_t
-ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(ROOT::Experimental::EColumnType type, void *buffer)
+std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(ENTupleColumnType type, void *buffer)
 {
-   using EColumnType = ROOT::Experimental::EColumnType;
-
    switch (type) {
-   case EColumnType::kBit: return SerializeUInt16(0x00, buffer);
-   case EColumnType::kByte: return SerializeUInt16(0x01, buffer);
-   case EColumnType::kChar: return SerializeUInt16(0x02, buffer);
-   case EColumnType::kInt8: return SerializeUInt16(0x03, buffer);
-   case EColumnType::kUInt8: return SerializeUInt16(0x04, buffer);
-   case EColumnType::kInt16: return SerializeUInt16(0x05, buffer);
-   case EColumnType::kUInt16: return SerializeUInt16(0x06, buffer);
-   case EColumnType::kInt32: return SerializeUInt16(0x07, buffer);
-   case EColumnType::kUInt32: return SerializeUInt16(0x08, buffer);
-   case EColumnType::kInt64: return SerializeUInt16(0x09, buffer);
-   case EColumnType::kUInt64: return SerializeUInt16(0x0A, buffer);
-   case EColumnType::kReal16: return SerializeUInt16(0x0B, buffer);
-   case EColumnType::kReal32: return SerializeUInt16(0x0C, buffer);
-   case EColumnType::kReal64: return SerializeUInt16(0x0D, buffer);
-   case EColumnType::kIndex32: return SerializeUInt16(0x0E, buffer);
-   case EColumnType::kIndex64: return SerializeUInt16(0x0F, buffer);
-   case EColumnType::kSwitch: return SerializeUInt16(0x10, buffer);
-   case EColumnType::kSplitInt16: return SerializeUInt16(0x11, buffer);
-   case EColumnType::kSplitUInt16: return SerializeUInt16(0x12, buffer);
-   case EColumnType::kSplitInt32: return SerializeUInt16(0x13, buffer);
-   case EColumnType::kSplitUInt32: return SerializeUInt16(0x14, buffer);
-   case EColumnType::kSplitInt64: return SerializeUInt16(0x15, buffer);
-   case EColumnType::kSplitUInt64: return SerializeUInt16(0x16, buffer);
-   case EColumnType::kSplitReal32: return SerializeUInt16(0x18, buffer);
-   case EColumnType::kSplitReal64: return SerializeUInt16(0x19, buffer);
-   case EColumnType::kSplitIndex32: return SerializeUInt16(0x1A, buffer);
-   case EColumnType::kSplitIndex64: return SerializeUInt16(0x1B, buffer);
-   case EColumnType::kReal32Trunc: return SerializeUInt16(0x1C, buffer);
-   case EColumnType::kReal32Quant: return SerializeUInt16(0x1D, buffer);
+   case ENTupleColumnType::kBit: return SerializeUInt16(0x00, buffer);
+   case ENTupleColumnType::kByte: return SerializeUInt16(0x01, buffer);
+   case ENTupleColumnType::kChar: return SerializeUInt16(0x02, buffer);
+   case ENTupleColumnType::kInt8: return SerializeUInt16(0x03, buffer);
+   case ENTupleColumnType::kUInt8: return SerializeUInt16(0x04, buffer);
+   case ENTupleColumnType::kInt16: return SerializeUInt16(0x05, buffer);
+   case ENTupleColumnType::kUInt16: return SerializeUInt16(0x06, buffer);
+   case ENTupleColumnType::kInt32: return SerializeUInt16(0x07, buffer);
+   case ENTupleColumnType::kUInt32: return SerializeUInt16(0x08, buffer);
+   case ENTupleColumnType::kInt64: return SerializeUInt16(0x09, buffer);
+   case ENTupleColumnType::kUInt64: return SerializeUInt16(0x0A, buffer);
+   case ENTupleColumnType::kReal16: return SerializeUInt16(0x0B, buffer);
+   case ENTupleColumnType::kReal32: return SerializeUInt16(0x0C, buffer);
+   case ENTupleColumnType::kReal64: return SerializeUInt16(0x0D, buffer);
+   case ENTupleColumnType::kIndex32: return SerializeUInt16(0x0E, buffer);
+   case ENTupleColumnType::kIndex64: return SerializeUInt16(0x0F, buffer);
+   case ENTupleColumnType::kSwitch: return SerializeUInt16(0x10, buffer);
+   case ENTupleColumnType::kSplitInt16: return SerializeUInt16(0x11, buffer);
+   case ENTupleColumnType::kSplitUInt16: return SerializeUInt16(0x12, buffer);
+   case ENTupleColumnType::kSplitInt32: return SerializeUInt16(0x13, buffer);
+   case ENTupleColumnType::kSplitUInt32: return SerializeUInt16(0x14, buffer);
+   case ENTupleColumnType::kSplitInt64: return SerializeUInt16(0x15, buffer);
+   case ENTupleColumnType::kSplitUInt64: return SerializeUInt16(0x16, buffer);
+   case ENTupleColumnType::kSplitReal32: return SerializeUInt16(0x18, buffer);
+   case ENTupleColumnType::kSplitReal64: return SerializeUInt16(0x19, buffer);
+   case ENTupleColumnType::kSplitIndex32: return SerializeUInt16(0x1A, buffer);
+   case ENTupleColumnType::kSplitIndex64: return SerializeUInt16(0x1B, buffer);
+   case ENTupleColumnType::kReal32Trunc: return SerializeUInt16(0x1C, buffer);
+   case ENTupleColumnType::kReal32Quant: return SerializeUInt16(0x1D, buffer);
    default:
       if (type == kTestFutureType)
          return SerializeUInt16(0x99, buffer);
@@ -712,47 +709,45 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(ROOT::Exper
 }
 
 ROOT::RResult<std::uint32_t>
-ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(const void *buffer,
-                                                                       ROOT::Experimental::EColumnType &type)
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(const void *buffer, ENTupleColumnType &type)
 {
-   using EColumnType = ROOT::Experimental::EColumnType;
    std::uint16_t onDiskType;
    auto result = DeserializeUInt16(buffer, onDiskType);
 
    switch (onDiskType) {
-   case 0x00: type = EColumnType::kBit; break;
-   case 0x01: type = EColumnType::kByte; break;
-   case 0x02: type = EColumnType::kChar; break;
-   case 0x03: type = EColumnType::kInt8; break;
-   case 0x04: type = EColumnType::kUInt8; break;
-   case 0x05: type = EColumnType::kInt16; break;
-   case 0x06: type = EColumnType::kUInt16; break;
-   case 0x07: type = EColumnType::kInt32; break;
-   case 0x08: type = EColumnType::kUInt32; break;
-   case 0x09: type = EColumnType::kInt64; break;
-   case 0x0A: type = EColumnType::kUInt64; break;
-   case 0x0B: type = EColumnType::kReal16; break;
-   case 0x0C: type = EColumnType::kReal32; break;
-   case 0x0D: type = EColumnType::kReal64; break;
-   case 0x0E: type = EColumnType::kIndex32; break;
-   case 0x0F: type = EColumnType::kIndex64; break;
-   case 0x10: type = EColumnType::kSwitch; break;
-   case 0x11: type = EColumnType::kSplitInt16; break;
-   case 0x12: type = EColumnType::kSplitUInt16; break;
-   case 0x13: type = EColumnType::kSplitInt32; break;
-   case 0x14: type = EColumnType::kSplitUInt32; break;
-   case 0x15: type = EColumnType::kSplitInt64; break;
-   case 0x16: type = EColumnType::kSplitUInt64; break;
-   case 0x18: type = EColumnType::kSplitReal32; break;
-   case 0x19: type = EColumnType::kSplitReal64; break;
-   case 0x1A: type = EColumnType::kSplitIndex32; break;
-   case 0x1B: type = EColumnType::kSplitIndex64; break;
-   case 0x1C: type = EColumnType::kReal32Trunc; break;
-   case 0x1D: type = EColumnType::kReal32Quant; break;
+   case 0x00: type = ENTupleColumnType::kBit; break;
+   case 0x01: type = ENTupleColumnType::kByte; break;
+   case 0x02: type = ENTupleColumnType::kChar; break;
+   case 0x03: type = ENTupleColumnType::kInt8; break;
+   case 0x04: type = ENTupleColumnType::kUInt8; break;
+   case 0x05: type = ENTupleColumnType::kInt16; break;
+   case 0x06: type = ENTupleColumnType::kUInt16; break;
+   case 0x07: type = ENTupleColumnType::kInt32; break;
+   case 0x08: type = ENTupleColumnType::kUInt32; break;
+   case 0x09: type = ENTupleColumnType::kInt64; break;
+   case 0x0A: type = ENTupleColumnType::kUInt64; break;
+   case 0x0B: type = ENTupleColumnType::kReal16; break;
+   case 0x0C: type = ENTupleColumnType::kReal32; break;
+   case 0x0D: type = ENTupleColumnType::kReal64; break;
+   case 0x0E: type = ENTupleColumnType::kIndex32; break;
+   case 0x0F: type = ENTupleColumnType::kIndex64; break;
+   case 0x10: type = ENTupleColumnType::kSwitch; break;
+   case 0x11: type = ENTupleColumnType::kSplitInt16; break;
+   case 0x12: type = ENTupleColumnType::kSplitUInt16; break;
+   case 0x13: type = ENTupleColumnType::kSplitInt32; break;
+   case 0x14: type = ENTupleColumnType::kSplitUInt32; break;
+   case 0x15: type = ENTupleColumnType::kSplitInt64; break;
+   case 0x16: type = ENTupleColumnType::kSplitUInt64; break;
+   case 0x18: type = ENTupleColumnType::kSplitReal32; break;
+   case 0x19: type = ENTupleColumnType::kSplitReal64; break;
+   case 0x1A: type = ENTupleColumnType::kSplitIndex32; break;
+   case 0x1B: type = ENTupleColumnType::kSplitIndex64; break;
+   case 0x1C: type = ENTupleColumnType::kReal32Trunc; break;
+   case 0x1D: type = ENTupleColumnType::kReal32Quant; break;
    // case 0x99 => kTestFutureType missing on purpose
    default:
       // may be a column type introduced by a future version
-      type = EColumnType::kUnknown;
+      type = ENTupleColumnType::kUnknown;
       break;
    }
    return result;

@@ -26,38 +26,38 @@
 #include <utility>
 
 std::pair<std::uint16_t, std::uint16_t>
-ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(EColumnType type)
+ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(ENTupleColumnType type)
 {
    switch (type) {
-   case EColumnType::kIndex64: return std::make_pair(64, 64);
-   case EColumnType::kIndex32: return std::make_pair(32, 32);
-   case EColumnType::kSwitch: return std::make_pair(96, 96);
-   case EColumnType::kByte: return std::make_pair(8, 8);
-   case EColumnType::kChar: return std::make_pair(8, 8);
-   case EColumnType::kBit: return std::make_pair(1, 1);
-   case EColumnType::kReal64: return std::make_pair(64, 64);
-   case EColumnType::kReal32: return std::make_pair(32, 32);
-   case EColumnType::kReal16: return std::make_pair(16, 16);
-   case EColumnType::kInt64: return std::make_pair(64, 64);
-   case EColumnType::kUInt64: return std::make_pair(64, 64);
-   case EColumnType::kInt32: return std::make_pair(32, 32);
-   case EColumnType::kUInt32: return std::make_pair(32, 32);
-   case EColumnType::kInt16: return std::make_pair(16, 16);
-   case EColumnType::kUInt16: return std::make_pair(16, 16);
-   case EColumnType::kInt8: return std::make_pair(8, 8);
-   case EColumnType::kUInt8: return std::make_pair(8, 8);
-   case EColumnType::kSplitIndex64: return std::make_pair(64, 64);
-   case EColumnType::kSplitIndex32: return std::make_pair(32, 32);
-   case EColumnType::kSplitReal64: return std::make_pair(64, 64);
-   case EColumnType::kSplitReal32: return std::make_pair(32, 32);
-   case EColumnType::kSplitInt64: return std::make_pair(64, 64);
-   case EColumnType::kSplitUInt64: return std::make_pair(64, 64);
-   case EColumnType::kSplitInt32: return std::make_pair(32, 32);
-   case EColumnType::kSplitUInt32: return std::make_pair(32, 32);
-   case EColumnType::kSplitInt16: return std::make_pair(16, 16);
-   case EColumnType::kSplitUInt16: return std::make_pair(16, 16);
-   case EColumnType::kReal32Trunc: return std::make_pair(10, 31);
-   case EColumnType::kReal32Quant: return std::make_pair(1, 32);
+   case ENTupleColumnType::kIndex64: return std::make_pair(64, 64);
+   case ENTupleColumnType::kIndex32: return std::make_pair(32, 32);
+   case ENTupleColumnType::kSwitch: return std::make_pair(96, 96);
+   case ENTupleColumnType::kByte: return std::make_pair(8, 8);
+   case ENTupleColumnType::kChar: return std::make_pair(8, 8);
+   case ENTupleColumnType::kBit: return std::make_pair(1, 1);
+   case ENTupleColumnType::kReal64: return std::make_pair(64, 64);
+   case ENTupleColumnType::kReal32: return std::make_pair(32, 32);
+   case ENTupleColumnType::kReal16: return std::make_pair(16, 16);
+   case ENTupleColumnType::kInt64: return std::make_pair(64, 64);
+   case ENTupleColumnType::kUInt64: return std::make_pair(64, 64);
+   case ENTupleColumnType::kInt32: return std::make_pair(32, 32);
+   case ENTupleColumnType::kUInt32: return std::make_pair(32, 32);
+   case ENTupleColumnType::kInt16: return std::make_pair(16, 16);
+   case ENTupleColumnType::kUInt16: return std::make_pair(16, 16);
+   case ENTupleColumnType::kInt8: return std::make_pair(8, 8);
+   case ENTupleColumnType::kUInt8: return std::make_pair(8, 8);
+   case ENTupleColumnType::kSplitIndex64: return std::make_pair(64, 64);
+   case ENTupleColumnType::kSplitIndex32: return std::make_pair(32, 32);
+   case ENTupleColumnType::kSplitReal64: return std::make_pair(64, 64);
+   case ENTupleColumnType::kSplitReal32: return std::make_pair(32, 32);
+   case ENTupleColumnType::kSplitInt64: return std::make_pair(64, 64);
+   case ENTupleColumnType::kSplitUInt64: return std::make_pair(64, 64);
+   case ENTupleColumnType::kSplitInt32: return std::make_pair(32, 32);
+   case ENTupleColumnType::kSplitUInt32: return std::make_pair(32, 32);
+   case ENTupleColumnType::kSplitInt16: return std::make_pair(16, 16);
+   case ENTupleColumnType::kSplitUInt16: return std::make_pair(16, 16);
+   case ENTupleColumnType::kReal32Trunc: return std::make_pair(10, 31);
+   case ENTupleColumnType::kReal32Quant: return std::make_pair(1, 32);
    default:
       if (type == kTestFutureType)
          return std::make_pair(32, 32);
@@ -67,38 +67,38 @@ ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(EColumnType t
    return std::make_pair(0, 0);
 }
 
-const char *ROOT::Experimental::Internal::RColumnElementBase::GetColumnTypeName(EColumnType type)
+const char *ROOT::Experimental::Internal::RColumnElementBase::GetColumnTypeName(ENTupleColumnType type)
 {
    switch (type) {
-   case EColumnType::kIndex64: return "Index64";
-   case EColumnType::kIndex32: return "Index32";
-   case EColumnType::kSwitch: return "Switch";
-   case EColumnType::kByte: return "Byte";
-   case EColumnType::kChar: return "Char";
-   case EColumnType::kBit: return "Bit";
-   case EColumnType::kReal64: return "Real64";
-   case EColumnType::kReal32: return "Real32";
-   case EColumnType::kReal16: return "Real16";
-   case EColumnType::kInt64: return "Int64";
-   case EColumnType::kUInt64: return "UInt64";
-   case EColumnType::kInt32: return "Int32";
-   case EColumnType::kUInt32: return "UInt32";
-   case EColumnType::kInt16: return "Int16";
-   case EColumnType::kUInt16: return "UInt16";
-   case EColumnType::kInt8: return "Int8";
-   case EColumnType::kUInt8: return "UInt8";
-   case EColumnType::kSplitIndex64: return "SplitIndex64";
-   case EColumnType::kSplitIndex32: return "SplitIndex32";
-   case EColumnType::kSplitReal64: return "SplitReal64";
-   case EColumnType::kSplitReal32: return "SplitReal32";
-   case EColumnType::kSplitInt64: return "SplitInt64";
-   case EColumnType::kSplitUInt64: return "SplitUInt64";
-   case EColumnType::kSplitInt32: return "SplitInt32";
-   case EColumnType::kSplitUInt32: return "SplitUInt32";
-   case EColumnType::kSplitInt16: return "SplitInt16";
-   case EColumnType::kSplitUInt16: return "SplitUInt16";
-   case EColumnType::kReal32Trunc: return "Real32Trunc";
-   case EColumnType::kReal32Quant: return "Real32Quant";
+   case ENTupleColumnType::kIndex64: return "Index64";
+   case ENTupleColumnType::kIndex32: return "Index32";
+   case ENTupleColumnType::kSwitch: return "Switch";
+   case ENTupleColumnType::kByte: return "Byte";
+   case ENTupleColumnType::kChar: return "Char";
+   case ENTupleColumnType::kBit: return "Bit";
+   case ENTupleColumnType::kReal64: return "Real64";
+   case ENTupleColumnType::kReal32: return "Real32";
+   case ENTupleColumnType::kReal16: return "Real16";
+   case ENTupleColumnType::kInt64: return "Int64";
+   case ENTupleColumnType::kUInt64: return "UInt64";
+   case ENTupleColumnType::kInt32: return "Int32";
+   case ENTupleColumnType::kUInt32: return "UInt32";
+   case ENTupleColumnType::kInt16: return "Int16";
+   case ENTupleColumnType::kUInt16: return "UInt16";
+   case ENTupleColumnType::kInt8: return "Int8";
+   case ENTupleColumnType::kUInt8: return "UInt8";
+   case ENTupleColumnType::kSplitIndex64: return "SplitIndex64";
+   case ENTupleColumnType::kSplitIndex32: return "SplitIndex32";
+   case ENTupleColumnType::kSplitReal64: return "SplitReal64";
+   case ENTupleColumnType::kSplitReal32: return "SplitReal32";
+   case ENTupleColumnType::kSplitInt64: return "SplitInt64";
+   case ENTupleColumnType::kSplitUInt64: return "SplitUInt64";
+   case ENTupleColumnType::kSplitInt32: return "SplitInt32";
+   case ENTupleColumnType::kSplitUInt32: return "SplitUInt32";
+   case ENTupleColumnType::kSplitInt16: return "SplitInt16";
+   case ENTupleColumnType::kSplitUInt16: return "SplitUInt16";
+   case ENTupleColumnType::kReal32Trunc: return "Real32Trunc";
+   case ENTupleColumnType::kReal32Quant: return "Real32Quant";
    default:
       if (type == kTestFutureType)
          return "TestFutureType";
@@ -108,50 +108,52 @@ const char *ROOT::Experimental::Internal::RColumnElementBase::GetColumnTypeName(
 
 template <>
 std::unique_ptr<ROOT::Experimental::Internal::RColumnElementBase>
-ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType onDiskType)
+ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(ENTupleColumnType onDiskType)
 {
+   //clang-format off
    switch (onDiskType) {
-   case EColumnType::kIndex64: return std::make_unique<RColumnElement<RColumnIndex, EColumnType::kIndex64>>();
-   case EColumnType::kIndex32: return std::make_unique<RColumnElement<RColumnIndex, EColumnType::kIndex32>>();
-   case EColumnType::kSwitch: return std::make_unique<RColumnElement<RColumnSwitch, EColumnType::kSwitch>>();
-   case EColumnType::kByte: return std::make_unique<RColumnElement<std::byte, EColumnType::kByte>>();
-   case EColumnType::kChar: return std::make_unique<RColumnElement<char, EColumnType::kChar>>();
-   case EColumnType::kBit: return std::make_unique<RColumnElement<bool, EColumnType::kBit>>();
-   case EColumnType::kReal64: return std::make_unique<RColumnElement<double, EColumnType::kReal64>>();
-   case EColumnType::kReal32: return std::make_unique<RColumnElement<float, EColumnType::kReal32>>();
+   case ENTupleColumnType::kIndex64: return std::make_unique<RColumnElement<RColumnIndex, ENTupleColumnType::kIndex64>>();
+   case ENTupleColumnType::kIndex32: return std::make_unique<RColumnElement<RColumnIndex, ENTupleColumnType::kIndex32>>();
+   case ENTupleColumnType::kSwitch: return std::make_unique<RColumnElement<RColumnSwitch, ENTupleColumnType::kSwitch>>();
+   case ENTupleColumnType::kByte: return std::make_unique<RColumnElement<std::byte, ENTupleColumnType::kByte>>();
+   case ENTupleColumnType::kChar: return std::make_unique<RColumnElement<char, ENTupleColumnType::kChar>>();
+   case ENTupleColumnType::kBit: return std::make_unique<RColumnElement<bool, ENTupleColumnType::kBit>>();
+   case ENTupleColumnType::kReal64: return std::make_unique<RColumnElement<double, ENTupleColumnType::kReal64>>();
+   case ENTupleColumnType::kReal32: return std::make_unique<RColumnElement<float, ENTupleColumnType::kReal32>>();
    // TODO: Change to std::float16_t in-memory type once available (from C++23).
-   case EColumnType::kReal16: return std::make_unique<RColumnElement<float, EColumnType::kReal16>>();
-   case EColumnType::kInt64: return std::make_unique<RColumnElement<std::int64_t, EColumnType::kInt64>>();
-   case EColumnType::kUInt64: return std::make_unique<RColumnElement<std::uint64_t, EColumnType::kUInt64>>();
-   case EColumnType::kInt32: return std::make_unique<RColumnElement<std::int32_t, EColumnType::kInt32>>();
-   case EColumnType::kUInt32: return std::make_unique<RColumnElement<std::uint32_t, EColumnType::kUInt32>>();
-   case EColumnType::kInt16: return std::make_unique<RColumnElement<std::int16_t, EColumnType::kInt16>>();
-   case EColumnType::kUInt16: return std::make_unique<RColumnElement<std::uint16_t, EColumnType::kUInt16>>();
-   case EColumnType::kInt8: return std::make_unique<RColumnElement<std::int8_t, EColumnType::kInt8>>();
-   case EColumnType::kUInt8: return std::make_unique<RColumnElement<std::uint8_t, EColumnType::kUInt8>>();
-   case EColumnType::kSplitIndex64: return std::make_unique<RColumnElement<RColumnIndex, EColumnType::kSplitIndex64>>();
-   case EColumnType::kSplitIndex32: return std::make_unique<RColumnElement<RColumnIndex, EColumnType::kSplitIndex32>>();
-   case EColumnType::kSplitReal64: return std::make_unique<RColumnElement<double, EColumnType::kSplitReal64>>();
-   case EColumnType::kSplitReal32: return std::make_unique<RColumnElement<float, EColumnType::kSplitReal32>>();
-   case EColumnType::kSplitInt64: return std::make_unique<RColumnElement<std::int64_t, EColumnType::kSplitInt64>>();
-   case EColumnType::kSplitUInt64: return std::make_unique<RColumnElement<std::uint64_t, EColumnType::kSplitUInt64>>();
-   case EColumnType::kSplitInt32: return std::make_unique<RColumnElement<std::int32_t, EColumnType::kSplitInt32>>();
-   case EColumnType::kSplitUInt32: return std::make_unique<RColumnElement<std::uint32_t, EColumnType::kSplitUInt32>>();
-   case EColumnType::kSplitInt16: return std::make_unique<RColumnElement<std::int16_t, EColumnType::kSplitInt16>>();
-   case EColumnType::kSplitUInt16: return std::make_unique<RColumnElement<std::uint16_t, EColumnType::kSplitUInt16>>();
-   case EColumnType::kReal32Trunc: return std::make_unique<RColumnElement<float, EColumnType::kReal32Trunc>>();
-   case EColumnType::kReal32Quant: return std::make_unique<RColumnElement<float, EColumnType::kReal32Quant>>();
+   case ENTupleColumnType::kReal16: return std::make_unique<RColumnElement<float, ENTupleColumnType::kReal16>>();
+   case ENTupleColumnType::kInt64: return std::make_unique<RColumnElement<std::int64_t, ENTupleColumnType::kInt64>>();
+   case ENTupleColumnType::kUInt64: return std::make_unique<RColumnElement<std::uint64_t, ENTupleColumnType::kUInt64>>();
+   case ENTupleColumnType::kInt32: return std::make_unique<RColumnElement<std::int32_t, ENTupleColumnType::kInt32>>();
+   case ENTupleColumnType::kUInt32: return std::make_unique<RColumnElement<std::uint32_t, ENTupleColumnType::kUInt32>>();
+   case ENTupleColumnType::kInt16: return std::make_unique<RColumnElement<std::int16_t, ENTupleColumnType::kInt16>>();
+   case ENTupleColumnType::kUInt16: return std::make_unique<RColumnElement<std::uint16_t, ENTupleColumnType::kUInt16>>();
+   case ENTupleColumnType::kInt8: return std::make_unique<RColumnElement<std::int8_t, ENTupleColumnType::kInt8>>();
+   case ENTupleColumnType::kUInt8: return std::make_unique<RColumnElement<std::uint8_t, ENTupleColumnType::kUInt8>>();
+   case ENTupleColumnType::kSplitIndex64: return std::make_unique<RColumnElement<RColumnIndex, ENTupleColumnType::kSplitIndex64>>();
+   case ENTupleColumnType::kSplitIndex32: return std::make_unique<RColumnElement<RColumnIndex, ENTupleColumnType::kSplitIndex32>>();
+   case ENTupleColumnType::kSplitReal64: return std::make_unique<RColumnElement<double, ENTupleColumnType::kSplitReal64>>();
+   case ENTupleColumnType::kSplitReal32: return std::make_unique<RColumnElement<float, ENTupleColumnType::kSplitReal32>>();
+   case ENTupleColumnType::kSplitInt64: return std::make_unique<RColumnElement<std::int64_t, ENTupleColumnType::kSplitInt64>>();
+   case ENTupleColumnType::kSplitUInt64: return std::make_unique<RColumnElement<std::uint64_t, ENTupleColumnType::kSplitUInt64>>();
+   case ENTupleColumnType::kSplitInt32: return std::make_unique<RColumnElement<std::int32_t, ENTupleColumnType::kSplitInt32>>();
+   case ENTupleColumnType::kSplitUInt32: return std::make_unique<RColumnElement<std::uint32_t, ENTupleColumnType::kSplitUInt32>>();
+   case ENTupleColumnType::kSplitInt16: return std::make_unique<RColumnElement<std::int16_t, ENTupleColumnType::kSplitInt16>>();
+   case ENTupleColumnType::kSplitUInt16: return std::make_unique<RColumnElement<std::uint16_t, ENTupleColumnType::kSplitUInt16>>();
+   case ENTupleColumnType::kReal32Trunc: return std::make_unique<RColumnElement<float, ENTupleColumnType::kReal32Trunc>>();
+   case ENTupleColumnType::kReal32Quant: return std::make_unique<RColumnElement<float, ENTupleColumnType::kReal32Quant>>();
    default:
       if (onDiskType == kTestFutureType)
          return std::make_unique<RColumnElement<Internal::RTestFutureColumn, kTestFutureType>>();
       assert(false);
    }
+   //clang-format on
    // never here
    return nullptr;
 }
 
 std::unique_ptr<ROOT::Experimental::Internal::RColumnElementBase>
-ROOT::Experimental::Internal::GenerateColumnElement(std::type_index inMemoryType, EColumnType onDiskType)
+ROOT::Experimental::Internal::GenerateColumnElement(std::type_index inMemoryType, ENTupleColumnType onDiskType)
 {
    if (inMemoryType == std::type_index(typeid(char))) {
       return GenerateColumnElementInternal<char>(onDiskType);

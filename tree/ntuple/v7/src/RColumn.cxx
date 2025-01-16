@@ -23,7 +23,7 @@
 #include <cassert>
 #include <utility>
 
-ROOT::Experimental::Internal::RColumn::RColumn(EColumnType type, std::uint32_t columnIndex,
+ROOT::Experimental::Internal::RColumn::RColumn(ENTupleColumnType type, std::uint32_t columnIndex,
                                                std::uint16_t representationIndex)
    : fType(type), fIndex(columnIndex), fRepresentationIndex(representationIndex), fTeam({this})
 {

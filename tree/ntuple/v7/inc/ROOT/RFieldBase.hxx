@@ -127,7 +127,7 @@ public:
    /// Shorthand for types that are both trivially constructible and destructible
    static constexpr int kTraitTrivialType = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
 
-   using ColumnRepresentation_t = std::vector<EColumnType>;
+   using ColumnRepresentation_t = std::vector<ENTupleColumnType>;
 
    /// During its lifetime, a field undergoes the following possible state transitions:
    ///

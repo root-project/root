@@ -107,7 +107,7 @@ public:
       std::uint64_t GetUncompressedSize() const { return fElementSize * fNElements; }
       std::uint64_t GetElementSize() const { return fElementSize; }
       std::uint64_t GetNElements() const { return fNElements; }
-      EColumnType GetType() const { return fColumnDescriptor.GetType(); }
+      ENTupleColumnType GetType() const { return fColumnDescriptor.GetType(); }
    };
 
    /////////////////////////////////////////////////////////////////////////////
@@ -258,24 +258,24 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the number of columns of a given type present in the RNTuple.
    ///
-   /// \param[in] colType The column type to count, as defined by ROOT::Experimental::EColumnType.
+   /// \param[in] colType The column type to count, as defined by ROOT::Experimental::ENTupleColumnType.
    ///
    /// \return The number of columns present in the inspected RNTuple of the provided type.
-   size_t GetColumnCountByType(EColumnType colType) const;
+   size_t GetColumnCountByType(ENTupleColumnType colType) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the IDs of all columns with the given type.
    ///
-   /// \param[in] colType The column type to collect, as defined by ROOT::Experimental::EColumnType.
+   /// \param[in] colType The column type to collect, as defined by ROOT::Experimental::ENTupleColumnType.
    ///
    /// \return A vector containing the physical IDs of columns of the provided type.
-   const std::vector<DescriptorId_t> GetColumnsByType(EColumnType colType);
+   const std::vector<DescriptorId_t> GetColumnsByType(ENTupleColumnType colType);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get all column types present in the RNTuple being inspected.
    ///
    /// \return A vector containing all column types present in the RNTuple.
-   const std::vector<EColumnType> GetColumnTypes();
+   const std::vector<ENTupleColumnType> GetColumnTypes();
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Print storage information per column type.
@@ -355,7 +355,7 @@ public:
    /// \brief Get a histogram containing the size distribution of the compressed pages for all columns of a given type.
    ///
    /// \param[in] colType The column type for which to get the size distribution, as defined by
-   /// ROOT::Experimental::EColumnType.
+   /// ROOT::Experimental::ENTupleColumnType.
    /// \param[in] histName The name of the histogram. An empty string means a default name will be used.
    /// \param[in] histTitle The title of the histogram. An empty string means a default title will be used.
    /// \param[in] nBins The desired number of histogram bins.
@@ -363,7 +363,7 @@ public:
    /// \return A pointer to a `TH1D` containing the page size distribution.
    ///
    /// The x-axis will range from the smallest page size, to the largest (inclusive).
-   std::unique_ptr<TH1D> GetPageSizeDistribution(EColumnType colType, std::string histName = "",
+   std::unique_ptr<TH1D> GetPageSizeDistribution(ENTupleColumnType colType, std::string histName = "",
                                                  std::string histTitle = "", size_t nBins = 64);
 
    /////////////////////////////////////////////////////////////////////////////
@@ -386,8 +386,8 @@ public:
    /// of types.
    ///
    /// \param[in] colTypes The column types for which to get the size distribution, as defined by
-   /// ROOT::Experimental::EColumnType. The default is an empty vector, which indicates that the distribution for *all*
-   /// physical columns will be returned.
+   /// ROOT::Experimental::ENTupleColumnType. The default is an empty vector, which indicates that the distribution
+   /// for *all* physical columns will be returned.
    /// \param[in] histName The name of the histogram. An empty string means a default name will be used. The name of
    /// each histogram inside the `THStack` will be `histName + colType`.
    /// \param[in] histTitle The title of the histogram. An empty string means a default title will be used.
@@ -404,15 +404,15 @@ public:
    ///
    /// // We want to show the page size distributions of columns with type `kSplitReal32` and `kSplitReal64`.
    /// auto hist = inspector->GetPageSizeDistribution(
-   ///     {ROOT::Experimental::EColumnType::kSplitReal32,
-   ///      ROOT::Experimental::EColumnType::kSplitReal64});
+   ///     {ROOT::Experimental::ENTupleColumnType::kSplitReal32,
+   ///      ROOT::Experimental::ENTupleColumnType::kSplitReal64});
    /// // The "PLC" option automatically sets the line color for each histogram in the `THStack`.
    /// // The "NOSTACK" option will draw the histograms on top of each other instead of stacked.
    /// hist->DrawClone("PLC NOSTACK");
    /// canvas->BuildLegend(0.7, 0.8, 0.89, 0.89);
    /// canvas->DrawClone();
    /// ~~~
-   std::unique_ptr<THStack> GetPageSizeDistribution(std::initializer_list<EColumnType> colTypes = {},
+   std::unique_ptr<THStack> GetPageSizeDistribution(std::initializer_list<ENTupleColumnType> colTypes = {},
                                                     std::string histName = "", std::string histTitle = "",
                                                     size_t nBins = 64);
 

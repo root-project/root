@@ -231,7 +231,7 @@ TEST(RNTupleImporter, ConvertDotsInBranchNames)
 
 TEST(RNTupleImporter, FieldModifier)
 {
-   using ROOT::Experimental::EColumnType;
+   using ROOT::Experimental::ENTupleColumnType;
    using ROOT::Experimental::RFieldBase;
 
    FileRaii fileGuard("test_ntuple_importer_column_modifier.root");
@@ -248,7 +248,7 @@ TEST(RNTupleImporter, FieldModifier)
 
    auto fnLowPrecisionFloatModifier = [](RFieldBase &field) {
       if (field.GetFieldName() == "a")
-         field.SetColumnRepresentatives({{EColumnType::kReal16}});
+         field.SetColumnRepresentatives({{ENTupleColumnType::kReal16}});
    };
 
    auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
@@ -262,9 +262,9 @@ TEST(RNTupleImporter, FieldModifier)
    EXPECT_FLOAT_EQ(1.0, *reader->GetModel().GetDefaultEntry().GetPtr<float>("a"));
    EXPECT_FLOAT_EQ(2.0, *reader->GetModel().GetDefaultEntry().GetPtr<float>("b"));
 
-   EXPECT_EQ(RFieldBase::ColumnRepresentation_t{EColumnType::kReal16},
+   EXPECT_EQ(RFieldBase::ColumnRepresentation_t{ENTupleColumnType::kReal16},
              reader->GetModel().GetConstField("a").GetColumnRepresentatives()[0]);
-   EXPECT_EQ(RFieldBase::ColumnRepresentation_t{EColumnType::kSplitReal32},
+   EXPECT_EQ(RFieldBase::ColumnRepresentation_t{ENTupleColumnType::kSplitReal32},
              reader->GetModel().GetConstField("b").GetColumnRepresentatives()[0]);
 }
 

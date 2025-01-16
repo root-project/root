@@ -533,9 +533,11 @@ void ROOT::Experimental::RProxiedCollectionField::ReadGlobalImpl(NTupleSize_t gl
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RProxiedCollectionField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations(
-      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
-      {});
+   static RColumnRepresentations representations({{ENTupleColumnType::kSplitIndex64},
+                                                  {ENTupleColumnType::kIndex64},
+                                                  {ENTupleColumnType::kSplitIndex32},
+                                                  {ENTupleColumnType::kIndex32}},
+                                                 {});
    return representations;
 }
 
@@ -696,10 +698,10 @@ void ROOT::Experimental::RStreamerField::ReadGlobalImpl(NTupleSize_t globalIndex
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RStreamerField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitIndex64, EColumnType::kByte},
-                                                  {EColumnType::kIndex64, EColumnType::kByte},
-                                                  {EColumnType::kSplitIndex32, EColumnType::kByte},
-                                                  {EColumnType::kIndex32, EColumnType::kByte}},
+   static RColumnRepresentations representations({{ENTupleColumnType::kSplitIndex64, ENTupleColumnType::kByte},
+                                                  {ENTupleColumnType::kIndex64, ENTupleColumnType::kByte},
+                                                  {ENTupleColumnType::kSplitIndex32, ENTupleColumnType::kByte},
+                                                  {ENTupleColumnType::kIndex32, ENTupleColumnType::kByte}},
                                                  {});
    return representations;
 }
@@ -1064,7 +1066,7 @@ void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex,
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RVariantField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSwitch}}, {});
+   static RColumnRepresentations representations({{ENTupleColumnType::kSwitch}}, {});
    return representations;
 }
 

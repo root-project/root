@@ -277,7 +277,7 @@ struct RDescriptorsComparison {
 
 struct RColumnOutInfo {
    DescriptorId_t fColumnId;
-   EColumnType fColumnType;
+   ENTupleColumnType fColumnType;
 };
 
 // { fully.qualified.fieldName.colInputId => colOutputInfo }
@@ -299,7 +299,7 @@ struct RColumnMergeInfo {
    std::string fColumnName;
    DescriptorId_t fInputId;
    DescriptorId_t fOutputId;
-   EColumnType fColumnType;
+   ENTupleColumnType fColumnType;
    // If nullopt, use the default in-memory type
    std::optional<std::type_index> fInMemoryType;
    const RFieldDescriptor *fParentField;
@@ -344,29 +344,29 @@ std::ostream &operator<<(std::ostream &os, const std::optional<RColumnDescriptor
 
 } // namespace ROOT::Experimental::Internal
 
-static bool IsSplitOrUnsplitVersionOf(EColumnType a, EColumnType b)
+static bool IsSplitOrUnsplitVersionOf(ENTupleColumnType a, ENTupleColumnType b)
 {
    // clang-format off
-   if (a == EColumnType::kInt16 && b == EColumnType::kSplitInt16) return true;
-   if (a == EColumnType::kSplitInt16 && b == EColumnType::kInt16) return true;
-   if (a == EColumnType::kInt32 && b == EColumnType::kSplitInt32) return true;
-   if (a == EColumnType::kSplitInt32 && b == EColumnType::kInt32) return true;
-   if (a == EColumnType::kInt64 && b == EColumnType::kSplitInt64) return true;
-   if (a == EColumnType::kSplitInt64 && b == EColumnType::kInt64) return true;
-   if (a == EColumnType::kUInt16 && b == EColumnType::kSplitUInt16) return true;
-   if (a == EColumnType::kSplitUInt16 && b == EColumnType::kUInt16) return true;
-   if (a == EColumnType::kUInt32 && b == EColumnType::kSplitUInt32) return true;
-   if (a == EColumnType::kSplitUInt32 && b == EColumnType::kUInt32) return true;
-   if (a == EColumnType::kUInt64 && b == EColumnType::kSplitUInt64) return true;
-   if (a == EColumnType::kSplitUInt64 && b == EColumnType::kUInt64) return true;
-   if (a == EColumnType::kIndex32 && b == EColumnType::kSplitIndex32) return true;
-   if (a == EColumnType::kSplitIndex32 && b == EColumnType::kIndex32) return true;
-   if (a == EColumnType::kIndex64 && b == EColumnType::kSplitIndex64) return true;
-   if (a == EColumnType::kSplitIndex64 && b == EColumnType::kIndex64) return true;
-   if (a == EColumnType::kReal32 && b == EColumnType::kSplitReal32) return true;
-   if (a == EColumnType::kSplitReal32 && b == EColumnType::kReal32) return true;
-   if (a == EColumnType::kReal64 && b == EColumnType::kSplitReal64) return true;
-   if (a == EColumnType::kSplitReal64 && b == EColumnType::kReal64) return true;
+   if (a == ENTupleColumnType::kInt16 && b == ENTupleColumnType::kSplitInt16) return true;
+   if (a == ENTupleColumnType::kSplitInt16 && b == ENTupleColumnType::kInt16) return true;
+   if (a == ENTupleColumnType::kInt32 && b == ENTupleColumnType::kSplitInt32) return true;
+   if (a == ENTupleColumnType::kSplitInt32 && b == ENTupleColumnType::kInt32) return true;
+   if (a == ENTupleColumnType::kInt64 && b == ENTupleColumnType::kSplitInt64) return true;
+   if (a == ENTupleColumnType::kSplitInt64 && b == ENTupleColumnType::kInt64) return true;
+   if (a == ENTupleColumnType::kUInt16 && b == ENTupleColumnType::kSplitUInt16) return true;
+   if (a == ENTupleColumnType::kSplitUInt16 && b == ENTupleColumnType::kUInt16) return true;
+   if (a == ENTupleColumnType::kUInt32 && b == ENTupleColumnType::kSplitUInt32) return true;
+   if (a == ENTupleColumnType::kSplitUInt32 && b == ENTupleColumnType::kUInt32) return true;
+   if (a == ENTupleColumnType::kUInt64 && b == ENTupleColumnType::kSplitUInt64) return true;
+   if (a == ENTupleColumnType::kSplitUInt64 && b == ENTupleColumnType::kUInt64) return true;
+   if (a == ENTupleColumnType::kIndex32 && b == ENTupleColumnType::kSplitIndex32) return true;
+   if (a == ENTupleColumnType::kSplitIndex32 && b == ENTupleColumnType::kIndex32) return true;
+   if (a == ENTupleColumnType::kIndex64 && b == ENTupleColumnType::kSplitIndex64) return true;
+   if (a == ENTupleColumnType::kSplitIndex64 && b == ENTupleColumnType::kIndex64) return true;
+   if (a == ENTupleColumnType::kReal32 && b == ENTupleColumnType::kSplitReal32) return true;
+   if (a == ENTupleColumnType::kSplitReal32 && b == ENTupleColumnType::kReal32) return true;
+   if (a == ENTupleColumnType::kReal64 && b == ENTupleColumnType::kSplitReal64) return true;
+   if (a == ENTupleColumnType::kSplitReal64 && b == ENTupleColumnType::kReal64) return true;
    // clang-format on
    return false;
 }
@@ -797,13 +797,13 @@ void RNTupleMerger::MergeSourceClusters(RPageSource &source, std::span<RColumnMe
    // So currently we simply merge all cluster groups into one.
 }
 
-static std::optional<std::type_index> ColumnInMemoryType(std::string_view fieldType, EColumnType onDiskType)
+static std::optional<std::type_index> ColumnInMemoryType(std::string_view fieldType, ENTupleColumnType onDiskType)
 {
-   if (onDiskType == EColumnType::kIndex32 || onDiskType == EColumnType::kSplitIndex32 ||
-       onDiskType == EColumnType::kIndex64 || onDiskType == EColumnType::kSplitIndex64)
+   if (onDiskType == ENTupleColumnType::kIndex32 || onDiskType == ENTupleColumnType::kSplitIndex32 ||
+       onDiskType == ENTupleColumnType::kIndex64 || onDiskType == ENTupleColumnType::kSplitIndex64)
       return typeid(ROOT::Experimental::Internal::RColumnIndex);
 
-   if (onDiskType == EColumnType::kSwitch)
+   if (onDiskType == ENTupleColumnType::kSwitch)
       return typeid(ROOT::Experimental::Internal::RColumnSwitch);
 
    if (fieldType == "bool") {

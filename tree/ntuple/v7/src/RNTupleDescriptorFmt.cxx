@@ -47,7 +47,7 @@ struct ColumnInfo {
    std::uint32_t fElementSize = 0;
    std::uint32_t fColumnIndex = 0;
    std::uint16_t fRepresentationIndex = 0;
-   ROOT::Experimental::EColumnType fType;
+   ROOT::Experimental::ENTupleColumnType fType;
    std::string fFieldName;
    std::string fFieldDescription;
 
