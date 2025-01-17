@@ -329,16 +329,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          oTabContainer.addItem(item);
 
-         const handle = this.websocket.createNewInstance(url);
+         const handle = this.websocket.createChannel();
          handle.setUserArgs({ nobrowser: true });
          item._jsroot_conn = handle; // keep to be able disconnect
+         item._jsroot_channelid = handle.getChannelId(); // indicate that channel id must be reported
 
-         XMLView.create({
+         return XMLView.create({
             viewName: "rootui5.tree.view.TreeViewer",
             viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
-         }).then(oView => item.addContent(oView));
-
-         return item;
+         }).then(oView => {
+            item.addContent(oView);
+            return item;
+         });
       },
 
       /* =========================================== */
