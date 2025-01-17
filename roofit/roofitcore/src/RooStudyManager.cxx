@@ -101,9 +101,9 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
 
     // Write header of driver script
     ofstream bdr(Form("study_driver_%s.sh",studyName)) ;
-    bdr << "#!/bin/sh" << endl
-        << Form("if [ ! -f study_data_%s.root ] ; then",studyName) << endl
-        << "uudecode <<EOR" << endl ;
+    bdr << "#!/bin/sh" << std::endl
+        << Form("if [ ! -f study_data_%s.root ] ; then",studyName) << std::endl
+        << "uudecode <<EOR" << std::endl ;
     bdr.close() ;
 
     // Write uuencoded ROOT file (base64) in driver script
@@ -111,29 +111,29 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
 
     // Write remainder of driver script
     ofstream bdr2 (Form("study_driver_%s.sh",studyName),ios::app) ;
-    bdr2 << "EOR" << endl
-    << "fi" << endl
-    << "root -l -b <<EOR" << endl
-    << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
-    << ".q" << endl
-    << "EOR" << endl ;
+    bdr2 << "EOR" << std::endl
+    << "fi" << std::endl
+    << "root -l -b <<EOR" << std::endl
+    << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << std::endl
+    << ".q" << std::endl
+    << "EOR" << std::endl ;
     // Remove binary input file
     gSystem->Unlink(Form("study_data_%s.root",studyName)) ;
 
-    coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << endl
-         << "     input data files is embedded in driver script" << endl ;
+    coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << std::endl
+         << "     input data files is embedded in driver script" << std::endl ;
 
   } else {
 
     ofstream bdr(Form("study_driver_%s.sh",studyName)) ;
-    bdr << "#!/bin/sh" << endl
-   << "root -l -b <<EOR" << endl
-   << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
-   << ".q" << endl
-   << "EOR" << endl ;
+    bdr << "#!/bin/sh" << std::endl
+   << "root -l -b <<EOR" << std::endl
+   << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << std::endl
+   << ".q" << std::endl
+   << "EOR" << std::endl ;
 
-    coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << endl
-         << "     input data file is " << Form("study_data_%s.root",studyName) << endl ;
+    coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << std::endl
+         << "     input data file is " << Form("study_data_%s.root",studyName) << std::endl ;
 
   }
 }
@@ -151,7 +151,7 @@ void RooStudyManager::processBatchOutput(const char* filePat)
   TList olist ;
 
   for (list<string>::iterator iter = flist.begin() ; iter!=flist.end() ; ++iter) {
-    coutP(DataHandling) << "RooStudyManager::processBatchOutput() now reading file " << *iter << endl ;
+    coutP(DataHandling) << "RooStudyManager::processBatchOutput() now reading file " << *iter << std::endl ;
     TFile f(iter->c_str()) ;
 
     for(auto * key : static_range_cast<TKey*>(*f.GetListOfKeys())) {

@@ -216,7 +216,7 @@ const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
   static RooArgSet dummy ;
   RooArgSet* config = static_cast<RooArgSet*>(_configSets.FindObject(name)) ;
   if (!config) {
-    oocoutE(nullptr,InputArguments) << "RooNumIntConfig::getConfigSection: ERROR: no configuration stored for integrator '" << name << "'" << endl ;
+    oocoutE(nullptr,InputArguments) << "RooNumIntConfig::getConfigSection: ERROR: no configuration stored for integrator '" << name << "'" << std::endl ;
     return dummy ;
   }
   return *config ;
@@ -230,7 +230,7 @@ const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
 void RooNumIntConfig::setEpsAbs(double newEpsAbs)
 {
   if (newEpsAbs<0) {
-    oocoutE(nullptr,InputArguments) << "RooNumIntConfig::setEpsAbs: ERROR: target absolute precision must be greater or equal than zero" << endl ;
+    oocoutE(nullptr,InputArguments) << "RooNumIntConfig::setEpsAbs: ERROR: target absolute precision must be greater or equal than zero" << std::endl ;
     return ;
   }
   _epsAbs = newEpsAbs ;
@@ -260,7 +260,7 @@ RooPrintable::StyleOption RooNumIntConfig::defaultPrintStyle(Option_t* opt) cons
 void RooNumIntConfig::setEpsRel(double newEpsRel)
 {
   if (newEpsRel<0) {
-    oocoutE(nullptr,InputArguments) << "RooNumIntConfig::setEpsRel: ERROR: target absolute precision must be greater or equal than zero" << endl ;
+    oocoutE(nullptr,InputArguments) << "RooNumIntConfig::setEpsRel: ERROR: target absolute precision must be greater or equal than zero" << std::endl ;
     return ;
   }
   _epsRel = newEpsRel ;
@@ -273,53 +273,53 @@ void RooNumIntConfig::setEpsRel(double newEpsRel)
 
 void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, bool verbose, TString indent) const
 {
-  os << indent << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;
+  os << indent << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << std::endl << std::endl ;
   if (_printEvalCounter) {
-    os << indent << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
+    os << indent << "Printing of function evaluation counter for each integration enabled" << std::endl << std::endl ;
   }
 
   os << indent << "1-D integration method: " << _method1D.getCurrentLabel() ;
   if (_method1DOpen.getCurrentIndex()!=_method1D.getCurrentIndex()) {
-    os << " (" << _method1DOpen.getCurrentLabel() << " if open-ended)" << endl ;
+    os << " (" << _method1DOpen.getCurrentLabel() << " if open-ended)" << std::endl ;
   } else {
-    os << endl ;
+    os << std::endl ;
   }
   os << indent << "2-D integration method: " << _method2D.getCurrentLabel() ;
   if (_method2DOpen.getCurrentIndex()!=_method2D.getCurrentIndex()) {
-    os << " (" << _method2DOpen.getCurrentLabel() << " if open-ended)" << endl ;
+    os << " (" << _method2DOpen.getCurrentLabel() << " if open-ended)" << std::endl ;
   } else {
-    os << endl ;
+    os << std::endl ;
   }
   os << indent << "N-D integration method: " << _methodND.getCurrentLabel() ;
   if (_methodNDOpen.getCurrentIndex()!=_methodND.getCurrentIndex()) {
-    os << " (" << _methodNDOpen.getCurrentLabel() << " if open-ended)" << endl ;
+    os << " (" << _methodNDOpen.getCurrentLabel() << " if open-ended)" << std::endl ;
   } else {
-    os << endl ;
+    os << std::endl ;
   }
 
   if (verbose) {
 
-    os << endl << "Available integration methods:" << endl << endl ;
+    os << std::endl << "Available integration methods:" << std::endl << std::endl ;
     for(auto * configSet : static_range_cast<RooArgSet*>(_configSets)) {
 
       auto const& info = *RooNumIntFactory::instance().getPluginInfo(configSet->GetName());
 
-      os << indent << "*** " << configSet->GetName() << " ***" << endl ;
+      os << indent << "*** " << configSet->GetName() << " ***" << std::endl ;
       os << indent << "Capabilities: " ;
       if (info.canIntegrate1D) os << "[1-D] " ;
       if (info.canIntegrate2D) os << "[2-D] " ;
       if (info.canIntegrateND) os << "[N-D] " ;
       if (info.canIntegrateOpenEnded) os << "[OpenEnded] " ;
-      os << endl ;
+      os << std::endl ;
 
-      os << "Configuration: " << endl ;
+      os << "Configuration: " << std::endl ;
       configSet->printMultiline(os,kName|kValue) ;
       //configSet->writeToStream(os,false) ;
 
       if (!info.depName.empty()) {
-   os << indent << "(Depends on '" << info.depName << "')" << endl ;
+   os << indent << "(Depends on '" << info.depName << "')" << std::endl ;
       }
-      os << endl ;
+      os << std::endl ;
 
     }
   }

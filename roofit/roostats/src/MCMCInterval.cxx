@@ -217,7 +217,7 @@ bool MCMCInterval::IsInInterval(const RooArgSet& point) const
    }
 
    coutE(InputArguments) << "Error in MCMCInterval::IsInInterval: "
-      << "Interval type not set.  Returning false." << endl;
+      << "Interval type not set.  Returning false." << std::endl;
    return false;
 }
 
@@ -242,7 +242,7 @@ void MCMCInterval::SetConfidenceLevel(double cl)
 //   }
 //   else {
 //      coutE(Eval) << "* Error in MCMCInterval::SetNumBins: " <<
-//                     "Negative number of bins given: " << numBins << endl;
+//                     "Negative number of bins given: " << numBins << std::endl;
 //      return;
 //   }
 //
@@ -260,7 +260,7 @@ void MCMCInterval::SetAxes(RooArgList& axes)
       coutE(InputArguments) << "* Error in MCMCInterval::SetAxes: " <<
                                "number of variables in axes (" << size <<
                                ") doesn't match number of parameters ("
-                               << fDimension << ")" << endl;
+                               << fDimension << ")" << std::endl;
       return;
    }
    for (Int_t i = 0; i < size; i++)
@@ -276,7 +276,7 @@ void MCMCInterval::CreateKeysPdf()
    // also check for memory leak from chain, does RooNDKeysPdf clone that?
    if (fAxes == nullptr || fParameters.empty()) {
       coutE(InputArguments) << "Error in MCMCInterval::CreateKeysPdf: "
-         << "parameters have not been set." << endl;
+         << "parameters have not been set." << std::endl;
       return;
    }
 
@@ -284,7 +284,7 @@ void MCMCInterval::CreateKeysPdf()
       coutE(InputArguments) <<
          "MCMCInterval::CreateKeysPdf: creation of Keys PDF failed: " <<
          "Number of burn-in steps (num steps to ignore) >= number of steps " <<
-         "in Markov chain." << endl;
+         "in Markov chain." << std::endl;
       delete fKeysPdf;
       delete fCutoffVar;
       delete fHeaviside;
@@ -315,8 +315,8 @@ void MCMCInterval::CreateHist()
 {
    if (fAxes == nullptr || fChain == nullptr) {
       coutE(Eval) << "* Error in MCMCInterval::CreateHist(): " <<
-                     "Crucial data member was nullptr." << endl;
-      coutE(Eval) << "Make sure to fully construct/initialize." << endl;
+                     "Crucial data member was nullptr." << std::endl;
+      coutE(Eval) << "Make sure to fully construct/initialize." << std::endl;
       return;
    }
    if (fHist != nullptr) {
@@ -328,7 +328,7 @@ void MCMCInterval::CreateHist()
       coutE(InputArguments) <<
          "MCMCInterval::CreateHist: creation of histogram failed: " <<
          "Number of burn-in steps (num steps to ignore) >= number of steps " <<
-         "in Markov chain." << endl;
+         "in Markov chain." << std::endl;
       return;
    }
 
@@ -349,7 +349,7 @@ void MCMCInterval::CreateHist()
 
    } else {
       coutE(Eval) << "* Error in MCMCInterval::CreateHist() : " <<
-                     "TH1* couldn't handle dimension: " << fDimension << endl;
+                     "TH1* couldn't handle dimension: " << fDimension << std::endl;
       return;
    }
 
@@ -386,9 +386,9 @@ void MCMCInterval::CreateSparseHist()
 {
    if (fAxes == nullptr || fChain == nullptr) {
       coutE(InputArguments) << "* Error in MCMCInterval::CreateSparseHist(): "
-                            << "Crucial data member was nullptr." << endl;
+                            << "Crucial data member was nullptr." << std::endl;
       coutE(InputArguments) << "Make sure to fully construct/initialize."
-                            << endl;
+                            << std::endl;
       return;
    }
    if (fSparseHist != nullptr)
@@ -414,7 +414,7 @@ void MCMCInterval::CreateSparseHist()
       coutE(InputArguments) <<
          "MCMCInterval::CreateSparseHist: creation of histogram failed: " <<
          "Number of burn-in steps (num steps to ignore) >= number of steps " <<
-         "in Markov chain." << endl;
+         "in Markov chain." << std::endl;
    }
 
    // Fill histogram
@@ -435,8 +435,8 @@ void MCMCInterval::CreateDataHist()
 {
    if (fParameters.empty() || fChain == nullptr) {
       coutE(Eval) << "* Error in MCMCInterval::CreateDataHist(): " <<
-                     "Crucial data member was nullptr or empty." << endl;
-      coutE(Eval) << "Make sure to fully construct/initialize." << endl;
+                     "Crucial data member was nullptr or empty." << std::endl;
+      coutE(Eval) << "Make sure to fully construct/initialize." << std::endl;
       return;
    }
 
@@ -444,7 +444,7 @@ void MCMCInterval::CreateDataHist()
       coutE(InputArguments) <<
          "MCMCInterval::CreateDataHist: creation of histogram failed: " <<
          "Number of burn-in steps (num steps to ignore) >= number of steps " <<
-         "in Markov chain." << endl;
+         "in Markov chain." << std::endl;
       fDataHist = nullptr;
       return;
    }
@@ -462,9 +462,9 @@ void MCMCInterval::CreateVector(RooRealVar* param)
 
    if (fChain == nullptr) {
       coutE(InputArguments) << "* Error in MCMCInterval::CreateVector(): " <<
-                     "Crucial data member (Markov chain) was nullptr." << endl;
+                     "Crucial data member (Markov chain) was nullptr." << std::endl;
       coutE(InputArguments) << "Make sure to fully construct/initialize."
-                            << endl;
+                            << std::endl;
       return;
    }
 
@@ -472,7 +472,7 @@ void MCMCInterval::CreateVector(RooRealVar* param)
       coutE(InputArguments) <<
          "MCMCInterval::CreateVector: creation of vector failed: " <<
          "Number of burn-in steps (num steps to ignore) >= number of steps " <<
-         "in Markov chain." << endl;
+         "in Markov chain." << std::endl;
    }
 
    // Fill vector
@@ -525,7 +525,7 @@ void MCMCInterval::DetermineInterval()
          break;
       default:
          coutE(InputArguments) << "MCMCInterval::DetermineInterval(): " <<
-            "Error: Interval type not set" << endl;
+            "Error: Interval type not set" << std::endl;
          break;
    }
 }
@@ -548,22 +548,22 @@ void MCMCInterval::DetermineTailFractionInterval()
    if (fLeftSideTF < 0 || fLeftSideTF > 1) {
       coutE(InputArguments) << "MCMCInterval::DetermineTailFractionInterval: "
          << "Fraction must be in the range [0, 1].  "
-         << fLeftSideTF << "is not allowed." << endl;
+         << fLeftSideTF << "is not allowed." << std::endl;
       return;
    }
 
    if (fDimension != 1) {
       coutE(InputArguments) << "MCMCInterval::DetermineTailFractionInterval(): "
          << "Error: Can only find a tail-fraction interval for 1-D intervals"
-         << endl;
+         << std::endl;
       return;
    }
 
    if (fAxes == nullptr) {
       coutE(InputArguments) << "MCMCInterval::DetermineTailFractionInterval(): "
-                            << "Crucial data member was nullptr." << endl;
+                            << "Crucial data member was nullptr." << std::endl;
       coutE(InputArguments) << "Make sure to fully construct/initialize."
-                            << endl;
+                            << std::endl;
       return;
    }
 
@@ -669,7 +669,7 @@ void MCMCInterval::DetermineByKeys()
    if (full < 0.98) {
       coutW(Eval) << "Warning: Integral of Keys PDF came out to " << full
          << " instead of expected value 1.  Will continue using this "
-         << "factor to normalize further integrals of this PDF." << endl;
+         << "factor to normalize further integrals of this PDF." << std::endl;
    }
 
    // kbelasco: Is there a better way to set the search range?
@@ -728,7 +728,7 @@ void MCMCInterval::DetermineByKeys()
    }
 
    coutI(Eval) << "range set: [" << bottomCutoff << ", " << topCutoff << "]"
-               << endl;
+               << std::endl;
 
    cutoff = (topCutoff + bottomCutoff) / 2.0;
    confLevel = CalcConfLevel(cutoff, full);
@@ -748,7 +748,7 @@ void MCMCInterval::DetermineByKeys()
       }
       cutoff = (topCutoff + bottomCutoff) / 2.0;
       coutI(Eval) << "cutoff range: [" << bottomCutoff << ", "
-                  << topCutoff << "]" << endl;
+                  << topCutoff << "]" << std::endl;
       confLevel = CalcConfLevel(cutoff, full);
    }
 
@@ -928,7 +928,7 @@ double MCMCInterval::GetActualConfidenceLevel()
       return fTFConfLevel;
    } else {
       coutE(InputArguments) << "MCMCInterval::GetActualConfidenceLevel: "
-         << "not implemented for this type of interval.  Returning 0." << endl;
+         << "not implemented for this type of interval.  Returning 0." << std::endl;
       return 0;
    }
 }
@@ -944,7 +944,7 @@ double MCMCInterval::LowerLimit(RooRealVar& param)
          return LowerLimitTailFraction(param);
       default:
          coutE(InputArguments) << "MCMCInterval::LowerLimit(): " <<
-            "Error: Interval type not set" << endl;
+            "Error: Interval type not set" << std::endl;
          return RooNumber::infinity();
    }
 }
@@ -960,7 +960,7 @@ double MCMCInterval::UpperLimit(RooRealVar& param)
          return UpperLimitTailFraction(param);
       default:
          coutE(InputArguments) << "MCMCInterval::UpperLimit(): " <<
-            "Error: Interval type not set" << endl;
+            "Error: Interval type not set" << std::endl;
          return RooNumber::infinity();
    }
 }
@@ -1041,7 +1041,7 @@ double MCMCInterval::LowerLimitBySparseHist(RooRealVar& param)
 {
    if (fDimension != 1) {
       coutE(InputArguments) << "In MCMCInterval::LowerLimitBySparseHist: "
-         << "Sorry, will not compute lower limit unless dimension == 1" << endl;
+         << "Sorry, will not compute lower limit unless dimension == 1" << std::endl;
       return param.getMin();
    }
    if (fHistCutoff < 0)
@@ -1051,7 +1051,7 @@ double MCMCInterval::LowerLimitBySparseHist(RooRealVar& param)
       // if fHistCutoff < 0 still, then determination of interval failed
       coutE(Eval) << "In MCMCInterval::LowerLimitBySparseHist: "
          << "couldn't determine cutoff.  Check that num burn in steps < num "
-         << "steps in the Markov chain.  Returning param.getMin()." << endl;
+         << "steps in the Markov chain.  Returning param.getMin()." << std::endl;
       return param.getMin();
    }
 
@@ -1087,7 +1087,7 @@ double MCMCInterval::LowerLimitByDataHist(RooRealVar& param)
       // if fHistCutoff < 0 still, then determination of interval failed
       coutE(Eval) << "In MCMCInterval::LowerLimitByDataHist: "
          << "couldn't determine cutoff.  Check that num burn in steps < num "
-         << "steps in the Markov chain.  Returning param.getMin()." << endl;
+         << "steps in the Markov chain.  Returning param.getMin()." << std::endl;
       return param.getMin();
    }
 
@@ -1118,7 +1118,7 @@ double MCMCInterval::UpperLimitBySparseHist(RooRealVar& param)
 {
    if (fDimension != 1) {
       coutE(InputArguments) << "In MCMCInterval::UpperLimitBySparseHist: "
-         << "Sorry, will not compute upper limit unless dimension == 1" << endl;
+         << "Sorry, will not compute upper limit unless dimension == 1" << std::endl;
       return param.getMax();
    }
    if (fHistCutoff < 0)
@@ -1128,7 +1128,7 @@ double MCMCInterval::UpperLimitBySparseHist(RooRealVar& param)
       // if fHistCutoff < 0 still, then determination of interval failed
       coutE(Eval) << "In MCMCInterval::UpperLimitBySparseHist: "
          << "couldn't determine cutoff.  Check that num burn in steps < num "
-         << "steps in the Markov chain.  Returning param.getMax()." << endl;
+         << "steps in the Markov chain.  Returning param.getMax()." << std::endl;
       return param.getMax();
    }
 
@@ -1164,7 +1164,7 @@ double MCMCInterval::UpperLimitByDataHist(RooRealVar& param)
       // if fHistCutoff < 0 still, then determination of interval failed
       coutE(Eval) << "In MCMCInterval::UpperLimitByDataHist: "
          << "couldn't determine cutoff.  Check that num burn in steps < num "
-         << "steps in the Markov chain.  Returning param.getMax()." << endl;
+         << "steps in the Markov chain.  Returning param.getMax()." << std::endl;
       return param.getMax();
    }
 
@@ -1204,7 +1204,7 @@ double MCMCInterval::LowerLimitByKeys(RooRealVar& param)
       coutE(Eval) << "in MCMCInterval::LowerLimitByKeys(): "
          << "couldn't find lower limit, check that the number of burn in "
          << "steps < number of total steps in the Markov chain.  Returning "
-         << "param.getMin()" << endl;
+         << "param.getMin()" << std::endl;
       return param.getMin();
    }
 
@@ -1244,7 +1244,7 @@ double MCMCInterval::UpperLimitByKeys(RooRealVar& param)
       coutE(Eval) << "in MCMCInterval::UpperLimitByKeys(): "
          << "couldn't find upper limit, check that the number of burn in "
          << "steps < number of total steps in the Markov chain.  Returning "
-         << "param.getMax()" << endl;
+         << "param.getMax()" << std::endl;
       return param.getMax();
    }
 
@@ -1283,7 +1283,7 @@ double MCMCInterval::GetKeysMax()
       coutE(Eval) << "in MCMCInterval::KeysMax(): "
          << "couldn't find Keys max value, check that the number of burn in "
          << "steps < number of total steps in the Markov chain.  Returning 0"
-         << endl;
+         << std::endl;
       return 0;
    }
 
@@ -1331,7 +1331,7 @@ double MCMCInterval::CalcConfLevel(double cutoff, double full)
    fCutoffVar->setVal(cutoff);
    std::unique_ptr<RooAbsReal> integral{fProduct->createIntegral(fParameters, NormSet(fParameters))};
    double confLevel = integral->getVal(fParameters) / full;
-   coutI(Eval) << "cutoff = " << cutoff << ", conf = " << confLevel << endl;
+   coutI(Eval) << "cutoff = " << cutoff << ", conf = " << confLevel << std::endl;
    return confLevel;
 }
 
@@ -1341,7 +1341,7 @@ TH1* MCMCInterval::GetPosteriorHist()
 {
    if (fConfidenceLevel == 0) {
       coutE(InputArguments) << "Error in MCMCInterval::GetPosteriorHist: "
-                            << "confidence level not set " << endl;
+                            << "confidence level not set " << std::endl;
    }
   if (fHist == nullptr)
      CreateHist();
@@ -1360,7 +1360,7 @@ RooNDKeysPdf* MCMCInterval::GetPosteriorKeysPdf()
 {
   if (fConfidenceLevel == 0) {
      coutE(InputArguments) << "Error in MCMCInterval::GetPosteriorKeysPdf: "
-                           << "confidence level not set " << endl;
+                           << "confidence level not set " << std::endl;
   }
    if (fKeysPdf == nullptr)
       CreateKeysPdf();
@@ -1379,7 +1379,7 @@ RooProduct* MCMCInterval::GetPosteriorKeysProduct()
 {
    if (fConfidenceLevel == 0) {
       coutE(InputArguments) << "MCMCInterval::GetPosteriorKeysProduct: "
-                            << "confidence level not set " << endl;
+                            << "confidence level not set " << std::endl;
    }
    if (fProduct == nullptr) {
       CreateKeysPdf();

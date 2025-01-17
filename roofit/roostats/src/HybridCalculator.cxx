@@ -37,11 +37,11 @@ using std::endl;
 int HybridCalculator::CheckHook(void) const {
 
    if( fPriorNuisanceNull && (!fNullModel->GetNuisanceParameters() || fNullModel->GetNuisanceParameters()->empty()) ) {
-      oocoutE(nullptr,InputArguments)  << "HybridCalculator - Nuisance PDF has been specified, but is unaware of which parameters are the nuisance parameters. Must set nuisance parameters in the Null ModelConfig." << endl;
+      oocoutE(nullptr,InputArguments)  << "HybridCalculator - Nuisance PDF has been specified, but is unaware of which parameters are the nuisance parameters. Must set nuisance parameters in the Null ModelConfig." << std::endl;
       return -1; // error
    }
    if( fPriorNuisanceAlt && (!fAltModel->GetNuisanceParameters() || fAltModel->GetNuisanceParameters()->empty()) ) {
-      oocoutE(nullptr,InputArguments)  << "HybridCalculator - Nuisance PDF has been specified, but is unaware of which parameters are the nuisance parameters. Must set nuisance parameters in the Alt ModelConfig" << endl;
+      oocoutE(nullptr,InputArguments)  << "HybridCalculator - Nuisance PDF has been specified, but is unaware of which parameters are the nuisance parameters. Must set nuisance parameters in the Alt ModelConfig" << std::endl;
       return -1; // error
    }
 
@@ -64,9 +64,9 @@ int HybridCalculator::PreNullHook(RooArgSet* /*parameterPoint*/, double obsTestS
    ) {
       oocoutI(nullptr,InputArguments)
        << "HybridCalculator - No nuisance parameters specified for Null model and no prior forced. "
-       << "Case is reduced to simple hypothesis testing with no uncertainty." << endl;
+       << "Case is reduced to simple hypothesis testing with no uncertainty." << std::endl;
    } else {
-      oocoutI(nullptr,InputArguments) << "HybridCalculator - Using uniform prior on nuisance parameters (Null model)." << endl;
+      oocoutI(nullptr,InputArguments) << "HybridCalculator - Using uniform prior on nuisance parameters (Null model)." << std::endl;
    }
 
 
@@ -75,14 +75,14 @@ int HybridCalculator::PreNullHook(RooArgSet* /*parameterPoint*/, double obsTestS
    // check whether TestStatSampler is a ToyMCSampler
    ToyMCSampler *toymcs = dynamic_cast<ToyMCSampler*>(GetTestStatSampler());
    if(toymcs) {
-      oocoutI(nullptr,InputArguments) << "Using a ToyMCSampler. Now configuring for Null." << endl;
+      oocoutI(nullptr,InputArguments) << "Using a ToyMCSampler. Now configuring for Null." << std::endl;
 
       // variable number of toys
       if(fNToysNull >= 0) toymcs->SetNToys(fNToysNull);
 
       // adaptive sampling
       if(fNToysNullTail) {
-         oocoutI(nullptr,InputArguments) << "Adaptive Sampling" << endl;
+         oocoutI(nullptr,InputArguments) << "Adaptive Sampling" << std::endl;
          if(GetTestStatSampler()->GetTestStatistic()->PValueIsRightTail()) {
             toymcs->SetToysRightTail(fNToysNullTail, obsTestStat);
          }else{
@@ -113,9 +113,9 @@ int HybridCalculator::PreAltHook(RooArgSet* /*parameterPoint*/, double obsTestSt
    ) {
       oocoutI(nullptr,InputArguments)
        << "HybridCalculator - No nuisance parameters specified for Alt model and no prior forced. "
-       << "Case is reduced to simple hypothesis testing with no uncertainty." << endl;
+       << "Case is reduced to simple hypothesis testing with no uncertainty." << std::endl;
    } else {
-      oocoutI(nullptr,InputArguments) << "HybridCalculator - Using uniform prior on nuisance parameters (Alt model)." << endl;
+      oocoutI(nullptr,InputArguments) << "HybridCalculator - Using uniform prior on nuisance parameters (Alt model)." << std::endl;
    }
 
 
@@ -124,14 +124,14 @@ int HybridCalculator::PreAltHook(RooArgSet* /*parameterPoint*/, double obsTestSt
    // check whether TestStatSampler is a ToyMCSampler
    ToyMCSampler *toymcs = dynamic_cast<ToyMCSampler*>(GetTestStatSampler());
    if(toymcs) {
-      oocoutI(nullptr,InputArguments) << "Using a ToyMCSampler. Now configuring for Alt." << endl;
+      oocoutI(nullptr,InputArguments) << "Using a ToyMCSampler. Now configuring for Alt." << std::endl;
 
       // variable number of toys
       if(fNToysAlt >= 0) toymcs->SetNToys(fNToysAlt);
 
       // adaptive sampling
       if(fNToysAltTail) {
-         oocoutI(nullptr,InputArguments) << "Adaptive Sampling" << endl;
+         oocoutI(nullptr,InputArguments) << "Adaptive Sampling" << std::endl;
          if(GetTestStatSampler()->GetTestStatistic()->PValueIsRightTail()) {
             toymcs->SetToysLeftTail(fNToysAltTail, obsTestStat);
          }else{

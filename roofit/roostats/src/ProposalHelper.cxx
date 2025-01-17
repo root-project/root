@@ -92,7 +92,7 @@ void ProposalHelper::CreatePdf()
 {
    if (fVars == nullptr) {
       coutE(InputArguments) << "ProposalHelper::CreatePdf(): " <<
-         "Variables to create proposal function for are not set." << endl;
+         "Variables to create proposal function for are not set." << std::endl;
       return;
    }
    RooArgList xVec{};

@@ -148,7 +148,7 @@ public:
             }
          }
       } else {
-         cout << "error in RooNonVecGaussian generateEvent" << endl;
+         std::cout << "error in RooNonVecGaussian generateEvent" << std::endl;
       }
 
       return;

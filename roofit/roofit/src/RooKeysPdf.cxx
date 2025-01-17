@@ -280,13 +280,13 @@ double RooKeysPdf::evaluate() const {
   if (i<0) {
 //     cerr << "got point below lower bound:"
 //     << double(_x) << " < " << _lo
-//     << " -- performing linear extrapolation..." << endl;
+//     << " -- performing linear extrapolation..." << std::endl;
     i=0;
   }
   if (i>_nPoints-1) {
 //     cerr << "got point above upper bound:"
 //     << double(_x) << " > " << _hi
-//     << " -- performing linear extrapolation..." << endl;
+//     << " -- performing linear extrapolation..." << std::endl;
     i=_nPoints-1;
   }
   double dx = (double(_x)-(_lo+i*_binWidth))/_binWidth;

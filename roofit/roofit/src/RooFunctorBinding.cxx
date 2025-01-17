@@ -61,7 +61,7 @@ RooFunctorBinding::RooFunctorBinding(const char *name, const char *title, const 
   // Check that function dimension and number of variables match
   if (ftor.NDim()!=UInt_t(v.size())) {
     coutE(InputArguments) << "RooFunctorBinding::ctor(" << GetName() << ") ERROR number of provided variables (" << v.size()
-           << ") does not match dimensionality of function (" << ftor.NDim() << ")" << endl ;
+           << ") does not match dimensionality of function (" << ftor.NDim() << ")" << std::endl ;
     throw string("RooFunctor::ctor ERROR") ;
   }
   x = new double[func->NDim()] ;
@@ -113,7 +113,7 @@ RooFunctorPdfBinding::RooFunctorPdfBinding(const char *name, const char *title, 
   // Check that function dimension and number of variables match
   if (ftor.NDim()!=UInt_t(v.size())) {
     coutE(InputArguments) << "RooFunctorPdfBinding::ctor(" << GetName() << ") ERROR number of provided variables (" << v.size()
-           << ") does not match dimensionality of function (" << ftor.NDim() << ")" << endl ;
+           << ") does not match dimensionality of function (" << ftor.NDim() << ")" << std::endl ;
     throw string("RooFunctor::ctor ERROR") ;
   }
   x = new double[func->NDim()] ;

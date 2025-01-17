@@ -168,7 +168,7 @@ double RooMCIntegrator::integral(const double* /*yvec*/)
 
 double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, double *absError)
 {
-  //cout << "VEGAS stage = " << stage << " calls = " << calls << " iterations = " << iterations << endl ;
+  //cout << "VEGAS stage = " << stage << " calls = " << calls << " iterations = " << iterations << std::endl ;
 
   // reset the grid to its initial state if we are starting from scratch
   if(stage == AllStages) _grid.initialize(*_function);
@@ -204,11 +204,11 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
    if(bins > RooGrid::maxBins) bins= RooGrid::maxBins;
    boxes = box_per_bin * bins;
    oocxcoutD((TObject*)nullptr,Integration) << "RooMCIntegrator: using stratified sampling with " << bins << " bins and "
-                << box_per_bin << " boxes/bin" << endl;
+                << box_per_bin << " boxes/bin" << std::endl;
       }
       else {
    oocxcoutD((TObject*)nullptr,Integration) << "RooMCIntegrator: using importance sampling with " << bins << " bins and "
-                << boxes << " boxes" << endl;
+                << boxes << " boxes" << std::endl;
       }
     }
 
@@ -286,7 +286,7 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
           sizeOfDim *= _grid.getNBoxes();
         }
         oocoutP(nullptr, Integration) << "RooMCIntegrator: still working ... iteration "
-            << it << '/' << iterations << "  box " << index << "/"<< std::pow(_grid.getNBoxes(), _grid.getDimension()) << endl;
+            << it << '/' << iterations << "  box " << index << "/"<< std::pow(_grid.getNBoxes(), _grid.getDimension()) << std::endl;
         _timer.Start(true);
       }
       else {
@@ -328,9 +328,9 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
       cum_int += (intgrl - cum_int) / (it + 1.0);
       cum_sig = 0.0;
     }
-    oocxcoutD((TObject*)nullptr,Integration) << "=== Iteration " << _it_num << " : I = " << intgrl << " +/- " << sqrt(sig) << endl
+    oocxcoutD((TObject*)nullptr,Integration) << "=== Iteration " << _it_num << " : I = " << intgrl << " +/- " << sqrt(sig) << std::endl
                  << "    Cumulative : I = " << cum_int << " +/- " << cum_sig << "( chi2 = " << _chisq
-                 << ")" << endl;
+                 << ")" << std::endl;
     // print the grid after the final iteration
     if (oodologD((TObject*)nullptr,Integration)) {
       if(it + 1 == iterations) _grid.print(std::cout, true);

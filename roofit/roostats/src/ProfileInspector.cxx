@@ -34,7 +34,7 @@ Utility class to plot conditional MLE of nuisance parameters vs. Parameters of I
 ClassImp(RooStats::ProfileInspector);
 
 using namespace RooStats;
-using std::cout, std::endl, std::string, std::map;
+using std::string, std::map;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -72,24 +72,24 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
 
 
   if(!poi_set){
-    cout << "no parameters of interest" << endl;
+    std::cout << "no parameters of interest" << std::endl;
     return nullptr;
   }
 
   if(poi_set->size()!=1){
-    cout << "only one parameter of interest is supported currently" << endl;
+    std::cout << "only one parameter of interest is supported currently" << std::endl;
     return nullptr;
   }
   RooRealVar* poi = static_cast<RooRealVar*>(poi_set->first());
 
 
   if(!nuis_params){
-    cout << "no nuisance parameters" << endl;
+    std::cout << "no nuisance parameters" << std::endl;
     return nullptr;
   }
 
   if(!pdf){
-    cout << "pdf not set" << endl;
+    std::cout << "pdf not set" << std::endl;
     return nullptr;
   }
 

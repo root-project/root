@@ -50,8 +50,6 @@ where Q denotes the charge of the \f$\rho\f$ meson.
 #include "TMath.h"
 #include "RooRealIntegral.h"
 
-using std::cout, std::endl;
-
 ClassImp(RooNonCPEigenDecay);
 
 #define Debug_RooNonCPEigenDecay 1
@@ -356,8 +354,8 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
     _genB0Frac = b0Int1/sumInt1;
 
     if (Debug_RooNonCPEigenDecay == 1) {
-       cout << "     o RooNonCPEigenDecay::initgenerator: genB0Frac     : " << _genB0Frac
-            << ", tag dilution: " << (1 - 2 * _avgW) << endl;
+       std::cout << "     o RooNonCPEigenDecay::initgenerator: genB0Frac     : " << _genB0Frac
+            << ", tag dilution: " << (1 - 2 * _avgW) << std::endl;
     }
   }
 
@@ -373,7 +371,7 @@ void RooNonCPEigenDecay::initGenerator( Int_t code )
     _genRhoPlusFrac = b0Int2/sumInt2;
 
     if (Debug_RooNonCPEigenDecay == 1) {
-       cout << "     o RooNonCPEigenDecay::initgenerator: genRhoPlusFrac: " << _genRhoPlusFrac << endl;
+       std::cout << "     o RooNonCPEigenDecay::initgenerator: genRhoPlusFrac: " << _genRhoPlusFrac << std::endl;
     }
   }
 }

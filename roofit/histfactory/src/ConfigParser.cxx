@@ -31,7 +31,7 @@
 using namespace RooStats;
 using namespace HistFactory;
 
-using std::string, std::cerr, std::cout, std::endl, std::vector;
+using std::string, std::vector;
 
 namespace {
 
@@ -135,7 +135,7 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
 
 
     // Read the Driver XML File
-    cxcoutIHF << "reading input : " << input << endl;
+    cxcoutIHF << "reading input : " << input << std::endl;
     TXMLDocument* xmldoc = xmlparser.GetXMLDocument();
     TXMLNode* rootNode = xmldoc->GetRootNode();
 
@@ -164,7 +164,7 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
 
       else if( attrName == TString( "OutputFilePrefix" ) ) {
    OutputFilePrefix = string(curAttr->GetValue());
-   cxcoutIHF << "output file prefix is : " << OutputFilePrefix << endl;
+   cxcoutIHF << "output file prefix is : " << OutputFilePrefix << std::endl;
       }
 
       /*
@@ -204,7 +204,7 @@ std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsF
 
     // If no channel xml files are found, exit
     if(xml_channel_files.empty()){
-      cerr << "no input channels found" << endl;
+      std::cerr << "no input channels found" << std::endl;
       throw hf_exc();
       //return measurement_list;
     }
@@ -378,7 +378,7 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode(TXMLNode 
       } else if (curAttrName == "BinHigh") {
          measurement.SetBinHigh(std::stoi(curAttrValue));
       } else if (curAttrName == "Mode") {
-         cout << "\n INFO: Mode attribute is deprecated and no longer supported, will ignore\n";
+         std::cout << "\n INFO: Mode attribute is deprecated and no longer supported, will ignore\n";
       } else if (curAttrName == "ExportOnly") {
          // ignored
          cxcoutIHF << "The \"ExportOnly\" attribute is ignored it is always \"true\" for any Measurement." << std::endl;
@@ -824,7 +824,7 @@ HistFactory::StatErrorConfig ConfigParser::CreateStatErrorConfigElement( TXMLNod
       else if( IsAcceptableNode( node ) ) { ; }
 
       else {
-   cout << "Invalid Stat Constraint Type: " << curAttr->GetValue() << endl;
+   std::cout << "Invalid Stat Constraint Type: " << curAttr->GetValue() << std::endl;
    throw hf_exc();
       }
     }
@@ -1357,7 +1357,7 @@ HistFactory::ShapeSys ConfigParser::MakeShapeSys( TXMLNode* node ) {
    shapeSys.SetConstraintType( Constraint::Poisson );
       }
       else {
-   cout << "Error: Encountered unknown ShapeSys Constraint type: " << attrVal << endl;
+   std::cout << "Error: Encountered unknown ShapeSys Constraint type: " << attrVal << std::endl;
    throw hf_exc();
       }
     }
@@ -1527,7 +1527,7 @@ RooStats::HistFactory::PreprocessFunction ConfigParser::ParseFunctionConfig( TXM
 
   //std::string command = "expr::"+func.GetName()+"('"+func.GetExpression()+"',{"+func.GetDependents()+"})";
   //func.SetCommand( command );
-  // //  cout << "will pre-process this line " << ret <<endl;
+  // //  std::cout << "will pre-process this line " << ret << std::endl;
   return func;
 
 }

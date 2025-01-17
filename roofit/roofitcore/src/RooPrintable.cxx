@@ -39,7 +39,7 @@ given a Print() option string.
 #include "TNamed.h"
 #include "TClass.h"
 
-using std::ostream, std::cout, std::endl, std::setw;
+using std::ostream, std::setw;
 
 ClassImp(RooPrintable);
 
@@ -139,7 +139,7 @@ void RooPrintable::printStream(ostream& os, Int_t contents, StyleOption style, T
     }
   }
 
-  if (style!=kInline) os << endl ;
+  if (style!=kInline) os << std::endl ;
 
 }
 
@@ -175,7 +175,7 @@ void RooPrintable::printMultiline(ostream& /*os*/, Int_t /*contents*/, bool /*ve
 
 void RooPrintable::printTree(ostream& /*os*/, TString /*indent*/) const
 {
-  cout << "Tree structure printing not implement for class " << IsA()->GetName() << endl ;
+  std::cout << "Tree structure printing not implement for class " << IsA()->GetName() << std::endl ;
 }
 
 
@@ -266,9 +266,9 @@ RooPrintable::StyleOption RooPrintable::defaultPrintStyle(Option_t* opt) const
 /// method allows subclasses to provide an inline implementation of
 /// Print() without pulling in iostream.h.
 
-ostream &RooPrintable::defaultPrintStream(ostream *os)
+ostream &RooPrintable::defaultPrintStream(std::ostream *os)
 {
-  static ostream *_defaultPrintStream = &cout;
+  static ostream *_defaultPrintStream = &std::cout;
 
   ostream& _oldDefault= *_defaultPrintStream;
   if(nullptr != os) _defaultPrintStream= os;

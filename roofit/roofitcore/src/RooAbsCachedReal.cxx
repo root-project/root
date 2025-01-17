@@ -118,7 +118,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
   if (cache) {
     if (cache->paramTracker()->hasChanged(true)) {
       ccoutD(Eval) << "RooAbsCachedReal::getCache(" << GetName() << ") cached function "
-        << cache->func()->GetName() << " requires recalculation as parameters changed" << endl ;
+        << cache->func()->GetName() << " requires recalculation as parameters changed" << std::endl ;
       fillCacheObject(*cache) ;
       cache->func()->setValueDirty() ;
     }
@@ -151,7 +151,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
 
   // Store this cache configuration
   Int_t code = _cacheMgr.setObj(nset,nullptr,((RooAbsCacheElement*)cache),nullptr) ;
-  ccoutD(Caching) << "RooAbsCachedReal("<<this<<")::getCache(" << GetName() << ") creating new cache " << cache->func()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code << endl ;
+  ccoutD(Caching) << "RooAbsCachedReal("<<this<<")::getCache(" << GetName() << ") creating new cache " << cache->func()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code << std::endl ;
 
   return cache ;
 }
@@ -286,7 +286,7 @@ RooArgList RooAbsCachedReal::FuncCacheElem::containedArgs(Action)
 void RooAbsCachedReal::FuncCacheElem::printCompactTreeHook(ostream& os, const char* indent, Int_t curElem, Int_t maxElem)
 {
   if (curElem==0) {
-    os << indent << "--- RooAbsCachedReal begin cache ---" << endl ;
+    os << indent << "--- RooAbsCachedReal begin cache ---" << std::endl ;
   }
 
   TString indent2(indent) ;
@@ -294,7 +294,7 @@ void RooAbsCachedReal::FuncCacheElem::printCompactTreeHook(ostream& os, const ch
   func()->printCompactTree(os,indent2) ;
 
   if (curElem==maxElem) {
-    os << indent << "--- RooAbsCachedReal end cache --- " << endl ;
+    os << indent << "--- RooAbsCachedReal end cache --- " << std::endl ;
   }
 }
 

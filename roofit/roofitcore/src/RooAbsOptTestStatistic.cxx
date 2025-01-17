@@ -208,14 +208,14 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
     if (!realReal->getBinning().lowBoundFunc() && realReal->getMin()<(datReal->getMin()-1e-6)) {
       coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR minimum of FUNC observable " << arg->GetName()
                  << "(" << realReal->getMin() << ") is smaller than that of "
-                 << arg->GetName() << " in the dataset (" << datReal->getMin() << ")" << endl ;
+                 << arg->GetName() << " in the dataset (" << datReal->getMin() << ")" << std::endl ;
       RooErrorHandler::softAbort() ;
       return ;
     }
 
     if (!realReal->getBinning().highBoundFunc() && realReal->getMax()>(datReal->getMax()+1e-6)) {
       coutE(InputArguments) << "RooAbsOptTestStatistic: ERROR maximum of FUNC observable " << arg->GetName()
-                 << " is larger than that of " << arg->GetName() << " in the dataset" << endl ;
+                 << " is larger than that of " << arg->GetName() << " in the dataset" << std::endl ;
       RooErrorHandler::softAbort() ;
       return ;
     }
@@ -224,7 +224,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   // Copy data and strip entries lost by adjusted fit range, _dataClone ranges will be copied from realDepSet ranges
   if (rangeName && strlen(rangeName)) {
     _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(RooFit::SelectVars(*_funcObsSet),RooFit::CutRange(rangeName))}.release();
-    //     cout << "RooAbsOptTestStatistic: reducing dataset to fit in range named " << rangeName << " resulting dataset has " << _dataClone->sumEntries() << " events" << endl ;
+    //     std::cout << "RooAbsOptTestStatistic: reducing dataset to fit in range named " << rangeName << " resulting dataset has " << _dataClone->sumEntries() << " events" << std::endl ;
   } else {
     _dataClone = static_cast<RooAbsData*>(indata.Clone()) ;
   }
@@ -237,7 +237,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
   std::unique_ptr<RooArgSet> origObsSet( real.getObservables(indata) );
   if (rangeName && strlen(rangeName)) {
-    cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") constructing test statistic for sub-range named " << rangeName << endl ;
+    cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") constructing test statistic for sub-range named " << rangeName << std::endl ;
 
     if(auto pdfClone = dynamic_cast<RooAbsPdf*>(_funcClone)) {
        pdfClone->setNormRange(rangeName);
@@ -277,7 +277,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
     if (addCoefRangeName && strlen(addCoefRangeName)) {
       cxcoutI(Fitting) << "RooAbsOptTestStatistic::ctor(" << GetName()
-                 << ") fixing interpretation of coefficients of any RooAddPdf component to range " << addCoefRangeName << endl ;
+                 << ") fixing interpretation of coefficients of any RooAddPdf component to range " << addCoefRangeName << std::endl ;
       _funcClone->fixAddCoefRange(addCoefRangeName,false) ;
     }
   }
@@ -311,7 +311,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
 
   coutI(Optimization) << "RooAbsOptTestStatistic::ctor(" << GetName() << ") optimizing internal clone of p.d.f for likelihood evaluation."
-      << "Lazy evaluation and associated change tracking will disabled for all nodes that depend on observables" << endl ;
+      << "Lazy evaluation and associated change tracking will disabled for all nodes that depend on observables" << std::endl ;
 
 
   // *********************************************************************
@@ -403,7 +403,7 @@ void RooAbsOptTestStatistic::printCompactTreeHook(ostream& os, const char* inden
   TString indent2(indent) ;
   indent2 += "opt >>" ;
   _funcClone->printCompactTree(os,indent2.Data()) ;
-  os << indent2 << " dataset clone = " << _dataClone << " first obs = " << _dataClone->get()->first() << endl ;
+  os << indent2 << " dataset clone = " << _dataClone << " first obs = " << _dataClone->get()->first() << std::endl ;
 }
 
 
@@ -417,7 +417,7 @@ void RooAbsOptTestStatistic::printCompactTreeHook(ostream& os, const char* inden
 
 void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt)
 {
-  //   cout << "ROATS::constOpt(" << GetName() << ") funcClone structure dump BEFORE const-opt" << endl ;
+  //   std::cout << "ROATS::constOpt(" << GetName() << ") funcClone structure dump BEFORE const-opt" << std::endl ;
   //   _funcClone->Print("t") ;
 
   RooAbsTestStatistic::constOptimizeTestStatistic(opcode,doAlsoTrackingOpt);
@@ -426,7 +426,7 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, bool
   if (_dataClone->hasFilledCache() && _dataClone->store()->cacheOwner()!=this) {
     if (opcode==Activate) {
       cxcoutW(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName()
-             << ") dataset cache is owned by another object, no constant term optimization can be applied" << endl ;
+             << ") dataset cache is owned by another object, no constant term optimization can be applied" << std::endl ;
     }
     return ;
   }
@@ -434,7 +434,7 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, bool
   if (!allowFunctionCache()) {
     if (opcode==Activate) {
       cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName()
-             << ") function caching prohibited by test statistic, no constant term optimization is applied" << endl ;
+             << ") function caching prohibited by test statistic, no constant term optimization is applied" << std::endl ;
     }
     return ;
   }
@@ -447,34 +447,34 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, bool
   case Activate:
     cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName()
            << ") optimizing evaluation of test statistic by finding all nodes in p.d.f that depend exclusively"
-           << " on observables and constant parameters and precalculating their values" << endl ;
+           << " on observables and constant parameters and precalculating their values" << std::endl ;
     optimizeConstantTerms(true,doAlsoTrackingOpt) ;
     break ;
 
   case DeActivate:
     cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName()
-           << ") deactivating optimization of constant terms in test statistic" << endl ;
+           << ") deactivating optimization of constant terms in test statistic" << std::endl ;
     optimizeConstantTerms(false) ;
     break ;
 
   case ConfigChange:
     cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName()
            << ") one ore more parameter were changed from constant to floating or vice versa, "
-           << "re-evaluating constant term optimization" << endl ;
+           << "re-evaluating constant term optimization" << std::endl ;
     optimizeConstantTerms(false) ;
     optimizeConstantTerms(true,doAlsoTrackingOpt) ;
     break ;
 
   case ValueChange:
     cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName()
-           << ") the value of one ore more constant parameter were changed re-evaluating constant term optimization" << endl ;
+           << ") the value of one ore more constant parameter were changed re-evaluating constant term optimization" << std::endl ;
     // Request a forcible cache update of all cached nodes
     _dataClone->store()->forceCacheUpdate() ;
 
     break ;
   }
 
-//   cout << "ROATS::constOpt(" << GetName() << ") funcClone structure dump AFTER const-opt" << endl ;
+//   std::cout << "ROATS::constOpt(" << GetName() << ") funcClone structure dump AFTER const-opt" << std::endl ;
 //   _funcClone->Print("t") ;
 }
 
@@ -491,7 +491,7 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, bool
 
 void RooAbsOptTestStatistic::optimizeCaching()
 {
-//   cout << "RooAbsOptTestStatistic::optimizeCaching(" << GetName() << "," << this << ")" << endl ;
+//   std::cout << "RooAbsOptTestStatistic::optimizeCaching(" << GetName() << "," << this << ")" << std::endl ;
 
   // Trigger create of all object caches now in nodes that have deferred object creation
   // so that cache contents can be processed immediately
@@ -534,12 +534,12 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrac
     //  WVE - Patch to allow customization of optimization level per component pdf
     if (_funcClone->getAttribute("NoOptimizeLevel1")) {
       coutI(Minimization) << " Optimization customization: Level-1 constant-term optimization prohibited by attribute NoOptimizeLevel1 set on top-level pdf  "
-                          << _funcClone->ClassName() << "::" << _funcClone->GetName() << endl ;
+                          << _funcClone->ClassName() << "::" << _funcClone->GetName() << std::endl ;
       return ;
     }
     if (_funcClone->getAttribute("NoOptimizeLevel2")) {
       coutI(Minimization) << " Optimization customization: Level-2 constant-term optimization prohibited by attribute NoOptimizeLevel2 set on top-level pdf  "
-                          << _funcClone->ClassName() << "::" << _funcClone->GetName() << endl ;
+                          << _funcClone->ClassName() << "::" << _funcClone->GetName() << std::endl ;
       applyTrackingOpt=false ;
     }
 
@@ -556,7 +556,7 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrac
       if (!dynamic_cast<RooVectorDataStore*>(_dataClone->store())) {
         coutW(Optimization) << "RooAbsOptTestStatistic::optimizeConstantTerms(" << GetName()
                      << ") WARNING Cache-and-track optimization (Optimize level 2) is only available for datasets"
-                     << " implement in terms of RooVectorDataStore - ignoring this option for current dataset" << endl ;
+                     << " implement in terms of RooVectorDataStore - ignoring this option for current dataset" << std::endl ;
         applyTrackingOpt = false ;
       }
     }
@@ -592,16 +592,16 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(bool activate, bool applyTrac
     actualTrackNodes.remove(*constNodes) ;
     if (!constNodes->empty()) {
       if (constNodes->size()<20) {
-        coutI(Minimization) << " The following expressions have been identified as constant and will be precalculated and cached: " << *constNodes << endl ;
+        coutI(Minimization) << " The following expressions have been identified as constant and will be precalculated and cached: " << *constNodes << std::endl ;
       } else {
-        coutI(Minimization) << " A total of " << constNodes->size() << " expressions have been identified as constant and will be precalculated and cached." << endl ;
+        coutI(Minimization) << " A total of " << constNodes->size() << " expressions have been identified as constant and will be precalculated and cached." << std::endl ;
       }
     }
     if (!actualTrackNodes.empty()) {
       if (actualTrackNodes.size()<20) {
-        coutI(Minimization) << " The following expressions will be evaluated in cache-and-track mode: " << actualTrackNodes << endl ;
+        coutI(Minimization) << " The following expressions will be evaluated in cache-and-track mode: " << actualTrackNodes << std::endl ;
       } else {
-        coutI(Minimization) << " A total of " << constNodes->size() << " expressions will be evaluated in cache-and-track-mode." << endl ;
+        coutI(Minimization) << " A total of " << constNodes->size() << " expressions will be evaluated in cache-and-track-mode." << std::endl ;
       }
     }
 
@@ -642,11 +642,11 @@ bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bo
 {
 
   if (operMode()==SimMaster) {
-    //cout << "ROATS::setDataSlave() ERROR this is SimMaster _funcClone = " << _funcClone << endl ;
+    //cout << "ROATS::setDataSlave() ERROR this is SimMaster _funcClone = " << _funcClone << std::endl ;
     return false ;
   }
 
-  //cout << "ROATS::setDataSlave() new dataset size = " << indata.numEntries() << endl ;
+  //cout << "ROATS::setDataSlave() new dataset size = " << indata.numEntries() << std::endl ;
   //indata.Print("v") ;
 
 
@@ -663,7 +663,7 @@ bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bo
 
   if (!cloneData && !_rangeName.empty()) {
     coutW(InputArguments) << "RooAbsOptTestStatistic::setData(" << GetName() << ") WARNING: test statistic was constructed with range selection on data, "
-          << "ignoring request to _not_ clone the input dataset" << endl ;
+          << "ignoring request to _not_ clone the input dataset" << std::endl ;
     cloneData = true ;
   }
 
@@ -720,7 +720,7 @@ RooAbsData& RooAbsOptTestStatistic::data()
     bool notice = (sealNotice() && strlen(sealNotice())) ;
     coutW(ObjectHandling) << "RooAbsOptTestStatistic::data(" << GetName()
            << ") WARNING: object sealed by creator - access to data is not permitted: "
-           << (notice?sealNotice():"<no user notice>") << endl ;
+           << (notice?sealNotice():"<no user notice>") << std::endl ;
     static RooDataSet dummy ("dummy","dummy",RooArgSet()) ;
     return dummy ;
   }
@@ -736,7 +736,7 @@ const RooAbsData& RooAbsOptTestStatistic::data() const
     bool notice = (sealNotice() && strlen(sealNotice())) ;
     coutW(ObjectHandling) << "RooAbsOptTestStatistic::data(" << GetName()
            << ") WARNING: object sealed by creator - access to data is not permitted: "
-           << (notice?sealNotice():"<no user notice>") << endl ;
+           << (notice?sealNotice():"<no user notice>") << std::endl ;
     static RooDataSet dummy ("dummy","dummy",RooArgSet()) ;
     return dummy ;
   }

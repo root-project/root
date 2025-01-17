@@ -78,7 +78,7 @@ bool RooThresholdCategory::addThreshold(double upperLimit, const char* catName, 
   for (const auto& thresh : _threshList) {
     if (thresh.first == upperLimit) {
       coutW(InputArguments) << "RooThresholdCategory::addThreshold(" << GetName()
-             << ") threshold at " << upperLimit << " already defined" << endl ;
+             << ") threshold at " << upperLimit << " already defined" << std::endl ;
       return true;
     }
   }
@@ -152,11 +152,11 @@ void RooThresholdCategory::printMultiline(ostream& os, Int_t content, bool verbo
    RooAbsCategory::printMultiline(os,content,verbose,indent);
 
    if (verbose) {
-     os << indent << "--- RooThresholdCategory ---" << endl
+     os << indent << "--- RooThresholdCategory ---" << std::endl
    << indent << "  Maps from " ;
      _inputVar.arg().printStream(os,0,kStandard);
 
-     os << indent << "  Threshold list" << endl ;
+     os << indent << "  Threshold list" << std::endl ;
      for (const auto& thresh : _threshList) {
        os << indent << "    input < " << thresh.first << " --> " ;
        os << lookupName(thresh.second) << '[' << thresh.second << "]\n";

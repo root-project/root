@@ -273,7 +273,7 @@ RooSimultaneous::initialize(std::string const& name, RooAbsCategoryLValue &inInd
         string superLabel = superIndex->getCurrentLabel() ;
         out->addPdf(*citem.second.pdf,superLabel);
         oocxcoutD(static_cast<RooAbsArg*>(nullptr), InputArguments) << msgPrefix
-                << "assigning pdf " << citem.second.pdf->GetName() << " to super label " << superLabel << endl ;
+                << "assigning pdf " << citem.second.pdf->GetName() << " to super label " << superLabel << std::endl ;
       }
     } else {
 
@@ -291,11 +291,11 @@ RooSimultaneous::initialize(std::string const& name, RooAbsCategoryLValue &inInd
             out->addPdf(*compPdf,superLabel);
             oocxcoutD(static_cast<RooAbsArg*>(nullptr), InputArguments) << msgPrefix
                     << "assigning pdf " << compPdf->GetName() << "(member of " << citem.second.pdf->GetName()
-                    << ") to super label " << superLabel << endl ;
+                    << ") to super label " << superLabel << std::endl ;
           } else {
             oocoutW(nullptr, InputArguments) << msgPrefix << "WARNING: No p.d.f. associated with label "
                 << type.second << " for component RooSimultaneous p.d.f " << citem.second.pdf->GetName()
-                << "which is associated with master index label " << citem.first << endl ;
+                << "which is associated with master index label " << citem.first << std::endl ;
           }
         }
 
@@ -317,11 +317,11 @@ RooSimultaneous::initialize(std::string const& name, RooAbsCategoryLValue &inInd
               out->addPdf(*compPdf,superLabel);
               oocxcoutD(static_cast<RooAbsArg*>(nullptr), InputArguments) << msgPrefix
                       << "assigning pdf " << compPdf->GetName() << "(member of " << citem.second.pdf->GetName()
-                      << ") to super label " << superLabel << endl ;
+                      << ") to super label " << superLabel << std::endl ;
             } else {
               oocoutW(nullptr, InputArguments) << msgPrefix << "WARNING: No p.d.f. associated with label "
                   << stype.second << " for component RooSimultaneous p.d.f " << citem.second.pdf->GetName()
-                  << "which is associated with master index label " << citem.first << endl ;
+                  << "which is associated with master index label " << citem.first << std::endl ;
             }
           }
         }
@@ -392,14 +392,14 @@ bool RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
   // PDFs cannot overlap with the index category
   if (pdf.dependsOn(_indexCat.arg())) {
     coutE(InputArguments) << "RooSimultaneous::addPdf(" << GetName() << "): PDF '" << pdf.GetName()
-           << "' overlaps with index category '" << _indexCat.arg().GetName() << "'."<< endl ;
+           << "' overlaps with index category '" << _indexCat.arg().GetName() << "'."<< std::endl ;
     return true ;
   }
 
   // Each index state can only have one PDF associated with it
   if (_pdfProxyList.FindObject(catLabel)) {
     coutE(InputArguments) << "RooSimultaneous::addPdf(" << GetName() << "): index state '"
-           << catLabel << "' has already an associated PDF." << endl ;
+           << catLabel << "' has already an associated PDF." << std::endl ;
     return true ;
   }
 
@@ -408,7 +408,7 @@ bool RooSimultaneous::addPdf(const RooAbsPdf& pdf, const char* catLabel)
 
     coutE(InputArguments) << "RooSimultaneous::addPdf(" << GetName()
            << ") ERROR: you cannot add a RooSimultaneous component to a RooSimultaneous using addPdf()."
-           << " Use the constructor with RooArgList if input p.d.f.s or the map<string,RooAbsPdf&> instead." << endl ;
+           << " Use the constructor with RooArgList if input p.d.f.s or the map<string,RooAbsPdf&> instead." << std::endl ;
     return true ;
 
   } else {
@@ -646,7 +646,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
   // Check if we have a projection dataset
   if (!projData) {
-    coutE(InputArguments) << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: must have a projection dataset for index category" << endl ;
+    coutE(InputArguments) << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: must have a projection dataset for index category" << std::endl ;
     return frame ;
   }
 
@@ -662,7 +662,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
         projectedVars.remove(*arg) ;
       } else {
         coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") slice variable "
-            << sliceArg->GetName() << " was not projected anyway" << endl ;
+            << sliceArg->GetName() << " was not projected anyway" << std::endl ;
       }
     }
   } else if (projSet) {
@@ -675,12 +675,12 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
   if (!_indexCat.arg().isDerived()) {
     // *** Error checking for a fundamental index category ***
-    //cout << "RooSim::plotOn: index is fundamental" << endl ;
+    //cout << "RooSim::plotOn: index is fundamental" << std::endl ;
 
     // Check that the provided projection dataset contains our index variable
     if (!projData->get()->find(_indexCat.arg().GetName())) {
       coutE(Plotting) << "RooSimultaneous::plotOn(" << GetName() << ") ERROR: Projection over index category "
-            << "requested, but projection data set doesn't contain index category" << endl ;
+            << "requested, but projection data set doesn't contain index category" << std::endl ;
       return frame ;
     }
 
@@ -717,7 +717,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     if (!allServers) {
       coutE(Plotting) << "RooSimultaneous::plotOn(" << GetName()
           << ") ERROR: Projection dataset doesn't contain complete set of index categories to do projection."
-          << "\n\tcategory " << missing << " is missing." << endl ;
+          << "\n\tcategory " << missing << " is missing." << std::endl ;
       return frame ;
     }
 
@@ -743,7 +743,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   if (!projIndex) {
 
     coutI(Plotting) << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName()
-          << " represents a slice in the index category ("  << _indexCat.arg().GetName() << ")" << endl ;
+          << " represents a slice in the index category ("  << _indexCat.arg().GetName() << ")" << std::endl ;
 
     // Reduce projData: take out fitCat (component) columns and entries that don't match selected slice
     // Construct cut string to only select projection data event that match the current slice
@@ -875,18 +875,18 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
   if (_indexCat.arg().isDerived() && !idxCompSliceSet->empty()) {
     coutI(Plotting) << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName()
-          << " represents a slice in index category components " << *idxCompSliceSet << endl ;
+          << " represents a slice in index category components " << *idxCompSliceSet << std::endl ;
 
     RooArgSet idxCompProjSet;
     _indexCat.arg().getObservables(frame->getNormVars(), idxCompProjSet) ;
     idxCompProjSet.remove(*idxCompSliceSet,true,true) ;
     if (!idxCompProjSet.empty()) {
       coutI(Plotting) << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName()
-            << " averages with data index category components " << idxCompProjSet << endl ;
+            << " averages with data index category components " << idxCompProjSet << std::endl ;
     }
   } else {
     coutI(Plotting) << "RooSimultaneous::plotOn(" << GetName() << ") plot on " << frame->getPlotVar()->GetName()
-          << " averages with data index category (" << _indexCat.arg().GetName() << ")" << endl ;
+          << " averages with data index category (" << _indexCat.arg().GetName() << ")" << std::endl ;
   }
 
 
@@ -982,7 +982,7 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDa
     if (!proxy) {
       coutE(InputArguments) << "RooSimultaneous::genContext(" << GetName()
              << ") ERROR: no PDF associated with current state ("
-             << _indexCat.arg().GetName() << "=" << _indexCat.arg().getCurrentLabel() << ")" << endl ;
+             << _indexCat.arg().GetName() << "=" << _indexCat.arg().getCurrentLabel() << ")" << std::endl ;
       return nullptr;
     }
     return static_cast<RooAbsPdf*>(proxy->absArg())->genContext(vars,prototype,auxProto,verbose) ;
