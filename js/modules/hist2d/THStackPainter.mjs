@@ -282,7 +282,8 @@ class THStackPainter extends ObjectPainter {
       const d = new DrawOptions(opt);
 
       this.options.nostack = d.check('NOSTACK');
-      if (d.check('STACK')) this.options.nostack = false;
+      if (d.check('STACK'))
+         this.options.nostack = false;
       this.options.same = d.check('SAME');
 
       d.check('NOCLEAR'); // ignore option

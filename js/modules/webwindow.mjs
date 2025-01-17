@@ -340,8 +340,10 @@ class WebWindowHandle {
       if (!force_queue && (!this.msgqueue || !this.msgqueue.length))
          return this.invokeReceiver(false, 'onWebsocketMsg', msg, len);
 
-      if (!this.msgqueue) this.msgqueue = [];
-      if (force_queue) len = undefined;
+      if (!this.msgqueue)
+         this.msgqueue = [];
+      if (force_queue)
+         len = undefined;
 
       this.msgqueue.push({ ready: true, msg, len });
    }
@@ -566,6 +568,10 @@ class WebWindowHandle {
      * @param [href] - optional URL to widget, use document URL instead
      * @private */
    connect(href) {
+      // ignore connect if channel from master connection configured
+      if (this.master && this.channelid)
+         return;
+
       this.close();
 
       if (href) {
