@@ -936,6 +936,13 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       auto widget = AddWidget(msg);
       if (widget)
          fWebWindow->Send(connid, NewWidgetMsg(widget));
+   } else if (kind == "NEWCHANNEL") {
+      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(msg);
+      if (arr && (arr->size() == 2)) {
+         auto widget = FindWidget((*arr)[0]);
+         if (widget)
+            RWebWindow::ShowWindow(widget->GetWindow(), { fWebWindow, connid, std::stoi((*arr)[1]) });
+      }
    } else if (kind == "CDWORKDIR") {
       auto wrkdir = Browsable::RSysFile::GetWorkingPath();
       if (fBrowsable.GetWorkingPath() != wrkdir) {

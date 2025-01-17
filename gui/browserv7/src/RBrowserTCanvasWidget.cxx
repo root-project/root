@@ -189,14 +189,23 @@ public:
 
    void Show(const std::string &arg) override
    {
+      // cannot be used
+
       if (CheckCanvasPointer())
          fWebCanvas->ShowWebWindow(arg);
    }
 
-   std::string GetUrl() override
+   std::shared_ptr<RWebWindow> GetWindow() override
    {
       if (CheckCanvasPointer())
-         return fWebCanvas->GetWebWindow()->GetUrl(false);
+         return fWebCanvas->GetWebWindow();
+      return nullptr;
+   }
+
+   std::string GetUrl() override
+   {
+      // if (CheckCanvasPointer())
+      //    return fWebCanvas->GetWebWindow()->GetUrl(false);
       return ""s;
    }
 

@@ -12,6 +12,7 @@ ROOT_LINKER_LIBRARY(ROOTBrowserWidgets
      src/RBrowserWidget.cxx
   DEPENDENCIES
      ROOTBrowsable
+     ROOTWebDisplay
 )
 
 ROOT_LINKER_LIBRARY(ROOTBrowserTCanvasWidget
