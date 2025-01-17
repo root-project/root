@@ -82,7 +82,10 @@ These examples shows some of the ratioplots
 |hist015_TH1_read_and_draw.C|hist015_TH1_read_and_draw.py|Read a 1D histogram from a ROOT File and draw it.|
 |hist016_TH1_different_scales_canvas.C||Draw two histograms on one canva using different y-axis scales.|
 |hist017_TH1_smooth.C||Histogram smoothing.|
-|hist060_TH1_Stats.C||Edit statistics box.|
+|hist060_TH1_stats.C||Edit statistics box.|
+|hist061_TH1_timeonaxis.C||Use a time axis as an x axis.|
+|hist062_TH1_timeonaxis2.C||Use a time axis as an x axis and use a time offset.|
+|hist063_TH1_seism.C||Use a time axis as an x axis to show sine signal as a strip chart.|
 |hist101_TH1_autobinning.C||Fill multiple histograms with different functions and automatic binning.|
 
 \anchor th2
@@ -164,8 +167,6 @@ These examples shows some of the ratioplots
 |hist051_Graphics_candle_plot_stack.C|Create a THStack with candle plot option.|
 |hist052_Graphics_candle_plot_whiskers.C|Create a candle plot showing the whiskers definition.|
 |hist053_Graphics_candle_scaled.C|Illustrate what scaling effects on candle and violin charts.|
-|hist054_Graphics_logscales.C|Draw parametric functions with log scales.|
-|hist055_Graphics_xyplot.C|Draw a curve in an orthogonal axis system.|
 
 \anchor texec
 

@@ -315,7 +315,7 @@ display plots using different palettes on the same pad.
 The tutorial multipalette.C illustrates this feature.
 
 Begin_Macro(source)
-../../../tutorials/visualisation/graphs/multipalette.C
+../../../tutorials/visualisation/graphics/multipalette.C
 End_Macro
 
 \since **6.26:**

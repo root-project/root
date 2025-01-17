@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_hist
+/// \ingroup tutorial_graphics
 /// \notebook
 /// Example showing how to produce a plot with an orthogonal axis system
 /// centered at (0,0).
@@ -10,7 +10,7 @@
 /// \date January 2017
 /// \author Olivier Couet
 
-void hist055_Graphics_xyplot()
+void xyplot()
 {
    TCanvas *c = new TCanvas("c", "XY plot", 200, 10, 700, 500);
 
