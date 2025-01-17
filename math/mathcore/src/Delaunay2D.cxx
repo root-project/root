@@ -180,7 +180,8 @@ void Delaunay2D::DoFindTriangles() {
    std::vector<CDT::V2d<double>> points(fNpoints);
    for (i = 0; i < fNpoints; ++i) points[i] = CDT::V2d<double>::make(fXN[i], fYN[i]);
    CDT::RemoveDuplicates(points);
-   if (fNpoints-points.size() > 0) Warning("DoFindTriangles","This TGraph2D has duplicated vertices. To remove them call RemoveDuplicates before drawing");
+   if (fNpoints-points.size() > 0)
+      Warning("DoFindTriangles","This TGraph2D has duplicated vertices. To remove them call RemoveDuplicates before drawing");
 
    CDT::Triangulation<double> cdt;
    cdt.insertVertices(points);
