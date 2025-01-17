@@ -276,11 +276,29 @@ std::shared_ptr<RWebWindow::WebConn> RWebWindow::FindConnection(unsigned wsid)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Signal that connection is closing
+
+void RWebWindow::ClearConnection(std::shared_ptr<WebConn> &conn, bool provide_signal)
+{
+   if (!conn)
+      return;
+
+   if (provide_signal)
+      ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
+   for (auto &elem: conn->fEmbed) {
+      if (provide_signal)
+         elem.second->ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
+      elem.second->RemoveMasterConnection(conn->fConnId);
+   }
+
+   conn->fEmbed.clear();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Remove connection with given websocket id
 
-std::shared_ptr<RWebWindow::WebConn> RWebWindow::RemoveConnection(unsigned wsid)
+std::shared_ptr<RWebWindow::WebConn> RWebWindow::RemoveConnection(unsigned wsid, bool provide_signal)
 {
-
    std::shared_ptr<WebConn> res;
 
    {
@@ -296,15 +314,10 @@ std::shared_ptr<RWebWindow::WebConn> RWebWindow::RemoveConnection(unsigned wsid)
          }
    }
 
-   if (res) {
-      for (auto &elem: res->fEmbed)
-         elem.second->RemoveMasterConnection(res->fConnId);
-      res->fEmbed.clear();
-   }
+   ClearConnection(res, provide_signal);
 
    return res;
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Add new master connection
@@ -603,8 +616,7 @@ void RWebWindow::RemoveKey(const std::string &key)
    }
 
    for (auto &conn : lst)
-      if (conn->fActive)
-         ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
+      ClearConnection(conn, conn->fActive);
 }
 
 
@@ -684,8 +696,7 @@ void RWebWindow::CheckInactiveConnections()
    }
 
    for (auto &entry : clr)
-      ProvideQueueEntry(entry->fConnId, kind_Disconnect, ""s);
-
+      ClearConnection(entry, true);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -862,7 +873,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       return false;
    }
 
-   // special sequrity check for the longpoll requests
+   // special security check for the longpoll requests
    if(is_longpoll) {
       auto conn = FindConnection(arg.GetWSId());
       if (!conn)
@@ -884,10 +895,9 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
    if (arg.IsMethod("WS_CLOSE")) {
       // connection is closed, one can remove handle, associated window will be closed
 
-      auto conn = RemoveConnection(arg.GetWSId());
+      auto conn = RemoveConnection(arg.GetWSId(), true);
 
       if (conn) {
-         ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
          bool do_clear_on_close = false;
          if (!conn->fNewKey.empty()) {
             // case when same handle want to be reused by client with new key
@@ -1105,8 +1115,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
          ProvideQueueEntry(conn->fConnId, kind_Connect, ""s);
          conn->fReady = 10;
       } else {
-         ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
-         RemoveConnection(conn->fWSId);
+         RemoveConnection(conn->fWSId, true);
       }
    } else if (nchannel == 1) {
       ProvideQueueEntry(conn->fConnId, kind_Data, std::move(cdata));
@@ -1912,7 +1921,7 @@ unsigned RWebWindow::AddEmbedWindow(std::shared_ptr<RWebWindow> window, unsigned
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-/// Remove RWebWindow associated with the channelfEmbed
+/// Remove RWebWindow associated with the channel
 
 void RWebWindow::RemoveEmbedWindow(unsigned connid, int channel)
 {
@@ -1968,21 +1977,25 @@ unsigned RWebWindow::ShowWindow(std::shared_ptr<RWebWindow> window, const RWebDi
       return 0;
 
    if (args.GetBrowserKind() == RWebDisplayArgs::kEmbedded) {
-      if (args.fMaster && window->fMaster && window->fMaster != args.fMaster) {
+      auto master = args.fMaster;
+      while (master && master->fMaster)
+         master = master->fMaster;
+
+      if (master && window->fMaster && window->fMaster != master) {
          R__LOG_ERROR(WebGUILog()) << "Cannot use different master for same RWebWindow";
          return 0;
       }
 
-      unsigned connid = args.fMaster ? args.fMaster->AddEmbedWindow(window, args.fMasterConnection, args.fMasterChannel) : 0;
+      unsigned connid = master ? master->AddEmbedWindow(window, args.fMasterConnection, args.fMasterChannel) : 0;
 
       if (connid > 0) {
 
          window->RemoveMasterConnection(connid);
 
-         window->AddMasterConnection(args.fMaster, connid, args.fMasterChannel);
+         window->AddMasterConnection(master, connid, args.fMasterChannel);
 
          // inform client that connection is established and window initialized
-         args.fMaster->SubmitData(connid, true, "EMBED_DONE"s, args.fMasterChannel);
+         master->SubmitData(connid, true, "EMBED_DONE"s, args.fMasterChannel);
 
          // provide call back for window itself that connection is ready
          window->ProvideQueueEntry(connid, kind_Connect, ""s);
@@ -2037,7 +2050,7 @@ bool RWebWindow::EmbedFileDialog(const std::shared_ptr<RWebWindow> &window, unsi
 
 /////////////////////////////////////////////////////////////////////////////////////
 /// Calculate HMAC checksum for provided key and message
-/// Key combained from connection key and session key
+/// Key combined from connection key and session key
 
 std::string RWebWindow::HMAC(const std::string &key, const std::string &sessionKey, const char *msg, int msglen)
 {

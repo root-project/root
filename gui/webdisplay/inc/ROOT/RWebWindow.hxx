@@ -190,7 +190,9 @@ private:
    /// Find connection with specified websocket id
    std::shared_ptr<WebConn> FindConnection(unsigned wsid);
 
-   std::shared_ptr<WebConn> RemoveConnection(unsigned wsid);
+   void ClearConnection(std::shared_ptr<WebConn> &conn, bool provide_signal = false);
+
+   std::shared_ptr<WebConn> RemoveConnection(unsigned wsid, bool provide_signal = false);
 
    bool _CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &key, const std::string &ntry, bool remote, bool test_first_time);
 
