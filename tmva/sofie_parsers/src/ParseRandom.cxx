@@ -14,7 +14,7 @@ ParserFuncSignature ParseRandom = [](RModelParser_ONNX &parser, const onnx::Node
       opMode = kNormal;
 
 
-   ETensorType input_type = ETensorType::FLOAT;
+   ETensorType input_type = ETensorType::FLOAT; // default value
    std::string input_name;
    // case of NormalLike and UniformLike , type is given by the input
    if (nodeproto.input_size() > 0) {
