@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cstddef>     // std::size_t
+#include <cstdint>
 #include <stdexcept>   // std::runtime_error
 #include <sstream>     // std::stringstream
 #include <memory>      // std::shared_ptr
