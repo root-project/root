@@ -48,9 +48,9 @@ RooDataHistSliceIter::RooDataHistSliceIter(RooDataHist& hist, RooAbsArg& sliceAr
 
   _nStep = dynamic_cast<RooAbsLValue&>(*sliceArgInt).numBins() ;
 
-//   cout << "RooDataHistSliceIter" << endl ;
+//   std::cout << "RooDataHistSliceIter" << std::endl ;
 //   hist.Print() ;
-//   cout << "hist._iterator = " << hist._iterator << endl ;
+//   std::cout << "hist._iterator = " << hist._iterator << std::endl ;
 
   Int_t i=0 ;
   for (const auto arg : hist._vars) {

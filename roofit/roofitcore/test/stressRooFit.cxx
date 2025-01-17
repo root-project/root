@@ -23,7 +23,7 @@
 #include <iostream>
 #include <cmath>
 
-using std::cout, std::endl, std::string, std::list;
+using std::string, std::list;
 using namespace RooFit;
 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
@@ -47,7 +47,7 @@ void StatusPrint(int id, const TString &title, int status)
    const int nch = header.Length();
    for (int i = nch; i < kMAX; i++)
       header += '.';
-   cout << header << (status > 0 ? "OK" : (status < 0 ? "SKIPPED" : "FAILED")) << endl;
+   std::cout << header << (status > 0 ? "OK" : (status < 0 ? "SKIPPED" : "FAILED")) << std::endl;
 }
 
 #include "stressRooFit_tests.h"
@@ -69,7 +69,7 @@ int stressRooFit(const char *refFile, bool writeRef, int doVerbose, int oneTest,
    if (!dryRun) {
       if (TString(refFile).Contains("http:")) {
          if (writeRef) {
-            cout << "stressRooFit ERROR: reference file must be local file in writing mode" << endl;
+            std::cout << "stressRooFit ERROR: reference file must be local file in writing mode" << std::endl;
             return 1;
          }
          TFile::SetCacheFileDir(".");
@@ -80,7 +80,7 @@ int stressRooFit(const char *refFile, bool writeRef, int doVerbose, int oneTest,
          // std::cout << "using file " << refFile << std::endl;
       }
       if (fref->IsZombie()) {
-         cout << "stressRooFit ERROR: cannot open reference file " << refFile << endl;
+         std::cout << "stressRooFit ERROR: cannot open reference file " << refFile << std::endl;
          return 1;
       }
    }
@@ -96,10 +96,10 @@ int stressRooFit(const char *refFile, bool writeRef, int doVerbose, int oneTest,
    // Add dedicated logging stream for errors that will remain active in silent mode
    RooMsgService::instance().addStream(RooFit::ERROR);
 
-   cout << "******************************************************************" << endl;
-   cout << "*  RooFit - S T R E S S suite                                    *" << endl;
-   cout << "******************************************************************" << endl;
-   cout << "******************************************************************" << endl;
+   std::cout << "******************************************************************" << std::endl;
+   std::cout << "*  RooFit - S T R E S S suite                                    *" << std::endl;
+   std::cout << "******************************************************************" << std::endl;
+   std::cout << "******************************************************************" << std::endl;
 
    TStopwatch timer;
    timer.Start();
@@ -161,8 +161,8 @@ int stressRooFit(const char *refFile, bool writeRef, int doVerbose, int oneTest,
    testList.push_back(new TestBasic803(fref, writeRef, doVerbose));
    testList.push_back(new TestBasic804(fref, writeRef, doVerbose));
 
-   cout << "*  Starting  S T R E S S  basic suite                            *" << endl;
-   cout << "******************************************************************" << endl;
+   std::cout << "*  Starting  S T R E S S  basic suite                            *" << std::endl;
+   std::cout << "******************************************************************" << std::endl;
 
    if (doDump) {
       TFile fdbg("stressRooFit_DEBUG.root", "RECREATE");
@@ -267,50 +267,50 @@ int main(int argc, const char *argv[])
       if (arg == "-b") {
          string mode = argv[++i];
          backend = RooFit::EvalBackend(mode);
-         cout << "stressRooFit: NLL evaluation backend set to " << mode << endl;
+         std::cout << "stressRooFit: NLL evaluation backend set to " << mode << std::endl;
       } else if (arg == "-f") {
-         cout << "stressRooFit: using reference file " << argv[i + 1] << endl;
+         std::cout << "stressRooFit: using reference file " << argv[i + 1] << std::endl;
          refFileName = argv[++i];
       } else if (arg == "-w") {
-         cout << "stressRooFit: running in writing mode to updating reference file" << endl;
+         std::cout << "stressRooFit: running in writing mode to updating reference file" << std::endl;
          doWrite = true;
       } else if (arg == "-mc") {
-         cout << "stressRooFit: running in memcheck mode, no regression tests are performed" << endl;
+         std::cout << "stressRooFit: running in memcheck mode, no regression tests are performed" << std::endl;
          dryRun = true;
       } else if (arg == "-ts") {
-         cout << "stressRooFit: setting tree-based storage for datasets" << endl;
+         std::cout << "stressRooFit: setting tree-based storage for datasets" << std::endl;
          doTreeStore = true;
       } else if (arg == "-min" || arg == "-minim") {
-         cout << "stressRooFit: running using minimizer " << argv[i + 1] << endl;
+         std::cout << "stressRooFit: running using minimizer " << argv[i + 1] << std::endl;
          minimizerName = argv[++i];
       } else if (arg == "-v") {
-         cout << "stressRooFit: running in verbose mode" << endl;
+         std::cout << "stressRooFit: running in verbose mode" << std::endl;
          if (doVerbose != 0)
             throw std::runtime_error(verbosityOptionErrorMsg);
          doVerbose = 1;
       } else if (arg == "-vv") {
-         cout << "stressRooFit: running in very verbose mode" << endl;
+         std::cout << "stressRooFit: running in very verbose mode" << std::endl;
          if (doVerbose != 0)
             throw std::runtime_error(verbosityOptionErrorMsg);
          doVerbose = 2;
       } else if (arg == "-q") {
-         cout << "stressRooFit: running in quiet mode" << endl;
+         std::cout << "stressRooFit: running in quiet mode" << std::endl;
          if (doVerbose != 0)
             throw std::runtime_error(verbosityOptionErrorMsg);
          doVerbose = -1;
       } else if (arg == "-n") {
-         cout << "stressRooFit: running single test " << argv[i + 1] << endl;
+         std::cout << "stressRooFit: running single test " << argv[i + 1] << std::endl;
          oneTest = atoi(argv[++i]);
       } else if (arg == "-d") {
-         cout << "stressRooFit: setting gDebug to " << argv[i + 1] << endl;
+         std::cout << "stressRooFit: setting gDebug to " << argv[i + 1] << std::endl;
          gDebug = atoi(argv[++i]);
       } else if (arg == "-c") {
-         cout << "stressRooFit: dumping comparison file for failed tests " << endl;
+         std::cout << "stressRooFit: dumping comparison file for failed tests " << std::endl;
          doDump = true;
       }
 
       if (arg == "-h" || arg == "--help") {
-         cout << R"(usage: stressRooFit [ options ]
+         std::cout << R"(usage: stressRooFit [ options ]
 
        -b <mode>   : Perform every fit in the tests with the EvalBackend(<mode>) command argument, where <mode> is a string
        -f <file>   : use given reference file instead of default ("stressRooFit_ref.root")
@@ -341,9 +341,9 @@ int main(int argc, const char *argv[])
       refFileName = ptr + 1;
       delete[] buf;
 
-      cout
+      std::cout
          << "stressRooFit: WARNING running in write mode, but reference file is web file, writing local file instead: "
-         << refFileName << endl;
+         << refFileName << std::endl;
    }
 
    // set minimizer

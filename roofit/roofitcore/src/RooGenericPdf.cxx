@@ -159,7 +159,7 @@ void RooGenericPdf::printMultiline(ostream& os, Int_t content, bool verbose, TSt
 {
   RooAbsPdf::printMultiline(os,content,verbose,indent);
   if (verbose) {
-    os << " --- RooGenericPdf --- " << endl ;
+    os << " --- RooGenericPdf --- " << std::endl ;
     indent.Append("  ");
     os << indent ;
     formula().printMultiline(os,content,verbose,indent);
@@ -196,7 +196,7 @@ bool RooGenericPdf::readFromStream(istream& /*is*/, bool /*compact*/, bool /*ver
 void RooGenericPdf::writeToStream(ostream& os, bool compact) const
 {
   if (compact) {
-    os << getVal() << endl ;
+    os << getVal() << std::endl ;
   } else {
     os << GetTitle() ;
   }

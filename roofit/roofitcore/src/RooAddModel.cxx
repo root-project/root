@@ -226,9 +226,9 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* inBasis, RooAbsArg* 
   // Check that primary variable of basis functions is our convolution variable
   if (inBasis->getParameter(0) != x.absArg()) {
     coutE(InputArguments) << "RooAddModel::convolution(" << GetName()
-           << ") convolution parameter of basis function and PDF don't match" << endl ;
-    ccoutE(InputArguments) << "basis->findServer(0) = " << inBasis->findServer(0) << " " << inBasis->findServer(0)->GetName() << endl ;
-    ccoutE(InputArguments) << "x.absArg()           = " << x.absArg() << " " << x.absArg()->GetName() << endl ;
+           << ") convolution parameter of basis function and PDF don't match" << std::endl ;
+    ccoutE(InputArguments) << "basis->findServer(0) = " << inBasis->findServer(0) << " " << inBasis->findServer(0)->GetName() << std::endl ;
+    ccoutE(InputArguments) << "x.absArg()           = " << x.absArg() << " " << x.absArg()->GetName() << std::endl ;
     inBasis->Print("v") ;
     return nullptr ;
   }
@@ -366,7 +366,7 @@ double RooAddModel::evaluate() const
       if (pdf->isSelectedComp()) {
    value += pdfVal*_coefCache[i]/snormVal ;
    cxcoutD(Eval) << "RooAddModel::evaluate(" << GetName() << ")  value += ["
-         << pdf->GetName() << "] " << pdfVal << " * " << _coefCache[i] << " / " << snormVal << endl ;
+         << pdf->GetName() << "] " << pdfVal << " * " << _coefCache[i] << " / " << snormVal << std::endl ;
       }
     }
     i++ ;
@@ -440,7 +440,7 @@ bool RooAddModel::checkObservables(const RooArgSet* nset) const
 
     if (pdf->observableOverlaps(nset,*coef)) {
       coutE(InputArguments) << "RooAddModel::checkObservables(" << GetName() << "): ERROR: coefficient " << coef->GetName()
-             << " and PDF " << pdf->GetName() << " have one or more dependents in common" << endl ;
+             << " and PDF " << pdf->GetName() << " have one or more dependents in common" << std::endl ;
       ret = true ;
     }
   }
@@ -551,7 +551,7 @@ double RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, c
       double intVal = pdfInt->getVal(nset) ;
       value += intVal*_coefCache[i]/snormVal ;
       cxcoutD(Eval) << "RooAddModel::evaluate(" << GetName() << ")  value += ["
-            << pdfInt->GetName() << "] " << intVal << " * " << _coefCache[i] << " / " << snormVal << endl ;
+            << pdfInt->GetName() << "] " << intVal << " * " << _coefCache[i] << " / " << snormVal << std::endl ;
     }
     i++ ;
   }

@@ -92,7 +92,7 @@ std::vector<double> histToVector(TH1 const &hist)
 
 // use this order for safety on library loading
 using namespace RooStats;
-using std::cout, std::endl, std::string, std::vector, std::make_unique, std::pair, std::unique_ptr, std::map;
+using std::string, std::vector, std::make_unique, std::pair, std::unique_ptr, std::map;
 
 using namespace RooStats::HistFactory::Detail;
 using namespace RooStats::HistFactory::Detail::MagicConstants;
@@ -144,7 +144,7 @@ namespace HistFactory{
     for(auto const& item : measurement.GetPOIList()) {
       sstream << item << " ";
     }
-    cxcoutIHF << sstream.str() << endl;
+    cxcoutIHF << sstream.str() << std::endl;
 
     RooArgSet params;
     for(auto const& poi_name : measurement.GetPOIList()) {
@@ -337,9 +337,9 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
   RooHistFunc* HistoToWorkspaceFactoryFast::MakeExpectedHistFunc(const TH1* hist,RooWorkspace &proto, string prefix,
       const RooArgList& observables) const {
     if(hist) {
-      cxcoutI(HistFactory) << "processing hist " << hist->GetName() << endl;
+      cxcoutI(HistFactory) << "processing hist " << hist->GetName() << std::endl;
     } else {
-      cxcoutF(HistFactory) << "hist is empty" << endl;
+      cxcoutF(HistFactory) << "hist is empty" << std::endl;
       R__ASSERT(hist != nullptr);
       return nullptr;
     }
@@ -466,7 +466,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
         range << "[" << norm.GetVal() << "," << norm.GetLow() << "," << norm.GetHigh() << "]";
 
         if( proto.obj(varname) == nullptr) {
-          cxcoutI(HistFactory) << "making normFactor: " << norm.GetName() << endl;
+          cxcoutI(HistFactory) << "making normFactor: " << norm.GetName() << std::endl;
           // remove "doRatio" and name can be changed when ws gets imported to the combined model.
           emplace<RooRealVar>(proto, varname, norm.GetVal(), norm.GetLow(), norm.GetHigh());
           proto.var(varname)->setError(0); // ensure factor is assigned an initial error, even if its zero
@@ -492,7 +492,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
         cxcoutI(HistFactory) <<"<NormFactor Name =\""<<*nit<<"\"> is duplicated for <Sample Name=\""
             << sample.GetName() << "\">, but only one factor will be included.  \n Instead, define something like"
             << "\n\t<Function Name=\""<<*nit<<"Squared\" Expression=\""<<*nit<<"*"<<*nit<<"\" Var=\""<<*nit<<rangeNames.at(rangeIndex)
-            << "\"> \nin your top-level XML's <Measurement> entry and use <NormFactor Name=\""<<*nit<<"Squared\" in your channel XML file."<< endl;
+            << "\"> \nin your top-level XML's <Measurement> entry and use <NormFactor Name=\""<<*nit<<"Squared\" in your channel XML file."<< std::endl;
       }
       ++rangeIndex;
     }
@@ -608,7 +608,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
        proto.import(interp); // params have already been imported in first loop of this function
     } else{
        // some strange behavior if params,lowVec,highVec are empty.
-       //cout << "WARNING: No OverallSyst terms" << endl;
+       //cout << "WARNING: No OverallSyst terms" << std::endl;
        emplace<RooConstVar>(proto, interpName, 1.); // params have already been imported in first loop of this function
     }
   }
@@ -696,10 +696,10 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       fprintf(covFile,"%s", myargi->GetName());
       for (auto const *myargj : static_range_cast<RooRealVar *>(*params)) {
         if(myargj->isConstant()) continue;
-        cout << myargi->GetName() << "," << myargj->GetName();
+        std::cout << myargi->GetName() << "," << myargj->GetName();
         fprintf(covFile, " & %.2f", result->correlation(*myargi, *myargj));
       }
-      cout << endl;
+      std::cout << std::endl;
       fprintf(covFile, " \\\\\n");
     }
     fclose(covFile);
@@ -774,7 +774,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     cxcoutP(HistFactory) << "\n-----------------------------------------\n"
         << "\tStarting to process '"
         << channel_name << "' channel with " << fObsNameVec.size() << " observables"
-        << "\n-----------------------------------------\n" << endl;
+        << "\n-----------------------------------------\n" << std::endl;
 
     //
     // our main workspace that we are using to construct the model
@@ -786,7 +786,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     // preprocess functions
     for(auto const& func : fPreprocessFunctions){
-      cxcoutI(HistFactory) << "will preprocess this line: " << func <<endl;
+      cxcoutI(HistFactory) << "will preprocess this line: " << func << std::endl;
       proto.factory(func);
       proto.Print();
     }
@@ -873,7 +873,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
       if(sample.GetHistoSysList().empty()) {
         // If no HistoSys
-        cxcoutI(HistFactory) << sample.GetName() + "_" + channel_name + " has no variation histograms " << endl;
+        cxcoutI(HistFactory) << sample.GetName() + "_" + channel_name + " has no variation histograms " << std::endl;
 
         sampleHistFuncs.push_back(nominalHistFunc);
       } else {
@@ -1255,7 +1255,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       RooRealVar* temp = proto.var(systToFix.at(i));
       if(!temp) {
         cxcoutW(HistFactory) << "could not find variable " << systToFix.at(i)
-            << " could not set it to constant" << endl;
+            << " could not set it to constant" << std::endl;
       } else {
         // set the parameter constant
         temp->setConstant();
@@ -1306,7 +1306,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     // after observables have been made
     cxcoutP(HistFactory) << "\n-----------------------------------------\n"
         << "\timport model into workspace"
-        << "\n-----------------------------------------\n" << endl;
+        << "\n-----------------------------------------\n" << std::endl;
 
     auto model = make_unique<RooProdPdf>(
         ("model_"+channel_name).c_str(),    // MB : have changed this into conditional pdf. Much faster for toys!
@@ -1479,8 +1479,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       RooWorkspace * ch=chs[i].get();
 
       RooAbsPdf* model = ch->pdf("model_"+channel_name);
-      if(!model) cout <<"failed to find model for channel"<<endl;
-      //      cout << "int = " << model->createIntegral(*obsN)->getVal() << endl;
+      if(!model) std::cout <<"failed to find model for channel"<< std::endl;
+      //      std::cout << "int = " << model->createIntegral(*obsN)->getVal() << std::endl;
       models.push_back(model);
       globalObs.add(*ch->set("globalObservables"), /*silent=*/true); // silent because observables might exist in other channel.
 
@@ -1490,7 +1490,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     cxcoutP(HistFactory) << "\n-----------------------------------------\n"
         << "\tEntering combination"
-        << "\n-----------------------------------------\n" << endl;
+        << "\n-----------------------------------------\n" << std::endl;
     auto combined = std::make_unique<RooWorkspace>("combined");
 
 
@@ -1532,7 +1532,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     cxcoutP(HistFactory) << "\n-----------------------------------------\n"
             << "\tImporting combined model"
-            << "\n-----------------------------------------\n" << endl;
+            << "\n-----------------------------------------\n" << std::endl;
     combined->import(*simPdf,RooFit::RecycleConflictNodes());
 
     for(auto const& param_itr : fParamValues) {
@@ -1542,9 +1542,9 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
       if(RooRealVar* temp = combined->var( paramName )) {
         temp->setVal( paramVal );
-        cxcoutI(HistFactory) <<"setting " << paramName << " to the value: " << paramVal <<  endl;
+        cxcoutI(HistFactory) <<"setting " << paramName << " to the value: " << paramVal <<  std::endl;
       } else
-        cxcoutE(HistFactory) << "could not find variable " << paramName << " could not set its value" << endl;
+        cxcoutE(HistFactory) << "could not find variable " << paramName << " could not set its value" << std::endl;
     }
 
 
@@ -1552,9 +1552,9 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       // make sure they are fixed
       if(RooRealVar* temp = combined->var(fSystToFix[i])) {
         temp->setConstant();
-        cxcoutI(HistFactory) <<"setting " << fSystToFix.at(i) << " constant" << endl;
+        cxcoutI(HistFactory) <<"setting " << fSystToFix.at(i) << " constant" << std::endl;
       } else
-        cxcoutE(HistFactory) << "could not find variable " << fSystToFix.at(i) << " could not set it to constant" << endl;
+        cxcoutE(HistFactory) << "could not find variable " << fSystToFix.at(i) << " could not set it to constant" << std::endl;
     }
 
     ///
@@ -1574,7 +1574,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     // Make toy simultaneous dataset
     cxcoutP(HistFactory) << "\n-----------------------------------------\n"
         << "\tcreate toy data"
-        << "\n-----------------------------------------\n" << endl;
+        << "\n-----------------------------------------\n" << std::endl;
 
 
     // now with weighted datasets

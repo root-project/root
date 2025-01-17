@@ -539,8 +539,8 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, bool refreshNorm)
     // scale this histogram to match that density
     _normNumEvts = rp->getFitRangeNEvt()/corFac ;
     _normObj = rp ;
-    // cout << "correction factor = " << _normBinWidth << "/" << rp->getFitRangeBinW() << std::endl ;
-    // cout << "updating numevts to " << _normNumEvts << std::endl ;
+    // std::cout << "correction factor = " << _normBinWidth << "/" << rp->getFitRangeBinW() << std::endl ;
+    // std::cout << "updating numevts to " << _normNumEvts << std::endl ;
 
   } else {
 
@@ -550,7 +550,7 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, bool refreshNorm)
       _normBinWidth = rp->getFitRangeBinW() ;
     }
 
-    // cout << "updating numevts to " << _normNumEvts << std::endl ;
+    // std::cout << "updating numevts to " << _normNumEvts << std::endl ;
   }
 
 }

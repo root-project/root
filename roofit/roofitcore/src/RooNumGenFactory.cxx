@@ -115,7 +115,7 @@ bool RooNumGenFactory::storeProtoSampler(RooAbsNumGenerator* proto, const RooArg
   TString name = proto->generatorName() ;
 
   if (getProtoSampler(name)) {
-    //cout << "RooNumGenFactory::storeSampler() ERROR: integrator '" << name << "' already registered" << endl ;
+    //cout << "RooNumGenFactory::storeSampler() ERROR: integrator '" << name << "' already registered" << std::endl ;
     return true ;
   }
 

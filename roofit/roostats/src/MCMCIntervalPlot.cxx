@@ -130,7 +130,7 @@ void* MCMCIntervalPlot::DrawPosteriorHist(const Option_t* /*options*/,
 
    if (fPosteriorHist == nullptr) {
       coutE(InputArguments) << "MCMCIntervalPlot::DrawPosteriorHist: "
-         << "Couldn't get posterior histogram." << endl;
+         << "Couldn't get posterior histogram." << std::endl;
       return nullptr;
    }
 
@@ -168,7 +168,7 @@ void* MCMCIntervalPlot::DrawPosteriorKeysPdf(const Option_t* options)
 
    if (fPosteriorKeysPdf == nullptr) {
       coutE(InputArguments) << "MCMCIntervalPlot::DrawPosteriorKeysPdf: "
-         << "Couldn't get posterior Keys PDF." << endl;
+         << "Couldn't get posterior Keys PDF." << std::endl;
       return nullptr;
    }
 
@@ -180,7 +180,7 @@ void* MCMCIntervalPlot::DrawPosteriorKeysPdf(const Option_t* options)
       RooPlot* frame = v->frame();
       if (frame == nullptr) {
          coutE(InputArguments) << "MCMCIntervalPlot::DrawPosteriorKeysPdf: "
-                               << "Invalid parameter" << endl;
+                               << "Invalid parameter" << std::endl;
          return nullptr;
       }
       if (isEmpty) {
@@ -227,7 +227,7 @@ void MCMCIntervalPlot::DrawInterval(const Option_t* options)
          break;
       default:
          coutE(InputArguments) << "MCMCIntervalPlot::DrawInterval(): " <<
-            "Interval type not supported" << endl;
+            "Interval type not supported" << std::endl;
          break;
    }
 }
@@ -304,7 +304,7 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
 
       if (fPosteriorKeysPdf == nullptr) {
          coutE(InputArguments) << "MCMCIntervalPlot::DrawKeysPdfInterval: "
-            << "Couldn't get posterior Keys PDF." << endl;
+            << "Couldn't get posterior Keys PDF." << std::endl;
          return;
       }
 
@@ -337,7 +337,7 @@ void MCMCIntervalPlot::DrawKeysPdfInterval(const Option_t* options)
       delete axes;
    } else {
       coutE(InputArguments) << "MCMCIntervalPlot::DrawKeysPdfInterval: "
-         << " Sorry: " << fDimension << "-D plots not currently supported" << endl;
+         << " Sorry: " << fDimension << "-D plots not currently supported" << std::endl;
    }
 }
 
@@ -407,7 +407,7 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
 
       if (fPosteriorHist == nullptr) {
          coutE(InputArguments) << "MCMCIntervalPlot::DrawHistInterval: "
-            << "Couldn't get posterior histogram." << endl;
+            << "Couldn't get posterior histogram." << std::endl;
          return;
       }
 
@@ -437,7 +437,7 @@ void MCMCIntervalPlot::DrawHistInterval(const Option_t* options)
       fPosteriorHist->Draw(tmpOpt.Data());
    } else {
       coutE(InputArguments) << "MCMCIntervalPlot::DrawHistInterval: "
-         << " Sorry: " << fDimension << "-D plots not currently supported" << endl;
+         << " Sorry: " << fDimension << "-D plots not currently supported" << std::endl;
    }
 }
 
@@ -499,7 +499,7 @@ void MCMCIntervalPlot::DrawTailFractionInterval(const Option_t* options)
    } else {
       coutE(InputArguments) << "MCMCIntervalPlot::DrawTailFractionInterval: "
          << " Sorry: " << fDimension << "-D plots not currently supported"
-         << endl;
+         << std::endl;
    }
 }
 
@@ -512,7 +512,7 @@ void* MCMCIntervalPlot::DrawPosteriorKeysProduct(const Option_t* options)
 
    if (fPosteriorKeysProduct == nullptr) {
       coutE(InputArguments) << "MCMCIntervalPlot::DrawPosteriorKeysProduct: "
-         << "Couldn't get posterior Keys product." << endl;
+         << "Couldn't get posterior Keys product." << std::endl;
       return nullptr;
    }
 

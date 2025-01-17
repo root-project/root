@@ -152,7 +152,7 @@ bool RooAbsRealLValue::isValidReal(double value, bool verbose) const
   if (!inRange(value,nullptr)) {
     if (verbose) {
        coutI(InputArguments) << "RooRealVar::isValid(" << GetName() << "): value " << value << " out of range ("
-                             << getMin() << " - " << getMax() << ")" << endl;
+                             << getMin() << " - " << getMax() << ")" << std::endl;
     }
     return false ;
   }
@@ -350,11 +350,11 @@ RooPlot *RooAbsRealLValue::frame(Int_t nbins) const
 {
   // Plot range of variable may not be infinite or empty
   if (getMin()==getMax()) {
-    coutE(InputArguments) << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: empty fit range, must specify plot range" << endl ;
+    coutE(InputArguments) << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: empty fit range, must specify plot range" << std::endl ;
     return nullptr ;
   }
   if (RooNumber::isInfinite(getMin())||RooNumber::isInfinite(getMax())) {
-    coutE(InputArguments) << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: open ended fit range, must specify plot range" << endl ;
+    coutE(InputArguments) << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: open ended fit range, must specify plot range" << std::endl ;
     return nullptr ;
   }
 
@@ -375,11 +375,11 @@ RooPlot *RooAbsRealLValue::frame() const
 {
   // Plot range of variable may not be infinite or empty
   if (getMin()==getMax()) {
-    coutE(InputArguments) << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: empty fit range, must specify plot range" << endl ;
+    coutE(InputArguments) << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: empty fit range, must specify plot range" << std::endl ;
     return nullptr ;
   }
   if (RooNumber::isInfinite(getMin())||RooNumber::isInfinite(getMax())) {
-    coutE(InputArguments) << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: open ended fit range, must specify plot range" << endl ;
+    coutE(InputArguments) << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: open ended fit range, must specify plot range" << std::endl ;
     return nullptr ;
   }
 
@@ -404,7 +404,7 @@ void RooAbsRealLValue::copyCache(const RooAbsArg* source, bool valueOnly, bool s
 void RooAbsRealLValue::printMultiline(ostream& os, Int_t contents, bool verbose, TString indent) const
 {
   RooAbsReal::printMultiline(os,contents,verbose,indent);
-  os << indent << "--- RooAbsRealLValue ---" << endl;
+  os << indent << "--- RooAbsRealLValue ---" << std::endl;
   TString unit(_unit);
   if(!unit.IsNull()) unit.Prepend(' ');
   os << indent << "  Fit range is [ ";
@@ -415,10 +415,10 @@ void RooAbsRealLValue::printMultiline(ostream& os, Int_t contents, bool verbose,
     os << "-INF , ";
   }
   if(hasMax()) {
-    os << getMax() << unit << " ]" << endl;
+    os << getMax() << unit << " ]" << std::endl;
   }
   else {
-    os << "+INF ]" << endl;
+    os << "+INF ]" << std::endl;
   }
 }
 
@@ -438,7 +438,7 @@ void RooAbsRealLValue::randomize(const char* rangeName)
     setValFast(min + RooRandom::uniform()*(max-min));
   }
   else {
-    coutE(Generation) << fName << "::" << ClassName() << ":randomize: fails with unbounded fit range" << endl;
+    coutE(Generation) << fName << "::" << ClassName() << ":randomize: fails with unbounded fit range" << std::endl;
   }
 }
 
@@ -453,7 +453,7 @@ void RooAbsRealLValue::setBin(Int_t ibin, const char* rangeName)
   // Check range of plot bin index
   if (ibin<0 || ibin>=numBins(rangeName)) {
     coutE(InputArguments) << "RooAbsRealLValue::setBin(" << GetName() << ") ERROR: bin index " << ibin
-           << " is out of range (0," << getBins(rangeName)-1 << ")" << endl ;
+           << " is out of range (0," << getBins(rangeName)-1 << ")" << std::endl ;
     return ;
   }
 
@@ -689,7 +689,7 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   // Check if the fit range is usable as plot range
   if (!fitRangeOKForPlotting()) {
     coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName()
-           << ") ERROR: fit range empty or open ended, must explicitly specify range" << endl ;
+           << ") ERROR: fit range empty or open ended, must explicitly specify range" << std::endl ;
     return nullptr ;
   }
 
@@ -747,7 +747,7 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
 {
   if ((!xlo && xhi) || (xlo && !xhi)) {
     coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName()
-           << ") ERROR must specify either no range, or both limits" << endl ;
+           << ") ERROR must specify either no range, or both limits" << std::endl ;
     return nullptr ;
   }
 
@@ -763,12 +763,12 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
 
     if (!fitRangeOKForPlotting()) {
       coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName()
-      << ") ERROR: fit range empty or open ended, must explicitly specify range" << endl ;
+      << ") ERROR: fit range empty or open ended, must explicitly specify range" << std::endl ;
       return nullptr ;
     }
     if (!yvar.fitRangeOKForPlotting()) {
       coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName()
-      << ") ERROR: fit range of " << yvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;
+      << ") ERROR: fit range of " << yvar.GetName() << " empty or open ended, must explicitly specify range" << std::endl ;
       return nullptr ;
     }
 
@@ -821,7 +821,7 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
 {
   if ((!xlo && xhi) || (xlo && !xhi)) {
     coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName()
-           << ") ERROR must specify either no range, or both limits" << endl ;
+           << ") ERROR must specify either no range, or both limits" << std::endl ;
     return nullptr ;
   }
 
@@ -836,17 +836,17 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
 
     if (!fitRangeOKForPlotting()) {
       coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName()
-             << ") ERROR: fit range empty or open ended, must explicitly specify range" << endl ;
+             << ") ERROR: fit range empty or open ended, must explicitly specify range" << std::endl ;
       return nullptr ;
     }
     if (!yvar.fitRangeOKForPlotting()) {
       coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName()
-             << ") ERROR: fit range of " << yvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;
+             << ") ERROR: fit range of " << yvar.GetName() << " empty or open ended, must explicitly specify range" << std::endl ;
       return nullptr ;
     }
     if (!zvar.fitRangeOKForPlotting()) {
       coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName()
-             << ") ERROR: fit range of " << zvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;
+             << ") ERROR: fit range of " << zvar.GetName() << " empty or open ended, must explicitly specify range" << std::endl ;
       return nullptr ;
     }
 
@@ -925,7 +925,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   // Check that we have 1-3 vars
   Int_t dim= vars.size();
   if(dim < 1 || dim > 3) {
-    oocoutE(nullptr,InputArguments) << "RooAbsReal::createHistogram: dimension not supported: " << dim << endl;
+    oocoutE(nullptr,InputArguments) << "RooAbsReal::createHistogram: dimension not supported: " << dim << std::endl;
     return nullptr;
   }
 
@@ -939,7 +939,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
     const RooAbsArg *arg= vars.at(index);
     xyz[index]= dynamic_cast<const RooAbsRealLValue*>(arg);
     if(!xyz[index]) {
-      oocoutE(nullptr,InputArguments) << "RooAbsRealLValue::createHistogram: variable is not real lvalue: " << arg->GetName() << endl;
+      oocoutE(nullptr,InputArguments) << "RooAbsRealLValue::createHistogram: variable is not real lvalue: " << arg->GetName() << std::endl;
       return nullptr;
     }
     histName.Append("_");
@@ -986,7 +986,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
     break;
   }
   if(!histogram) {
-    oocoutE(nullptr,InputArguments) << "RooAbsReal::createHistogram: unable to create a new histogram" << endl;
+    oocoutE(nullptr,InputArguments) << "RooAbsReal::createHistogram: unable to create a new histogram" << std::endl;
     return nullptr;
   }
 

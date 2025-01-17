@@ -93,7 +93,7 @@ and there is no guarantee that this works.
 #include "TClass.h"
 
 
-using std::cout, std::endl, std::ostream, std::setw, std::hex, std::dec, std::map, std::string;
+using std::ostream, std::setw, std::hex, std::dec, std::map, std::string;
 
 ClassImp(RooTrace);
 
@@ -211,8 +211,8 @@ void RooTrace::create2(const TObject* obj)
 {
   _list.Add(const_cast<RooAbsArg *>(static_cast<RooAbsArg const*>(obj)));
   if (_verbose) {
-    cout << "RooTrace::create: object " << obj << " of type " << obj->ClassName()
-    << " created " << endl ;
+    std::cout << "RooTrace::create: object " << obj << " of type " << obj->ClassName()
+    << " created " << std::endl ;
   }
 }
 
@@ -226,8 +226,8 @@ void RooTrace::destroy2(const TObject* obj)
 {
   if (!_list.Remove(const_cast<RooAbsArg *>(static_cast<RooAbsArg const*>(obj)))) {
   } else if (_verbose) {
-    cout << "RooTrace::destroy: object " << obj << " of type " << obj->ClassName()
-    << " destroyed [" << obj->GetTitle() << "]" << endl ;
+    std::cout << "RooTrace::destroy: object " << obj << " of type " << obj->ClassName()
+    << " destroyed [" << obj->GetTitle() << "]" << std::endl ;
   }
 }
 
@@ -281,13 +281,13 @@ void RooTrace::mark3()
 
 void RooTrace::dump()
 {
-  RooTrace::instance().dump3(cout,false) ;
+  RooTrace::instance().dump3(std::cout,false) ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTrace::dump(ostream& os, bool sinceMarked)
+void RooTrace::dump(std::ostream& os, bool sinceMarked)
 {
   RooTrace::instance().dump3(os,sinceMarked) ;
 }
@@ -297,20 +297,20 @@ void RooTrace::dump(ostream& os, bool sinceMarked)
 /// Dump contents of object register to stream 'os'. If sinceMarked is
 /// true, only object created after the last call to mark() are shown.
 
-void RooTrace::dump3(ostream& os, bool sinceMarked)
+void RooTrace::dump3(std::ostream& os, bool sinceMarked)
 {
-  os << "List of RooFit objects allocated while trace active:" << endl ;
+  os << "List of RooFit objects allocated while trace active:" << std::endl ;
 
   Int_t i;
   Int_t nMarked(0);
   for(i=0 ; i<_list.GetSize() ; i++) {
     if (!sinceMarked || _markList.IndexOf(_list.At(i)) == -1) {
-      os << hex << setw(10) << _list.At(i) << dec << " : " << setw(20) << _list.At(i)->ClassName() << setw(0) << " - " << _list.At(i)->GetName() << endl ;
+      os << hex << setw(10) << _list.At(i) << dec << " : " << setw(20) << _list.At(i)->ClassName() << setw(0) << " - " << _list.At(i)->GetName() << std::endl ;
     } else {
       nMarked++ ;
     }
   }
-  if (sinceMarked) os << nMarked << " marked objects suppressed" << endl ;
+  if (sinceMarked) os << nMarked << " marked objects suppressed" << std::endl ;
 }
 
 
@@ -328,17 +328,17 @@ void RooTrace::printObjectCounts3()
   double total(0) ;
   for (map<TClass*,int>::iterator iter = _objectCount.begin() ; iter != _objectCount.end() ; ++iter) {
     double tot= 1.0*(iter->first->Size()*iter->second)/(1024*1024) ;
-    cout << " class " << iter->first->GetName() << " count = " << iter->second << " sizeof = " << iter->first->Size() << " total memory = " <<  Form("%5.2f",tot) << " Mb" << endl ;
+    std::cout << " class " << iter->first->GetName() << " count = " << iter->second << " sizeof = " << iter->first->Size() << " total memory = " <<  Form("%5.2f",tot) << " Mb" << std::endl ;
     total+=tot ;
   }
 
   for (map<string,int>::iterator iter = _specialCount.begin() ; iter != _specialCount.end() ; ++iter) {
     int size = _specialSize[iter->first] ;
     double tot=1.0*(size*iter->second)/(1024*1024) ;
-    cout << " speeial " << iter->first << " count = " << iter->second << " sizeof = " << size  << " total memory = " <<  Form("%5.2f",tot) << " Mb" << endl ;
+    std::cout << " speeial " << iter->first << " count = " << iter->second << " sizeof = " << size  << " total memory = " <<  Form("%5.2f",tot) << " Mb" << std::endl ;
     total+=tot ;
   }
-  cout << "Grand total memory = " << Form("%5.2f",total) << " Mb" << endl ;
+  std::cout << "Grand total memory = " << Form("%5.2f",total) << " Mb" << std::endl ;
 
 }
 
@@ -352,7 +352,7 @@ void RooTrace::printObjectCounts3()
 
 void RooTrace::callgrind_zero()
 {
-  ooccoutD((TObject*)nullptr,Tracing) << "RooTrace::callgrind_zero()" << endl ;
+  ooccoutD((TObject*)nullptr,Tracing) << "RooTrace::callgrind_zero()" << std::endl ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -364,5 +364,5 @@ void RooTrace::callgrind_zero()
 
 void RooTrace::callgrind_dump()
 {
-  ooccoutD((TObject*)nullptr,Tracing) << "RooTrace::callgrind_dump()" << endl ;
+  ooccoutD((TObject*)nullptr,Tracing) << "RooTrace::callgrind_dump()" << std::endl ;
 }

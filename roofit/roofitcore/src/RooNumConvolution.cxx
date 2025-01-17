@@ -247,7 +247,7 @@ double RooNumConvolution::evaluate() const
     _callHist->Fill(x,_integrand->numCall()) ;
     if (_integrand->numCall()>_verboseThresh) {
       coutW(Integration) << "RooNumConvolution::evaluate(" << GetName() << ") WARNING convolution integral at x=" << x
-          << " required " << _integrand->numCall() << " function evaluations" << endl ;
+          << " required " << _integrand->numCall() << " function evaluations" << std::endl ;
     }
   }
 
@@ -302,7 +302,7 @@ void RooNumConvolution::setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal
 void RooNumConvolution::setCallWarning(Int_t threshold)
 {
   if (threshold<0) {
-    coutE(InputArguments) << "RooNumConvolution::setCallWarning(" << GetName() << ") ERROR: threshold must be positive, value unchanged" << endl ;
+    coutE(InputArguments) << "RooNumConvolution::setCallWarning(" << GetName() << ") ERROR: threshold must be positive, value unchanged" << std::endl ;
     return ;
   }
   _verboseThresh = threshold ;
@@ -349,7 +349,7 @@ void RooNumConvolution::setCallProfiling(bool flag, Int_t nbinX, Int_t nbinCall,
 
 void RooNumConvolution::printCompactTreeHook(ostream& os, const char* indent)
 {
-  os << indent << "RooNumConvolution begin cache" << endl ;
+  os << indent << "RooNumConvolution begin cache" << std::endl ;
 
   if (_init) {
     _cloneVar->printCompactTree(os,Form("%s[Var]",indent)) ;
@@ -357,7 +357,7 @@ void RooNumConvolution::printCompactTreeHook(ostream& os, const char* indent)
     _cloneModel->printCompactTree(os,Form("%s[Mod]",indent)) ;
   }
 
-  os << indent << "RooNumConvolution end cache" << endl ;
+  os << indent << "RooNumConvolution end cache" << std::endl ;
 }
 
 

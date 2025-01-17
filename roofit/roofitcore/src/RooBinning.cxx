@@ -216,7 +216,7 @@ double* RooBinning::array() const
 void RooBinning::setRange(double xlo, double xhi)
 {
   if (xlo > xhi) {
-    coutE(InputArguments) << "RooBinning::setRange: ERROR low bound > high bound" << endl;
+    coutE(InputArguments) << "RooBinning::setRange: ERROR low bound > high bound" << std::endl;
     return;
   }
   // Remove previous boundaries
@@ -254,7 +254,7 @@ void RooBinning::updateBinCount()
 bool RooBinning::binEdges(Int_t bin, double& xlo, double& xhi) const
 {
   if (0 > bin || bin >= _nbins) {
-    coutE(InputArguments) << "RooBinning::binEdges ERROR: bin number must be in range (0," << _nbins << ")" << endl;
+    coutE(InputArguments) << "RooBinning::binEdges ERROR: bin number must be in range (0," << _nbins << ")" << std::endl;
     return true;
   }
   xlo = _boundaries[bin + _blo], xhi = _boundaries[bin + _blo + 1];

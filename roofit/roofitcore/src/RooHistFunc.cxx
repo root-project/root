@@ -350,8 +350,8 @@ std::list<double>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
     }
   }
 
-  // cout << "RooHistFunc::bb(" << GetName() << ") histObs = " << _histObsList << std::endl ;
-  // cout << "RooHistFunc::bb(" << GetName() << ") pdfObs = " << _depList << std::endl ;
+  // std::cout << "RooHistFunc::bb(" << GetName() << ") histObs = " << _histObsList << std::endl ;
+  // std::cout << "RooHistFunc::bb(" << GetName() << ") pdfObs = " << _depList << std::endl ;
 
   RooAbsRealLValue* transform = nullptr;
   if (!hobs) {
@@ -379,8 +379,8 @@ std::list<double>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
   }
 
 
-  // cout << "hobs = " << hobs->GetName() << std::endl ;
-  // cout << "transform = " << (transform?transform->GetName():"<none>") << std::endl ;
+  // std::cout << "hobs = " << hobs->GetName() << std::endl ;
+  // std::cout << "transform = " << (transform?transform->GetName():"<none>") << std::endl ;
 
   // Check that observable is in dataset, if not no hint is generated
   RooAbsArg* xtmp = _dataHist->get()->find(hobs->GetName()) ;

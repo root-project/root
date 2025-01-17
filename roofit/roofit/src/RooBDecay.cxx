@@ -32,8 +32,6 @@ be analytically convolved with any RooResolutionModel implementation.
 
 #include "TError.h"
 
-using std::cout, std::endl;
-
 ClassImp(RooBDecay);
 
 /// \brief Constructor for RooBDecay.
@@ -234,16 +232,16 @@ void RooBDecay::generateEvent(Int_t code)
     double ft = std::abs(t);
     double f = exp(-ft/_tau)*(_f0*cosh(dgt)+_f1*sinh(dgt)+_f2*cos(dmt)+_f3*sin(dmt));
     if(f < 0) {
-      cout << "RooBDecay::generateEvent(" << GetName() << ") ERROR: PDF value less than zero" << endl;
+      std::cout << "RooBDecay::generateEvent(" << GetName() << ") ERROR: PDF value less than zero" << std::endl;
       ::abort();
     }
     double w = 1.001*exp(-ft*gammamin)*(std::abs(_f0)+std::abs(_f1)+sqrt(_f2*_f2+_f3*_f3));
     if(w < f) {
-      cout << "RooBDecay::generateEvent(" << GetName() << ") ERROR: Envelope function less than p.d.f. " << endl;
-      cout << _f0 << endl;
-      cout << _f1 << endl;
-      cout << _f2 << endl;
-      cout << _f3 << endl;
+      std::cout << "RooBDecay::generateEvent(" << GetName() << ") ERROR: Envelope function less than p.d.f. " << std::endl;
+      std::cout << _f0 << std::endl;
+      std::cout << _f1 << std::endl;
+      std::cout << _f2 << std::endl;
+      std::cout << _f3 << std::endl;
       ::abort();
     }
     if(w*RooRandom::uniform() > f) continue;

@@ -339,7 +339,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
   // Choose same expensive object cache as integrand
   setExpensiveObjectCache(function.expensiveObjectCache()) ;
-//   cout << "RRI::ctor(" << GetName() << ") setting expensive object cache to " << &expensiveObjectCache() << " as taken from " << function.GetName() << std::endl ;
+//   std::cout << "RRI::ctor(" << GetName() << ") setting expensive object cache to " << &expensiveObjectCache() << " as taken from " << function.GetName() << std::endl ;
 
   // Use objects integrator configuration if none is specified
   if (!_iconfig) _iconfig = const_cast<RooNumIntConfig*>(function.getIntegratorConfig());
@@ -812,7 +812,7 @@ double RooRealIntegral::evaluate() const
 
       if (cacheVal) {
         retVal = *cacheVal ;
-   // cout << "using cached value of integral" << GetName() << std::endl ;
+   // std::cout << "using cached value of integral" << GetName() << std::endl ;
       } else {
 
 
@@ -847,7 +847,7 @@ double RooRealIntegral::evaluate() const
         if ((_cacheNum && !_intList.empty()) || int(_intList.size())>=_cacheAllNDim) {
           RooDouble* val = new RooDouble(retVal) ;
           expensiveObjectCache().registerObject(_function->GetName(),GetName(),*val,parameters())  ;
-          //     cout << "### caching value of integral" << GetName() << " in " << &expensiveObjectCache() << std::endl ;
+          //     std::cout << "### caching value of integral" << GetName() << " in " << &expensiveObjectCache() << std::endl ;
         }
 
       }

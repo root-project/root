@@ -89,7 +89,7 @@ bool RooAbsHiddenReal::readFromStream(istream& is, bool compact, bool verbose)
 {
   if (isHidden()) {
     // No-op version of readFromStream
-    coutE(InputArguments) << "RooAbsHiddenReal::readFromStream(" << GetName() << "): not allowed" << endl ;
+    coutE(InputArguments) << "RooAbsHiddenReal::readFromStream(" << GetName() << "): not allowed" << std::endl ;
     return true ;
   } else {
     return readFromStream(is,compact,verbose) ;
@@ -105,7 +105,7 @@ void RooAbsHiddenReal::writeToStream(ostream& os, bool compact) const
 {
   if (isHidden()) {
     // No-op version of writeToStream
-    coutE(InputArguments) << "RooAbsHiddenReal::writeToStream(" << GetName() << "): not allowed" << endl ;
+    coutE(InputArguments) << "RooAbsHiddenReal::writeToStream(" << GetName() << "): not allowed" << std::endl ;
   } else {
     RooAbsReal::writeToStream(os,compact) ;
   }

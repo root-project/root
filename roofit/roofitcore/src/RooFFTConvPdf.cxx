@@ -492,7 +492,7 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
     otherObs.remove(*histArg,true,true) ;
   }
 
-  //cout << "RooFFTConvPdf::fillCacheObject() otherObs = " << otherObs << endl ;
+  //cout << "RooFFTConvPdf::fillCacheObject() otherObs = " << otherObs << std::endl ;
 
   // Handle trivial scenario -- no other observables
   if (otherObs.empty()) {
@@ -525,7 +525,7 @@ void RooFFTConvPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
     // Set current slice position
     for (Int_t j=0 ; j<n ; j++) { obsLV[j]->setBin(binCur[j],binningName()) ; }
 
-//     cout << "filling slice: bin of obsLV[0] = " << obsLV[0]->getBin() << endl ;
+//     std::cout << "filling slice: bin of obsLV[0] = " << obsLV[0]->getBin() << std::endl ;
 
     // Fill current slice
     fillCacheSlice(static_cast<FFTCacheElem&>(cache),otherObs) ;
@@ -876,14 +876,14 @@ RooAbsGenContext* RooFFTConvPdf::genContext(const RooArgSet &vars, const RooData
 
   if (pdfCanDir) {
     cxcoutI(Generation) << "RooFFTConvPdf::genContext() input p.d.f " << _pdf1.arg().GetName()
-         << " has internal generator that is safe to use in current context" << endl ;
+         << " has internal generator that is safe to use in current context" << std::endl ;
   }
   if (resCanDir) {
     cxcoutI(Generation) << "RooFFTConvPdf::genContext() input p.d.f. " << _pdf2.arg().GetName()
-         << " has internal generator that is safe to use in current context" << endl ;
+         << " has internal generator that is safe to use in current context" << std::endl ;
   }
   if (numAddDep>0) {
-    cxcoutI(Generation) << "RooFFTConvPdf::genContext() generation requested for observables other than the convolution observable " << _x.arg().GetName() << endl ;
+    cxcoutI(Generation) << "RooFFTConvPdf::genContext() generation requested for observables other than the convolution observable " << _x.arg().GetName() << std::endl ;
   }
 
 
@@ -892,14 +892,14 @@ RooAbsGenContext* RooFFTConvPdf::genContext(const RooArgSet &vars, const RooData
     // or pdf or resmodel do not support direct generation
     cxcoutI(Generation) << "RooFFTConvPdf::genContext() selecting accept/reject generator context because one or both of the input "
          << "p.d.f.s cannot use internal generator and/or "
-         << "observables other than the convolution variable are requested for generation" << endl ;
+         << "observables other than the convolution variable are requested for generation" << std::endl ;
     return new RooGenContext(*this,vars,prototype,auxProto,verbose) ;
   }
 
   // Any other resolution model: use specialized generator context
   cxcoutI(Generation) << "RooFFTConvPdf::genContext() selecting specialized convolution generator context as both input "
             << "p.d.fs are safe for internal generator and only "
-            << "the convolution observables is requested for generation" << endl ;
+            << "the convolution observables is requested for generation" << std::endl ;
   return new RooConvGenContext(*this,vars,prototype,auxProto,verbose) ;
 }
 
@@ -912,7 +912,7 @@ RooAbsGenContext* RooFFTConvPdf::genContext(const RooArgSet &vars, const RooData
 void RooFFTConvPdf::setBufferFraction(double frac)
 {
   if (frac<0) {
-    coutE(InputArguments) << "RooFFTConvPdf::setBufferFraction(" << GetName() << ") fraction should be greater than or equal to zero" << endl ;
+    coutE(InputArguments) << "RooFFTConvPdf::setBufferFraction(" << GetName() << ") fraction should be greater than or equal to zero" << std::endl ;
     return ;
   }
   _bufFrac = frac ;

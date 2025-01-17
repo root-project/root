@@ -64,7 +64,7 @@ RooFit messages can be evaluated or suppressed.
 #include <fstream>
 #include <iomanip>
 
-using std::cout, std::endl, std::ofstream, std::ostream, std::string, std::vector, std::map;
+using std::ofstream, std::ostream, std::string, std::vector, std::map;
 using namespace RooFit;
 
 ClassImp(RooMsgService);
@@ -257,9 +257,9 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
       os2 = new ofstream(outFile) ;
 
       if (!*os2) {
-   cout << "RooMsgService::addReportingStream ERROR: cannot open output log file " << outFile << " reverting stream to stdout" << endl ;
+   std::cout << "RooMsgService::addReportingStream ERROR: cannot open output log file " << outFile << " reverting stream to stdout" << std::endl ;
    delete os2 ;
-   newStream.os = &cout ;
+   newStream.os = &std::cout ;
       } else {
    newStream.os = os2 ;
       }
@@ -273,7 +273,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
   } else {
 
     // To stdout
-    newStream.os = &cout ;
+    newStream.os = &std::cout ;
 
   }
 
@@ -311,7 +311,7 @@ void RooMsgService::deleteStream(Int_t id)
 void RooMsgService::setStreamStatus(Int_t id, bool flag)
 {
   if (id<0 || id>=static_cast<Int_t>(_streams.size())) {
-    cout << "RooMsgService::setStreamStatus() ERROR: invalid stream ID " << id << endl ;
+    std::cout << "RooMsgService::setStreamStatus() ERROR: invalid stream ID " << id << std::endl ;
     return ;
   }
 
@@ -331,7 +331,7 @@ void RooMsgService::setStreamStatus(Int_t id, bool flag)
 bool RooMsgService::getStreamStatus(Int_t id) const
 {
   if (id<0 || id>= static_cast<Int_t>(_streams.size())) {
-    cout << "RooMsgService::getStreamStatus() ERROR: invalid stream ID " << id << endl ;
+    std::cout << "RooMsgService::getStreamStatus() ERROR: invalid stream ID " << id << std::endl ;
     return false ;
   }
   return _streams[id].active ;
@@ -432,9 +432,9 @@ ostream& RooMsgService::log(const RooAbsArg* self, RooFit::MsgLevel level, RooFi
   // Flush any previous messages
   (*_streams[as].os).flush() ;
 
-  // Insert an endl if we switch from progress to another level
+  // Insert an std::endl if we switch from progress to another level
   if (_lastMsgLevel==PROGRESS && level!=PROGRESS) {
-    (*_streams[as].os) << endl ;
+    (*_streams[as].os) << std::endl ;
   }
   _lastMsgLevel=level ;
 
@@ -490,7 +490,7 @@ void RooMsgService::Print(Option_t *options) const
     activeOnly = false ;
   }
 
-  cout << (activeOnly?"Active Message streams":"All Message streams") << endl ;
+  std::cout << (activeOnly?"Active Message streams":"All Message streams") << std::endl ;
   for (UInt_t i=0 ; i<_streams.size() ; i++) {
 
     // Skip passive streams in active only mode
@@ -500,41 +500,41 @@ void RooMsgService::Print(Option_t *options) const
 
 
     map<int,string>::const_iterator is = _levelNames.find(_streams[i].minLevel) ;
-    cout << "[" << i << "] MinLevel = " << is->second ;
+    std::cout << "[" << i << "] MinLevel = " << is->second ;
 
-    cout << " Topic = " ;
+    std::cout << " Topic = " ;
     if (_streams[i].topic != 0xFFFFF) {
       map<int,string>::const_iterator iter = _topicNames.begin() ;
       while(iter!=_topicNames.end()) {
    if (iter->first & _streams[i].topic) {
-     cout << iter->second << " " ;
+     std::cout << iter->second << " " ;
    }
    ++iter ;
       }
     } else {
-      cout << " Any " ;
+      std::cout << " Any " ;
     }
 
 
     if (!_streams[i].objectName.empty()) {
-      cout << " ObjectName = " << _streams[i].objectName ;
+      std::cout << " ObjectName = " << _streams[i].objectName ;
     }
     if (!_streams[i].className.empty()) {
-      cout << " ClassName = " << _streams[i].className ;
+      std::cout << " ClassName = " << _streams[i].className ;
     }
     if (!_streams[i].baseClassName.empty()) {
-      cout << " BaseClassName = " << _streams[i].baseClassName ;
+      std::cout << " BaseClassName = " << _streams[i].baseClassName ;
     }
     if (!_streams[i].tagName.empty()) {
-      cout << " TagLabel = " << _streams[i].tagName ;
+      std::cout << " TagLabel = " << _streams[i].tagName ;
     }
 
     // Postfix status when printing all
     if (!activeOnly && !_streams[i].active) {
-      cout << " (NOT ACTIVE)"  ;
+      std::cout << " (NOT ACTIVE)"  ;
     }
 
-    cout << endl ;
+    std::cout << std::endl ;
   }
 
 }

@@ -143,7 +143,7 @@ bool RooAdaptiveIntegratorND::checkLimits() const
 bool RooAdaptiveIntegratorND::setLimits(double *xmin, double *xmax)
 {
   if(_useIntegrandLimits) {
-    oocoutE(nullptr,Integration) << "RooAdaptiveIntegratorND::setLimits: cannot override integrand's limits" << endl;
+    oocoutE(nullptr,Integration) << "RooAdaptiveIntegratorND::setLimits: cannot override integrand's limits" << std::endl;
     return false;
   }
   for (UInt_t i=0 ; i<_func->NDim() ; i++) {
@@ -167,11 +167,11 @@ double RooAdaptiveIntegratorND::integral(const double* /*yvec*/)
     _nError++ ;
     if (_nError<=_nWarn) {
       oocoutW(nullptr, NumIntegration) << "RooAdaptiveIntegratorND::integral(" << integrand()->getName() << ") WARNING: target rel. precision not reached due to nEval limit of "
-             << _nmax << ", estimated rel. precision is " << Form("%3.1e",_integrator->RelError()) << endl ;
+             << _nmax << ", estimated rel. precision is " << Form("%3.1e",_integrator->RelError()) << std::endl ;
     }
     if (_nError==_nWarn) {
       oocoutW(nullptr, NumIntegration) << "RooAdaptiveIntegratorND::integral(" << integrand()->getName()
-             << ") Further warnings on target precision are suppressed conform specification in integrator specification" << endl ;
+             << ") Further warnings on target precision are suppressed conform specification in integrator specification" << std::endl ;
     }
   }
   return ret ;

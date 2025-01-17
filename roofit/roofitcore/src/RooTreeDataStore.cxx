@@ -337,7 +337,7 @@ void RooTreeDataStore::createTree(RooStringView name, RooStringView title)
   memDir.Append(":/") ;
   bool notInMemNow= (pwd!=memDir) ;
 
-  // cout << "RooTreeData::createTree pwd=" << pwd << " memDir=" << memDir << " notInMemNow = " << (notInMemNow?"T":"F") << endl ;
+  // std::cout << "RooTreeData::createTree pwd=" << pwd << " memDir=" << memDir << " notInMemNow = " << (notInMemNow?"T":"F") << std::endl ;
 
   if (notInMemNow) {
     gDirectory->cd(memDir) ;
@@ -451,7 +451,7 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
   }
 
   if (numInvalid>0) {
-    coutW(DataHandling) << "RooTreeDataStore::loadValues(" << GetName() << ") Ignored " << numInvalid << " out-of-range events" << endl ;
+    coutW(DataHandling) << "RooTreeDataStore::loadValues(" << GetName() << ") Ignored " << numInvalid << " out-of-range events" << std::endl ;
   }
 
   SetTitle(t->GetTitle());
@@ -716,7 +716,7 @@ bool RooTreeDataStore::changeObservableName(const char* from, const char* to)
 
   // Check that we found it
   if (!var) {
-    coutE(InputArguments) << "RooTreeDataStore::changeObservableName(" << GetName() << " no observable " << from << " in this dataset" << endl ;
+    coutE(InputArguments) << "RooTreeDataStore::changeObservableName(" << GetName() << " no observable " << from << " in this dataset" << std::endl ;
     return true ;
   }
 
@@ -788,7 +788,7 @@ RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, bool adjustRange)
   // Sanity check that the holder really is fundamental
   if(!valHolder->isFundamental()) {
     coutE(InputArguments) << GetName() << "::addColumn: holder argument is not fundamental: \""
-    << valHolder->GetName() << "\"" << endl;
+    << valHolder->GetName() << "\"" << std::endl;
     return nullptr;
   }
 
@@ -1002,7 +1002,7 @@ void RooTreeDataStore::setArgStatus(const RooArgSet& set, bool active)
     RooAbsArg* depArg = _vars.find(arg->GetName()) ;
     if (!depArg) {
       coutE(InputArguments) << "RooTreeDataStore::setArgStatus(" << GetName()
-             << ") dataset doesn't contain variable " << arg->GetName() << endl ;
+             << ") dataset doesn't contain variable " << arg->GetName() << std::endl ;
       continue ;
     }
     depArg->setTreeBranchStatus(*_tree,active) ;

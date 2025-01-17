@@ -111,7 +111,7 @@ void RooConvIntegrandBinding::loadValues(const double xvector[], bool clipInvali
     if (clipInvalid && !_vars[index]->isValidReal(xvector[index])) {
       _xvecValid = false ;
     } else {
-      //cout << "RooConvBasBinding::loadValues[" << index << "] loading value " << xvector[index] << endl ;
+      //cout << "RooConvBasBinding::loadValues[" << index << "] loading value " << xvector[index] << std::endl ;
       _vars[index]->setVal(xvector[index]);
     }
   }
@@ -129,7 +129,7 @@ double RooConvIntegrandBinding::operator()(const double xvector[]) const
   // First evaluate function at x'
   loadValues(xvector);
   if (!_xvecValid) return 0 ;
-  //cout << "RooConvIntegrandBinding::operator(): evaluating f(x') at x' = " << xvector[0] << endl ;
+  //cout << "RooConvIntegrandBinding::operator(): evaluating f(x') at x' = " << xvector[0] << std::endl ;
   double f_xp = _func->getVal(_nset) ;
 
   // Next evaluate model at x-x'
@@ -138,11 +138,11 @@ double RooConvIntegrandBinding::operator()(const double xvector[]) const
   if (!_xvecValid) return 0 ;
   double g_xmxp = _model->getVal(_nset) ;
 
-  //cout << "RooConvIntegrandBinding::operator(): evaluating g(x-x') at x-x' = " << _vars[0]->getVal() << " = " << g_xmxp << endl ;
-  //cout << "RooConvIntegrandBinding::operator(): return value = " << f_xp << " * " << g_xmxp << " = " << f_xp*g_xmxp << endl ;
+  //cout << "RooConvIntegrandBinding::operator(): evaluating g(x-x') at x-x' = " << _vars[0]->getVal() << " = " << g_xmxp << std::endl ;
+  //cout << "RooConvIntegrandBinding::operator(): return value = " << f_xp << " * " << g_xmxp << " = " << f_xp*g_xmxp << std::endl ;
 
-  //cout << "_vars[0] = " << _vars[0]->getVal() << " _vars[1] = " << _vars[1]->getVal() << endl ;
-  //cout << "_xvec[0] = " <<  xvector[0]        << " _xvec[1] = " <<  xvector[1] << endl ;
+  //cout << "_vars[0] = " << _vars[0]->getVal() << " _vars[1] = " << _vars[1]->getVal() << std::endl ;
+  //cout << "_xvec[0] = " <<  xvector[0]        << " _xvec[1] = " <<  xvector[1] << std::endl ;
 
   return f_xp*g_xmxp ;
 }

@@ -66,9 +66,6 @@ AsymptoticCalculator, which can compute in addition the expected
 
 #include "Math/MinimizerOptions.h"
 #include "RooMinimizer.h"
-//#include "RooProdPdf.h"
-
-using std::cout, std::endl;
 
 ClassImp(RooStats::ProfileLikelihoodCalculator);
 
@@ -185,18 +182,18 @@ RooFit::OwningPtr<RooFitResult> ProfileLikelihoodCalculator::DoMinimizeNLL(RooAb
       if (status%1000 == 0) {  // ignore errors from Improve
          break;
       } else if (tries < maxtries) {
-         cout << "    ----> Doing a re-scan first" << endl;
+         std::cout << "    ----> Doing a re-scan first" << std::endl;
          minim.minimize(minimType,"Scan");
          if (tries == 2) {
             if (strategy == 0 ) {
-               cout << "    ----> trying with strategy = 1" << endl;
+               std::cout << "    ----> trying with strategy = 1" << std::endl;
                minim.setStrategy(1);
             }
             else
                tries++; // skip this trial if strategy is already 1
          }
          if (tries == 3) {
-            cout << "    ----> trying with improve" << endl;
+            std::cout << "    ----> trying with improve" << std::endl;
             minimType = "Minuit";
             minimAlgo = "migradimproved";
          }

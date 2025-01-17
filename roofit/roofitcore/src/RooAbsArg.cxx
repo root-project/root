@@ -96,7 +96,7 @@ for single nodes.
 #include <fstream>
 #include <sstream>
 
-using std::cout, std::endl, std::ostream, std::string, std::set, std::map, std::istream, std::pair, std::ofstream, std::make_pair;
+using std::ostream, std::string, std::set, std::map, std::istream, std::pair, std::ofstream, std::make_pair;
 
 ClassImp(RooAbsArg);
 
@@ -180,12 +180,12 @@ RooAbsArg::~RooAbsArg()
     if (_verboseDirty) {
 
       if (first) {
-   cxcoutD(Tracing) << "RooAbsArg::dtor(" << GetName() << "," << this << ") DeleteWatch: object is being destroyed" << endl ;
+   cxcoutD(Tracing) << "RooAbsArg::dtor(" << GetName() << "," << this << ") DeleteWatch: object is being destroyed" << std::endl ;
    first = false ;
       }
 
       cxcoutD(Tracing)  << fName << "::" << ClassName() << ":~RooAbsArg: dependent \""
-             << client->GetName() << "\" should have been deleted first" << endl ;
+             << client->GetName() << "\" should have been deleted first" << std::endl ;
     }
   }
 
@@ -329,12 +329,12 @@ void RooAbsArg::addServer(RooAbsArg& server, bool valueProp, bool shapeProp, std
   if (_prohibitServerRedirect) {
     cxcoutF(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName()
             << "): PROHIBITED SERVER ADDITION REQUESTED: adding server " << server.GetName()
-            << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << endl ;
+            << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << std::endl ;
     throw std::logic_error("PROHIBITED SERVER ADDITION REQUESTED in RooAbsArg::addServer");
   }
 
   cxcoutD(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName() << "): adding server " << server.GetName()
-          << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << endl ;
+          << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << std::endl ;
 
   if (server.operMode()==ADirty && operMode()!=ADirty && valueProp) {
     setOperMode(ADirty) ;
@@ -387,7 +387,7 @@ void RooAbsArg::removeServer(RooAbsArg& server, bool force)
 
   if (_verboseDirty) {
     cxcoutD(LinkStateMgmt) << "RooAbsArg::removeServer(" << GetName() << "): removing server "
-            << server.GetName() << "(" << &server << ")" << endl ;
+            << server.GetName() << "(" << &server << ")" << std::endl ;
   }
 
   // Remove server link to given server
@@ -439,14 +439,14 @@ void RooAbsArg::changeServer(RooAbsArg& server, bool valueProp, bool shapeProp)
 {
   if (!_serverList.containsByNamePtr(&server)) {
     coutE(LinkStateMgmt) << "RooAbsArg::changeServer(" << GetName() << "): Server "
-    << server.GetName() << " not registered" << endl ;
+    << server.GetName() << " not registered" << std::endl ;
     return ;
   }
 
   // This condition should not happen, but check anyway
   if (!server._clientList.containsByNamePtr(this)) {
     coutE(LinkStateMgmt) << "RooAbsArg::changeServer(" << GetName() << "): Server "
-          << server.GetName() << " doesn't have us registered as client" << endl ;
+          << server.GetName() << " doesn't have us registered as client" << std::endl ;
     return ;
   }
 
@@ -499,7 +499,7 @@ void RooAbsArg::branchNodeServerList(RooAbsCollection* list, const RooAbsArg* ar
 void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg, bool doBranch, bool doLeaf, bool valueOnly, bool recurseFundamental) const
 {
 //   if (arg==0) {
-//     cout << "treeNodeServerList(" << GetName() << ") doBranch=" << (doBranch?"T":"F") << " doLeaf = " << (doLeaf?"T":"F") << " valueOnly=" << (valueOnly?"T":"F") << endl ;
+//     std::cout << "treeNodeServerList(" << GetName() << ") doBranch=" << (doBranch?"T":"F") << " doLeaf = " << (doLeaf?"T":"F") << " valueOnly=" << (valueOnly?"T":"F") << std::endl ;
 //   }
 
   if (!arg) {
@@ -813,7 +813,7 @@ bool RooAbsArg::recursiveCheckObservables(const RooArgSet* nset) const
   for(RooAbsArg * arg : nodeList) {
     if (arg->getAttribute("ServerDied")) {
       coutE(LinkStateMgmt) << "RooAbsArg::recursiveCheckObservables(" << GetName() << "): ERROR: one or more servers of node "
-            << arg->GetName() << " no longer exists!" << endl ;
+            << arg->GetName() << " no longer exists!" << std::endl ;
       arg->Print("v") ;
       ret = true ;
     }
@@ -930,7 +930,7 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source)
   } else if (source==this) {
     // Cyclical dependency, abort
     coutE(LinkStateMgmt) << "RooAbsArg::setValueDirty(" << GetName()
-          << "): cyclical dependency detected, source = " << source->GetName() << endl ;
+          << "): cyclical dependency detected, source = " << source->GetName() << std::endl ;
     //assert(0) ;
     return ;
   }
@@ -938,7 +938,7 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source)
   // Propagate dirty flag to all clients if this is a down->up transition
   if (_verboseDirty) {
     cxcoutD(LinkStateMgmt) << "RooAbsArg::setValueDirty(" << (source?source->GetName():"self") << "->" << GetName() << "," << this
-            << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
+            << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << std::endl ;
   }
 
   _valueDirty = true ;
@@ -960,7 +960,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source)
 {
   if (_verboseDirty) {
     cxcoutD(LinkStateMgmt) << "RooAbsArg::setShapeDirty(" << GetName()
-            << "): dirty flag " << (_shapeDirty?"already ":"") << "raised" << endl ;
+            << "): dirty flag " << (_shapeDirty?"already ":"") << "raised" << std::endl ;
   }
 
   if (_clientListShape.empty()) {
@@ -974,7 +974,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source)
   } else if (source==this) {
     // Cyclical dependency, abort
     coutE(LinkStateMgmt) << "RooAbsArg::setShapeDirty(" << GetName()
-    << "): cyclical dependency detected" << endl ;
+    << "): cyclical dependency detected" << std::endl ;
     return ;
   }
 
@@ -1083,7 +1083,7 @@ bool RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, bool mustRep
       auto ap = dynamic_cast<const RooArgProxy*>(p);
       coutE(LinkStateMgmt) << "RooAbsArg::redirectServers(" << GetName()
               << "): ERROR, proxy '" << p->name()
-              << "' with arg '" << (ap ? ap->absArg()->GetName() : "<could not cast>") << "' could not be adjusted" << endl;
+              << "' with arg '" << (ap ? ap->absArg()->GetName() : "<could not cast>") << "' could not be adjusted" << std::endl;
       ret = true ;
     }
   }
@@ -1241,7 +1241,7 @@ bool recursiveRedirectServersImpl(RooAbsArg *arg, RooAbsCollection const &newSet
    oocxcoutD(arg, LinkStateMgmt) << "RooAbsArg::recursiveRedirectServers(" << arg << "," << arg->GetName()
                                  << ") newSet = " << newSet << " mustReplaceAll = " << (mustReplaceAll ? "T" : "F")
                                  << " nameChange = " << (nameChange ? "T" : "F")
-                                 << " recurseInNewSet = " << (recurseInNewSet ? "T" : "F") << endl;
+                                 << " recurseInNewSet = " << (recurseInNewSet ? "T" : "F") << std::endl;
 
    // Do redirect on self (identify operation as recursion step)
    ret |= arg->redirectServers(newSet, mustReplaceAll, nameChange, true);
@@ -1313,13 +1313,13 @@ void RooAbsArg::registerProxy(RooArgProxy& proxy)
   if (_proxyList.FindObject(&proxy)) {
     coutE(LinkStateMgmt) << "RooAbsArg::registerProxy(" << GetName() << "): proxy named "
           << proxy.GetName() << " for arg " << proxy.absArg()->GetName()
-          << " already registered" << endl ;
+          << " already registered" << std::endl ;
     return ;
   }
 
-//   cout << (void*)this << " " << GetName() << ": registering proxy "
+//   std::cout << (void*)this << " " << GetName() << ": registering proxy "
 //        << (void*)&proxy << " with name " << proxy.name() << " in mode "
-//        << (proxy.isValueServer()?"V":"-") << (proxy.isShapeServer()?"S":"-") << endl ;
+//        << (proxy.isValueServer()?"V":"-") << (proxy.isShapeServer()?"S":"-") << std::endl ;
 
   // Register proxied object as server
   if (proxy.absArg()) {
@@ -1356,7 +1356,7 @@ void RooAbsArg::registerProxy(RooSetProxy& proxy)
   // Every proxy can be registered only once
   if (_proxyList.FindObject(&proxy)) {
     coutE(LinkStateMgmt) << "RooAbsArg::registerProxy(" << GetName() << "): proxy named "
-          << proxy.GetName() << " already registered" << endl ;
+          << proxy.GetName() << " already registered" << std::endl ;
     return ;
   }
 
@@ -1391,7 +1391,7 @@ void RooAbsArg::registerProxy(RooListProxy& proxy)
   // Every proxy can be registered only once
   if (_proxyList.FindObject(&proxy)) {
     coutE(LinkStateMgmt) << "RooAbsArg::registerProxy(" << GetName() << "): proxy named "
-          << proxy.GetName() << " already registered" << endl ;
+          << proxy.GetName() << " already registered" << std::endl ;
     return ;
   }
 
@@ -1400,7 +1400,7 @@ void RooAbsArg::registerProxy(RooListProxy& proxy)
   _proxyList.Add(&proxy) ;
   _proxyListCache.isDirty = true;
   if (_proxyList.GetEntries()!=nProxyOld+1) {
-    cout << "RooAbsArg::registerProxy(" << GetName() << ") proxy registration failure! nold=" << nProxyOld << " nnew=" << _proxyList.GetEntries() << endl ;
+    std::cout << "RooAbsArg::registerProxy(" << GetName() << ") proxy registration failure! nold=" << nProxyOld << " nnew=" << _proxyList.GetEntries() << std::endl ;
   }
 }
 
@@ -1478,7 +1478,7 @@ void RooAbsArg::setProxyNormSet(const RooArgSet* nset)
 void RooAbsArg::attachToTree(TTree& ,Int_t)
 {
   coutE(Contents) << "RooAbsArg::attachToTree(" << GetName()
-        << "): Cannot be attached to a TTree" << endl ;
+        << "): Cannot be attached to a TTree" << std::endl ;
 }
 
 
@@ -1569,7 +1569,7 @@ Int_t RooAbsArg::defaultPrintContents(Option_t* /*opt*/) const
 
 void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, bool /*verbose*/, TString indent) const
 {
-  os << indent << "--- RooAbsArg ---" << endl;
+  os << indent << "--- RooAbsArg ---" << std::endl;
   // dirty state flags
   os << indent << "  Value State: " ;
   switch(_operMode) {
@@ -1577,16 +1577,16 @@ void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, bool /*verbose*/
   case AClean: os << "FORCED clean" ; break ;
   case Auto: os << (isValueDirty() ? "DIRTY":"clean") ; break ;
   }
-  os << endl
-     << indent << "  Shape State: " << (isShapeDirty() ? "DIRTY":"clean") << endl;
+  os << std::endl
+     << indent << "  Shape State: " << (isShapeDirty() ? "DIRTY":"clean") << std::endl;
   // attribute list
   os << indent << "  Attributes: " ;
   printAttribList(os) ;
-  os << endl ;
+  os << std::endl ;
   // our memory address (for x-referencing with client addresses of other args)
-  os << indent << "  Address: " << (void*)this << endl;
+  os << indent << "  Address: " << (void*)this << std::endl;
   // client list
-  os << indent << "  Clients: " << endl;
+  os << indent << "  Clients: " << std::endl;
   for (const auto client : _clientList) {
     os << indent << "    (" << (void*)client  << ","
        << (_clientListValue.containsByNamePtr(client)?"V":"-")
@@ -1596,7 +1596,7 @@ void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, bool /*verbose*/
   }
 
   // server list
-  os << indent << "  Servers: " << endl;
+  os << indent << "  Servers: " << std::endl;
   for (const auto server : _serverList) {
     os << indent << "    (" << (void*)server << ","
        << (server->_clientListValue.containsByNamePtr(this)?"V":"-")
@@ -1741,13 +1741,13 @@ void RooAbsArg::printDirty(bool depth) const
     }
 
   } else {
-    cout << GetName() << " : " ;
+    std::cout << GetName() << " : " ;
     switch (_operMode) {
-    case AClean: cout << "FORCED clean" ; break ;
-    case ADirty: cout << "FORCED DIRTY" ; break ;
-    case Auto:   cout << "Auto  " << (isValueDirty()?"DIRTY":"clean") ;
+    case AClean: std::cout << "FORCED clean" ; break ;
+    case ADirty: std::cout << "FORCED DIRTY" ; break ;
+    case Auto:   std::cout << "Auto  " << (isValueDirty()?"DIRTY":"clean") ;
     }
-    cout << endl ;
+    std::cout << std::endl ;
   }
 }
 
@@ -1767,7 +1767,7 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet& observables)
   optimizeCacheMode(observables,opt,proc) ;
 
   coutI(Optimization) << "RooAbsArg::optimizeCacheMode(" << GetName() << ") nodes " << opt << " depend on observables, "
-         << "changing cache operation mode from change tracking to unconditional evaluation" << endl ;
+         << "changing cache operation mode from change tracking to unconditional evaluation" << std::endl ;
 }
 
 
@@ -1803,7 +1803,7 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet& observables, RooArgSet& optim
   if (obj) {
      // here for nodes with duplicate names
      cxcoutI(Optimization) << "RooAbsArg::optimizeCacheMode(" << GetName() << " node " << this << " exists already as "
-                           << obj << " but with the SAME name !" << endl;
+                           << obj << " but with the SAME name !" << std::endl;
   }
 
   processedNodes.Add(this);
@@ -1812,7 +1812,7 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet& observables, RooArgSet& optim
   if (dependsOnValue(observables)) {
 
     if (dynamic_cast<RooRealIntegral*>(this)) {
-      cxcoutI(Integration) << "RooAbsArg::optimizeCacheMode(" << GetName() << ") integral depends on value of one or more observables and will be evaluated for every event" << endl ;
+      cxcoutI(Integration) << "RooAbsArg::optimizeCacheMode(" << GetName() << ") integral depends on value of one or more observables and will be evaluated for every event" << std::endl ;
     }
     optimizedNodes.add(*this,true) ;
     if (operMode()==AClean) {
@@ -1844,7 +1844,7 @@ bool RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cache
 
   // If node can be optimized and hasn't been identified yet, add it to the list
   coutI(Optimization) << "RooAbsArg::findConstantNodes(" << GetName() << "): components "
-         << cacheList << " depend exclusively on constant parameters and will be precalculated and cached" << endl ;
+         << cacheList << " depend exclusively on constant parameters and will be precalculated and cached" << std::endl ;
 
   return ret ;
 }
@@ -1895,7 +1895,7 @@ bool RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cache
     if (!cacheList.find(*this) && dependsOnValue(observables) && !observables.find(*this) ) {
 
       // Add to cache list
-      cxcoutD(Optimization) << "RooAbsArg::findConstantNodes(" << GetName() << ") adding self to list of constant nodes" << endl ;
+      cxcoutD(Optimization) << "RooAbsArg::findConstantNodes(" << GetName() << ") adding self to list of constant nodes" << std::endl ;
 
       if (canOpt) setAttribute("ConstantExpressionCached") ;
       cacheList.add(*this,false) ;
@@ -1974,7 +1974,7 @@ void RooAbsArg::printCompactTree(const char* indent, const char* filename, const
     ofstream ofs(filename) ;
     printCompactTree(ofs,indent,namePat,client) ;
   } else {
-    printCompactTree(cout,indent,namePat,client) ;
+    printCompactTree(std::cout,indent,namePat,client) ;
   }
 }
 
@@ -2006,7 +2006,7 @@ void RooAbsArg::printCompactTree(ostream& os, const char* indent, const char* na
       case ADirty: os << " [ADIRTY] " ; break ;
       }
     }
-    os << endl ;
+    os << std::endl ;
 
     for (Int_t i=0 ;i<numCaches() ; i++) {
       getCache(i)->printCompactTreeHook(os,indent) ;
@@ -2037,7 +2037,7 @@ void RooAbsArg::printComponentTree(const char* indent, const char* namePat, Int_
   if (InheritsFrom("RooConstVar")) return ;
 
   if ( !namePat || TString(GetName()).Contains(namePat)) {
-    cout << indent ;
+    std::cout << indent ;
     Print() ;
   }
 
@@ -2151,7 +2151,7 @@ void RooAbsArg::graphVizTree(const char* fileName, const char* delimiter, bool u
 {
   ofstream ofs(fileName) ;
   if (!ofs) {
-    coutE(InputArguments) << "RooAbsArg::graphVizTree() ERROR: Cannot open graphViz output file with name " << fileName << endl ;
+    coutE(InputArguments) << "RooAbsArg::graphVizTree() ERROR: Cannot open graphViz output file with name " << fileName << std::endl ;
     return ;
   }
   graphVizTree(ofs, delimiter, useTitle, useLatex) ;
@@ -2168,14 +2168,14 @@ void RooAbsArg::graphVizTree(const char* fileName, const char* delimiter, bool u
 void RooAbsArg::graphVizTree(ostream& os, const char* delimiter, bool useTitle, bool useLatex)
 {
   if (!os) {
-    coutE(InputArguments) << "RooAbsArg::graphVizTree() ERROR: output stream provided as input argument is in invalid state" << endl ;
+    coutE(InputArguments) << "RooAbsArg::graphVizTree() ERROR: output stream provided as input argument is in invalid state" << std::endl ;
   }
 
   // silent warning messages coming when evaluating a RooAddPdf without a normalization set
   RooHelpers::LocalChangeMsgLevel locmsg(RooFit::WARNING, 0u, RooFit::Eval, false);
 
   // Write header
-  os << "digraph \"" << GetName() << "\"{" << endl ;
+  os << "digraph \"" << GetName() << "\"{" << std::endl ;
 
   // First list all the tree nodes
   RooArgSet nodeSet ;
@@ -2201,7 +2201,7 @@ void RooAbsArg::graphVizTree(ostream& os, const char* delimiter, bool useTitle, 
     }
 
     os << "\"" << nodeName << "\" [ color=" << (node->isFundamental()?"blue":"red")
-       << ", label=\"" << nodeType << delimiter << nodeLabel << "\"];" << endl ;
+       << ", label=\"" << nodeType << delimiter << nodeLabel << "\"];" << std::endl ;
 
   }
 
@@ -2211,11 +2211,11 @@ void RooAbsArg::graphVizTree(ostream& os, const char* delimiter, bool useTitle, 
 
   // And write them out
   for(auto const& link : links) {
-    os << "\"" << link.first->GetName() << "\" -> \"" << link.second->GetName() << "\";" << endl ;
+    os << "\"" << link.first->GetName() << "\" -> \"" << link.second->GetName() << "\";" << std::endl ;
   }
 
   // Write trailer
-  os << "}" << endl ;
+  os << "}" << std::endl ;
 
 }
 
@@ -2350,7 +2350,7 @@ void RooAbsArg::SetName(const char* name)
   TNamed::SetName(name) ;
   auto newPtr = RooNameReg::instance().constPtr(GetName()) ;
   if (newPtr != _namePtr) {
-    //cout << "Rename '" << _namePtr->GetName() << "' to '" << name << "' (set flag in new name)" << endl;
+    //cout << "Rename '" << _namePtr->GetName() << "' to '" << name << "' (set flag in new name)" << std::endl;
     _namePtr = newPtr;
     const_cast<TNamed*>(_namePtr)->SetBit(RooNameReg::kRenamedArg);
     RooNameReg::incrementRenameCounter();

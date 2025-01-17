@@ -34,7 +34,7 @@
 // Tests file
 #include "stressRooStats_tests.h"
 
-using std::cout, std::endl, std::string, std::list, std::setw, std::setfill, std::left;
+using std::string, std::list, std::setw, std::setfill, std::left;
 using namespace RooFit;
 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
@@ -50,8 +50,8 @@ using namespace RooFit;
 void StatusPrint(const int id, const TString &title, const int status, const int lineWidth)
 {
    TString header = TString::Format("Test %d : %s ", id, title.Data());
-   cout << left << setw(lineWidth) << setfill('.') << header << " "
-        << (status > 0 ? "OK" : (status < 0 ? "SKIPPED" : "FAILED")) << endl;
+   std::cout << left << setw(lineWidth) << setfill('.') << header << " "
+        << (status > 0 ? "OK" : (status < 0 ? "SKIPPED" : "FAILED")) << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +74,7 @@ int stressRooStats(const char *refFile, bool writeRef, int verbose, bool allTest
    if (!dryRun) {
       if (TString(refFile).Contains("http:")) {
          if (writeRef) {
-            cout << "stressRooStats ERROR: reference file must be local file in writing mode" << endl;
+            std::cout << "stressRooStats ERROR: reference file must be local file in writing mode" << std::endl;
             return -1;
          }
          fref = new TWebFile(refFile);
@@ -82,7 +82,7 @@ int stressRooStats(const char *refFile, bool writeRef, int verbose, bool allTest
          fref = new TFile(refFile, writeRef ? "RECREATE" : "");
       }
       if (fref->IsZombie()) {
-         cout << "stressRooStats ERROR: cannot open reference file " << refFile << endl;
+         std::cout << "stressRooStats ERROR: cannot open reference file " << refFile << std::endl;
          return -1;
       }
    }
@@ -98,11 +98,11 @@ int stressRooStats(const char *refFile, bool writeRef, int verbose, bool allTest
    // Add dedicated logging stream for errors that will remain active in silent mode
    RooMsgService::instance().addStream(RooFit::ERROR);
 
-   cout << left << setw(lineWidth) << setfill('*') << "" << endl;
-   cout << "*" << setw(lineWidth - 2) << setfill(' ') << " RooStats S.T.R.E.S.S. suite "
-        << "*" << endl;
-   cout << setw(lineWidth) << setfill('*') << "" << endl;
-   cout << setw(lineWidth) << setfill('*') << "" << endl;
+   std::cout << left << setw(lineWidth) << setfill('*') << "" << std::endl;
+   std::cout << "*" << setw(lineWidth - 2) << setfill(' ') << " RooStats S.T.R.E.S.S. suite "
+        << "*" << std::endl;
+   std::cout << setw(lineWidth) << setfill('*') << "" << std::endl;
+   std::cout << setw(lineWidth) << setfill('*') << "" << std::endl;
 
    TStopwatch timer;
    timer.Start();
@@ -195,8 +195,8 @@ int stressRooStats(const char *refFile, bool writeRef, int verbose, bool allTest
       " Starting S.T.R.E.S.S. %s",
       allTests ? "full suite" : (oneTest ? TString::Format("test %d", testNumber).Data() : "basic suite"));
 
-   cout << "*" << setw(lineWidth - 3) << setfill(' ') << suiteType << " *" << endl;
-   cout << setw(lineWidth) << setfill('*') << "" << endl;
+   std::cout << "*" << setw(lineWidth - 3) << setfill(' ') << suiteType << " *" << std::endl;
+   std::cout << setw(lineWidth) << setfill('*') << "" << std::endl;
 
    if (doDump) {
       TFile fdbg("stressRooStats_DEBUG.root", "RECREATE");
@@ -210,7 +210,7 @@ int stressRooStats(const char *refFile, bool writeRef, int verbose, bool allTest
       list<RooUnitTest *>::iterator iter;
 
       if (oneTest && (testNumber <= 0 || (UInt_t)testNumber > testList.size())) {
-         cout << "Tests are numbered from 1 to " << testList.size() << endl;
+         std::cout << "Tests are numbered from 1 to " << testList.size() << std::endl;
       } else {
          for (iter = testList.begin(), i = 1; iter != testList.end(); iter++, i++) {
             if (!oneTest || testNumber == i) {
@@ -235,25 +235,25 @@ int stressRooStats(const char *refFile, bool writeRef, int verbose, bool allTest
 
    // Print table with results
    bool UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
-   cout << setw(lineWidth) << setfill('*') << "" << endl;
+   std::cout << setw(lineWidth) << setfill('*') << "" << std::endl;
    if (UNIX) {
       TString sp = gSystem->GetFromPipe("uname -a");
-      cout << "* SYS: " << sp << endl;
+      std::cout << "* SYS: " << sp << std::endl;
       if (strstr(gSystem->GetBuildNode(), "Darwin")) {
          sp = gSystem->GetFromPipe("sw_vers -productVersion");
          sp += " Mac OS X ";
-         cout << "* SYS: " << sp << endl;
+         std::cout << "* SYS: " << sp << std::endl;
       }
    } else {
       const Char_t *os = gSystem->Getenv("OS");
       if (!os) {
-         cout << "*  SYS: Windows 95" << endl;
+         std::cout << "*  SYS: Windows 95" << std::endl;
       } else {
-         cout << "*  SYS: " << os << " " << gSystem->Getenv("PROCESSOR_IDENTIFIER") << endl;
+         std::cout << "*  SYS: " << os << " " << gSystem->Getenv("PROCESSOR_IDENTIFIER") << std::endl;
       }
    }
 
-   cout << setw(lineWidth) << setfill('*') << "" << endl;
+   std::cout << setw(lineWidth) << setfill('*') << "" << std::endl;
    gBenchmark->Print("stressRooStats");
 #ifdef __CINT__
    Double_t reftime = 186.34; // pcbrun4 interpreted
@@ -262,15 +262,15 @@ int stressRooStats(const char *refFile, bool writeRef, int verbose, bool allTest
 #endif
    const Double_t rootmarks = 860 * reftime / gBenchmark->GetCpuTime("stressRooStats");
 
-   cout << setw(lineWidth) << setfill('*') << "" << endl;
-   cout << TString::Format("*  ROOTMARKS = %6.1f  *  Root %-8s %d/%d", rootmarks, gROOT->GetVersion(),
+   std::cout << setw(lineWidth) << setfill('*') << "" << std::endl;
+   std::cout << TString::Format("*  ROOTMARKS = %6.1f  *  Root %-8s %d/%d", rootmarks, gROOT->GetVersion(),
                            gROOT->GetVersionDate(), gROOT->GetVersionTime())
-        << endl;
-   cout << setw(lineWidth) << setfill('*') << "" << endl;
+        << std::endl;
+   std::cout << setw(lineWidth) << setfill('*') << "" << std::endl;
 
    // NOTE: The function TStopwatch::CpuTime() calls Tstopwatch::Stop(), so you do not need to stop the timer
    // separately.
-   cout << "Time at the end of job = " << timer.CpuTime() << " seconds" << endl;
+   std::cout << "Time at the end of job = " << timer.CpuTime() << " seconds" << std::endl;
 
    if (fref) {
       fref->Close();
@@ -324,44 +324,44 @@ int main(int argc, const char *argv[])
          backend = RooFit::EvalBackend(mode);
          std::cout << "stressRooStats: NLL evaluation backend set to " << mode << std::endl;
       } else if (arg == "-f") {
-         cout << "stressRooStats: using reference file " << argv[i + 1] << endl;
+         std::cout << "stressRooStats: using reference file " << argv[i + 1] << std::endl;
          refFileName = argv[++i];
       } else if (arg == "-w") {
-         cout << "stressRooStats: running in writing mode to update reference file" << endl;
+         std::cout << "stressRooStats: running in writing mode to update reference file" << std::endl;
          doWrite = true;
       } else if (arg == "-mc") {
-         cout << "stressRooStats: running in memcheck mode, no regression tests are performed" << endl;
+         std::cout << "stressRooStats: running in memcheck mode, no regression tests are performed" << std::endl;
          dryRun = true;
       } else if (arg == "-min" || arg == "-minim") {
-         cout << "stressRooStats: running using minimizer " << argv[i + 1] << endl;
+         std::cout << "stressRooStats: running using minimizer " << argv[i + 1] << std::endl;
          minimizerName = argv[++i];
       } else if (arg == "-ts") {
-         cout << "stressRooStats: setting tree-based storage for datasets" << endl;
+         std::cout << "stressRooStats: setting tree-based storage for datasets" << std::endl;
          doTreeStore = true;
       } else if (arg == "-v") {
-         cout << "stressRooStats: running in verbose mode" << endl;
+         std::cout << "stressRooStats: running in verbose mode" << std::endl;
          verbose = 1;
       } else if (arg == "-vv") {
-         cout << "stressRooStats: running in very verbose mode" << endl;
+         std::cout << "stressRooStats: running in very verbose mode" << std::endl;
          verbose = 2;
       } else if (arg == "-vvv") {
-         cout << "stressRooStats: running in very very verbose mode" << endl;
+         std::cout << "stressRooStats: running in very very verbose mode" << std::endl;
          verbose = 3;
       } else if (arg == "-a") {
-         cout << "stressRooStats: deploying full suite of tests" << endl;
+         std::cout << "stressRooStats: deploying full suite of tests" << std::endl;
          allTests = true;
       } else if (arg == "-n") {
-         cout << "stressRooStats: running single test" << endl;
+         std::cout << "stressRooStats: running single test" << std::endl;
          oneTest = true;
          testNumber = atoi(argv[++i]);
       } else if (arg == "-d") {
-         cout << "stressRooStats: setting gDebug to " << argv[i + 1] << endl;
+         std::cout << "stressRooStats: setting gDebug to " << argv[i + 1] << std::endl;
          gDebug = atoi(argv[++i]);
       } else if (arg == "-c") {
-         cout << "stressRooStats: dumping comparison file for failed tests " << endl;
+         std::cout << "stressRooStats: dumping comparison file for failed tests " << std::endl;
          doDump = true;
       } else if (arg == "-h" || arg == "--help") {
-         cout << R"(usage: stressRooStats [ options ]
+         std::cout << R"(usage: stressRooStats [ options ]
 
        -b <mode>   : Perform every fit in the tests with the EvalBackend(<mode>) command argument, where <mode> is a string
        -f <file>   : use given reference file instead of default ("stressRooStats_ref.root")
@@ -389,9 +389,9 @@ int main(int argc, const char *argv[])
    //       refFileName = ptr + 1;
    //       delete[] buf;
 
-   //       cout << "stressRooStats: WARNING running in write mode, but reference file is web file, writing local file
+   //       std::cout << "stressRooStats: WARNING running in write mode, but reference file is web file, writing local file
    //       instead: "
-   //            << refFileName << endl;
+   //            << refFileName << std::endl;
    //    }
 
    // set minimizer

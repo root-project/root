@@ -123,7 +123,7 @@ double RooLinearVar::evaluate() const
 
 void RooLinearVar::setVal(double value)
 {
-  //cout << "RooLinearVar::setVal(" << GetName() << "): new value = " << value << endl ;
+  //cout << "RooLinearVar::setVal(" << GetName() << "): new value = " << value << std::endl ;
 
   // Prevent DIV0 problems
   if (_slope == 0.) {
@@ -152,12 +152,12 @@ bool RooLinearVar::isJacobianOK(const RooArgSet& depList) const
   for(RooAbsArg* arg : depList) {
     if (arg->IsA()->InheritsFrom(RooAbsReal::Class())) {
       if (_slope->dependsOnValue(*arg)) {
-//    cout << "RooLinearVar::isJacobianOK(" << GetName() << ") return false because slope depends on value of " << arg->GetName() << endl ;
+//    std::cout << "RooLinearVar::isJacobianOK(" << GetName() << ") return false because slope depends on value of " << arg->GetName() << std::endl ;
    return false ;
       }
     }
   }
-  //   cout << "RooLinearVar::isJacobianOK(" << GetName() << ") return true" << endl ;
+  //   std::cout << "RooLinearVar::isJacobianOK(" << GetName() << ") return true" << std::endl ;
   return true ;
 }
 

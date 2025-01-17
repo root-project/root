@@ -35,7 +35,7 @@ when any of the parameters of the input p.d.f. has changed.
 #include "RooHistPdf.h"
 #include "RooRealVar.h"
 
-using std::cout, std::endl, std::string;
+using std::string;
 
 ClassImp(RooNumRunningInt);
 
@@ -293,7 +293,7 @@ RooAbsCachedReal::FuncCacheElem* RooNumRunningInt::createCache(const RooArgSet* 
 
 double RooNumRunningInt::evaluate() const
 {
-  cout << "RooNumRunningInt::evaluate(" << GetName() << ")" << endl ;
+  std::cout << "RooNumRunningInt::evaluate(" << GetName() << ")" << std::endl ;
   return 0 ;
 }
 

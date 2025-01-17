@@ -37,7 +37,7 @@ prototype data etc..
 #include "Riostream.h"
 
 
-using std::cout, std::endl, std::ostream;
+using std::ostream;
 
 ClassImp(RooAbsGenContext);
 
@@ -54,7 +54,7 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
 {
   // Check PDF dependents
   if (model.recursiveCheckObservables(&vars)) {
-    coutE(Generation) << "RooAbsGenContext::ctor: Error in PDF dependents" << endl ;
+    coutE(Generation) << "RooAbsGenContext::ctor: Error in PDF dependents" << std::endl ;
     _isValid = false ;
     return ;
   }
@@ -130,7 +130,7 @@ RooDataSet* RooAbsGenContext::createDataSet(const char* name, const char* title,
 RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool extendedMode)
 {
   if(!isValid()) {
-    coutE(Generation) << ClassName() << "::" << GetName() << ": context is not valid" << endl;
+    coutE(Generation) << ClassName() << "::" << GetName() << ": context is not valid" << std::endl;
     return nullptr;
   }
 
@@ -142,18 +142,18 @@ RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool exten
     else {
       if (_extendMode == RooAbsPdf::CanNotBeExtended) {
    coutE(Generation) << ClassName() << "::" << GetName()
-        << ":generate: PDF not extendable: cannot calculate expected number of events" << endl;
+        << ":generate: PDF not extendable: cannot calculate expected number of events" << std::endl;
    return nullptr;
       }
       nEvents= _expectedEvents;
     }
     if(nEvents <= 0) {
       coutE(Generation) << ClassName() << "::" << GetName()
-         << ":generate: cannot calculate expected number of events" << endl;
+         << ":generate: cannot calculate expected number of events" << std::endl;
       return nullptr;
     }
     coutI(Generation) << ClassName() << "::" << GetName() << ":generate: will generate "
-            << nEvents << " events" << endl;
+            << nEvents << " events" << std::endl;
 
   }
 
@@ -161,7 +161,7 @@ RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool exten
      double nExpEvents = nEvents;
      nEvents = RooRandom::randomGenerator()->Poisson(nEvents) ;
      cxcoutI(Generation) << " Extended mode active, number of events generated (" << nEvents << ") is Poisson fluctuation on "
-                         << GetName() << "::expectedEvents() = " << nExpEvents << endl ;
+                         << GetName() << "::expectedEvents() = " << nExpEvents << std::endl ;
   }
 
   // check that any prototype dataset still defines the variables we need
@@ -172,7 +172,7 @@ RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool exten
     for (RooAbsArg * arg : _protoVars) {
       if(vars->contains(*arg)) continue;
       coutE(InputArguments) << ClassName() << "::" << GetName() << ":generate: prototype dataset is missing \""
-             << arg->GetName() << "\"" << endl;
+             << arg->GetName() << "\"" << std::endl;
 
       // WVE disable this for the moment
       // ok= false;
@@ -214,7 +214,7 @@ RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool exten
       }
       else {
    coutE(Generation) << ClassName() << "::" << GetName() << ":generate: cannot load event "
-           << actualProtoIdx << " from prototype dataset" << endl;
+           << actualProtoIdx << " from prototype dataset" << std::endl;
    return nullptr;
       }
     }
@@ -342,7 +342,7 @@ void RooAbsGenContext::resampleData(double& ratio)
   Int_t nTarg = Int_t(nOrig*ratio+0.5) ;
   std::unique_ptr<RooAbsData> trimmedData{_genData->reduce(RooFit::EventRange(0,nTarg))};
 
-  cxcoutD(Generation) << "RooGenContext::resampleData*( existing production trimmed from " << nOrig << " to " << trimmedData->numEntries() << " events" << endl ;
+  cxcoutD(Generation) << "RooGenContext::resampleData*( existing production trimmed from " << nOrig << " to " << trimmedData->numEntries() << " events" << std::endl ;
 
   delete _genData ;
   _genData = static_cast<RooDataSet*>(trimmedData.release());

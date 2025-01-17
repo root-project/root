@@ -226,7 +226,7 @@ double RooXYChi2Var::xErrorContribution(double ydata) const
       // Calculate slope
       double slope = (fxmax-fxmin)/(2*xerr/100.) ;
 
-//       cout << "xerrHi = " << xerrHi << " xerrLo = " << xerrLo << " slope = " << slope << std::endl ;
+//       std::cout << "xerrHi = " << xerrHi << " xerrLo = " << xerrLo << " slope = " << slope << std::endl ;
 
       // Asymmetric X error, decide which one to use
       if ((ydata>cxval && fxmax>fxmin) || (ydata<=cxval && fxmax<=fxmin)) {
@@ -254,10 +254,10 @@ double RooXYChi2Var::xErrorContribution(double ydata) const
       // Calculate slope
       double slope = (fxmax-fxmin)/(2*xerr/100.) ;
 
-//       cout << var << " " ;
+//       std::cout << var << " " ;
 //       var->Print() ;
 
-//       cout << var->GetName() << " xerr = " << xerr << " slope = " << slope << std::endl ;
+//       std::cout << var->GetName() << " xerr = " << xerr << " slope = " << slope << std::endl ;
 
       // Symmetric X error
       ret += pow(xerr*slope,2) ;
@@ -352,7 +352,7 @@ double RooXYChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastE
     // Add contributions due to error in x coordinates
     double eIntX2 = _integrate ? 0 : xErrorContribution(ydata) ;
 
-//     cout << "fy = " << yfunc << " eExt = " << eExt << " eInt = " << eInt << " eIntX2 = " << eIntX2 << std::endl ;
+//     std::cout << "fy = " << yfunc << " eExt = " << eExt << " eInt = " << eInt << " eIntX2 = " << eIntX2 << std::endl ;
 
     // Return 0 if eInt=0, special handling in MINUIT will follow
     if (eInt==0.) {

@@ -125,7 +125,7 @@ void MCMCCalculator::SetLeftSideTailFraction(double a)
    if (a < 0 || a > 1) {
       coutE(InputArguments) << "MCMCCalculator::SetLeftSideTailFraction: "
          << "Fraction must be in the range [0, 1].  "
-         << a << "is not allowed." << endl;
+         << a << "is not allowed." << std::endl;
       return;
    }
 
@@ -144,7 +144,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
 
    if (fSize < 0) {
       coutE(InputArguments) << "MCMCCalculator::GetInterval: "
-         << "Test size/Confidence level not set.  Returning nullptr." << endl;
+         << "Test size/Confidence level not set.  Returning nullptr." << std::endl;
       return nullptr;
    }
 

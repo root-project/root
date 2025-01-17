@@ -56,7 +56,7 @@ To retrieve a RooCurve from a RooPlot, use RooPlot::getCurve().
 #include <deque>
 #include <algorithm>
 
-using std::endl, std::ostream, std::list, std::vector, std::cout, std::min;
+using std::ostream, std::list, std::vector, std::min;
 
 ClassImp(RooCurve);
 
@@ -130,7 +130,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, double xlo, double 
     std::unique_ptr<std::list<double>> hint{f.plotSamplingHint(x,xlo,xhi)};
     addPoints(*funcPtr,xlo,xhi,xbins+1,prec,resolution,wmode,nEvalError,doEEVal,eeVal,hint.get());
     if (_showProgress) {
-      ccoutP(Plotting) << endl ;
+      ccoutP(Plotting) << std::endl ;
     }
   } else {
     // if number of bins is set to <= 0, skip any interpolation and just evaluate the pdf at the bin centers
@@ -287,11 +287,11 @@ void RooCurve::addPoints(const RooAbsFunc &func, double xlo, double xhi,
 {
   // check the inputs
   if(!func.isValid()) {
-    coutE(InputArguments) << fName << "::addPoints: input function is not valid" << endl;
+    coutE(InputArguments) << fName << "::addPoints: input function is not valid" << std::endl;
     return;
   }
   if(minPoints <= 0 || xhi <= xlo) {
-    coutE(InputArguments) << fName << "::addPoints: bad input (nothing added)" << endl;
+    coutE(InputArguments) << fName << "::addPoints: bad input (nothing added)" << std::endl;
     return;
   }
 
@@ -326,7 +326,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, double xlo, double xhi,
     yval[step]= func(&xx);
     if (_showProgress) {
       ccoutP(Plotting) << "." ;
-      cout.flush() ;
+      std::cout.flush() ;
     }
 
     if (RooAbsReal::numEvalErrors()>0) {
@@ -413,7 +413,7 @@ void RooCurve::addRange(const RooAbsFunc& func, double x1, double x2,
   double ymid= func(&xmid);
   if (_showProgress) {
     ccoutP(Plotting) << "." ;
-    cout.flush() ;
+    std::cout.flush() ;
   }
 
   if (RooAbsReal::numEvalErrors()>0) {
@@ -446,7 +446,7 @@ void RooCurve::addRange(const RooAbsFunc& func, double x1, double x2,
 
 void RooCurve::addPoint(double x, double y)
 {
-//   cout << "RooCurve("<< GetName() << ") adding point at (" << x << "," << y << ")" << endl ;
+//   std::cout << "RooCurve("<< GetName() << ") adding point at (" << x << "," << y << ")" << std::endl ;
   Int_t next= GetN();
   SetPoint(next, x, y);
   updateYAxisLimits(y) ;
@@ -516,12 +516,12 @@ void RooCurve::printClassName(ostream& os) const
 
 void RooCurve::printMultiline(ostream& os, Int_t /*contents*/, bool /*verbose*/, TString indent) const
 {
-  os << indent << "--- RooCurve ---" << endl ;
+  os << indent << "--- RooCurve ---" << std::endl ;
   Int_t n= GetN();
-  os << indent << "  Contains " << n << " points" << endl;
-  os << indent << "  Graph points:" << endl;
+  os << indent << "  Contains " << n << " points" << std::endl;
+  os << indent << "  Graph points:" << std::endl;
   for(Int_t i= 0; i < n; i++) {
-    os << indent << std::setw(3) << i << ") x = " << fX[i] << " , y = " << fY[i] << endl;
+    os << indent << std::setw(3) << i << ") x = " << fX[i] << " , y = " << fY[i] << std::endl;
   }
 }
 
@@ -581,7 +581,7 @@ double RooCurve::average(double xFirst, double xLast) const
 {
   if (xFirst>=xLast) {
     coutE(InputArguments) << "RooCurve::average(" << GetName()
-           << ") invalid range (" << xFirst << "," << xLast << ")" << endl ;
+           << ") invalid range (" << xFirst << "," << xLast << ")" << std::endl ;
     return 0 ;
   }
 
@@ -871,8 +871,8 @@ bool RooCurve::isIdentical(const RooCurve& other, double tol, bool verbose) cons
     if (rdy>tol) {
       ret = false;
       if(!verbose) continue;
-      cout << "RooCurve::isIdentical[" << std::setw(3) << i << "] Y tolerance exceeded (" << std::setprecision(5) << std::setw(10) << rdy << ">" << tol << "),";
-      cout << "  x,y=(" << std::right << std::setw(10) << fX[i] << "," << std::setw(10) << fY[i] << ")\tref: y="
+      std::cout << "RooCurve::isIdentical[" << std::setw(3) << i << "] Y tolerance exceeded (" << std::setprecision(5) << std::setw(10) << rdy << ">" << tol << "),";
+      std::cout << "  x,y=(" << std::right << std::setw(10) << fX[i] << "," << std::setw(10) << fY[i] << ")\tref: y="
           << std::setw(10) << other.interpolate(fX[i], 1.E-15) << ". [Nearest point from ref: ";
       auto j = other.findPoint(fX[i], 1.E10);
       std::cout << "j=" << j << "\tx,y=(" << std::setw(10) << other.fX[j] << "," << std::setw(10) << other.fY[j] << ") ]" << "\trange=" << Yrange << std::endl;

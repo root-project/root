@@ -61,7 +61,7 @@ RooSuperCategory::RooSuperCategory(const char *name, const char *title, const Ro
   for (const auto arg : inputCategories) {
     if (!arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
       coutE(InputArguments) << "RooSuperCategory::RooSuperCategory(" << GetName() << "): input category " << arg->GetName()
-             << " is not an lvalue. Use RooMultiCategory instead." << endl ;
+             << " is not an lvalue. Use RooMultiCategory instead." << std::endl ;
       throw std::invalid_argument("Arguments of RooSuperCategory must be lvalues.");
     }
   }

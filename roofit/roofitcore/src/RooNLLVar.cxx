@@ -188,7 +188,7 @@ double RooNLLVar::evaluatePartition(std::size_t firstEvent, std::size_t lastEven
       // Calculate log(Poisson(N|mu) for this bin
       double N = eventWeight ;
       double mu = _binnedPdf->getVal()*_binw[i] ;
-      //cout << "RooNLLVar::binnedL(" << GetName() << ") N=" << N << " mu = " << mu << endl ;
+      //cout << "RooNLLVar::binnedL(" << GetName() << ") N=" << N << " mu = " << mu << std::endl ;
 
       if (mu<=0 && N>0) {
 

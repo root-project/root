@@ -44,7 +44,7 @@ RooBrentRootFinder::RooBrentRootFinder(const RooAbsFunc& function) :
 {
   if(_function->getDimension() != 1) {
     oocoutE(nullptr,Eval) << "RooBrentRootFinder:: cannot find roots for function of dimension "
-               << _function->getDimension() << endl;
+               << _function->getDimension() << std::endl;
     _valid= false;
   }
 }
@@ -67,7 +67,7 @@ bool RooBrentRootFinder::findRoot(double &result, double xlo, double xhi, double
   double fb= (*_function)(&b) - value;
   if(fb*fa > 0) {
     oocxcoutD((TObject*)nullptr,Eval) << "RooBrentRootFinder::findRoot(" << _function->getName() << "): initial interval does not bracket a root: ("
-            << a << "," << b << "), value = " << value << " f[xlo] = " << fa << " f[xhi] = " << fb << endl;
+            << a << "," << b << "), value = " << value << " f[xlo] = " << fa << " f[xhi] = " << fb << std::endl;
     return false;
   }
 
@@ -102,7 +102,7 @@ bool RooBrentRootFinder::findRoot(double &result, double xlo, double xhi, double
 
 
     if (fb == 0 || std::abs(m) <= tol) {
-      //cout << "RooBrentRootFinder: iter = " << iter << " m = " << m << " tol = " << tol << endl ;
+      //cout << "RooBrentRootFinder: iter = " << iter << " m = " << m << " tol = " << tol << std::endl ;
       result= b;
       _function->restoreXVec() ;
       return true;
@@ -165,7 +165,7 @@ bool RooBrentRootFinder::findRoot(double &result, double xlo, double xhi, double
 
   }
   // Return our best guess if we run out of iterations
-  oocoutE(nullptr,Eval) << "RooBrentRootFinder::findRoot(" << _function->getName() << "): maximum iterations exceeded." << endl;
+  oocoutE(nullptr,Eval) << "RooBrentRootFinder::findRoot(" << _function->getName() << "): maximum iterations exceeded." << std::endl;
   result= b;
 
   _function->restoreXVec() ;

@@ -86,7 +86,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc &function, int numBins)
     std::unique_ptr<list<double>> tmp{ _function->binBoundaries(i) };
     if (!tmp) {
       oocoutW(nullptr,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #"
-          << i << " substituting default binning of " << _numBins << " bins" << endl ;
+          << i << " substituting default binning of " << _numBins << " bins" << std::endl ;
       tmp = std::make_unique<list<double>>( );
       for (Int_t j=0 ; j<=_numBins ; j++) {
         tmp->push_back(_xmin[i]+j*(_xmax[i]-_xmin[i])/_numBins) ;
@@ -117,7 +117,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntCo
 bool RooBinIntegrator::setLimits(double *xmin, double *xmax)
 {
   if(_useIntegrandLimits) {
-    oocoutE(nullptr,Integration) << "RooBinIntegrator::setLimits: cannot override integrand's limits" << endl;
+    oocoutE(nullptr,Integration) << "RooBinIntegrator::setLimits: cannot override integrand's limits" << std::endl;
     return false;
   }
   _xmin[0]= *xmin;
@@ -143,7 +143,7 @@ bool RooBinIntegrator::checkLimits() const
   }
   for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
     if (_xmax[i]<=_xmin[i]) {
-      oocoutE(nullptr,Integration) << "RooBinIntegrator::checkLimits: bad range with min >= max (_xmin = " << _xmin[i] << " _xmax = " << _xmax[i] << ")" << endl;
+      oocoutE(nullptr,Integration) << "RooBinIntegrator::checkLimits: bad range with min >= max (_xmin = " << _xmin[i] << " _xmax = " << _xmax[i] << ")" << std::endl;
       return false;
     }
     if (RooNumber::isInfinite(_xmin[i]) || RooNumber::isInfinite(_xmax[i])) {

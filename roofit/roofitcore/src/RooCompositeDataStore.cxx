@@ -39,7 +39,7 @@ When iterated from start to finish, datasets will be traversed in the order of t
 #include <iomanip>
 #include <iostream>
 
-using std::cout, std::endl, std::map, std::list, std::string;
+using std::map, std::list, std::string;
 
 ClassImp(RooCompositeDataStore);
 
@@ -295,7 +295,7 @@ bool RooCompositeDataStore::changeObservableName(const char* from, const char* t
 
   // Check that we found it
   if (!var) {
-    coutE(InputArguments) << "RooCompositeDataStore::changeObservableName(" << GetName() << " no observable " << from << " in this dataset" << endl ;
+    coutE(InputArguments) << "RooCompositeDataStore::changeObservableName(" << GetName() << " no observable " << from << " in this dataset" << std::endl ;
     return true ;
   }
 
@@ -457,11 +457,11 @@ void RooCompositeDataStore::resetBuffers()
 
 void RooCompositeDataStore::dump()
 {
-  cout << "RooCompositeDataStore::dump()" << endl ;
+  std::cout << "RooCompositeDataStore::dump()" << std::endl ;
   for (auto const& item : _dataMap) {
-    cout << "state number " << item.first << " has store " << item.second->ClassName() << " with variables " << *item.second->get() ;
-    if (item.second->isWeighted()) cout << " and is weighted " ;
-    cout << endl ;
+    std::cout << "state number " << item.first << " has store " << item.second->ClassName() << " with variables " << *item.second->get() ;
+    if (item.second->isWeighted()) std::cout << " and is weighted " ;
+    std::cout << std::endl ;
   }
 }
 

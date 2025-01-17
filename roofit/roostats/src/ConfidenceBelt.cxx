@@ -41,7 +41,7 @@ store the interval.
 ClassImp(RooStats::ConfidenceBelt);
 
 using namespace RooStats;
-using std::cout, std::endl, std::vector;
+using std::vector;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Alternate constructor
@@ -78,7 +78,7 @@ ConfidenceBelt::ConfidenceBelt(const char* name, const char* title, RooAbsData& 
 ////////////////////////////////////////////////////////////////////////////////
 
 double ConfidenceBelt::GetAcceptanceRegionMin(RooArgSet& parameterPoint, double cl, double leftside) {
-  if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
+  if(cl>0 || leftside > 0) std::cout <<"using default cl, leftside for now" << std::endl;
   AcceptanceRegion * region = GetAcceptanceRegion(parameterPoint, cl,leftside);
   return (region) ? region->GetLowerLimit() : TMath::QuietNaN();
 }
@@ -86,7 +86,7 @@ double ConfidenceBelt::GetAcceptanceRegionMin(RooArgSet& parameterPoint, double 
 ////////////////////////////////////////////////////////////////////////////////
 
 double ConfidenceBelt::GetAcceptanceRegionMax(RooArgSet& parameterPoint, double cl, double leftside) {
-  if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
+  if(cl>0 || leftside > 0) std::cout <<"using default cl, leftside for now" << std::endl;
   AcceptanceRegion * region = GetAcceptanceRegion(parameterPoint, cl,leftside);
   return (region) ? region->GetUpperLimit() : TMath::QuietNaN();
 }
@@ -103,22 +103,22 @@ vector<double> ConfidenceBelt::ConfidenceLevels() const {
 void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, Int_t dsIndex,
                 double lower, double upper,
                 double cl, double leftside){
-  if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
+  if(cl>0 || leftside > 0) std::cout <<"using default cl, leftside for now" << std::endl;
 
   RooDataSet*  tree = dynamic_cast<RooDataSet*>( fParameterPoints );
   RooDataHist* hist = dynamic_cast<RooDataHist*>(fParameterPoints );
 
-  //  cout << "add: " << tree << " " << hist << endl;
+  //  std::cout << "add: " << tree << " " << hist << std::endl;
 
   if( !this->CheckParameters(parameterPoint) )
     std::cout << "problem with parameters" << std::endl;
 
   Int_t luIndex = fSamplingSummaryLookup.GetLookupIndex(cl, leftside);
-  //  cout << "lookup index = " << luIndex << endl;
+  //  std::cout << "lookup index = " << luIndex << std::endl;
   if(luIndex <0 ) {
     fSamplingSummaryLookup.Add(cl,leftside);
     luIndex = fSamplingSummaryLookup.GetLookupIndex(cl, leftside);
-    cout << "lookup index = " << luIndex << endl;
+    std::cout << "lookup index = " << luIndex << std::endl;
   }
   AcceptanceRegion* thisRegion = new AcceptanceRegion(luIndex, lower, upper);
 
@@ -129,7 +129,7 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, Int_t dsInde
     //    RooStats::SetParameters(&parameterPoint, const_cast<RooArgSet*>(hist->get()));
     //    int index = hist->calcTreeIndex(); // get index
     int index = hist->getIndex(parameterPoint); // get index
-    //    cout << "hist index = " << index << endl;
+    //    std::cout << "hist index = " << index << std::endl;
 
     // allocate memory if necessary.  numEntries is overkill?
     if((Int_t)fSamplingSummaries.size() <= index) {
@@ -143,7 +143,7 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, Int_t dsInde
   else if( tree ){
     //    int index = tree->getIndex(parameterPoint);
     int index = dsIndex;
-    //    cout << "tree index = " << index << endl;
+    //    std::cout << "tree index = " << index << std::endl;
 
     // allocate memory if necessary.  numEntries is overkill?
     if((Int_t)fSamplingSummaries.size() <= index){
@@ -160,7 +160,7 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, Int_t dsInde
 
 void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, AcceptanceRegion region,
                 double cl, double leftside){
-  if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
+  if(cl>0 || leftside > 0) std::cout <<"using default cl, leftside for now" << std::endl;
 
   RooDataSet*  tree = dynamic_cast<RooDataSet*>( fParameterPoints );
   RooDataHist* hist = dynamic_cast<RooDataHist*>(fParameterPoints );
@@ -199,7 +199,7 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, AcceptanceRe
 
 AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint, double cl, double leftside)
 {
-  if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
+  if(cl>0 || leftside > 0) std::cout <<"using default cl, leftside for now" << std::endl;
 
   RooDataSet*  tree = dynamic_cast<RooDataSet*>( fParameterPoints );
   RooDataHist* hist = dynamic_cast<RooDataHist*>(fParameterPoints );

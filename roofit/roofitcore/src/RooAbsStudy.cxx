@@ -71,7 +71,7 @@ RooAbsStudy::~RooAbsStudy()
 void RooAbsStudy::registerSummaryOutput(const RooArgSet& allVars, const RooArgSet& varsWithError, const RooArgSet& varsWithAsymError)
 {
   if (_summaryData) {
-    coutW(ObjectHandling) << "RooAbsStudy::registerSummaryOutput(" << GetName() << ") WARNING summary output already registered" << endl ;
+    coutW(ObjectHandling) << "RooAbsStudy::registerSummaryOutput(" << GetName() << ") WARNING summary output already registered" << std::endl ;
     return ;
   }
 
@@ -86,7 +86,7 @@ void RooAbsStudy::registerSummaryOutput(const RooArgSet& allVars, const RooArgSe
 void RooAbsStudy::storeSummaryOutput(const RooArgSet& vars)
 {
   if (!_summaryData) {
-    coutE(ObjectHandling) << "RooAbsStudy::storeSummaryOutput(" << GetName() << ") ERROR: no summary output data configuration registered" << endl ;
+    coutE(ObjectHandling) << "RooAbsStudy::storeSummaryOutput(" << GetName() << ") ERROR: no summary output data configuration registered" << std::endl ;
     return ;
   }
   _summaryData->add(vars) ;
@@ -103,11 +103,11 @@ void RooAbsStudy::storeDetailedOutput(std::unique_ptr<TNamed> object)
     if (!_detailData) {
       _detailData = new RooLinkedList ;
       _detailData->SetName(TString::Format("%s_detailed_data_list",GetName())) ;
-      //cout << "RooAbsStudy::ctor() detailData name = " << _detailData->GetName() << endl ;
+      //cout << "RooAbsStudy::ctor() detailData name = " << _detailData->GetName() << std::endl ;
     }
 
     object->SetName(TString::Format("%s_detailed_data_%d",GetName(),_detailData->GetSize())) ;
-    //cout << "storing detailed data with name " << object.GetName() << endl ;
+    //cout << "storing detailed data with name " << object.GetName() << std::endl ;
     _detailData->Add(object.release());
 }
 
@@ -121,12 +121,12 @@ void RooAbsStudy::aggregateSummaryOutput(TList* chunkList)
 
   for(TObject * obj : *chunkList) {
 
-    //cout << "RooAbsStudy::aggregateSummaryOutput(" << GetName() << ") processing object " << obj->GetName() << endl ;
+    //cout << "RooAbsStudy::aggregateSummaryOutput(" << GetName() << ") processing object " << obj->GetName() << std::endl ;
 
     RooDataSet* data = dynamic_cast<RooDataSet*>(obj) ;
     if (data) {
       if (TString(data->GetName()).BeginsWith(Form("%s_summary_data",GetName()))) {
-   //cout << "RooAbsStudy::aggregateSummaryOutput(" << GetName() << ") found summary block " << data->GetName() << endl ;
+   //cout << "RooAbsStudy::aggregateSummaryOutput(" << GetName() << ") found summary block " << data->GetName() << std::endl ;
    if (!_summaryData) {
      _summaryData = static_cast<RooDataSet*>(data->Clone(Form("%s_summary_data",GetName()))) ;
    } else {

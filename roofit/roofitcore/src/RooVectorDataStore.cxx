@@ -47,7 +47,7 @@ which returns spans pointing directly to the data.
 #include "TBuffer.h"
 
 #include <iomanip>
-using std::string, std::vector, std::cout, std::endl, std::list;
+using std::string, std::vector, std::list;
 
 ClassImp(RooVectorDataStore);
 ClassImp(RooVectorDataStore::RealVector);
@@ -627,7 +627,7 @@ RooAbsArg* RooVectorDataStore::addColumn(RooAbsArg& newVar, bool /*adjustRange*/
   // Sanity check that the holder really is fundamental
   if(!valHolder->isFundamental()) {
     coutE(InputArguments) << GetName() << "::addColumn: holder argument is not fundamental: \""
-    << valHolder->GetName() << "\"" << endl;
+    << valHolder->GetName() << "\"" << std::endl;
     return nullptr;
   }
 
@@ -803,8 +803,8 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
   }
 
   // WVE need to prune tracking entries _below_ constant nodes as the're not needed
-//   cout << "Number of Cache-and-Tracked args are " << trackArgs.size() << endl ;
-//   cout << "Compound ordered cache parameters = " << endl ;
+//   std::cout << "Number of Cache-and-Tracked args are " << trackArgs.size() << std::endl ;
+//   std::cout << "Compound ordered cache parameters = " << std::endl ;
 //   orderedArgs.Print("v") ;
 
   checkInit() ;
@@ -844,7 +844,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
     RooArgSet* normSet(nullptr) ;
     const char* catNset = arg->getStringAttribute("CATNormSet") ;
     if (catNset) {
-//       cout << "RooVectorDataStore::cacheArgs() cached node " << arg->GetName() << " has a normalization set specification CATNormSet = " << catNset << endl ;
+//       std::cout << "RooVectorDataStore::cacheArgs() cached node " << arg->GetName() << " has a normalization set specification CATNormSet = " << catNset << std::endl ;
 
       RooArgSet anset = RooHelpers::selectFromArgSet(nset ? *nset : RooArgSet{}, catNset);
       normSet = anset.selectCommon(*argObs);
@@ -852,7 +852,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
     }
     const char* catCset = arg->getStringAttribute("CATCondSet") ;
     if (catCset) {
-//       cout << "RooVectorDataStore::cacheArgs() cached node " << arg->GetName() << " has a conditional observable set specification CATCondSet = " << catCset << endl ;
+//       std::cout << "RooVectorDataStore::cacheArgs() cached node " << arg->GetName() << " has a conditional observable set specification CATCondSet = " << catCset << std::endl ;
 
       RooArgSet acset = RooHelpers::selectFromArgSet(nset ? *nset : RooArgSet{}, catCset);
       argObs->remove(acset,true,true) ;
@@ -861,7 +861,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
     // now construct normalization set for component from cset/nset spec
 //     if (normSet) {
-//       cout << "RooVectorDaraStore::cacheArgs() component " << arg->GetName() << " has custom normalization set " << *normSet << endl ;
+//       std::cout << "RooVectorDaraStore::cacheArgs() component " << arg->GetName() << " has custom normalization set " << *normSet << std::endl ;
 //     }
     nsetList.push_back(normSet) ;
   }
@@ -901,7 +901,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
       // find ordinal number of arg in original list
       Int_t idx = cloneSet.index(arg->GetName()) ;
 
-      coutI(Optimization) << "RooVectorDataStore::cacheArg() element " << arg->GetName() << " has change tracking enabled on parameters " << deps << endl ;
+      coutI(Optimization) << "RooVectorDataStore::cacheArg() element " << arg->GetName() << " has change tracking enabled on parameters " << deps << std::endl ;
       rv->setNset(nsetList[idx]) ;
     }
 
@@ -1065,37 +1065,37 @@ void RooVectorDataStore::resetBuffers()
 
 void RooVectorDataStore::dump()
 {
-  cout << "RooVectorDataStor::dump()" << endl ;
+  std::cout << "RooVectorDataStor::dump()" << std::endl ;
 
-  cout << "_varsww = " << endl ; _varsww.Print("v") ;
-  cout << "realVector list is" << endl ;
+  std::cout << "_varsww = " << std::endl ; _varsww.Print("v") ;
+  std::cout << "realVector list is" << std::endl ;
 
   for (const auto elm : _realStoreList) {
-    cout << "RealVector " << elm << " _nativeReal = " << elm->_nativeReal << " = " << elm->_nativeReal->GetName() << " bufptr = " << elm->_buf  << endl ;
-    cout << " values : " ;
+    std::cout << "RealVector " << elm << " _nativeReal = " << elm->_nativeReal << " = " << elm->_nativeReal->GetName() << " bufptr = " << elm->_buf  << std::endl ;
+    std::cout << " values : " ;
     Int_t imax = elm->_vec.size()>10 ? 10 : elm->_vec.size() ;
     for (Int_t i=0 ; i<imax ; i++) {
-      cout << elm->_vec[i] << " " ;
+      std::cout << elm->_vec[i] << " " ;
     }
-    cout << endl ;
+    std::cout << std::endl ;
   }
 
   for (const auto elm : _realfStoreList) {
-    cout << "RealFullVector " << elm << " _nativeReal = " << elm->_nativeReal << " = " << elm->_nativeReal->GetName()
-    << " bufptr = " << elm->_buf  << " errbufptr = " << elm->bufE() << endl ;
+    std::cout << "RealFullVector " << elm << " _nativeReal = " << elm->_nativeReal << " = " << elm->_nativeReal->GetName()
+    << " bufptr = " << elm->_buf  << " errbufptr = " << elm->bufE() << std::endl ;
 
-    cout << " values : " ;
+    std::cout << " values : " ;
     Int_t imax = elm->_vec.size()>10 ? 10 : elm->_vec.size() ;
     for (Int_t i=0 ; i<imax ; i++) {
-      cout << elm->_vec[i] << " " ;
+      std::cout << elm->_vec[i] << " " ;
     }
-    cout << endl ;
+    std::cout << std::endl ;
     if (elm->bufE()) {
-      cout << " errors : " ;
+      std::cout << " errors : " ;
       for (Int_t i=0 ; i<imax ; i++) {
-   cout << elm->dataE()[i] << " " ;
+   std::cout << elm->dataE()[i] << " " ;
       }
-      cout << endl ;
+      std::cout << std::endl ;
 
     }
   }

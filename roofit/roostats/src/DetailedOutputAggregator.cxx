@@ -89,7 +89,7 @@ namespace RooStats {
 
       if (aset == nullptr) {
          // silently ignore
-         //std::cout << "Attempted to append nullptr" << endl;
+         //std::cout << "Attempted to append nullptr" << std::endl;
          return;
       }
       if (fBuiltSet == nullptr) {

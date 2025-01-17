@@ -50,7 +50,7 @@ RooBinnedGenContext::RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet
          << " for generation of observable(s) " << vars ;
   if (prototype) ccxcoutI(Generation) << " with prototype data for " << *prototype->get() ;
   if (auxProto && !auxProto->empty())  ccxcoutI(Generation) << " with auxiliary prototypes " << *auxProto ;
-  ccxcoutI(Generation) << endl ;
+  ccxcoutI(Generation) << std::endl ;
 
   // Constructor. Build an array of generator contexts for each product component PDF
   RooArgSet(model).snapshot(_pdfSet, true);
@@ -120,7 +120,7 @@ RooDataSet *RooBinnedGenContext::generate(double nEvt, bool /*skipInit*/, bool e
   if (nEvents<=0) {
     if (!_pdf->canBeExtended()) {
       coutE(InputArguments) << "RooAbsPdf::generateBinned(" << GetName()
-             << ") ERROR: No event count provided and p.d.f does not provide expected number of events" << endl ;
+             << ") ERROR: No event count provided and p.d.f does not provide expected number of events" << std::endl ;
       return nullptr ;
     } else {
       // Don't round in expectedData mode
@@ -228,7 +228,7 @@ void RooBinnedGenContext::generateEvent(RooArgSet&, Int_t)
 void RooBinnedGenContext::printMultiline(ostream &os, Int_t content, bool verbose, TString indent) const
 {
   RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
-  os << indent << "--- RooBinnedGenContext ---" << endl ;
+  os << indent << "--- RooBinnedGenContext ---" << std::endl ;
   os << indent << "Using PDF ";
   _pdf->printStream(os,kName|kArgs|kClassName,kSingleLine,indent);
 }

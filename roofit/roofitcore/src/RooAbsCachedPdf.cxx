@@ -187,7 +187,7 @@ RooAbsCachedPdf::PdfCacheElem::PdfCacheElem(const RooAbsCachedPdf& self, const R
   _hist->removeSelfFromDir() ;
 
   //RooArgSet* observables= self.getObservables(orderedObs) ;
-  // cout << "orderedObs = " << orderedObs << " observables = " << *observables << std::endl ;
+  // std::cout << "orderedObs = " << orderedObs << " observables = " << *observables << std::endl ;
 
   // Get set of p.d.f. observable corresponding to set of histogram observables
   RooArgSet pdfObs ;

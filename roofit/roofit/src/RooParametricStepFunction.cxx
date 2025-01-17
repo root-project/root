@@ -202,7 +202,7 @@ double RooParametricStepFunction::evaluate() const
      value = lastBinValue();
      if (value<=0.0){
        value = 0.000001;
-       //       cout << "RooParametricStepFunction: sum of values gt 1.0 -- beware!!" <<endl;
+       //       std::cout << "RooParametricStepFunction: sum of values gt 1.0 -- beware!!" << std::endl;
      }
      break;
    }

@@ -127,7 +127,7 @@ RooRealVar* RooFactoryWSTool::createVariable(const char* name, double xmin, doub
 {
   // First check if variable already exists
   if (_ws->var(name)) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::createFactory() ERROR: variable with name '" << name << "' already exists" << endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::createFactory() ERROR: variable with name '" << name << "' already exists" << std::endl ;
     logError() ;
     return nullptr ;
   }
@@ -282,7 +282,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
   // Find class in ROOT class table
   TClass* tc = resolveClassName(className);
   if (!tc) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR class " << className << " not found in factory alias table, nor in ROOT class table" << endl;
+    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR class " << className << " not found in factory alias table, nor in ROOT class table" << std::endl;
     logError();
     return nullptr;
   }
@@ -291,7 +291,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 
   // Check that class inherits from RooAbsPdf
   if (!tc->InheritsFrom(RooAbsArg::Class())) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR class " << className << " does not inherit from RooAbsArg" << endl;
+    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR class " << className << " does not inherit from RooAbsArg" << std::endl;
     logError();
     return nullptr;
   }
@@ -323,7 +323,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
   // Try CINT interface
   pair<list<string>,unsigned int> ca = ctorArgs(className,_args.size()+2) ;
   if (ca.first.empty()) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR no suitable constructor found for class " << className << endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR no suitable constructor found for class " << className << std::endl ;
     logError() ;
     return nullptr ;
   }
@@ -333,11 +333,11 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
   if (_args.size()+2<ca.second || _args.size()+2>ca.first.size()) {
     if (ca.second==ca.first.size()) {
       coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR number of arguments provided (" << _args.size() << ") for class is invalid, " << className
-             << " expects " << ca.first.size()-2 << endl ;
+             << " expects " << ca.first.size()-2 << std::endl ;
       logError() ;
     } else {
       coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR number of arguments provided (" << _args.size() << ") for class is invalid " << className
-             << " expect number between " << ca.second-2 << " and " << ca.first.size()-2 << endl ;
+             << " expect number between " << ca.second-2 << " and " << ca.first.size()-2 << std::endl ;
       logError() ;
     }
     return nullptr ;
@@ -445,12 +445,12 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
     }
     cintExpr += ") ;" ;
   } catch (const string &err) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR constructing " << className << "::" << objName << ": " << err << endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR constructing " << className << "::" << objName << ": " << err << std::endl ;
     logError() ;
     return nullptr ;
   }
 
-  cxcoutD(ObjectHandling) << "RooFactoryWSTool::createArg() Construct expression is " << cintExpr << endl ;
+  cxcoutD(ObjectHandling) << "RooFactoryWSTool::createArg() Construct expression is " << cintExpr << std::endl ;
 
   // Call CINT to perform constructor call. Catch any error thrown by argument conversion method
   if (std::unique_ptr<RooAbsArg> arg{reinterpret_cast<RooAbsArg*>(gROOT->ProcessLineFast(cintExpr.c_str()))}) {
@@ -465,7 +465,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
     RooAbsArg* ret = _ws->arg(objName) ;
     return ret ;
   } else {
-    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR in CINT constructor call to create object" << endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR in CINT constructor call to create object" << std::endl ;
     logError() ;
     return nullptr ;
   }
@@ -501,7 +501,7 @@ RooAddPdf* RooFactoryWSTool::add(const char *objName, const char* specList, bool
     pdfList.add(pdfList2) ;
 
   } catch (const string &err) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::add(" << objName << ") ERROR creating RooAddPdf: " << err << endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::add(" << objName << ") ERROR creating RooAddPdf: " << err << std::endl ;
     logError() ;
     return nullptr;
   }
@@ -543,7 +543,7 @@ RooRealSumPdf* RooFactoryWSTool::amplAdd(const char *objName, const char* specLi
     amplList.add(amplList2) ;
 
   } catch (const string &err) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::add(" << objName << ") ERROR creating RooRealSumPdf: " << err << endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::add(" << objName << ") ERROR creating RooRealSumPdf: " << err << std::endl ;
     logError() ;
     return nullptr;
   }
@@ -585,7 +585,7 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
       try {
    cmdList.Add(Conditional(asSET(tok),asSET(sep),!invCond).Clone()) ;
       } catch (const string &err) {
-   coutE(ObjectHandling) << "RooFactoryWSTool::prod(" << objName << ") ERROR creating RooProdPdf Conditional argument: " << err << endl ;
+   coutE(ObjectHandling) << "RooFactoryWSTool::prod(" << objName << ") ERROR creating RooProdPdf Conditional argument: " << err << std::endl ;
    logError() ;
    return nullptr ;
       }
@@ -605,7 +605,7 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
   try {
     pdf = std::make_unique<RooProdPdf>(objName,objName,asSET(regPdfList.c_str()),cmdList);
   } catch (const string &err) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::prod(" << objName << ") ERROR creating RooProdPdf input set of regular pdfs: " << err << endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::prod(" << objName << ") ERROR creating RooProdPdf input set of regular pdfs: " << err << std::endl ;
     logError() ;
   }
   cmdList.Delete() ;
@@ -635,7 +635,7 @@ RooSimultaneous* RooFactoryWSTool::simul(const char* objName, const char* indexC
     char* eq = strchr(tok,'=') ;
     if (!eq) {
       coutE(ObjectHandling) << "RooFactoryWSTool::simul(" << objName << ") ERROR creating RooSimultaneous::" << objName
-             << " expect mapping token of form 'state=pdfName', but found '" << tok << "'" << endl ;
+             << " expect mapping token of form 'state=pdfName', but found '" << tok << "'" << std::endl ;
       logError() ;
       return nullptr ;
     } else {
@@ -644,7 +644,7 @@ RooSimultaneous* RooFactoryWSTool::simul(const char* objName, const char* indexC
       try {
    theMap[tok] = &asPDF(eq+1) ;
       } catch (const string &err ) {
-   coutE(ObjectHandling) << "RooFactoryWSTool::simul(" << objName << ") ERROR creating RooSimultaneous: " << err << endl ;
+   coutE(ObjectHandling) << "RooFactoryWSTool::simul(" << objName << ") ERROR creating RooSimultaneous: " << err << std::endl ;
    logError() ;
       }
     }
@@ -657,7 +657,7 @@ RooSimultaneous* RooFactoryWSTool::simul(const char* objName, const char* indexC
   try {
     pdf = std::make_unique<RooSimultaneous>(objName,objName,theMap,asCATLV(indexCat)) ;
   } catch (const string &err) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::simul(" << objName << ") ERROR creating RooSimultaneous::" << objName << " " << err << endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::simul(" << objName << ") ERROR creating RooSimultaneous::" << objName << " " << err << std::endl ;
     logError() ;
     return nullptr;
   }
@@ -697,13 +697,13 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
     }
 
   } catch (const string &err) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::addfunc(" << objName << ") ERROR creating RooAddition: " << err << endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::addfunc(" << objName << ") ERROR creating RooAddition: " << err << std::endl ;
     logError() ;
     return nullptr ;
   }
 
   if (!sumlist2.empty() && (sumlist1.size()!=sumlist2.size())) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::addfunc(" << objName << ") ERROR creating RooAddition: syntax error: either all sum terms must be products or none" << endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::addfunc(" << objName << ") ERROR creating RooAddition: syntax error: either all sum terms must be products or none" << std::endl ;
     logError() ;
     return nullptr ;
   }
@@ -821,7 +821,7 @@ RooProduct* RooFactoryWSTool::prodfunc(const char *objName, const char* pdfList)
 RooAbsArg* RooFactoryWSTool::process(const char* expr)
 {
 
-//   cout << "RooFactoryWSTool::process() " << expr << endl ;
+//   std::cout << "RooFactoryWSTool::process() " << expr << std::endl ;
 
   // First perform basic syntax check
   if (checkSyntax(expr)) {
@@ -852,13 +852,13 @@ RooAbsArg* RooFactoryWSTool::process(const char* expr)
   try {
     out = processExpression(buf.data()) ;
   } catch (const string &error) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::processExpression() ERROR in parsing: " << error << endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::processExpression() ERROR in parsing: " << error << std::endl ;
     logError() ;
   }
 
   // If there were no errors commit the transaction, cancel it otherwise
   if (errorCount()>0) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::processExpression() ERRORS detected, transaction to workspace aborted, no objects committed" << endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::processExpression() ERRORS detected, transaction to workspace aborted, no objects committed" << std::endl ;
     ws().cancelTransaction() ;
   } else {
     ws().commitTransaction() ;
@@ -1061,7 +1061,7 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
       // Create function argument with instance name
       ret= processCreateArg(func,args) ;
     } else {
-      coutE(ObjectHandling) << "RooFactoryWSTool::processSingleExpression(" << arg << "): ERROR: Syntax error: Class::Instance must be followed by (...)" << endl ;
+      coutE(ObjectHandling) << "RooFactoryWSTool::processSingleExpression(" << arg << "): ERROR: Syntax error: Class::Instance must be followed by (...)" << std::endl ;
       logError() ;
     }
   } else if (func[0]!='$'){
@@ -1090,7 +1090,7 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
       }
       ret= processCreateArg(autoname,args) ;
     } else {
-      coutE(ObjectHandling) << "RooFactoryWSTool::processSingleExpression(" << arg << "): ERROR: Syntax error: expect either Class(...) or Instance[...]" << endl ;
+      coutE(ObjectHandling) << "RooFactoryWSTool::processSingleExpression(" << arg << "): ERROR: Syntax error: expect either Class(...) or Instance[...]" << std::endl ;
       logError() ;
     }
   } else {
@@ -1098,7 +1098,7 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
       // Process meta function (compile arguments, but not meta-function itself)
       ret= processMetaArg(func,args) ;
     } else {
-      coutE(ObjectHandling) << "RooFactoryWSTool::processSingleExpression(" << arg << "): ERROR: Syntax error: $MetaClass must be followed by (...)" << endl ;
+      coutE(ObjectHandling) << "RooFactoryWSTool::processSingleExpression(" << arg << "): ERROR: Syntax error: $MetaClass must be followed by (...)" << std::endl ;
       logError() ;
     }
   }
@@ -1186,7 +1186,7 @@ string RooFactoryWSTool::processAliasExpression(const char* token)
 {
   vector<string> args = splitFunctionArgs(token) ;
   if (args.size()!=2) {
-    coutE(ObjectHandling) << "RooFactorWSTool::processAliasExpression() ERROR $Alias() takes exactly two arguments, " << args.size() << " args found" << endl ;
+    coutE(ObjectHandling) << "RooFactorWSTool::processAliasExpression() ERROR $Alias() takes exactly two arguments, " << args.size() << " args found" << std::endl ;
     logError() ;
     return string() ;
   }
@@ -1223,7 +1223,7 @@ TClass* RooFactoryWSTool::resolveClassName(const char* className)
   if (!tc) {
     tc = TClass::GetClass(Form("Roo%s",className)) ;
     if (!tc) {
-      coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR class " << className << " not defined in ROOT class table" << endl ;
+      coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR class " << className << " not defined in ROOT class table" << std::endl ;
       logError() ;
       return nullptr ;
     }
@@ -1277,7 +1277,7 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
 
       // One argument, create constant variable with given value
       double xinit = atof((ai)->c_str()) ;
-      cxcoutD(ObjectHandling) << "CREATE variable " << func << " xinit = " << xinit << endl ;
+      cxcoutD(ObjectHandling) << "CREATE variable " << func << " xinit = " << xinit << std::endl ;
       RooRealVar tmp(func.c_str(),func.c_str(),xinit) ;
       tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
       if (_ws->import(tmp,Silence())) {
@@ -1289,7 +1289,7 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
       // Two arguments, create variable with given range
       double xlo = atof((ai++)->c_str()) ;
       double xhi = atof(ai->c_str()) ;
-      cxcoutD(ObjectHandling) << "CREATE variable " << func << " xlo = " << xlo << " xhi = " << xhi << endl ;
+      cxcoutD(ObjectHandling) << "CREATE variable " << func << " xlo = " << xlo << " xhi = " << xhi << std::endl ;
       RooRealVar tmp(func.c_str(),func.c_str(),xlo,xhi) ;
       tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
       if (_ws->import(tmp,Silence())) {
@@ -1302,7 +1302,7 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
       double xinit = atof((ai++)->c_str()) ;
       double xlo = atof((ai++)->c_str()) ;
       double xhi = atof(ai->c_str()) ;
-      cxcoutD(ObjectHandling) << "CREATE variable " << func << " xinit = " << xinit << " xlo = " << xlo << " xhi = " << xhi << endl ;
+      cxcoutD(ObjectHandling) << "CREATE variable " << func << " xinit = " << xinit << " xlo = " << xlo << " xhi = " << xhi << std::endl ;
       RooRealVar tmp(func.c_str(),func.c_str(),xinit,xlo,xhi) ;
       tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
       if (_ws->import(tmp,Silence())) {
@@ -1495,15 +1495,15 @@ bool RooFactoryWSTool::checkSyntax(const char* arg)
     ptr++ ;
   }
   if (nParentheses!=0) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::checkSyntax ERROR non-matching '" << (nParentheses>0?"(":")") << "' in expression" << endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::checkSyntax ERROR non-matching '" << (nParentheses>0?"(":")") << "' in expression" << std::endl ;
     return true ;
   }
   if (nBracket!=0) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::checkSyntax ERROR non-matching '" << (nBracket>0?"[":"]") << "' in expression" << endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::checkSyntax ERROR non-matching '" << (nBracket>0?"[":"]") << "' in expression" << std::endl ;
     return true ;
   }
   if (nAccolade!=0) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::checkSyntax ERROR non-matching '" << (nAccolade>0?"{":"}") << "' in expression" << endl ;
+    coutE(ObjectHandling) << "RooFactoryWSTool::checkSyntax ERROR non-matching '" << (nAccolade>0?"{":"}") << "' in expression" << std::endl ;
     return true ;
   }
   return false ;
@@ -1702,10 +1702,10 @@ RooArgSet RooFactoryWSTool::asSET(const char* arg)
 
   // If given object is not of {,,,} form, interpret given string as name of defined set
   if (arg[0]!='{') {
-    // cout << "asSet(arg='" << arg << "') parsing as defined set" << endl ;
+    // std::cout << "asSet(arg='" << arg << "') parsing as defined set" << std::endl ;
     const RooArgSet* defSet = ws().set(arg) ;
     if (defSet) {
-      // cout << "found defined set: " << *defSet << endl ;
+      // std::cout << "found defined set: " << *defSet << std::endl ;
       s.add(*defSet) ;
       return s ;
     }

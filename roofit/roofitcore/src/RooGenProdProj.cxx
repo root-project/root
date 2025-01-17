@@ -62,9 +62,9 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
   RooAbsReal* numerator = makeIntegral("numerator",_prodSet,_intSet,*_compSetOwnedN,isetRangeName,doFactorize) ;
   RooAbsReal* denominator = makeIntegral("denominator",_prodSet,_normSet,*_compSetOwnedD,normRangeName,doFactorize) ;
 
-//   cout << "RooGenProdPdf::ctor(" << GetName() << ") numerator = " << numerator->GetName() << endl ;
+//   std::cout << "RooGenProdPdf::ctor(" << GetName() << ") numerator = " << numerator->GetName() << std::endl ;
 //   numerator->printComponentTree() ;
-//   cout << "RooGenProdPdf::ctor(" << GetName() << ") denominator = " << denominator->GetName() << endl ;
+//   std::cout << "RooGenProdPdf::ctor(" << GetName() << ") denominator = " << denominator->GetName() << std::endl ;
 //   denominator->printComponentTree() ;
 
   // Copy all components in (non-owning) set proxy
@@ -248,7 +248,7 @@ double RooGenProdProj::evaluate() const
 
   double den = static_cast<RooAbsReal*>(_intList.at(1))->getVal(nset);
 
-  //cout << "RooGenProdProj::eval(" << GetName() << ") nom = " << nom << " den = " << den << endl ;
+  //cout << "RooGenProdProj::eval(" << GetName() << ") nom = " << nom << " den = " << den << std::endl ;
 
   return nom / den ;
 }

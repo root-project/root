@@ -127,7 +127,7 @@ void RooBMixDecay::doEval(RooFit::EvalContext &ctx) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///   cout << "RooBMixDecay::getCoefAI " ; allVars.Print("1") ;
+///   std::cout << "RooBMixDecay::getCoefAI " ; allVars.Print("1") ;
 
 Int_t RooBMixDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {

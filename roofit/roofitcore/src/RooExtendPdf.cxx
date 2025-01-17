@@ -111,7 +111,7 @@ double RooExtendPdf::expectedEvents(const RooArgSet* nset) const
 
   if (_rangeName && (!nset || nset->empty())) {
     coutW(InputArguments) << "RooExtendPdf::expectedEvents(" << GetName() << ") WARNING: RooExtendPdf needs non-null normalization set to calculate fraction in range "
-           << _rangeName << ".  Results may be nonsensical" << endl ;
+           << _rangeName << ".  Results may be nonsensical" << std::endl ;
   }
 
   double nExp = _n ;
@@ -124,7 +124,7 @@ double RooExtendPdf::expectedEvents(const RooArgSet* nset) const
 
     if ( fracInt == 0. || _n == 0.) {
       coutW(Eval) << "RooExtendPdf(" << GetName() << ") WARNING: nExpected = " << _n << " / "
-        << fracInt << " for nset = " << (nset?*nset:RooArgSet()) << endl ;
+        << fracInt << " for nset = " << (nset?*nset:RooArgSet()) << std::endl ;
     }
 
     nExp /= fracInt ;

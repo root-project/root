@@ -307,7 +307,7 @@ bool RooAbsTestStatistic::redirectServersHook(const RooAbsCollection& newServerL
     for (Int_t i = 0; i < _nCPU; ++i) {
       if (_mpfeArray[i]) {
    _mpfeArray[i]->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange);
-//    cout << "redirecting servers on " << _mpfeArray[i]->GetName() << endl;
+//    std::cout << "redirecting servers on " << _mpfeArray[i]->GetName() << std::endl;
       }
     }
   }
@@ -324,13 +324,13 @@ void RooAbsTestStatistic::printCompactTreeHook(ostream& os, const char* indent)
 {
   if (SimMaster == _gofOpMode) {
     // Forward to slaves
-    os << indent << "RooAbsTestStatistic begin GOF contents" << endl ;
+    os << indent << "RooAbsTestStatistic begin GOF contents" << std::endl ;
     for (std::size_t i = 0; i < _gofArray.size(); ++i) {
       TString indent2(indent);
       indent2 += "[" + std::to_string(i) + "] ";
       _gofArray[i]->printCompactTreeHook(os,indent2);
     }
-    os << indent << "RooAbsTestStatistic end GOF contents" << endl;
+    os << indent << "RooAbsTestStatistic end GOF contents" << std::endl;
   } else if (MPMaster == _gofOpMode) {
     // WVE implement this
   }
@@ -415,7 +415,7 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
     gof->SetName(Form("%s_GOF%d",GetName(),i));
     gof->SetTitle(Form("%s_GOF%d",GetTitle(),i));
 
-    ccoutD(Eval) << "RooAbsTestStatistic::initMPMode: starting remote server process #" << i << endl;
+    ccoutD(Eval) << "RooAbsTestStatistic::initMPMode: starting remote server process #" << i << std::endl;
     _mpfeArray[i] = new RooRealMPFE(Form("%s_%zx_MPFE%d",GetName(),reinterpret_cast<size_t>(this),i),Form("%s_%zx_MPFE%d",GetTitle(),reinterpret_cast<size_t>(this),i),*gof,false);
     //_mpfeArray[i]->setVerbose(true,true);
     _mpfeArray[i]->initialize();
@@ -424,8 +424,8 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
     }
   }
   _mpfeArray[_nCPU - 1]->addOwnedComponents(*gof);
-  coutI(Eval) << "RooAbsTestStatistic::initMPMode: started " << _nCPU << " remote server process." << endl;
-  //cout << "initMPMode --- done" << endl ;
+  coutI(Eval) << "RooAbsTestStatistic::initMPMode: started " << _nCPU << " remote server process." << std::endl;
+  //cout << "initMPMode --- done" << std::endl ;
   return ;
 }
 
@@ -468,7 +468,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 
     if (pdf && dset && (0. != dset->sumEntries() || processEmptyDataSets())) {
       ccoutI(Fitting) << "RooAbsTestStatistic::initSimMode: creating slave calculator #" << _gofArray.size() << " for state " << catName
-          << " (" << dset->numEntries() << " dataset entries)" << endl;
+          << " (" << dset->numEntries() << " dataset entries)" << std::endl;
 
 
       // *** START HERE
@@ -514,7 +514,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   for(auto& gof : _gofArray) {
     gof->setSimCount(_gofArray.size());
   }
-  coutI(Fitting) << "RooAbsTestStatistic::initSimMode: created " << _gofArray.size() << " slave calculators." << endl;
+  coutI(Fitting) << "RooAbsTestStatistic::initSimMode: created " << _gofArray.size() << " slave calculators." << std::endl;
 
   dsetList->Delete(); // delete the content.
 }
@@ -552,7 +552,7 @@ bool RooAbsTestStatistic::setData(RooAbsData& indata, bool cloneData)
     } else {
       std::unique_ptr<TList> dlist{indata.split(*static_cast<RooSimultaneous*>(_func), processEmptyDataSets())};
       if (!dlist) {
-        coutE(Fitting) << "RooAbsTestStatistic::initSimMode(" << GetName() << ") ERROR: index category of simultaneous pdf is missing in dataset, aborting" << endl;
+        coutE(Fitting) << "RooAbsTestStatistic::initSimMode(" << GetName() << ") ERROR: index category of simultaneous pdf is missing in dataset, aborting" << std::endl;
         throw std::runtime_error("RooAbsTestStatistic::initSimMode() ERROR, index category of simultaneous pdf is missing in dataset, aborting");
       }
 
@@ -560,14 +560,14 @@ bool RooAbsTestStatistic::setData(RooAbsData& indata, bool cloneData)
         if (auto compData = static_cast<RooAbsData*>(dlist->FindObject(gof->GetName()))) {
           gof->setDataSlave(*compData,false,true);
         } else {
-          coutE(DataHandling) << "RooAbsTestStatistic::setData(" << GetName() << ") ERROR: Cannot find component data for state " << gof->GetName() << endl;
+          coutE(DataHandling) << "RooAbsTestStatistic::setData(" << GetName() << ") ERROR: Cannot find component data for state " << gof->GetName() << std::endl;
         }
       }
     }
     break;
   case MPMaster:
     // Not supported
-    coutF(DataHandling) << "RooAbsTestStatistic::setData(" << GetName() << ") FATAL: setData() is not supported in multi-processor mode" << endl;
+    coutF(DataHandling) << "RooAbsTestStatistic::setData(" << GetName() << ") FATAL: setData() is not supported in multi-processor mode" << std::endl;
     throw std::runtime_error("RooAbsTestStatistic::setData is not supported in MPMaster mode");
     break;
   }

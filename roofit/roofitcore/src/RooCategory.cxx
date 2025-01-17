@@ -210,7 +210,7 @@ bool RooCategory::defineType(const std::string& label)
 {
   if (label.find(';') != std::string::npos) {
     coutE(InputArguments) << "RooCategory::defineType(" << GetName()
-        << "): semicolons not allowed in label name" << endl ;
+        << "): semicolons not allowed in label name" << std::endl ;
     return true;
   }
 
@@ -226,7 +226,7 @@ bool RooCategory::defineType(const std::string& label, Int_t index)
 {
   if (label.find(';') != std::string::npos) {
     coutE(InputArguments) << "RooCategory::defineType(" << GetName()
-         << "): semicolons not allowed in label name" << endl ;
+         << "): semicolons not allowed in label name" << std::endl ;
     return true;
   }
 
@@ -323,7 +323,7 @@ void RooCategory::clearRange(const char* name, bool silent)
   std::map<std::string, std::vector<value_type>>::iterator item = _ranges->find(name);
   if (item == _ranges->end()) {
     if (!silent)
-      coutE(InputArguments) << "RooCategory::clearRange(" << GetName() << ") ERROR: must specify valid range name" << endl ;
+      coutE(InputArguments) << "RooCategory::clearRange(" << GetName() << ") ERROR: must specify valid range name" << std::endl ;
     return;
   }
 
@@ -356,7 +356,7 @@ void RooCategory::addToRange(const char* name, RooAbsCategory::value_type stateI
 
     item = _ranges->emplace(name, std::vector<value_type>()).first;
     coutI(Contents) << "RooCategory::setRange(" << GetName()
-        << ") new range named '" << name << "' created for state " << stateIndex << endl ;
+        << ") new range named '" << name << "' created for state " << stateIndex << std::endl ;
   }
 
   item->second.push_back(stateIndex);
@@ -372,7 +372,7 @@ void RooCategory::addToRange(const char* name, RooAbsCategory::value_type stateI
 void RooCategory::addToRange(const char* name, const char* stateNameList)
 {
   if (!stateNameList) {
-    coutE(InputArguments) << "RooCategory::setRange(" << GetName() << ") ERROR: must specify valid name and state name list" << endl ;
+    coutE(InputArguments) << "RooCategory::setRange(" << GetName() << ") ERROR: must specify valid name and state name list" << std::endl ;
     return;
   }
 
@@ -383,7 +383,7 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
       addToRange(name, idx);
     } else {
       coutW(InputArguments) << "RooCategory::setRange(" << GetName() << ") WARNING: Ignoring invalid state name '"
-             << token << "' in state name list" << endl ;
+             << token << "' in state name list" << std::endl ;
     }
   }
 }
@@ -419,7 +419,7 @@ bool RooCategory::isStateInRange(const char* rangeName, const char* stateName) c
   }
 
   if (!stateName) {
-    coutE(InputArguments) << "RooCategory::isStateInRange(" << GetName() << ") ERROR: must specify valid state name" << endl ;
+    coutE(InputArguments) << "RooCategory::isStateInRange(" << GetName() << ") ERROR: must specify valid state name" << std::endl ;
     return false;
   }
 

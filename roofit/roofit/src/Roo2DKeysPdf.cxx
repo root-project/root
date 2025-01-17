@@ -29,9 +29,7 @@ Two-dimensional kernel estimation PDF.
 #include "TFile.h"
 #include "TMath.h"
 
-//#include <math.h>
-
-using std::cout, std::endl, std::ostream;
+using std::ostream;
 
 ClassImp(Roo2DKeysPdf);
 
@@ -67,7 +65,7 @@ Roo2DKeysPdf::Roo2DKeysPdf(const Roo2DKeysPdf & other, const char* name) :
   x("x", this, other.x),
   y("y", this, other.y)
 {
-  if(_verbosedebug) { cout << "Roo2DKeysPdf::Roo2DKeysPdf copy ctor" << endl; }
+  if(_verbosedebug) { std::cout << "Roo2DKeysPdf::Roo2DKeysPdf copy ctor" << std::endl; }
 
   _xMean   = other._xMean;
   _xSigma  = other._xSigma;
@@ -114,7 +112,7 @@ Roo2DKeysPdf::Roo2DKeysPdf(const Roo2DKeysPdf & other, const char* name) :
 /// Destructor.
 
 Roo2DKeysPdf::~Roo2DKeysPdf() {
-  if(_verbosedebug) { cout << "Roo2DKeysPdf::Roo2KeysPdf dtor" << endl; }
+  if(_verbosedebug) { std::cout << "Roo2DKeysPdf::Roo2KeysPdf dtor" << std::endl; }
     delete[] _x;
     delete[] _hx;
     delete[] _y;
@@ -130,18 +128,18 @@ Roo2DKeysPdf::~Roo2DKeysPdf() {
 
 Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
 {
-  if(_verbosedebug) { cout << "Roo2DKeysPdf::loadDataSet" << endl; }
+  if(_verbosedebug) { std::cout << "Roo2DKeysPdf::loadDataSet" << std::endl; }
 
   setOptions(options);
 
-  if(_verbosedebug) { cout << "Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)" << endl; }
+  if(_verbosedebug) { std::cout << "Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)" << std::endl; }
 
   _2pi       = 2.0*TMath::Pi() ;   //use pi from math.h
   _sqrt2pi   = sqrt(_2pi);
   _nEvents   = (Int_t)data.numEntries();
   if(_nEvents == 0)
   {
-    cout << "ERROR:  Roo2DKeysPdf::loadDataSet The input data set is empty.  Unable to begin generating the PDF" << endl;
+    std::cout << "ERROR:  Roo2DKeysPdf::loadDataSet The input data set is empty.  Unable to begin generating the PDF" << std::endl;
     return 1;
   }
   _n16       =  std::pow(_nEvents, -1./6.); // = (4/[n(dim(R) + 2)])^1/(dim(R)+4); dim(R) = 2
@@ -169,18 +167,18 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
   const RooAbsReal & yy = y.arg();
   if(! static_cast<RooRealVar*>((const_cast<RooArgSet *>(data.get(0)))->find( xx.GetName() )) )
   {
-    cout << "Roo2DKeysPdf::Roo2DKeysPdf invalid RooAbsReal name: "<<xx.GetName()<<" not in the data set" <<endl;
+    std::cout << "Roo2DKeysPdf::Roo2DKeysPdf invalid RooAbsReal name: "<<xx.GetName()<<" not in the data set" << std::endl;
     bad = 1;
   }
   if(! static_cast<RooRealVar*>((const_cast<RooArgSet *>(data.get(0)))->find( yy.GetName() )) )
   {
-    cout << "Roo2DKeysPdf::Roo2DKeysPdf invalid RooAbsReal name: "<<yy.GetName()<<" not in the data set" << endl;
+    std::cout << "Roo2DKeysPdf::Roo2DKeysPdf invalid RooAbsReal name: "<<yy.GetName()<<" not in the data set" << std::endl;
     bad = 1;
   }
   if(bad)
   {
-    cout << "Roo2DKeysPdf::Roo2DKeysPdf Unable to initialize object; incompatible RooDataSet doesn't contain"<<endl;
-    cout << "                           all of the RooAbsReal arguments"<<endl;
+    std::cout << "Roo2DKeysPdf::Roo2DKeysPdf Unable to initialize object; incompatible RooDataSet doesn't contain"<< std::endl;
+    std::cout << "                           all of the RooAbsReal arguments"<< std::endl;
     return 1;
   }
 
@@ -205,7 +203,7 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
   //==========================================//
   if(_nEvents == 0)
   {
-    cout << "Roo2DKeysPdf::Roo2DKeysPdf Empty data set was used; can't generate a PDF"<<endl;
+    std::cout << "Roo2DKeysPdf::Roo2DKeysPdf Empty data set was used; can't generate a PDF"<< std::endl;
   }
 
   _xMean  = x1/x0;
@@ -225,7 +223,7 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
 
 void Roo2DKeysPdf::setOptions(TString options)
 {
-  if(_verbosedebug) { cout << "Roo2DKeysPdf::setOptions" << endl; }
+  if(_verbosedebug) { std::cout << "Roo2DKeysPdf::setOptions" << std::endl; }
 
   options.ToLower();
   if( options.Contains("a") )   _BandWidthType    = 0;
@@ -243,12 +241,12 @@ void Roo2DKeysPdf::setOptions(TString options)
 
   if( _debug )
   {
-    cout << "Roo2DKeysPdf::setOptions(TString options)    options = "<< options << endl;
-    cout << "\t_BandWidthType    = " << _BandWidthType    << endl;
-    cout << "\t_MirrorAtBoundary = " << _MirrorAtBoundary << endl;
-    cout << "\t_debug            = " << _debug            << endl;
-    cout << "\t_verbosedebug     = " << _verbosedebug     << endl;
-    cout << "\t_vverbosedebug    = " << _vverbosedebug    << endl;
+    std::cout << "Roo2DKeysPdf::setOptions(TString options)    options = "<< options << std::endl;
+    std::cout << "\t_BandWidthType    = " << _BandWidthType    << std::endl;
+    std::cout << "\t_MirrorAtBoundary = " << _MirrorAtBoundary << std::endl;
+    std::cout << "\t_debug            = " << _debug            << std::endl;
+    std::cout << "\t_verbosedebug     = " << _verbosedebug     << std::endl;
+    std::cout << "\t_vverbosedebug    = " << _vverbosedebug    << std::endl;
   }
 }
 
@@ -257,12 +255,12 @@ void Roo2DKeysPdf::setOptions(TString options)
 
 void Roo2DKeysPdf::getOptions(void) const
 {
-  cout << "Roo2DKeysPdf::getOptions(void)" << endl;
-  cout << "\t_BandWidthType                           = " << _BandWidthType    << endl;
-  cout << "\t_MirrorAtBoundary                        = " << _MirrorAtBoundary << endl;
-  cout << "\t_debug                                   = " << _debug            << endl;
-  cout << "\t_verbosedebug                            = " << _verbosedebug     << endl;
-  cout << "\t_vverbosedebug                           = " << _vverbosedebug    << endl;
+  std::cout << "Roo2DKeysPdf::getOptions(void)" << std::endl;
+  std::cout << "\t_BandWidthType                           = " << _BandWidthType    << std::endl;
+  std::cout << "\t_MirrorAtBoundary                        = " << _MirrorAtBoundary << std::endl;
+  std::cout << "\t_debug                                   = " << _debug            << std::endl;
+  std::cout << "\t_verbosedebug                            = " << _verbosedebug     << std::endl;
+  std::cout << "\t_vverbosedebug                           = " << _vverbosedebug    << std::endl;
 }
 
 
@@ -272,7 +270,7 @@ void Roo2DKeysPdf::getOptions(void) const
 
 Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
 {
-  if(_verbosedebug) { cout << "Roo2DKeysPdf::calculateBandWidth(Int_t kernel)" << endl; }
+  if(_verbosedebug) { std::cout << "Roo2DKeysPdf::calculateBandWidth(Int_t kernel)" << std::endl; }
   if(kernel != -999)
   {
     _BandWidthType = kernel;
@@ -286,7 +284,7 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
   if(sigProd != 0.0)  h = _n16*sqrt( sigSum/sigProd );
   if(sqrtSum == 0)
   {
-    cout << "Roo2DKeysPdf::calculateBandWidth The sqr(variance sum) == 0.0. " << " Your dataset represents a delta function."<<endl;
+    std::cout << "Roo2DKeysPdf::calculateBandWidth The sqr(variance sum) == 0.0. " << " Your dataset represents a delta function."<< std::endl;
     return 1;
   }
 
@@ -300,8 +298,8 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
   //////////////////////////////////////
   if(_BandWidthType == 1)  //calculate a trivial bandwidth
   {
-    cout << "Roo2DKeysPdf::calculateBandWidth Using a normal bandwidth (same for a given dimension) based on"<<endl;
-    cout << "                                 h_j = n^{-1/6}*sigma_j for the j^th dimension and n events * "<<_widthScaleFactor<<endl;
+    std::cout << "Roo2DKeysPdf::calculateBandWidth Using a normal bandwidth (same for a given dimension) based on"<< std::endl;
+    std::cout << "                                 h_j = n^{-1/6}*sigma_j for the j^th dimension and n events * "<<_widthScaleFactor<< std::endl;
     double hxGaussian = _n16 * _xSigma * _widthScaleFactor;
     double hyGaussian = _n16 * _ySigma * _widthScaleFactor;
     for(Int_t j=0;j<_nEvents;++j)
@@ -314,8 +312,8 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
   }
   else //use an adaptive bandwidth to reduce the dependence on global data distribution
   {
-    cout << "Roo2DKeysPdf::calculateBandWidth Using an adaptive bandwidth (in general different for all events) [default]"<<endl;
-    cout << "                                 scaled by a factor of "<<_widthScaleFactor<<endl;
+    std::cout << "Roo2DKeysPdf::calculateBandWidth Using an adaptive bandwidth (in general different for all events) [default]"<< std::endl;
+    std::cout << "                                 scaled by a factor of "<<_widthScaleFactor<< std::endl;
     double xnorm   = h * std::pow(_xSigma/sqrtSum, 1.5) * _widthScaleFactor;
     double ynorm   = h * std::pow(_ySigma/sqrtSum, 1.5) * _widthScaleFactor;
     for(Int_t j=0;j<_nEvents;++j)
@@ -341,7 +339,7 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
 
 double Roo2DKeysPdf::evaluate() const
 {
-  if(_vverbosedebug) { cout << "Roo2DKeysPdf::evaluate()" << endl; }
+  if(_vverbosedebug) { std::cout << "Roo2DKeysPdf::evaluate()" << std::endl; }
   return evaluateFull(x,y);
 }
 
@@ -357,7 +355,7 @@ double Roo2DKeysPdf::evaluate() const
 
 double Roo2DKeysPdf::evaluateFull(double thisX, double thisY) const
 {
-  if( _vverbosedebug ) { cout << "Roo2DKeysPdf::evaluateFull()" << endl; }
+  if( _vverbosedebug ) { std::cout << "Roo2DKeysPdf::evaluateFull()" << std::endl; }
 
   double f=0.0;
 
@@ -413,7 +411,7 @@ double Roo2DKeysPdf::evaluateFull(double thisX, double thisY) const
 
 double Roo2DKeysPdf::highBoundaryCorrection(double thisVar, double thisH, double high, double tVar) const
 {
-  if(_vverbosedebug) { cout << "Roo2DKeysPdf::highBoundaryCorrection" << endl; }
+  if(_vverbosedebug) { std::cout << "Roo2DKeysPdf::highBoundaryCorrection" << std::endl; }
 
   if(thisH == 0.0) return 0.0;
   double correction = (thisVar + tVar - 2.0* high )/thisH;
@@ -425,7 +423,7 @@ double Roo2DKeysPdf::highBoundaryCorrection(double thisVar, double thisH, double
 
 double Roo2DKeysPdf::lowBoundaryCorrection(double thisVar, double thisH, double low, double tVar) const
 {
-  if(_vverbosedebug) { cout << "Roo2DKeysPdf::lowBoundaryCorrection" << endl; }
+  if(_vverbosedebug) { std::cout << "Roo2DKeysPdf::lowBoundaryCorrection" << std::endl; }
 
   if(thisH == 0.0) return 0.0;
   double correction = (thisVar + tVar - 2.0* low )/thisH;
@@ -467,8 +465,8 @@ double Roo2DKeysPdf::g(double varMean1, double * _var1, double sigma1, double va
 
 Int_t Roo2DKeysPdf::getBandWidthType() const
 {
-  if(_BandWidthType == 1)  cout << "The Bandwidth Type selected is Trivial" << endl;
-  else                     cout << "The Bandwidth Type selected is Adaptive" << endl;
+  if(_BandWidthType == 1)  std::cout << "The Bandwidth Type selected is Trivial" << std::endl;
+  else                     std::cout << "The Bandwidth Type selected is Adaptive" << std::endl;
 
   return _BandWidthType;
 }
@@ -482,7 +480,7 @@ double Roo2DKeysPdf::getMean(const char * axis) const
   else if(!strcmp(axis,y.GetName()) || !strcmp(axis,"y") || !strcmp(axis,"Y")) return _yMean;
   else
   {
-    cout << "Roo2DKeysPdf::getMean unknown axis "<<axis<<endl;
+    std::cout << "Roo2DKeysPdf::getMean unknown axis "<<axis<< std::endl;
   }
   return 0.0;
 }
@@ -496,7 +494,7 @@ double Roo2DKeysPdf::getSigma(const char * axis) const
   else if(!strcmp(axis,y.GetName()) || !strcmp(axis,"y") || !strcmp(axis,"Y")) return _ySigma;
   else
   {
-    cout << "Roo2DKeysPdf::getSigma unknown axis "<<axis<<endl;
+    std::cout << "Roo2DKeysPdf::getSigma unknown axis "<<axis<< std::endl;
   }
   return 0.0;
 }
@@ -524,12 +522,12 @@ void Roo2DKeysPdf::writeToFile(char * outputFile, const char * name) const
 
 void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName) const
 {
-  cout << "Roo2DKeysPdf::writeHistToFile This member function is temporarily disabled" <<endl;
+  std::cout << "Roo2DKeysPdf::writeHistToFile This member function is temporarily disabled" << std::endl;
   //make sure that any existing file is not over written
   std::unique_ptr<TFile> file{TFile::Open(outputFile, "UPDATE")};
   if (!file)
   {
-    cout << "Roo2DKeysPdf::writeHistToFile unable to open file "<< outputFile <<endl;
+    std::cout << "Roo2DKeysPdf::writeHistToFile unable to open file "<< outputFile << std::endl;
     return;
   }
 
@@ -564,7 +562,7 @@ void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name) const
   file = new TFile(outputFile, "UPDATE");
   if (!file)
   {
-    cout << "Roo2DKeysPdf::writeNTupleToFile unable to open file "<< outputFile <<endl;
+    std::cout << "Roo2DKeysPdf::writeNTupleToFile unable to open file "<< outputFile << std::endl;
     return;
   }
   RooAbsReal & xArg = (RooAbsReal&)x.arg();
@@ -576,7 +574,7 @@ void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name) const
   TString label = name;
   label += " the source data for 2D Keys PDF";
   TTree * _theTree =  new TTree(name, label);
-  if(!_theTree) { cout << "Unable to get a TTree for output" << endl; return; }
+  if(!_theTree) { std::cout << "Unable to get a TTree for output" << std::endl; return; }
   _theTree->SetAutoSave(1000000000);  // autosave when 1 Gbyte written
 
   //name the TBranches the same as the RooAbsReal's
@@ -609,17 +607,17 @@ void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name) const
 
 void Roo2DKeysPdf::PrintInfo(ostream & out) const
 {
-  out << "Roo2DKeysPDF instance domain information:"<<endl;
-  out << "\tX_min          = " << _lox <<endl;
-  out << "\tX_max          = " << _hix <<endl;
-  out << "\tY_min          = " << _loy <<endl;
-  out << "\tY_max          = " << _hiy <<endl;
+  out << "Roo2DKeysPDF instance domain information:"<< std::endl;
+  out << "\tX_min          = " << _lox << std::endl;
+  out << "\tX_max          = " << _hix << std::endl;
+  out << "\tY_min          = " << _loy << std::endl;
+  out << "\tY_max          = " << _hiy << std::endl;
 
-  out << "Data information:" << endl;
-  out << "\t<x>             = " << _xMean <<endl;
-  out << "\tsigma(x)       = " << _xSigma <<endl;
-  out << "\t<y>             = " << _yMean <<endl;
-  out << "\tsigma(y)       = " << _ySigma <<endl;
+  out << "Data information:" << std::endl;
+  out << "\t<x>             = " << _xMean << std::endl;
+  out << "\tsigma(x)       = " << _xSigma << std::endl;
+  out << "\t<y>             = " << _yMean << std::endl;
+  out << "\tsigma(y)       = " << _ySigma << std::endl;
 
-  out << "END of info for Roo2DKeys pdf instance"<< endl;
+  out << "END of info for Roo2DKeys pdf instance"<< std::endl;
 }

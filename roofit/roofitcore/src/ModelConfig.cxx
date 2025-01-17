@@ -67,7 +67,7 @@ void removeConstantParameters(RooAbsCollection &coll)
 
 } // namespace
 
-using std::cout, std::endl, std::ostream;
+using std::ostream;
 
 namespace RooStats {
 
@@ -138,7 +138,7 @@ void ModelConfig::Print(Option_t *) const
 {
    ostream &os = RooPrintable::defaultPrintStream();
 
-   os << endl << "=== Using the following for " << GetName() << " ===" << endl;
+   os << std::endl << "=== Using the following for " << GetName() << " ===" << std::endl;
 
    // args
    if (GetObservables()) {
@@ -183,12 +183,12 @@ void ModelConfig::Print(Option_t *) const
    // snapshot
    const RooArgSet *snapshot = GetSnapshot();
    if (snapshot) {
-      os << "Snapshot:                " << endl;
+      os << "Snapshot:                " << std::endl;
       snapshot->Print("v");
       delete snapshot;
    }
 
-   os << endl;
+   os << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -215,7 +215,7 @@ RooWorkspace *ModelConfig::GetWS() const
 {
    RooWorkspace *ws = dynamic_cast<RooWorkspace *>(fRefWS.GetObject());
    if (!ws) {
-      coutE(ObjectHandling) << "workspace not set" << endl;
+      coutE(ObjectHandling) << "workspace not set" << std::endl;
       return nullptr;
    }
    return ws;
@@ -353,7 +353,7 @@ bool ModelConfig::SetHasOnlyParameters(const RooArgSet &set, const char *errorMs
    }
 
    if (errorMsgPrefix && !nonparams.empty()) {
-      cout << errorMsgPrefix << " ERROR: specified set contains non-parameters: " << nonparams << endl;
+      std::cout << errorMsgPrefix << " ERROR: specified set contains non-parameters: " << nonparams << std::endl;
    }
    return (nonparams.empty());
 }

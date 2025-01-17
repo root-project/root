@@ -282,7 +282,7 @@ void RooCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& splitC
 {
   if (_sterile) {
     oocoutE(nullptr, InputArguments) << "RooCustomizer::splitArgs(" << _name
-           << ") ERROR cannot set spitting rules on this sterile customizer" << endl ;
+           << ") ERROR cannot set spitting rules on this sterile customizer" << std::endl ;
     return ;
   }
 
@@ -305,13 +305,13 @@ void RooCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCa
 {
   if (_splitArgList.find(arg.GetName())) {
     oocoutE(nullptr, InputArguments) << "RooCustomizer(" << _masterPdf->GetName() << ") ERROR: multiple splitting rules defined for "
-           << arg.GetName() << " only using first rule" << endl ;
+           << arg.GetName() << " only using first rule" << std::endl ;
     return ;
   }
 
   if (_sterile) {
     oocoutE(nullptr, InputArguments) << "RooCustomizer::splitArg(" << _name
-    << ") ERROR cannot set spitting rules on this sterile customizer" << endl ;
+    << ") ERROR cannot set spitting rules on this sterile customizer" << std::endl ;
     return ;
   }
 
@@ -328,7 +328,7 @@ void RooCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst)
 {
   if (_replaceArgList.find(orig.GetName())) {
     oocoutE(nullptr, InputArguments) << "RooCustomizer(" << _masterPdf->GetName() << ") ERROR: multiple replacement rules defined for "
-    << orig.GetName() << " only using first rule" << endl ;
+    << orig.GetName() << " only using first rule" << std::endl ;
     return ;
   }
 
@@ -384,14 +384,14 @@ RooAbsArg* RooCustomizer::build(const char* masterCatState, bool verbose)
 {
   if (_sterile) {
     oocoutE(nullptr, InputArguments) << "RooCustomizer::build(" << _name
-           << ") ERROR cannot use leaf spitting build() on this sterile customizer" << endl ;
+           << ") ERROR cannot use leaf spitting build() on this sterile customizer" << std::endl ;
     return nullptr ;
   }
 
   // Set masterCat to given state
   if (_masterCat->setLabel(masterCatState)) {
     oocoutE(nullptr, InputArguments) << "RooCustomizer::build(" << _masterPdf->GetName() << "): ERROR label '" << masterCatState
-           << "' not defined for master splitting category " << _masterCat->GetName() << endl ;
+           << "' not defined for master splitting category " << _masterCat->GetName() << std::endl ;
     return nullptr ;
   }
 
@@ -415,14 +415,14 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
   RooArgSet nodeList(_masterLeafList) ;
   nodeList.add(_masterBranchList) ;
 
-  //   cout << "loop over " << nodeList.size() << " nodes" << endl ;
+  //   std::cout << "loop over " << nodeList.size() << " nodes" << std::endl ;
   for (auto node : nodeList) {
     RooAbsArg* theSplitArg = !_sterile?static_cast<RooAbsArg*>(_splitArgList.find(node->GetName())):nullptr ;
     if (theSplitArg) {
       RooAbsCategory* splitCat = static_cast<RooAbsCategory*>(_splitCatList.at(_splitArgList.index(theSplitArg))) ;
       if (verbose) {
    oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName()
-               << "): tree node " << node->GetName() << " is split by category " << splitCat->GetName() << endl ;
+               << "): tree node " << node->GetName() << " is split by category " << splitCat->GetName() << std::endl ;
       }
 
       TString newName(node->GetName()) ;
@@ -439,7 +439,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
    clonedMasterNodes.add(*specNode) ;
    if (verbose) {
      oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName()
-            << ") Adding existing node specialization " << newName << " to clonedMasterNodes" << endl ;
+            << ") Adding existing node specialization " << newName << " to clonedMasterNodes" << std::endl ;
    }
 
    // Affix attribute with old name to clone to support name changing server redirect
@@ -457,7 +457,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
 
    if (node->isDerived()) {
      oocoutW(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName()
-            << "): WARNING: branch node " << node->GetName() << " is split but has no pre-defined specializations" << endl ;
+            << "): WARNING: branch node " << node->GetName() << " is split but has no pre-defined specializations" << std::endl ;
    }
 
    TString newTitle(node->GetTitle()) ;
@@ -498,7 +498,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
       RooAbsArg* substArg = static_cast<RooAbsArg*>(_replaceSubList.at(_replaceArgList.index(ReplaceArg))) ;
       if (verbose) {
    oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName()
-               << "): tree node " << node->GetName() << " will be replaced by " << substArg->GetName() << endl ;
+               << "): tree node " << node->GetName() << " will be replaced by " << substArg->GetName() << std::endl ;
       }
 
       // Affix attribute with old name to support name changing server redirect
@@ -519,13 +519,13 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
     // If branch is split itself, don't handle here
     if (masterNodesToBeSplit.find(branch->GetName())) {
       if (verbose) {
-   oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node " << branch->GetName() << " is already split" << endl ;
+   oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node " << branch->GetName() << " is already split" << std::endl ;
       }
       continue ;
     }
     if (masterNodesToBeReplaced.find(branch->GetName())) {
       if (verbose) {
-   oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node " << branch->GetName() << " is already replaced" << endl ;
+   oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node " << branch->GetName() << " is already replaced" << std::endl ;
       }
       continue ;
     }
@@ -533,13 +533,13 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
     if (branch->dependsOn(masterNodesToBeSplit)) {
       if (verbose) {
    oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node "
-               << branch->ClassName() << "::" << branch->GetName() << " cloned: depends on a split parameter" << endl ;
+               << branch->ClassName() << "::" << branch->GetName() << " cloned: depends on a split parameter" << std::endl ;
       }
       masterBranchesToBeCloned.add(*branch) ;
     } else if (branch->dependsOn(masterNodesToBeReplaced)) {
       if (verbose) {
    oocoutI(nullptr, ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node "
-               << branch->ClassName() << "::" << branch->GetName() << " cloned: depends on a replaced parameter" << endl ;
+               << branch->ClassName() << "::" << branch->GetName() << " cloned: depends on a replaced parameter" << std::endl ;
       }
       masterBranchesToBeCloned.add(*branch) ;
     }
@@ -609,22 +609,22 @@ void RooCustomizer::printArgs(ostream& os) const
 
 void RooCustomizer::printMultiline(ostream& os, Int_t /*content*/, bool /*verbose*/, TString indent) const
 {
-  os << indent << "RooCustomizer for " << _masterPdf->GetName() << (_sterile?" (sterile)":"") << endl ;
+  os << indent << "RooCustomizer for " << _masterPdf->GetName() << (_sterile?" (sterile)":"") << std::endl ;
 
   Int_t i;
   Int_t nsplit = _splitArgList.size();
   if (nsplit>0) {
-    os << indent << "  Splitting rules:" << endl ;
+    os << indent << "  Splitting rules:" << std::endl ;
     for (i=0 ; i<nsplit ; i++) {
-      os << indent << "   " << _splitArgList.at(i)->GetName() << " is split by " << _splitCatList.at(i)->GetName() << endl ;
+      os << indent << "   " << _splitArgList.at(i)->GetName() << " is split by " << _splitCatList.at(i)->GetName() << std::endl ;
     }
   }
 
   Int_t nrepl = _replaceArgList.size() ;
   if (nrepl>0) {
-    os << indent << "  Replacement rules:" << endl ;
+    os << indent << "  Replacement rules:" << std::endl ;
     for (i=0 ; i<nrepl ; i++) {
-      os << indent << "   " << _replaceSubList.at(i)->GetName() << " replaces " << _replaceArgList.at(i)->GetName() << endl ;
+      os << indent << "   " << _replaceSubList.at(i)->GetName() << " replaces " << _replaceArgList.at(i)->GetName() << std::endl ;
     }
   }
 
@@ -701,7 +701,7 @@ std::string CustIFace::create(RooFactoryWSTool& ft, const char* typeName, const 
    char* saveptr ;
    char* tok = R__STRTOK_R(buf2,",)",&saveptr) ;
    while(tok) {
-     //cout << "$REMOVE is restricted to " << tok << endl ;
+     //cout << "$REMOVE is restricted to " << tok << std::endl ;
      subst->setAttribute(Form("REMOVE_FROM_%s",tok)) ;
      tok = R__STRTOK_R(nullptr,",)",&saveptr) ;
    }
@@ -722,7 +722,7 @@ std::string CustIFace::create(RooFactoryWSTool& ft, const char* typeName, const 
     if (orig && subst) {
       cust.replaceArg(*orig,*subst) ;
     } else {
-      oocoutW(nullptr,ObjectHandling) << "RooCustomizer::CustIFace::create() WARNING: input or replacement of a replacement operation not found, operation ignored"<< endl ;
+      oocoutW(nullptr,ObjectHandling) << "RooCustomizer::CustIFace::create() WARNING: input or replacement of a replacement operation not found, operation ignored"<< std::endl ;
     }
   }
 

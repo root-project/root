@@ -154,7 +154,7 @@ bool RooGaussKronrodIntegrator1D::initialize()
 bool RooGaussKronrodIntegrator1D::setLimits(double* xmin, double* xmax)
 {
   if(_useIntegrandLimits) {
-    oocoutE(nullptr,Eval) << "RooGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << endl;
+    oocoutE(nullptr,Eval) << "RooGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << std::endl;
     return false;
   }
   _xmin= *xmin;

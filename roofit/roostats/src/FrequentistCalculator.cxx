@@ -70,7 +70,7 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
    if( fNullModel->GetNuisanceParameters() ) {
       allButNuisance.remove(*fNullModel->GetNuisanceParameters());
       if( fConditionalMLEsNull ) {
-         oocoutI(nullptr,InputArguments) << "Using given conditional MLEs for Null." << endl;
+         oocoutI(nullptr,InputArguments) << "Using given conditional MLEs for Null." << std::endl;
          allParams->assign(*fConditionalMLEsNull);
          // LM: fConditionalMLEsNull must be nuisance parameters otherwise an error message will be printed
          allButNuisance.add( *fConditionalMLEsNull );
@@ -84,7 +84,7 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
       doProfile = false;
    }
    if (doProfile) {
-      oocoutI(nullptr,InputArguments) << "Profiling conditional MLEs for Null." << endl;
+      oocoutI(nullptr,InputArguments) << "Profiling conditional MLEs for Null." << std::endl;
       RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
       RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
@@ -135,7 +135,7 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
    // check whether TestStatSampler is a ToyMCSampler
    ToyMCSampler *toymcs = dynamic_cast<ToyMCSampler*>(GetTestStatSampler());
    if(toymcs) {
-      oocoutI(nullptr,InputArguments) << "Using a ToyMCSampler. Now configuring for Null." << endl;
+      oocoutI(nullptr,InputArguments) << "Using a ToyMCSampler. Now configuring for Null." << std::endl;
 
       // variable number of toys
       if(fNToysNull >= 0) toymcs->SetNToys(fNToysNull);
@@ -145,7 +145,7 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
 
       // adaptive sampling
       if(fNToysNullTail) {
-         oocoutI(nullptr,InputArguments) << "Adaptive Sampling" << endl;
+         oocoutI(nullptr,InputArguments) << "Adaptive Sampling" << std::endl;
          if(GetTestStatSampler()->GetTestStatistic()->PValueIsRightTail()) {
             toymcs->SetToysRightTail(fNToysNullTail, obsTestStat);
          }else{
@@ -176,7 +176,7 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
    if( fAltModel->GetNuisanceParameters() ) {
       allButNuisance.remove(*fAltModel->GetNuisanceParameters());
       if( fConditionalMLEsAlt ) {
-         oocoutI(nullptr,InputArguments) << "Using given conditional MLEs for Alt." << endl;
+         oocoutI(nullptr,InputArguments) << "Using given conditional MLEs for Alt." << std::endl;
          allParams->assign(*fConditionalMLEsAlt);
          // LM: fConditionalMLEsAlt must be nuisance parameters otherwise an error message will be printed
          allButNuisance.add( *fConditionalMLEsAlt );
@@ -190,7 +190,7 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
       doProfile = false;
    }
    if (doProfile) {
-      oocoutI(nullptr,InputArguments) << "Profiling conditional MLEs for Alt." << endl;
+      oocoutI(nullptr,InputArguments) << "Profiling conditional MLEs for Alt." << std::endl;
       RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
       RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
@@ -241,7 +241,7 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
    // check whether TestStatSampler is a ToyMCSampler
    ToyMCSampler *toymcs = dynamic_cast<ToyMCSampler*>(GetTestStatSampler());
    if(toymcs) {
-      oocoutI(nullptr,InputArguments) << "Using a ToyMCSampler. Now configuring for Alt." << endl;
+      oocoutI(nullptr,InputArguments) << "Using a ToyMCSampler. Now configuring for Alt." << std::endl;
 
       // variable number of toys
       if(fNToysAlt >= 0) toymcs->SetNToys(fNToysAlt);
@@ -251,7 +251,7 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
 
       // adaptive sampling
       if(fNToysAltTail) {
-         oocoutI(nullptr,InputArguments) << "Adaptive Sampling" << endl;
+         oocoutI(nullptr,InputArguments) << "Adaptive Sampling" << std::endl;
          if(GetTestStatSampler()->GetTestStatistic()->PValueIsRightTail()) {
             toymcs->SetToysLeftTail(fNToysAltTail, obsTestStat);
          }else{

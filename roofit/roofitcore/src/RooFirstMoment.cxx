@@ -129,6 +129,6 @@ RooFirstMoment::RooFirstMoment(const RooFirstMoment& other, const char* name) :
 double RooFirstMoment::evaluate() const
 {
   double ratio = _ixf / _if ;
-  //cout << "\nRooFirstMoment::eval(" << GetName() << ") val = " << ratio << endl ;
+  //cout << "\nRooFirstMoment::eval(" << GetName() << ") val = " << ratio << std::endl ;
   return ratio ;
 }

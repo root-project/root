@@ -144,7 +144,7 @@ RooArgSet::RooArgSet(const TCollection& tcoll, const char* name) :
   for(TObject* obj : tcoll) {
     if (!dynamic_cast<RooAbsArg*>(obj)) {
       coutW(InputArguments) << "RooArgSet::RooArgSet(TCollection) element " << obj->GetName()
-             << " is not a RooAbsArg, ignored" << endl ;
+             << " is not a RooAbsArg, ignored" << std::endl ;
       continue ;
     }
     add(*static_cast<RooAbsArg*>(obj)) ;
@@ -189,7 +189,7 @@ RooAbsArg& RooArgSet::operator[](const TString& name) const
 {
   RooAbsArg* arg = find(name) ;
   if (!arg) {
-    coutE(InputArguments) << "RooArgSet::operator[](" << GetName() << ") ERROR: no element named " << name << " in set" << endl ;
+    coutE(InputArguments) << "RooArgSet::operator[](" << GetName() << ") ERROR: no element named " << name << " in set" << std::endl ;
     throw std::invalid_argument((TString("No element named '") + name + "' in set " + GetName()).Data());
   }
   return *arg ;
@@ -208,7 +208,7 @@ bool RooArgSet::checkForDup(const RooAbsArg& var, bool silent) const
       if (!silent) {
    // print a warning if this variable is not the same one we
    // already have
-   coutE(InputArguments) << "RooArgSet::checkForDup: ERROR argument with name " << var.GetName() << " is already in this set" << endl;
+   coutE(InputArguments) << "RooArgSet::checkForDup: ERROR argument with name " << var.GetName() << " is already in this set" << std::endl;
       }
     }
     // don't add duplicates
@@ -231,7 +231,7 @@ void RooArgSet::writeToFile(const char* fileName) const
 {
   ofstream ofs(fileName) ;
   if (ofs.fail()) {
-    coutE(InputArguments) << "RooArgSet::writeToFile(" << GetName() << ") error opening file " << fileName << endl ;
+    coutE(InputArguments) << "RooArgSet::writeToFile(" << GetName() << ") error opening file " << fileName << std::endl ;
     return ;
   }
   writeToStream(ofs,false) ;
@@ -247,7 +247,7 @@ bool RooArgSet::readFromFile(const char* fileName, const char* flagReadAtt, cons
 {
   ifstream ifs(fileName) ;
   if (ifs.fail()) {
-    coutE(InputArguments) << "RooArgSet::readFromFile(" << GetName() << ") error opening file " << fileName << endl ;
+    coutE(InputArguments) << "RooArgSet::readFromFile(" << GetName() << ") error opening file " << fileName << std::endl ;
     return true ;
   }
   return readFromStream(ifs,false,flagReadAtt,section,verbose) ;
@@ -279,12 +279,12 @@ void RooArgSet::writeToStream(ostream& os, bool compact, const char* section) co
       next->writeToStream(os, true);
       os << " ";
     }
-    os << endl;
+    os << std::endl;
   } else {
     for (const auto next : _list) {
       os << next->GetName() << " = " ;
       next->writeToStream(os,false) ;
-      os << endl ;
+      os << std::endl ;
     }
   }
 }
@@ -336,7 +336,7 @@ void RooArgSet::writeToStream(ostream& os, bool compact, const char* section) co
 bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAtt, const char* section, bool verbose)
 {
   if (compact) {
-    coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << ") compact mode not supported" << endl ;
+    coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << ") compact mode not supported" << std::endl ;
     return true ;
   }
 
@@ -381,17 +381,17 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
     if (!token.CompareTo("include")) {
       if (parser.atEOL()) {
         coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName()
-                   << "): no filename found after include statement" << endl ;
+                   << "): no filename found after include statement" << std::endl ;
         return true ;
       }
       TString filename = parser.readLine() ;
       ifstream incfs(filename) ;
       if (!incfs.good()) {
-        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): cannot open include file " << filename << endl ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): cannot open include file " << filename << std::endl ;
         return true ;
       }
       coutI(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): processing include file "
-          << filename << endl ;
+          << filename << std::endl ;
       if (readFromStream(incfs,compact,flagReadAtt,inSection?nullptr:section,verbose)) return true ;
       continue ;
     }
@@ -439,7 +439,7 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
 
       if (verbose) {
         cxcoutD(Eval) << "RooArgSet::readFromStream(" << GetName() << "): conditional expression " << expr << " = "
-                      << (condStack[condStackLevel] ? "true" : "false") << endl;
+                      << (condStack[condStackLevel] ? "true" : "false") << std::endl;
       }
       continue ; // go to next line
     }
@@ -447,7 +447,7 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
     if (!token.CompareTo("else")) {
       // Must have seen an if statement before
       if (condStackLevel==0) {
-        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): unmatched 'else'" << endl ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): unmatched 'else'" << std::endl ;
       }
 
       if (parser.atEOL()) {
@@ -459,7 +459,7 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
         // if anything follows it should be 'if'
         token = parser.readToken() ;
         if (token.CompareTo("if")) {
-          coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): syntax error: 'else " << token << "'" << endl ;
+          coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): syntax error: 'else " << token << "'" << std::endl ;
           return true ;
         } else {
           if (anyCondTrue[condStackLevel]) {
@@ -480,7 +480,7 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
     if (!token.CompareTo("endif")) {
       // Must have seen an if statement before
       if (condStackLevel==0) {
-        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): unmatched 'endif'" << endl ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): unmatched 'endif'" << std::endl ;
         return true ;
       }
 
@@ -495,14 +495,14 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
       // Process echo statements
       if (!token.CompareTo("echo")) {
         TString message = parser.readLine() ;
-        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): >> " << message << endl ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): >> " << message << std::endl ;
         continue ;
       }
 
       // Process abort statements
       if (!token.CompareTo("abort")) {
         TString message = parser.readLine() ;
-        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): USER ABORT" << endl ;
+        coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): USER ABORT" << std::endl ;
         return true ;
       }
 
@@ -514,7 +514,7 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
           parser.zapToEnd(true) ;
           retVal=true ;
           coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName()
-                << "): missing '=' sign: " << arg << endl ;
+                << "): missing '=' sign: " << arg << std::endl ;
           continue ;
         }
         bool argRet = arg->readFromStream(is,false,verbose) ;
@@ -523,7 +523,7 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
       } else {
         if (verbose) {
           coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): argument "
-              << token << " not in list, ignored" << endl ;
+              << token << " not in list, ignored" << std::endl ;
         }
         parser.zapToEnd(true) ;
       }
@@ -534,7 +534,7 @@ bool RooArgSet::readFromStream(istream& is, bool compact, const char* flagReadAt
 
   // Did we fully unwind the conditional stack?
   if (condStackLevel!=0) {
-    coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): missing 'endif'" << endl ;
+    coutE(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): missing 'endif'" << std::endl ;
     return true ;
   }
 

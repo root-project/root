@@ -710,7 +710,7 @@ double RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, con
   cxcoutD(Caching) << "RooAddPdf::aiWN(" << GetName() << ") calling getProjCache with nset = " << (normSet?*normSet:RooArgSet()) << std::endl ;
 
   if ((normSet==nullptr || normSet->empty()) && !_refCoefNorm.empty()) {
-//     cout << "WVE integration of RooAddPdf without normalization, but have reference set, using ref set for normalization" << std::endl ;
+//     std::cout << "WVE integration of RooAddPdf without normalization, but have reference set, using ref set for normalization" << std::endl ;
     normSet = &_refCoefNorm ;
   }
 

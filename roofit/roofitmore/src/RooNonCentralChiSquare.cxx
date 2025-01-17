@@ -72,7 +72,7 @@ RooNonCentralChiSquare::RooNonCentralChiSquare(const char *name, const char *tit
      fHasIssuedSumWarning(false)
 {
    ccoutD(InputArguments) << "RooNonCentralChiSquare::ctor(" << GetName() <<
-      "MathMore Available, will use Bessel function expressions unless SetForceSum(true) "<< endl ;
+      "MathMore Available, will use Bessel function expressions unless SetForceSum(true) "<< std::endl ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,7 +89,7 @@ RooNonCentralChiSquare::RooNonCentralChiSquare(const RooNonCentralChiSquare &oth
      fHasIssuedSumWarning(false)
 {
    ccoutD(InputArguments) << "RooNonCentralChiSquare::ctor(" << GetName() <<
-     "MathMore Available, will use Bessel function expressions unless SetForceSum(true) "<< endl ;
+     "MathMore Available, will use Bessel function expressions unless SetForceSum(true) "<< std::endl ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,7 +129,7 @@ double RooNonCentralChiSquare::evaluate() const
 
    if ( fForceSum  ){
       if(!fHasIssuedSumWarning){
-         coutI(InputArguments) << "RooNonCentralChiSquare sum being forced" << endl ;
+         coutI(InputArguments) << "RooNonCentralChiSquare sum being forced" << std::endl ;
          fHasIssuedSumWarning=true;
       }
       double sum = 0;
@@ -137,14 +137,14 @@ double RooNonCentralChiSquare::evaluate() const
       double errorTol = fErrorTol;
       int MaxIters = fMaxIters;
       int iDominant = (int) std::floor(lambda/2);
-      //     cout <<"iDominant: " << iDominant << endl;
+      //     std::cout <<"iDominant: " << iDominant << std::endl;
 
       // do 0th term last
       //     if(iDominant==0) iDominant = 1;
       for(int i = iDominant; ; ++i){
          ithTerm =exp(-lambda/2.)*pow(lambda/2.,i)*ROOT::Math::chisquared_pdf(_x,k+2*i)/TMath::Gamma(i+1);
          sum+=ithTerm;
-         //       cout <<"progress: " << i << " " << ithTerm/sum << endl;
+         //       std::cout <<"progress: " << i << " " << ithTerm/sum << std::endl;
          if(ithTerm/sum < errorTol)
             break;
 
@@ -154,14 +154,14 @@ double RooNonCentralChiSquare::evaluate() const
                coutW(Eval) << "RooNonCentralChiSquare did not converge: for x=" << x <<" k="<<k
                            << ", lambda="<<lambda << " fractional error = " << ithTerm/sum
                            << "\n either adjust tolerance with SetErrorTolerance(tol) or max_iter with SetMaxIter(max_it)"
-                           << endl;
+                           << std::endl;
             }
             break;
          }
       }
 
       for(int i = iDominant - 1; i >= 0; --i){
-         //       cout <<"Progress: " << i << " " << ithTerm/sum << endl;
+         //       std::cout <<"Progress: " << i << " " << ithTerm/sum << std::endl;
          ithTerm =exp(-lambda/2.)*pow(lambda/2.,i)*ROOT::Math::chisquared_pdf(_x,k+2*i)/TMath::Gamma(i+1);
          sum+=ithTerm;
       }
@@ -188,7 +188,7 @@ Int_t RooNonCentralChiSquare::getAnalyticalIntegral(RooArgSet& allVars, RooArgSe
 double RooNonCentralChiSquare::analyticalIntegral(Int_t code, const char* rangeName) const
 {
    R__ASSERT(code==1 );
-   //  cout << "evaluating analytic integral" << endl;
+   //  std::cout << "evaluating analytic integral" << std::endl;
    double xmin = x.min(rangeName);
    double xmax = x.max(rangeName);
 
@@ -211,14 +211,14 @@ double RooNonCentralChiSquare::analyticalIntegral(Int_t code, const char* rangeN
    int MaxIters = fMaxIters; // for normalization use more terms
 
    int iDominant = (int) std::floor(lambda/2);
-   //     cout <<"iDominant: " << iDominant << endl;
+   //     std::cout <<"iDominant: " << iDominant << std::endl;
    //   iDominant=0;
    for(int i = iDominant; ; ++i){
       ithTerm =exp(-lambda/2.)*pow(lambda/2.,i)
          *( ROOT::Math::chisquared_cdf(xmax,k+2*i)/TMath::Gamma(i+1)
             - ROOT::Math::chisquared_cdf(xmin,k+2*i)/TMath::Gamma(i+1) );
       sum+=ithTerm;
-      //     cout <<"progress: " << i << " " << ithTerm << " " << sum << endl;
+      //     std::cout <<"progress: " << i << " " << ithTerm << " " << sum << std::endl;
       if(ithTerm/sum < errorTol)
          break;
 
@@ -228,7 +228,7 @@ double RooNonCentralChiSquare::analyticalIntegral(Int_t code, const char* rangeN
             coutW(Eval) << "RooNonCentralChiSquare Normalization did not converge: for k="<<k
                         << ", lambda="<<lambda << " fractional error = " << ithTerm/sum
                         << "\n either adjust tolerance with SetErrorTolerance(tol) or max_iter with SetMaxIter(max_it)"
-                        << endl;
+                        << std::endl;
          }
          break;
       }
