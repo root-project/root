@@ -58,6 +58,8 @@ public:
    void SetTitle(const std::string &title) { fTitle = title; }
    const std::string &GetTitle() const { return fTitle; }
 
+   std::shared_ptr<RWebWindow> GetWindow() { return fWebWindow; }
+
    std::string GetWindowAddr() const;
 
    std::string GetWindowUrl(bool remote);
