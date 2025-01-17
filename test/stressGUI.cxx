@@ -2206,7 +2206,7 @@ void testControlBars()
    bar->AddButton("hsimple",   ".x hsimple.C",          "An Example Creating Histograms/Ntuples on File");
    bar->AddButton("hsum",      ".x hist/hsum.C",        "Filling Histograms and Some Graphics Options");
    bar->AddButton("formula1",  ".x visualisation/graphics/formula1.C","Simple Formula and Functions");
-   bar->AddButton("surfaces",  ".x visualisation/graphs/surfaces.C",  "Surface Drawing Options");
+   bar->AddButton("surfaces",  ".x visualisation/graphics/surfaces.C",  "Surface Drawing Options");
    bar->AddButton("fillrandom",".x hist/fillrandom.C",  "Histograms with Random Numbers from a Function");
    bar->AddButton("fit1",      ".x fit/fit1.C",         "A Simple Fitting Example");
    bar->AddButton("multifit",  ".x fit/multifit.C",     "Fitting in Subranges of Histograms");

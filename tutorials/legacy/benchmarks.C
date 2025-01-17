@@ -47,7 +47,7 @@ void benchmarks() {
    summary->AddText("  graphs/gr001_simple.C");
    summary->AddText("  graphs/gr002_errors.C");
    summary->AddText("  graphics/tornado.C");
-   summary->AddText("  graphs/surfaces.C");
+   summary->AddText("  graphics/surfaces.C");
    summary->AddText("  graphs/gr303_zdemo.C");
    summary->AddText("  geom/geometry.C");
    summary->AddText("  geom/na49view.C");
@@ -63,7 +63,7 @@ void benchmarks() {
    bexec(dir,"graphs/gr001_simple.C");
    bexec(dir,"graphs/gr002_errors.C");
    bexec(dir,"graphics/tornado.C");
-   bexec(dir,"graphs/surfaces.C");
+   bexec(dir,"graphics/surfaces.C");
    bexec(dir,"graphs/gr303_zdemo.C");
    bexec(dir,"geom/geometry.C");
    bexec(dir,"geom/na49view.C");
