@@ -127,6 +127,11 @@ sap.ui.define([
                this.canvas_painter.useWebsocket(this.canvas_painter._window_handle);
                delete this.canvas_painter._window_handle;
             }
+
+            if (this.canvas_painter?._window_resolve) {
+               this.canvas_painter._window_resolve();
+               delete this.canvas_painter._window_resolve;
+            }
          }
 
          if (check_resize) {
