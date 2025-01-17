@@ -9,6 +9,7 @@
 #ifndef ROOT7_RVirtualCanvasPainter
 #define ROOT7_RVirtualCanvasPainter
 
+#include <cstdint>
 #include <memory>
 #include <functional>
 #include <string>
