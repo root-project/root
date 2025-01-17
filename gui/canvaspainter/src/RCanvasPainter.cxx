@@ -167,6 +167,8 @@ public:
 
    int NumDisplays() const final;
 
+   std::shared_ptr<ROOT::RWebWindow> GetWindow() final;
+
    std::string GetWindowAddr() const final;
 
    std::string GetWindowUrl(bool remote) final;
@@ -676,6 +678,15 @@ void RCanvasPainter::NewDisplay(const std::string &where)
 
    fWindow->Show(args);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns web window used for canvas display
+
+std::shared_ptr<ROOT::RWebWindow> RCanvasPainter::GetWindow()
+{
+   return fWindow;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns number of connected displays

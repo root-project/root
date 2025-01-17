@@ -70,6 +70,8 @@ public:
 
    virtual int NumDisplays() const = 0;
 
+   virtual std::shared_ptr<ROOT::RWebWindow> GetWindow() = 0;
+
    virtual std::string GetWindowAddr() const = 0;
 
    virtual std::string GetWindowUrl(bool remote) = 0;

@@ -128,6 +128,10 @@ public:
    /// Returns window URL which can be used for connection
    std::string GetWindowUrl(bool remote);
 
+   Internal::RVirtualCanvasPainter *GetPainter();
+
+   std::shared_ptr<RWebWindow> GetWindow();
+
    /// Hide all canvas displays
    void Hide();
 
