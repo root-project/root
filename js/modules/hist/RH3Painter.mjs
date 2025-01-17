@@ -494,7 +494,8 @@ class RH3Painter extends RHistPainter {
       const main = this.getFramePainter(); // who makes axis and 3D drawing
 
       if (reason === 'resize') {
-         if (main.resize3D()) main.render3D();
+         if (main.resize3D())
+            main.render3D();
          return this;
       }
 

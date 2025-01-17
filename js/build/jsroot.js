@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '13/01/2025',
+version_date = '17/01/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -11065,6 +11065,14 @@ function applyAttributesToMathJax(painter, mj_node, svg, arg, font_size, svg_fac
    let mw = parseInt(svg.attr('width')),
        mh = parseInt(svg.attr('height'));
 
+   if (isNodeJs()) {
+      // workaround for NaN in viewBox produced by MathJax
+      const vb = svg.attr('viewBox');
+      if (isStr(vb) && vb.indexOf('NaN') > 0)
+         svg.attr('viewBox', vb.replaceAll('NaN', '600'));
+      // console.log('Problematic viewBox', vb, svg.select('text').node()?.innerHTML);
+   }
+
    if (Number.isInteger(mh) && Number.isInteger(mw)) {
       if (svg_factor > 0) {
          mw = mw / svg_factor;
@@ -11077,9 +11085,11 @@ function applyAttributesToMathJax(painter, mj_node, svg, arg, font_size, svg_fac
       mh = box.height || mh || 10;
    }
 
-   if ((svg_factor > 0) && arg.valign) arg.valign = arg.valign / svg_factor;
+   if ((svg_factor > 0) && arg.valign)
+      arg.valign = arg.valign / svg_factor;
 
-   if (arg.valign === null) arg.valign = (font_size - mh) / 2;
+   if (arg.valign === null)
+      arg.valign = (font_size - mh) / 2;
 
    const sign = { x: 1, y: 1 };
    let nx = 'x', ny = 'y';
@@ -11104,10 +11114,8 @@ function applyAttributesToMathJax(painter, mj_node, svg, arg, font_size, svg_fac
       arg[ny] += sign.y * (arg.height - mh - arg.valign);
 
    let trans = makeTranslate(arg.x, arg.y) || '';
-   if (arg.rotate) {
-      if (trans) trans += ' ';
-      trans += `rotate(${arg.rotate})`;
-   }
+   if (arg.rotate)
+      trans += `${trans?' ':''}rotate(${arg.rotate})`;
 
    mj_node.attr('transform', trans || null).attr('visibility', null);
 }
@@ -11128,7 +11136,7 @@ async function produceMathjax(painter, mj_node, arg) {
 
               repairMathJaxSvgSize(painter, mj_node, svg, arg);
 
-              arg.applyAttributesToMathJax = applyAttributesToMathJax;
+              arg.mj_func = applyAttributesToMathJax;
               return true;
            });
 }
@@ -12093,6 +12101,16 @@ function getSvgLineStyle(indx) {
    return root_line_styles[indx];
 }
 
+function calcTextSize(sz, sz0, fact, pp) {
+   if (!sz)
+      sz = sz0 || 0;
+
+   if (sz >= 1)
+      return Math.round(sz * (pp?.getPadScale() || 1));
+
+   return Math.round(sz * Math.min(pp?.getPadWidth() ?? 1000, pp?.getPadHeight() ?? 1000) * (fact || 1));
+}
+
 /**
   * @summary Handle for text attributes
   * @private
@@ -12182,24 +12200,13 @@ class TAttTextHandler {
    }
 
    /** @summary Provides pixel size */
-   getSize(w, h, fact, zero_size) {
-      if (this.size >= 1)
-         return Math.round(this.size);
-      if (!w) w = 1000;
-      if (!h) h = w;
-      if (!fact) fact = 1;
-
-      return Math.round((this.size || zero_size || 0) * Math.min(w, h) * fact);
-   }
+   getSize(pp, fact, zero_size) { return calcTextSize(this.size, zero_size, fact, pp); }
 
    /** @summary Returns alternating size - which defined by sz1 variable */
-   getAltSize(sz1, h) {
-      if (!sz1) sz1 = this.size;
-      return Math.round(sz1 >= 1 ? sz1 : sz1 * h);
-   }
+   getAltSize(sz1, pp) { return calcTextSize(sz1, this.size, 1, pp); }
 
    /** @summary Get font index - without precision */
-   getGedFont() { return Math.floor(this.font/10); }
+   getGedFont() { return Math.floor(this.font / 10); }
 
    /** @summary Change text font from GED */
    setGedFont(value) {
@@ -13244,9 +13251,9 @@ class ObjectPainter extends BasePainter {
       }
 
       all_args.forEach(arg => {
-         if (arg.mj_node && arg.applyAttributesToMathJax) {
+         if (arg.mj_node && arg.mj_func) {
             const svg = arg.mj_node.select('svg'); // MathJax svg
-            arg.applyAttributesToMathJax(this, arg.mj_node, svg, arg, font_size, f);
+            arg.mj_func(this, arg.mj_node, svg, arg, font_size, f);
             delete arg.mj_node; // remove reference
             only_text = false;
          } else if (arg.txt_g)
@@ -13338,7 +13345,11 @@ class ObjectPainter extends BasePainter {
          } else
             console.error('text rect not calcualted - please check code');
 
-         if (!arg.rotate) { arg.x += dx; arg.y += dy; dx = dy = 0; }
+         if (!arg.rotate) {
+            arg.x += dx;
+            arg.y += dy;
+            dx = dy = 0;
+         }
 
          // use translate and then rotate to avoid complex sign calculations
          let trans = makeTranslate(Math.round(arg.x), Math.round(arg.y)) || '';
@@ -13351,7 +13362,8 @@ class ObjectPainter extends BasePainter {
             append(`scale(${scale.toFixed(3)})`);
          if (dtrans)
             append(dtrans);
-         if (trans) txt.attr('transform', trans);
+         if (trans)
+            txt.attr('transform', trans);
       });
 
 
@@ -13424,22 +13436,24 @@ class ObjectPainter extends BasePainter {
          arg.text = '';
 
       arg.draw_g = arg.draw_g || this.draw_g;
-      if (!arg.draw_g || arg.draw_g.empty()) return;
+      if (!arg.draw_g || arg.draw_g.empty())
+         return;
 
       const font = arg.draw_g.property('text_font');
       arg.font = font; // use in latex conversion
 
       if (font) {
-         if (font.color && !arg.color) arg.color = font.color;
-         if (font.align && !arg.align) arg.align = font.align;
-         if (font.angle && !arg.rotate) arg.rotate = font.angle;
+         arg.color = arg.color || font.color;
+         arg.align = arg.align || font.align;
+         arg.rotate = arg.rotate || font.angle;
       }
 
       let align = ['start', 'middle'];
 
       if (isStr(arg.align)) {
          align = arg.align.split(';');
-         if (align.length === 1) align.push('middle');
+         if (align.length === 1)
+            align.push('middle');
       } else if (typeof arg.align === 'number') {
          if ((arg.align / 10) >= 3)
             align[0] = 'end';
@@ -13454,7 +13468,8 @@ class ObjectPainter extends BasePainter {
       } else if (isObject(arg.align) && (arg.align.length === 2))
          align = arg.align;
 
-      if (arg.latex === undefined) arg.latex = 1; //  latex 0-text, 1-latex, 2-math
+      if (arg.latex === undefined)
+         arg.latex = 1; //  0: text, 1: latex, 2: math
       arg.align = align;
       arg.x = arg.x || 0;
       arg.y = arg.y || 0;
@@ -13466,10 +13481,12 @@ class ObjectPainter extends BasePainter {
       if (arg.draw_g.property('_fast_drawing')) {
          if (arg.scale) {
             // area too small - ignore such drawing
-            if (arg.height < 4) return 0;
+            if (arg.height < 4)
+               return 0;
          } else if (arg.font_size) {
             // font size too small
-            if (arg.font_size < 4) return 0;
+            if (arg.font_size < 4)
+               return 0;
          } else if (arg.draw_g.property('_font_too_small')) {
             // configure font is too small - ignore drawing
             return 0;
@@ -13492,10 +13509,13 @@ class ObjectPainter extends BasePainter {
       if (!use_mathjax || arg.nomathjax) {
          arg.txt_node = arg.draw_g.append('svg:text');
 
-         if (arg.color) arg.txt_node.attr('fill', arg.color);
+         if (arg.color)
+            arg.txt_node.attr('fill', arg.color);
 
-         if (arg.font_size) arg.txt_node.attr('font-size', arg.font_size);
-                       else arg.font_size = font.size;
+         if (arg.font_size)
+            arg.txt_node.attr('font-size', arg.font_size);
+         else
+            arg.font_size = font.size;
 
          arg.plain = !arg.latex || (settings.Latex === cl.Off) || (settings.Latex === cl.Symbols);
 
@@ -57469,7 +57489,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
    control.getMouseIntersects = function(mouse) {
       // domElement gives correct coordinate with canvas render, but isn't always right for webgl renderer
-      if (!this.renderer) return [];
+      if (!this.renderer)
+         return [];
 
       const sz = (this.renderer instanceof THREE.SVGRenderer) ? this.renderer.domElement : this.renderer.getSize(new THREE.Vector2()),
             pnt = { x: mouse.x / sz.width * 2 - 1, y: -mouse.y / sz.height * 2 + 1 };
@@ -57535,9 +57556,9 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
             fp._dblclick_handler(info);
             return;
          }
-       }
+      }
 
-       this.reset();
+      this.reset();
    };
 
    control.changeEvent = function() {
@@ -57599,12 +57620,14 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
    };
 
    control.mainProcessMouseMove = function(evnt) {
-      if (!this.painter) return; // protect when cleanup
+      if (!this.painter)
+         return; // protect when cleanup
 
       if (this.control_active && evnt.buttons && (evnt.buttons & 2))
          this.block_ctxt = true; // if right button in control was active, block next context menu
 
-      if (this.control_active || this.block_mousemove || !isFunc(this.processMouseMove)) return;
+      if (this.control_active || this.block_mousemove || !isFunc(this.processMouseMove))
+         return;
 
       if (this.mouse_zoom_mesh) {
          // when working with zoom mesh, need special handling
@@ -57650,14 +57673,19 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
             tip = this.processMouseMove(intersects);
 
       if (tip) {
-         let name = '', title = '', coord = '', info = '';
-         if (mouse) coord = mouse.x.toFixed(0) + ',' + mouse.y.toFixed(0);
+         let name = '', title = '', info = '';
+         const coord = mouse ? mouse.x.toFixed(0) + ',' + mouse.y.toFixed(0) : '';
          if (isStr(tip))
             info = tip;
          else {
-            name = tip.name; title = tip.title;
-            if (tip.line) info = tip.line; else
-            if (tip.lines) { info = tip.lines.slice(1).join(' '); name = tip.lines[0]; }
+            name = tip.name;
+            title = tip.title;
+            if (tip.line)
+               info = tip.line;
+            else if (tip.lines) {
+               info = tip.lines.slice(1).join(' ');
+               name = tip.lines[0];
+            }
          }
          this.painter.showObjectStatus(name, title, info, coord);
       }
@@ -57681,7 +57709,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
    };
 
    control.mainProcessMouseLeave = function() {
-      if (!this.painter) return; // protect when cleanup
+      if (!this.painter)
+         return; // protect when cleanup
 
       // do not enter main event at all
       if (this.tmout_handle) {
@@ -57744,7 +57773,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
    control.lstn_click = function(evnt) {
       // ignore right-mouse click
-      if (evnt.detail === 2) return;
+      if (evnt.detail === 2)
+         return;
 
       if (this.single_click_tm) {
          clearTimeout(this.single_click_tm);
@@ -57786,7 +57816,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
   * @desc Simplify JS engine to remove it from memory
   * @private */
 function disposeThreejsObject(obj, only_childs) {
-   if (!obj) return;
+   if (!obj)
+      return;
 
    if (obj.children) {
       for (let i = 0; i < obj.children.length; i++)
@@ -64360,7 +64391,7 @@ const TooltipHandler = {
             frame_rect = this.getFrameRect(),
             pp = this.getPadPainter(),
             pad_width = pp?.getPadWidth(),
-            scale = this.getCanvPainter()?.getPadScale() ?? 1,
+            scale = pp?.getPadScale() ?? 1,
             textheight = (pnt?.touch ? 15 : 11) * scale,
             font = new FontHandler(160, textheight),
             disable_tootlips = !this.isTooltipAllowed() || !this.tooltip_enabled;
@@ -68908,7 +68939,8 @@ class BrowserLayout {
 const clTButton = 'TButton', kIsGrayscale = BIT(22);
 
 function getButtonSize(handler, fact) {
-   return Math.round((fact || 1) * (handler.iscan || !handler.has_canvas ? 16 : 12));
+   const cp = handler.getCanvPainter();
+   return Math.round((fact || 1) * (cp?._pad_scale || 1) * (cp === handler ? 16 : 12));
 }
 
 function isPadPainter(p) {
@@ -69735,7 +69767,11 @@ class TPadPainter extends ObjectPainter {
           y = Math.round(height * (1 - this.pad.fAbsYlowNDC)) - h,
           svg_pad, svg_border, btns;
 
-      if (pad_enlarged === this.pad) { w = width; h = height; x = y = 0; }
+      if (pad_enlarged === this.pad) {
+         w = width;
+         h = height;
+         x = y = 0;
+      }
 
       if (only_resize) {
          svg_pad = this.svg_this_pad();
@@ -69789,7 +69825,7 @@ class TPadPainter extends ObjectPainter {
              .property('draw_width', w)
              .property('draw_height', h);
 
-      this._pad_scale = 1; // subpads always use scale 1 while placed inside canvas viewBox
+      this._pad_scale = this.getCanvPainter().getPadScale();
       this._pad_x = x;
       this._pad_y = y;
       this._pad_width = w;
@@ -71268,7 +71304,7 @@ class TPadPainter extends ObjectPainter {
          width = fp.getFrameWidth();
          height = fp.getFrameHeight();
       }
-      const scale = this.getCanvPainter()?.getPadScale() ?? 1;
+      const scale = this.getPadScale();
       if (scale !== 1) {
          viewBox = `viewBox="0 0 ${width} ${height}"`;
          width = Math.round(width / scale);
@@ -71402,17 +71438,19 @@ class TPadPainter extends ObjectPainter {
       const iscan = this.iscan || !this.has_canvas;
       if (!iscan && (funcname.indexOf('Pad') !== 0) && (funcname !== 'enlargePad')) {
          const cp = this.getCanvPainter();
-         if (cp && (cp !== this)) cp.addPadButton(btn, tooltip, funcname);
+         if (cp && (cp !== this))
+            cp.addPadButton(btn, tooltip, funcname);
       }
    }
 
    /** @summary Show pad buttons
      * @private */
    showPadButtons() {
-      if (!this._buttons) return;
+      if (!this._buttons)
+         return;
 
-       PadButtonsHandler.assign(this);
-       this.showPadButtons();
+      PadButtonsHandler.assign(this);
+      this.showPadButtons();
    }
 
    /** @summary Add buttons for pad or canvas
@@ -71870,7 +71908,7 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Handle websocket messages
      * @private */
    onWebsocketMsg(handle, msg) {
-      // console.log(`GET MSG len:${msg.length} ${msg.slice(0,60)}`);
+      // console.log(`GET len:${msg.length} msg:${msg.slice(0,60)}`);
 
       if (msg === 'CLOSE') {
          this.onWebsocketClosed();
@@ -73049,7 +73087,6 @@ class TPavePainter extends ObjectPainter {
             arr = pt.fLines?.arr || [],
             nlines = arr.length,
             pp = this.getPadPainter(),
-            pad_width = pp.getPadWidth(),
             pad_height = pp.getPadHeight(),
             draw_header = (pt.fLabel.length > 0),
             promises = [],
@@ -73061,9 +73098,10 @@ class TPavePainter extends ObjectPainter {
 
       // for single line (typically title) limit font size
       if ((nlines === 1) && (this.textatt.size > 0))
-         max_font_size = Math.max(3, this.textatt.getSize(pad_height));
+         max_font_size = Math.max(3, this.textatt.getSize(pp));
 
-      if (!text_g) text_g = this.draw_g;
+      if (!text_g)
+         text_g = this.draw_g;
 
       const fast = (nlines === 1) && pp._fast_drawing;
       let num_txt = 0, num_custom = 0;
@@ -73076,7 +73114,7 @@ class TPavePainter extends ObjectPainter {
             num_custom++;
       });
 
-      const pr = (num_txt > num_custom) ? this.startTextDrawingAsync(this.textatt.font, this.$postitle ? this.textatt.getSize(pad_width, pad_height, 1, 0.05) : 0.85*height/nlines, text_g, max_font_size) : Promise.resolve();
+      const pr = (num_txt > num_custom) ? this.startTextDrawingAsync(this.textatt.font, this.$postitle ? this.textatt.getSize(pp, 1, 0.05) : 0.85*height/nlines, text_g, max_font_size) : Promise.resolve();
 
       return pr.then(() => {
          for (let nline = 0; nline < nlines; ++nline) {
@@ -73099,7 +73137,7 @@ class TPavePainter extends ObjectPainter {
                            y = entry.fY ? (1 - entry.fY)*height : (texty + (valign === 2 ? stepy / 2 : (valign === 3 ? stepy : 0))),
                            draw_g = text_g.append('svg:g');
 
-                     promises.push(this.startTextDrawingAsync(this.textatt.font, this.textatt.getAltSize(entry.fTextSize, pad_height), draw_g)
+                     promises.push(this.startTextDrawingAsync(this.textatt.font, this.textatt.getAltSize(entry.fTextSize, pp), draw_g)
                                        .then(() => this.drawText({ align, x, y, text: entry.fTitle, color,
                                                                    latex: (entry._typename === clTText) ? 0 : 1, draw_g, fast }))
                                        .then(() => this.finishTextDrawing(draw_g)));
@@ -73168,11 +73206,11 @@ class TPavePainter extends ObjectPainter {
          if (!draw_header)
             return;
 
-         const x = Math.round(width*0.25),
-               y = Math.round(-pad_height*0.02),
-               w = Math.round(width*0.5),
+         const w = Math.round(width*0.5),
                h = Math.round(pad_height*0.04),
-               lbl_g = text_g.append('svg:g').attr('transform', makeTranslate(x, y));
+               lbl_g = text_g.append('svg:g');
+
+         makeTranslate(lbl_g, Math.round(width*0.25), Math.round(-pad_height*0.02));
 
          this.drawBorder(lbl_g, w, h);
 
@@ -73280,7 +73318,7 @@ class TPavePainter extends ObjectPainter {
       this.createAttText({ attr: legend, can_rotate: false });
 
       const pp = this.getPadPainter(),
-            tsz = this.textatt.getSize(pp.getPadHeight());
+            tsz = this.textatt.getSize(pp);
       if (tsz && (tsz < font_size))
          font_size = max_font_size = tsz;
 
@@ -73418,7 +73456,7 @@ class TPavePainter extends ObjectPainter {
                              text: entry.fLabel, color: textatt.color };
                if (custom_textg) {
                   arg.draw_g = this.draw_g.append('svg:g');
-                  text_promises.push(this.startTextDrawingAsync(textatt.font, textatt.getSize(pp.getPadHeight()), arg.draw_g, max_font_size)
+                  text_promises.push(this.startTextDrawingAsync(textatt.font, textatt.getSize(pp), arg.draw_g, max_font_size)
                                        .then(() => this.drawText(arg))
                                        .then(() => this.finishTextDrawing(arg.draw_g)));
                } else
@@ -80233,8 +80271,6 @@ function createLatexGeometry(painter, lbl, size) {
       }
 
       attr(name, value) {
-         // console.log(`attr ${name} = ${value}`);
-
          const get = () => {
                   if (!value) return '';
                   const res = value[0];
@@ -80500,35 +80536,50 @@ function create3DCamera(fp, orthographic) {
    fp.scene.add(fp.camera);
 }
 
-/** @summary Set default camera position
+/** @summary Returns camera default position
   * @private */
-function setCameraPosition(fp, first_time) {
+function getCameraDefaultPosition(fp, first_time) {
    const pad = fp.getPadPainter().getRootPad(true),
          kz = fp.camera.isOrthographicCamera ? 1 : 1.4;
    let max3dx = Math.max(0.75*fp.size_x3d, fp.size_z3d),
-       max3dy = Math.max(0.75*fp.size_y3d, fp.size_z3d);
+       max3dy = Math.max(0.75*fp.size_y3d, fp.size_z3d),
+       pos = null;
 
    if (first_time) {
+      pos = new THREE.Vector3();
       if (max3dx === max3dy)
-         fp.camera.position.set(-1.6*max3dx, -3.5*max3dy, kz*fp.size_z3d);
+         pos.set(-1.6*max3dx, -3.5*max3dy, kz*fp.size_z3d);
       else if (max3dx > max3dy)
-         fp.camera.position.set(-2*max3dx, -3.5*max3dy, kz*fp.size_z3d);
+         pos.set(-2*max3dx, -3.5*max3dy, kz*fp.size_z3d);
       else
-         fp.camera.position.set(-3.5*max3dx, -2*max3dy, kz*fp.size_z3d);
+         pos.set(-3.5*max3dx, -2*max3dy, kz*fp.size_z3d);
    }
 
    if (pad && (first_time || !fp.zoomChangedInteractive())) {
       if (Number.isFinite(pad.fTheta) && Number.isFinite(pad.fPhi) && ((pad.fTheta !== fp.camera_Theta) || (pad.fPhi !== fp.camera_Phi))) {
-         fp.camera_Phi = pad.fPhi;
-         fp.camera_Theta = pad.fTheta;
+         if (!pos)
+            pos = new THREE.Vector3();
          max3dx = 3*Math.max(fp.size_x3d, fp.size_z3d);
          max3dy = 3*Math.max(fp.size_y3d, fp.size_z3d);
-         const phi = (270 - pad.fPhi)/180*Math.PI, theta = (pad.fTheta - 10)/180*Math.PI;
-         fp.camera.position.set(max3dx*Math.cos(phi)*Math.cos(theta),
-                                max3dy*Math.sin(phi)*Math.cos(theta),
-                                fp.size_z3d + (kz-0.9)*(max3dx+max3dy)*Math.sin(theta));
-         first_time = true;
+         const phi = (270 - pad.fPhi) / 180 * Math.PI,
+               theta = (pad.fTheta - 10) / 180 * Math.PI;
+         pos.set(max3dx*Math.cos(phi)*Math.cos(theta),
+                 max3dy*Math.sin(phi)*Math.cos(theta),
+                 fp.size_z3d + (kz-0.9)*(max3dx+max3dy)*Math.sin(theta));
       }
+   }
+
+   return pos;
+}
+
+/** @summary Set default camera position
+  * @private */
+function setCameraPosition(fp, first_time) {
+   const pos = getCameraDefaultPosition(fp, first_time);
+
+   if (pos) {
+      fp.camera.position.copy(pos);
+      first_time = true;
    }
 
    if (first_time)
@@ -80536,7 +80587,8 @@ function setCameraPosition(fp, first_time) {
 
    if (first_time && fp.camera.isOrthographicCamera && fp.scene_width && fp.scene_height) {
       const screen_ratio = fp.scene_width / fp.scene_height,
-          szx = fp.camera.right - fp.camera.left, szy = fp.camera.top - fp.camera.bottom;
+            szx = fp.camera.right - fp.camera.left,
+            szy = fp.camera.top - fp.camera.bottom;
 
       if (screen_ratio > szx / szy) {
          // screen wider than actual geometry
@@ -80559,7 +80611,7 @@ function getCameraPosition(fp) {
          dist = p.distanceTo(p0),
          dist_xy = Math.sqrt((p.x-p0.x)**2 + (p.y-p0.y)**2),
          new_theta = Math.atan2((p.z - p0.z)/dist, dist_xy/dist) / Math.PI * 180,
-         new_phi = 270 - Math.atan2((p.y - p0.y)/dist_xy, (p.x - p0.x)/dist_xy)/ Math.PI * 180,
+         new_phi = 270 - Math.atan2((p.y - p0.y)/dist_xy, (p.x - p0.x)/dist_xy) / Math.PI * 180,
          pad = fp.getPadPainter()?.getRootPad(true);
 
    fp.camera_Phi = new_phi >= 360 ? new_phi - 360 : new_phi;
@@ -80599,7 +80651,8 @@ function create3DControl(fp) {
          const delta_x = 1e-4*frame_painter.size_x3d,
                delta_y = 1e-4*frame_painter.size_y3d,
                delta_z = 1e-4*frame_painter.size_z3d;
-         if ((tip.x1 > tip.x2) || (tip.y1 > tip.y2) || (tip.z1 > tip.z2)) console.warn('check 3D hints coordinates');
+         if ((tip.x1 > tip.x2) || (tip.y1 > tip.y2) || (tip.z1 > tip.z2))
+            console.warn('check 3D hints coordinates');
          tip.x1 -= delta_x; tip.x2 += delta_x;
          tip.y1 -= delta_y; tip.y2 += delta_y;
          tip.z1 -= delta_z; tip.z2 += delta_z;
@@ -80717,9 +80770,11 @@ function create3DScene(render3d, x3dscale, y3dscale, orthographic) {
    const sz = this.getSizeFor3d(undefined, render3d);
 
    this.size_z3d = 100;
-   this.size_x3d = this.size_y3d = (sz.height > 10) && (sz.width > 10) ? Math.round(sz.width/sz.height*this.size_z3d) : this.size_z3d;
-   if (x3dscale) this.size_x3d *= x3dscale;
-   if (y3dscale) this.size_y3d *= y3dscale;
+   this.x3dscale = x3dscale || 1;
+   this.y3dscale = y3dscale || 1;
+   const xy3d = (sz.height > 10) && (sz.width > 10) ? Math.round(sz.width/sz.height*this.size_z3d) : this.size_z3d;
+   this.size_x3d = xy3d * this.x3dscale;
+   this.size_y3d = xy3d * this.y3dscale;
 
    return importThreeJs().then(() => {
       // three.js 3D drawing
@@ -80829,7 +80884,8 @@ function render3D(tmout) {
       return rrr.domElement;
    }
 
-   if (tmout === undefined) tmout = 5; // by default, rendering happens with timeout
+   if (tmout === undefined)
+      tmout = 5; // by default, rendering happens with timeout
 
    const batch_mode = this.isBatchMode();
 
@@ -80844,7 +80900,8 @@ function render3D(tmout) {
       delete this.render_tmout;
    }
 
-   if (!this.renderer) return;
+   if (!this.renderer)
+      return;
 
    beforeRender3D(this.renderer);
 
@@ -80896,6 +80953,17 @@ function resize3D() {
 
    this.renderer.setSize(this.scene_width, this.scene_height);
 
+   const xy3d = (sz.height > 10) && (sz.width > 10) ? Math.round(sz.width/sz.height*this.size_z3d) : this.size_z3d,
+         x3d = xy3d * this.x3dscale,
+         y3d = xy3d * this.y3dscale;
+
+   if ((Math.abs(x3d - this.size_x3d) > 0.15*this.size_z3d) || (Math.abs(y3d - this.size_y3d) > 0.15*this.size_z3d)) {
+      this.size_x3d = x3d;
+      this.size_y3d = y3d;
+      this.control?.position0?.copy(getCameraDefaultPosition(this, true));
+      return 1; // indicate significant resize
+   }
+
    return true;
 }
 
@@ -80905,7 +80973,8 @@ function highlightBin3D(tip, selfmesh) {
    const want_remove = !tip || (tip.x1 === undefined) || !this.enable_highlight;
    let changed = false, tooltip_mesh = null, changed_self = true, mainp = this.getMainPainter();
 
-   if (mainp && (!mainp.provideUserTooltip || !mainp.hasUserTooltip())) mainp = null;
+   if (!mainp?.provideUserTooltip || !mainp?.hasUserTooltip())
+      mainp = null;
 
    if (this.tooltip_selfmesh) {
       changed_self = (this.tooltip_selfmesh !== selfmesh);
@@ -80922,8 +80991,10 @@ function highlightBin3D(tip, selfmesh) {
    }
 
    if (want_remove) {
-      if (changed) this.render3D();
-      if (changed && mainp) mainp.provideUserTooltip(null);
+      if (changed) {
+         this.render3D();
+         mainp?.provideUserTooltip(null);
+      }
       return;
    }
 
@@ -80958,8 +81029,10 @@ function highlightBin3D(tip, selfmesh) {
          tooltip_mesh.material.opacity = opacity;
       }
 
-      if (tip.x1 === tip.x2) console.warn(`same tip X ${tip.x1} ${tip.x2}`);
-      if (tip.y1 === tip.y2) console.warn(`same tip Y ${tip.y1} ${tip.y2}`);
+      if (tip.x1 === tip.x2)
+         console.warn(`same tip X ${tip.x1} ${tip.x2}`);
+      if (tip.y1 === tip.y2)
+         console.warn(`same tip Y ${tip.y1} ${tip.y2}`);
       if (tip.z1 === tip.z2) tip.z2 = tip.z1 + 0.0001;  // avoid zero faces
 
       for (let k = 0, nn = -3; k < indicies.length; ++k) {
@@ -83957,12 +84030,18 @@ class TH1Painter extends TH1Painter$2 {
             is_main = this.isMainPainter(), // is main histogram
             histo = this.getHisto(),
             zmult = 1 + 2*gStyle.fHistTopMargin;
-      let pr = Promise.resolve(true);
+      let pr = Promise.resolve(true), full_draw = true;
 
       if (reason === 'resize') {
-         if (is_main && main.resize3D())
-            main.render3D();
-      } else {
+         const res = is_main ? main.resize3D() : false;
+         if (res !== 1) {
+            full_draw = false;
+            if (res)
+               main.render3D();
+         }
+      }
+
+      if (full_draw) {
          this.createHistDrawAttributes(true);
 
          this.scanContent(reason === 'zoom'); // may be required for axis drawings
@@ -84213,12 +84292,18 @@ class TH2Painter extends TH2Painter$2 {
       const main = this.getFramePainter(), // who makes axis drawing
             is_main = this.isMainPainter(), // is main histogram
             histo = this.getHisto();
-      let pr = Promise.resolve(true);
+      let pr = Promise.resolve(true), full_draw = true;
 
       if (reason === 'resize') {
-         if (is_main && main.resize3D())
-            main.render3D();
-      } else {
+         const res = is_main ? main.resize3D() : false;
+         if (res !== 1) {
+            full_draw = false;
+            if (res)
+               main.render3D();
+         }
+      }
+
+      if (full_draw) {
          const pad = this.getPadPainter().getRootPad(true),
                logz = pad?.fLogv ?? pad?.fLogz;
          let zmult = 1;
@@ -84909,11 +84994,18 @@ class TH3Painter extends THistPainter {
    async redraw(reason) {
       const main = this.getFramePainter(), // who makes axis and 3D drawing
             histo = this.getHisto();
-      let pr = Promise.resolve(true);
+      let pr = Promise.resolve(true), full_draw = true;
 
       if (reason === 'resize') {
-         if (main.resize3D()) main.render3D();
-      } else {
+         const res = main.resize3D();
+         if (res !== 1) {
+            full_draw = false;
+            if (res)
+               main.render3D();
+         }
+      }
+
+      if (full_draw) {
          assignFrame3DMethods(main);
          pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale, this.options.Ortho).then(() => {
             main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax, this);
@@ -147880,8 +147972,6 @@ default: _rollup_plugin_ignore_empty_module_placeholder
 async function drawText$1() {
    const text = this.getObject(),
          pp = this.getPadPainter(),
-         w = pp.getPadWidth(),
-         h = pp.getPadHeight(),
          fp = this.getFramePainter(),
          is_url = text.fName.startsWith('http://') || text.fName.startsWith('https://');
    let pos_x = text.fX, pos_y = text.fY, use_frame = false,
@@ -147936,7 +148026,7 @@ async function drawText$1() {
          this.draw_g.append('svg:title').text(`link on ${text.fName}`);
    }
 
-   return this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(w, h, fact /* , 0.05 */))
+   return this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(pp, fact /* , 0.05 */))
               .then(() => this.drawText(arg))
               .then(() => this.finishTextDrawing())
               .then(() => {
@@ -150773,7 +150863,8 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
       const d = new DrawOptions(opt);
 
       this.options.nostack = d.check('NOSTACK');
-      if (d.check('STACK')) this.options.nostack = false;
+      if (d.check('STACK'))
+         this.options.nostack = false;
       this.options.same = d.check('SAME');
 
       d.check('NOCLEAR'); // ignore option
@@ -158023,12 +158114,13 @@ class RAxisPainter extends RObjectPainter {
 
       if (this.vertical) {
          offset += Math.round(pos[0] - this.drag_pos0);
-         label_g.attr('transform', `translate(${offset})`);
+         makeTranslate(label_g, offset);
       } else {
          offset += Math.round(pos[1] - this.drag_pos0);
-         label_g.attr('transform', `translate(0,${offset})`);
+         makeTranslate(label_g, 0, offset);
       }
-      if (!offset) label_g.attr('transform', null);
+      if (!offset)
+         makeTranslate(label_g);
 
       if (arg === 'stop') {
          label_g.select('rect.drag').remove();
@@ -158281,7 +158373,7 @@ class RAxisPainter extends RObjectPainter {
       let lastpos = 0;
 
       if (fix_offset)
-         label_g.attr('transform', this.vertical ? `translate(${fix_offset})` : `translate(0,${fix_offset})`);
+         makeTranslate(label_g, this.vertical ? fix_offset : 0, this.vertical ? 0 : fix_offset);
 
       label_g.property('fix_offset', fix_offset);
 
@@ -158475,7 +158567,8 @@ class RAxisPainter extends RObjectPainter {
    async drawAxis(layer, transform, side) {
       let axis_g = layer;
 
-      if (side === undefined) side = 1;
+      if (side === undefined)
+         side = 1;
 
       if (!this.standalone) {
          axis_g = layer.selectChild(`.${this.name}_container`);
@@ -158561,13 +158654,12 @@ class RAxisPainter extends RObjectPainter {
 
       axis_g.attr('transform', transform);
 
-      if (this.ticksSide === 'invert') side = -side;
+      if (this.ticksSide === 'invert')
+         side = -side;
 
-      // draw ticks again
+      // draw ticks and labels again
       const tgaps = this.drawTicks(axis_g, side, false),
-
-           // draw labels again
-           promise = this.optionUnlab || only_ticks ? Promise.resolve(tgaps) : this.drawLabels(axis_g, side, tgaps);
+            promise = this.optionUnlab || only_ticks ? Promise.resolve(tgaps) : this.drawLabels(axis_g, side, tgaps);
 
       return promise.then(lgaps => {
          this.addZoomingRect(axis_g, side, lgaps);
@@ -165290,7 +165382,8 @@ class RH1Painter extends RH1Painter$2 {
       let pr = Promise.resolve(this);
 
       if (reason === 'resize') {
-         if (is_main && main.resize3D()) main.render3D();
+         if (is_main && main.resize3D())
+            main.render3D();
          return pr;
       }
 
@@ -166532,7 +166625,8 @@ class RH2Painter extends RH2Painter$2 {
       let pr = Promise.resolve(this);
 
       if (reason === 'resize') {
-         if (is_main && main.resize3D()) main.render3D();
+         if (is_main && main.resize3D())
+            main.render3D();
          return pr;
       }
 
@@ -167069,7 +167163,8 @@ class RH3Painter extends RHistPainter {
       const main = this.getFramePainter(); // who makes axis and 3D drawing
 
       if (reason === 'resize') {
-         if (main.resize3D()) main.render3D();
+         if (main.resize3D())
+            main.render3D();
          return this;
       }
 

@@ -542,7 +542,6 @@ class TPavePainter extends ObjectPainter {
             arr = pt.fLines?.arr || [],
             nlines = arr.length,
             pp = this.getPadPainter(),
-            pad_width = pp.getPadWidth(),
             pad_height = pp.getPadHeight(),
             draw_header = (pt.fLabel.length > 0),
             promises = [],
@@ -554,9 +553,10 @@ class TPavePainter extends ObjectPainter {
 
       // for single line (typically title) limit font size
       if ((nlines === 1) && (this.textatt.size > 0))
-         max_font_size = Math.max(3, this.textatt.getSize(pad_height));
+         max_font_size = Math.max(3, this.textatt.getSize(pp));
 
-      if (!text_g) text_g = this.draw_g;
+      if (!text_g)
+         text_g = this.draw_g;
 
       const fast = (nlines === 1) && pp._fast_drawing;
       let num_txt = 0, num_custom = 0;
@@ -569,7 +569,7 @@ class TPavePainter extends ObjectPainter {
             num_custom++;
       });
 
-      const pr = (num_txt > num_custom) ? this.startTextDrawingAsync(this.textatt.font, this.$postitle ? this.textatt.getSize(pad_width, pad_height, 1, 0.05) : 0.85*height/nlines, text_g, max_font_size) : Promise.resolve();
+      const pr = (num_txt > num_custom) ? this.startTextDrawingAsync(this.textatt.font, this.$postitle ? this.textatt.getSize(pp, 1, 0.05) : 0.85*height/nlines, text_g, max_font_size) : Promise.resolve();
 
       return pr.then(() => {
          for (let nline = 0; nline < nlines; ++nline) {
@@ -592,7 +592,7 @@ class TPavePainter extends ObjectPainter {
                            y = entry.fY ? (1 - entry.fY)*height : (texty + (valign === 2 ? stepy / 2 : (valign === 3 ? stepy : 0))),
                            draw_g = text_g.append('svg:g');
 
-                     promises.push(this.startTextDrawingAsync(this.textatt.font, this.textatt.getAltSize(entry.fTextSize, pad_height), draw_g)
+                     promises.push(this.startTextDrawingAsync(this.textatt.font, this.textatt.getAltSize(entry.fTextSize, pp), draw_g)
                                        .then(() => this.drawText({ align, x, y, text: entry.fTitle, color,
                                                                    latex: (entry._typename === clTText) ? 0 : 1, draw_g, fast }))
                                        .then(() => this.finishTextDrawing(draw_g)));
@@ -661,11 +661,11 @@ class TPavePainter extends ObjectPainter {
          if (!draw_header)
             return;
 
-         const x = Math.round(width*0.25),
-               y = Math.round(-pad_height*0.02),
-               w = Math.round(width*0.5),
+         const w = Math.round(width*0.5),
                h = Math.round(pad_height*0.04),
-               lbl_g = text_g.append('svg:g').attr('transform', makeTranslate(x, y));
+               lbl_g = text_g.append('svg:g');
+
+         makeTranslate(lbl_g, Math.round(width*0.25), Math.round(-pad_height*0.02));
 
          this.drawBorder(lbl_g, w, h);
 
@@ -773,7 +773,7 @@ class TPavePainter extends ObjectPainter {
       this.createAttText({ attr: legend, can_rotate: false });
 
       const pp = this.getPadPainter(),
-            tsz = this.textatt.getSize(pp.getPadHeight());
+            tsz = this.textatt.getSize(pp);
       if (tsz && (tsz < font_size))
          font_size = max_font_size = tsz;
 
@@ -911,7 +911,7 @@ class TPavePainter extends ObjectPainter {
                              text: entry.fLabel, color: textatt.color };
                if (custom_textg) {
                   arg.draw_g = this.draw_g.append('svg:g');
-                  text_promises.push(this.startTextDrawingAsync(textatt.font, textatt.getSize(pp.getPadHeight()), arg.draw_g, max_font_size)
+                  text_promises.push(this.startTextDrawingAsync(textatt.font, textatt.getSize(pp), arg.draw_g, max_font_size)
                                        .then(() => this.drawText(arg))
                                        .then(() => this.finishTextDrawing(arg.draw_g)));
                } else

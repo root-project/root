@@ -342,7 +342,7 @@ class TCanvasPainter extends TPadPainter {
    /** @summary Handle websocket messages
      * @private */
    onWebsocketMsg(handle, msg) {
-      // console.log(`GET MSG len:${msg.length} ${msg.slice(0,60)}`);
+      // console.log(`GET len:${msg.length} msg:${msg.slice(0,60)}`);
 
       if (msg === 'CLOSE') {
          this.onWebsocketClosed();

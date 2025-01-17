@@ -210,12 +210,18 @@ class TH2Painter extends TH2Painter2D {
       const main = this.getFramePainter(), // who makes axis drawing
             is_main = this.isMainPainter(), // is main histogram
             histo = this.getHisto();
-      let pr = Promise.resolve(true);
+      let pr = Promise.resolve(true), full_draw = true;
 
       if (reason === 'resize') {
-         if (is_main && main.resize3D())
-            main.render3D();
-      } else {
+         const res = is_main ? main.resize3D() : false;
+         if (res !== 1) {
+            full_draw = false;
+            if (res)
+               main.render3D();
+         }
+      }
+
+      if (full_draw) {
          const pad = this.getPadPainter().getRootPad(true),
                logz = pad?.fLogv ?? pad?.fLogz;
          let zmult = 1;

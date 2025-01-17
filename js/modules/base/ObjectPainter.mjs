@@ -1044,9 +1044,9 @@ class ObjectPainter extends BasePainter {
       }
 
       all_args.forEach(arg => {
-         if (arg.mj_node && arg.applyAttributesToMathJax) {
+         if (arg.mj_node && arg.mj_func) {
             const svg = arg.mj_node.select('svg'); // MathJax svg
-            arg.applyAttributesToMathJax(this, arg.mj_node, svg, arg, font_size, f);
+            arg.mj_func(this, arg.mj_node, svg, arg, font_size, f);
             delete arg.mj_node; // remove reference
             only_text = false;
          } else if (arg.txt_g)
@@ -1138,7 +1138,11 @@ class ObjectPainter extends BasePainter {
          } else
             console.error('text rect not calcualted - please check code');
 
-         if (!arg.rotate) { arg.x += dx; arg.y += dy; dx = dy = 0; }
+         if (!arg.rotate) {
+            arg.x += dx;
+            arg.y += dy;
+            dx = dy = 0;
+         }
 
          // use translate and then rotate to avoid complex sign calculations
          let trans = makeTranslate(Math.round(arg.x), Math.round(arg.y)) || '';
@@ -1151,7 +1155,8 @@ class ObjectPainter extends BasePainter {
             append(`scale(${scale.toFixed(3)})`);
          if (dtrans)
             append(dtrans);
-         if (trans) txt.attr('transform', trans);
+         if (trans)
+            txt.attr('transform', trans);
       });
 
 
@@ -1224,22 +1229,24 @@ class ObjectPainter extends BasePainter {
          arg.text = '';
 
       arg.draw_g = arg.draw_g || this.draw_g;
-      if (!arg.draw_g || arg.draw_g.empty()) return;
+      if (!arg.draw_g || arg.draw_g.empty())
+         return;
 
       const font = arg.draw_g.property('text_font');
       arg.font = font; // use in latex conversion
 
       if (font) {
-         if (font.color && !arg.color) arg.color = font.color;
-         if (font.align && !arg.align) arg.align = font.align;
-         if (font.angle && !arg.rotate) arg.rotate = font.angle;
+         arg.color = arg.color || font.color;
+         arg.align = arg.align || font.align;
+         arg.rotate = arg.rotate || font.angle;
       }
 
       let align = ['start', 'middle'];
 
       if (isStr(arg.align)) {
          align = arg.align.split(';');
-         if (align.length === 1) align.push('middle');
+         if (align.length === 1)
+            align.push('middle');
       } else if (typeof arg.align === 'number') {
          if ((arg.align / 10) >= 3)
             align[0] = 'end';
@@ -1254,7 +1261,8 @@ class ObjectPainter extends BasePainter {
       } else if (isObject(arg.align) && (arg.align.length === 2))
          align = arg.align;
 
-      if (arg.latex === undefined) arg.latex = 1; //  latex 0-text, 1-latex, 2-math
+      if (arg.latex === undefined)
+         arg.latex = 1; //  0: text, 1: latex, 2: math
       arg.align = align;
       arg.x = arg.x || 0;
       arg.y = arg.y || 0;
@@ -1266,10 +1274,12 @@ class ObjectPainter extends BasePainter {
       if (arg.draw_g.property('_fast_drawing')) {
          if (arg.scale) {
             // area too small - ignore such drawing
-            if (arg.height < 4) return 0;
+            if (arg.height < 4)
+               return 0;
          } else if (arg.font_size) {
             // font size too small
-            if (arg.font_size < 4) return 0;
+            if (arg.font_size < 4)
+               return 0;
          } else if (arg.draw_g.property('_font_too_small')) {
             // configure font is too small - ignore drawing
             return 0;
@@ -1292,10 +1302,13 @@ class ObjectPainter extends BasePainter {
       if (!use_mathjax || arg.nomathjax) {
          arg.txt_node = arg.draw_g.append('svg:text');
 
-         if (arg.color) arg.txt_node.attr('fill', arg.color);
+         if (arg.color)
+            arg.txt_node.attr('fill', arg.color);
 
-         if (arg.font_size) arg.txt_node.attr('font-size', arg.font_size);
-                       else arg.font_size = font.size;
+         if (arg.font_size)
+            arg.txt_node.attr('font-size', arg.font_size);
+         else
+            arg.font_size = font.size;
 
          arg.plain = !arg.latex || (settings.Latex === cl.Off) || (settings.Latex === cl.Symbols);
 

@@ -31,7 +31,8 @@ class RH2Painter extends RH2Painter2D {
       let pr = Promise.resolve(this);
 
       if (reason === 'resize') {
-         if (is_main && main.resize3D()) main.render3D();
+         if (is_main && main.resize3D())
+            main.render3D();
          return pr;
       }
 
