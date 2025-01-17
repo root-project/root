@@ -18,6 +18,7 @@
 #include <string>
 
 #include <ROOT/Browsable/RElement.hxx>
+#include <ROOT/RWebWindow.hxx>
 
 namespace ROOT {
 
@@ -47,6 +48,8 @@ public:
    RBrowser *GetBrowser() const { return fBrowser; }
 
    virtual void Show(const std::string &) = 0;
+
+   virtual std::shared_ptr<RWebWindow> GetWindow() { return nullptr; }
 
    virtual void ResetConn() {}
 
