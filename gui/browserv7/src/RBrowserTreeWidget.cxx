@@ -45,7 +45,8 @@ public:
 
    std::string GetKind() const override { return "tree"s; }
    std::string GetTitle() override { return fTitle; }
-   std::string GetUrl() override { return fViewer.GetWindowUrl(false); }
+   std::string GetUrl() override { return ""; }
+   std::shared_ptr<RWebWindow> GetWindow() override { return fViewer.GetWindow(); }
 
    void Show(const std::string &arg) override { fViewer.Show(arg); }
 
