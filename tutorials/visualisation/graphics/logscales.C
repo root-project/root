@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_hist
+/// \ingroup tutorial_graphics
 /// \notebook
 /// Draw parametric functions with log scales.
 ///
@@ -9,7 +9,7 @@
 /// \date July 2016
 /// \author Olivier Couet
 
-void hist054_Graphics_logscales()
+void logscales()
 {
    TCanvas *c1 = new TCanvas("c1", "Various options on LOG scales plots", 0, 0, 700, 900);
    c1->SetFillColor(30);

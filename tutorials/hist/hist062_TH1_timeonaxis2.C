@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_graphs
+/// \ingroup tutorial_hist
 /// \notebook
 /// Define the time offset as 2003, January 1st.
 ///
@@ -8,7 +8,7 @@
 ///
 /// \author Olivier Couet
 
-void timeonaxis2()
+void hist062_TH1_timeonaxis2()
 {
    auto ct2 = new TCanvas("ct2", "ct2", 10, 10, 700, 500);
 

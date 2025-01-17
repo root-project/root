@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_graphs
+/// \ingroup tutorial_graphics
 /// \notebook
 /// Examples of use of the spline classes.
 ///

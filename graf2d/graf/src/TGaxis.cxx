@@ -675,7 +675,7 @@ and `localtime` give with what gives `TGaxis`. It can be used
 as referenced test to check if the time option of `TGaxis` is working properly.
 
 Begin_Macro(source)
-../../../tutorials/visualisation/graphs/timeonaxis3.C
+../../../tutorials/visualisation/graphics/timeonaxis3.C
 End_Macro
 
 
@@ -683,7 +683,7 @@ The following macro illustrates the use, with histograms axis, of the time mode 
 with different time intervals and time formats.
 
 Begin_Macro(source)
-../../../tutorials/visualisation/graphs/timeonaxis.C
+../../../tutorials/hist/hist061_TH1_timeonaxis.C
 End_Macro
 
 */

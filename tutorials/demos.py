@@ -34,7 +34,7 @@ bar.AddButton( 'browser',       r'TPython::Exec( "b = ROOT.TBrowser()" );',     
 bar.AddButton( 'hsimple',       r'TPython::Exec( "' + to_run.format('hsimple.py') + '" );',   'Creating histograms/Ntuples on file', "button" )
 bar.AddButton( 'hsum',          r'TPython::Exec( "' + to_run.format('hist/hsum.py') + '" );',      'Filling Histograms and Some Graphics Options' )
 bar.AddButton( 'formula1',      r'TPython::Exec( "' + to_run.format('visualisation/graphics/formula1.py') + '" );',  'Simple Formula and Functions' )
-bar.AddButton( 'surfaces',      r'TPython::Exec( "' + to_run.format('visualisation/graphs/surfaces.py') + '" );',  'Surface Drawing Options' )
+bar.AddButton( 'surfaces',      r'TPython::Exec( "' + to_run.format('visualisation/graphics/surfaces.py') + '" );',  'Surface Drawing Options' )
 bar.AddButton( 'fillrandom',    r'TPython::Exec( "' + to_run.format('hist/fillrandom.py') + '" );','Histograms with Random Numbers from a Function' )
 bar.AddButton( 'fit1',          r'TPython::Exec( "' + to_run.format('math/fit/fit1.py') + '" );',      'A Simple Fitting Example' )
 bar.AddButton( 'multifit',      r'TPython::Exec( "' + to_run.format('math/fit/multifit.py') + '" );',  'Fitting in Subranges of Histograms' )

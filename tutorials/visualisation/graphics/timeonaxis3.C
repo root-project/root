@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_graphs
+/// \ingroup tutorial_graphics
 /// \notebook
 /// This example compares what the system time function gmtime and localtime give
 /// with what gives TGaxis. It can be used as referenced test to check if TGaxis

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_graphs
+/// \ingroup tutorial_hist
 /// \notebook -js
 /// This macro illustrates the use of the time mode on the axis
 /// with different time intervals and time formats.
@@ -23,7 +23,7 @@
 
 #include <time.h>
 
-void timeonaxis()
+void hist061_TH1_timeonaxis()
 {
 
    time_t script_time;

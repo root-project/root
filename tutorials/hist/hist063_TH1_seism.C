@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_graphs
+/// \ingroup tutorial_hist
 /// \notebook -js
 /// Strip chart example.
 ///
@@ -17,7 +17,7 @@
 #include "TRandom.h"
 #include <cstdio>
 
-void seism()
+void hist063_TH1_seism()
 {
 
    TStopwatch sw;

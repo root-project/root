@@ -516,7 +516,7 @@ set(returncode_1 math/fit/fit2a.C
                  hist/hist102_TH2_contour_list.C
                  hist/hist006_TH1_bar_charts.C
                  hist/hist037_TH2Poly_boxes.C
-                 hist/hist060_TH1_Stats.C
+                 hist/hist060_TH1_stats.C
                  hist/hist014_TH1_cumulative.C
                  hist/hist004_TH1_labels.C
                  hist/hist036_TH2_labels.C
