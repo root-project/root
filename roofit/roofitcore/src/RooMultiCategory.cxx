@@ -59,7 +59,7 @@ RooMultiCategory::RooMultiCategory(const char *name, const char *title, const Ro
   for (const auto arg : inputCategories) {
     if (!dynamic_cast<RooAbsCategory*>(arg)) {
       coutE(InputArguments) << "RooMultiCategory::RooMultiCategory(" << GetName() << "): input argument " << arg->GetName()
-             << " is not a RooAbsCategory" << endl ;
+             << " is not a RooAbsCategory" << std::endl ;
     }
     _catSet.add(*arg) ;
   }
@@ -131,8 +131,8 @@ void RooMultiCategory::printMultiline(ostream& os, Int_t content, bool verbose, 
   RooAbsCategory::printMultiline(os,content,verbose,indent) ;
 
   if (verbose) {
-    os << indent << "--- RooMultiCategory ---" << endl;
-    os << indent << "  Input category list:" << endl ;
+    os << indent << "--- RooMultiCategory ---" << std::endl;
+    os << indent << "  Input category list:" << std::endl ;
     TString moreIndent(indent) ;
     moreIndent.Append("   ") ;
     _catSet.printStream(os,kName|kValue,kStandard,moreIndent.Data()) ;

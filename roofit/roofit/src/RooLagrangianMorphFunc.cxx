@@ -73,7 +73,7 @@ describe the same process or not.
 #include <type_traits>
 #include <typeinfo>
 
-using std::cerr, std::string, std::make_unique, std::vector;
+using std::string, std::make_unique, std::vector;
 
 ClassImp(RooLagrangianMorphFunc);
 
@@ -145,7 +145,7 @@ inline void writeMatrixToFileT(const MatrixT &matrix, const char *fname)
 {
    std::ofstream of(fname);
    if (!of.good()) {
-      cerr << "unable to read file '" << fname << "'!" << std::endl;
+      std::cerr << "unable to read file '" << fname << "'!" << std::endl;
    }
    writeMatrixToStreamT(matrix, of);
    of.close();
@@ -612,7 +612,7 @@ inline void extractServers(const RooAbsArg &coupling, T2 &operators)
 template <class T1, class T2, typename std::enable_if<!is_specialization<T1, std::vector>::value, T1>::type * = nullptr>
 inline void extractOperators(const T1 &couplings, T2 &operators)
 {
-   // coutD(InputArguments) << "extracting operators from
+   // std::coutD(InputArguments) << "extracting operators from
    // "<<couplings.size()<<" couplings" << std::endl;
    for (auto itr : couplings) {
       extractServers(*itr, operators);
@@ -638,7 +638,7 @@ inline void extractCouplings(const T1 &inCouplings, T2 &outCouplings)
 {
    for (auto itr : inCouplings) {
       if (!outCouplings.find(itr->GetName())) {
-         // coutD(InputArguments) << "adding parameter "<< obj->GetName() <<
+         // std::coutD(InputArguments) << "adding parameter "<< obj->GetName() <<
          // std::endl;
          outCouplings.add(*itr);
       }

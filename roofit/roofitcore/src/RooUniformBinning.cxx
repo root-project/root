@@ -62,7 +62,7 @@ RooUniformBinning::RooUniformBinning(const RooUniformBinning &other, const char 
 void RooUniformBinning::setRange(double xlo, double xhi)
 {
   if (xlo>xhi) {
-    coutE(InputArguments) << "RooUniformBinning::setRange: ERROR low bound > high bound" << endl ;
+    coutE(InputArguments) << "RooUniformBinning::setRange: ERROR low bound > high bound" << std::endl ;
     return ;
   }
 
@@ -97,7 +97,7 @@ double RooUniformBinning::binCenter(Int_t i) const
 {
   if (i<0 || i>=_nbins) {
     coutE(InputArguments) << "RooUniformBinning::binCenter ERROR: bin index " << i
-           << " is out of range (0," << _nbins-1 << ")" << endl ;
+           << " is out of range (0," << _nbins-1 << ")" << std::endl ;
     return 0 ;
   }
 
@@ -124,7 +124,7 @@ double RooUniformBinning::binLow(Int_t i) const
 {
   if (i<0 || i>=_nbins) {
     coutE(InputArguments) << "RooUniformBinning::binLow ERROR: bin index " << i
-           << " is out of range (0," << _nbins-1 << ")" << endl ;
+           << " is out of range (0," << _nbins-1 << ")" << std::endl ;
     return 0 ;
   }
 
@@ -140,7 +140,7 @@ double RooUniformBinning::binHigh(Int_t i) const
 {
   if (i<0 || i>=_nbins) {
     coutE(InputArguments) << "RooUniformBinning::fitBinHigh ERROR: bin index " << i
-           << " is out of range (0," << _nbins-1 << ")" << endl ;
+           << " is out of range (0," << _nbins-1 << ")" << std::endl ;
     return 0 ;
   }
 

@@ -40,7 +40,7 @@
 #include <algorithm>
 #include <map>
 
-using std::cout, std::endl, std::string, std::vector;
+using std::string, std::vector;
 
 ClassImp(RooMomentMorphFuncND);
 ClassImp(RooMomentMorphFuncND::Grid2);
@@ -134,12 +134,12 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
    for (auto *mref : mrefList) {
       if (!dynamic_cast<RooAbsReal *>(mref)) {
          coutE(InputArguments) << "RooMomentMorphFuncND::ctor(" << GetName() << ") ERROR: mref " << mref->GetName()
-                               << " is not of type RooAbsReal" << endl;
+                               << " is not of type RooAbsReal" << std::endl;
          throw string("RooMomentMorphFuncND::ctor() ERROR mref is not of type RooAbsReal");
       }
       if (!dynamic_cast<RooConstVar *>(mref)) {
          coutW(InputArguments) << "RooMomentMorphFuncND::ctor(" << GetName() << ") WARNING mref point " << i
-                               << " is not a constant, taking a snapshot of its value" << endl;
+                               << " is not a constant, taking a snapshot of its value" << std::endl;
       }
       mrefpoints[i] = static_cast<RooAbsReal *>(mref)->getVal();
       i++;
@@ -212,13 +212,13 @@ void RooMomentMorphFuncND::initialize()
 
    if (nPar != nDim) {
       coutE(InputArguments) << "RooMomentMorphFuncND::initialize(" << GetName() << ") ERROR: nPar != nDim"
-                            << ": " << nPar << " !=" << nDim << endl;
+                            << ": " << nPar << " !=" << nDim << std::endl;
       assert(0);
    }
 
    if (nPdf != nRef) {
       coutE(InputArguments) << "RooMomentMorphFuncND::initialize(" << GetName() << ") ERROR: nPdf != nRef"
-                            << ": " << nPdf << " !=" << nRef << endl;
+                            << ": " << nPdf << " !=" << nRef << std::endl;
       assert(0);
    }
 
@@ -621,7 +621,7 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
          const_cast<RooRealVar *>(frac(2 * nPdf + i))->setVal(ffrac); // need to add up
 
          if (verbose) {
-            cout << "NonLinear fraction " << ffrac << endl;
+            std::cout << "NonLinear fraction " << ffrac << std::endl;
             frac(i)->Print();
             frac(nPdf + i)->Print();
             frac(2 * nPdf + i)->Print();
@@ -699,7 +699,7 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
          }
 
          if (verbose) {
-            cout << "Linear fraction " << ffrac << endl;
+            std::cout << "Linear fraction " << ffrac << std::endl;
             frac(self._squareIdx[i])->Print();
             frac(nPdf + self._squareIdx[i])->Print();
             frac(2 * nPdf + self._squareIdx[i])->Print();
@@ -723,7 +723,7 @@ void RooMomentMorphFuncND::findShape(const vector<double> &x) const
    //       isEnclosed = false;
    // }
 
-   // cout << "isEnclosed = " << isEnclosed << endl;
+   // std::cout << "isEnclosed = " << isEnclosed << std::endl;
 
    int depth = std::pow(2, nPar);
 
@@ -749,15 +749,15 @@ void RooMomentMorphFuncND::findShape(const vector<double> &x) const
       }
    }
 
-   // cout << endl;
+   // std::cout << std::endl;
 
    // for (int isq = 0; isq < _squareVec.size(); isq++) {
-   //   cout << _squareIdx[isq];
-   //   cout << " (";
+   //   std::cout << _squareIdx[isq];
+   //   std::cout << " (";
    //   for (int isqq = 0; isqq < _squareVec[isq].size(); isqq++) {
-   //     cout << _squareVec[isq][isqq] << ((isqq<_squareVec[isq].size()-1)?",":"");
+   //     std::cout << _squareVec[isq][isqq] << ((isqq<_squareVec[isq].size()-1)?",":"");
    //   }
-   //   cout << ") ";
+   //   std::cout << ") ";
    // }
 
    // construct transformation matrix for linear extrapolation
@@ -801,7 +801,7 @@ bool RooMomentMorphFuncND::setBinIntegrator(RooArgSet &allVars)
       temp->specialIntegratorConfig(true)->getConfigSection("RooBinIntegrator").setRealValue("numBins", nbins);
       return true;
    } else {
-      cout << "Currently BinIntegrator only knows how to deal with 1-d " << endl;
+      std::cout << "Currently BinIntegrator only knows how to deal with 1-d " << std::endl;
       return false;
    }
    return false;

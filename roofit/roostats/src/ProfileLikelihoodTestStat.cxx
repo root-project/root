@@ -39,8 +39,6 @@ either use:
 
 #include "RooStats/RooStatsUtils.h"
 
-using std::cout, std::endl;
-
 bool RooStats::ProfileLikelihoodTestStat::fgAlwaysReuseNll = true ;
 
 void RooStats::ProfileLikelihoodTestStat::SetAlwaysReuseNLL(bool flag) { fgAlwaysReuseNll = flag ; }
@@ -68,7 +66,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
        if (firstPOI) initial_mu_value = firstPOI->getVal();
        //paramsOfInterest.getRealValue(firstPOI->GetName());
        if (fPrintLevel > 1) {
-            cout << "POIs: " << endl;
+            std::cout << "POIs: " << std::endl;
             paramsOfInterest.Print("v");
        }
 
@@ -87,13 +85,13 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
           fNll = std::unique_ptr<RooAbsReal>{fPdf->createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),
                                  RooFit::GlobalObservables(fGlobalObs), RooFit::ConditionalObservables(fConditionalObs), RooFit::Offset(fLOffset))};
 
-          if (fPrintLevel > 0 && fLOffset) cout << "ProfileLikelihoodTestStat::Evaluate - Use Offset in creating NLL " << endl ;
+          if (fPrintLevel > 0 && fLOffset) std::cout << "ProfileLikelihoodTestStat::Evaluate - Use Offset in creating NLL " << std::endl ;
 
           created = true ;
-          if (fPrintLevel > 1) cout << "creating NLL " << &*fNll << " with data = " << &data << endl ;
+          if (fPrintLevel > 1) std::cout << "creating NLL " << &*fNll << " with data = " << &data << std::endl ;
        }
        if (reuse && !created) {
-         if (fPrintLevel > 1) cout << "reusing NLL " << &*fNll << " new data = " << &data << endl ;
+         if (fPrintLevel > 1) std::cout << "reusing NLL " << &*fNll << " new data = " << &data << std::endl ;
          fNll->setData(data,false) ;
        }
        // print data in case of number counting (simple data sets)
@@ -174,7 +172,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
           if (fPrintLevel>1) std::cout << "Do conditional fit " << std::endl;
 
 
-          //       cout <<" reestablish snapshot"<<endl;
+          //       std::cout <<" reestablish snapshot"<< std::endl;
           attachedSet->assign(*snap);
 
 
@@ -307,18 +305,18 @@ std::unique_ptr<RooFitResult> RooStats::ProfileLikelihoodTestStat::GetMinNLL() {
       if (status%1000 == 0) {  // ignore errors from Improve
          break;
       } else if (tries < maxtries) {
-         cout << "    ----> Doing a re-scan first" << endl;
+         std::cout << "    ----> Doing a re-scan first" << std::endl;
          minim.minimize(minimizer,"Scan");
          if (tries == 2) {
             if (fStrategy == 0 ) {
-               cout << "    ----> trying with strategy = 1" << endl;
+               std::cout << "    ----> trying with strategy = 1" << std::endl;
                minim.setStrategy(1);
             }
             else
                tries++; // skip this trial if strategy is already 1
          }
          if (tries == 3) {
-            cout << "    ----> trying with improve" << endl;
+            std::cout << "    ----> trying with improve" << std::endl;
             minimizer = "Minuit";
             algorithm = "migradimproved";
          }

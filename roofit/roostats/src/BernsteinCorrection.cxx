@@ -72,7 +72,7 @@ ClassImp(RooStats::BernsteinCorrection);
 
 using namespace RooFit;
 using namespace RooStats;
-using std::cout, std::endl, std::vector;
+using std::vector;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -94,7 +94,7 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
   RooAbsData* data = wks->data(dataName);
 
   if (!x || !nominal || !data) {
-     cout << "Error:  wrong name for pdf or variable or dataset - return -1 " << std::endl;
+     std::cout << "Error:  wrong name for pdf or variable or dataset - return -1 " << std::endl;
      return -1;
   }
 
@@ -113,7 +113,7 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
 
   // setup a log
   std::stringstream log;
-  log << "------ Begin Bernstein Correction Log --------" << endl;
+  log << "------ Begin Bernstein Correction Log --------" << std::endl;
 
   // Local variables that we want to keep in scope after loop
   RooArgList coeff;
@@ -181,15 +181,15 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
      << " -log L("<<degree-1<<") = " << lastNll
      << " -log L(" << degree <<") = " << result->minNll()
      << " q = " << q
-     << " P(chi^2_1 > q) = " << TMath::Prob(q,1) << endl;
+     << " P(chi^2_1 > q) = " << TMath::Prob(q,1) << std::endl;
     }
 
     // update last result for next iteration in loop
     lastNll = result->minNll();
   }
 
-  log << "------ End Bernstein Correction Log --------" << endl;
-  cout << log.str();
+  log << "------ End Bernstein Correction Log --------" << std::endl;
+  std::cout << log.str();
 
   return degree;
 }
@@ -212,13 +212,13 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
   RooAbsData* data = wks->data(dataName);
 
   if (!x || !nominal || !data) {
-     cout << "Error:  wrong name for pdf or variable or dataset ! " << std::endl;
+     std::cout << "Error:  wrong name for pdf or variable or dataset ! " << std::endl;
      return;
   }
 
   // setup a log
   std::stringstream log;
-  log << "------ Begin Bernstein Correction Log --------" << endl;
+  log << "------ Begin Bernstein Correction Log --------" << std::endl;
 
   // Local variables that we want to keep in scope after loop
   RooArgList coeff; // n-th degree correction
@@ -226,7 +226,7 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
   RooArgList coeffExtra; // n+1 correction
   vector<RooRealVar*> coefficients;
 
-  //cout << "make coefs" << endl;
+  //cout << "make coefs" << std::endl;
   for(int i = 0; i<=degree+1; ++i) {
     // we need to generate names for vars on the fly
     std::stringstream str;
@@ -266,7 +266,7 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
     = new RooEffProd("correctedExtra","",*nominal,*polyExtra);
 
 
-  cout << "made pdfs, make toy generator" << endl;
+  std::cout << "made pdfs, make toy generator" << std::endl;
 
   // make a PDF to generate the toys
   RooDataHist dataHist("dataHist","",*x,*data);
@@ -285,7 +285,7 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
     double qExtra = 0;
     // do toys
     for (int i = 0; i < nToys; ++i) {
-       cout << "on toy " << i << endl;
+       std::cout << "on toy " << i << std::endl;
 
        std::unique_ptr<RooDataSet> tmpData{toyGen.generate(*x, data->numEntries())};
        // check to see how well this correction fits
@@ -307,8 +307,8 @@ void BernsteinCorrection::CreateQSamplingDist(RooWorkspace* wks,
        samplingDist->Fill(q);
        samplingDistExtra->Fill(qExtra);
        if (printLevel > 0) {
-      cout << "NLL Results: null " << resultNull->minNll() << " ref = " << result->minNll() << " extra"
-           << resultExtra->minNll() << endl;
+      std::cout << "NLL Results: null " << resultNull->minNll() << " ref = " << result->minNll() << " extra"
+           << resultExtra->minNll() << std::endl;
        }
   }
 

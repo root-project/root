@@ -334,7 +334,7 @@ void HypoTestResult::Print(Option_t * ) const
 {
    bool fromToys = (fAltDistr || fNullDistr);
 
-   std::cout << std::endl << "Results " << GetName() << ": " << endl;
+   std::cout << std::endl << "Results " << GetName() << ": " << std::endl;
    std::cout << " - Null p-value = " << NullPValue();
    if (fromToys) std::cout << " +/- " << NullPValueError();
    std::cout << std::endl;

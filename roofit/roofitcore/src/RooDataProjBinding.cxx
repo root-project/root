@@ -41,8 +41,6 @@ constructed from all the categories in the dataset
 #include <iostream>
 #include <cassert>
 
-using std::cout, std::endl;
-
 ClassImp(RooDataProjBinding);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -105,11 +103,11 @@ double RooDataProjBinding::operator()(const double xvector[]) const
 
     // Procedure might be lengthy, give some progress indication
     if (_first) {
-      oocoutW(_real,Eval) << "RooDataProjBinding::operator() projecting over " << nEvt << " events" << endl ;
+      oocoutW(_real,Eval) << "RooDataProjBinding::operator() projecting over " << nEvt << " events" << std::endl ;
       _first = false ;
     } else {
       if (oodologW(_real,Eval)) {
-   ooccoutW(_real,Eval) << "." ; cout.flush() ;
+   ooccoutW(_real,Eval) << "." ; std::cout.flush() ;
       }
     }
 
@@ -126,9 +124,9 @@ double RooDataProjBinding::operator()(const double xvector[]) const
       if (wgt) {
    ret = _real->getVal(_nset) ;
    result += wgt * ret ;
-//    cout << "ret[" << i << "] = " ;
+//    std::cout << "ret[" << i << "] = " ;
 //    params->printStream(cout,RooPrintable::kName|RooPrintable::kValue,RooPrintable::kStandard) ;
-//    cout << " = " << ret << endl ;
+//    std::cout << " = " << ret << std::endl ;
    wgtSum += wgt ;
       }
     }

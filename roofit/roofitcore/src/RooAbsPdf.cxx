@@ -363,7 +363,7 @@ double RooAbsPdf::getValV(const RooArgSet* nset) const
 
 double RooAbsPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
 {
-  cxcoutD(Eval) << "RooAbsPdf::analyticalIntegralWN(" << GetName() << ") code = " << code << " normset = " << (normSet?*normSet:RooArgSet()) << endl ;
+  cxcoutD(Eval) << "RooAbsPdf::analyticalIntegralWN(" << GetName() << ") code = " << code << " normset = " << (normSet?*normSet:RooArgSet()) << std::endl ;
 
 
   if (code==0) return getVal(normSet) ;
@@ -421,13 +421,13 @@ double RooAbsPdf::getNorm(const RooArgSet* nset) const
   if (!nset) return 1 ;
 
   syncNormalization(nset,true) ;
-  if (_verboseEval>1) cxcoutD(Tracing) << ClassName() << "::getNorm(" << GetName() << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
+  if (_verboseEval>1) cxcoutD(Tracing) << ClassName() << "::getNorm(" << GetName() << "): norm(" << _norm << ") = " << _norm->getVal() << std::endl ;
 
   double ret = _norm->getVal() ;
   if (ret==0.) {
     if(++_errorCount <= 10) {
       coutW(Eval) << "RooAbsPdf::getNorm(" << GetName() << ":: WARNING normalization is zero, nset = " ;  nset->Print("1") ;
-      if(_errorCount == 10) coutW(Eval) << "RooAbsPdf::getNorm(" << GetName() << ") INFO: no more messages will be printed " << endl ;
+      if(_errorCount == 10) coutW(Eval) << "RooAbsPdf::getNorm(" << GetName() << ") INFO: no more messages will be printed " << std::endl ;
     }
   }
 
@@ -515,10 +515,10 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
   if (_verboseEval>0) {
     if (!selfNormalized()) {
       cxcoutD(Tracing) << ClassName() << "::syncNormalization(" << GetName()
-      << ") recreating normalization integral " << endl ;
+      << ") recreating normalization integral " << std::endl ;
       depList.printStream(ccoutD(Tracing),kName|kValue|kArgs,kSingleLine) ;
     } else {
-      cxcoutD(Tracing) << ClassName() << "::syncNormalization(" << GetName() << ") selfNormalized, creating unit norm" << endl;
+      cxcoutD(Tracing) << ClassName() << "::syncNormalization(" << GetName() << ") selfNormalized, creating unit norm" << std::endl;
     }
   }
 
@@ -530,7 +530,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
   } else {
     const char* nr = (_normRangeOverride.Length()>0 ? _normRangeOverride.Data() : (_normRange.Length()>0 ? _normRange.Data() : nullptr)) ;
 
-//     cout << "RooAbsPdf::syncNormalization(" << GetName() << ") rangeName for normalization is " << (nr?nr:"<null>") << endl ;
+//     std::cout << "RooAbsPdf::syncNormalization(" << GetName() << ") rangeName for normalization is " << (nr?nr:"<null>") << std::endl ;
     RooAbsReal* normInt;
     {
       // Normalization is always over all pdf components. Overriding the global
@@ -541,7 +541,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
     }
     static_cast<RooRealIntegral*>(normInt)->setAllowComponentSelection(false);
     normInt->getVal() ;
-//     cout << "resulting normInt = " << normInt->GetName() << endl ;
+//     std::cout << "resulting normInt = " << normInt->GetName() << std::endl ;
 
     const char* cacheParamsStr = getStringAttribute("CACHEPARAMINT") ;
     if (cacheParamsStr && strlen(cacheParamsStr)) {
@@ -552,7 +552,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
 
       if (!cacheParams.empty()) {
    cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.size()
-          << "-dim value cache for integral over " << depList << " as a function of " << cacheParams << " in range " << (nr?nr:"<default>") <<  endl ;
+          << "-dim value cache for integral over " << depList << " as a function of " << cacheParams << " in range " << (nr?nr:"<default>") <<  std::endl ;
    string name = Form("%s_CACHE_[%s]",normInt->GetName(),cacheParams.contentsString().c_str()) ;
    RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*normInt,cacheParams) ;
    cachedIntegral->setInterpolationOrder(2) ;
@@ -572,7 +572,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
   cache = new CacheElem(*_norm) ;
   _normMgr.setObj(nset,cache) ;
 
-//   cout << "making new object " << _norm->GetName() << endl ;
+//   std::cout << "making new object " << _norm->GetName() << std::endl ;
 
   return true ;
 }
@@ -1100,10 +1100,10 @@ void RooAbsPdf::printValue(ostream& os) const
 void RooAbsPdf::printMultiline(ostream& os, Int_t contents, bool verbose, TString indent) const
 {
   RooAbsReal::printMultiline(os,contents,verbose,indent);
-  os << indent << "--- RooAbsPdf ---" << endl;
-  os << indent << "Cached value = " << _value << endl ;
+  os << indent << "--- RooAbsPdf ---" << std::endl;
+  os << indent << "Cached value = " << _value << std::endl ;
   if (_norm) {
-    os << indent << " Normalization integral: " << endl ;
+    os << indent << " Normalization integral: " << std::endl ;
     auto moreIndent = std::string(indent.Data()) + "   " ;
     _norm->printStream(os,kName|kAddress|kTitle|kValue|kArgs,kSingleLine,moreIndent.c_str()) ;
   }
@@ -1257,14 +1257,14 @@ RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(const RooArgSet& whatVars, con
      if (nEvents == 0) nEvents = expectedEvents(&whatVars);
   } else if (nEvents==0) {
     cxcoutI(Generation) << "No number of events specified , number of events generated is "
-           << GetName() << "::expectedEvents() = " << expectedEvents(&whatVars)<< endl ;
+           << GetName() << "::expectedEvents() = " << expectedEvents(&whatVars)<< std::endl ;
   }
 
   if (extended && protoData && !randProto) {
     cxcoutI(Generation) << "WARNING Using generator option Extended() (Poisson distribution of #events) together "
            << "with a prototype dataset implies incomplete sampling or oversampling of proto data. "
            << "Set randomize flag in ProtoData() option to randomize prototype dataset order and thus "
-           << "to randomize the set of over/undersampled prototype events for each generation cycle." << endl ;
+           << "to randomize the set of over/undersampled prototype events for each generation cycle." << std::endl ;
   }
 
 
@@ -1399,7 +1399,7 @@ RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(const RooArgSet &whatVars, dou
      generated = std::unique_ptr<RooDataSet>{context->generate(nEvents, false, extended)};
   }
   else {
-    coutE(Generation)  << "RooAbsPdf::generate(" << GetName() << ") cannot create a valid context" << endl;
+    coutE(Generation)  << "RooAbsPdf::generate(" << GetName() << ") cannot create a valid context" << std::endl;
   }
   return RooFit::makeOwningPtr(std::move(generated));
 }
@@ -1426,7 +1426,7 @@ std::unique_ptr<RooDataSet> RooAbsPdf::generate(RooAbsGenContext& context, const
   }
 
   if (randProtoOrder && prototype && prototype->numEntries()!=nEvents) {
-    coutI(Generation) << "RooAbsPdf::generate (Re)randomizing event order in prototype dataset (Nevt=" << nEvents << ")" << endl ;
+    coutI(Generation) << "RooAbsPdf::generate (Re)randomizing event order in prototype dataset (Nevt=" << nEvents << ")" << std::endl ;
     Int_t* newOrder = randomizeProtoOrder(prototype->numEntries(),Int_t(nEvents),resampleProto) ;
     context.setProtoDataOrder(newOrder) ;
     delete[] newOrder ;
@@ -1436,7 +1436,7 @@ std::unique_ptr<RooDataSet> RooAbsPdf::generate(RooAbsGenContext& context, const
     generated = std::unique_ptr<RooDataSet>{context.generate(nEvents,skipInit,extended)};
   }
   else {
-    coutE(Generation) << "RooAbsPdf::generate(" << GetName() << ") do not have a valid generator context" << endl;
+    coutE(Generation) << "RooAbsPdf::generate(" << GetName() << ") do not have a valid generator context" << std::endl;
   }
   return generated;
 }
@@ -1473,7 +1473,7 @@ RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(const RooArgSet &whatVars, con
   if (context) {
     return RooFit::makeOwningPtr(generate(*context,whatVars,&prototype,nEvents,verbose,randProtoOrder,resampleProto));
   }
-  coutE(Generation) << "RooAbsPdf::generate(" << GetName() << ") ERROR creating generator context" << endl ;
+  coutE(Generation) << "RooAbsPdf::generate(" << GetName() << ") ERROR creating generator context" << std::endl ;
   return nullptr;
 }
 
@@ -1628,14 +1628,14 @@ RooFit::OwningPtr<RooDataHist> RooAbsPdf::generateBinned(const RooArgSet& whatVa
      //nEvents = (nEvents==0?Int_t(expectedEvents(&whatVars)+0.5):nEvents) ;
     nEvents = (nEvents==0 ? expectedEvents(&whatVars) :nEvents) ;
     cxcoutI(Generation) << " Extended mode active, number of events generated (" << nEvents << ") is Poisson fluctuation on "
-         << GetName() << "::expectedEvents() = " << nEvents << endl ;
+         << GetName() << "::expectedEvents() = " << nEvents << std::endl ;
     // If Poisson fluctuation results in zero events, stop here
     if (nEvents==0) {
       return nullptr ;
     }
   } else if (nEvents==0) {
     cxcoutI(Generation) << "No number of events specified , number of events generated is "
-         << GetName() << "::expectedEvents() = " << expectedEvents(&whatVars)<< endl ;
+         << GetName() << "::expectedEvents() = " << expectedEvents(&whatVars)<< std::endl ;
   }
 
   // Forward to appropriate implementation
@@ -1685,7 +1685,7 @@ RooFit::OwningPtr<RooDataHist> RooAbsPdf::generateBinned(const RooArgSet &whatVa
   // Scale to number of events and introduce Poisson fluctuations
   if (nEvents<=0) {
     if (!canBeExtended()) {
-      coutE(InputArguments) << "RooAbsPdf::generateBinned(" << GetName() << ") ERROR: No event count provided and p.d.f does not provide expected number of events" << endl ;
+      coutE(InputArguments) << "RooAbsPdf::generateBinned(" << GetName() << ") ERROR: No event count provided and p.d.f does not provide expected number of events" << std::endl ;
       return nullptr;
     } else {
 
@@ -1959,7 +1959,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
           << "\n\t- Clear the automatic fit range attribute: <pdf>.removeStringAttribute(\"fitrange\");"
           << "\n\t- Explicitly specify the plotting range: Range(\"<rangeName>\")."
           << "\n\t- Explicitly specify where to compute the normalisation: NormRange(\"<rangeName>\")."
-          << "\n\tThe default (full) range can be denoted with Range(\"\") / NormRange(\"\")."<< endl ;
+          << "\n\tThe default (full) range can be denoted with Range(\"\") / NormRange(\"\")."<< std::endl ;
   }
 
   // Sanity checks
@@ -2021,7 +2021,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
   if (stype==RelativeExpected) {
     if (!canBeExtended()) {
       coutE(Plotting) << "RooAbsPdf::plotOn(" << GetName()
-            << "): ERROR the 'Expected' scale option can only be used on extendable PDFs" << endl ;
+            << "): ERROR the 'Expected' scale option can only be used on extendable PDFs" << std::endl ;
       return frame ;
     }
     frame->updateNormVars(*frame->getPlotVar()) ;
@@ -2049,9 +2049,9 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
         coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") only plotting range ["
             << rangeLo << "," << rangeHi << "]" ;
         if (!pc.hasProcessed("NormRange")) {
-          ccoutI(Plotting) << ", curve is normalized to data in " << (adjustNorm?"given":"full") << " range" << endl ;
+          ccoutI(Plotting) << ", curve is normalized to data in " << (adjustNorm?"given":"full") << " range" << std::endl ;
         } else {
-          ccoutI(Plotting) << endl ;
+          ccoutI(Plotting) << std::endl ;
         }
 
         nameSuffix.append(Form("_Range[%f_%f]",rangeLo,rangeHi)) ;
@@ -2072,9 +2072,9 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
 
         coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") only plotting range '" << pc.getString("rangeName", "", false) << "'" ;
         if (!pc.hasProcessed("NormRange")) {
-          ccoutI(Plotting) << ", curve is normalized to data in " << (adjustNorm?"given":"full") << " range" << endl ;
+          ccoutI(Plotting) << ", curve is normalized to data in " << (adjustNorm?"given":"full") << " range" << std::endl ;
         } else {
-          ccoutI(Plotting) << endl ;
+          ccoutI(Plotting) << std::endl ;
         }
 
         nameSuffix.append("_Range[" + std::string(pc.getString("rangeName")) + "]");
@@ -2093,7 +2093,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
         }
         adjustNorm = true ;
         hasCustomRange = true ;
-        coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f. curve is normalized using explicit choice of ranges '" << pc.getString("normRangeName", "", false) << "'" << endl ;
+        coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") p.d.f. curve is normalized using explicit choice of ranges '" << pc.getString("normRangeName", "", false) << "'" << std::endl ;
 
         nameSuffix.append("_NormRange[" + std::string(pc.getString("rangeName")) + "]");
 
@@ -2178,15 +2178,15 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
       dirSelNodes = std::unique_ptr<RooArgSet>{branchNodeSet.selectByName(compSpec)};
     }
     if (!dirSelNodes->empty()) {
-      coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") directly selected PDF components: " << *dirSelNodes << endl ;
+      coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") directly selected PDF components: " << *dirSelNodes << std::endl ;
 
       // Do indirect selection and activate both
       plotOnCompSelect(dirSelNodes.get());
     } else {
       if (compSet) {
-   coutE(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") ERROR: component selection set " << *compSet << " does not match any components of p.d.f." << endl ;
+   coutE(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") ERROR: component selection set " << *compSet << " does not match any components of p.d.f." << std::endl ;
       } else {
-   coutE(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") ERROR: component selection expression '" << compSpec << "' does not select any components of p.d.f." << endl ;
+   coutE(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") ERROR: component selection expression '" << compSpec << "' does not select any components of p.d.f." << std::endl ;
       }
       return nullptr ;
     }
@@ -2229,7 +2229,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, PlotOpt o) const
   if (o.stype==RelativeExpected) {
     if (!canBeExtended()) {
       coutE(Plotting) << "RooAbsPdf::plotOn(" << GetName()
-            << "): ERROR the 'Expected' scale option can only be used on extendable PDFs" << endl ;
+            << "): ERROR the 'Expected' scale option can only be used on extendable PDFs" << std::endl ;
       return frame ;
     }
     frame->updateNormVars(*frame->getPlotVar()) ;
@@ -2530,10 +2530,10 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createCdf(const RooArgSet& iset, const 
     Int_t isNum= !static_cast<RooRealIntegral&>(*tmp).numIntRealVars().empty();
 
     if (isNum) {
-      coutI(NumIntegration) << "RooAbsPdf::createCdf(" << GetName() << ") integration over observable(s) " << iset << " involves numeric integration," << endl
+      coutI(NumIntegration) << "RooAbsPdf::createCdf(" << GetName() << ") integration over observable(s) " << iset << " involves numeric integration," << std::endl
              << "      constructing cdf though numeric integration of sampled pdf in " << numScanBins << " bins and applying order "
-             << intOrder << " interpolation on integrated histogram." << endl
-             << "      To override this choice of technique use argument ScanNone(), to change scan parameters use ScanParameters(nbins,order) argument" << endl ;
+             << intOrder << " interpolation on integrated histogram." << std::endl
+             << "      To override this choice of technique use argument ScanNone(), to change scan parameters use ScanParameters(nbins,order) argument" << std::endl ;
     }
 
     return isNum ? createScanCdf(iset,nset,numScanBins,intOrder) : createIntRI(iset,nset) ;
@@ -2591,7 +2591,7 @@ RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet&
     } else {
       coutI(Minimization) << "RooAbsPdf::getAllConstraints(" << GetName() << ") omitting term " << pdf->GetName()
            << " as constraint term as it does not share any parameters with the other pdfs in product. "
-           << "To force inclusion in likelihood, add an explicit Constrain() argument for the target parameter" << endl ;
+           << "To force inclusion in likelihood, add an explicit Constrain() argument for the target parameter" << std::endl ;
     }
   }
 

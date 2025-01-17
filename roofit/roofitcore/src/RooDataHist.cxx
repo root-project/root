@@ -76,7 +76,7 @@ See RooAbsData::plotOn().
 #include "TMath.h"
 #include "Math/Util.h"
 
-using std::cout, std::endl, std::string, std::ostream;
+using std::string, std::ostream;
 
 ClassImp(RooDataHist);
 
@@ -514,7 +514,7 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, st
     // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
     if (!indexCat.hasLabel(hiter.first)) {
       indexCat.defineType(hiter.first) ;
-      coutI(InputArguments) << "RooDataHist::importTH1Set(" << GetName() << ") defining state \"" << hiter.first << "\" in index category " << indexCat.GetName() << endl ;
+      coutI(InputArguments) << "RooDataHist::importTH1Set(" << GetName() << ") defining state \"" << hiter.first << "\" in index category " << indexCat.GetName() << std::endl ;
     }
     if (!icat->hasLabel(hiter.first)) {
       icat->defineType(hiter.first) ;
@@ -524,7 +524,7 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, st
   // Check consistency in number of dimensions
   if (histo && int(vars.size()) != histo->GetDimension()) {
     coutE(InputArguments) << "RooDataHist::importTH1Set(" << GetName() << "): dimension of input histogram must match "
-           << "number of continuous variables" << endl ;
+           << "number of continuous variables" << std::endl ;
     throw std::invalid_argument("Inputs histograms for RooDataHist are not compatible with dimensions of variables.");
   }
 
@@ -629,7 +629,7 @@ void RooDataHist::importDHistSet(const RooArgList & /*vars*/, RooCategory &index
       if (!indexCat.hasLabel(label)) {
          indexCat.defineType(label);
          coutI(InputArguments) << "RooDataHist::importDHistSet(" << GetName() << ") defining state \"" << label
-                               << "\" in index category " << indexCat.GetName() << endl;
+                               << "\" in index category " << indexCat.GetName() << std::endl;
       }
       if (!icat->hasLabel(label)) {
          icat->defineType(label);
@@ -927,7 +927,7 @@ std::unique_ptr<RooAbsData> RooDataHist::reduceEng(const RooArgSet& varSubset, c
     tmp = std::make_unique<RooArgSet>();
     // Deep clone cutVar and attach clone to this dataset
     if (RooArgSet(*cutVar).snapshot(*tmp)) {
-      coutE(DataHandling) << "RooDataHist::reduceEng(" << GetName() << ") Couldn't deep-clone cut variable, abort," << endl ;
+      coutE(DataHandling) << "RooDataHist::reduceEng(" << GetName() << ") Couldn't deep-clone cut variable, abort," << std::endl ;
       return nullptr;
     }
     cloneVar = static_cast<RooFormulaVar*>(tmp->find(*cutVar));
@@ -1116,20 +1116,20 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
   if (o.bins) return RooAbsData::plotOn(frame,o) ;
 
   if(!frame) {
-    coutE(InputArguments) << ClassName() << "::" << GetName() << ":plotOn: frame is null" << endl;
+    coutE(InputArguments) << ClassName() << "::" << GetName() << ":plotOn: frame is null" << std::endl;
     return nullptr;
   }
   auto var= static_cast<RooAbsRealLValue*>(frame->getPlotVar());
   if(!var) {
     coutE(InputArguments) << ClassName() << "::" << GetName()
-    << ":plotOn: frame does not specify a plot variable" << endl;
+    << ":plotOn: frame does not specify a plot variable" << std::endl;
     return nullptr;
   }
 
   auto dataVar = static_cast<RooRealVar*>(_vars.find(*var));
   if (!dataVar) {
     coutE(InputArguments) << ClassName() << "::" << GetName()
-    << ":plotOn: dataset doesn't contain plot frame variable" << endl;
+    << ":plotOn: dataset doesn't contain plot frame variable" << std::endl;
     return nullptr;
   }
 
@@ -1402,7 +1402,7 @@ double RooDataHist::weightFast(const RooArgSet& bin, Int_t intOrder, bool correc
 
   // Handle illegal intOrder values
   if (intOrder<0) {
-    coutE(InputArguments) << "RooDataHist::weight(" << GetName() << ") ERROR: interpolation order must be positive" << endl ;
+    coutE(InputArguments) << "RooDataHist::weight(" << GetName() << ") ERROR: interpolation order must be positive" << std::endl ;
     return 0 ;
   }
 
@@ -1437,7 +1437,7 @@ double RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, bool correctFor
 
   // Handle illegal intOrder values
   if (intOrder<0) {
-    coutE(InputArguments) << "RooDataHist::weight(" << GetName() << ") ERROR: interpolation order must be positive" << endl ;
+    coutE(InputArguments) << "RooDataHist::weight(" << GetName() << ") ERROR: interpolation order must be positive" << std::endl ;
     return 0 ;
   }
 
@@ -1526,12 +1526,12 @@ double RooDataHist::weightInterpolated(const RooArgSet& bin, int intOrder, bool 
     }
 
     if (gDebug>7) {
-      cout << "RooDataHist interpolating data is" << endl ;
-      cout << "xarr = " ;
-      for (int q=0; q<=intOrder ; q++) cout << xarr[q] << " " ;
-      cout << " yarr = " ;
-      for (int q=0; q<=intOrder ; q++) cout << yarr[q] << " " ;
-      cout << endl ;
+      std::cout << "RooDataHist interpolating data is" << std::endl ;
+      std::cout << "xarr = " ;
+      for (int q=0; q<=intOrder ; q++) std::cout << xarr[q] << " " ;
+      std::cout << " yarr = " ;
+      for (int q=0; q<=intOrder ; q++) std::cout << yarr[q] << " " ;
+      std::cout << std::endl ;
     }
     wInt = RooMath::interpolate(xarr,yarr,intOrder+1,yval) ;
 
@@ -1539,7 +1539,7 @@ double RooDataHist::weightInterpolated(const RooArgSet& bin, int intOrder, bool 
 
     // Higher dimensional scenarios not yet implemented
     coutE(InputArguments) << "RooDataHist::weight(" << GetName() << ") interpolation in "
-                          << varInfo.nRealVars << " dimensions not yet implemented" << endl ;
+                          << varInfo.nRealVars << " dimensions not yet implemented" << std::endl ;
     return weightFast(bin,0,correctForBinSize,cdfBoundaries) ;
 
   }
@@ -1821,7 +1821,7 @@ void RooDataHist::add(const RooAbsData& dset, const RooFormulaVar* cutVar, doubl
     // Deep clone cutVar and attach clone to this dataset
     tmp = std::make_unique<RooArgSet>();
     if(RooArgSet(*cutVar).snapshot(*tmp)) {
-      coutE(DataHandling) << "RooDataHist::add(" << GetName() << ") Couldn't deep-clone cut variable, abort," << endl ;
+      coutE(DataHandling) << "RooDataHist::add(" << GetName() << ") Couldn't deep-clone cut variable, abort," << std::endl ;
       return ;
     }
 
@@ -2217,7 +2217,7 @@ TIterator* RooDataHist::sliceIterator(RooAbsArg& sliceArg, const RooArgSet& othe
 
   RooAbsArg* intArg = _vars.find(sliceArg) ;
   if (!intArg) {
-    coutE(InputArguments) << "RooDataHist::sliceIterator() variable " << sliceArg.GetName() << " is not part of this RooDataHist" << endl ;
+    coutE(InputArguments) << "RooDataHist::sliceIterator() variable " << sliceArg.GetName() << " is not part of this RooDataHist" << std::endl ;
     return nullptr ;
   }
   return new RooDataHistSliceIter(*this,*intArg) ;
@@ -2300,11 +2300,11 @@ void RooDataHist::printMultiline(ostream& os, Int_t content, bool verbose, TStri
 {
   RooAbsData::printMultiline(os,content,verbose,indent) ;
 
-  os << indent << "Binned Dataset " << GetName() << " (" << GetTitle() << ")" << endl ;
-  os << indent << "  Contains " << numEntries() << " bins with a total weight of " << sumEntries() << endl;
+  os << indent << "Binned Dataset " << GetName() << " (" << GetTitle() << ")" << std::endl ;
+  os << indent << "  Contains " << numEntries() << " bins with a total weight of " << sumEntries() << std::endl;
 
   if (!verbose) {
-    os << indent << "  Observables " << _vars << endl ;
+    os << indent << "  Observables " << _vars << std::endl ;
   } else {
     os << indent << "  Observables: " ;
     _vars.printStream(os,kName|kValue|kExtras|kTitle,kVerbose,indent+"  ") ;
@@ -2312,7 +2312,7 @@ void RooDataHist::printMultiline(ostream& os, Int_t content, bool verbose, TStri
 
   if(verbose) {
     if (!_cachedVars.empty()) {
-      os << indent << "  Caches " << _cachedVars << endl ;
+      os << indent << "  Caches " << _cachedVars << std::endl ;
     }
   }
 }
@@ -2322,7 +2322,7 @@ void RooDataHist::printDataHistogram(ostream& os, RooRealVar* obs) const
   for(Int_t i=0; i<obs->getBins(); ++i){
     this->get(i);
     obs->setBin(i);
-    os << this->weight() << " +/- " << this->weightSquared() << endl;
+    os << this->weight() << " +/- " << this->weightSquared() << std::endl;
   }
 }
 

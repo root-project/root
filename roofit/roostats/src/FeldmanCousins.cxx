@@ -119,14 +119,14 @@ void FeldmanCousins::CreateTestStatSampler() const{
   fTestStatSampler->SetPdf(*fModel.GetPdf());
 
   if(!fAdaptiveSampling){
-    ooccoutP(&fModel,Generation) << "FeldmanCousins: ntoys per point = " << (int) (fAdditionalNToysFactor*50./fSize) << endl;
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: ntoys per point = " << (int) (fAdditionalNToysFactor*50./fSize) << std::endl;
   } else{
-    ooccoutP(&fModel,Generation) << "FeldmanCousins: ntoys per point: adaptive" << endl;
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: ntoys per point: adaptive" << std::endl;
   }
   if(fFluctuateData){
-    ooccoutP(&fModel,Generation) << "FeldmanCousins: nEvents per toy will fluctuate about  expectation" << endl;
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: nEvents per toy will fluctuate about  expectation" << std::endl;
   } else{
-    ooccoutP(&fModel,Generation) << "FeldmanCousins: nEvents per toy will not fluctuate, will always be " << fData.numEntries() << endl;
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: nEvents per toy will not fluctuate, will always be " << fData.numEntries() << std::endl;
     fTestStatSampler->SetNEventsPerToy(fData.numEntries());
   }
 }
@@ -139,7 +139,7 @@ void FeldmanCousins::CreateParameterPoints() const{
   // get ingredients
   RooAbsPdf* pdf   = fModel.GetPdf();
   if (!pdf ){
-    ooccoutE(&fModel,Generation) << "FeldmanCousins: ModelConfig has no PDF" << endl;
+    ooccoutE(&fModel,Generation) << "FeldmanCousins: ModelConfig has no PDF" << std::endl;
     return;
   }
 
@@ -151,7 +151,7 @@ void FeldmanCousins::CreateParameterPoints() const{
 
   if( fModel.GetNuisanceParameters() && ! fModel.GetParametersOfInterest()->equals(*parameters) && fDoProfileConstruction) {
     // if parameters include nuisance parameters, do profile construction
-    ooccoutP(&fModel,Generation) << "FeldmanCousins: Model has nuisance parameters, will do profile construction" << endl;
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: Model has nuisance parameters, will do profile construction" << std::endl;
 
     // set nbins for the POI
     for (auto *myarg2 : static_range_cast<RooRealVar *>(*fModel.GetParametersOfInterest())){
@@ -167,7 +167,7 @@ void FeldmanCousins::CreateParameterPoints() const{
       parameterScan = new RooDataHist("parameterScan", "", *fModel.GetParametersOfInterest());
     }
 
-    ooccoutP(&fModel,Generation) << "FeldmanCousins: # points to test = " << parameterScan->numEntries() << endl;
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: # points to test = " << parameterScan->numEntries() << std::endl;
     // make profile construction
     RooFit::MsgLevel previous  = RooMsgService::instance().globalKillBelow();
     RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
@@ -193,14 +193,14 @@ void FeldmanCousins::CreateParameterPoints() const{
 
   } else{
     // Do full construction
-    ooccoutP(&fModel,Generation) << "FeldmanCousins: Model has no nuisance parameters" << endl;
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: Model has no nuisance parameters" << std::endl;
 
     for (auto *myarg : static_range_cast<RooRealVar *>(*parameters)){
       myarg->setBins(fNbins);
     }
 
     RooDataHist* parameterScan = new RooDataHist("parameterScan", "", *parameters);
-    ooccoutP(&fModel,Generation) << "FeldmanCousins: # points to test = " << parameterScan->numEntries() << endl;
+    ooccoutP(&fModel,Generation) << "FeldmanCousins: # points to test = " << parameterScan->numEntries() << std::endl;
 
     fPointsToTest = parameterScan;
   }

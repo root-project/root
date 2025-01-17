@@ -590,7 +590,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
       if (_paramFixed[par->GetName()] != par->isConstant()) {
    cxcoutI(Minimization) << "RooStats::HistFactory::RooBarlowBeestonLL::evaluate(" << GetName() << ") constant status of parameter " << par->GetName() << " has changed from "
             << (_paramFixed[par->GetName()]?"fixed":"floating") << " to " << (par->isConstant()?"fixed":"floating")
-            << ", recalculating absolute minimum" << endl ;
+            << ", recalculating absolute minimum" << std::endl ;
    _absMinValid = false ;
    break ;
       }
@@ -601,7 +601,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
   // If we don't have the absolute minimum w.r.t all observables, calculate that first
   if (!_absMinValid) {
 
-    cxcoutI(Minimization) << "RooStats::HistFactory::RooBarlowBeestonLL::evaluate(" << GetName() << ") determining minimum likelihood for current configurations w.r.t all observable" << endl ;
+    cxcoutI(Minimization) << "RooStats::HistFactory::RooBarlowBeestonLL::evaluate(" << GetName() << ") determining minimum likelihood for current configurations w.r.t all observable" << std::endl ;
 
 
     // Save current values of non-marginalized parameters
@@ -649,7 +649,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
    ccxcoutI(Minimization) << (first?"":", ") << arg->GetName() << "=" << arg->getVal() ;
    first=false ;
       }
-      ccxcoutI(Minimization) << ")" << endl ;
+      ccxcoutI(Minimization) << ")" << std::endl ;
     }
 
     // Restore original parameter values

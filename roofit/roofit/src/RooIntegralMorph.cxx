@@ -283,7 +283,7 @@ RooIntegralMorph::MorphCacheElem::~MorphCacheElem()
 double RooIntegralMorph::MorphCacheElem::calcX(double y, bool& ok)
 {
   if (y<0 || y>1) {
-    oocoutW(_self,Eval) << "RooIntegralMorph::MorphCacheElem::calcX() WARNING: requested root finding for unphysical CDF value " << y << endl ;
+    oocoutW(_self,Eval) << "RooIntegralMorph::MorphCacheElem::calcX() WARNING: requested root finding for unphysical CDF value " << y << std::endl ;
   }
   double x1;
   double x2;
@@ -385,7 +385,7 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
     if (std::abs(xOffset/binw)>1e-3) {
       double slope = (_yatX[i+1]-_yatX[i-1])/(_calcX[i+1]-_calcX[i-1]) ;
       double newY = _yatX[i] + slope*xOffset ;
-      //cout << "bin " << i << " needs to be re-centered " << xOffset/binw << " slope = " << slope << " origY = " << _yatX[i] << " newY = " << newY << endl ;
+      //cout << "bin " << i << " needs to be re-centered " << xOffset/binw << " slope = " << slope << " origY = " << _yatX[i] << " newY = " << newY << std::endl ;
       _yatX[i] = newY ;
     }
   }
@@ -434,7 +434,7 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
   pdf()->setUnitNorm(true) ;
   _self->x = xsave ;
 
-  oocxcoutD(_self,Eval) << "RooIntegralMorph::MorphCacheElem::calculate(" << _self->GetName() << ") calculation required " << _ccounter << " samplings of cdfs" << endl ;
+  oocxcoutD(_self,Eval) << "RooIntegralMorph::MorphCacheElem::calculate(" << _self->GetName() << ") calculation required " << _ccounter << " samplings of cdfs" << std::endl ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -446,15 +446,15 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
 void RooIntegralMorph::MorphCacheElem::fillGap(Int_t ixlo, Int_t ixhi, double splitPoint)
 {
   // CONVENTION: _yatX[ixlo] is filled, _yatX[ixhi] is filled, elements in between are empty
-  //   cout << "fillGap: gap from _yatX[" << ixlo << "]=" << _yatX[ixlo] << " to _yatX[" << ixhi << "]=" << _yatX[ixhi] << ", size = " << ixhi-ixlo << endl ;
+  //   std::cout << "fillGap: gap from _yatX[" << ixlo << "]=" << _yatX[ixlo] << " to _yatX[" << ixhi << "]=" << _yatX[ixhi] << ", size = " << ixhi-ixlo << std::endl ;
 
   if (_yatX[ixlo]<0) {
     oocoutE(_self,Eval) << "RooIntegralMorph::MorphCacheElme::fillGap(" << _self->GetName() << "): ERROR in fillgap " << ixlo << " = " << ixhi
-         << " splitPoint= " << splitPoint << " _yatX[ixlo] = " << _yatX[ixlo] << endl ;
+         << " splitPoint= " << splitPoint << " _yatX[ixlo] = " << _yatX[ixlo] << std::endl ;
   }
   if (_yatX[ixhi]<0) {
     oocoutE(_self,Eval) << "RooIntegralMorph::MorphCacheElme::fillGap(" << _self->GetName() << "): ERROR in fillgap " << ixlo << " = " << ixhi
-         << " splitPoint " << splitPoint << " _yatX[ixhi] = " << _yatX[ixhi] << endl ;
+         << " splitPoint " << splitPoint << " _yatX[ixhi] = " << _yatX[ixhi] << std::endl ;
   }
 
   // Determine where half-way Y value lands
@@ -463,7 +463,7 @@ void RooIntegralMorph::MorphCacheElem::fillGap(Int_t ixlo, Int_t ixhi, double sp
   double Xmid = calcX(ymid,ok) ;
   if (!ok) {
     oocoutW(_self,Eval) << "RooIntegralMorph::MorphCacheElem::fillGap(" << _self->GetName() << ") unable to calculate midpoint in gap ["
-         << ixlo << "," << ixhi << "], resorting to interpolation" << endl ;
+         << ixlo << "," << ixhi << "], resorting to interpolation" << std::endl ;
     interpolateGap(ixlo,ixhi) ;
   }
 
@@ -529,7 +529,7 @@ void RooIntegralMorph::MorphCacheElem::fillGap(Int_t ixlo, Int_t ixhi, double sp
 
 void RooIntegralMorph::MorphCacheElem::interpolateGap(Int_t ixlo, Int_t ixhi)
 {
-  //cout << "filling gap with linear interpolation ixlo=" << ixlo << " ixhi=" << ixhi << endl ;
+  //cout << "filling gap with linear interpolation ixlo=" << ixlo << " ixhi=" << ixhi << std::endl ;
 
   double xmax = _x->getMax("cache") ;
   double xmin = _x->getMin("cache") ;
@@ -575,7 +575,7 @@ void RooIntegralMorph::MorphCacheElem::findRange()
   while(true) {
     ok &= _rf1->findRoot(x1,xmin,xmax,ymin) ;
     ok &= _rf2->findRoot(x2,xmin,xmax,ymin) ;
-    oocxcoutD(_self,Eval) << "RooIntegralMorph::MorphCacheElem::findRange(" << _self->GetName() << ") findMin: x1 = " << x1 << " x2 = " << x2 << " ok = " << (ok?"T":"F") << endl ;
+    oocxcoutD(_self,Eval) << "RooIntegralMorph::MorphCacheElem::findRange(" << _self->GetName() << ") findMin: x1 = " << x1 << " x2 = " << x2 << " ok = " << (ok?"T":"F") << std::endl ;
 
     // Terminate in case of non-convergence
     if (!ok) break ;
@@ -613,7 +613,7 @@ void RooIntegralMorph::MorphCacheElem::findRange()
     ok &= _rf1->findRoot(x1,xmin,xmax,1-deltaymax) ;
     ok &= _rf2->findRoot(x2,xmin,xmax,1-deltaymax) ;
 
-    oocxcoutD(_self,Eval) << "RooIntegralMorph::MorphCacheElem::findRange(" << _self->GetName() << ") findMax: x1 = " << x1 << " x2 = " << x2 << " ok = " << (ok?"T":"F") << endl ;
+    oocxcoutD(_self,Eval) << "RooIntegralMorph::MorphCacheElem::findRange(" << _self->GetName() << ") findMax: x1 = " << x1 << " x2 = " << x2 << " ok = " << (ok?"T":"F") << std::endl ;
 
     // Terminate in case of non-convergence
     if (!ok) break ;
@@ -646,8 +646,8 @@ void RooIntegralMorph::MorphCacheElem::findRange()
   // Initialize values out of range to 'out-of-range' (-2)
   for (int i=0 ; i<_yatXmin ; i++)  _yatX[i] = -2 ;
   for (int i=_yatXmax+1 ; i<nbins; i++) _yatX[i] = -2 ;
-  oocxcoutD(_self,Eval) << "RooIntegralMorph::findRange(" << _self->GetName() << "): ymin = " << _yatX[_yatXmin] << " ymax = " << _yatX[_yatXmax] << endl;
-  oocxcoutD(_self,Eval) << "RooIntegralMorph::findRange(" << _self->GetName() << "): xmin = " << _calcX[_yatXmin] << " xmax = " << _calcX[_yatXmax] << endl;
+  oocxcoutD(_self,Eval) << "RooIntegralMorph::findRange(" << _self->GetName() << "): ymin = " << _yatX[_yatXmin] << " ymax = " << _yatX[_yatXmax] << std::endl;
+  oocxcoutD(_self,Eval) << "RooIntegralMorph::findRange(" << _self->GetName() << "): xmin = " << _calcX[_yatXmin] << " xmax = " << _calcX[_yatXmax] << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

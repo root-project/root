@@ -96,7 +96,7 @@ RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
   for(TObject * obj : tcoll) {
     if (!dynamic_cast<RooAbsArg*>(obj)) {
       coutW(InputArguments) << "RooArgList::RooArgList(TCollection) element " << obj->GetName()
-             << " is not a RooAbsArg, ignored" << endl ;
+             << " is not a RooAbsArg, ignored" << std::endl ;
       continue ;
     }
     add(*static_cast<RooAbsArg*>(obj)) ;
@@ -138,7 +138,7 @@ RooArgList::~RooArgList()
 void RooArgList::writeToStream(ostream& os, bool compact)
 {
   if (!compact) {
-    coutE(InputArguments) << "RooArgList::writeToStream(" << GetName() << ") non-compact mode not supported" << endl ;
+    coutE(InputArguments) << "RooArgList::writeToStream(" << GetName() << ") non-compact mode not supported" << std::endl ;
     return ;
   }
 
@@ -146,7 +146,7 @@ void RooArgList::writeToStream(ostream& os, bool compact)
     obj->writeToStream(os,true);
     os << " " ;
   }
-  os << endl ;
+  os << std::endl ;
 }
 
 
@@ -161,7 +161,7 @@ void RooArgList::writeToStream(ostream& os, bool compact)
 bool RooArgList::readFromStream(istream& is, bool compact, bool verbose)
 {
   if (!compact) {
-    coutE(InputArguments) << "RooArgList::readFromStream(" << GetName() << ") non-compact mode not supported" << endl ;
+    coutE(InputArguments) << "RooArgList::readFromStream(" << GetName() << ") non-compact mode not supported" << std::endl ;
     return true ;
   }
 
@@ -181,7 +181,7 @@ bool RooArgList::readFromStream(istream& is, bool compact, bool verbose)
     TString rest = parser.readLine() ;
     if (verbose) {
       coutW(InputArguments) << "RooArgSet::readFromStream(" << GetName()
-             << "): ignoring extra characters at end of line: '" << rest << "'" << endl ;
+             << "): ignoring extra characters at end of line: '" << rest << "'" << std::endl ;
     }
   }
 

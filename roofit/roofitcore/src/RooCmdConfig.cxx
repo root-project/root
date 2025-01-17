@@ -46,8 +46,6 @@ typename Collection::const_iterator findVar(Collection const& coll, const char *
 }
 
 
-using std::cout, std::endl;
-
 ClassImp(RooCmdConfig);
 
 
@@ -143,7 +141,7 @@ void RooCmdConfig::defineDependency(const char* refArgName, const char* neededAr
 bool RooCmdConfig::defineInt(const char* name, const char* argName, int intNum, int defVal)
 {
   if (findVar(_iList, name) != _iList.end()) {
-    coutE(InputArguments) << "RooCmdConfig::defineInt: name '" << name << "' already defined" << endl ;
+    coutE(InputArguments) << "RooCmdConfig::defineInt: name '" << name << "' already defined" << std::endl ;
     return true ;
   }
 
@@ -165,7 +163,7 @@ bool RooCmdConfig::defineInt(const char* name, const char* argName, int intNum, 
 bool RooCmdConfig::defineDouble(const char* name, const char* argName, int doubleNum, double defVal)
 {
   if (findVar(_dList, name) != _dList.end()) {
-    coutE(InputArguments) << "RooCmdConfig::defineDouble: name '" << name << "' already defined" << endl ;
+    coutE(InputArguments) << "RooCmdConfig::defineDouble: name '" << name << "' already defined" << std::endl ;
     return true ;
   }
 
@@ -189,7 +187,7 @@ bool RooCmdConfig::defineDouble(const char* name, const char* argName, int doubl
 bool RooCmdConfig::defineString(const char* name, const char* argName, int stringNum, const char* defVal, bool appendMode)
 {
   if (findVar(_sList, name) != _sList.end()) {
-    coutE(InputArguments) << "RooCmdConfig::defineString: name '" << name << "' already defined" << endl ;
+    coutE(InputArguments) << "RooCmdConfig::defineString: name '" << name << "' already defined" << std::endl ;
     return true ;
   }
 
@@ -215,7 +213,7 @@ bool RooCmdConfig::defineObject(const char* name, const char* argName, int setNu
 {
 
   if (findVar(_oList, name) != _oList.end()) {
-    coutE(InputArguments) << "RooCmdConfig::defineObject: name '" << name << "' already defined" << endl ;
+    coutE(InputArguments) << "RooCmdConfig::defineObject: name '" << name << "' already defined" << std::endl ;
     return true ;
   }
 
@@ -241,7 +239,7 @@ bool RooCmdConfig::defineSet(const char* name, const char* argName, int setNum, 
 {
 
   if (findVar(_cList, name) != _cList.end()) {
-    coutE(InputArguments) << "RooCmdConfig::defineObject: name '" << name << "' already defined" << endl ;
+    coutE(InputArguments) << "RooCmdConfig::defineObject: name '" << name << "' already defined" << std::endl ;
     return true ;
   }
 
@@ -263,28 +261,28 @@ void RooCmdConfig::print() const
 {
   // Find registered integer fields for this opcode
   for(auto const& ri : _iList) {
-    cout << ri.name << "[int] = " << ri.val << endl ;
+    std::cout << ri.name << "[int] = " << ri.val << std::endl ;
   }
 
   // Find registered double fields for this opcode
   for(auto const& rd : _dList) {
-    cout << rd.name << "[double] = " << rd.val << endl ;
+    std::cout << rd.name << "[double] = " << rd.val << std::endl ;
   }
 
   // Find registered string fields for this opcode
   for(auto const& rs : _sList) {
-    cout << rs.name << "[string] = \"" << rs.val << "\"" << endl ;
+    std::cout << rs.name << "[string] = \"" << rs.val << "\"" << std::endl ;
   }
 
   // Find registered argset fields for this opcode
   for(auto const& ro : _oList) {
-    cout << ro.name << "[TObject] = " ;
+    std::cout << ro.name << "[TObject] = " ;
     auto const * obj = ro.val.At(0);
     if (obj) {
-      cout << obj->GetName() << endl ;
+      std::cout << obj->GetName() << std::endl ;
     } else {
 
-      cout << "(null)" << endl ;
+      std::cout << "(null)" << std::endl ;
     }
   }
 }
@@ -318,7 +316,7 @@ bool RooCmdConfig::process(const RooCmdArg& arg)
 
   // Check if not forbidden
   if (_fList.FindObject(opc)) {
-    coutE(InputArguments) << _name << " ERROR: argument " << opc << " not allowed in this context" << endl ;
+    coutE(InputArguments) << _name << " ERROR: argument " << opc << " not allowed in this context" << std::endl ;
     _error = true ;
     return true ;
   }
@@ -330,12 +328,12 @@ bool RooCmdConfig::process(const RooCmdArg& arg)
     if (!_pList.FindObject(dep->GetTitle())) {
       _rList.Add(new TObjString(dep->GetTitle())) ;
       if (_verbose) {
-   cout << "RooCmdConfig::process: " << opc << " has unprocessed dependent " << dep->GetTitle()
-        << ", adding to required list" << endl ;
+   std::cout << "RooCmdConfig::process: " << opc << " has unprocessed dependent " << dep->GetTitle()
+        << ", adding to required list" << std::endl ;
       }
     } else {
       if (_verbose) {
-   cout << "RooCmdConfig::process: " << opc << " dependent " << dep->GetTitle() << " is already processed" << endl ;
+   std::cout << "RooCmdConfig::process: " << opc << " dependent " << dep->GetTitle() << " is already processed" << std::endl ;
       }
     }
   }
@@ -344,8 +342,8 @@ bool RooCmdConfig::process(const RooCmdArg& arg)
   TObject * mutex = _mList.FindObject(opc) ;
   if (mutex) {
     if (_verbose) {
-      cout << "RooCmdConfig::process: " << opc << " excludes " << mutex->GetTitle()
-      << ", adding to forbidden list" << endl ;
+      std::cout << "RooCmdConfig::process: " << opc << " excludes " << mutex->GetTitle()
+      << ", adding to forbidden list" << std::endl ;
     }
     _fList.Add(new TObjString(mutex->GetTitle())) ;
   }
@@ -359,7 +357,7 @@ bool RooCmdConfig::process(const RooCmdArg& arg)
       ri.val = arg.getInt(ri.num) ;
       anyField = true ;
       if (_verbose) {
-   cout << "RooCmdConfig::process " << ri.name << "[int]" << " set to " << ri.val << endl ;
+   std::cout << "RooCmdConfig::process " << ri.name << "[int]" << " set to " << ri.val << std::endl ;
       }
     }
   }
@@ -370,7 +368,7 @@ bool RooCmdConfig::process(const RooCmdArg& arg)
       rd.val = arg.getDouble(rd.num) ;
       anyField = true ;
       if (_verbose) {
-   cout << "RooCmdConfig::process " << rd.name << "[double]" << " set to " << rd.val << endl ;
+   std::cout << "RooCmdConfig::process " << rd.name << "[double]" << " set to " << rd.val << std::endl ;
       }
     }
   }
@@ -402,11 +400,11 @@ bool RooCmdConfig::process(const RooCmdArg& arg)
       os.val.Add(const_cast<TObject*>(arg.getObject(os.num)));
       anyField = true ;
       if (_verbose) {
-   cout << "RooCmdConfig::process " << os.name << "[TObject]" << " set to " ;
+   std::cout << "RooCmdConfig::process " << os.name << "[TObject]" << " set to " ;
    if (os.val.At(0)) {
-     cout << os.val.At(0)->GetName() << endl ;
+     std::cout << os.val.At(0)->GetName() << std::endl ;
    } else {
-     cout << "(null)" << endl ;
+     std::cout << "(null)" << std::endl ;
    }
       }
     }
@@ -418,11 +416,11 @@ bool RooCmdConfig::process(const RooCmdArg& arg)
       cs.val = const_cast<RooArgSet*>(arg.getSet(cs.num));
       anyField = true ;
       if (_verbose) {
-   cout << "RooCmdConfig::process " << cs.name << "[RooArgSet]" << " set to " ;
+   std::cout << "RooCmdConfig::process " << cs.name << "[RooArgSet]" << " set to " ;
    if (cs.val) {
-     cout << cs.val->GetName() << endl ;
+     std::cout << cs.val->GetName() << std::endl ;
    } else {
-     cout << "(null)" << endl ;
+     std::cout << "(null)" << std::endl ;
    }
       }
     }
@@ -431,7 +429,7 @@ bool RooCmdConfig::process(const RooCmdArg& arg)
   bool multiArg = !TString("MultiArg").CompareTo(opc) ;
 
   if (!anyField && !_allowUndefined && !multiArg) {
-    coutE(InputArguments) << _name << " ERROR: unrecognized command: " << opc << endl ;
+    coutE(InputArguments) << _name << " ERROR: unrecognized command: " << opc << std::endl ;
   }
 
 
@@ -557,9 +555,9 @@ bool RooCmdConfig::ok(bool verbose) const
   if (verbose) {
     std::string margs = missingArgs() ;
     if (!margs.empty()) {
-      coutE(InputArguments) << _name << " ERROR: missing arguments: " << margs << endl ;
+      coutE(InputArguments) << _name << " ERROR: missing arguments: " << margs << std::endl ;
     } else {
-      coutE(InputArguments) << _name << " ERROR: illegal combination of arguments and/or missing arguments" << endl ;
+      coutE(InputArguments) << _name << " ERROR: illegal combination of arguments and/or missing arguments" << std::endl ;
     }
   }
   return false ;

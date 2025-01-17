@@ -30,7 +30,7 @@
 #include "TMath.h"
 #include "TH1.h"
 
-using std::cout, std::endl, std::string, std::vector;
+using std::string, std::vector;
 
 ClassImp(RooMomentMorphFunc)
 
@@ -84,12 +84,12 @@ RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooA
    for (auto *mref : mrefList) {
       if (!dynamic_cast<RooAbsReal *>(mref)) {
          coutE(InputArguments) << "RooMomentMorphFunc::ctor(" << GetName() << ") ERROR: mref " << mref->GetName()
-                               << " is not of type RooAbsReal" << endl;
+                               << " is not of type RooAbsReal" << std::endl;
          throw string("RooPolyMorh::ctor() ERROR mref is not of type RooAbsReal");
       }
       if (!dynamic_cast<RooConstVar *>(mref)) {
          coutW(InputArguments) << "RooMomentMorphFunc::ctor(" << GetName() << ") WARNING mref point " << i
-                               << " is not a constant, taking a snapshot of its value" << endl;
+                               << " is not a constant, taking a snapshot of its value" << std::endl;
       }
       (*_mref)[i] = static_cast<RooAbsReal *>(mref)->getVal();
       ++i;
@@ -132,7 +132,7 @@ void RooMomentMorphFunc::initialize()
 
    // other quantities needed
    if (nPdf != _mref->GetNrows()) {
-      coutE(InputArguments) << "RooMomentMorphFunc::initialize(" << GetName() << ") ERROR: nPdf != nRefPoints" << endl;
+      coutE(InputArguments) << "RooMomentMorphFunc::initialize(" << GetName() << ") ERROR: nPdf != nRefPoints" << std::endl;
       assert(0);
    }
 
@@ -387,7 +387,7 @@ void RooMomentMorphFunc::CacheElem::calculateFractions(const RooMomentMorphFunc 
       // fractions for rms and mean
       const_cast<RooRealVar *>(frac(nPdf + i))->setVal(ffrac);
       if (verbose) {
-         cout << ffrac << endl;
+         std::cout << ffrac << std::endl;
       }
    }
 

@@ -145,15 +145,15 @@ RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* inBasis, RooA
   // Check that primary variable of basis functions is our convolution variable
   if (inBasis->getParameter(0) != x.absArg()) {
     coutE(InputArguments) << "RooResolutionModel::convolution(" << GetName() << "," << this
-           << ") convolution parameter of basis function and PDF don't match" << endl
-           << "basis->findServer(0) = " << inBasis->findServer(0) << endl
-           << "x.absArg()           = " << x.absArg() << endl ;
+           << ") convolution parameter of basis function and PDF don't match" << std::endl
+           << "basis->findServer(0) = " << inBasis->findServer(0) << std::endl
+           << "x.absArg()           = " << x.absArg() << std::endl ;
     return nullptr ;
   }
 
   if (basisCode(inBasis->GetTitle())==0) {
     coutE(InputArguments) << "RooResolutionModel::convolution(" << GetName() << "," << this
-           << ") basis function '" << inBasis->GetTitle() << "' is not supported." << endl ;
+           << ") basis function '" << inBasis->GetTitle() << "' is not supported." << std::endl ;
     return nullptr ;
   }
 
@@ -234,7 +234,7 @@ double RooResolutionModel::getValV(const RooArgSet* nset) const
     _value = evaluate() ;
 
     // WVE insert traceEval traceEval
-    if (_verboseDirty) cxcoutD(Tracing) << "RooResolutionModel(" << GetName() << ") value = " << _value << endl ;
+    if (_verboseDirty) cxcoutD(Tracing) << "RooResolutionModel(" << GetName() << ") value = " << _value << std::endl ;
 
     clearValueDirty() ;
     clearShapeDirty() ;
@@ -306,7 +306,7 @@ double RooResolutionModel::getNorm(const RooArgSet* nset) const
 
   syncNormalization(nset,false) ;
   if (_verboseEval>1) cxcoutD(Tracing) << ClassName() << "::getNorm(" << GetName()
-                   << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
+                   << "): norm(" << _norm << ") = " << _norm->getVal() << std::endl ;
 
   double ret = _norm->getVal() ;
   return ret ;
@@ -326,12 +326,12 @@ void RooResolutionModel::printMultiline(ostream& os, Int_t content, bool verbose
   RooAbsPdf::printMultiline(os,content,verbose,indent) ;
 
   if(verbose) {
-    os << indent << "--- RooResolutionModel ---" << endl;
+    os << indent << "--- RooResolutionModel ---" << std::endl;
     os << indent << "basis function = " ;
     if (_basis) {
       _basis->printStream(os,kName|kAddress|kTitle,kSingleLine,indent) ;
     } else {
-      os << "<none>" << endl ;
+      os << "<none>" << std::endl ;
     }
   }
 }

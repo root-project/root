@@ -42,7 +42,7 @@ in the input dataset.
 
 #include "TError.h"
 
-using std::cout, std::endl, std::string, std::vector, std::pair, std::map;
+using std::string, std::vector, std::pair, std::map;
 
 ClassImp(RooNDKeysPdf);
 
@@ -108,7 +108,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
   if(int( _varList.size()) != rho.GetNrows() ) {
      coutE(InputArguments)
         << "ERROR:  RooNDKeysPdf::RooNDKeysPdf() : The vector-size of rho is different from that of varList."
-        << "Unable to create the PDF." << endl;
+        << "Unable to create the PDF." << std::endl;
      R__ASSERT(int(_varList.size()) == rho.GetNrows());
   }
 
@@ -117,7 +117,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
   // and that _rho has already been set ...
   _rho.resize( rho.GetNrows() );
   for (Int_t j = 0; j < rho.GetNrows(); j++) {
-     _rho[j] = rho[j]; /*cout<<"RooNDKeysPdf ctor, _rho["<<j<<"]="<<_rho[j]<<endl;*/
+     _rho[j] = rho[j]; /*cout<<"RooNDKeysPdf ctor, _rho["<<j<<"]="<<_rho[j]<< std::endl;*/
   }
 
   createPdf(true, data); // calls initialize ...
@@ -141,7 +141,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
       const auto rho = rhoList.at(i);
       if (!dynamic_cast<const RooAbsReal *>(rho)) {
          coutE(InputArguments) << "RooNDKeysPdf::ctor(" << GetName() << ") ERROR: parameter " << rho->GetName()
-                               << " is not of type RooRealVar" << endl;
+                               << " is not of type RooRealVar" << std::endl;
          assert(0);
       }
       _rhoList.add(*rho);
@@ -151,7 +151,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
    // copy rho widths
    if ((_varList.size() != _rhoList.size())) {
       coutE(InputArguments) << "ERROR:  RooNDKeysPdf::RooNDKeysPdf() : The size of rhoList is different from varList."
-                            << "Unable to create the PDF." << endl;
+                            << "Unable to create the PDF." << std::endl;
       assert(_varList.size() == _rhoList.size());
    }
 
@@ -181,7 +181,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
       const auto rho = rhoList.at(i);
       if (!dynamic_cast<RooAbsReal *>(rho)) {
          coutE(InputArguments) << "RooNDKeysPdf::ctor(" << GetName() << ") ERROR: parameter " << rho->GetName()
-                               << " is not of type RooRealVar" << endl;
+                               << " is not of type RooRealVar" << std::endl;
          assert(0);
       }
       _rhoList.add(*rho);
@@ -190,7 +190,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList
 
    if ((_varList.size() != _rhoList.size())) {
       coutE(InputArguments) << "ERROR:  RooNDKeysPdf::RooNDKeysPdf() : The size of rhoList is different from varList."
-                            << "Unable to create the PDF." << endl;
+                            << "Unable to create the PDF." << std::endl;
       assert(_varList.size() == _rhoList.size());
    }
 
@@ -215,7 +215,7 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, c
    if (mirror != NoMirror) {
       if (mirror != MirrorBoth) {
          coutW(InputArguments) << "RooNDKeysPdf::RooNDKeysPdf() : Warning : asymmetric mirror(s) no longer supported."
-                               << endl;
+                               << std::endl;
       }
       _options = "m";
    }
@@ -384,12 +384,12 @@ void RooNDKeysPdf::setOptions()
          << "\n\tmirror           = " << _mirror
          << "\n\tdebug            = " << _debug
          << "\n\tverbose          = " << _verbose
-         << endl;
+         << std::endl;
 
   if (_nSigma<2.0) {
     coutW(InputArguments) << "RooNDKeysPdf::setOptions() : Warning : nSigma = " << _nSigma << " < 2.0. "
            << "Calculated normalization could be too large."
-           << endl;
+           << std::endl;
   }
 
   // number of adaptive width iterations. Default is 1.
@@ -416,13 +416,13 @@ void RooNDKeysPdf::initialize(RooDataSet const& data)
 
   if(_nDim==0) {
     coutE(InputArguments) << "ERROR:  RooNDKeysPdf::initialize() : The observable list is empty. "
-           << "Unable to begin generating the PDF." << endl;
+           << "Unable to begin generating the PDF." << std::endl;
     R__ASSERT (_nDim!=0);
   }
 
   if(_nEvents==0) {
     coutE(InputArguments) << "ERROR:  RooNDKeysPdf::initialize() : The input data set is empty. "
-           << "Unable to begin generating the PDF." << endl;
+           << "Unable to begin generating the PDF." << std::endl;
     R__ASSERT (_nEvents!=0);
   }
 
@@ -594,7 +594,7 @@ void RooNDKeysPdf::loadDataSet(bool firstCall, RooDataSet const& data)
 
   coutI(Contents) << "RooNDKeysPdf::loadDataSet(" << this << ")"
                   << "\n Number of events in dataset: " << _nEvents
-                  << "\n Weighted number of events in dataset: " << _nEventsW << endl;
+                  << "\n Weighted number of events in dataset: " << _nEventsW << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -610,8 +610,8 @@ void RooNDKeysPdf::mirrorDataSet()
      _xDatLo3s[j] = _xDatLo[j] + _nSigma * (_n * _sigma[j]);
      _xDatHi3s[j] = _xDatHi[j] - _nSigma * (_n * _sigma[j]);
 
-     // cout<<"xDatLo3s["<<j<<"]="<<_xDatLo3s[j]<<endl;
-     // cout<<"xDatHi3s["<<j<<"]="<<_xDatHi3s[j]<<endl;
+     // std::cout<<"xDatLo3s["<<j<<"]="<<_xDatLo3s[j]<< std::endl;
+     // std::cout<<"xDatHi3s["<<j<<"]="<<_xDatHi3s[j]<< std::endl;
   }
 
   vector<double> dummy(_nDim,0.);
@@ -705,7 +705,7 @@ void RooNDKeysPdf::loadWeightSet(RooDataSet const& data)
     //}
   }
 
-  coutI(Contents) << "RooNDKeysPdf::loadWeightSet(" << this << ") : Number of weighted events : " << _wMap.size() << endl;
+  coutI(Contents) << "RooNDKeysPdf::loadWeightSet(" << this << ") : Number of weighted events : " << _wMap.size() << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -725,10 +725,10 @@ void RooNDKeysPdf::calculateShell(BoxInfo* bi) const
     bi->xVarHiM3s[j] = bi->xVarHi[j] - _nSigma * (_n * _sigma[j]);
     bi->xVarHiP3s[j] = bi->xVarHi[j] + _nSigma * (_n * _sigma[j]);
 
-    //cout<<"bi->xVarLoM3s["<<j<<"]="<<bi->xVarLoM3s[j]<<endl;
-    //cout<<"bi->xVarLoP3s["<<j<<"]="<<bi->xVarLoP3s[j]<<endl;
-    //cout<<"bi->xVarHiM3s["<<j<<"]="<<bi->xVarHiM3s[j]<<endl;
-    //cout<<"bi->xVarHiM3s["<<j<<"]="<<bi->xVarHiM3s[j]<<endl;
+    //cout<<"bi->xVarLoM3s["<<j<<"]="<<bi->xVarLoM3s[j]<< std::endl;
+    //cout<<"bi->xVarLoP3s["<<j<<"]="<<bi->xVarLoP3s[j]<< std::endl;
+    //cout<<"bi->xVarHiM3s["<<j<<"]="<<bi->xVarHiM3s[j]<< std::endl;
+    //cout<<"bi->xVarHiM3s["<<j<<"]="<<bi->xVarHiM3s[j]<< std::endl;
   }
 
   //for (Int_t i=0; i<_nEventsM; i++) {
@@ -777,7 +777,7 @@ void RooNDKeysPdf::calculateShell(BoxInfo* bi) const
         << "\n Events in shell " << bi->sIdcs.size()
         << "\n Events in box " << bi->bIdcs.size()
         << "\n Events in box and shell " << bi->bpsIdcs.size()
-        << endl;
+        << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -797,7 +797,7 @@ void RooNDKeysPdf::calculatePreNorm(BoxInfo* bi) const
   cxcoutD(Eval) << "RooNDKeysPdf::calculatePreNorm() : "
          << "\n nEventsBMSW " << bi->nEventsBMSW
          << "\n nEventsBW " << bi->nEventsBW
-         << endl;
+         << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -836,7 +836,7 @@ void RooNDKeysPdf::sortDataIndices(BoxInfo* bi)
   }
 
   for (Int_t j=0; j<_nDim; j++) {
-    cxcoutD(Eval) << "RooNDKeysPdf::sortDataIndices() : Number of sorted events : " << _sortTVIdcs[j].size() << endl;
+    cxcoutD(Eval) << "RooNDKeysPdf::sortDataIndices() : Number of sorted events : " << _sortTVIdcs[j].size() << std::endl;
   }
 }
 
@@ -844,7 +844,7 @@ void RooNDKeysPdf::sortDataIndices(BoxInfo* bi)
 
 void RooNDKeysPdf::calculateBandWidth()
 {
-  cxcoutD(Eval) << "RooNDKeysPdf::calculateBandWidth()" << endl;
+  cxcoutD(Eval) << "RooNDKeysPdf::calculateBandWidth()" << std::endl;
 
   const bool adaptive = _options.Contains("a");
   if (_weights != &_weights1 || _weights != &_weights0) {
@@ -855,7 +855,7 @@ void RooNDKeysPdf::calculateBandWidth()
   // (default, and needed to calculate adaptive bandwidth)
 
   if(!adaptive) {
-      cxcoutD(Eval) << "RooNDKeysPdf::calculateBandWidth() Using static bandwidth." << endl;
+      cxcoutD(Eval) << "RooNDKeysPdf::calculateBandWidth() Using static bandwidth." << std::endl;
   }
 
   // fixed width approximation
@@ -863,13 +863,13 @@ void RooNDKeysPdf::calculateBandWidth()
     vector<double>& weight = _weights0[i];
     for (Int_t j = 0; j < _nDim; j++) {
        weight[j] = _n * (*_sigmaR)[j];
-       // cout<<"j: "<<j<<", _n: "<<_n<<", sigmaR="<<(*_sigmaR)[j]<<", weight="<<weight[j]<<endl;
+       // std::cout<<"j: "<<j<<", _n: "<<_n<<", sigmaR="<<(*_sigmaR)[j]<<", weight="<<weight[j]<< std::endl;
     }
   }
 
   // adaptive width
   if (adaptive) {
-     cxcoutD(Eval) << "RooNDKeysPdf::calculateBandWidth() Using adaptive bandwidth." << endl;
+     cxcoutD(Eval) << "RooNDKeysPdf::calculateBandWidth() Using adaptive bandwidth." << std::endl;
 
      double sqrt12 = sqrt(12.);
      double sqrtSigmaAvgR = sqrt(_sigmaAvgR);
@@ -880,11 +880,11 @@ void RooNDKeysPdf::calculateBandWidth()
      std::vector<std::vector<double>> *weights_prev(nullptr);
      std::vector<std::vector<double>> *weights_new(nullptr);
 
-     // cout << "Number of adaptive iterations: " << _nAdpt << endl;
+     // std::cout << "Number of adaptive iterations: " << _nAdpt << std::endl;
 
      for (Int_t k = 1; k <= _nAdpt; ++k) {
 
-        // cout << "  Cycle: " << k << endl;
+        // std::cout << "  Cycle: " << k << std::endl;
 
         // if multiple adaptive iterations, need to swap weight sets
         if (k % 2) {
@@ -958,7 +958,7 @@ double RooNDKeysPdf::gauss(vector<double>& x, vector<vector<double> >& weights) 
         double r = (*_dx)[j]; // x[j] - point[j];
         double c = 1. / (2. * weight[j] * weight[j]);
 
-        // cout << "j = " << j << " x[j] = " << point[j] << " w = " << weight[j] << endl;
+        // std::cout << "j = " << j << " x[j] = " << point[j] << " w = " << weight[j] << std::endl;
 
         g *= exp(-c * r * r);
         g *= 1. / (sqrt2pi * weight[j]);
@@ -1091,7 +1091,7 @@ double RooNDKeysPdf::evaluate() const
    }
 
   double val = gauss(_x,*_weights);
-  //cout<<"returning "<<val<<endl;
+  //cout<<"returning "<<val<< std::endl;
 
   if (val >= 1E-20) {
      return val;
@@ -1120,7 +1120,7 @@ double RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
   checkInitWeights();
 
   cxcoutD(Eval) << "Calling RooNDKeysPdf::analyticalIntegral(" << GetName() << ") with code " << code
-         << " and rangeName " << (rangeName?rangeName:"<none>") << endl;
+         << " and rangeName " << (rangeName?rangeName:"<none>") << std::endl;
 
   // determine which observables need to be integrated over ...
   Int_t nComb = 1 << (_nDim);
@@ -1153,7 +1153,7 @@ double RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 
   // reset
   if (newBounds) {
-    cxcoutD(Eval) << "RooNDKeysPdf::analyticalIntegral() : Found new boundaries ... " << (rangeName?rangeName:"<none>") << endl;
+    cxcoutD(Eval) << "RooNDKeysPdf::analyticalIntegral() : Found new boundaries ... " << (rangeName?rangeName:"<none>") << std::endl;
     boxInfoInit(bi,rangeName,code);
   }
 
@@ -1171,7 +1171,7 @@ double RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 
   if (_mirror && bi->netFluxZ) {
     // KEYS expression is self-normalized
-    cxcoutD(Eval) << "RooNDKeysPdf::analyticalIntegral() : Using mirrored normalization : " << bi->nEventsBW << endl;
+    cxcoutD(Eval) << "RooNDKeysPdf::analyticalIntegral() : Using mirrored normalization : " << bi->nEventsBW << std::endl;
     return bi->nEventsBW;
   }
   // calculate leakage in and out of variable range box
@@ -1206,7 +1206,7 @@ double RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
       norm += prob * _wMap.at(_idx[bi->sIdcs[i]]);
     }
 
-    cxcoutD(Eval) << "RooNDKeysPdf::analyticalIntegral() : Final normalization : " << norm << " " << bi->nEventsBW << endl;
+    cxcoutD(Eval) << "RooNDKeysPdf::analyticalIntegral() : Final normalization : " << norm << " " << bi->nEventsBW << std::endl;
     return norm;
   }
 }
@@ -1222,7 +1222,7 @@ RooDataSet* RooNDKeysPdf::createDatasetFromHist(const RooArgList &varList, const
    for (const auto var : varList) {
       if (!dynamic_cast<RooRealVar *>(var)) {
          coutE(InputArguments) << "RooNDKeysPdf::createDatasetFromHist(" << GetName() << ") WARNING: variable "
-                               << var->GetName() << " is not of type RooRealVar. Skip." << endl;
+                               << var->GetName() << " is not of type RooRealVar. Skip." << std::endl;
          continue;
       }
       varVec.push_back(static_cast<RooRealVar *>(var)); // used for setting the variables.
@@ -1242,7 +1242,7 @@ RooDataSet* RooNDKeysPdf::createDatasetFromHist(const RooArgList &varList, const
 
    if (histndim > 3 || histndim <= 0) {
       coutE(InputArguments) << "RooNDKeysPdf::createDatasetFromHist(" << GetName()
-                            << ") ERROR: input histogram dimension not between [1-3]: " << histndim << endl;
+                            << ") ERROR: input histogram dimension not between [1-3]: " << histndim << std::endl;
       assert(0);
    }
 
@@ -1294,7 +1294,7 @@ TMatrixD RooNDKeysPdf::getWeights(const int &k) const
 
   TMatrixD mref(_nEvents, _nDim + 1);
 
-   cxcoutD(Eval) << "RooNDKeysPdf::getWeights() Return evaluated weights." << endl;
+   cxcoutD(Eval) << "RooNDKeysPdf::getWeights() Return evaluated weights." << std::endl;
 
    for (Int_t i = 0; i < _nEvents; ++i) {
       const vector<double>& x = _dataPts[i];

@@ -74,7 +74,7 @@ RooRangeBinning::RooRangeBinning(const RooRangeBinning& other, const char* name)
 void RooRangeBinning::setRange(double xlo, double xhi)
 {
   if (xlo>xhi) {
-    oocoutE(nullptr,InputArguments) << "RooRangeBinning::setRange: ERROR low bound > high bound" << endl ;
+    oocoutE(nullptr,InputArguments) << "RooRangeBinning::setRange: ERROR low bound > high bound" << std::endl ;
     return ;
   }
 

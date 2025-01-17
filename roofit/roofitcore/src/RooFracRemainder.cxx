@@ -52,7 +52,7 @@ RooFracRemainder::RooFracRemainder(const char* name, const char* title, const Ro
   for(RooAbsArg * comp : sumSet) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "RooFracRemainder::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
-             << " is not of type RooAbsReal" << endl ;
+             << " is not of type RooAbsReal" << std::endl ;
       RooErrorHandler::softAbort() ;
     }
     _set1.add(*comp) ;

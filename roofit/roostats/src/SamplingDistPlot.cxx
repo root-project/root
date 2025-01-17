@@ -37,7 +37,7 @@ objects.
 ClassImp(RooStats::SamplingDistPlot);
 
 using namespace RooStats;
-using std::cout, std::endl, std::string;
+using std::string;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// SamplingDistPlot default constructor with bin size
@@ -69,7 +69,7 @@ SamplingDistPlot::~SamplingDistPlot()
 double SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *samplingDist, Option_t *drawOptions) {
    fSamplingDistr = samplingDist->GetSamplingDistribution();
    if( fSamplingDistr.empty() ) {
-      coutW(Plotting) << "Empty sampling distribution given to plot. Skipping." << endl;
+      coutW(Plotting) << "Empty sampling distribution given to plot. Skipping." << std::endl;
       return 0.0;
    }
    SetSampleWeights(samplingDist);
@@ -89,7 +89,7 @@ double SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *sam
       }
    }
    if( xmin >= xmax ) {
-      coutW(Plotting) << "Could not determine xmin and xmax of sampling distribution that was given to plot." << endl;
+      coutW(Plotting) << "Could not determine xmin and xmax of sampling distribution that was given to plot." << std::endl;
       xmin = -1.0;
       xmax = 1.0;
    }
@@ -150,7 +150,7 @@ double SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *sam
 
 double SamplingDistPlot::AddSamplingDistributionShaded(const SamplingDistribution *samplingDist, double minShaded, double maxShaded, Option_t *drawOptions) {
    if( samplingDist->GetSamplingDistribution().empty() ) {
-      coutW(Plotting) << "Empty sampling distribution given to plot. Skipping." << endl;
+      coutW(Plotting) << "Empty sampling distribution given to plot. Skipping." << std::endl;
       return 0.0;
    }
    double scaleFactor = AddSamplingDistribution(samplingDist, drawOptions);
@@ -289,11 +289,11 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
    }
    fRooPlot->SetTitle("");
    if( !TMath::IsNaN(theYMax) ) {
-      //coutI(InputArguments) << "Setting maximum to " << theYMax << endl;
+      //coutI(InputArguments) << "Setting maximum to " << theYMax << std::endl;
       fRooPlot->SetMaximum(theYMax);
    }
    if( !TMath::IsNaN(theYMin) ) {
-      //coutI(InputArguments) << "Setting minimum to " << theYMin << endl;
+      //coutI(InputArguments) << "Setting minimum to " << theYMin << std::endl;
       fRooPlot->SetMinimum(theYMin);
    }
 
@@ -302,11 +302,11 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
       // add cloned objects to avoid mem leaks
       TH1 * cloneObj = static_cast<TH1*>(obj->Clone());
       if( !TMath::IsNaN(theYMax) ) {
-         //coutI(InputArguments) << "Setting maximum of TH1 to " << theYMax << endl;
+         //coutI(InputArguments) << "Setting maximum of TH1 to " << theYMax << std::endl;
          cloneObj->SetMaximum(theYMax);
       }
       if( !TMath::IsNaN(theYMin) ) {
-         //coutI(InputArguments) << "Setting minimum of TH1 to " << theYMin << endl;
+         //coutI(InputArguments) << "Setting minimum of TH1 to " << theYMin << std::endl;
          cloneObj->SetMinimum(theYMin);
       }
       cloneObj->SetDirectory(nullptr);  // transfer ownership of the object
@@ -322,11 +322,11 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
    if(fLegend) fRooPlot->addObject(fLegend);
 
    if(bool(gStyle->GetOptLogx()) != fLogXaxis) {
-      if(!fApplyStyle) coutW(Plotting) << "gStyle will be changed to adjust SetOptLogx(...)" << endl;
+      if(!fApplyStyle) coutW(Plotting) << "gStyle will be changed to adjust SetOptLogx(...)" << std::endl;
       gStyle->SetOptLogx(fLogXaxis);
    }
    if(bool(gStyle->GetOptLogy()) != fLogYaxis) {
-      if(!fApplyStyle) coutW(Plotting) << "gStyle will be changed to adjust SetOptLogy(...)" << endl;
+      if(!fApplyStyle) coutW(Plotting) << "gStyle will be changed to adjust SetOptLogy(...)" << std::endl;
       gStyle->SetOptLogy(fLogYaxis);
    }
    fRooPlot->Draw();
@@ -562,7 +562,7 @@ void SamplingDistPlot::DumpToFile(const char* RootFileName, Option_t *option, co
    // All the objects are written to rootfile
 
    if(!fRooPlot) {
-      cout << "Plot was not drawn yet. Dump can only be saved after it was drawn with Draw()." << endl;
+      std::cout << "Plot was not drawn yet. Dump can only be saved after it was drawn with Draw()." << std::endl;
       return;
    }
 

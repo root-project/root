@@ -35,7 +35,7 @@ Multivariate Gaussian p.d.f. with correlations
 #include "TDecompChol.h"
 #include "RooFitResult.h"
 
-using std::string, std::list, std::map, std::vector, std::cout, std::endl;
+using std::string, std::list, std::map, std::vector;
 
 ClassImp(RooMultiVarGaussian);
 
@@ -213,7 +213,7 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet
   if (nx>127) {
     // Warn that analytical integration is only provided for the first 127 observables
     coutW(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() << ") WARNING: p.d.f. has " << _x.size()
-             << " observables, analytical integration is only implemented for the first 127 observables" << endl ;
+             << " observables, analytical integration is only implemented for the first 127 observables" << std::endl ;
     nx=127 ;
   }
 
@@ -230,13 +230,13 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet
       RooRealVar* xi = static_cast<RooRealVar*>(_x.at(i)) ;
       if (xi->getMin(rangeName)<_muVec(i)-_z*sqrt(_cov(i,i)) && xi->getMax(rangeName) > _muVec(i)+_z*sqrt(_cov(i,i))) {
    cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName()
-              << ") Advertising analytical integral over " << xi->GetName() << " as range is >" << _z << " sigma" << endl ;
+              << ") Advertising analytical integral over " << xi->GetName() << " as range is >" << _z << " sigma" << std::endl ;
    bits.setBit(i) ;
    anyBits = true ;
    analVars.add(*allVars.find(_x.at(i)->GetName())) ;
       } else {
    cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() << ") Range of " << xi->GetName() << " is <"
-              << _z << " sigma, relying on numeric integral" << endl ;
+              << _z << " sigma, relying on numeric integral" << std::endl ;
       }
     }
 
@@ -246,13 +246,13 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet
       RooRealVar* pi = static_cast<RooRealVar*>(_mu.at(i)) ;
       if (pi->getMin(rangeName)<_muVec(i)-_z*sqrt(_cov(i,i)) && pi->getMax(rangeName) > _muVec(i)+_z*sqrt(_cov(i,i))) {
    cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName()
-              << ") Advertising analytical integral over " << pi->GetName() << " as range is >" << _z << " sigma" << endl ;
+              << ") Advertising analytical integral over " << pi->GetName() << " as range is >" << _z << " sigma" << std::endl ;
    bits.setBit(i) ;
    anyBits = true ;
    analVars.add(*allVars.find(_mu.at(i)->GetName())) ;
       } else {
    cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() << ") Range of " << pi->GetName() << " is <"
-              << _z << " sigma, relying on numeric integral" << endl ;
+              << _z << " sigma, relying on numeric integral" << std::endl ;
       }
     }
 
@@ -379,7 +379,7 @@ Int_t RooMultiVarGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &
   if (nx>127) {
     // Warn that analytical integration is only provided for the first 127 observables
     coutW(Integration) << "RooMultiVarGaussian::getGenerator(" << GetName() << ") WARNING: p.d.f. has " << _x.size()
-             << " observables, partial internal generation is only implemented for the first 127 observables" << endl ;
+             << " observables, partial internal generation is only implemented for the first 127 observables" << std::endl ;
     nx=127 ;
   }
 
@@ -597,7 +597,7 @@ RooMultiVarGaussian::GenData& RooMultiVarGaussian::genData(Int_t code) const
 void RooMultiVarGaussian::decodeCode(Int_t code, vector<int>& map1, vector<int>& map2) const
 {
   if (code<0 || code> (Int_t)_aicMap.size()) {
-    cout << "RooMultiVarGaussian::decodeCode(" << GetName() << ") ERROR don't have bit pattern for code " << code << endl ;
+    std::cout << "RooMultiVarGaussian::decodeCode(" << GetName() << ") ERROR don't have bit pattern for code " << code << std::endl ;
     throw string("RooMultiVarGaussian::decodeCode() ERROR don't have bit pattern for code") ;
   }
 

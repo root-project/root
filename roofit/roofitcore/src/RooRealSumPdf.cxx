@@ -385,7 +385,7 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooAbsReal const& caller, RooObjCac
   Int_t sterileIdx(-1) ;
   auto* cache = static_cast<CacheElem*>(normIntMgr.getObj(normSet.get(),&analVars,&sterileIdx,RooNameReg::ptr(rangeName)));
   if (cache) {
-    //cout << "RooRealSumPdf("<<this<<")::getAnalyticalIntegralWN:"<<GetName()<<"("<<allVars<<","<<analVars<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << " -> " << _normIntMgr.lastIndex()+1 << " (cached)" << endl;
+    //cout << "RooRealSumPdf("<<this<<")::getAnalyticalIntegralWN:"<<GetName()<<"("<<allVars<<","<<analVars<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << " -> " << _normIntMgr.lastIndex()+1 << " (cached)" << std::endl;
     return normIntMgr.lastIndex()+1 ;
   }
 
@@ -407,7 +407,7 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooAbsReal const& caller, RooObjCac
   // Store cache element
   Int_t code = normIntMgr.setObj(normSet.get(),&analVars,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName)) ;
 
-  //cout << "RooRealSumPdf("<<this<<")::getAnalyticalIntegralWN:"<<GetName()<<"("<<allVars<<","<<analVars<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << " -> " << code+1 << endl;
+  //cout << "RooRealSumPdf("<<this<<")::getAnalyticalIntegralWN:"<<GetName()<<"("<<allVars<<","<<analVars<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << " -> " << code+1 << std::endl;
   return code+1 ;
 }
 
@@ -420,9 +420,9 @@ RooRealSumPdf::getCacheElem(RooAbsReal const &caller, RooObjCacheManager &normIn
    // WVE needs adaptation for rangeName feature
    auto *cache = static_cast<CacheElem *>(normIntMgr.getObjByIndex(code - 1));
    if (cache == nullptr) { // revive the (sterilized) cache
-      // cout <<
+      // std::cout <<
       // "RooRealSumPdf("<<this<<")::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>")
-      // << ": reviving cache "<< endl;
+      // << ": reviving cache "<< std::endl;
       RooArgSet vars;
       caller.getParameters(nullptr, vars);
       RooArgSet iset = normIntMgr.selectFromSet2(vars, code - 1);
