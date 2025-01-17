@@ -148,7 +148,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install awscli==1.36.40
-        aws configure set default.s3.max_concurrent_requests 64
+        aws configure set default.s3.max_concurrent_requests 128
 
     - name: Sync documentation to S3
       working-directory: ${{ env.DOC_LOCATION }}

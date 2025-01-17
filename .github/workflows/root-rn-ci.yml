@@ -45,8 +45,8 @@ jobs:
       - name: Install AWS CLI
         run: |
           python -m pip install --upgrade pip
-          pip install awscli
-          aws configure set default.s3.max_concurrent_requests 200
+          pip install awscli==1.36.40
+          aws configure set default.s3.max_concurrent_requests 128
   
       - name: Sync documentation to S3
         env:
