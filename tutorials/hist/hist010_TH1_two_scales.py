@@ -10,12 +10,6 @@
 ##
 ## \author Alberto Ferro
 
-#include "TCanvas.h"
-#include "TStyle.h"
-#include "TH1.h"
-#include "TGaxis.h"
-#include "TRandom.h"
-
 import ROOT
 import numpy as np
 
