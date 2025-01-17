@@ -40,12 +40,15 @@ method.
 #include <mutex>
 
 // this is for the bvh acceleration stuff
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wunknown-pragmas"
-#pragma GCC diagnostic ignored "-Wattributes"
+#if defined(__GNUC__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wall"
+#  pragma GCC diagnostic ignored "-Wshadow"
+#  pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#  pragma GCC diagnostic ignored "-Wattributes"
+#elif defined (_MSC_VER)
+#  pragma warning( push )
+#  pragma warning( disable : 5051)
 #endif
 
 // V2 BVH
@@ -1488,6 +1491,8 @@ void TGeoParallelWorld::TestVoxelGrid()
    }
 }
 
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
+#if defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#elif defined (_MSC_VER)
+#  pragma warning( pop )
 #endif
