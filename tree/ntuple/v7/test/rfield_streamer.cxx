@@ -193,8 +193,8 @@ TEST(RField, StreamerMerge)
       std::vector<RPageSource *> sourcePtrs{sources[0].get(), sources[1].get()};
       auto destination = std::make_unique<RPageSinkFile>("ntpl", fileGuard3.GetPath(), RNTupleWriteOptions());
 
-      RNTupleMerger merger;
-      EXPECT_NO_THROW(merger.Merge(sourcePtrs, *destination));
+      RNTupleMerger merger{std::move(destination)};
+      EXPECT_NO_THROW(merger.Merge(sourcePtrs));
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard3.GetPath());

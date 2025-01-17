@@ -86,6 +86,7 @@ struct RNTupleMergeOptions {
  */
 // clang-format on
 class RNTupleMerger final {
+   std::unique_ptr<RPageSink> fDestination;
    std::unique_ptr<RPageAllocator> fPageAlloc;
    std::optional<TTaskGroup> fTaskGroup;
 
@@ -97,11 +98,11 @@ class RNTupleMerger final {
                             std::span<RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
 
 public:
-   RNTupleMerger();
+   /// Creates a RNTupleMerger with the given destination.
+   explicit RNTupleMerger(std::unique_ptr<RPageSink> destination);
 
    /// Merge a given set of sources into the destination.
-   RResult<void> Merge(std::span<RPageSource *> sources, RPageSink &destination,
-                       const RNTupleMergeOptions &mergeOpts = RNTupleMergeOptions());
+   RResult<void> Merge(std::span<RPageSource *> sources, const RNTupleMergeOptions &mergeOpts = RNTupleMergeOptions());
 
 }; // end of class RNTupleMerger
 
