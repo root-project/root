@@ -189,6 +189,12 @@ bool RModel::IsInitializedTensor(const std::string& tensorName) const {
     std::string name = UTILITY::Clean_name(tensorName);
     return fInitializedTensors.find(name) != fInitializedTensors.end();
 }
+bool RModel::IsConstantTensor(const std::string& tensorName) const {
+    std::string name = UTILITY::Clean_name(tensorName);
+    auto itr = fInitializedTensors.find(name);
+    if (itr == fInitializedTensors.end()) return false;
+    return itr->second.IsConstantTensor();
+}
 
 bool RModel::IsDynamicTensor(const std::string& tensorName) const {
    std::string name = UTILITY::Clean_name(tensorName);

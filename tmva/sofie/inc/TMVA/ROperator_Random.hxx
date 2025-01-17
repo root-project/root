@@ -63,11 +63,27 @@ public:
          model.AddNeededCustomHeader("TRandom3.h");
       }
 
+      // use default values
+      if (fMode == kNormal) {
+         if (fParams.count("mean") == 0 )
+            fParams["mean"] = 0;
+         if (fParams.count("scale") == 0)
+            fParams["scale"] = 1;
+      }
+      if (fMode == kUniform) {
+         if (fParams.count("low") == 0)
+            fParams["low"] = 0;
+         if (fParams.count("high") == 0)
+            fParams["high"] = 1;
+      }
+
       if (model.Verbose()) {
          std::cout << "Random";
          if (fMode == kNormal) std::cout << "Normal";
          else if (fMode == kUniform) std::cout << "Uniform";
          std::cout << " op  -> " << fNY << " : " << ConvertShapeToString(fShapeY) << std::endl;
+         for (auto & p : fParams)
+            std::cout << p.first << " : " << p.second << std::endl;
       }
    }
    // generate declaration code for random number generators
@@ -103,13 +119,13 @@ public:
       if (fUseROOT) {
          if (fMode == kNormal) {
             if (fParams.count("mean") == 0 || fParams.count("scale") == 0)
-              std::runtime_error("TMVA SOFIE RandomNormal op : no mean or scale are defined");
+               throw std::runtime_error("TMVA SOFIE RandomNormal op : no mean or scale are defined");
             float mean = fParams["mean"];
             float scale = fParams["scale"];
             out << SP << SP << "tensor_" << fNY << "[i] = fRndmEngine->Gaus(" << mean << "," << scale << ");\n";
          } else if (fMode == kUniform) {
             if (fParams.count("high") == 0 || fParams.count("low") == 0)
-              std::runtime_error("TMVA SOFIE RandomUniform op : no low or high are defined");
+              throw std::runtime_error("TMVA SOFIE RandomUniform op : no low or high are defined");
             float high = fParams["high"];
             float low = fParams["low"];
             out << SP << SP << "tensor_" << fNY << "[i] = fRndmEngine->Uniform(" << low << "," << high << ");\n";
