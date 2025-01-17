@@ -202,12 +202,10 @@ namespace SOFIE{
             }
             fShapeC = model.GetTensorShape(fNC);
             fNC2 = fNC;
-            bool broadcast_needed = !UTILITY::AreSameShape(fShapeC, fShapeY);
-
-            // For Gemm broadcasting is not needed if fShapeY[0] == 1 i.e. C and Y have same length
-            //if (fShapeY[0] == 1 && ConvertShapeToLength(fShapeC) != ConvertShapeToLength(fShapeY)) {
-            //   broadcast_needed = false;
-            //}
+            size_t lengthC = ConvertShapeToLength(fShapeC);
+            size_t lengthY = ConvertShapeToLength(shapeY);
+            // for dynamic outputs broadcasting is always done
+            bool broadcast_needed = lengthC != lengthY;
 
 
             if (broadcast_needed) {

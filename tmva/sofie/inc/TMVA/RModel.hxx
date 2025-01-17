@@ -108,6 +108,8 @@ public:
 
    // Check if a tensor is initialized
    bool IsInitializedTensor(const std::string &name) const;
+   // Check if a tensor is Constant (note a Constant tensor is also initialized)
+   bool IsConstantTensor(const std::string &name) const;
    bool IsDynamicTensor(const std::string &name) const;
    // Check if tensor is a input dynamic tensor (without a specified shape, based on Sim structure
    bool IsDimInputTensor(const std::string &name) const;
