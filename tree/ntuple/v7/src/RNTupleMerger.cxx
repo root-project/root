@@ -215,7 +215,7 @@ try {
    }
 
    // Now merge
-   RNTupleMerger merger;
+   RNTupleMerger merger{std::move(destination)};
    RNTupleMergeOptions mergerOpts;
    mergerOpts.fCompressionSettings = *compression;
    mergerOpts.fExtraVerbose = extraVerbose;
@@ -225,7 +225,7 @@ try {
    if (auto errBehavior = ParseOptionErrBehavior(mergeInfo->fOptions)) {
       mergerOpts.fErrBehavior = *errBehavior;
    }
-   merger.Merge(sourcePtrs, *destination, mergerOpts).ThrowOnError();
+   merger.Merge(sourcePtrs, mergerOpts).ThrowOnError();
 
    // Provide the caller with a merged anchor object (even though we've already
    // written it).
@@ -928,23 +928,28 @@ GatherColumnInfos(const RDescriptorsComparison &descCmp, const RNTupleDescriptor
    return res;
 }
 
-RNTupleMerger::RNTupleMerger()
+RNTupleMerger::RNTupleMerger(std::unique_ptr<RPageSink> destination)
    // TODO(gparolini): consider using an arena allocator instead, since we know the precise lifetime
    // of the RNTuples we are going to handle (e.g. we can reset the arena at every source)
-   : fPageAlloc(std::make_unique<RPageAllocatorHeap>())
+   : fDestination(std::move(destination)), fPageAlloc(std::make_unique<RPageAllocatorHeap>())
 {
+   R__ASSERT(fDestination);
+
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled())
       fTaskGroup = TTaskGroup();
 #endif
 }
 
-ROOT::RResult<void>
-RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination, const RNTupleMergeOptions &mergeOptsIn)
+ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const RNTupleMergeOptions &mergeOptsIn)
 {
    RNTupleMergeOptions mergeOpts = mergeOptsIn;
+
+   assert(fDestination);
+
+   // Set compression settings if unset and verify it's compatible with the sink
    {
-      const auto dstCompSettings = destination.GetWriteOptions().GetCompression();
+      const auto dstCompSettings = fDestination->GetWriteOptions().GetCompression();
       if (!mergeOpts.fCompressionSettings) {
          mergeOpts.fCompressionSettings = dstCompSettings;
       } else if (*mergeOpts.fCompressionSettings != dstCompSettings) {
@@ -955,7 +960,7 @@ RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination, c
       }
    }
 
-   RNTupleMergeData mergeData{sources, destination, mergeOpts};
+   RNTupleMergeData mergeData{sources, *fDestination, mergeOpts};
 
    std::unique_ptr<RNTupleModel> model; // used to initialize the schema of the output RNTuple
 
@@ -976,20 +981,20 @@ RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination, c
       mergeData.fSrcDescriptor = &srcDescriptor.GetRef();
 
       // Create sink from the input model if not initialized
-      if (!destination.IsInitialized()) {
+      if (!fDestination->IsInitialized()) {
          auto opts = RNTupleDescriptor::RCreateModelOptions();
          opts.fReconstructProjections = true;
          model = srcDescriptor->CreateModel(opts);
-         destination.Init(*model);
+         fDestination->Init(*model);
       }
 
       for (const auto &extraTypeInfoDesc : srcDescriptor->GetExtraTypeInfoIterable())
-         destination.UpdateExtraTypeInfo(extraTypeInfoDesc);
+         fDestination->UpdateExtraTypeInfo(extraTypeInfoDesc);
 
       auto descCmpRes = CompareDescriptorStructure(mergeData.fDstDescriptor, srcDescriptor.GetRef());
       if (!descCmpRes) {
          SKIP_OR_ABORT(
-            std::string("Source RNTuple will be skipped due to incompatible schema with the destination:\n") +
+            std::string("Source RNTuple will be skipped due to incompatible schema with the fDestination:\n") +
             descCmpRes.GetError()->GetReport());
       }
       auto descCmp = descCmpRes.Unwrap();
@@ -1011,7 +1016,7 @@ RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination, c
             ExtendDestinationModel(descCmp.fExtraSrcFields, *model, mergeData, descCmp.fCommonFields);
          } else if (mergeOpts.fMergingMode == ENTupleMergingMode::kStrict) {
             // If the current source has extra fields and we're in Strict mode, error
-            std::string msg = "Source RNTuple has extra fields that the destination RNTuple doesn't have:";
+            std::string msg = "Source RNTuple has extra fields that the fDestination RNTuple doesn't have:";
             for (const auto *field : descCmp.fExtraSrcFields) {
                msg += "\n  " + field->GetFieldName() + " : " + field->GetTypeName();
             }
@@ -1025,8 +1030,8 @@ RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination, c
    } // end loop over sources
 
    // Commit the output
-   destination.CommitClusterGroup();
-   destination.CommitDataset();
+   fDestination->CommitClusterGroup();
+   fDestination->CommitDataset();
 
    return RResult<void>::Success();
 }

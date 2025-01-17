@@ -147,9 +147,9 @@ TEST(RNTupleChecksum, Merge)
    }
 
    auto destination = std::make_unique<RPageSinkFile>("ntpl", fileGuard3.GetPath(), options);
-   RNTupleMerger merger;
+   RNTupleMerger merger{std::move(destination)};
    try {
-      merger.Merge(sourcePtrs, *destination);
+      merger.Merge(sourcePtrs);
       FAIL() << "merging should fail due to checksum error";
    } catch (const ROOT::RException &e) {
       EXPECT_THAT(e.what(), testing::HasSubstr("page checksum"));
