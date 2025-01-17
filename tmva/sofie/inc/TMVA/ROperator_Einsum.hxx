@@ -26,6 +26,7 @@ private:
    std::vector<std::string> fInputLabels;
    std::string fOutputLabels;
    std::string fSumLabels;  // string containing the reducing labels
+   std::string fGemmType;
 
    std::vector<int> fSumDims; // dimension of the labels we use to perform summing
 
@@ -157,6 +158,27 @@ public:
          }
       }
 
+      // check if we can use MatMul for EinSum
+      // need to have one sum labels in the last 2 and have the first in common
+      if (fNInputs.size() == 2 && fSumDims.size() == 1 && fShapeInputs[0].size() >=2 && fShapeInputs[1].size() >= 2 ) {
+         // find positions of dum labels
+         char l = fSumLabels[0];
+         size_t pos1 = fInputLabels[0].find(l);
+         size_t pos2 = fInputLabels[1].find(l);
+         // check if summing is done in the last 2 indices of tensor
+
+         if (pos1 == fInputLabels[0].length() - 1 && pos2 == fInputLabels[1].length() - 2)
+            fGemmType = "nn";
+         else if (pos1 == fInputLabels[0].length() - 2 && pos2 == fInputLabels[1].length() - 2)
+            fGemmType = "tn";
+         else if (pos1 == fInputLabels[0].length() - 1 && pos2 == fInputLabels[1].length() - 1)
+            fGemmType = "nt";
+         else if (pos1 == fInputLabels[0].length() - 2 && pos2 == fInputLabels[1].length() - 1)
+            fGemmType = "tt";
+         else
+            fGemmType = "";
+      }
+
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNInputs[0]), fShapeY);
 
       if (model.Verbose()) {
@@ -175,11 +197,11 @@ public:
       return out.str();
    }
 
-   std::string Generate(std::string OpName) override {
+   std::string Generate(std::string opName) override {
 
       if (fIsOutputConstant) return "";
 
-      OpName = "op_" + OpName;
+      opName = "op_" + opName;
 
       if (fShapeY.size() != fOutputLabels.length()) {
          throw std::runtime_error("TMVA SOFIE Einsum Op called to Generate without being initialized first");
@@ -202,7 +224,10 @@ public:
       std::stringstream out;
       out << SP << "\n//-------- Einsum   \n";
 
+      auto outputStride = UTILITY::ComputeStrideFromShape(fShapeY);
+
       // loops on the output indices  i0,....iN
+      if (fGemmType.empty()) {
       int outDims = fShapeY.size();
       int inDims = fSumLabels.length();
       assert(outDims == fOutputLabels.size());
@@ -213,7 +238,6 @@ public:
          out << "for (int " << l << " = 0; " << l << " < " << fShapeY[i] << "; " << l << "++) {\n";
       }
       // reset to zero output tensor
-      auto outputStride = UTILITY::ComputeStrideFromShape(fShapeY);
       std::string outputIndex = tensorIndex(outputStride,fOutputLabels);
 
       for (int j = 0; j < outDims; j++) out << SP;
@@ -242,9 +266,73 @@ public:
          out << "}\n";
       }
 
+
+      } else {
+         // case we use Gemm
+         out << SP << "// implementing Einsum using MatMul   \n";
+         // note A is second input and B first one - due to transpose of Fortran rep.
+         out << SP << "char " << opName << "_transA = '" << fGemmType[0] << "';\n";
+         out << SP << "char " << opName << "_transB = '" << fGemmType[1] << "';\n";
+         // need to consider case A and B have dim > 2 (for MatMul)
+         int64_t dimA = fShapeInputs[0].size();
+         int64_t dimB = fShapeInputs[1].size();
+
+         auto m = (fGemmType[0] == 't') ? fShapeInputs[0][dimA-1] : fShapeInputs[0][dimA-2];
+         auto n = (fGemmType[1] == 't') ? fShapeInputs[1][dimB-2] : fShapeInputs[1][dimB-1];
+         auto k = (fGemmType[0] == 't') ? fShapeInputs[0][dimA-2] : fShapeInputs[0][dimA-1];
+
+         out << SP << "int " << opName << "_m = " << m << ";\n";
+         out << SP << "int " << opName << "_n = " << n << ";\n";
+         out << SP << "int " << opName << "_k = " << k << ";\n";
+         out << SP << "float " << opName << "_alpha = 1.0;\n";
+         out << SP << "float " << opName << "_beta = 0.0;\n";
+         out << SP << "int " << opName << "_lda = " << ((fGemmType[0] == 't') ? m : k) << ";\n";
+         out << SP << "int " << opName << "_ldb = " << ((fGemmType[1] == 't') ? k : n) << ";\n";
+
+         auto inputStrideA = UTILITY::ComputeStrideFromShape(fShapeInputs[0]);
+         auto inputStrideB = UTILITY::ComputeStrideFromShape(fShapeInputs[1]);
+
+         int stackDims = fShapeY.size()-2;
+         for (int i = 0; i < stackDims; i++) {
+            for (int j = 0; j < i; j++) out << SP;
+            std::string l {fOutputLabels[i]};
+            out << "for (int " << l << " = 0; " << l << " < " << fShapeY[i] << "; " << l << "++) {\n";
+         }
+         auto tensorOffset = [](const std::vector<size_t> & stride, const std::string & labels) {
+            std::stringstream strst;
+            int dims = labels.length()-2;
+            // scalar case
+            if (dims == 0) return std::string("0");
+            assert (dims +2 == (int) stride.size());
+            for (int i = 0; i < dims; i++) {
+               strst << stride[i] << "*" << std::string{labels[i]};
+               if (i < dims-1) strst << " + ";
+            }
+            return strst.str();
+         };
+         // only float type supported
+         out << SP << "BLAS::sgemm_(&" << opName << "_transB, &" << opName << "_transA, &" << opName
+             << "_n, &" << opName << "_m, &" << opName << "_k, &" << opName << "_alpha, "
+             << "&tensor_" << fNInputs[1] << "[" << tensorOffset(inputStrideB, fInputLabels[1])
+             << "], &" << opName << "_ldb, "
+             << "&tensor_" << fNInputs[0] << "[" << tensorOffset(inputStrideA, fInputLabels[0]  ) << "], &" << opName << "_lda, &" << opName << "_beta, "
+             << "&tensor_" << fNY << "[" << tensorOffset(outputStride,fOutputLabels) << "],  &" << opName << "_n);\n";
+
+
+         for (int i = stackDims-1; i >= 0; i--) {
+            for (int j = 0; j < i; j++) out << SP;
+            out << "}\n";
+         }
+
+      }
+
+
       return out.str();
    }
 
+   std::vector<std::string> GetBlasRoutines() override {
+      return { std::string("Gemm") };
+   }
 };
 
 }//SOFIE
