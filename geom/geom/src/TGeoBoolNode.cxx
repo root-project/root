@@ -223,33 +223,27 @@ void TGeoBoolNode::AssignPoints(Int_t npoints, Double_t *points)
 Int_t TGeoBoolNode::GetNpoints()
 {
    Int_t itot = 0;
-   Double_t point[3];
-   Double_t tolerance = TGeoShape::Tolerance();
    if (fNpoints)
       return fNpoints;
    // Local points for the left shape
    Int_t nleft = fLeft->GetNmeshVertices();
-   Double_t *points1 = new Double_t[3 * nleft];
-   fLeft->SetPoints(points1);
-   // Local points for the right shape
    Int_t nright = fRight->GetNmeshVertices();
-   Double_t *points2 = new Double_t[3 * nright];
-   fRight->SetPoints(points2);
+   if (nleft + nright == 0) return 0;
+
+   Double_t *points1 = (nleft > 0) ? new Double_t[3 * nleft] : nullptr;
+   if (nleft > 0) fLeft->SetPoints(points1);
+   // Local points for the right shape
+   Double_t *points2 = (nright > 0) ? new Double_t[3 * nright] : nullptr;
+   if (nright > 0) fRight->SetPoints(points2);
    Double_t *points = new Double_t[3 * (nleft + nright)];
    for (Int_t i = 0; i < nleft; i++) {
-      if (TMath::Abs(points1[3 * i]) < tolerance && TMath::Abs(points1[3 * i + 1]) < tolerance)
-         continue;
       fLeftMat->LocalToMaster(&points1[3 * i], &points[3 * itot]);
-      fRightMat->MasterToLocal(&points[3 * itot], point);
-      if (Inside(point) == TGeoShape::kSurface)
+      if (Inside(&points[3 * itot]) == TGeoShape::kSurface)
          itot++;
    }
    for (Int_t i = 0; i < nright; i++) {
-      if (TMath::Abs(points2[3 * i]) < tolerance && TMath::Abs(points2[3 * i + 1]) < tolerance)
-         continue;
       fRightMat->LocalToMaster(&points2[3 * i], &points[3 * itot]);
-      fLeftMat->MasterToLocal(&points[3 * itot], point);
-      if (Inside(point) == TGeoShape::kSurface)
+      if (Inside(&points[3 * itot]) == TGeoShape::kSurface)
          itot++;
    }
 
