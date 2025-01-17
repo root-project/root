@@ -85,9 +85,8 @@ These examples are slightly more advanced so will be most useful for more advanc
 
 | **Tutorial** || **Description** |
 |------|--------|-----------------|
-| gr201_waves.C |  | Draw spherical waves interference, using closed and filled TGraphs to hide other plot elements. |
-| gr202_textmarkers.C |  | Draw a graph with text attached to each point. Uses a [TExec](https://root.cern/doc/master/classTExec.html) function to attach the text to the points. |
-|  |  |  |
+| gr201_waves.C |  Draw spherical waves interference, using closed and filled TGraphs to hide other plot elements. |
+| gr202_textmarkers.C | Draw a graph with text attached to each point. Uses a [TExec](https://root.cern/doc/master/classTExec.html) function to attach the text to the points. |
 
 
 \anchor other
@@ -97,9 +96,9 @@ These examples show the most complex usage of the graphs functionality.
 
 | **Tutorial** || **Description** |
 |------|--------|-----------------|
-| gr301_highlight1.C |  | How to use the interactive highlight mode on graph, thanks to the TCanvas [HighlightConnect](https://root.cern/doc/master/classTCanvas.html#a462b8dc286a2d29152fefa9b31f89920) method. |
-| gr302_highlight2.C |  | How to use the interactive highlight mode on graph, thanks to the TCanvas [HighlightConnect](https://root.cern/doc/master/classTCanvas.html#a462b8dc286a2d29152fefa9b31f89920) method. |
-| gr303_zdemo.C |  | Example of graphs in log scales with annotations and other advanced plot formatting. |
+| gr301_highlight1.C |  How to use the interactive highlight mode on graph, thanks to the TCanvas [HighlightConnect](https://root.cern/doc/master/classTCanvas.html#a462b8dc286a2d29152fefa9b31f89920) method. |
+| gr302_highlight2.C |  How to use the interactive highlight mode on graph, thanks to the TCanvas [HighlightConnect](https://root.cern/doc/master/classTCanvas.html#a462b8dc286a2d29152fefa9b31f89920) method. |
+| gr303_zdemo.C |  Example of graphs in log scales with annotations and other advanced plot formatting. |
 
 
 \anchor alltutorials
