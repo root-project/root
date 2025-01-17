@@ -108,6 +108,11 @@ Specific drawing options can be used to paint a TGraph2D:
 | "LINE"   | Draw a 3D polyline. |
 | "CONT5"  | Draw a contour plot using Delaunay triangles.|
 
+The Delaunay triangulation algorithm assumes that each (x, y) coordinate corresponds to a unique z value,
+meaning duplicate (x, y) points are not allowed. Consequently, when using drawing options that rely on this
+algorithm (e.g., TRI, SURF, etc.), a warning may appear instructing you to remove duplicates
+(see RemoveDuplicates()).
+
 A TGraph2D can be also drawn with any options valid to draw a 2D histogram
 (like `COL`, `SURF`, `LEGO`, `CONT` etc..).
 
@@ -324,15 +329,12 @@ TGraph2D::TGraph2D(TH2 *h2)
    // need to call later because sets title in ref histogram
    SetTitle(h2->GetTitle());
 
-
-
    TAxis *xaxis = h2->GetXaxis();
    TAxis *yaxis = h2->GetYaxis();
    Int_t xfirst = xaxis->GetFirst();
    Int_t xlast  = xaxis->GetLast();
    Int_t yfirst = yaxis->GetFirst();
    Int_t ylast  = yaxis->GetLast();
-
 
    Double_t x, y, z;
    Int_t k = 0;
@@ -1407,6 +1409,34 @@ TH1 *TGraph2D::Project(Option_t *option) const
    }
    h->SetEntries(entries);
    return h;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes duplicated points.
+///
+/// The Delaunay triangulation algorithm assumes that each (x, y) coordinate corresponds to a unique z value,
+/// meaning duplicate (x, y) points are not allowed. Consequently, when using drawing options that rely on this
+/// algorithm (e.g., TRI, SURF, etc.), a warning may appear instructing you to remove duplicates.
+/// This function provides a way to handle such duplicates.
+///
+/// Example:
+/// ~~~ {.cpp}
+/// g->RemoveDuplicates();
+/// g->Draw("TRI1");
+/// ~~~
+
+Int_t TGraph2D::RemoveDuplicates()
+{
+   for (int i=0; i<fNpoints; i++) {
+      double x = fX[i];
+      double y = fY[i];
+      for (int j=i+1; j<fNpoints; j++) {
+         if (x==fX[j] && y==fY[j]) {RemovePoint(j); j--;}
+      }
+   }
+
+   return fNpoints;
 }
 
 
