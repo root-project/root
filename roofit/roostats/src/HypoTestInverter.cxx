@@ -1205,7 +1205,7 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
                                        << nToys << std::endl;
 
 
-      printf("\n\nshnapshot of s+b model \n");
+      std::cout << "\n\nshnapshot of s+b model \n";
       sbModel->GetSnapshot()->Print("v");
 
       // reset parameters to initial values to be sure in case they are not reset
