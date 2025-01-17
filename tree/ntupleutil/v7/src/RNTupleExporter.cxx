@@ -166,6 +166,10 @@ RNTupleExporter::RPagesResult RNTupleExporter::ExportPages(RPageSource &source, 
                << "_elems_" << pageInfo.fNElements << "_comp_" << *colRange.fCompressionSettings << ".page";
             const auto outFileName = ss.str();
             std::ofstream outFile{outFileName, std::ios_base::binary};
+            if (!outFile)
+               throw ROOT::RException(
+                  R__FAIL(std::string("output path ") + options.fOutputPath + " does not exist or is not writable!"));
+
             outFile.write(reinterpret_cast<const char *>(pageBuf), pageBufSize);
 
             res.fExportedFileNames.push_back(outFileName);
