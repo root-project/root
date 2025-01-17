@@ -96,11 +96,11 @@ public:
            break;
         } else {
            if (tries > 1) {
-         printf("    ----> Doing a re-scan first\n");
+         std::cout << "    ----> Doing a re-scan first\n";
          minim.minimize(fMinimizer,"Scan");
        }
            if (tries > 2) {
-         printf("    ----> trying with strategy = 1\n");
+              std::cout << "    ----> trying with strategy = 1\n";
               minim.setStrategy(1);
            }
         }

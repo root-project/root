@@ -184,9 +184,9 @@ bool AsymptoticCalculator::Initialize() const {
    }
 
    // GetNullModel()->Print();
-   // printf("ASymptotic calc: null snapshot\n");
+   // std::cout << "ASymptotic calc: null snapshot\n";
    // nullSnapshot->Print("v");
-   // printf("PDF  variables " );
+   // std::cout << "PDF  variables ";
    // nullPdf->getVariables()->Print("v");
 
    // keep snapshot for the initial parameter values (need for nominal Asimov)
@@ -399,19 +399,19 @@ double EvaluateNLL(RooStats::ModelConfig const& modelConfig, RooAbsData& data, c
              break;
           } else {
              if (tries == 1) {
-                printf("    ----> Doing a re-scan first\n");
+                std::cout << "    ----> Doing a re-scan first\n";
                 minim.minimize(minimizer,"Scan");
              }
              if (tries == 2) {
                 if (ROOT::Math::MinimizerOptions::DefaultStrategy() == 0 ) {
-                   printf("    ----> trying with strategy = 1\n");
+                   std::cout << "    ----> trying with strategy = 1\n";
                    minim.setStrategy(1);
                 }
                 else
                    tries++; // skip this trial if strategy is already 1
              }
              if (tries == 3) {
-                printf("    ----> trying with improve\n");
+                std::cout << "    ----> trying with improve\n";
                 minimizer = "Minuit";
                 algorithm = "migradimproved";
              }

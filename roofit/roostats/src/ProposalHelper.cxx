@@ -63,10 +63,10 @@ ProposalFunction* ProposalHelper::GetProposalFunction()
    if (fCluesPdf == nullptr)
       CreateCluesPdf();
    if (fCluesPdf != nullptr) {
-      if (fCluesFrac < 0)
+      if (fCluesFrac < 0) {
          fCluesFrac = DEFAULT_CLUES_FRAC;
-      printf("added clues from dataset %s with fraction %g\n",
-            fClues->GetName(), fCluesFrac);
+      }
+      std::cout << "added clues from dataset " << fClues->GetName() << " with fraction " << fCluesFrac << std::endl;
       components.add(*fCluesPdf);
       coeffs.add(RooConst(fCluesFrac));
    }
