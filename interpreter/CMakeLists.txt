@@ -218,11 +218,21 @@ if(builtin_llvm)
 
   set(LLVM_ENABLE_PROJECTS "clang" CACHE STRING "")
 
+  #---Reduce log level to suppress STATUS messages from LLVM
+  if(NOT DEFINED CMAKE_MESSAGE_LOG_LEVEL)
+    set(CMAKE_MESSAGE_LOG_LEVEL "NOTICE")
+    set(_unset_log_level TRUE)
+  endif()
+
   #---Add the sub-directory excluding all the targets from all-----------------------------------------
   if(CMAKE_GENERATOR MATCHES "Xcode")
     add_subdirectory(llvm-project/llvm)
   else()
     add_subdirectory(llvm-project/llvm EXCLUDE_FROM_ALL)
+  endif()
+
+  if(DEFINED _unset_log_level)
+    unset(CMAKE_MESSAGE_LOG_LEVEL)
   endif()
 
   set(LLVM_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/llvm-project/llvm/include
