@@ -164,6 +164,16 @@ std::string ROOT::Experimental::RCanvas::GetWindowUrl(bool remote)
    return "";
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// Returns window handle for the canvas
+
+std::shared_ptr<ROOT::RWebWindow> ROOT::Experimental::RCanvas::GetWindow()
+{
+   if (fPainter)
+      return fPainter->GetWindow();
+
+   return nullptr;
+}
 
 //////////////////////////////////////////////////////////////////////////
 /// Hide all canvas displays

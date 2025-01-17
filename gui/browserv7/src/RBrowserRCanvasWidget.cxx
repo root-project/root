@@ -45,9 +45,14 @@ public:
       fCanvas->Show(arg);
    }
 
+   std::shared_ptr<ROOT::RWebWindow> GetWindow() override
+   {
+      return fCanvas->GetWindow();
+   }
+
    std::string GetUrl() override
    {
-      return fCanvas->GetWindowUrl(false);
+      return ""s;
    }
 
    std::string GetTitle() override
