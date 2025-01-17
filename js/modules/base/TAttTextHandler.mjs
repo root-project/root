@@ -1,6 +1,16 @@
 import { getColor } from './colors.mjs';
 
 
+function calcTextSize(sz, sz0, fact, pp) {
+   if (!sz)
+      sz = sz0 || 0;
+
+   if (sz >= 1)
+      return Math.round(sz * (pp?.getPadScale() || 1));
+
+   return Math.round(sz * Math.min(pp?.getPadWidth() ?? 1000, pp?.getPadHeight() ?? 1000) * (fact || 1));
+}
+
 /**
   * @summary Handle for text attributes
   * @private
@@ -90,24 +100,13 @@ class TAttTextHandler {
    }
 
    /** @summary Provides pixel size */
-   getSize(w, h, fact, zero_size) {
-      if (this.size >= 1)
-         return Math.round(this.size);
-      if (!w) w = 1000;
-      if (!h) h = w;
-      if (!fact) fact = 1;
-
-      return Math.round((this.size || zero_size || 0) * Math.min(w, h) * fact);
-   }
+   getSize(pp, fact, zero_size) { return calcTextSize(this.size, zero_size, fact, pp); }
 
    /** @summary Returns alternating size - which defined by sz1 variable */
-   getAltSize(sz1, h) {
-      if (!sz1) sz1 = this.size;
-      return Math.round(sz1 >= 1 ? sz1 : sz1 * h);
-   }
+   getAltSize(sz1, pp) { return calcTextSize(sz1, this.size, 1, pp); }
 
    /** @summary Get font index - without precision */
-   getGedFont() { return Math.floor(this.font/10); }
+   getGedFont() { return Math.floor(this.font / 10); }
 
    /** @summary Change text font from GED */
    setGedFont(value) {

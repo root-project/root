@@ -1010,7 +1010,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
    control.getMouseIntersects = function(mouse) {
       // domElement gives correct coordinate with canvas render, but isn't always right for webgl renderer
-      if (!this.renderer) return [];
+      if (!this.renderer)
+         return [];
 
       const sz = (this.renderer instanceof THREE.SVGRenderer) ? this.renderer.domElement : this.renderer.getSize(new THREE.Vector2()),
             pnt = { x: mouse.x / sz.width * 2 - 1, y: -mouse.y / sz.height * 2 + 1 };
@@ -1076,9 +1077,9 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
             fp._dblclick_handler(info);
             return;
          }
-       }
+      }
 
-       this.reset();
+      this.reset();
    };
 
    control.changeEvent = function() {
@@ -1140,12 +1141,14 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
    };
 
    control.mainProcessMouseMove = function(evnt) {
-      if (!this.painter) return; // protect when cleanup
+      if (!this.painter)
+         return; // protect when cleanup
 
       if (this.control_active && evnt.buttons && (evnt.buttons & 2))
          this.block_ctxt = true; // if right button in control was active, block next context menu
 
-      if (this.control_active || this.block_mousemove || !isFunc(this.processMouseMove)) return;
+      if (this.control_active || this.block_mousemove || !isFunc(this.processMouseMove))
+         return;
 
       if (this.mouse_zoom_mesh) {
          // when working with zoom mesh, need special handling
@@ -1191,14 +1194,19 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
             tip = this.processMouseMove(intersects);
 
       if (tip) {
-         let name = '', title = '', coord = '', info = '';
-         if (mouse) coord = mouse.x.toFixed(0) + ',' + mouse.y.toFixed(0);
+         let name = '', title = '', info = '';
+         const coord = mouse ? mouse.x.toFixed(0) + ',' + mouse.y.toFixed(0) : '';
          if (isStr(tip))
             info = tip;
          else {
-            name = tip.name; title = tip.title;
-            if (tip.line) info = tip.line; else
-            if (tip.lines) { info = tip.lines.slice(1).join(' '); name = tip.lines[0]; }
+            name = tip.name;
+            title = tip.title;
+            if (tip.line)
+               info = tip.line;
+            else if (tip.lines) {
+               info = tip.lines.slice(1).join(' ');
+               name = tip.lines[0];
+            }
          }
          this.painter.showObjectStatus(name, title, info, coord);
       }
@@ -1222,7 +1230,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
    };
 
    control.mainProcessMouseLeave = function() {
-      if (!this.painter) return; // protect when cleanup
+      if (!this.painter)
+         return; // protect when cleanup
 
       // do not enter main event at all
       if (this.tmout_handle) {
@@ -1285,7 +1294,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
    control.lstn_click = function(evnt) {
       // ignore right-mouse click
-      if (evnt.detail === 2) return;
+      if (evnt.detail === 2)
+         return;
 
       if (this.single_click_tm) {
          clearTimeout(this.single_click_tm);
@@ -1327,7 +1337,8 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
   * @desc Simplify JS engine to remove it from memory
   * @private */
 function disposeThreejsObject(obj, only_childs) {
-   if (!obj) return;
+   if (!obj)
+      return;
 
    if (obj.children) {
       for (let i = 0; i < obj.children.length; i++)
@@ -1485,7 +1496,8 @@ class PointsControl extends InteractiveControl {
    setSelected(col, indx) {
       const m = this.mesh;
       if ((m.select_col === col) && (m.select_indx === indx)) {
-         col = null; indx = undefined;
+         col = null;
+         indx = undefined;
       }
       m.select_col = col;
       m.select_indx = indx;

@@ -1438,6 +1438,14 @@ function applyAttributesToMathJax(painter, mj_node, svg, arg, font_size, svg_fac
    let mw = parseInt(svg.attr('width')),
        mh = parseInt(svg.attr('height'));
 
+   if (isNodeJs()) {
+      // workaround for NaN in viewBox produced by MathJax
+      const vb = svg.attr('viewBox');
+      if (isStr(vb) && vb.indexOf('NaN') > 0)
+         svg.attr('viewBox', vb.replaceAll('NaN', '600'));
+      // console.log('Problematic viewBox', vb, svg.select('text').node()?.innerHTML);
+   }
+
    if (Number.isInteger(mh) && Number.isInteger(mw)) {
       if (svg_factor > 0) {
          mw = mw / svg_factor;
@@ -1450,9 +1458,11 @@ function applyAttributesToMathJax(painter, mj_node, svg, arg, font_size, svg_fac
       mh = box.height || mh || 10;
    }
 
-   if ((svg_factor > 0) && arg.valign) arg.valign = arg.valign / svg_factor;
+   if ((svg_factor > 0) && arg.valign)
+      arg.valign = arg.valign / svg_factor;
 
-   if (arg.valign === null) arg.valign = (font_size - mh) / 2;
+   if (arg.valign === null)
+      arg.valign = (font_size - mh) / 2;
 
    const sign = { x: 1, y: 1 };
    let nx = 'x', ny = 'y';
@@ -1477,10 +1487,8 @@ function applyAttributesToMathJax(painter, mj_node, svg, arg, font_size, svg_fac
       arg[ny] += sign.y * (arg.height - mh - arg.valign);
 
    let trans = makeTranslate(arg.x, arg.y) || '';
-   if (arg.rotate) {
-      if (trans) trans += ' ';
-      trans += `rotate(${arg.rotate})`;
-   }
+   if (arg.rotate)
+      trans += `${trans?' ':''}rotate(${arg.rotate})`;
 
    mj_node.attr('transform', trans || null).attr('visibility', null);
 }
@@ -1501,7 +1509,7 @@ async function produceMathjax(painter, mj_node, arg) {
 
               repairMathJaxSvgSize(painter, mj_node, svg, arg);
 
-              arg.applyAttributesToMathJax = applyAttributesToMathJax;
+              arg.mj_func = applyAttributesToMathJax;
               return true;
            });
 }

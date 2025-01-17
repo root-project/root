@@ -9,8 +9,6 @@ import { assignContextMenu } from '../gui/menu.mjs';
 async function drawText() {
    const text = this.getObject(),
          pp = this.getPadPainter(),
-         w = pp.getPadWidth(),
-         h = pp.getPadHeight(),
          fp = this.getFramePainter(),
          is_url = text.fName.startsWith('http://') || text.fName.startsWith('https://');
    let pos_x = text.fX, pos_y = text.fY, use_frame = false,
@@ -65,7 +63,7 @@ async function drawText() {
          this.draw_g.append('svg:title').text(`link on ${text.fName}`);
    }
 
-   return this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(w, h, fact /* , 0.05 */))
+   return this.startTextDrawingAsync(this.textatt.font, this.textatt.getSize(pp, fact /* , 0.05 */))
               .then(() => this.drawText(arg))
               .then(() => this.finishTextDrawing())
               .then(() => {

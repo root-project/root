@@ -19,7 +19,8 @@ import { BrowserLayout, getHPainter } from '../gui/display.mjs';
 const clTButton = 'TButton', kIsGrayscale = BIT(22);
 
 function getButtonSize(handler, fact) {
-   return Math.round((fact || 1) * (handler.iscan || !handler.has_canvas ? 16 : 12));
+   const cp = handler.getCanvPainter();
+   return Math.round((fact || 1) * (cp?._pad_scale || 1) * (cp === handler ? 16 : 12));
 }
 
 function isPadPainter(p) {
@@ -846,7 +847,11 @@ class TPadPainter extends ObjectPainter {
           y = Math.round(height * (1 - this.pad.fAbsYlowNDC)) - h,
           svg_pad, svg_border, btns;
 
-      if (pad_enlarged === this.pad) { w = width; h = height; x = y = 0; }
+      if (pad_enlarged === this.pad) {
+         w = width;
+         h = height;
+         x = y = 0;
+      }
 
       if (only_resize) {
          svg_pad = this.svg_this_pad();
@@ -900,7 +905,7 @@ class TPadPainter extends ObjectPainter {
              .property('draw_width', w)
              .property('draw_height', h);
 
-      this._pad_scale = 1; // subpads always use scale 1 while placed inside canvas viewBox
+      this._pad_scale = this.getCanvPainter().getPadScale();
       this._pad_x = x;
       this._pad_y = y;
       this._pad_width = w;
@@ -2379,7 +2384,7 @@ class TPadPainter extends ObjectPainter {
          width = fp.getFrameWidth();
          height = fp.getFrameHeight();
       }
-      const scale = this.getCanvPainter()?.getPadScale() ?? 1;
+      const scale = this.getPadScale();
       if (scale !== 1) {
          viewBox = `viewBox="0 0 ${width} ${height}"`;
          width = Math.round(width / scale);
@@ -2513,17 +2518,19 @@ class TPadPainter extends ObjectPainter {
       const iscan = this.iscan || !this.has_canvas;
       if (!iscan && (funcname.indexOf('Pad') !== 0) && (funcname !== 'enlargePad')) {
          const cp = this.getCanvPainter();
-         if (cp && (cp !== this)) cp.addPadButton(btn, tooltip, funcname);
+         if (cp && (cp !== this))
+            cp.addPadButton(btn, tooltip, funcname);
       }
    }
 
    /** @summary Show pad buttons
      * @private */
    showPadButtons() {
-      if (!this._buttons) return;
+      if (!this._buttons)
+         return;
 
-       PadButtonsHandler.assign(this);
-       this.showPadButtons();
+      PadButtonsHandler.assign(this);
+      this.showPadButtons();
    }
 
    /** @summary Add buttons for pad or canvas
