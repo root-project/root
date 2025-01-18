@@ -26,6 +26,8 @@ This class defines the interface to retrieve bin boundaries, ranges etc.
 #include "RooAbsBinning.h"
 
 #include "RooAbsReal.h"
+#include "RooMsgService.h"
+
 #include "TBuffer.h"
 #include "TClass.h"
 
@@ -134,4 +136,10 @@ void RooAbsBinning::Streamer(TBuffer &R__b)
       RooPrintable::Streamer(R__b);
       R__b.SetByteCount(R__c, true);
    }
+}
+
+std::string RooAbsBinning::translateBinNumber(RooFit::Experimental::CodegenContext &, RooAbsArg const &, int) const
+{
+   oocoutE(nullptr, InputArguments) << "This binning doesn't support codegen!" << std::endl;
+   return "";
 }
