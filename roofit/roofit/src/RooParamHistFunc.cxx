@@ -79,7 +79,7 @@ double RooParamHistFunc::evaluate() const
 
 void RooParamHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   std::string const &idx = _dh.calculateTreeIndexForCodeSquash(this, ctx, _x);
+   std::string const &idx = _dh.calculateTreeIndexForCodeSquash(ctx, _x);
    std::string arrName = ctx.buildArg(_p);
    std::string result = arrName + "[" + idx + "]";
    if (_relParam) {

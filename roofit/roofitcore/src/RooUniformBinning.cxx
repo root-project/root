@@ -25,10 +25,12 @@ is 'elastic': if the range changes the binning will change accordingly, unlike
 e.g. the binning of class RooBinning.
 **/
 
-#include "RooUniformBinning.h"
-#include "RooMsgService.h"
+#include <RooUniformBinning.h>
 
-#include "Riostream.h"
+#include <RooFit/Detail/CodeSquashContext.h>
+#include <RooMsgService.h>
+
+#include <Riostream.h>
 
 
 using std::endl;
@@ -163,4 +165,8 @@ double* RooUniformBinning::array() const
   return _array.data();
 }
 
-
+std::string
+RooUniformBinning::translateBinNumber(RooFit::Detail::CodeSquashContext &ctx, RooAbsArg const &var, int coef) const
+{
+   return ctx.buildCall("RooFit::Detail::MathFuncs::uniformBinNumber", lowBound(), highBound(), var, numBins(), coef);
+}

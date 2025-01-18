@@ -996,19 +996,13 @@ std::string RooDataHist::declWeightArrayForCodeSquash(RooFit::Detail::CodeSquash
                                                       bool correctForBinSize) const
 {
    std::vector<double> vals(_arrSize);
-   if (correctForBinSize) {
-      for (std::size_t i = 0; i < vals.size(); ++i) {
-         vals[i] = _wgt[i] / _binv[i];
-      }
-   } else {
-      for (std::size_t i = 0; i < vals.size(); ++i) {
-         vals[i] = _wgt[i];
-      }
+   for (std::size_t i = 0; i < vals.size(); ++i) {
+      vals[i] = correctForBinSize ? _wgt[i] / _binv[i] : _wgt[i];
    }
    return ctx.buildArg(vals);
 }
 
-std::string RooDataHist::calculateTreeIndexForCodeSquash(RooAbsArg const * /*klass*/, RooFit::Detail::CodeSquashContext &ctx,
+std::string RooDataHist::calculateTreeIndexForCodeSquash(RooFit::Detail::CodeSquashContext &ctx,
                                                          const RooAbsCollection &coords, bool reverse) const
 {
    assert(coords.size() == _vars.size());
@@ -1027,16 +1021,9 @@ std::string RooDataHist::calculateTreeIndexForCodeSquash(RooAbsArg const * /*kla
          coutE(InputArguments) << "RooHistPdf::weight(" << GetName()
                                << ") ERROR: Code Squashing currently does not support category values." << std::endl;
          return "";
-      } else if (!dynamic_cast<RooUniformBinning const *>(binning)) {
-         coutE(InputArguments) << "RooHistPdf::weight(" << GetName()
-                               << ") ERROR: Code Squashing currently only supports uniformly binned cases."
-                               << std::endl;
-         return "";
       }
 
-      std::string const &bin = ctx.buildCall("RooFit::Detail::MathFuncs::getUniformBinning", binning->lowBound(),
-                                             binning->highBound(), *theVar, binning->numBins());
-      code += " + " + std::to_string(idxMult) + " * " + bin;
+      code += " + " + binning->translateBinNumber(ctx, *theVar, idxMult);
 
       // Use RooAbsLValue here because it also generalized to categories, which
       // is useful in the future. dynamic_cast because it's a cross-cast.
