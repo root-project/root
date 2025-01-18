@@ -77,7 +77,7 @@ embedstl: embedstl.log
 	$(TestDiff)
 
 mapvector.root: mapvector_C.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l mapvector.C+ > mapvector_root.build.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l mapvector.C+ > mapvector_root.build.log 2>&1 || handleError.sh --cmd='Execution of $<' --result=$$? --log=mapvector_root.build.log --test=$*
 
 mapvector.log: mapvector.root
 
