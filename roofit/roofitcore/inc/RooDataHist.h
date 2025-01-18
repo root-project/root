@@ -218,7 +218,7 @@ public:
   double const* wgtErrHiArray() const { return _errHi; }
   double const* sumW2Array()    const { return _sumw2; }
 
-  std::string calculateTreeIndexForCodeSquash(RooAbsArg const *klass, RooFit::Experimental::CodegenContext &ctx,
+  std::string calculateTreeIndexForCodeSquash(RooFit::Experimental::CodegenContext &ctx,
                                               const RooAbsCollection &coords, bool reverse = false) const;
   std::string declWeightArrayForCodeSquash(RooFit::Experimental::CodegenContext &ctx,
                                            bool correctForBinSize) const;

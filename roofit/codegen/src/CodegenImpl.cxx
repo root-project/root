@@ -86,7 +86,7 @@ void rooHistTranslateImpl(RooAbsArg const &arg, CodegenContext &ctx, int intOrde
                                         binning.numBins(), weightArr));
       return;
    }
-   std::string const &offset = dataHist.calculateTreeIndexForCodeSquash(&arg, ctx, obs);
+   std::string const &offset = dataHist.calculateTreeIndexForCodeSquash(ctx, obs);
    std::string weightArr = dataHist.declWeightArrayForCodeSquash(ctx, correctForBinSize);
    ctx.addResult(&arg, "*(" + weightArr + " + " + offset + ")");
 }
@@ -135,7 +135,7 @@ void codegenImpl(RooFit::Detail::RooFixedProdPdf &arg, CodegenContext &ctx)
 
 void codegenImpl(ParamHistFunc &arg, CodegenContext &ctx)
 {
-   std::string const &idx = arg.dataHist().calculateTreeIndexForCodeSquash(&arg, ctx, arg.dataVars(), true);
+   std::string const &idx = arg.dataHist().calculateTreeIndexForCodeSquash(ctx, arg.dataVars(), true);
    std::string const &paramNames = ctx.buildArg(arg.paramList());
 
    ctx.addResult(&arg, paramNames + "[" + idx + "]");
@@ -190,10 +190,10 @@ void codegenImpl(PiecewiseInterpolation &arg, CodegenContext &ctx)
    std::string lowName = ctx.getTmpVarName();
    std::string highName = ctx.getTmpVarName();
    std::string nominalName = ctx.getTmpVarName();
-   code += "unsigned int " + idxName + " = " +
-           nomHist.calculateTreeIndexForCodeSquash(&arg, ctx,
-                                                   dynamic_cast<RooHistFunc const &>(*arg.nominalHist()).variables()) +
-           ";\n";
+   code +=
+      "unsigned int " + idxName + " = " +
+      nomHist.calculateTreeIndexForCodeSquash(ctx, dynamic_cast<RooHistFunc const &>(*arg.nominalHist()).variables()) +
+      ";\n";
    code += "double const* " + lowName + " = " + valsLowStr + " + " + nStr + " * " + idxName + ";\n";
    code += "double const* " + highName + " = " + valsHighStr + " + " + nStr + " * " + idxName + ";\n";
    code += "double " + nominalName + " = *(" + valsNominalStr + " + " + idxName + ");\n";
@@ -447,7 +447,7 @@ void codegenImpl(RooFit::Detail::RooNormalizedPdf &arg, CodegenContext &ctx)
 
 void codegenImpl(RooParamHistFunc &arg, CodegenContext &ctx)
 {
-   std::string const &idx = arg.dataHist().calculateTreeIndexForCodeSquash(&arg, ctx, arg.xList());
+   std::string const &idx = arg.dataHist().calculateTreeIndexForCodeSquash(ctx, arg.xList());
    std::string arrName = ctx.buildArg(arg.paramList());
    std::string result = arrName + "[" + idx + "]";
    if (arg.relParam()) {
