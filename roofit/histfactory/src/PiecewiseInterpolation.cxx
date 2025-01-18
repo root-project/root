@@ -242,7 +242,7 @@ void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) c
    std::string lowName = ctx.getTmpVarName();
    std::string highName = ctx.getTmpVarName();
    std::string nominalName = ctx.getTmpVarName();
-   code += "unsigned int " + idxName + " = " + nomHist.calculateTreeIndexForCodeSquash(this, ctx, dynamic_cast<RooHistFunc const &>(*_nominal).variables()) + ";\n";
+   code += "unsigned int " + idxName + " = " + nomHist.calculateTreeIndexForCodeSquash(ctx, dynamic_cast<RooHistFunc const &>(*_nominal).variables()) + ";\n";
    code += "double const* " + lowName + " = " + valsLowStr + " + " + nStr + " * " + idxName + ";\n";
    code += "double const* " + highName + " = " + valsHighStr + " + " + nStr + " * " + idxName + ";\n";
    code += "double " + nominalName + " = *(" + valsNominalStr + " + " + idxName + ");\n";

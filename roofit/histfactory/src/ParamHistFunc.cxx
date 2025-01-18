@@ -569,7 +569,7 @@ void ParamHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
       _numBinsPerDim = getNumBinsPerDim(_dataVars);
    }
 
-   std::string const &idx = _dataSet.calculateTreeIndexForCodeSquash(this, ctx, _dataVars, true);
+   std::string const &idx = _dataSet.calculateTreeIndexForCodeSquash(ctx, _dataVars, true);
    std::string const &paramNames = ctx.buildArg(_paramSet);
 
    ctx.addResult(this, paramNames + "[" + idx + "]");

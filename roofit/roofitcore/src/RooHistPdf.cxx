@@ -240,7 +240,7 @@ void RooHistPdf::rooHistTranslateImpl(RooAbsArg const *klass, RooFit::Detail::Co
                                          binning.highBound(), *obs[0], binning.numBins(), weightArr));
       return;
    }
-   std::string const &offset = dataHist->calculateTreeIndexForCodeSquash(klass, ctx, obs);
+   std::string const &offset = dataHist->calculateTreeIndexForCodeSquash(ctx, obs);
    std::string weightArr = dataHist->declWeightArrayForCodeSquash(ctx, correctForBinSize);
    ctx.addResult(klass, "*(" + weightArr + " + " + offset + ")");
 }

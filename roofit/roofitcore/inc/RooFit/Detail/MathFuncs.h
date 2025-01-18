@@ -18,12 +18,11 @@
 #include <Math/PdfFuncMathCore.h>
 #include <Math/ProbFuncMathCore.h>
 
+#include <algorithm>
 #include <cmath>
 
 namespace RooFit {
-
 namespace Detail {
-
 namespace MathFuncs {
 
 /// Calculates the binomial coefficient n over k.
@@ -130,8 +129,9 @@ template <bool pdfMode = false>
 inline double polynomial(double const *coeffs, int nCoeffs, int lowestOrder, double x)
 {
    double retVal = coeffs[nCoeffs - 1];
-   for (int i = nCoeffs - 2; i >= 0; i--)
+   for (int i = nCoeffs - 2; i >= 0; i--) {
       retVal = coeffs[i] + x * retVal;
+   }
    retVal = retVal * std::pow(x, lowestOrder);
    return retVal + (pdfMode && lowestOrder > 0 ? 1.0 : 0.0);
 }
@@ -169,10 +169,29 @@ inline double constraintSum(double const *comp, unsigned int compSize)
    return sum;
 }
 
-inline unsigned int getUniformBinning(double low, double high, double val, unsigned int numBins)
+inline unsigned int uniformBinNumber(double low, double high, double val, unsigned int numBins, double coef)
 {
    double binWidth = (high - low) / numBins;
-   return val >= high ? numBins - 1 : std::abs((val - low) / binWidth);
+   return coef * (val >= high ? numBins - 1 : std::abs((val - low) / binWidth));
+}
+
+inline unsigned int rawBinNumber(double x, double const *boundaries, std::size_t nBoundaries)
+{
+   double const *end = boundaries + nBoundaries;
+   double const *it = std::lower_bound(boundaries, end, x);
+   // always return valid bin number
+   while (boundaries != it && (end == it || end == it + 1 || x < *it)) {
+      --it;
+   }
+   return it - boundaries;
+}
+
+inline unsigned int
+binNumber(double x, double coef, double const *boundaries, unsigned int nBoundaries, int nbins, int blo)
+{
+   const int rawBin = rawBinNumber(x, boundaries, nBoundaries);
+   int tmp = std::min(nbins, rawBin - blo);
+   return coef * std::max(0, tmp);
 }
 
 inline double interpolate1d(double low, double high, double val, unsigned int numBins, double const *vals)
@@ -390,7 +409,7 @@ inline double cbShape(double m, double m0, double sigma, double alpha, double n)
    if (alpha < 0)
       t = -t;
 
-   double absAlpha = std::abs((double)alpha);
+   double absAlpha = std::abs(alpha);
 
    if (t >= -absAlpha) {
       return std::exp(-0.5 * t * t);
@@ -747,9 +766,29 @@ inline double multiVarGaussian(int n, const double *x, const double *mu, const d
 }
 
 } // namespace MathFuncs
-
 } // namespace Detail
-
 } // namespace RooFit
+
+namespace clad {
+namespace custom_derivatives {
+namespace RooFit {
+namespace Detail {
+namespace MathFuncs {
+
+// Clad can't generate the pullback for binNumber because of the
+// std::lower_bound usage. But since binNumber returns an integer, and such
+// functions have mathematically no derivatives anyway, we just declare a
+// custom dummy pullback that does nothing.
+
+template <class... Types>
+void binNumber_pullback(Types... args)
+{
+}
+
+} // namespace MathFuncs
+} // namespace Detail
+} // namespace RooFit
+} // namespace custom_derivatives
+} // namespace clad
 
 #endif
