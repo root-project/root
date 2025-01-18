@@ -69,6 +69,8 @@ public:
   void addUniform(Int_t nBins, double xlo, double xhi);
   bool removeBoundary(double boundary);
 
+  std::string translateBinNumber(RooFit::Experimental::CodegenContext &ctx, RooAbsArg const &var, int coef) const override;
+
 protected:
 
   bool binEdges(Int_t bin, double& xlo, double& xhi) const;
