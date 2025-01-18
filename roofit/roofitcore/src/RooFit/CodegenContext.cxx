@@ -329,6 +329,9 @@ CodegenContext::buildFunction(RooAbsArg const &arg, std::map<RooFit::Detail::Dat
    static int iCodegen = 0;
    auto funcName = "roo_codegen_" + std::to_string(iCodegen++);
 
+   // Make sure the codegen implementations are known to the interpreter
+   gInterpreter->Declare("#include <RooFit/CodegenImpl.h>\n");
+
    ctx.pushScope();
    std::string funcBody = ctx.getResult(arg);
    ctx.popScope();
