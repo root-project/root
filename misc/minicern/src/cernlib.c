@@ -172,8 +172,8 @@ int cfstati_(char *fname, int *info, int *lgname)
 #endif
 {
    struct stat buf;
-   char *ptname, *fchtak();
-   int istat=-1, stat();
+   char *ptname;
+   int istat = -1;
    ptname = fchtak(fname,*lgname);
    if (ptname == ((void *)0)) return -1;
    istat = stat(ptname, &buf);
@@ -226,7 +226,7 @@ void cfopei_(int *lundes, int *medium, int *nwrec, int *mode, int *nbuf,
              char *ftext, int *astat, int *lgtx)
 #endif
 {
-   char *pttext, *fchtak();
+   char *pttext;
    int flags = 0;
    int fildes;
    int perm;
