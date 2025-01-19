@@ -545,7 +545,8 @@ public:
    Long_t             Property() const override;
    Int_t              ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
    Int_t              ReadBuffer(TBuffer &b, void *pointer);
-   static void        RegisterReadRules(ROOT::TSchemaRule::RuleType_t, const char *classname, std::vector<::ROOT::Internal::TSchemaHelper> &&rules);
+   static void        RegisterReadRules(ROOT::TSchemaRule::RuleType_t, const char *classname,
+                                        std::vector<::ROOT::Internal::TSchemaHelper> &&rules);
    void               RegisterStreamerInfo(TVirtualStreamerInfo *info);
    void               RemoveStreamerInfo(Int_t slot);
    void               ReplaceWith(TClass *newcl) const;

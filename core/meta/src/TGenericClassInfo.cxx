@@ -334,7 +334,7 @@ namespace Internal {
          rule = new TSchemaRule(ProcessReadRules ? TSchemaRule::kReadRule : TSchemaRule::kReadRawRule,
                                 fClass->GetName(), *it);
 
-          if( !rset->AddRule( rule, TSchemaRuleSet::kCheckAll, &errmsg ) ) {
+         if (!rset->AddRule(rule, TSchemaRuleSet::kCheckAll, &errmsg)) {
             ::Warning( "TGenericClassInfo", "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because %s.",
                         GetClassName(), it->fVersion.c_str(), it->fTarget.c_str(), errmsg.Data() );
             delete rule;

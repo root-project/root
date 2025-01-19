@@ -568,13 +568,11 @@ void WriteClassInit(std::ostream& finalString,
                     bool& needCollectionProxy);
 
 //______________________________________________________________________________
-void WriteStandaloneReadRules(std::ostream &finalString, bool rawrules,
-                              std::vector<std::string> &standaloneTargets,
+void WriteStandaloneReadRules(std::ostream &finalString, bool rawrules, std::vector<std::string> &standaloneTargets,
                               const cling::Interpreter &interp);
 
 //______________________________________________________________________________
-void WriteRulesRegistration(std::ostream &finalString,
-                            const std::string &dictName,
+void WriteRulesRegistration(std::ostream &finalString, const std::string &dictName,
                             const std::vector<std::string> &standaloneTargets);
 
 //______________________________________________________________________________

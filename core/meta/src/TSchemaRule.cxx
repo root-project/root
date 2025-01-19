@@ -98,31 +98,34 @@ TSchemaRule::TSchemaRule(): fVersionVect( nullptr ), fChecksumVect( nullptr ),
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 TSchemaRule::TSchemaRule(TSchemaRule::RuleType_t type, const char *targetClass,
-                         const ROOT::Internal::TSchemaHelper& helper) :
-                         fVersionVect( nullptr ), fChecksumVect( nullptr ),
-                         fTargetVect( nullptr ), fSourceVect( nullptr ),
-                         fIncludeVect( nullptr ), fEmbed( kTRUE ),
-                         fReadFuncPtr( nullptr ), fReadRawFuncPtr( nullptr ),
-                         fRuleType( type )
+                         const ROOT::Internal::TSchemaHelper &helper)
+   : fVersionVect(nullptr),
+     fChecksumVect(nullptr),
+     fTargetVect(nullptr),
+     fSourceVect(nullptr),
+     fIncludeVect(nullptr),
+     fEmbed(kTRUE),
+     fReadFuncPtr(nullptr),
+     fReadRawFuncPtr(nullptr),
+     fRuleType(type)
 {
-   SetTarget( helper.fTarget );
-   SetTargetClass( targetClass );
-   SetSourceClass( helper.fSourceClass );
-   SetSource( helper.fSource );
-   SetCode( helper.fCode );
-   SetVersion( helper.fVersion );
-   SetChecksum( helper.fChecksum );
-   SetEmbed( helper.fEmbed );
-   SetInclude( helper.fInclude );
-   SetAttributes( helper.fAttributes );
+   SetTarget(helper.fTarget);
+   SetTargetClass(targetClass);
+   SetSourceClass(helper.fSourceClass);
+   SetSource(helper.fSource);
+   SetCode(helper.fCode);
+   SetVersion(helper.fVersion);
+   SetChecksum(helper.fChecksum);
+   SetEmbed(helper.fEmbed);
+   SetInclude(helper.fInclude);
+   SetAttributes(helper.fAttributes);
 
-   if( type == TSchemaRule::kReadRule ) {
-      SetReadFunctionPointer( (TSchemaRule::ReadFuncPtr_t)helper.fFunctionPtr );
+   if (type == TSchemaRule::kReadRule) {
+      SetReadFunctionPointer((TSchemaRule::ReadFuncPtr_t)helper.fFunctionPtr);
    } else {
-      SetReadRawFunctionPointer( (TSchemaRule::ReadRawFuncPtr_t)helper.fFunctionPtr );
+      SetReadRawFunctionPointer((TSchemaRule::ReadRawFuncPtr_t)helper.fFunctionPtr);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
