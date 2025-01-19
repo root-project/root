@@ -4735,53 +4735,52 @@ void TStreamerInfo::InsertArtificialElements(std::vector<const ROOT::TSchemaRule
       // existing in this StreamerInfo.
       const TObjArray *sources = rule->GetSource();
       if (sources)
-      for(auto src : TRangeDynCast<ROOT::TSchemaRule::TSources>( *sources ))
-      {
-         auto source_element = dynamic_cast<TStreamerElement *>(GetElements()->FindObject(src->GetName()));
-         if (!source_element) {
-            // It might still be in one the base classes.
-            if (fClass->GetListOfRealData() && !fClass->GetListOfRealData()->FindObject(src->GetName()))
-            {
-               // Missing source.
-               if (!canIgnore(rule)) {
+         for (auto src : TRangeDynCast<ROOT::TSchemaRule::TSources>(*sources)) {
+            auto source_element = dynamic_cast<TStreamerElement *>(GetElements()->FindObject(src->GetName()));
+            if (!source_element) {
+               // It might still be in one the base classes.
+               if (fClass->GetListOfRealData() && !fClass->GetListOfRealData()->FindObject(src->GetName())) {
+                  // Missing source.
+                  if (!canIgnore(rule)) {
+                     TString ruleStr;
+                     rule->AsString(ruleStr);
+                     Warning("InsertArtificialElements",
+                             "For class %s in StreamerInfo %d is missing the source data member `%s` when trying to "
+                             "apply the "
+                             "rule:\n   %s",
+                             GetName(), GetClassVersion(), src->GetName(), ruleStr.Data());
+                  }
+                  rule = nullptr;
+                  break;
+               }
+            } else {
+               // The source exists, let's check if it has the expected type.
+               auto [memClass, memType, datasize, dimensions, totaldim] = GetSourceType(src, source_element);
+               if ((memClass != source_element->GetNewClass() || memType != source_element->GetNewType()) &&
+                   (memType != TVirtualStreamerInfo::kNoContextMenu && memType != TVirtualStreamerInfo::kNoType)) {
+                  const char *dim = src->GetDimensions();
                   TString ruleStr;
                   rule->AsString(ruleStr);
-                  Warning("InsertArtificialElements",
-                        "For class %s in StreamerInfo %d is missing the source data member `%s` when trying to apply the "
-                        "rule:\n   %s",
-                        GetName(), GetClassVersion(), src->GetName(), ruleStr.Data());
+                  auto cl = source_element->GetNewClass();
+                  TString classmsg;
+                  if (memClass != cl) {
+                     classmsg = "and the memory TClass is \"";
+                     classmsg += cl ? cl->GetName() : "nullptr";
+                     classmsg += "\" while the rule needed \"";
+                     classmsg += memClass ? memClass->GetName() : "nullptr";
+                     classmsg += "\"";
+                  }
+                  Error("InsertArtificialElements",
+                        "For class %s in StreamerInfo %d a rule has conflicting type for the source \"%s %s%s\",\n"
+                        "   The TStreamerElement has memory type %d (needed %d) %s:\n   %s",
+                        GetName(), GetClassVersion(), src->GetTypeForDeclaration().Data(), src->GetName(),
+                        dim && dim[0] ? dim : "", source_element->GetNewType(), memType, classmsg.Data(),
+                        ruleStr.Data());
+                  rule = nullptr;
+                  break;
                }
-               rule = nullptr;
-               break;
-            }
-         } else {
-            // The source exists, let's check if it has the expected type.
-            auto [memClass, memType, datasize, dimensions, totaldim] = GetSourceType(src, source_element);
-            if ((memClass != source_element->GetNewClass() || memType != source_element->GetNewType())
-                && (memType != TVirtualStreamerInfo::kNoContextMenu && memType != TVirtualStreamerInfo::kNoType))
-            {
-               const char *dim = src->GetDimensions();
-               TString ruleStr;
-               rule->AsString(ruleStr);
-               auto cl = source_element->GetNewClass();
-               TString classmsg;
-               if (memClass != cl) {
-                  classmsg = "and the memory TClass is \"";
-                  classmsg += cl ? cl->GetName() : "nullptr";
-                  classmsg += "\" while the rule needed \"";
-                  classmsg += memClass ? memClass->GetName() : "nullptr";
-                  classmsg += "\"";
-               }
-               Error("InsertArtificialElements",
-                     "For class %s in StreamerInfo %d a rule has conflicting type for the source \"%s %s%s\",\n"
-                     "   The TStreamerElement has memory type %d (needed %d) %s:\n   %s",
-                     GetName(), GetClassVersion(), src->GetTypeForDeclaration().Data(), src->GetName(),
-                     dim && dim[0] ? dim : "", source_element->GetNewType(), memType, classmsg.Data(), ruleStr.Data());
-               rule = nullptr;
-               break;
             }
          }
-      }
 
       if (!rule) continue;
 
