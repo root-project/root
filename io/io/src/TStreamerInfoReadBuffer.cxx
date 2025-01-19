@@ -327,10 +327,9 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, const TCompInfo *c
 
       // skip Class *  not derived from TObject with comment field  //->
       case TStreamerInfo::kSkip + TStreamerInfo::kAnyp:
-      case TStreamerInfo::kSkip + TStreamerInfo::kAnyp + TStreamerInfo::kOffsetL:
-      {
+      case TStreamerInfo::kSkip + TStreamerInfo::kAnyp + TStreamerInfo::kOffsetL: {
          DOLOOP {
-            for (Int_t j=0;j<compinfo->fLength;j++) {
+            for (Int_t j = 0; j < compinfo->fLength; j++) {
                b.SkipObjectAny();
             }
          }
@@ -339,8 +338,7 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, const TCompInfo *c
 
       // skip Class*   not derived from TObject
       case TStreamerInfo::kSkip + TStreamerInfo::kAnyP:
-      case TStreamerInfo::kSkip + TStreamerInfo::kAnyP + TStreamerInfo::kOffsetL:
-      {
+      case TStreamerInfo::kSkip + TStreamerInfo::kAnyP + TStreamerInfo::kOffsetL: {
          DOLOOP {
             for (Int_t j=0;j<compinfo->fLength;j++) {
                b.SkipObjectAny();
@@ -351,10 +349,9 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, const TCompInfo *c
 
       // skip Any Class not derived from TObject
       case TStreamerInfo::kSkip + TStreamerInfo::kAny:
-      case TStreamerInfo::kSkip + TStreamerInfo::kAny + TStreamerInfo::kOffsetL:
-      {
+      case TStreamerInfo::kSkip + TStreamerInfo::kAny + TStreamerInfo::kOffsetL: {
          DOLOOP {
-            for (Int_t j=0;j<compinfo->fLength;j++) {
+            for (Int_t j = 0; j < compinfo->fLength; j++) {
                b.SkipObjectAny();
             }
          }
@@ -382,8 +379,8 @@ Int_t TStreamerInfo::ReadBufferSkip(TBuffer &b, const T &arr, const TCompInfo *c
       case TStreamerInfo::kSkip + TStreamerInfo::kStreamLoop + TStreamerInfo::kOffsetL:
       case TStreamerInfo::kSkip + TStreamerInfo::kStreamer: {
          DOLOOP {
-            for (Int_t j=0;j<compinfo->fLength;j++) {
-              b.SkipObjectAny();
+            for (Int_t j = 0; j < compinfo->fLength; j++) {
+               b.SkipObjectAny();
             }
          }
          break;
@@ -795,17 +792,17 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
 
       if (R__TestUseCache<T>(aElement)) {
          Int_t bufpos = b.Length();
-         if (b.PeekDataCache()==0) {
+         if (b.PeekDataCache() == 0) {
             Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",thisVar->GetName(),aElement->GetName());
             thisVar->ReadBufferSkip(b,arr,compinfo[i],compinfo[i]->fType+TStreamerInfo::kSkip,aElement,narr,eoffset);
          } else {
             if (gDebug > 1) {
                printf("ReadBuffer, class:%s, name=%s, fType[%d]=%d,"
-                  " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
-                  fClass->GetName(),aElement->GetName(),i,compinfo[i]->fType,
-                  aElement->ClassName(),b.Length(),arr[0], eoffset,b.PeekDataCache()->GetObjectAt(0));
+                      " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
+                      fClass->GetName(), aElement->GetName(), i, compinfo[i]->fType, aElement->ClassName(), b.Length(),
+                      arr[0], eoffset, b.PeekDataCache()->GetObjectAt(0));
             }
-            thisVar->ReadBuffer(b,*b.PeekDataCache(),compinfo,i,i+1,narr,eoffset, arrayMode);
+            thisVar->ReadBuffer(b, *b.PeekDataCache(), compinfo, i, i + 1, narr, eoffset, arrayMode);
          }
          if (aElement->TestBit(TStreamerElement::kRepeat)) { b.SetBufferOffset(bufpos); }
          continue;
@@ -1095,7 +1092,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
          case TStreamerInfo::kAnyP:    // Class*  not derived from TObject with no comment field NOTE:: Re-added by Phil
          case TStreamerInfo::kAnyP+TStreamerInfo::kOffsetL: {
             DOLOOP {
-               b.ReadFastArray((void**)(arr[k]+ioffset), newCle ? newCle : cle, compinfo[i]->fLength, isPreAlloc, pstreamer, cle);
+               b.ReadFastArray((void **)(arr[k] + ioffset), newCle ? newCle : cle, compinfo[i]->fLength, isPreAlloc,
+                               pstreamer, cle);
             }
          }
          continue;
@@ -1393,7 +1391,7 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
 
          case TStreamerInfo::kAny+TStreamerInfo::kOffsetL: {
             DOLOOP {
-               b.ReadFastArray((void*)(arr[k]+ioffset), newCle ? newCle : cle, compinfo[i]->fLength, pstreamer, cle);
+               b.ReadFastArray((void *)(arr[k] + ioffset), newCle ? newCle : cle, compinfo[i]->fLength, pstreamer, cle);
             }
             continue;
          }
@@ -1698,12 +1696,8 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
             continue;
          }
 
-         case TStreamerInfo::kCacheNew:
-            b.PushDataCache( new TVirtualArray( aElement->GetClassPointer(), narr ) );
-            continue;
-         case TStreamerInfo::kCacheDelete:
-            delete b.PopDataCache();
-            continue;
+         case TStreamerInfo::kCacheNew: b.PushDataCache(new TVirtualArray(aElement->GetClassPointer(), narr)); continue;
+         case TStreamerInfo::kCacheDelete: delete b.PopDataCache(); continue;
 
          case -1:
             // -- Skip an ignored TObject base class.

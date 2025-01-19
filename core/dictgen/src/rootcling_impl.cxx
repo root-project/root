@@ -2649,15 +2649,9 @@ int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootP
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int GenerateFullDict(std::ostream &dictStream,
-                     std::string dictName,
-                     cling::Interpreter &interp,
-                     RScanner &scan,
-                     const ROOT::TMetaUtils::RConstructorTypes &ctorTypes,
-                     bool isSplit,
-                     bool isGenreflex,
-                     bool isSelXML,
-                     bool writeEmptyRootPCM)
+int GenerateFullDict(std::ostream &dictStream, std::string dictName, cling::Interpreter &interp, RScanner &scan,
+                     const ROOT::TMetaUtils::RConstructorTypes &ctorTypes, bool isSplit, bool isGenreflex,
+                     bool isSelXML, bool writeEmptyRootPCM)
 {
    ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
 
@@ -4967,15 +4961,8 @@ int RootClingMain(int argc,
          rootclingRetCode +=  FinalizeStreamerInfoWriting(interp);
       }
    } else {
-      rootclingRetCode += GenerateFullDict(*splitDictStream,
-                                 modGen.GetDictionaryName(),
-                                 interp,
-                                 scan,
-                                 constructorTypes,
-                                 gOptSplit,
-                                 isGenreflex,
-                                 isSelXML,
-                                 gOptWriteEmptyRootPCM);
+      rootclingRetCode += GenerateFullDict(*splitDictStream, modGen.GetDictionaryName(), interp, scan, constructorTypes,
+                                           gOptSplit, isGenreflex, isSelXML, gOptWriteEmptyRootPCM);
    }
 
    if (rootclingRetCode != 0) {

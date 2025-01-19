@@ -15,7 +15,7 @@
 #include "DllImport.h"
 
 namespace clang {
-   class CXXRecordDecl;
+class CXXRecordDecl;
 }
 
 namespace ROOT

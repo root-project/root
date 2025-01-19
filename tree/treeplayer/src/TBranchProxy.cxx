@@ -523,9 +523,9 @@ bool ROOT::Detail::TBranchProxy::Setup()
                                   bcount?bcount->GetName():"unknown"));
                fMemberOffset = 0;
             } else if (fMemberOffset == TVirtualStreamerInfo::kMissing) {
-               Error("Setup","%s",Form("Missing data member in a TClonesArray, %s in %s and %s",
-                     fDataMember.Data(), fBranch->GetName(),
-                     bcount ? bcount->GetName() : "unknown"));
+               Error("Setup", "%s",
+                     Form("Missing data member in a TClonesArray, %s in %s and %s", fDataMember.Data(),
+                          fBranch->GetName(), bcount ? bcount->GetName() : "unknown"));
                fMemberOffset = 0;
             }
 
@@ -545,21 +545,23 @@ bool ROOT::Detail::TBranchProxy::Setup()
 
             }
             if (fMemberOffset < 0) {
-               Error("Setup","%s",Form("Negative offset %d for %s in %s, class: %s",
-                     fMemberOffset, fDataMember.Data(), fBranch->GetName(), fClass->GetName()));
+               Error("Setup", "%s",
+                     Form("Negative offset %d for %s in %s, class: %s", fMemberOffset, fDataMember.Data(),
+                          fBranch->GetName(), fClass->GetName()));
                fMemberOffset = 0;
             } else if (fMemberOffset == TVirtualStreamerInfo::kMissing) {
-               Error("Setup","%s",Form("Missing data member %s in %s, class: %s",
-                     fDataMember.Data(), fBranch->GetName(), fClass->GetName()));
+               Error("Setup", "%s",
+                     Form("Missing data member %s in %s, class: %s", fDataMember.Data(), fBranch->GetName(),
+                          fClass->GetName()));
                fMemberOffset = 0;
             }
 
          // The extra condition (fElement is not a TStreamerSTL) is to handle the case where fBranch is a
          // TBranchElement and fElement is a TStreamerSTL. Without the extra condition we get an error
          // message, although the vector (i.e. the TBranchElement) is accessible.
-         } else if (fParent && fBranch->IsA() != TBranch::Class() && fElement->IsA() != TStreamerBasicType::Class()
-                    && fElement->IsA() != TStreamerSTL::Class()) {
-            Error("Setup","%s",Form("Missing TClass object for %s",fClassName.Data()));
+         } else if (fParent && fBranch->IsA() != TBranch::Class() && fElement->IsA() != TStreamerBasicType::Class() &&
+                    fElement->IsA() != TStreamerSTL::Class()) {
+            Error("Setup", "%s", Form("Missing TClass object for %s", fClassName.Data()));
          }
 
          if ( fBranch->IsA()==TBranchElement::Class()

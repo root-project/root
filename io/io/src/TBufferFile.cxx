@@ -3411,9 +3411,9 @@ Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClas
    Version_t v = ReadVersion(&start,&count);
 
    TStreamerInfo *sinfo = nullptr;
-   if( onFileClass ) {
-      sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, v );
-      if( !sinfo )
+   if (onFileClass) {
+      sinfo = (TStreamerInfo *)cl->GetConversionStreamerInfo(onFileClass, v);
+      if (!sinfo)
          return 0;
    }
    if (!sinfo)

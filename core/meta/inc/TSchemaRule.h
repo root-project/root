@@ -15,9 +15,9 @@ class TVirtualObject;
 class TObjArray;
 namespace ROOT {
 namespace Internal {
-   struct TSchemaHelper;
+struct TSchemaHelper;
 }
-}
+} // namespace ROOT
 
 namespace ROOT {
 
@@ -47,17 +47,14 @@ namespace ROOT {
 
             Int_t GetPointerLevel() const { return fPointerLevel; }
 
-            const char* GetUnderlyingTypeName() const
-            {
-               return fTitle;
-            }
+            const char *GetUnderlyingTypeName() const { return fTitle; }
 
             // The source can be declared with:
             //   "%s %s%s;", GetTypeForDeclaration().Data(), GetName(), GetDimensions);
             TString GetTypeForDeclaration()
             {
                TString type = fTitle;
-               for(Int_t s = 0; s < fPointerLevel; ++s)
+               for (Int_t s = 0; s < fPointerLevel; ++s)
                   type.Append('*');
                return type;
             }
@@ -81,7 +78,7 @@ namespace ROOT {
          typedef void (*ReadRawFuncPtr_t)( char*, TBuffer&);
 
          TSchemaRule();
-         TSchemaRule(RuleType_t type, const char *targetClass, const ROOT::Internal::TSchemaHelper& helper);
+         TSchemaRule(RuleType_t type, const char *targetClass, const ROOT::Internal::TSchemaHelper &helper);
          virtual ~TSchemaRule();
 
          TSchemaRule( const TSchemaRule& rhs );
