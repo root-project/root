@@ -1719,17 +1719,19 @@ void TClass::Init(const char *name, Version_t cversion,
       // std::pairs have implicit conversions
       GetSchemaRules(kTRUE);
    }
-   for(auto ruletype : {ROOT::TSchemaRule::kReadRule, ROOT::TSchemaRule::kReadRawRule}) {
+   for (auto ruletype : {ROOT::TSchemaRule::kReadRule, ROOT::TSchemaRule::kReadRawRule}) {
       auto &registry = GetReadRulesRegistry(ruletype);
       auto rulesiter = registry.find(GetName());
       if (rulesiter != registry.end()) {
-         auto rset = GetSchemaRules( kTRUE );
-         for(const auto &helper : rulesiter->second) {
+         auto rset = GetSchemaRules(kTRUE);
+         for (const auto &helper : rulesiter->second) {
             auto rule = new ROOT::TSchemaRule(ruletype, GetName(), helper);
             TString errmsg;
-            if( !rset->AddRule( rule, ROOT::Detail::TSchemaRuleSet::kCheckAll, &errmsg ) ) {
-               Warning( "Init", "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because %s.",
-                        GetName(), helper.fVersion.c_str(), helper.fTarget.c_str(), errmsg.Data() );
+            if (!rset->AddRule(rule, ROOT::Detail::TSchemaRuleSet::kCheckAll, &errmsg)) {
+               Warning(
+                  "Init",
+                  "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because %s.",
+                  GetName(), helper.fVersion.c_str(), helper.fTarget.c_str(), errmsg.Data());
                delete rule;
             }
          }
@@ -3624,16 +3626,16 @@ TRealData* TClass::GetRealData(const char* name) const
    // Try ignoring the array dimensions.
    std::string::size_type firstBracket = givenName.find_first_of("[");
    std::string nameNoDim(givenName.substr(0, firstBracket));
-   TObjLink* lnk = fRealData->FirstLink();
+   TObjLink *lnk = fRealData->FirstLink();
    while (lnk) {
-      TObject* obj = lnk->GetObject();
+      TObject *obj = lnk->GetObject();
       std::string objName(obj->GetName());
       std::string::size_type pos = objName.find_first_of("[");
       if (pos != std::string::npos) {
          objName.erase(pos);
       }
       if (objName == nameNoDim) {
-         return static_cast<TRealData*>(obj);
+         return static_cast<TRealData *>(obj);
       }
       lnk = lnk->Next();
    }
@@ -6918,10 +6920,10 @@ void TClass::StreamerTObject(const TClass* pThis, void *object, TBuffer &b, cons
 ////////////////////////////////////////////////////////////////////////////////
 /// Case of TObjects when fIsOffsetStreamerSet is known to have been set.
 
-void TClass::StreamerTObjectInitialized(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class)
+void TClass::StreamerTObjectInitialized(const TClass *pThis, void *object, TBuffer &b, const TClass *onfile_class)
 {
    if (R__likely(onfile_class == nullptr || pThis == onfile_class)) {
-      TObject *tobj = (TObject*)((Longptr_t)object + pThis->fOffsetStreamer);
+      TObject *tobj = (TObject *)((Longptr_t)object + pThis->fOffsetStreamer);
       tobj->Streamer(b);
    } else {
       // This is the case where we are reading an object of a derived class
@@ -7409,20 +7411,22 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
 /// Rules will end up here if they are created in a dictionary file that does not
 /// contain the dictionary for the target class.
 
-void TClass::RegisterReadRules(ROOT::TSchemaRule::RuleType_t type,
-                               const char *classname, std::vector<::ROOT::Internal::TSchemaHelper> &&rules)
+void TClass::RegisterReadRules(ROOT::TSchemaRule::RuleType_t type, const char *classname,
+                               std::vector<::ROOT::Internal::TSchemaHelper> &&rules)
 {
    R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    auto cl = TClass::GetClass(classname, false, false);
    if (cl) {
-      auto rset = cl->GetSchemaRules( kTRUE );
-      for(const auto &it : rules) {
+      auto rset = cl->GetSchemaRules(kTRUE);
+      for (const auto &it : rules) {
          auto rule = new ROOT::TSchemaRule(type, cl->GetName(), it);
          TString errmsg;
-         if( !rset->AddRule( rule, ROOT::Detail::TSchemaRuleSet::kCheckAll, &errmsg ) ) {
-            ::Warning( "TGenericClassInfo", "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because %s.",
-                        cl->GetName(), it.fVersion.c_str(), it.fTarget.c_str(), errmsg.Data() );
+         if (!rset->AddRule(rule, ROOT::Detail::TSchemaRuleSet::kCheckAll, &errmsg)) {
+            ::Warning(
+               "TGenericClassInfo",
+               "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because %s.",
+               cl->GetName(), it.fVersion.c_str(), it.fTarget.c_str(), errmsg.Data());
             delete rule;
          }
       }

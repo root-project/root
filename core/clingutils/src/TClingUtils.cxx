@@ -1823,7 +1823,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       int i = 0;
       finalString << "\n   // Schema evolution read functions\n";
       std::list<ROOT::SchemaRuleMap_t>::iterator rIt = rulesIt1->second.fRules.begin();
-      while( rIt != rulesIt1->second.fRules.end() ) {
+      while (rIt != rulesIt1->second.fRules.end()) {
 
          //--------------------------------------------------------------------
          // Check if the rules refer to valid data members
@@ -1858,7 +1858,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       int i = 0;
       finalString << "\n   // Schema evolution read raw functions\n";
       std::list<ROOT::SchemaRuleMap_t>::iterator rIt = rulesIt2->second.fRules.begin();
-      while( rIt != rulesIt2->second.fRules.end() ) {
+      while (rIt != rulesIt2->second.fRules.end()) {
 
          //--------------------------------------------------------------------
          // Check if the rules refer to valid data members
@@ -2052,14 +2052,14 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    if( rulesIt1 != ROOT::gReadRules.end() ) {
       finalString << "\n" << "      // the io read rules" << "\n" << "      std::vector<::ROOT::Internal::TSchemaHelper> readrules(" << rulesIt1->second.size() << ");" << "\n";
-      ROOT::WriteSchemaList( rulesIt1->second.fRules, "readrules", finalString );
+      ROOT::WriteSchemaList(rulesIt1->second.fRules, "readrules", finalString);
       finalString << "      instance.SetReadRules( readrules );" << "\n";
       rulesIt1->second.fGenerated = true;
    }
 
    if( rulesIt2 != ROOT::gReadRawRules.end() ) {
       finalString << "\n" << "      // the io read raw rules" << "\n" << "      std::vector<::ROOT::Internal::TSchemaHelper> readrawrules(" << rulesIt2->second.size() << ");" << "\n";
-      ROOT::WriteSchemaList( rulesIt2->second.fRules, "readrawrules", finalString );
+      ROOT::WriteSchemaList(rulesIt2->second.fRules, "readrawrules", finalString);
       finalString << "      instance.SetReadRawRules( readrawrules );" << "\n";
       rulesIt2->second.fGenerated = true;
    }
@@ -2193,19 +2193,17 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
 void ROOT::TMetaUtils::WriteStandaloneReadRules(std::ostream &finalString, bool rawrules,
                                                 std::vector<std::string> &standaloneTargets,
-                                                const cling::Interpreter& interp)
+                                                const cling::Interpreter &interp)
 {
-   for (auto &rulesIt1 : rawrules? ROOT::gReadRawRules : ROOT::gReadRules) {
+   for (auto &rulesIt1 : rawrules ? ROOT::gReadRawRules : ROOT::gReadRules) {
       if (!rulesIt1.second.fGenerated) {
          const clang::Type *typeptr = nullptr;
-         const clang::CXXRecordDecl *target
-            = ROOT::TMetaUtils::ScopeSearch(rulesIt1.first.c_str(), interp,
-                                            true /*diag*/, &typeptr);
-
+         const clang::CXXRecordDecl *target =
+            ROOT::TMetaUtils::ScopeSearch(rulesIt1.first.c_str(), interp, true /*diag*/, &typeptr);
 
          if (!target && !rulesIt1.second.fTargetDecl) {
             ROOT::TMetaUtils::Warning(nullptr, "%d Rule(s) for target class %s was not used!\n", rulesIt1.second.size(),
-                                    rulesIt1.first.c_str());
+                                      rulesIt1.first.c_str());
             continue;
          }
 
@@ -2256,8 +2254,7 @@ void ROOT::TMetaUtils::WriteStandaloneReadRules(std::ostream &finalString, bool 
    }
 }
 
-void ROOT::TMetaUtils::WriteRulesRegistration(std::ostream &finalString,
-                                              const std::string &dictName,
+void ROOT::TMetaUtils::WriteRulesRegistration(std::ostream &finalString, const std::string &dictName,
                                               const std::vector<std::string> &standaloneTargets)
 {
    std::string functionname("RecordReadRules_");
@@ -2267,27 +2264,31 @@ void ROOT::TMetaUtils::WriteRulesRegistration(std::ostream &finalString,
    finalString << "   // Registration Schema evolution read functions\n";
    finalString << "   int " << functionname << "() {" << "\n";
    if (!standaloneTargets.empty())
-      finalString << "\n" << "      ::ROOT::Internal::TSchemaHelper* rule;" << "\n";
-   for (const auto &target : standaloneTargets)
-   {
+      finalString << "\n"
+                  << "      ::ROOT::Internal::TSchemaHelper* rule;" << "\n";
+   for (const auto &target : standaloneTargets) {
       std::string name;
       TClassEdit::GetNormalizedName(name, target);
 
-      ROOT::SchemaRuleClassMap_t::iterator rulesIt1 = ROOT::gReadRules.find( target.c_str() );
+      ROOT::SchemaRuleClassMap_t::iterator rulesIt1 = ROOT::gReadRules.find(target.c_str());
       finalString << "    {\n";
       if (rulesIt1 != ROOT::gReadRules.end()) {
          finalString << "      // the io read rules for " << target << "\n";
-         finalString << "      std::vector<::ROOT::Internal::TSchemaHelper> readrules(" << rulesIt1->second.size() << ");" << "\n";
-         ROOT::WriteSchemaList( rulesIt1->second.fRules, "readrules", finalString );
-         finalString << "      TClass::RegisterReadRules(TSchemaRule::kReadRule, \"" << name << "\", std::move(readrules));\n";
+         finalString << "      std::vector<::ROOT::Internal::TSchemaHelper> readrules(" << rulesIt1->second.size()
+                     << ");" << "\n";
+         ROOT::WriteSchemaList(rulesIt1->second.fRules, "readrules", finalString);
+         finalString << "      TClass::RegisterReadRules(TSchemaRule::kReadRule, \"" << name
+                     << "\", std::move(readrules));\n";
          rulesIt1->second.fGenerated = true;
       }
-      ROOT::SchemaRuleClassMap_t::iterator rulesIt2 = ROOT::gReadRawRules.find( target.c_str() );
+      ROOT::SchemaRuleClassMap_t::iterator rulesIt2 = ROOT::gReadRawRules.find(target.c_str());
       if (rulesIt2 != ROOT::gReadRawRules.end()) {
          finalString << "\n      // the io read raw rules for " << target << "\n";
-         finalString << "      std::vector<::ROOT::Internal::TSchemaHelper> readrawrules(" << rulesIt2->second.size() << ");" << "\n";
-         ROOT::WriteSchemaList( rulesIt2->second.fRules, "readrawrules", finalString );
-         finalString << "      TClass::RegisterReadRules(TSchemaRule::kReadRawRule, \"" << name << "\", std::move(readrawrules));\n";
+         finalString << "      std::vector<::ROOT::Internal::TSchemaHelper> readrawrules(" << rulesIt2->second.size()
+                     << ");" << "\n";
+         ROOT::WriteSchemaList(rulesIt2->second.fRules, "readrawrules", finalString);
+         finalString << "      TClass::RegisterReadRules(TSchemaRule::kReadRawRule, \"" << name
+                     << "\", std::move(readrawrules));\n";
          rulesIt2->second.fGenerated = true;
       }
       finalString << "    }\n";
@@ -2295,7 +2296,7 @@ void ROOT::TMetaUtils::WriteRulesRegistration(std::ostream &finalString,
    finalString << "      return 0;\n";
    finalString << "   }\n";
    finalString << "   static int _R__UNIQUE_DICT_(ReadRules_" << dictName << ") = " << functionname << "();";
-   finalString<<  "R__UseDummy(_R__UNIQUE_DICT_(ReadRules_" << dictName << "));" << "\n";
+   finalString << "R__UseDummy(_R__UNIQUE_DICT_(ReadRules_" << dictName << "));" << "\n";
    finalString << "} // namespace ROOT" << "\n";
 }
 

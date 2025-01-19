@@ -113,8 +113,7 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
 
    // Do not generate/build the StreamerInfo if it is not already there.
    TVirtualStreamerInfo *info = fClass->GetCurrentStreamerInfo();
-   if (rule->GetTarget() && (fClass->GetState() > TClass::kEmulated || info))
-   {
+   if (rule->GetTarget() && (fClass->GetState() > TClass::kEmulated || info)) {
       TObjArrayIter titer( rule->GetTarget() );
       TObject* obj;
       while( (obj = titer.Next()) ) {
@@ -125,7 +124,7 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
          // been set and would make detecting if the data member is local to
          // the current class (as opposed to a base class) more difficult.
          if (fClass->GetState() > TClass::kEmulated) {
-            found = fClass->GetDataMember( str->GetString() ) || fClass->GetBaseClass( str->GetString() );
+            found = fClass->GetDataMember(str->GetString()) || fClass->GetBaseClass(str->GetString());
          } else if (info) {
             found = info->GetElements()->FindObject(str->GetString());
          }

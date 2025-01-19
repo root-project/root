@@ -1071,8 +1071,9 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
          baseOffset = 0; // For now we do not support requesting from a class that is the base of one of the class for which there is transformation to ....
          clOnfile = cl;
          cl = const_cast<TClass*>(expectedClass);
-         if (gDebug >0)
-            Info("ReadObjectAny","Using Converter StreamerInfo from %s to %s",clOnfile->GetName(),expectedClass->GetName());
+         if (gDebug > 0)
+            Info("ReadObjectAny", "Using Converter StreamerInfo from %s to %s", clOnfile->GetName(),
+                 expectedClass->GetName());
       }
       if (cl->GetState() > TClass::kEmulated && expectedClass->GetState() <= TClass::kEmulated) {
          //we cannot mix a compiled class with an emulated class in the inheritance
