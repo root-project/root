@@ -598,7 +598,7 @@ function(ROOTTEST_ADD_OLDTEST)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LABELS;TIMEOUT" ${ARGN})
 
   ROOTTEST_ADD_TEST( make
-                     COMMAND ${ROOT_GMAKE_PROGRAM} cleantest
+                     COMMAND ${ROOT_GMAKE_PROGRAM} cleantest ${ROOTTEST_PARALLEL_MAKE}
                      WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                      DEPENDS roottest-root-io-event
                      LABELS ${ARG_LABELS} TIMEOUT ${ARG_TIMEOUT})
