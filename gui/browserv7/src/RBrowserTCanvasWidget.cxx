@@ -162,6 +162,20 @@ public:
       fWebCanvas->ShowWebWindow("embed");
    }
 
+   RBrowserTCanvasWidget(const std::string &name, TCanvas *canv, TWebCanvas *webcanv) : RBrowserWidget(name)
+   {
+      fCanvas = canv;
+      fCanvasName = fCanvas->GetName();
+      fCanvas->SetBatch(kTRUE); // mark canvas as batch
+
+      fWebCanvas = webcanv;
+      // use async mode to prevent blocking inside qt5/qt6/cef
+      fWebCanvas->SetAsyncMode(kTRUE);
+
+      // assign implementation
+      SetPrivateCanvasFields(true);
+   }
+
    virtual ~RBrowserTCanvasWidget()
    {
       if (!fCanvas || !gROOT->GetListOfCanvases()->FindObject(fCanvas))
@@ -289,6 +303,18 @@ protected:
       if (!canv) return nullptr;
 
       return std::make_shared<RBrowserTCanvasWidget>(name, canv);
+   }
+
+   std::shared_ptr<RBrowserWidget> DetectWindow(RWebWindow &win) final
+   {
+      TIter iter(gROOT->GetListOfCanvases());
+
+      while (auto canv = static_cast<TCanvas *>(iter())) {
+         auto web_canv = dynamic_cast<TWebCanvas *>(canv->GetCanvasImp());
+         if (web_canv->GetWebWindow().get() == &win)
+            return std::make_shared<RBrowserTCanvasWidget>(canv->GetName(), canv, web_canv);
+      }
+      return nullptr;
    }
 
 public:

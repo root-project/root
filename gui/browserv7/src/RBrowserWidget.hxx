@@ -78,6 +78,10 @@ protected:
 
    virtual std::shared_ptr<RBrowserWidget> CreateFor(const std::string &, std::shared_ptr<Browsable::RElement> &) { return nullptr; }
 
+   virtual std::shared_ptr<RBrowserWidget> DetectWindow(RWebWindow &) { return nullptr; }
+
+   static RBrowserWidgetProvider *GetProvider(const std::string &kind);
+
    static ProvidersMap_t& GetMap();
 
 public:
@@ -88,6 +92,8 @@ public:
    static std::shared_ptr<RBrowserWidget> CreateWidget(const std::string &kind, const std::string &name);
 
    static std::shared_ptr<RBrowserWidget> CreateWidgetFor(const std::string &kind, const std::string &name, std::shared_ptr<Browsable::RElement> &element);
+
+   static std::shared_ptr<RBrowserWidget> DetectCatchedWindow(const std::string &kind, RWebWindow &win);
 };
 
 } // namespace ROOT
