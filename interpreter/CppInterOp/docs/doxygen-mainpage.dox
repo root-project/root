@@ -1,0 +1,18 @@
+/// @mainpage CppInterOp
+///
+/// @section main_intro Introduction
+/// A Clang-based C++ Interoperability library, which allow C++ code to be accessed and used from other programming languages.
+/// This involves creating a bridge or wrapper that exposes C++ functionality through a language-specific API. 
+/// The document explains the detailings of the API of the language interoperability layer. This library allows different languages
+/// to interoperate with C++ code, instantiate a template and execute it.
+///
+/// This documentation describes the @b internal software that makes 
+/// up CppInterOp, not the @b external use of CppInterOp. There are no complete instructions
+/// here on how to use CppInterOp, only the APIs that make up the software. For 
+/// usage instructions, please see the programmer's guide or reference 
+/// manual.
+///
+/// @section main_caveat Caveat 
+/// This documentation is generated directly from the source code with doxygen. 
+/// Since CppInterOp is constantly under active development, what you're about to
+/// read is out of date!

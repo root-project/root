@@ -1,0 +1,60 @@
+Checks: >
+  -*,
+  bugprone-*,
+  clang-diagnostic-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  llvm-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -bugprone-narrowing-conversions,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-implicit-widening-of-multiplication-result,
+  -bugprone-unchecked-optional-access,
+  -misc-const-correctness,
+  -misc-unused-parameters,
+  -misc-non-private-member-variables-in-classes,
+  -misc-no-recursion,
+  -misc-use-anonymous-namespace,
+  -modernize-return-braced-init-list,
+  -modernize-use-trailing-return-type,
+  -readability-braces-around-statements,
+  -readability-identifier-length,
+  -readability-implicit-bool-conversion,
+  -readability-magic-numbers,
+  -readability-named-parameter,
+  -readability-function-cognitive-complexity,
+  -readability-redundant-access-specifiers,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-init-variables,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-member-init,
+  -cppcoreguidelines-macro-usage,
+  -llvm-namespace-comment
+
+CheckOptions:
+  - key:             readability-identifier-naming.ClassCase
+    value:           aNy_CasE
+  - key:             readability-identifier-naming.FunctionCase
+    value:           aNy_CasE
+  - key:             readability-identifier-naming.MemberCase
+    value:           aNy_CasE
+  - key:             readability-identifier-naming.ParameterCase
+    value:           aNy_CasE
+  - key:             readability-identifier-naming.UnionCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.VariableCase
+    value:           aNy_CasE
+  - key:             readability-identifier-naming.IgnoreMainLikeFunctions
+    value:           1
+  - key:             cppcoreguidelines-avoid-magic-numbers.IgnoreMacros
+    value:           1
+  - key:             cppcoreguidelines-pro-bounds-pointer-arithmetic.Pessimistic
+    value:           1
+  - key:             cppcoreguidelines-pro-type-member-init.InitWithEquals
+    value:           1
+  - key:             llvm-namespace-comment.Spaces
+    value:           2
