@@ -5,3 +5,4 @@
 #
 #-------------------------------------------------------------------------------
 ROOTTEST_ADD_OLDTEST(LABELS longtest)
+ROOTTEST_ADD_TESTDIRS()
