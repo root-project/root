@@ -1,0 +1,33 @@
+diff --git a/clang/lib/CodeGen/CodeGenModule.cpp b/clang/lib/CodeGen/CodeGenModule.cpp
+index 978e4d404..683449958 100644
+--- a/clang/lib/CodeGen/CodeGenModule.cpp
++++ b/clang/lib/CodeGen/CodeGenModule.cpp
+@@ -7206,7 +7206,6 @@ void CodeGenModule::moveLazyEmissionStates(CodeGenModule *NewBuilder) {
+          "Newly created module should not have manglings");
+   NewBuilder->Manglings = std::move(Manglings);
+ 
+-  assert(WeakRefReferences.empty() && "Not all WeakRefRefs have been applied");
+   NewBuilder->WeakRefReferences = std::move(WeakRefReferences);
+ 
+   NewBuilder->TBAA = std::move(TBAA);
+diff --git a/clang/test/Interpreter/execute-weak.cpp b/clang/test/Interpreter/execute-weak.cpp
+index 5b343512c..3c6978165 100644
+--- a/clang/test/Interpreter/execute-weak.cpp
++++ b/clang/test/Interpreter/execute-weak.cpp
+@@ -2,11 +2,16 @@
+ // RUN: clang-repl "int i = 10;" 'extern "C" int printf(const char*,...);' \
+ // RUN:            'auto r1 = printf("i = %d\n", i);' | FileCheck --check-prefix=CHECK-DRIVER %s
+ // CHECK-DRIVER: i = 10
++//
+ // UNSUPPORTED: system-aix, system-windows
+ // RUN: cat %s | clang-repl | FileCheck %s
++
+ extern "C" int printf(const char *, ...);
+ int __attribute__((weak)) bar() { return 42; }
+ auto r4 = printf("bar() = %d\n", bar());
+ // CHECK: bar() = 42
+ 
++int a = 12;
++static __typeof(a) b __attribute__((__weakref__("a")));
++int c = b;
+ %quit

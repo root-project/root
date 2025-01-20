@@ -514,3 +514,15 @@ mark_as_advanced(FORCE BUG_REPORT_URL BUILD_CLANG_FORMAT_VS_PLUGIN BUILD_SHARED_
                        C_INCLUDE_DIRS DEFAULT_SYSROOT FFI_INCLUDE_DIR FFI_LIBRARY_DIR
                        GCC_INSTALL_PREFIX LIBCLANG_BUILD_STATIC TOOL_INFO_PLIST)
 mark_as_advanced(CLEAR LLVM_ENABLE_ASSERTIONS LLVM_BUILD_TYPE)
+
+##################### LIBINTEROP ###########################
+
+#---Set InterOp include directories, for any ROOT component that requires the headers--------------------------------------------------------
+set(CPPINTEROP_INCLUDE_DIRS
+  ${CMAKE_CURRENT_SOURCE_DIR}/CppInterOp/include
+  CACHE STRING "CppInterOp include directories.")
+
+#---Set InterOp to build on Cling, this can be toggled to use Clang-REPL-------------------------------------------------------
+set(CPPINTEROP_USE_CLING ON BOOL "Use Cling as backend")
+
+add_subdirectory(CppInterOp)
