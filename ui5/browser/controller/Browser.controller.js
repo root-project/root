@@ -329,10 +329,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          oTabContainer.addItem(item);
 
-         const handle = this.websocket.createChannel();
+         // with non empty url creates independent connection
+         const handle = this.websocket.createChannel(url);
          handle.setUserArgs({ nobrowser: true });
          item._jsroot_conn = handle; // keep to be able disconnect
-         item._jsroot_channelid = handle.getChannelId(); // indicate that channel id must be reported
 
          return XMLView.create({
             viewName: "rootui5.tree.view.TreeViewer",
@@ -1192,8 +1192,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
             this.findTab(arr[2], true); // set active
             Promise.resolve(pr).then(tab => {
-               if (tab?._jsroot_channelid)
-                  this.sendNewChannel(arr[2], tab?._jsroot_channelid);
+               if (tab?._jsroot_conn?.isChannel())
+                  this.sendNewChannel(arr[2], tab._jsroot_conn.getChannelId());
             });
             break;
          }
@@ -1343,8 +1343,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             } else {
                const pr = this.createElement(kind, arr[k][1], arr[k][2], arr[k][3], arr[k][4]);
                Promise.resolve(pr).then(tab => {
-                  if (tab?._jsroot_channelid)
-                     this.sendNewChannel(arr[k][2], tab?._jsroot_channelid);
+                  if (tab?._jsroot_conn?.isChannel())
+                     this.sendNewChannel(arr[k][2], tab._jsroot_conn.getChannelId());
                });
             }
          }
@@ -1387,12 +1387,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          });
 
          oTabContainer.addItem(item);
-         // oTabContainer.setSelectedItem(item);
 
-         const handle = this.websocket.createChannel();
+         // with non empty url creates independent connection
+         const handle = this.websocket.createChannel(url);
          handle.setUserArgs({ nobrowser: true });
          item._jsroot_conn = handle; // keep to be able disconnect
-         item._jsroot_channelid = handle.getChannelId(); // indicate that channel id must be reported
 
          return XMLView.create({
             viewName: 'rootui5.geom.view.GeomViewer',
@@ -1405,7 +1404,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       createCanvas(kind, url, name, title, tooltip) {
-         if (!url || !name || (kind != "tcanvas" && kind != "rcanvas"))
+         if (!name || (kind != "tcanvas" && kind != "rcanvas"))
             return null;
 
          let item = new TabContainerItem({
@@ -1418,10 +1417,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.byId("tabContainer").addItem(item);
 
-         // argument for connect, makes relative path
-         const conn = this.websocket.createChannel();
+         // with non empty url creates independent connection
+         const conn = this.websocket.createChannel(url);
          item._jsroot_conn = conn; // keep to be able disconnect
-         item._jsroot_channelid = conn.getChannelId(); // indicate that channel id must be reported
 
          return import('jsroot/draw').then(draw => {
             if (kind == "rcanvas")
