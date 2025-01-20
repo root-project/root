@@ -22,6 +22,7 @@
 
 #include "RBrowserWidget.hxx"
 
+#include "TVirtualPad.h"
 #include "TString.h"
 #include "TSystem.h"
 #include "TError.h"
@@ -309,7 +310,14 @@ RBrowser::RBrowser(bool use_rcanvas)
       if (!fWebWindow || !fCatchWindowShow || kind.empty())
          return false;
 
-      auto widget = AddCatchedWidget(&win, kind);
+      auto widget = RBrowserWidgetProvider::DetectCatchedWindow(kind, win);
+      if (widget) {
+         widget->fBrowser = this;
+         fWidgets.emplace_back(widget);
+         fActiveWidgetName = widget->GetName();
+      } else {
+         widget = AddCatchedWidget(&win, kind);
+      }
 
       if (widget && fWebWindow && (fWebWindow->NumConnections() > 0))
          fWebWindow->Send(0, NewWidgetMsg(widget));
