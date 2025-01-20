@@ -488,8 +488,12 @@ class WebWindowHandle {
    }
 
    /** @summary Method open channel, which will share same connection, but can be used independently from main
+     * If @param url is provided - creates fully independent instance and perform connection with it
      * @private */
-   createChannel() {
+   createChannel(url) {
+      if (url)
+         return this.createNewInstance(url);
+
       if (this.master)
          return this.master.createChannel();
 
@@ -516,6 +520,8 @@ class WebWindowHandle {
 
    /** @summary Returns used channel ID, 1 by default */
    getChannelId() { return this.channelid && this.master ? this.channelid : 1; }
+
+   isChannel() { return this.getChannelId() > 1; }
 
    /** @summary Assign href parameter
      * @param {string} [path] - absolute path, when not specified window.location.url will be used
