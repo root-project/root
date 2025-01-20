@@ -67,3 +67,5 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 
 execWriteAfterOld.log: stringarray_h.${DllSuf} writefile_cxx.${DllSuf}
 
+execreadfile.clog: execWriteAfterOld.log
+
