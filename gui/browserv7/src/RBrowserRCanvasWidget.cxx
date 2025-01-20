@@ -34,12 +34,15 @@ public:
       fCanvas->Show("embed");
    }
 
-   RBrowserRCanvasWidget(const std::string &name, std::shared_ptr<ROOT::Experimental::RCanvas> &canv) : ROOT::RBrowserWidget(name)
+   RBrowserRCanvasWidget(const std::string &name, std::shared_ptr<ROOT::Experimental::RCanvas> &canv, bool catched_canvas = false) : ROOT::RBrowserWidget(name)
    {
-      fCanvas = std::move(canv);
-
-      // ensure creation of web window
-      fCanvas->Show("embed");
+      if (catched_canvas) {
+         fCanvas = canv;
+      } else {
+         fCanvas = std::move(canv);
+         // ensure creation of web window
+         fCanvas->Show("embed");
+      }
    }
 
    ~RBrowserRCanvasWidget() override = default;
@@ -112,6 +115,17 @@ protected:
 
       return std::make_shared<RBrowserRCanvasWidget>(name, canv);
    }
+
+   std::shared_ptr<ROOT::RBrowserWidget> DetectWindow(ROOT::RWebWindow &win) final
+   {
+      for(auto & canv : ROOT::Experimental::RCanvas::GetCanvases()) {
+         if (canv->GetWindow().get() == &win)
+            return std::make_shared<RBrowserRCanvasWidget>(canv->GetTitle(), const_cast<std::shared_ptr<ROOT::Experimental::RCanvas> &>(canv), true);
+      }
+
+      return nullptr;
+   }
+
 
 public:
    RBrowserRCanvasProvider() : ROOT::RBrowserWidgetProvider("rcanvas") {}
