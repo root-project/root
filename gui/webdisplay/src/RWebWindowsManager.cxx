@@ -854,6 +854,11 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
       InformListener(std::string("win:") + winurl + "\n");
    }
 
+   auto server = GetServer();
+
+   if (win.IsUseCurrentDir() && server)
+      server->AddLocation("currentdir/", ".");
+
    if (!args.IsHeadless() && ((args.GetBrowserKind() == RWebDisplayArgs::kServer) || gROOT->IsWebDisplayBatch()) /*&& (RWebWindowWSHandler::GetBoolEnv("WebGui.OnetimeKey") != 1)*/) {
       std::cout << "New web window: " << args.GetUrl() << std::endl;
       return 0;
@@ -880,11 +885,6 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
       }
    }
 #endif
-
-   auto server = GetServer();
-
-   if (win.IsUseCurrentDir())
-      server->AddLocation("currentdir/", ".");
 
    if (!normal_http)
       args.SetHttpServer(server);
