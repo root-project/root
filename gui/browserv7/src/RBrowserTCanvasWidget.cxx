@@ -132,6 +132,9 @@ public:
       fCanvas->cd();
 
       RegisterCanvasInGlobalLists();
+
+      // ensure creation of web window
+      fWebCanvas->ShowWebWindow("embed");
    }
 
    RBrowserTCanvasWidget(const std::string &name, std::unique_ptr<TCanvas> &canv) : RBrowserWidget(name)
@@ -154,6 +157,9 @@ public:
       fCanvas->cd();
 
       RegisterCanvasInGlobalLists();
+
+      // ensure creation of web window
+      fWebCanvas->ShowWebWindow("embed");
    }
 
    virtual ~RBrowserTCanvasWidget()
@@ -187,14 +193,6 @@ public:
          fCanvas->cd();
    }
 
-   void Show(const std::string &arg) override
-   {
-      // cannot be used
-
-      if (CheckCanvasPointer())
-         fWebCanvas->ShowWebWindow(arg);
-   }
-
    std::shared_ptr<RWebWindow> GetWindow() override
    {
       if (CheckCanvasPointer())
@@ -202,17 +200,7 @@ public:
       return nullptr;
    }
 
-   std::string GetUrl() override
-   {
-      // if (CheckCanvasPointer())
-      //    return fWebCanvas->GetWebWindow()->GetUrl(false);
-      return ""s;
-   }
-
-   std::string GetTitle() override
-   {
-      return fCanvasName.Data();
-   }
+   std::string GetTitle() override { return fCanvasName.Data(); }
 
    bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &opt = "") override
    {

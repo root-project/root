@@ -29,36 +29,26 @@ public:
    RBrowserRCanvasWidget(const std::string &name) : ROOT::RBrowserWidget(name)
    {
       fCanvas = ROOT::Experimental::RCanvas::Create(name);
+
+      // ensure creation of web window
+      fCanvas->Show("embed");
    }
 
    RBrowserRCanvasWidget(const std::string &name, std::shared_ptr<ROOT::Experimental::RCanvas> &canv) : ROOT::RBrowserWidget(name)
    {
       fCanvas = std::move(canv);
+
+      // ensure creation of web window
+      fCanvas->Show("embed");
    }
 
    ~RBrowserRCanvasWidget() override = default;
 
    std::string GetKind() const override { return "rcanvas"s; }
 
-   void Show(const std::string &arg) override
-   {
-      fCanvas->Show(arg);
-   }
+   std::shared_ptr<ROOT::RWebWindow> GetWindow() override { return fCanvas->GetWindow(); }
 
-   std::shared_ptr<ROOT::RWebWindow> GetWindow() override
-   {
-      return fCanvas->GetWindow();
-   }
-
-   std::string GetUrl() override
-   {
-      return ""s;
-   }
-
-   std::string GetTitle() override
-   {
-      return fCanvas->GetTitle();
-   }
+   std::string GetTitle() override { return fCanvas->GetTitle(); }
 
    bool DrawElement(std::shared_ptr<RElement> &elem, const std::string &opt = "") override
    {

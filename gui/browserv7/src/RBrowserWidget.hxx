@@ -47,8 +47,6 @@ public:
 
    RBrowser *GetBrowser() const { return fBrowser; }
 
-   virtual void Show(const std::string &) = 0;
-
    virtual std::shared_ptr<RWebWindow> GetWindow() { return nullptr; }
 
    virtual void ResetConn() {}
@@ -60,7 +58,7 @@ public:
 
    const std::string &GetName() const { return fName; }
    virtual std::string GetKind() const = 0;
-   virtual std::string GetUrl() = 0;
+   virtual std::string GetUrl() { return ""; }
    virtual std::string GetTitle() { return ""; }
 
    virtual bool DrawElement(std::shared_ptr<Browsable::RElement> &, const std::string & = "") { return false; }
