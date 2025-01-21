@@ -82,7 +82,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model) override {
+   void Initialize(RModel& model){
       // input must be a graph input, or already initialized intermediate tensor
       if (!model.CheckIfTensorAlreadyExist(fNA)){
          throw std::runtime_error(std::string("TMVA SOFIE Binary Op Input Tensor ") + fNA + "is not found in model");

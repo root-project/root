@@ -608,7 +608,7 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
          bool existInputs = true;
          int input_size = graph.node(i).input_size();
          // special case for Reshape where shape is input and not a weight tensor
-         if (fVerbose )
+         if (fVerbose)
             std::cout << "Checking input of  Node " << i << " : " << graph.node(i).name() << std::endl;
          for (int j = 0; j < input_size; j++) {
             std::string name = graph.node(i).input(j);
@@ -616,7 +616,7 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
             if (!name.empty()) {
                existInputs &= (allInputs.find(name) != allInputs.end() ||
                                allInitializedTensors.find(name) != allInitializedTensors.end());
-               if (fVerbose ) {
+               if (fVerbose) {
                   std::cout << "\t\t input " << name << " "
                      << bool(allInputs.find(name) != allInputs.end()) << "  " <<
                      bool(allInitializedTensors.find(name) != allInitializedTensors.end()) <<

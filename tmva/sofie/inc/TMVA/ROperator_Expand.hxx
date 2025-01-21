@@ -40,7 +40,7 @@ public:
       return input;
    }
 
-   void Initialize(RModel& model) override {
+   void Initialize(RModel& model){
       // input must be a graph input, or already initialized intermediate tensor
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
         throw std::runtime_error("TMVA SOFIE Expand Op Input Tensor " + fNX + " is not found in model");
@@ -89,7 +89,7 @@ public:
       }
       fType = ConvertTypeToString(model.GetTensorType(fNX));
       if (model.Verbose())
-         std::cout << "Expand - output is with shape " << ConvertShapeToString(fShapeY) << std::endl;
+         std::cout << "Expand - output is with shape " << ConvertShapeToString(fShapeY) << std::endl;      
    }
 
    std::string GenerateInitCode() override {
@@ -117,6 +117,15 @@ public:
                    << ", fTensor_" << fNY << ");\n";
       }
       return out.str();
+   }
+   
+   const std::vector<std::string>& GetOpInputTensors() {
+      static const std::vector<std::string> op_input_tensors = { fNX };
+      return op_input_tensors;
+   }
+   const std::vector<std::string>& GetOpOutputTensors() {
+      static const std::vector<std::string> op_output_tensors = { fNY };
+      return op_output_tensors;
    }
 
 };

@@ -101,7 +101,7 @@ public:
    /*! \brief Initialize the model
     * \param model Model
     */
-   void Initialize(RModel & /*model*/) override;
+   void Initialize(RModel &) override;
 
    /*! \brief Generate code for initializing the op
     */
