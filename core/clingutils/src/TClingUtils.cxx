@@ -2202,8 +2202,11 @@ void ROOT::TMetaUtils::WriteStandaloneReadRules(std::ostream &finalString, bool 
             ROOT::TMetaUtils::ScopeSearch(rulesIt1.first.c_str(), interp, true /*diag*/, &typeptr);
 
          if (!target && !rulesIt1.second.fTargetDecl) {
-            ROOT::TMetaUtils::Warning(nullptr, "%d Rule(s) for target class %s was not used!\n", rulesIt1.second.size(),
-                                      rulesIt1.first.c_str());
+            auto &&nRules = rulesIt1.second.size();
+            std::string rule{nRules > 1 ? "rules" : "rule"};
+            std::string verb{nRules > 1 ? "were" : "was"};
+            ROOT::TMetaUtils::Warning(nullptr, "%d %s for target class %s %s not used!\n", nRules, rule.c_str(),
+                                      rulesIt1.first.c_str(), verb.c_str());
             continue;
          }
 
