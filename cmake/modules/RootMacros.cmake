@@ -1986,38 +1986,45 @@ macro(ROOT_ADD_COMPILE_OPTIONS flags)
 endmacro()
 
 #----------------------------------------------------------------------------
-# find_python_module(module [REQUIRED] [QUIET])
+# ROOT_FIND_PYTHON_MODULE(module [REQUIRED] [QUIET])
+# Try importing the python dependency and cache the result in
+# ROOT_TEST_<MODULE> (all upper case).
+# Also set ROOT_<MODULE>_FOUND (all upper case) as well as ROOT_<module>_FOUND
+# (the original spelling of the argument) in the parent scope of this function
+# for convenient testing in subsequent if().
 #----------------------------------------------------------------------------
-function(find_python_module module)
-   CMAKE_PARSE_ARGUMENTS(ARG "REQUIRED;QUIET" "" "" ${ARGN})
-   string(TOUPPER ${module} module_upper)
-   if(NOT PY_${module_upper})
-      if(ARG_REQUIRED)
-         set(py_${module}_FIND_REQUIRED TRUE)
-      endif()
-      if(ARG_QUIET)
-         set(py_${module}_FIND_QUIETLY TRUE)
-      endif()
-      # A module's location is usually a directory, but for binary modules
-      # it's a .so file.
-      execute_process(COMMAND "${Python3_EXECUTABLE}" "-c"
-         "import re, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__file__))"
-         RESULT_VARIABLE _${module}_status
-         OUTPUT_VARIABLE _${module}_location
-         ERROR_VARIABLE _${module}_error
-         OUTPUT_STRIP_TRAILING_WHITESPACE
-         ERROR_STRIP_TRAILING_WHITESPACE)
-      if(NOT _${module}_status)
-         set(PY_${module_upper} ${_${module}_location} CACHE STRING "Location of Python module ${module}")
-         mark_as_advanced(PY_${module_upper})
+function(ROOT_FIND_PYTHON_MODULE module)
+  CMAKE_PARSE_ARGUMENTS(ARG "REQUIRED;QUIET" "" "" ${ARGN})
+  string(TOUPPER ${module} module_upper)
+  set(CACHE_VAR ROOT_TEST_${module_upper})
+
+  if(NOT DEFINED ${CACHE_VAR})
+    execute_process(COMMAND "${Python3_EXECUTABLE}" "-c" "import ${module}"
+      RESULT_VARIABLE status
+      ERROR_QUIET)
+
+    if(${status} EQUAL 0)
+      set(${CACHE_VAR} ON CACHE BOOL "Enable tests depending on '${module}'")
+    else()
+      set(${CACHE_VAR} OFF CACHE BOOL "Enable tests depending on '${module}'")
+    endif()
+
+    if(NOT ARG_QUIET)
+      if(${CACHE_VAR})
+        message(STATUS "Found Python module ${module}")
       else()
-         if(NOT ARG_QUIET)
-            message(STATUS "Failed to find Python module ${module}: ${_${module}_error}")
-          endif()
+        message(STATUS "Could NOT find Python module ${module}. Corresponding tests will be disabled.")
       endif()
-   endif()
-   find_package_handle_standard_args(py_${module} DEFAULT_MSG PY_${module_upper})
-   set(PY_${module_upper}_FOUND ${PY_${module_upper}_FOUND} PARENT_SCOPE)
+    endif()
+  endif()
+
+  # Set the ROOT_xxx_FOUND to the (cached) result of the search:
+  set(ROOT_${module_upper}_FOUND ${${CACHE_VAR}} PARENT_SCOPE)
+  set(ROOT_${module}_FOUND ${${CACHE_VAR}} PARENT_SCOPE)
+
+  if(ARG_REQUIRED AND NOT ${CACHE_VAR})
+    message(FATAL_ERROR "Python module ${module} is required.")
+  endif()
 endfunction()
 
 #----------------------------------------------------------------------------
