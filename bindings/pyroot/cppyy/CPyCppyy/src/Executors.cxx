@@ -1022,6 +1022,8 @@ public:
 #if __cplusplus > 201402L
         gf["std::byte ptr"] =               (ef_t)+[](cdims_t d) { return new ByteArrayExecutor{d};     };
         gf["const std::byte ptr"] =         gf["std::byte ptr"];
+        gf["byte ptr"] =                    gf["std::byte ptr"];
+        gf["const byte ptr"] =              gf["std::byte ptr"];
 #endif
         gf["int8_t ptr"] =                  (ef_t)+[](cdims_t d) { return new Int8ArrayExecutor{d};    };
         gf["uint8_t ptr"] =                 (ef_t)+[](cdims_t d) { return new UInt8ArrayExecutor{d};   };
@@ -1046,8 +1048,11 @@ public:
         gf["internal_enum_type_t ptr"] =    gf["int ptr"];
 #if __cplusplus > 201402L
         gf["std::byte"] =                   gf["uint8_t"];
+        gf["byte"] =                        gf["uint8_t"];
         gf["std::byte&"] =                  gf["uint8_t&"];
+        gf["byte&"] =                       gf["uint8_t&"];
         gf["const std::byte&"] =            gf["const uint8_t&"];
+        gf["const byte&"] =                 gf["const uint8_t&"];
 #endif
         gf["std::int8_t"] =                 gf["int8_t"];
         gf["std::int8_t&"] =                gf["int8_t&"];

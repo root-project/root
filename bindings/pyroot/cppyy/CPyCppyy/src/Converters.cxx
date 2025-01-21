@@ -3522,8 +3522,11 @@ public:
         gf["const signed char&"] =          gf["const char&"];
 #if __cplusplus > 201402L
         gf["std::byte"] =                   gf["uint8_t"];
+        gf["byte"] =                        gf["uint8_t"];
         gf["const std::byte&"] =            gf["const uint8_t&"];
+        gf["const byte&"] =                 gf["const uint8_t&"];
         gf["std::byte&"] =                  gf["uint8_t&"];
+        gf["byte&"] =                       gf["uint8_t&"];
 #endif
         gf["std::int8_t"] =                 gf["int8_t"];
         gf["const std::int8_t&"] =          gf["const int8_t&"];
