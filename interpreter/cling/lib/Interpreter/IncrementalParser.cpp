@@ -664,7 +664,6 @@ namespace cling {
       commitTransaction(nestedPRT);
       m_Consumer->setTransaction(prevConsumerT);
     }
-    m_Consumer->HandleTranslationUnit(getCI()->getASTContext());
 
 
     // The static initializers might run anything and can thus cause more
