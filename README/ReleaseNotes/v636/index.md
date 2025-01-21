@@ -37,7 +37,7 @@ The following people have contributed to this new version:
 * The `RooDataSet` constructors to construct a dataset from a part of an existing dataset are deprecated and will be removed in ROOT 6.38. This is to avoid interface duplication. Please use `RooAbsData::reduce()` instead, or if you need to change the weight column, use the universal constructor with the `Import()`, `Cut()`, and `WeightVar()` arguments.
 * The ROOT splash screen was removed for Linux and macOS
 * Proof support has been completely removed form RooFit and RooStats, after it was already not working anymore for several releases
-* The build options `mysql`, `odbc`, and `pgsql` have been deprecated. Please complain with root-dev@cern.ch should you still need one!
+* The build options `mysql`, `odbc`, `pgsql` and `qt5web` have been deprecated. Please complain with root-dev@cern.ch should you still need one!
 
 ## Python Interface
 
@@ -55,13 +55,13 @@ The following people have contributed to this new version:
 ## IO
 
 * New options have been added to TFileMerger (which can be passed as whitespace-separated TStrings via `TFileMerger::SetMergeOptions`)
-  * "FirstSrcCompression": when merging multiple files, instructs the class-specific merger to use the same compression as the 
+  * "FirstSrcCompression": when merging multiple files, instructs the class-specific merger to use the same compression as the
     first object of the destination's class as the destination's compression. Currently only recognized by the RNTuple merger;
   * "DefaultCompression": specifies that the merged output should use the class-specific default compression. Currently only
     meaningful for RNTuple, which has a default compression different from the TFile's default compression (ZSTD instead of ZLIB).
     This option is automatically set by `hadd` when no other compression option is specified;
   * "rntuple.MergingMode=(Filter|Union|Strict)": RNTuple-specific option that specifies the merging mode that should be used by
-    the RNTupleMerger (see 
+    the RNTupleMerger (see
     [RNTupleMergeOptions](https://root.cern/doc/v634/structROOT_1_1Experimental_1_1Internal_1_1RNTupleMergeOptions.html));
   * "rntuple.ErrBehavior=(Abort|Skip)": RNTuple-specific option that specifies the behavior of the RNTupleMerger on error (see link above);
   * "rntuple.ExtraVerbose": RNTuple-specific option that tells the RNTupleMerger to emit more information during the merge process.
@@ -71,7 +71,7 @@ The following people have contributed to this new version:
 
 ## Tutorials and Code Examples
 
-## Core 
+## Core
 
 ## Histograms
 
