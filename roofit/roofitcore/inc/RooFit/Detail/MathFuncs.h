@@ -781,7 +781,7 @@ namespace MathFuncs {
 // custom dummy pullback that does nothing.
 
 template <class... Types>
-void binNumber_pullback(Types... args)
+void binNumber_pullback(Types...)
 {
 }
 
