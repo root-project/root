@@ -89,22 +89,32 @@ protected:
             throw std::runtime_error("This Vary call is varying multiple columns simultaneously but the expression "
                                      "does not return an RVec of RVecs.");
 
+         // Check for type mismatches. We are interested in two cases:
+         // - All columns that are going to be varied must be of the same type
+         // - The return type of the expression must match the type of the nominal column
          auto colTypes = GetColumnTypeNamesList(colNames);
-         auto allColTypesEqual =
-            std::all_of(colTypes.begin() + 1, colTypes.end(), [&](const std::string &t) { return t == colTypes[0]; });
-         if (!allColTypesEqual)
-            throw std::runtime_error("Cannot simultaneously vary multiple columns of different types.");
-
+         auto &&nColTypes = colTypes.size();
+         // Cache type_info when requested
+         std::vector<const std::type_info *> colTypeIDs(nColTypes);
          const auto &innerTypeID = typeid(RDFInternal::InnerValueType_t<RetType>);
-
-         for (auto i = 0u; i < colTypes.size(); ++i) {
+         for (decltype(nColTypes) i{}; i < nColTypes; ++i) {
+            // Need to retrieve the type_info for each column. We start with
+            // checking if the column comes from a Define, in which case the
+            // type_info is cached already. Otherwise, we need to retrieve it
+            // via TypeName2TypeID, which eventually might call the interpreter.
             const auto *define = fColRegister.GetDefine(colNames[i]);
-            const auto *expectedTypeID = define ? &define->GetTypeId() : &RDFInternal::TypeName2TypeID(colTypes[i]);
-            if (innerTypeID != *expectedTypeID)
+            colTypeIDs[i] = define ? &define->GetTypeId() : &RDFInternal::TypeName2TypeID(colTypes[i]);
+            // First check: whether the current column type is the same as the first one.
+            if (*colTypeIDs[i] != *colTypeIDs[0]) {
+               throw std::runtime_error("Cannot simultaneously vary multiple columns of different types.");
+            }
+            // Second check: mismatch between varied type and nominal type
+            if (innerTypeID != *colTypeIDs[i])
                throw std::runtime_error("Varied values for column \"" + colNames[i] + "\" have a different type (" +
                                         RDFInternal::TypeID2TypeName(innerTypeID) + ") than the nominal value (" +
                                         colTypes[i] + ").");
          }
+
       } else { // we are varying a single column, RetType is RVec<T>
          const auto &retTypeID = typeid(typename RetType::value_type);
          const auto &colName = colNames[0]; // we have only one element in there
