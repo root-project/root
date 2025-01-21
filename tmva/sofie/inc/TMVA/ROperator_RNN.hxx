@@ -113,7 +113,7 @@ template <typename T> class ROperator_RNN final : public ROperator {
     *
     * \param model Model
     */
-   void Initialize(RModel &model);
+   void Initialize(RModel &);
 
    /*! \brief Generates the inference code
     *

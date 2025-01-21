@@ -116,7 +116,7 @@ template <typename T> class ROperator_GRU final : public ROperator {
     *
     * \param model Model
     */
-   void Initialize(RModel & /*model*/);
+   void Initialize(RModel &);
 
    /*! \brief Generate the inference code
     *
