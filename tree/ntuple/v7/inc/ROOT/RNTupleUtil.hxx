@@ -313,6 +313,10 @@ RResult<void> EnsureValidNameForRNTuple(std::string_view name, std::string_view 
 
 } // namespace Internal
 
+// TODO(jblomer): remove before branching ROOT v6.36
+using EColumnType [[deprecated("ROOT::Experimental::EColumnType moved to ROOT::Experimental::ENTupleColumnType")]] =
+   ENTupleColumnType;
+
 } // namespace Experimental
 } // namespace ROOT
 
