@@ -40,8 +40,8 @@ private:
    EDataType    fUnderlyingType = kInt_t; // Type (size) used to store the enum in memory
 
    enum EStatusBits {
-     kBitIsScopedEnum = BIT(14), ///< The enum is an enum class.
-     kBitIsValid = BIT(15)       ///< The TEnum object was read from file (assumed valid)
+      kBitIsScopedEnum = BIT(14), ///< The enum is an enum class.
+      kBitIsValid = BIT(15)       ///< The TEnum object was read from file (assumed valid)
    };
 
 public:
