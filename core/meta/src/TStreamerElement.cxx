@@ -1895,7 +1895,7 @@ TClass *TStreamerSTL::GetClassPointer() const
       if ( arglist.fElements[1].size() >= 2 ) {
          auto enumdesc = TEnum::GetEnum(arglist.fElements[1].c_str());
          if (enumdesc || gCling->ClassInfo_IsEnum(arglist.fElements[1].c_str())) {
-            ((TStreamerElement*)this)->fNewClass = cl;
+            ((TStreamerElement *)this)->fNewClass = cl;
             if (proxy->HasPointers())
                cl = TClass::GetClass("vector<Int_t*>");
             else

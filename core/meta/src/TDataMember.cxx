@@ -226,7 +226,8 @@ void TDataMember::Init(bool afterReading)
          if (enumdesc)
             fDataType = TDataType::GetDataType(enumdesc->GetUnderlyingType());
          else
-            fDataType = gROOT->GetType("Int_t", kTRUE); // In rare instance we are called before Int_t has been added to the list of types in TROOT, the kTRUE insures it is there.
+            fDataType = gROOT->GetType("Int_t", kTRUE); // In rare instance we are called before Int_t has been added to
+                                                        // the list of types in TROOT, the kTRUE insures it is there.
       }
       //         if (!fDataType)
       //            Error("TDataMember", "basic data type %s not found in list of basic types",
@@ -511,15 +512,15 @@ Longptr_t TDataMember::GetOffsetCint() const
 Int_t TDataMember::GetUnitSize() const
 {
    if (IsaPointer()) return sizeof(void*);
-   if (IsEnum())
-   {
+   if (IsEnum()) {
       auto e = TEnum::GetEnum(GetTypeName());
       if (e)
          return TDataType::GetDataType(e->GetUnderlyingType())->Size();
       else
          return sizeof(Int_t);
    }
-   if (IsBasic()) return GetDataType()->Size();
+   if (IsBasic())
+      return GetDataType()->Size();
 
    TClass *cl = TClass::GetClass(GetTypeName());
    if (!cl) cl = TClass::GetClass(GetTrueTypeName());

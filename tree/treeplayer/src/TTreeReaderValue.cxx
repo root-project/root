@@ -623,8 +623,8 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy()
             if ((dictdt && dictdt->GetType() == kInt_t && actualenum) ||
                 (actualdt && actualdt->GetType() == kInt_t && dictenum))
                complainAboutMismatch = false;
-            if ((dictdt && actualenum && dictdt->GetType() == actualenum->GetUnderlyingType())
-                ||(actualdt && dictenum && actualdt->GetType() == dictenum->GetUnderlyingType()))
+            if ((dictdt && actualenum && dictdt->GetType() == actualenum->GetUnderlyingType()) ||
+                (actualdt && dictenum && actualdt->GetType() == dictenum->GetUnderlyingType()))
                complainAboutMismatch = false;
          }
          if (complainAboutMismatch) {
