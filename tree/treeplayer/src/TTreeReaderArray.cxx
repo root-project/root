@@ -557,8 +557,8 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
          if ((left_datatype && left_datatype->GetType() == kInt_t && right_enum)
             || (right_datatype && right_datatype->GetType() == kInt_t && left_enum))
             return true;
-         if ((left_datatype && right_enum && left_datatype->GetType() == right_enum->GetUnderlyingType())
-            || (right_datatype && left_enum && right_datatype->GetType() == left_enum->GetUnderlyingType()))
+         if ((left_datatype && right_enum && left_datatype->GetType() == right_enum->GetUnderlyingType()) ||
+             (right_datatype && left_enum && right_datatype->GetType() == left_enum->GetUnderlyingType()))
             return true;
          if (!left_datatype || !right_datatype)
             return false;

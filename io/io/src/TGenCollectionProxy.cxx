@@ -397,7 +397,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent,
             } else {
                fSize = fundType->Size();
             }
-         } else if (auto e = TEnum::GetEnum( intype.c_str(), TEnum::kNone) ) {
+         } else if (auto e = TEnum::GetEnum(intype.c_str(), TEnum::kNone)) {
             R__ASSERT(e->IsValid());
             // This is a known enum.
             fCase = kIsEnum;

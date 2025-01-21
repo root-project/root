@@ -641,18 +641,17 @@ void TStreamerInfo::Build(Bool_t isTransient)
             element = new TStreamerBasicType(dmName, dmTitle, offset, dtype, dmFull);
          }
          if (dm->IsEnum()) {
-            if (auto enumdesc = TEnum::GetEnum(dm->GetFullTypeName(), TEnum::kNone))
-            {
+            if (auto enumdesc = TEnum::GetEnum(dm->GetFullTypeName(), TEnum::kNone)) {
                // When introducing support for non-default sized enum, it was
                // decided to keep the file format unchanged and to always
                // store the enum constant as an int.
                auto memType = enumdesc->GetUnderlyingType();
                if (TDataType::GetDataType(memType)->Size() > 4) {
                   // 4 is the onfile space for an Int_t.
-                  Error(
-                     "Build",
-                     "Discarding %s %s::%s because the underlying type (%s) for the enum %s is larger than 4 bytes and may result in data loss.",
-                      dmFull, GetName(), dmName, TDataType::GetTypeName(memType), dm->GetFullTypeName());
+                  Error("Build",
+                        "Discarding %s %s::%s because the underlying type (%s) for the enum %s is larger than 4 bytes "
+                        "and may result in data loss.",
+                        dmFull, GetName(), dmName, TDataType::GetTypeName(memType), dm->GetFullTypeName());
                   continue;
                }
                element->SetType(TStreamerInfo::kInt);
