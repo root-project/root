@@ -81,7 +81,6 @@ public:
    Bool_t Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1) override;
    Bool_t Add(TF1 *h1, Double_t c1=1, Option_t *option="") override;
    void          ClearBinContents();                 // Clears the content of all bins
-   TObject      *Clone(const char* newname = "") const override;
    void          Copy(TObject & newth2p) const override;
    void          ChangePartition(Int_t n, Int_t m);  // Sets the number of partition cells to another value
    using TH2::Multiply;
