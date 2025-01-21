@@ -42,6 +42,7 @@ public:
       }
       fShape = model.GetTensorShape(fNX);
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShape);
+      model.EvaluateIntermediateMemory(GetOpInputTensors());
 
    }
 
@@ -61,6 +62,9 @@ public:
    }
 
    std::vector<std::string> GetStdLibs() { return { std::string("cmath") };}
+
+   const std::vector<std::string>& GetOpInputTensors() { return { &fNX };}
+
 };
 
 }//SOFIE

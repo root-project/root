@@ -90,6 +90,8 @@ public:
       fType = ConvertTypeToString(model.GetTensorType(fNX));
       if (model.Verbose())
          std::cout << "Expand - output is with shape " << ConvertShapeToString(fShapeY) << std::endl;
+      
+      model.EvaluateIntermediateMemory(GetOpInputTensors());
    }
 
    std::string GenerateInitCode() override {
@@ -118,6 +120,7 @@ public:
       }
       return out.str();
    }
+   const std::vector<std::string>& GetOpInputTensors() { return { &fNX };}
 
 };
 

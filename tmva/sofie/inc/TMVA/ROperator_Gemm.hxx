@@ -262,6 +262,7 @@ namespace SOFIE{
          }
 
          model.AddNeededStdLib("algorithm");
+         model.EvaluateIntermediateMemory(GetOpInputTensors())
 
       }
 
@@ -382,6 +383,7 @@ namespace SOFIE{
       }
 
       std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Gemv") }; }
+      const std::vector<std::string>& GetOpInputTensors() { return { &fNA, &fNB, &fNC };}
 
    };
 
