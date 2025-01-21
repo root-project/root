@@ -9,7 +9,7 @@ body:
     id: check-duplicates
     attributes:
       label: Check duplicate issues.
-      description: Please search in [GitHub](https://github.com/root-project/root/issues?q=is%3Aissue) AND [Jira](<https://sft.its.cern.ch/jira/issues/?jql=project %3D ROOT>) for existing reports of your issue.
+      description: Please search in [GitHub](https://github.com/root-project/root/issues?q=is%3Aissue) for existing reports of your issue.
       options:
         - label: Checked for duplicates
     validations:
