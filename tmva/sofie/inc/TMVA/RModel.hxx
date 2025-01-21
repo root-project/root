@@ -35,6 +35,10 @@ private:
 
    const std::string SP = "   ";
 
+   // memory pool information for intermediate tensors
+   MemoryPoolInfo fIntermediateMemoryInfo {0, 0};
+   std::unordered_map<std::string, TensorCounter> fIntermediateTensorFrequencyLookup;
+
 public:
    // Rule of five: explicitly define move semantics, disallow copy
    RModel(RModel &&other);
@@ -141,6 +145,8 @@ public:
    // generate the infer function signature. If isdecl= false generate the calling infer function
    // used to infer the sub-graphs
    std::string GenerateInferSignature(bool isdecl = true);
+
+   void EvaluateIntermediateMemory(const std::vector<std::string>& op_input_tensors); 
 
 protected:
    // internal functions

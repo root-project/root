@@ -257,6 +257,8 @@ public:
             }
          }
       }
+
+      model.EvaluateIntermediateMemory(GetOpInputTensors());
    }
 
    std::string GenerateInitCode() {
@@ -539,6 +541,8 @@ public:
    /*! \brief Returns the blas routines needed to compile the generated code
     */
    std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Axpy") }; }
+
+   const std::vector<std::string>& GetOpInputTensors() { return { &fNX, &fNB  };}
 };
 
 } // namespace SOFIE

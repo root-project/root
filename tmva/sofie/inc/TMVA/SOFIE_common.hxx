@@ -98,6 +98,15 @@ struct TensorType<uint64_t> {
    static const std::string Name() { return "uint64_t"; }
 };
 
+struct MemoryPoolInfo {
+   std::vector<std::pair<std::string, size_t>> total_memory;
+   std::vector<std::pair<unsigned int, size_t>> available_memory;
+};
+
+struct TensorCounter {
+   bool check_flag;
+   unsigned int frequency;
+};
 
 std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape);
 

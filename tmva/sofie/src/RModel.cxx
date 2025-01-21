@@ -163,6 +163,24 @@ void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
     } else {
         fOperators.push_back(std::move(op));
     }
+
+    // storing the frequency of tensors which are input to operators (but are not
+    // inputs to the model, i.e. they are intermediate tensors). This information
+    // is needed to keep a check on when a particular intermediate tensor can be 
+    // flushed to free up memory for reuse.
+   const std::vector<std::string>& op_input_tensors = op->GetOpInputTensors();
+   for (const auto& it : op_input_tensors) {
+
+      // check if the tensor is already in the lookup table
+      if (fIntermediateTensorFrequencyLookup.find(it) == fIntermediateTensorFrequencyLookup.end()) {
+         // first time seeing this tensor: initialize values
+         fIntermediateTensorFrequencyLookup[it].check_flag = true;
+         fIntermediateTensorFrequencyLookup[it].frequency = 1;
+      } else {
+         // tensor already seen: increment frequency
+         fIntermediateTensorFrequencyLookup[it].frequency++;
+      }
+   }
 }
 
 void RModel::AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data) {
@@ -288,6 +306,32 @@ void RModel::SetNotWritableInitializedTensor(const std::string & tensor_name) {
       t->second.SetNotWritable();
    }
 
+void RModel::EvaluateIntermediateMemory(const std::vector<std::string>& op_input_tensors, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter) {
+   for (auto &it : op_input_tensors){
+      fIntermediateTensorCounter[it].frequency--;
+      if (!fIntermediateTensorCounter[it].check_flag){
+         fIntermediateTensorCounter[it].check_flag == true;
+         auto tensor_size = ConvertShapeToLength(GetTensorShape(it));
+         if (!fIntermediateMemoryInfo.available_memory.empty()){
+            for (size_t block_idx = 0; block_idx < fIntermediateMemoryInfo.available_memory.size(); ++block_idx){
+               if (fIntermediateMemoryInfo.available_memory[block_idx].second >= tensor_size){
+                  fIntermediateMemoryInfo.available_memory[block_idx].second -= tensor_size;
+                  if (!fIntermediateMemoryInfo.available_memory[block_idx].second) {
+                     fIntermediateMemoryInfo.available_memory.erase(fIntermediateMemoryInfo.available_memory.begin() + block_idx);
+                  }
+               }
+            }
+         } else {
+            fIntermediateMemoryInfo.total_memory.push_back(tensor_size);
+         }
+      }
+
+      if (fIntermediateTensorCounter[it].frequency == 0){
+
+      }
+   }
+}
+
 void RModel::Initialize(int batchSize, bool verbose) {
    std::map<std::string, size_t> inputParams;
    if (batchSize > 0) {
@@ -300,6 +344,8 @@ void RModel::Initialize(int batchSize, bool verbose) {
 void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool verbose) {
 
    fVerbose = int(verbose);
+
+   auto fIntermediateTensorCounter  = fIntermediateTensorFrequencyLookup;
 
    if (fIsInitialized) {
       if (verbose)
@@ -379,7 +425,7 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
          auto& r = *op.get();
          std::cout << "Initializing operator " << i << "  " << typeid(r).name() << std::endl;
       }
-      op->Initialize(*this);
+      op->Initialize(*this, fIntermediateTensorCounter);
       i++;
    }
    fIsInitialized = true;
@@ -472,6 +518,10 @@ void RModel::GenerateInitializedTensorInfo()
          }
       }
    }
+}
+
+void RModel::GenerateIntermediateMemoryPool() {
+
 }
 
 void RModel::GenerateIntermediateTensorInfo() {
@@ -609,6 +659,7 @@ void RModel::GenerateOutput() {
    for (size_t id = 0; id < fOperators.size(); id++) {
       if (fVerbose) std::cout << "Generating code for operator .... " << id << std::endl;
       fGC += (fOperators[id]->Generate(std::to_string(id)));
+      fGC += FlushIntermediateMemory();
    }
 
    if (outputSize == 1) {
@@ -673,6 +724,8 @@ void RModel::GenerateSessionCode()
 
    // generate code for declaring the initialized tensors
    GenerateInitializedTensorInfo();
+   // generate the memory pool to be used by intermediate tensors
+   GenerateIntermediateMemoryPool();
    // generate the declaring the intermediate tensors
    GenerateIntermediateTensorInfo();
    // generate code for declarations of some specific operators
