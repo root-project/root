@@ -262,7 +262,6 @@ namespace SOFIE{
          }
 
          model.AddNeededStdLib("algorithm");
-
       }
 
       std::string GenerateInitCode()
@@ -383,6 +382,15 @@ namespace SOFIE{
 
       std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Gemv") }; }
 
+      const std::vector<std::string>& GetOpInputTensors() {
+         static const std::vector<std::string> op_input_tensors = { fNA, fNB, fNC };
+         return op_input_tensors;
+      }
+      const std::vector<std::string>& GetOpOutputTensors() {
+         static const std::vector<std::string> op_output_tensors = { fNY, fNC2 };
+         return op_output_tensors;
+      }      
+      
    };
 
 

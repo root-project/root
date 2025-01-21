@@ -39,7 +39,7 @@ public:
     std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>>) {return {{}};};
     std::vector<ETensorType> TypeInference(std::vector<ETensorType>){ return {};};
 
-    void Initialize(RModel& model){
+   void Initialize(RModel& model){
       model.AddNeededCustomHeader(fHeaderName);
       for(auto& it:fInputNames){
         if (model.CheckIfTensorAlreadyExist(it) == false){

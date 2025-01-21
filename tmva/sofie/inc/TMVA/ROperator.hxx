@@ -21,6 +21,14 @@ class ROperator{
 public:
    virtual std::vector<std::string> GetBlasRoutines() { return {}; }
    virtual std::vector<std::string> GetStdLibs() { return {}; }
+   virtual const std::vector<std::string>& GetOpInputTensors() {
+      static const std::vector<std::string> defaultTensors;
+      return defaultTensors;
+   }
+   virtual const std::vector<std::string>& GetOpOutputTensors() {
+      static const std::vector<std::string> defaultTensors;
+      return defaultTensors;
+   }      
    virtual std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>>) = 0;
    virtual std::vector<ETensorType> TypeInference(std::vector<ETensorType>) = 0;
    virtual void Initialize(RModel&) = 0;
@@ -32,7 +40,6 @@ public:
    // generate session data members specific to operator
    virtual std::string GenerateSessionMembersCode(std::string /*opName*/) { return ""; }
    virtual std::string Header() { return "";}
-
 
    //virtual void Forward_reference() = 0;
    //virtual void Forward_blas() = 0;
