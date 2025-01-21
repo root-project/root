@@ -1620,6 +1620,77 @@ TEST_P(RDFVary, ManyVariationsManyColumns)
    }
 }
 
+// Regression test for https://github.com/root-project/root/issues/17486
+TEST_P(RDFVary, CompatibleColumnTypes)
+{
+   struct DataRAII {
+      const char *fFileName{"rdf_vary_compatible_column_types.root"};
+      const char *fTreeName{"tree"};
+      DataRAII()
+      {
+         TFile f{fFileName, "recreate"};
+         TTree t{fTreeName, fTreeName};
+         Float_t v[3] = {1.f, 2.f, 3.f};
+         t.Branch("v", &v, "v[3]/F");
+         t.Branch("w", &v, "w[3]/F");
+         t.Fill();
+         f.Write();
+      }
+      ~DataRAII() { std::remove(fFileName); }
+   } dataset;
+
+   ROOT::RDataFrame df_start{dataset.fTreeName, dataset.fFileName};
+   ROOT::RDF::RNode df{df_start};
+
+   // The JITted transformation triggers a change in the column type name
+   // due to the desugaring of the Float_t typedef
+   df = df.Redefine("v", "v");
+
+   // Previously Vary would throw when doing a string comparison check of the
+   // types of the columns to be varied
+   EXPECT_NO_THROW({
+      df = df.Vary(
+         {"v", "w"},
+         [](const ROOT::RVecF &v, const ROOT::RVecF &w) {
+            return ROOT::RVec<ROOT::RVec<ROOT::RVecF>>{{v - 1, v + 1}, {w - 1, w + 1}};
+         },
+         {"v", "w"}, {"down", "up"}, "variation");
+   });
+}
+
+TEST_P(RDFVary, IncompatibleColumnTypes)
+{
+   struct DataRAII {
+      const char *fFileName{"rdf_vary_incompatible_column_types.root"};
+      const char *fTreeName{"tree"};
+      DataRAII()
+      {
+         TFile f{fFileName, "recreate"};
+         TTree t{fTreeName, fTreeName};
+         Float_t v[3] = {1.f, 2.f, 3.f};
+         Int_t w[3] = {1, 2, 3};
+         t.Branch("v", &v, "v[3]/F");
+         t.Branch("w", &w, "w[3]/I");
+         t.Fill();
+         f.Write();
+      }
+      ~DataRAII() { std::remove(fFileName); }
+   } dataset;
+
+   ROOT::RDataFrame df{dataset.fTreeName, dataset.fFileName};
+
+   EXPECT_THROW(
+      {
+         df.Vary(
+            {"v", "w"},
+            [](const ROOT::RVecF &v, const ROOT::RVecI &w) {
+               return ROOT::RVec<ROOT::RVec<ROOT::RVecF>>{{v - 1, v + 1}, {w - 1, w + 1}};
+            },
+            {"v", "w"}, {"down", "up"}, "variation");
+      },
+      std::runtime_error);
+}
+
 struct HelperWithCallback : ROOT::Detail::RDF::RActionImpl<HelperWithCallback> {
    using Result_t = int;
    std::shared_ptr<Result_t> fResult = std::make_shared<Result_t>(0);
