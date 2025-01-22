@@ -71,12 +71,12 @@ private:
 public:
    ~TH2() override;
    using TH1::AddBinContent;
-   /// Increment 2D bin content by 1.
-   /// Passing an out-of-range bin leads to undefined behavior
-   virtual void     AddBinContent(Int_t binx, Int_t biny) = 0;
-   /// Increment 2D bin content by a weight w.
-   /// Passing an out-of-range bin leads to undefined behavior
-   virtual void     AddBinContent(Int_t binx, Int_t biny, Double_t w) = 0;
+           /// Increment 2D bin content by 1.
+           /// Passing an out-of-range bin leads to undefined behavior
+           void     AddBinContent(Int_t binx, Int_t biny) { AddBinContent(GetBin(binx, biny)); }
+           /// Increment 2D bin content by a weight w.
+           /// Passing an out-of-range bin leads to undefined behavior
+           void     AddBinContent(Int_t binx, Int_t biny, Double_t w) { AddBinContent(GetBin(binx, biny), w); }
            Int_t    BufferEmpty(Int_t action=0) override;
            void     Copy(TObject &hnew) const override;
            Int_t    Fill(Double_t x, Double_t y) override;
@@ -159,8 +159,6 @@ public:
 
            void     AddBinContent(Int_t bin) override;
            void     AddBinContent(Int_t bin, Double_t w) override;
-           void     AddBinContent(Int_t binx, Int_t biny) override { AddBinContent(GetBin(binx, biny)); }
-           void     AddBinContent(Int_t binx, Int_t biny, Double_t w) override { AddBinContent(GetBin(binx, biny), w); }
            void     Copy(TObject &hnew) const override;
            void     Reset(Option_t *option="") override;
            void     SetBinsLength(Int_t n=-1) override;
@@ -202,8 +200,6 @@ public:
 
            void     AddBinContent(Int_t bin) override;
            void     AddBinContent(Int_t bin, Double_t w) override;
-           void     AddBinContent(Int_t binx, Int_t biny) override { AddBinContent(GetBin(binx, biny)); }
-           void     AddBinContent(Int_t binx, Int_t biny, Double_t w) override { AddBinContent(GetBin(binx, biny), w); }
            void     Copy(TObject &hnew) const override;
            void     Reset(Option_t *option="") override;
            void     SetBinsLength(Int_t n=-1) override;
@@ -245,8 +241,6 @@ public:
 
            void     AddBinContent(Int_t bin) override;
            void     AddBinContent(Int_t bin, Double_t w) override;
-           void     AddBinContent(Int_t binx, Int_t biny) override { AddBinContent(GetBin(binx, biny)); }
-           void     AddBinContent(Int_t binx, Int_t biny, Double_t w) override { AddBinContent(GetBin(binx, biny), w); }
            void     Copy(TObject &hnew) const override;
            void     Reset(Option_t *option="") override;
            void     SetBinsLength(Int_t n=-1) override;
@@ -286,8 +280,6 @@ public:
    ~TH2L() override;
    void     AddBinContent(Int_t bin) override;
    void     AddBinContent(Int_t bin, Double_t w) override;
-   void     AddBinContent(Int_t binx, Int_t biny) override { AddBinContent(GetBin(binx, biny)); }
-   void     AddBinContent(Int_t binx, Int_t biny, Double_t w) override { AddBinContent(GetBin(binx, biny), w); }
    void     Copy(TObject &hnew) const override;
    void     Reset(Option_t *option="") override;
    void     SetBinsLength(Int_t n=-1) override;
@@ -334,8 +326,6 @@ public:
            /// Passing an out-of-range bin leads to undefined behavior
            void     AddBinContent(Int_t bin, Double_t w) override
                                  {fArray[bin] += Float_t (w);}
-           void     AddBinContent(Int_t binx, Int_t biny) override { AddBinContent(GetBin(binx, biny)); }
-           void     AddBinContent(Int_t binx, Int_t biny, Double_t w) override { AddBinContent(GetBin(binx, biny), w); }
            void     Copy(TObject &hnew) const override;
            void     Reset(Option_t *option="") override;
            void     SetBinsLength(Int_t n=-1) override;
@@ -383,8 +373,6 @@ public:
            /// Passing an out-of-range bin leads to undefined behavior
            void     AddBinContent(Int_t bin, Double_t w) override
                                  {fArray[bin] += Double_t (w);}
-           void     AddBinContent(Int_t binx, Int_t biny) override { AddBinContent(GetBin(binx, biny)); }
-           void     AddBinContent(Int_t binx, Int_t biny, Double_t w) override { AddBinContent(GetBin(binx, biny), w); }
            void     Copy(TObject &hnew) const override;
            void     Reset(Option_t *option="") override;
            void     SetBinsLength(Int_t n=-1) override;
