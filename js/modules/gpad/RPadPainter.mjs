@@ -5,7 +5,7 @@ import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { prSVG, getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate, svgToImage } from '../base/BasePainter.mjs';
 import { selectActivePad, getActivePad } from '../base/ObjectPainter.mjs';
 import { registerForResize, saveFile } from '../gui/utils.mjs';
-import { BrowserLayout } from '../gui/display.mjs';
+import { BrowserLayout, getHPainter } from '../gui/display.mjs';
 import { createMenu, closeMenu } from '../gui/menu.mjs';
 import { PadButtonsHandler } from './TPadPainter.mjs';
 
@@ -1183,7 +1183,7 @@ class RPadPainter extends RObjectPainter {
 
          const mainid = this.selectDom().attr('id');
 
-         if (!this.isBatchMode() && !this.use_openui && !this.brlayout && mainid && isStr(mainid)) {
+         if (!this.isBatchMode() && !this.use_openui && !this.brlayout && mainid && isStr(mainid) && !getHPainter()) {
             this.brlayout = new BrowserLayout(mainid, null, this);
             this.brlayout.create(mainid, true);
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas

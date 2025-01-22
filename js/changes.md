@@ -1,5 +1,13 @@
 # JSROOT changelog
 
+## Changes in 7.8.1
+1. Fix - correctly position title according to gStyle->GetTitleAlign()
+2. Fix - tooltips on TGraphPolar
+3. Fix - use 'portrait' orientation for PDF pages where width smaller than height
+4. Fix - font corruption after PDF generation
+5. Fix - support drawing of `RooEllipse` class
+
+
 ## Changes in 7.8.0
 1. Let use custom time zone for time display, support '&utc' and '&cet' in URL parameters
 2. Support gStyle.fLegendFillStyle

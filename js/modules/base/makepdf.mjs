@@ -85,18 +85,20 @@ async function makePDF(svg, args) {
 
    let doc;
 
+   const orientation = (svg.width < svg.height) ? 'portrait' : 'landscape';
+
    if (args?.as_doc)
       doc = args?.doc;
 
    if (doc) {
       doc.addPage({
-         orientation: 'landscape',
+         orientation,
          unit: 'px',
          format: [svg.width + 10, svg.height + 10]
       });
    } else {
       doc = new jsPDF({
-         orientation: 'landscape',
+         orientation,
          unit: 'px',
          format: [svg.width + 10, svg.height + 10]
       });
@@ -141,7 +143,13 @@ async function makePDF(svg, args) {
          node.removeAttribute('dy');
       });
 
-      restore_text.forEach(node => { node.innerHTML = node.$originalHTML; node.setAttribute('font-family', node.$originalFont); });
+      restore_text.forEach(node => {
+         node.innerHTML = node.$originalHTML;
+         if (node.$originalFont)
+            node.setAttribute('font-family', node.$originalFont);
+         else
+            node.removeAttribute('font-family');
+      });
 
       const res = args?.as_buffer ? doc.output('arraybuffer') : doc.output('dataurlstring');
       if (nodejs) {

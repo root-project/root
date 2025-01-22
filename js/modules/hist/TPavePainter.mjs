@@ -1402,18 +1402,20 @@ class TPavePainter extends ObjectPainter {
             } else if ((opt === 'postitle') || painter.isDummyPos(pave)) {
                const st = gStyle, fp = painter.getFramePainter();
                if (st && fp) {
-                  const midx = st.fTitleX, y2 = st.fTitleY, fsz = st.fTitleFontSize;
-                  let w = st.fTitleW, h = st.fTitleH;
-
-                  if (!h) h = Math.max((y2 - fp.fY2NDC) * 0.7, (fsz < 1) ? 1.1 * fsz : 1.1 * fsz / fp.getFrameWidth());
-                  if (!w) w = fp.fX2NDC - fp.fX1NDC;
+                  const midx = st.fTitleX, y2 = st.fTitleY,
+                        valign = st.fTitleAlign % 10, halign = (st.fTitleAlign - valign) / 10,
+                        title = pave.fLines?.arr[0]?.fTitle;
+                  let w = st.fTitleW, h = st.fTitleH, fsz = st.fTitleFontSize;
+                  if (fsz > 1) fsz = fsz / fp.getFrameWidth();
+                  if (!h) h = Math.max((y2 - fp.fY2NDC) * 0.7, 1.1 * fsz);
+                  if (!w) w = (halign !== 2 && title) ? title.length * fsz * 0.2 : fp.fX2NDC - fp.fX1NDC;
                   if (!Number.isFinite(h) || (h <= 0)) h = 0.06;
                   if (!Number.isFinite(w) || (w <= 0)) w = 0.44;
 
-                  pave.fX1NDC = midx - w/2;
-                  pave.fY1NDC = y2 - h;
-                  pave.fX2NDC = midx + w/2;
-                  pave.fY2NDC = y2;
+                  pave.fX1NDC = halign < 2 ? midx : (halign > 2 ? midx - w : midx - w/2);
+                  pave.fY1NDC = valign === 3 ? y2 - h : (valign === 2 ? y2 - h / 2 : y2);
+                  pave.fX2NDC = pave.fX1NDC + w;
+                  pave.fY2NDC = pave.fY1NDC + h;
                   pave.fInit = 1;
                }
             }
