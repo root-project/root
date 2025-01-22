@@ -846,7 +846,7 @@ void ROOT::Experimental::RField<TObject>::ReadGlobalImpl(ROOT::NTupleSize_t glob
 
 void ROOT::Experimental::RField<TObject>::AfterConnectPageSource()
 {
-   if (GetTypeVersion() != 1) {
+   if (GetOnDiskTypeVersion() != 1) {
       throw RException(R__FAIL("unsupported on-disk version of TObject: " + std::to_string(GetTypeVersion())));
    }
 }
