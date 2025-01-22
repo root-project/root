@@ -157,7 +157,7 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
    void BeforeConnectPageSource(Internal::RPageSource &pageSource) final;
-   void OnConnectPageSource() final;
+   void AfterConnectPageSource() final;
 
 public:
    RClassField(std::string_view fieldName, std::string_view className);
@@ -448,7 +448,7 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
-   void OnConnectPageSource() final;
+   void AfterConnectPageSource() final;
 
 public:
    static std::string TypeName() { return "TObject"; }
