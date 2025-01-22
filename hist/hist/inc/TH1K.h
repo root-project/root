@@ -28,17 +28,26 @@ class TH1K : public TH1, public TArrayF {
 private:
    void Sort();
 protected:
-   Int_t fReady;  //!
-   Int_t fNIn;
-   Int_t fKOrd;   //!
-   Int_t fKCur;   //!
+   Int_t fReady = 0;  //!
+   Int_t fNIn = 0;
+   Int_t fKOrd = 3;   //!
+   Int_t fKCur = 0;   //!
 
    Double_t RetrieveBinContent(Int_t bin) const override { return GetBinContent(bin); }
+   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Float_t (content); }
 
 public:
    TH1K();
    TH1K(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup,Int_t k=0);
-   ~TH1K() override;
+
+   /// Increment bin content by 1.
+   /// Passing an out-of-range bin leads to undefined behavior
+   void     AddBinContent(Int_t bin) override {++fArray[bin];}
+   /// Increment bin content by a weight w.
+   /// \warning The value of w is cast to `Float_t` before being added.
+   /// Passing an out-of-range bin leads to undefined behavior
+   void     AddBinContent(Int_t bin, Double_t w) override
+                          { fArray[bin] += Float_t (w); }
 
    void      Copy(TObject &obj) const override;
    Int_t     Fill(Double_t x) override;
