@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '17/01/2025',
+version_date = '22/01/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -142993,6 +142993,7 @@ drawFuncs = { lst: [
    { name: clTCutG, sameas: clTGraph },
    { name: /^RooHist/, sameas: clTGraph },
    { name: /^RooCurve/, sameas: clTGraph },
+   { name: /^RooEllipse/, sameas: clTGraph },
    { name: 'TScatter', icon: 'img_graph', class: () => Promise.resolve().then(function () { return TScatterPainter$1; }).then(h => h.TScatterPainter), opt: ';A' },
    { name: 'RooPlot', icon: 'img_canvas', func: drawRooPlot },
    { name: 'TRatioPlot', icon: 'img_mgraph', class: () => Promise.resolve().then(function () { return TRatioPlotPainter$1; }).then(h => h.TRatioPlotPainter), opt: '' },

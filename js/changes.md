@@ -11,11 +11,12 @@
 1. Implement 'arc' draw option for `TPave`
 1. Provide context menus for all derived from `TPave` classes
 1. Support Poisson errors for `TH1`/`TH2`, https://root-forum.cern.ch/t/62335/
-1. Support TLink and TButton object, used in TInspectCanvas
+1. Support `TLink` and `TButton` object, used in `TInspectCanvas`
 1. Fix - handle `TPave` NDC position also when fInit is not set
 1. Fix - correctly position title according to gStyle->GetTitleAlign()
 1. Fix - correctly handle tooltip events for `TGraphPolar`
 1. Fix - font corruption after PDF generation
+1. Fix - support drawing of `RooEllipse` class
 
 
 ## Changes in 7.8.0
