@@ -39,10 +39,6 @@ ClassImp(TH1K);
 TH1K::TH1K()
 {
    fDimension = 1;
-   fNIn   = 0;
-   fReady = 0;
-   fKOrd  = 3;
-   fKCur  = 0;
 }
 
 
@@ -54,18 +50,7 @@ TH1K::TH1K(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t
      : TH1(name,title,nbins,xlow,xup), TArrayF(100)
 {
    fDimension = 1;
-   fNIn   = 0;
-   fReady = 0;
    fKOrd  = k;
-   fKCur  = 0;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
-
-TH1K::~TH1K()
-{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
