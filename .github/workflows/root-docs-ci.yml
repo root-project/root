@@ -35,7 +35,7 @@ jobs:
       DOC_DIR: v6-34-00-patches
       DOC_LOCATION: /github/home
       BASE_REF: v6-34-00-patches
-      WEB_DIR_NAME: v6-34-00-patches
+      WEB_DIR_NAME: v634
       TAR_NAME: html634.tar
 
     permissions:
