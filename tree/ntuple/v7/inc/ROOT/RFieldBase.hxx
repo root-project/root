@@ -476,7 +476,7 @@ protected:
    virtual void BeforeConnectPageSource(Internal::RPageSource &) {}
 
    /// Called by `ConnectPageSource()` once connected; derived classes may override this as appropriate
-   virtual void OnConnectPageSource() {}
+   virtual void AfterConnectPageSource() {}
 
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
    /// normalized type name and type alias.

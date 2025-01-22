@@ -247,7 +247,7 @@ void ROOT::Experimental::RClassField::BeforeConnectPageSource(Internal::RPageSou
    }
 }
 
-void ROOT::Experimental::RClassField::OnConnectPageSource()
+void ROOT::Experimental::RClassField::AfterConnectPageSource()
 {
    // Add post-read callbacks for I/O customization rules; only rules that target transient members are allowed for now
    // TODO(jalopezg): revise after supporting schema evolution
@@ -844,7 +844,7 @@ void ROOT::Experimental::RField<TObject>::ReadGlobalImpl(ROOT::NTupleSize_t glob
    *reinterpret_cast<UInt_t *>(reinterpret_cast<unsigned char *>(to) + GetOffsetBits()) = bits;
 }
 
-void ROOT::Experimental::RField<TObject>::OnConnectPageSource()
+void ROOT::Experimental::RField<TObject>::AfterConnectPageSource()
 {
    if (GetTypeVersion() != 1) {
       throw RException(R__FAIL("unsupported on-disk version of TObject: " + std::to_string(GetTypeVersion())));
