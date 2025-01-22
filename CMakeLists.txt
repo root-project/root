@@ -696,7 +696,15 @@ if(testing)
 endif()
 
 if(LLVM_LINKER_IS_MOLD)
-  message(FATAL_ERROR "The mold linker is not supported by ROOT. Please use a different linker")
+  execute_process(
+    COMMAND mold --version
+    OUTPUT_VARIABLE MOLD_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  string(REGEX REPLACE "mold ([0-9]+\\.[0-9]+\\.[0-9]+).*" "\\1" MOLD_VERSION "${MOLD_VERSION}")
+  if(MOLD_VERSION VERSION_LESS "2.32.0")
+    message(FATAL_ERROR "The mold linker version ${MOLD_VERSION} is not supported by ROOT. Please use mold >= 2.32.0 or a different linker")
+  endif()
 endif()
 
 cmake_host_system_information(RESULT PROCESSOR QUERY PROCESSOR_DESCRIPTION)
