@@ -309,25 +309,53 @@ void RModel::SetNotWritableInitializedTensor(const std::string & tensor_name) {
 void RModel::EvaluateIntermediateMemory(const std::vector<std::string>& op_input_tensors, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter) {
    for (auto &it : op_input_tensors){
       fIntermediateTensorCounter[it].frequency--;
+
+      // check flag is false => tensor memory has not been accounted yet. If it's already accounted, we only decrement
+      // its frequency. Once the frequency reaches 0 => the tensor is no longer required after the current operator,
+      // therefore it is safe to flush it
       if (!fIntermediateTensorCounter[it].check_flag){
-         fIntermediateTensorCounter[it].check_flag == true;
          auto tensor_size = ConvertShapeToLength(GetTensorShape(it));
+
+         // check if there is any available memory
          if (!fIntermediateMemoryInfo.available_memory.empty()){
-            for (size_t block_idx = 0; block_idx < fIntermediateMemoryInfo.available_memory.size(); ++block_idx){
-               if (fIntermediateMemoryInfo.available_memory[block_idx].second >= tensor_size){
-                  fIntermediateMemoryInfo.available_memory[block_idx].second -= tensor_size;
-                  if (!fIntermediateMemoryInfo.available_memory[block_idx].second) {
-                     fIntermediateMemoryInfo.available_memory.erase(fIntermediateMemoryInfo.available_memory.begin() + block_idx);
+            for (auto chunk = fIntermediateMemoryInfo.available_memory.begin(); chunk != fIntermediateMemoryInfo.available_memory.end(); ) {
+               
+               // check if available memory chunks are capable of accomodating the tensor
+               if (chunk->second >= tensor_size) {
+                  chunk->second -= tensor_size;
+
+                  fIntermediateTensorCounter[it].check_flag == true;
+
+                  if (chunk->second == 0) {
+                        chunk = fIntermediateMemoryInfo.available_memory.erase(chunk);
+                        continue;
                   }
                }
+               ++chunk;
             }
-         } else {
-            fIntermediateMemoryInfo.total_memory.push_back(tensor_size);
+         } 
+
+         // either there was no available memory, or not enough to accomodate the tensor => we need to include 
+         // the tensor in the total memory
+         if (!fIntermediateTensorCounter[it].check_flag) {
+            auto previous_tensor_idx = fIntermediateMemoryInfo.back().chunk_idx;
+            auto previous_tensor_size = fIntermediateMemoryInfo.back().tensor_size;
+            fIntermediateMemoryInfo.total_memory.push_back({
+               it,
+               previous_tensor_idx+previous_tensor_size,
+               tensor_size
+            });
          }
       }
 
+      // if the frequency of the tensor has reached 0, it is now safe to flush
+      // therefore we will keep its memory in the available list
       if (fIntermediateTensorCounter[it].frequency == 0){
-
+         for (auto &tensor_chunk:fIntermediateMemoryInfo.total_memory){
+            if (tensor_chunk.tensor_name == it){
+               fIntermediateMemoryInfo.available_memory.insert({tensor_chunk.chunk_idx, tensor_chunk.tensor_size})
+            }
+         }
       }
    }
 }
