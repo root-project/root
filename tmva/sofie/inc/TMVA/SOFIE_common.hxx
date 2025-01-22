@@ -98,9 +98,19 @@ struct TensorType<uint64_t> {
    static const std::string Name() { return "uint64_t"; }
 };
 
+struct TensorMemoryInfo {
+   std::string tensor_name;
+   unsigned int chunk_idx;
+   size_t tensor_size;
+};
+
+struct AvailableChunkInfo {
+   unsigned int chunk_idx;
+   size_t chunk_size;
+};
 struct MemoryPoolInfo {
-   std::vector<std::pair<std::string, size_t>> total_memory;
-   std::vector<std::pair<unsigned int, size_t>> available_memory;
+   std::vector<TensorMemoryInfo> total_memory;
+   std::map<unsigned int, size_t> available_memory;
 };
 
 struct TensorCounter {
