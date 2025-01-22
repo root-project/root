@@ -1,3 +1,8 @@
+/// \file
+/// \ingroup tutorial_eve_7
+///
+/// \macro_code
+///
 #include <ROOT/REveElement.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveViewer.hxx>

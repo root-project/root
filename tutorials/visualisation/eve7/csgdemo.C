@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_eve7
+/// \ingroup tutorial_eve_7
 /// Combinatorial Solid Geometry example
 ///
 /// Stripped down to demonstrate EVE shape-extracts.

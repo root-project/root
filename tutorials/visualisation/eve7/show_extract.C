@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_eve7
+/// \ingroup tutorial_eve_7
 /// Helper script for showing of extracted / simplified geometries.
 /// By default shows a simplified ALICE geometry.
 ///

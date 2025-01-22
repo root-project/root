@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_eve
+/// \ingroup tutorial_eve_7
 /// Demonstrates usage of class REveStraightLineSet. The elements in the set can be individually picked when enable
 /// secondary select. The REveStraightLineSet is a projectable class. It can be visible in RhoZ and RhoPhi projected
 /// views.

@@ -1,3 +1,8 @@
+/// \file
+/// \ingroup tutorial_eve_7
+///
+/// \macro_code
+///
 #include "TRandom.h"
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveScene.hxx>

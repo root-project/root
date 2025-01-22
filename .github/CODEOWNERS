@@ -51,7 +51,7 @@ interpreter/cling/tools/packaging @vgvassilev
 /graf2d/cocoa/ @couet
 /graf3d/eve/ @osschar
 /graf3d/eve7/ @osschar @linev
-/tutorials/visualisation/eve7/eve/ @osschar
+/tutorials/visualisation/eve/ @osschar
 /tutorials/visualisation/eve7/ @osschar @linev
 
 #different http/webgui components
