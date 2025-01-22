@@ -146,7 +146,9 @@ public:
    // used to infer the sub-graphs
    std::string GenerateInferSignature(bool isdecl = true);
 
-   void EvaluateIntermediateMemory(const std::vector<std::string>& op_input_tensors); 
+   void EvaluateIntermediateMemory(const std::vector<const std::string&>& op_input_tensors); 
+   void CheckAndAllocateIntermediateMemory(const std::vector<const std::string&>& op_output_tensors);
+   void CheckAndFlushIntermediateMemory(const std::vector<const std::string&>& op_output_tensors);
 
 protected:
    // internal functions

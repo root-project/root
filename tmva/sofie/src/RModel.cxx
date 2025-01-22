@@ -686,8 +686,9 @@ void RModel::GenerateOutput() {
 
    for (size_t id = 0; id < fOperators.size(); id++) {
       if (fVerbose) std::cout << "Generating code for operator .... " << id << std::endl;
+      fGC += CheckAndAllocateIntermediateMemory(fOperators[id]->GetOpOutputTensors());
       fGC += (fOperators[id]->Generate(std::to_string(id)));
-      fGC += FlushIntermediateMemory();
+      fGC += CheckAndFlushIntermediateMemory(fOperators[id]->GetOpOutputTensors());
    }
 
    if (outputSize == 1) {

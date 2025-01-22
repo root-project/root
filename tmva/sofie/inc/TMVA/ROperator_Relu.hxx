@@ -65,7 +65,8 @@ public:
       return out.str();
    }
 
-   const std::vector<std::string>& GetOpInputTensors() { return { fNX };}
+   const std::vector<std::string&>& GetOpInputTensors() { return { &fNX };}
+   const std::vector<std::string&>& GetOpOutputTensors() { return { &fNY };}
 
 };
 

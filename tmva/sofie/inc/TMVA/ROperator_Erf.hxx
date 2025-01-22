@@ -64,6 +64,7 @@ public:
    std::vector<std::string> GetStdLibs() { return { std::string("cmath") };}
 
    const std::vector<std::string>& GetOpInputTensors() { return { &fNX };}
+   const std::vector<std::string>& GetOpOutputTensors() { return { &fNY };}
 
 };
 
