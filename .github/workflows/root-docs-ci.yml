@@ -1,0 +1,182 @@
+name: 'ROOT Docs CI'
+
+on:
+
+  # Allows nightly builds to trigger one run for each branch easily, by
+  # providing the relevant branch as "default" value here:
+  workflow_call:
+    inputs:
+      incremental:
+        type: boolean
+        default: true
+
+  workflow_dispatch:
+    inputs:
+      incremental:
+        description: 'Do incremental build'
+        type: boolean
+        required: true
+        default: true
+      # docu_input: # opportunity: overwrite makeinput.sh with these args
+      #   description: Folders to build documentation for. All folders are built if empty.
+      #   type: string
+      #   default: ""
+      #   required: false
+
+jobs:
+  build-docs:
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
+
+    env:
+      PLATFORM: alma9
+      DOC_DIR: v6-32-00-patches
+      DOC_LOCATION: /github/home
+      BASE_REF: v6-32-00-patches
+      WEB_DIR_NAME: v632
+      TAR_NAME: html632.tar
+
+    permissions:
+      contents: read
+
+    container:
+      image: registry.cern.ch/root-ci/alma9:buildready # ALSO UPDATE BELOW!
+      options: '--security-opt label=disable --rm --name rootdoc' # ALSO UPDATE BELOW!
+      env:
+        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+        OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+        OS_AUTH_TYPE: 'v3applicationcredential'
+        OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+        OS_IDENTITY_API_VERSION: 3
+        OS_INTERFACE: 'public'
+        OS_REGION_NAME: 'cern'
+        PYTHONUNBUFFERED: true
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python Virtual Env
+      # if the `if` expr is false, `if` still has exit code 0.
+      # if the `if` block is entered, the block's exit code becomes the exit
+      # code of the `if`.
+      run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
+
+    - name: Set up directory name and tar filenames
+      run: |
+        echo TAR_NAME=html${BASE_REF}.tar >> $GITHUB_ENV
+        echo DOCDIR_NAME=${BASE_REF} >> $GITHUB_ENV
+
+    # TODO: install latest versions in image on root-ci-images
+    - name: Install Doxygen 1.10.0
+      run : |
+        mkdir -p ${{ github.workspace }}/doxygen
+        curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
+        echo PATH=$PATH:${{ github.workspace }}/doxygen/bin >> $GITHUB_ENV
+
+    - name: Install qhelpgenerator-qt5
+      run: |
+        dnf update -y
+        dnf upgrade -y
+        dnf install -y qt5-doctools
+        which qhelpgenerator-qt5
+
+    - name: Apply option overrides
+      env:
+        OVERRIDES: "testing=Off roottest=Off minimal=On"
+        CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/alma9.txt'
+      shell: bash
+      run: |
+        set -x
+        echo '' >> "$CONFIGFILE"
+        for ENTRY in $OVERRIDES; do
+            KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
+            # Add entry to file if not exists, otherwise replace
+            if grep -q "$KEY=" "$CONFIGFILE"; then
+                sed -i "s/$KEY=.*\$/$ENTRY/" "$CONFIGFILE"
+            else
+                echo "$ENTRY" >> "$CONFIGFILE"
+            fi
+        done
+        cat "$CONFIGFILE" || true
+
+    - name: Build ROOT - Workflow Dispatch
+      if:   github.event_name == 'workflow_dispatch'
+      run: ".github/workflows/root-ci-config/build_root.py
+                  --buildtype      Release
+                  --platform       ${{ env.PLATFORM }}
+                  --incremental    ${{ inputs.incremental }}
+                  --base_ref       ${BASE_REF}
+                  --head_ref       ${BASE_REF}
+                  --binaries       false
+                  --repository     ${{ github.server_url }}/${{ github.repository }}"
+
+    - name: Build ROOT - Schedule
+      if:   github.event_name == 'schedule'
+      run: ".github/workflows/root-ci-config/build_root.py
+                  --buildtype      Release
+                  --platform       ${{ env.PLATFORM }}
+                  --incremental    ${{ inputs.incremental }}
+                  --base_ref       ${BASE_REF}
+                  --head_ref       ${BASE_REF}
+                  --binaries       false
+                  --repository     ${{ github.server_url }}/${{ github.repository }}"
+
+    - name: Run Doxygen
+      working-directory: ${{ env.DOC_LOCATION }}
+      shell: bash
+      run: |
+        source ROOT-CI/build/bin/thisroot.sh
+        export DOXYGEN_OUTPUT_DIRECTORY=/github/home/${DOC_DIR}
+        cd ROOT-CI/src/documentation/doxygen_s3
+        make -j `nproc --all`
+
+    - name: Create documentation archives
+      working-directory: ${{ env.DOC_LOCATION }}
+      shell: bash
+      run: |
+        pwd
+        ls -l
+        echo ${DOC_DIR}
+        echo ${TAR_NAME}
+        ls -l ${DOC_DIR}
+        tar cf ${TAR_NAME} ${DOC_DIR}
+        gzip ${TAR_NAME}
+        ls -l
+
+    #Upload to GitHub as an artifact
+    - name: Upload tar file for GH
+      if:   ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{env.TAR_NAME}}.gz
+        path: ${{env.DOC_LOCATION}}/${{env.TAR_NAME}}.gz
+        if-no-files-found: error
+
+    - name: Install AWS CLI
+      run: |
+        python -m pip install --upgrade pip
+        pip install awscli==1.36.40
+        aws configure set default.s3.max_concurrent_requests 128
+
+    - name: Sync documentation to S3
+      working-directory: ${{ env.DOC_LOCATION }}
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_ENDPOINT_URL: https://s3.cern.ch/
+
+      run: |
+        pwd
+        ls -l
+        echo ${DOC_DIR}
+        echo ${WEB_DIR_NAME}
+        ls -l ${DOC_DIR}
+        aws s3 sync ${DOC_DIR}/html/ s3://root/doc-test/${WEB_DIR_NAME}/
+        rm -rf ${DOC_DIR}/html
+        aws s3 sync ${DOC_DIR}/ s3://root/doc-test/${WEB_DIR_NAME}/
+        aws s3 cp ${TAR_NAME}.gz s3://root/download-test/
