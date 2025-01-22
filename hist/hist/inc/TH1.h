@@ -200,8 +200,12 @@ public:
    virtual Bool_t   Add(TF1 *h1, Double_t c1=1, Option_t *option="");
    virtual Bool_t   Add(const TH1 *h1, Double_t c1=1);
    virtual Bool_t   Add(const TH1 *h, const TH1 *h2, Double_t c1=1, Double_t c2=1);
-   virtual void     AddBinContent(Int_t bin);
-   virtual void     AddBinContent(Int_t bin, Double_t w);
+   /// Increment bin content by 1.
+   /// Passing an out-of-range bin leads to undefined behavior
+   virtual void     AddBinContent(Int_t bin) = 0;
+   /// Increment bin content by a weight w.
+   /// Passing an out-of-range bin leads to undefined behavior
+   virtual void     AddBinContent(Int_t bin, Double_t w) = 0;
    static  void     AddDirectory(Bool_t add=kTRUE);
    static  Bool_t   AddDirectoryStatus();
            void     Browse(TBrowser *b) override;
@@ -456,8 +460,15 @@ public:
    ClassDefOverride(TH1,8)  //1-Dim histogram base class
 
 protected:
-   virtual Double_t RetrieveBinContent(Int_t bin) const;
-   virtual void     UpdateBinContent(Int_t bin, Double_t content);
+
+   /// Raw retrieval of bin content on internal data structure
+   /// see convention for numbering bins in TH1::GetBin
+   virtual Double_t RetrieveBinContent(Int_t bin) const = 0;
+
+   /// Raw update of bin content on internal data structure
+   /// see convention for numbering bins in TH1::GetBin
+   virtual void     UpdateBinContent(Int_t bin, Double_t content) = 0;
+
    virtual Double_t GetBinErrorSqUnchecked(Int_t bin) const { return fSumw2.fN ? fSumw2.fArray[bin] : RetrieveBinContent(bin); }
 };
 

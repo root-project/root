@@ -70,10 +70,13 @@ private:
 
 public:
    ~TH2() override;
-           void     AddBinContent(Int_t bin) override;
-           void     AddBinContent(Int_t bin, Double_t w) override;
-   virtual void     AddBinContent(Int_t binx, Int_t biny);
-   virtual void     AddBinContent(Int_t binx, Int_t biny, Double_t w);
+   using TH1::AddBinContent;
+   /// Increment 2D bin content by 1.
+   /// Passing an out-of-range bin leads to undefined behavior
+   virtual void     AddBinContent(Int_t binx, Int_t biny) = 0;
+   /// Increment 2D bin content by a weight w.
+   /// Passing an out-of-range bin leads to undefined behavior
+   virtual void     AddBinContent(Int_t binx, Int_t biny, Double_t w) = 0;
            Int_t    BufferEmpty(Int_t action=0) override;
            void     Copy(TObject &hnew) const override;
            Int_t    Fill(Double_t x, Double_t y) override;
