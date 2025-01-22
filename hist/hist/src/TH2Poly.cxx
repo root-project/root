@@ -1751,3 +1751,15 @@ Double_t TH2Poly::Interpolate(Double_t, Double_t)
    Error("Interpolate", "Not implemented for TH2Poly");
    return TMath::QuietNaN();
 }
+////////////////////////////////////////////////////////////////////////////////
+/// NOT IMPLEMENTED for TH2Poly
+void TH2Poly::AddBinContent(Int_t)
+{
+   Error("AddBinContent", "Not implemented for TH2Poly");
+}
+////////////////////////////////////////////////////////////////////////////////
+/// NOT IMPLEMENTED for TH2Poly
+void TH2Poly::AddBinContent(Int_t, Double_t)
+{
+   Error("AddBinContent", "Not implemented for TH2Poly");
+}

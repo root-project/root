@@ -130,6 +130,9 @@ protected:
 
    //functions not to be used for TH2Poly
 
+   void AddBinContent(Int_t) override;           ///< NOT IMPLEMENTED for TH2Poly
+   void AddBinContent(Int_t, Double_t) override; ///< NOT IMPLEMENTED for TH2Poly
+
    Int_t        Fill(Double_t) override{return -1;}                              ///< NOT IMPLEMENTED for TH2Poly
    Int_t        Fill(Double_t , const char *, Double_t) override{return -1;}     ///< NOT IMPLEMENTED for TH2Poly
    Int_t        Fill(const char *, Double_t , Double_t ) override{return -1;}    ///< NOT IMPLEMENTED for TH2Poly
