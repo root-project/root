@@ -139,8 +139,8 @@ class TGaxisPainter extends TAxisPainter {
       });
    }
 
-   /** @summary Fill TGaxis context */
-   fillContextMenu(menu) {
+   /** @summary Fill TGaxis context menu items */
+   fillContextMenuItems(menu) {
       menu.addTAxisMenu(EAxisBits, this, this.getObject(), '');
    }
 

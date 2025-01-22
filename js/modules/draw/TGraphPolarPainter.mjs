@@ -443,7 +443,7 @@ class TGraphPolarPainter extends ObjectPainter {
 
       for (let n = 0; n < graph.fNpoints; ++n) {
          const pos = main.translate(graph.fX[n], graph.fY[n]),
-               dist2 = (pos.x-pnt.x)**2 + (pos.y-pnt.y)**2;
+               dist2 = (pos.grx-pnt.x)**2 + (pos.gry-pnt.y)**2;
          if (dist2 < best_dist2) { best_dist2 = dist2; bestindx = n; bestpos = pos; }
       }
 
@@ -454,8 +454,8 @@ class TGraphPolarPainter extends ObjectPainter {
 
       const res = {
          name: this.getObject().fName, title: this.getObject().fTitle,
-         x: bestpos.x, y: bestpos.y,
-         color1: this.markeratt?.used ? this.markeratt.color : this.lineatt.color,
+         x: bestpos.grx, y: bestpos.gry,
+         color1: (this.markeratt?.used ? this.markeratt.color : undefined) ?? (this.fillatt?.used ? this.fillatt.color : undefined) ?? this.lineatt?.color,
          exact: Math.sqrt(best_dist2) < 4,
          lines: [this.getObjectHint()],
          binindx: bestindx,

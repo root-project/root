@@ -522,7 +522,7 @@ function parseLatex(node, arg, label, curr) {
    },
 
    createSubPos = fscale => {
-      return { lvl: curr.lvl + 1, x: 0, y: 0, fsize: curr.fsize*(fscale || 1), color: curr.color, font: curr.font, parent: curr, painter: curr.painter };
+      return { lvl: curr.lvl + 1, x: 0, y: 0, fsize: curr.fsize*(fscale || 1), color: curr.color, font: curr.font, parent: curr, painter: curr.painter, italic: curr.italic, bold: curr.bold };
    };
 
    while (label) {
@@ -869,11 +869,7 @@ function parseLatex(node, arg, label, curr) {
 
          const subpos = createSubPos();
 
-         let value;
-         for (let c = curr; c && (value === undefined && c); c = c.parent)
-            value = c[found.bi];
-
-         subpos[found.bi] = !value;
+         subpos[found.bi] = !subpos[found.bi];
 
          parseLatex(currG(), arg, sublabel, subpos);
 
