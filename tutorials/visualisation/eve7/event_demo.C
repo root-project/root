@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_eve7
+/// \ingroup tutorial_eve_7
 ///  This example display geometry, tracks and hits in web browser
 ///
 /// \macro_code

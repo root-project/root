@@ -283,7 +283,7 @@ set(gui_veto math/fit/fitpanel_playback.C
              roofit/roostats/ModelInspector.C
              roofit/roostats/ModelInspector.py
              legacy/tree/tvdemo.C
-             visualisation/eve7/eve/*.C
+             visualisation/eve/*.C
              visualisation/webgui/geom/geom_threejs.cxx
              visualisation/webgui/panel/webpanel.cxx
              visualisation/webgui/webwindow/webwindow.cxx)
@@ -750,7 +750,7 @@ if(ROOT_pyroot_FOUND)
              visualisation/gui/numberEntry.py  # requires GUI
              legacy/pyroot/*py      # legacy ...
              roofit/histfactory/makeQuickModel.py # not a tutorial
-             visualisation/eve7/eve/lineset.py         # requires GUI
+             visualisation/eve/lineset.py         # requires GUI
              io/sql/sqlcreatedb.py     # same as the C++ case
              io/sql/sqlfilldb.py       # same as the C++ case
              io/sql/sqlselect.py       # same as the C++ case
