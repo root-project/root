@@ -175,7 +175,6 @@ jobs:
         ls -l
         echo ${DOC_DIR}
         echo ${WEB_DIR_NAME}
-        ls -l ${DOC_DIR}
         aws s3 sync ${DOC_DIR}/html/ s3://root/doc-test/${WEB_DIR_NAME}/
         rm -rf ${DOC_DIR}/html
         aws s3 sync ${DOC_DIR}/ s3://root/doc-test/${WEB_DIR_NAME}/
