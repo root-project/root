@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_eve
+/// \ingroup tutorial_eve_7
 /// Demonstrates usage of TEveBox class.
 ///
 /// \image html eve_box.png

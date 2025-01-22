@@ -45,7 +45,7 @@ Each primitive can be assigned:
   2. External TObject* (stored as TRef).
 
 See also base-class REveDigitSet for more information.
-Tutorial: tutorials/visualisation/eve7/eve/boxset_test.C
+Tutorial: tutorials/visualisation/eve/boxset_test.C
 */
 
 ////////////////////////////////////////////////////////////////////////////////

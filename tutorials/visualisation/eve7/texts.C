@@ -1,9 +1,10 @@
 /// \file
-/// \ingroup tutorial_eve7
+/// \ingroup tutorial_eve_7
 ///  This example display only texts in web browser
 ///
-/// \Waad
+/// \macro_code
 ///
+/// \author Waad Fahad
 
 #include "TRandom.h"
 #include <ROOT/REveElement.hxx>

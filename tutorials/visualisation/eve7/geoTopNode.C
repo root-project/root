@@ -1,4 +1,8 @@
-
+/// \file
+/// \ingroup tutorial_eve_7
+///
+/// \macro_code
+///
 #include <ROOT/REveGeoTopNode.hxx>
 #include <ROOT/REveManager.hxx>
 

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_eve7
+/// \ingroup tutorial_eve_7
 ///
 /// This is an example of visualization of containers
 /// with REveDataCollection and REveDataProxyBuilders.

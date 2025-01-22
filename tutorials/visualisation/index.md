@@ -18,7 +18,11 @@
 
 \defgroup tutorial_eve Event display tutorials
 \ingroup tutorial_visualisation
-\brief Examples showing the usage of the Event display classes.
+\brief Examples showing the usage of the Event Display classes.
+
+\defgroup tutorial_eve_7 Event display for ROOT 7 tutorials
+\ingroup tutorial_visualisation
+\brief Examples showing the usage of the ROOT 7 Event Display classes.
 
 \defgroup tutorial_geom Geometry tutorials
 \ingroup tutorial_visualisation
