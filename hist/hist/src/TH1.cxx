@@ -1249,24 +1249,6 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment bin content by 1.
-/// Passing an out-of-range bin leads to undefined behavior
-
-void TH1::AddBinContent(Int_t)
-{
-   AbstractMethod("AddBinContent");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Increment bin content by a weight w.
-/// Passing an out-of-range bin leads to undefined behavior
-
-void TH1::AddBinContent(Int_t, Double_t)
-{
-   AbstractMethod("AddBinContent");
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Sets the flag controlling the automatic add of histograms in memory
 ///
 /// By default (fAddDirectory = kTRUE), histograms are automatically added
@@ -9452,25 +9434,6 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
    }
 
    return hout;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Raw retrieval of bin content on internal data structure
-/// see convention for numbering bins in TH1::GetBin
-
-Double_t TH1::RetrieveBinContent(Int_t) const
-{
-   AbstractMethod("RetrieveBinContent");
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Raw update of bin content on internal data structure
-/// see convention for numbering bins in TH1::GetBin
-
-void TH1::UpdateBinContent(Int_t, Double_t)
-{
-   AbstractMethod("UpdateBinContent");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
