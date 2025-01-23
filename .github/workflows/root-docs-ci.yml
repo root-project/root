@@ -160,7 +160,7 @@ jobs:
       run: |
         pwd
         ls -l
-        aws s3 sync ${DOC_DIR}/html/ s3://root/doc-test/${WEB_DIR_NAME}/
+        aws s3 sync ${DOC_DIR}/html/ s3://root/doc/${WEB_DIR_NAME}/
         rm -rf ${DOC_DIR}/html
-        aws s3 sync ${DOC_DIR}/ s3://root/doc-test/${WEB_DIR_NAME}/
-        aws s3 cp ${TAR_NAME}.gz s3://root/download-test/
+        aws s3 sync ${DOC_DIR}/ s3://root/doc/${WEB_DIR_NAME}/
+        aws s3 cp ${TAR_NAME}.gz s3://root/download
