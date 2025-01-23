@@ -11,18 +11,18 @@
 
 TCanvas *hist006_TH1_bar_charts()
 {
-   // Try to open first the file cernstaff.root in tutorials/tree directory
+   // Try to open first the file cernstaff.root in tutorials/io/tree directory
    TString filedir = gROOT->GetTutorialDir();
-   filedir += TString("/tree/");
+   filedir += TString("/io/tree/");
    TString filename = "cernstaff.root";
    // Note that `AccessPathName` returns 0 (false) on success!
    bool fileNotFound = gSystem->AccessPathName(filename); 
 
-   // If the file is not found try to generate it using the macro tree/cernbuild.C
+   // If the file is not found try to generate it using the macro io/tree/tree500_cernbuild.C
    if (fileNotFound) {
-      TString macroName = filedir + "cernbuild.C";
+      TString macroName = filedir + "tree500_cernbuild.C";
       if (!gInterpreter->IsLoaded(macroName)) gInterpreter->LoadMacro(macroName);
-      gROOT->ProcessLineFast("cernbuild()");
+      gROOT->ProcessLineFast("tree500_cernbuild()");
    }
 
    auto file = std::unique_ptr<TFile>(TFile::Open(filename, "READ"));
