@@ -67,15 +67,33 @@ static const ClassRefs_t::size_type STD_HANDLE = GLOBAL_HANDLE + 1;
 
 typedef std::map<std::string, ClassRefs_t::size_type> Name2ClassRefIndex_t;
 static Name2ClassRefIndex_t g_name2classrefidx;
+static std::map<std::string, std::string> resolved_enum_types;
 
 namespace {
 
-static inline Cppyy::TCppType_t find_memoized(const std::string& name)
+static inline
+Cppyy::TCppType_t find_memoized_scope(const std::string& name)
 {
     auto icr = g_name2classrefidx.find(name);
     if (icr != g_name2classrefidx.end())
         return (Cppyy::TCppType_t)icr->second;
     return (Cppyy::TCppType_t)0;
+}
+
+static inline
+std::string find_memoized_resolved_name(const std::string& name)
+{
+// resolved class types
+    Cppyy::TCppType_t klass = find_memoized_scope(name);
+    if (klass) return Cppyy::GetScopedFinalName(klass);
+
+// resolved enum types
+    auto res = resolved_enum_types.find(name);
+    if (res != resolved_enum_types.end())
+        return res->second;
+
+// unknown ...
+    return "";
 }
 
 class CallWrapper {
@@ -403,8 +421,8 @@ std::string Cppyy::ResolveName(const std::string& cppitem_name)
 // Fully resolve the given name to the final type name.
 
 // try memoized type cache, in case seen before
-    TCppType_t klass = find_memoized(cppitem_name);
-    if (klass) return GetScopedFinalName(klass);
+    std::string memoized = find_memoized_resolved_name(cppitem_name);
+    if (!memoized.empty()) return memoized;
 
 // remove global scope '::' if present
     std::string tclean = cppitem_name.compare(0, 2, "::") == 0 ?
@@ -421,23 +439,32 @@ std::string Cppyy::ResolveName(const std::string& cppitem_name)
     if (tclean.rfind("byte", 0) == 0 || tclean.rfind("std::byte", 0) == 0)
         return tclean;
 
+// remove __restrict and __restrict__
+    auto pos = tclean.rfind("__restrict");
+    if (pos != std::string::npos)
+        tclean = tclean.substr(0, pos);
+
+    if (tclean.compare(0, 9, "std::byte") == 0)
+        return tclean;
+
+
 // check data types list (accept only builtins as typedefs will
 // otherwise not be resolved)
-    TDataType* dt = gROOT->GetType(tclean.c_str());
-    if (dt && dt->GetType() != kOther_t) return dt->GetFullTypeName();
-
+    if (IsBuiltin(tclean)) return tclean;
 // special case for enums
     if (IsEnum(cppitem_name))
         return ResolveEnum(cppitem_name);
 
 // special case for clang's builtin __type_pack_element (which does not resolve)
-    if (cppitem_name.rfind("__type_pack_element", 0) != std::string::npos) {
-    // shape is "__type_pack_element<index,type1,type2,...,typeN>cpd": extract
+    pos = cppitem_name.size() > 20 ? \
+              cppitem_name.rfind("__type_pack_element", 5) : std::string::npos;
+    if (pos != std::string::npos) {
+    // shape is "[std::]__type_pack_element<index,type1,type2,...,typeN>cpd": extract
     // first the index, and from there the indexed type; finally, restore the
     // qualifiers
         const char* str = cppitem_name.c_str();
         char* endptr = nullptr;
-        unsigned long index = strtoul(str+20, &endptr, 0);
+        unsigned long index = strtoul(str+20+pos, &endptr, 0);
 
         std::string tmplvars{endptr};
         auto start = tmplvars.find(',') + 1;
@@ -456,11 +483,21 @@ std::string Cppyy::ResolveName(const std::string& cppitem_name)
         return resolved;
     }
 
-// typedefs
-    return TClassEdit::ResolveTypedef(tclean.c_str(), true);
+// typedefs etc. (and a couple of hacks around TClassEdit-isms, fixing of which
+// in ResolveTypedef itself is a TODO ...)
+    tclean = TClassEdit::ResolveTypedef(tclean.c_str(), true);
+    pos = 0;
+    while ((pos = tclean.find("::::", pos)) != std::string::npos) {
+        tclean.replace(pos, 4, "::");
+        pos += 2;
+    }
+
+    if (tclean.compare(0, 6, "const ") != 0)
+        return TClassEdit::ShortType(tclean.c_str(), 2);
+    return "const " + TClassEdit::ShortType(tclean.c_str(), 2);
 }
 
-static std::map<std::string, std::string> resolved_enum_types;
+
 std::string Cppyy::ResolveEnum(const std::string& enum_type)
 {
 // The underlying type of a an enum may be any kind of integer.
@@ -517,7 +554,7 @@ std::string Cppyy::ResolveEnum(const std::string& enum_type)
 Cppyy::TCppScope_t Cppyy::GetScope(const std::string& sname)
 {
 // First, try cache
-    TCppType_t result = find_memoized(sname);
+    TCppType_t result = find_memoized_scope(sname);
     if (result) return result;
 
 // Second, skip builtins before going through the more expensive steps of resolving
@@ -528,21 +565,24 @@ Cppyy::TCppScope_t Cppyy::GetScope(const std::string& sname)
 // TODO: scope_name should always be final already?
 // Resolve name fully before lookup to make sure all aliases point to the same scope
     std::string scope_name = ResolveName(sname);
-    bool bHasAlias = sname != scope_name;
-    if (bHasAlias) {
-        result = find_memoized(scope_name);
-        if (result) return result;
+    bool bHasAlias1 = sname != scope_name;
+    if (bHasAlias1) {
+        result = find_memoized_scope(scope_name);
+        if (result) {
+            g_name2classrefidx[sname] = result;
+            return result;
+        }
     }
 
 // both failed, but may be STL name that's missing 'std::' now, but didn't before
     bool b_scope_name_missclassified = is_missclassified_stl(scope_name);
     if (b_scope_name_missclassified) {
-        result = find_memoized("std::"+scope_name);
+        result = find_memoized_scope("std::"+scope_name);
         if (result) g_name2classrefidx["std::"+scope_name] = (ClassRefs_t::size_type)result;
     }
-    bool b_sname_missclassified = bHasAlias ? is_missclassified_stl(sname) : false;
+    bool b_sname_missclassified = bHasAlias1 ? is_missclassified_stl(sname) : false;
     if (b_sname_missclassified) {
-        if (!result) result = find_memoized("std::"+sname);
+        if (!result) result = find_memoized_scope("std::"+sname);
         if (result) g_name2classrefidx["std::"+sname] = (ClassRefs_t::size_type)result;
     }
 
@@ -556,16 +596,27 @@ Cppyy::TCppScope_t Cppyy::GetScope(const std::string& sname)
         return (TCppScope_t)0;
 
 // memoize found/created TClass
+    bool bHasAlias2 = cr->GetName() != scope_name;
+    if (bHasAlias2) {
+        result = find_memoized_scope(cr->GetName());
+        if (result) {
+            g_name2classrefidx[scope_name] = result;
+            if (bHasAlias1) g_name2classrefidx[sname] = result;
+            return result;
+        }
+    }
+
     ClassRefs_t::size_type sz = g_classrefs.size();
     g_name2classrefidx[scope_name] = sz;
-    if (bHasAlias) g_name2classrefidx[sname] = sz;
-    g_classrefs.push_back(TClassRef(scope_name.c_str()));
-
+    if (bHasAlias1) g_name2classrefidx[sname] = sz;
+    if (bHasAlias2) g_name2classrefidx[cr->GetName()] = sz;
 // TODO: make ROOT/meta NOT remove std :/
     if (b_scope_name_missclassified)
         g_name2classrefidx["std::"+scope_name] = sz;
     if (b_sname_missclassified)
         g_name2classrefidx["std::"+sname] = sz;
+
+    g_classrefs.push_back(TClassRef(scope_name.c_str()));
 
     return (TCppScope_t)sz;
 }
@@ -651,10 +702,19 @@ size_t Cppyy::SizeOf(const std::string& type_name)
     return SizeOf(GetScope(type_name));
 }
 
+
 bool Cppyy::IsBuiltin(const std::string& type_name)
 {
-    TDataType* dt = gROOT->GetType(TClassEdit::CleanType(type_name.c_str(), 1).c_str());
-    if (dt) return dt->GetType() != kOther_t;
+    if (g_builtins.find(type_name) != g_builtins.end())
+        return true;
+
+    const std::string& tclean = TClassEdit::CleanType(type_name.c_str(), 1);
+    if (g_builtins.find(tclean) != g_builtins.end())
+        return true;
+
+    if (strstr(tclean.c_str(), "std::complex"))
+        return true;
+
     return false;
 }
 
