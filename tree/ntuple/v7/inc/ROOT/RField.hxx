@@ -143,9 +143,13 @@ private:
    RClassField(std::string_view fieldName, const RClassField &source); ///< Used by CloneImpl
    RClassField(std::string_view fieldName, TClass *classp);
    void Attach(std::unique_ptr<RFieldBase> child, RSubFieldInfo info);
-   /// Register post-read callbacks corresponding to a list of ROOT I/O customization rules. `classp` is used to
-   /// fill the `TVirtualObject` instance passed to the user function.
-   void AddReadCallbacksFromIORules(const std::span<const TSchemaRule *> rules, TClass *classp = nullptr);
+   /// Register post-read callback corresponding to a ROOT I/O customization rules.
+   void AddReadCallbacksFromIORule(const TSchemaRule *rule);
+   /// Given the on-disk information from the page source, find all the I/O customization rules that apply
+   /// to the class field at hand, to which the fieldDesc descriptor, if provided, must correspond.
+   /// Fields may not have an on-disk representation (e.g., when inserted by schema evolution), in which case the passed
+   /// field descriptor is nullptr.
+   std::vector<const TSchemaRule *> FindRules(const RFieldDescriptor *fieldDesc);
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -157,7 +161,6 @@ protected:
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
    void BeforeConnectPageSource(Internal::RPageSource &pageSource) final;
-   void AfterConnectPageSource() final;
 
 public:
    RClassField(std::string_view fieldName, std::string_view className);
