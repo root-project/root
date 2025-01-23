@@ -212,7 +212,7 @@ std::unique_ptr<ROOT::Experimental::Internal::RPageSource> ROOT::Experimental::I
 {
    auto clone = CloneImpl();
    if (fIsAttached) {
-      clone->GetExclDescriptorGuard().MoveIn(std::move(*GetSharedDescriptorGuard()->Clone()));
+      clone->GetExclDescriptorGuard().MoveIn(GetSharedDescriptorGuard()->Clone());
       clone->fHasStructure = true;
       clone->fIsAttached = true;
    }

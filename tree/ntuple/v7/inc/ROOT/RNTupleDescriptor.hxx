@@ -65,7 +65,7 @@ class RNTupleDescriptorBuilder;
 \brief Meta-data stored for every field of an ntuple
 */
 // clang-format on
-class RFieldDescriptor {
+class RFieldDescriptor final {
    friend class Internal::RNTupleDescriptorBuilder;
    friend class Internal::RFieldDescriptorBuilder;
 
@@ -149,7 +149,7 @@ public:
 \brief Meta-data stored for every column of an ntuple
 */
 // clang-format on
-class RColumnDescriptor {
+class RColumnDescriptor final {
    friend class Internal::RColumnDescriptorBuilder;
    friend class Internal::RNTupleDescriptorBuilder;
 
@@ -227,7 +227,7 @@ Clusters usually span across all available columns but in some cases they can de
 for instance when describing friend ntuples.
 */
 // clang-format on
-class RClusterDescriptor {
+class RClusterDescriptor final {
    friend class Internal::RClusterDescriptorBuilder;
 
 public:
@@ -427,7 +427,7 @@ Every ntuple has at least one cluster group.  The clusters in a cluster group ar
 the order of page locations in the page list envelope that belongs to the cluster group (see format specification)
 */
 // clang-format on
-class RClusterGroupDescriptor {
+class RClusterGroupDescriptor final {
    friend class Internal::RClusterGroupDescriptorBuilder;
 
 private:
@@ -486,7 +486,7 @@ enum class EExtraTypeInfoIds {
 Currently only used by streamer fields to store RNTuple-wide list of streamer info records.
 */
 // clang-format on
-class RExtraTypeInfoDescriptor {
+class RExtraTypeInfoDescriptor final {
    friend class Internal::RExtraTypeInfoDescriptorBuilder;
 
 private:
@@ -536,7 +536,7 @@ the concept of frames: header, footer, and substructures have a preamble with ve
 writte struct. This allows for forward and backward compatibility when the meta-data evolves.
 */
 // clang-format on
-class RNTupleDescriptor {
+class RNTupleDescriptor final {
    friend class Internal::RNTupleDescriptorBuilder;
 
 public:
@@ -616,7 +616,7 @@ public:
    RNTupleDescriptor(RNTupleDescriptor &&other) = default;
    RNTupleDescriptor &operator=(RNTupleDescriptor &&other) = default;
 
-   std::unique_ptr<RNTupleDescriptor> Clone() const;
+   RNTupleDescriptor Clone() const;
 
    bool operator==(const RNTupleDescriptor &other) const;
 

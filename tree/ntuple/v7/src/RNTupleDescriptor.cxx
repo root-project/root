@@ -663,32 +663,32 @@ ROOT::Experimental::RNTupleDescriptor::CreateModel(const RCreateModelOptions &op
    return model;
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleDescriptor> ROOT::Experimental::RNTupleDescriptor::Clone() const
+ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::RNTupleDescriptor::Clone() const
 {
-   auto clone = std::make_unique<RNTupleDescriptor>();
-   clone->fName = fName;
-   clone->fDescription = fDescription;
-   clone->fOnDiskHeaderXxHash3 = fOnDiskHeaderXxHash3;
-   clone->fOnDiskHeaderSize = fOnDiskHeaderSize;
-   clone->fOnDiskFooterSize = fOnDiskFooterSize;
-   clone->fNEntries = fNEntries;
-   clone->fNClusters = fNClusters;
-   clone->fNPhysicalColumns = fNPhysicalColumns;
-   clone->fFieldZeroId = fFieldZeroId;
-   clone->fGeneration = fGeneration;
+   RNTupleDescriptor clone;
+   clone.fName = fName;
+   clone.fDescription = fDescription;
+   clone.fOnDiskHeaderXxHash3 = fOnDiskHeaderXxHash3;
+   clone.fOnDiskHeaderSize = fOnDiskHeaderSize;
+   clone.fOnDiskFooterSize = fOnDiskFooterSize;
+   clone.fNEntries = fNEntries;
+   clone.fNClusters = fNClusters;
+   clone.fNPhysicalColumns = fNPhysicalColumns;
+   clone.fFieldZeroId = fFieldZeroId;
+   clone.fGeneration = fGeneration;
    for (const auto &d : fFieldDescriptors)
-      clone->fFieldDescriptors.emplace(d.first, d.second.Clone());
+      clone.fFieldDescriptors.emplace(d.first, d.second.Clone());
    for (const auto &d : fColumnDescriptors)
-      clone->fColumnDescriptors.emplace(d.first, d.second.Clone());
+      clone.fColumnDescriptors.emplace(d.first, d.second.Clone());
    for (const auto &d : fClusterGroupDescriptors)
-      clone->fClusterGroupDescriptors.emplace(d.first, d.second.Clone());
-   clone->fSortedClusterGroupIds = fSortedClusterGroupIds;
+      clone.fClusterGroupDescriptors.emplace(d.first, d.second.Clone());
+   clone.fSortedClusterGroupIds = fSortedClusterGroupIds;
    for (const auto &d : fClusterDescriptors)
-      clone->fClusterDescriptors.emplace(d.first, d.second.Clone());
+      clone.fClusterDescriptors.emplace(d.first, d.second.Clone());
    for (const auto &d : fExtraTypeInfoDescriptors)
-      clone->fExtraTypeInfoDescriptors.emplace_back(d.Clone());
+      clone.fExtraTypeInfoDescriptors.emplace_back(d.Clone());
    if (fHeaderExtension)
-      clone->fHeaderExtension = std::make_unique<RHeaderExtension>(*fHeaderExtension);
+      clone.fHeaderExtension = std::make_unique<RHeaderExtension>(*fHeaderExtension);
    return clone;
 }
 

@@ -310,8 +310,8 @@ TEST_F(RPageStorageDaos, CagedPages)
       auto pageSource = RPageSource::Create(ntupleName, daosUri, options);
       pageSource->Attach();
       const auto &desc = pageSource->GetSharedDescriptorGuard()->Clone();
-      const auto colId = desc->FindPhysicalColumnId(desc->FindFieldId("cnt"), 0, 0);
-      const auto clusterId = desc->FindClusterId(colId, 0);
+      const auto colId = desc.FindPhysicalColumnId(desc.FindFieldId("cnt"), 0, 0);
+      const auto clusterId = desc.FindClusterId(colId, 0);
 
       RPageStorage::RSealedPage sealedPage;
       pageSource->LoadSealedPage(colId, RNTupleLocalIndex{clusterId, 0}, sealedPage);
@@ -320,7 +320,7 @@ TEST_F(RPageStorageDaos, CagedPages)
       sealedPage.SetBuffer(pageBuf.get());
       pageSource->LoadSealedPage(colId, RNTupleLocalIndex{clusterId, 0}, sealedPage);
 
-      auto colType = desc->GetColumnDescriptor(colId).GetType();
+      auto colType = desc.GetColumnDescriptor(colId).GetType();
       auto elem = ROOT::Experimental::Internal::RColumnElementBase::Generate<std::uint32_t>(colType);
       auto page = pageSource->UnsealPage(sealedPage, *elem).Unwrap();
       EXPECT_GT(page.GetNElements(), 0);

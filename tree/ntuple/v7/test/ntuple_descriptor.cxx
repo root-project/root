@@ -537,7 +537,7 @@ TEST(RNTupleDescriptor, Clone)
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    const auto &desc = ntuple->GetDescriptor();
    auto clone = desc.Clone();
-   EXPECT_EQ(desc, *clone);
+   EXPECT_EQ(desc, clone);
 }
 
 TEST(RNTupleDescriptor, BuildStreamerInfos)
