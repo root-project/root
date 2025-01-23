@@ -119,7 +119,7 @@ jobs:
       run: |
         source ROOT-CI/build/bin/thisroot.sh
         export DOXYGEN_OUTPUT_DIRECTORY=/github/home/${DOC_DIR}
-        cd ROOT-CI/src/documentation/doxygen_s3
+        cd ROOT-CI/src/documentation/doxygen
         make -j `nproc --all`
 
     - name: Create documentation archives
