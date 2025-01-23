@@ -377,7 +377,7 @@ RNTupleDS::RNTupleDS(std::unique_ptr<Internal::RPageSource> pageSource)
    fPrincipalDescriptor = pageSource->GetSharedDescriptorGuard()->Clone();
    fStagingArea.emplace_back(std::move(pageSource));
 
-   AddField(*fPrincipalDescriptor, "", fPrincipalDescriptor->GetFieldZeroId(),
+   AddField(fPrincipalDescriptor, "", fPrincipalDescriptor.GetFieldZeroId(),
             std::vector<ROOT::Experimental::RNTupleDS::RFieldInfo>());
 }
 
@@ -442,9 +442,9 @@ RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std:
 
    // Map the field's and subfields' IDs to qualified names so that we can later connect the fields to
    // other page sources from the chain
-   fFieldId2QualifiedName[field->GetOnDiskId()] = fPrincipalDescriptor->GetQualifiedFieldName(field->GetOnDiskId());
+   fFieldId2QualifiedName[field->GetOnDiskId()] = fPrincipalDescriptor.GetQualifiedFieldName(field->GetOnDiskId());
    for (const auto &s : *field) {
-      fFieldId2QualifiedName[s.GetOnDiskId()] = fPrincipalDescriptor->GetQualifiedFieldName(s.GetOnDiskId());
+      fFieldId2QualifiedName[s.GetOnDiskId()] = fPrincipalDescriptor.GetQualifiedFieldName(s.GetOnDiskId());
    }
 
    auto reader = std::make_unique<Internal::RNTupleColumnReader>(this, field);
