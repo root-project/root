@@ -29,7 +29,7 @@ TEST(RNTupleInspector, CreateFromPointer)
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
    auto ntuple = std::unique_ptr<RNTuple>(file->Get<RNTuple>("ntuple"));
    auto inspector = RNTupleInspector::Create(*ntuple);
-   EXPECT_EQ(inspector->GetDescriptor()->GetName(), "ntuple");
+   EXPECT_EQ(inspector->GetDescriptor().GetName(), "ntuple");
 }
 
 TEST(RNTupleInspector, CreateFromString)
@@ -40,7 +40,7 @@ TEST(RNTupleInspector, CreateFromString)
    }
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
-   EXPECT_EQ(inspector->GetDescriptor()->GetName(), "ntuple");
+   EXPECT_EQ(inspector->GetDescriptor().GetName(), "ntuple");
 
    EXPECT_THROW(RNTupleInspector::Create("nonexistent", fileGuard.GetPath()), ROOT::RException);
 }
@@ -154,7 +154,7 @@ TEST(RNTupleInspector, SizeUncompressedComplex)
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
    int nIndexCols = inspector->GetColumnCountByType(ENTupleColumnType::kIndex64);
-   int nEntries = inspector->GetDescriptor()->GetNEntries();
+   int nEntries = inspector->GetDescriptor().GetNEntries();
 
    EXPECT_EQ(2, nIndexCols);
    EXPECT_EQ(3, nEntries);
@@ -288,7 +288,7 @@ TEST(RNTupleInspector, ColumnInfoCompressed)
 
    std::uint64_t totalOnDiskSize = 0;
 
-   for (std::size_t i = 0; i < inspector->GetDescriptor()->GetNLogicalColumns(); ++i) {
+   for (std::size_t i = 0; i < inspector->GetDescriptor().GetNLogicalColumns(); ++i) {
       auto colInfo = inspector->GetColumnInspector(i);
       totalOnDiskSize += colInfo.GetCompressedSize();
 
@@ -332,7 +332,7 @@ TEST(RNTupleInspector, ColumnInfoUncompressed)
 
    std::uint64_t colTypeSizes[] = {sizeof(std::int32_t), sizeof(double)};
 
-   for (std::size_t i = 0; i < inspector->GetDescriptor()->GetNLogicalColumns(); ++i) {
+   for (std::size_t i = 0; i < inspector->GetDescriptor().GetNLogicalColumns(); ++i) {
       auto colInfo = inspector->GetColumnInspector(i);
       EXPECT_EQ(colInfo.GetCompressedSize(), colInfo.GetUncompressedSize());
       EXPECT_EQ(colInfo.GetCompressedSize(), colTypeSizes[i] * 5);
@@ -508,15 +508,15 @@ TEST(RNTupleInspector, ColumnTypeInfoHist)
    EXPECT_STREQ("colTypeCountHist", countHist->GetName());
    EXPECT_STREQ("Column count by type", countHist->GetTitle());
    EXPECT_EQ(4U, countHist->GetNbinsX());
-   EXPECT_EQ(inspector->GetDescriptor()->GetNPhysicalColumns(), countHist->Integral());
+   EXPECT_EQ(inspector->GetDescriptor().GetNPhysicalColumns(), countHist->Integral());
 
    auto nElemsHist = inspector->GetColumnTypeInfoAsHist(ROOT::Experimental::ENTupleInspectorHist::kNElems, "elemsHist");
    EXPECT_STREQ("elemsHist", nElemsHist->GetName());
    EXPECT_STREQ("Number of elements by column type", nElemsHist->GetTitle());
    EXPECT_EQ(4U, nElemsHist->GetNbinsX());
    std::uint64_t nTotalElems = 0;
-   for (const auto &col : inspector->GetDescriptor()->GetColumnIterable()) {
-      nTotalElems += inspector->GetDescriptor()->GetNElements(col.GetPhysicalId());
+   for (const auto &col : inspector->GetDescriptor().GetColumnIterable()) {
+      nTotalElems += inspector->GetDescriptor().GetNElements(col.GetPhysicalId());
    }
    EXPECT_EQ(nTotalElems, nElemsHist->Integral());
 
@@ -606,7 +606,7 @@ TEST(RNTupleInspector, PageSizeDistribution)
 
    auto allColsSizeHisto = inspector->GetPageSizeDistribution();
    nPages = 0;
-   for (const auto &col : inspector->GetDescriptor()->GetColumnIterable()) {
+   for (const auto &col : inspector->GetDescriptor().GetColumnIterable()) {
       nPages += inspector->GetColumnInspector(col.GetPhysicalId()).GetNPages();
    }
    int allColsIntegral = 0;
@@ -616,7 +616,7 @@ TEST(RNTupleInspector, PageSizeDistribution)
    EXPECT_EQ(nPages, allColsIntegral);
 
    // Requesting a histogram for a column with a physical ID not present in the given RNTuple should throw
-   EXPECT_THROW(inspector->GetPageSizeDistribution(inspector->GetDescriptor()->GetNPhysicalColumns() + 1),
+   EXPECT_THROW(inspector->GetPageSizeDistribution(inspector->GetDescriptor().GetNPhysicalColumns() + 1),
                 ROOT::RException);
 
    // Requesting a histogram for a column type not present in the given RNTuple should give an empty histogram
@@ -656,7 +656,7 @@ TEST(RNTupleInspector, FieldInfoCompressed)
    std::uint64_t subFieldOnDiskSize = 0;
    std::uint64_t subFieldInMemorySize = 0;
 
-   for (const auto &subField : inspector->GetDescriptor()->GetFieldIterable(topFieldInfo.GetDescriptor().GetId())) {
+   for (const auto &subField : inspector->GetDescriptor().GetFieldIterable(topFieldInfo.GetDescriptor().GetId())) {
       auto subFieldInfo = inspector->GetFieldTreeInspector(subField.GetId());
       subFieldOnDiskSize += subFieldInfo.GetCompressedSize();
       subFieldInMemorySize += subFieldInfo.GetUncompressedSize();
@@ -666,7 +666,7 @@ TEST(RNTupleInspector, FieldInfoCompressed)
    EXPECT_EQ(topFieldInfo.GetUncompressedSize(), subFieldInMemorySize);
 
    EXPECT_THROW(inspector->GetFieldTreeInspector("invalid_field"), ROOT::RException);
-   EXPECT_THROW(inspector->GetFieldTreeInspector(inspector->GetDescriptor()->GetNFields()), ROOT::RException);
+   EXPECT_THROW(inspector->GetFieldTreeInspector(inspector->GetDescriptor().GetNFields()), ROOT::RException);
 }
 
 TEST(RNTupleInspector, FieldInfoUncompressed)
@@ -699,7 +699,7 @@ TEST(RNTupleInspector, FieldInfoUncompressed)
    std::uint64_t subFieldOnDiskSize = 0;
    std::uint64_t subFieldInMemorySize = 0;
 
-   for (const auto &subField : inspector->GetDescriptor()->GetFieldIterable(topFieldInfo.GetDescriptor().GetId())) {
+   for (const auto &subField : inspector->GetDescriptor().GetFieldIterable(topFieldInfo.GetDescriptor().GetId())) {
       auto subFieldInfo = inspector->GetFieldTreeInspector(subField.GetId());
       subFieldOnDiskSize += subFieldInfo.GetCompressedSize();
       subFieldInMemorySize += subFieldInfo.GetUncompressedSize();

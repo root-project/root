@@ -86,7 +86,7 @@ private:
    /// descriptor.  Using the descriptor's generation number, we know if the cached descriptor is stale.
    /// Retrieving descriptor data from an RNTupleReader is supposed to be for testing and information purposes,
    /// not on a hot code path.
-   std::unique_ptr<RNTupleDescriptor> fCachedDescriptor;
+   std::optional<RNTupleDescriptor> fCachedDescriptor;
    Detail::RNTupleMetrics fMetrics;
    /// If not nullopt, these will used when creating the model
    std::optional<RNTupleDescriptor::RCreateModelOptions> fCreateModelOptions;

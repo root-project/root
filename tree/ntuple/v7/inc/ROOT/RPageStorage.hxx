@@ -602,7 +602,7 @@ public:
          fLock.unlock();
       }
       RNTupleDescriptor *operator->() const { return &fDescriptor; }
-      void MoveIn(RNTupleDescriptor &&desc) { fDescriptor = std::move(desc); }
+      void MoveIn(RNTupleDescriptor desc) { fDescriptor = std::move(desc); }
    };
 
 private:

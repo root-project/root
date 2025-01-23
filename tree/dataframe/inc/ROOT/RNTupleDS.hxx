@@ -20,6 +20,7 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDataSource.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleDescriptor.hxx>
 #include <string_view>
 
 #include <condition_variable>
@@ -36,7 +37,6 @@ class RNTuple;
 
 namespace Experimental {
 class RFieldBase;
-class RNTupleDescriptor;
 
 namespace Internal {
 class RNTupleColumnReader;
@@ -57,7 +57,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    };
 
    /// A clone of the first pages source's descriptor.
-   std::unique_ptr<RNTupleDescriptor> fPrincipalDescriptor;
+   RNTupleDescriptor fPrincipalDescriptor;
 
    /// The data source may be constructed with an ntuple name and a list of files
    std::string fNTupleName;

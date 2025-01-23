@@ -134,7 +134,7 @@ public:
 
 private:
    std::unique_ptr<Internal::RPageSource> fPageSource;
-   std::unique_ptr<RNTupleDescriptor> fDescriptor;
+   RNTupleDescriptor fDescriptor;
    std::optional<std::uint32_t> fCompressionSettings; ///< The compression settings are unknown for an empty ntuple
    std::uint64_t fCompressedSize = 0;
    std::uint64_t fUncompressedSize = 0;
@@ -203,7 +203,7 @@ public:
    /// \brief Get the descriptor for the RNTuple being inspected.
    ///
    /// \return A static copy of the RNTupleDescriptor belonging to the inspected RNTuple.
-   RNTupleDescriptor *GetDescriptor() const { return fDescriptor.get(); }
+   const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the compression settings of the RNTuple being inspected.
