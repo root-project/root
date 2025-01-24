@@ -32,6 +32,7 @@ public:
       auto name = std::string(pdf.GetName()) + "_over_" + _normIntegral->GetName();
       SetName(name.c_str());
       SetTitle(name.c_str());
+      _normRange = pdf.normRange(); // so that e.g. RooAddPdf can query over what we are normalized
    }
 
    RooNormalizedPdf(const RooNormalizedPdf &other, const char *name)

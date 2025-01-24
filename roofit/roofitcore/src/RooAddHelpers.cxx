@@ -56,14 +56,17 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
       nset2.add(refCoefNormSet);
    }
 
-   bool hasPdfWithCustomRange = false;
+   bool hasPdfWithDifferentRange = false;
 
    // Fill with dummy unit RRVs for now
    for (std::size_t i = 0; i < pdfList.size(); ++i) {
       auto pdf = static_cast<const RooAbsPdf *>(pdfList.at(i));
       auto coef = static_cast<const RooAbsReal *>(coefList.at(i));
 
-      hasPdfWithCustomRange |= pdf->normRange() != nullptr;
+      const std::string normRangeComponent = pdf->normRange() ? pdf->normRange() : "";
+      const bool componentHasDifferentNormRange = normRangeComponent != normRange;
+
+      hasPdfWithDifferentRange |= componentHasDifferentNormRange;
 
       // Start with full list of dependents
       RooArgSet supNSet(fullDepList);
@@ -88,7 +91,7 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
                                      << pdf->GetName() << std::endl;
       }
 
-      if (!normRange.empty()) {
+      if (componentHasDifferentNormRange) {
          auto snormTerm = std::unique_ptr<RooAbsReal>(pdf->createIntegral(nset2, nset2, normRange.c_str()));
          if (snorm) {
             auto oldSnorm = std::move(snorm);
@@ -109,7 +112,7 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
 
    // *** PART 2 : Create projection coefficients ***
 
-   const bool projectCoefsForRangeReasons = !refCoefNormRange.empty() || !normRange.empty() || hasPdfWithCustomRange;
+   const bool projectCoefsForRangeReasons = !refCoefNormRange.empty() || !normRange.empty() || hasPdfWithDifferentRange;
 
    // If no projections required stop here
    if (refCoefNormSet.empty() && !projectCoefsForRangeReasons) {

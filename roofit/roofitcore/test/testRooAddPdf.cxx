@@ -5,11 +5,14 @@
 #include <RooConstVar.h>
 #include <RooDataHist.h>
 #include <RooFit/Evaluator.h>
+#include <RooGaussian.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
 #include <RooHistPdf.h>
 #include <RooMsgService.h>
 #include <RooProdPdf.h>
+#include <RooRealIntegral.h>
+#include <RooUniform.h>
 #include <RooWorkspace.h>
 
 #include <RooStats/SPlot.h>
@@ -381,4 +384,43 @@ TEST(RooAddPdf, ImplicitDimensions)
 
    EXPECT_DOUBLE_EQ(pdf.getVal(normSet), refVal);
    EXPECT_DOUBLE_EQ(evaluator.run()[0], refVal);
+}
+
+// Make sure that there are no superfluous integrals when one does a ranged
+// with equivalent coefficient reference range.
+// Covers GitHub issue 12645.
+TEST(RooAddPdf, IntegralsForRangedFitWithIdenticalCoefRange)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   using namespace RooFit;
+
+   RooRealVar x("x", "", 0, 1);
+
+   RooGaussian g("g", "", x, 0.5, 0.2);
+   RooUniform u("u", "", x);
+
+   RooRealVar f("f", "", 0.5, 0, 1);
+   RooAddPdf a("a", "", {g, u}, {f});
+
+   std::unique_ptr<RooAbsData> dt{a.generate(x, 1000)};
+
+   x.setRange("limited", 0.2, 0.8);
+
+   std::unique_ptr<RooAbsReal> nll{a.createNLL(*dt, Range("limited"), SumCoefRange("limited"), EvalBackend("cpu"))};
+
+   RooArgList nodes;
+   nll->treeNodeServerList(&nodes);
+
+   int iIntegrals = 0;
+
+   for (auto *arg : nodes) {
+      if (dynamic_cast<RooRealIntegral const *>(arg)) {
+         ++iIntegrals;
+      }
+   }
+
+   // We expect only two integral objects: one normalization integral for each
+   // of the component pdfs.
+   EXPECT_EQ(iIntegrals, 2);
 }
