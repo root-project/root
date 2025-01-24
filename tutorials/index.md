@@ -1,37 +1,6 @@
 \defgroup Tutorials Tutorials
 \brief A collection of C++ macros, Python scripts and notebooks helping to learn ROOT by example.
 
-You can execute the scripts in `$ROOTSYS/tutorials` (or sub-directories)
-by setting your current directory in the script directory or from any
-user directory with write access.
-
-Several tutorials create new files. If you have write access to
-the tutorials directory, the new files will be created in the tutorials
-directory, otherwise they will be created in the user directory.
-
-You can start by executing the standard ROOT demos with a session like:
-
-```
-  root > .x demos.C
-```
-or
-
-```
-  root > .x $ROOTSYS/tutorials/demos.C
-```
-
-You can execute the standard ROOT graphics benchmark with
-
-```
-  root > .x benchmarks.C
-```
-
-or
-
-```
-  root > .x $ROOTSYS/tutorials/benchmarks.C
-```
-
 ## Get started
 
 If you have never used ROOT before and don’t know where to start, we recommend that you first explore the [ROOT introductory course](https://github.com/root-project/student-course). You can also watch the recording of the course, but you should follow the material along on your PC. You also may want to have a look at the documentation of these modules:
@@ -97,3 +66,35 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \defgroup tutorial_legacy Legacy tutorials
 \ingroup Tutorials
 \brief Legacy Tutorials
+
+## Demos and benchmarks
+You can execute the scripts in `$ROOTSYS/tutorials` (or sub-directories)
+by setting your current directory in the script directory or from any
+user directory with write access.
+
+Several tutorials create new files. If you have write access to
+the tutorials directory, the new files will be created in the tutorials
+directory, otherwise they will be created in the user directory.
+
+You can start by executing the standard ROOT demos with a session like:
+
+```
+  root > .x demos.C
+```
+or
+
+```
+  root > .x $ROOTSYS/tutorials/demos.C
+```
+
+You can execute the standard ROOT graphics benchmark with
+
+```
+  root > .x benchmarks.C
+```
+
+or
+
+```
+  root > .x $ROOTSYS/tutorials/benchmarks.C
+```
