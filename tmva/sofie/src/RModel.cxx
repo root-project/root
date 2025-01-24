@@ -338,13 +338,21 @@ void RModel::EvaluateIntermediateMemory(const std::vector<std::string>& op_input
          // either there was no available memory, or not enough to accomodate the tensor => we need to include 
          // the tensor in the total memory
          if (!fIntermediateTensorCounter[it].check_flag) {
-            auto previous_tensor_idx = fIntermediateMemoryInfo.back().chunk_idx;
-            auto previous_tensor_size = fIntermediateMemoryInfo.back().tensor_size;
-            fIntermediateMemoryInfo.total_memory.push_back({
-               it,
-               previous_tensor_idx+previous_tensor_size,
-               tensor_size
-            });
+            if (fIntermediateMemoryInfo.total_memory.size()){
+               auto previous_tensor_idx = fIntermediateMemoryInfo.total_memory().back().chunk_idx;
+               auto previous_tensor_size = fIntermediateMemoryInfo.total_memory().back().tensor_size;
+               fIntermediateMemoryInfo.total_memory.push_back({
+                  it,
+                  previous_tensor_idx+previous_tensor_size,
+                  tensor_size
+               });
+            } else {
+               fIntermediateMemoryInfo.total_memory.push_back({
+                  it,
+                  0,
+                  tensor_size
+               });
+            }
          }
       }
 
@@ -363,10 +371,53 @@ void RModel::EvaluateIntermediateMemory(const std::vector<std::string>& op_input
 std::string RModel::CheckAndAllocateIntermediateMemory(const std::vector<const std::string&>& op_output_tensors){
    std::string memory_allocation_string;
    for (auto& it:op_output_tensors){
+      fIntermediateTensorFrequencyLookup[it].frequency--;
       if(!fIntermediateTensorFrequencyLookup[it].check_flag){
-         memory_allocation_string += 
+         auto tensor_size = ConvertShapeToLength(GetTensorShape(it));
+
+         if (!fIntermediateMemoryInfo.available_memory.empty()){
+            for (auto chunk = fIntermediateMemoryInfo.available_memory.begin(); chunk != fIntermediateMemoryInfo.available_memory.end(); ) {
+               
+               // check if available memory chunks are capable of accomodating the tensor
+               if (chunk->second >= tensor_size) {
+                  chunk->second -= tensor_size;
+
+                  fIntermediateTensorCounter[it].check_flag == true;
+
+                  if (chunk->second == 0) {
+                        chunk = fIntermediateMemoryInfo.available_memory.erase(chunk);
+                        continue;
+                  }
+
+                  memory_allocation_string += "float* tensor_"+ it + "= reinterpret_cast<float*>(fIntermediateMemoryPool+" + chunk->first + ");\n"
+               }
+               ++chunk;
+            }
+         } 
+
+         if (!fIntermediateTensorCounter[it].check_flag) {
+            if (fIntermediateMemoryInfo.total_memory.size()){
+               auto previous_tensor_idx = fIntermediateMemoryInfo.total_memory().back().chunk_idx;
+               auto previous_tensor_size = fIntermediateMemoryInfo.total_memory().back().tensor_size;
+               fIntermediateMemoryInfo.total_memory.push_back({
+                  it,
+                  previous_tensor_idx+previous_tensor_size,
+                  tensor_size
+               });
+               memory_allocation_string += "float* tensor_"+ it + "= reinterpret_cast<float*>(fIntermediateMemoryPool+" + previous_tensor_idx+previous_tensor_size + ");\n"
+            } else {
+               fIntermediateMemoryInfo.total_memory.push_back({
+                  it,
+                  0,
+                  tensor_size
+               });
+               memory_allocation_string += "float* tensor_"+ it + "= reinterpret_cast<float*>(fIntermediateMemoryPool);\n"
+            }
+         }
+
       }
    }
+   return memory_allocation_string;
 }
 
 
@@ -378,6 +429,7 @@ void RModel::Initialize(int batchSize, bool verbose) {
       inputParams["bs"] = batchSize;
    }
    Initialize(inputParams, verbose);
+   fIntermediateMemoryInfo = MemoryPoolInfo();
 }
 void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool verbose) {
 
