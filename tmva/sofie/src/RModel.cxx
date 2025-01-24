@@ -360,6 +360,16 @@ void RModel::EvaluateIntermediateMemory(const std::vector<std::string>& op_input
    }
 }
 
+std::string RModel::CheckAndAllocateIntermediateMemory(const std::vector<const std::string&>& op_output_tensors){
+   std::string memory_allocation_string;
+   for (auto& it:op_output_tensors){
+      if(!fIntermediateTensorFrequencyLookup[it].check_flag){
+         memory_allocation_string += 
+      }
+   }
+}
+
+
 void RModel::Initialize(int batchSize, bool verbose) {
    std::map<std::string, size_t> inputParams;
    if (batchSize > 0) {
@@ -549,7 +559,12 @@ void RModel::GenerateInitializedTensorInfo()
 }
 
 void RModel::GenerateIntermediateMemoryPool() {
-
+   unsigned int total_memory_required = fIntermediateMemoryInfo.total_memory.back().chunk_idx+fIntermediateMemoryInfo.total_memory.back().tensor_size;
+   fGC += "\n//--- Allocating session memory pool to be used for allocating intermediate tensors\n";
+   
+   // char memory block is allocated since char takes 1 byte, thus easier to allocate tensors
+   // of other data types
+   fGC += "char* fIntermediateMemoryPool = new char[" + total_memory_required + "];"
 }
 
 void RModel::GenerateIntermediateTensorInfo() {
