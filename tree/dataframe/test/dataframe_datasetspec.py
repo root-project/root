@@ -43,8 +43,8 @@ class RDatasetSpecTest(unittest.TestCase):
             REntryRange(),
             REntryRange(1, 4),
             REntryRange(2, 4),
-            REntryRange(100),
-            REntryRange(1, 100),
+            REntryRange(5),
+            REntryRange(1, 5),
             REntryRange(2, 2),
             REntryRange(7, 7),
         ]
