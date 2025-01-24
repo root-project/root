@@ -32,7 +32,7 @@ int mp_processSelector()
    gROOT->SetBatch(kTRUE);
 
    TString selectorPath = gROOT->GetTutorialDir();
-   selectorPath += "/io/tree/h1analysis.C+";
+   selectorPath += "/analysis/tree/h1analysis.C+";
    std::cout << "selector used is: " << selectorPath << "\n";
    auto sel = TSelector::GetSelector(selectorPath);
 

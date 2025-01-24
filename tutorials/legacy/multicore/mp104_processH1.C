@@ -66,7 +66,7 @@ int mp104_processH1()
    // Run the analysis with a selector
 
    TString selectorPath = gROOT->GetTutorialDir();
-   selectorPath += "/io/tree/h1analysisTreeReader.C+";
+   selectorPath += "/analysis/tree/h1analysisTreeReader.C+";
    std::cout << tutname << "processing the H1 dataset with selector '" << selectorPath << "'\n";
    auto sel = TSelector::GetSelector(selectorPath);
 
