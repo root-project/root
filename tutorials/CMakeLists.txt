@@ -520,7 +520,7 @@ set(returncode_1 math/fit/fit2a.C
                  hist/hist014_TH1_cumulative.C
                  hist/hist004_TH1_labels.C
                  hist/hist036_TH2_labels.C
-                 io/tree/h1analysis.C
+                 analysis/tree/h1analysis.C
                  math/chi2test.C
                  math/r/SimpleFitting.C)
 #---Dependencies------------------------------------------------------
