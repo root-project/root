@@ -542,7 +542,15 @@ public:
     */
    std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Axpy") }; }
 
-   const std::vector<std::string>& GetOpInputTensors() { return { &fNX, &fNB  };}
+   const std::vector<std::string>& GetOpInputTensors() {
+      static const std::vector<std::string> op_input_tensors = { fNX, fNB };
+      return op_input_tensors;
+   }
+   const std::vector<std::string>& GetOpOutputTensors() {
+      static const std::vector<std::string> op_output_tensors = { fNY, fNB2 };
+      return op_output_tensors;
+   }   
+
 };
 
 } // namespace SOFIE

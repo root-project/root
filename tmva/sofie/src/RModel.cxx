@@ -359,14 +359,14 @@ void RModel::EvaluateIntermediateMemory(const std::vector<std::string>& op_input
       // if the frequency of the tensor has reached 0, it is now safe to flush
       // therefore we will keep its memory in the available list
          if (fIntermediateTensorCounter[it].frequency == 0) {
-            for (auto it = fIntermediateMemoryInfo.total_memory.begin(); 
-                  it != fIntermediateMemoryInfo.total_memory.end(); ) {
-               if (it->tensor_name == tensor_name) {
-                     fIntermediateMemoryInfo.available_memory.insert({it->chunk_idx, it->tensor_size});
+            for (auto chunk = fIntermediateMemoryInfo.total_memory.begin(); 
+                chunk != fIntermediateMemoryInfo.total_memory.end(); ) {
+               if (chunk->tensor_name == it) {
+                     fIntermediateMemoryInfo.available_memory.insert({chunk->chunk_idx, chunk->tensor_size});
                      
-                     it = fIntermediateMemoryInfo.total_memory.erase(it);
+                     chunk = fIntermediateMemoryInfo.total_memory.erase(chunk);
                } else {
-                     ++it;
+                     ++chunk;
                }
             }
          }
