@@ -257,8 +257,14 @@ TEST_P(RDatasetSpecTest, SimpleMetaDataHandling)
 // start > end -> error in the spec directly
 TEST_P(RDatasetSpecTest, Ranges)
 {
-   std::vector<RDatasetSpec::REntryRange> ranges = {{1, 4},     {2, 4},    {100},     {1, 100}, {2, 2},
-                                                    {100, 100}, {85, 100}, {86, 100}, {92, 100}};
+   // Logically correct ranges
+   std::vector<RDatasetSpec::REntryRange> goodRanges = {{1, 4}, {2, 4}, {75}, {1, 75}, {2, 2}, {100, 100}};
+
+   // Problematic ranges
+   RDatasetSpec::REntryRange endEntryBeyondEndRange{1, 100};
+   RDatasetSpec::REntryRange offByOneBeginEntryRange{85, 86};
+   RDatasetSpec::REntryRange offByTwoBeginEntryRange{86, 100};
+   RDatasetSpec::REntryRange ReallyBeyondEndRange{92, 100};
 
    std::vector<RDatasetSpec> specs(2);
    for (const auto &d : data) {
@@ -278,48 +284,92 @@ TEST_P(RDatasetSpecTest, Ranges)
       specs[1].AddSample({d.name, treeNamesExpanded, fileGlobsExpanded, d.meta});
    }
    for (auto &spec : specs) {
-      for (auto i = 0u; i < ranges.size(); ++i) {
-         auto df = RDataFrame(spec.WithGlobalRange(ranges[i]));
+
+      // Good ranges
+      for (auto i = 0u; i < goodRanges.size(); ++i) {
+         auto df = RDataFrame(spec.WithGlobalRange(goodRanges[i]));
          auto takeRes = df.Take<ULong64_t>("x"); // lazy action
-         if (i < 6u) {                           // the first 6 ranges, are logically correct
-            auto &res = *takeRes;
-            std::sort(res.begin(), res.end());
-            if (ranges[i].fBegin != ranges[i].fEnd)
-               EXPECT_VEC_SEQ_EQ(res, ROOT::TSeq<ULong64_t>(ranges[i].fBegin, std::min(85ll, ranges[i].fEnd)));
-            else
-               EXPECT_EQ((*takeRes).size(), 0u);
-         } else {
-            if (GetParam()) { // MT case, error coming from the TTreeProcessorMT
-               EXPECT_THROW(
-                  try { *takeRes; } catch (const std::logic_error &err) {
-                     const auto msg =
-                        std::string("A range of entries was passed in the creation of the TTreeProcessorMT, "
-                                    "but the starting entry (") +
-                        ranges[i].fBegin +
-                        ") is larger "
-                        "than the total number of entries (85) in the dataset.";
-                     EXPECT_EQ(std::string(err.what()), msg);
-                     throw;
-                  },
-                  std::logic_error);
-            } else {
-               if (i == 6u) // Single-threaded case undesired behaviour, see
-                            // https://github.com/root-project/root/issues/10774
-                  EXPECT_EQ((*takeRes).size(), 0u);
-               else {
-                  EXPECT_THROW(
-                     try {
-                        ROOT_EXPECT_ERROR(*takeRes, "TTreeReader::SetEntriesRange()",
-                                          (std::string("Error setting first entry ") + ranges[i].fBegin +
-                                           ": one of the readers was not successfully initialized")
-                                             .Data());
-                     } catch (const std::logic_error &err) { // error coming from the RLoopManager
-                        EXPECT_STREQ(err.what(), "Something went wrong in initializing the TTreeReader.");
-                        throw;
-                     },
-                     std::logic_error);
-               }
-            }
+         auto &res = *takeRes;
+         std::sort(res.begin(), res.end());
+         if (goodRanges[i].fBegin != goodRanges[i].fEnd)
+            EXPECT_VEC_SEQ_EQ(res, ROOT::TSeq<ULong64_t>(goodRanges[i].fBegin, std::min(85ll, goodRanges[i].fEnd)));
+         else
+            EXPECT_EQ((*takeRes).size(), 0u);
+      }
+
+      // Bad ranges
+
+      {
+         // End entry out of bounds
+         auto df = RDataFrame(spec.WithGlobalRange(endEntryBeyondEndRange));
+         auto takeRes = df.Take<ULong64_t>("x");
+         ROOT_EXPECT_WARNING(*takeRes, "RDataFrame::Run",
+                             "RDataFrame stopped processing after 84 entries, whereas an entry range (begin=1,end=100) "
+                             "was requested. Consider adjusting the end value of the entry range to a maximum of 85.");
+      }
+
+      if (GetParam()) {
+         // Begin entry beyond maximum number of entries, in MT case the error
+         // comes from TTreeProcessorMT
+         for (auto &&range : {offByOneBeginEntryRange, offByTwoBeginEntryRange, ReallyBeyondEndRange}) {
+            auto df = RDataFrame(spec.WithGlobalRange(range));
+            auto takeRes = df.Take<ULong64_t>("x");
+            EXPECT_THROW(
+               try { *takeRes; } catch (const std::logic_error &err) {
+                  const auto msg = std::string("A range of entries was passed in the creation of the TTreeProcessorMT, "
+                                               "but the starting entry (") +
+                                   range.fBegin +
+                                   ") is larger "
+                                   "than the total number of entries (85) in the dataset.";
+                  EXPECT_EQ(std::string(err.what()), msg);
+                  throw;
+               },
+               std::logic_error);
+         }
+      } else {
+         // Begin entry beyond maximum number of entries, in single-threaded
+         // case we rely on TTreeReader status codes
+         {
+            // Off by one case, SetEntriesRange does not error out immediately.
+            // The first call to TTreeReader::Next will detect the issue.
+            auto df = RDataFrame(spec.WithGlobalRange(offByOneBeginEntryRange));
+            auto takeRes = df.Take<ULong64_t>("x");
+            EXPECT_THROW(
+               try {
+                  ROOT_EXPECT_ERROR(*takeRes, "TTreeReader::SetEntryBase()",
+                                    "The beginning entry specified via SetEntriesRange (85) is equal to or beyond "
+                                    "the total number of entries in the dataset (85). Make sure to specify a "
+                                    "beginning entry lower than the number of available entries.");
+               } catch (const std::runtime_error &err) { // error coming from the RLoopManager
+                  EXPECT_STREQ(err.what(),
+                               "An error was encountered while processing the data. TTreeReader status code is: 3");
+                  throw;
+               },
+               std::runtime_error);
+         }
+
+         for (auto &&range : {offByTwoBeginEntryRange, ReallyBeyondEndRange}) {
+            // Other cases with begin entry further beyond are caught directly by SetEntriesRange
+            auto df = RDataFrame(spec.WithGlobalRange(range));
+            auto takeRes = df.Take<ULong64_t>("x");
+            EXPECT_THROW(
+               try {
+                  ROOT::TestSupport::CheckDiagsRAII diagRAII;
+                  diagRAII.requiredDiag(kError, "TTreeReader::SetEntryBase()",
+                                        "The beginning entry specified via SetEntriesRange (" +
+                                           std::to_string(range.fBegin) +
+                                           ") is equal to or beyond "
+                                           "the total number of entries in the dataset (85). Make sure to specify a "
+                                           "beginning entry lower than the number of available entries.");
+                  diagRAII.requiredDiag(kError, "TTreeReader::SetEntriesRange()",
+                                        "Error setting first entry " + std::to_string(range.fBegin) +
+                                           ": cannot access chain element");
+                  *takeRes;
+               } catch (const std::logic_error &err) { // error coming from the RLoopManager
+                  EXPECT_STREQ(err.what(), "Something went wrong in initializing the TTreeReader.");
+                  throw;
+               },
+               std::logic_error);
          }
       }
    }

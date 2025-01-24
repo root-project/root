@@ -697,7 +697,17 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, bool local)
                value->NotifyNewTree(fTree->GetTree());
             }
          }
-         fEntryStatus = kEntryBeyondEnd;
+         auto &&nEntries = treeToCallLoadOn->GetEntriesFast();
+         if (fBeginEntry >= nEntries && nEntries > 0) {
+            // The beginning entry specified via SetEntriesRange was beyond the total number of entries in the dataset
+            Error("SetEntryBase()",
+                  "The beginning entry specified via SetEntriesRange (%lld) is equal to or beyond the "
+                  "total number of entries in the dataset (%lld). Make sure to specify a "
+                  "beginning entry lower than the number of available entries.",
+                  fBeginEntry, nEntries);
+            fEntryStatus = kEntryNotFound;
+         } else
+            fEntryStatus = kEntryBeyondEnd;
          WarnIfFriendsHaveMoreEntries();
          return fEntryStatus;
       }
