@@ -358,13 +358,18 @@ void RModel::EvaluateIntermediateMemory(const std::vector<std::string>& op_input
 
       // if the frequency of the tensor has reached 0, it is now safe to flush
       // therefore we will keep its memory in the available list
-      if (fIntermediateTensorCounter[it].frequency == 0){
-         for (auto &tensor_chunk:fIntermediateMemoryInfo.total_memory){
-            if (tensor_chunk.tensor_name == it){
-               fIntermediateMemoryInfo.available_memory.insert({tensor_chunk.chunk_idx, tensor_chunk.tensor_size})
+         if (fIntermediateTensorCounter[it].frequency == 0) {
+            for (auto it = fIntermediateMemoryInfo.total_memory.begin(); 
+                  it != fIntermediateMemoryInfo.total_memory.end(); ) {
+               if (it->tensor_name == tensor_name) {
+                     fIntermediateMemoryInfo.available_memory.insert({it->chunk_idx, it->tensor_size});
+                     
+                     it = fIntermediateMemoryInfo.total_memory.erase(it);
+               } else {
+                     ++it;
+               }
             }
          }
-      }
    }
 }
 
@@ -382,7 +387,7 @@ std::string RModel::CheckAndAllocateIntermediateMemory(const std::vector<const s
                if (chunk->second >= tensor_size) {
                   chunk->second -= tensor_size;
 
-                  fIntermediateTensorCounter[it].check_flag == true;
+                  fIntermediateTensorFrequencyLookup[it].check_flag == true;
 
                   if (chunk->second == 0) {
                         chunk = fIntermediateMemoryInfo.available_memory.erase(chunk);
@@ -395,7 +400,7 @@ std::string RModel::CheckAndAllocateIntermediateMemory(const std::vector<const s
             }
          } 
 
-         if (!fIntermediateTensorCounter[it].check_flag) {
+         if (!fIntermediateTensorFrequencyLookup[it].check_flag) {
             if (fIntermediateMemoryInfo.total_memory.size()){
                auto previous_tensor_idx = fIntermediateMemoryInfo.total_memory().back().chunk_idx;
                auto previous_tensor_size = fIntermediateMemoryInfo.total_memory().back().tensor_size;
@@ -419,6 +424,25 @@ std::string RModel::CheckAndAllocateIntermediateMemory(const std::vector<const s
    }
    return memory_allocation_string;
 }
+
+void CheckAndFlushIntermediateMemory(const std::vector<const std::string&>& op_output_tensors){
+   for (auto &it : op_output_tensors){
+      fIntermediateTensorFrequencyLookup[it].frequency--;
+      if (fIntermediateTensorCounter[it].frequency == 0) {
+         for (auto it = fIntermediateMemoryInfo.total_memory.begin(); 
+               it != fIntermediateMemoryInfo.total_memory.end(); ) {
+            if (it->tensor_name == tensor_name) {
+                  fIntermediateMemoryInfo.available_memory.insert({it->chunk_idx, it->tensor_size});
+                  
+                  it = fIntermediateMemoryInfo.total_memory.erase(it);
+            } else {
+                  ++it;
+            }
+         }
+      }
+   }
+}
+
 
 
 void RModel::Initialize(int batchSize, bool verbose) {
@@ -755,7 +779,7 @@ void RModel::GenerateOutput() {
       if (fVerbose) std::cout << "Generating code for operator .... " << id << std::endl;
       fGC += CheckAndAllocateIntermediateMemory(fOperators[id]->GetOpOutputTensors());
       fGC += (fOperators[id]->Generate(std::to_string(id)));
-      fGC += CheckAndFlushIntermediateMemory(fOperators[id]->GetOpOutputTensors());
+      CheckAndFlushIntermediateMemory(fOperators[id]->GetOpOutputTensors());
    }
 
    if (outputSize == 1) {
