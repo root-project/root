@@ -590,6 +590,15 @@ void RLoopManager::RunTreeProcessorMT()
                                   std::to_string(r.GetEntryStatus()));
       }
    });
+
+   auto &&processedEntries = entryCount.load();
+   if (fEndEntry != std::numeric_limits<Long64_t>::max() &&
+       static_cast<ULong64_t>(fEndEntry - fBeginEntry) > processedEntries) {
+      Warning("RDataFrame::Run",
+              "RDataFrame stopped processing after %lld entries, whereas an entry range (begin=%lld,end=%lld) was "
+              "requested. Consider adjusting the end value of the entry range to a maximum of %lld.",
+              processedEntries, fBeginEntry, fEndEntry, fBeginEntry + processedEntries);
+   }
 #endif // no-op otherwise (will not be called)
 }
 
@@ -613,12 +622,14 @@ void RLoopManager::RunTreeReader()
 
    // recursive call to check filters and conditionally execute actions
    // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
+   Long64_t processedEntries{};
    try {
       while (validTTreeReaderRead(r) && fNStopsReceived < fNChildren) {
          if (fNewSampleNotifier.CheckFlag(0)) {
             UpdateSampleInfo(/*slot*/0, r);
          }
          RunAndCheckFilters(0, r.GetCurrentEntry());
+         processedEntries++;
       }
    } catch (...) {
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
@@ -628,6 +639,13 @@ void RLoopManager::RunTreeReader()
       // something went wrong in the TTreeReader event loop
       throw std::runtime_error("An error was encountered while processing the data. TTreeReader status code is: " +
                                std::to_string(r.GetEntryStatus()));
+   }
+
+   if (fEndEntry != std::numeric_limits<Long64_t>::max() && (fEndEntry - fBeginEntry) > processedEntries) {
+      Warning("RDataFrame::Run",
+              "RDataFrame stopped processing after %lld entries, whereas an entry range (begin=%lld,end=%lld) was "
+              "requested. Consider adjusting the end value of the entry range to a maximum of %lld.",
+              processedEntries, fBeginEntry, fEndEntry, fBeginEntry + processedEntries);
    }
 }
 
