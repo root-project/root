@@ -4,7 +4,7 @@
 // of detectors A and B. Eack Track object has a TRefArray of hits.
 // A TClonesArray of Jets is made with a subset of the Track objects
 // also stored in a TRefArray.
-// see $ROOTSYS/tutorials/jets.C for an example creating a Tree
+// see $ROOTSYS/tutorials/io/tree/tree130_jets.C for an example creating a Tree
 // with JetEvents.
 
 #include "TMath.h"

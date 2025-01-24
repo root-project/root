@@ -415,8 +415,8 @@ set(extra_veto
   io/tree/tree110_copy.C
   io/tree/tree111_copy.C
   io/tree/tree112_copy.C
-  io/tree/h1analysis*.C # these are not a tutorial but classes used in run_h1analysis.C
-  io/tree/h1chain.C
+  analysis/tree/h1analysis*.C # these are not a tutorial but classes used in run_h1analysis.C
+  analysis/tree/h1chain.C
   http/*.C
   visualisation/eve7/*.C
   math/r/rootlogon.C)
@@ -424,7 +424,7 @@ set(extra_veto
 if(MSVC)
   # disable run_h1analysis.C because of Endpoint Security HTTP traffic scanning,
   # which is corrupting the data on Windows
-  list(APPEND extra_veto io/tree/run_h1analysis.C)
+  list(APPEND extra_veto analysis/tree/run_h1analysis.C)
 endif()
 
 if(MSVC AND NOT llvm13_broken_tests)
