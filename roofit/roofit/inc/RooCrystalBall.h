@@ -60,7 +60,7 @@ private:
    std::unique_ptr<RooRealProxy> alphaR_ = nullptr;
    std::unique_ptr<RooRealProxy> nR_ = nullptr;
 
-   ClassDefOverride(RooCrystalBall, 1)
+   ClassDefOverride(RooCrystalBall, 2)
 };
 
 #endif
