@@ -103,6 +103,8 @@ std::string makeValidVarName(std::string const &in);
 
 void replaceAll(std::string &inOut, std::string_view what, std::string_view with);
 
+std::string makeSliceCutString(RooArgSet const &sliceDataSet);
+
 } // namespace Detail
 } // namespace RooFit
 

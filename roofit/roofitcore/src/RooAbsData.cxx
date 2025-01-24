@@ -1890,7 +1890,7 @@ RooPlot *RooAbsData::plotOn(RooPlot *frame, PlotOpt o) const
   RooAbsRealLValue* dataVar = static_cast<RooAbsRealLValue*>(_vars.find(var->GetName())) ;
   double nEnt(sumEntries()) ;
   if (dataVar->getMin()<var->getMin() || dataVar->getMax()>var->getMax()) {
-    std::unique_ptr<RooAbsData> tmp{const_cast<RooAbsData*>(this)->reduce(*var)};
+    std::unique_ptr<RooAbsData> tmp{const_cast<RooAbsData*>(this)->reduce(RooFit::SelectVars(*var))};
     nEnt = tmp->sumEntries() ;
   }
 

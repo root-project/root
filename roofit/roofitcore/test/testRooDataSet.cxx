@@ -305,7 +305,7 @@ TEST(RooDataSet, ReduceWithCompositeDataStore)
                                RooFit::Link({{"physics", &dataSetWeighted}}));
 
    // Reduce the dataset with the RooCompositeDataStore
-   std::unique_ptr<RooAbsData> dataSetReducedPtr{dataSetComposite.reduce("true")};
+   std::unique_ptr<RooAbsData> dataSetReducedPtr{dataSetComposite.reduce(RooFit::Cut("true"))};
    auto &dataSetReduced = static_cast<RooDataSet &>(*dataSetReducedPtr);
 
    // Get the first row of all datasets
