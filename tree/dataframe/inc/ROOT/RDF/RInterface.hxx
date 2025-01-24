@@ -2270,6 +2270,18 @@ public:
    /// auto myGAE2 = myDf.GraphAsymmErrors<f, f, f, f, f, f>("xValues", "yValues", "exl", "exh", "eyl", "eyh");
    /// ~~~
    ///
+   /// `GraphAssymErrors` should also be used for the cases in which values associated only with 
+   /// one of the axes have associated errors. For example, only `ey` exist and `ex` are equal to zero. 
+   /// In such cases, user should do the following: 
+   /// ~~~{.cpp}
+   /// // Create a column of zeros in RDataFrame
+   /// auto rdf_withzeros = rdf.Define("zero", "0"); 
+   /// // or alternatively: 
+   /// auto rdf_withzeros = rdf.Define("zero", []() -> double { return 0.;});
+   /// // Create the graph with y errors only
+   /// auto rdf_errorsOnYOnly = rdf_withzeros.GraphAsymmErrors("xValues", "yValues", "zero", "zero", "eyl", "eyh");
+   /// ~~~
+   ///
    /// \note Differently from other ROOT interfaces, the returned TGraphAsymmErrors is not associated to gDirectory
    /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
    /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).
