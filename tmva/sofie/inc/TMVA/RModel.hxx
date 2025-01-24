@@ -36,7 +36,7 @@ private:
    const std::string SP = "   ";
 
    // memory pool information for intermediate tensors
-   MemoryPoolInfo fIntermediateMemoryInfo {0, 0};
+   MemoryPoolInfo fIntermediateMemoryInfo;
    std::unordered_map<std::string, TensorCounter> fIntermediateTensorFrequencyLookup;
 
 public:
@@ -147,8 +147,8 @@ public:
    std::string GenerateInferSignature(bool isdecl = true);
 
    void EvaluateIntermediateMemory(const std::vector<const std::string&>& op_input_tensors); 
-   void CheckAndAllocateIntermediateMemory(const std::vector<const std::string&>& op_output_tensors);
-   void CheckAndFlushIntermediateMemory(const std::vector<const std::string&>& op_output_tensors);
+   std::string CheckAndAllocateIntermediateMemory(const std::vector<const std::string&>& op_output_tensors);
+   std::string CheckAndFlushIntermediateMemory(const std::vector<const std::string&>& op_output_tensors);
 
 protected:
    // internal functions
