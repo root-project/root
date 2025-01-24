@@ -1496,7 +1496,7 @@ public:
       // ---------------------------------------------------------------------------------------------
 
       // Make subset of experimental data with only y values
-      std::unique_ptr<RooAbsData> expDataY{expDataXY->reduce(y)};
+      std::unique_ptr<RooAbsData> expDataY{expDataXY->reduce(RooFit::SelectVars(y))};
 
       // Generate 10000 events in x obtained from _conditional_ model(x|y) with y values taken from experimental data
       std::unique_ptr<RooDataSet> data{model.generate(x, ProtoData(static_cast<RooDataSet &>(*expDataY)))};
@@ -2453,10 +2453,10 @@ public:
       // -------------------------------------------------------------
 
       // The reduce() function returns a new dataset which is a subset of the original
-      std::unique_ptr<RooAbsData> d1{d.reduce(RooArgSet(x, c))};
-      std::unique_ptr<RooAbsData> d2{d.reduce(RooArgSet(y))};
-      std::unique_ptr<RooAbsData> d3{d.reduce("y>5.17")};
-      std::unique_ptr<RooAbsData> d4{d.reduce(RooArgSet(x, c), "y>5.17")};
+      std::unique_ptr<RooAbsData> d1{d.reduce(SelectVars({x, c}))};
+      std::unique_ptr<RooAbsData> d2{d.reduce(SelectVars(y))};
+      std::unique_ptr<RooAbsData> d3{d.reduce(Cut("y>5.17"))};
+      std::unique_ptr<RooAbsData> d4{d.reduce(SelectVars({x, c}), Cut("y>5.17"))};
 
       regValue(d3->numEntries(), "rf403_nd3");
       regValue(d4->numEntries(), "rf403_nd4");
@@ -2489,7 +2489,7 @@ public:
       //
       // All reduce() methods are interfaced in RooAbsData. All reduction techniques
       // demonstrated on unbinned datasets can be applied to binned datasets as well.
-      std::unique_ptr<RooAbsData> dh2{dh.reduce(y, "x>0")};
+      std::unique_ptr<RooAbsData> dh2{dh.reduce(SelectVars(y), Cut("x>0"))};
 
       // Add dh2 to yframe and redraw
       dh2->plotOn(yframe, LineColor(kRed), MarkerColor(kRed), Name("dh2"));

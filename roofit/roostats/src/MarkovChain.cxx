@@ -22,6 +22,7 @@ MarkovChain.
 
 #include "TNamed.h"
 #include "RooStats/MarkovChain.h"
+#include "RooGlobalFunc.h"
 #include "RooDataSet.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
@@ -136,7 +137,7 @@ RooFit::OwningPtr<RooDataSet> MarkovChain::GetAsDataSet(RooArgSet* whichVars) co
       args.add(*whichVars);
    }
 
-   return RooFit::makeOwningPtr<RooDataSet>(std::unique_ptr<RooAbsData>{fChain->reduce(args)});
+   return RooFit::makeOwningPtr<RooDataSet>(std::unique_ptr<RooAbsData>{fChain->reduce(RooFit::SelectVars(args))});
 }
 
 RooFit::OwningPtr<RooDataHist> MarkovChain::GetAsDataHist(RooArgSet* whichVars) const
@@ -150,7 +151,7 @@ RooFit::OwningPtr<RooDataHist> MarkovChain::GetAsDataHist(RooArgSet* whichVars) 
       args.add(*whichVars);
    }
 
-   std::unique_ptr<RooAbsData> data{fChain->reduce(args)};
+   std::unique_ptr<RooAbsData> data{fChain->reduce(RooFit::SelectVars(args))};
    return RooFit::makeOwningPtr(std::unique_ptr<RooDataHist>{static_cast<RooDataSet&>(*data).binnedClone()});
 }
 

@@ -97,7 +97,7 @@ void RooSimultaneous::InitializationOutput::addPdf(const RooAbsPdf &pdf, std::st
    finalCatLabels.emplace_back(catLabel);
 }
 
-using std::string, std::endl;
+using std::string;
 
 ClassImp(RooSimultaneous);
 
@@ -608,7 +608,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     return frame ;
   }
 
-  const RooAbsData* projData = static_cast<const RooAbsData*>(pc.getObject("projData")) ;
+  RooAbsData* projData = static_cast<RooAbsData*>(pc.getObject("projData")) ;
   const RooArgSet* projDataSet = pc.getSet("projDataSet");
   const RooArgSet* sliceSetTmp = pc.getSet("sliceSet") ;
   std::unique_ptr<RooArgSet> sliceSet( sliceSetTmp ? (static_cast<RooArgSet*>(sliceSetTmp->Clone())) : nullptr );
@@ -749,29 +749,21 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     // Construct cut string to only select projection data event that match the current slice
 
     // Make cut string to exclude rows from projection data
-    TString cutString ;
-    bool first(true) ;
-    for (const auto arg : *idxCompSliceSet) {
-      auto idxComp = static_cast<RooCategory*>(arg);
-      RooAbsArg* slicedComponent = nullptr;
-      if (sliceSet && (slicedComponent = sliceSet->find(*idxComp)) != nullptr) {
-        auto theCat = static_cast<const RooAbsCategory*>(slicedComponent);
-        idxComp->setIndex(theCat->getCurrentIndex(), false);
+    if (sliceSet) {
+      for (auto *idxComp : static_range_cast<RooCategory *>(*idxCompSliceSet)) {
+        if (auto* slicedComponent = static_cast<const RooAbsCategory*>(sliceSet->find(*idxComp))) {
+          idxComp->setIndex(slicedComponent->getCurrentIndex(), false);
+        }
       }
-
-      if (!first) {
-        cutString.Append("&&") ;
-      } else {
-        first=false ;
-      }
-      cutString.Append(Form("%s==%d",idxComp->GetName(),idxComp->getCurrentIndex())) ;
     }
+    std::string cutString = RooFit::Detail::makeSliceCutString(*idxCompSliceSet);
 
     // Make temporary projData without RooSim index category components
     RooArgSet projDataVars(*projData->get()) ;
     projDataVars.remove(*idxCompSliceSet,true,true) ;
 
-    std::unique_ptr<RooAbsData> projDataTmp( const_cast<RooAbsData*>(projData)->reduce(projDataVars,cutString) );
+    std::unique_ptr<RooAbsData>
+       projDataTmp(projData->reduce(RooFit::SelectVars(projDataVars), RooFit::Cut(cutString.c_str())));
 
     // Override normalization and projection dataset
     RooCmdArg tmp1 = RooFit::Normalization(scaleFactor*wTable->getFrac(idxCatClone->getCurrentLabel()),stype) ;
@@ -837,19 +829,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   if (projData) {
 
     // Construct cut string to only select projection data event that match the current slice
-    TString cutString ;
-    if (!idxCompSliceSet->empty()) {
-      bool first(true) ;
-      for (const auto idxSliceCompArg : *idxCompSliceSet) {
-        const auto idxSliceComp = static_cast<RooAbsCategory*>(idxSliceCompArg);
-        if (!first) {
-          cutString.Append("&&") ;
-        } else {
-          first=false ;
-        }
-        cutString.Append(Form("%s==%d",idxSliceComp->GetName(),idxSliceComp->getCurrentIndex())) ;
-      }
-    }
+    std::string cutString = RooFit::Detail::makeSliceCutString(*idxCompSliceSet);
 
     // Make temporary projData without RooSim index category components
     RooArgSet projDataVars(*projData->get()) ;
@@ -858,11 +838,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
     projDataVars.remove(idxCatServers,true,true) ;
 
-    if (!idxCompSliceSet->empty()) {
-      projDataTmp = std::unique_ptr<RooAbsData>{const_cast<RooAbsData*>(projData)->reduce(projDataVars,cutString)};
-    } else {
-      projDataTmp = std::unique_ptr<RooAbsData>{const_cast<RooAbsData*>(projData)->reduce(projDataVars)};
-    }
+    projDataTmp = std::unique_ptr<RooAbsData>{projData->reduce(RooFit::SelectVars(projDataVars), RooFit::Cut(cutString.c_str()))};
 
 
 
