@@ -1447,26 +1447,12 @@ Int_t TGraph2D::RemovePoint(Int_t ipoint)
 {
    if (ipoint < 0) return -1;
    if (ipoint >= fNpoints) return -1;
-
-   fNpoints--;
-   Double_t *newX = new Double_t[fNpoints];
-   Double_t *newY = new Double_t[fNpoints];
-   Double_t *newZ = new Double_t[fNpoints];
-   Int_t j = -1;
-   for (Int_t i = 0; i < fNpoints + 1; i++) {
-      if (i == ipoint) continue;
-      j++;
-      newX[j] = fX[i];
-      newY[j] = fY[i];
-      newZ[j] = fZ[i];
+   for (Int_t i = ipoint; i < fNpoints - 1; i++) {
+      fX[i] = fX[i+1];
+      fY[i] = fY[i+1];
+      fZ[i] = fZ[i+1];
    }
-   delete [] fX;
-   delete [] fY;
-   delete [] fZ;
-   fX = newX;
-   fY = newY;
-   fZ = newZ;
-   fSize = fNpoints;
+   fNpoints--;
    if (fHistogram) {
       delete fHistogram;
       fHistogram = nullptr;
