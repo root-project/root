@@ -83,6 +83,7 @@ namespace Internal {
                elem = Trim( source.substr( last, size ) );
                if( !elem.empty() ) {
                   unsigned int level = 0;
+                  dims.clear();
 
                   // Split between the typename and the membername
                   // Take in consideration template names.
