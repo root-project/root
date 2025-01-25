@@ -67,4 +67,7 @@ The std::list<std::string> values are:
    c2
    c3
  and is correct.
+The int[3] values are:
+   111  112  113   and is correct.
+The int value is: 3 and is correct.
 (int) 0
