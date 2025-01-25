@@ -2945,6 +2945,12 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
    char   *cmd = nullptr;
    char  *q;
 
+   // We do want the messages from the gROOT initialization
+   // So let's force it rather than having as a side effect of the
+   // TUrl construction.
+   if (!ROOT::Internal::gROOTLocal || !ROOT::Internal::gROOTLocal->Initialized())
+      (void)gROOT;
+
    Int_t old_level = gErrorIgnoreLevel;
    gErrorIgnoreLevel = kFatal; // Explicitly remove all messages
    if (patbuf0.BeginsWith("\\")) {
