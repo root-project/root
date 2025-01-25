@@ -37,6 +37,8 @@ struct Old
    // and used in a read rule, the offset for the cached arrays was wrong - set to 0
    float fSingle = 1.0;
    int fInt = 1;
+   int fHitPattern[3] = {101, 102, 103};
+   int fHitCount = 2;
    A fValue{1.1};
    A fValueB{1.2};
    A fValueC{1.3};;
@@ -77,6 +79,8 @@ struct New
    double fSingle = 10.0;
    double fExtra  = 15.0;
    double fDouble = 20.0;
+   int fHitPattern[3] = {101, 102, 103};
+   int fHitCount = 2;
    B fValue;  // Using implicit conversion
    B fValueB; // Using explicit conversion from A to B
    C fValueC; // Using implicit conversion from A to B and explicit conversion to C
@@ -117,10 +121,16 @@ struct New
 
 #include <iostream>
 
+void examine(int a, bool trailing = true)
+{
+   std::cout << "The int value is: " << a;
+   if (trailing)
+      std::cout << '\n';
+}
+
 void examine(double a, bool trailing = true)
 {
-   std::cout << "The double";
-   std::cout << " value is: " << a;
+   std::cout << "The double value is: " << a;
    if (trailing)
       std::cout << '\n';
 }
@@ -144,6 +154,17 @@ void examine(T * const p, bool trailing = true)
      std::cout << "nullptr";
    if (trailing)
      std::cout << '\n';
+}
+
+template <int N>
+void examine_array(int arr[N], bool trailing = true)
+{
+   std::cout << "The int[" << N << "] values are:\n";
+   std::cout << "   ";
+   for(size_t i = 0; i < N; ++i)
+      std::cout << arr[i] << "  ";
+   if (trailing)
+      std::cout << '\n';
 }
 
 template <typename T, int N>
@@ -198,6 +219,15 @@ void examine(const std::list<std::string> &l, bool trailing = true)
    }
 }
 
+bool test_value(int in, int ref)
+{
+   bool error = ( in != ref);
+   if (error)
+     std::cout << " and is incorrect, expected value: " << ref << '\n';
+   else
+     std::cout << " and is correct.\n";
+   return !error;
+}
 
 template<typename T, typename V>
 bool test_value(T in, V ref)
@@ -208,6 +238,12 @@ bool test_value(T in, V ref)
    else
      std::cout << " and is correct.\n";
    return !error;
+}
+
+bool check(int in, int ref)
+{
+   examine(in, false);
+   return test_value(in, ref);
 }
 
 template<typename V>
@@ -237,13 +273,31 @@ bool check(T *p, V ref)
    return !error;
 }
 
+template<size_t N, typename V> //  = decltype(T::f)[N]>
+bool check_array(int arr[N], V ref)
+{
+   bool error = false;
+   for(size_t i = 0; i < N; ++i) {
+     error = error || ( arr[i] != ref[i]);
+   }
+
+   examine_array<N>(arr, false);
+   if (error) {
+     std::cout << " and is incorrect, expected value: ";
+     for(const auto &v : ref)
+        std::cout << v << " ";
+     std::cout << '\n';
+   } else
+     std::cout << " and is correct.\n";
+   return !error;
+}
+
 template<typename T, size_t N, typename V> //  = decltype(T::f)[N]>
 bool check_array(T arr[N], V ref)
 {
    bool error = false;
    for(size_t i = 0; i < N; ++i) {
      error = error || ( std::abs(arr[i].f - ref[i]) > std::numeric_limits<typename V::value_type>::epsilon() );
-     // if (error) std::cout << "got " << std::abs(arr[i].f - ref[i]) << " vs " << std::numeric_limits<typename V::value_type>::epsilon() << '\n';
    }
 
    examine_array<T,N>(arr, false);
@@ -393,6 +447,10 @@ void CopyTo(const TList &input, std::list<std::string> &output)
 #pragma read sourceClass="Old" targetClass="New" source="TList fListImplicitExplicit" target="fListImplicitExplicit" version="[1-]" \
   code="{ examine(onfile.fListImplicitExplicit); CopyTo(onfile.fListImplicitExplicit, fListImplicitExplicit); onfile.fListImplicitExplicit.Delete(); }"
 
+// Rules with 2 (or more) input with the first one being an array.
+#pragma read sourceClass="Old" targetClass="New" source="int fHitPattern[3]; int fHitCount" \
+  target="fHitPattern,fHitCount" version="[1-]" \
+  code="{ for(size_t i = 0; i < 3; ++i) fHitPattern[i] = onfile.fHitPattern[i]+10; fHitCount = onfile.fHitCount + 1; }"
 
 #endif
 
@@ -453,6 +511,9 @@ int readfile(const char *filename = "sourcetypes.root")
    res = res && check(n->fListImplicit, {"a1", "a2", "a3"});
    res = res && check(n->fListExplicit, {"b1", "b2", "b3"});
    res = res && check(n->fListImplicitExplicit, {"c1", "c2", "c3"});
+
+   res = res && check_array<3>(n->fHitPattern, std::vector<int>{111, 112, 113});
+   res = res && check(n->fHitCount, 3);
 
    return !res; // 0 is success.
 }
