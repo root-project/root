@@ -18,6 +18,7 @@ The following people have contributed to this new version:
  Mattias Ellert, Uppsala University,\
  Florine de Geus, CERN/University of Twente,\
  Fernando Hueso Gonzalez, University of Valencia,\
+ Enrico Lusiani, INFN Padova,\
  Alberto Mecca, University of Turin,\
  Lorenzo Moneta, CERN/EP-SFT,\
  Mark Owen, University of Glasgow,\
