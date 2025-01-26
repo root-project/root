@@ -132,9 +132,27 @@ std::unique_ptr<RooAbsDataStore> RooCompositeDataStore::reduce(
   // create an empty RooCompositeDataStore
   auto out = std::make_unique<RooCompositeDataStore>(name, title, varsNoIndex, *_indexCat, std::map<std::string,RooAbsDataStore*>{});
 
+  RooCategory* indexCatForCut = nullptr;
+  RooAbsCategory::value_type initialIndex = 0;
+  if (cutVar) {
+    // find _indexCat in the formula recursive servers, if present
+    RooArgSet formulaObservables;
+    cutVar->getObservables(&_vars, formulaObservables);
+    indexCatForCut = dynamic_cast<RooCategory*>(formulaObservables.find(*_indexCat));
+    if (indexCatForCut) {
+      // save initial index to restore it later
+      initialIndex = indexCatForCut->getCurrentIndex();
+    }
+  }
+
   // fill it with reduced versions of components
   for (const auto& item : _dataMap) {
+    if (indexCatForCut) indexCatForCut->setIndex(item.first);
     out->_dataMap[item.first] = item.second->reduce(name, title, varsNoIndex, cutVar, cutRange, nStart, nStop).release();
+  }
+  if (indexCatForCut) {
+    // restore initial index
+    indexCatForCut->setIndex(initialIndex);
   }
 
   // indiceate component ownership and return

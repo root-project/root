@@ -6,6 +6,7 @@
 #include <RooCategory.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
+#include <RooFormulaVar.h>
 #include <RooHelpers.h>
 #include <RooRealVar.h>
 #include <RooStringVar.h>
@@ -463,24 +464,76 @@ TEST(RooDataSet, ReadDataSetWithErrors626)
    EXPECT_DOUBLE_EQ(y.getAsymErrorHi(), 1.0);
 }
 
-TEST(RooDataSet,RooStringVarStorage) {
+TEST(RooDataSet, RooStringVarStorage)
+{
    /* RooDataSet should be able to store strings
     * although this currently will only work for tree storage
     * */
 
-   RooStringVar str("str","test string","");
-   RooDataSet data("data","data",str);
+   RooStringVar str("str", "test string", "");
+   RooDataSet data("data", "data", str);
    data.convertToTreeStore(); // necessary until VectorStore supports strings
-   data.add(str="str1");
-   data.add(str="str2");
+   data.add(str = "str1");
+   data.add(str = "str2");
 
-   ASSERT_STREQ(data.get(0)->getStringValue("str"),"str1");
-   ASSERT_STREQ(data.get(1)->getStringValue("str"),"str2");
+   ASSERT_STREQ(data.get(0)->getStringValue("str"), "str1");
+   ASSERT_STREQ(data.get(1)->getStringValue("str"), "str2");
 
    // ensure dataset is cloneable
    RooDataSet dataClone(data);
 
-   ASSERT_STREQ(dataClone.get(0)->getStringValue("str"),"str1");
-   ASSERT_STREQ(dataClone.get(1)->getStringValue("str"),"str2");
+   ASSERT_STREQ(dataClone.get(0)->getStringValue("str"), "str1");
+   ASSERT_STREQ(dataClone.get(1)->getStringValue("str"), "str2");
+}
 
+// root-project/root#15744: Test that reducing a RooCompositeDataStore with a cut tha depends on its index category
+// works properly
+TEST(RooDataSet, ReduceCompositeDataStoreByIndexCat)
+{
+   using namespace RooFit;
+
+   RooWorkspace ws{};
+   auto cat = static_cast<RooCategory *>(ws.factory("cat[c0=0,c1=1]"));
+   ws.factory("Gaussian::gauss(x[0,1], mu[0.5, 0., 1.], sigma[0.2, 0.1, 0.3])");
+   auto sim = static_cast<RooAbsPdf *>(ws.factory("SIMCLONE::sim(gauss, $SplitParam(mu, cat))"));
+
+   // fill a small protodata
+   // we expect only 1 entry with index 1
+   RooArgSet row(*cat);
+   RooDataSet cat_data("cat_data", "", *cat);
+   for (int i = 0; i < 10; i++) {
+      cat->setIndex(i == 0);
+      cat_data.add(row);
+   }
+
+   std::unique_ptr<RooDataSet> data{sim->generate(*ws.var("x"), ProtoData(cat_data))};
+
+   // the index category stored in the datastore
+   auto dsCat = static_cast<RooCategory *>(data->store()->get()->find(*cat));
+   dsCat->setIndex(0);
+
+   auto initialIndexInDataStore = dsCat->getCurrentIndex();
+   auto initialIndexInWorkspace = cat->getCurrentIndex();
+
+   // reduce by string cut
+   // also test that the cut works even if the index cat is not among the selected variables
+   std::unique_ptr<RooAbsData> dataReducedByString{data->reduce(SelectVars(*ws.var("x")), Cut("cat==cat::c1"))};
+
+   // reduce by RooFormulaVar to test server handling
+   RooFormulaVar cutVar("cut", "cat==cat::c1", {*cat});
+   std::unique_ptr<RooAbsData> dataReducedByDirectFormulaVar{data->reduce(Cut(cutVar))};
+
+   // reduce by RooFormulaVar not directly depending on the index category to test server handling
+   RooFormulaVar catIndex("catIndex", "cat", {*cat});
+   RooFormulaVar cutVar2("cut2", "catIndex > 0.5", {catIndex});
+   std::unique_ptr<RooAbsData> dataReducedByIndirectFormulaVar{data->reduce(Cut(cutVar2))};
+
+   // Make sure the number of selected entries matches the number of events with index 1 (which is 1)
+   EXPECT_EQ(dataReducedByString->numEntries(), 1);
+   EXPECT_EQ(dataReducedByDirectFormulaVar->numEntries(), 1);
+   EXPECT_EQ(dataReducedByIndirectFormulaVar->numEntries(), 1);
+
+   // Test that the category state was correctly reset (both in workspace and datastore)
+   EXPECT_EQ(dsCat->getCurrentIndex(), initialIndexInDataStore);
+   EXPECT_EQ(cat->getCurrentIndex(), initialIndexInWorkspace);
 }
