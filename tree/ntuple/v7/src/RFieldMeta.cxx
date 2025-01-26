@@ -235,6 +235,9 @@ std::size_t ROOT::Experimental::RClassField::AppendImpl(const void *from)
 
 void ROOT::Experimental::RClassField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
+   for (const auto &[_, si] : fStagingItems) {
+      CallReadOn(*si.fField, globalIndex, fStagingArea.get() + si.fOffset);
+   }
    for (unsigned i = 0; i < fSubFields.size(); i++) {
       CallReadOn(*fSubFields[i], globalIndex, static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
    }
@@ -242,8 +245,75 @@ void ROOT::Experimental::RClassField::ReadGlobalImpl(ROOT::NTupleSize_t globalIn
 
 void ROOT::Experimental::RClassField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
 {
+   for (const auto &[_, si] : fStagingItems) {
+      CallReadOn(*si.fField, localIndex, fStagingArea.get() + si.fOffset);
+   }
    for (unsigned i = 0; i < fSubFields.size(); i++) {
       CallReadOn(*fSubFields[i], localIndex, static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
+   }
+}
+
+ROOT::DescriptorId_t ROOT::Experimental::RClassField::LookupMember(const RNTupleDescriptor &desc,
+                                                                   std::string_view memberName,
+                                                                   ROOT::DescriptorId_t classFieldId)
+{
+   auto idSourceMember = desc.FindFieldId(memberName, classFieldId);
+   if (idSourceMember != ROOT::kInvalidDescriptorId)
+      return idSourceMember;
+
+   for (const auto &subFieldDesc : desc.GetFieldIterable(classFieldId)) {
+      const auto subFieldName = subFieldDesc.GetFieldName();
+      if (subFieldName.length() > 2 && subFieldName[0] == ':' && subFieldName[1] == '_') {
+         idSourceMember = LookupMember(desc, memberName, subFieldDesc.GetId());
+         if (idSourceMember != ROOT::kInvalidDescriptorId)
+            return idSourceMember;
+      }
+   }
+
+   return ROOT::kInvalidDescriptorId;
+}
+
+void ROOT::Experimental::RClassField::PrepareStagingArea(const std::vector<const TSchemaRule *> &rules,
+                                                         const RNTupleDescriptor &desc,
+                                                         const RFieldDescriptor &classFieldDesc)
+{
+   auto clName = classFieldDesc.GetTypeName();
+   if (classFieldDesc.GetTypeVersion() != GetTypeVersion()) {
+      TClass::GetClass(classFieldDesc.GetTypeName().c_str())->GetStreamerInfo(classFieldDesc.GetTypeVersion());
+      clName += std::string("@@") + std::to_string(classFieldDesc.GetTypeVersion());
+   }
+   auto cl = TClass::GetClass(clName.c_str());
+   R__ASSERT(cl);
+
+   std::size_t stagingAreaSize = 0;
+   for (const auto rule : rules) {
+      for (auto source : TRangeDynCast<TSchemaRule::TSources>(rule->GetSource())) {
+         auto [itr, isNew] = fStagingItems.emplace(source->GetName(), RStagingItem());
+         if (!isNew) {
+            // This source member has already been processed by another rule (and we only support one type per member)
+            continue;
+         }
+         RStagingItem &stagingItem = itr->second;
+
+         const auto memberFieldId = LookupMember(desc, source->GetName(), classFieldDesc.GetId());
+         if (memberFieldId == kInvalidDescriptorId) {
+            throw RException(R__FAIL(std::string("cannot find on disk rule source member ") + GetTypeName() + "." +
+                                     source->GetName()));
+         }
+         const auto &memberFieldDesc = desc.GetFieldDescriptor(memberFieldId);
+
+         auto memberType = source->GetTypeForDeclaration() + source->GetDimensions();
+         stagingItem.fField = Create("" /* we don't need a field name */, std::string(memberType)).Unwrap();
+         stagingItem.fField->SetOnDiskId(memberFieldDesc.GetId());
+
+         stagingItem.fOffset = cl->GetDataMemberOffset(source->GetName());
+         stagingAreaSize = std::max(stagingAreaSize, stagingItem.fOffset + stagingItem.fField->GetValueSize());
+         R__ASSERT(stagingAreaSize > 0);
+      }
+   }
+
+   if (stagingAreaSize) {
+      fStagingArea = Internal::MakeUninitArray<unsigned char>(stagingAreaSize);
    }
 }
 
@@ -251,10 +321,10 @@ void ROOT::Experimental::RClassField::AddReadCallbacksFromIORule(const TSchemaRu
 {
    auto func = rule->GetReadFunctionPointer();
    R__ASSERT(func != nullptr);
-   fReadCallbacks.emplace_back([func, classp = fClass](void *target) {
+   fReadCallbacks.emplace_back([func, classp = fClass, stagingArea = fStagingArea.get()](void *target) {
       TVirtualObject oldObj{nullptr};
       oldObj.fClass = classp;
-      oldObj.fObject = target;
+      oldObj.fObject = stagingArea;
       func(static_cast<char *>(target), &oldObj);
       oldObj.fClass = nullptr; // TVirtualObject does not own the value
    });
@@ -286,6 +356,9 @@ void ROOT::Experimental::RClassField::BeforeConnectPageSource(Internal::RPageSou
       }
 
       rules = FindRules(&fieldDesc);
+      PrepareStagingArea(rules, desc, fieldDesc);
+      for (auto &[_, si] : fStagingItems)
+         Internal::CallConnectPageSourceOnField(*si.fField, pageSource);
    }
 
    for (const auto rule : rules) {

@@ -122,6 +122,13 @@ private:
       ESubFieldRole fRole;
       std::size_t fOffset;
    };
+   // Information to read into the staging area a field that is used as an input to an I/O customization rule
+   struct RStagingItem {
+      /// The field used to read the on-disk data. The fields type may be different from the on-disk type as long
+      /// as the on-disk type can be converted to the fields type (through type cast / schema evolution).
+      std::unique_ptr<RFieldBase> fField;
+      std::size_t fOffset; ///< offset in fStagingArea
+   };
    /// Prefix used in the subfield names generated for base classes
    static constexpr const char *kPrefixInherited{":"};
 
@@ -139,10 +146,24 @@ private:
    std::vector<RSubFieldInfo> fSubFieldsInfo;
    std::size_t fMaxAlignment = 1;
 
+   /// The staging area stores inputs to I/O rules according to the offsets given by the streamer info of
+   /// "TypeName@@Version". The area is allocated depending on I/O rules resp. the source members of the I/O rules.
+   std::unique_ptr<unsigned char[]> fStagingArea;
+   std::unordered_map<std::string, RStagingItem> fStagingItems; ///< Lookup staging items by member name
+
 private:
    RClassField(std::string_view fieldName, const RClassField &source); ///< Used by CloneImpl
    RClassField(std::string_view fieldName, TClass *classp);
    void Attach(std::unique_ptr<RFieldBase> child, RSubFieldInfo info);
+
+   /// Returns the id of member 'name' in the class field given by 'fieldId', or kInvalidDescriptorId if no such
+   /// member exist. Looks recursively in base classes.
+   ROOT::DescriptorId_t
+   LookupMember(const RNTupleDescriptor &desc, std::string_view memberName, ROOT::DescriptorId_t classFieldId);
+   /// If there are rules with inputs (source members), create the staging area according to the TClass instance
+   /// that corresponds to the on-disk field.
+   void PrepareStagingArea(const std::vector<const TSchemaRule *> &rules, const RNTupleDescriptor &desc,
+                           const RFieldDescriptor &classFieldId);
    /// Register post-read callback corresponding to a ROOT I/O customization rules.
    void AddReadCallbacksFromIORule(const TSchemaRule *rule);
    /// Given the on-disk information from the page source, find all the I/O customization rules that apply
