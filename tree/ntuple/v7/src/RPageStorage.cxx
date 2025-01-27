@@ -200,11 +200,11 @@ void ROOT::Experimental::Internal::RPageSource::LoadStructure()
    fHasStructure = true;
 }
 
-void ROOT::Experimental::Internal::RPageSource::Attach()
+void ROOT::Experimental::Internal::RPageSource::Attach(RNTupleSerializer::EDescriptorDeserializeMode mode)
 {
    LoadStructure();
    if (!fIsAttached)
-      GetExclDescriptorGuard().MoveIn(AttachImpl());
+      GetExclDescriptorGuard().MoveIn(AttachImpl(mode));
    fIsAttached = true;
 }
 
@@ -297,7 +297,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
 
          fCounters->fNPageUnsealed.Add(pageNo);
       } // for all in-memory types of the column
-   }    // for all columns in cluster
+   } // for all columns in cluster
 
    fTaskScheduler->Wait();
 

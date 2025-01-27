@@ -695,7 +695,7 @@ protected:
 
    virtual void LoadStructureImpl() = 0;
    /// `LoadStructureImpl()` has been called before `AttachImpl()` is called
-   virtual RNTupleDescriptor AttachImpl() = 0;
+   virtual RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode) = 0;
    /// Returns a new, unattached page source for the same data set
    virtual std::unique_ptr<RPageSource> CloneImpl() const = 0;
    // Only called if a task scheduler is set. No-op be default.
@@ -766,7 +766,8 @@ public:
    /// Therefore, `LoadStructure()` may do nothing and defer loading the meta-data to `Attach()`.
    void LoadStructure();
    /// Open the physical storage container and deserialize header and footer
-   void Attach();
+   void Attach(
+      RNTupleSerializer::EDescriptorDeserializeMode mode = RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
    NTupleSize_t GetNEntries();
    NTupleSize_t GetNElements(ColumnHandle_t columnHandle);
 

@@ -503,7 +503,8 @@ ROOT::Experimental::Internal::RPageSourceDaos::RPageSourceDaos(std::string_view 
 
 ROOT::Experimental::Internal::RPageSourceDaos::~RPageSourceDaos() = default;
 
-ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceDaos::AttachImpl()
+ROOT::Experimental::RNTupleDescriptor
+ROOT::Experimental::Internal::RPageSourceDaos::AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode)
 {
    ROOT::Experimental::RNTupleDescriptor ntplDesc;
    std::unique_ptr<unsigned char[]> buffer, zipBuffer;
@@ -532,7 +533,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceD
       RNTupleDecompressor::Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().GetNBytesOnStorage(),
                                  cgDesc.GetPageListLength(), buffer.get());
 
-      RNTupleSerializer::DeserializePageList(buffer.get(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc);
+      RNTupleSerializer::DeserializePageList(buffer.get(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc, mode);
    }
 
    return desc;
