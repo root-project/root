@@ -40,7 +40,7 @@ public:
       return input;
    }
 
-   void Initialize(RModel& model) override {
+   void Initialize(RModel& model, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter){
       // input must be a graph input, or already initialized intermediate tensor
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
         throw std::runtime_error("TMVA SOFIE Expand Op Input Tensor " + fNX + " is not found in model");
@@ -91,7 +91,7 @@ public:
       if (model.Verbose())
          std::cout << "Expand - output is with shape " << ConvertShapeToString(fShapeY) << std::endl;
       
-      model.EvaluateIntermediateMemory(GetOpInputTensors());
+      model.EvaluateIntermediateMemory(GetOpInputTensors(), fIntermediateTensorCounter);
    }
 
    std::string GenerateInitCode() override {

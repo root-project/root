@@ -58,7 +58,7 @@ public:
    }
 
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter){
       if (model.CheckIfTensorAlreadyExist(fNData) == false){   //input must be a graph input, or already initialized intermediate tensor
          std::cout<<"Input tensor for transspose: "<<fNData<<'\n';
          throw std::runtime_error("TMVA SOFIE Tranpose Op Input Tensor is not found in model");

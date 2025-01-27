@@ -198,7 +198,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model) {
+   void Initialize(RModel& model, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter){
 
       fUseSession = model.UseSession();
 

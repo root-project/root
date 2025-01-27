@@ -44,7 +44,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter){
        //input must be a graph input, or already initialized intermediate tensor
       size_t length = 1;
       if (!fNX.empty()) {
