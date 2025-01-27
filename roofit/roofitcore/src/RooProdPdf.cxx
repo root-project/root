@@ -464,6 +464,18 @@ void addCommon(std::vector<RooAbsArg*> &v, std::vector<RooAbsArg*> const& o1, st
   }
 }
 
+bool isRangeIdentical(RooArgSet const &observables, TString const &normRange, TNamed *refRangeName)
+{
+   // FK: Here the refRange should be compared to normRange, if it's set, and to the normObs range if it's not set
+   const char *range = normRange.Length() > 0 ? normRange.Data() : nullptr;
+   const char *refRange = RooNameReg::str(refRangeName);
+   for (auto const *normObs : static_range_cast<RooRealVar *>(observables)) {
+      if (normObs->getMin(range) != normObs->getMin(refRange) || normObs->getMax(range) != normObs->getMax(refRange))
+         return false;
+   }
+   return true;
+}
+
 }
 
 
@@ -642,8 +654,6 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     crossDepList.Add(snap);
 //     std::cout << GetName() << ": list of cross dependents for term " << (*term) << " set to " << *crossDeps << std::endl ;
   }
-
-  return;
 }
 
 
@@ -734,23 +744,8 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
 //    std::cout << "WVE now here" << std::endl;
 
    // WVE we can skip this if the ref range is equal to the normalization range
-   bool rangeIdentical(true);
-//    std::cout << "_normRange = " << _normRange << " _refRangeName = " << RooNameReg::str(_refRangeName) << std::endl ;
-   for (auto const* normObs : static_range_cast<RooRealVar*>(termNSet)) {
-     //FK: Here the refRange should be compared to _normRange, if it's set, and to the normObs range if it's not set
-     if (_normRange.Length() > 0) {
-       if (normObs->getMin(_normRange.Data()) != normObs->getMin(RooNameReg::str(_refRangeName))) rangeIdentical = false;
-       if (normObs->getMax(_normRange.Data()) != normObs->getMax(RooNameReg::str(_refRangeName))) rangeIdentical = false;
-     }
-     else{
-       if (normObs->getMin() != normObs->getMin(RooNameReg::str(_refRangeName))) rangeIdentical = false;
-       if (normObs->getMax() != normObs->getMax(RooNameReg::str(_refRangeName))) rangeIdentical = false;
-     }
-   }
-//    std::cout<<"FK: rangeIdentical Single = "<<(rangeIdentical ? 'T':'F')<< std::endl;
-   // coverity[CONSTANT_EXPRESSION_RESULT]
    // LM : avoid making integral ratio if range is the same. Why was not included ??? (same at line 857)
-   if (!rangeIdentical ) {
+   if (!isRangeIdentical(termNSet, _normRange, _refRangeName)) {
 //      std::cout << "PREPARING RATIO HERE (SINGLE TERM)" << std::endl ;
      auto ratio = makeCondPdfRatioCorr(*static_cast<RooAbsReal*>(term->first()), termNSet, termImpSet, normRange(), RooNameReg::str(_refRangeName));
      std::ostringstream str; termImpSet.printValue(str);
@@ -773,21 +768,7 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
    if (!termImpSet.empty() && nullptr != _refRangeName) {
 
      // WVE we can skip this if the ref range is equal to the normalization range
-     bool rangeIdentical(true);
-     //FK: Here the refRange should be compared to _normRange, if it's set, and to the normObs range if it's not set
-     if(_normRange.Length() > 0) {
-       for (auto const* normObs : static_range_cast<RooRealVar*>(termNSet)) {
-         if (normObs->getMin(_normRange.Data()) != normObs->getMin(RooNameReg::str(_refRangeName))) rangeIdentical = false;
-         if (normObs->getMax(_normRange.Data()) != normObs->getMax(RooNameReg::str(_refRangeName))) rangeIdentical = false;
-       }
-     } else {
-       for (auto const* normObs : static_range_cast<RooRealVar*>(termNSet)) {
-         if (normObs->getMin() != normObs->getMin(RooNameReg::str(_refRangeName))) rangeIdentical = false;
-         if (normObs->getMax() != normObs->getMax(RooNameReg::str(_refRangeName))) rangeIdentical = false;
-       }
-     }
-//      std::cout<<"FK: rangeIdentical Composite = "<<(rangeIdentical ? 'T':'F') << std::endl;
-     if (!rangeIdentical ) {
+     if (!isRangeIdentical(termNSet, _normRange, _refRangeName)) {
 //        std::cout << "PREPARING RATIO HERE (COMPOSITE TERM)" << std::endl ;
        auto ratio = makeCondPdfRatioCorr(*static_cast<RooAbsReal*>(term->first()), termNSet, termImpSet, normRange(), RooNameReg::str(_refRangeName));
        std::ostringstream str; termImpSet.printValue(str);
@@ -1493,54 +1474,22 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
   // -----------------------------------------------------
   for (auto* pdf : static_range_cast<RooAbsPdf*>(*term)) {
 
+    isOwned = false;
+    RooAbsReal *ret0 = pdf;
+
     if (forceWrap) {
-
+      isOwned = true;
       // Construct representative name of normalization wrapper
-      TString name(pdf->GetName()) ;
-      name.Append("_NORM[") ;
-      bool first(true) ;
-      for (auto const* arg : termNSet) {
-   if (!first) {
-     name.Append(",") ;
-   } else {
-     first=false ;
-   }
-   name.Append(arg->GetName()) ;
-      }
-      if (normRange()) {
-   name.Append("|") ;
-   name.Append(normRange()) ;
-      }
-      name.Append("]") ;
-
-      RooAbsReal* partInt = new RooRealIntegral(name.Data(),name.Data(),*pdf,RooArgSet(),&termNSet) ;
-      partInt->setStringAttribute("PROD_TERM_TYPE","IVb") ;
-      isOwned=true ;
-
-      //cout << "processProductTerm(" << GetName() << ") case IVb func = " << partInt->GetName() << std::endl ;
-
-      ret[0] = partInt ;
-
-      ret[1] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(RooArgSet())}.release();
-      ret[2] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termNSet,normRange())}.release();
-
-      return ret ;
-
-
-    } else {
-      isOwned=false ;
-
-      //cout << "processProductTerm(" << GetName() << ") case IVb func = " << pdf->GetName() << std::endl ;
-
-
-      pdf->setStringAttribute("PROD_TERM_TYPE","IVb") ;
-      ret[0] = pdf ;
-
-      ret[1] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(RooArgSet())}.release();
-      ret[2] = !termNSet.empty() ? std::unique_ptr<RooAbsReal>{pdf->createIntegral(termNSet,normRange())}.release()
-                                 : (static_cast<RooAbsReal*>(RooFit::RooConst(1).clone("1")));
-      return ret  ;
+      std::string name = pdf->GetName() + ("_NORM[" + RooHelpers::getColonSeparatedNameString(termNSet, ','));
+      name += normRange() ? ('|' + std::string{normRange()} + ']') : "]";
+      ret0 = new RooRealIntegral(name.c_str(),name.c_str(),*pdf,RooArgSet(),&termNSet);
     }
+
+    ret0->setStringAttribute("PROD_TERM_TYPE","IVb") ;
+    ret[0] = ret0;
+    ret[1] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(RooArgSet())}.release();
+    ret[2] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termNSet,normRange())}.release();
+    return ret;
   }
 
   coutE(Eval) << "RooProdPdf::processProductTerm(" << GetName() << ") unidentified term!!!" << std::endl ;
