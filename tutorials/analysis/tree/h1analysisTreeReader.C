@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_tree
+/// \ingroup tutorial_tree_analysis
 ///
 /// H1 analysis example expressed in terms of TTreeReader (see h1analysis.C).
 ///
