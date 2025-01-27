@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_tree
+/// \ingroup tutorial_tree_analysis
 /// \notebook -header -nodraw
 /// Example of analysis class for the H1 data.
 ///

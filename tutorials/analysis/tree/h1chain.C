@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_tree
+/// \ingroup tutorial_tree_analysis
 /// \notebook -nodraw
 /// Creates a TChain to be used by the h1analysis.C class
 /// the symbol H1 must point to a directory where the H1 data sets
