@@ -456,7 +456,7 @@ Int_t TH3::Fill(const char *namex, const char *namey, const char *namez, Double_
    Double_t v = w;
    fTsumw   += v;
    fTsumw2  += v*v;
-   // skip computation of the statistics along axis that have labels (can be extended and are aphanumeric)
+   // skip computation of the statistics along axis that have labels (can be extended and are alphanumeric)
    UInt_t labelBitMask = GetAxisLabelStatus();
    if (labelBitMask != TH1::kAllAxes) {
       Double_t x = (labelBitMask & TH1::kXaxis) ? 0 : fXaxis.GetBinCenter(binx);
@@ -507,7 +507,7 @@ Int_t TH3::Fill(const char *namex, Double_t y, const char *namez, Double_t w)
    fTsumw2  += v*v;
    fTsumwy  += v*y;
    fTsumwy2 += v*y*y;
-   // skip computation of the statistics along axis that have labels (can be extended and are aphanumeric)
+   // skip computation of the statistics along axis that have labels (can be extended and are alphanumeric)
    UInt_t labelBitMask = GetAxisLabelStatus();
    if (labelBitMask != (TH1::kXaxis | TH1::kZaxis) ) {
       Double_t x = (labelBitMask & TH1::kXaxis) ? 0 : fXaxis.GetBinCenter(binx);
@@ -555,7 +555,7 @@ Int_t TH3::Fill(const char *namex, const char *namey, Double_t z, Double_t w)
    fTsumw2  += v*v;
    fTsumwz  += v*z;
    fTsumwz2 += v*z*z;
-   // skip computation of the statistics along axis that have labels (can be extended and are aphanumeric)
+   // skip computation of the statistics along axis that have labels (can be extended and are alphanumeric)
    UInt_t labelBitMask = GetAxisLabelStatus();
    if (labelBitMask != (TH1::kXaxis | TH1::kYaxis)) {
       Double_t x = (labelBitMask & TH1::kXaxis) ? 0 : fXaxis.GetBinCenter(binx);
@@ -604,7 +604,7 @@ Int_t TH3::Fill(Double_t x, const char *namey, const char *namez, Double_t w)
    fTsumw2 += v * v;
    fTsumwx += v * x;
    fTsumwx2 += v * x * x;
-   // skip computation of the statistics along axis that have labels (can be extended and are aphanumeric)
+   // skip computation of the statistics along axis that have labels (can be extended and are alphanumeric)
    UInt_t labelBitMask = GetAxisLabelStatus();
    if (labelBitMask != (TH1::kYaxis | TH1::kZaxis)) {
       Double_t y = (labelBitMask & TH1::kYaxis) ? 0 : fYaxis.GetBinCenter(biny);
@@ -776,7 +776,7 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in function fname.
 ///
-///  @param fname  : Function name used for filling the historam
+///  @param fname  : Function name used for filling the histogram
 ///  @param ntimes : number of times the histogram is filled
 ///  @param rng    : (optional) Random number generator used to sample
 ///
@@ -790,7 +790,7 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
 ///   ntimes random numbers are generated
 ///
 /// N.B. By dfault this methods approximates the integral of the function in each bin with the
-///      function value at the center of the bin, mutiplied by the bin width
+///      function value at the center of the bin, multiplied by the bin width
 ///
 ///  One can also call TF1::GetRandom to get a random variate from a function.
 
@@ -873,7 +873,7 @@ void TH3::FillRandom(TF1 *fobj, Int_t ntimes, TRandom * rng)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in histogram h.
 ///
-///  @param h      : Histogram  pointer used for smpling random number
+///  @param h      : Histogram  pointer used for sampling random number
 ///  @param ntimes : number of times the histogram is filled
 ///  @param rng    : (optional) Random number generator used for sampling
 ///
