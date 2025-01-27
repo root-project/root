@@ -62,6 +62,8 @@ have to appear in any specific place in the list.
 #include "RooFitImplHelpers.h"
 #include "strtok.h"
 
+#include <ROOT/StringUtils.hxx>
+
 #include <algorithm>
 #include <array>
 #include <cstring>
@@ -803,17 +805,16 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
         RooArgSet termImpSet{*imps};
 
         // Add prefab term to partIntList.
-        bool isOwned(false);
-        vector<RooAbsReal*> func = processProductTerm(nset, iset, isetRangeName, term, termNSet, termISet, isOwned);
-        if (func[0]) {
-          cache->_partList.add(*func[0]);
-          if (isOwned) cache->_ownedList.addOwned(std::unique_ptr<RooAbsArg>{func[0]});
+        auto func = processProductTerm(nset, iset, isetRangeName, term, termNSet, termISet);
+        if (func.x0) {
+          cache->_partList.add(*func.x0);
+          if (func.isOwned) cache->_ownedList.addOwned(std::unique_ptr<RooAbsArg>{func.x0});
 
           cache->_normList.emplace_back(std::make_unique<RooArgSet>());
           norm->snapshot(*cache->_normList.back(), false);
 
-          cache->_numList.addOwned(std::unique_ptr<RooAbsArg>{func[1]});
-          cache->_denList.addOwned(std::unique_ptr<RooAbsArg>{func[2]});
+          cache->_numList.addOwned(std::move(func.x1));
+          cache->_denList.addOwned(std::move(func.x2));
         }
       } else {
 //        std::cout << "processing composite item" << std::endl;
@@ -837,19 +838,17 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
           // Remove outer integration dependents from termISet
           termISet.remove(outerIntDeps, true, true);
 
-          bool isOwned = false;
-          vector<RooAbsReal *> func =
-             processProductTerm(nset, iset, isetRangeName, term, termNSet, termISet, isOwned, true);
-          //       std::cout << GetName() << ": created composite term component " << func[0]->GetName() << std::endl;
-          if (func[0]) {
-     compTermSet.add(*func[0]);
-     if (isOwned) cache->_ownedList.addOwned(std::unique_ptr<RooAbsArg>{func[0]});
+          auto func = processProductTerm(nset, iset, isetRangeName, term, termNSet, termISet, true);
+          //       std::cout << GetName() << ": created composite term component " << func.x0->GetName() << std::endl;
+          if (func.x0) {
+     compTermSet.add(*func.x0);
+     if (func.isOwned) cache->_ownedList.addOwned(std::unique_ptr<RooAbsArg>{func.x0});
      compTermNorm.add(*norm, false);
 
-     compTermNum.add(*func[1]);
-     compTermDen.add(*func[2]);
-     //cache->_numList.add(*func[1]);
-     //cache->_denList.add(*func[2]);
+     compTermNum.add(*func.x1.release());
+     compTermDen.add(*func.x2.release());
+     //cache->_numList.add(*func.x1);
+     //cache->_denList.add(*func.x2);
 
    }
       }
@@ -944,23 +943,9 @@ std::unique_ptr<RooAbsReal> RooProdPdf::makeCondPdfRatioCorr(RooAbsReal& pdf, co
 
 void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 {
-  RooAbsReal *part;
-  RooAbsReal *num;
-  RooAbsReal *den;
   RooArgSet nomList ;
 
-  list<string> rangeComps ;
-  {
-    std::vector<char> buf(strlen(_normRange.Data()) + 1);
-    strcpy(buf.data(),_normRange.Data()) ;
-    char* save(nullptr) ;
-    char* token = R__STRTOK_R(buf.data(),",",&save) ;
-    while(token) {
-      rangeComps.push_back(token) ;
-      token = R__STRTOK_R(nullptr,",",&save) ;
-    }
-  }
-
+  std::vector<std::string> rangeComps = ROOT::Split(_normRange.Data(), ",", /*skipEmpty=*/true);
 
   std::map<std::string,RooArgSet> denListList ;
   RooArgSet specIntDeps ;
@@ -970,9 +955,9 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
   for (std::size_t i = 0; i < cache._partList.size(); i++) {
 
-    part = static_cast<RooAbsReal*>(cache._partList.at(i));
-    num = static_cast<RooAbsReal*>(cache._numList.at(i));
-    den = static_cast<RooAbsReal*>(cache._denList.at(i));
+    RooAbsReal *part = static_cast<RooAbsReal*>(cache._partList.at(i));
+    RooAbsReal *num = static_cast<RooAbsReal*>(cache._numList.at(i));
+    RooAbsReal *den = static_cast<RooAbsReal*>(cache._denList.at(i));
     i++;
 
 //     std::cout << "now processing part " << part->GetName() << " of type " << part->getStringAttribute("PROD_TERM_TYPE") << std::endl ;
@@ -1000,10 +985,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
    if (ratio) {
      RooCustomizer cust(*func,"blah") ;
      cust.replaceArg(*ratio,RooFit::RooConst(1)) ;
-     RooAbsArg* funcCust = cust.build() ;
-//      std::cout << "customized function = " << std::endl ;
-//      funcCust->printComponentTree() ;
-     nomList.add(*funcCust) ;
+     nomList.add(*cust.build()) ;
    } else {
      nomList.add(*func) ;
    }
@@ -1038,7 +1020,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
     }
 
-    for (list<string>::iterator iter = rangeComps.begin() ; iter != rangeComps.end() ; ++iter) {
+    for (auto iter = rangeComps.begin() ; iter != rangeComps.end() ; ++iter) {
       // If denominator is an integral, make a clone with the integration range adjusted to
       // the selected component of the normalization integral
 //       std::cout << "NOW PROCESSING DENOMINATOR " << den->ClassName() << "::" << den->GetName() << std::endl ;
@@ -1330,20 +1312,16 @@ void RooProdPdf::groupProductTerms(std::list<std::vector<RooArgSet*>>& groupedTe
 /// Calculate integrals of factorized product terms over observables iset while normalized
 /// to observables in nset.
 
-std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName,
+RooProdPdf::ProcessProductTermOutput RooProdPdf::processProductTerm(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName,
                      const RooArgSet* term,const RooArgSet& termNSet, const RooArgSet& termISet,
-                     bool& isOwned, bool forceWrap) const
+                     bool forceWrap) const
 {
-  vector<RooAbsReal*> ret(3) ; ret[0] = nullptr ; ret[1] = nullptr ; ret[2] = nullptr ;
+  ProcessProductTermOutput ret;
 
   // CASE I: factorizing term: term is integrated over all normalizing observables
   // -----------------------------------------------------------------------------
   // Check if all observbales of this term are integrated. If so the term cancels
   if (!termNSet.empty() && termNSet.size()==termISet.size() && isetRangeName==nullptr) {
-
-
-    //cout << "processProductTerm(" << GetName() << ") case I " << std::endl ;
-
     // Term factorizes
     return ret ;
   }
@@ -1351,9 +1329,6 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
   // CASE II: Dropped terms: if term is entirely unnormalized, it should be dropped
   // ------------------------------------------------------------------------------
   if (nset && termNSet.empty()) {
-
-    //cout << "processProductTerm(" << GetName() << ") case II " << std::endl ;
-
     // Drop terms that are not asked to be normalized
     return ret ;
   }
@@ -1366,22 +1341,17 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
 
       RooAbsPdf* pdf = static_cast<RooAbsPdf*>(term->first()) ;
 
-      RooAbsReal* partInt = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termISet,termNSet,isetRangeName)}.release();
-      partInt->setOperMode(operMode()) ;
-      partInt->setStringAttribute("PROD_TERM_TYPE","IIIa") ;
+      ret.x0 = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termISet,termNSet,isetRangeName)}.release();
+      ret.x0->setOperMode(operMode()) ;
+      ret.x0->setStringAttribute("PROD_TERM_TYPE","IIIa") ;
 
-      isOwned=true ;
-
-      //cout << "processProductTerm(" << GetName() << ") case IIIa func = " << partInt->GetName() << std::endl ;
-
-      ret[0] = partInt ;
+      ret.isOwned=true ;
 
       // Split mode results
-      ret[1] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termISet,isetRangeName)}.release();
-      ret[2] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termNSet,normRange())}.release();
+      ret.x1 = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termISet,isetRangeName)};
+      ret.x2 = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termNSet,normRange())};
 
       return ret ;
-
 
     } else {
 
@@ -1390,22 +1360,19 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
 
       // Use auxiliary class RooGenProdProj to calculate this term
       const std::string name = makeRGPPName("GENPROJ_",*term,termISet,termNSet,isetRangeName) ;
-      RooAbsReal* partInt = new RooGenProdProj(name.c_str(),name.c_str(),*term,termISet,termNSet,isetRangeName) ;
-      partInt->setStringAttribute("PROD_TERM_TYPE","IIIb") ;
-      partInt->setOperMode(operMode()) ;
+      ret.x0 = new RooGenProdProj(name.c_str(),name.c_str(),*term,termISet,termNSet,isetRangeName) ;
+      ret.x0->setStringAttribute("PROD_TERM_TYPE","IIIb") ;
+      ret.x0->setOperMode(operMode()) ;
 
-      //cout << "processProductTerm(" << GetName() << ") case IIIb func = " << partInt->GetName() << std::endl ;
-
-      isOwned=true ;
-      ret[0] = partInt ;
+      ret.isOwned=true ;
 
       const std::string name1 = makeRGPPName("PROD",*term,RooArgSet(),RooArgSet(),nullptr) ;
 
       // WVE FIX THIS
       RooProduct* tmp_prod = new RooProduct(name1.c_str(),name1.c_str(),*term) ;
 
-      ret[1] = std::unique_ptr<RooAbsReal>{tmp_prod->createIntegral(termISet,isetRangeName)}.release();
-      ret[2] = std::unique_ptr<RooAbsReal>{tmp_prod->createIntegral(termNSet,normRange())}.release();
+      ret.x1 = std::unique_ptr<RooAbsReal>{tmp_prod->createIntegral(termISet,isetRangeName)};
+      ret.x2 = std::unique_ptr<RooAbsReal>{tmp_prod->createIntegral(termNSet,normRange())};
 
       return ret ;
     }
@@ -1417,24 +1384,21 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
     // Composite term needs normalized integration
 
     const std::string name = makeRGPPName("GENPROJ_",*term,termISet,termNSet,isetRangeName) ;
-    RooAbsReal* partInt = new RooGenProdProj(name.c_str(),name.c_str(),*term,termISet,termNSet,isetRangeName,normRange()) ;
-    partInt->setExpensiveObjectCache(expensiveObjectCache()) ;
+    ret.x0 = new RooGenProdProj(name.c_str(),name.c_str(),*term,termISet,termNSet,isetRangeName,normRange()) ;
+    ret.x0->setExpensiveObjectCache(expensiveObjectCache()) ;
 
-    partInt->setStringAttribute("PROD_TERM_TYPE","IVa") ;
-    partInt->setOperMode(operMode()) ;
+    ret.x0->setStringAttribute("PROD_TERM_TYPE","IVa") ;
+    ret.x0->setOperMode(operMode()) ;
 
-    //cout << "processProductTerm(" << GetName() << ") case IVa func = " << partInt->GetName() << std::endl ;
-
-    isOwned=true ;
-    ret[0] = partInt ;
+    ret.isOwned=true ;
 
     const std::string name1 = makeRGPPName("PROD",*term,RooArgSet(),RooArgSet(),nullptr) ;
 
     // WVE FIX THIS
     RooProduct* tmp_prod = new RooProduct(name1.c_str(),name1.c_str(),*term) ;
 
-    ret[1] = std::unique_ptr<RooAbsReal>{tmp_prod->createIntegral(termISet,isetRangeName)}.release();
-    ret[2] = std::unique_ptr<RooAbsReal>{tmp_prod->createIntegral(termNSet,normRange())}.release();
+    ret.x1 = std::unique_ptr<RooAbsReal>{tmp_prod->createIntegral(termISet,isetRangeName)};
+    ret.x2 = std::unique_ptr<RooAbsReal>{tmp_prod->createIntegral(termNSet,normRange())};
 
     return ret ;
   }
@@ -1443,11 +1407,11 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
   // -----------------------------------------------------
   for (auto* pdf : static_range_cast<RooAbsPdf*>(*term)) {
 
-    isOwned = false;
+    ret.isOwned = false;
     RooAbsReal *ret0 = pdf;
 
     if (forceWrap) {
-      isOwned = true;
+      ret.isOwned = true;
       // Construct representative name of normalization wrapper
       std::string name = pdf->GetName() + ("_NORM[" + RooHelpers::getColonSeparatedNameString(termNSet, ','));
       name += normRange() ? ('|' + std::string{normRange()} + ']') : "]";
@@ -1455,9 +1419,9 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
     }
 
     ret0->setStringAttribute("PROD_TERM_TYPE","IVb") ;
-    ret[0] = ret0;
-    ret[1] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(RooArgSet())}.release();
-    ret[2] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termNSet,normRange())}.release();
+    ret.x0 = ret0;
+    ret.x1 = std::unique_ptr<RooAbsReal>{pdf->createIntegral(RooArgSet())};
+    ret.x2 = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termNSet,normRange())};
     return ret;
   }
 
