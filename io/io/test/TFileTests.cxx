@@ -8,7 +8,7 @@
 #include "TNamed.h"
 #include "TPluginManager.h"
 #include "TROOT.h" // gROOT
-#include "TSystem.h"
+#include "TEnv.h" // gEnv
 
 TEST(TFile, WriteObjectTObject)
 {
@@ -133,4 +133,21 @@ TEST(TFile, ReadWithoutGlobalRegistrationNet)
 {
    const auto netFile = "root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root";
    TestReadWithoutGlobalRegistrationIfPossible(netFile);
+}
+
+https://github.com/root-project/root/issues/16189
+TEST(TFile, k630forwardCompatibility)
+{
+   gEnv->SetValue("TFile.v630forwardCompatibility", 1);
+   const std::string filename{std::tmpnam(nullptr)};
+   TFile filec{filename.c_str(),"CREATE"};
+   ASSERT_EQ(filec.TestBit(TFile::k630forwardCompatibility), true);  
+   filec.Close();
+   TFile filer{filename.c_str(),"READ"};
+   ASSERT_EQ(filer.TestBit(TFile::k630forwardCompatibility), true);  
+   filer.Close();
+   TFile fileu{filename.c_str(),"UPDATE"};
+   ASSERT_EQ(fileu.TestBit(TFile::k630forwardCompatibility), true);  
+   fileu.Close();
+   gSystem->Unlink(filename);
 }
