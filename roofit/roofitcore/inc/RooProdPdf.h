@@ -155,9 +155,16 @@ private:
 
   Int_t getPartIntList(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName=nullptr) const ;
 
-  std::vector<RooAbsReal*> processProductTerm(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName,
+  struct ProcessProductTermOutput {
+    bool isOwned = false;
+    RooAbsReal* x0 = nullptr;
+    std::unique_ptr<RooAbsReal> x1;
+    std::unique_ptr<RooAbsReal> x2;
+  };
+
+  ProcessProductTermOutput processProductTerm(const RooArgSet* nset, const RooArgSet* iset, const char* isetRangeName,
                      const RooArgSet* term,const RooArgSet& termNSet, const RooArgSet& termISet,
-                     bool& isOwned, bool forceWrap=false) const ;
+                     bool forceWrap=false) const ;
 
 
   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; } ;
