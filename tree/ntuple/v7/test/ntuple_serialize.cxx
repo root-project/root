@@ -5,6 +5,8 @@
 
 #include <limits>
 
+using EDeserializeMode = RNTupleSerializer::EDescriptorDeserializeMode;
+
 TEST(RNTuple, SerializeInt)
 {
    std::int32_t value;
@@ -526,11 +528,11 @@ TEST(RNTuple, SerializeEmptyHeader)
    RNTupleDescriptorBuilder builder;
    builder.SetNTuple("ntpl", "");
    builder.AddField(RFieldDescriptorBuilder()
-      .FieldId(0)
-      .FieldName("")
-      .Structure(ENTupleStructure::kRecord)
-      .MakeDescriptor()
-      .Unwrap());
+                       .FieldId(0)
+                       .FieldName("")
+                       .Structure(ENTupleStructure::kRecord)
+                       .MakeDescriptor()
+                       .Unwrap());
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeader(nullptr, desc);
    EXPECT_GT(context.GetHeaderSize(), 0);
@@ -540,23 +542,22 @@ TEST(RNTuple, SerializeEmptyHeader)
    RNTupleSerializer::DeserializeHeader(buffer.get(), context.GetHeaderSize(), builder);
 }
 
-
 TEST(RNTuple, SerializeHeader)
 {
    RNTupleDescriptorBuilder builder;
    builder.SetNTuple("ntpl", "");
    builder.AddField(RFieldDescriptorBuilder()
-      .FieldId(0)
-      .FieldName("")
-      .Structure(ENTupleStructure::kRecord)
-      .MakeDescriptor()
-      .Unwrap());
+                       .FieldId(0)
+                       .FieldName("")
+                       .Structure(ENTupleStructure::kRecord)
+                       .MakeDescriptor()
+                       .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
-      .FieldId(42)
-      .FieldName("pt")
-      .Structure(ENTupleStructure::kLeaf)
-      .MakeDescriptor()
-      .Unwrap());
+                       .FieldId(42)
+                       .FieldName("pt")
+                       .Structure(ENTupleStructure::kLeaf)
+                       .MakeDescriptor()
+                       .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(24)
                        .FieldName("ptAlias")
@@ -565,17 +566,17 @@ TEST(RNTuple, SerializeHeader)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
-      .FieldId(137)
-      .FieldName("jet")
-      .Structure(ENTupleStructure::kRecord)
-      .MakeDescriptor()
-      .Unwrap());
+                       .FieldId(137)
+                       .FieldName("jet")
+                       .Structure(ENTupleStructure::kRecord)
+                       .MakeDescriptor()
+                       .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
-      .FieldId(13)
-      .FieldName("eta")
-      .Structure(ENTupleStructure::kLeaf)
-      .MakeDescriptor()
-      .Unwrap());
+                       .FieldId(13)
+                       .FieldName("eta")
+                       .Structure(ENTupleStructure::kLeaf)
+                       .MakeDescriptor()
+                       .Unwrap());
    builder.AddFieldLink(0, 42);
    builder.AddFieldLink(0, 24);
    builder.AddFieldLink(0, 137);
@@ -648,23 +649,22 @@ TEST(RNTuple, SerializeHeader)
    EXPECT_STREQ("xyz", extraTypeInfoDesc.GetContent().c_str());
 }
 
-
 TEST(RNTuple, SerializeFooter)
 {
    RNTupleDescriptorBuilder builder;
    builder.SetNTuple("ntpl", "");
    builder.AddField(RFieldDescriptorBuilder()
-      .FieldId(0)
-      .FieldName("")
-      .Structure(ENTupleStructure::kRecord)
-      .MakeDescriptor()
-      .Unwrap());
+                       .FieldId(0)
+                       .FieldName("")
+                       .Structure(ENTupleStructure::kRecord)
+                       .MakeDescriptor()
+                       .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
-      .FieldId(42)
-      .FieldName("tag")
-      .Structure(ENTupleStructure::kLeaf)
-      .MakeDescriptor()
-      .Unwrap());
+                       .FieldId(42)
+                       .FieldName("tag")
+                       .Structure(ENTupleStructure::kLeaf)
+                       .MakeDescriptor()
+                       .Unwrap());
    builder.AddFieldLink(0, 42);
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(17)
@@ -740,7 +740,7 @@ TEST(RNTuple, SerializeFooter)
    EXPECT_EQ(1u, desc.GetNClusters());
    EXPECT_EQ(0u, desc.GetNActiveClusters());
 
-   RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, desc);
+   RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, desc, EDeserializeMode::kForReading);
    const auto &verify = desc.GetClusterGroupDescriptor(0);
    EXPECT_EQ(0u, verify.GetMinEntry());
    EXPECT_EQ(100u, verify.GetEntrySpan());
@@ -1049,7 +1049,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
    desc = builder.MoveDescriptor();
-   RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, desc);
+   RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, desc, EDeserializeMode::kForReading);
 
    EXPECT_EQ(2u, desc.GetNClusters());
    const auto &fieldDesc = desc.GetFieldDescriptor(desc.FindFieldId("str"));
@@ -1235,7 +1235,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
    desc = builder.MoveDescriptor();
-   RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, desc);
+   RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, desc, EDeserializeMode::kForReading);
 
    EXPECT_EQ(2u, desc.GetNClusters());
    const auto &aliasDesc = desc.GetFieldDescriptor(desc.FindFieldId("ptAlias"));
@@ -1357,7 +1357,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
    desc = builder.MoveDescriptor();
-   RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, desc);
+   RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, desc, EDeserializeMode::kForReading);
 
    EXPECT_EQ(3u, desc.GetNClusters());
    const auto &fieldDesc = desc.GetFieldDescriptor(desc.FindFieldId("pt"));
@@ -1480,7 +1480,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
    RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
    RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
    desc = builder.MoveDescriptor();
-   RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, desc);
+   RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, desc, EDeserializeMode::kForReading);
 
    EXPECT_EQ(2u, desc.GetNClusters());
    const auto &fieldDesc = desc.GetFieldDescriptor(desc.FindFieldId("pt"));

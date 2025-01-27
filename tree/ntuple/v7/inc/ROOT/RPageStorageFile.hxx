@@ -158,7 +158,7 @@ private:
 
 protected:
    void LoadStructureImpl() final;
-   RNTupleDescriptor AttachImpl() final;
+   RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode) final;
    /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.
    std::unique_ptr<RPageSource> CloneImpl() const final;
 

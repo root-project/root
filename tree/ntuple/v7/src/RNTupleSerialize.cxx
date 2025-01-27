@@ -1765,10 +1765,10 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
    return RResult<void>::Success();
 }
 
-ROOT::RResult<void> ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void *buffer,
-                                                                                         std::uint64_t bufSize,
-                                                                                         DescriptorId_t clusterGroupId,
-                                                                                         RNTupleDescriptor &desc)
+ROOT::RResult<std::vector<ROOT::Experimental::Internal::RClusterDescriptorBuilder>>
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageListRaw(const void *buffer, std::uint64_t bufSize,
+                                                                        DescriptorId_t clusterGroupId,
+                                                                        const RNTupleDescriptor &desc)
 {
    auto base = reinterpret_cast<const unsigned char *>(buffer);
    auto bytes = base;
@@ -1828,7 +1828,6 @@ ROOT::RResult<void> ROOT::Experimental::Internal::RNTupleSerializer::Deserialize
    if (nClusters != nClusterSummaries)
       return R__FAIL("mismatch between number of clusters and number of cluster summaries");
 
-   std::vector<RClusterDescriptor> clusters;
    for (std::uint32_t i = 0; i < nClusters; ++i) {
       std::uint64_t outerFrameSize;
       auto outerFrame = bytes;
@@ -1891,13 +1890,49 @@ ROOT::RResult<void> ROOT::Experimental::Internal::RNTupleSerializer::Deserialize
       } // loop over columns
 
       bytes = outerFrame + outerFrameSize;
-
-      auto voidRes = clusterBuilders[i].CommitSuppressedColumnRanges(desc);
-      if (!voidRes)
-         return R__FORWARD_ERROR(voidRes);
-      clusterBuilders[i].AddExtendedColumnRanges(desc);
-      clusters.emplace_back(clusterBuilders[i].MoveDescriptor().Unwrap());
    } // loop over clusters
+
+   return clusterBuilders;
+}
+
+ROOT::RResult<void>
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void *buffer, std::uint64_t bufSize,
+                                                                     DescriptorId_t clusterGroupId,
+                                                                     RNTupleDescriptor &desc,
+                                                                     EDescriptorDeserializeMode mode)
+{
+   auto clusterBuildersRes = RNTupleSerializer::DeserializePageListRaw(buffer, bufSize, clusterGroupId, desc);
+   if (!clusterBuildersRes)
+      return R__FORWARD_ERROR(clusterBuildersRes);
+
+   auto clusterBuilders = clusterBuildersRes.Unwrap();
+
+   std::vector<RClusterDescriptor> clusters;
+   clusters.reserve(clusterBuilders.size());
+
+   // Conditionally fixup the clusters depending on the attach purpose
+   switch (mode) {
+   case EDescriptorDeserializeMode::kForReading:
+      for (auto &builder : clusterBuilders) {
+         if (auto res = builder.CommitSuppressedColumnRanges(desc); !res)
+            return R__FORWARD_RESULT(res);
+         builder.AddExtendedColumnRanges(desc);
+         clusters.emplace_back(builder.MoveDescriptor().Unwrap());
+      }
+      break;
+   case EDescriptorDeserializeMode::kForWriting:
+      for (auto &builder : clusterBuilders) {
+         if (auto res = builder.CommitSuppressedColumnRanges(desc); !res)
+            return R__FORWARD_RESULT(res);
+         clusters.emplace_back(builder.MoveDescriptor().Unwrap());
+      }
+      break;
+   case EDescriptorDeserializeMode::kRaw:
+      for (auto &builder : clusterBuilders)
+         clusters.emplace_back(builder.MoveDescriptor().Unwrap());
+      break;
+   }
+
    desc.AddClusterGroupDetails(clusterGroupId, clusters);
 
    return RResult<void>::Success();

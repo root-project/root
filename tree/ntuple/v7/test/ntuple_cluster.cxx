@@ -41,7 +41,7 @@ namespace {
 class RPageSourceMock : public RPageSource {
 protected:
    void LoadStructureImpl() final {}
-   RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
+   RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode) final { return RNTupleDescriptor(); }
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
    RPageRef LoadPageImpl(ColumnHandle_t, const RClusterInfo &, NTupleSize_t) final { return RPageRef(); }
 

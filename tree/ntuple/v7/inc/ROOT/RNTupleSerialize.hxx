@@ -60,6 +60,10 @@ Deserialization errors throw exceptions. Only when indicated or when passed as a
 */
 // clang-format on
 class RNTupleSerializer {
+   static RResult<std::vector<RClusterDescriptorBuilder>>
+   DeserializePageListRaw(const void *buffer, std::uint64_t bufSize, DescriptorId_t clusterGroupId,
+                          const RNTupleDescriptor &desc);
+
 public:
    static constexpr std::uint16_t kEnvelopeTypeHeader = 0x01;
    static constexpr std::uint16_t kEnvelopeTypeFooter = 0x02;
@@ -275,9 +279,21 @@ public:
    DeserializeHeader(const void *buffer, std::uint64_t bufSize, RNTupleDescriptorBuilder &descBuilder);
    static RResult<void>
    DeserializeFooter(const void *buffer, std::uint64_t bufSize, RNTupleDescriptorBuilder &descBuilder);
+
+   enum class EDescriptorDeserializeMode {
+      /// Deserializes the descriptor as-is without performing any additional fixup. The produced descriptor is
+      /// unsuitable for reading or writing, but it's a faithful representation of the on-disk information.
+      kRaw,
+      /// Deserializes the descriptor and performs fixup on the suppressed column ranges. This produces a descriptor
+      /// that is suitable for writing, but not reading.
+      kForWriting,
+      /// Deserializes the descriptor and performs fixup on the suppressed column ranges and on clusters, taking
+      /// into account the header extension. This produces a descriptor that is suitable for reading.
+      kForReading,
+   };
    // The clusters vector must be initialized with the cluster summaries corresponding to the page list
    static RResult<void> DeserializePageList(const void *buffer, std::uint64_t bufSize, DescriptorId_t clusterGroupId,
-                                            RNTupleDescriptor &desc);
+                                            RNTupleDescriptor &desc, EDescriptorDeserializeMode mode);
 
    // Helper functions to (de-)serialize the streamer info type extra information
    static std::string SerializeStreamerInfos(const StreamerInfoMap_t &infos);
