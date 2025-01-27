@@ -146,9 +146,9 @@ public:
    // used to infer the sub-graphs
    std::string GenerateInferSignature(bool isdecl = true);
 
-   void EvaluateIntermediateMemory(const std::vector<const std::string&>& op_input_tensors); 
-   std::string CheckAndAllocateIntermediateMemory(const std::vector<const std::string&>& op_output_tensors);
-   std::string CheckAndFlushIntermediateMemory(const std::vector<const std::string&>& op_output_tensors);
+   void EvaluateIntermediateMemory(const std::vector<std::string>& op_input_tensors, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter); 
+   std::string CheckAndAllocateIntermediateMemory(const std::vector<std::string>& op_output_tensors);
+   void CheckAndFlushIntermediateMemory(const std::vector<std::string>& op_output_tensors);
 
 protected:
    // internal functions
@@ -162,6 +162,8 @@ protected:
    void GenerateOperatorDeclarations();
    // generate code for inference
    void GenerateOutput();
+   // generate code for initializing memory pool for intermediate tensors
+   void GenerateIntermediateMemoryPool();
    // Generate all session code
    void GenerateSessionCode();
 

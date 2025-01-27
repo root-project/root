@@ -65,8 +65,7 @@ public:
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override { return input; }
 
-   void Initialize(RModel &model) override
-   {
+   void Initialize(RModel& model, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter) override {
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw std::runtime_error("TMVA::SOFIE - Tensor " + fNX + " not found.");
       }

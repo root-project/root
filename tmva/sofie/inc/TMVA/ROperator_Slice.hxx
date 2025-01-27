@@ -80,7 +80,7 @@ public:
    }
 
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter){
       if (model.CheckIfTensorAlreadyExist(fNData) == false){   //input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA Slice Op Input Tensor is not found in model");
       }
