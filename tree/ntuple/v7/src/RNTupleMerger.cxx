@@ -864,6 +864,7 @@ static void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const RN
 
       auto srcColumnId = srcFieldDesc.GetLogicalColumnIds()[i];
       const auto &srcColumn = srcDesc.GetColumnDescriptor(srcColumnId);
+
       RColumnMergeInfo info{};
       info.fColumnName = name + '.' + std::to_string(srcColumn.GetIndex());
       info.fInputId = srcColumn.GetPhysicalId();
@@ -996,7 +997,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       auto descCmpRes = CompareDescriptorStructure(mergeData.fDstDescriptor, srcDescriptor.GetRef());
       if (!descCmpRes) {
          SKIP_OR_ABORT(
-            std::string("Source RNTuple will be skipped due to incompatible schema with the fDestination:\n") +
+            std::string("Source RNTuple has an incompatible schema with the destination:\n") +
             descCmpRes.GetError()->GetReport());
       }
       auto descCmp = descCmpRes.Unwrap();
@@ -1018,7 +1019,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
             ExtendDestinationModel(descCmp.fExtraSrcFields, *model, mergeData, descCmp.fCommonFields);
          } else if (mergeOpts.fMergingMode == ENTupleMergingMode::kStrict) {
             // If the current source has extra fields and we're in Strict mode, error
-            std::string msg = "Source RNTuple has extra fields that the fDestination RNTuple doesn't have:";
+            std::string msg = "Source RNTuple has extra fields that the destination RNTuple doesn't have:";
             for (const auto *field : descCmp.fExtraSrcFields) {
                msg += "\n  " + field->GetFieldName() + " : " + field->GetTypeName();
             }
