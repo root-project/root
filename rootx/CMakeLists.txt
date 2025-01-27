@@ -9,7 +9,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_EXECUTABLE(root src/rootx.cxx)
+ROOT_EXECUTABLE(root src/rootx.cxx CMAKENOEXPORT)
 
 if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
   target_link_libraries(root PRIVATE util procstat)
