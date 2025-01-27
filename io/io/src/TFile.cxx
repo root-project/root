@@ -665,6 +665,11 @@ void TFile::Init(Bool_t create)
       fEND         = fBEGIN;    //Pointer to end of file
       new TFree(fFree, fBEGIN, Long64_t(kStartBigFile));  //Create new free list
 
+      //*-* -------------Check if we need to enable forward compatible with version
+      //*-* -------------prior to v6.30
+      if (gEnv->GetValue("TFile.v630forwardCompatibility", 0) == 1)
+         SetBit(k630forwardCompatibility);
+
       //*-* Write Directory info
       Int_t namelen= TNamed::Sizeof();
       Int_t nbytes = namelen + TDirectoryFile::Sizeof();
