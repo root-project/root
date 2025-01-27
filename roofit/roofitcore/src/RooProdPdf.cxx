@@ -482,10 +482,7 @@ bool isRangeIdentical(RooArgSet const &observables, TString const &normRange, TN
 ////////////////////////////////////////////////////////////////////////////////
 /// Factorize product in irreducible terms for given choice of integration/normalization
 
-void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& intSet,
-              RooLinkedList& termList, RooLinkedList& normList,
-              RooLinkedList& impDepList, RooLinkedList& crossDepList,
-              RooLinkedList& intList) const
+void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& intSet, Factorized &factorized) const
 {
   // List of all term dependents: normalization and imported
   std::vector<RooArgSet> depAllList;
@@ -493,7 +490,6 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
 
   // Setup lists for factorization terms and their dependents
   RooArgSet* term(nullptr);
-  RooArgSet* termNormDeps(nullptr);
   RooArgSet* termIntDeps(nullptr);
   RooArgSet* termIntNoNormDeps(nullptr);
 
@@ -577,10 +573,10 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     // Check if this PDF has dependents overlapping with one of the existing terms
     bool done = false;
     int j = 0;
-    auto lIter = termList.begin();
-    auto ldIter = normList.begin();
-    for(;lIter != termList.end(); (++lIter, ++ldIter, ++j)) {
-      termNormDeps = static_cast<RooArgSet*>(*ldIter);
+    auto lIter = factorized.terms.begin();
+    auto ldIter = factorized.norms.begin();
+    for(;lIter != factorized.terms.end(); (++lIter, ++ldIter, ++j)) {
+      RooArgSet *termNormDeps = static_cast<RooArgSet*>(*ldIter);
       term = static_cast<RooArgSet*>(*lIter);
       // PDF should be added to existing term if
       // 1) It has overlapping normalization dependents with any other PDF in existing term
@@ -613,7 +609,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
       if (!(pdfNormDeps.empty() && pdfAllDeps.empty() &&
        pdfIntSet.empty()) || normSet.empty()) {
    term = new RooArgSet("term");
-   termNormDeps = new RooArgSet("termNormDeps");
+   RooArgSet *termNormDeps = new RooArgSet("termNormDeps");
    depAllList.emplace_back(pdfAllDeps.begin(), pdfAllDeps.end(), "termAllDeps");
    termIntDeps = new RooArgSet(pdfIntSet.begin(), pdfIntSet.end(), "termIntDeps");
    depIntNoNormList.emplace_back(pdfIntNoNormDeps.begin(), pdfIntNoNormDeps.end(), "termIntNoNormDeps");
@@ -622,9 +618,9 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
    term->add(pdf);
    termNormDeps->add(pdfNormDeps.begin(), pdfNormDeps.end(), false);
 
-   termList.Add(term);
-   normList.Add(termNormDeps);
-   intList.Add(termIntDeps);
+   factorized.terms.Add(term);
+   factorized.norms.Add(termNormDeps);
+   factorized.ints.Add(termIntDeps);
       }
     }
 
@@ -633,9 +629,9 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
   // Loop over list of terms again to determine 'imported' observables
   int i = 0;
   RooArgSet *normDeps;
-  auto lIter = termList.begin();
-  auto ldIter = normList.begin();
-  for(;lIter != termList.end(); (++lIter, ++ldIter, ++i)) {
+  auto lIter = factorized.terms.begin();
+  auto ldIter = factorized.norms.begin();
+  for(;lIter != factorized.terms.end(); (++lIter, ++ldIter, ++i)) {
     normDeps = static_cast<RooArgSet*>(*ldIter);
     term = static_cast<RooArgSet*>(*lIter);
     // Make list of wholly imported dependents
@@ -643,7 +639,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     impDeps.remove(*normDeps, true, true);
     auto snap = new RooArgSet;
     impDeps.snapshot(*snap);
-    impDepList.Add(snap);
+    factorized.imps.Add(snap);
 //     std::cout << GetName() << ": list of imported dependents for term " << (*term) << " set to " << impDeps << std::endl ;
 
     // Make list of cross dependents (term is self contained for these dependents,
@@ -651,7 +647,7 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     auto crossDeps = std::unique_ptr<RooAbsCollection>{depIntNoNormList[i].selectCommon(*normDeps)};
     snap = new RooArgSet;
     crossDeps->snapshot(*snap);
-    crossDepList.Add(snap);
+    factorized.cross.Add(snap);
 //     std::cout << GetName() << ": list of cross dependents for term " << (*term) << " set to " << *crossDeps << std::endl ;
   }
 }
@@ -695,30 +691,17 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
   auto cache = std::make_unique<CacheElem>();
 
   // Factorize the product in irreducible terms for this nset
-  RooLinkedList terms;
-  RooLinkedList norms;
-  RooLinkedList imp;
-  RooLinkedList ints;
-  RooLinkedList cross;
-  //   std::cout << "RooProdPdf::getPIL -- now calling factorizeProduct()" << std::endl ;
-
+  Factorized factorized;
 
   // Normalization set used for factorization
   RooArgSet factNset(nset ? (*nset) : _defNormSet);
-//   std::cout << GetName() << "factNset = " << factNset << std::endl ;
 
-  factorizeProduct(factNset, iset ? (*iset) : RooArgSet(), terms, norms, imp, cross, ints);
-
-  RooArgSet *norm;
-  RooArgSet *integ;
-  RooArgSet *xdeps;
-  RooArgSet *imps;
+  factorizeProduct(factNset, iset ? (*iset) : RooArgSet(), factorized);
 
   // Group irriducible terms that need to be (partially) integrated together
   std::list<std::vector<RooArgSet*>> groupedList;
   RooArgSet outerIntDeps;
-//   std::cout << "RooProdPdf::getPIL -- now calling groupProductTerms()" << std::endl;
-  groupProductTerms(groupedList, outerIntDeps, terms, norms, imp, ints, cross);
+  groupProductTerms(groupedList, outerIntDeps, factorized);
 
   // Loop over groups
 //   std::cout<<"FK: pdf("<<GetName()<<") Starting selecting F(x|y)!"<< std::endl;
@@ -730,9 +713,9 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
 
       RooArgSet* term = group[0];
 
-      Int_t termIdx = terms.IndexOf(term);
-      norm=static_cast<RooArgSet*>(norms.At(termIdx));
-      imps=static_cast<RooArgSet*>(imp.At(termIdx));
+      Int_t termIdx = factorized.terms.IndexOf(term);
+      RooArgSet *norm=static_cast<RooArgSet*>(factorized.norms.At(termIdx));
+      RooArgSet *imps=static_cast<RooArgSet*>(factorized.imps.At(termIdx));
       RooArgSet termNSet(*norm);
       RooArgSet termImpSet(*imps);
 
@@ -740,8 +723,6 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
       //       std::cout<<"FK: _refRangeName = "<<_refRangeName<< std::endl;
 
       if (!termImpSet.empty() && nullptr != _refRangeName) {
-
-//    std::cout << "WVE now here" << std::endl;
 
    // WVE we can skip this if the ref range is equal to the normalization range
    // LM : avoid making integral ratio if range is the same. Why was not included ??? (same at line 857)
@@ -759,9 +740,9 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
 
       for (auto const& term : group) {
 
-   Int_t termIdx = terms.IndexOf(term);
-   norm=static_cast<RooArgSet*>(norms.At(termIdx));
-   imps=static_cast<RooArgSet*>(imp.At(termIdx));
+   Int_t termIdx = factorized.terms.IndexOf(term);
+   RooArgSet *norm=static_cast<RooArgSet*>(factorized.norms.At(termIdx));
+   RooArgSet *imps=static_cast<RooArgSet*>(factorized.imps.At(termIdx));
    RooArgSet termNSet(*norm);
    RooArgSet termImpSet(*imps);
 
@@ -784,9 +765,9 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
   // Replace G(y) with (G(y),ratio)
   for (auto const& group : groupedList) {
       for (auto const& term : group) {
-   Int_t termIdx = terms.IndexOf(term);
-   norm = static_cast<RooArgSet*>(norms.At(termIdx));
-   imps = static_cast<RooArgSet*>(imp.At(termIdx));
+   Int_t termIdx = factorized.terms.IndexOf(term);
+   RooArgSet *norm = static_cast<RooArgSet*>(factorized.norms.At(termIdx));
+   RooArgSet *imps = static_cast<RooArgSet*>(factorized.imps.At(termIdx));
    RooArgSet termNSet(*norm);
    RooArgSet termImpSet(*imps);
 
@@ -808,24 +789,18 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
 //       std::cout << "processing atomic item" << std::endl;
       RooArgSet* term = group[0];
 
-        Int_t termIdx = terms.IndexOf(term);
-        norm = static_cast<RooArgSet*>(norms.At(termIdx));
-        integ = static_cast<RooArgSet*>(ints.At(termIdx));
-        xdeps = static_cast<RooArgSet*>(cross.At(termIdx));
-        imps = static_cast<RooArgSet*>(imp.At(termIdx));
+        Int_t termIdx = factorized.terms.IndexOf(term);
+        RooArgSet *norm = factorized.termNormDeps(termIdx);
+        RooArgSet *integ = factorized.termIntDeps(termIdx);
+        RooArgSet *xdeps = factorized.termCrossDeps(termIdx);
+        RooArgSet *imps = factorized.termImpDeps(termIdx);
 
-        RooArgSet termNSet;
-        RooArgSet termISet;
-        RooArgSet termXSet;
-        RooArgSet termImpSet;
-
-        // Take list of normalization, integrated dependents from factorization algorithm
-        termISet.add(*integ);
-        termNSet.add(*norm);
-
-        // Cross-imported integrated dependents
-        termXSet.add(*xdeps);
-        termImpSet.add(*imps);
+        // Take list of normalization, integrated dependents, and
+        // cross-imported integrated dependents from factorization algorithm
+        RooArgSet termNSet{*norm};
+        RooArgSet termISet{*integ};
+        RooArgSet termXSet{*xdeps};
+        RooArgSet termImpSet{*imps};
 
         // Add prefab term to partIntList.
         bool isOwned(false);
@@ -848,20 +823,16 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
         RooArgSet compTermDen;
         for (auto const &term : group) {
           //    std::cout << GetName() << ": processing term " << (*term) << " of composite item" << std::endl ;
-          Int_t termIdx = terms.IndexOf(term);
-          norm = static_cast<RooArgSet *>(norms.At(termIdx));
-          integ = static_cast<RooArgSet *>(ints.At(termIdx));
-          xdeps = static_cast<RooArgSet *>(cross.At(termIdx));
-          imps = static_cast<RooArgSet *>(imp.At(termIdx));
+          Int_t termIdx = factorized.terms.IndexOf(term);
+          RooArgSet *norm = factorized.termNormDeps(termIdx);
+          RooArgSet *integ = factorized.termIntDeps(termIdx);
+          RooArgSet *xdeps = factorized.termCrossDeps(termIdx);
+          RooArgSet *imps = factorized.termImpDeps(termIdx);
 
-          RooArgSet termNSet;
-          RooArgSet termISet;
-          RooArgSet termXSet;
-          RooArgSet termImpSet;
-          termISet.add(*integ);
-          termNSet.add(*norm);
-          termXSet.add(*xdeps);
-          termImpSet.add(*imps);
+          RooArgSet termNSet{*norm};
+          RooArgSet termISet{*integ};
+          RooArgSet termXSet{*xdeps};
+          RooArgSet termImpSet{*imps};
 
           // Remove outer integration dependents from termISet
           termISet.remove(outerIntDeps, true, true);
@@ -935,16 +906,19 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
     rearrangeProduct(*cache);
   }
 
-  // We own contents of all lists filled by factorizeProduct()
-  terms.Delete();
-  ints.Delete();
-  imp.Delete();
-  norms.Delete();
-  cross.Delete();
-
   return cache;
 }
 
+
+RooProdPdf::Factorized::~Factorized()
+{
+   // We own contents of all lists filled by factorizeProduct()
+   terms.Delete();
+   ints.Delete();
+   imps.Delete();
+   norms.Delete();
+   cross.Delete();
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1281,24 +1255,23 @@ std::unique_ptr<RooAbsReal> RooProdPdf::specializeIntegral(RooAbsReal& input, co
 /// Group product into terms that can be calculated independently
 
 void RooProdPdf::groupProductTerms(std::list<std::vector<RooArgSet*>>& groupedTerms, RooArgSet& outerIntDeps,
-               const RooLinkedList& terms, const RooLinkedList& norms,
-               const RooLinkedList& imps, const RooLinkedList& ints, const RooLinkedList& /*cross*/) const
+                                   Factorized const &factorized) const
 {
   // Start out with each term in its own group
-  for(auto * term : static_range_cast<RooArgSet*>(terms)) {
+  for(auto * term : static_range_cast<RooArgSet*>(factorized.terms)) {
     groupedTerms.emplace_back();
     groupedTerms.back().emplace_back(term) ;
   }
 
   // Make list of imported dependents that occur in any term
   RooArgSet allImpDeps ;
-  for(auto * impDeps : static_range_cast<RooArgSet*>(imps)) {
+  for(auto * impDeps : static_range_cast<RooArgSet*>(factorized.imps)) {
     allImpDeps.add(*impDeps,false) ;
   }
 
   // Make list of integrated dependents that occur in any term
   RooArgSet allIntDeps ;
-  for(auto * intDeps : static_range_cast<RooArgSet*>(ints)) {
+  for(auto * intDeps : static_range_cast<RooArgSet*>(factorized.ints)) {
     allIntDeps.add(*intDeps,false) ;
   }
 
@@ -1320,14 +1293,10 @@ void RooProdPdf::groupProductTerms(std::list<std::vector<RooArgSet*>>& groupedTe
       // See if any term in this group depends in any ay on outerDepInt
       for (auto const& term2 : *group) {
 
-   Int_t termIdx = terms.IndexOf(term2) ;
-   RooArgSet* termNormDeps = static_cast<RooArgSet*>(norms.At(termIdx)) ;
-   RooArgSet* termIntDeps = static_cast<RooArgSet*>(ints.At(termIdx)) ;
-   RooArgSet* termImpDeps = static_cast<RooArgSet*>(imps.At(termIdx)) ;
-
-   if (termNormDeps->contains(*outerIntDep) ||
-       termIntDeps->contains(*outerIntDep) ||
-       termImpDeps->contains(*outerIntDep)) {
+   Int_t termIdx = factorized.terms.IndexOf(term2) ;
+   if (factorized.termNormDeps(termIdx)->contains(*outerIntDep) ||
+       factorized.termIntDeps(termIdx)->contains(*outerIntDep) ||
+       factorized.termImpDeps(termIdx)->contains(*outerIntDep)) {
      needMerge = true ;
    }
 

@@ -63,16 +63,12 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
   }
 
   // Factorize product in irreducible terms
-  RooLinkedList termList;
-  RooLinkedList depsList;
-  RooLinkedList impDepList;
-  RooLinkedList crossDepList;
-  RooLinkedList intList;
-  model.factorizeProduct(deps,RooArgSet(),termList,depsList,impDepList,crossDepList,intList) ;
+  RooProdPdf::Factorized factorized;
+  model.factorizeProduct(deps,RooArgSet(),factorized);
 
   if (dologD(Generation)) {
     cxcoutD(Generation) << "RooProdGenContext::ctor() factorizing product expression in irriducible terms " ;
-    for(auto * t : static_range_cast<RooArgSet*>(termList)) {
+    for(auto * t : static_range_cast<RooArgSet*>(factorized.terms)) {
       ccxcoutD(Generation) << *t ;
     }
     ccxcoutD(Generation) << std::endl;
@@ -85,18 +81,18 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
   bool go=true ;
   while(go) {
 
-    auto termIter = termList.begin();
-    auto impIter = impDepList.begin();
-    auto normIter = depsList.begin();
+    auto termIter = factorized.terms.begin();
+    auto impIter = factorized.imps.begin();
+    auto normIter = factorized.norms.begin();
 
     bool anyPrevAction=anyAction ;
     anyAction=false ;
 
-    if (termList.empty()) {
+    if (factorized.terms.empty()) {
       break ;
     }
 
-    while(termIter != termList.end()) {
+    while(termIter != factorized.terms.end()) {
 
       auto * term = static_cast<RooArgSet*>(*termIter);
       auto * impDeps = static_cast<RooArgSet*>(*impIter);
@@ -138,9 +134,9 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
    ++termIter;
    ++normIter;
    ++impIter;
-   termList.Remove(term);
-   depsList.Remove(termDeps);
-   impDepList.Remove(impDeps);
+   factorized.terms.Remove(term);
+   factorized.norms.Remove(termDeps);
+   factorized.imps.Remove(impDeps);
 
    delete term ;
    delete termDeps ;
@@ -211,9 +207,9 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
       ++termIter;
       ++normIter;
       ++impIter;
-      termList.Remove(term);
-      depsList.Remove(termDeps);
-      impDepList.Remove(impDeps);
+      factorized.terms.Remove(term);
+      factorized.norms.Remove(termDeps);
+      factorized.imps.Remove(impDeps);
       delete term ;
       delete termDeps ;
       delete impDeps ;
@@ -223,15 +219,15 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 
   // Check if there are any left over terms that cannot be generated
   // separately due to cross dependency of observables
-  if (!termList.empty()) {
+  if (!factorized.terms.empty()) {
 
     cxcoutD(Generation) << "RooProdGenContext::ctor() there are left-over terms that need to be generated separately" << std::endl ;
 
     // Concatenate remaining terms
-    auto normIter = depsList.begin();
+    auto normIter = factorized.norms.begin();
     RooArgSet trailerTerm ;
     RooArgSet trailerTermDeps ;
-    for(auto * term : static_range_cast<RooArgSet*>(termList)) {
+    for(auto * term : static_range_cast<RooArgSet*>(factorized.terms)) {
       auto* termDeps = static_cast<RooArgSet*>(*normIter);
       trailerTerm.add(*term) ;
       trailerTermDeps.add(*termDeps) ;
@@ -282,15 +278,6 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
   if (!_uniObs.empty()) {
     coutI(Generation) << "RooProdGenContext(" << model.GetName() << "): generating uniform distribution for non-dependent observable(s) " << _uniObs << std::endl;
   }
-
-
-  // We own contents of lists filled by factorizeProduct()
-  termList.Delete() ;
-  depsList.Delete() ;
-  impDepList.Delete() ;
-  crossDepList.Delete() ;
-  intList.Delete() ;
-
 }
 
 

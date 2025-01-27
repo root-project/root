@@ -27,9 +27,6 @@
 #include <list>
 #include <string>
 
-typedef RooArgList* pRooArgList ;
-typedef RooLinkedList* pRooLinkedList ;
-
 namespace RooFit {
 namespace Detail {
 class RooFixedProdPdf;
@@ -135,14 +132,24 @@ private:
 
   void initializeFromCmdArgList(const RooArgSet& fullPdfSet, const RooLinkedList& l) ;
 
-  void factorizeProduct(const RooArgSet& normSet, const RooArgSet& intSet,
-                        RooLinkedList& termList,   RooLinkedList& normList,
-                        RooLinkedList& impDepList, RooLinkedList& crossDepList,
-                        RooLinkedList& intList) const;
+  struct Factorized {
+     ~Factorized();
+
+     RooArgSet *termNormDeps(int i) const { return static_cast<RooArgSet*>(norms.At(i)); }
+     RooArgSet *termIntDeps(int i) const { return static_cast<RooArgSet*>(ints.At(i)); }
+     RooArgSet *termImpDeps(int i) const { return static_cast<RooArgSet*>(imps.At(i)); }
+     RooArgSet *termCrossDeps(int i) const { return static_cast<RooArgSet*>(cross.At(i)); }
+
+     RooLinkedList terms;
+     RooLinkedList norms;
+     RooLinkedList imps;
+     RooLinkedList ints;
+     RooLinkedList cross;
+  };
+
+  void factorizeProduct(const RooArgSet& normSet, const RooArgSet& intSet, Factorized &factorized) const;
   std::string makeRGPPName(const char* pfx, const RooArgSet& term, const RooArgSet& iset, const RooArgSet& nset, const char* isetRangeName) const ;
-  void groupProductTerms(std::list<std::vector<RooArgSet*>>& groupedTerms, RooArgSet& outerIntDeps,
-                         const RooLinkedList& terms, const RooLinkedList& norms,
-                         const RooLinkedList& imps, const RooLinkedList& ints, const RooLinkedList& cross) const ;
+  void groupProductTerms(std::list<std::vector<RooArgSet*>>& groupedTerms, RooArgSet& outerIntDeps, Factorized const &factorized) const;
 
 
 
