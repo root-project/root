@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_tree
+/// \ingroup tutorial_tree_analysis
 /// \notebook -nodraw
 /// Macro driving the analysis can specify file name and type
 ///
