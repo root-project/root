@@ -149,5 +149,5 @@ TEST(TFile, k630forwardCompatibility)
    TFile fileu{filename.c_str(),"UPDATE"};
    ASSERT_EQ(fileu.TestBit(TFile::k630forwardCompatibility), true);  
    fileu.Close();
-   gSystem->Unlink(filename);
+   gSystem->Unlink(filename.c_str());
 }
