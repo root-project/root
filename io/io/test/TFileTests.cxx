@@ -136,7 +136,7 @@ TEST(TFile, ReadWithoutGlobalRegistrationNet)
    TestReadWithoutGlobalRegistrationIfPossible(netFile);
 }
 
-https://github.com/root-project/root/issues/16189
+// https://github.com/root-project/root/issues/16189
 TEST(TFile, k630forwardCompatibility)
 {
    gEnv->SetValue("TFile.v630forwardCompatibility", 1);
