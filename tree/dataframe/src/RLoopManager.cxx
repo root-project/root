@@ -778,9 +778,17 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
    if (fSampleMap.empty()) {
       fSampleInfos[slot] = RSampleInfo(id, range);
    } else {
-      if (fSampleMap.find(id) == fSampleMap.end())
+      // fSampleMap contains the list of paths as a key. However,
+      // the path stored is without any prefixes that are automatically added for
+      // remote files e.g. on EOS. The path stored in "id" does contain the prefix.
+      // Thus, a check is performed if the id substring is found in the keys of the map
+      auto itrSample = std::find_if(fSampleMap.begin(), fSampleMap.end(),
+        [&id](const auto& element) {return id.find(element.first) != std::string::npos;});
+      if (itrSample == fSampleMap.end()) {
          throw std::runtime_error("Full sample identifier '" + id + "' cannot be found in the available samples.");
-      fSampleInfos[slot] = RSampleInfo(id, range, fSampleMap[id]);
+      } else {
+        fSampleInfos[slot] = RSampleInfo(id, range, itrSample->second);
+      }
    }
 }
 
