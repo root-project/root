@@ -409,7 +409,7 @@ void TSpectrum::SetResolution(Double_t resolution)
 /// Original spectrum is shown in black color, estimated background in red color.
 ///
 /// Begin_Macro(source)
-/// ../../../tutorials/legacy/spectrum/spectrum/Background_incr.C
+/// ../../../tutorials/legacy/spectrum/Background_incr.C
 /// End_Macro
 ///
 /// ### Example 2 script Background_decr.C:
