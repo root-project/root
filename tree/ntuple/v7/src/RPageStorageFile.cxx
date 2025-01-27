@@ -349,7 +349,8 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadStructureImpl()
    }
 }
 
-ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceFile::AttachImpl()
+ROOT::Experimental::RNTupleDescriptor
+ROOT::Experimental::Internal::RPageSourceFile::AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode mode)
 {
    auto unzipBuf = reinterpret_cast<unsigned char *>(fStructureBuffer.fPtrFooter) + fAnchor->GetNBytesFooter();
 
@@ -373,7 +374,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceF
       RNTupleDecompressor::Unzip(zipBuffer, cgDesc.GetPageListLocator().GetNBytesOnStorage(),
                                  cgDesc.GetPageListLength(), buffer.data());
 
-      RNTupleSerializer::DeserializePageList(buffer.data(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc);
+      RNTupleSerializer::DeserializePageList(buffer.data(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc, mode);
    }
 
    // For the page reads, we rely on the I/O scheduler to define the read requests
