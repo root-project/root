@@ -149,8 +149,7 @@ TCanvas *hist102_TH2_contour_list()
          gc = (TGraph *)curv->Clone();
          gc->Draw("C");
 
-         sprintf(val, "%g", zval0);
-         l.DrawLatex(xval0, yval0, val);
+         l.DrawLatex(xval0, yval0, Form("%g", zval0));
          curv = (TGraph *)contLevel->After(curv); // Get Next graph
       }
    }
@@ -172,7 +171,7 @@ Double_t SawTooth(Double_t x, Double_t WaveLen)
    //      /\   |
    //     /  \  |
    //    /    \ |
-   //   /      \ 
+   //   /      \|
    //  /--------\--------/------------
    //           |\      /
    //           | \    /

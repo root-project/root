@@ -388,11 +388,9 @@ public:
 
    std::string GetAddr() const;
 
-   _R__DEPRECATED_LATER("Use GetUrl() to get valid connection URL")
-   std::string GetRelativeAddr(const std::shared_ptr<RWebWindow> &win) const;
+   _R__DEPRECATED_LATER("Use GetUrl() to get valid connection URL") std::string GetRelativeAddr(const std::shared_ptr<RWebWindow> &win) const;
 
-   _R__DEPRECATED_LATER("Use GetAddr() to get valid connection URL")
-   std::string GetRelativeAddr(const RWebWindow &win) const;
+   _R__DEPRECATED_LATER("Use GetAddr() to get valid connection URL") std::string GetRelativeAddr(const RWebWindow &win) const;
 
    void SetCallBacks(WebWindowConnectCallback_t conn, WebWindowDataCallback_t data, WebWindowConnectCallback_t disconn = nullptr);
 
