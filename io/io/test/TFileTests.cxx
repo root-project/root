@@ -8,6 +8,7 @@
 #include "TNamed.h"
 #include "TPluginManager.h"
 #include "TROOT.h" // gROOT
+#include "TSystem.h"
 #include "TEnv.h" // gEnv
 
 TEST(TFile, WriteObjectTObject)
