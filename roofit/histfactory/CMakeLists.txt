@@ -93,7 +93,7 @@ endif()
 # XML model specification. The ConfigParser is only built when xml is ON, so we
 # can't build hist2workspace without xml.
 if(xml)
-  ROOT_EXECUTABLE(hist2workspace hist2workspace.cxx LIBRARIES HistFactory)
+  ROOT_EXECUTABLE(hist2workspace hist2workspace.cxx LIBRARIES HistFactory CMAKENOEXPORT)
   target_compile_definitions(HistFactory PUBLIC HISTFACTORY_XML)
 endif()
 
