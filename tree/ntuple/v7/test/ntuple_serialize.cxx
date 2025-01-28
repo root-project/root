@@ -1505,3 +1505,278 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
    EXPECT_EQ(expect1_0, columnRange1_0);
    EXPECT_EQ(expect1_1, columnRange1_1);
 }
+
+TEST(RNTuple, DeserializeDescriptorModes)
+{
+   // Construct an RNTuple with a deferred column and a suppressed column, then try to load it
+   // with all the different deserialization modes, then verify that we get the expected results.
+
+   std::unique_ptr<unsigned char[]> bufHeader, bufFooter, bufPageList;
+   std::uint32_t sizeHeader, sizeFooter, sizePageList;
+   // Writing
+   {
+      RNTupleDescriptorBuilder builder;
+      builder.SetNTuple("ntpl", "");
+
+      builder.AddField(RFieldDescriptorBuilder()
+                          .FieldId(0)
+                          .FieldName("")
+                          .Structure(ENTupleStructure::kRecord)
+                          .MakeDescriptor()
+                          .Unwrap());
+
+      // Create a field with a suppressed column
+      builder.AddField(RFieldDescriptorBuilder()
+                          .FieldId(1)
+                          .FieldName("suppressed")
+                          .TypeName("int")
+                          .Structure(ENTupleStructure::kLeaf)
+                          .MakeDescriptor()
+                          .Unwrap());
+      builder.AddFieldLink(0, 1);
+
+      builder.AddColumn(RColumnDescriptorBuilder()
+                           .LogicalColumnId(0)
+                           .PhysicalColumnId(0)
+                           .FieldId(1)
+                           .BitsOnStorage(32)
+                           .Type(ENTupleColumnType::kInt32)
+                           .FirstElementIndex(0)
+                           .MakeDescriptor()
+                           .Unwrap());
+
+      builder.AddColumn(RColumnDescriptorBuilder()
+                           .LogicalColumnId(1)
+                           .PhysicalColumnId(1)
+                           .FieldId(1)
+                           .RepresentationIndex(1)
+                           .BitsOnStorage(16)
+                           .Type(ENTupleColumnType::kInt16)
+                           .FirstElementIndex(0)
+                           .MakeDescriptor()
+                           .Unwrap());
+
+      auto context = RNTupleSerializer::SerializeHeader(nullptr, builder.GetDescriptor());
+      bufHeader = MakeUninitArray<unsigned char>(context.GetHeaderSize());
+      context = RNTupleSerializer::SerializeHeader(bufHeader.get(), builder.GetDescriptor());
+      sizeHeader = context.GetHeaderSize();
+
+      ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
+      ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+
+      // First cluster
+      RClusterDescriptorBuilder clusterBuilder;
+      clusterBuilder.ClusterId(13).FirstEntryIndex(0).NEntries(1);
+      pageRange.fPhysicalColumnId = 0;
+      pageInfo.fNElements = 1;
+      pageRange.fPageInfos.emplace_back(pageInfo);
+      clusterBuilder.MarkSuppressedColumnRange(1);
+      clusterBuilder.CommitColumnRange(0, 0, 505, pageRange);
+      clusterBuilder.CommitSuppressedColumnRanges(builder.GetDescriptor()).ThrowOnError();
+      builder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
+
+      builder.BeginHeaderExtension();
+
+      // Create a field with a deferred column
+      builder.AddField(RFieldDescriptorBuilder()
+                          .FieldId(2)
+                          .FieldName("deferred")
+                          .TypeName("float")
+                          .Structure(ENTupleStructure::kLeaf)
+                          .MakeDescriptor()
+                          .Unwrap());
+      builder.AddFieldLink(0, 2);
+      builder.AddColumn(RColumnDescriptorBuilder()
+                           .LogicalColumnId(2)
+                           .PhysicalColumnId(2)
+                           .FieldId(2)
+                           .BitsOnStorage(32)
+                           .Type(ENTupleColumnType::kReal32)
+                           .FirstElementIndex(1)
+                           .MakeDescriptor()
+                           .Unwrap());
+      context.MapSchema(builder.GetDescriptor(), /*forHeaderExtension=*/true);
+
+      // Second cluster
+      clusterBuilder.ClusterId(17).FirstEntryIndex(1).NEntries(2);
+      clusterBuilder.MarkSuppressedColumnRange(0);
+      pageRange.fPhysicalColumnId = 1;
+      pageRange.fPageInfos[0].fNElements = 2;
+      clusterBuilder.CommitColumnRange(1, 0, 505, pageRange);
+      pageRange.fPhysicalColumnId = 2;
+      pageRange.fPageInfos[0].fNElements = 2;
+      clusterBuilder.CommitColumnRange(2, 1, 505, pageRange);
+      clusterBuilder.CommitSuppressedColumnRanges(builder.GetDescriptor()).ThrowOnError();
+      builder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
+
+      RClusterGroupDescriptorBuilder cgBuilder;
+      cgBuilder.ClusterGroupId(137).NClusters(2).EntrySpan(3);
+      cgBuilder.AddSortedClusters({13, 17});
+      builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
+
+      auto desc = builder.MoveDescriptor();
+      std::vector<DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17)};
+      context.MapClusterGroupId(137);
+      sizePageList = RNTupleSerializer::SerializePageList(nullptr, desc, physClusterIDs, context);
+      bufPageList = MakeUninitArray<unsigned char>(sizePageList);
+      RNTupleSerializer::SerializePageList(bufPageList.get(), desc, physClusterIDs, context);
+
+      sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context);
+      bufFooter = MakeUninitArray<unsigned char>(sizeFooter);
+      RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context);
+   }
+
+   // Reading
+   {
+      // Deserialize page list in various modes
+      RNTupleDescriptorBuilder builder;
+      RNTupleSerializer::DeserializeHeader(bufHeader.get(), sizeHeader, builder);
+      RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
+
+      // 1. for reading
+      {
+         auto desc = builder.GetDescriptor().Clone();
+         RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, desc,
+                                                EDeserializeMode::kForReading);
+         EXPECT_EQ(2u, desc.GetNClusters());
+         {
+            const auto &fieldDesc = desc.GetFieldDescriptor(desc.FindFieldId("suppressed"));
+            const auto &columnIds = fieldDesc.GetLogicalColumnIds();
+            EXPECT_EQ(2u, columnIds.size());
+
+            auto &clusterDesc0 = desc.GetClusterDescriptor(0);
+            EXPECT_EQ(0u, clusterDesc0.GetFirstEntryIndex());
+            const auto columnRange0_0 = clusterDesc0.GetColumnRange(columnIds[0]);
+            const auto columnRange0_1 = clusterDesc0.GetColumnRange(columnIds[1]);
+            RClusterDescriptor::RColumnRange expect0_0{0, 0, 1, 505, false};
+            RClusterDescriptor::RColumnRange expect0_1{1, 0, 1, {}, true};
+            EXPECT_EQ(expect0_0, columnRange0_0);
+            EXPECT_EQ(expect0_1, columnRange0_1);
+
+            auto &clusterDesc1 = desc.GetClusterDescriptor(1);
+            EXPECT_EQ(1u, clusterDesc1.GetFirstEntryIndex());
+            const auto columnRange1_0 = clusterDesc1.GetColumnRange(columnIds[0]);
+            const auto columnRange1_1 = clusterDesc1.GetColumnRange(columnIds[1]);
+            RClusterDescriptor::RColumnRange expect1_0{0, 0, 2, {}, true};
+            RClusterDescriptor::RColumnRange expect1_1{1, 0, 2, 505, false};
+            EXPECT_EQ(expect1_0, columnRange1_0);
+            EXPECT_EQ(expect1_1, columnRange1_1);
+         }
+         {
+            const auto &fieldDesc = desc.GetFieldDescriptor(desc.FindFieldId("deferred"));
+            const auto &columnIds = fieldDesc.GetLogicalColumnIds();
+            EXPECT_EQ(1u, columnIds.size());
+
+            auto &clusterDesc0 = desc.GetClusterDescriptor(0);
+            EXPECT_EQ(0u, clusterDesc0.GetFirstEntryIndex());
+            const auto columnRange0_0 = clusterDesc0.GetColumnRange(columnIds[0]);
+            RClusterDescriptor::RColumnRange expect0_0{2, 0, 1, {}, false};
+            EXPECT_EQ(expect0_0, columnRange0_0);
+            clusterDesc0.GetPageRange(columnIds[0]); // should not throw
+
+            auto &clusterDesc1 = desc.GetClusterDescriptor(1);
+            EXPECT_EQ(1u, clusterDesc1.GetFirstEntryIndex());
+            const auto columnRange1_0 = clusterDesc1.GetColumnRange(columnIds[0]);
+            RClusterDescriptor::RColumnRange expect1_0{2, 1, 2, 505, false};
+            EXPECT_EQ(expect1_0, columnRange1_0);
+         }
+      }
+
+      // 2. for writing
+      // same as for reading but has no fixup for deferred columns
+      {
+         auto desc = builder.GetDescriptor().Clone();
+         RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, desc,
+                                                EDeserializeMode::kForWriting);
+         EXPECT_EQ(2u, desc.GetNClusters());
+         {
+            const auto &fieldDesc = desc.GetFieldDescriptor(desc.FindFieldId("suppressed"));
+            const auto &columnIds = fieldDesc.GetLogicalColumnIds();
+            EXPECT_EQ(2u, columnIds.size());
+
+            auto &clusterDesc0 = desc.GetClusterDescriptor(0);
+            EXPECT_EQ(0u, clusterDesc0.GetFirstEntryIndex());
+            const auto columnRange0_0 = clusterDesc0.GetColumnRange(columnIds[0]);
+            const auto columnRange0_1 = clusterDesc0.GetColumnRange(columnIds[1]);
+            RClusterDescriptor::RColumnRange expect0_0{0, 0, 1, 505, false};
+            RClusterDescriptor::RColumnRange expect0_1{1, 0, 1, {}, true};
+            EXPECT_EQ(expect0_0, columnRange0_0);
+            EXPECT_EQ(expect0_1, columnRange0_1);
+
+            auto &clusterDesc1 = desc.GetClusterDescriptor(1);
+            EXPECT_EQ(1u, clusterDesc1.GetFirstEntryIndex());
+            const auto columnRange1_0 = clusterDesc1.GetColumnRange(columnIds[0]);
+            const auto columnRange1_1 = clusterDesc1.GetColumnRange(columnIds[1]);
+            RClusterDescriptor::RColumnRange expect1_0{0, 0, 2, {}, true};
+            RClusterDescriptor::RColumnRange expect1_1{1, 0, 2, 505, false};
+            EXPECT_EQ(expect1_0, columnRange1_0);
+            EXPECT_EQ(expect1_1, columnRange1_1);
+         }
+         {
+            const auto &fieldDesc = desc.GetFieldDescriptor(desc.FindFieldId("deferred"));
+            const auto &columnIds = fieldDesc.GetLogicalColumnIds();
+            EXPECT_EQ(1u, columnIds.size());
+
+            auto &clusterDesc0 = desc.GetClusterDescriptor(0);
+            EXPECT_EQ(0u, clusterDesc0.GetFirstEntryIndex());
+            EXPECT_THROW(clusterDesc0.GetColumnRange(columnIds[0]), std::out_of_range);
+
+            auto &clusterDesc1 = desc.GetClusterDescriptor(1);
+            EXPECT_EQ(1u, clusterDesc1.GetFirstEntryIndex());
+            const auto columnRange1_0 = clusterDesc1.GetColumnRange(columnIds[0]);
+            RClusterDescriptor::RColumnRange expect1_0{2, 1, 2, 505, false};
+            EXPECT_EQ(expect1_0, columnRange1_0);
+         }
+      }
+
+      // 3. raw
+      // should lack fixup for suppressed and deferred
+      {
+         auto desc = builder.GetDescriptor().Clone();
+         RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, desc, EDeserializeMode::kRaw);
+         EXPECT_EQ(2u, desc.GetNClusters());
+         {
+            const auto &fieldDesc = desc.GetFieldDescriptor(desc.FindFieldId("suppressed"));
+            const auto &columnIds = fieldDesc.GetLogicalColumnIds();
+            EXPECT_EQ(2u, columnIds.size());
+
+            auto &clusterDesc0 = desc.GetClusterDescriptor(0);
+            EXPECT_EQ(0u, clusterDesc0.GetFirstEntryIndex());
+            const auto columnRange0_0 = clusterDesc0.GetColumnRange(columnIds[0]);
+            const auto columnRange0_1 = clusterDesc0.GetColumnRange(columnIds[1]);
+            RClusterDescriptor::RColumnRange expect0_0{0, 0, 1, 505, false};
+            RClusterDescriptor::RColumnRange expect0_1{};
+            expect0_1.fPhysicalColumnId = 1;
+            expect0_1.fIsSuppressed = true;
+            EXPECT_EQ(expect0_0, columnRange0_0);
+            EXPECT_EQ(expect0_1, columnRange0_1);
+
+            auto &clusterDesc1 = desc.GetClusterDescriptor(1);
+            EXPECT_EQ(1u, clusterDesc1.GetFirstEntryIndex());
+            const auto columnRange1_0 = clusterDesc1.GetColumnRange(columnIds[0]);
+            const auto columnRange1_1 = clusterDesc1.GetColumnRange(columnIds[1]);
+            RClusterDescriptor::RColumnRange expect1_0{};
+            expect1_0.fPhysicalColumnId = 0;
+            expect1_0.fIsSuppressed = true;
+            RClusterDescriptor::RColumnRange expect1_1{1, 0, 2, 505, false};
+            EXPECT_EQ(expect1_0, columnRange1_0);
+            EXPECT_EQ(expect1_1, columnRange1_1);
+         }
+         {
+            const auto &fieldDesc = desc.GetFieldDescriptor(desc.FindFieldId("deferred"));
+            const auto &columnIds = fieldDesc.GetLogicalColumnIds();
+            EXPECT_EQ(1u, columnIds.size());
+
+            auto &clusterDesc0 = desc.GetClusterDescriptor(0);
+            EXPECT_EQ(0u, clusterDesc0.GetFirstEntryIndex());
+            EXPECT_THROW(clusterDesc0.GetColumnRange(columnIds[0]), std::out_of_range);
+
+            auto &clusterDesc1 = desc.GetClusterDescriptor(1);
+            EXPECT_EQ(1u, clusterDesc1.GetFirstEntryIndex());
+            const auto columnRange1_0 = clusterDesc1.GetColumnRange(columnIds[0]);
+            RClusterDescriptor::RColumnRange expect1_0{2, 1, 2, 505, false};
+            EXPECT_EQ(expect1_0, columnRange1_0);
+         }
+      }
+   }
+}
