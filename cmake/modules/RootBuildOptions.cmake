@@ -131,7 +131,6 @@ ROOT_BUILD_OPTION(geom ON "Enable support for the geometry library. Disabling th
 ROOT_BUILD_OPTION(geombuilder OFF "Enable support for the geombuilder library")
 ROOT_BUILD_OPTION(gnuinstall OFF "Perform installation following the GNU guidelines")
 ROOT_BUILD_OPTION(gviz OFF "Enable support for Graphviz (graph visualization software)")
-ROOT_BUILD_OPTION(html OFF "Build THtml, the legacy ROOT documentation system (deprecated)")
 ROOT_BUILD_OPTION(http ON "Enable support for HTTP server")
 ROOT_BUILD_OPTION(imt ON "Enable support for implicit multi-threading via Intel® Thread Building Blocks (TBB)")
 ROOT_BUILD_OPTION(libcxx OFF "Build using libc++")
@@ -387,7 +386,7 @@ endif()
 #---Removed options------------------------------------------------------------
 # Please notify SPI when adding to this list
 foreach(opt afdsmgrd afs alien bonjour builtin_afterimage castor chirp cxx11 cxx14 cxx17
-        exceptions geocad gfal glite globus gsl_shared hdfs ios jemalloc krb5
+        exceptions geocad gfal glite globus gsl_shared hdfs html ios jemalloc krb5
         ldap memstat minuit2 monalisa oracle pyroot-python2 pyroot_legacy
         pythia6 pythia6_nolink python qt qtgsi rfio ruby sapdb srp table
         tcmalloc vmc xproofd)
@@ -397,7 +396,7 @@ foreach(opt afdsmgrd afs alien bonjour builtin_afterimage castor chirp cxx11 cxx
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt html mysql odbc pgsql qt5web)
+foreach(opt mysql odbc pgsql qt5web)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
