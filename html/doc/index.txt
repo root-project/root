@@ -1,8 +1,0 @@
-DUMMY - a howto, for now.
-
-The content of a file called index.html or index.txt will be put
-into the module index page (e.g. into GUI/index.html).
-All other files will be linked.
-
-.txt files will be run through THtml::Convert, html files will be kept.
-Only files ending on .txt or .html will be considered as module documentation.
