@@ -7,7 +7,7 @@ if(NOT DST)
   set(DST .)
 endif()
 
-set(rootsite http://root.cern/files)
+set(rootsite http://root-test.web.cern.ch/files)
 set(timeout 100)
 
 if(NOT EXISTS ${DST}/h1)

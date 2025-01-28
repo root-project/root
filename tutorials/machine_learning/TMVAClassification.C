@@ -176,7 +176,7 @@ int TMVAClassification( TString myMethodList = "" )
    // data file will be downloaded here if not present yet, then it will be read
    // from the cache path directly.
    TFile::SetCacheFileDir(".");
-   std::unique_ptr<TFile> input{TFile::Open("http://root.cern/files/tmva_class_example.root", "CACHEREAD")};
+   std::unique_ptr<TFile> input{TFile::Open("http://root-test.web.cern.ch/files/tmva_class_example.root", "CACHEREAD")};
    if (!input || input->IsZombie()) {
       throw std::runtime_error("ERROR: could not open data file");
    }

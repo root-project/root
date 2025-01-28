@@ -1709,7 +1709,7 @@ void th2poly()
    if (!gVerbose)
       gErrorIgnoreLevel = 9999;
    TFile::SetCacheFileDir(".");
-   TFile *f = TFile::Open("http://root.cern/files/usa.root", "CACHEREAD");
+   TFile *f = TFile::Open("http://root-test.web.cern.ch/files/usa.root", "CACHEREAD");
 
    if (!f) {
       printf("Cannot access usa.root. Is internet working ?\n");

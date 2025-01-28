@@ -69,7 +69,7 @@ Define now input data file and signal and background trees
  **/
 
    TString inputFileName = "Higgs_data.root";
-   TString inputFileLink = "http://root.cern/files/" + inputFileName;
+   TString inputFileLink = "http://root-test.web.cern.ch/files/" + inputFileName;
 
    TFile *inputFile = nullptr;
 
