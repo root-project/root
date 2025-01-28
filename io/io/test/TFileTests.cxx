@@ -141,7 +141,7 @@ TEST(TFile, ReadWithoutGlobalRegistrationNet)
 TEST(TFile, k630forwardCompatibility)
 {
    gEnv->SetValue("TFile.v630forwardCompatibility", 1);
-   const std::string filename{std::tmpnam(nullptr)};
+   const std::string filename{"filek30.root"};
    TFile filec{filename.c_str(),"CREATE"};
    ASSERT_EQ(filec.TestBit(TFile::k630forwardCompatibility), true);  
    filec.Close();
