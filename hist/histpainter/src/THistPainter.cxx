@@ -9663,7 +9663,7 @@ void THistPainter::PaintTable(Option_t *option)
          if (Hoption.Text)         PaintTH2PolyText(option);
          if (Hoption.Line)         PaintTH2PolyBins("l");
          if (Hoption.Mark)         PaintTH2PolyBins("P");
-      } else if (fH->GetEntries() != 0 && Hoption.Axis<=0) {
+      } else if (Hoption.Axis<=0) {
          if (Hoption.Scat)         PaintScatterPlot(option);
          if (Hoption.Arrow)        PaintArrows(option);
          if (Hoption.Box)          PaintBoxes(option);
