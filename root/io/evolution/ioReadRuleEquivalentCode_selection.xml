@@ -8,7 +8,7 @@
            source=""
            target="transient_"
            embed="true"
-           code="{      newObj->initializeTransients();              } "/>
+           code="{      (void)transient_; newObj->initializeTransients();              } "/>
 </lcgdict>
 
 <!--
