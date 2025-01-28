@@ -368,32 +368,13 @@ public:                                                                         
 #define R__UseDummy(name) \
    class _NAME2_(name,_c) { public: _NAME2_(name,_c)() { if (name) { } } }
 
-#define ClassImpUnique(name,key)                                                                        \
-   namespace ROOT {                                                                                     \
-      /** \cond HIDDEN_SYMBOLS */ TGenericClassInfo *GenerateInitInstance(const name*); /** \endcond */ \
-      namespace {                                                                                       \
-         static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) __attribute__((unused)) =                     \
-            GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__);                          \
-         R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key)));                                            \
-      }                                                                                                 \
-   }
+#define ClassImpUnique(name, key)
 
 /// \deprecated
 #define ClassImp(name) ClassImpUnique(name,default)
 
 /// Macro for Namespace
-#define NamespaceImpUnique(name,key)                                        \
-   namespace name {                                                         \
-      namespace ROOTDict {                                                  \
-         /** \cond HIDDEN_SYMBOLS */                                        \
-         ::ROOT::TGenericClassInfo *GenerateInitInstance(); /** \endcond */ \
-         namespace {                                                        \
-            static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) =              \
-               GenerateInitInstance()->SetImplFile(__FILE__, __LINE__);     \
-            R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key)));             \
-         }                                                                  \
-      }                                                                     \
-   }
+#define NamespaceImpUnique(name, key)
 
 #define NamespaceImp(name) NamespaceImpUnique(name,default)
 
@@ -417,13 +398,8 @@ public:                                                                         
 
 #define ClassDefT2(name,Tmpl)
 
-#define templateClassImpUnique(name, key)                                                                           \
-   namespace ROOT {                                                                                                 \
-   /** \cond HIDDEN_SYMBOLS */ static TNamed *                                                                      \
-      _R__UNIQUE_(_NAME2_(R__dummyholder, key)) = ::ROOT::RegisterClassTemplate(_QUOTE_(name), __FILE__, __LINE__); \
-   /** \endcond */                                                                                                  \
-   R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyholder, key)));                                                          \
-   }
+#define templateClassImpUnique(name, key)
+
 #define templateClassImp(name) templateClassImpUnique(name,default)
 
 #define ClassImpT(name,Tmpl) templateClassImp(name)

@@ -40,6 +40,7 @@ The following people have contributed to this new version:
 * Proof support has been completely removed form RooFit and RooStats, after it was already not working anymore for several releases
 * The build options `mysql`, `odbc`, `pgsql` and `qt5web` have been deprecated. Please complain with root-dev@cern.ch should you still need one!
 * The build option `html` has been removed.
+* The ClassImp macro and derived macros have no effect now and will be deprecated in ROOT 6.38.
 * The `RooAbsPdf::generateSimGlobal()` method is deprecated and will be removed in ROOT 6.38. It only contains some workarounds that are not necessary anymore. One can just use the regular `RooAbsPdf::generate()` function.
 
 ## Python Interface
