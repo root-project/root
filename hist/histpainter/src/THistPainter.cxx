@@ -10059,7 +10059,7 @@ void THistPainter::PaintText(Option_t *)
 {
 
    TLatex text;
-   text.SetTextFont(gStyle->GetTextFont());
+   text.SetTextFont(((int)gStyle->GetTextFont()/10)*10+2); // font precision must be 2
    text.SetTextColor(fH->GetMarkerColor());
    text.SetTextSize(0.02*fH->GetMarkerSize());
 
