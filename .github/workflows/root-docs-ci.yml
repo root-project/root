@@ -59,10 +59,10 @@ jobs:
         echo DOCDIR_NAME=${BASE_REF} >> $GITHUB_ENV
 
     # TODO: install latest versions in image on root-ci-images
-    - name: Install Doxygen 1.10.0
+    - name: Install Doxygen 1.12.0
       run : |
         mkdir -p ${{ github.workspace }}/doxygen
-        curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
+        curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_12_0/doxygen-1.12.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
         echo PATH=$PATH:${{ github.workspace }}/doxygen/bin >> $GITHUB_ENV
 
     - name: Install qhelpgenerator-qt5
