@@ -274,23 +274,6 @@
 #pragma read sourceClass="ROOT::Math::PtEtaPhiM4D<Float16_t>"  \
              targetClass="ROOT::Math::PtEtaPhiM4D<double>";
 
-//#pragma link C++ class    ROOT::Math::EEtaPhiMSystem<double>+;
-#pragma read sourceClass="ROOT::Math::EEtaPhiMSystem<Double32_t>" \
-             targetClass="ROOT::Math::EEtaPhiMSystem<double>";
-#pragma read sourceClass="ROOT::Math::EEtaPhiMSystem<float>"      \
-             targetClass="ROOT::Math::EEtaPhiMSystem<double>";
-#pragma read sourceClass="ROOT::Math::EEtaPhiMSystem<Float16_t>"  \
-             targetClass="ROOT::Math::EEtaPhiMSystem<double>";
-
-//#pragma link C++ class    ROOT::Math::PtEtaPhiMSystem<double>+;
-#pragma read sourceClass="ROOT::Math::PtEtaPhiMSystem<Double32_t>" \
-             targetClass="ROOT::Math::PtEtaPhiMSystem<double>";
-#pragma read sourceClass="ROOT::Math::PtEtaPhiMSystem<float>"      \
-             targetClass="ROOT::Math::PtEtaPhiMSystem<double>";
-#pragma read sourceClass="ROOT::Math::PtEtaPhiMSystem<Float16_t>"  \
-             targetClass="ROOT::Math::PtEtaPhiMSystem<double>";
-
-
 #pragma link C++ class    ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >+;
 #pragma read sourceClass="ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<Double32_t> >" \
              targetClass="ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >";
@@ -582,23 +565,6 @@
              targetClass="ROOT::Math::PtEtaPhiM4D<float>";
 #pragma read sourceClass="ROOT::Math::PtEtaPhiM4D<Float16_t>"  \
              targetClass="ROOT::Math::PtEtaPhiM4D<float>";
-
-//#pragma link C++ class    ROOT::Math::EEtaPhiMSystem<float>+;
-#pragma read sourceClass="ROOT::Math::EEtaPhiMSystem<double>"     \
-             targetClass="ROOT::Math::EEtaPhiMSystem<float>";
-#pragma read sourceClass="ROOT::Math::EEtaPhiMSystem<Double32_t>" \
-             targetClass="ROOT::Math::EEtaPhiMSystem<float>";
-#pragma read sourceClass="ROOT::Math::EEtaPhiMSystem<Float16_t>"  \
-             targetClass="ROOT::Math::EEtaPhiMSystem<float>";
-
-//#pragma link C++ class    ROOT::Math::PtEtaPhiMSystem<float>+;
-#pragma read sourceClass="ROOT::Math::PtEtaPhiMSystem<double>"     \
-             targetClass="ROOT::Math::PtEtaPhiMSystem<float>";
-#pragma read sourceClass="ROOT::Math::PtEtaPhiMSystem<Double32_t>" \
-             targetClass="ROOT::Math::PtEtaPhiMSystem<float>";
-#pragma read sourceClass="ROOT::Math::PtEtaPhiMSystem<Float16_t>"  \
-             targetClass="ROOT::Math::PtEtaPhiMSystem<float>";
-
 
 #pragma link C++ class    ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> >+;
 #pragma read sourceClass="ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >"     \
