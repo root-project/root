@@ -100,22 +100,13 @@ struct TensorType<uint64_t> {
 
 struct TensorMemoryInfo {
    std::string tensor_name;
-   unsigned int chunk_idx;
+   size_t chunk_idx;
    size_t tensor_size;
 };
 
-struct AvailableChunkInfo {
-   unsigned int chunk_idx;
-   size_t chunk_size;
-};
 struct MemoryPoolInfo {
    std::vector<TensorMemoryInfo> total_memory;
-   std::map<unsigned int, size_t> available_memory;
-};
-
-struct TensorCounter {
-   bool check_flag;
-   unsigned int frequency;
+   std::vector<std::pair<size_t, size_t>> available_memory;
 };
 
 std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape);

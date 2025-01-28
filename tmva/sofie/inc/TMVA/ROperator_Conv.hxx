@@ -62,6 +62,8 @@ public:
          throw
             std::runtime_error("TMVA SOFIE Encountered unsupported type parsing a Conv operator");
       }
+      fInputTensorNames = { fNX, fNB };
+      fOutputTensorNames = { fNY, fNB2 };
    }
 
    ROperator_Conv(std::string autopad, std::vector<size_t> dilations,
@@ -78,6 +80,8 @@ public:
          throw
             std::runtime_error("TMVA SOFIE Encountered unsupported type parsing a Conv operator");
       }
+      fInputTensorNames = { fNX };
+      fOutputTensorNames = { fNY };
    }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) {
@@ -194,7 +198,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) {
       fUseSession = model.UseSession();
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw
@@ -257,7 +261,6 @@ public:
             }
          }
       }
-
    }
 
    std::string GenerateInitCode() {
@@ -540,16 +543,6 @@ public:
    /*! \brief Returns the blas routines needed to compile the generated code
     */
    std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Axpy") }; }
-
-   const std::vector<std::string>& GetOpInputTensors() {
-      static const std::vector<std::string> op_input_tensors = { fNX, fNB };
-      return op_input_tensors;
-   }
-   const std::vector<std::string>& GetOpOutputTensors() {
-      static const std::vector<std::string> op_output_tensors = { fNY, fNB2 };
-      return op_output_tensors;
-   }   
-
 };
 
 } // namespace SOFIE

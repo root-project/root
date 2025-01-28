@@ -29,7 +29,10 @@ private:
 public:
    ROperator_Expand(){}
    ROperator_Expand(std::string nameX, std::string nameShape, std::string nameY):
-      fNX(UTILITY::Clean_name(nameX)), fNShape(UTILITY::Clean_name(nameShape)), fNY(UTILITY::Clean_name(nameY)){}
+      fNX(UTILITY::Clean_name(nameX)), fNShape(UTILITY::Clean_name(nameShape)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
+      }
 
    // type of output given input
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
@@ -117,15 +120,6 @@ public:
                    << ", fTensor_" << fNY << ");\n";
       }
       return out.str();
-   }
-   
-   const std::vector<std::string>& GetOpInputTensors() {
-      static const std::vector<std::string> op_input_tensors = { fNX };
-      return op_input_tensors;
-   }
-   const std::vector<std::string>& GetOpOutputTensors() {
-      static const std::vector<std::string> op_output_tensors = { fNY };
-      return op_output_tensors;
    }
 
 };
