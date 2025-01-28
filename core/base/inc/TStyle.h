@@ -142,6 +142,8 @@ private:
    Double_t      fCandleBoxRange;    ///< Candle plot, The fraction which is covered by the box (0 < x < 1), default 0.5
    Bool_t        fCandleScaled;      ///< Candle plot, shall the box-width be scaled to each other by the integral of a box?
    Bool_t        fViolinScaled;      ///< Violin plot, shall the violin or histos be scaled to each other by the maximum height?
+   Int_t         fCandleCircleLineWidth; ///< Line width of the circle marker of a candle plot ([1,5]).
+   Int_t         fCandleCrossLineWidth; ///< Line width of the cross marker of a candle plot ([1,5]).
    Float_t       fXAxisExpXOffset;   ///< X axis exponent label X offset
    Float_t       fXAxisExpYOffset;   ///< X axis exponent label Y offset
    Float_t       fYAxisExpXOffset;   ///< Y axis exponent label X offset
@@ -291,6 +293,8 @@ public:
    Double_t         GetCandleBoxRange() const {return fCandleBoxRange;}
    Bool_t           GetCandleScaled() const {return fCandleScaled;}
    Bool_t           GetViolinScaled() const {return fViolinScaled;}
+   Int_t            GetCandleCircleLineWidth() const {return fCandleCircleLineWidth;}
+   Int_t            GetCandleCrossLineWidth() const {return fCandleCrossLineWidth;}
    Bool_t           GetOrthoCamera() const {return fOrthoCamera;}
 
    Bool_t           IsReading() const {return fIsReading;}
@@ -424,12 +428,14 @@ public:
    void             SetCandleBoxRange(Double_t bRange=0.5);
    void             SetCandleScaled(Bool_t on=kFALSE) {fCandleScaled=on;}
    void             SetViolinScaled(Bool_t on=kTRUE) {fViolinScaled=on;}
+   void             SetCandleCircleLineWidth (Int_t CircleLineWidth=1);
+   void             SetCandleCrossLineWidth (Int_t CrossLineWidth=1);
    void             SetOrthoCamera(Bool_t on=kTRUE) {fOrthoCamera=on;}
 
    void             SavePrimitive(std::ostream &out, Option_t * = "") override;
    void             SaveSource(const char *filename, Option_t *option = nullptr);
 
-   ClassDefOverride(TStyle, 23);  //A collection of all graphics attributes
+   ClassDefOverride(TStyle, 24);  //A collection of all graphics attributes
 };
 
 
