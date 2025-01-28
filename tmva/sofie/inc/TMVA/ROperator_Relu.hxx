@@ -24,7 +24,10 @@ private:
 public:
    ROperator_Relu(){}
    ROperator_Relu(std::string nameX, std::string nameY):
-      fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){}
+      fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
+      }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;
@@ -63,15 +66,6 @@ public:
       return out.str();
    }
 
-      const std::vector<std::string>& GetOpInputTensors() {
-      static const std::vector<std::string> op_input_tensors = { fNX };
-      return op_input_tensors;
-   }
-   const std::vector<std::string>& GetOpOutputTensors() {
-      static const std::vector<std::string> op_output_tensors = { fNY };
-      return op_output_tensors;
-   }     
-   
 };
 
 }//SOFIE

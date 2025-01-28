@@ -21,14 +21,6 @@ class ROperator{
 public:
    virtual std::vector<std::string> GetBlasRoutines() { return {}; }
    virtual std::vector<std::string> GetStdLibs() { return {}; }
-   virtual const std::vector<std::string>& GetOpInputTensors() {
-      static const std::vector<std::string> defaultTensors;
-      return defaultTensors;
-   }
-   virtual const std::vector<std::string>& GetOpOutputTensors() {
-      static const std::vector<std::string> defaultTensors;
-      return defaultTensors;
-   }      
    virtual std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>>) = 0;
    virtual std::vector<ETensorType> TypeInference(std::vector<ETensorType>) = 0;
    virtual void Initialize(RModel&) = 0;
@@ -50,6 +42,19 @@ protected:
    const std::string SP = "   ";    ///< space used to correctly indent the generated C++ code
    bool fUseSession = false;        ///< flag to identify if using the session class
    bool fIsOutputConstant = false;  ///< flag to identify if operator has a constant output (no need to generate code)
+   
+   mutable std::vector<std::string_view> fInputTensorNames;
+   mutable std::vector<std::string_view> fOutputTensorNames;
+
+public:
+   std::span<const std::string_view> GetOpInputTensors() const {
+      return fInputTensorNames;
+   }
+
+   std::span<const std::string_view> GetOpOutputTensors() const {
+      return fOutputTensorNames;
+   }
+   
 };
 
 

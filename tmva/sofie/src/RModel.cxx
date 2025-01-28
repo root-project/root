@@ -155,6 +155,8 @@ void RModel::AddInputTensorName(std::string input_name) {
 void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
     AddBlasRoutines(op->GetBlasRoutines());
     auto libs = op->GetStdLibs();
+    auto op_input_tensors = op->GetOpInputTensors();
+
     for (auto& stdlib : libs) {
         AddNeededStdLib(stdlib);
     }
@@ -163,12 +165,11 @@ void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
     } else {
         fOperators.push_back(std::move(op));
     }
-
+    
     // storing the first and the last usage of tensors which are input to 
     // operators (but are not inputs to the model, i.e. they are intermediate 
     // tensors). This information is needed to keep a check on when a 
     // particular intermediate tensor can be flushed to free up memory for reuse.
-   const std::vector<std::string>& op_input_tensors = op->GetOpInputTensors();
    for(size_t index = 0; index<op_input_tensors.size(); ++index){
       // check if the tensor is already in the lookup table
       if (fIntermediateTensorFrequencyLookup.find(op_input_tensors[index]) == fIntermediateTensorFrequencyLookup.end()) {
@@ -304,12 +305,12 @@ void RModel::SetNotWritableInitializedTensor(const std::string & tensor_name) {
       t->second.SetNotWritable();
    }
 
-void RModel::EvaluateIntermediateMemory(const std::vector<std::string>& op_input_tensors, const size_t& current_op_idx, size_t& total_memory, std::vector<size_t>& available_memory) {
+void RModel::EvaluateIntermediateMemory(std::span<const std::string_view> op_input_tensors, const size_t& current_op_idx, size_t& total_memory, std::vector<size_t>& available_memory) {
    bool allocated;
 
    for (auto &it : op_input_tensors){
 
-      auto tensor_size = ConvertShapeToLength(GetTensorShape(it));
+      auto tensor_size = ConvertShapeToLength(GetTensorShape(std::string(it)));
 
       // flag to check if the tensor is considered for allocation
       allocated = false;
@@ -324,16 +325,16 @@ void RModel::EvaluateIntermediateMemory(const std::vector<std::string>& op_input
                   *chunk -= tensor_size;
                   allocated = true;
 
-                  // If the chunk is fully used, erase it
+                  // erase the chunk if fully used
                   if (*chunk == 0) {
-                     chunk = available_memory.erase(chunk);  // Erase and update iterator
+                     chunk = available_memory.erase(chunk);  // erase and update iterator
                   } else {
-                     ++chunk;  // Move to the next chunk
+                     ++chunk;
                   }
 
-                  break;  // Allocation successful, exit loop
+                  break;
             } else {
-                  ++chunk;  // Move to the next chunk
+                  ++chunk;
             }
          }
 
@@ -351,13 +352,14 @@ void RModel::EvaluateIntermediateMemory(const std::vector<std::string>& op_input
    }
 }
 
-std::string RModel::CheckAndAllocateIntermediateMemory(const std::vector<std::string>& op_output_tensors){
+std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view> op_output_tensors){
+   
    std::string memory_allocation_string;
-   for (auto& it:op_output_tensors){
-      fIntermediateTensorFrequencyLookup[it].frequency--;
-      if(!fIntermediateTensorFrequencyLookup[it].check_flag){
-         auto tensor_size = ConvertShapeToLength(GetTensorShape(it));
+   bool allocated = false;
 
+   for (auto& it:op_output_tensors){
+         auto tensor_size = ConvertShapeToLength(GetTensorShape(std::string(it)));
+         memory_allocation_string = "\n // Allocating memory for intermediate tensor " + std::string(it) + " with size " + tensor_size + " bytes";
          if (!fIntermediateMemoryInfo.available_memory.empty()){
             for (auto chunk = fIntermediateMemoryInfo.available_memory.begin(); chunk != fIntermediateMemoryInfo.available_memory.end(); ) {
                
@@ -365,52 +367,54 @@ std::string RModel::CheckAndAllocateIntermediateMemory(const std::vector<std::st
                if (chunk->second >= tensor_size) {
                   chunk->second -= tensor_size;
 
-                  fIntermediateTensorFrequencyLookup[it].check_flag = true;
+                  allocated = true;
 
                   if (chunk->second == 0) {
                         chunk = fIntermediateMemoryInfo.available_memory.erase(chunk);
                         continue;
                   }
 
-                  memory_allocation_string += "float* tensor_"+ it + "= reinterpret_cast<float*>(fIntermediateMemoryPool+" + chunk->first + ");\n";
+                  memory_allocation_string += "\nfloat* tensor_"+ std::string(it) + "= reinterpret_cast<float*>(fIntermediateMemoryPool+" + chunk->first + ");\n";
                }
                ++chunk;
             }
          } 
 
-         if (!fIntermediateTensorFrequencyLookup[it].check_flag) {
+         if (!allocated) {
             if (fIntermediateMemoryInfo.total_memory.size()){
                auto previous_tensor_idx = fIntermediateMemoryInfo.total_memory.back().chunk_idx;
                auto previous_tensor_size = fIntermediateMemoryInfo.total_memory.back().tensor_size;
+
                fIntermediateMemoryInfo.total_memory.push_back({
-                  it,
+                  std::string(it),
                   previous_tensor_idx+previous_tensor_size,
                   tensor_size
                });
-               memory_allocation_string += "float* tensor_"+ it + "= reinterpret_cast<float*>(fIntermediateMemoryPool+" + previous_tensor_idx+previous_tensor_size + ");\n";
+               memory_allocation_string += "\nfloat* tensor_"+ std::string(it) + "= reinterpret_cast<float*>(fIntermediateMemoryPool+" + std::to_string(previous_tensor_idx+previous_tensor_size) + ");\n";
             } else {
                fIntermediateMemoryInfo.total_memory.push_back({
-                  it,
+                  std::string(it),
                   0,
                   tensor_size
                });
-               memory_allocation_string += "float* tensor_"+ it + "= reinterpret_cast<float*>(fIntermediateMemoryPool);\n";
+               memory_allocation_string += "\nfloat* tensor_"+ std::string(it) + "= reinterpret_cast<float*>(fIntermediateMemoryPool);\n";
             }
          }
 
-      }
+
    }
    return memory_allocation_string;
 }
 
-void RModel::CheckAndFlushIntermediateMemory(const std::vector<std::string>& op_output_tensors){
-   for (auto &it : op_output_tensors){
-      fIntermediateTensorFrequencyLookup[it].frequency--;
-      if (fIntermediateTensorFrequencyLookup[it].frequency == 0) {
+void RModel::CheckAndFlushIntermediateMemory(std::span<const std::string_view> op_input_tensors, const size_t& op_idx){
+   for (auto &it : op_input_tensors){
+      
+      // last occurence of the tensor is reached => flush it from memory
+      if (fIntermediateTensorFrequencyLookup[it].second == op_idx) {
          for (auto chunk = fIntermediateMemoryInfo.total_memory.begin(); 
                chunk != fIntermediateMemoryInfo.total_memory.end(); ) {
             if (chunk->tensor_name == it) {
-                  fIntermediateMemoryInfo.available_memory.insert({chunk->chunk_idx, chunk->tensor_size});
+                  fIntermediateMemoryInfo.available_memory.push_back({chunk->chunk_idx, chunk->tensor_size});
                   
                   chunk = fIntermediateMemoryInfo.total_memory.erase(chunk);
             } else {
@@ -436,8 +440,6 @@ void RModel::Initialize(int batchSize, bool verbose) {
 void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool verbose) {
 
    fVerbose = int(verbose);
-
-   auto fIntermediateTensorCounter  = fIntermediateTensorFrequencyLookup;
 
    if (fIsInitialized) {
       if (verbose)
@@ -513,9 +515,7 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
    // Go through model and initialize each operator
    int i = 0;
    
-
-   size_t total_memory;
-   std::vector<size_t> available_memory;
+   std::vector<size_t> available_memory; // vector stores individual chunks of available memory that maybe reused
 
    for(size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx){
       if (verbose) {
@@ -523,7 +523,7 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
          std::cout << "Initializing operator " << i << "  " << typeid(r).name() << std::endl;
       }
       fOperators[op_idx]->Initialize(*this);
-      EvaluateIntermediateMemory(op->GetOpInputTensors(), op_idx, &total_memory, &available_memory);
+      EvaluateIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx, fTotalIntermediateMemory, available_memory);
       i++;
    }
 
@@ -620,12 +620,11 @@ void RModel::GenerateInitializedTensorInfo()
 }
 
 void RModel::GenerateIntermediateMemoryPool() {
-   unsigned int total_memory_required = fIntermediateMemoryInfo.total_memory.back().chunk_idx+fIntermediateMemoryInfo.total_memory.back().tensor_size;
    fGC += "\n//--- Allocating session memory pool to be used for allocating intermediate tensors\n";
    
    // char memory block is allocated since char takes 1 byte, thus easier to allocate tensors
    // of other data types
-   fGC += "char* fIntermediateMemoryPool = new char[" + std::to_string(total_memory_required) + "];";
+   fGC += "char* fIntermediateMemoryPool = new char[" + std::to_string(fTotalIntermediateMemory) + "];";
 }
 
 void RModel::GenerateIntermediateTensorInfo() {
@@ -760,11 +759,11 @@ void RModel::GenerateOutput() {
 
    fGC += "){\n";
 
-   for (size_t id = 0; id < fOperators.size(); id++) {
-      if (fVerbose) std::cout << "Generating code for operator .... " << id << std::endl;
-      fGC += CheckAndAllocateIntermediateMemory(fOperators[id]->GetOpOutputTensors());
-      fGC += (fOperators[id]->Generate(std::to_string(id)));
-      CheckAndFlushIntermediateMemory(fOperators[id]->GetOpOutputTensors());
+   for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
+      if (fVerbose) std::cout << "Generating code for operator .... " << op_idx << std::endl;
+      fGC += AllocateIntermediateMemory(fOperators[op_idx]->GetOpOutputTensors());
+      fGC += (fOperators[op_idx]->Generate(std::to_string(op_idx)));
+      CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
    }
 
    if (outputSize == 1) {
