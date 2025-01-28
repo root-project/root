@@ -103,7 +103,7 @@ auto ROperator_ConvTranspose<T>::ShapeInference(std::vector<std::vector<size_t>>
 }
 
 template <typename T>
-void ROperator_ConvTranspose<T>::Initialize(RModel& model, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter){
+void ROperator_ConvTranspose<T>::Initialize(RModel& model){
 
    fUseSession = model.UseSession();
    if (!model.CheckIfTensorAlreadyExist(fNX)) {

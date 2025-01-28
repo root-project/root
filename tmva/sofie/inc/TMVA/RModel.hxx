@@ -37,7 +37,7 @@ private:
 
    // memory pool information for intermediate tensors
    MemoryPoolInfo fIntermediateMemoryInfo;
-   std::unordered_map<std::string, TensorCounter> fIntermediateTensorFrequencyLookup;
+   std::unordered_map<std::string, std::pair<size_t, size_t>> fIntermediateTensorFrequencyLookup;
 
 public:
    // Rule of five: explicitly define move semantics, disallow copy
@@ -146,7 +146,7 @@ public:
    // used to infer the sub-graphs
    std::string GenerateInferSignature(bool isdecl = true);
 
-   void EvaluateIntermediateMemory(const std::vector<std::string>& op_input_tensors, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter); 
+   void EvaluateIntermediateMemory(const std::vector<std::string>& op_input_tensors, const size_t& current_op_idx, size_t& total_memory, std::vector<size_t>& available_memory);
    std::string CheckAndAllocateIntermediateMemory(const std::vector<std::string>& op_output_tensors);
    void CheckAndFlushIntermediateMemory(const std::vector<std::string>& op_output_tensors);
 

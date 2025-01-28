@@ -116,7 +116,7 @@ template <typename T> class ROperator_GRU final : public ROperator {
     *
     * \param model Model
     */
-   void Initialize(RModel &, std::unordered_map<std::string, TensorCounter> &);
+   void Initialize(RModel &);
 
    /*! \brief Generate the inference code
     *

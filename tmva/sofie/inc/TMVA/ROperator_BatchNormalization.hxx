@@ -83,7 +83,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter){
+   void Initialize(RModel& model){
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw
             std::runtime_error("TMVA SOFIE BatchNormalization op Input Tensor " + fNX + " fnx is not found in model");

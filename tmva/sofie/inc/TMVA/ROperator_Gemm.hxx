@@ -132,7 +132,7 @@ namespace SOFIE{
 
 
 
-      void Initialize(RModel& model, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter){
+      void Initialize(RModel& model){
          //TODO: propagate A or B as specified by ONNX standard
 
          if ((model.CheckIfTensorAlreadyExist(fNA) == false) || (model.CheckIfTensorAlreadyExist(fNB) == false) ){   //input must be a graph input, or already initialized intermediate tensor
@@ -262,8 +262,6 @@ namespace SOFIE{
          }
 
          model.AddNeededStdLib("algorithm");
-         model.EvaluateIntermediateMemory(GetOpInputTensors(), fIntermediateTensorCounter);
-
       }
 
       std::string GenerateInitCode()
