@@ -2976,6 +2976,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       if (! IsAbsoluteFileName(library) ) {
          AssignAndDelete( library , ConcatFileName( WorkingDirectory(), library ) );
       }
+      libname_noext = library_specified;
       library = TString(library) + "." + fSoExt;
    }
    library = gSystem->UnixPathName(library);
