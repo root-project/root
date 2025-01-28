@@ -123,6 +123,8 @@ struct IsVector_t : public std::false_type {};
 template <typename T, typename A>
 struct IsVector_t<std::vector<T, A>> : public std::true_type {};
 
+std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName);
+
 const std::type_info &TypeName2TypeID(const std::string &name);
 
 std::string TypeID2TypeName(const std::type_info &id);

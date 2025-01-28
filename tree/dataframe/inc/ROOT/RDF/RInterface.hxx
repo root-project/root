@@ -1361,6 +1361,57 @@ public:
       return resPtr;
    }
 
+   RResultPtr<RInterface<RLoopManager>> UntypedSnapshot(std::string_view treename, std::string_view filename,
+                                                        const ColumnNames_t &columnList,
+                                                        const RSnapshotOptions &options = RSnapshotOptions())
+   {
+      // like columnList but with `#var` columns removed
+      auto colListNoPoundSizes = RDFInternal::FilterArraySizeColNames(columnList, "Snapshot");
+      // like columnListWithoutSizeColumns but with aliases resolved
+      auto colListNoAliases = GetValidatedColumnNames(colListNoPoundSizes.size(), colListNoPoundSizes);
+      RDFInternal::CheckForDuplicateSnapshotColumns(colListNoAliases);
+      // like validCols but with missing size branches required by array branches added in the right positions
+      const auto pairOfColumnLists =
+         RDFInternal::AddSizeBranches(fLoopManager->GetBranchNames(), fLoopManager->GetTree(),
+                                      std::move(colListNoAliases), std::move(colListNoPoundSizes));
+      const auto &colListNoAliasesWithSizeBranches = pairOfColumnLists.first;
+      const auto &colListWithAliasesAndSizeBranches = pairOfColumnLists.second;
+
+      const auto fullTreeName = treename;
+      const auto parsedTreePath = RDFInternal::ParseTreePath(fullTreeName);
+      treename = parsedTreePath.fTreeName;
+      const auto &dirname = parsedTreePath.fDirName;
+
+      auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(
+         RDFInternal::SnapshotHelperArgs{std::string(filename), std::string(dirname), std::string(treename),
+                                         colListWithAliasesAndSizeBranches, options});
+
+      ::TDirectory::TContext ctxt;
+
+      // The CreateLMFromTTree function by default opens the file passed as input
+      // to check for the presence of the TTree inside. But at this moment the
+      // filename we are using here corresponds to a file which does not exist yet,
+      // i.e. the output file of the Snapshot call. Thus, checkFile=false will
+      // prevent the function from trying to open a non-existent file.
+      auto newRDF = std::make_shared<RInterface<RLoopManager>>(ROOT::Detail::RDF::CreateLMFromTTree(
+         fullTreeName, filename, colListNoAliasesWithSizeBranches, /*checkFile*/ false));
+
+      auto &&nColumns = colListNoAliasesWithSizeBranches.size();
+      const auto validColumnNames = GetValidatedColumnNames(nColumns, colListNoAliasesWithSizeBranches);
+      // Can't do it at the moment, but could be done by changing the signature to accept only the runtime type or
+      // type names
+      // CheckAndFillDSColumns(validColumnNames, RDFInternal::TypeList<ColTypes...>());
+
+      const auto nSlots = fLoopManager->GetNSlots();
+
+      auto action = RDFInternal::BuildAction(validColumnNames, snapHelperArgs, nSlots, fProxiedPtr, fColRegister);
+      auto resPtr = MakeResultPtr(newRDF, *fLoopManager, std::move(action));
+
+      if (!options.fLazy)
+         *resPtr;
+      return resPtr;
+   }
+
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
