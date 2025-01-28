@@ -801,33 +801,21 @@ static std::optional<std::type_index> ColumnInMemoryType(std::string_view fieldT
    if (onDiskType == ENTupleColumnType::kSwitch)
       return typeid(ROOT::Experimental::Internal::RColumnSwitch);
 
-   if (fieldType == "bool") {
-      return typeid(bool);
-   } else if (fieldType == "std::byte") {
-      return typeid(std::byte);
-   } else if (fieldType == "char") {
-      return typeid(char);
-   } else if (fieldType == "std::int8_t") {
-      return typeid(std::int8_t);
-   } else if (fieldType == "std::uint8_t") {
-      return typeid(std::uint8_t);
-   } else if (fieldType == "std::int16_t") {
-      return typeid(std::int16_t);
-   } else if (fieldType == "std::uint16_t") {
-      return typeid(std::uint16_t);
-   } else if (fieldType == "std::int32_t") {
-      return typeid(std::int32_t);
-   } else if (fieldType == "std::uint32_t") {
-      return typeid(std::uint32_t);
-   } else if (fieldType == "std::int64_t") {
-      return typeid(std::int64_t);
-   } else if (fieldType == "std::uint64_t") {
-      return typeid(std::uint64_t);
-   } else if (fieldType == "float") {
-      return typeid(float);
-   } else if (fieldType == "double") {
-      return typeid(double);
-   }
+   // clang-format off
+   if (fieldType == "bool")          return typeid(bool);
+   if (fieldType == "std::byte")     return typeid(std::byte);
+   if (fieldType == "char")          return typeid(char);
+   if (fieldType == "std::int8_t")   return typeid(std::int8_t);
+   if (fieldType == "std::uint8_t")  return typeid(std::uint8_t);
+   if (fieldType == "std::int16_t")  return typeid(std::int16_t);
+   if (fieldType == "std::uint16_t") return typeid(std::uint16_t);
+   if (fieldType == "std::int32_t")  return typeid(std::int32_t);
+   if (fieldType == "std::uint32_t") return typeid(std::uint32_t);
+   if (fieldType == "std::int64_t")  return typeid(std::int64_t);
+   if (fieldType == "std::uint64_t") return typeid(std::uint64_t);
+   if (fieldType == "float")         return typeid(float);
+   if (fieldType == "double")        return typeid(double);
+   // clang-format on
 
    // if the type is not one of those above, we use the default in-memory type.
    return std::nullopt;
