@@ -46,7 +46,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter){
+   void Initialize(RModel& model){
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw std::runtime_error("TMVA SOFIE Gather Op Input Tensor " + fNX + " is not found in model");
       }

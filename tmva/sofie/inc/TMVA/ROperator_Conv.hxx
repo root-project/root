@@ -194,7 +194,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter){
+   void Initialize(RModel& model){
       fUseSession = model.UseSession();
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw
@@ -258,7 +258,6 @@ public:
          }
       }
 
-      model.EvaluateIntermediateMemory(GetOpInputTensors(), fIntermediateTensorCounter);
    }
 
    std::string GenerateInitCode() {

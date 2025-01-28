@@ -138,7 +138,7 @@
             return ret;
          }
 
-      void Initialize(RModel& model, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter){
+      void Initialize(RModel& model){
             for (auto &it : fInputs) {
                if (model.CheckIfTensorAlreadyExist(it) == false) {
                   throw std::runtime_error("TMVA SOFIE Concat Op Input Tensor " + it + " is not found in model");

@@ -36,7 +36,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter){
+   void Initialize(RModel& model){
        //input must be a graph input, or already initialized intermediate tensor
       if (model.CheckIfTensorAlreadyExist(fNX) == false){
         throw std::runtime_error("TMVA SOFIE Identity Op Input Tensor is not found in model");

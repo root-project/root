@@ -35,7 +35,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model, std::unordered_map<std::string, TensorCounter>& fIntermediateTensorCounter){
+   void Initialize(RModel& model){
       if (model.CheckIfTensorAlreadyExist(fNX) == false){   //input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA SOFIE Relu Op Input Tensor " + fNX + " is not found in model");
       }
@@ -46,8 +46,6 @@ public:
       if (model.Verbose()) {
          std::cout << "Relu : " << fNX << " -> " << fNY << " " << ConvertDynamicShapeToString(fShape) << std::endl;
       }
-
-      model.EvaluateIntermediateMemory(GetOpInputTensors(), fIntermediateTensorCounter);
    }
 
 
