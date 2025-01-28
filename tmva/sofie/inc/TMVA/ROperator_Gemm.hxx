@@ -40,7 +40,7 @@ namespace SOFIE{
       std::vector<Dim> fShapeB;
       std::vector<size_t> fShapeC;
       std::vector<Dim> fShapeY;
-
+      
    public:
 
       ROperator_Gemm(){}
@@ -51,6 +51,8 @@ namespace SOFIE{
          fType = "float";
          static_assert(std::is_same_v<T, float>,
                   "TMVA::SOFIE - Unsupported type parsing a Gemm operator");
+         fInputTensorNames = { fNA, fNB };
+         fOutputTensorNames = { fNY };
       }
 
       ROperator_Gemm(float alpha, float beta, int_t transA, int_t transB, std::string nameA, std::string nameB, std::string nameC, std::string nameY):
@@ -60,6 +62,8 @@ namespace SOFIE{
          fType = "float";
          static_assert(std::is_same_v<T, float>,
                   "TMVA::SOFIE - Unsupported type parsing a Gemm operator");
+         fInputTensorNames = { fNA, fNB, fNC };
+         fOutputTensorNames = { fNY };
       }
 
       std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
@@ -381,15 +385,6 @@ namespace SOFIE{
       }
 
       std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Gemv") }; }
-
-      const std::vector<std::string>& GetOpInputTensors() {
-         static const std::vector<std::string> op_input_tensors = { fNA, fNB, fNC };
-         return op_input_tensors;
-      }
-      const std::vector<std::string>& GetOpOutputTensors() {
-         static const std::vector<std::string> op_output_tensors = { fNY, fNC2 };
-         return op_output_tensors;
-      }      
       
    };
 
