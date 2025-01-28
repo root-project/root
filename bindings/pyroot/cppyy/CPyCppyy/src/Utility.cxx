@@ -645,7 +645,7 @@ void CPyCppyy::Utility::ConstructCallbackPreamble(const std::string& retType,
              << retType << "\"), CPyCppyy::DestroyConverter};\n";
     std::vector<bool> arg_is_ptr;
     if (nArgs) {
-        arg_is_ptr.reserve(nArgs);
+        arg_is_ptr.resize(nArgs);
         code << "    CPYCPPYY_STATIC std::vector<std::unique_ptr<CPyCppyy::Converter, std::function<void(CPyCppyy::Converter*)>>> argcvs;\n"
              << "    if (argcvs.empty()) {\n"
              << "      argcvs.reserve(" << nArgs << ");\n";
