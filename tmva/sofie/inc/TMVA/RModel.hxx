@@ -148,7 +148,7 @@ public:
 
    void EvaluateIntermediateMemory(const std::vector<std::string>& op_input_tensors, const size_t& current_op_idx, size_t& total_memory, std::vector<size_t>& available_memory);
    std::string CheckAndAllocateIntermediateMemory(const std::vector<std::string>& op_output_tensors);
-   void CheckAndFlushIntermediateMemory(const std::vector<std::string>& op_output_tensors);
+   void CheckAndFlushIntermediateMemory(const std::vector<std::string>& op_output_tensors, const size_t& op_idx);
 
 protected:
    // internal functions
