@@ -42,6 +42,25 @@
 #include "ROOT/RNTupleDS.hxx"
 #endif
 
+#ifdef R__UNIX
+// Functions needed to perform EOS XRootD redirection in ChangeSpec
+#include <optional>
+#include "TEnv.h"
+#include "TSystem.h"
+#ifndef R__FBSD
+#include <sys/xattr.h>
+#else
+#include <sys/extattr.h>
+#endif
+#ifdef R__MACOSX
+/* On macOS getxattr takes two extra arguments that should be set to 0 */
+#define getxattr(path, name, value, size) getxattr(path, name, value, size, 0u, 0)
+#endif
+#ifdef R__FBSD
+#define getxattr(path, name, value, size) extattr_get_file(path, EXTATTR_NAMESPACE_USER, name, value, size)
+#endif
+#endif
+
 #include <algorithm>
 #include <atomic>
 #include <cassert>
@@ -403,6 +422,38 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
    ChangeSpec(std::move(spec));
 }
 
+#ifdef R__UNIX
+namespace {
+std::optional<std::string> GetRedirectedSampleId(std::string_view path, std::string_view datasetName)
+{
+   // Mimick the redirection done in TFile::Open to see if the path points to a FUSE-mounted EOS path.
+   // If so, we create a redirected sample ID with the full xroot URL.
+   TString expandedUrl(path.data());
+   gSystem->ExpandPathName(expandedUrl);
+   if (gEnv->GetValue("TFile.CrossProtocolRedirects", 1) == 1) {
+      TUrl fileurl(expandedUrl, /* default is file */ kTRUE);
+      if (strcmp(fileurl.GetProtocol(), "file") == 0) {
+         ssize_t len = getxattr(fileurl.GetFile(), "eos.url.xroot", nullptr, 0);
+         if (len > 0) {
+            std::string xurl(len, 0);
+            std::string fileNameFromUrl{fileurl.GetFile()};
+            if (getxattr(fileNameFromUrl.c_str(), "eos.url.xroot", &xurl[0], len) == len) {
+               // Sometimes the `getxattr` call may return an invalid URL due
+               // to the POSIX attribute not being yet completely filled by EOS.
+               if (auto baseName = fileNameFromUrl.substr(fileNameFromUrl.find_last_of("/") + 1);
+                   std::equal(baseName.crbegin(), baseName.crend(), xurl.crbegin())) {
+                  return xurl + '/' + datasetName.data();
+               }
+            }
+         }
+      }
+   }
+
+   return std::nullopt;
+}
+} // namespace
+#endif
+
 /**
  * @brief Changes the internal TTree held by the RLoopManager.
  *
@@ -441,6 +492,11 @@ void RLoopManager::ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec)
          // is exposed to users via RSampleInfo and DefinePerSample).
          const auto sampleId = files[i] + '/' + trees[i];
          fSampleMap.insert({sampleId, &sample});
+#ifdef R__UNIX
+         // Also add redirected EOS xroot URL when available
+         if (auto redirectedSampleId = GetRedirectedSampleId(files[i], trees[i]))
+            fSampleMap.insert({redirectedSampleId.value(), &sample});
+#endif
       }
    }
    SetTree(std::move(chain));
