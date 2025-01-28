@@ -809,14 +809,12 @@ void TLegend::PaintPrimitives()
       // bar are drawn differently.
       Int_t endcaps  = 0; // no endcaps.
       if (eobj) { // eobj == nullptr for the legend header
-         TString eobjopt = eobj->GetDrawOption();
-         eobjopt.ToLower();
-         if (eobjopt.Contains("e1") && eobj->InheritsFrom(TH1::Class())) endcaps = 1; // a bar
+         if (opt.Contains("e1") && eobj->InheritsFrom(TH1::Class())) endcaps = 1; // a bar
          if (eobj->InheritsFrom(TGraph::Class())) {
             endcaps = 1; // a bar, default for TGraph
-            if (eobjopt.Contains("z"))  endcaps = 0; // no endcaps.
-            if (eobjopt.Contains(">"))  endcaps = 2; // empty arrow.
-            if (eobjopt.Contains("|>")) endcaps = 3; // filled arrow.
+            if (opt.Contains("z"))  endcaps = 0; // no endcaps.
+            if (opt.Contains(">"))  endcaps = 2; // empty arrow.
+            if (opt.Contains("|>")) endcaps = 3; // filled arrow.
          }
       }
       float arrow_shift = 0.3;
