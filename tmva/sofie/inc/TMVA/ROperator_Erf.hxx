@@ -21,9 +21,6 @@ private:
    std::string fNY;
    std::vector<size_t> fShape;
 
-   mutable std::array<std::string_view, 1> fInputTensorNames;
-   mutable std::array<std::string_view, 1> fOutputTensorNames;
-
 public:
    ROperator_Erf(){}
    ROperator_Erf(std::string nameX, std::string nameY):
