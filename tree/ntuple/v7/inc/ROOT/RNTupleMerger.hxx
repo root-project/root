@@ -89,6 +89,7 @@ class RNTupleMerger final {
    std::unique_ptr<RPageSink> fDestination;
    std::unique_ptr<RPageAllocator> fPageAlloc;
    std::optional<TTaskGroup> fTaskGroup;
+   std::unique_ptr<RNTupleModel> fModel;
 
    void MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t clusterId,
                            std::span<RColumnMergeInfo> commonColumns, const RCluster::ColumnSet_t &commonColumnSet,
@@ -99,7 +100,9 @@ class RNTupleMerger final {
 
 public:
    /// Creates a RNTupleMerger with the given destination.
-   explicit RNTupleMerger(std::unique_ptr<RPageSink> destination);
+   /// The model must be given if and only if `destination` has been initialized with that model
+   /// (i.e. in case of incremental merging).
+   RNTupleMerger(std::unique_ptr<RPageSink> destination, std::unique_ptr<RNTupleModel> model = nullptr);
 
    /// Merge a given set of sources into the destination.
    RResult<void> Merge(std::span<RPageSource *> sources, const RNTupleMergeOptions &mergeOpts = RNTupleMergeOptions());
