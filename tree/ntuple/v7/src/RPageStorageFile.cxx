@@ -245,7 +245,7 @@ void ROOT::Experimental::Internal::RPageSinkFile::CommitDatasetImpl(unsigned cha
    auto szFooterZip = fCompressor->Zip(serializedFooter, length, GetWriteOptions().GetCompression(),
                                        RNTupleCompressor::MakeMemCopyWriter(bufFooterZip.get()));
    fWriter->WriteNTupleFooter(bufFooterZip.get(), szFooterZip, length);
-   fWriter->Commit();
+   fWriter->Commit(GetWriteOptions().GetCompression());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

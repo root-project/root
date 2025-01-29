@@ -20,6 +20,7 @@
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RSpan.hxx>
+#include <Compression.h>
 #include <string_view>
 
 #include <cstdint>
@@ -202,7 +203,7 @@ private:
    /// Write the TList with the RNTuple key
    void WriteTFileKeysList();
    /// Write the compressed streamer info record with the description of the RNTuple class
-   void WriteTFileStreamerInfo();
+   void WriteTFileStreamerInfo(int compression);
    /// Last record in the file
    void WriteTFileFreeList();
    /// For a bare file, which is necessarily written by a C file stream, write file header
@@ -245,7 +246,7 @@ public:
    /// Ensures that the streamer info records passed as argument are written to the file
    void UpdateStreamerInfos(const RNTupleSerializer::StreamerInfoMap_t &streamerInfos);
    /// Writes the RNTuple key to the file so that the header and footer keys can be found
-   void Commit();
+   void Commit(int compression = RCompressionSetting::EDefaults::kUseGeneralPurpose);
 };
 
 } // namespace Internal
