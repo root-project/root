@@ -1603,3 +1603,60 @@ TEST(RNTupleMerger, MergeAsymmetric1TFileMerger)
       }
    }
 }
+
+TEST(RNTupleMerger, MergeIncrementalLMExt)
+{
+   // Create the input files
+   std::vector<FileRaii> inputFiles;
+   const auto nInputs = 10;
+   auto model = RNTupleModel::Create();
+   for (int fileIdx = 0; fileIdx < nInputs; ++fileIdx) {
+      auto &fileGuard =
+         inputFiles.emplace_back(std::string("test_ntuple_merge_incr_lmext_in_") + std::to_string(fileIdx) + ".root");
+      fileGuard.PreserveFile();
+
+      // Each input gets a different model, so we can exercise the late model extension.
+      // Just to have some variation, use different types depending on the field index
+      const auto fieldName = std::string("f_") + std::to_string(fileIdx);
+      switch (fileIdx % 3) {
+      case 0: model->MakeField<int>(fieldName); break;
+      case 1: model->MakeField<float>(fieldName); break;
+      default: model->MakeField<std::string>(fieldName);
+      }
+
+      auto writer = RNTupleWriter::Recreate(model->Clone(), "ntpl", fileGuard.GetPath());
+
+      // Fill the RNTuple with nFills per field
+      const auto nFills = 5;
+      const auto &entry = writer->GetModel().GetDefaultEntry();
+      for (int fillIdx = 0; fillIdx < nFills; ++fillIdx) {
+         for (int fieldIdx = 0; fieldIdx < fileIdx + 1; ++fieldIdx) {
+            const auto fldName = std::string("f_") + std::to_string(fieldIdx);
+            switch (fieldIdx % 3) {
+            case 0: *entry.GetPtr<int>(fldName) = fileIdx + fillIdx + fieldIdx; break;
+            case 1: *entry.GetPtr<float>(fldName) = fileIdx + fillIdx + fieldIdx; break;
+            default: *entry.GetPtr<std::string>(fldName) = std::to_string(fileIdx + fillIdx + fieldIdx);
+            }
+            writer->Fill();
+         }
+      }
+   }
+
+   // Incrementally merge the inputs
+   FileRaii fileGuard("test_ntuple_merge_incr_lmext.root");
+   fileGuard.PreserveFile();
+   const auto compression = 0;//ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose;
+
+   TFileMerger merger(kFALSE, kFALSE);
+   merger.OutputFile(fileGuard.GetPath().c_str(), "RECREATE", compression);
+   merger.SetMergeOptions(TString("rntuple.MergingMode=Union"));
+
+   for (int i = 0; i < nInputs; ++i) {
+      auto tfile = std::unique_ptr<TFile>(TFile::Open(inputFiles[i].GetPath().c_str(), "READ"));
+
+      merger.AddFile(tfile.get());
+      bool result =
+         merger.PartialMerge(TFileMerger::kIncremental | TFileMerger::kNonResetable | TFileMerger::kKeepCompression);
+      ASSERT_TRUE(result);
+   }
+}
