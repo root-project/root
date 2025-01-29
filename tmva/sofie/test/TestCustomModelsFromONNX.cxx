@@ -316,6 +316,10 @@
 #include "RandomUniform_FromONNX.hxx"
 #include "RandomNormal_FromONNX.hxx"
 
+#include "Split_0_FromONNX.hxx"
+#include "Split_1_FromONNX.hxx"
+#include "Split_2_FromONNX.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -3102,5 +3106,65 @@ TEST(ONNX, RandomNormal)
    // Checking output
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - correct_output[i]), DEFAULT_TOLERANCE);
+   }
+}
+
+TEST(ONNX, Split_0)
+{
+   // split in axis 0  in 2 tensor {2,2,3}
+   std::vector<float> input {1.,2.,3,4,5,6,7,8,9,10,11,12};
+   std::vector<std::vector<float>> correct_output ={ {1,2,3,4,5,6}, {7,8,9,10,11,12} };
+
+   TMVA_SOFIE_Split_0::Session s("Split_0_FromONNX.dat");
+
+   auto output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      for (size_t j = 0; j < output[i].size(); ++j) {
+         EXPECT_LE(std::abs(output[i][j] - correct_output[i][j]), DEFAULT_TOLERANCE);
+      }
+   }
+}
+
+TEST(ONNX, Split_1)
+{
+   // split in axis 1  in 2 tensor {2,2,3}
+   std::vector<float> input {1.,2.,3,4,5,6,7,8,9,10,11,12};
+   std::vector<std::vector<float>> correct_output ={ {1,2,3,7,8,9}, {4,5,6,10,11,12} };
+
+   TMVA_SOFIE_Split_1::Session s("Split_1_FromONNX.dat");
+
+   auto output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      for (size_t j = 0; j < output[i].size(); ++j) {
+         EXPECT_LE(std::abs(output[i][j] - correct_output[i][j]), DEFAULT_TOLERANCE);
+      }
+   }
+}
+
+TEST(ONNX, Split_2)
+{
+   // split in axis 2  in 2 tensor {2,2,3} -> { 2,2,2} and {2,2,1}
+   std::vector<float> input {1.,2.,3,4,5,6,7,8,9,10,11,12};
+   std::vector<std::vector<float>> correct_output ={ {1,2,4,5,7,8,10,11}, {3,6,9,12} };
+
+   TMVA_SOFIE_Split_2::Session s("Split_2_FromONNX.dat");
+
+   auto output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), correct_output.size());
+   // Checking output
+   for (size_t i = 0; i < output.size(); ++i) {
+      for (size_t j = 0; j < output[i].size(); ++j) {
+         EXPECT_LE(std::abs(output[i][j] - correct_output[i][j]), DEFAULT_TOLERANCE);
+      }
    }
 }

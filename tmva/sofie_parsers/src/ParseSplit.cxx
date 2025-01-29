@@ -26,19 +26,34 @@ ParserFuncSignature ParseSplit = [](RModelParser_ONNX &parser, const onnx::NodeP
       }
    }
 
-   // ignore for time being attributes
-   if (nodeproto.attribute_size() > 0 )
-      std::cout << "WARNING: TMVA::SOFIE ONNX Parser Split operator: attributes are not yet supported- they are ignored" << std::endl;
+   int axis = 0;
+   int num_outputs = 0;
+   for (int i = 0; i < nodeproto.attribute_size(); i++) {
+      std::string attribute_name = nodeproto.attribute(i).name();
+      if (attribute_name == "axis") {
+         axis = nodeproto.attribute(i).i();
+      }
+      else if (attribute_name == "num_outputs") {
+         num_outputs = nodeproto.attribute(i).i();
+      }
+      else
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser Split operator: attribute" + attribute_name +  "is not yet supported");
+   }
 
    // number of splits are given by the number of output tensors
-   size_t output_size = nodeproto.output_size();
+   int output_size = nodeproto.output_size();
    std::vector<std::string> output_names(output_size);
-   for (size_t i = 0; i < output_size; i++)
+   for (int i = 0; i < output_size; i++)
       output_names[i] = nodeproto.output(i);
 
-   std::unique_ptr<ROperator> op(new ROperator_Split<float>(input_name, split_name, output_names));
+   if (num_outputs > 0 && num_outputs != output_size)
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser Split - invalid output size: " + std::to_string(output_size) + " instead of " +
+         std::to_string(num_outputs));
 
-   for (size_t i = 0; i < output_size; i++) {
+   std::unique_ptr<ROperator> op(new ROperator_Split(input_name, split_name, axis, output_names));
+
+
+   for (int i = 0; i < output_size; i++) {
       if (!parser.IsRegisteredTensorType(output_names[i])) {
         parser.RegisterTensorType(output_names[i], input_type);
       }
