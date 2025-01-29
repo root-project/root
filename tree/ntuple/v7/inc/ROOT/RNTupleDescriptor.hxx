@@ -548,15 +548,26 @@ private:
    /// Free text from the user
    std::string fDescription;
 
-   std::uint64_t fOnDiskHeaderXxHash3 = 0; ///< Set by the descriptor builder when deserialized
+   DescriptorId_t fFieldZeroId = kInvalidDescriptorId; ///< Set by the descriptor builder
+
+   std::uint64_t fNPhysicalColumns = 0; ///< Updated by the descriptor builder when columns are added
    std::uint64_t fOnDiskHeaderSize = 0;    ///< Set by the descriptor builder when deserialized
+
+   std::set<unsigned int> fFeatureFlags;
+   std::unordered_map<DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
+   std::unordered_map<DescriptorId_t, RColumnDescriptor> fColumnDescriptors;
+
+   std::vector<RExtraTypeInfoDescriptor> fExtraTypeInfoDescriptors;
+   std::unique_ptr<RHeaderExtension> fHeaderExtension;
+
+   //// All fields above are part of the schema and are cloned when creating a new descriptor from a given one
+   //// (see CloneSchema())
+
+   std::uint64_t fOnDiskHeaderXxHash3 = 0; ///< Set by the descriptor builder when deserialized
    std::uint64_t fOnDiskFooterSize = 0; ///< Like fOnDiskHeaderSize, contains both cluster summaries and page locations
 
    std::uint64_t fNEntries = 0;         ///< Updated by the descriptor builder when the cluster groups are added
    std::uint64_t fNClusters = 0;        ///< Updated by the descriptor builder when the cluster groups are added
-   std::uint64_t fNPhysicalColumns = 0; ///< Updated by the descriptor builder when columns are added
-
-   DescriptorId_t fFieldZeroId = kInvalidDescriptorId; ///< Set by the descriptor builder
 
    /**
     * Once constructed by an RNTupleDescriptorBuilder, the descriptor is mostly immutable except for set of
@@ -567,9 +578,6 @@ private:
     */
    std::uint64_t fGeneration = 0;
 
-   std::set<unsigned int> fFeatureFlags;
-   std::unordered_map<DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
-   std::unordered_map<DescriptorId_t, RColumnDescriptor> fColumnDescriptors;
    std::unordered_map<DescriptorId_t, RClusterGroupDescriptor> fClusterGroupDescriptors;
    /// References cluster groups sorted by entry range and thus allows for binary search.
    /// Note that this list is empty during the descriptor building process and will only be
@@ -578,11 +586,14 @@ private:
    /// May contain only a subset of all the available clusters, e.g. the clusters of the current file
    /// from a chain of files
    std::unordered_map<DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
-   std::vector<RExtraTypeInfoDescriptor> fExtraTypeInfoDescriptors;
-   std::unique_ptr<RHeaderExtension> fHeaderExtension;
 
    // We don't expose this publicly because when we add sharded clusters, this interface does not make sense anymore
    DescriptorId_t FindClusterId(NTupleSize_t entryIdx) const;
+
+   /// Fills `into` with the schema information about this RNTuple, i.e. all the information needed to create
+   /// a new RNTuple with the same schema as this one but not necessarily the same clustering. This is used
+   /// when merging two RNTuples.
+   RNTupleDescriptor CloneSchema() const;
 
 public:
    static constexpr unsigned int kFeatureFlagTest = 137; // Bit reserved for forward-compatibility testing
@@ -1398,6 +1409,8 @@ public:
    RResult<void> EnsureValidDescriptor() const;
    const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
    RNTupleDescriptor MoveDescriptor();
+
+   void CreateFromSchema(const RNTupleDescriptor &descriptor);
 
    void SetNTuple(const std::string_view name, const std::string_view description);
    void SetFeature(unsigned int flag);

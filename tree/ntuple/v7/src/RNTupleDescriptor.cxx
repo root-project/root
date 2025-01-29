@@ -663,32 +663,43 @@ ROOT::Experimental::RNTupleDescriptor::CreateModel(const RCreateModelOptions &op
    return model;
 }
 
-ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::RNTupleDescriptor::Clone() const
+ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::RNTupleDescriptor::CloneSchema() const
 {
    RNTupleDescriptor clone;
    clone.fName = fName;
    clone.fDescription = fDescription;
-   clone.fOnDiskHeaderXxHash3 = fOnDiskHeaderXxHash3;
-   clone.fOnDiskHeaderSize = fOnDiskHeaderSize;
-   clone.fOnDiskFooterSize = fOnDiskFooterSize;
-   clone.fNEntries = fNEntries;
-   clone.fNClusters = fNClusters;
    clone.fNPhysicalColumns = fNPhysicalColumns;
    clone.fFieldZeroId = fFieldZeroId;
-   clone.fGeneration = fGeneration;
+   clone.fOnDiskHeaderSize = fOnDiskHeaderSize;
+   // OnDiskFooterSize not copied because it would not be correct (since we change the clustering)
+
    for (const auto &d : fFieldDescriptors)
       clone.fFieldDescriptors.emplace(d.first, d.second.Clone());
    for (const auto &d : fColumnDescriptors)
       clone.fColumnDescriptors.emplace(d.first, d.second.Clone());
+
+   for (const auto &d : fExtraTypeInfoDescriptors)
+      clone.fExtraTypeInfoDescriptors.emplace_back(d.Clone());
+   if (fHeaderExtension)
+      clone.fHeaderExtension = std::make_unique<RHeaderExtension>(*fHeaderExtension);
+
+   return clone;
+}
+
+ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::RNTupleDescriptor::Clone() const
+{
+   RNTupleDescriptor clone = CloneSchema();
+
+   clone.fOnDiskHeaderXxHash3 = fOnDiskHeaderXxHash3;
+   clone.fOnDiskFooterSize = fOnDiskFooterSize;
+   clone.fNEntries = fNEntries;
+   clone.fNClusters = fNClusters;
+   clone.fGeneration = fGeneration;
    for (const auto &d : fClusterGroupDescriptors)
       clone.fClusterGroupDescriptors.emplace(d.first, d.second.Clone());
    clone.fSortedClusterGroupIds = fSortedClusterGroupIds;
    for (const auto &d : fClusterDescriptors)
       clone.fClusterDescriptors.emplace(d.first, d.second.Clone());
-   for (const auto &d : fExtraTypeInfoDescriptors)
-      clone.fExtraTypeInfoDescriptors.emplace_back(d.Clone());
-   if (fHeaderExtension)
-      clone.fHeaderExtension = std::make_unique<RHeaderExtension>(*fHeaderExtension);
    return clone;
 }
 
@@ -1197,6 +1208,11 @@ void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::Reset()
    fDescriptor.fClusterDescriptors.clear();
    fDescriptor.fClusterGroupDescriptors.clear();
    fDescriptor.fHeaderExtension.reset();
+}
+
+void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::CreateFromSchema(const RNTupleDescriptor &descriptor)
+{
+   fDescriptor = descriptor.CloneSchema();
 }
 
 void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::BeginHeaderExtension()
