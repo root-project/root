@@ -384,12 +384,13 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
             if (fIntermediateMemoryInfo.total_memory.size()){
                auto previous_tensor_idx = fIntermediateMemoryInfo.total_memory.back().chunk_idx;
                auto previous_tensor_size = fIntermediateMemoryInfo.total_memory.back().tensor_size;
+
                fIntermediateMemoryInfo.total_memory.push_back({
                   std::string(it),
                   previous_tensor_idx+previous_tensor_size,
                   tensor_size
                });
-               memory_allocation_string += "\nfloat* tensor_"+ std::string(it) + "= reinterpret_cast<float*>(fIntermediateMemoryPool+" + previous_tensor_idx+previous_tensor_size + ");\n";
+               memory_allocation_string += "\nfloat* tensor_"+ std::string(it) + "= reinterpret_cast<float*>(fIntermediateMemoryPool+" + std::to_string(previous_tensor_idx+previous_tensor_size) + ");\n";
             } else {
                fIntermediateMemoryInfo.total_memory.push_back({
                   std::string(it),
