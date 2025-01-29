@@ -1002,13 +1002,19 @@ private:
    std::uint32_t fNLogicalColumns = 0;
    std::uint32_t fNPhysicalColumns = 0;
 
-   void AddExtendedField(const RFieldDescriptor &fieldDesc)
+   /// Marks `fieldDesc` as an extended field, i.e. a field that appears in the Header Extension (e.g. having been added
+   /// through late model extension). Note that the field descriptor should also have been added to the RNTuple
+   /// Descriptor alongside non-extended fields.
+   void MarkExtendedField(const RFieldDescriptor &fieldDesc)
    {
       fFieldIdsOrder.emplace_back(fieldDesc.GetId());
       fFieldIdsLookup.insert(fieldDesc.GetId());
    }
 
-   void AddExtendedColumn(const RColumnDescriptor &columnDesc)
+   /// Marks `columnDesc` as an extended column, i.e. a column that appears in the Header Extension (e.g. having been
+   /// added through late model extension as an additional representation of an existing column). Note that the column
+   /// descriptor should also have been added to the RNTuple Descriptor alongside non-extended columns.
+   void MarkExtendedColumn(const RColumnDescriptor &columnDesc)
    {
       fNLogicalColumns++;
       if (!columnDesc.IsAliasColumn())
