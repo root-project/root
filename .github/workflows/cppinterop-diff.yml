@@ -1,0 +1,26 @@
+name: Diff CppInterOp against upstream
+on:
+  pull_request:
+    paths:
+      - 'interpreter/CppInterOp/**'
+
+jobs:
+  cppinterop-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out ROOT
+        uses: actions/checkout@v4
+        with:
+          path: root
+      - name: Check out CppInterOp
+        uses: actions/checkout@v4
+        with:
+          repository: compiler-research/CppInterOp
+          ref: 6c6f94a22bd971520a249e2c02e4259cdd3a5be6
+          path: CppInterOp
+      - name: Drop directories that are not added to ROOT
+        working-directory: CppInterOp
+        run: |
+          rm -rf .git .github discord.svg
+      - name: Compare
+        run: diff -ur CppInterOp/ root/interpreter/CppInterOp/
