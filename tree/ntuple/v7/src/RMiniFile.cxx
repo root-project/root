@@ -1188,7 +1188,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::UpdateStreamerInfos(
    fStreamerInfoMap.insert(streamerInfos.cbegin(), streamerInfos.cend());
 }
 
-void ROOT::Experimental::Internal::RNTupleFileWriter::Commit()
+void ROOT::Experimental::Internal::RNTupleFileWriter::Commit(int compression)
 {
    if (fFileProper) {
       // Easy case, the ROOT file header and the RNTuple streaming is taken care of by TFile
@@ -1220,7 +1220,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::Commit()
 
    WriteTFileNTupleKey();
    WriteTFileKeysList();
-   WriteTFileStreamerInfo();
+   WriteTFileStreamerInfo(compression);
    WriteTFileFreeList();
 
    // Update header and TFile record
@@ -1365,7 +1365,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteBareFileSkeleton(int 
    fFileSimple.fKeyOffset = fFileSimple.fFilePos;
 }
 
-void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileStreamerInfo()
+void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileStreamerInfo(int compression)
 {
    // The streamer info record is a TList of TStreamerInfo object.  We cannot use
    // RNTupleSerializer::SerializeStreamerInfos because that uses TBufferIO::WriteObject.
@@ -1400,7 +1400,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileStreamerInfo()
 
    RNTupleCompressor compressor;
    auto zipStreamerInfos = MakeUninitArray<unsigned char>(lenPayload);
-   auto szZipStreamerInfos = compressor.Zip(bufPayload, lenPayload, 1, zipStreamerInfos.get());
+   auto szZipStreamerInfos = compressor.Zip(bufPayload, lenPayload, compression, zipStreamerInfos.get());
 
    fFileSimple.WriteKey(zipStreamerInfos.get(), szZipStreamerInfos, lenPayload,
                         fFileSimple.fControlBlock->fHeader.GetSeekInfo(), RTFHeader::kBEGIN, "TList", "StreamerInfo",
