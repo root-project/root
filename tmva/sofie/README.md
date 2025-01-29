@@ -82,6 +82,8 @@ Here is the updated list of supported ONNX operators
 - [x] ConstantOfShape
 - [x] Conv
 - [x] ConvTranspose
+- [x] Cos
+- [x] Einsum
 - [x] Elu
 - [x] Equal
 - [x] Erf
@@ -110,9 +112,14 @@ Here is the updated list of supported ONNX operators
 - [x] Min
 - [x] Mul
 - [x] Neg
+- [x] Pad
 - [x] Pool
 - [x] Pow
 - [x] Range
+- [x] RandomNormal
+- [x] RandomNormalLike
+- [x] RandomUniform
+- [x] RandomUniformLike
 - [x] Reciprocal
 - [x] ReduceMean
 - [x] ReduceProd
@@ -123,6 +130,7 @@ Here is the updated list of supported ONNX operators
 - [x] RNN
 - [x] Selu
 - [x] Sigmoid
+- [x] Sin
 - [x] Slice
 - [x] Softmax
 - [x] Split
@@ -133,6 +141,7 @@ Here is the updated list of supported ONNX operators
 - [x] TopK
 - [x] Transpose
 - [x] Unsqueeze
+- [x] Where
 
 The above operators are supported for tensors of the following types:
 

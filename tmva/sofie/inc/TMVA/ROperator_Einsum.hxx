@@ -6,6 +6,7 @@
 #include "TMVA/RModel.hxx"
 
 #include <sstream>
+#include <cassert>
 
 namespace TMVA{
 namespace Experimental{
@@ -230,8 +231,8 @@ public:
       if (fGemmType.empty()) {
       int outDims = fShapeY.size();
       int inDims = fSumLabels.length();
-      assert(outDims == fOutputLabels.size());
-      assert(inDims == fSumDims.size());
+      assert(outDims == int(fOutputLabels.size()));
+      assert(inDims == int(fSumDims.size()));
       for (int i = 0; i < outDims; i++) {
          for (int j = 0; j < i; j++) out << SP;
          std::string l {fOutputLabels[i]};

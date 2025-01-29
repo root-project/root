@@ -180,24 +180,17 @@ public:
       size_t length = ConvertShapeToLength(fShapeY);
       std::string typeName = TensorType<T>::Name();
       // Broadcast A if it's uninitialized
+      // use broadcasting function where we pass an already allocated tensor to minimize memory allocations
       if (fShapeA != fShapeY) {
          out << SP << "// Broadcasting uninitialized tensor " << fNA << "\n";
-         //out << SP << "{\n";
          out << SP  << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << typeName << ">(tensor_" << fNA << ", " << ConvertShapeToString(fShapeA) << ", " << ConvertShapeToString(fShapeY)
                          << ", fTensor_" << fNBroadcastedA << ");\n";
-         //out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNBroadcastedA << ");\n";
-         //out << SP << SP << "delete[] data;\n";
-         //out << SP << "}\n";
       }
       // Broadcast B if it's uninitialized
       if (fShapeB != fShapeY) {
          out << SP << "// Broadcasting uninitialized tensor " << fNB << "\n";
-         //out << SP << "{\n";
          out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << typeName << ">(tensor_" << fNB << ", " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeY)
                    << ", fTensor_" << fNBroadcastedB << ");\n";
-         //out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNBroadcastedB << ");\n";
-         //out << SP << SP << "delete[] data;\n";
-         //out << SP << "}\n";
       }
       const std::string& nameA = fNBroadcastedA.empty()? fNA : fNBroadcastedA;
       const std::string& nameB = fNBroadcastedB.empty()? fNB : fNBroadcastedB;
