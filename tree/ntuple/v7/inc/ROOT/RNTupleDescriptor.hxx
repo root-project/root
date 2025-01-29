@@ -1051,6 +1051,13 @@ public:
    /// We cannot create this vector when building the fFields because at the time when AddExtendedField is called,
    /// the field is not yet linked into the schema tree.
    std::vector<DescriptorId_t> GetTopLevelFields(const RNTupleDescriptor &desc) const;
+
+   bool ContainsField(DescriptorId_t fieldId) const { return fFieldIdsLookup.find(fieldId) != fFieldIdsLookup.end(); }
+   bool ContainsExtendedColumnRepresentation(DescriptorId_t columnId) const
+   {
+      return std::find(fExtendedColumnRepresentations.begin(), fExtendedColumnRepresentations.end(), columnId) !=
+             fExtendedColumnRepresentations.end();
+   }
 };
 
 namespace Internal {

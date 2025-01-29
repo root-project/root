@@ -247,15 +247,23 @@ std::uint32_t SerializePhysicalColumn(const ROOT::Experimental::RColumnDescripto
 std::uint32_t SerializeColumnsOfFields(const ROOT::Experimental::RNTupleDescriptor &desc,
                                        std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
                                        const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
-                                       void *buffer)
+                                       void *buffer, bool forHeaderExtension)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
+   const auto *xHeader = !forHeaderExtension ? desc.GetHeaderExtension() : nullptr;
+
    for (auto parentId : fieldList) {
+      // If we're serializing the non-extended header and we already have a header extension (which may happen if
+      // we load an RNTuple for incremental merging), we need to skip all the extended fields, as they need to be
+      // written in the header extension, not in the regular header.
+      if (xHeader && xHeader->ContainsField(parentId))
+         continue;
+
       for (const auto &c : desc.GetColumnIterable(parentId)) {
-         if (c.IsAliasColumn())
+         if (c.IsAliasColumn() || (xHeader && xHeader->ContainsExtendedColumnRepresentation(c.GetLogicalId())))
             continue;
 
          pos += SerializePhysicalColumn(c, context, *where);
@@ -476,15 +484,20 @@ std::uint32_t SerializeAliasColumn(const ROOT::Experimental::RColumnDescriptor &
 std::uint32_t SerializeAliasColumnsOfFields(const ROOT::Experimental::RNTupleDescriptor &desc,
                                             std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
                                             const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
-                                            void *buffer)
+                                            void *buffer, bool forHeaderExtension)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
+   const auto *xHeader = !forHeaderExtension ? desc.GetHeaderExtension() : nullptr;
+
    for (auto parentId : fieldList) {
+      if (xHeader && xHeader->ContainsField(parentId))
+         continue;
+
       for (const auto &c : desc.GetColumnIterable(parentId)) {
-         if (!c.IsAliasColumn())
+         if (!c.IsAliasColumn() || (xHeader && xHeader->ContainsExtendedColumnRepresentation(c.GetLogicalId())))
             continue;
 
          pos += SerializeAliasColumn(c, context, *where);
@@ -1301,9 +1314,16 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
          }
       }
    } else {
-      nFields = desc.GetNFields() - 1;
-      nColumns = desc.GetNPhysicalColumns();
-      nAliasColumns = desc.GetNLogicalColumns() - desc.GetNPhysicalColumns();
+      if (auto xHeader = desc.GetHeaderExtension()) {
+         nFields = desc.GetNFields() - xHeader->GetNFields() - 1;
+         nColumns = desc.GetNPhysicalColumns() - xHeader->GetNPhysicalColumns();
+         nAliasColumns = desc.GetNLogicalColumns() - desc.GetNPhysicalColumns() -
+                         (xHeader->GetNLogicalColumns() - xHeader->GetNPhysicalColumns());
+      } else {
+         nFields = desc.GetNFields() - 1;
+         nColumns = desc.GetNPhysicalColumns();
+         nAliasColumns = desc.GetNLogicalColumns() - desc.GetNPhysicalColumns();
+      }
    }
    const auto nExtraTypeInfos = desc.GetNExtraTypeInfos();
    const auto &onDiskFields = context.GetOnDiskFieldList();
@@ -1318,7 +1338,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
 
    frame = pos;
    pos += SerializeListFramePreamble(nColumns, *where);
-   pos += SerializeColumnsOfFields(desc, fieldList, context, *where);
+   pos += SerializeColumnsOfFields(desc, fieldList, context, *where, forHeaderExtension);
    for (const auto &c : extraColumns) {
       if (!c.get().IsAliasColumn()) {
          pos += SerializePhysicalColumn(c.get(), context, *where);
@@ -1328,7 +1348,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
 
    frame = pos;
    pos += SerializeListFramePreamble(nAliasColumns, *where);
-   pos += SerializeAliasColumnsOfFields(desc, fieldList, context, *where);
+   pos += SerializeAliasColumnsOfFields(desc, fieldList, context, *where, forHeaderExtension);
    for (const auto &c : extraColumns) {
       if (c.get().IsAliasColumn()) {
          pos += SerializeAliasColumn(c.get(), context, *where);
