@@ -110,6 +110,8 @@ using RPrepareVisitor = ROOT::Experimental::RPrepareVisitor;
 using RPrintSchemaVisitor = ROOT::Experimental::RPrintSchemaVisitor;
 using RRawFile = ROOT::Internal::RRawFile;
 using EContainerFormat = RNTupleFileWriter::EContainerFormat;
+template <typename T>
+using RNTupleView = ROOT::Experimental::RNTupleView<T>;
 
 using ROOT::Experimental::Internal::MakeUninitArray;
 
