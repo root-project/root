@@ -199,9 +199,7 @@ try {
    assert(compression);
    writeOpts.SetCompression(*compression);
    auto destination = std::make_unique<RPageSinkFile>(ntupleName, *outFile, writeOpts);
-   // TODO: currently unused, will be used by the merger in a future change.
    std::unique_ptr<RNTupleModel> model;
-
    // If we already have an existing RNTuple, copy over its descriptor to support incremental merging
    if (outNTuple) {
       auto outSource = RPageSourceFile::CreateFromAnchor(*outNTuple);
@@ -217,7 +215,7 @@ try {
    }
 
    // Now merge
-   RNTupleMerger merger{std::move(destination)};
+   RNTupleMerger merger{std::move(destination), std::move(model)};
    RNTupleMergeOptions mergerOpts;
    mergerOpts.fCompressionSettings = *compression;
    mergerOpts.fExtraVerbose = extraVerbose;
@@ -234,7 +232,7 @@ try {
    *this = *outFile->Get<ROOT::RNTuple>(ntupleName.c_str());
 
    return 0;
-} catch (const RException &ex) {
+} catch (const std::exception &ex) {
    Error("RNTuple::Merge", "Exception thrown while merging: %s", ex.what());
    return -1;
 }
@@ -616,6 +614,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, ROOT::Descript
       const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).fCompressionSettings.value();
       const bool needsCompressionChange =
          colRangeCompressionSettings != mergeData.fMergeOpts.fCompressionSettings.value();
+
       if (needsCompressionChange && mergeData.fMergeOpts.fExtraVerbose)
          Info("RNTuple::Merge", "Column %s: changing source compression from %d to %d", column.fColumnName.c_str(),
               colRangeCompressionSettings, mergeData.fMergeOpts.fCompressionSettings.value());
@@ -631,6 +630,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, ROOT::Descript
       for (const auto &pageInfo : pages.fPageInfos) {
          assert(pageIdx < sealedPages.size());
          assert(sealedPageData.fBuffers.size() == 0 || pageIdx < sealedPageData.fBuffers.size());
+         assert(pageInfo.fLocator.GetType() != RNTupleLocator::kTypePageZero);
 
          ROnDiskPage::Key key{columnId, pageIdx};
          auto onDiskPage = cluster->GetOnDiskPage(key);
@@ -773,14 +773,8 @@ void RNTupleMerger::MergeSourceClusters(RPageSource &source, std::span<RColumnMe
       R__ASSERT(nClusterEntries > 0);
 
       RSealedPageMergeData sealedPageData;
-
-      if (!commonColumnSet.empty()) {
-         MergeCommonColumns(clusterPool, clusterId, commonColumns, commonColumnSet, sealedPageData, mergeData);
-      }
-
-      if (!extraDstColumnSet.empty()) {
-         GenerateExtraDstColumns(nClusterEntries, extraDstColumns, sealedPageData, mergeData);
-      }
+      MergeCommonColumns(clusterPool, clusterId, commonColumns, commonColumnSet, sealedPageData, mergeData);
+      GenerateExtraDstColumns(nClusterEntries, extraDstColumns, sealedPageData, mergeData);
 
       // Commit the pages and the clusters
       mergeData.fDestination.CommitSealedPageV(sealedPageData.fGroups);
@@ -840,13 +834,12 @@ static std::optional<std::type_index> ColumnInMemoryType(std::string_view fieldT
    return std::nullopt;
 }
 
-// Given a field, fill `columns` and `colIdMap` with information about all columns belonging to it and its subfields.
-// `colIdMap` is used to map matching columns from different sources to the same output column in the destination.
-// We match columns by their "fully qualified name", which is the concatenation of their ancestor fields' names
-// and the column index.
-// By this point, since we called `CompareDescriptorStructure()` earlier, we should be guaranteed that two matching
-// columns will have at least compatible representations.
-// NOTE: srcFieldDesc and dstFieldDesc may alias.
+// Given a field, fill `columns` and `mergeData.fColumnIdMap` with information about all columns belonging to it and its
+// subfields. `mergeData.fColumnIdMap` is used to map matching columns from different sources to the same output column
+// in the destination. We match columns by their "fully qualified name", which is the concatenation of their ancestor
+// fields' names and the column index. By this point, since we called `CompareDescriptorStructure()` earlier, we should
+// be guaranteed that two matching columns will have at least compatible representations. NOTE: srcFieldDesc and
+// dstFieldDesc may alias.
 static void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const RNTupleDescriptor &srcDesc,
                                 RNTupleMergeData &mergeData, const RFieldDescriptor &srcFieldDesc,
                                 const RFieldDescriptor &dstFieldDesc, const std::string &prefix = "")
@@ -916,8 +909,8 @@ static void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const RN
 }
 
 // Converts the fields comparison data to the corresponding column information.
-// While doing so, it collects such information in `colIdMap`, which is used by later calls to this function
-// to map already-seen column names to their chosen outputId, type and so on.
+// While doing so, it collects such information in `mergeData.fColumnIdMap`, which is used by later calls to this
+// function to map already-seen column names to their chosen outputId, type and so on.
 static RColumnInfoGroup
 GatherColumnInfos(const RDescriptorsComparison &descCmp, const RNTupleDescriptor &srcDesc, RNTupleMergeData &mergeData)
 {
@@ -928,13 +921,14 @@ GatherColumnInfos(const RDescriptorsComparison &descCmp, const RNTupleDescriptor
    for (const auto &[srcField, dstField] : descCmp.fCommonFields) {
       AddColumnsFromField(res.fCommonColumns, srcDesc, mergeData, *srcField, *dstField);
    }
+
    return res;
 }
 
-RNTupleMerger::RNTupleMerger(std::unique_ptr<RPageSink> destination)
+RNTupleMerger::RNTupleMerger(std::unique_ptr<RPageSink> destination, std::unique_ptr<RNTupleModel> model)
    // TODO(gparolini): consider using an arena allocator instead, since we know the precise lifetime
    // of the RNTuples we are going to handle (e.g. we can reset the arena at every source)
-   : fDestination(std::move(destination)), fPageAlloc(std::make_unique<RPageAllocatorHeap>())
+   : fDestination(std::move(destination)), fPageAlloc(std::make_unique<RPageAllocatorHeap>()), fModel(std::move(model))
 {
    R__ASSERT(fDestination);
 
@@ -963,9 +957,15 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       }
    }
 
-   RNTupleMergeData mergeData{sources, *fDestination, mergeOpts};
+   // we should have a model if and only if the destination is initialized.
+   if (!!fModel != fDestination->IsInitialized()) {
+      return R__FAIL(
+         "passing an already-initialized destination to RNTupleMerger::Merge (i.e. trying to do incremental "
+         "merging) can only be done by providing a valid RNTupleModel when constructing the RNTupleMerger.");
+   }
 
-   std::unique_ptr<RNTupleModel> model; // used to initialize the schema of the output RNTuple
+   RNTupleMergeData mergeData{sources, *fDestination, mergeOpts};
+   mergeData.fNumDstEntries = mergeData.fDestination.GetNEntries();
 
 #define SKIP_OR_ABORT(errMsg)                                                        \
    do {                                                                              \
@@ -984,11 +984,11 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       mergeData.fSrcDescriptor = &srcDescriptor.GetRef();
 
       // Create sink from the input model if not initialized
-      if (!fDestination->IsInitialized()) {
+      if (!fModel) {
          auto opts = RNTupleDescriptor::RCreateModelOptions();
          opts.fReconstructProjections = true;
-         model = srcDescriptor->CreateModel(opts);
-         fDestination->Init(*model);
+         fModel = srcDescriptor->CreateModel(opts);
+         fDestination->Init(*fModel);
       }
 
       for (const auto &extraTypeInfoDesc : srcDescriptor->GetExtraTypeInfoIterable())
@@ -996,9 +996,8 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
 
       auto descCmpRes = CompareDescriptorStructure(mergeData.fDstDescriptor, srcDescriptor.GetRef());
       if (!descCmpRes) {
-         SKIP_OR_ABORT(
-            std::string("Source RNTuple has an incompatible schema with the destination:\n") +
-            descCmpRes.GetError()->GetReport());
+         SKIP_OR_ABORT(std::string("Source RNTuple has an incompatible schema with the destination:\n") +
+                       descCmpRes.GetError()->GetReport());
       }
       auto descCmp = descCmpRes.Unwrap();
 
@@ -1016,7 +1015,7 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       if (descCmp.fExtraSrcFields.size()) {
          if (mergeOpts.fMergingMode == ENTupleMergingMode::kUnion) {
             // late model extension for all fExtraSrcFields in Union mode
-            ExtendDestinationModel(descCmp.fExtraSrcFields, *model, mergeData, descCmp.fCommonFields);
+            ExtendDestinationModel(descCmp.fExtraSrcFields, *fModel, mergeData, descCmp.fCommonFields);
          } else if (mergeOpts.fMergingMode == ENTupleMergingMode::kStrict) {
             // If the current source has extra fields and we're in Strict mode, error
             std::string msg = "Source RNTuple has extra fields that the destination RNTuple doesn't have:";
