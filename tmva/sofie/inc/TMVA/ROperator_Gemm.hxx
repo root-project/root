@@ -182,9 +182,6 @@ namespace SOFIE{
             }
          }
 
-            //   throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensors have not compatible shapes. A " +
-            //    ConvertDynamicShapeToString(fShapeA) + " B " + ConvertDynamicShapeToString(fShapeB) );
-
          fShapeY = DynamicShapeInference({fShapeA, fShapeB})[0];
          std::vector<size_t> shapeY;
          if (!fIsDynamic) {
