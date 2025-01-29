@@ -117,7 +117,6 @@ public:
       std::vector<DescriptorId_t> fOnDisk2MemColumnIDs;
       std::vector<DescriptorId_t> fOnDisk2MemClusterIDs;
       std::vector<DescriptorId_t> fOnDisk2MemClusterGroupIDs;
-      std::size_t fHeaderExtensionOffset = -1U;
 
    public:
       void SetHeaderSize(std::uint64_t size) { fHeaderSize = size; }
@@ -184,10 +183,6 @@ public:
       /// Return a vector containing the in-memory field ID for each on-disk counterpart, in order, i.e. the `i`-th
       /// value corresponds to the in-memory field ID for `i`-th on-disk ID
       const std::vector<DescriptorId_t> &GetOnDiskFieldList() const { return fOnDisk2MemFieldIDs; }
-      /// Mark the first on-disk field ID that is part of the schema extension
-      void BeginHeaderExtension() { fHeaderExtensionOffset = fOnDisk2MemFieldIDs.size(); }
-      /// Return the offset of the first element in `fOnDisk2MemFieldIDs` that is part of the schema extension
-      std::size_t GetHeaderExtensionOffset() const { return fHeaderExtensionOffset; }
    };
 
    /// Writes a XxHash-3 64bit checksum of the byte range given by data and length.
