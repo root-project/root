@@ -624,6 +624,8 @@ public:
       *seekKey = fSeekKey;
    }
 
+   bool WasAllocatedInAFreeSlot() const { return fLeft > 0; }
+
    ClassDefInlineOverride(RKeyBlob, 0)
 };
 
@@ -1097,6 +1099,13 @@ ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::ReserveBlobKey(siz
       unsigned char localKeyBuffer[kBlobKeyLen];
       PrepareBlobKey(offsetKey, nbytes, len, localKeyBuffer);
       Write(localKeyBuffer, kBlobKeyLen, offsetKey);
+   }
+
+   if (keyBlob.WasAllocatedInAFreeSlot()) {
+      // If the key was allocated in a free slot, the last 4 bytes of its buffer contain the new size
+      // of the remaining free slot and we need to write it to disk before the key gets destroyed at the end of the
+      // function.
+      Write(keyBlob.GetBuffer() + nbytes, sizeof(Int_t), offsetKey + kBlobKeyLen + nbytes);
    }
 
    auto offsetData = offsetKey + kBlobKeyLen;
