@@ -1247,7 +1247,7 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapSchema(const 
 
    R__ASSERT(desc.GetNFields() > 0); // we must have at least a zero field
    if (!forHeaderExtension)
-      R__ASSERT(GetHeaderExtensionOffset() == -1U);
+      R__ASSERT(!desc.GetHeaderExtension());
 
    std::vector<DescriptorId_t> fieldTrees;
    if (!forHeaderExtension) {
@@ -1273,9 +1273,6 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapSchema(const 
             MapPhysicalColumnId(columnDesc.GetPhysicalId());
          }
       }
-   } else {
-      // Anything added after this point is accounted for the header extension
-      BeginHeaderExtension();
    }
 }
 
@@ -1298,7 +1295,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
          nFields = xHeader->GetNFields();
          nColumns = xHeader->GetNPhysicalColumns();
          nAliasColumns = xHeader->GetNLogicalColumns() - xHeader->GetNPhysicalColumns();
-         fieldListOffset = context.GetHeaderExtensionOffset();
+         fieldListOffset = desc.GetNFields() - nFields - 1;
 
          extraColumns.reserve(xHeader->GetExtendedColumnRepresentations().size());
          for (auto columnId : xHeader->GetExtendedColumnRepresentations()) {
