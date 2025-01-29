@@ -123,7 +123,12 @@ TCutG::TCutG(const char *name, Int_t n)
    fObjectX  = nullptr;
    fObjectY  = nullptr;
    SetName(name);
-   delete gROOT->GetListOfSpecials()->FindObject(name);
+   auto obj = gROOT->GetListOfSpecials()->FindObject(name);
+   if (obj) {
+      Warning("TCutG","Replacing existing %s: %s (Potential memory leak).",
+                 obj->IsA()->GetName(),obj->GetName()); 
+      delete obj;
+   }
    gROOT->GetListOfSpecials()->Add(this);
 
    // Take name of cut variables from pad title if title contains ":"
@@ -164,7 +169,12 @@ TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
    fObjectX  = nullptr;
    fObjectY  = nullptr;
    SetName(name);
-   delete gROOT->GetListOfSpecials()->FindObject(name);
+   auto obj = gROOT->GetListOfSpecials()->FindObject(name);
+   if (obj) {
+      Warning("TCutG","Replacing existing %s: %s (Potential memory leak).",
+                 obj->IsA()->GetName(),obj->GetName()); 
+      delete obj;
+   }
    gROOT->GetListOfSpecials()->Add(this);
 
    // Take name of cut variables from pad title if title contains ":"
@@ -205,7 +215,12 @@ TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
    fObjectX  = nullptr;
    fObjectY  = nullptr;
    SetName(name);
-   delete gROOT->GetListOfSpecials()->FindObject(name);
+   auto obj = gROOT->GetListOfSpecials()->FindObject(name);
+   if (obj) {
+      Warning("TCutG","Replacing existing %s: %s (Potential memory leak).",
+                 obj->IsA()->GetName(),obj->GetName()); 
+      delete obj;
+   }
    gROOT->GetListOfSpecials()->Add(this);
 
    // Take name of cut variables from pad title if title contains ":"
