@@ -1063,7 +1063,7 @@ void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddField(const RFie
 {
    fDescriptor.fFieldDescriptors.emplace(fieldDesc.GetId(), fieldDesc.Clone());
    if (fDescriptor.fHeaderExtension)
-      fDescriptor.fHeaderExtension->AddExtendedField(fieldDesc);
+      fDescriptor.fHeaderExtension->MarkExtendedField(fieldDesc);
    if (fieldDesc.GetFieldName().empty() && fieldDesc.GetParentId() == kInvalidDescriptorId) {
       fDescriptor.fFieldZeroId = fieldDesc.GetId();
    }
@@ -1171,7 +1171,7 @@ ROOT::RResult<void> ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddC
       fDescriptor.fNPhysicalColumns++;
    fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(columnDesc));
    if (fDescriptor.fHeaderExtension)
-      fDescriptor.fHeaderExtension->AddExtendedColumn(columnDesc);
+      fDescriptor.fHeaderExtension->MarkExtendedColumn(columnDesc);
 
    return RResult<void>::Success();
 }
