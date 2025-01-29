@@ -108,12 +108,7 @@ public:
          throw std::runtime_error("TMVA SOFIE Operator Split called to Generate without being initialized first");
       }
 
-      // compute input and output strides
       auto input_strides =  UTILITY::ComputeStrideFromShape(fInputShape);
-      std::vector<std::vector<size_t>> output_strides;
-      for (size_t i = 0; i < fOutputShapes.size(); i++) {
-         output_strides.emplace_back( UTILITY::ComputeStrideFromShape(fOutputShapes[i]));
-      }
 
       // generate now the code for split
       std::stringstream out;
@@ -121,7 +116,7 @@ public:
       out << SP << "size_t " << OpName << "_axis_offset = 0;\n";
       // unroll the loop on split outputs
       for (size_t i = 0; i < fNYs.size(); i++)  {
-         int length = ConvertShapeToLength(fOutputShapes[i]);
+         size_t length = ConvertShapeToLength(fOutputShapes[i]);
          auto output_strides = UTILITY::ComputeStrideFromShape(fOutputShapes[i]);
 
          out << SP << "for (int id = 0; id < " << length << " ; id++){\n";

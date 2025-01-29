@@ -157,7 +157,7 @@ public:
    bool IsConstantTensor() const { return fConstant;}
    // query if tensor needs to be written in a weight file. Constant tensors are not written in a file
    bool IsWeightTensor() const { return !fConstant && !fIsNotWritable;}
-
+   // set not writable initialized tensors - i.e. tensor that must not be written in a file
    void SetNotWritable() { fIsNotWritable = true;}
 
    template <class T = void>
