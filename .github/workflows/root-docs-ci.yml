@@ -59,20 +59,20 @@ jobs:
         echo DOCDIR_NAME=${BASE_REF} >> $GITHUB_ENV
 
     # TODO: install latest versions in image on root-ci-images
-    - name: Install Doxygen 1.12.0
+    - name: Install Doxygen 1.10.0
       run : |
-        git clone --branch Release_1_12_0 https://github.com/doxygen/doxygen.git
-        cd doxygen
-        mkdir build
-        cd build
-        cmake ..
-        make -j$(nproc)
-        echo PATH=$PATH:${{ github.workspace }}/doxygen/build/bin >> $GITHUB_ENV
-        cd ${{ github.workspace }}
-        doxygen --version
-#         mkdir -p ${{ github.workspace }}/doxygen
-#         curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_12_0/doxygen-1.12.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
-#         echo PATH=$PATH:${{ github.workspace }}/doxygen/bin >> $GITHUB_ENV
+        mkdir -p ${{ github.workspace }}/doxygen
+        curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
+        echo PATH=$PATH:${{ github.workspace }}/doxygen/bin >> $GITHUB_ENV
+#         git clone --branch Release_1_12_0 https://github.com/doxygen/doxygen.git
+#         cd doxygen
+#         mkdir build
+#         cd build
+#         cmake ..
+#         make -j$(nproc)
+#         echo PATH=$PATH:${{ github.workspace }}/doxygen/build/bin >> $GITHUB_ENV
+#         cd ${{ github.workspace }}
+#         doxygen --version
 
     - name: Install qhelpgenerator-qt5
       run: |
