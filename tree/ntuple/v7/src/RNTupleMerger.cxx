@@ -167,7 +167,7 @@ try {
       if (!compression) {
          // Get the compression of this RNTuple and use it as the output compression.
          // We currently assume all column ranges have the same compression, so we just peek at the first one.
-         source->Attach();
+         source->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kRaw);
          auto descriptor = source->GetSharedDescriptorGuard();
          auto clusterIter = descriptor->GetClusterIterable();
          auto firstCluster = clusterIter.begin();
@@ -203,7 +203,7 @@ try {
    // If we already have an existing RNTuple, copy over its descriptor to support incremental merging
    if (outNTuple) {
       auto outSource = RPageSourceFile::CreateFromAnchor(*outNTuple);
-      outSource->Attach();
+      outSource->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
       auto desc = outSource->GetSharedDescriptorGuard();
       model = destination->InitFromDescriptor(desc.GetRef());
    }
