@@ -40,7 +40,8 @@ ParserFuncSignature ParseReshape = [](RModelParser_ONNX &parser, const onnx::Nod
       attr_value = nodeproto.attribute(0).i();
 
    std::vector<int64_t> attr_axes = {};
-   if (nodeproto.input_size() == 1 && (opMode == Squeeze || opMode == Unsqueeze)) {
+   // this is for older ONNX versions ( <= 11)
+   if (nodeproto.input_size() == 1 && nodeproto.attribute_size() > 0 && (opMode == Squeeze || opMode == Unsqueeze)) {
       std::string attribute_name = nodeproto.attribute(0).name();
       if (attribute_name == "axes")
          attr_axes = {nodeproto.attribute(0).ints().begin(), nodeproto.attribute(0).ints().end()};
