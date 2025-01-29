@@ -1606,9 +1606,15 @@ TEST(RNTupleMerger, MergeAsymmetric1TFileMerger)
 
 TEST(RNTupleMerger, MergeIncrementalLMExt)
 {
-   // Create the input files
+   // Create the input files:
+   // File 0: f_0: int
+   // File 1: f_0: int, f_1: float
+   // File 2: f_0: int, f_1: float, f_2: string
+   // File 3: f_0: int, f_1: float, f_2: string, f_3: int
+   // ...
+   // each file has 5 entries.
    std::vector<FileRaii> inputFiles;
-   const auto nInputs = 10;
+   const auto nInputs = 12;
    auto model = RNTupleModel::Create();
    for (int fileIdx = 0; fileIdx < nInputs; ++fileIdx) {
       auto &fileGuard =
@@ -1637,26 +1643,80 @@ TEST(RNTupleMerger, MergeIncrementalLMExt)
             case 1: *entry.GetPtr<float>(fldName) = fileIdx + fillIdx + fieldIdx; break;
             default: *entry.GetPtr<std::string>(fldName) = std::to_string(fileIdx + fillIdx + fieldIdx);
             }
-            writer->Fill();
          }
+         writer->Fill();
       }
    }
 
    // Incrementally merge the inputs
    FileRaii fileGuard("test_ntuple_merge_incr_lmext.root");
    fileGuard.PreserveFile();
-   const auto compression = 0;//ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose;
+   const auto compression = 0;
 
-   TFileMerger merger(kFALSE, kFALSE);
-   merger.OutputFile(fileGuard.GetPath().c_str(), "RECREATE", compression);
-   merger.SetMergeOptions(TString("rntuple.MergingMode=Union"));
+   {
+      TFileMerger merger(kFALSE, kFALSE);
+      merger.OutputFile(fileGuard.GetPath().c_str(), "RECREATE", compression);
+      merger.SetMergeOptions(TString("rntuple.MergingMode=Union"));
 
-   for (int i = 0; i < nInputs; ++i) {
-      auto tfile = std::unique_ptr<TFile>(TFile::Open(inputFiles[i].GetPath().c_str(), "READ"));
+      for (int i = 0; i < nInputs; ++i) {
+         auto tfile = std::unique_ptr<TFile>(TFile::Open(inputFiles[i].GetPath().c_str(), "READ"));
+         merger.AddFile(tfile.get());
+         bool result =
+            merger.PartialMerge(TFileMerger::kIncremental | TFileMerger::kNonResetable | TFileMerger::kKeepCompression);
+         ASSERT_TRUE(result);
+      }
+   }
 
-      merger.AddFile(tfile.get());
-      bool result =
-         merger.PartialMerge(TFileMerger::kIncremental | TFileMerger::kNonResetable | TFileMerger::kKeepCompression);
-      ASSERT_TRUE(result);
+   // Now verify that the output file contains all the expected data.
+   {
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      const auto &desc = reader->GetDescriptor();
+      for (int i = 0; i < nInputs; ++i) {
+         const auto fieldId = desc.FindFieldId(std::string("f_") + std::to_string(i));
+         EXPECT_NE(fieldId, ROOT::Experimental::kInvalidDescriptorId);
+         const auto &fdesc = desc.GetFieldDescriptor(fieldId);
+         for (const auto &colId : fdesc.GetLogicalColumnIds()) {
+            const auto &cdesc = desc.GetColumnDescriptor(colId);
+            EXPECT_EQ(cdesc.GetFirstElementIndex(), (cdesc.GetIndex() == 0) * i * 5);
+         }
+      }
+
+      RNTupleView<int> v_int[] = {
+         reader->GetView<int>("f_0"),
+         reader->GetView<int>("f_3"),
+         reader->GetView<int>("f_6"),
+         reader->GetView<int>("f_9"),
+      };
+      RNTupleView<float> v_float[] = {
+         reader->GetView<float>("f_1"),
+         reader->GetView<float>("f_4"),
+         reader->GetView<float>("f_7"),
+         reader->GetView<float>("f_10"),
+      };
+      RNTupleView<std::string> v_string[] = {
+         reader->GetView<std::string>("f_2"),
+         reader->GetView<std::string>("f_5"),
+         reader->GetView<std::string>("f_8"),
+         reader->GetView<std::string>("f_11"),
+      };
+      for (auto entryId : reader->GetEntryRange()) {
+         int fileIdx = entryId / 5;
+         int localEntryId = entryId % 5;
+
+         for (int i = 0; i < nInputs / 3; ++i) {
+            auto x0 = v_int[i](entryId);
+            int expected_x0 = (entryId >= 15u * i) * (fileIdx + localEntryId + i * 3);
+            EXPECT_EQ(x0, expected_x0);
+
+            auto x1 = v_float[i](entryId);
+            float expected_x1 = (entryId >= 5 + 15u * i) * (fileIdx + localEntryId + i * 3 + 1);
+            EXPECT_FLOAT_EQ(x1, expected_x1);
+
+            auto x2 = v_string[i](entryId);
+            std::string expected_x2 =
+               (entryId >= 10 + 15u * i) ? std::to_string(fileIdx + localEntryId + i * 3 + 2) : "";
+            EXPECT_EQ(x2, expected_x2);
+         }
+      }
    }
 }

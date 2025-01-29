@@ -551,7 +551,7 @@ private:
    DescriptorId_t fFieldZeroId = kInvalidDescriptorId; ///< Set by the descriptor builder
 
    std::uint64_t fNPhysicalColumns = 0; ///< Updated by the descriptor builder when columns are added
-   std::uint64_t fOnDiskHeaderSize = 0;    ///< Set by the descriptor builder when deserialized
+   std::uint64_t fOnDiskHeaderSize = 0; ///< Set by the descriptor builder when deserialized
 
    std::set<unsigned int> fFeatureFlags;
    std::unordered_map<DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
@@ -566,8 +566,8 @@ private:
    std::uint64_t fOnDiskHeaderXxHash3 = 0; ///< Set by the descriptor builder when deserialized
    std::uint64_t fOnDiskFooterSize = 0; ///< Like fOnDiskHeaderSize, contains both cluster summaries and page locations
 
-   std::uint64_t fNEntries = 0;         ///< Updated by the descriptor builder when the cluster groups are added
-   std::uint64_t fNClusters = 0;        ///< Updated by the descriptor builder when the cluster groups are added
+   std::uint64_t fNEntries = 0;  ///< Updated by the descriptor builder when the cluster groups are added
+   std::uint64_t fNClusters = 0; ///< Updated by the descriptor builder when the cluster groups are added
 
    /**
     * Once constructed by an RNTupleDescriptorBuilder, the descriptor is mostly immutable except for set of
@@ -1048,6 +1048,8 @@ public:
    /// We cannot create this vector when building the fFields because at the time when AddExtendedField is called,
    /// the field is not yet linked into the schema tree.
    std::vector<DescriptorId_t> GetTopLevelFields(const RNTupleDescriptor &desc) const;
+
+   bool ContainsField(DescriptorId_t fieldId) const { return fFieldIdsLookup.find(fieldId) != fFieldIdsLookup.end(); }
 };
 
 namespace Internal {
