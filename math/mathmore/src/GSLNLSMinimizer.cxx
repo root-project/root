@@ -275,13 +275,8 @@ GSLNLSMinimizer::GSLNLSMinimizer( int type )
 }
 
 GSLNLSMinimizer::~GSLNLSMinimizer () {
-<<<<<<< HEAD
-   assert(fGSLMultiFit != nullptr);
-   delete fGSLMultiFit;
-=======
    if (fGSLMultiFit) delete fGSLMultiFit;
    if (fGSLMultiFit2) delete fGSLMultiFit2;
->>>>>>> c1c95febd88 ([math][mathmore] Add new fitter algorithm from GSL under GSLMultiFit)
 }
 
 
@@ -466,13 +461,8 @@ bool GSLNLSMinimizer::DoMinimize(const Func & fitFunc, FitterType * fitter) {
    }
 
    // save state with values and function value
-<<<<<<< HEAD
-   const double * x = fGSLMultiFit->X();
-   if (x == nullptr) return false;
-=======
    const double * x = fitter->X();
-   if (x == 0) return false;
->>>>>>> c1c95febd88 ([math][mathmore] Add new fitter algorithm from GSL under GSLMultiFit)
+   if (x == nullptr) return false;
    // apply transformation outside SetFinalValues(..)
    // because trFunc is not a MinimTransformFunction but a FitTransFormFunction
    if (trFunc)  x = trFunc->Transformation(x);

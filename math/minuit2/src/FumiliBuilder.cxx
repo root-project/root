@@ -48,16 +48,19 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
    print.Debug("Convergence when edm <", edmval);
 
    if (seed.Parameters().Vec().size() == 0) {
+      print.Warn("No variable parameters are defined! - Return current function value ");
       return FunctionMinimum(seed, fcn.Up());
    }
 
-   //   double edm = Estimator().Estimate(seed.Gradient(), seed.Error());
-   double edm = seed.State().Edm();
+   // estimate initial edm value
+   double edm = Estimator().Estimate(seed.Gradient(), seed.Error());
+   print.Debug("initial edm is ", edm);
+   //double edm = seed.State().Edm();
 
    FunctionMinimum min(seed, fcn.Up());
 
    if (edm < 0.) {
-      print.Warn("Initial matrix not pos.def.");
+      print.Error("Initial matrix not positive defined, edm = ",edm,"\nExit minimization ");
       return min;
    }
 
