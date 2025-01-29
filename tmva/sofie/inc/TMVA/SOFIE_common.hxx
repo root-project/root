@@ -104,10 +104,6 @@ struct TensorMemoryInfo {
    size_t tensor_size;
 };
 
-struct AvailableChunkInfo {
-   size_t chunk_idx;
-   size_t chunk_size;
-};
 struct MemoryPoolInfo {
    std::vector<TensorMemoryInfo> total_memory;
    std::vector<std::pair<size_t, size_t>> available_memory;

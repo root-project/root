@@ -21,10 +21,16 @@ private:
    std::string fNY;
    std::vector<size_t> fShape;
 
+   mutable std::array<std::string_view, 1> fInputTensorNames;
+   mutable std::array<std::string_view, 1> fOutputTensorNames;
+
 public:
    ROperator_Erf(){}
    ROperator_Erf(std::string nameX, std::string nameY):
-      fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){}
+      fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
+      }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;
@@ -60,15 +66,6 @@ public:
    }
 
    std::vector<std::string> GetStdLibs() { return { std::string("cmath") };}
-
-   const std::vector<std::string>& GetOpInputTensors() {
-      static const std::vector<std::string> op_input_tensors = { fNX };
-      return op_input_tensors;
-   }
-   const std::vector<std::string>& GetOpOutputTensors() {
-      static const std::vector<std::string> op_output_tensors = { fNY };
-      return op_output_tensors;
-   }
    
 };
 
