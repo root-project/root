@@ -26,9 +26,6 @@ private:
 
    bool fInitialized = false;
 
-   mutable std::array<std::string_view, 1> fInputTensorNames;
-   mutable std::array<std::string_view, 1> fOutputTensorNames;
-
 public:
    ROperator_Expand(){}
    ROperator_Expand(std::string nameX, std::string nameShape, std::string nameY):

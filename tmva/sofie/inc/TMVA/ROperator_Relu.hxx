@@ -21,9 +21,6 @@ private:
    std::string fNY;
    std::vector<Dim> fShape;
 
-   mutable std::array<std::string_view, 1> fInputTensorNames;
-   mutable std::array<std::string_view, 1> fOutputTensorNames;
-
 public:
    ROperator_Relu(){}
    ROperator_Relu(std::string nameX, std::string nameY):
