@@ -1492,10 +1492,9 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
    Long64_t nbytesl= nlast-nfirst+1;
    if (nbytesl > 2000000000) nbytesl = 2000000000;
    Int_t nbytes    = -Int_t (nbytesl);
-   Int_t nb        = sizeof(Int_t);
-   char * buffer   = new char[nb];
-   char * psave    = buffer;
-   tobuf(buffer, nbytes);
+   char buffer[sizeof(Int_t)];
+   char *pbuffer = buffer;
+   tobuf(pbuffer, nbytes);
    if (last == fEND-1) fEND = nfirst;
    Seek(nfirst);
    // We could not update the meta data for this block on the file.
@@ -1503,9 +1502,8 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
    // if we ever need to Recover the file before the block is actually
    // (attempted to be reused.
    // coverity[unchecked_value]
-   WriteBuffer(psave, nb);
+   WriteBuffer(buffer, sizeof(buffer));
    if (fMustFlush) Flush();
-   delete [] psave;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
