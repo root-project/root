@@ -119,10 +119,14 @@ public:
             fNBroadcastedB = "Broadcasted" + fNB + "to" + fNY;
             if (model.IsInitializedTensor(fNB)) {
                auto data = model.GetInitializedTensorData(fNB);
+               std::cout << "data B " << ConvertShapeToString(fShapeB) << " : " <<
+                  ConvertValuesToString(ConvertShapeToLength(fShapeB), static_cast<T*>(data.get())) << std::endl;
                std::shared_ptr<void> broadcastedData(
                   UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), fShapeB, fShapeY),
                   std::default_delete<T[]>());
                // do not update tensor B but add broadcasted one (since it can be input to some other operators)
+               std::cout << "broadcasted data B " << ConvertShapeToString(fShapeY) << " : " <<
+                  ConvertValuesToString(ConvertShapeToLength(fShapeY), static_cast<T*>(broadcastedData.get())) << std::endl;
                model.AddConstantTensor(fNBroadcastedB, model.GetTensorType(fNB), fShapeY, broadcastedData);
                fShapeB = fShapeY;
             } else {
@@ -135,15 +139,18 @@ public:
       }
       // check case of constant  output (if all inputs are defined)
       if (model.IsInitializedTensor(fNA) && model.IsInitializedTensor(fNB)) {
-         auto dataA = static_cast<T *>(model.GetInitializedTensorData(fNA).get());
-         auto dataB = static_cast<T *>(model.GetInitializedTensorData(fNB).get());
+         const std::string& nameA = fNBroadcastedA.empty()? fNA : fNBroadcastedA;
+         const std::string& nameB = fNBroadcastedB.empty()? fNB : fNBroadcastedB;
+         auto dataA = static_cast<T *>(model.GetInitializedTensorData(nameA).get());
+         auto dataB = static_cast<T *>(model.GetInitializedTensorData(nameB).get());
          std::vector<T> dataY(ConvertShapeToLength(fShapeY));
-         for (size_t i = 0; i < dataY.size(); i++)
+         for (size_t i = 0; i < dataY.size(); i++) {
             dataY[i] = BinaryOperatorTrait<T,Op>::Func(dataA[i], dataB[i]);
+         }
          model.AddConstantTensor<T>(fNY, fShapeY, dataY.data());
          // flag tensors to not be written in a fil
-         model.SetNotWritableInitializedTensor(fNA);
-         model.SetNotWritableInitializedTensor(fNB);
+         model.SetNotWritableInitializedTensor(nameA);
+         model.SetNotWritableInitializedTensor(nameB);
          fIsOutputConstant = true;
          if (model.Verbose())
             std::cout << "Binary op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << " : "
