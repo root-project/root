@@ -825,7 +825,7 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
 
         // loop on tensors and parse the file
         for (auto& i: fInitializedTensors) {
-            // skip Constant and shape tensors
+            // skip Constant and shape tensors (not written in a file)
             if (!i.second.IsWeightTensor()) continue;
             std::string tensor_name = "tensor_" + i.first;
             if (i.second.type() == ETensorType::FLOAT) {
