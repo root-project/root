@@ -103,7 +103,11 @@ public:
 
    void SetParameters(const ROOT::Math::MinimizerOptions & minimOptions)
    {
-      // set the GSL parameters from the minimizer options
+      // set the parameters from the minimizer options
+      fPrintLevel = minimOptions.PrintLevel();
+      if (minimOptions.Tolerance() > 0) fTolerance = minimOptions.Tolerance();
+      if (minimOptions.MaxIterations() > 0) fMaxIter = minimOptions.MaxIterations();
+      // now specific options to set the specific GSL parameters
       const ROOT::Math::IOptions  * opt = minimOptions.ExtraOptions();
       if (!opt)
          return;
@@ -116,7 +120,8 @@ public:
       else if (sval == "marquardt")
          fParams.scale = gsl_multifit_nlinear_scale_marquardt;
       else {
-         std::cout << "GSLMultiFit2::SetParameters use default scale : "
+         if (fPrintLevel > 0)
+            std::cout << "GSLMultiFit2::SetParameters use default scale : "
                   << fParams.scale->name << std::endl;
       }
       opt->GetValue("solver",sval);
@@ -124,12 +129,15 @@ public:
          fParams.solver = gsl_multifit_nlinear_solver_qr;
       else if (sval == "cholesky")
          fParams.solver = gsl_multifit_nlinear_solver_cholesky;
+#if ((GSL_MAJOR_VERSION >= 2) && (GSL_MINOR_VERSION > 5))
       else if (sval == "mcholesky")
          fParams.solver = gsl_multifit_nlinear_solver_mcholesky;
+#endif
       else if (sval == "svd")
          fParams.solver = gsl_multifit_nlinear_solver_svd;
       else {
-         std::cout << "GSLMultiFit2::SetParameters use default solver : "
+          if (fPrintLevel > 0)
+            std::cout << "GSLMultiFit2::SetParameters use default solver : "
                   << fParams.solver->name << std::endl;
       }
       double val;
@@ -137,6 +145,8 @@ public:
       fParams.factor_up = val;
       opt->GetValue("factor_down",val);
       fParams.factor_down = val;
+
+
    }
 
    /**
@@ -145,9 +155,7 @@ public:
    ~GSLMultiFit2 ()  {
       if (fWs) gsl_multifit_nlinear_free(fWs);
       if (fVec != 0) gsl_vector_free(fVec);
-      //if (fTmp != 0) gsl_vector_free(fTmp);
       if (fCov != 0) gsl_matrix_free(fCov);
-      //if (fJac != 0) gsl_matrix_free(fJac);
    }
 
    void PrintOptions() const {
@@ -161,8 +169,8 @@ public:
       std::cout << "\t\t Max allowed |a|/|v|       : " << fParams.avmax << std::endl;
       std::cout << "\t\t Step size for deriv       : " << fParams.h_df << std::endl;
       std::cout << "\t\t Step size for fvv         : " << fParams.h_fvv << std::endl;
-      // std::cout << "\t\t Max number of iterations  : " << fParams.max_iter << std::endl;
-      // std::cout << "\t\t Tolerance                 : " << fParams.tol << std::endl;
+      std::cout << "\t\t Max number of iterations  : " << fMaxIter << std::endl;
+      std::cout << "\t\t Tolerance                 : " << fTolerance << std::endl;
    }
 
 private:
@@ -184,23 +192,6 @@ private:
 
 public:
 
-#if 0
-   /// create the minimizer from the type and size of number of fitting points and number of parameters
-   void CreateSolver(unsigned int npoints, unsigned int npar) {
-      //if (fSolver) gsl_multifit_fdfsolver_free(fSolver);
-      //fSolver = gsl_multifit_fdfsolver_alloc(fType, npoints, npar);
-      if (fVec != 0) gsl_vector_free(fVec);
-      fVec = gsl_vector_alloc( npar );
-      if (fTmp != 0) gsl_vector_free(fTmp);
-      fTmp = gsl_vector_alloc( npar );
-      if (fCov != 0) gsl_matrix_free(fCov);
-      fCov = gsl_matrix_alloc( npar, npar );
-#if GSL_MAJOR_VERSION > 1
-      if (fJac != 0) gsl_matrix_free(fJac);
-      fJac = gsl_matrix_alloc( npoints, npar );
-#endif
-   }
-#endif
 
    /// set the solver parameters
    template<class Func>
@@ -211,8 +202,6 @@ public:
       if (npts == 0) return -1;
 
       unsigned int npar = funcVec[0].NDim();
-      // in case function is not a chi2 number of points is considered as number of parameters
-      //if (!funcVec[0].IsLSType()) npts = npar;
 
       // Remove unused typedef to remove warning in GCC48
       // http://gcc.gnu.org/gcc-4.8/porting_to.html
@@ -220,11 +209,8 @@ public:
       //FuncIt funcIter = funcVec.begin();
       SetFunction(funcVec, npts, npar);
 
-//       // create solver object
-       //CreateSolver( npts, npar );
-//       assert(fSolver != 0);
        // set initial values
-       if (fVec != 0) gsl_vector_free(fVec);
+      if (fVec != 0) gsl_vector_free(fVec);
       fVec = gsl_vector_alloc( npar );
       std::copy(x,x+npar, fVec->data);
 
@@ -234,14 +220,11 @@ public:
    }
 
    std::string Name() const {
-      // if (fSolver == 0)
-      return "undefined";
-      //return std::string(gsl_multifit_fdfsolver_name(fSolver) );
+      if (fWs == nullptr) return "undefined";
+      return std::string(gsl_multifit_nlinear_name(fWs) );
    }
 
    int Iterate() {
-      // if (fSolver == 0) return -1;
-      // return gsl_multifit_fdfsolver_iterate(fSolver);
       return -1;
    }
 
@@ -250,7 +233,8 @@ public:
       int npts = fFunc.n;
       int npar = fFunc.p;
 
-      PrintOptions();
+      if (fPrintLevel > 0)
+         PrintOptions();
 
       /* allocate workspace with default parameters */
       fWs = gsl_multifit_nlinear_alloc (fType, &fParams, npts, npar);
@@ -265,14 +249,16 @@ public:
       double chisq0;
       gsl_blas_ddot(f, f, &chisq0);
 
-      const double xtol = 1e-8;
-      const double gtol = 1e-8;
+      // use slightly larger tolerance for gradient
+      const double xtol = fTolerance;
+      const double gtol = 10*fTolerance;
       const double ftol = 0.0;
 
       /* solve the system with a maximum of 100 iterations */
       int info = 0;
-      int status = gsl_multifit_nlinear_driver(100, xtol, gtol, ftol,
-                                       GSLMultiFit2::Callback, NULL, &info, fWs);
+      void * callback_params = (fPrintLevel > 0) ? &fPrintLevel : nullptr;
+      int status = gsl_multifit_nlinear_driver(fMaxIter, xtol, gtol, ftol,
+                                       GSLMultiFit2::Callback, callback_params , &info, fWs);
 
       /* compute covariance of best fit parameters */
       fJac = gsl_multifit_nlinear_jac (fWs);
@@ -286,7 +272,10 @@ public:
 
    }
 
-   static void Callback(const size_t iter, void *params, const gsl_multifit_nlinear_workspace *w) {
+   static void Callback(const size_t iter, void * params , const gsl_multifit_nlinear_workspace *w) {
+      // return in case of printLevel=0
+      if (params == nullptr) return;
+
       gsl_vector *f = gsl_multifit_nlinear_residual(w);
       gsl_vector *x = gsl_multifit_nlinear_position(w);
       double rcond = 0;
@@ -317,6 +306,9 @@ public:
 
    }
 
+   int NIter() const {
+      return gsl_multifit_nlinear_niter(fWs);
+   }
 
    /// parameter values at the minimum
    const double * X() const {
@@ -333,49 +325,23 @@ public:
    /// gradient value at the minimum
    const double * Gradient() const {
       return nullptr;
-#if 0
-#if GSL_MAJOR_VERSION  > 1
-      fType->gradient(fSolver->state, fVec);
-#else
-      gsl_multifit_gradient(fSolver->J, fSolver->f,fVec);
-#endif
-#endif
-      return fVec->data;
    }
 
-
+   // this functions are not used (kept for keeping same interface as old GSLMultiFit class )
    /// test gradient (ask from solver gradient vector)
-   int TestGradient(double absTol) const {
+   int TestGradient(double /* absTol */ ) const {
       return -1;
-      // if (fSolver == 0) return -1;
-      // Gradient();
-      // return gsl_multifit_test_gradient( fVec, absTol);
    }
 
    /// test using abs and relative tolerance
    ///  |dx| < absTol + relTol*|x| for every component
-   int TestDelta(double absTol, double relTol) const {
+   int TestDelta(double /* absTol */, double /* relTol */) const {
       return -1;
-      //return gsl_multifit_test_delta(fSolver->dx, fSolver->x, absTol, relTol);
    }
 
    // calculate edm  1/2 * ( grad^T * Cov * grad )
    double Edm() const {
-#if 0
-      // product C * g
-      double edm = -1;
-      const double * g = Gradient();
-      if (g == 0) return edm;
-      const double * c = CovarMatrix();
-      if (c == 0) return edm;
-      if (fTmp == 0) return edm;
-      int status =   gsl_blas_dgemv(CblasNoTrans, 1.0, fCov, fVec, 0.,fTmp);
-      if (status == 0) status |= gsl_blas_ddot(fVec, fTmp, &edm);
-      if (status != 0) return -1;
-      // need to divide by 2 ??
-      return 0.5*edm;
-#endif
-   return -1;
+      return -1;
    }
 
 protected:
@@ -396,6 +362,9 @@ protected:
 
 private:
 
+   int fPrintLevel = 0;
+   int fMaxIter = 100;
+   double fTolerance = 1.E-6;
    gsl_multifit_nlinear_fdf fFunc;
    gsl_multifit_nlinear_workspace * fWs;
    //gsl_multifit_fdfsolver * fSolver;
@@ -407,6 +376,7 @@ private:
 
    const gsl_multifit_nlinear_type * fType;
    gsl_multifit_nlinear_parameters fParams;
+
 
 };
 

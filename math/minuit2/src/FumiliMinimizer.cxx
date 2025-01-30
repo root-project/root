@@ -47,7 +47,7 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNBase &fcn, const MnUserParame
    if (maxfcn == 0)
       maxfcn = 200 + 100 * npar + 5 * npar * npar;
    // FUMILI needs much less function calls
-   maxfcn = int(0.1 * maxfcn);
+   //maxfcn = int(0.1 * maxfcn);
 
    // Minimize using Fumili - function interface must be a FumiliFCNBase type
    FumiliFCNBase *fumiliFcn = dynamic_cast<FumiliFCNBase *>(const_cast<FCNBase *>(&fcn));
