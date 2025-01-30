@@ -75,8 +75,8 @@ public:
    EImplicitMT GetUseImplicitMT() const { return fUseImplicitMT; }
    void SetUseImplicitMT(EImplicitMT val) { fUseImplicitMT = val; }
 
-   bool HasMetricsEnabled() const { return fEnableMetrics; }
-   void SetMetricsEnabled(bool enable) { fEnableMetrics = enable; }
+   bool GetEnableMetrics() const { return fEnableMetrics; }
+   void SetEnableMetrics(bool val) { fEnableMetrics = val; }
 }; // class RNTupleReadOptions
 
 namespace Internal {
