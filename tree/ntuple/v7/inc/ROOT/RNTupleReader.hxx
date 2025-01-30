@@ -173,7 +173,7 @@ public:
    std::unique_ptr<RNTupleReader> Clone()
    {
       auto options = RNTupleReadOptions{};
-      options.SetMetricsEnabled(fMetrics.IsEnabled());
+      options.SetEnableMetrics(fMetrics.IsEnabled());
       return std::unique_ptr<RNTupleReader>(new RNTupleReader(fSource->Clone(), options));
    }
    ~RNTupleReader();
