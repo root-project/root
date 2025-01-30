@@ -5,6 +5,7 @@
 #include <TVector2.h>
 #include <TVector3.h>
 #include <TVirtualStreamerInfo.h>
+#include <TFree.h>
 
 #include <cstring>
 
@@ -799,4 +800,107 @@ TEST(MiniFile, UUID)
    TUUID uuid;
    uuid.SetUUID("00000000-0000-0000-0000-000000000000");
    EXPECT_NE(uuid, f->GetUUID());
+}
+
+TEST(MiniFile, FreeSlots)
+{
+   FileRaii fileGuard("test_ntuple_minifile_freeslot.root");
+   fileGuard.PreserveFile();
+   
+   // Write a TFile, delete some objects in it to create free slots, then write a RNTuple into it with a RBlob
+   // fitting into a free slot with some free bytes left. Verify that we properly write the new free slot header
+   // and don't end up with a corrupted TFile.
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      RelativelyLargeStruct dummyObj;
+      file->WriteObject(&dummyObj, "dummy");
+      file->WriteObject(&dummyObj, "dummy2");
+      file->WriteObject(&dummyObj, "dummy3");
+      // These deletes will create a free slot about 200 B wide.
+      file->Delete("dummy;*"); 
+      file->Delete("dummy2;*"); 
+   }
+
+   int maxKeySize = -1;
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+
+      // Verify we have the free slot we expect
+      auto keysInfo = file->WalkTKeys();
+      int maxGapSize = -1;
+      for (const auto &key : keysInfo) {
+         maxKeySize = std::max<int>(maxKeySize, key.fLen);
+         if (key.fType == ROOT::Detail::TKeyMapNode::EType::kGap) {
+            maxGapSize = std::max<int>(maxGapSize, key.fLen);
+         }
+      }
+      EXPECT_GT(maxKeySize, 0);
+      EXPECT_GT(maxGapSize, 0);
+
+      auto model = RNTupleModel::Create();
+      auto pFlt = model->MakeField<float>("flt");
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
+
+      *pFlt = 420.f;
+      writer->Fill();
+
+      // When the writer goes out of scope, it will write into the TFile. This will cause the following things:
+      // - the file's KeysList will be deleted (creating a new free slot) and rewritten at the end of the file;
+      // - the RNTuple Anchor, Header, Footer, PageList and Page will be written and some of them will end up
+      //   in available free slots, shrinking them;
+      // - the file's FreeList will be deleted and rewritten in the first available free slot.
+      //
+   }
+
+   // Create another RNTuple to use even more free slots
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+      auto model = RNTupleModel::Create();
+      auto pFlt = model->MakeField<float>("flt");
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl2", *file);
+
+      *pFlt = 22.f;
+      writer->Fill();
+   }
+
+   // What we want to verify is that an RBlob has been written inside a previous FreeSlot and that it correctly
+   // updated the header of the shrinked free slot with its new size.
+   // NOTE: we open this file with UPDATE to cause the free list to be populated.
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
+   auto keysInfoIter = file->WalkTKeys();
+   std::vector<ROOT::Detail::TKeyMapNode> keysInfo(keysInfoIter.begin(), keysInfoIter.end());
+   
+   // Indices into `keysInfo` with the "interesting" free slots, i.e. those that have likely been shrunk by
+   // RMiniFileWriter allocating an RBlob into them.
+   std::vector<int> gapIndices;
+   for (auto i = 0u; i < keysInfo.size() - 1; ++i) {
+      const auto &key = keysInfo[i];
+      // Find a RBlob and a gap immediately following it.
+      if (key.fType == ROOT::Detail::TKeyMapNode::kKey && key.fClassName == "RBlob") {
+         const auto &next = keysInfo[i + 1];
+         if (next.fType == ROOT::Detail::TKeyMapNode::kGap) {
+            gapIndices.push_back(i + 1);
+            ++i;
+         }
+      }
+   }
+   EXPECT_GT(gapIndices.size(), 0);
+
+   // Verify that every gap has a correct header.
+   const auto *freeList = file->GetListOfFree();
+   for (int gapIdx : gapIndices) {
+      const auto &gap = keysInfo[gapIdx];
+      // Find the corresponding entry in the free list
+      TListIter iter(freeList);
+      bool found = false;
+      while (auto *freeObj = iter.Next()) {
+         auto *free = static_cast<TFree *>(freeObj);
+         if (free->GetFirst() == static_cast<Long_t>(gap.fAddr)) {
+            found = true;
+            EXPECT_EQ(free->GetLast() - free->GetFirst() + 1, gap.fLen);
+            break;
+         }
+      }
+      EXPECT_TRUE(found);
+   }
 }
