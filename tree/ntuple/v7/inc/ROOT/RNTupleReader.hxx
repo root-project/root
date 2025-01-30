@@ -234,7 +234,13 @@ public:
       LoadEntry(index, fModel->GetDefaultEntry());
    }
    /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
-   void LoadEntry(NTupleSize_t index, REntry &entry) { entry.Read(index); }
+   void LoadEntry(NTupleSize_t index, REntry &entry)
+   {
+      if (R__unlikely(entry.GetModelId() != fModel->GetModelId()))
+         throw RException(R__FAIL("mismatch between entry and model"));
+
+      entry.Read(index);
+   }
 
    /// Returns an iterator over the entry indices of the RNTuple.
    ///
