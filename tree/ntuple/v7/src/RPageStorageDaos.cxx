@@ -492,7 +492,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::RPageSourceDaos(std::string_view 
                                                                const RNTupleReadOptions &options)
    : RPageSource(ntupleName, options),
      fURI(uri),
-     fClusterPool(std::make_unique<RClusterPool>(*this, options.GetClusterBunchSize()))
+     fClusterPool(std::make_unique<RClusterPool>(*this, RNTupleReadOptionsManip::GetClusterBunchSize(options)))
 {
    EnableDefaultMetrics("RPageSourceDaos");
 

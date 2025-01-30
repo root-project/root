@@ -19,6 +19,18 @@
 namespace ROOT {
 namespace Experimental {
 
+class RNTupleReadOptions;
+
+namespace Internal {
+
+class RNTupleReadOptionsManip final {
+public:
+   static unsigned int GetClusterBunchSize(const RNTupleReadOptions &options);
+   static void SetClusterBunchSize(RNTupleReadOptions &options, unsigned int val);
+};
+
+} // namespace Internal
+
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleReadOptions
@@ -29,6 +41,8 @@ All page source classes need to support the common options.
 */
 // clang-format on
 class RNTupleReadOptions {
+   friend class Internal::RNTupleReadOptionsManip;
+
 public:
    enum class EClusterCache {
       kOff,
@@ -52,15 +66,26 @@ public:
    EClusterCache GetClusterCache() const { return fClusterCache; }
    void SetClusterCache(EClusterCache val) { fClusterCache = val; }
 
-   unsigned int GetClusterBunchSize() const { return fClusterBunchSize; }
-   void SetClusterBunchSize(unsigned int val) { fClusterBunchSize = val; }
-
    EImplicitMT GetUseImplicitMT() const { return fUseImplicitMT; }
    void SetUseImplicitMT(EImplicitMT val) { fUseImplicitMT = val; }
 
    bool HasMetricsEnabled() const { return fEnableMetrics; }
    void SetMetricsEnabled(bool enable) { fEnableMetrics = enable; }
 };
+
+namespace Internal {
+
+inline unsigned int RNTupleReadOptionsManip::GetClusterBunchSize(const RNTupleReadOptions &options)
+{
+   return options.fClusterBunchSize;
+}
+
+inline void RNTupleReadOptionsManip::SetClusterBunchSize(RNTupleReadOptions &options, unsigned int val)
+{
+   options.fClusterBunchSize = val;
+}
+
+} // namespace Internal
 
 } // namespace Experimental
 } // namespace ROOT
