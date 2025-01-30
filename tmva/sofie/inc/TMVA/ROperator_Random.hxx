@@ -43,7 +43,10 @@ public:
       fSeed(seed),
       fShapeY(shape),
       fParams(params)
-      {}
+      {
+         fInputTensorNames = {  };
+         fOutputTensorNames = { fNY };
+      }
 
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override  {

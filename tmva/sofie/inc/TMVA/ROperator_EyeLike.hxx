@@ -25,7 +25,10 @@ private:
 public:
    ROperator_EyeLike(){}
    ROperator_EyeLike(int dtype, int k, std::string nameX, std::string nameY):
-      fdtype(dtype), fk(k), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){}
+      fdtype(dtype), fk(k), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
+      }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;
@@ -66,7 +69,8 @@ public:
       // add a dummy statement to avoid warning for unused input
       out << SP << "(void) tensor_" << fNX << ";\n";
 
-      out << SP << "fTensor_" << fNY << ".assign(" << length << ", 0);\n";
+      out << SP << "std::fill(tensor_" << fNY << ", tensor_" << fNY << " + " << length << ","
+          << 0 << ");\n";
       out << SP << "for (int i = 0; i < " << fShape[0] << "; i++) {\n";
       out << SP << SP << "int j = i +" << fk << ";\n";
       out << SP << SP << "if (j >= 0 && j < " << fShape[1] << ")\n";

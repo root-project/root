@@ -20,7 +20,9 @@ private:
     std::vector<std::string> fInputNames;
     std::vector<std::string> fOutputNames;
     std::vector<std::vector<std::size_t>> fOutputShapes;
+    std::vector<std::size_t> fInputSizes;
     std::string fHeaderName;
+    ETensorType fInputType;
 
 public:
     ROperator_Custom(){}
@@ -30,9 +32,11 @@ public:
         fHeaderName = HeaderName;
         for(auto& it:Inputs){
             fInputNames.emplace_back(UTILITY::Clean_name(it));
+            fInputTensorNames.emplace_back(fInputNames.back());
         }
         for(auto& it:Outputs){
             fOutputNames.emplace_back(UTILITY::Clean_name(it));
+            fOutputTensorNames.emplace_back(fOutputNames.back());
         }
     }
 
@@ -41,10 +45,13 @@ public:
 
    void Initialize(RModel& model){
       model.AddNeededCustomHeader(fHeaderName);
+      fInputType = model.GetTensorType(fInputNames[0]);
+
       for(auto& it:fInputNames){
         if (model.CheckIfTensorAlreadyExist(it) == false){
          throw std::runtime_error("TMVA SOFIE Custom " + fOpName + " Op Input Tensor " + it + " is not found in model");
         }
+        fInputSizes.push_back(ConvertShapeToLength(model.GetTensorShape(it)));
       }
 
       if(fOutputNames.size() != fOutputShapes.size()){
@@ -52,9 +59,12 @@ public:
       }
 
       for(long unsigned int i=0; i<fOutputNames.size(); ++i){
-        model.AddIntermediateTensor(fOutputNames[i], ETensorType::FLOAT, fOutputShapes[i]);
+        model.AddIntermediateTensor(std::string(fOutputNames[i]), ETensorType::FLOAT, fOutputShapes[i]);
       }
+
+
       model.UpdateOutputTensorList(fInputNames, fOutputNames);
+
       if (model.Verbose()) {
          std::cout << "Custom operator using " << fHeaderName;
          for (auto & i : fInputNames) std::cout << " " << i;
@@ -70,11 +80,11 @@ public:
       out << "\n//------ "<<fOpName<<" \n";
       std::string args;
       for(long unsigned int i = 0; i<fInputNames.size(); ++i){
-        args+="fTensor_"+fInputNames[i]+",";
+        args+="std::span<"+ConvertTypeToString(fInputType)+">(tensor_"+std::string(fInputNames[i])+", "+fInputSizes[i]+"),";
       }
 
       for(long unsigned int i = 0; i<fOutputNames.size(); ++i){
-        args+="fTensor_"+fOutputNames[i]+",";
+        args+="std::span<float>(tensor_"+std::string(fOutputNames[i])+", "+ConvertShapeToLength(fOutputShapes[i])+"),";
       }
       args.pop_back();
       out << SP << fOpName<<"::Compute("+args+");\n";

@@ -33,6 +33,10 @@ public:
       {
          for (auto & n : fNYs)
             n = UTILITY::Clean_name(n);
+
+         fInputTensorNames = { fNX };
+         std::transform(fNYs.begin(), fNYs.end(), fOutputTensorNames.begin(),
+                   [](const std::string& s) -> std::string_view { return s; });
       }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
