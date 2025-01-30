@@ -688,7 +688,7 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
          // for skipping the fused nodes like Add after MatMul
          continue;
       }
-      rmodel.AddOperator(std::move(op));
+      rmodel.AddOperator(std::move(op), i);
    }
 
    std::vector<std::string> outputnames;

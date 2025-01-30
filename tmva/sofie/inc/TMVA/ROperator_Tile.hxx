@@ -26,7 +26,10 @@ private:
 public:
    ROperator_Tile(){}
    ROperator_Tile(std::string nameRepeat, std::string nameInput, std::string nameY):
-      fNRepeats(UTILITY::Clean_name(nameRepeat)),fNInput(UTILITY::Clean_name(nameInput)), fNY(UTILITY::Clean_name(nameY)){}
+      fNRepeats(UTILITY::Clean_name(nameRepeat)),fNInput(UTILITY::Clean_name(nameInput)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNRepeats, fNInput };
+         fOutputTensorNames = { fNY };
+      }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;

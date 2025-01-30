@@ -83,6 +83,7 @@ public:
          if (broadcast || model.IsConstantTensor(fNX)) {
             fIsOutputConstant = true; // constant output in this case
             model.AddConstantTensor(fNY, model.GetTensorType(fNX), fShapeY, data);
+            fOutputTensorNames.pop_back();
          } else {
             model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
          }
@@ -117,7 +118,7 @@ public:
       if (!fInitialized && fShapeX != fShapeY) {
          out << SP << "// Broadcasting uninitialized tensor " << fNX << "\n";
          out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << fType << ">(tensor_" << fNX << ", " << ConvertShapeToString(fShapeX) << ", " << ConvertShapeToString(fShapeY)
-                   << ", fTensor_" << fNY << ");\n";
+                   << ", std::span<"<<fType<<">(tensor_"<<fNY<<", "<<ConvertShapeToLength(fShapeY)<<"));\n";                   
       }
       return out.str();
    }

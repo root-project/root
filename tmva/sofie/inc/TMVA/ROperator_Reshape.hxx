@@ -50,6 +50,12 @@ public:
    {
       if (opMode == Reshape) fAllowZero = attr_value;
       if (opMode == Flatten) fAxis = attr_value;
+
+      fInputTensorNames = { fNData };
+      if(!fNShape.empty()){
+         fInputTensorNames.emplace_back(fNShape);
+      }
+      fOutputTensorNames = { fNOutput };
    }
 
    // for squeeze/unsqueezed operators following old ONNX version (< 10)

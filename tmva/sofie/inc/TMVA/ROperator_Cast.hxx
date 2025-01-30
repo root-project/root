@@ -26,7 +26,10 @@ public:
    ROperator_Cast(){}
    ROperator_Cast(std::string attr_type,std::string nameX, std::string nameY):
    fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)),
-   fAttrType(attr_type) {}
+   fAttrType(attr_type) {
+      fInputTensorNames = { fNX };
+      fOutputTensorNames = { fNY };
+   }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;

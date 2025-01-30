@@ -36,6 +36,9 @@ public:
 			throw
 				std::runtime_error("TMVA SOFIE Encountered unsupported type parsing a Leaky Relu operator");
 		}
+
+      fInputTensorNames = { fNX };
+      fOutputTensorNames = { fNY };
    }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){

@@ -63,7 +63,7 @@ public:
             std::runtime_error("TMVA SOFIE Encountered unsupported type parsing a Conv operator");
       }
       fInputTensorNames = { fNX, fNB };
-      fOutputTensorNames = { fNY, fNB2 };
+      fOutputTensorNames = { fNY };
    }
 
    ROperator_Conv(std::string autopad, std::vector<size_t> dilations,

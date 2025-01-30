@@ -47,6 +47,9 @@ public:
             fMode = kEdge;
          else if (mode == "wrap")
             fMode = kWrap;
+         
+         fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
       }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){

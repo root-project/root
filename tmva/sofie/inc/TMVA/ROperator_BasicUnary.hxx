@@ -71,7 +71,10 @@ public:
 
    ROperator_BasicUnary(std::string nameX, std::string nameY)
       : fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY))
-   {}
+   {
+         fInputTensorNames =  { fNX };
+         fOutputTensorNames = { fNY };   
+   }
 
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override { return input; }
 

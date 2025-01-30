@@ -51,7 +51,10 @@ public:
    fNX(UTILITY::Clean_name(nameX)), fNScale(UTILITY::Clean_name(nameScale)),
    fNB(UTILITY::Clean_name(nameB)), fNMean(UTILITY::Clean_name(nameMean)),
    fNVar(UTILITY::Clean_name(nameVar)), fNY(UTILITY::Clean_name(nameY))
-   {
+   {  
+      fInputTensorNames = { fNX };
+      fOutputTensorNames = { fNY };
+
       if(std::is_same<T, float>::value){
       fType = "float";
       }
@@ -195,6 +198,7 @@ public:
       size_t n = batchSize * channels * height * width;
 
       //// copy X into Y
+      out << "\n\n//---- BatchNorm\n";
       out << SP << "constexpr int " << OpName << "_N =" << batchSize * channels * height * width << ";\n";
       out << SP << "constexpr int "<<OpName<< "_incx = 1;\n";
       out << SP << "constexpr int "<<OpName<< "_incy = 1;\n";

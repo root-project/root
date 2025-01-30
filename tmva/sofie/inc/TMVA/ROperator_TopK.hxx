@@ -37,7 +37,10 @@ public:
         fNK(UTILITY::Clean_name(nameK)),
         fNX(UTILITY::Clean_name(nameX)),
         fNVal(UTILITY::Clean_name(nameVal)),
-        fNInd(UTILITY::Clean_name(nameInd)){}
+        fNInd(UTILITY::Clean_name(nameInd)){
+            fInputTensorNames = { fNX, fNK };
+            fOutputTensorNames = { fNVal, fNInd };
+        }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) {
          ETensorType ret = input[0];

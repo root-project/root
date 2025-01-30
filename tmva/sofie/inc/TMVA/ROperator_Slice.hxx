@@ -50,6 +50,8 @@ public:
         fNames[i] = UTILITY::Clean_name(names[i]);
     }
 
+    fInputTensorNames = { fNData };
+    fOutputTensorNames = { fNOutput };
    }
    // ctor for versions < 10
    ROperator_Slice(std::string nameData, std::vector<IType> starts, std::vector<IType> ends, std::vector<IType> axes, std::string nameOutput)
