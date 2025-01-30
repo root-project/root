@@ -174,10 +174,10 @@ void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
       // check if the tensor is already in the lookup table
       if (fIntermediateTensorFrequencyLookup.find(op_input_tensors[index]) == fIntermediateTensorFrequencyLookup.end()) {
          // first time seeing this tensor: initialize the first and last index with the current index
-         fIntermediateTensorFrequencyLookup[op_input_tensors[index]] = std::make_pair(index, index);
+         fIntermediateTensorFrequencyLookup[op_input_tensors[index]] = std::make_pair(order_execution, order_execution);
       } else {
          // tensor already seen: update last index
-         fIntermediateTensorFrequencyLookup[op_input_tensors[index]].second = index;
+         fIntermediateTensorFrequencyLookup[op_input_tensors[index]].second = order_execution;
       }
    }
 }
@@ -366,15 +366,14 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
                // check if available memory chunks are capable of accomodating the tensor
                if (chunk->second >= tensor_size) {
                   chunk->second -= tensor_size;
-
                   allocated = true;
-
+                  memory_allocation_string += "\nfloat* tensor_"+ std::string(it) + "= reinterpret_cast<float*>(fIntermediateMemoryPool+" + chunk->first + ");\n";
+                  chunk->first += tensor_size;
+                  
                   if (chunk->second == 0) {
                         chunk = fIntermediateMemoryInfo.available_memory.erase(chunk);
                         continue;
                   }
-
-                  memory_allocation_string += "\nfloat* tensor_"+ std::string(it) + "= reinterpret_cast<float*>(fIntermediateMemoryPool+" + chunk->first + ");\n";
                }
                ++chunk;
             }
@@ -408,21 +407,21 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
 
 void RModel::CheckAndFlushIntermediateMemory(std::span<const std::string_view> op_input_tensors, const size_t& op_idx){
    for (auto &it : op_input_tensors){
-      
       // last occurence of the tensor is reached => flush it from memory
       if (fIntermediateTensorFrequencyLookup[it].second == op_idx) {
          for (auto chunk = fIntermediateMemoryInfo.total_memory.begin(); 
                chunk != fIntermediateMemoryInfo.total_memory.end(); ) {
-            if (chunk->tensor_name == it) {
-                  fIntermediateMemoryInfo.available_memory.push_back({chunk->chunk_idx, chunk->tensor_size});
-                  
-                  chunk = fIntermediateMemoryInfo.total_memory.erase(chunk);
-            } else {
-                  ++chunk;
-            }
+               if (chunk->tensor_name == std::string(it)) {
+                     fIntermediateMemoryInfo.available_memory.push_back({chunk->chunk_idx, chunk->tensor_size});
+                     
+                     chunk = fIntermediateMemoryInfo.total_memory.erase(chunk);
+               } else {
+                     ++chunk;
+               }
          }
       }
    }
+   std::cout<<"\n\n\n";
 }
 
 
