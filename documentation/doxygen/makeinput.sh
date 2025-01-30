@@ -50,7 +50,6 @@ echo "        ../../graf3d/gl/                 \\" >> Doxyfile_INPUT
 echo "        ../../graf3d/gviz3d/             \\" >> Doxyfile_INPUT
 echo "        ../../gui/                       \\" >> Doxyfile_INPUT
 echo "        ../../hist/                      \\" >> Doxyfile_INPUT
-echo "        ../../html/                      \\" >> Doxyfile_INPUT
 echo "        ../../io/doc/TFile               \\" >> Doxyfile_INPUT
 echo "        ../../io/dcache/                 \\" >> Doxyfile_INPUT
 echo "        ../../io/io/                     \\" >> Doxyfile_INPUT
