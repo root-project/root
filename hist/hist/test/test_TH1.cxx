@@ -1,6 +1,8 @@
 #include "gtest/gtest.h"
 
 #include "TH1.h"
+#include "TH2.h"
+#include "TH3.h"
 #include "TH1F.h"
 #include "THLimitsFinder.h"
 
@@ -74,4 +76,18 @@ TEST(TH1, DumpOutput)
    h.Dump();
    const std::string output = testing::internal::GetCapturedStdout();
    EXPECT_TRUE(output.find(line_fArray) != std::string::npos) << "Could not find '" << line_fArray << "' in the multiline output '" << output;
+}
+
+// https://github.com/root-project/root/issues/17552
+TEST(TH1, AddBinContent)
+{
+   TH1F h("h1", "h1", 10, 0, 1);
+   h.AddBinContent(1,1.);
+   EXPECT_FLOAT_EQ(h1.GetBinContent(1),1.);
+   TH2F h2("h2", "h2", 10, 0, 1, 2, 0, 3);
+   h2.AddBinContent(1,1,1.);
+   EXPECT_FLOAT_EQ(h2.GetBinContent(1,1),1.);
+   TH3F h3("h3", "h3", 5, 0, 1, 2, 0, 2, 2, 0, 3);;
+   h3.AddBinContent(1,1,1,1.);
+   EXPECT_FLOAT_EQ(h3.GetBinContent(1,1,1),1.);
 }

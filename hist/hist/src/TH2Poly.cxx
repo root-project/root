@@ -1750,3 +1750,15 @@ void TH2Poly::AddBinContent(Int_t, Double_t)
 {
    Error("AddBinContent", "Not implemented for TH2Poly");
 }
+////////////////////////////////////////////////////////////////////////////////
+/// NOT IMPLEMENTED for TH2Poly
+void TH2Poly::AddBinContent(Int_t, Int_t)
+{
+   Error("AddBinContent", "Not implemented for TH2Poly");
+}
+////////////////////////////////////////////////////////////////////////////////
+/// NOT IMPLEMENTED for TH2Poly
+void TH2Poly::AddBinContent(Int_t, Int_t, Double_t)
+{
+   Error("AddBinContent", "Not implemented for TH2Poly");
+}

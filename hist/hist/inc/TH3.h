@@ -78,10 +78,10 @@ public:
    using TH1::AddBinContent;
            /// Increment 3D bin content by 1.
            /// Passing an out-of-range bin leads to undefined behavior
-           void     AddBinContent(Int_t binx, Int_t biny, Int_t binz) { AddBinContent(GetBin(binx, biny, binz)); }
+   virtual void     AddBinContent(Int_t binx, Int_t biny, Int_t binz) = 0;
            /// Increment 3D bin content by a weight w.
            /// Passing an out-of-range bin leads to undefined behavior
-           void     AddBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t w) { AddBinContent(GetBin(binx, biny, binz), w); }
+   virtual void     AddBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t w) = 0;
            Int_t    BufferEmpty(Int_t action = 0) override;
            void     Copy(TObject &hnew) const override;
    virtual Int_t    Fill(Double_t x, Double_t y, Double_t z);
@@ -175,6 +175,8 @@ public:
 
            void      AddBinContent(Int_t bin) override;
            void      AddBinContent(Int_t bin, Double_t w) override;
+           void      AddBinContent(Int_t binx, Int_t biny, Int_t binz) override { AddBinContent(GetBin(binx, biny, binz)); } ///< \copydoc TH3::AddBinContent(Int_t,Int_t,Int_t)
+           void      AddBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t w) override { AddBinContent(GetBin(binx, biny, binz), w); }  ///< \copydoc TH3::AddBinContent(Int_t,Int_t,Int_t,Double_t)
            void      Copy(TObject &hnew) const override;
            void      Reset(Option_t *option="") override;
            void      SetBinsLength(Int_t n=-1) override;
@@ -213,6 +215,8 @@ public:
 
            void      AddBinContent(Int_t bin) override;
            void      AddBinContent(Int_t bin, Double_t w) override;
+           void      AddBinContent(Int_t binx, Int_t biny, Int_t binz) override { AddBinContent(GetBin(binx, biny, binz)); } ///< \copydoc TH3::AddBinContent(Int_t,Int_t,Int_t)
+           void      AddBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t w) override { AddBinContent(GetBin(binx, biny, binz), w); }  ///< \copydoc TH3::AddBinContent(Int_t,Int_t,Int_t,Double_t)
            void      Copy(TObject &hnew) const override;
            void      Reset(Option_t *option="") override;
            void      SetBinsLength(Int_t n=-1) override;
@@ -251,6 +255,8 @@ public:
 
            void      AddBinContent(Int_t bin) override;
            void      AddBinContent(Int_t bin, Double_t w) override;
+           void      AddBinContent(Int_t binx, Int_t biny, Int_t binz) override { AddBinContent(GetBin(binx, biny, binz)); } ///< \copydoc TH3::AddBinContent(Int_t,Int_t,Int_t)
+           void      AddBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t w) override { AddBinContent(GetBin(binx, biny, binz), w); }  ///< \copydoc TH3::AddBinContent(Int_t,Int_t,Int_t,Double_t)
            void      Copy(TObject &hnew) const override;
            void      Reset(Option_t *option="") override;
            void      SetBinsLength(Int_t n=-1) override;
@@ -289,6 +295,8 @@ public:
    ~TH3L() override;
    void      AddBinContent(Int_t bin) override;
    void      AddBinContent(Int_t bin, Double_t w) override;
+   void      AddBinContent(Int_t binx, Int_t biny, Int_t binz) override { AddBinContent(GetBin(binx, biny, binz)); } ///< \copydoc TH3::AddBinContent(Int_t,Int_t,Int_t)
+   void      AddBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t w) override { AddBinContent(GetBin(binx, biny, binz), w); }  ///< \copydoc TH3::AddBinContent(Int_t,Int_t,Int_t,Double_t)
    void      Copy(TObject &hnew) const override;
    void      Reset(Option_t *option="") override;
    void      SetBinsLength(Int_t n=-1) override;
@@ -333,6 +341,8 @@ public:
            /// Passing an out-of-range bin leads to undefined behavior
            void      AddBinContent(Int_t bin, Double_t w) override
                                  {fArray[bin] += Float_t (w);}
+           void      AddBinContent(Int_t binx, Int_t biny, Int_t binz) override { AddBinContent(GetBin(binx, biny, binz)); } ///< \copydoc TH3::AddBinContent(Int_t,Int_t,Int_t)
+           void      AddBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t w) override { AddBinContent(GetBin(binx, biny, binz), w); }  ///< \copydoc TH3::AddBinContent(Int_t,Int_t,Int_t,Double_t)
            void      Copy(TObject &hnew) const override;
            void      Reset(Option_t *option="") override;
            void      SetBinsLength(Int_t n=-1) override;
@@ -376,6 +386,8 @@ public:
            /// Passing an out-of-range bin leads to undefined behavior
            void      AddBinContent(Int_t bin, Double_t w) override
                                  {fArray[bin] += Double_t (w);}
+           void      AddBinContent(Int_t binx, Int_t biny, Int_t binz) override { AddBinContent(GetBin(binx, biny, binz)); } ///< \copydoc TH3::AddBinContent(Int_t,Int_t,Int_t)
+           void      AddBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t w) override { AddBinContent(GetBin(binx, biny, binz), w); }  ///< \copydoc TH3::AddBinContent(Int_t,Int_t,Int_t,Double_t)
            void      Copy(TObject &hnew) const override;
            void      Reset(Option_t *option="") override;
            void      SetBinsLength(Int_t n=-1) override;
