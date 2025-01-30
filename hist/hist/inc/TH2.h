@@ -334,8 +334,8 @@ public:
            /// Passing an out-of-range bin leads to undefined behavior
            void     AddBinContent(Int_t bin, Double_t w) override
                                  {fArray[bin] += Float_t (w);}
-            void     AddBinContent(Int_t binx, Int_t biny) override { AddBinContent(GetBin(binx, biny)); } ///< \copydoc TH2::AddBinContent(Int_t,Int_t)
-            void     AddBinContent(Int_t binx, Int_t biny, Double_t w) override { AddBinContent(GetBin(binx, biny), w); } ///< \copydoc TH2::AddBinContent(Int_t,Int_t,Double_t)
+           void     AddBinContent(Int_t binx, Int_t biny) override { AddBinContent(GetBin(binx, biny)); } ///< \copydoc TH2::AddBinContent(Int_t,Int_t)
+           void     AddBinContent(Int_t binx, Int_t biny, Double_t w) override { AddBinContent(GetBin(binx, biny), w); } ///< \copydoc TH2::AddBinContent(Int_t,Int_t,Double_t)
            void     Copy(TObject &hnew) const override;
            void     Reset(Option_t *option="") override;
            void     SetBinsLength(Int_t n=-1) override;
