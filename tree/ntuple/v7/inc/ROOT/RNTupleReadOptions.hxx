@@ -44,11 +44,15 @@ class RNTupleReadOptions {
    friend class Internal::RNTupleReadOptionsManip;
 
 public:
+   /// Controls if the prefetcher (including the prefetcher thread) is used
    enum class EClusterCache {
       kOff,
       kOn,
       kDefault = kOn,
    };
+
+   /// Allows to disable parallel page compression and decompression even if ROOT uses implicit MT.
+   /// This is useful, e.g., in the context of RDataFrame where the threads are fully managed by RDataFrame.
    enum class EImplicitMT {
       kOff,
       kDefault,
@@ -56,6 +60,8 @@ public:
 
 private:
    EClusterCache fClusterCache = EClusterCache::kDefault;
+   /// The number of cluster to be prefetched in a single batch; this option is transitional and will be replaced
+   /// by an option that allows to control the amount of memory that the prefetcher uses.
    unsigned int fClusterBunchSize = 1;
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
    /// If true, the RNTupleReader will track metrics straight from its construction, as
@@ -71,7 +77,7 @@ public:
 
    bool HasMetricsEnabled() const { return fEnableMetrics; }
    void SetMetricsEnabled(bool enable) { fEnableMetrics = enable; }
-};
+}; // class RNTupleReadOptions
 
 namespace Internal {
 
