@@ -151,6 +151,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TGlobal.h"
 #include "ROOT/RConcurrentHashColl.hxx"
 #include <memory>
+#include <inttypes.h>
 
 #ifdef R__FBSD
 #include <sys/extattr.h>
@@ -1571,128 +1572,150 @@ void TFile::Map(Option_t *opt)
 {
    TString options(opt);
    options.ToLower();
-   bool forComp = options.Contains("forcomp");
-   bool extended = options.Contains("extended");
+   const bool forComp = options.Contains("forcomp");
+   const bool extended = options.Contains("extended");
 
-   Short_t  keylen,cycle;
-   UInt_t   datime;
-   Int_t    nbytes,date,time,objlen;
-   date = 0;
-   time = 0;
-   Long64_t seekkey,seekpdir;
-   char    *buffer;
-   char     nwhc;
-   Long64_t idcur = fBEGIN;
+   const unsigned char nDigits = std::log10(fEND) + 1;
 
-   constexpr Int_t nwheader = 512;
+   const auto tkeyInfos = WalkTKeys();
+   for (const auto &key : tkeyInfos) {
+      switch (key.fType) {
+      case ROOT::Detail::TKeyMapNode::kError:
+         Printf("Address = %" PRIu64 "\tNbytes = %u\t=====E R R O R=======", key.fAddr, key.fLen);
+         break;
 
-   char header[nwheader];
-   char classname[512];
-   char keyname[512];
-   char keytitle[512];
-   TString extrainfo;
+      case ROOT::Detail::TKeyMapNode::kGap:
+         Printf("Address = %" PRIu64 "\tNbytes = %d\t=====G A P===========", key.fAddr, -key.fLen);
+         break;
 
-   unsigned char nDigits = std::log10(fEND) + 1;
+      case ROOT::Detail::TKeyMapNode::kKey:
+         TString extrainfo;
+         if (extended)
+            extrainfo.Form(" name: %-16s  title: %s", key.fKeyName.c_str(), key.fKeyTitle.c_str());
 
-   while (idcur < fEND) {
+         if (forComp) {
+            // Printing to help compare two files.
+            if (key.fObjLen != static_cast<Int_t>(key.fLen) - key.fKeyLen) {
+               Float_t cx = static_cast<float>(key.fObjLen + key.fKeyLen) / key.fLen;
+               Printf("At:%-*" PRIu64 "  N=%-8u K=%-3d O=%-8d  %-14s CX = %5.2f %s", nDigits + 1, key.fAddr, key.fLen,
+                      key.fKeyLen, key.fObjLen, key.fClassName.c_str(), cx, extrainfo.Data());
+            } else {
+               Printf("At:%-*" PRIu64 "  N=%-8u K=%-3d O=%-8d  %-14s CX =  1    %s", nDigits + 1, key.fAddr, key.fLen,
+                      key.fKeyLen, key.fObjLen, key.fClassName.c_str(), extrainfo.Data());
+            }
+         } else {
+            Int_t date, time;
+            TDatime::GetDateTime(key.fDatime, date, time);
+            if (key.fObjLen != static_cast<Int_t>(key.fLen) - key.fKeyLen) {
+               Float_t cx = static_cast<float>(key.fObjLen + key.fKeyLen) / key.fLen;
+               Printf("%d/%06d  At:%-*" PRIu64 "  N=%-8u  %-14s CX = %5.2f %s", date, time, nDigits + 1, key.fAddr,
+                      key.fLen, key.fClassName.c_str(), cx, extrainfo.Data());
+            } else {
+               Printf("%d/%06d  At:%-*" PRIu64 "  N=%-8u  %-14s            %s", date, time, nDigits + 1, key.fAddr,
+                      key.fLen, key.fClassName.c_str(), extrainfo.Data());
+            }
+         }
+      }
+   }
+
+   if (!forComp) {
+      Int_t datime = tkeyInfos.empty() ? 0 : tkeyInfos.back().fDatime;
+      Int_t date, time;
+      TDatime::GetDateTime(datime, date, time);
+      Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s", date, time, nDigits + 1, fEND, 1, "END");
+   } else {
+      Printf("At:%-*lld  N=%-8d K=    O=          %-14s", nDigits + 1, fEND, 1, "END");
+   }
+}
+
+std::vector<ROOT::Detail::TKeyMapNode> TFile::WalkTKeys()
+{
+   std::vector<ROOT::Detail::TKeyMapNode> res;
+
+   static constexpr int headerSize = 512;
+
+   std::uint64_t idcur = fBEGIN;
+   const std::uint64_t end = fEND;
+   while (idcur < end) {
       Seek(idcur);
-      Int_t nread = nwheader;
-      if (idcur+nread >= fEND) nread = fEND-idcur-1;
+      auto nread = headerSize;
+      if (idcur + nread >= end)
+         nread = fEND - idcur - 1;
+
+      char header[headerSize];
       if (ReadBuffer(header, nread)) {
          // ReadBuffer returns kTRUE in case of failure.
-         Warning("Map","%s: failed to read the key data from disk at %lld.",
-                 GetName(),idcur);
+         res.push_back({idcur, ROOT::Detail::TKeyMapNode::kError});
          break;
       }
 
-      buffer=header;
+      char *buffer = header;
+      Int_t nbytes;
       frombuf(buffer, &nbytes);
       if (!nbytes) {
-         Printf("Address = %lld\tNbytes = %d\t=====E R R O R=======", idcur, nbytes);
-         date = 0; time = 0;
+         res.push_back({idcur, ROOT::Detail::TKeyMapNode::kError});
          break;
       }
       if (nbytes < 0) {
-         Printf("Address = %lld\tNbytes = %d\t=====G A P===========", idcur, nbytes);
+         // free slot
+         res.push_back({idcur, ROOT::Detail::TKeyMapNode::kGap, static_cast<std::uint32_t>(-nbytes)});
          idcur -= nbytes;
-         Seek(idcur);
          continue;
       }
-      Version_t versionkey;
-      frombuf(buffer, &versionkey);
-      frombuf(buffer, &objlen);
-      frombuf(buffer, &datime);
-      frombuf(buffer, &keylen);
-      frombuf(buffer, &cycle);
-      if (versionkey > 1000) {
-         frombuf(buffer, &seekkey);
-         frombuf(buffer, &seekpdir);
+
+      auto &node = res.emplace_back(idcur, ROOT::Detail::TKeyMapNode::kKey, nbytes);
+
+      frombuf(buffer, &node.fKeyVersion);
+      frombuf(buffer, &node.fObjLen);
+      frombuf(buffer, &node.fDatime);
+      frombuf(buffer, &node.fKeyLen);
+      frombuf(buffer, &node.fCycle);
+      if (node.fKeyVersion > 1000) {
+         frombuf(buffer, &node.fSeekKey);
+         frombuf(buffer, &node.fSeekPdir);
       } else {
-         Int_t skey,sdir;
-         frombuf(buffer, &skey);  seekkey  = (Long64_t)skey;
-         frombuf(buffer, &sdir);  seekpdir = (Long64_t)sdir;
-      }
-      frombuf(buffer, &nwhc);
-      if ( ((buffer-header) + nwhc) > nwheader ) // Don't read past the end of the part of the key we have read.
-         nwhc = nwheader - (buffer-header);
-      for (int i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
-      classname[(int)nwhc] = '\0'; //cast to avoid warning with gcc3.4
-      if (idcur == fSeekFree) strlcpy(classname,"FreeSegments",512);
-      if (idcur == fSeekInfo) strlcpy(classname,"StreamerInfo",512);
-      if (idcur == fSeekKeys) strlcpy(classname,"KeysList",512);
-
-      if (extended) {
-         if ( (buffer-header) >= nwheader )
-            nwhc = 0;
-         else {
-            frombuf(buffer, &nwhc);
-            if (nwhc < 0)
-               nwhc = 0;
-            else if ( ((buffer-header) + nwhc) > nwheader ) // Don't read past the end of the part of the key we have read.
-               nwhc = nwheader - (buffer-header);
-         }
-         for (int i = 0;i < nwhc; i++) frombuf(buffer, &keyname[i]);
-         keyname[(int)nwhc] = '\0'; //cast to avoid warning with gcc3.4
-
-         if ( (buffer-header) >= nwheader )
-            nwhc = 0;
-         else {
-            frombuf(buffer, &nwhc);
-            if (nwhc < 0)
-               nwhc = 0;
-            else if ( ((buffer-header) + nwhc) > nwheader ) // Don't read past the end of the part of the key we have read.
-               nwhc = nwheader - (buffer-header);
-         }
-         for (int i = 0;i < nwhc; i++) frombuf(buffer, &keytitle[i]);
-         keytitle[(int)nwhc] = '\0'; //cast to avoid warning with gcc3.4
-
-         extrainfo.Form(" name: %-16s  title: %s", keyname, keytitle);
+         Int_t skey, sdir;
+         frombuf(buffer, &skey);
+         frombuf(buffer, &sdir);
+         node.fSeekKey = static_cast<Long64_t>(skey);
+         node.fSeekPdir = static_cast<Long64_t>(sdir);
       }
 
-      TDatime::GetDateTime(datime, date, time);
-      if (!forComp) {
-         if (objlen != nbytes - keylen) {
-            Float_t cx = Float_t(objlen + keylen) / Float_t(nbytes);
-            Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s CX = %5.2f %s", date, time, nDigits + 1, idcur, nbytes, classname,
-                   cx, extrainfo.Data());
+      const auto readString = [&buffer, &header] (bool skipCheck = false) {
+         char stringLen;
+         char str[256];
+         if (!skipCheck && ((buffer - header) >= headerSize)) {
+            stringLen = 0;
          } else {
-            Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s            %s", date, time, nDigits + 1, idcur, nbytes, classname, extrainfo.Data());
+            frombuf(buffer, &stringLen);
+            if (stringLen < 0)
+               stringLen = 0;
+            else if ((buffer - header) + stringLen > headerSize)
+               stringLen = headerSize - (buffer - header);
          }
-      } else {
-         // Printing to help compare two files.
-         if (objlen != nbytes - keylen) {
-            Float_t cx = Float_t(objlen + keylen) / Float_t(nbytes);
-            Printf("At:%-*lld  N=%-8d K=%-3d O=%-8d  %-14s CX = %5.2f %s", nDigits+1, idcur, nbytes, keylen, objlen, classname, cx, extrainfo.Data());
-         } else {
-            Printf("At:%-*lld  N=%-8d K=%-3d O=%-8d  %-14s CX =  1    %s", nDigits+1, idcur, nbytes, keylen, objlen, classname, extrainfo.Data());
-         }
-      }
+         for (int i = 0; i < stringLen; ++i)
+            frombuf(buffer, &str[i]);
+         str[static_cast<int>(stringLen)] = 0;
+
+         return std::string(str, stringLen);
+      };
+
+      node.fClassName = readString(true);
+
+      if (idcur == static_cast<std::uint64_t>(fSeekFree))
+         node.fClassName = "FreeSegments";
+      else if (idcur == static_cast<std::uint64_t>(fSeekInfo))
+         node.fClassName = "StreamerInfo";
+      else if (idcur == static_cast<std::uint64_t>(fSeekKeys))
+         node.fClassName = "KeysList";
+
+      node.fKeyName = readString();
+      node.fKeyTitle = readString();
+
       idcur += nbytes;
    }
-   if (!forComp)
-      Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s",date,time, nDigits+1, idcur,1,"END");
-   else
-      Printf("At:%-*lld  N=%-8d K=    O=          %-14s", nDigits+1, idcur,1,"END");
+
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
