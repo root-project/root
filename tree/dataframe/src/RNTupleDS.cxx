@@ -395,7 +395,7 @@ const ROOT::Experimental::RNTupleReadOptions &GetOpts()
          std::string envStr{env};
          auto envNum{std::stoul(envStr)};
          envNum = envNum == 0 ? 1 : envNum;
-         opts.SetClusterBunchSize(envNum);
+         Internal::RNTupleReadOptionsManip::SetClusterBunchSize(opts, envNum);
       }
    });
    return opts;

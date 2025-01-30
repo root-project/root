@@ -251,9 +251,9 @@ void ROOT::Experimental::Internal::RPageSinkFile::CommitDatasetImpl(unsigned cha
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName,
-                                                               const RNTupleReadOptions &options)
-   : RPageSource(ntupleName, options),
-     fClusterPool(std::make_unique<RClusterPool>(*this, options.GetClusterBunchSize()))
+                                                               const RNTupleReadOptions &opts)
+   : RPageSource(ntupleName, opts),
+     fClusterPool(std::make_unique<RClusterPool>(*this, Internal::RNTupleReadOptionsManip::GetClusterBunchSize(opts)))
 {
    EnableDefaultMetrics("RPageSourceFile");
 }

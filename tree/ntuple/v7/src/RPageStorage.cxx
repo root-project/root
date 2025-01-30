@@ -344,7 +344,8 @@ void ROOT::Experimental::Internal::RPageSource::UpdateLastUsedCluster(Descriptor
       itr = fPreloadedClusters.erase(itr);
    }
    std::size_t poolWindow = 0;
-   while ((itr != fPreloadedClusters.end()) && (poolWindow < 2 * fOptions.GetClusterBunchSize())) {
+   while ((itr != fPreloadedClusters.end()) &&
+          (poolWindow < 2 * RNTupleReadOptionsManip::GetClusterBunchSize(fOptions))) {
       ++itr;
       ++poolWindow;
    }
