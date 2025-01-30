@@ -3,7 +3,7 @@
 /// \notebook
 /// Example of candle plot showing the whiskers definition.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_output
 /// \macro_code
 ///
