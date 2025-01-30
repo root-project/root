@@ -305,4 +305,8 @@ struct ThrowForVariant {
    ThrowForVariant &operator=(const ThrowForVariant &) = default;
 };
 
+struct RelativelyLargeStruct {
+   char fDummy[250];
+};
+
 #endif
