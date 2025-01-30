@@ -175,6 +175,7 @@ public:
 
            void      AddBinContent(Int_t bin) override;
            void      AddBinContent(Int_t bin, Double_t w) override;
+   using TH3::AddBinContent;
            void      Copy(TObject &hnew) const override;
            void      Reset(Option_t *option="") override;
            void      SetBinsLength(Int_t n=-1) override;
@@ -213,6 +214,7 @@ public:
 
            void      AddBinContent(Int_t bin) override;
            void      AddBinContent(Int_t bin, Double_t w) override;
+   using TH3::AddBinContent;
            void      Copy(TObject &hnew) const override;
            void      Reset(Option_t *option="") override;
            void      SetBinsLength(Int_t n=-1) override;
@@ -251,6 +253,7 @@ public:
 
            void      AddBinContent(Int_t bin) override;
            void      AddBinContent(Int_t bin, Double_t w) override;
+   using TH3::AddBinContent;
            void      Copy(TObject &hnew) const override;
            void      Reset(Option_t *option="") override;
            void      SetBinsLength(Int_t n=-1) override;
@@ -289,6 +292,7 @@ public:
    ~TH3L() override;
    void      AddBinContent(Int_t bin) override;
    void      AddBinContent(Int_t bin, Double_t w) override;
+   using TH3::AddBinContent;
    void      Copy(TObject &hnew) const override;
    void      Reset(Option_t *option="") override;
    void      SetBinsLength(Int_t n=-1) override;
@@ -333,6 +337,7 @@ public:
            /// Passing an out-of-range bin leads to undefined behavior
            void      AddBinContent(Int_t bin, Double_t w) override
                                  {fArray[bin] += Float_t (w);}
+   using TH3::AddBinContent;
            void      Copy(TObject &hnew) const override;
            void      Reset(Option_t *option="") override;
            void      SetBinsLength(Int_t n=-1) override;
@@ -376,6 +381,7 @@ public:
            /// Passing an out-of-range bin leads to undefined behavior
            void      AddBinContent(Int_t bin, Double_t w) override
                                  {fArray[bin] += Double_t (w);}
+   using TH3::AddBinContent;
            void      Copy(TObject &hnew) const override;
            void      Reset(Option_t *option="") override;
            void      SetBinsLength(Int_t n=-1) override;
