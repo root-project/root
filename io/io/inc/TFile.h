@@ -23,6 +23,7 @@
 
 #include <atomic>
 #include <string>
+#include <cstdint>
 
 #include "Compression.h"
 #include "TDirectoryFile.h"
@@ -49,6 +50,35 @@ class TFileCacheWrite;
 class TProcessID;
 class TStopwatch;
 class TFilePrefetch;
+
+namespace ROOT::Detail {
+struct TKeyMapNode {
+   enum EType {
+      kError,
+      kGap,
+      kKey
+   };
+
+   std::uint64_t fAddr = 0;
+   EType fType = kError;
+   std::uint32_t fLen = 0;
+
+   // these are only valid for Keys
+   Version_t fKeyVersion = 0;
+   Int_t fObjLen = 0;
+   Int_t fDatime = 0;
+   Short_t fKeyLen = 0;
+   Short_t fCycle = 0;
+   Long64_t fSeekKey = 0;
+   Long64_t fSeekPdir = 0;
+   std::string fClassName;
+   std::string fKeyName;
+   std::string fKeyTitle;
+
+   TKeyMapNode() = default;
+   TKeyMapNode(std::uint64_t addr, EType type, std::uint32_t len = 0) : fAddr(addr), fType(type), fLen(len) {}
+};
+} // namespace ROOT::Detail
 
 class TFile : public TDirectoryFile {
   friend class TDirectoryFile;
@@ -263,6 +293,10 @@ public:
    virtual void        MakeFree(Long64_t first, Long64_t last);
    virtual void        MakeProject(const char *dirname, const char *classes="*",
                                    Option_t *option="new"); // *MENU*
+
+   /// Traverses all TKeys in the TFile and returns information about them.
+   std::vector<ROOT::Detail::TKeyMapNode> WalkTKeys();
+
    virtual void        Map(Option_t *opt); // *MENU*
    virtual void        Map() { Map(""); }; // *MENU*
    virtual Bool_t      Matches(const char *name);
