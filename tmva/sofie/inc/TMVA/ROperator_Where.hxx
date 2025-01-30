@@ -38,7 +38,10 @@ private:
 public:
    ROperator_Where(){}
    ROperator_Where(const std::string & nameA, const std::string & nameB, const std::string & nameC, const std::string & nameY):
-      fNA(UTILITY::Clean_name(nameA)), fNB(UTILITY::Clean_name(nameB)), fNC(UTILITY::Clean_name(nameC)), fNY(UTILITY::Clean_name(nameY)){}
+      fNA(UTILITY::Clean_name(nameA)), fNB(UTILITY::Clean_name(nameB)), fNC(UTILITY::Clean_name(nameC)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNA, fNB, fNC };
+         fOutputTensorNames = { fNY };
+      }
 
    // type of output given input
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
@@ -168,6 +171,9 @@ public:
          if (model.Verbose())
             std::cout << "Where op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << " : "
                << ConvertValuesToString(dataY) << std::endl;
+         
+         // output is a constant tensor
+         fOutputTensorNames.pop_back();
       }
       else {
         model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), fShapeY);
