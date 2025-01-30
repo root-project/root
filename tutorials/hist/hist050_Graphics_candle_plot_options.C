@@ -3,7 +3,7 @@
 /// \notebook
 /// Example showing how to combine the various candle plot options.
 ///
-/// \macro_image
+/// \macro_image (tcanvas_js)
 /// \macro_code
 ///
 /// \date December 2017
@@ -26,8 +26,7 @@ void hist050_Graphics_candle_plot_options()
    }
    for (int i = 1; i < 7; i++) {
       c1->cd(i);
-      char str[16];
-      sprintf(str, "candlex%d", i);
+      TString str = TString::Format("candlex%d", i);
       TH2I *myhist = (TH2I *)h1->DrawCopy(str);
       myhist->SetTitle(str);
    }
@@ -38,8 +37,7 @@ void hist050_Graphics_candle_plot_options()
                         "301", "1111", "2321", "12111", "112111", "212111", "312111"};
    for (int i = 0; i < 15; i++) {
       c2->cd(i + 1);
-      char str[16];
-      sprintf(str, "candlex(%s)", myopt[i]);
+      TString str = TString::Format("candlex(%s)", myopt[i]);
       TH2I *myhist = (TH2I *)h1->DrawCopy(str);
       myhist->SetTitle(str);
    }
