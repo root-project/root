@@ -81,8 +81,8 @@ TEST(TH1, DumpOutput)
 // https://github.com/root-project/root/issues/17552
 TEST(TH1, AddBinContent)
 {
-   TH1F h("h1", "h1", 10, 0, 1);
-   h.AddBinContent(1,1.);
+   TH1F h1("h1", "h1", 10, 0, 1);
+   h1.AddBinContent(1,1.);
    EXPECT_FLOAT_EQ(h1.GetBinContent(1),1.);
    TH2F h2("h2", "h2", 10, 0, 1, 2, 0, 3);
    h2.AddBinContent(1,1,1.);
