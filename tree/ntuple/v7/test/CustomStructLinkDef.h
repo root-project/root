@@ -105,4 +105,6 @@
 
 #pragma link C++ class ThrowForVariant + ;
 
+#pragma link C++ class RelativelyLargeStruct + ;
+
 #endif
