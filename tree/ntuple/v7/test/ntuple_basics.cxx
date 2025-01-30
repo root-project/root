@@ -547,27 +547,43 @@ TEST(RNTuple, ModelId)
 
 TEST(RNTuple, Entry)
 {
-   auto m1 = RNTupleModel::Create();
+   auto m = RNTupleModel::Create();
    try {
-      m1->CreateEntry();
+      m->CreateEntry();
       FAIL() << "creating entry of unfrozen model should throw";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to create entry"));
    }
-   m1->Freeze();
-   auto e1 = m1->CreateEntry();
+   m->Freeze();
+   auto e = m->CreateEntry();
 
-   auto m2 = RNTupleModel::Create();
-   m2->Freeze();
-   auto e2 = m2->CreateEntry();
+   auto mWrite = m->Clone();
+   mWrite->Freeze();
+   auto eWrite = mWrite->CreateEntry();
 
    FileRaii fileGuard("test_ntuple_entry.root");
-   auto ntuple = RNTupleWriter::Recreate(std::move(m1), "ntpl", fileGuard.GetPath());
-   ntuple->Fill();
-   ntuple->Fill(*e1);
+   {
+      auto ntuple = RNTupleWriter::Recreate(std::move(mWrite), "ntpl", fileGuard.GetPath());
+      ntuple->Fill();
+      ntuple->Fill(*eWrite);
+      try {
+         ntuple->Fill(*e);
+         FAIL() << "filling with wrong entry should throw";
+      } catch (const ROOT::RException &err) {
+         EXPECT_THAT(err.what(), testing::HasSubstr("mismatch between entry and model"));
+      }
+   }
+
+   auto mRead = m->Clone();
+   mRead->Freeze();
+   auto eRead = mRead->CreateEntry();
+
+   auto ntuple = RNTupleReader::Open(std::move(mRead), "ntpl", fileGuard.GetPath());
+   ntuple->LoadEntry(0);
+   ntuple->LoadEntry(0, *eRead);
    try {
-      ntuple->Fill(*e2);
-      FAIL() << "filling with wrong entry should throw";
+      ntuple->LoadEntry(0, *e);
+      FAIL() << "loading the wrong entry should throw";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("mismatch between entry and model"));
    }
