@@ -115,6 +115,8 @@ endif()
 # RDFDescription pythonization
 if (dataframe)
     ROOT_ADD_PYUNITTEST(pyroot_rdfdescription rdfdescription.py)
+
+    ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_misc rdataframe_misc.py)
 endif()
 
 # SOFIE-GNN pythonizations
