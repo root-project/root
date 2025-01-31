@@ -862,7 +862,6 @@ sap.ui.define([
          }
          {
             let dome = this.get_view().getDomRef();
-            console.log(dome, dome.childElementCount);
 
             let vid = this.get_view().sId + "--rcore";
             let hasCanvas = false;

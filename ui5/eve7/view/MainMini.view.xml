@@ -1,0 +1,15 @@
+<mvc:View height="100%" class="sapUiSizeCompact" 
+          controllerName="rootui5.eve7.controller.MainMini"
+          xmlns="sap.m"
+          xmlns:mvc="sap.ui.core.mvc"
+          xmlns:l="sap.ui.layout"
+          xmlns:commons="sap.ui.commons">
+   <Page title="" showHeader="false" showNavButton="false" showFooter="false"
+      showSubHeader="false" id="MainMiniPage" >
+
+      <content>
+        <l:Splitter id="DaMain" width="100%" height="100%"/>
+      </content>
+
+    </Page>
+</mvc:View>
