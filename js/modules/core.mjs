@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '22/01/2025',
+version_date = '31/01/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1579,7 +1579,8 @@ function getMethods(typename, obj) {
    if ((typename.indexOf(clTF1) === 0) || (typename === clTF2)) {
       m.addFormula = function(obj) {
          if (!obj) return;
-         if (this.formulas === undefined) this.formulas = [];
+         if (this.formulas === undefined)
+            this.formulas = [];
          this.formulas.push(obj);
       };
       m.GetParName = function(n) {
@@ -1746,23 +1747,18 @@ function getMethods(typename, obj) {
          m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); };
          m.getBinContent = function(x, y) {
             const bin = this.getBin(x, y);
-            if (bin < 0 || bin >= this.fNcells) return 0;
-            if (this.fBinEntries[bin] < 1e-300) return 0;
-            if (!this.fArray) return 0;
-            return this.fArray[bin]/this.fBinEntries[bin];
+            if (bin < 0 || bin >= this.fNcells || this.fBinEntries[bin] < 1e-300) return 0;
+            return this.fArray ? this.fArray[bin]/this.fBinEntries[bin] : 0;
          };
          m.getBinEntries = function(x, y) {
             const bin = this.getBin(x, y);
-            if (bin < 0 || bin >= this.fNcells) return 0;
-            return this.fBinEntries[bin];
+            return (bin < 0 || bin >= this.fNcells) ? 0 : this.fBinEntries[bin];
          };
       } else {
          m.getBin = function(x) { return x; };
          m.getBinContent = function(bin) {
-            if (bin < 0 || bin >= this.fNcells) return 0;
-            if (this.fBinEntries[bin] < 1e-300) return 0;
-            if (!this.fArray) return 0;
-            return this.fArray[bin]/this.fBinEntries[bin];
+            if (bin < 0 || bin >= this.fNcells || this.fBinEntries[bin] < 1e-300) return 0;
+            return this.fArray ? this.fArray[bin]/this.fBinEntries[bin] : 0;
          };
          m.getBinEntries = function(bin) {
             return (bin < 0) || (bin >= this.fNcells) ? 0 : this.fBinEntries[bin];

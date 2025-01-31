@@ -531,10 +531,10 @@ define(Hcl, hcl, extend(Color, {
 }));
 
 var A = -0.14861,
-    B = +1.78277,
+    B = 1.78277,
     C = -0.29227,
     D = -0.90649,
-    E = +1.97294,
+    E = 1.97294,
     ED = E * D,
     EB = E * B,
     BC_DA = B * C - D * A;
@@ -2418,16 +2418,9 @@ function number$2(x) {
 }
 
 function* numbers(values, valueof) {
-  if (valueof === undefined) {
+  {
     for (let value of values) {
       if (value != null && (value = +value) >= value) {
-        yield value;
-      }
-    }
-  } else {
-    let index = -1;
-    for (let value of values) {
-      if ((value = valueof(value, ++index, values)) != null && (value = +value) >= value) {
         yield value;
       }
     }
@@ -2437,7 +2430,6 @@ function* numbers(values, valueof) {
 const ascendingBisect = bisector(ascending);
 const bisectRight = ascendingBisect.right;
 bisector(number$2).center;
-var bisect = bisectRight;
 
 class InternMap extends Map {
   constructor(entries, key = keyof) {
@@ -2556,17 +2548,9 @@ function tickStep(start, stop, count) {
 
 function max$1(values, valueof) {
   let max;
-  if (valueof === undefined) {
+  {
     for (const value of values) {
       if (value != null
-          && (max < value || (max === undefined && value >= value))) {
-        max = value;
-      }
-    }
-  } else {
-    let index = -1;
-    for (let value of values) {
-      if ((value = valueof(value, ++index, values)) != null
           && (max < value || (max === undefined && value >= value))) {
         max = value;
       }
@@ -2577,17 +2561,9 @@ function max$1(values, valueof) {
 
 function min$1(values, valueof) {
   let min;
-  if (valueof === undefined) {
+  {
     for (const value of values) {
       if (value != null
-          && (min > value || (min === undefined && value >= value))) {
-        min = value;
-      }
-    }
-  } else {
-    let index = -1;
-    for (let value of values) {
-      if ((value = valueof(value, ++index, values)) != null
           && (min > value || (min === undefined && value >= value))) {
         min = value;
       }
@@ -2649,7 +2625,7 @@ function swap(array, i, j) {
 }
 
 function quantile$1(values, p, valueof) {
-  values = Float64Array.from(numbers(values, valueof));
+  values = Float64Array.from(numbers(values));
   if (!(n = values.length) || isNaN(p = +p)) return;
   if (p <= 0 || n < 2) return min$1(values);
   if (p >= 1) return max$1(values);
@@ -3221,7 +3197,7 @@ function polymap(domain, range, interpolate) {
   }
 
   return function(x) {
-    var i = bisect(domain, x, 1, j) - 1;
+    var i = bisectRight(domain, x, 1, j) - 1;
     return r[i](d[i](x));
   };
 }
@@ -4049,7 +4025,7 @@ function quantile() {
   }
 
   function scale(x) {
-    return x == null || isNaN(x = +x) ? unknown : range[bisect(thresholds, x)];
+    return x == null || isNaN(x = +x) ? unknown : range[bisectRight(thresholds, x)];
   }
 
   scale.invertExtent = function(y) {
@@ -4099,7 +4075,7 @@ function quantize() {
       unknown;
 
   function scale(x) {
-    return x != null && x <= x ? range[bisect(domain, x, 0, n)] : unknown;
+    return x != null && x <= x ? range[bisectRight(domain, x, 0, n)] : unknown;
   }
 
   function rescale() {
@@ -4150,7 +4126,7 @@ function threshold() {
       n = 1;
 
   function scale(x) {
-    return x != null && x <= x ? range[bisect(domain, x, 0, n)] : unknown;
+    return x != null && x <= x ? range[bisectRight(domain, x, 0, n)] : unknown;
   }
 
   scale.domain = function(_) {
@@ -4224,7 +4200,7 @@ function timeInterval(floori, offseti, count, field) {
         if (step < 0) while (++step <= 0) {
           while (offseti(date, -1), !test(date)) {} // eslint-disable-line no-empty
         } else while (--step >= 0) {
-          while (offseti(date, +1), !test(date)) {} // eslint-disable-line no-empty
+          while (offseti(date, 1), !test(date)) {} // eslint-disable-line no-empty
         }
       }
     });
@@ -5270,8 +5246,6 @@ var formatIso = Date.prototype.toISOString
     ? formatIsoNative
     : utcFormat(isoSpecifier);
 
-var formatIso$1 = formatIso;
-
 function parseIsoNative(string) {
   var date = new Date(string);
   return isNaN(date) ? null : date;
@@ -5280,8 +5254,6 @@ function parseIsoNative(string) {
 var parseIso = +new Date("2000-01-01T00:00:00.000Z")
     ? parseIsoNative
     : utcParse(isoSpecifier);
-
-var parseIso$1 = parseIso;
 
 function date(t) {
   return new Date(t);
@@ -5458,7 +5430,7 @@ function sequentialQuantile() {
       interpolator = identity$2;
 
   function scale(x) {
-    if (x != null && !isNaN(x = +x)) return interpolator((bisect(domain, x, 1) - 1) / (domain.length - 1));
+    if (x != null && !isNaN(x = +x)) return interpolator((bisectRight(domain, x, 1) - 1) / (domain.length - 1));
   }
 
   scale.domain = function(_) {
@@ -6905,4 +6877,4 @@ function active(node, name) {
   return null;
 }
 
-export { active, arc, chord, chordDirected, chordTranspose, color, create$1 as create, creator, cubehelix, drag, nodrag as dragDisable, yesdrag as dragEnable, gray, hcl, hsl, interrupt, formatIso$1 as isoFormat, parseIso$1 as isoParse, lab, lch, local, matcher, namespace, namespaces, pointer, pointers, rgb, ribbon$1 as ribbon, ribbonArrow, band as scaleBand, diverging as scaleDiverging, divergingLog as scaleDivergingLog, divergingPow as scaleDivergingPow, divergingSqrt as scaleDivergingSqrt, divergingSymlog as scaleDivergingSymlog, identity as scaleIdentity, implicit as scaleImplicit, linear as scaleLinear, log as scaleLog, ordinal as scaleOrdinal, point as scalePoint, pow as scalePow, quantile as scaleQuantile, quantize as scaleQuantize, radial as scaleRadial, sequential as scaleSequential, sequentialLog as scaleSequentialLog, sequentialPow as scaleSequentialPow, sequentialQuantile as scaleSequentialQuantile, sequentialSqrt as scaleSequentialSqrt, sequentialSymlog as scaleSequentialSymlog, sqrt$1 as scaleSqrt, symlog as scaleSymlog, threshold as scaleThreshold, time as scaleTime, utcTime as scaleUtc, select, selectAll, selection, selector, selectorAll, styleValue as style, tickFormat, timeFormat, defaultLocale as timeFormatDefaultLocale, formatLocale as timeFormatLocale, timeParse, transition, utcFormat, utcParse, version, defaultView as window };
+export { active, arc, chord, chordDirected, chordTranspose, color, create$1 as create, creator, cubehelix, drag, nodrag as dragDisable, yesdrag as dragEnable, gray, hcl, hsl, interrupt, formatIso as isoFormat, parseIso as isoParse, lab, lch, local, matcher, namespace, namespaces, pointer, pointers, rgb, ribbon$1 as ribbon, ribbonArrow, band as scaleBand, diverging as scaleDiverging, divergingLog as scaleDivergingLog, divergingPow as scaleDivergingPow, divergingSqrt as scaleDivergingSqrt, divergingSymlog as scaleDivergingSymlog, identity as scaleIdentity, implicit as scaleImplicit, linear as scaleLinear, log as scaleLog, ordinal as scaleOrdinal, point as scalePoint, pow as scalePow, quantile as scaleQuantile, quantize as scaleQuantize, radial as scaleRadial, sequential as scaleSequential, sequentialLog as scaleSequentialLog, sequentialPow as scaleSequentialPow, sequentialQuantile as scaleSequentialQuantile, sequentialSqrt as scaleSequentialSqrt, sequentialSymlog as scaleSequentialSymlog, sqrt$1 as scaleSqrt, symlog as scaleSymlog, threshold as scaleThreshold, time as scaleTime, utcTime as scaleUtc, select, selectAll, selection, selector, selectorAll, styleValue as style, tickFormat, timeFormat, defaultLocale as timeFormatDefaultLocale, formatLocale as timeFormatLocale, timeParse, transition, utcFormat, utcParse, version, defaultView as window };
