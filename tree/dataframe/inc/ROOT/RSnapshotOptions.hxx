@@ -12,6 +12,7 @@
 #define ROOT_RSNAPSHOTOPTIONS
 
 #include <Compression.h>
+#include <optional>
 #include <string_view>
 #include <string>
 
@@ -25,7 +26,8 @@ struct RSnapshotOptions {
    RSnapshotOptions(const RSnapshotOptions &) = default;
    RSnapshotOptions(RSnapshotOptions &&) = default;
    RSnapshotOptions(std::string_view mode, ECAlgo comprAlgo, int comprLevel, int autoFlush, int splitLevel, bool lazy,
-                    bool overwriteIfExists = false, bool vector2RVec = true)
+                    bool overwriteIfExists = false, bool vector2RVec = true,
+                    const std::optional<int> &basketSize = std::nullopt)
       : fMode(mode),
         fCompressionAlgorithm(comprAlgo),
         fCompressionLevel{comprLevel},
@@ -33,7 +35,8 @@ struct RSnapshotOptions {
         fSplitLevel(splitLevel),
         fLazy(lazy),
         fOverwriteIfExists(overwriteIfExists),
-        fVector2RVec(vector2RVec)
+        fVector2RVec(vector2RVec),
+        fBasketSize(basketSize)
    {
    }
    std::string fMode = "RECREATE"; ///< Mode of creation of output file
@@ -45,6 +48,8 @@ struct RSnapshotOptions {
    bool fLazy = false;                              ///< Do not start the event loop when Snapshot is called
    bool fOverwriteIfExists = false; ///< If fMode is "UPDATE", overwrite object in output file if it already exists
    bool fVector2RVec = true;        ///< If set to true will convert std::vector columns to RVec when saving to disk
+   std::optional<int> fBasketSize{}; ///< Set a custom basket size option. For more details, see
+                                     ///< https://root.cern/manual/trees/#baskets-clusters-and-the-tree-header
 };
 } // namespace RDF
 } // namespace ROOT
