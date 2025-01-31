@@ -4,4 +4,6 @@
 # define a CTest test that calls 'make' in ${CMAKE_CURRENT_SOURCE_DIR}
 #
 #-------------------------------------------------------------------------------
-ROOTTEST_ADD_OLDTEST()
+#ROOTTEST_ADD_OLDTEST()
+ROOTTEST_COMPILE_MACRO(test_classes.h)
+ROOTTEST_ADD_AUTOMACROS(DEPENDS ${COMPILE_MACRO_TEST})
