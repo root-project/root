@@ -29,7 +29,7 @@ data.root: CALLROOTEXE += -e 'gROOT->ProcessLine(".L MyClassOld.cxx+");'
 endif
 
 data.root: MyClassOld_cxx.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l write.C > write.log 
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l write.C > write.log
 
 ifneq ($(ClingWorkAroundMissingDynamicScope),)
 readold.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L MyClassOld.cxx+");'
@@ -44,15 +44,15 @@ readnew.log: MyClass_C.$(DllSuf) data.root
 ClassConv.root: ClassConvOld_cxx.$(DllSuf)  ClassConvWriteOld.cxx
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l ClassConvWriteOld.cxx > ClassConvWriteOld.log
 
-ClassConvReadOld.log: ClassConvOld_cxx.$(DllSuf) ClassConv.root ClassConvReadOld.cxx 
+ClassConvReadOld.log: ClassConvOld_cxx.$(DllSuf) ClassConv.root ClassConvReadOld.cxx
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l ClassConvReadOld.cxx > ClassConvReadOld.log
 
 ClassConvNew.root: ClassConvNew_cxx.$(DllSuf) ClassConvWriteNew.cxx
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l ClassConvWriteNew.cxx > ClassConvWriteNew.log
 
 ClassConv.log: ClassConv.root ClassConvNew.root ClassConvNew_cxx.$(DllSuf)  ClassConvOther_cxx.$(DllSuf) ClassConvReadOld.log
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l ClassConvReadNew.cxx > ClassConv.log 2>&1 
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l ClassConvReadOther.cxx >> ClassConv.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l ClassConvReadNew.cxx > ClassConv.log 2>&1
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l ClassConvReadOther.cxx >> ClassConv.log 2>&1
 
 typedefWrite.log : $(ROOTCORELIBS) typedefWrite_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l typedefWrite.C+ > typedefWrite.log 2>&1
@@ -69,7 +69,7 @@ skipWrite.log: skipWrite_C.$(DllSuf) $(ROOTCORELIBS)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l skipWrite.C+ > skipWrite.log
 
 skip.log: skipWrite.log skipRead_C.$(DllSuf)
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l runSkip.C 2>&1 | sed -e's/method=.*//' > skip.log 
+	$(CMDECHO) $(CALLROOTEXE) -q -b -l runSkip.C 2>&1 | sed -e's/method=.*//' > skip.log
 
 skip: skip.log
 	$(TestDiff)
@@ -127,16 +127,16 @@ ClonesArrayEvo.log: Event_3_cxx.$(DllSuf)
 ClonesArrayEvo: ClonesArrayEvo.log
 	$(TestDiff)
 
-FILES := int.root float16.root double32.root regular.root char.root  \
-       short.root long.root longlong.root uchar.root ushort.root \
-       uint.root ulong.root ulonglong.root float.root double.root \
-       double32enough.root double32mantis.root \
-       float16enough.root float16mantis.root
-FILESFAIL := double32tooshort.root float16tooshort.root
-ifneq ($(FAST),)
-FILES := int.root double32.root longlong.root float.root
-FILESFAIL := 
-endif
+#FILES := int.root float16.root double32.root regular.root char.root  \
+#       short.root long.root longlong.root uchar.root ushort.root \
+#       uint.root ulong.root ulonglong.root float.root double.root \
+#       double32enough.root double32mantis.root \
+#       float16enough.root float16mantis.root
+#FILESFAIL := double32tooshort.root float16tooshort.root
+#ifneq ($(FAST),)
+#FILES := int.root double32.root longlong.root float.root
+#FILESFAIL :=
+#endif
 
 LIBS := $(patsubst %.root,lib%.$(DllSuf),$(FILES) $(FILESFAIL))
 
@@ -158,7 +158,7 @@ $(LIBS): lib%.$(DllSuf): rootalias.C float16.cxx float16.h compile.C
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'compile.C(0, "$*")' > $*.log 2>&1
 
 %.root: lib%.$(DllSuf) rootalias.C run.C
-	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'run.C("$*")' > lib$*.log 2>&1 
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'run.C("$*")' > lib$*.log 2>&1
 
 $(LOGS) : check.%.log: %.root $(FILES) $(FILESFAIL) read.C
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q 'read.C("$(FILES)", "$(FILESFAIL)", 0, "$*")' 2>&1 | grep -v Processing > $@
@@ -170,7 +170,7 @@ else
 	$(CMDECHO) diff -b check_fast.ref $< && touch $@
 endif
 
-STL_FILES := map.root vector.root multimap.root list.root
+#STL_FILES := map.root vector.root multimap.root list.root
 
 STL_LIBS := $(patsubst %.root,lib%.$(DllSuf),$(STL_FILES))
 

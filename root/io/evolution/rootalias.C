@@ -11,9 +11,9 @@ int compile(int type, const char *what)
    TString lib( Form("lib%s",what) );
 
    if (type==0) {
-      return !gSystem->CompileMacro("float16.cxx","k",lib);
+      return !gSystem->CompileMacro("../float16.cxx","k",lib);
    } else if (type==1) {
-      return !gSystem->CompileMacro("maptovector.cxx","k",lib);
+      return !gSystem->CompileMacro("../maptovector.cxx","k",lib);
    } else {
       return 0;
    }
