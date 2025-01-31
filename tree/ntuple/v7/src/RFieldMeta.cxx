@@ -190,7 +190,7 @@ std::vector<const ROOT::TSchemaRule *> ROOT::Experimental::RClassField::FindRule
    }
 
    // For the time being, we only support rules targeting transient members
-   auto referencesNonTransientMembers = [classp = fClass](const ROOT::TSchemaRule *rule) {
+   auto targetsNonTransientMembers = [classp = fClass](const ROOT::TSchemaRule *rule) {
       if (rule->GetTarget() == nullptr)
          return false;
       for (auto target : ROOT::Detail::TRangeStaticCast<TObjString>(*rule->GetTarget())) {
@@ -203,7 +203,7 @@ std::vector<const ROOT::TSchemaRule *> ROOT::Experimental::RClassField::FindRule
       }
       return false;
    };
-   rules.erase(std::remove_if(rules.begin(), rules.end(), referencesNonTransientMembers), rules.end());
+   rules.erase(std::remove_if(rules.begin(), rules.end(), targetsNonTransientMembers), rules.end());
 
    // Erase unknown rule types
    auto hasUnknownType = [](const ROOT::TSchemaRule *rule) {
