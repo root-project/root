@@ -2459,7 +2459,9 @@ void TStreamerInfo::BuildOld()
 
                } else if ( (newkind==ROOT::kSTLmap || newkind==ROOT::kSTLmultimap) &&
                            (oldkind!=ROOT::kSTLmap && oldkind!=ROOT::kSTLmultimap) ) {
-                  element->SetNewType(TVirtualStreamerInfo::kUnsupportedConversion);
+                  // This case was not previously not supported, however it is unclear
+                  // why so we keep it as a separate case for the time behind.
+                  element->Update(oldClass, newClass.GetClass());
                } else {
                   element->Update(oldClass, newClass.GetClass());
                }
