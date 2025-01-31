@@ -702,6 +702,12 @@ foreach(t ${tutorials})
   endif()
 endforeach()
 
+if(root7 AND MSVC)
+  # This test should take 15-25 seconds but fails (timeout) often in the CI on Windows,
+  # so decrease its timeout to 2 minutes to prevent waiting hours to complete the tests
+  set_tests_properties(tutorial-io-ntuple-ntpl013_staged PROPERTIES TIMEOUT 120)
+endif()
+
 #---Loop over all MPI tutorials and define the corresponding test---------
 foreach(t ${mpi_tutorials})
   list(FIND returncode_1 ${t} index)
