@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2010-2023 Three.js Authors
+ * Copyright 2010-2025 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
 import { ExtrudeGeometry, ShapePath, Ray, Plane, MathUtils, Vector3, Controls, MOUSE, TOUCH, Quaternion, Spherical, Vector2, OrthographicCamera, BufferGeometry, Float32BufferAttribute, Mesh, ShaderMaterial, UniformsUtils, WebGLRenderTarget, HalfFloatType, NoBlending, Clock, Color, AdditiveBlending, MeshBasicMaterial, Vector4, Box3, Matrix4, Frustum, Matrix3, DoubleSide, Box2, SRGBColorSpace, Camera } from './three.mjs';
@@ -37,20 +37,9 @@ class TextGeometry extends ExtrudeGeometry {
 
 			const shapes = font.generateShapes( text, parameters.size );
 
-			// translate parameters to ExtrudeGeometry API
-
-			if ( parameters.depth === undefined && parameters.height !== undefined ) {
-
-				console.warn( 'THREE.TextGeometry: .height is now depreciated. Please use .depth instead' ); // @deprecated, r163
-
-			}
-
-			parameters.depth = parameters.depth !== undefined ?
-				parameters.depth : parameters.height !== undefined ?
-					parameters.height : 50;
-
 			// defaults
 
+			if ( parameters.depth === undefined ) parameters.depth = 50;
 			if ( parameters.bevelThickness === undefined ) parameters.bevelThickness = 10;
 			if ( parameters.bevelSize === undefined ) parameters.bevelSize = 8;
 			if ( parameters.bevelEnabled === undefined ) parameters.bevelEnabled = false;
@@ -225,7 +214,7 @@ const _v = new Vector3();
 const _twoPI = 2 * Math.PI;
 
 const _STATE = {
-	NONE: - 1,
+	NONE: -1,
 	ROTATE: 0,
 	DOLLY: 1,
 	PAN: 2,
@@ -288,6 +277,7 @@ class OrbitControls extends Controls {
 		// Set to false to disable rotating
 		this.enableRotate = true;
 		this.rotateSpeed = 1.0;
+		this.keyRotateSpeed = 1.0;
 
 		// Set to false to disable panning
 		this.enablePan = true;
@@ -485,14 +475,6 @@ class OrbitControls extends Controls {
 
 	}
 
-	resetOrthoPanZoom() {
-
-		this._panOffset.set(0, 0, 0);
-		this.object.zoom = 1;
-		this.object.updateProjectionMatrix();
-
-	}
-
 	update( deltaTime = null ) {
 
 		const position = this.object.position;
@@ -660,7 +642,7 @@ class OrbitControls extends Controls {
 				if ( this.screenSpacePanning ) {
 
 					// position the orbit target in front of the new camera position
-					this.target.set( 0, 0, - 1 )
+					this.target.set( 0, 0, -1 )
 						.transformDirection( this.object.matrix )
 						.multiplyScalar( newRadius )
 						.add( this.object.position );
@@ -669,7 +651,7 @@ class OrbitControls extends Controls {
 
 					// get the ray and translation plane to compute target
 					_ray.origin.copy( this.object.position );
-					_ray.direction.set( 0, 0, - 1 ).transformDirection( this.object.matrix );
+					_ray.direction.set( 0, 0, -1 ).transformDirection( this.object.matrix );
 
 					// if the camera is 20 degrees above the horizon then don't adjust the focus target to avoid
 					// extremely large values
@@ -988,11 +970,19 @@ class OrbitControls extends Controls {
 
 				if ( event.ctrlKey || event.metaKey || event.shiftKey ) {
 
-					this._rotateUp( _twoPI * this.rotateSpeed / this.domElement.clientHeight );
+					if ( this.enableRotate ) {
+
+						this._rotateUp( _twoPI * this.keyRotateSpeed / this.domElement.clientHeight );
+
+					}
 
 				} else {
 
-					this._pan( 0, this.keyPanSpeed );
+					if ( this.enablePan ) {
+
+						this._pan( 0, this.keyPanSpeed );
+
+					}
 
 				}
 
@@ -1003,11 +993,19 @@ class OrbitControls extends Controls {
 
 				if ( event.ctrlKey || event.metaKey || event.shiftKey ) {
 
-					this._rotateUp( - _twoPI * this.rotateSpeed / this.domElement.clientHeight );
+					if ( this.enableRotate ) {
+
+						this._rotateUp( - _twoPI * this.keyRotateSpeed / this.domElement.clientHeight );
+
+					}
 
 				} else {
 
-					this._pan( 0, - this.keyPanSpeed );
+					if ( this.enablePan ) {
+
+						this._pan( 0, - this.keyPanSpeed );
+
+					}
 
 				}
 
@@ -1018,11 +1016,19 @@ class OrbitControls extends Controls {
 
 				if ( event.ctrlKey || event.metaKey || event.shiftKey ) {
 
-					this._rotateLeft( _twoPI * this.rotateSpeed / this.domElement.clientHeight );
+					if ( this.enableRotate ) {
+
+						this._rotateLeft( _twoPI * this.keyRotateSpeed / this.domElement.clientHeight );
+
+					}
 
 				} else {
 
-					this._pan( this.keyPanSpeed, 0 );
+					if ( this.enablePan ) {
+
+						this._pan( this.keyPanSpeed, 0 );
+
+					}
 
 				}
 
@@ -1033,11 +1039,19 @@ class OrbitControls extends Controls {
 
 				if ( event.ctrlKey || event.metaKey || event.shiftKey ) {
 
-					this._rotateLeft( - _twoPI * this.rotateSpeed / this.domElement.clientHeight );
+					if ( this.enableRotate ) {
+
+						this._rotateLeft( - _twoPI * this.keyRotateSpeed / this.domElement.clientHeight );
+
+					}
 
 				} else {
 
-					this._pan( - this.keyPanSpeed, 0 );
+					if ( this.enablePan ) {
+
+						this._pan( - this.keyPanSpeed, 0 );
+
+					}
 
 				}
 
@@ -1422,7 +1436,7 @@ function onMouseDown( event ) {
 
 		default:
 
-			mouseAction = - 1;
+			mouseAction = -1;
 
 	}
 
@@ -1544,7 +1558,7 @@ function onMouseWheel( event ) {
 
 function onKeyDown( event ) {
 
-	if ( this.enabled === false || this.enablePan === false ) return;
+	if ( this.enabled === false ) return;
 
 	this._handleKeyDown( event );
 
@@ -1802,7 +1816,7 @@ class Pass {
 
 // Helper for passes that need to fill the viewport with a single quad.
 
-const _camera = new OrthographicCamera( - 1, 1, 1, - 1, 0, 1 );
+const _camera = new OrthographicCamera( -1, 1, 1, -1, 0, 1 );
 
 // https://github.com/mrdoob/three.js/pull/21358
 
@@ -1812,7 +1826,7 @@ class FullscreenTriangleGeometry extends BufferGeometry {
 
 		super();
 
-		this.setAttribute( 'position', new Float32BufferAttribute( [ - 1, 3, 0, - 1, - 1, 0, 3, - 1, 0 ], 3 ) );
+		this.setAttribute( 'position', new Float32BufferAttribute( [ -1, 3, 0, -1, -1, 0, 3, -1, 0 ], 3 ) );
 		this.setAttribute( 'uv', new Float32BufferAttribute( [ 0, 2, 0, 0, 2, 0 ], 2 ) );
 
 	}
@@ -2094,7 +2108,7 @@ class EffectComposer {
 
 		const index = this.passes.indexOf( pass );
 
-		if ( index !== - 1 ) {
+		if ( index !== -1 ) {
 
 			this.passes.splice( index, 1 );
 
@@ -2353,18 +2367,18 @@ class SimplexNoise {
 
 	constructor( r = Math ) {
 
-		this.grad3 = [[ 1, 1, 0 ], [ - 1, 1, 0 ], [ 1, - 1, 0 ], [ - 1, - 1, 0 ],
-			[ 1, 0, 1 ], [ - 1, 0, 1 ], [ 1, 0, - 1 ], [ - 1, 0, - 1 ],
-			[ 0, 1, 1 ], [ 0, - 1, 1 ], [ 0, 1, - 1 ], [ 0, - 1, - 1 ]];
+		this.grad3 = [[ 1, 1, 0 ], [ -1, 1, 0 ], [ 1, -1, 0 ], [ -1, -1, 0 ],
+			[ 1, 0, 1 ], [ -1, 0, 1 ], [ 1, 0, -1 ], [ -1, 0, -1 ],
+			[ 0, 1, 1 ], [ 0, -1, 1 ], [ 0, 1, -1 ], [ 0, -1, -1 ]];
 
-		this.grad4 = [[ 0, 1, 1, 1 ], [ 0, 1, 1, - 1 ], [ 0, 1, - 1, 1 ], [ 0, 1, - 1, - 1 ],
-			[ 0, - 1, 1, 1 ], [ 0, - 1, 1, - 1 ], [ 0, - 1, - 1, 1 ], [ 0, - 1, - 1, - 1 ],
-			[ 1, 0, 1, 1 ], [ 1, 0, 1, - 1 ], [ 1, 0, - 1, 1 ], [ 1, 0, - 1, - 1 ],
-			[ - 1, 0, 1, 1 ], [ - 1, 0, 1, - 1 ], [ - 1, 0, - 1, 1 ], [ - 1, 0, - 1, - 1 ],
-			[ 1, 1, 0, 1 ], [ 1, 1, 0, - 1 ], [ 1, - 1, 0, 1 ], [ 1, - 1, 0, - 1 ],
-			[ - 1, 1, 0, 1 ], [ - 1, 1, 0, - 1 ], [ - 1, - 1, 0, 1 ], [ - 1, - 1, 0, - 1 ],
-			[ 1, 1, 1, 0 ], [ 1, 1, - 1, 0 ], [ 1, - 1, 1, 0 ], [ 1, - 1, - 1, 0 ],
-			[ - 1, 1, 1, 0 ], [ - 1, 1, - 1, 0 ], [ - 1, - 1, 1, 0 ], [ - 1, - 1, - 1, 0 ]];
+		this.grad4 = [[ 0, 1, 1, 1 ], [ 0, 1, 1, -1 ], [ 0, 1, -1, 1 ], [ 0, 1, -1, -1 ],
+			[ 0, -1, 1, 1 ], [ 0, -1, 1, -1 ], [ 0, -1, -1, 1 ], [ 0, -1, -1, -1 ],
+			[ 1, 0, 1, 1 ], [ 1, 0, 1, -1 ], [ 1, 0, -1, 1 ], [ 1, 0, -1, -1 ],
+			[ -1, 0, 1, 1 ], [ -1, 0, 1, -1 ], [ -1, 0, -1, 1 ], [ -1, 0, -1, -1 ],
+			[ 1, 1, 0, 1 ], [ 1, 1, 0, -1 ], [ 1, -1, 0, 1 ], [ 1, -1, 0, -1 ],
+			[ -1, 1, 0, 1 ], [ -1, 1, 0, -1 ], [ -1, -1, 0, 1 ], [ -1, -1, 0, -1 ],
+			[ 1, 1, 1, 0 ], [ 1, 1, -1, 0 ], [ 1, -1, 1, 0 ], [ 1, -1, -1, 0 ],
+			[ -1, 1, 1, 0 ], [ -1, 1, -1, 0 ], [ -1, -1, 1, 0 ], [ -1, -1, -1, 0 ]];
 
 		this.p = [];
 
@@ -2918,7 +2932,7 @@ class UnrealBloomPass extends Pass {
 
 		for ( let i = 0; i < this.nMips; i ++ ) {
 
-			this.separableBlurMaterials.push( this.getSeperableBlurMaterial( kernelSizeArray[ i ] ) );
+			this.separableBlurMaterials.push( this.getSeparableBlurMaterial( kernelSizeArray[ i ] ) );
 
 			this.separableBlurMaterials[ i ].uniforms[ 'invSize' ].value = new Vector2( 1 / resx, 1 / resy );
 
@@ -3122,13 +3136,13 @@ class UnrealBloomPass extends Pass {
 
 	}
 
-	getSeperableBlurMaterial( kernelRadius ) {
+	getSeparableBlurMaterial( kernelRadius ) {
 
 		const coefficients = [];
 
 		for ( let i = 0; i < kernelRadius; i ++ ) {
 
-			coefficients.push( 0.39894 * Math.exp( - 0.5 * i * i / ( kernelRadius * kernelRadius ) ) / kernelRadius );
+			coefficients.push( 0.39894 * Math.exp( -0.5 * i * i / ( kernelRadius * kernelRadius ) ) / kernelRadius );
 
 		}
 
@@ -3368,7 +3382,7 @@ class Projector {
 			_vector3 = new Vector3(),
 			_vector4 = new Vector4(),
 
-			_clipBox = new Box3( new Vector3( - 1, - 1, - 1 ), new Vector3( 1, 1, 1 ) ),
+			_clipBox = new Box3( new Vector3( -1, -1, -1 ), new Vector3( 1, 1, 1 ) ),
 			_boundingBox = new Box3(),
 			_points3 = new Array( 3 ),
 
@@ -3420,9 +3434,9 @@ class Projector {
 				positionScreen.y *= invW;
 				positionScreen.z *= invW;
 
-				vertex.visible = positionScreen.x >= - 1 && positionScreen.x <= 1 &&
-						 positionScreen.y >= - 1 && positionScreen.y <= 1 &&
-						 positionScreen.z >= - 1 && positionScreen.z <= 1;
+				vertex.visible = positionScreen.x >= -1 && positionScreen.x <= 1 &&
+						 positionScreen.y >= -1 && positionScreen.y <= 1 &&
+						 positionScreen.z >= -1 && positionScreen.z <= 1;
 
 			}
 
@@ -3938,7 +3952,7 @@ class Projector {
 
 			_vector4.z *= invW;
 
-			if ( _vector4.z >= - 1 && _vector4.z <= 1 ) {
+			if ( _vector4.z >= -1 && _vector4.z <= 1 ) {
 
 				_sprite = getNextSpriteInPool();
 				_sprite.id = object.id;
@@ -4354,9 +4368,9 @@ class SVGRenderer {
 
 					_v1 = element.v1; _v2 = element.v2; _v3 = element.v3;
 
-					if ( _v1.positionScreen.z < - 1 || _v1.positionScreen.z > 1 ) continue;
-					if ( _v2.positionScreen.z < - 1 || _v2.positionScreen.z > 1 ) continue;
-					if ( _v3.positionScreen.z < - 1 || _v3.positionScreen.z > 1 ) continue;
+					if ( _v1.positionScreen.z < -1 || _v1.positionScreen.z > 1 ) continue;
+					if ( _v2.positionScreen.z < -1 || _v2.positionScreen.z > 1 ) continue;
+					if ( _v3.positionScreen.z < -1 || _v3.positionScreen.z > 1 ) continue;
 
 					_v1.positionScreen.x *= _svgWidthHalf; _v1.positionScreen.y *= - _svgHeightHalf;
 					_v2.positionScreen.x *= _svgWidthHalf; _v2.positionScreen.y *= - _svgHeightHalf;
@@ -4395,7 +4409,7 @@ class SVGRenderer {
 					_vector3.setFromMatrixPosition( object.matrixWorld );
 					_vector3.applyMatrix4( _viewProjectionMatrix );
 
-					if ( _vector3.z < - 1 || _vector3.z > 1 ) return;
+					if ( _vector3.z < -1 || _vector3.z > 1 ) return;
 
 					const x = _vector3.x * _svgWidthHalf;
 					const y = - _vector3.y * _svgHeightHalf;
