@@ -142,6 +142,7 @@ TEST(TFile, k630forwardCompatibility)
 {
    gEnv->SetValue("TFile.v630forwardCompatibility", 1);
    const std::string filename{"filek30.root"};
+   // Testing that the flag is also set when creating the file from scratch (as opposed to "UPDATE")
    TFile filec{filename.c_str(),"RECREATE"};
    ASSERT_EQ(filec.TestBit(TFile::k630forwardCompatibility), true);  
    filec.Close();
