@@ -7,7 +7,7 @@ for dir in `ls $1`
 do
     if [ -e SpecialDirs ]
     then 
-        if [ "x`grep $dir SpecialDirs`" = "x$dir" ]
+        if [ "x`grep -x $dir SpecialDirs`" = "x$dir" ]
         then
             continue
         fi
