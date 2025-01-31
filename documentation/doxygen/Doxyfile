@@ -1076,6 +1076,10 @@ EXCLUDE_PATTERNS       = */G__* \
                          */src/lexertk.hpp \
                          *.xml \
                          *.dtd \
+                         */graf3d/eve7/glu/* \
+                         */gui/cefdisplay/* \
+                         */gui/qt5webdisplay/* \
+                         */gui/qt6webdisplay/* \
                          */tutorials/visualisation/webgui/qt5web/* \
                          */math/mathcore/src/CDT*
 
