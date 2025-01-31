@@ -100,7 +100,8 @@ endfunction(ROOTTEST_TARGETNAME_FROM_FILE)
 
 #-------------------------------------------------------------------------------
 #
-# function ROOTTEST_ADD_AUTOMACROS(DEPENDS [dependencies ...])
+# function ROOTTEST_ADD_AUTOMACROS(DEPENDS [dependencies ...]
+#                                  [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...])
 #
 # Automatically adds all macros in the current source directory to the list of
 # tests that follow the naming scheme:
@@ -109,7 +110,7 @@ endfunction(ROOTTEST_TARGETNAME_FROM_FILE)
 #
 #-------------------------------------------------------------------------------
 function(ROOTTEST_ADD_AUTOMACROS)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDS;WILLFAIL;EXCLUDE" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDS;WILLFAIL;EXCLUDE;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" ${ARGN})
 
   file(GLOB automacros run*.C run*.cxx assert*.C assert*.cxx exec*.C exec*.cxx)
 
@@ -157,11 +158,26 @@ function(ROOTTEST_ADD_AUTOMACROS)
       endif()
     endforeach()
 
+    if (ARG_FIXTURES_SETUP)
+      set(fixtures_setup ${ARG_FIXTURES_SETUP})
+    endif()
+
+    if (ARG_FIXTURES_CLEANUP)
+      set(fixtures_cleanup ${ARG_FIXTURES_CLEANUP})
+    endif()
+
+    if (ARG_FIXTURES_REQUIRED)
+      set(fixtures_required ${ARG_FIXTURES_REQUIRED})
+    endif()
+
     if(selected)
       ROOTTEST_ADD_TEST(${targetname}-auto
                         MACRO ${auto_macro_filename}${${auto_macro_name}-suffix}
                         ${outref}
                         ${arg_wf}
+                        FIXTURES_SETUP ${fixtures_setup}
+                        FIXTURES_CLEANUP ${fixtures_cleanup}
+                        FIXTURES_REQUIRED ${fixtures_required}
                         DEPENDS ${auto_depends})
     endif()
   endforeach()
@@ -171,6 +187,7 @@ endfunction(ROOTTEST_ADD_AUTOMACROS)
 #-------------------------------------------------------------------------------
 #
 # macro ROOTTEST_COMPILE_MACRO(<filename> [BUILDOBJ object] [BUILDLIB lib]
+#                                         [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...]
 #                                         [DEPENDS dependencies...])
 #
 # This macro creates and loads a shared library containing the code from
@@ -181,7 +198,7 @@ endfunction(ROOTTEST_ADD_AUTOMACROS)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_COMPILE_MACRO filename)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "BUILDOBJ;BUILDLIB" "DEPENDS"  ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "BUILDOBJ;BUILDLIB" "DEPENDS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED"  ${ARGN})
 
   # Add defines to root_compile_macro, in order to have out-of-source builds
   # when using the scripts/build.C macro.
@@ -248,6 +265,19 @@ macro(ROOTTEST_COMPILE_MACRO filename)
   set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
   if(CMAKE_GENERATOR MATCHES Ninja AND NOT MSVC)
     set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY RUN_SERIAL true)
+  endif()
+  if (ARG_FIXTURES_SETUP)
+    set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY
+      FIXTURES_SETUP ${ARG_FIXTURES_SETUP})
+  endif()
+  if (ARG_FIXTURES_CLEANUP)
+    set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY
+      FIXTURES_CLEANUP ${ARG_FIXTURES_CLEANUP})
+  endif()
+
+  if (ARG_FIXTURES_REQUIRED)
+    set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY
+      FIXTURES_REQUIRED ${ARG_FIXTURES_REQUIRED})
   endif()
 
   if(MSVC)
