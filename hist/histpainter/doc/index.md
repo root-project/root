@@ -6,8 +6,8 @@ Some related  tutorials:
 
   - gr001_simple.C: Using and drawing a simple TGraph.
   - gr011_graph2d_errorsfit.C: TGraph2D with errors drawing.
-  - h1draw.C: Drawing Options for 1D Histograms.
-  - hbars.C: Demo of option bar with histograms.
+  - hist015_TH1_read_and_draw.C: Drawing Options for 1D Histograms.
+  - hist006_TH1_bar_charts.C: Demo of option bar with histograms.
   - hsimple.C: Simple drawing of a 1D Histograms.
   - hsum.C: Filling several histograms and some graphics options.
   - surfaces.C: Drawing a TH2 as a 2-D surface.

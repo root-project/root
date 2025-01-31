@@ -26,7 +26,7 @@ further categories, depending on the set of possible bin values:
 
 -   **`TH1I, TH2I and TH3I`** contain one integer (four bytes) per bin
     (maximum bin content = 2 147 483 647).
-    
+
 -   **`TH1L, TH2L and TH3L`** contain one long64 (eight bytes) per bin
     (maximum bin content = 9 223 372 036 854 775 807).
 
@@ -887,7 +887,7 @@ bar1`", "`bar2`", "`bar3`", "`bar4`".
 Use **`TH1`**`::SetBarWidth()` to control the bar width (default is
 the bin width). Use **`TH1`**`::SetBarOffset` to control the bar
 offset (default is 0). See the example
-`$ROOTSYS/tutorials/hist/hbars.C`
+`$ROOTSYS/tutorials/hist/hist006_TH1_bar_charts.C`
 
 The options for the horizontal bar chart are "`hbar`", "`hbar0`",
 "`hbar1`", "`hbar2`", "`hbar3`", and "`hbar4`".
@@ -906,7 +906,7 @@ The options for the horizontal bar chart are "`hbar`", "`hbar0`",
 
 Use **`TH1`**`::SetBarWidth` to control the bar width (default is the
 bin width). Use **`TH1`**`::SetBarOffset` to control the bar offset
-(default is 0). See the example `$ROOTSYS/tutorials/hist/hbars.C`
+(default is 0). See the example `$ROOTSYS/tutorials/hist/hist006_TH1_bar_charts.C`
 
 ![Horizontal bar charts](pictures/02000037.png)
 
