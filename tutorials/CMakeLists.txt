@@ -374,16 +374,11 @@ if(root7)
     list(APPEND root7_veto experimental/rcanvas/df104.py)
     list(APPEND root7_veto experimental/rcanvas/df105.py)
   endif()
-  if(MSVC)
-    # This test should take 15-25 seconds but fails (timeout) often in the CI on Windows,
-    # so decrease its timeout to 2 minutes to prevent waiting hours to complete the tests
-    set_tests_properties(tutorial-io-ntuple-ntpl013_staged PROPERTIES TIMEOUT 120)
-    if(NOT win_broken_tests)
-      #---EOS is not supported on Windows
-      list(APPEND root7_veto experimental/rcanvas/df104.py)
-      list(APPEND root7_veto experimental/rcanvas/df105.py)
-      list(APPEND root7_veto experimental/rcanvas/rbox.py)
-    endif()
+  if(MSVC AND NOT win_broken_tests)
+    #---EOS is not supported on Windows
+    list(APPEND root7_veto experimental/rcanvas/df104.py)
+    list(APPEND root7_veto experimental/rcanvas/df105.py)
+    list(APPEND root7_veto experimental/rcanvas/rbox.py)
   endif()
 else()
   if(MSVC AND NOT win_broken_tests)
@@ -706,6 +701,12 @@ foreach(t ${tutorials})
     set_tests_properties(tutorial-${tname} PROPERTIES RESOURCE_LOCK multithreaded PROCESSORS ${NProcessors})
   endif()
 endforeach()
+
+if(MSVC)
+  # This test should take 15-25 seconds but fails (timeout) often in the CI on Windows,
+  # so decrease its timeout to 2 minutes to prevent waiting hours to complete the tests
+  set_tests_properties(tutorial-io-ntuple-ntpl013_staged PROPERTIES TIMEOUT 120)
+endif()
 
 #---Loop over all MPI tutorials and define the corresponding test---------
 foreach(t ${mpi_tutorials})
