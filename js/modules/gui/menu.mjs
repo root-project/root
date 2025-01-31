@@ -232,7 +232,8 @@ class JSRootMenu {
          }
 
          this.add('endcolumn:');
-         if (!this.native()) break;
+         if (!this.native())
+            break;
       }
 
       this.endsub();
@@ -245,7 +246,8 @@ class JSRootMenu {
 
       let values = [], miss_current = false;
       if (isObject(step)) {
-         values = step; step = 1;
+         values = step;
+         step = 1;
       } else {
          for (let sz = min; sz <= max; sz += step)
             values.push(sz);
@@ -285,7 +287,6 @@ class JSRootMenu {
       this.sub('Palette', () => this.input('Enter palette code [1..113]', curr, 'int', 1, 113).then(set_func));
 
       this.add('column:');
-
       add(57, 'Bird', 'Default color palette', (curr > 113));
       add(55, 'Rainbow');
       add(51, 'Deep Sea');
@@ -299,14 +300,12 @@ class JSRootMenu {
       add(59, '', 'Green Red Violet');
       add(60, '', 'Blue Red Yellow');
       add(61, 'Ocean');
-
       this.add('endcolumn:');
 
       if (!this.native())
          return this.endsub();
 
       this.add('column:');
-
       add(62, '', 'Color Printable On Grey');
       add(63, 'Alpine');
       add(64, 'Aquamarine');
@@ -320,10 +319,9 @@ class JSRootMenu {
       add(72, 'Brown Cyan');
       add(73, 'CMYK');
       add(74, 'Candy');
-
       this.add('endcolumn:');
-      this.add('column:');
 
+      this.add('column:');
       add(75, 'Cherry');
       add(76, 'Coffee');
       add(77, '', 'Dark Rain Bow');
@@ -337,10 +335,9 @@ class JSRootMenu {
       add(85, 'Island');
       add(86, 'Lake');
       add(87, '', 'Light Temperature');
-
       this.add('endcolumn:');
-      this.add('column:');
 
+      this.add('column:');
       add(88, '', 'Light Terrain');
       add(89, 'Mint');
       add(90, 'Neon');
@@ -354,10 +351,9 @@ class JSRootMenu {
       add(98, '', 'Sandy Terrain');
       add(99, 'Sienna');
       add(100, 'Solar');
-
       this.add('endcolumn:');
-      this.add('column:');
 
+      this.add('column:');
       add(101, '', 'South West');
       add(102, '', 'Starry Night');
       add(103, '', 'Sunset');
@@ -371,7 +367,6 @@ class JSRootMenu {
       add(111, '', 'Gist Earth');
       add(112, 'Viridis');
       add(113, 'Cividis');
-
       this.add('endcolumn:');
 
       this.endsub();
@@ -481,7 +476,8 @@ class JSRootMenu {
       supported.push(3144, 3244, 3344, 3305, 3315, 3325, 3490, 3481, 3472);
 
       for (let n = 0; n < supported.length; ++n) {
-         if (n % 7 === 0) this.add('column:');
+         if (n % 7 === 0)
+            this.add('column:');
 
          const selected = (value === supported[n]);
 
@@ -495,7 +491,8 @@ class JSRootMenu {
             this.add(svgelement.node().outerHTML, supported[n], arg => set_func(parseInt(arg)), `Pattern : ${supported[n]}` + (selected ? ' Active' : ''));
          } else
             this.addchk(selected, supported[n].toString(), supported[n], arg => set_func(parseInt(arg)));
-         if (n % 7 === 6) this.add('endcolumn:');
+         if (n % 7 === 6)
+            this.add('endcolumn:');
       }
       this.endsub();
    }
@@ -1013,7 +1010,8 @@ class JSRootMenu {
       }, 'Store settings and gStyle in browser local storage');
       this.add('Delete settings', () => { saveSettings(-1); saveStyle(-1); }, 'Delete settings and gStyle from browser local storage');
 
-      if (!alone) this.endsub();
+      if (!alone)
+         this.endsub();
    }
 
    /** @summary Run modal dialog
@@ -1129,7 +1127,7 @@ class JSRootMenu {
       for (let n = 0; n < args.length; ++n) {
          main_content += `<label for="${dlg_id}_inp${n}">arg${n+1}</label>`+
                          `<input type='text' id="${dlg_id}_inp${n}" value="${args[n]}" style="width:100%;display:block"/>`;
-     }
+      }
 
       main_content += '</fieldset></form>';
 
@@ -1235,6 +1233,9 @@ class StandaloneMenu extends JSRootMenu {
    _buildContextmenu(menu, left, top, loc) {
       const doc = getDocument(),
             outer = doc.createElement('div'),
+            clname = 'jsroot_ctxt_container',
+            clfocus = 'jsroot_ctxt_focus',
+            clcolumn = 'jsroot_ctxt_column',
             container_style =
          'position: absolute; top: 0; user-select: none; z-index: 100000; background-color: rgb(250, 250, 250); margin: 0; padding: 0px; width: auto;'+
          'min-width: 100px; box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2); border: 3px solid rgb(215, 215, 215); font-family: Arial, helvetica, sans-serif, serif;'+
@@ -1242,23 +1243,23 @@ class StandaloneMenu extends JSRootMenu {
 
       // if loc !== doc.body then its a submenu, so it needs to have position: relative;
       if (loc === doc.body) {
-         // delete all elements with className jsroot_ctxt_container
-         const deleteElems = doc.getElementsByClassName('jsroot_ctxt_container');
-         while (deleteElems.length > 0)
-            deleteElems[0].parentNode.removeChild(deleteElems[0]);
+         // delete all elements with menu className
+         const deleteElems = doc.getElementsByClassName(clname);
+         for (let k = deleteElems.length - 1; k >= 0; --k)
+            deleteElems[k].parentNode.removeChild(deleteElems[k]);
 
-         outer.className = 'jsroot_ctxt_container';
+         outer.className = clname;
          outer.style = container_style;
          outer.style.position = 'fixed';
          outer.style.left = left + 'px';
          outer.style.top = top + 'px';
       } else if ((left < 0) && (top === left)) {
          // column
-         outer.className = 'jsroot_ctxt_column';
+         outer.className = clcolumn;
          outer.style.float = 'left';
          outer.style.width = (100/-left).toFixed(1) + '%';
       } else {
-         outer.className = 'jsroot_ctxt_container';
+         outer.className = clname;
          outer.style = container_style;
          outer.style.left = -loc.offsetLeft + loc.offsetWidth + 'px';
       }
@@ -1377,12 +1378,12 @@ class StandaloneMenu extends JSRootMenu {
 
          function changeFocus(item, on) {
             if (on) {
-               item.classList.add('jsroot_ctxt_focus');
+               item.classList.add(clfocus);
                item.style['background-color'] = 'rgb(220, 220, 220)';
-            } else if (item.classList.contains('jsroot_ctxt_focus')) {
+            } else if (item.classList.contains(clfocus)) {
                item.style['background-color'] = null;
-               item.classList.remove('jsroot_ctxt_focus');
-               item.querySelector('.jsroot_ctxt_container')?.remove();
+               item.classList.remove(clfocus);
+               item.querySelector(`.${clname}`)?.remove();
             }
          }
 
@@ -1397,7 +1398,7 @@ class StandaloneMenu extends JSRootMenu {
                extraText.addEventListener('click', evnt => {
                   evnt.preventDefault();
                   evnt.stopPropagation();
-                  const was_active = item.parentNode.querySelector('.jsroot_ctxt_focus');
+                  const was_active = item.parentNode.querySelector(`.${clfocus}`);
 
                   if (was_active)
                      changeFocus(was_active, false);
@@ -1456,7 +1457,7 @@ class StandaloneMenu extends JSRootMenu {
             // Does contextmenu overflow window height?
             outer.style.top = (docHeight - outer.offsetHeight) + 'px';
          }
-      } else if (outer.className !== 'jsroot_ctxt_column') {
+      } else if (outer.className !== clcolumn) {
          // if its sub-contextmenu
          const dimensionsLoc = loc.getBoundingClientRect(), dimensionsOuter = outer.getBoundingClientRect();
 
@@ -1490,15 +1491,15 @@ class StandaloneMenu extends JSRootMenu {
    async show(event) {
       this.remove();
 
-      if (!event && this.show_evnt) event = this.show_evnt;
+      if (!event && this.show_evnt)
+         event = this.show_evnt;
 
       const doc = getDocument(),
             woffset = typeof window === 'undefined' ? { x: 0, y: 0 } : { x: window.scrollX, y: window.scrollY };
 
       doc.body.addEventListener('click', this.remove_handler);
 
-      const oldmenu = doc.getElementById(this.menuname);
-      if (oldmenu) oldmenu.remove();
+      doc.getElementById(this.menuname)?.remove();
 
       this.element = this._buildContextmenu(this.code, (event?.clientX || 0) + woffset.x, (event?.clientY || 0) + woffset.y, doc.body);
 
@@ -1509,9 +1510,11 @@ class StandaloneMenu extends JSRootMenu {
 
    /** @summary Run modal elements with standalone code */
    createModal(title, main_content, args) {
-      if (!args) args = {};
+      if (!args)
+         args = {};
 
-      if (!args.Ok) args.Ok = 'Ok';
+      if (!args.Ok)
+         args.Ok = 'Ok';
 
       const modal = { args }, dlg_id = (this?.menuname ?? sDfltName) + sDfltDlg;
       d3_select(`#${dlg_id}`).remove();
@@ -1578,8 +1581,10 @@ class StandaloneMenu extends JSRootMenu {
       });
 
       let f = modal.element.select('.jsroot_dialog_content').select('input');
-      if (f.empty()) f = modal.element.select('.jsroot_dialog_footer').select('button');
-      if (!f.empty()) f.node().focus();
+      if (f.empty())
+         f = modal.element.select('.jsroot_dialog_footer').select('button');
+      if (!f.empty())
+         f.node().focus();
       return modal;
    }
 
