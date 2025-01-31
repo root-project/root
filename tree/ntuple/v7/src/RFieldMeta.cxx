@@ -208,7 +208,8 @@ std::vector<const ROOT::TSchemaRule *> ROOT::Experimental::RClassField::FindRule
    // Erase unknown rule types
    auto hasUnknownType = [](const ROOT::TSchemaRule *rule) {
       if (rule->GetRuleType() != ROOT::TSchemaRule::kReadRule) {
-         R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "ignoring I/O customization rule with unsupported type";
+         R__LOG_WARNING(ROOT::Internal::NTupleLog())
+            << "ignoring I/O customization rule with unsupported type: " << rule->GetRuleType();
          return true;
       }
       return false;
