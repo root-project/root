@@ -5,8 +5,8 @@ numpy
 pandas
 
 # TMVA: SOFIE
-dm-sonnet ; python_version < "3.13"  # used for GNNs, not available for Python 3.13 yet
-graph_nets ; python_version < "3.13" # not available for Python 3.13 yet
+dm-sonnet # used for GNNs
+graph_nets
 onnx
 
 # TMVA: PyMVA interfaces
@@ -16,7 +16,7 @@ torch<2.5 ; python_version < "3.13" # no torch version that fullfills version co
 xgboost
 
 # PyROOT: ROOT.Numba.Declare decorator
-numba>=0.48 ; python_version < "3.13" # no numba available for Python 3.13 yet
+numba>=0.48
 cffi>=1.9.1
 
 # Notebooks: ROOT C++ kernel
