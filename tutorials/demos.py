@@ -38,7 +38,7 @@ bar.AddButton( 'surfaces',      r'TPython::Exec( "' + to_run.format('visualisati
 bar.AddButton( 'fillrandom',    r'TPython::Exec( "' + to_run.format('hist/fillrandom.py') + '" );','Histograms with Random Numbers from a Function' )
 bar.AddButton( 'fit1',          r'TPython::Exec( "' + to_run.format('math/fit/fit1.py') + '" );',      'A Simple Fitting Example' )
 bar.AddButton( 'multifit',      r'TPython::Exec( "' + to_run.format('math/fit/multifit.py') + '" );',  'Fitting in Subranges of Histograms' )
-bar.AddButton( 'h1draw',        r'TPython::Exec( "' + to_run.format('hist/h1ReadAndDraw.py') + '" );',    'Drawing Options for 1D Histograms' )
+bar.AddButton( 'h1draw',        r'TPython::Exec( "' + to_run.format('hist/hist015_TH1_read_and_draw.py') + '" );',    'Drawing Options for 1D Histograms' )
 bar.AddButton( 'graph',         r'TPython::Exec( "' + to_run.format('visualisation/graphs/graph.py') + '" );',     'Example of a Simple Graph' )
 bar.AddButton( 'gerrors',       r'TPython::Exec( "' + to_run.format('visualisation/graphs/gerrors.py') + '" );',   'Example of a Graph with Error Bars' )
 bar.AddButton( 'tornado',       r'TPython::Exec( "' + to_run.format('visualisation/graphics/tornado.py') + '" );',   'Examples of 3-D PolyMarkers' )

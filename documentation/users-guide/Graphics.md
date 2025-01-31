@@ -730,7 +730,7 @@ primitives in this pad. The same can be achieved with the graphics
 editor. For example:
 
 ``` {.cpp}
-root[] .x tutorials/hist/h1draw.C
+root[] .x tutorials/hist/hist015_TH1_read_and_draw.C
 root[] TPad *newpad=new TPad("newpad","Transparent pad",0,0,1,1);
 root[] newpad->SetFillStyle(4000);
 root[] newpad->Draw();
