@@ -18,6 +18,15 @@ function initEVE(source_dir) {
                        import(mpath+'geom/TGeoPainter.mjs')])
     .then(arr => {
        globalThis.THREE = Object.assign({}, arr.shift(), arr.shift());
+
+       if (globalThis.THREE.OrbitControls) {
+          globalThis.THREE.OrbitControls.prototype.resetOrthoPanZoom = function() {
+            this._panOffset.set(0, 0, 0);
+            this.object.zoom = 1;
+            this.object.updateProjectionMatrix();
+          }
+       }
+
        globalThis.EVE = {};
        globalThis.EVE.JSR = Object.assign({}, ...arr); // JSROOT functionality
        return globalThis.EVE;
