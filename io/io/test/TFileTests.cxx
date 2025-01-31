@@ -142,7 +142,7 @@ TEST(TFile, k630forwardCompatibility)
 {
    gEnv->SetValue("TFile.v630forwardCompatibility", 1);
    const std::string filename{"filek30.root"};
-   TFile filec{filename.c_str(),"CREATE"};
+   TFile filec{filename.c_str(),"RECREATE"};
    ASSERT_EQ(filec.TestBit(TFile::k630forwardCompatibility), true);  
    filec.Close();
    TFile filer{filename.c_str(),"READ"};
