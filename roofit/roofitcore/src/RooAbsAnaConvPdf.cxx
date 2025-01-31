@@ -506,10 +506,10 @@ Int_t RooAbsAnaConvPdf::getAnalyticalIntegralWN(RooArgSet& allVars,
 
   // takes ownership of all sets
   masterCode = _codeReg.store(tmp,
-                              intCoefSet.release(),
-                              intConvSet.release(),
-                              normCoefSet.release(),
-                              normConvSet.release()) + 1;
+                              intCoefSet.get(),
+                              intConvSet.get(),
+                              normCoefSet.get(),
+                              normConvSet.get()) + 1;
 
   analVars.add(allDeps) ;
 
@@ -556,11 +556,11 @@ double RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet *normS
       return getVal(normSet);
 
    // Unpack master code
-   RooArgSet *intCoefSet;
-   RooArgSet *intConvSet;
-   RooArgSet *normCoefSet;
-   RooArgSet *normConvSet;
-   _codeReg.retrieve(code - 1, intCoefSet, intConvSet, normCoefSet, normConvSet);
+   auto retrieved = _codeReg.retrieve(code - 1);
+   RooArgSet *intCoefSet = retrieved.sets[0];
+   RooArgSet *intConvSet = retrieved.sets[1];
+   RooArgSet *normCoefSet = retrieved.sets[2];
+   RooArgSet *normConvSet = retrieved.sets[3];
 
    Int_t index(0);
 

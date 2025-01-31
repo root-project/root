@@ -16,7 +16,6 @@
 #ifndef ROO_SIMULTANEOUS
 #define ROO_SIMULTANEOUS
 
-#include <RooAICRegistry.h>
 #include <RooAbsCacheElement.h>
 #include <RooAbsPdf.h>
 #include <RooArgList.h>

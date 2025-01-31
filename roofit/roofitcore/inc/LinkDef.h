@@ -64,7 +64,6 @@
 #pragma link C++ class RooAddGenContext+ ;
 #pragma link C++ class RooAddition+ ;
 #pragma link C++ class RooAddModel+ ;
-#pragma link C++ class RooAICRegistry+ ;
 #pragma link C++ class RooArgList+ ;
 #pragma link C++ class RooArgProxy+ ;
 #pragma link C++ class RooArgSet+ ;
