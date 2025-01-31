@@ -1572,8 +1572,10 @@ void TFile::Map(Option_t *opt)
 
    const unsigned char nDigits = std::log10(fEND) + 1;
 
+   std::optional<ROOT::Detail::TKeyMapNode> lastNode;
    const auto tkeyInfos = WalkTKeys();
    for (const auto &key : tkeyInfos) {
+      lastNode = key;
       switch (key.fType) {
       case ROOT::Detail::TKeyMapNode::kError:
          Printf("Address = %" PRIu64 "\tNbytes = %u\t=====E R R O R=======", key.fAddr, key.fLen);
@@ -1614,7 +1616,7 @@ void TFile::Map(Option_t *opt)
    }
 
    if (!forComp) {
-      Int_t datime = tkeyInfos.empty() ? 0 : tkeyInfos.back().fDatime;
+      Int_t datime = lastNode ? lastNode->fDatime : 0;
       Int_t date, time;
       TDatime::GetDateTime(datime, date, time);
       Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s", date, time, nDigits + 1, fEND, 1, "END");
@@ -1623,94 +1625,108 @@ void TFile::Map(Option_t *opt)
    }
 }
 
-std::vector<ROOT::Detail::TKeyMapNode> TFile::WalkTKeys()
+ROOT::Detail::TKeyMapIterable TFile::WalkTKeys()
 {
-   std::vector<ROOT::Detail::TKeyMapNode> res;
+   return ROOT::Detail::TKeyMapIterable(this);
+}
 
+ROOT::Detail::TKeyMapIterable::TIterator::TIterator(TFile *file, std::uint64_t addr) : fFile(file), fCurAddr(addr)
+{
+   if (addr == 0)
+      fCurAddr = fFile->fBEGIN;
+   Advance();
+}
+
+std::optional<ROOT::Detail::TKeyMapNode> ROOT::Detail::TKeyMapIterable::TIterator::Next()
+{
    static constexpr int headerSize = 512;
 
-   std::uint64_t idcur = fBEGIN;
-   const std::uint64_t end = fEND;
-   while (idcur < end) {
-      Seek(idcur);
-      auto nread = headerSize;
-      if (idcur + nread >= end)
-         nread = fEND - idcur - 1;
+   const std::uint64_t idcur = fCurAddr;
+   const std::uint64_t end = fFile->fEND;
+   if (idcur >= end)
+      return std::nullopt;
 
-      char header[headerSize];
-      if (ReadBuffer(header, nread)) {
-         // ReadBuffer returns kTRUE in case of failure.
-         res.push_back({idcur, ROOT::Detail::TKeyMapNode::kError});
-         break;
-      }
+   fFile->Seek(idcur);
+   auto nread = headerSize;
+   if (idcur + nread >= end)
+      nread = end - idcur - 1;
 
-      char *buffer = header;
-      Int_t nbytes;
-      frombuf(buffer, &nbytes);
-      if (!nbytes) {
-         res.push_back({idcur, ROOT::Detail::TKeyMapNode::kError});
-         break;
-      }
-      if (nbytes < 0) {
-         // free slot
-         res.push_back({idcur, ROOT::Detail::TKeyMapNode::kGap, static_cast<std::uint32_t>(-nbytes)});
-         idcur -= nbytes;
-         continue;
-      }
-
-      auto &node = res.emplace_back(idcur, ROOT::Detail::TKeyMapNode::kKey, nbytes);
-
-      frombuf(buffer, &node.fKeyVersion);
-      frombuf(buffer, &node.fObjLen);
-      frombuf(buffer, &node.fDatime);
-      frombuf(buffer, &node.fKeyLen);
-      frombuf(buffer, &node.fCycle);
-      if (node.fKeyVersion > 1000) {
-         frombuf(buffer, &node.fSeekKey);
-         frombuf(buffer, &node.fSeekPdir);
-      } else {
-         Int_t skey, sdir;
-         frombuf(buffer, &skey);
-         frombuf(buffer, &sdir);
-         node.fSeekKey = static_cast<Long64_t>(skey);
-         node.fSeekPdir = static_cast<Long64_t>(sdir);
-      }
-
-      const auto readString = [&buffer, &header] (bool skipCheck = false) {
-         char stringLen;
-         char str[256];
-         if (!skipCheck && ((buffer - header) >= headerSize)) {
-            stringLen = 0;
-         } else {
-            frombuf(buffer, &stringLen);
-            if (stringLen < 0)
-               stringLen = 0;
-            else if ((buffer - header) + stringLen > headerSize)
-               stringLen = headerSize - (buffer - header);
-         }
-         for (int i = 0; i < stringLen; ++i)
-            frombuf(buffer, &str[i]);
-         str[static_cast<int>(stringLen)] = 0;
-
-         return std::string(str, stringLen);
-      };
-
-      node.fClassName = readString(true);
-
-      if (idcur == static_cast<std::uint64_t>(fSeekFree))
-         node.fClassName = "FreeSegments";
-      else if (idcur == static_cast<std::uint64_t>(fSeekInfo))
-         node.fClassName = "StreamerInfo";
-      else if (idcur == static_cast<std::uint64_t>(fSeekKeys))
-         node.fClassName = "KeysList";
-
-      node.fKeyName = readString();
-      node.fKeyTitle = readString();
-
-      idcur += nbytes;
+   char header[headerSize];
+   if (fFile->ReadBuffer(header, nread)) {
+      // ReadBuffer returns kTRUE in case of failure.
+      auto node = ROOT::Detail::TKeyMapNode{idcur, ROOT::Detail::TKeyMapNode::kError};
+      fCurAddr = end;
+      return node;
    }
 
-   return res;
+   char *buffer = header;
+   Int_t nbytes;
+   frombuf(buffer, &nbytes);
+   if (!nbytes) {
+      auto node = ROOT::Detail::TKeyMapNode{idcur, ROOT::Detail::TKeyMapNode::kError};
+      fCurAddr = end;
+      return node;
+   }
+
+   if (nbytes < 0) {
+      // free slot
+      auto node =
+         ROOT::Detail::TKeyMapNode{idcur, ROOT::Detail::TKeyMapNode::kGap, static_cast<std::uint32_t>(-nbytes)};
+      fCurAddr -= nbytes;
+      return node;
+   }
+
+   auto node = ROOT::Detail::TKeyMapNode{idcur, ROOT::Detail::TKeyMapNode::kKey, static_cast<std::uint32_t>(nbytes)};
+   frombuf(buffer, &node.fKeyVersion);
+   frombuf(buffer, &node.fObjLen);
+   frombuf(buffer, &node.fDatime);
+   frombuf(buffer, &node.fKeyLen);
+   frombuf(buffer, &node.fCycle);
+   if (node.fKeyVersion > 1000) {
+      frombuf(buffer, &node.fSeekKey);
+      frombuf(buffer, &node.fSeekPdir);
+   } else {
+      Int_t skey, sdir;
+      frombuf(buffer, &skey);
+      frombuf(buffer, &sdir);
+      node.fSeekKey = static_cast<Long64_t>(skey);
+      node.fSeekPdir = static_cast<Long64_t>(sdir);
+   }
+
+   const auto readString = [&buffer, &header](bool skipCheck = false) {
+      char stringLen;
+      char str[256];
+      if (!skipCheck && ((buffer - header) >= headerSize)) {
+         stringLen = 0;
+      } else {
+         frombuf(buffer, &stringLen);
+         if (stringLen < 0)
+            stringLen = 0;
+         else if ((buffer - header) + stringLen > headerSize)
+            stringLen = headerSize - (buffer - header);
+      }
+      for (int i = 0; i < stringLen; ++i)
+         frombuf(buffer, &str[i]);
+      str[static_cast<int>(stringLen)] = 0;
+
+      return std::string(str, stringLen);
+   };
+
+   node.fClassName = readString(true);
+
+   if (idcur == static_cast<std::uint64_t>(fFile->fSeekFree))
+      node.fClassName = "FreeSegments";
+   else if (idcur == static_cast<std::uint64_t>(fFile->fSeekInfo))
+      node.fClassName = "StreamerInfo";
+   else if (idcur == static_cast<std::uint64_t>(fFile->fSeekKeys))
+      node.fClassName = "KeysList";
+
+   node.fKeyName = readString();
+   node.fKeyTitle = readString();
+
+   fCurAddr += nbytes;
+
+   return node;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
