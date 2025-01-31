@@ -55,7 +55,6 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
   RooAbsPdf(name,title),
   _pdfObsList("pdfObs","List of p.d.f. observables",this),
   _dataHist(const_cast<RooDataHist*>(&dhist)),
-  _codeReg(10),
   _intOrder(intOrder)
 {
   _histObsList.addClone(vars) ;
@@ -104,7 +103,6 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
   RooAbsPdf(name,title),
   _pdfObsList("pdfObs","List of p.d.f. observables",this),
   _dataHist(const_cast<RooDataHist*>(&dhist)),
-  _codeReg(10),
   _intOrder(intOrder)
 {
   _histObsList.addClone(histObs) ;
@@ -164,7 +162,6 @@ RooHistPdf::RooHistPdf(const RooHistPdf& other, const char* name) :
   RooAbsPdf(other,name),
   _pdfObsList("pdfObs",this,other._pdfObsList),
   _dataHist(other._dataHist),
-  _codeReg(other._codeReg),
   _intOrder(other._intOrder),
   _cdfBoundaries(other._cdfBoundaries),
   _totVolume(other._totVolume),

@@ -82,7 +82,6 @@ RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& 
   _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,false,false),
   _projCacheMgr(this,10),
   _intCacheMgr(this,10),
-  _codeReg(10),
   _pdfList("!pdfs","List of PDFs",this),
   _coefList("!coefficients","List of coefficients",this)
 {
@@ -160,7 +159,6 @@ RooAddModel::RooAddModel(const RooAddModel &other, const char *name)
      _refCoefRangeName((TNamed *)other._refCoefRangeName),
      _projCacheMgr(other._projCacheMgr, this),
      _intCacheMgr(other._intCacheMgr, this),
-     _codeReg(other._codeReg),
      _pdfList("!pdfs", this, other._pdfList),
      _coefList("!coefficients", this, other._coefList),
      _haveLastCoef(other._haveLastCoef),

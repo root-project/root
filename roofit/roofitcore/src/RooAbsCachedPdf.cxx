@@ -326,18 +326,18 @@ int RooAbsCachedPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
     return 0 ;
   }
 
-  RooArgSet* all = new RooArgSet ;
-  RooArgSet* ana = new RooArgSet ;
-  RooArgSet* nrm = new RooArgSet ;
-  all->addClone(allVars) ;
-  ana->addClone(analVars) ;
+  RooArgSet all;
+  RooArgSet ana;
+  RooArgSet nrm;
+  all.addClone(allVars) ;
+  ana.addClone(analVars) ;
   if (normSet) {
-    nrm->addClone(*normSet) ;
+    nrm.addClone(*normSet) ;
   }
   std::vector<int> codeList(2);
   codeList[0] = code ;
   codeList[1] = cache->pdf()->haveUnitNorm() ? 1 : 0 ;
-  int masterCode = _anaReg.store(codeList,all,ana,nrm)+1 ; // takes ownership of all sets
+  int masterCode = _anaReg.store(codeList,&all,&ana,&nrm)+1 ;
 
 
   // Mark all observables as internally integrated
@@ -368,11 +368,11 @@ double RooAbsCachedPdf::analyticalIntegralWN(int code, const RooArgSet* normSet,
     return 0.;
   }
 
-  RooArgSet *allVars(nullptr);
-  RooArgSet *anaVars(nullptr);
-  RooArgSet *normSet2(nullptr);
-  RooArgSet *dummy(nullptr);
-  const std::vector<int> codeList = _anaReg.retrieve(code-1,allVars,anaVars,normSet2,dummy) ;
+  auto retrieved = _anaReg.retrieve(code-1);
+  std::vector<int> const &codeList = retrieved.codes;
+  RooArgSet *allVars = retrieved.sets[0];
+  RooArgSet *anaVars = retrieved.sets[1];
+  RooArgSet *normSet2 = retrieved.sets[2];
 
   // Mirror getAnalyticalIntegralWN's lookup key. If the caller passed a null
   // normSet to getAnalyticalIntegralWN, the stored normSet2 is non-null but

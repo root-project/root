@@ -683,8 +683,7 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
   analVars.add(allAnalVars) ;
 
   // Store set of variables analytically integrated
-  RooArgSet* intSet = new RooArgSet(allAnalVars) ;
-  Int_t masterCode = _codeReg.store(subCode,intSet)+1 ;
+  Int_t masterCode = _codeReg.store(subCode,&allAnalVars)+1 ;
 
   return masterCode ;
 }
@@ -702,8 +701,9 @@ double RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, con
   }
 
   // Retrieve analytical integration subCodes and set of observabels integrated over
-  RooArgSet* intSet = nullptr;
-  const std::vector<Int_t>& subCode = _codeReg.retrieve(code-1,intSet) ;
+  auto retrieved = _codeReg.retrieve(code-1);
+  std::vector<int> const &subCode = retrieved.codes;
+  RooArgSet *intSet = retrieved.sets[0];
   if (subCode.empty()) {
     std::stringstream errorMsg;
     errorMsg << "RooAddPdf::analyticalIntegral(" << GetName() << "): ERROR unrecognized integration code, " << code;
