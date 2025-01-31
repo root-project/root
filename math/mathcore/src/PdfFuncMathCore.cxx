@@ -46,16 +46,14 @@ namespace Math {
 
       if (xi <= 0) return 0;
       double v = (x - x0)/xi;
-      double u, ue, us, denlan;
+      double u, denlan;
       if (v < -5.5) {
          u   = std::exp(v+1.0);
          if (u < 1e-10) return 0.0;
-         ue  = std::exp(-1/u);
-         us  = std::sqrt(u);
-         denlan = 0.3989422803*(ue/us)*(1+(a1[0]+(a1[1]+a1[2]*u)*u)*u);
+         denlan = 0.3989422803*std::exp(-1 / u - 0.5 * (v + 1))*(1+(a1[0]+(a1[1]+a1[2]*u)*u)*u);
       } else if(v < -1) {
          u   = std::exp(-v-1);
-         denlan = std::exp(-u)*std::sqrt(u)*
+         denlan = std::exp(-u - 0.5 * (v + 1))*
             (p1[0]+(p1[1]+(p1[2]+(p1[3]+p1[4]*v)*v)*v)*v)/
             (q1[0]+(q1[1]+(q1[2]+(q1[3]+q1[4]*v)*v)*v)*v);
       } else if(v < 1) {
