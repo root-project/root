@@ -16,44 +16,47 @@
 #ifndef ROO_AIC_REGISTRY
 #define ROO_AIC_REGISTRY
 
+#include <array>
+#include <memory>
 #include <vector>
-#include "Rtypes.h"
 
 class RooArgSet;
 
-typedef RooArgSet* pRooArgSet ;
-
+/// Registry for analytical integration codes.
 class RooAICRegistry {
 
 public:
-  RooAICRegistry(UInt_t size = 10) ;
-  RooAICRegistry(const RooAICRegistry &other);
-  RooAICRegistry &operator=(const RooAICRegistry &other);
-  RooAICRegistry(RooAICRegistry &&other) = default;
-  RooAICRegistry &operator=(RooAICRegistry &&other) = default;
-  virtual ~RooAICRegistry() ;
+   RooAICRegistry(std::size_t size = 10);
+   RooAICRegistry(const RooAICRegistry &other);
+   RooAICRegistry &operator=(const RooAICRegistry &other);
+   RooAICRegistry(RooAICRegistry &&other) = default;
+   RooAICRegistry &operator=(RooAICRegistry &&other) = default;
 
-  Int_t store(const std::vector<Int_t>& codeList, RooArgSet* set1 = nullptr, RooArgSet* set2 = nullptr,
-              RooArgSet* set3 = nullptr, RooArgSet* set4 = nullptr) ;
-  const std::vector<Int_t>& retrieve(Int_t masterCode) const ;
-  const std::vector<Int_t>&  retrieve(Int_t masterCode, pRooArgSet& set1) const ;
-  const std::vector<Int_t>&  retrieve(Int_t masterCode, pRooArgSet& set1, pRooArgSet& set2) const ;
-  const std::vector<Int_t>&  retrieve(Int_t masterCode, pRooArgSet& set1,
-                                      pRooArgSet& set2, pRooArgSet& set3, pRooArgSet& set4) const ;
-  size_t size() const;
+   int store(const std::vector<int> &codeList, RooArgSet *set1 = nullptr, RooArgSet *set2 = nullptr,
+             RooArgSet *set3 = nullptr, RooArgSet *set4 = nullptr);
 
-private:
-  void copyImpl(const RooAICRegistry &other);
+   struct Output {
+      std::vector<int> const &codes;
+      std::array<RooArgSet*, 4> sets;
+   };
+
+   /// Retrieve the array of integer codes associated with the given master code,
+   /// together with the (up to four) RooArgSets associated with this master code.
+   Output retrieve(int masterCode)
+   {
+      Output out{.codes = _clArr[masterCode], .sets = {}};
+      for (std::size_t iArr = 0; iArr < 4; ++iArr) {
+         out.sets[iArr] = _asArr[iArr][masterCode].get();
+      }
+      return out;
+   }
+
+   /// Number of stored code lists.
+   std::size_t size() const { return _clArr.size(); }
 
 protected:
-
-  std::vector<std::vector<Int_t> > _clArr; ///<! Array of array of code lists
-  std::vector<pRooArgSet> _asArr1;         ///<! Array of 1st RooArgSet pointers
-  std::vector<pRooArgSet> _asArr2;         ///<! Array of 2nd RooArgSet pointers
-  std::vector<pRooArgSet> _asArr3;         ///<! Array of 3rd RooArgSet pointers
-  std::vector<pRooArgSet> _asArr4;         ///<! Array of 4th RooArgSet pointers
-
-  ClassDef(RooAICRegistry,2) // Registry for analytical integration codes
-} ;
+   std::vector<std::vector<int>> _clArr;                          ///<! Array of array of code lists
+   std::array<std::vector<std::unique_ptr<RooArgSet>>, 4> _asArr; ///<! Array of RooArgSet pointers
+};
 
 #endif
