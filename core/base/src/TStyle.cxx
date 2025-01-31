@@ -749,6 +749,8 @@ void TStyle::Reset(Option_t *opt)
    fFrameBorderMode= 1;
    fBarWidth       = 1;
    fBarOffset      = 0;
+   fCandleCircleLineWidth = 1;
+   fCandleCrossLineWidth = 1;
    fDrawBorder     = 0;
    fOptLogx        = 0;
    fOptLogy        = 0;
