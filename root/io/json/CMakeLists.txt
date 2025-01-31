@@ -1,9 +1,3 @@
-#-------------------------------------------------------------------------------
-#
-# Placeholder file to translate the tests to the new CTest system. Meanwhile we
-# define a CTest test that calls 'make' in ${CMAKE_CURRENT_SOURCE_DIR}
-#
-#-------------------------------------------------------------------------------
-#ROOTTEST_ADD_OLDTEST()
-ROOTTEST_COMPILE_MACRO(test_classes.h)
-ROOTTEST_ADD_AUTOMACROS(DEPENDS ${COMPILE_MACRO_TEST})
+
+ROOTTEST_COMPILE_MACRO(test_classes.h FIXTURES_SETUP json-test-classes-build)
+ROOTTEST_ADD_AUTOMACROS(FIXTURES_REQUIRED json-test-classes-build)
