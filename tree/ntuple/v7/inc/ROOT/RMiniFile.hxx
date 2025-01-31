@@ -199,9 +199,10 @@ private:
    /// For a TFile container written by a C file stream, write the header and TFile object
    void WriteTFileSkeleton(int defaultCompression);
    /// The only key that will be visible in file->ls()
-   void WriteTFileNTupleKey();
+   /// Returns the size on disk of the anchor object
+   std::uint64_t WriteTFileNTupleKey(int compression);
    /// Write the TList with the RNTuple key
-   void WriteTFileKeysList();
+   void WriteTFileKeysList(std::uint64_t anchorSize);
    /// Write the compressed streamer info record with the description of the RNTuple class
    void WriteTFileStreamerInfo(int compression);
    /// Last record in the file
