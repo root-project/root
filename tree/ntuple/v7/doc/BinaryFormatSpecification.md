@@ -20,7 +20,7 @@ Such optional features, although unknown to previous software versions,
 won't prevent those software versions from properly reading the file.
 Old readers will safely ignore these features.
 
-_Patch_: an increment of the patch version indicates backported features from newer format versions.
+_Patch_: an increment of the patch version indicates clarifications or backported features from newer format versions.
 The backported features may correspond to a major or a minor release.
 
 Except for the epoch, the versioning is for reporting only.
@@ -162,7 +162,7 @@ The level is between 1 and 9 and is extrapolated to the spectrum of levels of th
 
 Feature flags are 64bit integers where every bit represents a certain forward-incompatible feature that is used
 in the binary format of the RNTuple at hand (see Versioning Notes).
-The most significant bit is used to indicate that one or more flags is active with a bit higher than 63.
+The most significant bit is used to indicate that one or more flags are active with a bit number higher than 62.
 That means that readers need to continue reading feature flags as long as their signed integer value is negative.
 
 Readers should gracefully abort reading when they encounter unknown bits set.
@@ -293,7 +293,7 @@ The following envelope types exist
 
 | Type              |  ID  | Contents                                                          |
 |-------------------|------|-------------------------------------------------------------------|
-| _reserved_        | 0x00 | unused and reserved
+| _reserved_        | 0x00 | unused and reserved                                               |
 | Header            | 0x01 | RNTuple schema: field and column types                            |
 | Footer            | 0x02 | Description of clusters                                           |
 | Page list         | 0x03 | Location of data pages                                            |
@@ -357,7 +357,7 @@ Every field record frame of the list of fields has the following contents
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                          Type Version                         |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+                        Parent Field ID                        +
+|                        Parent Field ID                        |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |        Structural Role        |             Flags             |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -422,9 +422,9 @@ Depending on the flags, the following optional values follow:
 +               Array Size (if flag 0x01 is set)                +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+             Source Field ID (if flag 0x02 is set)             +
+|             Source Field ID (if flag 0x02 is set)             |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+            ROOT Type Checksum (if flag 0x04 is set)           +
+|            ROOT Type Checksum (if flag 0x04 is set)           |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
@@ -442,7 +442,7 @@ Top-level fields have their own field ID set as parent ID.
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |              Type             |        Bits on Storage        |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+                            Field ID                           +
+|                            Field ID                           |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |             Flags             |      Representation Index     |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -571,7 +571,7 @@ An alias column has the following format
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+                      Physical Column ID                       +
+|                      Physical Column ID                       |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                           Field ID                            |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -583,7 +583,7 @@ The second 32-bit integer references the associated "projected" field.
 A projected field is a field using alias columns to present available data by an alternative C++ type.
 Alias columns have no prescribed column ID of their own, since alias columns are not referenced.
 In the footer and page list envelopes, only physical column IDs must be referenced.
-However, columns should be attached to projected fields in their serialization order (first header then footer).
+However, columns should be attached to projected fields in their serialization order (first header, then footer).
 
 
 #### Extra type information
@@ -595,7 +595,7 @@ The type information record frame has the following contents followed by a strin
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+                       Content Identifier                      +
+|                       Content Identifier                      |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                          Type Version                         |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -730,7 +730,7 @@ See next Section on "Suppressed Columns" for additional details.
 Note that the size of the inner list frame includes the element offset and compression settings.
 The order of the outer items must match the order of columns in the header and the extension header (small to large).
 
-The order of the inner items must match the order of pages or elements, resp.
+The order of the inner items must match the order of pages or elements, respectively.
 Every inner item (that describes a page) has the following structure followed by a locator for the page.
 
 ```
@@ -946,14 +946,14 @@ The behavior depends on whether the class has an associated collection proxy.
 #### Regular class / struct
 
 User defined C++ classes are supported with the following limitations
-  - The class must have a dictionary
-  - All persistent members and base classes must be themselves types with RNTuple I/O support
-  - Transient members must be marked, e.g. by a `//!` comment
-  - The class must not be in the `std` namespace
-  - The class must be empty or splittable (e.g., the class must not provide a custom streamer)
+  - The class must have a dictionary.
+  - All persistent members and base classes must be themselves types with RNTuple I/O support.
+  - Transient members must be marked, e.g. by a `//!` comment.
+  - The class must not be in the `std` namespace.
+  - The class must be empty or splittable (e.g., the class must not provide a custom streamer).
   - There is no support for polymorphism,
-    i.e. a field of class `A` cannot store class `B` that derives from `A`
-  - Virtual inheritance is unsupported
+    i.e. a field of class `A` cannot store class `B` that derives from `A`.
+  - Virtual inheritance is unsupported.
 
 User classes are stored as a record parent field with no attached columns.
 Direct base classes and persistent members are stored as subfields with their respective types.
@@ -996,7 +996,7 @@ into a single `Byte` column.
 It can have any type supported by `TClass` (even types that are not available in the native RNTuple type system).
 The first (principal) column is of type `(Split)Index[32|64]`.
 The second column is of type `Byte`.
-
+In effect, the column representation is identical to a collection of `std::byte`.
 
 ### Untyped collections and records
 
