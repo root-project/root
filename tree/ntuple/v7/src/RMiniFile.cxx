@@ -1218,10 +1218,10 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::Commit(int compression)
       return;
    }
 
-   WriteTFileNTupleKey();
-   WriteTFileKeysList();
+   auto anchorSize = WriteTFileNTupleKey(compression);
+   WriteTFileKeysList(anchorSize); // NOTE: this is written uncompressed
    WriteTFileStreamerInfo(compression);
-   WriteTFileFreeList();
+   WriteTFileFreeList(); // NOTE: this is written uncompressed
 
    // Update header and TFile record
    memcpy(fFileSimple.fHeaderBlock, &fFileSimple.fControlBlock->fHeader, fFileSimple.fControlBlock->fHeader.GetSize());
@@ -1398,9 +1398,8 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileStreamerInfo(int
    const auto bufPayload = buffer.Buffer() + keyLen;
    const auto lenPayload = buffer.Length() - keyLen;
 
-   RNTupleCompressor compressor;
    auto zipStreamerInfos = MakeUninitArray<unsigned char>(lenPayload);
-   auto szZipStreamerInfos = compressor.Zip(bufPayload, lenPayload, compression, zipStreamerInfos.get());
+   auto szZipStreamerInfos = RNTupleCompressor::Zip(bufPayload, lenPayload, compression, zipStreamerInfos.get());
 
    fFileSimple.WriteKey(zipStreamerInfos.get(), szZipStreamerInfos, lenPayload,
                         fFileSimple.fControlBlock->fHeader.GetSeekInfo(), RTFHeader::kBEGIN, "TList", "StreamerInfo",
@@ -1409,7 +1408,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileStreamerInfo(int
                                                     fFileSimple.fControlBlock->fHeader.GetSeekInfo());
 }
 
-void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileKeysList()
+void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileKeysList(std::uint64_t anchorSize)
 {
    RTFString strEmpty;
    RTFString strRNTupleClass{"ROOT::RNTuple"};
@@ -1417,7 +1416,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileKeysList()
    RTFString strFileName{fFileName};
 
    RTFKey keyRNTuple(fFileSimple.fControlBlock->fSeekNTuple, RTFHeader::kBEGIN, strRNTupleClass, strRNTupleName,
-                     strEmpty, RTFNTuple::GetSizePlusChecksum());
+                     strEmpty, RTFNTuple::GetSizePlusChecksum(), anchorSize);
 
    fFileSimple.fControlBlock->fFileRecord.SetSeekKeys(fFileSimple.fKeyOffset);
    RTFKeyList keyList{1};
@@ -1455,7 +1454,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileFreeList()
    fFileSimple.fControlBlock->fHeader.SetEnd(fFileSimple.fFilePos);
 }
 
-void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileNTupleKey()
+std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileNTupleKey(int compression)
 {
    RTFString strRNTupleClass{"ROOT::RNTuple"};
    RTFString strRNTupleName{fNTupleName};
@@ -1471,8 +1470,13 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileNTupleKey()
    memcpy(keyBuf, &ntupleOnDisk, sizeof(RTFNTuple));
    memcpy(keyBuf + sizeof(RTFNTuple), &checksum, sizeof(checksum));
 
-   fFileSimple.WriteKey(keyBuf, sizeof(keyBuf), sizeof(keyBuf), fFileSimple.fControlBlock->fSeekNTuple,
+   const auto sizeAnchor = sizeof(RTFNTuple) + sizeof(checksum);
+   char zipAnchor[RTFNTuple::GetSizePlusChecksum()];
+   auto szZipAnchor = RNTupleCompressor::Zip(keyBuf, sizeAnchor, compression, zipAnchor);
+
+   fFileSimple.WriteKey(zipAnchor, szZipAnchor, sizeof(keyBuf), fFileSimple.fControlBlock->fSeekNTuple,
                         RTFHeader::kBEGIN, "ROOT::RNTuple", fNTupleName, "");
+   return szZipAnchor;
 }
 
 void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileSkeleton(int defaultCompression)
