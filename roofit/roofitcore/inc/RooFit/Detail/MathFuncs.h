@@ -765,6 +765,20 @@ inline double multiVarGaussian(int n, const double *x, const double *mu, const d
    return std::exp(-0.5 * result);
 }
 
+// Integral of a step function defined by `nBins` intervals, where the
+// intervals have values `coefs` and the boundary on the interval `iBin` is
+// given by `[boundaries[i], boundaries[i+1])`.
+inline double stepFunctionIntegral(double xmin, double xmax, std::size_t nBins, double const *boundaries, double const *coefs)
+{
+   double out = 0.0;
+   for (std::size_t i = 0; i < nBins; ++i) {
+      double a = boundaries[i];
+      double b = boundaries[i + 1];
+      out += coefs[i] * std::max(0.0, std::min(b, xmax) - std::max(a, xmin));
+   }
+   return out;
+}
+
 } // namespace MathFuncs
 } // namespace Detail
 } // namespace RooFit
