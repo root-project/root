@@ -74,6 +74,20 @@ std::vector<double> getParamVals(RooAbsMinimizerFcn &fcn)
    return values;
 }
 
+std::unique_ptr<RooFitResult> runMinimizer(RooAbsReal &nll, bool offsetting)
+{
+   RooMinimizer m0{nll};
+
+   m0.setVerbose(false);
+   m0.setStrategy(0);
+   m0.setPrintLevel(-1);
+   m0.setOffsetting(offsetting);
+
+   m0.minimize("Minuit2", "migrad");
+
+   return std::unique_ptr<RooFitResult>{m0.save()};
+}
+
 } // namespace
 
 namespace RFMP = RooFit::MultiProcess;
@@ -145,15 +159,7 @@ TEST_P(LikelihoodGradientJobTest, Gaussian1D)
 
    // --------
 
-   RooMinimizer m0{*nll};
-
-   m0.setStrategy(0);
-   m0.setPrintLevel(-1);
-   m0.setOffsetting(offsetting);
-
-   m0.minimize("Minuit2", "migrad");
-
-   std::unique_ptr<RooFitResult> m0result{m0.save()};
+   std::unique_ptr<RooFitResult> m0result{runMinimizer(*nll, offsetting)};
    double minNll0 = m0result->minNll();
    double edm0 = m0result->edm();
    double mu0 = mu->getVal();
@@ -248,15 +254,7 @@ TEST_P(LikelihoodGradientJobTest, GaussianND)
 
    // --------
 
-   RooMinimizer m0(*nll);
-
-   m0.setStrategy(0);
-   m0.setPrintLevel(-1);
-   m0.setOffsetting(offsetting);
-
-   m0.minimize("Minuit2", "migrad");
-
-   std::unique_ptr<RooFitResult> m0result{m0.save()};
+   std::unique_ptr<RooFitResult> m0result{runMinimizer(*nll, offsetting)};
    double minNll0 = m0result->minNll();
    double edm0 = m0result->edm();
    std::vector<double> mean0(N);
@@ -432,7 +430,7 @@ TEST_P(SimBinnedConstrainedTest, ConstrainedAndOffset)
 
    // do a minimization, but now using GradMinimizer and its MP version
    std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data, Constrain(*w.var("alpha_bkg_A")),
-                                                  GlobalObservables(*w.var("alpha_bkg_obs_B")), Offset(true))};
+                                                  GlobalObservables(*w.var("alpha_bkg_obs_B")), Offset("initial"))};
 
    // parameters
    std::size_t NWorkers = 2;
@@ -531,16 +529,7 @@ TEST_P(LikelihoodGradientJobTest, Gaussian1DAlsoWithLikelihoodJob)
 
    // --------
 
-   RooMinimizer m0{*nll};
-
-   m0.setStrategy(0);
-   m0.setPrintLevel(-1);
-   m0.setVerbose(false);
-   m0.setOffsetting(offsetting);
-
-   m0.minimize("Minuit2", "migrad");
-
-   std::unique_ptr<RooFitResult> m0result{m0.save()};
+   std::unique_ptr<RooFitResult> m0result{runMinimizer(*nll, offsetting)};
    double minNll0 = m0result->minNll();
    double edm0 = m0result->edm();
    double mu0 = mu->getVal();
@@ -649,16 +638,7 @@ TEST_P(LikelihoodGradientJobErrorTest, ErrorHandling)
    RooArgSet savedValues;
    values.snapshot(savedValues);
 
-   RooMinimizer m0{*nll};
-
-   m0.setStrategy(0);
-   m0.setPrintLevel(-1);
-   m0.setVerbose(false);
-   //   m0.setPrintEvalErrors(200);
-
-   m0.minimize("Minuit2", "migrad");
-
-   std::unique_ptr<RooFitResult> m0result{m0.save()};
+   std::unique_ptr<RooFitResult> m0result{runMinimizer(*nll, false)};
    double minNll0 = m0result->minNll();
    double edm0 = m0result->edm();
    double m_0 = w.var("m")->getVal();
@@ -858,18 +838,10 @@ TEST_P(LikelihoodGradientJobBinnedErrorTest, TriggerMuLEZero)
 
    // legacy RooFit fit
    std::unique_ptr<RooAbsReal> nll(w.pdf("model")->createNLL(h_data, RooFit::EvalBackend::Legacy()));
-   RooMinimizer m0{*nll};
 
    double nll0BeforeFit = nll->getVal();
 
-   m0.setStrategy(0);
-   m0.setPrintLevel(-1);
-   m0.setVerbose(false);
-   //   m0.setPrintEvalErrors(200);
-
-   m0.minimize("Minuit2", "migrad");
-
-   std::unique_ptr<RooFitResult> m0result{m0.save()};
+   std::unique_ptr<RooFitResult> m0result{runMinimizer(*nll, false)};
    double minNll0 = m0result->minNll();
    double mu_sig0 = w.var("mu_sig")->getVal();
    double mu_bkg_A0 = w.var("mu_bkg_A")->getVal();

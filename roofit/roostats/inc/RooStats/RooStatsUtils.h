@@ -37,7 +37,7 @@ In addition the namespace contain a set of utility functions.
 
 namespace RooStats {
    struct RooStatsConfig {
-      bool useLikelihoodOffset{false}; ///< Offset the likelihood by passing RooFit::Offset to fitTo().
+      std::string useLikelihoodOffset = "none"; ///< Offset the likelihood by passing RooFit::Offset to fitTo().
       bool useEvalErrorWall{true};     ///< Use the error wall RooFit::EvalErrorWall to drive the fitter away from disallowed parameter values.
    };
 
@@ -131,12 +131,31 @@ namespace RooStats {
    /// useful function to print in one line the content of a set with their values
    void PrintListContent(const RooArgList & l, std::ostream & os = std::cout);
 
-   /// function to set a global flag in RooStats to use NLL offset when performing nll computations
-   /// Note that not all ROoStats tools implement this capabilities
-   void UseNLLOffset(bool on);
+   /// Use an offset in NLL calculations.
+   /// \deprecated Use SetNLLOffsetMode().
+   inline void UseNLLOffset(bool on) {
+      GetGlobalRooStatsConfig().useLikelihoodOffset = on ? "initial" : "none";
+   }
 
-   /// function returning if the flag to check if the flag to use  NLLOffset is set
-   bool IsNLLOffset();
+   /// Function returning if the flag to check if the flag to use  NLLOffset is
+   /// set.
+   /// \deprecated Use NLLOffsetMode().
+   inline bool IsNLLOffset() {
+      return GetGlobalRooStatsConfig().useLikelihoodOffset == "initial";
+   }
+
+   /// Function to set a global flag in RooStats to use NLL offset when
+   /// performing nll computations.
+   /// \note Not all RooStats tools implement this capabilities.
+   inline void SetNLLOffsetMode(std::string const& mode) {
+      GetGlobalRooStatsConfig().useLikelihoodOffset = mode;
+   }
+
+   /// Test what offsetting mode RooStats should use by default.
+   inline std::string const &NLLOffsetMode() {
+      return GetGlobalRooStatsConfig().useLikelihoodOffset;
+   }
+
 
    /// function that clones a workspace, copying all needed components and discarding all others
    RooWorkspace* MakeReducedWorkspace(RooWorkspace *oldWS, const char *newName, bool copySnapshots,

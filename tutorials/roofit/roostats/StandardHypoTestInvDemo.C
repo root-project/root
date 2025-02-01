@@ -357,7 +357,7 @@ void StandardHypoTestInvDemo(const char *infile = nullptr, const char *wsName = 
 
    // enable offset for all roostats
    if (optHTInv.useNLLOffset)
-      RooStats::UseNLLOffset(true);
+      RooStats::SetNLLOffsetMode("initial");
 
    RooWorkspace *w = dynamic_cast<RooWorkspace *>(file->Get(wsName));
    HypoTestInverterResult *r = nullptr;
@@ -672,13 +672,13 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
       tw.Start();
       std::unique_ptr<RooFitResult> fitres{sbModel->GetPdf()->fitTo(
          *data, InitialHesse(false), Hesse(false), Minimizer(mMinimizerType.c_str(), "Migrad"), Strategy(0),
-         PrintLevel(mPrintLevel), Constrain(constrainParams), Save(true), Offset(RooStats::IsNLLOffset()))};
+         PrintLevel(mPrintLevel), Constrain(constrainParams), Save(true), Offset(RooStats::NLLOffsetMode()))};
       if (fitres->status() != 0) {
          Warning("StandardHypoTestInvDemo",
                  "Fit to the model failed - try with strategy 1 and perform first an Hesse computation");
          fitres = std::unique_ptr<RooFitResult>{sbModel->GetPdf()->fitTo(
             *data, InitialHesse(true), Hesse(false), Minimizer(mMinimizerType.c_str(), "Migrad"), Strategy(1),
-            PrintLevel(mPrintLevel + 1), Constrain(constrainParams), Save(true), Offset(RooStats::IsNLLOffset()))};
+            PrintLevel(mPrintLevel + 1), Constrain(constrainParams), Save(true), Offset(RooStats::NLLOffsetMode()))};
       }
       if (fitres->status() != 0)
          Warning("StandardHypoTestInvDemo", " Fit still failed - continue anyway.....");
@@ -979,7 +979,7 @@ HypoTestInverterResult *RooStats::HypoTestInvTool::RunInverter(RooWorkspace *w, 
 
             sbModel->GetPdf()->fitTo(*data, InitialHesse(false), Hesse(false),
                                      Minimizer(mMinimizerType.c_str(), "Migrad"), Strategy(0), PrintLevel(mPrintLevel),
-                                     Constrain(constrainParams), Offset(RooStats::IsNLLOffset()));
+                                     Constrain(constrainParams), Offset(RooStats::NLLOffsetMode()));
 
             std::cout << "rebuild using fitted parameter value for B-model snapshot" << std::endl;
             constrainParams.Print("v");

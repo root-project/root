@@ -561,7 +561,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
                 PrintLevel(self.mPrintLevel),
                 Constrain(constrainParams),
                 Save(True),
-                Offset(RooStats.IsNLLOffset()),
+                Offset(RooStats.NLLOffsetMode()),
             )
 
             if fitres.status() != 0:
@@ -578,7 +578,7 @@ class HypoTestInvTool_plus(ROOT.RooStats.HypoTestInvTool):
                     PrintLevel(self.mPrintLevel + 1),
                     Constrain(constrainParams),
                     Save(True),
-                    Offset(RooStats.IsNLLOffset()),
+                    Offset(RooStats.NLLOffsetMode()),
                 )
 
             if fitres.status() != 0:
@@ -1098,7 +1098,7 @@ def StandardHypoTestInvDemo(
 
     # enable offset for all roostats
     if optHTInv.useNLLOffset:
-        RooStats.UseNLLOffset(True)
+        RooStats.SetNLLOffsetMode("initial")
 
     w = file.Get(wsName)
     r = 0
