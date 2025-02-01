@@ -78,16 +78,6 @@ namespace RooStats {
       return std::sqrt(za2);
    }
 
-   /// Use an offset in NLL calculations.
-   void UseNLLOffset(bool on) {
-      GetGlobalRooStatsConfig().useLikelihoodOffset = on;
-   }
-
-   /// Test of RooStats should by default offset NLL calculations.
-   bool IsNLLOffset() {
-      return GetGlobalRooStatsConfig().useLikelihoodOffset;
-   }
-
    void FactorizePdf(const RooArgSet &observables, RooAbsPdf &pdf, RooArgList &obsTerms, RooArgList &constraints) {
    // utility function to factorize constraint terms from a pdf
    // (from G. Petrucciani)

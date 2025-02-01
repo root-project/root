@@ -85,7 +85,10 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
           fNll = std::unique_ptr<RooAbsReal>{fPdf->createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),
                                  RooFit::GlobalObservables(fGlobalObs), RooFit::ConditionalObservables(fConditionalObs), RooFit::Offset(fLOffset))};
 
-          if (fPrintLevel > 0 && fLOffset) std::cout << "ProfileLikelihoodTestStat::Evaluate - Use Offset in creating NLL " << std::endl ;
+          if (fPrintLevel > 0) {
+             std::cout << "ProfileLikelihoodTestStat::Evaluate - Use Offset mode \""
+                 << fLOffset << "\" in creating NLL" << std::endl;
+          }
 
           created = true ;
           if (fPrintLevel > 1) std::cout << "creating NLL " << &*fNll << " with data = " << &data << std::endl ;
@@ -191,9 +194,9 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
           // no need to minimize just evaluate the nll
           if (allParams.empty() ) {
              // be sure to evaluate with offsets
-             if (fLOffset) RooAbsReal::setHideOffset(false);
+             if (fLOffset == "initial") RooAbsReal::setHideOffset(false);
              condML = fNll->getVal();
-             if (fLOffset) RooAbsReal::setHideOffset(true);
+             if (fLOffset == "initial") RooAbsReal::setHideOffset(true);
           }
           else {
             fNll->clearEvalErrorLog();
@@ -221,7 +224,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
        if (type != 0)  {
           // for conditional only or unconditional fits
           // need to compute nll value without the offset
-          if (fLOffset) {
+          if (fLOffset == "initial") {
              RooAbsReal::setHideOffset(false) ;
              pll = fNll->getVal();
           }
