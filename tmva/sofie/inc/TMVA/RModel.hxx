@@ -26,7 +26,7 @@ private:
    std::unordered_map<std::string, std::string>
       fShapeParams; // parameters defining the dynamic shape (e.g. batch size), store also its default value
    std::vector<std::string> fOutputTensorNames;
-   std::vector<std::string> fInputTensorNames; // input tensor names using ONNX order
+   std::unordered_set<std::string> fInputTensorNames; // input tensor names using ONNX order
 
    std::vector<std::unique_ptr<ROperator>> fOperators;
 
@@ -36,7 +36,7 @@ private:
    const std::string SP = "   ";
 
    // memory pool information for intermediate tensors
-   size_t fTotalIntermediateMemory;
+   size_t fTotalIntermediateMemory = 0;
    MemoryPoolInfo fIntermediateMemoryInfo;
    std::unordered_map<std::string_view, std::pair<size_t, size_t>> fIntermediateTensorFrequencyLookup;
 
@@ -147,7 +147,7 @@ public:
    // used to infer the sub-graphs
    std::string GenerateInferSignature(bool isdecl = true);
 
-   void EvaluateIntermediateMemory(std::span<const std::string_view> op_input_tensors, const size_t& current_op_idx, size_t& total_memory, std::vector<size_t>& available_memory);
+   void EvaluateIntermediateMemory(std::span<const std::string_view> op_input_tensors, std::span<const std::string_view> op_output_tensors, const size_t& current_op_idx, std::vector<size_t>& available_memory);
    std::string AllocateIntermediateMemory(std::span<const std::string_view> op_output_tensors);
    void CheckAndFlushIntermediateMemory(std::span<const std::string_view> op_output_tensors, const size_t& op_idx);
 
@@ -169,7 +169,7 @@ protected:
    void GenerateSessionCode();
 
 public:
-   const std::vector<std::string> &GetInputTensorNames() const { return fInputTensorNames; }
+   const std::unordered_set<std::string> &GetInputTensorNames() const { return fInputTensorNames; }
    const std::vector<std::string> &GetOutputTensorNames() const { return fOutputTensorNames; }
 
    void ReadInitializedTensorsFromFile(long);
