@@ -149,7 +149,7 @@ void RModel::AddInputTensorInfo(std::string input_name, ETensorType type, std::v
 }
 
 void RModel::AddInputTensorName(std::string input_name) {
-    fInputTensorNames.push_back(UTILITY::Clean_name(input_name));
+    fInputTensorNames.emplace(UTILITY::Clean_name(input_name));
 }
 
 void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
@@ -170,7 +170,11 @@ void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
     // operators (but are not inputs to the model, i.e. they are intermediate 
     // tensors). This information is needed to keep a check on when a 
     // particular intermediate tensor can be flushed to free up memory for reuse.
-   for(size_t index = 0; index<op_input_tensors.size(); ++index){
+   for(size_t index = 0; index<op_input_tensors.size() && 
+         fInitializedTensors.find(UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInitializedTensors.end() && 
+         fInputTensorNames.find(UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInputTensorNames.end();
+         ++index){
+      std::cout<<"Checking input tensor "<<std::string(op_input_tensors[index])<<"\n";
       // check if the tensor is already in the lookup table
       if (fIntermediateTensorFrequencyLookup.find(op_input_tensors[index]) == fIntermediateTensorFrequencyLookup.end()) {
          // first time seeing this tensor: initialize the first and last index with the current index
@@ -305,19 +309,15 @@ void RModel::SetNotWritableInitializedTensor(const std::string & tensor_name) {
       t->second.SetNotWritable();
    }
 
-void RModel::EvaluateIntermediateMemory(std::span<const std::string_view> op_input_tensors, const size_t& current_op_idx, size_t& total_memory, std::vector<size_t>& available_memory) {
+void RModel::EvaluateIntermediateMemory(std::span<const std::string_view> op_input_tensors, std::span<const std::string_view> op_output_tensors, const size_t& current_op_idx, std::vector<size_t>& available_memory) {
    bool allocated;
 
-   for (auto &it : op_input_tensors){
-
+   for (auto &it : op_output_tensors){
       auto tensor_size = ConvertShapeToLength(GetTensorShape(std::string(it)));
-
+      if (GetTensorType(std::string(it)) == ETensorType::BOOL) continue;
+     
       // flag to check if the tensor is considered for allocation
       allocated = false;
-
-      // current index is the first occurence of the tensor, thus needs to be
-      // accounted in memory
-      if (fIntermediateTensorFrequencyLookup[it].first == current_op_idx){
 
          // check if there is any available memory
          for (auto chunk = available_memory.begin(); chunk != available_memory.end(); ) {
@@ -341,14 +341,19 @@ void RModel::EvaluateIntermediateMemory(std::span<const std::string_view> op_inp
          // either there was no available memory, or not enough to accomodate the tensor => we need to include 
          // the tensor in the total memory
          if (!allocated) {
-            total_memory += tensor_size;
+            fTotalIntermediateMemory += tensor_size;
          }
-      }
+   }
 
-      // if we have reached the last occurence of the tensor, it needs to be flushed from memory
-         if (fIntermediateTensorFrequencyLookup[it].second == current_op_idx) {
+   // if we have reached the last occurence of the tensor, it needs to be flushed from memory
+   for (auto &it : op_input_tensors) {
+    auto map_it = fIntermediateTensorFrequencyLookup.find(it);
+    if (map_it != fIntermediateTensorFrequencyLookup.end()) {
+        if (map_it->second.second == current_op_idx) {
+            auto tensor_size = ConvertShapeToLength(GetTensorShape(std::string(it)));
             available_memory.push_back(tensor_size);
          }
+      }
    }
 }
 
@@ -358,6 +363,7 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
    bool allocated = false;
 
    for (auto& it:op_output_tensors){
+         if (GetTensorType(std::string(it)) == ETensorType::BOOL) continue;
          auto tensor_size = ConvertShapeToLength(GetTensorShape(std::string(it)));
          memory_allocation_string = "\n // Allocating memory for intermediate tensor " + std::string(it) + " with size " + tensor_size + " bytes";
          if (!fIntermediateMemoryInfo.available_memory.empty()){
@@ -522,7 +528,7 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
          std::cout << "Initializing operator " << i << "  " << typeid(r).name() << std::endl;
       }
       fOperators[op_idx]->Initialize(*this);
-      EvaluateIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx, fTotalIntermediateMemory, available_memory);
+      EvaluateIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), fOperators[op_idx]->GetOpOutputTensors(), op_idx, available_memory);
       i++;
    }
 
@@ -551,7 +557,7 @@ void RModel::InitializeSubGraph(std::shared_ptr<RModel>  graph) {
 
    // add parent input tensors to current graph
    for (auto & name : fInputTensorNames)
-      graph->fInputTensorNames.push_back(name);
+      graph->fInputTensorNames.insert(name);
 
    // clean graph name
    graph->fName = UTILITY::Clean_name(graph->fName);
@@ -628,25 +634,33 @@ void RModel::GenerateIntermediateMemoryPool() {
 
 void RModel::GenerateIntermediateTensorInfo() {
    if (!fIntermediateTensorInfos.empty()) {
-      fGC += "\n//--- declare and allocate the intermediate tensors\n";
+      std::string tensor_declaration_block = ""; 
+
       for (auto &i : fIntermediateTensorInfos) {
-         size_t length = ConvertShapeToLength(i.second.shape);
-         if (i.second.type == ETensorType::FLOAT) {
-            fGC += "std::vector<float> fTensor_" + i.first + " = std::vector<float>(" + std::to_string(length) + ");\n";
-            fGC += "float * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+         if (fIntermediateTensorFrequencyLookup.find(i.first) == fIntermediateTensorFrequencyLookup.end()) {
+            size_t length = ConvertShapeToLength(i.second.shape);
+            
+            if (i.second.type == ETensorType::FLOAT) {
+               tensor_declaration_block += "std::vector<float> fTensor_" + i.first + " = std::vector<float>(" + std::to_string(length) + ");\n";
+               tensor_declaration_block += "float * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+            }
+            else if (i.second.type == ETensorType::DOUBLE) {
+               tensor_declaration_block += "std::vector<double> fTensor_" + i.first + " = std::vector<double>(" + std::to_string(length) + ");\n";
+               tensor_declaration_block += "double * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+            }
+            else if (i.second.type == ETensorType::INT64) {
+               tensor_declaration_block += "std::vector<int64_t> fTensor_" + i.first + " = std::vector<int64_t>(" + std::to_string(length) + ");\n";
+               tensor_declaration_block += "int64_t * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
+            }
+            else if (i.second.type == ETensorType::BOOL) {
+               tensor_declaration_block += "std::vector<bool> fTensor_" + i.first + " = std::vector<bool>(" + std::to_string(length) + ");\n";
+               // No pointer allocation needed for BOOL
+            }
          }
-         if (i.second.type == ETensorType::DOUBLE) {
-            fGC += "std::vector<double> fTensor_" + i.first + " = std::vector<double>(" + std::to_string(length) + ");\n";
-            fGC += "double * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
-         }
-         if (i.second.type == ETensorType::INT64) {
-            fGC += "std::vector<int64_t> fTensor_" + i.first + " = std::vector<int64_t>(" + std::to_string(length) + ");\n";
-            fGC += "int64_t * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
-         }
-         if (i.second.type == ETensorType::BOOL) {
-            fGC += "std::vector<bool> fTensor_" + i.first + " = std::vector<bool>(" + std::to_string(length) + ");\n";
-            // don't allocate pointer since boolean vector don't have the .data() member
-         }
+      }
+
+      if (tensor_declaration_block.length()) {
+         fGC += "\n//--- declare and allocate the intermediate tensors\n" + tensor_declaration_block;
       }
    }
    // add also the dynamic tensors (only declarations, allocation will be done later)
