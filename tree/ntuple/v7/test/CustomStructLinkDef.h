@@ -79,6 +79,10 @@
 #pragma read sourceClass = "StructWithIORules" source = "float a" version = "[1-]" targetClass = \
    "StructWithIORules" target = "c" code = "{ c = onfile.a + newObj->b; }"
 
+// Conflicting type for source member
+#pragma read sourceClass = "StructWithIORules" source = "double a" version = "[1-]" targetClass = \
+   "StructWithIORules" target = "" code = "{ }"
+
 // This rule uses a checksum to identify the source class
 #pragma read sourceClass = "StructWithIORules" source = "" checksum = "[3494027874]" targetClass = \
    "StructWithIORules" target = "checksumA" code = "{ checksumA = 42.0; }"
