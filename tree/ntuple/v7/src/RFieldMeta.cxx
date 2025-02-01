@@ -191,6 +191,8 @@ std::vector<const ROOT::TSchemaRule *> ROOT::Experimental::RClassField::FindRule
    }
 
    // Cleanup and sort rules
+   // Check that any any given source member uses the same type in all rules
+   std::unordered_map<std::string, std::string> sourceNameAndType;
    std::size_t nskip = 0; // skip whole-object-rules that were moved to the end of the rules vector
    for (auto itr = rules.begin(); itr != rules.end() - nskip;) {
       const auto rule = *itr;
@@ -199,6 +201,23 @@ std::vector<const ROOT::TSchemaRule *> ROOT::Experimental::RClassField::FindRule
       if (rule->GetRuleType() != ROOT::TSchemaRule::kReadRule) {
          R__LOG_WARNING(ROOT::Internal::NTupleLog())
             << "ignoring I/O customization rule with unsupported type: " << rule->GetRuleType();
+         itr = rules.erase(itr);
+         continue;
+      }
+
+      bool hasConflictingSourceMembers = false;
+      for (auto source : TRangeDynCast<TSchemaRule::TSources>(rule->GetSource())) {
+         auto memberType = source->GetTypeForDeclaration() + source->GetDimensions();
+         auto [itrSrc, isNew] = sourceNameAndType.emplace(source->GetName(), memberType);
+         if (!isNew && (itrSrc->second != memberType)) {
+            R__LOG_WARNING(ROOT::Internal::NTupleLog())
+               << "ignoring I/O customization rule due to conflicting source member type: " << itrSrc->second << " vs. "
+               << memberType << " for member " << source->GetName();
+            hasConflictingSourceMembers = true;
+            break;
+         }
+      }
+      if (hasConflictingSourceMembers) {
          itr = rules.erase(itr);
          continue;
       }
