@@ -217,6 +217,7 @@ struct StructWithTransientString {
 struct StructWithIORules : StructWithIORulesBase {
    StructWithTransientString s;
    float c = 0.0f; //! transient member
+   float cDerived = 0.0f;    //! should become 2*c after rules for c applied
    float checksumA = 0.0f;   //! transient member, edited by checksum based rule
    float checksumB = 137.0f; //! transient member, skipped by checksum based rule due to checksum mismatch
 

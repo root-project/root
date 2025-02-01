@@ -189,32 +189,45 @@ std::vector<const ROOT::TSchemaRule *> ROOT::Experimental::RClassField::FindRule
       }
    }
 
-   // For the time being, we only support rules targeting transient members
-   auto targetsNonTransientMembers = [classp = fClass](const ROOT::TSchemaRule *rule) {
-      if (rule->GetTarget() == nullptr)
-         return false;
-      for (auto target : ROOT::Detail::TRangeStaticCast<TObjString>(*rule->GetTarget())) {
-         const auto dataMember = classp->GetDataMember(target->GetString());
-         if (!dataMember || dataMember->IsPersistent()) {
-            R__LOG_WARNING(ROOT::Internal::NTupleLog())
-               << "ignoring I/O customization rule with non-transient member: " << dataMember->GetName();
-            return true;
-         }
-      }
-      return false;
-   };
-   rules.erase(std::remove_if(rules.begin(), rules.end(), targetsNonTransientMembers), rules.end());
+   // Cleanup and sort rules
+   std::size_t nskip = 0; // skip whole-object-rules that were moved to the end of the rules vector
+   for (auto itr = rules.begin(); itr != rules.end() - nskip;) {
+      const auto rule = *itr;
 
-   // Erase unknown rule types
-   auto hasUnknownType = [](const ROOT::TSchemaRule *rule) {
+      // Erase unknown rule types
       if (rule->GetRuleType() != ROOT::TSchemaRule::kReadRule) {
          R__LOG_WARNING(ROOT::Internal::NTupleLog())
             << "ignoring I/O customization rule with unsupported type: " << rule->GetRuleType();
-         return true;
+         itr = rules.erase(itr);
+         continue;
       }
-      return false;
-   };
-   rules.erase(std::remove_if(rules.begin(), rules.end(), hasUnknownType), rules.end());
+
+      // Rules targeting the entire object need to be executed at the end
+      if (rule->GetTarget() == nullptr) {
+         nskip++;
+         if (itr != rules.end() - nskip)
+            std::iter_swap(itr++, rules.end() - nskip);
+         continue;
+      }
+
+      // For the time being, we only support rules targeting transient members
+      bool hasPersistentTarget = false;
+      for (auto target : ROOT::Detail::TRangeStaticCast<TObjString>(*rule->GetTarget())) {
+         const auto dataMember = fClass->GetDataMember(target->GetString());
+         if (!dataMember || dataMember->IsPersistent()) {
+            R__LOG_WARNING(ROOT::Internal::NTupleLog())
+               << "ignoring I/O customization rule with non-transient member: " << dataMember->GetName();
+            hasPersistentTarget = true;
+            break;
+         }
+      }
+      if (hasPersistentTarget) {
+         itr = rules.erase(itr);
+         continue;
+      }
+
+      ++itr;
+   }
 
    return rules;
 }
