@@ -644,3 +644,7 @@ Rint.Canvas.HighLightColor:      5
 #                          1 All Branches (default)
 # Can be overridden by the environment variable ROOT_TTREECACHE_PREFILL
 # TTreeCache.Prefill: 1
+
+#test davix https
+Davix.GSI.CACheck: n
+
