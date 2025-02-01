@@ -38,6 +38,9 @@ class RooStepFunction : public RooAbsReal {
 
   std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
 
+  int getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override;
+  double analyticalIntegral(int code, const char* rangeName=nullptr) const override;
+
  protected:
 
   double evaluate() const override;
@@ -48,6 +51,8 @@ class RooStepFunction : public RooAbsReal {
   RooListProxy _coefList ;
   RooListProxy _boundaryList ;
   bool       _interpolate = false;
+  mutable std::vector<double> _coefCache; //!
+  mutable std::vector<double> _boundaryCache; //!
 
   ClassDefOverride(RooStepFunction,1) //  Step Function
 };
