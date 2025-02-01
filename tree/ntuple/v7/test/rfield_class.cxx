@@ -243,6 +243,9 @@ TEST(RNTuple, TClassReadRules)
    {
       auto model = RNTupleModel::Create();
       auto ptrClass = model->MakeField<StructWithIORules>("class");
+      auto ptrCoord = model->MakeField<CoordinatesWithIORules>("coord");
+      ptrCoord->fX = 1.0;
+      ptrCoord->fY = 1.0;
       auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       for (int i = 0; i < 5; i++) {
          *ptrClass = StructWithIORules{/*a=*/static_cast<float>(i), /*chars=*/c};
@@ -271,4 +274,10 @@ TEST(RNTuple, TClassReadRules)
       // The following member is not touched by a rule due to a checksum mismatch
       EXPECT_FLOAT_EQ(137.0, viewKlass(i).checksumB);
    }
+
+   auto viewCoord = reader->GetView<CoordinatesWithIORules>("coord");
+   EXPECT_FLOAT_EQ(1.0, viewCoord(0).fX);
+   EXPECT_FLOAT_EQ(1.0, viewCoord(0).fY);
+   EXPECT_FLOAT_EQ(sqrt(2), viewCoord(0).fR);
+   EXPECT_FLOAT_EQ(M_PI / 4., viewCoord(0).fPhi);
 }

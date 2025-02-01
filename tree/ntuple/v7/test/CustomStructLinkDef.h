@@ -90,6 +90,12 @@
 #pragma read sourceClass = "StructWithIORules" source = "" checksum = "[1]" targetClass = "StructWithIORules" target = \
    "checksumB" code = "{ checksumB = 0.0; }"
 
+#pragma link C++ options = version(3) class CoordinatesWithIORules + ;
+
+#pragma read sourceClass = "CoordinatesWithIORules" source = "float fX; float fY" version = "[3]" targetClass = \
+   "CoordinatesWithIORules" target = "fPhi,fR" include = "cmath" code =                                         \
+      "{ fR = sqrt(onfile.fX * onfile.fX + onfile.fY * onfile.fY); fPhi = atan2(onfile.fY, onfile.fX); }"
+
 #pragma link C++ class Cyclic + ;
 #pragma link C++ class CyclicCollectionProxy + ;
 #pragma link C++ class Unsupported + ;

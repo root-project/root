@@ -225,6 +225,13 @@ struct StructWithIORules : StructWithIORulesBase {
    StructWithIORules(float _a, char _c[4]) : StructWithIORulesBase{_a, 0.0f}, s{{_c[0], _c[1], _c[2], _c[3]}, {}} {}
 };
 
+struct CoordinatesWithIORules {
+   float fX;
+   float fY;
+   float fR;   //!
+   float fPhi; //!
+};
+
 struct Cyclic {
    std::vector<Cyclic> fMember;
 };
