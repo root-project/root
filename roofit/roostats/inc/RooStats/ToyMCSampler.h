@@ -67,7 +67,6 @@ class ToyMCSampler: public TestStatSampler {
 
    public:
 
-      ToyMCSampler();
       ToyMCSampler(TestStatistic &ts, Int_t ntoys);
       ~ToyMCSampler() override;
 
@@ -285,8 +284,7 @@ class ToyMCSampler: public TestStatSampler {
       static bool fgAlwaysUseMultiGen ;  ///< Use PrepareMultiGen always
       bool fUseMultiGen = false;         ///< Use PrepareMultiGen?
 
-   protected:
-   ClassDefOverride(ToyMCSampler, 4) // A simple implementation of the TestStatSampler interface
+   ClassDefOverride(ToyMCSampler, 0) // A simple implementation of the TestStatSampler interface
 };
 }
 

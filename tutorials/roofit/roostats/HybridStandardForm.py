@@ -277,7 +277,6 @@ w.factory("Lognormal::lognorm_prior(b,y, expr::kappa('1+1./sqrt(y)',y))")
 # -------------------------------------------------------
 
 hc1 = ROOT.RooStats.HybridCalculator(data, sb_model, b_model)
-toymcs1 = ROOT.RooStats.ToyMCSampler()
 toymcs1 = hc1.GetTestStatSampler()
 #  toymcs1.SetNEventsPerToy(1) # because the model is in number counting form
 toymcs1.SetTestStatistic(eventCount)  # set the test statistic
