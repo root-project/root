@@ -233,6 +233,10 @@ TEST(RNTuple, TClassReadRules)
 {
    ROOT::TestSupport::CheckDiagsRAII diags;
    diags.requiredDiag(kWarning, "[ROOT.NTuple]", "ignoring I/O customization rule with non-transient member: a", false);
+   diags.requiredDiag(kWarning, "[ROOT.NTuple]",
+                      "ignoring I/O customization rule due to conflicting source member type: float vs. double "
+                      "for member a",
+                      false);
 
    FileRaii fileGuard("test_ntuple_tclassrules.root");
    char c[4] = {'R', 'O', 'O', 'T'};
