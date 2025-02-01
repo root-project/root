@@ -34,6 +34,7 @@
 #include <TRealData.h>
 #include <TSchemaRule.h>
 #include <TSchemaRuleSet.h>
+#include <TStreamerElement.h>
 #include <TVirtualObject.h>
 #include <TVirtualStreamerInfo.h>
 
@@ -287,18 +288,21 @@ ROOT::DescriptorId_t ROOT::Experimental::RClassField::LookupMember(const RNTuple
    return ROOT::kInvalidDescriptorId;
 }
 
+void ROOT::Experimental::RClassField::SetStagingClass(const std::string &className, unsigned int classVersion)
+{
+   TClass::GetClass(className.c_str())->GetStreamerInfo(classVersion);
+   if (classVersion != GetTypeVersion()) {
+      fStagingClass = TClass::GetClass((className + std::string("@@") + std::to_string(classVersion)).c_str());
+   } else {
+      fStagingClass = fClass;
+   }
+   R__ASSERT(fStagingClass);
+}
+
 void ROOT::Experimental::RClassField::PrepareStagingArea(const std::vector<const TSchemaRule *> &rules,
                                                          const RNTupleDescriptor &desc,
                                                          const RFieldDescriptor &classFieldDesc)
 {
-   auto clName = classFieldDesc.GetTypeName();
-   if (classFieldDesc.GetTypeVersion() != GetTypeVersion()) {
-      TClass::GetClass(classFieldDesc.GetTypeName().c_str())->GetStreamerInfo(classFieldDesc.GetTypeVersion());
-      clName += std::string("@@") + std::to_string(classFieldDesc.GetTypeVersion());
-   }
-   auto cl = TClass::GetClass(clName.c_str());
-   R__ASSERT(cl);
-
    std::size_t stagingAreaSize = 0;
    for (const auto rule : rules) {
       for (auto source : TRangeDynCast<TSchemaRule::TSources>(rule->GetSource())) {
@@ -320,16 +324,16 @@ void ROOT::Experimental::RClassField::PrepareStagingArea(const std::vector<const
          stagingItem.fField = Create("" /* we don't need a field name */, std::string(memberType)).Unwrap();
          stagingItem.fField->SetOnDiskId(memberFieldDesc.GetId());
 
-         stagingItem.fOffset = cl->GetDataMemberOffset(source->GetName());
+         stagingItem.fOffset = fStagingClass->GetDataMemberOffset(source->GetName());
          // Since we successfully looked up the source member in the RNTuple on-disk meta-data, we expect it
          // to be present in the TClass instance, too.
          R__ASSERT(stagingItem.fOffset != TVirtualStreamerInfo::kMissing);
          stagingAreaSize = std::max(stagingAreaSize, stagingItem.fOffset + stagingItem.fField->GetValueSize());
-         R__ASSERT(stagingAreaSize > 0);
       }
    }
 
    if (stagingAreaSize) {
+      R__ASSERT(static_cast<Int_t>(stagingAreaSize) <= fStagingClass->Size()); // we may have removed rules
       fStagingArea = Internal::MakeUninitArray<unsigned char>(stagingAreaSize);
    }
 }
@@ -338,9 +342,9 @@ void ROOT::Experimental::RClassField::AddReadCallbacksFromIORule(const TSchemaRu
 {
    auto func = rule->GetReadFunctionPointer();
    R__ASSERT(func != nullptr);
-   fReadCallbacks.emplace_back([func, classp = fClass, stagingArea = fStagingArea.get()](void *target) {
+   fReadCallbacks.emplace_back([func, stagingClass = fStagingClass, stagingArea = fStagingArea.get()](void *target) {
       TVirtualObject oldObj{nullptr};
-      oldObj.fClass = classp;
+      oldObj.fClass = stagingClass;
       oldObj.fObject = stagingArea;
       func(static_cast<char *>(target), &oldObj);
       oldObj.fClass = nullptr; // TVirtualObject does not own the value
@@ -355,6 +359,8 @@ void ROOT::Experimental::RClassField::BeforeConnectPageSource(Internal::RPageSou
    if (GetOnDiskId() == kInvalidDescriptorId) {
       // This can happen for added base classes or added members of class type
       rules = FindRules(nullptr);
+      if (!rules.empty())
+         SetStagingClass(GetTypeName(), GetTypeVersion());
    } else {
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
       const RNTupleDescriptor &desc = descriptorGuard.GetRef();
@@ -373,7 +379,10 @@ void ROOT::Experimental::RClassField::BeforeConnectPageSource(Internal::RPageSou
       }
 
       rules = FindRules(&fieldDesc);
-      PrepareStagingArea(rules, desc, fieldDesc);
+      if (!rules.empty()) {
+         SetStagingClass(fieldDesc.GetTypeName(), fieldDesc.GetTypeVersion());
+         PrepareStagingArea(rules, desc, fieldDesc);
+      }
       for (auto &[_, si] : fStagingItems)
          Internal::CallConnectPageSourceOnField(*si.fField, pageSource);
    }
