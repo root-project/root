@@ -139,20 +139,6 @@ bool ToyMCSampler::fgAlwaysUseMultiGen = false ;
 void ToyMCSampler::SetAlwaysUseMultiGen(bool flag) { fgAlwaysUseMultiGen = flag ; }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Proof constructor. Do not use.
-
-ToyMCSampler::ToyMCSampler()
-   : fSamplingDistName("SD"),
-     fNToys(1),
-     fMaxToys(RooNumber::infinity()),
-     fAdaptiveLowLimit(-RooNumber::infinity()),
-     fAdaptiveHighLimit(RooNumber::infinity())
-{
-   //suppress messages for num integration of Roofit
-   RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys)
    : fSamplingDistName(ts.GetVarName().Data()),

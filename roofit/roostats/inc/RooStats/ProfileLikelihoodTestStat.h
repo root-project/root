@@ -32,15 +32,6 @@ namespace RooStats {
      enum LimitType {twoSided, oneSided, oneSidedDiscovery};
 
    public:
-      /// Proof constructor. Do not use.
-      ProfileLikelihoodTestStat()
-         : fStrategy(::ROOT::Math::MinimizerOptions::DefaultStrategy()),
-           fTolerance(std::max(1., ::ROOT::Math::MinimizerOptions::DefaultTolerance())),
-           fPrintLevel(::ROOT::Math::MinimizerOptions::DefaultPrintLevel()),
-           fLOffset(RooStats::IsNLLOffset())
-      {
-      }
-
       ProfileLikelihoodTestStat(RooAbsPdf &pdf)
          : fPdf(&pdf),
            fStrategy(::ROOT::Math::MinimizerOptions::DefaultStrategy()),
@@ -137,9 +128,7 @@ namespace RooStats {
       Int_t fPrintLevel;
       bool fLOffset ;
 
-   protected:
-
-      ClassDefOverride(ProfileLikelihoodTestStat,10)   // implements the profile likelihood ratio as a test statistic to be used with several tools
+      ClassDefOverride(ProfileLikelihoodTestStat,0)   // implements the profile likelihood ratio as a test statistic to be used with several tools
    };
 }
 
