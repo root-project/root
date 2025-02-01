@@ -149,6 +149,11 @@ private:
    /// The staging area stores inputs to I/O rules according to the offsets given by the streamer info of
    /// "TypeName@@Version". The area is allocated depending on I/O rules resp. the source members of the I/O rules.
    std::unique_ptr<unsigned char[]> fStagingArea;
+   /// The TClass instance that corresponds to the staging area.
+   /// The staging class exists as <class name>@@<on-disk version> if the on-disk version is different from the
+   /// current in-memory version, or it can be accessed by the first @@alloc streamer element of the current streamer
+   /// info.
+   TClass *fStagingClass = nullptr;
    std::unordered_map<std::string, RStagingItem> fStagingItems; ///< Lookup staging items by member name
 
 private:
@@ -160,6 +165,8 @@ private:
    /// member exist. Looks recursively in base classes.
    ROOT::DescriptorId_t
    LookupMember(const RNTupleDescriptor &desc, std::string_view memberName, ROOT::DescriptorId_t classFieldId);
+   /// Sets fStagingClass according to the given name and version
+   void SetStagingClass(const std::string &className, unsigned int classVersion);
    /// If there are rules with inputs (source members), create the staging area according to the TClass instance
    /// that corresponds to the on-disk field.
    void PrepareStagingArea(const std::vector<const TSchemaRule *> &rules, const RNTupleDescriptor &desc,
