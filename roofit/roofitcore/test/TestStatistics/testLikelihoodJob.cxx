@@ -477,15 +477,17 @@ TEST_F(LikelihoodJobSimBinnedConstrainedTest, BasicParameters)
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 TEST_F(LikelihoodJobSimBinnedConstrainedTest, ConstrainedAndOffset)
 {
+   using namespace RooFit;
+
    // A variation to test some additional parameters (ConstrainedParameters and offsetting)
 
    // The reference likelihood is using the legacy evaluation backend, because
    // the multiprocess test statistics classes were designed to give values
    // that are bit-by-bit identical with the old test statistics based on
    // RooAbsTestStatistic.
-   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, RooFit::Constrain(*w.var("alpha_bkg_A")),
-                                                    RooFit::GlobalObservables(*w.var("alpha_bkg_obs_B")),
-                                                    RooFit::Offset(true), RooFit::EvalBackend::Legacy())};
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, Constrain(*w.var("alpha_bkg_A")),
+                                                    GlobalObservables(*w.var("alpha_bkg_obs_B")), Offset("initial"),
+                                                    EvalBackend::Legacy())};
 
    // --------
 
@@ -555,15 +557,17 @@ TEST_P(LikelihoodJobSplitStrategies, SimBinnedConstrainedAndOffset)
 TEST_P(LikelihoodJobSplitStrategies, DISABLED_SimBinnedConstrainedAndOffset)
 #endif
 {
+   using namespace RooFit;
+
    // Based on ConstrainedAndOffset, this test tests different parallelization strategies
 
    // The reference likelihood is using the legacy evaluation backend, because
    // the multiprocess test statistics classes were designed to give values
    // that are bit-by-bit identical with the old test statistics based on
    // RooAbsTestStatistic.
-   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, RooFit::Constrain(*w.var("alpha_bkg_A")),
-                                                    RooFit::GlobalObservables(*w.var("alpha_bkg_obs_B")),
-                                                    RooFit::Offset(true), RooFit::EvalBackend::Legacy())};
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, Constrain(*w.var("alpha_bkg_A")),
+                                                    GlobalObservables(*w.var("alpha_bkg_obs_B")), Offset("initial"),
+                                                    EvalBackend::Legacy())};
 
    // --------
 
