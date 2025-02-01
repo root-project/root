@@ -257,8 +257,9 @@ TEST(RNTuple, TClassReadRules)
       EXPECT_TRUE(0 == memcmp(c, viewKlass(i).s.chars, sizeof(c)));
 
       // The following values are set from a read rule; see CustomStructLinkDef.h
-      EXPECT_EQ(fi + 1.0f, viewKlass(i).b);
-      EXPECT_EQ(viewKlass(i).a + viewKlass(i).b, viewKlass(i).c);
+      EXPECT_FLOAT_EQ(fi + 1.0f, viewKlass(i).b);
+      EXPECT_FLOAT_EQ(viewKlass(i).a + viewKlass(i).b, viewKlass(i).c);
+      EXPECT_FLOAT_EQ(2 * (viewKlass(i).a + viewKlass(i).b), viewKlass(i).cDerived);
       EXPECT_STREQ("ROOT", viewKlass(i).s.str.c_str());
 
       // The following member is set by a checksum based rule
