@@ -336,5 +336,6 @@
 #pragma link C++ class RooBinWidthFunction+;
 #pragma link C++ class RooFit::Detail::RooNLLVarNew+;
 #pragma link C++ class RooFit::Detail::RooNormalizedPdf+ ;
+#pragma link C++ class RooFit::Detail::RooSimNLL+;
 
 #endif

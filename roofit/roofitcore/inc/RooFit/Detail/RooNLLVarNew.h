@@ -19,9 +19,12 @@
 #include <RooAbsPdf.h>
 #include <RooAbsReal.h>
 #include <RooGlobalFunc.h>
+#include <RooListProxy.h>
 #include <RooTemplateProxy.h>
 
 #include <Math/Util.h>
+
+class RooAbsCategory;
 
 namespace RooFit {
 namespace Detail {
@@ -85,6 +88,30 @@ private:
    mutable ROOT::Math::KahanSum<double> _offset{0.}; ///<! Offset as KahanSum to avoid loss of precision
 
    ClassDefOverride(RooFit::Detail::RooNLLVarNew, 0);
+};
+
+class RooSimNLL : public RooAbsReal {
+public:
+   RooSimNLL(const char *name, const char *title, const RooArgSet &terms, RooAbsCategoryLValue const &indexCat,
+             bool channelMasking);
+
+   RooSimNLL(const RooSimNLL &other, const char *name = nullptr);
+   TObject *clone(const char *newname) const override { return new RooSimNLL(*this, newname); }
+
+   double defaultErrorLevel() const override;
+
+   const RooArgSet &terms() const { return _set; }
+   const RooArgSet &masks() const { return _mask; }
+
+   void doEval(RooFit::EvalContext &) const override;
+
+protected:
+   double evaluate() const override;
+
+   RooSetProxy _set; ///< set of terms to be summed
+   RooSetProxy _mask;
+
+   ClassDefOverride(RooFit::Detail::RooSimNLL, 0) // Sum of RooNLLVarNew instances
 };
 
 } // namespace Detail

@@ -76,7 +76,7 @@ void randomizeParameters(const RooArgSet &parameters)
       double mul = unif(re);
 
       auto par = dynamic_cast<RooAbsRealLValue *>(param);
-      if (!par)
+      if (!par || par->isConstant())
          continue;
       double val = par->getVal();
       val = val + mul * (mul > 0 ? (par->getMax() - val) : (val - par->getMin()));
@@ -241,6 +241,7 @@ TEST_P(FactoryTest, NLLFit)
    // We don't use the RooFit::Evaluator for the nominal likelihood. Like this,
    // we make sure to validate also the NLL values of the generated code.
    static_cast<RooFit::Experimental::RooFuncWrapper &>(*nllFunc).disableEvaluator();
+   static_cast<RooFit::Experimental::RooFuncWrapper &>(*nllFunc).writeDebugMacro(_params._name);
 
    double tol = _params._fitResultTolerance;
 
