@@ -2107,7 +2107,7 @@ double Var(const RVec<T> &v)
    auto pred = [&sum_squares, &squared_sum](const T& x) {sum_squares+=x*x; squared_sum+=x;};
    std::for_each(v.begin(), v.end(), pred);
    squared_sum *= squared_sum;
-   const auto dsize = (double) size;
+   const double dsize = (double) size;
    return 1. / (dsize - 1.) * (sum_squares - squared_sum / dsize );
 }
 
