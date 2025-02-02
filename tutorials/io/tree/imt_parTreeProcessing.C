@@ -36,7 +36,7 @@ int imt_parTreeProcessing()
    // and it must be thread safe. To enforce the latter requirement,
    // TThreadedObject histograms will be used.
    auto myFunction = [&](TTreeReader &myReader) {
-      TTreeReaderValue<std::vector<ROOT::Math::PxPyPzEVector>> tracksRV(myReader, "tracks");
+      TTreeReaderArray<ROOT::Math::PxPyPzEVector> tracksRA(myReader, "tracks");
 
       // For performance reasons, a copy of the pointer associated to this thread on the
       // stack is used
@@ -45,8 +45,7 @@ int imt_parTreeProcessing()
       auto myPxPyHist = pxpyHist.Get();
 
       while (myReader.Next()) {
-         auto tracks = *tracksRV;
-         for (auto &&track : tracks) {
+         for (auto &&track : tracksRA) {
             myPtHist->Fill(track.Pt(), 1. / track.Pt());
             myPxPyHist->Fill(track.Px(), track.Py());
 
