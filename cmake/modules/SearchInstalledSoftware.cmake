@@ -980,12 +980,10 @@ if(builtin_xrootd)
     message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_xrootd'"
       " option or the 'fail-on-missing' to automatically disable options requiring internet access")
   endif()
+  if(NOT ssl AND NOT builtin_openssl)
+    message(FATAL_ERROR "Building XRootD ('builtin_xrootd'=On) requires ssl support ('ssl' or 'builtin_openssl').")
+  endif()
   list(APPEND ROOT_BUILTINS BUILTIN_XROOTD)
-  # The builtin XRootD requires OpenSSL.
-  # We have to find it here, such that OpenSSL is available in this scope to
-  # finalize the XRootD target configuration.
-  # See also: https://github.com/root-project/root/issues/16374
-  find_package(OpenSSL REQUIRED)
   add_subdirectory(builtins/xrootd)
   set(xrootd ON CACHE BOOL "Enabled because builtin_xrootd requested (${xrootd_description})" FORCE)
 endif()
@@ -1000,7 +998,6 @@ if(xrootd AND NOT TARGET XRootD::XrdCl)
 
   add_library(XRootD::XrdCl SHARED IMPORTED)
   set_target_properties(XRootD::XrdCl PROPERTIES IMPORTED_LOCATION ${XROOTD_CLIENT_LIBRARIES})
-  target_link_libraries(XRootD::XrdCl INTERFACE OpenSSL::SSL)
   target_include_directories(XRootD::XrdCl SYSTEM INTERFACE $<BUILD_INTERFACE:${XROOTD_INCLUDE_DIRS}>)
 
   add_library(XRootD::XrdUtils SHARED IMPORTED)
