@@ -13,14 +13,6 @@
 #ifndef ROOT_TWinNTSystem
 #define ROOT_TWinNTSystem
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TWinNTSystem                                                         //
-//                                                                      //
-// Class providing an interface to the Windows NT Operating System.     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TSystem.h"
 #include <string>
 
@@ -54,7 +46,7 @@ struct group {
    char   **gr_mem;     // group members
 };
 
-
+/// Class providing an interface to the Windows NT Operating System.
 class TWinNTSystem : public TSystem {
 public:
    // pointer to message handler func
