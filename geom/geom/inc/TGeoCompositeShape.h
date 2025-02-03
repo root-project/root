@@ -14,16 +14,11 @@
 
 #include "TGeoBBox.h"
 
-/////////////////////////////////////////////////////////////////////////////
-//                                                                         //
-// TGeoCompositeShape - composite shape class. A composite shape contains  //
-//   a list of primitive shapes, the list of corresponding transformations //
-//   and a boolean finder handling boolean operations among components.    //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
-
 class TGeoBoolNode;
 
+/// @details A composite shape contains
+/// a list of primitive shapes, the list of corresponding transformations
+/// and a boolean finder handling boolean operations among components.
 class TGeoCompositeShape : public TGeoBBox {
 private:
    // data members
