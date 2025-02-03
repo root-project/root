@@ -17,8 +17,6 @@
 // Authors: Lukasz Janyst, Justin Salmon                                      //
 //          CERN, 2013                                                        //
 //                                                                            //
-// Enables access to XRootD staging capabilities using the new client.        //
-//                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "TFileStager.h"
@@ -27,6 +25,7 @@ class TCollection;
 class TNetXNGSystem;
 class TFileCollection;
 
+/// Enables access to XRootD staging capabilities using the new client
 class TNetXNGFileStager: public TFileStager {
 
 private:
