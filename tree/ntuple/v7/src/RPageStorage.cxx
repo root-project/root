@@ -922,7 +922,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel>
 ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTupleDescriptor &srcDescriptor)
 {
    // Create new descriptor
-   fDescriptorBuilder.CreateFromSchema(srcDescriptor);
+   fDescriptorBuilder.SetSchemaFromExisting(srcDescriptor);
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    // Create column/page ranges

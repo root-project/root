@@ -949,8 +949,9 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
 
    // we should have a model if and only if the destination is initialized.
    if (!!fModel != fDestination->IsInitialized()) {
-      return R__FAIL("Passing an already-initialized destination to RNTupleMerger (i.e. trying to do incremental "
-                     "merging) can only be done if you provided a valid RNTupleModel");
+      return R__FAIL(
+         "passing an already-initialized destination to RNTupleMerger::Merge (i.e. trying to do incremental "
+         "merging) can only be done if you provided a valid RNTupleModel when constructing the RNTupleMerger.");
    }
 
    RNTupleMergeData mergeData{sources, *fDestination, mergeOpts};

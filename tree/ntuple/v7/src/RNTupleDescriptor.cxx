@@ -1210,7 +1210,7 @@ void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::Reset()
    fDescriptor.fHeaderExtension.reset();
 }
 
-void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::CreateFromSchema(const RNTupleDescriptor &descriptor)
+void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::SetSchemaFromExisting(const RNTupleDescriptor &descriptor)
 {
    fDescriptor = descriptor.CloneSchema();
 }

@@ -1412,7 +1412,7 @@ public:
    const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
    RNTupleDescriptor MoveDescriptor();
 
-   void CreateFromSchema(const RNTupleDescriptor &descriptor);
+   void SetSchemaFromExisting(const RNTupleDescriptor &descriptor);
 
    void SetNTuple(const std::string_view name, const std::string_view description);
    void SetFeature(unsigned int flag);
