@@ -34,11 +34,6 @@ void EnsureUniqueNTupleNames(const std::vector<RNTupleOpenSpec> &ntuples)
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
 ROOT::Experimental::RNTupleProcessor::Create(const RNTupleOpenSpec &ntuple, std::unique_ptr<RNTupleModel> model)
 {
-   if (!model) {
-      auto pageSource = Internal::RPageSource::Create(ntuple.fNTupleName, ntuple.fStorage);
-      pageSource->Attach();
-      model = pageSource->GetSharedDescriptorGuard()->CreateModel();
-   }
    return std::unique_ptr<RNTupleSingleProcessor>(new RNTupleSingleProcessor(ntuple, std::move(model)));
 }
 
@@ -150,9 +145,13 @@ void ROOT::Experimental::RNTupleProcessor::ConnectField(RFieldContext &fieldCont
 
 ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(const RNTupleOpenSpec &ntuple,
                                                                    std::unique_ptr<RNTupleModel> model)
-   : RNTupleProcessor({ntuple}, std::move(model))
+   : RNTupleProcessor({ntuple}, std::move(model)), fNTupleSpec(ntuple)
 {
-   fPageSource = Internal::RPageSource::Create(ntuple.fNTupleName, ntuple.fStorage);
+   if (!fModel) {
+      fPageSource = Internal::RPageSource::Create(fNTupleSpec.fNTupleName, fNTupleSpec.fStorage);
+      fPageSource->Attach();
+      fModel = fPageSource->GetSharedDescriptorGuard()->CreateModel();
+   }
 
    fModel->Freeze();
    fEntry = fModel->CreateEntry();
@@ -203,6 +202,8 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect()
    if (fIsConnected)
       return;
 
+   if (!fPageSource)
+      fPageSource = Internal::RPageSource::Create(fNTupleSpec.fNTupleName, fNTupleSpec.fStorage);
    fPageSource->Attach();
 
    for (auto &[_, fieldContext] : fFieldContexts) {
