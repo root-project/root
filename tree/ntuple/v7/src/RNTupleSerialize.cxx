@@ -1246,8 +1246,6 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapSchema(const 
    };
 
    R__ASSERT(desc.GetNFields() > 0); // we must have at least a zero field
-   if (!forHeaderExtension)
-      R__ASSERT(!desc.GetHeaderExtension());
 
    std::vector<DescriptorId_t> fieldTrees;
    if (!forHeaderExtension) {
