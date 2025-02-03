@@ -62,8 +62,8 @@ protected:
    static int          UnixUnixConnect(int port);
    static int          UnixUnixConnect(const char *path);
    static int          UnixTcpService(int port, Bool_t reuse, int backlog,
-                                      int tcpwindowsize);
-   static int          UnixUdpService(int port, int backlog);
+                                      int tcpwindowsize, ESocketBindOption socketBindOption);
+   static int          UnixUdpService(int port, int backlog, ESocketBindOption socketBindOption);
    static int          UnixUnixService(int port, int backlog);
    static int          UnixUnixService(const char *sockpath, int backlog);
    static int          UnixRecv(int sock, void *buf, int len, int flag);
@@ -197,8 +197,8 @@ public:
    char             *GetServiceByPort(int port) override;
    int               ConnectService(const char *server, int port, int tcpwindowsize, const char *protocol = "tcp");
    int               OpenConnection(const char *server, int port, int tcpwindowsize = -1, const char *protocol = "tcp") override;
-   int               AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1) override;
-   int               AnnounceUdpService(int port, int backlog) override;
+   int               AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1, ESocketBindOption socketBindOption = ESocketBindOption::kInaddrAny) override;
+   int               AnnounceUdpService(int port, int backlog, ESocketBindOption socketBindOption = ESocketBindOption::kInaddrAny) override;
    int               AnnounceUnixService(int port, int backlog) override;
    int               AnnounceUnixService(const char *sockpath, int backlog) override;
    int               AcceptConnection(int sock) override;
