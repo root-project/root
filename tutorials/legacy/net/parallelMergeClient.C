@@ -33,7 +33,7 @@ void parallelMergeClient()
 
    file->Write();
    file->UploadAndReset();       // We do this early to get assigned an index.
-   UInt_t idx = file->fServerIdx; // This works on in ACLiC.
+   UInt_t idx = file->GetServerIdx();
 
    TH1 *hpx;
    if (idx%2 == 0) {

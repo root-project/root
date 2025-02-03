@@ -55,6 +55,8 @@ public:
    Int_t  Write(const char *name=nullptr, Int_t opt=0, Int_t bufsiz=0) const override;
    void   WriteStreamerInfo() override;
 
+   Int_t GetServerIdx() const { return fServerIdx; }
+
    ClassDefOverride(TParallelMergingFile, 0);  // TFile specialization that will semi-automatically upload its content to a merging server.
 };
 
