@@ -199,13 +199,15 @@ try {
    assert(compression);
    writeOpts.SetCompression(*compression);
    auto destination = std::make_unique<RPageSinkFile>(ntupleName, *outFile, writeOpts);
+   // TODO: currently unused, will be used by the merger in a future change.
+   std::unique_ptr<RNTupleModel> model;
 
    // If we already have an existing RNTuple, copy over its descriptor to support incremental merging
    if (outNTuple) {
       auto outSource = RPageSourceFile::CreateFromAnchor(*outNTuple);
       outSource->Attach();
       auto desc = outSource->GetSharedDescriptorGuard();
-      destination->InitFromDescriptor(desc.GetRef());
+      model = destination->InitFromDescriptor(desc.GetRef());
    }
 
    // Interface conversion
