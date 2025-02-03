@@ -30,7 +30,8 @@ ExternalProject_Add(
                -DENABLE_CEPH=OFF
                -DXRDCL_LIB_ONLY=ON
                -DCMAKE_INSTALL_RPATH:STRING=${XROOTD_PREFIX}/lib
-               -DOPENSSL_ROOT_DIR=${OPENSSL_ROOT_DIR}
+               -DOpenSSL_ROOT=${OPENSSL_ROOT} #For CMake <3.27
+               -DOPENSSL_ROOT=${OPENSSL_ROOT}
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
     BUILD_BYPRODUCTS XrdUtils XrdCl
