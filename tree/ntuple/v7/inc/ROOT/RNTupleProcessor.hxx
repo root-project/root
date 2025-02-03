@@ -314,6 +314,7 @@ class RNTupleSingleProcessor : public RNTupleProcessor {
    friend class RNTupleProcessor;
 
 private:
+   RNTupleOpenSpec fNTupleSpec;
    bool fIsConnected = false;
 
    /////////////////////////////////////////////////////////////////////////////
