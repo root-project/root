@@ -38,6 +38,16 @@ class TSeqCollection;
 class TFdSet;
 class TVirtualMutex;
 
+/*! \enum ESocketBindOption
+    \brief Options for binging the sockets created
+
+    These values can be used to configure the binding of the opened sockets.
+*/
+enum ESocketBindOption {
+   kInaddrAny = 0,      ///< Any address for socket binding
+   kInaddrLoopback = 1, ///< Refers to the local host via the loopback device
+};
+
 enum EAccessMode {
    kFileExists        = 0,
    kExecutePermission = 1,
@@ -501,8 +511,9 @@ public:
    virtual int             GetServiceByName(const char *service);
    virtual char           *GetServiceByPort(int port);
    virtual int             OpenConnection(const char *server, int port, int tcpwindowsize = -1, const char *protocol = "tcp");
-   virtual int             AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1);
-   virtual int             AnnounceUdpService(int port, int backlog);
+   virtual int AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1,
+                                  ESocketBindOption socketBindOption = ESocketBindOption::kInaddrAny);
+   virtual int AnnounceUdpService(int port, int backlog, ESocketBindOption socketBindOption = ESocketBindOption::kInaddrAny);
    virtual int             AnnounceUnixService(int port, int backlog);
    virtual int             AnnounceUnixService(const char *sockpath, int backlog);
    virtual int             AcceptConnection(int sock);

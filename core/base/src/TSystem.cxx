@@ -2342,7 +2342,7 @@ int TSystem::OpenConnection(const char *, int, int, const char *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Announce TCP/IP service.
 
-int TSystem::AnnounceTcpService(int, Bool_t, int, int)
+int TSystem::AnnounceTcpService(int, Bool_t, int, int, ESocketBindOption)
 {
    AbstractMethod("AnnounceTcpService");
    return -1;
@@ -2351,7 +2351,7 @@ int TSystem::AnnounceTcpService(int, Bool_t, int, int)
 ////////////////////////////////////////////////////////////////////////////////
 /// Announce UDP service.
 
-int TSystem::AnnounceUdpService(int, int)
+int TSystem::AnnounceUdpService(int, int, ESocketBindOption)
 {
    AbstractMethod("AnnounceUdpService");
    return -1;
