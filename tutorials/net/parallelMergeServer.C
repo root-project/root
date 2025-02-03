@@ -14,8 +14,8 @@
 /// To run this demo do the following:
 ///   - Open three windows
 ///   - Start ROOT in all three windows
-///   - Execute in the first window: .x hserv2.C
-///   - Execute in the second and third windows: .x hclient.C
+///   - Execute in the first window: .x parallelMergeServer.C
+///   - Execute in the second and third windows: .x parallelMergeClient.C("<socket path printed by the server>")
 ///
 /// \macro_code
 ///
@@ -319,10 +319,23 @@ struct ParallelFileMerger : public TObject
 };
 
 void parallelMergeServer(bool cache = false) {
-   // Open a server socket looking for connections on a named service or
-   // on a specified port.
-   //TServerSocket *ss = new TServerSocket("rootserv", kTRUE);
-   TServerSocket *ss = new TServerSocket(1095, kTRUE, 100);
+   // Open a server socket looking for connections on a named service
+   TString socketPath = "rootserv."; // prefix for temporary file in the temp folder
+   // Get a unique, temporary file name for the socket. We remove and close the file
+   // immediatly in order to reopen it as a socket. There is a race here: between
+   // the removal and the creation of the socket, the file could have been recreated.
+   // But it is unlikely (due to the random letters in the name) and harmless: the socket
+   // cannot be created in this case.
+   FILE *dummy = gSystem->TempFileName(socketPath);
+   if (!dummy) {
+      Error("fastMergeServer", "Cannot create temporary file for socket\n");
+      return;
+   }
+
+   std::string strSocketPath(socketPath.View());
+   remove(strSocketPath.c_str());
+   fclose(dummy);
+   TServerSocket *ss = new TServerSocket(socketPath);
    if (!ss->IsValid()) {
       return;
    }
@@ -343,7 +356,7 @@ void parallelMergeServer(bool cache = false) {
       kProtocolVersion = 1
    };
 
-   printf("fastMergeServerHist ready to accept connections\n");
+   printf("fastMergeServerHist ready to accept connections on %s\n", strSocketPath.c_str());
    while (true) {
       TMessage *mess;
       TSocket  *s;
@@ -438,5 +451,6 @@ void parallelMergeServer(bool cache = false) {
 
    mergers.Delete();
    delete mon;
+   remove(strSocketPath.c_str());
    delete ss;
 }
