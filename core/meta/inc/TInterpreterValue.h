@@ -9,17 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.                   *
  ******************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-//  Class representing a value coming from the interpreter. Its main use case //
-//  is to TCallFunc. When TCallFunc returns by-value, i.e. a temporary        //
-//  variable, its lifetime has to be extended. TInterpreterValue provides a   //
-//  way to extend the temporaries lifetime and gives the user to control it.  //
-//                                                                            //
-//  The class needs to be derived from for the actual interpreter,            //
-//  see TClingValue.                                                          //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+///                                                                            //
+///  Class representing a value coming from the interpreter. Its main use case //
+///  is to TCallFunc. When TCallFunc returns by-value, i.e. a temporary        //
+///  variable, its lifetime has to be extended. TInterpreterValue provides a   //
+///  way to extend the temporaries lifetime and gives the user to control it.  //
+///                                                                            //
+///  The class needs to be derived from for the actual interpreter,            //
+///  see TClingValue.                                                          //
+///                                                                            //
+/////////////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TInterpreterValue
 #define ROOT_TInterpreterValue
