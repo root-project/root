@@ -621,3 +621,68 @@ TEST(RNTupleDescriptor, BuildStreamerInfos)
    EXPECT_STREQ("CustomStruct", typeNames[0].c_str());
    EXPECT_STREQ("DerivedA", typeNames[1].c_str());
 }
+
+TEST(RNTupleDescriptor, CloneSchema)
+{
+   FileRaii fileGuard("test_ntuple_desc_cloneschema.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pFlt = model->MakeField<float>("flt");
+      auto pVec = model->MakeField<std::vector<int>>("vec");
+      auto fProj = RFieldBase::Create("flt2", "float").Unwrap();
+      model->AddProjectedField(std::move(fProj), [](const std::string &) { return "flt"; });
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      for (int i = 0; i < 100; ++i) {
+         *pFlt = i;
+         pVec->push_back(i);
+         writer->Fill();
+         if ((i % 10) == 0)
+            writer->CommitCluster();
+      }
+
+      // late model extend to get a header extension in the descriptor
+      auto updater = writer->CreateModelUpdater();
+      updater->BeginUpdate();
+      updater->AddField(RFieldBase::Create("ext", "int").Unwrap());
+      auto fProjDef = RFieldBase::Create("vec2", "std::vector<int>").Unwrap();
+      updater
+         ->AddProjectedField(std::move(fProjDef),
+                             [](const std::string &name) { return name == "vec2" ? "vec" : "vec._0"; })
+         .ThrowOnError();
+      updater->CommitUpdate();
+
+      for (int i = 0; i < 100; ++i) {
+         writer->Fill();
+         if ((i % 10) == 0)
+            writer->CommitCluster();
+      }
+   }
+
+   // Read back the RNTuple
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+   EXPECT_EQ(desc.GetNFields(), 8);
+   EXPECT_EQ(desc.GetNLogicalColumns(), 7);
+   EXPECT_EQ(desc.GetNPhysicalColumns(), 4);
+   EXPECT_EQ(desc.GetNClusters(), 21);
+   EXPECT_EQ(desc.GetNClusterGroups(), 1);
+   EXPECT_EQ(desc.GetNEntries(), 200);
+   EXPECT_NE(desc.GetHeaderExtension(), nullptr);
+   EXPECT_NE(desc.GetOnDiskHeaderXxHash3(), 0);
+   EXPECT_NE(desc.GetOnDiskHeaderSize(), 0);
+   EXPECT_NE(desc.GetOnDiskFooterSize(), 0);
+
+   const auto descOnlySchema = ROOT::Experimental::Internal::CloneDescriptorSchema(desc);
+   EXPECT_EQ(descOnlySchema.GetNFields(), 8);
+   EXPECT_EQ(descOnlySchema.GetNLogicalColumns(), 7);
+   EXPECT_EQ(descOnlySchema.GetNPhysicalColumns(), 4);
+   EXPECT_EQ(descOnlySchema.GetNClusters(), 0);
+   EXPECT_EQ(descOnlySchema.GetNClusterGroups(), 0);
+   EXPECT_EQ(descOnlySchema.GetNEntries(), 0);
+   EXPECT_NE(descOnlySchema.GetHeaderExtension(), nullptr);
+   EXPECT_EQ(descOnlySchema.GetOnDiskHeaderXxHash3(), 0);
+   EXPECT_EQ(descOnlySchema.GetOnDiskHeaderSize(), 0);
+   EXPECT_EQ(descOnlySchema.GetOnDiskFooterSize(), 0);
+}
