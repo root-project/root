@@ -281,6 +281,9 @@ protected:
    /// with the page source, we leave it up to the derived class whether or not the compressor gets constructed.
    std::unique_ptr<RNTupleCompressor> fCompressor;
 
+   /// Flag if sink was initialized
+   bool fIsInitialized = false;
+
    /// Helper for streaming a page. This is commonly used in derived, concrete page sinks. Note that if
    /// compressionSetting is 0 (uncompressed) and the page is mappable and not checksummed, the returned sealed page
    /// will point directly to the input page buffer.  Otherwise, the sealed page references an internal buffer
@@ -289,8 +292,6 @@ protected:
    RSealedPage SealPage(const RPage &page, const RColumnElementBase &element);
 
 private:
-   /// Flag if sink was initialized
-   bool fIsInitialized = false;
    std::vector<Callback_t> fOnDatasetCommitCallbacks;
    std::vector<unsigned char> fSealPageBuffer; ///< Used as destination buffer in the simple SealPage overload
 
@@ -529,7 +530,9 @@ public:
    void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
    /// Initialize sink based on an existing descriptor and fill into the descriptor builder.
-   void InitFromDescriptor(const RNTupleDescriptor &descriptor);
+   /// \return The model created from the new sink's descriptor. This model should be kept alive
+   /// for at least as long as the sink.
+   [[nodiscard]] std::unique_ptr<RNTupleModel> InitFromDescriptor(const RNTupleDescriptor &descriptor);
 
    void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
