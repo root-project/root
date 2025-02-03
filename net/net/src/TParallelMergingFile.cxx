@@ -77,20 +77,33 @@ Bool_t TParallelMergingFile::UploadAndReset()
 {
    // Open connection to server
    if (fSocket == 0) {
-      const char *host = fServerLocation.GetHost();
-      Int_t port = fServerLocation.GetPort();
-      if (host == 0 || host[0] == '\0') {
-         host = "localhost";
-      }
-      if (port <= 0) {
-         port = 1095;
-      }
-      fSocket = new TSocket(host,port);
-      if (!fSocket->IsValid()) {
-         Error("UploadAndReset","Could not contact the server %s:%d\n",host,port);
-         delete fSocket;
-         fSocket = 0;
-         return kFALSE;
+      const char *path = fServerLocation.GetFile();
+      if (path && strlen(path) > 0 && path[0] == '/') {
+         // UNIX domain socket
+         fSocket = new TSocket(path);
+         if (!fSocket->IsValid()) {
+            Error("UploadAndReset", "Could not contact the server %s\n", path);
+            delete fSocket;
+            fSocket = 0;
+            return kFALSE;
+         }
+      } else {
+         // TCP socket
+         const char *host = fServerLocation.GetHost();
+         Int_t port = fServerLocation.GetPort();
+         if (host == 0 || host[0] == '\0') {
+            host = "localhost";
+         }
+         if (port <= 0) {
+            port = 1095;
+         }
+         fSocket = new TSocket(host, port);
+         if (!fSocket->IsValid()) {
+            Error("UploadAndReset", "Could not contact the server %s:%d\n", host, port);
+            delete fSocket;
+            fSocket = 0;
+            return kFALSE;
+         }
       }
       // Wait till we get the start message
       // server tells us who we are
