@@ -25,7 +25,7 @@ private:
    std::unordered_map<std::string, DynamicTensorInfo> fDynamicTensorInfos;
    std::unordered_map<std::string, std::string>
       fShapeParams; // parameters defining the dynamic shape (e.g. batch size), store also its default value
-   std::unordered_set<std::string> fOutputTensorNames;
+   std::vector<std::string> fOutputTensorNames;
    std::unordered_set<std::string> fInputTensorNames; // input tensor names using ONNX order
 
    std::vector<std::unique_ptr<ROperator>> fOperators;
@@ -170,7 +170,7 @@ protected:
 
 public:
    const std::unordered_set<std::string> &GetInputTensorNames() const { return fInputTensorNames; }
-   const std::unordered_set<std::string> &GetOutputTensorNames() const { return fOutputTensorNames; }
+   const std::vector<std::string> &GetOutputTensorNames() const { return fOutputTensorNames; }
 
    void ReadInitializedTensorsFromFile(long);
    long WriteInitializedTensorsToFile(std::string filename = "");
@@ -178,7 +178,7 @@ public:
    void PrintIntermediateTensors();
    void PrintOutputTensors();
    void OutputGenerated(std::string filename = "", bool append = false);
-   std::unordered_set<std::string> GetOutputTensorNames() { return fOutputTensorNames; }
+   std::vector<std::string> GetOutputTensorNames() { return fOutputTensorNames; }
    void SetFilename(std::string filename) { fName = filename; }
 
    /*
