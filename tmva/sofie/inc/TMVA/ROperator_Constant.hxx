@@ -33,7 +33,9 @@ public:
       fShape(shape),
       fValues(values),
       fAttrType(type)
-      { }
+      {
+
+      }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;

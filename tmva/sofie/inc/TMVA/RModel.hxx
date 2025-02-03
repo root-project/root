@@ -26,7 +26,7 @@ private:
    std::unordered_map<std::string, std::string>
       fShapeParams; // parameters defining the dynamic shape (e.g. batch size), store also its default value
    std::vector<std::string> fOutputTensorNames;
-   std::unordered_set<std::string> fInputTensorNames; // input tensor names using ONNX order
+   std::vector<std::string> fInputTensorNames; // input tensor names using ONNX order
 
    std::vector<std::unique_ptr<ROperator>> fOperators;
 
@@ -169,7 +169,7 @@ protected:
    void GenerateSessionCode();
 
 public:
-   const std::unordered_set<std::string> &GetInputTensorNames() const { return fInputTensorNames; }
+   const std::vector<std::string> &GetInputTensorNames() const { return fInputTensorNames; }
    const std::vector<std::string> &GetOutputTensorNames() const { return fOutputTensorNames; }
 
    void ReadInitializedTensorsFromFile(long);

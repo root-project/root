@@ -149,7 +149,7 @@ void RModel::AddInputTensorInfo(std::string input_name, ETensorType type, std::v
 }
 
 void RModel::AddInputTensorName(std::string input_name) {
-    fInputTensorNames.emplace(UTILITY::Clean_name(input_name));
+    fInputTensorNames.emplace_back(UTILITY::Clean_name(input_name));
 }
 
 void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
@@ -172,7 +172,8 @@ void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
     // particular intermediate tensor can be flushed to free up memory for reuse.
    for(size_t index = 0; index<op_input_tensors.size() && 
          fInitializedTensors.find(UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInitializedTensors.end() && 
-         fInputTensorNames.find(UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInputTensorNames.end();
+         std::find(fInputTensorNames.begin(), fInputTensorNames.end(), 
+                   UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInputTensorNames.end();
          ++index){
       // check if the tensor is already in the lookup table
       if (fIntermediateTensorFrequencyLookup.find(op_input_tensors[index]) == fIntermediateTensorFrequencyLookup.end()) {
@@ -557,7 +558,7 @@ void RModel::InitializeSubGraph(std::shared_ptr<RModel>  graph) {
 
    // add parent input tensors to current graph
    for (auto & name : fInputTensorNames)
-      graph->fInputTensorNames.insert(name);
+      graph->fInputTensorNames.emplace_back(name);
 
    // clean graph name
    graph->fName = UTILITY::Clean_name(graph->fName);
