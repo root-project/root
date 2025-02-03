@@ -1,17 +1,12 @@
 // @(#)root/physics:$Id$
 // Author: Rene Brun , Valerio Filippini  06/09/2000
 
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-//   Phase Space Generator, based on the GENBOD routine of CERNLIB           //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
 #ifndef ROOT_TGenPhaseSpace
 #define ROOT_TGenPhaseSpace
 
 #include "TLorentzVector.h"
 
+/// Phase Space Generator, based on the GENBOD routine of CERNLIB
 class TGenPhaseSpace : public TObject {
 private:
    Int_t        fNt;             // number of decay particles

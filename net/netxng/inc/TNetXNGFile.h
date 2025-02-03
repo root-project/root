@@ -17,8 +17,6 @@
 // Authors: Justin Salmon, Lukasz Janyst                                      //
 //          CERN, 2013                                                        //
 //                                                                            //
-// Enables access to XRootD files using the new client.                       //
-//                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "TFile.h"
@@ -30,6 +28,8 @@ namespace XrdCl {
 }
 class XrdSysCondVar;
 
+
+/// Enables access to XRootD files using the new client.
 class TNetXNGFile: public TFile {
 private:
    XrdCl::File            *fFile;        // Underlying XRootD file

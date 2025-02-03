@@ -12,12 +12,8 @@
 #ifndef ROOT_TTVSession
 #define ROOT_TTVSession
 
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-// TTVSession and TTVRecord - I/O classes for TreeViewer session handling    //
-//     TTreeViewer                                                           //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
+/// @file
+/// @brief TTVSession and TTVRecord - I/O classes for TreeViewer session handling
 
 #include "TObject.h"
 #include "TString.h"
