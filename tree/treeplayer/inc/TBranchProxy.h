@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <string>
 #include <iostream>
+#include <memory>
 
 class TBranch;
 class TStreamerElement;
@@ -106,7 +107,7 @@ namespace Detail {
       Long64_t fRead;     // Last entry read
 
       void    *fWhere;    // memory location of the data
-      TVirtualCollectionProxy *fCollection; // Handle to the collection containing the data chunk.
+      std::unique_ptr<TVirtualCollectionProxy> fCollection; // Handle to the collection containing the data chunk.
 
    public:
       virtual void Print();
@@ -440,7 +441,7 @@ public:
          return nullptr;
       }
 
-      TVirtualCollectionProxy *GetCollection() { return fCollection; }
+      TVirtualCollectionProxy *GetCollection() { return fCollection.get(); }
 
       // protected:
       virtual  void *GetStart(UInt_t /*i*/=0) {
