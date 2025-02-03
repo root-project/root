@@ -174,7 +174,6 @@ void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
          fInitializedTensors.find(UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInitializedTensors.end() && 
          fInputTensorNames.find(UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInputTensorNames.end();
          ++index){
-      std::cout<<"Checking input tensor "<<std::string(op_input_tensors[index])<<"\n";
       // check if the tensor is already in the lookup table
       if (fIntermediateTensorFrequencyLookup.find(op_input_tensors[index]) == fIntermediateTensorFrequencyLookup.end()) {
          // first time seeing this tensor: initialize the first and last index with the current index
@@ -272,7 +271,7 @@ void RModel::AddDynamicTensor(std::string tensor_name, ETensorType type, std::ve
 void RModel::AddOutputTensorNameList(std::vector<std::string> outputtensornames) {
     fOutputTensorNames.clear();
     for(auto& it : outputtensornames) {
-        fOutputTensorNames.insert(UTILITY::Clean_name(it));
+        fOutputTensorNames.emplace_back(UTILITY::Clean_name(it));
     }
 }
 
@@ -427,7 +426,6 @@ void RModel::CheckAndFlushIntermediateMemory(std::span<const std::string_view> o
          }
       }
    }
-   std::cout<<"\n\n\n";
 }
 
 
@@ -631,7 +629,7 @@ void RModel::GenerateIntermediateMemoryPool() {
    
    // char memory block is allocated since char takes 1 byte, thus easier to allocate tensors
    // of other data types
-   fGC += "char* fIntermediateMemoryPool = new char[" + std::to_string(fTotalIntermediateMemory) + "];";
+   fGC += "char* fIntermediateMemoryPool = new char[" + std::to_string(fTotalIntermediateMemory) + "];\n\n";
 }
 
 void RModel::GenerateIntermediateTensorInfo() {
@@ -639,7 +637,7 @@ void RModel::GenerateIntermediateTensorInfo() {
       std::string tensor_declaration_block = ""; 
 
       for (auto &i : fIntermediateTensorInfos) {
-         if (fIntermediateTensorFrequencyLookup.find(i.first) == fIntermediateTensorFrequencyLookup.end() && fOutputTensorNames.find(i.first) != fOutputTensorNames.end()) {
+         if (fIntermediateTensorFrequencyLookup.find(i.first) == fIntermediateTensorFrequencyLookup.end() && std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), i.first) == fOutputTensorNames.end()) {
             size_t length = ConvertShapeToLength(i.second.shape);
             
             if (i.second.type == ETensorType::FLOAT) {
@@ -761,8 +759,8 @@ void RModel::GenerateOutput() {
       fGC += "std::vector<" + outputType + "> ";
    } else {
       // we assume all output types are the same
-      for (auto output_tensor_name = fOutputTensorNames.begin(); output_tensor_name != fOutputTensorNames.end(); ++it) {
-         if (GetTensorType(*output_tensor_name) != eOutputType)
+      for (size_t i = 1; i < outputSize; i++) {
+         if (GetTensorType(fOutputTensorNames[i]) != eOutputType)
             throw std::runtime_error("TMVA-SOFIE: different output tensor types are not supported");
       }
 
@@ -783,12 +781,12 @@ void RModel::GenerateOutput() {
    }
 
    if (outputSize == 1) {
-      std::string tensorName = *fOutputTensorNames.begin();
+      std::string tensorName = fOutputTensorNames[0];
       if (fIntermediateTensorInfos.count(tensorName) > 0) {
          // need to check is size is the same(don't want to return a vector with larger size)
          // in that case better to copy
-         fGC += SP + "std::vector<float> ret(tensor_"+tensorName+", tensor_"+tensorName+" + " + sizeof(float) * ConvertShapeToLength(GetTensorShape(tensorName)) + ");"
-         fGC += SP + "return ret;";
+         fGC += SP + "std::vector<float> ret(tensor_"+tensorName+", tensor_"+tensorName+" + " + ConvertShapeToLength(GetTensorShape(tensorName)) + ");\n";
+         fGC += SP + "return ret;\n";
       } else {
          // include also dynamic tensors since the vectors can be allocated with a size larger than their output
          // we need a special handling for bool type allocated as vector<bool>
