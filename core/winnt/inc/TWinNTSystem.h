@@ -232,8 +232,8 @@ public:
    int               GetServiceByName(const char *service) override;
    char              *GetServiceByPort(int port) override;
    int               OpenConnection(const char *server, int port, int tcpwindowsize = -1, const char *protocol = "tcp") override;
-   int               AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1) override;
-   int               AnnounceUdpService(int port, int backlog) override;
+   int               AnnounceTcpService(int port, Bool_t reuse, int backlog, int tcpwindowsize = -1, ESocketBindOption socketBindOption = ESocketBindOption::kInaddrAny) override;
+   int               AnnounceUdpService(int port, int backlog, ESocketBindOption socketBindOption = ESocketBindOption::kInaddrAny) override;
    int               AnnounceUnixService(int port, int backlog) override;
    int               AnnounceUnixService(const char *sockpath, int backlog) override;
    int               AcceptConnection(int sock) override;

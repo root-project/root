@@ -72,7 +72,7 @@ protected:
    TBits         fBitsInfo;       // bits array to mark TStreamerInfo classes already sent
    TList        *fUUIDs;          // list of TProcessIDs already sent through the socket
 
-   TVirtualMutex *fLastUsageMtx;   // Protect last usage setting / reading
+   TVirtualMutex *fLastUsageMtx;  // Protect last usage setting / reading
    TTimeStamp    fLastUsage;      // Time stamp of last usage
 
    static ULong64_t fgBytesRecv;  // total bytes received by all socket objects

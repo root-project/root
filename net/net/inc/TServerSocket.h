@@ -55,8 +55,8 @@ private:
 public:
    enum { kDefaultBacklog = 10 };
 
-   TServerSocket(Int_t port, Bool_t reuse = kFALSE, Int_t backlog = kDefaultBacklog,
-                 Int_t tcpwindowsize = -1);
+   TServerSocket(Int_t port, Bool_t reuse = kFALSE, Int_t backlog = kDefaultBacklog, Int_t tcpwindowsize = -1,
+                 ESocketBindOption socketBindOption = ESocketBindOption::kInaddrAny);
    TServerSocket(const char *service, Bool_t reuse = kFALSE,
                  Int_t backlog = kDefaultBacklog, Int_t tcpwindowsize = -1);
    virtual ~TServerSocket();

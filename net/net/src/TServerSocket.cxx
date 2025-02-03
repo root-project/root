@@ -62,6 +62,8 @@ static void SetAuthOpt(UChar_t &opt, UChar_t mod)
 /// Use tcpwindowsize to specify the size of the receive buffer, it has
 /// to be specified here to make sure the window scale option is set (for
 /// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// The socketBindOption parameter allows to specify how the socket will be 
+/// bound. See the documentation of ESocketBindOption for the details.
 /// Use IsValid() to check the validity of the
 /// server socket. In case server socket is not valid use GetErrorCode()
 /// to obtain the specific error value. These values are:
@@ -105,7 +107,7 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
       fService = service;
       int port = gSystem->GetServiceByName(service);
       if (port != -1) {
-         fSocket = gSystem->AnnounceTcpService(port, reuse, backlog, tcpwindowsize);
+         fSocket = gSystem->AnnounceTcpService(port, reuse, backlog, tcpwindowsize, ESocketBindOption::kInaddrLoopback);
          if (fSocket >= 0) {
             R__LOCKGUARD(gROOTMutex);
             gROOT->GetListOfSockets()->Add(this);
@@ -125,6 +127,8 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
 /// Use tcpwindowsize to specify the size of the receive buffer, it has
 /// to be specified here to make sure the window scale option is set (for
 /// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// The socketBindOption parameter allows to specify how the socket will be 
+/// bound. See the documentation of ESocketBindOption for the details.
 /// Use IsValid() to check the validity of the
 /// server socket. In case server socket is not valid use GetErrorCode()
 /// to obtain the specific error value. These values are:
@@ -136,8 +140,8 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
 /// will make sure that any open sockets are properly closed on
 /// program termination.
 
-TServerSocket::TServerSocket(Int_t port, Bool_t reuse, Int_t backlog,
-                             Int_t tcpwindowsize)
+TServerSocket::TServerSocket(Int_t port, Bool_t reuse, Int_t backlog, Int_t tcpwindowsize,
+                             ESocketBindOption socketBindOption)
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -149,7 +153,7 @@ TServerSocket::TServerSocket(Int_t port, Bool_t reuse, Int_t backlog,
    fService = gSystem->GetServiceByPort(port);
    SetTitle(fService);
 
-   fSocket = gSystem->AnnounceTcpService(port, reuse, backlog, tcpwindowsize);
+   fSocket = gSystem->AnnounceTcpService(port, reuse, backlog, tcpwindowsize, socketBindOption);
    if (fSocket >= 0) {
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);

@@ -3239,17 +3239,17 @@ int TUnixSystem::OpenConnection(const char *server, int port, int tcpwindowsize,
 /// or -3 if listen() failed.
 
 int TUnixSystem::AnnounceTcpService(int port, Bool_t reuse, int backlog,
-                                    int tcpwindowsize)
+                                    int tcpwindowsize, ESocketBindOption socketBindOption)
 {
-   return UnixTcpService(port, reuse, backlog, tcpwindowsize);
+   return UnixTcpService(port, reuse, backlog, tcpwindowsize, socketBindOption);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Announce UDP service.
 
-int TUnixSystem::AnnounceUdpService(int port, int backlog)
+int TUnixSystem::AnnounceUdpService(int port, int backlog, ESocketBindOption socketBindOption)
 {
-   return UnixUdpService(port, backlog);
+   return UnixUdpService(port, backlog, socketBindOption);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4291,11 +4291,13 @@ int TUnixSystem::UnixUnixConnect(const char *sockpath)
 /// Use tcpwindowsize to specify the size of the receive buffer, it has
 /// to be specified here to make sure the window scale option is set (for
 /// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// The socketBindOption parameter allows to specify how the socket will be 
+/// bound. See the documentation of ESocketBindOption for the details.
 /// Returns socket fd or -1 if socket() failed, -2 if bind() failed
 /// or -3 if listen() failed.
 
 int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
-                                int tcpwindowsize)
+                                int tcpwindowsize, ESocketBindOption socketBindOption)
 {
    const short kSOCKET_MINPORT = 5000, kSOCKET_MAXPORT = 15000;
    short  sport, tryport = kSOCKET_MINPORT;
@@ -4329,7 +4331,7 @@ int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
    struct sockaddr_in inserver;
    memset(&inserver, 0, sizeof(inserver));
    inserver.sin_family = AF_INET;
-   inserver.sin_addr.s_addr = htonl(INADDR_ANY);
+   inserver.sin_addr.s_addr = socketBindOption == ESocketBindOption::kInaddrAny ? htonl(INADDR_ANY) : htonl(INADDR_LOOPBACK);
    inserver.sin_port = sport;
 
    // Bind socket
@@ -4369,8 +4371,10 @@ int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
 /// how many sockets can be waiting to be accepted. If port is 0 a port
 /// scan will be done to find a free port. This option is mutual exlusive
 /// with the reuse option.
+/// The socketBindOption parameter allows to specify how the socket will be 
+/// bound. See the documentation of ESocketBindOption for the details.
 
-int TUnixSystem::UnixUdpService(int port, int backlog)
+int TUnixSystem::UnixUdpService(int port, int backlog, ESocketBindOption socketBindOption)
 {
    const short kSOCKET_MINPORT = 5000, kSOCKET_MAXPORT = 15000;
    short  sport, tryport = kSOCKET_MINPORT;
@@ -4391,7 +4395,7 @@ int TUnixSystem::UnixUdpService(int port, int backlog)
    struct sockaddr_in inserver;
    memset(&inserver, 0, sizeof(inserver));
    inserver.sin_family = AF_INET;
-   inserver.sin_addr.s_addr = htonl(INADDR_ANY);
+   inserver.sin_addr.s_addr = socketBindOption == ESocketBindOption::kInaddrAny ? htonl(INADDR_ANY) : htonl(INADDR_LOOPBACK);
    inserver.sin_port = sport;
 
    // Bind socket
