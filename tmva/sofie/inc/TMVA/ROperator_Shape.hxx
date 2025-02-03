@@ -30,7 +30,10 @@ private:
 public:
    ROperator_Shape(){}
    ROperator_Shape(int start, int end, std::string nameX, std::string nameY):
-   fStart(start) ,fEnd(end), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){}
+   fStart(start) ,fEnd(end), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
+   }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;

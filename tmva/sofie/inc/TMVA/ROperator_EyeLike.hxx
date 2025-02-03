@@ -25,7 +25,10 @@ private:
 public:
    ROperator_EyeLike(){}
    ROperator_EyeLike(int dtype, int k, std::string nameX, std::string nameY):
-      fdtype(dtype), fk(k), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){}
+      fdtype(dtype), fk(k), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
+      }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;

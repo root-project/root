@@ -28,6 +28,8 @@ public:
    ROperator_Softmax(int64_t attr_axis, std::string nameX, std::string nameY)
       : fAttrAxis(attr_axis), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY))
    {
+         fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
    }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) { return input; }
