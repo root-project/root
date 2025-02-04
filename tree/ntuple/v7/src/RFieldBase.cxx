@@ -98,11 +98,11 @@ void ROOT::Experimental::Internal::CallConnectPageSourceOnField(RFieldBase &fiel
 }
 
 ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
-ROOT::Experimental::Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &canonicalType,
-                                                  const std::string &typeAlias, const RCreateFieldOptions &options,
-                                                  const RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId)
+ROOT::Experimental::Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
+                                                  const RCreateFieldOptions &options, const RNTupleDescriptor *desc,
+                                                  ROOT::DescriptorId_t fieldId)
 {
-   return RFieldBase::Create(fieldName, canonicalType, typeAlias, options, desc, fieldId);
+   return RFieldBase::Create(fieldName, typeName, options, desc, fieldId);
 }
 
 //------------------------------------------------------------------------------
@@ -274,32 +274,18 @@ std::string ROOT::Experimental::RFieldBase::GetQualifiedFieldName() const
 ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
 ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
 {
-   auto typeAlias = Internal::GetNormalizedTypeName(typeName);
-   auto canonicalType = Internal::GetNormalizedTypeName(GetCanonicalTypeName(typeAlias));
-   return R__FORWARD_RESULT(RFieldBase::Create(fieldName, canonicalType, typeAlias, RCreateFieldOptions{}));
-}
-
-ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
-ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &typeName,
-                                       const RCreateFieldOptions &options, const RNTupleDescriptor *desc,
-                                       ROOT::DescriptorId_t fieldId)
-{
-   auto typeAlias = Internal::GetNormalizedTypeName(typeName);
-   auto canonicalType = Internal::GetNormalizedTypeName(GetCanonicalTypeName(typeAlias));
-   return R__FORWARD_RESULT(RFieldBase::Create(fieldName, canonicalType, typeAlias, options, desc, fieldId));
+   return R__FORWARD_RESULT(
+      RFieldBase::Create(fieldName, typeName, RCreateFieldOptions{}, nullptr, ROOT::kInvalidDescriptorId));
 }
 
 std::vector<ROOT::Experimental::RFieldBase::RCheckResult>
 ROOT::Experimental::RFieldBase::Check(const std::string &fieldName, const std::string &typeName)
 {
-   auto typeAlias = Internal::GetNormalizedTypeName(typeName);
-   auto canonicalType = Internal::GetNormalizedTypeName(GetCanonicalTypeName(typeAlias));
-
    RFieldZero fieldZero;
    RCreateFieldOptions cfOpts{};
    cfOpts.fReturnInvalidOnError = true;
    cfOpts.fEmulateUnknownTypes = false;
-   fieldZero.Attach(RFieldBase::Create(fieldName, canonicalType, typeAlias, cfOpts).Unwrap());
+   fieldZero.Attach(RFieldBase::Create(fieldName, typeName, cfOpts, nullptr, kInvalidDescriptorId).Unwrap());
 
    std::vector<RCheckResult> result;
    for (const auto &f : fieldZero) {
@@ -315,10 +301,13 @@ ROOT::Experimental::RFieldBase::Check(const std::string &fieldName, const std::s
 }
 
 ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
-ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &canonicalType,
-                                       const std::string &typeAlias, const RCreateFieldOptions &options,
-                                       const RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId)
+ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &typeName,
+                                       const RCreateFieldOptions &options, const RNTupleDescriptor *desc,
+                                       ROOT::DescriptorId_t fieldId)
 {
+   const auto typeAlias = Internal::GetNormalizedTypeName(typeName);
+   const auto canonicalType = Internal::GetNormalizedTypeName(GetCanonicalTypeName(typeAlias));
+
    thread_local CreateContext createContext;
    CreateContextGuard createContextGuard(createContext);
    if (options.fReturnInvalidOnError)
