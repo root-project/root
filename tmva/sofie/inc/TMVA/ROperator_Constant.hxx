@@ -34,7 +34,12 @@ public:
       fValues(values),
       fAttrType(type)
       {
+         fInputTensorNames = { };
+         if (!fNX.empty()){
+            fInputTensorNames.emplace_back(fNX);
+         }
 
+         fOutputTensorNames = { };
       }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
