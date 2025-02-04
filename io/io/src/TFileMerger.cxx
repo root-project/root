@@ -948,9 +948,9 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
       }
    }
 
-   // Special treament for the single file case to improve efficiency...
+   // Special treatment for the single file case to improve efficiency...
    if ((fFileList.GetEntries() == 1) && !fExcessFiles.GetEntries() &&
-      !(in_type & (kIncremental | kOnlyListed | kSkipListed | kResetable | kNonResetable)) && !fCompressionChange && !fExplicitCompLevel) {
+      !(in_type & (kIncremental | kOnlyListed | kSkipListed | kResetable | kNonResetable)) && !fCompressionChange && !fExplicitCompLevel && !fNoTrees) {
       fOutputFile->Close();
       SafeDelete(fOutputFile);
 
