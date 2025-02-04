@@ -151,6 +151,7 @@ auto GETLISTTREE(TGFileBrowser *b)
 #include "TRegexp.h"
 #include "TExec.h"
 #include "TPaveText.h"
+#include "TLatex.h"
 
 #include "TGListTree.h"
 #include "TGMsgBox.h"
@@ -524,8 +525,8 @@ void xRooNode::Checked(TObject *obj, bool val)
       if (auto fr = get<RooFitResult>(); fr) {
          if (auto _ws = ws(); _ws) {
             if (val) {
-               // ensure fit result is in genericObjects list ... if not, add a copy ...
-               if (!_ws->genobj(fr->GetName())) {
+               // ensure fit result is in genericObjects list or snapshots ... if not, add a copy ...
+               if (fr->numStatusHistory() && !_ws->genobj(fr->GetName())) {
                   _ws->import(*fr);
                   if (auto wfr = dynamic_cast<RooFitResult *>(_ws->genobj(fr->GetName()))) {
                      fr = wfr;
@@ -626,7 +627,7 @@ void xRooNode::Browse(TBrowser *b)
    if (auto _fr = get<RooFitResult>(); _fr && fBrowsables.empty()) {
       // have some common drawing options
       fBrowsables.push_back(std::make_shared<xRooNode>(".Draw(\"pull\")", nullptr, *this));
-      fBrowsables.push_back(std::make_shared<xRooNode>(".Draw(\"corrcolztext\")", nullptr, *this));
+      fBrowsables.push_back(std::make_shared<xRooNode>(".Draw(\"corr10colztext\")", nullptr, *this));
       if (std::unique_ptr<RooAbsCollection>(_fr->floatParsFinal().selectByAttrib("poi", true))->size() == 1) {
          fBrowsables.push_back(std::make_shared<xRooNode>(".Draw(\"impact\")", nullptr, *this));
       }
@@ -747,7 +748,7 @@ void xRooNode::Browse(TBrowser *b)
       }
       if (_fr) {
          if (_fr->status() || _fr->covQual() != 3) { // snapshots or bad fits
-            v->GetTreeItem(b)->SetColor((_fr->numStatusHistory() || _fr->floatParsFinal().empty()) ? kRed : kBlue);
+            v->GetTreeItem(b)->SetColor((_fr->numStatusHistory() && !_fr->floatParsFinal().empty()) ? kRed : kBlue);
          } else if (_fr->numStatusHistory() == 0) { // partial fit result ..
             v->GetTreeItem(b)->SetColor(kGray);
          }
@@ -1251,10 +1252,22 @@ const char *xRooNode::GetNodeType() const
    if (auto o = get(); o && fParent && (fParent->get<RooProduct>() || fParent->get<RooRealSumPdf>())) {
       if (o->InheritsFrom("RooStats::HistFactory::FlexibleInterpVar"))
          return "Overall";
-      if (o->InheritsFrom("PiecewiseInterpolation"))
-         return (dynamic_cast<RooAbsArg *>(o)->getAttribute("density")) ? "DensityHisto" : "Histo";
+      if (o->InheritsFrom("PiecewiseInterpolation")) {
+         // check if children are all RooHistFunc ... if so, it's a HistoFactor, otherwise it's a Varied
+         bool isHisto=true;
+         for(auto c : const_cast<xRooNode*>(this)->browse()) {
+            if(!c->get<RooHistFunc>()) {
+               isHisto=false; break;
+            }
+         }
+         if(isHisto) {
+            return (dynamic_cast<RooAbsArg *>(o)->getAttribute("density")) ? "HistoDensity" : "Histo";
+         } else {
+            return (dynamic_cast<RooAbsArg *>(o)->getAttribute("density")) ? "VariedDensity" : "Varied";
+         }
+      }
       if (o->InheritsFrom("RooHistFunc"))
-         return (dynamic_cast<RooAbsArg *>(o)->getAttribute("density")) ? "ConstDensityHisto" : "ConstHisto";
+         return (dynamic_cast<RooAbsArg *>(o)->getAttribute("density")) ? "SimpleDensity" : "Simple";
       if (o->InheritsFrom("RooBinWidthFunction"))
          return "Density";
       if (o->InheritsFrom("ParamHistFunc"))
@@ -1957,7 +1970,7 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
                   TString::Format("%s;%s", dynamic_cast<TObject *>(_x)->GetName(), binningName.Data()));
                // technically convertForAcquisition has already acquired so no need to re-acquire but should be harmless
                _func = std::dynamic_pointer_cast<RooAbsArg>(acquire(xRooNode(*h).convertForAcquisition(*this)));
-               Info("Add", "Created densityhisto factor %s (xaxis=%s) for %s", _func->GetName(), _obs.at(0)->GetName(),
+               Info("Add", "Created SimpleDensity factor %s (xaxis=%s) for %s", _func->GetName(), _obs.at(0)->GetName(),
                     p->GetName());
             } else {
                throw std::runtime_error("Unsupported creation of new component in SumPdf for this many obs");
@@ -1992,7 +2005,7 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
          }
          if (isConverted) {
             Info("Add", "Created %s factor RooHistFunc::%s for %s",
-                 _f->getAttribute("density") ? "densityhisto" : "histo", _f->GetName(), p->GetName());
+                 _f->getAttribute("density") ? "SimpleDensity" : "Simple", _f->GetName(), p->GetName());
          }
       }
 
@@ -2183,7 +2196,7 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
                   std::unique_ptr<RooAbsCollection>(w->allVars().selectCommon(*_d->get()))->setAttribAll("obs");
                }
                if (_d->getGlobalObservables()) {
-                  std::unique_ptr<RooAbsCollection> globs(w->allVars().selectCommon(*_d->get()));
+                  std::unique_ptr<RooAbsCollection> globs(w->allVars().selectCommon(*_d->getGlobalObservables()));
                   globs->setAttribAll("obs");
                   globs->setAttribAll("global");
                }
@@ -2847,6 +2860,13 @@ xRooNode xRooNode::Multiply(const xRooNode &child, Option_t *opt)
                  mainChild().get() ? mainChild().get()->GetName() : get()->GetName(), o->ClassName(), o->GetName());
          }
          return out;
+      } else if(sOpt=="const") {
+         auto out = Multiply(RooConstVar(child.GetName(), child.GetTitle(), 1));
+         if (get()) {
+            Info("Multiply", "Scaled %s by new const factor %s",
+                 mainChild().get() ? mainChild().get()->GetName() : get()->GetName(), out->GetName());
+         }
+         return out;
       } else if (sOpt == "norm") {
          if (TString(child.GetName()).Contains("[") && ws()) {
             // assume factory method wanted
@@ -2867,7 +2887,7 @@ xRooNode xRooNode::Multiply(const xRooNode &child, Option_t *opt)
                  mainChild().get() ? mainChild().get()->GetName() : get()->GetName(), out->GetName());
          }
          return out;
-      } else if (sOpt == "shape" || sOpt == "histo" || sOpt == "blankshape") {
+      } else if (sOpt == "shape" || sOpt == "simple" || sOpt == "blankshape") {
          // needs axis defined
          if (auto ax = GetXaxis(); ax) {
             auto h = std::shared_ptr<TH1>(BuildHistogram(dynamic_cast<RooAbsLValue *>(ax->GetParent()), true));
@@ -2965,6 +2985,34 @@ xRooNode xRooNode::Multiply(const xRooNode &child, Option_t *opt)
                return xRooNode(*coefs, fParent).Multiply(child);
             }
          }
+      } else if(auto p2 = fParent->fParent->get<RooRealSumPdf>()) {
+         // find our function in the funcList, and then update the coefs of it
+
+         for (size_t i = 0; i < p2->funcList().size(); i++) {
+            if (p2->funcList().at(i) == fParent->get<RooAbsArg>()) {
+               auto coefs = p2->coefList().at(i);
+               if (!coefs->InheritsFrom("RooProduct")) {
+                  RooArgList oldCoef;
+                  if (!(strcmp(coefs->GetName(), "1") == 0 || strcmp(coefs->GetName(), "ONE") == 0))
+                     oldCoef.add(*coefs);
+                  auto newCoefs = fParent->acquireNew<RooProduct>(
+                     TString::Format("coefs_%s", fParent->GetName()),
+                     TString::Format("coefficients for %s", fParent->GetName()), oldCoef);
+                  RooArgList oldCoefs;
+                  for (size_t j = 0; j < p2->coefList().size(); j++) {
+                     if (i == j) {
+                        oldCoefs.add(*newCoefs);
+                     } else {
+                        oldCoefs.add(*p2->coefList().at(j));
+                     }
+                  }
+                  const_cast<RooArgList &>(p2->coefList()).removeAll();
+                  const_cast<RooArgList &>(p2->coefList()).add(oldCoefs);
+                  coefs = newCoefs.get();
+               }
+               return xRooNode(*coefs, fParent).Multiply(child);
+            }
+         }
       }
       throw std::runtime_error("this coefs case is not supported");
    }
@@ -3008,10 +3056,10 @@ xRooNode xRooNode::Multiply(const xRooNode &child, Option_t *opt)
 
       if (isConverted && child.get<RooHistFunc>()) {
          Info("Multiply", "Created %s factor %s in %s",
-              child.get<RooAbsArg>()->getAttribute("density") ? "densityhisto" : "histo", child->GetName(),
+              child.get<RooAbsArg>()->getAttribute("density") ? "SimpleDensity" : "Simple", child->GetName(),
               p->GetName());
       } else if (isConverted && child.get<ParamHistFunc>()) {
-         Info("Multiply", "Created shape factor %s in %s", child->GetName(), p->GetName());
+         Info("Multiply", "Created Shape factor %s in %s", child->GetName(), p->GetName());
       }
 
       if (auto _f = std::dynamic_pointer_cast<RooAbsReal>(out); _f) {
@@ -3657,7 +3705,7 @@ xRooNode &xRooNode::operator=(const TObject &o)
     */
 }
 
-void xRooNode::_fit_(const char *constParValues)
+void xRooNode::_fit_(const char *constParValues, const char* options)
 {
    try {
       auto _pars = pars();
@@ -3669,8 +3717,10 @@ void xRooNode::_fit_(const char *constParValues)
          TString pat = (idx == -1) ? TString(pattern) : TString(pattern(0, idx));
          double val =
             (idx == -1) ? std::numeric_limits<double>::quiet_NaN() : TString(pattern(idx + 1, pattern.Length())).Atof();
+         bool foundArg = false;
          for (auto p : _pars.argList()) {
             if (TString(p->GetName()).Contains(TRegexp(pat, true))) {
+               foundArg = true;
                p->setAttribute("Constant", true);
                if (!std::isnan(val)) {
                   valsToSet[dynamic_cast<RooAbsRealLValue *>(p)] = val;
@@ -3679,7 +3729,25 @@ void xRooNode::_fit_(const char *constParValues)
                }
             }
          }
+         if(!foundArg) {
+            throw std::runtime_error(std::string("Unrecognised parameter: ") + pat.Data());
+         }
       }
+
+      // parse options
+      TStringToken pattern2(options, ",");
+      auto defaultOpts = xRooFit::createNLLOptions();
+      while (pattern2.NextToken()) {
+         auto idx = pattern2.Index('=');
+         TString pat = (idx == -1) ? TString(pattern2) : TString(pattern2(0, idx));
+         TString val = TString(pattern2(idx + 1, pattern2.Length()));
+         if(auto o = defaultOpts->FindObject(pat)) {
+            defaultOpts->Remove(o);
+            delete o;
+         }
+         defaultOpts->Add( new RooCmdArg(pat,val.IsDec() ? val.Atoi() : 0,0,val.IsFloat() ? val.Atof() : 0.,0.,val.IsAlpha()?val:nullptr) );
+      }
+
       // use the first selected dataset
       auto _dsets = datasets();
       TString dsetName = "";
@@ -3689,7 +3757,7 @@ void xRooNode::_fit_(const char *constParValues)
             break;
          }
       }
-      auto _nll = nll(dsetName.Data());
+      auto _nll = nll(dsetName.Data(),*defaultOpts);
       // can now set the values
       for (auto [p, v] : valsToSet) {
          p->setVal(v);
@@ -3750,7 +3818,7 @@ void xRooNode::_generate_(const char *datasetName, bool expected)
 }
 
 void xRooNode::_scan_(const char *what, double nToys, const char *xvar, int nBinsX, double lowX,
-                      double highX /*, const char*, int, double, double*/, const char *constParValues)
+                      double highX /*, const char*, int, double, double*/, const char *constParValues, const char* options)
 {
    try {
       TString sXvar(xvar);
@@ -3773,16 +3841,38 @@ void xRooNode::_scan_(const char *what, double nToys, const char *xvar, int nBin
          TString pat = (idx == -1) ? TString(pattern) : TString(pattern(0, idx));
          double val =
             (idx == -1) ? std::numeric_limits<double>::quiet_NaN() : TString(pattern(idx + 1, pattern.Length())).Atof();
+         bool foundArg = false;
          for (auto par : _pars.argList()) {
             if (TString(par->GetName()).Contains(TRegexp(pat, true))) {
+               foundArg=true;
                par->setAttribute("Constant", true);
                if (!std::isnan(val)) {
                   dynamic_cast<RooAbsRealLValue *>(par)->setVal(val);
                }
             }
          }
+         if(!foundArg) {
+            throw std::runtime_error(std::string("Unrecognised parameter: ") + pat.Data());
+         }
+
       }
-      auto hs = nll(dsetName.Data()).hypoSpace(sXvar);
+
+      // parse options
+      TStringToken pattern2(options, ",");
+      auto defaultOpts = xRooFit::createNLLOptions();
+      while (pattern2.NextToken()) {
+         auto idx = pattern2.Index('=');
+         TString pat = (idx == -1) ? TString(pattern2) : TString(pattern2(0, idx));
+         TString val = TString(pattern2(idx + 1, pattern2.Length()));
+         if(auto o = defaultOpts->FindObject(pat)) {
+            defaultOpts->Remove(o);
+            delete o;
+         }
+         defaultOpts->Add( new RooCmdArg(pat,val.IsDec() ? val.Atoi() : 0,0,val.IsFloat() ? val.Atof() : 0.,0.,val.IsAlpha()?val:nullptr) );
+      }
+
+      auto hs = nll(dsetName.Data(),*defaultOpts).hypoSpace(sXvar);
+      hs.SetName(TUUID().AsString());
       if (nToys) {
          sWhat += " toys";
          if (nToys > 0) {
@@ -3801,7 +3891,6 @@ void xRooNode::_scan_(const char *what, double nToys, const char *xvar, int nBin
             TString::Format("%s\nData = %s\nScan Status Code = %d", hs.GetName(), dsetName.Data(), scanStatus),
             kMBIconExclamation, kMBOk);
       }
-      hs.SetName(TUUID().AsString());
       if (ws()) {
          if (auto res = hs.result())
             ws()->import(*res);
@@ -4272,7 +4361,7 @@ bool xRooNode::SetBinError(int bin, double value)
       }
       auto newVar = (value == 0) ? getObject<RooRealVar>("1")
                                  : acquire<RooRealVar>(Form("%s_bin%d", prefix.Data(), bin),
-                                                       Form("%s_bin%d", prefix.Data(), bin), 1);
+                                                       Form("#gamma^{%s}_{%d}", prefix.Data(), bin), 1);
 #if ROOT_VERSION_CODE < ROOT_VERSION(6, 27, 00)
       RooArgList &pSet = phf->_paramSet;
 #else
@@ -4591,13 +4680,12 @@ std::shared_ptr<TObject> xRooNode::convertForAcquisition(xRooNode &acquirer, con
             } else {
                if (!h) {
                   arg = acquirer.acquireNew<RooRealVar>(TString::Format("%s_bin%d", newObjName.Data(), i + 1), "", 1);
-               }
-               if (h->GetMinimumStored() != -1111 || h->GetMaximumStored() != -1111) {
-                  arg = acquirer.acquireNew<RooRealVar>(TString::Format("%s_bin%d", newObjName.Data(), i + 1), "",
+               } else if (h->GetMinimumStored() != -1111 || h->GetMaximumStored() != -1111) {
+                  arg = acquirer.acquireNew<RooRealVar>(TString::Format("%s_bin%d", newObjName.Data(), i + 1), TString::Format("%s_{%d}",h->GetTitle(),i+1),
                                                         h->GetBinContent(i + 1), h->GetMinimumStored(),
                                                         h->GetMaximumStored());
                } else {
-                  arg = acquirer.acquireNew<RooRealVar>(TString::Format("%s_bin%d", newObjName.Data(), i + 1), "",
+                  arg = acquirer.acquireNew<RooRealVar>(TString::Format("%s_bin%d", newObjName.Data(), i + 1), TString::Format("%s_{%d}",h->GetTitle(),i+1),
                                                         h->GetBinContent(i + 1));
                }
             }
@@ -4794,24 +4882,31 @@ std::shared_ptr<TObject> xRooNode::acquire(const std::shared_ptr<TObject> &arg, 
       } else if (arg->InheritsFrom("RooFitResult") || arg->InheritsFrom("TTree") || arg->IsA() == TStyle::Class() ||
                  arg->InheritsFrom("RooStats::HypoTestInverterResult") ||
                  arg->InheritsFrom("RooStats::HypoTestResult")) {
-         // ensure will have a unique name for import if must be new
-         TNamed *aNamed = dynamic_cast<TNamed *>(arg.get());
-         TString aName = arg->GetName();
-         TObject *out_arg = _ws->genobj(arg->GetName());
-         int ii = 1;
-         while (aNamed && out_arg && mustBeNew) {
-            aNamed->SetName(TString::Format("%s;%d", aName.Data(), ii++));
-            out_arg = _ws->genobj(aNamed->GetName());
-         }
-         if (!out_arg) {
-            if (aName != arg->GetName()) {
-               Warning("acquire", "Renaming to %s", arg->GetName());
-            }
-            if (_ws->import(*arg, false /*replace existing*/)) {
-               RooMsgService::instance().setGlobalKillBelow(msglevel);
-               return nullptr;
-            }
+         TObject *out_arg = nullptr;
+         if(auto fr = dynamic_cast<RooFitResult*>(&*arg); fr && fr->numStatusHistory()==0) {
+            // fit results without a status history are treated as snapshots
+            out_arg = fr->Clone();
+            const_cast<RooLinkedList &>(GETWSSNAPSHOTS(_ws)).Add(out_arg);
+         } else {
+            // ensure will have a unique name for import if must be new
+            TNamed *aNamed = dynamic_cast<TNamed *>(arg.get());
+            TString aName = arg->GetName();
             out_arg = _ws->genobj(arg->GetName());
+            int ii = 1;
+            while (aNamed && out_arg && mustBeNew) {
+               aNamed->SetName(TString::Format("%s;%d", aName.Data(), ii++));
+               out_arg = _ws->genobj(aNamed->GetName());
+            }
+            if (!out_arg) {
+               if (aName != arg->GetName()) {
+                  Warning("acquire", "Renaming to %s", arg->GetName());
+               }
+               if (_ws->import(*arg, false /*replace existing*/)) {
+                  RooMsgService::instance().setGlobalKillBelow(msglevel);
+                  return nullptr;
+               }
+               out_arg = _ws->genobj(arg->GetName());
+            }
          }
          RooMsgService::instance().setGlobalKillBelow(msglevel);
          /* this doesnt work because caller has its own version of fParent, not the one in the browser
@@ -6667,68 +6762,69 @@ xRooNode xRooNode::fitResult(const char *opt) const
       auto checkFr = [&](TObject *o) {
          if (auto _fr = dynamic_cast<RooFitResult *>(o); _fr && _fr->TestBit(1 << 20)) {
             // check all pars match final/const values ... if mismatch need to create a new RooFitResult
-            bool match = true;
+            RooArgList oldFloats; RooArgList newFloats;
+            RooArgList newConsts;
             for (auto p : pars()) {
-               if (!p->get<RooAbsReal>()) {
-                  if (auto cat = p->get<RooAbsCategory>();
-                      cat && cat->getCurrentIndex() ==
-                                _fr->floatParsFinal().getCatIndex(cat->GetName(), std::numeric_limits<int>().max())) {
-                     match = false;
-                     break;
-                  }
-               } else if (p->get<RooAbsArg>()->getAttribute("Constant")) {
-                  if (_fr->floatParsFinal().find(p->GetName()) ||
-                      std::abs(_fr->constPars().getRealValue(p->GetName(), std::numeric_limits<double>::quiet_NaN()) -
-                               p->get<RooAbsReal>()->getVal()) > 1e-15) {
-                     match = false;
-                     break;
+               if (p->get<RooAbsArg>()->getAttribute("Constant") || p->get<RooConstVar>()) {
+                  // par must not be in the float list or have different value to what is in constPars (if it is there)
+                  if(_fr->floatParsFinal().find(p->GetName()) ||
+                      (p->get<RooAbsReal>() && std::abs(_fr->constPars().getRealValue(p->GetName(), std::numeric_limits<double>::quiet_NaN()) -
+                               p->get<RooAbsReal>()->getVal()) > 1e-15) ||
+                      (p->get<RooAbsCategory>() && p->get<RooAbsCategory>()->getCurrentIndex() !=
+                                                      _fr->constPars().getCatIndex(p->GetName(), std::numeric_limits<int>().max()))) {
+                     newConsts.add(*p->get<RooAbsArg>());
                   }
                } else {
-                  if (_fr->constPars().find(p->GetName()) ||
-                      std::abs(
-                         _fr->floatParsFinal().getRealValue(p->GetName(), std::numeric_limits<double>::quiet_NaN()) -
-                         p->get<RooAbsReal>()->getVal()) > 1e-15) {
-                     match = false;
-                     break;
+                  // floating par must be present in the floatPars list with the same value
+                  if(!_fr->floatParsFinal().find(p->GetName())) {
+                     newFloats.add(*p->get<RooAbsArg>());
+                  } else if((p->get<RooAbsReal>() && std::abs(_fr->floatParsFinal().getRealValue(p->GetName(), std::numeric_limits<double>::quiet_NaN()) -
+                                                               p->get<RooAbsReal>()->getVal()) > 1e-15) ||
+                             (p->get<RooAbsCategory>() && p->get<RooAbsCategory>()->getCurrentIndex() !=
+                                                             _fr->floatParsFinal().getCatIndex(p->GetName(), std::numeric_limits<int>().max()))) {
+                     // value of existing float changed
+                     oldFloats.add(*p->get<RooAbsArg>());
                   }
                }
             }
-            if (!match) {
-               // create new fit result using covariances from this fit result
-               std::unique_ptr<RooArgList> _pars(
-                  dynamic_cast<RooArgList *>(pars().argList().selectByAttrib("Constant", false)));
-               auto fr = std::make_shared<RooFitResult>(TString::Format("%s-dirty", _fr->GetName()));
-               fr->SetTitle(TString::Format("%s parameter snapshot", GetName()));
-               fr->setFinalParList(*_pars);
-               TMatrixTSym<double> *prevCov = static_cast<TMatrixTSym<double> *>(GETDMP(_fr, _VM));
-               if (prevCov) {
-                  auto cov = _fr->reducedCovarianceMatrix(*_pars);
-                  // make the diagonals all the current error values
-                  for (size_t i = 0; i < _pars->size(); i++) {
-                     if (auto v = dynamic_cast<RooRealVar *>(_pars->at(i))) {
-                        cov(i, i) = pow(v->getError(), 2);
-                     } else {
-                        cov(i, i) = 0;
-                     }
+            if (!oldFloats.empty() || !newFloats.empty() || !newConsts.empty()) {
+               // create new fit result using covariance from the fit result
+               // remove any new consts from the list before extracting covariance matrix
+               RooArgList existingFloats(_fr->floatParsFinal());
+               existingFloats.remove(newConsts,true,true/* match name*/);
+               auto cov = _fr->reducedCovarianceMatrix(existingFloats);
+               if(!newFloats.empty()) {
+                  // extend the covariance matrix and add variances using current parameter errors
+                  size_t oldSize = existingFloats.size();
+                  cov.ResizeTo(oldSize+newFloats.size(),oldSize+newFloats.size());
+                  for(size_t i=0;i<newFloats.size();i++) {
+                     existingFloats.add(*newFloats.at(i));
+                     auto v = dynamic_cast<RooRealVar*>(newFloats.at(i));
+                     if(v)
+                        cov( oldSize + i, oldSize + i ) = std::pow(v->getError(),2);
                   }
-                  fr->setCovarianceMatrix(cov);
                }
+               RooArgList existingConsts(_fr->constPars());
+               existingConsts.remove(newFloats,true,true);
+               existingConsts.add(newConsts);
 
-               auto _args = consts().argList();
-               _args.add(pp().argList());
-               // global obs are added to constPars list too
-               auto _globs = globs(); // keep alive as may own glob
-               _args.add(_globs.argList());
-               fr->setConstParList(_args);
-               std::unique_ptr<RooArgList> _snap(dynamic_cast<RooArgList *>(_pars->snapshot()));
-               for (auto &p : *_snap) {
-                  if (auto atr = p->getStringAttribute("initVal"); atr && dynamic_cast<RooRealVar *>(p))
-                     dynamic_cast<RooRealVar *>(p)->setVal(TString(atr).Atof());
-               }
-               fr->setInitParList(*_snap);
+               // do we need to add our remaining const pars to the const par list? or the globs?
+               // for speed we wont bother
+               // note that generating datasets needs the globs in the const pars list so the robs can be determined
+               // at the moment this check is done in the generate() method (along with check for missing pars)
+
+               auto fr = std::make_shared<RooFitResult>(TString::Format("%s-dirty", _fr->GetName()));
+               fr->setFinalParList(existingFloats);
+               fr->setConstParList(existingConsts);
+               fr->setCovarianceMatrix(cov);
+               fr->setInitParList(_fr->floatParsInit()); // will only be the pars that were actually float for the fit
+
                return xRooNode(fr, *this);
+            } else {
+               // all matching, can return the fit result as-is
+               return xRooNode(*_fr, std::make_shared<xRooNode>(*_w, std::make_shared<xRooNode>()));
             }
-            return xRooNode(*_fr, std::make_shared<xRooNode>(*_w, std::make_shared<xRooNode>()));
+
          }
          return xRooNode();
       };
@@ -6902,7 +6998,6 @@ xRooNode xRooNode::generate(const xRooNode &fr, bool expected, int seed)
       }
       throw std::runtime_error(TString::Format("%s is not a pdf", GetName()));
    }
-   auto _fr = fr.get<RooFitResult>();
 
    // when generating, will only include channels that are selected
    // any unselected but not hidden channel will have data from the only selected dataset added to it
@@ -6952,9 +7047,67 @@ xRooNode xRooNode::generate(const xRooNode &fr, bool expected, int seed)
       }
    }
 
+   auto _fr = fr.get<RooFitResult>();
+   xRooNode fr2;
+   if(!_fr) {
+      fr2 = fitResult();
+      _fr = fr2.get<RooFitResult>();
+   }
+
+   // must ensure fr has all the globs in its constPars list ... any missing must be added
+   // otherwise generateFrom method wont determine globs properly
+   // same for any missing pars
+   auto _globs = globs();
+   bool missingGlobs(false);
+   for(auto glob : _globs) {
+      if(!_fr->constPars().find(*glob->get<RooAbsArg>())) {
+         missingGlobs = true; break;
+      }
+   }
+
+   std::unique_ptr<RooFitResult> newFr;
+   if (missingGlobs) {
+      newFr = std::make_unique<RooFitResult>(*_fr);
+      for(auto glob : _globs) {
+         if(!newFr->constPars().find(*glob->get<RooAbsArg>())) {
+            const_cast<RooArgList&>(newFr->constPars()).addClone(*glob->get<RooAbsArg>());
+         }
+      }
+      _fr = newFr.get();
+   }
+
+   // check for missing fundamental pars (consts are not fundamentals)
+   auto _pars = pars();
+   bool missingPars(false);
+   for(auto par : _pars) {
+      if(!par->get<RooAbsArg>()->isFundamental()) continue;
+      if(!_fr->constPars().find(*par->get<RooAbsArg>()) && !_fr->floatParsFinal().find(*par->get<RooAbsArg>())) {
+         missingPars = true; break;
+      }
+   }
+
+   if(missingPars) {
+      newFr = std::make_unique<RooFitResult>(*_fr);
+      for(auto par : _pars) {
+         if(!par->get<RooAbsArg>()->isFundamental()) continue;
+         if(!newFr->constPars().find(*par->get<RooAbsArg>()) && !newFr->floatParsFinal().find(*par->get<RooAbsArg>())) {
+            const_cast<RooArgList&>(newFr->constPars()).addClone(*par->get<RooAbsArg>());
+         }
+      }
+      _fr = newFr.get();
+   }
+
+
+
    return xRooNode(
-      xRooFit::generateFrom(*get<RooAbsPdf>(), (_fr ? *_fr : *(fitResult().get<RooFitResult>())), expected, seed).first,
+      xRooFit::generateFrom(*get<RooAbsPdf>(), *_fr, expected, seed).first,
       *this);
+
+   // should add coords to the dataset too?
+   // e.g. in the case of generating a dataset for a single channel, include the channelCat
+   // this will allow datasets to then be combined.
+   // could just say users must use 'reduced' on the simPdf, even if reducing to a single channel
+
 }
 
 xRooNLLVar xRooNode::nll(const xRooNode &_data, const RooLinkedList &opts) const
@@ -7434,7 +7587,8 @@ double new_getPropagatedError(const RooAbsReal &f, const RooFitResult &fr, const
          if (std::abs(rrvInAbsReal->getVal() - rrvFitRes->getVal()) > 0.01 * rrvFitRes->getError()) {
             std::stringstream errMsg;
             errMsg << "RooAbsReal::getPropagatedError(): the parameters of the RooAbsReal don't have"
-                   << " the same values as in the fit result! The logic of getPropagatedError is broken in this case.";
+                   << " the same values as in the fit result! The logic of getPropagatedError is broken in this case."
+                   << " \n " << rrvInAbsReal->GetName() << " : " << rrvInAbsReal->getVal() << " vs " << rrvFitRes->getVal();
 
             throw std::runtime_error(errMsg.str());
          }
@@ -7900,8 +8054,11 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
                               bool setInterp) const
 {
    auto rar = get<RooAbsReal>();
-   if (!rar)
+   if (!rar) {
+      if(get<TH1>()) { return dynamic_cast<TH1*>(get()->Clone()); }
       return nullptr;
+   }
+
 
    TObject *vv = rar;
 
@@ -8061,22 +8218,7 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
 
       /// Oct2022: No longer doing this because want to allow fitResult to be used to get partial error
       //        // need to add any floating parameters not included somewhere already in the fit result ...
-      //        RooArgList l;
-      //        for(auto& p : pars()) {
-      //            auto vv = p->get<RooRealVar>();
-      //            if (!vv) continue;
-      //            if (vv == dynamic_cast<RooRealVar*>(v)) continue;
-      //            if (vv->isConstant()) continue;
-      //            if (fr->floatParsFinal().find(vv->GetName())) continue;
-      //            if (fr->_constPars && fr->_constPars->find(vv->GetName())) continue;
-      //            l.add(*vv);
-      //        }
-      //
-      //        if (!l.empty()) {
-      //            RooArgList l2; l2.addClone(fr->floatParsFinal());
-      //            l2.addClone(l);
-      //            fr->setFinalParList(l2);
-      //        }
+      // now done in the fitResult() method, where a fit result from the workspace can be automatically extended
 
       TMatrixTSym<double> *prevCov = static_cast<TMatrixTSym<double> *>(GETDMP(fr, _VM));
 
@@ -9082,7 +9224,10 @@ void addLegendEntry(TObject *o, const char *title, const char *opt)
    if (l->GetListOfPrimitives()->GetEntries() > 20)
       return; // todo: create an 'other' entry?
 
-   l->AddEntry(o, formatLegendString(title).c_str(), opt);
+   auto e = l->AddEntry(o, formatLegendString(title).c_str(), opt);
+   // move to top of the legend (we add things in at the top)
+   l->GetListOfPrimitives()->RemoveLast();
+   l->GetListOfPrimitives()->AddFirst(e);
    if (auto nObj = l->GetListOfPrimitives()->GetEntries(); nObj > 0) {
       // each entry takes up 0.05 ... maximum of N*(N+4) (where N is # cols) before next column
       int nn = l->GetNColumns();
@@ -9576,7 +9721,7 @@ void xRooNode::Draw(Option_t *opt)
             _size++;
       }
       if (!hasSame) {
-         if (_size > 2) {
+         if (_size > 4) {
             // add a pad for the common legends
             _size++;
          }
@@ -9604,7 +9749,7 @@ void xRooNode::Draw(Option_t *opt)
          //                }
          //            }
          dynamic_cast<TPad *>(pad)->DivideSquare(_size, 1e-9, 1e-9);
-         if (_size > 3) {
+         if (_size > 5) {
             auto _pad = pad->GetPad(_size); // will use as the legend pad
             _pad->SetName("legend");
             // stretch the pad all the way to the left
@@ -9728,9 +9873,45 @@ void xRooNode::Draw(Option_t *opt)
    if (auto fr = get<RooFitResult>(); fr) {
       if (sOpt.Contains("corr")) {
          // do correlation matrix
+         // if a number follows 'corr', reduce the correlation matrix to show only the most extreme correlations
+         int numCorrs = TString(sOpt(sOpt.Index("corr") + 4, sOpt.Length())).Atoi();
+         if(numCorrs==0) numCorrs = fr->correlationMatrix().GetNcols();
 
-         auto hist = fr->correlationHist(fr->GetName());
-         hist->SetTitle(fr->GetTitle());
+         TH2* hist = nullptr;
+         if(numCorrs < fr->correlationMatrix().GetNcols()) {
+            // need to reduce
+            std::set<std::pair<double,size_t>> maxCorrs;
+            for(int i=0;i<fr->correlationMatrix().GetNcols();i++) {
+               double maxCorr = 0;
+               for(int j=0;j<fr->correlationMatrix().GetNcols();j++) {
+                  if(j==i) continue;
+                  maxCorr = std::max(std::abs(fr->correlationMatrix()(i,j)),maxCorr);
+               }
+               maxCorrs.insert({maxCorr,i});
+            }
+            std::vector<size_t> topN;
+            int c=0;
+            for(auto itr = maxCorrs.rbegin();itr != maxCorrs.rend(); ++itr) {
+               topN.push_back(itr->second);
+               c++;
+               if (c == numCorrs)
+                  break;
+            }
+            hist = new TH2D(fr->GetName(),TString::Format("%s - Top %d correlations",fr->GetTitle(),numCorrs),numCorrs,0,numCorrs,numCorrs,0,numCorrs);
+            for(size_t i = 0;i<topN.size();i++) {
+               hist->GetXaxis()->SetBinLabel(i+1,fr->floatParsFinal().at(topN.at(i))->GetTitle());
+               hist->GetYaxis()->SetBinLabel(numCorrs-i,fr->floatParsFinal().at(topN.at(i))->GetTitle());
+               for(size_t j = 0;j<topN.size();j++) {
+                  hist->Fill(i+0.5,numCorrs-j-0.5,fr->correlationMatrix()(topN.at(i),topN.at(j)));
+               }
+            }
+            hist->SetMinimum(-1); hist->SetMaximum(1);
+
+         } else {
+            hist = fr->correlationHist(fr->GetName());
+            hist->SetTitle(fr->GetTitle());
+         }
+
          hist->SetBit(kCanDelete);
          hist->Scale(100);
          hist->SetStats(false);
@@ -10199,7 +10380,7 @@ void xRooNode::Draw(Option_t *opt)
          pave->SetMargin(0.);
          pave->SetName("status");
          pave->SetTextAlign(31);
-         pave->AddText(TString::Format("minNLL: %g  edm: %g", fr->minNll(), fr->edm()));
+         pave->AddText(TString::Format("minNLL: %g  edm: %g", fr->minNll(), fr->edm()))->SetTextColor((fr->status() == 3) ? kRed : kBlack);
          std::string covQualTxt;
          switch (fr->covQual()) {
          case -1: covQualTxt = "Unknown"; break;
@@ -10375,6 +10556,23 @@ void xRooNode::Draw(Option_t *opt)
                l->SetY2(_axis->GetXmax());
                // l->Draw();
             }
+         }
+      }
+
+      if(!sOpt.Contains("impact")) {
+         // add labels to graph for unconstrained parameters
+         for(size_t i=0;i<ugraphLabels.size();i++) {
+            int bin = pNamesHist->GetNbinsX()-ugraphLabels.size()+i+1;
+            auto p = dynamic_cast<RooRealVar*>(fr->floatParsFinal().find(pNamesHist->GetXaxis()->GetBinLabel(bin)));
+            if(!p) continue;
+            auto x = graph->GetPointX(graph->GetN()-ugraphLabels.size()+i);
+            auto y = graph->GetPointY(graph->GetN()-ugraphLabels.size()+i)+graph->GetErrorYhigh(graph->GetN()-ugraphLabels.size()+i);
+            auto l = xRooFit::matchPrecision({p->getVal(),p->getError()});
+            auto t = new TLatex(x,y,TString::Format("%g #pm %g",l.first,l.second));
+            t->SetBit(kCanDelete);
+            t->SetTextSize(0.025);
+            t->SetTextAngle(90);
+            graph->GetListOfFunctions()->Add(t);
          }
       }
 
@@ -11283,7 +11481,7 @@ void xRooNode::Draw(Option_t *opt)
                                       ratioHist->GetBinContent(i));
       }
 
-      double rHeight = 1. / padFrac; //(_tmpPad->GetWNDC())/(gPad->GetHNDC());
+      double rHeight = (1.-padFrac) / padFrac; //(_tmpPad->GetWNDC())/(gPad->GetHNDC());
       if (ratioHist->GetYaxis()->GetTitleFont() % 10 == 2) {
          ratioHist->GetYaxis()->SetTitleSize(ratioHist->GetYaxis()->GetTitleSize() * rHeight);
          ratioHist->GetYaxis()->SetLabelSize(ratioHist->GetYaxis()->GetLabelSize() * rHeight);
@@ -11584,9 +11782,10 @@ std::pair<double, double> xRooNode::IntegralAndError(const xRooNode &fr, const c
    }
 
    auto _obs = obs();
+   RooArgSet sobs(*_obs.get<RooArgList>()); // need to make explicit RooArgSet for ROOT 6.36 onwards
    auto _coefs = coefs(); // need here to keep alive owned RooProduct
    if (auto c = _coefs.get<RooAbsReal>(); c) {
-      out = c->getVal(*_obs.get<RooArgList>()); // assumes independent of observables!
+      out = c->getVal(sobs); // assumes independent of observables!
    }
 
    if (auto p = dynamic_cast<RooAbsPdf *>(get()); p) {

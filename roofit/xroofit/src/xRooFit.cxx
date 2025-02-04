@@ -942,6 +942,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
    }
 
    bool restore = !fitConfig.UpdateAfterFit();
+   bool minos = fitConfig.MinosErrors();
    std::string logs;
    if (!out) {
       int strategy = fitConfig.MinimizerOptions().Strategy();
@@ -976,7 +977,6 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       bool hesse = _minimizer.fitter()->Config().ParabErrors();
       _minimizer.fitter()->Config().SetParabErrors(
          false); // turn "off" so can run hesse as a separate step, appearing in status
-      bool minos = _minimizer.fitter()->Config().MinosErrors();
       _minimizer.fitter()->Config().SetMinosErrors(false);
       _minimizer.fitter()->Config().SetUpdateAfterFit(true); // note: seems to always take effect
 
@@ -1130,6 +1130,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       // Note that if strategy>=2 or (strategy=1 and Dcovar>0.05) then hesse will be forced to be run (see
       // VariadicMetricBuilder) So only in Strategy=0 can you skip hesse (even if SetParabErrors false).
 
+      int miniStrat = _minimizer.fitter()->Config().MinimizerOptions().Strategy();
       double dCovar = std::numeric_limits<double>::quiet_NaN();
       // if(auto _minuit2 = dynamic_cast<ROOT::Minuit2::Minuit2Minimizer*>(_minimizer.fitter()->GetMinimizer());
       // _minuit2 && _minuit2->fMinimum) {
@@ -1282,6 +1283,15 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
          }
       }
 
+      if(miniStrat < _minimizer.fitter()->Config().MinimizerOptions().Strategy() && hesse && out->edm() > _minimizer.fitter()->Config().MinimizerOptions().Tolerance()*1e-3 && out->status() != 3) {
+         // hesse may have updated edm by using a better strategy than used in the minimization
+         // so print a warning about this
+         std::cerr << "Warning: post-Hesse edm greater than allowed by tolerance. Consider increasing minimization strategy" << std::endl;
+         // Dec24: As this is a new warning, will not update status code for now, so edm will be large
+         // but in the future we should probably update the code to 3 so that users don't miss this warning.
+         // out->setStatus(3); // edm above max
+      }
+
       out->setStatusHistory(statusHistory);
 
       // userPars wont have been added to the RooFitResult by RooMinimizer
@@ -1388,18 +1398,18 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       if (_progress) {
          delete _nll;
       }
+   }
 
+   if(out && out->status() == 0 && minos) {
       // call minos if requested on any parameters
-      if (status == 0 && minos) {
-         for (auto label : {"xminos", "xMinos"}) {
-            std::unique_ptr<RooAbsCollection> pars(floatPars->selectByAttrib(label, true));
-            for (auto p : *pars) {
-               Info("minimize", "Computing xminos error for %s", p->GetName());
-               xRooFit::minos(nll, *out, p->GetName(), myFitConfig);
-            }
-            if (!pars->empty())
-               *floatPars = out->floatParsFinal(); // put values back to best fit
+      for (auto label : {"xminos", "xMinos"}) {
+         std::unique_ptr<RooAbsCollection> pars(floatPars->selectByAttrib(label, true));
+         for (auto p : *pars) {
+            Info("minimize", "Computing xminos error for %s", p->GetName());
+            xRooFit::minos(nll, *out, p->GetName(), myFitConfig);
          }
+         if (!pars->empty())
+            *floatPars = out->floatParsFinal(); // put values back to best fit
       }
    }
 
