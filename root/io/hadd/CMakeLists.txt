@@ -59,6 +59,20 @@ ROOTTEST_ADD_TEST(test_MergeCMSOpenDataRNTuples
                   POSTCMD ${ROOT_root_CMD} -q -b -l "hadd_check_cms.C(\"cms_opendata_merged.root\", \"cms_opendata_0_200.root\")"
 )
 
+ROOTTEST_ADD_TEST(test_MergeFilterBlacklist
+                  COPY_TO_BUILDDIR hadd_gen_input_files.C hadd_check_filtered.C hadd_filter.txt
+                  PRECMD ${ROOT_root_CMD} -q -b -l "hadd_gen_input_files.C(\"hadd_input\")"
+                  COMMAND ${ROOT_hadd_CMD} -L hadd_filter.txt -Ltype SkipListed -f filtered_blacklist.root hadd_input0.root hadd_input1.root hadd_input2.root hadd_input3.root
+                  POSTCMD ${ROOT_root_CMD} -q -b -l "hadd_check_filtered.C(\"filtered_blacklist.root\", \"blacklist\")"
+)
+
+ROOTTEST_ADD_TEST(test_MergeFilterWhitelist
+                  COPY_TO_BUILDDIR hadd_gen_input_files.C hadd_check_filtered.C hadd_filter.txt
+                  DEPENDS test_MergeFilterBlacklist
+                  COMMAND ${ROOT_hadd_CMD} -L hadd_filter.txt -Ltype OnlyListed -f filtered_whitelist.root hadd_input0.root hadd_input1.root hadd_input2.root hadd_input3.root
+                  POSTCMD ${ROOT_root_CMD} -q -b -l "hadd_check_filtered.C(\"filtered_whitelist.root\", \"whitelist\")"
+)
+
 ################################################################
 #                 argument parsing tests                       #
 ################################################################
@@ -165,4 +179,25 @@ ROOTTEST_ADD_TEST(test_hadd_args_missing_arg2
                   PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_missing_arg2_out.root
                   COMMAND ${ROOT_hadd_CMD} hadd_args_missing_arg2_out.root hadd_args_in.root -n
                   PASSREGEX "Error in <hadd>: expected argument after '-n' flag."
+)
+
+ROOTTEST_ADD_TEST(test_hadd_args_wrong_ltype
+                  DEPENDS test_hadd_args_gen_input
+                  PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_wrong_ltype.root
+                  COMMAND ${ROOT_hadd_CMD} hadd_args_wrong_ltype.root hadd_args_in.root -L foo -Ltype onlylisted
+                  PASSREGEX "Error in <hadd>: invalid argument for -Ltype: 'onlylisted'"
+)
+
+ROOTTEST_ADD_TEST(test_hadd_args_missing_ltype
+                  DEPENDS test_hadd_args_gen_input
+                  PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_missing_ltype.root
+                  COMMAND ${ROOT_hadd_CMD} hadd_args_missing_ltype.root hadd_args_in.root -L foo
+                  PASSREGEX "Error in <hadd>: -L must always be passed along with -Ltype"
+)
+
+ROOTTEST_ADD_TEST(test_hadd_args_missing_l
+                  DEPENDS test_hadd_args_gen_input
+                  PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_missing_l.root
+                  COMMAND ${ROOT_hadd_CMD} hadd_args_missing_l.root hadd_args_in.root -Ltype SkipListed
+                  PASSREGEX "Error in <hadd>: -L must always be passed along with -Ltype"
 )
