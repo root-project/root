@@ -9,6 +9,7 @@
 #include <NTupleStruct.hxx>
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include "ClassWithArrays.h"
 
@@ -99,6 +100,13 @@ TEST_F(RNTupleDSTest, ColTypeNames)
    EXPECT_STREQ("float", ds.GetTypeName("energy").c_str());
    EXPECT_STREQ("std::size_t", ds.GetTypeName("R_rdf_sizeof_jets").c_str());
    EXPECT_STREQ("ROOT::VecOps::RVec<std::int32_t>", ds.GetTypeName("rvec").c_str());
+
+   try {
+      ds.GetTypeName("Address");
+      FAIL() << "should not be able to get a type for a non-existent column";
+   } catch (const std::runtime_error &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("RNTupleDS: There is no column with name \"Address\""));
+   }
 }
 
 TEST_F(RNTupleDSTest, NFiles)
