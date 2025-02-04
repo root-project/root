@@ -28,7 +28,7 @@ TClass::fRefStart.
 /// Copy ctor, increases reference count to original TClass object.
 
 TClassRef::TClassRef(const TClassRef &org) :
-   fClassName(org.fClassName), fClassPtr(org.fClassPtr)
+   fClassName(org.fClassName), fClassPtr(org.fClassPtr.load())
 {
 }
 
@@ -59,7 +59,7 @@ TClassRef::TClassRef(TClass *cl) : fClassPtr(nullptr)
 void TClassRef::Assign(const TClassRef &rhs)
 {
    fClassName = rhs.fClassName;
-   fClassPtr  = rhs.fClassPtr;
+   fClassPtr  = rhs.fClassPtr.load();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
