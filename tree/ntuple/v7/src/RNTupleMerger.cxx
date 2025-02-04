@@ -158,9 +158,8 @@ try {
       TFile *inFile = dynamic_cast<TFile *>(pitr);
       ROOT::RNTuple *anchor = inFile ? inFile->Get<ROOT::RNTuple>(ntupleName.c_str()) : nullptr;
       if (!anchor) {
-         Error("RNTuple::Merge", "Failed to retrieve RNTuple anchor named '%s' from file '%s'", ntupleName.c_str(),
-               inFile->GetName());
-         return -1;
+         Info("RNTuple::Merge", "No RNTuple anchor named '%s' from file '%s'", ntupleName.c_str(), inFile->GetName());
+         continue;
       }
 
       auto source = RPageSourceFile::CreateFromAnchor(*anchor);
