@@ -3,6 +3,7 @@
 set -ex
 
 echo "Running clang-format against branch $TRAVIS_BRANCH, with hash $BASE_COMMIT"
+clang-format --version
 COMMIT_FILES=$(git diff --name-status $BASE_COMMIT | grep -i -v '.mjs$' | grep -i -v LinkDef | grep -v -E '^D +' | sed -E 's,^.[[:space:]]+,,')
 
 RESULT_OUTPUT="no modified files to format"
