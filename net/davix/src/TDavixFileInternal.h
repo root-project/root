@@ -56,42 +56,20 @@ class TDavixFileInternal {
 
 private:
    TDavixFileInternal(const TUrl & mUrl, Option_t* mopt) :
-      positionLock(),
-      openLock(),
       davixContext(getDavixInstance()),
-      davixParam(nullptr),
-      davixPosix(nullptr),
-      davixFd(nullptr),
       fUrl(mUrl),
       opt(mopt),
-      oflags(0),
       dirdVec() { }
 
    TDavixFileInternal(const char* url, Option_t* mopt) :
-      positionLock(),
-      openLock(),
       davixContext(getDavixInstance()),
-      davixParam(nullptr),
-      davixPosix(nullptr),
-      davixFd(nullptr),
       fUrl(url),
       opt(mopt),
-      oflags(0),
       dirdVec() { }
 
    ~TDavixFileInternal();
 
-   Davix_fd *getDavixFileInstance()
-   {
-      // singleton init
-      if (davixFd == nullptr) {
-         TLockGuard l(&(openLock));
-         if (davixFd == nullptr) {
-            davixFd = this->Open();
-         }
-      }
-      return davixFd;
-   }
+   Davix_fd *getDavixFileInstance();
 
    Davix_fd * Open();
 
@@ -123,19 +101,16 @@ private:
      return replicas;
    }
 
-   TMutex positionLock;
-   TMutex openLock;
-
    std::vector<std::string> replicas;
 
    // DAVIX
    Davix::Context *davixContext;
-   Davix::RequestParams *davixParam;
-   Davix::DavPosix *davixPosix;
-   Davix_fd *davixFd;
+   Davix::RequestParams *davixParam = nullptr;
+   Davix::DavPosix *davixPosix = nullptr;
+   Davix_fd *davixFd = nullptr;
    TUrl fUrl;
    Option_t* opt;
-   int oflags;
+   int oflags = 0;
    std::vector<void*> dirdVec;
 
 public:

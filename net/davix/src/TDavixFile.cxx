@@ -76,7 +76,10 @@ const char* open_mode_create = "CREATE";
 const char* open_mode_new = "NEW";
 const char* open_mode_update = "UPDATE";
 
-static TMutex createLock;
+static TMutex davixLockCreate;
+static TMutex davixLockPosition;
+static TMutex davixLockOpen;
+
 static Context* davix_context_s = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -352,7 +355,7 @@ TDavixFileInternal::~TDavixFileInternal()
 Context *TDavixFileInternal::getDavixInstance()
 {
    if (davix_context_s == NULL) {
-      TLockGuard guard(&createLock);
+      TLockGuard guard(&davixLockCreate);
       if (davix_context_s == NULL) {
          davix_context_s = new Context();
       }
@@ -709,7 +712,7 @@ TString TDavixFile::GetNewUrl() {
 
 void TDavixFile::Seek(Long64_t offset, ERelativeTo pos)
 {
-   TLockGuard guard(&(d_ptr->positionLock));
+   TLockGuard guard(&davixLockPosition);
    switch (pos) {
       case kBeg:
          fOffset = offset + fArchiveOffset;
@@ -736,7 +739,7 @@ void TDavixFile::Seek(Long64_t offset, ERelativeTo pos)
 
 Bool_t TDavixFile::ReadBuffer(char *buf, Int_t len)
 {
-   TLockGuard guard(&(d_ptr->positionLock));
+   TLockGuard guard(&davixLockPosition);
    Davix_fd *fd;
    if ((fd = d_ptr->getDavixFileInstance()) == NULL)
       return kTRUE;
@@ -840,7 +843,7 @@ void TDavixFile::enableGridMode()
 
 bool TDavixFileInternal::isMyDird(void *fd)
 {
-   TLockGuard l(&(openLock));
+   TLockGuard l(&davixLockOpen);
    std::vector<void *>::iterator f = std::find(dirdVec.begin(), dirdVec.end(), fd);
    return (f != dirdVec.end());
 }
@@ -849,7 +852,7 @@ bool TDavixFileInternal::isMyDird(void *fd)
 
 void TDavixFileInternal::addDird(void *fd)
 {
-   TLockGuard l(&(openLock));
+   TLockGuard l(&davixLockOpen);
    dirdVec.push_back(fd);
 }
 
@@ -857,7 +860,7 @@ void TDavixFileInternal::addDird(void *fd)
 
 void TDavixFileInternal::removeDird(void *fd)
 {
-   TLockGuard l(&(openLock));
+   TLockGuard l(&davixLockOpen);
    std::vector<void *>::iterator f = std::find(dirdVec.begin(), dirdVec.end(), fd);
    if (f != dirdVec.end())
       dirdVec.erase(f);
@@ -993,4 +996,18 @@ Long64_t TDavixFile::DavixReadBuffers(Davix_fd *fd, char *buf, Long64_t *pos, In
    }
 
    return ret;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Davix_fd *TDavixFileInternal::getDavixFileInstance()
+{
+   // singleton init
+   if (davixFd == nullptr) {
+      TLockGuard l(&davixLockOpen);
+      if (davixFd == nullptr) {
+         davixFd = this->Open();
+      }
+   }
+   return davixFd;
 }
