@@ -11,23 +11,21 @@
 from . import pythonization
 
 def wait_press_windows():
-   import ROOT
+   from ROOT import gSystem
    import msvcrt
    import time
 
-   done = False
-   while not done:
-      k = ''
-      ROOT.gSystem.ProcessEvents()
+   while not gSystem.ProcessEvents():
       if msvcrt.kbhit():
          k = msvcrt.getch()
-         done = k[0] == 32
+         if k[0] == 32:
+            break
       else:
          time.sleep(0.01)
 
 
 def wait_press_posix():
-   import ROOT
+   from ROOT import gSystem
    import sys
    import select
    import tty
@@ -40,8 +38,7 @@ def wait_press_posix():
 
    try:
 
-      while True:
-         ROOT.gSystem.ProcessEvents()
+      while not gSystem.ProcessEvents():
          c = ''
          if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
             c = sys.stdin.read(1)
