@@ -34,6 +34,16 @@ def get_argparse():
         "compression setting after fk (for example 206 when using -fk206)"), action = 'store_true')
     parser.add_argument("-ff", help="The compression level use is the one specified in the first input", action = 'store_true')
     parser.add_argument("-k", help="Skip corrupt or non-existent files, do not exit", action = 'store_true')
+    parser.add_argument("-L", help=textwrap.fill(
+       "Read the list of objects from FILE and either only merge or skip those objects depending on "
+       "the value of \"-Ltype\". FILE must contain one object name per line, which cannot contain "
+       "whitespaces or '/'. You can also pass TDirectory names, which apply to the entire directory "
+       "content. Lines beginning with '#' are ignored. If this flag is passed, \"-Ltype\" MUST be "
+       "passed as well."), action = 'store_true')
+    parser.add_argument("-Ltype", help=textwrap.fill(
+        "Sets the type of operation performed on the objects listed in FILE given with the "
+        "\"-L\" flag. \"SkipListed\" will skip all the listed objects; \"OnlyListed\" will only merge those "
+        "objects. If this flag is passed, \"-L\" must be passed as well."), action = 'store_true')
     parser.add_argument("-O", help="Re-optimize basket size when merging TTree", action = 'store_true')
     parser.add_argument("-T", help="Do not merge Trees", action = 'store_true')
     parser.add_argument("-v", help=textwrap.fill(
