@@ -70,4 +70,5 @@ The std::list<std::string> values are:
 The int[3] values are:
    111  112  113   and is correct.
 The int value is: 3 and is correct.
+The string value is: "input message" and is correct.
 (int) 0
