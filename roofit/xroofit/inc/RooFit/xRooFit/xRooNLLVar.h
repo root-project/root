@@ -45,6 +45,7 @@ class RooCmdArg;
 class TGraph;
 class TGraphErrors;
 class TMultiGraph;
+class TFile;
 
 namespace RooStats {
 class HypoTestResult;
@@ -366,6 +367,8 @@ public:
       std::map<std::shared_ptr<xRooNode>, std::shared_ptr<xRooNLLVar>> fNlls; // existing NLL functions of added pdfs;
 
       std::set<std::pair<std::shared_ptr<RooArgList>, std::shared_ptr<xRooNode>>> fPdfs;
+
+      std::shared_ptr<TFile> fFitDb;
    };
 
    xRooHypoSpace hypoSpace(const char *parName, int nPoints, double low, double high,

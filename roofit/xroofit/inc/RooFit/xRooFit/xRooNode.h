@@ -441,13 +441,13 @@ public:
             int seed = 0); // generate a dataset from a pdf node using given fr - if none given will use current fit
 
    /** @private */
-   void _fit_(const char *constParValues = ""); // *MENU*
+   void _fit_(const char *constParValues = "", const char* options = ""); // *MENU*
    /** @private */
    void _generate_(const char *name = "", bool expected = false); // *MENU*
    /** @private */
    void _scan_(const char *what = "plr", double nToys = 0, const char *xvar = "", int nPointsX = 0, double lowX = 0,
                double highX = 0 /*, const char* yvar="", int nBinsY=0, double lowY=0, double highY=0*/,
-               const char *constParValues = ""); // *MENU*
+               const char *constParValues = "", const char* options = ""); // *MENU*
    //    xRooNode fitTo(const char* datasetName) const;
    //    xRooNode fitTo(const xRooNode& _data) const;
    //    xRooNode generate(bool expected=false) const;

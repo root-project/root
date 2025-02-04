@@ -844,9 +844,10 @@ double xRooNLLVar::saturatedConstraintTermVal() const
       return 0;
 
    for (auto c : cTerm->list()) {
-      if (std::string(c->ClassName()) == "RooAbsPdf") {
+      if (std::string(c->ClassName()) == "RooAbsPdf" || std::string(c->ClassName()).find("RooNormalizedPdf")!=std::string::npos) {
          // in ROOT 6.32 the constraintTerm is full of RooNormalizedPdfs which aren't public
-         // in that case use the first server
+         // became public in 6.34, hence now also check for RooNormalizedPdf explicitly
+         // in this case use the first server
          c = c->servers()[0];
       }
       if (auto gaus = dynamic_cast<RooGaussian *>(c)) {
@@ -1353,6 +1354,10 @@ double xRooNLLVar::extendedTermVal() const
 
 double xRooNLLVar::simTermVal() const
 {
+   // comes from the _simCount code inside RooNLLVar
+   // is this actually only appropriate if the roosimultaneous is not extended?
+   // i.e. then this term represents the probability the entry belongs to a given state, and given
+   // all the states are normalized to 1, this probability is assumed to just be 1/N_states
    if (auto s = dynamic_cast<RooSimultaneous *>(fPdf.get()); s) {
       return fData->sumEntries() * log(1.0 * (s->servers().size() - 1)); // one of the servers is the cat
    }
@@ -1426,10 +1431,12 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::getVal(const char *what)
       if (getVal(sWhat + " readonly").second != 0) {
          if (sWhat.Contains("toys=")) {
             // extract number of toys required ... format is "nullToys.altToysFraction" if altToysFraction=0 then use
-            // same for both
-            size_t nToys = TString(sWhat(sWhat.Index("toys=") + 5, sWhat.Length())).Atoi();
-            size_t nToysAlt = (TString(sWhat(sWhat.Index("toys=") + 5, sWhat.Length())).Atof() - nToys) * nToys;
-            if (nToysAlt == 0)
+            // same for both, unless explicitly set (i.e. N.0) then means we want no alt toys
+            // e.g. if doing just pnull significance
+            TString toyNum = sWhat(sWhat.Index("toys=") + 5, sWhat.Length());
+            size_t nToys = toyNum.Atoi();
+            size_t nToysAlt = (toyNum.Atof() - nToys)*nToys;
+            if (nToysAlt == 0 && !toyNum.Contains('.'))
                nToysAlt = nToys;
             if (nullToys.size() < nToys) {
                addNullToys(nToys - nullToys.size());
@@ -1440,6 +1447,8 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::getVal(const char *what)
          } else if (doCLs && toys) {
             // auto toy-generating for limits .. do in blocks of 100
             addCLsToys(100, 0, 0.05, nSigma);
+         } else if(toys) {
+            throw std::runtime_error("Auto-generating toys for anything other than CLs not yet supported, please specify number of toys with 'toys=N' ");
          }
       }
    }
@@ -1912,7 +1921,6 @@ std::shared_ptr<const RooFitResult> xRooNLLVar::xRooHypoPoint::retrieveFit(int t
          rfit->setStatus(fit->getRealValue("status"));
          rfit->setMinNLL(fit->getRealValue("minNll"));
          rfit->setEDM(fit->getRealValue("edm"));
-         rfit->setCovQual(fit->getRealValue("covQual"));
          if (type == 0) {
             std::unique_ptr<RooAbsCollection> par_hats(
                hypoTestResult->GetFitInfo()->getGlobalObservables()->selectByName(coords->contentsString().c_str()));
@@ -1925,6 +1933,7 @@ std::shared_ptr<const RooFitResult> xRooNLLVar::xRooHypoPoint::retrieveFit(int t
          rfit->setInitParList(RooArgList());
          TMatrixDSym cov(0);
          rfit->setCovarianceMatrix(cov);
+         rfit->setCovQual(fit->getRealValue("covQual"));
          return rfit;
       }
    }
@@ -2400,10 +2409,15 @@ size_t xRooNLLVar::xRooHypoPoint::addToys(bool alt, int nToys, int initialSeed, 
             std::cout << "..." << std::flush;
             lasti = altToysAdded + toysAdded;
             s.Reset();
-            Draw();
-            if (gPad) {
-               gPad->Update();
-               gSystem->ProcessEvents();
+            if(!gROOT->IsBatch()) {
+               Draw();
+               if (gPad) {
+                  gPad->Update();
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 30, 00)
+                  gPad->GetCanvas()->ResetUpdated(); // stops previous canvas being replaced in a jupyter notebook
+#endif
+                  gSystem->ProcessEvents();
+               }
             }
             s.Start();
             // std::cout << "Generated " << i << "/" << nToys << (alt ? " alt " : " null ") << " hypothesis toys " ..."
@@ -2448,13 +2462,15 @@ size_t xRooNLLVar::xRooHypoPoint::addToys(bool alt, int nToys, int initialSeed, 
       }
       std::cout << "toys " << TString::Format("[%.2f toys/s overall]", double(toysAdded + altToysAdded) / s2.RealTime())
                 << std::endl;
-      Draw();
-      if (gPad) {
-         gPad->Update();
+      if(!gROOT->IsBatch()) {
+         Draw();
+         if (gPad) {
+            gPad->Update();
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 30, 00)
-         gPad->GetCanvas()->ResetUpdated(); // stops previous canvas being replaced in a jupyter notebook
+            gPad->GetCanvas()->ResetUpdated(); // stops previous canvas being replaced in a jupyter notebook
 #endif
-         gSystem->ProcessEvents();
+            gSystem->ProcessEvents();
+         }
       }
    }
 
@@ -2780,6 +2796,7 @@ void xRooNLLVar::xRooHypoPoint::Draw(Option_t *opt)
       l->SetBorderSize(0);
       l->SetBit(kCanDelete);
       l->Draw();
+      l->ConvertNDCtoPad();
    } else {
       for (auto o : *gPad->GetListOfPrimitives()) {
          l = dynamic_cast<TLegend *>(o);
@@ -2846,7 +2863,7 @@ void xRooNLLVar::xRooHypoPoint::Draw(Option_t *opt)
 
    l->AddEntry(tl, label, "l");
    label = "";
-   if (!std::isnan(pNull.first) || !std::isnan(pAlt.first)) {
+   if (nullHist->GetEntries() || altHist->GetEntries()) {
       auto pCLs = pCLs_toys();
       label += " p_{toy}=(";
       label += (std::isnan(pNull.first)) ? "-" : TString::Format("%.4f #pm %.4f", pNull.first, pNull.second);
@@ -2906,11 +2923,11 @@ TString xRooNLLVar::xRooHypoPoint::tsTitle(bool inWords) const
    } else if (fPllType == xRooFit::Asymptotics::Uncapped) {
       if (v && v->hasRange("physical") && v->getMin("physical") != -std::numeric_limits<double>::infinity()) {
          return (inWords) ? TString::Format("Lower-Bound Uncapped PLR")
-                          : TString::Format("#tilde{s}_{%s=%g}", v->GetTitle(), v->getVal());
+                          : TString::Format("#tilde{u}_{%s=%g}", v->GetTitle(), v->getVal());
       } else if (v) {
-         return (inWords) ? TString::Format("Uncapped PLR") : TString::Format("s_{%s=%g}", v->GetTitle(), v->getVal());
+         return (inWords) ? TString::Format("Uncapped PLR") : TString::Format("u_{%s=%g}", v->GetTitle(), v->getVal());
       } else {
-         return "s";
+         return "u";
       }
    } else {
       return "Test Statistic";
@@ -2958,7 +2975,7 @@ xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints
             Info("xRooNLLVar::hypoSpace", "Setting physical range of %s to [0,inf]", p->GetName());
          } else if (dynamic_cast<RooRealVar *>(p)->hasRange("physical")) {
             dynamic_cast<RooRealVar *>(p)->removeRange("physical");
-            Info("xRooNLLVar::hypoSpace", "Setting physical range of %s to [-inf,inf] (i.e. removed range)",
+            Info("xRooNLLVar::hypoSpace", "Removing physical range of %s",
                  p->GetName());
          }
       }
