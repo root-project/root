@@ -54,6 +54,14 @@
   \param -j [N_JOBS]   Parallelise the execution in `N_JOBS` processes. If the number of processes is not specified,
                        or is 0, use the system maximum.
   \param -k            Skip corrupt or non-existent files, do not exit
+  \param -L <FILE>     Read the list of objects from FILE and either only merge or skip those objects depending on
+                       the value of "-Ltype". FILE must contain one object name per line, which cannot contain
+                       whitespaces or '/'. You can also pass TDirectory names, which apply to the entire directory
+                       content. Lines beginning with '#' are ignored. If this flag is passed, "-Ltype" MUST be
+                       passed as well.
+  \param -Ltype <SkipListed|OnlyListed> Sets the type of operation performed on the objects listed in FILE given with the
+                       "-L" flag. "SkipListed" will skip all the listed objects; "OnlyListed" will only merge those
+                       objects. If this flag is passed, "-L" must be passed as well.
   \param -n <N_FILES>  Open at most `N` files at once (use 0 to request to use the system maximum - which is also
                        the default)
   \param -O            Re-optimize basket size when merging TTree
@@ -180,6 +188,8 @@ struct HAddArgs {
 
    std::optional<std::string> fWorkingDir;
    std::optional<IntFlag_t> fNProcesses;
+   std::optional<std::string> fObjectFilterFile;
+   std::optional<Int_t> fObjectFilterType;
    std::optional<TString> fCacheSize;
    std::optional<ROOT::TIOFeatures> fFeatures;
    std::optional<IntFlag_t> fMaxOpenedFiles;
@@ -293,6 +303,17 @@ static FlagConvResult<TString> ConvertCacheSize(const char *arg)
       cacheSize.Append(arg);
    }
    return {cacheSize, EFlagResult::kParsed};
+}
+
+static FlagConvResult<Int_t> ConvertFilterType(const char *arg)
+{
+   if (strcmp(arg, "SkipListed") == 0)
+      return {TFileMerger::kSkipListed, EFlagResult::kParsed};
+   if (strcmp(arg, "OnlyListed") == 0)
+      return {TFileMerger::kOnlyListed, EFlagResult::kParsed};
+
+   Err() << "invalid argument for -Ltype: '" << arg << "'. Can only be 'SkipListed' or 'OnlyListed' (case matters).\n";
+   return {{}, EFlagResult::kErr};
 }
 
 // Parses a flag that is followed by an argument of type T.
@@ -493,6 +514,7 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
       }                                           \
    } while (0)
 
+         // NOTE: if two flags have the same prefix (e.g. -Ltype and -L) always put the longest one first!
          PARSE_FLAG(FlagToggle, arg, "T", args.fNoTrees);
          PARSE_FLAG(FlagToggle, arg, "a", args.fAppend);
          PARSE_FLAG(FlagToggle, arg, "k", args.fSkipErrors);
@@ -500,6 +522,8 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
          PARSE_FLAG(FlagToggle, arg, "dbg", args.fDebug);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "d", args.fWorkingDir);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "j", args.fNProcesses, {0});
+         PARSE_FLAG(FlagArg, argc, argv, argIdx, "Ltype", args.fObjectFilterType, {}, ConvertFilterType);
+         PARSE_FLAG(FlagArg, argc, argv, argIdx, "L", args.fObjectFilterFile);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "cachesize", args.fCacheSize, {}, ConvertCacheSize);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "experimental-io-features", args.fFeatures);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "n", args.fMaxOpenedFiles);
@@ -540,6 +564,46 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
    }
 
    return args;
+}
+
+// Returns the flags to add to the file merger's flags, or -1 in case of errors.
+static Int_t ParseFilterFile(const std::optional<std::string> &filterFileName,
+                             std::optional<Int_t> objectFilterType, TFileMerger &fileMerger)
+{
+   if (filterFileName) {
+      std::ifstream filterFile(*filterFileName);
+      if (!filterFile) {
+         Err() << "error opening filter file '" << *filterFileName << "'\n";
+         return -1;
+      }
+      TString filteredObjects;
+      std::string line;
+      std::string objPath;
+      int nObjects = 0;
+      while (std::getline(filterFile, line)) {
+         std::istringstream ss(line);
+         // only read exactly 1 token per line (strips any whitespaces and such)
+         objPath.clear();
+         ss >> objPath;
+         if (!objPath.empty() && objPath[0] != '#') {
+            filteredObjects.Append(objPath + ' ');
+            ++nObjects;
+         }
+      }
+
+      if (nObjects) {
+         Info() << "added " << nObjects << " object from filter file '" << *filterFileName << "'\n";
+         fileMerger.AddObjectNames(filteredObjects);
+      } else {
+         Warn() << "no objects were added from filter file '" << *filterFileName << "'\n";
+      }
+
+      assert(objectFilterType.has_value());
+      const auto filterFlag = *objectFilterType;
+      assert(filterFlag == TFileMerger::kSkipListed || filterFlag == TFileMerger::kOnlyListed);
+      return filterFlag;
+   }
+   return 0;
 }
 
 int main(int argc, char **argv)
@@ -587,7 +651,11 @@ int main(int argc, char **argv)
       workingDir = *args.fWorkingDir;
    }
 
-   gSystem->Load("libTreePlayer");
+   // Verify that -L and -Ltype are either both present or both absent.
+   if (args.fObjectFilterFile.has_value() != args.fObjectFilterType.has_value()) {
+      Err() << "-L must always be passed along with -Ltype.\n";
+      return 1;
+   }
 
    const char *targetname = 0;
    if (!args.fOutputArgIdx) {
@@ -605,6 +673,10 @@ int main(int argc, char **argv)
 
    if (args.fCacheSize)
       Info() << "Using " << cacheSize << "\n";
+
+   ////////////////////////////// end flags processing /////////////////////////////////
+
+   gSystem->Load("libTreePlayer");
 
    TFileMerger fileMerger(kFALSE, kFALSE);
    fileMerger.SetMsgPrefix("hadd");
@@ -740,11 +812,16 @@ int main(int argc, char **argv)
       merger.SetNotrees(args.fNoTrees);
       merger.SetMergeOptions(TString(merger.GetMergeOptions()) + " " + cacheSize);
       merger.SetIOFeatures(features);
-      Bool_t status;
+      Int_t fileMergerFlags = TFileMerger::kAll;
+      Int_t extraFlags = ParseFilterFile(args.fObjectFilterFile, args.fObjectFilterType, merger);
+      if (extraFlags < 0)
+         return false;
+      fileMergerFlags |= extraFlags;
       if (args.fAppend)
-         status = merger.PartialMerge(TFileMerger::kIncremental | TFileMerger::kAll);
+         fileMergerFlags |= TFileMerger::kIncremental;
       else
-         status = merger.Merge();
+         fileMergerFlags |= TFileMerger::kRegular;
+      Bool_t status = merger.PartialMerge(fileMergerFlags);
       return status;
    };
 
