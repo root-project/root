@@ -85,7 +85,7 @@ namespace Internal {
 // delete, we can still use it to detect the cases where the destructor was called.
 
 ATTRIBUTE_NO_SANITIZE_ADDRESS
-bool DeleteChangesMemoryImpl()
+bool     DeleteChangesMemoryImpl()
 {
    static constexpr UInt_t kGoldenUUID = 0x00000021;
    static constexpr UInt_t kGoldenbits = 0x03000000;
