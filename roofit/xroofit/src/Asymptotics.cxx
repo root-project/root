@@ -144,6 +144,8 @@ double xRooFit::Asymptotics::PValue(const IncompatFunc &compatRegions, double k,
 
    double out = Phi_m(poiVal, poi_primeVal, std::numeric_limits<double>::infinity(), sigma, compatRegions) - 1;
 
+   double out2 = 0; // use to hold small corrections (terms in "out" are O(1), which ruins precision)
+
    if (out < -1) {
       // compatibility function is unsupported, return negative
       return -2;
@@ -151,22 +153,26 @@ double xRooFit::Asymptotics::PValue(const IncompatFunc &compatRegions, double k,
 
    // go through the 4 'regions' ... only two of which will apply
    if (k <= k_high) {
-      out += ROOT::Math::gaussian_cdf(sqrt(k) + Lambda_y) -
+      out2 += ROOT::Math::gaussian_cdf_c(sqrt(k) + Lambda_y);
+      out += 1.0 -
              Phi_m(poiVal, poi_primeVal, Lambda_y + sqrt(k), sigma, compatRegions);
    } else {
       double Lambda_high = (poiVal - upBound) * (poiVal + upBound - 2. * poi_primeVal) / (sigma * sigma);
       double sigma_high = 2. * (upBound - poiVal) / sigma;
-      out += ROOT::Math::gaussian_cdf((k - Lambda_high) / sigma_high) -
+      out2 += ROOT::Math::gaussian_cdf_c((k - Lambda_high) / sigma_high);
+      out += 1.0 -
              Phi_m(poiVal, poi_primeVal, (k - Lambda_high) / sigma_high, sigma, compatRegions);
    }
 
    if (k <= k_low) {
-      out += ROOT::Math::gaussian_cdf(sqrt(k) - Lambda_y) +
+      out2 += ROOT::Math::gaussian_cdf_c(sqrt(k) - Lambda_y);
+      out += 1.0 +
              Phi_m(poiVal, poi_primeVal, Lambda_y - sqrt(k), sigma, compatRegions);
    } else {
       double Lambda_low = (poiVal - lowBound) * (poiVal + lowBound - 2. * poi_primeVal) / (sigma * sigma);
       double sigma_low = 2. * (poiVal - lowBound) / sigma;
-      out += ROOT::Math::gaussian_cdf((k - Lambda_low) / sigma_low) +
+      out2 += ROOT::Math::gaussian_cdf_c((k - Lambda_low) / sigma_low);
+      out += 1.0 +
              Phi_m(poiVal, poi_primeVal, (Lambda_low - k) / sigma_low, sigma, compatRegions);
       /*out +=  ROOT::Math::gaussian_cdf((k-Lambda_low)/sigma_low) +
            2*Phi_m(poiVal,poi_primeVal,(Lambda_low - k_low)==0 ? 0 : ((Lambda_low -
@@ -184,7 +190,8 @@ double xRooFit::Asymptotics::PValue(const IncompatFunc &compatRegions, double k,
       }*/
    }
 
-   return 1. - out;
+   out = 1.0 - out;
+   return out2 + out;
 }
 
 double
