@@ -125,9 +125,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
          continue;
       }
 
-      std::string typeName{Internal::GetNormalizedTypeName(dataMember->GetTrueTypeName())};
-      std::string typeAlias{Internal::GetNormalizedTypeName(dataMember->GetFullTypeName())};
-
+      std::string typeName{dataMember->GetFullTypeName()};
       // For C-style arrays, complete the type name with the size for each dimension, e.g. `int[4][2]`
       if (dataMember->Property() & kIsArray) {
          for (int dim = 0, n = dataMember->GetArrayDim(); dim < n; ++dim)
@@ -136,7 +134,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
 
       std::unique_ptr<RFieldBase> subField;
 
-      subField = RFieldBase::Create(dataMember->GetName(), typeName, typeAlias).Unwrap();
+      subField = RFieldBase::Create(dataMember->GetName(), typeName).Unwrap();
       fTraits &= subField->GetTraits();
       Attach(std::move(subField), RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
    }
