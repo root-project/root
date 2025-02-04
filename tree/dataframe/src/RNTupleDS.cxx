@@ -684,7 +684,14 @@ void RNTupleDS::FinalizeSlot(unsigned int slot)
 
 std::string RNTupleDS::GetTypeName(std::string_view colName) const
 {
-   const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), colName));
+   auto colNamePos = std::find(fColumnNames.begin(), fColumnNames.end(), colName);
+
+   if (colNamePos == fColumnNames.end()) {
+      auto msg = std::string("RNTupleDS: There is no column with name \"") + std::string(colName) + "\"";
+      throw std::runtime_error(msg);
+   }
+
+   const auto index = std::distance(fColumnNames.begin(), colNamePos);
    return fColumnTypes[index];
 }
 
