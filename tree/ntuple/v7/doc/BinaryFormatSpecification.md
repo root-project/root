@@ -1,4 +1,4 @@
-# RNTuple Binary Format Specification 1.0.0.0
+# RNTuple Binary Format Specification 1.0.0.1
 
 ## Versioning Notes
 
@@ -150,9 +150,9 @@ Note that this type system is independent (and different) from the regular ROOT 
 _Integer_: Integers are encoded in two's complement, little-endian format.
 They can be signed or unsigned and have lengths up to 64bit.
 
-_String_: A string is stored as a 32bit unsigned integer indicating the length of the string
+_String_: A string is stored as a 32bit unsigned integer indicating the number of bytes of the string
 followed by the characters.
-Strings are ASCII encoded; every character is a signed 8bit integer.
+String data are UTF-8 encoded.
 
 _Compression settings_: A 32bit integer containing both a compression algorithm and the compression level.
 The compression settings are encoded according to this formula: $settings = algorithm * 100 + level$.
@@ -802,6 +802,30 @@ This section is a comprehensive list of the C++ types with RNTuple I/O support.
 Within the supported type system complex types can be freely composed,
 e.g. `std::vector<MyEvent>` or `std::vector<std::vector<float>>`.
 
+### Type Name Normalization
+
+Type names are stored according to the following normalization rules
+  - The type name of a field has typedefs and usings fully resolved (except for the following rule).
+  - The integer types `signed char`, `unsigned char`, and `[signed|unsigned](short|int|long[ long])`
+    are replaced by the corresponding (at the time of writing) `std::[u]int(8|16|32|64)_t` standard integer typedef.
+  - Qualifiers `volatile` and `const` that do not appear in template arguments are removed.
+  - The `class`, `struct`, and `enum` keywords are removed.
+  - Type names are fully qualified by the namespace in which they are declared;
+    the root namespace ('::' prefix) is stripped.
+  - Type names used as template arguments are themselves normalized.
+  - For user-defined types, default-initialized template arguments are explicitly spelled out;
+    optional template arguments of stdlib types such as allocators are omitted.
+  - Integer template arguments are written in standard decimal notation;
+    only if integer values are larger than 2^63, the suffix `u` (`unsigned long long`) is added.
+  - Only whitespaces strictly required by C++ semantic are kept.
+
+Both the field type name and the field alias type name are normalized,
+except that the field alias type name does not apply any type name resolution.
+
+For example, the type name `const pair<size_t, array<class ::Event, 2>>` will be normalized on 64bit architectures to
+`std::pair<std::uint64_t,std::array<Event,2>>` with an alias type name
+`std::pair<size_t,std::array<Event,2>>`.
+
 ### Fundamental Types
 
 The following fundamental types are stored as `leaf` fields with a single column each.
@@ -829,7 +853,6 @@ Such cases are marked as `R` in the table.
 | Real32Trunc                        |        |             |        |          |           |           |            |           |            |           |            |    W    |    W     |
 | Real32Quant                        |        |             |        |          |           |           |            |           |            |           |            |    W    |    W     |
 
-Possibly available `const` and `volatile` qualifiers of the C++ types are ignored for serialization.
 The default column for serialization is denoted with an asterisk.
 If the ntuple is stored uncompressed, the default changes from split encoding to non-split encoding where applicable.
 
@@ -954,6 +977,8 @@ User defined C++ classes are supported with the following limitations
   - There is no support for polymorphism,
     i.e. a field of class `A` cannot store class `B` that derives from `A`.
   - Virtual inheritance is unsupported.
+  - Bit-field declarations (data member with an explicit size in bits) are unsupported.
+  - Template arguments of templated classes are restricted to integers and types that have RNTuple type support.
 
 User classes are stored as a record parent field with no attached columns.
 Direct base classes and persistent members are stored as subfields with their respective types.
@@ -994,6 +1019,8 @@ The valid types are `std::uint32_t` and `std::uint64_t`.
 A field with the structural role 0x04 ("streamer") represents an object serialized by the ROOT streamer
 into a single `Byte` column.
 It can have any type supported by `TClass` (even types that are not available in the native RNTuple type system).
+For templated types, however,
+the restrictions on template arguments (only RNTuple supported types and integers) still apply.
 The first (principal) column is of type `(Split)Index[32|64]`.
 The second column is of type `Byte`.
 In effect, the column representation is identical to a collection of `std::byte`.
