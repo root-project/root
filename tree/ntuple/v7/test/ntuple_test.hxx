@@ -128,7 +128,9 @@ private:
 
 public:
    explicit FileRaii(const std::string &path) : fPath(path) {}
+   FileRaii(FileRaii &&) = default;
    FileRaii(const FileRaii &) = delete;
+   FileRaii &operator=(FileRaii &&) = default;
    FileRaii &operator=(const FileRaii &) = delete;
    ~FileRaii()
    {

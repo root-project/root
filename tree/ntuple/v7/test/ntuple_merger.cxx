@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <zlib.h>
 #include "gmock/gmock.h"
+#include <TTree.h>
 
 using ROOT::TestSupport::CheckDiagsRAII;
 
@@ -1602,4 +1603,44 @@ TEST(RNTupleMerger, MergeAsymmetric1TFileMerger)
          EXPECT_TRUE(res);
       }
    }
+}
+
+TEST(RNTupleMerger, SkipMissing)
+{
+   // Try merging various files, some containing RNTuples and some not; verify that we ignore the ones that don't.
+   std::vector<FileRaii> fileGuards;
+   for (int i = 0; i < 6; ++i) {
+      auto &fileGuard =
+         fileGuards.emplace_back(std::string("test_ntuple_merge_skipmissing_") + std::to_string(i) + ".root");
+
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      if (i % 2) {
+         auto model = RNTupleModel::Create();
+         auto p = model->MakeField<std::string>("s");
+         auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
+         for (int j = 0; j < 10; ++j) {
+            *p = std::to_string(j + i);
+            writer->Fill();
+         }
+      } else {
+         auto tree = std::make_unique<TTree>("tree", "tree");
+         std::string s;
+         tree->Branch("s", &s);
+         for (int j = 0; j < 10; ++j) {
+            s = std::to_string(j + i);
+            tree->Fill();
+         }
+         tree->Write();
+      }
+   }
+
+   FileRaii fileOut("test_ntuple_merge_skipmissing_out.root");
+   TFileMerger merger;
+   merger.OutputFile(fileOut.GetPath().c_str());
+   for (const auto &file : fileGuards) {
+      merger.AddFile(file.GetPath().c_str());
+   }
+
+   bool ok = merger.PartialMerge();
+   EXPECT_TRUE(ok);
 }
