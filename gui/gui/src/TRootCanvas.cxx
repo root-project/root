@@ -950,7 +950,7 @@ again:
                      }
                      if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
                         TVirtualPadEditor::Terminate();
-                     if (TClass::GetClass("TStyleManager"))
+                     if (TClass::GetClass("TStyleManager", kFALSE, kTRUE))
                         gROOT->ProcessLine("TStyleManager::Terminate()");
                      gApplication->Terminate(0);
                      break;
