@@ -138,7 +138,7 @@ void TUrl::SetUrl(const char *url, Bool_t defaultIsFile)
    char *s, sav;
 
    TString surl = url;
-   char *u, *u0 = Strip(defaultIsFile && surl.EndsWith(":/") ? surl(0,surl.Length()-2).Data() : url);
+   char *u, *u0 = Strip(defaultIsFile && surl.EndsWith(":/") ? TString(surl(0,surl.Length()-2)).Data() : url);
 tryfile:
    u = u0;
 
