@@ -56,6 +56,8 @@ struct Old
    RooLikeList fListExplicit;
    RooLikeList fListImplicitExplicit;
 
+   std::string fString = "input message";
+
    Old() {
       Feed(fListImplicit, {"a1", "a2", "a3"});
       Feed(fListExplicit, {"b1", "b2", "b3"});
@@ -107,6 +109,8 @@ struct New
    TList fListExplicit;
    std::list<std::string> fListImplicitExplicit;
 
+   std::string fString;
+
    ~New()
    {
       delete fPtr;
@@ -131,6 +135,13 @@ void examine(int a, bool trailing = true)
 void examine(double a, bool trailing = true)
 {
    std::cout << "The double value is: " << a;
+   if (trailing)
+      std::cout << '\n';
+}
+
+void examine(const std::string &a, bool trailing = true)
+{
+   std::cout << "The string value is: \"" << a << "\"";
    if (trailing)
       std::cout << '\n';
 }
@@ -229,6 +240,16 @@ bool test_value(int in, int ref)
    return !error;
 }
 
+bool test_value(const std::string &in, const char *ref)
+{
+   bool error = (in != ref);
+   if (error)
+     std::cout << " and is incorrect, expected value: \"" << ref << "\"\n";
+   else
+     std::cout << " and is correct.\n";
+   return !error;
+}
+
 template<typename T, typename V>
 bool test_value(T in, V ref)
 {
@@ -253,13 +274,18 @@ bool check(double in, V ref)
    return test_value(in, ref);
 }
 
+bool check(std::string &in, const char *ref)
+{
+   examine(in, false);
+   return test_value(in, ref);
+}
+
 template<typename T, typename V = decltype(T::f)>
 bool check(T &a, V ref)
 {
    examine(a, false);
    return test_value(a.f, ref);
 }
-
 
 template<typename T, typename V = decltype(T::f)>
 bool check(T *p, V ref)
@@ -452,6 +478,10 @@ void CopyTo(const TList &input, std::list<std::string> &output)
   target="fHitPattern,fHitCount" version="[1-]" \
   code="{ for(size_t i = 0; i < 3; ++i) fHitPattern[i] = onfile.fHitPattern[i]+10; fHitCount = onfile.fHitCount + 1; }"
 
+// std::string
+#pragma read sourceClass="Old" targetClass="New" source="std::string fString;" target="fString"  version="[1-]" \
+  code="{ fString = onfile.fString; }";
+
 #endif
 
 void writefile(const char *filename)
@@ -514,6 +544,8 @@ int readfile(const char *filename = "sourcetypes.root")
 
    res = res && check_array<3>(n->fHitPattern, std::vector<int>{111, 112, 113});
    res = res && check(n->fHitCount, 3);
+
+   res = res && check(n->fString, "input message");
 
    return !res; // 0 is success.
 }
