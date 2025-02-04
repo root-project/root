@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -x
 
 echo "Running clang-format against branch $TRAVIS_BRANCH, with hash $BASE_COMMIT"
 clang-format --version
