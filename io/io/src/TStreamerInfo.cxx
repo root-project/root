@@ -262,6 +262,7 @@ namespace {
       Int_t datasize = 1;
       auto memClass = TClass::GetClass(localtypename.c_str());
       std::vector<Int_t> dimensions;
+      static TClassRef string_classref("string");
       bool isStdArray = memClass && TClassEdit::IsStdArray(memClass->GetName());
       if (isStdArray) {
          totaldim = 1;
@@ -279,13 +280,13 @@ namespace {
          if (s->GetPointerLevel()) {
             if (memClass->IsTObject()) {
                memType = TVirtualStreamerInfo::kObjectP;
-            } else if (memClass->GetCollectionProxy()) {
+            } else if (memClass->GetCollectionProxy() || memClass == string_classref) {
                memType = TVirtualStreamerInfo::kSTLp;
             } else {
                memType = TVirtualStreamerInfo::kAnyP;
             }
          } else {
-            if (memClass->GetCollectionProxy()) {
+            if (memClass->GetCollectionProxy() || memClass == string_classref) {
                memType = TVirtualStreamerInfo::kSTL;
             } else if (memClass->IsTObject() && memClass == element->GetClassPointer()) {
                // If there is a change in the class type, we can't use the TObject::Streamer
