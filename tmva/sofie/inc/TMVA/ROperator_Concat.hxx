@@ -11,6 +11,7 @@
  #include <iterator>
  #include <iomanip>
  #include <limits>
+ #include <ranges>
 
  namespace TMVA{
  namespace Experimental{
@@ -33,6 +34,11 @@
             fInputs.reserve(inputs.size());
             for (auto & name : inputs)
                fInputs.push_back(UTILITY::Clean_name(name));
+
+         std::transform(fInputs.begin(), fInputs.end(), fInputTensorNames.begin(),
+                   [](const std::string& s) -> std::string_view { return s; });
+         fOutputTensorNames = { fOutput };
+         
          }
 
          std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
