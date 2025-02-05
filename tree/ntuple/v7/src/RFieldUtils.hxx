@@ -40,7 +40,8 @@ ERNTupleSerializationMode GetRNTupleSerializationMode(TClass *cl);
 std::tuple<std::string, std::vector<size_t>> ParseArrayType(std::string_view typeName);
 
 /// Used in RFieldBase::Create() in order to get the comma-separated list of template types
-/// E.g., gets {"int", "std::variant<double,int>"} from "int,std::variant<double,int>"
+/// E.g., gets {"int", "std::variant<double,int>"} from "int,std::variant<double,int>".
+/// TODO(jblomer): Try to merge with TClassEdit::TSplitType
 std::vector<std::string> TokenizeTypeList(std::string_view templateType);
 
 } // namespace Internal
