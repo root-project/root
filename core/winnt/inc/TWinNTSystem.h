@@ -251,7 +251,6 @@ public:
    Int_t             GetMemInfo(MemInfo_t *info) const override;
    Int_t             GetProcInfo(ProcInfo_t *info) const override;
 
-   ClassDefOverride(TWinNTSystem, 0)
 };
 
 R__EXTERN ULongptr_t gConsoleWindow;   // console window handle

@@ -216,7 +216,6 @@ public:
    int               GetMemInfo(MemInfo_t *info) const override;
    int               GetProcInfo(ProcInfo_t *info) const override;
 
-   ClassDefOverride(TUnixSystem,0)  //Interface to Unix OS services
 };
 
 #endif

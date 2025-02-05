@@ -62,8 +62,6 @@ private:
 
    TMacOSXSystem(const TMacOSXSystem &rhs);
    TMacOSXSystem &operator = (const TMacOSXSystem &rhs);
-
-   ClassDef(TMacOSXSystem, 0);//TSystem for Mac OSX.
 };
 
 #endif
