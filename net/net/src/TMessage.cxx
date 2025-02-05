@@ -91,8 +91,6 @@ TMessage::TMessage(void *buf, Int_t bufsize, Bool_t adopt) : TBufferFile(TBuffer
       if (adopt) {
          SetBit(kIsOwnerComp); // bufcomp points to the original buf
       }
-      // Force being owner of the newly created buffer (inside Uncompress)
-      SetBit(kIsOwner);
    }
 
    if (fWhat == kMESS_OBJECT) {
@@ -430,6 +428,9 @@ Int_t TMessage::Uncompress()
    fBufCur  = fBuffer + sizeof(UInt_t) + sizeof(fWhat);
    fBufMax  = fBuffer + fBufSize;
    char *messbuf = fBuffer + hdrlen;
+   
+   // Force being owner of the newly created buffer
+   SetBit(kIsOwner);
 
    Int_t nout;
    Int_t noutot = 0;
