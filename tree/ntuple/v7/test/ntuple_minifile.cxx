@@ -76,6 +76,10 @@ TEST(MiniFile, Stream)
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("MyNTuple").Inspect();
+   EXPECT_EQ(1u, ntuple.GetVersionEpoch());
+   EXPECT_EQ(0u, ntuple.GetVersionMajor());
+   EXPECT_EQ(0u, ntuple.GetVersionMinor());
+   EXPECT_EQ(1u, ntuple.GetVersionPatch());
    EXPECT_EQ(offHeader, ntuple.GetSeekHeader());
    EXPECT_EQ(offFooter, ntuple.GetSeekFooter());
 
@@ -111,6 +115,10 @@ TEST(MiniFile, Proper)
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("MyNTuple").Inspect();
+   EXPECT_EQ(1u, ntuple.GetVersionEpoch());
+   EXPECT_EQ(0u, ntuple.GetVersionMajor());
+   EXPECT_EQ(0u, ntuple.GetVersionMinor());
+   EXPECT_EQ(1u, ntuple.GetVersionPatch());
    EXPECT_EQ(offHeader, ntuple.GetSeekHeader());
    EXPECT_EQ(offFooter, ntuple.GetSeekFooter());
 
