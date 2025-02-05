@@ -741,7 +741,8 @@ Bool_t TDavixFile::ReadBuffer(char *buf, Int_t len)
    Davix_fd *fd;
    if ((fd = d_ptr->getDavixFileInstance()) == NULL)
       return kTRUE;
-   Long64_t ret = DavixReadBuffer(fd, buf, len);
+   Long64_t ret = DavixReadBuffer(fd, buf, fOffset, len);
+   fOffset += std::max((Long64_t)0, ret); // only shift offset on successful read
    if (ret < 0)
       return kTRUE;
 
@@ -760,7 +761,7 @@ Bool_t TDavixFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
    if ((fd = d_ptr->getDavixFileInstance()) == NULL)
       return kTRUE;
 
-   Long64_t ret = DavixPReadBuffer(fd, buf, pos, len);
+   Long64_t ret = DavixReadBuffer(fd, buf, pos, len);
    if (ret < 0)
       return kTRUE;
 
@@ -906,20 +907,20 @@ void TDavixFile::eventStop(Double_t t_start, Long64_t len, bool read)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Long64_t TDavixFile::DavixReadBuffer(Davix_fd *fd, char *buf, Int_t len)
+Long64_t TDavixFile::DavixReadBuffer(Davix_fd *fd, char *buf, Long64_t pos, Int_t len)
 {
    DavixError *davixErr = NULL;
    Double_t start_time = eventStart();
 
-   Long64_t ret = d_ptr->davixPosix->pread(fd, buf, len, fOffset, &davixErr);
+   Long64_t ret = d_ptr->davixPosix->pread(fd, buf, len, pos, &davixErr);
    if (ret < 0) {
       Error("DavixReadBuffer", "can not read data with davix: %s (%d)",
             davixErr->getErrMsg().c_str(), davixErr->getStatus());
       DavixError::clearError(&davixErr);
    } else {
-      fOffset += ret;
       eventStop(start_time, ret);
    }
+
 
    return ret;
 }
@@ -940,26 +941,6 @@ Long64_t TDavixFile::DavixWriteBuffer(Davix_fd *fd, const char *buf, Int_t len)
       fOffset += ret;
       eventStop(start_time, ret, false);
    }
-
-   return ret;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Long64_t TDavixFile::DavixPReadBuffer(Davix_fd *fd, char *buf, Long64_t pos, Int_t len)
-{
-   DavixError *davixErr = NULL;
-   Double_t start_time = eventStart();
-
-   Long64_t ret = d_ptr->davixPosix->pread(fd, buf, len, pos, &davixErr);
-   if (ret < 0) {
-      Error("DavixPReadBuffer", "can not read data with davix: %s (%d)",
-            davixErr->getErrMsg().c_str(), davixErr->getStatus());
-      DavixError::clearError(&davixErr);
-   } else {
-      eventStop(start_time, ret);
-   }
-
 
    return ret;
 }
