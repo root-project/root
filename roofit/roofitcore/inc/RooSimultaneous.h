@@ -26,8 +26,6 @@
 #include <RooRealProxy.h>
 #include <RooSetProxy.h>
 
-#include <ROOT/RConfig.hxx> // for R__DEPRECATED
-
 #include <TList.h>
 
 #include <map>
@@ -93,8 +91,7 @@ public:
   const RooAbsCategoryLValue& indexCat() const { return (RooAbsCategoryLValue&) _indexCat.arg() ; }
 
 
-  RooFit::OwningPtr<RooDataSet> generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) override
-  R__DEPRECATED(6,38, "Use RooAbsPdf::generate() instead. The RooAbsPdf::generateSimGlobal() only contains some workarounds that are not necessary anymore");
+  RooFit::OwningPtr<RooDataSet> generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) override ;
 
   virtual RooDataHist* fillDataHist(RooDataHist *hist, const RooArgSet* nset, double scaleFactor,
                 bool correctForBinVolume=false, bool showProgress=false) const ;
