@@ -51,7 +51,7 @@ will return the name of the last clicked button.
                  "Examples of a simple graph");
    bar.AddButton("tornado",          ".x visualisation/graphics/tornado.C",
                  "Examples of 3-D PolyMarkers");
-   bar.AddButton("shapes",           ".x visualisation/geom/shapes.C",
+   bar.AddButton("shapes",           ".x legacy/g3d/shapes.C",
                  "The Geometry Shapes");
    bar.AddButton("file_layout",      ".x io/file.C",
                  "The ROOT file format");
