@@ -42,9 +42,9 @@ bar.AddButton( 'h1draw',        r'TPython::Exec( "' + to_run.format('hist/hist01
 bar.AddButton( 'graph',         r'TPython::Exec( "' + to_run.format('visualisation/graphs/graph.py') + '" );',     'Example of a Simple Graph' )
 bar.AddButton( 'gerrors',       r'TPython::Exec( "' + to_run.format('visualisation/graphs/gerrors.py') + '" );',   'Example of a Graph with Error Bars' )
 bar.AddButton( 'tornado',       r'TPython::Exec( "' + to_run.format('visualisation/graphics/tornado.py') + '" );',   'Examples of 3-D PolyMarkers' )
-bar.AddButton( 'shapes',        r'TPython::Exec( "' + to_run.format('visualisation/geom/shapes.py') + '" );',    'The Geometry Shapes' )
-bar.AddButton( 'geometry',      r'TPython::Exec( "' + to_run.format('visualisation/geom/geometry.py') + '" );',  'Creation of the NA49 Geometry File' )
-bar.AddButton( 'na49view',      r'TPython::Exec( "' + to_run.format('visualisation/geom/na49view.py') + '" );',  'Two Views of the NA49 Detector Geometry' )
+bar.AddButton( 'shapes',        r'TPython::Exec( "' + to_run.format('legacy/g3d/shapes.py') + '" );',    'The Geometry Shapes' )
+bar.AddButton( 'geometry',      r'TPython::Exec( "' + to_run.format('legacy/g3d/geometry.py') + '" );',  'Creation of the NA49 Geometry File' )
+bar.AddButton( 'na49view',      r'TPython::Exec( "' + to_run.format('legacy/g3d/na49view.py') + '" );',  'Two Views of the NA49 Detector Geometry' )
 bar.AddButton( 'ntuple1',       r'TPython::Exec( "' + to_run.format('io/tree/ntuple1.py') + '" );',   'Ntuples and Selections' )
 bar.AddSeparator()       # not implemented
 bar.AddButton( 'make ntuple',   r'TPython::Exec( "' + to_run.format('io/tree/csv2tntuple.py') + '" );',       'Convert a text file to an ntuple' )
