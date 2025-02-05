@@ -91,7 +91,7 @@ def _CreateHistogram(name, title, bins, nrange=None, data=None, density=False, w
     hist = root_class(name, title, *args)
     
     # ideally we should use FillN, but we can remove this loop once Fill is pythonised to handle both scalars and vectors)
-    if (data):
+    if (data is not None):
         for i, point in enumerate(data):
             hist.Fill(*point, weights[i]) 
 
