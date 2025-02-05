@@ -30,7 +30,7 @@ The graph tutorials below are divided in groups of increasing complexity, starti
 - [More tutorials](\ref other)
 
 
-[List of all tutorials](\ref alltutorials)
+[List of all tutorials](\ref graphs_alltutorials)
 \anchor basics
 ## Basics
 
@@ -101,5 +101,5 @@ These examples show the most complex usage of the graphs functionality.
 | gr303_zdemo.C |  Example of graphs in log scales with annotations and other advanced plot formatting. |
 
 
-\anchor alltutorials
+\anchor graphs_alltutorials
 @}
