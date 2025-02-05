@@ -803,7 +803,17 @@ namespace ROOT
          }
 
          if( it->find( "source" ) != it->end() ) {
-            output << "      rule->fSource      = \"" << (*it)["source"];
+            // Normalize the type name first, in particular we need to remove the
+            // aliases.
+            SourceTypeList_t source;
+            TSchemaRuleProcessor::SplitDeclaration( (*it)["source"], source );
+            std::string norm_sources;
+            std::string norm_type;
+            for(auto it2 = source.begin(); it2 != source.end(); ++it2 ) {
+               TClassEdit::GetNormalizedName(norm_type, it2->first.fType);
+               norm_sources += norm_type + " " + it2->second + it2->first.fDimensions + "; ";
+            }
+            output << "      rule->fSource      = \"" << norm_sources;
             output << "\";" << std::endl;
          }
 
