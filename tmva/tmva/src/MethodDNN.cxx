@@ -64,6 +64,7 @@ Deep Neural Network Implementation.
 #include <iostream>
 #include <string>
 #include <iomanip>
+#include <chrono>
 
 REGISTER_METHOD(DNN)
 
