@@ -86,6 +86,16 @@ public:
    T fMember;
 };
 
+template <typename FirstT, typename SecondT = double>
+class DataVector {
+public:
+   FirstT fFirst;
+   SecondT fSecond;
+};
+
+template <typename T1, typename T2, typename T3, typename T4>
+class InnerCV {};
+
 class IOConstructor {
 public:
    IOConstructor() = delete;

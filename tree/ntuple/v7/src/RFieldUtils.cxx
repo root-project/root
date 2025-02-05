@@ -62,7 +62,7 @@ const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
 
 std::string ROOT::Experimental::Internal::GetCanonicalTypePrefix(const std::string &typeName)
 {
-   std::string canonicalType{TClassEdit::CleanType(typeName.c_str(), /*mode=*/2)};
+   std::string canonicalType{TClassEdit::CleanType(typeName.c_str(), /*mode=*/1)};
 
    if (canonicalType.substr(0, 6) == "array<") {
       canonicalType = "std::" + canonicalType;
@@ -132,6 +132,39 @@ std::string ROOT::Experimental::Internal::GetCanonicalTypePrefix(const std::stri
    }
 
    return canonicalType;
+}
+
+std::string ROOT::Experimental::Internal::GetRenormalizedTypeName(const std::string &metaNormalizedName)
+{
+   std::string normalizedType{GetCanonicalTypePrefix(metaNormalizedName)};
+   auto idxOpen = normalizedType.find_first_of("<");
+   if (idxOpen == std::string::npos)
+      return normalizedType;
+
+   R__ASSERT(normalizedType.back() == '>');
+   R__ASSERT((normalizedType.size() - 1) > idxOpen);
+
+   auto templateArgs = TokenizeTypeList(normalizedType.substr(idxOpen + 1, normalizedType.size() - idxOpen - 2));
+   R__ASSERT(!templateArgs.empty());
+
+   normalizedType = normalizedType.substr(0, idxOpen + 1); // Everything up to '<'
+   for (const auto &a : templateArgs) {
+      R__ASSERT(!a.empty());
+      if (std::isdigit(a[0]) || a[0] == '-') {
+         // Integer template argument
+         normalizedType += a + ",";
+      } else {
+         // Type name template argument; template arguments must keep their CV qualifier
+         if (a.substr(0, 6) == "const " || (a.length() > 14 && a.substr(9, 6) == "const "))
+            normalizedType += "const ";
+         if (a.substr(0, 9) == "volatile " || (a.length() > 14 && a.substr(6, 9) == "volatile "))
+            normalizedType += "volatile ";
+         normalizedType += GetRenormalizedTypeName(a) + ",";
+      }
+   }
+   normalizedType[normalizedType.size() - 1] = '>';
+
+   return normalizedType;
 }
 
 ROOT::Experimental::Internal::ERNTupleSerializationMode

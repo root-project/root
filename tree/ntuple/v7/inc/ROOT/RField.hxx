@@ -141,7 +141,7 @@ private:
 
 private:
    RClassField(std::string_view fieldName, const RClassField &source); ///< Used by CloneImpl
-   RClassField(std::string_view fieldName, std::string_view className, TClass *classp);
+   RClassField(std::string_view fieldName, TClass *classp);
    void Attach(std::unique_ptr<RFieldBase> child, RSubFieldInfo info);
    /// Register post-read callbacks corresponding to a list of ROOT I/O customization rules. `classp` is used to
    /// fill the `TVirtualObject` instance passed to the user function.
@@ -190,9 +190,7 @@ private:
    Internal::RColumnIndex fIndex;                                 ///< number of bytes written in the current cluster
 
 private:
-   // Note that className may be different from classp->GetName(), e.g. through different canonicalization of RNTuple
-   // vs. TClass. Also, classp may be nullptr for types unsupported by the ROOT I/O.
-   RStreamerField(std::string_view fieldName, std::string_view className, TClass *classp);
+   RStreamerField(std::string_view fieldName, TClass *classp);
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -229,7 +227,7 @@ public:
 /// The field for an unscoped or scoped enum with dictionary
 class REnumField : public RFieldBase {
 private:
-   REnumField(std::string_view fieldName, std::string_view enumName, TEnum *enump);
+   REnumField(std::string_view fieldName, TEnum *enump);
    REnumField(std::string_view fieldName, std::string_view enumName, std::unique_ptr<RFieldBase> intField);
 
 protected:
