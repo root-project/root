@@ -60,13 +60,13 @@ private:
 
 protected:
    enum EStatusBits {
-     kIsOwnerComp = BIT(18) // if TMessage owns fBufComp
+     kIsOwnerComp = BIT(19) // if TMessage owns fBufComp
    };
    TMessage(void *buf, Int_t bufsize);   // only called by T(P)Socket::Recv()
    void SetLength() const;               // only called by T(P)Socket::Send()
 
 public:
-   TMessage(UInt_t what = kMESS_ANY, Int_t bufsiz = TBuffer::kInitialSize);
+   TMessage(UInt_t what = kMESS_ANY, Int_t bufsiz = TBuffer::kInitialSize, Bool_t adopt = kTRUE);
    virtual ~TMessage();
 
    void     ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force) override;
