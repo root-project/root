@@ -433,8 +433,9 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
    if (fProxy->HasPointers())
       throw RException(R__FAIL("collection proxies whose value type is a pointer are not supported"));
    if (!fProxy->GetCollectionClass()->HasDictionary()) {
+      // TODO(jblomer): Use GetRenormalizedTypeName() once available
       throw RException(R__FAIL("dictionary not available for type " +
-                               Internal::GetNormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
+                               Internal::GetCanonicalTypePrefix(fProxy->GetCollectionClass()->GetName())));
    }
 
    fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readFromDisk */);
