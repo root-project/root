@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_geom
+## \ingroup tutorial_g3d_legacy
 ## This macro generates two views of the NA49 detector.
 ##
 ## To have a better and dynamic view of any of these pads,

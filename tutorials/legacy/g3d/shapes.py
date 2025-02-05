@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_geom
+## \ingroup tutorial_g3d_legacy
 ## \notebook
 ##  Draw the geometry using the x3d viewver.
 ##  Note that this viewver may also be invoked from the "View" menu in
