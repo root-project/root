@@ -82,7 +82,6 @@ TMessage::TMessage(void *buf, Int_t bufsize, Bool_t adopt) : TBufferFile(TBuffer
    fInfos      = nullptr;
    fEvolution  = kFALSE;
 
-
    if (fWhat & kMESS_ZIP) {
       // if buffer has kMESS_ZIP set, move it to fBufComp and uncompress
       fBufComp    = fBuffer;
