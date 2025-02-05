@@ -737,7 +737,6 @@ void TDavixFile::Seek(Long64_t offset, ERelativeTo pos)
 
 Bool_t TDavixFile::ReadBuffer(char *buf, Int_t len)
 {
-   TLockGuard guard(&davixLock);
    Davix_fd *fd;
    if ((fd = d_ptr->getDavixFileInstance()) == NULL)
       return kTRUE;
@@ -912,7 +911,12 @@ Long64_t TDavixFile::DavixReadBuffer(Davix_fd *fd, char *buf, Long64_t pos, Int_
    DavixError *davixErr = NULL;
    Double_t start_time = eventStart();
 
-   Long64_t ret = d_ptr->davixPosix->pread(fd, buf, len, pos, &davixErr);
+   Long64_t ret;
+   {
+      TLockGuard guard(&davixLock);
+      ret = d_ptr->davixPosix->pread(fd, buf, len, pos, &davixErr);
+   }
+
    if (ret < 0) {
       Error("DavixReadBuffer", "can not read data with davix: %s (%d)",
             davixErr->getErrMsg().c_str(), davixErr->getStatus());
