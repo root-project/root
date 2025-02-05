@@ -449,7 +449,7 @@ if(MSVC AND NOT llvm13_broken_tests)
 endif()
 
 set(all_veto hsimple.C
-             visualisation/geom/geometry.C
+             legacy/g3d/geometry.C
              ${extra_veto}
              ${gdml_veto}
              ${gui_veto}
@@ -637,7 +637,7 @@ file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
     PASSRC 255 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
 if(ROOT_geom_FOUND)
-  ROOT_ADD_TEST(tutorial-visualisation-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/visualisation/geom/geometry.C
+  ROOT_ADD_TEST(tutorial-legacy-g3d-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/legacy/g3d/geometry.C
                 FAILREGEX "Error in" "error:" "warning: Failed to call" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
 endif()
 # define Python GNN parsing tutorial needed to run before
