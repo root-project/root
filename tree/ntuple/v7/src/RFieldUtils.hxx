@@ -19,11 +19,10 @@ namespace ROOT {
 namespace Experimental {
 namespace Internal {
 
-/// Applies type name normalization rules that lead to the final name used to create a RField, e.g. transforms
-/// `const vector<T>` to `std::vector<T>`.  Specifically, `const` / `volatile` qualifiers are removed and `std::` is
-/// added to fully qualify known types in the `std` namespace.  The same happens to `ROOT::RVec` which is normalized to
-/// `ROOT::VecOps::RVec`.
-std::string GetNormalizedTypeName(const std::string &typeName);
+/// Applies RNTuple specific type name normalization rules (see specs) that help the string parsing in
+/// RFieldBase::Create(). The normalization of templated types does not include full normalization of the
+/// template arguments (hence "Prefix").
+std::string GetCanonicalTypePrefix(const std::string &typeName);
 
 /// Possible settings for the "rntuple.streamerMode" class attribute in the dictionary.
 enum class ERNTupleSerializationMode { kForceNativeMode, kForceStreamerMode, kUnset };
