@@ -63,7 +63,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern/d
 - [Cheat sheet](\ref cheatsheet)
 - [Introduction](\ref rdf_intro)
 - [Crash course](\ref crash-course)
-- [Working with collections](\ref collections)
+- [Working with collections](\ref working_with_collections)
 - [Transformations: manipulating data](\ref transformations)
 - [Actions: getting results](\ref actions)
 - [Distributed execution in Python](rdf_distrdf)
@@ -508,7 +508,7 @@ ROOT::EnableImplicitMT();
 ~~~
 Simple as that. More details are given [below](#parallel-execution).
 
-\anchor collections
+\anchor working_with_collections
 ## Working with collections and object selections
 
 RDataFrame reads collections as the special type [ROOT::RVec](https://root.cern/doc/master/classROOT_1_1VecOps_1_1RVec.html): for example, a column containing an array of floating point numbers can be read as a ROOT::RVecF. C-style arrays (with variable or static size), STL vectors and most other collection types can be read this way.

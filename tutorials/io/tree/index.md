@@ -17,13 +17,13 @@ Explore the examples below or go to [TTree class reference](classTTree.html).
 ## Tutorials sorted after groups
 - [Basic Usage](\ref basic)
 - [Copying Trees](\ref copy)
-- [Collection Classes](\ref collections)
+- [Collection Classes](\ref tree_collections)
 - [Advanced examples](\ref advanced)
-- [Graphics](\ref graphics)
+- [Graphics](\ref tree_graphics)
 - [More tutorials](\ref other)
 
 
-[List of all tutorials](\ref alltutorials)
+[List of all tutorials](\ref tree_alltutorials)
 \anchor basic
 ## Basic usage
 
@@ -55,7 +55,7 @@ These examples shows how to copy the content of trees.
 | tree112_copy.C | Copy a subset of a tree to a new tree, selecting entries |
 
 
-\anchor collections
+\anchor tree_collections
 ## Collection Classes
 
 These examples show how to write and read several collection classes (std::vector, [TClonesArray](classTClonesArray.html),...) to trees.
@@ -79,7 +79,7 @@ These examples shows a couple of more advanced examples using complex data.
 | tree131_clones_event.C | Example to write & read a Tree built with a complex class inheritance tree. It demonstrates usage of inheritance and TClonesArrays |
 
 
-\anchor graphics
+\anchor tree_graphics
 ## Graphics
 
 These tutorials show how to generate complex graphics from [TNtuple](classTNtuple.html) and/or [TTree](classTTree.html).
@@ -106,5 +106,5 @@ A collection of other examples which showcases other usecases
 | tree502_staff.C | Create a plot of the data in `cernstaff.root` |
 
 
-\anchor alltutorials
+\anchor tree_alltutorials
 @}
