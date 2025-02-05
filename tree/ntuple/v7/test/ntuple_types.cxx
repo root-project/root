@@ -37,7 +37,10 @@ TEST(RNTuple, TypeNameNormalization)
    EXPECT_EQ("std::int32_t", RFieldBase::Create("f", "signed").Unwrap()->GetTypeName());
    EXPECT_EQ("std::map<std::int32_t,std::int32_t>", RFieldBase::Create("f", "map<int, int>").Unwrap()->GetTypeName());
 
-   EXPECT_TRUE(RFieldBase::Create("f", "std::int32_t").Unwrap()->GetTypeAlias().empty());
+   const std::string innerCV = "class InnerCV<const int, const volatile int, volatile const int, volatile int>";
+   const std::string normInnerCV =
+      "InnerCV<const std::int32_t,const volatile std::int32_t,const volatile std::int32_t,volatile std::int32_t>";
+   EXPECT_EQ(normInnerCV, RFieldBase::Create("f", innerCV).Unwrap()->GetTypeName());
 }
 
 TEST(RNTuple, EnumBasics)
@@ -1642,16 +1645,16 @@ TEST(RNTuple, Optional)
 TEST(RNTuple, UnsupportedStdTypes)
 {
    try {
-      auto field = RField<std::weak_ptr<int>>("myWeakPtr");
+      auto field = RField<std::weak_ptr<float>>("myWeakPtr");
       FAIL() << "should not be able to make a std::weak_ptr field";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<int> is not supported"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<float> is not supported"));
    }
    try {
-      auto field = RField<std::vector<std::weak_ptr<int>>>("weak_ptr_vec");
+      auto field = RField<std::vector<std::weak_ptr<float>>>("weak_ptr_vec");
       FAIL() << "should not be able to make a std::vector<std::weak_ptr> field";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<int> is not supported"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<float> is not supported"));
    }
 }
 
