@@ -45,8 +45,10 @@ Begin_Macro
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
    top->Draw();
-   TView *view = gPad->GetView();
-   if (view) view->ShowAxis();
+   if (gPad) {
+      TView *view = gPad->GetView();
+      if (view) view->ShowAxis();
+    }
 }
 End_Macro
 
