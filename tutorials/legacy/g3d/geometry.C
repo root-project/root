@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_geom
+/// \ingroup tutorial_g3d_legacy
 /// Example of the old geometry package (now obsolete)
 //
 /// \macro_image

@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_geom
+/// \ingroup tutorial_g3d_legacy
 /// Macro illustrating how to animate a geometry picture using a Timer
 ///
 /// \macro_code
@@ -90,7 +90,8 @@ void Animate()
 {
    theta += 2;
    phi += 2;
-   gPad->GetView()->RotateView(theta, phi);
+   if (gPad->GetView())
+      gPad->GetView()->RotateView(theta, phi);
    gPad->Modified();
    gPad->Update();
 }

@@ -1,5 +1,5 @@
 ## \file
-## \ingroup tutorial_geom
+## \ingroup tutorial_g3d_legacy
 ## Set visibility attributes for the NA49 geometry
 ## Set Shape attributes
 ##
