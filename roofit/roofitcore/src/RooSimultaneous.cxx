@@ -975,16 +975,24 @@ RooAbsGenContext* RooSimultaneous::genContext(const RooArgSet &vars, const RooDa
   RooArgSet catsAmongAllVars;
   allVars.selectCommon(flattenedCatList(), catsAmongAllVars);
 
-  // Not generating index cat: return context for pdf associated with present index state
+  // Not generating index cat: we better error out because it's not clear what
+  // the user expects here. Does the user want to generate according to the
+  // currently-selected pdf? Or does the user want to generate global
+  // observable values according to the union of all category pdfs?
+  // Print an error and tell the user what to do to explicitly.
   if(catsAmongAllVars.empty()) {
-    auto* proxy = static_cast<RooRealProxy*>(_pdfProxyList.FindObject(_indexCat->getCurrentLabel()));
-    if (!proxy) {
-      coutE(InputArguments) << "RooSimultaneous::genContext(" << GetName()
-             << ") ERROR: no PDF associated with current state ("
-             << _indexCat.arg().GetName() << "=" << _indexCat.arg().getCurrentLabel() << ")" << std::endl ;
-      return nullptr;
-    }
-    return static_cast<RooAbsPdf*>(proxy->absArg())->genContext(vars,prototype,auxProto,verbose) ;
+    coutE(InputArguments) << "RooSimultaneous::generateSimGlobal(" << GetName()
+           << ") asking to generate without the index category!\n"
+           << "It's not clear what to do. you probably want to either:\n"
+           << "\n"
+           << "    1. Generate according to the currently-selected pdf.\n"
+           << "       Please do this explicitly with:\n"
+           << "           simpdf->getPdf(simpdf->indexCat().getCurrentLabel())->generate(vars, ...)\n"
+           << "\n"
+           << "    1. Generate global observable values according to the union of all component pdfs.\n"
+           << "       For this, please use simpdf->generateSimGlobal(vars, ...)\n"
+           << std::endl;
+    return nullptr;
   }
 
   RooArgSet catsAmongProtoVars;
@@ -1031,10 +1039,30 @@ RooDataHist* RooSimultaneous::fillDataHist(RooDataHist *hist,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Special generator interface for generation of 'global observables' -- for RooStats tools
+/// Special generator interface for generation of 'global observables' -- for RooStats tools.
+///
+/// \note Why one can't just use RooAbsPdf::generate()? That's becaues when
+/// using the regular generate() method, a specific component pdf is selected
+/// for each generated entry according to the index category value. However,
+/// global observable values are independent of the current index category,
+/// which can best be illustrated with the case where a global observable
+/// corresponds to a nuisance parameter that is relevant for multiple channels.
+/// So the interpretation of what is an entry in the generated dataset is very
+/// different, hence the separate function.
 
 RooFit::OwningPtr<RooDataSet> RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents)
 {
+  // Generating the index category together with the global observables doesn't make any sense.
+  RooArgSet catsAmongAllVars;
+  whatVars.selectCommon(flattenedCatList(), catsAmongAllVars);
+  if(!catsAmongAllVars.empty()) {
+    coutE(InputArguments) << "RooSimultaneous::generateSimGlobal(" << GetName()
+           << ") asking to generate global obserables at the same time as the index category!\n"
+           << "This doesn't make any sense: global observables are generally not related to a specific channel.\n"
+           << std::endl;
+    return nullptr;
+  }
+
   // Make set with clone of variables (placeholder for output)
   RooArgSet globClone;
   whatVars.snapshot(globClone);
