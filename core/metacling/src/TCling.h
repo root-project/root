@@ -574,8 +574,6 @@ public: // Public Interface
    bool IsPointerType(const void * QualTypePtr) const;
    bool IsVoidPointerType(const void * QualTypePtr) const;
 
-   // FunctionDecl interface 
-   bool FunctionDeclId_IsMethod(DeclId_t fdeclid) const;
 
    std::set<TClass*>& GetModTClasses() { return fModTClasses; }
 
