@@ -49,6 +49,28 @@
 #include <utility>
 #include <variant>
 
+namespace {
+
+TClass *EnsureValidClass(std::string_view className)
+{
+   auto cl = TClass::GetClass(std::string(className).c_str());
+   if (cl == nullptr) {
+      throw ROOT::RException(R__FAIL("RField: no I/O support for type " + std::string(className)));
+   }
+   return cl;
+}
+
+TEnum *EnsureValidEnum(std::string_view enumName)
+{
+   auto e = TEnum::GetEnum(std::string(enumName).c_str());
+   if (e == nullptr) {
+      throw ROOT::RException(R__FAIL("RField: no I/O support for enum type " + std::string(enumName)));
+   }
+   return e;
+}
+
+} // anonymous namespace
+
 ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, const RClassField &source)
    : ROOT::Experimental::RFieldBase(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kRecord,
                                     false /* isSimple */),
@@ -63,37 +85,34 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, const R
 }
 
 ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::string_view className)
-   : RClassField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
+   : RClassField(fieldName, EnsureValidClass(className))
 {
 }
 
-ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::string_view className, TClass *classp)
-   : ROOT::Experimental::RFieldBase(fieldName, className, ROOT::ENTupleStructure::kRecord, false /* isSimple */),
+ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, TClass *classp)
+   : ROOT::Experimental::RFieldBase(fieldName, Internal::GetRenormalizedTypeName(classp->GetName()),
+                                    ROOT::ENTupleStructure::kRecord, false /* isSimple */),
      fClass(classp)
 {
-   if (fClass == nullptr) {
-      throw RException(R__FAIL("RField: no I/O support for type " + std::string(className)));
-   }
    // Avoid accidentally supporting std types through TClass.
    if (fClass->Property() & kIsDefinedInStd) {
-      throw RException(R__FAIL(std::string(className) + " is not supported"));
+      throw RException(R__FAIL(std::string(GetTypeName()) + " is not supported"));
    }
-   if (className == "TObject") {
+   if (GetTypeName() == "TObject") {
       throw RException(R__FAIL("TObject is only supported through RField<TObject>"));
    }
    if (fClass->GetCollectionProxy()) {
-      throw RException(
-         R__FAIL(std::string(className) + " has an associated collection proxy; use RProxiedCollectionField instead"));
+      throw RException(R__FAIL(std::string(GetTypeName()) + " has an associated collection proxy; "
+                                                            "use RProxiedCollectionField instead"));
    }
    // Classes with, e.g., custom streamers are not supported through this field. Empty classes, however, are.
    // Can be overwritten with the "rntuple.streamerMode=true" class attribute
    if (!fClass->CanSplit() && fClass->Size() > 1 &&
        Internal::GetRNTupleSerializationMode(fClass) != Internal::ERNTupleSerializationMode::kForceNativeMode) {
-      throw RException(R__FAIL(std::string(className) + " cannot be stored natively in RNTuple"));
+      throw RException(R__FAIL(GetTypeName() + " cannot be stored natively in RNTuple"));
    }
    if (Internal::GetRNTupleSerializationMode(fClass) == Internal::ERNTupleSerializationMode::kForceStreamerMode) {
-      throw RException(
-         R__FAIL(std::string(className) + " has streamer mode enforced, not supported as native RNTuple class"));
+      throw RException(R__FAIL(GetTypeName() + " has streamer mode enforced, not supported as native RNTuple class"));
    }
 
    if (!(fClass->ClassProperty() & kClassHasExplicitCtor))
@@ -104,7 +123,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
    int i = 0;
    for (auto baseClass : ROOT::Detail::TRangeStaticCast<TBaseClass>(*fClass->GetListOfBases())) {
       if (baseClass->GetDelta() < 0) {
-         throw RException(R__FAIL(std::string("virtual inheritance is not supported: ") + std::string(className) +
+         throw RException(R__FAIL(std::string("virtual inheritance is not supported: ") + GetTypeName() +
                                   " virtually inherits from " + baseClass->GetName()));
       }
       TClass *c = baseClass->GetClassPointer();
@@ -302,19 +321,17 @@ void ROOT::Experimental::RClassField::AcceptVisitor(Detail::RFieldVisitor &visit
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::string_view enumName)
-   : REnumField(fieldName, enumName, TEnum::GetEnum(std::string(enumName).c_str()))
+   : REnumField(fieldName, EnsureValidEnum(enumName))
 {
 }
 
-ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::string_view enumName, TEnum *enump)
-   : ROOT::Experimental::RFieldBase(fieldName, enumName, ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
+ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, TEnum *enump)
+   : ROOT::Experimental::RFieldBase(fieldName, Internal::GetRenormalizedTypeName(enump->GetQualifiedName()),
+                                    ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
 {
-   if (enump == nullptr) {
-      throw RException(R__FAIL("RField: no I/O support for enum type " + std::string(enumName)));
-   }
    // Avoid accidentally supporting std types through TEnum.
    if (enump->Property() & kIsDefinedInStd) {
-      throw RException(R__FAIL(std::string(enumName) + " is not supported"));
+      throw RException(R__FAIL(GetTypeName() + " is not supported"));
    }
 
    switch (enump->GetUnderlyingType()) {
@@ -328,7 +345,7 @@ ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::stri
    case kLong64_t: Attach(std::make_unique<RField<int64_t>>("_0")); break;
    case kULong_t:
    case kULong64_t: Attach(std::make_unique<RField<uint64_t>>("_0")); break;
-   default: throw RException(R__FAIL("Unsupported underlying integral type for enum type " + std::string(enumName)));
+   default: throw RException(R__FAIL("Unsupported underlying integral type for enum type " + GetTypeName()));
    }
 
    fTraits |= kTraitTriviallyConstructible | kTraitTriviallyDestructible;
@@ -418,14 +435,13 @@ ROOT::Experimental::RProxiedCollectionField::RCollectionIterableOnce::GetIterato
    return ifuncs;
 }
 
-ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName,
-                                                                     std::string_view typeName, TClass *classp)
-   : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kCollection, false /* isSimple */), fNWritten(0)
+ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName, TClass *classp)
+   : RFieldBase(fieldName, Internal::GetRenormalizedTypeName(classp->GetName()), ROOT::ENTupleStructure::kCollection,
+                false /* isSimple */),
+     fNWritten(0)
 {
-   if (classp == nullptr)
-      throw RException(R__FAIL("RField: no I/O support for collection proxy type " + std::string(typeName)));
    if (!classp->GetCollectionProxy())
-      throw RException(R__FAIL(std::string(typeName) + " has no associated collection proxy"));
+      throw RException(R__FAIL(std::string(GetTypeName()) + " has no associated collection proxy"));
 
    fProxy.reset(classp->GetCollectionProxy()->Generate());
    fProperties = fProxy->GetProperties();
@@ -433,9 +449,8 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
    if (fProxy->HasPointers())
       throw RException(R__FAIL("collection proxies whose value type is a pointer are not supported"));
    if (!fProxy->GetCollectionClass()->HasDictionary()) {
-      // TODO(jblomer): Use GetRenormalizedTypeName() once available
       throw RException(R__FAIL("dictionary not available for type " +
-                               Internal::GetCanonicalTypePrefix(fProxy->GetCollectionClass()->GetName())));
+                               Internal::GetRenormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
    }
 
    fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readFromDisk */);
@@ -445,7 +460,7 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
 ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName,
                                                                      std::string_view typeName,
                                                                      std::unique_ptr<RFieldBase> itemField)
-   : RProxiedCollectionField(fieldName, typeName, TClass::GetClass(std::string(typeName).c_str()))
+   : RProxiedCollectionField(fieldName, EnsureValidClass(typeName))
 {
    fItemSize = itemField->GetValueSize();
    Attach(std::move(itemField));
@@ -453,7 +468,7 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
 
 ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName,
                                                                      std::string_view typeName)
-   : RProxiedCollectionField(fieldName, typeName, TClass::GetClass(std::string(typeName).c_str()))
+   : RProxiedCollectionField(fieldName, EnsureValidClass(typeName))
 {
    // NOTE (fdegeus): std::map is supported, custom associative might be supported in the future if the need arises.
    if (fProperties & TVirtualCollectionProxy::kIsAssociative)
@@ -600,7 +615,7 @@ void ROOT::Experimental::RProxiedCollectionField::AcceptVisitor(Detail::RFieldVi
 
 ROOT::Experimental::RMapField::RMapField(std::string_view fieldName, std::string_view typeName,
                                          std::unique_ptr<RFieldBase> itemField)
-   : RProxiedCollectionField(fieldName, typeName, TClass::GetClass(std::string(typeName).c_str()))
+   : RProxiedCollectionField(fieldName, EnsureValidClass(typeName))
 {
    if (!dynamic_cast<RPairField *>(itemField.get()))
       throw RException(R__FAIL("RMapField inner field type must be of RPairField"));
@@ -643,21 +658,17 @@ public:
 
 ROOT::Experimental::RStreamerField::RStreamerField(std::string_view fieldName, std::string_view className,
                                                    std::string_view typeAlias)
-   : RStreamerField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
+   : RStreamerField(fieldName, EnsureValidClass(className))
 {
    fTypeAlias = typeAlias;
 }
 
-ROOT::Experimental::RStreamerField::RStreamerField(std::string_view fieldName, std::string_view className,
-                                                   TClass *classp)
-   : ROOT::Experimental::RFieldBase(fieldName, className, ROOT::ENTupleStructure::kStreamer, false /* isSimple */),
+ROOT::Experimental::RStreamerField::RStreamerField(std::string_view fieldName, TClass *classp)
+   : ROOT::Experimental::RFieldBase(fieldName, Internal::GetRenormalizedTypeName(classp->GetName()),
+                                    ROOT::ENTupleStructure::kStreamer, false /* isSimple */),
      fClass(classp),
      fIndex(0)
 {
-   if (fClass == nullptr) {
-      throw RException(R__FAIL("RStreamerField: no I/O support for type " + std::string(className)));
-   }
-
    fTraits |= kTraitTypeChecksum;
    if (!(fClass->ClassProperty() & kClassHasExplicitCtor))
       fTraits |= kTraitTriviallyConstructible;

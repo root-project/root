@@ -23,6 +23,11 @@
 
 #pragma link C++ class EdmWrapper<CustomStruct> +;
 
+#pragma link C++ class DataVector < int, double> + ;
+#pragma link C++ class DataVector < int, float> + ;
+#pragma link C++ class DataVector < bool, std::vector < unsigned int>> + ;
+#pragma link C++ class InnerCV < const int, const volatile int, volatile const int, volatile int> + ;
+
 #pragma link C++ class IAuxSetOption+;
 #pragma link C++ class PackedParameters+;
 #pragma link C++ class PackedContainer<int>+;
