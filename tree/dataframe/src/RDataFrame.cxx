@@ -61,12 +61,12 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern/d
 
 ## Table of Contents
 - [Cheat sheet](\ref cheatsheet)
-- [Introduction](\ref introduction)
+- [Introduction](\ref rdf_intro)
 - [Crash course](\ref crash-course)
 - [Working with collections](\ref collections)
 - [Transformations: manipulating data](\ref transformations)
 - [Actions: getting results](\ref actions)
-- [Distributed execution in Python](classROOT_1_1RDataFrame.html#distrdf)
+- [Distributed execution in Python](rdf_distrdf)
 - [Performance tips and parallel execution](\ref parallel-execution)
 - [More features](\ref more-features)
    - [Systematic variations](\ref systematics)
@@ -168,7 +168,7 @@ These operations do not modify the dataframe or book computations but simply ret
 | GetNSlots() | Return the number of processing slots that RDataFrame will use during the event loop (i.e. the concurrency level). |
 | SaveGraph() | Store the computation graph of an RDataFrame in [DOT format (graphviz)](https://en.wikipedia.org/wiki/DOT_(graph_description_language)) for easy inspection. See the [relevant section](\ref representgraph) for details. |
 
-\anchor introduction
+\anchor rdf_intro
 ## Introduction
 Users define their analysis as a sequence of operations to be performed on the dataframe object; the framework
 takes care of the management of the loop over entries as well as low-level details such as I/O and parallelization.
@@ -670,7 +670,7 @@ auto graph = df2.Graph<int, int>("x","y");
 The `Graph` action is going to request first the value from column "x", then that of column "y". Specifically, the order
 of execution of the operations of nodes in this branch of the computation graph is guaranteed to be top to bottom.
 
-\anchor distrdf
+\anchor rdf_distrdf
 ## Distributed execution
 
 RDataFrame applications can be executed in parallel through distributed computing frameworks on a set of remote machines
