@@ -267,3 +267,31 @@ TEST(RNTuple, TClassReadRules)
       EXPECT_FLOAT_EQ(137.0, viewKlass(i).checksumB);
    }
 }
+
+TEST(RNTuple, TClassDefaultTemplateParameter)
+{
+   FileRaii fileGuard("test_ntuple_default_template_parameter.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<DataVector<int>>("f1"); // default second template parameter is double
+      model->MakeField<DataVector<int, float>>("f2");
+      model->AddField(RFieldBase::Create("f3", "DataVector<int>").Unwrap());
+      model->AddField(RFieldBase::Create("f4", "struct DataVector<bool,vector<unsigned>>").Unwrap());
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(0u, reader->GetNEntries());
+
+   const auto &desc = reader->GetDescriptor();
+   EXPECT_EQ("DataVector<std::int32_t,double>", desc.GetFieldDescriptor(desc.FindFieldId("f1")).GetTypeName());
+   EXPECT_EQ("DataVector<std::int32_t,float>", desc.GetFieldDescriptor(desc.FindFieldId("f2")).GetTypeName());
+   EXPECT_EQ("DataVector<std::int32_t,double>", desc.GetFieldDescriptor(desc.FindFieldId("f3")).GetTypeName());
+   EXPECT_EQ("DataVector<bool,std::vector<std::uint32_t>>",
+             desc.GetFieldDescriptor(desc.FindFieldId("f4")).GetTypeName());
+
+   auto v1 = reader->GetView<DataVector<int>>("f1");
+   auto v3 = reader->GetView<DataVector<int>>("f3");
+   EXPECT_THROW(reader->GetView<DataVector<int>>("f2"), ROOT::RException);
+}

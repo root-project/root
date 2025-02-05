@@ -24,6 +24,9 @@ namespace Internal {
 /// template arguments (hence "Prefix").
 std::string GetCanonicalTypePrefix(const std::string &typeName);
 
+/// Given a type name normalized by ROOT meta, renormalize it for RNTuple. E.g., insert std::prefix.
+std::string GetRenormalizedTypeName(const std::string &metaNormalizedName);
+
 /// Possible settings for the "rntuple.streamerMode" class attribute in the dictionary.
 enum class ERNTupleSerializationMode { kForceNativeMode, kForceStreamerMode, kUnset };
 
