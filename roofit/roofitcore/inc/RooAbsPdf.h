@@ -23,8 +23,6 @@
 #include <RooGlobalFunc.h>
 #include <RooObjCacheManager.h>
 
-#include <ROOT/RConfig.hxx> // for R__DEPRECATED
-
 class RooArgSet ;
 class RooAbsGenContext ;
 class RooFitResult ;
@@ -120,8 +118,7 @@ public:
                const RooCmdArg& arg5={},const RooCmdArg& arg6={}) const;
   virtual RooFit::OwningPtr<RooDataHist> generateBinned(const RooArgSet &whatVars, double nEvents, bool expectedData=false, bool extended=false) const;
 
-  virtual RooFit::OwningPtr<RooDataSet> generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents)
-  R__DEPRECATED(6,38, "Use RooAbsPdf::generate() instead. The RooAbsPdf::generateSimGlobal() only contains some workarounds that are not necessary anymore");
+  virtual RooFit::OwningPtr<RooDataSet> generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) ;
 
   ///Helper calling plotOn(RooPlot*, RooLinkedList&) const
   RooPlot* plotOn(RooPlot* frame,

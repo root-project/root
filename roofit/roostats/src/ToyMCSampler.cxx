@@ -395,7 +395,7 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
    } else {
 
       // not using multigen for global observables
-      std::unique_ptr<RooDataSet> one{pdf.generate( *fGlobalObservables, 1 )};
+      std::unique_ptr<RooDataSet> one{pdf.generateSimGlobal( *fGlobalObservables, 1 )};
       const RooArgSet *values = one->get(0);
       std::unique_ptr<RooArgSet> allVars{pdf.getVariables()};
       allVars->assign(*values);

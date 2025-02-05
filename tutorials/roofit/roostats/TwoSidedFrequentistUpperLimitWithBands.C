@@ -317,10 +317,24 @@ void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
       }
 
       // generate global observables
-      std::unique_ptr<RooDataSet> one{mc->GetPdf()->generate(*mc->GetGlobalObservables(), 1)};
-      const RooArgSet *values = one->get();
-      std::unique_ptr<RooArgSet> allVars{mc->GetPdf()->getVariables()};
-      allVars->assign(*values);
+      // need to be careful for simpdf.
+      // In ROOT 5.28 there is a problem with generating global observables
+      // with a simultaneous PDF.  In 5.29 there is a solution with
+      // RooSimultaneous::generateSimGlobal, but this may change to
+      // the standard generate interface in 5.30.
+
+      RooSimultaneous *simPdf = dynamic_cast<RooSimultaneous *>(mc->GetPdf());
+      if (!simPdf) {
+         std::unique_ptr<RooDataSet> one{mc->GetPdf()->generate(*mc->GetGlobalObservables(), 1)};
+         const RooArgSet *values = one->get();
+         std::unique_ptr<RooArgSet> allVars{mc->GetPdf()->getVariables()};
+         allVars->assign(*values);
+      } else {
+         std::unique_ptr<RooDataSet> one{simPdf->generateSimGlobal(*mc->GetGlobalObservables(), 1)};
+         const RooArgSet *values = one->get();
+         std::unique_ptr<RooArgSet> allVars{mc->GetPdf()->getVariables()};
+         allVars->assign(*values);
+      }
 
       // get test stat at observed UL in observed data
       firstPOI->setVal(observedUL);
