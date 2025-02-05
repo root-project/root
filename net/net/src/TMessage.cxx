@@ -110,7 +110,7 @@ TMessage::TMessage(void *buf, Int_t bufsize, Bool_t adopt) : TBufferFile(TBuffer
 
 TMessage::~TMessage()
 {
-   // We only own fBufComp when we explictly created it
+   // We only own fBufComp when we explictly created it or adopt and kMESS_ZIP were true
    if (TestBit(kIsOwnerComp)) delete [] fBufComp;
    delete fInfos;
 }
@@ -188,7 +188,7 @@ void TMessage::Reset()
    ResetMap();
 
    if (fBufComp) {
-      // We only own fBufComp when we explictly created it
+      // We only own fBufComp when we explictly created it or adopt and kMESS_ZIP were true
       if (TestBit(kIsOwnerComp)) delete [] fBufComp;
       fBufComp    = nullptr;
       fBufCompCur = nullptr;
@@ -257,7 +257,7 @@ void TMessage::SetCompressionAlgorithm(Int_t algorithm)
       newCompress = 100 * algorithm + level;
    }
    if (newCompress != fCompress && fBufComp) {
-      // We only own fBufComp when we explictly created it
+      // We only own fBufComp when we explictly created it or adopt and kMESS_ZIP were true
       if (TestBit(kIsOwnerComp)) delete [] fBufComp;
       fBufComp    = nullptr;
       fBufCompCur = nullptr;
@@ -282,7 +282,7 @@ void TMessage::SetCompressionLevel(Int_t level)
       newCompress = 100 * algorithm + level;
    }
    if (newCompress != fCompress && fBufComp) {
-      // We only own fBufComp when we explictly created it
+      // We only own fBufComp when we explictly created it or adopt and kMESS_ZIP were true
       if (TestBit(kIsOwnerComp)) delete [] fBufComp;
       fBufComp    = nullptr;
       fBufCompCur = nullptr;
@@ -297,7 +297,7 @@ void TMessage::SetCompressionLevel(Int_t level)
 void TMessage::SetCompressionSettings(Int_t settings)
 {
    if (settings != fCompress && fBufComp) {
-      // We only own fBufComp when we explictly created it
+      // We only own fBufComp when we explictly created it or adopt and kMESS_ZIP were true
       if (TestBit(kIsOwnerComp)) delete [] fBufComp;
       fBufComp    = nullptr;
       fBufCompCur = nullptr;
@@ -320,7 +320,7 @@ Int_t TMessage::Compress()
    if (compressionLevel <= 0) {
       // no compression specified
       if (fBufComp) {
-         // We only own fBufComp when we explictly created it
+         // We only own fBufComp when we explictly created it or adopt and kMESS_ZIP were true
          if (TestBit(kIsOwnerComp)) delete [] fBufComp;
          fBufComp    = nullptr;
          fBufCompCur = nullptr;
@@ -336,7 +336,7 @@ Int_t TMessage::Compress()
 
    // remove any existing compressed buffer before compressing modified message
    if (fBufComp) {
-      // We only own fBufComp when we explictly created it
+      // We only own fBufComp when we explictly created it or adopt and kMESS_ZIP were true
       if (TestBit(kIsOwnerComp)) delete [] fBufComp;
       fBufComp    = nullptr;
       fBufCompCur = nullptr;
