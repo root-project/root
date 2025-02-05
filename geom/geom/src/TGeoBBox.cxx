@@ -71,7 +71,7 @@ Begin_Macro
    gGeoManager->SetNsegments(80);
    top->Draw();
    TView *view = gPad->GetView();
-   view->ShowAxis();
+   if (view) view->ShowAxis();
 }
 End_Macro
 
@@ -109,7 +109,7 @@ Begin_Macro
    gGeoManager->SetNsegments(80);
    top->Draw();
    TView *view = gPad->GetView();
-   view->ShowAxis();
+   if (view) view->ShowAxis();
 }
 End_Macro
 
@@ -136,7 +136,7 @@ Begin_Macro
    gGeoManager->SetNsegments(80);
    top->Draw();
    TView *view = gPad->GetView();
-   view->ShowAxis();
+   if (view) view->ShowAxis();
 }
 End_Macro
 

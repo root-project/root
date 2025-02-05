@@ -37,7 +37,7 @@ Begin_Macro
    gGeoManager->SetNsegments(80);
    top->Draw();
    TView *view = gPad->GetView();
-   view->ShowAxis();
+   if (view) view->ShowAxis();
 }
 End_Macro
 */
@@ -75,7 +75,7 @@ Begin_Macro
    gGeoManager->SetNsegments(80);
    top->Draw();
    TView *view = gPad->GetView();
-   view->ShowAxis();
+   if (view) view->ShowAxis();
 }
 End_Macro
 */
@@ -117,7 +117,7 @@ nhi[0],nhi[1],nhi[2]); vol->SetLineWidth(2); top->AddNode(vol,1); gGeoManager->C
    gGeoManager->SetNsegments(80);
    top->Draw();
    TView *view = gPad->GetView();
-   view->ShowAxis();
+   if (view) view->ShowAxis();
 }
 End_Macro
 
