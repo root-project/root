@@ -7,6 +7,7 @@
 
 #include "RFieldUtils.hxx"
 
+#include <ROOT/RField.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
@@ -59,50 +60,78 @@ const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
 
 }
 
-std::string ROOT::Experimental::Internal::GetNormalizedTypeName(const std::string &typeName)
+std::string ROOT::Experimental::Internal::GetCanonicalTypePrefix(const std::string &typeName)
 {
-   std::string normalizedType{TClassEdit::CleanType(typeName.c_str(), /*mode=*/2)};
+   std::string canonicalType{TClassEdit::CleanType(typeName.c_str(), /*mode=*/2)};
 
-   if (auto it = typeTranslationMap.find(normalizedType); it != typeTranslationMap.end())
-      normalizedType = it->second;
+   if (canonicalType.substr(0, 6) == "array<") {
+      canonicalType = "std::" + canonicalType;
+   } else if (canonicalType.substr(0, 7) == "atomic<") {
+      canonicalType = "std::" + canonicalType;
+   } else if (canonicalType.substr(0, 7) == "bitset<") {
+      canonicalType = "std::" + canonicalType;
+   } else if (canonicalType.substr(0, 4) == "map<") {
+      canonicalType = "std::" + canonicalType;
+   } else if (canonicalType.substr(0, 9) == "multimap<") {
+      canonicalType = "std::" + canonicalType;
+   } else if (canonicalType.substr(0, 9) == "multiset<") {
+      canonicalType = "std::" + canonicalType;
+   }
+   if (canonicalType.substr(0, 5) == "pair<") {
+      canonicalType = "std::" + canonicalType;
+   } else if (canonicalType.substr(0, 4) == "set<") {
+      canonicalType = "std::" + canonicalType;
+   } else if (canonicalType.substr(0, 6) == "tuple<") {
+      canonicalType = "std::" + canonicalType;
+   } else if (canonicalType.substr(0, 11) == "unique_ptr<") {
+      canonicalType = "std::" + canonicalType;
+   } else if (canonicalType.substr(0, 14) == "unordered_map<") {
+      canonicalType = "std::" + canonicalType;
+   } else if (canonicalType.substr(0, 19) == "unordered_multimap<") {
+      canonicalType = "std::" + canonicalType;
+   } else if (canonicalType.substr(0, 19) == "unordered_multiset<") {
+      canonicalType = "std::" + canonicalType;
+   } else if (canonicalType.substr(0, 14) == "unordered_set<") {
+      canonicalType = "std::" + canonicalType;
+   } else if (canonicalType.substr(0, 8) == "variant<") {
+      canonicalType = "std::" + canonicalType;
+   } else if (canonicalType.substr(0, 7) == "vector<") {
+      canonicalType = "std::" + canonicalType;
+   } else if (canonicalType.substr(0, 11) == "ROOT::RVec<") {
+      canonicalType = "ROOT::VecOps::RVec<" + canonicalType.substr(11);
+   }
 
-   if (normalizedType.substr(0, 7) == "vector<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 6) == "array<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 8) == "variant<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 5) == "pair<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 6) == "tuple<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 7) == "bitset<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 11) == "unique_ptr<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 4) == "set<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 14) == "unordered_set<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 9) == "multiset<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 19) == "unordered_multiset<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 4) == "map<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 14) == "unordered_map<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 9) == "multimap<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 19) == "unordered_multimap<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 7) == "atomic<")
-      normalizedType = "std::" + normalizedType;
+   if (auto it = typeTranslationMap.find(canonicalType); it != typeTranslationMap.end()) {
+      canonicalType = it->second;
+   }
 
-   if (normalizedType.substr(0, 11) == "ROOT::RVec<")
-      normalizedType = "ROOT::VecOps::RVec<" + normalizedType.substr(11);
+   // Map fundamental integer types to stdint integer types (e.g. int --> std::int32_t)
+   if (canonicalType == "signed char") {
+      canonicalType = RField<signed char>::TypeName();
+   } else if (canonicalType == "unsigned char") {
+      canonicalType = RField<unsigned char>::TypeName();
+   } else if (canonicalType == "short" || canonicalType == "short int" || canonicalType == "signed short" ||
+              canonicalType == "signed short int") {
+      canonicalType = RField<short int>::TypeName();
+   } else if (canonicalType == "unsigned short" || canonicalType == "unsigned short int") {
+      canonicalType = RField<unsigned short int>::TypeName();
+   } else if (canonicalType == "int" || canonicalType == "signed" || canonicalType == "signed int") {
+      canonicalType = RField<int>::TypeName();
+   } else if (canonicalType == "unsigned" || canonicalType == "unsigned int") {
+      canonicalType = RField<unsigned int>::TypeName();
+   } else if (canonicalType == "long" || canonicalType == "long int" || canonicalType == "signed long" ||
+              canonicalType == "signed long int") {
+      canonicalType = RField<long int>::TypeName();
+   } else if (canonicalType == "unsigned long" || canonicalType == "unsigned long int") {
+      canonicalType = RField<unsigned long int>::TypeName();
+   } else if (canonicalType == "long long" || canonicalType == "long long int" || canonicalType == "signed long long" ||
+              canonicalType == "signed long long int") {
+      canonicalType = RField<long long int>::TypeName();
+   } else if (canonicalType == "unsigned long long" || canonicalType == "unsigned long long int") {
+      canonicalType = RField<unsigned long long int>::TypeName();
+   }
 
-   return normalizedType;
+   return canonicalType;
 }
 
 ROOT::Experimental::Internal::ERNTupleSerializationMode

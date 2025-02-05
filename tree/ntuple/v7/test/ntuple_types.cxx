@@ -29,6 +29,17 @@ TEST(RNTuple, TypeName) {
       (ROOT::Experimental::RField<std::tuple<std::tuple<char, CustomStruct, char>, int>>::TypeName().c_str()));
 }
 
+TEST(RNTuple, TypeNameNormalization)
+{
+   EXPECT_EQ("CustomStruct", RFieldBase::Create("f", "class CustomStruct").Unwrap()->GetTypeName());
+   EXPECT_EQ("CustomStruct", RFieldBase::Create("f", "struct CustomStruct").Unwrap()->GetTypeName());
+   EXPECT_EQ("CustomEnum", RFieldBase::Create("f", "enum CustomEnum").Unwrap()->GetTypeName());
+   EXPECT_EQ("std::int32_t", RFieldBase::Create("f", "signed").Unwrap()->GetTypeName());
+   EXPECT_EQ("std::map<std::int32_t,std::int32_t>", RFieldBase::Create("f", "map<int, int>").Unwrap()->GetTypeName());
+
+   EXPECT_TRUE(RFieldBase::Create("f", "std::int32_t").Unwrap()->GetTypeAlias().empty());
+}
+
 TEST(RNTuple, EnumBasics)
 {
    // Needs fix of TEnum
