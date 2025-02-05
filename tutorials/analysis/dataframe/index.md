@@ -17,7 +17,7 @@ histoA->Draw(); // <-- event loop runs here!
 histoB->Draw(); // HistoB has already been filled, no event loop is run here
 ~~~
 
-Explore the examples below or go to [RDataFrame's user guide](classROOT_1_1RDataFrame.html). A list of all the RDataFrame tutorials can be found [here](\ref alltutorials).
+Explore the examples below or go to [RDataFrame's user guide](classROOT_1_1RDataFrame.html). A list of all the RDataFrame tutorials can be found [here](\ref df_alltutorials).
 
 ## Table of contents
 - [Introduction](\ref df_intro)
@@ -27,7 +27,7 @@ Explore the examples below or go to [RDataFrame's user guide](classROOT_1_1RData
 - [Distributed execution in Python](\ref df_distrdf)
 - [Know more about your analysis](\ref analysisinfo)
 - [Example HEP analyses tutorials](\ref hepanalysis)
-- [List of all the tutorials](\ref alltutorials)
+- [List of all the tutorials](\ref df_alltutorials)
 
 
 
@@ -137,5 +137,5 @@ With RDataFrame advanced analyses can be executed on large amounts of data. Thes
 | df106_HiggsToFourLeptons.C | df106_HiggsToFourLeptons.py | The Higgs to four lepton analysis from the ATLAS Open Data release of 2020. |
 | | df107_SingleTopAnalysis.py | A single top analysis using the ATLAS Open Data release of 2020. |
 
-\anchor alltutorials
+\anchor df_alltutorials
 @}
