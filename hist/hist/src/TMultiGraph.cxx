@@ -1308,16 +1308,20 @@ void TMultiGraph::Paint(Option_t *choptin)
          fHistogram->SetMaximum(rwymax);
          fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
          fHistogram->SetDirectory(nullptr);
+         fHistogram->Sumw2(kFALSE);
          if (!xtitle.empty()) fHistogram->GetXaxis()->SetTitle(xtitle.c_str());
          if (!ytitle.empty()) fHistogram->GetYaxis()->SetTitle(ytitle.c_str());
          if (firstx != lastx) fHistogram->GetXaxis()->SetRange(firstx,lastx);
          if (timedisplay) {fHistogram->GetXaxis()->SetTimeDisplay(timedisplay);}
          if (!timeformat.empty()) fHistogram->GetXaxis()->SetTimeFormat(timeformat.c_str());
       }
-      TString chopth = "0";
-      if (strstr(chopt.Data(),"X+")) chopth.Append("X+");
-      if (strstr(chopt.Data(),"Y+")) chopth.Append("Y+");
-      if (strstr(chopt.Data(),"I"))  chopth.Append("A");
+      TString chopth("0");
+      if (strstr(chopt.Data(),"X+"))
+         chopth.Append("X+");
+      if (strstr(chopt.Data(),"Y+"))
+         chopth.Append("Y+");
+      if (strstr(chopt.Data(),"I"))
+         chopth.Append("A");
       fHistogram->Paint(chopth.Data());
    }
 
