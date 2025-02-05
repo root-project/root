@@ -559,9 +559,6 @@ public:
    virtual Bool_t IsPointerType(const void * /* QualTypePtr */) const {return 0;}
    virtual Bool_t IsVoidPointerType(const void * /* QualTypePtr */) const {return 0;}
 
-   // FunctionDecl interface
-   virtual Bool_t FunctionDeclId_IsMethod(DeclId_t /* fdeclid */) const {return 0;}
-
    static TInterpreter *Instance();
 
    ClassDefOverride(TInterpreter,0)  //ABC defining interface to generic interpreter

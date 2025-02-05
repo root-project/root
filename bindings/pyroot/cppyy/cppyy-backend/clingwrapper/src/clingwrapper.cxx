@@ -361,6 +361,7 @@ TFunction* m2f(Cppyy::TCppMethod_t method) {
     return wrap->fTF;
 }
 
+/*
 static inline
 CallWrapper::DeclId_t m2d(Cppyy::TCppMethod_t method) {
     CallWrapper* wrap = ((CallWrapper*)method);
@@ -370,6 +371,7 @@ CallWrapper::DeclId_t m2d(Cppyy::TCppMethod_t method) {
     }
     return wrap->fDecl;
 }
+*/
 
 static inline
 char* cppstring_to_cstring(const std::string& cppstr)
@@ -980,7 +982,8 @@ Cppyy::TCppFuncAddr_t Cppyy::GetFunctionAddress(TCppMethod_t method, bool check_
 {
     if (check_enabled && !gEnableFastPath) return (TCppFuncAddr_t)nullptr;
     TFunction* f = m2f(method);
-    TCppFuncAddr_t pf = gInterpreter->FindSym(f->GetMangledName());
+
+    TCppFuncAddr_t pf = (TCppFuncAddr_t)gInterpreter->FindSym(f->GetMangledName());
     if (pf) return pf;
 
     int ierr = 0;
@@ -996,25 +999,32 @@ Cppyy::TCppFuncAddr_t Cppyy::GetFunctionAddress(TCppMethod_t method, bool check_
         sig << "template " << fn << ";";
         gInterpreter->ProcessLine(sig.str().c_str());
     } else {
-        std::string sfn(fn);
-        std::string addrstr;
-        addrstr.reserve(128);
-        addrstr.push_back('(');
-        addrstr.append(Cppyy::GetMethodResultType(method));
-        addrstr.append(" (");
+        std::ostringstream sig;
 
-        if (gInterpreter->FunctionDeclId_IsMethod(m2d(method))) {
-            std::string::size_type colon = sfn.rfind("::");
-            if (colon != std::string::npos) addrstr.append(sfn.substr(0, colon+2));
+        std::string sfn = fn;
+        std::string::size_type pos = sfn.find('(');
+        if (pos != std::string::npos) sfn = sfn.substr(0, pos);
+
+    // start cast
+        sig << '(' << f->GetReturnTypeName() << " (";
+
+    // add scope for methods
+        pos = sfn.rfind(':');
+        if (pos != std::string::npos) {
+            std::string scope_name = sfn.substr(0, pos-1);
+            TCppScope_t scope = GetScope(scope_name);
+            if (scope && !IsNamespace(scope))
+                sig << scope_name << "::";
         }
 
-        addrstr.append("*)");
-        addrstr.append(Cppyy::GetMethodSignature(method, false));
-        addrstr.append(") &");
+    // finalize cast
+        sig << "*)" << GetMethodSignature(method, false)
+                    << ((f->Property() & kIsConstMethod) ? " const" : "")
+            << ')';
 
-        addrstr.append(sfn.substr(0, sfn.find('(')));
-
-        gInterpreter->Calc(addrstr.c_str());
+    // load address
+        sig << '&' << sfn;
+        gInterpreter->Calc(sig.str().c_str());
     }
 
     return (TCppFuncAddr_t)gInterpreter->FindSym(f->GetMangledName());
