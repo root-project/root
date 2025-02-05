@@ -37,7 +37,7 @@ Explore the examples below for [different histogram classes](group__Histograms.h
 
 ## Tutorials sorted after groups
 
-- [Introduction](\ref introduction)
+- [Introduction](\ref hist_intro)
 - [TH1 Histograms](\ref th1)
 - [TH2 Histograms](\ref th2)
 - [THnSparse](\ref thnsparse)
@@ -48,7 +48,7 @@ Explore the examples below for [different histogram classes](group__Histograms.h
 - [TExec](\ref texec)
 
 [List of all tutorials](\ref alltutorials)
-\anchor introduction
+\anchor hist_intro
 
 ## Introduction
 
