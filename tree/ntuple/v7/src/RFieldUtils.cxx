@@ -63,6 +63,11 @@ const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
 std::string ROOT::Experimental::Internal::GetCanonicalTypePrefix(const std::string &typeName)
 {
    std::string canonicalType{TClassEdit::CleanType(typeName.c_str(), /*mode=*/1)};
+   if (canonicalType.substr(0, 7) == "struct ") {
+      canonicalType.erase(0, 7);
+   } else if (canonicalType.substr(0, 5) == "enum ") {
+      canonicalType.erase(0, 5);
+   }
 
    if (canonicalType.substr(0, 6) == "array<") {
       canonicalType = "std::" + canonicalType;
