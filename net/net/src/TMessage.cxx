@@ -68,7 +68,7 @@ TMessage::TMessage(UInt_t what, Int_t bufsiz) :
 /// Create a TMessage object for reading objects. The objects will be
 /// read from buf. Use the What() method to get the message type.
 
-TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsize, buf),
+TMessage::TMessage(void *buf, Int_t bufsize, Bool_t adopt) : TBufferFile(TBuffer::kRead, bufsize, buf, adopt),
                                                fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
 {
    // skip space at the beginning of the message reserved for the message length
@@ -82,9 +82,6 @@ TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsi
    fInfos      = nullptr;
    fEvolution  = kFALSE;
 
-   // The receiving socket owns the passed buffer
-   ResetBit(kIsOwner);
-   ResetBit(kIsOwnerComp);
 
    if (fWhat & kMESS_ZIP) {
       // if buffer has kMESS_ZIP set, move it to fBufComp and uncompress
@@ -92,7 +89,10 @@ TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsi
       fBufCompCur = fBuffer + bufsize;
       fBuffer     = nullptr;
       Uncompress();
-      // Owner of the newly created buffer (inside Uncompress)
+      if (adopt) {
+         SetBit(kIsOwnerComp); // bufcomp points to the original buf
+      }
+      // Force being owner of the newly created buffer (inside Uncompress)
       SetBit(kIsOwner);
    }
 
