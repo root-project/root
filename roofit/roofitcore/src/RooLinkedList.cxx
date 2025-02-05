@@ -43,7 +43,6 @@ Use RooAbsCollection derived objects for public use
 #include <memory>
 #include <vector>
 
-ClassImp(RooLinkedList);
 
 /// \cond ROOFIT_INTERNAL
 

@@ -110,7 +110,6 @@
 #include "TMatrixD.h"
 
 
-ClassImp(RooStats::SPlot);
 
 using namespace RooStats;
 using std::endl;

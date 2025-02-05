@@ -42,8 +42,6 @@
 
 using std::string, std::vector;
 
-ClassImp(RooMomentMorphFuncND);
-ClassImp(RooMomentMorphFuncND::Grid2);
 
 //_____________________________________________________________________________
 RooMomentMorphFuncND::RooMomentMorphFuncND() : _cacheMgr(this, 10, true, true), _setting(RooMomentMorphFuncND::Linear), _useHorizMorph(true)

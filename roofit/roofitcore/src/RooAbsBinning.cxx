@@ -35,7 +35,6 @@ This class defines the interface to retrieve bin boundaries, ranges etc.
 
 using std::ostream;
 
-ClassImp(RooAbsBinning);
 
 
 

@@ -30,4 +30,3 @@ the getMinLimit() and getMaxLimit() methods.
 
 #include "RooAbsFunc.h"
 
-ClassImp(RooAbsFunc);

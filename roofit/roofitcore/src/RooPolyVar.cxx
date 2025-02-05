@@ -39,7 +39,6 @@ it can define.
 #include <array>
 #include <cmath>
 
-ClassImp(RooPolyVar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct polynomial in x with coefficients in coefList. If

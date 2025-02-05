@@ -30,7 +30,6 @@ This function can be analytically convolved with any RooResolutionModel implemen
 #include "RooRandom.h"
 #include "RooBatchCompute.h"
 
-ClassImp(RooBMixDecay);
 
 /// \brief Constructor for RooBMixDecay.
 ///

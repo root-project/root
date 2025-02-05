@@ -43,7 +43,6 @@ that an event originates from a certain category.
 #include <iostream>
 #include <string>
 
-ClassImp(RooSimGenContext);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of specialized generator context for RooSimultaneous p.d.f.s. This

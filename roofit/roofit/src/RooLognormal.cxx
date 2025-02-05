@@ -33,7 +33,6 @@ The parameterization here is physics driven and differs from the ROOT::Math::log
 
 #include <Math/PdfFuncMathCore.h>
 
-ClassImp(RooLognormal);
 
 ////////////////////////////////////////////////////////////////////////////////
 

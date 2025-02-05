@@ -90,7 +90,6 @@ in calculation speed.
 
  using std::flush, std::endl;
 
-ClassImp(RooIntegralMorph);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with observables x, pdf shapes pdf1 and pdf2 which represent

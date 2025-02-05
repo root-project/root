@@ -29,7 +29,6 @@ that can be stored in RooSharedPropertiesList.
 
 #include "Riostream.h"
 
-ClassImp(RooSharedProperties);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -68,7 +68,6 @@
 
 using std::istream, std::ostream, std::ifstream, std::ofstream, std::endl;
 
-ClassImp(RooArgSet);
 
 void RooArgSet::cleanup() { }
 

@@ -45,7 +45,6 @@ frame->Draw();
 ~~~
 */
 
-ClassImp(RooSpline);
 
 /// Constructor for creating a spline from a TGraph.
 /// \param[in] name The name of the spline.

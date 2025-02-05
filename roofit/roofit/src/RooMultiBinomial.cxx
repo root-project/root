@@ -37,7 +37,6 @@ The combination only 'reject' can be chosen to be visible or not visible
 
 using std::endl, std::vector, std::string;
 
-ClassImp(RooMultiBinomial);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct the efficiency functions from a list of efficiency functions

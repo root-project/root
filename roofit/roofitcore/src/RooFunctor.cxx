@@ -33,7 +33,6 @@ Lightweight interface adaptor that exports a RooAbsPdf as a functor.
 
 #include <cassert>
 
-ClassImp(RooFunctor);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -74,7 +74,6 @@ The calculator can generate Asimov datasets from two kinds of PDFs:
 using namespace RooStats;
 using std::string, std::unique_ptr;
 
-ClassImp(RooStats::AsymptoticCalculator);
 
 namespace {
 

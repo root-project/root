@@ -124,7 +124,6 @@ observable snapshots are stored in the dataset.
 #include <unordered_map>
 
 
-ClassImp(RooAbsData);
 
 RooAbsData::StorageType RooAbsData::defaultStorageType=RooAbsData::Vector ;
 

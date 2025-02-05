@@ -59,7 +59,6 @@ to the fractions of the various functions. **This requires setting the last argu
 #include <memory>
 #include <stdexcept>
 
-ClassImp(RooRealSumPdf);
 
 bool RooRealSumPdf::_doFloorGlobal = false ;
 

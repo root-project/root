@@ -288,7 +288,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooBinning.cxx
     src/RooBinningCategory.cxx
     src/RooBrentRootFinder.cxx
-    src/RooCacheManager.cxx
     src/RooCachedPdf.cxx
     src/RooCachedReal.cxx
     src/RooCategory.cxx

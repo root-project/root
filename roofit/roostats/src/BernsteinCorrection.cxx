@@ -68,7 +68,6 @@ generating the toys (either via a histogram or via an independent model that is 
 #include "Math/MinimizerOptions.h"
 
 
-ClassImp(RooStats::BernsteinCorrection);
 
 using namespace RooFit;
 using namespace RooStats;

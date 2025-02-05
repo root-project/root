@@ -28,7 +28,6 @@ RooRealIntegral integration mechanism.
 #include "RooAbsAnaConvPdf.h"
 #include "RooConvCoefVar.h"
 
-ClassImp(RooConvCoefVar);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -50,7 +50,6 @@ using namespace RooFit;
 using std::endl;
 
 
-ClassImp(RooStats::ToyMCSampler);
 
 namespace RooStats {
 

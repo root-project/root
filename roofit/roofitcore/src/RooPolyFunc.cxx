@@ -36,7 +36,6 @@ part of the RooFit computation graph.
 using std::endl;
 using namespace RooFit;
 
-ClassImp(RooPolyFunc);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// coverity[UNINIT_CTOR]

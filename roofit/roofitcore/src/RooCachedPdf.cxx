@@ -29,7 +29,6 @@ any external RooAbsPdf input function provided in the constructor.
 
 using std::endl;
 
-ClassImp(RooCachedPdf);
 
 
 ////////////////////////////////////////////////////////////////////////////////

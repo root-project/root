@@ -35,7 +35,6 @@ Represents the ratio of two RooAbsReal objects.
 
 #include <cmath>
 
-ClassImp(RooRatio);
 
 RooRatio::RooRatio()
 {

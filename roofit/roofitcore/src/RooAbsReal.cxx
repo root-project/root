@@ -183,7 +183,6 @@ EvalErrorData::ErrorList::iterator RooAbsReal::evalErrorIter()
    return evalErrorData().errorList.begin();
 }
 
-ClassImp(RooAbsReal)
 
 bool RooAbsReal::_globalSelectComp = false;
 bool RooAbsReal::_hideOffset = true ;

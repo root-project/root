@@ -16,7 +16,6 @@
 
 #include <array>
 
-ClassImp(RooFit::Detail::RooNormalizedPdf);
 
 /**
  * \class RooNormalizedPdf

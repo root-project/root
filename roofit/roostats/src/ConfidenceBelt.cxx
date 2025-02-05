@@ -38,7 +38,6 @@ store the interval.
 
 #include <TMath.h>
 
-ClassImp(RooStats::ConfidenceBelt);
 
 using namespace RooStats;
 using std::vector;

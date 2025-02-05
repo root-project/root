@@ -35,7 +35,6 @@ range and values of the arguments.
 #include <algorithm>
 #include <cmath>
 
-ClassImp(RooExponential);
 
 ////////////////////////////////////////////////////////////////////////////////
 

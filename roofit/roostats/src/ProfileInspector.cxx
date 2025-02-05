@@ -31,7 +31,6 @@ Utility class to plot conditional MLE of nuisance parameters vs. Parameters of I
 #include "RooCurve.h"
 #include "TAxis.h"
 
-ClassImp(RooStats::ProfileInspector);
 
 using namespace RooStats;
 using std::string, std::map;

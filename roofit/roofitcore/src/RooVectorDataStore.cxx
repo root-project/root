@@ -49,9 +49,6 @@ which returns spans pointing directly to the data.
 #include <iomanip>
 using std::string, std::vector, std::list;
 
-ClassImp(RooVectorDataStore);
-ClassImp(RooVectorDataStore::RealVector);
-ClassImp(RooVectorDataStore::RealFullVector);
 
 
 ////////////////////////////////////////////////////////////////////////////////

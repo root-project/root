@@ -99,7 +99,6 @@ void RooSimultaneous::InitializationOutput::addPdf(const RooAbsPdf &pdf, std::st
 
 using std::string, std::endl;
 
-ClassImp(RooSimultaneous);
 
 
 

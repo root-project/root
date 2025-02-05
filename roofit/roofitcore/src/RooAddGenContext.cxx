@@ -38,7 +38,6 @@ with a probability proportional to its associated coefficient.
 #include <sstream>
 
 
-ClassImp(RooAddGenContext);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -43,7 +43,6 @@ setting the states.
 
 using std::endl, std::ostream;
 
-ClassImp(RooMultiCategory);
 
 
 

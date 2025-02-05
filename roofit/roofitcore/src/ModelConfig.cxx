@@ -51,7 +51,6 @@ likelihood.
 
 #include <sstream>
 
-ClassImp(RooStats::ModelConfig);
 
 namespace {
 

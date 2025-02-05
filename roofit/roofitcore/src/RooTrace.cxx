@@ -95,7 +95,6 @@ and there is no guarantee that this works.
 
 using std::ostream, std::setw, std::hex, std::dec, std::map, std::string;
 
-ClassImp(RooTrace);
 
 RooTrace* RooTrace::_instance=nullptr ;
 

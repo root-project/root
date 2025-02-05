@@ -41,7 +41,6 @@ that create and fill these generic containers
 #include <string>
 #include <iostream>
 
-ClassImp(RooCmdArg);
 
 const RooCmdArg RooCmdArg::_none ;
 

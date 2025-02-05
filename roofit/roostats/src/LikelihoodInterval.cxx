@@ -66,7 +66,6 @@
 #include <cctype>   // need to use c version of toupper defined here
 
 
-ClassImp(RooStats::LikelihoodInterval);
 
 using namespace RooStats;
 

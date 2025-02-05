@@ -35,7 +35,6 @@ for changes to trigger a refilling of the cache histogram.
 #include "RooExpensiveObjectCache.h"
 #include "RooFit/Detail/RooNormalizedPdf.h"
 
-ClassImp(RooAbsCachedPdf);
 
 
 

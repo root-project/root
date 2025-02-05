@@ -30,7 +30,6 @@ and applying an extra rejection step based on the efficiency function.
 #include "RooAbsPdf.h"
 #include "RooRandom.h"
 
-ClassImp(RooEffGenContext);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of generator context for RooEffProd products

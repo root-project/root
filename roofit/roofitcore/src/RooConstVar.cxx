@@ -25,7 +25,6 @@ Represents a constant real-valued object.
 #include "RooConstVar.h"
 #include "RooNumber.h"
 
-ClassImp(RooConstVar);
 
 
 ////////////////////////////////////////////////////////////////////////////////

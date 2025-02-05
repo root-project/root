@@ -63,7 +63,6 @@ the following replacements should be used:
 #include <functional>
 #include <memory>
 
-ClassImp(RooAbsCategory);
 
 /// A category state to signify an invalid category. The category name is empty,
 /// the index is the minimal int.

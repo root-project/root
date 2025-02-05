@@ -67,7 +67,6 @@ AsymptoticCalculator, which can compute in addition the expected
 #include "Math/MinimizerOptions.h"
 #include "RooMinimizer.h"
 
-ClassImp(RooStats::ProfileLikelihoodCalculator);
 
 using namespace RooFit;
 using namespace RooStats;

@@ -33,7 +33,6 @@ starts with the coefficient that goes with \f$ T_1(x)=x \f$ (i.e. the linear ter
 
 #include <cmath>
 
-ClassImp(RooChebychev);
 
 ////////////////////////////////////////////////////////////////////////////////
 

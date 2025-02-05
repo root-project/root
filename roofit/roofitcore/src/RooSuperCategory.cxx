@@ -42,7 +42,6 @@ supercategory will propagate to its input categories.
 
 using std::endl, std::ostream;
 
-ClassImp(RooSuperCategory);
 
 RooSuperCategory::RooSuperCategory() = default;
 

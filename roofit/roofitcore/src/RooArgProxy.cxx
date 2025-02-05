@@ -37,7 +37,6 @@ points to gets redirected (e.g. in a copy or clone operation).
 **/
 
 
-ClassImp(RooArgProxy);
 
 
 ////////////////////////////////////////////////////////////////////////////////

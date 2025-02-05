@@ -75,8 +75,6 @@ have to appear in any specific place in the list.
 
 using std::endl, std::string, std::vector, std::list, std::ostream, std::map, std::ostringstream;
 
-ClassImp(RooFit::Detail::RooFixedProdPdf);
-ClassImp(RooProdPdf);
 
 
 ////////////////////////////////////////////////////////////////////////////////

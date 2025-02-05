@@ -30,7 +30,6 @@ associated normalization and integration sets.
 
 #include "Riostream.h"
 
-ClassImp(RooAICRegistry);
 
 namespace {
 

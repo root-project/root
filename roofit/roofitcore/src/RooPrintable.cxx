@@ -41,7 +41,6 @@ given a Print() option string.
 
 using std::ostream, std::setw;
 
-ClassImp(RooPrintable);
 
 Int_t  RooPrintable::_nameLength(0) ;
 

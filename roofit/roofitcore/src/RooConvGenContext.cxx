@@ -41,7 +41,6 @@ subsequently explicitly smeared with the resolution model distribution.
 
 using std::ostream;
 
-ClassImp(RooConvGenContext);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for specialized generator context for analytical convolutions.

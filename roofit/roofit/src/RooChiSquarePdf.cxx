@@ -24,7 +24,6 @@ Here we also implement the analytic integral.
 #include <array>
 #include <cmath>
 
-ClassImp(RooChiSquarePdf);
 
 ////////////////////////////////////////////////////////////////////////////////
 

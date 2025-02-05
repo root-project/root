@@ -32,7 +32,6 @@ of the original parameter.
 #include "RooArgSet.h"
 #include "RooUnblindUniform.h"
 
-ClassImp(RooUnblindUniform);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from a given RooAbsReal (to hold the blinded value) and a set

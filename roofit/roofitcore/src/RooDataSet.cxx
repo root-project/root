@@ -117,7 +117,6 @@ the new `RooAbsData::uniqueId()`.
 
 using std::endl, std::string, std::map, std::list, std::ifstream, std::ofstream, std::ostream;
 
-ClassImp(RooDataSet);
 
 void RooDataSet::cleanup() {}
 

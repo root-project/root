@@ -63,7 +63,6 @@ enum BasisSign { Both = 0, Plus = +1, Minus = -1 };
 } // namespace
 
 
-ClassImp(RooGExpModel);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a Gauss (x) Exp model with mean, sigma and tau parameters and scale factors for each parameter.

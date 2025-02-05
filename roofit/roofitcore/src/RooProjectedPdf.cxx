@@ -35,7 +35,6 @@ is therefore identical to that of <pre>f->createProjection(RooArgSet(x,y))</pre>
 #include "RooRealVar.h"
 #include "RooNameReg.h"
 
-ClassImp(RooProjectedPdf);
 
 
 ////////////////////////////////////////////////////////////////////////////////

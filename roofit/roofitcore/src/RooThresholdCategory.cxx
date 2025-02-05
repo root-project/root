@@ -28,7 +28,6 @@ A real-to-category mapping defined by a series of thresholds.
 
 using std::endl, std::ostream;
 
-ClassImp(RooThresholdCategory);
 
 namespace {
 bool threshListSorter(const std::pair<double,RooAbsCategory::value_type>& lhs, const std::pair<double,RooAbsCategory::value_type>& rhs) {

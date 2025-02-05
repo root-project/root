@@ -40,7 +40,6 @@ though usually only one observable actually changes.
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 
-ClassImp(RooChangeTracker);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. The set trackSet contains the observables to be

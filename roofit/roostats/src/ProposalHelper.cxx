@@ -35,7 +35,6 @@ namespace RooStats {
    class ProposalFunction;
 }
 
-ClassImp(RooStats::ProposalHelper);
 
 using namespace RooFit;
 using namespace RooStats;

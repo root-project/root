@@ -35,7 +35,6 @@ Efficient implementation of the generator context specific for binned pdfs.
 
 using std::endl, std::vector, std::ostream;
 
-ClassImp(RooBinnedGenContext);
 
 
 ////////////////////////////////////////////////////////////////////////////////

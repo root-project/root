@@ -46,7 +46,6 @@ use a RooAcceptReject sampling technique.
 
 using std::endl, std::string, std::ostream;
 
-ClassImp(RooGenContext);
 
 
 ////////////////////////////////////////////////////////////////////////////////

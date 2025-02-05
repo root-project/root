@@ -46,7 +46,6 @@ typename Collection::const_iterator findVar(Collection const& coll, const char *
 }
 
 
-ClassImp(RooCmdConfig);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -37,7 +37,6 @@ when any of the parameters of the input p.d.f. has changed.
 
 using std::string;
 
-ClassImp(RooNumRunningInt);
 
 
 

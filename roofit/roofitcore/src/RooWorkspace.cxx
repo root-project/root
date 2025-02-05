@@ -101,15 +101,12 @@ bool isCacheSet(std::string const& setName) {
 
 using std::string, std::list, std::map, std::vector, std::ifstream, std::ofstream, std::fstream, std::make_unique;
 
-ClassImp(RooWorkspace);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(RooWorkspace::CodeRepo);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(RooWorkspace::WSDir);
 
 list<string> RooWorkspace::_classDeclDirList ;
 list<string> RooWorkspace::_classImplDirList ;

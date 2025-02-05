@@ -29,7 +29,6 @@ upper limit for each toy-MC sample generated
 #include "RooStats/ProfileLikelihoodCalculator.h"
 #include "RooRealVar.h"
 
-ClassImp(RooStats::UpperLimitMCSModule);
 
 using namespace RooStats ;
 

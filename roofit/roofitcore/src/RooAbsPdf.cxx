@@ -216,9 +216,7 @@ using std::endl, std::string, std::ostream, std::vector, std::pair, std::make_pa
 
 using RooHelpers::getColonSeparatedNameString;
 
-ClassImp(RooAbsPdf);
 
-ClassImp(RooAbsPdf::GenSpec);
 
 
 Int_t RooAbsPdf::_verboseEval = 0;

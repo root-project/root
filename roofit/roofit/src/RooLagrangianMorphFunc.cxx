@@ -75,7 +75,6 @@ describe the same process or not.
 
 using std::string, std::make_unique, std::vector;
 
-ClassImp(RooLagrangianMorphFunc);
 
 //#define _DEBUG_
 

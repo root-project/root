@@ -82,7 +82,6 @@ BasisType getBasisType(int basisCode)
 using RooHeterogeneousMath::evalCerf;
 using RooHeterogeneousMath::evalCerfApprox;
 
-ClassImp(RooGaussModel);
 
 ////////////////////////////////////////////////////////////////////////////////
 

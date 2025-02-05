@@ -32,7 +32,6 @@ be analytically convolved with any RooResolutionModel implementation.
 
 #include "TError.h"
 
-ClassImp(RooBDecay);
 
 /// \brief Constructor for RooBDecay.
 ///

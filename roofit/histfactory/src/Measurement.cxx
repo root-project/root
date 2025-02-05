@@ -33,7 +33,6 @@ uncertainty or the functional form of constraints on nuisance parameters.
 
 using std::ofstream;
 
-ClassImp(RooStats::HistFactory::Measurement);
 
 /// Standard constructor
 RooStats::HistFactory::Measurement::Measurement()

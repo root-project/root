@@ -34,7 +34,6 @@ Abstract base class for RooStudyManager modules
 #include "RooFitResult.h"
 
 
-ClassImp(RooGenFitStudy);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

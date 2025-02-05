@@ -52,7 +52,6 @@ For the future, perhaps this factory should be extended to include the efficienc
 
 
 
-ClassImp(RooStats::NumberCountingPdfFactory);
 
 
 ////////////////////////////////////////////////////////////////////////////////

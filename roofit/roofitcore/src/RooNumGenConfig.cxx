@@ -35,7 +35,6 @@ use this class in the (normalization) integral configuration interface
 
 using std::endl, std::ostream;
 
-ClassImp(RooNumGenConfig);
 
 
 ////////////////////////////////////////////////////////////////////////////////

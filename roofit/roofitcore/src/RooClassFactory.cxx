@@ -606,7 +606,6 @@ void codegenImpl(CLASS_NAME &arg, CodegenContext &ctx);
 
 #include <cmath>
 
-ClassImp(CLASS_NAME);
 
 CLASS_NAME::CLASS_NAME(const char *name, const char *title,
 )";

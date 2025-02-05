@@ -93,7 +93,6 @@ for advanced uses of categories.
 
 using std::endl, std::istream, std::ostream;
 
-ClassImp(RooCategory);
 
 std::map<RooSharedProperties::UUID, std::weak_ptr<RooCategory::RangeMap_t>> RooCategory::_uuidToSharedRangeIOHelper; // Helper for restoring shared properties
 std::map<std::string, std::weak_ptr<RooCategory::RangeMap_t>> RooCategory::_sharedRangeIOHelper;

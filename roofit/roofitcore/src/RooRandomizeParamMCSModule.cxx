@@ -46,7 +46,6 @@ number of expected events of an extended p.d.f
 
 using std::endl;
 
-ClassImp(RooRandomizeParamMCSModule);
 
 
 ////////////////////////////////////////////////////////////////////////////////

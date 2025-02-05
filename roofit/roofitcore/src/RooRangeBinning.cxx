@@ -32,7 +32,6 @@ the RooRealVar::setRange() method.
 
 using std::endl;
 
-ClassImp(RooRangeBinning);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

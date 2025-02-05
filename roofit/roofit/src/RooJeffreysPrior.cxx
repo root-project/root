@@ -23,7 +23,6 @@ Check the tutorial rs302_JeffreysPriorDemo.C for a demonstration with a simple P
 #include "RooRealVar.h"
 #include "RooHelpers.h"
 
-ClassImp(RooJeffreysPrior);
 
 using namespace RooFit;
 

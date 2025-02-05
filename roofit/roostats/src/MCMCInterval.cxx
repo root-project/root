@@ -82,7 +82,6 @@
 #include <string>
 #include <algorithm>
 
-ClassImp(RooStats::MCMCInterval);
 
 using namespace RooFit;
 using namespace RooStats;

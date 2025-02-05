@@ -91,7 +91,6 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include <set>
 #include <sstream>
 
-ClassImp(RooAddPdf);
 
 
 ////////////////////////////////////////////////////////////////////////////////

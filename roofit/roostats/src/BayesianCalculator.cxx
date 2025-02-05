@@ -87,7 +87,6 @@ credible interval from the given function.
 
 #include "RConfigure.h"
 
-ClassImp(RooStats::BayesianCalculator);
 
 namespace RooStats {
 

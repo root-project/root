@@ -40,7 +40,6 @@ using std::string, std::endl, std::ostream;
 #include "RooChangeTracker.h"
 #include "RooExpensiveObjectCache.h"
 
-ClassImp(RooAbsCachedReal);
 
 
 

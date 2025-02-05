@@ -51,7 +51,6 @@ the names of the arguments are not hard coded.
 
 using std::istream, std::ostream, std::endl;
 
-ClassImp(RooGenericPdf);
 
 RooGenericPdf::RooGenericPdf() {}
 

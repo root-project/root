@@ -35,7 +35,6 @@ of its servers and present it as a simple array oriented interface.
 
 using std::endl;
 
-ClassImp(RooRealBinding);
 
 
 ////////////////////////////////////////////////////////////////////////////////

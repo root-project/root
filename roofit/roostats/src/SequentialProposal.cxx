@@ -23,7 +23,6 @@ by moving only in one coordinate (chosen randomly) at each step
 #include <RooStats/RooStatsUtils.h>
 
 
-ClassImp(RooStats::SequentialProposal);
 
 namespace RooStats {
 

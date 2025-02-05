@@ -38,7 +38,6 @@ for each component PDF sequentially.
 
 using std::endl, std::ostream;
 
-ClassImp(RooProdGenContext);
 
 
 ////////////////////////////////////////////////////////////////////////////////

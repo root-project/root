@@ -38,7 +38,6 @@ F may have an arbitrary number of dependents and parameters
 
 #include "TError.h"
 
-ClassImp(RooEfficiency);
 
 
 ////////////////////////////////////////////////////////////////////////////////

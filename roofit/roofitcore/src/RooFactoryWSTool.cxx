@@ -67,7 +67,6 @@ using std::string, std::map, std::list, std::pair, std::endl, std::vector;
 
 #define BUFFER_SIZE 64000
 
-ClassImp(RooFactoryWSTool);
 
 RooFactoryWSTool* RooFactoryWSTool::_of = nullptr ;
 map<string,RooFactoryWSTool::IFace*>* RooFactoryWSTool::_hooks=nullptr ;

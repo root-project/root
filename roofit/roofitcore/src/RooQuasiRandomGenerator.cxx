@@ -36,7 +36,6 @@ convergence of a Monte Carlo integration.
 
 using std::endl;
 
-ClassImp(RooQuasiRandomGenerator);
 
 
 ////////////////////////////////////////////////////////////////////////////////

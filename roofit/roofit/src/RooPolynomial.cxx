@@ -39,7 +39,6 @@ RooPolynomial::RooPolynomial(const char*, const char*, RooAbsReal&, const RooArg
 #include "TError.h"
 #include <vector>
 
-ClassImp(RooPolynomial);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a polynomial in the variable `x`.

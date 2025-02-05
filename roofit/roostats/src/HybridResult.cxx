@@ -42,7 +42,6 @@ TConfidenceLevel.
 
 /// ClassImp for building the THtml documentation of the class
 
-ClassImp(RooStats::HybridResult);
 
 using namespace RooStats;
 
