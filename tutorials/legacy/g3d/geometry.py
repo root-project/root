@@ -10,7 +10,7 @@
 import os
 import ROOT
 
-macrodir = os.path.join(str(ROOT.gROOT.GetTutorialDir()), 'visualisation', 'geom')
+macrodir = os.path.join(str(ROOT.gROOT.GetTutorialDir()), 'legacy', 'g3d')
 
 # the na49.C file was generated, so no python conversion is provided
 ROOT.gROOT.Macro( ROOT.gSystem.UnixPathName( os.path.join( macrodir, 'na49.C' ) ) )

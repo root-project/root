@@ -2214,9 +2214,9 @@ void testControlBars()
    bar->AddButton("graph",     ".x graphs/gr001_graph.C", "Example of a Simple Graph");
    bar->AddButton("gerrors",   ".x graphs/gr002_errors.C", "Example of a Graph with Error Bars");
    bar->AddButton("tornado",   ".x visualisation/graphics/tornado.C", "Examples of 3-D PolyMarkers");
-   bar->AddButton("shapes",    ".x visualisation/geom/shapes.C",      "The Geometry Shapes");
-   bar->AddButton("geometry",  ".x visualisation/geom/geometry.C",    "Creation of the NA49 Geometry File");
-   bar->AddButton("na49view",  ".x visualisation/geom/na49view.C",    "Two Views of the NA49 Detector Geometry");
+   bar->AddButton("shapes",    ".x legacy/g3d/shapes.C",      "The Geometry Shapes");
+   bar->AddButton("geometry",  ".x legacy/g3d/geometry.C",    "Creation of the NA49 Geometry File");
+   bar->AddButton("na49view",  ".x legacy/g3d/na49view.C",    "Two Views of the NA49 Detector Geometry");
    bar->AddButton("file",      ".x io/file.C",          "The ROOT File Format");
    bar->AddButton("fildir",    ".x io/fildir.C",        "The ROOT File, Directories and Keys");
    bar->AddButton("tree",      ".x tree/tree.C",        "The Tree Data Structure");

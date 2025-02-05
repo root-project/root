@@ -49,8 +49,8 @@ void benchmarks() {
    summary->AddText("  visualisation/graphics/tornado.C");
    summary->AddText("  visualisation/graphics/surfaces.C");
    summary->AddText("  visualisation/graphs/gr303_zdemo.C");
-   summary->AddText("  visualisation/geom/geometry.C");
-   summary->AddText("  visualisation/geom/na49view.C");
+   summary->AddText("  legacy/g3d/geometry.C");
+   summary->AddText("  legacy/g3d/na49view.C");
    summary->AddText("  io/tree/tree120_ntuple.C");
    summary->AddText("  ");
    bexec(dir,"visualisation/graphics/framework.C");
@@ -65,8 +65,8 @@ void benchmarks() {
    bexec(dir,"visualisation/graphics/tornado.C");
    bexec(dir,"visualisation/graphics/surfaces.C");
    bexec(dir,"visualisation/graphs/gr303_zdemo.C");
-   bexec(dir,"visualisation/geom/geometry.C");
-   bexec(dir,"visualisation/geom/na49view.C");
+   bexec(dir,"legacy/g3d/geometry.C");
+   bexec(dir,"legacy/g3d/na49view.C");
    bexec(dir,"io/tree/tree120_ntuple.C");
    bexec(dir,"legacy/rootmarks.C");
 }

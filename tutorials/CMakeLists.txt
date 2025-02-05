@@ -545,13 +545,13 @@ set(benchmarks-depends tutorial-hsimple
                        tutorial-math-fit-myfit
                        tutorial-hist-hist015_TH1_read_and_draw
                        tutorial-hist-hist056_TPolyMarker_contour
-                       tutorial-visualisation-geom-na49view
+                       tutorial-legacy-g3d-na49view
                        tutorial-io-tree-tree120_ntuple.C
                        tutorial-io-tree-spider
                        tutorial-io-hadd
                        tutorial-io-loopdir
                        tutorial-io-copyFiles)
-set(visualisation-geom-na49view-depends tutorial-visualisation-geom-geometry)
+set(legacy-g3d-na49view-depends tutorial-legacy-g3d-geometry)
 set(io-tree-mt_readNtuplesFillHistosAndFit-depends tutorial-io-tree-mt_fillNtuples)
 set(io-tree-mp_readNtuplesFillHistosAndFit-depends tutorial-io-tree-mp_fillNtuples)
 
@@ -750,8 +750,8 @@ if(ROOT_pyroot_FOUND)
              math/fit/fit1_py.py      # not a tutorial
              visualisation/gui/gui_simple.py       # requires GUI
              io/tree/csv2tntuple.py          # not really a tutorial
-             visualisation/geom/na49geomfile.py # ????
-             visualisation/geom/na49visible.py  # ????
+             legacy/g3d/na49geomfile.py # ????
+             legacy/g3d/na49visible.py  # ????
              io/tree/csv2tree_ReadStream.py # not a tutorial
              visualisation/gui/numberEntry.py  # requires GUI
              legacy/pyroot/*py      # legacy ...
@@ -852,11 +852,11 @@ if(ROOT_pyroot_FOUND)
   set(hist-hist015_TH1_read_and_draw-depends tutorial-hsimple-py)
   set(pyroot-benchmarks-depends tutorial-hsimple-py
                                 tutorial-math-fit-fit1-py
-                                tutorial-visualisation-geom-na49view-py
+                                tutorial-legacy-g3d-na49view-py
                                 tutorial-hist-hist015_TH1_read_and_draw-py
                                 tutorial-io-tree-ntuple1-py)
   set(math-fit-fit1-depends tutorial-hist-hist001_TH1_fillrandom-py)
-  set(visualisation-geom-na49view-depends tutorial-visualisation-geom-geometry-py)
+  set(legacy-g3d-na49view-depends tutorial-legacy-g3d-geometry-py)
   set(roofit-roofit-rf503_wspaceread-depends tutorial-roofit-roofit-rf502_wspacewrite-py)
   set(roofit-roofit-rf618_mixture_models-depends tutorial-analysis-dataframe-df106_HiggsToFourLeptons-py)
 
