@@ -157,11 +157,11 @@ h.Fill(1.0, 2.0)  # Fill single value with weight
 
 ## Further Python fitting examples
 Further examples can be found in the tutorials:
-- [combinedFit.py](combinedFit__8py.html) performs a combined (simultaneous) fit of two 1D histograms with separate functions and some common parameters.
-- [fit1.py](fit1__8py.html) reads a `TF1` and 1D histogram (created and saved in an earlier example [fillrandom.py](fillrandom__8py.html)), and fits the histogram.
-- [fitConvolution.py](fitConvolution__8py.html) fits a 1D histogram to a convolution of two functions.
-- [fitNormSum.py](fitNormSum__8py.html) fits a 1D histogram to the normalized sum of two functions (here, a background exponential and a crystal ball function).
-- [multifit.py](multifit__8py.html) fits multiple functions to different ranges of a 1D histogram.
+- [combinedFit.py](combinedFit_8py.html) performs a combined (simultaneous) fit of two 1D histograms with separate functions and some common parameters.
+- [fit1.py](fit1_8py.html) reads a `TF1` and 1D histogram (created and saved in an earlier example [fillrandom.py](fillrandom__8py.html)), and fits the histogram.
+- [fitConvolution.py](fitConvolution_8py.html) fits a 1D histogram to a convolution of two functions.
+- [fitNormSum.py](fitNormSum_8py.html) fits a 1D histogram to the normalized sum of two functions (here, a background exponential and a crystal ball function).
+- [multifit.py](multifit_8py.html) fits multiple functions to different ranges of a 1D histogram.
 
 \endpythondoc
 """
