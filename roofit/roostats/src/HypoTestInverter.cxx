@@ -66,7 +66,6 @@ call HypoTestInverter::UseCLs().
 #include <cmath>
 #include <memory>
 
-ClassImp(RooStats::HypoTestInverter);
 
 using namespace RooStats;
 using std::endl;

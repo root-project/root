@@ -22,7 +22,6 @@
 #include "RooStats/HistFactory/HistFactoryException.h"
 
 
-ClassImp(RooStats::HistFactory::HistFactoryNavigation);
 
 
 namespace RooStats {

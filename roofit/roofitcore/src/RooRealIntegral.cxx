@@ -47,7 +47,6 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include <iostream>
 #include <memory>
 
-ClassImp(RooRealIntegral);
 
 namespace {
 

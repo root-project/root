@@ -25,4 +25,3 @@ Link element for the RooLinkedList class
 #include "TBuffer.h"
 #include "RooLinkedListElem.h"
 
-ClassImp(RooLinkedListElem);

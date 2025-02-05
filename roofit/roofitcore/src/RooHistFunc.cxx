@@ -39,7 +39,6 @@ discrete dimensions and may have negative values.
 #include <stdexcept>
 
 
-ClassImp(RooHistFunc);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -71,7 +71,6 @@ convolution precision.
 
 using std::endl, std::ostream;
 
-ClassImp(RooNumConvolution);
 
 
 

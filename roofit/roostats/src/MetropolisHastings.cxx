@@ -57,7 +57,6 @@ uniformly over their intervals before construction of the MarkovChain begins.
 #include "RooRandom.h"
 #include "TMath.h"
 
-ClassImp(RooStats::MetropolisHastings);
 
 using namespace RooFit;
 using namespace RooStats;

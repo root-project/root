@@ -35,7 +35,6 @@ RooArgusBG is a RooAbsPdf implementation describing the ARGUS background shape.
 
 #include <cmath>
 
-ClassImp(RooArgusBG);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

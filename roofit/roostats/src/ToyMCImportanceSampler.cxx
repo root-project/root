@@ -28,7 +28,6 @@ using namespace RooFit;
 using std::endl, std::vector;
 
 
-ClassImp(RooStats::ToyMCImportanceSampler);
 
 namespace RooStats {
 

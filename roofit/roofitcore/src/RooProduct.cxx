@@ -34,7 +34,6 @@ Represents the product of a given set of RooAbsReal objects.
 #include <cmath>
 #include <memory>
 
-ClassImp(RooProduct);
 
 class RooProduct::ProdMap : public  std::vector<std::pair<RooArgSet*,RooArgList*> > {} ;
 

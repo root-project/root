@@ -41,7 +41,6 @@ constructed from all the categories in the dataset
 #include <iostream>
 #include <cassert>
 
-ClassImp(RooDataProjBinding);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of a data weighted average function binding with

@@ -98,7 +98,6 @@ for single nodes.
 
 using std::ostream, std::string, std::set, std::map, std::istream, std::pair, std::ofstream, std::make_pair;
 
-ClassImp(RooAbsArg);
 
 bool RooAbsArg::_verboseDirty(false) ;
 bool RooAbsArg::_inhibitDirty(false) ;

@@ -37,7 +37,6 @@
 #include "RooRealSumPdf.h"
 #include "RooTrace.h"
 
-ClassImp(RooRealSumFunc);
 
 bool RooRealSumFunc::_doFloorGlobal = false;
 

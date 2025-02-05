@@ -46,7 +46,6 @@ the preference of the caller as encoded in the configuration object.
 
 #include "RooMsgService.h"
 
-ClassImp(RooNumIntFactory)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register all known integrators by calling

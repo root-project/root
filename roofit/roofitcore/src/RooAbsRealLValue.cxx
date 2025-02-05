@@ -57,7 +57,6 @@ interpreted as a parameter.
 
 using std::endl, std::istream, std::ostream;
 
-ClassImp(RooAbsRealLValue);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

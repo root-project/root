@@ -39,7 +39,6 @@ http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
 
 #include <RooFit/Detail/MathFuncs.h>
 
-ClassImp(RooBernstein);
 
 RooBernstein::RooBernstein(const char *name, const char *title, RooAbsRealLValue &x, const RooArgList &coefList)
    : RooAbsPdf(name, title), _x("x", "Dependent", this, x), _coefList("coefficients", "List of coefficients", this)

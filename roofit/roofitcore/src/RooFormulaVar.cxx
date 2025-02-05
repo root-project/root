@@ -60,7 +60,6 @@
 
 using std::ostream, std::istream, std::list;
 
-ClassImp(RooFormulaVar);
 
 RooFormulaVar::RooFormulaVar() {}
 

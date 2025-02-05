@@ -41,7 +41,6 @@ repeated applications of generate-and-fit operations on a workspace
 
 using std::list, std::string;
 
-ClassImp(RooStudyPackage);
 
 ////////////////////////////////////////////////////////////////////////////////
 

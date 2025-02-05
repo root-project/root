@@ -44,8 +44,6 @@ pointer first using RooCFunction1Binding<T1,T2>::register().
 
 using std::endl, std::ostream, std::string;
 
-ClassImp(RooFunctorBinding);
-ClassImp(RooFunctorPdfBinding);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a RooFit function that makes `ftor` usable in RooFit.

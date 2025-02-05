@@ -24,7 +24,6 @@
 #include <Riostream.h>
 #include <TMath.h>
 
-ClassImp(RooStats::HistFactory::FlexibleInterpVar);
 
 using namespace RooStats;
 using namespace HistFactory;

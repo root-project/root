@@ -31,7 +31,6 @@ RooPowerSum implements a power law PDF of the form
 #include <cmath>
 #include <sstream>
 
-ClassImp(RooPowerSum);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a power law in the variable `x`.

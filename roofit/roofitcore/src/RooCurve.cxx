@@ -58,7 +58,6 @@ To retrieve a RooCurve from a RooPlot, use RooPlot::getCurve().
 
 using std::ostream, std::list, std::vector, std::min;
 
-ClassImp(RooCurve);
 
 namespace {
 

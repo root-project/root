@@ -55,7 +55,6 @@ where
 #include <memory>
 #include <utility>
 
-ClassImp(RooCrystalBall);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates the fully parametrized crystal ball shape with asymmetric Gaussian core and asymmetric tails.

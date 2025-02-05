@@ -54,7 +54,6 @@ plotted for the 1-D case.
 //static const char* TAIL_FRACTION_INTERVAL = "tail_fraction_interval";
 //static const char* OPTION_SEP = ":";
 
-ClassImp(RooStats::MCMCIntervalPlot);
 
 using std::endl;
 using namespace RooStats;

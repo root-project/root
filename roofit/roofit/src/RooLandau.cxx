@@ -31,7 +31,6 @@ Landau distribution p.d.f
 #include "TMath.h"
 #include "Math/ProbFunc.h"
 
-ClassImp(RooLandau);
 
 ////////////////////////////////////////////////////////////////////////////////
 

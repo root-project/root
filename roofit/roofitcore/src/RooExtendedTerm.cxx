@@ -27,7 +27,6 @@ is constructed.
 #include <RooExtendedTerm.h>
 #include <RooProduct.h>
 
-ClassImp(RooExtendedTerm);
 
 
 ////////////////////////////////////////////////////////////////////////////////

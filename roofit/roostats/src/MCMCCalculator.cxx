@@ -47,7 +47,6 @@
 #include "RooStats/PdfProposal.h"
 #include "RooProdPdf.h"
 
-ClassImp(RooStats::MCMCCalculator);
 
 using namespace RooFit;
 using namespace RooStats;

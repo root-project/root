@@ -37,7 +37,6 @@ arguments.
 #include "RooHelpers.h"
 #include "RooAbsCategoryLValue.h"
 
-ClassImp(RooConstraintSum);
 
 
 ////////////////////////////////////////////////////////////////////////////////

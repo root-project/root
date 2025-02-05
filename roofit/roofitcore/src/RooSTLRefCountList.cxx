@@ -22,7 +22,6 @@
 #include "RooAbsArg.h"
 
 // Template specialisation used in RooAbsArg:
-ClassImp(RooSTLRefCountList<RooAbsArg>);
 
 /// Converts RooLinkedList to RooSTLRefCountList<RooAbsArg>.
 /// This converter only yields lists with T=RooAbsArg. This is ok because this

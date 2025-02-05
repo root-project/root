@@ -35,8 +35,6 @@ retrieve these precalculated objects.
 #include "RooMsgService.h"
 #include <iostream>
 
-ClassImp(RooExpensiveObjectCache);
-ClassImp(RooExpensiveObjectCache::ExpensiveObject);
 
 
 ////////////////////////////////////////////////////////////////////////////////

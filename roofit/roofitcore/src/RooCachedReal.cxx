@@ -31,7 +31,6 @@ any external RooAbsReal input function provided in the constructor.
 
 using std::endl;
 
-ClassImp(RooCachedReal);
 
 
 ////////////////////////////////////////////////////////////////////////////////

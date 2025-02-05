@@ -36,7 +36,6 @@ but a not-normalized function (RooAbsReal)
 #include <RooMath.h>
 #include <RooMsgService.h>
 
-ClassImp(RooStepFunction);
 
 namespace {
 

@@ -27,7 +27,6 @@
 
 using std::vector, std::endl;
 
-ClassImp(RooStats::HistFactory::LinInterpVar);
 
 using namespace RooStats;
 using namespace HistFactory;
