@@ -20,16 +20,6 @@
 
 namespace {
 
-/// Resolve usings and typedefs
-std::string GetResolvedTypeName(const std::string &typeName)
-{
-   // The following types are asummed to be resolved; thus, do not perform `typedef` resolution on those
-   if (typeName.substr(0, 5) == "std::" || typeName.substr(0, 25) == "ROOT::RNTupleCardinality<")
-      return typeName;
-
-   return TClassEdit::ResolveTypedef(typeName.c_str());
-}
-
 /// Used as a thread local context storage for Create(); steers the behavior of the Create() call stack
 class CreateContextGuard;
 class CreateContext {
@@ -304,8 +294,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
                                        const RCreateFieldOptions &options, const RNTupleDescriptor *desc,
                                        ROOT::DescriptorId_t fieldId)
 {
-   const auto canocialType = Internal::GetCanonicalTypePrefix(typeName);
-   const auto resolvedType = Internal::GetCanonicalTypePrefix(GetResolvedTypeName(canocialType));
+   const auto resolvedType = Internal::GetCanonicalTypePrefix(TClassEdit::ResolveTypedef(typeName.c_str()));
 
    thread_local CreateContext createContext;
    CreateContextGuard createContextGuard(createContext);
@@ -544,9 +533,10 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          auto innerTypes = Internal::TokenizeTypeList(resolvedType.substr(25, resolvedType.length() - 26));
          if (innerTypes.size() != 1)
             return R__FORWARD_RESULT(fnFail("invalid cardinality template: " + resolvedType));
-         if (innerTypes[0] == "std::uint32_t") {
+         const auto canonicalInnerType = Internal::GetCanonicalTypePrefix(innerTypes[0]);
+         if (canonicalInnerType == "std::uint32_t") {
             result = std::make_unique<RField<RNTupleCardinality<std::uint32_t>>>(fieldName);
-         } else if (innerTypes[0] == "std::uint64_t") {
+         } else if (canonicalInnerType == "std::uint64_t") {
             result = std::make_unique<RField<RNTupleCardinality<std::uint64_t>>>(fieldName);
          } else {
             return R__FORWARD_RESULT(fnFail("invalid cardinality template: " + resolvedType));
@@ -585,7 +575,9 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
                auto field = Create(memberDesc.GetFieldName(), memberDesc.GetTypeName(), options, desc, id).Unwrap();
                memberFields.emplace_back(std::move(field));
             }
-            auto recordField = Internal::CreateEmulatedField(fieldName, std::move(memberFields), resolvedType);
+            auto recordField =
+               Internal::CreateEmulatedField(fieldName, std::move(memberFields), fieldDesc.GetTypeName());
+            recordField->fTypeAlias = fieldDesc.GetTypeAlias();
             return recordField;
          }
       }
@@ -600,8 +592,19 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    }
 
    if (result) {
-      if (canocialType != resolvedType)
-         result->fTypeAlias = canocialType;
+      const TClassEdit::EModType modType = static_cast<TClassEdit::EModType>(
+         TClassEdit::kDropStlDefault | TClassEdit::kDropComparator | TClassEdit::kDropHash);
+      std::string normOrigType{typeName};
+      TClassEdit::TSplitType splitname(normOrigType.c_str(), modType);
+      splitname.ShortType(normOrigType, modType);
+      // See TClassEdit::GetNormalizedName
+      if (normOrigType.length() > 2 && normOrigType[0] == ':' && normOrigType[1] == ':') {
+         normOrigType.erase(0, 2);
+      }
+      normOrigType = Internal::GetRenormalizedTypeName(normOrigType);
+      if (normOrigType != result->GetTypeName()) {
+         result->fTypeAlias = normOrigType;
+      }
       return result;
    }
    return R__FORWARD_RESULT(fnFail("unknown type: " + resolvedType, RInvalidField::RCategory::kUnknownType));
