@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_geom
+/// \ingroup tutorial_g3d_legacy
 /// This macro generates
 /// with 2 views of the NA49 detector using the old obsolete geometry package.
 ///

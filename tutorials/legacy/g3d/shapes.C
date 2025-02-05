@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_geom
+/// \ingroup tutorial_g3d_legacy
 /// The old geometry shapes (see script geodemo.C)
 ///
 /// \macro_image

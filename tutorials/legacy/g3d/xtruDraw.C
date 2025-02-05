@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_geom
+/// \ingroup tutorial_g3d_legacy
 /// Draw a "representative" TXTRU shape
 ///
 /// \macro_image

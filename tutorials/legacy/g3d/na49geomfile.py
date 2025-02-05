@@ -1,6 +1,6 @@
 ## \file
-## \ingroup tutorial_geom
-## Before executing this macro, the file makegeometry.C must have been executed
+## \ingroup tutorial_g3d_legacy
+## Before executing this macro, the file namakegeometry.C must have been executed
 ##
 ## \macro_code
 ##

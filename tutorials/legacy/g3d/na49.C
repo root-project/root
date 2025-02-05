@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_geom
+/// \ingroup tutorial_g3d_legacy
 /// This file has been generated automatically via the root
 /// utility toroot from an interactive version of GEANT
 /// (see ROOT class TGeometry header for an example of use)

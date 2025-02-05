@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_geom
+/// \ingroup tutorial_g3d_legacy
 ///  Before executing this macro, the file makegeometry.C must have been executed
 ///
 /// \macro_code

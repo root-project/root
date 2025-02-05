@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_geom
+/// \ingroup tutorial_g3d_legacy
 /// Draw a sample of TXTRU shapes some convex, concave (and possibly malformed)
 ///
 /// Change Bool_t's to test alternative specifications
