@@ -50,7 +50,6 @@ implemented using the container denoted by RooAbsCollection::Storage_t.
 #include <fstream>
 #include <memory>
 
-ClassImp(RooAbsCollection);
 
 namespace RooFit {
 namespace Detail {

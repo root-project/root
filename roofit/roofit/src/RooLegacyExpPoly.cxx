@@ -41,7 +41,6 @@ RooLegacyExpPoly::RooLegacyExpPoly(const char*, const char*, RooAbsReal&, const 
 #include <complex>
 #include <sstream>
 
-ClassImp(RooLegacyExpPoly);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a polynomial in the variable `x`.

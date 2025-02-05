@@ -34,7 +34,6 @@ objects.
 
 #include "TMath.h"
 
-ClassImp(RooStats::SamplingDistPlot);
 
 using namespace RooStats;
 using std::string;

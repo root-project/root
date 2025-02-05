@@ -62,7 +62,6 @@ RooAbsData::convertToVectorStore().
 #include <iomanip>
 using std::endl, std::list, std::string;
 
-ClassImp(RooTreeDataStore);
 
 
 Int_t RooTreeDataStore::_defTreeBufSize = 10*1024*1024;

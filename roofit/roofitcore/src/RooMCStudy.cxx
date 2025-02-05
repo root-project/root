@@ -75,7 +75,6 @@ for usage examples.
 #include <snprintf.h>
 #include <iostream>
 
-ClassImp(RooMCStudy);
 
 /**
 Construct Monte Carlo Study Manager. This class automates generating data from a given PDF,

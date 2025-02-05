@@ -27,7 +27,6 @@
 #include <RooRealVar.h>
 #include <RooFitImplHelpers.h>
 
-ClassImp(RooParamHistFunc);
 
 RooParamHistFunc::RooParamHistFunc(const char *name, const char *title, RooDataHist &dh, const RooAbsArg &x,
                                    const RooParamHistFunc *paramSource, bool paramRelative)

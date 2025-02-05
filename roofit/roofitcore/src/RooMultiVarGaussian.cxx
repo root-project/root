@@ -37,7 +37,6 @@ Multivariate Gaussian p.d.f. with correlations
 
 using std::string, std::list, std::map, std::vector;
 
-ClassImp(RooMultiVarGaussian);
 
 ////////////////////////////////////////////////////////////////////////////////
 

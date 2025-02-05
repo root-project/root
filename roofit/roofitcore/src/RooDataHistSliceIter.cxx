@@ -28,7 +28,6 @@ bin coordinates of the input sliceSet.
 #include "RooAbsLValue.h"
 #include "RooDataHistSliceIter.h"
 
-ClassImp(RooDataHistSliceIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct an iterator over all bins of RooDataHist 'hist' in the slice defined

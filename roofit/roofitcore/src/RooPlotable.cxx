@@ -30,7 +30,6 @@ most useful implementation of RooPlotable are RooHist and RooCurve.
 
 using std::endl, std::ostream;
 
-ClassImp(RooPlotable);
 
 
 ////////////////////////////////////////////////////////////////////////////////

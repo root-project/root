@@ -35,7 +35,6 @@ and it has a protected version of getVal()
 
 using std::ostream, std::istream, std::endl;
 
-ClassImp(RooAbsHiddenReal);
 
 RooCategory* RooAbsHiddenReal::_dummyBlindState = nullptr;
 

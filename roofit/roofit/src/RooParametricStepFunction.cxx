@@ -83,7 +83,6 @@ xframe->Draw();
 #include <RooCurve.h>
 #include <RooRealVar.h>
 
-ClassImp(RooParametricStepFunction);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

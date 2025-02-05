@@ -31,7 +31,6 @@ range cannot include zero.
 #include "Riostream.h"
 #include <cmath>
 
-ClassImp(RooInvTransform);
 ;
 
 

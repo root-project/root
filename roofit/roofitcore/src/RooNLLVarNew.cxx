@@ -46,7 +46,6 @@ computation times.
 #include <stdexcept>
 #include <vector>
 
-ClassImp(RooFit::Detail::RooNLLVarNew);
 
 namespace RooFit {
 namespace Detail {

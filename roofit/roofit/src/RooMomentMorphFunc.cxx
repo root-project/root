@@ -32,7 +32,6 @@
 
 using std::string, std::vector;
 
-ClassImp(RooMomentMorphFunc)
 
 //_____________________________________________________________________________
 RooMomentMorphFunc::RooMomentMorphFunc()

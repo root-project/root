@@ -32,7 +32,6 @@ of the unblind parameter
 #include "RooArgSet.h"
 #include "RooUnblindCPAsymVar.h"
 
-ClassImp(RooUnblindCPAsymVar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

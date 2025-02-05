@@ -41,7 +41,6 @@ When iterated from start to finish, datasets will be traversed in the order of t
 
 using std::map, std::list, std::string;
 
-ClassImp(RooCompositeDataStore);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -38,7 +38,6 @@ store the interval.
 #include "RooDataHist.h"
 
 
-ClassImp(RooStats::PointSetInterval);
 
 using namespace RooStats;
 

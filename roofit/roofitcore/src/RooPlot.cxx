@@ -69,7 +69,6 @@ object onto a one-dimensional plot.
 #include <cstring>
 #include <iostream>
 
-ClassImp(RooPlot);
 
 
 bool RooPlot::_addDirStatus = true ;

@@ -81,7 +81,6 @@ enum BasisSign { Both = 0, Plus = +1, Minus = -1 };
 
 } // namespace
 
-ClassImp(RooTruthModel);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of a truth resolution model, i.e. a delta function in observable 'xIn'

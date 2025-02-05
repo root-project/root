@@ -51,7 +51,6 @@ the nominal integration range \f$ \mathrm{normRegion}[x] \f$.
 
 using std::endl;
 
-ClassImp(RooExtendPdf);
 
 RooExtendPdf::RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
                     RooAbsReal& norm, const char* rangeName)

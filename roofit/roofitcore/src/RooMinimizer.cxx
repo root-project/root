@@ -68,7 +68,6 @@ automatic PDF optimization.
 #include <iostream>
 #include <stdexcept> // logic_error
 
-ClassImp(RooMinimizer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct MINUIT interface to given function. Function can be anything,

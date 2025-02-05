@@ -54,7 +54,6 @@ RooPoison(N,mu) and treating the function as a PDF in mu.
 
 #include <cmath>
 
-ClassImp(RooGamma);
 
 ////////////////////////////////////////////////////////////////////////////////
 

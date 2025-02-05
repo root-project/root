@@ -15,7 +15,6 @@
 #include "RooAbsPdf.h"
 #include "RooAbsCategory.h"
 
-ClassImp(RooExtendedBinding);
 
  RooExtendedBinding::RooExtendedBinding(const char *name, const char *title, RooAbsPdf& _pdf) :
    RooAbsReal(name,title),

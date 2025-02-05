@@ -50,7 +50,6 @@ where Q denotes the charge of the \f$\rho\f$ meson.
 #include "TMath.h"
 #include "RooRealIntegral.h"
 
-ClassImp(RooNonCPEigenDecay);
 
 #define Debug_RooNonCPEigenDecay 1
 

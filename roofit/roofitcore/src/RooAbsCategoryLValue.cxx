@@ -34,7 +34,6 @@ to other RooAbsArgs must be invertible.
 #include <RooMsgService.h>
 
 
-ClassImp(RooAbsCategoryLValue);
 
 
 

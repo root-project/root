@@ -35,7 +35,6 @@ error, such as calculating the pull value.
 
 using std::endl, std::istream, std::ostream;
 
-ClassImp(RooErrorVar);
 
 
 ////////////////////////////////////////////////////////////////////////////////

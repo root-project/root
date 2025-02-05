@@ -35,7 +35,6 @@ e.g. the binning of class RooBinning.
 
 using std::endl;
 
-ClassImp(RooUniformBinning);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct range [xlo,xhi] with 'nBins' bins

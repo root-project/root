@@ -56,7 +56,6 @@
 
 using std::ostream, std::string, std::pair, std::vector, std::setw;
 
-ClassImp(RooFitResult);
 
 
 

@@ -97,7 +97,6 @@ using std::string, std::vector, std::make_unique, std::pair, std::unique_ptr, st
 using namespace RooStats::HistFactory::Detail;
 using namespace RooStats::HistFactory::Detail::MagicConstants;
 
-ClassImp(RooStats::HistFactory::HistoToWorkspaceFactoryFast);
 
 namespace RooStats{
 namespace HistFactory{

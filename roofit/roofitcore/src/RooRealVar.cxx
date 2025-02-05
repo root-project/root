@@ -48,7 +48,6 @@ or integrals to sub ranges. The range without any name is used as default range.
 
 using std::endl, std::ostream, std::istream;
 
-ClassImp(RooRealVar);
 
 
 bool RooRealVar::_printScientific(false) ;

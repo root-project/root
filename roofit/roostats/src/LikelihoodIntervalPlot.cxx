@@ -47,7 +47,6 @@
 #include "TF1.h"
 
 /// ClassImp for building the THtml documentation of the class
-ClassImp(RooStats::LikelihoodIntervalPlot);
 
 using namespace RooStats;
 

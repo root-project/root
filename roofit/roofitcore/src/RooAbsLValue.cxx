@@ -28,4 +28,3 @@
 
 #include <RooAbsLValue.h>
 
-ClassImp(RooAbsLValue);

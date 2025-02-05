@@ -43,7 +43,6 @@ repeated applications of generate-and-fit operations on a workspace
 
 using std::string, std::endl, std::ios, std::list, std::ofstream;
 
-ClassImp(RooStudyManager);
 
 
 ////////////////////////////////////////////////////////////////////////////////

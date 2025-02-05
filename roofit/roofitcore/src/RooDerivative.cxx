@@ -39,7 +39,6 @@ derivator class.
 #include "Math/WrappedFunction.h"
 #include "Math/RichardsonDerivator.h"
 
-ClassImp(RooDerivative);
 
 
 
