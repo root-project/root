@@ -48,6 +48,11 @@ public:
       // parse teh equations to find labels
       if (!ParseEquation(equation))
          throw std::runtime_error("TMVA SOFIE Einsum Op: Error parsing the equation " + equation);
+
+      fInputTensorNames.resize(fNInputs.size());
+      std::transform(fNInputs.begin(), fNInputs.end(), fInputTensorNames.begin(),
+                  [](const std::string& s) -> std::string_view { return s; });
+      fOutputTensorNames = { fNY };
    }
 
    bool ParseEquation(const std::string & input_equation) {
