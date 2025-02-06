@@ -1316,11 +1316,11 @@ void TMultiGraph::Paint(Option_t *choptin)
          if (!timeformat.empty()) fHistogram->GetXaxis()->SetTimeFormat(timeformat.c_str());
       }
       TString chopth("0");
-      if (strstr(chopt.Data(),"X+"))
+      if (chopt.Contains("X+"))
          chopth.Append("X+");
-      if (strstr(chopt.Data(),"Y+"))
+      if (chopt.Contains("Y+"))
          chopth.Append("Y+");
-      if (strstr(chopt.Data(),"I"))
+      if (chopt.Contains("I"))
          chopth.Append("A");
       fHistogram->Paint(chopth.Data());
    }
