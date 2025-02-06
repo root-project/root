@@ -173,7 +173,7 @@ ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(const RNTuple
    }
 }
 
-ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::LoadEntry(NTupleSize_t entryNumber)
+ROOT::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::LoadEntry(ROOT::NTupleSize_t entryNumber)
 {
    Connect();
 
@@ -243,9 +243,9 @@ ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(
    }
 }
 
-ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::GetNEntries()
+ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::GetNEntries()
 {
-   NTupleSize_t nEntries = 0;
+   ROOT::NTupleSize_t nEntries = 0;
 
    for (unsigned i = 0; i < fInnerProcessors.size(); ++i) {
       if (fInnerNEntries[i] == kInvalidNTupleIndex) {
@@ -272,9 +272,9 @@ void ROOT::Experimental::RNTupleChainProcessor::SetEntryPointers(const REntry &e
    }
 }
 
-ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(NTupleSize_t entryNumber)
+ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NTupleSize_t entryNumber)
 {
-   NTupleSize_t localEntryNumber = entryNumber;
+   ROOT::NTupleSize_t localEntryNumber = entryNumber;
    size_t currProcessor = 0;
 
    assert(fInnerNEntries[0] != kInvalidNTupleIndex);
@@ -455,10 +455,10 @@ void ROOT::Experimental::RNTupleJoinProcessor::SetEntryPointers(const REntry &en
    }
 }
 
-ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(NTupleSize_t entryNumber)
+ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTupleSize_t entryNumber)
 {
    if (entryNumber >= fPageSource->GetNEntries())
-      return kInvalidNTupleIndex;
+      return ROOT::kInvalidNTupleIndex;
 
    // Read the values of the primary ntuple. If no index is used (i.e., the join is aligned), also read the values of
    // auxiliary ntuples.
@@ -485,7 +485,7 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadE
    }
 
    // Find the index entry number corresponding to the join field values for each auxiliary ntuple.
-   std::vector<NTupleSize_t> indexEntryNumbers;
+   std::vector<ROOT::NTupleSize_t> indexEntryNumbers;
    indexEntryNumbers.reserve(fJoinIndices.size());
    for (unsigned i = 0; i < fJoinIndices.size(); ++i) {
       auto &joinIndex = fJoinIndices[i];
@@ -501,7 +501,7 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadE
          continue;
 
       auto &value = fEntry->GetValue(fieldContext.fToken);
-      if (indexEntryNumbers[fieldContext.fNTupleIdx - 1] == kInvalidNTupleIndex) {
+      if (indexEntryNumbers[fieldContext.fNTupleIdx - 1] == ROOT::kInvalidNTupleIndex) {
          // No matching entry exists, so we reset the field's value to a default value.
          // TODO(fdegeus): further consolidate how non-existing join matches should be handled. N.B.: in case
          // ConstructValue is not used anymore in the future, remove friend in RFieldBase.

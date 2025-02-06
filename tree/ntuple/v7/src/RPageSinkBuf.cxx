@@ -62,7 +62,7 @@ ROOT::Experimental::Internal::RPageSinkBuf::AddColumn(DescriptorId_t /*fieldId*/
 }
 
 void ROOT::Experimental::Internal::RPageSinkBuf::ConnectFields(const std::vector<RFieldBase *> &fields,
-                                                               NTupleSize_t firstEntry)
+                                                               ROOT::NTupleSize_t firstEntry)
 {
    auto connectField = [&](RFieldBase &f) {
       // Field Zero would have id 0.
@@ -93,7 +93,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::InitImpl(RNTupleModel &model)
 }
 
 void ROOT::Experimental::Internal::RPageSinkBuf::UpdateSchema(const RNTupleModelChangeset &changeset,
-                                                              NTupleSize_t firstEntry)
+                                                              ROOT::NTupleSize_t firstEntry)
 {
    ConnectFields(changeset.fAddedFields, firstEntry);
 
@@ -258,7 +258,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::FlushClusterImpl(std::function<
       bufColumn.DropBufferedPages();
 }
 
-std::uint64_t ROOT::Experimental::Internal::RPageSinkBuf::CommitCluster(ROOT::Experimental::NTupleSize_t nNewEntries)
+std::uint64_t ROOT::Experimental::Internal::RPageSinkBuf::CommitCluster(ROOT::NTupleSize_t nNewEntries)
 {
    std::uint64_t nbytes;
    FlushClusterImpl([&] { nbytes = fInnerSink->CommitCluster(nNewEntries); });
@@ -266,7 +266,7 @@ std::uint64_t ROOT::Experimental::Internal::RPageSinkBuf::CommitCluster(ROOT::Ex
 }
 
 ROOT::Experimental::Internal::RPageSink::RStagedCluster
-ROOT::Experimental::Internal::RPageSinkBuf::StageCluster(ROOT::Experimental::NTupleSize_t nNewEntries)
+ROOT::Experimental::Internal::RPageSinkBuf::StageCluster(ROOT::NTupleSize_t nNewEntries)
 {
    ROOT::Experimental::Internal::RPageSink::RStagedCluster stagedCluster;
    FlushClusterImpl([&] { stagedCluster = fInnerSink->StageCluster(nNewEntries); });

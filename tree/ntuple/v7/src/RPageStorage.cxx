@@ -128,7 +128,7 @@ ROOT::Experimental::Internal::RPageSource::RActivePhysicalColumns::ToColumnSet()
 
 bool ROOT::Experimental::Internal::RPageSource::REntryRange::IntersectsWith(const RClusterDescriptor &clusterDesc) const
 {
-   if (fFirstEntry == kInvalidNTupleIndex) {
+   if (fFirstEntry == ROOT::kInvalidNTupleIndex) {
       /// Entry range unset, we assume that the entry range covers the complete source
       return true;
    }
@@ -219,12 +219,12 @@ std::unique_ptr<ROOT::Experimental::Internal::RPageSource> ROOT::Experimental::I
    return clone;
 }
 
-ROOT::Experimental::NTupleSize_t ROOT::Experimental::Internal::RPageSource::GetNEntries()
+ROOT::NTupleSize_t ROOT::Experimental::Internal::RPageSource::GetNEntries()
 {
    return GetSharedDescriptorGuard()->GetNEntries();
 }
 
-ROOT::Experimental::NTupleSize_t ROOT::Experimental::Internal::RPageSource::GetNElements(ColumnHandle_t columnHandle)
+ROOT::NTupleSize_t ROOT::Experimental::Internal::RPageSource::GetNElements(ColumnHandle_t columnHandle)
 {
    return GetSharedDescriptorGuard()->GetNElements(columnHandle.fPhysicalId);
 }
@@ -308,7 +308,8 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
 
 void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
    const RCluster::RKey &clusterKey, ROnDiskPageMap &pageZeroMap,
-   std::function<void(DescriptorId_t, NTupleSize_t, const RClusterDescriptor::RPageRange::RPageInfo &)> perPageFunc)
+   std::function<void(DescriptorId_t, ROOT::NTupleSize_t, const RClusterDescriptor::RPageRange::RPageInfo &)>
+      perPageFunc)
 {
    auto descriptorGuard = GetSharedDescriptorGuard();
    const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterKey.fClusterId);
@@ -318,7 +319,7 @@ void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
          continue;
 
       const auto &pageRange = clusterDesc.GetPageRange(physicalColumnId);
-      NTupleSize_t pageNo = 0;
+      ROOT::NTupleSize_t pageNo = 0;
       for (const auto &pageInfo : pageRange.fPageInfos) {
          if (pageInfo.fLocator.GetType() == RNTupleLocator::kTypePageZero) {
             pageZeroMap.Register(
@@ -337,7 +338,8 @@ void ROOT::Experimental::Internal::RPageSource::UpdateLastUsedCluster(Descriptor
    if (fLastUsedCluster == clusterId)
       return;
 
-   NTupleSize_t firstEntryIndex = GetSharedDescriptorGuard()->GetClusterDescriptor(clusterId).GetFirstEntryIndex();
+   ROOT::NTupleSize_t firstEntryIndex =
+      GetSharedDescriptorGuard()->GetClusterDescriptor(clusterId).GetFirstEntryIndex();
    auto itr = fPreloadedClusters.begin();
    while ((itr != fPreloadedClusters.end()) && (itr->first < firstEntryIndex)) {
       fPagePool.Evict(itr->second);
@@ -358,7 +360,7 @@ void ROOT::Experimental::Internal::RPageSource::UpdateLastUsedCluster(Descriptor
 }
 
 ROOT::Experimental::Internal::RPageRef
-ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
+ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleSize_t globalIndex)
 {
    const auto columnId = columnHandle.fPhysicalId;
    const auto columnElementId = columnHandle.fColumn->GetElement()->GetIdentifier();
@@ -794,7 +796,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::AddColumn(DescriptorId_t fiel
 }
 
 void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTupleModelChangeset &changeset,
-                                                                     NTupleSize_t firstEntry)
+                                                                     ROOT::NTupleSize_t firstEntry)
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
@@ -1099,7 +1101,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageV(
 }
 
 ROOT::Experimental::Internal::RPageSink::RStagedCluster
-ROOT::Experimental::Internal::RPagePersistentSink::StageCluster(ROOT::Experimental::NTupleSize_t nNewEntries)
+ROOT::Experimental::Internal::RPagePersistentSink::StageCluster(ROOT::NTupleSize_t nNewEntries)
 {
    RStagedCluster stagedCluster;
    stagedCluster.fNBytesWritten = StageClusterImpl();

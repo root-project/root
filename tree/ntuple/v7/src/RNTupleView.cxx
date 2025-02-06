@@ -39,7 +39,7 @@ ROOT::Experimental::Internal::GetFieldRange(const RFieldBase &field, const RPage
    }
 
    if (columnId == kInvalidDescriptorId) {
-      return RNTupleGlobalRange(kInvalidNTupleIndex, kInvalidNTupleIndex);
+      return RNTupleGlobalRange(ROOT::kInvalidNTupleIndex, ROOT::kInvalidNTupleIndex);
    }
 
    auto arraySize = std::max(std::uint64_t(1), desc.GetFieldDescriptor(field.GetOnDiskId()).GetNRepetitions());

@@ -262,11 +262,11 @@ public:
    /// Cluster that was staged, but not yet logically appended to the RNTuple
    struct RStagedCluster {
       std::uint64_t fNBytesWritten = 0;
-      NTupleSize_t fNEntries = 0;
+      ROOT::NTupleSize_t fNEntries = 0;
 
       struct RColumnInfo {
          RClusterDescriptor::RPageRange fPageRange;
-         NTupleSize_t fNElements = kInvalidNTupleIndex;
+         ROOT::NTupleSize_t fNElements = ROOT::kInvalidNTupleIndex;
          bool fIsSuppressed = false;
       };
 
@@ -318,7 +318,7 @@ public:
    /// Return the RNTupleDescriptor being constructed.
    virtual const RNTupleDescriptor &GetDescriptor() const = 0;
 
-   virtual NTupleSize_t GetNEntries() const = 0;
+   virtual ROOT::NTupleSize_t GetNEntries() const = 0;
 
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
    /// Init() associates column handles to the columns referenced by the model
@@ -357,7 +357,7 @@ public:
    /// Incorporate incremental changes to the model into the ntuple descriptor. This happens, e.g. if new fields were
    /// added after the initial call to `RPageSink::Init(RNTupleModel &)`.
    /// `firstEntry` specifies the global index for the first stored element in the added columns.
-   virtual void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) = 0;
+   virtual void UpdateSchema(const RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) = 0;
    /// Adds an extra type information record to schema. The extra type information will be written to the
    /// extension header. The information in the record will be merged with the existing information, e.g.
    /// duplicate streamer info records will be removed. This method is called by the "on commit dataset" callback
@@ -376,12 +376,12 @@ public:
    /// Stage the current cluster and create a new one for the following data.
    /// Returns the object that must be passed to CommitStagedClusters to logically append the staged cluster to the
    /// ntuple descriptor.
-   virtual RStagedCluster StageCluster(NTupleSize_t nNewEntries) = 0;
+   virtual RStagedCluster StageCluster(ROOT::NTupleSize_t nNewEntries) = 0;
    /// Commit staged clusters, logically appending them to the ntuple descriptor.
    virtual void CommitStagedClusters(std::span<RStagedCluster> clusters) = 0;
    /// Finalize the current cluster and create a new one for the following data.
    /// Returns the number of bytes written to storage (excluding meta-data).
-   virtual std::uint64_t CommitCluster(NTupleSize_t nNewEntries)
+   virtual std::uint64_t CommitCluster(ROOT::NTupleSize_t nNewEntries)
    {
       RStagedCluster stagedClusters[] = {StageCluster(nNewEntries)};
       CommitStagedClusters(stagedClusters);
@@ -445,7 +445,7 @@ private:
    /// Remembers the starting cluster id for the next cluster group
    std::uint64_t fNextClusterInGroup = 0;
    /// Used to calculate the number of entries in the current cluster
-   NTupleSize_t fPrevClusterNEntries = 0;
+   ROOT::NTupleSize_t fPrevClusterNEntries = 0;
    /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
    std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
    /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
@@ -522,11 +522,11 @@ public:
 
    const RNTupleDescriptor &GetDescriptor() const final { return fDescriptorBuilder.GetDescriptor(); }
 
-   NTupleSize_t GetNEntries() const final { return fPrevClusterNEntries; }
+   ROOT::NTupleSize_t GetNEntries() const final { return fPrevClusterNEntries; }
 
    /// Updates the descriptor and calls InitImpl() that handles the backend-specific details (file, DAOS, etc.)
    void InitImpl(RNTupleModel &model) final;
-   void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
+   void UpdateSchema(const RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
    void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
    /// Initialize sink based on an existing descriptor and fill into the descriptor builder.
@@ -538,7 +538,7 @@ public:
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
    void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
-   RStagedCluster StageCluster(NTupleSize_t nNewEntries) final;
+   RStagedCluster StageCluster(ROOT::NTupleSize_t nNewEntries) final;
    void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
    void CommitClusterGroup() final;
    void CommitDatasetImpl() final;
@@ -559,8 +559,8 @@ class RPageSource : public RPageStorage {
 public:
    /// Used in SetEntryRange / GetEntryRange
    struct REntryRange {
-      NTupleSize_t fFirstEntry = kInvalidNTupleIndex;
-      NTupleSize_t fNEntries = 0;
+      ROOT::NTupleSize_t fFirstEntry = ROOT::kInvalidNTupleIndex;
+      ROOT::NTupleSize_t fNEntries = 0;
 
       /// Returns true if the given cluster has entries within the entry range
       bool IntersectsWith(const RClusterDescriptor &clusterDesc) const;
@@ -620,7 +620,7 @@ private:
    /// Clusters from where pages got preloaded in UnzipClusterImpl(), ordered by first entry number
    /// of the clusters. If the last used cluster changes in LoadPage(), all unused pages from
    /// previous clusters are evicted from the page pool.
-   std::map<NTupleSize_t, DescriptorId_t> fPreloadedClusters;
+   std::map<ROOT::NTupleSize_t, DescriptorId_t> fPreloadedClusters;
 
    /// Does nothing if fLastUsedCluster == clusterId. Otherwise, updated fLastUsedCluster
    /// and evict unused paged from the page pool of all previous clusters.
@@ -705,14 +705,15 @@ protected:
    virtual void UnzipClusterImpl(RCluster *cluster);
    // Returns a page from storage if not found in the page pool. Should be able to handle zero page locators.
    virtual RPageRef
-   LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, NTupleSize_t idxInCluster) = 0;
+   LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, ROOT::NTupleSize_t idxInCluster) = 0;
 
    /// Prepare a page range read for the column set in `clusterKey`.  Specifically, pages referencing the
    /// `kTypePageZero` locator are filled in `pageZeroMap`; otherwise, `perPageFunc` is called for each page. This is
    /// commonly used as part of `LoadClusters()` in derived classes.
    void PrepareLoadCluster(
       const RCluster::RKey &clusterKey, ROnDiskPageMap &pageZeroMap,
-      std::function<void(DescriptorId_t, NTupleSize_t, const RClusterDescriptor::RPageRange::RPageInfo &)> perPageFunc);
+      std::function<void(DescriptorId_t, ROOT::NTupleSize_t, const RClusterDescriptor::RPageRange::RPageInfo &)>
+         perPageFunc);
 
    /// Enables the default set of metrics provided by RPageSource. `prefix` will be used as the prefix for
    /// the counters registered in the internal RNTupleMetrics object.
@@ -771,8 +772,8 @@ public:
    /// Open the physical storage container and deserialize header and footer
    void Attach(
       RNTupleSerializer::EDescriptorDeserializeMode mode = RNTupleSerializer::EDescriptorDeserializeMode::kForReading);
-   NTupleSize_t GetNEntries();
-   NTupleSize_t GetNElements(ColumnHandle_t columnHandle);
+   ROOT::NTupleSize_t GetNEntries();
+   ROOT::NTupleSize_t GetNElements(ColumnHandle_t columnHandle);
 
    /// Promise to only read from the given entry range. If set, prevents the cluster pool from reading-ahead beyond
    /// the given range. The range needs to be within `[0, GetNEntries())`.
@@ -781,7 +782,7 @@ public:
 
    /// Allocates and fills a page that contains the index-th element. The default implementation searches
    /// the page and calls LoadPageImpl(). Returns a default-constructed RPage for suppressed columns.
-   virtual RPageRef LoadPage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex);
+   virtual RPageRef LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleSize_t globalIndex);
    /// Another version of `LoadPage` that allows to specify cluster-relative indexes.
    /// Returns a default-constructed RPage for suppressed columns.
    virtual RPageRef LoadPage(ColumnHandle_t columnHandle, RNTupleLocalIndex localIndex);

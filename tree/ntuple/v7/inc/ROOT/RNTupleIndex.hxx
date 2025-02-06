@@ -68,7 +68,7 @@ private:
 
    /// The index itself. Maps field values (or combinations thereof in case the index is defined for multiple fields) to
    /// their respsective entry numbers.
-   std::unordered_map<RIndexValue, std::vector<NTupleSize_t>, RIndexValueHash> fIndex;
+   std::unordered_map<RIndexValue, std::vector<ROOT::NTupleSize_t>, RIndexValueHash> fIndex;
 
    /// The page source belonging to the RNTuple for which to build the index.
    std::unique_ptr<RPageSource> fPageSource;
@@ -150,14 +150,14 @@ public:
    ///
    /// Note that in case multiple entries corresponding to the provided index value exist, the first occurrence is
    /// returned. Use RNTupleIndex::GetAllEntryNumbers to get all entries.
-   NTupleSize_t GetFirstEntryNumber(const std::vector<void *> &valuePtrs) const;
+   ROOT::NTupleSize_t GetFirstEntryNumber(const std::vector<void *> &valuePtrs) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the entry number containing the given index value.
    ///
    /// \sa GetFirstEntryNumber(std::vector<void *> valuePtrs)
    template <typename... Ts>
-   NTupleSize_t GetFirstEntryNumber(Ts... values) const
+   ROOT::NTupleSize_t GetFirstEntryNumber(Ts... values) const
    {
       if (sizeof...(Ts) != fIndexFields.size())
          throw RException(R__FAIL("number of values must match number of indexed fields"));
@@ -176,14 +176,14 @@ public:
    ///
    /// \return The entry numbers that corresponds to `valuePtrs`. When no such entry exists, an empty vector is
    /// returned.
-   const std::vector<NTupleSize_t> *GetAllEntryNumbers(const std::vector<void *> &valuePtrs) const;
+   const std::vector<ROOT::NTupleSize_t> *GetAllEntryNumbers(const std::vector<void *> &valuePtrs) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get all entry numbers for the given index.
    ///
    /// \sa GetAllEntryNumbers(std::vector<void *> valuePtrs)
    template <typename... Ts>
-   const std::vector<NTupleSize_t> *GetAllEntryNumbers(Ts... values) const
+   const std::vector<ROOT::NTupleSize_t> *GetAllEntryNumbers(Ts... values) const
    {
       if (sizeof...(Ts) != fIndexFields.size())
          throw RException(R__FAIL("number of values must match number of indexed fields"));

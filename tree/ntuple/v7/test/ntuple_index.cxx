@@ -154,7 +154,7 @@ TEST(RNTupleIndex, SparseSecondary)
       auto event = fldEvent(i);
 
       if (i % 2 == 1) {
-         EXPECT_EQ(index->GetFirstEntryNumber<std::uint64_t>(event), ROOT::Experimental::kInvalidNTupleIndex)
+         EXPECT_EQ(index->GetFirstEntryNumber<std::uint64_t>(event), ROOT::kInvalidNTupleIndex)
             << "entry should not be present in the index";
       } else {
          auto idx = index->GetFirstEntryNumber<std::uint64_t>(event);

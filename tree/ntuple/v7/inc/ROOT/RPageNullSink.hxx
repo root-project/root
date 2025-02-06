@@ -48,9 +48,9 @@ public:
       return descriptor;
    }
 
-   NTupleSize_t GetNEntries() const final { return 0; }
+   ROOT::NTupleSize_t GetNEntries() const final { return 0; }
 
-   void ConnectFields(const std::vector<RFieldBase *> &fields, NTupleSize_t firstEntry)
+   void ConnectFields(const std::vector<RFieldBase *> &fields, ROOT::NTupleSize_t firstEntry)
    {
       auto connectField = [&](RFieldBase &f) { CallConnectPageSinkOnField(f, *this, firstEntry); };
       for (auto *f : fields) {
@@ -65,7 +65,7 @@ public:
       auto &fieldZero = GetFieldZeroOfModel(model);
       ConnectFields(fieldZero.GetSubFields(), 0);
    }
-   void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final
+   void UpdateSchema(const RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final
    {
       ConnectFields(changeset.fAddedFields, firstEntry);
    }
@@ -86,7 +86,7 @@ public:
       }
    }
 
-   RStagedCluster StageCluster(NTupleSize_t) final
+   RStagedCluster StageCluster(ROOT::NTupleSize_t) final
    {
       RStagedCluster stagedCluster;
       stagedCluster.fNBytesWritten = fNBytesCurrentCluster;

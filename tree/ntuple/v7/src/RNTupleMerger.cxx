@@ -318,7 +318,7 @@ struct RNTupleMergeData {
    std::vector<RColumnMergeInfo> fColumns;
    ColumnIdMap_t fColumnIdMap;
 
-   NTupleSize_t fNumDstEntries = 0;
+   ROOT::NTupleSize_t fNumDstEntries = 0;
 
    RNTupleMergeData(std::span<RPageSource *> sources, RPageSink &destination, const RNTupleMergeOptions &mergeOpts)
       : fSources{sources}, fDestination{destination}, fMergeOpts{mergeOpts}, fDstDescriptor{destination.GetDescriptor()}

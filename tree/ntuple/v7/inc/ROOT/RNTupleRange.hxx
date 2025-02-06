@@ -30,24 +30,24 @@ namespace Experimental {
 // clang-format on
 class RNTupleGlobalRange {
 private:
-   NTupleSize_t fStart;
-   NTupleSize_t fEnd;
+   ROOT::NTupleSize_t fStart;
+   ROOT::NTupleSize_t fEnd;
 
 public:
    class RIterator {
    private:
-      NTupleSize_t fIndex = kInvalidNTupleIndex;
+      ROOT::NTupleSize_t fIndex = ROOT::kInvalidNTupleIndex;
 
    public:
       using iterator = RIterator;
       using iterator_category = std::forward_iterator_tag;
-      using value_type = NTupleSize_t;
-      using difference_type = NTupleSize_t;
-      using pointer = NTupleSize_t *;
-      using reference = NTupleSize_t &;
+      using value_type = ROOT::NTupleSize_t;
+      using difference_type = ROOT::NTupleSize_t;
+      using pointer = ROOT::NTupleSize_t *;
+      using reference = ROOT::NTupleSize_t &;
 
       RIterator() = default;
-      explicit RIterator(NTupleSize_t index) : fIndex(index) {}
+      explicit RIterator(ROOT::NTupleSize_t index) : fIndex(index) {}
       ~RIterator() = default;
 
       iterator operator++(int) /* postfix */
@@ -67,11 +67,11 @@ public:
       bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
    };
 
-   RNTupleGlobalRange(NTupleSize_t start, NTupleSize_t end) : fStart(start), fEnd(end) {}
+   RNTupleGlobalRange(ROOT::NTupleSize_t start, ROOT::NTupleSize_t end) : fStart(start), fEnd(end) {}
    RIterator begin() const { return RIterator(fStart); }
    RIterator end() const { return RIterator(fEnd); }
-   NTupleSize_t size() const { return fEnd - fStart; }
-   bool IsValid() const { return (fStart != kInvalidNTupleIndex) && (fEnd != kInvalidNTupleIndex); }
+   ROOT::NTupleSize_t size() const { return fEnd - fStart; }
+   bool IsValid() const { return (fStart != ROOT::kInvalidNTupleIndex) && (fEnd != ROOT::kInvalidNTupleIndex); }
 };
 
 // clang-format off
@@ -84,8 +84,8 @@ public:
 class RNTupleClusterRange {
 private:
    const DescriptorId_t fClusterId;
-   const NTupleSize_t fStart;
-   const NTupleSize_t fEnd;
+   const ROOT::NTupleSize_t fStart;
+   const ROOT::NTupleSize_t fEnd;
 
 public:
    class RIterator {
@@ -121,13 +121,13 @@ public:
       bool operator!=(const iterator &rh) const { return fLocalIndex != rh.fLocalIndex; }
    };
 
-   RNTupleClusterRange(DescriptorId_t clusterId, NTupleSize_t start, NTupleSize_t end)
+   RNTupleClusterRange(DescriptorId_t clusterId, ROOT::NTupleSize_t start, ROOT::NTupleSize_t end)
       : fClusterId(clusterId), fStart(start), fEnd(end)
    {
    }
    RIterator begin() const { return RIterator(RNTupleLocalIndex(fClusterId, fStart)); }
    RIterator end() const { return RIterator(RNTupleLocalIndex(fClusterId, fEnd)); }
-   NTupleSize_t size() const { return fEnd - fStart; }
+   ROOT::NTupleSize_t size() const { return fEnd - fStart; }
 };
 
 } // namespace Experimental
