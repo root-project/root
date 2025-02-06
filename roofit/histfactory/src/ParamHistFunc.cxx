@@ -317,10 +317,8 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
       gamma.setConstant( false );
 
       w.import( gamma, RooFit::RecycleConflictNodes() );
-      RooRealVar* gamma_wspace = (RooRealVar*) w.var( VarName );
 
-      paramSet.add( *gamma_wspace );
-
+      paramSet.add(*w.arg(VarName));
     }
   }
 
@@ -351,10 +349,8 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
         gamma.setConstant( false );
 
         w.import( gamma, RooFit::RecycleConflictNodes() );
-        RooRealVar* gamma_wspace = (RooRealVar*) w.var( VarName );
 
-        paramSet.add( *gamma_wspace );
-
+        paramSet.add(*w.arg(VarName));
       }
     }
   }
@@ -388,10 +384,8 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
           gamma.setConstant( false );
 
           w.import( gamma, RooFit::RecycleConflictNodes() );
-          RooRealVar* gamma_wspace = (RooRealVar*) w.var( VarName );
 
-          paramSet.add( *gamma_wspace );
-
+          paramSet.add(*w.arg(VarName));
         }
       }
     }
@@ -431,10 +425,12 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
   RooArgList params = ParamHistFunc::createParamSet( w, Prefix, vars );
 
   for (auto comp : params) {
-    auto var = static_cast<RooRealVar*>(comp);
-
-    var->setMin( gamma_min );
-    var->setMax( gamma_max );
+    // If the gamma is subject to a preprocess function, it is a RooAbsReal and
+    // we don't need to set the range.
+    if(auto var = dynamic_cast<RooRealVar*>(comp)) {
+      var->setMin( gamma_min );
+      var->setMax( gamma_max );
+    }
   }
 
   return params;
