@@ -70,7 +70,7 @@ protected:
 public:
    static std::string TypeName() { return "std::size_t"; }
    RRDFCardinalityField()
-      : ROOT::Experimental::RFieldBase("", TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
+      : ROOT::Experimental::RFieldBase("", TypeName(), ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
    {
    }
    RRDFCardinalityField(RRDFCardinalityField &&other) = default;
@@ -136,7 +136,7 @@ private:
 
 public:
    RArraySizeField(std::size_t arrayLength)
-      : ROOT::Experimental::RFieldBase("", "std::size_t", ENTupleStructure::kLeaf, false /* isSimple */),
+      : ROOT::Experimental::RFieldBase("", "std::size_t", ROOT::ENTupleStructure::kLeaf, false /* isSimple */),
         fArrayLength(arrayLength)
    {
    }
@@ -262,14 +262,14 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
 
    const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
    const auto &nRepetitions = fieldDesc.GetNRepetitions();
-   if ((fieldDesc.GetStructure() == ENTupleStructure::kCollection) || (nRepetitions > 0)) {
+   if ((fieldDesc.GetStructure() == ROOT::ENTupleStructure::kCollection) || (nRepetitions > 0)) {
       // The field is a collection or a fixed-size array.
       // We open a new collection scope with fieldID being the inner most collection. E.g. for "event.tracks.hits",
       // fieldInfos would already contain the fieldID of "event.tracks"
       fieldInfos.emplace_back(fieldId, nRepetitions);
    }
 
-   if (fieldDesc.GetStructure() == ENTupleStructure::kCollection) {
+   if (fieldDesc.GetStructure() == ROOT::ENTupleStructure::kCollection) {
       // Inner fields of collections are provided as projected collections of only that inner field,
       // E.g. we provide a projected collection RVec<RVec<float>> for "event.tracks.hits.x" in the example
       // above.
@@ -299,7 +299,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
       const auto &f = *desc.GetFieldIterable(fieldDesc.GetId()).begin();
       AddField(desc, colName, f.GetId(), fieldInfos);
       return;
-   } else if (fieldDesc.GetStructure() == ENTupleStructure::kRecord) {
+   } else if (fieldDesc.GetStructure() == ROOT::ENTupleStructure::kRecord) {
       // Inner fields of records are provided as individual RDF columns, e.g. "event.id"
       for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
          auto innerName = colName.empty() ? f.GetFieldName() : (std::string(colName) + "." + f.GetFieldName());

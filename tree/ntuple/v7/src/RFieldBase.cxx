@@ -246,8 +246,8 @@ ROOT::Experimental::RFieldBase::CreateObject<void>() const
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RFieldBase::RFieldBase(std::string_view name, std::string_view type, ENTupleStructure structure,
-                                           bool isSimple, std::size_t nRepetitions)
+ROOT::Experimental::RFieldBase::RFieldBase(std::string_view name, std::string_view type,
+                                           ROOT::ENTupleStructure structure, bool isSimple, std::size_t nRepetitions)
    : fName(name),
      fType(type),
      fStructure(structure),
@@ -729,8 +729,10 @@ ROOT::Experimental::RFieldBase::EntryToColumnElementIndex(NTupleSize_t globalInd
    std::size_t result = globalIndex;
    for (auto f = this; f != nullptr; f = f->GetParent()) {
       auto parent = f->GetParent();
-      if (parent && (parent->GetStructure() == kCollection || parent->GetStructure() == kVariant))
+      if (parent && (parent->GetStructure() == ROOT::ENTupleStructure::kCollection ||
+                     parent->GetStructure() == ROOT::ENTupleStructure::kVariant)) {
          return 0U;
+      }
       result *= std::max(f->GetNRepetitions(), std::size_t{1U});
    }
    return result;

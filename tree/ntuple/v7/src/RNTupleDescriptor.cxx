@@ -69,7 +69,7 @@ std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc,
                                                   const RCreateFieldOptions &options) const
 {
-   if (GetStructure() == ENTupleStructure::kStreamer) {
+   if (GetStructure() == ROOT::ENTupleStructure::kStreamer) {
       auto streamerField = std::make_unique<RStreamerField>(GetFieldName(), GetTypeName());
       streamerField->SetOnDiskId(fFieldId);
       return streamerField;
@@ -77,7 +77,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
 
    // The structure may be unknown if the descriptor comes from a deserialized field with an unknown structural role.
    // For forward compatibility, we allow this case and return an InvalidField.
-   if (GetStructure() == ENTupleStructure::kUnknown) {
+   if (GetStructure() == ROOT::ENTupleStructure::kUnknown) {
       if (options.fReturnInvalidOnError) {
          auto invalidField = std::make_unique<RInvalidField>(GetFieldName(), GetTypeName(), "",
                                                              RInvalidField::RCategory::kUnknownStructure);
@@ -90,7 +90,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
 
    if (GetTypeName().empty()) {
       switch (GetStructure()) {
-      case ENTupleStructure::kRecord: {
+      case ROOT::ENTupleStructure::kRecord: {
          std::vector<std::unique_ptr<RFieldBase>> memberFields;
          memberFields.reserve(fLinkIds.size());
          for (auto id : fLinkIds) {
@@ -104,7 +104,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
          recordField->SetOnDiskId(fFieldId);
          return recordField;
       }
-      case ENTupleStructure::kCollection: {
+      case ROOT::ENTupleStructure::kCollection: {
          if (fLinkIds.size() != 1) {
             throw RException(R__FAIL("unsupported untyped collection for field \"" + GetFieldName() + "\""));
          }
@@ -150,14 +150,14 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
 
 bool ROOT::Experimental::RFieldDescriptor::IsCustomClass() const
 {
-   if (fStructure != ENTupleStructure::kRecord && fStructure != ENTupleStructure::kStreamer)
+   if (fStructure != ROOT::ENTupleStructure::kRecord && fStructure != ROOT::ENTupleStructure::kStreamer)
       return false;
 
    // Skip untyped structs
    if (fTypeName.empty())
       return false;
 
-   if (fStructure == ENTupleStructure::kRecord) {
+   if (fStructure == ROOT::ENTupleStructure::kRecord) {
       if (fTypeName.compare(0, 10, "std::pair<") == 0)
          return false;
       if (fTypeName.compare(0, 11, "std::tuple<") == 0)
@@ -1057,7 +1057,7 @@ ROOT::Experimental::Internal::RFieldDescriptorBuilder::MakeDescriptor() const
    if (fField.GetId() == kInvalidDescriptorId) {
       return R__FAIL("invalid field id");
    }
-   if (fField.GetStructure() == ENTupleStructure::kInvalid) {
+   if (fField.GetStructure() == ROOT::ENTupleStructure::kInvalid) {
       return R__FAIL("invalid field structure");
    }
    // FieldZero is usually named "" and would be a false positive here

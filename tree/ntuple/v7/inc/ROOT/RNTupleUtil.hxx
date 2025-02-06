@@ -105,12 +105,20 @@ enum class ENTupleColumnType {
    kMax,
 };
 
-namespace Experimental {
-
 /// The fields in the ntuple model tree can carry different structural information about the type system.
 /// Leaf fields contain just data, collection fields resolve to offset columns, record fields have no
 /// materialization on the primitive column layer.
-enum ENTupleStructure : std::uint16_t { kInvalid, kLeaf, kCollection, kRecord, kVariant, kStreamer, kUnknown };
+enum class ENTupleStructure : std::uint16_t {
+   kInvalid,
+   kLeaf,
+   kCollection,
+   kRecord,
+   kVariant,
+   kStreamer,
+   kUnknown
+};
+
+namespace Experimental {
 
 /// Integer type long enough to hold the maximum number of entries in a column
 using NTupleSize_t = std::uint64_t;
@@ -301,8 +309,8 @@ std::unique_ptr<T[]> MakeUninitArray(std::size_t size)
 inline constexpr ENTupleColumnType kTestFutureType =
    static_cast<ENTupleColumnType>(std::numeric_limits<std::underlying_type_t<ENTupleColumnType>>::max() - 1);
 
-inline constexpr ENTupleStructure kTestFutureFieldStructure =
-   static_cast<ENTupleStructure>(std::numeric_limits<std::underlying_type_t<ENTupleStructure>>::max() - 1);
+inline constexpr ROOT::ENTupleStructure kTestFutureFieldStructure =
+   static_cast<ROOT::ENTupleStructure>(std::numeric_limits<std::underlying_type_t<ROOT::ENTupleStructure>>::max() - 1);
 
 inline constexpr RNTupleLocator::ELocatorType kTestLocatorType = static_cast<RNTupleLocator::ELocatorType>(0x7e);
 static_assert(kTestLocatorType < RNTupleLocator::ELocatorType::kLastSerializableType);
@@ -315,6 +323,8 @@ RResult<void> EnsureValidNameForRNTuple(std::string_view name, std::string_view 
 // TODO(jblomer): remove before branching ROOT v6.36
 using EColumnType [[deprecated("ROOT::Experimental::EColumnType moved to ROOT::ENTupleColumnType")]] =
    ROOT::ENTupleColumnType;
+using ENTupleStructure [[deprecated("ROOT::Experimental::ENTupleStructure moved to ROOT::ENTupleStructure")]] =
+   ROOT::ENTupleStructure;
 
 } // namespace Experimental
 } // namespace ROOT

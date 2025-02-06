@@ -281,7 +281,7 @@ private:
       {
          const auto &desc = source->GetSharedDescriptorGuard().GetRef();
          const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
-         if (fieldDesc.GetStructure() != ENTupleStructure::kCollection) {
+         if (fieldDesc.GetStructure() != ROOT::ENTupleStructure::kCollection) {
             throw RException(
                R__FAIL("invalid attemt to create collection view on non-collection field " + fieldDesc.GetFieldName()));
          }

@@ -500,7 +500,7 @@ void ROOT::Experimental::RField<std::string>::AcceptVisitor(Detail::RFieldVisito
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RRecordField::RRecordField(std::string_view name, const RRecordField &source)
-   : ROOT::Experimental::RFieldBase(name, source.GetTypeName(), ENTupleStructure::kRecord, false /* isSimple */),
+   : ROOT::Experimental::RFieldBase(name, source.GetTypeName(), ROOT::ENTupleStructure::kRecord, false /* isSimple */),
      fMaxAlignment(source.fMaxAlignment),
      fSize(source.fSize),
      fOffsets(source.fOffsets)
@@ -511,7 +511,7 @@ ROOT::Experimental::RRecordField::RRecordField(std::string_view name, const RRec
 }
 
 ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName, std::string_view typeName)
-   : ROOT::Experimental::RFieldBase(fieldName, typeName, ENTupleStructure::kRecord, false /* isSimple */)
+   : ROOT::Experimental::RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kRecord, false /* isSimple */)
 {
 }
 
@@ -541,7 +541,7 @@ ROOT::Experimental::Internal::CreateEmulatedField(std::string_view fieldName,
 ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
                                                std::vector<std::unique_ptr<RFieldBase>> itemFields,
                                                std::string_view emulatedFromType)
-   : ROOT::Experimental::RFieldBase(fieldName, emulatedFromType, ENTupleStructure::kRecord, false /* isSimple */)
+   : ROOT::Experimental::RFieldBase(fieldName, emulatedFromType, ROOT::ENTupleStructure::kRecord, false /* isSimple */)
 {
    fTraits |= kTraitTrivialType;
    fOffsets.reserve(itemFields.size());
@@ -649,7 +649,7 @@ void ROOT::Experimental::RRecordField::AcceptVisitor(Detail::RFieldVisitor &visi
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RBitsetField::RBitsetField(std::string_view fieldName, std::size_t N)
-   : ROOT::Experimental::RFieldBase(fieldName, "std::bitset<" + std::to_string(N) + ">", ENTupleStructure::kLeaf,
+   : ROOT::Experimental::RFieldBase(fieldName, "std::bitset<" + std::to_string(N) + ">", ROOT::ENTupleStructure::kLeaf,
                                     false /* isSimple */, N),
      fN(N)
 {
@@ -721,7 +721,7 @@ void ROOT::Experimental::RBitsetField::AcceptVisitor(Detail::RFieldVisitor &visi
 
 ROOT::Experimental::RNullableField::RNullableField(std::string_view fieldName, std::string_view typeName,
                                                    std::unique_ptr<RFieldBase> itemField)
-   : ROOT::Experimental::RFieldBase(fieldName, typeName, ENTupleStructure::kCollection, false /* isSimple */)
+   : ROOT::Experimental::RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kCollection, false /* isSimple */)
 {
    Attach(std::move(itemField));
 }
@@ -962,7 +962,7 @@ size_t ROOT::Experimental::ROptionalField::GetAlignment() const
 
 ROOT::Experimental::RAtomicField::RAtomicField(std::string_view fieldName, std::string_view typeName,
                                                std::unique_ptr<RFieldBase> itemField)
-   : RFieldBase(fieldName, typeName, ENTupleStructure::kLeaf, false /* isSimple */)
+   : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
 {
    if (itemField->GetTraits() & kTraitTriviallyConstructible)
       fTraits |= kTraitTriviallyConstructible;
