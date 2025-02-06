@@ -122,18 +122,18 @@ void table(Float_t x1, Float_t x2, Float_t yrange, TText &t, const char **symbol
    for (i = 0; i < n; i++) {
       if (octal) {
          unsigned char value = *symbol[i];
-         sprintf(text, "@\\ %3o", value);
+         snprintf(text, 12, "@\\ %3o", value);
       } else {
          strcpy(text, symbol[i]);
       }
       t.DrawText(xc0, y, text);
-      sprintf(text, "%s", symbol[i]);
+      snprintf(text, 12, "%s", symbol[i]);
       t.DrawText(xc1, y, text);
-      sprintf(text, "`%s", symbol[i]);
+      snprintf(text, 12, "`%s", symbol[i]);
       t.DrawText(xc2, y, text);
-      sprintf(text, "'%s", symbol[i]);
+      snprintf(text, 12, "'%s", symbol[i]);
       t.DrawText(xc3, y, text);
-      sprintf(text, "~%s", symbol[i]);
+      snprintf(text, 12, "~%s", symbol[i]);
       t.DrawText(xc4, y, text);
       y -= dy;
    }
