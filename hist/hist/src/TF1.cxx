@@ -3126,6 +3126,7 @@ TH1   *TF1::DoCreateHistogram(Double_t xmin, Double_t  xmax, Bool_t recreate)
 
    // Copy Function attributes to histogram attributes.
    histogram->SetBit(TH1::kNoStats);
+   histogram->Sumw2(kFALSE);
    histogram->SetLineColor(GetLineColor());
    histogram->SetLineStyle(GetLineStyle());
    histogram->SetLineWidth(GetLineWidth());

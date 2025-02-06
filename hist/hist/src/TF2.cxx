@@ -782,6 +782,7 @@ void TF2::Paint(Option_t *option)
    fHistogram->SetMarkerStyle(GetMarkerStyle());
    fHistogram->SetMarkerSize(GetMarkerSize());
    fHistogram->SetStats(false);
+   fHistogram->Sumw2(kFALSE);
 
 //-  Draw the histogram
    if (!gPad) return;
