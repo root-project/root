@@ -1174,7 +1174,7 @@ TEST(RNTupleMerger, DifferentCompatibleRepresentations)
 
    {
       auto &fieldFooDbl = clonedModel->GetMutableField("foo");
-      fieldFooDbl.SetColumnRepresentatives({{ENTupleColumnType::kReal32}});
+      fieldFooDbl.SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}});
       auto ntuple = RNTupleWriter::Recreate(std::move(clonedModel), "ntuple", fileGuard2.GetPath());
       auto e = ntuple->CreateEntry();
       auto pFoo2 = e->GetPtr<double>("foo");
@@ -1237,7 +1237,7 @@ TEST(RNTupleMerger, MultipleRepresentations)
    {
       auto model = RNTupleModel::Create();
       auto fldPx = RFieldBase::Create("px", "float").Unwrap();
-      fldPx->SetColumnRepresentatives({{ENTupleColumnType::kReal32}, {ENTupleColumnType::kReal16}});
+      fldPx->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}, {ROOT::ENTupleColumnType::kReal16}});
       model->AddField(std::move(fldPx));
       auto ptrPx = model->GetDefaultEntry().GetPtr<float>("px");
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());

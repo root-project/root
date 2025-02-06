@@ -145,7 +145,7 @@ public:
       kTraitTrivialType = kTraitTriviallyConstructible | kTraitTriviallyDestructible
    };
 
-   using ColumnRepresentation_t = std::vector<ENTupleColumnType>;
+   using ColumnRepresentation_t = std::vector<ROOT::ENTupleColumnType>;
 
    /// During its lifetime, a field undergoes the following possible state transitions:
    ///

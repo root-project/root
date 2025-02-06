@@ -39,6 +39,7 @@
 #include <unordered_map>
 #include <vector>
 
+using ROOT::ENTupleColumnType;
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Internal;
 

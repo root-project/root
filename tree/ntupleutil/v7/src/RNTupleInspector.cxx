@@ -188,7 +188,7 @@ ROOT::Experimental::RNTupleInspector::GetColumnInspector(DescriptorId_t physical
    return fColumnInfo.at(physicalColumnId);
 }
 
-size_t ROOT::Experimental::RNTupleInspector::GetColumnCountByType(ROOT::Experimental::ENTupleColumnType colType) const
+size_t ROOT::Experimental::RNTupleInspector::GetColumnCountByType(ROOT::ENTupleColumnType colType) const
 {
    size_t typeCount = 0;
 
@@ -202,7 +202,7 @@ size_t ROOT::Experimental::RNTupleInspector::GetColumnCountByType(ROOT::Experime
 }
 
 const std::vector<ROOT::Experimental::DescriptorId_t>
-ROOT::Experimental::RNTupleInspector::GetColumnsByType(ROOT::Experimental::ENTupleColumnType colType)
+ROOT::Experimental::RNTupleInspector::GetColumnsByType(ROOT::ENTupleColumnType colType)
 {
    std::vector<DescriptorId_t> colIds;
 
@@ -214,9 +214,9 @@ ROOT::Experimental::RNTupleInspector::GetColumnsByType(ROOT::Experimental::ENTup
    return colIds;
 }
 
-const std::vector<ROOT::Experimental::ENTupleColumnType> ROOT::Experimental::RNTupleInspector::GetColumnTypes()
+const std::vector<ROOT::ENTupleColumnType> ROOT::Experimental::RNTupleInspector::GetColumnTypes()
 {
-   std::set<ENTupleColumnType> colTypes;
+   std::set<ROOT::ENTupleColumnType> colTypes;
 
    for (const auto &[colId, colInfo] : fColumnInfo) {
       colTypes.emplace(colInfo.GetType());
@@ -240,7 +240,7 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
       }
    };
 
-   std::map<ENTupleColumnType, ColumnTypeInfo> colTypeInfo;
+   std::map<ROOT::ENTupleColumnType, ColumnTypeInfo> colTypeInfo;
 
    for (const auto &[colId, colInfo] : fColumnInfo) {
       colTypeInfo[colInfo.GetType()] += colInfo;
@@ -320,9 +320,9 @@ std::unique_ptr<TH1D> ROOT::Experimental::RNTupleInspector::GetPageSizeDistribut
    return GetPageSizeDistribution({physicalColumnId}, histName, histTitle, nBins);
 }
 
-std::unique_ptr<TH1D>
-ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(ROOT::Experimental::ENTupleColumnType colType,
-                                                              std::string histName, std::string histTitle, size_t nBins)
+std::unique_ptr<TH1D> ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(ROOT::ENTupleColumnType colType,
+                                                                                    std::string histName,
+                                                                                    std::string histTitle, size_t nBins)
 {
    if (histName.empty())
       histName = "pageSizeHistCol" + std::string{Internal::RColumnElementBase::GetColumnTypeName(colType)};
@@ -377,9 +377,9 @@ ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(std::initializer_l
    return hist;
 }
 
-std::unique_ptr<THStack> ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(
-   std::initializer_list<ROOT::Experimental::ENTupleColumnType> colTypes, std::string histName, std::string histTitle,
-   size_t nBins)
+std::unique_ptr<THStack>
+ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(std::initializer_list<ROOT::ENTupleColumnType> colTypes,
+                                                              std::string histName, std::string histTitle, size_t nBins)
 {
    if (histName.empty())
       histName = "pageSizeHist";
@@ -390,9 +390,9 @@ std::unique_ptr<THStack> ROOT::Experimental::RNTupleInspector::GetPageSizeDistri
 
    double histMin = std::numeric_limits<double>::max();
    double histMax = 0;
-   std::map<ENTupleColumnType, std::vector<std::uint64_t>> pageSizes;
+   std::map<ROOT::ENTupleColumnType, std::vector<std::uint64_t>> pageSizes;
 
-   std::vector<ENTupleColumnType> colTypeVec = colTypes;
+   std::vector<ROOT::ENTupleColumnType> colTypeVec = colTypes;
    if (std::empty(colTypes)) {
       colTypeVec = GetColumnTypes();
    }

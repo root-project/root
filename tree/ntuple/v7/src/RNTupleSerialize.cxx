@@ -276,7 +276,7 @@ std::uint32_t SerializeColumnsOfFields(const ROOT::Experimental::RNTupleDescript
 ROOT::RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSize,
                                                ROOT::Experimental::Internal::RColumnDescriptorBuilder &columnDesc)
 {
-   using ROOT::Experimental::ENTupleColumnType;
+   using ROOT::ENTupleColumnType;
 
    auto base = reinterpret_cast<const unsigned char *>(buffer);
    auto bytes = base;

@@ -164,7 +164,7 @@ TEST(RNTupleParallelWriter, StagedMultiColumn)
    {
       auto model = RNTupleModel::CreateBare();
       auto fldPx = RFieldBase::Create("px", "float").Unwrap();
-      fldPx->SetColumnRepresentatives({{ENTupleColumnType::kReal32}, {ENTupleColumnType::kReal16}});
+      fldPx->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}, {ROOT::ENTupleColumnType::kReal16}});
       model->AddField(std::move(fldPx));
 
       auto writer = RNTupleParallelWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
@@ -204,9 +204,9 @@ TEST(RNTupleParallelWriter, StagedMultiColumn)
    const auto &colDesc32 = desc.GetColumnDescriptor(fieldDesc.GetLogicalColumnIds()[0]);
    const auto &colDesc16 = desc.GetColumnDescriptor(fieldDesc.GetLogicalColumnIds()[1]);
 
-   EXPECT_EQ(ENTupleColumnType::kReal32, colDesc32.GetType());
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal32, colDesc32.GetType());
    EXPECT_EQ(0u, colDesc32.GetRepresentationIndex());
-   EXPECT_EQ(ENTupleColumnType::kReal16, colDesc16.GetType());
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal16, colDesc16.GetType());
    EXPECT_EQ(1u, colDesc16.GetRepresentationIndex());
 
    const auto &clusterDesc0 = desc.GetClusterDescriptor(0);

@@ -9,8 +9,8 @@
 #include "CustomStructUtil.hxx"
 #include "ntupleutil_test.hxx"
 
+using ROOT::ENTupleColumnType;
 using ROOT::RNTuple;
-using ROOT::Experimental::ENTupleColumnType;
 using ROOT::Experimental::RField;
 using ROOT::Experimental::RFieldBase;
 using ROOT::Experimental::RNTupleInspector;

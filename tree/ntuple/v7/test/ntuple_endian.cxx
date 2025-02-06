@@ -20,7 +20,7 @@
 #include <memory>
 #include <vector>
 
-using ROOT::Experimental::ENTupleColumnType;
+using ROOT::ENTupleColumnType;
 using ROOT::Experimental::NTupleSize_t;
 using ROOT::Experimental::RNTupleDescriptor;
 using ROOT::Experimental::RNTupleModel;

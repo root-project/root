@@ -196,7 +196,7 @@ TEST(RNTupleCompat, FutureColumnType)
    const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("futureColumn"));
    GTEST_ASSERT_EQ(fdesc.GetLogicalColumnIds().size(), 1);
    const auto &cdesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
-   EXPECT_EQ(cdesc.GetType(), ENTupleColumnType::kUnknown);
+   EXPECT_EQ(cdesc.GetType(), ROOT::ENTupleColumnType::kUnknown);
 
    {
       // Creating a model not in fwd-compatible mode should fail
@@ -248,7 +248,7 @@ TEST(RNTupleCompat, FutureColumnType_Nested)
    const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("vec._0", futureId));
    GTEST_ASSERT_EQ(fdesc.GetLogicalColumnIds().size(), 1);
    const auto &cdesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);
-   EXPECT_EQ(cdesc.GetType(), ENTupleColumnType::kUnknown);
+   EXPECT_EQ(cdesc.GetType(), ROOT::ENTupleColumnType::kUnknown);
 
    {
       // Creating a model not in fwd-compatible mode should fail

@@ -69,7 +69,7 @@ public:
    /// in-memory C++ type, given by a type index.
    struct RIdentifier {
       std::type_index fInMemoryType = std::type_index(typeid(void));
-      ENTupleColumnType fOnDiskType = ENTupleColumnType::kUnknown;
+      ROOT::ENTupleColumnType fOnDiskType = ROOT::ENTupleColumnType::kUnknown;
 
       bool operator==(const RIdentifier &other) const
       {
@@ -87,12 +87,12 @@ public:
 
    /// If CppT == void, use the default C++ type for the given column type
    template <typename CppT = void>
-   static std::unique_ptr<RColumnElementBase> Generate(ENTupleColumnType type);
-   static const char *GetColumnTypeName(ENTupleColumnType type);
+   static std::unique_ptr<RColumnElementBase> Generate(ROOT::ENTupleColumnType type);
+   static const char *GetColumnTypeName(ROOT::ENTupleColumnType type);
    /// Most types have a fixed on-disk bit width. Some low-precision column types
    /// have a range of possible bit widths. Return the minimum and maximum allowed
    /// bit size per type.
-   static std::pair<std::uint16_t, std::uint16_t> GetValidBitRange(ENTupleColumnType type);
+   static std::pair<std::uint16_t, std::uint16_t> GetValidBitRange(ROOT::ENTupleColumnType type);
 
    /// Derived, typed classes tell whether the on-storage layout is bitwise identical to the memory layout
    virtual bool IsMappable() const
@@ -136,18 +136,19 @@ struct RTestFutureColumn {
    std::uint32_t dummy;
 };
 
-std::unique_ptr<RColumnElementBase> GenerateColumnElement(std::type_index inMemoryType, ENTupleColumnType onDiskType);
+std::unique_ptr<RColumnElementBase>
+GenerateColumnElement(std::type_index inMemoryType, ROOT::ENTupleColumnType onDiskType);
 
 std::unique_ptr<RColumnElementBase> GenerateColumnElement(const RColumnElementBase::RIdentifier &elementId);
 
 template <typename CppT>
-std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(ENTupleColumnType onDiskType)
+std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(ROOT::ENTupleColumnType onDiskType)
 {
    return GenerateColumnElement(std::type_index(typeid(CppT)), onDiskType);
 }
 
 template <>
-std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate<void>(ENTupleColumnType onDiskType);
+std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate<void>(ROOT::ENTupleColumnType onDiskType);
 
 } // namespace ROOT::Experimental::Internal
 

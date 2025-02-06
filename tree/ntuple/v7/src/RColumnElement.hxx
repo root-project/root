@@ -317,7 +317,7 @@ inline void CastZigzagSplitUnpack(void *destination, const void *source, std::si
 // anonymous namespace because these definitions are not meant to be exported.
 namespace {
 
-using ROOT::Experimental::ENTupleColumnType;
+using ROOT::ENTupleColumnType;
 using ROOT::Experimental::Internal::kTestFutureType;
 using ROOT::Experimental::Internal::MakeUninitArray;
 using ROOT::Experimental::Internal::RColumnElementBase;
@@ -1514,8 +1514,8 @@ public:
    }
 };
 
-inline void RColumnElement<bool, ROOT::Experimental::ENTupleColumnType::kBit>::Pack(void *dst, const void *src,
-                                                                                    std::size_t count) const
+inline void
+RColumnElement<bool, ROOT::ENTupleColumnType::kBit>::Pack(void *dst, const void *src, std::size_t count) const
 {
    const bool *boolArray = reinterpret_cast<const bool *>(src);
    char *charArray = reinterpret_cast<char *>(dst);
@@ -1534,8 +1534,8 @@ inline void RColumnElement<bool, ROOT::Experimental::ENTupleColumnType::kBit>::P
    }
 }
 
-inline void RColumnElement<bool, ROOT::Experimental::ENTupleColumnType::kBit>::Unpack(void *dst, const void *src,
-                                                                                      std::size_t count) const
+inline void
+RColumnElement<bool, ROOT::ENTupleColumnType::kBit>::Unpack(void *dst, const void *src, std::size_t count) const
 {
    bool *boolArray = reinterpret_cast<bool *>(dst);
    const char *charArray = reinterpret_cast<const char *>(src);
