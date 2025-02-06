@@ -52,11 +52,9 @@ struct RNTupleCardinality {
    ValueType fValue;
 };
 
-namespace Experimental {
-
 // clang-format off
 /**
-\class ROOT::Experimental::ENTupleColumnType
+\class ROOT::ENTupleColumnType
 \ingroup NTuple
 \brief The available trivial, native content types of a column
 
@@ -106,6 +104,8 @@ enum class ENTupleColumnType {
    kReal32Quant,
    kMax,
 };
+
+namespace Experimental {
 
 /// The fields in the ntuple model tree can carry different structural information about the type system.
 /// Leaf fields contain just data, collection fields resolve to offset columns, record fields have no
@@ -313,8 +313,8 @@ RResult<void> EnsureValidNameForRNTuple(std::string_view name, std::string_view 
 } // namespace Internal
 
 // TODO(jblomer): remove before branching ROOT v6.36
-using EColumnType [[deprecated("ROOT::Experimental::EColumnType moved to ROOT::Experimental::ENTupleColumnType")]] =
-   ENTupleColumnType;
+using EColumnType [[deprecated("ROOT::Experimental::EColumnType moved to ROOT::ENTupleColumnType")]] =
+   ROOT::ENTupleColumnType;
 
 } // namespace Experimental
 } // namespace ROOT

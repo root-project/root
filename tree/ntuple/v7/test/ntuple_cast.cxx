@@ -5,7 +5,7 @@
 
 template <typename T>
 static std::shared_ptr<T>
-MakeField(std::string_view name, ROOT::Experimental::ENTupleColumnType colType, ROOT::Experimental::RNTupleModel &model)
+MakeField(std::string_view name, ROOT::ENTupleColumnType colType, ROOT::Experimental::RNTupleModel &model)
 {
    auto field = std::make_unique<RField<T>>(name);
    field->SetColumnRepresentatives({{colType}});
@@ -72,12 +72,12 @@ TEST(RNTuple, TypeCastBool)
       auto ptrInt64Split = model->MakeField<std::int64_t>("int64_split");
       auto ptrUInt64Split = model->MakeField<std::uint64_t>("uint64_split");
 
-      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ENTupleColumnType::kInt16, *model);
-      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ENTupleColumnType::kUInt16, *model);
-      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ENTupleColumnType::kInt32, *model);
-      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ENTupleColumnType::kUInt32, *model);
-      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ENTupleColumnType::kInt64, *model);
-      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ENTupleColumnType::kUInt64, *model);
+      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ROOT::ENTupleColumnType::kInt16, *model);
+      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ROOT::ENTupleColumnType::kUInt16, *model);
+      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ROOT::ENTupleColumnType::kInt32, *model);
+      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ROOT::ENTupleColumnType::kUInt32, *model);
+      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ROOT::ENTupleColumnType::kInt64, *model);
+      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ROOT::ENTupleColumnType::kUInt64, *model);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       *ptrChar = 127;
@@ -277,19 +277,19 @@ TEST(RNTuple, TypeCastChar)
       auto ptrInt8 = model->MakeField<std::int8_t>("int8");
       auto ptrUInt8 = model->MakeField<std::uint8_t>("uint8");
 
-      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", ENTupleColumnType::kSplitInt16, *model);
-      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", ENTupleColumnType::kSplitUInt16, *model);
-      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", ENTupleColumnType::kSplitInt32, *model);
-      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", ENTupleColumnType::kSplitUInt32, *model);
-      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", ENTupleColumnType::kSplitInt64, *model);
-      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", ENTupleColumnType::kSplitUInt64, *model);
+      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", ROOT::ENTupleColumnType::kSplitInt16, *model);
+      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", ROOT::ENTupleColumnType::kSplitUInt16, *model);
+      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", ROOT::ENTupleColumnType::kSplitInt32, *model);
+      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", ROOT::ENTupleColumnType::kSplitUInt32, *model);
+      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", ROOT::ENTupleColumnType::kSplitInt64, *model);
+      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", ROOT::ENTupleColumnType::kSplitUInt64, *model);
 
-      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ENTupleColumnType::kInt16, *model);
-      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ENTupleColumnType::kUInt16, *model);
-      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ENTupleColumnType::kInt32, *model);
-      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ENTupleColumnType::kUInt32, *model);
-      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ENTupleColumnType::kInt64, *model);
-      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ENTupleColumnType::kUInt64, *model);
+      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ROOT::ENTupleColumnType::kInt16, *model);
+      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ROOT::ENTupleColumnType::kUInt16, *model);
+      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ROOT::ENTupleColumnType::kInt32, *model);
+      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ROOT::ENTupleColumnType::kUInt32, *model);
+      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ROOT::ENTupleColumnType::kInt64, *model);
+      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ROOT::ENTupleColumnType::kUInt64, *model);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       *ptrBool = true;
@@ -396,19 +396,19 @@ TEST(RNTuple, TypeCastInt8)
       auto ptrChar = model->MakeField<char>("char");
       auto ptrUInt8 = model->MakeField<std::uint8_t>("uint8");
 
-      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", ENTupleColumnType::kSplitInt16, *model);
-      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", ENTupleColumnType::kSplitUInt16, *model);
-      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", ENTupleColumnType::kSplitInt32, *model);
-      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", ENTupleColumnType::kSplitUInt32, *model);
-      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", ENTupleColumnType::kSplitInt64, *model);
-      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", ENTupleColumnType::kSplitUInt64, *model);
+      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", ROOT::ENTupleColumnType::kSplitInt16, *model);
+      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", ROOT::ENTupleColumnType::kSplitUInt16, *model);
+      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", ROOT::ENTupleColumnType::kSplitInt32, *model);
+      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", ROOT::ENTupleColumnType::kSplitUInt32, *model);
+      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", ROOT::ENTupleColumnType::kSplitInt64, *model);
+      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", ROOT::ENTupleColumnType::kSplitUInt64, *model);
 
-      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ENTupleColumnType::kInt16, *model);
-      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ENTupleColumnType::kUInt16, *model);
-      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ENTupleColumnType::kInt32, *model);
-      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ENTupleColumnType::kUInt32, *model);
-      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ENTupleColumnType::kInt64, *model);
-      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ENTupleColumnType::kUInt64, *model);
+      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ROOT::ENTupleColumnType::kInt16, *model);
+      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ROOT::ENTupleColumnType::kUInt16, *model);
+      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ROOT::ENTupleColumnType::kInt32, *model);
+      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ROOT::ENTupleColumnType::kUInt32, *model);
+      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ROOT::ENTupleColumnType::kInt64, *model);
+      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ROOT::ENTupleColumnType::kUInt64, *model);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       *ptrBool = true;
@@ -515,19 +515,19 @@ TEST(RNTuple, TypeCastUInt8)
       auto ptrChar = model->MakeField<char>("char");
       auto ptrInt8 = model->MakeField<std::int8_t>("int8");
 
-      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", ENTupleColumnType::kSplitInt16, *model);
-      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", ENTupleColumnType::kSplitUInt16, *model);
-      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", ENTupleColumnType::kSplitInt32, *model);
-      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", ENTupleColumnType::kSplitUInt32, *model);
-      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", ENTupleColumnType::kSplitInt64, *model);
-      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", ENTupleColumnType::kSplitUInt64, *model);
+      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", ROOT::ENTupleColumnType::kSplitInt16, *model);
+      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", ROOT::ENTupleColumnType::kSplitUInt16, *model);
+      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", ROOT::ENTupleColumnType::kSplitInt32, *model);
+      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", ROOT::ENTupleColumnType::kSplitUInt32, *model);
+      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", ROOT::ENTupleColumnType::kSplitInt64, *model);
+      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", ROOT::ENTupleColumnType::kSplitUInt64, *model);
 
-      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ENTupleColumnType::kInt16, *model);
-      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ENTupleColumnType::kUInt16, *model);
-      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ENTupleColumnType::kInt32, *model);
-      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ENTupleColumnType::kUInt32, *model);
-      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ENTupleColumnType::kInt64, *model);
-      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ENTupleColumnType::kUInt64, *model);
+      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ROOT::ENTupleColumnType::kInt16, *model);
+      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ROOT::ENTupleColumnType::kUInt16, *model);
+      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ROOT::ENTupleColumnType::kInt32, *model);
+      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ROOT::ENTupleColumnType::kUInt32, *model);
+      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ROOT::ENTupleColumnType::kInt64, *model);
+      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ROOT::ENTupleColumnType::kUInt64, *model);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       *ptrBool = true;
@@ -635,17 +635,17 @@ TEST(RNTuple, TypeCastInt16)
       auto ptrInt8 = model->MakeField<std::int8_t>("int8");
       auto ptrUInt8 = model->MakeField<std::uint8_t>("uint8");
 
-      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", ENTupleColumnType::kSplitUInt16, *model);
-      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", ENTupleColumnType::kSplitInt32, *model);
-      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", ENTupleColumnType::kSplitUInt32, *model);
-      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", ENTupleColumnType::kSplitInt64, *model);
-      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", ENTupleColumnType::kSplitUInt64, *model);
+      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", ROOT::ENTupleColumnType::kSplitUInt16, *model);
+      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", ROOT::ENTupleColumnType::kSplitInt32, *model);
+      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", ROOT::ENTupleColumnType::kSplitUInt32, *model);
+      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", ROOT::ENTupleColumnType::kSplitInt64, *model);
+      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", ROOT::ENTupleColumnType::kSplitUInt64, *model);
 
-      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ENTupleColumnType::kUInt16, *model);
-      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ENTupleColumnType::kInt32, *model);
-      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ENTupleColumnType::kUInt32, *model);
-      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ENTupleColumnType::kInt64, *model);
-      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ENTupleColumnType::kUInt64, *model);
+      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ROOT::ENTupleColumnType::kUInt16, *model);
+      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ROOT::ENTupleColumnType::kInt32, *model);
+      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ROOT::ENTupleColumnType::kUInt32, *model);
+      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ROOT::ENTupleColumnType::kInt64, *model);
+      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ROOT::ENTupleColumnType::kUInt64, *model);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       *ptrBool = true;
@@ -748,17 +748,17 @@ TEST(RNTuple, TypeCastUInt16)
       auto ptrInt8 = model->MakeField<std::int8_t>("int8");
       auto ptrUInt8 = model->MakeField<std::uint8_t>("uint8");
 
-      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", ENTupleColumnType::kSplitInt16, *model);
-      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", ENTupleColumnType::kSplitInt32, *model);
-      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", ENTupleColumnType::kSplitUInt32, *model);
-      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", ENTupleColumnType::kSplitInt64, *model);
-      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", ENTupleColumnType::kSplitUInt64, *model);
+      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", ROOT::ENTupleColumnType::kSplitInt16, *model);
+      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", ROOT::ENTupleColumnType::kSplitInt32, *model);
+      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", ROOT::ENTupleColumnType::kSplitUInt32, *model);
+      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", ROOT::ENTupleColumnType::kSplitInt64, *model);
+      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", ROOT::ENTupleColumnType::kSplitUInt64, *model);
 
-      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ENTupleColumnType::kInt16, *model);
-      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ENTupleColumnType::kInt32, *model);
-      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ENTupleColumnType::kUInt32, *model);
-      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ENTupleColumnType::kInt64, *model);
-      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ENTupleColumnType::kUInt64, *model);
+      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ROOT::ENTupleColumnType::kInt16, *model);
+      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ROOT::ENTupleColumnType::kInt32, *model);
+      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ROOT::ENTupleColumnType::kUInt32, *model);
+      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ROOT::ENTupleColumnType::kInt64, *model);
+      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ROOT::ENTupleColumnType::kUInt64, *model);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       *ptrBool = true;
@@ -861,17 +861,17 @@ TEST(RNTuple, TypeCastInt32)
       auto ptrInt8 = model->MakeField<std::int8_t>("int8");
       auto ptrUInt8 = model->MakeField<std::uint8_t>("uint8");
 
-      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", ENTupleColumnType::kSplitInt16, *model);
-      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", ENTupleColumnType::kSplitUInt16, *model);
-      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", ENTupleColumnType::kSplitUInt32, *model);
-      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", ENTupleColumnType::kSplitInt64, *model);
-      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", ENTupleColumnType::kSplitUInt64, *model);
+      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", ROOT::ENTupleColumnType::kSplitInt16, *model);
+      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", ROOT::ENTupleColumnType::kSplitUInt16, *model);
+      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", ROOT::ENTupleColumnType::kSplitUInt32, *model);
+      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", ROOT::ENTupleColumnType::kSplitInt64, *model);
+      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", ROOT::ENTupleColumnType::kSplitUInt64, *model);
 
-      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ENTupleColumnType::kInt16, *model);
-      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ENTupleColumnType::kUInt16, *model);
-      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ENTupleColumnType::kUInt32, *model);
-      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ENTupleColumnType::kInt64, *model);
-      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ENTupleColumnType::kUInt64, *model);
+      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ROOT::ENTupleColumnType::kInt16, *model);
+      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ROOT::ENTupleColumnType::kUInt16, *model);
+      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ROOT::ENTupleColumnType::kUInt32, *model);
+      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ROOT::ENTupleColumnType::kInt64, *model);
+      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ROOT::ENTupleColumnType::kUInt64, *model);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       *ptrBool = true;
@@ -974,17 +974,17 @@ TEST(RNTuple, TypeCastUInt32)
       auto ptrInt8 = model->MakeField<std::int8_t>("int8");
       auto ptrUInt8 = model->MakeField<std::uint8_t>("uint8");
 
-      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", ENTupleColumnType::kSplitInt16, *model);
-      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", ENTupleColumnType::kSplitUInt16, *model);
-      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", ENTupleColumnType::kSplitInt32, *model);
-      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", ENTupleColumnType::kSplitInt64, *model);
-      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", ENTupleColumnType::kSplitUInt64, *model);
+      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", ROOT::ENTupleColumnType::kSplitInt16, *model);
+      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", ROOT::ENTupleColumnType::kSplitUInt16, *model);
+      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", ROOT::ENTupleColumnType::kSplitInt32, *model);
+      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", ROOT::ENTupleColumnType::kSplitInt64, *model);
+      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", ROOT::ENTupleColumnType::kSplitUInt64, *model);
 
-      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ENTupleColumnType::kInt16, *model);
-      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ENTupleColumnType::kUInt16, *model);
-      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ENTupleColumnType::kInt32, *model);
-      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ENTupleColumnType::kInt64, *model);
-      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ENTupleColumnType::kUInt64, *model);
+      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ROOT::ENTupleColumnType::kInt16, *model);
+      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ROOT::ENTupleColumnType::kUInt16, *model);
+      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ROOT::ENTupleColumnType::kInt32, *model);
+      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ROOT::ENTupleColumnType::kInt64, *model);
+      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ROOT::ENTupleColumnType::kUInt64, *model);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       *ptrBool = true;
@@ -1087,17 +1087,17 @@ TEST(RNTuple, TypeCastInt64)
       auto ptrInt8 = model->MakeField<std::int8_t>("int8");
       auto ptrUInt8 = model->MakeField<std::uint8_t>("uint8");
 
-      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", ENTupleColumnType::kSplitInt16, *model);
-      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", ENTupleColumnType::kSplitUInt16, *model);
-      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", ENTupleColumnType::kSplitInt32, *model);
-      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", ENTupleColumnType::kSplitUInt32, *model);
-      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", ENTupleColumnType::kSplitUInt64, *model);
+      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", ROOT::ENTupleColumnType::kSplitInt16, *model);
+      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", ROOT::ENTupleColumnType::kSplitUInt16, *model);
+      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", ROOT::ENTupleColumnType::kSplitInt32, *model);
+      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", ROOT::ENTupleColumnType::kSplitUInt32, *model);
+      auto ptrUInt64Split = MakeField<std::uint64_t>("uint64_split", ROOT::ENTupleColumnType::kSplitUInt64, *model);
 
-      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ENTupleColumnType::kInt16, *model);
-      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ENTupleColumnType::kUInt16, *model);
-      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ENTupleColumnType::kInt32, *model);
-      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ENTupleColumnType::kUInt32, *model);
-      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ENTupleColumnType::kUInt64, *model);
+      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ROOT::ENTupleColumnType::kInt16, *model);
+      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ROOT::ENTupleColumnType::kUInt16, *model);
+      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ROOT::ENTupleColumnType::kInt32, *model);
+      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ROOT::ENTupleColumnType::kUInt32, *model);
+      auto ptrUInt64Unsplit = MakeField<std::uint64_t>("uint64_unsplit", ROOT::ENTupleColumnType::kUInt64, *model);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       *ptrBool = true;
@@ -1200,17 +1200,17 @@ TEST(RNTuple, TypeCastUInt64)
       auto ptrInt8 = model->MakeField<std::int8_t>("int8");
       auto ptrUInt8 = model->MakeField<std::uint8_t>("uint8");
 
-      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", ENTupleColumnType::kSplitInt16, *model);
-      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", ENTupleColumnType::kSplitUInt16, *model);
-      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", ENTupleColumnType::kSplitInt32, *model);
-      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", ENTupleColumnType::kSplitUInt32, *model);
-      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", ENTupleColumnType::kSplitInt64, *model);
+      auto ptrInt16Split = MakeField<std::int16_t>("int16_split", ROOT::ENTupleColumnType::kSplitInt16, *model);
+      auto ptrUInt16Split = MakeField<std::uint16_t>("uint16_split", ROOT::ENTupleColumnType::kSplitUInt16, *model);
+      auto ptrInt32Split = MakeField<std::int32_t>("int32_split", ROOT::ENTupleColumnType::kSplitInt32, *model);
+      auto ptrUInt32Split = MakeField<std::uint32_t>("uint32_split", ROOT::ENTupleColumnType::kSplitUInt32, *model);
+      auto ptrInt64Split = MakeField<std::int64_t>("int64_split", ROOT::ENTupleColumnType::kSplitInt64, *model);
 
-      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ENTupleColumnType::kInt16, *model);
-      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ENTupleColumnType::kUInt16, *model);
-      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ENTupleColumnType::kInt32, *model);
-      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ENTupleColumnType::kUInt32, *model);
-      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ENTupleColumnType::kInt64, *model);
+      auto ptrInt16Unsplit = MakeField<std::int16_t>("int16_unsplit", ROOT::ENTupleColumnType::kInt16, *model);
+      auto ptrUInt16Unsplit = MakeField<std::uint16_t>("uint16_unsplit", ROOT::ENTupleColumnType::kUInt16, *model);
+      auto ptrInt32Unsplit = MakeField<std::int32_t>("int32_unsplit", ROOT::ENTupleColumnType::kInt32, *model);
+      auto ptrUInt32Unsplit = MakeField<std::uint32_t>("uint32_unsplit", ROOT::ENTupleColumnType::kUInt32, *model);
+      auto ptrInt64Unsplit = MakeField<std::int64_t>("int64_unsplit", ROOT::ENTupleColumnType::kInt64, *model);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       *ptrBool = true;

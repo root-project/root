@@ -54,7 +54,7 @@ TEST(RNTuple, SerializeString)
 
 TEST(RNTuple, SerializeColumnType)
 {
-   ENTupleColumnType type = ENTupleColumnType::kUnknown;
+   ROOT::ENTupleColumnType type = ROOT::ENTupleColumnType::kUnknown;
    unsigned char buffer[2];
 
    try {
@@ -67,10 +67,10 @@ TEST(RNTuple, SerializeColumnType)
    RNTupleSerializer::SerializeUInt16(5000, buffer);
    auto res = RNTupleSerializer::DeserializeColumnType(buffer, type);
    EXPECT_TRUE(bool(res));
-   EXPECT_EQ(type, ENTupleColumnType::kUnknown);
+   EXPECT_EQ(type, ROOT::ENTupleColumnType::kUnknown);
 
-   for (int i = 1; i < static_cast<int>(ENTupleColumnType::kMax); ++i) {
-      RNTupleSerializer::SerializeColumnType(static_cast<ENTupleColumnType>(i), buffer);
+   for (int i = 1; i < static_cast<int>(ROOT::ENTupleColumnType::kMax); ++i) {
+      RNTupleSerializer::SerializeColumnType(static_cast<ROOT::ENTupleColumnType>(i), buffer);
       RNTupleSerializer::DeserializeColumnType(buffer, type);
       EXPECT_EQ(i, static_cast<int>(type));
    }
@@ -587,7 +587,7 @@ TEST(RNTuple, SerializeHeader)
                         .PhysicalColumnId(23)
                         .FieldId(42)
                         .BitsOnStorage(32)
-                        .Type(ENTupleColumnType::kReal32)
+                        .Type(ROOT::ENTupleColumnType::kReal32)
                         .Index(0)
                         .MakeDescriptor()
                         .Unwrap());
@@ -596,7 +596,7 @@ TEST(RNTuple, SerializeHeader)
                         .PhysicalColumnId(23)
                         .FieldId(24)
                         .BitsOnStorage(32)
-                        .Type(ENTupleColumnType::kReal32)
+                        .Type(ROOT::ENTupleColumnType::kReal32)
                         .Index(0)
                         .MakeDescriptor()
                         .Unwrap());
@@ -605,7 +605,7 @@ TEST(RNTuple, SerializeHeader)
                         .PhysicalColumnId(17)
                         .FieldId(137)
                         .BitsOnStorage(32)
-                        .Type(ENTupleColumnType::kIndex32)
+                        .Type(ROOT::ENTupleColumnType::kIndex32)
                         .Index(0)
                         .MakeDescriptor()
                         .Unwrap());
@@ -614,7 +614,7 @@ TEST(RNTuple, SerializeHeader)
                         .PhysicalColumnId(40)
                         .FieldId(137)
                         .BitsOnStorage(8)
-                        .Type(ENTupleColumnType::kByte)
+                        .Type(ROOT::ENTupleColumnType::kByte)
                         .Index(1)
                         .MakeDescriptor()
                         .Unwrap());
@@ -671,7 +671,7 @@ TEST(RNTuple, SerializeFooter)
                         .PhysicalColumnId(17)
                         .FieldId(42)
                         .BitsOnStorage(32)
-                        .Type(ENTupleColumnType::kIndex32)
+                        .Type(ROOT::ENTupleColumnType::kIndex32)
                         .Index(0)
                         .MakeDescriptor()
                         .Unwrap());
@@ -792,7 +792,7 @@ TEST(RNTuple, SerializeFooterXHeader)
                         .PhysicalColumnId(17)
                         .FieldId(42)
                         .BitsOnStorage(32)
-                        .Type(ENTupleColumnType::kInt32)
+                        .Type(ROOT::ENTupleColumnType::kInt32)
                         .Index(0)
                         .MakeDescriptor()
                         .Unwrap());
@@ -831,7 +831,7 @@ TEST(RNTuple, SerializeFooterXHeader)
                         .PhysicalColumnId(18)
                         .FieldId(44)
                         .BitsOnStorage(32)
-                        .Type(ENTupleColumnType::kReal32)
+                        .Type(ROOT::ENTupleColumnType::kReal32)
                         .Index(0)
                         .FirstElementIndex(4200)
                         .MakeDescriptor()
@@ -841,7 +841,7 @@ TEST(RNTuple, SerializeFooterXHeader)
                         .PhysicalColumnId(19)
                         .FieldId(45)
                         .BitsOnStorage(64)
-                        .Type(ENTupleColumnType::kInt64)
+                        .Type(ROOT::ENTupleColumnType::kInt64)
                         .Index(0)
                         .FirstElementIndex(10000)
                         .MakeDescriptor()
@@ -860,7 +860,7 @@ TEST(RNTuple, SerializeFooterXHeader)
                         .PhysicalColumnId(18)
                         .FieldId(46)
                         .BitsOnStorage(32)
-                        .Type(ENTupleColumnType::kReal32)
+                        .Type(ROOT::ENTupleColumnType::kReal32)
                         .Index(0)
                         .MakeDescriptor()
                         .Unwrap());
@@ -962,7 +962,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
                         .PhysicalColumnId(0)
                         .FieldId(7)
                         .BitsOnStorage(32)
-                        .Type(ENTupleColumnType::kIndex32)
+                        .Type(ROOT::ENTupleColumnType::kIndex32)
                         .Index(0)
                         .MakeDescriptor()
                         .Unwrap());
@@ -971,7 +971,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
                         .PhysicalColumnId(1)
                         .FieldId(7)
                         .BitsOnStorage(8)
-                        .Type(ENTupleColumnType::kChar)
+                        .Type(ROOT::ENTupleColumnType::kChar)
                         .Index(1)
                         .MakeDescriptor()
                         .Unwrap());
@@ -980,7 +980,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
                         .PhysicalColumnId(2)
                         .FieldId(7)
                         .BitsOnStorage(64)
-                        .Type(ENTupleColumnType::kIndex64)
+                        .Type(ROOT::ENTupleColumnType::kIndex64)
                         .Index(0)
                         .RepresentationIndex(1)
                         .MakeDescriptor()
@@ -990,7 +990,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
                         .PhysicalColumnId(3)
                         .FieldId(7)
                         .BitsOnStorage(8)
-                        .Type(ENTupleColumnType::kChar)
+                        .Type(ROOT::ENTupleColumnType::kChar)
                         .Index(1)
                         .RepresentationIndex(1)
                         .MakeDescriptor()
@@ -1059,16 +1059,16 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    EXPECT_EQ(4u, columnIds.size());
    EXPECT_EQ(0, desc.GetColumnDescriptor(columnIds[0]).GetIndex());
    EXPECT_EQ(0, desc.GetColumnDescriptor(columnIds[0]).GetRepresentationIndex());
-   EXPECT_EQ(ENTupleColumnType::kIndex32, desc.GetColumnDescriptor(columnIds[0]).GetType());
+   EXPECT_EQ(ROOT::ENTupleColumnType::kIndex32, desc.GetColumnDescriptor(columnIds[0]).GetType());
    EXPECT_EQ(1, desc.GetColumnDescriptor(columnIds[1]).GetIndex());
    EXPECT_EQ(0, desc.GetColumnDescriptor(columnIds[1]).GetRepresentationIndex());
-   EXPECT_EQ(ENTupleColumnType::kChar, desc.GetColumnDescriptor(columnIds[1]).GetType());
+   EXPECT_EQ(ROOT::ENTupleColumnType::kChar, desc.GetColumnDescriptor(columnIds[1]).GetType());
    EXPECT_EQ(0, desc.GetColumnDescriptor(columnIds[2]).GetIndex());
    EXPECT_EQ(1, desc.GetColumnDescriptor(columnIds[2]).GetRepresentationIndex());
-   EXPECT_EQ(ENTupleColumnType::kIndex64, desc.GetColumnDescriptor(columnIds[2]).GetType());
+   EXPECT_EQ(ROOT::ENTupleColumnType::kIndex64, desc.GetColumnDescriptor(columnIds[2]).GetType());
    EXPECT_EQ(1, desc.GetColumnDescriptor(columnIds[3]).GetIndex());
    EXPECT_EQ(1, desc.GetColumnDescriptor(columnIds[3]).GetRepresentationIndex());
-   EXPECT_EQ(ENTupleColumnType::kChar, desc.GetColumnDescriptor(columnIds[3]).GetType());
+   EXPECT_EQ(ROOT::ENTupleColumnType::kChar, desc.GetColumnDescriptor(columnIds[3]).GetType());
 
    EXPECT_EQ(columnIds[0], desc.FindLogicalColumnId(fieldDesc.GetId(), 0, 0));
    EXPECT_EQ(columnIds[1], desc.FindLogicalColumnId(fieldDesc.GetId(), 1, 0));
@@ -1162,7 +1162,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
                         .PhysicalColumnId(0)
                         .FieldId(5)
                         .BitsOnStorage(32)
-                        .Type(ENTupleColumnType::kReal32)
+                        .Type(ROOT::ENTupleColumnType::kReal32)
                         .MakeDescriptor()
                         .Unwrap());
    builder.AddColumn(RColumnDescriptorBuilder()
@@ -1170,7 +1170,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
                         .PhysicalColumnId(1)
                         .FieldId(5)
                         .BitsOnStorage(16)
-                        .Type(ENTupleColumnType::kReal16)
+                        .Type(ROOT::ENTupleColumnType::kReal16)
                         .RepresentationIndex(1)
                         .MakeDescriptor()
                         .Unwrap());
@@ -1179,7 +1179,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
                         .PhysicalColumnId(0)
                         .FieldId(7)
                         .BitsOnStorage(32)
-                        .Type(ENTupleColumnType::kReal32)
+                        .Type(ROOT::ENTupleColumnType::kReal32)
                         .MakeDescriptor()
                         .Unwrap());
    builder.AddColumn(RColumnDescriptorBuilder()
@@ -1187,7 +1187,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
                         .PhysicalColumnId(1)
                         .FieldId(7)
                         .BitsOnStorage(16)
-                        .Type(ENTupleColumnType::kReal16)
+                        .Type(ROOT::ENTupleColumnType::kReal16)
                         .RepresentationIndex(1)
                         .MakeDescriptor()
                         .Unwrap());
@@ -1247,9 +1247,9 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
    EXPECT_EQ(0, desc.GetColumnDescriptor(columnIds[0]).GetPhysicalId());
    EXPECT_EQ(1, desc.GetColumnDescriptor(columnIds[1]).GetPhysicalId());
    EXPECT_EQ(0, desc.GetColumnDescriptor(columnIds[0]).GetRepresentationIndex());
-   EXPECT_EQ(ENTupleColumnType::kReal32, desc.GetColumnDescriptor(columnIds[0]).GetType());
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal32, desc.GetColumnDescriptor(columnIds[0]).GetType());
    EXPECT_EQ(1, desc.GetColumnDescriptor(columnIds[1]).GetRepresentationIndex());
-   EXPECT_EQ(ENTupleColumnType::kReal16, desc.GetColumnDescriptor(columnIds[1]).GetType());
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal16, desc.GetColumnDescriptor(columnIds[1]).GetType());
 
    EXPECT_EQ(columnIds[0], desc.FindLogicalColumnId(aliasDesc.GetId(), 0, 0));
    EXPECT_EQ(columnIds[1], desc.FindLogicalColumnId(aliasDesc.GetId(), 0, 1));
@@ -1301,7 +1301,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
                         .PhysicalColumnId(0)
                         .FieldId(5)
                         .BitsOnStorage(32)
-                        .Type(ENTupleColumnType::kReal32)
+                        .Type(ROOT::ENTupleColumnType::kReal32)
                         .FirstElementIndex(1)
                         .MakeDescriptor()
                         .Unwrap());
@@ -1310,7 +1310,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
                         .PhysicalColumnId(1)
                         .FieldId(5)
                         .BitsOnStorage(16)
-                        .Type(ENTupleColumnType::kReal16)
+                        .Type(ROOT::ENTupleColumnType::kReal16)
                         .RepresentationIndex(1)
                         .FirstElementIndex(1)
                         .SetSuppressedDeferred()
@@ -1418,7 +1418,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
                         .PhysicalColumnId(0)
                         .BitsOnStorage(16)
                         .FieldId(5)
-                        .Type(ENTupleColumnType::kReal16)
+                        .Type(ROOT::ENTupleColumnType::kReal16)
                         .MakeDescriptor()
                         .Unwrap());
 
@@ -1444,7 +1444,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
                         .PhysicalColumnId(1)
                         .FieldId(5)
                         .BitsOnStorage(32)
-                        .Type(ENTupleColumnType::kReal32)
+                        .Type(ROOT::ENTupleColumnType::kReal32)
                         .RepresentationIndex(1)
                         .FirstElementIndex(1)
                         .SetSuppressedDeferred()
@@ -1540,7 +1540,7 @@ TEST(RNTuple, DeserializeDescriptorModes)
                            .PhysicalColumnId(0)
                            .FieldId(1)
                            .BitsOnStorage(32)
-                           .Type(ENTupleColumnType::kInt32)
+                           .Type(ROOT::ENTupleColumnType::kInt32)
                            .FirstElementIndex(0)
                            .MakeDescriptor()
                            .Unwrap());
@@ -1551,7 +1551,7 @@ TEST(RNTuple, DeserializeDescriptorModes)
                            .FieldId(1)
                            .RepresentationIndex(1)
                            .BitsOnStorage(16)
-                           .Type(ENTupleColumnType::kInt16)
+                           .Type(ROOT::ENTupleColumnType::kInt16)
                            .FirstElementIndex(0)
                            .MakeDescriptor()
                            .Unwrap());
@@ -1591,7 +1591,7 @@ TEST(RNTuple, DeserializeDescriptorModes)
                            .PhysicalColumnId(2)
                            .FieldId(2)
                            .BitsOnStorage(32)
-                           .Type(ENTupleColumnType::kReal32)
+                           .Type(ROOT::ENTupleColumnType::kReal32)
                            .FirstElementIndex(1)
                            .MakeDescriptor()
                            .Unwrap());
@@ -1811,7 +1811,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred_HeaderExtBeforeSerializ
                         .PhysicalColumnId(0)
                         .FieldId(5)
                         .BitsOnStorage(32)
-                        .Type(ENTupleColumnType::kReal32)
+                        .Type(ROOT::ENTupleColumnType::kReal32)
                         .FirstElementIndex(1)
                         .MakeDescriptor()
                         .Unwrap());
@@ -1820,7 +1820,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred_HeaderExtBeforeSerializ
                         .PhysicalColumnId(1)
                         .FieldId(5)
                         .BitsOnStorage(16)
-                        .Type(ENTupleColumnType::kReal16)
+                        .Type(ROOT::ENTupleColumnType::kReal16)
                         .RepresentationIndex(1)
                         .FirstElementIndex(1)
                         .SetSuppressedDeferred()
@@ -1937,7 +1937,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferredInMainHeader)
                         .PhysicalColumnId(0)
                         .FieldId(5)
                         .BitsOnStorage(32)
-                        .Type(ENTupleColumnType::kReal32)
+                        .Type(ROOT::ENTupleColumnType::kReal32)
                         .FirstElementIndex(1)
                         .MakeDescriptor()
                         .Unwrap());
@@ -1946,7 +1946,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferredInMainHeader)
                         .PhysicalColumnId(1)
                         .FieldId(5)
                         .BitsOnStorage(16)
-                        .Type(ENTupleColumnType::kReal16)
+                        .Type(ROOT::ENTupleColumnType::kReal16)
                         .RepresentationIndex(1)
                         .FirstElementIndex(1)
                         .SetSuppressedDeferred()

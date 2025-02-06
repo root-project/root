@@ -187,7 +187,7 @@ private:
    /// but low-precision float columns have variable bit widths.
    std::uint16_t fBitsOnStorage = 0;
    /// The on-disk column type
-   ENTupleColumnType fType = ENTupleColumnType::kUnknown;
+   ROOT::ENTupleColumnType fType = ROOT::ENTupleColumnType::kUnknown;
    /// Optional value range (used e.g. by quantized real fields)
    std::optional<RValueRange> fValueRange;
 
@@ -209,7 +209,7 @@ public:
    std::uint16_t GetRepresentationIndex() const { return fRepresentationIndex; }
    std::uint64_t GetFirstElementIndex() const { return std::abs(fFirstElementIndex); }
    std::uint16_t GetBitsOnStorage() const { return fBitsOnStorage; }
-   ENTupleColumnType GetType() const { return fType; }
+   ROOT::ENTupleColumnType GetType() const { return fType; }
    std::optional<RValueRange> GetValueRange() const { return fValueRange; }
    bool IsAliasColumn() const { return fPhysicalColumnId != fLogicalColumnId; }
    bool IsDeferredColumn() const { return fFirstElementIndex != 0; }
@@ -1095,7 +1095,7 @@ public:
       fColumn.fBitsOnStorage = bitsOnStorage;
       return *this;
    }
-   RColumnDescriptorBuilder &Type(ENTupleColumnType type)
+   RColumnDescriptorBuilder &Type(ROOT::ENTupleColumnType type)
    {
       fColumn.fType = type;
       return *this;

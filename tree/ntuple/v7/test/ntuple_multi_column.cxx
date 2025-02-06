@@ -7,7 +7,7 @@ TEST(RNTuple, MultiColumnRepresentationSimple)
    {
       auto model = RNTupleModel::Create();
       auto fldPx = RFieldBase::Create("px", "float").Unwrap();
-      fldPx->SetColumnRepresentatives({{ENTupleColumnType::kReal32}, {ENTupleColumnType::kReal16}});
+      fldPx->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}, {ROOT::ENTupleColumnType::kReal16}});
       model->AddField(std::move(fldPx));
       auto ptrPx = model->GetDefaultEntry().GetPtr<float>("px");
       RNTupleWriteOptions options;
@@ -40,9 +40,9 @@ TEST(RNTuple, MultiColumnRepresentationSimple)
    const auto &colDesc32 = desc.GetColumnDescriptor(fieldDesc.GetLogicalColumnIds()[0]);
    const auto &colDesc16 = desc.GetColumnDescriptor(fieldDesc.GetLogicalColumnIds()[1]);
 
-   EXPECT_EQ(ENTupleColumnType::kReal32, colDesc32.GetType());
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal32, colDesc32.GetType());
    EXPECT_EQ(0u, colDesc32.GetRepresentationIndex());
-   EXPECT_EQ(ENTupleColumnType::kReal16, colDesc16.GetType());
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal16, colDesc16.GetType());
    EXPECT_EQ(1u, colDesc16.GetRepresentationIndex());
 
    const auto &clusterDesc0 = desc.GetClusterDescriptor(0);
@@ -146,8 +146,8 @@ TEST(RNTuple, MultiColumnRepresentationString)
    {
       auto model = RNTupleModel::Create();
       auto fldStr = RFieldBase::Create("str", "std::string").Unwrap();
-      fldStr->SetColumnRepresentatives({{ENTupleColumnType::kIndex32, ENTupleColumnType::kChar},
-                                        {ENTupleColumnType::kSplitIndex64, ENTupleColumnType::kChar}});
+      fldStr->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kIndex32, ROOT::ENTupleColumnType::kChar},
+                                        {ROOT::ENTupleColumnType::kSplitIndex64, ROOT::ENTupleColumnType::kChar}});
       model->AddField(std::move(fldStr));
       auto ptrStr = model->GetDefaultEntry().GetPtr<std::string>("str");
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
@@ -189,7 +189,7 @@ TEST(RNTuple, MultiColumnRepresentationVector)
    {
       auto model = RNTupleModel::Create();
       auto fldVec = RFieldBase::Create("vec", "std::vector<float>").Unwrap();
-      fldVec->SetColumnRepresentatives({{ENTupleColumnType::kIndex32}, {ENTupleColumnType::kSplitIndex64}});
+      fldVec->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kIndex32}, {ROOT::ENTupleColumnType::kSplitIndex64}});
       model->AddField(std::move(fldVec));
       auto ptrVec = model->GetDefaultEntry().GetPtr<std::vector<float>>("vec");
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
@@ -235,10 +235,10 @@ TEST(RNTuple, MultiColumnRepresentationMany)
    {
       auto model = RNTupleModel::Create();
       auto fldVec = RFieldBase::Create("vec", "std::vector<float>").Unwrap();
-      fldVec->SetColumnRepresentatives({{ENTupleColumnType::kIndex32},
-                                        {ENTupleColumnType::kSplitIndex64},
-                                        {ENTupleColumnType::kIndex64},
-                                        {ENTupleColumnType::kSplitIndex32}});
+      fldVec->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kIndex32},
+                                        {ROOT::ENTupleColumnType::kSplitIndex64},
+                                        {ROOT::ENTupleColumnType::kIndex64},
+                                        {ROOT::ENTupleColumnType::kSplitIndex32}});
       model->AddField(std::move(fldVec));
       auto ptrVec = model->GetDefaultEntry().GetPtr<std::vector<float>>("vec");
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
@@ -286,9 +286,10 @@ TEST(RNTuple, MultiColumnRepresentationNullable)
       auto model = RNTupleModel::Create();
       auto fldScalar = RFieldBase::Create("scalar", "std::optional<float>").Unwrap();
       auto fldVector = RFieldBase::Create("vector", "std::vector<std::optional<float>>").Unwrap();
-      fldScalar->SetColumnRepresentatives({{ENTupleColumnType::kIndex32}, {ENTupleColumnType::kSplitIndex64}});
+      fldScalar->SetColumnRepresentatives(
+         {{ROOT::ENTupleColumnType::kIndex32}, {ROOT::ENTupleColumnType::kSplitIndex64}});
       fldVector->GetSubFields()[0]->SetColumnRepresentatives(
-         {{ENTupleColumnType::kSplitIndex64}, {ENTupleColumnType::kIndex32}});
+         {{ROOT::ENTupleColumnType::kSplitIndex64}, {ROOT::ENTupleColumnType::kIndex32}});
       model->AddField(std::move(fldScalar));
       model->AddField(std::move(fldVector));
       auto ptrScalar = model->GetDefaultEntry().GetPtr<std::optional<float>>("scalar");
@@ -351,7 +352,7 @@ TEST(RNTuple, MultiColumnRepresentationBulk)
    {
       auto model = RNTupleModel::Create();
       auto fldPx = RFieldBase::Create("px", "float").Unwrap();
-      fldPx->SetColumnRepresentatives({{ENTupleColumnType::kReal32}, {ENTupleColumnType::kReal16}});
+      fldPx->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}, {ROOT::ENTupleColumnType::kReal16}});
       model->AddField(std::move(fldPx));
       auto ptrPx = model->GetDefaultEntry().GetPtr<float>("px");
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
@@ -383,13 +384,13 @@ TEST(RNTuple, MultiColumnRepresentationFriends)
 
    auto model1 = RNTupleModel::Create();
    auto fldPt = RFieldBase::Create("pt", "float").Unwrap();
-   fldPt->SetColumnRepresentatives({{ENTupleColumnType::kReal32}, {ENTupleColumnType::kReal16}});
+   fldPt->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}, {ROOT::ENTupleColumnType::kReal16}});
    model1->AddField(std::move(fldPt));
    auto ptrPt = model1->GetDefaultEntry().GetPtr<float>("pt");
 
    auto model2 = RNTupleModel::Create();
    auto fldEta = RFieldBase::Create("eta", "float").Unwrap();
-   fldEta->SetColumnRepresentatives({{ENTupleColumnType::kReal16}, {ENTupleColumnType::kReal32}});
+   fldEta->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal16}, {ROOT::ENTupleColumnType::kReal32}});
    model2->AddField(std::move(fldEta));
    auto ptrEta = model2->GetDefaultEntry().GetPtr<float>("eta");
 
@@ -420,6 +421,6 @@ TEST(RNTuple, MultiColumnRepresentationDedup)
    FileRaii fileGuard("test_ntuple_multi_column_representation_dedup.root");
 
    auto fldPx = RFieldBase::Create("px", "float").Unwrap();
-   fldPx->SetColumnRepresentatives({{ENTupleColumnType::kReal16}, {ENTupleColumnType::kReal16}});
+   fldPx->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal16}, {ROOT::ENTupleColumnType::kReal16}});
    EXPECT_EQ(fldPx->GetColumnRepresentatives().size(), 1);
 }
