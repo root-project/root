@@ -1038,7 +1038,13 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member, TClas
       if (indx.IsArray() && (tid == kChar_t))
          shift = indx.ReduceDimension();
 
+      auto unitSize = member->GetUnitSize();
       char *ppp = (char *)ptr;
+      if (member->IsaPointer()) {
+         // UnitSize was the sizeof(void*)
+         assert(member->GetDataType());
+         unitSize = member->GetDataType()->Size();
+      }
 
       if (indx.IsArray())
          fOutBuffer.Append(indx.GetBegin());
@@ -1079,7 +1085,7 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member, TClas
          if (indx.IsArray())
             fOutBuffer.Append(indx.NextSeparator());
 
-         ppp += shift * member->GetUnitSize();
+         ppp += shift * unitSize;
 
       } while (!indx.IsDone());
 
