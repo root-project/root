@@ -313,7 +313,7 @@ void RModel::EvaluateIntermediateMemory(std::span<const std::string_view> op_inp
    bool allocated;
 
    for (auto &it : op_output_tensors){
-      auto tensor_size = sizeof(float) * ConvertShapeToLength(GetTensorShape(std::string(it)));
+      auto tensor_size = GetTypeSize(GetTensorType(std::string(it))) * ConvertShapeToLength(GetTensorShape(std::string(it)));
       if (GetTensorType(std::string(it)) == ETensorType::BOOL) continue;
      
       // flag to check if the tensor is considered for allocation
@@ -350,7 +350,7 @@ void RModel::EvaluateIntermediateMemory(std::span<const std::string_view> op_inp
     auto map_it = fIntermediateTensorFrequencyLookup.find(it);
     if (map_it != fIntermediateTensorFrequencyLookup.end()) {
         if (map_it->second.second == current_op_idx) {
-            auto tensor_size = sizeof(float) * ConvertShapeToLength(GetTensorShape(std::string(it)));
+            auto tensor_size = GetTypeSize(GetTensorType(std::string(it))) * ConvertShapeToLength(GetTensorShape(std::string(it)));
             available_memory.push_back(tensor_size);
          }
       }
@@ -364,7 +364,7 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
 
    for (auto& it:op_output_tensors){
          if (GetTensorType(std::string(it)) == ETensorType::BOOL) continue;
-         auto tensor_size = sizeof(float) * ConvertShapeToLength(GetTensorShape(std::string(it)));
+         auto tensor_size = GetTypeSize(GetTensorType(std::string(it))) * ConvertShapeToLength(GetTensorShape(std::string(it)));
          memory_allocation_string = "\n // Allocating memory for intermediate tensor " + std::string(it) + " with size " + tensor_size + " bytes";
          if (!fIntermediateMemoryInfo.available_memory.empty()){
             for (auto chunk = fIntermediateMemoryInfo.available_memory.begin(); chunk != fIntermediateMemoryInfo.available_memory.end(); ) {
@@ -373,7 +373,7 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
                if (chunk->second >= tensor_size) {
                   chunk->second -= tensor_size;
                   allocated = true;
-                  memory_allocation_string += "\nfloat* tensor_"+ std::string(it) + "= reinterpret_cast<float*>(fIntermediateMemoryPool+" + chunk->first + ");\n";
+                  memory_allocation_string += "\n"+ ConvertTypeToString(GetTensorType(std::string(it))) + "* tensor_"+ std::string(it) + "= reinterpret_cast<float*>(fIntermediateMemoryPool+" + chunk->first + ");\n";
                   chunk->first += tensor_size;
                   
                   if (chunk->second == 0) {
@@ -786,7 +786,7 @@ void RModel::GenerateOutput() {
       if (fIntermediateTensorInfos.count(tensorName) > 0) {
          // need to check is size is the same(don't want to return a vector with larger size)
          // in that case better to copy
-         fGC += SP + "std::vector<float> ret(tensor_"+tensorName+", tensor_"+tensorName+" + " + ConvertShapeToLength(GetTensorShape(tensorName)) + ");\n";
+         fGC += SP + "std::vector<"+ ConvertTypeToString(GetTensorType(std::string(tensorName))) +"> ret(tensor_"+tensorName+", tensor_"+tensorName+" + " + ConvertShapeToLength(GetTensorShape(tensorName)) + ");\n";
          fGC += SP + "return ret;\n";
       } else {
          // include also dynamic tensors since the vectors can be allocated with a size larger than their output

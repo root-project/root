@@ -101,6 +101,7 @@ public:
       for (auto & name : inputNames)
          fNInputs.push_back(UTILITY::Clean_name(name));
 
+      fInputTensorNames.resize(fNInputs.size());
       std::transform(fNInputs.begin(), fNInputs.end(), fInputTensorNames.begin(),
                   [](const std::string& s) -> std::string_view { return s; });
       fOutputTensorNames = { fNY };

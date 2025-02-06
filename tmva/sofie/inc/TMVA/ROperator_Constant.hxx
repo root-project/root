@@ -35,10 +35,6 @@ public:
       fAttrType(type)
       {
          fInputTensorNames = { };
-         if (!fNX.empty()){
-            fInputTensorNames.emplace_back(fNX);
-         }
-
          fOutputTensorNames = { };
       }
 
