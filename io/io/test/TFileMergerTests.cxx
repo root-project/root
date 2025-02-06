@@ -101,3 +101,38 @@ TEST(TFileMerger, MergeSingleOnlyListed)
    ASSERT_TRUE(output.get() && output->GetListOfKeys());
    EXPECT_EQ(output->GetListOfKeys()->GetSize(), 2);
 }
+
+// https://github.com/root-project/root/issues/14558
+void ROOT_4716() {
+   TTree atree("atree", "atitle");
+   int value;
+   atree.Branch("a", &value);
+  
+   TTree abtree("abtree", "abtitle");
+   abtree.Branch("a", &value);
+   abtree.Branch("b", &value);
+   value = 42;
+   abtree.Fill();
+  
+   TTree dummy;
+   TList treelist;
+   treelist.Add(&atree);
+   treelist.Add(&abtree);
+   std::unique_ptr<TFile> file(TFile::Open("c4716.root", "RECREATE"));
+   TFileMergeInfo info(file.get());
+   dummy.Merge(&treelist, &info);
+   ASSERT_TRUE(dummy.FindBranch("a") != nullptr);
+   EXPECT_EQ(dummy.FindBranch("a")->GetEntries(),1);
+   ASSERT_TRUE(dummy.FindBranch("b") != nullptr);
+   EXPECT_EQ(dummy.FindBranch("b")->GetEntries(),2);
+
+   treelist.Clear();
+   treelist.Add(&abtree);
+   std::unique_ptr<TFile> file2(TFile::Open("d4716.root", "RECREATE"));
+   TFileMergeInfo info2(file2.get());
+   atree.Merge(&treelist, &info2);
+   ASSERT_TRUE(atree.FindBranch("a") != nullptr);
+   EXPECT_EQ(atree.FindBranch("a")->GetEntries(),1);
+   ASSERT_TRUE(atree.FindBranch("b") != nullptr);
+   EXPECT_EQ(atree.FindBranch("b")->GetEntries(),2);
+}

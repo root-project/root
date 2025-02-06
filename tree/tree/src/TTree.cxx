@@ -6834,6 +6834,38 @@ bool TTree::MemoryFull(Int_t nbytes)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Function merging branch structure from an outside tree into the current one
+///
+/// If the same branch name already exists in "this", it's skipped, only new ones
+/// are copied.
+/// Entries are not copied, just branch name / type is cloned
+/// Branches marked as DoNotProcess are not merged
+/// @param tree the outside TTree whose branches will be copied into this tree
+/// @return boolean true on sucess, false otherwise
+
+bool TTree::MergeBranches(TTree* tree)
+{
+   if (tree) {
+      TObjArray* newbranches = tree->GetListOfBranches();
+      Int_t nbranches = newbranches->GetEntriesFast();
+      for (Int_t i = 0; i < nbranches; ++i) {
+         TBranch* nbranch = (TBranch*) newbranches->UncheckedAt(i);
+         if (nbranch->TestBit(kDoNotProcess)) {
+            continue;
+         }
+         if (!FindBranch(nbranch->GetName())) {
+            auto addbranch = (TBranch*) nbranch->Clone();
+            addbranch->SetAddress(nullptr);
+            addbranch->SetTree(this);
+            fBranches.Add(addbranch);
+         }
+      }
+      return true;
+   }
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Static function merging the trees in the TList into a new tree.
 ///
 /// Trees in the list can be memory or disk-resident trees.
@@ -6863,6 +6895,9 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
          tree->ResetBranchAddresses();
          newtree->ResetBranchAddresses();
          continue;
+      }
+      else {
+         newtree->MergeBranches(tree);
       }
 
       newtree->CopyEntries(tree, -1, options, true);
@@ -6899,7 +6934,7 @@ Long64_t TTree::Merge(TCollection* li, Option_t *options)
 
       Long64_t nentries = tree->GetEntries();
       if (nentries == 0) continue;
-
+      MergeBranches(tree);
       CopyEntries(tree, -1, options, true);
    }
    fAutoSave = storeAutoSave;
@@ -6959,7 +6994,7 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
          fAutoSave = storeAutoSave;
          return -1;
       }
-
+      MergeBranches(tree);
       CopyEntries(tree, -1, options, true);
    }
    fAutoSave = storeAutoSave;
