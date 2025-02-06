@@ -109,7 +109,7 @@ TEST(TFileMerger, MergeBranches)
    TTree atree("atree", "atitle");
    int value;
    atree.Branch("a", &value);
-  
+  atree.Fill();
    TTree abtree("abtree", "abtitle");
    abtree.Branch("a", &value);
    abtree.Branch("b", &value);
