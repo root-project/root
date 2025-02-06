@@ -1081,6 +1081,7 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
          CreateInterpolator(oldInterp);
       }
       fHistogram->SetBit(TH1::kNoStats);
+      fHistogram->Sumw2(kFALSE);
    } else {
       hxmin = fHistogram->GetXaxis()->GetXmin();
       hymin = fHistogram->GetYaxis()->GetXmin();
