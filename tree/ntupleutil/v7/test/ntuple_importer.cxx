@@ -231,7 +231,7 @@ TEST(RNTupleImporter, ConvertDotsInBranchNames)
 
 TEST(RNTupleImporter, FieldModifier)
 {
-   using ROOT::Experimental::ENTupleColumnType;
+   using ROOT::ENTupleColumnType;
    using ROOT::Experimental::RFieldBase;
 
    FileRaii fileGuard("test_ntuple_importer_column_modifier.root");
