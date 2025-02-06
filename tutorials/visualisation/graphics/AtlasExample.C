@@ -55,9 +55,7 @@ void AtlasExample()
          g1[ir][icut]->SetMarkerStyle(0);
       }
 
-      char daname[100];
-      sprintf(daname, "data_%d", icut);
-      data[icut] = (TGraphErrors *)g1[0][icut]->Clone(daname);
+      data[icut] = (TGraphErrors *)g1[0][icut]->Clone(TString::Format("data_%d", icut));
       data[icut]->SetMarkerStyle(20);
       data[icut]->SetMarkerColor(1);
 
@@ -130,21 +128,19 @@ TGraphErrors *GetGraph(Int_t ir, Int_t ifs, Int_t icut, Int_t ipdf)
    TFile::SetCacheFileDir(".");
    TFile *file = TFile::Open("http://root.cern/files/AtlasGraphs.root", "CACHEREAD");
 
-   char gname[100];
-   char tname[100];
+   TString tname;
 
    if (ipdf >= 0)
-      sprintf(tname, " E_T (mu_r=%g, mu_f=%g);%s Pdf: %d", mur[ir], muf[ifs], cuts[icut], ipdf);
+      tname = TString::Format(" E_T (mu_r=%g, mu_f=%g);%s Pdf: %d", mur[ir], muf[ifs], cuts[icut], ipdf);
    else
-      sprintf(tname, " E_T %s Ms= %d", cuts[icut], -ipdf);
+      tname = TString::Format(" E_T %s Ms= %d", cuts[icut], -ipdf);
 
    TGraphErrors *g1 = 0;
 
    for (int i = 1; i <= GMAX; i++) {
-      sprintf(gname, "full_%d", i);
-      g1 = (TGraphErrors *)file->Get(gname);
+      g1 = (TGraphErrors *)file->Get(TString::Format("full_%d", i));
       if (!g1) {
-         cout << gname << "  not found " << endl;
+         cout << TString::Format("full_%d", i) << "  not found " << endl;
          return nullptr;
       }
 

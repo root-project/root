@@ -33,7 +33,7 @@ void psview()
 
    // create a PostScript file
    TString dir = gROOT->GetTutorialDir();
-   dir.Append("/graphics/feynman.C");
+   dir.Append("/visualisation/graphics/feynman.C");
    gROOT->Macro(dir);
    gPad->Print("feynman.eps");
 
