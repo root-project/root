@@ -61,7 +61,7 @@ protected:
    void ConstructValue(void *) const final {}
 
 public:
-   RFieldZero() : RFieldBase("", "", ENTupleStructure::kRecord, false /* isSimple */) {}
+   RFieldZero() : RFieldBase("", "", ROOT::ENTupleStructure::kRecord, false /* isSimple */) {}
 
    using RFieldBase::Attach;
    size_t GetValueSize() const final { return 0; }
@@ -99,7 +99,7 @@ protected:
 
 public:
    RInvalidField(std::string_view name, std::string_view type, std::string_view error, RCategory category)
-      : RFieldBase(name, type, ENTupleStructure::kLeaf, false /* isSimple */), fError(error), fCategory(category)
+      : RFieldBase(name, type, ROOT::ENTupleStructure::kLeaf, false /* isSimple */), fError(error), fCategory(category)
    {
       fTraits |= kTraitInvalidField;
    }
@@ -297,7 +297,7 @@ private:
 
 protected:
    RCardinalityField(std::string_view fieldName, std::string_view typeName)
-      : RFieldBase(fieldName, typeName, ENTupleStructure::kLeaf, false /* isSimple */)
+      : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
    {
    }
 
@@ -327,7 +327,7 @@ protected:
 
 public:
    RSimpleField(std::string_view name, std::string_view type)
-      : RFieldBase(name, type, ENTupleStructure::kLeaf, true /* isSimple */)
+      : RFieldBase(name, type, ROOT::ENTupleStructure::kLeaf, true /* isSimple */)
    {
       fTraits |= kTraitTrivialType;
    }

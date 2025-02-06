@@ -122,7 +122,7 @@ std::uint32_t SerializeFieldList(const ROOT::Experimental::RNTupleDescriptor &de
 ROOT::RResult<std::uint32_t> DeserializeField(const void *buffer, std::uint64_t bufSize,
                                               ROOT::Experimental::Internal::RFieldDescriptorBuilder &fieldDesc)
 {
-   using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
+   using ENTupleStructure = ROOT::ENTupleStructure;
 
    auto base = reinterpret_cast<const unsigned char *>(buffer);
    auto bytes = base;
@@ -767,10 +767,9 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(const voi
 }
 
 std::uint32_t
-ROOT::Experimental::Internal::RNTupleSerializer::SerializeFieldStructure(ROOT::Experimental::ENTupleStructure structure,
-                                                                         void *buffer)
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeFieldStructure(ROOT::ENTupleStructure structure, void *buffer)
 {
-   using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
+   using ENTupleStructure = ROOT::ENTupleStructure;
    switch (structure) {
    case ENTupleStructure::kLeaf: return SerializeUInt16(0x00, buffer);
    case ENTupleStructure::kCollection: return SerializeUInt16(0x01, buffer);
@@ -784,10 +783,11 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFieldStructure(ROOT::E
    }
 }
 
-ROOT::RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFieldStructure(
-   const void *buffer, ROOT::Experimental::ENTupleStructure &structure)
+ROOT::RResult<std::uint32_t>
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFieldStructure(const void *buffer,
+                                                                           ROOT::ENTupleStructure &structure)
 {
-   using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
+   using ENTupleStructure = ROOT::ENTupleStructure;
    std::uint16_t onDiskValue;
    auto result = DeserializeUInt16(buffer, onDiskValue);
    switch (onDiskValue) {
@@ -1696,8 +1696,11 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeHeader(const void *b
    descBuilder.SetNTuple(name, description);
 
    // Zero field
-   descBuilder.AddField(
-      RFieldDescriptorBuilder().FieldId(kZeroFieldId).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(kZeroFieldId)
+                           .Structure(ROOT::ENTupleStructure::kRecord)
+                           .MakeDescriptor()
+                           .Unwrap());
    result = DeserializeSchemaDescription(bytes, fnBufSizeLeft(), descBuilder);
    if (!result)
       return R__FORWARD_ERROR(result);

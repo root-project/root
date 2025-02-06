@@ -73,7 +73,7 @@ struct Outer_Simple {
 
       const auto &outer = model->GetConstField("f");
       ASSERT_EQ(outer.GetTypeName(), "Outer_Simple");
-      ASSERT_EQ(outer.GetStructure(), ENTupleStructure::kRecord);
+      ASSERT_EQ(outer.GetStructure(), ROOT::ENTupleStructure::kRecord);
       ASSERT_EQ(outer.GetSubFields().size(), 2);
 
       const auto subfields = outer.GetSubFields();
@@ -82,7 +82,7 @@ struct Outer_Simple {
       const auto *inner = subfields[1];
       ASSERT_EQ(inner->GetTypeName(), "Inner_Simple");
       ASSERT_EQ(inner->GetFieldName(), "fInner");
-      ASSERT_EQ(inner->GetStructure(), ENTupleStructure::kRecord);
+      ASSERT_EQ(inner->GetStructure(), ROOT::ENTupleStructure::kRecord);
       ASSERT_NE(inner->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
       ASSERT_EQ(inner->GetSubFields().size(), 2);
       ASSERT_EQ(inner->GetSubFields()[0]->GetFieldName(), "fInt1");
@@ -166,13 +166,13 @@ struct Outer_Vecs {
 
       const auto &outers = model->GetConstField("outers");
       ASSERT_EQ(outers.GetTypeName(), "std::vector<Outer_Vecs>");
-      ASSERT_EQ(outers.GetStructure(), ENTupleStructure::kCollection);
+      ASSERT_EQ(outers.GetStructure(), ROOT::ENTupleStructure::kCollection);
       ASSERT_EQ(outers.GetSubFields().size(), 1);
 
       const auto subfields = outers.GetSubFields();
       const auto *outer = subfields[0];
       ASSERT_EQ(outer->GetTypeName(), "Outer_Vecs");
-      ASSERT_EQ(outer->GetStructure(), ENTupleStructure::kRecord);
+      ASSERT_EQ(outer->GetStructure(), ROOT::ENTupleStructure::kRecord);
       ASSERT_NE(outer->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
 
       const auto outersubfields = outer->GetSubFields();
@@ -181,14 +181,14 @@ struct Outer_Vecs {
       const auto *inners = outersubfields[0];
       ASSERT_EQ(inners->GetTypeName(), "std::vector<Inner_Vecs>");
       ASSERT_EQ(inners->GetFieldName(), "fInners");
-      ASSERT_EQ(inners->GetStructure(), ENTupleStructure::kCollection);
+      ASSERT_EQ(inners->GetStructure(), ROOT::ENTupleStructure::kCollection);
       ASSERT_EQ(inners->GetSubFields().size(), 1);
       ASSERT_EQ(inners->GetSubFields()[0]->GetFieldName(), "_0");
 
       const auto innersubfields = inners->GetSubFields();
       const auto *inner = innersubfields[0];
       ASSERT_EQ(inner->GetTypeName(), "Inner_Vecs");
-      ASSERT_EQ(inner->GetStructure(), ENTupleStructure::kRecord);
+      ASSERT_EQ(inner->GetStructure(), ROOT::ENTupleStructure::kRecord);
       ASSERT_EQ(inner->GetSubFields().size(), 1);
       ASSERT_EQ(inner->GetSubFields()[0]->GetFieldName(), "fFlt");
    }
@@ -257,14 +257,14 @@ struct Outer_EmptyStruct {
 
       const auto &outer = model->GetConstField("f");
       ASSERT_EQ(outer.GetTypeName(), "Outer_EmptyStruct");
-      ASSERT_EQ(outer.GetStructure(), ENTupleStructure::kRecord);
+      ASSERT_EQ(outer.GetStructure(), ROOT::ENTupleStructure::kRecord);
       ASSERT_EQ(outer.GetSubFields().size(), 1);
 
       const auto subfields = outer.GetSubFields();
       const auto *inner = subfields[0];
       ASSERT_EQ(inner->GetTypeName(), "Inner_EmptyStruct");
       ASSERT_EQ(inner->GetFieldName(), "fInner");
-      ASSERT_EQ(inner->GetStructure(), ENTupleStructure::kRecord);
+      ASSERT_EQ(inner->GetStructure(), ROOT::ENTupleStructure::kRecord);
       ASSERT_NE(inner->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
       ASSERT_EQ(inner->GetSubFields().size(), 0);
    }
@@ -335,7 +335,7 @@ struct Inner_EmptyVec {
 
       const auto &outer = model->GetConstField("f");
       ASSERT_EQ(outer.GetTypeName(), "std::vector<Inner_EmptyVec>");
-      ASSERT_EQ(outer.GetStructure(), ENTupleStructure::kCollection);
+      ASSERT_EQ(outer.GetStructure(), ROOT::ENTupleStructure::kCollection);
       ASSERT_EQ(outer.GetSubFields().size(), 1);
       ASSERT_EQ(outer.GetTraits() & RFieldBase::kTraitEmulatedField, 0);
 
@@ -343,7 +343,7 @@ struct Inner_EmptyVec {
       const auto *inner = subfields[0];
       ASSERT_EQ(inner->GetTypeName(), "Inner_EmptyVec");
       ASSERT_EQ(inner->GetFieldName(), "_0");
-      ASSERT_EQ(inner->GetStructure(), ENTupleStructure::kRecord);
+      ASSERT_EQ(inner->GetStructure(), ROOT::ENTupleStructure::kRecord);
       ASSERT_NE(inner->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
       ASSERT_EQ(inner->GetSubFields().size(), 0);
    }
@@ -368,13 +368,13 @@ TEST(RNTupleEmulated, EmulatedFields_Write)
       ASSERT_TRUE(gInterpreter->Declare(R"(
 struct Inner_Write {
    int fFlt = 42;
-   
+
    ClassDefNV(Inner_Write, 2);
 };
 
 struct Outer_Write {
    std::vector<Inner_Write> fInners;
-   
+
    ClassDefNV(Outer_Write, 2);
 };
 )"));

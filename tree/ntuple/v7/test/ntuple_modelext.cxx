@@ -11,8 +11,8 @@ struct RFieldBaseTest : public ROOT::Experimental::RFieldBase {
          std::size_t result = columnElementIndex;
          for (auto f = static_cast<const RFieldBase *>(this); f != nullptr; f = f->GetParent()) {
             auto parent = f->GetParent();
-            if (parent && (parent->GetStructure() == ROOT::Experimental::kCollection ||
-                           parent->GetStructure() == ROOT::Experimental::kVariant))
+            if (parent && (parent->GetStructure() == ROOT::ENTupleStructure::kCollection ||
+                           parent->GetStructure() == ROOT::ENTupleStructure::kVariant))
                return 0U;
             result /= std::max(f->GetNRepetitions(), std::size_t{1U});
          }
