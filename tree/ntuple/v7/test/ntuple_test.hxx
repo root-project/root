@@ -57,7 +57,6 @@ using ROOT::Experimental::RNTupleLocalIndex;
 using ROOT::Experimental::Internal::RColumnIndex;
 using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
 using ROOT::Experimental::EExtraTypeInfoIds;
-using NTupleSize_t = ROOT::Experimental::NTupleSize_t;
 using RClusterDescriptor = ROOT::Experimental::RClusterDescriptor;
 using RClusterDescriptorBuilder = ROOT::Experimental::Internal::RClusterDescriptorBuilder;
 using RClusterGroupDescriptorBuilder = ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder;

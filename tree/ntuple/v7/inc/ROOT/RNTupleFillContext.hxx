@@ -59,8 +59,8 @@ private:
 
    Detail::RNTupleMetrics fMetrics;
 
-   NTupleSize_t fLastFlushed = 0;
-   NTupleSize_t fNEntries = 0;
+   ROOT::NTupleSize_t fLastFlushed = 0;
+   ROOT::NTupleSize_t fNEntries = 0;
    /// Keeps track of the number of bytes written into the current cluster
    std::size_t fUnzippedClusterSize = 0;
    /// The total number of bytes written to storage (i.e., after compression)
@@ -128,9 +128,9 @@ public:
    std::unique_ptr<REntry> CreateEntry() { return fModel->CreateEntry(); }
 
    /// Return the entry number that was last flushed in a cluster.
-   NTupleSize_t GetLastFlushed() const { return fLastFlushed; }
+   ROOT::NTupleSize_t GetLastFlushed() const { return fLastFlushed; }
    /// Return the number of entries filled so far.
-   NTupleSize_t GetNEntries() const { return fNEntries; }
+   ROOT::NTupleSize_t GetNEntries() const { return fNEntries; }
 
    void EnableStagedClusterCommitting(bool val = true)
    {

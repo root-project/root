@@ -330,13 +330,13 @@ public:
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
 
-   T *Map(NTupleSize_t globalIndex) { return reinterpret_cast<T *>(this->BaseType::Map(globalIndex)); }
+   T *Map(ROOT::NTupleSize_t globalIndex) { return reinterpret_cast<T *>(this->BaseType::Map(globalIndex)); }
    T *Map(RNTupleLocalIndex localIndex) { return reinterpret_cast<T *>(this->BaseType::Map(localIndex)); }
-   T *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems)
+   T *MapV(ROOT::NTupleSize_t globalIndex, ROOT::NTupleSize_t &nItems)
    {
       return reinterpret_cast<T *>(this->BaseType::MapV(globalIndex, nItems));
    }
-   T *MapV(RNTupleLocalIndex localIndex, NTupleSize_t &nItems)
+   T *MapV(RNTupleLocalIndex localIndex, ROOT::NTupleSize_t &nItems)
    {
       return reinterpret_cast<T *>(this->BaseType::MapV(localIndex, nItems));
    }

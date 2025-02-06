@@ -82,7 +82,7 @@ protected:
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
    std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
 
    RRecordField(std::string_view fieldName, std::string_view typeName);

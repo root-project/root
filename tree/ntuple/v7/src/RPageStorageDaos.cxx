@@ -592,7 +592,8 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(DescriptorId_
 
 ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t columnHandle,
-                                                            const RClusterInfo &clusterInfo, NTupleSize_t idxInCluster)
+                                                            const RClusterInfo &clusterInfo,
+                                                            ROOT::NTupleSize_t idxInCluster)
 {
    const auto columnId = columnHandle.fPhysicalId;
    const auto clusterId = clusterInfo.fClusterId;
@@ -673,7 +674,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
    struct RDaosSealedPageLocator {
       DescriptorId_t fClusterId = 0;
       DescriptorId_t fColumnId = 0;
-      NTupleSize_t fPageNo = 0;
+      ROOT::NTupleSize_t fPageNo = 0;
       std::uint64_t fPosition = 0;
       std::uint64_t fCageOffset = 0;
       std::uint64_t fDataSize = 0;   // page payload
@@ -695,7 +696,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
       auto pageZeroMap = std::make_unique<ROnDiskPageMap>();
       PrepareLoadCluster(
          clusterKey, *pageZeroMap,
-         [&](DescriptorId_t physicalColumnId, NTupleSize_t pageNo,
+         [&](DescriptorId_t physicalColumnId, ROOT::NTupleSize_t pageNo,
              const RClusterDescriptor::RPageRange::RPageInfo &pageInfo) {
             const auto &pageLocator = pageInfo.fLocator;
             uint32_t position, offset;

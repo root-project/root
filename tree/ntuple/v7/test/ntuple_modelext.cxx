@@ -5,9 +5,9 @@ namespace {
 struct RFieldBaseTest : public ROOT::Experimental::RFieldBase {
    /// Returns the global index of the first entry that has a stored on-disk value.  For deferred fields, this allows
    /// for differentiating zero-initialized values read before the addition of the field from actual stored data.
-   NTupleSize_t GetFirstEntry() const
+   ROOT::NTupleSize_t GetFirstEntry() const
    {
-      auto fnColumnElementIndexToEntry = [&](NTupleSize_t columnElementIndex) -> std::size_t {
+      auto fnColumnElementIndexToEntry = [&](ROOT::NTupleSize_t columnElementIndex) -> std::size_t {
          std::size_t result = columnElementIndex;
          for (auto f = static_cast<const RFieldBase *>(this); f != nullptr; f = f->GetParent()) {
             auto parent = f->GetParent();

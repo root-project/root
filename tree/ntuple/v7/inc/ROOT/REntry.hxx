@@ -116,7 +116,7 @@ private:
    RFieldBase::RValue &GetValue(RFieldToken token) { return fValues.at(token.fIndex); }
    RFieldBase::RValue &GetValue(std::string_view fieldName) { return GetValue(GetToken(fieldName)); }
 
-   void Read(NTupleSize_t index)
+   void Read(ROOT::NTupleSize_t index)
    {
       for (auto &v : fValues) {
          v.Read(index);

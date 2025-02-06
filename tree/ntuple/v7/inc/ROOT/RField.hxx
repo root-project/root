@@ -154,7 +154,7 @@ protected:
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RClassDeleter>(fClass); }
 
    std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
    void BeforeConnectPageSource(Internal::RPageSource &pageSource) final;
    void OnConnectPageSource() final;
@@ -205,7 +205,7 @@ protected:
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RStreamerFieldDeleter>(fClass); }
 
    std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
    void CommitClusterImpl() final { fIndex = 0; }
 
@@ -238,7 +238,7 @@ protected:
    void ConstructValue(void *where) const final { CallConstructValueOn(*fSubFields[0], where); }
 
    std::size_t AppendImpl(const void *from) final { return CallAppendOn(*fSubFields[0], from); }
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubFields[0], globalIndex, to); }
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubFields[0], globalIndex, to); }
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final { CallReadOn(*fSubFields[0], localIndex, to); }
 
 public:
@@ -286,11 +286,11 @@ class RCardinalityField : public RFieldBase {
    friend class RNTupleCollectionView; // to access GetCollectionInfo()
 
 private:
-   void GetCollectionInfo(NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, NTupleSize_t *size)
+   void GetCollectionInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size)
    {
       fPrincipalColumn->GetCollectionInfo(globalIndex, collectionStart, size);
    }
-   void GetCollectionInfo(RNTupleLocalIndex localIndex, RNTupleLocalIndex *collectionStart, NTupleSize_t *size)
+   void GetCollectionInfo(RNTupleLocalIndex localIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size)
    {
       fPrincipalColumn->GetCollectionInfo(localIndex, collectionStart, size);
    }
@@ -335,10 +335,16 @@ public:
    RSimpleField &operator=(RSimpleField &&other) = default;
    ~RSimpleField() override = default;
 
-   T *Map(NTupleSize_t globalIndex) { return fPrincipalColumn->Map<T>(globalIndex); }
+   T *Map(ROOT::NTupleSize_t globalIndex) { return fPrincipalColumn->Map<T>(globalIndex); }
    T *Map(RNTupleLocalIndex localIndex) { return fPrincipalColumn->Map<T>(localIndex); }
-   T *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) { return fPrincipalColumn->MapV<T>(globalIndex, nItems); }
-   T *MapV(RNTupleLocalIndex localIndex, NTupleSize_t &nItems) { return fPrincipalColumn->MapV<T>(localIndex, nItems); }
+   T *MapV(ROOT::NTupleSize_t globalIndex, ROOT::NTupleSize_t &nItems)
+   {
+      return fPrincipalColumn->MapV<T>(globalIndex, nItems);
+   }
+   T *MapV(RNTupleLocalIndex localIndex, ROOT::NTupleSize_t &nItems)
+   {
+      return fPrincipalColumn->MapV<T>(localIndex, nItems);
+   }
 
    size_t GetValueSize() const final { return sizeof(T); }
    size_t GetAlignment() const final { return alignof(T); }
@@ -370,10 +376,10 @@ protected:
    void ConstructValue(void *where) const final { new (where) RNTupleCardinality<SizeT>(0); }
 
    /// Get the number of elements of the collection identified by globalIndex
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final
    {
       RNTupleLocalIndex collectionStart;
-      NTupleSize_t size;
+      ROOT::NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
       *static_cast<RNTupleCardinality<SizeT> *>(to) = size;
    }
@@ -382,7 +388,7 @@ protected:
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final
    {
       RNTupleLocalIndex collectionStart;
-      NTupleSize_t size;
+      ROOT::NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(localIndex, &collectionStart, &size);
       *static_cast<RNTupleCardinality<SizeT> *>(to) = size;
    }
@@ -390,17 +396,17 @@ protected:
    std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final
    {
       RNTupleLocalIndex collectionStart;
-      NTupleSize_t collectionSize;
+      ROOT::NTupleSize_t collectionSize;
       fPrincipalColumn->GetCollectionInfo(bulkSpec.fFirstIndex, &collectionStart, &collectionSize);
 
       auto typedValues = static_cast<RNTupleCardinality<SizeT> *>(bulkSpec.fValues);
       typedValues[0] = collectionSize;
 
       auto lastOffset = collectionStart.GetIndexInCluster() + collectionSize;
-      NTupleSize_t nRemainingEntries = bulkSpec.fCount - 1;
+      ROOT::NTupleSize_t nRemainingEntries = bulkSpec.fCount - 1;
       std::size_t nEntries = 1;
       while (nRemainingEntries > 0) {
-         NTupleSize_t nItemsUntilPageEnd;
+         ROOT::NTupleSize_t nItemsUntilPageEnd;
          auto offsets =
             fPrincipalColumn->MapV<Internal::RColumnIndex>(bulkSpec.fFirstIndex + nEntries, nItemsUntilPageEnd);
          std::size_t nBatch = std::min(nRemainingEntries, nItemsUntilPageEnd);
@@ -442,7 +448,7 @@ protected:
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<TObject>>(); }
 
    std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
    void OnConnectPageSource() final;
 

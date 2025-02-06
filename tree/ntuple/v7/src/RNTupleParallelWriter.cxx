@@ -27,8 +27,8 @@
 
 namespace {
 
+using ROOT::NTupleSize_t;
 using ROOT::Experimental::DescriptorId_t;
-using ROOT::Experimental::NTupleSize_t;
 using ROOT::Experimental::RExtraTypeInfoDescriptor;
 using ROOT::Experimental::RNTupleDescriptor;
 using ROOT::Experimental::RNTupleModel;

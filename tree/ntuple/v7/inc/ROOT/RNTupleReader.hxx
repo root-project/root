@@ -106,18 +106,18 @@ public:
    // Browse through the entries
    class RIterator {
    private:
-      NTupleSize_t fIndex = kInvalidNTupleIndex;
+      ROOT::NTupleSize_t fIndex = ROOT::kInvalidNTupleIndex;
 
    public:
       using iterator = RIterator;
       using iterator_category = std::forward_iterator_tag;
-      using value_type = NTupleSize_t;
-      using difference_type = NTupleSize_t;
-      using pointer = NTupleSize_t *;
-      using reference = NTupleSize_t &;
+      using value_type = ROOT::NTupleSize_t;
+      using difference_type = ROOT::NTupleSize_t;
+      using pointer = ROOT::NTupleSize_t *;
+      using reference = ROOT::NTupleSize_t &;
 
       RIterator() = default;
-      explicit RIterator(NTupleSize_t index) : fIndex(index) {}
+      explicit RIterator(ROOT::NTupleSize_t index) : fIndex(index) {}
       ~RIterator() = default;
 
       iterator operator++(int) /* postfix */
@@ -178,7 +178,7 @@ public:
    }
    ~RNTupleReader();
 
-   NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
+   ROOT::NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
    const RNTupleModel &GetModel();
    std::unique_ptr<REntry> CreateEntry();
 
@@ -219,11 +219,11 @@ public:
    /// Shows the values of the i-th entry/row, starting with 0 for the first entry. By default,
    /// prints the output in JSON format.
    /// Uses the visitor pattern to traverse through each field of the given entry.
-   void Show(NTupleSize_t index, std::ostream &output = std::cout);
+   void Show(ROOT::NTupleSize_t index, std::ostream &output = std::cout);
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
    /// On I/O errors, raises an exception.
-   void LoadEntry(NTupleSize_t index)
+   void LoadEntry(ROOT::NTupleSize_t index)
    {
       // TODO(jblomer): can be templated depending on the factory method / constructor
       if (R__unlikely(!fModel)) {
@@ -234,7 +234,7 @@ public:
       LoadEntry(index, fModel->GetDefaultEntry());
    }
    /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
-   void LoadEntry(NTupleSize_t index, REntry &entry)
+   void LoadEntry(ROOT::NTupleSize_t index, REntry &entry)
    {
       if (R__unlikely(entry.GetModelId() != fModel->GetModelId()))
          throw RException(R__FAIL("mismatch between entry and model"));
@@ -261,7 +261,7 @@ public:
 
    /// Provides access to an individual field that can contain either a scalar value or a collection, e.g.
    /// GetView<double>("particles.pt") or GetView<std::vector<double>>("particle").  It can as well be the index
-   /// field of a collection itself, like GetView<NTupleSize_t>("particle").
+   /// field of a collection itself, like GetView<ROOT::NTupleSize_t>("particle").
    ///
    /// Raises an exception if there is no field with the given name.
    ///

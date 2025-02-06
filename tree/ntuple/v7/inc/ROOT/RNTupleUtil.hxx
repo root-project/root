@@ -118,11 +118,11 @@ enum class ENTupleStructure : std::uint16_t {
    kUnknown
 };
 
-namespace Experimental {
-
 /// Integer type long enough to hold the maximum number of entries in a column
 using NTupleSize_t = std::uint64_t;
 constexpr NTupleSize_t kInvalidNTupleIndex = std::uint64_t(-1);
+
+namespace Experimental {
 
 /// Distriniguishes elements of the same type within a descriptor, e.g. different fields
 using DescriptorId_t = std::uint64_t;
@@ -132,20 +132,26 @@ constexpr DescriptorId_t kInvalidDescriptorId = std::uint64_t(-1);
 class RNTupleLocalIndex {
 private:
    DescriptorId_t fClusterId = kInvalidDescriptorId;
-   NTupleSize_t fIndexInCluster = kInvalidNTupleIndex;
+   ROOT::NTupleSize_t fIndexInCluster = ROOT::kInvalidNTupleIndex;
 
 public:
    RNTupleLocalIndex() = default;
    RNTupleLocalIndex(const RNTupleLocalIndex &other) = default;
    RNTupleLocalIndex &operator=(const RNTupleLocalIndex &other) = default;
-   constexpr RNTupleLocalIndex(DescriptorId_t clusterId, NTupleSize_t indexInCluster)
+   constexpr RNTupleLocalIndex(DescriptorId_t clusterId, ROOT::NTupleSize_t indexInCluster)
       : fClusterId(clusterId), fIndexInCluster(indexInCluster)
    {
    }
 
-   RNTupleLocalIndex operator+(NTupleSize_t off) const { return RNTupleLocalIndex(fClusterId, fIndexInCluster + off); }
+   RNTupleLocalIndex operator+(ROOT::NTupleSize_t off) const
+   {
+      return RNTupleLocalIndex(fClusterId, fIndexInCluster + off);
+   }
 
-   RNTupleLocalIndex operator-(NTupleSize_t off) const { return RNTupleLocalIndex(fClusterId, fIndexInCluster - off); }
+   RNTupleLocalIndex operator-(ROOT::NTupleSize_t off) const
+   {
+      return RNTupleLocalIndex(fClusterId, fIndexInCluster - off);
+   }
 
    RNTupleLocalIndex operator++(int) /* postfix */
    {
@@ -168,7 +174,7 @@ public:
    bool operator!=(RNTupleLocalIndex other) const { return !(*this == other); }
 
    DescriptorId_t GetClusterId() const { return fClusterId; }
-   NTupleSize_t GetIndexInCluster() const { return fIndexInCluster; }
+   ROOT::NTupleSize_t GetIndexInCluster() const { return fIndexInCluster; }
 };
 
 /// RNTupleLocator payload that is common for object stores using 64bit location information.
@@ -279,13 +285,13 @@ public:
 /// Holds the index and the tag of a kSwitch column
 class RColumnSwitch {
 private:
-   NTupleSize_t fIndex;
+   ROOT::NTupleSize_t fIndex;
    std::uint32_t fTag = 0;
 
 public:
    RColumnSwitch() = default;
-   RColumnSwitch(NTupleSize_t index, std::uint32_t tag) : fIndex(index), fTag(tag) {}
-   NTupleSize_t GetIndex() const { return fIndex; }
+   RColumnSwitch(ROOT::NTupleSize_t index, std::uint32_t tag) : fIndex(index), fTag(tag) {}
+   ROOT::NTupleSize_t GetIndex() const { return fIndex; }
    std::uint32_t GetTag() const { return fTag; }
 };
 
@@ -325,6 +331,7 @@ using EColumnType [[deprecated("ROOT::Experimental::EColumnType moved to ROOT::E
    ROOT::ENTupleColumnType;
 using ENTupleStructure [[deprecated("ROOT::Experimental::ENTupleStructure moved to ROOT::ENTupleStructure")]] =
    ROOT::ENTupleStructure;
+using NTupleSize_t [[deprecated("ROOT::Experimental::NTupleSize_t moved to ROOT::NTupleSize_t")]] = ROOT::NTupleSize_t;
 
 } // namespace Experimental
 } // namespace ROOT

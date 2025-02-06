@@ -195,7 +195,7 @@ ROOT::Experimental::RColumnDescriptor ROOT::Experimental::RColumnDescriptor::Clo
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfoExtended
-ROOT::Experimental::RClusterDescriptor::RPageRange::Find(NTupleSize_t idxInCluster) const
+ROOT::Experimental::RClusterDescriptor::RPageRange::Find(ROOT::NTupleSize_t idxInCluster) const
 {
    const auto N = fCumulativeNElements.size();
    R__ASSERT(N > 0);
@@ -323,10 +323,9 @@ bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &
    // clang-format on
 }
 
-ROOT::Experimental::NTupleSize_t
-ROOT::Experimental::RNTupleDescriptor::GetNElements(DescriptorId_t physicalColumnId) const
+ROOT::NTupleSize_t ROOT::Experimental::RNTupleDescriptor::GetNElements(DescriptorId_t physicalColumnId) const
 {
-   NTupleSize_t result = 0;
+   ROOT::NTupleSize_t result = 0;
    for (const auto &cd : fClusterDescriptors) {
       if (!cd.second.ContainsColumn(physicalColumnId))
          continue;
@@ -399,7 +398,7 @@ ROOT::Experimental::RNTupleDescriptor::FindPhysicalColumnId(DescriptorId_t field
 }
 
 ROOT::Experimental::DescriptorId_t
-ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t physicalColumnId, NTupleSize_t index) const
+ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t physicalColumnId, ROOT::NTupleSize_t index) const
 {
    if (GetNClusterGroups() == 0)
       return kInvalidDescriptorId;
@@ -457,7 +456,8 @@ ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t physicalColu
    return kInvalidDescriptorId;
 }
 
-ROOT::Experimental::DescriptorId_t ROOT::Experimental::RNTupleDescriptor::FindClusterId(NTupleSize_t entryIdx) const
+ROOT::Experimental::DescriptorId_t
+ROOT::Experimental::RNTupleDescriptor::FindClusterId(ROOT::NTupleSize_t entryIdx) const
 {
    if (GetNClusterGroups() == 0)
       return kInvalidDescriptorId;
@@ -771,7 +771,7 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::CommitSuppressedColumnR
    for (auto &[_, columnRange] : fCluster.fColumnRanges) {
       if (!columnRange.fIsSuppressed)
          continue;
-      R__ASSERT(columnRange.fFirstElementIndex == kInvalidNTupleIndex);
+      R__ASSERT(columnRange.fFirstElementIndex == ROOT::kInvalidNTupleIndex);
 
       const auto &columnDesc = desc.GetColumnDescriptor(columnRange.fPhysicalColumnId);
       const auto &fieldDesc = desc.GetFieldDescriptor(columnDesc.GetFieldId());
@@ -793,7 +793,7 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::CommitSuppressedColumnR
          break;
       }
 
-      if (columnRange.fFirstElementIndex == kInvalidNTupleIndex) {
+      if (columnRange.fFirstElementIndex == ROOT::kInvalidNTupleIndex) {
          return R__FAIL(std::string("cannot find non-suppressed column for column ID ") +
                         std::to_string(columnRange.fPhysicalColumnId) +
                         ", cluster ID: " + std::to_string(fCluster.GetId()));
@@ -878,7 +878,7 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::MoveDescriptor()
       }
       pr.second.fCumulativeNElements.clear();
       pr.second.fCumulativeNElements.reserve(pr.second.fPageInfos.size());
-      NTupleSize_t sum = 0;
+      ROOT::NTupleSize_t sum = 0;
       for (const auto &pi : pr.second.fPageInfos) {
          sum += pi.fNElements;
          pr.second.fCumulativeNElements.emplace_back(sum);

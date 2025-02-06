@@ -224,7 +224,7 @@ ROOT::Experimental::RNTupleReader *ROOT::Experimental::RNTupleReader::GetDisplay
    return fDisplayReader.get();
 }
 
-void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, std::ostream &output)
+void ROOT::Experimental::RNTupleReader::Show(ROOT::NTupleSize_t index, std::ostream &output)
 {
    auto reader = GetDisplayReader();
    const auto &entry = reader->GetModel().GetDefaultEntry();

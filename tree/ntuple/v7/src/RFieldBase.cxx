@@ -88,7 +88,7 @@ void ROOT::Experimental::Internal::CallCommitClusterOnField(RFieldBase &field)
    field.CommitCluster();
 }
 void ROOT::Experimental::Internal::CallConnectPageSinkOnField(RFieldBase &field, Internal::RPageSink &sink,
-                                                              NTupleSize_t firstEntry)
+                                                              ROOT::NTupleSize_t firstEntry)
 {
    field.ConnectPageSink(sink, firstEntry);
 }
@@ -663,7 +663,7 @@ std::size_t ROOT::Experimental::RFieldBase::AppendImpl(const void * /* from */)
    return 0;
 }
 
-void ROOT::Experimental::RFieldBase::ReadGlobalImpl(ROOT::Experimental::NTupleSize_t /*index*/, void * /* to */)
+void ROOT::Experimental::RFieldBase::ReadGlobalImpl(ROOT::NTupleSize_t /*index*/, void * /* to */)
 {
    R__ASSERT(false);
 }
@@ -723,8 +723,7 @@ void ROOT::Experimental::RFieldBase::Attach(std::unique_ptr<ROOT::Experimental::
    fSubFields.emplace_back(std::move(child));
 }
 
-ROOT::Experimental::NTupleSize_t
-ROOT::Experimental::RFieldBase::EntryToColumnElementIndex(NTupleSize_t globalIndex) const
+ROOT::NTupleSize_t ROOT::Experimental::RFieldBase::EntryToColumnElementIndex(ROOT::NTupleSize_t globalIndex) const
 {
    std::size_t result = globalIndex;
    for (auto f = this; f != nullptr; f = f->GetParent()) {
@@ -973,7 +972,7 @@ void ROOT::Experimental::RFieldBase::AutoAdjustColumnTypes(const RNTupleWriteOpt
       SetColumnRepresentatives({{ROOT::ENTupleColumnType::kSplitReal32}});
 }
 
-void ROOT::Experimental::RFieldBase::ConnectPageSink(Internal::RPageSink &pageSink, NTupleSize_t firstEntry)
+void ROOT::Experimental::RFieldBase::ConnectPageSink(Internal::RPageSink &pageSink, ROOT::NTupleSize_t firstEntry)
 {
    if (dynamic_cast<ROOT::Experimental::RFieldZero *>(this))
       throw RException(R__FAIL("invalid attempt to connect zero field to page sink"));

@@ -237,9 +237,9 @@ public:
    struct RColumnRange {
       DescriptorId_t fPhysicalColumnId = kInvalidDescriptorId;
       /// The global index of the first column element in the cluster
-      NTupleSize_t fFirstElementIndex = kInvalidNTupleIndex;
+      ROOT::NTupleSize_t fFirstElementIndex = ROOT::kInvalidNTupleIndex;
       /// The number of column elements in the cluster
-      NTupleSize_t fNElements = kInvalidNTupleIndex;
+      ROOT::NTupleSize_t fNElements = ROOT::kInvalidNTupleIndex;
       /// The usual format for ROOT compression settings (see Compression.h).
       /// The pages of a particular column in a particular cluster are all compressed with the same settings.
       /// If unset, the compression settings are undefined (deferred columns, suppressed columns).
@@ -259,7 +259,7 @@ public:
                 fIsSuppressed == other.fIsSuppressed;
       }
 
-      bool Contains(NTupleSize_t index) const
+      bool Contains(ROOT::NTupleSize_t index) const
       {
          return (fFirstElementIndex <= index && (fFirstElementIndex + fNElements) > index);
       }
@@ -284,7 +284,7 @@ public:
 
       /// Has the same length than fPageInfos and stores the sum of the number of elements of all the pages
       /// up to and including a given index. Used for binary search in Find().
-      std::vector<NTupleSize_t> fCumulativeNElements;
+      std::vector<ROOT::NTupleSize_t> fCumulativeNElements;
 
    public:
       /// We do not need to store the element size / uncompressed page size because we know to which column
@@ -304,12 +304,12 @@ public:
       };
       struct RPageInfoExtended : RPageInfo {
          /// Index (in cluster) of the first element in page.
-         NTupleSize_t fFirstInPage = 0;
+         ROOT::NTupleSize_t fFirstInPage = 0;
          /// Page number in the corresponding RPageRange.
-         NTupleSize_t fPageNo = 0;
+         ROOT::NTupleSize_t fPageNo = 0;
 
          RPageInfoExtended() = default;
-         RPageInfoExtended(const RPageInfo &pi, NTupleSize_t i, NTupleSize_t n)
+         RPageInfoExtended(const RPageInfo &pi, ROOT::NTupleSize_t i, ROOT::NTupleSize_t n)
             : RPageInfo(pi), fFirstInPage(i), fPageNo(n)
          {
          }
@@ -331,7 +331,7 @@ public:
       }
 
       /// Find the page in the RPageRange that contains the given element. The element must exist.
-      RPageInfoExtended Find(NTupleSize_t idxInCluster) const;
+      RPageInfoExtended Find(ROOT::NTupleSize_t idxInCluster) const;
 
       DescriptorId_t fPhysicalColumnId = kInvalidDescriptorId;
       std::vector<RPageInfo> fPageInfos;
@@ -345,9 +345,9 @@ public:
 private:
    DescriptorId_t fClusterId = kInvalidDescriptorId;
    /// Clusters can be swapped by adjusting the entry offsets
-   NTupleSize_t fFirstEntryIndex = kInvalidNTupleIndex;
+   ROOT::NTupleSize_t fFirstEntryIndex = kInvalidNTupleIndex;
    // TODO(jblomer): change to std::uint64_t
-   NTupleSize_t fNEntries = kInvalidNTupleIndex;
+   ROOT::NTupleSize_t fNEntries = kInvalidNTupleIndex;
 
    std::unordered_map<DescriptorId_t, RColumnRange> fColumnRanges;
    std::unordered_map<DescriptorId_t, RPageRange> fPageRanges;
@@ -366,8 +366,8 @@ public:
    bool operator==(const RClusterDescriptor &other) const;
 
    DescriptorId_t GetId() const { return fClusterId; }
-   NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
-   NTupleSize_t GetNEntries() const { return fNEntries; }
+   ROOT::NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
+   ROOT::NTupleSize_t GetNEntries() const { return fNEntries; }
    const RColumnRange &GetColumnRange(DescriptorId_t physicalId) const { return fColumnRanges.at(physicalId); }
    const RPageRange &GetPageRange(DescriptorId_t physicalId) const { return fPageRanges.at(physicalId); }
    /// Returns an iterator over pairs { columnId, columnRange }. The iteration order is unspecified.
@@ -591,7 +591,7 @@ private:
    std::unordered_map<DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
 
    // We don't expose this publicly because when we add sharded clusters, this interface does not make sense anymore
-   DescriptorId_t FindClusterId(NTupleSize_t entryIdx) const;
+   DescriptorId_t FindClusterId(ROOT::NTupleSize_t entryIdx) const;
 
    /// Creates a descriptor containing only the schema information about this RNTuple, i.e. all the information needed
    /// to create a new RNTuple with the same schema as this one but not necessarily the same clustering. This is used
@@ -687,8 +687,8 @@ public:
    std::size_t GetNExtraTypeInfos() const { return fExtraTypeInfoDescriptors.size(); }
 
    /// We know the number of entries from adding the cluster summaries
-   NTupleSize_t GetNEntries() const { return fNEntries; }
-   NTupleSize_t GetNElements(DescriptorId_t physicalColumnId) const;
+   ROOT::NTupleSize_t GetNEntries() const { return fNEntries; }
+   ROOT::NTupleSize_t GetNElements(DescriptorId_t physicalColumnId) const;
 
    /// Returns the logical parent of all top-level NTuple data fields.
    DescriptorId_t GetFieldZeroId() const { return fFieldZeroId; }
@@ -700,7 +700,7 @@ public:
    FindLogicalColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex, std::uint16_t representationIndex) const;
    DescriptorId_t
    FindPhysicalColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex, std::uint16_t representationIndex) const;
-   DescriptorId_t FindClusterId(DescriptorId_t physicalColumnId, NTupleSize_t index) const;
+   DescriptorId_t FindClusterId(DescriptorId_t physicalColumnId, ROOT::NTupleSize_t index) const;
    DescriptorId_t FindNextClusterId(DescriptorId_t clusterId) const;
    DescriptorId_t FindPrevClusterId(DescriptorId_t clusterId) const;
 

@@ -47,7 +47,7 @@ std::size_t ROOT::Experimental::RArrayField::AppendImpl(const void *from)
    return nbytes;
 }
 
-void ROOT::Experimental::RArrayField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RArrayField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
    if (fSubFields[0]->IsSimple()) {
       GetPrincipalColumnOf(*fSubFields[0])->ReadV(globalIndex * fArrayLength, fArrayLength, to);
@@ -252,7 +252,7 @@ std::size_t ROOT::Experimental::RRVecField::AppendImpl(const void *from)
    return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
    // TODO as a performance optimization, we could assign values to elements of the inline buffer:
    // if size < inline buffer size: we save one allocation here and usage of the RVec skips a pointer indirection
@@ -260,7 +260,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
    auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(to);
 
    // Read collection info for this entry
-   NTupleSize_t nItems;
+   ROOT::NTupleSize_t nItems;
    RNTupleLocalIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
    char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
@@ -343,7 +343,7 @@ std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSp
 
    // Get size of the first RVec of the bulk
    RNTupleLocalIndex firstItemIndex;
-   NTupleSize_t collectionSize;
+   ROOT::NTupleSize_t collectionSize;
    this->GetCollectionInfo(bulkSpec.fFirstIndex, &firstItemIndex, &collectionSize);
    *beginPtr = itemValueArray;
    *sizePtr = collectionSize;
@@ -353,11 +353,11 @@ std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSp
    // We optimistically assume that bulkSpec.fAuxData is already large enough to hold all the item values in the
    // given range. If not, we'll fix up the pointers afterwards.
    auto lastOffset = firstItemIndex.GetIndexInCluster() + collectionSize;
-   NTupleSize_t nRemainingValues = bulkSpec.fCount - 1;
+   ROOT::NTupleSize_t nRemainingValues = bulkSpec.fCount - 1;
    std::size_t nValues = 1;
    std::size_t nItems = collectionSize;
    while (nRemainingValues > 0) {
-      NTupleSize_t nElementsUntilPageEnd;
+      ROOT::NTupleSize_t nElementsUntilPageEnd;
       const auto offsets =
          fPrincipalColumn->MapV<Internal::RColumnIndex>(bulkSpec.fFirstIndex + nValues, nElementsUntilPageEnd);
       const std::size_t nBatch = std::min(nRemainingValues, nElementsUntilPageEnd);
@@ -530,11 +530,11 @@ std::size_t ROOT::Experimental::RVectorField::AppendImpl(const void *from)
    return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RVectorField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
    auto typedValue = static_cast<std::vector<char> *>(to);
 
-   NTupleSize_t nItems;
+   ROOT::NTupleSize_t nItems;
    RNTupleLocalIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
@@ -654,11 +654,11 @@ std::size_t ROOT::Experimental::RField<std::vector<bool>>::AppendImpl(const void
    return count + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
    auto typedValue = static_cast<std::vector<bool> *>(to);
 
-   NTupleSize_t nItems;
+   ROOT::NTupleSize_t nItems;
    RNTupleLocalIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
@@ -795,7 +795,7 @@ std::unique_ptr<ROOT::Experimental::RFieldBase::RDeleter> ROOT::Experimental::RA
    return std::make_unique<RRVecField::RRVecDeleter>(fSubFields[0]->GetAlignment());
 }
 
-void ROOT::Experimental::RArrayAsRVecField::ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RArrayAsRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
 
    auto [beginPtr, _, __] = GetRVecDataMembers(to);

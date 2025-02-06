@@ -113,16 +113,16 @@ void ROOT::Experimental::Internal::RNTupleIndex::Build()
    fIsBuilt = true;
 }
 
-ROOT::Experimental::NTupleSize_t
+ROOT::NTupleSize_t
 ROOT::Experimental::Internal::RNTupleIndex::GetFirstEntryNumber(const std::vector<void *> &valuePtrs) const
 {
    const auto entryIndices = GetAllEntryNumbers(valuePtrs);
    if (!entryIndices)
-      return kInvalidNTupleIndex;
+      return ROOT::kInvalidNTupleIndex;
    return entryIndices->front();
 }
 
-const std::vector<ROOT::Experimental::NTupleSize_t> *
+const std::vector<ROOT::NTupleSize_t> *
 ROOT::Experimental::Internal::RNTupleIndex::GetAllEntryNumbers(const std::vector<void *> &valuePtrs) const
 {
    if (valuePtrs.size() != fIndexFields.size())

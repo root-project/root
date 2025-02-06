@@ -51,7 +51,7 @@ protected:
    std::unique_ptr<RDeleter> GetDeleter() const final { return GetDeleterOf(*fSubFields[0]); }
 
    std::size_t AppendImpl(const void *from) final { return CallAppendOn(*fSubFields[0], from); }
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubFields[0], globalIndex, to); }
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubFields[0], globalIndex, to); }
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final { CallReadOn(*fSubFields[0], localIndex, to); }
 
 public:
@@ -103,7 +103,7 @@ protected:
    void GenerateColumns(const RNTupleDescriptor &desc) final;
    void ConstructValue(void *where) const final { memset(where, 0, GetValueSize()); }
    std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
 
 public:
@@ -179,7 +179,7 @@ protected:
 
    /// Given the index of the nullable field, returns the corresponding global index of the subfield or,
    /// if it is null, returns kInvalidNTupleIndex
-   RNTupleLocalIndex GetItemIndex(NTupleSize_t globalIndex);
+   RNTupleLocalIndex GetItemIndex(ROOT::NTupleSize_t globalIndex);
 
    RNullableField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
 
@@ -218,7 +218,7 @@ protected:
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
    std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
 public:
    ROptionalField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
@@ -260,7 +260,7 @@ protected:
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
    std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
 public:
    RUniquePtrField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
@@ -305,7 +305,7 @@ private:
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<std::string>>(); }
 
    std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to) final;
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
    void CommitClusterImpl() final { fIndex = 0; }
 
@@ -381,7 +381,7 @@ protected:
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
    std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
 
    void CommitClusterImpl() final;
 

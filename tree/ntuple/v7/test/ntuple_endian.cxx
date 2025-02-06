@@ -21,7 +21,7 @@
 #include <vector>
 
 using ROOT::ENTupleColumnType;
-using ROOT::Experimental::NTupleSize_t;
+using ROOT::NTupleSize_t;
 using ROOT::Experimental::RNTupleDescriptor;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::Internal::RCluster;
@@ -91,10 +91,7 @@ protected:
       return RNTupleDescriptor();
    }
    std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
-   RPageRef LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::Experimental::NTupleSize_t) final
-   {
-      return RPageRef();
-   }
+   RPageRef LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::NTupleSize_t) final { return RPageRef(); }
 
 public:
    RPageSourceMock(const std::vector<RPageStorage::RSealedPage> &pages, const RColumnElementBase &elt)

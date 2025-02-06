@@ -80,7 +80,7 @@ struct hash<ROOT::Experimental::Internal::ROnDiskPage::Key> {
    size_t operator()(const ROOT::Experimental::Internal::ROnDiskPage::Key &key) const
    {
       return ((std::hash<ROOT::Experimental::DescriptorId_t>()(key.fPhysicalColumnId) ^
-               (hash<ROOT::Experimental::NTupleSize_t>()(key.fPageNo) << 1)) >>
+               (hash<ROOT::NTupleSize_t>()(key.fPageNo) << 1)) >>
               1);
    }
 };

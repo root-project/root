@@ -38,7 +38,7 @@ ROOT::Experimental::Internal::RColumn::~RColumn()
 }
 
 void ROOT::Experimental::Internal::RColumn::ConnectPageSink(DescriptorId_t fieldId, RPageSink &pageSink,
-                                                            NTupleSize_t firstElementIndex)
+                                                            ROOT::NTupleSize_t firstElementIndex)
 {
    fInitialNElements = pageSink.GetWriteOptions().GetInitialUnzippedPageSize() / fElement->GetSize();
    if (fInitialNElements < 1) {
@@ -82,7 +82,7 @@ void ROOT::Experimental::Internal::RColumn::CommitSuppressed()
    fPageSink->CommitSuppressedColumn(fHandleSink);
 }
 
-bool ROOT::Experimental::Internal::RColumn::TryMapPage(NTupleSize_t globalIndex)
+bool ROOT::Experimental::Internal::RColumn::TryMapPage(ROOT::NTupleSize_t globalIndex)
 {
    const auto nTeam = fTeam.size();
    std::size_t iTeam = 1;

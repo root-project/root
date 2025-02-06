@@ -155,7 +155,7 @@ public:
    RNTupleView &operator=(RNTupleView &&other) = default;
    ~RNTupleView() = default;
 
-   const T &operator()(NTupleSize_t globalIndex)
+   const T &operator()(ROOT::NTupleSize_t globalIndex)
    {
       RNTupleViewBase<T>::fValue.Read(globalIndex);
       return RNTupleViewBase<T>::fValue.template GetRef<T>();
@@ -203,7 +203,7 @@ public:
    RNTupleView &operator=(RNTupleView &&other) = default;
    ~RNTupleView() = default;
 
-   void operator()(NTupleSize_t globalIndex) { fValue.Read(globalIndex); }
+   void operator()(ROOT::NTupleSize_t globalIndex) { fValue.Read(globalIndex); }
    void operator()(RNTupleLocalIndex localIndex) { fValue.Read(localIndex); }
 };
 
@@ -249,7 +249,7 @@ public:
    const RFieldBase &GetField() const { return fField; }
    RNTupleGlobalRange GetFieldRange() const { return fFieldRange; }
 
-   const T &operator()(NTupleSize_t globalIndex) { return *fField.Map(globalIndex); }
+   const T &operator()(ROOT::NTupleSize_t globalIndex) { return *fField.Map(globalIndex); }
    const T &operator()(RNTupleLocalIndex localIndex) { return *fField.Map(localIndex); }
 };
 
@@ -308,8 +308,9 @@ public:
    RNTupleCollectionView &operator=(RNTupleCollectionView &&other) = default;
    ~RNTupleCollectionView() = default;
 
-   RNTupleClusterRange GetCollectionRange(NTupleSize_t globalIndex) {
-      NTupleSize_t size;
+   RNTupleClusterRange GetCollectionRange(ROOT::NTupleSize_t globalIndex)
+   {
+      ROOT::NTupleSize_t size;
       RNTupleLocalIndex collectionStart;
       fField.GetCollectionInfo(globalIndex, &collectionStart, &size);
       return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndexInCluster(),
@@ -318,7 +319,7 @@ public:
 
    RNTupleClusterRange GetCollectionRange(RNTupleLocalIndex localIndex)
    {
-      NTupleSize_t size;
+      ROOT::NTupleSize_t size;
       RNTupleLocalIndex collectionStart;
       fField.GetCollectionInfo(localIndex, &collectionStart, &size);
       return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndexInCluster(),
@@ -349,7 +350,7 @@ public:
       return RNTupleCollectionView::Create(GetFieldId(fieldName), fSource);
    }
 
-   std::uint64_t operator()(NTupleSize_t globalIndex)
+   std::uint64_t operator()(ROOT::NTupleSize_t globalIndex)
    {
       fValue.Read(globalIndex);
       return fValue.GetRef<std::uint64_t>();
