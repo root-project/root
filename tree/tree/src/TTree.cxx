@@ -6853,7 +6853,7 @@ bool TTree::MergeBranches(TTree* tree)
          if (nbranch->TestBit(kDoNotProcess)) {
             continue;
          }
-         if (!FindBranch(nbranch->GetName())) {
+         if (!GetListOfBranches()->FindObject(nbranch->GetName())
             auto addbranch = (TBranch*) nbranch->Clone();
             addbranch->SetAddress(nullptr);
             addbranch->SetTree(this);
