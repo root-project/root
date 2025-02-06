@@ -16,7 +16,6 @@ void splines_test(Int_t np = 23, Double_t a = -0.5, Double_t b = 31)
    TSpline5 *spline5 = 0;
    TLine *line5, *line3;
    TText *text5, *text3, *textn;
-   char text[20];
    const Double_t power = 0.75;
 
    // Define the original function
@@ -95,8 +94,7 @@ void splines_test(Int_t np = 23, Double_t a = -0.5, Double_t b = 31)
       // Draw the third spline
       spline3->Draw("lcpsame");
 
-      sprintf(text, "%3d knots", nnp);
-      textn->SetTitle(text);
+      textn->SetTitle(TString::Format("%3d knots", nnp));
       gPad->Update();
 
       //
