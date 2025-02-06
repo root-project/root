@@ -124,7 +124,7 @@ TEST(TFileMerger, MergeBranches)
    TFileMergeInfo info(file.get());
    dummy.Merge(&treelist, &info);
    ASSERT_TRUE(dummy.FindBranch("a") != nullptr);
-   EXPECT_EQ(dummy.FindBranch("a")->GetEntries(),1);
+   EXPECT_EQ(dummy.FindBranch("a")->GetEntries(),2);
    ASSERT_TRUE(dummy.FindBranch("b") != nullptr);
    EXPECT_EQ(dummy.FindBranch("b")->GetEntries(),2);
 
@@ -134,7 +134,7 @@ TEST(TFileMerger, MergeBranches)
    TFileMergeInfo info2(file2.get());
    atree.Merge(&treelist, &info2);
    ASSERT_TRUE(atree.FindBranch("a") != nullptr);
-   EXPECT_EQ(atree.FindBranch("a")->GetEntries(),1);
+   EXPECT_EQ(atree.FindBranch("a")->GetEntries(),2);
    ASSERT_TRUE(atree.FindBranch("b") != nullptr);
    EXPECT_EQ(atree.FindBranch("b")->GetEntries(),2);
 }

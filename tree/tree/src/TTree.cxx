@@ -6843,11 +6843,13 @@ bool TTree::MemoryFull(Int_t nbytes)
 /// @param tree the outside TTree whose branches will be copied into this tree
 /// @return boolean true on sucess, false otherwise
 
-bool TTree::MergeBranches(TTree* tree)
+bool TTree::ImportBranches(TTree* tree)
 {
    if (tree) {
       TObjArray* newbranches = tree->GetListOfBranches();
       Int_t nbranches = newbranches->GetEntriesFast();
+      const Long64_t nentries = GetEntries();
+      std::vector<TBranch*> importedCollection;
       for (Int_t i = 0; i < nbranches; ++i) {
          TBranch* nbranch = (TBranch*) newbranches->UncheckedAt(i);
          if (nbranch->TestBit(kDoNotProcess)) {
@@ -6858,6 +6860,15 @@ bool TTree::MergeBranches(TTree* tree)
             addbranch->ResetAddress();
             addbranch->SetTree(this);
             fBranches.Add(addbranch);
+            importedCollection.push_back(addbranch);
+         }
+      }
+      // Backfill mechanism to realign with TTree
+      if (!importedCollection.empty()) {
+         for( Long64_t e = 0; e < nentries; ++e ) {
+            for(auto branch : importedCollection) {
+               branch->BackFill();
+            }
          }
       }
       return true;
@@ -6897,7 +6908,7 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
          continue;
       }
       else {
-         newtree->MergeBranches(tree);
+         newtree->ImportBranches(tree);
       }
 
       newtree->CopyEntries(tree, -1, options, true);
@@ -6934,7 +6945,7 @@ Long64_t TTree::Merge(TCollection* li, Option_t *options)
 
       Long64_t nentries = tree->GetEntries();
       if (nentries == 0) continue;
-      MergeBranches(tree);
+      ImportBranches(tree);
       CopyEntries(tree, -1, options, true);
    }
    fAutoSave = storeAutoSave;
@@ -6994,7 +7005,7 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
          fAutoSave = storeAutoSave;
          return -1;
       }
-      MergeBranches(tree);
+      ImportBranches(tree);
       CopyEntries(tree, -1, options, true);
    }
    fAutoSave = storeAutoSave;
