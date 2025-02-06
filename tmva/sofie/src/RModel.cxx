@@ -359,13 +359,13 @@ void RModel::EvaluateIntermediateMemory(std::span<const std::string_view> op_inp
 
 std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view> op_output_tensors){
    
-   std::string memory_allocation_string;
+   std::string memory_allocation_string = "";
    bool allocated = false;
 
    for (auto& it:op_output_tensors){
          if (GetTensorType(std::string(it)) == ETensorType::BOOL) continue;
          auto tensor_size = GetTypeSize(GetTensorType(std::string(it))) * ConvertShapeToLength(GetTensorShape(std::string(it)));
-         memory_allocation_string = "\n // Allocating memory for intermediate tensor " + std::string(it) + " with size " + tensor_size + " bytes";
+         memory_allocation_string += "\n // Allocating memory for intermediate tensor " + std::string(it) + " with size " + tensor_size + " bytes";
          if (!fIntermediateMemoryInfo.available_memory.empty()){
             for (auto chunk = fIntermediateMemoryInfo.available_memory.begin(); chunk != fIntermediateMemoryInfo.available_memory.end(); ) {
                

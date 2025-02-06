@@ -36,6 +36,7 @@ public:
             fNYs.push_back(UTILITY::Clean_name(name));
       
          fInputTensorNames = { fNX };
+         fOutputTensorNames.resize(fNYs.size());
          std::transform(fNYs.begin(), fNYs.end(), fOutputTensorNames.begin(),
                    [](const std::string& s) -> std::string_view { return s; });
       }
