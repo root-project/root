@@ -75,6 +75,8 @@ public:
    ROperator_Comparision(const std::string & nameX1, const std::string & nameX2, const std::string & nameY):
       fNX1(UTILITY::Clean_name(nameX1)), fNX2(UTILITY::Clean_name(nameX2)), fNY(UTILITY::Clean_name(nameY)){
          fInputTensorNames = { fNX1, fNX2 };
+         
+         // output will be a boolean vector so should not be considered for memory optimized pool
          fOutputTensorNames = { fNY };
       }
 

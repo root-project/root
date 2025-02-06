@@ -69,7 +69,8 @@ public:
       // add a dummy statement to avoid warning for unused input
       out << SP << "(void) tensor_" << fNX << ";\n";
 
-      out << SP << "fTensor_" << fNY << ".assign(" << length << ", 0);\n";
+      out << SP << "std::fill(tensor_" << fNY << ", tensor_" << fNY << " + " << length << ","
+          << 0 << ");\n";
       out << SP << "for (int i = 0; i < " << fShape[0] << "; i++) {\n";
       out << SP << SP << "int j = i +" << fk << ";\n";
       out << SP << SP << "if (j >= 0 && j < " << fShape[1] << ")\n";
