@@ -239,6 +239,8 @@ endif()
 if(MSVC)
   #---Multiproc is not supported on Windows
   set(imt_veto ${imt_veto} multicore/mp*.C multicore/mtbb201_parallelHistoFill.C)
+  #---XRootD is not supported on Windows
+  set(imt_veto ${imt_veto} multicore/imt101_parTreeProcessing.C)
 endif()
 
 if(ROOT_CLASSIC_BUILD)
@@ -358,7 +360,7 @@ if(root7)
     list(APPEND root7_veto rcanvas/df105.py)
   endif()
   if(MSVC AND NOT win_broken_tests)
-    #---EOS is not supported on Windows
+    #---XRootD is not supported on Windows
     list(APPEND root7_veto rcanvas/df104.py)
     list(APPEND root7_veto rcanvas/df105.py)
     list(APPEND root7_veto rcanvas/rbox.py)
