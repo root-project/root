@@ -102,8 +102,9 @@ TEST(TFileMerger, MergeSingleOnlyListed)
    EXPECT_EQ(output->GetListOfKeys()->GetSize(), 2);
 }
 
-// https://github.com/root-project/root/issues/14558
-void ROOT_4716() {
+// https://github.com/root-project/root/issues/14558 aka https://its.cern.ch/jira/browse/ROOT-4716
+TEST(TFileMerger, MergeBranches)
+{
    TTree atree("atree", "atitle");
    int value;
    atree.Branch("a", &value);
