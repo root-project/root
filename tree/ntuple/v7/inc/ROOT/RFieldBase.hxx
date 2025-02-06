@@ -45,7 +45,7 @@ class RPageSource;
 // TODO(jblomer): find a better way to not have these methods in the RFieldBase public API
 void CallFlushColumnsOnField(RFieldBase &);
 void CallCommitClusterOnField(RFieldBase &);
-void CallConnectPageSinkOnField(RFieldBase &, RPageSink &, NTupleSize_t firstEntry = 0);
+void CallConnectPageSinkOnField(RFieldBase &, RPageSink &, ROOT::NTupleSize_t firstEntry = 0);
 void CallConnectPageSourceOnField(RFieldBase &, RPageSource &);
 ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
 CallFieldBaseCreate(const std::string &fieldName, const std::string &canonicalType, const std::string &typeAlias,
@@ -79,7 +79,7 @@ class RFieldBase {
    friend struct ROOT::Experimental::Internal::RFieldRepresentationModifier; // used for unit tests
    friend void Internal::CallFlushColumnsOnField(RFieldBase &);
    friend void Internal::CallCommitClusterOnField(RFieldBase &);
-   friend void Internal::CallConnectPageSinkOnField(RFieldBase &, Internal::RPageSink &, NTupleSize_t);
+   friend void Internal::CallConnectPageSinkOnField(RFieldBase &, Internal::RPageSink &, ROOT::NTupleSize_t);
    friend void Internal::CallConnectPageSourceOnField(RFieldBase &, Internal::RPageSource &);
    friend ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
    Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &canonicalType,
@@ -228,7 +228,7 @@ private:
    ///
    /// The column element index also depends on the number of repetitions of each field in the hierarchy, e.g., given a
    /// field with type `std::array<std::array<float, 4>, 2>`, this function returns 8 for the inner-most field.
-   NTupleSize_t EntryToColumnElementIndex(NTupleSize_t globalIndex) const;
+   ROOT::NTupleSize_t EntryToColumnElementIndex(ROOT::NTupleSize_t globalIndex) const;
 
    /// Flushes data from active columns
    void FlushColumns();
@@ -237,7 +237,7 @@ private:
    /// Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
    /// can be read or written.  In order to find the field in the page storage, the field's on-disk ID has to be set.
    /// \param firstEntry The global index of the first entry with on-disk data for the connected field
-   void ConnectPageSink(Internal::RPageSink &pageSink, NTupleSize_t firstEntry = 0);
+   void ConnectPageSink(Internal::RPageSink &pageSink, ROOT::NTupleSize_t firstEntry = 0);
    /// Connects the field and its sub field tree to the given page source. Once connected, data can be read.
    /// Only unconnected fields may be connected, i.e. the method is not idempotent. The field ID has to be set prior to
    /// calling this function. For sub fields, a field ID may or may not be set. If the field ID is unset, it will be
@@ -390,7 +390,7 @@ protected:
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
    virtual std::size_t AppendImpl(const void *from);
-   virtual void ReadGlobalImpl(NTupleSize_t globalIndex, void *to);
+   virtual void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to);
    virtual void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to);
 
    /// Write the given value into columns. The value object has to be of the same type as the field.
@@ -400,7 +400,7 @@ protected:
    /// Populate a single value with data from the field. The memory location pointed to by to needs to be of the
    /// fitting type. The fast path is conditioned by the field qualifying as simple, i.e. maps as-is
    /// to a single column and has no read callback.
-   void Read(NTupleSize_t globalIndex, void *to)
+   void Read(ROOT::NTupleSize_t globalIndex, void *to)
    {
       if (fIsSimple)
          return (void)fPrincipalColumn->Read(globalIndex, to);
@@ -446,7 +446,7 @@ protected:
    /// Allow derived classes to call Append and Read on other (sub) fields.
    static std::size_t CallAppendOn(RFieldBase &other, const void *from) { return other.Append(from); }
    static void CallReadOn(RFieldBase &other, RNTupleLocalIndex localIndex, void *to) { other.Read(localIndex, to); }
-   static void CallReadOn(RFieldBase &other, NTupleSize_t globalIndex, void *to) { other.Read(globalIndex, to); }
+   static void CallReadOn(RFieldBase &other, ROOT::NTupleSize_t globalIndex, void *to) { other.Read(globalIndex, to); }
    static void *CallCreateObjectRawPtrOn(RFieldBase &other) { return other.CreateObjectRawPtr(); }
 
    /// Fields may need direct access to the principal column of their sub fields, e.g. in RRVecField::ReadBulk
@@ -702,7 +702,7 @@ public:
    ~RValue() = default;
 
    std::size_t Append() { return fField->Append(fObjPtr.get()); }
-   void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr.get()); }
+   void Read(ROOT::NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr.get()); }
    void Read(RNTupleLocalIndex localIndex) { fField->Read(localIndex, fObjPtr.get()); }
    void Bind(std::shared_ptr<void> objPtr) { fObjPtr = objPtr; }
    void BindRawPtr(void *rawPtr);

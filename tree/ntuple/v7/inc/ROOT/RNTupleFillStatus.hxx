@@ -38,7 +38,7 @@ class RNTupleFillStatus {
 
 private:
    /// Number of entries written into the current cluster
-   NTupleSize_t fNEntriesSinceLastFlush = 0;
+   ROOT::NTupleSize_t fNEntriesSinceLastFlush = 0;
    /// Number of bytes written into the current cluster
    std::size_t fUnzippedClusterSize = 0;
    /// Number of bytes written for the last entry
@@ -47,7 +47,7 @@ private:
 
 public:
    /// Return the number of entries written into the current cluster.
-   NTupleSize_t GetNEntries() const { return fNEntriesSinceLastFlush; }
+   ROOT::NTupleSize_t GetNEntries() const { return fNEntriesSinceLastFlush; }
    /// Return the number of bytes written into the current cluster.
    std::size_t GetUnzippedClusterSize() const { return fUnzippedClusterSize; }
    /// Return the number of bytes for the last entry.

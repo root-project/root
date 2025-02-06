@@ -414,7 +414,8 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadSealedPage(DescriptorId_
 
 ROOT::Experimental::Internal::RPageRef
 ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t columnHandle,
-                                                            const RClusterInfo &clusterInfo, NTupleSize_t idxInCluster)
+                                                            const RClusterInfo &clusterInfo,
+                                                            ROOT::NTupleSize_t idxInCluster)
 {
    const auto columnId = columnHandle.fPhysicalId;
    const auto clusterId = clusterInfo.fClusterId;
@@ -494,7 +495,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
 {
    struct ROnDiskPageLocator {
       ROOT::Experimental::DescriptorId_t fColumnId = 0;
-      ROOT::Experimental::NTupleSize_t fPageNo = 0;
+      ROOT::NTupleSize_t fPageNo = 0;
       std::uint64_t fOffset = 0;
       std::uint64_t fSize = 0;
       std::size_t fBufPos = 0;
@@ -504,7 +505,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    auto activeSize = 0;
    auto pageZeroMap = std::make_unique<ROnDiskPageMap>();
    PrepareLoadCluster(clusterKey, *pageZeroMap,
-                      [&](DescriptorId_t physicalColumnId, NTupleSize_t pageNo,
+                      [&](DescriptorId_t physicalColumnId, ROOT::NTupleSize_t pageNo,
                           const RClusterDescriptor::RPageRange::RPageInfo &pageInfo) {
                          const auto &pageLocator = pageInfo.fLocator;
                          if (pageLocator.GetType() == RNTupleLocator::kTypeUnknown)

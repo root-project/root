@@ -216,7 +216,7 @@ TEST_F(RNTupleChainProcessorTest, EmptyNTuples)
 
 namespace ROOT::Experimental::Internal {
 struct RNTupleProcessorEntryLoader {
-   static NTupleSize_t LoadEntry(RNTupleProcessor &processor, NTupleSize_t entryNumber)
+   static ROOT::NTupleSize_t LoadEntry(RNTupleProcessor &processor, ROOT::NTupleSize_t entryNumber)
    {
       return processor.LoadEntry(entryNumber);
    }
@@ -248,5 +248,5 @@ TEST_F(RNTupleChainProcessorTest, LoadRandomEntry)
    EXPECT_EQ(2.f, *x);
    EXPECT_EQ(0, proc->GetCurrentProcessorNumber());
 
-   EXPECT_EQ(ROOT::Experimental::kInvalidNTupleIndex, RNTupleProcessorEntryLoader::LoadEntry(*proc, 8));
+   EXPECT_EQ(ROOT::kInvalidNTupleIndex, RNTupleProcessorEntryLoader::LoadEntry(*proc, 8));
 }

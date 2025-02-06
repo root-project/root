@@ -185,7 +185,7 @@ std::size_t ROOT::Experimental::RClassField::AppendImpl(const void *from)
    return nbytes;
 }
 
-void ROOT::Experimental::RClassField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RClassField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
    for (unsigned i = 0; i < fSubFields.size(); i++) {
       CallReadOn(*fSubFields[i], globalIndex, static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
@@ -512,9 +512,9 @@ std::size_t ROOT::Experimental::RProxiedCollectionField::AppendImpl(const void *
    return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RProxiedCollectionField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RProxiedCollectionField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
-   NTupleSize_t nItems;
+   ROOT::NTupleSize_t nItems;
    RNTupleLocalIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
@@ -685,10 +685,10 @@ std::size_t ROOT::Experimental::RStreamerField::AppendImpl(const void *from)
    return nbytes + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RStreamerField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RStreamerField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
    RNTupleLocalIndex collectionStart;
-   NTupleSize_t nbytes;
+   ROOT::NTupleSize_t nbytes;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nbytes);
 
    TBufferFile buffer(TBuffer::kRead, nbytes);
@@ -816,7 +816,7 @@ std::size_t ROOT::Experimental::RField<TObject>::AppendImpl(const void *from)
    return nbytes;
 }
 
-void ROOT::Experimental::RField<TObject>::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RField<TObject>::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
    // Cf. TObject::Streamer()
 
@@ -1046,7 +1046,7 @@ std::size_t ROOT::Experimental::RVariantField::AppendImpl(const void *from)
    return nbytes + sizeof(Internal::RColumnSwitch);
 }
 
-void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RVariantField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
    RNTupleLocalIndex variantIndex;
    std::uint32_t tag;

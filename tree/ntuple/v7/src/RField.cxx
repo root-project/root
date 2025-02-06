@@ -478,11 +478,11 @@ std::size_t ROOT::Experimental::RField<std::string>::AppendImpl(const void *from
    return length + fPrincipalColumn->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RField<std::string>::ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RField<std::string>::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
    auto typedValue = static_cast<std::string *>(to);
    RNTupleLocalIndex collectionStart;
-   NTupleSize_t nChars;
+   ROOT::NTupleSize_t nChars;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nChars);
    if (nChars == 0) {
       typedValue->clear();
@@ -590,7 +590,7 @@ std::size_t ROOT::Experimental::RRecordField::AppendImpl(const void *from)
    return nbytes;
 }
 
-void ROOT::Experimental::RRecordField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RRecordField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
       CallReadOn(*fSubFields[i], globalIndex, static_cast<unsigned char *>(to) + fOffsets[i]);
@@ -687,7 +687,7 @@ std::size_t ROOT::Experimental::RBitsetField::AppendImpl(const void *from)
    return fN;
 }
 
-void ROOT::Experimental::RBitsetField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RBitsetField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
    auto *asULongArray = static_cast<Word_t *>(to);
    bool elementValue;
@@ -761,10 +761,10 @@ std::size_t ROOT::Experimental::RNullableField::AppendValue(const void *from)
    return sizeof(Internal::RColumnIndex) + nbytesItem;
 }
 
-ROOT::Experimental::RNTupleLocalIndex ROOT::Experimental::RNullableField::GetItemIndex(NTupleSize_t globalIndex)
+ROOT::Experimental::RNTupleLocalIndex ROOT::Experimental::RNullableField::GetItemIndex(ROOT::NTupleSize_t globalIndex)
 {
    RNTupleLocalIndex collectionStart;
-   NTupleSize_t collectionSize;
+   ROOT::NTupleSize_t collectionSize;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &collectionSize);
    return (collectionSize == 0) ? RNTupleLocalIndex() : collectionStart;
 }
@@ -799,13 +799,13 @@ std::size_t ROOT::Experimental::RUniquePtrField::AppendImpl(const void *from)
    }
 }
 
-void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
    auto ptr = static_cast<std::unique_ptr<char> *>(to);
    bool isValidValue = static_cast<bool>(*ptr);
 
    auto itemIndex = GetItemIndex(globalIndex);
-   bool isValidItem = itemIndex.GetIndexInCluster() != kInvalidNTupleIndex;
+   bool isValidItem = itemIndex.GetIndexInCluster() != ROOT::kInvalidNTupleIndex;
 
    void *valuePtr = nullptr;
    if (isValidValue)
@@ -890,11 +890,11 @@ std::size_t ROOT::Experimental::ROptionalField::AppendImpl(const void *from)
    }
 }
 
-void ROOT::Experimental::ROptionalField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::ROptionalField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
    auto engagementPtr = GetEngagementPtr(to);
    auto itemIndex = GetItemIndex(globalIndex);
-   if (itemIndex.GetIndexInCluster() == kInvalidNTupleIndex) {
+   if (itemIndex.GetIndexInCluster() == ROOT::kInvalidNTupleIndex) {
       if (*engagementPtr && !(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible))
          fItemDeleter->operator()(to, true /* dtorOnly */);
       *engagementPtr = false;

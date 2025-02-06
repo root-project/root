@@ -210,9 +210,9 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(DescriptorId_t clusterId,
 
          auto cid = next;
          next = descriptorGuard->FindNextClusterId(cid);
-         if (next != kInvalidNTupleIndex) {
+         if (next != ROOT::kInvalidNTupleIndex) {
             if (!fPageSource.GetEntryRange().IntersectsWith(descriptorGuard->GetClusterDescriptor(next)))
-               next = kInvalidNTupleIndex;
+               next = ROOT::kInvalidNTupleIndex;
          }
          if (next == kInvalidDescriptorId)
             provideInfo.fFlags |= RProvides::kFlagLast;

@@ -69,7 +69,7 @@ private:
    RNTupleFillContext fFillContext;
    Detail::RNTupleMetrics fMetrics;
 
-   NTupleSize_t fLastCommittedClusterGroup = 0;
+   ROOT::NTupleSize_t fLastCommittedClusterGroup = 0;
 
    RNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
 
@@ -130,13 +130,13 @@ public:
    std::unique_ptr<REntry> CreateEntry() { return fFillContext.CreateEntry(); }
 
    /// Return the entry number that was last flushed in a cluster.
-   NTupleSize_t GetLastFlushed() const { return fFillContext.GetLastFlushed(); }
+   ROOT::NTupleSize_t GetLastFlushed() const { return fFillContext.GetLastFlushed(); }
    /// Return the entry number that was last committed in a cluster.
-   NTupleSize_t GetLastCommitted() const { return fFillContext.GetLastFlushed(); }
+   ROOT::NTupleSize_t GetLastCommitted() const { return fFillContext.GetLastFlushed(); }
    /// Return the entry number that was last committed in a cluster group.
-   NTupleSize_t GetLastCommittedClusterGroup() const { return fLastCommittedClusterGroup; }
+   ROOT::NTupleSize_t GetLastCommittedClusterGroup() const { return fLastCommittedClusterGroup; }
    /// Return the number of entries filled so far.
-   NTupleSize_t GetNEntries() const { return fFillContext.GetNEntries(); }
+   ROOT::NTupleSize_t GetNEntries() const { return fFillContext.GetNEntries(); }
 
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }

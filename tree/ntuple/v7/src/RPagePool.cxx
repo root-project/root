@@ -113,7 +113,7 @@ void ROOT::Experimental::Internal::RPagePool::RemoveFromUnusedPages(const RPage 
 }
 
 ROOT::Experimental::Internal::RPageRef
-ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, NTupleSize_t globalIndex)
+ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, ROOT::NTupleSize_t globalIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    auto itrPageSet = fLookupByKey.find(key);

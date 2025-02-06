@@ -94,10 +94,10 @@ public:
    size_t GetAlignment() const final { return alignof(std::size_t); }
 
    /// Get the number of elements of the collection identified by globalIndex
-   void ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to) final
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final
    {
       RNTupleLocalIndex collectionStart;
-      NTupleSize_t size;
+      ROOT::NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
       *static_cast<std::size_t *>(to) = size;
    }
@@ -106,7 +106,7 @@ public:
    void ReadInClusterImpl(ROOT::Experimental::RNTupleLocalIndex localIndex, void *to) final
    {
       RNTupleLocalIndex collectionStart;
-      NTupleSize_t size;
+      ROOT::NTupleSize_t size;
       fPrincipalColumn->GetCollectionInfo(localIndex, &collectionStart, &size);
       *static_cast<std::size_t *>(to) = size;
    }
@@ -128,7 +128,10 @@ private:
    }
    void GenerateColumns() final { assert(false && "RArraySizeField fields must only be used for reading"); }
    void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &) final {}
-   void ReadGlobalImpl(NTupleSize_t /*globalIndex*/, void *to) final { *static_cast<std::size_t *>(to) = fArrayLength; }
+   void ReadGlobalImpl(ROOT::NTupleSize_t /*globalIndex*/, void *to) final
+   {
+      *static_cast<std::size_t *>(to) = fArrayLength;
+   }
    void ReadInClusterImpl(RNTupleLocalIndex /*localIndex*/, void *to) final
    {
       *static_cast<std::size_t *>(to) = fArrayLength;

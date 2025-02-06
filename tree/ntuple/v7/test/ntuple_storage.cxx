@@ -41,10 +41,10 @@ protected:
       return descriptor;
    }
 
-   NTupleSize_t GetNEntries() const final { return 0; }
+   ROOT::NTupleSize_t GetNEntries() const final { return 0; }
 
    void InitImpl(RNTupleModel &) final {}
-   void UpdateSchema(const ROOT::Experimental::Internal::RNTupleModelChangeset &, NTupleSize_t) final {}
+   void UpdateSchema(const ROOT::Experimental::Internal::RNTupleModelChangeset &, ROOT::NTupleSize_t) final {}
    void UpdateExtraTypeInfo(const ROOT::Experimental::RExtraTypeInfoDescriptor &) final {}
    void CommitSuppressedColumn(ColumnHandle_t) final {}
    void CommitPage(ColumnHandle_t /*columnHandle*/, const RPage & /*page*/) final { fCounters.fNCommitPage++; }
@@ -53,7 +53,7 @@ protected:
       fCounters.fNCommitSealedPage++;
    }
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup>) override { fCounters.fNCommitSealedPageV++; }
-   RStagedCluster StageCluster(NTupleSize_t) final { return {}; }
+   RStagedCluster StageCluster(ROOT::NTupleSize_t) final { return {}; }
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
    void CommitClusterGroup() final {}
    void CommitDatasetImpl() final {}

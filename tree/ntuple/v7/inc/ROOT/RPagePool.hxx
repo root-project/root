@@ -85,18 +85,20 @@ private:
    /// This allows to do binary search for one or the other. Note that elements in fLookupByKey must have
    /// _both_ values to be valid. If RPagePosition is used as a search key, only one of the two needs to be set.
    struct RPagePosition {
-      NTupleSize_t fGlobalFirstElement = kInvalidNTupleIndex;
+      ROOT::NTupleSize_t fGlobalFirstElement = ROOT::kInvalidNTupleIndex;
       RNTupleLocalIndex fClusterFirstElement;
 
       bool operator<(const RPagePosition &other) const
       {
-         if ((fGlobalFirstElement != kInvalidNTupleIndex) && (other.fGlobalFirstElement != kInvalidNTupleIndex))
+         if ((fGlobalFirstElement != ROOT::kInvalidNTupleIndex) &&
+             (other.fGlobalFirstElement != ROOT::kInvalidNTupleIndex)) {
             return fGlobalFirstElement < other.fGlobalFirstElement;
+         }
 
          assert(fClusterFirstElement.GetClusterId() != kInvalidDescriptorId &&
-                fClusterFirstElement.GetIndexInCluster() != kInvalidNTupleIndex);
+                fClusterFirstElement.GetIndexInCluster() != ROOT::kInvalidNTupleIndex);
          assert(other.fClusterFirstElement.GetClusterId() != kInvalidDescriptorId &&
-                other.fClusterFirstElement.GetIndexInCluster() != kInvalidNTupleIndex);
+                other.fClusterFirstElement.GetIndexInCluster() != ROOT::kInvalidNTupleIndex);
          if (fClusterFirstElement.GetClusterId() == other.fClusterFirstElement.GetClusterId())
             return fClusterFirstElement.GetIndexInCluster() < other.fClusterFirstElement.GetIndexInCluster();
          return fClusterFirstElement.GetClusterId() < other.fClusterFirstElement.GetClusterId();
@@ -110,7 +112,7 @@ private:
       }
 
       // Search key constructors
-      explicit RPagePosition(NTupleSize_t globalIndex) : fGlobalFirstElement(globalIndex) {}
+      explicit RPagePosition(ROOT::NTupleSize_t globalIndex) : fGlobalFirstElement(globalIndex) {}
       explicit RPagePosition(RNTupleLocalIndex localIndex) : fClusterFirstElement(localIndex) {}
    };
 
@@ -160,7 +162,7 @@ public:
    void Evict(DescriptorId_t clusterId);
    /// Tries to find the page corresponding to column and index in the cache. If the page is found, its reference
    /// counter is increased
-   RPageRef GetPage(RKey key, NTupleSize_t globalIndex);
+   RPageRef GetPage(RKey key, ROOT::NTupleSize_t globalIndex);
    RPageRef GetPage(RKey key, RNTupleLocalIndex localIndex);
 };
 
