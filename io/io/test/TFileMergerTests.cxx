@@ -1,6 +1,7 @@
 #include "ROOT/TestSupport.hxx"
 
 #include "TFileMerger.h"
+#include "TFileMergeInfo.h"
 
 #include "TMemFile.h"
 #include "TTree.h"
