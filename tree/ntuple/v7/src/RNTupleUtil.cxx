@@ -25,7 +25,7 @@
 #include <cstring>
 #include <iostream>
 
-ROOT::RLogChannel &ROOT::Experimental::NTupleLog()
+ROOT::RLogChannel &ROOT::NTupleLog()
 {
    static RLogChannel sLog("ROOT.NTuple");
    return sLog;

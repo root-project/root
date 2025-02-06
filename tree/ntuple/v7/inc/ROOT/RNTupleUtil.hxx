@@ -27,6 +27,10 @@
 
 namespace ROOT {
 
+class RLogChannel;
+/// Log channel for RNTuple diagnostics.
+ROOT::RLogChannel &NTupleLog();
+
 /// Helper types to present an offset column as array of collection sizes.
 /// See RField<RNTupleCardinality<SizeT>> for details.
 template <typename SizeT>
@@ -48,12 +52,7 @@ struct RNTupleCardinality {
    ValueType fValue;
 };
 
-class RLogChannel;
-
 namespace Experimental {
-
-/// Log channel for RNTuple diagnostics.
-ROOT::RLogChannel &NTupleLog();
 
 // clang-format off
 /**
