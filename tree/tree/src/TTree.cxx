@@ -6850,9 +6850,8 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
       if (!obj->InheritsFrom(TTree::Class())) continue;
       TTree *tree = (TTree*)obj;
       Long64_t nentries = tree->GetEntries();
-      if (nentries == 0) continue;
       if (!newtree) {
-         newtree = (TTree*)tree->CloneTree(-1, options);
+         newtree = (TTree*)tree->CloneTree(nentries == 0 ? 0 : -1, options);
          if (!newtree) continue;
 
          // Once the cloning is done, separate the trees,
@@ -6864,7 +6863,7 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
          newtree->ResetBranchAddresses();
          continue;
       }
-
+      if (nentries == 0) continue;
       newtree->CopyEntries(tree, -1, options, true);
    }
    if (newtree && newtree->GetTreeIndex()) {
@@ -6929,7 +6928,8 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
       } else {
          TDirectory::TContext ctxt(info->fOutputDirectory);
          TIOFeatures saved_features = fIOFeatures;
-         TTree *newtree = CloneTree(-1, options);
+         Long64_t nentries = tree->GetEntries();
+         TTree *newtree = CloneTree(nentries == 0 ? 0 : -1, options);
          if (info->fIOFeatures)
             fIOFeatures = *(info->fIOFeatures);
          else
