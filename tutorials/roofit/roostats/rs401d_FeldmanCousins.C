@@ -136,9 +136,9 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins = false, bool doMCMC = true)
    //  model.graphVizTree("model.dot");
 
    // turn off some messages
-   RooMsgService::instance().setStreamStatus(0, False);
-   RooMsgService::instance().setStreamStatus(1, False);
-   RooMsgService::instance().setStreamStatus(2, False);
+   RooMsgService::instance().setStreamStatus(0, false);
+   RooMsgService::instance().setStreamStatus(1, false);
+   RooMsgService::instance().setStreamStatus(2, false);
 
    // --------------------------------------
    // n events in data to data, simply sum of sig+bkg
@@ -157,7 +157,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins = false, bool doMCMC = true)
 
    // plot the PDF
    dataCanvas->cd(1);
-   TH1 *hh = PnmuTone.createHistogram("hh", E, Binning(40), YVar(L, Binning(40)), Scaling(False));
+   TH1 *hh = PnmuTone.createHistogram("hh", E, Binning(40), YVar(L, Binning(40)), Scaling(false));
    hh->SetLineColor(kBlue);
    hh->SetTitle("True Signal Model");
    hh->Draw("surf");
@@ -179,7 +179,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins = false, bool doMCMC = true)
    std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, Extended(true))};
    RooProfileLL pll("pll", "", *nll, RooArgSet(deltaMSq, sinSq2theta));
    //  TH1* hhh = nll.createHistogram("hhh",sinSq2theta,Binning(40),YVar(deltaMSq,Binning(40))) ;
-   TH1 *hhh = pll.createHistogram("hhh", sinSq2theta, Binning(40), YVar(deltaMSq, Binning(40)), Scaling(False));
+   TH1 *hhh = pll.createHistogram("hhh", sinSq2theta, Binning(40), YVar(deltaMSq, Binning(40)), Scaling(false));
    hhh->SetLineColor(kBlue);
    hhh->SetTitle("Likelihood Function");
    hhh->Draw("surf");
@@ -220,8 +220,8 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins = false, bool doMCMC = true)
 
    if (doMCMC) {
       // turn some messages back on
-      RooMsgService::instance().setStreamStatus(0, True);
-      RooMsgService::instance().setStreamStatus(1, True);
+      RooMsgService::instance().setStreamStatus(0, true);
+      RooMsgService::instance().setStreamStatus(1, true);
 
       TStopwatch mcmcWatch;
       mcmcWatch.Start();
