@@ -188,7 +188,7 @@ public:
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNInputs[0]), fShapeY);
 
       if (model.Verbose()) {
-         std::cout << "Einstein op ";
+         std::cout << "Einsum op ";
          for (i = 0; i < fNInputs.size(); i++) {
             if (i > 0) std::cout << ", ";
             std::cout << fNInputs[i] << " " << ConvertShapeToString(fShapeInputs[i]) << " " << fInputLabels[i];

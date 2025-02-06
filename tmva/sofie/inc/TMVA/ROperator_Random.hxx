@@ -44,7 +44,7 @@ public:
       fShapeY(shape),
       fParams(params)
       {
-         fInputTensorNames = { fNX };
+         fInputTensorNames = {  };
          fOutputTensorNames = { fNY };
       }
 

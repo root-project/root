@@ -116,7 +116,7 @@ const ETensorType& RModel::GetTensorType(std::string name) {
     if (fIsSubGraph && fParentGraph)
       return fParentGraph->GetTensorType(name);
 
-    throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the type is requested is not found");
+    throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the type is requested is not found, model name: " + fName);
 }
 
 bool RModel::CheckIfTensorAlreadyExist(std::string tensor_name) {
@@ -626,6 +626,7 @@ void RModel::GenerateInitializedTensorInfo()
 }
 
 void RModel::GenerateIntermediateMemoryPool() {
+   if (fTotalIntermediateMemory == 0) return;
    fGC += "\n//--- Allocating session memory pool to be used for allocating intermediate tensors\n";
    
    // char memory block is allocated since char takes 1 byte, thus easier to allocate tensors
@@ -638,6 +639,10 @@ void RModel::GenerateIntermediateTensorInfo() {
       std::string tensor_declaration_block = ""; 
 
       for (auto &i : fIntermediateTensorInfos) {
+         if (i.second.type == ETensorType::BOOL) {
+               tensor_declaration_block += "std::vector<bool> fTensor_" + i.first + " = std::vector<bool>(" + std::to_string(ConvertShapeToLength(i.second.shape)) + ");\n";
+               // No pointer allocation needed for BOOL
+         }
          if (fIntermediateTensorFrequencyLookup.find(i.first) == fIntermediateTensorFrequencyLookup.end() && std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), i.first) == fOutputTensorNames.end()) {
             size_t length = ConvertShapeToLength(i.second.shape);
             
@@ -652,10 +657,6 @@ void RModel::GenerateIntermediateTensorInfo() {
             else if (i.second.type == ETensorType::INT64) {
                tensor_declaration_block += "std::vector<int64_t> fTensor_" + i.first + " = std::vector<int64_t>(" + std::to_string(length) + ");\n";
                tensor_declaration_block += "int64_t * tensor_" + i.first + " = fTensor_" + i.first + ".data();\n";
-            }
-            else if (i.second.type == ETensorType::BOOL) {
-               tensor_declaration_block += "std::vector<bool> fTensor_" + i.first + " = std::vector<bool>(" + std::to_string(length) + ");\n";
-               // No pointer allocation needed for BOOL
             }
          }
       }
@@ -784,10 +785,15 @@ void RModel::GenerateOutput() {
    if (outputSize == 1) {
       std::string tensorName = fOutputTensorNames[0];
       if (fIntermediateTensorInfos.count(tensorName) > 0) {
-         // need to check is size is the same(don't want to return a vector with larger size)
-         // in that case better to copy
-         fGC += SP + "std::vector<"+ ConvertTypeToString(GetTensorType(std::string(tensorName))) +"> ret(tensor_"+tensorName+", tensor_"+tensorName+" + " + ConvertShapeToLength(GetTensorShape(tensorName)) + ");\n";
-         fGC += SP + "return ret;\n";
+
+         if (GetTensorType(tensorName) == ETensorType::BOOL){
+            fGC += SP + "return fTensor_" + tensorName + ";\n";
+         } else {
+            // need to check is size is the same(don't want to return a vector with larger size)
+            // in that case better to copy
+            fGC += SP + "std::vector<"+ ConvertTypeToString(GetTensorType(std::string(tensorName))) +"> ret(tensor_"+tensorName+", tensor_"+tensorName+" + " + ConvertShapeToLength(GetTensorShape(tensorName)) + ");\n";
+            fGC += SP + "return ret;\n";
+         }
       } else {
          // include also dynamic tensors since the vectors can be allocated with a size larger than their output
          // we need a special handling for bool type allocated as vector<bool>
@@ -807,8 +813,9 @@ void RModel::GenerateOutput() {
       for (size_t i = 0; i < outputSize; i++) {
          std::string tensorName = *(fOutputTensorNames.begin() + i);
          if (!tensorName.empty()) {
+
             if (fIntermediateTensorInfos.count(tensorName) > 0) {
-               fGC += "fTensor_" + tensorName;
+               fGC += SP + "std::vector<"+ ConvertTypeToString(GetTensorType(std::string(tensorName))) +">(tensor_"+tensorName+", tensor_"+tensorName+" + " + ConvertShapeToLength(GetTensorShape(tensorName)) + ")";
             } else {
                auto outputLength = ConvertDynamicShapeToLength(GetDynamicTensorShape(tensorName));
                if (IsDynamicTensor(tensorName) && eOutputType == ETensorType::BOOL) {
