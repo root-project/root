@@ -1,5 +1,5 @@
 \addtogroup tutorial_tree
- 
+
 @{
 [TTree](classTTree.html) represents a columnar dataset. Used for example by all LHC (Large Hadron Collider) experiments. Trees are optimized for reduced disk space and selecting, high-throughput columnar access with reduced memory usage.
 
@@ -20,7 +20,7 @@ Explore the examples below or go to [TTree class reference](classTTree.html).
 - [Collection Classes](\ref tree_collections)
 - [Advanced examples](\ref advanced)
 - [Graphics](\ref tree_graphics)
-- [More tutorials](\ref other)
+- [More tutorials](\ref tree_other)
 
 
 [List of all tutorials](\ref tree_alltutorials)
@@ -92,10 +92,10 @@ These tutorials show how to generate complex graphics from [TNtuple](classTNtupl
 | tree143_drawsparse.C | Convert a [THnSparse](classTHnSparse.html) to a [TTree](classTTree.html) using efficient iteration through the [THnSparse](classTHnSparse.html) and draw it using [TParallelCoord](classTParallelCoord.html) |
 
 
-\anchor other
+\anchor tree_other
 ## More tutorials
 
-A collection of other examples which showcases other usecases 
+A collection of other examples which showcases other usecases
 | **Tutorial** | **Description** |
 |--------------|-----------------|
 | tree200_temperature.C | Illustrates how to use the highlight mode with trees, using a temperature dataset from Prague between 1775 and 2004 |

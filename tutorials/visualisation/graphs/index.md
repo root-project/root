@@ -27,7 +27,7 @@ The graph tutorials below are divided in groups of increasing complexity, starti
 - [Basics: creation and drawing](\ref basics)
 - [Formatting: changing/adding elements to the graphs and/or the plots](\ref modfying)
 - [Intermediate: more advanced examples](\ref medium)
-- [More tutorials](\ref other)
+- [More tutorials](\ref graph_other)
 
 
 [List of all tutorials](\ref graphs_alltutorials)
@@ -38,7 +38,7 @@ These examples showcase the creation of different types of graphs and basic ways
 
 | **Tutorial** || **Description** |
 |------|--------|-----------------|
-| gr001_basic.C |  | Create a simple graph from available data or from a file, and draw it. |
+| gr001_simple.C |  | Create a simple graph from available data or from a file, and draw it. |
 | gr002_errors.C |  | Create and draw a graph with error bars.|
 | gr003_errors2.C |  | Create and draw two graphs with error bars, superposed on the same canvas (not using TMultiGraph). |
 | gr004_errors_asym.C |  | Create and draw a graph with asymmetric x & y errors. |
@@ -89,10 +89,10 @@ These examples are slightly more advanced so will be most useful for more advanc
 | gr202_textmarkers.C | Draw a graph with text attached to each point. Uses a [TExec](https://root.cern/doc/master/classTExec.html) function to attach the text to the points. |
 
 
-\anchor other
+\anchor graph_other
 ## More tutorials
 
-These examples show the most complex usage of the graphs functionality. 
+These examples show the most complex usage of the graphs functionality.
 
 | **Tutorial** || **Description** |
 |------|--------|-----------------|
