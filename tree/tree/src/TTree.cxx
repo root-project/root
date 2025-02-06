@@ -6855,7 +6855,7 @@ bool TTree::MergeBranches(TTree* tree)
          }
          if (!GetListOfBranches()->FindObject(nbranch->GetName())
             auto addbranch = (TBranch*) nbranch->Clone();
-            addbranch->SetAddress(nullptr);
+            addbranch->ResetAddress();
             addbranch->SetTree(this);
             fBranches.Add(addbranch);
          }
