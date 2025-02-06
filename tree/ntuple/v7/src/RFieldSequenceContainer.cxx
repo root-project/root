@@ -17,7 +17,7 @@ ROOT::Experimental::RArrayField::RArrayField(std::string_view fieldName, std::un
                                              std::size_t arrayLength)
    : ROOT::Experimental::RFieldBase(fieldName,
                                     "std::array<" + itemField->GetTypeName() + "," + std::to_string(arrayLength) + ">",
-                                    ENTupleStructure::kLeaf, false /* isSimple */, arrayLength),
+                                    ROOT::ENTupleStructure::kLeaf, false /* isSimple */, arrayLength),
      fItemSize(itemField->GetValueSize()),
      fArrayLength(arrayLength)
 {
@@ -215,7 +215,7 @@ void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, s
 
 ROOT::Experimental::RRVecField::RRVecField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField)
    : ROOT::Experimental::RFieldBase(fieldName, "ROOT::VecOps::RVec<" + itemField->GetTypeName() + ">",
-                                    ENTupleStructure::kCollection, false /* isSimple */),
+                                    ROOT::ENTupleStructure::kCollection, false /* isSimple */),
      fItemSize(itemField->GetValueSize()),
      fNWritten(0)
 {
@@ -477,7 +477,7 @@ void ROOT::Experimental::RRVecField::AcceptVisitor(Detail::RFieldVisitor &visito
 ROOT::Experimental::RVectorField::RVectorField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
                                                bool isUntyped)
    : ROOT::Experimental::RFieldBase(fieldName, isUntyped ? "" : "std::vector<" + itemField->GetTypeName() + ">",
-                                    ENTupleStructure::kCollection, false /* isSimple */),
+                                    ROOT::ENTupleStructure::kCollection, false /* isSimple */),
      fItemSize(itemField->GetValueSize()),
      fNWritten(0)
 {
@@ -635,7 +635,8 @@ void ROOT::Experimental::RVectorField::AcceptVisitor(Detail::RFieldVisitor &visi
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RField<std::vector<bool>>::RField(std::string_view name)
-   : ROOT::Experimental::RFieldBase(name, "std::vector<bool>", ENTupleStructure::kCollection, false /* isSimple */)
+   : ROOT::Experimental::RFieldBase(name, "std::vector<bool>", ROOT::ENTupleStructure::kCollection,
+                                    false /* isSimple */)
 {
    Attach(std::make_unique<RField<bool>>("_0"));
 }
@@ -717,7 +718,7 @@ ROOT::Experimental::RArrayAsRVecField::RArrayAsRVecField(std::string_view fieldN
                                                          std::unique_ptr<ROOT::Experimental::RFieldBase> itemField,
                                                          std::size_t arrayLength)
    : ROOT::Experimental::RFieldBase(fieldName, "ROOT::VecOps::RVec<" + itemField->GetTypeName() + ">",
-                                    ENTupleStructure::kCollection, false /* isSimple */),
+                                    ROOT::ENTupleStructure::kCollection, false /* isSimple */),
      fItemSize(itemField->GetValueSize()),
      fArrayLength(arrayLength)
 {

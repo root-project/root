@@ -88,7 +88,7 @@ private:
    /// The number of elements per entry for fixed-size arrays
    std::uint64_t fNRepetitions = 0;
    /// The structural information carried by this field in the data model tree
-   ENTupleStructure fStructure = ENTupleStructure::kInvalid;
+   ROOT::ENTupleStructure fStructure = ROOT::ENTupleStructure::kInvalid;
    /// Establishes sub field relationships, such as classes and collections
    DescriptorId_t fParentId = kInvalidDescriptorId;
    /// For projected fields, the source field ID
@@ -130,7 +130,7 @@ public:
    const std::string &GetTypeName() const { return fTypeName; }
    const std::string &GetTypeAlias() const { return fTypeAlias; }
    std::uint64_t GetNRepetitions() const { return fNRepetitions; }
-   ENTupleStructure GetStructure() const { return fStructure; }
+   ROOT::ENTupleStructure GetStructure() const { return fStructure; }
    DescriptorId_t GetParentId() const { return fParentId; }
    DescriptorId_t GetProjectionSourceId() const { return fProjectionSourceId; }
    const std::vector<DescriptorId_t> &GetLinkIds() const { return fLinkIds; }
@@ -1227,7 +1227,7 @@ public:
       fField.fNRepetitions = nRepetitions;
       return *this;
    }
-   RFieldDescriptorBuilder &Structure(const ENTupleStructure &structure)
+   RFieldDescriptorBuilder &Structure(const ROOT::ENTupleStructure &structure)
    {
       fField.fStructure = structure;
       return *this;

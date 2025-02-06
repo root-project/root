@@ -692,8 +692,8 @@ static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnMer
       auto nRepetitions = std::max<std::uint64_t>(field->GetNRepetitions(), 1);
       for (auto parentId = field->GetParentId(); parentId != kInvalidDescriptorId;) {
          const RFieldDescriptor &parent = mergeData.fSrcDescriptor->GetFieldDescriptor(parentId);
-         if (parent.GetStructure() == ENTupleStructure::kCollection ||
-             parent.GetStructure() == ENTupleStructure::kVariant) {
+         if (parent.GetStructure() == ROOT::ENTupleStructure::kCollection ||
+             parent.GetStructure() == ROOT::ENTupleStructure::kVariant) {
             skipColumn = true;
             break;
          }
@@ -705,7 +705,7 @@ static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnMer
 
       const auto structure = field->GetStructure();
 
-      if (structure == ENTupleStructure::kStreamer) {
+      if (structure == ROOT::ENTupleStructure::kStreamer) {
          Fatal(
             "RNTuple::Merge",
             "Destination RNTuple contains a streamer field (%s) that is not present in one of the sources. "
@@ -715,8 +715,8 @@ static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnMer
       }
 
       // NOTE: we cannot have a Record here because it has no associated columns.
-      R__ASSERT(structure == ENTupleStructure::kCollection || structure == ENTupleStructure::kVariant ||
-                structure == ENTupleStructure::kLeaf);
+      R__ASSERT(structure == ROOT::ENTupleStructure::kCollection || structure == ROOT::ENTupleStructure::kVariant ||
+                structure == ROOT::ENTupleStructure::kLeaf);
 
       const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
       const auto nElements = nClusterEntries * nRepetitions;

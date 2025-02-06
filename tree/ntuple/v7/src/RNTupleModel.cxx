@@ -56,12 +56,13 @@ ROOT::RResult<void>
 ROOT::Experimental::Internal::RProjectedFields::EnsureValidMapping(const RFieldBase *target, const FieldMap_t &fieldMap)
 {
    auto source = fieldMap.at(target);
-   const bool hasCompatibleStructure =
-      (source->GetStructure() == target->GetStructure()) ||
-      ((source->GetStructure() == ENTupleStructure::kCollection) && dynamic_cast<const RCardinalityField *>(target));
+   const bool hasCompatibleStructure = (source->GetStructure() == target->GetStructure()) ||
+                                       ((source->GetStructure() == ROOT::ENTupleStructure::kCollection) &&
+                                        dynamic_cast<const RCardinalityField *>(target));
    if (!hasCompatibleStructure)
       return R__FAIL("field mapping structural mismatch: " + source->GetFieldName() + " --> " + target->GetFieldName());
-   if ((source->GetStructure() == ENTupleStructure::kLeaf) || (source->GetStructure() == ENTupleStructure::kStreamer)) {
+   if ((source->GetStructure() == ROOT::ENTupleStructure::kLeaf) ||
+       (source->GetStructure() == ROOT::ENTupleStructure::kStreamer)) {
       if (target->GetTypeName() != source->GetTypeName())
          return R__FAIL("field mapping type mismatch: " + source->GetFieldName() + " --> " + target->GetFieldName());
    }
@@ -86,8 +87,8 @@ ROOT::Experimental::Internal::RProjectedFields::EnsureValidMapping(const RFieldB
    auto fnBreakPoint = [](const RFieldBase *f) -> const RFieldBase * {
       auto parent = f->GetParent();
       while (parent) {
-         if ((parent->GetStructure() != ENTupleStructure::kRecord) &&
-             (parent->GetStructure() != ENTupleStructure::kLeaf)) {
+         if ((parent->GetStructure() != ROOT::ENTupleStructure::kRecord) &&
+             (parent->GetStructure() != ROOT::ENTupleStructure::kLeaf)) {
             return parent;
          }
          parent = parent->GetParent();
@@ -98,10 +99,10 @@ ROOT::Experimental::Internal::RProjectedFields::EnsureValidMapping(const RFieldB
 
    // If source or target has a variant or reference as a parent, error out
    auto *sourceBreakPoint = fnBreakPoint(source);
-   if (sourceBreakPoint && sourceBreakPoint->GetStructure() != ENTupleStructure::kCollection)
+   if (sourceBreakPoint && sourceBreakPoint->GetStructure() != ROOT::ENTupleStructure::kCollection)
       return R__FAIL("unsupported field mapping (source structure)");
    auto *targetBreakPoint = fnBreakPoint(target);
-   if (targetBreakPoint && sourceBreakPoint->GetStructure() != ENTupleStructure::kCollection)
+   if (targetBreakPoint && sourceBreakPoint->GetStructure() != ROOT::ENTupleStructure::kCollection)
       return R__FAIL("unsupported field mapping (target structure)");
 
    if (!sourceBreakPoint && !targetBreakPoint) {
@@ -362,8 +363,8 @@ void ROOT::Experimental::RNTupleModel::RegisterSubfield(std::string_view qualifi
 
    auto parent = field->GetParent();
    while (parent && !parent->GetFieldName().empty()) {
-      if (parent->GetStructure() == ENTupleStructure::kCollection || parent->GetNRepetitions() > 0 ||
-          parent->GetStructure() == ENTupleStructure::kVariant) {
+      if (parent->GetStructure() == ROOT::ENTupleStructure::kCollection || parent->GetNRepetitions() > 0 ||
+          parent->GetStructure() == ROOT::ENTupleStructure::kVariant) {
          throw RException(R__FAIL(
             "registering a subfield as part of a collection, fixed-sized array or std::variant is not supported"));
       }

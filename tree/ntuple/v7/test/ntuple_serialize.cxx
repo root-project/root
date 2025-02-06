@@ -78,7 +78,7 @@ TEST(RNTuple, SerializeColumnType)
 
 TEST(RNTuple, SerializeFieldStructure)
 {
-   ENTupleStructure structure = ENTupleStructure::kInvalid;
+   ROOT::ENTupleStructure structure = ROOT::ENTupleStructure::kInvalid;
    unsigned char buffer[2];
 
    try {
@@ -90,10 +90,10 @@ TEST(RNTuple, SerializeFieldStructure)
 
    RNTupleSerializer::SerializeUInt16(5000, buffer);
    RNTupleSerializer::DeserializeFieldStructure(buffer, structure).Unwrap();
-   EXPECT_EQ(structure, ENTupleStructure::kUnknown);
+   EXPECT_EQ(structure, ROOT::ENTupleStructure::kUnknown);
 
-   for (int i = 0; i < static_cast<int>(ENTupleStructure::kInvalid); ++i) {
-      RNTupleSerializer::SerializeFieldStructure(static_cast<ENTupleStructure>(i), buffer);
+   for (int i = 0; i < static_cast<int>(ROOT::ENTupleStructure::kInvalid); ++i) {
+      RNTupleSerializer::SerializeFieldStructure(static_cast<ROOT::ENTupleStructure>(i), buffer);
       RNTupleSerializer::DeserializeFieldStructure(buffer, structure);
       EXPECT_EQ(i, static_cast<int>(structure));
    }
@@ -530,7 +530,7 @@ TEST(RNTuple, SerializeEmptyHeader)
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(0)
                        .FieldName("")
-                       .Structure(ENTupleStructure::kRecord)
+                       .Structure(ROOT::ENTupleStructure::kRecord)
                        .MakeDescriptor()
                        .Unwrap());
    auto desc = builder.MoveDescriptor();
@@ -549,32 +549,32 @@ TEST(RNTuple, SerializeHeader)
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(0)
                        .FieldName("")
-                       .Structure(ENTupleStructure::kRecord)
+                       .Structure(ROOT::ENTupleStructure::kRecord)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(42)
                        .FieldName("pt")
-                       .Structure(ENTupleStructure::kLeaf)
+                       .Structure(ROOT::ENTupleStructure::kLeaf)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(24)
                        .FieldName("ptAlias")
-                       .Structure(ENTupleStructure::kLeaf)
+                       .Structure(ROOT::ENTupleStructure::kLeaf)
                        .ProjectionSourceId(42)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(137)
                        .FieldName("jet")
-                       .Structure(ENTupleStructure::kRecord)
+                       .Structure(ROOT::ENTupleStructure::kRecord)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(13)
                        .FieldName("eta")
-                       .Structure(ENTupleStructure::kLeaf)
+                       .Structure(ROOT::ENTupleStructure::kLeaf)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 42);
@@ -656,13 +656,13 @@ TEST(RNTuple, SerializeFooter)
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(0)
                        .FieldName("")
-                       .Structure(ENTupleStructure::kRecord)
+                       .Structure(ROOT::ENTupleStructure::kRecord)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(42)
                        .FieldName("tag")
-                       .Structure(ENTupleStructure::kLeaf)
+                       .Structure(ROOT::ENTupleStructure::kLeaf)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 42);
@@ -776,14 +776,14 @@ TEST(RNTuple, SerializeFooterXHeader)
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(0)
                        .FieldName("")
-                       .Structure(ENTupleStructure::kRecord)
+                       .Structure(ROOT::ENTupleStructure::kRecord)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(42)
                        .FieldName("field")
                        .TypeName("int32_t")
-                       .Structure(ENTupleStructure::kLeaf)
+                       .Structure(ROOT::ENTupleStructure::kLeaf)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 42);
@@ -806,21 +806,21 @@ TEST(RNTuple, SerializeFooterXHeader)
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(43)
                        .FieldName("struct")
-                       .Structure(ENTupleStructure::kRecord)
+                       .Structure(ROOT::ENTupleStructure::kRecord)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(44)
                        .FieldName("f")
                        .TypeName("float")
-                       .Structure(ENTupleStructure::kLeaf)
+                       .Structure(ROOT::ENTupleStructure::kLeaf)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(45)
                        .FieldName("i64")
                        .TypeName("int64_t")
-                       .Structure(ENTupleStructure::kLeaf)
+                       .Structure(ROOT::ENTupleStructure::kLeaf)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 43);
@@ -851,7 +851,7 @@ TEST(RNTuple, SerializeFooterXHeader)
                        .FieldId(46)
                        .FieldName("projected")
                        .TypeName("float")
-                       .Structure(ENTupleStructure::kLeaf)
+                       .Structure(ROOT::ENTupleStructure::kLeaf)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 46);
@@ -946,14 +946,14 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(0)
                        .FieldName("")
-                       .Structure(ENTupleStructure::kRecord)
+                       .Structure(ROOT::ENTupleStructure::kRecord)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(7)
                        .FieldName("str")
                        .TypeName("std::string")
-                       .Structure(ENTupleStructure::kLeaf)
+                       .Structure(ROOT::ENTupleStructure::kLeaf)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 7);
@@ -1137,14 +1137,14 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(0)
                        .FieldName("")
-                       .Structure(ENTupleStructure::kRecord)
+                       .Structure(ROOT::ENTupleStructure::kRecord)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(5)
                        .FieldName("pt")
                        .TypeName("float")
-                       .Structure(ENTupleStructure::kLeaf)
+                       .Structure(ROOT::ENTupleStructure::kLeaf)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 5);
@@ -1152,7 +1152,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
                        .FieldId(7)
                        .FieldName("ptAlias")
                        .TypeName("float")
-                       .Structure(ENTupleStructure::kLeaf)
+                       .Structure(ROOT::ENTupleStructure::kLeaf)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 7);
@@ -1273,7 +1273,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(0)
                        .FieldName("")
-                       .Structure(ENTupleStructure::kRecord)
+                       .Structure(ROOT::ENTupleStructure::kRecord)
                        .MakeDescriptor()
                        .Unwrap());
 
@@ -1292,7 +1292,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
                        .FieldId(5)
                        .FieldName("pt")
                        .TypeName("float")
-                       .Structure(ENTupleStructure::kLeaf)
+                       .Structure(ROOT::ENTupleStructure::kLeaf)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 5);
@@ -1402,14 +1402,14 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(0)
                        .FieldName("")
-                       .Structure(ENTupleStructure::kRecord)
+                       .Structure(ROOT::ENTupleStructure::kRecord)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(5)
                        .FieldName("pt")
                        .TypeName("float")
-                       .Structure(ENTupleStructure::kLeaf)
+                       .Structure(ROOT::ENTupleStructure::kLeaf)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 5);
@@ -1521,7 +1521,7 @@ TEST(RNTuple, DeserializeDescriptorModes)
       builder.AddField(RFieldDescriptorBuilder()
                           .FieldId(0)
                           .FieldName("")
-                          .Structure(ENTupleStructure::kRecord)
+                          .Structure(ROOT::ENTupleStructure::kRecord)
                           .MakeDescriptor()
                           .Unwrap());
 
@@ -1530,7 +1530,7 @@ TEST(RNTuple, DeserializeDescriptorModes)
                           .FieldId(1)
                           .FieldName("suppressed")
                           .TypeName("int")
-                          .Structure(ENTupleStructure::kLeaf)
+                          .Structure(ROOT::ENTupleStructure::kLeaf)
                           .MakeDescriptor()
                           .Unwrap());
       builder.AddFieldLink(0, 1);
@@ -1582,7 +1582,7 @@ TEST(RNTuple, DeserializeDescriptorModes)
                           .FieldId(2)
                           .FieldName("deferred")
                           .TypeName("float")
-                          .Structure(ENTupleStructure::kLeaf)
+                          .Structure(ROOT::ENTupleStructure::kLeaf)
                           .MakeDescriptor()
                           .Unwrap());
       builder.AddFieldLink(0, 2);
@@ -1792,7 +1792,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred_HeaderExtBeforeSerializ
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(0)
                        .FieldName("")
-                       .Structure(ENTupleStructure::kRecord)
+                       .Structure(ROOT::ENTupleStructure::kRecord)
                        .MakeDescriptor()
                        .Unwrap());
 
@@ -1802,7 +1802,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred_HeaderExtBeforeSerializ
                        .FieldId(5)
                        .FieldName("pt")
                        .TypeName("float")
-                       .Structure(ENTupleStructure::kLeaf)
+                       .Structure(ROOT::ENTupleStructure::kLeaf)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 5);
@@ -1920,7 +1920,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferredInMainHeader)
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(0)
                        .FieldName("")
-                       .Structure(ENTupleStructure::kRecord)
+                       .Structure(ROOT::ENTupleStructure::kRecord)
                        .MakeDescriptor()
                        .Unwrap());
 
@@ -1928,7 +1928,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferredInMainHeader)
                        .FieldId(5)
                        .FieldName("pt")
                        .TypeName("float")
-                       .Structure(ENTupleStructure::kLeaf)
+                       .Structure(ROOT::ENTupleStructure::kLeaf)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 5);

@@ -195,7 +195,7 @@ private:
    /// The C++ type captured by this field
    std::string fType;
    /// The role of this field in the data model structure
-   ENTupleStructure fStructure;
+   ROOT::ENTupleStructure fStructure;
    /// For fixed sized arrays, the array length
    std::size_t fNRepetitions;
    /// A field qualifies as simple if it is mappable (which implies it has a single principal column),
@@ -516,7 +516,7 @@ public:
    /// The constructor creates the underlying column objects and connects them to either a sink or a source.
    /// If `isSimple` is `true`, the trait `kTraitMappable` is automatically set on construction. However, the
    /// field might be demoted to non-simple if a post-read callback is set.
-   RFieldBase(std::string_view name, std::string_view type, ENTupleStructure structure, bool isSimple,
+   RFieldBase(std::string_view name, std::string_view type, ROOT::ENTupleStructure structure, bool isSimple,
               std::size_t nRepetitions = 0);
    RFieldBase(const RFieldBase &) = delete;
    RFieldBase(RFieldBase &&) = default;
@@ -570,7 +570,7 @@ public:
    std::string GetQualifiedFieldName() const;
    const std::string &GetTypeName() const { return fType; }
    const std::string &GetTypeAlias() const { return fTypeAlias; }
-   ENTupleStructure GetStructure() const { return fStructure; }
+   ROOT::ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
    const RFieldBase *GetParent() const { return fParent; }
    std::vector<RFieldBase *> GetSubFields();

@@ -50,7 +50,8 @@
 #include <variant>
 
 ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, const RClassField &source)
-   : ROOT::Experimental::RFieldBase(fieldName, source.GetTypeName(), ENTupleStructure::kRecord, false /* isSimple */),
+   : ROOT::Experimental::RFieldBase(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kRecord,
+                                    false /* isSimple */),
      fClass(source.fClass),
      fSubFieldsInfo(source.fSubFieldsInfo),
      fMaxAlignment(source.fMaxAlignment)
@@ -67,7 +68,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
 }
 
 ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::string_view className, TClass *classp)
-   : ROOT::Experimental::RFieldBase(fieldName, className, ENTupleStructure::kRecord, false /* isSimple */),
+   : ROOT::Experimental::RFieldBase(fieldName, className, ROOT::ENTupleStructure::kRecord, false /* isSimple */),
      fClass(classp)
 {
    if (fClass == nullptr) {
@@ -308,7 +309,7 @@ ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::stri
 }
 
 ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::string_view enumName, TEnum *enump)
-   : ROOT::Experimental::RFieldBase(fieldName, enumName, ENTupleStructure::kLeaf, false /* isSimple */)
+   : ROOT::Experimental::RFieldBase(fieldName, enumName, ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
 {
    if (enump == nullptr) {
       throw RException(R__FAIL("RField: no I/O support for enum type " + std::string(enumName)));
@@ -337,7 +338,7 @@ ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::stri
 
 ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::string_view enumName,
                                            std::unique_ptr<RFieldBase> intField)
-   : ROOT::Experimental::RFieldBase(fieldName, enumName, ENTupleStructure::kLeaf, false /* isSimple */)
+   : ROOT::Experimental::RFieldBase(fieldName, enumName, ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
 {
    Attach(std::move(intField));
    fTraits |= kTraitTriviallyConstructible | kTraitTriviallyDestructible;
@@ -421,7 +422,7 @@ ROOT::Experimental::RProxiedCollectionField::RCollectionIterableOnce::GetIterato
 
 ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName,
                                                                      std::string_view typeName, TClass *classp)
-   : RFieldBase(fieldName, typeName, ENTupleStructure::kCollection, false /* isSimple */), fNWritten(0)
+   : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kCollection, false /* isSimple */), fNWritten(0)
 {
    if (classp == nullptr)
       throw RException(R__FAIL("RField: no I/O support for collection proxy type " + std::string(typeName)));
@@ -650,7 +651,7 @@ ROOT::Experimental::RStreamerField::RStreamerField(std::string_view fieldName, s
 
 ROOT::Experimental::RStreamerField::RStreamerField(std::string_view fieldName, std::string_view className,
                                                    TClass *classp)
-   : ROOT::Experimental::RFieldBase(fieldName, className, ENTupleStructure::kStreamer, false /* isSimple */),
+   : ROOT::Experimental::RFieldBase(fieldName, className, ROOT::ENTupleStructure::kStreamer, false /* isSimple */),
      fClass(classp),
      fIndex(0)
 {
@@ -773,7 +774,7 @@ std::size_t ROOT::Experimental::RField<TObject>::GetOffsetOfMember(const char *n
 }
 
 ROOT::Experimental::RField<TObject>::RField(std::string_view fieldName, const RField<TObject> &source)
-   : ROOT::Experimental::RFieldBase(fieldName, "TObject", ENTupleStructure::kRecord, false /* isSimple */)
+   : ROOT::Experimental::RFieldBase(fieldName, "TObject", ROOT::ENTupleStructure::kRecord, false /* isSimple */)
 {
    fTraits |= kTraitTypeChecksum;
    Attach(source.GetSubFields()[0]->Clone("fUniqueID"));
@@ -781,7 +782,7 @@ ROOT::Experimental::RField<TObject>::RField(std::string_view fieldName, const RF
 }
 
 ROOT::Experimental::RField<TObject>::RField(std::string_view fieldName)
-   : ROOT::Experimental::RFieldBase(fieldName, "TObject", ENTupleStructure::kRecord, false /* isSimple */)
+   : ROOT::Experimental::RFieldBase(fieldName, "TObject", ROOT::ENTupleStructure::kRecord, false /* isSimple */)
 {
    assert(TObject::Class()->GetClassVersion() == 1);
 
@@ -966,7 +967,7 @@ std::string ROOT::Experimental::RVariantField::GetTypeList(const std::vector<std
 }
 
 ROOT::Experimental::RVariantField::RVariantField(std::string_view name, const RVariantField &source)
-   : ROOT::Experimental::RFieldBase(name, source.GetTypeName(), ENTupleStructure::kVariant, false /* isSimple */),
+   : ROOT::Experimental::RFieldBase(name, source.GetTypeName(), ROOT::ENTupleStructure::kVariant, false /* isSimple */),
      fMaxItemSize(source.fMaxItemSize),
      fMaxAlignment(source.fMaxAlignment),
      fTagOffset(source.fTagOffset),
@@ -981,7 +982,7 @@ ROOT::Experimental::RVariantField::RVariantField(std::string_view name, const RV
 ROOT::Experimental::RVariantField::RVariantField(std::string_view fieldName,
                                                  std::vector<std::unique_ptr<RFieldBase>> itemFields)
    : ROOT::Experimental::RFieldBase(fieldName, "std::variant<" + GetTypeList(itemFields) + ">",
-                                    ENTupleStructure::kVariant, false /* isSimple */)
+                                    ROOT::ENTupleStructure::kVariant, false /* isSimple */)
 {
    // The variant needs to initialize its own tag member
    fTraits |= kTraitTriviallyDestructible & ~kTraitTriviallyConstructible;
