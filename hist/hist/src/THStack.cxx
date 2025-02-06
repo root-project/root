@@ -878,6 +878,7 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint, Bool_t rebuild_stac
          }
       }
       fHistogram->SetStats(false);
+      fHistogram->Sumw2(kFALSE);
       TH1::AddDirectory(add);
    } else {
       fHistogram->SetTitle(GetTitle());
