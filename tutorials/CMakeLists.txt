@@ -260,6 +260,8 @@ endif()
 if(MSVC)
   #---Multiproc is not supported on Windows
   set(imt_veto ${imt_veto} multicore/mp*.C multicore/mtbb201_parallelHistoFill.C)
+  #---XRootD is not supported on Windows
+  set(imt_veto ${imt_veto} multicore/imt101_parTreeProcessing.C)
   if(NOT win_broken_tests)
     # std::this_thread::sleep_for(std::chrono::duration<double, std::nano>(500));
     # fails on Windows 32 bit and Visual Studio v17.9 with the following error:
