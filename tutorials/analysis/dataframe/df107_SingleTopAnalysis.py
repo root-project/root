@@ -212,7 +212,9 @@ for h, color in zip(
         [(0.87, 0.35, 0.42), (0.61, 0.6, 0.8), (0.82, 0.94, 0.76)]):
     h.SetLineWidth(1)
     h.SetLineColor("black")
-    h.SetFillColor(color)
+    h.SetFillColor(ROOT.TColor.GetColor(*color))
+    # From Python 3.11 onward, implicit conversion of the tuple works too:
+    # h.SetFillColor(color)
     stack.Add(h)
 stack.Draw("HIST")
 stack.GetXaxis().SetTitle("m_{W(l#nu)+b} [GeV]")
