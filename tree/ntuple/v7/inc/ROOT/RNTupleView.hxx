@@ -64,7 +64,7 @@ protected:
    RNTupleGlobalRange fFieldRange;
    RFieldBase::RValue fValue;
 
-   static std::unique_ptr<RFieldBase> CreateField(DescriptorId_t fieldId, Internal::RPageSource &pageSource)
+   static std::unique_ptr<RFieldBase> CreateField(ROOT::DescriptorId_t fieldId, Internal::RPageSource &pageSource)
    {
       std::unique_ptr<RFieldBase> field;
       {
@@ -223,7 +223,7 @@ protected:
    RField<T> fField;
    RNTupleGlobalRange fFieldRange;
 
-   static RField<T> CreateField(DescriptorId_t fieldId, Internal::RPageSource &pageSource)
+   static RField<T> CreateField(ROOT::DescriptorId_t fieldId, Internal::RPageSource &pageSource)
    {
       const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(fieldId);
@@ -268,14 +268,14 @@ private:
    RField<RNTupleCardinality<std::uint64_t>> fField;
    RFieldBase::RValue fValue;
 
-   RNTupleCollectionView(DescriptorId_t fieldId, const std::string &fieldName, Internal::RPageSource *source)
+   RNTupleCollectionView(ROOT::DescriptorId_t fieldId, const std::string &fieldName, Internal::RPageSource *source)
       : fSource(source), fField(fieldName), fValue(fField.CreateValue())
    {
       fField.SetOnDiskId(fieldId);
       Internal::CallConnectPageSourceOnField(fField, *source);
    }
 
-   static RNTupleCollectionView Create(DescriptorId_t fieldId, Internal::RPageSource *source)
+   static RNTupleCollectionView Create(ROOT::DescriptorId_t fieldId, Internal::RPageSource *source)
    {
       std::string fieldName;
       {
@@ -290,11 +290,11 @@ private:
       return RNTupleCollectionView(fieldId, fieldName, source);
    }
 
-   DescriptorId_t GetFieldId(std::string_view fieldName)
+   ROOT::DescriptorId_t GetFieldId(std::string_view fieldName)
    {
       auto descGuard = fSource->GetSharedDescriptorGuard();
       auto fieldId = descGuard->FindFieldId(fieldName, fField.GetOnDiskId());
-      if (fieldId == kInvalidDescriptorId) {
+      if (fieldId == ROOT::kInvalidDescriptorId) {
          throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in collection '" +
                                   descGuard->GetQualifiedFieldName(fField.GetOnDiskId()) + "'"));
       }

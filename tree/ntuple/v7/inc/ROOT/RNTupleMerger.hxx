@@ -90,7 +90,7 @@ class RNTupleMerger final {
    std::unique_ptr<RPageAllocator> fPageAlloc;
    std::optional<TTaskGroup> fTaskGroup;
 
-   void MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t clusterId,
+   void MergeCommonColumns(RClusterPool &clusterPool, ROOT::DescriptorId_t clusterId,
                            std::span<RColumnMergeInfo> commonColumns, const RCluster::ColumnSet_t &commonColumnSet,
                            RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData);
 

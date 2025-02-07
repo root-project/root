@@ -331,11 +331,11 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitPageImpl(ColumnHandle_t colum
 }
 
 ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageImpl(DescriptorId_t physicalColumnId,
+ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId,
                                                                   const RPageStorage::RSealedPage &sealedPage)
 {
    auto offsetData = fPageId.fetch_add(1);
-   DescriptorId_t clusterId = fDescriptorBuilder.GetDescriptor().GetNActiveClusters();
+   ROOT::DescriptorId_t clusterId = fDescriptorBuilder.GetDescriptor().GetNActiveClusters();
 
    {
       Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
@@ -367,7 +367,7 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPa
    const bool useCaging = fCageSizeLimit > 0;
    const std::uint8_t locatorFlags = useCaging ? EDaosLocatorFlags::kCagedPage : 0;
 
-   DescriptorId_t clusterId = fDescriptorBuilder.GetDescriptor().GetNActiveClusters();
+   ROOT::DescriptorId_t clusterId = fDescriptorBuilder.GetDescriptor().GetNActiveClusters();
    int64_t payloadSz = 0;
    std::size_t positionOffset;
    uint32_t positionIndex;
@@ -544,7 +544,7 @@ std::string ROOT::Experimental::Internal::RPageSourceDaos::GetObjectClass() cons
    return fDaosContainer->GetDefaultObjectClass().ToString();
 }
 
-void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(DescriptorId_t physicalColumnId,
+void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(ROOT::DescriptorId_t physicalColumnId,
                                                                    RNTupleLocalIndex localIndex,
                                                                    RSealedPage &sealedPage)
 {
@@ -672,8 +672,8 @@ std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>>
 ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::RKey> clusterKeys)
 {
    struct RDaosSealedPageLocator {
-      DescriptorId_t fClusterId = 0;
-      DescriptorId_t fColumnId = 0;
+      ROOT::DescriptorId_t fClusterId = 0;
+      ROOT::DescriptorId_t fColumnId = 0;
       ROOT::NTupleSize_t fPageNo = 0;
       std::uint64_t fPosition = 0;
       std::uint64_t fCageOffset = 0;
@@ -696,7 +696,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
       auto pageZeroMap = std::make_unique<ROnDiskPageMap>();
       PrepareLoadCluster(
          clusterKey, *pageZeroMap,
-         [&](DescriptorId_t physicalColumnId, ROOT::NTupleSize_t pageNo,
+         [&](ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t pageNo,
              const RClusterDescriptor::RPageRange::RPageInfo &pageInfo) {
             const auto &pageLocator = pageInfo.fLocator;
             uint32_t position, offset;

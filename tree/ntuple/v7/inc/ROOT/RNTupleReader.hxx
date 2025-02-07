@@ -100,7 +100,7 @@ private:
    RNTupleReader *GetDisplayReader();
    void InitPageSource(bool enableMetrics);
 
-   DescriptorId_t RetrieveFieldId(std::string_view fieldName) const;
+   ROOT::DescriptorId_t RetrieveFieldId(std::string_view fieldName) const;
 
 public:
    // Browse through the entries
@@ -298,7 +298,7 @@ public:
    }
 
    template <typename T>
-   RNTupleView<T> GetView(DescriptorId_t fieldId)
+   RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId)
    {
       auto field = RNTupleView<T>::CreateField(fieldId, *fSource);
       auto range = Internal::GetFieldRange(*field, *fSource);
@@ -306,7 +306,7 @@ public:
    }
 
    template <typename T>
-   RNTupleView<T> GetView(DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
+   RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, std::shared_ptr<T> objPtr)
    {
       auto field = RNTupleView<T>::CreateField(fieldId, *fSource);
       auto range = Internal::GetFieldRange(*field, *fSource);
@@ -314,7 +314,7 @@ public:
    }
 
    template <typename T>
-   RNTupleView<T> GetView(DescriptorId_t fieldId, T *rawPtr)
+   RNTupleView<T> GetView(ROOT::DescriptorId_t fieldId, T *rawPtr)
    {
       auto field = RNTupleView<T>::CreateField(fieldId, *fSource);
       auto range = Internal::GetFieldRange(*field, *fSource);
@@ -328,7 +328,7 @@ public:
    }
 
    template <typename T>
-   RNTupleDirectAccessView<T> GetDirectAccessView(DescriptorId_t fieldId)
+   RNTupleDirectAccessView<T> GetDirectAccessView(ROOT::DescriptorId_t fieldId)
    {
       auto field = RNTupleDirectAccessView<T>::CreateField(fieldId, *fSource);
       auto range = Internal::GetFieldRange(field, *fSource);
@@ -341,14 +341,14 @@ public:
    RNTupleCollectionView GetCollectionView(std::string_view fieldName)
    {
       auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName);
-      if (fieldId == kInvalidDescriptorId) {
+      if (fieldId == ROOT::kInvalidDescriptorId) {
          throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
                                   fSource->GetSharedDescriptorGuard()->GetName() + "'"));
       }
       return GetCollectionView(fieldId);
    }
 
-   RNTupleCollectionView GetCollectionView(DescriptorId_t fieldId)
+   RNTupleCollectionView GetCollectionView(ROOT::DescriptorId_t fieldId)
    {
       return RNTupleCollectionView::Create(fieldId, fSource.get());
    }

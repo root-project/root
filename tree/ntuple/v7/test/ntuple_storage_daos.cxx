@@ -358,9 +358,9 @@ TEST_F(RPageStorageDaos, Checksum)
    EXPECT_THROW(viewPy(0), ROOT::RException);
    EXPECT_FLOAT_EQ(3.0, viewPz(0));
 
-   DescriptorId_t pxColId;
-   DescriptorId_t pyColId;
-   DescriptorId_t clusterId;
+   ROOT::DescriptorId_t pxColId;
+   ROOT::DescriptorId_t pyColId;
+   ROOT::DescriptorId_t clusterId;
    auto pageSource = RPageSource::Create("ntpl", daosUri);
    pageSource->Attach();
    {

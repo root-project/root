@@ -158,7 +158,7 @@ ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, RNTupleLocalIndex loc
    return RPageRef();
 }
 
-void ROOT::Experimental::Internal::RPagePool::Evict(DescriptorId_t clusterId)
+void ROOT::Experimental::Internal::RPagePool::Evict(ROOT::DescriptorId_t clusterId)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    auto itr = fUnusedPages.find(clusterId);

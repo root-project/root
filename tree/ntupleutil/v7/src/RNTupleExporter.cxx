@@ -92,7 +92,7 @@ RAddColumnsResult AddColumnsFromField(std::vector<RColumnExportInfo> &vec, const
 int CountPages(const RNTupleDescriptor &desc, std::span<const RColumnExportInfo> columns)
 {
    int nPages = 0;
-   DescriptorId_t clusterId = desc.FindClusterId(0, 0);
+   auto clusterId = desc.FindClusterId(0, 0);
    while (clusterId != kInvalidDescriptorId) {
       const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
       for (const auto &colInfo : columns) {
@@ -133,14 +133,14 @@ RNTupleExporter::RPagesResult RNTupleExporter::ExportPages(RPageSource &source, 
    res.fExportedFileNames.reserve(nPages);
 
    // Iterate over the clusters in order and dump pages
-   DescriptorId_t clusterId = nPages > 0 ? desc->FindClusterId(0, 0) : kInvalidDescriptorId;
+   auto clusterId = nPages > 0 ? desc->FindClusterId(0, 0) : ROOT::kInvalidDescriptorId;
    int pagesExported = 0;
    int prevIntPercent = 0;
-   while (clusterId != kInvalidDescriptorId) {
+   while (clusterId != ROOT::kInvalidDescriptorId) {
       const auto &clusterDesc = desc->GetClusterDescriptor(clusterId);
       const RCluster *cluster = clusterPool.GetCluster(clusterId, columnSet);
       for (const auto &colInfo : columnInfos) {
-         DescriptorId_t columnId = colInfo.fColDesc->GetPhysicalId();
+         auto columnId = colInfo.fColDesc->GetPhysicalId();
          const auto &pages = clusterDesc.GetPageRange(columnId);
          const auto &colRange = clusterDesc.GetColumnRange(columnId);
          std::uint64_t pageIdx = 0;

@@ -83,7 +83,7 @@ public:
 // clang-format on
 class RNTupleClusterRange {
 private:
-   const DescriptorId_t fClusterId;
+   const ROOT::DescriptorId_t fClusterId;
    const ROOT::NTupleSize_t fStart;
    const ROOT::NTupleSize_t fEnd;
 
@@ -121,7 +121,7 @@ public:
       bool operator!=(const iterator &rh) const { return fLocalIndex != rh.fLocalIndex; }
    };
 
-   RNTupleClusterRange(DescriptorId_t clusterId, ROOT::NTupleSize_t start, ROOT::NTupleSize_t end)
+   RNTupleClusterRange(ROOT::DescriptorId_t clusterId, ROOT::NTupleSize_t start, ROOT::NTupleSize_t end)
       : fClusterId(clusterId), fStart(start), fEnd(end)
    {
    }
