@@ -401,7 +401,7 @@ DeserializeExtraTypeInfo(const void *buffer, std::uint64_t bufSize,
    return frameSize;
 }
 
-std::uint32_t SerializeLocatorPayloadLarge(const ROOT::Experimental::RNTupleLocator &locator, unsigned char *buffer)
+std::uint32_t SerializeLocatorPayloadLarge(const ROOT::RNTupleLocator &locator, unsigned char *buffer)
 {
    if (buffer) {
       RNTupleSerializer::SerializeUInt64(locator.GetNBytesOnStorage(), buffer);
@@ -410,7 +410,7 @@ std::uint32_t SerializeLocatorPayloadLarge(const ROOT::Experimental::RNTupleLoca
    return sizeof(std::uint64_t) + sizeof(std::uint64_t);
 }
 
-void DeserializeLocatorPayloadLarge(const unsigned char *buffer, ROOT::Experimental::RNTupleLocator &locator)
+void DeserializeLocatorPayloadLarge(const unsigned char *buffer, ROOT::RNTupleLocator &locator)
 {
    std::uint64_t nBytesOnStorage;
    std::uint64_t position;
@@ -420,9 +420,9 @@ void DeserializeLocatorPayloadLarge(const unsigned char *buffer, ROOT::Experimen
    locator.SetPosition(position);
 }
 
-std::uint32_t SerializeLocatorPayloadObject64(const ROOT::Experimental::RNTupleLocator &locator, unsigned char *buffer)
+std::uint32_t SerializeLocatorPayloadObject64(const ROOT::RNTupleLocator &locator, unsigned char *buffer)
 {
-   const auto &data = locator.GetPosition<ROOT::Experimental::RNTupleLocatorObject64>();
+   const auto &data = locator.GetPosition<ROOT::RNTupleLocatorObject64>();
    const uint32_t sizeofNBytesOnStorage = (locator.GetNBytesOnStorage() > std::numeric_limits<std::uint32_t>::max())
                                              ? sizeof(std::uint64_t)
                                              : sizeof(std::uint32_t);
@@ -438,7 +438,7 @@ std::uint32_t SerializeLocatorPayloadObject64(const ROOT::Experimental::RNTupleL
 }
 
 void DeserializeLocatorPayloadObject64(const unsigned char *buffer, std::uint32_t sizeofLocatorPayload,
-                                       ROOT::Experimental::RNTupleLocator &locator)
+                                       ROOT::RNTupleLocator &locator)
 {
    std::uint64_t location;
    if (sizeofLocatorPayload == 12) {
@@ -454,7 +454,7 @@ void DeserializeLocatorPayloadObject64(const unsigned char *buffer, std::uint32_
    } else {
       throw ROOT::RException(R__FAIL("invalid DAOS locator payload size: " + std::to_string(sizeofLocatorPayload)));
    }
-   locator.SetPosition(ROOT::Experimental::RNTupleLocatorObject64{location});
+   locator.SetPosition(ROOT::RNTupleLocatorObject64{location});
 }
 
 std::uint32_t SerializeAliasColumn(const ROOT::Experimental::RColumnDescriptor &columnDesc,
