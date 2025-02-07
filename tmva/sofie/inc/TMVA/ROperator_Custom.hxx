@@ -17,6 +17,8 @@ class ROperator_Custom final : public ROperator
 
 private:
     std::string fOpName;
+    std::vector<std::string> fInputNames;
+    std::vector<std::string> fOutputNames;
     std::vector<std::vector<std::size_t>> fOutputShapes;
     std::string fHeaderName;
 
@@ -27,10 +29,12 @@ public:
         fOutputShapes = OutputShapes;
         fHeaderName = HeaderName;
         for(auto& it:Inputs){
-            fInputTensorNames.emplace_back(UTILITY::Clean_name(it));
+            fInputNames.emplace_back(UTILITY::Clean_name(it));
+            fInputTensorNames.emplace_back(fInputNames.back());
         }
         for(auto& it:Outputs){
-            fOutputTensorNames.emplace_back(UTILITY::Clean_name(it));
+            fOutputNames.emplace_back(UTILITY::Clean_name(it));
+            fOutputTensorNames.emplace_back(fOutputNames.back());
         }
     }
 
