@@ -8,6 +8,30 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+r'''
+\pythondoc TCanvas
+
+Functionality of TCanvas::Update() method was extended to support interactive
+graphics in the python scripts. If extra block parameter is True, script execution
+will be suspended until <space> key pressed by user. Simple example:
+
+\code{.py}
+\endcode
+import ROOT
+
+c = ROOT.TCanvas()
+h = ROOT.TH1I("h1", "h1", 100, -5, 5)
+h.FillRandom("gaus", 10000)
+h.Draw("")
+
+# block here until space is pressed
+c.Update(True)
+
+# continues after <space> is pressed
+c.SaveAs("canvas.root")
+\endpythondoc
+'''
+
 from . import pythonization
 
 def wait_press_windows():
