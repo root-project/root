@@ -53,8 +53,8 @@
 #include <variant>
 #include <vector>
 
+using ROOT::RNTupleLocalIndex;
 using ROOT::Experimental::EExtraTypeInfoIds;
-using ROOT::Experimental::RNTupleLocalIndex;
 using ROOT::Experimental::Internal::RColumnIndex;
 using RClusterDescriptor = ROOT::Experimental::RClusterDescriptor;
 using RClusterDescriptorBuilder = ROOT::Experimental::Internal::RClusterDescriptorBuilder;

@@ -103,7 +103,7 @@ public:
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
-   void ReadInClusterImpl(ROOT::Experimental::RNTupleLocalIndex localIndex, void *to) final
+   void ReadInClusterImpl(ROOT::RNTupleLocalIndex localIndex, void *to) final
    {
       RNTupleLocalIndex collectionStart;
       ROOT::NTupleSize_t size;
