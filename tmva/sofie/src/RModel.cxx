@@ -173,7 +173,8 @@ void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
    for(size_t index = 0; index<op_input_tensors.size() && 
          fInitializedTensors.find(UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInitializedTensors.end() && 
          std::find(fInputTensorNames.begin(), fInputTensorNames.end(), 
-                   UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInputTensorNames.end();
+                   UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fInputTensorNames.end() &&
+         fDynamicTensorInfos.find(UTILITY::Clean_name(std::string(op_input_tensors[index]))) == fDynamicTensorInfos.end();
          ++index){
       // check if the tensor is already in the lookup table
       if (fIntermediateTensorFrequencyLookup.find(op_input_tensors[index]) == fIntermediateTensorFrequencyLookup.end()) {
@@ -313,8 +314,9 @@ void RModel::EvaluateIntermediateMemory(std::span<const std::string_view> op_inp
    bool allocated;
 
    for (auto &it : op_output_tensors){
+      if (GetTensorType(std::string(it)) == ETensorType::BOOL || fDynamicTensorInfos.find(std::string(it)) != fDynamicTensorInfos.end()) continue;
+
       auto tensor_size = GetTypeSize(GetTensorType(std::string(it))) * ConvertShapeToLength(GetTensorShape(std::string(it)));
-      if (GetTensorType(std::string(it)) == ETensorType::BOOL) continue;
      
       // flag to check if the tensor is considered for allocation
       allocated = false;
@@ -363,7 +365,7 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
    bool allocated = false;
 
    for (auto& it:op_output_tensors){
-         if (GetTensorType(std::string(it)) == ETensorType::BOOL || fInitializedTensors.find(std::string(it)) != fInitializedTensors.end()) continue;
+         if (GetTensorType(std::string(it)) == ETensorType::BOOL || fInitializedTensors.find(std::string(it)) != fInitializedTensors.end() || fDynamicTensorInfos.find(std::string(it)) != fDynamicTensorInfos.end()) continue;
          auto tensor_size = GetTypeSize(GetTensorType(std::string(it))) * ConvertShapeToLength(GetTensorShape(std::string(it)));
          memory_allocation_string += "\n // Allocating memory for intermediate tensor " + std::string(it) + " with size " + tensor_size + " bytes";
          if (!fIntermediateMemoryInfo.available_memory.empty()){
