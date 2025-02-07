@@ -76,7 +76,7 @@ void ROOT::Experimental::Internal::RPageSinkFile::InitImpl(unsigned char *serial
    fWriter->WriteNTupleHeader(zipBuffer.get(), szZipHeader, length);
 }
 
-inline ROOT::Experimental::RNTupleLocator
+inline ROOT::RNTupleLocator
 ROOT::Experimental::Internal::RPageSinkFile::WriteSealedPage(const RPageStorage::RSealedPage &sealedPage,
                                                              std::size_t bytesPacked)
 {
@@ -95,7 +95,7 @@ ROOT::Experimental::Internal::RPageSinkFile::WriteSealedPage(const RPageStorage:
    return result;
 }
 
-ROOT::Experimental::RNTupleLocator
+ROOT::RNTupleLocator
 ROOT::Experimental::Internal::RPageSinkFile::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
 {
    auto element = columnHandle.fColumn->GetElement();
@@ -109,7 +109,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitPageImpl(ColumnHandle_t colum
    return WriteSealedPage(sealedPage, element->GetPackedSize(page.GetNElements()));
 }
 
-ROOT::Experimental::RNTupleLocator
+ROOT::RNTupleLocator
 ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId,
                                                                   const RPageStorage::RSealedPage &sealedPage)
 {
@@ -145,14 +145,14 @@ void ROOT::Experimental::Internal::RPageSinkFile::CommitBatchOfPages(CommitBatch
    batch.fSealedPages.clear();
 }
 
-std::vector<ROOT::Experimental::RNTupleLocator>
+std::vector<ROOT::RNTupleLocator>
 ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges,
                                                                    const std::vector<bool> &mask)
 {
    const std::uint64_t maxKeySize = fOptions->GetMaxKeySize();
 
    CommitBatch batch{};
-   std::vector<ROOT::Experimental::RNTupleLocator> locators;
+   std::vector<RNTupleLocator> locators;
 
    std::size_t iPage = 0;
    for (auto rangeIt = ranges.begin(); rangeIt != ranges.end(); ++rangeIt) {
@@ -223,7 +223,7 @@ std::uint64_t ROOT::Experimental::Internal::RPageSinkFile::StageClusterImpl()
    return result;
 }
 
-ROOT::Experimental::RNTupleLocator
+ROOT::RNTupleLocator
 ROOT::Experimental::Internal::RPageSinkFile::CommitClusterGroupImpl(unsigned char *serializedPageList,
                                                                     std::uint32_t length)
 {

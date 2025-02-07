@@ -35,13 +35,13 @@ class TDirectory;
 
 namespace ROOT {
 class RNTuple; // for making RPageSourceFile a friend of RNTuple
+class RNTupleLocator;
 
 namespace Internal {
 class RRawFile;
 }
 
 namespace Experimental {
-class RNTupleLocator;
 
 namespace Internal {
 class RClusterPool;

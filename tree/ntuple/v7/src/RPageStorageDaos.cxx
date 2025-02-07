@@ -109,7 +109,7 @@ RDaosURI ParseDaosURI(std::string_view uri)
 
 /// \brief Unpacks a 64-bit RNTuple page locator address for object stores into a pair of 32-bit values:
 /// the attribute key under which the cage is stored and the offset within that cage to access the page.
-std::pair<uint32_t, uint32_t> DecodeDaosPagePosition(const ROOT::Experimental::RNTupleLocatorObject64 &address)
+std::pair<uint32_t, uint32_t> DecodeDaosPagePosition(const ROOT::RNTupleLocatorObject64 &address)
 {
    auto position = static_cast<uint32_t>(address.GetLocation() & 0xFFFFFFFF);
    auto offset = static_cast<uint32_t>(address.GetLocation() >> 32);
@@ -118,10 +118,10 @@ std::pair<uint32_t, uint32_t> DecodeDaosPagePosition(const ROOT::Experimental::R
 
 /// \brief Packs an attribute key together with an offset within its contents into a single 64-bit address.
 /// The offset is kept in the MSb half and defaults to zero, which is the case when caging is disabled.
-ROOT::Experimental::RNTupleLocatorObject64 EncodeDaosPagePosition(uint64_t position, uint64_t offset = 0)
+ROOT::RNTupleLocatorObject64 EncodeDaosPagePosition(uint64_t position, uint64_t offset = 0)
 {
    uint64_t address = (position & 0xFFFFFFFF) | (offset << 32);
-   return ROOT::Experimental::RNTupleLocatorObject64{address};
+   return ROOT::RNTupleLocatorObject64{address};
 }
 
 /// \brief Helper structure concentrating the functionality required to locate an ntuple within a DAOS container.
@@ -316,7 +316,7 @@ void ROOT::Experimental::Internal::RPageSinkDaos::InitImpl(unsigned char *serial
    WriteNTupleHeader(zipBuffer.get(), szZipHeader, length);
 }
 
-ROOT::Experimental::RNTupleLocator
+ROOT::RNTupleLocator
 ROOT::Experimental::Internal::RPageSinkDaos::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
 {
    auto element = columnHandle.fColumn->GetElement();
@@ -330,7 +330,7 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitPageImpl(ColumnHandle_t colum
    return CommitSealedPageImpl(columnHandle.fPhysicalId, sealedPage);
 }
 
-ROOT::Experimental::RNTupleLocator
+ROOT::RNTupleLocator
 ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId,
                                                                   const RPageStorage::RSealedPage &sealedPage)
 {
@@ -354,12 +354,12 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageImpl(ROOT::Descript
    return result;
 }
 
-std::vector<ROOT::Experimental::RNTupleLocator>
+std::vector<ROOT::RNTupleLocator>
 ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges,
                                                                    const std::vector<bool> &mask)
 {
    RDaosContainer::MultiObjectRWOperation_t writeRequests;
-   std::vector<ROOT::Experimental::RNTupleLocator> locators;
+   std::vector<RNTupleLocator> locators;
    auto nPages = mask.size();
    locators.reserve(nPages);
 
@@ -427,7 +427,7 @@ std::uint64_t ROOT::Experimental::Internal::RPageSinkDaos::StageClusterImpl()
    return std::exchange(fNBytesCurrentCluster, 0);
 }
 
-ROOT::Experimental::RNTupleLocator
+ROOT::RNTupleLocator
 ROOT::Experimental::Internal::RPageSinkDaos::CommitClusterGroupImpl(unsigned char *serializedPageList,
                                                                     std::uint32_t length)
 {

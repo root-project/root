@@ -175,8 +175,6 @@ public:
    ROOT::NTupleSize_t GetIndexInCluster() const { return fIndexInCluster; }
 };
 
-namespace Experimental {
-
 /// RNTupleLocator payload that is common for object stores using 64bit location information.
 /// This might not contain the full location of the content. In particular, for page locators this information may be
 /// used in conjunction with the cluster and column ID.
@@ -248,6 +246,8 @@ public:
       fPosition = position;
    }
 };
+
+namespace Experimental {
 
 namespace Internal {
 
