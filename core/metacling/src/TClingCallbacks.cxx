@@ -201,7 +201,7 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
    //    or TH1F in presence of TH1F.h.
    // Strategy 2) is tried only if 1) fails.
 
-   bool isHeaderFile = FileName.endswith(".h") || FileName.endswith(".hxx") || FileName.endswith(".hpp");
+   bool isHeaderFile = FileName.ends_with(".h") || FileName.ends_with(".hxx") || FileName.ends_with(".hpp");
    if (!IsAutoLoadingEnabled() || fIsAutoLoadingRecursively || !isHeaderFile)
       return;
 
