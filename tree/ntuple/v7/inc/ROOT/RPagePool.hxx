@@ -213,12 +213,6 @@ public:
          fPagePool->ReleasePage(fPage);
    }
 
-   /// Used by the friend virtual page source to map the cluster ID to its virtual counterpart
-   void ChangeClusterId(DescriptorId_t clusterId)
-   {
-      fPage.fClusterInfo = RPage::RClusterInfo(clusterId, fPage.fClusterInfo.GetIndexOffset());
-   }
-
    const RPage &Get() const { return fPage; }
 };
 
