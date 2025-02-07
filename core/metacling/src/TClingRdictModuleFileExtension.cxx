@@ -79,7 +79,7 @@ void TClingRdictModuleFileExtension::Writer::writeExtensionContents(clang::Sema 
       if (llvm::sys::fs::is_directory(FilePath))
          continue;
       StringRef FileName = llvm::sys::path::filename(FilePath);
-      if (FileName.startswith(RdictsStart) && FileName.endswith(RdictsEnd)) {
+      if (FileName.starts_with(RdictsStart) && FileName.ends_with(RdictsEnd)) {
 
          uint64_t Record[] = {FIRST_EXTENSION_RECORD_ID};
          Stream.EmitRecordWithBlob(Abbrev, Record, FileName);

@@ -3530,7 +3530,7 @@ public:
                          bool ForPragma) override {
       assert(M);
       using namespace clang;
-      if (llvm::StringRef(M->Name).endswith("ACLiC_dict")) {
+      if (llvm::StringRef(M->Name).ends_with("ACLiC_dict")) {
          Preprocessor& PP = m_Interpreter->getCI()->getPreprocessor();
          HeaderSearch& HS = PP.getHeaderSearchInfo();
          // FIXME: Reduce to Core.Rtypes.h.
@@ -4454,7 +4454,7 @@ int RootClingMain(int argc,
 
    if (gOptCxxModule) {
       for (llvm::StringRef DepMod : gOptModuleDependencies) {
-         if (DepMod.endswith("_rdict.pcm")) {
+         if (DepMod.ends_with("_rdict.pcm")) {
             ROOT::TMetaUtils::Warning(nullptr, "'%s' value is deprecated. Please use [<fullpath>]%s.pcm\n",
                                       DepMod.data(),
                                       GetModuleNameFromRdictName(DepMod).str().data());

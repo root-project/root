@@ -257,8 +257,8 @@ int WarnIfPragmaOnceDetected(const std::string& fullHeaderPath,
    while(std::getline(headerFile,line)){
       llvm::StringRef lineRef (line);
       auto trimmedLineRef = lineRef.trim();
-      if (trimmedLineRef.startswith("#pragma") &&
-          (trimmedLineRef.endswith(" once") || trimmedLineRef.endswith("\tonce"))) {
+      if (trimmedLineRef.starts_with("#pragma") &&
+          (trimmedLineRef.ends_with(" once") || trimmedLineRef.ends_with("\tonce"))) {
          std::cerr << "Error: #pragma once directive detected in header file "
                   << fullHeaderPath
                   << " which was requested to be inlined.\n";
