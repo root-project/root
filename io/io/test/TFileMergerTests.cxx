@@ -104,7 +104,7 @@ TEST(TFileMerger, MergeSingleOnlyListed)
 }
 
 // https://github.com/root-project/root/issues/14558 aka https://its.cern.ch/jira/browse/ROOT-4716
-TEST(TFileMerger, MergeBranches)
+TEST(TFileMerger, ImportBranches)
 {
    TTree atree("atree", "atitle");
    int value;
@@ -123,6 +123,7 @@ TEST(TFileMerger, MergeBranches)
    treelist.Add(&abtree);
    std::unique_ptr<TFile> file(TFile::Open("c4716.root", "RECREATE"));
    TFileMergeInfo info(file.get());
+   info.fOptions += " importBranches";
    dummy.Merge(&treelist, &info);
    ASSERT_TRUE(dummy.FindBranch("a") != nullptr);
    EXPECT_EQ(dummy.FindBranch("a")->GetEntries(),2);
@@ -133,6 +134,7 @@ TEST(TFileMerger, MergeBranches)
    treelist.Add(&abtree);
    std::unique_ptr<TFile> file2(TFile::Open("d4716.root", "RECREATE"));
    TFileMergeInfo info2(file2.get());
+   info2.fOptions += " importBranches";
    atree.Merge(&treelist, &info2);
    ASSERT_TRUE(atree.FindBranch("a") != nullptr);
    EXPECT_EQ(atree.FindBranch("a")->GetEntries(),2);
