@@ -133,11 +133,14 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// AddField recurses into the sub fields. The fieldInfos argument is a list of objects holding info
    /// about the fields of the outer collection(s) (w.r.t. fieldId). For instance, if fieldId refers to an
    /// `std::vector<Jet>`, with
+   /// ~~~{.cpp}
    /// struct Jet {
    ///    float pt;
    ///    float eta;
    /// };
-   /// AddField will recurse into Jet.pt and Jet.eta and provide the two inner fields as std::vector<float> each.
+   /// ~~~
+   /// AddField will recurse into `Jet.pt` and `Jet.eta` and provide the two inner fields as `ROOT::VecOps::RVec<float>`
+   /// each.
    ///
    /// In case the field is a collection of type `ROOT::VecOps::RVec`, `std::vector` or `std::array`, its corresponding
    /// column is added as a `ROOT::VecOps::RVec`. Otherwise, the field's on-disk type is used.
