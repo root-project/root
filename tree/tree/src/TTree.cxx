@@ -6952,7 +6952,7 @@ Long64_t TTree::Merge(TCollection* li, Option_t *options)
       Long64_t nentries = tree->GetEntries();
       if (nentries == 0) continue;
       if (importBranches)
-        ImportBranches(tree);
+         ImportBranches(tree);
       CopyEntries(tree, -1, options, true);
    }
    fAutoSave = storeAutoSave;
@@ -6999,7 +6999,7 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
       }
    }
    if (!li) return 0;
-  const bool importBranches = TString(options).ToLower().Contains("importbranches");
+   const bool importBranches = TString(options).ToLower().Contains("importbranches");
    Long64_t storeAutoSave = fAutoSave;
    // Disable the autosave as the TFileMerge keeps a list of key and deleting the underlying
    // key would invalidate its iteration (or require costly measure to not use the deleted keys).
@@ -7016,7 +7016,7 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
          return -1;
       }
       if (importBranches)
-        ImportBranches(tree);
+         ImportBranches(tree);
       CopyEntries(tree, -1, options, true);
    }
    fAutoSave = storeAutoSave;
