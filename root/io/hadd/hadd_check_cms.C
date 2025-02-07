@@ -24,14 +24,14 @@ int hadd_check_cms(const char *merged, const char *reference)
 
   for (const auto &fdesc : refDesc.GetTopLevelFields()) {
     const auto fid = mergedDesc.FindFieldId(fdesc.GetFieldName());
-    if (fid == kInvalidDescriptorId) {
+    if (fid == ROOT::kInvalidDescriptorId) {
       printf("Merged RNTuple is missing field '%s'\n", fdesc.GetFieldName().c_str());
       return 1;
     }
   }
   for (const auto &fdesc : mergedDesc.GetTopLevelFields()) {
     const auto fid = refDesc.FindFieldId(fdesc.GetFieldName());
-    if (fid == kInvalidDescriptorId) {
+    if (fid == ROOT::kInvalidDescriptorId) {
       printf("Merged RNTuple has extra field '%s' that reference doesn't have\n", fdesc.GetFieldName().c_str());
       return 1;
     }
