@@ -74,6 +74,10 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
    if (fClass == nullptr) {
       throw RException(R__FAIL("RField: no I/O support for type " + std::string(className)));
    }
+   if (fClass->GetState() < TClass::kInterpreted) {
+      throw RException(R__FAIL(std::string("RField: RClassField \"") + std::string(className) +
+                               " cannot be constructed from a class that's not at least Interpreted"));
+   }
    // Avoid accidentally supporting std types through TClass.
    if (fClass->Property() & kIsDefinedInStd) {
       throw RException(R__FAIL(std::string(className) + " is not supported"));
@@ -102,7 +106,9 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
       fTraits |= kTraitTriviallyDestructible;
 
    int i = 0;
-   for (auto baseClass : ROOT::Detail::TRangeStaticCast<TBaseClass>(*fClass->GetListOfBases())) {
+   const auto *bases = fClass->GetListOfBases();
+   assert(bases);
+   for (auto baseClass : ROOT::Detail::TRangeStaticCast<TBaseClass>(*bases)) {
       if (baseClass->GetDelta() < 0) {
          throw RException(R__FAIL(std::string("virtual inheritance is not supported: ") + std::string(className) +
                                   " virtually inherits from " + baseClass->GetName()));
