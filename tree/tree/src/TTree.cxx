@@ -6891,7 +6891,7 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
    TIter next(li);
    TTree *newtree = nullptr;
    TObject *obj;
-   const bool importBranches = TString(options).Contains("ImportBranches", kIgnoreCase);
+   const bool importBranches = TString(options).Contains("ImportBranches", TString::ECaseCompare::kIgnoreCase);
    while ((obj=next())) {
       if (!obj->InheritsFrom(TTree::Class())) continue;
       TTree *tree = (TTree*)obj;
@@ -6932,7 +6932,7 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
 Long64_t TTree::Merge(TCollection* li, Option_t *options)
 {
    if (!li) return 0;
-   const bool importBranches = TString(options).Contains("ImportBranches", kIgnoreCase);
+   const bool importBranches = TString(options).Contains("ImportBranches", TString::ECaseCompare::kIgnoreCase);
    Long64_t storeAutoSave = fAutoSave;
    // Disable the autosave as the TFileMerge keeps a list of key and deleting the underlying
    // key would invalidate its iteration (or require costly measure to not use the deleted keys).
@@ -6999,7 +6999,7 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
       }
    }
    if (!li) return 0;
-   const bool importBranches = TString(options).Contains("ImportBranches", kIgnoreCase);
+   const bool importBranches = TString(options).Contains("ImportBranches", TString::ECaseCompare::kIgnoreCase);
    Long64_t storeAutoSave = fAutoSave;
    // Disable the autosave as the TFileMerge keeps a list of key and deleting the underlying
    // key would invalidate its iteration (or require costly measure to not use the deleted keys).
