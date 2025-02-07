@@ -126,8 +126,6 @@ constexpr NTupleSize_t kInvalidNTupleIndex = std::uint64_t(-1);
 using DescriptorId_t = std::uint64_t;
 constexpr DescriptorId_t kInvalidDescriptorId = std::uint64_t(-1);
 
-namespace Experimental {
-
 /// Addresses a column element or field item relative to a particular cluster, instead of a global NTupleSize_t index
 class RNTupleLocalIndex {
 private:
@@ -176,6 +174,8 @@ public:
    ROOT::DescriptorId_t GetClusterId() const { return fClusterId; }
    ROOT::NTupleSize_t GetIndexInCluster() const { return fIndexInCluster; }
 };
+
+namespace Experimental {
 
 /// RNTupleLocator payload that is common for object stores using 64bit location information.
 /// This might not contain the full location of the content. In particular, for page locators this information may be

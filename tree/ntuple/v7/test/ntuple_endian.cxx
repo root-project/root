@@ -102,8 +102,8 @@ public:
       ROOT::Experimental::Internal::RPagePool::RKey key{columnHandle.fPhysicalId, std::type_index(typeid(void))};
       return fPagePool.RegisterPage(std::move(page), key);
    }
-   RPageRef LoadPage(ColumnHandle_t, ROOT::Experimental::RNTupleLocalIndex) final { return RPageRef(); }
-   void LoadSealedPage(ROOT::DescriptorId_t, ROOT::Experimental::RNTupleLocalIndex, RSealedPage &) final {}
+   RPageRef LoadPage(ColumnHandle_t, ROOT::RNTupleLocalIndex) final { return RPageRef(); }
+   void LoadSealedPage(ROOT::DescriptorId_t, ROOT::RNTupleLocalIndex, RSealedPage &) final {}
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey>) final { return {}; }
 };
 } // anonymous namespace

@@ -761,7 +761,7 @@ std::size_t ROOT::Experimental::RNullableField::AppendValue(const void *from)
    return sizeof(Internal::RColumnIndex) + nbytesItem;
 }
 
-ROOT::Experimental::RNTupleLocalIndex ROOT::Experimental::RNullableField::GetItemIndex(ROOT::NTupleSize_t globalIndex)
+ROOT::RNTupleLocalIndex ROOT::Experimental::RNullableField::GetItemIndex(ROOT::NTupleSize_t globalIndex)
 {
    RNTupleLocalIndex collectionStart;
    ROOT::NTupleSize_t collectionSize;
