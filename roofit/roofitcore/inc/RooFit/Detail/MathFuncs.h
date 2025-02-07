@@ -416,7 +416,7 @@ inline double cbShape(double m, double m0, double sigma, double alpha, double n)
    } else {
       double r = n / absAlpha;
       double a = std::exp(-0.5 * absAlpha * absAlpha);
-      double b = r - absAlpha
+      double b = r - absAlpha;
 
       return a * std::pow(r / (b - t), n);
    }
