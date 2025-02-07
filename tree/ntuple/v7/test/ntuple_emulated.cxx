@@ -88,10 +88,19 @@ struct Outer_Simple {
       ASSERT_EQ(inner->GetSubFields()[0]->GetFieldName(), "fInt1");
    }
 
-   // Now test loading entries with a reader
+   // Now test loading entries with a reader.
+   // NOTE: using a TFile-based reader exercises the code path where the user-defined type
+   // gets loaded as an Emulated TClass, which we must make sure we handle properly.
    RNTupleDescriptor::RCreateModelOptions cmOpts;
    cmOpts.fEmulateUnknownTypes = true;
-   reader = RNTupleReader::Open(cmOpts, "ntpl", fileGuard.GetPath());
+
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   diagRAII.optionalDiag(kWarning, "TClass::Init", "no dictionary for class",
+                         /*matchFullMessage=*/false);
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
+   std::unique_ptr<ROOT::RNTuple> ntpl(file->Get<ROOT::RNTuple>("ntpl"));
+   reader = RNTupleReader::Open(cmOpts, *ntpl);
+
    reader->LoadEntry(0);
 }
 
