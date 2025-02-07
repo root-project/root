@@ -3519,7 +3519,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       if (interp.getCI()->getLangOpts().Modules && !headerFE) {
          assert(decl.isFirstDecl() && "Couldn't trace back include from a decl"
                                       " that is not from an AST file");
-         assert(StringRef(includeLoc.printToString(sourceManager)).startswith("<module-includes>"));
+         assert(StringRef(includeLoc.printToString(sourceManager)).starts_with("<module-includes>"));
          break;
       }
       includeLoc = getFinalSpellingLoc(sourceManager,

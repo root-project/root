@@ -1607,7 +1607,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
                         /*prepend=*/true);
       auto ShouldPermanentlyIgnore = [](llvm::StringRef FileName) -> bool{
          llvm::StringRef stem = llvm::sys::path::stem(FileName);
-         return stem.startswith("libNew") || stem.startswith("libcppyy_backend");
+         return stem.starts_with("libNew") || stem.starts_with("libcppyy_backend");
       };
       // Initialize the dyld for AutoloadLibraryGenerator.
       DLM.initializeDyld(ShouldPermanentlyIgnore);
@@ -2266,7 +2266,7 @@ void TCling::RegisterModule(const char* modulename,
    bool ModuleWasSuccessfullyLoaded = false;
    if (hasCxxModule) {
       std::string ModuleName = modulename;
-      if (llvm::StringRef(modulename).startswith("lib"))
+      if (llvm::StringRef(modulename).starts_with("lib"))
          ModuleName = llvm::StringRef(modulename).substr(3).str();
 
       // In case we are directly loading the library via gSystem->Load() without
@@ -6623,8 +6623,7 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
    std::string libName = DLM.searchLibrariesForSymbol(mangled_name,
                                                       /*searchSystem=*/ true);
 
-   assert(!llvm::StringRef(libName).startswith("libNew") &&
-          "We must not resolve symbols from libNew!");
+   assert(!llvm::StringRef(libName).starts_with("libNew") && "We must not resolve symbols from libNew!");
 
    if (libName.empty())
       return nullptr;
@@ -7266,7 +7265,7 @@ static bool hasParsedRootmapForLibrary(llvm::StringRef lib)
 {
    // Check if we have parsed a rootmap file.
    llvm::SmallString<256> rootmapName;
-   if (!lib.startswith("lib"))
+   if (!lib.starts_with("lib"))
       rootmapName.append("lib");
 
    rootmapName.append(llvm::sys::path::filename(lib));
