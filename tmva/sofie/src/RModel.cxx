@@ -363,7 +363,7 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
    bool allocated = false;
 
    for (auto& it:op_output_tensors){
-         if (GetTensorType(std::string(it)) == ETensorType::BOOL) continue;
+         if (GetTensorType(std::string(it)) == ETensorType::BOOL || fInitializedTensors.find(std::string(it)) != fInitializedTensors.end()) continue;
          auto tensor_size = GetTypeSize(GetTensorType(std::string(it))) * ConvertShapeToLength(GetTensorShape(std::string(it)));
          memory_allocation_string += "\n // Allocating memory for intermediate tensor " + std::string(it) + " with size " + tensor_size + " bytes";
          if (!fIntermediateMemoryInfo.available_memory.empty()){
@@ -777,9 +777,7 @@ void RModel::GenerateOutput() {
 
    for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
       if (fVerbose) std::cout << "Generating code for operator .... " << op_idx << std::endl;
-      fGC += AllocateIntermediateMemory(fOperators[op_idx]->GetOpOutputTensors());
       fGC += (fOperators[op_idx]->Generate(std::to_string(op_idx)));
-      CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
    }
 
    if (outputSize == 1) {
@@ -853,10 +851,19 @@ void RModel::GenerateSessionCode()
    GenerateInitializedTensorInfo();
    // generate the memory pool to be used by intermediate tensors
    GenerateIntermediateMemoryPool();
+   
+   fGC += "\n// --- Positioning intermediate tensor memory --";
+   for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
+      fGC += AllocateIntermediateMemory(fOperators[op_idx]->GetOpOutputTensors());
+      CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
+   }
+
    // generate the declaring the intermediate tensors
    GenerateIntermediateTensorInfo();
    // generate code for declarations of some specific operators
    GenerateOperatorDeclarations();
+
+
 
    // add subgraph session
    if (!fSubGraphs.empty()) fGC += "//   subgraph sessions\n";
