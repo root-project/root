@@ -1831,7 +1831,7 @@ static void SetNestedNameSpecifier(Sema &S, TagDecl *T,
 static bool IsRootAutoloadDeclTemplate(ClassTemplateDecl *D) {
   for (TagDecl *TD = D->getTemplatedDecl(); TD; TD = TD->getPreviousDecl())
     if (auto AnnotAttr = TD->getAttr<AnnotateAttr>())
-      return AnnotAttr->getAnnotation().startswith("$clingAutoload$");
+      return AnnotAttr->getAnnotation().starts_with("$clingAutoload$");
   return false;
 }
 
@@ -2102,7 +2102,7 @@ DeclResult Sema::CheckClassTemplate(
       continue;
     if (A.getNumArgs() > 0 && A.isArgExpr(0))
       if (auto AnnotVal = dyn_cast<StringLiteral>(A.getArgAsExpr(0)))
-        if (AnnotVal->getString().startswith("$clingAutoload$"))
+        if (AnnotVal->getString().starts_with("$clingAutoload$"))
           fwdDeclFromROOT = true;
   }
   if (!fwdDeclFromROOT && PrevClassTemplate)
