@@ -218,7 +218,7 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace *w, ModelConfig *mc, RooAbsDat
       TGLabel *hlabel =
          new TGLabel(hframek, Form("%s = %.3f +%.3f", param->GetName(), param->getVal(), param->getError()));
       TGTripleHSlider *hsliderk = new TGTripleHSlider(hframek, 190, kDoubleScaleBoth, HSId1, kHorizontalFrame,
-                                                      GetDefaultFrameBackground(), False, False, False, False);
+                                                      GetDefaultFrameBackground(), false, false, false, false);
       hsliderk->Connect("PointerPositionChanged()", "ModelInspectorGUI", this, "DoSlider()");
       hsliderk->Connect("PositionChanged()", "ModelInspectorGUI", this, "DoSlider()");
       hsliderk->SetRange(param->getMin(), param->getMax());
