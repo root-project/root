@@ -117,7 +117,7 @@ TEST(TFileMerger, MergeBranches)
    value = 42;
    abtree.Fill();
   
-   TTree dummy;
+   TTree dummy("ztree", "zeroBranches");
    TList treelist;
    treelist.Add(&atree);
    treelist.Add(&abtree);
