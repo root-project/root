@@ -414,10 +414,11 @@ inline double cbShape(double m, double m0, double sigma, double alpha, double n)
    if (t >= -absAlpha) {
       return std::exp(-0.5 * t * t);
    } else {
-      double a = std::pow(n / absAlpha, n) * std::exp(-0.5 * absAlpha * absAlpha);
+      // double a = std::pow(n / absAlpha, n) * std::exp(-0.5 * absAlpha * absAlpha);
+      double a = std::exp(-0.5 * absAlpha * absAlpha);
       double b = n / absAlpha - absAlpha;
 
-      return a / std::pow(b - t, n);
+      return a * std::pow(n / absAlpha / (b - t), n);
    }
 }
 
@@ -697,23 +698,25 @@ inline double cbShapeIntegral(double mMin, double mMax, double m0, double sigma,
    if (tmin >= -absAlpha) {
       result += sig * sqrtPiOver2 * (approxErf(tmax / sqrt2) - approxErf(tmin / sqrt2));
    } else if (tmax <= -absAlpha) {
-      double a = std::pow(n / absAlpha, n) * std::exp(-0.5 * absAlpha * absAlpha);
+      // double a = std::pow(n / absAlpha, n) * std::exp(-0.5 * absAlpha * absAlpha);
+      double a = n / absAlpha * std::exp(-0.5 * absAlpha * absAlpha);
       double b = n / absAlpha - absAlpha;
 
       if (useLog) {
-         result += a * sig * (std::log(b - tmin) - std::log(b - tmax));
+         result += a * std::pow(n / absAlpha, n-1) * sig * (std::log(b - tmin) - std::log(b - tmax));
       } else {
-         result += a * sig / (1.0 - n) * (1.0 / (std::pow(b - tmin, n - 1.0)) - 1.0 / (std::pow(b - tmax, n - 1.0)));
+         result += a * sig / (1.0 - n) * (std::pow(n / absAlpha / (b - tmin), n - 1.0) - std::pow(n / absAlpha / (b - tmax), n - 1.0));
       }
    } else {
-      double a = std::pow(n / absAlpha, n) * std::exp(-0.5 * absAlpha * absAlpha);
+      // double a = std::pow(n / absAlpha, n) * std::exp(-0.5 * absAlpha * absAlpha);
+      double a = n / absAlpha * std::exp(-0.5 * absAlpha * absAlpha);
       double b = n / absAlpha - absAlpha;
 
       double term1 = 0.0;
       if (useLog) {
-         term1 = a * sig * (std::log(b - tmin) - std::log(n / absAlpha));
+         term1 = a * std::pow(n / absAlpha, n-1) * sig * (std::log(b - tmin) - std::log(n / absAlpha));
       } else {
-         term1 = a * sig / (1.0 - n) * (1.0 / (std::pow(b - tmin, n - 1.0)) - 1.0 / (std::pow(n / absAlpha, n - 1.0)));
+         term1 = a * sig / (1.0 - n) * (std::pow(n / absAlpha / (b - tmin), n - 1.0) - 1.0);
       }
 
       double term2 = sig * sqrtPiOver2 * (approxErf(tmax / sqrt2) - approxErf(-absAlpha / sqrt2));
