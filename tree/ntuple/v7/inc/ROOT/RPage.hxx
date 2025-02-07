@@ -56,7 +56,7 @@ public:
    class RClusterInfo {
    private:
       /// The cluster number
-      DescriptorId_t fId = 0;
+      ROOT::DescriptorId_t fId = 0;
       /// The first element index of the column in this cluster
       ROOT::NTupleSize_t fIndexOffset = 0;
 

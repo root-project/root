@@ -85,7 +85,7 @@ ROOT::RResult<std::uint64_t> ROOT::Experimental::Internal::RPageStorage::RSealed
 //------------------------------------------------------------------------------
 
 void ROOT::Experimental::Internal::RPageSource::RActivePhysicalColumns::Insert(
-   DescriptorId_t physicalColumnId, RColumnElementBase::RIdentifier elementId)
+   ROOT::DescriptorId_t physicalColumnId, RColumnElementBase::RIdentifier elementId)
 {
    auto [itr, _] = fColumnInfos.emplace(physicalColumnId, std::vector<RColumnInfo>());
    for (auto &columnInfo : itr->second) {
@@ -97,7 +97,7 @@ void ROOT::Experimental::Internal::RPageSource::RActivePhysicalColumns::Insert(
    itr->second.emplace_back(RColumnInfo{elementId, 1});
 }
 
-void ROOT::Experimental::Internal::RPageSource::RActivePhysicalColumns::Erase(DescriptorId_t physicalColumnId,
+void ROOT::Experimental::Internal::RPageSource::RActivePhysicalColumns::Erase(ROOT::DescriptorId_t physicalColumnId,
                                                                               RColumnElementBase::RIdentifier elementId)
 {
    auto itr = fColumnInfos.find(physicalColumnId);
@@ -170,12 +170,12 @@ ROOT::Experimental::Internal::RPageSource::Create(std::string_view ntupleName, s
 }
 
 ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Internal::RPageSource::AddColumn(DescriptorId_t fieldId, RColumn &column)
+ROOT::Experimental::Internal::RPageSource::AddColumn(ROOT::DescriptorId_t fieldId, RColumn &column)
 {
-   R__ASSERT(fieldId != kInvalidDescriptorId);
+   R__ASSERT(fieldId != ROOT::kInvalidDescriptorId);
    auto physicalId =
       GetSharedDescriptorGuard()->FindPhysicalColumnId(fieldId, column.GetIndex(), column.GetRepresentationIndex());
-   R__ASSERT(physicalId != kInvalidDescriptorId);
+   R__ASSERT(physicalId != ROOT::kInvalidDescriptorId);
    fActivePhysicalColumns.Insert(physicalId, column.GetElement()->GetIdentifier());
    return ColumnHandle_t{physicalId, &column};
 }
@@ -308,7 +308,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
 
 void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
    const RCluster::RKey &clusterKey, ROnDiskPageMap &pageZeroMap,
-   std::function<void(DescriptorId_t, ROOT::NTupleSize_t, const RClusterDescriptor::RPageRange::RPageInfo &)>
+   std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const RClusterDescriptor::RPageRange::RPageInfo &)>
       perPageFunc)
 {
    auto descriptorGuard = GetSharedDescriptorGuard();
@@ -333,7 +333,7 @@ void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
    }
 }
 
-void ROOT::Experimental::Internal::RPageSource::UpdateLastUsedCluster(DescriptorId_t clusterId)
+void ROOT::Experimental::Internal::RPageSource::UpdateLastUsedCluster(ROOT::DescriptorId_t clusterId)
 {
    if (fLastUsedCluster == clusterId)
       return;
@@ -376,7 +376,7 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
       auto descriptorGuard = GetSharedDescriptorGuard();
       clusterInfo.fClusterId = descriptorGuard->FindClusterId(columnId, globalIndex);
 
-      if (clusterInfo.fClusterId == kInvalidDescriptorId)
+      if (clusterInfo.fClusterId == ROOT::kInvalidDescriptorId)
          throw RException(R__FAIL("entry with index " + std::to_string(globalIndex) + " out of bounds"));
 
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterInfo.fClusterId);
@@ -774,7 +774,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::RPagePersistentSink(std::stri
 ROOT::Experimental::Internal::RPagePersistentSink::~RPagePersistentSink() {}
 
 ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Internal::RPagePersistentSink::AddColumn(DescriptorId_t fieldId, RColumn &column)
+ROOT::Experimental::Internal::RPagePersistentSink::AddColumn(ROOT::DescriptorId_t fieldId, RColumn &column)
 {
    auto columnId = fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns();
    RColumnDescriptorBuilder columnBuilder;
@@ -863,7 +863,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
    const auto nColumns = descriptor.GetNPhysicalColumns();
    fOpenColumnRanges.reserve(fOpenColumnRanges.size() + (nColumns - nColumnsBeforeUpdate));
    fOpenPageRanges.reserve(fOpenPageRanges.size() + (nColumns - nColumnsBeforeUpdate));
-   for (DescriptorId_t i = nColumnsBeforeUpdate; i < nColumns; ++i) {
+   for (ROOT::DescriptorId_t i = nColumnsBeforeUpdate; i < nColumns; ++i) {
       RClusterDescriptor::RColumnRange columnRange;
       columnRange.fPhysicalColumnId = i;
       // We set the first element index in the current cluster to the first element that is part of a materialized page
@@ -933,7 +933,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTu
    R__ASSERT(fOpenColumnRanges.empty() && fOpenPageRanges.empty());
    fOpenColumnRanges.reserve(nColumns);
    fOpenPageRanges.reserve(nColumns);
-   for (DescriptorId_t i = 0; i < nColumns; ++i) {
+   for (ROOT::DescriptorId_t i = 0; i < nColumns; ++i) {
       const auto &column = descriptor.GetColumnDescriptor(i);
       RClusterDescriptor::RColumnRange columnRange;
       columnRange.fPhysicalColumnId = i;
@@ -948,7 +948,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTu
 
    // Clone and add all cluster descriptors
    auto clusterId = srcDescriptor.FindClusterId(0, 0);
-   while (clusterId != ROOT::Experimental::kInvalidDescriptorId) {
+   while (clusterId != ROOT::kInvalidDescriptorId) {
       auto &cluster = srcDescriptor.GetClusterDescriptor(clusterId);
       auto nEntries = cluster.GetNEntries();
       for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
@@ -1001,7 +1001,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitPage(ColumnHandle_
    fOpenPageRanges.at(columnHandle.fPhysicalId).fPageInfos.emplace_back(pageInfo);
 }
 
-void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPage(DescriptorId_t physicalColumnId,
+void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPage(ROOT::DescriptorId_t physicalColumnId,
                                                                          const RPageStorage::RSealedPage &sealedPage)
 {
    fOpenColumnRanges.at(physicalColumnId).fNElements += sealedPage.GetNElements();
@@ -1137,7 +1137,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitStagedClusters(std
          .FirstEntryIndex(fPrevClusterNEntries)
          .NEntries(cluster.fNEntries);
       for (const auto &columnInfo : cluster.fColumnInfos) {
-         DescriptorId_t colId = columnInfo.fPageRange.fPhysicalColumnId;
+         const auto colId = columnInfo.fPageRange.fPhysicalColumnId;
          if (columnInfo.fIsSuppressed) {
             assert(columnInfo.fPageRange.fPageInfos.empty());
             clusterBuilder.MarkSuppressedColumnRange(colId);
@@ -1153,7 +1153,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitStagedClusters(std
       for (const auto &columnInfo : cluster.fColumnInfos) {
          if (!columnInfo.fIsSuppressed)
             continue;
-         DescriptorId_t colId = columnInfo.fPageRange.fPhysicalColumnId;
+         const auto colId = columnInfo.fPageRange.fPhysicalColumnId;
          // For suppressed columns, we need to reset the first element index to the first element of the next (upcoming)
          // cluster. This information has been determined for the committed cluster descriptor through
          // CommitSuppressedColumnRanges(), so we can use the information from the descriptor.
@@ -1172,7 +1172,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitClusterGroup()
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    const auto nClusters = descriptor.GetNActiveClusters();
-   std::vector<DescriptorId_t> physClusterIDs;
+   std::vector<ROOT::DescriptorId_t> physClusterIDs;
    physClusterIDs.reserve(nClusters);
    for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
       physClusterIDs.emplace_back(fSerializationContext.MapClusterId(i));
@@ -1196,7 +1196,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitClusterGroup()
                     firstClusterDesc.GetFirstEntryIndex())
          .NClusters(nClusters - fNextClusterInGroup);
    }
-   std::vector<DescriptorId_t> clusterIds;
+   std::vector<ROOT::DescriptorId_t> clusterIds;
    clusterIds.reserve(nClusters);
    for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
       clusterIds.emplace_back(i);

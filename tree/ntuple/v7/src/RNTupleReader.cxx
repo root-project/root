@@ -28,14 +28,14 @@ void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
 {
    auto &fieldZero = Internal::GetFieldZeroOfModel(model);
    // We must not use the descriptor guard to prevent recursive locking in field.ConnectPageSource
-   DescriptorId_t fieldZeroId = fSource->GetSharedDescriptorGuard()->GetFieldZeroId();
+   ROOT::DescriptorId_t fieldZeroId = fSource->GetSharedDescriptorGuard()->GetFieldZeroId();
    fieldZero.SetOnDiskId(fieldZeroId);
    // Iterate only over fieldZero's direct subfields; their descendants are recursively handled in
    // RFieldBase::ConnectPageSource
    for (auto &field : fieldZero.GetSubFields()) {
       // If the model has been created from the descriptor, the on-disk IDs are already set.
       // User-provided models instead need to find their corresponding IDs in the descriptor.
-      if (field->GetOnDiskId() == kInvalidDescriptorId) {
+      if (field->GetOnDiskId() == ROOT::kInvalidDescriptorId) {
          field->SetOnDiskId(fSource->GetSharedDescriptorGuard()->FindFieldId(field->GetFieldName(), fieldZeroId));
       }
       Internal::CallConnectPageSourceOnField(*field, *fSource);
@@ -254,10 +254,10 @@ const ROOT::Experimental::RNTupleDescriptor &ROOT::Experimental::RNTupleReader::
    return *fCachedDescriptor;
 }
 
-ROOT::Experimental::DescriptorId_t ROOT::Experimental::RNTupleReader::RetrieveFieldId(std::string_view fieldName) const
+ROOT::DescriptorId_t ROOT::Experimental::RNTupleReader::RetrieveFieldId(std::string_view fieldName) const
 {
    auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName);
-   if (fieldId == kInvalidDescriptorId) {
+   if (fieldId == ROOT::kInvalidDescriptorId) {
       throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
                                fSource->GetSharedDescriptorGuard()->GetName() + "'"));
    }

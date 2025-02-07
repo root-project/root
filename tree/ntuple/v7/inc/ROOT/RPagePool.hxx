@@ -52,7 +52,7 @@ public:
    // Search key for a set of pages covering the same column and in-memory target type.
    // Within the set of pages, one needs to find the page of a given index.
    struct RKey {
-      DescriptorId_t fColumnId = kInvalidDescriptorId;
+      ROOT::DescriptorId_t fColumnId = ROOT::kInvalidDescriptorId;
       std::type_index fInMemoryType = std::type_index(typeid(void));
 
       bool operator==(const RKey &other) const
@@ -69,7 +69,7 @@ private:
       /// Like boost::hash_combine
       std::size_t operator()(const RKey &k) const
       {
-         auto seed = std::hash<DescriptorId_t>()(k.fColumnId);
+         auto seed = std::hash<ROOT::DescriptorId_t>()(k.fColumnId);
          return seed ^ (std::hash<std::type_index>()(k.fInMemoryType) + 0x9e3779b9 + (seed << 6) + (seed >> 2));
       }
    };
@@ -95,9 +95,9 @@ private:
             return fGlobalFirstElement < other.fGlobalFirstElement;
          }
 
-         assert(fClusterFirstElement.GetClusterId() != kInvalidDescriptorId &&
+         assert(fClusterFirstElement.GetClusterId() != ROOT::kInvalidDescriptorId &&
                 fClusterFirstElement.GetIndexInCluster() != ROOT::kInvalidNTupleIndex);
-         assert(other.fClusterFirstElement.GetClusterId() != kInvalidDescriptorId &&
+         assert(other.fClusterFirstElement.GetClusterId() != ROOT::kInvalidDescriptorId &&
                 other.fClusterFirstElement.GetIndexInCluster() != ROOT::kInvalidNTupleIndex);
          if (fClusterFirstElement.GetClusterId() == other.fClusterFirstElement.GetClusterId())
             return fClusterFirstElement.GetIndexInCluster() < other.fClusterFirstElement.GetIndexInCluster();
@@ -128,7 +128,7 @@ private:
    /// by their page buffer address. The fLookupByBuffer map can be used to resolve the address to a page.
    /// Once a page gets used, it is removed from the unused pages list. Evict will remove all unused pages
    /// from a given cluster id.
-   std::unordered_map<DescriptorId_t, std::unordered_set<void *>> fUnusedPages;
+   std::unordered_map<ROOT::DescriptorId_t, std::unordered_set<void *>> fUnusedPages;
    std::mutex fLock; ///< The page pool is accessed concurrently due to parallel decompression
 
    /// Add a new page to the fLookupByBuffer and fLookupByKey data structures.
@@ -159,7 +159,7 @@ public:
    void PreloadPage(RPage page, RKey key);
    /// Removes unused pages (pages with reference counter 0) from the page pool. Users of PreloadPage() should
    /// use Evict() appropriately to avoid accumulation of unused pages.
-   void Evict(DescriptorId_t clusterId);
+   void Evict(ROOT::DescriptorId_t clusterId);
    /// Tries to find the page corresponding to column and index in the cache. If the page is found, its reference
    /// counter is increased
    RPageRef GetPage(RKey key, ROOT::NTupleSize_t globalIndex);

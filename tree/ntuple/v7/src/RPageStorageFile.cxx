@@ -110,7 +110,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitPageImpl(ColumnHandle_t colum
 }
 
 ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageImpl(DescriptorId_t physicalColumnId,
+ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId,
                                                                   const RPageStorage::RSealedPage &sealedPage)
 {
    const auto nBits = fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(physicalColumnId).GetBitsOnStorage();
@@ -383,7 +383,7 @@ ROOT::Experimental::Internal::RPageSourceFile::AttachImpl(RNTupleSerializer::EDe
    return desc;
 }
 
-void ROOT::Experimental::Internal::RPageSourceFile::LoadSealedPage(DescriptorId_t physicalColumnId,
+void ROOT::Experimental::Internal::RPageSourceFile::LoadSealedPage(ROOT::DescriptorId_t physicalColumnId,
                                                                    RNTupleLocalIndex localIndex,
                                                                    RSealedPage &sealedPage)
 {
@@ -494,7 +494,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    const RCluster::RKey &clusterKey, std::vector<ROOT::Internal::RRawFile::RIOVec> &readRequests)
 {
    struct ROnDiskPageLocator {
-      ROOT::Experimental::DescriptorId_t fColumnId = 0;
+      ROOT::DescriptorId_t fColumnId = 0;
       ROOT::NTupleSize_t fPageNo = 0;
       std::uint64_t fOffset = 0;
       std::uint64_t fSize = 0;
@@ -505,7 +505,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    auto activeSize = 0;
    auto pageZeroMap = std::make_unique<ROnDiskPageMap>();
    PrepareLoadCluster(clusterKey, *pageZeroMap,
-                      [&](DescriptorId_t physicalColumnId, ROOT::NTupleSize_t pageNo,
+                      [&](ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t pageNo,
                           const RClusterDescriptor::RPageRange::RPageInfo &pageInfo) {
                          const auto &pageLocator = pageInfo.fLocator;
                          if (pageLocator.GetType() == RNTupleLocator::kTypeUnknown)

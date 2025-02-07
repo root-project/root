@@ -30,10 +30,7 @@ public:
    } fCounters{};
 
 protected:
-   ColumnHandle_t AddColumn(ROOT::Experimental::DescriptorId_t, ROOT::Experimental::Internal::RColumn &) final
-   {
-      return {};
-   }
+   ColumnHandle_t AddColumn(ROOT::DescriptorId_t, ROOT::Experimental::Internal::RColumn &) final { return {}; }
 
    const RNTupleDescriptor &GetDescriptor() const final
    {
@@ -48,7 +45,7 @@ protected:
    void UpdateExtraTypeInfo(const ROOT::Experimental::RExtraTypeInfoDescriptor &) final {}
    void CommitSuppressedColumn(ColumnHandle_t) final {}
    void CommitPage(ColumnHandle_t /*columnHandle*/, const RPage & /*page*/) final { fCounters.fNCommitPage++; }
-   void CommitSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final
+   void CommitSealedPage(ROOT::DescriptorId_t, const RPageStorage::RSealedPage &) final
    {
       fCounters.fNCommitSealedPage++;
    }
@@ -587,7 +584,7 @@ TEST(RPageSinkBuf, Basics)
       EXPECT_EQ(viewKlassVec(i).at(0).s, viewKlassVecBuf(i).at(0).s);
    }
 
-   std::vector<std::pair<DescriptorId_t, std::int64_t>> pagePositions;
+   std::vector<std::pair<ROOT::DescriptorId_t, std::int64_t>> pagePositions;
    std::size_t num_columns = 10;
    const auto &cluster0 = ntupleBuf->GetDescriptor().GetClusterDescriptor(0);
    for (std::size_t i = 0; i < num_columns; i++) {

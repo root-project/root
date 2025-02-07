@@ -202,7 +202,7 @@ void ROOT::Experimental::RClassField::ReadInClusterImpl(RNTupleLocalIndex localI
 void ROOT::Experimental::RClassField::BeforeConnectPageSource(Internal::RPageSource &pageSource)
 {
    // This can happen for added base classes or non-simple members.
-   if (GetOnDiskId() == kInvalidDescriptorId) {
+   if (GetOnDiskId() == ROOT::kInvalidDescriptorId) {
       return;
    }
    // Gather all known sub fields in the descriptor.

@@ -516,7 +516,7 @@ TEST(RClusterDescriptor, GetNBytesOnStorage)
    const auto &desc = ntuple->GetDescriptor();
 
    auto clusterID = desc.FindClusterId(0, 0);
-   ASSERT_NE(ROOT::Experimental::kInvalidDescriptorId, clusterID);
+   ASSERT_NE(ROOT::kInvalidDescriptorId, clusterID);
    EXPECT_EQ(8 + 8 + 8 + 3, desc.GetClusterDescriptor(clusterID).GetNBytesOnStorage());
 }
 

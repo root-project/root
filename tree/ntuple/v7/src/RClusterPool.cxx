@@ -85,7 +85,7 @@ void ROOT::Experimental::Internal::RClusterPool::ExecReadClusters()
             const auto &item = readItems[i];
             // `kInvalidDescriptorId` is used as a marker for thread cancellation. Such item causes the
             // thread to terminate; thus, it must appear last in the queue.
-            if (R__unlikely(item.fClusterKey.fClusterId == kInvalidDescriptorId)) {
+            if (R__unlikely(item.fClusterKey.fClusterId == ROOT::kInvalidDescriptorId)) {
                R__ASSERT(i == (readItems.size() - 1));
                return;
             }
@@ -105,7 +105,7 @@ void ROOT::Experimental::Internal::RClusterPool::ExecReadClusters()
 }
 
 ROOT::Experimental::Internal::RCluster *
-ROOT::Experimental::Internal::RClusterPool::FindInPool(DescriptorId_t clusterId) const
+ROOT::Experimental::Internal::RClusterPool::FindInPool(ROOT::DescriptorId_t clusterId) const
 {
    for (const auto &cptr : fPool) {
       if (cptr && (cptr->GetId() == clusterId))
@@ -131,7 +131,7 @@ namespace {
 
 /// Helper class for the (cluster, column list) pairs that should be loaded in the background
 class RProvides {
-   using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
+   using DescriptorId_t = ROOT::DescriptorId_t;
    using ColumnSet_t = ROOT::Experimental::Internal::RCluster::ColumnSet_t;
 
 public:
@@ -182,10 +182,10 @@ public:
 } // anonymous namespace
 
 ROOT::Experimental::Internal::RCluster *
-ROOT::Experimental::Internal::RClusterPool::GetCluster(DescriptorId_t clusterId,
+ROOT::Experimental::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId,
                                                        const RCluster::ColumnSet_t &physicalColumns)
 {
-   std::set<DescriptorId_t> keep;
+   std::set<ROOT::DescriptorId_t> keep;
    RProvides provide;
    {
       auto descriptorGuard = fPageSource.GetSharedDescriptorGuard();
@@ -194,7 +194,7 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(DescriptorId_t clusterId,
       auto prev = clusterId;
       for (unsigned int i = 0; i < fWindowPre; ++i) {
          prev = descriptorGuard->FindPrevClusterId(prev);
-         if (prev == kInvalidDescriptorId)
+         if (prev == ROOT::kInvalidDescriptorId)
             break;
          keep.insert(prev);
       }
@@ -204,7 +204,7 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(DescriptorId_t clusterId,
       provideInfo.fPhysicalColumnSet = physicalColumns;
       provideInfo.fBunchId = fBunchId;
       provideInfo.fFlags = RProvides::kFlagRequired;
-      for (DescriptorId_t i = 0, next = clusterId; i < 2 * fClusterBunchSize; ++i) {
+      for (ROOT::DescriptorId_t i = 0, next = clusterId; i < 2 * fClusterBunchSize; ++i) {
          if (i == fClusterBunchSize)
             provideInfo.fBunchId = ++fBunchId;
 
@@ -214,12 +214,12 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(DescriptorId_t clusterId,
             if (!fPageSource.GetEntryRange().IntersectsWith(descriptorGuard->GetClusterDescriptor(next)))
                next = ROOT::kInvalidNTupleIndex;
          }
-         if (next == kInvalidDescriptorId)
+         if (next == ROOT::kInvalidDescriptorId)
             provideInfo.fFlags |= RProvides::kFlagLast;
 
          provide.Insert(cid, provideInfo);
 
-         if (next == kInvalidDescriptorId)
+         if (next == ROOT::kInvalidDescriptorId)
             break;
          provideInfo.fFlags = 0;
       }
@@ -328,7 +328,7 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(DescriptorId_t clusterId,
 }
 
 ROOT::Experimental::Internal::RCluster *
-ROOT::Experimental::Internal::RClusterPool::WaitFor(DescriptorId_t clusterId,
+ROOT::Experimental::Internal::RClusterPool::WaitFor(ROOT::DescriptorId_t clusterId,
                                                     const RCluster::ColumnSet_t &physicalColumns)
 {
    while (true) {

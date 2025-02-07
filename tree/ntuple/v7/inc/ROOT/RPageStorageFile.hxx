@@ -89,7 +89,7 @@ protected:
    void InitImpl(unsigned char *serializedHeader, std::uint32_t length) final;
    RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) override;
    RNTupleLocator
-   CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
+   CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    std::vector<RNTupleLocator>
    CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask) final;
    std::uint64_t StageClusterImpl() final;
@@ -180,7 +180,8 @@ public:
    RPageSourceFile &operator=(RPageSourceFile &&) = delete;
    ~RPageSourceFile() override;
 
-   void LoadSealedPage(DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;
+   void
+   LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
 }; // class RPageSourceFile

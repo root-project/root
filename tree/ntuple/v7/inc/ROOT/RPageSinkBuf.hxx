@@ -115,8 +115,8 @@ private:
    std::vector<RColumnBuf> fBufferedColumns;
    /// Columns committed as suppressed are stored and passed to the inner sink at cluster commit
    std::vector<ColumnHandle_t> fSuppressedColumns;
-   DescriptorId_t fNFields = 0;
-   DescriptorId_t fNColumns = 0;
+   ROOT::DescriptorId_t fNFields = 0;
+   ROOT::DescriptorId_t fNColumns = 0;
 
    void ConnectFields(const std::vector<RFieldBase *> &fields, ROOT::NTupleSize_t firstEntry);
    void FlushClusterImpl(std::function<void(void)> FlushClusterFn);
@@ -129,7 +129,7 @@ public:
    RPageSinkBuf& operator=(RPageSinkBuf&&) = default;
    ~RPageSinkBuf() override;
 
-   ColumnHandle_t AddColumn(DescriptorId_t fieldId, RColumn &column) final;
+   ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, RColumn &column) final;
 
    const RNTupleDescriptor &GetDescriptor() const final;
 
@@ -141,7 +141,7 @@ public:
 
    void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
-   void CommitSealedPage(DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
+   void CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    std::uint64_t CommitCluster(ROOT::NTupleSize_t nNewEntries) final;
    RStagedCluster StageCluster(ROOT::NTupleSize_t nNewEntries) final;

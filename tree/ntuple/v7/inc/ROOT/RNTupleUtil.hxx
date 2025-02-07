@@ -122,23 +122,23 @@ enum class ENTupleStructure : std::uint16_t {
 using NTupleSize_t = std::uint64_t;
 constexpr NTupleSize_t kInvalidNTupleIndex = std::uint64_t(-1);
 
-namespace Experimental {
-
 /// Distriniguishes elements of the same type within a descriptor, e.g. different fields
 using DescriptorId_t = std::uint64_t;
 constexpr DescriptorId_t kInvalidDescriptorId = std::uint64_t(-1);
 
+namespace Experimental {
+
 /// Addresses a column element or field item relative to a particular cluster, instead of a global NTupleSize_t index
 class RNTupleLocalIndex {
 private:
-   DescriptorId_t fClusterId = kInvalidDescriptorId;
+   ROOT::DescriptorId_t fClusterId = ROOT::kInvalidDescriptorId;
    ROOT::NTupleSize_t fIndexInCluster = ROOT::kInvalidNTupleIndex;
 
 public:
    RNTupleLocalIndex() = default;
    RNTupleLocalIndex(const RNTupleLocalIndex &other) = default;
    RNTupleLocalIndex &operator=(const RNTupleLocalIndex &other) = default;
-   constexpr RNTupleLocalIndex(DescriptorId_t clusterId, ROOT::NTupleSize_t indexInCluster)
+   constexpr RNTupleLocalIndex(ROOT::DescriptorId_t clusterId, ROOT::NTupleSize_t indexInCluster)
       : fClusterId(clusterId), fIndexInCluster(indexInCluster)
    {
    }
@@ -173,7 +173,7 @@ public:
 
    bool operator!=(RNTupleLocalIndex other) const { return !(*this == other); }
 
-   DescriptorId_t GetClusterId() const { return fClusterId; }
+   ROOT::DescriptorId_t GetClusterId() const { return fClusterId; }
    ROOT::NTupleSize_t GetIndexInCluster() const { return fIndexInCluster; }
 };
 
@@ -332,6 +332,8 @@ using EColumnType [[deprecated("ROOT::Experimental::EColumnType moved to ROOT::E
 using ENTupleStructure [[deprecated("ROOT::Experimental::ENTupleStructure moved to ROOT::ENTupleStructure")]] =
    ROOT::ENTupleStructure;
 using NTupleSize_t [[deprecated("ROOT::Experimental::NTupleSize_t moved to ROOT::NTupleSize_t")]] = ROOT::NTupleSize_t;
+using DescriptorId_t [[deprecated("ROOT::Experimental::DescriptorId_t moved to ROOT::DescriptorId_t")]] =
+   ROOT::DescriptorId_t;
 
 } // namespace Experimental
 } // namespace ROOT

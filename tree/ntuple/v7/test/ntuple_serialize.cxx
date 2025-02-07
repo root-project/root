@@ -698,7 +698,7 @@ TEST(RNTuple, SerializeFooter)
    cgLocator.SetPosition(1337U);
    cgLocator.SetNBytesOnStorage(42);
    cgBuilder.ClusterGroupId(256).PageListLength(137).PageListLocator(cgLocator).NClusters(1).EntrySpan(100);
-   std::vector<DescriptorId_t> clusterIds{84};
+   std::vector<ROOT::DescriptorId_t> clusterIds{84};
    cgBuilder.AddSortedClusters(clusterIds);
    builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
 
@@ -708,7 +708,7 @@ TEST(RNTuple, SerializeFooter)
    auto bufHeader = MakeUninitArray<unsigned char>(context.GetHeaderSize());
    context = RNTupleSerializer::SerializeHeader(bufHeader.get(), desc);
 
-   std::vector<DescriptorId_t> physClusterIDs;
+   std::vector<ROOT::DescriptorId_t> physClusterIDs;
    for (const auto &c : desc.GetClusterIterable()) {
       physClusterIDs.emplace_back(context.MapClusterId(c.GetId()));
    }
@@ -1036,7 +1036,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    auto bufHeader = MakeUninitArray<unsigned char>(context.GetHeaderSize());
    context = RNTupleSerializer::SerializeHeader(bufHeader.get(), desc);
 
-   std::vector<DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17)};
+   std::vector<ROOT::DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17)};
    context.MapClusterGroupId(137);
    auto sizePageList = RNTupleSerializer::SerializePageList(nullptr, desc, physClusterIDs, context);
    auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
@@ -1074,8 +1074,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    EXPECT_EQ(columnIds[1], desc.FindLogicalColumnId(fieldDesc.GetId(), 1, 0));
    EXPECT_EQ(columnIds[2], desc.FindLogicalColumnId(fieldDesc.GetId(), 0, 1));
    EXPECT_EQ(columnIds[3], desc.FindLogicalColumnId(fieldDesc.GetId(), 1, 1));
-   EXPECT_EQ(ROOT::Experimental::kInvalidDescriptorId, desc.FindLogicalColumnId(fieldDesc.GetId(), 2, 0));
-   EXPECT_EQ(ROOT::Experimental::kInvalidDescriptorId, desc.FindLogicalColumnId(fieldDesc.GetId(), 0, 2));
+   EXPECT_EQ(ROOT::kInvalidDescriptorId, desc.FindLogicalColumnId(fieldDesc.GetId(), 2, 0));
+   EXPECT_EQ(ROOT::kInvalidDescriptorId, desc.FindLogicalColumnId(fieldDesc.GetId(), 0, 2));
 
    auto &clusterDesc0 = desc.GetClusterDescriptor(0);
    EXPECT_TRUE(clusterDesc0.ContainsColumn(columnIds[0]));
@@ -1222,7 +1222,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
    auto bufHeader = MakeUninitArray<unsigned char>(context.GetHeaderSize());
    context = RNTupleSerializer::SerializeHeader(bufHeader.get(), desc);
 
-   std::vector<DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17)};
+   std::vector<ROOT::DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17)};
    context.MapClusterGroupId(137);
    auto sizePageList = RNTupleSerializer::SerializePageList(nullptr, desc, physClusterIDs, context);
    auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
@@ -1343,8 +1343,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
    builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
 
    auto desc = builder.MoveDescriptor();
-   std::vector<DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17),
-                                              context.MapClusterId(19)};
+   std::vector<ROOT::DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17),
+                                                    context.MapClusterId(19)};
    context.MapClusterGroupId(137);
    auto sizePageList = RNTupleSerializer::SerializePageList(nullptr, desc, physClusterIDs, context);
    auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
@@ -1467,7 +1467,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
    builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
 
    auto desc = builder.MoveDescriptor();
-   std::vector<DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17)};
+   std::vector<ROOT::DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17)};
    context.MapClusterGroupId(137);
    auto sizePageList = RNTupleSerializer::SerializePageList(nullptr, desc, physClusterIDs, context);
    auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
@@ -1615,7 +1615,7 @@ TEST(RNTuple, DeserializeDescriptorModes)
       builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
 
       auto desc = builder.MoveDescriptor();
-      std::vector<DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17)};
+      std::vector<ROOT::DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17)};
       context.MapClusterGroupId(137);
       sizePageList = RNTupleSerializer::SerializePageList(nullptr, desc, physClusterIDs, context);
       bufPageList = MakeUninitArray<unsigned char>(sizePageList);
@@ -1861,8 +1861,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred_HeaderExtBeforeSerializ
    builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
 
    auto desc = builder.MoveDescriptor();
-   std::vector<DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17),
-                                              context.MapClusterId(19)};
+   std::vector<ROOT::DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17),
+                                                    context.MapClusterId(19)};
    context.MapClusterGroupId(137);
    auto sizePageList = RNTupleSerializer::SerializePageList(nullptr, desc, physClusterIDs, context);
    auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);
@@ -1987,8 +1987,8 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferredInMainHeader)
    builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
 
    auto desc = builder.MoveDescriptor();
-   std::vector<DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17),
-                                              context.MapClusterId(19)};
+   std::vector<ROOT::DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17),
+                                                    context.MapClusterId(19)};
    context.MapClusterGroupId(137);
    auto sizePageList = RNTupleSerializer::SerializePageList(nullptr, desc, physClusterIDs, context);
    auto bufPageList = MakeUninitArray<unsigned char>(sizePageList);

@@ -34,13 +34,13 @@ The RPageNullSink class is for internal testing only and can be used to measure 
 elements into pages, without actually writing them onto disk or even serializing the RNTuple headers and footers.
 */
 class RPageNullSink : public RPageSink {
-   DescriptorId_t fNColumns = 0;
+   ROOT::DescriptorId_t fNColumns = 0;
    std::uint64_t fNBytesCurrentCluster = 0;
 
 public:
    RPageNullSink(std::string_view ntupleName, const RNTupleWriteOptions &options) : RPageSink(ntupleName, options) {}
 
-   ColumnHandle_t AddColumn(DescriptorId_t, RColumn &column) final { return {fNColumns++, &column}; }
+   ColumnHandle_t AddColumn(ROOT::DescriptorId_t, RColumn &column) final { return {fNColumns++, &column}; }
 
    const RNTupleDescriptor &GetDescriptor() const final
    {
@@ -73,7 +73,7 @@ public:
 
    void CommitSuppressedColumn(ColumnHandle_t) final {}
    void CommitPage(ColumnHandle_t, const RPage &page) final { fNBytesCurrentCluster += page.GetNBytes(); }
-   void CommitSealedPage(DescriptorId_t, const RSealedPage &page) final
+   void CommitSealedPage(ROOT::DescriptorId_t, const RSealedPage &page) final
    {
       fNBytesCurrentCluster += page.GetBufferSize();
    }

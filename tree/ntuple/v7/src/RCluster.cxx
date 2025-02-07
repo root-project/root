@@ -60,7 +60,7 @@ void ROOT::Experimental::Internal::RCluster::Adopt(RCluster &&other)
    other.fPageMaps.clear();
 }
 
-void ROOT::Experimental::Internal::RCluster::SetColumnAvailable(DescriptorId_t physicalColumnId)
+void ROOT::Experimental::Internal::RCluster::SetColumnAvailable(ROOT::DescriptorId_t physicalColumnId)
 {
    fAvailPhysicalColumns.insert(physicalColumnId);
 }

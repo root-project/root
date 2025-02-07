@@ -38,10 +38,7 @@ protected:
    const RColumnElementBase &fElement;
    std::vector<RPageStorage::RSealedPage> fPages;
 
-   ColumnHandle_t AddColumn(ROOT::Experimental::DescriptorId_t, ROOT::Experimental::Internal::RColumn &) final
-   {
-      return {};
-   }
+   ColumnHandle_t AddColumn(ROOT::DescriptorId_t, ROOT::Experimental::Internal::RColumn &) final { return {}; }
 
    const RNTupleDescriptor &GetDescriptor() const final
    {
@@ -55,7 +52,7 @@ protected:
    void UpdateSchema(const ROOT::Experimental::Internal::RNTupleModelChangeset &, NTupleSize_t) final {}
    void UpdateExtraTypeInfo(const ROOT::Experimental::RExtraTypeInfoDescriptor &) final {}
    void CommitSuppressedColumn(ColumnHandle_t) final {}
-   void CommitSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final {}
+   void CommitSealedPage(ROOT::DescriptorId_t, const RPageStorage::RSealedPage &) final {}
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup>) final {}
    RStagedCluster StageCluster(NTupleSize_t) final { return {}; }
    void CommitStagedClusters(std::span<RStagedCluster>) final {}
@@ -106,9 +103,7 @@ public:
       return fPagePool.RegisterPage(std::move(page), key);
    }
    RPageRef LoadPage(ColumnHandle_t, ROOT::Experimental::RNTupleLocalIndex) final { return RPageRef(); }
-   void LoadSealedPage(ROOT::Experimental::DescriptorId_t, ROOT::Experimental::RNTupleLocalIndex, RSealedPage &) final
-   {
-   }
+   void LoadSealedPage(ROOT::DescriptorId_t, ROOT::Experimental::RNTupleLocalIndex, RSealedPage &) final {}
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey>) final { return {}; }
 };
 } // anonymous namespace

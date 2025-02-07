@@ -161,7 +161,7 @@ private:
    /// \return The RFieldTreeInspector for the provided field ID.
    ///
    /// This method is called when the RNTupleInspector is initially created.
-   RFieldTreeInspector CollectFieldTreeInfo(DescriptorId_t fieldId);
+   RFieldTreeInspector CollectFieldTreeInfo(ROOT::DescriptorId_t fieldId);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the columns that make up the given field, including its subfields.
@@ -169,7 +169,7 @@ private:
    /// \param [in] fieldId The ID of the field for which to collect the columns.
    ///
    /// \return A vector containing the IDs of all columns for the provided field ID.
-   std::vector<DescriptorId_t> GetColumnsByFieldId(DescriptorId_t fieldId) const;
+   std::vector<ROOT::DescriptorId_t> GetColumnsByFieldId(ROOT::DescriptorId_t fieldId) const;
 
 public:
    RNTupleInspector(const RNTupleInspector &other) = delete;
@@ -253,7 +253,7 @@ public:
    /// \param[in] physicalColumnId The physical ID of the column for which to get the information.
    ///
    /// \return The storage information for the provided column.
-   const RColumnInspector &GetColumnInspector(DescriptorId_t physicalColumnId) const;
+   const RColumnInspector &GetColumnInspector(ROOT::DescriptorId_t physicalColumnId) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the number of columns of a given type present in the RNTuple.
@@ -269,7 +269,7 @@ public:
    /// \param[in] colType The column type to collect, as defined by ROOT::ENTupleColumnType.
    ///
    /// \return A vector containing the physical IDs of columns of the provided type.
-   const std::vector<DescriptorId_t> GetColumnsByType(ROOT::ENTupleColumnType colType);
+   const std::vector<ROOT::DescriptorId_t> GetColumnsByType(ROOT::ENTupleColumnType colType);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get all column types present in the RNTuple being inspected.
@@ -348,7 +348,7 @@ public:
    /// \return A pointer to a `TH1D` containing the page size distribution.
    ///
    /// The x-axis will range from the smallest page size, to the largest (inclusive).
-   std::unique_ptr<TH1D> GetPageSizeDistribution(DescriptorId_t physicalColumnId, std::string histName = "",
+   std::unique_ptr<TH1D> GetPageSizeDistribution(ROOT::DescriptorId_t physicalColumnId, std::string histName = "",
                                                  std::string histTitle = "", size_t nBins = 64);
 
    /////////////////////////////////////////////////////////////////////////////
@@ -376,7 +376,7 @@ public:
    /// \return A pointer to a `TH1D` containing the (cumulative) page size distribution.
    ///
    /// The x-axis will range from the smallest page size, to the largest (inclusive).
-   std::unique_ptr<TH1D> GetPageSizeDistribution(std::initializer_list<DescriptorId_t> colIds,
+   std::unique_ptr<TH1D> GetPageSizeDistribution(std::initializer_list<ROOT::DescriptorId_t> colIds,
                                                  std::string histName = "", std::string histTitle = "",
                                                  size_t nBins = 64);
 
@@ -420,7 +420,7 @@ public:
    /// \param[in] fieldId The ID of the (sub)field for which to get the information.
    ///
    /// \return The storage information inspector for the provided (sub)field tree.
-   const RFieldTreeInspector &GetFieldTreeInspector(DescriptorId_t fieldId) const;
+   const RFieldTreeInspector &GetFieldTreeInspector(ROOT::DescriptorId_t fieldId) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get a storage information inspector for a given (sub)field by name, including its subfields.
@@ -458,14 +458,15 @@ public:
    /// \param[in] searchInSubFields If set to `false`, only top-level fields will be considered.
    ///
    /// \return A vector containing the IDs of fields that match the provided name.
-   const std::vector<DescriptorId_t>
+   const std::vector<ROOT::DescriptorId_t>
    GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubFields = true) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the IDs of (sub-)fields whose name matches the given string.
    ///
    /// \see GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubFields) const
-   const std::vector<DescriptorId_t> GetFieldsByName(std::string_view fieldNamePattern, bool searchInSubFields = true)
+   const std::vector<ROOT::DescriptorId_t>
+   GetFieldsByName(std::string_view fieldNamePattern, bool searchInSubFields = true)
    {
       return GetFieldsByName(std::regex{std::string(fieldNamePattern)}, searchInSubFields);
    }

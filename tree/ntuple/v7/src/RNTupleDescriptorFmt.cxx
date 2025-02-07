@@ -38,9 +38,9 @@ struct ClusterInfo {
 };
 
 struct ColumnInfo {
-   ROOT::Experimental::DescriptorId_t fPhysicalColumnId = 0;
-   ROOT::Experimental::DescriptorId_t fLogicalColumnId = 0;
-   ROOT::Experimental::DescriptorId_t fFieldId = 0;
+   ROOT::DescriptorId_t fPhysicalColumnId = 0;
+   ROOT::DescriptorId_t fLogicalColumnId = 0;
+   ROOT::DescriptorId_t fFieldId = 0;
    std::uint64_t fNElements = 0;
    std::uint64_t fNPages = 0;
    std::uint64_t fNBytesOnStorage = 0;
@@ -62,17 +62,15 @@ struct ColumnInfo {
    }
 };
 
-std::string
-GetFieldName(ROOT::Experimental::DescriptorId_t fieldId, const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
+std::string GetFieldName(ROOT::DescriptorId_t fieldId, const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
 {
    const auto &fieldDesc = ntupleDesc.GetFieldDescriptor(fieldId);
-   if (fieldDesc.GetParentId() == ROOT::Experimental::kInvalidDescriptorId)
+   if (fieldDesc.GetParentId() == ROOT::kInvalidDescriptorId)
       return fieldDesc.GetFieldName();
    return GetFieldName(fieldDesc.GetParentId(), ntupleDesc) + "." + fieldDesc.GetFieldName();
 }
 
-std::string GetFieldDescription(ROOT::Experimental::DescriptorId_t fFieldId,
-                                const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
+std::string GetFieldDescription(ROOT::DescriptorId_t fFieldId, const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
 {
    const auto &fieldDesc = ntupleDesc.GetFieldDescriptor(fFieldId);
    return fieldDesc.GetFieldDescription();
@@ -84,7 +82,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
 {
    std::vector<ColumnInfo> columns;
    std::vector<ClusterInfo> clusters;
-   std::unordered_map<DescriptorId_t, unsigned int> cluster2Idx;
+   std::unordered_map<ROOT::DescriptorId_t, unsigned int> cluster2Idx;
    clusters.reserve(fClusterDescriptors.size());
    for (const auto &cluster : fClusterDescriptors) {
       ClusterInfo info;

@@ -24,21 +24,21 @@ ROOT::Experimental::Internal::GetFieldRange(const RFieldBase &field, const RPage
 {
    const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
 
-   auto fnGetPrincipalColumnId = [&desc](DescriptorId_t fieldId) -> DescriptorId_t {
+   auto fnGetPrincipalColumnId = [&desc](ROOT::DescriptorId_t fieldId) -> ROOT::DescriptorId_t {
       auto columnIterable = desc.GetColumnIterable(fieldId);
-      return (columnIterable.size() > 0) ? columnIterable.begin()->GetPhysicalId() : kInvalidDescriptorId;
+      return (columnIterable.size() > 0) ? columnIterable.begin()->GetPhysicalId() : ROOT::kInvalidDescriptorId;
    };
 
    auto columnId = fnGetPrincipalColumnId(field.GetOnDiskId());
-   if (columnId == kInvalidDescriptorId) {
+   if (columnId == ROOT::kInvalidDescriptorId) {
       for (const auto &f : field) {
          columnId = fnGetPrincipalColumnId(f.GetOnDiskId());
-         if (columnId != kInvalidDescriptorId)
+         if (columnId != ROOT::kInvalidDescriptorId)
             break;
       }
    }
 
-   if (columnId == kInvalidDescriptorId) {
+   if (columnId == ROOT::kInvalidDescriptorId) {
       return RNTupleGlobalRange(ROOT::kInvalidNTupleIndex, ROOT::kInvalidNTupleIndex);
    }
 

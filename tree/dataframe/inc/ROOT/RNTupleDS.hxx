@@ -89,7 +89,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// Connects the IDs of active proto fields and their subfields to their fully qualified name (a.b.c.d).
    /// This enables the column reader to rewire the field IDs when the file changes (chain),
    /// using the fully qualified name as a search key in the descriptor of the other page sources.
-   std::unordered_map<ROOT::Experimental::DescriptorId_t, std::string> fFieldId2QualifiedName;
+   std::unordered_map<ROOT::DescriptorId_t, std::string> fFieldId2QualifiedName;
    std::vector<std::string> fColumnNames;
    std::vector<std::string> fColumnTypes;
    /// List of column readers returned by GetColumnReaders() organized by slot. Used to reconnect readers
@@ -120,10 +120,13 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
 
    /// \brief Holds useful information about fields added to the RNTupleDS
    struct RFieldInfo {
-      DescriptorId_t fFieldId;
+      ROOT::DescriptorId_t fFieldId;
       std::size_t fNRepetitions;
       // Enable `std::vector::emplace_back` for this type
-      RFieldInfo(DescriptorId_t fieldId, std::size_t nRepetitions) : fFieldId(fieldId), fNRepetitions(nRepetitions) {}
+      RFieldInfo(ROOT::DescriptorId_t fieldId, std::size_t nRepetitions)
+         : fFieldId(fieldId), fNRepetitions(nRepetitions)
+      {
+      }
    };
 
    /// Provides the RDF column "colName" given the field identified by fieldID. For records and collections,
@@ -135,7 +138,7 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    ///    float eta;
    /// };
    /// AddField will recurse into Jet.pt and Jet.eta and provide the two inner fields as std::vector<float> each.
-   void AddField(const RNTupleDescriptor &desc, std::string_view colName, DescriptorId_t fieldId,
+   void AddField(const RNTupleDescriptor &desc, std::string_view colName, ROOT::DescriptorId_t fieldId,
                  std::vector<RFieldInfo> fieldInfos);
 
    /// The main function of the fThreadStaging background thread

@@ -57,10 +57,10 @@ TEST(RNTupleChecksum, VerifyOnLoad)
    CreateCorruptedRNTuple(fileGuard.GetPath());
 
    RPageStorage::RSealedPage sealedPage;
-   DescriptorId_t pxColId;
-   DescriptorId_t pyColId;
-   DescriptorId_t pzColId;
-   DescriptorId_t clusterId;
+   ROOT::DescriptorId_t pxColId;
+   ROOT::DescriptorId_t pyColId;
+   ROOT::DescriptorId_t pzColId;
+   ROOT::DescriptorId_t clusterId;
    auto pageSource = RPageSource::Create("ntpl", fileGuard.GetPath());
    pageSource->Attach();
    {

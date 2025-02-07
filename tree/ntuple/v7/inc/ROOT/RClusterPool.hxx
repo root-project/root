@@ -106,7 +106,7 @@ private:
    std::thread fThreadIo;
 
    /// Every cluster id has at most one corresponding RCluster pointer in the pool
-   RCluster *FindInPool(DescriptorId_t clusterId) const;
+   RCluster *FindInPool(ROOT::DescriptorId_t clusterId) const;
    /// Returns an index of an unused element in fPool; callers of this function (GetCluster() and WaitFor())
    /// make sure that a free slot actually exists
    size_t FindFreeSlot() const;
@@ -115,7 +115,7 @@ private:
    /// Returns the given cluster from the pool, which needs to contain at least the columns `physicalColumns`.
    /// Executed at the end of GetCluster when all missing data pieces have been sent to the load queue.
    /// Ideally, the function returns without blocking if the cluster is already in the pool.
-   RCluster *WaitFor(DescriptorId_t clusterId, const RCluster::ColumnSet_t &physicalColumns);
+   RCluster *WaitFor(ROOT::DescriptorId_t clusterId, const RCluster::ColumnSet_t &physicalColumns);
 
 public:
    static constexpr unsigned int kDefaultClusterBunchSize = 1;
@@ -131,7 +131,7 @@ public:
    /// `physicalColumns` and possibly pages of other columns, too.  If implicit multi-threading is turned on, the
    /// uncompressed pages of the returned cluster are already pushed into the page pool associated with the page source
    /// upon return. The cluster remains valid until the next call to GetCluster().
-   RCluster *GetCluster(DescriptorId_t clusterId, const RCluster::ColumnSet_t &physicalColumns);
+   RCluster *GetCluster(ROOT::DescriptorId_t clusterId, const RCluster::ColumnSet_t &physicalColumns);
 
    /// Used by the unit tests to drain the queue of clusters to be preloaded
    void WaitForInFlightClusters();

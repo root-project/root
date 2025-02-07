@@ -50,9 +50,9 @@ public:
    /// On-disk pages within a page source are identified by the column and page number. The key is used for
    /// associative collections of on-disk pages.
    struct Key {
-      DescriptorId_t fPhysicalColumnId;
+      ROOT::DescriptorId_t fPhysicalColumnId;
       std::uint64_t fPageNo;
-      Key(DescriptorId_t columnId, std::uint64_t pageNo) : fPhysicalColumnId(columnId), fPageNo(pageNo) {}
+      Key(ROOT::DescriptorId_t columnId, std::uint64_t pageNo) : fPhysicalColumnId(columnId), fPageNo(pageNo) {}
       friend bool operator ==(const Key &lhs, const Key &rhs) {
          return lhs.fPhysicalColumnId == rhs.fPhysicalColumnId && lhs.fPageNo == rhs.fPageNo;
       }
@@ -79,9 +79,9 @@ struct hash<ROOT::Experimental::Internal::ROnDiskPage::Key> {
    // TODO(jblomer): quick and dirty hash, likely very sub-optimal, to be revised later.
    size_t operator()(const ROOT::Experimental::Internal::ROnDiskPage::Key &key) const
    {
-      return ((std::hash<ROOT::Experimental::DescriptorId_t>()(key.fPhysicalColumnId) ^
-               (hash<ROOT::NTupleSize_t>()(key.fPageNo) << 1)) >>
-              1);
+      return (
+         (std::hash<ROOT::DescriptorId_t>()(key.fPhysicalColumnId) ^ (hash<ROOT::NTupleSize_t>()(key.fPageNo) << 1)) >>
+         1);
    }
 };
 }
@@ -151,16 +151,16 @@ Binds together several page maps that represent all the pages of certain columns
 // clang-format on
 class RCluster {
 public:
-   using ColumnSet_t = std::unordered_set<DescriptorId_t>;
+   using ColumnSet_t = std::unordered_set<ROOT::DescriptorId_t>;
    /// The identifiers that specifies the content of a (partial) cluster
    struct RKey {
-      DescriptorId_t fClusterId = kInvalidDescriptorId;
+      ROOT::DescriptorId_t fClusterId = ROOT::kInvalidDescriptorId;
       ColumnSet_t fPhysicalColumnSet;
    };
 
 protected:
    /// References the cluster identifier in the page source that created the cluster
-   DescriptorId_t fClusterId;
+   ROOT::DescriptorId_t fClusterId;
    /// Multiple page maps can be combined in a single RCluster
    std::vector<std::unique_ptr<ROnDiskPageMap>> fPageMaps;
    /// Set of the (complete) columns represented by the RCluster
@@ -169,7 +169,7 @@ protected:
    std::unordered_map<ROnDiskPage::Key, ROnDiskPage> fOnDiskPages;
 
 public:
-   explicit RCluster(DescriptorId_t clusterId) : fClusterId(clusterId) {}
+   explicit RCluster(ROOT::DescriptorId_t clusterId) : fClusterId(clusterId) {}
    RCluster(const RCluster &other) = delete;
    RCluster(RCluster &&other) = default;
    RCluster &operator =(const RCluster &other) = delete;
@@ -189,12 +189,12 @@ public:
    /// Marks the column as complete; must be done for all columns, even empty ones without associated pages,
    /// before the cluster is given from the page storage to the cluster pool.  Marking the available columns is
    /// typically the last step of RPageSouce::LoadCluster().
-   void SetColumnAvailable(DescriptorId_t physicalColumnId);
+   void SetColumnAvailable(ROOT::DescriptorId_t physicalColumnId);
    const ROnDiskPage *GetOnDiskPage(const ROnDiskPage::Key &key) const;
 
-   DescriptorId_t GetId() const { return fClusterId; }
+   ROOT::DescriptorId_t GetId() const { return fClusterId; }
    const ColumnSet_t &GetAvailPhysicalColumns() const { return fAvailPhysicalColumns; }
-   bool ContainsColumn(DescriptorId_t colId) const { return fAvailPhysicalColumns.count(colId) > 0; }
+   bool ContainsColumn(ROOT::DescriptorId_t colId) const { return fAvailPhysicalColumns.count(colId) > 0; }
    size_t GetNOnDiskPages() const { return fOnDiskPages.size(); }
 }; // class RCluster
 

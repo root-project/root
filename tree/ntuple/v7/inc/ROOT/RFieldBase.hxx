@@ -49,7 +49,7 @@ void CallConnectPageSinkOnField(RFieldBase &, RPageSink &, ROOT::NTupleSize_t fi
 void CallConnectPageSourceOnField(RFieldBase &, RPageSource &);
 ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
 CallFieldBaseCreate(const std::string &fieldName, const std::string &canonicalType, const std::string &typeAlias,
-                    const RCreateFieldOptions &options, const RNTupleDescriptor *desc, DescriptorId_t fieldId);
+                    const RCreateFieldOptions &options, const RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 
 } // namespace Internal
 
@@ -84,7 +84,7 @@ class RFieldBase {
    friend ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
    Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &canonicalType,
                                  const std::string &typeAlias, const RCreateFieldOptions &options,
-                                 const RNTupleDescriptor *desc, DescriptorId_t fieldId);
+                                 const RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 
    using ReadCallback_t = std::function<void(void *)>;
 
@@ -208,7 +208,7 @@ private:
    /// When the columns are connected to a page source or page sink, the field represents a field id in the
    /// corresponding RNTuple descriptor. This on-disk ID is set in RPageSink::Create() for writing and by
    /// RFieldDescriptor::CreateField() when recreating a field / model from the stored descriptor.
-   DescriptorId_t fOnDiskId = kInvalidDescriptorId;
+   ROOT::DescriptorId_t fOnDiskId = ROOT::kInvalidDescriptorId;
    /// Free text set by the user
    std::string fDescription;
    /// Changed by ConnectTo[Sink,Source], reset by Clone()
@@ -486,13 +486,13 @@ protected:
    static RResult<std::unique_ptr<RFieldBase>>
    Create(const std::string &fieldName, const std::string &canonicalType, const std::string &typeAlias,
           const RCreateFieldOptions &options = {}, const RNTupleDescriptor *desc = nullptr,
-          DescriptorId_t fieldId = kInvalidDescriptorId);
+          ROOT::DescriptorId_t fieldId = ROOT::kInvalidDescriptorId);
 
    /// Same as the above overload of Create, but infers the normalized type name and the canonical type name from
    /// `typeName`.
    static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &typeName,
                                                       const RCreateFieldOptions &options, const RNTupleDescriptor *desc,
-                                                      DescriptorId_t fieldId);
+                                                      ROOT::DescriptorId_t fieldId);
 
 public:
    template <bool IsConstT>
@@ -582,8 +582,8 @@ public:
    void SetDescription(std::string_view description);
    EState GetState() const { return fState; }
 
-   DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
-   void SetOnDiskId(DescriptorId_t id);
+   ROOT::DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
+   void SetOnDiskId(ROOT::DescriptorId_t id);
 
    /// Returns the fColumnRepresentative pointee or, if unset (always the case for artificial fields), the field's
    /// default representative

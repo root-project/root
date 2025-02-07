@@ -44,7 +44,7 @@ ROOT::Experimental::Internal::RNTupleIndex::RNTupleIndex(const std::vector<std::
 
    for (const auto &fieldName : fieldNames) {
       auto fieldId = desc->FindFieldId(fieldName);
-      if (fieldId == kInvalidDescriptorId)
+      if (fieldId == ROOT::kInvalidDescriptorId)
          throw RException(R__FAIL("could not find join field \"" + std::string(fieldName) + "\" in RNTuple \"" +
                                   fPageSource->GetNTupleName() + "\""));
 
