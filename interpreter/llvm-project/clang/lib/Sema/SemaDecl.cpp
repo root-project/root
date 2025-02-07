@@ -16970,8 +16970,7 @@ bool Sema::CheckEnumRedeclaration(SourceLocation EnumLoc, bool IsScoped,
         if (!attr->isInherited()) {
           llvm::StringRef annotation = attr->getAnnotation();
           assert(!annotation.empty() && "Empty annotation!");
-          static const char annoTag[] = "$clingAutoload$";
-          if (annotation.startswith(llvm::StringRef(annoTag, strlen(annoTag)))) {
+          if (annotation.starts_with("$clingAutoload$")) {
             // autoload annotation.
             return true;
           }
