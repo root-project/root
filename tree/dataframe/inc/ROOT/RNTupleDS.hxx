@@ -138,8 +138,11 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    ///    float eta;
    /// };
    /// AddField will recurse into Jet.pt and Jet.eta and provide the two inner fields as std::vector<float> each.
+   ///
+   /// In case the field is a collection of type `ROOT::VecOps::RVec`, `std::vector` or `std::array`, its corresponding
+   /// column is added as a `ROOT::VecOps::RVec`. Otherwise, the field's on-disk type is used.
    void AddField(const RNTupleDescriptor &desc, std::string_view colName, ROOT::DescriptorId_t fieldId,
-                 std::vector<RFieldInfo> fieldInfos);
+                 std::vector<RFieldInfo> fieldInfos, bool convertToRVec = false);
 
    /// The main function of the fThreadStaging background thread
    void ExecStaging();

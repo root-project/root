@@ -231,7 +231,7 @@ public:
 RNTupleDS::~RNTupleDS() = default;
 
 void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName, ROOT::DescriptorId_t fieldId,
-                         std::vector<RNTupleDS::RFieldInfo> fieldInfos)
+                         std::vector<RNTupleDS::RFieldInfo> fieldInfos, bool convertToRVec)
 {
    // As an example for the mapping of RNTuple fields to RDF columns, let's consider an RNTuple
    // using the following types and with a top-level field named "event" of type Event:
@@ -286,12 +286,14 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
          fProtoFields.emplace_back(std::move(cardinalityField));
 
          for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
-            AddField(desc, std::string(colName) + "." + f.GetFieldName(), f.GetId(), fieldInfos);
+            AddField(desc, std::string(colName) + "." + f.GetFieldName(), f.GetId(), fieldInfos, true);
          }
       } else {
-         // ROOT::RVec with exactly one sub field
+         // collection with exactly one sub field
+         bool representableAsRVec = fieldDesc.GetTypeName().substr(0, 19) == "ROOT::VecOps::RVec<" ||
+                                    fieldDesc.GetTypeName().substr(0, 12) == "std::vector<";
          const auto &f = *desc.GetFieldIterable(fieldDesc.GetId()).begin();
-         AddField(desc, colName, f.GetId(), fieldInfos);
+         AddField(desc, colName, f.GetId(), fieldInfos, representableAsRVec);
       }
       // Note that at the end of the recursion, we handled the inner sub collections as well as the
       // collection as whole, so we are done.
@@ -300,13 +302,13 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    } else if (nRepetitions > 0) {
       // Fixed-size array, same logic as ROOT::RVec.
       const auto &f = *desc.GetFieldIterable(fieldDesc.GetId()).begin();
-      AddField(desc, colName, f.GetId(), fieldInfos);
+      AddField(desc, colName, f.GetId(), fieldInfos, true);
       return;
    } else if (fieldDesc.GetStructure() == ROOT::ENTupleStructure::kRecord) {
       // Inner fields of records are provided as individual RDF columns, e.g. "event.id"
       for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
          auto innerName = colName.empty() ? f.GetFieldName() : (std::string(colName) + "." + f.GetFieldName());
-         AddField(desc, innerName, f.GetId(), fieldInfos);
+         AddField(desc, innerName, f.GetId(), fieldInfos, convertToRVec);
       }
    }
 
@@ -340,8 +342,14 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
          valueField =
             std::make_unique<ROOT::Experimental::RArrayAsRVecField>("", std::move(valueField), fieldInfo.fNRepetitions);
       } else {
-         // Actual ROOT::RVec
-         valueField = std::make_unique<ROOT::Experimental::RRVecField>("", std::move(valueField));
+         // Actual collection. A std::vector or ROOT::RVec gets added as a ROOT::RVec. All other collection types keep
+         // their original type.
+         if (convertToRVec) {
+            valueField = std::make_unique<ROOT::Experimental::RRVecField>("", std::move(valueField));
+         } else {
+            auto outerFieldType = desc.GetFieldDescriptor(fieldInfo.fFieldId).GetTypeName();
+            valueField = RFieldBase::Create("", outerFieldType).Unwrap();
+         }
       }
 
       valueField->SetOnDiskId(fieldInfo.fFieldId);
