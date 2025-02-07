@@ -3492,7 +3492,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       = getFinalSpellingLoc(sourceManager,
                             sourceManager.getIncludeLoc(headerFID));
 
-   const FileEntry *headerFE = sourceManager.getFileEntryForID(headerFID);
+   OptionalFileEntryRef headerFE = sourceManager.getFileEntryRefForID(headerFID);
    while (includeLoc.isValid() && sourceManager.isInSystemHeader(includeLoc)) {
       ConstSearchDirIterator *foundDir = nullptr;
       // use HeaderSearch on the basename, to make sure it takes a header from
@@ -3511,7 +3511,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                 false /*OpenFile*/, true /*CacheFailures*/);
       if (FEhdr) break;
       headerFID = sourceManager.getFileID(includeLoc);
-      headerFE = sourceManager.getFileEntryForID(headerFID);
+      headerFE = sourceManager.getFileEntryRefForID(headerFID);
       // If we have a system header in a module we can't just trace back the
       // original include with the preprocessor. But it should be enough if
       // we trace it back to the top-level system header that includes this
