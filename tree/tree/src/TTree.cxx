@@ -6882,6 +6882,8 @@ bool TTree::ImportBranches(TTree* tree)
 ///
 /// Trees in the list can be memory or disk-resident trees.
 /// The new tree is created in the current directory (memory if gROOT).
+/// Use "importBranches" option to incorporate branches from the trees in
+/// the list that were not in the first TTree into the final result
 
 TTree* TTree::MergeTrees(TList* li, Option_t* options)
 {
@@ -6889,7 +6891,7 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
    TIter next(li);
    TTree *newtree = nullptr;
    TObject *obj;
-
+   const bool importBranches = TString(options).ToLower().Contains("importbranches");
    while ((obj=next())) {
       if (!obj->InheritsFrom(TTree::Class())) continue;
       TTree *tree = (TTree*)obj;
@@ -6908,7 +6910,7 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
          newtree->ResetBranchAddresses();
          continue;
       }
-      else {
+      else if (importBranches) {
          newtree->ImportBranches(tree);
       }
 
@@ -6924,10 +6926,13 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
 /// Merge the trees in the TList into this tree.
 ///
 /// Returns the total number of entries in the merged tree.
+/// Use "importBranches" option to incorporate branches from the trees in
+/// the list that were not in this TTree into the final result
 
 Long64_t TTree::Merge(TCollection* li, Option_t *options)
 {
    if (!li) return 0;
+   const bool importBranches = TString(options).ToLower().Contains("importbranches");
    Long64_t storeAutoSave = fAutoSave;
    // Disable the autosave as the TFileMerge keeps a list of key and deleting the underlying
    // key would invalidate its iteration (or require costly measure to not use the deleted keys).
@@ -6946,7 +6951,8 @@ Long64_t TTree::Merge(TCollection* li, Option_t *options)
 
       Long64_t nentries = tree->GetEntries();
       if (nentries == 0) continue;
-      ImportBranches(tree);
+      if (importBranches)
+        ImportBranches(tree);
       CopyEntries(tree, -1, options, true);
    }
    fAutoSave = storeAutoSave;
@@ -6961,6 +6967,8 @@ Long64_t TTree::Merge(TCollection* li, Option_t *options)
 /// use for further merging).
 ///
 /// Returns the total number of entries in the merged tree.
+/// Use "importBranches" info-option to incorporate branches from the trees
+/// in the list that were not in this TTree into the final result
 
 Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
 {
@@ -6991,6 +6999,7 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
       }
    }
    if (!li) return 0;
+  const bool importBranches = TString(options).ToLower().Contains("importbranches");
    Long64_t storeAutoSave = fAutoSave;
    // Disable the autosave as the TFileMerge keeps a list of key and deleting the underlying
    // key would invalidate its iteration (or require costly measure to not use the deleted keys).
@@ -7006,7 +7015,8 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
          fAutoSave = storeAutoSave;
          return -1;
       }
-      ImportBranches(tree);
+      if (importBranches)
+        ImportBranches(tree);
       CopyEntries(tree, -1, options, true);
    }
    fAutoSave = storeAutoSave;
