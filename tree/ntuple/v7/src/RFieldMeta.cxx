@@ -95,6 +95,10 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, TClass 
                                     ROOT::ENTupleStructure::kRecord, false /* isSimple */),
      fClass(classp)
 {
+   if (fClass->GetState() < TClass::kInterpreted) {
+      throw RException(R__FAIL(std::string("RField: RClassField \"") + classp->GetName() +
+                               " cannot be constructed from a class that's not at least Interpreted"));
+   }
    // Avoid accidentally supporting std types through TClass.
    if (fClass->Property() & kIsDefinedInStd) {
       throw RException(R__FAIL(std::string(GetTypeName()) + " is not supported"));
@@ -122,7 +126,9 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, TClass 
       fTraits |= kTraitTriviallyDestructible;
 
    int i = 0;
-   for (auto baseClass : ROOT::Detail::TRangeStaticCast<TBaseClass>(*fClass->GetListOfBases())) {
+   const auto *bases = fClass->GetListOfBases();
+   assert(bases);
+   for (auto baseClass : ROOT::Detail::TRangeStaticCast<TBaseClass>(*bases)) {
       if (baseClass->GetDelta() < 0) {
          throw RException(R__FAIL(std::string("virtual inheritance is not supported: ") + GetTypeName() +
                                   " virtually inherits from " + baseClass->GetName()));
