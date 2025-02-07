@@ -1013,11 +1013,10 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPage(ROOT::D
    fOpenPageRanges.at(physicalColumnId).fPageInfos.emplace_back(pageInfo);
 }
 
-std::vector<ROOT::Experimental::RNTupleLocator>
-ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageVImpl(
+std::vector<ROOT::RNTupleLocator> ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageVImpl(
    std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask)
 {
-   std::vector<ROOT::Experimental::RNTupleLocator> locators;
+   std::vector<ROOT::RNTupleLocator> locators;
    locators.reserve(mask.size());
    std::size_t i = 0;
    for (auto &range : ranges) {

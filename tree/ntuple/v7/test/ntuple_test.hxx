@@ -54,6 +54,8 @@
 #include <vector>
 
 using ROOT::RNTupleLocalIndex;
+using ROOT::RNTupleLocator;
+using ROOT::RNTupleLocatorObject64;
 using ROOT::Experimental::EExtraTypeInfoIds;
 using ROOT::Experimental::Internal::RColumnIndex;
 using RClusterDescriptor = ROOT::Experimental::RClusterDescriptor;
@@ -68,8 +70,6 @@ template <class T>
 using RField = ROOT::Experimental::RField<T>;
 using RFieldBase = ROOT::Experimental::RFieldBase;
 using RFieldDescriptor = ROOT::Experimental::RFieldDescriptor;
-using RNTupleLocator = ROOT::Experimental::RNTupleLocator;
-using RNTupleLocatorObject64 = ROOT::Experimental::RNTupleLocatorObject64;
 using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
 using RNTupleAtomicCounter = ROOT::Experimental::Detail::RNTupleAtomicCounter;
 using RNTupleAtomicTimer = ROOT::Experimental::Detail::RNTupleAtomicTimer;
