@@ -4,10 +4,10 @@ The A[3] values are:
    1.5  2.6  3.7  
 Error in <TStreamerInfo::InsertArtificialElements>: For class Old in StreamerInfo -1 a rule has conflicting type for the source "double fSingle",
    The TStreamerElement has memory type 5 (needed 8) :
-   type=read sourceClass="Old" targetClass="New" version="[1-]" source="double fSingle" target="fDouble" code="{ std::cout << "ERROR: the rule for fDouble should not be run
+   type=read sourceClass="Old" targetClass="New" version="[1-]" source="double fSingle; " target="fDouble" code="{ std::cout << "ERROR: the rule for fDouble should not be run
 "; fDouble = onfile.fSingle * 3; }" 
 Warning in <TStreamerInfo::InsertArtificialElements>: For class Old in StreamerInfo -1 is missing the source data member `fArrayNew` when trying to apply the rule:
-   type=read sourceClass="Old" targetClass="New" version="[1-]" source="A fArrayNew[3]" target="fArrayNew" code="{ examine_array<A,3>(onfile.fArrayNew); for(size_t i = 0; i < 3; ++i) fArrayNew[i].f = onfile.fArrayNew[i].f; }" 
+   type=read sourceClass="Old" targetClass="New" version="[1-]" source="A fArrayNew[3]; " target="fArrayNew" code="{ examine_array<A,3>(onfile.fArrayNew); for(size_t i = 0; i < 3; ++i) fArrayNew[i].f = onfile.fArrayNew[i].f; }" 
 The A value is: 1.2
 The B value is: 5.27183e-315
 The B value is: 1.3
