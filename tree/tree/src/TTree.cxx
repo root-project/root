@@ -6858,6 +6858,7 @@ bool TTree::ImportBranches(TTree* tree)
          if (!GetListOfBranches()->FindObject(nbranch->GetName())) {
             auto addbranch = (TBranch*) nbranch->Clone();
             addbranch->ResetAddress();
+            addbranch->Reset();
             addbranch->SetTree(this);
             fBranches.Add(addbranch);
             importedCollection.push_back(addbranch);
