@@ -135,7 +135,6 @@ and it provides the `Merge(...)` interface for the `TFileMerger`.
 The page source and sink can read and write pages and clusters from and to a storage backend.
 There are concrete class implementations for an RNTuple stored in a ROOT file (local or remote), and for an RNTuple stored in a DAOS object store.
 There is a virtual page sink for buffered writes, which also groups pages of the same column before flushing them to disk.
-There is a virtual page source for aligned friend datasets (horizontal data combination).
 
 Page sources and sinks do not operate entry-based but based on pages/indices of columns.
 For instance, there is no API in the page sink to write an entry, but only to write pages of columns.
