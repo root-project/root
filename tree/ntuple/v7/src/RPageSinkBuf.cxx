@@ -56,7 +56,7 @@ ROOT::Experimental::Internal::RPageSinkBuf::~RPageSinkBuf()
 }
 
 ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Internal::RPageSinkBuf::AddColumn(DescriptorId_t /*fieldId*/, RColumn &column)
+ROOT::Experimental::Internal::RPageSinkBuf::AddColumn(ROOT::DescriptorId_t /*fieldId*/, RColumn &column)
 {
    return ColumnHandle_t{fNColumns++, &column};
 }
@@ -216,7 +216,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    });
 }
 
-void ROOT::Experimental::Internal::RPageSinkBuf::CommitSealedPage(DescriptorId_t /*physicalColumnId*/,
+void ROOT::Experimental::Internal::RPageSinkBuf::CommitSealedPage(ROOT::DescriptorId_t /*physicalColumnId*/,
                                                                   const RSealedPage & /*sealedPage*/)
 {
    throw RException(R__FAIL("should never commit sealed pages to RPageSinkBuf"));

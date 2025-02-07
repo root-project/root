@@ -40,9 +40,8 @@
 namespace {
 using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
 
-std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &fieldDesc,
-                             ROOT::Experimental::DescriptorId_t onDiskParentId,
-                             ROOT::Experimental::DescriptorId_t onDiskProjectionSourceId, void *buffer)
+std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &fieldDesc, ROOT::DescriptorId_t onDiskParentId,
+                             ROOT::DescriptorId_t onDiskProjectionSourceId, void *buffer)
 {
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
@@ -94,24 +93,21 @@ std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &fieldDe
 /// required buffer size is returned
 // clang-format on
 std::uint32_t SerializeFieldList(const ROOT::Experimental::RNTupleDescriptor &desc,
-                                 std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
-                                 std::size_t firstOnDiskId,
+                                 std::span<const ROOT::DescriptorId_t> fieldList, std::size_t firstOnDiskId,
                                  const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context, void *buffer)
 {
-   using ROOT::Experimental::kInvalidDescriptorId;
-
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
    auto fieldZeroId = desc.GetFieldZeroId();
-   ROOT::Experimental::DescriptorId_t onDiskFieldId = firstOnDiskId;
+   ROOT::DescriptorId_t onDiskFieldId = firstOnDiskId;
    for (auto fieldId : fieldList) {
       const auto &f = desc.GetFieldDescriptor(fieldId);
       auto onDiskParentId =
          (f.GetParentId() == fieldZeroId) ? onDiskFieldId : context.GetOnDiskFieldId(f.GetParentId());
       auto onDiskProjectionSourceId =
-         f.IsProjectedField() ? context.GetOnDiskFieldId(f.GetProjectionSourceId()) : kInvalidDescriptorId;
+         f.IsProjectedField() ? context.GetOnDiskFieldId(f.GetProjectionSourceId()) : ROOT::kInvalidDescriptorId;
       pos += SerializeField(f, onDiskParentId, onDiskProjectionSourceId, *where);
       ++onDiskFieldId;
    }
@@ -245,7 +241,7 @@ std::uint32_t SerializePhysicalColumn(const ROOT::Experimental::RColumnDescripto
 }
 
 std::uint32_t SerializeColumnsOfFields(const ROOT::Experimental::RNTupleDescriptor &desc,
-                                       std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
+                                       std::span<const ROOT::DescriptorId_t> fieldList,
                                        const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
                                        void *buffer, bool forHeaderExtension)
 {
@@ -482,7 +478,7 @@ std::uint32_t SerializeAliasColumn(const ROOT::Experimental::RColumnDescriptor &
 }
 
 std::uint32_t SerializeAliasColumnsOfFields(const ROOT::Experimental::RNTupleDescriptor &desc,
-                                            std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
+                                            std::span<const ROOT::DescriptorId_t> fieldList,
                                             const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
                                             void *buffer, bool forHeaderExtension)
 {
@@ -1244,8 +1240,8 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapSchema(const 
                                                                           bool forHeaderExtension)
 {
    auto fieldZeroId = desc.GetFieldZeroId();
-   auto depthFirstTraversal = [&](std::span<DescriptorId_t> fieldTrees, auto doForEachField) {
-      std::deque<DescriptorId_t> idQueue{fieldTrees.begin(), fieldTrees.end()};
+   auto depthFirstTraversal = [&](std::span<ROOT::DescriptorId_t> fieldTrees, auto doForEachField) {
+      std::deque<ROOT::DescriptorId_t> idQueue{fieldTrees.begin(), fieldTrees.end()};
       while (!idQueue.empty()) {
          auto fieldId = idQueue.front();
          idQueue.pop_front();
@@ -1260,14 +1256,14 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapSchema(const 
 
    R__ASSERT(desc.GetNFields() > 0); // we must have at least a zero field
 
-   std::vector<DescriptorId_t> fieldTrees;
+   std::vector<ROOT::DescriptorId_t> fieldTrees;
    if (!forHeaderExtension) {
       fieldTrees.emplace_back(fieldZeroId);
    } else if (auto xHeader = desc.GetHeaderExtension()) {
       fieldTrees = xHeader->GetTopLevelFields(desc);
    }
-   depthFirstTraversal(fieldTrees, [&](DescriptorId_t fieldId) { MapFieldId(fieldId); });
-   depthFirstTraversal(fieldTrees, [&](DescriptorId_t fieldId) {
+   depthFirstTraversal(fieldTrees, [&](ROOT::DescriptorId_t fieldId) { MapFieldId(fieldId); });
+   depthFirstTraversal(fieldTrees, [&](ROOT::DescriptorId_t fieldId) {
       for (const auto &c : desc.GetColumnIterable(fieldId)) {
          if (!c.IsAliasColumn()) {
             MapPhysicalColumnId(c.GetPhysicalId());
@@ -1328,8 +1324,8 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
    const auto nExtraTypeInfos = desc.GetNExtraTypeInfos();
    const auto &onDiskFields = context.GetOnDiskFieldList();
    R__ASSERT(onDiskFields.size() >= fieldListOffset);
-   std::span<const DescriptorId_t> fieldList{onDiskFields.data() + fieldListOffset,
-                                             onDiskFields.size() - fieldListOffset};
+   std::span<const ROOT::DescriptorId_t> fieldList{onDiskFields.data() + fieldListOffset,
+                                                   onDiskFields.size() - fieldListOffset};
 
    auto frame = pos;
    pos += SerializeListFramePreamble(nFields, *where);
@@ -1402,7 +1398,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
       auto resVoid = descBuilder.AddFieldLink(parentId, fieldId);
       if (!resVoid)
          return R__FORWARD_ERROR(resVoid);
-      if (projectionSourceId != kInvalidDescriptorId) {
+      if (projectionSourceId != ROOT::kInvalidDescriptorId) {
          resVoid = descBuilder.AddFieldProjection(projectionSourceId, fieldId);
          if (!resVoid)
             return R__FORWARD_ERROR(resVoid);
@@ -1412,7 +1408,8 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
 
    // As columns are added in order of representation index and column index, determine the column index
    // for the currently deserialized column from the columns already added.
-   auto fnNextColumnIndex = [&descBuilder](DescriptorId_t fieldId, std::uint16_t representationIndex) -> std::uint32_t {
+   auto fnNextColumnIndex = [&descBuilder](ROOT::DescriptorId_t fieldId,
+                                           std::uint16_t representationIndex) -> std::uint32_t {
       const auto &existingColumns = descBuilder.GetDescriptor().GetFieldDescriptor(fieldId).GetLogicalColumnIds();
       if (existingColumns.empty())
          return 0;
@@ -1538,7 +1535,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeader(void *buffer,
 
 std::uint32_t
 ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer, const RNTupleDescriptor &desc,
-                                                                   std::span<DescriptorId_t> physClusterIDs,
+                                                                   std::span<ROOT::DescriptorId_t> physClusterIDs,
                                                                    const RContext &context)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
@@ -1567,7 +1564,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
    for (auto clusterId : physClusterIDs) {
       const auto &clusterDesc = desc.GetClusterDescriptor(context.GetMemClusterId(clusterId));
       // Get an ordered set of physical column ids
-      std::set<DescriptorId_t> onDiskColumnIds;
+      std::set<ROOT::DescriptorId_t> onDiskColumnIds;
       for (const auto &columnRange : clusterDesc.GetColumnRangeIterable())
          onDiskColumnIds.insert(context.GetOnDiskColumnId(columnRange.fPhysicalColumnId));
 
@@ -1785,7 +1782,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
 
 ROOT::RResult<std::vector<ROOT::Experimental::Internal::RClusterDescriptorBuilder>>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageListRaw(const void *buffer, std::uint64_t bufSize,
-                                                                        DescriptorId_t clusterGroupId,
+                                                                        ROOT::DescriptorId_t clusterGroupId,
                                                                         const RNTupleDescriptor &desc)
 {
    auto base = reinterpret_cast<const unsigned char *>(buffer);
@@ -1806,8 +1803,8 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageListRaw(const vo
       return R__FAIL("XxHash-3 mismatch between header and page list");
 
    std::vector<RClusterDescriptorBuilder> clusterBuilders;
-   DescriptorId_t firstClusterId{0};
-   for (DescriptorId_t i = 0; i < clusterGroupId; ++i) {
+   ROOT::DescriptorId_t firstClusterId{0};
+   for (ROOT::DescriptorId_t i = 0; i < clusterGroupId; ++i) {
       firstClusterId = firstClusterId + desc.GetClusterGroupDescriptor(i).GetNClusters();
    }
 
@@ -1915,7 +1912,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageListRaw(const vo
 
 ROOT::RResult<void>
 ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void *buffer, std::uint64_t bufSize,
-                                                                     DescriptorId_t clusterGroupId,
+                                                                     ROOT::DescriptorId_t clusterGroupId,
                                                                      RNTupleDescriptor &desc,
                                                                      EDescriptorDeserializeMode mode)
 {

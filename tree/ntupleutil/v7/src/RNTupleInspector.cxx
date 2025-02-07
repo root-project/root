@@ -99,7 +99,7 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
 }
 
 ROOT::Experimental::RNTupleInspector::RFieldTreeInspector
-ROOT::Experimental::RNTupleInspector::CollectFieldTreeInfo(DescriptorId_t fieldId)
+ROOT::Experimental::RNTupleInspector::CollectFieldTreeInfo(ROOT::DescriptorId_t fieldId)
 {
    std::uint64_t compressedSize = 0;
    std::uint64_t uncompressedSize = 0;
@@ -111,7 +111,7 @@ ROOT::Experimental::RNTupleInspector::CollectFieldTreeInfo(DescriptorId_t fieldI
    }
 
    for (const auto &subFieldDescriptor : fDescriptor.GetFieldIterable(fieldId)) {
-      DescriptorId_t subFieldId = subFieldDescriptor.GetId();
+      auto subFieldId = subFieldDescriptor.GetId();
 
       auto subFieldInfo = CollectFieldTreeInfo(subFieldId);
 
@@ -124,11 +124,11 @@ ROOT::Experimental::RNTupleInspector::CollectFieldTreeInfo(DescriptorId_t fieldI
    return fieldInfo;
 }
 
-std::vector<ROOT::Experimental::DescriptorId_t>
-ROOT::Experimental::RNTupleInspector::GetColumnsByFieldId(DescriptorId_t fieldId) const
+std::vector<ROOT::DescriptorId_t>
+ROOT::Experimental::RNTupleInspector::GetColumnsByFieldId(ROOT::DescriptorId_t fieldId) const
 {
-   std::vector<DescriptorId_t> colIds;
-   std::deque<DescriptorId_t> fieldIdQueue{fieldId};
+   std::vector<ROOT::DescriptorId_t> colIds;
+   std::deque<ROOT::DescriptorId_t> fieldIdQueue{fieldId};
 
    while (!fieldIdQueue.empty()) {
       auto currId = fieldIdQueue.front();
@@ -179,7 +179,7 @@ std::string ROOT::Experimental::RNTupleInspector::GetCompressionSettingsAsString
 //------------------------------------------------------------------------------
 
 const ROOT::Experimental::RNTupleInspector::RColumnInspector &
-ROOT::Experimental::RNTupleInspector::GetColumnInspector(DescriptorId_t physicalColumnId) const
+ROOT::Experimental::RNTupleInspector::GetColumnInspector(ROOT::DescriptorId_t physicalColumnId) const
 {
    if (physicalColumnId > fDescriptor.GetNPhysicalColumns()) {
       throw RException(R__FAIL("No column with physical ID " + std::to_string(physicalColumnId) + " present"));
@@ -201,10 +201,10 @@ size_t ROOT::Experimental::RNTupleInspector::GetColumnCountByType(ROOT::ENTupleC
    return typeCount;
 }
 
-const std::vector<ROOT::Experimental::DescriptorId_t>
+const std::vector<ROOT::DescriptorId_t>
 ROOT::Experimental::RNTupleInspector::GetColumnsByType(ROOT::ENTupleColumnType colType)
 {
-   std::vector<DescriptorId_t> colIds;
+   std::vector<ROOT::DescriptorId_t> colIds;
 
    for (const auto &[colId, colInfo] : fColumnInfo) {
       if (colInfo.GetType() == colType)
@@ -310,9 +310,9 @@ ROOT::Experimental::RNTupleInspector::GetColumnTypeInfoAsHist(ROOT::Experimental
    return hist;
 }
 
-std::unique_ptr<TH1D> ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(DescriptorId_t physicalColumnId,
-                                                                                    std::string histName,
-                                                                                    std::string histTitle, size_t nBins)
+std::unique_ptr<TH1D>
+ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(ROOT::DescriptorId_t physicalColumnId,
+                                                              std::string histName, std::string histTitle, size_t nBins)
 {
    if (histTitle.empty())
       histTitle = "Page size distribution for column with ID " + std::to_string(physicalColumnId);
@@ -345,7 +345,7 @@ std::unique_ptr<TH1D> ROOT::Experimental::RNTupleInspector::GetPageSizeDistribut
 }
 
 std::unique_ptr<TH1D>
-ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(std::initializer_list<DescriptorId_t> colIds,
+ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(std::initializer_list<ROOT::DescriptorId_t> colIds,
                                                               std::string histName, std::string histTitle, size_t nBins)
 {
    auto hist = std::make_unique<TH1D>();
@@ -435,7 +435,7 @@ ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(std::initializer_l
 //------------------------------------------------------------------------------
 
 const ROOT::Experimental::RNTupleInspector::RFieldTreeInspector &
-ROOT::Experimental::RNTupleInspector::GetFieldTreeInspector(DescriptorId_t fieldId) const
+ROOT::Experimental::RNTupleInspector::GetFieldTreeInspector(ROOT::DescriptorId_t fieldId) const
 {
    if (fieldId >= fDescriptor.GetNFields()) {
       throw RException(R__FAIL("No field with ID " + std::to_string(fieldId) + " present"));
@@ -447,7 +447,7 @@ ROOT::Experimental::RNTupleInspector::GetFieldTreeInspector(DescriptorId_t field
 const ROOT::Experimental::RNTupleInspector::RFieldTreeInspector &
 ROOT::Experimental::RNTupleInspector::GetFieldTreeInspector(std::string_view fieldName) const
 {
-   DescriptorId_t fieldId = fDescriptor.FindFieldId(fieldName);
+   auto fieldId = fDescriptor.FindFieldId(fieldName);
 
    if (fieldId == kInvalidDescriptorId) {
       throw RException(R__FAIL("Could not find field `" + std::string(fieldName) + "`"));
@@ -474,10 +474,10 @@ size_t ROOT::Experimental::RNTupleInspector::GetFieldCountByType(const std::rege
    return typeCount;
 }
 
-const std::vector<ROOT::Experimental::DescriptorId_t>
+const std::vector<ROOT::DescriptorId_t>
 ROOT::Experimental::RNTupleInspector::GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubFields) const
 {
-   std::vector<DescriptorId_t> fieldIds;
+   std::vector<ROOT::DescriptorId_t> fieldIds;
 
    for (auto &[fldId, fldInfo] : fFieldTreeInfo) {
 

@@ -100,7 +100,7 @@ void ROOT::Experimental::Internal::CallConnectPageSourceOnField(RFieldBase &fiel
 ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
 ROOT::Experimental::Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &canonicalType,
                                                   const std::string &typeAlias, const RCreateFieldOptions &options,
-                                                  const RNTupleDescriptor *desc, DescriptorId_t fieldId)
+                                                  const RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId)
 {
    return RFieldBase::Create(fieldName, canonicalType, typeAlias, options, desc, fieldId);
 }
@@ -282,7 +282,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
 ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
 ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &typeName,
                                        const RCreateFieldOptions &options, const RNTupleDescriptor *desc,
-                                       DescriptorId_t fieldId)
+                                       ROOT::DescriptorId_t fieldId)
 {
    auto typeAlias = Internal::GetNormalizedTypeName(typeName);
    auto canonicalType = Internal::GetNormalizedTypeName(GetCanonicalTypeName(typeAlias));
@@ -317,7 +317,7 @@ ROOT::Experimental::RFieldBase::Check(const std::string &fieldName, const std::s
 ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
 ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &canonicalType,
                                        const std::string &typeAlias, const RCreateFieldOptions &options,
-                                       const RNTupleDescriptor *desc, DescriptorId_t fieldId)
+                                       const RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId)
 {
    thread_local CreateContext createContext;
    CreateContextGuard createContextGuard(createContext);
@@ -345,7 +345,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          const auto &fieldDesc = desc->GetFieldDescriptor(fieldId);
          return fieldDesc.GetLinkIds().at(childId);
       } else {
-         return kInvalidDescriptorId;
+         return ROOT::kInvalidDescriptorId;
       }
    };
 
@@ -791,7 +791,7 @@ void ROOT::Experimental::RFieldBase::SetDescription(std::string_view description
    fDescription = std::string(description);
 }
 
-void ROOT::Experimental::RFieldBase::SetOnDiskId(DescriptorId_t id)
+void ROOT::Experimental::RFieldBase::SetOnDiskId(ROOT::DescriptorId_t id)
 {
    if (fState != EState::kUnconnected)
       throw RException(R__FAIL("cannot set field ID once field is connected"));
@@ -902,7 +902,7 @@ ROOT::Experimental::RFieldBase::EnsureCompatibleColumnTypes(const RNTupleDescrip
 {
    static const ColumnRepresentation_t kEmpty;
 
-   if (fOnDiskId == kInvalidDescriptorId)
+   if (fOnDiskId == ROOT::kInvalidDescriptorId)
       throw RException(R__FAIL("No on-disk field information for `" + GetQualifiedFieldName() + "`"));
 
    ColumnRepresentation_t onDiskTypes;
@@ -1013,7 +1013,7 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
    BeforeConnectPageSource(pageSource);
 
    for (auto &f : fSubFields) {
-      if (f->GetOnDiskId() == kInvalidDescriptorId) {
+      if (f->GetOnDiskId() == ROOT::kInvalidDescriptorId) {
          f->SetOnDiskId(pageSource.GetSharedDescriptorGuard()->FindFieldId(f->GetFieldName(), GetOnDiskId()));
       }
       f->ConnectPageSource(pageSource);
@@ -1034,7 +1034,7 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
          }
       }
       R__ASSERT(!fColumnRepresentatives.empty());
-      if (fOnDiskId != kInvalidDescriptorId) {
+      if (fOnDiskId != ROOT::kInvalidDescriptorId) {
          const auto &fieldDesc = desc.GetFieldDescriptor(fOnDiskId);
          fOnDiskTypeVersion = fieldDesc.GetTypeVersion();
          if (fieldDesc.GetTypeChecksum().has_value())

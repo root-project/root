@@ -127,7 +127,7 @@ void ROOT::Experimental::RNTupleProcessor::ConnectField(RFieldContext &fieldCont
    auto desc = pageSource.GetSharedDescriptorGuard();
 
    const auto fieldId = desc->FindFieldId(fieldContext.GetProtoField().GetFieldName());
-   if (fieldId == kInvalidDescriptorId) {
+   if (fieldId == ROOT::kInvalidDescriptorId) {
       throw RException(
          R__FAIL("field \"" + fieldContext.GetProtoField().GetFieldName() + "\" not found in current RNTuple"));
    }

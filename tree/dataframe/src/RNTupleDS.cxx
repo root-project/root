@@ -230,7 +230,7 @@ public:
 
 RNTupleDS::~RNTupleDS() = default;
 
-void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName, DescriptorId_t fieldId,
+void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName, ROOT::DescriptorId_t fieldId,
                          std::vector<RNTupleDS::RFieldInfo> fieldInfos)
 {
    // As an example for the mapping of RNTuple fields to RDF columns, let's consider an RNTuple

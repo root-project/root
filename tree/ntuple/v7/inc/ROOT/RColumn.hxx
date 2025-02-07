@@ -61,7 +61,7 @@ private:
    /// The currently mapped page for reading
    RPageRef fReadPageRef;
    /// The column id in the column descriptor, once connected to a sink or source
-   DescriptorId_t fOnDiskId = kInvalidDescriptorId;
+   ROOT::DescriptorId_t fOnDiskId = ROOT::kInvalidDescriptorId;
    /// Global index of the first element in this column; usually == 0, unless it is a deferred column
    ROOT::NTupleSize_t fFirstElementIndex = 0;
    /// Used to pack and unpack pages on writing/reading
@@ -120,9 +120,9 @@ public:
    /// Connect the column to a page sink.  `firstElementIndex` can be used to specify the first column element index
    /// with backing storage for this column.  On read back, elements before `firstElementIndex` will cause the zero page
    /// to be mapped.
-   void ConnectPageSink(DescriptorId_t fieldId, RPageSink &pageSink, ROOT::NTupleSize_t firstElementIndex = 0U);
+   void ConnectPageSink(ROOT::DescriptorId_t fieldId, RPageSink &pageSink, ROOT::NTupleSize_t firstElementIndex = 0U);
    /// Connect the column to a page source.
-   void ConnectPageSource(DescriptorId_t fieldId, RPageSource &pageSource);
+   void ConnectPageSource(ROOT::DescriptorId_t fieldId, RPageSource &pageSource);
 
    void Append(const void *from)
    {
@@ -351,7 +351,7 @@ public:
    }
    std::uint32_t GetIndex() const { return fIndex; }
    std::uint16_t GetRepresentationIndex() const { return fRepresentationIndex; }
-   DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
+   ROOT::DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
    ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
    RPageSource *GetPageSource() const { return fPageSource; }
    RPageSink *GetPageSink() const { return fPageSink; }

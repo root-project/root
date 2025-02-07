@@ -1981,7 +1981,7 @@ TEST(RNTuple, TClassEBO)
       auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
       EXPECT_EQ(1U, ntuple->GetNEntries());
       auto idEmptyStruct = ntuple->GetDescriptor().FindFieldId("klass.:_0");
-      EXPECT_NE(idEmptyStruct, ROOT::Experimental::kInvalidDescriptorId);
+      EXPECT_NE(idEmptyStruct, ROOT::kInvalidDescriptorId);
       auto viewKlass = ntuple->GetView<TestEBO>("klass");
       EXPECT_EQ(42, viewKlass(0).u64);
    }

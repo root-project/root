@@ -278,7 +278,7 @@ struct RDescriptorsComparison {
 };
 
 struct RColumnOutInfo {
-   DescriptorId_t fColumnId;
+   ROOT::DescriptorId_t fColumnId;
    ENTupleColumnType fColumnType;
 };
 
@@ -299,8 +299,8 @@ struct RColumnMergeInfo {
    // the columns' parent fields' names plus the index of the column itself.
    // e.g. "Muon.pt.x._0"
    std::string fColumnName;
-   DescriptorId_t fInputId;
-   DescriptorId_t fOutputId;
+   ROOT::DescriptorId_t fInputId;
+   ROOT::DescriptorId_t fOutputId;
    ENTupleColumnType fColumnType;
    // If nullopt, use the default in-memory type
    std::optional<std::type_index> fInMemoryType;
@@ -391,7 +391,7 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
 
    for (const auto &dstField : dst.GetTopLevelFields()) {
       const auto srcFieldId = src.FindFieldId(dstField.GetFieldName());
-      if (srcFieldId != kInvalidDescriptorId) {
+      if (srcFieldId != ROOT::kInvalidDescriptorId) {
          const auto &srcField = src.GetFieldDescriptor(srcFieldId);
          commonFields.push_back({&srcField, &dstField});
       } else {
@@ -400,7 +400,7 @@ CompareDescriptorStructure(const RNTupleDescriptor &dst, const RNTupleDescriptor
    }
    for (const auto &srcField : src.GetTopLevelFields()) {
       const auto dstFieldId = dst.FindFieldId(srcField.GetFieldName());
-      if (dstFieldId == kInvalidDescriptorId)
+      if (dstFieldId == ROOT::kInvalidDescriptorId)
          res.fExtraSrcFields.push_back(&srcField);
    }
 
@@ -579,7 +579,7 @@ static void ExtendDestinationModel(std::span<const RFieldDescriptor *> newFields
 
 // Merges all columns appearing both in the source and destination RNTuples, just copying them if their
 // compression matches ("fast merge") or by unsealing and resealing them with the proper compression.
-void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, DescriptorId_t clusterId,
+void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, ROOT::DescriptorId_t clusterId,
                                        std::span<RColumnMergeInfo> commonColumns,
                                        const RCluster::ColumnSet_t &commonColumnSet,
                                        RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData)
@@ -690,7 +690,7 @@ static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnMer
       // and can be skipped.
       bool skipColumn = false;
       auto nRepetitions = std::max<std::uint64_t>(field->GetNRepetitions(), 1);
-      for (auto parentId = field->GetParentId(); parentId != kInvalidDescriptorId;) {
+      for (auto parentId = field->GetParentId(); parentId != ROOT::kInvalidDescriptorId;) {
          const RFieldDescriptor &parent = mergeData.fSrcDescriptor->GetFieldDescriptor(parentId);
          if (parent.GetStructure() == ROOT::ENTupleStructure::kCollection ||
              parent.GetStructure() == ROOT::ENTupleStructure::kVariant) {
@@ -766,8 +766,8 @@ void RNTupleMerger::MergeSourceClusters(RPageSource &source, std::span<RColumnMe
    // Loop over all clusters in this file.
    // descriptor->GetClusterIterable() doesn't guarantee any specific order, so we explicitly
    // request the first cluster.
-   DescriptorId_t clusterId = mergeData.fSrcDescriptor->FindClusterId(0, 0);
-   while (clusterId != kInvalidDescriptorId) {
+   ROOT::DescriptorId_t clusterId = mergeData.fSrcDescriptor->FindClusterId(0, 0);
+   while (clusterId != ROOT::kInvalidDescriptorId) {
       const auto &clusterDesc = mergeData.fSrcDescriptor->GetClusterDescriptor(clusterId);
       const auto nClusterEntries = clusterDesc.GetNEntries();
       R__ASSERT(nClusterEntries > 0);

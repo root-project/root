@@ -39,11 +39,11 @@ protected:
 
    std::string fParentName;
 
-   ROOT::Experimental::DescriptorId_t fFieldId;
+   ROOT::DescriptorId_t fFieldId;
 
 public:
    RFieldElement(std::shared_ptr<ROOT::Experimental::RNTupleReader> ntplReader, const std::string &parent_name,
-                 const ROOT::Experimental::DescriptorId_t id)
+                 const ROOT::DescriptorId_t id)
       : RElement(), fNtplReader(ntplReader), fParentName(parent_name), fFieldId(id)
    {
    }
@@ -153,13 +153,13 @@ public:
 class RFieldsIterator : public RLevelIter {
 
    std::shared_ptr<ROOT::Experimental::RNTupleReader> fNtplReader;
-   std::vector<ROOT::Experimental::DescriptorId_t> fFieldIds;
+   std::vector<ROOT::DescriptorId_t> fFieldIds;
    std::string fParentName;
    int fCounter{-1};
 
 public:
    RFieldsIterator(std::shared_ptr<ROOT::Experimental::RNTupleReader> ntplReader,
-                   std::vector<ROOT::Experimental::DescriptorId_t> &&ids, const std::string &parent_name = ""s)
+                   std::vector<ROOT::DescriptorId_t> &&ids, const std::string &parent_name = ""s)
       : fNtplReader(ntplReader), fFieldIds(ids), fParentName(parent_name)
    {
    }
@@ -210,7 +210,7 @@ public:
 
 std::unique_ptr<RLevelIter> RFieldElement::GetChildsIter()
 {
-   std::vector<ROOT::Experimental::DescriptorId_t> ids;
+   std::vector<ROOT::DescriptorId_t> ids;
    std::string prefix;
 
    for (auto &f : fNtplReader->GetDescriptor().GetFieldIterable(fFieldId))
@@ -229,7 +229,7 @@ std::unique_ptr<RLevelIter> RFieldElement::GetChildsIter()
 
 std::unique_ptr<RLevelIter> RNTupleElement::GetChildsIter()
 {
-   std::vector<ROOT::Experimental::DescriptorId_t> ids;
+   std::vector<ROOT::DescriptorId_t> ids;
 
    for (auto &f : fNtplReader->GetDescriptor().GetTopLevelFields())
       ids.emplace_back(f.GetId());

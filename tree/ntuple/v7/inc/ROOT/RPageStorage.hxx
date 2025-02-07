@@ -133,12 +133,13 @@ public:
    using SealedPageSequence_t = std::deque<RSealedPage>;
    /// A range of sealed pages referring to the same column that can be used for vector commit
    struct RSealedPageGroup {
-      DescriptorId_t fPhysicalColumnId;
+      ROOT::DescriptorId_t fPhysicalColumnId;
       SealedPageSequence_t::const_iterator fFirst;
       SealedPageSequence_t::const_iterator fLast;
 
       RSealedPageGroup() = default;
-      RSealedPageGroup(DescriptorId_t d, SealedPageSequence_t::const_iterator b, SealedPageSequence_t::const_iterator e)
+      RSealedPageGroup(ROOT::DescriptorId_t d, SealedPageSequence_t::const_iterator b,
+                       SealedPageSequence_t::const_iterator e)
          : fPhysicalColumnId(d), fFirst(b), fLast(e)
       {
       }
@@ -171,23 +172,23 @@ public:
    virtual EPageStorageType GetType() = 0;
 
    struct RColumnHandle {
-      DescriptorId_t fPhysicalId = kInvalidDescriptorId;
+      ROOT::DescriptorId_t fPhysicalId = ROOT::kInvalidDescriptorId;
       RColumn *fColumn = nullptr;
 
       /// Returns true for a valid column handle; fColumn and fPhysicalId should always either both
       /// be valid or both be invalid.
-      explicit operator bool() const { return fPhysicalId != kInvalidDescriptorId && fColumn; }
+      explicit operator bool() const { return fPhysicalId != ROOT::kInvalidDescriptorId && fColumn; }
    };
    /// The column handle identifies a column with the current open page storage
    using ColumnHandle_t = RColumnHandle;
 
    /// Register a new column.  When reading, the column must exist in the ntuple on disk corresponding to the meta-data.
    /// When writing, every column can only be attached once.
-   virtual ColumnHandle_t AddColumn(DescriptorId_t fieldId, RColumn &column) = 0;
+   virtual ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, RColumn &column) = 0;
    /// Unregisters a column.  A page source decreases the reference counter for the corresponding active column.
    /// For a page sink, dropping columns is currently a no-op.
    virtual void DropColumn(ColumnHandle_t columnHandle) = 0;
-   DescriptorId_t GetColumnId(ColumnHandle_t columnHandle) const { return columnHandle.fPhysicalId; }
+   ROOT::DescriptorId_t GetColumnId(ColumnHandle_t columnHandle) const { return columnHandle.fPhysicalId; }
 
    /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by
    /// overriding this.
@@ -370,7 +371,8 @@ public:
    /// Write a page to the storage. The column must have been added before.
    virtual void CommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
    /// Write a preprocessed page to storage. The column must have been added before.
-   virtual void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
+   virtual void
+   CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
    /// Write a vector of preprocessed pages to storage. The corresponding columns must have been added before.
    virtual void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) = 0;
    /// Stage the current cluster and create a new one for the following data.
@@ -479,7 +481,7 @@ protected:
 
    virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
    virtual RNTupleLocator
-   CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
+   CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
    /// Vector commit of preprocessed pages. The `ranges` array specifies a range of sealed pages to be
    /// committed for each column.  The returned vector contains, in order, the RNTupleLocator for each
    /// page on each range in `ranges`, i.e. the first N entries refer to the N pages in `ranges[0]`,
@@ -518,7 +520,7 @@ public:
    static std::unique_ptr<RPageSink> Create(std::string_view ntupleName, std::string_view location,
                                             const RNTupleWriteOptions &options = RNTupleWriteOptions());
 
-   ColumnHandle_t AddColumn(DescriptorId_t fieldId, RColumn &column) final;
+   ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, RColumn &column) final;
 
    const RNTupleDescriptor &GetDescriptor() const final { return fDescriptorBuilder.GetDescriptor(); }
 
@@ -536,7 +538,7 @@ public:
 
    void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
-   void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
+   void CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    RStagedCluster StageCluster(ROOT::NTupleSize_t nNewEntries) final;
    void CommitStagedClusters(std::span<RStagedCluster> clusters) final;
@@ -616,16 +618,16 @@ private:
    bool fIsAttached = false;   ///< Set to true once `Attach()` is called
 
    /// Remembers the last cluster id from which a page was requested
-   DescriptorId_t fLastUsedCluster = kInvalidDescriptorId;
+   ROOT::DescriptorId_t fLastUsedCluster = ROOT::kInvalidDescriptorId;
    /// Clusters from where pages got preloaded in UnzipClusterImpl(), ordered by first entry number
    /// of the clusters. If the last used cluster changes in LoadPage(), all unused pages from
    /// previous clusters are evicted from the page pool.
-   std::map<ROOT::NTupleSize_t, DescriptorId_t> fPreloadedClusters;
+   std::map<ROOT::NTupleSize_t, ROOT::DescriptorId_t> fPreloadedClusters;
 
    /// Does nothing if fLastUsedCluster == clusterId. Otherwise, updated fLastUsedCluster
    /// and evict unused paged from the page pool of all previous clusters.
    /// Must not be called when the descriptor guard is taken.
-   void UpdateLastUsedCluster(DescriptorId_t clusterId);
+   void UpdateLastUsedCluster(ROOT::DescriptorId_t clusterId);
 
 protected:
    /// Default I/O performance counters that get registered in `fMetrics`
@@ -664,14 +666,17 @@ protected:
       /// indicated by the reference counter.
       /// We can only have a handful of possible in-memory representations for a given column,
       /// so it is fine to search them linearly.
-      std::unordered_map<DescriptorId_t, std::vector<RColumnInfo>> fColumnInfos;
+      std::unordered_map<ROOT::DescriptorId_t, std::vector<RColumnInfo>> fColumnInfos;
 
    public:
-      void Insert(DescriptorId_t physicalColumnId, RColumnElementBase::RIdentifier elementId);
-      void Erase(DescriptorId_t physicalColumnId, RColumnElementBase::RIdentifier elementId);
+      void Insert(ROOT::DescriptorId_t physicalColumnId, RColumnElementBase::RIdentifier elementId);
+      void Erase(ROOT::DescriptorId_t physicalColumnId, RColumnElementBase::RIdentifier elementId);
       RCluster::ColumnSet_t ToColumnSet() const;
-      bool HasColumnInfos(DescriptorId_t physicalColumnId) const { return fColumnInfos.count(physicalColumnId) > 0; }
-      const std::vector<RColumnInfo> &GetColumnInfos(DescriptorId_t physicalColumnId) const
+      bool HasColumnInfos(ROOT::DescriptorId_t physicalColumnId) const
+      {
+         return fColumnInfos.count(physicalColumnId) > 0;
+      }
+      const std::vector<RColumnInfo> &GetColumnInfos(ROOT::DescriptorId_t physicalColumnId) const
       {
          return fColumnInfos.at(physicalColumnId);
       }
@@ -680,7 +685,7 @@ protected:
    /// Summarizes cluster-level information that are necessary to load a certain page.
    /// Used by LoadPageImpl().
    struct RClusterInfo {
-      DescriptorId_t fClusterId = 0;
+      ROOT::DescriptorId_t fClusterId = 0;
       /// Location of the page on disk
       RClusterDescriptor::RPageRange::RPageInfoExtended fPageInfo;
       /// The first element number of the page's column in the given cluster
@@ -712,7 +717,7 @@ protected:
    /// commonly used as part of `LoadClusters()` in derived classes.
    void PrepareLoadCluster(
       const RCluster::RKey &clusterKey, ROnDiskPageMap &pageZeroMap,
-      std::function<void(DescriptorId_t, ROOT::NTupleSize_t, const RClusterDescriptor::RPageRange::RPageInfo &)>
+      std::function<void(ROOT::DescriptorId_t, ROOT::NTupleSize_t, const RClusterDescriptor::RPageRange::RPageInfo &)>
          perPageFunc);
 
    /// Enables the default set of metrics provided by RPageSource. `prefix` will be used as the prefix for
@@ -761,7 +766,7 @@ public:
       return RSharedDescriptorGuard(fDescriptor, fDescriptorLock);
    }
 
-   ColumnHandle_t AddColumn(DescriptorId_t fieldId, RColumn &column) override;
+   ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, RColumn &column) override;
    void DropColumn(ColumnHandle_t columnHandle) override;
 
    /// Loads header and footer without decompressing or deserializing them. This can be used to asynchronously open
@@ -793,7 +798,7 @@ public:
    /// `nullptr`, no data will be copied but the returned size information can be used by the caller to allocate a large
    /// enough buffer and call `LoadSealedPage` again.
    virtual void
-   LoadSealedPage(DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) = 0;
+   LoadSealedPage(ROOT::DescriptorId_t physicalColumnId, RNTupleLocalIndex localIndex, RSealedPage &sealedPage) = 0;
 
    /// Populates all the pages of the given cluster ids and columns; it is possible that some columns do not
    /// contain any pages.  The page source may load more columns than the minimal necessary set from `columns`.
