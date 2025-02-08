@@ -121,7 +121,7 @@ TEST(TFileMerger, MergeBranches)
    TTree dummy("emptytree","emptytitle");
    TList treelist;
    
-   // Case 1 - Static - NoBranch + NoEntries + 2 entries
+   // Case 1 - Static: NoBranch + NoEntries + 2 entries
    treelist.Add(&dummy);
    treelist.Add(&atree);
    treelist.Add(&abtree);
@@ -132,7 +132,7 @@ TEST(TFileMerger, MergeBranches)
    ASSERT_TRUE(rtree->FindBranch("b") == nullptr);
    file1->Write();
    
-   // Case 2 - This - NoBranch + NoEntries + 2 entries
+   // Case 2 - This (NoBranch) + NoEntries + 2 entries
    treelist.Clear();
    treelist.Add(&atree);
    treelist.Add(&abtree);
