@@ -6899,7 +6899,7 @@ Long64_t TTree::Merge(TCollection* li, Option_t *options)
          // We could come from a list made up of different names, the first one still wins
          tree->SetName(this->GetName());
          auto prevEntries = tree->GetEntries();
-         auto result = tree->Merge(li, info);
+         auto result = tree->Merge(li, options);
          if (result != prevEntries) {
             // If there is no additional entries, the first write was enough.
             tree->Write();
