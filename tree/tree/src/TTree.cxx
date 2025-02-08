@@ -6932,8 +6932,7 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
       } else {
          TDirectory::TContext ctxt(info->fOutputDirectory);
          TIOFeatures saved_features = fIOFeatures;
-         Long64_t nentries = GetEntries();
-         TTree *newtree = CloneTree(nentries == 0 ? 0 : -1, options);
+         TTree *newtree = CloneTree(-1, options);
          if (info->fIOFeatures)
             fIOFeatures = *(info->fIOFeatures);
          else
