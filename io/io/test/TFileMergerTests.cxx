@@ -142,16 +142,19 @@ TEST(TFileMerger, MergeBranches)
    ASSERT_TRUE(dummy.FindBranch("a") != nullptr);
    ASSERT_TRUE(dummy.FindBranch("b") == nullptr);
    EXPECT_EQ(dummy.FindBranch("a")->GetEntries(), 2);
+   EXPECT_EQ(atree.FindBranch("a")->GetEntries(), 2); // atree has now 2 entries instead of zero since it was used as skeleton for dummy
    file2->Write();
 
    // Case 3 - This (NoEntries) + 2 entries
+   TTree a0tree("a0tree", "a0title"); // We cannot reuse atree since it was cannibalized by dummy
+   a0tree.Branch("a", &value);
    treelist.Clear();
    treelist.Add(&abtree);
    std::unique_ptr<TFile> file3(TFile::Open("d_4716.root", "RECREATE"));
    TFileMergeInfo info3(file3.get());
-   atree.Merge(&treelist, &info3);
-   ASSERT_TRUE(atree.FindBranch("a") != nullptr);
-   ASSERT_TRUE(atree.FindBranch("b") == nullptr);
-   EXPECT_EQ(atree.FindBranch("a")->GetEntries(), 2);
+   a0tree.Merge(&treelist, &info3);
+   ASSERT_TRUE(a0tree.FindBranch("a") != nullptr);
+   ASSERT_TRUE(a0tree.FindBranch("b") == nullptr);
+   EXPECT_EQ(a0tree.FindBranch("a")->GetEntries(), 2);
    file3->Write();
 }
