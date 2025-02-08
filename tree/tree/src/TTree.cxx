@@ -6840,6 +6840,9 @@ bool TTree::MemoryFull(Int_t nbytes)
 /// are copied.
 /// Entries are not copied, just branch name / type is cloned
 /// Branches marked as DoNotProcess are not merged
+/// If this tree had some entries already in other branches and the new tree incorporates a new branch,
+/// when importing the branch, we backfill the branch value with default values until GetEntries is reached,
+/// to prevent misalignments in the TTree structure between branches / entries.
 /// @param tree the outside TTree whose branches will be copied into this tree
 /// @return boolean true on sucess, false otherwise
 
