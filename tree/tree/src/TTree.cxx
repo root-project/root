@@ -6838,6 +6838,8 @@ bool TTree::MemoryFull(Int_t nbytes)
 ///
 /// Trees in the list can be memory or disk-resident trees.
 /// The new tree is created in the current directory (memory if gROOT).
+/// Trees with no branches will be skipped, the branch structure
+/// will be taken from the first non-zero-branch Tree of {li}
 
 TTree* TTree::MergeTrees(TList* li, Option_t* options)
 {
@@ -6880,9 +6882,38 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
 /// Merge the trees in the TList into this tree.
 ///
 /// Returns the total number of entries in the merged tree.
+/// Trees with no branches will be skipped, the branch structure
+/// will be taken from the first non-zero-branch Tree of {this+li}
 
 Long64_t TTree::Merge(TCollection* li, Option_t *options)
 {
+    if (fBranches.IsEmpty()) {
+       if (!li || li->IsEmpty())
+          return 0; // Nothing to do ....
+      // Let's find the first non-empty
+      TIter next(li);
+      TTree *tree;
+      while ((tree = (TTree*)next())) {
+         if (tree==this || tree->GetListOfBranches()->IsEmpty())
+            continue;
+         // We could come from a list made up of different names, the first one still wins
+         tree->SetName(this->GetName());
+         auto prevEntries = tree->GetEntries();
+         auto result = tree->Merge(li, info);
+         if (result != prevEntries) {
+            // If there is no additional entries, the first write was enough.
+            tree->Write();
+         }
+         // Make sure things are really written out to disk before attempting any reading.
+         if (tree->GetCurrentFile()) {
+            tree->GetCurrentFile()->Flush();
+            // Read back the complete info in this TTree, so that caller does not 
+            // inadvertently write the empty tree.
+            tree->GetDirectory()->ReadTObject(this, this->GetName());
+         }
+         return result;
+      }
+   }
    if (!li) return 0;
    Long64_t storeAutoSave = fAutoSave;
    // Disable the autosave as the TFileMerge keeps a list of key and deleting the underlying
@@ -6915,11 +6946,38 @@ Long64_t TTree::Merge(TCollection* li, Option_t *options)
 /// info->fOutputDirectory and then overlay the new TTree information onto
 /// this TTree object (so that this TTree object is now the appropriate to
 /// use for further merging).
+/// Trees with no branches will be skipped, the branch structure
+/// will be taken from the first non-zero-branch Tree of {this+li}
 ///
 /// Returns the total number of entries in the merged tree.
 
 Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
 {
+    if (fBranches.IsEmpty()) {
+       if (!li || li->IsEmpty())
+          return 0; // Nothing to do ....
+      // Let's find the first non-empty
+      TIter next(li);
+      TTree *tree;
+      while ((tree = (TTree*)next())) {
+         if (tree==this || tree->GetListOfBranches()->IsEmpty())
+            continue;
+         // We could come from a list made up of different names, the first one still wins
+         tree->SetName(this->GetName());
+         auto prevEntries = tree->GetEntries();
+         auto result = tree->Merge(li, info);
+         if (result != prevEntries) {
+            // If there is no additional entries, the first write was enough.
+            tree->Write();
+         }
+         // Make sure things are really written out to disk before attempting any reading.
+         info->fOutputDirectory->GetFile()->Flush();
+         // Read back the complete info in this TTree, so that TFileMerge does not 
+         // inadvertently write the empty tree.
+         info->fOutputDirectory->ReadTObject(this, this->GetName());
+         return result;
+      }
+   }
    const char *options = info ? info->fOptions.Data() : "";
    if (info && info->fIsFirst && info->fOutputDirectory && info->fOutputDirectory->GetFile() != GetCurrentFile()) {
       if (GetCurrentFile() == nullptr) {
