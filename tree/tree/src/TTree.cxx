@@ -6849,9 +6849,13 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
    while ((obj=next())) {
       if (!obj->InheritsFrom(TTree::Class())) continue;
       TTree *tree = (TTree*)obj;
+      if (tree->GetListOfBranches()->IsEmpty())
+         continue; // Completely ignore the empty trees.
       Long64_t nentries = tree->GetEntries();
+      if (newtree && nentries == 0)
+         continue; // If we already have the structure and we have no entry, save time and skip
       if (!newtree) {
-         newtree = (TTree*)tree->CloneTree(nentries == 0 ? 0 : -1, options);
+         newtree = (TTree*)tree->CloneTree(-1, options);
          if (!newtree) continue;
 
          // Once the cloning is done, separate the trees,
