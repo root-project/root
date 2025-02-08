@@ -1,13 +1,16 @@
 # This is a template for all makefiles.
 
+# Don't clean the utils library.
+ifneq ($(MAKECMDGOALS),cleantest)
 #Set the list of files to be deleted by clean (Targets can also be specified).:
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog pt_collector$(ExeSuf)
+endif
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += mytest
+TEST_TARGETS += utils
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -64,5 +67,4 @@ endif
 
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
-
 
