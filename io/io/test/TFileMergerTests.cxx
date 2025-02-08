@@ -125,9 +125,7 @@ TEST(TFileMerger, ImportBranches)
    treelist.Add(&atree);
    treelist.Add(&abtree);
    std::unique_ptr<TFile> file1(TFile::Open("b4716.root", "RECREATE"));
-   TFileMergeInfo info1(file1.get());
-   info1.fOptions += " ImportBranches";
-   auto rtree = TTree::MergeTrees(&treelist);
+   auto rtree = TTree::MergeTrees(&treelist, "ImportBranches");
    file1->Write();
    ASSERT_TRUE(rtree->FindBranch("a") != nullptr);
    EXPECT_EQ(rtree->FindBranch("a")->GetEntries(),2);
