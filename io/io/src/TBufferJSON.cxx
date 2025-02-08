@@ -717,8 +717,10 @@ TString TBufferJSON::StoreObject(const void *obj, const TClass *cl)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Converts selected data member into json
-/// Parameter ptr specifies address in memory, where data member is located
-/// compact parameter defines compactness of produced JSON (from 0 to 3)
+/// Parameter ptr specifies address in memory, where data member is located.
+/// Note; if data member described by 'member'is pointer, `ptr` should be the
+/// value of the pointer, not the address of the pointer.
+/// compact parameter defines compactness of produced JSON (from 0 to 3).
 /// arraylen (when specified) is array length for this data member,  //[fN] case
 
 TString TBufferJSON::ConvertToJSON(const void *ptr, TDataMember *member, Int_t compact, Int_t arraylen)
@@ -1002,6 +1004,8 @@ void *TBufferJSON::ConvertFromJSONChecked(const char *str, const TClass *expecte
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert single data member to JSON structures
+/// Note; if data member described by 'member'is pointer, `ptr` should be the
+/// value of the pointer, not the address of the pointer.
 /// Returns string with converted member
 
 TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member, TClass *memberClass, Int_t arraylen)
