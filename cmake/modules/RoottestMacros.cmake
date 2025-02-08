@@ -631,6 +631,7 @@ function(ROOTTEST_ADD_OLDTEST)
                      COMMAND ${ROOT_GMAKE_PROGRAM} cleantest ${ROOTTEST_PARALLEL_MAKE}
                      WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                      DEPENDS roottest-root-io-event
+                     FIXTURES_REQUIRED UtilsLibraryBuild
                      LABELS ${ARG_LABELS} TIMEOUT ${ARG_TIMEOUT})
   if(MSVC)
     ROOTTEST_TARGETNAME_FROM_FILE(testprefix .)
