@@ -6913,6 +6913,7 @@ Long64_t TTree::Merge(TCollection* li, Option_t *options)
          }
          return result;
       }
+      return 0; // All trees have empty branches
    }
    if (!li) return 0;
    Long64_t storeAutoSave = fAutoSave;
@@ -6977,6 +6978,7 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
          info->fOutputDirectory->ReadTObject(this, this->GetName());
          return result;
       }
+      return 0; // All trees have empty branches
    }
    const char *options = info ? info->fOptions.Data() : "";
    if (info && info->fIsFirst && info->fOutputDirectory && info->fOutputDirectory->GetFile() != GetCurrentFile()) {
