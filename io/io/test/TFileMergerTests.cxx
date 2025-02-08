@@ -113,40 +113,45 @@ TEST(TFileMerger, MergeBranches)
    TTree abtree("abtree", "abtitle");
    abtree.Branch("a", &value);
    abtree.Branch("b", &value);
+   value = 11;
+   abtree.Fill();
    value = 42;
    abtree.Fill();
   
    TTree dummy("emptytree","emptytitle");
    TList treelist;
    
-   // Case 1 - Static - NoBranch + NoEntries + 1 entry
+   // Case 1 - Static - NoBranch + NoEntries + 2 entries
    treelist.Add(&dummy);
    treelist.Add(&atree);
    treelist.Add(&abtree);
-   std::unique_ptr<TFile> file(TFile::Open("b_4716.root", "RECREATE"));
+   std::unique_ptr<TFile> file1(TFile::Open("b_4716.root", "RECREATE"));
    auto rtree = TTree::MergeTrees(&treelist);
    ASSERT_TRUE(rtree->FindBranch("a") != nullptr);
+   EXPECT_EQ(rtree->FindBranch("a")->GetEntries(), 2);
    ASSERT_TRUE(rtree->FindBranch("b") == nullptr);
-   EXPECT_EQ(rtree->FindBranch("a")->GetEntries(),1);
-
-   // Case 2 - This - NoBranch + NoEntries + 1 entry
+   file1->Write();
+   
+   // Case 2 - This - NoBranch + NoEntries + 2 entries
    treelist.Clear();
    treelist.Add(&atree);
    treelist.Add(&abtree);
-   std::unique_ptr<TFile> file(TFile::Open("c_4716.root", "RECREATE"));
-   TFileMergeInfo info(file.get());
-   dummy.Merge(&treelist, &info);
+   std::unique_ptr<TFile> file2(TFile::Open("c_4716.root", "RECREATE"));
+   TFileMergeInfo info2(file2.get());
+   dummy.Merge(&treelist, &info2);
    ASSERT_TRUE(dummy.FindBranch("a") != nullptr);
    ASSERT_TRUE(dummy.FindBranch("b") == nullptr);
-   EXPECT_EQ(dummy.FindBranch("a")->GetEntries(),2);
+   EXPECT_EQ(dummy.FindBranch("a")->GetEntries(), 2);
+   file2->Write();
 
-   // Case 3 - This (NoEntries) + 1 entry
+   // Case 3 - This (NoEntries) + 2 entries
    treelist.Clear();
    treelist.Add(&abtree);
-   std::unique_ptr<TFile> file2(TFile::Open("d_4716.root", "RECREATE"));
-   TFileMergeInfo info2(file2.get());
-   atree.Merge(&treelist, &info2);
+   std::unique_ptr<TFile> file3(TFile::Open("d_4716.root", "RECREATE"));
+   TFileMergeInfo info3(file3.get());
+   atree.Merge(&treelist, &info3);
    ASSERT_TRUE(atree.FindBranch("a") != nullptr);
    ASSERT_TRUE(atree.FindBranch("b") == nullptr);
-   EXPECT_EQ(atree.FindBranch("a")->GetEntries(),2);
+   EXPECT_EQ(atree.FindBranch("a")->GetEntries(), 2);
+   file3->Write();
 }
