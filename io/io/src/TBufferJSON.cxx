@@ -671,6 +671,8 @@ TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl, Int_t comp
       }
 
       void *ptr = (char *)actualStart + rdata->GetThisOffset();
+      if (member->IsaPointer())
+         ptr = *((char **)ptr);
 
       return TBufferJSON::ConvertToJSON(ptr, member, compact, arraylen);
    }
@@ -721,7 +723,7 @@ TString TBufferJSON::StoreObject(const void *obj, const TClass *cl)
 
 TString TBufferJSON::ConvertToJSON(const void *ptr, TDataMember *member, Int_t compact, Int_t arraylen)
 {
-   if (!member || !ptr || (member->IsaPointer() && (*(void **)ptr) == nullptr))
+   if (!ptr || !member)
       return TString("null");
 
    Bool_t stlstring = !strcmp(member->GetTrueTypeName(), "string");
@@ -731,11 +733,8 @@ TString TBufferJSON::ConvertToJSON(const void *ptr, TDataMember *member, Int_t c
    TClass *mcl = member->IsBasic() ? nullptr : gROOT->GetClass(member->GetTypeName());
 
    if (mcl && (mcl != TString::Class()) && !stlstring && !isstl && (mcl->GetBaseClassOffset(TArray::Class()) != 0) &&
-       (arraylen <= 0) && (member->GetArrayDim() == 0)) {
-      if (member->IsaPointer())
-         ptr = *((char **)ptr);
+       (arraylen <= 0) && (member->GetArrayDim() == 0))
       return TBufferJSON::ConvertToJSON(ptr, mcl, compact);
-   }
 
    TBufferJSON buf;
 
@@ -1019,9 +1018,6 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member, TClas
       tid = kCharStar;
    else if (!member->IsBasic() || (tid == kOther_t) || (tid == kVoid_t))
       tid = kNoType_t;
-
-   if (ptr && member->IsaPointer())
-      ptr = *((void **)ptr);
 
    if (!ptr)
       return (tid == kCharStar) ? "\"\"" : "null";
