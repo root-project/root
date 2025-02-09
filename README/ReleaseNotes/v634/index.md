@@ -658,7 +658,7 @@ Published on December 16, 2024
 
 ### Items addressed in this release
 
-This release includes a few minor fixes in RDataFrame and RooFit, besides the item below. Moreover, built-in Davix was patched to build with GCC14 while waiting for the new Davix release.
+This release includes a few minor fixes in RDataFrame and RooFit, besides the items below. Moreover, built-in Davix was patched to build with GCC14 while waiting for the new Davix release.
 
 * [[#17145](https://github.com/root-project/root/issues/17145)] - Distributed RDataFrame cannot deal with same column name in different branches
 - [[#17190](https://github.com/root-project/root/issues/17190)] - Compiler error with GCC 14.2.0 related to Davix
@@ -666,3 +666,21 @@ This release includes a few minor fixes in RDataFrame and RooFit, besides the it
 - [[#17223](https://github.com/root-project/root/issues/17223)] - TFileMerger leaves files open resulting in corrupt metadata
 
 ## HEAD of the v6-34-00-patches branch
+
+This branch includes a few minor fixes in RDataFrame, as well as a mechanism was added to specify binding options when opening sockets with TSocketServer. 
+Moreover, the items listed below were addressed:
+
+* [[ROOT-7372](https://its.cern.ch/jira/browse/ROOT-7372)] - Accessing complex map branches crashes in PyROOT
+* [[ROOT-10482](https://its.cern.ch/jira/browse/ROOT-10482)] - pullHist and residHist biased
+* [[#12841](https://github.com/root-project/root/issues/12841)] - [ntuple] prefer IO constructor in RField<user class>::GenerateValue()
+* [[#14007](https://github.com/root-project/root/issues/14007)] - Cannot create a RNtuple into a TDirectory
+* [[#15473](https://github.com/root-project/root/issues/15473)] - Segmentation fault when building with the mold linker
+* [[#16189](https://github.com/root-project/root/issues/16189)] - TFile::k630forwardCompatibility does not apply to new files correctly
+* [[#16560](https://github.com/root-project/root/issues/16560)] - Issue using TColor and saving canvas to ROOT format
+* [[#17291](https://github.com/root-project/root/issues/17291)] - [RF] Parameter ordering bug in RooFormulaArgStreamer
+* [[#17305](https://github.com/root-project/root/issues/17305)] - The ONNX.Tile5D test in tmva/sofie/test/TestCustomModelsFromONNX.cxx writes array elements beyond the last element in the array
+* [[#17321](https://github.com/root-project/root/issues/17321)] - [RF] Unused Class rule
+* [[#17442](https://github.com/root-project/root/issues/17442)] - [Python] Regression in `std::bytes` support with cppyy inside ROOT
+* [[#17444](https://github.com/root-project/root/issues/17444)] - ROOT doesn't compile with gcc-15
+* [[#17472](https://github.com/root-project/root/issues/17472)] - RooEllipse not drawn in notebooks with `%jsroot on`
+
