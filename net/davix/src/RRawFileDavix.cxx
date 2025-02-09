@@ -11,6 +11,7 @@
 
 #include "ROOT/RRawFileDavix.hxx"
 
+#include <TEnv.h>
 #include <TError.h>
 
 #include <memory>
@@ -28,7 +29,16 @@ namespace ROOT {
 namespace Internal {
 
 struct RDavixFileDes {
-   RDavixFileDes() : fd(nullptr), pos(&ctx) {}
+   RDavixFileDes() : fd(nullptr), pos(&ctx)
+   {
+      // CA Check
+      const auto ca_check_local_str = gEnv->GetValue("Davix.GSI.CACheck", (const char *)"y");
+      bool ca_check_local = true;
+      if (!strcmp(ca_check_local_str, "n") || !strcmp(ca_check_local_str, "no") || !strcmp(ca_check_local_str, "0") || !strcmp(ca_check_local_str, "false")) {
+         ca_check_local = false;
+      }
+      pars.setSSLCAcheck(ca_check_local);
+   }
    RDavixFileDes(const RDavixFileDes &) = delete;
    RDavixFileDes &operator=(const RDavixFileDes &) = delete;
    ~RDavixFileDes() = default;
@@ -36,6 +46,7 @@ struct RDavixFileDes {
    DAVIX_FD *fd;
    Davix::Context ctx;
    Davix::DavPosix pos;
+   Davix::RequestParams pars;
 };
 
 } // namespace Internal
@@ -62,7 +73,7 @@ std::uint64_t ROOT::Internal::RRawFileDavix::GetSizeImpl()
 {
    struct stat buf;
    Davix::DavixError *err = nullptr;
-   if (fFileDes->pos.stat(nullptr, fUrl, &buf, &err) == -1) {
+   if (fFileDes->pos.stat(&fFileDes->pars, fUrl, &buf, &err) == -1) {
       throw std::runtime_error("Cannot determine size of '" + fUrl + "', error: " + err->getErrMsg());
    }
    return buf.st_size;
@@ -71,7 +82,7 @@ std::uint64_t ROOT::Internal::RRawFileDavix::GetSizeImpl()
 void ROOT::Internal::RRawFileDavix::OpenImpl()
 {
    Davix::DavixError *err = nullptr;
-   fFileDes->fd = fFileDes->pos.open(nullptr, fUrl, O_RDONLY, &err);
+   fFileDes->fd = fFileDes->pos.open(&fFileDes->pars, fUrl, O_RDONLY, &err);
    if (fFileDes->fd == nullptr) {
       throw std::runtime_error("Cannot open '" + fUrl + "', error: " + err->getErrMsg());
    }
@@ -102,7 +113,8 @@ void ROOT::Internal::RRawFileDavix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
       R__ASSERT(ioVec[i].fSize > 0);
    }
 
-   auto ret = fFileDes->pos.preadVec(fFileDes->fd, in.data(), out.data(), nReq, &davixErr);
+   auto ret = fFileDes->pos.preadVec(
+      fFileDes->fd, in.data(), out.data(), nReq, &davixErr);
    if (ret < 0) {
       throw std::runtime_error("Cannot do vector read from '" + fUrl + "', error: " + davixErr->getErrMsg());
    }
