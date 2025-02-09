@@ -826,4 +826,16 @@ Besides the fixes listed below, a scaling problem RDataFrame was fixed.
 * [[16562](https://github.com/root-project/root/issues/16562)] - TTreeViewer save session absolute path	
 * [[16771](https://github.com/root-project/root/issues/16771)] - Copying a default constructed `TH2Poly` fails.	
 
+## Release 6.32.10
+
+Published on February 9, 2025
+
+### Items addressed in this release
+
+In this release, minor fixes for RDataFrame were integrated, and a mechanism was added to specify binding options when opening sockets with TSocketServer.
+In addition, these items were addressed:
+
+* [[#17444](https://github.com/root-project/root/issues/17444)] - ROOT doesn't compile with gcc-15
+* [[#16189](https://github.com/root-project/root/issues/16189)] - TFile::k630forwardCompatibility does not apply to new files correctly
+
 ## HEAD of the v6-32-00-patches branch
