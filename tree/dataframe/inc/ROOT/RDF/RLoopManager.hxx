@@ -207,13 +207,11 @@ public:
    RLoopManager &operator=(RLoopManager &&) = delete;
    ~RLoopManager() override;
 
-   void JitDeclarations();
    void Jit();
    RLoopManager *GetLoopManagerUnchecked() final { return this; }
    void Run(bool jit = true);
    const ColumnNames_t &GetDefaultColumnNames() const;
    TTree *GetTree() const;
-   ::TDirectory *GetDirectory() const;
    ULong64_t GetNEmptyEntries() const { return fEmptyEntryRange.second - fEmptyEntryRange.first; }
    RDataSource *GetDataSource() const { return fDataSource.get(); }
    void Register(RDFInternal::RActionBase *actionPtr);
