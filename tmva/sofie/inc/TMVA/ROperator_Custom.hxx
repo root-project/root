@@ -43,31 +43,28 @@ public:
 
    void Initialize(RModel& model){
       model.AddNeededCustomHeader(fHeaderName);
-      for(auto& it:fInputTensorNames){
+      for(auto& it:fInputNames){
         if (model.CheckIfTensorAlreadyExist(std::string(it)) == false){
          throw std::runtime_error("TMVA SOFIE Custom " + fOpName + " Op Input Tensor " + std::string(it) + " is not found in model");
         }
       }
 
-      if(fOutputTensorNames.size() != fOutputShapes.size()){
+      if(fOutputNames.size() != fOutputShapes.size()){
         throw std::runtime_error("TMVA SOFIE Custom "+ fOpName + " Op was not intialized with the names/shapes of all the output tensors");
       }
 
-      for(long unsigned int i=0; i<fOutputTensorNames.size(); ++i){
-        model.AddIntermediateTensor(std::string(fInputTensorNames[i]), ETensorType::FLOAT, fOutputShapes[i]);
+      for(long unsigned int i=0; i<fOutputNames.size(); ++i){
+        model.AddIntermediateTensor(std::string(fOutputNames[i]), ETensorType::FLOAT, fOutputShapes[i]);
       }
 
-      auto convertToStringVec = [](const std::vector<std::string_view>& vec) {
-          return std::vector<std::string>(vec.begin(), vec.end());
-      };
 
-      model.UpdateOutputTensorList(convertToStringVec(fInputTensorNames), convertToStringVec(fOutputTensorNames));
+      model.UpdateOutputTensorList(fInputNames, fOutputNames);
 
       if (model.Verbose()) {
          std::cout << "Custom operator using " << fHeaderName;
-         for (auto & i : fInputTensorNames) std::cout << " " << i;
+         for (auto & i : fOutputNames) std::cout << " " << i;
          std::cout << " ---> ";
-         for (auto & i : fOutputTensorNames) std::cout << " " << i;
+         for (auto & i : fOutputNames) std::cout << " " << i;
          std::cout << "\n";
       }
    }
@@ -77,12 +74,12 @@ public:
       std::stringstream out;
       out << "\n//------ "<<fOpName<<" \n";
       std::string args;
-      for(long unsigned int i = 0; i<fInputTensorNames.size(); ++i){
-        args+="fTensor_"+std::string(fInputTensorNames[i])+",";
+      for(long unsigned int i = 0; i<fOutputNames.size(); ++i){
+        args+="fTensor_"+std::string(fOutputNames[i])+",";
       }
 
-      for(long unsigned int i = 0; i<fOutputTensorNames.size(); ++i){
-        args+="fTensor_"+std::string(fOutputTensorNames[i])+",";
+      for(long unsigned int i = 0; i<fOutputNames.size(); ++i){
+        args+="fTensor_"+std::string(fOutputNames[i])+",";
       }
       args.pop_back();
       out << SP << fOpName<<"::Compute("+args+");\n";
