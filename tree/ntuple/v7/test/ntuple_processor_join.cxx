@@ -94,6 +94,12 @@ TEST_F(RNTupleJoinProcessorTest, Basic)
    ntuples = {{fNTupleNames[0], fFileNames[0]}};
 
    auto proc = RNTupleProcessor::CreateJoin(ntuples, {});
+   EXPECT_STREQ("ntuple1", proc->GetProcessorName().c_str());
+
+   {
+      auto namedProc = RNTupleProcessor::CreateJoin(ntuples, {}, "my_ntuple");
+      EXPECT_STREQ("my_ntuple", namedProc->GetProcessorName().c_str());
+   }
 
    int nEntries = 0;
    for (const auto &entry : *proc) {
