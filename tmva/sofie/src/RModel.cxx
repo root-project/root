@@ -364,28 +364,31 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
    std::string memory_allocation_string = "";
    bool allocated = false;
 
-   for (auto& it:op_output_tensors){
-         if (GetTensorType(std::string(it)) == ETensorType::BOOL || fInitializedTensors.find(std::string(it)) != fInitializedTensors.end() || fDynamicTensorInfos.find(std::string(it)) != fDynamicTensorInfos.end()) continue;
+      for (auto& it : op_output_tensors) {
+         if (GetTensorType(std::string(it)) == ETensorType::BOOL || 
+            fInitializedTensors.find(std::string(it)) != fInitializedTensors.end() || 
+            fDynamicTensorInfos.find(std::string(it)) != fDynamicTensorInfos.end()) continue;
+
          auto tensor_size = GetTypeSize(GetTensorType(std::string(it))) * ConvertShapeToLength(GetTensorShape(std::string(it)));
-         memory_allocation_string += "\n // Allocating memory for intermediate tensor " + std::string(it) + " with size " + tensor_size + " bytes";
-         if (!fIntermediateMemoryInfo.available_memory.empty()){
+         memory_allocation_string += "\n // Allocating memory for intermediate tensor " + std::string(it) + " with size " + std::to_string(tensor_size) + " bytes";
+         
             for (auto chunk = fIntermediateMemoryInfo.available_memory.begin(); chunk != fIntermediateMemoryInfo.available_memory.end(); ) {
-               
-               // check if available memory chunks are capable of accomodating the tensor
-               if (chunk->second >= tensor_size) {
-                  chunk->second -= tensor_size;
-                  allocated = true;
-                  memory_allocation_string += "\n"+ ConvertTypeToString(GetTensorType(std::string(it))) + "* tensor_"+ std::string(it) + "= reinterpret_cast<float*>(fIntermediateMemoryPool+" + chunk->first + ");\n";
-                  chunk->first += tensor_size;
-                  
-                  if (chunk->second == 0) {
+                  // check if available memory chunks can accommodate the tensor
+                  if (chunk->second >= tensor_size) {
+                     chunk->second -= tensor_size;
+                     memory_allocation_string += "\n" + ConvertTypeToString(GetTensorType(std::string(it))) + 
+                                                "* tensor_" + std::string(it) + 
+                                                " = reinterpret_cast<float*>(fIntermediateMemoryPool + " + std::to_string(chunk->first) + ");\n";
+                     chunk->first += tensor_size;
+                     allocated = true;
+                     
+                     if (chunk->second == 0) {
                         chunk = fIntermediateMemoryInfo.available_memory.erase(chunk);
-                        continue;
+                     }
+                     break;
                   }
-               }
-               ++chunk;
+                  ++chunk;
             }
-         } 
 
          if (!allocated) {
             if (fIntermediateMemoryInfo.total_memory.size()){
