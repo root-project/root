@@ -66,7 +66,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern/d
 - [Working with collections](\ref working_with_collections)
 - [Transformations: manipulating data](\ref transformations)
 - [Actions: getting results](\ref actions)
-- [Distributed execution in Python](rdf_distrdf)
+- [Distributed execution in Python](\ref rdf_distrdf)
 - [Performance tips and parallel execution](\ref parallel-execution)
 - [More features](\ref more-features)
    - [Systematic variations](\ref systematics)
