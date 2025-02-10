@@ -34,9 +34,6 @@
 #include "TStopwatch.h"
 
 #include "TVirtualFitter.h"
-// #include "TFitterMinuit.h"
-//  #include "TFitterFumili.h"
-//  #include "TFumili.h"
 
 #include "GaussFunction.h"
 
@@ -402,13 +399,6 @@ int FitUsingTFit(T *hist, TF1 *func)
    // std::cout << "iret " << iret << std::endl;
 #ifdef DEBUG
    func->SetParameters(iniPar);
-   //    if (fitter == "Minuit2") {
-   //       // increase print level
-   //       TVirtualFitter * tvf = TVirtualFitter::GetFitter();
-   //       TFitterMinuit * minuit2 = dynamic_cast<TFitterMinuit * >(tvf);
-   //       assert (minuit2 != 0);
-   //       minuit2->SetPrintLevel(3);
-   //    }
    if (MinType::name() != "Linear")
       iret |= hist->Fit(func, "BFV0");
    else

@@ -19,9 +19,10 @@ bool Minimizer::SetCovarianceDiag(std::span<const double> g2, unsigned int n)
    return false;
 }
 
-/** set initial values for covariance/error matrix
-    The covariance matrix must be provided in compressed form (row-major ordered upper traingular part)
-*/
+/** 
+ * Set initial values for covariance/error matrix.
+ * The covariance matrix must be provided in compressed form (row-major ordered upper traingular part)
+ */
 bool Minimizer::SetCovariance(std::span<const double> cov, unsigned int nrow)
 {
    MATH_UNUSED(cov);
@@ -29,8 +30,15 @@ bool Minimizer::SetCovariance(std::span<const double> cov, unsigned int nrow)
    return false;
 }
 
-/// set a new upper/lower limited variable (override if minimizer supports them ) otherwise as default set an unlimited
-/// variable
+/// Set a new upper/lower limited variable (override if minimizer supports them) otherwise as default set an unlimited
+/// variable (i.e. the lower and upper bounds will be ignored).
+/// @see Minimizer::SetVariable
+/// @param ivar the index of this variable in the array
+/// @param name the variable name
+/// @param val the value
+/// @param step the step size
+/// @param lower the lower bound
+/// @param upper this upper bound
 bool Minimizer::SetLimitedVariable(unsigned int ivar, const std::string &name, double val, double step, double lower,
                                    double upper)
 {
@@ -40,7 +48,7 @@ bool Minimizer::SetLimitedVariable(unsigned int ivar, const std::string &name, d
    return SetVariable(ivar, name, val, step);
 }
 
-/// set a new fixed variable (override if minimizer supports them )
+/// Set a new fixed variable (override if minimizer supports them).
 bool Minimizer::SetFixedVariable(unsigned int ivar, const std::string &name, double val)
 {
    MATH_ERROR_MSG("Minimizer::SetFixedVariable", "Setting of fixed variable not implemented");
@@ -49,7 +57,7 @@ bool Minimizer::SetFixedVariable(unsigned int ivar, const std::string &name, dou
    MATH_UNUSED(val);
    return false;
 }
-/// set the value of an already existing variable
+/// Set the value of an already existing variable.
 bool Minimizer::SetVariableValue(unsigned int ivar, double value)
 {
    MATH_ERROR_MSG("Minimizer::SetVariableValue", "Set of a variable value not implemented");
@@ -58,7 +66,7 @@ bool Minimizer::SetVariableValue(unsigned int ivar, double value)
    return false;
 }
 
-/// set the step size of an already existing variable
+/// Set the step size of an already existing variable.
 bool Minimizer::SetVariableStepSize(unsigned int ivar, double value)
 {
    MATH_ERROR_MSG("Minimizer::SetVariableStepSize", "Setting an existing variable step size not implemented");
@@ -66,7 +74,7 @@ bool Minimizer::SetVariableStepSize(unsigned int ivar, double value)
    MATH_UNUSED(value);
    return false;
 }
-/// set the lower-limit of an already existing variable
+/// Set the lower-limit of an already existing variable.
 bool Minimizer::SetVariableLowerLimit(unsigned int ivar, double lower)
 {
    MATH_ERROR_MSG("Minimizer::SetVariableLowerLimit", "Setting an existing variable limit not implemented");
@@ -74,7 +82,7 @@ bool Minimizer::SetVariableLowerLimit(unsigned int ivar, double lower)
    MATH_UNUSED(lower);
    return false;
 }
-/// set the upper-limit of an already existing variable
+/// Set the upper-limit of an already existing variable.
 bool Minimizer::SetVariableUpperLimit(unsigned int ivar, double upper)
 {
    MATH_ERROR_MSG("Minimizer::SetVariableUpperLimit", "Setting an existing variable limit not implemented");
@@ -83,29 +91,29 @@ bool Minimizer::SetVariableUpperLimit(unsigned int ivar, double upper)
    return false;
 }
 
-/// fix an existing variable
+/// Fix an existing variable.
 bool Minimizer::FixVariable(unsigned int ivar)
 {
    MATH_ERROR_MSG("Minimizer::FixVariable", "Fixing an existing variable not implemented");
    MATH_UNUSED(ivar);
    return false;
 }
-/// release an existing variable
+/// Release an existing variable.
 bool Minimizer::ReleaseVariable(unsigned int ivar)
 {
    MATH_ERROR_MSG("Minimizer::ReleaseVariable", "Releasing an existing variable not implemented");
    MATH_UNUSED(ivar);
    return false;
 }
-/// query if an existing variable is fixed (i.e. considered constant in the minimization)
-/// note that by default all variables are not fixed
+/// Query if an existing variable is fixed (i.e. considered constant in the minimization).
+/// @note By default all variables are not fixed.
 bool Minimizer::IsFixedVariable(unsigned int ivar) const
 {
    MATH_ERROR_MSG("Minimizer::IsFixedVariable", "Querying an existing variable not implemented");
    MATH_UNUSED(ivar);
    return false;
 }
-/// get variable settings in a variable object (like ROOT::Fit::ParamsSettings)
+/// Get variable settings in a variable object (like ROOT::Fit::ParamsSettings).
 bool Minimizer::GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings &pars) const
 {
    MATH_ERROR_MSG("Minimizer::GetVariableSettings", "Querying an existing variable not implemented");
@@ -113,10 +121,11 @@ bool Minimizer::GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSetti
    MATH_UNUSED(pars);
    return false;
 }
-/** return covariance matrices element for variables ivar,jvar
-    if the variable is fixed the return value is zero
-    The ordering of the variables is the same as in the parameter and errors vectors
-*/
+/**
+ * @return covariance matrices element for variables ivar,jvar
+ * if the variable is fixed the return value is zero.
+ * The ordering of the variables is the same as in the parameter and errors vectors.
+ */
 double Minimizer::CovMatrix(unsigned int ivar, unsigned int jvar) const
 {
    MATH_UNUSED(ivar);
@@ -125,13 +134,13 @@ double Minimizer::CovMatrix(unsigned int ivar, unsigned int jvar) const
 }
 
 /**
-    Fill the passed array with the  covariance matrix elements
-    if the variable is fixed or const the value is zero.
-    The array will be filled as cov[i *ndim + j]
-    The ordering of the variables is the same as in errors and parameter value.
-    This is different from the direct interface of Minuit2 or TMinuit where the
-    values were obtained only to variable parameters
-*/
+ * Fill the passed array with the  covariance matrix elements
+ *  if the variable is fixed or const the value is zero.
+ *  The array will be filled as cov[i *ndim + j]
+ *  The ordering of the variables is the same as in errors and parameter value.
+ *  This is different from the direct interface of Minuit2 or TMinuit where the
+ *  values were obtained only to variable parameters
+ */
 bool Minimizer::GetCovMatrix(double *covMat) const
 {
    MATH_UNUSED(covMat);
@@ -139,12 +148,12 @@ bool Minimizer::GetCovMatrix(double *covMat) const
 }
 
 /**
-    Fill the passed array with the Hessian matrix elements
-    The Hessian matrix is the matrix of the second derivatives
-    and is the inverse of the covariance matrix
-    If the variable is fixed or const the values for that variables are zero.
-    The array will be filled as h[i *ndim + j]
-*/
+ *  Fill the passed array with the Hessian matrix elements
+ *  The Hessian matrix is the matrix of the second derivatives
+ *  and is the inverse of the covariance matrix
+ *  If the variable is fixed or const the values for that variables are zero.
+ *  The array will be filled as h[i *ndim + j]
+ */
 bool Minimizer::GetHessianMatrix(double *hMat) const
 {
    MATH_UNUSED(hMat);
@@ -152,11 +161,11 @@ bool Minimizer::GetHessianMatrix(double *hMat) const
 }
 
 /**
-   return global correlation coefficient for variable i
-   This is a number between zero and one which gives
-   the correlation between the i-th parameter  and that linear combination of all
-   other parameters which is most strongly correlated with i.
-   Minimizer must overload method if implemented
+ * @return global correlation coefficient for variable i.
+ * This is a number between zero and one which gives
+ * the correlation between the i-th parameter  and that linear combination of all
+ * other parameters which is most strongly correlated with i.
+ * Minimizer must overload method if implemented
  */
 double Minimizer::GlobalCC(unsigned int ivar) const
 {
@@ -165,10 +174,10 @@ double Minimizer::GlobalCC(unsigned int ivar) const
 }
 
 /**
-   minos error for variable i, return false if Minos failed or not supported
-   and the lower and upper errors are returned in errLow and errUp
-   An extra flag  specifies if only the lower (option=-1) or the upper (option=+1) error calculation is run
-*/
+ * Minos error for variable i, return false if Minos failed or not supported
+ * and the lower and upper errors are returned in errLow and errUp
+ * An extra flag  specifies if only the lower (option=-1) or the upper (option=+1) error calculation is run
+ */
 bool Minimizer::GetMinosError(unsigned int ivar, double &errLow, double &errUp, int option)
 {
    MATH_ERROR_MSG("Minimizer::GetMinosError", "Minos Error not implemented");
@@ -180,7 +189,7 @@ bool Minimizer::GetMinosError(unsigned int ivar, double &errLow, double &errUp, 
 }
 
 /**
-   perform a full calculation of the Hessian matrix for error calculation
+ * Perform a full calculation of the Hessian matrix for error calculation.
  */
 bool Minimizer::Hesse()
 {
@@ -189,8 +198,8 @@ bool Minimizer::Hesse()
 }
 
 /**
-   scan function minimum for variable i. Variable and function must be set before using Scan
-   Return false if an error or if minimizer does not support this functionality
+ * Scan function minimum for variable i. Variable and function must be set before using Scan.
+ * @return false if an error or if minimizer does not support this functionality
  */
 bool Minimizer::Scan(unsigned int ivar, unsigned int &nstep, double *x, double *y, double xmin, double xmax)
 {
@@ -205,8 +214,8 @@ bool Minimizer::Scan(unsigned int ivar, unsigned int &nstep, double *x, double *
 }
 
 /**
-   find the contour points (xi, xj) of the function for parameter ivar and jvar around the minimum
-   The contour will be find for value of the function = Min + ErrorUp();
+ * Find the contour points (xi, xj) of the function for parameter ivar and jvar around the minimum.
+ * The contour will be find for value of the function = Min + ErrorUp();
  */
 bool Minimizer::Contour(unsigned int ivar, unsigned int jvar, unsigned int &npoints, double *xi, double *xj)
 {
@@ -219,16 +228,16 @@ bool Minimizer::Contour(unsigned int ivar, unsigned int jvar, unsigned int &npoi
    return false;
 }
 
-/// get name of variables (override if minimizer support storing of variable names)
-/// return an empty string if variable is not found
+/// Get name of variables (override if minimizer support storing of variable names).
+/// @return an empty string if variable is not found
 std::string Minimizer::VariableName(unsigned int ivar) const
 {
    MATH_UNUSED(ivar);
    return std::string(); // return empty string
 }
 
-/// get index of variable given a variable given a name
-/// return -1 if variable is not found
+/// Get index of variable given a variable given a name.
+/// @return -1 if variable is not found
 int Minimizer::VariableIndex(const std::string &name) const
 {
    MATH_ERROR_MSG("Minimizer::VariableIndex", "Getting variable index from name not implemented");
