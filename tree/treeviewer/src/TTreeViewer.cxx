@@ -171,6 +171,28 @@ or :
    root [2] TTreeViewer *tv = new TTreeViewer();
    root [3] tv->SetTreeName("Mytree");
 ~~~
+
+### The HISTOGRAM and OPTION boxes
+
+As explained before, in the top bar, there is the "Histogram" box, prepopulated with the string "htemp",
+which will be the variable name where the drawn histogram will be stored. You can modify it to specify
+e.g. a specific 2D binning "htemp(100,0,10, 20,0,5)", in the same way that you would do it when calling
+TTree::Draw ( "x >> htemp(...)" ).
+Likewise, there is the "Option" box, where you can specify drawing options such as "SAME", "COLZ", etc.
+In fact, once you click on the Draw icon, the resulting behind-the-scenes executed command will be added
+to the ROOT history. You can go back to the command line and press arrow-up, to be able to edit it further
+if you prefer the command line rather than the GUI.
+
+### Comparing different cuts
+
+It's a common use case to define different cuts on your data and compare them in the same canvas. To do so,
+define an expression e1 and e2 by double clicking on the empty "E<>" icons. Drag-and-drop e1 into the scissors
+icon, click then on the Draw icon. Then, add the "same" to the "Option" box, and change "htemp" to "htemp2",
+finally drag-and-drop e2 to the scissors, and click on the Draw icon again. Finally, right click on the resulting
+histogram (htemp2), choose "DrawPanel" and change the color to make it distinguishable.
+You can also define, directly by double-clicking on the scissors icons, or by generating a third expression e3,
+more complex cuts such as (~e1) && (~e2), or (~e1) || !(~e2). Parentheses are important.
+
 \image html ttree_treeview.png
 */
 
