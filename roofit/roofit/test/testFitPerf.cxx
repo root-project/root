@@ -34,8 +34,6 @@
 #include "TStopwatch.h"
 
 #include "TVirtualFitter.h"
-//  #include "TFitterFumili.h"
-//  #include "TFumili.h"
 
 #include "GaussFunction.h"
 
