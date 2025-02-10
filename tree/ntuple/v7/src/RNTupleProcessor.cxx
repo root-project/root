@@ -177,7 +177,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::LoadEntry(ROOT::N
 {
    Connect();
 
-   if (entryNumber >= fPageSource->GetNEntries())
+   if (entryNumber >= fNEntries)
       return kInvalidNTupleIndex;
 
    fEntry->Read(entryNumber);
@@ -205,6 +205,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect()
    if (!fPageSource)
       fPageSource = Internal::RPageSource::Create(fNTupleSpec.fNTupleName, fNTupleSpec.fStorage);
    fPageSource->Attach();
+   fNEntries = fPageSource->GetNEntries();
 
    for (auto &[_, fieldContext] : fFieldContexts) {
       ConnectField(fieldContext, *fPageSource, *fEntry);
@@ -245,17 +246,19 @@ ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(
 
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::GetNEntries()
 {
-   ROOT::NTupleSize_t nEntries = 0;
+   if (fNEntries == kInvalidNTupleIndex) {
+      fNEntries = 0;
 
-   for (unsigned i = 0; i < fInnerProcessors.size(); ++i) {
-      if (fInnerNEntries[i] == kInvalidNTupleIndex) {
-         fInnerNEntries[i] = fInnerProcessors[i]->GetNEntries();
+      for (unsigned i = 0; i < fInnerProcessors.size(); ++i) {
+         if (fInnerNEntries[i] == kInvalidNTupleIndex) {
+            fInnerNEntries[i] = fInnerProcessors[i]->GetNEntries();
+         }
+
+         fNEntries += fInnerNEntries[i];
       }
-
-      nEntries += fInnerNEntries[i];
    }
 
-   return nEntries;
+   return fNEntries;
 }
 
 void ROOT::Experimental::RNTupleChainProcessor::SetEntryPointers(const REntry &entry)
@@ -313,6 +316,8 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpen
    if (fPageSource->GetNEntries() == 0) {
       throw RException(R__FAIL("provided RNTuple is empty"));
    }
+
+   fNEntries = fPageSource->GetNEntries();
 
    if (!model)
       model = fPageSource->GetSharedDescriptorGuard()->CreateModel();

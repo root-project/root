@@ -130,6 +130,10 @@ protected:
 
    std::unique_ptr<RNTupleModel> fModel;
 
+   /// Total number of entries. Only to be used internally by the processor, not meant to be exposed in the public
+   /// interface.
+   ROOT::NTupleSize_t fNEntries = kInvalidNTupleIndex;
+
    ROOT::NTupleSize_t fNEntriesProcessed = 0;  //< Total number of entries processed so far
    ROOT::NTupleSize_t fCurrentEntryNumber = 0; //< Current processor entry number
    std::size_t fCurrentProcessorNumber = 0;    //< Number of the currently open inner processor
@@ -336,7 +340,7 @@ private:
    ROOT::NTupleSize_t GetNEntries() final
    {
       Connect();
-      return fPageSource->GetNEntries();
+      return fNEntries;
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -421,7 +425,7 @@ private:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the total number of entries in this processor.
-   ROOT::NTupleSize_t GetNEntries() final { return fPageSource->GetNEntries(); }
+   ROOT::NTupleSize_t GetNEntries() final { return fNEntries; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Constructs a new RNTupleJoinProcessor.
