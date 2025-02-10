@@ -925,6 +925,8 @@ RNTupleMerger::RNTupleMerger(std::unique_ptr<RPageSink> destination, std::unique
 #endif
 }
 
+RNTupleMerger::RNTupleMerger(std::unique_ptr<RPageSink> destination) : RNTupleMerger(std::move(destination), nullptr) {}
+
 ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const RNTupleMergeOptions &mergeOptsIn)
 {
    RNTupleMergeOptions mergeOpts = mergeOptsIn;
