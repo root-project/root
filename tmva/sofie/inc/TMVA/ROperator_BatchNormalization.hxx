@@ -198,6 +198,7 @@ public:
       size_t n = batchSize * channels * height * width;
 
       //// copy X into Y
+      out << "\n\n//---- BatchNorm\n";
       out << SP << "constexpr int " << OpName << "_N =" << batchSize * channels * height * width << ";\n";
       out << SP << "constexpr int "<<OpName<< "_incx = 1;\n";
       out << SP << "constexpr int "<<OpName<< "_incy = 1;\n";

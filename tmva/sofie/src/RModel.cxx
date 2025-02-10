@@ -359,7 +359,7 @@ void RModel::EvaluateIntermediateMemory(std::span<const std::string_view> op_inp
    }
 }
 
-std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view> op_output_tensors){
+std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view> op_output_tensors, size_t& total_intermediate_capacity) {
    
    std::string memory_allocation_string = "";
    bool allocated = false;
@@ -375,43 +375,38 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
             for (auto chunk = fIntermediateMemoryInfo.available_memory.begin(); chunk != fIntermediateMemoryInfo.available_memory.end(); ) {
                   // check if available memory chunks can accommodate the tensor
                   if (chunk->second >= tensor_size) {
-                     chunk->second -= tensor_size;
+                     fIntermediateMemoryInfo.total_memory.push_back({
+                        std::string(it),
+                        chunk->first,
+                        tensor_size
+                     });
+                     
                      memory_allocation_string += "\n" + ConvertTypeToString(GetTensorType(std::string(it))) + 
                                                 "* tensor_" + std::string(it) + 
                                                 " = reinterpret_cast<float*>(fIntermediateMemoryPool + " + std::to_string(chunk->first) + ");\n";
+                     chunk->second -= tensor_size;
                      chunk->first += tensor_size;
+                     
                      allocated = true;
                      
                      if (chunk->second == 0) {
                         chunk = fIntermediateMemoryInfo.available_memory.erase(chunk);
                      }
+
                      break;
                   }
                   ++chunk;
             }
 
          if (!allocated) {
-            if (fIntermediateMemoryInfo.total_memory.size()){
-               auto previous_tensor_idx = fIntermediateMemoryInfo.total_memory.back().chunk_idx;
-               auto previous_tensor_size = fIntermediateMemoryInfo.total_memory.back().tensor_size;
-
                fIntermediateMemoryInfo.total_memory.push_back({
                   std::string(it),
-                  previous_tensor_idx+previous_tensor_size,
+                  total_intermediate_capacity,
                   tensor_size
                });
-               memory_allocation_string += "\nfloat* tensor_"+ std::string(it) + "= reinterpret_cast<float*>(fIntermediateMemoryPool+" + std::to_string(previous_tensor_idx+previous_tensor_size) + ");\n";
-            } else {
-               fIntermediateMemoryInfo.total_memory.push_back({
-                  std::string(it),
-                  0,
-                  tensor_size
-               });
-               memory_allocation_string += "\nfloat* tensor_"+ std::string(it) + "= reinterpret_cast<float*>(fIntermediateMemoryPool);\n";
-            }
+               memory_allocation_string += "\nfloat* tensor_"+ std::string(it) + "= reinterpret_cast<float*>(fIntermediateMemoryPool + " + std::to_string(total_intermediate_capacity) + ");\n";
+               total_intermediate_capacity += tensor_size;
          }
-
-
    }
    return memory_allocation_string;
 }
@@ -857,9 +852,10 @@ void RModel::GenerateSessionCode()
    // generate the memory pool to be used by intermediate tensors
    GenerateIntermediateMemoryPool();
    
+   size_t total_intermediate_capacity = 0;
    fGC += "\n// --- Positioning intermediate tensor memory --";
    for (size_t op_idx = 0; op_idx < fOperators.size(); ++op_idx) {
-      fGC += AllocateIntermediateMemory(fOperators[op_idx]->GetOpOutputTensors());
+      fGC += AllocateIntermediateMemory(fOperators[op_idx]->GetOpOutputTensors(), total_intermediate_capacity);
       CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
    }
 

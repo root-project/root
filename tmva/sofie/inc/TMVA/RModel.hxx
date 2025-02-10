@@ -148,7 +148,7 @@ public:
    std::string GenerateInferSignature(bool isdecl = true);
 
    void EvaluateIntermediateMemory(std::span<const std::string_view> op_input_tensors, std::span<const std::string_view> op_output_tensors, const size_t& current_op_idx, std::vector<size_t>& available_memory);
-   std::string AllocateIntermediateMemory(std::span<const std::string_view> op_output_tensors);
+   std::string AllocateIntermediateMemory(std::span<const std::string_view> op_output_tensors, size_t& total_intermediate_capacity);
    void CheckAndFlushIntermediateMemory(std::span<const std::string_view> op_output_tensors, const size_t& op_idx);
 
 protected:
