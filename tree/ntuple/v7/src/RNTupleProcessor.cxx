@@ -199,7 +199,8 @@ void ROOT::Experimental::RNTupleSingleProcessor::SetEntryPointers(const REntry &
 
 void ROOT::Experimental::RNTupleSingleProcessor::Connect()
 {
-   if (fIsConnected)
+   // The processor has already been connected.
+   if (fNEntries != kInvalidNTupleIndex)
       return;
 
    if (!fPageSource)
@@ -210,8 +211,6 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect()
    for (auto &[_, fieldContext] : fFieldContexts) {
       ConnectField(fieldContext, *fPageSource, *fEntry);
    }
-
-   fIsConnected = true;
 }
 
 //------------------------------------------------------------------------------

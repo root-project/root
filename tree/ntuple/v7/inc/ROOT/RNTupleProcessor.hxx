@@ -318,7 +318,6 @@ class RNTupleSingleProcessor : public RNTupleProcessor {
 
 private:
    RNTupleOpenSpec fNTupleSpec;
-   bool fIsConnected = false;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connects the page source of the underlying RNTuple.
