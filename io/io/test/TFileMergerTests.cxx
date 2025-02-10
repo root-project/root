@@ -1,6 +1,7 @@
 #include "ROOT/TestSupport.hxx"
 
 #include "TFileMerger.h"
+#include "TFileMergeInfo.h"
 
 #include "TMemFile.h"
 #include "TTree.h"
@@ -100,4 +101,64 @@ TEST(TFileMerger, MergeSingleOnlyListed)
    output = std::unique_ptr<TFile>(TFile::Open("SingleOnlyListed.root"));
    ASSERT_TRUE(output.get() && output->GetListOfKeys());
    EXPECT_EQ(output->GetListOfKeys()->GetSize(), 2);
+}
+
+// https://github.com/root-project/root/issues/14558 aka https://its.cern.ch/jira/browse/ROOT-4716
+TEST(TFileMerger, ImportBranches)
+{
+   TTree atree("atree", "atitle");
+   int value;
+   atree.Branch("a", &value);
+   value = 11;
+   atree.Fill();
+   TTree abtree("abtree", "abtitle");
+   abtree.Branch("a", &value);
+   abtree.Branch("b", &value);
+   value = 42;
+   abtree.Fill();
+  
+   TTree dummy("ztree", "zeroBranches");
+   TList treelist;
+
+   // Case 1 - Static: ZeroBranches + 1 entry (1 branch) + 1 entry (2 branch)
+   treelist.Add(&dummy);
+   treelist.Add(&atree);
+   treelist.Add(&abtree);
+   std::unique_ptr<TFile> file1(TFile::Open("b4716.root", "RECREATE"));
+   auto rtree = TTree::MergeTrees(&treelist, "ImportBranches");
+   file1->Write();
+   ASSERT_TRUE(rtree->FindBranch("a") != nullptr);
+   EXPECT_EQ(rtree->FindBranch("a")->GetEntries(),2);
+   ASSERT_TRUE(rtree->FindBranch("b") != nullptr);
+   EXPECT_EQ(rtree->FindBranch("b")->GetEntries(),2);
+
+   // Case 2 - this (ZeroBranches) + 1 entry (1 branch) + 1 entry (2 branch)
+   treelist.Clear();
+   treelist.Add(&atree);
+   treelist.Add(&abtree);
+   std::unique_ptr<TFile> file2(TFile::Open("c4716.root", "RECREATE"));
+   TFileMergeInfo info2(file2.get());
+   info2.fOptions += " ImportBranches";
+   dummy.Merge(&treelist, &info2);
+   file2->Write();
+   ASSERT_TRUE(dummy.FindBranch("a") != nullptr);
+   EXPECT_EQ(dummy.FindBranch("a")->GetEntries(),2);
+   ASSERT_TRUE(dummy.FindBranch("b") != nullptr);
+   EXPECT_EQ(dummy.FindBranch("b")->GetEntries(),2);
+
+   // Case 3 - this (0 entry / 1 branch) + 1 entry (1 branch) + 1 entry (2 branch)
+   treelist.Clear();
+   treelist.Add(&atree);
+   treelist.Add(&abtree);
+   TTree a0tree("a0tree", "a0title");
+   a0tree.Branch("a", &value);
+   std::unique_ptr<TFile> file3(TFile::Open("d4716.root", "RECREATE"));
+   TFileMergeInfo info3(file3.get());
+   info3.fOptions += " ImportBranches";
+   a0tree.Merge(&treelist, &info3);
+   file3->Write();
+   ASSERT_TRUE(a0tree.FindBranch("a") != nullptr);
+   EXPECT_EQ(a0tree.FindBranch("a")->GetEntries(),2);
+   ASSERT_TRUE(a0tree.FindBranch("b") != nullptr);
+   EXPECT_EQ(a0tree.FindBranch("b")->GetEntries(),2);  
 }
