@@ -271,6 +271,14 @@ public:
    RIterator begin() { return RIterator(*this, 0); }
    RIterator end() { return RIterator(*this, ROOT::kInvalidNTupleIndex); }
 
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Create an `RNTupleProcessor` for a single RNTuple.
+   ///
+   /// \param[in] ntuple The name and storage location of the RNTuple to process.
+   /// \param[in] model An RNTupleModel specifying which fields can be read by the processor. If no model is provided,
+   /// one will be created based on the descriptor of the first ntuple specified.
+   ///
+   /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
    Create(const RNTupleOpenSpec &ntuple, std::unique_ptr<RNTupleModel> model = nullptr);
 
