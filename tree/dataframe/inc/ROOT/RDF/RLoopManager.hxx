@@ -138,13 +138,13 @@ class RLoopManager : public RNodeBase {
 
    /// Friends of the fTree. Only used if we constructed fTree ourselves.
    std::vector<std::unique_ptr<TChain>> fFriends;
-   const ColumnNames_t fDefaultColumns;
+   ColumnNames_t fDefaultColumns;
    /// Range of entries created when no data source is specified.
    std::pair<ULong64_t, ULong64_t> fEmptyEntryRange{};
-   const unsigned int fNSlots{1};
+   unsigned int fNSlots{1};
    bool fMustRunNamedFilters{true};
-   const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
-   const std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
+   ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
+   std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
    /// Registered callbacks to be executed every N events.
    /// The registration happens via the RegisterCallback method.
    std::vector<RDFInternal::RCallback> fCallbacksEveryNEvents;
