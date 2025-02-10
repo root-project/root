@@ -704,11 +704,19 @@ void RLoopManager::RunTreeReader()
    }
 }
 
+namespace {
+struct DSRunRAII {
+   ROOT::RDF::RDataSource &fDS;
+   DSRunRAII(ROOT::RDF::RDataSource &ds) : fDS(ds) { fDS.Initialize(); }
+   ~DSRunRAII() { fDS.Finalize(); }
+};
+} // namespace
+
 /// Run event loop over data accessed through a DataSource, in sequence.
 void RLoopManager::RunDataSource()
 {
    assert(fDataSource != nullptr);
-   fDataSource->Initialize();
+   DSRunRAII _{*fDataSource};
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty() && fNStopsReceived < fNChildren) {
       InitNodeSlots(nullptr, 0u);
@@ -732,7 +740,6 @@ void RLoopManager::RunDataSource()
       fDataSource->FinalizeSlot(0u);
       ranges = fDataSource->GetEntryRanges();
    }
-   fDataSource->Finalize();
 }
 
 /// Run event loop over data accessed through a DataSource, in parallel.
@@ -766,13 +773,12 @@ void RLoopManager::RunDataSourceMT()
       fDataSource->FinalizeSlot(slot);
    };
 
-   fDataSource->Initialize();
+   DSRunRAII _{*fDataSource};
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty()) {
       pool.Foreach(runOnRange, ranges);
       ranges = fDataSource->GetEntryRanges();
    }
-   fDataSource->Finalize();
 #endif // not implemented otherwise (never called)
 }
 
