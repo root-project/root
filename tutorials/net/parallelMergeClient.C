@@ -6,8 +6,8 @@
 /// To run this demo do the following:
 ///   - Open at least 2 windows
 ///   - Start ROOT in the first windows
-///   - Execute in the first window: .x fastMergeServer.C
-///   - Execute in the other windows: root.exe -b -l -q .x treeClient.C
+///   - Execute in the first window: .x parallelMergeServer.C
+///   - Execute in the other windows: root.exe -b -l -q .x 'parallelMergeClient.C("<socket path printed by server>")'
 ///     (You can put it in the background if wanted).
 /// If you want to run the hserv.C on a different host, just change
 /// "localhost" in the TSocket ctor below to the desired hostname.
@@ -25,15 +25,18 @@
 #include "TRandom.h"
 #include "TError.h"
 
-void parallelMergeClient()
+#include <string>
+
+void parallelMergeClient(const std::string &socketPath)
 {
    gBenchmark->Start("treeClient");
 
-   TParallelMergingFile *file = (TParallelMergingFile*)TFile::Open("mergedClient.root?pmerge=localhost:1095","RECREATE");
+   TParallelMergingFile *file =
+      (TParallelMergingFile *)TFile::Open((std::string("mergedClient.root?pmerge=") + socketPath).c_str(), "RECREATE");
 
    file->Write();
    file->UploadAndReset();       // We do this early to get assigned an index.
-   UInt_t idx = file->fServerIdx; // This works on in ACLiC.
+   UInt_t idx = file->GetServerIdx();
 
    TH1 *hpx;
    if (idx%2 == 0) {
