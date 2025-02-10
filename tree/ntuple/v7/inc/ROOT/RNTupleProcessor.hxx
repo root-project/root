@@ -168,10 +168,7 @@ protected:
    ///
    /// \note Before processing, a model *must* exist. However, this is handled downstream by the RNTupleProcessor's
    /// factory functions (CreateSingle, CreateChain and CreateJoin) and constructors.
-   RNTupleProcessor(const std::vector<RNTupleOpenSpec> &ntuples, std::unique_ptr<RNTupleModel> model)
-      : fNTuples(ntuples), fModel(std::move(model))
-   {
-   }
+   RNTupleProcessor(std::unique_ptr<RNTupleModel> model) : fModel(std::move(model)) {}
 
 public:
    RNTupleProcessor(const RNTupleProcessor &) = delete;
