@@ -34,12 +34,29 @@ void EnsureUniqueNTupleNames(const std::vector<RNTupleOpenSpec> &ntuples)
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
 ROOT::Experimental::RNTupleProcessor::Create(const RNTupleOpenSpec &ntuple, std::unique_ptr<RNTupleModel> model)
 {
-   return std::unique_ptr<RNTupleSingleProcessor>(new RNTupleSingleProcessor(ntuple, std::move(model)));
+   return Create(ntuple, ntuple.fNTupleName, std::move(model));
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
+ROOT::Experimental::RNTupleProcessor::Create(const RNTupleOpenSpec &ntuple, std::string_view processorName,
+                                             std::unique_ptr<RNTupleModel> model)
+{
+   return std::unique_ptr<RNTupleSingleProcessor>(new RNTupleSingleProcessor(ntuple, processorName, std::move(model)));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
 ROOT::Experimental::RNTupleProcessor::CreateChain(const std::vector<RNTupleOpenSpec> &ntuples,
                                                   std::unique_ptr<RNTupleModel> model)
+{
+   if (ntuples.empty())
+      throw RException(R__FAIL("at least one RNTuple must be provided"));
+
+   return CreateChain(ntuples, ntuples[0].fNTupleName, std::move(model));
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
+ROOT::Experimental::RNTupleProcessor::CreateChain(const std::vector<RNTupleOpenSpec> &ntuples,
+                                                  std::string_view processorName, std::unique_ptr<RNTupleModel> model)
 {
    if (ntuples.empty())
       throw RException(R__FAIL("at least one RNTuple must be provided"));
@@ -58,12 +75,23 @@ ROOT::Experimental::RNTupleProcessor::CreateChain(const std::vector<RNTupleOpenS
       innerProcessors.emplace_back(Create(ntuple, model->Clone()));
    }
 
-   return CreateChain(std::move(innerProcessors), std::move(model));
+   return CreateChain(std::move(innerProcessors), processorName, std::move(model));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
 ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<std::unique_ptr<RNTupleProcessor>> innerProcessors,
                                                   std::unique_ptr<RNTupleModel> model)
+{
+   if (innerProcessors.empty())
+      throw RException(R__FAIL("at least one inner processor must be provided"));
+
+   auto processorName = innerProcessors[0]->GetProcessorName();
+   return CreateChain(std::move(innerProcessors), processorName, std::move(model));
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
+ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<std::unique_ptr<RNTupleProcessor>> innerProcessors,
+                                                  std::string_view processorName, std::unique_ptr<RNTupleModel> model)
 {
    if (innerProcessors.empty())
       throw RException(R__FAIL("at least one inner processor must be provided"));
@@ -74,12 +102,23 @@ ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<std::unique_ptr<RN
    }
 
    return std::unique_ptr<RNTupleChainProcessor>(
-      new RNTupleChainProcessor(std::move(innerProcessors), std::move(model)));
+      new RNTupleChainProcessor(std::move(innerProcessors), processorName, std::move(model)));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
 ROOT::Experimental::RNTupleProcessor::CreateJoin(const std::vector<RNTupleOpenSpec> &ntuples,
                                                  const std::vector<std::string> &joinFields,
+                                                 std::vector<std::unique_ptr<RNTupleModel>> models)
+{
+   if (ntuples.empty())
+      throw RException(R__FAIL("at least one RNTuple must be provided"));
+   return CreateJoin(ntuples, joinFields, ntuples[0].fNTupleName, std::move(models));
+}
+
+std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
+ROOT::Experimental::RNTupleProcessor::CreateJoin(const std::vector<RNTupleOpenSpec> &ntuples,
+                                                 const std::vector<std::string> &joinFields,
+                                                 std::string_view processorName,
                                                  std::vector<std::unique_ptr<RNTupleModel>> models)
 {
    if (ntuples.size() < 1)
@@ -103,9 +142,10 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(const std::vector<RNTupleOpenSp
 
    std::unique_ptr<RNTupleJoinProcessor> processor;
    if (models.size() > 0) {
-      processor = std::unique_ptr<RNTupleJoinProcessor>(new RNTupleJoinProcessor(ntuples[0], std::move(models[0])));
+      processor = std::unique_ptr<RNTupleJoinProcessor>(
+         new RNTupleJoinProcessor(ntuples[0], processorName, std::move(models[0])));
    } else {
-      processor = std::unique_ptr<RNTupleJoinProcessor>(new RNTupleJoinProcessor(ntuples[0]));
+      processor = std::unique_ptr<RNTupleJoinProcessor>(new RNTupleJoinProcessor(ntuples[0], processorName));
    }
 
    for (unsigned i = 1; i < ntuples.size(); ++i) {
@@ -144,8 +184,9 @@ void ROOT::Experimental::RNTupleProcessor::ConnectField(RFieldContext &fieldCont
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(const RNTupleOpenSpec &ntuple,
+                                                                   std::string_view processorName,
                                                                    std::unique_ptr<RNTupleModel> model)
-   : RNTupleProcessor(std::move(model)), fNTupleSpec(ntuple)
+   : RNTupleProcessor(processorName, std::move(model)), fNTupleSpec(ntuple)
 {
    if (!fModel) {
       fPageSource = Internal::RPageSource::Create(fNTupleSpec.fNTupleName, fNTupleSpec.fStorage);
@@ -216,8 +257,9 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect()
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(
-   std::vector<std::unique_ptr<RNTupleProcessor>> processors, std::unique_ptr<RNTupleModel> model)
-   : RNTupleProcessor(std::move(model)), fInnerProcessors(std::move(processors))
+   std::vector<std::unique_ptr<RNTupleProcessor>> processors, std::string_view processorName,
+   std::unique_ptr<RNTupleModel> model)
+   : RNTupleProcessor(processorName, std::move(model)), fInnerProcessors(std::move(processors))
 {
    fInnerNEntries.assign(fInnerProcessors.size(), kInvalidNTupleIndex);
 
@@ -303,8 +345,9 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NT
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpenSpec &mainNTuple,
+                                                               std::string_view processorName,
                                                                std::unique_ptr<RNTupleModel> model)
-   : RNTupleProcessor(nullptr)
+   : RNTupleProcessor(processorName, nullptr)
 {
    fNTuples.emplace_back(mainNTuple);
    fPageSource = Internal::RPageSource::Create(mainNTuple.fNTupleName, mainNTuple.fStorage);
