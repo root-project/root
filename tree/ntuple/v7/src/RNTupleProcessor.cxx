@@ -220,7 +220,6 @@ ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(
    : RNTupleProcessor({}, std::move(model)), fInnerProcessors(std::move(processors))
 {
    fInnerNEntries.assign(fInnerProcessors.size(), kInvalidNTupleIndex);
-   fInnerNEntries[0] = fInnerProcessors[0]->GetNEntries();
 
    fModel->Freeze();
    fEntry = fModel->CreateEntry();
@@ -279,20 +278,18 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NT
    ROOT::NTupleSize_t localEntryNumber = entryNumber;
    size_t currProcessor = 0;
 
-   assert(fInnerNEntries[0] != kInvalidNTupleIndex);
-
    // As long as the entry fails to load from the current processor, we decrement the local entry number with the number
    // of entries in this processor and try with the next processor until we find the correct local entry number.
    while (fInnerProcessors[currProcessor]->LoadEntry(localEntryNumber) == kInvalidNTupleIndex) {
+      if (fInnerNEntries[currProcessor] == kInvalidNTupleIndex) {
+         fInnerNEntries[currProcessor] = fInnerProcessors[currProcessor]->GetNEntries();
+      }
+
       localEntryNumber -= fInnerNEntries[currProcessor];
 
       // The provided global entry number is larger than the number of available entries.
       if (++currProcessor >= fInnerProcessors.size())
          return kInvalidNTupleIndex;
-
-      if (fInnerNEntries[currProcessor] == kInvalidNTupleIndex) {
-         fInnerNEntries[currProcessor] = fInnerProcessors[currProcessor]->GetNEntries();
-      }
    }
 
    if (currProcessor != fCurrentProcessorNumber)
