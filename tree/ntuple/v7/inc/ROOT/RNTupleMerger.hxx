@@ -25,11 +25,12 @@
 
 #include <memory>
 #include <optional>
-#include <string>
-#include <vector>
-#include <unordered_map>
 
-namespace ROOT::Experimental::Internal {
+namespace ROOT {
+
+class RNTuple;
+
+namespace Experimental::Internal {
 
 enum class ENTupleMergingMode {
    /// The merger will discard all columns that aren't present in the prototype model (i.e. the model of the first
@@ -86,6 +87,8 @@ struct RNTupleMergeOptions {
  */
 // clang-format on
 class RNTupleMerger final {
+   friend class ROOT::RNTuple;
+
    std::unique_ptr<RPageSink> fDestination;
    std::unique_ptr<RPageAllocator> fPageAlloc;
    std::optional<TTaskGroup> fTaskGroup;
@@ -98,17 +101,21 @@ class RNTupleMerger final {
    void MergeSourceClusters(RPageSource &source, std::span<RColumnMergeInfo> commonColumns,
                             std::span<RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
 
-public:
    /// Creates a RNTupleMerger with the given destination.
    /// The model must be given if and only if `destination` has been initialized with that model
    /// (i.e. in case of incremental merging).
-   RNTupleMerger(std::unique_ptr<RPageSink> destination, std::unique_ptr<RNTupleModel> model = nullptr);
+   RNTupleMerger(std::unique_ptr<RPageSink> destination, std::unique_ptr<RNTupleModel> model);
+
+public:
+   /// Creates a RNTupleMerger with the given destination.
+   explicit RNTupleMerger(std::unique_ptr<RPageSink> destination);
 
    /// Merge a given set of sources into the destination.
    RResult<void> Merge(std::span<RPageSource *> sources, const RNTupleMergeOptions &mergeOpts = RNTupleMergeOptions());
 
 }; // end of class RNTupleMerger
 
-} // namespace ROOT::Experimental::Internal
+} // namespace Experimental::Internal
+} // namespace ROOT
 
 #endif
