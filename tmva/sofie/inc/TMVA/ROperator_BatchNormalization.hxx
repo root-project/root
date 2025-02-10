@@ -52,7 +52,7 @@ public:
    fNB(UTILITY::Clean_name(nameB)), fNMean(UTILITY::Clean_name(nameMean)),
    fNVar(UTILITY::Clean_name(nameVar)), fNY(UTILITY::Clean_name(nameY))
    {  
-      fInputTensorNames = { fNX, fNScale, fNB, fNMean, fNVar};
+      fInputTensorNames = { fNX };
       fOutputTensorNames = { fNY };
 
       if(std::is_same<T, float>::value){
