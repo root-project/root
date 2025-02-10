@@ -171,18 +171,30 @@ public:
    /// set initial covariance matrix
    virtual bool SetCovariance(std::span<const double> cov, unsigned int nrow);
 
-   /// set a new lower limit variable  (override if minimizer supports them )
-   virtual bool SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower ) {
-      return SetLimitedVariable(ivar, name, val, step, lower, std::numeric_limits<double>::infinity() );
+   /// set a new lower limit variable  (override if minimizer supports them), leave upper bound unlimited
+   /// @see Minimizer::SetLimitedVariable
+   /// @param ivar the index of this variable in the array
+   /// @param name the variable name
+   /// @param val the value
+   /// @param step the step size
+   /// @param lower the lower bound
+   virtual bool SetLowerLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double lower) {
+      return SetLimitedVariable(ivar, name, val, step, lower, std::numeric_limits<double>::infinity());
    }
-   /// set a new upper limit variable (override if minimizer supports them )
-   virtual bool SetUpperLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double upper ) {
-      return SetLimitedVariable(ivar, name, val, step, - std::numeric_limits<double>::infinity(), upper );
+   /// set a new upper limit variable (override if minimizer supports them), leave lower bound unlimited
+   /// @see Minimizer::SetLimitedVariable
+   /// @param ivar the index of this variable in the array
+   /// @param name the variable name
+   /// @param val the value
+   /// @param step the step size
+   /// @param upper the upper bound
+   virtual bool SetUpperLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double upper) {
+      return SetLimitedVariable(ivar, name, val, step, - std::numeric_limits<double>::infinity(), upper);
    }
-   virtual bool SetLimitedVariable(unsigned int ivar  , const std::string & name  , double val  , double  step ,
-                                   double lower , double  upper );
-   virtual bool SetFixedVariable(unsigned int  ivar  , const std::string &  name , double val  );
-   virtual bool SetVariableValue(unsigned int ivar , double value);
+   virtual bool SetLimitedVariable(unsigned int ivar, const std::string & name, double val, double step,
+                                   double lower, double upper);
+   virtual bool SetFixedVariable(unsigned int  ivar, const std::string &  name, double val);
+   virtual bool SetVariableValue(unsigned int ivar, double value);
    /// set the values of all existing variables (array must be dimensioned to the size of the existing parameters)
    virtual bool SetVariableValues(const double * x) {
       bool ret = true;
@@ -192,7 +204,7 @@ public:
       }
       return ret;
    }
-   virtual bool SetVariableStepSize(unsigned int ivar, double value );
+   virtual bool SetVariableStepSize(unsigned int ivar, double value);
    virtual bool SetVariableLowerLimit(unsigned int ivar, double lower);
    virtual bool SetVariableUpperLimit(unsigned int ivar, double upper);
    /// set the limits of an already existing variable

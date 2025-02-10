@@ -29,8 +29,15 @@ bool Minimizer::SetCovariance(std::span<const double> cov, unsigned int nrow)
    return false;
 }
 
-/// set a new upper/lower limited variable (override if minimizer supports them ) otherwise as default set an unlimited
-/// variable
+/// set a new upper/lower limited variable (override if minimizer supports them) otherwise as default set an unlimited
+/// variable (i.e. the lower and upper bounds will be ignored)
+/// @see Minimizer::SetVariable
+/// @param ivar the index of this variable in the array
+/// @param name the variable name
+/// @param val the value
+/// @param step the step size
+/// @param lower the lower bound
+/// @param upper this upper bound
 bool Minimizer::SetLimitedVariable(unsigned int ivar, const std::string &name, double val, double step, double lower,
                                    double upper)
 {
@@ -40,7 +47,7 @@ bool Minimizer::SetLimitedVariable(unsigned int ivar, const std::string &name, d
    return SetVariable(ivar, name, val, step);
 }
 
-/// set a new fixed variable (override if minimizer supports them )
+/// set a new fixed variable (override if minimizer supports them)
 bool Minimizer::SetFixedVariable(unsigned int ivar, const std::string &name, double val)
 {
    MATH_ERROR_MSG("Minimizer::SetFixedVariable", "Setting of fixed variable not implemented");
