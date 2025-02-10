@@ -145,7 +145,7 @@ void ROOT::Experimental::RNTupleProcessor::ConnectField(RFieldContext &fieldCont
 
 ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(const RNTupleOpenSpec &ntuple,
                                                                    std::unique_ptr<RNTupleModel> model)
-   : RNTupleProcessor({ntuple}, std::move(model)), fNTupleSpec(ntuple)
+   : RNTupleProcessor(std::move(model)), fNTupleSpec(ntuple)
 {
    if (!fModel) {
       fPageSource = Internal::RPageSource::Create(fNTupleSpec.fNTupleName, fNTupleSpec.fStorage);
@@ -217,7 +217,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect()
 
 ROOT::Experimental::RNTupleChainProcessor::RNTupleChainProcessor(
    std::vector<std::unique_ptr<RNTupleProcessor>> processors, std::unique_ptr<RNTupleModel> model)
-   : RNTupleProcessor({}, std::move(model)), fInnerProcessors(std::move(processors))
+   : RNTupleProcessor(std::move(model)), fInnerProcessors(std::move(processors))
 {
    fInnerNEntries.assign(fInnerProcessors.size(), kInvalidNTupleIndex);
 
@@ -304,8 +304,9 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NT
 
 ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpenSpec &mainNTuple,
                                                                std::unique_ptr<RNTupleModel> model)
-   : RNTupleProcessor({mainNTuple}, nullptr)
+   : RNTupleProcessor(nullptr)
 {
+   fNTuples.emplace_back(mainNTuple);
    fPageSource = Internal::RPageSource::Create(mainNTuple.fNTupleName, mainNTuple.fStorage);
    fPageSource->Attach();
 
