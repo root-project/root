@@ -3603,6 +3603,9 @@ root[] T->MakeClass("MyClass")
 Files: MyClass.h and MyClass.C generated from Tree: T
 ```
 
+(Warning: it's recommended to use `MakeSelector` or `MakeProxy`
+rather than `MakeClass`.)
+
 Cling informs us that it has created two files. `MyClass.h` contains the
 class definition and `MyClass.C` contains the `MyClass::Loop()` method.
 `MyClass` has more methods than just `Loop()`. The other methods are a
