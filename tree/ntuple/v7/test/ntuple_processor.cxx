@@ -115,6 +115,13 @@ TEST_F(RNTupleProcessorTest, BaseWithBareModel)
 
    auto proc = RNTupleProcessor::Create(ntuple, std::move(model));
 
+   EXPECT_STREQ("ntuple", proc->GetProcessorName().c_str());
+
+   {
+      auto namedProc = RNTupleProcessor::Create(ntuple, "my_ntuple");
+      EXPECT_STREQ("my_ntuple", namedProc->GetProcessorName().c_str());
+   }
+
    int nEntries = 0;
 
    for (const auto &entry : *proc) {
