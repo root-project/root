@@ -401,5 +401,12 @@ void THLimitsFinder::OptimizeLimits(Int_t nbins, Int_t &newbins, Double_t &xmin,
       if (xmin +nbins*bw < umax) {nbins++; xmax = xmin +nbins*bw;}
       if (xmin > umin)           {nbins++; xmin = xmax -nbins*bw;}
    }
+   else {
+      xmax = std::max(xmax + 1e-12, std::nextafter(xmax,INFINITY));
+      // If we put the upper bin limit directly at xmax, then all values at xmax will go into the overflow and will be invisible.
+      // So shift it slightly to the right, by at least 1e-12.
+      // Otherwise, it still does not plot the max data it with the reproducer at https://root-forum.cern.ch/t/bug-or-feature-in-ttree-draw/62862
+      // probably due to some extra double rounding precision loss in subsequent operations.
+   }
    newbins = nbins;
 }
