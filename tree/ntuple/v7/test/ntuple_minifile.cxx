@@ -805,7 +805,6 @@ TEST(MiniFile, UUID)
 TEST(MiniFile, FreeSlots)
 {
    FileRaii fileGuard("test_ntuple_minifile_freeslot.root");
-   fileGuard.PreserveFile();
    
    // Write a TFile, delete some objects in it to create free slots, then write a RNTuple into it with a RBlob
    // fitting into a free slot with some free bytes left. Verify that we properly write the new free slot header
