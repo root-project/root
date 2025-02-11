@@ -820,7 +820,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeExtraTypeInfoId(cons
    case 0x00: id = EExtraTypeInfoIds::kStreamerInfo; break;
    default:
       id = EExtraTypeInfoIds::kInvalid;
-      R__LOG_DEBUG(0, NTupleLog()) << "Unknown extra type info id: " << onDiskValue;
+      R__LOG_DEBUG(0, ROOT::Internal::NTupleLog()) << "Unknown extra type info id: " << onDiskValue;
    }
    return result;
 }
@@ -1726,7 +1726,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(const void *b
    bytes += result.Unwrap();
    for (auto f : featureFlags) {
       if (f)
-         R__LOG_WARNING(NTupleLog()) << "Unsupported feature flag! " << f;
+         R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "Unsupported feature flag! " << f;
    }
 
    std::uint64_t xxhash3{0};
