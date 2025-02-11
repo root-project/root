@@ -19,7 +19,7 @@ find_package(Git)
 function(SET_VERSION_FROM_FILE)
   # See https://stackoverflow.com/questions/47066115/cmake-get-version-from-multiline-text-file
   if(ROOT_BASE_DIR AND EXISTS ${ROOT_BASE_DIR}/include/ROOT/RVersion.hxx)
-    file(READ "${ROOT_GLOBAL_SOURCE_DIR}/core/foundation/inc/ROOT/RVersion.hxx" versionstr)
+	  file(READ "${ROOT_BASE_DIR}/core/foundation/inc/ROOT/RVersion.hxx" versionstr)
   elseif(ROOT_GLOBAL_SOURCE_DIR AND EXISTS ${ROOT_GLOBAL_SOURCE_DIR}/include/ROOT/RVersion.hxx)
     file(READ "${ROOT_GLOBAL_SOURCE_DIR}/core/foundation/inc/ROOT/RVersion.hxx" versionstr)
   else()
