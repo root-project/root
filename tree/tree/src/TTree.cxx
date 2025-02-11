@@ -9167,6 +9167,17 @@ void TTree::SetFileNumber(Int_t number)
 /// The function's primary purpose is to allow the user to access the data
 /// directly with numerical type variable rather than having to have the original
 /// set of classes (or a reproduction thereof).
+/// In other words, SetMakeClass sets the TTree into some sort of compatibility
+/// mode that allow its reading via a set of independant variables
+/// (see the result of running TTree::MakeClass on your TTree) by changing the
+/// interpretation of the address passed to SetAddress from being the beginning
+/// of the object containing the data to being the exact location where the data
+/// should be loaded. If you have the shared library corresponding to your object,
+/// it is better if you do
+/// `MyClass *objp = 0; tree->SetBranchAddress("toplevel",&objp);`, whereas
+/// if you do not have the shared library but know your branch data type, e.g.
+/// `Int_t* ptr = new Int_t[10];`, then:
+/// `tree->SetMakeClass(1); tree->GetBranch("x")->SetAddress(ptr)` is the way to go.
 
 void TTree::SetMakeClass(Int_t make)
 {
