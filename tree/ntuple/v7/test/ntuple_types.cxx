@@ -10,62 +10,6 @@
 #include <type_traits>
 #include <utility>
 
-TEST(RNTuple, TypeName) {
-   EXPECT_STREQ("float", ROOT::Experimental::RField<float>::TypeName().c_str());
-   EXPECT_STREQ("std::vector<std::string>",
-                ROOT::Experimental::RField<std::vector<std::string>>::TypeName().c_str());
-   EXPECT_STREQ("CustomStruct",
-                ROOT::Experimental::RField<CustomStruct>::TypeName().c_str());
-   EXPECT_STREQ("DerivedB",
-                ROOT::Experimental::RField<DerivedB>::TypeName().c_str());
-
-   auto field = RField<DerivedB>("derived");
-   EXPECT_EQ(sizeof(DerivedB), field.GetValueSize());
-
-   EXPECT_STREQ("std::pair<std::pair<float,CustomStruct>,std::int32_t>", (ROOT::Experimental::RField<
-                 std::pair<std::pair<float,CustomStruct>,int>>::TypeName().c_str()));
-   EXPECT_STREQ(
-      "std::tuple<std::tuple<char,CustomStruct,char>,std::int32_t>",
-      (ROOT::Experimental::RField<std::tuple<std::tuple<char, CustomStruct, char>, int>>::TypeName().c_str()));
-}
-
-TEST(RNTuple, TypeNameNormalization)
-{
-   EXPECT_EQ("CustomStruct", RFieldBase::Create("f", "class CustomStruct").Unwrap()->GetTypeName());
-   EXPECT_EQ("", RFieldBase::Create("f", "class CustomStruct").Unwrap()->GetTypeAlias());
-
-   EXPECT_EQ("CustomStruct", RFieldBase::Create("f", "struct CustomStruct").Unwrap()->GetTypeName());
-   EXPECT_EQ("", RFieldBase::Create("f", "struct CustomStruct").Unwrap()->GetTypeAlias());
-
-   EXPECT_EQ("CustomEnum", RFieldBase::Create("f", "enum CustomEnum").Unwrap()->GetTypeName());
-   EXPECT_EQ("", RFieldBase::Create("f", "enum CustomEnum").Unwrap()->GetTypeAlias());
-
-   EXPECT_EQ("std::int32_t", RFieldBase::Create("f", "signed").Unwrap()->GetTypeName());
-   EXPECT_EQ("", RFieldBase::Create("f", "signed").Unwrap()->GetTypeAlias());
-
-   EXPECT_EQ("std::map<std::int32_t,std::int32_t>", RFieldBase::Create("f", "map<int, int>").Unwrap()->GetTypeName());
-   EXPECT_EQ("", RFieldBase::Create("f", "map<int, int>").Unwrap()->GetTypeAlias());
-
-   EXPECT_EQ("std::uint32_t", RFieldBase::Create("f", "SG::sgkey_t").Unwrap()->GetTypeName());
-   EXPECT_EQ("SG::sgkey_t", RFieldBase::Create("f", "SG::sgkey_t").Unwrap()->GetTypeAlias());
-
-   const std::string innerCV = "class InnerCV<const int, const volatile int, volatile const int, volatile int>";
-   const std::string normInnerCV =
-      "InnerCV<const std::int32_t,const volatile std::int32_t,const volatile std::int32_t,volatile std::int32_t>";
-   EXPECT_EQ(normInnerCV, RFieldBase::Create("f", innerCV).Unwrap()->GetTypeName());
-   EXPECT_EQ("", RFieldBase::Create("f", innerCV).Unwrap()->GetTypeAlias());
-
-   const std::string example = "const pair<size_t, array<class CustomStruct, 6>>";
-   std::string normExample;
-   if (sizeof(std::size_t) == 4) {
-      normExample = "std::pair<std::uint32_t,std::array<CustomStruct,6>>";
-   } else {
-      normExample = "std::pair<std::uint64_t,std::array<CustomStruct,6>>";
-   }
-   EXPECT_EQ(normExample, RFieldBase::Create("f", example).Unwrap()->GetTypeName());
-   EXPECT_EQ("std::pair<size_t,std::array<CustomStruct,6>>", RFieldBase::Create("f", example).Unwrap()->GetTypeAlias());
-}
-
 TEST(RNTuple, EnumBasics)
 {
    // Needs fix of TEnum
