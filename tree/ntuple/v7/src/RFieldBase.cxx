@@ -546,22 +546,22 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
       if (!result) {
          auto e = TEnum::GetEnum(resolvedType.c_str());
          if (e != nullptr) {
-            result = std::make_unique<REnumField>(fieldName, resolvedType);
+            result = std::make_unique<REnumField>(fieldName, typeName);
          }
       }
 
       if (!result) {
-         auto cl = TClass::GetClass(resolvedType.c_str());
+         auto cl = TClass::GetClass(typeName.c_str());
          if (cl != nullptr) {
             createContextGuard.AddClassToStack(resolvedType);
             if (cl->GetCollectionProxy()) {
-               result = std::make_unique<RProxiedCollectionField>(fieldName, resolvedType);
+               result = std::make_unique<RProxiedCollectionField>(fieldName, typeName);
             } else {
                if (Internal::GetRNTupleSerializationMode(cl) ==
                    Internal::ERNTupleSerializationMode::kForceStreamerMode) {
-                  result = std::make_unique<RStreamerField>(fieldName, resolvedType);
+                  result = std::make_unique<RStreamerField>(fieldName, typeName);
                } else {
-                  result = std::make_unique<RClassField>(fieldName, resolvedType);
+                  result = std::make_unique<RClassField>(fieldName, typeName);
                }
             }
          } else if (options.fEmulateUnknownTypes) {
@@ -575,6 +575,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
                auto field = Create(memberDesc.GetFieldName(), memberDesc.GetTypeName(), options, desc, id).Unwrap();
                memberFields.emplace_back(std::move(field));
             }
+            R__ASSERT(typeName == fieldDesc.GetTypeName());
             auto recordField =
                Internal::CreateEmulatedField(fieldName, std::move(memberFields), fieldDesc.GetTypeName());
             recordField->fTypeAlias = fieldDesc.GetTypeAlias();
@@ -584,7 +585,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    } catch (RException &e) {
       auto error = e.GetError();
       if (createContext.GetContinueOnError()) {
-         return std::unique_ptr<RFieldBase>(std::make_unique<RInvalidField>(fieldName, resolvedType, error.GetReport(),
+         return std::unique_ptr<RFieldBase>(std::make_unique<RInvalidField>(fieldName, typeName, error.GetReport(),
                                                                             RInvalidField::RCategory::kGeneric));
       } else {
          return error;
@@ -603,7 +604,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
       }
       return result;
    }
-   return R__FORWARD_RESULT(fnFail("unknown type: " + resolvedType, RInvalidField::RCategory::kUnknownType));
+   return R__FORWARD_RESULT(fnFail("unknown type: " + typeName, RInvalidField::RCategory::kUnknownType));
 }
 
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
