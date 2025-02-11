@@ -414,3 +414,12 @@ TEST(RNTuple, MultiColumnRepresentationFriends)
       writer->Fill();
    }
 }
+
+TEST(RNTuple, MultiColumnRepresentationDedup)
+{
+   FileRaii fileGuard("test_ntuple_multi_column_representation_dedup.root");
+
+   auto fldPx = RFieldBase::Create("px", "float").Unwrap();
+   fldPx->SetColumnRepresentatives({{ENTupleColumnType::kReal16}, {ENTupleColumnType::kReal16}});
+   EXPECT_EQ(fldPx->GetColumnRepresentatives().size(), 1);
+}
