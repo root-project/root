@@ -119,8 +119,8 @@ ROOT::Experimental::Internal::GetRNTupleSerializationMode(TClass *cl)
    } else if (value == "FALSE") {
       return ERNTupleSerializationMode::kForceNativeMode;
    } else {
-      R__LOG_WARNING(ROOT::NTupleLog()) << "invalid setting for 'rntuple.streamerMode' class attribute: "
-                                        << am->GetPropertyAsString("rntuple.streamerMode");
+      R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "invalid setting for 'rntuple.streamerMode' class attribute: "
+                                                  << am->GetPropertyAsString("rntuple.streamerMode");
       return ERNTupleSerializationMode::kUnset;
    }
 }

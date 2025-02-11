@@ -46,12 +46,12 @@ ROOT::Experimental::RNTupleFillContext::~RNTupleFillContext()
    try {
       FlushCluster();
    } catch (const RException &err) {
-      R__LOG_ERROR(NTupleLog()) << "failure flushing cluster: " << err.GetError().GetReport();
+      R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "failure flushing cluster: " << err.GetError().GetReport();
    }
 
    if (!fStagedClusters.empty()) {
-      R__LOG_ERROR(NTupleLog()) << std::to_string(fStagedClusters.size())
-                                << " staged clusters still pending, their data is lost";
+      R__LOG_ERROR(ROOT::Internal::NTupleLog())
+         << std::to_string(fStagedClusters.size()) << " staged clusters still pending, their data is lost";
    }
 }
 
