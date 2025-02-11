@@ -41,7 +41,8 @@ TEST(RNTupleShow, BasicTypes)
       auto field64uint = model->MakeField<std::uint64_t>("uint64");
       auto fieldstring = model->MakeField<std::string>("string");
       auto fieldbool = model->MakeField<bool>("boolean");
-      auto fieldchar = model->MakeField<uint8_t>("uint8");
+      auto fieldu8 = model->MakeField<uint8_t>("uint8");
+      auto fieldi8 = model->MakeField<int8_t>("int8");
       auto fieldbitset = model->MakeField<std::bitset<65>>("bitset");
       auto fielduniqueptr = model->MakeField<std::unique_ptr<std::string>>("pstring");
       auto fieldatomic = model->MakeField<std::atomic<bool>>("atomic");
@@ -55,7 +56,8 @@ TEST(RNTupleShow, BasicTypes)
       *field64uint = 44444444444ull;
       *fieldstring = "TestString";
       *fieldbool = true;
-      *fieldchar = 97;
+      *fieldu8 = 97;
+      *fieldi8 = 97;
       *fieldbitset = std::bitset<65>("10000000000000000000000000000010000000000000000000000000000010010");
       *fielduniqueptr = std::make_unique<std::string>("abc");
       *fieldatomic = false;
@@ -69,7 +71,8 @@ TEST(RNTupleShow, BasicTypes)
       *field64uint = 2299994967294ull;
       *fieldstring = "TestString2";
       *fieldbool = false;
-      *fieldchar = 98;
+      *fieldu8 = 98;
+      *fieldi8 = 98;
       fieldbitset->flip();
       fielduniqueptr->reset();
       *fieldatomic = true;
@@ -92,6 +95,7 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"string\": \"TestString\",\n"
       + "  \"boolean\": true,\n"
       + "  \"uint8\": 97,\n"
+      + "  \"int8\": 97,\n"
       + "  \"bitset\": \"10000000000000000000000000000010000000000000000000000000000010010\",\n"
       + "  \"pstring\": \"abc\",\n"
       + "  \"atomic\": false\n"
@@ -113,6 +117,7 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"string\": \"TestString2\",\n"
       + "  \"boolean\": false,\n"
       + "  \"uint8\": 98,\n"
+      + "  \"int8\": 98,\n"
       + "  \"bitset\": \"01111111111111111111111111111101111111111111111111111111111101101\",\n"
       + "  \"pstring\": null,\n"
       + "  \"atomic\": true\n"
