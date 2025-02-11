@@ -226,7 +226,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitInt8Field(const RIntegralField
 {
    PrintIndent();
    PrintName(field);
-   fOutput << fValue.GetRef<std::int8_t>();
+   fOutput << static_cast<int>(fValue.GetRef<std::int8_t>());
 }
 
 void ROOT::Experimental::RPrintValueVisitor::VisitInt16Field(const RIntegralField<std::int16_t> &field)
