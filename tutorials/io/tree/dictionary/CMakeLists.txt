@@ -22,6 +22,7 @@ find_package(ROOT REQUIRED COMPONENTS Tree TreePlayer ROOTDataFrame)
 #---Include a CMake module which makes use of the previous variables and loads modules 
 #   with useful macros or functions such as ROOT_GENERATE_DICTIONARY
 #   For further details: https://root-forum.cern.ch/t/how-to-integrate-root-into-my-project-with-cmake/37175
+#   A more modern alternative to the two lines below is in https://github.com/root-project/root/issues/8308#issuecomment-856008466
 include(${ROOT_USE_FILE})
 
 #---Add include directory of ROOT to the build
