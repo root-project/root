@@ -15,7 +15,7 @@ int testPyAdaBoostClassification(){
    TString fname = "./tmva_class_example.root";
    if (gSystem->AccessPathName(fname)) {
       // file does not exist in local directory
-      gSystem->Exec("curl -L -O http://root.cern/files/tmva_class_example.root");
+      gSystem->Exec("curl -L -O http://root-test.web.cern.ch/files/tmva_class_example.root");
    }
    TFile *input = TFile::Open(fname);
 
