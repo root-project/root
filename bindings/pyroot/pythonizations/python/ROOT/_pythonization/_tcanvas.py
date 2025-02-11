@@ -73,26 +73,10 @@ def wait_press_posix():
    finally:
       termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
 
-
-def _TCanvas_Update(self, block = False):
-   """
-   Updates the canvas.
-   Also blocks script execution and runs the ROOT graphics event loop until the <space> keyword is pressed,
-   but only if the following conditions are met:
-   * The `block` optional argument is set to `True`.
-   * ROOT graphics are enabled, i.e. `ROOT.gROOT.IsBatch() == False`.
-   * The script is running not in ipython notebooks.
-   """
-
+def run_root_event_loop():
    from ROOT import gROOT
    import os
    import sys
-
-   self._Update()
-
-   # blocking flag is not set
-   if not block:
-      return
 
    # no special handling in batch mode
    if gROOT.IsBatch():
@@ -110,11 +94,52 @@ def _TCanvas_Update(self, block = False):
       wait_press_posix()
 
 
+def _TCanvas_Update(self, block = False):
+   """
+   Updates the canvas.
+   Also blocks script execution and runs the ROOT graphics event loop until the <space> keyword is pressed,
+   but only if the following conditions are met:
+   * The `block` optional argument is set to `True`.
+   * ROOT graphics are enabled, i.e. `ROOT.gROOT.IsBatch() == False`.
+   * The script is running not in ipython notebooks.
+   """
+
+   self._Update()
+
+   # run loop if block flag is set
+   if block:
+      run_root_event_loop()
+
+
+def _TCanvas_Draw(self, block = False):
+   """
+   Draw the canvas.
+   Also blocks script execution and runs the ROOT graphics event loop until the <space> keyword is pressed,
+   but only if the following conditions are met:
+   * The `block` optional argument is set to `True`.
+   * ROOT graphics are enabled, i.e. `ROOT.gROOT.IsBatch() == False`.
+   * The script is running not in ipython notebooks.
+   """
+
+   if isinstance(block, str):
+      self._Draw(block)
+      return
+
+   self._Draw()
+
+   # run loop if block flag is set
+   if block == True:
+      self._Update()
+      run_root_event_loop()
+
+
 @pythonization('TCanvas')
 def pythonize_tcanvas(klass):
     # Parameters:
     # klass: class to be pythonized
 
     klass._Update = klass.Update
+    klass._Draw = klass.Draw
     klass.Update = _TCanvas_Update
+    klass.Draw = _TCanvas_Draw
 
