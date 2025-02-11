@@ -597,10 +597,6 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
       std::string normOrigType{typeName};
       TClassEdit::TSplitType splitname(normOrigType.c_str(), modType);
       splitname.ShortType(normOrigType, modType);
-      // See TClassEdit::GetNormalizedName
-      if (normOrigType.length() > 2 && normOrigType[0] == ':' && normOrigType[1] == ':') {
-         normOrigType.erase(0, 2);
-      }
       normOrigType = Internal::GetRenormalizedTypeName(normOrigType);
       if (normOrigType != result->GetTypeName()) {
          result->fTypeAlias = normOrigType;

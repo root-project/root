@@ -67,6 +67,8 @@ std::string ROOT::Experimental::Internal::GetCanonicalTypePrefix(const std::stri
       canonicalType.erase(0, 7);
    } else if (canonicalType.substr(0, 5) == "enum ") {
       canonicalType.erase(0, 5);
+   } else if (canonicalType.substr(0, 2) == "::") {
+      canonicalType.erase(0, 2);
    }
 
    if (canonicalType.substr(0, 6) == "array<") {
