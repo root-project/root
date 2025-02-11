@@ -1778,6 +1778,7 @@ Int_t TTree::Branch(TList* li, Int_t bufsize /* = 32000 */ , Int_t splitlevel /*
 /// to be of the form `master.subbranch` instead of simply `subbranch`.
 /// This situation happens when the top level object
 /// has two or more members referencing the same class.
+/// Without the dot, the prefix will not be there and that will cause ambiguities.
 /// For example, if a Tree has two branches B1 and B2 corresponding
 /// to objects of the same class MyClass, one can do:
 /// ~~~ {.cpp}
@@ -1786,6 +1787,8 @@ Int_t TTree::Branch(TList* li, Int_t bufsize /* = 32000 */ , Int_t splitlevel /*
 /// ~~~
 /// if MyClass has 3 members a,b,c, the two instructions above will generate
 /// subbranches called B1.a, B1.b ,B1.c, B2.a, B2.b, B2.c
+/// In other words, the trailing dot of the branch name is semantically relevant
+/// and recommended.
 ///
 /// Example:
 /// ~~~ {.cpp}
