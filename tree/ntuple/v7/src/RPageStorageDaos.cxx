@@ -280,8 +280,8 @@ ROOT::Experimental::Internal::RPageSinkDaos::RPageSinkDaos(std::string_view ntup
 {
    static std::once_flag once;
    std::call_once(once, []() {
-      R__LOG_WARNING(NTupleLog()) << "The DAOS backend is experimental and still under development. "
-                                  << "Do not store real data with this version of RNTuple!";
+      R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "The DAOS backend is experimental and still under development. "
+                                                  << "Do not store real data with this version of RNTuple!";
    });
    fCompressor = std::make_unique<RNTupleCompressor>();
    EnableDefaultMetrics("RPageSinkDaos");

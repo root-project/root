@@ -233,7 +233,7 @@ void ROOT::Experimental::RFieldBase::RBulk::AdoptBuffer(void *buf, std::size_t c
 
 void ROOT::Experimental::RFieldBase::RCreateObjectDeleter<void>::operator()(void *)
 {
-   R__LOG_WARNING(NTupleLog()) << "possibly leaking object from RField<T>::CreateObject<void>";
+   R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "possibly leaking object from RField<T>::CreateObject<void>";
 }
 
 template <>

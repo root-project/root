@@ -155,7 +155,7 @@ void ROOT::Experimental::RClassField::AddReadCallbacksFromIORules(const std::spa
 {
    for (const auto rule : rules) {
       if (rule->GetRuleType() != ROOT::TSchemaRule::kReadRule) {
-         R__LOG_WARNING(NTupleLog()) << "ignoring I/O customization rule with unsupported type";
+         R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "ignoring I/O customization rule with unsupported type";
          continue;
       }
       auto func = rule->GetReadFunctionPointer();
@@ -243,8 +243,8 @@ void ROOT::Experimental::RClassField::OnConnectPageSource()
       for (auto target : ROOT::Detail::TRangeStaticCast<TObjString>(*rule->GetTarget())) {
          const auto dataMember = klass->GetDataMember(target->GetString());
          if (!dataMember || dataMember->IsPersistent()) {
-            R__LOG_WARNING(NTupleLog()) << "ignoring I/O customization rule with non-transient member: "
-                                        << dataMember->GetName();
+            R__LOG_WARNING(ROOT::Internal::NTupleLog())
+               << "ignoring I/O customization rule with non-transient member: " << dataMember->GetName();
             return true;
          }
       }

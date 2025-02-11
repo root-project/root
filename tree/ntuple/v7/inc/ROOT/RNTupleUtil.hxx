@@ -28,8 +28,10 @@
 namespace ROOT {
 
 class RLogChannel;
+namespace Internal {
 /// Log channel for RNTuple diagnostics.
 ROOT::RLogChannel &NTupleLog();
+} // namespace Internal
 
 /// Helper types to present an offset column as array of collection sizes.
 /// See RField<RNTupleCardinality<SizeT>> for details.
