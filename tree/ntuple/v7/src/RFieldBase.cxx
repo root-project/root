@@ -189,7 +189,7 @@ void ROOT::Experimental::RFieldBase::RBulk::Reset(RNTupleLocalIndex firstIndex, 
          throw RException(R__FAIL("invalid attempt to bulk read beyond the adopted buffer"));
       }
       ReleaseValues();
-      fValues = operator new(size *fValueSize);
+      fValues = operator new(size * fValueSize);
 
       if (!(fField->GetTraits() & RFieldBase::kTraitTriviallyConstructible)) {
          for (std::size_t i = 0; i < size; ++i) {
@@ -887,7 +887,11 @@ void ROOT::Experimental::RFieldBase::SetColumnRepresentatives(
       auto itRepresentative = std::find(validTypes.begin(), validTypes.end(), r);
       if (itRepresentative == std::end(validTypes))
          throw RException(R__FAIL("invalid column representative"));
-      fColumnRepresentatives.emplace_back(*itRepresentative);
+
+      // don't add a duplicate representation
+      if (std::find_if(fColumnRepresentatives.begin(), fColumnRepresentatives.end(),
+                       [&r](const auto &rep) { return r == rep.get(); }) == fColumnRepresentatives.end())
+         fColumnRepresentatives.emplace_back(*itRepresentative);
    }
 }
 

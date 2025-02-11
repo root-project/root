@@ -182,7 +182,7 @@ public:
    private:
       Selection_t fSerializationTypes;
       /// The union of the serialization types and the deserialization extra types.  Duplicates the serialization types
-      /// list but the benenfit is that GetDeserializationTypes does not need to compile the list.
+      /// list but the benefit is that GetDeserializationTypes does not need to compile the list.
       Selection_t fDeserializationTypes;
    }; // class RColumnRepresentations
 
