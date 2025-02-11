@@ -52,6 +52,10 @@ TEST(RNTuple, TypeNameNormalization)
    }
    EXPECT_EQ(normExample, RFieldBase::Create("f", example).Unwrap()->GetTypeName());
    EXPECT_EQ("std::pair<size_t,std::array<CustomStruct,6>>", RFieldBase::Create("f", example).Unwrap()->GetTypeAlias());
+
+   EXPECT_EQ("std::vector<CustomStruct>",
+             RFieldBase::Create("f", "::std::vector<::CustomStruct>").Unwrap()->GetTypeName());
+   EXPECT_EQ("", RFieldBase::Create("f", "::std::vector<::CustomStruct>").Unwrap()->GetTypeAlias());
 }
 
 TEST(RNTuple, TClassDefaultTemplateParameter)
