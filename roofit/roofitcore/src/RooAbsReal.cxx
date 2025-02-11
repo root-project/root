@@ -1016,27 +1016,18 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
     zvar= dynamic_cast<RooRealVar*>(plotClones.find(plotVars.at(2)->GetName()));
     zaxis= hist->GetZaxis();
     assert(nullptr != zvar && nullptr != zaxis);
-    if (scaleForDensity) {
-      scaleFactor*= (zaxis->GetXmax() - zaxis->GetXmin())/zbins;
-    }
     // fall through to next case...
   case 2:
     ybins= hist->GetNbinsY();
     yvar= dynamic_cast<RooRealVar*>(plotClones.find(plotVars.at(1)->GetName()));
     yaxis= hist->GetYaxis();
     assert(nullptr != yvar && nullptr != yaxis);
-    if (scaleForDensity) {
-      scaleFactor*= (yaxis->GetXmax() - yaxis->GetXmin())/ybins;
-    }
     // fall through to next case...
   case 1:
     xbins= hist->GetNbinsX();
     xvar= dynamic_cast<RooRealVar*>(plotClones.find(plotVars.at(0)->GetName()));
     xaxis= hist->GetXaxis();
     assert(nullptr != xvar && nullptr != xaxis);
-    if (scaleForDensity) {
-      scaleFactor*= (xaxis->GetXmax() - xaxis->GetXmin())/xbins;
-    }
     break;
   default:
     coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: cannot fill histogram with "
@@ -1074,7 +1065,13 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
       break;
     }
 
-    double result= scaleFactor*projected->getVal();
+    // Bin volume scaling
+    double scaleFactorBin = scaleFactor;
+    scaleFactorBin *= scaleForDensity && hdim > 2 ? hist->GetZaxis()->GetBinWidth(zbin) : 1.0;
+    scaleFactorBin *= scaleForDensity && hdim > 1 ? hist->GetYaxis()->GetBinWidth(ybin) : 1.0;
+    scaleFactorBin *= scaleForDensity && hdim > 0 ? hist->GetXaxis()->GetBinWidth(xbin) : 1.0;
+
+    double result= scaleFactorBin * projected->getVal();
     if (RooAbsReal::numEvalErrors()>0) {
       coutW(Plotting) << "WARNING: Function evaluation error(s) at coordinates [x]=" << xvar->getVal() ;
       if (hdim==2) ccoutW(Plotting) << " [y]=" << yvar->getVal() ;
