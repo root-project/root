@@ -149,7 +149,7 @@ ifneq ($(ClingWorkAroundMissingDynamicScope),)
 cloning.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L cloningTwo.C+");' 
 endif
 
-cloning.root: cloningOne_C.$(DllSuf)
+cloning.root: cloningOne_C.$(DllSuf) cloningTwo_C.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'runcloning.C(1)' > cloning_root.log
 
 cloning.log: cloningTwo_C.$(DllSuf) cloning.root
