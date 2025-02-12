@@ -34,4 +34,8 @@ if(r)
   add_subdirectory(rtools)
 endif()
 
+if(scipy AND NUMPY_FOUND)
+  add_subdirectory(scipy)
+endif()
+
 add_subdirectory(vecops)
