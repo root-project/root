@@ -873,7 +873,12 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     endif()
 
   else()
-    set_property(GLOBAL APPEND PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT ${modulemap_entry})
+    #set_property(GLOBAL APPEND PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT ${modulemap_entry})
+    set_property(GLOBAL APPEND PROPERTY ROOT_CXXMODULES_EXTRA_SPLIT_MODULEMAP_CONTENT "extern module ${library} \"ROOT.modulemap.d/${library}.modulemap\"\n")
+    set_property(GLOBAL APPEND PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT "extern module ${library} \"${library}.modulemap\"\n")
+
+    file(WRITE "${CMAKE_BINARY_DIR}/include/ROOT.modulemap.d/${library}.modulemap" "${modulemap_entry}")
+    file(WRITE "${CMAKE_BINARY_DIR}/include/${library}.modulemap" "${modulemap_entry}")
   endif()
 endfunction()
 
