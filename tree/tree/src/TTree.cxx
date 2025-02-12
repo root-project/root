@@ -1778,7 +1778,7 @@ Int_t TTree::Branch(TList* li, Int_t bufsize /* = 32000 */ , Int_t splitlevel /*
 /// to be of the form `master.subbranch` instead of simply `subbranch`.
 /// This situation happens when the top level object
 /// has two or more members referencing the same class.
-/// Without the dot, the prefix will not be there and that will cause ambiguities.
+/// Without the dot, the prefix will not be there and that might cause ambiguities.
 /// For example, if a Tree has two branches B1 and B2 corresponding
 /// to objects of the same class MyClass, one can do:
 /// ~~~ {.cpp}
@@ -9167,7 +9167,7 @@ void TTree::SetFileNumber(Int_t number)
 /// The function's primary purpose is to allow the user to access the data
 /// directly with numerical type variable rather than having to have the original
 /// set of classes (or a reproduction thereof).
-/// In other words, SetMakeClass sets the TTree into some sort of compatibility
+/// In other words, SetMakeClass sets the branch(es) into a
 /// mode that allow its reading via a set of independant variables
 /// (see the result of running TTree::MakeClass on your TTree) by changing the
 /// interpretation of the address passed to SetAddress from being the beginning
