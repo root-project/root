@@ -29,6 +29,37 @@ TCollection inherits from TObject since we want to be able to have
 collections of collections.
 
 In a later release the collections may become templatized.
+
+The following describes how you can access the elements in case
+an interface returns a ROOT collection type such as TList or TObjArray.
+These type of ROOT collections hold pointers to TObject. In other words,
+to store an object in a ROOT collection, it must inherit from TObject.
+You can think of a TList as a std::list<TObject*>.
+
+\note For historical reasons, some of ROOT’s interfaces use ROOT’s
+own collection types such as TList and TObjArray. In modern code
+(within ROOT and your own), it's recommended to rather use
+std::array or std::vector etc. from the C++ Standard Library, and
+their standard iterators.
+
+Traditional ways of iterating through these elements rely on the use of
+TIter, R__FOR_EACH, std::for_each, range-based for, TObjLink::Next or
+TList::After, as described in the 6 examples of TList documentation.
+
+However, these ways of retrieval through the parent class TObject* are
+often not useful, since those pointers have to be cast back to the
+correct subclass. For instance, with TTree::GetListOfBranches(),
+you know that the derived class is of type TBranch*. For this purpose,
+ROOT offers a specific tools for range-based for loops: such as
+ROOT::RRangeCast, TRangeStaticCast and TRangeDynCast (in this example):
+
+```{.cpp}
+for (auto br : TRangeDynCast<TBranch>( tree->GetListOfBranches() )) {
+    if (!br) continue;
+    // Use br as a TBranch*
+}
+```
+
 */
 
 #include "TCollection.h"

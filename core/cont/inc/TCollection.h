@@ -321,7 +321,7 @@ public:
 /// of the type requested (or a derived class). Any deviation from this expectation
 /// will only be caught/reported by an assert in debug builds.
 ///
-/// This is best used with a TClonesArray, for other cases prefered TRangeDynCast.
+/// This is best used with a TClonesArray, for other cases TRangeDynCast is preferred.
 ///
 /// The typical use is:
 /// ```{.cpp}
