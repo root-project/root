@@ -76,8 +76,11 @@ TEST(RNTuple, TClassDefaultTemplateParameter)
 
    const auto &desc = reader->GetDescriptor();
    EXPECT_EQ("DataVector<std::int32_t,double>", desc.GetFieldDescriptor(desc.FindFieldId("f1")).GetTypeName());
+   EXPECT_EQ("", desc.GetFieldDescriptor(desc.FindFieldId("f1")).GetTypeAlias());
    EXPECT_EQ("DataVector<std::int32_t,float>", desc.GetFieldDescriptor(desc.FindFieldId("f2")).GetTypeName());
+   EXPECT_EQ("", desc.GetFieldDescriptor(desc.FindFieldId("f2")).GetTypeAlias());
    EXPECT_EQ("DataVector<std::int32_t,double>", desc.GetFieldDescriptor(desc.FindFieldId("f3")).GetTypeName());
+   EXPECT_EQ("", desc.GetFieldDescriptor(desc.FindFieldId("f3")).GetTypeAlias());
    EXPECT_EQ("DataVector<bool,std::vector<std::uint32_t>>",
              desc.GetFieldDescriptor(desc.FindFieldId("f4")).GetTypeName());
 
