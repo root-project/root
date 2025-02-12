@@ -246,8 +246,8 @@ private:
    RNTupleModel(std::unique_ptr<RFieldZero> fieldZero);
 
 public:
-   RNTupleModel(const RNTupleModel&) = delete;
-   RNTupleModel& operator =(const RNTupleModel&) = delete;
+   RNTupleModel(const RNTupleModel &) = delete;
+   RNTupleModel &operator=(const RNTupleModel &) = delete;
    ~RNTupleModel() = default;
 
    std::unique_ptr<RNTupleModel> Clone() const;
