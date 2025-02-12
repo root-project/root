@@ -8,11 +8,16 @@ on:
     paths-ignore:
       - 'doc/**'
       - 'documentation/**'
+      - 'README/ReleaseNotes/**'
 
   push:
     branches:
       - 'master'
       - 'v*-*-*-patches'
+      paths-ignore:
+        - 'doc/**'
+        - 'documentation/**'
+        - 'README/ReleaseNotes/**'
 
   # Allows nightly builds to trigger one run for each branch easily, by
   # providing the relevant branch as "default" value here:
