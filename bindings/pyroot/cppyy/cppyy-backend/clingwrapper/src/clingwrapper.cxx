@@ -275,7 +275,8 @@ public:
             "slice_array", "slice", "stack", "string", "strstream", "strstreambuf",
             "time_get_byname", "time_get", "time_put_byname", "time_put", "unary_function",
             "unary_negate", "unique_ptr", "underflow_error", "unordered_map", "unordered_multimap",
-            "unordered_multiset", "unordered_set", "valarray", "vector", "weak_ptr", "wstring"};
+            "unordered_multiset", "unordered_set", "valarray", "vector", "weak_ptr", "wstring",
+            "__hash_not_enabled"};
         for (auto& name : stl_names)
             gSTLNames.insert(name);
 
