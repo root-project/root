@@ -310,6 +310,67 @@ TEST_F(RNTupleDSTest, ChainTailScheduling)
 }
 #endif
 
+TEST(RNTupleDS, CollectionFieldTypes)
+{
+   // NB: The other tests already cover std::vector and std::array (and nestings thereof).
+   FileRAII fileGuard{"RNTupleDS_test_collection_field_types.root"};
+   {
+      auto model = RNTupleModel::Create();
+      *model->MakeField<std::set<int>>("intSet") = std::set<int>{3, 1, 2};
+      *model->MakeField<std::set<Electron>>("electronSet") =
+         std::set<Electron>{Electron{1.f}, Electron{2.f}, Electron{3.f}};
+      *model->MakeField<std::set<std::vector<Electron>>>("electronSetVec") =
+         std::set<std::vector<Electron>>{{Electron{1.f}, Electron{2.f}}, {Electron{3.f}}};
+      *model->MakeField<std::set<std::set<Electron>>>("electronSetSet") =
+         std::set<std::set<Electron>>{{Electron{1.f}, Electron{2.f}}, {Electron{3.f}}};
+
+      // Mimic the collection stucture of NanoAOD
+      std::vector<std::unique_ptr<ROOT::Experimental::RFieldBase>> muon;
+      muon.emplace_back(std::make_unique<ROOT::Experimental::RField<float>>("muon_pt"));
+      auto fldMuonRecord = std::make_unique<ROOT::Experimental::RRecordField>("_0", std::move(muon));
+      auto fldMuons = ROOT::Experimental::RVectorField::CreateUntyped("muon", std::move(fldMuonRecord));
+      model->AddField(std::move(fldMuons));
+
+      auto muonPtField = ROOT::Experimental::RFieldBase::Create("muon_pt", "ROOT::VecOps::RVec<float>").Unwrap();
+      model->AddProjectedField(std::move(muonPtField), [](const std::string &fieldName) {
+         if (fieldName == "muon_pt")
+            return "muon";
+         else
+            return "muon._0.muon_pt";
+      });
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      ntuple->Fill();
+   }
+
+   RNTupleDS ds("ntuple", fileGuard.GetPath());
+
+   auto colNames = ds.GetColumnNames();
+
+   ASSERT_EQ(19, colNames.size());
+
+   EXPECT_TRUE(ds.HasColumn("intSet"));
+   EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_intSet"));
+   EXPECT_TRUE(ds.HasColumn("electronSet"));
+   EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_electronSet"));
+   EXPECT_TRUE(ds.HasColumn("electronSet.pt"));
+   EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_electronSet.pt"));
+   EXPECT_TRUE(ds.HasColumn("muon_pt"));
+   EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_muon_pt"));
+   EXPECT_TRUE(ds.HasColumn("muon._0.muon_pt"));
+   EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_muon._0.muon_pt"));
+
+   EXPECT_STREQ("std::set<std::int32_t>", ds.GetTypeName("intSet").c_str());
+   EXPECT_STREQ("std::set<Electron>", ds.GetTypeName("electronSet").c_str());
+   EXPECT_STREQ("ROOT::VecOps::RVec<float>", ds.GetTypeName("electronSet.pt").c_str());
+   EXPECT_STREQ("std::set<std::set<Electron>>", ds.GetTypeName("electronSetSet").c_str());
+   EXPECT_STREQ("ROOT::VecOps::RVec<ROOT::VecOps::RVec<float>>", ds.GetTypeName("electronSetSet.pt").c_str());
+   // TODO(fdegeus) figure out how to (cleanly) still add inner vectors etc. as RVecs.
+   EXPECT_STREQ("std::set<std::vector<Electron>>", ds.GetTypeName("electronSetVec").c_str());
+   EXPECT_STREQ("ROOT::VecOps::RVec<float>", ds.GetTypeName("muon_pt").c_str());
+   EXPECT_STREQ(ds.GetTypeName("muon._0.muon_pt").c_str(), ds.GetTypeName("muon_pt").c_str());
+}
+
 const static std::array<ROOT::RVec<std::array<ROOT::RVecI, 3>>, 3> arraysDatasetCol4El{
    ROOT::RVec<std::array<ROOT::RVecI, 3>>{
       {ROOT::RVecI{1, 2}, ROOT::RVecI{4, 5, 6}, ROOT::RVecI{42, 43, 44, 45}},
