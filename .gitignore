@@ -982,9 +982,9 @@ root/tree/stl/vecptr.root
 /root/treeproxy/red.h
 /root/treeproxy/val3dimSel.h
 /root/treeproxy/fullmcSel.h
-/root/treeproxy/vectorintSel.h
-/root/treeproxy/vectorintEmuSel.h
-/root/treeproxy/vec.root
+/root/treeproxy/vectorint/vectorintSel.h
+/root/treeproxy/vectorint/vectorintEmuSel.h
+/root/treeproxy/vectorint/vec.root
 /root/treeproxy/forproxy.root
 /root/treeproxy/withfriend*
 /root/treeproxy/make_tuple.root
