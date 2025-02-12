@@ -24,7 +24,10 @@ private:
 public:
    ROperator_Erf(){}
    ROperator_Erf(std::string nameX, std::string nameY):
-      fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){}
+      fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
+      }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;
@@ -42,7 +45,6 @@ public:
       }
       fShape = model.GetTensorShape(fNX);
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShape);
-
    }
 
 
@@ -61,6 +63,7 @@ public:
    }
 
    std::vector<std::string> GetStdLibs() { return { std::string("cmath") };}
+   
 };
 
 }//SOFIE

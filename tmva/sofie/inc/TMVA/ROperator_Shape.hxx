@@ -30,7 +30,10 @@ private:
 public:
    ROperator_Shape(){}
    ROperator_Shape(int start, int end, std::string nameX, std::string nameY):
-   fStart(start) ,fEnd(end), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){}
+   fStart(start) ,fEnd(end), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
+   }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;
@@ -63,6 +66,7 @@ public:
          auto shape_values = std::vector<int64_t>(fShape.begin()+fStart, fShape.begin() + fEnd );
          std::memcpy(data.get(), (void*) shape_values.data(), length * sizeof(int64_t));
          model.AddConstantTensor(fNY, ETensorType::INT64, fOutput_shape, data);
+         fOutputTensorNames.pop_back();
          if (model.Verbose()) {
             std::cout << "Output of Shape is constant tensor with shape " << ConvertShapeToString(fOutput_shape) << " and values ";
             for (size_t i = 0; i < shape_values.size(); i++)

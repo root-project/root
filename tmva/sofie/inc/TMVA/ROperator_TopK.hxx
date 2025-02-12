@@ -37,7 +37,10 @@ public:
         fNK(UTILITY::Clean_name(nameK)),
         fNX(UTILITY::Clean_name(nameX)),
         fNVal(UTILITY::Clean_name(nameVal)),
-        fNInd(UTILITY::Clean_name(nameInd)){}
+        fNInd(UTILITY::Clean_name(nameInd)){
+            fInputTensorNames = { fNX, fNK };
+            fOutputTensorNames = { fNVal, fNInd };
+        }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) {
          ETensorType ret = input[0];
@@ -57,8 +60,7 @@ public:
    }
 
 
-   void Initialize(RModel &model)
-   {
+   void Initialize(RModel& model){
       if (model.CheckIfTensorAlreadyExist(fNX) == false) {
          // input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA SOFIE TopK Op Input Tensor is not found in model");

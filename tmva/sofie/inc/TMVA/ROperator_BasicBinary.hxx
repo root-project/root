@@ -68,7 +68,10 @@ private:
 public:
    ROperator_BasicBinary(){}
    ROperator_BasicBinary(std::string nameA, std::string nameB, std::string nameY):
-      fNA(UTILITY::Clean_name(nameA)), fNB(UTILITY::Clean_name(nameB)), fNY(UTILITY::Clean_name(nameY)){}
+      fNA(UTILITY::Clean_name(nameA)), fNB(UTILITY::Clean_name(nameB)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNA, fNB };
+         fOutputTensorNames = { fNY };
+      }
 
    // type of output given input
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
@@ -82,7 +85,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model) override {
+   void Initialize(RModel& model){
       // input must be a graph input, or already initialized intermediate tensor
       if (!model.CheckIfTensorAlreadyExist(fNA)){
          throw std::runtime_error(std::string("TMVA SOFIE Binary Op Input Tensor ") + fNA + "is not found in model");

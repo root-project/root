@@ -59,14 +59,25 @@ public:
         fNScale(UTILITY::Clean_name(nameScale)), fNB(UTILITY::Clean_name(nameB)),
         fNY(UTILITY::Clean_name(nameY)), fNMean(UTILITY::Clean_name(nameMean)), fNInvStdDev(UTILITY::Clean_name(nameInvStdDev))
    {
+         fInputTensorNames = { fNX, fNScale };
+         if (!fNB.empty()){
+            fInputTensorNames.emplace_back(fNB);
+         }
+
+         fOutputTensorNames = { fNY };
+         if (!fNMean.empty()){
+            fOutputTensorNames.emplace_back(fNMean);
+         }
+         if (!fNInvStdDev.empty()){
+            fOutputTensorNames.emplace_back(fNInvStdDev);
+         }
    }
 
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override { return input; }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override { return input; }
 
-   void Initialize(RModel &model) override
-   {
+   void Initialize(RModel& model) override {
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw std::runtime_error("TMVA::SOFIE - Tensor " + fNX + " not found.");
       }
