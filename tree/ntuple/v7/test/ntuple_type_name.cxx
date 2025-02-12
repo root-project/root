@@ -68,6 +68,8 @@ TEST(RNTuple, TClassDefaultTemplateParameter)
       model->MakeField<DataVector<int, float>>("f2");
       model->AddField(RFieldBase::Create("f3", "DataVector<int>").Unwrap());
       model->AddField(RFieldBase::Create("f4", "struct DataVector<bool,vector<unsigned>>").Unwrap());
+      model->AddField(RFieldBase::Create("f5", "DataVector<Double32_t>").Unwrap());
+      model->AddField(RFieldBase::Create("f6", "DataVector<int, double>").Unwrap());
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
    }
 
@@ -77,12 +79,22 @@ TEST(RNTuple, TClassDefaultTemplateParameter)
    const auto &desc = reader->GetDescriptor();
    EXPECT_EQ("DataVector<std::int32_t,double>", desc.GetFieldDescriptor(desc.FindFieldId("f1")).GetTypeName());
    EXPECT_EQ("", desc.GetFieldDescriptor(desc.FindFieldId("f1")).GetTypeAlias());
+
    EXPECT_EQ("DataVector<std::int32_t,float>", desc.GetFieldDescriptor(desc.FindFieldId("f2")).GetTypeName());
    EXPECT_EQ("", desc.GetFieldDescriptor(desc.FindFieldId("f2")).GetTypeAlias());
+
    EXPECT_EQ("DataVector<std::int32_t,double>", desc.GetFieldDescriptor(desc.FindFieldId("f3")).GetTypeName());
    EXPECT_EQ("", desc.GetFieldDescriptor(desc.FindFieldId("f3")).GetTypeAlias());
+
    EXPECT_EQ("DataVector<bool,std::vector<std::uint32_t>>",
              desc.GetFieldDescriptor(desc.FindFieldId("f4")).GetTypeName());
+   EXPECT_EQ("", desc.GetFieldDescriptor(desc.FindFieldId("f4")).GetTypeAlias());
+
+   EXPECT_EQ("DataVector<double,double>", desc.GetFieldDescriptor(desc.FindFieldId("f5")).GetTypeName());
+   EXPECT_EQ("DataVector<Double32_t,double>", desc.GetFieldDescriptor(desc.FindFieldId("f5")).GetTypeAlias());
+
+   EXPECT_EQ("DataVector<std::int32_t,double>", desc.GetFieldDescriptor(desc.FindFieldId("f6")).GetTypeName());
+   EXPECT_EQ("", desc.GetFieldDescriptor(desc.FindFieldId("f6")).GetTypeAlias());
 
    auto v1 = reader->GetView<DataVector<int>>("f1");
    auto v3 = reader->GetView<DataVector<int>>("f3");
