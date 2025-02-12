@@ -268,6 +268,7 @@ public:
       struct RColumnInfo {
          RClusterDescriptor::RPageRange fPageRange;
          ROOT::NTupleSize_t fNElements = ROOT::kInvalidNTupleIndex;
+         int fCompressionSettings;
          bool fIsSuppressed = false;
       };
 

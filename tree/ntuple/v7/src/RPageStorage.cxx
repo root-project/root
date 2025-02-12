@@ -1108,6 +1108,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::StageCluster(ROOT::NTupleSize
 
    for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
       RStagedCluster::RColumnInfo columnInfo;
+      columnInfo.fCompressionSettings = fOpenColumnRanges[i].fCompressionSettings.value();
       if (fOpenColumnRanges[i].fIsSuppressed) {
          assert(fOpenPageRanges[i].fPageInfos.empty());
          columnInfo.fPageRange.fPhysicalColumnId = i;
@@ -1142,7 +1143,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitStagedClusters(std
             clusterBuilder.MarkSuppressedColumnRange(colId);
          } else {
             clusterBuilder.CommitColumnRange(colId, fOpenColumnRanges[colId].fFirstElementIndex,
-                                             fOpenColumnRanges[colId].fCompressionSettings.value(),
+                                             columnInfo.fCompressionSettings,
                                              columnInfo.fPageRange);
             fOpenColumnRanges[colId].fFirstElementIndex += columnInfo.fNElements;
          }
