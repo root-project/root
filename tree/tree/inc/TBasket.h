@@ -112,7 +112,7 @@ public:
 
    TBasket();
    TBasket(TDirectory *motherDir);
-   TBasket(const char *name, const char *title, TBranch *branch);
+   TBasket(const char *name, const char *title, TBranch *branch, Int_t ondiskSize);
    ~TBasket() override;
 
    virtual void    AdjustSize(Int_t newsize);
