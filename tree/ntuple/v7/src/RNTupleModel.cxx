@@ -195,21 +195,33 @@ void ROOT::Experimental::RNTupleModel::RUpdater::CommitUpdate()
    fWriter.GetSink().UpdateSchema(toCommit, fWriter.GetNEntries());
 }
 
-void ROOT::Experimental::RNTupleModel::RUpdater::AddField(std::unique_ptr<RFieldBase> field)
+void ROOT::Experimental::Internal::RNTupleModelChangeset::AddField(std::unique_ptr<RFieldBase> field)
 {
    auto fieldp = field.get();
-   fOpenChangeset.fModel.AddField(std::move(field));
-   fOpenChangeset.fAddedFields.emplace_back(fieldp);
+   fModel.AddField(std::move(field));
+   fAddedFields.emplace_back(fieldp);
+}
+
+void ROOT::Experimental::RNTupleModel::RUpdater::AddField(std::unique_ptr<RFieldBase> field)
+{
+   fOpenChangeset.AddField(std::move(field));
+}
+
+ROOT::RResult<void>
+ROOT::Experimental::Internal::RNTupleModelChangeset::AddProjectedField(std::unique_ptr<RFieldBase> field,
+                                                                       RNTupleModel::FieldMappingFunc_t mapping)
+{
+   auto fieldp = field.get();
+   auto result = fModel.AddProjectedField(std::move(field), mapping);
+   if (result)
+      fAddedProjectedFields.emplace_back(fieldp);
+   return R__FORWARD_RESULT(result);
 }
 
 ROOT::RResult<void> ROOT::Experimental::RNTupleModel::RUpdater::AddProjectedField(std::unique_ptr<RFieldBase> field,
                                                                                   FieldMappingFunc_t mapping)
 {
-   auto fieldp = field.get();
-   auto result = fOpenChangeset.fModel.AddProjectedField(std::move(field), mapping);
-   if (result)
-      fOpenChangeset.fAddedProjectedFields.emplace_back(fieldp);
-   return R__FORWARD_RESULT(result);
+   return R__FORWARD_RESULT(fOpenChangeset.AddProjectedField(std::move(field), std::move(mapping)));
 }
 
 void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fieldName)
