@@ -15,7 +15,7 @@
 #include "clang/Basic/SourceManager.h"
 
 #include "llvm/ADT/ArrayRef.h"
-
+#include "llvm/ExecutionEngine/Orc/AutoLoadEPC.h"
 #include <memory>
 
 namespace clang {
@@ -43,7 +43,7 @@ namespace cling {
   /// \brief  This interface provides a way to observe the actions of the
   /// interpreter as it does its thing.  Clients can define their hooks here to
   /// implement interpreter level tools.
-  class InterpreterCallbacks {
+  class InterpreterCallbacks : public llvm::orc::ORCCallbacks {
   protected:
 
     ///\brief Our interpreter instance.
@@ -118,7 +118,7 @@ namespace cling {
     ///
     /// \param[in] - Error message and parameters passed to loadLibrary
     /// \returns true if the error was handled.
-    virtual bool LibraryLoadingFailed(const std::string&, const std::string&, bool, bool) { return 0; }
+    // virtual bool LibraryLoadingFailed(const std::string&, const std::string&, bool, bool) { return 0; }
 
     ///\brief This callback is invoked whenever interpreter has committed new
     /// portion of declarations.
@@ -159,8 +159,8 @@ namespace cling {
     ///\param[in] - The declaration that has been shadowed.
     virtual void DefinitionShadowed(const clang::NamedDecl*) {}
 
-    virtual void LibraryLoaded(const void*, llvm::StringRef) {}
-    virtual void LibraryUnloaded(const void*, llvm::StringRef) {}
+    // virtual void LibraryLoaded(const void*, llvm::StringRef) {}
+    // virtual void LibraryUnloaded(const void*, llvm::StringRef) {}
 
     ///\brief Cling calls this is printing a stack trace can be beneficial,
     /// for instance when throwing interpreter exceptions.

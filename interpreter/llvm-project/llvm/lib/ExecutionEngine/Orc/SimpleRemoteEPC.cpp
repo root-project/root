@@ -45,6 +45,40 @@ SimpleRemoteEPC::lookupSymbols(ArrayRef<LookupRequest> Request) {
   return std::move(Result);
 }
 
+static void
+resolveSymbolsAsyncHelper(EPCGenericDylibManager &DylibMgr,
+                          ArrayRef<SymbolLookupSet> Request,
+                          std::vector<ResolveResult> Result,
+                          SimpleRemoteEPC::ResolveSymbolsCompleteFn Complete) {
+  if (Request.empty())
+    return Complete(std::move(Result));
+
+  auto &Symbols = Request.front();
+  DylibMgr.resolveAsync(Symbols, [&DylibMgr, Request,
+                                  Complete = std::move(Complete),
+                                  Result = std::move(Result)](auto R) mutable {
+    if (!R)
+      return Complete(R.takeError());
+    Result.push_back({});
+    if (R->Filter.has_value())
+      Result.back().Filter.swap(R->Filter);
+
+    auto &S = R->SymbolDef;
+    auto &SymDef = Result.back().SymbolDef;
+    SymDef.reserve(S.size());
+    for (auto Addr : S)
+      SymDef.push_back(Addr);
+
+    resolveSymbolsAsyncHelper(DylibMgr, Request.drop_front(), std::move(Result),
+                              std::move(Complete));
+  });
+}
+
+void SimpleRemoteEPC::resolveSymbolsAsync(ArrayRef<SymbolLookupSet> Request,
+                                          ResolveSymbolsCompleteFn Complete) {
+  resolveSymbolsAsyncHelper(*DylibMgr, Request, {}, std::move(Complete));
+}
+
 Expected<int32_t> SimpleRemoteEPC::runAsMain(ExecutorAddr MainFnAddr,
                                              ArrayRef<std::string> Args) {
   int64_t Result = 0;
