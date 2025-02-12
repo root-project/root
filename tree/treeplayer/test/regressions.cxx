@@ -181,8 +181,7 @@ TEST(TTreeFormulaRegressions, ConstantAlias)
 {
    TTree t("t","ti");
    t.SetAlias("w","3");
-   TTreeFormula tf;
-   tf.SetTree(&t);
+   TTreeFormula tf("tf", "Entry$", &t);
    Int_t action;
    TString expr = "w";
    EXPECT_EQ(tf.DefinedVariable(expr, action), 0); // was -3 during the regression

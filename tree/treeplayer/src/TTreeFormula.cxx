@@ -2905,8 +2905,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
                return -3;
             }
 
-            if (fManager)
-               fManager->Add(subform);
+            fManager->Add(subform);
             fAliases.AddAtAndExpand(subform,fNoper);
 
             if (subform->IsString()) {
