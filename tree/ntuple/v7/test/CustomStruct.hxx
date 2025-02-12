@@ -96,6 +96,9 @@ public:
 template <typename T1, typename T2, typename T3, typename T4>
 class InnerCV {};
 
+template <long long TLL, unsigned long long TULL>
+class IntegerTemplates {};
+
 class IOConstructor {
 public:
    IOConstructor() = delete;

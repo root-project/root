@@ -388,7 +388,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          if (arrayDef.size() != 2) {
             return R__FORWARD_RESULT(fnFail("the template list for std::array must have exactly two elements"));
          }
-         auto arrayLength = std::stoi(arrayDef[1]);
+         auto arrayLength = std::stoull(arrayDef[1]);
          auto itemField = Create("_0", arrayDef[0], options, desc, maybeGetChildId(0));
          result = std::make_unique<RArrayField>(fieldName, itemField.Unwrap(), arrayLength);
       } else if (resolvedType.substr(0, 13) == "std::variant<") {
@@ -589,6 +589,14 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
                                                                             RInvalidField::RCategory::kGeneric));
       } else {
          return error;
+      }
+   } catch (std::logic_error &e) {
+      // Integer parsing error
+      if (createContext.GetContinueOnError()) {
+         return std::unique_ptr<RFieldBase>(
+            std::make_unique<RInvalidField>(fieldName, typeName, e.what(), RInvalidField::RCategory::kGeneric));
+      } else {
+         return R__FAIL(e.what());
       }
    }
 

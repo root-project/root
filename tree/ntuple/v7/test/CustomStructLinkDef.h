@@ -27,6 +27,9 @@
 #pragma link C++ class DataVector < int, float> + ;
 #pragma link C++ class DataVector < bool, std::vector < unsigned int>> + ;
 #pragma link C++ class InnerCV < const int, const volatile int, volatile const int, volatile int> + ;
+#pragma link C++ class IntegerTemplates < 0, 0> + ;
+#pragma link C++ class IntegerTemplates < -1, 1> + ;
+#pragma link C++ class IntegerTemplates < -2147483650ll, 9223372036854775810ull> + ;
 
 #pragma link C++ class IAuxSetOption+;
 #pragma link C++ class PackedParameters+;

@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <charconv>
+#include <limits>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -67,7 +68,7 @@ std::string GetNormalizedTemplateArg(const std::string &arg, F fnTypeNormalizer)
 
    if (std::isdigit(arg[0]) || arg[0] == '-') {
       // Integer template argument
-      return arg;
+      return ROOT::Experimental::Internal::GetNormalizedInteger(arg);
    }
 
    std::string qualifier;
@@ -237,6 +238,31 @@ std::string ROOT::Experimental::Internal::GetNormalizedUnresolvedTypeName(const 
    return normName;
 }
 
+std::string ROOT::Experimental::Internal::GetNormalizedInteger(long long val)
+{
+   if (val > std::numeric_limits<std::int32_t>::max() || val < std::numeric_limits<std::int32_t>::min()) {
+      return std::to_string(val) + "ll";
+   }
+   return std::to_string(val);
+}
+
+std::string ROOT::Experimental::Internal::GetNormalizedInteger(unsigned long long val)
+{
+   if (val > std::numeric_limits<std::int64_t>::max())
+      return std::to_string(val) + "ull";
+   if (val > std::numeric_limits<std::int32_t>::max())
+      return std::to_string(val) + "ll";
+   return std::to_string(val);
+}
+
+std::string ROOT::Experimental::Internal::GetNormalizedInteger(const std::string &intTemplateArg)
+{
+   R__ASSERT(!intTemplateArg.empty());
+   if (intTemplateArg[0] == '-')
+      return GetNormalizedInteger(std::stoll(intTemplateArg));
+   return GetNormalizedInteger(std::stoull(intTemplateArg));
+}
+
 ROOT::Experimental::Internal::ERNTupleSerializationMode
 ROOT::Experimental::Internal::GetRNTupleSerializationMode(TClass *cl)
 {
@@ -257,24 +283,29 @@ ROOT::Experimental::Internal::GetRNTupleSerializationMode(TClass *cl)
    }
 }
 
-std::tuple<std::string, std::vector<size_t>> ROOT::Experimental::Internal::ParseArrayType(std::string_view typeName)
+std::tuple<std::string, std::vector<std::size_t>>
+ROOT::Experimental::Internal::ParseArrayType(const std::string &typeName)
 {
-   std::vector<size_t> sizeVec;
+   std::vector<std::size_t> sizeVec;
 
    // Only parse outer array definition, i.e. the right `]` should be at the end of the type name
-   while (typeName.back() == ']') {
-      auto posRBrace = typeName.size() - 1;
-      auto posLBrace = typeName.find_last_of('[', posRBrace);
-      if (posLBrace == std::string_view::npos)
-         return {};
+   std::string prefix{typeName};
+   while (prefix.back() == ']') {
+      auto posRBrace = prefix.size() - 1;
+      auto posLBrace = prefix.find_last_of('[', posRBrace);
+      if (posLBrace == std::string_view::npos) {
+         throw RException(R__FAIL(std::string("invalid array type: ") + typeName));
+      }
 
-      size_t size;
-      if (std::from_chars(typeName.data() + posLBrace + 1, typeName.data() + posRBrace, size).ec != std::errc{})
-         return {};
+      const std::size_t size = std::stoull(prefix.substr(posLBrace + 1, posRBrace - posLBrace - 1));
+      if (size == 0) {
+         throw RException(R__FAIL(std::string("invalid array size: ") + typeName));
+      }
+
       sizeVec.insert(sizeVec.begin(), size);
-      typeName.remove_suffix(typeName.size() - posLBrace);
+      prefix.resize(posLBrace);
    }
-   return std::make_tuple(std::string{typeName}, sizeVec);
+   return std::make_tuple(prefix, sizeVec);
 }
 
 std::vector<std::string> ROOT::Experimental::Internal::TokenizeTypeList(std::string_view templateType)
