@@ -2444,7 +2444,7 @@ void TBranch::Print(Option_t *option) const
 
 void TBranch::PrintCacheInfo() const
 {
-   fCacheInfo.Print(GetName(), fBasketEntry);
+   fCacheInfo.Print(GetName(), fBasketEntry, fMaxBaskets, fEntries);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
