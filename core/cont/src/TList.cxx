@@ -1041,6 +1041,9 @@ void TList::InsertAfter(const TObjLinkPtr_t &newlink, const TObjLinkPtr_t &prev)
 
 /** \class TListIter
 Iterator of linked list.
+\see TList documentation for examples on how to loop with this
+iterator, and TCollection documentation for more modern alternatives
+that dynamically cast the derived class.
 */
 
 ClassImp(TListIter);
