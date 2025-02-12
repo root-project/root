@@ -83,8 +83,6 @@ private:
    static constexpr unsigned fgMaxWidth = 100; ///< Maximum width of the table that Print() displays
 
    VecStr_t fTypes; ///< This attribute stores the type of each column. It is needed by the interpreter to print it.
-   std::vector<bool> fIsCollection; ///< True if the column contains a collection. Collections are treated differently
-                                    ///< during the printing.
    std::vector<std::vector<DElement_t>> fTable; ///< String representation of the data to be printed.
    std::vector<unsigned short> fWidths; ///< Tracks the maximum width of each column, based on the largest element.
 
@@ -281,7 +279,7 @@ private:
       std::stringstream calc; // JITted code
       int columnIndex = 0;
       // Unwrapping the parameters to create the JITted code.
-      fIsCollection = {AddInterpreterString(calc, columns, columnIndex++)...};
+      bool isCollection [] {AddInterpreterString(calc, columns, columnIndex++)...};
 
       // Let cling::printValue handle the conversion. This can be done only through cling-compiled code.
       const std::string toJit = calc.str();
@@ -290,7 +288,7 @@ private:
 
       // Populate the fTable using the results of the JITted code.
       for (size_t i = 0; i < fNColumns; ++i) {
-         if (fIsCollection[i]) {
+         if (isCollection[i]) {
             AddCollectionToRow(fCollectionsRepresentations[i]);
          } else {
             AddToRow(fRepresentations[i]);
