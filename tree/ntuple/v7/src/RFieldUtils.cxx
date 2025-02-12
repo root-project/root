@@ -178,6 +178,10 @@ std::string ROOT::Experimental::Internal::GetCanonicalTypePrefix(const std::stri
 std::string ROOT::Experimental::Internal::GetRenormalizedTypeName(const std::string &metaNormalizedName)
 {
    std::string normName{GetCanonicalTypePrefix(metaNormalizedName)};
+   // RNTuple resolves Double32_t for the normalized type name but keeps Double32_t for the type alias
+   // (also in template parameters)
+   if (normName == "Double32_t")
+      return "double";
 
    const auto [typePrefix, argList] = SplitTypePrefixFromTemplateArgs(normName);
    if (argList.empty())
