@@ -518,7 +518,9 @@ public:
    /// Copies the field and its sub fields using a possibly new name and a new, unconnected set of columns
    std::unique_ptr<RFieldBase> Clone(std::string_view newName) const;
 
-   /// Factory method to resurrect a field from the stored on-disk type information
+   /// Factory method to create a field from a certain type given as string.
+   /// Note that the provided type name must be a valid C++ type name. Template arguments of templated types
+   /// must be type names or integers (e.g., no expressions).
    static RResult<std::unique_ptr<RFieldBase>>
    Create(const std::string &fieldName, const std::string &typeName);
 
