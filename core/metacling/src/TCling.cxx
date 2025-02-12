@@ -1354,6 +1354,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
    std::vector<std::string> clingArgsStorage;
    clingArgsStorage.push_back("cling4root");
+   std::string interpInclude(TROOT::GetEtcDir().Data());
    for (const char* const* arg = argv; *arg; ++arg)
       clingArgsStorage.push_back(*arg);
 
@@ -1362,7 +1363,6 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
       ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
 
       // Add -I early so ASTReader can find the headers.
-      std::string interpInclude(TROOT::GetEtcDir().Data());
       clingArgsStorage.push_back("-I" + interpInclude);
 
       // Add include path to etc/cling.
@@ -1402,6 +1402,17 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
       clingArgsStorage.push_back("-optimize-regalloc=0");
 #endif
    }
+
+   // TODO(lukas) enable only if compiled with CUDA support.
+   clingArgsStorage.push_back("-x");
+   clingArgsStorage.push_back("cuda");
+   clingArgsStorage.push_back("-isystem");
+   clingArgsStorage.push_back(interpInclude + "cling/lib/clang/18/include/cuda_wrappers");
+   //clingArgsStorage.push_back("--cuda-gpu-arch=sm_60");
+   //clingArgsStorage.push_back("-L/usr/lib/x86_64-linux-gnu");
+   //clingArgsStorage.push_back("-lcuda");
+   //clingArgsStorage.push_back("-lcudart");
+   //clingArgsStorage.push_back("--cuda-path=/usr/lib/cuda");
 
    // Process externally passed arguments if present.
    std::optional<std::string> EnvOpt = llvm::sys::Process::GetEnv("EXTRA_CLING_ARGS");
