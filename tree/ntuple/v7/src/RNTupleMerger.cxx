@@ -556,13 +556,33 @@ static void ExtendDestinationModel(std::span<const RFieldDescriptor *> newFields
         (newFields.size() > 1 ? "them" : "it"), mergeData.fNumDstEntries);
 
    changeset.fAddedFields.reserve(newFields.size());
+   // First add all non-projected fields...
    for (const auto *fieldDesc : newFields) {
+      if (!fieldDesc->IsProjectedField()) {
+         auto field = fieldDesc->CreateField(*mergeData.fSrcDescriptor);
+         changeset.AddField(std::move(field));
+      }
+   }
+   // ...then add all projected fields.
+   for (const auto *fieldDesc : newFields) {
+      if (!fieldDesc->IsProjectedField())
+         continue;
+
+      Internal::RProjectedFields::FieldMap_t fieldMap;
       auto field = fieldDesc->CreateField(*mergeData.fSrcDescriptor);
-      if (fieldDesc->IsProjectedField())
-         changeset.fAddedProjectedFields.emplace_back(field.get());
-      else
-         changeset.fAddedFields.emplace_back(field.get());
-      changeset.fModel.AddField(std::move(field));
+      const auto sourceId = fieldDesc->GetProjectionSourceId();
+      const auto &sourceField = dstModel.GetConstField(mergeData.fSrcDescriptor->GetQualifiedFieldName(sourceId));
+      fieldMap[field.get()] = &sourceField;
+
+      for (const auto &subfield : *field) {
+         const auto &subFieldDesc = mergeData.fSrcDescriptor->GetFieldDescriptor(subfield.GetOnDiskId());
+         const auto subSourceId = subFieldDesc.GetProjectionSourceId();
+         const auto &subSourceField =
+            dstModel.GetConstField(mergeData.fSrcDescriptor->GetQualifiedFieldName(subSourceId));
+         fieldMap[&subfield] = &subSourceField;
+      }
+      changeset.fAddedProjectedFields.emplace_back(field.get());
+      Internal::GetProjectedFieldsOfModel(dstModel).Add(std::move(field), fieldMap);
    }
    dstModel.Freeze();
    mergeData.fDestination.UpdateSchema(changeset, mergeData.fNumDstEntries);
