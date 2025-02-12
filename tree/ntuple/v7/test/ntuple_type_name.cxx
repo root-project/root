@@ -100,3 +100,20 @@ TEST(RNTuple, TClassDefaultTemplateParameter)
    auto v3 = reader->GetView<DataVector<int>>("f3");
    EXPECT_THROW(reader->GetView<DataVector<int>>("f2"), ROOT::RException);
 }
+
+TEST(RNTuple, TemplateArgIntegerNormalization)
+{
+   EXPECT_EQ("IntegerTemplates<0,0>", RFieldBase::Create("f", "IntegerTemplates<0ll,0ull>").Unwrap()->GetTypeName());
+   EXPECT_EQ("", RFieldBase::Create("f", "IntegerTemplates<0ll,0ull>").Unwrap()->GetTypeAlias());
+
+   EXPECT_EQ("IntegerTemplates<-1,1>", RFieldBase::Create("f", "IntegerTemplates<-1LL,1ULL>").Unwrap()->GetTypeName());
+   EXPECT_EQ("", RFieldBase::Create("f", "IntegerTemplates<-1LL,1ULL>").Unwrap()->GetTypeAlias());
+
+   EXPECT_EQ("IntegerTemplates<-2147483650,9223372036854775810u>",
+             RFieldBase::Create("f", "IntegerTemplates<-2147483650ll,9223372036854775810>").Unwrap()->GetTypeName());
+   EXPECT_EQ("",
+             RFieldBase::Create("f", "IntegerTemplates<-2147483650ll,9223372036854775810>").Unwrap()->GetTypeAlias());
+
+   EXPECT_THROW(RFieldBase::Create("f", "IntegerTemplates<-1u,0u>").Unwrap(), ROOT::RException);
+   EXPECT_THROW(RFieldBase::Create("f", "IntegerTemplates<1u,0x>").Unwrap(), ROOT::RException);
+}

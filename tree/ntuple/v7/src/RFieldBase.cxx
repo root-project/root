@@ -388,7 +388,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          if (arrayDef.size() != 2) {
             return R__FORWARD_RESULT(fnFail("the template list for std::array must have exactly two elements"));
          }
-         auto arrayLength = std::stoi(arrayDef[1]);
+         auto arrayLength = Internal::ParseUIntTypeToken(arrayDef[1]);
          auto itemField = Create("_0", arrayDef[0], options, desc, maybeGetChildId(0));
          result = std::make_unique<RArrayField>(fieldName, itemField.Unwrap(), arrayLength);
       } else if (resolvedType.substr(0, 13) == "std::variant<") {
@@ -419,7 +419,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
          }
          result = std::make_unique<RTupleField>(fieldName, std::move(items));
       } else if (resolvedType.substr(0, 12) == "std::bitset<") {
-         auto size = std::stoull(resolvedType.substr(12, resolvedType.length() - 13));
+         auto size = Internal::ParseUIntTypeToken(resolvedType.substr(12, resolvedType.length() - 13));
          result = std::make_unique<RBitsetField>(fieldName, size);
       } else if (resolvedType.substr(0, 16) == "std::unique_ptr<") {
          std::string itemTypeName = resolvedType.substr(16, resolvedType.length() - 17);
@@ -589,6 +589,14 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
                                                                             RInvalidField::RCategory::kGeneric));
       } else {
          return error;
+      }
+   } catch (std::logic_error &e) {
+      // Integer parsing error
+      if (createContext.GetContinueOnError()) {
+         return std::unique_ptr<RFieldBase>(
+            std::make_unique<RInvalidField>(fieldName, typeName, e.what(), RInvalidField::RCategory::kGeneric));
+      } else {
+         return R__FAIL(e.what());
       }
    }
 
