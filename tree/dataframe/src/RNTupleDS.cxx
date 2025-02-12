@@ -68,9 +68,8 @@ protected:
    void ConstructValue(void *where) const final { *static_cast<std::size_t *>(where) = 0; }
 
 public:
-   static std::string TypeName() { return "std::size_t"; }
    RRDFCardinalityField()
-      : ROOT::Experimental::RFieldBase("", TypeName(), ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
+      : ROOT::Experimental::RFieldBase("", "std::size_t", ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
    {
    }
    RRDFCardinalityField(RRDFCardinalityField &&other) = default;
