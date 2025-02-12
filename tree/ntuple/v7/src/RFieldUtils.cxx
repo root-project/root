@@ -21,6 +21,7 @@
 #include <string_view>
 #include <system_error>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -58,7 +59,40 @@ const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
    {"ULong64_t", "unsigned long long"},
    {"uint64_t", "std::uint64_t"}};
 
+// Recursively normalizes a template argument using the regular type name normalizer F as a helper.
+template <typename F>
+std::string GetNormalizedTemplateArg(const std::string &arg, F fnTypeNormalizer)
+{
+   R__ASSERT(!arg.empty());
+
+   if (std::isdigit(arg[0]) || arg[0] == '-') {
+      // Integer template argument
+      return arg;
+   }
+
+   std::string qualifier;
+   // Type name template argument; template arguments must keep their CV qualifier
+   if (arg.substr(0, 6) == "const " || (arg.length() > 14 && arg.substr(9, 6) == "const "))
+      qualifier += "const ";
+   if (arg.substr(0, 9) == "volatile " || (arg.length() > 14 && arg.substr(6, 9) == "volatile "))
+      qualifier += "volatile ";
+   return qualifier + fnTypeNormalizer(arg);
 }
+
+std::pair<std::string, std::string> SplitTypePrefixFromTemplateArgs(const std::string &typeName)
+{
+   auto idxOpen = typeName.find_first_of("<");
+   if (idxOpen == std::string::npos)
+      return {typeName, ""};
+
+   R__ASSERT(idxOpen > 0);
+   R__ASSERT(typeName.back() == '>');
+   R__ASSERT((typeName.size() - 1) > idxOpen);
+
+   return {typeName.substr(0, idxOpen), typeName.substr(idxOpen + 1, typeName.size() - idxOpen - 2)};
+}
+
+} // namespace
 
 std::string ROOT::Experimental::Internal::GetCanonicalTypePrefix(const std::string &typeName)
 {
@@ -143,35 +177,60 @@ std::string ROOT::Experimental::Internal::GetCanonicalTypePrefix(const std::stri
 
 std::string ROOT::Experimental::Internal::GetRenormalizedTypeName(const std::string &metaNormalizedName)
 {
-   std::string normalizedType{GetCanonicalTypePrefix(metaNormalizedName)};
-   auto idxOpen = normalizedType.find_first_of("<");
-   if (idxOpen == std::string::npos)
-      return normalizedType;
+   std::string normName{GetCanonicalTypePrefix(metaNormalizedName)};
 
-   R__ASSERT(normalizedType.back() == '>');
-   R__ASSERT((normalizedType.size() - 1) > idxOpen);
+   const auto [typePrefix, argList] = SplitTypePrefixFromTemplateArgs(normName);
+   if (argList.empty())
+      return typePrefix;
 
-   auto templateArgs = TokenizeTypeList(normalizedType.substr(idxOpen + 1, normalizedType.size() - idxOpen - 2));
+   auto templateArgs = TokenizeTypeList(argList);
    R__ASSERT(!templateArgs.empty());
 
-   normalizedType = normalizedType.substr(0, idxOpen + 1); // Everything up to '<'
+   normName = typePrefix + "<";
    for (const auto &a : templateArgs) {
-      R__ASSERT(!a.empty());
-      if (std::isdigit(a[0]) || a[0] == '-') {
-         // Integer template argument
-         normalizedType += a + ",";
-      } else {
-         // Type name template argument; template arguments must keep their CV qualifier
-         if (a.substr(0, 6) == "const " || (a.length() > 14 && a.substr(9, 6) == "const "))
-            normalizedType += "const ";
-         if (a.substr(0, 9) == "volatile " || (a.length() > 14 && a.substr(6, 9) == "volatile "))
-            normalizedType += "volatile ";
-         normalizedType += GetRenormalizedTypeName(a) + ",";
-      }
+      normName += GetNormalizedTemplateArg(a, GetRenormalizedTypeName) + ",";
    }
-   normalizedType[normalizedType.size() - 1] = '>';
+   normName[normName.size() - 1] = '>';
 
-   return normalizedType;
+   return normName;
+}
+
+std::string ROOT::Experimental::Internal::GetNormalizedUnresolvedTypeName(const std::string &origName)
+{
+   const TClassEdit::EModType modType = static_cast<TClassEdit::EModType>(
+      TClassEdit::kDropStlDefault | TClassEdit::kDropComparator | TClassEdit::kDropHash);
+   std::string normName{origName};
+   TClassEdit::TSplitType splitname(normName.c_str(), modType);
+   splitname.ShortType(normName, modType);
+   normName = GetCanonicalTypePrefix(normName);
+
+   const auto [typePrefix, argList] = SplitTypePrefixFromTemplateArgs(normName);
+   if (argList.empty())
+      return normName;
+
+   auto templateArgs = TokenizeTypeList(argList);
+   R__ASSERT(!templateArgs.empty());
+
+   // Get default-initialized template arguments; we only need to do this for user-defined class types
+   auto expandedName = normName;
+   if ((expandedName.substr(0, 5) != "std::") && (expandedName.substr(0, 19) != "ROOT::VecOps::RVec<")) {
+      auto cl = TClass::GetClass(origName.c_str());
+      if (cl)
+         expandedName = cl->GetName();
+   }
+   auto expandedTemplateArgs = TokenizeTypeList(SplitTypePrefixFromTemplateArgs(expandedName).second);
+   R__ASSERT(expandedTemplateArgs.size() >= templateArgs.size());
+
+   normName = typePrefix + "<";
+   for (const auto &a : templateArgs) {
+      normName += GetNormalizedTemplateArg(a, GetNormalizedUnresolvedTypeName) + ",";
+   }
+   for (std::size_t i = templateArgs.size(); i < expandedTemplateArgs.size(); ++i) {
+      normName += GetNormalizedTemplateArg(expandedTemplateArgs[i], GetNormalizedUnresolvedTypeName) + ",";
+   }
+   normName[normName.size() - 1] = '>';
+
+   return normName;
 }
 
 ROOT::Experimental::Internal::ERNTupleSerializationMode

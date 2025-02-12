@@ -593,12 +593,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    }
 
    if (result) {
-      const TClassEdit::EModType modType = static_cast<TClassEdit::EModType>(
-         TClassEdit::kDropStlDefault | TClassEdit::kDropComparator | TClassEdit::kDropHash);
-      std::string normOrigType{typeName};
-      TClassEdit::TSplitType splitname(normOrigType.c_str(), modType);
-      splitname.ShortType(normOrigType, modType);
-      normOrigType = Internal::GetRenormalizedTypeName(normOrigType);
+      const auto normOrigType = Internal::GetNormalizedUnresolvedTypeName(typeName);
       if (normOrigType != result->GetTypeName()) {
          result->fTypeAlias = normOrigType;
       }
