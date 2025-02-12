@@ -24,7 +24,6 @@ from . import _asan
 
 import cppyy
 import sys, importlib
-import libROOTPythonizations
 
 # Build cache of commonly used python strings (the cache is python intern, so
 # all strings are shared python-wide, not just in PyROOT).
