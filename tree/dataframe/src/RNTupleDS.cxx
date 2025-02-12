@@ -286,12 +286,13 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
          fProtoFields.emplace_back(std::move(cardinalityField));
 
          for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
-            AddField(desc, std::string(colName) + "." + f.GetFieldName(), f.GetId(), fieldInfos, true);
+            AddField(desc, std::string(colName) + "." + f.GetFieldName(), f.GetId(), fieldInfos);
          }
       } else {
-         // collection with exactly one sub field
-         bool representableAsRVec = fieldDesc.GetTypeName().substr(0, 19) == "ROOT::VecOps::RVec<" ||
-                                    fieldDesc.GetTypeName().substr(0, 12) == "std::vector<";
+         // Collection with exactly one sub field. Only convert to an `RVec` if all of its parent collections can also
+         // be added as an `RVec`.
+         bool representableAsRVec = convertToRVec && (fieldDesc.GetTypeName().substr(0, 19) == "ROOT::VecOps::RVec<" ||
+                                                      fieldDesc.GetTypeName().substr(0, 12) == "std::vector<");
          const auto &f = *desc.GetFieldIterable(fieldDesc.GetId()).begin();
          AddField(desc, colName, f.GetId(), fieldInfos, representableAsRVec);
       }
@@ -302,13 +303,14 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    } else if (nRepetitions > 0) {
       // Fixed-size array, same logic as ROOT::RVec.
       const auto &f = *desc.GetFieldIterable(fieldDesc.GetId()).begin();
-      AddField(desc, colName, f.GetId(), fieldInfos, true);
+      AddField(desc, colName, f.GetId(), fieldInfos);
       return;
    } else if (fieldDesc.GetStructure() == ROOT::ENTupleStructure::kRecord) {
       // Inner fields of records are provided as individual RDF columns, e.g. "event.id"
       for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
          auto innerName = colName.empty() ? f.GetFieldName() : (std::string(colName) + "." + f.GetFieldName());
-         AddField(desc, innerName, f.GetId(), fieldInfos, convertToRVec);
+         // Inner fields of collections of records are always exposed as ROOT::RVec
+         AddField(desc, innerName, f.GetId(), fieldInfos);
       }
    }
 
