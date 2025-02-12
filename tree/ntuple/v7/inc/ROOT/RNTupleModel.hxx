@@ -94,28 +94,6 @@ public:
    bool IsEmpty() const { return fFieldZero->begin() == fFieldZero->end(); }
 };
 
-// clang-format off
-/**
-\class ROOT::Experimental::Internal::RNTupleModelChangeset
-\ingroup NTuple
-\brief The incremental changes to a `RNTupleModel`
-
-Represents a set of alterations to a `RNTupleModel` that happened after the model is used to initialize a `RPageSink`
-instance. This object can be used to communicate metadata updates to a `RPageSink`.
-You will not normally use this directly; see `RNTupleModel::RUpdater` instead.
-*/
-// clang-format on
-struct RNTupleModelChangeset {
-   RNTupleModel &fModel;
-   /// Points to the fields in fModel that were added as part of an updater transaction
-   std::vector<RFieldBase *> fAddedFields;
-   /// Points to the projected fields in fModel that were added as part of an updater transaction
-   std::vector<RFieldBase *> fAddedProjectedFields;
-
-   RNTupleModelChangeset(RNTupleModel &model) : fModel(model) {}
-   bool IsEmpty() const { return fAddedFields.empty() && fAddedProjectedFields.empty(); }
-};
-
 } // namespace Internal
 
 // clang-format off
@@ -157,44 +135,7 @@ public:
       std::string_view fDescription = "";
    };
 
-   /// A model is usually immutable after passing it to an `RNTupleWriter`. However, for the rare
-   /// cases that require changing the model after the fact, `RUpdater` provides limited support for
-   /// incremental updates, e.g. addition of new fields.
-   ///
-   /// See `RNTupleWriter::CreateModelUpdater()` for an example.
-   class RUpdater {
-   private:
-      RNTupleWriter &fWriter;
-      Internal::RNTupleModelChangeset fOpenChangeset;
-      std::uint64_t fNewModelId = 0; ///< The model ID after committing
-
-   public:
-      explicit RUpdater(RNTupleWriter &writer);
-      ~RUpdater() { CommitUpdate(); }
-      /// Begin a new set of alterations to the underlying model. As a side effect, all `REntry` instances related to
-      /// the model are invalidated.
-      void BeginUpdate();
-      /// Commit changes since the last call to `BeginUpdate()`. All the invalidated `REntry`s remain invalid.
-      /// `CreateEntry()` or `CreateBareEntry()` can be used to create an `REntry` that matching the new model.
-      /// Upon completion, `BeginUpdate()` can be called again to begin a new set of changes.
-      void CommitUpdate();
-
-      template <typename T>
-      std::shared_ptr<T> MakeField(const NameWithDescription_t &fieldNameDesc)
-      {
-         auto objPtr = fOpenChangeset.fModel.MakeField<T>(fieldNameDesc);
-         auto fieldZero = fOpenChangeset.fModel.fFieldZero.get();
-         auto it = std::find_if(fieldZero->begin(), fieldZero->end(),
-                                [&](const auto &f) { return f.GetFieldName() == fieldNameDesc.fName; });
-         R__ASSERT(it != fieldZero->end());
-         fOpenChangeset.fAddedFields.emplace_back(&(*it));
-         return objPtr;
-      }
-
-      void AddField(std::unique_ptr<RFieldBase> field);
-
-      RResult<void> AddProjectedField(std::unique_ptr<RFieldBase> field, FieldMappingFunc_t mapping);
-   };
+   class RUpdater;
 
 private:
    // The states a model can be in. Possible transitions are between kBuilding and kFrozen
@@ -400,6 +341,74 @@ public:
    /// understood per sequential RNTupleWriter or per RNTupleFillContext created for a RNTupleParallelWriter
    /// constructed with this model.
    std::size_t EstimateWriteMemoryUsage(const RNTupleWriteOptions &options = RNTupleWriteOptions()) const;
+};
+
+namespace Internal {
+
+// clang-format off
+/**
+\class ROOT::Experimental::Internal::RNTupleModelChangeset
+\ingroup NTuple
+\brief The incremental changes to a `RNTupleModel`
+
+Represents a set of alterations to a `RNTupleModel` that happened after the model is used to initialize a `RPageSink`
+instance. This object can be used to communicate metadata updates to a `RPageSink`.
+You will not normally use this directly; see `RNTupleModel::RUpdater` instead.
+*/
+// clang-format on
+struct RNTupleModelChangeset {
+   RNTupleModel &fModel;
+   /// Points to the fields in fModel that were added as part of an updater transaction
+   std::vector<RFieldBase *> fAddedFields;
+   /// Points to the projected fields in fModel that were added as part of an updater transaction
+   std::vector<RFieldBase *> fAddedProjectedFields;
+
+   RNTupleModelChangeset(RNTupleModel &model) : fModel(model) {}
+   bool IsEmpty() const { return fAddedFields.empty() && fAddedProjectedFields.empty(); }
+
+   void AddField(std::unique_ptr<RFieldBase> field);
+   ROOT::RResult<void> AddProjectedField(std::unique_ptr<RFieldBase> field, RNTupleModel::FieldMappingFunc_t mapping);
+};
+
+} // namespace Internal
+
+/// A model is usually immutable after passing it to an `RNTupleWriter`. However, for the rare
+/// cases that require changing the model after the fact, `RUpdater` provides limited support for
+/// incremental updates, e.g. addition of new fields.
+///
+/// See `RNTupleWriter::CreateModelUpdater()` for an example.
+class RNTupleModel::RUpdater {
+private:
+   RNTupleWriter &fWriter;
+   Internal::RNTupleModelChangeset fOpenChangeset;
+   std::uint64_t fNewModelId = 0; ///< The model ID after committing
+
+public:
+   explicit RUpdater(RNTupleWriter &writer);
+   ~RUpdater() { CommitUpdate(); }
+   /// Begin a new set of alterations to the underlying model. As a side effect, all `REntry` instances related to
+   /// the model are invalidated.
+   void BeginUpdate();
+   /// Commit changes since the last call to `BeginUpdate()`. All the invalidated `REntry`s remain invalid.
+   /// `CreateEntry()` or `CreateBareEntry()` can be used to create an `REntry` that matching the new model.
+   /// Upon completion, `BeginUpdate()` can be called again to begin a new set of changes.
+   void CommitUpdate();
+
+   template <typename T>
+   std::shared_ptr<T> MakeField(const NameWithDescription_t &fieldNameDesc)
+   {
+      auto objPtr = fOpenChangeset.fModel.MakeField<T>(fieldNameDesc);
+      auto fieldZero = fOpenChangeset.fModel.fFieldZero.get();
+      auto it = std::find_if(fieldZero->begin(), fieldZero->end(),
+                             [&](const auto &f) { return f.GetFieldName() == fieldNameDesc.fName; });
+      R__ASSERT(it != fieldZero->end());
+      fOpenChangeset.fAddedFields.emplace_back(&(*it));
+      return objPtr;
+   }
+
+   void AddField(std::unique_ptr<RFieldBase> field);
+
+   RResult<void> AddProjectedField(std::unique_ptr<RFieldBase> field, FieldMappingFunc_t mapping);
 };
 
 } // namespace Experimental
