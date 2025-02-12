@@ -94,6 +94,7 @@ set(HEADERS
   TRandom1.h
   TRandom2.h
   TRandom3.h
+  TRandomBinary.h
   TRandomGen.h
   TStatistic.h
   VectorizedTMath.h
@@ -186,6 +187,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore
     src/TRandom1.cxx
     src/TRandom2.cxx
     src/TRandom3.cxx
+    src/TRandomBinary.cxx
     src/TRandomGen.cxx
     src/TStatistic.cxx
     src/UnBinData.cxx
