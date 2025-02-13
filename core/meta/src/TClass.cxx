@@ -6105,7 +6105,7 @@ Long_t TClass::Property() const
 
    TClass *kl = const_cast<TClass*>(this);
 
-   kl->fStreamerType = TClass::kDefault;
+   Int_t streamerType = TClass::kDefault;
 
    if (InheritsFrom(TObject::Class())) {
       kl->SetBit(kIsTObject);
@@ -6114,7 +6114,7 @@ Long_t TClass::Property() const
       Int_t delta = kl->GetBaseClassOffsetRecurse(TObject::Class());
       if (delta==0) kl->SetBit(kStartWithTObject);
 
-      kl->fStreamerType  = kTObject;
+      streamerType = kTObject;
    }
 
    if (HasInterpreterInfo()) {
@@ -6126,22 +6126,22 @@ Long_t TClass::Property() const
       if (!const_cast<TClass*>(this)->GetClassMethodWithPrototype("Streamer","TBuffer&",kFALSE)) {
 
          kl->SetBit(kIsForeign);
-         kl->fStreamerType  = kForeign;
+         streamerType = kForeign;
 
-      } else if ( kl->fStreamerType == TClass::kDefault ) {
+      } else if (streamerType == TClass::kDefault) {
          if (kl->fConvStreamerFunc) {
-            kl->fStreamerType  = kInstrumented;
+            streamerType = kInstrumented;
          } else if (kl->fStreamerFunc) {
-            kl->fStreamerType  = kInstrumented;
+            streamerType = kInstrumented;
          } else {
             // We have an automatic streamer using the StreamerInfo .. no need to go through the
             // Streamer method function itself.
-            kl->fStreamerType  = kInstrumented;
+            streamerType = kInstrumented;
          }
       }
 
       if (fStreamer) {
-         kl->fStreamerType  = kExternal;
+         streamerType = kExternal;
       }
 
       if (const_cast<TClass *>(this)->GetClassMethodWithPrototype("Hash", "", kTRUE)) {
@@ -6163,15 +6163,16 @@ Long_t TClass::Property() const
          kl->fProperty = gCling->ClassInfo_Property(fClassInfo);
       }
 
-      kl->SetStreamerImpl();
+      kl->SetStreamerImpl(streamerType);
    } else {
 
       if (fStreamer) {
-         kl->fStreamerType  = kExternal;
+         streamerType = kExternal;
       }
 
-      kl->fStreamerType |= kEmulatedStreamer;
-      kl->SetStreamerImpl();
+      streamerType |= kEmulatedStreamer;
+
+      kl->SetStreamerImpl(streamerType);
       // fProperty was *not* set so that it can be forced to be recalculated
       // next time.
       return 0;
@@ -6206,8 +6207,9 @@ void TClass::SetRuntimeProperties()
 /// Internal routine to set fStreamerImpl based on the value of
 /// fStreamerType.
 
-void TClass::SetStreamerImpl()
+void TClass::SetStreamerImpl(Int_t StreamerType)
 {
+   fStreamerType = StreamerType;
    switch (fStreamerType) {
       case kTObject:  fStreamerImpl  = &TClass::StreamerTObject; break;
       case kForeign:  fStreamerImpl  = &TClass::StreamerStreamerInfo; break;
