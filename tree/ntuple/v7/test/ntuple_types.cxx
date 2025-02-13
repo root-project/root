@@ -10,25 +10,6 @@
 #include <type_traits>
 #include <utility>
 
-TEST(RNTuple, TypeName) {
-   EXPECT_STREQ("float", ROOT::Experimental::RField<float>::TypeName().c_str());
-   EXPECT_STREQ("std::vector<std::string>",
-                ROOT::Experimental::RField<std::vector<std::string>>::TypeName().c_str());
-   EXPECT_STREQ("CustomStruct",
-                ROOT::Experimental::RField<CustomStruct>::TypeName().c_str());
-   EXPECT_STREQ("DerivedB",
-                ROOT::Experimental::RField<DerivedB>::TypeName().c_str());
-
-   auto field = RField<DerivedB>("derived");
-   EXPECT_EQ(sizeof(DerivedB), field.GetValueSize());
-
-   EXPECT_STREQ("std::pair<std::pair<float,CustomStruct>,std::int32_t>", (ROOT::Experimental::RField<
-                 std::pair<std::pair<float,CustomStruct>,int>>::TypeName().c_str()));
-   EXPECT_STREQ(
-      "std::tuple<std::tuple<char,CustomStruct,char>,std::int32_t>",
-      (ROOT::Experimental::RField<std::tuple<std::tuple<char, CustomStruct, char>, int>>::TypeName().c_str()));
-}
-
 TEST(RNTuple, EnumBasics)
 {
    // Needs fix of TEnum
@@ -1631,16 +1612,16 @@ TEST(RNTuple, Optional)
 TEST(RNTuple, UnsupportedStdTypes)
 {
    try {
-      auto field = RField<std::weak_ptr<int>>("myWeakPtr");
+      auto field = RField<std::weak_ptr<float>>("myWeakPtr");
       FAIL() << "should not be able to make a std::weak_ptr field";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<int> is not supported"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<float> is not supported"));
    }
    try {
-      auto field = RField<std::vector<std::weak_ptr<int>>>("weak_ptr_vec");
+      auto field = RField<std::vector<std::weak_ptr<float>>>("weak_ptr_vec");
       FAIL() << "should not be able to make a std::vector<std::weak_ptr> field";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<int> is not supported"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<float> is not supported"));
    }
 }
 

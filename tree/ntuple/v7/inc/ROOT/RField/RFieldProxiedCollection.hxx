@@ -154,7 +154,7 @@ protected:
 
    /// Constructor used when the value type of the collection is not known in advance, i.e. in the case of custom
    /// collections.
-   RProxiedCollectionField(std::string_view fieldName, std::string_view typeName, TClass *classp);
+   RProxiedCollectionField(std::string_view fieldName, TClass *classp);
    /// Constructor used when the value type of the collection is known in advance, e.g. in `RSetField`.
    RProxiedCollectionField(std::string_view fieldName, std::string_view typeName,
                            std::unique_ptr<RFieldBase> itemField);
