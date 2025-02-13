@@ -6217,6 +6217,8 @@ Long_t TClass::Property() const
          kl->SetBit(kHasLocalHashMember);
       }
 
+      kl->SetStreamerImpl(streamerType);
+
       if (GetClassInfo()) {
          // In the case where the TClass for one of ROOT's core class
          // (eg TClonesArray for map<int,TClonesArray*>) is requested
@@ -6232,7 +6234,6 @@ Long_t TClass::Property() const
          kl->fProperty = gCling->ClassInfo_Property(fClassInfo);
       }
 
-      kl->SetStreamerImpl(streamerType);
    } else {
 
       if (fStreamer) {
