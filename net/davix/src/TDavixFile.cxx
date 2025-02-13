@@ -527,10 +527,17 @@ void TDavixFileInternal::parseConfig()
    }
 
    // CA Check
+   // Do not check https certificate on macOS. See https://github.com/cern-fts/davix/issues/135
+   #ifdef __APPLE__
+   bool ca_check_local = false;
+   if (gDebug > 0)
+      Info("parseConfig", "MacOS was detected. Setting CACheck to false.");
+   #else
    bool ca_check_local = !isno(gEnv->GetValue("Davix.GSI.CACheck", (const char *)"y"));
-   davixParam->setSSLCAcheck(ca_check_local);
    if (gDebug > 0)
       Info("parseConfig", "Setting CAcheck to %s", ((ca_check_local) ? ("true") : ("false")));
+   #endif
+   davixParam->setSSLCAcheck(ca_check_local);
 
    // WLCG Bearer tokens check
    std::string prefix = "Bearer ";
