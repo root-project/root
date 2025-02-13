@@ -5,5 +5,6 @@
 #pragma link off all functions;
 
 #pragma link C++ class Electron + ;
+#pragma link C++ class Jet + ;
 
 #endif
