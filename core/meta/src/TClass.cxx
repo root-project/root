@@ -6215,7 +6215,6 @@ Long_t TClass::Property() const
    TClass *kl = const_cast<TClass*>(this);
 
    kl->fStreamerType = TClass::kDefault;
-   kl->fStreamerImpl = &TClass::StreamerDefault;
 
    if (InheritsFrom(TObject::Class())) {
       kl->SetBit(kIsTObject);
@@ -6225,7 +6224,6 @@ Long_t TClass::Property() const
       if (delta==0) kl->SetBit(kStartWithTObject);
 
       kl->fStreamerType  = kTObject;
-      kl->fStreamerImpl  = &TClass::StreamerTObject;
    }
 
    if (HasInterpreterInfo()) {
@@ -6238,26 +6236,21 @@ Long_t TClass::Property() const
 
          kl->SetBit(kIsForeign);
          kl->fStreamerType  = kForeign;
-         kl->fStreamerImpl  = &TClass::StreamerStreamerInfo;
 
       } else if ( kl->fStreamerType == TClass::kDefault ) {
          if (kl->fConvStreamerFunc) {
             kl->fStreamerType  = kInstrumented;
-            kl->fStreamerImpl  = &TClass::ConvStreamerInstrumented;
          } else if (kl->fStreamerFunc) {
             kl->fStreamerType  = kInstrumented;
-            kl->fStreamerImpl  = &TClass::StreamerInstrumented;
          } else {
             // We have an automatic streamer using the StreamerInfo .. no need to go through the
             // Streamer method function itself.
             kl->fStreamerType  = kInstrumented;
-            kl->fStreamerImpl  = &TClass::StreamerStreamerInfo;
          }
       }
 
       if (fStreamer) {
          kl->fStreamerType  = kExternal;
-         kl->fStreamerImpl  = &TClass::StreamerExternal;
       }
 
       if (const_cast<TClass *>(this)->GetClassMethodWithPrototype("Hash", "", kTRUE)) {
@@ -6278,11 +6271,12 @@ Long_t TClass::Property() const
          // and think all test bits have been properly set.
          kl->fProperty = gCling->ClassInfo_Property(fClassInfo);
       }
+
+      kl->SetStreamerImpl();
    } else {
 
       if (fStreamer) {
          kl->fStreamerType  = kExternal;
-         kl->fStreamerImpl  = &TClass::StreamerExternal;
       }
 
       kl->fStreamerType |= kEmulatedStreamer;
