@@ -315,6 +315,26 @@ void replaceAll(std::string &inOut, std::string_view what, std::string_view with
    }
 }
 
+std::string makeSliceCutString(RooArgSet const &sliceDataSet)
+{
+   std::stringstream cutString;
+   bool first = true;
+   for (RooAbsArg *sliceVar : sliceDataSet) {
+      if (!first) {
+         cutString << "&&";
+      } else {
+         first = false;
+      }
+
+      if (auto *real = dynamic_cast<RooAbsRealLValue *>(sliceVar)) {
+         cutString << real->GetName() << "==" << real->getVal();
+      } else if (auto *cat = dynamic_cast<RooAbsCategoryLValue *>(sliceVar)) {
+         cutString << cat->GetName() << "==" << cat->getCurrentIndex();
+      }
+   }
+   return cutString.str();
+}
+
 } // namespace Detail
 } // namespace RooFit
 
