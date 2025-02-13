@@ -21,6 +21,7 @@
 #include "RooDataSet.h"
 #include "RooWorkspace.h"
 
+#include <ROOT/RConfig.hxx> // for R__DEPRECATED
 
  class TString;
 
@@ -104,7 +105,11 @@ namespace RooStats {
 
   ClassDefOverride(HLFactory,1)  // The high Level Model Factory to create models from datacards
 
+#ifdef ROOFIT_BUILDS_ITSELF // to avoid the deprecation warnings when building RooFit itself
   };
+#else
+  } R__DEPRECATED(6,38, "Outdated higher-level interface around RooWorkspace. Use RooWorkspace directly.");
+#endif
 }
 
 #endif
