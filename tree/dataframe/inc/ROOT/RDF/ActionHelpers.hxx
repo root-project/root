@@ -1506,8 +1506,11 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
    }
 }
 
-void ValidateSnapshotTTreeOutput(const RSnapshotOptions &opts, const std::string &treeName,
-                                 const std::string &fileName);
+/// Ensure that the TTree with the resulting snapshot can be written to the target TFile. This means checking that the
+/// TFile can be opened in the mode specified in `opts`, deleting any existing TTrees in case
+/// `opts.fOverwriteIfExists = true`, or throwing an error otherwise.
+void EnsureValidSnapshotTTreeOutput(const RSnapshotOptions &opts, const std::string &treeName,
+                                    const std::string &fileName);
 
 /// Helper object for a single-thread TTree-based Snapshot action
 template <typename... ColTypes>
@@ -1543,7 +1546,7 @@ public:
         fBranchAddresses(vbnames.size(), nullptr),
         fIsDefine(std::move(isDefine))
    {
-      ValidateSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
+      EnsureValidSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
    }
 
    SnapshotTTreeHelper(const SnapshotTTreeHelper &) = delete;
@@ -1718,7 +1721,7 @@ public:
         fOutputBranches(fNSlots),
         fIsDefine(std::move(isDefine))
    {
-      ValidateSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
+      EnsureValidSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
    }
    SnapshotTTreeHelperMT(const SnapshotTTreeHelperMT &) = delete;
    SnapshotTTreeHelperMT(SnapshotTTreeHelperMT &&) = default;
@@ -1881,8 +1884,11 @@ public:
 };
 
 #ifdef R__HAS_ROOT7
-void ValidateSnapshotRNTupleOutput(const RSnapshotOptions &opts, const std::string &ntupleName,
-                                   const std::string &fileName);
+/// Ensure that the RNTuple with the resulting snapshot can be written to the target TFile. This means checking that the
+/// TFile can be opened in the mode specified in `opts`, deleting any existing RNTuples in case
+/// `opts.fOverwriteIfExists = true`, or throwing an error otherwise.
+void EnsureValidSnapshotRNTupleOutput(const RSnapshotOptions &opts, const std::string &ntupleName,
+                                      const std::string &fileName);
 
 /// Helper function to update the value of an RNTuple's field in the provided entry.
 template <typename T>
@@ -1922,7 +1928,7 @@ public:
         fOutputFieldNames(ReplaceDotWithUnderscore(fnames)),
         fIsDefine(std::move(isDefine))
    {
-      ValidateSnapshotRNTupleOutput(fOptions, fNTupleName, fFileName);
+      EnsureValidSnapshotRNTupleOutput(fOptions, fNTupleName, fFileName);
    }
 
    SnapshotRNTupleHelper(const SnapshotRNTupleHelper &) = delete;
