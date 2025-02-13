@@ -558,11 +558,14 @@ static void ExtendDestinationModel(std::span<const RFieldDescriptor *> newFields
    changeset.fAddedFields.reserve(newFields.size());
    for (const auto *fieldDesc : newFields) {
       auto field = fieldDesc->CreateField(*mergeData.fSrcDescriptor);
-      if (fieldDesc->IsProjectedField())
-         changeset.fAddedProjectedFields.emplace_back(field.get());
-      else
-         changeset.fAddedFields.emplace_back(field.get());
-      changeset.fModel.AddField(std::move(field));
+      if (fieldDesc->IsProjectedField()) {
+         const auto sourceId = fieldDesc->GetProjectionSourceId();
+         const auto &sourceField = mergeData.fSrcDescriptor->GetFieldDescriptor(sourceId);
+         changeset.AddProjectedField(std::move(field),
+                                     [dstName = sourceField.GetFieldName()](const std::string &) { return dstName; });
+      } else {
+         changeset.AddField(std::move(field));
+      }
    }
    dstModel.Freeze();
    mergeData.fDestination.UpdateSchema(changeset, mergeData.fNumDstEntries);
