@@ -1712,7 +1712,7 @@ TEST(RNTupleMerger, MergeIncrementalLMExt)
       const auto &desc = reader->GetDescriptor();
       for (int i = 0; i < nInputs; ++i) {
          const auto fieldId = desc.FindFieldId(std::string("f_") + std::to_string(i));
-         EXPECT_NE(fieldId, ROOT::Experimental::kInvalidDescriptorId);
+         EXPECT_NE(fieldId, ROOT::kInvalidDescriptorId);
          const auto &fdesc = desc.GetFieldDescriptor(fieldId);
          for (const auto &colId : fdesc.GetLogicalColumnIds()) {
             const auto &cdesc = desc.GetColumnDescriptor(colId);
@@ -1830,7 +1830,7 @@ TEST(RNTupleMerger, MergeIncrementalLMExtMemFile)
       const auto &desc = reader->GetDescriptor();
       for (int i = 0; i < nInputs; ++i) {
          const auto fieldId = desc.FindFieldId(std::string("f_") + std::to_string(i));
-         EXPECT_NE(fieldId, ROOT::Experimental::kInvalidDescriptorId);
+         EXPECT_NE(fieldId, ROOT::kInvalidDescriptorId);
          const auto &fdesc = desc.GetFieldDescriptor(fieldId);
          for (const auto &colId : fdesc.GetLogicalColumnIds()) {
             const auto &cdesc = desc.GetColumnDescriptor(colId);
