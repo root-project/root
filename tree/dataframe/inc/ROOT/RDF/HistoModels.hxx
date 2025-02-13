@@ -85,6 +85,7 @@ struct TH3DModel {
    std::vector<double> fBinXEdges;
    std::vector<double> fBinYEdges;
    std::vector<double> fBinZEdges;
+   bool fCloneHistogram = true;
 
    TH3DModel() = default;
    TH3DModel(const TH3DModel &) = default;

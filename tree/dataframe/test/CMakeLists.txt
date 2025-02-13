@@ -19,6 +19,7 @@ ROOT_ADD_GTEST(dataframe_regression dataframe_regression.cxx LIBRARIES Physics R
 ROOT_ADD_GTEST(dataframe_utils dataframe_utils.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_report dataframe_report.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_incomplete_entries dataframe_incomplete_entries.cxx LIBRARIES ROOTDataFrame)
+ROOT_ADD_GTEST(dataframe_bufferedFill dataframe_bufferedFill.cxx LIBRARIES ROOTDataFrame REPEATS 20)
 
 
 if(MSVC)
