@@ -2291,7 +2291,7 @@ RooAbsArg* RooAbsArg::cloneTree(const char* newname) const
 void RooAbsArg::attachToStore(RooAbsDataStore& store)
 {
   if (dynamic_cast<RooTreeDataStore*>(&store)) {
-    attachToTree((static_cast<RooTreeDataStore&>(store)).tree()) ;
+    attachToTree(*static_cast<RooTreeDataStore&>(store).tree()) ;
   } else if (dynamic_cast<RooVectorDataStore*>(&store)) {
     attachToVStore(static_cast<RooVectorDataStore&>(store)) ;
   }

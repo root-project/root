@@ -83,7 +83,6 @@ public:
 
   // Add one or more columns
   virtual RooAbsArg* addColumn(RooAbsArg& var, bool adjustRange=true) = 0 ;
-  RooArgSet* addColumns(const RooArgList& varList);
 
   // Merge column-wise
   virtual RooAbsDataStore* merge(const RooArgSet& allvars, std::list<RooAbsDataStore*> dstoreList) = 0 ;
@@ -138,7 +137,6 @@ public:
 
   virtual bool hasFilledCache() const { return false ; }
 
-  virtual const TTree* tree() const { return nullptr ; }
   virtual void dump() {}
 
   virtual void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=nullptr, const char* rangeName=nullptr,

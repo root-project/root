@@ -2410,7 +2410,7 @@ bool RooAbsData::hasFilledCache() const
 const TTree *RooAbsData::tree() const
 {
    if (storageType == RooAbsData::Tree) {
-      return _dstore->tree();
+      return static_cast<RooTreeDataStore&>(*_dstore).tree();
    } else {
       coutW(InputArguments) << "RooAbsData::tree(" << GetName() << ") WARNING: is not of StorageType::Tree. "
                             << "Use GetClonedTree() instead or convert to tree storage." << std::endl;
@@ -2425,11 +2425,10 @@ const TTree *RooAbsData::tree() const
 TTree *RooAbsData::GetClonedTree() const
 {
    if (storageType == RooAbsData::Tree) {
-      auto tmp = const_cast<TTree *>(_dstore->tree());
-      return tmp->CloneTree();
+      return static_cast<RooTreeDataStore&>(*_dstore).tree()->CloneTree();
    } else {
       RooTreeDataStore buffer(GetName(), GetTitle(), *get(), *_dstore);
-      return buffer.tree().CloneTree();
+      return buffer.tree()->CloneTree();
    }
 }
 
