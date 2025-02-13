@@ -20,9 +20,23 @@ using ROOT::Experimental::RNTupleWriter;
 
 using namespace ROOT::RDF;
 
+class FileRAII {
+private:
+   std::string fPath;
+
+public:
+   explicit FileRAII(const std::string &path) : fPath(path) {}
+   FileRAII(FileRAII &&) = default;
+   FileRAII(const FileRAII &) = delete;
+   FileRAII &operator=(FileRAII &&) = default;
+   FileRAII &operator=(const FileRAII &) = delete;
+   ~FileRAII() { std::remove(fPath.c_str()); }
+   std::string GetPath() const { return fPath; }
+};
+
 TEST(RDFSnapshotRNTuple, FromScratchTemplated)
 {
-   const auto filename = "RDFSnapshotRNTuple_from_scratch_templated.root";
+   FileRAII fileGuard{"RDFSnapshotRNTuple_from_scratch_templated.root"};
    const std::vector<std::string> columns = {"x"};
 
    auto df = ROOT::RDataFrame(25ull).Define("x", [] { return 10; });
@@ -30,11 +44,11 @@ TEST(RDFSnapshotRNTuple, FromScratchTemplated)
    RSnapshotOptions opts;
    opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
 
-   auto sdf = df.Snapshot<int>("ntuple", filename, columns, opts);
+   auto sdf = df.Snapshot<int>("ntuple", fileGuard.GetPath(), columns, opts);
 
    EXPECT_EQ(columns, sdf->GetColumnNames());
 
-   auto ntuple = RNTupleReader::Open("ntuple", filename);
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(25ull, ntuple->GetNEntries());
 
    auto x = ntuple->GetView<int>("x");
@@ -45,7 +59,7 @@ TEST(RDFSnapshotRNTuple, FromScratchTemplated)
 
 TEST(RDFSnapshotRNTuple, FromScratchJITted)
 {
-   const auto filename = "RDFSnapshotRNTuple_from_scratch_jitted.root";
+   FileRAII fileGuard{"RDFSnapshotRNTuple_from_scratch_jitted.root"};
    const std::vector<std::string> columns = {"x"};
 
    auto df = ROOT::RDataFrame(25ull).Define("x", [] { return 10; });
@@ -53,11 +67,11 @@ TEST(RDFSnapshotRNTuple, FromScratchJITted)
    RSnapshotOptions opts;
    opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
 
-   auto sdf = df.Snapshot("ntuple", filename, "x", opts);
+   auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), "x", opts);
 
    EXPECT_EQ(columns, sdf->GetColumnNames());
 
-   auto ntuple = RNTupleReader::Open("ntuple", filename);
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(25ull, ntuple->GetNEntries());
 
    auto x = ntuple->GetView<int>("x");
@@ -66,26 +80,26 @@ TEST(RDFSnapshotRNTuple, FromScratchJITted)
    }
 }
 
-void BookLazySnapshot()
+void BookLazySnapshot(std::string_view filename)
 {
    auto d = ROOT::RDataFrame(1);
    ROOT::RDF::RSnapshotOptions opts;
    opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
    opts.fLazy = true;
-   d.Snapshot<ULong64_t>("t", "lazysnapshotnottriggered_shouldnotbecreated.root", {"rdfentry_"}, opts);
+   d.Snapshot<ULong64_t>("t", filename, {"rdfentry_"}, opts);
 }
 
 TEST(RDFSnapshotRNTuple, LazyNotTriggered)
 {
-   ROOT_EXPECT_WARNING(BookLazySnapshot(), "Snapshot", "A lazy Snapshot action was booked but never triggered.");
-   // This returns FALSE if the file IS there.
-   // TODO(fdegeus) use std::filesystem::exists once supported on all platforms.
-   EXPECT_TRUE(gSystem->AccessPathName("lazysnapshotnottriggered_shouldnotbecreated.root"));
+   FileRAII fileGuard{"lazysnapshotnottriggered_shouldnotbecreated.root"};
+   ROOT_EXPECT_WARNING(BookLazySnapshot(fileGuard.GetPath()), "Snapshot",
+                       "A lazy Snapshot action was booked but never triggered.");
+   EXPECT_TRUE(gSystem->AccessPathName(fileGuard.GetPath().c_str()));
 }
 
 TEST(RDFSnapshotRNTuple, Compression)
 {
-   const auto filename = "RDFSnapshotRNTuple_compression.root";
+   FileRAII fileGuard{"RDFSnapshotRNTuple_compression.root"};
    const std::vector<std::string> columns = {"x"};
 
    auto df = ROOT::RDataFrame(25ull).Define("x", [] { return 10; });
@@ -95,11 +109,11 @@ TEST(RDFSnapshotRNTuple, Compression)
    opts.fCompressionAlgorithm = ROOT::RCompressionSetting::EAlgorithm::kLZ4;
    opts.fCompressionLevel = 4;
 
-   auto sdf = df.Snapshot("ntuple", filename, "x", opts);
+   auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), "x", opts);
 
    EXPECT_EQ(columns, sdf->GetColumnNames());
 
-   auto inspector = RNTupleInspector::Create("ntuple", filename);
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
    EXPECT_EQ(404, inspector->GetCompressionSettings());
 }
 
@@ -136,12 +150,12 @@ protected:
 
 TEST_F(RDFSnapshotRNTupleTest, DefaultToRNTupleTemplated)
 {
-   const auto filename = "RDFSnapshotRNTuple_snap_templated.root";
+   FileRAII fileGuard{"RDFSnapshotRNTuple_snap_templated.root"};
 
    auto df = ROOT::RDataFrame(fNtplName, fFileName);
-   auto sdf = df.Define("x", [] { return 10; }).Snapshot<float, int>("ntuple", filename, {"pt", "x"});
+   auto sdf = df.Define("x", [] { return 10; }).Snapshot<float, int>("ntuple", fileGuard.GetPath(), {"pt", "x"});
 
-   auto ntuple = RNTupleReader::Open("ntuple", filename);
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(1ull, ntuple->GetNEntries());
 
    auto pt = ntuple->GetView<float>("pt");
@@ -153,12 +167,12 @@ TEST_F(RDFSnapshotRNTupleTest, DefaultToRNTupleTemplated)
 
 TEST_F(RDFSnapshotRNTupleTest, DefaultToRNTupleJITted)
 {
-   const auto filename = "RDFSnapshotRNTuple_snap_jitted.root";
+   FileRAII fileGuard{"RDFSnapshotRNTuple_snap_jitted.root"};
 
    auto df = ROOT::RDataFrame(fNtplName, fFileName);
-   auto sdf = df.Define("x", [] { return 10; }).Snapshot("ntuple", filename, {"pt", "x"});
+   auto sdf = df.Define("x", [] { return 10; }).Snapshot("ntuple", fileGuard.GetPath(), {"pt", "x"});
 
-   auto ntuple = RNTupleReader::Open("ntuple", filename);
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(1ull, ntuple->GetNEntries());
 
    auto pt = ntuple->GetView<float>("pt");
@@ -170,16 +184,16 @@ TEST_F(RDFSnapshotRNTupleTest, DefaultToRNTupleJITted)
 
 TEST_F(RDFSnapshotRNTupleTest, ToTTreeTemplated)
 {
-   const auto filename = "RDFSnapshotRNTuple_to_ttree_templated.root";
+   FileRAII fileGuard{"RDFSnapshotRNTuple_to_ttree_templated.root"};
 
    auto df = ROOT::RDataFrame(fNtplName, fFileName);
 
    RSnapshotOptions opts;
    opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kTTree;
 
-   auto sdf = df.Define("x", [] { return 10; }).Snapshot<float, int>("tree", filename, {"pt", "x"}, opts);
+   auto sdf = df.Define("x", [] { return 10; }).Snapshot<float, int>("tree", fileGuard.GetPath(), {"pt", "x"}, opts);
 
-   TFile file(filename);
+   TFile file(fileGuard.GetPath().c_str());
    auto tree = file.Get<TTree>("tree");
    EXPECT_EQ(1ull, tree->GetEntries());
 
@@ -197,16 +211,16 @@ TEST_F(RDFSnapshotRNTupleTest, ToTTreeTemplated)
 
 TEST_F(RDFSnapshotRNTupleTest, ToTTreeJITted)
 {
-   const auto filename = "RDFSnapshotRNTuple_to_ttree_jitted.root";
+   FileRAII fileGuard{"RDFSnapshotRNTuple_to_ttree_jitted.root"};
 
    auto df = ROOT::RDataFrame(fNtplName, fFileName);
 
    RSnapshotOptions opts;
    opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kTTree;
 
-   auto sdf = df.Define("x", [] { return 10; }).Snapshot("tree", filename, {"pt", "x"}, opts);
+   auto sdf = df.Define("x", [] { return 10; }).Snapshot("tree", fileGuard.GetPath(), {"pt", "x"}, opts);
 
-   TFile file(filename);
+   TFile file(fileGuard.GetPath().c_str());
    auto tree = file.Get<TTree>("tree");
    EXPECT_EQ(1ull, tree->GetEntries());
 
@@ -224,8 +238,9 @@ TEST_F(RDFSnapshotRNTupleTest, ToTTreeJITted)
 
 TEST_F(RDFSnapshotRNTupleTest, ScalarFields)
 {
+   FileRAII fileGuard{"RDFSnapshotRNTuple_scalar_fields.root"};
    auto df = ROOT::RDataFrame(fNtplName, fFileName);
-   auto sdf = df.Snapshot("ntuple", "RDFSnapshotRNTuple_scalar_fields.root", "pt");
+   auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), "pt");
 
    std::vector<std::string> expected = {"pt"};
    EXPECT_EQ(expected, sdf->GetColumnNames());
@@ -236,8 +251,9 @@ TEST_F(RDFSnapshotRNTupleTest, ScalarFields)
 
 TEST_F(RDFSnapshotRNTupleTest, VectorFields)
 {
+   FileRAII fileGuard{"RDFSnapshotRNTuple_vector_fields.root"};
    auto df = ROOT::RDataFrame(fNtplName, fFileName);
-   auto sdf = df.Snapshot("ntuple", "RDFSnapshotRNTuple_all_fields.root", "nnlo");
+   auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), "nnlo");
 
    std::vector<std::string> expected = {"nnlo"};
    EXPECT_EQ(expected, sdf->GetColumnNames());
@@ -256,8 +272,9 @@ TEST_F(RDFSnapshotRNTupleTest, VectorFields)
 
 TEST_F(RDFSnapshotRNTupleTest, ComplexFields)
 {
+   FileRAII fileGuard{"RDFSnapshotRNTuple_complex_fields.root"};
    auto df = ROOT::RDataFrame(fNtplName, fFileName);
-   auto sdf = df.Snapshot("ntuple", "RDFSnapshotRNTuple_complex_fields.root", "electrons");
+   auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), "electrons");
 
    std::vector<std::string> expected = {"electrons", "electrons.pt"};
    EXPECT_EQ(expected, sdf->GetColumnNames());
@@ -272,9 +289,11 @@ TEST_F(RDFSnapshotRNTupleTest, ComplexFields)
 
 TEST_F(RDFSnapshotRNTupleTest, InnerFields)
 {
+   FileRAII fileGuard{"RDFSnapshotRNTuple_inner_fields.root"};
+
    auto df = ROOT::RDataFrame(fNtplName, fFileName);
 
-   auto sdf1 = df.Snapshot("ntuple", "RDFSnapshotRNTuple_inner_fields.root", "electron.pt");
+   auto sdf1 = df.Snapshot("ntuple", fileGuard.GetPath(), "electron.pt");
 
    std::vector<std::string> expected = {"electron_pt"};
    EXPECT_EQ(expected, sdf1->GetColumnNames());
@@ -282,7 +301,7 @@ TEST_F(RDFSnapshotRNTupleTest, InnerFields)
    auto electronPtMax = sdf1->Max("electron_pt").GetValue();
    EXPECT_FLOAT_EQ(137.f, electronPtMax);
 
-   auto sdf2 = df.Snapshot("ntuple", "RDFSnapshotRNTuple_inner_fields.root", "jets.electrons");
+   auto sdf2 = df.Snapshot("ntuple", fileGuard.GetPath(), "jets.electrons");
 
    expected = {"jets_electrons", "jets_electrons.pt"};
    EXPECT_EQ(expected, sdf2->GetColumnNames());
@@ -304,16 +323,20 @@ TEST_F(RDFSnapshotRNTupleTest, InnerFields)
 
 TEST_F(RDFSnapshotRNTupleTest, AllFields)
 {
+   FileRAII fileGuard{"RDFSnapshotRNTuple_all_fields.root"};
+
    auto df = ROOT::RDataFrame(fNtplName, fFileName);
-   auto sdf = df.Snapshot("ntuple", "RDFSnapshotRNTuple_all_fields.root");
+   auto sdf = df.Snapshot("ntuple", fileGuard.GetPath());
 
    EXPECT_EQ(df.GetColumnNames(), sdf->GetColumnNames());
 }
 
 TEST_F(RDFSnapshotRNTupleTest, WithDefines)
 {
+   FileRAII fileGuard{"RDFSnapshotRNTuple_with_defines.root"};
+
    auto df = ROOT::RDataFrame(fNtplName, fFileName);
-   auto sdf = df.Define("x", [] { return 10; }).Snapshot("ntuple", "RDFSnapshotRNTuple_with_defines.root");
+   auto sdf = df.Define("x", [] { return 10; }).Snapshot("ntuple", fileGuard.GetPath());
 
    std::vector<std::string> expected = df.GetColumnNames();
    expected.push_back("x");
@@ -322,7 +345,8 @@ TEST_F(RDFSnapshotRNTupleTest, WithDefines)
 
 TEST(RDFSnapshotRNTuple, WithFilters)
 {
-   const auto filename = "RDFSnapshotRNTuple_defines_and_filters.root";
+   FileRAII fileGuardInput{"RDFSnapshotRNTuple_defines_and_filters.root"};
+   FileRAII fileGuardSnapshot{"snap_ntuple_filtered.root"};
 
    {
       auto df = ROOT::RDataFrame(10ull).DefineSlotEntry("x", [](unsigned int, std::uint64_t entry) { return entry; });
@@ -330,12 +354,12 @@ TEST(RDFSnapshotRNTuple, WithFilters)
       RSnapshotOptions opts;
       opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
 
-      df.Snapshot("ntuple", filename, "x", opts);
+      df.Snapshot("ntuple", fileGuardInput.GetPath(), "x", opts);
    }
 
-   auto df = ROOT::RDataFrame("ntuple", filename).Filter("x % 2 == 0");
-   auto sdf = df.Snapshot("ntuple", "snap_ntuple_filtered.root");
-   auto ntuple = RNTupleReader::Open("ntuple", "snap_ntuple_filtered.root");
+   auto df = ROOT::RDataFrame("ntuple", fileGuardInput.GetPath()).Filter("x % 2 == 0");
+   auto sdf = df.Snapshot("ntuple", fileGuardSnapshot.GetPath());
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuardSnapshot.GetPath());
    EXPECT_EQ(5ull, ntuple->GetNEntries());
 
    auto x = ntuple->GetView<std::uint64_t>("x");
@@ -346,50 +370,50 @@ TEST(RDFSnapshotRNTuple, WithFilters)
 
 TEST(RDFSnapshotRNTuple, UpdateDifferentName)
 {
-   const auto filename = "RDFSnapshotRNTuple_update_different_name.root";
+   FileRAII fileGuard{"RDFSnapshotRNTuple_update_different_name.root"};
 
    {
       auto df = ROOT::RDataFrame(25ull).Define("x", [] { return 10; });
       RSnapshotOptions opts;
       opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
-      auto sdf = df.Snapshot("ntuple", filename, "x", opts);
+      auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), "x", opts);
    }
 
-   auto df = ROOT::RDataFrame("ntuple", filename);
+   auto df = ROOT::RDataFrame("ntuple", fileGuard.GetPath());
 
    RSnapshotOptions opts;
    opts.fMode = "UPDATE";
 
-   auto sdf = df.Define("y", [] { return 42; }).Snapshot("ntuple_snap", filename, "", opts);
+   auto sdf = df.Define("y", [] { return 42; }).Snapshot("ntuple_snap", fileGuard.GetPath(), "", opts);
 
    std::vector<std::string> expected = {"x", "y"};
    EXPECT_EQ(expected, sdf->GetColumnNames());
 
-   auto ntupleOriginal = RNTupleReader::Open("ntuple", filename);
+   auto ntupleOriginal = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(25ull, ntupleOriginal->GetNEntries());
 
-   auto ntupleSnap = RNTupleReader::Open("ntuple_snap", filename);
+   auto ntupleSnap = RNTupleReader::Open("ntuple_snap", fileGuard.GetPath());
    EXPECT_EQ(25ull, ntupleSnap->GetNEntries());
 }
 
 TEST(RDFSnapshotRNTuple, UpdateSameName)
 {
-   const auto filename = "RDFSnapshotRNTuple_update_same_name.root";
+   FileRAII fileGuard{"RDFSnapshotRNTuple_update_same_name.root"};
 
    {
       auto df = ROOT::RDataFrame(25ull).Define("x", [] { return 10; });
       RSnapshotOptions opts;
       opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
-      auto sdf = df.Snapshot("ntuple", filename, "x", opts);
+      auto sdf = df.Snapshot("ntuple", fileGuard.GetPath(), "x", opts);
    }
 
-   auto df = ROOT::RDataFrame("ntuple", filename);
+   auto df = ROOT::RDataFrame("ntuple", fileGuard.GetPath());
 
    RSnapshotOptions opts;
    opts.fMode = "UPDATE";
 
    try {
-      auto sdf = df.Define("y", [] { return 42; }).Snapshot<int, int>("ntuple", filename, {"x", "y"}, opts);
+      auto sdf = df.Define("y", [] { return 42; }).Snapshot<int, int>("ntuple", fileGuard.GetPath(), {"x", "y"}, opts);
       FAIL() << "snapshotting in \"UPDATE\" mode to the same ntuple name without `fOverwriteIfExists` is not allowed ";
    } catch (const std::invalid_argument &err) {
       EXPECT_STREQ(err.what(),
@@ -399,7 +423,7 @@ TEST(RDFSnapshotRNTuple, UpdateSameName)
    }
 
    opts.fOverwriteIfExists = true;
-   auto sdf = df.Define("y", [] { return 42; }).Snapshot("ntuple", filename, "", opts);
+   auto sdf = df.Define("y", [] { return 42; }).Snapshot("ntuple", fileGuard.GetPath(), "", opts);
 
    std::vector<std::string> expected = {"x", "y"};
    EXPECT_EQ(expected, sdf->GetColumnNames());
@@ -421,17 +445,18 @@ void WriteTestTree(const std::string &tname, const std::string &fname)
 TEST(RDFSnapshotRNTuple, DisallowFromTTreeTemplated)
 {
    const auto treename = "tree";
-   const auto filename = "RDFSnapshotRNTuple_disallow_from_ttree_templated.root";
+   FileRAII fileGuard{"RDFSnapshotRNTuple_disallow_from_ttree_templated.root"};
 
-   WriteTestTree(treename, filename);
+   WriteTestTree(treename, fileGuard.GetPath());
 
-   auto df = ROOT::RDataFrame(treename, filename);
+   auto df = ROOT::RDataFrame(treename, fileGuard.GetPath());
 
    RSnapshotOptions opts;
    opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
 
    try {
-      auto sdf = df.Define("x", [] { return 10; }).Snapshot<float, int>("ntuple", filename, {"pt", "x"}, opts);
+      auto sdf =
+         df.Define("x", [] { return 10; }).Snapshot<float, int>("ntuple", fileGuard.GetPath(), {"pt", "x"}, opts);
       FAIL() << "snapshotting from RNTuple to TTree is not (yet) possible";
    } catch (const std::runtime_error &err) {
       EXPECT_STREQ(err.what(), "Snapshotting from TTree to RNTuple is not yet supported. The current recommended way "
@@ -442,17 +467,17 @@ TEST(RDFSnapshotRNTuple, DisallowFromTTreeTemplated)
 TEST(RDFSnapshotRNTuple, DisallowFromTTreeJITted)
 {
    const auto treename = "tree";
-   const auto filename = "RDFSnapshotRNTuple_disallow_from_ttree_jitted.root";
+   FileRAII fileGuard{"RDFSnapshotRNTuple_disallow_from_ttree_jitted.root"};
 
-   WriteTestTree(treename, filename);
+   WriteTestTree(treename, fileGuard.GetPath());
 
-   auto df = ROOT::RDataFrame(treename, filename);
+   auto df = ROOT::RDataFrame(treename, fileGuard.GetPath());
 
    RSnapshotOptions opts;
    opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
 
    try {
-      auto sdf = df.Define("x", [] { return 10; }).Snapshot("ntuple", filename, {"pt", "x"}, opts);
+      auto sdf = df.Define("x", [] { return 10; }).Snapshot("ntuple", fileGuard.GetPath(), {"pt", "x"}, opts);
       FAIL() << "snapshotting from RNTuple to TTree is not (yet) possible";
    } catch (const std::runtime_error &err) {
       EXPECT_STREQ(err.what(), "Snapshotting from TTree to RNTuple is not yet supported. The current recommended way "
