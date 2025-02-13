@@ -401,9 +401,9 @@ void ROOT::Experimental::RClassField::BeforeConnectPageSource(Internal::RPageSou
       if (!rules.empty()) {
          SetStagingClass(fieldDesc.GetTypeName(), fieldDesc.GetTypeVersion());
          PrepareStagingArea(rules, desc, fieldDesc);
+         for (auto &[_, si] : fStagingItems)
+            Internal::CallConnectPageSourceOnField(*si.fField, pageSource);
       }
-      for (auto &[_, si] : fStagingItems)
-         Internal::CallConnectPageSourceOnField(*si.fField, pageSource);
    }
 
    for (const auto rule : rules) {
