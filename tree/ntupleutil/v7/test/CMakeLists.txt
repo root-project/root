@@ -24,5 +24,5 @@ ROOT_ADD_GTEST(ntuple_exporter ntuple_exporter.cxx LIBRARIES ROOTNTupleUtil)
 ROOT_ADD_GTEST(ntuple_inspector ntuple_inspector.cxx LIBRARIES ROOTNTupleUtil)
 
 if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
-    target_link_libraries(ntuple_exporter stdc++fs)
+    target_link_libraries(ntuple_exporter PRIVATE stdc++fs)
 endif()
