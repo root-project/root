@@ -23,6 +23,6 @@ void runoperators() {
    std::vector<myiterator> v;
    std::vector<myiterator>::iterator iter;
    for( iter = v.begin(); iter != v.end(); ++iter) {
-      iter + 1;
+      static_cast<void>(iter + 1);
    }
 }
