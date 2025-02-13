@@ -53,7 +53,7 @@ int VectorSort() {
    // ensure that we can iterate, and that the precedence is correct,
    // and that the op++ doesn't operator on the elements:
    ++beg++;
-   *(++beg)++;
+   static_cast<void>(*(++beg)++);
    ++(*(++beg));
    beg = ++beg++;
    beg = ++beg++;
