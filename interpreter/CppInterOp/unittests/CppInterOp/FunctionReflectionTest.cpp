@@ -876,8 +876,8 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
   GetAllTopLevelDecls(code, Decls);
 
   Interp->process(R"(
-    #include <string>
-    void f2(std::string &s) { printf("%s", s.c_str()); };
+    #include <iostream>
+    void f2(std::string &s) { std::cout << s.c_str(); };
   )");
 
   Interp->process(R"(
@@ -922,10 +922,11 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
 
   // FIXME: Do we need to support private ctors?
   Interp->process(R"(
+    #include <iostream>
     class C {
     public:
-      C() { printf("Default Ctor Called\n"); }
-      ~C() { printf("Dtor Called\n"); }
+      C() { std::cout << "Default Ctor Called\n"; }
+      ~C() { std::cout << "Dtor Called\n"; }
     };
   )");
 
