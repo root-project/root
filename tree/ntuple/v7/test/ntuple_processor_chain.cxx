@@ -103,6 +103,14 @@ TEST_F(RNTupleChainProcessorTest, Basic)
 
    std::uint64_t nEntries = 0;
    auto proc = RNTupleProcessor::CreateChain(ntuples);
+
+   EXPECT_STREQ("ntuple", proc->GetProcessorName().c_str());
+
+   {
+      auto namedProc = RNTupleProcessor::CreateChain(ntuples, "my_ntuple");
+      EXPECT_STREQ("my_ntuple", namedProc->GetProcessorName().c_str());
+   }
+
    auto x = proc->GetEntry().GetPtr<float>("x");
    for (const auto &entry : *proc) {
       EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
