@@ -121,13 +121,29 @@ struct TensorType<uint64_t> {
 
 struct TensorMemoryInfo {
    std::string tensor_name;
-   size_t chunk_idx;
    size_t tensor_size;
+
+   TensorMemoryInfo split(const std::string& new_name, size_t new_size) {
+        if (new_size > tensor_size) {
+            throw std::invalid_argument("New size exceeds available tensor size.");
+        }
+        tensor_size -= new_size;
+        return TensorMemoryInfo{new_name, new_size};
+   }
+
+    // Method to merge another struct into this one
+   void merge(const TensorMemoryInfo& other) {
+        tensor_size += other.tensor_size;
+   }
 };
 
 struct MemoryPoolInfo {
-   std::vector<TensorMemoryInfo> total_memory;
-   std::vector<std::pair<size_t, size_t>> available_memory;
+
+   // ordered map with chunk_idx as key and TensorMemoryInfo as value
+   std::map<size_t, TensorMemoryInfo> total_stack;
+
+   // ordered map with chunk_idx as key and chunk_size as value
+   std::map<size_t, size_t> available_stack;
 };
 
 std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape);
