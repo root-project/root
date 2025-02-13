@@ -6208,6 +6208,14 @@ Long_t TClass::Property() const
    // Avoid asking about the class when it is still building
    if (TestBit(kLoading)) return fProperty;
 
+   if (fStreamerType != kDefault && !HasInterpreterInfo()) {
+      // We have no interpreter information but we already set the streamer type
+      // so we have already been here and have no new information, then let's
+      // give up.  See the code at this end of this routine (else branch of the
+      // `if (HasInterpreterInfo()` for the path we took before.
+      return 0;
+   }
+
    // When called via TMapFile (e.g. Update()) make sure that the dictionary
    // gets allocated on the heap and not in the mapped file.
    TMmallocDescTemp setreset;
