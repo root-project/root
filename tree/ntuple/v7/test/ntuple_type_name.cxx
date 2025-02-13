@@ -30,6 +30,7 @@ TEST(RNTuple, TypeNameNormalization)
 
    EXPECT_EQ("std::int32_t", RFieldBase::Create("f", "signed").Unwrap()->GetTypeName());
    EXPECT_EQ("", RFieldBase::Create("f", "signed").Unwrap()->GetTypeAlias());
+   EXPECT_TRUE(RFieldBase::Create("f", "std::int32_t").Unwrap()->GetTypeAlias().empty());
 
    EXPECT_EQ("std::map<std::int32_t,std::int32_t>", RFieldBase::Create("f", "map<int, int>").Unwrap()->GetTypeName());
    EXPECT_EQ("", RFieldBase::Create("f", "map<int, int>").Unwrap()->GetTypeAlias());
