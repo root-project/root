@@ -1,0 +1,969 @@
+diff --git a/clang/include/clang/Interpreter/Interpreter.h b/clang/include/clang/Interpreter/Interpreter.h
+index e68021845..43573fb1a 100644
+--- a/clang/include/clang/Interpreter/Interpreter.h
++++ b/clang/include/clang/Interpreter/Interpreter.h
+@@ -42,8 +42,34 @@ class IncrementalParser;
+ /// Create a pre-configured \c CompilerInstance for incremental processing.
+ class IncrementalCompilerBuilder {
+ public:
++  IncrementalCompilerBuilder() {}
++
++  void SetCompilerArgs(const std::vector<const char *> &Args) {
++    UserArgs = Args;
++  }
++
++  // General C++
++  llvm::Expected<std::unique_ptr<CompilerInstance>> CreateCpp();
++
++  // Offload options
++  void SetOffloadArch(llvm::StringRef Arch) { OffloadArch = Arch; };
++
++  // CUDA specific
++  void SetCudaSDK(llvm::StringRef path) { CudaSDKPath = path; };
++
++  llvm::Expected<std::unique_ptr<CompilerInstance>> CreateCudaHost();
++  llvm::Expected<std::unique_ptr<CompilerInstance>> CreateCudaDevice();
++
++private:
+   static llvm::Expected<std::unique_ptr<CompilerInstance>>
+   create(std::vector<const char *> &ClangArgv);
++
++  llvm::Expected<std::unique_ptr<CompilerInstance>> createCuda(bool device);
++
++  std::vector<const char *> UserArgs;
++
++  llvm::StringRef OffloadArch;
++  llvm::StringRef CudaSDKPath;
+ };
+ 
+ /// Provides top-level interfaces for incremental compilation and execution.
+@@ -52,6 +78,9 @@ class Interpreter {
+   std::unique_ptr<IncrementalParser> IncrParser;
+   std::unique_ptr<IncrementalExecutor> IncrExecutor;
+ 
++  // An optional parser for CUDA offloading
++  std::unique_ptr<IncrementalParser> DeviceParser;
++
+   Interpreter(std::unique_ptr<CompilerInstance> CI, llvm::Error &Err);
+ 
+   llvm::Error CreateExecutor();
+@@ -66,6 +95,9 @@ public:
+   ~Interpreter();
+   static llvm::Expected<std::unique_ptr<Interpreter>>
+   create(std::unique_ptr<CompilerInstance> CI);
++  static llvm::Expected<std::unique_ptr<Interpreter>>
++  createWithCUDA(std::unique_ptr<CompilerInstance> CI,
++                 std::unique_ptr<CompilerInstance> DCI);
+   const ASTContext &getASTContext() const;
+   ASTContext &getASTContext();
+   const CompilerInstance *getCompilerInstance() const;
+diff --git a/clang/lib/CodeGen/CGCUDANV.cpp b/clang/lib/CodeGen/CGCUDANV.cpp
+index bb887df3e..9cb8ae33b 100644
+--- a/clang/lib/CodeGen/CGCUDANV.cpp
++++ b/clang/lib/CodeGen/CGCUDANV.cpp
+@@ -24,6 +24,7 @@
+ #include "llvm/IR/DerivedTypes.h"
+ #include "llvm/IR/ReplaceConstant.h"
+ #include "llvm/Support/Format.h"
++#include "llvm/Support/VirtualFileSystem.h"
+ 
+ using namespace clang;
+ using namespace CodeGen;
+@@ -721,8 +722,9 @@ llvm::Function *CGNVCUDARuntime::makeModuleCtorFunction() {
+   // handle so CUDA runtime can figure out what to call on the GPU side.
+   std::unique_ptr<llvm::MemoryBuffer> CudaGpuBinary = nullptr;
+   if (!CudaGpuBinaryFileName.empty()) {
+-    llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> CudaGpuBinaryOrErr =
+-        llvm::MemoryBuffer::getFileOrSTDIN(CudaGpuBinaryFileName);
++    auto VFS = CGM.getFileSystem();
++    auto CudaGpuBinaryOrErr =
++        VFS->getBufferForFile(CudaGpuBinaryFileName, -1, false);
+     if (std::error_code EC = CudaGpuBinaryOrErr.getError()) {
+       CGM.getDiags().Report(diag::err_cannot_open_file)
+           << CudaGpuBinaryFileName << EC.message();
+diff --git a/clang/lib/CodeGen/CodeGenAction.cpp b/clang/lib/CodeGen/CodeGenAction.cpp
+index 2b2192678..8ea66845e 100644
+--- a/clang/lib/CodeGen/CodeGenAction.cpp
++++ b/clang/lib/CodeGen/CodeGenAction.cpp
+@@ -263,6 +263,7 @@ namespace clang {
+     // Links each entry in LinkModules into our module.  Returns true on error.
+     bool LinkInModules() {
+       for (auto &LM : LinkModules) {
++        assert(LM.Module && "LinkModule does not actually have a module");
+         if (LM.PropagateAttrs)
+           for (Function &F : *LM.Module) {
+             // Skip intrinsics. Keep consistent with how intrinsics are created
+@@ -291,6 +292,7 @@ namespace clang {
+         if (Err)
+           return true;
+       }
++      LinkModules.clear();
+       return false; // success
+     }
+ 
+diff --git a/clang/lib/CodeGen/CodeGenModule.cpp b/clang/lib/CodeGen/CodeGenModule.cpp
+index 12d602fed..978e4d404 100644
+--- a/clang/lib/CodeGen/CodeGenModule.cpp
++++ b/clang/lib/CodeGen/CodeGenModule.cpp
+@@ -6228,6 +6228,10 @@ void CodeGenModule::EmitLinkageSpec(const LinkageSpecDecl *LSD) {
+ }
+ 
+ void CodeGenModule::EmitTopLevelStmt(const TopLevelStmtDecl *D) {
++  // Device code should not be at top level.
++  if (LangOpts.CUDA && LangOpts.CUDAIsDevice)
++    return;
++
+   std::unique_ptr<CodeGenFunction> &CurCGF =
+       GlobalTopLevelStmtBlockInFlight.first;
+ 
+diff --git a/clang/lib/CodeGen/ModuleBuilder.cpp b/clang/lib/CodeGen/ModuleBuilder.cpp
+index e3e953c34..3594f4c66 100644
+--- a/clang/lib/CodeGen/ModuleBuilder.cpp
++++ b/clang/lib/CodeGen/ModuleBuilder.cpp
+@@ -36,7 +36,7 @@ namespace {
+     IntrusiveRefCntPtr<llvm::vfs::FileSystem> FS; // Only used for debug info.
+     const HeaderSearchOptions &HeaderSearchOpts; // Only used for debug info.
+     const PreprocessorOptions &PreprocessorOpts; // Only used for debug info.
+-    const CodeGenOptions CodeGenOpts;  // Intentionally copied in.
++    const CodeGenOptions &CodeGenOpts;
+ 
+     unsigned HandlingTopLevelDecls;
+ 
+diff --git a/clang/lib/Interpreter/CMakeLists.txt b/clang/lib/Interpreter/CMakeLists.txt
+index 565e824bf..32f1b7c37 100644
+--- a/clang/lib/Interpreter/CMakeLists.txt
++++ b/clang/lib/Interpreter/CMakeLists.txt
+@@ -1,6 +1,7 @@
+ set(LLVM_LINK_COMPONENTS
+    core
+    native
++   MC
+    Option
+    OrcJit
+    Support
+@@ -9,6 +10,7 @@ set(LLVM_LINK_COMPONENTS
+   )
+ 
+ add_clang_library(clangInterpreter
++  DeviceOffload.cpp
+   IncrementalExecutor.cpp
+   IncrementalParser.cpp
+   Interpreter.cpp
+diff --git a/clang/lib/Interpreter/DeviceOffload.cpp b/clang/lib/Interpreter/DeviceOffload.cpp
+new file mode 100644
+index 000000000..8e39af6ab
+--- /dev/null
++++ b/clang/lib/Interpreter/DeviceOffload.cpp
+@@ -0,0 +1,176 @@
++//===---------- DeviceOffload.cpp - Device Offloading------------*- C++ -*-===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++//
++// This file implements offloading to CUDA devices.
++//
++//===----------------------------------------------------------------------===//
++
++#include "DeviceOffload.h"
++
++#include "clang/Basic/TargetOptions.h"
++#include "clang/CodeGen/ModuleBuilder.h"
++#include "clang/Frontend/CompilerInstance.h"
++
++#include "llvm/IR/LegacyPassManager.h"
++#include "llvm/MC/TargetRegistry.h"
++#include "llvm/Target/TargetMachine.h"
++
++namespace clang {
++
++IncrementalCUDADeviceParser::IncrementalCUDADeviceParser(
++    Interpreter &Interp, std::unique_ptr<CompilerInstance> Instance,
++    IncrementalParser &HostParser, llvm::LLVMContext &LLVMCtx,
++    llvm::IntrusiveRefCntPtr<llvm::vfs::InMemoryFileSystem> FS,
++    llvm::Error &Err)
++    : IncrementalParser(Interp, std::move(Instance), LLVMCtx, Err),
++      HostParser(HostParser), VFS(FS) {
++  if (Err)
++    return;
++  StringRef Arch = CI->getTargetOpts().CPU;
++  if (!Arch.starts_with("sm_") || Arch.substr(3).getAsInteger(10, SMVersion)) {
++    Err = llvm::joinErrors(std::move(Err), llvm::make_error<llvm::StringError>(
++                                               "Invalid CUDA architecture",
++                                               llvm::inconvertibleErrorCode()));
++    return;
++  }
++}
++
++llvm::Expected<PartialTranslationUnit &>
++IncrementalCUDADeviceParser::Parse(llvm::StringRef Input) {
++  auto PTU = IncrementalParser::Parse(Input);
++  if (!PTU)
++    return PTU.takeError();
++
++  auto PTX = GeneratePTX();
++  if (!PTX)
++    return PTX.takeError();
++
++  auto Err = GenerateFatbinary();
++  if (Err)
++    return std::move(Err);
++
++  std::string FatbinFileName =
++      "/incr_module_" + std::to_string(PTUs.size()) + ".fatbin";
++  VFS->addFile(FatbinFileName, 0,
++               llvm::MemoryBuffer::getMemBuffer(
++                   llvm::StringRef(FatbinContent.data(), FatbinContent.size()),
++                   "", false));
++
++  HostParser.getCI()->getCodeGenOpts().CudaGpuBinaryFileName = FatbinFileName;
++
++  FatbinContent.clear();
++
++  return PTU;
++}
++
++llvm::Expected<llvm::StringRef> IncrementalCUDADeviceParser::GeneratePTX() {
++  auto &PTU = PTUs.back();
++  std::string Error;
++
++  const llvm::Target *Target = llvm::TargetRegistry::lookupTarget(
++      PTU.TheModule->getTargetTriple(), Error);
++  if (!Target)
++    return llvm::make_error<llvm::StringError>(std::move(Error),
++                                               std::error_code());
++  llvm::TargetOptions TO = llvm::TargetOptions();
++  llvm::TargetMachine *TargetMachine = Target->createTargetMachine(
++      PTU.TheModule->getTargetTriple(), getCI()->getTargetOpts().CPU, "", TO,
++      llvm::Reloc::Model::PIC_);
++  PTU.TheModule->setDataLayout(TargetMachine->createDataLayout());
++
++  PTXCode.clear();
++  llvm::raw_svector_ostream dest(PTXCode);
++
++  llvm::legacy::PassManager PM;
++  if (TargetMachine->addPassesToEmitFile(PM, dest, nullptr,
++                                         llvm::CGFT_AssemblyFile)) {
++    return llvm::make_error<llvm::StringError>(
++        "NVPTX backend cannot produce PTX code.",
++        llvm::inconvertibleErrorCode());
++  }
++
++  if (!PM.run(*PTU.TheModule))
++    return llvm::make_error<llvm::StringError>("Failed to emit PTX code.",
++                                               llvm::inconvertibleErrorCode());
++
++  PTXCode += '\0';
++  while (PTXCode.size() % 8)
++    PTXCode += '\0';
++  return PTXCode.str();
++}
++
++llvm::Error IncrementalCUDADeviceParser::GenerateFatbinary() {
++  enum FatBinFlags {
++    AddressSize64 = 0x01,
++    HasDebugInfo = 0x02,
++    ProducerCuda = 0x04,
++    HostLinux = 0x10,
++    HostMac = 0x20,
++    HostWindows = 0x40
++  };
++
++  struct FatBinInnerHeader {
++    uint16_t Kind;             // 0x00
++    uint16_t unknown02;        // 0x02
++    uint32_t HeaderSize;       // 0x04
++    uint32_t DataSize;         // 0x08
++    uint32_t unknown0c;        // 0x0c
++    uint32_t CompressedSize;   // 0x10
++    uint32_t SubHeaderSize;    // 0x14
++    uint16_t VersionMinor;     // 0x18
++    uint16_t VersionMajor;     // 0x1a
++    uint32_t CudaArch;         // 0x1c
++    uint32_t unknown20;        // 0x20
++    uint32_t unknown24;        // 0x24
++    uint32_t Flags;            // 0x28
++    uint32_t unknown2c;        // 0x2c
++    uint32_t unknown30;        // 0x30
++    uint32_t unknown34;        // 0x34
++    uint32_t UncompressedSize; // 0x38
++    uint32_t unknown3c;        // 0x3c
++    uint32_t unknown40;        // 0x40
++    uint32_t unknown44;        // 0x44
++    FatBinInnerHeader(uint32_t DataSize, uint32_t CudaArch, uint32_t Flags)
++        : Kind(1 /*PTX*/), unknown02(0x0101), HeaderSize(sizeof(*this)),
++          DataSize(DataSize), unknown0c(0), CompressedSize(0),
++          SubHeaderSize(HeaderSize - 8), VersionMinor(2), VersionMajor(4),
++          CudaArch(CudaArch), unknown20(0), unknown24(0), Flags(Flags),
++          unknown2c(0), unknown30(0), unknown34(0), UncompressedSize(0),
++          unknown3c(0), unknown40(0), unknown44(0) {}
++  };
++
++  struct FatBinHeader {
++    uint32_t Magic;      // 0x00
++    uint16_t Version;    // 0x04
++    uint16_t HeaderSize; // 0x06
++    uint32_t DataSize;   // 0x08
++    uint32_t unknown0c;  // 0x0c
++  public:
++    FatBinHeader(uint32_t DataSize)
++        : Magic(0xba55ed50), Version(1), HeaderSize(sizeof(*this)),
++          DataSize(DataSize), unknown0c(0) {}
++  };
++
++  FatBinHeader OuterHeader(sizeof(FatBinInnerHeader) + PTXCode.size());
++  FatbinContent.append((char *)&OuterHeader,
++                       ((char *)&OuterHeader) + OuterHeader.HeaderSize);
++
++  FatBinInnerHeader InnerHeader(PTXCode.size(), SMVersion,
++                                FatBinFlags::AddressSize64 |
++                                    FatBinFlags::HostLinux);
++  FatbinContent.append((char *)&InnerHeader,
++                       ((char *)&InnerHeader) + InnerHeader.HeaderSize);
++
++  FatbinContent.append(PTXCode.begin(), PTXCode.end());
++
++  return llvm::Error::success();
++}
++
++IncrementalCUDADeviceParser::~IncrementalCUDADeviceParser() {}
++
++} // namespace clang
+diff --git a/clang/lib/Interpreter/DeviceOffload.h b/clang/lib/Interpreter/DeviceOffload.h
+new file mode 100644
+index 000000000..ce4f218c9
+--- /dev/null
++++ b/clang/lib/Interpreter/DeviceOffload.h
+@@ -0,0 +1,51 @@
++//===----------- DeviceOffload.h - Device Offloading ------------*- C++ -*-===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++//
++// This file implements classes required for offloading to CUDA devices.
++//
++//===----------------------------------------------------------------------===//
++
++#ifndef LLVM_CLANG_LIB_INTERPRETER_DEVICE_OFFLOAD_H
++#define LLVM_CLANG_LIB_INTERPRETER_DEVICE_OFFLOAD_H
++
++#include "IncrementalParser.h"
++#include "llvm/Support/FileSystem.h"
++#include "llvm/Support/VirtualFileSystem.h"
++
++namespace clang {
++
++class IncrementalCUDADeviceParser : public IncrementalParser {
++public:
++  IncrementalCUDADeviceParser(
++      Interpreter &Interp, std::unique_ptr<CompilerInstance> Instance,
++      IncrementalParser &HostParser, llvm::LLVMContext &LLVMCtx,
++      llvm::IntrusiveRefCntPtr<llvm::vfs::InMemoryFileSystem> VFS,
++      llvm::Error &Err);
++
++  llvm::Expected<PartialTranslationUnit &>
++  Parse(llvm::StringRef Input) override;
++
++  // Generate PTX for the last PTU
++  llvm::Expected<llvm::StringRef> GeneratePTX();
++
++  // Generate fatbinary contents in memory
++  llvm::Error GenerateFatbinary();
++
++  ~IncrementalCUDADeviceParser();
++
++protected:
++  IncrementalParser &HostParser;
++  int SMVersion;
++  llvm::SmallString<1024> PTXCode;
++  llvm::SmallVector<char, 1024> FatbinContent;
++  llvm::IntrusiveRefCntPtr<llvm::vfs::InMemoryFileSystem> VFS;
++};
++
++} // namespace clang
++
++#endif // LLVM_CLANG_LIB_INTERPRETER_DEVICE_OFFLOAD_H
+diff --git a/clang/lib/Interpreter/IncrementalParser.cpp b/clang/lib/Interpreter/IncrementalParser.cpp
+index f892eeb81..a3ae1aa8a 100644
+--- a/clang/lib/Interpreter/IncrementalParser.cpp
++++ b/clang/lib/Interpreter/IncrementalParser.cpp
+@@ -194,6 +194,15 @@ public:
+   }
+ };
+ 
++CodeGenerator *IncrementalParser::getCodeGen() const {
++  FrontendAction *WrappedAct = Act->getWrapped();
++  if (!WrappedAct->hasIRSupport())
++    return nullptr;
++  return static_cast<CodeGenAction *>(WrappedAct)->getCodeGenerator();
++}
++
++IncrementalParser::IncrementalParser() {}
++
+ IncrementalParser::IncrementalParser(Interpreter &Interp,
+                                      std::unique_ptr<CompilerInstance> Instance,
+                                      llvm::LLVMContext &LLVMCtx,
+@@ -211,6 +220,21 @@ IncrementalParser::IncrementalParser(Interpreter &Interp,
+   P.reset(
+       new Parser(CI->getPreprocessor(), CI->getSema(), /*SkipBodies=*/false));
+   P->Initialize();
++
++  // An initial PTU is needed as CUDA includes some headers automatically
++  auto PTU = ParseOrWrapTopLevelDecl();
++  if (auto E = PTU.takeError()) {
++    consumeError(std::move(E)); // FIXME
++    return;                     // PTU.takeError();
++  }
++
++  if (CodeGenerator *CG = getCodeGen()) {
++    std::unique_ptr<llvm::Module> M(CG->ReleaseModule());
++    CG->StartModule("incr_module_" + std::to_string(PTUs.size()),
++                    M->getContext());
++    PTU->TheModule = std::move(M);
++    assert(PTU->TheModule && "Failed to create initial PTU");
++  }
+ }
+ 
+ IncrementalParser::~IncrementalParser() {
+@@ -281,14 +305,6 @@ IncrementalParser::ParseOrWrapTopLevelDecl() {
+   return LastPTU;
+ }
+ 
+-static CodeGenerator *getCodeGen(FrontendAction *Act) {
+-  IncrementalAction *IncrAct = static_cast<IncrementalAction *>(Act);
+-  FrontendAction *WrappedAct = IncrAct->getWrapped();
+-  if (!WrappedAct->hasIRSupport())
+-    return nullptr;
+-  return static_cast<CodeGenAction *>(WrappedAct)->getCodeGenerator();
+-}
+-
+ llvm::Expected<PartialTranslationUnit &>
+ IncrementalParser::Parse(llvm::StringRef input) {
+   Preprocessor &PP = CI->getPreprocessor();
+@@ -351,7 +367,7 @@ IncrementalParser::Parse(llvm::StringRef input) {
+ 
+ std::unique_ptr<llvm::Module> IncrementalParser::GenModule() {
+   static unsigned ID = 0;
+-  if (CodeGenerator *CG = getCodeGen(Act.get())) {
++  if (CodeGenerator *CG = getCodeGen()) {
+     std::unique_ptr<llvm::Module> M(CG->ReleaseModule());
+     CG->StartModule("incr_module_" + std::to_string(ID++), M->getContext());
+     return M;
+@@ -378,7 +394,7 @@ void IncrementalParser::CleanUpPTU(PartialTranslationUnit &PTU) {
+ }
+ 
+ llvm::StringRef IncrementalParser::GetMangledName(GlobalDecl GD) const {
+-  CodeGenerator *CG = getCodeGen(Act.get());
++  CodeGenerator *CG = getCodeGen();
+   assert(CG);
+   return CG->GetMangledName(GD);
+ }
+diff --git a/clang/lib/Interpreter/IncrementalParser.h b/clang/lib/Interpreter/IncrementalParser.h
+index 99e37588d..def5750d1 100644
+--- a/clang/lib/Interpreter/IncrementalParser.h
++++ b/clang/lib/Interpreter/IncrementalParser.h
+@@ -28,6 +28,7 @@ class LLVMContext;
+ 
+ namespace clang {
+ class ASTConsumer;
++class CodeGenerator;
+ class CompilerInstance;
+ class IncrementalAction;
+ class Interpreter;
+@@ -36,6 +37,7 @@ class Parser;
+ /// changes between the subsequent incremental input.
+ ///
+ class IncrementalParser {
++protected:
+   /// Long-lived, incremental parsing action.
+   std::unique_ptr<IncrementalAction> Act;
+ 
+@@ -55,18 +57,21 @@ class IncrementalParser {
+   /// of code.
+   std::list<PartialTranslationUnit> PTUs;
+ 
++  IncrementalParser();
++
+ public:
+   IncrementalParser(Interpreter &Interp,
+                     std::unique_ptr<CompilerInstance> Instance,
+                     llvm::LLVMContext &LLVMCtx, llvm::Error &Err);
+-  ~IncrementalParser();
++  virtual ~IncrementalParser();
+ 
+-  const CompilerInstance *getCI() const { return CI.get(); }
++  CompilerInstance *getCI() { return CI.get(); }
++  CodeGenerator *getCodeGen() const;
+ 
+   /// Parses incremental input by creating an in-memory file.
+   ///\returns a \c PartialTranslationUnit which holds information about the
+   /// \c TranslationUnitDecl and \c llvm::Module corresponding to the input.
+-  llvm::Expected<PartialTranslationUnit &> Parse(llvm::StringRef Input);
++  virtual llvm::Expected<PartialTranslationUnit &> Parse(llvm::StringRef Input);
+ 
+   /// Uses the CodeGenModule mangled name cache and avoids recomputing.
+   ///\returns the mangled name of a \c GD.
+diff --git a/clang/lib/Interpreter/Interpreter.cpp b/clang/lib/Interpreter/Interpreter.cpp
+index 4391bd008..74d428a86 100644
+--- a/clang/lib/Interpreter/Interpreter.cpp
++++ b/clang/lib/Interpreter/Interpreter.cpp
+@@ -13,6 +13,7 @@
+ 
+ #include "clang/Interpreter/Interpreter.h"
+ 
++#include "DeviceOffload.h"
+ #include "IncrementalExecutor.h"
+ #include "IncrementalParser.h"
+ 
+@@ -22,6 +23,7 @@
+ #include "clang/AST/TypeVisitor.h"
+ #include "clang/Basic/DiagnosticSema.h"
+ #include "clang/Basic/TargetInfo.h"
++#include "clang/CodeGen/CodeGenAction.h"
+ #include "clang/CodeGen/ModuleBuilder.h"
+ #include "clang/CodeGen/ObjectFilePCHContainerOperations.h"
+ #include "clang/Driver/Compilation.h"
+@@ -146,7 +148,6 @@ IncrementalCompilerBuilder::create(std::vector<const char *> &ClangArgv) {
+   // action and use other actions in incremental mode.
+   // FIXME: Print proper driver diagnostics if the driver flags are wrong.
+   // We do C++ by default; append right after argv[0] if no "-x" given
+-  ClangArgv.insert(ClangArgv.end(), "-xc++");
+   ClangArgv.insert(ClangArgv.end(), "-Xclang");
+   ClangArgv.insert(ClangArgv.end(), "-fincremental-extensions");
+   ClangArgv.insert(ClangArgv.end(), "-c");
+@@ -179,6 +180,54 @@ IncrementalCompilerBuilder::create(std::vector<const char *> &ClangArgv) {
+   return CreateCI(**ErrOrCC1Args);
+ }
+ 
++llvm::Expected<std::unique_ptr<CompilerInstance>>
++IncrementalCompilerBuilder::CreateCpp() {
++  std::vector<const char *> Argv;
++  Argv.reserve(5 + 1 + UserArgs.size());
++  Argv.push_back("-xc++");
++  Argv.insert(Argv.end(), UserArgs.begin(), UserArgs.end());
++
++  return IncrementalCompilerBuilder::create(Argv);
++}
++
++llvm::Expected<std::unique_ptr<CompilerInstance>>
++IncrementalCompilerBuilder::createCuda(bool device) {
++  std::vector<const char *> Argv;
++  Argv.reserve(5 + 4 + UserArgs.size());
++
++  Argv.push_back("-xcuda");
++  if (device)
++    Argv.push_back("--cuda-device-only");
++  else
++    Argv.push_back("--cuda-host-only");
++
++  std::string SDKPathArg = "--cuda-path=";
++  if (!CudaSDKPath.empty()) {
++    SDKPathArg += CudaSDKPath;
++    Argv.push_back(SDKPathArg.c_str());
++  }
++
++  std::string ArchArg = "--offload-arch=";
++  if (!OffloadArch.empty()) {
++    ArchArg += OffloadArch;
++    Argv.push_back(ArchArg.c_str());
++  }
++
++  Argv.insert(Argv.end(), UserArgs.begin(), UserArgs.end());
++
++  return IncrementalCompilerBuilder::create(Argv);
++}
++
++llvm::Expected<std::unique_ptr<CompilerInstance>>
++IncrementalCompilerBuilder::CreateCudaDevice() {
++  return IncrementalCompilerBuilder::createCuda(true);
++}
++
++llvm::Expected<std::unique_ptr<CompilerInstance>>
++IncrementalCompilerBuilder::CreateCudaHost() {
++  return IncrementalCompilerBuilder::createCuda(false);
++}
++
+ Interpreter::Interpreter(std::unique_ptr<CompilerInstance> CI,
+                          llvm::Error &Err) {
+   llvm::ErrorAsOutParameter EAO(&Err);
+@@ -239,6 +288,34 @@ Interpreter::create(std::unique_ptr<CompilerInstance> CI) {
+   return std::move(Interp);
+ }
+ 
++llvm::Expected<std::unique_ptr<Interpreter>>
++Interpreter::createWithCUDA(std::unique_ptr<CompilerInstance> CI,
++                            std::unique_ptr<CompilerInstance> DCI) {
++  // avoid writing fat binary to disk using an in-memory virtual file system
++  llvm::IntrusiveRefCntPtr<llvm::vfs::InMemoryFileSystem> IMVFS =
++      std::make_unique<llvm::vfs::InMemoryFileSystem>();
++  llvm::IntrusiveRefCntPtr<llvm::vfs::OverlayFileSystem> OverlayVFS =
++      std::make_unique<llvm::vfs::OverlayFileSystem>(
++          llvm::vfs::getRealFileSystem());
++  OverlayVFS->pushOverlay(IMVFS);
++  CI->createFileManager(OverlayVFS);
++
++  auto Interp = Interpreter::create(std::move(CI));
++  if (auto E = Interp.takeError())
++    return std::move(E);
++
++  llvm::Error Err = llvm::Error::success();
++  auto DeviceParser = std::make_unique<IncrementalCUDADeviceParser>(
++      **Interp, std::move(DCI), *(*Interp)->IncrParser.get(),
++      *(*Interp)->TSCtx->getContext(), IMVFS, Err);
++  if (Err)
++    return std::move(Err);
++
++  (*Interp)->DeviceParser = std::move(DeviceParser);
++
++  return Interp;
++}
++
+ const CompilerInstance *Interpreter::getCompilerInstance() const {
+   return IncrParser->getCI();
+ }
+@@ -268,6 +345,14 @@ size_t Interpreter::getEffectivePTUSize() const {
+ 
+ llvm::Expected<PartialTranslationUnit &>
+ Interpreter::Parse(llvm::StringRef Code) {
++  // If we have a device parser, parse it first.
++  // The generated code will be included in the host compilation
++  if (DeviceParser) {
++    auto DevicePTU = DeviceParser->Parse(Code);
++    if (auto E = DevicePTU.takeError())
++      return std::move(E);
++  }
++
+   // Tell the interpreter sliently ignore unused expressions since value
+   // printing could cause it.
+   getCompilerInstance()->getDiagnostics().setSeverity(
+diff --git a/clang/test/Interpreter/CUDA/device-function-template.cu b/clang/test/Interpreter/CUDA/device-function-template.cu
+new file mode 100644
+index 000000000..f0077a2c5
+--- /dev/null
++++ b/clang/test/Interpreter/CUDA/device-function-template.cu
+@@ -0,0 +1,24 @@
++// Tests device function templates
++// RUN: cat %s | clang-repl --cuda | FileCheck %s
++
++extern "C" int printf(const char*, ...);
++
++template <typename T> __device__ inline T sum(T a, T b) { return a + b; }
++__global__ void test_kernel(int* value) { *value = sum(40, 2); }
++
++int var;
++int* devptr = nullptr;
++printf("cudaMalloc: %d\n", cudaMalloc((void **) &devptr, sizeof(int)));
++// CHECK: cudaMalloc: 0
++
++test_kernel<<<1,1>>>(devptr);
++printf("CUDA Error: %d\n", cudaGetLastError());
++// CHECK-NEXT: CUDA Error: 0
++
++printf("cudaMemcpy: %d\n", cudaMemcpy(&var, devptr, sizeof(int), cudaMemcpyDeviceToHost));
++// CHECK-NEXT: cudaMemcpy: 0
++
++printf("Value: %d\n", var);
++// CHECK-NEXT: Value: 42
++
++%quit
+diff --git a/clang/test/Interpreter/CUDA/device-function.cu b/clang/test/Interpreter/CUDA/device-function.cu
+new file mode 100644
+index 000000000..396f8f0f9
+--- /dev/null
++++ b/clang/test/Interpreter/CUDA/device-function.cu
+@@ -0,0 +1,24 @@
++// Tests __device__ function calls
++// RUN: cat %s | clang-repl --cuda | FileCheck %s
++
++extern "C" int printf(const char*, ...);
++
++__device__ inline void test_device(int* value) { *value = 42; }
++__global__ void test_kernel(int* value) { test_device(value); }
++
++int var;
++int* devptr = nullptr;
++printf("cudaMalloc: %d\n", cudaMalloc((void **) &devptr, sizeof(int)));
++// CHECK: cudaMalloc: 0
++
++test_kernel<<<1,1>>>(devptr);
++printf("CUDA Error: %d\n", cudaGetLastError());
++// CHECK-NEXT: CUDA Error: 0
++
++printf("cudaMemcpy: %d\n", cudaMemcpy(&var, devptr, sizeof(int), cudaMemcpyDeviceToHost));
++// CHECK-NEXT: cudaMemcpy: 0
++
++printf("Value: %d\n", var);
++// CHECK-NEXT: Value: 42
++
++%quit
+diff --git a/clang/test/Interpreter/CUDA/host-and-device.cu b/clang/test/Interpreter/CUDA/host-and-device.cu
+new file mode 100644
+index 000000000..8e44e3403
+--- /dev/null
++++ b/clang/test/Interpreter/CUDA/host-and-device.cu
+@@ -0,0 +1,27 @@
++// Checks that a function is available in both __host__ and __device__
++// RUN: cat %s | clang-repl --cuda | FileCheck %s
++
++extern "C" int printf(const char*, ...);
++
++__host__ __device__ inline int sum(int a, int b){ return a + b; }
++__global__ void kernel(int * output){ *output = sum(40,2); }
++
++printf("Host sum: %d\n", sum(41,1));
++// CHECK: Host sum: 42
++
++int var = 0;
++int * deviceVar;
++printf("cudaMalloc: %d\n", cudaMalloc((void **) &deviceVar, sizeof(int)));
++// CHECK-NEXT: cudaMalloc: 0
++
++kernel<<<1,1>>>(deviceVar);
++printf("CUDA Error: %d\n", cudaGetLastError());
++// CHECK-NEXT: CUDA Error: 0
++
++printf("cudaMemcpy: %d\n", cudaMemcpy(&var, deviceVar, sizeof(int), cudaMemcpyDeviceToHost));
++// CHECK-NEXT: cudaMemcpy: 0
++
++printf("var: %d\n", var);
++// CHECK-NEXT: var: 42
++
++%quit
+diff --git a/clang/test/Interpreter/CUDA/lit.local.cfg b/clang/test/Interpreter/CUDA/lit.local.cfg
+new file mode 100644
+index 000000000..999157246
+--- /dev/null
++++ b/clang/test/Interpreter/CUDA/lit.local.cfg
+@@ -0,0 +1,2 @@
++if 'host-supports-cuda' not in config.available_features:
++    config.unsupported = True
+diff --git a/clang/test/Interpreter/CUDA/memory.cu b/clang/test/Interpreter/CUDA/memory.cu
+new file mode 100644
+index 000000000..852cc04f6
+--- /dev/null
++++ b/clang/test/Interpreter/CUDA/memory.cu
+@@ -0,0 +1,23 @@
++// Tests cudaMemcpy and writes from kernel
++// RUN: cat %s | clang-repl --cuda | FileCheck %s
++
++extern "C" int printf(const char*, ...);
++
++__global__ void test_func(int* value) { *value = 42; }
++
++int var;
++int* devptr = nullptr;
++printf("cudaMalloc: %d\n", cudaMalloc((void **) &devptr, sizeof(int)));
++// CHECK: cudaMalloc: 0
++
++test_func<<<1,1>>>(devptr);
++printf("CUDA Error: %d\n", cudaGetLastError());
++// CHECK-NEXT: CUDA Error: 0
++
++printf("cudaMemcpy: %d\n", cudaMemcpy(&var, devptr, sizeof(int), cudaMemcpyDeviceToHost));
++// CHECK-NEXT: cudaMemcpy: 0
++
++printf("Value: %d\n", var);
++// CHECK-NEXT: Value: 42
++
++%quit
+diff --git a/clang/test/Interpreter/CUDA/sanity.cu b/clang/test/Interpreter/CUDA/sanity.cu
+new file mode 100644
+index 000000000..ef9d68df4
+--- /dev/null
++++ b/clang/test/Interpreter/CUDA/sanity.cu
+@@ -0,0 +1,11 @@
++// RUN: cat %s | clang-repl --cuda | FileCheck %s
++
++extern "C" int printf(const char*, ...);
++
++__global__ void test_func() {}
++
++test_func<<<1,1>>>();
++printf("CUDA Error: %d", cudaGetLastError());
++// CHECK: CUDA Error: 0
++
++%quit
+diff --git a/clang/test/lit.cfg.py b/clang/test/lit.cfg.py
+index cc55c3c44..fe237fadc 100644
+--- a/clang/test/lit.cfg.py
++++ b/clang/test/lit.cfg.py
+@@ -86,9 +86,39 @@ def have_host_jit_feature_support(feature_name):
+ 
+     return 'true' in clang_repl_out
+ 
++def have_host_clang_repl_cuda():
++    clang_repl_exe = lit.util.which('clang-repl', config.clang_tools_dir)
++
++    if not clang_repl_exe:
++        return False
++
++    testcode = b'\n'.join([
++        b"__global__ void test_func() {}",
++        b"test_func<<<1,1>>>();",
++        b"extern \"C\" int puts(const char *s);",
++        b"puts(cudaGetLastError() ? \"failure\" : \"success\");",
++        b"%quit"
++    ])
++    try:
++        clang_repl_cmd = subprocess.run([clang_repl_exe, '--cuda'],
++                                        stdout=subprocess.PIPE,
++                                        stderr=subprocess.PIPE,
++                                        input=testcode)
++    except OSError:
++        return False
++
++    if clang_repl_cmd.returncode == 0:
++        if clang_repl_cmd.stdout.find(b"success") != -1:
++            return True
++
++    return False
++
+ if have_host_jit_feature_support('jit'):
+     config.available_features.add('host-supports-jit')
+ 
++    if have_host_clang_repl_cuda():
++        config.available_features.add('host-supports-cuda')
++
+ if config.clang_staticanalyzer:
+     config.available_features.add('staticanalyzer')
+     tools.append('clang-check')
+diff --git a/clang/tools/clang-repl/ClangRepl.cpp b/clang/tools/clang-repl/ClangRepl.cpp
+index 33faf3fab..19733e193 100644
+--- a/clang/tools/clang-repl/ClangRepl.cpp
++++ b/clang/tools/clang-repl/ClangRepl.cpp
+@@ -20,9 +20,13 @@
+ #include "llvm/Support/CommandLine.h"
+ #include "llvm/Support/ManagedStatic.h" // llvm_shutdown
+ #include "llvm/Support/Signals.h"
+-#include "llvm/Support/TargetSelect.h" // llvm::Initialize*
++#include "llvm/Support/TargetSelect.h"
+ #include <optional>
+ 
++static llvm::cl::opt<bool> CudaEnabled("cuda", llvm::cl::Hidden);
++static llvm::cl::opt<std::string> CudaPath("cuda-path", llvm::cl::Hidden);
++static llvm::cl::opt<std::string> OffloadArch("offload-arch", llvm::cl::Hidden);
++
+ static llvm::cl::list<std::string>
+     ClangArgs("Xcc",
+               llvm::cl::desc("Argument to pass to the CompilerInvocation"),
+@@ -76,8 +80,11 @@ int main(int argc, const char **argv) {
+   std::vector<const char *> ClangArgv(ClangArgs.size());
+   std::transform(ClangArgs.begin(), ClangArgs.end(), ClangArgv.begin(),
+                  [](const std::string &s) -> const char * { return s.data(); });
+-  llvm::InitializeNativeTarget();
+-  llvm::InitializeNativeTargetAsmPrinter();
++  // Initialize all targets (required for device offloading)
++  llvm::InitializeAllTargetInfos();
++  llvm::InitializeAllTargets();
++  llvm::InitializeAllTargetMCs();
++  llvm::InitializeAllAsmPrinters();
+ 
+   if (OptHostSupportsJit) {
+     auto J = llvm::orc::LLJITBuilder().create();
+@@ -90,9 +97,30 @@ int main(int argc, const char **argv) {
+     return 0;
+   }
+ 
++  clang::IncrementalCompilerBuilder CB;
++  CB.SetCompilerArgs(ClangArgv);
++
++  std::unique_ptr<clang::CompilerInstance> DeviceCI;
++  if (CudaEnabled) {
++    if (!CudaPath.empty())
++      CB.SetCudaSDK(CudaPath);
++
++    if (OffloadArch.empty()) {
++      OffloadArch = "sm_35";
++    }
++    CB.SetOffloadArch(OffloadArch);
++
++    DeviceCI = ExitOnErr(CB.CreateCudaDevice());
++  }
++
+   // FIXME: Investigate if we could use runToolOnCodeWithArgs from tooling. It
+   // can replace the boilerplate code for creation of the compiler instance.
+-  auto CI = ExitOnErr(clang::IncrementalCompilerBuilder::create(ClangArgv));
++  std::unique_ptr<clang::CompilerInstance> CI;
++  if (CudaEnabled) {
++    CI = ExitOnErr(CB.CreateCudaHost());
++  } else {
++    CI = ExitOnErr(CB.CreateCpp());
++  }
+ 
+   // Set an error handler, so that any LLVM backend diagnostics go through our
+   // error handler.
+@@ -101,8 +129,23 @@ int main(int argc, const char **argv) {
+ 
+   // Load any requested plugins.
+   CI->LoadRequestedPlugins();
++  if (CudaEnabled)
++    DeviceCI->LoadRequestedPlugins();
++
++  std::unique_ptr<clang::Interpreter> Interp;
++  if (CudaEnabled) {
++    Interp = ExitOnErr(
++        clang::Interpreter::createWithCUDA(std::move(CI), std::move(DeviceCI)));
++
++    if (CudaPath.empty()) {
++      ExitOnErr(Interp->LoadDynamicLibrary("libcudart.so"));
++    } else {
++      auto CudaRuntimeLibPath = CudaPath + "/lib/libcudart.so";
++      ExitOnErr(Interp->LoadDynamicLibrary(CudaRuntimeLibPath.c_str()));
++    }
++  } else
++    Interp = ExitOnErr(clang::Interpreter::create(std::move(CI)));
+ 
+-  auto Interp = ExitOnErr(clang::Interpreter::create(std::move(CI)));
+   for (const std::string &input : OptInputs) {
+     if (auto Err = Interp->ParseAndExecute(input))
+       llvm::logAllUnhandledErrors(std::move(Err), llvm::errs(), "error: ");
+diff --git a/clang/unittests/Interpreter/ExceptionTests/InterpreterExceptionTest.cpp b/clang/unittests/Interpreter/ExceptionTests/InterpreterExceptionTest.cpp
+index 6d0433a98..63bb69038 100644
+--- a/clang/unittests/Interpreter/ExceptionTests/InterpreterExceptionTest.cpp
++++ b/clang/unittests/Interpreter/ExceptionTests/InterpreterExceptionTest.cpp
+@@ -38,7 +38,9 @@ createInterpreter(const Args &ExtraArgs = {},
+                   DiagnosticConsumer *Client = nullptr) {
+   Args ClangArgs = {"-Xclang", "-emit-llvm-only"};
+   ClangArgs.insert(ClangArgs.end(), ExtraArgs.begin(), ExtraArgs.end());
+-  auto CI = cantFail(clang::IncrementalCompilerBuilder::create(ClangArgs));
++  auto CB = clang::IncrementalCompilerBuilder();
++  CB.SetCompilerArgs(ClangArgs);
++  auto CI = cantFail(CB.CreateCpp());
+   if (Client)
+     CI->getDiagnostics().setClient(Client, /*ShouldOwnClient=*/false);
+   return cantFail(clang::Interpreter::create(std::move(CI)));
+diff --git a/clang/unittests/Interpreter/IncrementalProcessingTest.cpp b/clang/unittests/Interpreter/IncrementalProcessingTest.cpp
+index b7ad468e1..6d477c9ab 100644
+--- a/clang/unittests/Interpreter/IncrementalProcessingTest.cpp
++++ b/clang/unittests/Interpreter/IncrementalProcessingTest.cpp
+@@ -52,7 +52,9 @@ const Function *getGlobalInit(llvm::Module *M) {
+ 
+ TEST(IncrementalProcessing, EmitCXXGlobalInitFunc) {
+   std::vector<const char *> ClangArgv = {"-Xclang", "-emit-llvm-only"};
+-  auto CI = llvm::cantFail(IncrementalCompilerBuilder::create(ClangArgv));
++  auto CB = clang::IncrementalCompilerBuilder();
++  CB.SetCompilerArgs(ClangArgv);
++  auto CI = cantFail(CB.CreateCpp());
+   auto Interp = llvm::cantFail(Interpreter::create(std::move(CI)));
+ 
+   std::array<clang::PartialTranslationUnit *, 2> PTUs;
+diff --git a/clang/unittests/Interpreter/InterpreterTest.cpp b/clang/unittests/Interpreter/InterpreterTest.cpp
+index 330fd18ab..338003cd9 100644
+--- a/clang/unittests/Interpreter/InterpreterTest.cpp
++++ b/clang/unittests/Interpreter/InterpreterTest.cpp
+@@ -46,7 +46,9 @@ createInterpreter(const Args &ExtraArgs = {},
+                   DiagnosticConsumer *Client = nullptr) {
+   Args ClangArgs = {"-Xclang", "-emit-llvm-only"};
+   ClangArgs.insert(ClangArgs.end(), ExtraArgs.begin(), ExtraArgs.end());
+-  auto CI = cantFail(clang::IncrementalCompilerBuilder::create(ClangArgs));
++  auto CB = clang::IncrementalCompilerBuilder();
++  CB.SetCompilerArgs(ClangArgs);
++  auto CI = cantFail(CB.CreateCpp());
+   if (Client)
+     CI->getDiagnostics().setClient(Client, /*ShouldOwnClient=*/false);
+   return cantFail(clang::Interpreter::create(std::move(CI)));

@@ -115,6 +115,8 @@ clang/LLVM technology.
 #include "cling/Utils/SourceNormalization.h"
 #include "cling/Interpreter/Exception.h"
 
+#include "clang/Interpreter/CppInterOp.h"
+
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/Module.h"
 
@@ -1539,6 +1541,11 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
    if (!fInterpreter->getCI()) { // Compiler instance could not be created. See https://its.cern.ch/jira/browse/ROOT-10239
       return;
    }
+
+   // Tell CppInterOp that the cling::Interpreter instance is managed externally by ROOT
+   // Sets the interpreter by passing the fInterpreter handle as soon as TCling is initialized
+   Cpp::UseExternalInterpreter((Cpp::TInterp_t*)fInterpreter.get());
+
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHOrModuleValidation =
       DisableValidationForModuleKind::All;
