@@ -170,7 +170,8 @@ private:
    template<typename T> T GetConstant(Int_t k);
 
 public:
-   TTreeFormula();
+   TTreeFormula() = delete;
+   TTreeFormula(TRootIOCtor*);
    TTreeFormula(const char *name,const char *formula, TTree *tree);
      ~TTreeFormula() override;
 

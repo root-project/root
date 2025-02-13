@@ -120,13 +120,12 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+/// TreeFormula constructor only valid for ROOT I/O purposes.
 
-TTreeFormula::TTreeFormula(): ROOT::v5::TFormula(), fQuickLoad(false), fNeedLoading(true),
+TTreeFormula::TTreeFormula(TRootIOCtor*): ROOT::v5::TFormula(), fQuickLoad(false), fNeedLoading(true),
    fDidBooleanOptimization(false), fDimensionSetup(nullptr)
 
 {
-   // Tree Formula default constructor
-
    fTree         = nullptr;
    fLookupType   = nullptr;
    fNindex       = 0;
