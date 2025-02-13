@@ -594,7 +594,10 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
 
       if (!result) {
          auto cl = TClass::GetClass(canonicalType.c_str());
-         if (cl != nullptr) {
+         // NOTE: if the class is not at least "Interpreted" we don't have enough information to
+         // properly construct the RClassField (e.g. we are missing the list of bases), so in that
+         // situation we rely on field emulation instead.
+         if (cl != nullptr && cl->GetState() >= TClass::kInterpreted) {
             createContextGuard.AddClassToStack(canonicalType);
             if (cl->GetCollectionProxy()) {
                result = std::make_unique<RProxiedCollectionField>(fieldName, canonicalType);
