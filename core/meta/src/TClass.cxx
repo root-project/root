@@ -5014,8 +5014,8 @@ const void *TClass::DynamicCast(const TClass *cl, const void *obj, Bool_t up)
 /// If quiet is true, do not issue a message via Error in case
 /// of problems, just return `nullptr`.
 ///
-/// This method is also used by the I/O subsystem to allocate the right amount 
-/// of memory for the objects. If a default constructor is not defined for a 
+/// This method is also used by the I/O subsystem to allocate the right amount
+/// of memory for the objects. If a default constructor is not defined for a
 /// certain class, some options are available.
 /// The simplest is to define the default I/O constructor, for example
 /// ~~~{.cpp}
@@ -5032,7 +5032,7 @@ const void *TClass::DynamicCast(const TClass *cl, const void *obj, Bool_t up)
 /// ~~~ {.cpp}
 ///    #pragma link C++ ioctortype UserClass;
 /// ~~~
-/// `TClass::New` will then look for a constructor (for a class `MyClass` in the 
+/// `TClass::New` will then look for a constructor (for a class `MyClass` in the
 /// following example) in the following order, constructing the object using the
 /// first one in the list that exists and is declared public:
 /// ~~~ {.cpp}
