@@ -1043,7 +1043,8 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
    }
    for (auto &column : fAvailableColumns)
       column->ConnectPageSource(fOnDiskId, pageSource);
-   OnConnectPageSource();
+
+   AfterConnectPageSource();
 
    fState = EState::kConnectedToSource;
 }
