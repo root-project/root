@@ -73,8 +73,10 @@
    "StructWithTransientString" target = "str" include = "string" code = "{ str = std::string{onfile.chars, 4}; }"
 
 // Whole object rule (without target member) listed first but should be executed last
-#pragma read sourceClass = "StructWithIORules" version = "[1-]" targetClass = "StructWithIORules" source = "" target = \
-   "" code = "{ newObj->cDerived = 2 * newObj->c; }"
+// clang-format off
+#pragma read sourceClass="StructWithIORules" version="[1-]" targetClass="StructWithIORules" source="" target="" \
+   code="{ newObj->cDerived = 2 * newObj->c; }"
+// clang-format on
 
 #pragma read sourceClass = "StructWithIORules" source = "float a" version = "[1-]" targetClass = \
    "StructWithIORules" target = "c" code = "{ c = onfile.a + newObj->b; }"

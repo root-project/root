@@ -362,11 +362,11 @@ void ROOT::Experimental::RClassField::AddReadCallbacksFromIORule(const TSchemaRu
    auto func = rule->GetReadFunctionPointer();
    R__ASSERT(func != nullptr);
    fReadCallbacks.emplace_back([func, stagingClass = fStagingClass, stagingArea = fStagingArea.get()](void *target) {
-      TVirtualObject oldObj{nullptr};
-      oldObj.fClass = stagingClass;
-      oldObj.fObject = stagingArea;
-      func(static_cast<char *>(target), &oldObj);
-      oldObj.fClass = nullptr; // TVirtualObject does not own the value
+      TVirtualObject onfileObj{nullptr};
+      onfileObj.fClass = stagingClass;
+      onfileObj.fObject = stagingArea;
+      func(static_cast<char *>(target), &onfileObj);
+      onfileObj.fObject = nullptr; // TVirtualObject does not own the value
    });
 }
 
