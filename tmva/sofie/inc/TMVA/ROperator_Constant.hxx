@@ -33,7 +33,10 @@ public:
       fShape(shape),
       fValues(values),
       fAttrType(type)
-      { }
+      {
+         fInputTensorNames = { };
+         fOutputTensorNames = { };
+      }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;
