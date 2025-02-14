@@ -6208,14 +6208,21 @@ Long_t TClass::Property() const
    // Avoid asking about the class when it is still building
    if (TestBit(kLoading)) return fProperty;
 
+   if (fStreamerType != kDefault && !HasInterpreterInfo()) {
+      // We have no interpreter information but we already set the streamer type
+      // so we have already been here and have no new information, then let's
+      // give up.  See the code at this end of this routine (else branch of the
+      // `if (HasInterpreterInfo()` for the path we took before.
+      return 0;
+   }
+
    // When called via TMapFile (e.g. Update()) make sure that the dictionary
    // gets allocated on the heap and not in the mapped file.
    TMmallocDescTemp setreset;
 
    TClass *kl = const_cast<TClass*>(this);
 
-   kl->fStreamerType = TClass::kDefault;
-   kl->fStreamerImpl = &TClass::StreamerDefault;
+   Int_t streamerType = TClass::kDefault;
 
    if (InheritsFrom(TObject::Class())) {
       kl->SetBit(kIsTObject);
@@ -6224,8 +6231,7 @@ Long_t TClass::Property() const
       Int_t delta = kl->GetBaseClassOffsetRecurse(TObject::Class());
       if (delta==0) kl->SetBit(kStartWithTObject);
 
-      kl->fStreamerType  = kTObject;
-      kl->fStreamerImpl  = &TClass::StreamerTObject;
+      streamerType = kTObject;
    }
 
    if (HasInterpreterInfo()) {
@@ -6237,32 +6243,29 @@ Long_t TClass::Property() const
       if (!const_cast<TClass*>(this)->GetClassMethodWithPrototype("Streamer","TBuffer&",kFALSE)) {
 
          kl->SetBit(kIsForeign);
-         kl->fStreamerType  = kForeign;
-         kl->fStreamerImpl  = &TClass::StreamerStreamerInfo;
+         streamerType = kForeign;
 
-      } else if ( kl->fStreamerType == TClass::kDefault ) {
+      } else if (streamerType == TClass::kDefault) {
          if (kl->fConvStreamerFunc) {
-            kl->fStreamerType  = kInstrumented;
-            kl->fStreamerImpl  = &TClass::ConvStreamerInstrumented;
+            streamerType = kInstrumented;
          } else if (kl->fStreamerFunc) {
-            kl->fStreamerType  = kInstrumented;
-            kl->fStreamerImpl  = &TClass::StreamerInstrumented;
+            streamerType = kInstrumented;
          } else {
             // We have an automatic streamer using the StreamerInfo .. no need to go through the
             // Streamer method function itself.
-            kl->fStreamerType  = kInstrumented;
-            kl->fStreamerImpl  = &TClass::StreamerStreamerInfo;
+            streamerType = kInstrumented;
          }
       }
 
       if (fStreamer) {
-         kl->fStreamerType  = kExternal;
-         kl->fStreamerImpl  = &TClass::StreamerExternal;
+         streamerType = kExternal;
       }
 
       if (const_cast<TClass *>(this)->GetClassMethodWithPrototype("Hash", "", kTRUE)) {
          kl->SetBit(kHasLocalHashMember);
       }
+
+      kl->SetStreamerImpl(streamerType);
 
       if (GetClassInfo()) {
          // In the case where the TClass for one of ROOT's core class
@@ -6278,15 +6281,16 @@ Long_t TClass::Property() const
          // and think all test bits have been properly set.
          kl->fProperty = gCling->ClassInfo_Property(fClassInfo);
       }
+
    } else {
 
       if (fStreamer) {
-         kl->fStreamerType  = kExternal;
-         kl->fStreamerImpl  = &TClass::StreamerExternal;
+         streamerType = kExternal;
       }
 
-      kl->fStreamerType |= kEmulatedStreamer;
-      kl->SetStreamerImpl();
+      streamerType |= kEmulatedStreamer;
+
+      kl->SetStreamerImpl(streamerType);
       // fProperty was *not* set so that it can be forced to be recalculated
       // next time.
       return 0;
@@ -6321,8 +6325,9 @@ void TClass::SetRuntimeProperties()
 /// Internal routine to set fStreamerImpl based on the value of
 /// fStreamerType.
 
-void TClass::SetStreamerImpl()
+void TClass::SetStreamerImpl(Int_t StreamerType)
 {
+   fStreamerType = StreamerType;
    switch (fStreamerType) {
       case kTObject:  fStreamerImpl  = &TClass::StreamerTObject; break;
       case kForeign:  fStreamerImpl  = &TClass::StreamerStreamerInfo; break;

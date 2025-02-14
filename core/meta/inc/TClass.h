@@ -310,7 +310,7 @@ private:
    void               SetClassSize(Int_t sizof) { fSizeof = sizof; }
    TVirtualStreamerInfo* DetermineCurrentStreamerInfo();
 
-   void SetStreamerImpl();
+   void SetStreamerImpl(Int_t streamerType);
 
    void SetRuntimeProperties();
 
