@@ -1,5 +1,6 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RNTupleDS.hxx>
+#include <ROOT/RNTupleDSHelpers.hxx>
 #include <ROOT/RVec.hxx>
 
 #include <ROOT/RNTupleModel.hxx>
