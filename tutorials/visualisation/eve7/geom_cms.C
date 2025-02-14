@@ -93,7 +93,7 @@ void geom_cms()
 
    TFile::SetCacheFileDir(".");
 
-   auto geoManager = eveMng->GetGeometry("http://root.cern/files/cms.root");
+   auto geoManager = eveMng->GetGeometry("http://root-test.web.cern.ch/files/cms.root");
    TGeoNode *top = geoManager->GetTopVolume()->FindNode("CMSE_1");
 
    // tracker
