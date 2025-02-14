@@ -25,6 +25,8 @@ on:
 
 jobs:
   build-docs:
+    if: github.repository_owner == 'root-project'
+
     runs-on:
       - self-hosted
       - linux
