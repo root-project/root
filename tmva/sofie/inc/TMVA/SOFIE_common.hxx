@@ -12,6 +12,7 @@
 #include <complex>
 #include <string>
 #include <vector>
+#include <map>
 #include <memory>
 #include <regex>
 #include <sstream>
