@@ -3215,3 +3215,4 @@ const TString& TROOT::GetTTFFontDir() {
 const char *TROOT::GetTutorialsDir() {
    return GetTutorialDir();
 }
+
