@@ -17,9 +17,9 @@ TEST(RNTupleJoinTable, Basic)
    }
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto index = RNTupleJoinTable::Create({"fld"}, *pageSource);
+   auto joinTable = RNTupleJoinTable::Create({"fld"}, *pageSource);
 
-   EXPECT_EQ(10UL, index->GetSize());
+   EXPECT_EQ(10UL, joinTable->GetSize());
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    auto fld = ntuple->GetView<std::uint64_t>("fld");
@@ -27,7 +27,7 @@ TEST(RNTupleJoinTable, Basic)
    for (unsigned i = 0; i < ntuple->GetNEntries(); ++i) {
       auto fldValue = fld(i);
       EXPECT_EQ(fldValue, i * 2);
-      EXPECT_EQ(index->GetFirstEntryNumber({&fldValue}), i);
+      EXPECT_EQ(joinTable->GetFirstEntryNumber({&fldValue}), i);
    }
 }
 
@@ -47,20 +47,20 @@ TEST(RNTupleJoinTable, DeferBuild)
    }
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto index = RNTupleJoinTable::Create({"fld"}, *pageSource, true /* deferBuild */);
-   EXPECT_FALSE(index->IsBuilt());
+   auto joinTable = RNTupleJoinTable::Create({"fld"}, *pageSource, true /* deferBuild */);
+   EXPECT_FALSE(joinTable->IsBuilt());
 
    try {
-      index->GetFirstEntryNumber<std::uint64_t>(0);
-      FAIL() << "querying an unbuilt index should not be possible";
+      joinTable->GetFirstEntryNumber<std::uint64_t>(0);
+      FAIL() << "querying an unbuilt join table should not be possible";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("join table has not been built yet"));
    }
 
-   index->Build();
-   EXPECT_TRUE(index->IsBuilt());
+   joinTable->Build();
+   EXPECT_TRUE(joinTable->IsBuilt());
 
-   EXPECT_EQ(0, index->GetFirstEntryNumber<std::uint64_t>(0));
+   EXPECT_EQ(0, joinTable->GetFirstEntryNumber<std::uint64_t>(0));
 }
 
 TEST(RNTupleJoinTable, InvalidTypes)
@@ -80,12 +80,12 @@ TEST(RNTupleJoinTable, InvalidTypes)
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
 
-   auto intIndex = RNTupleJoinTable::Create({"fldInt"}, *pageSource);
-   EXPECT_EQ(1UL, intIndex->GetSize());
+   auto joinTable = RNTupleJoinTable::Create({"fldInt"}, *pageSource);
+   EXPECT_EQ(1UL, joinTable->GetSize());
 
    try {
       RNTupleJoinTable::Create({"fldFloat"}, *pageSource);
-      FAIL() << "non-integral-type field should not be allowed as index fields";
+      FAIL() << "non-integral-type field should not be allowed as join fields";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(
          err.what(),
@@ -95,7 +95,7 @@ TEST(RNTupleJoinTable, InvalidTypes)
 
    try {
       RNTupleJoinTable::Create({"fldString"}, *pageSource);
-      FAIL() << "non-integral-type field should not be allowed as index fields";
+      FAIL() << "non-integral-type field should not be allowed as join fields";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(
          err.what(),
@@ -105,7 +105,7 @@ TEST(RNTupleJoinTable, InvalidTypes)
 
    try {
       RNTupleJoinTable::Create({"fldStruct"}, *pageSource);
-      FAIL() << "non-integral-type field should not be allowed as index fields";
+      FAIL() << "non-integral-type field should not be allowed as join fields";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("cannot use field \"fldStruct\" with type \"CustomStruct\" in "
                                                  "join table: only integral types are allowed"));
@@ -146,7 +146,7 @@ TEST(RNTupleJoinTable, SparseSecondary)
    auto fldEvent = mainNtuple->GetView<std::uint64_t>("event");
 
    auto secondaryPageSource = RPageSource::Create("secondary", fileGuardSecondary.GetPath());
-   auto index = RNTupleJoinTable::Create({"event"}, *secondaryPageSource);
+   auto joinTable = RNTupleJoinTable::Create({"event"}, *secondaryPageSource);
    auto secondaryNTuple = RNTupleReader::Open("secondary", fileGuardSecondary.GetPath());
    auto fldX = secondaryNTuple->GetView<float>("x");
 
@@ -154,10 +154,10 @@ TEST(RNTupleJoinTable, SparseSecondary)
       auto event = fldEvent(i);
 
       if (i % 2 == 1) {
-         EXPECT_EQ(index->GetFirstEntryNumber<std::uint64_t>(event), ROOT::kInvalidNTupleIndex)
-            << "entry should not be present in the index";
+         EXPECT_EQ(joinTable->GetFirstEntryNumber<std::uint64_t>(event), ROOT::kInvalidNTupleIndex)
+            << "entry should not be present in the join table";
       } else {
-         auto idx = index->GetFirstEntryNumber<std::uint64_t>(event);
+         auto idx = joinTable->GetFirstEntryNumber<std::uint64_t>(event);
          EXPECT_EQ(idx, i / 2);
          EXPECT_FLOAT_EQ(fldX(idx), static_cast<float>(idx) / 3.14);
       }
@@ -186,9 +186,9 @@ TEST(RNTupleJoinTable, MultipleFields)
    }
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto index = RNTupleJoinTable::Create({"run", "event"}, *pageSource);
+   auto joinTable = RNTupleJoinTable::Create({"run", "event"}, *pageSource);
 
-   EXPECT_EQ(15ULL, index->GetSize());
+   EXPECT_EQ(15ULL, joinTable->GetSize());
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    auto fld = ntuple->GetView<float>("x");
@@ -198,24 +198,24 @@ TEST(RNTupleJoinTable, MultipleFields)
    for (std::uint64_t i = 0; i < pageSource->GetNEntries(); ++i) {
       run = i / 5;
       event = i % 5;
-      auto entryIdx = index->GetFirstEntryNumber({&run, &event});
+      auto entryIdx = joinTable->GetFirstEntryNumber({&run, &event});
       EXPECT_EQ(fld(entryIdx), fld(i));
    }
 
-   auto idx1 = index->GetFirstEntryNumber<std::int16_t, std::uint64_t>(2, 1);
-   auto idx2 = index->GetFirstEntryNumber<std::int16_t, std::uint64_t>(1, 2);
+   auto idx1 = joinTable->GetFirstEntryNumber<std::int16_t, std::uint64_t>(2, 1);
+   auto idx2 = joinTable->GetFirstEntryNumber<std::int16_t, std::uint64_t>(1, 2);
    EXPECT_NE(idx1, idx2);
 
    try {
-      index->GetAllEntryNumbers<std::int16_t, std::uint64_t, std::uint64_t>(0, 2, 3);
-      FAIL() << "querying the index with more values than index values should not be possible";
+      joinTable->GetAllEntryNumbers<std::int16_t, std::uint64_t, std::uint64_t>(0, 2, 3);
+      FAIL() << "querying the join table with more values than join field values should not be possible";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("number of values must match number of join fields"));
    }
 
    try {
-      index->GetAllEntryNumbers({0});
-      FAIL() << "querying the index with fewer values than index values should not be possible";
+      joinTable->GetAllEntryNumbers({0});
+      FAIL() << "querying the join table with fewer values than join field values should not be possible";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("number of value pointers must match number of join fields"));
    }
@@ -241,19 +241,19 @@ TEST(RNTupleJoinTable, MultipleMatches)
    }
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto index = RNTupleJoinTable::Create({"run"}, *pageSource);
+   auto joinTable = RNTupleJoinTable::Create({"run"}, *pageSource);
 
-   EXPECT_EQ(3ULL, index->GetSize());
+   EXPECT_EQ(3ULL, joinTable->GetSize());
 
-   auto entryIdxs = index->GetAllEntryNumbers<std::uint64_t>(1);
+   auto entryIdxs = joinTable->GetAllEntryNumbers<std::uint64_t>(1);
    auto expected = std::vector<std::uint64_t>{0, 1, 2, 3, 4};
    EXPECT_EQ(expected, *entryIdxs);
-   entryIdxs = index->GetAllEntryNumbers<std::uint64_t>(2);
+   entryIdxs = joinTable->GetAllEntryNumbers<std::uint64_t>(2);
    expected = {5, 6, 7};
    EXPECT_EQ(expected, *entryIdxs);
-   entryIdxs = index->GetAllEntryNumbers<std::uint64_t>(3);
+   entryIdxs = joinTable->GetAllEntryNumbers<std::uint64_t>(3);
    expected = {8, 9};
    EXPECT_EQ(expected, *entryIdxs);
-   entryIdxs = index->GetAllEntryNumbers<std::uint64_t>(4);
+   entryIdxs = joinTable->GetAllEntryNumbers<std::uint64_t>(4);
    EXPECT_EQ(nullptr, entryIdxs);
 }
