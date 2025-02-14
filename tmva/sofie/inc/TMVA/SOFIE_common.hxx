@@ -12,6 +12,7 @@
 #include <complex>
 #include <string>
 #include <vector>
+#include <map>
 #include <memory>
 #include <regex>
 #include <sstream>
@@ -45,8 +46,6 @@ constexpr size_t GetTypeSize(ETensorType type) {
         case ETensorType::UINT64:    return sizeof(uint64_t);
         case ETensorType::BOOL:      return sizeof(bool);
         case ETensorType::STRING:    return sizeof(std::string);
-        case ETensorType::COMPLEX64: return sizeof(std::complex<float>);
-        case ETensorType::COMPLEX28: return sizeof(std::complex<double>);
         default: return 0;
     }
 }
@@ -120,10 +119,10 @@ struct TensorType<uint64_t> {
 };
 
 struct TensorMemoryInfo {
-   std::string tensor_name;
+   std::string_view tensor_name;
    size_t tensor_size;
 
-   TensorMemoryInfo split(const std::string& new_name, size_t new_size) {
+   TensorMemoryInfo split(const std::string_view new_name, size_t new_size) {
         if (new_size > tensor_size) {
             throw std::invalid_argument("New size exceeds available tensor size.");
         }

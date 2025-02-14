@@ -36,9 +36,8 @@ private:
    const std::string SP = "   ";
 
    // memory pool information for intermediate tensors
-   size_t fTotalIntermediateMemory = 0;
-   MemoryPoolInfo fIntermediateMemoryInfo;
-   std::unordered_map<std::string_view, size_t> fIntermediateTensorFrequencyLookup;
+   MemoryPoolInfo fIntermediateMemoryInfo;    ///<!  intermediate memory info (transient)
+   std::unordered_map<std::string_view, size_t> fIntermediateTensorFrequencyLookup;    ///<!  lookup table for intermediate tensor frequency (transient)
 
 public:
    // Rule of five: explicitly define move semantics, disallow copy

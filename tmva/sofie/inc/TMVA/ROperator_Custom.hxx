@@ -72,6 +72,7 @@ public:
          for (auto & i : fOutputNames) std::cout << " " << i;
          std::cout << "\n";
       }
+      model.AddNeededCustomHeader("ROOT/RSpan.hxx");
    }
 
     std::string Generate(std::string OpName){
@@ -80,11 +81,11 @@ public:
       out << "\n//------ "<<fOpName<<" \n";
       std::string args;
       for(long unsigned int i = 0; i<fInputNames.size(); ++i){
-        args+="std::span<"+ConvertTypeToString(fInputType)+">(tensor_"+std::string(fInputNames[i])+", "+fInputSizes[i]+"),";
+        args+="std::span<const "+ConvertTypeToString(fInputType)+">(tensor_"+std::string(fInputNames[i])+", "+fInputSizes[i]+"),";
       }
 
       for(long unsigned int i = 0; i<fOutputNames.size(); ++i){
-        args+="std::span<float>(tensor_"+std::string(fOutputNames[i])+", "+ConvertShapeToLength(fOutputShapes[i])+"),";
+        args+="std::span<"+TensorType<T>::Name()+">(tensor_"+std::string(fOutputNames[i])+", "+ConvertShapeToLength(fOutputShapes[i])+"),";
       }
       args.pop_back();
       out << SP << fOpName<<"::Compute("+args+");\n";

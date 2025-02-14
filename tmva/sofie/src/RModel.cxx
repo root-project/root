@@ -156,7 +156,6 @@ void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution) {
     AddBlasRoutines(op->GetBlasRoutines());
     auto libs = op->GetStdLibs();
     auto op_input_tensors = op->GetOpInputTensors();
-
     for (auto& stdlib : libs) {
         AddNeededStdLib(stdlib);
     }
@@ -313,6 +312,7 @@ std::string RModel:: AllocateIntermediateMemory(std::span<const std::string_view
          if (GetTensorType(std::string(it)) == ETensorType::BOOL || 
             fInitializedTensors.find(std::string(it)) != fInitializedTensors.end() || 
             fDynamicTensorInfos.find(std::string(it)) != fDynamicTensorInfos.end()) continue;
+
          auto tensor_size = GetTypeSize(GetTensorType(std::string(it))) * ConvertShapeToLength(GetTensorShape(std::string(it)));
          memory_allocation_string += "\n // Allocating memory for intermediate tensor " + std::string(it) + " with size " + std::to_string(tensor_size) + " bytes";
 
@@ -320,12 +320,13 @@ std::string RModel:: AllocateIntermediateMemory(std::span<const std::string_view
 
                   // check if available memory chunks can accommodate the tensor
                   if (chunk->second >= tensor_size) {
-                     auto new_chunk = fIntermediateMemoryInfo.total_stack[chunk->first].split(std::string(it), tensor_size);
-                     fIntermediateMemoryInfo.total_stack[chunk->first+chunk->second-tensor_size] = new_chunk;
+                     auto new_chunk = fIntermediateMemoryInfo.total_stack[chunk->first].split(it, tensor_size);
+                     auto new_chunk_location = chunk->first+chunk->second-tensor_size;
+                     fIntermediateMemoryInfo.total_stack[new_chunk_location] = new_chunk;
 
                      memory_allocation_string += "\n" + ConvertTypeToString(GetTensorType(std::string(it))) + 
                                                 "* tensor_" + std::string(it) + 
-                                                " = reinterpret_cast<"+ConvertTypeToString(GetTensorType(std::string(it)))+"*>(fIntermediateMemoryPool + " + std::to_string(chunk->first) + ");\n";
+                                                " = reinterpret_cast<"+ConvertTypeToString(GetTensorType(std::string(it)))+"*>(fIntermediateMemoryPool + " + std::to_string(new_chunk_location) + ");\n";
                      chunk->second -= tensor_size;
                      
                      allocated = true;
@@ -346,7 +347,7 @@ std::string RModel:: AllocateIntermediateMemory(std::span<const std::string_view
 
                fIntermediateMemoryInfo.total_stack[chunk_idx] = 
                    {
-                     std::string(it),
+                     it,
                      tensor_size
                    };
 
@@ -362,11 +363,31 @@ void RModel::CheckAndFlushIntermediateMemory(std::span<const std::string_view> o
       if (fIntermediateTensorFrequencyLookup[it] == op_idx) {
          for (auto chunk = fIntermediateMemoryInfo.total_stack.begin(); 
                chunk != fIntermediateMemoryInfo.total_stack.end(); ++chunk ) {
-               if (chunk->second.tensor_name == std::string(it)) {
-                     fIntermediateMemoryInfo.available_stack.insert({
-                        chunk->first,
-                        chunk->second.tensor_size
-                     });                     
+               if (chunk->second.tensor_name == it) {
+                     
+                     // check if nearby chunks in available memory can coalesce
+                     auto first_greater = fIntermediateMemoryInfo.available_stack.upper_bound(chunk->first); // smallest element greater than the flushed chunk idx
+                     auto last_smaller = (first_greater == fIntermediateMemoryInfo.available_stack.begin()) ? fIntermediateMemoryInfo.available_stack.end() : std::prev(first_greater); // largest element smaller than the flushed chunk idx
+                     
+                     // check if the next stack entry is actually adjacent in memory
+                     if (last_smaller->first+last_smaller->second + 1 == chunk->first){
+                        last_smaller->second += chunk->second.tensor_size;
+                        fIntermediateMemoryInfo.total_stack[last_smaller->first].merge(chunk->second);
+
+                        if (last_smaller->first + last_smaller->second + 1 == first_greater->first){
+                              fIntermediateMemoryInfo.total_stack[last_smaller->first].merge(fIntermediateMemoryInfo.total_stack[first_greater->first]);
+                              first_greater = fIntermediateMemoryInfo.available_stack.erase(first_greater);
+                        }   
+                     } else{ 
+                        if (chunk->first + chunk->second.tensor_size + 1 == first_greater->first){
+                           fIntermediateMemoryInfo.total_stack[chunk->first].merge(fIntermediateMemoryInfo.total_stack[first_greater->first]);
+                           first_greater = fIntermediateMemoryInfo.available_stack.erase(first_greater);
+                        }
+                        fIntermediateMemoryInfo.available_stack.insert({
+                           chunk->first,
+                           chunk->second.tensor_size
+        });
+                     }
                }
          }
       }
@@ -471,6 +492,14 @@ void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool 
          std::cout << "Initializing operator " << i << "  " << typeid(r).name() << std::endl;
       }
       fOperators[op_idx]->Initialize(*this);
+      for(auto &it:fOperators[op_idx]->GetOpOutputTensors()){
+         if (fIntermediateTensorFrequencyLookup.find(it) == fIntermediateTensorFrequencyLookup.end() &&
+             std::find(fOutputTensorNames.begin(), fOutputTensorNames.end(), std::string(it)) == fOutputTensorNames.end() &&
+             fInitializedTensors.find(std::string(it)) == fInitializedTensors.end() && 
+             fDynamicTensorInfos.find(std::string(it)) == fDynamicTensorInfos.end()){
+            fIntermediateTensorFrequencyLookup[it] = op_idx;
+         }
+      }
       i++;
    }
 
@@ -707,7 +736,7 @@ void RModel::GenerateOutput() {
             throw std::runtime_error("TMVA-SOFIE: different output tensor types are not supported");
       }
 
-      fGC += "std::vector<std::vector<" + outputType + ">> ";
+      fGC += "\n\nstd::vector<std::vector<" + outputType + ">> ";
    }
 
    fGC += "infer(";
