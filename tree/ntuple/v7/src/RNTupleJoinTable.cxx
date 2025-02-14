@@ -1,4 +1,4 @@
-/// \file RNTupleIndex.cxx
+/// \file RNTupleJoinTable.cxx
 /// \ingroup NTuple ROOT7
 /// \author Florine de Geus <florine.de.geus@cern.ch>
 /// \date 2024-04-02
@@ -13,13 +13,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RNTupleIndex.hxx>
+#include <ROOT/RNTupleJoinTable.hxx>
 
 namespace {
-ROOT::Experimental::Internal::RNTupleIndex::NTupleIndexValue_t
+ROOT::Experimental::Internal::RNTupleJoinTable::NTupleIndexValue_t
 CastValuePtr(void *valuePtr, const ROOT::Experimental::RFieldBase &field)
 {
-   ROOT::Experimental::Internal::RNTupleIndex::NTupleIndexValue_t value;
+   ROOT::Experimental::Internal::RNTupleJoinTable::NTupleIndexValue_t value;
 
    switch (field.GetValueSize()) {
    case 1: value = *reinterpret_cast<std::uint8_t *>(valuePtr); break;
@@ -33,8 +33,8 @@ CastValuePtr(void *valuePtr, const ROOT::Experimental::RFieldBase &field)
 }
 } // anonymous namespace
 
-ROOT::Experimental::Internal::RNTupleIndex::RNTupleIndex(const std::vector<std::string> &fieldNames,
-                                                         const RPageSource &pageSource)
+ROOT::Experimental::Internal::RNTupleJoinTable::RNTupleJoinTable(const std::vector<std::string> &fieldNames,
+                                                                 const RPageSource &pageSource)
    : fPageSource(pageSource.Clone())
 {
    fPageSource->Attach();
@@ -57,17 +57,17 @@ ROOT::Experimental::Internal::RNTupleIndex::RNTupleIndex(const std::vector<std::
    }
 }
 
-void ROOT::Experimental::Internal::RNTupleIndex::EnsureBuilt() const
+void ROOT::Experimental::Internal::RNTupleJoinTable::EnsureBuilt() const
 {
    if (!fIsBuilt)
       throw RException(R__FAIL("index has not been built yet"));
 }
 
-std::unique_ptr<ROOT::Experimental::Internal::RNTupleIndex>
-ROOT::Experimental::Internal::RNTupleIndex::Create(const std::vector<std::string> &fieldNames,
-                                                   const RPageSource &pageSource, bool deferBuild)
+std::unique_ptr<ROOT::Experimental::Internal::RNTupleJoinTable>
+ROOT::Experimental::Internal::RNTupleJoinTable::Create(const std::vector<std::string> &fieldNames,
+                                                       const RPageSource &pageSource, bool deferBuild)
 {
-   auto index = std::unique_ptr<RNTupleIndex>(new RNTupleIndex(fieldNames, pageSource));
+   auto index = std::unique_ptr<RNTupleJoinTable>(new RNTupleJoinTable(fieldNames, pageSource));
 
    if (!deferBuild)
       index->Build();
@@ -75,7 +75,7 @@ ROOT::Experimental::Internal::RNTupleIndex::Create(const std::vector<std::string
    return index;
 }
 
-void ROOT::Experimental::Internal::RNTupleIndex::Build()
+void ROOT::Experimental::Internal::RNTupleJoinTable::Build()
 {
    if (fIsBuilt)
       return;
@@ -114,7 +114,7 @@ void ROOT::Experimental::Internal::RNTupleIndex::Build()
 }
 
 ROOT::NTupleSize_t
-ROOT::Experimental::Internal::RNTupleIndex::GetFirstEntryNumber(const std::vector<void *> &valuePtrs) const
+ROOT::Experimental::Internal::RNTupleJoinTable::GetFirstEntryNumber(const std::vector<void *> &valuePtrs) const
 {
    const auto entryIndices = GetAllEntryNumbers(valuePtrs);
    if (!entryIndices)
@@ -123,7 +123,7 @@ ROOT::Experimental::Internal::RNTupleIndex::GetFirstEntryNumber(const std::vecto
 }
 
 const std::vector<ROOT::NTupleSize_t> *
-ROOT::Experimental::Internal::RNTupleIndex::GetAllEntryNumbers(const std::vector<void *> &valuePtrs) const
+ROOT::Experimental::Internal::RNTupleJoinTable::GetAllEntryNumbers(const std::vector<void *> &valuePtrs) const
 {
    if (valuePtrs.size() != fIndexFields.size())
       throw RException(R__FAIL("number of value pointers must match number of indexed fields"));
