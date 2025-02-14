@@ -1,4 +1,4 @@
-/// \file ROOT/RNTupleIndex.hxx
+/// \file ROOT/RNTupleJoinTable.hxx
 /// \ingroup NTuple ROOT7
 /// \author Florine de Geus <florine.de.geus@cern.ch>
 /// \date 2024-04-02
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_RNTupleIndex
-#define ROOT7_RNTupleIndex
+#ifndef ROOT7_RNTupleJoinTable
+#define ROOT7_RNTupleJoinTable
 
 #include <ROOT/RField.hxx>
 
@@ -28,12 +28,12 @@ namespace Experimental {
 namespace Internal {
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RNTupleIndex
+\class ROOT::Experimental::Internal::RNTupleJoinTable
 \ingroup NTuple
 \brief Builds an index on one or several fields of an RNTuple so it can be joined onto other RNTuples.
 */
 // clang-format on
-class RNTupleIndex {
+class RNTupleJoinTable {
 public:
    using NTupleIndexValue_t = std::uint64_t;
 
@@ -80,43 +80,44 @@ private:
    bool fIsBuilt = false;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Create an a new RNTupleIndex for the RNTuple represented by the provided page source.
+   /// \brief Create an a new RNTupleJoinTable for the RNTuple represented by the provided page source.
    ///
    /// \param[in] fieldNames The names of the fields to index. Only integral-type fields can be specified as index
    /// fields.
    /// \param[in] pageSource The page source.
-   RNTupleIndex(const std::vector<std::string> &fieldNames, const RPageSource &pageSource);
+   RNTupleJoinTable(const std::vector<std::string> &fieldNames, const RPageSource &pageSource);
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Ensure the RNTupleIndex has been built.
+   /// \brief Ensure the RNTupleJoinTable has been built.
    ///
    /// \throws RException If the index has not been built, and can therefore not be used yet.
    void EnsureBuilt() const;
 
 public:
-   RNTupleIndex(const RNTupleIndex &other) = delete;
-   RNTupleIndex &operator=(const RNTupleIndex &other) = delete;
-   RNTupleIndex(RNTupleIndex &&other) = delete;
-   RNTupleIndex &operator=(RNTupleIndex &&other) = delete;
-   ~RNTupleIndex() = default;
+   RNTupleJoinTable(const RNTupleJoinTable &other) = delete;
+   RNTupleJoinTable &operator=(const RNTupleJoinTable &other) = delete;
+   RNTupleJoinTable(RNTupleJoinTable &&other) = delete;
+   RNTupleJoinTable &operator=(RNTupleJoinTable &&other) = delete;
+   ~RNTupleJoinTable() = default;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Create an RNTupleIndex from an existing RNTuple.
+   /// \brief Create an RNTupleJoinTable from an existing RNTuple.
    ///
    /// \param[in] fieldNames The names of the fields to index. Only integral-type fields can be specified as index
    /// fields.
    /// \param[in] pageSource The page source.
-   /// \param[in] deferBuild When set to `true`, an empty index will be created. A call to RNTupleIndex::Build is
+   /// \param[in] deferBuild When set to `true`, an empty index will be created. A call to RNTupleJoinTable::Build is
    /// required before the index can actually be used.
    ///
    /// \return A pointer to the newly-created index.
-   static std::unique_ptr<RNTupleIndex>
+   static std::unique_ptr<RNTupleJoinTable>
    Create(const std::vector<std::string> &fieldNames, const RPageSource &pageSource, bool deferBuild = false);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Build the index.
    ///
-   /// Only a built index can be queried (with RNTupleIndex::GetFirstEntryNumber or RNTupleIndex::GetAllEntryNumbers).
+   /// Only a built index can be queried (with RNTupleJoinTable::GetFirstEntryNumber or
+   /// RNTupleJoinTable::GetAllEntryNumbers).
    void Build();
 
    /////////////////////////////////////////////////////////////////////////////
@@ -149,7 +150,7 @@ public:
    /// is returned.
    ///
    /// Note that in case multiple entries corresponding to the provided index value exist, the first occurrence is
-   /// returned. Use RNTupleIndex::GetAllEntryNumbers to get all entries.
+   /// returned. Use RNTupleJoinTable::GetAllEntryNumbers to get all entries.
    ROOT::NTupleSize_t GetFirstEntryNumber(const std::vector<void *> &valuePtrs) const;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -199,4 +200,4 @@ public:
 } // namespace Experimental
 } // namespace ROOT
 
-#endif // ROOT7_RNTupleIndex
+#endif // ROOT7_RNTupleJoinTable

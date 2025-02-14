@@ -1,9 +1,9 @@
 #include "ntuple_test.hxx"
 #include "CustomStruct.hxx"
 
-TEST(RNTupleIndex, Basic)
+TEST(RNTupleJoinTable, Basic)
 {
-   FileRaii fileGuard("test_ntuple_index_basic.root");
+   FileRaii fileGuard("test_ntuple_join_table_basic.root");
    {
       auto model = RNTupleModel::Create();
       auto fld = model->MakeField<std::uint64_t>("fld");
@@ -17,7 +17,7 @@ TEST(RNTupleIndex, Basic)
    }
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto index = RNTupleIndex::Create({"fld"}, *pageSource);
+   auto index = RNTupleJoinTable::Create({"fld"}, *pageSource);
 
    EXPECT_EQ(10UL, index->GetSize());
 
@@ -31,9 +31,9 @@ TEST(RNTupleIndex, Basic)
    }
 }
 
-TEST(RNTupleIndex, DeferBuild)
+TEST(RNTupleJoinTable, DeferBuild)
 {
-   FileRaii fileGuard("test_ntuple_index_defer_build.root");
+   FileRaii fileGuard("test_ntuple_join_table_defer_build.root");
    {
       auto model = RNTupleModel::Create();
       auto fld = model->MakeField<std::uint64_t>("fld");
@@ -47,7 +47,7 @@ TEST(RNTupleIndex, DeferBuild)
    }
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto index = RNTupleIndex::Create({"fld"}, *pageSource, true /* deferBuild */);
+   auto index = RNTupleJoinTable::Create({"fld"}, *pageSource, true /* deferBuild */);
    EXPECT_FALSE(index->IsBuilt());
 
    try {
@@ -63,9 +63,9 @@ TEST(RNTupleIndex, DeferBuild)
    EXPECT_EQ(0, index->GetFirstEntryNumber<std::uint64_t>(0));
 }
 
-TEST(RNTupleIndex, InvalidTypes)
+TEST(RNTupleJoinTable, InvalidTypes)
 {
-   FileRaii fileGuard("test_ntuple_index_invalid_types.root");
+   FileRaii fileGuard("test_ntuple_join_table_invalid_types.root");
    {
       auto model = RNTupleModel::Create();
       *model->MakeField<std::int8_t>("fldInt") = 99;
@@ -80,11 +80,11 @@ TEST(RNTupleIndex, InvalidTypes)
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
 
-   auto intIndex = RNTupleIndex::Create({"fldInt"}, *pageSource);
+   auto intIndex = RNTupleJoinTable::Create({"fldInt"}, *pageSource);
    EXPECT_EQ(1UL, intIndex->GetSize());
 
    try {
-      RNTupleIndex::Create({"fldFloat"}, *pageSource);
+      RNTupleJoinTable::Create({"fldFloat"}, *pageSource);
       FAIL() << "non-integral-type field should not be allowed as index fields";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(
@@ -94,7 +94,7 @@ TEST(RNTupleIndex, InvalidTypes)
    }
 
    try {
-      RNTupleIndex::Create({"fldString"}, *pageSource);
+      RNTupleJoinTable::Create({"fldString"}, *pageSource);
       FAIL() << "non-integral-type field should not be allowed as index fields";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(
@@ -104,7 +104,7 @@ TEST(RNTupleIndex, InvalidTypes)
    }
 
    try {
-      RNTupleIndex::Create({"fldStruct"}, *pageSource);
+      RNTupleJoinTable::Create({"fldStruct"}, *pageSource);
       FAIL() << "non-integral-type field should not be allowed as index fields";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("cannot use field \"fldStruct\" with type \"CustomStruct\" for "
@@ -112,9 +112,9 @@ TEST(RNTupleIndex, InvalidTypes)
    }
 }
 
-TEST(RNTupleIndex, SparseSecondary)
+TEST(RNTupleJoinTable, SparseSecondary)
 {
-   FileRaii fileGuardMain("test_ntuple_index_sparse_secondary1.root");
+   FileRaii fileGuardMain("test_ntuple_join_table_sparse_secondary1.root");
    {
       auto model = RNTupleModel::Create();
       auto fldEvent = model->MakeField<std::uint64_t>("event");
@@ -127,7 +127,7 @@ TEST(RNTupleIndex, SparseSecondary)
       }
    }
 
-   FileRaii fileGuardSecondary("test_ntuple_index_sparse_secondary2.root");
+   FileRaii fileGuardSecondary("test_ntuple_join_table_sparse_secondary2.root");
    {
       auto model = RNTupleModel::Create();
       auto fldEvent = model->MakeField<std::uint64_t>("event");
@@ -146,7 +146,7 @@ TEST(RNTupleIndex, SparseSecondary)
    auto fldEvent = mainNtuple->GetView<std::uint64_t>("event");
 
    auto secondaryPageSource = RPageSource::Create("secondary", fileGuardSecondary.GetPath());
-   auto index = RNTupleIndex::Create({"event"}, *secondaryPageSource);
+   auto index = RNTupleJoinTable::Create({"event"}, *secondaryPageSource);
    auto secondaryNTuple = RNTupleReader::Open("secondary", fileGuardSecondary.GetPath());
    auto fldX = secondaryNTuple->GetView<float>("x");
 
@@ -164,9 +164,9 @@ TEST(RNTupleIndex, SparseSecondary)
    }
 }
 
-TEST(RNTupleIndex, MultipleFields)
+TEST(RNTupleJoinTable, MultipleFields)
 {
-   FileRaii fileGuard("test_ntuple_index_multiple_fields.root");
+   FileRaii fileGuard("test_ntuple_join_table_multiple_fields.root");
    {
       auto model = RNTupleModel::Create();
       auto fldRun = model->MakeField<std::int16_t>("run");
@@ -186,7 +186,7 @@ TEST(RNTupleIndex, MultipleFields)
    }
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto index = RNTupleIndex::Create({"run", "event"}, *pageSource);
+   auto index = RNTupleJoinTable::Create({"run", "event"}, *pageSource);
 
    EXPECT_EQ(15ULL, index->GetSize());
 
@@ -221,9 +221,9 @@ TEST(RNTupleIndex, MultipleFields)
    }
 }
 
-TEST(RNTupleIndex, MultipleMatches)
+TEST(RNTupleJoinTable, MultipleMatches)
 {
-   FileRaii fileGuard("test_ntuple_index_multiple_matches.root");
+   FileRaii fileGuard("test_ntuple_join_table_multiple_matches.root");
    {
       auto model = RNTupleModel::Create();
       auto fldRun = model->MakeField<std::uint64_t>("run");
@@ -241,7 +241,7 @@ TEST(RNTupleIndex, MultipleMatches)
    }
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto index = RNTupleIndex::Create({"run"}, *pageSource);
+   auto index = RNTupleJoinTable::Create({"run"}, *pageSource);
 
    EXPECT_EQ(3ULL, index->GetSize());
 
