@@ -7307,7 +7307,9 @@ void TTree::Print(Option_t* option) const
       for (l=0;l<nl;l++) {
          leaf = (TLeaf *)const_cast<TTree*>(this)->GetListOfLeaves()->At(l);
          br   = leaf->GetBranch();
-         if (strchr(br->GetName(),'.')) {
+         auto bname = br->GetName();
+         auto pDot = strchr(bname,'.');
+         if ( pDot && pDot!=&bname[strlen(bname)-1] ) {
             count[l] = -1;
             count[keep] += br->GetZipBytes();
          } else {
