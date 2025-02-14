@@ -60,7 +60,7 @@ ROOT::Experimental::Internal::RNTupleJoinTable::RNTupleJoinTable(const std::vect
 void ROOT::Experimental::Internal::RNTupleJoinTable::EnsureBuilt() const
 {
    if (!fIsBuilt)
-      throw RException(R__FAIL("index has not been built yet"));
+      throw RException(R__FAIL("join table has not been built yet"));
 }
 
 std::unique_ptr<ROOT::Experimental::Internal::RNTupleJoinTable>
@@ -90,7 +90,7 @@ void ROOT::Experimental::Internal::RNTupleJoinTable::Build()
    for (const auto &field : fJoinFields) {
       if (allowedTypes.find(field->GetTypeName()) == allowedTypes.end()) {
          throw RException(R__FAIL("cannot use field \"" + field->GetFieldName() + "\" with type \"" +
-                                  field->GetTypeName() + "\" for indexing: only integral types are allowed"));
+                                  field->GetTypeName() + "\" in join table: only integral types are allowed"));
       }
       fieldValues.emplace_back(field->CreateValue());
    }
@@ -126,7 +126,7 @@ const std::vector<ROOT::NTupleSize_t> *
 ROOT::Experimental::Internal::RNTupleJoinTable::GetAllEntryNumbers(const std::vector<void *> &valuePtrs) const
 {
    if (valuePtrs.size() != fJoinFields.size())
-      throw RException(R__FAIL("number of value pointers must match number of indexed fields"));
+      throw RException(R__FAIL("number of value pointers must match number of join fields"));
 
    EnsureBuilt();
 

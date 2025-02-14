@@ -161,7 +161,7 @@ public:
    ROOT::NTupleSize_t GetFirstEntryNumber(Ts... values) const
    {
       if (sizeof...(Ts) != fJoinFields.size())
-         throw RException(R__FAIL("number of values must match number of indexed fields"));
+         throw RException(R__FAIL("number of values must match number of join fields"));
 
       std::vector<void *> valuePtrs;
       valuePtrs.reserve(sizeof...(Ts));
@@ -187,7 +187,7 @@ public:
    const std::vector<ROOT::NTupleSize_t> *GetAllEntryNumbers(Ts... values) const
    {
       if (sizeof...(Ts) != fJoinFields.size())
-         throw RException(R__FAIL("number of values must match number of indexed fields"));
+         throw RException(R__FAIL("number of values must match number of join fields"));
 
       std::vector<void *> valuePtrs;
       valuePtrs.reserve(sizeof...(Ts));
