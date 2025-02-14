@@ -16,10 +16,10 @@
 #include <ROOT/RNTupleJoinTable.hxx>
 
 namespace {
-ROOT::Experimental::Internal::RNTupleJoinTable::NTupleIndexValue_t
+ROOT::Experimental::Internal::RNTupleJoinTable::NTupleJoinValue_t
 CastValuePtr(void *valuePtr, const ROOT::Experimental::RFieldBase &field)
 {
-   ROOT::Experimental::Internal::RNTupleJoinTable::NTupleIndexValue_t value;
+   ROOT::Experimental::Internal::RNTupleJoinTable::NTupleJoinValue_t value;
 
    switch (field.GetValueSize()) {
    case 1: value = *reinterpret_cast<std::uint8_t *>(valuePtr); break;
@@ -40,7 +40,7 @@ ROOT::Experimental::Internal::RNTupleJoinTable::RNTupleJoinTable(const std::vect
    fPageSource->Attach();
    auto desc = fPageSource->GetSharedDescriptorGuard();
 
-   fIndexFields.reserve(fieldNames.size());
+   fJoinFields.reserve(fieldNames.size());
 
    for (const auto &fieldName : fieldNames) {
       auto fieldId = desc->FindFieldId(fieldName);
@@ -53,7 +53,7 @@ ROOT::Experimental::Internal::RNTupleJoinTable::RNTupleJoinTable(const std::vect
 
       CallConnectPageSourceOnField(*field, *fPageSource);
 
-      fIndexFields.push_back(std::move(field));
+      fJoinFields.push_back(std::move(field));
    }
 }
 
@@ -67,12 +67,12 @@ std::unique_ptr<ROOT::Experimental::Internal::RNTupleJoinTable>
 ROOT::Experimental::Internal::RNTupleJoinTable::Create(const std::vector<std::string> &fieldNames,
                                                        const RPageSource &pageSource, bool deferBuild)
 {
-   auto index = std::unique_ptr<RNTupleJoinTable>(new RNTupleJoinTable(fieldNames, pageSource));
+   auto joinTable = std::unique_ptr<RNTupleJoinTable>(new RNTupleJoinTable(fieldNames, pageSource));
 
    if (!deferBuild)
-      index->Build();
+      joinTable->Build();
 
-   return index;
+   return joinTable;
 }
 
 void ROOT::Experimental::Internal::RNTupleJoinTable::Build()
@@ -85,9 +85,9 @@ void ROOT::Experimental::Internal::RNTupleJoinTable::Build()
                                                                 "std::uint32_t", "std::uint64_t"};
 
    std::vector<RFieldBase::RValue> fieldValues;
-   fieldValues.reserve(fIndexFields.size());
+   fieldValues.reserve(fJoinFields.size());
 
-   for (const auto &field : fIndexFields) {
+   for (const auto &field : fJoinFields) {
       if (allowedTypes.find(field->GetTypeName()) == allowedTypes.end()) {
          throw RException(R__FAIL("cannot use field \"" + field->GetFieldName() + "\" with type \"" +
                                   field->GetTypeName() + "\" for indexing: only integral types are allowed"));
@@ -95,19 +95,19 @@ void ROOT::Experimental::Internal::RNTupleJoinTable::Build()
       fieldValues.emplace_back(field->CreateValue());
    }
 
-   std::vector<NTupleIndexValue_t> indexValues;
-   indexValues.reserve(fIndexFields.size());
+   std::vector<NTupleJoinValue_t> joinFieldValues;
+   joinFieldValues.reserve(fJoinFields.size());
 
    for (unsigned i = 0; i < fPageSource->GetNEntries(); ++i) {
-      indexValues.clear();
+      joinFieldValues.clear();
       for (auto &fieldValue : fieldValues) {
          // TODO(fdegeus): use bulk reading
          fieldValue.Read(i);
 
          auto valuePtr = fieldValue.GetPtr<void>();
-         indexValues.push_back(CastValuePtr(valuePtr.get(), fieldValue.GetField()));
+         joinFieldValues.push_back(CastValuePtr(valuePtr.get(), fieldValue.GetField()));
       }
-      fIndex[RIndexValue(indexValues)].push_back(i);
+      fJoinTable[RCombinedJoinFieldValue(joinFieldValues)].push_back(i);
    }
 
    fIsBuilt = true;
@@ -125,21 +125,21 @@ ROOT::Experimental::Internal::RNTupleJoinTable::GetFirstEntryNumber(const std::v
 const std::vector<ROOT::NTupleSize_t> *
 ROOT::Experimental::Internal::RNTupleJoinTable::GetAllEntryNumbers(const std::vector<void *> &valuePtrs) const
 {
-   if (valuePtrs.size() != fIndexFields.size())
+   if (valuePtrs.size() != fJoinFields.size())
       throw RException(R__FAIL("number of value pointers must match number of indexed fields"));
 
    EnsureBuilt();
 
-   std::vector<NTupleIndexValue_t> indexValues;
-   indexValues.reserve(fIndexFields.size());
+   std::vector<NTupleJoinValue_t> joinFieldValues;
+   joinFieldValues.reserve(fJoinFields.size());
 
    for (unsigned i = 0; i < valuePtrs.size(); ++i) {
-      indexValues.push_back(CastValuePtr(valuePtrs[i], *fIndexFields[i]));
+      joinFieldValues.push_back(CastValuePtr(valuePtrs[i], *fJoinFields[i]));
    }
 
-   auto entryNumber = fIndex.find(RIndexValue(indexValues));
+   auto entryNumber = fJoinTable.find(RCombinedJoinFieldValue(joinFieldValues));
 
-   if (entryNumber == fIndex.end())
+   if (entryNumber == fJoinTable.end())
       return nullptr;
 
    return &(entryNumber->second);
