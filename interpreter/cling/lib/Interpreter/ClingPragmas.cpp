@@ -9,7 +9,6 @@
 
 #include "ClingPragmas.h"
 
-#include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/Output.h"
@@ -254,7 +253,7 @@ namespace {
         default:
           do {
             if (Command == kAddLibrary)
-              m_Interp.getDynamicLibraryManager()->addSearchPath(std::move(Literal));
+              m_Interp.getClingEPC()->getDylibLookup().addSearchPath(std::move(Literal));
             else if (Command == kAddInclude)
               m_Interp.AddIncludePath(Literal);
           } while (GetNextLiteral(PP, Tok, Literal, Command));

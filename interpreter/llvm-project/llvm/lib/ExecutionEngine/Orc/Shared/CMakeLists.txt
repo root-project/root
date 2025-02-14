@@ -1,5 +1,7 @@
 add_llvm_component_library(LLVMOrcShared
   AllocationActions.cpp
+  AutoLoadDylibLookUp.cpp
+  AutoLoadDyLoader.cpp
   ObjectFormats.cpp
   OrcError.cpp
   OrcRTBridge.cpp
@@ -14,5 +16,6 @@ add_llvm_component_library(LLVMOrcShared
   ${LLVM_PTHREAD_LIB}
 
   LINK_COMPONENTS
+  Object
   Support
   )
