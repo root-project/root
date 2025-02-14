@@ -17,7 +17,7 @@ The following people have contributed to this new version:
  Philippe Canal, FNAL,\
  Mattias Ellert, Uppsala University,\
  Florine de Geus, CERN/University of Twente,\
- Fernando Hueso Gonzalez, University of Valencia,\
+ Fernando Hueso Gonzalez, CSIC/University of Valencia,\
  Enrico Lusiani, INFN Padova,\
  Alberto Mecca, University of Turin,\
  Lorenzo Moneta, CERN/EP-SFT,\
@@ -41,6 +41,7 @@ The following people have contributed to this new version:
 * The build options `mysql`, `odbc`, `pgsql` and `qt5web` have been deprecated. Please complain with root-dev@cern.ch should you still need one!
 * The build option `html` has been removed.
 * The ClassImp macro and derived macros have no effect now and will be deprecated in ROOT 6.38.
+* The default TTreeFormula constructor (without arguments) is now deleted, since it lead to an unusable and unsafe object. Instead, this implementation has been reserved now for ROOT I/O exclusively via the TRootIOCtor argument tag.
 
 ## Python Interface
 
