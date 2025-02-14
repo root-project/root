@@ -106,4 +106,8 @@ ROOTTEST_ADD_TEST(execInitOrder
                   OUTREF execInitOrder.ref
                   DEPENDS libInitOrder-build libInitOrderDups-build)
 
+ROOTTEST_ADD_TEST(tclassStl
+                  MACRO tclassStl.cxx+
+		  OUTREF tclassStl.ref)
+
 ROOTTEST_ADD_TESTDIRS()
