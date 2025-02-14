@@ -19,7 +19,7 @@
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
-#include <ROOT/RNTupleIndex.hxx>
+#include <ROOT/RNTupleJoinTable.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPageStorage.hxx>
@@ -295,7 +295,7 @@ public:
    /// \param[in] joinFields The names of the fields on which to join, in case the specified ntuples are unaligned.
    /// The join is made based on the combined join field values, and therefore each field has to be present in each
    /// specified RNTuple. If an empty list is provided, it is assumed that the specified ntuple are fully aligned, and
-   /// `RNTupleIndex` will not be used.
+   /// `RNTupleJoinTable` will not be used.
    /// \param[in] models A list of models for the ntuples. This list must either contain a model for each ntuple in
    /// `ntuples` (following the specification order), or be empty. When the list is empty, the default model (i.e.
    /// containing all fields) will be used for each ntuple.
@@ -408,7 +408,7 @@ private:
    std::vector<std::unique_ptr<Internal::RPageSource>> fAuxiliaryPageSources;
    /// Tokens representing the join fields present in the main RNTuple
    std::vector<REntry::RFieldToken> fJoinFieldTokens;
-   std::vector<std::unique_ptr<Internal::RNTupleIndex>> fJoinIndices;
+   std::vector<std::unique_ptr<Internal::RNTupleJoinTable>> fJoinIndices;
 
    bool IsUsingIndex() const { return fJoinIndices.size() > 0; }
 
