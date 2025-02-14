@@ -363,10 +363,30 @@ void RModel::CheckAndFlushIntermediateMemory(std::span<const std::string_view> o
          for (auto chunk = fIntermediateMemoryInfo.total_stack.begin(); 
                chunk != fIntermediateMemoryInfo.total_stack.end(); ++chunk ) {
                if (chunk->second.tensor_name == std::string(it)) {
-                     fIntermediateMemoryInfo.available_stack.insert({
-                        chunk->first,
-                        chunk->second.tensor_size
-                     });                     
+                     
+                     // check if nearby chunks in available memory can coalesce
+                     auto first_greater = fIntermediateMemoryInfo.available_stack.upper_bound(chunk->first); // smallest element greater than the flushed chunk idx
+                     auto last_smaller = (first_greater == fIntermediateMemoryInfo.available_stack.begin()) ? fIntermediateMemoryInfo.available_stack.end() : std::prev(first_greater); // largest element smaller than the flushed chunk idx
+                     
+                     // check if the next stack entry is actually adjacent in memory
+                     if (last_smaller->first+last_smaller->second + 1 == chunk->first){
+                        last_smaller->second += chunk->second.tensor_size;
+                        fIntermediateMemoryInfo.total_stack[last_smaller->first].merge(chunk->second);
+
+                        if (last_smaller->first + last_smaller->second + 1 == first_greater->first){
+                              fIntermediateMemoryInfo.total_stack[last_smaller->first].merge(fIntermediateMemoryInfo.total_stack[first_greater->first]);
+                              first_greater = fIntermediateMemoryInfo.available_stack.erase(first_greater);
+                        }   
+                     } else{ 
+                        if (chunk->first + chunk->second.tensor_size + 1 == first_greater->first){
+                           fIntermediateMemoryInfo.total_stack[chunk->first].merge(fIntermediateMemoryInfo.total_stack[first_greater->first]);
+                           first_greater = fIntermediateMemoryInfo.available_stack.erase(first_greater);
+                        }
+                        fIntermediateMemoryInfo.available_stack.insert({
+                           chunk->first,
+                           chunk->second.tensor_size
+                        });
+                     }
                }
          }
       }
@@ -707,7 +727,7 @@ void RModel::GenerateOutput() {
             throw std::runtime_error("TMVA-SOFIE: different output tensor types are not supported");
       }
 
-      fGC += "std::vector<std::vector<" + outputType + ">> ";
+      fGC += "\n\nstd::vector<std::vector<" + outputType + ">> ";
    }
 
    fGC += "infer(";
