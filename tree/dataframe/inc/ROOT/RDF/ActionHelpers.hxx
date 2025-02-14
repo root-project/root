@@ -58,6 +58,7 @@
 #include <vector>
 #include <iomanip>
 #include <numeric> // std::accumulate in MeanHelper
+#include <optional> // std::optional<int> in SetBranchesHelper
 
 /// \cond HIDDEN_SYMBOLS
 
@@ -1335,7 +1336,7 @@ void *GetData(T & /*v*/)
 template <typename T>
 void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &inName, const std::string &name,
                        TBranch *&branch, void *&branchAddress, T *address, RBranchSet &outputBranches,
-                       bool /*isDefine*/)
+                       bool /*isDefine*/, const std::optional<int> &basketSize)
 {
    static TClassRef TBOClRef("TBranchObject");
 
@@ -1366,7 +1367,7 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
       // In particular, by keeping splitlevel equal to 0 if this was the case for `inputBranch`, we avoid
       // writing garbage when unsplit objects cannot be written as split objects (e.g. in case of a polymorphic
       // TObject branch, see https://bit.ly/2EjLMId ).
-      const auto bufSize = inputBranch->GetBasketSize();
+      const auto bufSize = basketSize.has_value() ? basketSize.value() : inputBranch->GetBasketSize();   //Use original basket size for existing branches otherwise custom basket size for new branches
       const auto splitLevel = inputBranch->GetSplitLevel();
 
       if (inputBranch->IsA() == TBOClRef) {
@@ -1377,7 +1378,9 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
          outputBranch = outputTree.Branch(name.c_str(), address, bufSize, splitLevel);
       }
    } else {
-      outputBranch = outputTree.Branch(name.c_str(), address);
+      // Set Custom basket size for new branches.
+      const auto buffSize = basketSize.value_or(32000);
+      outputBranch = outputTree.Branch(name.c_str(), address, buffSize);
    }
    outputBranches.Insert(name, outputBranch);
    // This is not an array branch, so we don't register the address of the output branch here
@@ -1397,7 +1400,7 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
 /// `branchAddress`) so we can intercept changes in the address of the input branch and tell the output branch.
 template <typename T>
 void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &inName, const std::string &outName,
-                       TBranch *&branch, void *&branchAddress, RVec<T> *ab, RBranchSet &outputBranches, bool isDefine)
+                       TBranch *&branch, void *&branchAddress, RVec<T> *ab, RBranchSet &outputBranches, bool isDefine, const std::optional<int> &basketSize)
 {
    TBranch *inputBranch = nullptr;
    if (inputTree) {
@@ -1406,6 +1409,8 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
          inputBranch = inputTree->FindBranch(inName.c_str());
    }
    auto *outputBranch = outputBranches.Get(outName);
+
+   //bool isNewBranch = isDefine || !inputBranch;    // Determine if this is a new branch or not (Created via Define).
 
    // if no backing input branch, we must write out an RVec
    bool mustWriteRVec = (inputBranch == nullptr || isDefine);
@@ -1434,7 +1439,9 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
          // needs to be SetObject (not SetAddress) to mimic what happens when this TBranchElement is constructed
          outputBranch->SetObject(ab);
       } else {
-         auto *b = outputTree.Branch(outName.c_str(), ab);
+         // Set Custom basket size for new branches.
+         const auto buffSize = basketSize.value_or(32000);
+         auto *b = outputTree.Branch(outName.c_str(), ab, buffSize);
          outputBranches.Insert(outName, b);
       }
       return;
@@ -1462,7 +1469,8 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
          // added to the output tree yet. However, the size leaf has to be available for the creation of the array
          // branch to be successful. So we create the size leaf here.
          const auto sizeTypeStr = TypeName2ROOTTypeName(sizeLeaf->GetTypeName());
-         const auto sizeBufSize = sizeLeaf->GetBranch()->GetBasketSize();
+         // Use Original basket size for Existing Branches otherwise use Custom basket Size.
+         const auto sizeBufSize = basketSize.has_value() ? basketSize.value() : sizeLeaf->GetBranch()->GetBasketSize();;
          // The null branch address is a placeholder. It will be set when SetBranchesHelper is called for `sizeLeafName`
          auto *sizeBranch = outputTree.Branch(sizeLeafName.c_str(), (void *)nullptr,
                                               (sizeLeafName + '/' + sizeTypeStr).c_str(), sizeBufSize);
@@ -1478,7 +1486,9 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
                  bname);
       } else {
          const auto leaflist = std::string(bname) + "[" + sizeLeafName + "]/" + rootbtype;
-         outputBranch = outputTree.Branch(outName.c_str(), dataPtr, leaflist.c_str());
+         // Use original basket size for existing branches and new basket size for new branches
+         const auto branchBufSize = basketSize.has_value() ? basketSize.value() : inputBranch->GetBasketSize();
+         outputBranch = outputTree.Branch(outName.c_str(), dataPtr, leaflist.c_str(), branchBufSize);
          outputBranch->SetTitle(inputBranch->GetTitle());
          outputBranches.Insert(outName, outputBranch);
          branch = outputBranch;
@@ -1578,7 +1588,7 @@ public:
    {
       // create branches in output tree
       int expander[] = {(SetBranchesHelper(fInputTree, *fOutputTree, fInputBranchNames[S], fOutputBranchNames[S],
-                                           fBranches[S], fBranchAddresses[S], &values, fOutputBranches, fIsDefine[S]),
+                                           fBranches[S], fBranchAddresses[S], &values, fOutputBranches, fIsDefine[S], fOptions.fBasketSize),
                          0)...,
                         0};
       fOutputBranches.AssertNoNullBranchAddresses();
@@ -1779,7 +1789,7 @@ public:
       // hack to call TTree::Branch on all variadic template arguments
       int expander[] = {(SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fInputBranchNames[S],
                                            fOutputBranchNames[S], fBranches[slot][S], fBranchAddresses[slot][S],
-                                           &values, fOutputBranches[slot], fIsDefine[S]),
+                                           &values, fOutputBranches[slot], fIsDefine[S], fOptions.fBasketSize),
                          0)...,
                         0};
       fOutputBranches[slot].AssertNoNullBranchAddresses();
