@@ -97,6 +97,7 @@ TClingCallbacks::TClingCallbacks(cling::Interpreter *interp, bool hasCodeGen) : 
                llvm::orc::AutoLoadDynamicLibrarySearchGenerator::GetForTargetProcess(
                   interp->getClingEPC()->getExecutionSession(), std::move(F)))
          interp->addGenerator(std::move(*DSG));
+      // interp->addGenerator(std::make_unique<AutoloadLibraryGenerator>(interp, *this));
    }
 }
 

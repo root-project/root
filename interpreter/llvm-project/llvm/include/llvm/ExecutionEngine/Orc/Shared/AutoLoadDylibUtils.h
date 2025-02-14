@@ -30,6 +30,36 @@ constexpr uint32_t log2u(std::uint32_t n) {
   return (n > 1) ? 1 + log2u(n >> 1) : 0;
 }
 
+// namespace platform {
+/// Platform specific delimiter for splitting environment variables.
+/// ':' on Unix, and ';' on Windows
+extern const char *const kEnvDelim;
+
+enum class SplitMode {
+  PruneNonExistant, ///< Don't add non-existant paths into output
+  FailNonExistant,  ///< Fail on any non-existant paths
+  AllowNonExistant  ///< Add all paths whether they exist or not
+};
+
+bool SplitPaths(StringRef PathStr, SmallVectorImpl<StringRef> &Paths,
+                SplitMode Mode, StringRef Delim, bool Verbose = false);
+
+///
+bool GetSystemLibraryPaths(llvm::SmallVectorImpl<std::string> &Paths);
+
+/// Returns a normalized version of the given Path
+std::string NormalizePath(const std::string &Path);
+
+/// Open a handle to a shared library. On Unix the lib is opened with
+/// RTLD_LAZY|RTLD_GLOBAL flags.
+void *DLOpen(const std::string &Path, std::string *Err = nullptr);
+
+void *DLSym(const std::string &Name, std::string *Err = nullptr);
+
+/// Close a handle to a shared library.
+void DLClose(void *Lib, std::string *Err = nullptr);
+// } // namespace platform
+
 class BloomFilter {
 private:
   static constexpr int Bits = 8 * sizeof(uint64_t);
@@ -51,7 +81,7 @@ private:
 
   // Helper method for hash testing
   bool TestHash(uint32_t hash) const {
-    assert(IsInitialized && "Bloom filter is not initialized!");
+    assert(Initialized && "Bloom filter is not initialized!");
     uint32_t hash2 = hash >> BloomShift;
     uint32_t n = (hash >> log2u(Bits)) % BloomSize;
     uint64_t mask = ((1ULL << (hash % Bits)) | (1ULL << (hash2 % Bits)));
@@ -60,7 +90,7 @@ private:
 
   // Helper method to add a hash
   void AddHash(uint32_t hash) {
-    assert(IsInitialized && "Bloom filter is not initialized!");
+    assert(Initialized && "Bloom filter is not initialized!");
     uint32_t hash2 = hash >> BloomShift;
     uint32_t n = (hash >> log2u(Bits)) % BloomSize;
     uint64_t mask = ((1ULL << (hash % Bits)) | (1ULL << (hash2 % Bits)));
@@ -85,8 +115,7 @@ public:
   BloomFilter(const BloomFilter &other) noexcept
       : Initialized(other.Initialized), SymbolsCount(other.SymbolsCount),
         BloomSize(other.BloomSize), BloomShift(other.BloomShift),
-        BloomTable(other.BloomTable) {
-  }
+        BloomTable(other.BloomTable) {}
   BloomFilter &operator=(const BloomFilter &other) = delete;
 
   BloomFilter(BloomFilter &&other) noexcept

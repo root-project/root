@@ -32,7 +32,7 @@
 namespace llvm {
 namespace orc {
 
-// temporary solution for callbacks suppored in AutoLoadEPC.
+// Temporary implementation for supporting callbacks in AutoLoadEPC.
 class ORCCallbacks {
 public:
   virtual bool LibraryLoadingFailed(const std::string &, const std::string &,
@@ -69,6 +69,7 @@ public:
   };
 
   Expected<tpctypes::DylibHandle> loadDylib(const char *DylibPath) override;
+  Expected<tpctypes::DylibHandle> loadDylib(const char *DylibPath, bool useDLOpen = true);
   LoadLibResult loadDylib(StringRef DylibPath, bool Permanent,
                           bool Resolved = false);
   void unloadDylib(StringRef DylibPath);
@@ -116,7 +117,7 @@ private:
   std::unique_ptr<jitlink::JITLinkMemoryManager> OwnedMemMgr;
   AutoLoadDynamicLibraryLookup DylibLookup;
   DynamicLibs Dylibs;
-  llvm::StringSet<> LoadedLibraries;
+  // llvm::StringSet<> LoadedLibraries;
   ORCCallbacks *Callbacks;
   char GlobalManglingPrefix = 0;
 };

@@ -16,46 +16,46 @@
 #include "llvm/Support/Process.h"
 #include "llvm/TargetParser/Host.h"
 
-#if defined(LLVM_ON_UNIX)
-#include <array>
-#include <atomic>
-#include <cxxabi.h>
-#include <dlfcn.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <string>
-#include <sys/mman.h>
-#include <unistd.h>
+// #if defined(LLVM_ON_UNIX)
+// #include <array>
+// #include <atomic>
+// #include <cxxabi.h>
+// #include <dlfcn.h>
+// #include <errno.h>
+// #include <fcntl.h>
+// #include <string>
+// #include <sys/mman.h>
+// #include <unistd.h>
 
-// PATH_MAX
-#ifdef __APPLE__
-#include <sys/syslimits.h>
-#else
-#include <limits.h>
-#endif
+// // PATH_MAX
+// #ifdef __APPLE__
+// #include <sys/syslimits.h>
+// #else
+// #include <limits.h>
+// #endif
 
-namespace platform {
+// namespace platform {
 
-static void DLErr(std::string *Err) {
-  if (!Err)
-    return;
-  if (const char *DyLibError = ::dlerror())
-    *Err = DyLibError;
-}
+// static void DLErr(std::string *Err) {
+//   if (!Err)
+//     return;
+//   if (const char *DyLibError = ::dlerror())
+//     *Err = DyLibError;
+// }
 
-static void *DLOpen(const std::string &Path, std::string *Err) {
-  void *Lib = dlopen(Path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
-  DLErr(Err);
-  return Lib;
-}
+// static void *DLOpen(const std::string &Path, std::string *Err) {
+//   void *Lib = dlopen(Path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
+//   DLErr(Err);
+//   return Lib;
+// }
 
-static void DLClose(const void *Lib, std::string *Err) {
-  ::dlclose(const_cast<void *>(Lib));
-  DLErr(Err);
-}
+// static void DLClose(const void *Lib, std::string *Err) {
+//   ::dlclose(const_cast<void *>(Lib));
+//   DLErr(Err);
+// }
 
-} // namespace platform
-#endif
+// } // namespace platform
+// #endif
 
 #define DEBUG_TYPE "orc"
 
@@ -121,11 +121,27 @@ AutoLoadEPC::Create(std::shared_ptr<SymbolStringPool> SSP,
 
 Expected<tpctypes::DylibHandle>
 AutoLoadEPC::loadDylib(const char *DylibPath) {
+  return loadDylib(DylibPath, false);
+}
+
+Expected<tpctypes::DylibHandle>
+AutoLoadEPC::loadDylib(const char *DylibPath, bool useDLOpen) {
   std::string ErrMsg;
-  auto Dylib = sys::DynamicLibrary::getPermanentLibrary(DylibPath, &ErrMsg);
-  if (!Dylib.isValid())
-    return make_error<StringError>(std::move(ErrMsg), inconvertibleErrorCode());
-  return ExecutorAddr::fromPtr(Dylib.getOSSpecificHandle());
+  DylibHandle DylibH;
+  if (useDLOpen) {
+    DylibH = DLOpen(DylibPath, &ErrMsg);
+    if (!DylibH)
+      return make_error<StringError>(std::move(ErrMsg),
+                                     inconvertibleErrorCode());
+  } else {
+    sys::DynamicLibrary Dylib =
+        sys::DynamicLibrary::getPermanentLibrary(DylibPath, &ErrMsg);
+    if (!Dylib.isValid())
+      return make_error<StringError>(std::move(ErrMsg),
+                                     inconvertibleErrorCode());
+      DylibH = Dylib.getOSSpecificHandle();
+  }
+  return ExecutorAddr::fromPtr(DylibH);
 }
 
 AutoLoadEPC::LoadLibResult
@@ -140,7 +156,7 @@ AutoLoadEPC::loadDylib(StringRef DylibPath, bool Permanent, bool resolved) {
       return kLoadLibNotFound;
   }
 
-  if (LoadedLibraries.find(DylibPath) != LoadedLibraries.end())
+  if (DylibLookup.isLibraryLoaded(DylibPath))
     return kLoadLibAlreadyLoaded;
 
   DylibHandle dyLibHandle;
@@ -158,19 +174,19 @@ AutoLoadEPC::loadDylib(StringRef DylibPath, bool Permanent, bool resolved) {
   };
 
   std::string ErrMsg;
-  if (Permanent) {
-    auto Dylib = sys::DynamicLibrary::getPermanentLibrary(
-        DylibPath.str().c_str(), &ErrMsg);
-    if (!Dylib.isValid()) {
-      return handleLibraryLoadingError(ErrMsg);
-    }
-    dyLibHandle = Dylib.getOSSpecificHandle();
-  } else {
-    dyLibHandle = platform::DLOpen(canonicalLoadedLib, &ErrMsg);
+  // if (Permanent) {
+  //   auto Dylib = sys::DynamicLibrary::getPermanentLibrary(
+  //       DylibPath.str().c_str(), &ErrMsg);
+  //   if (!Dylib.isValid()) {
+  //     return handleLibraryLoadingError(ErrMsg);
+  //   }
+  //   dyLibHandle = Dylib.getOSSpecificHandle();
+  // } else {
+    dyLibHandle = DLOpen(canonicalLoadedLib, &ErrMsg);
     if (!dyLibHandle) {
       return handleLibraryLoadingError(ErrMsg);
     }
-  }
+  // }
 
   // Notify callbacks if the library was loaded successfully
   if (Callbacks) {
@@ -207,12 +223,12 @@ void AutoLoadEPC::unloadDylib(StringRef DylibPath) {
   // TODO: !permanent case
 
   //   std::string errMsg;
-  //   platform::DLClose(dyLibHandle, &errMsg);
+  //   DLClose(dyLibHandle, &errMsg);
   // sys::DynamicLibrary Dylib(dyLibHandle);
   // sys::DynamicLibrary::closeLibrary(Dylib);
 
   std::string errMsg;
-  platform::DLClose(dyLibHandle, &errMsg);
+  DLClose(dyLibHandle, &errMsg);
   if (Callbacks)
     Callbacks->LibraryUnloaded(dyLibHandle, canonicalLoadedLib);
 
@@ -275,7 +291,7 @@ void AutoLoadEPC::resolveSymbolsAsync(ArrayRef<SymbolLookupSet> Request,
           DylibLookup.BuildGlobalBloomFilter(Filter);
         Result.push_back(ExecutorSymbolDef());
       } else {
-        auto H = loadDylib(canonicalLoadedLib.c_str());
+        auto H = loadDylib(canonicalLoadedLib.c_str(), true);
         if (!H)
           return Complete(H.takeError());
 

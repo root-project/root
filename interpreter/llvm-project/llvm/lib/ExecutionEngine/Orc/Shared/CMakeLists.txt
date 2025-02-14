@@ -1,6 +1,7 @@
 add_llvm_component_library(LLVMOrcShared
   AllocationActions.cpp
   AutoLoadDylibLookUp.cpp
+  AutoLoadDylibUtils.cpp
   AutoLoadDyLoader.cpp
   ObjectFormats.cpp
   OrcError.cpp

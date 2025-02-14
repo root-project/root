@@ -445,7 +445,7 @@ class DynamicLoader {
   bool UseBloomFilter = true;
   bool UseHashTable = true;
 
-  const AutoLoadDynamicLibraryLookup &AutoLoadDylibMgr;
+  const AutoLoadDynamicLibraryLookup &AutoLoadDylibLookupMgr;
 
   /// The basename of `/home/.../lib/libA.so`,
   /// BasePaths will contain `/home/.../lib/`
@@ -488,7 +488,8 @@ public:
   DynamicLoader(const AutoLoadDynamicLibraryLookup &DLM,
                 PermanentlyIgnoreCallbackProto shouldIgnore,
                 StringRef execFormat)
-      : AutoLoadDylibMgr(DLM), ShouldPermanentlyIgnoreCallback(shouldIgnore),
+      : AutoLoadDylibLookupMgr(DLM),
+        ShouldPermanentlyIgnoreCallback(shouldIgnore),
         ExecutableFormat(execFormat) {}
 
   ~DynamicLoader(){};
@@ -554,7 +555,7 @@ void HandleDynTab(const ELFFile<ELFT> *Elf, StringRef FileName,
 
 void DynamicLoader::ScanForLibraries(bool searchSystemLibraries /* = false*/) {
 #define DEBUG_TYPE "Dyld:ScanForLibraries:"
-  const auto &searchPaths = AutoLoadDylibMgr.getSearchPaths();
+  const auto &searchPaths = AutoLoadDylibLookupMgr.getSearchPaths();
 
   LLVM_DEBUG({
     dbgs() << "Dyld::ScanForLibraries: system="
@@ -583,7 +584,7 @@ void DynamicLoader::ScanForLibraries(bool searchSystemLibraries /* = false*/) {
         }
 
         if (ShouldPermanentlyIgnore(FileName)) {
-          LLVM_DEBUG(dbgs() << "PermanentlyIgnored!!!\n");
+          LLVM_DEBUG(dbgs() << "PermanentlyIgnored!!!\n";);
           return;
         }
 
@@ -636,6 +637,11 @@ void DynamicLoader::ScanForLibraries(bool searchSystemLibraries /* = false*/) {
           MachOObjectFile *Obj = dyn_cast<MachOObjectFile>(BinObjF);
           for (const auto &Command : Obj->load_commands()) {
             if (Command.C.cmd == MachO::LC_LOAD_DYLIB) {
+              // Command.C.cmd == MachO::LC_ID_DYLIB ||
+              // Command.C.cmd == MachO::LC_LOAD_WEAK_DYLIB ||
+              // Command.C.cmd == MachO::LC_REEXPORT_DYLIB ||
+              // Command.C.cmd == MachO::LC_LAZY_LOAD_DYLIB ||
+              // Command.C.cmd == MachO::LC_LOAD_UPWARD_DYLIB ||
               MachO::dylib_command dylibCmd =
                   Obj->getDylibIDLoadCommand(Command);
               Deps.push_back(StringRef(Command.Ptr + dylibCmd.dylib.name));
@@ -690,7 +696,7 @@ void DynamicLoader::ScanForLibraries(bool searchSystemLibraries /* = false*/) {
 
         // Recursively handle dependencies
         for (StringRef dep : Deps) {
-          std::string dep_full = AutoLoadDylibMgr.lookupLibrary(
+          std::string dep_full = AutoLoadDylibLookupMgr.lookupLibrary(
               dep, RPath, RunPath, FileName, false);
           ProcessLibraryFile(dep_full, level + 1);
         }
@@ -761,18 +767,6 @@ void DynamicLoader::ScanForLibraries(bool searchSystemLibraries /* = false*/) {
             ProcessLibraryFile(DepFileName, 0);
         }
       }
-      for (sys::fs::directory_iterator DirIt(DirPath, EC), DirEnd;
-           DirIt != DirEnd && !EC; DirIt.increment(EC)) {
-        LLVM_DEBUG(dbgs() << "Dyld::ScanForLibraries: File " << DirIt->path()
-                          << ", type=" << (short)DirIt->type() << "\n");
-
-        const sys::fs::file_type ft = DirIt->type();
-        if (ft == sys::fs::file_type::regular_file ||
-            (ft == sys::fs::file_type::symlink_file &&
-             !sys::fs::is_symlink_file(DirIt->path()))) {
-          ProcessLibraryFile(DirIt->path(), 0);
-        }
-      }
 
       // Register the DirPath as fully scanned.
       ScannedPaths.insert(&ScannedBPath);
@@ -793,36 +787,71 @@ void DynamicLoader::BuildBloomFilter(LibraryPath *Lib,
 
   LLVM_DEBUG(dbgs() << "Dyld::BuildBloomFilter: Building Bloom filter for: "
                     << Lib->GetFullName() << "\n");
-
-  std::vector<StringRef> symbols;
+// If BloomFilter is empty then build it.
+  // Count Symbols and generate BloomFilter
   uint32_t SymbolsCount = 0;
-  // Helper to process each symbol from a range
-  auto ProcessSymbols = [&](auto range) {
-    for (const object::SymbolRef &S : range) {
-      uint32_t Flags = cantFail(S.getFlags());
+  std::list<llvm::StringRef> symbols;
+  for (const llvm::object::SymbolRef &S : BinObjFile->symbols()) {
+    uint32_t Flags = llvm::cantFail(S.getFlags());
+    // Do not insert in the table symbols flagged to ignore.
+    if (Flags & IgnoreSymbolFlags)
+      continue;
 
-      // Skip symbols based on the flags (e.g., undefined or ignored)
-      if (Flags & IgnoreSymbolFlags || Flags & object::SymbolRef::SF_Undefined)
-        continue;
+    // Note, we are at last resort and loading library based on a weak
+    // symbol is allowed. Otherwise, the JIT will issue an unresolved
+    // symbol error.
+    //
+    // There are other weak symbol kinds (marked as 'V') to denote
+    // typeinfo and vtables. It is unclear whether we should load such
+    // libraries or from which library we should resolve the symbol.
+    // We seem to not have a way to differentiate it from the symbol API.
 
-      Expected<StringRef> SymName = S.getName();
-      if (!SymName || SymName->empty()) {
-        LLVM_DEBUG(dbgs() << "Dyld::BuildBloomFilter: Skipped empty or failed "
-                             "to read symbol\n");
-        continue;
-      }
-
-      symbols.push_back(*SymName);
-      ++SymbolsCount;
+    llvm::Expected<llvm::StringRef> SymNameErr = S.getName();
+    if (!SymNameErr) {
+      LLVM_DEBUG(dbgs() << "Dyld::BuildBloomFilter: Failed to read symbol "
+                        << SymNameErr.get() << "\n");
+      continue;
     }
-  };
-
-  ProcessSymbols(BinObjFile->symbols());
-
+    
+    if (SymNameErr.get().empty())
+    continue;
+    
+    ++SymbolsCount;
+    symbols.push_back(SymNameErr.get());
+  }
+  
   if (BinObjFile->isELF()) {
     // ELF file format has .dynstr section for the dynamic symbol table.
     const auto *ElfObj = cast<object::ELFObjectFileBase>(BinObjFile);
-    ProcessSymbols(ElfObj->getDynamicSymbolIterators());
+    for (const object::SymbolRef &S : ElfObj->getDynamicSymbolIterators()) {
+      uint32_t Flags = llvm::cantFail(S.getFlags());
+      // DO NOT insert to table if symbol was undefined
+      if (Flags & llvm::object::SymbolRef::SF_Undefined)
+      continue;
+      
+      // Note, we are at last resort and loading library based on a weak
+      // symbol is allowed. Otherwise, the JIT will issue an unresolved
+      // symbol error.
+      //
+      // There are other weak symbol kinds (marked as 'V') to denote
+      // typeinfo and vtables. It is unclear whether we should load such
+      // libraries or from which library we should resolve the symbol.
+      // We seem to not have a way to differentiate it from the symbol API.
+      
+      llvm::Expected<StringRef> SymNameErr = S.getName();
+      if (!SymNameErr) {
+        LLVM_DEBUG(dbgs() << "Dyld::BuildBloomFilter: Failed to read symbol "
+                          << SymNameErr.get() << "\n");
+        continue;
+      }
+      
+      if (SymNameErr.get().empty())
+      continue;
+
+      ++SymbolsCount;
+      symbols.push_back(SymNameErr.get());
+    }
+
   } else if (BinObjFile->isCOFF()) { // On Windows, the symbols are present in
                                      // COFF format.
     object::COFFObjectFile *CoffObj = cast<object::COFFObjectFile>(BinObjFile);
@@ -962,10 +991,19 @@ bool DynamicLoader::ContainsSymbol(const LibraryPath *Lib,
       // We seem to not have a way to differentiate it from the symbol API.
 
       Expected<StringRef> SymNameErr = S.getName();
-      if (!SymNameErr || SymNameErr.get().empty())
+      if (!SymNameErr) {
+        LLVM_DEBUG(dbgs() << "Dyld::ContainsSymbol: Failed to read symbol "
+                          << mangledName.str() << "\n");
+        continue;
+      }
+
+      if (SymNameErr.get().empty())
         continue;
 
       if (SymNameErr.get() == mangledName) {
+        LLVM_DEBUG(dbgs() << "Dyld::ContainsSymbol: Symbol "
+                          << mangledName.str() << " found in "
+                          << library_filename << "\n");
         return true;
       }
     }
@@ -1008,13 +1046,20 @@ bool DynamicLoader::ShouldPermanentlyIgnore(StringRef FileName) const {
 
   // No need to check linked libraries, as this function is only invoked
   // for symbols that cannot be found (neither by dlsym nor in the JIT).
-  if (AutoLoadDylibMgr.isLibraryLoaded(FileName))
+  if (AutoLoadDylibLookupMgr.isLibraryLoaded(FileName))
     return true;
 
   auto ObjF = object::ObjectFile::createObjectFile(FileName);
   if (!ObjF) {
+    // Note: It is important to always call handleAllErrors, otherwise the
+    // destructor of llvm::Error will abort the program "due to an unhandled
+    // Error"
+    std::string Message;
+    handleAllErrors(ObjF.takeError(), [&](llvm::ErrorInfoBase &EIB) {
+      Message += EIB.message() + "; ";
+    });
     LLVM_DEBUG(dbgs() << "[DyLD] Failed to read object file " << FileName
-                      << "\n");
+                      << " message : " << Message << "\n";);
     return true;
   }
 
@@ -1122,7 +1167,7 @@ DynamicLoader::searchLibrariesForSymbol(StringRef mangledName,
 
     for (const LibraryPath *P : QueriedLibraries.GetLibraries()) {
       const std::string LibName = P->GetFullName();
-      if (!AutoLoadDylibMgr.isLibraryLoaded(LibName))
+      if (!AutoLoadDylibLookupMgr.isLibraryLoaded(LibName))
         continue;
 
       Libraries.UnregisterLib(*P);

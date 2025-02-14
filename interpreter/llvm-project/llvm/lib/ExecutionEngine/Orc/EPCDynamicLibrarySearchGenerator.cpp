@@ -12,6 +12,8 @@
 
 #include "llvm/ExecutionEngine/Orc/AutoLoadEPC.h"
 
+#define DEBUG_TYPE "orc"
+
 namespace llvm {
 namespace orc {
 
@@ -88,8 +90,8 @@ Error AutoLoadDynamicLibrarySearchGenerator::tryToGenerate(
 
   SymbolNameSet CandidateSyms;
   for (auto &KV : Symbols) {
-    if (GlobalFilter.IsInitialized() && !GlobalFilter.MayContain(*KV.first) &&
-        !ExcludedSymbols.count(*KV.first))
+    if (GlobalFilter.IsInitialized() && (!GlobalFilter.MayContain(*KV.first) ||
+        ExcludedSymbols.count(*KV.first)))
       continue;
 
     CandidateSyms.insert(KV.first);
@@ -100,11 +102,6 @@ Error AutoLoadDynamicLibrarySearchGenerator::tryToGenerate(
 
   auto Err = tryToResolve(CandidateSyms, [this, &JD, LS = std::move(LS),
                                           CandidateSyms](auto Result) mutable {
-    auto &ResolveRes = Result->front();
-    bool IsFilter = GlobalFilter.IsInitialized();
-    if (!IsFilter && ResolveRes.Filter.has_value())
-      GlobalFilter = std::move(ResolveRes.Filter.value());
-
     if (!Result) {
       LLVM_DEBUG({
         dbgs() << "AutoLoadDynamicLibrarySearchGenerator resolve failed due to "
@@ -112,6 +109,11 @@ Error AutoLoadDynamicLibrarySearchGenerator::tryToGenerate(
       });
       return LS.continueLookup(Result.takeError());
     }
+
+    auto &ResolveRes = Result->front();
+    bool IsFilter = GlobalFilter.IsInitialized();
+    if (!IsFilter && ResolveRes.Filter.has_value())
+      GlobalFilter = std::move(ResolveRes.Filter.value());
 
     auto &Symbols = ResolveRes.SymbolDef;
     assert(Result->size() == 1 && "Results for more than one library returned");

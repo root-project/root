@@ -298,7 +298,7 @@ namespace cling {
     }
 
     if (m_Opts.CompilerOpts.CUDAHost && !isInSyntaxOnlyMode()) {
-      if (getClingEPC()->loadDylib("libcudart.so", true) ==
+      if (getClingEPC()->loadDylib("libcudart.so", true, false) ==
           llvm::orc::AutoLoadEPC::LoadLibResult::kLoadLibNotFound){
         llvm::errs() << "Error: libcudart.so not found!\n" <<
           "Please add the cuda lib path to LD_LIBRARY_PATH or set it via -L argument.\n";
