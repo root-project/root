@@ -34,7 +34,8 @@ namespace Experimental::Internal {
 
 enum class ENTupleMergingMode {
    /// The merger will discard all columns that aren't present in the prototype model (i.e. the model of the first
-   /// source)
+   /// source); also all subsequent RNTuples must contain at least all the columns that are present in the prototype
+   /// model
    kFilter,
    /// The merger will refuse to merge any 2 RNTuples whose schema doesn't match exactly
    kStrict,
