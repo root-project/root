@@ -35,31 +35,31 @@ namespace Internal {
 // clang-format on
 class RNTupleJoinTable {
 public:
-   using NTupleIndexValue_t = std::uint64_t;
+   using NTupleJoinValue_t = std::uint64_t;
 
 private:
    /////////////////////////////////////////////////////////////////////////////
    /// Container for the hashes of the indexed fields.
-   class RIndexValue {
+   class RCombinedJoinFieldValue {
    public:
-      std::vector<NTupleIndexValue_t> fFieldValues;
-      RIndexValue(const std::vector<NTupleIndexValue_t> &fieldValues)
+      std::vector<NTupleJoinValue_t> fFieldValues;
+      RCombinedJoinFieldValue(const std::vector<NTupleJoinValue_t> &fieldValues)
       {
          fFieldValues.reserve(fieldValues.size());
          fFieldValues = fieldValues;
       }
-      inline bool operator==(const RIndexValue &other) const { return other.fFieldValues == fFieldValues; }
+      inline bool operator==(const RCombinedJoinFieldValue &other) const { return other.fFieldValues == fFieldValues; }
    };
 
    /////////////////////////////////////////////////////////////////////////////
-   /// Hash combinining the individual index value hashes from RIndexValue. Uses the implementation from
+   /// Hash combinining the individual index value hashes from RCombinedJoinFieldValue. Uses the implementation from
    /// `boost::hash_combine` (see
    /// https://www.boost.org/doc/libs/1_55_0/doc/html/hash/reference.html#boost.hash_combine).
-   struct RIndexValueHash {
-      inline std::size_t operator()(const RIndexValue &indexValue) const
+   struct RCombinedJoinFieldValueHash {
+      inline std::size_t operator()(const RCombinedJoinFieldValue &joinFieldValue) const
       {
          std::size_t combinedHash = 0;
-         for (const auto &fieldVal : indexValue.fFieldValues) {
+         for (const auto &fieldVal : joinFieldValue.fFieldValues) {
             combinedHash ^= fieldVal + 0x9e3779b9 + (fieldVal << 6) + (fieldVal >> 2);
          }
          return combinedHash;
@@ -68,13 +68,13 @@ private:
 
    /// The index itself. Maps field values (or combinations thereof in case the index is defined for multiple fields) to
    /// their respsective entry numbers.
-   std::unordered_map<RIndexValue, std::vector<ROOT::NTupleSize_t>, RIndexValueHash> fIndex;
+   std::unordered_map<RCombinedJoinFieldValue, std::vector<ROOT::NTupleSize_t>, RCombinedJoinFieldValueHash> fJoinTable;
 
    /// The page source belonging to the RNTuple for which to build the index.
    std::unique_ptr<RPageSource> fPageSource;
 
    /// The fields for which the index is built. Used to compute the hashes for each entry value.
-   std::vector<std::unique_ptr<RFieldBase>> fIndexFields;
+   std::vector<std::unique_ptr<RFieldBase>> fJoinFields;
 
    /// Only built indexes can be queried.
    bool fIsBuilt = false;
@@ -130,7 +130,7 @@ public:
    std::size_t GetSize() const
    {
       EnsureBuilt();
-      return fIndex.size();
+      return fJoinTable.size();
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -160,7 +160,7 @@ public:
    template <typename... Ts>
    ROOT::NTupleSize_t GetFirstEntryNumber(Ts... values) const
    {
-      if (sizeof...(Ts) != fIndexFields.size())
+      if (sizeof...(Ts) != fJoinFields.size())
          throw RException(R__FAIL("number of values must match number of indexed fields"));
 
       std::vector<void *> valuePtrs;
@@ -186,7 +186,7 @@ public:
    template <typename... Ts>
    const std::vector<ROOT::NTupleSize_t> *GetAllEntryNumbers(Ts... values) const
    {
-      if (sizeof...(Ts) != fIndexFields.size())
+      if (sizeof...(Ts) != fJoinFields.size())
          throw RException(R__FAIL("number of values must match number of indexed fields"));
 
       std::vector<void *> valuePtrs;
