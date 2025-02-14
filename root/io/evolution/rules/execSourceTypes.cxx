@@ -38,7 +38,7 @@ struct Old
    float fSingle = 1.0;
    int fInt = 1;
    int fHitPattern[3] = {101, 102, 103};
-   int fHitCount = 2;
+   unsigned int fHitCount = 2;
    A fValue{1.1};
    A fValueB{1.2};
    A fValueC{1.3};;
