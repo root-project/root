@@ -12,9 +12,13 @@ else()
   set(testcint OUTREF)
 endif()
 
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(is_failing ${WILLFAIL_ON_WIN32})
+endif()
+
 ROOTTEST_ADD_TEST(VectorSort
                   MACRO VectorSort.C
                   ${testcint} VectorSort.ref
                   # OUTCNV VectorSort_convert.sh
-                  ${WILLFAIL_ON_WIN32}
+                  ${is_failing}
                   LABELS roottest regression cling)

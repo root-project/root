@@ -16,7 +16,6 @@ ROOTTEST_ADD_TEST(runtemplateAutodict
 ROOTTEST_ADD_TEST(runoperators
                   MACRO runoperators.C
                   OUTREF operators.ref
-                  ${WILLFAIL_ON_WIN32}
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(runalgebra
