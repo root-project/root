@@ -79,6 +79,83 @@ namespace RDFDetail = ROOT::Detail::RDF;
 namespace RDFInternal = ROOT::Internal::RDF;
 namespace TTraits = ROOT::TypeTraits;
 
+// RBarChart Class provides functionality to create bar chart from categorical data in RDataFrame (Alphanumeric bins!)
+// right now it handles string based categories and handles bin labelling automatically
+class RBarChart {
+public:
+   // Constructor initializes a bar chart with a name and a tittle
+   // name is a unique identifier for the histogram
+   // title is will be displayed on the historgram
+    RBarChart(const std::string& name, const std::string& title)
+        : fName(name), fTitle(title), fHist(nullptr) {}
+
+   // define the structure of the histogram with provided bin labels
+   // binLabels is a Vector of strings that will be used as X-axis labels
+   // Creates a new TH1D with bin corresponding to each unique category
+   // Pending - TH2D, TH3D
+    void Define(const std::vector<std::string>& binLabels) {
+        fHist = std::make_unique<TH1D>(fName.c_str(), fTitle.c_str(), 
+                                      binLabels.size(), 0, binLabels.size());
+        
+        // Set labels for each bin in the histogram
+        for (size_t i = 0; i < binLabels.size(); ++i) {
+            fHist->GetXaxis()->SetBinLabel(i + 1, binLabels[i].c_str());
+        }
+    }
+
+    // Fill histogrm with a category value
+    // value is a string category that will be counted in the histogram
+    // Finds the appropriate bin for the category and increments its value / count
+    void Fill(const std::string& value) {
+        if (fHist) {
+            int bin = fHist->GetXaxis()->FindBin(value.c_str());
+            fHist->Fill(bin - 0.5);
+        }
+    }
+
+    // Get the underlying ROOT Histogram
+    // returns a raw pointer to the TH1D histohram
+    // Allow external code to access and manipulate the histogram directly
+    TH1D* GetHistogram() const { return fHist.get(); }
+
+private:
+    std::string fName;  // name identifier for histogram
+    std::string fTitle; // title displayed on histogram
+    std::unique_ptr<TH1D> fHist; //smart pointer to root histogram
+};
+
+// helper function to create a bar chart from an RDataFrame column
+// df is ROOT RDataFrame instance
+// column name -  which contains the categorical data or string data
+// name - Identifier for the histogram
+// title - displayed on the histogram
+// Finally returns RBarChart object containing the filled histogram. 
+template<typename DF>
+RBarChart MakeBarChartTH1D(DF& df, 
+                          const std::string& column,
+                          const std::string& name,
+                          const std::string& title) {
+    RBarChart barChart(name, title);
+    
+    // extract a  ll values from the specified column (column which has the categorical / string data)
+    auto values = df.template Take<std::string>(column);
+
+    // create a set of unique categories
+    std::set<std::string> uniqueSet(values.begin(), values.end());
+
+    // convert set into a vector
+    std::vector<std::string> binLabels(uniqueSet.begin(), uniqueSet.end());
+
+    // initialize histogram
+    barChart.Define(binLabels);
+    
+    df.Foreach([&barChart](const std::string& value) {
+        barChart.Fill(value);
+    }, {column});
+    
+    return barChart;
+}
+
 template <typename Proxied, typename DataSource>
 class RInterface;
 
@@ -3107,6 +3184,14 @@ public:
    {
       ColumnNames_t selectedColumns(columnList);
       return Display(selectedColumns, nRows, nMaxCollectionElements);
+   }
+
+   // method to create a bar chart from a categorical / string based data column in RDataFrame
+   template <typename T = double>
+   RBarChart MakeBarChartTH1D(const std::string& column,
+                          const std::string& name,
+                          const std::string& title) {
+   return ROOT::RDF::MakeBarChartTH1D(*this, column, name, title);
    }
 
 private:
