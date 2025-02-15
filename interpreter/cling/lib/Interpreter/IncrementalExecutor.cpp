@@ -12,7 +12,6 @@
 #include "IncrementalJIT.h"
 #include "Threading.h"
 
-#include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Value.h"
 #include "cling/Utils/AST.h"
@@ -22,7 +21,9 @@
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Frontend/CompilerInstance.h"
 
+#include "llvm/ExecutionEngine/Orc/AutoLoadEPC.h"
 #include "llvm/ExecutionEngine/Orc/ExecutorProcessControl.h"
+#include "llvm/ExecutionEngine/Orc/EPCDynamicLibrarySearchGenerator.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
 #include "llvm/ADT/SmallPtrSet.h"
@@ -41,13 +42,11 @@ IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& /*diags*/,
   : m_Diags(diags)
 #endif
 {
-  m_DyLibManager.initializeDyld([](llvm::StringRef){/*ignore*/ return false;});
-
   // MSVC doesn't support m_AtExitFuncsSpinLock=ATOMIC_FLAG_INIT; in the class definition
   std::atomic_flag_clear( &m_AtExitFuncsSpinLock );
 
   llvm::Error Err = llvm::Error::success();
-  auto EPC = llvm::cantFail(llvm::orc::SelfExecutorProcessControl::Create());
+  auto EPC = llvm::cantFail(llvm::orc::AutoLoadEPC::Create());
   m_JIT.reset(new IncrementalJIT(*this, CI, std::move(EPC), Err,
     ExtraLibHandle, Verbose));
   if (Err) {
@@ -56,6 +55,9 @@ IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& /*diags*/,
   }
 
   m_BackendPasses.reset(new BackendPasses(CI.getCodeGenOpts(), *m_JIT, m_JIT->getTargetMachine()));
+
+  ClingEPC = static_cast<llvm::orc::AutoLoadEPC*>(
+      &m_JIT->getLLJIT()->getExecutionSession().getExecutorProcessControl());
 }
 
 IncrementalExecutor::~IncrementalExecutor() {}
@@ -222,7 +224,7 @@ IncrementalExecutor::executeWrapper(llvm::StringRef function,
 
 void IncrementalExecutor::setCallbacks(InterpreterCallbacks* callbacks) {
   m_Callbacks = callbacks;
-  m_DyLibManager.setCallbacks(callbacks);
+  ClingEPC->setCallbacks(callbacks);
 }
 
 void IncrementalExecutor::addGenerator(
@@ -334,8 +336,9 @@ bool IncrementalExecutor::diagnoseUnresolvedSymbols(llvm::StringRef trigger,
           << "Maybe you need to load the corresponding shared library?\n";
     }
 
-    std::string libName = m_DyLibManager.searchLibrariesForSymbol(sym,
-                                                        /*searchSystem=*/ true);
+    std::string libName = ClingEPC->getDylibLookup().searchLibrariesForSymbol(
+        sym,
+        /*searchSystem=*/true);
     if (!libName.empty())
       cling::errs() << "Symbol found in '" << libName << "';"
                     << " did you mean to load it with '.L "

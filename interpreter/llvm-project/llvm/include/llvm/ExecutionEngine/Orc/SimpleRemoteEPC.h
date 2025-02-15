@@ -74,6 +74,9 @@ public:
   Expected<std::vector<tpctypes::LookupResult>>
   lookupSymbols(ArrayRef<LookupRequest> Request) override;
 
+  void resolveSymbolsAsync(ArrayRef<SymbolLookupSet> Request,
+                           ResolveSymbolsCompleteFn F) override;
+
   Expected<int32_t> runAsMain(ExecutorAddr MainFnAddr,
                               ArrayRef<std::string> Args) override;
 

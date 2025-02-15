@@ -29,7 +29,6 @@
 #include "cling/Interpreter/ClingCodeCompleteConsumer.h"
 #include "cling/Interpreter/CompilationOptions.h"
 #include "cling/Interpreter/DynamicExprInfo.h"
-#include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Exception.h"
 #include "cling/Interpreter/IncrementalCUDADeviceCompiler.h"
 #include "cling/Interpreter/LookupHelper.h"
@@ -281,7 +280,7 @@ namespace cling {
         return;
 
       for (const std::string &P : m_Opts.LibSearchPath)
-        getDynamicLibraryManager()->addSearchPath(P);
+        getClingEPC()->getDylibLookup().addSearchPath(P);
     }
 
     bool usingCxxModules = getSema().getLangOpts().Modules;
@@ -299,8 +298,8 @@ namespace cling {
     }
 
     if (m_Opts.CompilerOpts.CUDAHost && !isInSyntaxOnlyMode()) {
-      if (getDynamicLibraryManager()->loadLibrary("libcudart.so", true) ==
-          cling::DynamicLibraryManager::LoadLibResult::kLoadLibNotFound){
+      if (getClingEPC()->loadDylib("libcudart.so", true, false) ==
+          llvm::orc::AutoLoadEPC::LoadLibResult::kLoadLibNotFound){
         llvm::errs() << "Error: libcudart.so not found!\n" <<
           "Please add the cuda lib path to LD_LIBRARY_PATH or set it via -L argument.\n";
        }
@@ -663,8 +662,8 @@ namespace cling {
   }
 
   void Interpreter::DumpDynamicLibraryInfo(llvm::raw_ostream* S) const {
-    if (auto DLM = getDynamicLibraryManager())
-      DLM->dump(S);
+    if (auto *EPC = getClingEPC())
+      EPC->getDylibLookup().dump();
   }
 
   // FIXME: Add stream argument and move DumpIncludePath path here.
@@ -1443,11 +1442,12 @@ namespace cling {
   }
 
   std::string Interpreter::lookupFileOrLibrary(llvm::StringRef file) {
-    std::string canonicalFile = DynamicLibraryManager::normalizePath(file);
+    std::string canonicalFile =
+        llvm::orc::AutoLoadDynamicLibraryLookup::normalizePath(file);
     if (canonicalFile.empty())
       canonicalFile = file.str();
 
-    //Copied from clang's PPDirectives.cpp
+    // Copied from clang's PPDirectives.cpp
     bool isAngled = false;
     // Clang doc says:
     // "LookupFrom is set when this is a \#include_next directive, it
@@ -1458,36 +1458,37 @@ namespace cling {
     Preprocessor& PP = getCI()->getPreprocessor();
     // PP::LookupFile uses it to issue 'nice' diagnostic
     SourceLocation fileNameLoc;
-    auto FE = PP.LookupFile(fileNameLoc, canonicalFile, isAngled, FromDir,
-                            FromFile, CurDir, /*SearchPath*/nullptr,
-                            /*RelativePath*/ nullptr, /*suggestedModule*/nullptr,
-                            /*IsMapped*/ nullptr, /*IsFrameworkFound*/ nullptr,
-                            /*SkipCache*/ false, /*OpenFile*/ false,
-                            /*CacheFail*/ false);
+    auto FE =
+        PP.LookupFile(fileNameLoc, canonicalFile, isAngled, FromDir, FromFile,
+                      CurDir, /*SearchPath*/ nullptr,
+                      /*RelativePath*/ nullptr, /*suggestedModule*/ nullptr,
+                      /*IsMapped*/ nullptr, /*IsFrameworkFound*/ nullptr,
+                      /*SkipCache*/ false, /*OpenFile*/ false,
+                      /*CacheFail*/ false);
     if (FE)
       return FE->getName().str();
-    return getDynamicLibraryManager()->lookupLibrary(canonicalFile);
+    return getClingEPC()->lookupDylib(canonicalFile);
   }
 
   Interpreter::CompilationResult
   Interpreter::loadLibrary(const std::string& filename, bool lookup) {
-    DynamicLibraryManager* DLM = getDynamicLibraryManager();
+    llvm::orc::AutoLoadEPC* EPC = getClingEPC();
     std::string canonicalLib;
     if (lookup)
-      canonicalLib = DLM->lookupLibrary(filename);
+      canonicalLib = EPC->lookupDylib(filename);
 
-    const std::string &library = lookup ? canonicalLib : filename;
+    const std::string& library = lookup ? canonicalLib : filename;
     if (!library.empty()) {
-      switch (DLM->loadLibrary(library, /*permanent*/false, /*resolved*/true)) {
-      case DynamicLibraryManager::kLoadLibSuccess: // Intentional fall through
-      case DynamicLibraryManager::kLoadLibAlreadyLoaded:
-        return kSuccess;
-      case DynamicLibraryManager::kLoadLibNotFound:
-        assert(0 && "Cannot find library with existing canonical name!");
-        return kFailure;
-      default:
-        // Not a source file (canonical name is non-empty) but can't load.
-        return kFailure;
+      switch (EPC->loadDylib(library, /*permanent*/ false, /*resolved*/ true)) {
+        case llvm::orc::AutoLoadEPC::kLoadLibSuccess: // Intentional fall
+                                                      // through
+        case llvm::orc::AutoLoadEPC::kLoadLibAlreadyLoaded: return kSuccess;
+        case llvm::orc::AutoLoadEPC::kLoadLibNotFound:
+          assert(0 && "Cannot find library with existing canonical name!");
+          return kFailure;
+        default:
+          // Not a source file (canonical name is non-empty) but can't load.
+          return kFailure;
       }
     }
     return kMoreInputExpected;
@@ -1677,13 +1678,15 @@ namespace cling {
     return m_Executor->getLLJIT();
   }
 
-  const DynamicLibraryManager* Interpreter::getDynamicLibraryManager() const {
+  const llvm::orc::AutoLoadEPC*
+  Interpreter::getClingEPC() const {
     assert(m_Executor.get() && "We must have an executor");
-    return &m_Executor->getDynamicLibraryManager();
+    return m_Executor->getClingEPC();
   }
-  DynamicLibraryManager* Interpreter::getDynamicLibraryManager() {
-    return const_cast<DynamicLibraryManager*>(const_cast<const Interpreter*>(
-                                             this)->getDynamicLibraryManager());
+
+  llvm::orc::AutoLoadEPC* Interpreter::getClingEPC() {
+    return const_cast<llvm::orc::AutoLoadEPC*>(
+        const_cast<const Interpreter*>(this)->getClingEPC());
   }
 
   const Transaction* Interpreter::getFirstTransaction() const {
