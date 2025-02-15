@@ -50,47 +50,6 @@ bool Popen(const std::string &Cmd, llvm::SmallVectorImpl<char> &Buf, bool RdE) {
 }
 #endif
 
-bool GetSystemLibraryPaths(llvm::SmallVectorImpl<std::string> &Paths) {
-#if defined(__APPLE__) || defined(__CYGWIN__)
-  Paths.push_back("/usr/local/lib/");
-  Paths.push_back("/usr/X11R6/lib/");
-  Paths.push_back("/usr/lib/");
-  Paths.push_back("/lib/");
-
-#ifndef __APPLE__
-  Paths.push_back("/lib/x86_64-linux-gnu/");
-  Paths.push_back("/usr/local/lib64/");
-  Paths.push_back("/usr/lib64/");
-  Paths.push_back("/lib64/");
-#endif
-#elif defined(LLVM_ON_UNIX)
-  llvm::SmallString<1024> Buf;
-  platform::Popen("LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls", Buf, true);
-  const llvm::StringRef Result = Buf.str();
-
-  const std::size_t NPos = std::string::npos;
-  const std::size_t LD = Result.find("(LD_LIBRARY_PATH)");
-  std::size_t From = Result.find("search path=", LD == NPos ? 0 : LD);
-  if (From != NPos) {
-    std::size_t To = Result.find("(system search path)", From);
-    if (To != NPos) {
-      From += 12;
-      while (To > From && isspace(Result[To - 1]))
-        --To;
-      std::string SysPath = Result.substr(From, To - From).str();
-      SysPath.erase(std::remove_if(SysPath.begin(), SysPath.end(), ::isspace),
-                    SysPath.end());
-
-      llvm::SmallVector<llvm::StringRef, 10> CurPaths;
-      SplitPaths(SysPath, CurPaths);
-      for (const auto &Path : CurPaths)
-        Paths.push_back(Path.str());
-    }
-  }
-#endif
-  return true;
-}
-
 std::string NormalizePath(const std::string &Path) {
 
   llvm::SmallString<256> Buffer;
@@ -239,6 +198,47 @@ bool SplitPaths(StringRef PathStr, SmallVectorImpl<StringRef> &Paths,
   return AllExisted;
 
 #undef DEBUG_TYPE
+}
+
+bool GetSystemLibraryPaths(llvm::SmallVectorImpl<std::string> &Paths) {
+#if defined(__APPLE__) || defined(__CYGWIN__)
+  Paths.push_back("/usr/local/lib/");
+  Paths.push_back("/usr/X11R6/lib/");
+  Paths.push_back("/usr/lib/");
+  Paths.push_back("/lib/");
+
+#ifndef __APPLE__
+  Paths.push_back("/lib/x86_64-linux-gnu/");
+  Paths.push_back("/usr/local/lib64/");
+  Paths.push_back("/usr/lib64/");
+  Paths.push_back("/lib64/");
+#endif
+#elif defined(LLVM_ON_UNIX)
+  llvm::SmallString<1024> Buf;
+  Popen("LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls", Buf, true);
+  const llvm::StringRef Result = Buf.str();
+
+  const std::size_t NPos = std::string::npos;
+  const std::size_t LD = Result.find("(LD_LIBRARY_PATH)");
+  std::size_t From = Result.find("search path=", LD == NPos ? 0 : LD);
+  if (From != NPos) {
+    std::size_t To = Result.find("(system search path)", From);
+    if (To != NPos) {
+      From += 12;
+      while (To > From && isspace(Result[To - 1]))
+        --To;
+      std::string SysPath = Result.substr(From, To - From).str();
+      SysPath.erase(std::remove_if(SysPath.begin(), SysPath.end(), ::isspace),
+                    SysPath.end());
+
+      llvm::SmallVector<llvm::StringRef, 10> CurPaths;
+      SplitPaths(SysPath, CurPaths);
+      for (const auto &Path : CurPaths)
+        Paths.push_back(Path.str());
+    }
+  }
+#endif
+  return true;
 }
 
 } // namespace orc

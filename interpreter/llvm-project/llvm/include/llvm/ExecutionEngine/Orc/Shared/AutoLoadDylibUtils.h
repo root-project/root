@@ -30,7 +30,6 @@ constexpr uint32_t log2u(std::uint32_t n) {
   return (n > 1) ? 1 + log2u(n >> 1) : 0;
 }
 
-// namespace platform {
 /// Platform specific delimiter for splitting environment variables.
 /// ':' on Unix, and ';' on Windows
 extern const char *const kEnvDelim;
@@ -41,10 +40,14 @@ enum class SplitMode {
   AllowNonExistant  ///< Add all paths whether they exist or not
 };
 
-bool SplitPaths(StringRef PathStr, SmallVectorImpl<StringRef> &Paths,
-                SplitMode Mode, StringRef Delim, bool Verbose = false);
+/// Collect the constituant paths from a PATH string.
+/// /bin:/usr/bin:/usr/local/bin -> {/bin, /usr/bin, /usr/local/bin}
+bool SplitPaths(llvm::StringRef PathStr,
+                llvm::SmallVectorImpl<llvm::StringRef> &Paths,
+                SplitMode Mode = SplitMode::PruneNonExistant,
+                llvm::StringRef Delim = kEnvDelim,
+                bool Verbose = false);
 
-///
 bool GetSystemLibraryPaths(llvm::SmallVectorImpl<std::string> &Paths);
 
 /// Returns a normalized version of the given Path
@@ -58,7 +61,6 @@ void *DLSym(const std::string &Name, std::string *Err = nullptr);
 
 /// Close a handle to a shared library.
 void DLClose(void *Lib, std::string *Err = nullptr);
-// } // namespace platform
 
 class BloomFilter {
 private:

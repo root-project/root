@@ -11,7 +11,9 @@
 #include "llvm/ExecutionEngine/Orc/Shared/OrcRTBridge.h"
 #include "llvm/Support/FormatVariadic.h"
 
+#if defined(LLVM_ON_UNIX)
 #include <dlfcn.h>
+#endif
 
 #define DEBUG_TYPE "orc"
 
