@@ -40,7 +40,7 @@ namespace SOFIE{
       std::vector<Dim> fShapeB;
       std::vector<size_t> fShapeC;
       std::vector<Dim> fShapeY;
-
+      
    public:
 
       ROperator_Gemm(){}
@@ -51,6 +51,8 @@ namespace SOFIE{
          fType = "float";
          static_assert(std::is_same_v<T, float>,
                   "TMVA::SOFIE - Unsupported type parsing a Gemm operator");
+         fInputTensorNames = { fNA, fNB };
+         fOutputTensorNames = { fNY };
       }
 
       ROperator_Gemm(float alpha, float beta, int_t transA, int_t transB, std::string nameA, std::string nameB, std::string nameC, std::string nameY):
@@ -60,6 +62,8 @@ namespace SOFIE{
          fType = "float";
          static_assert(std::is_same_v<T, float>,
                   "TMVA::SOFIE - Unsupported type parsing a Gemm operator");
+         fInputTensorNames = { fNA, fNB, fNC };
+         fOutputTensorNames = { fNY };
       }
 
       std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
@@ -262,7 +266,6 @@ namespace SOFIE{
          }
 
          model.AddNeededStdLib("algorithm");
-
       }
 
       std::string GenerateInitCode()
@@ -382,7 +385,7 @@ namespace SOFIE{
       }
 
       std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Gemv") }; }
-
+      
    };
 
 

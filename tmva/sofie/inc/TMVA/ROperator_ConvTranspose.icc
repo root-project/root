@@ -103,8 +103,8 @@ auto ROperator_ConvTranspose<T>::ShapeInference(std::vector<std::vector<size_t>>
 }
 
 template <typename T>
-void ROperator_ConvTranspose<T>::Initialize(RModel &model)
-{
+void ROperator_ConvTranspose<T>::Initialize(RModel& model){
+
    fUseSession = model.UseSession();
    if (!model.CheckIfTensorAlreadyExist(fNX)) {
       throw std::runtime_error("TMVA SOFIE Conv Transpose op Input Tensor " + fNX + " is not found in model");

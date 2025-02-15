@@ -35,6 +35,10 @@ private:
 
    const std::string SP = "   ";
 
+   // memory pool information for intermediate tensors
+   MemoryPoolInfo fIntermediateMemoryInfo;    ///<!  intermediate memory info (transient)
+   std::unordered_map<std::string_view, size_t> fIntermediateTensorFrequencyLookup;    ///<!  lookup table for intermediate tensor frequency (transient)
+
 public:
    // Rule of five: explicitly define move semantics, disallow copy
    RModel(RModel &&other);
@@ -142,6 +146,10 @@ public:
    // used to infer the sub-graphs
    std::string GenerateInferSignature(bool isdecl = true);
 
+   // calculate total intermediate memory and position intermediate tensor addresses
+   std::string AllocateIntermediateMemory(std::span<const std::string_view> op_output_tensors);
+   void CheckAndFlushIntermediateMemory(std::span<const std::string_view> op_output_tensors, const size_t& op_idx);
+
 protected:
    // internal functions
    // generate code for the initialized tensors
@@ -154,6 +162,8 @@ protected:
    void GenerateOperatorDeclarations();
    // generate code for inference
    void GenerateOutput();
+   // generate code for initializing memory pool for intermediate tensors
+   void GenerateIntermediateMemoryPool();
    // Generate all session code
    void GenerateSessionCode();
 
