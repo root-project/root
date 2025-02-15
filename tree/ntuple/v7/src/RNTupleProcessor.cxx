@@ -430,7 +430,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpe
 
    // If no join fields have been specified, an aligned join is assumed and an index won't be necessary.
    if (joinFields.size() > 0)
-      fJoinIndices.emplace_back(Internal::RNTupleIndex::Create(joinFields, *pageSource, true /* deferBuild */));
+      fJoinIndices.emplace_back(Internal::RNTupleJoinTable::Create(joinFields, *pageSource, true /* deferBuild */));
 
    fAuxiliaryPageSources.emplace_back(std::move(pageSource));
 }
