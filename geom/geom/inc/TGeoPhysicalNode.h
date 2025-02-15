@@ -25,13 +25,7 @@ class TGeoShape;
 class TGeoNavigator;
 class TObjArray;
 
-//////////////////////////////////////////////////////////////////////////////
-//                                                                          //
-// TGeoPhysicalNode - class representing an unique object associated with a //
-//   path.                                                                  //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
-
+/// @details class representing an unique object associated with a path.
 class TGeoPhysicalNode : public TNamed, public TAttLine {
 protected:
    Int_t fLevel;             // depth in the geometry tree
@@ -90,13 +84,7 @@ public:
    ClassDefOverride(TGeoPhysicalNode, 1) // base class for physical nodes
 };
 
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
-// TGeoPNEntry - class representing physical node entry having a unique name //
-//   associated to a path.                                                   //
-//                                                                           //
-///////////////////////////////////////////////////////////////////////////////
-
+/// @details class representing physical node entry having a unique name associated to a path.
 class TGeoPNEntry : public TNamed {
 private:
    enum EPNEntryFlags { kPNEntryOwnMatrix = BIT(14) };
