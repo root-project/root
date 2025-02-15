@@ -19,6 +19,9 @@
 #include "TMath.h"
 #include "snprintf.h"
 
+#include <sstream>
+#include <string>
+
 extern void Yields(Int_t &, Double_t *, Double_t &f, Double_t *x, Int_t iflag);
 
 ClassImp(TSPlot);
@@ -286,11 +289,7 @@ The results above can be obtained by running the tutorial TestSPlot.C
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor (used by I/O only)
 
-TSPlot::TSPlot() :
- fTree(nullptr),
- fTreename(nullptr),
- fVarexp(nullptr),
- fSelection(nullptr)
+TSPlot::TSPlot()
 {
    fNx = 0;
    fNy=0;
@@ -307,11 +306,7 @@ TSPlot::TSPlot() :
 ///  - ns :  number of species
 ///  - tree: input data
 
-TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree) :
- fTreename(nullptr),
- fVarexp(nullptr),
- fSelection(nullptr)
-
+TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree)
 {
    fNx = nx;
    fNy=ny;
@@ -530,10 +525,9 @@ void TSPlot::FillXvarHists(Int_t nbins)
    }
 
    //make the histograms
-   char name[12];
    for (i=0; i<fNx; i++){
-      snprintf(name,sizeof(name), "x%d", i);
-      TH1D *h = new TH1D(name, name, nbins, fMinmax(0, i), fMinmax(1, i));
+      std::string name = "x" + std::to_string(i);
+      TH1D *h = new TH1D(name.c_str(), name.c_str(), nbins, fMinmax(0, i), fMinmax(1, i));
       for (j=0; j<fNevents; j++)
          h->Fill(fXvar(j, i));
       fXvarHists.Add(h);
@@ -587,10 +581,9 @@ void TSPlot::FillYvarHists(Int_t nbins)
    }
 
    //make the histograms
-   char name[12];
    for (i=0; i<fNy; i++){
-      snprintf(name,sizeof(name), "y%d", i);
-      TH1D *h=new TH1D(name, name, nbins, fMinmax(0, fNx+i), fMinmax(1, fNx+i));
+      std::string name = "y" + std::to_string(i);
+      TH1D *h=new TH1D(name.c_str(), name.c_str(), nbins, fMinmax(0, fNx+i), fMinmax(1, fNx+i));
       for (j=0; j<fNevents; j++)
          h->Fill(fYvar(j, i));
       fYvarHists.Add(h);
@@ -639,12 +632,13 @@ void TSPlot::FillYpdfHists(Int_t nbins)
          return;
    }
 
-   char name[34];
    for (ispecies=0; ispecies<fNSpecies; ispecies++){
       for (i=0; i<fNy; i++){
-         snprintf(name,sizeof(name), "pdf_species%d_y%d", ispecies, i);
+         std::stringstream nameStream;
+         nameStream << "pdf_species" << ispecies << "_y" << i;
+         std::string name = nameStream.str();
          //TH1D *h = new TH1D(name, name, nbins, ypdfmin[ispecies*fNy+i], ypdfmax[ispecies*fNy+i]);
-         TH1D *h = new TH1D(name, name, nbins, fMinmax(0, fNx+fNy+ispecies*fNy+i), fMinmax(1, fNx+fNy+ispecies*fNy+i));
+         TH1D *h = new TH1D(name.c_str(), name.c_str(), nbins, fMinmax(0, fNx+fNy+ispecies*fNy+i), fMinmax(1, fNx+fNy+ispecies*fNy+i));
          for (j=0; j<fNevents; j++)
             h->Fill(fYpdf(j, ispecies*fNy+i));
          fYpdfHists.Add(h);
@@ -702,13 +696,13 @@ void TSPlot::FillSWeightsHists(Int_t nbins)
          return;
    }
 
-   char name[30];
-
    //Fill histograms of x-variables weighted with sWeights
    for (Int_t ivar=0; ivar<fNx; ivar++){
       for (Int_t ispecies=0; ispecies<fNSpecies; ispecies++){
-            snprintf(name,30, "x%d_species%d", ivar, ispecies);
-            TH1D *h = new TH1D(name, name, nbins, fMinmax(0, ivar), fMinmax(1, ivar));
+            std::stringstream nameStream;
+            nameStream << "x" << ivar << "_species" << ispecies;
+            std::string name = nameStream.str();
+            TH1D *h = new TH1D(name.c_str(), name.c_str(), nbins, fMinmax(0, ivar), fMinmax(1, ivar));
             h->Sumw2();
             for (Int_t ievent=0; ievent<fNevents; ievent++)
                h->Fill(fXvar(ievent, ivar), fSWeights(ievent, ispecies));
@@ -719,8 +713,10 @@ void TSPlot::FillSWeightsHists(Int_t nbins)
    //Fill histograms of y-variables (excluded from the fit), weighted with sWeights
    for (Int_t iexcl=0; iexcl<fNy; iexcl++){
       for(Int_t ispecies=0; ispecies<fNSpecies; ispecies++){
-            snprintf(name,30, "y%d_species%d", iexcl, ispecies);
-            TH1D *h = new TH1D(name, name, nbins, fMinmax(0, fNx+iexcl), fMinmax(1, fNx+iexcl));
+            std::stringstream nameStream;
+            nameStream << "y" << iexcl << "_species" << ispecies;
+            std::string name = nameStream.str();
+            TH1D *h = new TH1D(name.c_str(), name.c_str(), nbins, fMinmax(0, fNx+iexcl), fMinmax(1, fNx+iexcl));
             h->Sumw2();
             for (Int_t ievent=0; ievent<fNevents; ievent++)
                h->Fill(fYvar(ievent, iexcl), fSWeights(ievent, fNSpecies*(iexcl+1)+ispecies));

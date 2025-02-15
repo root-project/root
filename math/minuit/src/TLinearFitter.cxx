@@ -24,7 +24,8 @@
 #include "TBuffer.h"
 #include "TROOT.h"
 #include "strlcpy.h"
-#include "snprintf.h"
+
+#include <string>
 
 ClassImp(TLinearFitter);
 
@@ -1564,12 +1565,10 @@ void TLinearFitter::SetFormula(const char *formula)
       fFunctions.Expand(fNfunctions);
 
       //check if the old notation of xi is used somewhere instead of x[i]
-      char pattern[12];
-      char replacement[14];
       for (i=0; i<fNdim; i++){
-         snprintf(pattern,sizeof(pattern), "x%d", i);
-         snprintf(replacement,sizeof(replacement), "x[%d]", i);
-         sstring = sstring.ReplaceAll(pattern, Int_t(i/10)+2, replacement, Int_t(i/10)+4);
+         std::string pattern = "x" + std::to_string(i);
+         std::string replacement = "x[" + std::to_string(i) + "]";
+         sstring = sstring.ReplaceAll(pattern.c_str(), replacement.c_str());
       }
 
       //fill the array of functions
