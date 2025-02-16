@@ -6,10 +6,10 @@
 cmake_minimum_required(VERSION 3.19)
 project(ROOT::math)
 
-include(${ROOT_GLOBAL_SOURCE_DIR}/add_inc/RootInitExternalProject.cmake)
+include(${ROOT_GLOBAL_SOURCE_DIR}/cmake/modules/RootInitExternalProject.cmake)
 ROOT_INIT_EXTERNAL_PROJECT(ROOT::math)
 
-add_subdirectory(mathcore)
+#add_subdirectory(mathcore)
 if(mathmore)
   add_subdirectory(mathmore)
 endif()
