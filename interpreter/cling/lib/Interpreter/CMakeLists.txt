@@ -58,7 +58,6 @@ endif()
 
 
 add_cling_library(clingInterpreter OBJECT
-  AutoSynthesizer.cpp
   AutoloadCallback.cpp
   ASTTransformer.cpp
   BackendPasses.cpp

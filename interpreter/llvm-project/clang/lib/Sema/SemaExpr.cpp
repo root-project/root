@@ -15654,46 +15654,6 @@ ExprResult Sema::CreateBuiltinBinOp(SourceLocation OpLoc,
 
   switch (Opc) {
   case BO_Assign:
-    // ROOT hack: we want to support constructs like n = new TNamed() and if n
-    // wasn't declared we should declare it.
-    if (DeclRefExpr* DRE = dyn_cast<DeclRefExpr>(LHSExpr)) {
-      if (VarDecl* VD = dyn_cast<VarDecl>(DRE->getDecl())) {
-        if (const AutoType* aTy = dyn_cast<AutoType>(VD->getType().getTypePtr())) {
-          if (const AnnotateAttr* A = VD->getAttr<AnnotateAttr>()) {
-            // If the deduction didn't take place and it is our special
-            // annotation
-            if (!aTy->isDeduced() && A->getAnnotation().equals("__Auto")) {
-              QualType ResTy;
-              ASTContext& C = getASTContext();
-              TypeSourceInfo* TrivialTSI
-                = C.getTrivialTypeSourceInfo(VD->getType());
-              TemplateDeductionInfo Info(RHSExpr->getExprLoc());
-              TemplateDeductionResult Result =
-                  DeduceAutoType(TrivialTSI->getTypeLoc(), RHSExpr, ResTy, Info);
-              if (Result != TDK_Success && Result != TDK_AlreadyDiagnosed) {
-                 Diag(VD->getLocation(), diag::err_auto_var_requires_init)
-                    << VD->getDeclName() << VD->getType();
-                 VD->setInvalidDecl();
-
-                 return ExprError();
-              }
-              if (!ResTy.isNull()) {
-                VD->setTypeSourceInfo(C.getTrivialTypeSourceInfo(ResTy));
-                VD->setType(ResTy);
-              }
-              VD->setInit(DefaultLvalueConversion(RHSExpr).get());
-              PushOnScopeChains(VD, getCurScope(), /*Add to ctx*/true);
-
-              // Here we need to return 'something' to make the parser happy.
-              // A reference to the decl is semantically closest to what we want.
-              return BuildDeclRefExpr(VD, VD->getType(), VK_LValue,
-                                      SourceLocation());
-            }
-          }
-        }
-      }
-    }
-
     ResultTy = CheckAssignmentOperands(LHS.get(), RHS, OpLoc, QualType(), Opc);
     if (getLangOpts().CPlusPlus &&
         LHS.get()->getObjectKind() != OK_ObjCProperty) {
