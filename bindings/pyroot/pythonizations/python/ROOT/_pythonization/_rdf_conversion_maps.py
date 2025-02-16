@@ -62,5 +62,6 @@ NUMPY_TO_TREE = {
     numpy.int64 : 'Long_t',
     numpy.float32 : 'Float_t',
     numpy.float64 : 'Double_t',
+    numpy.ulonglong : 'ULong64_t'
 }
 
