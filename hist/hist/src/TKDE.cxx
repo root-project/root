@@ -518,7 +518,15 @@ void TKDE::InitFromNewData() {
    if (fUseMirroring) {
       SetMirroredEvents();
    }
+   else {
+      // to set fBinCount and fSumOfCounts
+      SetBinCountData();
+   }
    // in case of I/O reset the kernel
+   if (!fKernelFunction) SetKernelFunction(nullptr);
+
+   SetKernel();
+   
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -876,6 +884,9 @@ void TKDE::SetBinCountData() {
       }
       fBinCount.clear();
    }
+   if (fSumOfCounts == 0) {
+      Warning("SetBinCountData()", "Empty sum of counts, might lead to nan/inf errors when normalizing.");
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1015,7 +1026,7 @@ Double_t TKDE::TKernel::operator()(Double_t x) const {
    Bool_t useCount = (fKDE->fBinCount.size() == n);
    // also in case of unbinned unweighted data fSumOfCounts is sum of events in range
    // events outside range should be used to normalize the TKDE ??
-   Double_t nSum = fKDE->fSumOfCounts; //(useBins) ? fKDE->fSumOfCounts : fKDE->fNEvents;
+   Double_t nSum = fKDE->fSumOfCounts; //(useCount) ? fKDE->fSumOfCounts : fKDE->fNEvents;
    //if (!useCount) nSum = fKDE->fNEvents;
    // in case of non-adaptive fWeights is a vector of size 1
    Bool_t hasAdaptiveWeights = (fWeights.size() == n);
