@@ -6,13 +6,17 @@ MACRO(ROOT_INIT_EXTERNAL_PROJECT project_name)
 
 	set(CMAKE_MODULE_PATH ${ROOT_GLOBAL_SOURCE_DIR}/cmake/modules/)
 
-	if(ROOT_GLOBAL_BINARY_DIR)
-		set(CMAKE_INSTALL_INCLUDEDIR ${ROOT_GLOBAL_BINARY_DIR}/include)
-	endif()
+	#if(ROOT_GLOBAL_BINARY_DIR)
+	#	set(CMAKE_INSTALL_INCLUDEDIR ${ROOT_GLOBAL_BINARY_DIR}/include)
+	#endif()
+
+	#if(CMAKE_BINARY_DIR)
+	#	set(CMAKE_INSTALL_INCLUDEDIR ${CMAKE_BINARY_DIR}/include)
+	#endif()
+
 	#include(SearchInstalledSoftware)
 	include(SetROOTVersion)
 
-	include(/root-mount/root-install-package/cmake/ROOTConfig.cmake)
 	#include(${ROOT_GLOBAL_BINARY_DIR}/ROOTConfig.cmake)
 	include(${ROOT_GLOBAL_SOURCE_DIR}/cmake/modules/RootInstallDirs.cmake)
 	include(${ROOT_GLOBAL_SOURCE_DIR}/cmake/modules/CheckCompiler.cmake)
