@@ -242,23 +242,33 @@ if (UNIX)
   endif()
 
   if(NOT CLING_CXX_HEADERS)
-    if (CLING_CXX_PATH)
-      execute_process(COMMAND ${CLING_CXX_PATH} ${CLING_CXX_PATH_ARGS} -xc++ -E -v /dev/null
+    
+    if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "NVHPC")
+        execute_process(COMMAND ${CLING_CXX_RLTV} -drygccinc
                       OUTPUT_QUIET ERROR_VARIABLE CLING_CXX_HEADERS)
-      set(CLING_CXX_PATH "${CLING_CXX_PATH} ${CLING_CXX_PATH_ARGS}")
+        execute_process(
+          COMMAND echo ${CLING_CXX_HEADERS}
+          COMMAND sed s/:/\\\n/g
+        OUTPUT_VARIABLE CLING_CXX_HEADERS)
     else()
-      # convert CMAKE_CXX_FLAGS to a list for execute_process
-      string(REPLACE "-fdiagnostics-color=always" "" cling_tmp_arg_list ${CMAKE_CXX_FLAGS})
-      string(REPLACE "-fcolor-diagnosics" "" cling_tmp_arg_list ${cling_tmp_arg_list})
-      string(REPLACE " " ";" cling_tmp_arg_list ${cling_tmp_arg_list})
-      execute_process(COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} ${cling_tmp_arg_list} -xc++ -E -v /dev/null
-                      OUTPUT_QUIET ERROR_VARIABLE CLING_CXX_HEADERS)
-    endif()
+       if (CLING_CXX_PATH)
+         execute_process(COMMAND ${CLING_CXX_PATH} ${CLING_CXX_PATH_ARGS} -xc++ -E -v /dev/null
+                         OUTPUT_QUIET ERROR_VARIABLE CLING_CXX_HEADERS)
+         set(CLING_CXX_PATH "${CLING_CXX_PATH} ${CLING_CXX_PATH_ARGS}")
+       else()
+         # convert CMAKE_CXX_FLAGS to a list for execute_process
+         string(REPLACE "-fdiagnostics-color=always" "" cling_tmp_arg_list ${CMAKE_CXX_FLAGS})
+         string(REPLACE "-fcolor-diagnosics" "" cling_tmp_arg_list ${cling_tmp_arg_list})
+         string(REPLACE " " ";" cling_tmp_arg_list ${cling_tmp_arg_list})
+         execute_process(COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} ${cling_tmp_arg_list} -xc++ -E -v /dev/null
+                         OUTPUT_QUIET ERROR_VARIABLE CLING_CXX_HEADERS)
+       endif()
 
-    execute_process(
-      COMMAND echo ${CLING_CXX_HEADERS}
-      COMMAND sed -n -e /^.include/,\$\{ -e /^\\\ \\\/.*++/p -e \}
-      OUTPUT_VARIABLE CLING_CXX_HEADERS)
+       execute_process(
+         COMMAND echo ${CLING_CXX_HEADERS}
+         COMMAND sed -n -e /^.include/,\$\{ -e /^\\\ \\\/.*++/p -e \}
+         OUTPUT_VARIABLE CLING_CXX_HEADERS)
+    endif()
 
     stripNewLine("${CLING_CXX_HEADERS}" CLING_CXX_HEADERS)
   endif()
