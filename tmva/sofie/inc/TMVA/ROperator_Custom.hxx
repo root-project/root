@@ -72,7 +72,7 @@ public:
          for (auto & i : fOutputNames) std::cout << " " << i;
          std::cout << "\n";
       }
-      model.AddNeededStdLib("span");
+      model.AddNeededCustomHeader("ROOT/RSpan.hxx");
    }
 
     std::string Generate(std::string OpName){
