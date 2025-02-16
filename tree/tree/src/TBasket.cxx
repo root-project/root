@@ -58,15 +58,22 @@ TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir)
 ////////////////////////////////////////////////////////////////////////////////
 /// Basket normal constructor, used during writing.
 
-TBasket::TBasket(const char *name, const char *title, TBranch *branch)
+TBasket::TBasket(const char *name, const char *title, TBranch *branch, Int_t ondiskSize)
    : TKey(branch->GetDirectory()), fBufferSize(branch->GetBasketSize()), fNevBufSize(branch->GetEntryOffsetLen()),
      fHeaderOnly(true), fIOBits(branch->GetIOFeatures().GetFeatures())
 {
+   float cx = branch->GetZipBytes() ? (branch->GetTotBytes()+0.00001)/branch->GetZipBytes()
+              : 1.0;
+   auto uncompressedEstimate = ondiskSize ? ondiskSize/cx : fBufferSize;
+   auto compressedEstimate = ondiskSize ? ondiskSize : fBufferSize * cx;
+   if (ondiskSize)
+      fBufferSize = uncompressedEstimate;
+
    SetName(name);
    SetTitle(title);
    fClassName   = "TBasket";
    fBuffer = nullptr;
-   fBufferRef   = new TBufferFile(TBuffer::kWrite, fBufferSize);
+   fBufferRef   = new TBufferFile(TBuffer::kWrite, uncompressedEstimate);
    fVersion    += 1000;
    if (branch->GetDirectory()) {
       TFile *file = branch->GetFile();
@@ -74,13 +81,13 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch)
    }
    if (branch->GetTree()) {
 #ifdef R__USE_IMT
-      fCompressedBufferRef = branch->GetTransientBuffer(fBufferSize);
+      fCompressedBufferRef = branch->GetTransientBuffer(compressedEstimate);
 #else
-      fCompressedBufferRef = branch->GetTree()->GetTransientBuffer(fBufferSize);
+      fCompressedBufferRef = branch->GetTree()->GetTransientBuffer(compressedEstimate);
 #endif
       fOwnsCompressedBuffer = false;
       if (!fCompressedBufferRef) {
-         fCompressedBufferRef = new TBufferFile(TBuffer::kRead, fBufferSize);
+         fCompressedBufferRef = new TBufferFile(TBuffer::kRead, compressedEstimate);
          fOwnsCompressedBuffer = true;
       }
    }

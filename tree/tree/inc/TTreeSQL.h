@@ -63,7 +63,7 @@ protected:
    TString                ConvertTypeName(const TString& typeName );
    virtual void           CreateBranch(const TString& branchName,const TString &typeName);
    bool                   CreateTable(const TString& table);
-   TBasket               *CreateBasket(TBranch * br) override;
+   TBasket               *CreateBasket(TBranch * br, Int_t ondisksize = 0) override;
 
    TBranch               *BranchImp(const char *branchname, const char *classname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel) override;
    TBranch               *BranchImp(const char *branchname, TClass *ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel) override;
