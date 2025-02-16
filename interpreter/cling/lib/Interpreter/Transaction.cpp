@@ -169,7 +169,8 @@ namespace cling {
       // that callback.
       // For reference (clang::CodeGen::CodeGenModule::EmitVTable).
       if (oldDCI.m_Call != kCCIHandleVTable
-          && oldDCI.m_Call != kCCIHandleCXXImplicitFunctionInstantiation)
+          && oldDCI.m_Call != kCCIHandleCXXImplicitFunctionInstantiation
+          && oldDCI.m_Call != kCCIHandleTopLevelDecl)
         assert(oldDCI != DCI && "Duplicates?!");
     }
     // We want to assert there is only one wrapper per transaction.
