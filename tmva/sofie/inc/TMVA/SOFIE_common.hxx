@@ -121,10 +121,10 @@ struct TensorType<uint64_t> {
 };
 
 struct TensorMemoryInfo {
-   std::string tensor_name;
+   std::string_view tensor_name;
    size_t tensor_size;
 
-   TensorMemoryInfo split(const std::string& new_name, size_t new_size) {
+   TensorMemoryInfo split(const std::string_view new_name, size_t new_size) {
         if (new_size > tensor_size) {
             throw std::invalid_argument("New size exceeds available tensor size.");
         }
