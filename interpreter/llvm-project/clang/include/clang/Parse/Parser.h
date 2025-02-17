@@ -459,11 +459,8 @@ class Parser : public CodeCompletionHandler {
   /// a statement expression and builds a suitable expression statement.
   StmtResult handleExprStmt(ExprResult E, ParsedStmtContext StmtCtx);
 
-  bool IsTemporary;
-
 public:
-  Parser(Preprocessor &PP, Sema &Actions, bool SkipFunctionBodies, 
-         bool isTemp = false);
+  Parser(Preprocessor &PP, Sema &Actions, bool SkipFunctionBodies);
   ~Parser() override;
 
   const LangOptions &getLangOpts() const { return PP.getLangOpts(); }
@@ -482,7 +479,7 @@ public:
 
   public:
     ParserCurTokRestoreRAII(Parser &P)
-      : P(P), SavedTok(P.Tok) 
+      : P(P), SavedTok(P.Tok)
     {
     }
 
@@ -491,7 +488,7 @@ public:
         return;
 
       P.Tok = SavedTok;
-      
+
       SavedTok.startToken();
     }
 
@@ -1261,7 +1258,7 @@ public:
     return Diag(Tok, DiagID);
   }
 
-protected:
+private:
   void SuggestParentheses(SourceLocation Loc, unsigned DK,
                           SourceRange ParenRange);
   void CheckNestedObjCContexts(SourceLocation AtLoc);

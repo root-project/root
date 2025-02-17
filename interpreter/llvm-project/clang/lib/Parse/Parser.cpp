@@ -50,18 +50,15 @@ IdentifierInfo *Parser::getSEHExceptKeyword() {
   return Ident__except;
 }
 
-Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies,
-               bool isTemporary /*=false*/)
+Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies)
     : PP(pp), PreferredType(pp.isCodeCompletionEnabled()), Actions(actions),
       Diags(PP.getDiagnostics()), GreaterThanIsOperator(true),
       ColonIsSacred(false), InMessageExpression(false),
-      TemplateParameterDepth(0), ParsingInObjCContainer(false),
-      IsTemporary(isTemporary) {
+      TemplateParameterDepth(0), ParsingInObjCContainer(false) {
   SkipFunctionBodies = pp.isCodeCompletionEnabled() || skipFunctionBodies;
   Tok.startToken();
   Tok.setKind(tok::eof);
-  if (!IsTemporary)
-    Actions.CurScope = nullptr;
+  Actions.CurScope = nullptr;
   NumCachedScopes = 0;
   CurParsedObjCImpl = nullptr;
 
@@ -70,17 +67,14 @@ Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies,
   initializePragmaHandlers();
 
   CommentSemaHandler.reset(new ActionCommentHandler(actions));
-  if (!IsTemporary)
-    PP.addCommentHandler(CommentSemaHandler.get());
+  PP.addCommentHandler(CommentSemaHandler.get());
 
-  if (!IsTemporary) {
-    PP.setCodeCompletionHandler(*this);
-    Actions.ParseTypeFromStringCallback = [this](StringRef TypeStr,
-                                                 StringRef Context,
-                                                 SourceLocation IncludeLoc) {
-      return this->ParseTypeFromString(TypeStr, Context, IncludeLoc);
-    };
-  }
+  PP.setCodeCompletionHandler(*this);
+
+  Actions.ParseTypeFromStringCallback =
+      [this](StringRef TypeStr, StringRef Context, SourceLocation IncludeLoc) {
+        return this->ParseTypeFromString(TypeStr, Context, IncludeLoc);
+      };
 }
 
 DiagnosticBuilder Parser::Diag(SourceLocation Loc, unsigned DiagID) {
@@ -474,10 +468,8 @@ Parser::ParseScopeFlags::~ParseScopeFlags() {
 
 Parser::~Parser() {
   // If we still have scopes active, delete the scope tree.
-  if (!IsTemporary) {
-    delete getCurScope();
-    Actions.CurScope = nullptr;
-  }
+  delete getCurScope();
+  Actions.CurScope = nullptr;
 
   // Free the scope cache.
   for (unsigned i = 0, e = NumCachedScopes; i != e; ++i)
@@ -485,11 +477,9 @@ Parser::~Parser() {
 
   resetPragmaHandlers();
 
-  if (!IsTemporary)
-    PP.removeCommentHandler(CommentSemaHandler.get());
+  PP.removeCommentHandler(CommentSemaHandler.get());
 
-  if (!IsTemporary)
-    PP.clearCodeCompletionHandler();
+  PP.clearCodeCompletionHandler();
 
   DestroyTemplateIds();
 }
