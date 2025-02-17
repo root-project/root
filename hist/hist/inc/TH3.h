@@ -28,6 +28,15 @@
 class TH2D;
 class TProfile2D;
 
+namespace ROOT::Internal {
+/// Entrypoint for thread-safe filling from RDataFrame.
+template <typename T, typename... Args>
+auto FillThreadSafe(T &histo, Args... args) -> decltype(histo.FillThreadSafe(args...), void())
+{
+   histo.FillThreadSafe(args...);
+}
+} // namespace ROOT::Internal
+
 class TH3 : public TH1, public TAtt3D {
 
 protected:
@@ -397,6 +406,13 @@ public:
 protected:
            Double_t RetrieveBinContent(Int_t bin) const override { return fArray[bin]; }
            void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = content; }
+private:
+#ifdef __cpp_lib_atomic_ref
+           void FillThreadSafe(Double_t x, Double_t y, Double_t z, Double_t w = 1.);
+           template <typename T, typename... Args>
+           friend auto ROOT::Internal::FillThreadSafe(T &histo, Args... args)
+              -> decltype(histo.FillThreadSafe(args...), void());
+#endif
 
    ClassDefOverride(TH3D,4)  //3-Dim histograms (one double per channel)
 };
