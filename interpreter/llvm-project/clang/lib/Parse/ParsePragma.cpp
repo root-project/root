@@ -415,10 +415,6 @@ void markAsReinjectedForRelexing(llvm::MutableArrayRef<clang::Token> Toks) {
 }  // end namespace
 
 void Parser::initializePragmaHandlers() {
-  // No pragma parsing for temporary parsers.
-  if (IsTemporary)
-    return;
-
   AlignHandler = std::make_unique<PragmaAlignHandler>();
   PP.AddPragmaHandler(AlignHandler.get());
 
@@ -572,10 +568,6 @@ void Parser::initializePragmaHandlers() {
 }
 
 void Parser::resetPragmaHandlers() {
-  // No pragma parsing for temporary parsers.
-  if (IsTemporary)
-    return;
-
   // Remove the pragma handlers we installed.
   PP.RemovePragmaHandler(AlignHandler.get());
   AlignHandler.reset();
