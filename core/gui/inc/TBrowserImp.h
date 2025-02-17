@@ -39,7 +39,7 @@ public:
    TBrowserImp(TBrowser *b = nullptr);
    TBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *opt = "");
    TBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt = "");
-   virtual ~TBrowserImp() = default;
+   virtual ~TBrowserImp();
 
    virtual void      Add(TObject *, const char *, Int_t) { }
    virtual void      AddCheckBox(TObject *, Bool_t = kFALSE) { }
