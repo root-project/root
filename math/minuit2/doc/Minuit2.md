@@ -153,7 +153,7 @@ two-way strategy was imposed:
 -   a minimal required interface with minimum interaction with M objects
     and with appropriate usage of the standard library (STL): the user's
     implementation of the FCNBase class, initial parameter values and
-    uncertainties are provided by the to M user via std::vectors.
+    uncertainties are provided by the to M user via `std::vector`.
 
 -   a rich interface which provides the user with more functionality
     such as interaction with parameters.
@@ -402,7 +402,7 @@ execution of `MIGRAD` (MnMigrad::operator(), see
 [api:migradop]) or HESSE (MnHesse::operator())) then the parameter
 errors printed by M are the square roots of the diagonal elements of
 this matrix. The covariance or the correlations can be printed and shown
-via std::cout as the ostream operator operator$<<$ is overloaded. The
+via `std::cout` as the ostream operator operator$<<$ is overloaded. The
 eigenvalues of the error matrix can be calculated using MnEigen, which
 should all be positive if the matrix is positive-definite (see below on
 `MIGRAD` and positive-definiteness).
@@ -487,7 +487,7 @@ are just the extreme points of the contour (use the
 MnContours::contour(...) method in order to get the points of the
 contour and the ones of the `MINOS` errors).
 MnContours::operator() returns a
-std::vector$<$std::pair$<$double,double$> >$ of (x,y) points. Using
+`std::vector$<$std::pair$<$double,double$> >$` of (x,y) points. Using
 MnPlot::operator() will generate a text graphics plot in the terminal.
 
 # M installation #
@@ -591,7 +591,7 @@ at CERN.
 The program is entirely written in standard portable C++. M does not depend
 on any external library. In its minimal usage the user must only provide
 an implementation of the FCNBase class to M and parameters and
-uncertainties in form of std::vector containers.
+uncertainties in form of `std::vector` containers.
 
 ### Memory allocation and thread safety ###
 
@@ -635,7 +635,7 @@ accuracy.
 
 The accuracy M expects is called *machine precision*
 (MnMachinePrecision, see [api:epsmac]) and can be printed on demand
-using std::cout. If the user fools M by making internal `FCN`
+using `std::cout`. If the user fools M by making internal `FCN`
 computations in single precision, M will interpret roundoff noise as
 significant and will usually either fail to find a minimum, or give
 incorrect values for the parameter errors.
@@ -675,16 +675,16 @@ The name of the user's class to implement the FCNBase interface may be
 chosen freely (in documentation we give it the generic name
 `FCN`).
 
-### FCNBase::operator()(const std::vector$<$double$>$&) ###
+### `FCNBase::operator()(const std::vector<double>&)` ###
 
-The meaning of the vector of parameters std::vector$<$double$>$ in the
-argument of FCNBase::operator() are of course defined by the user, who
+The meaning of the vector of parameters `std::vector<double>` in the
+argument of `FCNBase::operator()` are of course defined by the user, who
 uses the values of those parameters to calculate their function value. The
 order and the position of these parameters is strictly the one specified
 by the user when supplying the starting values for minimization.
 
 The starting values must be specified by the user, either via an
-std::vector$<$double$>$ or the MnUserParameters (see [api:parameters])
+`std::vector<double>` or the MnUserParameters (see [api:parameters])
 supplied as input to the M minimizers such as VariableMetricMinimizer or
 MnMigrad (see [api:migrad]). Later values are determined by M as it
 searches for the minimum or performs whatever analysis is requested by
@@ -700,7 +700,7 @@ for negative log likelihood, `up = 0.5`.
 
 ### `FCN` function with gradient ###
 
-By default first derivatives are calculated numerically by M . In case
+By default first derivatives are calculated numerically by M. In case
 the user wants to supply their own gradient calculator (e.g. analytical
 derivatives), they need to implement the FCNGradientBase interface.
 
@@ -722,12 +722,12 @@ of interaction.
 ### Minimal required interface ###
 
 Starting values of parameters and uncertainties can be provided to M by
-the user via std::vector$<$double$>$ vector containers. Any interaction
+the user via `std::vector<double>` vector containers. Any interaction
 with the parameters before minimization (fix, release, limits, etc.) is
 not possible then.
 
 Optionally if the user wants to provide starting values for the
-covariance, they have to provide the values in a std::vector$<$double$>$
+covariance, they have to provide the values in a `std::vector<double>`
 vector container stored in upper triangular packed storage format (see
 [api:covariance]).
 
@@ -770,7 +770,7 @@ The following input combinations to M are possible:
 -   `FCN` with gradient + parameters + covariance
 
 For each of these combinations the user can chose between a minimal
-required interface (using std::vector containers) for the parameters and
+required interface (using `std::vector` containers) for the parameters and
 uncertainties or a more functional one provided by M . If the user wants
 to interact with the parameters before minimization (fixing,
 adding/removing limits), the minimal required interface cannot be used.
@@ -786,7 +786,7 @@ The user must supply to M
 -   expected uncertainties on the parameters
 
 The input parameters can be simply defined via an
-std::vector$<$double$>$, which means that all parameters are variables.
+`std::vector<double>`, which means that all parameters are variables.
 If the user wants fix a parameter or put limits on it before
 minimization, they have to instantiate a MnUserParameters object and then
 add parameters one by one, giving them a name, value, uncertainty. Once
@@ -799,7 +799,7 @@ minimization.
 Optionally the user can supply their own gradient calculator by
 implementing the FCNGradientBase interface or supply a full covariance
 matrix for input if one is available. The covariance matrix can be
-supplied in form of a std::vector$<$double$>$ in packed storage format
+supplied in form of a `std::vector<double>` in packed storage format
 (upper triangular), or in a more user-friendly way by using the
 interface provided by the MnUserCovariance.
 
@@ -1011,7 +1011,7 @@ are provided as well.
 
 The MnHesse::operator() is overloaded both for internal (M ) and
 external (user) parameters. External parameters can be specified as
-std::vector$<$double$>$ or as MnUserParameters. The return value is
+`std::vector<double>` or as MnUserParameters. The return value is
 always a MnUserParameterState.
 
 The optional argument `maxcalls` specifies the (approximate)
@@ -1052,7 +1052,7 @@ is required. The minimization produces as a by-product the error matrix
 of the parameters, which is usually reliable unless warning messages are
 produced.
 
-### MnMigrad(const FCNBase&, const std::vector$<$double$>$&, const std::vector$<$double$>$&, unsigned int) ###
+### `MnMigrad(const FCNBase&, const std::vector<double>&, const std::vector<double>&, unsigned int)` ###
 
 Constructor for the minimal required interface: `FCN` and
 starting values for parameters and uncertainties. Optional the strategy
@@ -1097,7 +1097,7 @@ The VariableMetricMinimizer provides several overloaded methods minimize
 with return value FunctionMinimum. Together with the user
 `FCN` (either an implementation of FCNBase or
 FCNGradientBase) the user has to give as input the parameters with
-starting values in one of the defined formats (std::vector$<$double$>$,
+starting values in one of the defined formats (`std::vector<double>`,
 MnUserParameters or MnUserParameterState).
 
 ## MnMinimize and CombinedMinimizer ##
@@ -1212,8 +1212,8 @@ function can be done by directly using the SimplexMinimizer if no
 parameters interaction is required. As `SIMPLEX` is a
 stepping method it does not produce a covariance matrix.
 
-### MnSimplex(const FCNBase&, const std::vector$<$double$>$&,\
-const std::vector$<$double$>$&, unsigned int) ###
+### `MnSimplex(const FCNBase&, const std::vector<double>&,\
+const std::vector<double>&, unsigned int)` ###
 
 Constructor for the minimal required interface: `FCN` and
 starting values for parameters and uncertainties. Optional the strategy
@@ -1257,7 +1257,7 @@ The SimplexMinimizer provides several overloaded methods minimize with
 return value FunctionMinimum. Together with the user `FCN`
 (either an implementation of FCNBase or FCNGradientBase) the user has to
 give as input the parameters with starting values in one of the defined
-formats (std::vector$<$double$>$, MnUserParameters or
+formats (`std::vector<double>`, MnUserParameters or
 MnUserParameterState).
 
 ## MnStrategy ##
@@ -1296,7 +1296,7 @@ format. It can also be used as input prior to the minimization. The size
 of the covariance matrix is according to the number of variable
 parameters (free and limited).
 
-### MnUserCovariance(const std::vector$<$double$>$&, unsigned int nrow) ###
+### MnUserCovariance(const std::vector<double>&, unsigned int nrow) ###
 
 Construct from data, positions of the elements in the array are arranged
 according to the packed storage format. The size of the array must be
@@ -1341,7 +1341,7 @@ parameters:
 -   add(const char\*, double) for adding a constant parameter
 
 When adding parameters, M assigns indices to each parameter which will
-be the same as in the std::vector$<$double$>$ in the
+be the same as in the `std::vector<double>` in the
 FCNBase::operator(). That means the first parameter the user adds gets
 index 0, the second index 1, and so on. When calculating the function
 value inside FCN, M will call FCNBase::operator() with the elements at
@@ -1431,11 +1431,11 @@ name(unsigned int n) returns the name of the parameter with index $n$.
 and the MnUserCovariance. It can be created on input by the user, or by
 M itself as user representable format of the result of the minimization.
 
-### MnUserParameterState(const std::vector$<$double$>$&,\
-const std::vector$<$double$>$&) ###
+### `MnUserParameterState(const std::vector<double>&,\
+const std::vector<double>&)` ###
 
 Construct a state from starting values specified via
-std::vector$<$double$>$. No covariance is available.
+`std::vector<double>`. No covariance is available.
 
 ### MnUserParameterState(const MnUserParameters&) ###
 
@@ -1859,6 +1859,7 @@ The implementation of FCNBase by the user's GaussFcn is shown here.
 
 The user's model function is a Gaussian.
 
+```{.cpp}
     #ifndef MN_GaussFunction_H_
     #define MN_GaussFunction_H_
 
@@ -1890,13 +1891,14 @@ The user's model function is a Gaussian.
       double theConstant;
     };
     #endif // MN_GaussFunction_H_
+```
 
 ### GaussFcn.h ###
 
 The user's `FCN` (GaussFcn) to calculate the $\chi^2$
 (combining the user's data with the user's model).
 
-
+```{.cpp}
     #ifndef MN_GaussFcn_H_
     #define MN_GaussFcn_H_
 
@@ -1936,6 +1938,7 @@ The user's `FCN` (GaussFcn) to calculate the $\chi^2$
     };
 
     #endif //MN_GaussFcn_H_
+```
 
 ### GaussFcn.cpp ###
 
