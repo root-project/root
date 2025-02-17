@@ -170,6 +170,17 @@ static inline void R__ReleaseMemory(TClass *cl, TObject *obj)
    }
 }
 
+namespace ROOT::Internal {
+
+class TClonesArrayOwnershipRAII {
+   TClonesArray *fClonesArray;
+   bool fIsOwner;
+
+public:
+   TClonesArrayOwnershipRAII(TClonesArray *arr) : fClonesArray(arr), fIsOwner(arr->TCollection::IsOwner()) {}
+   ~TClonesArrayOwnershipRAII() { fClonesArray->TCollection::SetOwner(fIsOwner); }
+};
+} // namespace ROOT::Internal
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default Constructor.
@@ -428,8 +439,8 @@ void TClonesArray::Clear(Option_t *option)
    }
 
    // Protect against erroneously setting of owner bit
-   SetOwner(kFALSE);
-
+   ROOT::Internal::TClonesArrayOwnershipRAII ownRaii(this);
+   TObjArray::SetOwner(kFALSE);
    TObjArray::Clear();
 }
 
@@ -440,7 +451,8 @@ void TClonesArray::Clear(Option_t *option)
 
 void TClonesArray::Delete(Option_t *)
 {
-   if ( fClass->TestBit(TClass::kIsEmulation) ) {
+   if (fClass->GetState() == TClass::kEmulated)
+   {
       // In case of emulated class, we can not use the delete operator
       // directly, it would use the wrong destructor.
       for (Int_t i = 0; i < fSize; i++) {
@@ -457,8 +469,8 @@ void TClonesArray::Delete(Option_t *)
    }
 
    // Protect against erroneously setting of owner bit.
-   SetOwner(kFALSE);
-
+   ROOT::Internal::TClonesArrayOwnershipRAII ownRaii(this);
+   TObjArray::SetOwner(kFALSE);
    TObjArray::Clear();
 }
 

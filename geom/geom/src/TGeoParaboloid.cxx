@@ -41,8 +41,10 @@ Begin_Macro
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
    top->Draw();
-   TView *view = gPad->GetView();
-   view->ShowAxis();
+   if (gPad) {
+      TView *view = gPad->GetView();
+      if (view) view->ShowAxis();
+   }
 }
 End_Macro
 */
@@ -141,7 +143,7 @@ void TGeoParaboloid::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoParaboloid::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoParaboloid::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    norm[0] = norm[1] = 0.0;
    if (TMath::Abs(point[2]) > fDz) {

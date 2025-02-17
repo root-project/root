@@ -29,7 +29,8 @@ TEST(RooWrapperPdf, Basics)
 
   RooWrapperPdf polPdf("polPdf", "polynomial PDF", pol);
 
-  EXPECT_GT(pol.getVal(x)*1.05, polPdf.getVal(x)) << "Wrapper pdf normalises.";
+  RooArgSet normSet{x};
+  EXPECT_GT(pol.getVal(normSet)*1.05, polPdf.getVal(normSet)) << "Wrapper pdf normalises.";
 
   RooArgSet intSet(x);
   RooArgSet numSet;

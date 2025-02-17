@@ -6,8 +6,8 @@
             "subTree2"
          ],
          "files": [
-            "PYspecTestFile5.root",
-            "PYspecTestFile6.root"
+            "CPPspecTestFile5.root",
+            "CPPspecTestFile6.root"
          ],
          "metadata": {
             "lumi": 1.0
@@ -18,7 +18,7 @@
             "subTree"
          ],
          "files": [
-            "PYspecTestFile4.root"
+            "CPPspecTestFile4.root"
          ],
          "metadata": {
             "lumi": 0.5
@@ -31,7 +31,7 @@
             "anotherTree"
          ],
          "files": [
-            "PYspecTestFile7.root"
+            "CPPspecTestFile7.root"
          ]
       },
       "friendChain1": {
@@ -39,9 +39,9 @@
             "subTree"
          ],
          "files": [
-            "PYspecTestFile2.root",
-            "PYspecTestFile3.root",
-            "PYspecTestFile4.root"
+            "CPPspecTestFile2.root",
+            "CPPspecTestFile3.root",
+            "CPPspecTestFile4.root"
          ]
       }
    },

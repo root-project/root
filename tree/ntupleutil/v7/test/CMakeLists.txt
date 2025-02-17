@@ -13,11 +13,16 @@ ROOT_STANDARD_LIBRARY_PACKAGE(CustomStructUtil
                               LINKDEF CustomStructUtilLinkDef.h
                               DEPENDENCIES RIO)
 configure_file(CustomStructUtil.hxx . COPYONLY)
-if(MSVC)
+if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET CustomStructUtil POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libCustomStructUtil.dll
                                      ${CMAKE_CURRENT_BINARY_DIR}/libCustomStructUtil.dll)
 endif()
 
 ROOT_ADD_GTEST(ntuple_importer ntuple_importer.cxx LIBRARIES ROOTNTupleUtil CustomStructUtil)
+ROOT_ADD_GTEST(ntuple_exporter ntuple_exporter.cxx LIBRARIES ROOTNTupleUtil)
 ROOT_ADD_GTEST(ntuple_inspector ntuple_inspector.cxx LIBRARIES ROOTNTupleUtil)
+
+if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+    target_link_libraries(ntuple_exporter stdc++fs)
+endif()

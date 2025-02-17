@@ -74,7 +74,8 @@ public:
   // Function evaluation
   double evaluate() const override ;
   void doEval(RooFit::EvalContext &ctx) const override;
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
+  std::string getUniqueFuncName() const;
 
   protected:
   // Post-processing of server redirection

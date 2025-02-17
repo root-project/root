@@ -39,17 +39,7 @@
 
 #include <TMath.h>
 
-using std::runtime_error;
 
-ClassImp(RooStats::HistFactory::RooBarlowBeestonLL);
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-/// Default constructor. Should only be used by proof.
-RooStats::HistFactory::RooBarlowBeestonLL::RooBarlowBeestonLL() : RooAbsReal("RooBarlowBeestonLL", "RooBarlowBeestonLL")
-{
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -240,7 +230,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::initializeBarlowCache() {
       if( ChannelBinDataMap.find(channel_name) == ChannelBinDataMap.end() ) {
    std::cout << "Error: channel with name: " << channel_name
         << " not found in BinDataMap" << std::endl;
-   throw runtime_error("BinDataMap");
+   throw std::runtime_error("BinDataMap");
       }
       double nData = ChannelBinDataMap[channel_name].at(bin_index);
       cache.nData = nData;
@@ -414,7 +404,7 @@ double RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
     if( _barlowCache.find( channel_name ) == _barlowCache.end() ) {
       std::cout << "Error: channel: " << channel_name
       << " not found in barlow Cache" << std::endl;
-      throw runtime_error("Channel not in barlow cache");
+      throw std::runtime_error("Channel not in barlow cache");
     }
 
     std::vector< BarlowCache >& channel_cache = _barlowCache[ channel_name ];
@@ -519,14 +509,14 @@ double RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
      std::cout << "Warning: Discriminant (B*B - 4AC) < 0" << std::endl;
      std::cout << "Warning: Taking B*B - 4*A*C == 0" << std::endl;
      discrim=0;
-     //throw runtime_error("BarlowBeestonLL::evaluate() : B*B - 4AC < 0");
+     //throw std::runtime_error("BarlowBeestonLL::evaluate() : B*B - 4AC < 0");
    }
    if( A <= 0 ) {
      std::cout << "Warning: A <= 0" << std::endl;
-     throw runtime_error("BarlowBeestonLL::evaluate() : A < 0");
+     throw std::runtime_error("BarlowBeestonLL::evaluate() : A < 0");
    }
 
-   gamma_hat_hat = ( -1*B + TMath::Sqrt(discrim) ) / (2*A);
+   gamma_hat_hat = ( -1*B + std::sqrt(discrim) ) / (2*A);
       }
 
       // If the quadratic term is 0, we simply
@@ -538,7 +528,7 @@ double RooStats::HistFactory::RooBarlowBeestonLL::evaluate() const
       // Check for NAN
       if( TMath::IsNaN(gamma_hat_hat) ) {
    std::cout << "ERROR: gamma hat hat is NAN" << std::endl;
-   throw runtime_error("BarlowBeestonLL::evaluate() : gamma hat hat is NAN");
+   throw std::runtime_error("BarlowBeestonLL::evaluate() : gamma hat hat is NAN");
       }
 
       if( gamma_hat_hat <= 0 ) {
@@ -599,7 +589,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
       if (_paramFixed[par->GetName()] != par->isConstant()) {
    cxcoutI(Minimization) << "RooStats::HistFactory::RooBarlowBeestonLL::evaluate(" << GetName() << ") constant status of parameter " << par->GetName() << " has changed from "
             << (_paramFixed[par->GetName()]?"fixed":"floating") << " to " << (par->isConstant()?"fixed":"floating")
-            << ", recalculating absolute minimum" << endl ;
+            << ", recalculating absolute minimum" << std::endl ;
    _absMinValid = false ;
    break ;
       }
@@ -610,7 +600,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
   // If we don't have the absolute minimum w.r.t all observables, calculate that first
   if (!_absMinValid) {
 
-    cxcoutI(Minimization) << "RooStats::HistFactory::RooBarlowBeestonLL::evaluate(" << GetName() << ") determining minimum likelihood for current configurations w.r.t all observable" << endl ;
+    cxcoutI(Minimization) << "RooStats::HistFactory::RooBarlowBeestonLL::evaluate(" << GetName() << ") determining minimum likelihood for current configurations w.r.t all observable" << std::endl ;
 
 
     // Save current values of non-marginalized parameters
@@ -636,7 +626,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
     _paramAbsMin.removeAll() ;
 
     // Only store non-constant parameters here!
-    std::unique_ptr<RooArgSet> tmp{(RooArgSet*) _par.selectByAttrib("Constant",false)};
+    std::unique_ptr<RooArgSet> tmp{_par.selectByAttrib("Constant",false)};
     _paramAbsMin.addClone(*tmp) ;
 
     _obsAbsMin.addClone(_obs) ;
@@ -658,7 +648,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::validateAbsMin() const
    ccxcoutI(Minimization) << (first?"":", ") << arg->GetName() << "=" << arg->getVal() ;
    first=false ;
       }
-      ccxcoutI(Minimization) << ")" << endl ;
+      ccxcoutI(Minimization) << ")" << std::endl ;
     }
 
     // Restore original parameter values

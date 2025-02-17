@@ -15,6 +15,7 @@
 
 #include "Rtypes.h"
 
+class TColorNumber;
 
 class TAttMarker {
 
@@ -46,6 +47,8 @@ public:
 
    static Style_t GetMarkerStyleBase(Style_t style);
    static Width_t GetMarkerLineWidth(Style_t style);
+
+   void SetMarkerColor(TColorNumber lcolor);
 
    ClassDef(TAttMarker,3);  //Marker attributes
 };

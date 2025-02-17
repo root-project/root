@@ -78,7 +78,6 @@ Begin_Macro
 End_Macro
 
 The structure of a directory is shown in TDirectoryFile::TDirectoryFile
-
 </details>
 */
 
@@ -152,6 +151,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TGlobal.h"
 #include "ROOT/RConcurrentHashColl.hxx"
 #include <memory>
+#include <inttypes.h>
 
 #ifdef R__FBSD
 #include <sys/extattr.h>
@@ -609,7 +609,7 @@ TFile::~TFile()
 ///
 /// TFile implementations providing asynchronous open functionality need to
 /// override this method to run the appropriate checks before calling this
-/// standard initialization part. See TXNetFile::Init for an example.
+/// standard initialization part. See TNetXNGFile::Init for an example.
 
 void TFile::Init(Bool_t create)
 {
@@ -664,6 +664,11 @@ void TFile::Init(Bool_t create)
       fFree        = new TList;
       fEND         = fBEGIN;    //Pointer to end of file
       new TFree(fFree, fBEGIN, Long64_t(kStartBigFile));  //Create new free list
+
+      //*-* -------------Check if we need to enable forward compatible with version
+      //*-* -------------prior to v6.30
+      if (gEnv->GetValue("TFile.v630forwardCompatibility", 0) == 1)
+         SetBit(k630forwardCompatibility);
 
       //*-* Write Directory info
       Int_t namelen= TNamed::Sizeof();
@@ -898,9 +903,16 @@ void TFile::Init(Bool_t create)
          } else if (fVersion != gROOT->GetVersionInt() && fVersion > 30000) {
             // Don't complain about missing streamer info for empty files.
             if (fKeys->GetSize()) {
-               Warning("Init","no StreamerInfo found in %s therefore preventing schema evolution when reading this file."
-                              " The file was produced with version %d.%02d/%02d of ROOT.",
-                              GetName(),  fVersion / 10000, (fVersion / 100) % (100), fVersion  % 100);
+               // #14068: we take into account the different way of expressing the version
+               const auto separator = fVersion < 63200 ? "/" : ".";
+               const auto thisVersion = gROOT->GetVersionInt();
+               const auto msg = "no StreamerInfo found in %s therefore preventing schema evolution when reading this file. "
+                                "The file was produced with ROOT version %d.%02d%s%02d, "
+                                "while the current version is %d.%02d.%02d";
+               Warning("Init", msg,
+                       GetName(),
+                       fVersion / 10000, (fVersion / 100) % (100), separator, fVersion  % 100,
+                       thisVersion / 10000, (thisVersion / 100) % (100), thisVersion  % 100);
             }
          }
       }
@@ -1486,10 +1498,9 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
    Long64_t nbytesl= nlast-nfirst+1;
    if (nbytesl > 2000000000) nbytesl = 2000000000;
    Int_t nbytes    = -Int_t (nbytesl);
-   Int_t nb        = sizeof(Int_t);
-   char * buffer   = new char[nb];
-   char * psave    = buffer;
-   tobuf(buffer, nbytes);
+   char buffer[sizeof(Int_t)];
+   char *pbuffer = buffer;
+   tobuf(pbuffer, nbytes);
    if (last == fEND-1) fEND = nfirst;
    Seek(nfirst);
    // We could not update the meta data for this block on the file.
@@ -1497,9 +1508,8 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
    // if we ever need to Recover the file before the block is actually
    // (attempted to be reused.
    // coverity[unchecked_value]
-   WriteBuffer(psave, nb);
+   WriteBuffer(buffer, sizeof(buffer));
    if (fMustFlush) Flush();
-   delete [] psave;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1562,128 +1572,166 @@ void TFile::Map(Option_t *opt)
 {
    TString options(opt);
    options.ToLower();
-   bool forComp = options.Contains("forcomp");
-   bool extended = options.Contains("extended");
+   const bool forComp = options.Contains("forcomp");
+   const bool extended = options.Contains("extended");
 
-   Short_t  keylen,cycle;
-   UInt_t   datime;
-   Int_t    nbytes,date,time,objlen;
-   date = 0;
-   time = 0;
-   Long64_t seekkey,seekpdir;
-   char    *buffer;
-   char     nwhc;
-   Long64_t idcur = fBEGIN;
+   const unsigned char nDigits = std::log10(fEND) + 1;
 
-   constexpr Int_t nwheader = 512;
-
-   char header[nwheader];
-   char classname[512];
-   char keyname[512];
-   char keytitle[512];
-   TString extrainfo;
-
-   unsigned char nDigits = std::log10(fEND) + 1;
-
-   while (idcur < fEND) {
-      Seek(idcur);
-      Int_t nread = nwheader;
-      if (idcur+nread >= fEND) nread = fEND-idcur-1;
-      if (ReadBuffer(header, nread)) {
-         // ReadBuffer returns kTRUE in case of failure.
-         Warning("Map","%s: failed to read the key data from disk at %lld.",
-                 GetName(),idcur);
+   std::optional<ROOT::Detail::TKeyMapNode> lastNode;
+   const auto tkeyInfos = WalkTKeys();
+   for (const auto &key : tkeyInfos) {
+      lastNode = key;
+      switch (key.fType) {
+      case ROOT::Detail::TKeyMapNode::kError:
+         Printf("Address = %" PRIu64 "\tNbytes = %u\t=====E R R O R=======", key.fAddr, key.fLen);
          break;
-      }
 
-      buffer=header;
-      frombuf(buffer, &nbytes);
-      if (!nbytes) {
-         Printf("Address = %lld\tNbytes = %d\t=====E R R O R=======", idcur, nbytes);
-         date = 0; time = 0;
+      case ROOT::Detail::TKeyMapNode::kGap:
+         Printf("Address = %" PRIu64 "\tNbytes = %d\t=====G A P===========", key.fAddr, -key.fLen);
          break;
-      }
-      if (nbytes < 0) {
-         Printf("Address = %lld\tNbytes = %d\t=====G A P===========", idcur, nbytes);
-         idcur -= nbytes;
-         Seek(idcur);
-         continue;
-      }
-      Version_t versionkey;
-      frombuf(buffer, &versionkey);
-      frombuf(buffer, &objlen);
-      frombuf(buffer, &datime);
-      frombuf(buffer, &keylen);
-      frombuf(buffer, &cycle);
-      if (versionkey > 1000) {
-         frombuf(buffer, &seekkey);
-         frombuf(buffer, &seekpdir);
-      } else {
-         Int_t skey,sdir;
-         frombuf(buffer, &skey);  seekkey  = (Long64_t)skey;
-         frombuf(buffer, &sdir);  seekpdir = (Long64_t)sdir;
-      }
-      frombuf(buffer, &nwhc);
-      if ( ((buffer-header) + nwhc) > nwheader ) // Don't read past the end of the part of the key we have read.
-         nwhc = nwheader - (buffer-header);
-      for (int i = 0;i < nwhc; i++) frombuf(buffer, &classname[i]);
-      classname[(int)nwhc] = '\0'; //cast to avoid warning with gcc3.4
-      if (idcur == fSeekFree) strlcpy(classname,"FreeSegments",512);
-      if (idcur == fSeekInfo) strlcpy(classname,"StreamerInfo",512);
-      if (idcur == fSeekKeys) strlcpy(classname,"KeysList",512);
 
-      if (extended) {
-         if ( (buffer-header) >= nwheader )
-            nwhc = 0;
-         else {
-            frombuf(buffer, &nwhc);
-            if (nwhc < 0)
-               nwhc = 0;
-            else if ( ((buffer-header) + nwhc) > nwheader ) // Don't read past the end of the part of the key we have read.
-               nwhc = nwheader - (buffer-header);
-         }
-         for (int i = 0;i < nwhc; i++) frombuf(buffer, &keyname[i]);
-         keyname[(int)nwhc] = '\0'; //cast to avoid warning with gcc3.4
+      case ROOT::Detail::TKeyMapNode::kKey:
+         TString extrainfo;
+         if (extended)
+            extrainfo.Form(" name: %-16s  title: %s", key.fKeyName.c_str(), key.fKeyTitle.c_str());
 
-         if ( (buffer-header) >= nwheader )
-            nwhc = 0;
-         else {
-            frombuf(buffer, &nwhc);
-            if (nwhc < 0)
-               nwhc = 0;
-            else if ( ((buffer-header) + nwhc) > nwheader ) // Don't read past the end of the part of the key we have read.
-               nwhc = nwheader - (buffer-header);
-         }
-         for (int i = 0;i < nwhc; i++) frombuf(buffer, &keytitle[i]);
-         keytitle[(int)nwhc] = '\0'; //cast to avoid warning with gcc3.4
-
-         extrainfo.Form(" name: %-16s  title: %s", keyname, keytitle);
-      }
-
-      TDatime::GetDateTime(datime, date, time);
-      if (!forComp) {
-         if (objlen != nbytes - keylen) {
-            Float_t cx = Float_t(objlen + keylen) / Float_t(nbytes);
-            Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s CX = %5.2f %s", date, time, nDigits + 1, idcur, nbytes, classname,
-                   cx, extrainfo.Data());
+         if (forComp) {
+            // Printing to help compare two files.
+            if (key.fObjLen != static_cast<Int_t>(key.fLen) - key.fKeyLen) {
+               Float_t cx = static_cast<float>(key.fObjLen + key.fKeyLen) / key.fLen;
+               Printf("At:%-*" PRIu64 "  N=%-8u K=%-3d O=%-8d  %-14s CX = %5.2f %s", nDigits + 1, key.fAddr, key.fLen,
+                      key.fKeyLen, key.fObjLen, key.fClassName.c_str(), cx, extrainfo.Data());
+            } else {
+               Printf("At:%-*" PRIu64 "  N=%-8u K=%-3d O=%-8d  %-14s CX =  1    %s", nDigits + 1, key.fAddr, key.fLen,
+                      key.fKeyLen, key.fObjLen, key.fClassName.c_str(), extrainfo.Data());
+            }
          } else {
-            Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s            %s", date, time, nDigits + 1, idcur, nbytes, classname, extrainfo.Data());
-         }
-      } else {
-         // Printing to help compare two files.
-         if (objlen != nbytes - keylen) {
-            Float_t cx = Float_t(objlen + keylen) / Float_t(nbytes);
-            Printf("At:%-*lld  N=%-8d K=%-3d O=%-8d  %-14s CX = %5.2f %s", nDigits+1, idcur, nbytes, keylen, objlen, classname, cx, extrainfo.Data());
-         } else {
-            Printf("At:%-*lld  N=%-8d K=%-3d O=%-8d  %-14s CX =  1    %s", nDigits+1, idcur, nbytes, keylen, objlen, classname, extrainfo.Data());
+            Int_t date, time;
+            TDatime::GetDateTime(key.fDatime, date, time);
+            if (key.fObjLen != static_cast<Int_t>(key.fLen) - key.fKeyLen) {
+               Float_t cx = static_cast<float>(key.fObjLen + key.fKeyLen) / key.fLen;
+               Printf("%d/%06d  At:%-*" PRIu64 "  N=%-8u  %-14s CX = %5.2f %s", date, time, nDigits + 1, key.fAddr,
+                      key.fLen, key.fClassName.c_str(), cx, extrainfo.Data());
+            } else {
+               Printf("%d/%06d  At:%-*" PRIu64 "  N=%-8u  %-14s            %s", date, time, nDigits + 1, key.fAddr,
+                      key.fLen, key.fClassName.c_str(), extrainfo.Data());
+            }
          }
       }
-      idcur += nbytes;
    }
-   if (!forComp)
-      Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s",date,time, nDigits+1, idcur,1,"END");
-   else
-      Printf("At:%-*lld  N=%-8d K=    O=          %-14s", nDigits+1, idcur,1,"END");
+
+   if (!forComp) {
+      Int_t datime = lastNode ? lastNode->fDatime : 0;
+      Int_t date, time;
+      TDatime::GetDateTime(datime, date, time);
+      Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s", date, time, nDigits + 1, fEND, 1, "END");
+   } else {
+      Printf("At:%-*lld  N=%-8d K=    O=          %-14s", nDigits + 1, fEND, 1, "END");
+   }
+}
+
+ROOT::Detail::TKeyMapIterable TFile::WalkTKeys()
+{
+   return ROOT::Detail::TKeyMapIterable(this);
+}
+
+ROOT::Detail::TKeyMapIterable::TIterator::TIterator(TFile *file, std::uint64_t addr) : fFile(file), fCurAddr(addr)
+{
+   if (addr == 0)
+      fCurAddr = fFile->fBEGIN;
+   Advance();
+}
+
+std::optional<ROOT::Detail::TKeyMapNode> ROOT::Detail::TKeyMapIterable::TIterator::Next()
+{
+   static constexpr int headerSize = 512;
+
+   const std::uint64_t idcur = fCurAddr;
+   const std::uint64_t end = fFile->fEND;
+   if (idcur >= end)
+      return std::nullopt;
+
+   fFile->Seek(idcur);
+   auto nread = headerSize;
+   if (idcur + nread >= end)
+      nread = end - idcur - 1;
+
+   char header[headerSize];
+   if (fFile->ReadBuffer(header, nread)) {
+      // ReadBuffer returns kTRUE in case of failure.
+      auto node = ROOT::Detail::TKeyMapNode{idcur, ROOT::Detail::TKeyMapNode::kError};
+      fCurAddr = end;
+      return node;
+   }
+
+   char *buffer = header;
+   Int_t nbytes;
+   frombuf(buffer, &nbytes);
+   if (!nbytes) {
+      auto node = ROOT::Detail::TKeyMapNode{idcur, ROOT::Detail::TKeyMapNode::kError};
+      fCurAddr = end;
+      return node;
+   }
+
+   if (nbytes < 0) {
+      // free slot
+      auto node =
+         ROOT::Detail::TKeyMapNode{idcur, ROOT::Detail::TKeyMapNode::kGap, static_cast<std::uint32_t>(-nbytes)};
+      fCurAddr -= nbytes;
+      return node;
+   }
+
+   auto node = ROOT::Detail::TKeyMapNode{idcur, ROOT::Detail::TKeyMapNode::kKey, static_cast<std::uint32_t>(nbytes)};
+   frombuf(buffer, &node.fKeyVersion);
+   frombuf(buffer, &node.fObjLen);
+   frombuf(buffer, &node.fDatime);
+   frombuf(buffer, &node.fKeyLen);
+   frombuf(buffer, &node.fCycle);
+   if (node.fKeyVersion > 1000) {
+      frombuf(buffer, &node.fSeekKey);
+      frombuf(buffer, &node.fSeekPdir);
+   } else {
+      Int_t skey, sdir;
+      frombuf(buffer, &skey);
+      frombuf(buffer, &sdir);
+      node.fSeekKey = static_cast<Long64_t>(skey);
+      node.fSeekPdir = static_cast<Long64_t>(sdir);
+   }
+
+   const auto readString = [&buffer, &header](bool skipCheck = false) {
+      char stringLen;
+      char str[256];
+      if (!skipCheck && ((buffer - header) >= headerSize)) {
+         stringLen = 0;
+      } else {
+         frombuf(buffer, &stringLen);
+         if (stringLen < 0)
+            stringLen = 0;
+         else if ((buffer - header) + stringLen > headerSize)
+            stringLen = headerSize - (buffer - header);
+      }
+      for (int i = 0; i < stringLen; ++i)
+         frombuf(buffer, &str[i]);
+      str[static_cast<int>(stringLen)] = 0;
+
+      return std::string(str, stringLen);
+   };
+
+   node.fClassName = readString(true);
+
+   if (idcur == static_cast<std::uint64_t>(fFile->fSeekFree))
+      node.fClassName = "FreeSegments";
+   else if (idcur == static_cast<std::uint64_t>(fFile->fSeekInfo))
+      node.fClassName = "StreamerInfo";
+   else if (idcur == static_cast<std::uint64_t>(fFile->fSeekKeys))
+      node.fClassName = "KeysList";
+
+   node.fKeyName = readString();
+   node.fKeyTitle = readString();
+
+   fCurAddr += nbytes;
+
+   return node;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3082,7 +3130,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       if (info->IsA() != TStreamerInfo::Class()) {
          continue;
       }
-      if (strncmp(info->GetName(), "auto_ptr<", strlen("auto_ptr<")) == 0) {
+      if (strncmp(info->GetName(), "auto_ptr<", std::char_traits<char>::length("auto_ptr<")) == 0) {
          continue;
       }
       TClass *cl = TClass::GetClass(info->GetName());
@@ -4104,13 +4152,19 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
          ssize_t len = getxattr(fileurl.GetFile(), "eos.url.xroot", nullptr, 0);
          if (len > 0) {
             std::string xurl(len, 0);
-            if (getxattr(fileurl.GetFile(), "eos.url.xroot", &xurl[0], len) == len) {
-               if ((f = TFile::Open(xurl.c_str(), options, ftitle, compress, netopt))) {
-                  if (!f->IsZombie()) {
-                     return f;
-                  } else {
-                     delete f;
-                     f = nullptr;
+            std::string fileNameFromUrl{fileurl.GetFile()};
+            if (getxattr(fileNameFromUrl.c_str(), "eos.url.xroot", &xurl[0], len) == len) {
+               // Sometimes the `getxattr` call may return an invalid URL due
+               // to the POSIX attribute not being yet completely filled by EOS.
+               if (auto baseName = fileNameFromUrl.substr(fileNameFromUrl.find_last_of("/") + 1);
+                   std::equal(baseName.crbegin(), baseName.crend(), xurl.crbegin())) {
+                  if ((f = TFile::Open(xurl.c_str(), options, ftitle, compress, netopt))) {
+                     if (!f->IsZombie()) {
+                        return f;
+                     } else {
+                        delete f;
+                        f = nullptr;
+                     }
                   }
                }
             }
@@ -4125,7 +4179,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
    TString opts(options);
    Int_t ito = opts.Index("TIMEOUT=");
    if (ito != kNPOS) {
-      TString sto = opts(ito + strlen("TIMEOUT="), opts.Length());
+      TString sto = opts(ito + std::char_traits<char>::length("TIMEOUT="), opts.Length());
       while (!(sto.IsDigit()) && !(sto.IsNull())) { sto.Remove(sto.Length()-1,1); }
       if (!(sto.IsNull())) {
          // Timeout in millisecs
@@ -4278,8 +4332,9 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
                   f = (TFile*) h->ExecPlugin(4, name.Data(), option, ftitle, compress);
             } else {
                // Just try to open it locally but via TFile::Open, so that we pick-up the correct
-               // plug-in in the case file name contains information about a special backend (e.g.
-               f = TFile::Open(urlname.GetFileAndOptions(), option, ftitle, compress);
+               // plug-in in the case file name contains information about a special backend (e.g.)
+               if (strcmp(name, urlname.GetFileAndOptions()) != 0)
+                  f = TFile::Open(urlname.GetFileAndOptions(), option, ftitle, compress);
             }
          }
       }
@@ -4287,7 +4342,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
       if (f && f->IsZombie()) {
          TString newUrl = f->GetNewUrl();
          delete f;
-         if( newUrl.Length() && gEnv->GetValue("TFile.CrossProtocolRedirects", 1) )
+         if( newUrl.Length() && (newUrl != name) && gEnv->GetValue("TFile.CrossProtocolRedirects", 1) )
             f = TFile::Open( newUrl, option, ftitle, compress );
          else
             f = nullptr;
@@ -4333,7 +4388,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 ///     TFile::Open(const char *, ...)
 ///
 /// To be effective, the underlying TFile implementation must be able to
-/// support asynchronous open functionality. Currently, only TXNetFile
+/// support asynchronous open functionality. Currently, only TNetXNGFile
 /// supports it. If the functionality is not implemented, this call acts
 /// transparently by returning an handle with the arguments for the
 /// standard synchronous open run by TFile::Open(TFileOpenHandle *).
@@ -4390,7 +4445,7 @@ TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
       if (type == kNet) {
          // Network files
          if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
-            (!strcmp(h->GetClass(),"TXNetFile") || !strcmp(h->GetClass(),"TNetXNGFile"))
+            !strcmp(h->GetClass(),"TNetXNGFile")
             && h->LoadPlugin() == 0) {
             f = (TFile*) h->ExecPlugin(6, name.Data(), option, ftitle, compress, netopt, kTRUE);
             notfound = kFALSE;

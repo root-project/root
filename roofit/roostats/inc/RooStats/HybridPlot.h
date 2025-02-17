@@ -118,7 +118,7 @@ namespace RooStats {
       TVirtualPad * fPad;         ///< The pad where it has been drawn
       bool fVerbose;              ///< verbosity flag
 
-      ClassDefOverride(HybridPlot,1)   // Provides the plots for an HybridResult
+      ClassDefOverride(HybridPlot,0)   // Provides the plots for an HybridResult
    };
 }
 

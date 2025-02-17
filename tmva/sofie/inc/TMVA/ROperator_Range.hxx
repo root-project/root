@@ -6,6 +6,7 @@
 #include "TMVA/RModel.hxx"
 
 #include <sstream>
+#include <algorithm>
 
 namespace TMVA{
 namespace Experimental{
@@ -62,17 +63,50 @@ public:
             std::runtime_error("TMVA SOFIE Range Op Input Tensor " + fNDelta + "is not found in model");
       }
       ETensorType type = ConvertStringToType(fType);
-      fShape = {Dim{"range_size"}};
-      model.AddDynamicTensor(fNOutput, type, fShape);
+      if (model.IsInitializedTensor(fNStart) && model.IsInitializedTensor(fNDelta) && model.IsInitializedTensor(fNLimit)) {
+         T * start = static_cast<T*>(model.GetInitializedTensorData(fNStart).get());
+         T * limit = static_cast<T*>(model.GetInitializedTensorData(fNLimit).get());
+         T * delta = static_cast<T*>(model.GetInitializedTensorData(fNDelta).get());
+         if (!start || !delta || !limit)
+            std::runtime_error("TMVA SOFIE Range Op Input Tensor has invalid input data");
+         T a = *start;
+         T b = *limit;
+         T d = *delta;
+         int number_of_elements = std::max( static_cast<double>(std::ceil( (b - a) / d )) , 0. );
+         std::vector<T> output(number_of_elements);
+         for (int i=0; i<number_of_elements; ++i) {
+            output[i] =  a + (i * d);
+         }
+         std::vector<size_t> shape = {static_cast<size_t>(number_of_elements)};
+         model.AddConstantTensor(fNOutput,shape, output.data());
+         fIsOutputConstant = true;
+         // set the input tensor not writable
+         model.SetNotWritableInitializedTensor(fNStart);
+         model.SetNotWritableInitializedTensor(fNDelta);
+         model.SetNotWritableInitializedTensor(fNLimit);
+      }
+      else {
+         fShape = {Dim{"range_size"}};
+         model.AddDynamicTensor(fNOutput, type, fShape);
+      }
+      if (model.Verbose()) {
+         std::cout << "Range -> output is " << fNOutput << " ";
+         if (fIsOutputConstant) std::cout << ConvertDynamicShapeToString(fShape) << std::endl;
+         else std::cout << ConvertShapeToString(model.GetTensorShape(fNOutput)) << std::endl;
+      }
    }
 
    std::string Generate(std::string OpName) override {
+
+      std::stringstream out;
+      out << "\n//------ Range\n";
+      if (fIsOutputConstant) return out.str();
+
       OpName = "op_" + OpName;
       if (fShape.empty()) {
          throw std::runtime_error("TMVA SOFIE Range operator called to Generate without being initialized first");
       }
-      std::stringstream out;
-      out << "\n//------ Range\n";
+
       std::string sizeName = fShape[0].param;
       out << SP << "size_t " << sizeName << " = static_cast<size_t>(std::max(std::ceil((static_cast<float>(*tensor_" << fNLimit << ") - static_cast<float>(*tensor_" << fNStart << ")) / static_cast<float>(*tensor_" << fNDelta << ")), 0.0f));\n";
       out << SP << "if (" << sizeName << " > " << "fTensor_" << fNOutput << ".size() ){\n";

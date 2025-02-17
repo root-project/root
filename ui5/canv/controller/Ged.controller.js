@@ -43,12 +43,15 @@ sap.ui.define([
          this.getView().byId('ged_page').removeAllContent();
 
          // set dummy model
-         this.getView().setModel(new JSONModel({ SelectedClass: 'none' }));
+         this.getView().setModel(new JSONModel({ SelectedClass: 'none', SelectedPlace: '' }));
 
          // remove references
          this.currentPainter = null;
          this.currentPadPainter = null;
          this.currentPlace = undefined;
+         this.currentHistPainter = null;
+         this.currentHistAxis = '';
+
 
          // TODO: deregsiter for all events
       },
@@ -85,7 +88,6 @@ sap.ui.define([
       /// data object includes _kind, _painter and _handle (optionally)
       modelPropertyChange(evnt, data) {
          let pars = evnt.getParameters();
-         console.log('Model property changes', pars.path, pars.value, data._kind);
 
          if (data._handle) {
             if (typeof data._handle.verifyDirectChange === 'function')
@@ -140,32 +142,36 @@ sap.ui.define([
       },
 
       getAxisHandle() {
-         if (this.currentPainter)
-            switch (this.currentPlace) {
-               case 'xaxis': return this.currentPainter.x_handle;
-               case 'yaxis': return this.currentPainter.y_handle;
-               case 'zaxis': return this.currentPainter.z_handle;
-            }
-         return null;
+         const fp = this.currentPainter?.getFramePainter();
+         if (!fp || !this.currentPlace)
+            return this.currentPainter;
+
+         let found = null;
+         ['x_handle','y_handle','z_handle','x2_handle', 'y2_handle', 'z2_handle'].forEach(name => {
+            const handle = fp[name];
+            if ((handle?.hist_painter === this.currentPainter) && (handle?.hist_axis === this.currentPlace))
+               found = handle;
+         });
+
+         return found;
       },
 
       setAxisModel(model) {
-         let obj, painter, is_gaxis = !this.currentPlace, axis_chopt = '', axis_ticksize = 0, color_title = '';
-         if (is_gaxis) {
-            painter = this.currentPainter;
-            obj = painter.getObject();
+         let painter = this.getAxisHandle(),
+             obj = painter?.getObject(),
+             axis_chopt = '', axis_ticksize = 0, color_title = '';
+         if (painter?.is_gaxis) {
             axis_chopt = obj.fChopt;
             axis_ticksize = obj.fTickSize;
             color_title = this.currentPadPainter.getColor(obj.fTextColor);
          } else {
-            obj = this.currentPainter.getObject(this.currentPlace);
-            painter = this.getAxisHandle();
             axis_ticksize = obj.fTickLength;
             color_title = this.currentPadPainter.getColor(obj.fTitleColor);
          }
 
          let data = {
-             is_gaxis,
+             is_gaxis: painter?.is_gaxis,
+             mode2d: !painter.hist_painter?.options.Mode3D,
              specialRefresh: 'setAxisModel',
              axis: obj,
              axis_chopt,
@@ -174,9 +180,11 @@ sap.ui.define([
              color_label: this.currentPadPainter.getColor(obj.fLabelColor),
              center_label: obj.TestBit(this.getAxisBit('kCenterLabels')),
              vert_label: obj.TestBit(this.getAxisBit('kLabelsVert')),
+             font_label: painter.labelsFont?.index || 0,
              color_title,
              center_title: obj.TestBit(this.getAxisBit('kCenterTitle')),
              rotate_title: obj.TestBit(this.getAxisBit('kRotateTitle')),
+             font_title: painter.titleFont?.index || 0,
          };
 
          model.setData(data);
@@ -185,21 +193,19 @@ sap.ui.define([
       processAxisModelChange(evnt /*, data */) {
          let pars = evnt.getParameters(),
              item = pars.path.substr(1),
+             handle = this.getAxisHandle(),
+             axis = handle?.getObject(),
+             is_gaxis = handle?.is_gaxis,
+             kind = '',
              exec = '',
-             painter = this.currentPainter,
-             kind = this.currentPlace,
-             is_gaxis = !kind,
-             axis = painter.getObject(kind),
-             col;
+             col, fontid;
 
          // while axis painter is temporary object, we should not try change it attributes
+         if (!this.currentPadPainter || !axis)
+            return;
 
-         if (!this.currentPadPainter || !axis) return;
-
-         if (!is_gaxis && (typeof kind == 'string') && (kind.indexOf('axis') == 1))
-            kind = kind.slice(0,1);
-         else
-            kind = '';
+         if (!is_gaxis && handle?.hist_painter && handle?.hist_axis)
+            kind = handle.hist_axis;
 
          switch(item) {
             case 'axis/fTitle':
@@ -211,11 +217,11 @@ sap.ui.define([
                   axis.fLineColor = col;
                else
                   axis.fAxisColor = col;
-               exec = this.getColorExec(painter, pars.value, is_gaxis ? 'SetLineColor' : 'SetAxisColor');
+               exec = this.getColorExec(this.currentPadPainter, pars.value, is_gaxis ? 'SetLineColor' : 'SetAxisColor');
                break;
             case 'color_label':
                axis.fLabelColor = this.currentPadPainter.addColor(pars.value);
-               exec = this.getColorExec(painter, pars.value, 'SetLabelColor');
+               exec = this.getColorExec(this.currentPadPainter, pars.value, 'SetLabelColor');
                break;
             case 'center_label':
                axis.InvertBit(this.getAxisBit('kCenterLabels'));
@@ -224,6 +230,11 @@ sap.ui.define([
             case 'vert_label':
                axis.InvertBit(this.getAxisBit('kLabelsVert'));
                exec = `exec:SetBit(TAxis::kLabelsVert, ${pars.value ? true : false})`;
+               break;
+            case 'font_label':
+               fontid = parseInt(pars.value)*10 + 2;
+               axis.fLabelFont = fontid;
+               exec = `exec:SetLabelFont(${fontid})`;
                break;
             case 'axis/fLabelOffset':
                exec = `exec:SetLabelOffset(${pars.value})`;
@@ -237,7 +248,7 @@ sap.ui.define([
                   axis.fTextColor = col;
                else
                   axis.fTitleColor = col;
-               exec = this.getColorExec(painter, pars.value, 'SetTitleColor');
+               exec = this.getColorExec(this.currentPadPainter, pars.value, 'SetTitleColor');
                break;
             case 'center_title':
                axis.InvertBit(this.getAxisBit('kCenterTitle'));
@@ -246,6 +257,14 @@ sap.ui.define([
             case 'rotate_title':
                axis.InvertBit(this.getAxisBit('kRotateTitle'));
                exec = is_gaxis ? `exec:SetBit(TAxis::kRotateTitle, ${pars.value ? true : false})` : `exec:RotateTitle(${pars.value ? true : false})`;
+               break;
+            case 'font_title':
+               fontid = parseInt(pars.value)*10 + 2;
+               if (is_gaxis)
+                  axis.fTextFont = fontid;
+               else
+                  axis.fTitleFont = fontid;
+               exec = `exec:SetTitleFont(${fontid})`;
                break;
             case 'axis_ticksize':
                if (is_gaxis)
@@ -267,7 +286,7 @@ sap.ui.define([
          }
 
          // TAxis belongs to main painter like TH1, therefore submit commands there
-         let main = is_gaxis ? painter : this.currentPainter.getMainPainter(true);
+         const main = is_gaxis ? handle : handle.hist_painter;
 
          if (main?.snapid)
             main.interactiveRedraw('pad', exec, kind);
@@ -281,7 +300,8 @@ sap.ui.define([
 
          let data = {
             logbase: handle.logbase || 0,
-            handle: handle,
+            handle,
+            mode2d: true,
             ticks_size: handle.ticksSize/handle.scaling_size,
             labels_offset: handle.labelsOffset/handle.scaling_size,
             labels_rotate: handle.labelsFont.angle != 0,
@@ -323,19 +343,29 @@ sap.ui.define([
          opts.Mode3D = opts.Mode3Dindx > 0;
 
          opts.Lego = parseInt(opts.Lego);
+         opts.Surf = parseInt(opts.Surf);
 
          let cl = this.getView().getModel().getProperty('/SelectedClass');
 
          if ((typeof cl == 'string') && opts.Mode3D && (cl.indexOf('ROOT::Experimental::RHist') == 0))
             opts.Lego = 12;
 
-         opts.Contor = parseInt(opts.Contor);
+         opts.Contour = parseInt(opts.Contour);
          opts.ErrorKind = parseInt(opts.ErrorKind);
+         opts.BoxStyle = parseInt(opts.BoxStyle);
+         opts.GLBox = parseInt(opts.GLBox);
 
          this.currentPainter?.interactiveRedraw('pad', 'drawopt');
       },
 
-      async onObjectSelect(padpainter, painter, place) {
+      async onObjectSelect(padpainter, painter) {
+         let place = '';
+         if (painter.hist_painter && painter.hist_axis) {
+            // always keep reference on hist painter for x/y/z axis
+            // while axis painter is temporary and can change at any time
+            place = painter.hist_axis;
+            painter = painter.hist_painter;
+         }
 
          if ((this.currentPainter === painter) && (place === this.currentPlace)) return;
 
@@ -343,22 +373,15 @@ sap.ui.define([
          this.currentPainter = painter;
          this.currentPlace = place;
 
-         let obj = painter.getObject(place), selectedClass = '';
+         if (place)
+            painter = this.getAxisHandle();
 
-         if (place == 'xaxis' && painter.x_handle) {
-            painter = painter.x_handle;
-            selectedClass = painter.getAxisType();
-         } else if (place == 'yaxis' && painter.y_handle) {
-            painter = painter.y_handle;
-            selectedClass = painter.getAxisType();
-         } else if (place == 'zaxis' && painter.z_handle) {
-            painter = painter.z_handle;
-            selectedClass = painter.getAxisType();
-         } else {
-            selectedClass = obj ? obj._typename : painter.getObjectHint();
-         }
+         let obj = painter.getObject(),
+             selectedClass = obj?._typename ?? painter.getObjectHint();
+
 
          this.getView().getModel().setProperty('/SelectedClass', selectedClass);
+         this.getView().getModel().setProperty('/SelectedPlace', place);
 
          let oPage = this.getView().byId('ged_page');
          oPage.removeAllContent();
@@ -371,7 +394,8 @@ sap.ui.define([
             return;
          }
 
-         if (painter.lineatt?.used && !painter.lineatt.not_standard) {
+         if (painter.lineatt?.used && (selectedClass !== 'TAxis') && (selectedClass !== 'TGaxis')) {
+            console.log('Assign line attributes', painter.getObject()._typename, 'not_standard', painter.lineatt.not_standard);
             let model = new JSONModel( { attline: painter.lineatt } );
             model.attachPropertyChange({ _kind: 'TAttLine', _painter: painter, _handle: painter.lineatt }, this.modelPropertyChange, this);
             await this.addFragment(oPage, 'TAttLine', model);
@@ -408,25 +432,21 @@ sap.ui.define([
          }
 
          if (selectedClass == 'TAxis') {
-            let model = new JSONModel({ is_taxis: true });
+            let model = new JSONModel({ is_gaxis: false });
             this.setAxisModel(model);
             model.attachPropertyChange({ _kind: 'TAxis' }, this.processAxisModelChange, this);
             await this.addFragment(oPage, 'Axis', model);
-         }
-
-         if (selectedClass == 'TGaxis') {
-            let model = new JSONModel({ is_taxis: false });
+         } else if (selectedClass == 'TGaxis') {
+            let model = new JSONModel({ is_gaxis: true });
             this.setAxisModel(model);
             model.attachPropertyChange({ _kind: 'TGaxis' }, this.processAxisModelChange, this);
             await this.addFragment(oPage, 'Axis', model);
-         }
-
-         if (typeof painter.getHisto == 'function') {
+         } else if (typeof painter.getHisto == 'function') {
             painter.options.Mode3Dindx = painter.options.Mode3D ? 1 : 0;
             painter.options.Error = !!painter.options.Error;
             painter.options.Palette = !!painter.options.Palette;
             painter.options.Zero = !!painter.options.Zero;
-            let model = new JSONModel({ opts : painter.options });
+            let model = new JSONModel({ opts: painter.options });
             model.attachPropertyChange({ options: painter.options }, this.processHistModelChange, this);
             await this.addFragment(oPage, 'Hist', model);
          }
@@ -459,7 +479,7 @@ sap.ui.define([
          if (!evnt) return;
 
          if (evnt.what == 'select')
-            this.onObjectSelect(evnt.padpainter, evnt.painter, evnt.place);
+            this.onObjectSelect(evnt.padpainter, evnt.painter);
          else if (evnt.what == 'redraw')
             this.onObjectRedraw(evnt.padpainter, evnt.painter);
          else if (evnt.what == 'padredraw')

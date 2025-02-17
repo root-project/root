@@ -85,7 +85,7 @@ void ROOT::Experimental::Internal::RClusterPool::ExecReadClusters()
             const auto &item = readItems[i];
             // `kInvalidDescriptorId` is used as a marker for thread cancellation. Such item causes the
             // thread to terminate; thus, it must appear last in the queue.
-            if (R__unlikely(item.fClusterKey.fClusterId == kInvalidDescriptorId)) {
+            if (R__unlikely(item.fClusterKey.fClusterId == ROOT::kInvalidDescriptorId)) {
                R__ASSERT(i == (readItems.size() - 1));
                return;
             }
@@ -97,19 +97,6 @@ void ROOT::Experimental::Internal::RClusterPool::ExecReadClusters()
 
          auto clusters = fPageSource.LoadClusters(clusterKeys);
          for (std::size_t i = 0; i < clusters.size(); ++i) {
-            // Meanwhile, the user might have requested clusters outside the look-ahead window, so that we don't
-            // need the cluster anymore, in which case we simply discard it right away, before moving it to the pool
-            bool discard;
-            {
-               std::unique_lock<std::mutex> lock(fLockWorkQueue);
-               discard = std::any_of(fInFlightClusters.begin(), fInFlightClusters.end(),
-                                     [thisClusterId = clusters[i]->GetId()](auto &inFlight) {
-                                        return inFlight.fClusterKey.fClusterId == thisClusterId && inFlight.fIsExpired;
-                                     });
-            }
-            if (discard) {
-               clusters[i].reset();
-            }
             readItems[i].fPromise.set_value(std::move(clusters[i]));
          }
          readItems.erase(readItems.begin(), readItems.begin() + clusters.size());
@@ -118,7 +105,7 @@ void ROOT::Experimental::Internal::RClusterPool::ExecReadClusters()
 }
 
 ROOT::Experimental::Internal::RCluster *
-ROOT::Experimental::Internal::RClusterPool::FindInPool(DescriptorId_t clusterId) const
+ROOT::Experimental::Internal::RClusterPool::FindInPool(ROOT::DescriptorId_t clusterId) const
 {
    for (const auto &cptr : fPool) {
       if (cptr && (cptr->GetId() == clusterId))
@@ -144,7 +131,7 @@ namespace {
 
 /// Helper class for the (cluster, column list) pairs that should be loaded in the background
 class RProvides {
-   using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
+   using DescriptorId_t = ROOT::DescriptorId_t;
    using ColumnSet_t = ROOT::Experimental::Internal::RCluster::ColumnSet_t;
 
 public:
@@ -195,10 +182,10 @@ public:
 } // anonymous namespace
 
 ROOT::Experimental::Internal::RCluster *
-ROOT::Experimental::Internal::RClusterPool::GetCluster(DescriptorId_t clusterId,
+ROOT::Experimental::Internal::RClusterPool::GetCluster(ROOT::DescriptorId_t clusterId,
                                                        const RCluster::ColumnSet_t &physicalColumns)
 {
-   std::set<DescriptorId_t> keep;
+   std::set<ROOT::DescriptorId_t> keep;
    RProvides provide;
    {
       auto descriptorGuard = fPageSource.GetSharedDescriptorGuard();
@@ -207,7 +194,7 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(DescriptorId_t clusterId,
       auto prev = clusterId;
       for (unsigned int i = 0; i < fWindowPre; ++i) {
          prev = descriptorGuard->FindPrevClusterId(prev);
-         if (prev == kInvalidDescriptorId)
+         if (prev == ROOT::kInvalidDescriptorId)
             break;
          keep.insert(prev);
       }
@@ -217,22 +204,22 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(DescriptorId_t clusterId,
       provideInfo.fPhysicalColumnSet = physicalColumns;
       provideInfo.fBunchId = fBunchId;
       provideInfo.fFlags = RProvides::kFlagRequired;
-      for (DescriptorId_t i = 0, next = clusterId; i < 2 * fClusterBunchSize; ++i) {
+      for (ROOT::DescriptorId_t i = 0, next = clusterId; i < 2 * fClusterBunchSize; ++i) {
          if (i == fClusterBunchSize)
             provideInfo.fBunchId = ++fBunchId;
 
          auto cid = next;
          next = descriptorGuard->FindNextClusterId(cid);
-         if (next != kInvalidClusterIndex) {
+         if (next != ROOT::kInvalidNTupleIndex) {
             if (!fPageSource.GetEntryRange().IntersectsWith(descriptorGuard->GetClusterDescriptor(next)))
-               next = kInvalidClusterIndex;
+               next = ROOT::kInvalidNTupleIndex;
          }
-         if (next == kInvalidDescriptorId)
+         if (next == ROOT::kInvalidDescriptorId)
             provideInfo.fFlags |= RProvides::kFlagLast;
 
          provide.Insert(cid, provideInfo);
 
-         if (next == kInvalidDescriptorId)
+         if (next == ROOT::kInvalidDescriptorId)
             break;
          provideInfo.fFlags = 0;
       }
@@ -260,9 +247,6 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(DescriptorId_t clusterId,
 
       for (auto itr = fInFlightClusters.begin(); itr != fInFlightClusters.end(); ) {
          R__ASSERT(itr->fFuture.valid());
-         itr->fIsExpired =
-            !provide.Contains(itr->fClusterKey.fClusterId) && (keep.count(itr->fClusterKey.fClusterId) == 0);
-
          if (itr->fFuture.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
             // Remove the set of columns that are already scheduled for being loaded
             provide.Erase(itr->fClusterKey.fClusterId, itr->fClusterKey.fPhysicalColumnSet);
@@ -271,12 +255,18 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(DescriptorId_t clusterId,
          }
 
          auto cptr = itr->fFuture.get();
-         // If cptr is nullptr, the cluster expired previously and was released by the I/O thread
-         if (!cptr || itr->fIsExpired) {
+         R__ASSERT(cptr);
+
+         const bool isExpired =
+            !provide.Contains(itr->fClusterKey.fClusterId) && (keep.count(itr->fClusterKey.fClusterId) == 0);
+         if (isExpired) {
             cptr.reset();
             itr = fInFlightClusters.erase(itr);
             continue;
          }
+
+         // Noop unless the page source has a task scheduler
+         fPageSource.UnzipCluster(cptr.get());
 
          // We either put a fresh cluster into a free slot or we merge the cluster with an existing one
          auto existingCluster = FindInPool(cptr->GetId());
@@ -338,7 +328,7 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(DescriptorId_t clusterId,
 }
 
 ROOT::Experimental::Internal::RCluster *
-ROOT::Experimental::Internal::RClusterPool::WaitFor(DescriptorId_t clusterId,
+ROOT::Experimental::Internal::RClusterPool::WaitFor(ROOT::DescriptorId_t clusterId,
                                                     const RCluster::ColumnSet_t &physicalColumns)
 {
    while (true) {
@@ -374,9 +364,13 @@ ROOT::Experimental::Internal::RClusterPool::WaitFor(DescriptorId_t clusterId,
       }
 
       auto cptr = itr->fFuture.get();
+      // We were blocked waiting for the cluster, so assume that nobody discarded it.
+      R__ASSERT(cptr != nullptr);
+
+      // Noop unless the page source has a task scheduler
+      fPageSource.UnzipCluster(cptr.get());
+
       if (result) {
-         // Noop unless the page source has a task scheduler
-         fPageSource.UnzipCluster(cptr.get());
          result->Adopt(std::move(*cptr));
       } else {
          auto idxFreeSlot = FindFreeSlot();

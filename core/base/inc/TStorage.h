@@ -137,7 +137,9 @@ inline FreeHookFun_t TStorage::GetFreeHook() { return fgFreeHook; }
 namespace ROOT {
 namespace Internal {
 using FreeIfTMapFile_t = bool(void*);
+using GetMapFileMapllocDesc_t = void *(void*);
 R__EXTERN FreeIfTMapFile_t *gFreeIfTMapFile;
+R__EXTERN GetMapFileMapllocDesc_t *gGetMapFileMallocDesc;
 R__EXTERN void *gMmallocDesc;
 }
 }

@@ -24,7 +24,7 @@
 #include <string_view>
 #include <vector>
 
-class TFile;
+class TDirectory;
 
 namespace ROOT {
 namespace Experimental {
@@ -45,6 +45,12 @@ Compared to the sequential RNTupleWriter, a parallel writer enables the creation
 RNTupleParallelWriter::CreateFillContext).  Each fill context prepares independent clusters that are appended to the
 common ntuple with internal synchronization.  Before destruction, all fill contexts must have flushed their data and
 been destroyed (or data could be lost!).
+
+For user convenience, RNTupleParallelWriter::CreateFillContext is thread-safe and may be called from multiple threads
+in parallel at any time, also after some data has already been written.  Internally, the original model is cloned and
+ownership is passed to a newly created RNTupleFillContext.  For that reason, it is recommended to use
+RNTupleModel::CreateBare when creating the model for parallel writing and avoid the allocation of a useless default
+REntry per context.
 
 Note that the sequence of independently prepared clusters is indeterminate and therefore entries are only partially
 ordered:  Entries from one context are totally ordered as they were filled.  However, there is no orderering with other
@@ -80,16 +86,20 @@ public:
                                                           const RNTupleWriteOptions &options = RNTupleWriteOptions());
    /// Append an ntuple to the existing file, which must not be accessed while data is filled into any created context.
    static std::unique_ptr<RNTupleParallelWriter> Append(std::unique_ptr<RNTupleModel> model,
-                                                        std::string_view ntupleName, TFile &file,
+                                                        std::string_view ntupleName, TDirectory &fileOrDirectory,
                                                         const RNTupleWriteOptions &options = RNTupleWriteOptions());
 
    ~RNTupleParallelWriter();
 
    /// Create a new RNTupleFillContext that can be used to fill entries and prepare clusters in parallel. This method is
-   /// thread-safe and may be called from multiple threads in parallel.
+   /// thread-safe and may be called from multiple threads in parallel at any time, also after some data has already
+   /// been written.
    ///
-   /// Note that all fill contexts must be destroyed before the RNTupleParallelWriter is destructed.
+   /// Note that all fill contexts must be destroyed before RNTupleParallelWriter::CommitDataset() is called.
    std::shared_ptr<RNTupleFillContext> CreateFillContext();
+
+   /// Automatically called by the destructor
+   void CommitDataset();
 
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }

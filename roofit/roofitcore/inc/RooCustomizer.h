@@ -17,11 +17,12 @@
 #ifndef ROO_PDF_CUSTOMIZER
 #define ROO_PDF_CUSTOMIZER
 
-#include "TList.h"
-#include "TNamed.h"
-#include "TString.h"
-#include "RooArgSet.h"
-#include "RooPrintable.h"
+#include <RooArgList.h>
+#include <RooArgSet.h>
+#include <RooPrintable.h>
+
+#include <TNamed.h>
+#include <TString.h>
 
 #include <vector>
 #include <string>
@@ -69,9 +70,13 @@ public:
 
   RooAbsPdf const& pdf() const;
 
+  RooCustomizer(const RooCustomizer &) = delete;
+  RooCustomizer &operator=(const RooCustomizer &) = delete;
+  RooCustomizer(RooCustomizer &&) = delete;
+  RooCustomizer &operator=(RooCustomizer &&) = delete;
+
 protected:
 
-  RooCustomizer(const RooCustomizer&) ;
   void initialize() ;
 
   RooAbsArg* doBuild(const char* masterCatState, bool verbose) ;
@@ -80,11 +85,11 @@ protected:
   bool _owning ;  ///< If true we own all created components
   TString _name ;   ///< Name of this object
 
-  TList _splitArgList ; ///< List of RooAbsArgs to be split
-  TList _splitCatList ; ///< List of categories to be used for above splits
+  RooArgList _splitArgList ; ///< List of RooAbsArgs to be split
+  RooArgList _splitCatList ; ///< List of categories to be used for above splits
 
-  TList _replaceArgList ; ///< List of RooAbsArgs to be replaced
-  TList _replaceSubList ; ///< List of replacement RooAbsArgs
+  RooArgList _replaceArgList ; ///< List of RooAbsArgs to be replaced
+  RooArgList _replaceSubList ; ///< List of replacement RooAbsArgs
 
   // Master nodes are not owned
   RooAbsArg* _masterPdf ;             ///< Pointer to input p.d.f

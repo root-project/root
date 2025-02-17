@@ -557,8 +557,14 @@ Bool_t TGeoPhysicalNode::IsMatchingState(TGeoNavigator *nav) const
       Fatal("SetBranchAsState", "no state available");
       return kFALSE;
    }
+   // the first condition is that the levels of navigator and this physical node must match
+   if (cache->GetLevel() != fLevel) {
+      return kFALSE;
+   }
+   // now we compare the nodes at each level
+   // starting backwards since that enhances the probability of an early return
    TGeoNode **branch = (TGeoNode **)cache->GetBranch();
-   for (Int_t i = 1; i <= fLevel; i++)
+   for (Int_t i = fLevel; i >= 1; --i)
       if (fNodes->At(i) != branch[i])
          return kFALSE;
    return kTRUE;

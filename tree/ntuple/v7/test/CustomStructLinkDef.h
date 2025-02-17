@@ -1,4 +1,4 @@
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link C++ enum CustomEnum;
 #pragma link C++ enum CustomEnumInt8;
@@ -22,6 +22,14 @@
 #pragma link C++ class LowPrecisionFloats+;
 
 #pragma link C++ class EdmWrapper<CustomStruct> +;
+
+#pragma link C++ class DataVector < int, double> + ;
+#pragma link C++ class DataVector < int, float> + ;
+#pragma link C++ class DataVector < bool, std::vector < unsigned int>> + ;
+#pragma link C++ class InnerCV < const int, const volatile int, volatile const int, volatile int> + ;
+#pragma link C++ class IntegerTemplates < 0, 0> + ;
+#pragma link C++ class IntegerTemplates < -1, 1> + ;
+#pragma link C++ class IntegerTemplates < -2147483650ll, 9223372036854775810ull> + ;
 
 #pragma link C++ class IAuxSetOption+;
 #pragma link C++ class PackedParameters+;
@@ -64,8 +72,31 @@
 #pragma read sourceClass = "StructWithTransientString" source = "char chars[4]" version = "[1-]" targetClass = \
    "StructWithTransientString" target = "str" include = "string" code = "{ str = std::string{onfile.chars, 4}; }"
 
-#pragma read sourceClass = "StructWithIORules" source = "float a;float b" version = "[1-]" targetClass = \
-   "StructWithIORules" target = "c" code = "{ c = onfile.a + onfile.b; }"
+// Whole object rule (without target member) listed first but should be executed last
+// clang-format off
+#pragma read sourceClass="StructWithIORules" version="[1-]" targetClass="StructWithIORules" source="" target="" \
+   code="{ newObj->cDerived = 2 * newObj->c; }"
+// clang-format on
+
+#pragma read sourceClass = "StructWithIORules" source = "float a" version = "[1-]" targetClass = \
+   "StructWithIORules" target = "c" code = "{ c = onfile.a + newObj->b; }"
+
+// Conflicting type for source member
+#pragma read sourceClass = "StructWithIORules" source = "double a" version = "[1-]" targetClass = \
+   "StructWithIORules" target = "" code = "{ }"
+
+// This rule uses a checksum to identify the source class
+#pragma read sourceClass = "StructWithIORules" source = "" checksum = "[3494027874]" targetClass = \
+   "StructWithIORules" target = "checksumA" code = "{ checksumA = 42.0; }"
+// This rule will be ignored due to a checksum mismatch
+#pragma read sourceClass = "StructWithIORules" source = "" checksum = "[1]" targetClass = "StructWithIORules" target = \
+   "checksumB" code = "{ checksumB = 0.0; }"
+
+#pragma link C++ options = version(3) class CoordinatesWithIORules + ;
+
+#pragma read sourceClass = "CoordinatesWithIORules" source = "float fX; float fY" version = "[3]" targetClass = \
+   "CoordinatesWithIORules" target = "fPhi,fR" include = "cmath" code =                                         \
+      "{ fR = sqrt(onfile.fX * onfile.fX + onfile.fY * onfile.fY); fPhi = atan2(onfile.fY, onfile.fX); }"
 
 #pragma link C++ class Cyclic + ;
 #pragma link C++ class CyclicCollectionProxy + ;
@@ -81,5 +112,9 @@
 
 #pragma link C++ class Left + ;
 #pragma link C++ class DerivedFromLeftAndTObject+;
+
+#pragma link C++ class ThrowForVariant + ;
+
+#pragma link C++ class RelativelyLargeStruct + ;
 
 #endif

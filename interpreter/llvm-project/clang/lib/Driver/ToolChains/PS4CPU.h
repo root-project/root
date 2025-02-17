@@ -27,7 +27,7 @@ void addProfileRTArgs(const ToolChain &TC, const llvm::opt::ArgList &Args,
 void addSanitizerArgs(const ToolChain &TC, const llvm::opt::ArgList &Args,
                       llvm::opt::ArgStringList &CmdArgs);
 
-class LLVM_LIBRARY_VISIBILITY Assembler : public Tool {
+class LLVM_LIBRARY_VISIBILITY Assembler final : public Tool {
 public:
   Assembler(const ToolChain &TC) : Tool("PScpu::Assembler", "assembler", TC) {}
 
@@ -39,7 +39,7 @@ public:
                     const char *LinkingOutput) const override;
 };
 
-class LLVM_LIBRARY_VISIBILITY Linker : public Tool {
+class LLVM_LIBRARY_VISIBILITY Linker final : public Tool {
 public:
   Linker(const ToolChain &TC) : Tool("PScpu::Linker", "linker", TC) {}
 
@@ -63,6 +63,9 @@ public:
              const llvm::opt::ArgList &Args, StringRef Platform,
              const char *EnvVar);
 
+  void
+  AddClangSystemIncludeArgs(const llvm::opt::ArgList &DriverArgs,
+                            llvm::opt::ArgStringList &CC1Args) const override;
   // No support for finding a C++ standard library yet.
   void addLibCxxIncludePaths(const llvm::opt::ArgList &DriverArgs,
                              llvm::opt::ArgStringList &CC1Args) const override {
@@ -98,8 +101,6 @@ public:
     return llvm::DenormalMode::getPreserveSign();
   }
 
-  bool useRelaxRelocations() const override { return true; }
-
   // Helper methods for PS4/PS5.
   virtual const char *getLinkerBaseName() const = 0;
   virtual std::string qualifyPSCmdName(StringRef CmdName) const = 0;
@@ -111,6 +112,10 @@ public:
 
 protected:
   Tool *buildLinker() const override;
+
+private:
+  // We compute the SDK root dir in the ctor, and use it later.
+  std::string SDKRootDir;
 };
 
 // PS4-specific Toolchain class.

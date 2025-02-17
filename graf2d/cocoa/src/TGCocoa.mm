@@ -13,11 +13,7 @@
 
 #include "TGCocoa.h"
 
-// We want to pickup ROOT's glew and not the system OpenGL coming from:
-// ROOTOpenGLView.h ->QuartzWindow.h->Cocoa.h
-// Allowing TU's which include the system GL and then glew (from TGLIncludes)
-// leads to gltypes.h redefinition errors.
-#include "TGLIncludes.h"
+#include <GL/glew.h>
 
 #include "ROOTOpenGLView.h"
 #include "CocoaConstants.h"

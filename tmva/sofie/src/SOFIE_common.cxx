@@ -25,10 +25,23 @@ std::vector<size_t> ConvertShapeToInt(std::vector<Dim> shape){
    std::vector<size_t> ret_shape(shape.size());
    for (size_t i =0; i < shape.size(); i++){
       if (shape[i].isParam) {
-         ret_shape.clear();
-         break;
+         // try converting to integer in case string is a number >=0
+         int val = -1;
+         try {
+            val = std::stoi(shape[i].param);
+            if (val >= 0) ret_shape[i] = static_cast<size_t>(val);
+            else {
+               ret_shape.clear();
+               break;
+            }
+         }
+         catch (const std::invalid_argument& ) {
+            ret_shape.clear();
+            break;
+         }
+      } else {
+         ret_shape[i] = shape[i].dim;
       }
-      ret_shape[i] = shape[i].dim;
    }
    return ret_shape;
 }
@@ -71,7 +84,7 @@ std::string ConvertTypeToString(ETensorType type){
          return "bool";
       }
       default:{
-         return "other";
+         return "other_" + std::to_string( (int) type);
       }
    }
 }
@@ -362,9 +375,28 @@ std::vector<size_t>  UTILITY::UnidirectionalBroadcastShape(std::vector<size_t> s
    }
 }
 
+// UNidirectional boradcast specializaiton for vector<bool>
+
+// specialization for vector of boolean
+void UTILITY::UnidirectionalBroadcast(const std::vector<bool> & data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, std::vector<bool> & broadcastedData)
+ {
+   // Prepend shape with ones
+   auto ncdata = const_cast<std::vector<bool> &>(data);
+   if (shape.size() < targetShape.size()) {
+      size_t targetSize = targetShape.size();
+      std::vector<size_t> newShape(targetSize, 1);
+      size_t offset = targetSize - shape.size();
+      std::copy(shape.begin(), shape.end(), newShape.begin() + offset);
+      UTILITY::BroadcastTensor<bool, std::vector<bool> &>(ncdata, newShape, targetShape, broadcastedData);
+   }
+   UTILITY::BroadcastTensor<bool, std::vector<bool> &>(ncdata, shape, targetShape, broadcastedData);
+}
+
 std::string UTILITY::Clean_name(std::string input_tensor_name){
    std::string s (input_tensor_name);
-   s.erase(std::remove_if(s.begin(), s.end(), []( char const& c ) -> bool { return !std::isalnum(c); } ), s.end());
+   std::replace( s.begin(), s.end(), '-', '_');
+   // replace all non-alpohanumeric character except for "_"
+   s.erase(std::remove_if(s.begin(), s.end(), []( char const& c ) -> bool { return !std::isalnum(c) && c != '_'; } ), s.end());
    return s;
 }
 

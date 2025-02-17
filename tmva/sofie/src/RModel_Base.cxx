@@ -9,6 +9,7 @@ namespace SOFIE {
 
 RModel_Base::RModel_Base(std::string name, std::string parsedtime):fFileName(name), fParseTime(parsedtime) {
     fName = fFileName.substr(0, fFileName.rfind("."));
+    fName = UTILITY::Clean_name(fName);
 }
 
 void RModel_Base::GenerateHeaderInfo(std::string& hgname) {

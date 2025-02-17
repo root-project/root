@@ -25,12 +25,6 @@ pointer first using RooCFunction2Binding<T1,T2,T3>::register().
 #include "Riostream.h"
 #include "RooCFunction2Binding.h"
 
-#ifndef ROOFIT_R__NO_CLASS_TEMPLATE_SPECIALIZATION
-#define ROOFIT_R__NO_CLASS_TEMPLATE_SPECIALIZATION
-templateClassImp(RooCFunction2Binding);
-templateClassImp(RooCFunction2Ref);
-#endif
-
 
 namespace RooFit {
 

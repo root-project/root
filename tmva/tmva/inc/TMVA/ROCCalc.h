@@ -38,7 +38,13 @@ namespace TMVA {
 
       void ApplySignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* any = nullptr );
 
+      /// Get a pointer to the signal Pdf as an histogram.
+      /// The histogram is owned by the ROCCalc instance, so it will only live as long as the ROCCalc.
+      /// If you want a new histogram object that you manage yourself, please use `GetMvaSpdf()->Clone()`.
       TH1* GetMvaSpdf(){return fmvaSpdf;}
+      /// Get a pointer to the background  Pdf as a histogram.
+      /// The histogram is owned by the ROCCalc instance, so it will only live as long as the ROCCalc.
+      /// If you want a new histogram object that you manage yourself, please use `GetMvaBpdf()->Clone()`.
       TH1* GetMvaBpdf(){return fmvaBpdf;}
 
       //false if is found some error in mvaS or mvaB

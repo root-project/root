@@ -5,7 +5,9 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 add_subdirectory (geom)        # special CMakeLists.txt
-add_subdirectory (geombuilder) # special CMakeLists.txt
+if(geombuilder)
+  add_subdirectory (geombuilder) # special CMakeLists.txt
+endif()
 add_subdirectory (geompainter) # special CMakeLists.txt
 
 if(gdml)
@@ -22,7 +24,7 @@ if(vecgeom)
   add_subdirectory(vecgeom)
 endif()
 
-if(webgui AND root7)
+if(webgui)
   add_subdirectory(webviewer)
 endif()
 

@@ -239,7 +239,7 @@ public:
 extern "C" {
 int daos_init(void)
 {
-   R__LOG_WARNING(ROOT::Experimental::NTupleLog()) << "This RNTuple build uses libdaos_mock. Use only for testing!";
+   R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "This RNTuple build uses libdaos_mock. Use only for testing!";
    return 0;
 }
 

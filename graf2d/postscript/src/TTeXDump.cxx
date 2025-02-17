@@ -258,10 +258,13 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    if (fillis==1) {
       SetColor(fFillColor);
       PrintStr("@");
-      PrintStr("\\draw [color=c, fill=c");
       if (fCurrentAlpha != 1.) {
+         PrintStr("\\fill [c");
          PrintStr(", fill opacity=");
          WriteReal(fCurrentAlpha, kFALSE);
+      }
+      else {
+         PrintStr("\\draw [color=c, fill=c");
       }
       PrintStr("] (");
       WriteReal(x1c, kFALSE);
@@ -525,7 +528,7 @@ void TTeXDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
 
 void TTeXDump::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 {
-   Int_t  n = TMath::Abs(nn);;
+   Int_t  n = TMath::Abs(nn);
    Float_t x, y;
 
    if( n <= 1) {

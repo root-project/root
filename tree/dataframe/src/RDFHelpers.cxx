@@ -74,7 +74,7 @@ unsigned int ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
    const unsigned int nToRun =
       std::count_if(handles.begin(), handles.end(), [](const auto &h) { return !h.IsReady(); });
    if (nToRun < handles.size()) {
-      Warning("RunGraphs", "Got %lu handles from which %lu link to results which are already ready.", handles.size(),
+      Warning("RunGraphs", "Got %zu handles from which %zu link to results which are already ready.", handles.size(),
               handles.size() - nToRun);
    }
    if (nToRun == 0u)
@@ -89,16 +89,14 @@ unsigned int ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
    TStopwatch sw;
    sw.Start();
    {
-      const auto effectiveVerbosity =
-         ROOT::Experimental::Internal::GetChannelOrManager(ROOT::Detail::RDF::RDFLogChannel())
-            .GetEffectiveVerbosity(ROOT::Experimental::RLogManager::Get());
-      if (effectiveVerbosity >= ROOT::Experimental::ELogLevel::kDebug + 10) {
+      const auto effectiveVerbosity = ROOT::Internal::GetChannelOrManager(ROOT::Detail::RDF::RDFLogChannel())
+                                         .GetEffectiveVerbosity(ROOT::RLogManager::Get());
+      if (effectiveVerbosity >= ROOT::ELogLevel::kDebug + 10) {
          // a very high verbosity was requested, let's not silence anything
          uniqueLoops[0].fLoopManager->Jit();
       } else {
          // silence logs from RLoopManager::Jit: RunGraphs does its own logging
-         auto silenceRDFLogs = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(),
-                                                                       ROOT::Experimental::ELogLevel::kError);
+         auto silenceRDFLogs = ROOT::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::ELogLevel::kError);
          uniqueLoops[0].fLoopManager->Jit();
       }
    }

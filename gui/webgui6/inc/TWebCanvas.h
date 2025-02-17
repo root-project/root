@@ -91,12 +91,11 @@ protected:
    Long64_t fCanvVersion{1};       ///<! actual canvas version, changed with every new Modified() call
    UInt_t fClientBits{0};          ///<! latest status bits from client like editor visible or not
    std::vector<TPad *> fAllPads;   ///<! list of all pads recognized during streaming
+   std::map<TObject *,bool> fUsedObjs; ///<! map of used objects during streaming
    Int_t fStyleDelivery{0};        ///<! gStyle delivery to clients: 0:never, 1:once, 2:always
    Int_t fPaletteDelivery{1};      ///<! colors palette delivery 0:never, 1:once, 2:always, 3:per subpad
    Int_t fPrimitivesMerge{100};    ///<! number of PS primitives, which will be merged together
    Int_t fJsonComp{0};             ///<! compression factor for messages send to the client
-   std::string fCustomScripts;     ///<! custom JavaScript code or URL on JavaScript files to load before start drawing
-   std::vector<std::string> fCustomClasses;  ///<! list of custom classes, which can be delivered as is to client
    Bool_t fCanCreateObjects{kTRUE}; ///<! indicates if canvas allowed to create extra objects for interactive painting
    Bool_t fLongerPolling{kFALSE};  ///<! when true, make longer polling in blocking operations
    Bool_t fProcessingData{kFALSE}; ///<! flag used to prevent blocking methods when process data is invoked
@@ -105,7 +104,7 @@ protected:
    UInt_t fStyleHash{0};           ///<! last hash of gStyle
    Long64_t fColorsVersion{0};     ///<! current colors/palette version, checked every time when new snapshot created
    UInt_t fColorsHash{0};          ///<! last hash of colors/palette
-   Bool_t fTF1UseSave{kFALSE};     ///<! use save buffer for TF1/TF2, need when evaluation failed on client side
+   Int_t fTF1UseSave{1};           ///<! use save buffer for TF1/TF2, 0:off, 1:prefer, 2:force
    std::vector<int> fWindowGeometry; ///<! last received window geometry
    Bool_t fFixedSize{kFALSE};      ///<! is canvas size fixed
 
@@ -114,6 +113,18 @@ protected:
    PadClickedSignal_t fPadClickedSignal; ///<! signal emitted when simple mouse click performed on the pad
    PadClickedSignal_t fPadDblClickedSignal; ///<! signal emitted when simple mouse click performed on the pad
    ObjectSelectSignal_t fObjSelectSignal; ///<! signal emitted when new object selected in the pad
+
+   std::vector<std::unique_ptr<ROOT::RWebDisplayHandle>> fHelpHandles; ///<! array of handles for help widgets
+
+   static std::string gCustomScripts;     ///<! custom JavaScript code or URL on JavaScript files to load before start drawing
+   static std::vector<std::string> gCustomClasses;  ///<! list of custom classes, which can be delivered as is to client
+
+   static UInt_t gBatchImageMode;           ///<! configured batch size
+   static std::string gBatchMultiPdf;           ///<! name of current multi-page pdf file
+   static std::vector<std::string> gBatchFiles; ///<! file names for batch job
+   static std::vector<std::string> gBatchJsons; ///<! converted jsons batch job
+   static std::vector<int> gBatchWidths;   ///<! batch job widths
+   static std::vector<int> gBatchHeights;  ///<! batch job heights
 
    void Lock() override {}
    void Unlock() override {}
@@ -165,6 +176,12 @@ protected:
    void ProcessExecs(TPad *pad, TExec *extra = nullptr);
 
    void ProcessLinesForObject(TObject *obj, const std::string &lines);
+
+   void SetWindowGeometry(const std::vector<int> &arr);
+
+   static std::string ProcessCustomScripts(bool batch);
+
+   static bool FlushBatchImages();
 
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly = kTRUE);
@@ -233,15 +250,16 @@ public:
    void SetLongerPolling(Bool_t on) { fLongerPolling = on; }
    Bool_t GetLongerPolling() const { return fLongerPolling; }
 
-   void SetCustomScripts(const std::string &src);
-
-   void AddCustomClass(const std::string &clname, bool with_derived = false);
-   bool IsCustomClass(const TClass *cl) const;
-
    void SetAsyncMode(Bool_t on = kTRUE) { fAsyncMode = on; }
    Bool_t IsAsyncMode() const { return fAsyncMode; }
 
    Bool_t IsFixedSize() const { return fFixedSize; }
+
+   static void SetCustomScripts(const std::string &src);
+   static const std::string &GetCustomScripts();
+
+   static void AddCustomClass(const std::string &clname, bool with_derived = false);
+   static bool IsCustomClass(const TClass *cl);
 
    static Font_t AddFont(const char *name, const char *ttffile, Int_t precision = 2);
 
@@ -252,6 +270,8 @@ public:
    static bool ProduceImage(TPad *pad, const char *filename, Int_t width = 0, Int_t height = 0);
 
    static bool ProduceImages(std::vector<TPad *> pads, const char *filename, Int_t width = 0, Int_t height = 0);
+
+   static void BatchImageMode(UInt_t n = 100);
 
    static TCanvasImp *NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
 

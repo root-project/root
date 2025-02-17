@@ -37,7 +37,6 @@ The combination only 'reject' can be chosen to be visible or not visible
 
 using std::endl, std::vector, std::string;
 
-ClassImp(RooMultiBinomial);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct the efficiency functions from a list of efficiency functions
@@ -57,7 +56,7 @@ RooMultiBinomial::RooMultiBinomial(const char *name, const char *title,
   _effFuncList.add(effFuncList);
 
   if (_catList.size() != effFuncList.size()) {
-    coutE(InputArguments) << "RooMultiBinomial::ctor(" << GetName() << ") ERROR: Wrong input, should have equal number of categories and efficiencies." << endl;
+    coutE(InputArguments) << "RooMultiBinomial::ctor(" << GetName() << ") ERROR: Wrong input, should have equal number of categories and efficiencies." << std::endl;
     throw string("RooMultiBinomial::ctor() ERROR: Wrong input, should have equal number of categories and efficiencies") ;
   }
 
@@ -94,12 +93,12 @@ double RooMultiBinomial::evaluate() const
   for (int i=0; i<effFuncListSize; ++i) {
     if (effFuncVal[i]>1) {
       coutW(Eval) << "WARNING: Efficiency >1 (equal to " << effFuncVal[i]
-        << " ), for i = " << i << "...TRUNCATED" << endl;
+        << " ), for i = " << i << "...TRUNCATED" << std::endl;
       effFuncVal[i] = 1.0 ;
     } else if (effFuncVal[i]<0) {
       effFuncVal[i] = 0.0 ;
       coutW(Eval) << "WARNING: Efficiency <0 (equal to " << effFuncVal[i]
-        << " ), for i = " << i << "...TRUNCATED" << endl;
+        << " ), for i = " << i << "...TRUNCATED" << std::endl;
     }
   }
 
@@ -117,7 +116,7 @@ double RooMultiBinomial::evaluate() const
       // Reject case
       effValue[i] = 1 - effFuncVal[i] ;
     } else {
-      coutW(Eval) << "WARNING: WRONG CATEGORY NAMES GIVEN!, label = " << (static_cast<RooAbsCategory&>(_catList[i])).getCurrentIndex() << endl;
+      coutW(Eval) << "WARNING: WRONG CATEGORY NAMES GIVEN!, label = " << (static_cast<RooAbsCategory&>(_catList[i])).getCurrentIndex() << std::endl;
       effValue[i] = 0;
     }
   }

@@ -4,11 +4,8 @@ import sys
 import os
 from functools import partial
 
-import libcppyy as cppyy_backend
-from cppyy import gbl as gbl_namespace
-from cppyy import cppdef, include
-from libROOTPythonizations import gROOT
-from cppyy.gbl import gSystem
+import cppyy
+
 import cppyy.ll
 
 from ._application import PyROOTApplication
@@ -37,7 +34,7 @@ class _gROOTWrapper(object):
 
     def __init__(self, facade):
         self.__dict__["_facade"] = facade
-        self.__dict__["_gROOT"] = gROOT
+        self.__dict__["_gROOT"] = cppyy.gbl.ROOT.GetROOT()
 
     def __getattr__(self, name):
         if name != "SetBatch" and self._facade.__dict__["gROOT"] != self._gROOT:
@@ -46,23 +43,6 @@ class _gROOTWrapper(object):
 
     def __setattr__(self, name, value):
         return setattr(self._gROOT, name, value)
-
-
-def _create_rdf_experimental_distributed_module(parent):
-    """
-    Create the ROOT.RDF.Experimental.Distributed python module.
-
-    This module will be injected into the ROOT.RDF namespace.
-
-    Arguments:
-        parent: The ROOT.RDF namespace. Needed to define __package__.
-
-    Returns:
-        types.ModuleType: The ROOT.RDF.Experimental.Distributed submodule.
-    """
-    import DistRDF
-
-    return DistRDF.create_distributed_module(parent)
 
 
 def _subimport(name):
@@ -107,7 +87,7 @@ class ROOTFacade(types.ModuleType):
             "SetOwnership",
         ]
         for name in self._cppyy_exports:
-            setattr(self, name, getattr(cppyy_backend, name))
+            setattr(self, name, getattr(cppyy._backend, name))
         # For backwards compatibility
         self.MakeNullPointer = partial(self.bind_object, 0)
         self.BindObject = self.bind_object
@@ -154,19 +134,61 @@ class ROOTFacade(types.ModuleType):
         # e.g. ROOT.ROOT.Math as ROOT.Math
 
         # Note that hasattr caches the lookup for getattr
-        if hasattr(gbl_namespace, name):
-            return getattr(gbl_namespace, name)
-        elif hasattr(gbl_namespace.ROOT, name):
-            return getattr(gbl_namespace.ROOT, name)
+        if hasattr(cppyy.gbl, name):
+            return getattr(cppyy.gbl, name)
+        elif hasattr(cppyy.gbl.ROOT, name):
+            return getattr(cppyy.gbl.ROOT, name)
         else:
-            res = gROOT.FindObject(name)
+            res = self.gROOT.FindObject(name)
             if res:
                 return res
         raise AttributeError("Failed to get attribute {} from ROOT".format(name))
 
+    def _register_converters_and_executors(self):
+
+        converter_aliases = {
+            "Long64_t": "long long",
+            "Long64_t ptr": "long long ptr",
+            "Long64_t&": "long long&",
+            "const Long64_t&": "const long long&",
+            "ULong64_t": "unsigned long long",
+            "ULong64_t ptr": "unsigned long long ptr",
+            "ULong64_t&": "unsigned long long&",
+            "const ULong64_t&": "const unsigned long long&",
+            "Float16_t": "float",
+            "const Float16_t&": "const float&",
+            "Double32_t": "double",
+            "Double32_t&": "double&",
+            "const Double32_t&": "const double&",
+        }
+
+        executor_aliases = {
+            "Long64_t": "long long",
+            "Long64_t&": "long long&",
+            "Long64_t ptr": "long long ptr",
+            "ULong64_t": "unsigned long long",
+            "ULong64_t&": "unsigned long long&",
+            "ULong64_t ptr": "unsigned long long ptr",
+            "Float16_t": "float",
+            "Float16_t&": "float&",
+            "Double32_t": "double",
+            "Double32_t&": "double&",
+        }
+
+        from libROOTPythonizations import CPyCppyyRegisterConverterAlias, CPyCppyyRegisterExecutorAlias
+
+        for name, target in converter_aliases.items():
+            CPyCppyyRegisterConverterAlias(name, target)
+
+        for name, target in executor_aliases.items():
+            CPyCppyyRegisterExecutorAlias(name, target)
+
     def _finalSetup(self):
         # Prevent this method from being re-entered through the gROOT wrapper
-        self.__dict__["gROOT"] = gROOT
+        self.__dict__["gROOT"] = cppyy.gbl.ROOT.GetROOT()
+
+        # Make sure the interpreter is initialized once gROOT has been initialized
+        cppyy.gbl.TInterpreter.Instance()
 
         # Setup interactive usage from Python
         self.__dict__["app"] = PyROOTApplication(self.PyConfig, self._is_ipython)
@@ -180,7 +202,10 @@ class ROOTFacade(types.ModuleType):
 
         # Redirect lookups to cppyy's global namespace
         self.__class__.__getattr__ = self._fallback_getattr
-        self.__class__.__setattr__ = lambda self, name, val: setattr(gbl_namespace, name, val)
+        self.__class__.__setattr__ = lambda self, name, val: setattr(cppyy.gbl, name, val)
+
+        # Register custom converters and executors
+        self._register_converters_and_executors()
 
         # Run rootlogon if exists
         self._run_rootlogon()
@@ -290,9 +315,29 @@ class ROOTFacade(types.ModuleType):
     # Overload RDF namespace
     @property
     def RDF(self):
+        self._finalSetup()
         ns = self._fallback_getattr("RDF")
         try:
             from ._pythonization._rdataframe import _MakeNumpyDataFrame
+
+            # Provide a FromCSV factory method that uses keyword arguments instead of the ROptions config struct.
+            # In Python, the RCsvDS::ROptions struct members are available without the leading 'f' and in camelCase,
+            # e.g. fDelimiter --> delimiter.
+            # We need to keep the parameters of the old FromCSV signature for backward compatibility.
+            ns._FromCSV = ns.FromCSV
+            def MakeCSVDataFrame(
+                    fileName, readHeaders = True, delimiter = ',', linesChunkSize = -1, colTypes = {}, **kwargs):
+                options = ns.RCsvDS.ROptions()
+                options.fHeaders = readHeaders
+                options.fDelimiter = delimiter
+                options.fLinesChunkSize = linesChunkSize
+                options.fColumnTypes = colTypes
+                for key, val in kwargs.items():
+                    structMemberName = 'f' + key[0].upper() + key[1:]
+                    if hasattr(options, structMemberName):
+                        setattr(options, structMemberName, val)
+                return ns._FromCSV(fileName, options)
+            ns.FromCSV = MakeCSVDataFrame
 
             # Make a copy of the arrays that have strides to make sure we read the correct values
             # TODO a cleaner fix
@@ -312,17 +357,36 @@ class ROOTFacade(types.ModuleType):
                 for key in df.columns:
                     np_dict[key] = df[key].to_numpy()
                 return _MakeNumpyDataFrame(np_dict)
+
             ns.FromPandas = MakePandasDataFrame
 
             try:
-                # Inject Experimental.Distributed package into namespace RDF if available
-                ns.Experimental.Distributed = _create_rdf_experimental_distributed_module(ns.Experimental)
+                # Inject Pythonizations to interact between local and distributed RDF package
+                from ._pythonization._rdf_namespace import _create_distributed_module, _rungraphs, _variationsfor
+                ns.Experimental.Distributed = _create_distributed_module(ns.Experimental)
+                ns.RunGraphs = _rungraphs(ns.Experimental.Distributed.RunGraphs, ns.RunGraphs)
+                ns.Experimental.VariationsFor = _variationsfor(ns.Experimental.Distributed.VariationsFor, ns.Experimental.VariationsFor)
             except ImportError:
                 pass
         except:
             raise Exception("Failed to pythonize the namespace RDF")
         del type(self).RDF
         return ns
+
+    @property
+    def RDataFrame(self):
+        """
+        Dispatch between the local and distributed RDataFrame depending on
+        input arguments.
+        """
+        local_rdf = self.__getattr__("RDataFrame")
+        try:
+            import DistRDF
+            from ._pythonization._rdf_namespace import _rdataframe
+            return _rdataframe(local_rdf, DistRDF.RDataFrame)
+        except ImportError:
+            return local_rdf
+
 
     # Overload RooFit namespace
     @property
@@ -344,13 +408,14 @@ class ROOTFacade(types.ModuleType):
         from ._pythonization import _tmva
 
         ns = self._fallback_getattr("TMVA")
-        hasRDF = "dataframe" in gROOT.GetConfigFeatures()
+        hasRDF = "dataframe" in self.gROOT.GetConfigFeatures()
         if hasRDF:
             try:
-                from ._pythonization._tmva import inject_rbatchgenerator, _AsRTensor
+                from ._pythonization._tmva import inject_rbatchgenerator, _AsRTensor, SaveXGBoost
 
                 inject_rbatchgenerator(ns)
                 ns.Experimental.AsRTensor = _AsRTensor
+                ns.Experimental.SaveXGBoost = SaveXGBoost
             except:
                 raise Exception("Failed to pythonize the namespace TMVA")
         del type(self).TMVA
@@ -359,7 +424,7 @@ class ROOTFacade(types.ModuleType):
     # Create and overload Numba namespace
     @property
     def Numba(self):
-        cppdef("namespace Numba {}")
+        cppyy.cppdef("namespace Numba {}")
         ns = self._fallback_getattr("Numba")
         ns.Declare = staticmethod(_NumbaDeclareDecorator)
         del type(self).Numba
@@ -380,7 +445,7 @@ class ROOTFacade(types.ModuleType):
     # Get TPyDispatcher for programming GUI callbacks
     @property
     def TPyDispatcher(self):
-        include("ROOT/TPyDispatcher.h")
-        tpd = gbl_namespace.TPyDispatcher
+        cppyy.include("ROOT/TPyDispatcher.h")
+        tpd = cppyy.gbl.TPyDispatcher
         type(self).TPyDispatcher = tpd
         return tpd

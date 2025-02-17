@@ -1,10 +1,5 @@
 #include <gtest/gtest.h>
 
-// Backward compatibility for gtest version < 1.10.0
-#ifndef INSTANTIATE_TEST_SUITE_P
-#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
-#endif
-
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RVec.hxx>
 #include <ROOT/RDFHelpers.hxx>
@@ -262,8 +257,14 @@ TEST_P(RDatasetSpecTest, SimpleMetaDataHandling)
 // start > end -> error in the spec directly
 TEST_P(RDatasetSpecTest, Ranges)
 {
-   std::vector<RDatasetSpec::REntryRange> ranges = {{1, 4},     {2, 4},    {100},     {1, 100}, {2, 2},
-                                                    {100, 100}, {85, 100}, {86, 100}, {92, 100}};
+   // Logically correct ranges
+   std::vector<RDatasetSpec::REntryRange> goodRanges = {{1, 4}, {2, 4}, {75}, {1, 75}, {2, 2}, {100, 100}};
+
+   // Problematic ranges
+   RDatasetSpec::REntryRange endEntryBeyondEndRange{1, 100};
+   RDatasetSpec::REntryRange offByOneBeginEntryRange{85, 86};
+   RDatasetSpec::REntryRange offByTwoBeginEntryRange{86, 100};
+   RDatasetSpec::REntryRange ReallyBeyondEndRange{92, 100};
 
    std::vector<RDatasetSpec> specs(2);
    for (const auto &d : data) {
@@ -283,48 +284,92 @@ TEST_P(RDatasetSpecTest, Ranges)
       specs[1].AddSample({d.name, treeNamesExpanded, fileGlobsExpanded, d.meta});
    }
    for (auto &spec : specs) {
-      for (auto i = 0u; i < ranges.size(); ++i) {
-         auto df = RDataFrame(spec.WithGlobalRange(ranges[i]));
+
+      // Good ranges
+      for (auto i = 0u; i < goodRanges.size(); ++i) {
+         auto df = RDataFrame(spec.WithGlobalRange(goodRanges[i]));
          auto takeRes = df.Take<ULong64_t>("x"); // lazy action
-         if (i < 6u) {                           // the first 6 ranges, are logically correct
-            auto &res = *takeRes;
-            std::sort(res.begin(), res.end());
-            if (ranges[i].fBegin != ranges[i].fEnd)
-               EXPECT_VEC_SEQ_EQ(res, ROOT::TSeq<ULong64_t>(ranges[i].fBegin, std::min(85ll, ranges[i].fEnd)));
-            else
-               EXPECT_EQ((*takeRes).size(), 0u);
-         } else {
-            if (GetParam()) { // MT case, error coming from the TTreeProcessorMT
-               EXPECT_THROW(
-                  try { *takeRes; } catch (const std::logic_error &err) {
-                     const auto msg =
-                        std::string("A range of entries was passed in the creation of the TTreeProcessorMT, "
-                                    "but the starting entry (") +
-                        ranges[i].fBegin +
-                        ") is larger "
-                        "than the total number of entries (85) in the dataset.";
-                     EXPECT_EQ(std::string(err.what()), msg);
-                     throw;
-                  },
-                  std::logic_error);
-            } else {
-               if (i == 6u) // Single-threaded case undesired behaviour, see
-                            // https://github.com/root-project/root/issues/10774
-                  EXPECT_EQ((*takeRes).size(), 0u);
-               else {
-                  EXPECT_THROW(
-                     try {
-                        ROOT_EXPECT_ERROR(*takeRes, "TTreeReader::SetEntriesRange()",
-                                          (std::string("Error setting first entry ") + ranges[i].fBegin +
-                                           ": one of the readers was not successfully initialized")
-                                             .Data());
-                     } catch (const std::logic_error &err) { // error coming from the RLoopManager
-                        EXPECT_STREQ(err.what(), "Something went wrong in initializing the TTreeReader.");
-                        throw;
-                     },
-                     std::logic_error);
-               }
-            }
+         auto &res = *takeRes;
+         std::sort(res.begin(), res.end());
+         if (goodRanges[i].fBegin != goodRanges[i].fEnd)
+            EXPECT_VEC_SEQ_EQ(res, ROOT::TSeq<ULong64_t>(goodRanges[i].fBegin, std::min(85ll, goodRanges[i].fEnd)));
+         else
+            EXPECT_EQ((*takeRes).size(), 0u);
+      }
+
+      // Bad ranges
+
+      {
+         // End entry out of bounds
+         auto df = RDataFrame(spec.WithGlobalRange(endEntryBeyondEndRange));
+         auto takeRes = df.Take<ULong64_t>("x");
+         ROOT_EXPECT_WARNING(*takeRes, "RDataFrame::Run",
+                             "RDataFrame stopped processing after 84 entries, whereas an entry range (begin=1,end=100) "
+                             "was requested. Consider adjusting the end value of the entry range to a maximum of 85.");
+      }
+
+      if (GetParam()) {
+         // Begin entry beyond maximum number of entries, in MT case the error
+         // comes from TTreeProcessorMT
+         for (auto &&range : {offByOneBeginEntryRange, offByTwoBeginEntryRange, ReallyBeyondEndRange}) {
+            auto df = RDataFrame(spec.WithGlobalRange(range));
+            auto takeRes = df.Take<ULong64_t>("x");
+            EXPECT_THROW(
+               try { *takeRes; } catch (const std::logic_error &err) {
+                  const auto msg = std::string("A range of entries was passed in the creation of the TTreeProcessorMT, "
+                                               "but the starting entry (") +
+                                   range.fBegin +
+                                   ") is larger "
+                                   "than the total number of entries (85) in the dataset.";
+                  EXPECT_EQ(std::string(err.what()), msg);
+                  throw;
+               },
+               std::logic_error);
+         }
+      } else {
+         // Begin entry beyond maximum number of entries, in single-threaded
+         // case we rely on TTreeReader status codes
+         {
+            // Off by one case, SetEntriesRange does not error out immediately.
+            // The first call to TTreeReader::Next will detect the issue.
+            auto df = RDataFrame(spec.WithGlobalRange(offByOneBeginEntryRange));
+            auto takeRes = df.Take<ULong64_t>("x");
+            EXPECT_THROW(
+               try {
+                  ROOT_EXPECT_ERROR(*takeRes, "TTreeReader::SetEntryBase()",
+                                    "The beginning entry specified via SetEntriesRange (85) is equal to or beyond "
+                                    "the total number of entries in the dataset (85). Make sure to specify a "
+                                    "beginning entry lower than the number of available entries.");
+               } catch (const std::runtime_error &err) { // error coming from the RLoopManager
+                  EXPECT_STREQ(err.what(),
+                               "An error was encountered while processing the data. TTreeReader status code is: 3");
+                  throw;
+               },
+               std::runtime_error);
+         }
+
+         for (auto &&range : {offByTwoBeginEntryRange, ReallyBeyondEndRange}) {
+            // Other cases with begin entry further beyond are caught directly by SetEntriesRange
+            auto df = RDataFrame(spec.WithGlobalRange(range));
+            auto takeRes = df.Take<ULong64_t>("x");
+            EXPECT_THROW(
+               try {
+                  ROOT::TestSupport::CheckDiagsRAII diagRAII;
+                  diagRAII.requiredDiag(kError, "TTreeReader::SetEntryBase()",
+                                        "The beginning entry specified via SetEntriesRange (" +
+                                           std::to_string(range.fBegin) +
+                                           ") is equal to or beyond "
+                                           "the total number of entries in the dataset (85). Make sure to specify a "
+                                           "beginning entry lower than the number of available entries.");
+                  diagRAII.requiredDiag(kError, "TTreeReader::SetEntriesRange()",
+                                        "Error setting first entry " + std::to_string(range.fBegin) +
+                                           ": cannot access chain element");
+                  *takeRes;
+               } catch (const std::logic_error &err) { // error coming from the RLoopManager
+                  EXPECT_STREQ(err.what(), "Something went wrong in initializing the TTreeReader.");
+                  throw;
+               },
+               std::logic_error);
          }
       }
    }
@@ -339,46 +384,83 @@ TEST_P(RDatasetSpecTest, Ranges)
       std::logic_error);
 }
 
-// reuse the possible ranges from above
-TEST_P(RDatasetSpecTest, Friends)
+TEST_P(RDatasetSpecTest, FriendsEqualSize)
 {
-
+   // Test the canonical case: main tree and friend trees have all equal size.
    RDatasetSpec spec;
-   // pick the second sample as the main chain, so that can test shorter, equal-sized, longer friends
    spec.AddSample({data[1].name, data[1].trees[0][0].tree, data[1].fileGlobs});
-   for (const auto &d : data) {
-      std::vector<std::string> treeNames{};
-      std::vector<std::string> fileGlobs{};
-      std::vector<std::string> treeNamesExpanded{};
-      std::vector<std::string> fileGlobsExpanded{};
-      for (auto i = 0u; i < d.fileGlobs.size(); ++i) {
-         for (const auto &t : d.trees[i]) {
-            treeNamesExpanded.emplace_back(t.tree);
-            fileGlobsExpanded.emplace_back(t.file);
-         }
-         treeNames.emplace_back(d.trees[i][0].tree);
-         fileGlobs.emplace_back(d.fileGlobs[i]);
+   const auto &d = data[1];
+   std::vector<std::string> treeNames{};
+   std::vector<std::string> fileGlobs{};
+   std::vector<std::string> treeNamesExpanded{};
+   std::vector<std::string> fileGlobsExpanded{};
+   for (auto i = 0u; i < d.fileGlobs.size(); ++i) {
+      for (const auto &t : d.trees[i]) {
+         treeNamesExpanded.emplace_back(t.tree);
+         fileGlobsExpanded.emplace_back(t.file);
       }
-      spec.WithGlobalFriends(treeNames, fileGlobs, "friend_glob_" + d.name);
-      spec.WithGlobalFriends(treeNamesExpanded, fileGlobsExpanded, "friend_expanded_" + d.name);
+      treeNames.emplace_back(d.trees[i][0].tree);
+      fileGlobs.emplace_back(d.fileGlobs[i]);
    }
-   auto df = RDataFrame(spec);
-   std::unordered_map<std::string, ROOT::RDF::RResultPtr<std::vector<ULong64_t>>> res;
-   for (const auto &d : data) {
-      res["friend_glob_" + d.name + "x"] = df.Take<ULong64_t>("friend_glob_" + d.name + ".x");
-      res["friend_expanded_" + d.name + "x"] = df.Take<ULong64_t>("friend_expanded_" + d.name + ".x");
-   }
+   spec.WithGlobalFriends(treeNames, fileGlobs, "friend_glob_" + d.name);
+   spec.WithGlobalFriends(treeNamesExpanded, fileGlobsExpanded, "friend_expanded_" + d.name);
 
-   for (auto i = 0u; i < data.size(); ++i) {
-      std::sort(res["friend_glob_" + data[i].name + "x"]->begin(), res["friend_glob_" + data[i].name + "x"]->end());
-      std::sort(res["friend_expanded_" + data[i].name + "x"]->begin(),
-                res["friend_expanded_" + data[i].name + "x"]->end());
-      // case i = 0 is shorter friend, which currently leads to undesired behaviour
-      // see: https://github.com/root-project/root/issues/9137
-      if (i > 0) {
-         EXPECT_VEC_SEQ_EQ(*res["friend_glob_" + data[i].name + "x"],
-                           ROOT::TSeq<ULong64_t>(data[i].sampleStart, data[i].sampleStart + 24));
-      }
+   auto df = RDataFrame(spec);
+   auto take_glob = df.Take<ULong64_t>("friend_glob_" + d.name + ".x");
+   auto take_expanded = df.Take<ULong64_t>("friend_expanded_" + d.name + ".x");
+   std::sort(take_glob->begin(), take_glob->end());
+   std::sort(take_expanded->begin(), take_expanded->end());
+   EXPECT_VEC_SEQ_EQ(*take_glob, ROOT::TSeq<ULong64_t>(d.sampleStart, d.sampleStart + 24));
+   EXPECT_VEC_SEQ_EQ(*take_expanded, ROOT::TSeq<ULong64_t>(d.sampleStart, d.sampleStart + 24));
+}
+
+TEST_P(RDatasetSpecTest, FriendsLonger)
+{
+   // Test the case where there are still entries in the friend trees after
+   // processing of the main tree finishes. This should issue a warning
+   RDatasetSpec spec;
+   spec.AddSample({data[0].name, data[0].trees[0][0].tree, data[0].fileGlobs});
+   const auto &d = data[1];
+   std::vector<std::string> treeNames{};
+   std::vector<std::string> fileGlobs{};
+   for (auto i = 0u; i < d.fileGlobs.size(); ++i) {
+      treeNames.emplace_back(d.trees[i][0].tree);
+      fileGlobs.emplace_back(d.fileGlobs[i]);
+   }
+   spec.WithGlobalFriends(treeNames, fileGlobs, "friend_glob_" + d.name);
+
+   auto df = RDataFrame(spec);
+   auto take_glob = df.Take<ULong64_t>("friend_glob_" + d.name + ".x");
+   // The warning about longer friend only makes sense for the single-threaded case
+   if (!GetParam())
+      ROOT_EXPECT_WARNING(*take_glob, "SetEntryBase",
+                          "Last entry available from main tree '' was 14 but friend tree 'subTree' has more entries "
+                          "beyond the end of the main tree.");
+}
+
+TEST_P(RDatasetSpecTest, FriendsShorter)
+{
+   // Test the case where the friend trees are shorter than the main one.
+   // This should throw an exception.
+   RDatasetSpec spec;
+   spec.AddSample({data[1].name, data[1].trees[0][0].tree, data[1].fileGlobs});
+   const auto &d = data[0];
+   std::vector<std::string> treeNames{};
+   std::vector<std::string> fileGlobs{};
+   for (auto i = 0u; i < d.fileGlobs.size(); ++i) {
+      treeNames.emplace_back(d.trees[i][0].tree);
+      fileGlobs.emplace_back(d.fileGlobs[i]);
+   }
+   spec.WithGlobalFriends(treeNames, fileGlobs, "friend_glob_" + d.name);
+
+   auto df = RDataFrame(spec);
+   auto take_glob = df.Take<ULong64_t>("friend_glob_" + d.name + ".x");
+   try {
+      *take_glob;
+   } catch (const std::runtime_error &err) {
+      const std::string msg = "Cannot read entry 15 from friend tree 'tree'. The friend tree has less entries than the "
+                              "main tree. Make sure all trees of the dataset have the same number of entries.";
+      EXPECT_STREQ(err.what(), msg.c_str());
    }
 }
 
@@ -387,8 +469,7 @@ TEST_P(RDatasetSpecTest, Histo1D)
    RDatasetSpec spec;
    spec.AddSample({"real0", "tree"s, {"specTestFile0.root"s}});
    spec.AddSample({"real1", {{"tree"s, "specTestFile00*.root"s}}});
-   // 1 friend with entries from 15 up to 39 -> shortened to have the size of the main chain
-   spec.WithGlobalFriends({{"subTree"s, "specTestFile1*.root"s}}, "friend"s);
+   spec.WithGlobalFriends("subTree", std::vector<std::string>{"specTestFile1.root", "specTestFile11.root"}, "friend");
    ROOT::RDataFrame d(spec);
 
    auto h1 = d.Histo1D(::TH1D("h1", "h1", 10, 0, 10), "x");
@@ -434,8 +515,7 @@ TEST_P(RDatasetSpecTest, FilterDependingOnVariation)
    RDatasetSpec spec;
    spec.AddSample({"real0", "tree"s, {"specTestFile0.root"s}});
    spec.AddSample({"real1", {{"tree"s, "specTestFile00*.root"s}}});
-   // 1 friend with entries from 15 up to 39 -> shortened to have the size of the main chain
-   spec.WithGlobalFriends({{"subTree"s, "specTestFile1*.root"s}}, "friend"s);
+   spec.WithGlobalFriends("subTree", std::vector<std::string>{"specTestFile1.root", "specTestFile11.root"}, "friend");
    ROOT::RDataFrame df(spec);
 
    auto sum = df.Vary(
@@ -539,12 +619,12 @@ TEST(RDatasetSpecTest, Describe)
 TEST(RDatasetSpecTest, FromSpec)
 {
    auto dfWriter0 = ROOT::RDataFrame(5).Define("z", [](ULong64_t e) { return e + 100; }, {"rdfentry_"});
-   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree", "PYspecTestFile2.root", {"z"});
-   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree", "PYspecTestFile3.root", {"z"});
-   dfWriter0.Range(4, 5).Snapshot<ULong64_t>("subTree", "PYspecTestFile4.root", {"z"});
-   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree1", "PYspecTestFile5.root", {"z"});
-   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree2", "PYspecTestFile6.root", {"z"});
-   dfWriter0.Snapshot<ULong64_t>("anotherTree", "PYspecTestFile7.root", {"z"});
+   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree", "CPPspecTestFile2.root", {"z"});
+   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree", "CPPspecTestFile3.root", {"z"});
+   dfWriter0.Range(4, 5).Snapshot<ULong64_t>("subTree", "CPPspecTestFile4.root", {"z"});
+   dfWriter0.Range(0, 2).Snapshot<ULong64_t>("subTree1", "CPPspecTestFile5.root", {"z"});
+   dfWriter0.Range(2, 4).Snapshot<ULong64_t>("subTree2", "CPPspecTestFile6.root", {"z"});
+   dfWriter0.Snapshot<ULong64_t>("anotherTree", "CPPspecTestFile7.root", {"z"});
 
    auto rdf =
       FromSpec("spec.json")
@@ -575,7 +655,7 @@ TEST(RDatasetSpecTest, FromSpec)
    }
 
    for (auto i = 2u; i < 8u; ++i)
-      gSystem->Unlink(("PYspecTestFile" + std::to_string(i) + ".root").c_str());
+      gSystem->Unlink(("CPPspecTestFile" + std::to_string(i) + ".root").c_str());
 }
 
 TEST(RDatasetSpecTest, FromSpec_ordering_samplesAndFriends)
@@ -712,6 +792,44 @@ TEST(RDatasetSpecTest, Clusters)
    }
 }
 #endif
+
+TEST_P(RDatasetSpecTest, TreeInSubdir)
+{
+   class FileRAII {
+   private:
+      std::string fPath;
+
+   public:
+      explicit FileRAII(const std::string &path) : fPath(path) {}
+      FileRAII(const FileRAII &) = delete;
+      FileRAII &operator=(const FileRAII &) = delete;
+      ~FileRAII() { std::remove(fPath.c_str()); }
+      auto GetPath() const { return fPath.c_str(); }
+   };
+   FileRAII fraii("definepersample_treeinsubdir.root");
+   // Write TTree in TFile subdirectory
+   {
+      TFile f{fraii.GetPath(), "recreate"};
+      auto *outDir = f.mkdir("subdir");
+
+      outDir->cd();
+      int event{42};
+      TTree tree("T", "T");
+      tree.Branch("event", &event, "event/I");
+      tree.Fill();
+      tree.SetDirectory(outDir);
+      f.Write();
+   }
+
+   RDatasetSpec spec;
+   spec.AddSample({"mysample", {{"subdir/T", fraii.GetPath()}}});
+   ROOT::RDataFrame df{spec};
+   auto df_sample =
+      df.DefinePerSample("sample_id", [](unsigned int, const ROOT::RDF::RSampleInfo &id) { return id.AsString(); });
+   auto sample_ids = df_sample.Take<std::string>("sample_id");
+   EXPECT_EQ(sample_ids->size(), 1);
+   EXPECT_EQ(sample_ids->at(0), fraii.GetPath() + std::string("/subdir/T"));
+}
 
 // instantiate single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDatasetSpecTest, ::testing::Values(false));

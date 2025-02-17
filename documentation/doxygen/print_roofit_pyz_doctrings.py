@@ -74,7 +74,7 @@ def write_pyroot_block_for_class(klass):
     if klass.__doc__ is None:
         return
 
-    print("\class " + klass.__name__)
+    print("\class " + klass.__cpp_name__)
     print("\\brief \parblock \endparblock")
     print("\htmlonly")
     print('<div class="pyrootbox">')

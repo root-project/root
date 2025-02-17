@@ -64,10 +64,11 @@ namespace {
       }
    }
    struct R__PushCache {
-      TBufferFile &fBuffer;
+      TBuffer &fBuffer;
       TVirtualArray *fOnfileObject;
 
-      R__PushCache(TBufferFile &b, TVirtualArray *in, UInt_t size) : fBuffer(b), fOnfileObject(in) {
+      R__PushCache(TBuffer &b, TVirtualArray *in, UInt_t size) : fBuffer(b), fOnfileObject(in)
+      {
          if (fOnfileObject) {
             fOnfileObject->SetSize(size);
             fBuffer.PushDataCache( fOnfileObject );
@@ -365,10 +366,10 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
          bool canSelfReference = CanSelfReference(fBranchClass);
          if (fBranchClass.GetClass()->IsTObject()) {
             if (canSelfReference) SetBit(kBranchObject);
-            hasCustomStreamer = (!fBranchClass.GetClass()->GetCollectionProxy() && fBranchClass.GetClass()->TestBit(TClass::kHasCustomStreamerMember));
+            hasCustomStreamer = (!fBranchClass.GetClass()->GetCollectionProxy() && fBranchClass.GetClass()->HasCustomStreamerMember());
          } else {
             if (canSelfReference) SetBit(kBranchAny);
-            hasCustomStreamer = !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != nullptr || fBranchClass.GetClass()->TestBit(TClass::kHasCustomStreamerMember));
+            hasCustomStreamer = !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != nullptr || fBranchClass.GetClass()->HasCustomStreamerMember());
          }
          if (hasCustomStreamer) {
             fType = -1;
@@ -2560,11 +2561,9 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
 
          if (fID < 0) {
             cl = new TClass(fBranchClass.GetClassName(), fClassVersion);
-            cl->SetBit(TClass::kIsEmulation);
             className = cl->GetName();
          } else {
             cl = new TClass(className, fClassVersion);
-            cl->SetBit(TClass::kIsEmulation);
             className = cl->GetName();
          }
       }
@@ -2746,7 +2745,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
             if (clones->IsZombie()) {
                return -1;
             }
-            R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,ndata);
+            R__PushCache onfileObject(b, fOnfileObject, ndata);
 
             char **arr = (char **)clones->GetObjectRef();
             char **end = arr + fNdata;
@@ -2759,7 +2758,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
 
             auto ndata = GetNdata();
 
-            R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,ndata);
+            R__PushCache onfileObject(b, fOnfileObject, ndata);
             TVirtualCollectionProxy *proxy = GetCollectionProxy();
             TVirtualCollectionProxy::TPushPop helper(proxy, fObject);
 
@@ -2769,7 +2768,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
             // Apply the unattached rules; by definition they do not need any
             // input from a buffer.
             TBufferFile b(TBufferFile::kRead, 1);
-            R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,fNdata);
+            R__PushCache onfileObject(b, fOnfileObject, fNdata);
             b.ApplySequence(*fReadActionSequence, fObject);
          }
       }
@@ -3837,9 +3836,10 @@ static void PrintElements(const TStreamerInfo *info, const TStreamerInfoActions:
 
 void TBranchElement::Print(Option_t* option) const
 {
+   constexpr auto length = std::char_traits<char>::length;
    Int_t nbranches = fBranches.GetEntriesFast();
-   if (strncmp(option,"debugAddress",strlen("debugAddress"))==0) {
-      if (strlen(option)==strlen("debugAddress")) {
+   if (strncmp(option,"debugAddress",length("debugAddress"))==0) {
+      if (strlen(option)==length("debugAddress")) {
          Printf("%-24s %-16s %2s %4s %-16s %-16s %8s %8s %s %s\n",
                 "Branch Name", "Streamer Class", "ID", "Type", "Class", "Parent", "pOffset", "fOffset", "fObject", "fOnfileObject");
       }
@@ -3861,7 +3861,7 @@ void TBranchElement::Print(Option_t* option) const
       }
       return;
    }
-   if (strncmp(option,"debugInfo",strlen("debugInfo"))==0)  {
+   if (strncmp(option,"debugInfo",length("debugInfo"))==0)  {
       Printf("Branch %s uses:",GetName());
       if (fID>=0) {
          // GetInfoImp()->GetElement(fID)->ls();
@@ -3894,7 +3894,7 @@ void TBranchElement::Print(Option_t* option) const
          if (fFillActionSequence) fFillActionSequence->Print(option);
       }
       TString suboption = "debugInfoSub";
-      suboption += (option+strlen("debugInfo"));
+      suboption += (option+length("debugInfo"));
       for (Int_t i = 0; i < nbranches; ++i) {
          TBranchElement* subbranch = (TBranchElement*)fBranches.At(i);
          subbranch->Print(suboption);
@@ -4290,7 +4290,7 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
    }
    fNdata = n;
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1);
+   R__PushCache onfileObject(b, fOnfileObject, 1);
 
    // Note: Proxy-helper needs to "embrace" the entire
    //       streaming of this STL container if the container
@@ -4380,7 +4380,7 @@ void TBranchElement::ReadLeavesCollectionSplitPtrMember(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,fNdata);
+   R__PushCache onfileObject(b, fOnfileObject, fNdata);
 
    TStreamerInfo *info = GetInfoImp();
    if (info == nullptr) return;
@@ -4412,7 +4412,7 @@ void TBranchElement::ReadLeavesCollectionSplitVectorPtrMember(TBuffer& b)
    if (!fNdata) {
       return;
    }
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,fNdata);
+   R__PushCache onfileObject(b, fOnfileObject, fNdata);
 
    TStreamerInfo *info = GetInfoImp();
    if (info == nullptr) return;
@@ -4443,7 +4443,7 @@ void TBranchElement::ReadLeavesCollectionMember(TBuffer& b)
    if (!fNdata) {
       return;
    }
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,fNdata);
+   R__PushCache onfileObject(b, fOnfileObject, fNdata);
 
    TStreamerInfo *info = GetInfoImp();
    if (info == nullptr) return;
@@ -4523,7 +4523,7 @@ void TBranchElement::ReadLeavesClonesMember(TBuffer& b)
 
    // Note, we could (possibly) save some more, by configuring the action
    // based on the value of fOnfileObject rather than pushing in on a stack.
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,fNdata);
+   R__PushCache onfileObject(b, fOnfileObject, fNdata);
 
    char **arr = (char **)clones->GetObjectRef();
    char **end = arr + fNdata;
@@ -4548,7 +4548,7 @@ void TBranchElement::ReadLeavesMember(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1);
+   R__PushCache onfileObject(b, fOnfileObject, 1);
    // If not a TClonesArray or STL container master branch
    // or sub-branch and branch inherits from tobject,
    // then register with the buffer so that pointers are
@@ -4600,8 +4600,9 @@ void TBranchElement::ReadLeavesMemberBranchCount(TBuffer& b)
    if (!info) {
       return;
    }
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1); // Here we have a single object that contains a variable size C-style array.
-                                                                 // Since info is not null, fReadActionSequence is not null either.
+   R__PushCache onfileObject(b, fOnfileObject,
+                             1); // Here we have a single object that contains a variable size C-style array.
+                                 // Since info is not null, fReadActionSequence is not null either.
    b.ApplySequence(*fReadActionSequence, fObject);
 }
 
@@ -4635,7 +4636,7 @@ void TBranchElement::ReadLeavesMemberCounter(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1);
+   R__PushCache onfileObject(b, fOnfileObject, 1);
 
    // Since info is not null, fReadActionSequence is not null either.
    b.ApplySequence(*fReadActionSequence, fObject);
@@ -4656,7 +4657,7 @@ void TBranchElement::ReadLeavesCustomStreamer(TBuffer& b)
       return;
    }
 
-   R__PushCache onfileObject(((TBufferFile&)b),fOnfileObject,1);
+   R__PushCache onfileObject(b, fOnfileObject, 1);
    fBranchClass->Streamer(fObject,b);
 }
 
@@ -5734,7 +5735,7 @@ void TBranchElement::SetReadLeavesPtr()
       fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesCustomStreamer;
    } else if (fType == 0 && fID == -1) {
       // top-level branch.
-      bool hasCustomStreamer = fBranchClass.GetClass() && !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != nullptr || fBranchClass.GetClass()->TestBit(TClass::kHasCustomStreamerMember));
+      bool hasCustomStreamer = fBranchClass.GetClass() && !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != nullptr || fBranchClass.GetClass()->HasCustomStreamerMember());
       if (hasCustomStreamer) {
          // We are in the case where the object did *not* have a custom
          // Streamer when the TTree was written but now *does* have a custom

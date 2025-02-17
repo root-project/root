@@ -367,6 +367,28 @@ Int_t TChain::Add(const char *name, Long64_t nentries /* = TTree::kMaxEntries */
    TString basename, treename, query, suffix;
    ParseTreeFilename(name, basename, treename, query, suffix);
 
+   // Special case: ? used for query string AND as wildcard in the filename.
+   // In this case, everything after the first ? is parsed as query/suffix
+   // string in ParseTreeFilename. We assume that everything until the last
+   // occurence of .root should be part of the basename so we remove it
+   // from the suffix and add it back to the basename.
+   // See: https://github.com/root-project/root/issues/10239
+   static const char *dotr = ".root";
+   static Ssiz_t dotrl = strlen(dotr);
+   // Find the last one
+   Ssiz_t lastDotrIdx = kNPOS;
+   Ssiz_t dotrIdx = suffix.Index(dotr);
+   while (dotrIdx != kNPOS) {
+      lastDotrIdx = dotrIdx;
+      dotrIdx = suffix.Index(dotr, dotrIdx + 1);
+   }
+   if (lastDotrIdx != kNPOS) {
+      // Add the part up until '.root' to the basename for globbing
+      basename.Append(suffix, lastDotrIdx + dotrl);
+      // Remove the part up until '.root' from the suffix
+      suffix.Replace(0, lastDotrIdx + dotrl, "");
+   }
+
    // case with one single file
    if (!basename.MaybeWildcard()) {
       return AddFile(name, nentries);
@@ -1344,6 +1366,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
       // (the friends of the chain will be updated in the
       // next loop).
       fTree->LoadTree(treeReadEntry);
+
       if (fFriends) {
          // The current tree has not changed but some of its friends might.
          //
@@ -1528,6 +1551,10 @@ Long64_t TChain::LoadTree(Long64_t entry)
       } else if (!fGlobalRegistration) {
          fTree->ResetBit(kMustCleanup);
       }
+      // Propagate the IMT settings
+      if (fTree) {
+         fTree->SetImplicitMT(fIMTEnabled);
+      }
    }
 
    fTreeNumber = treenum;
@@ -1640,7 +1667,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
          TTree* t = fe->GetTree();
          if (!t) continue;
          if (t->GetTreeIndex()) {
-            t->GetTreeIndex()->UpdateFormulaLeaves(nullptr);
+            t->GetTreeIndex()->UpdateFormulaLeaves(GetTree());
          }
          if (t->GetTree() && t->GetTree()->GetTreeIndex()) {
             t->GetTree()->GetTreeIndex()->UpdateFormulaLeaves(GetTree());

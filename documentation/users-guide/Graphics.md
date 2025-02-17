@@ -153,7 +153,7 @@ The curious reader will have noticed that each entry in the context menu
 corresponds to a method of the class. Look for example to the menu named
 `TAxis::xaxis`. `xaxis` is the name of the object and **`TAxis`** the
 name of its class. If we look at the list of **`TAxis`** methods, for
-example in <http://root.cern.ch/root/htmldoc/TAxis.html>, we see the
+example in <https://root.cern/doc/master/classTAxis.html>, we see the
 methods `SetTimeDisplay()` and` UnZoom()`, which appear also in the
 context menu.
 
@@ -262,7 +262,7 @@ of the class. When the mouse is moved or a button pressed/released, the
 in all it's pads and for each object calls some standard methods to make
 the object react to the event (mouse movement, click or whatever).
 
-The second one is `DistanceToPrimitive(px,py)`. This function computes a
+The second one is `DistancetoPrimitive(px,py)`. This function computes a
 "distance" to an object from the mouse position at the pixel position
 (`px`, `py`, see definition at the end of this paragraph) and returns
 this distance in pixel units. The selected object will be the one with
@@ -524,7 +524,7 @@ known ahead of time.
 #### The Pixel Coordinate System
 
 The least common is the pixel coordinate system, used by functions such
-as `DistanceToPrimitive()` and `ExecuteEvent()`. Its primary use is for
+as `DistancetoPrimitive()` and `ExecuteEvent()`. Its primary use is for
 cursor position, which is always given in pixel coordinates. If
 (`px,py`) is the cursor position, `px=0` and `py=0` corresponds to the
 top-left corner of the pad, which is the standard convention in
@@ -730,7 +730,7 @@ primitives in this pad. The same can be achieved with the graphics
 editor. For example:
 
 ``` {.cpp}
-root[] .x tutorials/hist/h1draw.C
+root[] .x tutorials/hist/hist015_TH1_read_and_draw.C
 root[] TPad *newpad=new TPad("newpad","Transparent pad",0,0,1,1);
 root[] newpad->SetFillStyle(4000);
 root[] newpad->Draw();
@@ -1053,7 +1053,7 @@ The curly arc center is `(x1`, `y1)` and the radius is `rad`. The
 wavelength and the amplitude are given in percent of the line length.
 The parameters `phimin` and `phimax` are the starting and ending angle
 of the arc (given in degrees). Refer to
-`$ROOTSYS/tutorials/graphics/feynman.C` for the script that built the
+`$ROOTSYS/tutorials/visualisation/graphics/feynman.C` for the script that built the
 figure above.
 
 ### Text and Latex Mathematical Expressions
@@ -1188,7 +1188,7 @@ a -\> is obtained with `#vec{a}`
 
 #### Example 1
 
-The script `$ROOTSYS/tutorials/graphics/latex.C:`
+The script `$ROOTSYS/tutorials/visualisation/graphics/latex.C:`
 
 ``` {.cpp}
 {
@@ -1214,7 +1214,7 @@ latex.C](pictures/020000C1.jpg)
 
 #### Example 2
 
-The script `$ROOTSYS/tutorials/graphics/latex2.C:`
+The script `$ROOTSYS/tutorials/visualisation/graphics/latex2.C:`
 
 ``` {.cpp}
 {
@@ -1240,7 +1240,7 @@ latex2.C](pictures/020000C2.jpg)
 
 #### Example 3
 
-The script `$ROOTSYS/tutorials/graphics/latex3.C`:
+The script `$ROOTSYS/tutorials/visualisation/graphics/latex3.C`:
 
 ``` {.cpp}
 {
@@ -1344,7 +1344,7 @@ Int_t npaves, Option_t* option)
 TMathText's purpose is to write mathematical equations, exactly as TeX
 would do it. The syntax is the same as the TeX's one.
 
-The script `$ROOTSYS/tutorials/graphics/tmathtex.C`:
+The script `$ROOTSYS/tutorials/visualisation/graphics/tmathtex.C`:
 
 gives the following output:
 
@@ -1919,9 +1919,9 @@ The first script is:
   axis7->SetLabelOffset(0.01);
   axis7->Draw();
 
-  // one can make axis top->bottom. However because of a problem,
-  // the two x values should not be equal
-  TGaxis *axis8 = new TGaxis(6.5,0.8,6.499,-0.8,0,90,50510,"-");
+  // One can make a vertical axis going top->bottom.
+  // However one need to adjust labels align to avoid overlapping.
+  TGaxis *axis8 = new TGaxis(6.5,0.8,6.5,-0.8,0,90,50510,"-L");
   axis8->SetName("axis8");
   axis8->Draw();
 }
@@ -2312,11 +2312,13 @@ At initialization time, a table of basic colors is generated when the
 first Canvas constructor is called. This table is a linked list, which
 can be accessed from the ***`gROOT`*** object (see
 `TROOT::GetListOfColors()`). Each color has an index and when a basic
-color is defined, two "companion" colors are defined:
-
--   the dark version (color index + 100)
-
--   the bright version (color index + 150)
+color is defined, two "companion" colors are defined: the dark version and the bright version.
+Two static functions are available that return the bright or dark color number corresponding
+to a given color index. If these variants don't already exist, they are created as needed:
+```
+   Int_t dark   = TColor::GetColorDark(color_index);
+   Int_t bright = TColor::GetColorBright(color_index);
+```
 
 The dark and bright colors are used to give 3-D effects when drawing
 various boxes (see **`TWbox`**, **`TPave`**, **`TPaveText`**,
@@ -3228,7 +3230,7 @@ code for it can be found under `$ROOTSYS/gl`.
 
 You can manipulate the viewer via the GUI or via the base
 **`TGLViewer`** object behind the interface. These are detailed below -
-see also `$ROOTSYS/tutorials/gl/glViewerExercise.C`.
+see also `$ROOTSYS/tutorials/visualisation/gl/glViewerExercise.C`.
 
 #### Projections Modes (Cameras)
 
@@ -3288,7 +3290,7 @@ calling the method `TGLViewer::SetCurrentCamera` with one of the
 v->SetCurrentCamera(TGLViewer::kCameraPerspXOZ);
 ```
 
-See also `$ROOTSYS/tutorials/gl/glViewerExercise.C`.
+See also `$ROOTSYS/tutorials/visualisation/gl/glViewerExercise.C`.
 
 #### Adjusting Cameras
 

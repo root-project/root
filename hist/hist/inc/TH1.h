@@ -83,6 +83,17 @@ public:
          kNeutral = 2,  ///< Adapt to the global flag
    };
 
+   /// Enumeration specifying inconsistencies between two histograms,
+   /// in increasing severity.
+   enum  EInconsistencyBits {
+         kFullyConsistent = 0,
+         kDifferentLabels = BIT(0),
+         kDifferentBinLimits = BIT(1),
+         kDifferentAxisLimits = BIT(2),
+         kDifferentNumberOfBins = BIT(3),
+         kDifferentDimensions = BIT(4)
+   };
+
    friend class TH1Merger;
 
 protected:
@@ -156,7 +167,6 @@ protected:
    static bool CheckBinLabels(const TAxis* a1, const TAxis* a2);
    static bool CheckEqualAxes(const TAxis* a1, const TAxis* a2);
    static bool CheckConsistentSubAxes(const TAxis *a1, Int_t firstBin1, Int_t lastBin1, const TAxis *a2, Int_t firstBin2=0, Int_t lastBin2=0);
-   static int CheckConsistency(const TH1* h1, const TH1* h2);
    int LoggedInconsistency(const char* name, const TH1* h1, const TH1* h2, bool useMerge=false) const;
 
 public:
@@ -189,9 +199,13 @@ public:
 
    virtual Bool_t   Add(TF1 *h1, Double_t c1=1, Option_t *option="");
    virtual Bool_t   Add(const TH1 *h1, Double_t c1=1);
-   virtual Bool_t   Add(const TH1 *h, const TH1 *h2, Double_t c1=1, Double_t c2=1); // *MENU*
-   virtual void     AddBinContent(Int_t bin);
-   virtual void     AddBinContent(Int_t bin, Double_t w);
+   virtual Bool_t   Add(const TH1 *h, const TH1 *h2, Double_t c1=1, Double_t c2=1);
+   /// Increment bin content by 1.
+   /// Passing an out-of-range bin leads to undefined behavior
+   virtual void     AddBinContent(Int_t bin) = 0;
+   /// Increment bin content by a weight w.
+   /// Passing an out-of-range bin leads to undefined behavior
+   virtual void     AddBinContent(Int_t bin, Double_t w) = 0;
    static  void     AddDirectory(Bool_t add=kTRUE);
    static  Bool_t   AddDirectoryStatus();
            void     Browse(TBrowser *b) override;
@@ -199,6 +213,7 @@ public:
    virtual Double_t Chi2Test(const TH1* h2, Option_t *option = "UU", Double_t *res = nullptr) const;
    virtual Double_t Chi2TestX(const TH1* h2, Double_t &chi2, Int_t &ndf, Int_t &igood,Option_t *option = "UU",  Double_t *res = nullptr) const;
    virtual Double_t Chisquare(TF1 * f1, Option_t *option = "") const;
+   static  Int_t    CheckConsistency(const TH1* h1, const TH1* h2);
    virtual void     ClearUnderflowAndOverflow();
    virtual Double_t ComputeIntegral(Bool_t onlyPositive = false);
            TObject* Clone(const char *newname = "") const override;
@@ -207,7 +222,7 @@ public:
            Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
    virtual Bool_t   Divide(TF1 *f1, Double_t c1=1);
    virtual Bool_t   Divide(const TH1 *h1);
-   virtual Bool_t   Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+   virtual Bool_t   Divide(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option="");
            void     Draw(Option_t *option = "") override;
    virtual TH1     *DrawCopy(Option_t *option="", const char * name_postfix = "_copy") const;
    virtual TH1     *DrawNormalized(Option_t *option="", Double_t norm=1) const;
@@ -222,7 +237,8 @@ public:
    virtual Int_t    Fill(const char *name, Double_t w);
    virtual void     FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride=1);
    virtual void     FillN(Int_t, const Double_t *, const Double_t *, const Double_t *, Int_t) {}
-   virtual void     FillRandom(const char *fname, Int_t ntimes=5000, TRandom * rng = nullptr);
+   virtual void     FillRandom(TF1 *f1, Int_t ntimes=5000, TRandom * rng = nullptr);
+           void     FillRandom(const char *fname, Int_t ntimes=5000, TRandom * rng = nullptr);
    virtual void     FillRandom(TH1 *h, Int_t ntimes=5000, TRandom * rng = nullptr);
    virtual Int_t    FindBin(Double_t x, Double_t y=0, Double_t z=0);
    virtual Int_t    FindFixBin(Double_t x, Double_t y=0, Double_t z=0) const;
@@ -304,7 +320,7 @@ public:
 
    TVirtualHistPainter *GetPainter(Option_t *option="");
 
-   virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum = nullptr);
+   virtual Int_t    GetQuantiles(Int_t n, Double_t *xp, const Double_t *p = nullptr);
    virtual Double_t GetRandom(TRandom * rng = nullptr) const;
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t GetStdDev(Int_t axis=1) const;
@@ -346,10 +362,10 @@ public:
            Long64_t Merge(TCollection *list, Option_t * option);
    virtual Bool_t   Multiply(TF1 *f1, Double_t c1=1);
    virtual Bool_t   Multiply(const TH1 *h1);
-   virtual Bool_t   Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
+   virtual Bool_t   Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option="");
    virtual void     Normalize(Option_t *option=""); // *MENU*
-           void     Paint(Option_t *option="") override;
-           void     Print(Option_t *option="") const override;
+           void     Paint(Option_t *option = "") override;
+           void     Print(Option_t *option = "") const override;
    virtual void     PutStats(Double_t *stats);
    virtual TH1     *Rebin(Int_t ngroup = 2, const char *newname = "", const Double_t *xbins = nullptr);  // *MENU*
    virtual TH1     *RebinX(Int_t ngroup = 2, const char *newname = "") { return Rebin(ngroup,newname, (Double_t*) nullptr); }
@@ -359,7 +375,7 @@ public:
    virtual void     ResetStats();
            void     SaveAs(const char *filename = "hist", Option_t *option = "") const override;  // *MENU*
            void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
-   virtual void     Scale(Double_t c1=1, Option_t *option="");
+   virtual void     Scale(Double_t c1=1, Option_t *option="");  // *MENU*
    virtual void     SetAxisColor(Color_t color=1, Option_t *axis="X");
    virtual void     SetAxisRange(Double_t xmin, Double_t xmax, Option_t *axis="X");
    virtual void     SetBarOffset(Float_t offset=0.25) {fBarOffset = Short_t(1000*offset);}
@@ -385,6 +401,7 @@ public:
    virtual void     SetContent(const Double_t *content);
    virtual void     SetContour(Int_t nlevels, const Double_t *levels = nullptr);
    virtual void     SetContourLevel(Int_t level, Double_t value);
+   virtual void     SetColors(Color_t linecolor = -1, Color_t markercolor = -1, Color_t fillcolor = -1);
    static  void     SetDefaultBufferSize(Int_t buffersize=1000);
    static  void     SetDefaultSumw2(Bool_t sumw2=kTRUE);
    virtual void     SetDirectory(TDirectory *dir);
@@ -444,8 +461,15 @@ public:
    ClassDefOverride(TH1,8)  //1-Dim histogram base class
 
 protected:
-   virtual Double_t RetrieveBinContent(Int_t bin) const;
-   virtual void     UpdateBinContent(Int_t bin, Double_t content);
+
+   /// Raw retrieval of bin content on internal data structure
+   /// see convention for numbering bins in TH1::GetBin
+   virtual Double_t RetrieveBinContent(Int_t bin) const = 0;
+
+   /// Raw update of bin content on internal data structure
+   /// see convention for numbering bins in TH1::GetBin
+   virtual void     UpdateBinContent(Int_t bin, Double_t content) = 0;
+
    virtual Double_t GetBinErrorSqUnchecked(Int_t bin) const { return fSumw2.fN ? fSumw2.fArray[bin] : RetrieveBinContent(bin); }
 };
 

@@ -40,7 +40,13 @@ private:
 
 public:
    RArrowDS(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columns);
-   ~RArrowDS();
+   // Rule of five
+   RArrowDS(const RArrowDS &) = delete;
+   RArrowDS &operator=(const RArrowDS &) = delete;
+   RArrowDS(RArrowDS &&) = delete;
+   RArrowDS &operator=(RArrowDS &&) = delete;
+   ~RArrowDS() final;
+
    const std::vector<std::string> &GetColumnNames() const final;
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
    std::string GetTypeName(std::string_view colName) const final;

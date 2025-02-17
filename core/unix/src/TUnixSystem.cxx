@@ -744,6 +744,12 @@ Int_t TUnixSystem::GetCryptoRandom(void *buf, Int_t len)
    return len;
 #elif defined(R__GETRANDOM_CLIB)
    return getrandom(buf, len, GRND_NONBLOCK);
+#elif defined(R__USE_URANDOM)
+   std::ifstream urandom{"/dev/urandom"};
+   if (!urandom)
+      return -1;
+   urandom.read(reinterpret_cast<char *>(buf), len);
+   return len;
 #else
 #error "Reliable cryptographic random function not defined"
    return -1;
@@ -3233,17 +3239,17 @@ int TUnixSystem::OpenConnection(const char *server, int port, int tcpwindowsize,
 /// or -3 if listen() failed.
 
 int TUnixSystem::AnnounceTcpService(int port, Bool_t reuse, int backlog,
-                                    int tcpwindowsize)
+                                    int tcpwindowsize, ESocketBindOption socketBindOption)
 {
-   return UnixTcpService(port, reuse, backlog, tcpwindowsize);
+   return UnixTcpService(port, reuse, backlog, tcpwindowsize, socketBindOption);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Announce UDP service.
 
-int TUnixSystem::AnnounceUdpService(int port, int backlog)
+int TUnixSystem::AnnounceUdpService(int port, int backlog, ESocketBindOption socketBindOption)
 {
-   return UnixUdpService(port, backlog);
+   return UnixUdpService(port, backlog, socketBindOption);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4285,11 +4291,13 @@ int TUnixSystem::UnixUnixConnect(const char *sockpath)
 /// Use tcpwindowsize to specify the size of the receive buffer, it has
 /// to be specified here to make sure the window scale option is set (for
 /// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// The socketBindOption parameter allows to specify how the socket will be 
+/// bound. See the documentation of ESocketBindOption for the details.
 /// Returns socket fd or -1 if socket() failed, -2 if bind() failed
 /// or -3 if listen() failed.
 
 int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
-                                int tcpwindowsize)
+                                int tcpwindowsize, ESocketBindOption socketBindOption)
 {
    const short kSOCKET_MINPORT = 5000, kSOCKET_MAXPORT = 15000;
    short  sport, tryport = kSOCKET_MINPORT;
@@ -4323,7 +4331,7 @@ int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
    struct sockaddr_in inserver;
    memset(&inserver, 0, sizeof(inserver));
    inserver.sin_family = AF_INET;
-   inserver.sin_addr.s_addr = htonl(INADDR_ANY);
+   inserver.sin_addr.s_addr = socketBindOption == ESocketBindOption::kInaddrAny ? htonl(INADDR_ANY) : htonl(INADDR_LOOPBACK);
    inserver.sin_port = sport;
 
    // Bind socket
@@ -4363,8 +4371,10 @@ int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
 /// how many sockets can be waiting to be accepted. If port is 0 a port
 /// scan will be done to find a free port. This option is mutual exlusive
 /// with the reuse option.
+/// The socketBindOption parameter allows to specify how the socket will be 
+/// bound. See the documentation of ESocketBindOption for the details.
 
-int TUnixSystem::UnixUdpService(int port, int backlog)
+int TUnixSystem::UnixUdpService(int port, int backlog, ESocketBindOption socketBindOption)
 {
    const short kSOCKET_MINPORT = 5000, kSOCKET_MAXPORT = 15000;
    short  sport, tryport = kSOCKET_MINPORT;
@@ -4385,7 +4395,7 @@ int TUnixSystem::UnixUdpService(int port, int backlog)
    struct sockaddr_in inserver;
    memset(&inserver, 0, sizeof(inserver));
    inserver.sin_family = AF_INET;
-   inserver.sin_addr.s_addr = htonl(INADDR_ANY);
+   inserver.sin_addr.s_addr = socketBindOption == ESocketBindOption::kInaddrAny ? htonl(INADDR_ANY) : htonl(INADDR_LOOPBACK);
    inserver.sin_port = sport;
 
    // Bind socket
@@ -4811,12 +4821,12 @@ static void GetFreeBSDSysInfo(SysInfo_t *sysinfo)
    // it probably would be better to get this information from syscalls
    // this is possibly less error prone
    FILE *p = gSystem->OpenPipe("sysctl -n kern.ostype hw.model hw.ncpu "
-                               "hw.physmem dev.cpu.0.freq", "r");
+                               "hw.realmem dev.cpu.0.freq", "r");
    TString s;
    s.Gets(p);
    sysinfo->fOS = s;
    s.Gets(p);
-   sysinfo->fModel = s;
+   sysinfo->fCpuType = s;
    s.Gets(p);
    sysinfo->fCpus = s.Atoi();
    s.Gets(p);
@@ -4824,13 +4834,13 @@ static void GetFreeBSDSysInfo(SysInfo_t *sysinfo)
    sysinfo->fPhysRam = Int_t(t / 1024 / 1024);
    s.Gets(p);
    t = s.Atoll();
-   sysinfo->fCpuSpeed = Int_t(t / 1000000);
+   sysinfo->fCpuSpeed = Int_t(t);
    gSystem->ClosePipe(p);
 }
 
 static void GetFreeBSDCpuInfo(CpuInfo_t*, Int_t)
 {
-  //not yet implemented
+   Error("ListSymbols", "not yet implemented");
 }
 #endif
 
@@ -4940,15 +4950,10 @@ static void GetDarwinCpuInfo(CpuInfo_t *cpuinfo, Int_t sampleTime)
 static void GetDarwinMemInfo(MemInfo_t *meminfo)
 {
    static Int_t pshift = 0;
-   static DIR *dirp;
-   vm_statistics_data_t vm_info;
-   mach_msg_type_number_t count;
-   kern_return_t kr;
-   struct dirent *dp;
-   Long64_t total, used, free, swap_total, swap_used;
 
-   count = HOST_VM_INFO_COUNT;
-   kr = host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)&vm_info, &count);
+   mach_msg_type_number_t count = HOST_VM_INFO_COUNT;
+   vm_statistics_data_t vm_info;
+   kern_return_t kr = host_statistics(mach_host_self(), HOST_VM_INFO, (host_info_t)&vm_info, &count);
    if (kr != KERN_SUCCESS) {
       ::Error("TUnixSystem::GetDarwinMemInfo", "host_statistics: %s", mach_error_string(kr));
       return;
@@ -4958,19 +4963,13 @@ static void GetDarwinMemInfo(MemInfo_t *meminfo)
          pshift++;
    }
 
-   used =  (Long64_t)(vm_info.active_count + vm_info.inactive_count + vm_info.wire_count) << pshift;
-   free =  (Long64_t)(vm_info.free_count) << pshift;
-   total = (Long64_t)(vm_info.active_count + vm_info.inactive_count + vm_info.free_count + vm_info.wire_count) << pshift;
-
-   // Swap is available at same time as mem, so grab values here.
-   swap_used = vm_info.pageouts << pshift;
-
    // Figure out total swap. This adds up the size of the swapfiles */
-   dirp = opendir("/private/var/vm");
+   DIR *dirp = opendir("/private/var/vm");
    if (!dirp)
        return;
 
-   swap_total = 0;
+   Long64_t swap_total = 0;
+   struct dirent *dp;
    while ((dp = readdir(dirp)) != 0) {
       struct stat sb;
       char fname [MAXNAMLEN];
@@ -4984,12 +4983,21 @@ static void GetDarwinMemInfo(MemInfo_t *meminfo)
    }
    closedir(dirp);
 
+   Long64_t used =  (Long64_t)(vm_info.active_count + vm_info.inactive_count + vm_info.wire_count) << pshift;
+   Long64_t free =  (Long64_t)(vm_info.free_count) << pshift;
+   Long64_t total = (Long64_t)(vm_info.active_count + vm_info.inactive_count + vm_info.free_count + vm_info.wire_count) << pshift;
+   Long64_t avail = (Long64_t)(vm_info.inactive_count + vm_info.free_count) << pshift;
+
+   // Swap is available at same time as mem, so grab values here.
+   Long64_t swap_used = vm_info.pageouts << pshift;
+
    meminfo->fMemTotal  = (Int_t) (total >> 20);       // divide by 1024 * 1024
    meminfo->fMemUsed   = (Int_t) (used >> 20);
    meminfo->fMemFree   = (Int_t) (free >> 20);
    meminfo->fSwapTotal = (Int_t) (swap_total >> 20);
    meminfo->fSwapUsed  = (Int_t) (swap_used >> 20);
    meminfo->fSwapFree  = meminfo->fSwapTotal - meminfo->fSwapUsed;
+   meminfo->fMemAvailable = (Int_t)(avail >> 20);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5224,6 +5232,22 @@ static void GetLinuxMemInfo(MemInfo_t *meminfo)
          TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
          meminfo->fMemFree = (s.Atoi() / 1024);
       }
+      if (s.BeginsWith("MemAvailable")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fMemAvailable = (s.Atoi() / 1024);
+      }
+      if (s.BeginsWith("Cached")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fMemCached = (s.Atoi() / 1024);
+      }
+      if (s.BeginsWith("Buffers")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fMemBuffer = (s.Atoi() / 1024);
+      }
+      if (s.BeginsWith("Shmem")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fMemShared = (s.Atoi() / 1024);
+      }
       if (s.BeginsWith("SwapTotal")) {
          TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
          meminfo->fSwapTotal = (s.Atoi() / 1024);
@@ -5232,11 +5256,32 @@ static void GetLinuxMemInfo(MemInfo_t *meminfo)
          TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
          meminfo->fSwapFree = (s.Atoi() / 1024);
       }
+      if (s.BeginsWith("SwapCached")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fSwapCached = (s.Atoi() / 1024);
+      }
+      if (s.BeginsWith("SReclaimable")) {
+         TPRegexp("^.+: *([^ ]+).*").Substitute(s, "$1");
+         meminfo->fSReclaimable = (s.Atoi() / 1024);
+      }
+      
    }
    fclose(f);
 
-   meminfo->fMemUsed  = meminfo->fMemTotal - meminfo->fMemFree;
-   meminfo->fSwapUsed = meminfo->fSwapTotal - meminfo->fSwapFree;
+   /*
+    * Compute memory partition like procps(free), see https://gitlab.com/procps-ng/procps/-/blob/master/proc/sysinfo.c
+    * 
+    * fMemShared is a part of Cached (see https://lore.kernel.org/patchwork/patch/648763/), does not subtract twice from used
+    */
+   
+   meminfo->fMemCached = meminfo->fMemCached + meminfo->fSReclaimable - meminfo->fMemShared;
+   const Int_t usedDiff = meminfo->fMemFree + meminfo->fMemCached + meminfo->fSReclaimable + meminfo->fMemBuffer;
+
+   meminfo->fMemUsed = (meminfo->fMemTotal >= usedDiff) ? meminfo->fMemTotal - usedDiff : meminfo->fMemTotal - meminfo->fMemFree;
+   meminfo->fMemAvailable = meminfo->fMemAvailable != 0 ? std::min(meminfo->fMemAvailable, meminfo->fMemTotal) : meminfo->fMemFree;
+
+   meminfo->fSwapUsed = meminfo->fSwapTotal - meminfo->fSwapFree - meminfo->fSwapCached;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////

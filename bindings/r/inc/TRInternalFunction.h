@@ -31,7 +31,15 @@ public:
 
       RCPP_GENERATE_CTOR_ASSIGN(TRInternalFunction_Impl)
 
+#if RCPP_VERSION >= Rcpp_Version(1,0,13)
+      template <typename OUT, typename... T>
+      TRInternalFunction_Impl(OUT(*fun)(T...))
+      {
+         set(Rcpp::XPtr< Rcpp::CppFunctionN<OUT, T...> >(new Rcpp::CppFunctionN<OUT, T...>(fun), false));
+      }
+#else
 #include <TRInternalFunction__ctors.h>
+#endif
       void update(SEXP) {}
 private:
 

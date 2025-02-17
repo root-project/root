@@ -21,11 +21,15 @@
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 
+#include <TDirectory.h>
+#include <TError.h>
+#include <TFile.h>
+
 namespace {
 
-using ROOT::Experimental::DescriptorId_t;
-using ROOT::Experimental::NTupleSize_t;
-using ROOT::Experimental::RException;
+using ROOT::DescriptorId_t;
+using ROOT::NTupleSize_t;
+using ROOT::Experimental::RExtraTypeInfoDescriptor;
 using ROOT::Experimental::RNTupleDescriptor;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::Internal::RColumn;
@@ -70,37 +74,43 @@ public:
 
    const RNTupleDescriptor &GetDescriptor() const final { return fInnerSink->GetDescriptor(); }
 
-   ColumnHandle_t AddColumn(DescriptorId_t, const RColumn &) final { return {}; }
+   NTupleSize_t GetNEntries() const final { return fInnerSink->GetNEntries(); }
+
+   ColumnHandle_t AddColumn(DescriptorId_t, RColumn &) final { return {}; }
    void InitImpl(RNTupleModel &) final {}
    void UpdateSchema(const RNTupleModelChangeset &, NTupleSize_t) final
    {
-      throw RException(R__FAIL("UpdateSchema not supported via RPageSynchronizingSink"));
+      throw ROOT::RException(R__FAIL("UpdateSchema not supported via RPageSynchronizingSink"));
+   }
+   void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &) final
+   {
+      throw ROOT::RException(R__FAIL("UpdateExtraTypeInfo not supported via RPageSynchronizingSink"));
    }
 
+   void CommitSuppressedColumn(ColumnHandle_t handle) final { fInnerSink->CommitSuppressedColumn(handle); }
    void CommitPage(ColumnHandle_t, const RPage &) final
    {
-      throw RException(R__FAIL("should never commit single pages via RPageSynchronizingSink"));
+      throw ROOT::RException(R__FAIL("should never commit single pages via RPageSynchronizingSink"));
    }
    void CommitSealedPage(DescriptorId_t, const RSealedPage &) final
    {
-      throw RException(R__FAIL("should never commit sealed pages via RPageSynchronizingSink"));
+      throw ROOT::RException(R__FAIL("should never commit sealed pages via RPageSynchronizingSink"));
    }
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final
    {
       fInnerSink->CommitSealedPageV(ranges);
    }
    std::uint64_t CommitCluster(NTupleSize_t nNewEntries) final { return fInnerSink->CommitCluster(nNewEntries); }
+   RStagedCluster StageCluster(NTupleSize_t nNewEntries) final { return fInnerSink->StageCluster(nNewEntries); }
+   void CommitStagedClusters(std::span<RStagedCluster> clusters) final { fInnerSink->CommitStagedClusters(clusters); }
    void CommitClusterGroup() final
    {
-      throw RException(R__FAIL("should never commit cluster group via RPageSynchronizingSink"));
+      throw ROOT::RException(R__FAIL("should never commit cluster group via RPageSynchronizingSink"));
    }
-   void CommitDataset() final { throw RException(R__FAIL("should never commit dataset via RPageSynchronizingSink")); }
-
-   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final
+   void CommitDatasetImpl() final
    {
-      return fInnerSink->ReservePage(columnHandle, nElements);
+      throw ROOT::RException(R__FAIL("should never commit dataset via RPageSynchronizingSink"));
    }
-   void ReleasePage(RPage &page) final { fInnerSink->ReleasePage(page); }
 
    RSinkGuard GetSinkGuard() final { return RSinkGuard(fMutex); }
 };
@@ -111,6 +121,9 @@ ROOT::Experimental::RNTupleParallelWriter::RNTupleParallelWriter(std::unique_ptr
                                                                  std::unique_ptr<Internal::RPageSink> sink)
    : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleParallelWriter")
 {
+   if (fModel->GetRegisteredSubfields().size() > 0) {
+      throw RException(R__FAIL("cannot create an RNTupleParallelWriter from a model with registered subfields"));
+   }
    fModel->Freeze();
    fSink->Init(*fModel.get());
    fMetrics.ObserveMetrics(fSink->GetMetrics());
@@ -118,20 +131,28 @@ ROOT::Experimental::RNTupleParallelWriter::RNTupleParallelWriter(std::unique_ptr
 
 ROOT::Experimental::RNTupleParallelWriter::~RNTupleParallelWriter()
 {
+   try {
+      CommitDataset();
+   } catch (const RException &err) {
+      R__LOG_ERROR(ROOT::Internal::NTupleLog()) << "failure committing ntuple: " << err.GetError().GetReport();
+   }
+}
+
+void ROOT::Experimental::RNTupleParallelWriter::CommitDataset()
+{
+   if (fModel->IsExpired())
+      return;
+
    for (const auto &context : fFillContexts) {
       if (!context.expired()) {
-         R__LOG_ERROR(NTupleLog()) << "RNTupleFillContext has not been destructed";
-         return;
+         throw RException(R__FAIL("RNTupleFillContext has not been destructed"));
       }
    }
 
    // Now commit all clusters as a cluster group and then the dataset.
-   try {
-      fSink->CommitClusterGroup();
-      fSink->CommitDataset();
-   } catch (const RException &err) {
-      R__LOG_ERROR(NTupleLog()) << "failure committing ntuple: " << err.GetError().GetReport();
-   }
+   fSink->CommitClusterGroup();
+   fSink->CommitDataset();
+   fModel->Expire();
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleParallelWriter>
@@ -149,13 +170,23 @@ ROOT::Experimental::RNTupleParallelWriter::Recreate(std::unique_ptr<RNTupleModel
 
 std::unique_ptr<ROOT::Experimental::RNTupleParallelWriter>
 ROOT::Experimental::RNTupleParallelWriter::Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
-                                                  TFile &file, const RNTupleWriteOptions &options)
+                                                  TDirectory &fileOrDirectory, const RNTupleWriteOptions &options)
 {
+   auto file = fileOrDirectory.GetFile();
+   if (!file) {
+      throw RException(
+         R__FAIL("RNTupleParallelWriter only supports writing to a ROOT file. Cannot write into a directory "
+                 "that is not backed by a file"));
+   }
+   if (!file->IsBinary()) {
+      throw RException(R__FAIL("RNTupleParallelWriter only supports writing to a ROOT file. Cannot write into " +
+                               std::string(file->GetName())));
+   }
    if (!options.GetUseBufferedWrite()) {
       throw RException(R__FAIL("parallel writing requires buffering"));
    }
 
-   auto sink = std::make_unique<Internal::RPageSinkFile>(ntupleName, file, options);
+   auto sink = std::make_unique<Internal::RPageSinkFile>(ntupleName, fileOrDirectory, options);
    // Cannot use std::make_unique because the constructor of RNTupleParallelWriter is private.
    return std::unique_ptr<RNTupleParallelWriter>(new RNTupleParallelWriter(std::move(model), std::move(sink)));
 }
@@ -165,9 +196,6 @@ std::shared_ptr<ROOT::Experimental::RNTupleFillContext> ROOT::Experimental::RNTu
    std::lock_guard g(fMutex);
 
    auto model = fModel->Clone();
-
-   // TODO: Think about honoring RNTupleWriteOptions::SetUseBufferedWrite(false); this requires synchronization on every
-   // call to CommitPage() *and* preparing multiple cluster descriptors in parallel!
    auto sink = std::make_unique<Internal::RPageSinkBuf>(std::make_unique<RPageSynchronizingSink>(*fSink, fSinkMutex));
 
    // Cannot use std::make_shared because the constructor of RNTupleFillContext is private. Also it would mean that the

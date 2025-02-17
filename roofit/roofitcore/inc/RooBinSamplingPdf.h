@@ -60,6 +60,10 @@ public:
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override {
     return _pdf->analyticalIntegral(code, rangeName);
   }
+  /// Forwards to the PDF's implementation.
+  std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet *nset) const override {
+    return _pdf->createExpectedEventsFunc(nset);
+  }
 
   /// Forwards to the PDF's implementation.
   bool selfNormalized() const override { return true; }

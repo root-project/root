@@ -23,7 +23,7 @@ This class calls functions from `RooBatchCompute` library to provide faster
 computation times.
 **/
 
-#include "RooNLLVarNew.h"
+#include "RooFit/Detail/RooNLLVarNew.h"
 
 #include <RooHistPdf.h>
 #include <RooBatchCompute.h>
@@ -32,8 +32,7 @@ computation times.
 #include <RooConstVar.h>
 #include <RooRealVar.h>
 #include <RooSetProxy.h>
-#include "RooFit/Detail/Buffers.h"
-#include <RooFit/Detail/EvaluateFuncs.h>
+#include <RooFit/Detail/MathFuncs.h>
 
 #include "RooFitImplHelpers.h"
 
@@ -47,6 +46,10 @@ computation times.
 #include <stdexcept>
 #include <vector>
 
+
+namespace RooFit {
+namespace Detail {
+
 // Declare constexpr static members to make them available if odr-used in C++14.
 constexpr const char *RooNLLVarNew::weightVarName;
 constexpr const char *RooNLLVarNew::weightVarNameSumW2;
@@ -54,9 +57,9 @@ constexpr const char *RooNLLVarNew::weightVarNameSumW2;
 namespace {
 
 // Use RooConstVar for dummies such that they don't get included in getParameters().
-RooConstVar *dummyVar(const char *name)
+std::unique_ptr<RooConstVar> dummyVar(const char *name)
 {
-   return new RooConstVar(name, name, 1.0);
+   return std::make_unique<RooConstVar>(name, name, 1.0);
 }
 
 // Helper class to represent a template pdf based on the fit dataset.
@@ -129,8 +132,8 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
                            bool isExtended, RooFit::OffsetMode offsetMode)
    : RooAbsReal(name, title),
      _pdf{"pdf", "pdf", this, pdf},
-     _weightVar{"weightVar", "weightVar", this, *dummyVar(weightVarName), true, false, true},
-     _weightSquaredVar{weightVarNameSumW2, weightVarNameSumW2, this, *dummyVar("weightSquardVar"), true, false, true},
+     _weightVar{"weightVar", "weightVar", this, dummyVar(weightVarName)},
+     _weightSquaredVar{weightVarNameSumW2, weightVarNameSumW2, this, dummyVar("weightSquardVar")},
      _binnedL{pdf.getAttribute("BinnedLikelihoodActive")}
 {
    RooArgSet obs;
@@ -229,7 +232,7 @@ void RooNLLVarNew::doEvalBinnedL(RooFit::EvalContext &ctx, std::span<const doubl
          // Catch error condition: data present where zero events are predicted
          logEvalError(Form("Observed %f events in bin %lu with zero event yield", N, (unsigned long)i));
       } else {
-         result += RooFit::Detail::EvaluateFuncs::nllEvaluate(mu, N, true, _doBinOffset);
+         result += RooFit::Detail::MathFuncs::nll(mu, N, true, _doBinOffset);
          sumWeightKahanSum += N;
       }
    }
@@ -260,9 +263,9 @@ void RooNLLVarNew::doEval(RooFit::EvalContext &ctx) const
    auto nllOut = RooBatchCompute::reduceNLL(config, probas, _weightSquared ? weightsSumW2 : weights,
                                             _doBinOffset ? ctx.at(*_offsetPdf) : std::span<const double>{});
 
-   if (nllOut.nLargeValues > 0) {
+   if (nllOut.nInfiniteValues > 0) {
       oocoutW(&*_pdf, Eval) << "RooAbsPdf::getLogVal(" << _pdf->GetName()
-                            << ") WARNING: top-level pdf has unexpectedly large values" << std::endl;
+                            << ") WARNING: top-level pdf has some infinite values" << std::endl;
    }
    for (std::size_t i = 0; i < nllOut.nNonPositiveValues; ++i) {
       _pdf->logEvalError("getLogVal() top-level p.d.f not greater than zero");
@@ -332,46 +335,7 @@ void RooNLLVarNew::finalizeResult(RooFit::EvalContext &ctx, ROOT::Math::KahanSum
    ctx.setOutputWithOffset(this, result, _offset);
 }
 
-void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   if (_binnedL && !_pdf->getAttribute("BinnedLikelihoodActiveYields")) {
-      std::stringstream errorMsg;
-      errorMsg << "RooNLLVarNew::translate(): binned likelihood optimization is only supported when raw pdf "
-                  "values can be interpreted as yields."
-               << " This is not the case for HistFactory models written with ROOT versions before 6.26.00";
-      coutE(InputArguments) << errorMsg.str() << std::endl;
-      throw std::runtime_error(errorMsg.str());
-   }
-
-   std::string weightSumName = RooFit::Detail::makeValidVarName(GetName()) + "WeightSum";
-   std::string resName = RooFit::Detail::makeValidVarName(GetName()) + "Result";
-   ctx.addResult(this, resName);
-   ctx.addToGlobalScope("double " + weightSumName + " = 0.0;\n");
-   ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
-
-   const bool needWeightSum = _expectedEvents || _simCount > 1;
-
-   if (needWeightSum) {
-      auto scope = ctx.beginLoop(this);
-      ctx.addToCodeBody(weightSumName + " += " + ctx.getResult(*_weightVar) + ";\n");
-   }
-   if (_simCount > 1) {
-      std::string simCountStr = std::to_string(static_cast<double>(_simCount));
-      ctx.addToCodeBody(resName + " += " + weightSumName + " * std::log(" + simCountStr + ");\n");
-   }
-
-   // Begin loop scope for the observables and weight variable. If the weight
-   // is a scalar, the context will ignore it for the loop scope. The closing
-   // brackets of the loop is written at the end of the scopes lifetime.
-   {
-      auto scope = ctx.beginLoop(this);
-      std::string term = ctx.buildCall("RooFit::Detail::EvaluateFuncs::nllEvaluate", _pdf, _weightVar, _binnedL, 0);
-      ctx.addToCodeBody(this, resName + " += " + term + ";");
-   }
-   if (_expectedEvents) {
-      std::string expected = ctx.getResult(**_expectedEvents);
-      ctx.addToCodeBody(resName + " += " + expected + " - " + weightSumName + " * std::log(" + expected + ");\n");
-   }
-}
+} // namespace Detail
+} // namespace RooFit
 
 /// \endcond

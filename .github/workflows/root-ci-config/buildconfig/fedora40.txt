@@ -1,0 +1,5 @@
+builtin_zstd=ON
+builtin_zlib=ON
+builtin_nlohmannjson=On
+builtin_vdt=On
+ccache=On

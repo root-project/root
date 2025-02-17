@@ -70,7 +70,7 @@ protected:
 
    std::string BuildWSEntryPage();
 
-   void ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg);
+   void ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg, const std::string &version = "");
 
    static Bool_t VerifyFilePath(const char *fname);
 

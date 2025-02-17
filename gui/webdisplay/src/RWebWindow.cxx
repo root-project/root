@@ -49,6 +49,8 @@ RWebWindow::WebConn::~WebConn()
 }
 
 
+std::string RWebWindow::gJSROOTsettings = "";
+
 
 /** \class ROOT::RWebWindow
 \ingroup webdisplay
@@ -141,6 +143,8 @@ void RWebWindow::SetPanelName(const std::string &name)
 
    fPanelName = name;
    SetDefaultPage("file:rootui5sys/panel/panel.html");
+   if (fPanelName.find("localapp.") == 0)
+      SetUseCurrentDir(true);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -272,11 +276,29 @@ std::shared_ptr<RWebWindow::WebConn> RWebWindow::FindConnection(unsigned wsid)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Signal that connection is closing
+
+void RWebWindow::ClearConnection(std::shared_ptr<WebConn> &conn, bool provide_signal)
+{
+   if (!conn)
+      return;
+
+   if (provide_signal)
+      ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
+   for (auto &elem: conn->fEmbed) {
+      if (provide_signal)
+         elem.second->ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
+      elem.second->RemoveMasterConnection(conn->fConnId);
+   }
+
+   conn->fEmbed.clear();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Remove connection with given websocket id
 
-std::shared_ptr<RWebWindow::WebConn> RWebWindow::RemoveConnection(unsigned wsid)
+std::shared_ptr<RWebWindow::WebConn> RWebWindow::RemoveConnection(unsigned wsid, bool provide_signal)
 {
-
    std::shared_ptr<WebConn> res;
 
    {
@@ -287,19 +309,15 @@ std::shared_ptr<RWebWindow::WebConn> RWebWindow::RemoveConnection(unsigned wsid)
             res = std::move(fConn[n]);
             fConn.erase(fConn.begin() + n);
             res->fActive = false;
+            res->fWasFirst = (n == 0);
             break;
          }
    }
 
-   if (res) {
-      for (auto &elem: res->fEmbed)
-         elem.second->RemoveMasterConnection(res->fConnId);
-      res->fEmbed.clear();
-   }
+   ClearConnection(res, provide_signal);
 
    return res;
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Add new master connection
@@ -498,27 +516,6 @@ unsigned RWebWindow::AddDisplayHandle(bool headless_mode, const std::string &key
    return fConnCnt;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////
-/// Find connection with specified key.
-/// Must be used under connection mutex lock
-
-std::shared_ptr<RWebWindow::WebConn> RWebWindow::_FindConnWithKey(const std::string &key) const
-{
-   if (key.empty())
-      return nullptr;
-
-   for (auto &entry : fPendingConn) {
-      if (entry->fKey == key)
-         return entry;
-   }
-
-   for (auto &conn : fConn) {
-      if (conn->fKey == key)
-         return conn;
-   }
-
-   return nullptr;
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Check if provided hash, ntry parameters from the connection request could be accepted
@@ -543,7 +540,7 @@ bool RWebWindow::_CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &
       return (conn->fKey.empty() && hash.empty()) || (hash == conn->fKey) || (hash == expected);
 
    // for local connection simple key can be used
-   if (!remote && (hash == conn->fKey))
+   if (!remote && ((hash == conn->fKey) || (hash == expected)))
       return true;
 
    if (hash == expected) {
@@ -572,14 +569,28 @@ bool RWebWindow::_CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns true if provided key value already exists (in processes map or in existing connections)
+/// In special cases one also can check if key value exists as newkey
 
-bool RWebWindow::HasKey(const std::string &key) const
+bool RWebWindow::HasKey(const std::string &key, bool also_newkey) const
 {
+   if (key.empty())
+      return false;
+
    std::lock_guard<std::mutex> grd(fConnMutex);
 
-   auto conn = _FindConnWithKey(key);
+   for (auto &entry : fPendingConn) {
+      if (entry->fKey == key)
+         return true;
+   }
 
-   return conn ? true : false;
+   for (auto &conn : fConn) {
+      if (conn->fKey == key)
+         return true;
+      if (also_newkey && (conn->fNewKey == key))
+         return true;
+   }
+
+   return false;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -605,8 +616,7 @@ void RWebWindow::RemoveKey(const std::string &key)
    }
 
    for (auto &conn : lst)
-      if (conn->fActive)
-         ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
+      ClearConnection(conn, conn->fActive);
 }
 
 
@@ -615,9 +625,9 @@ void RWebWindow::RemoveKey(const std::string &key)
 
 std::string RWebWindow::GenerateKey() const
 {
-   auto key = RWebWindowsManager::GenerateKey(32);
+   auto key = RWebWindowsManager::GenerateKey(IsRequireAuthKey() ? 32 : 4);
 
-   R__ASSERT((!HasKey(key) && (key != fMgr->fSessionKey)) && "Fail to generate window connection key");
+   R__ASSERT((!IsRequireAuthKey() || (!HasKey(key) && (key != fMgr->fSessionKey))) && "Fail to generate window connection key");
 
    return key;
 }
@@ -686,20 +696,25 @@ void RWebWindow::CheckInactiveConnections()
    }
 
    for (auto &entry : clr)
-      ProvideQueueEntry(entry->fConnId, kind_Disconnect, ""s);
-
+      ClearConnection(entry, true);
 }
 
 /////////////////////////////////////////////////////////////////////////
 /// Configure maximal number of allowed connections - 0 is unlimited
 /// Will not affect already existing connections
 /// Default is 1 - the only client is allowed
+/// Because of security reasons setting number of allowed connections is not sufficient now.
+/// To enable multi-connection mode, one also has to call
+/// `ROOT::RWebWindowsManager::SetSingleConnMode(false);`
+/// before creating of the RWebWindow instance
 
 void RWebWindow::SetConnLimit(unsigned lmt)
 {
+   bool single_conn_mode = RWebWindowWSHandler::GetBoolEnv("WebGui.SingleConnMode", 1) == 1;
+
    std::lock_guard<std::mutex> grd(fConnMutex);
 
-   fConnLimit = lmt;
+   fConnLimit = single_conn_mode ? 1 : lmt;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -751,11 +766,36 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       return false;
 
    if (arg.IsMethod("WS_CONNECT")) {
-
       TUrl url;
       url.SetOptions(arg.GetQuery());
+      std::string key, ntry;
+      if(url.HasOption("key"))
+         key = url.GetValueFromOptions("key");
+      if(url.HasOption("ntry"))
+         ntry = url.GetValueFromOptions("ntry");
 
       std::lock_guard<std::mutex> grd(fConnMutex);
+
+      if (is_longpoll && !is_remote  && ntry == "1"s) {
+         // special workaround for local displays like qt5/qt6
+         // they are not disconnected regularly when page reload is invoked
+         // therefore try to detect if new key is applied
+         for (unsigned indx = 0; indx < fConn.size(); indx++) {
+            if (!fConn[indx]->fNewKey.empty() && (key == HMAC(fConn[indx]->fNewKey, ""s, "attempt_1", 9))) {
+               auto conn = std::move(fConn[indx]);
+               fConn.erase(fConn.begin() + indx);
+               conn->fKeyUsed = 0;
+               conn->fKey = conn->fNewKey;
+               conn->fNewKey.clear();
+               conn->fConnId = ++fConnCnt; // change connection id to avoid confusion
+               conn->fWasFirst = indx == 0;
+               conn->ResetData();
+               conn->ResetStamps(); // reset stamps, after timeout connection wll be removed
+               fPendingConn.emplace_back(conn);
+               break;
+            }
+         }
+      }
 
       // refuse connection when number of connections exceed limit
       if (fConnLimit && (fConn.size() >= fConnLimit))
@@ -772,15 +812,10 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       if (!IsRequireAuthKey())
          return true;
 
-      if(!url.HasOption("key")) {
+      if(key.empty()) {
          R__LOG_DEBUG(0, WebGUILog()) << "key parameter not provided in url";
          return false;
       }
-
-      std::string key, ntry;
-      key = url.GetValueFromOptions("key");
-      if(url.HasOption("ntry"))
-         ntry = url.GetValueFromOptions("ntry");
 
       for (auto &conn : fPendingConn)
          if (_CanTrustIn(conn, key, ntry, is_remote, true /* test_first_time */))
@@ -824,7 +859,10 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
          // preserve key for longpoll or when with session key used for HMAC hash of messages
          // conn->fKey.clear();
          conn->ResetStamps();
-         fConn.emplace_back(conn);
+         if (conn->fWasFirst)
+            fConn.emplace(fConn.begin(), conn);
+         else
+            fConn.emplace_back(conn);
          return true;
       } else if (!IsRequireAuthKey() && (!fConnLimit || (fConn.size() < fConnLimit))) {
          fConn.emplace_back(std::make_shared<WebConn>(++fConnCnt, arg.GetWSId()));
@@ -835,7 +873,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       return false;
    }
 
-   // special sequrity check for the longpoll requests
+   // special security check for the longpoll requests
    if(is_longpoll) {
       auto conn = FindConnection(arg.GetWSId());
       if (!conn)
@@ -857,10 +895,9 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
    if (arg.IsMethod("WS_CLOSE")) {
       // connection is closed, one can remove handle, associated window will be closed
 
-      auto conn = RemoveConnection(arg.GetWSId());
+      auto conn = RemoveConnection(arg.GetWSId(), true);
 
       if (conn) {
-         ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
          bool do_clear_on_close = false;
          if (!conn->fNewKey.empty()) {
             // case when same handle want to be reused by client with new key
@@ -924,7 +961,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
    if (!is_none) {
       std::string hmac = HMAC(conn->fKey, fMgr->fSessionKey, buf, data_len);
 
-      is_match = strncmp(buf0, hmac.c_str(), code_len) == 0;
+      is_match = (code_len == (Int_t) hmac.length()) && (strncmp(buf0, hmac.c_str(), code_len) == 0);
    } else if (!fMgr->fUseSessionKey) {
       // no packet signing without session key
       is_match = true;
@@ -952,7 +989,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       return false;
    }
 
-   if (oper_seq <= conn->fRecvSeq) {
+   if (is_remote && (oper_seq <= conn->fRecvSeq)) {
       R__LOG_ERROR(WebGUILog()) << "supply same package again - MiM attacker?";
       return false;
    }
@@ -1018,6 +1055,11 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       if ((cdata.compare(0, 6, "READY=") == 0) && !conn->fReady) {
 
          std::string key = cdata.substr(6);
+         bool new_key = false;
+         if (key.find("generate_key;") == 0) {
+            new_key = true;
+            key = key.substr(13);
+         }
 
          if (key.empty() && IsNativeOnlyConn()) {
             RemoveConnection(conn->fWSId);
@@ -1037,6 +1079,11 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
          } else {
             ProvideQueueEntry(conn->fConnId, kind_Connect, ""s);
             conn->fReady = 10;
+         }
+         if (new_key && !fMaster) {
+            conn->fNewKey = GenerateKey();
+            if(!conn->fNewKey.empty())
+               SubmitData(conn->fConnId, true, "NEW_KEY="s + conn->fNewKey, 0);
          }
       } else if (cdata.compare(0, 8, "CLOSECH=") == 0) {
          int channel = std::stoi(cdata.substr(8));
@@ -1068,8 +1115,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
          ProvideQueueEntry(conn->fConnId, kind_Connect, ""s);
          conn->fReady = 10;
       } else {
-         ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
-         RemoveConnection(conn->fWSId);
+         RemoveConnection(conn->fWSId, true);
       }
    } else if (nchannel == 1) {
       ProvideQueueEntry(conn->fConnId, kind_Data, std::move(cdata));
@@ -1257,17 +1303,26 @@ std::string RWebWindow::GetAddr() const
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
+/// DEPRECATED. Use GetUrl method instead while more arguments are required to connect with the widget
 /// Returns relative URL address for the specified window
 /// Address can be required if one needs to access data from one window into another window
 /// Used for instance when inserting panel into canvas
 
 std::string RWebWindow::GetRelativeAddr(const std::shared_ptr<RWebWindow> &win) const
 {
-   return GetRelativeAddr(*win);
+   if (fMgr != win->fMgr) {
+      R__LOG_ERROR(WebGUILog()) << "Same web window manager should be used";
+      return "";
+   }
+
+   std::string res("../");
+   res.append(win->GetAddr());
+   res.append("/");
+   return res;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
-/// Returns relative URL address for the specified window
+/// DEPRECATED. Use GetUrl method instead while more arguments are required to connect with the widget
 /// Address can be required if one needs to access data from one window into another window
 /// Used for instance when inserting panel into canvas
 
@@ -1558,7 +1613,7 @@ void RWebWindow::SubmitData(unsigned connid, bool txt, std::string &&data, int c
 
    for (auto &conn : arr) {
 
-      if (fProtocolCnt >= 0)
+      if ((fProtocolCnt >= 0) && (chid > 0))
          if (!fProtocolConnId || (conn->fConnId == fProtocolConnId)) {
             fProtocolConnId = conn->fConnId; // remember connection
             std::string fname = fProtocolPrefix;
@@ -1866,7 +1921,7 @@ unsigned RWebWindow::AddEmbedWindow(std::shared_ptr<RWebWindow> window, unsigned
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-/// Remove RWebWindow associated with the channelfEmbed
+/// Remove RWebWindow associated with the channel
 
 void RWebWindow::RemoveEmbedWindow(unsigned connid, int channel)
 {
@@ -1922,21 +1977,25 @@ unsigned RWebWindow::ShowWindow(std::shared_ptr<RWebWindow> window, const RWebDi
       return 0;
 
    if (args.GetBrowserKind() == RWebDisplayArgs::kEmbedded) {
-      if (args.fMaster && window->fMaster && window->fMaster != args.fMaster) {
+      auto master = args.fMaster;
+      while (master && master->fMaster)
+         master = master->fMaster;
+
+      if (master && window->fMaster && window->fMaster != master) {
          R__LOG_ERROR(WebGUILog()) << "Cannot use different master for same RWebWindow";
          return 0;
       }
 
-      unsigned connid = args.fMaster ? args.fMaster->AddEmbedWindow(window, args.fMasterConnection, args.fMasterChannel) : 0;
+      unsigned connid = master ? master->AddEmbedWindow(window, args.fMasterConnection, args.fMasterChannel) : 0;
 
       if (connid > 0) {
 
          window->RemoveMasterConnection(connid);
 
-         window->AddMasterConnection(args.fMaster, connid, args.fMasterChannel);
+         window->AddMasterConnection(master, connid, args.fMasterChannel);
 
          // inform client that connection is established and window initialized
-         args.fMaster->SubmitData(connid, true, "EMBED_DONE"s, args.fMasterChannel);
+         master->SubmitData(connid, true, "EMBED_DONE"s, args.fMasterChannel);
 
          // provide call back for window itself that connection is ready
          window->ProvideQueueEntry(connid, kind_Connect, ""s);
@@ -1991,7 +2050,7 @@ bool RWebWindow::EmbedFileDialog(const std::shared_ptr<RWebWindow> &window, unsi
 
 /////////////////////////////////////////////////////////////////////////////////////
 /// Calculate HMAC checksum for provided key and message
-/// Key combained from connection key and session key
+/// Key combined from connection key and session key
 
 std::string RWebWindow::HMAC(const std::string &key, const std::string &sessionKey, const char *msg, int msglen)
 {
@@ -2046,4 +2105,17 @@ std::string RWebWindow::HMAC(const std::string &key, const std::string &sessionK
    sha256_update(&hash3, (const unsigned char *) m2digest.data(), m2digest.length());
 
    return get_digest(hash3, true);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+/// Set JSROOT settings as json string
+/// Will be applied for any web window at the connection time
+/// Can be used to chang `settings` object of JSROOT like:
+/// ~~~ {.cpp}
+/// ROOT::RWebWindow::SetJSROOTSettings("{ ToolBar: false, CanEnlarge: false }");
+/// ~~~
+
+void RWebWindow::SetJSROOTSettings(const std::string &json)
+{
+   gJSROOTsettings = json;
 }

@@ -32,15 +32,11 @@ Computes the integral over a binned distribution by summing the bin contents of 
 #include "RooMsgService.h"
 #include "RooRealBinding.h"
 
-#include "TClass.h"
-#include "Math/Util.h"
-
 #include <cassert>
 #include <memory>
 
 
 using std::endl, std::list;
-
 
 // Register this class with RooNumIntConfig
 
@@ -90,7 +86,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc &function, int numBins)
     std::unique_ptr<list<double>> tmp{ _function->binBoundaries(i) };
     if (!tmp) {
       oocoutW(nullptr,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #"
-          << i << " substituting default binning of " << _numBins << " bins" << endl ;
+          << i << " substituting default binning of " << _numBins << " bins" << std::endl ;
       tmp = std::make_unique<list<double>>( );
       for (Int_t j=0 ; j<=_numBins ; j++) {
         tmp->push_back(_xmin[i]+j*(_xmax[i]-_xmin[i])/_numBins) ;
@@ -121,7 +117,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntCo
 bool RooBinIntegrator::setLimits(double *xmin, double *xmax)
 {
   if(_useIntegrandLimits) {
-    oocoutE(nullptr,Integration) << "RooBinIntegrator::setLimits: cannot override integrand's limits" << endl;
+    oocoutE(nullptr,Integration) << "RooBinIntegrator::setLimits: cannot override integrand's limits" << std::endl;
     return false;
   }
   _xmin[0]= *xmin;
@@ -147,7 +143,7 @@ bool RooBinIntegrator::checkLimits() const
   }
   for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
     if (_xmax[i]<=_xmin[i]) {
-      oocoutE(nullptr,Integration) << "RooBinIntegrator::checkLimits: bad range with min >= max (_xmin = " << _xmin[i] << " _xmax = " << _xmax[i] << ")" << endl;
+      oocoutE(nullptr,Integration) << "RooBinIntegrator::checkLimits: bad range with min >= max (_xmin = " << _xmin[i] << " _xmax = " << _xmax[i] << ")" << std::endl;
       return false;
     }
     if (RooNumber::isInfinite(_xmin[i]) || RooNumber::isInfinite(_xmax[i])) {
@@ -160,69 +156,40 @@ bool RooBinIntegrator::checkLimits() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate numeric integral at given set of function binding parameters.
+/// Calculate numeric integral at given set of function binding parameters,
+/// for any number of dimensions.
 double RooBinIntegrator::integral(const double *)
 {
-  assert(isValid());
-
-  ROOT::Math::KahanSum<double> sum;
-
-  if (_function->getDimension() == 1) {
-    const std::vector<double>& binb = _binb[0];
-
-    for (unsigned int ibin=0; ibin < binb.size() - 1; ++ibin) {
-      const double xhi = binb[ibin + 1];
-      const double xlo = binb[ibin];
-      const double xcenter = (xhi+xlo)/2.;
-      const double binInt = integrand(xvec(xcenter))*(xhi-xlo) ;
-      sum += binInt ;
-    }
-  } else if (_function->getDimension() == 2) {
-    const std::vector<double>& binbx = _binb[0];
-    const std::vector<double>& binby = _binb[1];
-
-    for (unsigned int ibin1=0; ibin1 < binbx.size() - 1; ++ibin1) {
-      const double x1hi = binbx[ibin1 + 1];
-      const double x1lo = binbx[ibin1];
-      double x1center = (x1hi+x1lo)/2 ;
-
-      for (unsigned int ibin2=0; ibin2 < binby.size() - 1; ++ibin2) {
-        const double x2hi = binby[ibin2 + 1];
-        const double x2lo = binby[ibin2];
-        const double x2center = (x2hi+x2lo)/2.;
-
-        const double binInt = integrand(xvec(x1center,x2center))*(x1hi-x1lo)*(x2hi-x2lo) ;
-        sum += binInt ;
-      }
-    }
-  } else if (_function->getDimension() == 3) {
-    const std::vector<double>& binbx = _binb[0];
-    const std::vector<double>& binby = _binb[1];
-    const std::vector<double>& binbz = _binb[2];
-
-    for (unsigned int ibin1=0; ibin1 < binbx.size() - 1; ++ibin1) {
-      const double x1hi = binbx[ibin1 + 1];
-      const double x1lo = binbx[ibin1];
-      double x1center = (x1hi+x1lo)/2 ;
-
-      for (unsigned int ibin2=0; ibin2 < binby.size() - 1; ++ibin2) {
-        const double x2hi = binby[ibin2 + 1];
-        const double x2lo = binby[ibin2];
-        const double x2center = (x2hi+x2lo)/2.;
-
-        for (unsigned int ibin3=0; ibin3 < binbz.size() - 1; ++ibin3) {
-          const double x3hi = binbz[ibin3 + 1];
-          const double x3lo = binbz[ibin3];
-          const double x3center = (x3hi+x3lo)/2.;
-
-          const double binInt = integrand(xvec(x1center,x2center,x3center))*(x1hi-x1lo)*(x2hi-x2lo)*(x3hi-x3lo);
-          sum += binInt ;
-        }
-      }
-    }
-  }
-
-  return sum.Sum();
+   assert(isValid());
+   if (_function->getDimension() < 1) return 0.;
+   
+   ROOT::Math::KahanSum<double> sum;
+   
+   recursive_integration(0,1.,sum);
+   
+   return sum.Sum();
 }
 
-
+/**
+ * @brief It performs recursively for loops to calculate N-dimensional integration
+ * @param d the current recursivity depth (dimension currently being for-looped)
+ * @param delta the (d-1)-dimensional bin width/area/volume/hypervolume...
+ * @param sum the resulting integral where to accumulate the integral, passed by reference
+ */
+void RooBinIntegrator::recursive_integration(const UInt_t d, const double delta, ROOT::Math::KahanSum<double>& sum) {
+   const std::vector<double>& binb = _binb[d];
+   const bool isLastDim = d+1 == _function->getDimension();
+   for (unsigned int ibin=0; ibin < binb.size() - 1; ++ibin) {
+      const double hi = binb[ibin + 1];
+      const double lo = binb[ibin];
+      const double mid = (hi+lo)/2.;
+      _x[d] = mid;
+      if (isLastDim) {
+         const double binInt = integrand(_x.data())*(hi-lo)*delta;
+         sum += binInt ;
+      }
+      else {
+         recursive_integration(d+1, (hi-lo)*delta, sum);
+      }
+   }
+}

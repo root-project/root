@@ -39,9 +39,8 @@ subsequently explicitly smeared with the resolution model distribution.
 #include "Riostream.h"
 
 
-using std::cout, std::endl, std::ostream;
+using std::ostream;
 
-ClassImp(RooConvGenContext);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for specialized generator context for analytical convolutions.
@@ -59,13 +58,13 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
   RooAbsGenContext(model,vars,prototype,auxProto,verbose)
 {
   cxcoutI(Generation) << "RooConvGenContext::ctor() setting up special generator context for analytical convolution p.d.f. " << model.GetName()
-            << " for generation of observable(s) " << vars << endl ;
+            << " for generation of observable(s) " << vars << std::endl ;
 
   // Clone PDF and change model to internal truth model
   _pdfCloneSet = std::make_unique<RooArgSet>();
   RooArgSet(model).snapshot(*_pdfCloneSet, true);
   if (!_pdfCloneSet) {
-    coutE(Generation) << "RooConvGenContext::RooConvGenContext(" << GetName() << ") Couldn't deep-clone PDF, abort," << endl ;
+    coutE(Generation) << "RooConvGenContext::RooConvGenContext(" << GetName() << ") Couldn't deep-clone PDF, abort," << std::endl ;
     RooErrorHandler::softAbort() ;
   }
 
@@ -136,7 +135,7 @@ RooConvGenContext::RooConvGenContext(const RooNumConvPdf &model, const RooArgSet
   RooAbsGenContext(model,vars,prototype,auxProto,verbose)
 {
   cxcoutI(Generation) << "RooConvGenContext::ctor() setting up special generator context for numeric convolution p.d.f. " << model.GetName()
-         << " for generation of observable(s) " << vars << endl ;
+         << " for generation of observable(s) " << vars << std::endl ;
 
   // Create generator for physics X truth model
   {
@@ -185,7 +184,7 @@ RooConvGenContext::RooConvGenContext(const RooFFTConvPdf &model, const RooArgSet
   RooAbsGenContext(model,vars,prototype,auxProto,verbose)
 {
   cxcoutI(Generation) << "RooConvGenContext::ctor() setting up special generator context for fft convolution p.d.f. " << model.GetName()
-         << " for generation of observable(s) " << vars << endl ;
+         << " for generation of observable(s) " << vars << std::endl ;
 
   _convVarName = model._x.arg().GetName() ;
 
@@ -233,10 +232,10 @@ void RooConvGenContext::attach(const RooArgSet& args)
   auto* cvPdf   = static_cast<RooRealVar*>(_pdfVars->find(_convVarName));
 
   // Replace all servers in _pdfVars and _modelVars with those in theEvent, except for the convolution variable
-  std::unique_ptr<RooArgSet> pdfCommon{static_cast<RooArgSet*>(args.selectCommon(*_pdfVars))};
+  std::unique_ptr<RooArgSet> pdfCommon{args.selectCommon(*_pdfVars)};
   pdfCommon->remove(*cvPdf,true,true) ;
 
-  std::unique_ptr<RooArgSet> modelCommon{static_cast<RooArgSet*>(args.selectCommon(*_modelVars))};
+  std::unique_ptr<RooArgSet> modelCommon{args.selectCommon(*_modelVars)};
   modelCommon->remove(*cvModel,true,true) ;
 
   _pdfGen->attach(*pdfCommon) ;
@@ -256,11 +255,11 @@ void RooConvGenContext::initGenerator(const RooArgSet &theEvent)
   _cvOut   = static_cast<RooRealVar*>(theEvent.find(_convVarName)) ;
 
   // Replace all servers in _pdfVars and _modelVars with those in theEvent, except for the convolution variable
-  std::unique_ptr<RooArgSet> pdfCommon{static_cast<RooArgSet*>(theEvent.selectCommon(*_pdfVars))};
+  std::unique_ptr<RooArgSet> pdfCommon{theEvent.selectCommon(*_pdfVars)};
   pdfCommon->remove(*_cvPdf,true,true) ;
   _pdfVars->replace(*pdfCommon) ;
 
-  std::unique_ptr<RooArgSet> modelCommon{static_cast<RooArgSet*>(theEvent.selectCommon(*_modelVars))};
+  std::unique_ptr<RooArgSet> modelCommon{theEvent.selectCommon(*_modelVars)};
   modelCommon->remove(*_cvModel,true,true) ;
   _modelVars->replace(*modelCommon) ;
 
@@ -316,8 +315,8 @@ void RooConvGenContext::setProtoDataOrder(Int_t* lut)
 void RooConvGenContext::printMultiline(ostream &os, Int_t content, bool verbose, TString indent) const
 {
   RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
-  os << indent << "--- RooConvGenContext ---" << endl ;
-  os << indent << "List of component generators" << endl ;
+  os << indent << "--- RooConvGenContext ---" << std::endl ;
+  os << indent << "List of component generators" << std::endl ;
 
   TString indent2(indent) ;
   indent2.Append("    ") ;

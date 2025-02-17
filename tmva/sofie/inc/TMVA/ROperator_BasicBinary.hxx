@@ -20,30 +20,35 @@ template <typename T>
 struct BinaryOperatorTrait<T, Add> {
    static const std::string Name() { return "Add"; }
    static std::string Op(const std::string & t1, const std::string t2) { return t1 + " + " + t2; }
+   static T Func(T t1, T t2) {return  t1 + t2;}
 };
 
 template <typename T>
 struct BinaryOperatorTrait<T, Sub> {
    static const std::string Name() { return "Sub"; }
    static std::string Op(const std::string & t1, const std::string t2) { return t1 + " - " + t2; }
+   static T Func (T t1, T t2) { return t1 - t2;}
 };
 
 template <typename T>
 struct BinaryOperatorTrait<T, Mul> {
    static const std::string Name() { return "Mul"; }
    static std::string Op(const std::string & t1, const std::string t2) { return t1 + " * " + t2; }
+   static T Func (T t1, T t2) { return  t1 * t2;}
 };
 
 template <typename T>
 struct BinaryOperatorTrait<T, Div> {
    static const std::string Name() { return "Div"; }
    static std::string Op(const std::string & t1, const std::string t2) { return t1 + " / " + t2; }
+   static T Func (T t1, T t2) { return t1/t2;}
 };
 
 template <typename T>
 struct BinaryOperatorTrait<T, Pow> {
    static const std::string Name() { return "Pow"; }
    static std::string Op(const std::string & t1, const std::string t2) { return "std::pow(" + t1 + "," + t2 + ")"; }
+   static T Func (T t1, T t2) { return std::pow(t1,t2);}
 };
 
 template<typename T, EBasicBinaryOperator Op>
@@ -52,8 +57,8 @@ private:
 
    std::string fNA;
    std::string fNB;
-   std::string fNBroadcadstedA;
-   std::string fNBroadcadstedB;
+   std::string fNBroadcastedA;
+   std::string fNBroadcastedB;
    std::string fNY;
 
    std::vector<size_t> fShapeA;
@@ -95,40 +100,65 @@ public:
          bool broadcastB = !UTILITY::AreSameShape(fShapeB, fShapeY);
          // Broadcast A to Y
          if (broadcastA) {
+            fNBroadcastedA = "Broadcasted" + fNA + "to" + fNY;
             if (model.IsInitializedTensor(fNA)) {
                auto data = model.GetInitializedTensorData(fNA);
                std::shared_ptr<void> broadcastedData(
-                  UTILITY::UnidirectionalBroadcast<float>(static_cast<float *>(data.get()), fShapeA, fShapeY),
-                  std::default_delete<float[]>());
+                  UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), fShapeA, fShapeY),
+                  std::default_delete<T[]>());
                // Update the data and the shape of A
-               model.UpdateInitializedTensor(fNA, model.GetTensorType(fNA), fShapeY, broadcastedData);
+               model.AddConstantTensor(fNBroadcastedA, model.GetTensorType(fNA), fShapeY, broadcastedData);
                fShapeA = fShapeY;
             } else {
                // Add an intermediate tensor for broadcasting A
-               fNBroadcadstedA = "Broadcasted" + fNA;
-               model.AddIntermediateTensor(fNBroadcadstedA, model.GetTensorType(fNA), fShapeY);
+               model.AddIntermediateTensor(fNBroadcastedA, model.GetTensorType(fNA), fShapeY);
             }
          }
          // Broadcast B to Y
          if (broadcastB) {
+            fNBroadcastedB = "Broadcasted" + fNB + "to" + fNY;
             if (model.IsInitializedTensor(fNB)) {
                auto data = model.GetInitializedTensorData(fNB);
+               std::cout << "data B " << ConvertShapeToString(fShapeB) << " : " <<
+                  ConvertValuesToString(ConvertShapeToLength(fShapeB), static_cast<T*>(data.get())) << std::endl;
                std::shared_ptr<void> broadcastedData(
-                  UTILITY::UnidirectionalBroadcast<float>(static_cast<float *>(data.get()), fShapeB, fShapeY),
-                  std::default_delete<float[]>());
-               // Update the data and the shape of B
-               model.UpdateInitializedTensor(fNB, model.GetTensorType(fNB), fShapeY, broadcastedData);
+                  UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), fShapeB, fShapeY),
+                  std::default_delete<T[]>());
+               // do not update tensor B but add broadcasted one (since it can be input to some other operators)
+               std::cout << "broadcasted data B " << ConvertShapeToString(fShapeY) << " : " <<
+                  ConvertValuesToString(ConvertShapeToLength(fShapeY), static_cast<T*>(broadcastedData.get())) << std::endl;
+               model.AddConstantTensor(fNBroadcastedB, model.GetTensorType(fNB), fShapeY, broadcastedData);
                fShapeB = fShapeY;
             } else {
                // Add an intermediate tensor for broadcasting B
-               fNBroadcadstedB = "Broadcasted" + fNB;
-               model.AddIntermediateTensor(fNBroadcadstedB, model.GetTensorType(fNB), fShapeY);
+               model.AddIntermediateTensor(fNBroadcastedB, model.GetTensorType(fNB), fShapeY);
             }
          }
       } else {
          fShapeY = fShapeA;
       }
-      model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), fShapeY);
+      // check case of constant  output (if all inputs are defined)
+      if (model.IsInitializedTensor(fNA) && model.IsInitializedTensor(fNB)) {
+         const std::string& nameA = fNBroadcastedA.empty()? fNA : fNBroadcastedA;
+         const std::string& nameB = fNBroadcastedB.empty()? fNB : fNBroadcastedB;
+         auto dataA = static_cast<T *>(model.GetInitializedTensorData(nameA).get());
+         auto dataB = static_cast<T *>(model.GetInitializedTensorData(nameB).get());
+         std::vector<T> dataY(ConvertShapeToLength(fShapeY));
+         for (size_t i = 0; i < dataY.size(); i++) {
+            dataY[i] = BinaryOperatorTrait<T,Op>::Func(dataA[i], dataB[i]);
+         }
+         model.AddConstantTensor<T>(fNY, fShapeY, dataY.data());
+         // flag tensors to not be written in a fil
+         model.SetNotWritableInitializedTensor(nameA);
+         model.SetNotWritableInitializedTensor(nameB);
+         fIsOutputConstant = true;
+         if (model.Verbose())
+            std::cout << "Binary op ---> " << fNY << "  " << ConvertShapeToString(fShapeY) << " : "
+               << ConvertValuesToString(dataY) << std::endl;
+      }
+      else {
+        model.AddIntermediateTensor(fNY, model.GetTensorType(fNA), fShapeY);
+      }
    }
 
    std::string GenerateInitCode() override {
@@ -137,6 +167,9 @@ public:
    }
 
    std::string Generate(std::string OpName) override {
+
+      if (fIsOutputConstant) return "";
+
       OpName = "op_" + OpName;
 
       if (fShapeY.empty()) {
@@ -145,26 +178,22 @@ public:
       std::stringstream out;
       out << SP << "\n//------ " << BinaryOperatorTrait<T,Op>::Name() << "\n";
       size_t length = ConvertShapeToLength(fShapeY);
+      std::string typeName = TensorType<T>::Name();
       // Broadcast A if it's uninitialized
-      if (!fNBroadcadstedA.empty()) {
+      // use broadcasting function where we pass an already allocated tensor to minimize memory allocations
+      if (fShapeA != fShapeY) {
          out << SP << "// Broadcasting uninitialized tensor " << fNA << "\n";
-         out << SP << "{\n";
-         out << SP << SP << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_" << fNA << ", " << ConvertShapeToString(fShapeA) << ", " << ConvertShapeToString(fShapeY) << ");\n";
-         out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNBroadcadstedA << ");\n";
-         out << SP << SP << "delete[] data;\n";
-         out << SP << "}\n";
+         out << SP  << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << typeName << ">(tensor_" << fNA << ", " << ConvertShapeToString(fShapeA) << ", " << ConvertShapeToString(fShapeY)
+                         << ", fTensor_" << fNBroadcastedA << ");\n";
       }
       // Broadcast B if it's uninitialized
-      if (!fNBroadcadstedB.empty()) {
+      if (fShapeB != fShapeY) {
          out << SP << "// Broadcasting uninitialized tensor " << fNB << "\n";
-         out << SP << "{\n";
-         out << SP << SP << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_" << fNB << ", " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeY) << ");\n";
-         out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNBroadcadstedB << ");\n";
-         out << SP << SP << "delete[] data;\n";
-         out << SP << "}\n";
+         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << typeName << ">(tensor_" << fNB << ", " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeY)
+                   << ", fTensor_" << fNBroadcastedB << ");\n";
       }
-      const std::string& nameA = fNBroadcadstedA.empty()? fNA : fNBroadcadstedA;
-      const std::string& nameB = fNBroadcadstedB.empty()? fNB : fNBroadcadstedB;
+      const std::string& nameA = fNBroadcastedA.empty()? fNA : fNBroadcastedA;
+      const std::string& nameB = fNBroadcastedB.empty()? fNB : fNBroadcastedB;
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
       out << SP << SP << "tensor_" << fNY << "[id] = "  << BinaryOperatorTrait<T,Op>::Op( "tensor_" + nameA + "[id]" , "tensor_" + nameB + "[id]") <<  " ;\n";
       out << SP << "}\n";

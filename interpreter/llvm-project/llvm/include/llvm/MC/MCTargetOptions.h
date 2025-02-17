@@ -24,6 +24,8 @@ enum class ExceptionHandling {
   WinEH,    ///< Windows Exception Handling
   Wasm,     ///< WebAssembly Exception Handling
   AIX,      ///< AIX Exception Handling
+  ZOS,      ///< z/OS MVS Exception Handling. Very similar to DwarfCFI, but the PPA1
+            ///< is used instead of an .eh_frame section.
 };
 
 enum class EmitDwarfUnwindType {
@@ -84,6 +86,13 @@ public:
   /// Additional paths to search for `.include` directives when using the
   /// integrated assembler.
   std::vector<std::string> IASSearchPaths;
+
+  // Whether to emit compact-unwind for non-canonical personality
+  // functions on Darwins.
+  bool EmitCompactUnwindNonCanonical : 1;
+
+  // Whether or not to use full register names on PowerPC.
+  bool PPCUseFullRegisterNames : 1;
 
   MCTargetOptions();
 

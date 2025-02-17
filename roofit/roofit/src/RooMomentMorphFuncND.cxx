@@ -40,10 +40,8 @@
 #include <algorithm>
 #include <map>
 
-using std::cout, std::endl, std::string, std::vector;
+using std::string, std::vector;
 
-ClassImp(RooMomentMorphFuncND);
-ClassImp(RooMomentMorphFuncND::Grid2);
 
 //_____________________________________________________________________________
 RooMomentMorphFuncND::RooMomentMorphFuncND() : _cacheMgr(this, 10, true, true), _setting(RooMomentMorphFuncND::Linear), _useHorizMorph(true)
@@ -53,7 +51,7 @@ RooMomentMorphFuncND::RooMomentMorphFuncND() : _cacheMgr(this, 10, true, true), 
 
 //_____________________________________________________________________________
 RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, const RooArgList &parList, const RooArgList &obsList,
-                       const Grid2 &referenceGrid, const Setting &setting)
+                       const Grid2 &referenceGrid, Setting setting)
    : RooMomentMorphFuncND::Base_t(name, title),
      _cacheMgr(this, 10, true, true),
      _parList("parList", "List of morph parameters", this),
@@ -134,12 +132,12 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
    for (auto *mref : mrefList) {
       if (!dynamic_cast<RooAbsReal *>(mref)) {
          coutE(InputArguments) << "RooMomentMorphFuncND::ctor(" << GetName() << ") ERROR: mref " << mref->GetName()
-                               << " is not of type RooAbsReal" << endl;
+                               << " is not of type RooAbsReal" << std::endl;
          throw string("RooMomentMorphFuncND::ctor() ERROR mref is not of type RooAbsReal");
       }
       if (!dynamic_cast<RooConstVar *>(mref)) {
          coutW(InputArguments) << "RooMomentMorphFuncND::ctor(" << GetName() << ") WARNING mref point " << i
-                               << " is not a constant, taking a snapshot of its value" << endl;
+                               << " is not a constant, taking a snapshot of its value" << std::endl;
       }
       mrefpoints[i] = static_cast<RooAbsReal *>(mref)->getVal();
       i++;
@@ -181,7 +179,8 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const RooMomentMorphFuncND &other, co
      _referenceGrid(other._referenceGrid),
      _pdfList("pdfList", this, other._pdfList),
      _setting(other._setting),
-     _useHorizMorph(other._useHorizMorph)
+     _useHorizMorph(other._useHorizMorph),
+     _isPdfMode{other._isPdfMode}
 {
    // general initialization
    initialize();
@@ -207,17 +206,17 @@ void RooMomentMorphFuncND::initialize()
    int nDim = _referenceGrid._grid.size();
    int nPdf = _referenceGrid._pdfList.size();
    int nRef = _referenceGrid._nref.size();
-   int depth = TMath::Power(2, nPar);
+   int depth = std::pow(2, nPar);
 
    if (nPar != nDim) {
       coutE(InputArguments) << "RooMomentMorphFuncND::initialize(" << GetName() << ") ERROR: nPar != nDim"
-                            << ": " << nPar << " !=" << nDim << endl;
+                            << ": " << nPar << " !=" << nDim << std::endl;
       assert(0);
    }
 
    if (nPdf != nRef) {
       coutE(InputArguments) << "RooMomentMorphFuncND::initialize(" << GetName() << ") ERROR: nPdf != nRef"
-                            << ": " << nPdf << " !=" << nRef << endl;
+                            << ": " << nPdf << " !=" << nRef << std::endl;
       assert(0);
    }
 
@@ -257,7 +256,7 @@ void RooMomentMorphFuncND::initialize()
             double tmpDm = 1.0;
             for (int ix = 0; ix < nPar; ix++) {
                double delta = dm[k][ix];
-               tmpDm *= TMath::Power(delta, static_cast<double>(output[i][ix]));
+               tmpDm *= std::pow(delta, static_cast<double>(output[i][ix]));
             }
             M(k, nperm) = tmpDm;
             nperm++;
@@ -269,8 +268,8 @@ void RooMomentMorphFuncND::initialize()
    }
 
    // Resize transformation vectors
-   _squareVec.resize(TMath::Power(2, nPar));
-   _squareIdx.resize(TMath::Power(2, nPar));
+   _squareVec.resize(std::pow(2, nPar));
+   _squareIdx.resize(std::pow(2, nPar));
 }
 
 //_____________________________________________________________________________
@@ -592,7 +591,7 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
          double tmpDm = 1.0;
          for (int ix = 0; ix < nPar; ix++) {
             double delta = dm2[ix];
-            tmpDm *= TMath::Power(delta, static_cast<double>(output[i][ix]));
+            tmpDm *= std::pow(delta, static_cast<double>(output[i][ix]));
          }
          deltavec[nperm] = tmpDm;
          nperm++;
@@ -620,7 +619,7 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
          const_cast<RooRealVar *>(frac(2 * nPdf + i))->setVal(ffrac); // need to add up
 
          if (verbose) {
-            cout << "NonLinear fraction " << ffrac << endl;
+            std::cout << "NonLinear fraction " << ffrac << std::endl;
             frac(i)->Print();
             frac(nPdf + i)->Print();
             frac(2 * nPdf + i)->Print();
@@ -655,7 +654,7 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
 
       self.findShape(mtmp); // this sets _squareVec and _squareIdx quantities
 
-      int depth = TMath::Power(2, nPar);
+      int depth = std::pow(2, nPar);
       vector<double> deltavec(depth, 1.0);
 
       int nperm = 0;
@@ -698,7 +697,7 @@ void RooMomentMorphFuncND::CacheElem::calculateFractions(const RooMomentMorphFun
          }
 
          if (verbose) {
-            cout << "Linear fraction " << ffrac << endl;
+            std::cout << "Linear fraction " << ffrac << std::endl;
             frac(self._squareIdx[i])->Print();
             frac(nPdf + self._squareIdx[i])->Print();
             frac(2 * nPdf + self._squareIdx[i])->Print();
@@ -722,9 +721,9 @@ void RooMomentMorphFuncND::findShape(const vector<double> &x) const
    //       isEnclosed = false;
    // }
 
-   // cout << "isEnclosed = " << isEnclosed << endl;
+   // std::cout << "isEnclosed = " << isEnclosed << std::endl;
 
-   int depth = TMath::Power(2, nPar);
+   int depth = std::pow(2, nPar);
 
    vector<vector<double>> boundaries(nPar);
    for (int idim = 0; idim < nPar; idim++) {
@@ -748,15 +747,15 @@ void RooMomentMorphFuncND::findShape(const vector<double> &x) const
       }
    }
 
-   // cout << endl;
+   // std::cout << std::endl;
 
    // for (int isq = 0; isq < _squareVec.size(); isq++) {
-   //   cout << _squareIdx[isq];
-   //   cout << " (";
+   //   std::cout << _squareIdx[isq];
+   //   std::cout << " (";
    //   for (int isqq = 0; isqq < _squareVec[isq].size(); isqq++) {
-   //     cout << _squareVec[isq][isqq] << ((isqq<_squareVec[isq].size()-1)?",":"");
+   //     std::cout << _squareVec[isq][isqq] << ((isqq<_squareVec[isq].size()-1)?",":"");
    //   }
-   //   cout << ") ";
+   //   std::cout << ") ";
    // }
 
    // construct transformation matrix for linear extrapolation
@@ -800,7 +799,7 @@ bool RooMomentMorphFuncND::setBinIntegrator(RooArgSet &allVars)
       temp->specialIntegratorConfig(true)->getConfigSection("RooBinIntegrator").setRealValue("numBins", nbins);
       return true;
    } else {
-      cout << "Currently BinIntegrator only knows how to deal with 1-d " << endl;
+      std::cout << "Currently BinIntegrator only knows how to deal with 1-d " << std::endl;
       return false;
    }
    return false;

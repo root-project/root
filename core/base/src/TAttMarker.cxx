@@ -181,7 +181,7 @@ method `GetMarkerSize`.
 
 Begin_Macro
 {
-   c = new TCanvas("c","Marker sizes",0,0,500,200);
+   auto c = new TCanvas("c","Marker sizes",0,0,500,200);
    TMarker marker;
    marker.SetMarkerStyle(3);
    Double_t x = 0;
@@ -378,4 +378,9 @@ void TAttMarker::SetMarkerAttributes()
 void TAttMarker::SetMarkerColorAlpha(Color_t mcolor, Float_t malpha)
 {
    fMarkerColor = TColor::GetColorTransparent(mcolor, malpha);
+}
+
+void TAttMarker::SetMarkerColor(TColorNumber lcolor)
+{
+   SetMarkerColor(lcolor.number());
 }

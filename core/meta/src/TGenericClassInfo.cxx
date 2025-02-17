@@ -12,6 +12,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TClassEdit.h"
+#include "TDictAttributeMap.h"
 #include "TVirtualStreamerInfo.h"
 #include "TStreamer.h"
 #include "TVirtualIsAProxy.h"
@@ -261,7 +262,7 @@ namespace Internal {
                                           GetDeclFileLine(),
                                           GetImplFileLine());
          if (fPragmaBits & TClassTable::kHasCustomStreamerMember) {
-            fClass->SetBit(TClass::kHasCustomStreamerMember);
+            fClass->fHasCustomStreamerMember = true;
          }
          fClass->SetNew(fNew);
          fClass->SetNewArray(fNewArray);
@@ -290,6 +291,18 @@ namespace Internal {
 
          CreateRuleSet( fReadRules, true );
          CreateRuleSet( fReadRawRules, false );
+
+         if (fPragmaBits & (TClassTable::kNtplForceNativeMode | TClassTable::kNtplForceStreamerMode)) {
+            fClass->CreateAttributeMap();
+            // The force-split and force-unsplit flags are mutually exclusive
+            assert(!((fPragmaBits & TClassTable::kNtplForceNativeMode) &&
+                     (fPragmaBits & TClassTable::kNtplForceStreamerMode)));
+            if (fPragmaBits & TClassTable::kNtplForceNativeMode) {
+               fClass->GetAttributeMap()->AddProperty("rntuple.streamerMode", "false");
+            } else if (fPragmaBits & TClassTable::kNtplForceStreamerMode) {
+               fClass->GetAttributeMap()->AddProperty("rntuple.streamerMode", "true");
+            }
+         }
       }
       return fClass;
    }
@@ -318,27 +331,10 @@ namespace Internal {
       TString errmsg;
       std::vector<Internal::TSchemaHelper>::iterator it;
       for( it = vect.begin(); it != vect.end(); ++it ) {
-         rule = new TSchemaRule();
-         rule->SetTarget( it->fTarget );
-         rule->SetTargetClass( fClass->GetName() );
-         rule->SetSourceClass( it->fSourceClass );
-         rule->SetSource( it->fSource );
-         rule->SetCode( it->fCode );
-         rule->SetVersion( it->fVersion );
-         rule->SetChecksum( it->fChecksum );
-         rule->SetEmbed( it->fEmbed );
-         rule->SetInclude( it->fInclude );
-         rule->SetAttributes( it->fAttributes );
+         rule = new TSchemaRule(ProcessReadRules ? TSchemaRule::kReadRule : TSchemaRule::kReadRawRule,
+                                fClass->GetName(), *it);
 
-         if( ProcessReadRules ) {
-            rule->SetRuleType( TSchemaRule::kReadRule );
-            rule->SetReadFunctionPointer( (TSchemaRule::ReadFuncPtr_t)it->fFunctionPtr );
-         }
-         else {
-            rule->SetRuleType( TSchemaRule::kReadRawRule );
-            rule->SetReadRawFunctionPointer( (TSchemaRule::ReadRawFuncPtr_t)it->fFunctionPtr );
-         }
-         if( !rset->AddRule( rule, TSchemaRuleSet::kCheckAll, &errmsg ) ) {
+         if (!rset->AddRule(rule, TSchemaRuleSet::kCheckAll, &errmsg)) {
             ::Warning( "TGenericClassInfo", "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because %s.",
                         GetClassName(), it->fVersion.c_str(), it->fTarget.c_str(), errmsg.Data() );
             delete rule;
@@ -436,7 +432,7 @@ namespace Internal {
       // Set the info for the CollectionProxy and take ownership of the object
       // being passed
 
-      delete fCollectionProxyInfo;;
+      delete fCollectionProxyInfo;
       fCollectionProxyInfo = info;
    }
 

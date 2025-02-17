@@ -129,6 +129,9 @@ REveCaloData::REveCaloData(const char* n, const char* t):
    // Constructor.
 }
 
+REveCaloData::~REveCaloData() {}
+void REveCaloData::SetSelector(REveCaloDataSelector* iSelector) { fSelector.reset(iSelector); }
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Process newly selected cells with given select-record.
 

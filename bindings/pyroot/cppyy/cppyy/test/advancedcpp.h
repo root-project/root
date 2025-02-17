@@ -2,7 +2,7 @@
 #include <ostream>
 #include <string>
 #include <vector>
-
+#include <cstdint>
 
 //===========================================================================
 #define DECLARE_DEFAULTERS(type, tname)                                     \

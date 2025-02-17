@@ -55,6 +55,7 @@ public:
    TGraphErrors(const TH1 *h);
    TGraphErrors(const char *filename, const char *format="%lg %lg %lg %lg", Option_t *option="");
    ~TGraphErrors() override;
+   virtual void AddPointError(Double_t x, Double_t y, Double_t ex = 0., Double_t ey = 0.);
    void    Apply(TF1 *f) override;
    virtual void    ApplyX(TF1 *f);
    static Int_t    CalculateScanfFields(const char *fmt);

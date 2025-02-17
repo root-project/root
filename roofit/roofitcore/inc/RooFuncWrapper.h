@@ -19,8 +19,13 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <sstream>
 
 class RooSimultaneous;
+
+namespace RooFit {
+
+namespace Experimental {
 
 /// @brief  A wrapper class to store a C++ function of type 'double (*)(double*, double*)'.
 /// The parameters can be accessed as params[<relative position of param in paramSet>] in the function body.
@@ -28,8 +33,8 @@ class RooSimultaneous;
 /// represents the data entry.
 class RooFuncWrapper final : public RooAbsReal {
 public:
-   RooFuncWrapper(const char *name, const char *title, RooAbsReal &obj, const RooAbsData *data,
-                  RooSimultaneous const *simPdf, bool useEvaluator);
+   RooFuncWrapper(const char *name, const char *title, RooAbsReal &obj, const RooAbsData *data = nullptr,
+                  RooSimultaneous const *simPdf = nullptr, bool useEvaluator = false);
 
    RooFuncWrapper(const RooFuncWrapper &other, const char *name = nullptr);
 
@@ -44,10 +49,6 @@ public:
 
    std::size_t getNumParams() const { return _params.size(); }
 
-   void dumpCode();
-
-   void dumpGradient();
-
    /// No constant term optimization is possible in code-generation mode.
    void constOptimizeTestStatistic(ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) override {}
 
@@ -55,18 +56,20 @@ public:
 
    void createGradient();
 
+   void disableEvaluator() { _useEvaluator = false; }
+
+   void writeDebugMacro(std::string const &) const;
+
+   std::vector<std::string> const &collectedFunctions() { return _collectedFunctions; }
+
 protected:
    double evaluate() const override;
 
 private:
-   std::string buildCode(RooAbsReal const &head);
-
-   static std::string declareFunction(std::string const &funcBody);
-
    void updateGradientVarBuffer() const;
 
-   void loadParamsAndData(RooAbsArg const *head, RooArgSet const &paramSet, const RooAbsData *data,
-                          RooSimultaneous const *simPdf);
+   std::map<RooFit::Detail::DataKey, std::span<const double>>
+   loadParamsAndData(RooArgSet const &paramSet, const RooAbsData *data, RooSimultaneous const *simPdf);
 
    void buildFuncAndGradFunctors();
 
@@ -85,11 +88,16 @@ private:
    Func _func;
    Grad _grad;
    bool _hasGradient = false;
+   bool _useEvaluator = false;
    mutable std::vector<double> _gradientVarBuffer;
    std::vector<double> _observables;
    std::map<RooFit::Detail::DataKey, ObsInfo> _obsInfos;
-   std::map<RooFit::Detail::DataKey, std::size_t> _nodeOutputSizes;
    std::vector<double> _xlArr;
+   std::vector<std::string> _collectedFunctions;
 };
+
+} // namespace Experimental
+
+} // namespace RooFit
 
 #endif

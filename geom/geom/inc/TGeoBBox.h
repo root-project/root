@@ -36,13 +36,10 @@ public:
    // destructor
    ~TGeoBBox() override;
    // methods
-   static Bool_t
-   AreOverlapping(const TGeoBBox *box1, const TGeoMatrix *mat1, const TGeoBBox *box2, const TGeoMatrix *mat2)
-      R__DEPRECATED(6, 34, "DEPRECATED, DO NOT USE ! The overlap detection does not work for all cases");
-
+   
    Double_t Capacity() const override;
    void ComputeBBox() override;
-   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) override;
+   void ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const override;
    void ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize) override;
    Bool_t Contains(const Double_t *point) const override;
    void Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const override;

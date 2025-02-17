@@ -1,0 +1,52 @@
+{
+   "samples": {
+      "sampleA": {
+         "trees": [
+            "subTree1",
+            "subTree2"
+         ],
+         "files": [
+            "PYspecTestFile5.root",
+            "PYspecTestFile6.root"
+         ],
+         "metadata": {
+            "lumi": 1.0
+         }
+      },
+      "sampleB": {
+         "trees": [
+            "subTree"
+         ],
+         "files": [
+            "PYspecTestFile4.root"
+         ],
+         "metadata": {
+            "lumi": 0.5
+         }
+      }
+   },
+   "friends": {
+      "friendTree": {
+         "trees": [
+            "anotherTree"
+         ],
+         "files": [
+            "PYspecTestFile7.root"
+         ]
+      },
+      "friendChain1": {
+         "trees": [
+            "subTree"
+         ],
+         "files": [
+            "PYspecTestFile2.root",
+            "PYspecTestFile3.root",
+            "PYspecTestFile4.root"
+         ]
+      }
+   },
+   "range": [
+      1,
+      5
+   ]
+}

@@ -21,15 +21,21 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RSpan.hxx>
 
+#include <Rtypes.h>
+
 #include <cstdint>
+#include <limits>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
+
+class TVirtualStreamerInfo;
 
 namespace ROOT {
 namespace Experimental {
 
-enum class EColumnType;
+enum class EExtraTypeInfoIds;
 class RClusterDescriptor;
 class RNTupleDescriptor;
 
@@ -53,19 +59,29 @@ Deserialization errors throw exceptions. Only when indicated or when passed as a
 */
 // clang-format on
 class RNTupleSerializer {
+   static RResult<std::vector<RClusterDescriptorBuilder>>
+   DeserializePageListRaw(const void *buffer, std::uint64_t bufSize, ROOT::DescriptorId_t clusterGroupId,
+                          const RNTupleDescriptor &desc);
+
 public:
    static constexpr std::uint16_t kEnvelopeTypeHeader = 0x01;
    static constexpr std::uint16_t kEnvelopeTypeFooter = 0x02;
    static constexpr std::uint16_t kEnvelopeTypePageList = 0x03;
 
    static constexpr std::uint16_t kFlagRepetitiveField = 0x01;
+   static constexpr std::uint16_t kFlagProjectedField = 0x02;
+   static constexpr std::uint16_t kFlagHasTypeChecksum = 0x04;
 
-   static constexpr std::uint32_t kFlagSortAscColumn     = 0x01;
-   static constexpr std::uint32_t kFlagSortDesColumn     = 0x02;
-   static constexpr std::uint32_t kFlagNonNegativeColumn = 0x04;
-   static constexpr std::uint32_t kFlagDeferredColumn    = 0x08;
+   static constexpr std::uint16_t kFlagDeferredColumn = 0x01;
+   static constexpr std::uint16_t kFlagHasValueRange = 0x02;
 
-   static constexpr DescriptorId_t kZeroFieldId = std::uint64_t(-2);
+   static constexpr ROOT::DescriptorId_t kZeroFieldId = std::uint64_t(-2);
+
+   static constexpr int64_t kSuppressedColumnMarker = std::numeric_limits<std::int64_t>::min();
+
+   // In the page sink and the streamer field, the seen streamer infos are stored in a map
+   // with the unique streamer info number being the key. Sorted by unique number.
+   using StreamerInfoMap_t = std::map<Int_t, TVirtualStreamerInfo *>;
 
    struct REnvelopeLink {
       std::uint64_t fLength = 0;
@@ -75,8 +91,7 @@ public:
    struct RClusterSummary {
       std::uint64_t fFirstEntry = 0;
       std::uint64_t fNEntries = 0;
-      /// -1 for "all columns"
-      std::int32_t fColumnGroupID = -1;
+      std::uint8_t fFlags = 0;
    };
 
    struct RClusterGroup {
@@ -93,15 +108,14 @@ public:
    private:
       std::uint64_t fHeaderSize = 0;
       std::uint64_t fHeaderXxHash3 = 0;
-      std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskFieldIDs;
-      std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskColumnIDs;
-      std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskClusterIDs;
-      std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskClusterGroupIDs;
-      std::vector<DescriptorId_t> fOnDisk2MemFieldIDs;
-      std::vector<DescriptorId_t> fOnDisk2MemColumnIDs;
-      std::vector<DescriptorId_t> fOnDisk2MemClusterIDs;
-      std::vector<DescriptorId_t> fOnDisk2MemClusterGroupIDs;
-      std::size_t fHeaderExtensionOffset = -1U;
+      std::map<ROOT::DescriptorId_t, ROOT::DescriptorId_t> fMem2OnDiskFieldIDs;
+      std::map<ROOT::DescriptorId_t, ROOT::DescriptorId_t> fMem2OnDiskColumnIDs;
+      std::map<ROOT::DescriptorId_t, ROOT::DescriptorId_t> fMem2OnDiskClusterIDs;
+      std::map<ROOT::DescriptorId_t, ROOT::DescriptorId_t> fMem2OnDiskClusterGroupIDs;
+      std::vector<ROOT::DescriptorId_t> fOnDisk2MemFieldIDs;
+      std::vector<ROOT::DescriptorId_t> fOnDisk2MemColumnIDs;
+      std::vector<ROOT::DescriptorId_t> fOnDisk2MemClusterIDs;
+      std::vector<ROOT::DescriptorId_t> fOnDisk2MemClusterGroupIDs;
 
    public:
       void SetHeaderSize(std::uint64_t size) { fHeaderSize = size; }
@@ -110,7 +124,8 @@ public:
       std::uint64_t GetHeaderXxHash3() const { return fHeaderXxHash3; }
       /// Map an in-memory field ID to its on-disk counterpart. It is allowed to call this function multiple times for
       /// the same `memId`, in which case the return value is the on-disk ID assigned on the first call.
-      DescriptorId_t MapFieldId(DescriptorId_t memId) {
+      ROOT::DescriptorId_t MapFieldId(ROOT::DescriptorId_t memId)
+      {
          auto onDiskId = fOnDisk2MemFieldIDs.size();
          const auto &p = fMem2OnDiskFieldIDs.try_emplace(memId, onDiskId);
          if (p.second)
@@ -119,20 +134,25 @@ public:
       }
       /// Map an in-memory column ID to its on-disk counterpart. It is allowed to call this function multiple times for
       /// the same `memId`, in which case the return value is the on-disk ID assigned on the first call.
-      DescriptorId_t MapColumnId(DescriptorId_t memId) {
+      /// Note that we only map physical column IDs.  Logical column IDs of alias columns are shifted before the
+      /// serialization of the extension header.  Also, we only need to query physical column IDs for the page list
+      /// serialization.
+      ROOT::DescriptorId_t MapPhysicalColumnId(ROOT::DescriptorId_t memId)
+      {
          auto onDiskId = fOnDisk2MemColumnIDs.size();
          const auto &p = fMem2OnDiskColumnIDs.try_emplace(memId, onDiskId);
          if (p.second)
             fOnDisk2MemColumnIDs.push_back(memId);
          return (*p.first).second;
       }
-      DescriptorId_t MapClusterId(DescriptorId_t memId) {
+      ROOT::DescriptorId_t MapClusterId(ROOT::DescriptorId_t memId)
+      {
          auto onDiskId = fOnDisk2MemClusterIDs.size();
          fMem2OnDiskClusterIDs[memId] = onDiskId;
          fOnDisk2MemClusterIDs.push_back(memId);
          return onDiskId;
       }
-      DescriptorId_t MapClusterGroupId(DescriptorId_t memId)
+      ROOT::DescriptorId_t MapClusterGroupId(ROOT::DescriptorId_t memId)
       {
          auto onDiskId = fOnDisk2MemClusterGroupIDs.size();
          fMem2OnDiskClusterGroupIDs[memId] = onDiskId;
@@ -144,28 +164,36 @@ public:
       /// list serialization requires all columns to be mapped.
       void MapSchema(const RNTupleDescriptor &desc, bool forHeaderExtension);
 
-      DescriptorId_t GetOnDiskFieldId(DescriptorId_t memId) const { return fMem2OnDiskFieldIDs.at(memId); }
-      DescriptorId_t GetOnDiskColumnId(DescriptorId_t memId) const { return fMem2OnDiskColumnIDs.at(memId); }
-      DescriptorId_t GetOnDiskClusterId(DescriptorId_t memId) const { return fMem2OnDiskClusterIDs.at(memId); }
-      DescriptorId_t GetOnDiskClusterGroupId(DescriptorId_t memId) const
+      ROOT::DescriptorId_t GetOnDiskFieldId(ROOT::DescriptorId_t memId) const { return fMem2OnDiskFieldIDs.at(memId); }
+      ROOT::DescriptorId_t GetOnDiskColumnId(ROOT::DescriptorId_t memId) const
+      {
+         return fMem2OnDiskColumnIDs.at(memId);
+      }
+      ROOT::DescriptorId_t GetOnDiskClusterId(ROOT::DescriptorId_t memId) const
+      {
+         return fMem2OnDiskClusterIDs.at(memId);
+      }
+      ROOT::DescriptorId_t GetOnDiskClusterGroupId(ROOT::DescriptorId_t memId) const
       {
          return fMem2OnDiskClusterGroupIDs.at(memId);
       }
-      DescriptorId_t GetMemFieldId(DescriptorId_t onDiskId) const { return fOnDisk2MemFieldIDs[onDiskId]; }
-      DescriptorId_t GetMemColumnId(DescriptorId_t onDiskId) const { return fOnDisk2MemColumnIDs[onDiskId]; }
-      DescriptorId_t GetMemClusterId(DescriptorId_t onDiskId) const { return fOnDisk2MemClusterIDs[onDiskId]; }
-      DescriptorId_t GetMemClusterGroupId(DescriptorId_t onDiskId) const
+      ROOT::DescriptorId_t GetMemFieldId(ROOT::DescriptorId_t onDiskId) const { return fOnDisk2MemFieldIDs[onDiskId]; }
+      ROOT::DescriptorId_t GetMemColumnId(ROOT::DescriptorId_t onDiskId) const
+      {
+         return fOnDisk2MemColumnIDs[onDiskId];
+      }
+      ROOT::DescriptorId_t GetMemClusterId(ROOT::DescriptorId_t onDiskId) const
+      {
+         return fOnDisk2MemClusterIDs[onDiskId];
+      }
+      ROOT::DescriptorId_t GetMemClusterGroupId(ROOT::DescriptorId_t onDiskId) const
       {
          return fOnDisk2MemClusterGroupIDs[onDiskId];
       }
 
       /// Return a vector containing the in-memory field ID for each on-disk counterpart, in order, i.e. the `i`-th
       /// value corresponds to the in-memory field ID for `i`-th on-disk ID
-      const std::vector<DescriptorId_t> &GetOnDiskFieldList() const { return fOnDisk2MemFieldIDs; }
-      /// Mark the first on-disk field ID that is part of the schema extension
-      void BeginHeaderExtension() { fHeaderExtensionOffset = fOnDisk2MemFieldIDs.size(); }
-      /// Return the offset of the first element in `fOnDisk2MemFieldIDs` that is part of the schema extension
-      std::size_t GetHeaderExtensionOffset() const { return fHeaderExtensionOffset; }
+      const std::vector<ROOT::DescriptorId_t> &GetOnDiskFieldList() const { return fOnDisk2MemFieldIDs; }
    };
 
    /// Writes a XxHash-3 64bit checksum of the byte range given by data and length.
@@ -195,10 +223,13 @@ public:
 
    /// While we could just interpret the enums as ints, we make the translation explicit
    /// in order to avoid accidentally changing the on-disk numbers when adjusting the enum classes.
-   static std::uint16_t SerializeFieldStructure(ROOT::Experimental::ENTupleStructure structure, void *buffer);
-   static std::uint16_t SerializeColumnType(ROOT::Experimental::EColumnType type, void *buffer);
-   static RResult<std::uint16_t> DeserializeFieldStructure(const void *buffer, ROOT::Experimental::ENTupleStructure &structure);
-   static RResult<std::uint16_t> DeserializeColumnType(const void *buffer, ROOT::Experimental::EColumnType &type);
+   static std::uint32_t SerializeFieldStructure(ROOT::ENTupleStructure structure, void *buffer);
+   static std::uint32_t SerializeColumnType(ROOT::ENTupleColumnType type, void *buffer);
+   static std::uint32_t SerializeExtraTypeInfoId(ROOT::Experimental::EExtraTypeInfoIds id, void *buffer);
+   static RResult<std::uint32_t> DeserializeFieldStructure(const void *buffer, ROOT::ENTupleStructure &structure);
+   static RResult<std::uint32_t> DeserializeColumnType(const void *buffer, ROOT::ENTupleColumnType &type);
+   static RResult<std::uint32_t>
+   DeserializeExtraTypeInfoId(const void *buffer, ROOT::Experimental::EExtraTypeInfoIds &id);
 
    static std::uint32_t SerializeEnvelopePreamble(std::uint16_t envelopeType, void *buffer);
    static std::uint32_t SerializeEnvelopePostscript(unsigned char *envelope, std::uint64_t size);
@@ -246,16 +277,33 @@ public:
 
    static RContext SerializeHeader(void *buffer, const RNTupleDescriptor &desc);
    static std::uint32_t SerializePageList(void *buffer, const RNTupleDescriptor &desc,
-                                          std::span<DescriptorId_t> physClusterIDs, const RContext &context);
+                                          std::span<ROOT::DescriptorId_t> physClusterIDs, const RContext &context);
    static std::uint32_t SerializeFooter(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
 
    static RResult<void>
    DeserializeHeader(const void *buffer, std::uint64_t bufSize, RNTupleDescriptorBuilder &descBuilder);
    static RResult<void>
    DeserializeFooter(const void *buffer, std::uint64_t bufSize, RNTupleDescriptorBuilder &descBuilder);
+
+   enum class EDescriptorDeserializeMode {
+      /// Deserializes the descriptor as-is without performing any additional fixup. The produced descriptor is
+      /// unsuitable for reading or writing, but it's a faithful representation of the on-disk information.
+      kRaw,
+      /// Deserializes the descriptor and performs fixup on the suppressed column ranges. This produces a descriptor
+      /// that is suitable for writing, but not reading.
+      kForWriting,
+      /// Deserializes the descriptor and performs fixup on the suppressed column ranges and on clusters, taking
+      /// into account the header extension. This produces a descriptor that is suitable for reading.
+      kForReading,
+   };
    // The clusters vector must be initialized with the cluster summaries corresponding to the page list
-   static RResult<void> DeserializePageList(const void *buffer, std::uint64_t bufSize, DescriptorId_t clusterGroupId,
-                                            RNTupleDescriptor &desc);
+   static RResult<void> DeserializePageList(const void *buffer, std::uint64_t bufSize,
+                                            ROOT::DescriptorId_t clusterGroupId, RNTupleDescriptor &desc,
+                                            EDescriptorDeserializeMode mode);
+
+   // Helper functions to (de-)serialize the streamer info type extra information
+   static std::string SerializeStreamerInfos(const StreamerInfoMap_t &infos);
+   static RResult<StreamerInfoMap_t> DeserializeStreamerInfos(const std::string &extraTypeInfoContent);
 }; // class RNTupleSerializer
 
 } // namespace Internal

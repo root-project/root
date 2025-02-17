@@ -47,7 +47,7 @@ call the function `SetNoEdges()`. To remove completely the ellipse
 outline it is enough to specify 0 as line style.
 
 Begin_Macro(source)
-../../../tutorials/graphics/ellipse.C
+../../../tutorials/visualisation/graphics/ellipse.C
 End_Macro
 */
 
@@ -697,14 +697,14 @@ void TEllipse::Streamer(TBuffer &R__b)
 
 Rectangle_t TEllipse::GetBBox()
 {
-   Rectangle_t BBox{0,0,0,0};
-   if (!gPad) return BBox;
-   if (!gPad) return (BBox);
-   BBox.fX = gPad->XtoPixel(fX1-fR1);
-   BBox.fY = gPad->YtoPixel(fY1+fR2);
-   BBox.fWidth = gPad->XtoPixel(fX1+fR1)-gPad->XtoPixel(fX1-fR1);
-   BBox.fHeight = gPad->YtoPixel(fY1-fR2)-gPad->YtoPixel(fY1+fR2);
-   return (BBox);
+   Rectangle_t BBox{0, 0, 0, 0};
+   if (gPad) {
+      BBox.fX = gPad->XtoPixel(fX1 - fR1);
+      BBox.fY = gPad->YtoPixel(fY1 + fR2);
+      BBox.fWidth = gPad->XtoPixel(fX1 + fR1) - gPad->XtoPixel(fX1 - fR1);
+      BBox.fHeight = gPad->YtoPixel(fY1 - fR2) - gPad->YtoPixel(fY1 + fR2);
+   }
+   return BBox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -712,12 +712,12 @@ Rectangle_t TEllipse::GetBBox()
 
 TPoint TEllipse::GetBBoxCenter()
 {
-   TPoint p(0,0);
-   if (!gPad) return (p);
-   if (!gPad) return (p);
-   p.SetX(gPad->XtoPixel(fX1));
-   p.SetY(gPad->YtoPixel(fY1));
-   return(p);
+   TPoint p(0, 0);
+   if (gPad) {
+      p.SetX(gPad->XtoPixel(fX1));
+      p.SetY(gPad->YtoPixel(fY1));
+   }
+   return p;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

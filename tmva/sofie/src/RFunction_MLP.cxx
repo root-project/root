@@ -31,7 +31,7 @@ void RFunction_MLP::Initialize() {
     std::string fGemmInput;
     if(fGraphType == GraphType::GNN) {
         std::unique_ptr<ROperator> op_concat;
-        op_concat.reset(new ROperator_Concat<float>(fInputTensors,1,0,fFuncName+"InputConcat"));
+        op_concat.reset(new ROperator_Concat(fInputTensors,1,0,fFuncName+"InputConcat"));
         function_block->AddOperator(std::move(op_concat));
         fGemmInput = fFuncName+"InputConcat";
 

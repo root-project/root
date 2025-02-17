@@ -44,11 +44,12 @@ public:
    void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SaveStyle(); // *MENU*
    void             SetAllWith(const char *, Option_t *, Double_t) override {}
-   void             SetMargin(Float_t) override { }
    virtual void     SetFitFormat(const char *format="5.4g");    // *MENU*
    virtual void     SetStatFormat(const char *format="6.4g");   // *MENU*
    void             SetOptFit(Int_t fit=1);                     // *MENU*
    void             SetOptStat(Int_t stat=1);                   // *MENU*
+   void             SetOption(Option_t *option="br") override;  // *MENU*
+   void             SetDrawOption(Option_t *option="") override;
    void             SetParent(TObject*obj) override { fParent = obj; }
    void             UseCurrentStyle() override;
 

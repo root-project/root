@@ -1,3 +1,6 @@
+BLA_VENDOR=OpenBLAS
 builtin_nlohmannjson=ON
-builtin_vdt=On
-tmva-sofie=On
+builtin_vdt=ON
+ccache=ON
+pythia8=OFF
+tmva-sofie=ON

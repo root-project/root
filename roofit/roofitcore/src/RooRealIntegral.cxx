@@ -35,8 +35,6 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include <RooConstVar.h>
 #include <RooDouble.h>
 #include <RooExpensiveObjectCache.h>
-#include <RooFuncWrapper.h>
-#include <RooHelpers.h>
 #include <RooInvTransform.h>
 #include <RooMsgService.h>
 #include <RooNameReg.h>
@@ -46,12 +44,9 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include <RooSuperCategory.h>
 #include <RooTrace.h>
 
-#include "RooFitImplHelpers.h"
-
 #include <iostream>
 #include <memory>
 
-ClassImp(RooRealIntegral);
 
 namespace {
 
@@ -343,7 +338,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
   // Choose same expensive object cache as integrand
   setExpensiveObjectCache(function.expensiveObjectCache()) ;
-//   cout << "RRI::ctor(" << GetName() << ") setting expensive object cache to " << &expensiveObjectCache() << " as taken from " << function.GetName() << std::endl ;
+//   std::cout << "RRI::ctor(" << GetName() << ") setting expensive object cache to " << &expensiveObjectCache() << " as taken from " << function.GetName() << std::endl ;
 
   // Use objects integrator configuration if none is specified
   if (!_iconfig) _iconfig = const_cast<RooNumIntConfig*>(function.getIntegratorConfig());
@@ -671,12 +666,12 @@ bool RooRealIntegral::initNumIntegrator() const
   // Bind the appropriate analytic integral of our RooRealVar object to
   // those of its arguments that will be integrated out numerically.
   if(_mode != 0) {
-    std::unique_ptr<RooAbsReal> analyticalPart{_function->createIntegral(_anaList, *funcNormSet(), RooNameReg::str(_rangeName))};
+    std::unique_ptr<RooAbsReal> analyticalPart{_function->createIntegral(_anaList, *actualFuncNormSet(), RooNameReg::str(_rangeName))};
     _numIntegrand = std::make_unique<RooRealBinding>(*analyticalPart,_intList,nullptr,false,_rangeName);
     const_cast<RooRealIntegral*>(this)->addOwnedComponents(std::move(analyticalPart));
   }
   else {
-    _numIntegrand = std::make_unique<RooRealBinding>(*_function,_intList,funcNormSet(),false,_rangeName);
+    _numIntegrand = std::make_unique<RooRealBinding>(*_function,_intList,actualFuncNormSet(),false,_rangeName);
   }
   if(nullptr == _numIntegrand || !_numIntegrand->isValid()) {
     coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrand." << std::endl;
@@ -715,7 +710,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral &other, const char *name)
      _intList("!intList", this, other._intList),
      _anaList("!anaList", this, other._anaList),
      _jacList("!jacList", this, other._jacList),
-     _facList("!facList", "Variables independent of function", this, false, true),
+     _facList("!facList", this, other._facList),
      _function("!func", this, other._function),
      _iconfig(other._iconfig),
      _sumCat("!sumCat", this, other._sumCat),
@@ -726,12 +721,6 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral &other, const char *name)
  if(other._funcNormSet) {
    _funcNormSet = std::make_unique<RooArgSet>();
    other._funcNormSet->snapshot(*_funcNormSet, false);
- }
-
- for (const auto arg : other._facList) {
-   std::unique_ptr<RooAbsArg> argClone{static_cast<RooAbsArg*>(arg->Clone())};
-   _facList.addOwned(*argClone);
-   addOwnedComponents(std::move(argClone));
  }
 
  other._intList.snapshot(_saveInt) ;
@@ -822,7 +811,7 @@ double RooRealIntegral::evaluate() const
 
       if (cacheVal) {
         retVal = *cacheVal ;
-   // cout << "using cached value of integral" << GetName() << std::endl ;
+   // std::cout << "using cached value of integral" << GetName() << std::endl ;
       } else {
 
 
@@ -857,7 +846,7 @@ double RooRealIntegral::evaluate() const
         if ((_cacheNum && !_intList.empty()) || int(_intList.size())>=_cacheAllNDim) {
           RooDouble* val = new RooDouble(retVal) ;
           expensiveObjectCache().registerObject(_function->GetName(),GetName(),*val,parameters())  ;
-          //     cout << "### caching value of integral" << GetName() << " in " << &expensiveObjectCache() << std::endl ;
+          //     std::cout << "### caching value of integral" << GetName() << " in " << &expensiveObjectCache() << std::endl ;
         }
 
       }
@@ -885,7 +874,7 @@ double RooRealIntegral::evaluate() const
       assert(servers().size() == _facList.size() + 1);
 
       //setDirtyInhibit(true) ;
-      retVal= _function->getVal(funcNormSet());
+      retVal= _function->getVal(actualFuncNormSet());
       //setDirtyInhibit(false) ;
       break ;
     }
@@ -1036,73 +1025,6 @@ bool RooRealIntegral::getAllowComponentSelection() const {
 
 void RooRealIntegral::setAllowComponentSelection(bool allow){
   _respectCompSelect = allow;
-}
-
-void RooRealIntegral::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   if (_sumList.empty() && _intList.empty()) {
-      ctx.addResult(this, _function.arg().buildCallToAnalyticIntegral(_mode, RooNameReg::str(_rangeName), ctx));
-      return;
-   }
-
-   if (intVars().size() != 1 || _intList.size() != 1) {
-      std::stringstream errorMsg;
-      errorMsg << "Only analytical integrals and 1D numeric integrals are supported for AD for class"
-               << _function.GetName();
-      coutE(Minimization) << errorMsg.str() << std::endl;
-      throw std::runtime_error(errorMsg.str().c_str());
-   }
-
-   auto &intVar = static_cast<RooAbsRealLValue &>(*_intList[0]);
-
-   RooFuncWrapper wrapper{GetName(), GetTitle(), *_function, nullptr, nullptr, false};
-
-   RooArgSet params;
-   _function->getParameters(nullptr, params);
-
-   std::string paramsName = ctx.getTmpVarName();
-
-   std::stringstream ss;
-
-   std::string resName = RooFit::Detail::makeValidVarName(GetName()) + "Result";
-   ctx.addResult(this, resName);
-   ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
-
-   ss  << "double " << paramsName << "[] = {";
-   std::string args;
-   int intVarIdx = 0;
-   for (RooAbsArg *param : params) {
-      // Fill the integration variable with dummy value for now. This will then
-      // be reset in the sampling loop.
-      if (param->namePtr() == intVar.namePtr()) {
-         args += "0.0,";
-      } else if (!param->isConstant()) {
-         args += ctx.getResult(*param) + ",";
-         intVarIdx++;
-      }
-   }
-   if (!args.empty()) {
-      args.pop_back();
-   }
-   ss << args << "};\n";
-
-   // TODO: once Clad has support for higher-order functions (follow also the
-   // Clad issue #637), we could refactor this code into an actual function
-   // instead of hardcoding it here as a string.
-   ss << "{\n"
-      << "   const int n = 1000; // number of sampling points\n"
-      << "   double d = " << intVar.getMax(intRange()) << " - " << intVar.getMin(intRange()) << ";\n"
-      << "   double eps = d / n;\n"
-      << "   for (int i = 0; i < n; ++i) {\n"
-      << "      " << paramsName << "[" << intVarIdx << "] = " << intVar.getMin(intRange()) << " + eps * i;\n"
-      // TODO: the second "paramsName" should be nullptr, but until Clad issue
-      // 636 is fixed, we have to pass a non-nullptr dummy.
-      << "      " << resName << " += " << " + " << ctx.buildCall(wrapper.funcName(), paramsName, paramsName, paramsName) << ";\n"
-      << "   }\n"
-      << "   " << resName << " *= " << " d / n;\n"
-      << "}\n";
-
-   ctx.addToGlobalScope(ss.str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

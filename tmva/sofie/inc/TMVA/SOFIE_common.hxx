@@ -15,6 +15,9 @@
 #include <regex>
 #include <sstream>
 #include <iostream>
+#include <iomanip>
+#include <cassert>
+#include <limits>
 
 namespace TMVA{
 namespace Experimental{
@@ -67,6 +70,35 @@ struct DynamicTensorInfo{
    std::vector<Dim> shape;
 };
 
+// template traits for Tensor type
+template <typename T>
+struct TensorType {};
+template<>
+struct TensorType<float> {
+   static const std::string Name() { return "float"; }
+};
+template<>
+struct TensorType<double> {
+   static const std::string Name() { return "double"; }
+};
+template<>
+struct TensorType<int64_t> {
+   static const std::string Name() { return "int64_t"; }
+};
+template<>
+struct TensorType<int32_t> {
+   static const std::string Name() { return "int32_t"; }
+};
+template<>
+struct TensorType<uint32_t> {
+   static const std::string Name() { return "uint32_t"; }
+};
+template<>
+struct TensorType<uint64_t> {
+   static const std::string Name() { return "uint64_t"; }
+};
+
+
 std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape);
 
 std::vector<size_t> ConvertShapeToInt(std::vector<Dim> shape);
@@ -81,17 +113,52 @@ std::string ConvertDynamicShapeToString(std::vector<Dim> shape);
 
 std::string ConvertDynamicShapeToLength(std::vector<Dim> shape);
 
+template<class T>
+std::string ConvertValToString(T value) {
+   std::stringstream ret;
+   if (std::is_floating_point_v<T>)
+      ret << std::setprecision(std::numeric_limits<T>::max_digits10);
+   ret << value;
+   return ret.str();
+}
+
+
+// convert list of values in a string taking into account the precision
+template<class T>
+std::string ConvertValuesToString(size_t n, const T * data) {
+   std::stringstream ret;
+   ret << "{ ";
+   for (size_t i = 0; i < n; i++) {
+      if (std::is_floating_point_v<T>)
+         ret << std::setprecision(std::numeric_limits<T>::max_digits10);
+      ret << data[i];
+      if (i < n-1) ret << ", ";
+   }
+   ret << "}";
+   return ret.str();
+}
+template<class T>
+std::string ConvertValuesToString(const std::vector<T> & data) {
+  return ConvertValuesToString(data.size(), data.data());
+}
+
 class InitializedTensor {
 public:
    InitializedTensor() = default;
-   InitializedTensor(ETensorType type, std::span<std::size_t> shape, std::shared_ptr<void> data)
-      : fType{type}, fShape{shape.begin(), shape.end()}, fData{data}
+   InitializedTensor(ETensorType type, std::span<std::size_t> shape, std::shared_ptr<void> data, bool typeConstant = false)
+      : fConstant(typeConstant), fType{type}, fShape{shape.begin(), shape.end()}, fData{data}
    {
    }
 
    ETensorType const &type() const { return fType; }
    std::vector<std::size_t> const &shape() const { return fShape; }
    std::shared_ptr<void> const &sharedptr() const { return fData; }
+   // query if tensor comes from a Constant operator
+   bool IsConstantTensor() const { return fConstant;}
+   // query if tensor needs to be written in a weight file. Constant tensors are not written in a file
+   bool IsWeightTensor() const { return !fConstant && !fIsNotWritable;}
+   // set not writable initialized tensors - i.e. tensor that must not be written in a file
+   void SetNotWritable() { fIsNotWritable = true;}
 
    template <class T = void>
    T const *data() const
@@ -143,6 +210,8 @@ public:
    }
 
 private:
+   bool  fConstant = false;      ///< Flag specifying if tensor is a Constant one (coming from a Constant operator)
+   bool  fIsNotWritable = false; ///< Flag to indicate that tensor values do not need to be written as weight or generated code
    ETensorType fType;               ///< Encodes the type of the data
    std::vector<std::size_t> fShape; ///< The shape of the data in terms of elements in each dimension
    std::shared_ptr<void> fData;     ///<! Transient shared data
@@ -225,19 +294,32 @@ T* BroadcastConvBias(const T* data, const size_t channel, const std::vector<size
 // Broadcast a tensor from shape to targetShape according to numpy broadcasting rules
 // See more at https://numpy.org/doc/stable/user/basics.broadcasting.html
 // and https://github.com/onnx/onnx/blob/main/docs/Broadcasting.md .
-template<typename T>
-T* BroadcastTensor(const T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape) {
-   // Size of the shapes
+template<typename T, class ContT = std::span<T> >
+void BroadcastTensor(ContT data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, ContT broadcastedData) {
+   // Size of the shapes (tensor input here have shapes with same sizes, we have already added the needed ones )
    size_t size = shape.size();
    // Current length of the broadcasted tensor
-   size_t curLength = ConvertShapeToLength(shape);
-   size_t targetLength = ConvertShapeToLength(targetShape);
-   // newShape is an aray of size equal to dimension along which we are broadcasting the tensor
-   T* broadcastedData = new T[targetLength];
-   std::copy(data, data + curLength, broadcastedData);
+   size_t curLength = data.size();
+   size_t targetLength = broadcastedData.size();
+   assert(ConvertShapeToLength(targetShape) == targetLength);
+   // special case when broadcasting last dimensions (initial shapes must be the same)
+   if (shape.front() == targetShape.front() && shape.back() == 1 && size > 1) {
+      size_t bsize = targetShape.back();
+      // compute the size of the data to broadcast
+      for (int k = int(size)-2; k >=0; k--) {
+         if (shape[k] != 1) break;
+         bsize *= targetShape[k];
+      }
+      for (size_t i = 0; i < curLength; i++) {
+         std::fill(broadcastedData.begin() + i*bsize, broadcastedData.begin() + (i+1)*bsize , data[i]);
+      }
+      return;
+   }
+
+   std::copy(data.begin(), data.end(), broadcastedData.begin());
    // Product of the previous dimensions of targetShape
    size_t arrayNum = 1;
-   // New broadcasted data
+   // New broadcasted data: is this needed?
    std::vector<T> newData(targetLength);
 
    for (size_t idx = 0; idx < size; idx++) {
@@ -254,8 +336,8 @@ T* BroadcastTensor(const T* data, const std::vector<size_t>& shape, const std::v
             for (size_t arrayIdx = 0; arrayIdx < arrayNum; arrayIdx++) {
                for (size_t targetIdx = 0; targetIdx < targetDim; targetIdx++) {
                   size_t offset = arrayIdx * arrayLength * targetDim + targetIdx * arrayLength;
-                  std::copy(broadcastedData + arrayIdx * arrayLength,
-                     broadcastedData + (arrayIdx + 1) * arrayLength,
+                  std::copy(broadcastedData.begin() + arrayIdx * arrayLength,
+                     broadcastedData.begin() + (arrayIdx + 1) * arrayLength,
                      newData.begin() + offset);
                }
             }
@@ -269,27 +351,57 @@ T* BroadcastTensor(const T* data, const std::vector<size_t>& shape, const std::v
          // Update current length
          curLength = newLength;
          // Update broadcasted data
-         std::copy(newData.begin(), newData.begin() + newLength, broadcastedData);
+         std::copy(newData.begin(), newData.begin() + newLength, broadcastedData.begin());
       }
       // Update the number of arrays
       arrayNum *= targetDim;
    }
-   return broadcastedData;
+   //return broadcastedData;
 }
 
-// Unidirectional broadcasting shape to targetShape
+// interface where we allocate a new array for broadcasted data
 template<typename T>
-T* UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape) {
+T* CreateBroadcastTensor(T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, size_t targetLength) {
+   // newShape is an array of size equal to dimension along which we are broadcasting the tensor
+   T* broadcastedData = new T[targetLength];
+   std::span<T> bData(broadcastedData, broadcastedData+targetLength);
+   size_t curLength = ConvertShapeToLength(shape);
+   std::span<T> inData(data, data+curLength);
+   BroadcastTensor<T, std::span<T>>(inData, shape, targetShape, bData);
+   return broadcastedData;
+}
+// Unidirectional broadcasting shape to targetShape// In unidirectional broadcast - only tensor B can have the shape changed not
+// tensor A - otherwise is a multidirectional broadcast
+template<typename T>
+T* UnidirectionalBroadcast(T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape) {
    // Prepend shape with ones
    if (shape.size() < targetShape.size()) {
       size_t targetSize = targetShape.size();
       std::vector<size_t> newShape(targetSize, 1);
       size_t offset = targetSize - shape.size();
       std::copy(shape.begin(), shape.end(), newShape.begin() + offset);
-      return BroadcastTensor<T>(data, newShape, targetShape);
+      return CreateBroadcastTensor<T>(data, newShape, targetShape, ConvertShapeToLength(targetShape));
    }
-   return BroadcastTensor<T>(data, shape, targetShape);
+   return CreateBroadcastTensor<T>(data, shape, targetShape, ConvertShapeToLength(targetShape));
 }
+
+// Unidirectional broadcasting shape to targetShape using a passed vector to avoid allocations
+template<typename T>
+void UnidirectionalBroadcast(T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, std::span<T> broadcastedData) {
+   size_t curLength = ConvertShapeToLength(shape);
+   std::span<T> inData(data, data+curLength);
+   // Prepend shape with ones
+   if (shape.size() < targetShape.size()) {
+      size_t targetSize = targetShape.size();
+      std::vector<size_t> newShape(targetSize, 1);
+      size_t offset = targetSize - shape.size();
+      std::copy(shape.begin(), shape.end(), newShape.begin() + offset);
+      BroadcastTensor<T>(inData, newShape, targetShape, broadcastedData);
+   }
+   BroadcastTensor<T, std::span<T>>(inData, shape, targetShape, broadcastedData);
+}
+// specialization for vector of boolean
+void UnidirectionalBroadcast(const std::vector<bool> & data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, std::vector<bool> & broadcastedData);
 
 /// compute stride of a tensor given its shape (assume layout is row-major)
 std::vector<size_t> ComputeStrideFromShape(const std::vector<size_t> & shape);

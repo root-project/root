@@ -13,11 +13,13 @@
 #include "llvm/ADT/FunctionExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSet.h"
-#include "llvm/IR/Module.h"
 #include "llvm/ExecutionEngine/Orc/Core.h"
 #include "llvm/ExecutionEngine/Orc/ExecutorProcessControl.h"
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
+#include "llvm/ExecutionEngine/Orc/Shared/ExecutorAddress.h"
+#include "llvm/ExecutionEngine/Orc/Shared/ExecutorSymbolDef.h"
 #include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Target/TargetMachine.h"
 
@@ -60,10 +62,12 @@ public:
                  std::unique_ptr<llvm::orc::ExecutorProcessControl> EPC,
                  llvm::Error &Err, void *ExtraLibHandle, bool Verbose);
 
+  ~IncrementalJIT();
+
   /// Register a DefinitionGenerator to dynamically provide symbols for
   /// generated code that are not already available within the process.
   void addGenerator(std::unique_ptr<llvm::orc::DefinitionGenerator> G) {
-    Jit->getMainJITDylib().addGenerator(std::move(G));
+    Jit->getProcessSymbolsJITDylib()->addGenerator(std::move(G));
   }
 
   /// Return a `DefinitionGenerator` that can provide addresses for symbols
@@ -90,12 +94,16 @@ public:
 
   /// Inject a symbol with a known address. Name is not linker mangled, i.e.
   /// as known by the IR.
-  llvm::JITTargetAddress addOrReplaceDefinition(llvm::StringRef Name,
-                                                llvm::JITTargetAddress KnownAddr);
+  llvm::orc::ExecutorAddr
+  addOrReplaceDefinition(llvm::StringRef Name,
+                         llvm::orc::ExecutorAddr KnownAddr);
 
   llvm::Error runCtors() const {
     return Jit->initialize(Jit->getMainJITDylib());
   }
+
+  /// @brief Return a pointer to the JIT held by IncrementalJIT object
+  llvm::orc::LLJIT* getLLJIT() { return Jit.get(); }
 
   /// @brief Get the TargetMachine used by the JIT.
   /// Non-const because BackendPasses need to update OptLevel.
@@ -106,13 +114,14 @@ private:
   llvm::orc::SymbolMap m_InjectedSymbols;
   SharedAtomicFlag SkipHostProcessLookup;
   llvm::StringSet<> m_ForbidDlSymbols;
-  llvm::orc::ResourceTrackerSP m_CurrentRT;
+  llvm::orc::ResourceTrackerSP m_CurrentProcessRT;
 
   /// FIXME: If the relation between modules and transactions is a bijection, the
   /// mapping via module pointers here is unnecessary. The transaction should
   /// store the resource tracker directly and pass it to `remove()` for
   /// unloading.
-  std::map<const Transaction*, llvm::orc::ResourceTrackerSP> m_ResourceTrackers;
+  std::map<const Transaction*, llvm::orc::ResourceTrackerSP> m_MainResourceTrackers;
+  std::map<const Transaction*, llvm::orc::ResourceTrackerSP> m_ProcessResourceTrackers;
   std::map<const llvm::Module *, llvm::orc::ThreadSafeModule> m_CompiledModules;
 
   bool m_JITLink;

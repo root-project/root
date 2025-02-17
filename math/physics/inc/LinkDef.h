@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link off all globals;
 #pragma link off all classes;
@@ -26,6 +26,7 @@
 #pragma link C++ function operator * ( const TVector3 &, Double_t  );
 #pragma link C++ function operator * ( Double_t, const TVector3 & );
 #pragma link C++ function operator * ( const TMatrix &, const TVector3 &);
+#pragma link C++ class vector<TVector3>;
 
 #pragma link C++ class TVector2-;
 #pragma link C++ function operator + ( const TVector2 &, const TVector2 & );

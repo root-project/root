@@ -62,7 +62,7 @@
 
 #include "RooAbsAnaConvPdf.h"
 
-#include "RooNormalizedPdf.h"
+#include "RooFit/Detail/RooNormalizedPdf.h"
 #include "RooMsgService.h"
 #include "Riostream.h"
 #include "RooResolutionModel.h"
@@ -76,7 +76,6 @@
 
 using std::endl, std::string, std::ostream;
 
-ClassImp(RooAbsAnaConvPdf);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +160,7 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
   // Sanity check
   if (_isCopy) {
     coutE(InputArguments) << "RooAbsAnaConvPdf::declareBasis(" << GetName() << "): ERROR attempt to "
-           << " declare basis functions in a copied RooAbsAnaConvPdf" << endl ;
+           << " declare basis functions in a copied RooAbsAnaConvPdf" << std::endl ;
     return -1 ;
   }
 
@@ -169,7 +168,7 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
   if (!(static_cast<RooResolutionModel*>(_model.absArg()))->isBasisSupported(expression)) {
     coutE(InputArguments) << "RooAbsAnaConvPdf::declareBasis(" << GetName() << "): resolution model "
            << _model.absArg()->GetName()
-           << " doesn't support basis function " << expression << endl ;
+           << " doesn't support basis function " << expression << std::endl ;
     return -1 ;
   }
 
@@ -193,7 +192,7 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
   _basisList.addOwned(std::move(basisFunc));
   if (!conv) {
     coutE(InputArguments) << "RooAbsAnaConvPdf::declareBasis(" << GetName() << "): unable to construct convolution with basis function '"
-           << expression << "'" << endl ;
+           << expression << "'" << std::endl ;
     return -1 ;
   }
   _convSet.add(*conv) ;
@@ -276,7 +275,7 @@ RooAbsGenContext* RooAbsAnaConvPdf::genContext(const RooArgSet &vars, const RooD
     if (!pdfCanDir) reason += "PDF does not support internal generation of convolution observable. " ;
     if (!resCanDir) reason += "Resolution model does not support internal generation of convolution observable. " ;
 
-    coutI(Generation) << "RooAbsAnaConvPdf::genContext(" << GetName() << ") Using regular accept/reject generator for convolution p.d.f because: " << reason.c_str() << endl ;
+    coutI(Generation) << "RooAbsAnaConvPdf::genContext(" << GetName() << ") Using regular accept/reject generator for convolution p.d.f because: " << reason.c_str() << std::endl ;
     return new RooGenContext(*this,vars,prototype,auxProto,verbose) ;
   }
 
@@ -337,10 +336,10 @@ double RooAbsAnaConvPdf::evaluate() const
     if (coef!=0.) {
       const double c = conv->getVal(nullptr);
       cxcoutD(Eval) << "RooAbsAnaConvPdf::evaluate(" << GetName() << ") val += coef*conv [" << index-1 << "/"
-          << _convSet.size() << "] coef = " << coef << " conv = " << c << endl ;
+          << _convSet.size() << "] coef = " << coef << " conv = " << c << std::endl ;
       result += c * coef;
     } else {
-      cxcoutD(Eval) << "RooAbsAnaConvPdf::evaluate(" << GetName() << ") [" << index-1 << "/" << _convSet.size() << "] coef = 0" << endl ;
+      cxcoutD(Eval) << "RooAbsAnaConvPdf::evaluate(" << GetName() << ") [" << index-1 << "/" << _convSet.size() << "] coef = 0" << std::endl ;
     }
   }
 
@@ -546,7 +545,7 @@ Int_t RooAbsAnaConvPdf::getCoefAnalyticalIntegral(Int_t /* coef*/, RooArgSet& /*
 double RooAbsAnaConvPdf::coefAnalyticalIntegral(Int_t coef, Int_t code, const char* /*rangeName*/) const
 {
   if (code==0) return coefficient(coef) ;
-  coutE(InputArguments) << "RooAbsAnaConvPdf::coefAnalyticalIntegral(" << GetName() << ") ERROR: unrecognized integration code: " << code << endl ;
+  coutE(InputArguments) << "RooAbsAnaConvPdf::coefAnalyticalIntegral(" << GetName() << ") ERROR: unrecognized integration code: " << code << std::endl ;
   assert(0) ;
   return 1 ;
 }
@@ -646,7 +645,7 @@ void RooAbsAnaConvPdf::printMultiline(ostream& os, Int_t contents, bool verbose,
 {
   RooAbsPdf::printMultiline(os,contents,verbose,indent);
 
-  os << indent << "--- RooAbsAnaConvPdf ---" << endl;
+  os << indent << "--- RooAbsAnaConvPdf ---" << std::endl;
   for (RooAbsArg * conv : _convSet) {
     conv->printMultiline(os,contents,verbose,indent) ;
   }
@@ -660,7 +659,7 @@ void RooAbsAnaConvPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
   for (auto const* carg : static_range_cast<RooAbsArg*>(_convSet)) {
     if (carg->canNodeBeCached()==Always) {
       trackNodes.add(*carg) ;
-      //cout << "tracking node RooAddPdf component " << carg->ClassName() << "::" << carg->GetName() << endl ;
+      //cout << "tracking node RooAddPdf component " << carg->ClassName() << "::" << carg->GetName() << std::endl ;
     }
   }
 }
@@ -677,7 +676,7 @@ RooAbsAnaConvPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Co
       std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf *>(_convSet[0].Clone()));
       ctx.compileServers(*pdfClone, normSet);
 
-      auto newArg = std::make_unique<RooNormalizedPdf>(*pdfClone, normSet);
+      auto newArg = std::make_unique<RooFit::Detail::RooNormalizedPdf>(*pdfClone, normSet);
 
       // The direct servers are this pdf and the normalization integral, which
       // don't need to be compiled further.
@@ -717,7 +716,7 @@ RooAbsAnaConvPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Co
    ctx.compileServers(*pdfClone, normSet);
 
    // Finally, this RooAbsAnaConvPdf needs to be normalized
-   auto newArg = std::make_unique<RooNormalizedPdf>(*pdfClone, normSet);
+   auto newArg = std::make_unique<RooFit::Detail::RooNormalizedPdf>(*pdfClone, normSet);
 
    // The direct servers are this pdf and the normalization integral, which
    // don't need to be compiled further.

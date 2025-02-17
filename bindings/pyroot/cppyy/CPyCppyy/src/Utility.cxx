@@ -122,6 +122,10 @@ namespace {
         }
     } initOperatorMapping_;
 
+    inline std::string full_scope(const std::string& tpname) {
+        return tpname[0] == ':' ? tpname : "::"+tpname;
+    }
+
 } // unnamed namespace
 
 
@@ -484,7 +488,7 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
     }
 
     if (CPPScope_Check(tn)) {
-        tmpl_name.append(Cppyy::GetScopedFinalName(((CPPClass*)tn)->fCppType));
+        tmpl_name.append(full_scope(Cppyy::GetScopedFinalName(((CPPClass*)tn)->fCppType)));
         if (arg) {
         // try to specialize the type match for the given object
             CPPInstance* pyobj = (CPPInstance*)arg;
@@ -505,7 +509,7 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
     }
 
     if (tn == (PyObject*)&CPPOverload_Type) {
-        PyObject* tpName =  arg ? \
+        PyObject* tpName = arg ? \
             PyObject_GetAttr(arg, PyStrings::gCppName) : \
             CPyCppyy_PyText_FromString("void* (*)(...)");
         tmpl_name.append(CPyCppyy_PyText_AsString(tpName));
@@ -529,7 +533,7 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
                     for (Py_ssize_t i = 0; i < (PyList_GET_SIZE(values)-1); ++i) {
                         if (i) tpn << ", ";
                         PyObject* item = PyList_GET_ITEM(values, i);
-                        tpn << (CPPScope_Check(item) ?  ClassName(item) : AnnotationAsText(item));
+                        tpn << (CPPScope_Check(item) ? full_scope(ClassName(item)) : AnnotationAsText(item));
                     }
                     Py_DECREF(values);
 
@@ -547,7 +551,8 @@ static bool AddTypeName(std::string& tmpl_name, PyObject* tn, PyObject* arg,
 
         PyObject* tpName = PyObject_GetAttr(arg, PyStrings::gCppName);
         if (tpName) {
-            tmpl_name.append(CPyCppyy_PyText_AsString(tpName));
+            const char* cname = CPyCppyy_PyText_AsString(tpName);
+            tmpl_name.append(CPPScope_Check(arg) ? full_scope(cname) : cname);
             Py_DECREF(tpName);
             return true;
         }
@@ -640,7 +645,7 @@ void CPyCppyy::Utility::ConstructCallbackPreamble(const std::string& retType,
              << retType << "\"), CPyCppyy::DestroyConverter};\n";
     std::vector<bool> arg_is_ptr;
     if (nArgs) {
-        arg_is_ptr.reserve(nArgs);
+        arg_is_ptr.resize(nArgs);
         code << "    CPYCPPYY_STATIC std::vector<std::unique_ptr<CPyCppyy::Converter, std::function<void(CPyCppyy::Converter*)>>> argcvs;\n"
              << "    if (argcvs.empty()) {\n"
              << "      argcvs.reserve(" << nArgs << ");\n";
@@ -821,6 +826,9 @@ Py_ssize_t CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, v
 
 // new-style buffer interface
     if (PyObject_CheckBuffer(pyobject)) {
+        if (PySequence_Check(pyobject) && !PySequence_Size(pyobject))
+            return 0;   // PyObject_GetBuffer() crashes on some platforms for some zero-sized seqeunces
+
         Py_buffer bufinfo;
         memset(&bufinfo, 0, sizeof(Py_buffer));
         if (PyObject_GetBuffer(pyobject, &bufinfo, PyBUF_FORMAT) == 0) {
@@ -1014,7 +1022,11 @@ std::string CPyCppyy::Utility::ClassName(PyObject* pyobj)
 static std::set<std::string> sIteratorTypes;
 bool CPyCppyy::Utility::IsSTLIterator(const std::string& classname)
 {
-// attempt to recognize STL iterators (TODO: probably belongs in the backend)
+// attempt to recognize STL iterators (TODO: probably belongs in the backend), using
+// a couple of common container classes with different iterator protocols (note that
+// mapping iterators are handled separately in the pythonizations) as exemplars (the
+// actual, resolved, names will be compiler-specific) that are picked b/c they are
+// baked into the CoreLegacy dictionary
     if (sIteratorTypes.empty()) {
         std::string tt = "<int>::";
         for (auto c : {"std::vector", "std::list", "std::deque"}) {
@@ -1090,23 +1102,17 @@ void CPyCppyy::Utility::SetDetailedException(std::vector<PyError_t>& errors, PyO
         return;
     }
 
-// if a _single_ exception was from C++, assume it has priority
-    PyObject* exc_type = nullptr;
+// if a _single_ exception was thrown from C++, assume it has priority (see below)
     PyError_t* unique_from_cpp = nullptr;
     for (auto& e : errors) {
         if (e.fIsCpp) {
             if (!unique_from_cpp)
                 unique_from_cpp = &e;
             else {
-            // two C++ exceptions, resort to default
+            // two C++ exceptions, resort to default behavior
                 unique_from_cpp = nullptr;
-                exc_type = defexc;
                 break;
             }
-        } else if (!unique_from_cpp) {
-        // try to consolidate Python exceptions, otherwise select default
-            if (!exc_type) exc_type = e.fType;
-            else if (exc_type != e.fType) exc_type = defexc;
         }
     }
 
@@ -1120,6 +1126,16 @@ void CPyCppyy::Utility::SetDetailedException(std::vector<PyError_t>& errors, PyO
         Py_INCREF(unique_from_cpp->fType); Py_INCREF(unique_from_cpp->fValue); Py_XINCREF(unique_from_cpp->fTrace);
         PyErr_Restore(unique_from_cpp->fType, unique_from_cpp->fValue, unique_from_cpp->fTrace);
     } else {
+    // try to consolidate Python exceptions, otherwise select default
+        PyObject* exc_type = nullptr;
+        for (auto& e : errors) {
+            if (!exc_type) exc_type = e.fType;
+            else if (exc_type != e.fType) {
+                exc_type = defexc;
+                break;
+            }
+        }
+
     // add the details to the topmsg
         PyObject* separator = CPyCppyy_PyText_FromString("\n  ");
         for (auto& e : errors) {

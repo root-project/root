@@ -256,7 +256,7 @@ initial material/mixture at time, while all resulting elements having a
 fractional weight less than precision are excluded.
 
 A demo macro for radioactive material features is
-`$ROOTSYS/tutorials/geom/RadioNuclides.C` It demonstrates also the decay
+`$ROOTSYS/tutorials/visualisation/geom/RadioNuclides.C` It demonstrates also the decay
 of a mixture made of radionuclides.
 
 \image html geometry004.png width=600px

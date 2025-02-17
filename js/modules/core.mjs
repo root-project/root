@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '18/03/2024',
+version_date = '31/01/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -22,7 +22,9 @@ internals = {
    id_counter: 1
 },
 
-_src = import.meta?.url;
+_src = import.meta?.url,
+
+_src_dir = '$jsrootsys';
 
 
 /** @summary Location of JSROOT modules
@@ -30,15 +32,25 @@ _src = import.meta?.url;
   * @private */
 let source_dir = '';
 
-if (_src && isStr(_src)) {
-   const pos = _src.indexOf('modules/core.mjs');
-   if (pos >= 0) {
+if (_src_dir[0] !== '$')
+   source_dir = _src_dir;
+else if (_src && isStr(_src)) {
+   let pos = _src.indexOf('modules/core.mjs');
+   if (pos < 0)
+      pos = _src.indexOf('build/jsroot.js');
+   if (pos < 0)
+      pos = _src.indexOf('build/jsroot.min.js');
+   if (pos >= 0)
       source_dir = _src.slice(0, pos);
-      console.log(`Set jsroot source_dir to ${source_dir}, ${version}`);
-   } else {
-      console.log(`jsroot bundle, ${version}`);
+   else
       internals.ignore_v6 = true;
-   }
+}
+
+if (!nodejs) {
+   if (source_dir)
+      console.log(`Set jsroot source_dir to ${source_dir}, ${version}`);
+   else
+      console.log(`jsroot bundle, ${version}`);
 }
 
 /** @summary Is batch mode flag
@@ -89,6 +101,7 @@ if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typ
       browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 0;
       browser.isWin = navigator.userAgent.indexOf('Windows') >= 0;
    }
+   browser.android = /android/i.test(navigator.userAgent);
    browser.touches = ('ontouchend' in document); // identify if touch events are supported
    browser.screenWidth = window.screen?.width ?? 1200;
 }
@@ -116,7 +129,7 @@ const constants = {
       WebGL: 1,
       /** @summary Use WebGL rendering, but convert into svg image, not interactive */
       WebGLImage: 2,
-      /** @summary Use SVG rendering, slow, inprecise and not interactive, nor recommendet */
+      /** @summary Use SVG rendering, slow, imprecise and not interactive, not recommended */
       SVG: 3,
       fromString(s) {
          if ((s === 'webgl') || (s === 'gl')) return this.WebGL;
@@ -130,13 +143,13 @@ const constants = {
    Embed3D: {
       /** @summary Do not embed 3D drawing, use complete space */
       NoEmbed: -1,
-      /** @summary Default embeding mode - on Firefox and latest Chrome is real ```Embed```, on all other ```Overlay``` */
+      /** @summary Default embedding mode - on Firefox and latest Chrome is real ```Embed```, on all other ```Overlay``` */
       Default: 0,
-      /** @summary WebGL canvas not inserted into SVG, but just overlayed The only way how earlier Chrome browser can be used */
+      /** @summary WebGL canvas not inserted into SVG, but just overlay. The only way how old Chrome browser can be used */
       Overlay: 1,
       /** @summary Really embed WebGL Canvas into SVG */
       Embed: 2,
-      /** @summary Embeding, but when SVG rendering or SVG image converion is used */
+      /** @summary Embedding, but when SVG rendering or SVG image conversion is used */
       EmbedSVG: 3,
       /** @summary Convert string values into number  */
       fromString(s) {
@@ -191,6 +204,12 @@ settings = {
    Render3DBatch: constants.Render3D.Default,
    /** @summary Way to embed 3D drawing in SVG, see {@link constants.Embed3D} for possible values */
    Embed3D: constants.Embed3D.Default,
+   /** @summary Default canvas width */
+   CanvasWidth: 1200,
+   /** @summary Default canvas height */
+   CanvasHeight: 800,
+   /** @summary Canvas pixel ratio between viewport and display, default 1 */
+   CanvasScale: 1,
    /** @summary Enable or disable tooltips, default on */
    Tooltip: !nodejs,
    /** @summary Time in msec for appearance of tooltips, 0 - no animation */
@@ -205,10 +224,10 @@ settings = {
    ZoomWheel: !nodejs,
    /** @summary Zooming on touch devices */
    ZoomTouch: !nodejs,
-   /** @summary Enables move and resize of elements like statbox, title, pave, colz  */
+   /** @summary Enables move and resize of elements like statistic box, title, pave, colz  */
    MoveResize: !browser.touches && !nodejs,
-   /** @summary Configures keybord key press handling
-     * @desc Can be disabled to prevent keys heandling in complex HTML layouts
+   /** @summary Configures keyboard key press handling
+     * @desc Can be disabled to prevent keys handling in complex HTML layouts
      * @default true */
    HandleKeys: !nodejs,
    /** @summary enables drag and drop functionality */
@@ -229,12 +248,14 @@ settings = {
    CanAdjustFrame: false,
    /** @summary calculation of text size consumes time and can be skipped to improve performance (but with side effects on text adjustments) */
    ApproxTextSize: false,
+   /** @summary Load symbol.ttf font to display greek labels. By default font file not loaded and unicode is used */
+   LoadSymbolTtf: false,
    /** @summary Histogram drawing optimization: 0 - disabled, 1 - only for large (>5000 1d bins, >50 2d bins) histograms, 2 - always */
    OptimizeDraw: 1,
    /** @summary Automatically create stats box, default on */
    AutoStat: true,
    /** @summary Default frame position in NFC
-     * @deprecated Use gStyle.fPad[Left/Right/Top/Bottom]Margin values instead */
+     * @deprecated Use gStyle.fPad[Left/Right/Top/Bottom]Margin values instead, to be removed in v8 */
    FrameNDC: {},
    /** @summary size of pad, where many features will be deactivated like text draw or zooming  */
    SmallPad: { width: 150, height: 100 },
@@ -260,7 +281,7 @@ settings = {
    YValuesFormat: undefined,
    /** @summary custom format for all Z values, when not specified {@link gStyle.fStatFormat} is used */
    ZValuesFormat: undefined,
-   /** @summary Let detect and solve problem when browser returns wrong content-length parameter
+   /** @summary Let detect and solve problem when server returns wrong Content-Length header
      * @desc See [jsroot#189]{@link https://github.com/root-project/jsroot/issues/189} for more info
      * Can be enabled by adding 'wrong_http_response' parameter to URL when using JSROOT UI
      * @default false */
@@ -269,10 +290,10 @@ settings = {
      * @desc When specified, extra URL parameter like ```?stamp=unique_value``` append to each files loaded
      * In such case browser will be forced to load file content disregards of server cache settings
      * Can be disabled by providing &usestamp=false in URL or via Settings/Files sub-menu
-     * @default true */
-   UseStamp: true,
+     * Disabled by default on node.js, enabled in the web browsers */
+   UseStamp: !nodejs,
    /** @summary Maximal number of bytes ranges in http 'Range' header
-     * @desc Some http server has limitations for number of bytes rannges therefore let change maximal number via setting
+     * @desc Some http server has limitations for number of bytes ranges therefore let change maximal number via setting
      * @default 200 */
    MaxRanges: 200,
   /** @summary Configure xhr.withCredentials = true when submitting http requests from JSROOT */
@@ -289,9 +310,11 @@ settings = {
    AxisTiltAngle: 25,
    /** @summary Strip axis labels trailing 0 or replace 10^0 by 1 */
    StripAxisLabels: true,
+   /** @summary If true exclude (cut off) axis labels which may exceed graphical range, also axis name can be specified */
+   CutAxisLabels: false,
    /** @summary Draw TF1 by default as curve or line */
    FuncAsCurve: false,
-   /** @summary Time zone used for date/time display of file time */
+   /** @summary Time zone used for date/time display, local by default, can be 'UTC' or 'Europe/Berlin' or any other valid value */
    TimeZone: '',
    /** @summary Page URL which will be used to show item in new tab, jsroot main dir used by default */
    NewTabUrl: '',
@@ -407,12 +430,15 @@ gStyle = {
    fLegendFont: 42,
    fLegendTextSize: 0,
    fLegendFillColor: 0,
+   fLegendFillStyle: 1001,
    fHatchesLineWidth: 1,
    fHatchesSpacing: 1,
    fCandleWhiskerRange: 1.0,
    fCandleBoxRange: 0.5,
    fCandleScaled: false,
    fViolinScaled: true,
+   fCandleCircleLineWidth: 1,
+   fCandleCrossLineWidth: 1,
    fOrthoCamera: false,
    fXAxisExpXOffset: 0,
    fXAxisExpYOffset: 0,
@@ -460,18 +486,37 @@ async function injectCode(code) {
             return true;
       }
 
-      const promise = code.indexOf('JSROOT.require') >= 0 ? _ensureJSROOT() : Promise.resolve(true);
+      // try to detect if code includes import and must be treated as module
+      const is_v6 = code.indexOf('JSROOT.require') >= 0,
+            is_mjs = !is_v6 && (code.indexOf('import {') > 0) && (code.indexOf('} from \'') > 0),
+            is_batch = !is_v6 && !is_mjs && (code.indexOf('JSROOT.ObjectPainter') >= 0),
+            promise = (is_v6 ? _ensureJSROOT() : Promise.resolve(true));
+
+      if (is_batch && !globalThis.JSROOT)
+         globalThis.JSROOT = internals.jsroot;
 
       return promise.then(() => {
          const element = document.createElement('script');
-         element.setAttribute('type', 'text/javascript');
+         element.setAttribute('type', is_mjs ? 'module' : 'text/javascript');
          element.innerHTML = code;
          document.head.appendChild(element);
-         return postponePromise(true, 10); // while onload event not fired, just postpone resolve
+         // while onload event not fired, just postpone resolve
+         return isBatchMode() ? true : postponePromise(true, 10);
       });
    }
 
    return false;
+}
+
+/** @summary Load ES6 modules
+  * @param {String} arg - single URL or array of URLs
+  * @return {Promise} */
+async function loadModules(arg) {
+   if (isStr(arg))
+      arg = arg.split(';');
+   if (arg.length === 0)
+      return true;
+   return import(/* webpackIgnore: true */ arg.shift()).then(() => loadModules(arg));
 }
 
 /** @summary Load script or CSS file into the browser
@@ -945,7 +990,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
                return this.error_callback(Error(`Fail to load url ${url}`), this.status);
 
          if (this.nodejs_checkzip && (this.getResponseHeader('content-encoding') === 'gzip')) {
-            // special handling of gzipped JSON objects in Node.js
+            // special handling of gzip JSON objects in Node.js
             return import('zlib').then(handle => {
                 const res = handle.unzipSync(Buffer.from(this.response)),
                       obj = JSON.parse(res); // zlib returns Buffer, use JSON to parse it
@@ -993,7 +1038,6 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
    if (isNodeJs()) {
       if (!use_promise)
          throw Error('Not allowed to create http requests in node.js without promise');
-      // eslint-disable-next-line new-cap
       return import('xhr2').then(h => configureXhr(new h.default()));
    }
 
@@ -1001,7 +1045,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
    return use_promise ? Promise.resolve(xhr) : xhr;
 }
 
-/** @summary Submit asynchronoues http request
+/** @summary Submit asynchronous http request
   * @desc Following requests kind can be specified:
   *    - 'bin' - abstract binary data, result as string
   *    - 'buf' - abstract binary data, result as ArrayBuffer (default)
@@ -1011,7 +1055,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
   *    - 'xml' - returns req.responseXML
   *    - 'head' - returns request itself, uses 'HEAD' request method
   *    - 'post' - creates post request, submits req.send(post_data)
-  *    - 'postbuf' - creates post request, expectes binary data as response
+  *    - 'postbuf' - creates post request, expects binary data as response
   * @param {string} url - URL for the request
   * @param {string} kind - kind of requested data
   * @param {string} [post_data] - data submitted with post kind of request
@@ -1038,16 +1082,17 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTPaveLabel = 'TPaveLabel', clTPaveClass = 'TPaveClass', clTDiamond = 'TDiamond',
       clTLegend = 'TLegend', clTLegendEntry = 'TLegendEntry',
       clTPaletteAxis = 'TPaletteAxis', clTImagePalette = 'TImagePalette',
-      clTText = 'TText', clTLatex = 'TLatex', clTMathText = 'TMathText', clTAnnotation = 'TAnnotation',
+      clTText = 'TText', clTLink = 'TLink', clTLatex = 'TLatex', clTMathText = 'TMathText', clTAnnotation = 'TAnnotation',
       clTColor = 'TColor', clTLine = 'TLine', clTBox = 'TBox', clTPolyLine = 'TPolyLine',
       clTPolyLine3D = 'TPolyLine3D', clTPolyMarker3D = 'TPolyMarker3D',
-      clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTAttCanvas = 'TAttCanvas',
+      clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTFrame = 'TFrame', clTAttCanvas = 'TAttCanvas',
       clTGaxis = 'TGaxis', clTAttAxis = 'TAttAxis', clTAxis = 'TAxis', clTStyle = 'TStyle',
       clTH1 = 'TH1', clTH1I = 'TH1I', clTH1D = 'TH1D', clTH2 = 'TH2', clTH2I = 'TH2I', clTH2F = 'TH2F', clTH3 = 'TH3',
       clTF1 = 'TF1', clTF2 = 'TF2', clTF3 = 'TF3', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
-      nsREX = 'ROOT::Experimental::',
-      kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect';
+      nsREX = 'ROOT::Experimental::', nsSVG = 'http://www.w3.org/2000/svg',
+      kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect', kTitle = 'title',
+      urlClassPrefix = 'https://root.cern/doc/master/class';
 
 
 /** @summary Create some ROOT classes
@@ -1071,6 +1116,9 @@ function create(typename, target) {
       case clTList:
       case clTHashList:
          extend(obj, { name: typename, arr: [], opt: [] });
+         break;
+      case clTObjArray:
+         extend(obj, { name: typename, arr: [] });
          break;
       case clTAttAxis:
          extend(obj, { fNdivisions: 510, fAxisColor: 1,
@@ -1105,7 +1153,7 @@ function create(typename, target) {
          break;
       case clTPave:
          create(clTBox, obj);
-         extend(obj, { fX1NDC: 0, fY1NDC: 0, fX2NDC: 1, fY2NDC: 1,
+         extend(obj, { fX1NDC: 0, fY1NDC: 0, fX2NDC: 0, fY2NDC: 0,
                        fBorderSize: 0, fInit: 1, fShadowColor: 1,
                        fCornerRadius: 0, fOption: 'brNDC', fName: '' });
          break;
@@ -1122,13 +1170,14 @@ function create(typename, target) {
          extend(obj, { fFillColor: gStyle.fStatColor, fFillStyle: gStyle.fStatStyle,
                        fTextFont: gStyle.fStatFont, fTextSize: gStyle.fStatFontSize, fTextColor: gStyle.fStatTextColor,
                        fBorderSize: gStyle.fStatBorderSize,
-                       fOptFit: 0, fOptStat: 0, fFitFormat: '', fStatFormat: '', fParent: null });
+                       fOptFit: gStyle.fOptFit, fOptStat: gStyle.fOptStat, fFitFormat: gStyle.fFitFormat, fStatFormat: gStyle.fStatFormat, fParent: null });
          break;
       case clTLegend:
          create(clTPave, obj);
          create(clTAttText, obj);
          extend(obj, { fColumnSeparation: 0, fEntrySeparation: 0.1, fMargin: 0.25, fNColumns: 1, fPrimitives: create(clTList), fName: clTPave,
-                       fBorderSize: gStyle.fLegendBorderSize, fTextFont: gStyle.fLegendFont, fTextSize: gStyle.fLegendTextSize, fFillColor: gStyle.fLegendFillColor });
+                       fBorderSize: gStyle.fLegendBorderSize, fTextFont: gStyle.fLegendFont, fTextSize: gStyle.fLegendTextSize,
+                       fFillColor: gStyle.fLegendFillColor, fFillStyle: gStyle.fLegendFillStyle });
          break;
       case clTPaletteAxis:
          create(clTPave, obj);
@@ -1145,12 +1194,12 @@ function create(typename, target) {
       case clTText:
          create(clTNamed, obj);
          create(clTAttText, obj);
-         extend(obj, { fLimitFactorSize: 3, fOriginSize: 0.04 });
+         extend(obj, { fX: 0, fY: 0 });
          break;
       case clTLatex:
          create(clTText, obj);
          create(clTAttLine, obj);
-         extend(obj, { fX: 0, fY: 0 });
+         extend(obj, { fLimitFactorSize: 3, fOriginSize: 0.04 });
          break;
       case clTObjString:
          create(clTObject, obj);
@@ -1231,7 +1280,7 @@ function create(typename, target) {
          create(clTNamed, obj);
          create(clTAttText, obj);
          create(clTAttLine, obj);
-         extend(obj, { fRadian: true, fDegree: false, fGrad: false, fPolarLabelColor: 1, fRadialLabelColor: 1,
+         extend(obj, { fRadian: false, fDegree: false, fGrad: false, fPolarLabelColor: 1, fRadialLabelColor: 1,
                        fAxisAngle: 0, fPolarOffset: 0.04, fPolarTextSize: 0.04, fRadialOffset: 0.025, fRadialTextSize: 0.035,
                        fRwrmin: 0, fRwrmax: 1, fRwtmin: 0, fRwtmax: 2*Math.PI, fTickpolarSize: 0.02,
                        fPolarLabelFont: 62, fRadialLabelFont: 62, fCutRadial: 0, fNdivRad: 508, fNdivPol: 508 });
@@ -1300,7 +1349,7 @@ function create(typename, target) {
                        fYsizeUser: 0, fXsizeReal: 20, fYsizeReal: 10,
                        fWindowTopX: 0, fWindowTopY: 0, fWindowWidth: 0, fWindowHeight: 0,
                        fBorderSize: gStyle.fCanvasBorderSize, fBorderMode: gStyle.fCanvasBorderMode,
-                       fCw: 500, fCh: 300, fCatt: create(clTAttCanvas),
+                       fCw: settings.CanvasWidth, fCh: settings.CanvasHeight, fCatt: create(clTAttCanvas),
                        kMoveOpaque: true, kResizeOpaque: true, fHighLightColor: 5,
                        fBatch: true, kShowEventStatus: false, kAutoExec: true, kMenuBar: true });
          break;
@@ -1487,6 +1536,7 @@ function getMethods(typename, obj) {
       if (typeof m.TestBit === 'undefined') {
          m.TestBit = function(f) { return (this.fBits & f) !== 0; };
          m.InvertBit = function(f) { this.fBits = this.fBits ^ (f & 0xffffff); };
+         m.SetBit = function(f, on = true) { this.fBits = on ? this.fBits | f : this.fBits & ~f; };
       }
    }
 
@@ -1515,7 +1565,10 @@ function getMethods(typename, obj) {
       m.AddText = function(txt) {
          const line = create(clTLatex);
          line.fTitle = txt;
-         line.fTextAlign = this.fTextAlign;
+         line.fTextAlign = 0;
+         line.fTextColor = 0;
+         line.fTextFont = 0;
+         line.fTextSize = 0;
          this.fLines.Add(line);
       };
       m.Clear = function() {
@@ -1526,7 +1579,8 @@ function getMethods(typename, obj) {
    if ((typename.indexOf(clTF1) === 0) || (typename === clTF2)) {
       m.addFormula = function(obj) {
          if (!obj) return;
-         if (this.formulas === undefined) this.formulas = [];
+         if (this.formulas === undefined)
+            this.formulas = [];
          this.formulas.push(obj);
       };
       m.GetParName = function(n) {
@@ -1693,23 +1747,21 @@ function getMethods(typename, obj) {
          m.getBin = function(x, y) { return (x + (this.fXaxis.fNbins+2) * y); };
          m.getBinContent = function(x, y) {
             const bin = this.getBin(x, y);
-            if (bin < 0 || bin >= this.fNcells) return 0;
-            if (this.fBinEntries[bin] < 1e-300) return 0;
-            if (!this.fArray) return 0;
-            return this.fArray[bin]/this.fBinEntries[bin];
+            if (bin < 0 || bin >= this.fNcells || this.fBinEntries[bin] < 1e-300) return 0;
+            return this.fArray ? this.fArray[bin]/this.fBinEntries[bin] : 0;
          };
          m.getBinEntries = function(x, y) {
             const bin = this.getBin(x, y);
-            if (bin < 0 || bin >= this.fNcells) return 0;
-            return this.fBinEntries[bin];
+            return (bin < 0 || bin >= this.fNcells) ? 0 : this.fBinEntries[bin];
          };
       } else {
          m.getBin = function(x) { return x; };
          m.getBinContent = function(bin) {
-            if (bin < 0 || bin >= this.fNcells) return 0;
-            if (this.fBinEntries[bin] < 1e-300) return 0;
-            if (!this.fArray) return 0;
-            return this.fArray[bin]/this.fBinEntries[bin];
+            if (bin < 0 || bin >= this.fNcells || this.fBinEntries[bin] < 1e-300) return 0;
+            return this.fArray ? this.fArray[bin]/this.fBinEntries[bin] : 0;
+         };
+         m.getBinEntries = function(bin) {
+            return (bin < 0) || (bin >= this.fNcells) ? 0 : this.fBinEntries[bin];
          };
       }
       m.getBinEffectiveEntries = function(bin) {
@@ -1752,14 +1804,32 @@ function getMethods(typename, obj) {
 
    if (typename === clTAxis) {
       m.GetBinLowEdge = function(bin) {
-         if (this.fNbins <= 0) return 0;
-         if ((this.fXbins.length > 0) && (bin > 0) && (bin <= this.fNbins)) return this.fXbins[bin-1];
-         return this.fXmin + (bin-1) * (this.fXmax - this.fXmin) / this.fNbins;
+         if (this.fNbins <= 0)
+            return 0;
+         if (this.fXbins.length) {
+            if ((bin > 0) && (bin <= this.fNbins + 1))
+               return this.fXbins[bin - 1];
+            if (bin === 0) // underflow
+               return 2 * this.fXbins[0] - this.fXbins[1];
+            if (bin === this.fNbins + 2) // right border of overflow bin
+               return 2 * this.fXbins[bin - 2] - this.fXbins[bin - 3];
+            return 0;
+         }
+         return this.fXmin + (bin - 1) * (this.fXmax - this.fXmin) / this.fNbins;
       };
       m.GetBinCenter = function(bin) {
-         if (this.fNbins <= 0) return 0;
-         if ((this.fXbins.length > 0) && (bin > 0) && (bin < this.fNbins)) return (this.fXbins[bin-1] + this.fXbins[bin])/2;
-         return this.fXmin + (bin-0.5) * (this.fXmax - this.fXmin) / this.fNbins;
+         if (this.fNbins <= 0)
+            return 0;
+         if (this.fXbins.length) {
+            if ((bin > 0) && (bin <= this.fNbins))
+               return (this.fXbins[bin - 1] + this.fXbins[bin]) / 2;
+            if (bin === 0) // underflow
+               return 1.5 * this.fXbins[0] - 0.5 * this.fXbins[1];
+            if (bin === this.fNbins + 1) // overflow
+               return 1.5 * this.fXbins[bin - 1] - 0.5 * this.fXbins[bin - 2];
+            return 0;
+         }
+         return this.fXmin + (bin - 0.5) * (this.fXmax - this.fXmin) / this.fNbins;
       };
    }
 
@@ -1829,7 +1899,7 @@ function isObject(arg) { return arg && typeof arg === 'object'; }
   * @private */
 function isFunc(arg) { return typeof arg === 'function'; }
 
-/** @summary Check if argument is a atring
+/** @summary Check if argument is a String
   * @private */
 function isStr(arg) { return typeof arg === 'string'; }
 
@@ -1863,6 +1933,10 @@ async function _ensureJSROOT() {
    }).then(() => globalThis.JSROOT);
 }
 
+/** @summary Internal collection of functions potentially used by batch scripts
+  * @private */
+internals.jsroot = { version, source_dir, settings, gStyle, parse, isBatchMode };
+
 export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, setBatchMode,
          browser, internals, constants, settings, gStyle, atob_func, btoa_func, prROOT,
          clTObject, clTNamed, clTString, clTObjString,
@@ -1870,14 +1944,15 @@ export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, s
          clTList, clTHashList, clTMap, clTObjArray, clTClonesArray,
          clTAttLine, clTAttFill, clTAttMarker, clTAttText,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond,
-         clTLegend, clTLegendEntry, clTPaletteAxis, clTImagePalette, clTText, clTLatex, clTMathText, clTAnnotation, clTMultiGraph,
-         clTColor, clTLine, clTBox, clTPolyLine, clTPad, clTCanvas, clTAttCanvas, clTGaxis,
+         clTLegend, clTLegendEntry, clTPaletteAxis, clTImagePalette, clTText, clTLink, clTLatex, clTMathText, clTAnnotation, clTMultiGraph,
+         clTColor, clTLine, clTBox, clTPolyLine, clTPad, clTCanvas, clTFrame, clTAttCanvas, clTGaxis,
          clTAxis, clTStyle, clTH1, clTH1I, clTH1D, clTH2, clTH2I, clTH2F, clTH3, clTF1, clTF2, clTF3,
          clTProfile, clTProfile2D, clTProfile3D, clTHStack,
          clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG,
-         clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, kNoZoom, kNoStats, kInspect,
+         clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix,
+         nsREX, nsSVG, kNoZoom, kNoStats, kInspect, kTitle, urlClassPrefix,
          isArrayProto, getDocument, BIT, clone, addMethods, parse, parseMulti, toJSON,
-         decodeUrl, findFunction, createHttpRequest, httpRequest, loadScript, injectCode,
+         decodeUrl, findFunction, createHttpRequest, httpRequest, loadModules, loadScript, injectCode,
          create, createHistogram, setHistogramTitle, createTPolyLine, createTGraph, createTHStack, createTMultiGraph,
          getMethods, registerMethods, isRootCollection, isObject, isFunc, isStr, isPromise, getPromise, postponePromise, _ensureJSROOT };

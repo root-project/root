@@ -1,5 +1,6 @@
 import unittest
 import ROOT
+
 RTensor = ROOT.TMVA.Experimental.RTensor
 import numpy as np
 import platform
@@ -11,40 +12,54 @@ def check_shape(root_obj, np_obj):
     return root_shape == np_shape
 
 
-
 class AsRTensor(unittest.TestCase):
     """
     Test AsRTensor adoption mechanism
     """
 
     # Helpers
-    dtypes = [
-        "int32", "int64", "uint32", "uint64", "float32", "float64"
-    ]
-    cpptypes = ["int", "long", "unsigned int", "unsigned long", "float", "double"]
+    cpptypes = {
+        "int32": "int32_t",
+        "int64": "int64_t" if platform.system() != "Darwin" else "long",
+        "uint32": "uint32_t",
+        "uint64": "uint64_t" if platform.system() != "Darwin" else "unsigned long",
+        "float32": "float",
+        "float64": "double",
+    }
 
     # Tests
-    def test_dtypes(self):
+    def do_dtype_test(self, dtype):
         """
         Test adoption of numpy arrays with different data types
         """
-        #using long long on Linux does not work although it is same size as long
-        if (platform.system() == "Windows") :
-                self.cpptypes[1] = "long long"
-                self.cpptypes[3] = "unsigned long long"
 
-        i = 0
-        for dtype in self.dtypes:
-            np_obj = np.array([[1, 2], [3, 4], [5, 6]], dtype=dtype)
-            root_obj = ROOT.TMVA.Experimental.AsRTensor(np_obj)
-            self.assertTrue(check_shape(root_obj, np_obj))
-            np_obj[0,0] = 42
-            self.assertTrue(root_obj[0,0] == 42)
-            # test also direct conversion
-            #print("test type",self.dtypes[i],self.cpptypes[i])
-            root_obj = ROOT.TMVA.Experimental.RTensor(self.cpptypes[i])(np_obj)
-            self.assertTrue(check_shape(root_obj, np_obj))
-            i += 1
+        np_obj = np.array([[1, 2], [3, 4], [5, 6]], dtype=dtype)
+        root_obj = ROOT.TMVA.Experimental.AsRTensor(np_obj)
+        self.assertTrue(check_shape(root_obj, np_obj))
+        np_obj[0, 0] = 42
+        self.assertTrue(root_obj[0, 0] == 42)
+        # test also direct conversion
+        root_obj = ROOT.TMVA.Experimental.RTensor(self.cpptypes[dtype])(np_obj)
+        self.assertTrue(check_shape(root_obj, np_obj))
+
+    # Tests
+    def test_dtype_int32(self):
+        self.do_dtype_test("int32")
+
+    def test_dtype_int64(self):
+        self.do_dtype_test("int64")
+
+    def test_dtype_uint32(self):
+        self.do_dtype_test("uint32")
+
+    def test_dtype_uint64(self):
+        self.do_dtype_test("uint64")
+
+    def test_dtype_float32(self):
+        self.do_dtype_test("float32")
+
+    def test_dtype_float64(self):
+        self.do_dtype_test("float64")
 
     def test_memoryLayout(self):
         """
@@ -92,8 +107,16 @@ class ArrayInterface(unittest.TestCase):
 
     # Helpers
     dtypes = [
-        "int", "unsigned int", "long", "long long", "Long64_t", "unsigned long",
-        "unsigned long long", "ULong64_t", "float", "double"
+        "int",
+        "unsigned int",
+        "long",
+        "long long",
+        "Long64_t",
+        "unsigned long",
+        "unsigned long long",
+        "ULong64_t",
+        "float",
+        "double",
     ]
 
     def get_maximum_for_dtype(self, dtype):
@@ -118,8 +141,8 @@ class ArrayInterface(unittest.TestCase):
             root_obj = RTensor(dtype)(shape)
             np_obj = np.asarray(root_obj)
             self.assertTrue(check_shape(root_obj, np_obj))
-            np_obj[0,0] = 42
-            self.assertTrue(root_obj[0,0] == 42)
+            np_obj[0, 0] = 42
+            self.assertTrue(root_obj[0, 0] == 42)
 
     def test_memoryLayout(self):
         """
@@ -215,8 +238,8 @@ class NumpyCompliance(unittest.TestCase):
         shape = ROOT.std.vector("size_t")((1, 2))
         x = RTensor("float")(shape)
         y = np.asarray(x)
-        y[0,0] = 1
-        y[0,1] = 2
+        y[0, 0] = 1
+        y[0, 1] = 2
 
         shape[0] = 2
         shape[1] = 1
@@ -226,8 +249,8 @@ class NumpyCompliance(unittest.TestCase):
         for i, j in zip(x.GetShape(), y.shape):
             self.assertEqual(i, j)
 
-        self.assertEqual(x[0,0], y[0,0])
-        self.assertEqual(x[1,0], y[1,0])
+        self.assertEqual(x[0, 0], y[0, 0])
+        self.assertEqual(x[1, 0], y[1, 0])
 
         self.assertEqual(x.GetMemoryLayout(), 1)
         self.assertEqual(y.flags.c_contiguous, True)
@@ -239,44 +262,44 @@ class NumpyCompliance(unittest.TestCase):
         shape = ROOT.std.vector("size_t")((2, 2))
         x = RTensor("float")(shape)
         y = np.asarray(x)
-        y[0,0] = 1
-        y[0,1] = 2
-        y[1,0] = 3
-        y[1,1] = 4
+        y[0, 0] = 1
+        y[0, 1] = 2
+        y[1, 0] = 3
+        y[1, 1] = 4
 
-        x1 = x[:,0]
-        y1 = y[:,0]
+        x1 = x[:, 0]
+        y1 = y[:, 0]
         for i, j in zip(x1.GetShape(), y1.shape):
             self.assertEqual(i, j)
         self.assertEqual(x1[0], y1[0])
         self.assertEqual(x1[1], y1[1])
 
-        x2 = x[:,:]
-        y2 = y[:,:]
+        x2 = x[:, :]
+        y2 = y[:, :]
         for i, j in zip(x2.GetShape(), y2.shape):
             self.assertEqual(i, j)
-        self.assertEqual(x2[0,0], y2[0,0])
-        self.assertEqual(x2[0,1], y2[0,1])
-        self.assertEqual(x2[1,0], y2[1,0])
-        self.assertEqual(x2[1,1], y2[1,1])
+        self.assertEqual(x2[0, 0], y2[0, 0])
+        self.assertEqual(x2[0, 1], y2[0, 1])
+        self.assertEqual(x2[1, 0], y2[1, 0])
+        self.assertEqual(x2[1, 1], y2[1, 1])
 
         # We know that we differ in this case since numpy
         # does only squeeze the dimensions of a slice if
         # the dimension is requested by a single index.
-        x3 = x[1:2,:]
-        y3 = np.squeeze(y[1:2,:])
+        x3 = x[1:2, :]
+        y3 = np.squeeze(y[1:2, :])
         for i, j in zip(x3.GetShape(), y3.shape):
             self.assertEqual(i, j)
         self.assertEqual(x3[0], y3[0])
         self.assertEqual(x3[1], y3[1])
 
-        x4 = x[:,-2]
-        y4 = y[:,-2]
+        x4 = x[:, -2]
+        y4 = y[:, -2]
         for i, j in zip(x4.GetShape(), y4.shape):
             self.assertEqual(i, j)
         self.assertEqual(x4[0], y4[0])
         self.assertEqual(x4[1], y4[1])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

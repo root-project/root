@@ -24,6 +24,8 @@
 #error This file can be compiled only when cudnn is available in ROOT
 #else
 
+#include "cudnn.h"
+
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/CNN/ContextHandles.h"
 //#include "TMVA/DNN/CNN/Descriptors.h"
@@ -34,7 +36,7 @@
 #include "TMVA/DNN/RNN/LSTMLayer.h"
 #include "TMVA/DNN/RNN/GRULayer.h"
 
-#include "cudnn.h"
+
 #include "Cuda/CudaBuffers.h"
 #include "Cuda/CudaTensor.h"
 #include "TMVA/DNN/TensorDataLoader.h"
@@ -89,7 +91,11 @@ public:
    using ReduceTensorDescriptor_t = cudnnReduceTensorDescriptor_t;
    using TensorDescriptor_t       = cudnnTensorDescriptor_t;
    using RecurrentDescriptor_t    = cudnnRNNDescriptor_t;
-
+#if (CUDNN_VERSION >= 8000)
+   using RNNDataDescriptor_t         = cudnnRNNDataDescriptor_t;
+#else
+   using RNNDataDescriptor_t         = TCudnnEmptyDescriptor;
+#endif
    using EmptyDescriptor_t       = TCudnnEmptyDescriptor;        // Used if a descriptor is not needed in a class
 
    using BNormLayer_t            = TBatchNormLayer<TCudnn<AFloat>>;
@@ -817,7 +823,7 @@ public:
    }
 
       // printing of tensor
-   static void PrintTensor( const Tensor_t & A, const std::string name = "tensor", bool = false);
+   static void PrintTensor( const Tensor_t & A, const std::string name = "tensor", bool = true);
 
    static void PrintTensor4dDescriptor(TensorDescriptor_t descriptor);
    static void PrintTensorNdDescriptor(TensorDescriptor_t descriptor, int n = 10);
@@ -915,34 +921,49 @@ void TCudnn<AFloat>::PrintTensor(const typename TCudnn<AFloat>::Tensor_t & A, co
    for (size_t k = 0; k < strides.size()-1; ++k)
       std::cout << strides[k] << " , ";
    std::cout << strides.back() << " }\n ";
-
-   if (A.GetShape().size() == 2 ) {
-      for (size_t i = 0; i < A.GetShape()[0]; ++i) {
+   if (A.GetShape().size() == 1 ) {
+      size_t n =  A.GetShape()[0];
+      if (truncate) n = std::min(n,size_t(10));
+      for (size_t j = 0; j < n; ++j) {
+         std::cout << A(0,j) << " ";
+      }
+      if (truncate && n < A.GetShape()[0]) std::cout << " ...... ";
+      std::cout << " } " << std::endl;
+   } else if (A.GetShape().size() == 2 ) {
+      size_t n1 =  A.GetShape()[0];
+      size_t n2 =  A.GetShape()[1];
+      if (truncate) n1 = std::min(n1,size_t(10));
+      for (size_t i = 0; i < n1; ++i) {
          std::cout << "{ ";
-         size_t n =  A.GetShape()[1];
-         if (truncate) n = std::min(n,size_t(10));
-         for (size_t j = 0; j < n; ++j) {
+         if (truncate) n2 = std::min(n2,size_t(10));
+         for (size_t j = 0; j < n2; ++j) {
             std::cout << A(i,j) << " ";
-
          }
-         if (truncate && n < A.GetShape()[1]) std::cout << " ...... ";
+         if (truncate && n2 < A.GetShape()[1]) std::cout << " ...... ";
          std::cout << " } " << std::endl;
       }
+      if (truncate && n1 < A.GetShape()[0]) std::cout << " ...............\n";
    } else if  (A.GetShape().size() == 3 ) {
-      for (size_t i = 0; i < A.GetFirstSize(); ++i) {
+      size_t n1 =  A.GetFirstSize();
+      size_t n2 =  A.GetHSize();
+      size_t n3 = A.GetWSize();
+      if (truncate) n1 = std::min(n1,size_t(10));
+      if (truncate) n2 = std::min(n2,size_t(10));
+      if (truncate) n3 = std::min(n3,size_t(10));
+      for (size_t i = 0; i < n1; ++i) {
          std::cout << "{ ";
-         for (size_t j = 0; j < A.GetHSize(); ++j) {
+         for (size_t j = 0; j < n2; ++j) {
             std::cout << "{ ";
-            size_t n =  A.GetWSize();
-            if (truncate)  n = std::min(n,size_t(10));
-            for (size_t k = 0; k < n; ++k) {
+            for (size_t k = 0; k < n3; ++k) {
                std::cout << A(i,j,k) << " ";
             }
-            if (truncate && n < A.GetWSize()) std::cout << " ...... ";
+            if (truncate && n3 < A.GetWSize()) std::cout << " ...... ";
             std::cout << " } " << std::endl;
          }
+         if (truncate && n2 < A.GetHSize()) std::cout << ".................\n";
          std::cout << " } " << std::endl;
       }
+      if (truncate && n1 < A.GetFirstSize()) std::cout << "...................\n";
    } else if  (A.GetShape().size() == 4 ) {
       for (size_t i = 0; i < A.GetShape()[0]; ++i) {
          std::cout << "{ ";

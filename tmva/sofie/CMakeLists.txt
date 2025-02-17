@@ -35,6 +35,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Pool.hxx
    TMVA/ROperator_Concat.hxx
    TMVA/ROperator_Identity.hxx
+   TMVA/ROperator_Constant.hxx
    TMVA/ROperator_Softmax.hxx
    TMVA/ROperator_Reduce.hxx
    TMVA/ROperator_Shape.hxx
@@ -48,6 +49,14 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Comparision.hxx
    TMVA/ROperator_EyeLike.hxx
    TMVA/ROperator_Range.hxx
+   TMVA/ROperator_TopK.hxx
+   TMVA/ROperator_Tile.hxx
+   TMVA/ROperator_Split.hxx
+   TMVA/ROperator_SubGraph.hxx
+   TMVA/ROperator_Pad.hxx
+   TMVA/ROperator_Where.hxx
+   TMVA/ROperator_Einsum.hxx
+   TMVA/ROperator_Random.hxx
    TMVA/SOFIE_common.hxx
    TMVA/SOFIEHelpers.hxx
 

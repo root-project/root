@@ -3,7 +3,7 @@
 #  @date 2021-02
 
 ################################################################################
-# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.                      #
+# Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.                      #
 # All rights reserved.                                                         #
 #                                                                              #
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import types
 
 import concurrent.futures
@@ -20,6 +21,7 @@ from typing import Iterable, TYPE_CHECKING
 
 from DistRDF.Backends import build_backends_submodules
 from DistRDF.LiveVisualize import LiveVisualize
+
 
 if TYPE_CHECKING:
     from DistRDF.Proxy import ResultPtrProxy, ResultMapProxy
@@ -47,6 +49,53 @@ def initialize(fun, *args, **kwargs):
     from DistRDF.Backends import Base
     Base.BaseBackend.register_initialization(fun, *args, **kwargs)
 
+def DistributeCppCode(code_to_declare: str) -> None:
+    """
+    Declare the C++ code that has to be processed on each worker. 
+    Args:
+        codeToDeclare (str): cpp code to be declared on the workers
+        
+    """
+    from DistRDF.Backends import Base
+    Base.BaseBackend.register_declaration(code_to_declare)
+
+    
+def DistributeHeaders(paths_to_headers: Iterable[str]):
+    """
+    This function allows users to directly load C++ custom headers 
+    onto the workers. The headers are declared locally first.
+
+    Args:
+        paths_to_headers (list): list of paths to headers to be distributed to each worker
+
+    """    
+    from DistRDF.Backends import Base
+    Base.BaseBackend.register_headers(paths_to_headers) 
+
+def DistributeFiles(paths_to_files: Iterable[str]):
+    """
+    This function allows users to directly load arbitrary files
+    onto the workers. 
+
+    Args:
+        paths_to_files (list): list of paths to files to be distributed
+        
+    """
+    from DistRDF.Backends import Base
+    Base.BaseBackend.register_files(paths_to_files)
+
+    
+def DistributeSharedLibs(paths_to_shared_libraries: Iterable[str]) -> None:
+    """
+    This function allows users to directly load pre-compiled shared libraries 
+    onto the workers. The shared libraries are loaded locally first. 
+
+    Args:
+        paths_to_shared_libraries (list): list of paths to shared libraries to be distributed
+        
+    """
+    from DistRDF.Backends import Base
+    Base.BaseBackend.register_shared_lib(paths_to_shared_libraries)
 
 def RunGraphs(proxies: Iterable) -> int:
     """
@@ -68,19 +117,17 @@ def RunGraphs(proxies: Iterable) -> int:
 
         @code{.py}
         import ROOT
-        RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
-        RunGraphs = ROOT.RDF.Experimental.Distributed.RunGraphs
 
         # Create 3 different dataframes and book an histogram on each one
         histoproxies = [
-            RDataFrame(100)
+            ROOT.RDataFrame(100, executor=SupportedExecutor(...))
                 .Define("x", "rdfentry_")
                 .Histo1D(("name", "title", 10, 0, 100), "x")
             for _ in range(4)
         ]
 
         # Execute the 3 computation graphs
-        n_graphs_run = RunGraphs(histoproxies)
+        n_graphs_run = ROOT.RDF.RunGraphs(histoproxies)
         # Retrieve all the histograms in one go
         histos = [histoproxy.GetValue() for histoproxy in histoproxies]
         @endcode
@@ -136,5 +183,39 @@ def create_distributed_module(parentmodule):
     distributed.RunGraphs = RunGraphs
     distributed.VariationsFor = VariationsFor
     distributed.LiveVisualize = LiveVisualize
-
+    distributed.DistributeHeaders = DistributeHeaders
+    distributed.DistributeFiles = DistributeFiles
+    distributed.DistributeSharedLibs = DistributeSharedLibs
+    distributed.DistributeCppCode = DistributeCppCode
+    
     return distributed
+
+
+def RDataFrame(*args, **kwargs):
+    executor = kwargs.get("executor", None)
+    if executor is None:
+        raise ValueError(
+            "Missing keyword argument 'executor'. Please provide a connection object "
+            "to one of the schedulers supported by distributed RDataFrame."
+        )
+
+    # Try to dispatch to the correct distributed scheduler implementation
+    try:
+        from distributed import Client
+        from DistRDF.Backends.Dask import RDataFrame
+        if isinstance(executor, Client):
+            return RDataFrame(*args, **kwargs)
+    except ImportError:
+        pass
+
+    try:
+        from pyspark import SparkContext
+        from DistRDF.Backends.Spark import RDataFrame
+        if isinstance(executor, SparkContext):
+            return RDataFrame(*args, **kwargs)
+    except ImportError:
+        pass
+
+    raise TypeError(
+        f"The client object of type '{type(executor)}' is not a supported "
+        "connection type for distributed RDataFrame.")

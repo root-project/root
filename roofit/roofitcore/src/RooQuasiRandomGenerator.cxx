@@ -36,7 +36,6 @@ convergence of a Monte Carlo integration.
 
 using std::endl;
 
-ClassImp(RooQuasiRandomGenerator);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +101,7 @@ bool RooQuasiRandomGenerator::generate(UInt_t dimension, double vector[])
     else break;
   }
   if(r >= NBits) {
-    oocoutE(nullptr,Integration) << "RooQuasiRandomGenerator::generate: internal error!" << endl;
+    oocoutE(nullptr,Integration) << "RooQuasiRandomGenerator::generate: internal error!" << std::endl;
     return false;
   }
 

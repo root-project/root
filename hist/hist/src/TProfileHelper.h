@@ -589,7 +589,7 @@ void TProfileHelper::LabelsDeflate(T* p, Option_t *ax)
    // do nothing in case it was the last bin
    if (nbins==axis->GetNbins()) return;
 
-   T *hold = (T*)p->IsA()->New();;
+   T *hold = (T*)p->IsA()->New();
    hold->SetDirectory(0);
    p->Copy(*hold);
 
@@ -641,7 +641,7 @@ void TProfileHelper::LabelsInflate(T* p, Option_t *ax)
    // TAxis *axis = p->GetXaxis();
    // if (ax[0] == 'y' || ax[0] == 'Y') axis = p->GetYaxis();
 
-   T *hold = (T*)p->IsA()->New();;
+   T *hold = (T*)p->IsA()->New();
    hold->SetDirectory(0);
    p->Copy(*hold);
 

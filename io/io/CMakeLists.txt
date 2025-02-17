@@ -134,7 +134,7 @@ ROOT_GENERATE_DICTIONARY(G__RIO
 # the many scope-local vars to share their stack space / become
 # registers, thanks to the optimizer.
 if(MSVC)
-  set_source_files_properties(src/TStreamerInfoReadBuffer.cxx COMPILE_FLAGS "/O2")
+  set_source_files_properties(src/TStreamerInfoReadBuffer.cxx COMPILE_FLAGS $<IF:$<CONFIG:Debug>,"/Od","/O2">)
 else()
   set_source_files_properties(src/TStreamerInfoReadBuffer.cxx COMPILE_FLAGS "-O3")
 endif()

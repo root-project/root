@@ -18,13 +18,10 @@ Poisson pdf
 #include "RooNaNPacker.h"
 #include "RooBatchCompute.h"
 
-#include "RooFit/Detail/AnalyticalIntegrals.h"
-#include "RooFit/Detail/EvaluateFuncs.h"
-#include "Math/ProbFuncMathCore.h"
+#include <RooFit/Detail/MathFuncs.h>
 
 #include <array>
 
-ClassImp(RooPoisson);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
@@ -63,16 +60,7 @@ double RooPoisson::evaluate() const
     np.setPayload(-mean);
     return np._payload;
   }
-  return RooFit::Detail::EvaluateFuncs::poissonEvaluate(k, mean);
-}
-
-void RooPoisson::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   std::string xName = ctx.getResult(x);
-   if (!_noRounding)
-      xName = "std::floor(" + xName + ")";
-
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::poissonEvaluate", xName, mean));
+  return RooFit::Detail::MathFuncs::poisson(k, mean);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,24 +88,8 @@ double RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
   R__ASSERT(code == 1 || code == 2) ;
 
   RooRealProxy const &integrand = code == 1 ? x : mean;
-  return RooFit::Detail::AnalyticalIntegrals::poissonIntegral(
+  return RooFit::Detail::MathFuncs::poissonIntegral(
      code, mean, _noRounding ? x : std::floor(x), integrand.min(rangeName), integrand.max(rangeName), _protectNegative);
-}
-
-std::string
-RooPoisson::buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const
-{
-   R__ASSERT(code == 1 || code == 2);
-   std::string xName = ctx.getResult(x);
-   if (!_noRounding)
-      xName = "std::floor(" + xName + ")";
-
-   RooRealProxy const &integrand = code == 1 ? x : mean;
-   // Since the integral function is the same for both codes, we need to make sure the indexed observables do not appear
-   // in the function if they are not required.
-   xName = code == 1 ? "0" : xName;
-   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::poissonIntegral", code, mean, xName,
-                        integrand.min(rangeName), integrand.max(rangeName), _protectNegative);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

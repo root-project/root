@@ -84,12 +84,11 @@ public:
 
    virtual ~Interpolator();
 
-private:
-   // usually copying is non trivial, so we make this unaccessible
-   Interpolator(const Interpolator &);
-   Interpolator & operator = (const Interpolator &);
-
-public:
+   // usually copying is non trivial, so we delete this
+   Interpolator(const Interpolator &) = delete;
+   Interpolator & operator = (const Interpolator &) = delete;
+   Interpolator(Interpolator &&) = delete;
+   Interpolator & operator = (Interpolator &&) = delete;
 
    /**
       Set the data vector ( x[] and y[] )

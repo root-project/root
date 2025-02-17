@@ -626,11 +626,13 @@ TEST(RDataFrameInterface, JittedExprWithMultipleReturns)
 
 TEST(RDataFrameInterface, JittedExprWithManyVars)
 {
-   std::string expr = "x + x + x + x";
-   for (int i = 0; i < 10; ++i) {
-      expr = expr + '+' + expr;
-   }
-   expr = expr + ">0";
+   // Build expression "x + x + ... + x > 0"
+   // With 100 occurences of 'x'
+   std::string expr{"x"};
+   for (int i = 0; i < 99; ++i)
+      expr += " + x";
+   expr += " > 0";
+
    const auto counts = ROOT::RDataFrame(1)
                           .Define("x", [] { return 1; })
                           .Filter(expr)
@@ -936,4 +938,42 @@ TEST(RDataFrameInterface, PrintValueDataSource)
    RDataFrame df(std::move(ds));
    auto printValue = cling::printValue(&df);
    EXPECT_EQ(printValue, "A data frame associated to the data source \"trivial data source\"");
+}
+
+TEST(RDataFrameInterface, GetNFilesFromOneFile)
+{
+   auto filename{"GetNFilesFromTTree.root"};
+   TreeInFileRAII r{filename};
+
+   ROOT::RDataFrame df{"t", filename};
+   EXPECT_EQ(df.GetNFiles(), 1);
+}
+
+TEST(RDataFrameInterface, GetNFilesFromTTree)
+{
+   TTree t{"t", "t"};
+   ROOT::RDataFrame df{t};
+   EXPECT_EQ(df.GetNFiles(), 0);
+}
+
+TEST(RDataFrameInterface, GetNFilesFromTChain)
+{
+   std::vector<std::string> filenames{"GetNFilesFromTChain1.root", "GetNFilesFromTChain2.root",
+                                      "GetNFilesFromTChain3.root"};
+   TChain c{"chain"};
+   for (const auto &fn : filenames)
+      c.Add(fn.c_str());
+   ROOT::RDataFrame df{c};
+   EXPECT_EQ(df.GetNFiles(), 3);
+}
+
+TEST(RDataFrameInterface, GetNFilesFromMoreFiles)
+{
+   std::vector<std::string> filenames{"GetNFilesFromTChain1.root", "GetNFilesFromTChain2.root",
+                                      "GetNFilesFromTChain3.root"};
+   TreeInFileRAII r1{filenames[0]};
+   TreeInFileRAII r2{filenames[1]};
+   TreeInFileRAII r3{filenames[2]};
+   ROOT::RDataFrame df{"t", filenames};
+   EXPECT_EQ(df.GetNFiles(), 3);
 }

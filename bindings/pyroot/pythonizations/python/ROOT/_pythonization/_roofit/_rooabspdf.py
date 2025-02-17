@@ -53,6 +53,8 @@ class RooAbsPdf(RooAbsReal):
     pdf.fitTo(data, Range="r1")
     \endcode"""
 
+    __cpp_name__ = 'RooAbsPdf'
+
     @cpp_signature("RooAbsPdf::fitTo()")
     def fitTo(self, *args, **kwargs):
         r"""The RooAbsPdf::fitTo() function is pythonized with the command argument pythonization.

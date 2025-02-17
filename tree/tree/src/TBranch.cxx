@@ -350,7 +350,7 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
          }
          if (lenName == 0 || ctype == leafname) {
             Warning("TBranch","No name was given to the leaf number '%d' in the leaflist of the branch '%s'.",fNleaves,name);
-            snprintf(leafname,640,"__noname%d",fNleaves);
+            snprintf(leafname, len + 1, "__noname%d", fNleaves);
          }
          TLeaf* leaf = nullptr;
          if (leaftype[1] == '[' && !strchr(leaftype, ',')) {
@@ -2425,7 +2425,7 @@ void TBranch::Print(Option_t *option) const
    }
    Printf("*Baskets :%9d : Basket Size=%11d bytes  Compression= %6.2f     *",fWriteBasket,fBasketSize,cx);
 
-   if (strncmp(option,"basketsInfo",strlen("basketsInfo"))==0) {
+   if (strncmp(option,"basketsInfo",std::char_traits<char>::length("basketsInfo"))==0) {
       Int_t nbaskets = fWriteBasket;
       for (Int_t i=0;i<nbaskets;i++) {
          Printf("*Basket #%4d  entry=%6lld  pos=%6lld  size=%5d",
@@ -2678,6 +2678,19 @@ void TBranch::ResetCount()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set address of this branch.
+/// @see TBranchElement::SetAddress
+/// @note TBranch::SetAddress is a lower level interface and has less ability
+/// to check for incorrect setup than TTree::SetBranchAddress. Without
+/// TTree::SetMakeClass, if the branch is within an object, the input of
+/// SetAddress is expected to be the start of the object (and thus the offset
+/// of the data member is added to the provided address). The explicit purpose
+/// of TTree::SetMakeClass is to disable this addition of the offset. Note that
+/// TTree::SetBranchAddress will detect this case and automatically call
+/// SetMakeClass for a data member within a class.
+/// For example, the tutorial https://root.cern/doc/master/tree108__tree_8C.html
+/// generates a ROOT file with a TTree. To read the temperature values,
+/// you need either `tree->SetBranchAddress("fTemperature", &temp);` or
+/// `tree->SetMakeClass(1); tree->GetBranch("fTemperature")->SetAddress(&temp);`.
 
 void TBranch::SetAddress(void* addr)
 {

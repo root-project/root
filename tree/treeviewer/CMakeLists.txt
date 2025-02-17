@@ -41,3 +41,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TreeViewer
     Gui
     TreePlayer
 )
+if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+    target_link_libraries(TreeViewer PUBLIC stdc++fs) # https://github.com/avast/retdec/issues/842
+endif()
+

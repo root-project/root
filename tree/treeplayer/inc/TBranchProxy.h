@@ -80,6 +80,7 @@ namespace Detail {
       bool          fIsClone : 1;     // true if we proxy the inside of a TClonesArray
       bool          fIsaPointer : 1;  // true if we proxy a data member of pointer type
       bool          fHasLeafCount : 1;// true if we proxy a variable size leaf of a leaflist
+      bool fSuppressMissingBranchError{false}; // Suppress error issued when the branch is missing from the tree
 
       const TString fBranchName;  // name of the branch to read
       TBranchProxy *fParent;      // Proxy to a parent object
@@ -115,7 +116,8 @@ namespace Detail {
       TBranchProxy(Internal::TBranchProxyDirector* boss, const char *top, const char *name, const char *membername);
       TBranchProxy(Internal::TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername, const char* top = nullptr, const char* name = nullptr);
       TBranchProxy(Internal::TBranchProxyDirector* boss, TBranch* branch, const char* membername);
-      TBranchProxy(Internal::TBranchProxyDirector* boss, const char* branchname, TBranch* branch, const char* membername);
+      TBranchProxy(Internal::TBranchProxyDirector *boss, const char *branchname, TBranch *branch,
+                   const char *membername, bool suppressMissingBranchError = false);
       virtual ~TBranchProxy();
 
       TBranchProxy* GetProxy() { return this; }
@@ -160,6 +162,10 @@ namespace Detail {
                } else if (fBranchCount) {
                   result &= (-1 != fBranchCount->GetEntry(treeEntry));
                }
+               // Sometimes the branch might be missing, e.g. when processing multiple
+               // files but one file of the chain does not have the branch.
+               if (R__unlikely(fBranch == nullptr))
+                  return false;
                result &= (-1 != fBranch->GetEntry(treeEntry));
             }
             fRead = treeEntry;
@@ -268,6 +274,10 @@ private:
       }
 
       bool ReadNoParentNoBranchCountCollectionPointer() {
+         // Sometimes the branch might be missing, e.g. when processing multiple
+         // files but one file of the chain does not have the branch.
+         if (R__unlikely(fBranch == nullptr))
+            return false;
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
             bool result = (-1 != fBranch->GetEntry(treeEntry));
@@ -281,6 +291,10 @@ private:
       }
 
       bool ReadNoParentNoBranchCountCollectionNoPointer() {
+         // Sometimes the branch might be missing, e.g. when processing multiple
+         // files but one file of the chain does not have the branch.
+         if (R__unlikely(fBranch == nullptr))
+            return false;
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
             bool result = (-1 != fBranch->GetEntry(treeEntry));
@@ -294,6 +308,10 @@ private:
       }
 
       bool ReadNoParentNoBranchCountNoCollection() {
+         // Sometimes the branch might be missing, e.g. when processing multiple
+         // files but one file of the chain does not have the branch.
+         if (R__unlikely(fBranch == nullptr))
+            return false;
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
             bool result = (-1 != fBranch->GetEntry(treeEntry));
@@ -305,6 +323,10 @@ private:
       }
 
       bool ReadNoParentBranchCountCollectionPointer() {
+         // Sometimes the branch might be missing, e.g. when processing multiple
+         // files but one file of the chain does not have the branch.
+         if (R__unlikely(fBranch == nullptr))
+            return false;
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
             bool result = (-1 != fBranchCount->GetEntry(treeEntry));
@@ -319,6 +341,10 @@ private:
       }
 
       bool ReadNoParentBranchCountCollectionNoPointer() {
+         // Sometimes the branch might be missing, e.g. when processing multiple
+         // files but one file of the chain does not have the branch.
+         if (R__unlikely(fBranch == nullptr))
+            return false;
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
             bool result = (-1 != fBranchCount->GetEntry(treeEntry));
@@ -333,6 +359,10 @@ private:
       }
 
       bool ReadNoParentBranchCountNoCollection() {
+         // Sometimes the branch might be missing, e.g. when processing multiple
+         // files but one file of the chain does not have the branch.
+         if (R__unlikely(fBranch == nullptr))
+            return false;
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
             bool result = (-1 != fBranchCount->GetEntry(treeEntry));
@@ -347,8 +377,8 @@ private:
 public:
 
       bool ReadEntries() {
-         if (R__unlikely(fDirector == nullptr)) return false;
-
+         if (R__unlikely(fDirector == nullptr))
+            return false;
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
             if (!IsInitialized()) {
@@ -362,6 +392,10 @@ public:
                if (fBranchCount) {
                   fBranchCount->TBranch::GetEntry(treeEntry);
                }
+               // Sometimes the branch might be missing, e.g. when processing multiple
+               // files but one file of the chain does not have the branch.
+               if (R__unlikely(fBranch == nullptr))
+                  return false;
                fBranch->TBranch::GetEntry(treeEntry);
             }
             // NO - we only read the entries, not the contained objects!
@@ -515,6 +549,8 @@ public:
       }
 
       Int_t GetOffset() { return fOffset; }
+
+      bool GetSuppressErrorsForMissingBranch() const { return fSuppressMissingBranchError; }
    };
 } // namespace Detail
 

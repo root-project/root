@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unordered_set>
+#include <cctype>
 
 #include "RConfigure.h"
 #include <ROOT/RConfig.hxx>
@@ -374,6 +375,7 @@ std::string AnnotatedRecordDecl::BuildDemangledTypeInfo(const clang::RecordDecl 
 /// There is no requested type name.
 /// Still let's normalized the actual name.
 
+// clang-format off
 AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          const clang::RecordDecl *decl,
                                          bool rStreamerInfo,
@@ -381,10 +383,18 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestNoInputOperator,
                                          bool rRequestOnlyTClass,
                                          int rRequestedVersionNumber,
+                                         int rRequestedRNTupleSerializationMode,
                                          const cling::Interpreter &interpreter,
-                                         const TNormalizedCtxt &normCtxt) :
-   fRuleIndex(index), fDecl(decl), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
-   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestedVersionNumber)
+                                         const TNormalizedCtxt &normCtxt)
+   : fRuleIndex(index),
+     fDecl(decl),
+     fRequestStreamerInfo(rStreamerInfo),
+     fRequestNoStreamer(rNoStreamer),
+     fRequestNoInputOperator(rRequestNoInputOperator),
+     fRequestOnlyTClass(rRequestOnlyTClass),
+     fRequestedVersionNumber(rRequestedVersionNumber),
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
+// clang-format on
 {
    TMetaUtils::GetNormalizedName(fNormalizedName, decl->getASTContext().getTypeDeclType(decl), interpreter,normCtxt);
    fDemangledTypeInfo = BuildDemangledTypeInfo(decl, fNormalizedName);
@@ -393,6 +403,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 ////////////////////////////////////////////////////////////////////////////////
 /// Normalize the requested type name.
 
+// clang-format off
 AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          const clang::Type *requestedType,
                                          const clang::RecordDecl *decl,
@@ -403,10 +414,19 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestNoInputOperator,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
+                                         int rRequestedRNTupleSerializationMode,
                                          const cling::Interpreter &interpreter,
-                                         const TNormalizedCtxt &normCtxt) :
-   fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
-   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber)
+                                         const TNormalizedCtxt &normCtxt)
+   : fRuleIndex(index),
+     fDecl(decl),
+     fRequestedName(""),
+     fRequestStreamerInfo(rStreamerInfo),
+     fRequestNoStreamer(rNoStreamer),
+     fRequestNoInputOperator(rRequestNoInputOperator),
+     fRequestOnlyTClass(rRequestOnlyTClass),
+     fRequestedVersionNumber(rRequestVersionNumber),
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
+// clang-format on
 {
    // For comparison purposes.
    TClassEdit::TSplitType splitname1(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
@@ -423,6 +443,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 ////////////////////////////////////////////////////////////////////////////////
 /// Normalize the requested type name.
 
+// clang-format off
 AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          const clang::Type *requestedType,
                                          const clang::RecordDecl *decl,
@@ -432,10 +453,19 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestNoInputOperator,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
+                                         int rRequestedRNTupleSerializationMode,
                                          const cling::Interpreter &interpreter,
-                                         const TNormalizedCtxt &normCtxt) :
-   fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
-   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber)
+                                         const TNormalizedCtxt &normCtxt)
+   : fRuleIndex(index),
+     fDecl(decl),
+     fRequestedName(""),
+     fRequestStreamerInfo(rStreamerInfo),
+     fRequestNoStreamer(rNoStreamer),
+     fRequestNoInputOperator(rRequestNoInputOperator),
+     fRequestOnlyTClass(rRequestOnlyTClass),
+     fRequestedVersionNumber(rRequestVersionNumber),
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
+// clang-format on
 {
    // For comparison purposes.
    TClassEdit::TSplitType splitname1(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
@@ -448,6 +478,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 ////////////////////////////////////////////////////////////////////////////////
 /// Normalize the requested name.
 
+// clang-format off
 AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          const clang::RecordDecl *decl,
                                          const char *requestName,
@@ -456,9 +487,19 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestNoInputOperator,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
+                                         int rRequestedRNTupleSerializationMode,
                                          const cling::Interpreter &interpreter,
-                                         const TNormalizedCtxt &normCtxt) :
-   fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer), fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber)
+                                         const TNormalizedCtxt &normCtxt)
+   : fRuleIndex(index),
+     fDecl(decl),
+     fRequestedName(""),
+     fRequestStreamerInfo(rStreamerInfo),
+     fRequestNoStreamer(rNoStreamer),
+     fRequestNoInputOperator(rRequestNoInputOperator),
+     fRequestOnlyTClass(rRequestOnlyTClass),
+     fRequestedVersionNumber(rRequestVersionNumber),
+     fRequestedRNTupleSerializationMode(rRequestedRNTupleSerializationMode)
+// clang-format on
 {
    // const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (decl);
    // if (tmplt_specialization) {
@@ -1781,8 +1822,8 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    if( rulesIt1 != ROOT::gReadRules.end() ) {
       int i = 0;
       finalString << "\n   // Schema evolution read functions\n";
-      std::list<ROOT::SchemaRuleMap_t>::iterator rIt = rulesIt1->second.begin();
-      while( rIt != rulesIt1->second.end() ) {
+      std::list<ROOT::SchemaRuleMap_t>::iterator rIt = rulesIt1->second.fRules.begin();
+      while (rIt != rulesIt1->second.fRules.end()) {
 
          //--------------------------------------------------------------------
          // Check if the rules refer to valid data members
@@ -1791,7 +1832,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
          std::string error_string;
          if( !HasValidDataMembers( *rIt, nameTypeMap, error_string ) ) {
             Warning(nullptr, "%s", error_string.c_str());
-            rIt = rulesIt1->second.erase(rIt);
+            rIt = rulesIt1->second.fRules.erase(rIt);
             continue;
          }
 
@@ -1816,8 +1857,8 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    if( rulesIt2 != ROOT::gReadRawRules.end() ) {
       int i = 0;
       finalString << "\n   // Schema evolution read raw functions\n";
-      std::list<ROOT::SchemaRuleMap_t>::iterator rIt = rulesIt2->second.begin();
-      while( rIt != rulesIt2->second.end() ) {
+      std::list<ROOT::SchemaRuleMap_t>::iterator rIt = rulesIt2->second.fRules.begin();
+      while (rIt != rulesIt2->second.fRules.end()) {
 
          //--------------------------------------------------------------------
          // Check if the rules refer to valid data members
@@ -1826,7 +1867,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
          std::string error_string;
          if( !HasValidDataMembers( *rIt, nameTypeMap, error_string ) ) {
             Warning(nullptr, "%s", error_string.c_str());
-            rIt = rulesIt2->second.erase(rIt);
+            rIt = rulesIt2->second.fRules.erase(rIt);
             continue;
          }
 
@@ -2011,14 +2052,16 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    if( rulesIt1 != ROOT::gReadRules.end() ) {
       finalString << "\n" << "      // the io read rules" << "\n" << "      std::vector<::ROOT::Internal::TSchemaHelper> readrules(" << rulesIt1->second.size() << ");" << "\n";
-      ROOT::WriteSchemaList( rulesIt1->second, "readrules", finalString );
+      ROOT::WriteSchemaList(rulesIt1->second.fRules, "readrules", finalString);
       finalString << "      instance.SetReadRules( readrules );" << "\n";
+      rulesIt1->second.fGenerated = true;
    }
 
    if( rulesIt2 != ROOT::gReadRawRules.end() ) {
       finalString << "\n" << "      // the io read raw rules" << "\n" << "      std::vector<::ROOT::Internal::TSchemaHelper> readrawrules(" << rulesIt2->second.size() << ");" << "\n";
-      ROOT::WriteSchemaList( rulesIt2->second, "readrawrules", finalString );
+      ROOT::WriteSchemaList(rulesIt2->second.fRules, "readrawrules", finalString);
       finalString << "      instance.SetReadRawRules( readrawrules );" << "\n";
+      rulesIt2->second.fGenerated = true;
    }
 
    finalString << "      return &instance;" << "\n" << "   }" << "\n";
@@ -2146,6 +2189,118 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    } // End of !ClassInfo__HasMethod(decl,"Dictionary") || IsTemplate(*decl))
 
    finalString << "} // end of namespace ROOT" << "\n" << "\n";
+}
+
+void ROOT::TMetaUtils::WriteStandaloneReadRules(std::ostream &finalString, bool rawrules,
+                                                std::vector<std::string> &standaloneTargets,
+                                                const cling::Interpreter &interp)
+{
+   for (auto &rulesIt1 : rawrules ? ROOT::gReadRawRules : ROOT::gReadRules) {
+      if (!rulesIt1.second.fGenerated) {
+         const clang::Type *typeptr = nullptr;
+         const clang::CXXRecordDecl *target =
+            ROOT::TMetaUtils::ScopeSearch(rulesIt1.first.c_str(), interp, true /*diag*/, &typeptr);
+
+         if (!target && !rulesIt1.second.fTargetDecl) {
+            auto &&nRules = rulesIt1.second.size();
+            std::string rule{nRules > 1 ? "rules" : "rule"};
+            std::string verb{nRules > 1 ? "were" : "was"};
+            ROOT::TMetaUtils::Warning(nullptr, "%d %s for target class %s %s not used!\n", nRules, rule.c_str(),
+                                      rulesIt1.first.c_str(), verb.c_str());
+            continue;
+         }
+
+         ROOT::MembersTypeMap_t nameTypeMap;
+         CreateNameTypeMap(*target, nameTypeMap);
+
+         std::string name;
+         TClassEdit::GetNormalizedName(name, rulesIt1.first);
+
+         std::string mappedname;
+         ROOT::TMetaUtils::GetCppName(mappedname, name.c_str());
+
+         finalString << "namespace ROOT {" << "\n";
+         // Also TClingUtils.cxx:1823
+         int i = 0;
+         finalString << "\n   // Schema evolution read functions\n";
+         std::list<ROOT::SchemaRuleMap_t>::iterator rIt = rulesIt1.second.fRules.begin();
+         while (rIt != rulesIt1.second.fRules.end()) {
+
+            //--------------------------------------------------------------------
+            // Check if the rules refer to valid data members
+            ///////////////////////////////////////////////////////////////////////
+
+            std::string error_string;
+            if (!HasValidDataMembers(*rIt, nameTypeMap, error_string)) {
+               ROOT::TMetaUtils::Warning(nullptr, "%s", error_string.c_str());
+               rIt = rulesIt1.second.fRules.erase(rIt);
+               continue;
+            }
+
+            //---------------------------------------------------------------------
+            // Write the conversion function if necessary
+            ///////////////////////////////////////////////////////////////////////
+
+            if (rIt->find("code") != rIt->end()) {
+               if (rawrules)
+                  WriteReadRawRuleFunc(*rIt, i++, mappedname, nameTypeMap, finalString);
+               else
+                  WriteReadRuleFunc(*rIt, i++, mappedname, nameTypeMap, finalString);
+            }
+            ++rIt;
+         }
+         finalString << "} // namespace ROOT" << "\n";
+
+         standaloneTargets.push_back(rulesIt1.first);
+         rulesIt1.second.fGenerated = true;
+      }
+   }
+}
+
+void ROOT::TMetaUtils::WriteRulesRegistration(std::ostream &finalString, const std::string &dictName,
+                                              const std::vector<std::string> &standaloneTargets)
+{
+   std::string functionname("RecordReadRules_");
+   functionname += dictName;
+
+   finalString << "namespace ROOT {" << "\n";
+   finalString << "   // Registration Schema evolution read functions\n";
+   finalString << "   int " << functionname << "() {" << "\n";
+   if (!standaloneTargets.empty())
+      finalString << "\n"
+                  << "      ::ROOT::Internal::TSchemaHelper* rule;" << "\n";
+   for (const auto &target : standaloneTargets) {
+      std::string name;
+      TClassEdit::GetNormalizedName(name, target);
+
+      ROOT::SchemaRuleClassMap_t::iterator rulesIt1 = ROOT::gReadRules.find(target.c_str());
+      finalString << "    {\n";
+      if (rulesIt1 != ROOT::gReadRules.end()) {
+         finalString << "      // the io read rules for " << target << "\n";
+         finalString << "      std::vector<::ROOT::Internal::TSchemaHelper> readrules(" << rulesIt1->second.size()
+                     << ");" << "\n";
+         ROOT::WriteSchemaList(rulesIt1->second.fRules, "readrules", finalString);
+         finalString << "      TClass::RegisterReadRules(TSchemaRule::kReadRule, \"" << name
+                     << "\", std::move(readrules));\n";
+         rulesIt1->second.fGenerated = true;
+      }
+      ROOT::SchemaRuleClassMap_t::iterator rulesIt2 = ROOT::gReadRawRules.find(target.c_str());
+      if (rulesIt2 != ROOT::gReadRawRules.end()) {
+         finalString << "\n      // the io read raw rules for " << target << "\n";
+         finalString << "      std::vector<::ROOT::Internal::TSchemaHelper> readrawrules(" << rulesIt2->second.size()
+                     << ");" << "\n";
+         ROOT::WriteSchemaList(rulesIt2->second.fRules, "readrawrules", finalString);
+         finalString << "      TClass::RegisterReadRules(TSchemaRule::kReadRawRule, \"" << name
+                     << "\", std::move(readrawrules));\n";
+         rulesIt2->second.fGenerated = true;
+      }
+      finalString << "    }\n";
+   }
+   finalString << "      return 0;\n";
+   finalString << "   }\n";
+   finalString << "   static int _R__UNIQUE_DICT_(ReadRules_" << dictName << ") = " << functionname << "();";
+   finalString << "R__UseDummy(_R__UNIQUE_DICT_(ReadRules_" << dictName << "));" << "\n";
+   finalString << "} // namespace ROOT" << "\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3054,7 +3209,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
    if (!prefix_changed && !mightHaveChanged) return originalType;
    if (prefix) {
-      instanceType = Ctx.getElaboratedType(clang::ETK_None,prefix,instanceType);
+      instanceType = Ctx.getElaboratedType(clang::ElaboratedTypeKeyword::None, prefix, instanceType);
       instanceType = Ctx.getQualifiedType(instanceType,prefix_qualifiers);
    }
    return instanceType;
@@ -3223,7 +3378,7 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const cling::I
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return (in the argument 'output') a mangled version of the C++ symbol/type (pass as 'input')
+/// Return (in the argument 'output') a valid name of the C++ symbol/type (pass as 'input')
 /// that can be used in C++ as a variable name.
 
 void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
@@ -3251,6 +3406,12 @@ void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
          case ')': repl = "cP"; break;
          case '[': repl = "oB"; break;
          case ']': repl = "cB"; break;
+         case '{': repl = "lB"; break;
+         case '}': repl = "rB"; break;
+         case ';': repl = "sC"; break;
+         case '#': repl = "hS"; break;
+         case '?': repl = "qM"; break;
+         case '`': repl = "bT"; break;
          case '!': repl = "nO"; break;
          case ',': repl = "cO"; break;
          case '$': repl = "dA"; break;
@@ -3267,10 +3428,9 @@ void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
          out.push_back(c);
    }
 
-   // Remove initial numbers if any
-   auto firstNonNumber = out.find_first_not_of("0123456789");
-   if (firstNonNumber != std::string::npos)
-      out.replace(0,firstNonNumber,"");
+   // If out is empty, or if it starts with a number, it's not a valid C++ variable. Prepend a "_"
+   if (out.empty() || isdigit(out[0]))
+      out.insert(out.begin(), '_');
 }
 
 static clang::SourceLocation
@@ -3332,7 +3492,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       = getFinalSpellingLoc(sourceManager,
                             sourceManager.getIncludeLoc(headerFID));
 
-   const FileEntry *headerFE = sourceManager.getFileEntryForID(headerFID);
+   OptionalFileEntryRef headerFE = sourceManager.getFileEntryRefForID(headerFID);
    while (includeLoc.isValid() && sourceManager.isInSystemHeader(includeLoc)) {
       ConstSearchDirIterator *foundDir = nullptr;
       // use HeaderSearch on the basename, to make sure it takes a header from
@@ -3342,7 +3502,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
          = HdrSearch.LookupFile(llvm::sys::path::filename(headerFE->getName()),
                                 SourceLocation(),
                                 true /*isAngled*/, nullptr/*FromDir*/, foundDir,
-                                ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
+                                ArrayRef<std::pair<OptionalFileEntryRef, DirectoryEntryRef>>(),
                                 nullptr/*Searchpath*/, nullptr/*RelPath*/,
                                 nullptr/*SuggestedModule*/, nullptr/*RequestingModule*/,
                                 nullptr/*IsMapped*/, nullptr /*IsFrameworkFound*/,
@@ -3351,7 +3511,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                 false /*OpenFile*/, true /*CacheFailures*/);
       if (FEhdr) break;
       headerFID = sourceManager.getFileID(includeLoc);
-      headerFE = sourceManager.getFileEntryForID(headerFID);
+      headerFE = sourceManager.getFileEntryRefForID(headerFID);
       // If we have a system header in a module we can't just trace back the
       // original include with the preprocessor. But it should be enough if
       // we trace it back to the top-level system header that includes this
@@ -3359,7 +3519,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       if (interp.getCI()->getLangOpts().Modules && !headerFE) {
          assert(decl.isFirstDecl() && "Couldn't trace back include from a decl"
                                       " that is not from an AST file");
-         assert(StringRef(includeLoc.printToString(sourceManager)).startswith("<module-includes>"));
+         assert(StringRef(includeLoc.printToString(sourceManager)).starts_with("<module-includes>"));
          break;
       }
       includeLoc = getFinalSpellingLoc(sourceManager,
@@ -3402,7 +3562,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       ConstSearchDirIterator* FoundDir = nullptr;
       FELong = HdrSearch.LookupFile(trailingPart, SourceLocation(),
                                     true /*isAngled*/, nullptr/*FromDir*/, FoundDir,
-                                    ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
+                                    ArrayRef<std::pair<OptionalFileEntryRef, DirectoryEntryRef>>(),
                                     nullptr/*Searchpath*/, nullptr/*RelPath*/,
                                     nullptr/*SuggestedModule*/, nullptr/*RequestingModule*/,
                                     nullptr/*IsMapped*/, nullptr /*IsFrameworkFound*/);
@@ -3428,7 +3588,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       // (or are we back to the previously found spelling, which is fine, too)
       if (HdrSearch.LookupFile(trailingPart, SourceLocation(),
                                true /*isAngled*/, nullptr/*FromDir*/, FoundDir,
-                               ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
+                               ArrayRef<std::pair<OptionalFileEntryRef, DirectoryEntryRef>>(),
                                nullptr/*Searchpath*/, nullptr/*RelPath*/,
                                nullptr/*SuggestedModule*/, nullptr/*RequestingModule*/,
                                nullptr/*IsMapped*/, nullptr /*IsFrameworkFound*/) == FELong) {
@@ -3961,7 +4121,7 @@ static void KeepNParams(clang::QualType& normalizedType,
    // Here we have (prefix_changed==true || mightHaveChanged), in both case
    // we need to reconstruct the type.
    if (prefix) {
-      normalizedType = astCtxt.getElaboratedType(clang::ETK_None,prefix,normalizedType);
+      normalizedType = astCtxt.getElaboratedType(clang::ElaboratedTypeKeyword::None, prefix, normalizedType);
       normalizedType = astCtxt.getQualifiedType(normalizedType,prefix_qualifiers);
    }
 
@@ -4364,6 +4524,44 @@ const clang::Type *ROOT::TMetaUtils::GetUnderlyingType(clang::QualType type)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return true if the DeclContext is representing an entity reacheable from the
+/// global namespace
+
+bool ROOT::TMetaUtils::IsCtxtReacheable(const clang::DeclContext &ctxt)
+{
+   if (ctxt.isNamespace() || ctxt.isTranslationUnit())
+      return true;
+   else if(const auto parentdecl = llvm::dyn_cast<clang::CXXRecordDecl>(&ctxt))
+      return ROOT::TMetaUtils::IsDeclReacheable(*parentdecl);
+   else
+      // For example "extern C" context.
+      return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the decl is representing an entity reacheable from the
+/// global namespace
+
+bool ROOT::TMetaUtils::IsDeclReacheable(const clang::Decl &decl)
+{
+   const clang::DeclContext *ctxt = decl.getDeclContext();
+   switch (decl.getAccess()) {
+      case clang::AS_public:
+         return !ctxt || IsCtxtReacheable(*ctxt);
+      case clang::AS_protected:
+         return false;
+      case clang::AS_private:
+         return false;
+      case clang::AS_none:
+         return !ctxt || IsCtxtReacheable(*ctxt);
+      default:
+         // IMPOSSIBLE
+         assert(false && "Unexpected value for the access property value in Clang");
+         return false;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return true, if the decl is part of the std namespace.
 
 bool ROOT::TMetaUtils::IsStdClass(const clang::RecordDecl &cl)
@@ -4549,7 +4747,8 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       clang::NestedNameSpecifier *scope = ReSubstTemplateArgNNS(Ctxt,etype->getQualifier(),instance);
       clang::QualType subTy = ReSubstTemplateArg(clang::QualType(etype->getNamedType().getTypePtr(),0),instance);
 
-      if (scope) subTy = Ctxt.getElaboratedType(clang::ETK_None,scope,subTy);
+      if (scope)
+         subTy = Ctxt.getElaboratedType(clang::ElaboratedTypeKeyword::None, scope, subTy);
       subTy = Ctxt.getQualifiedType(subTy,scope_qualifiers);
       return subTy;
    }

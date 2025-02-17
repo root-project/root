@@ -23,6 +23,7 @@ namespace textinput {
     ~SignalHandler() {}
 
     void EmitCtrlZ();
+    void EmitCtrlBackslash();
   };
 }
 

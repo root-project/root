@@ -16,6 +16,9 @@ import operator
 
 
 class RooArgList(RooAbsCollection):
+
+    __cpp_name__ = 'RooArgList'
+
     def __getitem__(self, key):
         try:
             operator.index(key)

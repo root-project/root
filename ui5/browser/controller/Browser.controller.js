@@ -17,10 +17,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/core/mvc/XMLView',
                'sap/ui/core/Icon',
                'sap/m/Button',
-               'sap/m/ButtonType',
-               'sap/ui/core/ValueState',
+               'sap/m/library',
+               'sap/ui/core/library',
                'sap/m/Dialog',
-               'sap/m/DialogType',
                'sap/ui/codeeditor/CodeEditor',
                'sap/m/Image',
                'sap/tnt/ToolHeader',
@@ -47,10 +46,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
            XMLView,
            CoreIcon,
            Button,
-           ButtonType,
-           ValueState,
+           mLibrary,
+           uiCoreLibrary,
            Dialog,
-           DialogType,
            CodeEditor,
            Image,
            ToolHeader,
@@ -256,9 +254,27 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             })
          }));
 
+         // ignore first resize
+         this._columnResized = -1;
+
          // catch re-rendering of the table to assign handlers
          t.addEventDelegate({
-            onAfterRendering() { this.assignRowHandlers(); }
+            onAfterRendering() {
+               this.assignRowHandlers();
+               if (this._columnResized < 1) return;
+               this._columnResized = 0;
+               let fullsz = 4;
+
+               t.getColumns().forEach(col => {
+                  if (col.getVisible()) fullsz += 4 + col.$().width();
+               });
+               // this.getView().byId('masterPage').getParent().removeStyleClass('masterExpanded');
+               this.getView().byId('SplitAppBrowser').getAggregation('_navMaster').setWidth(fullsz + 'px');
+            }
+         }, this);
+
+         t.attachEvent("columnResize", {}, evnt => {
+            this._columnResized++;
          }, this);
       },
 
@@ -313,19 +329,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          oTabContainer.addItem(item);
 
-         this.jsroot.connectWebWindow({
-            kind: this.websocket.kind,
-            href: this.websocket.getHRef(url),
-            user_args: { nobrowser: true }
-         }).then(handle => {
-            item._jsroot_conn = handle;
-            return XMLView.create({
-               viewName: "rootui5.tree.view.TreeViewer",
-               viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
-            });
-         }).then(oView => item.addContent(oView));
+         // with non empty url creates independent connection
+         const handle = this.websocket.createChannel(url);
+         handle.setUserArgs({ nobrowser: true });
+         item._jsroot_conn = handle; // keep to be able disconnect
 
-         return item;
+         return XMLView.create({
+            viewName: "rootui5.tree.view.TreeViewer",
+            viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
+         }).then(oView => {
+            item.addContent(oView);
+            return item;
+         });
       },
 
       /* =========================================== */
@@ -623,16 +638,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @summary Search TabContainerItem by key value */
       findTab(name, set_active) {
-         let oTabContainer = this.byId("tabContainer"),
-             items = oTabContainer.getItems();
-         for(let i = 0; i< items.length; i++)
+         const oTabContainer = this.byId("tabContainer"),
+               items = oTabContainer.getItems();
+         for(let i = 0; i < items.length; i++)
             if (items[i].getKey() === name) {
-               if (set_active) oTabContainer.setSelectedItem(items[i]);
+               if (set_active)
+                  oTabContainer.setSelectedItem(items[i]);
                return items[i];
             }
       },
 
-      /** @summary Retuns current selected tab, instance of TabContainerItem */
+      /** @summary Returns current selected tab, instance of TabContainerItem */
       getSelectedTab() {
          let oTabContainer = this.byId("tabContainer");
          let items = oTabContainer.getItems();
@@ -641,7 +657,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                return items[i];
       },
 
-      /** @summary Retuns code editor from the tab */
+      /** @summary Returns code editor from the tab */
       getCodeEditor(tab) {
          let items = tab ? tab.getContent() : [];
          for (let n = 0; n < items.length; ++n)
@@ -887,9 +903,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.websocket.send("WIDGET_SELECTED:" + item.getKey());
       },
 
-      doCloseTabItem(item) {
+      doCloseTabItem(item, skip_send) {
          let oTabContainer = this.byId("tabContainer");
-         if (item.getKey())
+         if (item.getKey() && !skip_send)
             this.websocket.send("CLOSE_TAB:" + item.getKey());
          // force connection to close
          item._jsroot_conn?.close(true);
@@ -994,6 +1010,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       onExpandMaster() {
+         // when button pressed - remove exact width value to let rule it via the style
+         this.getView().byId('SplitAppBrowser').getAggregation('_navMaster').setWidth('');
          const master = this.getView().byId('masterPage').getParent();
          master.toggleStyleClass('masterExpanded');
          const expanded = master.hasStyleClass('masterExpanded');
@@ -1049,12 +1067,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             content.addItem(this.oWarningProgress);
 
             this.oWarningDialog = new Dialog({
-               type: DialogType.Message,
+               type: mLibrary.DialogType.Message,
                title: "Warning",
-               state: ValueState.Warning,
+               state: uiCoreLibrary.ValueState.Warning,
                content,
                beginButton: new Button({
-                  type: ButtonType.Emphasized,
+                  type: mLibrary.ButtonType.Emphasized,
                   text: 'OK',
                   press: () => this.cancelWarning()
                })
@@ -1076,7 +1094,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             delete this.oWarningDialog;
             delete this.oWarningProgress;
          }
+      },
 
+      sendNewChannel(tabname, chid) {
+         this.websocket.send(`NEWCHANNEL:["${tabname}","${chid}"]`);
       },
 
       onWebsocketOpened(/*handle*/) {
@@ -1166,9 +1187,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          }
          case "NEWWIDGET": {  // widget created by server, need to establish connection
-            let arr = JSON.parse(msg);
-            this.createElement(arr[0], arr[1], arr[2], arr[3], arr[4]);
+            const arr = JSON.parse(msg);
+            const pr = this.createElement(arr[0], arr[1], arr[2], arr[3], arr[4]);
+
             this.findTab(arr[2], true); // set active
+            Promise.resolve(pr).then(tab => {
+               if (tab?._jsroot_conn?.isChannel())
+                  this.sendNewChannel(arr[2], tab._jsroot_conn.getChannelId());
+            });
             break;
          }
          case "SET_TITLE": {
@@ -1185,6 +1211,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "SELECT_WIDGET":
            this.findTab(msg, true); // set active
            break;
+         case "CLOSE_WIDGETS":
+            JSON.parse(msg).forEach(name => {
+               let tab = this.findTab(name);
+               if (tab) this.doCloseTabItem(tab, true);
+            });
+            break;
          case "BREPL":   // browser reply
             if (this.model) {
                let bresp = JSON.parse(msg);
@@ -1309,7 +1341,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                this._oSettingsModel.setProperty('/optTH2', arr[k][2]|| '<dflt>');
                this._oSettingsModel.setProperty('/optTProfile', arr[k][3]|| '<dflt>');
             } else {
-               this.createElement(kind, arr[k][1], arr[k][2], arr[k][3], arr[k][4]);
+               const pr = this.createElement(kind, arr[k][1], arr[k][2], arr[k][3], arr[k][4]);
+               Promise.resolve(pr).then(tab => {
+                  if (tab?._jsroot_conn?.isChannel())
+                     this.sendNewChannel(arr[k][2], tab._jsroot_conn.getChannelId());
+               });
             }
          }
 
@@ -1351,25 +1387,25 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          });
 
          oTabContainer.addItem(item);
-         // oTabContainer.setSelectedItem(item);
 
-         this.jsroot.connectWebWindow({
-            kind: this.websocket.kind,
-            href: this.websocket.getHRef(url),
-            user_args: { nobrowser: true }
-         }).then(handle => {
-            item._jsroot_conn = handle;
-            return XMLView.create({
-               viewName: "rootui5.geom.view.GeomViewer",
-               viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
-            });
-         }).then(oView => item.addContent(oView));
+         // with non empty url creates independent connection
+         const handle = this.websocket.createChannel(url);
+         handle.setUserArgs({ nobrowser: true });
+         item._jsroot_conn = handle; // keep to be able disconnect
 
-         return item;
+         return XMLView.create({
+            viewName: 'rootui5.geom.view.GeomViewer',
+            viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
+         }).then(oView => {
+            item.addContent(oView);
+            return item;
+
+         });
       },
 
       createCanvas(kind, url, name, title, tooltip) {
-         if (!url || !name || (kind != "tcanvas" && kind != "rcanvas")) return;
+         if (!name || (kind != "tcanvas" && kind != "rcanvas"))
+            return null;
 
          let item = new TabContainerItem({
             name: (kind == "rcanvas") ? "RCanvas" : "TCanvas",
@@ -1381,19 +1417,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.byId("tabContainer").addItem(item);
 
-         let conn = new this.jsroot.WebWindowHandle(this.websocket.kind);
-         conn.setHRef(this.websocket.getHRef(url)); // argument for connect, makes relative path
+         // with non empty url creates independent connection
+         const conn = this.websocket.createChannel(url);
+         item._jsroot_conn = conn; // keep to be able disconnect
 
-         item._jsroot_conn = conn;
-
-         import(this.jsroot.source_dir + 'modules/draw.mjs').then(draw => {
+         return import('jsroot/draw').then(draw => {
             if (kind == "rcanvas")
-               return import(this.jsroot.source_dir + 'modules/gpad/RCanvasPainter.mjs').then(h => {
+               return import('jsrootsys/modules/gpad/RCanvasPainter.mjs').then(h => {
                    draw.assignPadPainterDraw(h.RPadPainter);
                    return new h.RCanvasPainter(null, null);
                 });
 
-            return import(this.jsroot.source_dir + 'modules/gpad/TCanvasPainter.mjs').then(h => {
+            return import('jsrootsys/modules/gpad/TCanvasPainter.mjs').then(h => {
                draw.assignPadPainterDraw(h.TPadPainter);
                return new h.TCanvasPainter(null, null);
             });
@@ -1415,9 +1450,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             item.addContent(oView);
             let ctrl = oView.getController();
             ctrl.onCloseCanvasPress = this.doCloseTabItem.bind(this, item);
+            if (!item._jsroot_painter._window_handle)
+               return item;
+            // wait until painter is ready and fully configured to send message to server with newly created channel
+            return new Promise(resolveFunc => {
+               item._jsroot_painter._window_resolve = resolveFunc;
+            }).then(() => item);
          });
-
-         return item;
       }
 
    });

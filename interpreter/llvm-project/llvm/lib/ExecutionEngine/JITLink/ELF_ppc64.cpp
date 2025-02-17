@@ -15,7 +15,6 @@
 #include "llvm/ExecutionEngine/JITLink/TableManager.h"
 #include "llvm/ExecutionEngine/JITLink/ppc64.h"
 #include "llvm/Object/ELFObjectFile.h"
-#include "llvm/Support/Endian.h"
 
 #include "EHFrameSupportImpl.h"
 #include "ELFLinkGraphBuilder.h"
@@ -33,7 +32,7 @@ constexpr StringRef TOCSymbolAliasIdent = "__TOC__";
 constexpr uint64_t ELFTOCBaseOffset = 0x8000;
 constexpr StringRef ELFTLSInfoSectionName = "$__TLSINFO";
 
-template <support::endianness Endianness>
+template <llvm::endianness Endianness>
 class TLSInfoTableManager_ELF_ppc64
     : public TableManager<TLSInfoTableManager_ELF_ppc64<Endianness>> {
 public:
@@ -89,19 +88,19 @@ private:
 
 template <>
 const uint8_t TLSInfoTableManager_ELF_ppc64<
-    support::endianness::little>::TLSInfoEntryContent[16] = {
+    llvm::endianness::little>::TLSInfoEntryContent[16] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /*pthread key */
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  /*data address*/
 };
 
 template <>
 const uint8_t TLSInfoTableManager_ELF_ppc64<
-    support::endianness::big>::TLSInfoEntryContent[16] = {
+    llvm::endianness::big>::TLSInfoEntryContent[16] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /*pthread key */
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  /*data address*/
 };
 
-template <support::endianness Endianness>
+template <llvm::endianness Endianness>
 Symbol &createELFGOTHeader(LinkGraph &G,
                            ppc64::TOCTableManager<Endianness> &TOC) {
   Symbol *TOCSymbol = nullptr;
@@ -127,7 +126,7 @@ Symbol &createELFGOTHeader(LinkGraph &G,
 }
 
 // Register preexisting GOT entries with TOC table manager.
-template <support::endianness Endianness>
+template <llvm::endianness Endianness>
 inline void
 registerExistingGOTEntries(LinkGraph &G,
                            ppc64::TOCTableManager<Endianness> &TOC) {
@@ -145,7 +144,7 @@ registerExistingGOTEntries(LinkGraph &G,
   }
 }
 
-template <support::endianness Endianness>
+template <llvm::endianness Endianness>
 Error buildTables_ELF_ppc64(LinkGraph &G) {
   LLVM_DEBUG(dbgs() << "Visiting edges in graph:\n");
   ppc64::TOCTableManager<Endianness> TOC;
@@ -194,7 +193,7 @@ Error buildTables_ELF_ppc64(LinkGraph &G) {
 
 namespace llvm::jitlink {
 
-template <support::endianness Endianness>
+template <llvm::endianness Endianness>
 class ELFLinkGraphBuilder_ppc64
     : public ELFLinkGraphBuilder<object::ELFType<Endianness, true>> {
 private:
@@ -394,12 +393,13 @@ private:
 
 public:
   ELFLinkGraphBuilder_ppc64(StringRef FileName,
-                            const object::ELFFile<ELFT> &Obj, Triple TT)
-      : ELFLinkGraphBuilder<ELFT>(Obj, std::move(TT), FileName,
-                                  ppc64::getEdgeKindName) {}
+                            const object::ELFFile<ELFT> &Obj, Triple TT,
+                            SubtargetFeatures Features)
+      : ELFLinkGraphBuilder<ELFT>(Obj, std::move(TT), std::move(Features),
+                                  FileName, ppc64::getEdgeKindName) {}
 };
 
-template <support::endianness Endianness>
+template <llvm::endianness Endianness>
 class ELFJITLinker_ppc64 : public JITLinker<ELFJITLinker_ppc64<Endianness>> {
   using JITLinkerBase = JITLinker<ELFJITLinker_ppc64<Endianness>>;
   friend JITLinkerBase;
@@ -435,9 +435,8 @@ private:
 
     if (Section *TOCSection = G.findSectionByName(
             ppc64::TOCTableManager<Endianness>::getSectionName())) {
-      assert(!TOCSection->blocks().empty() &&
-             "TOC section should have reserved an "
-             "entry for containing the TOC base");
+      assert(!TOCSection->empty() && "TOC section should have reserved an "
+                                     "entry for containing the TOC base");
 
       SectionRange SR(*TOCSection);
       orc::ExecutorAddr TOCBaseAddr(SR.getFirstBlock()->getAddress() +
@@ -462,7 +461,7 @@ private:
   }
 };
 
-template <support::endianness Endianness>
+template <llvm::endianness Endianness>
 Expected<std::unique_ptr<LinkGraph>>
 createLinkGraphFromELFObject_ppc64(MemoryBufferRef ObjectBuffer) {
   LLVM_DEBUG({
@@ -474,15 +473,19 @@ createLinkGraphFromELFObject_ppc64(MemoryBufferRef ObjectBuffer) {
   if (!ELFObj)
     return ELFObj.takeError();
 
+  auto Features = (*ELFObj)->getFeatures();
+  if (!Features)
+    return Features.takeError();
+
   using ELFT = object::ELFType<Endianness, true>;
   auto &ELFObjFile = cast<object::ELFObjectFile<ELFT>>(**ELFObj);
   return ELFLinkGraphBuilder_ppc64<Endianness>(
              (*ELFObj)->getFileName(), ELFObjFile.getELFFile(),
-             (*ELFObj)->makeTriple())
+             (*ELFObj)->makeTriple(), std::move(*Features))
       .buildGraph();
 }
 
-template <support::endianness Endianness>
+template <llvm::endianness Endianness>
 void link_ELF_ppc64(std::unique_ptr<LinkGraph> G,
                     std::unique_ptr<JITLinkContext> Ctx) {
   PassConfiguration Config;
@@ -490,7 +493,7 @@ void link_ELF_ppc64(std::unique_ptr<LinkGraph> G,
   if (Ctx->shouldAddDefaultTargetPasses(G->getTargetTriple())) {
     // Construct a JITLinker and run the link function.
 
-    // Add eh-frame passses.
+    // Add eh-frame passes.
     Config.PrePrunePasses.push_back(DWARFRecordSectionSplitter(".eh_frame"));
     Config.PrePrunePasses.push_back(EHFrameEdgeFixer(
         ".eh_frame", G->getPointerSize(), ppc64::Pointer32, ppc64::Pointer64,
@@ -515,26 +518,26 @@ void link_ELF_ppc64(std::unique_ptr<LinkGraph> G,
 
 Expected<std::unique_ptr<LinkGraph>>
 createLinkGraphFromELFObject_ppc64(MemoryBufferRef ObjectBuffer) {
-  return createLinkGraphFromELFObject_ppc64<support::big>(
+  return createLinkGraphFromELFObject_ppc64<llvm::endianness::big>(
       std::move(ObjectBuffer));
 }
 
 Expected<std::unique_ptr<LinkGraph>>
 createLinkGraphFromELFObject_ppc64le(MemoryBufferRef ObjectBuffer) {
-  return createLinkGraphFromELFObject_ppc64<support::little>(
+  return createLinkGraphFromELFObject_ppc64<llvm::endianness::little>(
       std::move(ObjectBuffer));
 }
 
 /// jit-link the given object buffer, which must be a ELF ppc64 object file.
 void link_ELF_ppc64(std::unique_ptr<LinkGraph> G,
                     std::unique_ptr<JITLinkContext> Ctx) {
-  return link_ELF_ppc64<support::big>(std::move(G), std::move(Ctx));
+  return link_ELF_ppc64<llvm::endianness::big>(std::move(G), std::move(Ctx));
 }
 
 /// jit-link the given object buffer, which must be a ELF ppc64le object file.
 void link_ELF_ppc64le(std::unique_ptr<LinkGraph> G,
                       std::unique_ptr<JITLinkContext> Ctx) {
-  return link_ELF_ppc64<support::little>(std::move(G), std::move(Ctx));
+  return link_ELF_ppc64<llvm::endianness::little>(std::move(G), std::move(Ctx));
 }
 
 } // end namespace llvm::jitlink

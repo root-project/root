@@ -10,6 +10,29 @@ See :doc:`packages <packages>`, for details on the package structure.
 PyPy support lags CPython support.
 
 
+2024-12-16: 3.5.0
+-----------------
+
+* Fix buffering problems with std::string_view's on Python str objects
+* Fix potential buffering problems in creation of initializer lists
+* Improved overload selection for classes with deep hierarchies
+* Fixed regression when calling static methods with default args on instances
+* Fixed regression for pickling enums (in global scope only)
+* Proper error handling on ``memoryview(array.array('B', []))``
+* Auto-cast elements of std::vector<T*>, with T a class type
+* Add a ``Sequence_Check()`` method to the public API
+* Fix offset calculation of ``std::vector<unsigned>`` datamember on Mac arm
+* Extend API to define executor and converter aliases
+* Use importlib.metadata instead of pkg_resources for py3.11 and later
+* Added out-of-bounds handling for small char-based enums
+* Fixed a leak check in the generic STL iterator protocol
+* Represent arrays of ``signed char`` as low level views returning bytes
+* Improve memory regulator's handling of smart pointers
+* Version PCHs with the C++ standard version
+* Fixes for py3.12 and py3.13
+* Upgrade backend to Clang16
+
+
 2023-11-15: 3.1.2
 -----------------
 

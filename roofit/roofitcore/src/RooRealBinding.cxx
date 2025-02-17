@@ -35,7 +35,6 @@ of its servers and present it as a simple array oriented interface.
 
 using std::endl;
 
-ClassImp(RooRealBinding);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +57,7 @@ RooRealBinding::RooRealBinding(const RooAbsReal &func, const RooArgSet &vars, co
     _vars.push_back(dynamic_cast<RooAbsRealLValue*>(var));
     if(_vars.back() == nullptr) {
       oocoutE(nullptr,InputArguments) << "RooRealBinding: cannot bind to " << var->GetName()
-          << ". Variables need to be assignable, e.g. instances of RooRealVar." << endl ;
+          << ". Variables need to be assignable, e.g. instances of RooRealVar." << std::endl ;
       _valid= false;
     }
     if (!_func->dependsOn(*_vars[index])) {

@@ -24,6 +24,7 @@
 
 #include <iostream>
 #include <sstream> // class ostringstream
+#include "llvm/ADT/StringExtras.h"
 
 #include "SelectionRules.h"
 
@@ -552,6 +553,7 @@ int RScanner::AddAnnotatedRecordDecl(const ClassSelectionRule* selected,
       return 1;
    }
 
+   // clang-format off
    if (has_attr_name) {
       fSelectedClasses.emplace_back(selected->GetIndex() + indexOffset,
                                     req_type,
@@ -562,6 +564,7 @@ int RScanner::AddAnnotatedRecordDecl(const ClassSelectionRule* selected,
                                     selected->RequestNoInputOperator(),
                                     selected->RequestOnlyTClass(),
                                     selected->RequestedVersionNumber(),
+                                    selected->RequestedRNTupleSerializationMode(),
                                     fInterpreter,
                                     fNormCtxt);
    } else {
@@ -572,9 +575,11 @@ int RScanner::AddAnnotatedRecordDecl(const ClassSelectionRule* selected,
                                     selected->RequestNoInputOperator(),
                                     selected->RequestOnlyTClass(),
                                     selected->RequestedVersionNumber(),
+                                    selected->RequestedRNTupleSerializationMode(),
                                     fInterpreter,
                                     fNormCtxt);
    }
+   // clang-format on
 
    if (fVerboseLevel > 0) {
       std::string qual_name;

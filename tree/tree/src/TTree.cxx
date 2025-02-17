@@ -2,7 +2,7 @@
 // Author: Rene Brun   12/01/96
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,7 +11,10 @@
 /**
   \defgroup tree Tree Library
 
-  In order to store columnar datasets, ROOT provides the TTree, TChain,
+  RNTuple is the modern way of storing columnar datasets: please consider to use it
+  before starting new projects based on TTree and related classes.
+
+  In order to store columnar datasets, ROOT historically provides the TTree, TChain,
   TNtuple and TNtupleD classes.
   The TTree class represents a columnar dataset. Any C++ type can be stored in the
   columns. The TTree has allowed to store about **1 EB** of data coming from the LHC alone:
@@ -27,7 +30,8 @@
 /** \class TTree
 \ingroup tree
 
-A TTree represents a columnar dataset. Any C++ type can be stored in its columns.
+A TTree represents a columnar dataset. Any C++ type can be stored in its columns. The modern 
+version of TTree is RNTuple: please consider using it before opting for TTree.
 
 A TTree, often called in jargon *tree*, consists of a list of independent columns or *branches*,
 represented by the TBranch class.
@@ -77,8 +81,8 @@ It is strongly recommended to persistify those as objects rather than lists of l
 ~~~ {.cpp}
     auto branch = tree.Branch(branchname, address, leaflist, bufsize)
 ~~~
-- address is the address of the first item of a structure
-- leaflist is the concatenation of all the variable names and types
+- `address` is the address of the first item of a structure
+- `leaflist` is the concatenation of all the variable names and types
   separated by a colon character :
   The variable name and the variable type are separated by a
   slash (/). The variable type must be 1 character. (Characters
@@ -96,9 +100,9 @@ It is strongly recommended to persistify those as objects rather than lists of l
    - `I` : a 32 bit signed integer (`Int_t`)
    - `i` : a 32 bit unsigned integer (`UInt_t`)
    - `F` : a 32 bit floating point (`Float_t`)
-   - `f` : a 24 bit floating point with truncated mantissa (`Float16_t`)
+   - `f` : a 21 bit floating point with truncated mantissa (`Float16_t`): 1 for the sign, 8 for the exponent and 12 for the mantissa.
    - `D` : a 64 bit floating point (`Double_t`)
-   - `d` : a 24 bit truncated floating point (`Double32_t`)
+   - `d` : a 32 bit truncated floating point (`Double32_t`): 1 for the sign, 8 for the exponent and 23 for the mantissa.
    - `L` : a 64 bit signed integer (`Long64_t`)
    - `l` : a 64 bit unsigned integer (`ULong64_t`)
    - `G` : a long signed integer, stored as 64 bit (`Long_t`)
@@ -122,8 +126,8 @@ It is strongly recommended to persistify those as objects rather than lists of l
   result in a non-portable TTree (i.e. you will not be able to read it back on a
   platform with a different padding strategy).
   We recommend to persistify objects rather than composite leaflists.
-- In case of the truncated floating point types (Float16_t and Double32_t) you can
-  furthermore specify the range in the style [xmin,xmax] or [xmin,xmax,nbits] after
+- In case of the truncated floating point types (`Float16_t` and `Double32_t`) you can
+  also specify the range in the style `[xmin,xmax]` or `[xmin,xmax,nbits]` after
   the type character. For example, for storing a variable size array `myArr` of
   `Double32_t` with values within a range of `[0, 2*pi]` and the size of which is stored
   in an `Int_t` (/I) branch called `myArrSize`, the syntax for the `leaflist` string would
@@ -132,25 +136,25 @@ It is strongly recommended to persistify those as objects rather than lists of l
   18 bits were sufficient, the syntax would become: `myArr[myArrSize]/d[0,twopi,18]`
 
 \anchor addingacolumnofstl
-## Adding a column holding STL collection instances (e.g. std::vector, std::list, std::unordered_map)
+## Adding a column holding STL collection instances (e.g. std::vector or std::list)
 
 ~~~ {.cpp}
     auto branch = tree.Branch( branchname, STLcollection, buffsize, splitlevel);
 ~~~
-STLcollection is the address of a pointer to std::vector, std::list,
-std::deque, std::set or std::multiset containing pointers to objects.
-If the splitlevel is a value bigger than 100 (TTree::kSplitCollectionOfPointers)
-then the collection will be written in split mode, e.g. if it contains objects of
-any types deriving from TTrack this function will sort the objects
-based on their type and store them in separate branches in split
-mode.
+`STLcollection` is the address of a pointer to a container of the standard 
+library such as `std::vector`, `std::list`, containing pointers, fundamental types 
+or objects.
+If the splitlevel is a value bigger than 100 (`TTree::kSplitCollectionOfPointers`)
+then the collection will be written in split mode, i.e. transparently storing 
+individual data members as arrays, therewith potentially increasing compression ratio.
 
+### Note 
+In case of dynamic structures changing with each entry, see e.g. 
 ~~~ {.cpp}
     branch->SetAddress(void *address)
 ~~~
-In case of dynamic structures changing with each entry for example, one must
-redefine the branch address before filling the branch again.
-This is done via the TBranch::SetAddress member function.
+one must redefine the branch address before filling the branch 
+again. This is done via the `TBranch::SetAddress` member function.
 
 \anchor addingacolumnofobjs
 ## Add a column holding objects
@@ -176,40 +180,39 @@ Note: The 2nd parameter must be the address of a valid object.
 Another available syntax is the following:
 
 ~~~ {.cpp}
-    auto branch = tree.Branch(branchname, &p_object, bufsize, splitlevel)
-    auto branch = tree.Branch(branchname, className, &p_object, bufsize, splitlevel)
+    auto branch_a = tree.Branch(branchname, &p_object, bufsize, splitlevel)
+    auto branch_b = tree.Branch(branchname, className, &p_object, bufsize, splitlevel)
 ~~~
-- p_object is a pointer to an object.
-- If className is not specified, Branch uses the type of p_object to determine the
-  type of the object.
-- If className is used to specify explicitly the object type, the className must
-  be of a type related to the one pointed to by the pointer.  It should be either
-  a parent or derived class.
+- `p_object` is a pointer to an object.
+- If `className` is not specified, the `Branch` method uses the type of `p_object`
+  to determine the type of the object.
+- If `className` is used to specify explicitly the object type, the `className` 
+  must be of a type related to the one pointed to by the pointer. It should be 
+  either a parent or derived class.
 
-Note: The pointer whose address is passed to TTree::Branch must not
+Note: The pointer whose address is passed to `TTree::Branch` must not
       be destroyed (i.e. go out of scope) until the TTree is deleted or
       TTree::ResetBranchAddress is called.
 
-Note: The pointer p_object must be initialized before calling TTree::Branch
-- Do either:
-~~~ {.cpp}
-    MyDataClass* p_object = nullptr;
-    tree.Branch(branchname, &p_object);
-~~~
-- Or:
+Note: The pointer `p_object` can be initialized before calling `TTree::Branch`
 ~~~ {.cpp}
     auto p_object = new MyDataClass;
     tree.Branch(branchname, &p_object);
 ~~~
-Whether the pointer is set to zero or not, the ownership of the object
-is not taken over by the TTree.  I.e. even though an object will be allocated
-by TTree::Branch if the pointer p_object is zero, the object will <b>not</b>
-be deleted when the TTree is deleted.
+or not
+~~~ {.cpp}
+    MyDataClass* p_object = nullptr;
+    tree.Branch(branchname, &p_object);
+~~~
+In either case, the ownership of the object is not taken over by the `TTree`.
+Even though in the first case an object is be allocated by `TTree::Branch`, 
+the object will <b>not</b> be deleted when the `TTree` is deleted.
 
 \anchor addingacolumnoftclonesarray
 ## Add a column holding TClonesArray instances
 
-*It is recommended to use STL containers instead of TClonesArrays*.
+*The usage of `TClonesArray` should be abandoned in favour of `std::vector`, 
+for which `TTree` has been heavily optimised, as well as `RNTuple`.*
 
 ~~~ {.cpp}
     // clonesarray is the address of a pointer to a TClonesArray.
@@ -238,130 +241,117 @@ if one variable in the tree was computed with a certain algorithm,
 you may want to try another algorithm and compare the results.
 One solution is to add a new branch, fill it, and save the tree.
 The code below adds a simple branch to an existing tree.
-Note the kOverwrite option in the Write method, it overwrites the
+Note the `kOverwrite` option in the `Write` method: it overwrites the
 existing tree. If it is not specified, two copies of the tree headers
 are saved.
 ~~~ {.cpp}
-    void tree3AddBranch() {
-        TFile f("tree3.root", "update");
+    void addBranchToTree() {
+        TFile f("tree.root", "update");
 
         Float_t new_v;
-        auto t3 = f->Get<TTree>("t3");
-        auto newBranch = t3->Branch("new_v", &new_v, "new_v/F");
+        auto mytree = f->Get<TTree>("mytree");
+        auto newBranch = mytree->Branch("new_v", &new_v, "new_v/F");
 
-        Long64_t nentries = t3->GetEntries(); // read the number of entries in the t3
+        auto nentries = mytree->GetEntries(); // read the number of entries in the mytree
 
         for (Long64_t i = 0; i < nentries; i++) {
             new_v = gRandom->Gaus(0, 1);
             newBranch->Fill();
         }
 
-        t3->Write("", TObject::kOverwrite); // save only the new version of the tree
+        mytree->Write("", TObject::kOverwrite); // save only the new version of the tree
     }
 ~~~
 It is not always possible to add branches to existing datasets stored in TFiles: for example,
 these files might not be writeable, just readable. In addition, modifying in place a TTree
 causes a new TTree instance to be written and the previous one to be deleted.
-For this reasons, ROOT offers the concept of friends for TTree and TChain:
-if is good practice to rely on friend trees rather than adding a branch manually.
+For this reasons, ROOT offers the concept of friends for TTree and TChain.
 
 \anchor fullexample
-## An Example
-
-Begin_Macro
-../../../tutorials/tree/tree.C
-End_Macro
+## A Complete Example
 
 ~~~ {.cpp}
-    // A simple example with histograms and a tree
-    //
-    // This program creates :
-    //    - a one dimensional histogram
-    //    - a two dimensional histogram
-    //    - a profile histogram
-    //    - a tree
-    //
-    // These objects are filled with some random numbers and saved on a file.
+// A simple example creating a tree
+// Compile it with: `g++ myTreeExample.cpp -o myTreeExample `root-config --cflags --libs`
 
-    #include "TFile.h"
-    #include "TH1.h"
-    #include "TH2.h"
-    #include "TProfile.h"
-    #include "TRandom.h"
-    #include "TTree.h"
+#include "TFile.h"
+#include "TH1D.h"
+#include "TRandom3.h"
+#include "TTree.h"
 
-    //__________________________________________________________________________
-    main(int argc, char **argv)
-    {
-    // Create a new ROOT binary machine independent file.
-    // Note that this file may contain any kind of ROOT objects, histograms,trees
-    // pictures, graphics objects, detector geometries, tracks, events, etc..
-    // This file is now becoming the current directory.
-    TFile hfile("htree.root","RECREATE","Demo ROOT file with histograms & trees");
+int main()
+{
+   // Create a new ROOT binary machine independent file.
+   // Note that this file may contain any kind of ROOT objects, histograms,trees
+   // pictures, graphics objects, detector geometries, tracks, events, etc..
+   TFile hfile("htree.root", "RECREATE", "Demo ROOT file with trees");
 
-    // Create some histograms and a profile histogram
-    TH1F hpx("hpx","This is the px distribution",100,-4,4);
-    TH2F hpxpy("hpxpy","py ps px",40,-4,4,40,-4,4);
-    TProfile hprof("hprof","Profile of pz versus px",100,-4,4,0,20);
+   // Define a histogram and some simple structures
+   TH1D hpx("hpx", "This is the px distribution", 100, -4, 4);
 
-    // Define some simple structures
-    typedef struct {Float_t x,y,z;} POINT;
-    typedef struct {
-       Int_t ntrack,nseg,nvertex;
-       UInt_t flag;
-       Float_t temperature;
-    } EVENTN;
-    POINT point;
-    EVENTN eventn;
+   typedef struct {
+      Float_t x, y, z;
+   } Point;
 
-    // Create a ROOT Tree
-    TTree tree("T","An example of ROOT tree with a few branches");
-    tree.Branch("point",&point,"x:y:z");
-    tree.Branch("eventn",&eventn,"ntrack/I:nseg:nvertex:flag/i:temperature/F");
-    tree.Branch("hpx","TH1F",&hpx,128000,0);
+   typedef struct {
+      Int_t   ntrack, nseg, nvertex;
+      UInt_t  flag;
+      Float_t temperature;
+   } Event;
+   Point point;
+   Event event;
 
-    Float_t px,py,pz;
+   // Create a ROOT Tree
+   TTree tree("T", "An example of ROOT tree with a few branches");
+   tree.Branch("point", &point, "x:y:z");
+   tree.Branch("event", &event, "ntrack/I:nseg:nvertex:flag/i:temperature/F");
+   tree.Branch("hpx", &hpx);
 
-    // Here we start a loop on 1000 events
-    for ( Int_t i=0; i<1000; i++) {
-       gRandom->Rannor(px,py);
-       pz = px*px + py*py;
-       const auto random = gRandom->::Rndm(1);
+   float px, py;
 
-       // Fill histograms
-       hpx.Fill(px);
-       hpxpy.Fill(px,py,1);
-       hprof.Fill(px,pz,1);
+   TRandom3 myGenerator;
 
-       // Fill structures
-       point.x = 10*(random-1);
-       point.y = 5*random;
-       point.z = 20*random;
-       eventn.ntrack  = Int_t(100*random);
-       eventn.nseg    = Int_t(2*eventn.ntrack);
-       eventn.nvertex = 1;
-       eventn.flag    = Int_t(random+0.5);
-       eventn.temperature = 20+random;
+   // Here we start a loop on 1000 events
+   for (Int_t i = 0; i < 1000; i++) {
+      myGenerator.Rannor(px, py);
+      const auto random = myGenerator.Rndm(1);
 
-       // Fill the tree. For each event, save the 2 structures and 3 objects
-       // In this simple example, the objects hpx, hprof and hpxpy are slightly
-       // different from event to event. We expect a big compression factor!
-       tree->Fill();
-    }
-    // End of the loop
+      // Fill histogram
+      hpx.Fill(px);
 
-    tree.Print();
+      // Fill structures
+      point.x           = 10 * (random - 1);
+      point.y           = 5 * random;
+      point.z           = 20 * random;
+      event.ntrack      = int(100 * random);
+      event.nseg        = int(2 * event.ntrack);
+      event.nvertex     = 1;
+      event.flag        = int(random + 0.5);
+      event.temperature = 20 + random;
 
-    // Save all objects in this file
-    hfile.Write();
+      // Fill the tree. For each event, save the 2 structures and object.
+      // In this simple example, the objects hpx, hprof and hpxpy are only slightly
+      // different from event to event. We expect a big compression factor!
+      tree.Fill();
+   }
 
-    // Close the file. Note that this is automatically done when you leave
-    // the application upon file destruction.
-    hfile.Close();
+   // Save all objects in this file
+   hfile.Write();
 
-    return 0;
+   // Close the file. Note that this is automatically done when you leave
+   // the application upon file destruction.
+   hfile.Close();
+
+   return 0;
 }
 ~~~
+## TTree Diagram
+
+The following diagram shows the organisation of the federation of classes related to TTree. 
+
+Begin_Macro
+../../../tutorials/legacy/tree/tree.C
+End_Macro
 */
 
 #include <ROOT/RConfig.hxx>
@@ -1788,6 +1778,7 @@ Int_t TTree::Branch(TList* li, Int_t bufsize /* = 32000 */ , Int_t splitlevel /*
 /// to be of the form `master.subbranch` instead of simply `subbranch`.
 /// This situation happens when the top level object
 /// has two or more members referencing the same class.
+/// Without the dot, the prefix will not be there and that might cause ambiguities.
 /// For example, if a Tree has two branches B1 and B2 corresponding
 /// to objects of the same class MyClass, one can do:
 /// ~~~ {.cpp}
@@ -1796,6 +1787,8 @@ Int_t TTree::Branch(TList* li, Int_t bufsize /* = 32000 */ , Int_t splitlevel /*
 /// ~~~
 /// if MyClass has 3 members a,b,c, the two instructions above will generate
 /// subbranches called B1.a, B1.b ,B1.c, B2.a, B2.b, B2.c
+/// In other words, the trailing dot of the branch name is semantically relevant
+/// and recommended.
 ///
 /// Example:
 /// ~~~ {.cpp}
@@ -2444,7 +2437,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
          Error("Bronch", "TClonesArray with no dictionary defined in branch: %s", name);
          return nullptr;
       }
-      bool hasCustomStreamer = clones->GetClass()->TestBit(TClass::kHasCustomStreamerMember);
+      bool hasCustomStreamer = clones->GetClass()->HasCustomStreamerMember();
       if (splitlevel > 0) {
          if (hasCustomStreamer)
             Warning("Bronch", "Using split mode on a class: %s with a custom Streamer", clones->GetClass()->GetName());
@@ -2473,7 +2466,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
                Error("Bronch", "Container with no dictionary defined in branch: %s", name);
                return nullptr;
             }
-            if (inklass->TestBit(TClass::kHasCustomStreamerMember)) {
+            if (inklass->HasCustomStreamerMember()) {
                Warning("Bronch", "Using split mode on a class: %s with a custom Streamer", inklass->GetName());
             }
          }
@@ -2503,7 +2496,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
       return nullptr;
    }
 
-   if (!cl->GetCollectionProxy() && cl->TestBit(TClass::kHasCustomStreamerMember)) {
+   if (!cl->GetCollectionProxy() && cl->HasCustomStreamerMember()) {
       // Not an STL container and the linkdef file had a "-" after the class name.
       hasCustomStreamer = true;
    }
@@ -4324,7 +4317,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// ### Making a 5D plot using GL
 ///
 /// If option GL5D is specified together with 5 variables, a 5D plot is drawn
-/// using OpenGL. See $ROOTSYS/tutorials/tree/staff.C as example.
+/// using OpenGL. See $ROOTSYS/tutorials/io/tree/tree502_staff.C as example.
 ///
 /// ### Making a parallel coordinates plot
 ///
@@ -7256,7 +7249,7 @@ void TTree::Print(Option_t* option) const
    if (!option)
       option = "";
 
-   if (strncmp(option,"clusters",strlen("clusters"))==0) {
+   if (strncmp(option,"clusters",std::char_traits<char>::length("clusters"))==0) {
       Printf("%-16s %-16s %-16s %8s %20s",
              "Cluster Range #", "Entry Start", "Last Entry", "Size", "Number of clusters");
       Int_t index= 0;
@@ -7326,7 +7319,7 @@ void TTree::Print(Option_t* option) const
          if (count[l] < 0) continue;
          leaf = (TLeaf *)const_cast<TTree*>(this)->GetListOfLeaves()->At(l);
          br   = leaf->GetBranch();
-         Printf("branch: %-20s %9lld\n",br->GetName(),count[l]);
+         Printf("branch: %-20s %9lld",br->GetName(),count[l]);
       }
       delete [] count;
    } else {
@@ -9174,6 +9167,17 @@ void TTree::SetFileNumber(Int_t number)
 /// The function's primary purpose is to allow the user to access the data
 /// directly with numerical type variable rather than having to have the original
 /// set of classes (or a reproduction thereof).
+/// In other words, SetMakeClass sets the branch(es) into a
+/// mode that allow its reading via a set of independant variables
+/// (see the result of running TTree::MakeClass on your TTree) by changing the
+/// interpretation of the address passed to SetAddress from being the beginning
+/// of the object containing the data to being the exact location where the data
+/// should be loaded. If you have the shared library corresponding to your object,
+/// it is better if you do
+/// `MyClass *objp = 0; tree->SetBranchAddress("toplevel",&objp);`, whereas
+/// if you do not have the shared library but know your branch data type, e.g.
+/// `Int_t* ptr = new Int_t[10];`, then:
+/// `tree->SetMakeClass(1); tree->GetBranch("x")->SetAddress(ptr)` is the way to go.
 
 void TTree::SetMakeClass(Int_t make)
 {

@@ -67,3 +67,21 @@ TEST(Projections, Issue_6658_3D)
    EXPECT_EQ(xaxis_3d_nbins, prof2_px_nbins);
    expect_list_eq_names(*labels_3d, *labels_prof2_px);
 }
+
+// Test projection from Profile2D hist for labels/nbins
+TEST(Projections, Issue_6658_Profile2D)
+{
+   TProfile2D prof2d("prof2d", "", 2, 0, 2, 2, 0, 3);
+   auto *xaxis_2d = prof2d.GetXaxis();
+   xaxis_2d->SetBinLabel(1, "A");
+   xaxis_2d->SetBinLabel(2, "B");
+   auto xaxis_2d_nbins = xaxis_2d->GetNbins();
+   auto *labels_2d = xaxis_2d->GetLabels();
+
+   auto *hist_pxy = prof2d.ProjectionXY("xy");
+   auto *xaxis_pxy = hist_pxy->GetXaxis();
+   auto xaxis_pxy_nbins = xaxis_pxy->GetNbins();
+   auto *labels_pxy = xaxis_pxy->GetLabels();
+   EXPECT_EQ(xaxis_2d_nbins, xaxis_pxy_nbins);
+   expect_list_eq_names(*labels_2d, *labels_pxy);
+}

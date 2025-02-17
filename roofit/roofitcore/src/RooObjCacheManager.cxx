@@ -33,7 +33,6 @@ have a sensible default implementation.
 #include "RooObjCacheManager.h"
 #include "RooMsgService.h"
 
-ClassImp(RooObjCacheManager);
 
 bool RooObjCacheManager::_clearObsList(false) ;
 

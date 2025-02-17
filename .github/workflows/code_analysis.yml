@@ -6,6 +6,9 @@ on: pull_request
   # pull_request:
   #   branches: [ $default-branch ]
 
+permissions:
+  contents: read
+
 jobs:
   clang-format:
     # For any event that is not a PR, the CI will always run. In PRs, the CI

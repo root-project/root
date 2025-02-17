@@ -94,7 +94,7 @@ namespace TMVA {
 
       Bool_t           fNotDoneYet; ///<flat to indicate of Method Transformations have been obtained yet or not (normally done in MethodBase::TrainMethod)
 
-      mutable MsgLogger*         fLogger;   ///< message logger
+      mutable MsgLogger*         fLogger;   ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
 
       ClassDef(OptimizeConfigParameters,0); // Interface to different separation criteria used in training algorithms

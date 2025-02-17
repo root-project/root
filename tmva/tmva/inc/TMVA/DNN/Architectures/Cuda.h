@@ -685,7 +685,7 @@ public:
 
    // dummy RNN functions
    static void RNNForward(const Tensor_t & /* x */, const Matrix_t & /* hx */, const Matrix_t & /* cx */,
-                          const Matrix_t & /* weights */, Tensor_t & /* y */, Matrix_t & /* hy */, Matrix_t & /* cy */,
+                          const Tensor_t & /* weights */, Tensor_t & /* y */, Matrix_t & /* hy */, Matrix_t & /* cy */,
                           const RNNDescriptors_t & /* descr */, RNNWorkspace_t & /* workspace */, bool /* isTraining */)
    {
    }

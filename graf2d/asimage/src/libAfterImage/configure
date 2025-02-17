@@ -892,6 +892,9 @@ Optional Packages:
   --with-tiff-includes=DIR use TIFF includes in DIR
   --with-svg               support SVG image format via librsvg yes
   --with-xpm               support XPM image format yes
+  --with-ungif             support Uncompressed GIF image format using libungif no
+  --with-gif               support GIF image format using libgif   no
+  --with-gif-includes=DIR  use GIF includes in DIR
   --with-builtin-gif               support Uncompressed GIF image format using builtin libgif yes
   --with-ttf               support True Type Fonts via FreeType library yes
   --with-ttf-includes=DIR  use FreeType includes in DIR
@@ -1552,9 +1555,29 @@ if test "${with_xpm+set}" = set; then
 fi;
 with_builtin_xpm=$with_xpm
 
-with_ungif=no
-with_gif=no
-with_gif_includes=no
+# Check whether --with-ungif or --without-ungif was given.
+if test "${with_ungif+set}" = set; then
+  withval="$with_ungif"
+  with_ungif="$withval"
+else
+  with_ungif=no
+fi;
+
+# Check whether --with-gif or --without-gif was given.
+if test "${with_gif+set}" = set; then
+  withval="$with_gif"
+  with_gif="$withval"
+else
+  with_gif=no
+fi;
+
+# Check whether --with-gif_includes or --without-gif_includes was given.
+if test "${with_gif_includes+set}" = set; then
+  withval="$with_gif_includes"
+  gif_includes="$withval"
+else
+  gif_includes=no
+fi;
 
 # Check whether --with-builtin_gif or --without-builtin_gif was given.
 if test "${with_builtin_gif+set}" = set; then
@@ -5466,8 +5489,8 @@ main ()
   for (i = 0; i < 256; i++)
     if (XOR (islower (i), ISLOWER (i))
 	|| toupper (i) != TOUPPER (i))
-      exit(2);
-  exit (0);
+      return 2;
+  return 0;
 }
 _ACEOF
 rm -f conftest$ac_exeext

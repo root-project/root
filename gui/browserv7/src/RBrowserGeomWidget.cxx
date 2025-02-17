@@ -62,9 +62,7 @@ public:
 
    std::string GetKind() const override { return "geom"s; }
 
-   void Show(const std::string &arg) override { fViewer.Show(arg); }
-
-   std::string GetUrl() override { return fViewer.GetWindowUrl(false); }
+   std::shared_ptr<ROOT::RWebWindow> GetWindow() override { return fViewer.GetWindow(); }
 
    bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string & = "") override
    {

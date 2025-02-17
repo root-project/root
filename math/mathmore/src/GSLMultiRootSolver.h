@@ -175,24 +175,11 @@ public:
       if (fVec != nullptr) gsl_vector_free(fVec);
    }
 
-private:
-   // usually copying is non trivial, so we make this unaccessible
-
-   /**
-      Copy constructor
-   */
-   GSLMultiRootSolver(const GSLMultiRootSolver &) : GSLMultiRootBaseSolver() {}
-
-   /**
-      Assignment operator
-   */
-   GSLMultiRootSolver & operator = (const GSLMultiRootSolver & rhs)  {
-      if (this == &rhs) return *this;  // time saving self-test
-      return *this;
-   }
-
-
-public:
+   // usually copying is non trivial, so we delete this
+   GSLMultiRootSolver(const GSLMultiRootSolver &) = delete;
+   GSLMultiRootSolver & operator = (const GSLMultiRootSolver & rhs) = delete;
+   GSLMultiRootSolver(GSLMultiRootSolver &&) = delete;
+   GSLMultiRootSolver & operator = (GSLMultiRootSolver && rhs) = delete;
 
 
    void  CreateSolver(const  gsl_multiroot_fsolver_type * type, unsigned int n) {
@@ -288,25 +275,11 @@ public:
       if (fVec != nullptr) gsl_vector_free(fVec);
    }
 
-private:
-   // usually copying is non trivial, so we make this unaccessible
-
-   /**
-      Copy constructor
-   */
-   GSLMultiRootDerivSolver(const GSLMultiRootDerivSolver &) : GSLMultiRootBaseSolver() {}
-
-   /**
-      Assignment operator
-   */
-   GSLMultiRootDerivSolver & operator = (const GSLMultiRootDerivSolver & rhs)  {
-      if (this == &rhs) return *this;  // time saving self-test
-      return *this;
-   }
-
-
-public:
-
+   // usually copying is non trivial, so we delete this
+   GSLMultiRootDerivSolver(const GSLMultiRootDerivSolver &) = delete;
+   GSLMultiRootDerivSolver & operator = (const GSLMultiRootDerivSolver & rhs) = delete;
+   GSLMultiRootDerivSolver(GSLMultiRootDerivSolver &&) = delete;
+   GSLMultiRootDerivSolver & operator = (GSLMultiRootDerivSolver && rhs) = delete;
 
    /// create the solver from the type and size of number of fitting points and number of parameters
    void  CreateSolver(const gsl_multiroot_fdfsolver_type * type, unsigned int n) {

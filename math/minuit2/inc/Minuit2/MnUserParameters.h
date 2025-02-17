@@ -38,7 +38,7 @@ class MnUserParameters {
 public:
    MnUserParameters() : fTransformation(MnUserTransformation()) {}
 
-   MnUserParameters(const std::vector<double> &, const std::vector<double> &);
+   MnUserParameters(std::span<const double>, std::span<const double>);
 
    ~MnUserParameters() {}
 

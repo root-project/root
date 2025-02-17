@@ -9,6 +9,7 @@
 #include "TPluginManager.h"
 #include "TROOT.h" // gROOT
 #include "TSystem.h"
+#include "TEnv.h" // gEnv
 
 TEST(TFile, WriteObjectTObject)
 {
@@ -40,7 +41,6 @@ TEST(TFile, WriteObjectVector)
 {
     auto filename{"tfile_writeobject_vector.root"};
     auto vec_name{"object name"}; // Decided arbitrarily
-    auto vec_title{"object title"}; // Default title for non-TObject-derived instances
 
     {
         std::vector<int> myvec{1,2,3,4,5};
@@ -62,7 +62,7 @@ TEST(TFile, WriteObjectVector)
     }
 
     EXPECT_STREQ(retkey->GetName(), vec_name);
-    EXPECT_STREQ(retkey->GetTitle(), vec_title);
+    EXPECT_STREQ(retkey->GetTitle(), ""); // Objects that don't derive from TObject have no title
 
     input.Close();
     gSystem->Unlink(filename);
@@ -134,4 +134,22 @@ TEST(TFile, ReadWithoutGlobalRegistrationNet)
 {
    const auto netFile = "root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root";
    TestReadWithoutGlobalRegistrationIfPossible(netFile);
+}
+
+// https://github.com/root-project/root/issues/16189
+TEST(TFile, k630forwardCompatibility)
+{
+   gEnv->SetValue("TFile.v630forwardCompatibility", 1);
+   const std::string filename{"filek30.root"};
+   // Testing that the flag is also set when creating the file from scratch (as opposed to "UPDATE")
+   TFile filec{filename.c_str(),"RECREATE"};
+   ASSERT_EQ(filec.TestBit(TFile::k630forwardCompatibility), true);  
+   filec.Close();
+   TFile filer{filename.c_str(),"READ"};
+   ASSERT_EQ(filer.TestBit(TFile::k630forwardCompatibility), true);  
+   filer.Close();
+   TFile fileu{filename.c_str(),"UPDATE"};
+   ASSERT_EQ(fileu.TestBit(TFile::k630forwardCompatibility), true);  
+   fileu.Close();
+   gSystem->Unlink(filename.c_str());
 }

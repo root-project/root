@@ -100,7 +100,7 @@ public:
    RooMomentMorphFuncND(const char *name, const char *title, RooAbsReal &_m, const RooArgList &varList,
                         const RooArgList &pdfList, const RooArgList &mrefList, Setting setting);
    RooMomentMorphFuncND(const char *name, const char *title, const RooArgList &parList, const RooArgList &obsList,
-                        const Grid2 &referenceGrid, const Setting &setting);
+                        const Grid2 &referenceGrid, Setting setting);
    RooMomentMorphFuncND(const RooMomentMorphFuncND &other, const char *name = nullptr);
    RooMomentMorphFuncND(const char *name, const char *title, RooAbsReal &_m, const RooArgList &varList,
                         const RooArgList &pdfList, const TVectorD &mrefpoints, Setting setting);

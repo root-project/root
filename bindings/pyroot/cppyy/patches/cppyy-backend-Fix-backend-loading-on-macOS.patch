@@ -1,0 +1,31 @@
+From f2f447577fcc3e2e071794e1b83715b8813218bf Mon Sep 17 00:00:00 2001
+From: Jonas Rembser <jonas.rembser@cern.ch>
+Date: Thu, 6 Feb 2025 13:36:25 +0100
+Subject: [PATCH] [cppyy-backend] Fix backend loading on macOS
+
+---
+ .../cppyy-backend/cling/python/cppyy_backend/loader.py    | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/bindings/pyroot/cppyy/cppyy-backend/cling/python/cppyy_backend/loader.py b/bindings/pyroot/cppyy/cppyy-backend/cling/python/cppyy_backend/loader.py
+index 2e25dd93d1..01ea37c2ec 100644
+--- a/bindings/pyroot/cppyy/cppyy-backend/cling/python/cppyy_backend/loader.py
++++ b/bindings/pyroot/cppyy/cppyy-backend/cling/python/cppyy_backend/loader.py
+@@ -37,6 +37,14 @@ def _load_helper(bkname):
+     except OSError as e:
+         errors.add(str(e))
+ 
++ # failed ... try absolute path
++ # needed on MacOS12 with soversion
++    try:
++        libpath = os.path.dirname(os.path.dirname(__file__))
++        return ctypes.CDLL(os.path.join(libpath, bkname), ctypes.RTLD_GLOBAL), errors
++    except OSError:
++        pass
++
+  # failed ... load dependencies explicitly
+     try:
+         pkgpath = os.path.dirname(bkname)
+-- 
+2.47.1
+

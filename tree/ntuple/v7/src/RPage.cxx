@@ -14,6 +14,13 @@
  *************************************************************************/
 
 #include <ROOT/RPage.hxx>
+#include <ROOT/RPageAllocator.hxx>
+
+ROOT::Experimental::Internal::RPage::~RPage()
+{
+   if (fPageAllocator)
+      fPageAllocator->DeletePage(*this);
+}
 
 const void *ROOT::Experimental::Internal::RPage::GetPageZeroBuffer()
 {

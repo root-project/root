@@ -70,24 +70,6 @@ public:
    */
    ~GSLNLSMinimizer () override;
 
-private:
-   // usually copying is non trivial, so we make this unaccessible
-
-   /**
-      Copy constructor
-   */
-   GSLNLSMinimizer(const GSLNLSMinimizer &) : ROOT::Math::BasicMinimizer() {}
-
-   /**
-      Assignment operator
-   */
-   GSLNLSMinimizer & operator = (const GSLNLSMinimizer & rhs)  {
-      if (this == &rhs) return *this;  // time saving self-test
-      return *this;
-   }
-
-public:
-
    /// set the function to minimize
    void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
 

@@ -85,17 +85,18 @@ public:
    // -- MASTER - WORKER COMMUNICATION --
 
    template <typename T>
-   void publish_from_master_to_workers(T&& item);
+   void publish_from_master_to_workers(T &&item);
    template <typename T, typename T2, typename... Ts>
-   void publish_from_master_to_workers(T&& item, T2&& item2, Ts&&... items);
+   void publish_from_master_to_workers(T &&item, T2 &&item2, Ts &&...items);
    template <typename value_t>
    value_t receive_from_master_on_worker(bool *more = nullptr);
 
-   void send_from_worker_to_master();
-   template <typename T, typename... Ts>
-   void send_from_worker_to_master(T item, Ts... items);
+   template <typename T>
+   void send_from_worker_to_master(T &&item);
+   template <typename T, typename T2, typename... Ts>
+   void send_from_worker_to_master(T &&item, T2 &&item2, Ts &&...items);
    template <typename value_t>
-   value_t receive_from_worker_on_master();
+   value_t receive_from_worker_on_master(bool *more = nullptr);
 
    void test_receive(X2X expected_ping_value, test_rcv_pipes rcv_pipe, std::size_t worker_id);
    void test_send(X2X ping_value, test_snd_pipes snd_pipe, std::size_t worker_id);
@@ -107,10 +108,11 @@ public:
 private:
    void debug_print(std::string s);
 
-   template<class T>
-   void bindAddr(T & socket, std::string && addr) {
-     bound_ipc_addresses_.emplace_back(addr);
-     socket->bind(bound_ipc_addresses_.back());
+   template <class T>
+   void bindAddr(T &socket, std::string &&addr)
+   {
+      bound_ipc_addresses_.emplace_back(addr);
+      socket->bind(bound_ipc_addresses_.back());
    }
 
    // push

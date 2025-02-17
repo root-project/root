@@ -13,13 +13,19 @@ foreach(var PCRE_FOUND PCRE_VERSION PCRE_INCLUDE_DIR PCRE_PCRE_LIBRARY PCRE_LIBR
 endforeach()
 
 if(WIN32)
-  if(winrtdebug)
-    set(PCRE_POSTFIX $<$<CONFIG:Debug>:d>)
-    set(pcre_config_kind "Debug")
+  if(CMAKE_GENERATOR MATCHES Ninja)
+    if (CMAKE_BUILD_TYPE MATCHES Debug)
+      set(PCRE_POSTFIX d)
+    endif()
   else()
-    set(pcre_config_kind "Release")
+    if(winrtdebug)
+      set(PCRE_POSTFIX $<$<CONFIG:Debug>:d>)
+      set(pcre_config_kind "Debug")
+    else()
+      set(pcre_config_kind "Release")
+    endif()
+    set(pcre_config "--config ${pcre_config_kind}")
   endif()
-  set(pcre_config "--config")
 endif()
 
 set(PCRE_VERSION "8.43" CACHE INTERNAL "" FORCE)
@@ -52,7 +58,7 @@ ExternalProject_Add(PCRE
     -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=TRUE
 
   BUILD_COMMAND
-    ${CMAKE_COMMAND} --build <BINARY_DIR> ${pcre_config} ${pcre_config_kind} --target pcre
+    ${CMAKE_COMMAND} --build <BINARY_DIR> ${pcre_config} --target pcre
 
   BUILD_BYPRODUCTS
     ${PCRE_BYPRODUCTS}

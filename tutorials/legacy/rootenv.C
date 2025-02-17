@@ -9,7 +9,7 @@
 
 {
    gROOT->Reset();
-   c1 = new TCanvas("c1","ROOT Environment Canvas",720,840);
+   auto c1 = new TCanvas("c1","ROOT Environment Canvas",720,840);
    c1->Range(0,-0.25,19,29);
    TPaveLabel title(3,27.1,15,28.7,"ROOT Environment and Tools");
    title.SetFillColor(42);
@@ -19,7 +19,7 @@
 
    //
    TArrow ardash(2,15,2,3.5,0.015,"|>");
-   ardash.SetLineStyle(2);
+   ardash.SetLineStyle(kDashed);
    ardash.SetFillColor(1);
    ardash.Draw();
    TLine l1(2.5,4.5,15.5,4.5);

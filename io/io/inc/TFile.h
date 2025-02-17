@@ -23,11 +23,13 @@
 
 #include <atomic>
 #include <string>
+#include <cstdint>
 
 #include "Compression.h"
 #include "TDirectoryFile.h"
 #include "TUrl.h"
 #include "ROOT/RConcurrentHashColl.hxx"
+#include <optional>
 
 // Not a part of TFile interface; provide a forward declaration instead of #include.
 // #ifndef R__LESS_INCLUDES
@@ -50,9 +52,86 @@ class TProcessID;
 class TStopwatch;
 class TFilePrefetch;
 
+namespace ROOT::Detail {
+struct TKeyMapNode {
+   enum EType {
+      kError,
+      kGap,
+      kKey
+   };
+
+   std::uint64_t fAddr = 0;
+   EType fType = kError;
+   std::uint32_t fLen = 0;
+
+   // these are only valid for Keys
+   Version_t fKeyVersion = 0;
+   Int_t fObjLen = 0;
+   Int_t fDatime = 0;
+   Short_t fKeyLen = 0;
+   Short_t fCycle = 0;
+   Long64_t fSeekKey = 0;
+   Long64_t fSeekPdir = 0;
+   std::string fClassName;
+   std::string fKeyName;
+   std::string fKeyTitle;
+
+   TKeyMapNode() = default;
+   TKeyMapNode(std::uint64_t addr, EType type, std::uint32_t len = 0) : fAddr(addr), fType(type), fLen(len) {}
+};
+
+class TKeyMapIterable {
+   TFile *fFile;
+
+public:
+   class TIterator {
+      TFile *fFile;
+      std::optional<TKeyMapNode> fCur;
+      std::uint64_t fCurAddr;
+
+      std::optional<TKeyMapNode> Next();
+
+      void Advance()
+      {
+         fCur = Next();
+         // If we encounter an error key, skip to the end of the file so we don't try reading additional ones.
+         if (!fCur || fCur->fType == TKeyMapNode::kError)
+            fCurAddr = -1;
+      }
+
+   public:
+      using iterator = TIterator;
+      using iterator_category = std::forward_iterator_tag;
+      using difference_type = std::ptrdiff_t;
+      using value_type = TKeyMapNode;
+      using pointer = value_type *;
+      using reference = value_type &;
+
+      TIterator(TFile *file, std::uint64_t addr);
+
+      iterator operator++()
+      {
+         Advance();
+         return *this;
+      }
+      reference operator*() { return fCur.value(); }
+      pointer operator->() { return fCur ? &*fCur : nullptr; }
+      bool operator!=(const iterator &rh) const { return !(*this == rh); }
+      bool operator==(const iterator &rh) const { return fFile == rh.fFile && fCurAddr == rh.fCurAddr; }
+   };
+
+   explicit TKeyMapIterable(TFile *file) : fFile(file) {}
+
+   TIterator begin() const { return TIterator(fFile, 0); }
+   TIterator end() const { return TIterator(fFile, -1); }
+};
+
+} // namespace ROOT::Detail
+
 class TFile : public TDirectoryFile {
   friend class TDirectoryFile;
   friend class TFilePrefetch;
+  friend class ROOT::Detail::TKeyMapIterable::TIterator;
 // TODO: We need to make sure only one TBasket is being written at a time
 // if we are writing multiple baskets in parallel.
 #ifdef R__USE_IMT
@@ -263,6 +342,10 @@ public:
    virtual void        MakeFree(Long64_t first, Long64_t last);
    virtual void        MakeProject(const char *dirname, const char *classes="*",
                                    Option_t *option="new"); // *MENU*
+
+   /// Traverses all TKeys in the TFile and returns information about them.
+   ROOT::Detail::TKeyMapIterable WalkTKeys();
+
    virtual void        Map(Option_t *opt); // *MENU*
    virtual void        Map() { Map(""); }; // *MENU*
    virtual Bool_t      Matches(const char *name);

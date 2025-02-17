@@ -940,8 +940,7 @@ void TXMLFile::SetUsedDtd(Bool_t use)
 ////////////////////////////////////////////////////////////////////////////////
 /// Specify usage of namespaces in xml file
 /// In current implementation every instrumented class in file gets its unique namespace,
-/// which is equal to name of class and refer to root documentation page like
-/// `<TAttPad xmlns:TAttPad="http://root.cern/root/htmldoc/TAttPad.html" version="3">`
+/// which is equal to name of class and refer to root documentation page.
 /// And xml node for class member gets its name as combination of class name and member name
 ///            `<TAttPad:fLeftMargin v="0.100000"/>`
 ///            `<TAttPad:fRightMargin v="0.100000"/>`

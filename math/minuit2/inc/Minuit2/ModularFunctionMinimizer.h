@@ -12,7 +12,7 @@
 
 #include "Minuit2/MnConfig.h"
 
-#include "Minuit2/FunctionMinimizer.h"
+#include "Minuit2/MnStrategy.h"
 
 #include <vector>
 
@@ -28,8 +28,9 @@ class GradientCalculator;
 class MnUserParameterState;
 class MnUserParameters;
 class MnUserCovariance;
-class MnStrategy;
+class FCNBase;
 class FumiliFCNBase;
+class FunctionMinimum;
 
 //_____________________________________________________________
 /**
@@ -37,58 +38,14 @@ class FumiliFCNBase;
    Various Minimize methods are provided varying on the type of
    FCN function passesd and on the objects used for the parameters
  */
-class ModularFunctionMinimizer : public FunctionMinimizer {
+class ModularFunctionMinimizer {
 
 public:
-   ~ModularFunctionMinimizer() override {}
 
-   // inherited interface
-   FunctionMinimum Minimize(const FCNBase &, const std::vector<double> &, const std::vector<double> &,
-                                    unsigned int stra = 1, unsigned int maxfcn = 0, double toler = 0.1) const override;
+   virtual ~ModularFunctionMinimizer() = default;
 
-   FunctionMinimum Minimize(const FCNGradientBase &, const std::vector<double> &, const std::vector<double> &,
-                                    unsigned int stra = 1, unsigned int maxfcn = 0, double toler = 0.1) const override;
-
-   FunctionMinimum Minimize(const FCNBase &, const std::vector<double> &, unsigned int,
-                                    const std::vector<double> &, unsigned int stra = 1, unsigned int maxfcn = 0,
-                                    double toler = 0.1) const override;
-
-   FunctionMinimum Minimize(const FCNGradientBase &, const std::vector<double> &, unsigned int,
-                                    const std::vector<double> &, unsigned int stra = 1, unsigned int maxfcn = 0,
-                                    double toler = 0.1) const override;
-
-   // extension
-   virtual FunctionMinimum Minimize(const FCNBase &, const MnUserParameters &, const MnStrategy &,
+   virtual FunctionMinimum Minimize(const FCNBase &, const MnUserParameterState &, const MnStrategy & = MnStrategy{1},
                                     unsigned int maxfcn = 0, double toler = 0.1) const;
-
-   virtual FunctionMinimum Minimize(const FCNGradientBase &, const MnUserParameters &, const MnStrategy &,
-                                    unsigned int maxfcn = 0, double toler = 0.1) const;
-
-   virtual FunctionMinimum Minimize(const FCNBase &, const MnUserParameters &, const MnUserCovariance &,
-                                    const MnStrategy &, unsigned int maxfcn = 0, double toler = 0.1) const;
-
-   virtual FunctionMinimum Minimize(const FCNGradientBase &, const MnUserParameters &, const MnUserCovariance &,
-                                    const MnStrategy &, unsigned int maxfcn = 0, double toler = 0.1) const;
-
-   virtual FunctionMinimum Minimize(const FCNBase &, const MnUserParameterState &, const MnStrategy &,
-                                    unsigned int maxfcn = 0, double toler = 0.1) const;
-
-   virtual FunctionMinimum Minimize(const FCNGradientBase &, const MnUserParameterState &, const MnStrategy &,
-                                    unsigned int maxfcn = 0, double toler = 0.1) const;
-
-   // for Fumili
-
-   //   virtual FunctionMinimum Minimize(const FumiliFCNBase&, const std::vector<double>&, const std::vector<double>&,
-   //   unsigned int stra=1, unsigned int maxfcn = 0, double toler = 0.1) const;
-
-   //   virtual FunctionMinimum Minimize(const FumiliFCNBase&, const MnUserParameters&, const MnStrategy&, unsigned int
-   //   maxfcn = 0, double toler = 0.1) const;
-
-   //   virtual FunctionMinimum Minimize(const FumiliFCNBase&, const MnUserParameters&, const MnUserCovariance&, const
-   //   MnStrategy&, unsigned int maxfcn = 0, double toler = 0.1) const;
-
-   //   virtual FunctionMinimum Minimize(const FumiliFCNBase&, const MnUserParameterState&, const MnStrategy&, unsigned
-   //   int maxfcn = 0, double toler = 0.1) const;
 
    virtual const MinimumSeedGenerator &SeedGenerator() const = 0;
    virtual const MinimumBuilder &Builder() const = 0;

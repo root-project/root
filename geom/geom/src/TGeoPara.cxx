@@ -50,7 +50,7 @@ Begin_Macro
    gGeoManager->SetNsegments(80);
    top->Draw();
    TView *view = gPad->GetView();
-   view->ShowAxis();
+   if (view) view->ShowAxis();
 }
 End_Macro
 
@@ -180,7 +180,7 @@ void TGeoPara::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoPara::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
+void TGeoPara::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) const
 {
    Double_t saf[3];
    // distance from point to higher Z face

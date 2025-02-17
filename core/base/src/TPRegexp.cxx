@@ -25,19 +25,36 @@ found at : http://perldoc.perl.org/perlre.html
 #include "TObjString.h"
 #include "TError.h"
 
+#ifdef USE_PCRE2
+#ifdef R__WIN32
+#define PCRE2_STATIC
+#endif
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
+#define PCRE_CASELESS  PCRE2_CASELESS
+#define PCRE_MULTILINE PCRE2_MULTILINE
+#define PCRE_DOTALL    PCRE2_DOTALL
+#define PCRE_EXTENDED  PCRE2_EXTENDED
+#define PCRE_ERROR_NOMATCH PCRE2_ERROR_NOMATCH
+#else
 #ifdef R__WIN32
 #define PCRE_STATIC
 #endif
 #include <pcre.h>
+#endif
 
 #include <vector>
 #include <stdexcept>
 
 struct PCREPriv_t {
+#ifdef USE_PCRE2
+   pcre2_code *fPCRE;
+   PCREPriv_t() { fPCRE = nullptr; }
+#else
    pcre       *fPCRE;
    pcre_extra *fPCREExtra;
-
    PCREPriv_t() { fPCRE = nullptr; fPCREExtra = nullptr; }
+#endif
 };
 
 
@@ -79,10 +96,15 @@ TPRegexp::TPRegexp(const TPRegexp &p)
 
 TPRegexp::~TPRegexp()
 {
+#ifdef USE_PCRE2
+   if (fPriv->fPCRE)
+      pcre2_code_free(fPriv->fPCRE);
+#else
    if (fPriv->fPCRE)
       pcre_free(fPriv->fPCRE);
    if (fPriv->fPCREExtra)
       pcre_free(fPriv->fPCREExtra);
+#endif
    delete fPriv;
 }
 
@@ -93,12 +115,18 @@ TPRegexp &TPRegexp::operator=(const TPRegexp &p)
 {
    if (this != &p) {
       fPattern = p.fPattern;
+#ifdef USE_PCRE2
+      if (fPriv->fPCRE)
+         pcre2_code_free(fPriv->fPCRE);
+      fPriv->fPCRE = nullptr;
+#else
       if (fPriv->fPCRE)
          pcre_free(fPriv->fPCRE);
       fPriv->fPCRE = nullptr;
       if (fPriv->fPCREExtra)
          pcre_free(fPriv->fPCREExtra);
       fPriv->fPCREExtra = nullptr;
+#endif
       fPCREOpts  = p.fPCREOpts;
    }
    return *this;
@@ -197,31 +225,50 @@ TString TPRegexp::GetModifiers() const
 
 void TPRegexp::Compile()
 {
+#ifdef USE_PCRE2
+   if (fPriv->fPCRE)
+      pcre2_code_free(fPriv->fPCRE);
+#else
    if (fPriv->fPCRE)
       pcre_free(fPriv->fPCRE);
+#endif
 
    if (fPCREOpts & kPCRE_DEBUG_MSGS)
       Info("Compile", "PREGEX compiling %s", fPattern.Data());
 
+#ifdef USE_PCRE2
+   int errcode;
+   PCRE2_SIZE patIndex;
+   fPriv->fPCRE = pcre2_compile((PCRE2_SPTR)fPattern.Data(), fPattern.Length(),
+                                fPCREOpts & kPCRE_INTMASK,
+                                &errcode, &patIndex, nullptr);
+#else
    const char *errstr;
    Int_t patIndex;
    fPriv->fPCRE = pcre_compile(fPattern.Data(), fPCREOpts & kPCRE_INTMASK,
                                &errstr, &patIndex, nullptr);
+#endif
 
    if (!fPriv->fPCRE) {
+#ifdef USE_PCRE2
+      PCRE2_UCHAR errstr[256];
+      pcre2_get_error_message(errcode, errstr, 256);
+#endif
       if (fgThrowAtCompileError) {
          throw std::runtime_error
             (TString::Format("TPRegexp::Compile() compilation of TPRegexp(%s) failed at: %d because %s",
-                             fPattern.Data(), patIndex, errstr).Data());
+                             fPattern.Data(), (int)patIndex, errstr).Data());
       } else {
          Error("Compile", "compilation of TPRegexp(%s) failed at: %d because %s",
-               fPattern.Data(), patIndex, errstr);
+               fPattern.Data(), (int)patIndex, errstr);
          return;
       }
    }
 
+#ifndef USE_PCRE2
    if (fPriv->fPCREExtra || (fPCREOpts & kPCRE_OPTIMIZE))
       Optimize();
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -229,6 +276,7 @@ void TPRegexp::Compile()
 
 void TPRegexp::Optimize()
 {
+#ifndef USE_PCRE2
    if (fPriv->fPCREExtra)
       pcre_free(fPriv->fPCREExtra);
 
@@ -243,6 +291,7 @@ void TPRegexp::Optimize()
       Error("Optimize", "Optimization of TPRegexp(%s) failed: %s",
             fPattern.Data(), errstr);
    }
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -308,21 +357,43 @@ Int_t TPRegexp::MatchInternal(const TString &s, Int_t start,
                               Int_t nMaxMatch, TArrayI *pos) const
 {
    Int_t *offVec = new Int_t[3*nMaxMatch];
+
+#ifdef USE_PCRE2
+   pcre2_match_data *match_data;
+   match_data = pcre2_match_data_create_from_pattern(fPriv->fPCRE, nullptr);
+   Int_t nrMatch = pcre2_match(fPriv->fPCRE, (PCRE2_SPTR8)s.Data(),
+                               s.Length(), start, 0,
+                               match_data, nullptr);
+#else
    // pcre_exec allows less options - see pcre_internal.h PUBLIC_EXEC_OPTIONS.
    Int_t nrMatch = pcre_exec(fPriv->fPCRE, fPriv->fPCREExtra, s.Data(),
                              s.Length(), start, 0,
                              offVec, 3*nMaxMatch);
+#endif
 
    if (nrMatch == PCRE_ERROR_NOMATCH)
       nrMatch = 0;
    else if (nrMatch <= 0) {
       Error("Match","pcre_exec error = %d", nrMatch);
+#ifdef USE_PCRE2
+      pcre2_match_data_free(match_data);
+#endif
       delete [] offVec;
       return 0;
    }
 
-   if (pos)
+   if (pos) {
+#ifdef USE_PCRE2
+      PCRE2_SIZE *oVec = pcre2_get_ovector_pointer(match_data);
+      for (int i = 0; i < 2 * nrMatch; ++i)
+         offVec[i] = oVec[i];
+#endif
       pos->Set(2*nrMatch, offVec);
+   }
+
+#ifdef USE_PCRE2
+   pcre2_match_data_free(match_data);
+#endif
    delete [] offVec;
 
    return nrMatch;
@@ -404,13 +475,24 @@ Int_t TPRegexp::SubstituteInternal(TString &s, const TString &replacePattern,
    Int_t offset = start;
    Int_t last = 0;
 
+#ifdef USE_PCRE2
+   pcre2_match_data *match_data;
+   match_data = pcre2_match_data_create_from_pattern(fPriv->fPCRE, nullptr);
+#endif
+
    while (kTRUE) {
 
       // find next matching subs
       // pcre_exec allows less options - see pcre_internal.h PUBLIC_EXEC_OPTIONS.
+#ifdef USE_PCRE2
+      Int_t nrMatch = pcre2_match(fPriv->fPCRE, (PCRE2_SPTR)s.Data(),
+                                  s.Length(), offset, 0,
+                                  match_data, nullptr);
+#else
       Int_t nrMatch = pcre_exec(fPriv->fPCRE, fPriv->fPCREExtra, s.Data(),
                                 s.Length(), offset, 0,
                                 offVec, 3*nMaxMatch);
+#endif
 
       if (nrMatch == PCRE_ERROR_NOMATCH) {
          break;
@@ -418,6 +500,12 @@ Int_t TPRegexp::SubstituteInternal(TString &s, const TString &replacePattern,
          Error("Substitute", "pcre_exec error = %d", nrMatch);
          break;
       }
+
+#ifdef USE_PCRE2
+      PCRE2_SIZE *oVec = pcre2_get_ovector_pointer(match_data);
+      for (int i = 0; i < 2 * nrMatch; ++i)
+         offVec[i] = oVec[i];
+#endif
 
       // append anything previously unmatched, but not substituted
       if (last <= offVec[0]) {
@@ -446,6 +534,9 @@ Int_t TPRegexp::SubstituteInternal(TString &s, const TString &replacePattern,
       }
    }
 
+#ifdef USE_PCRE2
+   pcre2_match_data_free(match_data);
+#endif
    delete [] offVec;
 
    fin += s(last,s.Length()-last);

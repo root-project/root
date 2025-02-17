@@ -246,7 +246,7 @@ void TMVA::PDEFoamCell::Print(Option_t *option) const
    std::cout <<  " Volume= "<<     fVolume   <<",";
    std::cout <<  " TrueInteg= " << fIntegral <<",";
    std::cout <<  " DriveInteg= "<< fDrive    <<",";
-   std::cout << std::endl;;
+   std::cout << std::endl;
    std::cout <<  " Xdiv= "<<fXdiv<<",";
    std::cout <<  " Best= "<<fBest<<",";
    std::cout <<  " Parent=  {"<< (GetPare() ? GetPare()->GetSerial() : -1) <<"} "; // extra DEBUG

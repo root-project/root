@@ -56,19 +56,6 @@ Bisection::~Bisection()
    FreeSolver();
 }
 
-Bisection::Bisection(const Bisection &) : GSLRootFinder()
-{
-  // dummy copy ctr
-}
-
-Bisection & Bisection::operator = (const Bisection &rhs)
-{
-   // dummy (private) operator=
-   if (this == &rhs) return *this;  // time saving self-test
-   return *this;
-}
-
-
 // falsepos method
 
 FalsePos::FalsePos()
@@ -84,18 +71,6 @@ FalsePos::~FalsePos()
    FreeSolver();
 }
 
-FalsePos::FalsePos(const FalsePos &) : GSLRootFinder()
-{
-  // dummy copy ctr
-}
-
-FalsePos & FalsePos::operator = (const FalsePos &rhs)
-{
-   // dummy (private) operator=
-   if (this == &rhs) return *this;  // time saving self-test
-   return *this;
-}
-
 // Brent method
 
 Brent::Brent()
@@ -109,18 +84,6 @@ Brent::~Brent()
 {
    // destructor
    FreeSolver();
-}
-
-Brent::Brent(const Brent &) : GSLRootFinder()
-{
-  // dummy copy ctr
-}
-
-Brent & Brent::operator = (const Brent &rhs)
-{
-   // dummy (private) operator=
-   if (this == &rhs) return *this;  // time saving self-test
-   return *this;
 }
 
 
@@ -143,18 +106,6 @@ Newton::~Newton()
    FreeSolver();
 }
 
-Newton::Newton(const Newton &) : GSLRootFinderDeriv()
-{
-  // dummy copy ctr
-}
-
-Newton & Newton::operator = (const Newton &rhs)
-{
-   // dummy (private) operator=
-   if (this == &rhs) return *this;  // time saving self-test
-   return *this;
-}
-
 // Secant
 
 Secant::Secant()
@@ -168,18 +119,6 @@ Secant::~Secant()
 {
    // destructor
    FreeSolver();
-}
-
-Secant::Secant(const Secant &) : GSLRootFinderDeriv()
-{
-  // dummy copy ctr
-}
-
-Secant & Secant::operator = (const Secant &rhs)
-{
-   // dummy (private) operator=
-   if (this == &rhs) return *this;  // time saving self-test
-   return *this;
 }
 
 // Steffenson
@@ -196,19 +135,6 @@ Steffenson::~Steffenson()
    // destructor
    FreeSolver();
 }
-
-Steffenson::Steffenson(const Steffenson &) : GSLRootFinderDeriv()
-{
-  // dummy copy ctr
-}
-
-Steffenson & Steffenson::operator = (const Steffenson &rhs)
-{
-   // dummy (private) operator=
-   if (this == &rhs) return *this;  // time saving self-test
-   return *this;
-}
-
 
 
 } // end namespace GSLRoots

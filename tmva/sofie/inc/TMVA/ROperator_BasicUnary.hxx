@@ -9,7 +9,7 @@ namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
-enum class EBasicUnaryOperator { kReciprocal, kSqrt , kNeg, kExp, kLog };
+enum class EBasicUnaryOperator { kReciprocal, kSqrt , kNeg, kExp, kLog, kSin, kCos };
 
 template <typename T, EBasicUnaryOperator Op>
 struct UnaryOpTraits {
@@ -43,6 +43,18 @@ template <typename T>
 struct UnaryOpTraits<T, EBasicUnaryOperator::kLog> {
    static std::string Name() { return "Log"; }
    static std::string Op(const std::string &X) { return "std::log(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kSin> {
+   static std::string Name() { return "Sin"; }
+   static std::string Op(const std::string &X) { return "std::sin(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kCos> {
+   static std::string Name() { return "Cos"; }
+   static std::string Op(const std::string &X) { return "std::cos(" + X + ")"; }
 };
 
 template <typename T, EBasicUnaryOperator Op>
@@ -86,6 +98,14 @@ public:
       out << SP << SP << "tensor_" << fNY << "[i] = " << UnaryOpTraits<T, Op>::Op("tensor_" + fNX + "[i]") << ";\n";
       out << SP << "}\n";
       return out.str();
+   }
+
+   std::vector<std::string> GetStdLibs() override {
+      if (Op == EBasicUnaryOperator::kSqrt || Op == EBasicUnaryOperator::kExp || Op == EBasicUnaryOperator::kLog) {
+         return { std::string("cmath") };
+      } else {
+         return {};
+      }
    }
 };
 

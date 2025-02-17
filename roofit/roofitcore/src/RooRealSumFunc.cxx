@@ -37,7 +37,6 @@
 #include "RooRealSumPdf.h"
 #include "RooTrace.h"
 
-ClassImp(RooRealSumFunc);
 
 bool RooRealSumFunc::_doFloorGlobal = false;
 
@@ -112,11 +111,6 @@ RooRealSumFunc::~RooRealSumFunc()
 double RooRealSumFunc::evaluate() const
 {
   return RooRealSumPdf::evaluate(*this, _funcList, _coefList, _doFloor || _doFloorGlobal, _haveWarned);
-}
-
-void RooRealSumFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   RooRealSumPdf::translateImpl(ctx, this, _funcList, _coefList);
 }
 
 //_____________________________________________________________________________

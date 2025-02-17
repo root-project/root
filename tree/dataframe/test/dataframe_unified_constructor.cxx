@@ -20,7 +20,7 @@ protected:
       for (const auto &fName : fFileNames) {
          {
             auto modelWrite = RNTupleModel::Create();
-            auto pt = modelWrite->MakeField<float>("ntuple_pt", 11.f);
+            *modelWrite->MakeField<float>("ntuple_pt") = 11.f;
             auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), fNTupleName, fName);
             ntuple->Fill();
          }

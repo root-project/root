@@ -52,7 +52,14 @@ public:
       : fLoopManager(lm), fVariations(variations)
    {
    }
-   virtual ~RNodeBase() {}
+
+   // Rule of five
+   RNodeBase(const RNodeBase &) = delete;
+   RNodeBase &operator=(const RNodeBase &) = delete;
+   RNodeBase(RNodeBase &&) = delete;
+   RNodeBase &operator=(RNodeBase &&) = delete;
+   virtual ~RNodeBase() = default;
+
    virtual bool CheckFilters(unsigned int, Long64_t) = 0;
    virtual void Report(ROOT::RDF::RCutFlowReport &) const = 0;
    virtual void PartialReport(ROOT::RDF::RCutFlowReport &) const = 0;

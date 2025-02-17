@@ -12,7 +12,7 @@ sap.ui.define(['sap/ui/core/Control',
          }
       },
 
-      onBeforeRendering: function() {
+      onBeforeRendering() {
          // remove Canvas and painter from DOM
          if (this.geom_painter) {
             this.geom_painter.clear3dCanvas();
@@ -21,7 +21,7 @@ sap.ui.define(['sap/ui/core/Control',
       },
 
       // the part creating the HTML:
-      renderer : function(oRm, oControl) { // static function, so use the given "oControl" instance instead of "this" in the renderer function
+      renderer(oRm, oControl) { // static function, so use the given "oControl" instance instead of "this" in the renderer function
          oRm.write("<div");
          oRm.writeControlData(oControl);  // writes the Control ID and enables event handling - important!
          // oRm.addStyle("background-color", oControl.getColor());  // write the color property; UI5 has validated it to be a valid CSS color
@@ -34,7 +34,7 @@ sap.ui.define(['sap/ui/core/Control',
          oRm.write("</div>"); // no text content to render; close the tag
       },
 
-      onAfterRendering: function() {
+      onAfterRendering() {
          ResizeHandler.register(this, this.onResize.bind(this));
 
          if (this.geom_painter) {
@@ -54,7 +54,7 @@ sap.ui.define(['sap/ui/core/Control',
          }
       },
 
-      setGeomPainter: function(painter, skip_cleanup) {
+      setGeomPainter(painter, skip_cleanup) {
 
          if (this.geom_painter) {
             if (this.geom_skip_cleanup) {
@@ -74,15 +74,14 @@ sap.ui.define(['sap/ui/core/Control',
          }
       },
 
-      onResize: function() {
+      onResize() {
          if (this.resize_tmout) clearTimeout(this.resize_tmout);
          this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 100); // minimal latency
       },
 
-      onResizeTimeout: function() {
+      onResizeTimeout() {
          delete this.resize_tmout;
-         if (this.geom_painter)
-            this.geom_painter.checkResize();
+         this.geom_painter?.checkResize();
       }
    });
 

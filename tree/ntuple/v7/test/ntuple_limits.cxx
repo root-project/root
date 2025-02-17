@@ -1,5 +1,7 @@
 #include "ntuple_test.hxx"
 
+#include <limits>
+
 // This test aims to exercise some limits of RNTuple that are expected to be upper bounds for realistic applications.
 // The theoretical limits may be higher: for example, the specification supports up to 4B clusters per group, but the
 // expectation is less than 10k. For good measure, we test up to 100k clusters per group below.
@@ -12,20 +14,21 @@
 // ./tree/ntuple/v7/test/ntuple_limits --gtest_also_run_disabled_tests --gtest_filter=*Limits_ManyClusters
 // ```
 
-TEST(RNTuple, DISABLED_Limits_ManyFields)
+TEST(RNTuple, Limits_ManyFields)
 {
-   // Writing and reading a model with 10k integer fields takes around 30s and seems to have more than quadratic
-   // complexity (5k fields take 6s).
+   // Writing and reading a model with 100k integer fields takes around 2.2s and seems to have slightly more than linear
+   // complexity (200k fields take 7.5s).
+   // Peak RSS is around 750MB.
    FileRaii fileGuard("test_ntuple_limits_manyFields.root");
 
-   static constexpr int NumFields = 10'000;
+   static constexpr int NumFields = 100'000;
 
    {
       auto model = RNTupleModel::Create();
 
       for (int i = 0; i < NumFields; i++) {
          std::string name = "f" + std::to_string(i);
-         model->MakeField<int>(name, i);
+         *model->MakeField<int>(name) = i;
       }
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
@@ -37,7 +40,7 @@ TEST(RNTuple, DISABLED_Limits_ManyFields)
    const auto &model = reader->GetModel();
 
    EXPECT_EQ(descriptor.GetNFields(), 1 + NumFields);
-   EXPECT_EQ(model.GetFieldZero().GetSubFields().size(), NumFields);
+   EXPECT_EQ(model.GetConstFieldZero().GetSubFields().size(), NumFields);
    EXPECT_EQ(reader->GetNEntries(), 1);
 
    reader->LoadEntry(0);
@@ -47,13 +50,14 @@ TEST(RNTuple, DISABLED_Limits_ManyFields)
    }
 }
 
-TEST(RNTuple, DISABLED_Limits_ManyClusters)
+TEST(RNTuple, Limits_ManyClusters)
 {
-   // Writing and reading 100k clusters takes between 80s - 100s and seems to have more than quadratic complexity
-   // (50k clusters take less than 15s).
+   // Writing and reading 500k clusters takes around 3.3s and seems to have benign scaling behavior.
+   // (1M clusters take around 6.6s).
+   // Peak RSS is around 850MB.
    FileRaii fileGuard("test_ntuple_limits_manyClusters.root");
 
-   static constexpr int NumClusters = 100'000;
+   static constexpr int NumClusters = 500'000;
 
    {
       auto model = RNTupleModel::Create();
@@ -82,13 +86,14 @@ TEST(RNTuple, DISABLED_Limits_ManyClusters)
    }
 }
 
-TEST(RNTuple, DISABLED_Limits_ManyClusterGroups)
+TEST(RNTuple, Limits_ManyClusterGroups)
 {
-   // Writing and reading 100k cluster groups takes between 100s - 110s and seems to have more than quadratic complexity
-   // (50k cluster groups takes less than 20s).
+   // Writing and reading 25k cluster groups takes around 1.7s and seems to have quadratic complexity
+   // (50k cluster groups takes around 6.5s).
+   // Peak RSS is around 275MB.
    FileRaii fileGuard("test_ntuple_limits_manyClusterGroups.root");
 
-   static constexpr int NumClusterGroups = 100'000;
+   static constexpr int NumClusterGroups = 25'000;
 
    {
       auto model = RNTupleModel::Create();
@@ -117,13 +122,14 @@ TEST(RNTuple, DISABLED_Limits_ManyClusterGroups)
    }
 }
 
-TEST(RNTuple, DISABLED_Limits_ManyPages)
+TEST(RNTuple, Limits_ManyPages)
 {
-   // Writing and reading 200k pages (of two elements each) takes around 13s and seems to have more than quadratic
-   // complexity (400k pages take 100s).
+   // Writing and reading 1M pages (of two elements each) takes around 1.3 and seems to have benign scaling behavior
+   // (2M pages take 2.6s).
+   // Peak RSS is around 600MB.
    FileRaii fileGuard("test_ntuple_limits_manyPages.root");
 
-   static constexpr int NumPages = 200'000;
+   static constexpr int NumPages = 1'000'000;
    static constexpr int NumEntries = NumPages * 2;
 
    {
@@ -131,7 +137,8 @@ TEST(RNTuple, DISABLED_Limits_ManyPages)
       auto id = model->MakeField<int>("id");
       RNTupleWriteOptions options;
       // Two elements per page.
-      options.SetApproxUnzippedPageSize(8);
+      options.SetInitialUnzippedPageSize(8);
+      options.SetMaxUnzippedPageSize(8);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
       for (int i = 0; i < NumEntries; i++) {
@@ -144,7 +151,7 @@ TEST(RNTuple, DISABLED_Limits_ManyPages)
    const auto &descriptor = reader->GetDescriptor();
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("id");
-   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0);
+   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0, 0);
 
    EXPECT_EQ(reader->GetNEntries(), NumEntries);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
@@ -157,13 +164,14 @@ TEST(RNTuple, DISABLED_Limits_ManyPages)
    }
 }
 
-TEST(RNTuple, DISABLED_Limits_ManyPagesOneEntry)
+TEST(RNTuple, Limits_ManyPagesOneEntry)
 {
-   // Writing and reading 200k pages (of four elements each) takes around 13s and seems to have more than quadratic
-   // complexity (400k pages take around 100s).
+   // Writing and reading 1M pages (of four elements each) takes around 2.4s and seems to have benign scaling behavior
+   // (2M pages take around 4.8s).
+   // Peak RSS is around 625MB.
    FileRaii fileGuard("test_ntuple_limits_manyPagesOneEntry.root");
 
-   static constexpr int NumPages = 200'000;
+   static constexpr int NumPages = 1'000'000;
    static constexpr int NumElements = NumPages * 4;
 
    {
@@ -171,7 +179,8 @@ TEST(RNTuple, DISABLED_Limits_ManyPagesOneEntry)
       auto ids = model->MakeField<std::vector<int>>("ids");
       RNTupleWriteOptions options;
       // Four elements per page (must fit two 64-bit indices!)
-      options.SetApproxUnzippedPageSize(16);
+      options.SetInitialUnzippedPageSize(16);
+      options.SetMaxUnzippedPageSize(16);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
       for (int i = 0; i < NumElements; i++) {
@@ -185,7 +194,7 @@ TEST(RNTuple, DISABLED_Limits_ManyPagesOneEntry)
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("ids");
    auto subFieldId = descriptor.FindFieldId("_0", fieldId);
-   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0);
+   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0, 0);
 
    EXPECT_EQ(reader->GetNEntries(), 1);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
@@ -201,20 +210,24 @@ TEST(RNTuple, DISABLED_Limits_ManyPagesOneEntry)
 
 TEST(RNTuple, DISABLED_Limits_LargePage)
 {
-   // Writing and reading one page with 100M elements takes around 3.5s and seems to have linear complexity (200M
-   // elements take 7s, 400M elements take 13.5s).
+   // Writing and reading one page with 600M elements takes around 18s and seems to have linear complexity
+   // (900M elements take 27s)
+   // Peak RSS is around 14 GB.
    FileRaii fileGuard("test_ntuple_limits_largePage.root");
 
-   static constexpr int NumElements = 100'000'000;
+   // clang-format off
+   static constexpr int NumElements = 600'000'000;
+   // clang-format on
 
    {
       auto model = RNTupleModel::Create();
-      auto id = model->MakeField<int>("id");
+      auto id = model->MakeField<std::uint64_t>("id");
       RNTupleWriteOptions options;
-      static constexpr std::size_t Size = NumElements * sizeof(int);
+      static constexpr std::size_t Size = NumElements * sizeof(std::uint64_t);
       options.SetMaxUnzippedClusterSize(Size);
       options.SetApproxZippedClusterSize(Size);
-      options.SetApproxUnzippedPageSize(Size);
+      options.SetMaxUnzippedPageSize(Size);
+      options.SetUseBufferedWrite(false);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
       for (int i = 0; i < NumElements; i++) {
@@ -223,17 +236,21 @@ TEST(RNTuple, DISABLED_Limits_LargePage)
       }
    }
 
-   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   RNTupleReadOptions options;
+   options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOff);
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath(), options);
    const auto &descriptor = reader->GetDescriptor();
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("id");
-   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0);
+   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0, 0);
 
    EXPECT_EQ(reader->GetNEntries(), NumElements);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
    EXPECT_EQ(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), 1);
+   EXPECT_GT(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos[0].fLocator.GetNBytesOnStorage(),
+             static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()));
 
-   auto id = model.GetDefaultEntry().GetPtr<int>("id");
+   auto id = model.GetDefaultEntry().GetPtr<std::uint64_t>("id");
    for (int i = 0; i < NumElements; i++) {
       reader->LoadEntry(i);
       EXPECT_EQ(*id, i);
@@ -244,6 +261,7 @@ TEST(RNTuple, DISABLED_Limits_LargePageOneEntry)
 {
    // Writing and reading one page with 100M elements takes around 1.7s and seems to have linear complexity (200M
    // elements take 3.5s, 400M elements take around 7s).
+   // Peak RSS is around 1.4GB.
    FileRaii fileGuard("test_ntuple_limits_largePageOneEntry.root");
 
    static constexpr int NumElements = 100'000'000;
@@ -255,7 +273,7 @@ TEST(RNTuple, DISABLED_Limits_LargePageOneEntry)
       static constexpr std::size_t Size = NumElements * sizeof(int);
       options.SetMaxUnzippedClusterSize(Size);
       options.SetApproxZippedClusterSize(Size);
-      options.SetApproxUnzippedPageSize(Size);
+      options.SetMaxUnzippedPageSize(Size);
 
       auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath(), options);
       for (int i = 0; i < NumElements; i++) {
@@ -269,7 +287,7 @@ TEST(RNTuple, DISABLED_Limits_LargePageOneEntry)
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("ids");
    auto subFieldId = descriptor.FindFieldId("_0", fieldId);
-   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0);
+   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0, 0);
 
    EXPECT_EQ(reader->GetNEntries(), 1);
    EXPECT_EQ(descriptor.GetNClusters(), 1);

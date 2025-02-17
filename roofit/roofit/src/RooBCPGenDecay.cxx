@@ -29,7 +29,6 @@ Suitably stolen and modified from RooBCPEffDecay
 #include "RooBCPGenDecay.h"
 #include "RooRealIntegral.h"
 
-ClassImp(RooBCPGenDecay);
 
 /// \brief Constructor for RooBCPGenDecay.
 ///

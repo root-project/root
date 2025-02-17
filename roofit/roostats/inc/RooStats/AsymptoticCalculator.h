@@ -95,40 +95,12 @@ namespace RooStats {
 
       static void SetPrintLevel(int level);
 
-   protected:
-      // // configure TestStatSampler for the Null run
-      // int PreNullHook(RooArgSet *parameterPoint, double obsTestStat) const;
-
-      // // configure TestStatSampler for the Alt run
-      // int PreAltHook(RooArgSet *parameterPoint, double obsTestStat) const;
-
-
-      static RooAbsData * GenerateAsimovDataSinglePdf(const RooAbsPdf & pdf, const RooArgSet & obs,  const RooRealVar & weightVar,
-                                                      RooCategory * channelCat = nullptr);
-
-      static RooAbsData * GenerateCountingAsimovData(RooAbsPdf & pdf, const RooArgSet & obs,  const RooRealVar & weightVar,
-                                                      RooCategory * channelCat = nullptr);
-
-
-      static void FillBins(const RooAbsPdf & pdf, const RooArgList &obs, RooAbsData & data, int &index,  double
-                           &binVolume, int &ibin);
-
-      static double EvaluateNLL(RooStats::ModelConfig const& modelConfig, RooAbsData& data, const RooArgSet *poiSet = nullptr );
-
-      static bool SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs);
-      static bool SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs);
-
-   protected:
-      ClassDefOverride(AsymptoticCalculator,2)
-
    private:
-
       bool fOneSided;                     ///< for one sided PL test statistic (upper limits)
       mutable bool fOneSidedDiscovery;    ///< for one sided PL test statistic (for discovery)
       bool fNominalAsimov;                ///< make Asimov at nominal parameter values
       mutable bool fIsInitialized;        ///<! flag to check if calculator is initialized
       mutable int fUseQTilde;             ///< flag to indicate if using qtilde or not (-1 (default based on RooRealVar)), 0 false, 1 (true)
-      static int fgPrintLevel;            ///< control print level  (0 minimal, 1 normal, 2 debug)
       mutable double fNLLObs;
       mutable double fNLLAsimov;
 
@@ -137,7 +109,7 @@ namespace RooStats {
       mutable RooArgSet  fBestFitPoi;     ///< snapshot of best fitted POI values
       mutable RooArgSet  fBestFitParams;  ///< snapshot of all best fitted Parameter values
 
-
+      ClassDefOverride(AsymptoticCalculator,0)
    };
 }
 

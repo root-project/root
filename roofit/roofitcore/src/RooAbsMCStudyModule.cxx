@@ -35,7 +35,6 @@ Look at RooDLLSignificanceMCSModule for an example of an implementation.
 
 #include <RooFitResult.h>
 
-ClassImp(RooAbsMCStudyModule);
 
 
 ////////////////////////////////////////////////////////////////////////////////

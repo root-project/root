@@ -1,7 +1,8 @@
 // Author: Enrico Guiraud CERN 09/2020
+// Author: Vincenzo Eduardo Padulano CERN 09/2024
 
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -18,6 +19,7 @@
 #include <TTreeReaderValue.h>
 #include <TTreeReaderArray.h>
 
+#include <array>
 #include <memory>
 #include <string>
 
@@ -37,16 +39,19 @@ public:
       : fTreeValue(std::make_unique<TTreeReaderValue<T>>(r, colName.c_str()))
    {
    }
+};
 
-   /// The dtor resets the TTreeReaderValue object.
-   //
-   // Otherwise a race condition is present in which a TTreeReader
-   // and its TTreeReader{Value,Array}s can be deleted concurrently:
-   // - Thread #1) a task ends and pushes back processing slot
-   // - Thread #2) a task starts and overwrites thread-local TTreeReaderValues
-   // - Thread #1) first task deletes TTreeReader
-   // See https://github.com/root-project/root/commit/26e8ace6e47de6794ac9ec770c3bbff9b7f2e945
-   ~RTreeColumnReader() override { fTreeValue.reset(); }
+class R__CLING_PTRCHECK(off) RTreeOpaqueColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
+   std::unique_ptr<ROOT::Internal::TTreeReaderOpaqueValue> fTreeValue;
+
+   void *GetImpl(Long64_t) final { return fTreeValue->GetAddress(); }
+
+public:
+   /// Construct the RTreeColumnReader. Actual initialization is performed lazily by the Init method.
+   RTreeOpaqueColumnReader(TTreeReader &r, const std::string &colName)
+      : fTreeValue(std::make_unique<ROOT::Internal::TTreeReaderOpaqueValue>(r, colName.c_str()))
+   {
+   }
 };
 
 /// RTreeColumnReader specialization for TTree values read via TTreeReaderArrays.
@@ -81,6 +86,11 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
       // Currently we need the first entry to have been loaded to perform the check
       // TODO Move check to constructor once ROOT-10823 is fixed and TTreeReaderArray itself exposes this information
       const auto readerArraySize = readerArray.GetSize();
+
+      // The reader could not read an array, signal this back to the node requesting the value
+      if (R__unlikely(readerArray.GetReadStatus() == ROOT::Internal::TTreeReaderValueBase::EReadStatus::kReadError))
+         return nullptr;
+
       if (EStorageType::kUnknown == fStorageType && readerArraySize > 1) {
          // We can decide since the array is long enough
          fStorageType = EStorageType::kContiguous;
@@ -135,9 +145,6 @@ public:
       : fTreeArray(std::make_unique<TTreeReaderArray<T>>(r, colName.c_str()))
    {
    }
-
-   /// See the other class template specializations for an explanation.
-   ~RTreeColumnReader() override { fTreeArray.reset(); }
 };
 
 /// RTreeColumnReader specialization for arrays of boolean values read via TTreeReaderArrays.
@@ -176,9 +183,41 @@ public:
       : fTreeArray(std::make_unique<TTreeReaderArray<bool>>(r, colName.c_str()))
    {
    }
+};
 
-   /// See the other class template specializations for an explanation.
-   ~RTreeColumnReader() override { fTreeArray.reset(); }
+/// RTreeColumnReader specialization for TTree values read via TTreeReaderArrays.
+///
+/// This specialization is used when the requested type for reading is std::array
+template <typename T, std::size_t N>
+class R__CLING_PTRCHECK(off) RTreeColumnReader<std::array<T, N>> final : public ROOT::Detail::RDF::RColumnReaderBase {
+   std::unique_ptr<TTreeReaderArray<T>> fTreeArray;
+
+   /// We return a reference to this RVec to clients, to guarantee a stable address and contiguous memory layout
+   RVec<T> fArray;
+
+   Long64_t fLastEntry = -1;
+
+   void *GetImpl(Long64_t entry) final
+   {
+      if (entry == fLastEntry)
+         return fArray.data();
+
+      // This is a non-owning view on the contents of the TTreeReaderArray
+      RVec<T> view{&fTreeArray->At(0), fTreeArray->GetSize()};
+      swap(fArray, view);
+
+      fLastEntry = entry;
+      // The data member of this class is an RVec, to avoid an extra copy
+      // but we need to return the array buffer as the reader expects
+      // a std::array
+      return fArray.data();
+   }
+
+public:
+   RTreeColumnReader(TTreeReader &r, const std::string &colName)
+      : fTreeArray(std::make_unique<TTreeReaderArray<T>>(r, colName.c_str()))
+   {
+   }
 };
 
 } // namespace RDF

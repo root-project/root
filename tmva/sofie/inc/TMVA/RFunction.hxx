@@ -52,8 +52,7 @@ public:
     std::shared_ptr<RModel> GetFunctionBlock() {
         return function_block;
     }
-
-    std::string GenerateModel(const std::string& filename, long read_pos=0, long block_size=1);
+    std::string GenerateModel(const std::string& filename, long read_pos = 0, long block_size = -1);
     std::string Generate(const std::vector<std::string>& inputPtrs);
     FunctionTarget GetFunctionTarget() {
         return fTarget;

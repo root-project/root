@@ -14,13 +14,24 @@
 #include "TSchemaType.h"
 #include "DllImport.h"
 
+namespace clang {
+class CXXRecordDecl;
+}
+
 namespace ROOT
 {
    //---------------------------------------------------------------------------
    // Global variables
    //---------------------------------------------------------------------------
    typedef std::map<std::string, std::string> SchemaRuleMap_t;
-   typedef std::map<std::string, std::list<SchemaRuleMap_t> > SchemaRuleClassMap_t;
+   struct RRulesList {
+      bool fGenerated = false;
+      std::list<SchemaRuleMap_t> fRules;
+      const clang::CXXRecordDecl *fTargetDecl;
+
+      size_t size() const { return fRules.size(); }
+   };
+   typedef std::map<std::string, RRulesList> SchemaRuleClassMap_t;
    R__EXTERN SchemaRuleClassMap_t gReadRules;
    R__EXTERN SchemaRuleClassMap_t gReadRawRules;
 

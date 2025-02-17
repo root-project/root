@@ -85,7 +85,9 @@ using namespace RooFit;
 class TestBasic101 : public RooUnitTest {
 public:
    TestBasic101(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Fitting,plotting & event generation of basic p.d.f", refFile, writeRef, verbose){};
+      : RooUnitTest("Fitting,plotting & event generation of basic p.d.f", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -145,7 +147,9 @@ public:
 class TestBasic102 : public RooUnitTest {
 public:
    TestBasic102(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Data import methods", refFile, writeRef, verbose){};
+      : RooUnitTest("Data import methods", refFile, writeRef, verbose)
+   {
+   }
 
    std::unique_ptr<TH1> makeTH1()
    {
@@ -276,7 +280,9 @@ public:
 class TestBasic103 : public RooUnitTest {
 public:
    TestBasic103(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Interpreted expression p.d.f.", refFile, writeRef, verbose){};
+      : RooUnitTest("Interpreted expression p.d.f.", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -360,7 +366,9 @@ public:
 class TestBasic105 : public RooUnitTest {
 public:
    TestBasic105(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("C++ function binding operator p.d.f", refFile, writeRef, verbose){};
+      : RooUnitTest("C++ function binding operator p.d.f", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -423,7 +431,9 @@ public:
 class TestBasic108 : public RooUnitTest {
 public:
    TestBasic108(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Non-standard binning in counting and asymmetry plots", refFile, writeRef, verbose){};
+      : RooUnitTest("Non-standard binning in counting and asymmetry plots", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -524,7 +534,9 @@ public:
 class TestBasic109 : public RooUnitTest {
 public:
    TestBasic109(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Calculation of chi^2 and residuals in plots", refFile, writeRef, verbose){};
+      : RooUnitTest("Calculation of chi^2 and residuals in plots", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -596,7 +608,9 @@ public:
 class TestBasic110 : public RooUnitTest {
 public:
    TestBasic110(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Normalization of p.d.f.s in 1D", refFile, writeRef, verbose){};
+      : RooUnitTest("Normalization of p.d.f.s in 1D", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -659,7 +673,9 @@ public:
 class TestBasic111 : public RooUnitTest {
 public:
    TestBasic111(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Numeric integration configuration", refFile, writeRef, verbose){};
+      : RooUnitTest("Numeric integration configuration", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -728,7 +744,9 @@ public:
 class TestBasic201 : public RooUnitTest {
 public:
    TestBasic201(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Addition operator p.d.f.", refFile, writeRef, verbose){};
+      : RooUnitTest("Addition operator p.d.f.", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -738,7 +756,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
@@ -821,7 +839,9 @@ public:
 class TestBasic202 : public RooUnitTest {
 public:
    TestBasic202(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Extended ML fits to addition operator p.d.f.s", refFile, writeRef, verbose){};
+      : RooUnitTest("Extended ML fits to addition operator p.d.f.s", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -831,7 +851,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
@@ -910,7 +930,9 @@ public:
 class TestBasic203 : public RooUnitTest {
 public:
    TestBasic203(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Basic fitting and plotting in ranges", refFile, writeRef, verbose){};
+      : RooUnitTest("Basic fitting and plotting in ranges", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -971,7 +993,9 @@ public:
 class TestBasic204 : public RooUnitTest {
 public:
    TestBasic204(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Extended ML fit in sub range", refFile, writeRef, verbose){};
+      : RooUnitTest("Extended ML fit in sub range", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -981,7 +1005,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
@@ -1035,7 +1059,9 @@ public:
 class TestBasic205 : public RooUnitTest {
 public:
    TestBasic205(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Component plotting variations", refFile, writeRef, verbose){};
+      : RooUnitTest("Component plotting variations", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -1045,7 +1071,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
@@ -1061,7 +1087,7 @@ public:
       RooRealVar a1("a1", "a1", -0.2, -1., 1.);
       RooChebychev bkg1("bkg1", "Background 1", x, RooArgSet(a0, a1));
 
-      // Build expontential pdf
+      // Build exponential pdf
       RooRealVar alpha("alpha", "alpha", 1);
       RooExponential bkg2("bkg2", "Background 2", x, alpha, true);
 
@@ -1127,7 +1153,9 @@ public:
 class TestBasic208 : public RooUnitTest {
 public:
    TestBasic208(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("FFT Convolution operator p.d.f.", refFile, writeRef, verbose){};
+      : RooUnitTest("FFT Convolution operator p.d.f.", refFile, writeRef, verbose)
+   {
+   }
 
    bool isTestAvailable() override
    {
@@ -1213,7 +1241,9 @@ public:
 class TestBasic209 : public RooUnitTest {
 public:
    TestBasic209(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Analytical convolution operator", refFile, writeRef, verbose){};
+      : RooUnitTest("Analytical convolution operator", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -1279,7 +1309,9 @@ public:
 class TestBasic301 : public RooUnitTest {
 public:
    TestBasic301(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Composition extension of basic p.d.f", refFile, writeRef, verbose){};
+      : RooUnitTest("Composition extension of basic p.d.f", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -1332,7 +1364,9 @@ public:
 class TestBasic302 : public RooUnitTest {
 public:
    TestBasic302(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Sum and product utility functions", refFile, writeRef, verbose){};
+      : RooUnitTest("Sum and product utility functions", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -1433,7 +1467,9 @@ public:
    }
 
    TestBasic303(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Conditional use of F(x|y)", refFile, writeRef, verbose){};
+      : RooUnitTest("Conditional use of F(x|y)", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -1460,7 +1496,7 @@ public:
       // ---------------------------------------------------------------------------------------------
 
       // Make subset of experimental data with only y values
-      std::unique_ptr<RooAbsData> expDataY{expDataXY->reduce(y)};
+      std::unique_ptr<RooAbsData> expDataY{expDataXY->reduce(RooFit::SelectVars(y))};
 
       // Generate 10000 events in x obtained from _conditional_ model(x|y) with y values taken from experimental data
       std::unique_ptr<RooDataSet> data{model.generate(x, ProtoData(static_cast<RooDataSet &>(*expDataY)))};
@@ -1499,7 +1535,9 @@ public:
 class TestBasic304 : public RooUnitTest {
 public:
    TestBasic304(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Product operator p.d.f. with uncorrelated terms", refFile, writeRef, verbose){};
+      : RooUnitTest("Product operator p.d.f. with uncorrelated terms", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -1553,7 +1591,9 @@ public:
 class TestBasic305 : public RooUnitTest {
 public:
    TestBasic305(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Product operator p.d.f. with conditional term", refFile, writeRef, verbose){};
+      : RooUnitTest("Product operator p.d.f. with conditional term", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -1617,7 +1657,9 @@ public:
 class TestBasic306 : public RooUnitTest {
 public:
    TestBasic306(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Conditional use of per-event error p.d.f. F(t|dt)", refFile, writeRef, verbose){};
+      : RooUnitTest("Conditional use of per-event error p.d.f. F(t|dt)", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -1693,7 +1735,9 @@ public:
 class TestBasic307 : public RooUnitTest {
 public:
    TestBasic307(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Full per-event error p.d.f. F(t|dt)G(dt)", refFile, writeRef, verbose){};
+      : RooUnitTest("Full per-event error p.d.f. F(t|dt)G(dt)", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -1765,7 +1809,9 @@ public:
 class TestBasic308 : public RooUnitTest {
 public:
    TestBasic308(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Normalization of p.d.f.s in 2D", refFile, writeRef, verbose){};
+      : RooUnitTest("Normalization of p.d.f.s in 2D", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -1842,7 +1888,9 @@ public:
 class TestBasic310 : public RooUnitTest {
 public:
    TestBasic310(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Data and p.d.f projection in category slice", refFile, writeRef, verbose){};
+      : RooUnitTest("Data and p.d.f projection in category slice", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -1917,7 +1965,9 @@ public:
 class TestBasic311 : public RooUnitTest {
 public:
    TestBasic311(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Data and p.d.f projection in sub range", refFile, writeRef, verbose){};
+      : RooUnitTest("Data and p.d.f projection in sub range", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -1984,7 +2034,9 @@ public:
 class TestBasic312 : public RooUnitTest {
 public:
    TestBasic312(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Fit in multiple rectangular ranges", refFile, writeRef, verbose){};
+      : RooUnitTest("Fit in multiple rectangular ranges", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -2076,7 +2128,9 @@ public:
 class TestBasic313 : public RooUnitTest {
 public:
    TestBasic313(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Integration over non-rectangular regions", refFile, writeRef, verbose){};
+      : RooUnitTest("Integration over non-rectangular regions", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -2143,7 +2197,9 @@ public:
 class TestBasic314 : public RooUnitTest {
 public:
    TestBasic314(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Fit with non-rectangular observable boundaries", refFile, writeRef, verbose){};
+      : RooUnitTest("Fit with non-rectangular observable boundaries", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -2199,7 +2255,9 @@ public:
 class TestBasic315 : public RooUnitTest {
 public:
    TestBasic315(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("P.d.f. marginalization through integration", refFile, writeRef, verbose){};
+      : RooUnitTest("P.d.f. marginalization through integration", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -2261,7 +2319,9 @@ public:
 class TestBasic316 : public RooUnitTest {
 public:
    TestBasic316(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Likelihood ratio projection plot", refFile, writeRef, verbose){};
+      : RooUnitTest("Likelihood ratio projection plot", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -2350,7 +2410,9 @@ public:
 class TestBasic402 : public RooUnitTest {
 public:
    TestBasic402(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Basic operations on datasets", refFile, writeRef, verbose){};
+      : RooUnitTest("Basic operations on datasets", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -2391,10 +2453,10 @@ public:
       // -------------------------------------------------------------
 
       // The reduce() function returns a new dataset which is a subset of the original
-      std::unique_ptr<RooAbsData> d1{d.reduce(RooArgSet(x, c))};
-      std::unique_ptr<RooAbsData> d2{d.reduce(RooArgSet(y))};
-      std::unique_ptr<RooAbsData> d3{d.reduce("y>5.17")};
-      std::unique_ptr<RooAbsData> d4{d.reduce(RooArgSet(x, c), "y>5.17")};
+      std::unique_ptr<RooAbsData> d1{d.reduce(SelectVars({x, c}))};
+      std::unique_ptr<RooAbsData> d2{d.reduce(SelectVars(y))};
+      std::unique_ptr<RooAbsData> d3{d.reduce(Cut("y>5.17"))};
+      std::unique_ptr<RooAbsData> d4{d.reduce(SelectVars({x, c}), Cut("y>5.17"))};
 
       regValue(d3->numEntries(), "rf403_nd3");
       regValue(d4->numEntries(), "rf403_nd4");
@@ -2427,7 +2489,7 @@ public:
       //
       // All reduce() methods are interfaced in RooAbsData. All reduction techniques
       // demonstrated on unbinned datasets can be applied to binned datasets as well.
-      std::unique_ptr<RooAbsData> dh2{dh.reduce(y, "x>0")};
+      std::unique_ptr<RooAbsData> dh2{dh.reduce(SelectVars(y), Cut("x>0"))};
 
       // Add dh2 to yframe and redraw
       dh2->plotOn(yframe, LineColor(kRed), MarkerColor(kRed), Name("dh2"));
@@ -2442,7 +2504,9 @@ public:
 class TestBasic403 : public RooUnitTest {
 public:
    TestBasic403(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Fits with weighted datasets", refFile, writeRef, verbose){};
+      : RooUnitTest("Fits with weighted datasets", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -2466,11 +2530,10 @@ public:
       RooFormulaVar wFunc("w", "event weight", "(x*x+10)", x);
 
       // Add column with variable w to previously generated dataset
-      RooRealVar *w = (RooRealVar *)data->addColumn(wFunc);
+      data->addColumn(wFunc);
 
       // Instruct dataset d in interpret w as event weight rather than as observable
-      RooDataSet dataw(data->GetName(), data->GetTitle(), data.get(), *data->get(), nullptr, w->GetName());
-      // data->setWeightVar(*w) ;
+      RooDataSet dataw{data->GetName(), data->GetTitle(), *data->get(), Import(*data), WeightVar("w")};
 
       // U n b i n n e d   M L   f i t   t o   w e i g h t e d   d a t a
       // ---------------------------------------------------------------
@@ -2559,7 +2622,9 @@ public:
 class TestBasic404 : public RooUnitTest {
 public:
    TestBasic404(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Categories basic functionality", refFile, writeRef, verbose){};
+      : RooUnitTest("Categories basic functionality", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -2636,7 +2701,9 @@ public:
 class TestBasic405 : public RooUnitTest {
 public:
    TestBasic405(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Real-to-category functions", refFile, writeRef, verbose){};
+      : RooUnitTest("Real-to-category functions", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -2708,7 +2775,7 @@ public:
       // Define range "alt" as including bins 1,3,5,7,9
       xb->setRange("alt", "x_coarse_bin1,x_coarse_bin3,x_coarse_bin5,x_coarse_bin7,x_coarse_bin9");
 
-      // Construct subset of data matching range "alt" but only for the first 5000 events and plot it on the fram
+      // Construct subset of data matching range "alt" but only for the first 5000 events and plot it on the frame
       std::unique_ptr<RooAbsData> dataSel{data->reduce(CutRange("alt"), EventRange(0, 5000))};
       //   dataSel->plotOn(xframe,MarkerColor(kGreen),LineColor(kGreen),Name("data_sel")) ;
 
@@ -2723,7 +2790,9 @@ public:
 class TestBasic406 : public RooUnitTest {
 public:
    TestBasic406(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Category-to-category functions", refFile, writeRef, verbose){};
+      : RooUnitTest("Category-to-category functions", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -2798,7 +2867,9 @@ public:
 class TestBasic501 : public RooUnitTest {
 public:
    TestBasic501(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Simultaneous p.d.f. operator", refFile, writeRef, verbose){};
+      : RooUnitTest("Simultaneous p.d.f. operator", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -2910,7 +2981,9 @@ public:
 class TestBasic599 : public RooUnitTest {
 public:
    TestBasic599(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Workspace and p.d.f. persistence", refFile, writeRef, verbose){};
+      : RooUnitTest("Workspace and p.d.f. persistence", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -3110,94 +3183,13 @@ public:
    }
 };
 
-// Interactive minimization with MINUIT.
-class TestBasic601 : public RooUnitTest {
-public:
-   TestBasic601(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Interactive Minuit", refFile, writeRef, verbose){};
-   bool testCode() override
-   {
-
-      // S e t u p   p d f   a n d   l i k e l i h o o d
-      // -----------------------------------------------
-
-      // Observable
-      RooRealVar x("x", "x", -20, 20);
-
-      // Model (intentional strong correlations)
-      RooRealVar mean("mean", "mean of g1 and g2", 0);
-      RooRealVar sigma_g1("sigma_g1", "width of g1", 3);
-      RooGaussian g1("g1", "g1", x, mean, sigma_g1);
-
-      RooRealVar sigma_g2("sigma_g2", "width of g2", 4, 3.0, 6.0);
-      RooGaussian g2("g2", "g2", x, mean, sigma_g2);
-
-      RooRealVar frac("frac", "frac", 0.5, 0.0, 1.0);
-      RooAddPdf model("model", "model", RooArgList(g1, g2), frac);
-
-      // Generate 1000 events
-      std::unique_ptr<RooDataSet> data{model.generate(x, 1000)};
-
-      // Construct unbinned likelihood
-      std::unique_ptr<RooAbsReal> nll{model.createNLL(*data)};
-
-      // I n t e r a c t i v e   m i n i m i z a t i o n ,   e r r o r   a n a l y s i s
-      // -------------------------------------------------------------------------------
-
-      // Create MINUIT interface object
-      RooMinimizer m(*nll);
-
-      // Call MIGRAD to minimize the likelihood
-      m.migrad();
-
-      // Run HESSE to calculate errors from d2L/dp2
-      m.hesse();
-
-      // Run MINOS on sigma_g2 parameter only
-      m.minos(sigma_g2);
-
-      // S a v i n g   r e s u l t s ,   c o n t o u r   p l o t s
-      // ---------------------------------------------------------
-
-      // Save a snapshot of the fit result. This object contains the initial
-      // fit parameters, the final fit parameters, the complete correlation
-      // matrix, the EDM, the minimized FCN , the last MINUIT status code and
-      // the number of times the RooFit function object has indicated evaluation
-      // problems (e.g. zero probabilities during likelihood evaluation)
-      std::unique_ptr<RooFitResult> r{m.save()};
-
-      // C h a n g e   p a r a m e t e r   v a l u e s ,   f l o a t i n g
-      // -----------------------------------------------------------------
-
-      // At any moment you can manually change the value of a (constant)
-      // parameter
-      mean = 0.3;
-
-      // Rerun MIGRAD,HESSE
-      m.migrad();
-      m.hesse();
-
-      // Now fix sigma_g2
-      sigma_g2.setConstant(true);
-
-      // Rerun MIGRAD,HESSE
-      m.migrad();
-      m.hesse();
-
-      std::unique_ptr<RooFitResult> r2{m.save()};
-
-      regResult(std::move(r), "rf601_r");
-      regResult(std::move(r2), "rf601_r2");
-
-      return true;
-   }
-};
-
 // Setting up a binning chi^2 fit.
 class TestBasic602 : public RooUnitTest {
 public:
    TestBasic602(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Chi2 minimization", refFile, writeRef, verbose){};
+      : RooUnitTest("Chi2 minimization", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -3207,7 +3199,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
@@ -3256,7 +3248,9 @@ public:
 class TestBasic604 : public RooUnitTest {
 public:
    TestBasic604(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Auxiliary observable constraints", refFile, writeRef, verbose){};
+      : RooUnitTest("Auxiliary observable constraints", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -3322,7 +3316,9 @@ public:
 class TestBasic605 : public RooUnitTest {
 public:
    TestBasic605(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Profile Likelihood operator", refFile, writeRef, verbose){};
+      : RooUnitTest("Profile Likelihood operator", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -3403,7 +3399,9 @@ public:
 class TestBasic606 : public RooUnitTest {
 public:
    TestBasic606(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("NLL error handling", refFile, writeRef, verbose){};
+      : RooUnitTest("NLL error handling", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -3463,7 +3461,9 @@ public:
 class TestBasic607 : public RooUnitTest {
 public:
    TestBasic607(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Fit Result functionality", refFile, writeRef, verbose){};
+      : RooUnitTest("Fit Result functionality", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -3473,7 +3473,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5, -10, 10);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5, 0.1, 10);
       RooRealVar sigma2("sigma2", "width of gaussians", 1, 0.1, 10);
@@ -3534,7 +3534,9 @@ public:
 class TestBasic609 : public RooUnitTest {
 public:
    TestBasic609(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Chi^2 fit to X-Y dataset", refFile, writeRef, verbose){};
+      : RooUnitTest("Chi^2 fit to X-Y dataset", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -3604,7 +3606,9 @@ public:
 class TestBasic701 : public RooUnitTest {
 public:
    TestBasic701(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Efficiency operator p.d.f. 1D", refFile, writeRef, verbose){};
+      : RooUnitTest("Efficiency operator p.d.f. 1D", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -3674,7 +3678,9 @@ public:
 class TestBasic702 : public RooUnitTest {
 public:
    TestBasic702(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Efficiency operator p.d.f. 2D", refFile, writeRef, verbose){};
+      : RooUnitTest("Efficiency operator p.d.f. 2D", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -3756,7 +3762,9 @@ public:
 class TestBasic703 : public RooUnitTest {
 public:
    TestBasic703(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Efficiency product operator p.d.f", refFile, writeRef, verbose){};
+      : RooUnitTest("Efficiency product operator p.d.f", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -3774,7 +3782,7 @@ public:
       // ---------------------------------------------------
 
       // Use error function to simulate turn-on slope
-      RooFormulaVar eff("eff", "0.5*(TMath::Erf((t-1)/0.5)+1)", t);
+      RooFormulaVar eff("eff", "0.5*(std::erf((t-1)/0.5)+1)", t);
 
       // D e f i n e   d e c a y   p d f   w i t h   e f f i c i e n c y
       // ---------------------------------------------------------------
@@ -3820,7 +3828,9 @@ public:
 class TestBasic704 : public RooUnitTest {
 public:
    TestBasic704(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Amplitude sum operator p.d.f", refFile, writeRef, verbose){};
+      : RooUnitTest("Amplitude sum operator p.d.f", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -3900,7 +3910,9 @@ public:
    double ctol() override { return 5e-2; } // very conservative, this is a numerically difficult test
 
    TestBasic705(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Linear morph operator p.d.f.", refFile, writeRef, verbose){};
+      : RooUnitTest("Linear morph operator p.d.f.", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -4014,7 +4026,9 @@ public:
 class TestBasic706 : public RooUnitTest {
 public:
    TestBasic706(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Histogram based p.d.f.s", refFile, writeRef, verbose){};
+      : RooUnitTest("Histogram based p.d.f.s", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -4071,7 +4085,9 @@ public:
 class TestBasic707 : public RooUnitTest {
 public:
    TestBasic707(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Kernel estimation p.d.f.s", refFile, writeRef, verbose){};
+      : RooUnitTest("Kernel estimation p.d.f.s", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -4115,7 +4131,7 @@ public:
       // C r e a t e   l o w   s t a t s   2 - D   d a t a s e t
       // -------------------------------------------------------
 
-      // Construct a 2D toy pdf for sampleing
+      // Construct a 2D toy pdf for sampling
       RooRealVar y("y", "y", 0, 20);
       RooPolynomial py("py", "py", y, RooArgList(0.01, 0.01, -0.0004));
       RooProdPdf pxy("pxy", "pxy", RooArgSet(p, py));
@@ -4153,7 +4169,9 @@ public:
 class TestBasic708 : public RooUnitTest {
 public:
    TestBasic708(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("B Physics p.d.f.s", refFile, writeRef, verbose){};
+      : RooUnitTest("B Physics p.d.f.s", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -4327,7 +4345,9 @@ public:
 class TestBasic801 : public RooUnitTest {
 public:
    TestBasic801(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("Automated MC studies", refFile, writeRef, verbose){};
+      : RooUnitTest("Automated MC studies", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -4338,7 +4358,7 @@ public:
       RooRealVar x("x", "x", 0, 10);
       x.setBins(40);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5, 0, 10);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
@@ -4410,7 +4430,9 @@ public:
 class TestBasic802 : public RooUnitTest {
 public:
    TestBasic802(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("MC Study with chi^2 calculator", refFile, writeRef, verbose){};
+      : RooUnitTest("MC Study with chi^2 calculator", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -4494,7 +4516,9 @@ public:
 class TestBasic803 : public RooUnitTest {
 public:
    TestBasic803(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("MC Study with param rand. and Z calc", refFile, writeRef, verbose){};
+      : RooUnitTest("MC Study with param rand. and Z calc", refFile, writeRef, verbose)
+   {
+   }
    bool testCode() override
    {
 
@@ -4589,7 +4613,9 @@ public:
 class TestBasic804 : public RooUnitTest {
 public:
    TestBasic804(TFile *refFile, bool writeRef, int verbose)
-      : RooUnitTest("MC Studies with aux. obs. constraints", refFile, writeRef, verbose){};
+      : RooUnitTest("MC Studies with aux. obs. constraints", refFile, writeRef, verbose)
+   {
+   }
 
    double htol() override { return 0.1; } // numerically very difficult test
 

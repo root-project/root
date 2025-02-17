@@ -2,6 +2,7 @@ LIBAFTERIMAGE_OBJS = \
 		$(LIBAFTERIMAGE_PATH)/asimage.c \
 		$(LIBAFTERIMAGE_PATH)/ascmap.c \
 		$(LIBAFTERIMAGE_PATH)/asfont.c \
+		$(LIBAFTERIMAGE_PATH)/afterrootpngwrite.c \
 		$(LIBAFTERIMAGE_PATH)/asstorage.c \
 		$(LIBAFTERIMAGE_PATH)/asvisual.c \
 		$(LIBAFTERIMAGE_PATH)/blender.c \
@@ -23,6 +24,7 @@ LIBAFTERIMAGE_INCS = \
 		$(LIBAFTERIMAGE_PATH)/afterbase.h \
 		$(LIBAFTERIMAGE_PATH)/ascmap.h \
 		$(LIBAFTERIMAGE_PATH)/asfont.h \
+		$(LIBAFTERIMAGE_PATH)/afterrootpngwrite.h \
 		$(LIBAFTERIMAGE_PATH)/asim_afterbase.h \
 		$(LIBAFTERIMAGE_PATH)/asimage.h \
 		$(LIBAFTERIMAGE_PATH)/asstorage.h \

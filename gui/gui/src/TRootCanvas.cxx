@@ -163,17 +163,17 @@ static const char *gOpenTypes[] = { "ROOT files",   "*.root",
                                     0,              0 };
 
 static const char *gSaveAsTypes[] = { "PDF",          "*.pdf",
-                                      "PostScript",   "*.ps",
-                                      "Encapsulated PostScript", "*.eps",
                                       "SVG",          "*.svg",
                                       "TeX",          "*.tex",
+                                      "PostScript",   "*.ps",
+                                      "Encapsulated PostScript", "*.eps",
+                                      "PNG",          "*.png",
+                                      "JPEG",         "*.jpg",
                                       "GIF",          "*.gif",
                                       "ROOT macros",  "*.C",
                                       "ROOT files",   "*.root",
                                       "XML",          "*.xml",
-                                      "PNG",          "*.png",
                                       "XPM",          "*.xpm",
-                                      "JPEG",         "*.jpg",
                                       "TIFF",         "*.tiff",
                                       "XCF",          "*.xcf",
                                       "All files",    "*",
@@ -950,7 +950,7 @@ again:
                      }
                      if (TVirtualPadEditor::GetPadEditor(kFALSE) != 0)
                         TVirtualPadEditor::Terminate();
-                     if (TClass::GetClass("TStyleManager"))
+                     if (TClass::GetClass("TStyleManager", kFALSE, kTRUE))
                         gROOT->ProcessLine("TStyleManager::Terminate()");
                      gApplication->Terminate(0);
                      break;
@@ -1188,20 +1188,15 @@ again:
                   // Handle Help menu items...
                   case kHelpAbout:
                      {
-#ifdef R__UNIX
-                        TString rootx = TROOT::GetBinDir() + "/root -a &";
-                        gSystem->Exec(rootx);
-#else
 #ifdef WIN32
                         new TWin32SplashThread(kTRUE);
 #else
 
                         char str[32];
-                        sprintf(str, "About ROOT %s...", gROOT->GetVersion());
+                        snprintf(str, 32, "About ROOT %s...", gROOT->GetVersion());
                         hd = new TRootHelpDialog(this, str, 600, 400);
                         hd->SetText(gHelpAbout);
                         hd->Popup();
-#endif
 #endif
                      }
                      break;

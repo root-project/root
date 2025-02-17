@@ -94,7 +94,7 @@ namespace TMVA {
       Double_t              fPurity;  // S/(S+B) on training data
 
 
-      mutable MsgLogger*    fLogger;   // message logger
+      mutable MsgLogger*    fLogger;   //! message logger
       MsgLogger& Log() const { return *fLogger; }
    };
 }

@@ -1,6 +1,6 @@
 import { gStyle, isObject, isStr } from '../core.mjs';
 import { color as d3_color, rgb as d3_rgb, select as d3_select } from '../d3.mjs';
-import { getColor, findColor, clTLinearGradient, clTRadialGradient, toHex } from './colors.mjs';
+import { getColor, findColor, clTLinearGradient, clTRadialGradient, toColor } from './colors.mjs';
 
 
 /**
@@ -29,7 +29,7 @@ class TAttFillHandler {
      * @param {object} args - different arguments to set fill attributes
      * @param {object} [args.attr] - TAttFill object
      * @param {number} [args.color] - color id
-     * @param {number} [args.pattern] - filll pattern id
+     * @param {number} [args.pattern] - fill pattern id
      * @param {object} [args.svg] - SVG element to store newly created patterns
      * @param {string} [args.color_as_svg] - color in SVG format */
    setArgs(args) {
@@ -38,6 +38,9 @@ class TAttFillHandler {
          if ((args.color === undefined) && (args.attr.fFillColor !== undefined)) args.color = args.attr.fFillColor;
       }
 
+      if (args.enable !== undefined)
+         this.enable(args.enable);
+
       const was_changed = this.changed; // preserve changed state
       this.change(args.color, args.pattern, args.svg, args.color_as_svg, args.painter);
       this.changed = was_changed;
@@ -45,6 +48,11 @@ class TAttFillHandler {
 
    /** @summary Apply fill style to selection */
    apply(selection) {
+      if (this._disable) {
+         selection.style('fill', 'none');
+         return;
+      }
+
       this.used = true;
 
       selection.style('fill', this.getFillColor());
@@ -61,14 +69,22 @@ class TAttFillHandler {
 
    /** @summary Returns fill color without pattern url.
      * @desc If empty, alternative color will be provided
-     * @param {string} [altern] - alternative color which returned when fill color not exists
+     * @param {string} [alt] - alternative color which returned when fill color not exists
      * @private */
-   getFillColorAlt(altern) { return this.color && (this.color !== 'none') ? this.color : altern; }
+   getFillColorAlt(alt) { return this.color && (this.color !== 'none') ? this.color : alt; }
 
    /** @summary Returns true if color not specified or fill style not specified */
    empty() {
       const fill = this.getFillColor();
       return !fill || (fill === 'none');
+   }
+
+   /** @summary Enable or disable fill usage - if disabled only 'fill: none' will be applied */
+   enable(on) {
+      if ((on === undefined) || on)
+         delete this._disable;
+      else
+         this._disable = true;
    }
 
    /** @summary Set usage flag of attribute */
@@ -168,7 +184,7 @@ class TAttFillHandler {
 
       if (!this.gradient) {
          if ((this.pattern >= 4000) && (this.pattern <= 4100)) {
-            // special transparent colors (use for subpads)
+            // special transparent colors (use for sub-pads)
             this.opacity = (this.pattern - 4000) / 100;
             return true;
          }
@@ -412,7 +428,7 @@ class TAttFillHandler {
             }
             for (let n = 0; n < this.gradient.fColorPositions.length; ++n) {
                const pos = this.gradient.fColorPositions[n],
-                     col = '#' + toHex(this.gradient.fColors[n*4]) + toHex(this.gradient.fColors[n*4+1]) + toHex(this.gradient.fColors[n*4+2]);
+                     col = toColor(this.gradient.fColors[n*4], this.gradient.fColors[n*4+1], this.gradient.fColors[n*4+2]);
                grad.append('svg:stop').attr('offset', `${Math.round(pos*100)}%`)
                                       .attr('stop-color', col)
                                       .attr('stop-opacity', `${Math.round(this.gradient.fColors[n*4+3]*100)}%`);

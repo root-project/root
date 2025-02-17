@@ -31,7 +31,7 @@ functions used in D mixing have been hand coded for increased execution speed.
 #include <RooBatchCompute.h>
 #include <RooGenContext.h>
 
-#include <RooFit/Detail/EvaluateFuncs.h>
+#include <RooFit/Detail/MathFuncs.h>
 
 #include <Riostream.h>
 
@@ -81,7 +81,6 @@ enum BasisSign { Both = 0, Plus = +1, Minus = -1 };
 
 } // namespace
 
-ClassImp(RooTruthModel);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of a truth resolution model, i.e. a delta function in observable 'xIn'

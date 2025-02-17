@@ -14,6 +14,7 @@
 
 #include "TNamed.h"
 
+#include <array>
 #include <vector>
 
 class TArrayI;
@@ -69,6 +70,7 @@ public:
    void          Print(Option_t *option="") const override;
    virtual void  SetAlpha(Float_t a) { fAlpha = a; }
    virtual void  SetRGB(Float_t r, Float_t g, Float_t b);
+   void          SetName(const char* name) override;
 
    static void    InitializeColors();
    static void    HLS2RGB(Float_t h, Float_t l, Float_t s, Float_t &r, Float_t &g, Float_t &b);
@@ -90,6 +92,7 @@ public:
    static Int_t   GetColorTransparent(Int_t color, Float_t a);
    static Int_t   GetColorByName(const char *colorname);
    static Int_t   GetFreeColorIndex();
+   static Int_t   GetFirstFreeColorIndex();
    static const TArrayI& GetPalette();
    static Int_t   GetLinearGradient(Double_t angle, const std::vector<Int_t> &colors, const std::vector<Double_t> &positions = {});
    static Int_t   GetRadialGradient(Double_t r, const std::vector<Int_t> &colors, const std::vector<Double_t> &positions = {});
@@ -133,5 +136,17 @@ public:
                        kWaterMelon=108,      kCool=109,        kCopper=110,
                        kGistEarth=111,       kViridis=112,     kCividis=113,
                        kRainbow=kRainBow,    kDarkRainbow=kDarkRainBow};
+
+class TColorNumber {
+public:
+   TColorNumber(Int_t color) : fNumber{color} {}
+   TColorNumber(std::string const &color);
+   TColorNumber(std::array<Float_t, 3> rgb);
+   Int_t number() const { return fNumber; }
+
+private:
+   Int_t fNumber; ///< Color number identifier
+};
+
 #endif
 

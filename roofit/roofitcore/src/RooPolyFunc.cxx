@@ -36,7 +36,6 @@ part of the RooFit computation graph.
 using std::endl;
 using namespace RooFit;
 
-ClassImp(RooPolyFunc);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// coverity[UNINIT_CTOR]
@@ -115,7 +114,7 @@ void RooPolyFunc::addTerm(double coefficient, const RooAbsCollection &exponents)
    if (exponents.size() != _vars.size()) {
       coutE(InputArguments) << "RooPolyFunc::addTerm(" << GetName() << ") WARNING: number of exponents ("
                             << exponents.size() << ") provided do not match the number of variables (" << _vars.size()
-                            << ")" << endl;
+                            << ")" << std::endl;
    }
    int n_terms = _terms.size();
    std::string coeff_name = Form("%s_c%d", GetName(), n_terms);

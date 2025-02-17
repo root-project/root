@@ -38,7 +38,6 @@ D*-D0 mass difference distributions. It computes
 
 #include <cmath>
 
-ClassImp(RooDstD0BG);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,7 +72,7 @@ double RooDstD0BG::evaluate() const
    if (arg <= 0)
       return 0;
    double ratio = dm / dm0;
-   double val = (1 - std::exp(-arg / C)) * TMath::Power(ratio, A) + B * (ratio - 1);
+   double val = (1 - std::exp(-arg / C)) * std::pow(ratio, A) + B * (ratio - 1);
 
    return (val > 0 ? val : 0);
 }

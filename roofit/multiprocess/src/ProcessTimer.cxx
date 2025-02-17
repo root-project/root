@@ -17,7 +17,7 @@
 #include <fstream>
 #include <iomanip> // setw
 
-using std::list, std::string, std::invalid_argument, std::cout, std::endl, std::to_string, std::ios;
+using std::list, std::string, std::invalid_argument, std::to_string, std::ios;
 namespace chrono = std::chrono; // alias
 
 namespace RooFit {
@@ -94,7 +94,7 @@ void ProcessTimer::end_timer(string section_name)
 
 void ProcessTimer::print_durations(string to_print)
 {
-   cout << "On PID: " << ProcessTimer::process << endl << "====================" << endl << endl;
+   std::cout << "On PID: " << ProcessTimer::process << std::endl << "====================" << std::endl << std::endl;
    ProcessTimer::duration_map_t::key_type sec_name;
    ProcessTimer::duration_map_t::mapped_type duration_list;
    for (auto const &durations_element : ProcessTimer::durations) {
@@ -104,26 +104,26 @@ void ProcessTimer::print_durations(string to_print)
 
       int i = 0;
       long total_duration = 0;
-      cout << "Section name " << sec_name << ":" << endl;
+      std::cout << "Section name " << sec_name << ":" << std::endl;
       for (auto it = duration_list.begin(); it != duration_list.end(); ++it) {
          long duration = chrono::duration_cast<chrono::milliseconds>(*std::next(it) - *it).count();
-         cout << "Duration " << i << ": " << duration << "ms +" << endl;
+         std::cout << "Duration " << i << ": " << duration << "ms +" << std::endl;
          total_duration += duration;
          i++;
       }
-      cout << "--------------------" << endl << "Total: " << total_duration << "ms" << endl << endl;
+      std::cout << "--------------------" << std::endl << "Total: " << total_duration << "ms" << std::endl << std::endl;
    }
 }
 
 void ProcessTimer::print_timestamps()
 {
-   cout << "On PID: " << ProcessTimer::process << endl;
+   std::cout << "On PID: " << ProcessTimer::process << std::endl;
    ProcessTimer::duration_map_t::key_type sec_name;
    ProcessTimer::duration_map_t::mapped_type duration_list;
    for (auto const &durations_element : ProcessTimer::durations) {
       std::tie(sec_name, duration_list) = durations_element;
       int i = 0;
-      cout << "Section name " << sec_name << ":" << endl;
+      std::cout << "Section name " << sec_name << ":" << std::endl;
       for (auto it = duration_list.begin(); it != duration_list.end(); ++it) {
          long duration_since_begin_start =
             chrono::duration_cast<chrono::milliseconds>(*it - ProcessTimer::begin).count();
@@ -131,8 +131,8 @@ void ProcessTimer::print_timestamps()
          long duration_since_begin_end =
             chrono::duration_cast<chrono::milliseconds>(*std::next(it) - ProcessTimer::begin).count();
 
-         cout << "Duration " << i << ": " << duration_since_begin_start << "ms-->" << duration_since_begin_end << "ms"
-              << endl;
+         std::cout << "Duration " << i << ": " << duration_since_begin_start << "ms-->" << duration_since_begin_end << "ms"
+              << std::endl;
          i++;
       }
    }

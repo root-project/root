@@ -23,9 +23,14 @@ class pyf_tf1_callable:
     def __call__(self, x, p):
         return p[0] * x[0] + p[1]
 
+def pyf_func(x, pars):
+    return pars[0] * x[0] * x[2] + x[1] * pars[1]
 
 def pyf_tf1_gauss(x, p):
     return p[0] * 1.0 / math.sqrt(2.0 * math.pi * p[2]**2) * math.exp(-(x[0] - p[1])**2 / 2.0 / p[2]**2)
+
+def pyf_tf1_coulomb(x, p):
+    return p[1] * x[0] * x[1] / (p[0]**2) * math.exp(-p[2] / p[0])
 
 
 class TF1(unittest.TestCase):
@@ -93,6 +98,58 @@ class TF1(unittest.TestCase):
         self.assertAlmostEqual(scale, 1.0, 2)
         self.assertAlmostEqual(mean, 0.0, 2)
         self.assertAlmostEqual(abs(std), 1.0, 2)
+
+    def test_evalpar(self):
+        """
+        Test the 2D Numpy array pythonizations for TF1::EvalPar
+        """
+        import numpy as np
+
+        rtf1_coulomb = ROOT.TF1("my_func", pyf_tf1_coulomb, -10, 10)
+
+        # x dataset: 5 pairs of particle charges
+        x = np.array([
+            [1.0, 10, 2.0],
+            [1.5, 10, 2.5],
+            [2.0, 10, 3.0],
+            [2.5, 10, 3.5],
+            [3.0, 10, 4.0]
+        ])
+
+        params = np.array([
+            [1.0],       # Distance between charges r
+            [8.99e9],    # Coulomb constant k (in N·m²/C²)
+            [0.1]        # Additional factor for modulation
+        ])
+
+        # Slice to avoid the dummy column of 10's
+        res = rtf1_coulomb.EvalPar(x[:, ::2], params)
+
+        for i in range(len(x)):
+            expected_value = pyf_tf1_coulomb(x[i, ::2], params)
+            self.assertEqual(res[i], expected_value)
+    
+    def test_evalpar_dynamic(self):
+        """
+        Test the 2D NumPy pythonizations with dynamic TF1 data dimensions
+        """
+        import numpy as np
+
+        # Here we do not set the ndims, defaults to 1
+        rtf1_func = ROOT.TF1("my_func", pyf_func, -10, 10)
+
+        # x dataset with ndims 3
+        x = np.array([[2., 2, 1],
+                [1., 2, 3],
+                [2., 2, 1],
+                [4., 3, 2]])
+
+        pars = np.array([2., 3.])
+        res = rtf1_func.EvalPar(x, pars)
+
+        for i in range(len(x)):
+            expected_value = pyf_func(x[i], pars)
+            self.assertEqual(res[i], expected_value)
 
 
 def pyf_tf2_params(x, p):

@@ -66,7 +66,7 @@ namespace sema {
 /// parsed.
 class CompoundScopeInfo {
 public:
-  /// Whether this compound stamement contains `for' or `while' loops
+  /// Whether this compound statement contains `for' or `while' loops
   /// with empty bodies.
   bool HasEmptyLoopBodies = false;
 
@@ -168,9 +168,12 @@ public:
   /// to build, the initial and final coroutine suspend points
   bool NeedsCoroutineSuspends : 1;
 
-  /// An enumeration represeting the kind of the first coroutine statement
+  /// An enumeration representing the kind of the first coroutine statement
   /// in the function. One of co_return, co_await, or co_yield.
   unsigned char FirstCoroutineStmtKind : 2;
+
+  /// Whether we found an immediate-escalating expression.
+  bool FoundImmediateEscalatingExpression : 1;
 
   /// First coroutine statement in the current function.
   /// (ex co_return, co_await, co_yield)
@@ -185,6 +188,9 @@ public:
 
   /// First SEH '__try' statement in the current function.
   SourceLocation FirstSEHTryLoc;
+
+  /// First use of a VLA within the current function.
+  SourceLocation FirstVLALoc;
 
 private:
   /// Used to determine if errors occurred in this function or block.
@@ -214,7 +220,7 @@ public:
   /// The initial and final coroutine suspend points.
   std::pair<Stmt *, Stmt *> CoroutineSuspends;
 
-  /// The stack of currently active compound stamement scopes in the
+  /// The stack of currently active compound statement scopes in the
   /// function.
   SmallVector<CompoundScopeInfo, 4> CompoundScopes;
 
@@ -388,7 +394,8 @@ public:
         HasPotentialAvailabilityViolations(false), ObjCShouldCallSuper(false),
         ObjCIsDesignatedInit(false), ObjCWarnForNoDesignatedInitChain(false),
         ObjCIsSecondaryInit(false), ObjCWarnForNoInitDelegation(false),
-        NeedsCoroutineSuspends(true), ErrorTrap(Diag) {}
+        NeedsCoroutineSuspends(true), FoundImmediateEscalatingExpression(false),
+        ErrorTrap(Diag) {}
 
   virtual ~FunctionScopeInfo();
 
@@ -467,6 +474,11 @@ public:
   void setHasSEHTry(SourceLocation TryLoc) {
     setHasBranchProtectedScope();
     FirstSEHTryLoc = TryLoc;
+  }
+
+  void setHasVLA(SourceLocation VLALoc) {
+    if (FirstVLALoc.isInvalid())
+      FirstVLALoc = VLALoc;
   }
 
   bool NeedsScopeChecking() const {
@@ -838,6 +850,13 @@ public:
   /// The lambda's compiler-generated \c operator().
   CXXMethodDecl *CallOperator = nullptr;
 
+  /// Indicate that we parsed the parameter list
+  /// at which point the mutability of the lambda
+  /// is known.
+  bool AfterParameterList = true;
+
+  ParmVarDecl *ExplicitObjectParameter = nullptr;
+
   /// Source range covering the lambda introducer [...].
   SourceRange IntroducerRange;
 
@@ -849,8 +868,9 @@ public:
   /// explicit captures.
   unsigned NumExplicitCaptures = 0;
 
-  /// Whether this is a mutable lambda.
-  bool Mutable = false;
+  /// Whether this is a mutable lambda. Until the mutable keyword is parsed,
+  /// we assume the lambda is mutable.
+  bool Mutable = true;
 
   /// Whether the (empty) parameter list is explicit.
   bool ExplicitParams = false;
@@ -905,8 +925,8 @@ public:
   /// that were defined in parent contexts. Used to avoid warnings when the
   /// shadowed variables are uncaptured by this lambda.
   struct ShadowedOuterDecl {
-    const VarDecl *VD;
-    const VarDecl *ShadowedDecl;
+    const NamedDecl *VD;
+    const NamedDecl *ShadowedDecl;
   };
   llvm::SmallVector<ShadowedOuterDecl, 4> ShadowingDecls;
 
@@ -1015,7 +1035,7 @@ public:
     return NonODRUsedCapturingExprs.count(CapturingVarExpr);
   }
   void removePotentialCapture(Expr *E) {
-    llvm::erase_value(PotentiallyCapturingExprs, E);
+    llvm::erase(PotentiallyCapturingExprs, E);
   }
   void clearPotentialCaptures() {
     PotentiallyCapturingExprs.clear();
@@ -1032,6 +1052,8 @@ public:
 
   void visitPotentialCaptures(
       llvm::function_ref<void(ValueDecl *, Expr *)> Callback) const;
+
+  bool lambdaCaptureShouldBeConst() const;
 };
 
 FunctionScopeInfo::WeakObjectProfileTy::WeakObjectProfileTy()

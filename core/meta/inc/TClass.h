@@ -22,6 +22,7 @@
 
 #include "TDictionary.h"
 #include "TString.h"
+#include "TSchemaRule.h"
 
 #ifdef R__LESS_INCLUDES
 class TObjArray;
@@ -36,6 +37,7 @@ class TObjArray;
 #include <cstddef>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 #include <atomic>
@@ -72,6 +74,7 @@ namespace ROOT {
    }
    namespace Internal {
       class TCheckHashRecursiveRemoveConsistency;
+      struct TSchemaHelper;
    }
 }
 
@@ -92,18 +95,17 @@ public:
    enum EStatusBits {
       kReservedLoading = BIT(7), // Internal status bits, set and reset only during initialization
 
-      kClassSaved  = BIT(12),
+      /* had kClassSaved  = BIT(12), */
       kHasLocalHashMember = BIT(14),
       kIgnoreTObjectStreamer = BIT(15),
       kUnloaded    = BIT(16), // The library containing the dictionary for this class was
                               // loaded and has been unloaded from memory.
       kIsTObject = BIT(17),
       kIsForeign   = BIT(18),
-      kIsEmulation = BIT(19), // Deprecated
+      /* had kIsEmulation = BIT(19), // Deprecated */
       kStartWithTObject = BIT(20),  // see comments for IsStartingWithTObject()
       kWarned      = BIT(21),
-      kHasNameMapNode = BIT(22),
-      kHasCustomStreamerMember = BIT(23) // The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
+      kHasNameMapNode = BIT(22)
    };
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
    enum ECheckSum {
@@ -243,12 +245,15 @@ private:
    ClassConvStreamerFunc_t fConvStreamerFunc;   //Wrapper around this class custom conversion Streamer member function.
    Int_t               fSizeof;         //Sizeof the class.
 
-   // Bit field
-   Int_t fCanSplit : 3;          //!Indicates whether this class can be split or not. Values are -1, 0, 1, 2
+   std::atomic<Char_t> fCanSplit;          //!Indicates whether this class can be split or not. Values are -1, 0, 1, 2
 
+   // Bit field
    /// Indicates whether this class represents a pair and was not created from a dictionary nor interpreter info but has
    /// compiler compatible offset and size (and all the info is in the StreamerInfo per se)
    Bool_t fIsSyntheticPair : 1;  //!
+
+   /// @brief The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
+   Bool_t fHasCustomStreamerMember : 1; //!
 
    mutable std::atomic<Long_t> fProperty; //!Property See TClass::Property() for details
    mutable Long_t     fClassProperty;     //!C++ Property of the class (is abstract, has virtual table, etc.)
@@ -359,6 +364,9 @@ protected:
    void GetMissingDictionariesWithRecursionCheck(TCollection &result, TCollection &visited, bool recurse);
    void GetMissingDictionariesForPairElements(TCollection &result, TCollection &visited, bool recurse);
 
+   using SchemaHelperMap_t = std::unordered_map<std::string, std::vector<ROOT::Internal::TSchemaHelper>>;
+   static SchemaHelperMap_t &GetReadRulesRegistry(ROOT::TSchemaRule::RuleType_t type);
+
 public:
    TClass();
    TClass(const char *name, Bool_t silent = kFALSE);
@@ -404,6 +412,7 @@ public:
    void               ForceReload (TClass* oldcl);
    Bool_t             HasDataMemberInfo() const { return fIsSyntheticPair || fHasRootPcmInfo || HasInterpreterInfo(); }
    Bool_t             HasDefaultConstructor(Bool_t testio = kFALSE) const;
+   Bool_t             HasDirectStreamerInfoUse() const { return fStreamerImpl == &TClass::StreamerStreamerInfo; }
    Bool_t             HasInterpreterInfoInMemory() const { return nullptr != fClassInfo; }
    Bool_t             HasInterpreterInfo() const { return fCanLoadClassInfo || fClassInfo; }
    UInt_t             GetCheckSum(ECheckSum code = kCurrentCheckSum) const;
@@ -429,7 +438,7 @@ public:
    ROOT::DesFunc_t    GetDestructor() const;
    ROOT::DelArrFunc_t GetDeleteArray() const;
    ClassInfo_t       *GetClassInfo() const {
-      if (fCanLoadClassInfo && !TestBit(kLoading))
+      if (fCanLoadClassInfo)
          LoadClassInfo();
       return fClassInfo;
    }
@@ -502,6 +511,8 @@ public:
          SetRuntimeProperties();
       return fRuntimeProperties.load() & ERuntimeProperties::kConsistentHash;
    }
+   /// @brief The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
+   Bool_t             HasCustomStreamerMember() const { return fHasCustomStreamerMember; }
    Bool_t             HasDictionary() const;
    static Bool_t      HasDictionarySelection(const char* clname);
    Bool_t             HasLocalHashMember() const;
@@ -534,6 +545,8 @@ public:
    Long_t             Property() const override;
    Int_t              ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
    Int_t              ReadBuffer(TBuffer &b, void *pointer);
+   static void        RegisterReadRules(ROOT::TSchemaRule::RuleType_t, const char *classname,
+                                        std::vector<::ROOT::Internal::TSchemaHelper> &&rules);
    void               RegisterStreamerInfo(TVirtualStreamerInfo *info);
    void               RemoveStreamerInfo(Int_t slot);
    void               ReplaceWith(TClass *newcl) const;

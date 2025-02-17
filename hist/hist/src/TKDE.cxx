@@ -197,53 +197,53 @@ void TKDE::SetDrawOptions(const Option_t* option, TString& plotOpt, TString& dra
 
 void TKDE::GetOptions(std::string optionType, std::string option) {
    // Gets User defined KDE construction options
-   if (optionType.compare("kerneltype") == 0) {
+   if (optionType == "kerneltype") {
       fSettedOptions[0] = kTRUE;
-      if (option.compare("gaussian") == 0) {
+      if (option == "gaussian") {
          fKernelType = kGaussian;
-      } else if (option.compare("epanechnikov") == 0) {
+      } else if (option == "epanechnikov") {
          fKernelType = kEpanechnikov;
-      } else if (option.compare("biweight") == 0) {
+      } else if (option == "biweight") {
          fKernelType = kBiweight;
-      } else if (option.compare("cosinearch") == 0) {
+      } else if (option == "cosinearch") {
          fKernelType = kCosineArch;
-      } else if (option.compare("userdefined") == 0) {
+      } else if (option == "userdefined") {
          fKernelType = kUserDefined;
       } else {
          this->Warning("GetOptions", "Unknown kernel type option %s: setting to Gaussian",option.c_str());
          this->Info("GetOptions", "Possible kernel type options are: Gaussian, Epanechnikov, Biweight, Cosinearch, Userdefined");
          fKernelType = kGaussian;
       }
-   } else if (optionType.compare("iteration") == 0) {
+   } else if (optionType == "iteration") {
       fSettedOptions[1] = kTRUE;
-      if (option.compare("adaptive") == 0) {
+      if (option == "adaptive") {
          fIteration = kAdaptive;
-      } else if (option.compare("fixed") == 0) {
+      } else if (option == "fixed") {
          fIteration = kFixed;
       } else {
          this->Warning("GetOptions", "Unknown iteration option %s: setting to Adaptive",option.c_str());
          this->Info("GetOptions","Possible iteration type options are: Adaptive, Fixed");
          fIteration = kAdaptive;
       }
-   } else if (optionType.compare("mirror") == 0) {
+   } else if (optionType == "mirror") {
       fSettedOptions[2] = kTRUE;
-      if (option.compare("nomirror") == 0) {
+      if (option == "nomirror") {
          fMirror = kNoMirror;
-      } else if (option.compare("mirrorleft") == 0) {
+      } else if (option == "mirrorleft") {
          fMirror = kMirrorLeft;
-      } else if (option.compare("mirrorright") == 0) {
+      } else if (option == "mirrorright") {
          fMirror = kMirrorRight;
-      } else if (option.compare("mirrorboth") == 0) {
+      } else if (option == "mirrorboth") {
          fMirror = kMirrorBoth;
-      } else if (option.compare("mirrorasymleft") == 0) {
+      } else if (option == "mirrorasymleft") {
          fMirror = kMirrorAsymLeft;
-      } else if (option.compare("mirrorrightasymleft") == 0) {
+      } else if (option == "mirrorrightasymleft") {
          fMirror = kMirrorRightAsymLeft;
-      } else if (option.compare("mirrorasymright") == 0) {
+      } else if (option == "mirrorasymright") {
          fMirror = kMirrorAsymRight;
-      } else if (option.compare("mirrorleftasymright") == 0) {
+      } else if (option == "mirrorleftasymright") {
          fMirror = kMirrorLeftAsymRight;
-      } else if (option.compare("mirrorasymboth") == 0) {
+      } else if (option == "mirrorasymboth") {
          fMirror = kMirrorAsymBoth;
       } else {
          this->Warning("GetOptions", "Unknown mirror option %s: setting to NoMirror",option.c_str());
@@ -251,13 +251,13 @@ void TKDE::GetOptions(std::string optionType, std::string option) {
                                   "MirrorAsymRight, MirrorRightAsymLeft, MirrorLeftAsymRight, MirrorAsymBoth");
          fMirror = kNoMirror;
       }
-   } else if (optionType.compare("binning") == 0) {
+   } else if (optionType == "binning") {
       fSettedOptions[3] = kTRUE;
-      if (option.compare("unbinned") == 0) {
+      if (option == "unbinned") {
          fBinning = kUnbinned;
-      } else if (option.compare("relaxedbinning") == 0) {
+      } else if (option == "relaxedbinning") {
          fBinning = kRelaxedBinning;
-      } else if (option.compare("forcedbinning") == 0) {
+      } else if (option == "forcedbinning") {
          fBinning = kForcedBinning;
       } else {
          this->Warning("GetOptions", "Unknown binning option %s: setting to RelaxedBinning", option.c_str());

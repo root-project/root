@@ -1,0 +1,65 @@
+name: 'ROOT Release Notes'
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'The branch for which the RN have to be generated, e.g. "master" or "v6-34-00-patches"'
+        type: string
+        required: true
+        default: "master"
+
+jobs:
+  create_release_notes:
+    runs-on: ubuntu-latest
+    env:
+      WORKDIR: /home/runner/work/root
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+
+      - name: Download Release Notes creation script
+        working-directory: ${{ env.WORKDIR }}
+        run: wget https://raw.githubusercontent.com/root-project/rootspi/refs/heads/master/rdoc/relnotes_gh.py
+
+      - name: Setup Pandoc
+        run: sudo apt-get -y install pandoc
+
+      - name: Create Release Notes
+        working-directory: ${{ env.WORKDIR }}
+        run: |
+          echo +++ Directory
+          pwd
+          echo +++ Content
+          ls
+          echo +++ Running the command
+          python relnotes_gh.py root ${{ inputs.branch }}
+          echo +++ New Content
+          ls
+
+      - name: Install AWS CLI
+        run: |
+          python -m pip install --upgrade pip
+          pip install awscli==1.36.40
+          aws configure set default.s3.max_concurrent_requests 128
+  
+      - name: Sync documentation to S3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ENDPOINT_URL: https://s3.cern.ch/
+        working-directory: ${{ env.WORKDIR }}
+        run: |
+          echo +++ Directory
+          pwd
+          echo +++ Content
+          ls
+          echo +++ Running the command
+          export DIRNAME=`ls -1|grep -v relnotes|grep -v root`
+          aws s3 sync ${DIRNAME}/ s3://root/doc/${DIRNAME}
+          

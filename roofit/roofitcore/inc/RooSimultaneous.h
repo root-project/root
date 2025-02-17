@@ -16,16 +16,18 @@
 #ifndef ROO_SIMULTANEOUS
 #define ROO_SIMULTANEOUS
 
-//#include "THashList.h"
-#include "TList.h"
-#include "RooAbsPdf.h"
-#include "RooCategoryProxy.h"
-#include "RooRealProxy.h"
-#include "RooSetProxy.h"
-#include "RooAICRegistry.h"
-#include "RooObjCacheManager.h"
-#include "RooAbsCacheElement.h"
-#include "RooArgList.h"
+#include <RooAICRegistry.h>
+#include <RooAbsCacheElement.h>
+#include <RooAbsPdf.h>
+#include <RooArgList.h>
+#include <RooCategoryProxy.h>
+#include <RooGlobalFunc.h>
+#include <RooObjCacheManager.h>
+#include <RooRealProxy.h>
+#include <RooSetProxy.h>
+
+#include <TList.h>
+
 #include <map>
 #include <string>
 
@@ -56,6 +58,7 @@ public:
   inline RooSimultaneous() : _partIntMgr(this,10) {}
   RooSimultaneous(const char *name, const char *title, RooAbsCategoryLValue& indexCat) ;
   RooSimultaneous(const char *name, const char *title, std::map<std::string,RooAbsPdf*> pdfMap, RooAbsCategoryLValue& inIndexCat) ;
+  RooSimultaneous(const char *name, const char *title, RooFit::Detail::FlatMap<std::string,RooAbsPdf*> const &pdfMap, RooAbsCategoryLValue& inIndexCat);
   RooSimultaneous(const char *name, const char *title, const RooArgList& pdfList, RooAbsCategoryLValue& indexCat) ;
   RooSimultaneous(const RooSimultaneous& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooSimultaneous(*this,newname) ; }

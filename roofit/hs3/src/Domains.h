@@ -33,7 +33,9 @@ namespace Detail {
 
 class Domains {
 public:
+   void readVariable(const char *name, double min, double max, const char *domain);
    void readVariable(const char *name, double min, double max);
+
    void readVariable(RooRealVar const &);
    void writeVariable(RooRealVar &) const;
 
@@ -42,9 +44,9 @@ public:
 
    void populate(RooWorkspace &ws) const;
 
-private:
    class ProductDomain {
    public:
+      void readVariable(const RooRealVar &);
       void readVariable(const char *name, double min, double max);
       void writeVariable(RooRealVar &) const;
 
@@ -52,6 +54,7 @@ private:
       void writeJSON(RooFit::Detail::JSONNode &) const;
 
       void populate(RooWorkspace &ws) const;
+      void registerBinnings(const char *name, RooWorkspace &ws) const;
 
    private:
       struct ProductDomainElement {

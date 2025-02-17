@@ -48,8 +48,7 @@ namespace ROOT {
    namespace Math {
 
 
-GSLMinimizer::GSLMinimizer( ROOT::Math::EGSLMinimizerType type) :
-   BasicMinimizer()
+GSLMinimizer::GSLMinimizer( ROOT::Math::EGSLMinimizerType type)
 {
    // Constructor implementation : create GSLMultiMin wrapper object
    //std::cout << "create GSL Minimizer of type " << type << std::endl;
@@ -63,7 +62,7 @@ GSLMinimizer::GSLMinimizer( ROOT::Math::EGSLMinimizerType type) :
    SetPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel());
 }
 
-GSLMinimizer::GSLMinimizer( const char *  type) :    BasicMinimizer()
+GSLMinimizer::GSLMinimizer( const char *  type)
 {
    // Constructor implementation from a string
    std::string algoname(type);

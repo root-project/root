@@ -16,18 +16,50 @@
              <Label text="Ticks:" wrapping="true"/>
          </VBox>
          <VBox>
-            <StepInput min="-1.000" max="1.000" step="0.001" value="{/axis_ticksize}" editable="true" displayValuePrecision="3"/>
+            <StepInput min="-1.000" max="1.000" step="0.01" value="{/axis_ticksize}" editable="true" displayValuePrecision="3" tooltip="Axis ticks size"/>
          </VBox>
       </HBox>
-      <jsroot:ColorButton text="Title" attrcolor="{/color_title}" tooltip="Title color"/>
-      <CheckBox text="Center title" selected="{/center_title}"/>
-      <CheckBox text="Rotate title" selected="{/rotate_title}"/>
+      <HBox>
+         <jsroot:ColorButton text="Title" attrcolor="{/color_title}" tooltip="Title color"/>
+         <CheckBox text="Center" selected="{/center_title}" tooltip="Center axis title"/>
+         <CheckBox text="Rotate" selected="{/rotate_title}" tooltip="Rotate axis title"/>
+      </HBox>
+      <HBox justifyContent="SpaceBetween" alignItems="Center" visible="{= ${/mode2d}}">
+          <VBox class="sapUiSmallMarginEnd">
+             <Label text="Font:" wrapping="true"/>
+         </VBox>
+         <VBox>
+            <Select selectedKey="{/font_title}" tooltip="Title font style">
+               <layoutData>
+                  <FlexItemData growFactor="5"/>
+               </layoutData>
+               <items>
+                  <core:Item text="none" key="0"/>
+                  <core:Item text="Times New Roman italic" key="1"/>
+                  <core:Item text="Times New Roman bold" key="2"/>
+                  <core:Item text="Times New Roman bold italic" key="3"/>
+                  <core:Item text="Arial" key="4"/>
+                  <core:Item text="Arial oblique" key="5"/>
+                  <core:Item text="Arial bold" key="6"/>
+                  <core:Item text="Arial bold oblique" key="7"/>
+                  <core:Item text="Courier New" key="8"/>
+                  <core:Item text="Courier New oblique" key="9"/>
+                  <core:Item text="Courier New bold" key="10"/>
+                  <core:Item text="Courier New bold oblique" key="11"/>
+                  <core:Item text="Symbol" key="12"/>
+                  <core:Item text="Times New Roman" key="13"/>
+                  <core:Item text="Wingdings" key="14"/>
+                  <core:Item text="Symbol italic" key="15"/>
+               </items>
+            </Select>
+         </VBox>
+      </HBox>
       <HBox justifyContent="SpaceBetween" alignItems="Center">
           <VBox class="sapUiSmallMarginEnd">
              <Label text="Offset:" wrapping="true"/>
          </VBox>
          <VBox>
-            <StepInput min="0.00" max="3.00" step="0.01" value="{/axis/fTitleOffset}" editable="true" displayValuePrecision="3"/>
+            <StepInput min="0.00" max="3.00" step="0.1" value="{/axis/fTitleOffset}" editable="true" displayValuePrecision="3" tooltip="Axis title offset"/>
          </VBox>
       </HBox>
       <HBox justifyContent="SpaceBetween" alignItems="Center">
@@ -35,18 +67,50 @@
              <Label text="Size:" wrapping="true"/>
          </VBox>
          <VBox>
-            <StepInput min="0.01" max="0.50" step="0.01" value="{/axis/fTitleSize}" editable="true" displayValuePrecision="3"/>
+            <StepInput min="0.01" max="0.50" step="0.01" value="{/axis/fTitleSize}" editable="true" displayValuePrecision="3" tooltip="Axis title size"/>
          </VBox>
       </HBox>
-      <jsroot:ColorButton text="Labels" attrcolor="{/color_label}" tooltip="Labels color"/>
-      <CheckBox text="Center label" selected="{/center_label}"/>
-      <CheckBox text="Rotate label" selected="{/vert_label}"/>
+      <HBox>
+         <jsroot:ColorButton text="Labels" attrcolor="{/color_label}" tooltip="Labels color"/>
+         <CheckBox text="Center" selected="{/center_label}" tooltip="Centered labels position"/>
+         <CheckBox text="Rotate" selected="{/vert_label}" tooltip="Rotate labels"/>
+      </HBox>
+      <HBox justifyContent="SpaceBetween" alignItems="Center" visible="{= ${/mode2d}}">
+          <VBox class="sapUiSmallMarginEnd">
+             <Label text="Font:" wrapping="true"/>
+         </VBox>
+         <VBox>
+            <Select selectedKey="{/font_label}" tooltip="Labels font style">
+               <layoutData>
+                  <FlexItemData growFactor="5"/>
+               </layoutData>
+               <items>
+                  <core:Item text="none" key="0"/>
+                  <core:Item text="Times New Roman italic" key="1"/>
+                  <core:Item text="Times New Roman bold" key="2"/>
+                  <core:Item text="Times New Roman bold italic" key="3"/>
+                  <core:Item text="Arial" key="4"/>
+                  <core:Item text="Arial oblique" key="5"/>
+                  <core:Item text="Arial bold" key="6"/>
+                  <core:Item text="Arial bold oblique" key="7"/>
+                  <core:Item text="Courier New" key="8"/>
+                  <core:Item text="Courier New oblique" key="9"/>
+                  <core:Item text="Courier New bold" key="10"/>
+                  <core:Item text="Courier New bold oblique" key="11"/>
+                  <core:Item text="Symbol" key="12"/>
+                  <core:Item text="Times New Roman" key="13"/>
+                  <core:Item text="Wingdings" key="14"/>
+                  <core:Item text="Symbol italic" key="15"/>
+               </items>
+            </Select>
+         </VBox>
+      </HBox>
       <HBox justifyContent="SpaceBetween" alignItems="Center">
           <VBox class="sapUiSmallMarginEnd">
              <Label text="Offset:" wrapping="true"/>
          </VBox>
          <VBox>
-            <StepInput min="0.00" max="0.20" step="0.01" value="{/axis/fLabelOffset}" editable="true" displayValuePrecision="3"/>
+            <StepInput min="0.00" max="0.20" step="0.01" value="{/axis/fLabelOffset}" editable="true" displayValuePrecision="3" tooltip="Axis labels offset"/>
          </VBox>
       </HBox>
       <HBox justifyContent="SpaceBetween" alignItems="Center">
@@ -54,7 +118,7 @@
              <Label text="Size:" wrapping="true"/>
          </VBox>
          <VBox>
-            <StepInput min="0.00" max="0.50" step="0.01" value="{/axis/fLabelSize}" editable="true" displayValuePrecision="3"/>
+            <StepInput min="0.00" max="0.50" step="0.01" value="{/axis/fLabelSize}" editable="true" displayValuePrecision="3" tooltip="Axis labels size"/>
          </VBox>
       </HBox>
       <HBox justifyContent="SpaceBetween" alignItems="Center" visible="{/is_gaxis}">

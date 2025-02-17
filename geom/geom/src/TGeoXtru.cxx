@@ -45,8 +45,10 @@ Begin_Macro
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
    top->Draw();
-   TView *view = gPad->GetView();
-   view->ShowAxis();
+   if (gPad) {
+      TView *view = gPad->GetView();
+      if (view) view->ShowAxis();
+    }
 }
 End_Macro
 
@@ -355,7 +357,7 @@ void TGeoXtru::ComputeBBox()
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute normal to closest surface from POINT.
 
-void TGeoXtru::ComputeNormal(const Double_t * /*point*/, const Double_t *dir, Double_t *norm)
+void TGeoXtru::ComputeNormal(const Double_t * /*point*/, const Double_t *dir, Double_t *norm) const
 {
    ThreadData_t &td = GetThreadData();
    if (td.fIz < 0) {

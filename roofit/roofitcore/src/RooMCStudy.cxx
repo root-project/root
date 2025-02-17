@@ -75,7 +75,6 @@ for usage examples.
 #include <snprintf.h>
 #include <iostream>
 
-ClassImp(RooMCStudy);
 
 /**
 Construct Monte Carlo Study Manager. This class automates generating data from a given PDF,
@@ -96,7 +95,6 @@ fitting the PDF to data and accumulating the fit statistics.
 <tr><td> Verbose(bool flag)              <td> Activate informational messages in event generation phase
 <tr><td> Extended(bool flag)             <td> Determine number of events for each sample anew from a Poisson distribution
 <tr><td> Constrain(const RooArgSet& pars)  <td> Apply internal constraints on given parameters in fit and sample constrained parameter values from constraint p.d.f for each toy.
-<tr><td> ExternalConstraints(const RooArgSet& ) <td> Apply internal constraints on given parameters in fit and sample constrained parameter values from constraint p.d.f for each toy.
 <tr><td> ProtoData(const RooDataSet&, bool randOrder)
          <td> Prototype data for the event generation. If the randOrder flag is set, the order of the dataset will be re-randomized for each generation
               cycle to protect against systematic biases if the number of generated events does not exactly match the number of events in the prototype dataset
@@ -158,7 +156,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   const RooArgSet* cParsTmp = pc.getSet("cPars") ;
   const RooArgSet* extCons = pc.getSet("extCons") ;
 
-  RooArgSet* cPars = new RooArgSet ;
+  auto cPars = std::make_unique<RooArgSet>();
   if (cParsTmp) {
     cPars->add(*cParsTmp) ;
   }
@@ -1034,8 +1032,8 @@ void fitGaussToPulls(RooPlot& frame, RooDataSet& fitParData)
    const char * options = "ELU";
    std::stringstream ss;
    ss << "Fit parameters:\n"
-      << "#mu: " << *std::unique_ptr<TString>{pullMean.format(sigDigits, options)}
-      << "\n#sigma: " << *std::unique_ptr<TString>{pullSigma.format(sigDigits, options)};
+      << "#mu: " << pullMean.format(sigDigits, options)
+      << "\n#sigma: " << pullSigma.format(sigDigits, options);
    // We set the parameters constant to disable the default label. Still, we
    // use param() on as a wrapper for the text box generation.
    pullMean.setConstant(true);

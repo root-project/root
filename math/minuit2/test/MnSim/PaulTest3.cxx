@@ -125,7 +125,7 @@ int main()
    if (!min.IsValid()) {
       // try with higher strategy
       std::cout << "FM is invalid, try with strategy = 2." << std::endl;
-      MnMigrad migrad2(fFCN, upar, 2);
+      MnMigrad migrad2(fFCN, upar, MnStrategy{2});
       min = migrad2();
    }
    std::cout << "minimum: " << min << std::endl;

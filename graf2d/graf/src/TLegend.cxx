@@ -121,7 +121,7 @@ The global attributes change the default values for the next created legends.
 Text attributes can be also changed individually on each legend entry:
 ~~~ {.cpp}
    TLegendEntry *le = leg->AddEntry(h1,"Histogram filled with random numbers","f");
-   le->SetTextColor(kBlue);;
+   le->SetTextColor(kBlue);
 ~~~
 
 Note that the `TPad` class has a method to build automatically a legend
@@ -187,7 +187,7 @@ The following example illustrate this facility. Only the width and height of the
 legend is specified in percentage of the pad size.
 
 Begin_Macro(source)
-../../../tutorials/hist/legendautoplaced.C
+../../../tutorials/hist/hist011_TH1_legend_autoplaced.C
 End_Macro
 
 */
@@ -204,6 +204,7 @@ TLegend::TLegend(): TPave(0.3,0.15,0.3,0.15,4,"brNDC"),
    SetDefaults();
    SetBorderSize(gStyle->GetLegendBorderSize());
    SetFillColor(gStyle->GetLegendFillColor());
+   SetFillStyle(gStyle->GetLegendFillStyle());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -237,6 +238,7 @@ TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2,
    SetDefaults();
    SetBorderSize(gStyle->GetLegendBorderSize());
    SetFillColor(gStyle->GetLegendFillColor());
+   SetFillStyle(gStyle->GetLegendFillStyle());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -270,6 +272,7 @@ TLegend::TLegend( Double_t w, Double_t h, const char *header, Option_t *option)
    SetDefaults();
    SetBorderSize(gStyle->GetLegendBorderSize());
    SetFillColor(gStyle->GetLegendFillColor());
+   SetFillStyle(gStyle->GetLegendFillStyle());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -806,14 +809,12 @@ void TLegend::PaintPrimitives()
       // bar are drawn differently.
       Int_t endcaps  = 0; // no endcaps.
       if (eobj) { // eobj == nullptr for the legend header
-         TString eobjopt = eobj->GetDrawOption();
-         eobjopt.ToLower();
-         if (eobjopt.Contains("e1") && eobj->InheritsFrom(TH1::Class())) endcaps = 1; // a bar
+         if (opt.Contains("e1") && eobj->InheritsFrom(TH1::Class())) endcaps = 1; // a bar
          if (eobj->InheritsFrom(TGraph::Class())) {
             endcaps = 1; // a bar, default for TGraph
-            if (eobjopt.Contains("z"))  endcaps = 0; // no endcaps.
-            if (eobjopt.Contains(">"))  endcaps = 2; // empty arrow.
-            if (eobjopt.Contains("|>")) endcaps = 3; // filled arrow.
+            if (opt.Contains("z"))  endcaps = 0; // no endcaps.
+            if (opt.Contains(">"))  endcaps = 2; // empty arrow.
+            if (opt.Contains("|>")) endcaps = 3; // filled arrow.
          }
       }
       float arrow_shift = 0.3;

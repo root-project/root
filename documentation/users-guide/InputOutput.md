@@ -2481,7 +2481,7 @@ const Text_t *title="",Int_t compress,Int_t netopt)
 
 Depending on the `name` argument, the function returns a **`TFile`** or one
 of its derivations, for example a
-**`TXNetFile`** or a **`TDavixFile`** object. In case a URL
+**`TNetXNGFile`** or a **`TDavixFile`** object. In case a URL
 specifies a local file, a **`TFile`** object will be returned (and of
 course no login information is needed). The arguments of the `Open()`
 function are the same as the ones for the **`TFile`** constructor.

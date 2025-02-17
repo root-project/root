@@ -12,9 +12,6 @@
 #ifndef ROOT_TTreeReaderArray
 #define ROOT_TTreeReaderArray
 
-
-
-
 #include "TTreeReaderValue.h"
 #include "TTreeReaderUtils.h"
 #include <type_traits>
@@ -26,32 +23,31 @@ namespace Internal {
 Base class of TTreeReaderArray.
 */
 
-   class TTreeReaderArrayBase: public TTreeReaderValueBase {
-   public:
-      TTreeReaderArrayBase(TTreeReader* reader, const char* branchname,
-                           TDictionary* dict):
-         TTreeReaderValueBase(reader, branchname, dict) {}
+class TTreeReaderArrayBase : public TTreeReaderValueBase {
+public:
+   TTreeReaderArrayBase(TTreeReader *reader, const char *branchname, TDictionary *dict)
+      : TTreeReaderValueBase(reader, branchname, dict)
+   {
+   }
 
-      std::size_t GetSize() const { return fImpl->GetSize(GetProxy()); }
-      bool IsEmpty() const { return !GetSize(); }
+   std::size_t GetSize() const { return fImpl ? fImpl->GetSize(GetProxy()) : 0; }
+   bool IsEmpty() const { return !GetSize(); }
 
-      EReadStatus GetReadStatus() const override { return fImpl ? fImpl->fReadStatus : kReadError; }
+   EReadStatus GetReadStatus() const override { return fImpl ? fImpl->fReadStatus : kReadError; }
 
-   protected:
-      void *UntypedAt(std::size_t idx) const { return fImpl->At(GetProxy(), idx); }
-      void CreateProxy() override;
-      bool GetBranchAndLeaf(TBranch* &branch, TLeaf* &myLeaf,
-                            TDictionary* &branchActualType);
-      void SetImpl(TBranch* branch, TLeaf* myLeaf);
-      const char* GetBranchContentDataType(TBranch* branch,
-                                           TString& contentTypeName,
-                                           TDictionary* &dict);
+protected:
+   void *UntypedAt(std::size_t idx) const { return fImpl->At(GetProxy(), idx); }
+   void CreateProxy() override;
+   bool GetBranchAndLeaf(TBranch *&branch, TLeaf *&myLeaf, TDictionary *&branchActualType,
+                         bool suppressErrorsForMissingBranch = false);
+   void SetImpl(TBranch *branch, TLeaf *myLeaf);
+   const char *GetBranchContentDataType(TBranch *branch, TString &contentTypeName, TDictionary *&dict);
 
-      std::unique_ptr<TVirtualCollectionReader> fImpl; // Common interface to collections
+   std::unique_ptr<TVirtualCollectionReader> fImpl; // Common interface to collections
 
-      // FIXME: re-introduce once we have ClassDefInline!
-      //ClassDefOverride(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
-   };
+   // FIXME: re-introduce once we have ClassDefInline!
+   // ClassDefOverride(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
+};
 
 } // namespace Internal
 } // namespace ROOT
@@ -73,7 +69,7 @@ Base class of TTreeReaderArray.
 
 template <typename T>
 class R__CLING_PTRCHECK(off) TTreeReaderArray final : public ROOT::Internal::TTreeReaderArrayBase {
-// R__CLING_PTRCHECK is disabled because pointer / types are checked by CreateProxy().
+   // R__CLING_PTRCHECK is disabled because pointer / types are checked by CreateProxy().
 
 public:
    /// Random access iterator to the elements of a TTreeReaderArray.
@@ -106,7 +102,9 @@ public:
 
       /// Construct iterator from a const TTreeReaderArray
       Iterator_t(std::size_t index, const TTreeReaderArray *array)
-         : Iterator_t(index, const_cast<TTreeReaderArray *>(array)) {}
+         : Iterator_t(index, const_cast<TTreeReaderArray *>(array))
+      {
+      }
 
       Iterator_t(Iterator_t &&) = default;
       Iterator_t(const Iterator_t &) = default;
@@ -200,7 +198,9 @@ public:
 
    /// Create an array reader of branch "branchname" for TTreeReader "tr".
    TTreeReaderArray(TTreeReader &tr, const char *branchname)
-      : TTreeReaderArrayBase(&tr, branchname, TDictionary::GetDictionary(typeid(T))) {}
+      : TTreeReaderArrayBase(&tr, branchname, TDictionary::GetDictionary(typeid(T)))
+   {
+   }
 
    T &At(std::size_t idx) { return *static_cast<T *>(UntypedAt(idx)); }
    const T &At(std::size_t idx) const { return *static_cast<T *>(UntypedAt(idx)); }
@@ -221,5 +221,13 @@ protected:
    // FIXME: re-introduce once we have ClassDefTInline!
    // ClassDefT(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection
 };
+
+namespace cling {
+template <typename T>
+std::string printValue(TTreeReaderArray<T> *val)
+{
+   return printValue(static_cast<ROOT::Internal::TTreeReaderValueBase *>(val));
+}
+} // namespace cling
 
 #endif // ROOT_TTreeReaderArray

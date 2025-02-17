@@ -34,17 +34,15 @@ else()
   set(runtimedir ${CMAKE_INSTALL_PYTHONDIR})
 endif()
 
+set(ROOT_LIBRARY_PROPERTIES_NO_VERSION ${ROOT_LIBRARY_PROPERTIES_NO_VERSION}
+    SUFFIX ${libsuffix}
+    PREFIX ${libprefix} )
 if(soversion)
-  set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
+  set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES} ${ROOT_LIBRARY_PROPERTIES_NO_VERSION}
       VERSION ${ROOT_VERSION}
-      SOVERSION ${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}
-      SUFFIX ${libsuffix}
-      PREFIX ${libprefix} )
+      SOVERSION ${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION} )
 else()
-  set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
-      SUFFIX ${libsuffix}
-      PREFIX ${libprefix}
-      IMPORT_PREFIX ${libprefix} )
+  set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES} ${ROOT_LIBRARY_PROPERTIES_NO_VERSION} )
 endif()
 
 include(CMakeParseArguments)
@@ -915,6 +913,10 @@ function(ROOT_LINKER_LIBRARY library)
     target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
   endif()
 
+  if(DEFINED CMAKE_CXX_STANDARD)
+    target_compile_features(${library} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
+  endif()
+
   if(PROJECT_NAME STREQUAL "ROOT")
     if(NOT TARGET ROOT::${library})
       add_library(ROOT::${library} ALIAS ${library})
@@ -1506,7 +1508,7 @@ set(ROOT_TEST_DRIVER ${CMAKE_CURRENT_LIST_DIR}/RootTestDriver.cmake)
 #                        [LABELS label1 label2]
 #                        [PYTHON_DEPS numpy numba keras torch ...] # List of python packages required to run this test.
 #                                                              A fixture will be added the tries to import them before the test starts.
-#                        [PROPERTIES prop1 value1 prop2 value2...] 
+#                        [PROPERTIES prop1 value1 prop2 value2...]
 #                       )
 #
 function(ROOT_ADD_TEST test)
@@ -1743,18 +1745,13 @@ function(ROOT_ADD_TEST test)
     set_tests_properties(${test} PROPERTIES LABELS "${ARG_LABELS}")
   endif()
 
-  if(ARG_PYTHON_DEPS)
-    foreach(python_dep ${ARG_PYTHON_DEPS})
-      if(NOT TEST test-import-${python_dep})
-        add_test(NAME test-import-${python_dep} COMMAND ${PYTHON_EXECUTABLE} -c "import ${python_dep}")
-        set_tests_properties(test-import-${python_dep} PROPERTIES FIXTURES_SETUP requires_${python_dep})
-      endif()
-      list(APPEND fixtures "requires_${python_dep}")
-    endforeach()
-    if(fixtures)
-      set_tests_properties(${test} PROPERTIES FIXTURES_REQUIRED "${fixtures}")
+  foreach(python_dep ${ARG_PYTHON_DEPS})
+    ROOT_FIND_PYTHON_MODULE(${python_dep})
+    if(NOT ROOT_${python_dep}_FOUND)
+      set_property(TEST ${test} PROPERTY DISABLED True)
+      continue()
     endif()
-  endif()
+  endforeach()
 
   if(ARG_RUN_SERIAL)
     set_property(TEST ${test} PROPERTY RUN_SERIAL true)
@@ -1814,13 +1811,14 @@ endfunction()
 #                        [INCLUDE_DIRS label1 label2...] -- Extra target include directories
 #                        [REPEATS number] -- Repeats testsuite `number` times, stopping at the first failure.
 #                        [FAILREGEX ...] Fail test if this regex matches.
+#                        [ENVIRONMENT var1=val1 var2=val2 ...
 # Creates a new googletest exectuable, and registers it as a test.
 #----------------------------------------------------------------------------
 function(ROOT_ADD_GTEST test_suite)
   cmake_parse_arguments(ARG
     "WILLFAIL"
     "TIMEOUT;REPEATS;FAILREGEX"
-    "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS" ${ARGN})
+    "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS;ENVIRONMENT" ${ARGN})
 
   ROOT_GET_SOURCES(source_files . ${ARG_UNPARSED_ARGUMENTS})
   # Note we cannot use ROOT_EXECUTABLE without user-specified set of LIBRARIES to link with.
@@ -1833,6 +1831,9 @@ function(ROOT_ADD_GTEST test_suite)
   if(TARGET ROOT::TestSupport)
     target_link_libraries(${test_suite} ROOT::TestSupport)
   else()
+    # Since we don't inherit the linkage against gtest from ROOT::TestSupport,
+    # we need to link against gtest here.
+    target_link_libraries(${test_suite} gtest)
     message(WARNING "ROOT_ADD_GTEST(${test_suite} ...): The target ROOT::TestSupport is missing. It looks like the test is declared against a ROOT build that is configured with -Dtesting=OFF.
             If this test sends warning or error messages, this will go unnoticed.")
   endif()
@@ -1842,7 +1843,7 @@ function(ROOT_ADD_GTEST test_suite)
   endif(ARG_INCLUDE_DIRS)
 
   if(MSVC)
-    set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch
+    set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch \
         /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index")
     set_property(TARGET ${test_suite} APPEND_STRING PROPERTY LINK_FLAGS ${test_exports})
   endif()
@@ -1855,9 +1856,10 @@ function(ROOT_ADD_GTEST test_suite)
     set(extra_command --gtest_repeat=${ARG_REPEATS} --gtest_break_on_failure)
   endif()
 
-  ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
+  ROOT_PATH_TO_STRING(name_with_path ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
+  string(REPLACE "-test-" "-" clean_name_with_path ${name_with_path})
   ROOT_ADD_TEST(
-    gtest${mangled_name}
+    gtest${clean_name_with_path}
     COMMAND ${test_suite} ${extra_command}
     WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
     COPY_TO_BUILDDIR "${ARG_COPY_TO_BUILDDIR}"
@@ -1865,6 +1867,7 @@ function(ROOT_ADD_GTEST test_suite)
     TIMEOUT "${ARG_TIMEOUT}"
     LABELS "${ARG_LABELS}"
     FAILREGEX "${ARG_FAILREGEX}"
+    ENVIRONMENT "${ARG_ENVIRONMENT}"
   )
 endfunction()
 
@@ -1892,7 +1895,7 @@ function(ROOT_ADD_PYUNITTESTS name)
   endif()
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
   ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
+                COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
                 ENVIRONMENT ${ROOT_ENV})
 endfunction()
 
@@ -1930,12 +1933,15 @@ function(ROOT_ADD_PYUNITTEST name file)
     set(will_fail WILLFAIL)
   endif()
 
+  list(APPEND labels python)
   if(ARG_PYTHON_DEPS)
     list(APPEND labels python_runtime_deps)
   endif()
 
-  ROOT_ADD_TEST(pyunittests-${good_name}
-              COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
+  ROOT_PATH_TO_STRING(name_with_path ${good_name} PATH_SEPARATOR_REPLACEMENT "-")
+  string(REPLACE "-test-" "-" clean_name_with_path ${name_with_path})
+  ROOT_ADD_TEST(pyunittests${clean_name_with_path}
+              COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
               ENVIRONMENT ${ROOT_ENV} ${ARG_ENVIRONMENT}
               LABELS ${labels}
               ${copy_to_builddir}
@@ -1979,43 +1985,50 @@ macro(ROOT_ADD_COMPILE_OPTIONS flags)
 endmacro()
 
 #----------------------------------------------------------------------------
-# find_python_module(module [REQUIRED] [QUIET])
+# ROOT_FIND_PYTHON_MODULE(module [REQUIRED] [QUIET])
+# Try importing the python dependency and cache the result in
+# ROOT_TEST_<MODULE> (all upper case).
+# Also set ROOT_<MODULE>_FOUND (all upper case) as well as ROOT_<module>_FOUND
+# (the original spelling of the argument) in the parent scope of this function
+# for convenient testing in subsequent if().
 #----------------------------------------------------------------------------
-function(find_python_module module)
-   CMAKE_PARSE_ARGUMENTS(ARG "REQUIRED;QUIET" "" "" ${ARGN})
-   string(TOUPPER ${module} module_upper)
-   if(NOT PY_${module_upper})
-      if(ARG_REQUIRED)
-         set(py_${module}_FIND_REQUIRED TRUE)
-      endif()
-      if(ARG_QUIET)
-         set(py_${module}_FIND_QUIETLY TRUE)
-      endif()
-      # A module's location is usually a directory, but for binary modules
-      # it's a .so file.
-      execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
-         "import re, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__file__))"
-         RESULT_VARIABLE _${module}_status
-         OUTPUT_VARIABLE _${module}_location
-         ERROR_VARIABLE _${module}_error
-         OUTPUT_STRIP_TRAILING_WHITESPACE
-         ERROR_STRIP_TRAILING_WHITESPACE)
-      if(NOT _${module}_status)
-         set(PY_${module_upper} ${_${module}_location} CACHE STRING "Location of Python module ${module}")
-         mark_as_advanced(PY_${module_upper})
+function(ROOT_FIND_PYTHON_MODULE module)
+  CMAKE_PARSE_ARGUMENTS(ARG "REQUIRED;QUIET" "" "" ${ARGN})
+  string(TOUPPER ${module} module_upper)
+  set(CACHE_VAR ROOT_TEST_${module_upper})
+
+  if(NOT DEFINED ${CACHE_VAR})
+    execute_process(COMMAND "${Python3_EXECUTABLE}" "-c" "import ${module}"
+      RESULT_VARIABLE status
+      ERROR_QUIET)
+
+    if(${status} EQUAL 0)
+      set(${CACHE_VAR} ON CACHE BOOL "Enable tests depending on '${module}'")
+    else()
+      set(${CACHE_VAR} OFF CACHE BOOL "Enable tests depending on '${module}'")
+    endif()
+
+    if(NOT ARG_QUIET)
+      if(${CACHE_VAR})
+        message(STATUS "Found Python module ${module}")
       else()
-         if(NOT ARG_QUIET)
-            message(STATUS "Failed to find Python module ${module}: ${_${module}_error}")
-          endif()
+        message(STATUS "Could NOT find Python module ${module}. Corresponding tests will be disabled.")
       endif()
-   endif()
-   find_package_handle_standard_args(py_${module} DEFAULT_MSG PY_${module_upper})
-   set(PY_${module_upper}_FOUND ${PY_${module_upper}_FOUND} PARENT_SCOPE)
+    endif()
+  endif()
+
+  # Set the ROOT_xxx_FOUND to the (cached) result of the search:
+  set(ROOT_${module_upper}_FOUND ${${CACHE_VAR}} PARENT_SCOPE)
+  set(ROOT_${module}_FOUND ${${CACHE_VAR}} PARENT_SCOPE)
+
+  if(ARG_REQUIRED AND NOT ${CACHE_VAR})
+    message(FATAL_ERROR "Python module ${module} is required.")
+  endif()
 endfunction()
 
 #----------------------------------------------------------------------------
 # generateHeader(target input output)
-# Generate a help header file with build/misc/argparse2help.py script
+# Generate a help header file with cmake/scripts/argparse2help.py script
 # The 1st argument is the target to which the custom command will be attached
 # The 2nd argument is the path to the python argparse input file
 # The 3rd argument is the path to the output header file
@@ -2025,15 +2038,15 @@ function(generateHeader target input output)
     MAIN_DEPENDENCY
       ${input}
     DEPENDS
-      ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+      ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py
     COMMAND
-      ${PYTHON_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
+      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py ${input} ${output}
   )
   target_sources(${target} PRIVATE ${output})
 endfunction()
 
 #----------------------------------------------------------------------------
-# Generate and install manual page with build/misc/argparse2help.py script
+# Generate and install manual page with cmake/scripts/argparse2help.py script
 # The 1st argument is the name of the manual page
 # The 2nd argument is the path to the python argparse input file
 # The 3rd argument is the path to the output manual page
@@ -2045,9 +2058,9 @@ function(generateManual name input output)
     MAIN_DEPENDENCY
       ${input}
     DEPENDS
-      ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
+      ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py
     COMMAND
-      ${PYTHON_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
+      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/cmake/scripts/argparse2help.py ${input} ${output}
   )
 
   install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)

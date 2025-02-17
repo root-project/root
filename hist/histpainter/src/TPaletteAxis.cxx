@@ -116,7 +116,7 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// Palette default constructor.
 
-TPaletteAxis::TPaletteAxis(): TPave()
+TPaletteAxis::TPaletteAxis()
 {
    fH = nullptr;
    SetName("");
@@ -662,12 +662,11 @@ void TPaletteAxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
 void TPaletteAxis::UnZoom()
 {
-   if (!fH) return;
-   TView *view = gPad ? gPad->GetView() : nullptr;
-   if (view) {
-      delete view;
+   if (!fH)
+      return;
+   // if view exists - it will be deleted
+   if (gPad)
       gPad->SetView(nullptr);
-   }
    fH->GetZaxis()->SetRange(0, 0);
    if (fH->GetDimension() == 2) {
       fH->SetMinimum();

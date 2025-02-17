@@ -13,7 +13,7 @@ It has been converted to a C++ class, TMinuit, by R.Brun.
 See also:
 
   - The main documentation is in the class TMinuit
-  - [The Chapter about Fitting Histogram in the Users Guide](https://root.cern.ch/root/htmldoc/guides/users-guide/ROOTUsersGuide.html#fitting-histograms)
+  - [The Chapter about Fitting Histogram in the Users Guide](https://root.cern/manual/fitting/#fitting-1-d-histograms-with-pre-defined-functions)
   - [The MINUIT documentation in CERNLIB](https://root.cern.ch/download/minuit.pdf)
   - [How to Fit Histograms](https://root-forum.cern.ch/t/how-to-fit-histograms-or-data-points/38870)
   - peaks.C How to Fit find peaks in histograms

@@ -144,7 +144,7 @@ bool Fitter::DoSetFCN(bool extFcn, const ROOT::Math::IMultiGenFunction & fcn, co
       MATH_ERROR_MSG("Fitter::SetFCN","FCN function has zero parameters ");
       return false;
    }
-   if (params != nullptr || fConfig.ParamsSettings().size() == 0)
+   if (params != nullptr || fConfig.ParamsSettings().empty())
       fConfig.SetParamsSettings(npar, params);
    else {
       if ( fConfig.ParamsSettings().size() != npar) {
@@ -297,7 +297,7 @@ bool Fitter::EvalFCN()
       return false;
    }
    // create a Fit result from the fit configuration
-   fResult = std::make_shared<ROOT::Fit::FitResult>(fConfig);
+   fResult = std::make_unique<ROOT::Fit::FitResult>(fConfig);
    // evaluate one time the FCN
    double fcnval = (*ObjFunction())(fResult->GetParams());
    // update fit result
@@ -569,7 +569,7 @@ bool Fitter::CalculateHessErrors() {
    // update minimizer results with what comes out from Hesse
    // in case is empty - create from a FitConfig
    if (fResult->IsEmpty() )
-      fResult.reset(new ROOT::Fit::FitResult(fConfig) );
+      fResult = std::make_unique<ROOT::Fit::FitResult>(fConfig );
 
    // update obj function in case it was an external one
    if (fExtObjFunction) fObjFunction.reset(fExtObjFunction->Clone());
@@ -708,7 +708,7 @@ bool Fitter::DoInitMinimizer() {
    // create first Minimizer
    // using an auto_Ptr will delete the previous existing one
    fMinimizer = std::shared_ptr<ROOT::Math::Minimizer> ( fConfig.CreateMinimizer() );
-   if (fMinimizer.get() == nullptr) {
+   if (fMinimizer == nullptr) {
       MATH_ERROR_MSG("Fitter::DoInitMinimizer","Minimizer cannot be created");
       return false;
    }
@@ -726,7 +726,7 @@ bool Fitter::DoInitMinimizer() {
          const ROOT::Math::FitMethodGradFunction *fitGradFcn =
             dynamic_cast<const ROOT::Math::FitMethodGradFunction *>(gradfcn);
          if (fitGradFcn && fitGradFcn->HasHessian()) {
-            auto hessFcn = [=](const std::vector<double> &x, double *hess) {
+            auto hessFcn = [=](std::span<const double> x, double *hess) {
                unsigned int ndim = x.size();
                unsigned int nh = ndim * (ndim + 1) / 2;
                std::vector<double> h(nh);
@@ -799,7 +799,7 @@ bool Fitter::DoMinimization(const ROOT::Math::IMultiGenFunction * chi2func) {
 
    bool isValid = fMinimizer->Minimize();
 
-   if (!fResult) fResult = std::make_shared<FitResult>();
+   if (!fResult) fResult = std::make_unique<FitResult>();
 
    fResult->FillResult(fMinimizer,fConfig, fFunc, isValid, fDataSize, fFitType, chi2func );
 
@@ -891,7 +891,7 @@ bool Fitter::ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2,
    // - the objective function is a likelihood function and Likelihood::UseSumOfWeightSquare()
    //    has been called before
 
-   if (fMinimizer.get() == nullptr) {
+   if (fMinimizer == nullptr) {
       MATH_ERROR_MSG("Fitter::ApplyWeightCorrection","Must perform first a fit before applying the correction");
       return false;
    }

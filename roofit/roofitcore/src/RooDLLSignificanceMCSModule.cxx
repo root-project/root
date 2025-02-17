@@ -43,7 +43,6 @@ to test that assumption.
 
 using std::endl;
 
-ClassImp(RooDLLSignificanceMCSModule);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +90,7 @@ bool RooDLLSignificanceMCSModule::initializeInstance()
 {
   // Check that parameter is also present in fit parameter list of RooMCStudy object
   if (!fitParams()->find(_parName.c_str())) {
-    coutE(InputArguments) << "RooDLLSignificanceMCSModule::initializeInstance:: ERROR: No parameter named " << _parName << " in RooMCStudy!" << endl ;
+    coutE(InputArguments) << "RooDLLSignificanceMCSModule::initializeInstance:: ERROR: No parameter named " << _parName << " in RooMCStudy!" << std::endl ;
     return false ;
   }
 

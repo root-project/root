@@ -67,9 +67,9 @@ TEST(RooSimultaneous, CategoriesWithNoPdf)
 
    RooRealVar x("x", "", 0, 1);
    RooRealVar rnd("rnd", "", 0, 1);
-   RooThresholdCategory catThr("cat", "", rnd, "v2", 2);
-   catThr.addThreshold(1. / 3, "v0", 0);
-   catThr.addThreshold(2. / 3, "v1", 1);
+   RooThresholdCategory catThreshold("cat", "", rnd, "v2", 2);
+   catThreshold.addThreshold(1. / 3, "v0", 0);
+   catThreshold.addThreshold(2. / 3, "v1", 1);
 
    RooRealVar m0("m0", "", 0.5, 0, 1);
    RooRealVar m1("m1", "", 0.5, 0, 1);
@@ -79,7 +79,7 @@ TEST(RooSimultaneous, CategoriesWithNoPdf)
    RooProdPdf pdf("pdf", "", RooArgSet(g0, rndPdf));
 
    std::unique_ptr<RooDataSet> ds{pdf.generate(RooArgSet(x, rnd), RooFit::Name("ds"), RooFit::NumEvents(100))};
-   auto cat = dynamic_cast<RooCategory *>(ds->addColumn(catThr));
+   auto cat = dynamic_cast<RooCategory *>(ds->addColumn(catThreshold));
 
    RooSimultaneous sim("sim", "", *cat);
    sim.addPdf(g0, "v0");
@@ -370,4 +370,89 @@ TEST(RooSimultaneous, NestedSimPdfGenContext)
    EXPECT_EQ(catIndex(data2->get(0), "c2"), catIndex(proto.get(0), "c2"));
    EXPECT_EQ(catIndex(data2->get(1), "c1"), catIndex(proto.get(1), "c1"));
    EXPECT_EQ(catIndex(data2->get(1), "c2"), catIndex(proto.get(1), "c2"));
+}
+
+/// Make sure that putting a conditional RooProdPdf in a RooSimultaneous
+/// doesn't result in a messed up computation graph with unnecessary integrals.
+/// Covers GitHub issue #15751.
+TEST(RooSimultaneous, ConditionalProdPdf)
+{
+   RooRealVar x{"x", "x", 0, 1};
+   RooRealVar y{"y", "y", 0, 1};
+
+   RooGenericPdf pdfx{"pdfx", "1.0 + x - x", {x}};
+   RooGenericPdf pdfxy{"pdfxy", "1.0 + x - x + y - y", {x, y}};
+
+   RooProdPdf pdf{"pdf", "pdf", pdfx, RooFit::Conditional(pdfxy, y)};
+
+   RooArgSet normSet{x, y};
+
+   RooCategory cat{"cat", "cat", {{"0", 0}}};
+   RooSimultaneous simPdf{"simPdf", "simPdf", {{"0", &pdf}}, cat};
+
+   auto countGraphNodes = [](RooAbsArg &arg) {
+      RooArgList nodes;
+      arg.treeNodeServerList(&nodes);
+      return nodes.size();
+   };
+
+   RooFit::Detail::CompileContext ctx{normSet};
+   RooFit::Detail::CompileContext ctxSim{normSet};
+
+   std::unique_ptr<RooAbsPdf> compiled{static_cast<RooAbsPdf *>(pdf.compileForNormSet(normSet, ctx).release())};
+   std::unique_ptr<RooAbsPdf> compiledSim{
+      static_cast<RooAbsPdf *>(simPdf.compileForNormSet(normSet, ctxSim).release())};
+
+   // We expect only two more nodes in the computation graph: one for the
+   // RooSimultaneous, and one for the RooCategory.
+   EXPECT_EQ(countGraphNodes(*compiledSim), countGraphNodes(*compiled) + 2);
+}
+
+// Test that we can evaluate a RooSimultaneous also if only a fraction of the
+// channels can be extended. Also check if the likelihood can be created.
+TEST(RooSimultaneous, PartiallyExtendedPdfs)
+{
+   RooWorkspace ws;
+   ws.factory("Gaussian::pdfA(x_a[-10, 10], mu_a[0, -10, 10], sigma_a[2.0, 0.1, 10.0])");
+   ws.factory("Gaussian::pdfB(x_b[-10, 10], mu_b[0, -10, 10], sigma_b[2.0, 0.1, 10.0])");
+   ws.factory("PROD::pdfAprod(pdfA)");
+   ws.factory("ExtendPdf::pdfBext(pdfB, n_b[1000., 100., 10000.])");
+   ws.factory("SIMUL::simPdf( cat[A=0,B=1], A=pdfAprod, B=pdfBext)");
+
+   RooArgSet observables{*ws.var("x_a"), *ws.var("x_b"), *ws.cat("cat")};
+
+   auto &simPdf = *ws.pdf("simPdf");
+   std::cout << simPdf.getVal() << std::endl;
+
+   // A completely extended pdf, just to easily create a toy dataset
+   ws.factory("ExtendPdf::pdfAext(pdfA, n_b[1000., 100., 10000.])");
+   ws.factory("SIMUL::simPdfExtBoth( cat[A=0,B=1], A=pdfAext, B=pdfBext)");
+   std::unique_ptr<RooDataSet> data{ws.pdf("simPdfExtBoth")->generate(observables)};
+
+   // Check if likelihood can be instantiated
+   std::unique_ptr<RooAbsReal> nll{simPdf.createNLL(*data)};
+}
+
+// Make sure that one can use the same extended pdf instance for different
+// channels, and the RooSimultaneous will still evaluate correctly.
+TEST(RooSimultaneous, DuplicateExtendedPdfs)
+{
+   RooWorkspace ws;
+
+   ws.factory("Uniform::u_a(x[0, 10])");
+   ws.factory("Uniform::u_b(x)");
+   ws.factory("ExtendPdf::pdf_a(u_a, n[1000, 100, 10000])");
+   ws.factory("ExtendPdf::pdf_b(u_b, n)");
+
+   ws.factory("SIMUL::simPdf( c[A=0,B=1], A=pdf_a, B=pdf_a)");
+   ws.factory("SIMUL::simPdfRef( c, A=pdf_a, B=pdf_b)");
+
+   RooArgSet normSet{*ws.var("x")};
+
+   RooAbsPdf &simPdf = *ws.pdf("simPdf");
+   RooAbsPdf &simPdfRef = *ws.pdf("simPdfRef");
+   double simPdfVal = simPdf.getVal(normSet);
+
+   EXPECT_FLOAT_EQ(simPdfVal, 0.05);
+   EXPECT_DOUBLE_EQ(simPdfVal, simPdfRef.getVal(normSet));
 }

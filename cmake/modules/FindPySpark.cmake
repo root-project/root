@@ -34,7 +34,7 @@ if(Java_FOUND)
 
     # Import pyspark using the main Python executable, print its version and path to the __init__.py file
     execute_process(
-        COMMAND ${PYTHON_EXECUTABLE} -c "import pyspark; print(pyspark.__version__)" 
+        COMMAND ${Python3_EXECUTABLE} -c "import pyspark; print(pyspark.__version__)" 
         RESULT_VARIABLE _PYSPARK_IMPORT_EXIT_STATUS
         OUTPUT_VARIABLE _PYSPARK_VALUES_OUTPUT
         ERROR_VARIABLE _PYSPARK_ERROR_VALUE
@@ -48,7 +48,7 @@ if(Java_FOUND)
         # Signal to CMake that the environment could import pyspark and Java runtime was found
         set(PySpark_DEPENDENCIES_READY TRUE)
     else()
-        message(STATUS "Python package 'pyspark' could not be imported with ${PYTHON_EXECUTABLE}\n"
+        message(STATUS "Python package 'pyspark' could not be imported with ${Python3_EXECUTABLE}\n"
                     "${_PYSPARK_ERROR_VALUE}"
         )
     endif()

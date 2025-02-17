@@ -13,6 +13,8 @@
 #include "Minuit2/MnConfig.h"
 #include "Minuit2/MnStrategy.h"
 
+#include <ROOT/RSpan.hxx>
+
 #include <vector>
 
 namespace ROOT {
@@ -28,7 +30,6 @@ class MinimumState;
 class MnMachinePrecision;
 class MnFcn;
 class FunctionMinimum;
-class FCNGradientBase;
 
 //_______________________________________________________________________
 /**
@@ -49,28 +50,6 @@ public:
    /// conctructor with specific strategy
    MnHesse(const MnStrategy &stra) : fStrategy(stra) {}
 
-   ~MnHesse() {}
-
-   ///
-   /// low-level API
-   ///
-   /// FCN + parameters + errors
-   MnUserParameterState operator()(const FCNBase &, const std::vector<double> &, const std::vector<double> &,
-                                   unsigned int maxcalls = 0) const;
-   /// FCN + parameters + covariance
-   MnUserParameterState operator()(const FCNBase &, const std::vector<double> &, unsigned int nrow,
-                                   const std::vector<double> &, unsigned int maxcalls = 0) const;
-   /// FCN + parameters + MnUserCovariance
-   MnUserParameterState
-   operator()(const FCNBase &, const std::vector<double> &, const MnUserCovariance &, unsigned int maxcalls = 0) const;
-   ///
-   /// high-level API
-   ///
-   /// FCN + MnUserParameters
-   MnUserParameterState operator()(const FCNBase &, const MnUserParameters &, unsigned int maxcalls = 0) const;
-   /// FCN + MnUserParameters + MnUserCovariance
-   MnUserParameterState
-   operator()(const FCNBase &, const MnUserParameters &, const MnUserCovariance &, unsigned int maxcalls = 0) const;
    /// FCN + MnUserParameterState
    MnUserParameterState operator()(const FCNBase &, const MnUserParameterState &, unsigned int maxcalls = 0) const;
    ///
@@ -95,8 +74,8 @@ private:
    /// internal function to compute the Hessian using numerical derivative computation
    MinimumState ComputeNumerical(const MnFcn &, const MinimumState &, const MnUserTransformation &, unsigned int maxcalls) const;
 
-   /// internal function to compute the Hessian using an analytical computation or externally provided in the FCNGradientBase class
-   MinimumState ComputeAnalytical(const FCNGradientBase &, const MinimumState &, const MnUserTransformation &) const;
+   /// internal function to compute the Hessian using an analytical computation or externally provided in the FCNBase class
+   MinimumState ComputeAnalytical(const FCNBase &, const MinimumState &, const MnUserTransformation &) const;
 
    MnStrategy fStrategy;
 };

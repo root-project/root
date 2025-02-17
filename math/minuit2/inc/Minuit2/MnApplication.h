@@ -24,7 +24,6 @@ class MinuitParameter;
 class MnMachinePrecision;
 class ModularFunctionMinimizer;
 class FCNBase;
-class FCNGradientBase;
 
 //___________________________________________________________________________
 /**
@@ -39,10 +38,6 @@ class MnApplication {
 public:
    /// constructor from non-gradient functions
    MnApplication(const FCNBase &fcn, const MnUserParameterState &state, const MnStrategy &stra, unsigned int nfcn = 0);
-
-   /// constructor from gradient function
-   MnApplication(const FCNGradientBase &fcn, const MnUserParameterState &state, const MnStrategy &stra,
-                 unsigned int nfcn = 0);
 
    virtual ~MnApplication() {}
 
@@ -73,7 +68,6 @@ protected:
    MnUserParameterState fState;
    MnStrategy fStrategy;
    unsigned int fNumCall;
-   bool fUseGrad;
 
 public:
    // facade: forward interface of MnUserParameters and MnUserTransformation

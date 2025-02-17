@@ -90,24 +90,6 @@ const MnMachinePrecision &InitialGradientCalculator::Precision() const
    return fTransformation.Precision();
 }
 
-unsigned int InitialGradientCalculator::Ncycle() const
-{
-   // return ncyles (from Strategy)
-   return Strategy().GradientNCycles();
-}
-
-double InitialGradientCalculator::StepTolerance() const
-{
-   // return Gradient step tolerance (from Strategy)
-   return Strategy().GradientStepTolerance();
-}
-
-double InitialGradientCalculator::GradTolerance() const
-{
-   // return Gradient tolerance
-   return Strategy().GradientTolerance();
-}
-
 } // namespace Minuit2
 
 } // namespace ROOT

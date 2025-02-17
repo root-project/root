@@ -1,9 +1,13 @@
 // Author: Stefan Schmitt
 // DESY, 10/08/11
 
-//  Version 17.5, in parallel to changes in TUnfold
+//  Version 17.9, parallel to changes in TUnfold
 //
 //  History:
+//    Version 17.8, relaxed DTD definition
+//    Version 17.7, in parallel to changes in TUnfold
+//    Version 17.6, with updated doxygen comments
+//    Version 17.5, in parallel to changes in TUnfold
 //    Version 17.4, in parallel to changes in TUnfoldBinning
 //    Version 17.3, support for repeated bins with the same width
 //    Version 17.2, XML interface for class TUnfoldBinning
@@ -41,8 +45,12 @@
 
 #include "TUnfoldBinning.h"
 #include <iostream>
+#include <TNamed.h>
+#include <TObjArray.h>
+#include <TObjString.h>
 #include <TXMLNode.h>
 #include <TXMLDocument.h>
+#include <iostream>
 
 class TXMLNode;
 class TXMLDocument;

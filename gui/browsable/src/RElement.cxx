@@ -17,9 +17,9 @@
 using namespace ROOT::Browsable;
 using namespace std::string_literals;
 
-ROOT::Experimental::RLogChannel &ROOT::BrowsableLog()
+ROOT::RLogChannel &ROOT::BrowsableLog()
 {
-   static ROOT::Experimental::RLogChannel sLog("ROOT.Browsable");
+   static ROOT::RLogChannel sLog("ROOT.Browsable");
    return sLog;
 }
 

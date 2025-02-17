@@ -697,7 +697,7 @@ static PyObject* mp_call(CPPOverload* pymeth, PyObject* args, PyObject* kwds)
                 continue;    // did not set implicit conversion, so don't try again
 
             PyObject* result = methods[i]->Call(im_self, args, nargsf, kwds, &ctxt);
-            if (result != 0) {
+            if (result) {
             // success: update the dispatch map for subsequent calls
                 if (!memoized_pc)
                     dispatchMap.push_back(std::make_pair(sighash, methods[i]));
@@ -1054,6 +1054,9 @@ PyTypeObject CPPOverload_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x030c0000
     , 0                                // tp_watched
+#endif
+#if PY_VERSION_HEX >= 0x030d0000
+    , 0                                // tp_versions_used
 #endif
 };
 

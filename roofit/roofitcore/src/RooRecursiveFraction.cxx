@@ -35,7 +35,8 @@ from a set of recursive fractions: for a given set of input fractions
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 
-ClassImp(RooRecursiveFraction);
+#include <RooFit/Detail/MathFuncs.h>
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of plain RooAddPdf fraction from list of recursive fractions

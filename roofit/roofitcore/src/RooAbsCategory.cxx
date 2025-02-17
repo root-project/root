@@ -63,7 +63,6 @@ the following replacements should be used:
 #include <functional>
 #include <memory>
 
-ClassImp(RooAbsCategory);
 
 /// A category state to signify an invalid category. The category name is empty,
 /// the index is the minimal int.
@@ -107,7 +106,10 @@ RooAbsCategory::RooAbsCategory(const RooAbsCategory& other,const char* name) :
 
 RooAbsCategory::~RooAbsCategory()
 {
-
+   if (_treeReadBuffer) {
+      delete _treeReadBuffer;
+   }
+   _treeReadBuffer = nullptr;
 }
 
 
@@ -486,8 +488,11 @@ void RooAbsCategory::attachToTree(TTree& tree, Int_t bufSize)
     if (typeDetails != typeMap.end()) {
       coutI(DataHandling) << "RooAbsCategory::attachToTree(" << GetName() << ") TTree " << typeName << " branch \"" << cleanName
                   << "\" will be converted to int." << std::endl;
-      _treeReadBuffer = typeDetails->second();
+      _treeReadBuffer = typeDetails->second().release();
     } else {
+      if (_treeReadBuffer) {
+         delete _treeReadBuffer;
+      }
       _treeReadBuffer = nullptr;
 
       if (typeName == "Int_t") {

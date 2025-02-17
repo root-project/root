@@ -20,6 +20,7 @@
 #include "simple_app.h"
 
 #include <sstream>
+#include <fstream>
 #include <string>
 
 #include "include/base/cef_bind.h"
@@ -40,10 +41,9 @@
 #include "TBase64.h"
 #include <ROOT/RLogger.hxx>
 
-
-ROOT::Experimental::RLogChannel &CefWebDisplayLog()
+ROOT::RLogChannel &CefWebDisplayLog()
 {
-   static ROOT::Experimental::RLogChannel sChannel("ROOT.CefWebDisplay");
+   static ROOT::RLogChannel sChannel("ROOT.CefWebDisplay");
    return sChannel;
 }
 
@@ -365,8 +365,9 @@ CefRefPtr<CefResourceHandler> GuiHandler::GetResourceHandler(
   if (serv->IsFileRequested(inp_path, fname)) {
      // process file - no need for special requests handling
 
-     // when file not exists - return nullptr
-     if (gSystem->AccessPathName(fname.Data()))
+     std::ifstream ifs(fname.Data());
+     // when file not exists - return default handler otherwise CEF terminates
+     if (!ifs)
         return new TGuiResourceHandler(serv, true);
 
      const char *mime = THttpServer::GetMimeType(fname.Data());

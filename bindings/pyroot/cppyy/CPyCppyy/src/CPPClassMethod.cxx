@@ -35,7 +35,7 @@ PyObject* CPyCppyy::CPPClassMethod::Call(CPPInstance*&
     if ((!self || (PyObject*)self == Py_None) && nargs) {
         PyObject* arg0 = CPyCppyy_PyArgs_GET_ITEM(args, 0);
         if ((CPPInstance_Check(arg0) && ((CPPInstance*)arg0)->ObjectIsA() == GetScope()) && \
-                (fArgsRequired <= nargs-1) && (GetMaxArgs() < nargs)) {
+                (fArgsRequired <= nargs-1)) {
             args   += 1;     // drops first argument
             nargsf -= 1;
         }

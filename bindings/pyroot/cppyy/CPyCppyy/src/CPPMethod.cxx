@@ -611,14 +611,29 @@ PyObject* CPyCppyy::CPPMethod::GetArgDefault(int iarg, bool silent)
         PyObject* gdct = *dctptr;
         PyObject* scope = nullptr;
 
-        if (defvalue.find("::") != std::string::npos) {
-        // try to tickle scope creation, just in case
-            scope = CreateScopeProxy(defvalue.substr(0, defvalue.rfind('(')));
-            if (!scope) PyErr_Clear();
-
-        // rename '::' -> '.'
-            TypeManip::cppscope_to_pyscope(defvalue);
+        if (defvalue.rfind('(') != std::string::npos) {    // constructor-style call
+        // try to tickle scope creation, just in case, first look in the scope where
+        // the function lives, then in the global scope
+            std::string possible_scope = defvalue.substr(0, defvalue.rfind('('));
+            if (!Cppyy::IsBuiltin(possible_scope)) {
+                std::string cand_scope = Cppyy::GetScopedFinalName(fScope)+"::"+possible_scope;
+                scope = CreateScopeProxy(cand_scope);
+                if (!scope) {
+                    PyErr_Clear();
+                // search within the global scope instead
+                    scope = CreateScopeProxy(possible_scope);
+                    if (!scope) PyErr_Clear();
+                } else {
+                // re-scope the scope; alternatively, the expression could be
+                // compiled in the dictionary of the function's namespace, but
+                // that would affect arguments passed to the constructor, too
+                    defvalue = cand_scope + defvalue.substr(defvalue.rfind('('), std::string::npos);
+                }
+            }
         }
+
+    // replace '::' -> '.'
+        TypeManip::cppscope_to_pyscope(defvalue);
 
         if (!scope) {
         // a couple of common cases that python doesn't like (technically, 'L' is okay with older
@@ -956,13 +971,6 @@ PyObject* CPyCppyy::CPPMethod::Execute(void* self, ptrdiff_t offset, CallContext
         result = ExecuteProtected(self, offset, ctxt);
     }
 
-// TODO: the following is dreadfully slow and dead-locks on Apache: revisit
-// raising exceptions through callbacks by using magic returns
-//    if (result && Utility::PyErr_Occurred_WithGIL()) {
-//    // can happen in the case of a CINT error: trigger exception processing
-//        Py_DECREF(result);
-//        result = 0;
-//    } else if (!result && PyErr_Occurred())
     if (!result && PyErr_Occurred())
         SetPyError_(0);
 

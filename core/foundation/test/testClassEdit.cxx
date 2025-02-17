@@ -247,28 +247,48 @@ TEST(TClassEdit, SplitFuncErrors)
 // ROOT-9926
 TEST(TClassEdit, GetNameForIO)
 {
-   const std::vector<std::pair<std::string, std::string>> names{{"T", "unique_ptr<const T>"},
-                                                                {"T", "unique_ptr<const T*>"},
-                                                                {"T", "unique_ptr<const T* const*>"},
-                                                                {"T", "unique_ptr<T * const>"},
-                                                                {"T", "unique_ptr<T * const**const**&* const>"}};
+   const std::vector<std::pair<std::string, std::string>> names{{"T*", "unique_ptr<const T>"},
+                                                                {"T*", "unique_ptr<const T*>"},
+                                                                {"T*", "unique_ptr<const T* const*>"},
+                                                                {"T*", "unique_ptr<T * const>"},
+                                                                {"T*", "unique_ptr<T * const**const**&* const>"},
+                                                                {"vector<T*>", "vector<unique_ptr<T>>"},
+                                                                {"vector<const T*>", "vector<unique_ptr<const T>>"}};
    for (auto &&namesp : names) {
       EXPECT_EQ(namesp.first, TClassEdit::GetNameForIO(namesp.second.c_str()))
          << "Failure in transforming typename " << namesp.first << " into " << namesp.second;
    }
 }
 
-// ROOT-10574
+// ROOT-10574, https://github.com/root-project/root/issues/17295
 TEST(TClassEdit, ResolveTypedef)
 {
    gInterpreter->Declare("struct testPoint{}; typedef struct testPoint testPoint;");
    std::string non_existent = TClassEdit::ResolveTypedef("testPointAA");
    EXPECT_STREQ("testPointAA", non_existent.c_str());
    EXPECT_STRNE("::testPoint", TClassEdit::ResolveTypedef("::testPointXX").c_str());
+   gInterpreter->Declare("typedef const int mytype_t;");
+   gInterpreter->Declare("typedef const int cmytype_t;");
+   EXPECT_STREQ("const int", TClassEdit::ResolveTypedef("mytype_t").c_str());
+   EXPECT_STREQ("const int", TClassEdit::ResolveTypedef("cmytype_t").c_str());
 }
 
 // ROOT-11000
 TEST(TClassEdit, DefComp)
 {
    EXPECT_FALSE(TClassEdit::IsDefComp("std::less<>", "std::string"));
+}
+
+// https://github.com/root-project/root/issues/6607
+TEST(TClassEdit, DefAlloc)
+{
+   EXPECT_TRUE(TClassEdit::IsDefAlloc("class std::allocator<float>", "float"));
+}
+
+// https://github.com/root-project/root/issues/6607
+TEST(TClassEdit, GetNormalizedName)
+{
+   std::string n;
+   TClassEdit::GetNormalizedName(n, "std::vector<float, class std::allocator<float>>");
+   EXPECT_STREQ("vector<float>", n.c_str());
 }

@@ -13,7 +13,7 @@ class PythonizationDecorator(unittest.TestCase):
     # in some tests, and because of immediate pythonization they will be
     # processed by the pythonizors. Just ignore them
     exclude = [ 'TClass', 'TSystem', 'TUnixSystem', 'TMacOSXSystem',
-                'TWinNTSystem', 'TDictionary', 'TEnv', 'TInterpreter',
+                'TWinNTSystem', 'TDictionary', 'TEnv', 'TInterpreter', 'TApplication',
                 'TObject', 'TNamed', 'TROOT', 'TIter', 'TDirectory', 'TString' ]
 
     # Helpers

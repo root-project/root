@@ -1,0 +1,26 @@
+From 6e6725637d4a0d0402fac38a08f7176991d29ac9 Mon Sep 17 00:00:00 2001
+From: Jonas Rembser <jonas.rembser@cern.ch>
+Date: Tue, 17 Dec 2024 13:17:36 +0100
+Subject: [PATCH] Perform function-style casts when returning multi-keyword
+ types
+
+---
+ bindings/pyroot/cppyy/CPyCppyy/src/Dispatcher.cxx | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Dispatcher.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Dispatcher.cxx
+index db388575db..cdef2b8c7b 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Dispatcher.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Dispatcher.cxx
+@@ -45,7 +45,7 @@ static inline void InjectMethod(Cppyy::TCppMethod_t method, const std::string& m
+             "      return";
+     if (retType != "void") {
+         if (retType.back() != '*')
+-            code << " " << CPyCppyy::TypeManip::remove_const(retType) << "{}";
++            code << " (" << CPyCppyy::TypeManip::remove_const(retType) << "){}";
+         else
+             code << " nullptr";
+     }
+-- 
+2.47.0
+

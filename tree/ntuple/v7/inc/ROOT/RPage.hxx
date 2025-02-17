@@ -18,6 +18,7 @@
 
 #include <ROOT/RNTupleUtil.hxx>
 
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -25,6 +26,9 @@
 namespace ROOT {
 namespace Experimental {
 namespace Internal {
+
+class RPageAllocator;
+class RPageRef;
 
 // clang-format off
 /**
@@ -34,11 +38,15 @@ namespace Internal {
 
 The page provides an opaque memory buffer for uncompressed, unpacked data. It does not interpret
 the contents but it does now about the size (and thus the number) of the elements inside as well as the element
-number range within the backing column/cluster. The memory buffer is not managed by the page. It is normally registered
-with the page pool and allocated/freed by the page storage.
+number range within the backing column/cluster.
+For reading, pages are allocated and filled by the page source and then registered with the page pool.
+For writing, the page sink allocates uninitialized pages of a given size.
+The page has a pointer to its memory allocator so that it can release itself.
 */
 // clang-format on
 class RPage {
+   friend class RPageRef;
+
 public:
    static constexpr size_t kPageZeroSize = 64 * 1024;
 
@@ -48,99 +56,128 @@ public:
    class RClusterInfo {
    private:
       /// The cluster number
-      DescriptorId_t fId = 0;
+      ROOT::DescriptorId_t fId = 0;
       /// The first element index of the column in this cluster
-      NTupleSize_t fIndexOffset = 0;
+      ROOT::NTupleSize_t fIndexOffset = 0;
+
    public:
       RClusterInfo() = default;
-      RClusterInfo(NTupleSize_t id, NTupleSize_t indexOffset) : fId(id), fIndexOffset(indexOffset) {}
-      NTupleSize_t GetId() const { return fId; }
-      NTupleSize_t GetIndexOffset() const { return fIndexOffset; }
+      RClusterInfo(ROOT::NTupleSize_t id, ROOT::NTupleSize_t indexOffset) : fId(id), fIndexOffset(indexOffset) {}
+      ROOT::NTupleSize_t GetId() const { return fId; }
+      ROOT::NTupleSize_t GetIndexOffset() const { return fIndexOffset; }
    };
 
 private:
-   ColumnId_t fColumnId;
-   void *fBuffer;
-   std::uint32_t fElementSize;
-   std::uint32_t fNElements;
+   void *fBuffer = nullptr;
+   /// The allocator used to allocate fBuffer. Can be null if the buffer doesn't need to be freed.
+   RPageAllocator *fPageAllocator = nullptr;
+   std::uint32_t fElementSize = 0;
+   std::uint32_t fNElements = 0;
    /// The capacity of the page in number of elements
-   std::uint32_t fMaxElements;
-   NTupleSize_t fRangeFirst;
+   std::uint32_t fMaxElements = 0;
+   ROOT::NTupleSize_t fRangeFirst = 0;
    RClusterInfo fClusterInfo;
 
 public:
-   RPage()
-      : fColumnId(kInvalidColumnId), fBuffer(nullptr), fElementSize(0), fNElements(0), fMaxElements(0), fRangeFirst(0)
+   RPage() = default;
+   RPage(void *buffer, RPageAllocator *pageAllocator, std::uint32_t elementSize, std::uint32_t maxElements)
+      : fBuffer(buffer), fPageAllocator(pageAllocator), fElementSize(elementSize), fMaxElements(maxElements)
    {}
-   RPage(ColumnId_t columnId, void* buffer, ClusterSize_t::ValueType elementSize, ClusterSize_t::ValueType maxElements)
-      : fColumnId(columnId), fBuffer(buffer), fElementSize(elementSize), fNElements(0), fMaxElements(maxElements),
-        fRangeFirst(0)
-   {}
-   ~RPage() = default;
+   RPage(const RPage &) = delete;
+   RPage &operator=(const RPage &) = delete;
+   RPage(RPage &&other)
+   {
+      fBuffer = other.fBuffer;
+      fPageAllocator = other.fPageAllocator;
+      fElementSize = other.fElementSize;
+      fNElements = other.fNElements;
+      fMaxElements = other.fMaxElements;
+      fRangeFirst = other.fRangeFirst;
+      fClusterInfo = other.fClusterInfo;
+      other.fPageAllocator = nullptr;
+   }
+   RPage &operator=(RPage &&other)
+   {
+      if (this != &other) {
+         std::swap(fBuffer, other.fBuffer);
+         std::swap(fPageAllocator, other.fPageAllocator);
+         std::swap(fElementSize, other.fElementSize);
+         std::swap(fNElements, other.fNElements);
+         std::swap(fMaxElements, other.fMaxElements);
+         std::swap(fRangeFirst, other.fRangeFirst);
+         std::swap(fClusterInfo, other.fClusterInfo);
+      }
+      return *this;
+   }
+   ~RPage();
 
-   ColumnId_t GetColumnId() const { return fColumnId; }
    /// The space taken by column elements in the buffer
-   std::uint32_t GetNBytes() const { return fElementSize * fNElements; }
+   std::size_t GetNBytes() const
+   {
+      return static_cast<std::size_t>(fElementSize) * static_cast<std::size_t>(fNElements);
+   }
+   std::size_t GetCapacity() const
+   {
+      return static_cast<std::size_t>(fElementSize) * static_cast<std::size_t>(fMaxElements);
+   }
+   std::uint32_t GetElementSize() const { return fElementSize; }
    std::uint32_t GetNElements() const { return fNElements; }
    std::uint32_t GetMaxElements() const { return fMaxElements; }
-   NTupleSize_t GetGlobalRangeFirst() const { return fRangeFirst; }
-   NTupleSize_t GetGlobalRangeLast() const { return fRangeFirst + NTupleSize_t(fNElements) - 1; }
-   ClusterSize_t::ValueType GetClusterRangeFirst() const { return fRangeFirst - fClusterInfo.GetIndexOffset(); }
-   ClusterSize_t::ValueType GetClusterRangeLast() const {
-      return GetClusterRangeFirst() + NTupleSize_t(fNElements) - 1;
+   ROOT::NTupleSize_t GetGlobalRangeFirst() const { return fRangeFirst; }
+   ROOT::NTupleSize_t GetGlobalRangeLast() const { return fRangeFirst + ROOT::NTupleSize_t(fNElements) - 1; }
+   ROOT::NTupleSize_t GetClusterRangeFirst() const { return fRangeFirst - fClusterInfo.GetIndexOffset(); }
+   ROOT::NTupleSize_t GetClusterRangeLast() const
+   {
+      return GetClusterRangeFirst() + ROOT::NTupleSize_t(fNElements) - 1;
    }
    const RClusterInfo& GetClusterInfo() const { return fClusterInfo; }
 
-   bool Contains(NTupleSize_t globalIndex) const {
-      return (globalIndex >= fRangeFirst) && (globalIndex < fRangeFirst + NTupleSize_t(fNElements));
+   bool Contains(ROOT::NTupleSize_t globalIndex) const
+   {
+      return (globalIndex >= fRangeFirst) && (globalIndex < fRangeFirst + ROOT::NTupleSize_t(fNElements));
    }
 
-   bool Contains(RClusterIndex clusterIndex) const
+   bool Contains(RNTupleLocalIndex localIndex) const
    {
-      if (fClusterInfo.GetId() != clusterIndex.GetClusterId())
+      if (fClusterInfo.GetId() != localIndex.GetClusterId())
          return false;
-      auto clusterRangeFirst = ClusterSize_t(fRangeFirst - fClusterInfo.GetIndexOffset());
-      return (clusterIndex.GetIndex() >= clusterRangeFirst) &&
-             (clusterIndex.GetIndex() < clusterRangeFirst + fNElements);
+      auto clusterRangeFirst = fRangeFirst - fClusterInfo.GetIndexOffset();
+      return (localIndex.GetIndexInCluster() >= clusterRangeFirst) &&
+             (localIndex.GetIndexInCluster() < clusterRangeFirst + fNElements);
    }
 
    void* GetBuffer() const { return fBuffer; }
-   /// Called during writing: returns a pointer after the last element and increases the element counter
-   /// in anticipation of the caller filling nElements in the page. It is the responsibility of the caller
-   /// to prevent page overflows, i.e. that fNElements + nElements <= fMaxElements
-   void* GrowUnchecked(ClusterSize_t::ValueType nElements) {
+   /// Increases the number elements in the page. The caller is responsible to respect the page capacity,
+   /// i.e. to ensure that fNElements + nElements <= fMaxElements.
+   /// Returns a pointer after the last element, which is used during writing in anticipation of the caller filling
+   /// nElements in the page.
+   /// When reading a page from disk, GrowUnchecked is used to set the actual number of elements. In this case, the
+   /// return value is ignored.
+   void *GrowUnchecked(std::uint32_t nElements)
+   {
+      assert(fNElements + nElements <= fMaxElements);
       auto offset = GetNBytes();
       fNElements += nElements;
       return static_cast<unsigned char *>(fBuffer) + offset;
    }
    /// Seek the page to a certain position of the column
-   void SetWindow(const NTupleSize_t rangeFirst, const RClusterInfo &clusterInfo) {
+   void SetWindow(const ROOT::NTupleSize_t rangeFirst, const RClusterInfo &clusterInfo)
+   {
       fClusterInfo = clusterInfo;
       fRangeFirst = rangeFirst;
    }
    /// Forget all currently stored elements (size == 0) and set a new starting index.
-   void Reset(NTupleSize_t rangeFirst) { fNElements = 0; fRangeFirst = rangeFirst; }
+   void Reset(ROOT::NTupleSize_t rangeFirst)
+   {
+      fNElements = 0;
+      fRangeFirst = rangeFirst;
+   }
    void ResetCluster(const RClusterInfo &clusterInfo) { fNElements = 0; fClusterInfo = clusterInfo; }
 
-   /// Used by virtual page sources to map the physical column and cluster IDs to ther virtual counterparts
-   void ChangeIds(DescriptorId_t columnId, DescriptorId_t clusterId)
-   {
-      fColumnId = columnId;
-      fClusterInfo = RClusterInfo(clusterId, fClusterInfo.GetIndexOffset());
-   }
-
-   /// Make a 'zero' page for column `columnId` (that is comprised of 0x00 bytes only). The caller is responsible for
-   /// invoking `GrowUnchecked()` and `SetWindow()` as appropriate.
-   static RPage MakePageZero(ColumnId_t columnId, ClusterSize_t::ValueType elementSize)
-   {
-      return RPage{columnId, const_cast<void *>(GetPageZeroBuffer()), elementSize,
-                   /*maxElements=*/(kPageZeroSize / elementSize)};
-   }
    /// Return a pointer to the page zero buffer used if there is no on-disk data for a particular deferred column
    static const void *GetPageZeroBuffer();
 
    bool IsNull() const { return fBuffer == nullptr; }
-   bool IsPageZero() const { return fBuffer == GetPageZeroBuffer(); }
    bool IsEmpty() const { return fNElements == 0; }
    bool operator ==(const RPage &other) const { return fBuffer == other.fBuffer; }
    bool operator !=(const RPage &other) const { return !(*this == other); }

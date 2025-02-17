@@ -35,6 +35,9 @@ protected:
       return IsDisabled() ? kFALSE : fWindow.ProcessBatchHolder(arg);
    }
 
+   std::string GetCodeVersion() override { return fWindow.GetClientVersion(); }
+
+
    void VerifyDefaultPageContent(std::shared_ptr<THttpCallArg> &arg) override
    {
       auto token = fWindow.GetConnToken();
@@ -43,7 +46,7 @@ protected:
          url.SetOptions(arg->GetQuery());
          // refuse connection which does not provide proper token
          if (!url.HasOption("token") || (token != url.GetValueFromOptions("token"))) {
-            // refuce loading of default web page without token
+            // refuse loading of default web page without token
             arg->SetContent("refused");
             arg->Set404();
             return;
@@ -54,8 +57,8 @@ protected:
          TUrl url;
          url.SetOptions(arg->GetQuery());
          TString key = url.GetValueFromOptions("key");
-         if (key.IsNull() || !fWindow.HasKey(key.Data())) {
-            // refuce loading of default web page without valid key
+         if (key.IsNull() || !fWindow.HasKey(key.Data(), true)) {
+            // refuse loading of default web page without valid key
             arg->SetContent("refused");
             arg->Set404();
             return;
@@ -108,6 +111,8 @@ protected:
       auto user_args = fWindow.GetUserArgs();
       if (!user_args.empty())
          more_args.append("user_args: "s + user_args + ","s);
+      if (!RWebWindow::gJSROOTsettings.empty())
+         more_args.append("settings: "s + RWebWindow::gJSROOTsettings + ","s);
       if (!more_args.empty()) {
          std::string search = "connectWebWindow({"s;
          std::string replace = search + more_args;

@@ -66,11 +66,7 @@ AsymptoticCalculator, which can compute in addition the expected
 
 #include "Math/MinimizerOptions.h"
 #include "RooMinimizer.h"
-//#include "RooProdPdf.h"
 
-using std::cout, std::endl;
-
-ClassImp(RooStats::ProfileLikelihoodCalculator);
 
 using namespace RooFit;
 using namespace RooStats;
@@ -185,18 +181,18 @@ RooFit::OwningPtr<RooFitResult> ProfileLikelihoodCalculator::DoMinimizeNLL(RooAb
       if (status%1000 == 0) {  // ignore errors from Improve
          break;
       } else if (tries < maxtries) {
-         cout << "    ----> Doing a re-scan first" << endl;
+         std::cout << "    ----> Doing a re-scan first" << std::endl;
          minim.minimize(minimType,"Scan");
          if (tries == 2) {
             if (strategy == 0 ) {
-               cout << "    ----> trying with strategy = 1" << endl;;
+               std::cout << "    ----> trying with strategy = 1" << std::endl;
                minim.setStrategy(1);
             }
             else
                tries++; // skip this trial if strategy is already 1
          }
          if (tries == 3) {
-            cout << "    ----> trying with improve" << endl;;
+            std::cout << "    ----> trying with improve" << std::endl;
             minimType = "Minuit";
             minimAlgo = "migradimproved";
          }
@@ -315,7 +311,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
 
    double nLLatMLE = fFitResult->minNll();
    // in case of using offset need to save offset value
-   double nlloffset = (RooStats::IsNLLOffset() ) ? nll->getVal() - nLLatMLE : 0;
+   double nlloffset = RooStats::NLLOffsetMode() == "initial" ? nll->getVal() - nLLatMLE : 0;
 
    // set POI to given values, set constant, calculate conditional MLE
    std::vector<double> oldValues(poiList.size() );
@@ -367,7 +363,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
       // get just the likelihood value (no need to do a fit since the likelihood is a constant function)
       nLLatCondMLE = nll->getVal();
       // this value contains the offset
-      if (RooStats::IsNLLOffset() ) nLLatCondMLE -= nlloffset;
+      if (RooStats::NLLOffsetMode() == "initial") nLLatCondMLE -= nlloffset;
    }
 
    // Use Wilks' theorem to translate -2 log lambda into a significance/p-value

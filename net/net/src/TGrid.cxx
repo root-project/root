@@ -64,9 +64,13 @@ TGrid *TGrid::Connect(const char *grid, const char *uid, const char *pw,
       options = "";
 
    if ((h = gROOT->GetPluginManager()->FindHandler("TGrid", grid))) {
-      if (h->LoadPlugin() == -1)
+      if (h->LoadPlugin() == -1) {
+         ::Error("TGrid::Connect", "Loading Plugin failed");
          return 0;
+      }
       g = (TGrid *) h->ExecPlugin(4, grid, uid, pw, options);
+   } else {
+      ::Error("TGrid::Connect", "Could not find plugin to handle TGrid");
    }
 
    return g;

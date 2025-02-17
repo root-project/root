@@ -9,6 +9,7 @@
 #include <NTupleStruct.hxx>
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include "ClassWithArrays.h"
 
@@ -18,6 +19,22 @@ using ROOT::Experimental::RNTupleDS;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleWriter;
 using ROOT::Experimental::Internal::RPageSource;
+
+namespace {
+
+class FileRAII {
+private:
+   std::string fPath;
+
+public:
+   explicit FileRAII(const std::string &path) : fPath(path) {}
+   FileRAII(const FileRAII &) = delete;
+   FileRAII &operator=(const FileRAII &) = delete;
+   ~FileRAII() { std::remove(fPath.c_str()); }
+   std::string GetPath() const { return fPath; }
+};
+
+} // namespace
 
 template <typename V1, typename V2>
 void EXPECT_VEC_EQ(const V1 &v1, const V2 &v2)
@@ -35,15 +52,15 @@ protected:
 
    void SetUp() override {
       auto model = RNTupleModel::Create();
-      model->MakeField<float>("pt", 42.0);
-      model->MakeField<float>("energy", 7.0);
-      model->MakeField<std::string>("tag", "xyz");
-      model->MakeField<std::vector<float>>("jets", std::vector<float>{1.f, 2.f});
+      *model->MakeField<float>("pt") = 42;
+      *model->MakeField<float>("energy") = 7;
+      *model->MakeField<std::string>("tag") = "xyz";
+      *model->MakeField<std::vector<float>>("jets") = std::vector<float>{1.f, 2.f};
       auto fldNnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
       fldNnlo->push_back(std::vector<float>());
       fldNnlo->push_back(std::vector<float>{1.0});
       fldNnlo->push_back(std::vector<float>{1.0, 2.0, 4.0, 8.0});
-      model->MakeField<ROOT::RVecI>("rvec", ROOT::RVecI{1, 2, 3});
+      *model->MakeField<ROOT::RVecI>("rvec") = ROOT::RVecI{1, 2, 3};
       auto fldElectron = model->MakeField<Electron>("electron");
       fldElectron->pt = 137.0;
       auto fldVecElectron = model->MakeField<std::vector<Electron>>("VecElectron");
@@ -83,8 +100,21 @@ TEST_F(RNTupleDSTest, ColTypeNames)
    EXPECT_STREQ("float", ds.GetTypeName("energy").c_str());
    EXPECT_STREQ("std::size_t", ds.GetTypeName("R_rdf_sizeof_jets").c_str());
    EXPECT_STREQ("ROOT::VecOps::RVec<std::int32_t>", ds.GetTypeName("rvec").c_str());
+
+   try {
+      ds.GetTypeName("Address");
+      FAIL() << "should not be able to get a type for a non-existent column";
+   } catch (const std::runtime_error &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("RNTupleDS: There is no column with name \"Address\""));
+   }
 }
 
+TEST_F(RNTupleDSTest, NFiles)
+{
+   RNTupleDS ds(fNtplName, fFileName);
+
+   EXPECT_EQ(1, ds.GetNFiles());
+}
 
 TEST_F(RNTupleDSTest, CardinalityColumn)
 {
@@ -166,18 +196,6 @@ static void ChainTest(const std::string &name, const std::string &fname)
    auto df1000 = ROOT::RDataFrame(std::make_unique<RNTupleDS>(name, fileNames));
    EXPECT_DOUBLE_EQ(42000.0, df1000.Sum<float>("pt").GetValue());
 
-   class FileRAII {
-   private:
-      std::string fPath;
-
-   public:
-      explicit FileRAII(const std::string &path) : fPath(path) {}
-      FileRAII(const FileRAII &) = delete;
-      FileRAII &operator=(const FileRAII &) = delete;
-      ~FileRAII() { std::remove(fPath.c_str()); }
-      std::string GetPath() const { return fPath; }
-   };
-
    FileRAII guardFile1("RNTupleDS_test_chain_1.root");
    FileRAII guardFile2("RNTupleDS_test_chain_2.root");
    FileRAII guardFile3("RNTupleDS_test_chain_3.root");
@@ -211,6 +229,7 @@ static void ChainTest(const std::string &name, const std::string &fname)
 
    auto df3 = ROOT::RDataFrame(std::make_unique<RNTupleDS>(
       "chain", std::vector<std::string>{guardFile1.GetPath(), guardFile2.GetPath(), guardFile3.GetPath()}));
+   EXPECT_EQ(3, df3.Describe().GetNFiles());
    auto sumElectronPt =
       df3.Aggregate([](float &acc, const Electron &e) { acc += e.pt; }, [](float a, float b) { return a + b; }, "e");
    EXPECT_FLOAT_EQ(6.0, sumElectronPt.GetValue());
@@ -247,7 +266,110 @@ TEST_F(RNTupleDSTest, ChainMT)
 
    ChainTest(fNtplName, fFileName);
 }
+
+TEST_F(RNTupleDSTest, ChainTailScheduling)
+{
+   IMTRAII _;
+
+   FileRAII guardFile1("RNTupleDS_test_chain_tail_scheduling_1.root");
+   FileRAII guardFile2("RNTupleDS_test_chain_tail_scheduling_2.root");
+   FileRAII guardFile3("RNTupleDS_test_chain_tail_scheduling_3.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrX = model->MakeField<int>("x");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "chain", guardFile1.GetPath());
+      for (unsigned i = 0; i < 2; ++i) {
+         *ptrX = i;
+         writer->Fill();
+         writer->CommitCluster();
+      }
+   }
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<int>("x");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "chain", guardFile2.GetPath());
+      // Empty file
+   }
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrX = model->MakeField<int>("x");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "chain", guardFile3.GetPath());
+      for (unsigned i = 0; i < 11; ++i) {
+         *ptrX = i;
+         writer->Fill();
+         writer->CommitCluster();
+      }
+   }
+
+   auto df = ROOT::RDataFrame(std::make_unique<RNTupleDS>(
+      "chain", std::vector<std::string>{guardFile1.GetPath(), guardFile2.GetPath(), guardFile3.GetPath()}));
+   EXPECT_EQ(3, df.Describe().GetNFiles());
+   auto sumX = df.Aggregate([](int &acc, int x) { acc += x; }, [](int a, int b) { return a + b; }, "x");
+   EXPECT_EQ(56, sumX.GetValue());
+}
 #endif
+
+TEST(RNTupleDS, CollectionFieldTypes)
+{
+   // NB: The other tests already cover std::vector and std::array (and nestings thereof).
+   FileRAII fileGuard{"RNTupleDS_test_collection_field_types.root"};
+   {
+      auto model = RNTupleModel::Create();
+      *model->MakeField<std::set<int>>("intSet") = std::set<int>{3, 1, 2};
+      *model->MakeField<std::set<Electron>>("electronSet") =
+         std::set<Electron>{Electron{1.f}, Electron{2.f}, Electron{3.f}};
+      *model->MakeField<std::set<std::vector<Electron>>>("electronSetVec") =
+         std::set<std::vector<Electron>>{{Electron{1.f}, Electron{2.f}}, {Electron{3.f}}};
+      *model->MakeField<std::set<std::set<Electron>>>("electronSetSet") =
+         std::set<std::set<Electron>>{{Electron{1.f}, Electron{2.f}}, {Electron{3.f}}};
+
+      // Mimic the collection stucture of NanoAOD
+      std::vector<std::unique_ptr<ROOT::Experimental::RFieldBase>> muon;
+      muon.emplace_back(std::make_unique<ROOT::Experimental::RField<float>>("muon_pt"));
+      auto fldMuonRecord = std::make_unique<ROOT::Experimental::RRecordField>("_0", std::move(muon));
+      auto fldMuons = ROOT::Experimental::RVectorField::CreateUntyped("muon", std::move(fldMuonRecord));
+      model->AddField(std::move(fldMuons));
+
+      auto muonPtField = ROOT::Experimental::RFieldBase::Create("muon_pt", "ROOT::VecOps::RVec<float>").Unwrap();
+      model->AddProjectedField(std::move(muonPtField), [](const std::string &fieldName) {
+         if (fieldName == "muon_pt")
+            return "muon";
+         else
+            return "muon._0.muon_pt";
+      });
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      ntuple->Fill();
+   }
+
+   RNTupleDS ds("ntuple", fileGuard.GetPath());
+
+   auto colNames = ds.GetColumnNames();
+
+   ASSERT_EQ(19, colNames.size());
+
+   EXPECT_TRUE(ds.HasColumn("intSet"));
+   EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_intSet"));
+   EXPECT_TRUE(ds.HasColumn("electronSet"));
+   EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_electronSet"));
+   EXPECT_TRUE(ds.HasColumn("electronSet.pt"));
+   EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_electronSet.pt"));
+   EXPECT_TRUE(ds.HasColumn("muon_pt"));
+   EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_muon_pt"));
+   EXPECT_TRUE(ds.HasColumn("muon._0.muon_pt"));
+   EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_muon._0.muon_pt"));
+
+   EXPECT_STREQ("std::set<std::int32_t>", ds.GetTypeName("intSet").c_str());
+   EXPECT_STREQ("std::set<Electron>", ds.GetTypeName("electronSet").c_str());
+   EXPECT_STREQ("ROOT::VecOps::RVec<float>", ds.GetTypeName("electronSet.pt").c_str());
+   EXPECT_STREQ("std::set<std::set<Electron>>", ds.GetTypeName("electronSetSet").c_str());
+   EXPECT_STREQ("ROOT::VecOps::RVec<ROOT::VecOps::RVec<float>>", ds.GetTypeName("electronSetSet.pt").c_str());
+   // TODO(fdegeus) figure out how to (cleanly) still add inner vectors etc. as RVecs.
+   EXPECT_STREQ("std::set<std::vector<Electron>>", ds.GetTypeName("electronSetVec").c_str());
+   EXPECT_STREQ("ROOT::VecOps::RVec<float>", ds.GetTypeName("muon_pt").c_str());
+   EXPECT_STREQ(ds.GetTypeName("muon._0.muon_pt").c_str(), ds.GetTypeName("muon_pt").c_str());
+}
 
 const static std::array<ROOT::RVec<std::array<ROOT::RVecI, 3>>, 3> arraysDatasetCol4El{
    ROOT::RVec<std::array<ROOT::RVecI, 3>>{

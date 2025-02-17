@@ -41,7 +41,6 @@ Some contributions to this class have been written by Matthias Wolf (error estim
 
 #include <algorithm>
 
-ClassImp(RooStats::HypoTestInverterResult);
 
 using namespace RooStats;
 using namespace RooFit;
@@ -649,7 +648,7 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
 
    ROOT::Math::BrentRootFinder brf;
    brf.SetFunction(f1d,xmin,xmax);
-   brf.SetNpx(TMath::Max(graph.GetN()*2,100) );
+   brf.SetNpx(std::max(graph.GetN()*2,100) );
 #ifdef DO_DEBUG
    std::cout << "findind root for " << xmin << " ,  "<< xmax << "f(x) : " << graph.Eval(xmin) << " , " << graph.Eval(0.5*(xmax+xmin))
              << " , " << graph.Eval(xmax) << " target " << y0 << std::endl;
@@ -821,7 +820,7 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
    }
 
 #ifdef DO_DEBUG
-   std::cout << "finding " << lowSearch << " limit between " << xmin << "  " << xmax << endl;
+   std::cout << "finding " << lowSearch << " limit between " << xmin << "  " << xmax << std::endl;
 #endif
 
    // compute now the limit using the TGraph interpolations routine
@@ -938,7 +937,7 @@ int HypoTestInverterResult::FindClosestPointIndex(double target, int mode, doubl
 double HypoTestInverterResult::LowerLimit()
 {
   if (fFittedLowerLimit) return fLowerLimit;
-  //std::cout << "finding point with cl = " << 1-(1-ConfidenceLevel())/2 << endl;
+  //std::cout << "finding point with cl = " << 1-(1-ConfidenceLevel())/2 << std::endl;
   if ( fInterpolateLowerLimit ) {
      // find both lower/upper limit
      if (TMath::IsNaN(fLowerLimit) )  FindInterpolatedLimit(1-ConfidenceLevel(),true);
@@ -953,7 +952,7 @@ double HypoTestInverterResult::LowerLimit()
 
 double HypoTestInverterResult::UpperLimit()
 {
-   //std::cout << "finding point with cl = " << (1-ConfidenceLevel())/2 << endl;
+   //std::cout << "finding point with cl = " << (1-ConfidenceLevel())/2 << std::endl;
   if (fFittedUpperLimit) return fUpperLimit;
   if ( fInterpolateUpperLimit ) {
      if (TMath::IsNaN(fUpperLimit) )  FindInterpolatedLimit(1-ConfidenceLevel(),false);

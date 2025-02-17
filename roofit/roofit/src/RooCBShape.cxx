@@ -26,24 +26,12 @@ PDF implementing the Crystal Ball line shape.
 #include "RooMath.h"
 #include "RooBatchCompute.h"
 
+#include <RooFit/Detail/MathFuncs.h>
+
 #include "TMath.h"
 
 #include <cmath>
 
-ClassImp(RooCBShape);
-
-////////////////////////////////////////////////////////////////////////////////
-
-double RooCBShape::ApproxErf(double arg) const
-{
-  static const double erflim = 5.0;
-  if( arg > erflim )
-    return 1.0;
-  if( arg < -erflim )
-    return -1.0;
-
-  return RooMath::erf(arg);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -70,21 +58,9 @@ RooCBShape::RooCBShape(const RooCBShape& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double RooCBShape::evaluate() const {
-  double t = (m-m0)/sigma;
-  if (alpha < 0) t = -t;
-
-  double absAlpha = std::abs((double)alpha);
-
-  if (t >= -absAlpha) {
-    return exp(-0.5*t*t);
-  }
-  else {
-    double a =  TMath::Power(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
-    double b= n/absAlpha - absAlpha;
-
-    return a/TMath::Power(b - t, n);
-  }
+double RooCBShape::evaluate() const
+{
+   return RooFit::Detail::MathFuncs::cbShape(m, m0, sigma, alpha, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,68 +83,10 @@ Int_t RooCBShape::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooCBShape::analyticalIntegral(Int_t /*code*/, const char *rangeName) const
 {
-  static const double sqrtPiOver2 = 1.2533141373;
-  static const double sqrt2 = 1.4142135624;
-
-  R__ASSERT(code==1);
-  double result = 0.0;
-  bool useLog = false;
-
-  if( std::abs(n-1.0) < 1.0e-05 )
-    useLog = true;
-
-  double sig = std::abs((double)sigma);
-
-  double tmin = (m.min(rangeName)-m0)/sig;
-  double tmax = (m.max(rangeName)-m0)/sig;
-
-  if(alpha < 0) {
-    double tmp = tmin;
-    tmin = -tmax;
-    tmax = -tmp;
-  }
-
-  double absAlpha = std::abs((double)alpha);
-
-  if( tmin >= -absAlpha ) {
-    result += sig*sqrtPiOver2*(   ApproxErf(tmax/sqrt2)
-                                - ApproxErf(tmin/sqrt2) );
-  }
-  else if( tmax <= -absAlpha ) {
-    double a = TMath::Power(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
-    double b = n/absAlpha - absAlpha;
-
-    if(useLog) {
-      result += a*sig*( log(b-tmin) - log(b-tmax) );
-    }
-    else {
-      result += a*sig/(1.0-n)*(   1.0/(TMath::Power(b-tmin,n-1.0))
-                                - 1.0/(TMath::Power(b-tmax,n-1.0)) );
-    }
-  }
-  else {
-    double a = TMath::Power(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
-    double b = n/absAlpha - absAlpha;
-
-    double term1 = 0.0;
-    if(useLog) {
-      term1 = a*sig*(  log(b-tmin) - log(n/absAlpha));
-    }
-    else {
-      term1 = a*sig/(1.0-n)*(   1.0/(TMath::Power(b-tmin,n-1.0))
-                              - 1.0/(TMath::Power(n/absAlpha,n-1.0)) );
-    }
-
-    double term2 = sig*sqrtPiOver2*(   ApproxErf(tmax/sqrt2)
-                                     - ApproxErf(-absAlpha/sqrt2) );
-
-
-    result += term1 + term2;
-  }
-
-  return result != 0. ? result : 1.E-300;
+   using namespace RooFit::Detail::MathFuncs;
+   return cbShapeIntegral(m.min(rangeName), m.max(rangeName), m0, sigma, alpha, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -110,7 +110,6 @@
 #include "TMatrixD.h"
 
 
-ClassImp(RooStats::SPlot);
 
 using namespace RooStats;
 using std::endl;
@@ -198,7 +197,7 @@ SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* p
     if (!dynamic_cast<const RooAbsRealLValue*>(arg)) {
       coutE(InputArguments) << "SPlot::SPlot(" << GetName() << ") input argument "
              << arg->GetName() << " is not of type RooRealVar (or RooLinearVar)."
-             << "\nRooStats must be able to set it to 0 and to 1 to probe the PDF." << endl ;
+             << "\nRooStats must be able to set it to 0 and to 1 to probe the PDF." << std::endl ;
       throw std::invalid_argument(Form("SPlot::SPlot(%s) input argument %s is not of type RooRealVar/RooLinearVar",GetName(),arg->GetName())) ;
     }
   }
@@ -237,13 +236,13 @@ double SPlot::GetSWeight(Int_t numEvent, const char* sVariable) const
 {
   if(numEvent > fSData->numEntries() )
     {
-      coutE(InputArguments)  << "Invalid Entry Number" << endl;
+      coutE(InputArguments)  << "Invalid Entry Number" << std::endl;
       return -1;
     }
 
   if(numEvent < 0)
     {
-      coutE(InputArguments)  << "Invalid Entry Number" << endl;
+      coutE(InputArguments)  << "Invalid Entry Number" << std::endl;
       return -1;
     }
 
@@ -271,7 +270,7 @@ double SPlot::GetSWeight(Int_t numEvent, const char* sVariable) const
     }
 
   else
-    coutE(InputArguments) << "InputVariable not in list of sWeighted variables" << endl;
+    coutE(InputArguments) << "InputVariable not in list of sWeighted variables" << std::endl;
 
   return -1;
 }
@@ -286,13 +285,13 @@ double SPlot::GetSumOfEventSWeight(Int_t numEvent) const
 {
   if(numEvent > fSData->numEntries() )
     {
-      coutE(InputArguments)  << "Invalid Entry Number" << endl;
+      coutE(InputArguments)  << "Invalid Entry Number" << std::endl;
       return -1;
     }
 
   if(numEvent < 0)
     {
-      coutE(InputArguments)  << "Invalid Entry Number" << endl;
+      coutE(InputArguments)  << "Invalid Entry Number" << std::endl;
       return -1;
     }
 
@@ -345,7 +344,7 @@ double SPlot::GetYieldFromSWeight(const char* sVariable) const
     }
 
   else
-    coutE(InputArguments) << "InputVariable not in list of sWeighted variables" << endl;
+    coutE(InputArguments) << "InputVariable not in list of sWeighted variables" << std::endl;
 
   return -1;
 }
@@ -453,7 +452,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   RooArgList yields = *static_cast<RooArgList*>(yieldsTmp.snapshot(false));
 
   if (RooMsgService::instance().isActive(this, RooFit::InputArguments, RooFit::DEBUG)) {
-    coutI(InputArguments) << "Printing Yields" << endl;
+    coutI(InputArguments) << "Printing Yields" << std::endl;
     yields.Print();
   }
 
@@ -470,7 +469,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
     assert(pdf->dependsOn(*yieldinpdf));
 
     if (yieldinpdf) {
-      coutI(InputArguments)<< "yield in pdf: " << yieldinpdf->GetName() << " " << thisyield->getVal(&vars) << endl;
+      coutI(InputArguments)<< "yield in pdf: " << yieldinpdf->GetName() << " " << thisyield->getVal(&vars) << std::endl;
 
       yieldvars.push_back(yieldinpdf) ;
       yieldvalues.push_back(thisyield->getVal(&vars)) ;
@@ -613,7 +612,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
       for(Int_t m=0; m<nspec; ++m) covnorm += covInv[k][m]*yieldvalues[m] ;
       double sumrow(0) ;
       for(Int_t m = 0; m < nspec; ++m) sumrow += covMatrix[k][m] ;
-      coutI(Eval)  << yieldvalues[k] << " " << sumrow << " " << covnorm << endl ;
+      coutI(Eval)  << yieldvalues[k] << " " << sumrow << " " << covnorm << std::endl ;
     }
   }
 
@@ -674,7 +673,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
      if( !(std::abs(nsum/dsum)>=0 ) )
        {
-         coutE(Contents) << "error: " << nsum/dsum << endl ;
+         coutE(Contents) << "error: " << nsum/dsum << std::endl ;
          return;
        }
    }

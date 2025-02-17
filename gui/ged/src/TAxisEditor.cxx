@@ -250,7 +250,7 @@ void TAxisEditor::ConnectSignals2Slots()
    (fDiv2->GetNumberEntry())->Connect("ReturnPressed()", "TAxisEditor", this, "DoDivisions()");
    fDiv1->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoDivisions()");
    (fDiv1->GetNumberEntry())->Connect("ReturnPressed()", "TAxisEditor", this, "DoDivisions()");
-   fTitle->Connect("TextChanged(const char *)", "TAxisEditor", this, "DoTitle(const char *)");;
+   fTitle->Connect("TextChanged(const char *)", "TAxisEditor", this, "DoTitle(const char *)");
    fTitleColor->Connect("ColorSelected(Pixel_t)", "TAxisEditor", this, "DoTitleColor(Pixel_t)");
    fTitleSize->Connect("ValueSet(Long_t)", "TAxisEditor", this, "DoTitleSize()");
    (fTitleSize->GetNumberEntry())->Connect("ReturnPressed()", "TAxisEditor", this, "DoTitleSize()");

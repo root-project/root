@@ -253,7 +253,7 @@ public:
       if (!Duplex.second.empty()) {
         OS << Indent << Duplex.first << Separator;
         InstTxt = Duplex.second;
-      } else if (!HeadTail.first.trim().startswith("immext")) {
+      } else if (!HeadTail.first.trim().starts_with("immext")) {
         InstTxt = Duplex.first;
       }
       if (!InstTxt.empty())
@@ -364,12 +364,12 @@ static MCTargetStreamer *createHexagonNullTargetStreamer(MCStreamer &S) {
 }
 
 static void LLVM_ATTRIBUTE_UNUSED clearFeature(MCSubtargetInfo* STI, uint64_t F) {
-  if (STI->getFeatureBits()[F])
+  if (STI->hasFeature(F))
     STI->ToggleFeature(F);
 }
 
 static bool LLVM_ATTRIBUTE_UNUSED checkFeature(MCSubtargetInfo* STI, uint64_t F) {
-  return STI->getFeatureBits()[F];
+  return STI->hasFeature(F);
 }
 
 namespace {
@@ -554,7 +554,7 @@ MCSubtargetInfo *Hexagon_MC::createHexagonMCSubtargetInfo(const Triple &TT,
   // Add qfloat subtarget feature by default to v68 and above
   // unless explicitely disabled
   if (checkFeature(X, Hexagon::ExtensionHVXV68) &&
-      ArchFS.find("-hvx-qfloat", 0) == std::string::npos) {
+      !ArchFS.contains("-hvx-qfloat")) {
     llvm::FeatureBitset Features = X->getFeatureBits();
     X->setFeatureBits(Features.set(Hexagon::ExtensionHVXQFloat));
   }

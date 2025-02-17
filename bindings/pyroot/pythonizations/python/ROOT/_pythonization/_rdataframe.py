@@ -9,14 +9,7 @@
 ################################################################################
 
 r'''
-/**
-\class ROOT::RDataFrame
-\brief \parblock \endparblock
-\htmlonly
-<div class="pyrootbox">
-\endhtmlonly
-\anchor python
-## Efficient analysis in Python
+\pythondoc ROOT::RDataFrame
 
 You can use RDataFrame in Python thanks to the dynamic Python/C++ translation of [PyROOT](https://root.cern/manual/python). In general, the interface
 is the same as for C++, a simple example follows.
@@ -131,6 +124,48 @@ df = ROOT.RDF.FromNumpy({"x": x, "y": y})
 df.Define("z", "x + y").Snapshot("tree", "file.root")
 ~~~
 
+### Interoperability with [AwkwardArray](https://awkward-array.org/doc/main/user-guide/how-to-convert-rdataframe.html)
+
+The function for RDataFrame to Awkward conversion is ak.from_rdataframe(). The argument to this function accepts a tuple of strings that are the RDataFrame column names. By default this function returns ak.Array type.
+
+~~~{.py}
+import awkward as ak
+import ROOT
+
+array = ak.from_rdataframe(
+    df,
+    columns=(
+        "x",
+        "y",
+        "z",
+    ),
+)
+~~~
+
+The function for Awkward to RDataFrame conversion is ak.to_rdataframe().
+
+The argument to this function requires a dictionary: { <column name string> : <awkward array> }. This function always returns an RDataFrame object.
+
+The arrays given for each column have to be equal length:
+
+~~~{.py}
+array_x = ak.Array(
+    [
+        {"x": [1.1, 1.2, 1.3]},
+        {"x": [2.1, 2.2]},
+        {"x": [3.1]},
+        {"x": [4.1, 4.2, 4.3, 4.4]},
+        {"x": [5.1]},
+    ]
+)
+array_y = ak.Array([1, 2, 3, 4, 5])
+array_z = ak.Array([[1.1], [2.1, 2.3, 2.4], [3.1], [4.1, 4.2, 4.3], [5.1]])
+
+assert len(array_x) == len(array_y) == len(array_z)
+
+df = ak.to_rdataframe({"x": array_x, "y": array_y, "z": array_z})
+~~~
+
 ### Construct histogram and profile models from a tuple
 
 The Histo1D(), Histo2D(), Histo3D(), Profile1D() and Profile2D() methods return
@@ -165,12 +200,8 @@ df_transformed = ROOT.MyTransformation(ROOT.RDF.AsRNode(df))
 df2 = df.Filter("x > 42")
 df2_transformed = ROOT.MyTransformation(ROOT.RDF.AsRNode(df2))
 ~~~
-\htmlonly
-</div>
-\endhtmlonly
 
-\anchor reference
-*/
+\endpythondoc
 '''
 import sys
 from . import pythonization
@@ -204,6 +235,9 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
             1D numpy arrays with content as values; if lazy, AsNumpyResult containing
             the result pointers obtained from the Take actions.
     """
+
+    import ROOT
+
     # Sanitize input arguments
     if isinstance(columns, str):
         raise TypeError("The columns argument requires a list of strings")
@@ -233,14 +267,19 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
         # bools in bytes - different from the std::vector<bool> returned by the
         # action, which might do some space optimization
         column_type = "unsigned char" if column_type == "bool" else column_type
+
+        # If the column type is a class, make sure cling knows about it
+        tclass = ROOT.TClass.GetClass(column_type)
+        if tclass and not tclass.GetClassInfo():
+            raise RuntimeError(
+                f'The column named "{column}" is of type "{column_type}", which is not known to the ROOT interpreter. Please load the corresponding header files or dictionaries.'
+            )
+
         result_ptrs[column] = df.Take[column_type](column)
 
     result = AsNumpyResult(result_ptrs, columns)
 
-    if lazy:
-        return result
-    else:
-        return result.GetValue()
+    return result if lazy else result.GetValue()
 
 
 class AsNumpyResult(object):
@@ -355,12 +394,9 @@ def _clone_asnumpyresult(res: AsNumpyResult) -> AsNumpyResult:
     result.
     """
     import ROOT
+
     return AsNumpyResult(
-        {
-            col: ROOT.Internal.RDF.CloneResultAndAction(ptr)
-            for (col, ptr) in res._result_ptrs.items()
-        },
-        res._columns
+        {col: ROOT.Internal.RDF.CloneResultAndAction(ptr) for (col, ptr) in res._result_ptrs.items()}, res._columns
     )
 
 
@@ -460,7 +496,7 @@ def _make_name_rvec_pair(key, value):
     return ROOT.std.pair["std::string", type(pyvec)](key, ROOT.std.move(pyvec))
 
 
-# For refernces to keep alive the NumPy arrays that are read by
+# For references to keep alive the NumPy arrays that are read by
 # MakeNumpyDataFrame.
 _numpy_data = {}
 

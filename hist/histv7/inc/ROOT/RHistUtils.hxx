@@ -19,11 +19,12 @@
 #include <type_traits>
 
 namespace ROOT {
+class RLogChannel;
+
 namespace Experimental {
 
-class RLogChannel;
 /// Log channel for Hist diagnostics.
-RLogChannel &HistLog(); // implemented in RAxis.cxx
+ROOT::RLogChannel &HistLog(); // implemented in RAxis.cxx
 
 namespace Hist {
 

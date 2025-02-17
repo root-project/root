@@ -1,10 +1,13 @@
-import { settings, create } from '../core.mjs';
+import { settings, gStyle, create, BIT, clTPaveText, kTitle } from '../core.mjs';
 import { scaleLinear, select as d3_select, pointer as d3_pointer } from '../d3.mjs';
 import { DrawOptions, buildSvgCurve, makeTranslate } from '../base/BasePainter.mjs';
 import { ObjectPainter, getElementMainPainter } from '../base/ObjectPainter.mjs';
+import { TPavePainter, kPosTitle } from '../hist/TPavePainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { TooltipHandler } from '../gpad/TFramePainter.mjs';
+import { assignContextMenu, kNoReorder } from '../gui/menu.mjs';
 
+const kNoTitle = BIT(17);
 
 /**
  * @summary Painter for TGraphPolargram objects.
@@ -16,18 +19,59 @@ class TGraphPolargramPainter extends ObjectPainter {
    /** @summary Create painter
      * @param {object|string} dom - DOM element for drawing or element id
      * @param {object} polargram - object to draw */
-   constructor(dom, polargram) {
-      super(dom, polargram);
+   constructor(dom, polargram, opt) {
+      super(dom, polargram, opt);
       this.$polargram = true; // indicate that this is polargram
       this.zoom_rmin = this.zoom_rmax = 0;
+      this.t0 = 0;
+      this.mult = 1;
+      this.decodeOptions(opt);
+   }
+
+   /** @summary Returns true if fixed coordinates are configured */
+   isNormalAngles() {
+      const polar = this.getObject();
+      return polar?.fRadian || polar?.fGrad || polar?.fDegree;
+   }
+
+   /** @summary Decode draw options */
+   decodeOptions(opt) {
+      const d = new DrawOptions(opt);
+
+      if (!this.options)
+         this.options = {};
+
+      Object.assign(this.options, {
+         rdot: d.check('RDOT'),
+         rangle: d.check('RANGLE', true) ? d.partAsInt() : 0,
+         NoLabels: d.check('N'),
+         OrthoLabels: d.check('O')
+      });
+
+      this.storeDrawOpt(opt);
+   }
+
+   /** @summary Set angles range displayed by the polargram */
+   setAnglesRange(tmin, tmax, set_obj) {
+      if (tmin >= tmax)
+         tmax = tmin + 1;
+      if (set_obj) {
+         const polar = this.getObject();
+         polar.fRwtmin = tmin;
+         polar.fRwtmax = tmax;
+      }
+      this.t0 = tmin;
+      this.mult = 2*Math.PI/(tmax - tmin);
    }
 
    /** @summary Translate coordinates */
-   translate(angle, radius, keep_float) {
+   translate(input_angle, radius, keep_float) {
+      // recalculate angle
+      const angle = (input_angle - this.t0) * this.mult;
       let rx = this.r(radius),
           ry = rx/this.szx*this.szy,
-          grx = rx * Math.cos(-angle - this.angle),
-          gry = ry * Math.sin(-angle - this.angle);
+          grx = rx * Math.cos(-angle),
+          gry = ry * Math.sin(-angle);
 
       if (!keep_float) {
          grx = Math.round(grx);
@@ -42,15 +86,16 @@ class TGraphPolargramPainter extends ObjectPainter {
    format(radius) {
       if (radius === Math.round(radius)) return radius.toString();
       if (this.ndig > 10) return radius.toExponential(4);
-
       return radius.toFixed((this.ndig > 0) ? this.ndig : 0);
    }
 
    /** @summary Convert axis values to text */
    axisAsText(axis, value) {
       if (axis === 'r') {
-         if (value === Math.round(value)) return value.toString();
-         if (this.ndig>10) return value.toExponential(4);
+         if (value === Math.round(value))
+            return value.toString();
+         if (this.ndig > 10)
+            return value.toExponential(4);
          return value.toFixed(this.ndig+2);
       }
 
@@ -74,10 +119,10 @@ class TGraphPolargramPainter extends ObjectPainter {
          rect.szy = Math.round(0.5*h);
       }
 
-      rect.width = 2*rect.szx;
-      rect.height = 2*rect.szy;
-      rect.x = Math.round(w/2 - rect.szx);
-      rect.y = Math.round(h/2 - rect.szy);
+      rect.width = 2 * rect.szx;
+      rect.height = 2 * rect.szy;
+      rect.x = Math.round(w / 2 - rect.szx);
+      rect.y = Math.round(h / 2 - rect.szy);
 
       rect.hint_delta_x = rect.szx;
       rect.hint_delta_y = rect.szy;
@@ -89,17 +134,16 @@ class TGraphPolargramPainter extends ObjectPainter {
 
    /** @summary Process mouse event */
    mouseEvent(kind, evnt) {
-      const layer = this.getLayerSvg('primitives_layer'),
-            interactive = layer.select('.interactive_ellipse');
-      if (interactive.empty()) return;
+//      const layer = this.getLayerSvg('primitives_layer'),
+//            interactive = layer.select('.interactive_ellipse');
+//      if (interactive.empty()) return;
 
       let pnt = null;
 
       if (kind !== 'leave') {
-         const pos = d3_pointer(evnt, interactive.node());
+         const pos = d3_pointer(evnt, this.draw_g.node());
          pnt = { x: pos[0], y: pos[1], touch: false };
       }
-
       this.processFrameTooltipEvent(pnt);
    }
 
@@ -124,7 +168,8 @@ class TGraphPolargramPainter extends ObjectPainter {
       // rmin -= delta*range;
       rmax += delta*range;
 
-      if ((rmin<polar.fRwrmin) || (rmax>polar.fRwrmax)) rmin = rmax = 0;
+      if ((rmin < polar.fRwrmin) || (rmax > polar.fRwrmax))
+         rmin = rmax = 0;
 
       if ((this.zoom_rmin !== rmin) || (this.zoom_rmax !== rmax)) {
          this.zoom_rmin = rmin;
@@ -133,9 +178,56 @@ class TGraphPolargramPainter extends ObjectPainter {
       }
    }
 
+   /** @summary Process mouse double click event */
+   mouseDoubleClick(evnt) {
+      if (this.zoom_rmin || this.zoom_rmax) {
+         this.zoom_rmin = this.zoom_rmax = 0;
+         this.redrawPad();
+      }
+   }
+
+   /** @summary Draw polargram polar labels */
+   async drawPolarLabels(polar, nmajor) {
+      const fontsize = Math.round(polar.fPolarTextSize * this.szy * 2);
+
+      return this.startTextDrawingAsync(polar.fPolarLabelFont, fontsize)
+                 .then(() => {
+         const lbls = (nmajor === 8) ? ['0', '#frac{#pi}{4}', '#frac{#pi}{2}', '#frac{3#pi}{4}', '#pi', '#frac{5#pi}{4}', '#frac{3#pi}{2}', '#frac{7#pi}{4}'] : ['0', '#frac{2#pi}{3}', '#frac{4#pi}{3}'],
+               aligns = [12, 11, 21, 31, 32, 33, 23, 13];
+
+         for (let n = 0; n < nmajor; ++n) {
+            const angle = -n*2*Math.PI/nmajor;
+            this.draw_g.append('svg:path')
+               .attr('d', `M0,0L${Math.round(this.szx*Math.cos(angle))},${Math.round(this.szy*Math.sin(angle))}`)
+               .call(this.lineatt.func);
+
+            let align = 12, rotate = 0;
+
+            if (this.options.OrthoLabels) {
+               rotate = -n/nmajor*360;
+               if ((rotate > -271) && (rotate < -91)) {
+                  align = 32; rotate += 180;
+               }
+            } else {
+               const aindx = Math.round(16 - angle/Math.PI*4) % 8; // index in align table, here absolute angle is important
+               align = aligns[aindx];
+            }
+
+            this.drawText({ align, rotate,
+                           x: Math.round((this.szx + fontsize)*Math.cos(angle)),
+                           y: Math.round((this.szy + fontsize/this.szx*this.szy)*(Math.sin(angle))),
+                           text: lbls[n],
+                           color: this.getColor(polar.fPolarLabelColor), latex: 1 });
+         }
+
+         return this.finishTextDrawing();
+      });
+   }
+
    /** @summary Redraw polargram */
-   redraw() {
-      if (!this.isMainPainter()) return;
+   async redraw() {
+      if (!this.isMainPainter())
+         return;
 
       const polar = this.getObject(),
             rect = this.getPadPainter().getFrameRect();
@@ -154,13 +246,26 @@ class TGraphPolargramPainter extends ObjectPainter {
       }
 
       this.r = scaleLinear().domain([this.scale_rmin, this.scale_rmax]).range([0, this.szx]);
-      this.angle = polar.fAxisAngle || 0;
+
+      if (polar.fRadian) {
+         polar.fRwtmin = 0; polar.fRwtmax = 2*Math.PI;
+      } else if (polar.fDegree) {
+         polar.fRwtmin = 0; polar.fRwtmax = 360;
+      } else if (polar.fGrad) {
+         polar.fRwtmin = 0; polar.fRwtmax = 200;
+      }
+
+      this.setAnglesRange(polar.fRwtmin, polar.fRwtmax);
 
       const ticks = this.r.ticks(5);
-      let nminor = Math.floor((polar.fNdivRad % 10000) / 100);
+      let nminor = Math.floor((polar.fNdivRad % 10000) / 100),
+          nmajor = polar.fNdivPol % 100;
+      if (nmajor !== 3)
+         nmajor = 8;
 
       this.createAttLine({ attr: polar });
-      if (!this.gridatt) this.gridatt = this.createAttLine({ color: polar.fLineColor, style: 2, width: 1, std: false });
+      if (!this.gridatt)
+         this.gridatt = this.createAttLine({ color: polar.fLineColor, style: 2, width: 1, std: false });
 
       const range = Math.abs(polar.fRwrmax - polar.fRwrmin);
       this.ndig = (range <= 0) ? -3 : Math.round(Math.log10(ticks.length / range));
@@ -178,117 +283,130 @@ class TGraphPolargramPainter extends ObjectPainter {
       }
 
       let exclude_last = false;
+      const pointer_events = this.isBatchMode() ? null : 'visibleFill';
 
-      if ((ticks[ticks.length-1] < polar.fRwrmax) && (this.zoom_rmin === this.zoom_rmax)) {
+      if ((ticks[ticks.length - 1] < polar.fRwrmax) && (this.zoom_rmin === this.zoom_rmax)) {
          ticks.push(polar.fRwrmax);
          exclude_last = true;
       }
 
-      this.startTextDrawing(polar.fRadialLabelFont, Math.round(polar.fRadialTextSize * this.szy * 2));
+      return this.startTextDrawingAsync(polar.fRadialLabelFont, Math.round(polar.fRadialTextSize * this.szy * 2)).then(() => {
+         const axis_angle = - (this.options.rangle || polar.fAxisAngle) / 180 * Math.PI,
+               ca = Math.cos(axis_angle),
+               sa = Math.sin(axis_angle);
+         for (let n = 0; n < ticks.length; ++n) {
+            let rx = this.r(ticks[n]),
+                ry = rx / this.szx * this.szy;
+            this.draw_g.append('ellipse')
+               .attr('cx', 0)
+               .attr('cy', 0)
+               .attr('rx', Math.round(rx))
+               .attr('ry', Math.round(ry))
+               .style('fill', 'none')
+               .style('pointer-events', pointer_events)
+               .call(this.lineatt.func);
 
-      for (let n = 0; n < ticks.length; ++n) {
-         let rx = this.r(ticks[n]), ry = rx/this.szx*this.szy;
-         this.draw_g.append('ellipse')
-             .attr('cx', 0)
-             .attr('cy', 0)
-             .attr('rx', Math.round(rx))
-             .attr('ry', Math.round(ry))
-             .style('fill', 'none')
-             .call(this.lineatt.func);
+            if ((n < ticks.length-1) || !exclude_last) {
+               const halign = ca > 0.7 ? 1 : (ca > 0 ? 3 : (ca > -0.7 ? 1 : 3)),
+                     valign = Math.abs(ca) < 0.7 ? 1 : 3;
+               this.drawText({ align: 10 * halign + valign,
+                               x: Math.round(rx*ca),
+                               y: Math.round(ry*sa),
+                               text: this.format(ticks[n]),
+                               color: this.getColor(polar.fRadialLabelColor), latex: 0 });
+               if (this.options.rdot) {
+                  this.draw_g.append('ellipse')
+                     .attr('cx', Math.round(rx * ca))
+                     .attr('cy', Math.round(ry * sa))
+                     .attr('rx', 3)
+                     .attr('ry', 3)
+                     .style('fill', 'red');
+               }
+            }
 
-         if ((n < ticks.length-1) || !exclude_last) {
-            this.drawText({ align: 23, x: Math.round(rx), y: Math.round(polar.fRadialTextSize * this.szy * 0.5),
-                            text: this.format(ticks[n]), color: this.getColor(polar.fRadialLabelColor), latex: 0 });
-         }
-
-         if ((nminor>1) && ((n < ticks.length-1) || !exclude_last)) {
-            const dr = (ticks[1] - ticks[0]) / nminor;
-            for (let nn = 1; nn < nminor; ++nn) {
-               const gridr = ticks[n] + dr*nn;
-               if (gridr > this.scale_rmax) break;
-               rx = this.r(gridr); ry = rx/this.szx*this.szy;
-               this.draw_g.append('ellipse')
-                   .attr('cx', 0)
-                   .attr('cy', 0)
-                   .attr('rx', Math.round(rx))
-                   .attr('ry', Math.round(ry))
-                   .style('fill', 'none')
-                   .call(this.gridatt.func);
+            if ((nminor > 1) && ((n < ticks.length - 1) || !exclude_last)) {
+               const dr = (ticks[1] - ticks[0]) / nminor;
+               for (let nn = 1; nn < nminor; ++nn) {
+                  const gridr = ticks[n] + dr*nn;
+                  if (gridr > this.scale_rmax) break;
+                  rx = this.r(gridr);
+                  ry = rx / this.szx * this.szy;
+                  this.draw_g.append('ellipse')
+                     .attr('cx', 0)
+                     .attr('cy', 0)
+                     .attr('rx', Math.round(rx))
+                     .attr('ry', Math.round(ry))
+                     .style('fill', 'none')
+                     .style('pointer-events', pointer_events)
+                     .call(this.gridatt.func);
+               }
             }
          }
-      }
 
-      let nmajor = polar.fNdivPol % 100;
-      if ((nmajor !== 8) && (nmajor !== 3)) nmajor = 8;
-
-      return this.finishTextDrawing().then(() => {
-         const fontsize = Math.round(polar.fPolarTextSize * this.szy * 2);
-         this.startTextDrawing(polar.fPolarLabelFont, fontsize);
-
-         lbls = (nmajor === 8) ? ['0', '#frac{#pi}{4}', '#frac{#pi}{2}', '#frac{3#pi}{4}', '#pi', '#frac{5#pi}{4}', '#frac{3#pi}{2}', '#frac{7#pi}{4}'] : ['0', '#frac{2#pi}{3}', '#frac{4#pi}{3}'];
-         const aligns = [12, 11, 21, 31, 32, 33, 23, 13];
-
-         for (let n = 0; n < nmajor; ++n) {
-            const angle = -n*2*Math.PI/nmajor - this.angle;
-            this.draw_g.append('svg:path')
-                .attr('d', `M0,0L${Math.round(this.szx*Math.cos(angle))},${Math.round(this.szy*Math.sin(angle))}`)
+         if (ca < 0.999) {
+            this.draw_g.append('path')
+                .attr('d', `M0,0L${Math.round(this.szx*ca)},${Math.round(this.szy*sa)}`)
+                .style('pointer-events', pointer_events)
                 .call(this.lineatt.func);
-
-            const aindx = Math.round(16 -angle/Math.PI*4) % 8; // index in align table, here absolute angle is important
-
-            this.drawText({ align: aligns[aindx],
-                            x: Math.round((this.szx+fontsize)*Math.cos(angle)),
-                            y: Math.round((this.szy + fontsize/this.szx*this.szy)*(Math.sin(angle))),
-                            text: lbls[n],
-                            color: this.getColor(polar.fPolarLabelColor), latex: 1 });
          }
 
          return this.finishTextDrawing();
       }).then(() => {
+         return this.options.NoLabels ? true : this.drawPolarLabels(polar, nmajor);
+      }).then(() => {
          nminor = Math.floor((polar.fNdivPol % 10000) / 100);
 
          if (nminor > 1) {
-            for (let n = 0; n < nmajor*nminor; ++n) {
+            for (let n = 0; n < nmajor * nminor; ++n) {
                if (n % nminor === 0) continue;
-               const angle = -n*2*Math.PI/nmajor/nminor - this.angle;
+               const angle = -n*2*Math.PI/nmajor/nminor;
                this.draw_g.append('svg:path')
                    .attr('d', `M0,0L${Math.round(this.szx*Math.cos(angle))},${Math.round(this.szy*Math.sin(angle))}`)
                    .call(this.gridatt.func);
             }
          }
 
-         if (this.isBatchMode()) return;
+         if (this.isBatchMode())
+            return;
 
          TooltipHandler.assign(this);
 
-         const layer = this.getLayerSvg('primitives_layer');
-         let interactive = layer.select('.interactive_ellipse');
+         assignContextMenu(this, kNoReorder);
 
-         if (interactive.empty()) {
-            interactive = layer.append('g')
-                               .classed('most_upper_primitives', true)
-                               .append('ellipse')
-                               .classed('interactive_ellipse', true)
-                               .attr('cx', 0)
-                               .attr('cy', 0)
-                               .style('fill', 'none')
-                               .style('pointer-events', 'visibleFill')
-                               .on('mouseenter', evnt => this.mouseEvent('enter', evnt))
-                               .on('mousemove', evnt => this.mouseEvent('move', evnt))
-                               .on('mouseleave', evnt => this.mouseEvent('leave', evnt));
-         }
-
-         interactive.attr('rx', this.szx).attr('ry', this.szy);
-
-         d3_select(interactive.node().parentNode).attr('transform', this.draw_g.attr('transform'));
-
-         if (settings.Zooming && settings.ZoomWheel)
-            interactive.on('wheel', evnt => this.mouseWheel(evnt));
+         this.assignZoomHandler(this.draw_g);
       });
    }
 
+   /** @summary Fill TGraphPolargram context menu */
+   fillContextMenuItems(menu) {
+      const pp = this.getObject();
+      menu.sub('Axis range');
+      menu.addchk(pp.fRadian, 'Radian', flag => { pp.fRadian = flag; pp.fDegree = pp.fGrad = false; this.interactiveRedraw('pad', flag ? 'exec:SetToRadian()' : 'exec:SetTwoPi()'); }, 'Handle data angles as radian range 0..2*Pi');
+      menu.addchk(pp.fDegree, 'Degree', flag => { pp.fDegree = flag; pp.fRadian = pp.fGrad = false; this.interactiveRedraw('pad', flag ? 'exec:SetToDegree()' : 'exec:SetTwoPi()'); }, 'Handle data angles as degree range 0..360');
+      menu.addchk(pp.fGrad, 'Grad', flag => { pp.fGrad = flag; pp.fRadian = pp.fDegree = false; this.interactiveRedraw('pad', flag ? 'exec:SetToGrad()' : 'exec:SetTwoPi()'); }, 'Handle data angles as grad range 0..200');
+      menu.endsub();
+      menu.addSizeMenu('Axis angle', 0, 315, 45, this.options.rangle || pp.fAxisAngle, v => {
+         this.options.rangle = pp.fAxisAngle = v;
+         this.interactiveRedraw('pad', `exec:SetAxisAngle(${v})`);
+      });
+   }
+
+   /** @summary Assign zoom handler to element
+    * @private */
+   assignZoomHandler(elem) {
+      elem.on('mouseenter', evnt => this.mouseEvent('enter', evnt))
+          .on('mousemove', evnt => this.mouseEvent('move', evnt))
+          .on('mouseleave', evnt => this.mouseEvent('leave', evnt));
+
+      if (settings.Zooming)
+         elem.on('dblclick', evnt => this.mouseDoubleClick(evnt));
+
+      if (settings.Zooming && settings.ZoomWheel)
+         elem.on('wheel', evnt => this.mouseWheel(evnt));
+   }
+
    /** @summary Draw TGraphPolargram */
-   static async draw(dom, polargram /* , opt */) {
+   static async draw(dom, polargram, opt) {
       const main = getElementMainPainter(dom);
       if (main) {
          if (main.getObject() === polargram)
@@ -296,7 +414,7 @@ class TGraphPolargramPainter extends ObjectPainter {
          throw Error('Cannot superimpose TGraphPolargram with any other drawings');
       }
 
-      const painter = new TGraphPolargramPainter(dom, polargram);
+      const painter = new TGraphPolargramPainter(dom, polargram, opt);
       return ensureTCanvas(painter, false).then(() => {
          painter.setAsMainPainter();
          return painter.redraw();
@@ -314,58 +432,106 @@ class TGraphPolargramPainter extends ObjectPainter {
 
 class TGraphPolarPainter extends ObjectPainter {
 
-   /** @summary Redraw TGraphPolar */
-   redraw() {
-      this.drawGraphPolar();
-   }
-
    /** @summary Decode options for drawing TGraphPolar */
    decodeOptions(opt) {
       const d = new DrawOptions(opt || 'L');
 
-      if (!this.options) this.options = {};
+      if (!this.options)
+         this.options = {};
+
+      const rdot = d.check('RDOT'),
+            rangle = d.check('RANGLE', true) ? d.partAsInt() : 0;
 
       Object.assign(this.options, {
-          mark: d.check('P'),
-          err: d.check('E'),
-          fill: d.check('F'),
-          line: d.check('L'),
-          curve: d.check('C')
+         mark: d.check('P'),
+         err: d.check('E'),
+         fill: d.check('F'),
+         line: d.check('L'),
+         curve: d.check('C'),
+         radian: d.check('R'),
+         degree: d.check('D'),
+         grad: d.check('G'),
+         Axis: d.check('N') ? 'N' : ''
       });
+
+      if (d.check('O'))
+         this.options.Axis += 'O';
+      if (rdot)
+         this.options.Axis += '_rdot';
+      if (rangle)
+         this.options.Axis += `_rangle${rangle}`;
 
       this.storeDrawOpt(opt);
    }
 
+   /** @summary Update TGraphPolar with polargram */
+   updateObject(obj, opt) {
+      if (!this.matchObjectType(obj))
+         return false;
+
+      if (opt && (opt !== this.options.original))
+         this.decodeOptions(opt);
+
+      if (this._draw_axis && obj.fPolargram)
+         this.getMainPainter().updateObject(obj.fPolargram);
+
+      delete obj.fPolargram;
+      // copy all properties but not polargram
+      Object.assign(this.getObject(), obj);
+      return true;
+   }
+
+   /** @summary Redraw TGraphPolar */
+   redraw() {
+      return this.drawGraphPolar().then(() => this.updateTitle());
+   }
+
    /** @summary Drawing TGraphPolar */
-   drawGraphPolar() {
+   async drawGraphPolar() {
       const graph = this.getObject(),
             main = this.getMainPainter();
 
-      if (!graph || !main?.$polargram) return;
+      if (!graph || !main?.$polargram)
+         return;
 
-      if (this.options.mark) this.createAttMarker({ attr: graph });
-      if (this.options.err || this.options.line || this.options.curve) this.createAttLine({ attr: graph });
-      if (this.options.fill) this.createAttFill({ attr: graph });
+      if (this.options.mark)
+         this.createAttMarker({ attr: graph });
+      if (this.options.err || this.options.line || this.options.curve)
+         this.createAttLine({ attr: graph });
+      if (this.options.fill)
+         this.createAttFill({ attr: graph });
 
       this.createG();
+
+      if (this._draw_axis && !main.isNormalAngles()) {
+         const has_err = graph.fEX?.length;
+         let rwtmin = graph.fX[0],
+             rwtmax = graph.fX[0];
+         for (let n = 0; n < graph.fNpoints; ++n) {
+            rwtmin = Math.min(rwtmin, graph.fX[n] - (has_err ? graph.fEX[n] : 0));
+            rwtmax = Math.max(rwtmax, graph.fX[n] + (has_err ? graph.fEX[n] : 0));
+         }
+         rwtmax += (rwtmax - rwtmin) / graph.fNpoints;
+         main.setAnglesRange(rwtmin, rwtmax, true);
+      }
 
       this.draw_g.attr('transform', main.draw_g.attr('transform'));
 
       let mpath = '', epath = '';
-      const bins = [];
+      const bins = [], pointer_events = this.isBatchMode() ? null : 'visibleFill';
 
       for (let n = 0; n < graph.fNpoints; ++n) {
-         if (graph.fY[n] > main.scale_rmax) continue;
+         if (graph.fY[n] > main.scale_rmax)
+            continue;
 
          if (this.options.err) {
-            let pos1 = main.translate(graph.fX[n], graph.fY[n] - graph.fEY[n]),
-                pos2 = main.translate(graph.fX[n], graph.fY[n] + graph.fEY[n]);
-            epath += `M${pos1.grx},${pos1.gry}L${pos2.grx},${pos2.gry}`;
+            const p1 = main.translate(graph.fX[n], graph.fY[n] - graph.fEY[n]),
+                  p2 = main.translate(graph.fX[n], graph.fY[n] + graph.fEY[n]),
+                  p3 = main.translate(graph.fX[n] + graph.fEX[n], graph.fY[n]),
+                  p4 = main.translate(graph.fX[n] - graph.fEX[n], graph.fY[n]);
 
-            pos1 = main.translate(graph.fX[n] + graph.fEX[n], graph.fY[n]);
-            pos2 = main.translate(graph.fX[n] - graph.fEX[n], graph.fY[n]);
-
-            epath += `M${pos1.grx},${pos1.gry}A${pos2.rx},${pos2.ry},0,0,1,${pos2.grx},${pos2.gry}`;
+            epath += `M${p1.grx},${p1.gry}L${p2.grx},${p2.gry}` +
+                     `M${p3.grx},${p3.gry}A${p4.rx},${p4.ry},0,0,1,${p4.grx},${p4.gry}`;
          }
 
          const pos = main.translate(graph.fX[n], graph.fY[n]);
@@ -382,6 +548,7 @@ class TGraphPolarPainter extends ObjectPainter {
          if (this.options.fill) {
             this.draw_g.append('svg:path')
                 .attr('d', lpath + 'Z')
+                .style('pointer-events', pointer_events)
                 .call(this.fillatt.func);
          }
 
@@ -389,6 +556,7 @@ class TGraphPolarPainter extends ObjectPainter {
             this.draw_g.append('svg:path')
                 .attr('d', lpath)
                 .style('fill', 'none')
+                .style('pointer-events', pointer_events)
                 .call(this.lineatt.func);
          }
       }
@@ -397,6 +565,7 @@ class TGraphPolarPainter extends ObjectPainter {
          this.draw_g.append('svg:path')
                  .attr('d', buildSvgCurve(bins))
                  .style('fill', 'none')
+                 .style('pointer-events', pointer_events)
                  .call(this.lineatt.func);
       }
 
@@ -404,31 +573,46 @@ class TGraphPolarPainter extends ObjectPainter {
          this.draw_g.append('svg:path')
              .attr('d', epath)
              .style('fill', 'none')
+             .style('pointer-events', pointer_events)
              .call(this.lineatt.func);
       }
 
       if (mpath) {
          this.draw_g.append('svg:path')
                .attr('d', mpath)
+               .style('pointer-events', pointer_events)
                .call(this.markeratt.func);
+      }
+
+      if (!this.isBatchMode()) {
+         assignContextMenu(this, kNoReorder);
+         main.assignZoomHandler(this.draw_g);
       }
    }
 
    /** @summary Create polargram object */
-   createPolargram() {
-      const polargram = create('TGraphPolargram'),
-            gr = this.getObject();
-
-      let rmin = gr.fY[0] || 0, rmax = rmin;
-      for (let n = 0; n < gr.fNpoints; ++n) {
-         rmin = Math.min(rmin, gr.fY[n] - gr.fEY[n]);
-         rmax = Math.max(rmax, gr.fY[n] + gr.fEY[n]);
+   createPolargram(gr) {
+      if (!gr.fPolargram) {
+         gr.fPolargram = create('TGraphPolargram');
+         if (this.options.radian)
+            gr.fPolargram.fRadian = true;
+         else if (this.options.degree)
+            gr.fPolargram.fDegree = true;
+         else if (this.options.grad)
+            gr.fPolargram.fGrad = true;
       }
 
-      polargram.fRwrmin = rmin - (rmax-rmin)*0.1;
-      polargram.fRwrmax = rmax + (rmax-rmin)*0.1;
+      let rmin = gr.fY[0] || 0, rmax = rmin;
+      const has_err = gr.fEY?.length;
+      for (let n = 0; n < gr.fNpoints; ++n) {
+         rmin = Math.min(rmin, gr.fY[n] - (has_err ? gr.fEY[n] : 0));
+         rmax = Math.max(rmax, gr.fY[n] + (has_err ? gr.fEY[n] : 0));
+      }
 
-      return polargram;
+      gr.fPolargram.fRwrmin = rmin - (rmax-rmin)*0.1;
+      gr.fPolargram.fRwrmax = rmax + (rmax-rmin)*0.1;
+
+      return gr.fPolargram;
    }
 
    /** @summary Provide tooltip at specified point */
@@ -441,19 +625,25 @@ class TGraphPolarPainter extends ObjectPainter {
 
       for (let n = 0; n < graph.fNpoints; ++n) {
          const pos = main.translate(graph.fX[n], graph.fY[n]),
-               dist2 = (pos.x-pnt.x)**2 + (pos.y-pnt.y)**2;
-         if (dist2 < best_dist2) { best_dist2 = dist2; bestindx = n; bestpos = pos; }
+               dist2 = (pos.grx - pnt.x)**2 + (pos.gry - pnt.y)**2;
+         if (dist2 < best_dist2) {
+            best_dist2 = dist2;
+            bestindx = n;
+            bestpos = pos;
+         }
       }
 
       let match_distance = 5;
-      if (this.markeratt?.used) match_distance = this.markeratt.getFullSize();
+      if (this.markeratt?.used)
+         match_distance = this.markeratt.getFullSize();
 
-      if (Math.sqrt(best_dist2) > match_distance) return null;
+      if (Math.sqrt(best_dist2) > match_distance)
+         return null;
 
       const res = {
          name: this.getObject().fName, title: this.getObject().fTitle,
-         x: bestpos.x, y: bestpos.y,
-         color1: this.markeratt?.used ? this.markeratt.color : this.lineatt.color,
+         x: bestpos.grx, y: bestpos.gry,
+         color1: (this.markeratt?.used ? this.markeratt.color : undefined) ?? (this.fillatt?.used ? this.fillatt.color : undefined) ?? this.lineatt?.color,
          exact: Math.sqrt(best_dist2) < 4,
          lines: [this.getObjectHint()],
          binindx: bestindx,
@@ -471,6 +661,59 @@ class TGraphPolarPainter extends ObjectPainter {
          res.lines.push(`error phi = ${main.axisAsText('phi', graph.fEX[bestindx])}`);
 
       return res;
+   }
+
+   /** @summary Only redraw histogram title
+     * @return {Promise} with painter */
+   async updateTitle() {
+      // case when histogram drawn over other histogram (same option)
+      if (!this._draw_axis)
+         return this;
+
+      const tpainter = this.getPadPainter()?.findPainterFor(null, kTitle, clTPaveText),
+            pt = tpainter?.getObject();
+
+      if (!tpainter || !pt)
+         return this;
+
+      const gr = this.getObject(),
+            draw_title = !gr.TestBit(kNoTitle) && (gStyle.fOptTitle > 0);
+
+      pt.Clear();
+      if (draw_title) pt.AddText(gr.fTitle);
+      return tpainter.redraw().then(() => this);
+   }
+
+
+   /** @summary Draw histogram title
+     * @return {Promise} with painter */
+   async drawTitle() {
+      // case when histogram drawn over other histogram (same option)
+      if (!this._draw_axis)
+         return this;
+
+      const gr = this.getObject(),
+            st = gStyle,
+            draw_title = !gr.TestBit(kNoTitle) && (st.fOptTitle > 0),
+            pp = this.getPadPainter();
+
+      let pt = pp.findInPrimitives(kTitle, clTPaveText);
+
+      if (pt) {
+         pt.Clear();
+         if (draw_title)
+            pt.AddText(gr.fTitle);
+         return this;
+      }
+
+      pt = create(clTPaveText);
+      Object.assign(pt, { fName: kTitle, fFillColor: st.fTitleColor, fFillStyle: st.fTitleStyle, fBorderSize: st.fTitleBorderSize,
+                           fTextFont: st.fTitleFont, fTextSize: st.fTitleFontSize, fTextColor: st.fTitleTextColor, fTextAlign: 22 });
+
+      if (draw_title)
+         pt.AddText(gr.fTitle);
+      return TPavePainter.draw(pp, pt, kPosTitle)
+                         .then(p => { p?.setSecondaryId(this, kTitle); return this; });
    }
 
    /** @summary Show tooltip */
@@ -504,13 +747,14 @@ class TGraphPolarPainter extends ObjectPainter {
    /** @summary Process tooltip event */
    processTooltipEvent(pnt) {
       const hint = this.extractTooltip(pnt);
-      if (!pnt || !pnt.disabled) this.showTooltip(hint);
+      if (!pnt || !pnt.disabled)
+         this.showTooltip(hint);
       return hint;
    }
 
    /** @summary Draw TGraphPolar */
    static async draw(dom, graph, opt) {
-      const painter = new TGraphPolarPainter(dom, graph);
+      const painter = new TGraphPolarPainter(dom, graph, opt);
       painter.decodeOptions(opt);
 
       const main = painter.getMainPainter();
@@ -521,16 +765,16 @@ class TGraphPolarPainter extends ObjectPainter {
 
       let pr = Promise.resolve(null);
       if (!main) {
-         if (!graph.fPolargram)
-            graph.fPolargram = painter.createPolargram();
-         pr = TGraphPolargramPainter.draw(dom, graph.fPolargram);
+         // indicate that axis defined by this graph
+         painter._draw_axis = true;
+         pr = TGraphPolargramPainter.draw(dom, painter.createPolargram(graph), painter.options.Axis);
       }
 
-      return pr.then(() => {
+      return pr.then(gram_painter => {
+         gram_painter?.setSecondaryId(painter, 'polargram');
          painter.addToPadPrimitives();
-         painter.drawGraphPolar();
-         return painter;
-      });
+         return painter.drawGraphPolar();
+      }).then(() => painter.drawTitle());
    }
 
 } // class TGraphPolarPainter

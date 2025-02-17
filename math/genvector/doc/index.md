@@ -162,6 +162,9 @@ v3 = v1 - v2;
 Note that the multiplication between two vectors using the `operator *` is not supported
 because it is ambiguous.
 
+> [!note]
+> For the vectors using the 4D coordinate systems based on mass instead of energy (such as **`ROOT::Math::PxPyPzM4D`** or **`ROOT::Math::PtEtaPhiM4D`**) the unary operator `-` (negation) doesn't perform a 4-vector negation. Instead, it negates only the spatial components, which might result in unintuive behaviours (for instance, for PxPyPzM4D coordinate system, \f$\textbf{v}+ \left(-\textbf{v}\right) \neq \textbf{v} -\textbf{v}\f$).
+
 ### Other Methods
 
 The vector classes support methods for:

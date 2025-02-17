@@ -10,7 +10,7 @@
 #include <RooFit/Detail/NormalizationHelpers.h>
 #include <RooFit/Evaluator.h>
 
-#include "RooFit/Detail/BatchModeDataHelpers.h"
+#include "../src/RooFit/BatchModeDataHelpers.h"
 
 #include <gtest/gtest.h>
 #include <array>
@@ -73,9 +73,8 @@ TEST(ParamHistFunc, ValidateND)
    std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(paramHistFunc, *data.get());
    RooFit::Evaluator evaluator(*clone);
    std::stack<std::vector<double>> vectorBuffers;
-   auto dataSpans =
-      RooFit::Detail::BatchModeDataHelpers::getDataSpans(data, "", nullptr, /*skipZeroWeights=*/true,
-                                                         /*takeGlobalObservablesFromData=*/false, vectorBuffers);
+   auto dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(data, "", nullptr, /*skipZeroWeights=*/true,
+                                                               /*takeGlobalObservablesFromData=*/false, vectorBuffers);
    for (auto const &item : dataSpans) {
       evaluator.setInput(item.first->GetName(), item.second, false);
    }

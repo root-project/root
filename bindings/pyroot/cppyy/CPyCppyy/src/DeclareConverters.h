@@ -72,6 +72,11 @@ protected:                                                                   \
 CPPYY_DECLARE_BASIC_CONVERTER(Long);
 CPPYY_DECLARE_BASIC_CONVERTER(Bool);
 CPPYY_DECLARE_BASIC_CONVERTER(Char);
+class SCharAsIntConverter : public CharConverter {
+public:
+    using CharConverter::CharConverter;
+    virtual PyObject* FromMemory(void*);
+};
 CPPYY_DECLARE_BASIC_CONVERTER(UChar);
 class UCharAsIntConverter : public UCharConverter {
 public:
@@ -339,6 +344,8 @@ public:
 class VoidPtrPtrConverter : public Converter {
 public:
     VoidPtrPtrConverter(cdims_t dims);
+
+public:
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
     virtual PyObject* FromMemory(void* address);
     virtual bool HasState() { return true; }
@@ -355,30 +362,23 @@ CPPYY_DECLARE_BASIC_CONVERTER(PyObject);
 class name##Converter : public InstanceConverter {                           \
 public:                                                                      \
     name##Converter(bool keepControl = true);                                \
+                                                                             \
+public:                                                                      \
     virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);      \
     virtual PyObject* FromMemory(void* address);                             \
     virtual bool ToMemory(PyObject*, void*, PyObject* = nullptr);            \
     virtual bool HasState() { return true; }                                 \
+                                                                             \
 protected:                                                                   \
-    strtype fStringBuffer;                                                   \
+    strtype fBuffer;                                                         \
 }
 
 CPPYY_DECLARE_STRING_CONVERTER(TString, TString);
 CPPYY_DECLARE_STRING_CONVERTER(STLString, std::string);
-#if __cplusplus > 201402L
-// The buffer type needs to be std::string also in the string_view case,
-// otherwise the pointed-to string might not live long enough. See also:
-// https://github.com/wlav/CPyCppyy/issues/13
-CPPYY_DECLARE_STRING_CONVERTER(STLStringViewBase, std::string);
-class STLStringViewConverter : public STLStringViewBaseConverter {
-public:
-    virtual bool SetArg(PyObject*, Parameter&, CallContext* = nullptr);
-    virtual bool ToMemory(PyObject*, void*, PyObject* = nullptr);
-private:
-    std::string_view fStringView;
-};
-#endif
 CPPYY_DECLARE_STRING_CONVERTER(STLWString, std::wstring);
+#if __cplusplus > 201402L
+CPPYY_DECLARE_STRING_CONVERTER(STLStringView, std::string_view);
+#endif
 
 class STLStringMoveConverter : public STLStringConverter {
 public:

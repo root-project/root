@@ -29,12 +29,10 @@ starts with the coefficient that goes with \f$ T_1(x)=x \f$ (i.e. the linear ter
 #include "RooNameReg.h"
 #include "RooBatchCompute.h"
 
-#include <RooFit/Detail/AnalyticalIntegrals.h>
-#include <RooFit/Detail/EvaluateFuncs.h>
+#include <RooFit/Detail/MathFuncs.h>
 
 #include <cmath>
 
-ClassImp(RooChebychev);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -78,28 +76,17 @@ void RooChebychev::selectNormalizationRange(const char* rangeName, bool force)
 
 double RooChebychev::evaluate() const
 {
-  // first bring the range of the variable _x to the normalised range [-1, 1]
-  // calculate sum_k c_k T_k(x) where x is given in the normalised range,
-  // c_0 = 1, and the higher coefficients are given in _coefList
-  double xmax = _x.max(_refRangeName ? _refRangeName->GetName() : nullptr);
-  double xmin = _x.min(_refRangeName ? _refRangeName->GetName() : nullptr);
-
-  std::vector<double> coeffs;
-  for (auto it : _coefList)
-     coeffs.push_back(static_cast<const RooAbsReal &>(*it).getVal());
-  return RooFit::Detail::EvaluateFuncs::chebychevEvaluate(coeffs.data(), _coefList.size(), _x, xmin, xmax);
-}
-
-void RooChebychev::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
    // first bring the range of the variable _x to the normalised range [-1, 1]
    // calculate sum_k c_k T_k(x) where x is given in the normalised range,
    // c_0 = 1, and the higher coefficients are given in _coefList
    double xmax = _x.max(_refRangeName ? _refRangeName->GetName() : nullptr);
    double xmin = _x.min(_refRangeName ? _refRangeName->GetName() : nullptr);
 
-   ctx.addResult(this,
-                 ctx.buildCall("RooFit::Detail::EvaluateFuncs::chebychevEvaluate", _coefList, _coefList.size(), _x, xmin, xmax));
+   std::vector<double> coeffs;
+   for (auto it : _coefList) {
+      coeffs.push_back(static_cast<const RooAbsReal &>(*it).getVal());
+   }
+   return RooFit::Detail::MathFuncs::chebychev(coeffs.data(), _coefList.size(), _x, xmin, xmax);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,37 +108,24 @@ void RooChebychev::doEval(RooFit::EvalContext &ctx) const
 
 Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /* rangeName */) const
 {
-  if (matchArgs(allVars, analVars, _x)) return 1;
-  return 0;
+  return matchArgs(allVars, analVars, _x) ? 1 : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooChebychev::analyticalIntegral(Int_t code, const char *rangeName) const
 {
-  assert(1 == code); (void)code;
+   assert(1 == code);
+   (void)code;
 
-  double xmax = _x.max(_refRangeName ? _refRangeName->GetName() : nullptr);
-  double xmaxFull = _x.max(rangeName);
-  double xmin = _x.min(_refRangeName ? _refRangeName->GetName() : nullptr);
-  double xminFull = _x.min(rangeName);
-  unsigned int sz = _coefList.size();
-
-  std::vector<double> coeffs;
-  for (auto it : _coefList)
-     coeffs.push_back(static_cast<const RooAbsReal &>(*it).getVal());
-
-  return RooFit::Detail::AnalyticalIntegrals::chebychevIntegral(coeffs.data(), sz, xmin, xmax, xminFull, xmaxFull);
-}
-
-std::string RooChebychev::buildCallToAnalyticIntegral(Int_t /* code */, const char *rangeName,
-                                                      RooFit::Detail::CodeSquashContext &ctx) const
-{
    double xmax = _x.max(_refRangeName ? _refRangeName->GetName() : nullptr);
-   double xmaxFull = _x.max(rangeName);
    double xmin = _x.min(_refRangeName ? _refRangeName->GetName() : nullptr);
-   double xminFull = _x.min(rangeName);
    unsigned int sz = _coefList.size();
 
-   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::chebychevIntegral", _coefList, sz, xmin, xmax, xminFull, xmaxFull);
+   std::vector<double> coeffs;
+   for (auto it : _coefList)
+      coeffs.push_back(static_cast<const RooAbsReal &>(*it).getVal());
+
+   return RooFit::Detail::MathFuncs::chebychevIntegral(coeffs.data(), sz, xmin, xmax, _x.min(rangeName),
+                                                       _x.max(rangeName));
 }

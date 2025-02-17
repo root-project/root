@@ -138,12 +138,11 @@ namespace Math {
     /// destructor
     virtual ~GSLMultiRootFinder();
 
- private:
-    // usually copying is non trivial, so we make this unaccessible
-    GSLMultiRootFinder(const GSLMultiRootFinder &);
-    GSLMultiRootFinder & operator = (const GSLMultiRootFinder &);
-
- public:
+    // usually copying is non trivial, so we delete this
+    GSLMultiRootFinder(const GSLMultiRootFinder &) = delete;
+    GSLMultiRootFinder & operator = (const GSLMultiRootFinder &) = delete;
+    GSLMultiRootFinder(GSLMultiRootFinder &&) = delete;
+    GSLMultiRootFinder & operator = (GSLMultiRootFinder &&) = delete;
 
     /// set the type for an algorithm without derivatives
     void SetType(EType type) {

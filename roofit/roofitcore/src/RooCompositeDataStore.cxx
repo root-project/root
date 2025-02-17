@@ -39,9 +39,8 @@ When iterated from start to finish, datasets will be traversed in the order of t
 #include <iomanip>
 #include <iostream>
 
-using std::cout, std::endl, std::map, std::list, std::string;
+using std::map, std::list, std::string;
 
-ClassImp(RooCompositeDataStore);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -132,9 +131,27 @@ std::unique_ptr<RooAbsDataStore> RooCompositeDataStore::reduce(
   // create an empty RooCompositeDataStore
   auto out = std::make_unique<RooCompositeDataStore>(name, title, varsNoIndex, *_indexCat, std::map<std::string,RooAbsDataStore*>{});
 
+  RooCategory* indexCatForCut = nullptr;
+  RooAbsCategory::value_type initialIndex = 0;
+  if (cutVar) {
+    // find _indexCat in the formula recursive servers, if present
+    RooArgSet formulaObservables;
+    cutVar->getObservables(&_vars, formulaObservables);
+    indexCatForCut = dynamic_cast<RooCategory*>(formulaObservables.find(*_indexCat));
+    if (indexCatForCut) {
+      // save initial index to restore it later
+      initialIndex = indexCatForCut->getCurrentIndex();
+    }
+  }
+
   // fill it with reduced versions of components
   for (const auto& item : _dataMap) {
+    if (indexCatForCut) indexCatForCut->setIndex(item.first);
     out->_dataMap[item.first] = item.second->reduce(name, title, varsNoIndex, cutVar, cutRange, nStart, nStop).release();
+  }
+  if (indexCatForCut) {
+    // restore initial index
+    indexCatForCut->setIndex(initialIndex);
   }
 
   // indiceate component ownership and return
@@ -295,7 +312,7 @@ bool RooCompositeDataStore::changeObservableName(const char* from, const char* t
 
   // Check that we found it
   if (!var) {
-    coutE(InputArguments) << "RooCompositeDataStore::changeObservableName(" << GetName() << " no observable " << from << " in this dataset" << endl ;
+    coutE(InputArguments) << "RooCompositeDataStore::changeObservableName(" << GetName() << " no observable " << from << " in this dataset" << std::endl ;
     return true ;
   }
 
@@ -395,9 +412,9 @@ void RooCompositeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarS
 void RooCompositeDataStore::setArgStatus(const RooArgSet& set, bool active)
 {
   for (auto const& item : _dataMap) {
-    RooArgSet* subset = static_cast<RooArgSet*>(set.selectCommon(*item.second->get())) ;
-    item.second->setArgStatus(*subset,active) ;
-    delete subset ;
+    RooArgSet subset;
+    set.selectCommon(*item.second->get(), subset);
+    item.second->setArgStatus(subset,active) ;
   }
   return ;
 }
@@ -457,11 +474,11 @@ void RooCompositeDataStore::resetBuffers()
 
 void RooCompositeDataStore::dump()
 {
-  cout << "RooCompositeDataStore::dump()" << endl ;
+  std::cout << "RooCompositeDataStore::dump()" << std::endl ;
   for (auto const& item : _dataMap) {
-    cout << "state number " << item.first << " has store " << item.second->ClassName() << " with variables " << *item.second->get() ;
-    if (item.second->isWeighted()) cout << " and is weighted " ;
-    cout << endl ;
+    std::cout << "state number " << item.first << " has store " << item.second->ClassName() << " with variables " << *item.second->get() ;
+    if (item.second->isWeighted()) std::cout << " and is weighted " ;
+    std::cout << std::endl ;
   }
 }
 

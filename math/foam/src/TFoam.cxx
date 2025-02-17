@@ -42,7 +42,7 @@ See [full version of FOAM](http://jadach.home.cern.ch/jadach/Foam/Index.html)
 ### Simple example of the use of FOAM:
 
 Begin_Macro(source)
-../../../tutorials/foam/foam_kanwa.C
+../../../tutorials/math/foam/foam_kanwa.C
 End_Macro
 
 ### Canonical nine steering parameters of FOAM

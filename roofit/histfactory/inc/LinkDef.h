@@ -1,6 +1,4 @@
-
-
-#ifdef __CINT__
+#ifdef __CLING__
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
@@ -24,7 +22,6 @@
 #pragma link C++ class RooStats::HistFactory::RooBarlowBeestonLL+ ;
 #pragma link C++ class RooStats::HistFactory::HistFactoryNavigation+ ;
 
-#pragma link C++ class RooStats::HistFactory::ConfigParser+ ;
 #pragma link C++ class RooStats::HistFactory::Measurement+ ;
 #pragma read sourceClass="RooStats::HistFactory::Measurement" targetClass="RooStats::HistFactory::Measurement" checksum="[973506941]" source="std::string fPOI" target="fPOI"  code="{ fPOI.push_back(onfile.fPOI) ; }"
 

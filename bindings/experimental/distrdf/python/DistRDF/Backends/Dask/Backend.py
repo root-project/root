@@ -31,6 +31,7 @@ except ImportError:
 if TYPE_CHECKING:
     from dask_jobqueue import JobQueueCluster
     from DistRDF import Ranges
+    from DistRDF._graph_cache import ExecutionIdentifier
 
 
 def get_total_cores_generic(client: Client) -> int:
@@ -118,6 +119,8 @@ class DaskBackend(Base.BaseBackend):
     def dask_mapper(current_range: Tuple, 
                     headers: List[str], 
                     shared_libraries: List[str],
+                    pcms: List[str],
+                    files: List[str],
                     mapper: Callable) -> Callable:
         """
         Gets the paths to the file(s) in the current executor, then
@@ -139,20 +142,21 @@ class DaskBackend(Base.BaseBackend):
         """
         # Retrieve the current worker local directory
         localdir = get_worker().local_directory
-
-        # Get and declare headers on each worker
+        
+        #Get and declare headers on each worker
         headers_on_executor = [
             os.path.join(localdir, os.path.basename(filepath))
             for filepath in headers
         ]
-        Utils.declare_headers(headers_on_executor)
+        Utils.distribute_headers(headers_on_executor)
 
         # Get and declare shared libraries on each worker
         shared_libs_on_ex = [
             os.path.join(localdir, os.path.basename(filepath))
             for filepath in shared_libraries
         ]
-        Utils.declare_shared_libraries(shared_libs_on_ex)
+                
+        Utils.distribute_shared_libraries(shared_libs_on_ex)
 
         return mapper(current_range)
 
@@ -180,12 +184,18 @@ class DaskBackend(Base.BaseBackend):
         Returns:
             list: A list representing the values of action nodes returned
             after computation (Map-Reduce).
-        """   
+        """  
+        self.distribute_unique_paths(self.headers) 
+        self.distribute_unique_paths(self.shared_libraries)
+        self.distribute_unique_paths(self.pcms)
+        self.distribute_unique_paths(self.files)
+        
+        
         dmapper = dask.delayed(DaskBackend.dask_mapper)
         dreducer = dask.delayed(reducer)
 
-        mergeables_lists = [dmapper(range, self.headers, self.shared_libraries, mapper) for range in ranges]
-
+        mergeables_lists = [dmapper(range, self.headers, self.shared_libraries, self.pcms, self.files, mapper) for range in ranges]
+        
         while len(mergeables_lists) > 1:
             mergeables_lists.append(
                 dreducer(mergeables_lists.pop(0), mergeables_lists.pop(0)))
@@ -235,10 +245,16 @@ class DaskBackend(Base.BaseBackend):
         Returns:
             merged_results (TaskResult): The merged result of the computation.
         """
+        
+        self.distribute_unique_paths(self.headers) 
+        self.distribute_unique_paths(self.shared_libraries)
+        self.distribute_unique_paths(self.pcms)
+        self.distribute_unique_paths(self.files)
+        
+        
         # Set up Dask mapper
         dmapper = dask.delayed(DaskBackend.dask_mapper)
-        mergeables_lists = [dmapper(range, self.headers, self.shared_libraries, mapper) for range in ranges]
-
+        mergeables_lists = [dmapper(range, self.headers, self.shared_libraries, self.pcms, self.files, mapper) for range in ranges]
         # Compute the delayed tasks to get Dask futures that can be passed to the as_completed method
         future_tasks = self.client.compute(mergeables_lists)
 
@@ -368,3 +384,15 @@ class DaskBackend(Base.BaseBackend):
         npartitions = kwargs.pop("npartitions", None)
         headnode = HeadNode.get_headnode(self, npartitions, *args)
         return DataFrame.RDataFrame(headnode)
+
+    def cleanup_cache(self, exec_id: ExecutionIdentifier) -> None:
+        """
+        Remove the computation graph identified by the input argument from the
+        cache.
+        """
+        def remove_from_rdf_cache(exec_id: ExecutionIdentifier) -> None:
+            from DistRDF._graph_cache import _ACTIONS_REGISTER, _RDF_REGISTER
+            _ACTIONS_REGISTER.pop(exec_id, None)
+            _RDF_REGISTER.pop(exec_id, None)
+
+        return self.client.run(remove_from_rdf_cache, exec_id)

@@ -36,7 +36,6 @@ RooRealVar objects and will recycle them as appropriate.
 #include "RooConstVar.h"
 #include "RooArgList.h"
 
-ClassImp(RooRealConstant);
 
 
 

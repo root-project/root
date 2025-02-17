@@ -488,6 +488,67 @@ DeclIdMap_t *TClass::GetDeclIdMap() {
 #endif
 }
 
+
+namespace {
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check whether c is a character that can be part of an identifier.
+bool isIdentifierChar(char c) {
+   return isalnum(c) || c == '_';
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Count the number of occurrences of needle in typename haystack.
+
+static int CountStringOccurrences(const TString &needle, const TString &haystack) {
+   Ssiz_t currStart = 0;
+   int numOccurrences = 0;
+   Ssiz_t posFound = haystack.Index(needle, currStart);
+   while (posFound != TString::kNPOS) {
+      // Ensure it's neither FooNeedle nor NeedleFoo, but Needle is surrounded
+      // by delimiters:
+      auto hasDelimLeft = [&]() {
+         return posFound == 0
+            || !isIdentifierChar(haystack[posFound - 1]);
+      };
+      auto hasDelimRight = [&]() {
+         return posFound + needle.Length() == haystack.Length()
+            || !isIdentifierChar(haystack[posFound + needle.Length()]);
+      };
+
+      if (hasDelimLeft() && hasDelimRight())
+         ++numOccurrences;
+      currStart = posFound + needle.Length();
+      posFound = haystack.Index(needle, currStart);
+   }
+   return numOccurrences;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Whether an existing typeinfo value should be replaced because the new one
+/// has "less" Double32_t.
+
+static bool ShouldReplaceDouble32TypeInfo(TClass *newCl, TClass *existingCl) {
+
+   // If old and new names match, no need to replace.
+   if (!strcmp(newCl->GetName(), existingCl->GetName()))
+      return false;
+
+   int numExistingDouble32 = CountStringOccurrences("Double32_t", existingCl->GetName());
+   int numExistingFloat16 = CountStringOccurrences("Float16_t", existingCl->GetName());
+
+   // If the existing class has no I/O types then it should not be replaced.
+   if (numExistingDouble32 + numExistingFloat16 == 0)
+      return false;
+
+   int numNewDouble32 = CountStringOccurrences("Double32_t", newCl->GetName());
+   int numNewFloat16 = CountStringOccurrences("Float16_t", newCl->GetName());
+
+   // If old has more I/O types, replace!
+   return numExistingDouble32 + numExistingFloat16 > numNewDouble32 + numNewFloat16;
+}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// static: Add a class to the list and map of classes.
 
@@ -498,7 +559,11 @@ void TClass::AddClass(TClass *cl)
    R__LOCKGUARD(gInterpreterMutex);
    gROOT->GetListOfClasses()->Add(cl);
    if (cl->GetTypeInfo()) {
-      GetIdMap()->Add(cl->GetTypeInfo()->name(),cl);
+      bool shouldAddTypeInfo = true;
+      if (TClass* existingCl = GetIdMap()->Find(cl->GetTypeInfo()->name()))
+         shouldAddTypeInfo = ShouldReplaceDouble32TypeInfo(cl, existingCl);
+      if (shouldAddTypeInfo)
+         GetIdMap()->Add(cl->GetTypeInfo()->name(),cl);
    }
    if (cl->fClassInfo) {
       GetDeclIdMap()->Add((void*)(cl->fClassInfo), cl);
@@ -524,7 +589,9 @@ void TClass::RemoveClass(TClass *oldcl)
    R__LOCKGUARD(gInterpreterMutex);
    gROOT->GetListOfClasses()->Remove(oldcl);
    if (oldcl->GetTypeInfo()) {
-      GetIdMap()->Remove(oldcl->GetTypeInfo()->name());
+      if (TClass* existingCl = GetIdMap()->Find(oldcl->GetTypeInfo()->name()))
+         if (existingCl == oldcl)
+            GetIdMap()->Remove(oldcl->GetTypeInfo()->name());
    }
    if (oldcl->fClassInfo) {
       //GetDeclIdMap()->Remove((void*)(oldcl->fClassInfo));
@@ -684,7 +751,9 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
                line[kvalue] = 0;
             }
          } else {
-            strncpy(&line[kvalue], membertype->AsString(p3pointer), TMath::Min(kline-1-kvalue,(int)strlen(membertype->AsString(p3pointer))));
+            line[kvalue] = '-';
+            line[kvalue+1] = '>';
+            strncpy(&line[kvalue+2], membertype->AsString(p3pointer), TMath::Min(kline-1-kvalue-2,(int)strlen(membertype->AsString(p3pointer))));
          }
       } else if (!strcmp(memberFullTypeName, "char*") ||
                  !strcmp(memberFullTypeName, "const char*")) {
@@ -698,7 +767,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
             }
          }
          if (isPrintable) {
-            strncpy(line + kvalue, *ppointer, std::min( i, kline - kvalue));
+            strncpy(line + kvalue, *ppointer, kline - kvalue);
             line[kvalue+i] = 0;
          } else {
             line[kvalue] = 0;
@@ -1075,7 +1144,7 @@ TClass::TClass() :
    fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
+   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
@@ -1113,7 +1182,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
+   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
@@ -1161,7 +1230,7 @@ TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
    fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
+   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
@@ -1189,7 +1258,7 @@ TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t sil
    fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
+   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(theState),
    fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
@@ -1235,7 +1304,7 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
    fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
+   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
@@ -1286,7 +1355,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
+   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
@@ -1318,7 +1387,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fStreamer(nullptr), fIsA(nullptr), fGlobalIsA(nullptr), fIsAMethod(nullptr),
    fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr),
    fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fSizeof(-1),
-   fCanSplit(-1), fIsSyntheticPair(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
+   fCanSplit(-1), fIsSyntheticPair(kFALSE), fHasCustomStreamerMember(kFALSE), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kHasTClassInit),
    fCurrentInfo(nullptr), fLastReadInfo(nullptr), fRefProxy(nullptr),
@@ -1514,7 +1583,7 @@ void TClass::Init(const char *name, Version_t cversion,
             proto->FillTClass(this);
       }
       if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName, /* autoload = */ kTRUE)) {
-         gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
+         gInterpreter->SetClassInfo(this, kFALSE, silent);   // sets fClassInfo pointer
          if (fClassInfo) {
             // This should be moved out of GetCheckSum itself however the last time
             // we tried this cause problem, in particular in the end-of-process operation.
@@ -1649,6 +1718,24 @@ void TClass::Init(const char *name, Version_t cversion,
    } else if (TClassEdit::IsStdPair(GetName())) {
       // std::pairs have implicit conversions
       GetSchemaRules(kTRUE);
+   }
+   for (auto ruletype : {ROOT::TSchemaRule::kReadRule, ROOT::TSchemaRule::kReadRawRule}) {
+      auto &registry = GetReadRulesRegistry(ruletype);
+      auto rulesiter = registry.find(GetName());
+      if (rulesiter != registry.end()) {
+         auto rset = GetSchemaRules(kTRUE);
+         for (const auto &helper : rulesiter->second) {
+            auto rule = new ROOT::TSchemaRule(ruletype, GetName(), helper);
+            TString errmsg;
+            if (!rset->AddRule(rule, ROOT::Detail::TSchemaRuleSet::kCheckAll, &errmsg)) {
+               Warning(
+                  "Init",
+                  "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because %s.",
+                  GetName(), helper.fVersion.c_str(), helper.fTarget.c_str(), errmsg.Data());
+               delete rule;
+            }
+         }
+      }
    }
 
    ResetBit(kLoading);
@@ -1924,6 +2011,20 @@ void TClass::AdoptSchemaRules( ROOT::Detail::TSchemaRuleSet *rules )
    delete fSchemaRules;
    fSchemaRules = rules;
    fSchemaRules->SetClass( this );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the registry for the unassigned read rules.
+
+TClass::SchemaHelperMap_t &TClass::GetReadRulesRegistry(ROOT::TSchemaRule::RuleType_t type)
+{
+   if (type == ROOT::TSchemaRule::kReadRule) {
+      static SchemaHelperMap_t gReadRulesRegistry;
+      return gReadRulesRegistry;
+   } else {
+      static SchemaHelperMap_t gReadRawRulesRegistry;
+      return gReadRawRulesRegistry;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2366,7 +2467,7 @@ Bool_t TClass::CanSplit() const
       This->fCanSplit = 0;
       return kFALSE;
 
-   } else if ( TestBit(TClass::kHasCustomStreamerMember) ) {
+   } else if ( fHasCustomStreamerMember ) {
 
       // We have a custom member function streamer or
       // an older (not StreamerInfo based) automatic streamer.
@@ -3151,7 +3252,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
             return pairinfo->GetClass();
       } else {
          //  Check if we have an STL container that might provide it.
-         static const size_t slen = strlen("pair");
+         static constexpr size_t slen = std::char_traits<char>::length("pair");
          static const char *associativeContainer[] = { "map", "unordered_map", "multimap",
             "unordered_multimap", "set", "unordered_set", "multiset", "unordered_multiset" };
          for(auto contname : associativeContainer) {
@@ -3488,7 +3589,7 @@ Longptr_t TClass::GetDataMemberOffset(const char *name) const
          return info->GetOffset(name);
       }
    }
-   return 0;
+   return TVirtualStreamerInfo::kMissing;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3524,23 +3625,19 @@ TRealData* TClass::GetRealData(const char* name) const
 
    // Try ignoring the array dimensions.
    std::string::size_type firstBracket = givenName.find_first_of("[");
-   if (firstBracket != std::string::npos) {
-      // -- We are looking for an array data member.
-      std::string nameNoDim(givenName.substr(0, firstBracket));
-      TObjLink* lnk = fRealData->FirstLink();
-      while (lnk) {
-         TObject* obj = lnk->GetObject();
-         std::string objName(obj->GetName());
-         std::string::size_type pos = objName.find_first_of("[");
-         // Only match arrays to arrays for now.
-         if (pos != std::string::npos) {
-            objName.erase(pos);
-            if (objName == nameNoDim) {
-               return static_cast<TRealData*>(obj);
-            }
-         }
-         lnk = lnk->Next();
+   std::string nameNoDim(givenName.substr(0, firstBracket));
+   TObjLink *lnk = fRealData->FirstLink();
+   while (lnk) {
+      TObject *obj = lnk->GetObject();
+      std::string objName(obj->GetName());
+      std::string::size_type pos = objName.find_first_of("[");
+      if (pos != std::string::npos) {
+         objName.erase(pos);
       }
+      if (objName == nameNoDim) {
+         return static_cast<TRealData *>(obj);
+      }
+      lnk = lnk->Next();
    }
 
    // Now try it as a pointer.
@@ -4054,7 +4151,7 @@ void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, TColl
 
    visited.Add(this);
    //Check whether a custom streamer
-   if (!TestBit(TClass::kHasCustomStreamerMember)) {
+   if (!fHasCustomStreamerMember) {
       if (GetCollectionProxy()) {
          // We need to look at the collection's content
          // The collection has different kind of elements the check would be required.
@@ -4112,7 +4209,7 @@ void TClass::GetMissingDictionaries(THashTable& result, bool recurse)
    visited.Add(this);
 
    //Check whether a custom streamer
-   if (!TestBit(TClass::kHasCustomStreamerMember)) {
+   if (!fHasCustomStreamerMember) {
       if (GetCollectionProxy()) {
          // We need to look at the collection's content
          // The collection has different kind of elements the check would be required.
@@ -4941,33 +5038,45 @@ const void *TClass::DynamicCast(const TClass *cl, const void *obj, Bool_t up)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a pointer to a newly allocated object of this class.
-/// The class must have a default constructor. For meaning of
-/// defConstructor, see TClass::IsCallingNew().
 ///
-/// If quiet is true, do no issue a message via Error on case
-/// of problems, just return 0.
+/// If quiet is true, do not issue a message via Error in case
+/// of problems, just return `nullptr`.
 ///
-/// The constructor actually called here can be customized by
-/// using the rootcint pragma:
+/// This method is also used by the I/O subsystem to allocate the right amount
+/// of memory for the objects. If a default constructor is not defined for a
+/// certain class, some options are available.
+/// The simplest is to define the default I/O constructor, for example
+/// ~~~{.cpp}
+/// class myClass {
+/// public:
+///    myClass() = delete;
+///    myClass(TRootIOCtor *) {/* do something */}
+/// // more code...
+/// };
+/// ~~~
+///
+/// Moreover, the constructor called by TClass::New can be customized by
+/// using a rootcling pragma as follows:
 /// ~~~ {.cpp}
 ///    #pragma link C++ ioctortype UserClass;
 /// ~~~
-/// For example, with this pragma and a class named MyClass,
-/// this method will called the first of the following 3
-/// constructors which exists and is public:
+/// `TClass::New` will then look for a constructor (for a class `MyClass` in the
+/// following example) in the following order, constructing the object using the
+/// first one in the list that exists and is declared public:
 /// ~~~ {.cpp}
 ///    MyClass(UserClass*);
 ///    MyClass(TRootIOCtor*);
 ///    MyClass(); // Or a constructor with all its arguments defaulted.
 /// ~~~
 ///
-/// When more than one pragma ioctortype is used, the first seen as priority
+/// When more than one `pragma ioctortype` is specified, the priority order is
+/// defined as the definition order; the earliest definitions have higher priority.
 /// For example with:
 /// ~~~ {.cpp}
 ///    #pragma link C++ ioctortype UserClass1;
 ///    #pragma link C++ ioctortype UserClass2;
 /// ~~~
-/// We look in the following order:
+/// ROOT looks for constructors with the following order:
 /// ~~~ {.cpp}
 ///    MyClass(UserClass1*);
 ///    MyClass(UserClass2*);
@@ -5827,7 +5936,7 @@ void TClass::LoadClassInfo() const
 
    // Return if another thread already loaded the info
    // while we were waiting for the lock
-   if (!fCanLoadClassInfo)
+   if (!fCanLoadClassInfo || TestBit(kLoading))
       return;
 
    bool autoParse = !gInterpreter->IsAutoParsingSuspended();
@@ -6811,10 +6920,17 @@ void TClass::StreamerTObject(const TClass* pThis, void *object, TBuffer &b, cons
 ////////////////////////////////////////////////////////////////////////////////
 /// Case of TObjects when fIsOffsetStreamerSet is known to have been set.
 
-void TClass::StreamerTObjectInitialized(const TClass* pThis, void *object, TBuffer &b, const TClass * /* onfile_class */)
+void TClass::StreamerTObjectInitialized(const TClass *pThis, void *object, TBuffer &b, const TClass *onfile_class)
 {
-   TObject *tobj = (TObject*)((Longptr_t)object + pThis->fOffsetStreamer);
-   tobj->Streamer(b);
+   if (R__likely(onfile_class == nullptr || pThis == onfile_class)) {
+      TObject *tobj = (TObject *)((Longptr_t)object + pThis->fOffsetStreamer);
+      tobj->Streamer(b);
+   } else {
+      // This is the case where we are reading an object of a derived class
+      // but the class is not the same as the one we are streaming.
+      // We need to call the Streamer of the base class.
+      StreamerTObjectEmulated(pThis, object, b, onfile_class);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7290,6 +7406,40 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Register a set of read rules for a target class.
+///
+/// Rules will end up here if they are created in a dictionary file that does not
+/// contain the dictionary for the target class.
+
+void TClass::RegisterReadRules(ROOT::TSchemaRule::RuleType_t type, const char *classname,
+                               std::vector<::ROOT::Internal::TSchemaHelper> &&rules)
+{
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   auto cl = TClass::GetClass(classname, false, false);
+   if (cl) {
+      auto rset = cl->GetSchemaRules(kTRUE);
+      for (const auto &it : rules) {
+         auto rule = new ROOT::TSchemaRule(type, cl->GetName(), it);
+         TString errmsg;
+         if (!rset->AddRule(rule, ROOT::Detail::TSchemaRuleSet::kCheckAll, &errmsg)) {
+            ::Warning(
+               "TGenericClassInfo",
+               "The rule for class: \"%s\": version, \"%s\" and data members: \"%s\" has been skipped because %s.",
+               cl->GetName(), it.fVersion.c_str(), it.fTarget.c_str(), errmsg.Data());
+            delete rule;
+         }
+      }
+   } else {
+      auto &registry = GetReadRulesRegistry(type);
+      auto ans = registry.try_emplace(classname, std::move(rules));
+      if (!ans.second) {
+         ans.first->second.insert(ans.first->second.end(), rules.begin(), rules.end());
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Register the StreamerInfo in the given slot, change the State of the
 /// TClass as appropriate.
 
@@ -7322,7 +7472,7 @@ void TClass::RemoveStreamerInfo(Int_t slot)
    if (fStreamerInfo->GetSize() >= slot) {
       R__LOCKGUARD(gInterpreterMutex);
       TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)fStreamerInfo->At(slot);
-      fStreamerInfo->RemoveAt(fClassVersion);
+      fStreamerInfo->RemoveAt(slot);
       if (fLastReadInfo.load() == info)
          fLastReadInfo = nullptr;
       if (fCurrentInfo.load() == info)
@@ -7458,7 +7608,7 @@ ROOT::NewArrFunc_t TClass::GetNewArray() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the wrapper around delete ThiObject.
+/// Return the wrapper around delete ThisObject.
 
 ROOT::DelFunc_t TClass::GetDelete() const
 {
@@ -7466,7 +7616,7 @@ ROOT::DelFunc_t TClass::GetDelete() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the wrapper around delete [] ThiObject.
+/// Return the wrapper around delete [] ThisObject.
 
 ROOT::DelArrFunc_t TClass::GetDeleteArray() const
 {

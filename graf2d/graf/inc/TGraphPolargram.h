@@ -58,12 +58,11 @@ private:
 
 public:
    // TGraphPolarGram status bits
-   enum { kLabelOrtho    = BIT(14)
-        };
+   enum { kLabelOrtho = BIT(14) };
 
-   TGraphPolargram(const char* name, Double_t rmin, Double_t rmax,
-                                     Double_t tmin, Double_t tmax);
    TGraphPolargram(const char* name="");
+   TGraphPolargram(const char* name, Double_t rmin, Double_t rmax,
+                                     Double_t tmin, Double_t tmax, const char *opt = "");
    ~TGraphPolargram() override;
 
    Color_t  GetPolarColorLabel() { return fPolarLabelColor;}

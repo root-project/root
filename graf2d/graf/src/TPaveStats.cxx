@@ -218,10 +218,9 @@ to `gStyle->SetOptFit(111)`
 The following example show how to remove and add a line in a statistics box.
 
 Begin_Macro(source)
-../../../tutorials/hist/statsEditing.C
+../../../tutorials/hist/hist036_TH2_labels.C
 End_Macro
 */
-
 
 const UInt_t kTakeStyle = BIT(17); //see TStyle::SetOptFit/Stat
 
@@ -317,6 +316,29 @@ void TPaveStats::SetOptStat(Int_t stat)
 void TPaveStats::SetStatFormat(const char *form)
 {
    fStatFormat = form;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change drawing option for stats box
+/// While stats should not appear in pad list of primitives,
+/// this is the only way to modify drawing option.
+/// SetDrawOption will not have effect
+/// Redefined here to add **MENU** qualifier to show it in context menu
+
+void TPaveStats::SetOption(Option_t *option)
+{
+   TPaveText::SetOption(option);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Invalid method to change drawing option for stats box
+/// While stats box should never appear in pad list of primitives, this method cannot work
+/// Please use SetOption() method insted
+/// Redefined here to remove **MENU** qualifier and exclude it from context menu
+
+void TPaveStats::SetDrawOption(Option_t *option)
+{
+   TPaveText::SetDrawOption(option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

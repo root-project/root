@@ -82,11 +82,11 @@ const char *TClingMethodArgInfo::DefaultValue() const
    if (!IsValid()) {
       return nullptr;
    }
+   // Could deserialize / create instantiated decls.
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
    const clang::ParmVarDecl *pvd = GetDecl();
    // Instantiate default arg if needed
    if (pvd->hasUninstantiatedDefaultArg()) {
-      // Could deserialize / create instantiated decls.
-      cling::Interpreter::PushTransactionRAII RAII(fInterp);
       auto fd = llvm::cast_or_null<clang::FunctionDecl>(TClingDeclInfo::GetDecl());
       fInterp->getSema().BuildCXXDefaultArgExpr(clang::SourceLocation(),
                                                 const_cast<clang::FunctionDecl*>(fd),

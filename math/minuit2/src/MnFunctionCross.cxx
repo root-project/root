@@ -18,12 +18,14 @@
 #include "Minuit2/MnMachinePrecision.h"
 #include "Minuit2/MnPrint.h"
 
+#include <array>
+
 namespace ROOT {
 
 namespace Minuit2 {
 
-MnCross MnFunctionCross::operator()(const std::vector<unsigned int> &par, const std::vector<double> &pmid,
-                                    const std::vector<double> &pdir, double tlr, unsigned int maxcalls) const
+MnCross MnFunctionCross::operator()(std::span<const unsigned int> par, std::span<const double> pmid,
+                                    std::span<const double> pdir, double tlr, unsigned int maxcalls) const
 {
    // evaluate crossing point where function is equal to MIN + UP,
    // with direction pdir from values pmid
@@ -44,14 +46,15 @@ MnCross MnFunctionCross::operator()(const std::vector<unsigned int> &par, const 
    // for finding the point :
    double tlf = tlr * up;
    double tla = tlr;
-   unsigned int maxitr = 15;
+   unsigned int maxitr = 30;
    unsigned int ipt = 0;
    double aminsv = fFval;
    double aim = aminsv + up;
    // std::cout<<"aim= "<<aim<<std::endl;
    double aopt = 0.;
    bool limset = false;
-   std::vector<double> alsb(3, 0.), flsb(3, 0.);
+   std::array<double, 3> alsb{0., 0., 0.};
+   std::array<double, 3> flsb{0., 0., 0.};
 
    MnPrint print("MnFunctionCross");
 

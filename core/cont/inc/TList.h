@@ -70,7 +70,7 @@ public:
    typedef TListIter Iterator_t;
 
    TList() : fAscending(kTRUE) { }
-   TList(TObject *) : fAscending(kTRUE) { } // for backward compatibility, don't use
+
    virtual           ~TList();
    void              Clear(Option_t *option="") override;
    void              Delete(Option_t *option="") override;

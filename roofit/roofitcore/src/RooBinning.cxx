@@ -26,22 +26,24 @@ the user to add single bin boundaries, mirrored pairs, or sets of
 uniformly spaced boundaries.
 **/
 
-#include "Riostream.h"
-#include "RooBinning.h"
-#include "RooDouble.h"
-#include "RooAbsPdf.h"
-#include "RooRealVar.h"
-#include "RooNumber.h"
-#include "RooMsgService.h"
-#include "TBuffer.h"
-#include "TList.h"
+#include <Riostream.h>
+#include <RooAbsPdf.h>
+#include <RooBinning.h>
+#include <RooDouble.h>
+#include <RooFit/CodegenContext.h>
+#include <RooFit/Detail/MathFuncs.h>
+#include <RooMsgService.h>
+#include <RooNumber.h>
+#include <RooRealVar.h>
+
+#include <TBuffer.h>
+#include <TList.h>
 
 #include <algorithm>
 #include <cmath>
 
 using std::endl;
 
-ClassImp(RooBinning);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,8 +103,7 @@ RooBinning::~RooBinning()
 
 bool RooBinning::addBoundary(double boundary)
 {
-  std::vector<double>::iterator it =
-      std::lower_bound(_boundaries.begin(), _boundaries.end(), boundary);
+  auto it = std::lower_bound(_boundaries.begin(), _boundaries.end(), boundary);
   if (_boundaries.end() != it && *it == boundary) {
     // If boundary previously existed as range delimiter,
     //                    convert to regular boundary now
@@ -130,8 +131,7 @@ void RooBinning::addBoundaryPair(double boundary, double mirrorPoint)
 
 bool RooBinning::removeBoundary(double boundary)
 {
-  std::vector<double>::iterator it = std::lower_bound(_boundaries.begin(),
-      _boundaries.end(), boundary);
+  auto it = std::lower_bound(_boundaries.begin(), _boundaries.end(), boundary);
   if  (_boundaries.end() != it && *it == boundary) {
     _boundaries.erase(it);
     // if some moron deletes the boundaries corresponding to the current
@@ -161,28 +161,16 @@ void RooBinning::addUniform(Int_t nbins, double xlo, double xhi)
   }
 }
 
-namespace {
-
-inline int rawBinNumberImpl(double x, std::vector<double> const& boundaries) {
-  auto it = std::lower_bound(boundaries.begin(), boundaries.end(), x);
-  // always return valid bin number
-  while (boundaries.begin() != it &&
-     (boundaries.end() == it || boundaries.end() == it + 1 || x < *it)) --it;
-  return it - boundaries.begin();
-}
-
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return sequential bin number that contains value x where bin
 /// zero is the first bin with an upper boundary above the lower bound
 /// of the range
 
-void RooBinning::binNumbers(double const * x, int * bins, std::size_t n, int coef) const
+void RooBinning::binNumbers(double const *x, int *bins, std::size_t n, int coef) const
 {
-  for(std::size_t i = 0; i < n; ++i) {
-    bins[i] += coef * (std::max(0, std::min(_nbins, rawBinNumberImpl(x[i], _boundaries) - _blo)));
-  }
+   for (std::size_t i = 0; i < n; ++i) {
+      bins[i] += RooFit::Detail::MathFuncs::binNumber(x[i], coef, _boundaries.data(), _boundaries.size(), _nbins, _blo);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -216,7 +204,7 @@ double* RooBinning::array() const
 void RooBinning::setRange(double xlo, double xhi)
 {
   if (xlo > xhi) {
-    coutE(InputArguments) << "RooBinning::setRange: ERROR low bound > high bound" << endl;
+    coutE(InputArguments) << "RooBinning::setRange: ERROR low bound > high bound" << std::endl;
     return;
   }
   // Remove previous boundaries
@@ -239,9 +227,8 @@ void RooBinning::updateBinCount()
       _nbins = -1;
       return;
   }
-  _blo = rawBinNumberImpl(_xlo, _boundaries);
-  std::vector<double>::const_iterator it = std::lower_bound(
-      _boundaries.begin(), _boundaries.end(), _xhi);
+  _blo = RooFit::Detail::MathFuncs::rawBinNumber(_xlo, _boundaries.data(), _boundaries.size());
+  auto it = std::lower_bound(_boundaries.begin(), _boundaries.end(), _xhi);
   if (_boundaries.begin() != it && (_boundaries.end() == it || _xhi < *it)) --it;
   const Int_t bhi = it - _boundaries.begin();
   _nbins = bhi - _blo;
@@ -254,7 +241,7 @@ void RooBinning::updateBinCount()
 bool RooBinning::binEdges(Int_t bin, double& xlo, double& xhi) const
 {
   if (0 > bin || bin >= _nbins) {
-    coutE(InputArguments) << "RooBinning::binEdges ERROR: bin number must be in range (0," << _nbins << ")" << endl;
+    coutE(InputArguments) << "RooBinning::binEdges ERROR: bin number must be in range (0," << _nbins << ")" << std::endl;
     return true;
   }
   xlo = _boundaries[bin + _blo], xhi = _boundaries[bin + _blo + 1];
@@ -356,4 +343,9 @@ void RooBinning::Streamer(TBuffer &R__b)
    } else {
      R__b.WriteClassBuffer(RooBinning::Class(),this);
    }
+}
+
+std::string RooBinning::translateBinNumber(RooFit::Experimental::CodegenContext &ctx, RooAbsArg const &var, int coef) const
+{
+   return ctx.buildCall("RooFit::Detail::MathFuncs::binNumber", var, coef, _boundaries, _boundaries.size(), _nbins, _blo);
 }

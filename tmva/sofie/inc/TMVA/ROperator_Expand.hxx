@@ -63,45 +63,58 @@ public:
       fInitialized = model.IsInitializedTensor(fNX);
       // Broadcast X to the common shape fShapeY
       bool broadcast = !UTILITY::AreSameShape(fShapeX, fShapeY);
-      if (broadcast && model.IsInitializedTensor(fNX)) {
+      if (model.IsInitializedTensor(fNX)) {
          // If X is an initialized tensor (constant)
          auto data = model.GetInitializedTensorData(fNX);
-         std::shared_ptr<void> broadcastedData(
-               UTILITY::UnidirectionalBroadcast<float>(static_cast<float *>(data.get()), fShapeX, fShapeY),
-               std::default_delete<float[]>());
-         // Update the data and the shape of X
-         model.UpdateInitializedTensor(fNX, model.GetTensorType(fNX), fShapeY, broadcastedData);
-         fShapeX = fShapeY;
+         if (broadcast) {
+            std::shared_ptr<void> broadcastedData(
+               UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), fShapeX, fShapeY),
+               std::default_delete<T[]>());
+            // Update the data and the shape of X
+            model.UpdateInitializedTensor(fNX, model.GetTensorType(fNX), fShapeY, broadcastedData);
+            fShapeX = fShapeY;
+            // need to set as a not writable tensor
+            model.SetNotWritableInitializedTensor(fNX);
+            data = broadcastedData;
+         }
+         if (broadcast || model.IsConstantTensor(fNX)) {
+            fIsOutputConstant = true; // constant output in this case
+            model.AddConstantTensor(fNY, model.GetTensorType(fNX), fShapeY, data);
+         } else {
+            model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
+         }
+      } else {
+         // case input is not initialized
+         model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
       }
-      model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
       fType = ConvertTypeToString(model.GetTensorType(fNX));
+      if (model.Verbose())
+         std::cout << "Expand - output is with shape " << ConvertShapeToString(fShapeY) << std::endl;
    }
 
    std::string GenerateInitCode() override {
       std::stringstream out;
+      if (!fIsOutputConstant && (fInitialized || fShapeX == fShapeY  ) ) {
+         size_t length = ConvertShapeToLength(fShapeY);
+         out << "// Copying initialized tensor " << fNX << " to " << fNY << "\n";
+         out << SP << "std::copy(tensor_" << fNX << ", " << "tensor_" << fNX << " + " << length << ", tensor_" << fNY << ");\n";
+      }
       return out.str();
    }
 
    std::string Generate(std::string OpName) override {
+      if (fIsOutputConstant) return "";
       OpName = "op_" + OpName;
-
       if (fShapeY.empty()) {
          throw std::runtime_error("TMVA SOFIE Expand Op called to Generate without being initialized first");
       }
       std::stringstream out;
       out << SP << "\n//------ Expand Op" << "\n";
-      size_t length = ConvertShapeToLength(fShapeY);
-      // No need to broadcast A if it's an initialized tensor
-      if (fInitialized) {
-         out << "// Copying initialized tensor " << fNX << " to " << fNY << "\n";
-         out << SP << "std::copy(tensor_" << fNX << ", " << "tensor_" << fNX << " + " << length << ", tensor_" << fNY << ");\n";
-      } else {
+      // No need to broadcast A if it's an initialized tensor or shapes are the same
+      if (!fInitialized && fShapeX != fShapeY) {
          out << SP << "// Broadcasting uninitialized tensor " << fNX << "\n";
-         out << SP << "{\n";
-         out << SP << SP << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_" << fNX << ", " << ConvertShapeToString(fShapeX) << ", " << ConvertShapeToString(fShapeY) << ");\n";
-         out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNY << ");\n";
-         out << SP << SP << "delete[] data;\n";
-         out << SP << "}\n";
+         out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << fType << ">(tensor_" << fNX << ", " << ConvertShapeToString(fShapeX) << ", " << ConvertShapeToString(fShapeY)
+                   << ", fTensor_" << fNY << ");\n";
       }
       return out.str();
    }

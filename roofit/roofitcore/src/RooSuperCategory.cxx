@@ -42,11 +42,8 @@ supercategory will propagate to its input categories.
 
 using std::endl, std::ostream;
 
-ClassImp(RooSuperCategory);
 
-RooSuperCategory::RooSuperCategory() : _multiCat("MultiCatProxy", "Stores a RooMultiCategory", this, true, true, true)
-{
-}
+RooSuperCategory::RooSuperCategory() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a super category from other categories.
@@ -57,13 +54,13 @@ RooSuperCategory::RooSuperCategory() : _multiCat("MultiCatProxy", "Stores a RooM
 RooSuperCategory::RooSuperCategory(const char *name, const char *title, const RooArgSet& inputCategories) :
   RooAbsCategoryLValue(name, title),
   _multiCat("MultiCatProxy", "Stores a RooMultiCategory", this,
-      *new RooMultiCategory((std::string(name) + "_internalMultiCat").c_str(), title, inputCategories), true, true, true)
+      std::make_unique<RooMultiCategory>((std::string(name) + "_internalMultiCat").c_str(), title, inputCategories), true, true)
 {
   // Check category list
   for (const auto arg : inputCategories) {
     if (!arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
       coutE(InputArguments) << "RooSuperCategory::RooSuperCategory(" << GetName() << "): input category " << arg->GetName()
-             << " is not an lvalue. Use RooMultiCategory instead." << endl ;
+             << " is not an lvalue. Use RooMultiCategory instead." << std::endl ;
       throw std::invalid_argument("Arguments of RooSuperCategory must be lvalues.");
     }
   }

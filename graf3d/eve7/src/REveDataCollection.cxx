@@ -9,10 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/REveDataCollection.hxx>
-#include <ROOT/REveUtil.hxx>
-#include <ROOT/REveSelection.hxx>
 #include <ROOT/REveManager.hxx>
+#include <ROOT/REveDataCollection.hxx>
+#include <ROOT/REveSelection.hxx>
+#include <ROOT/REveUtil.hxx>
 
 #include "TROOT.h"
 #include "TMethod.h"
@@ -294,21 +294,22 @@ void REveDataCollection::SetFilterExpr(const char* filter)
 
    if (fFilterExpr.Length())
    {
+      if ( ! REveUtil::VerifyObjectFilterOrTableExpression(fFilterExpr.Data())) {
+         throw eh + "filter-expression verification failed.";
+      }
       std::stringstream s;
       s << "*((std::function<bool(" << fItemClass->GetName() << "*)>*)" << std::hex << std::showbase
         << (size_t)&fFilterFoo << ") = [](" << fItemClass->GetName() << "* p){" << fItemClass->GetName()
         << " &i=*p; return (" << fFilterExpr.Data() << "); };";
 
       // printf("%s\n", s.Data());
-      try {
-         gROOT->ProcessLine(s.str().c_str());
-         // AMT I don't know why ApplyFilter call is separated
-         ApplyFilter();
+      int err;
+      gROOT->ProcessLine(s.str().c_str(), &err);
+      if (err != TInterpreter::kNoError) {
+         throw eh + "filter expression compilation failed.";
       }
-      catch (const std::exception &exc)
-      {
-         R__LOG_ERROR(REveLog()) << "EveDataCollection::SetFilterExpr" << exc.what();
-      }
+      // AMT I don't know why ApplyFilter call is separated
+      ApplyFilter();
    }
    else
    {
@@ -345,7 +346,7 @@ void REveDataCollection::ApplyFilter()
 
       ii->SetFiltered( ! res );
 
-      ids.push_back(idx++);
+      ids.push_back(idx++); // all of them? SetFiltered() could return status-change
    }
    StampObjProps();
    fItemList->StampObjProps();
@@ -359,7 +360,6 @@ void  REveDataCollection::StreamPublicMethods(nlohmann::json &j) const
    j["fPublicFunctions"] = nlohmann::json::array();
    TMethod *meth;
    TIter next(fItemClass->GetListOfAllPublicMethods());
-   int cnt = 0;
    while ((meth = (TMethod *)next())) {
       // Filter out ctor, dtor, some ROOT stuff.
 
@@ -400,13 +400,6 @@ void  REveDataCollection::StreamPublicMethods(nlohmann::json &j) const
       jm["r"] = meth->GetReturnTypeName();
       jm["c"] = meth->GetClass()->GetName();
       j["fPublicFunctions"].push_back(jm);
-
-      if (m.Contains("charge"))
-      {
-         printf("FOUND chargw methos %s %d\n\n", m.Data(), cnt);
-      }
-
-      cnt++;
    }
 }
 

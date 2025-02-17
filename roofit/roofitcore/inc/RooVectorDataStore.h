@@ -292,7 +292,7 @@ public:
       auto beg = std::min(_vec.cbegin() + first, _vec.cend());
       auto end = std::min(_vec.cbegin() + last,  _vec.cend());
 
-      return std::span<const double>(&*beg, std::distance(beg, end));
+      return std::span<const double>(_vec.data(), std::distance(beg, end));
     }
 
     std::size_t size() const { return _vec.size() ; }
@@ -498,7 +498,7 @@ public:
       auto beg = std::min(_vec.cbegin() + first, _vec.cend());
       auto end = std::min(_vec.cbegin() + last,  _vec.cend());
 
-      return std::span<const RooAbsCategory::value_type>(&*beg, std::distance(beg, end));
+      return std::span<const RooAbsCategory::value_type>(_vec.data(), std::distance(beg, end));
     }
 
 

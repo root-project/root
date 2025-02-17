@@ -4,11 +4,11 @@ TEST(RNTuple, ReconstructModel)
 {
    FileRaii fileGuard("test_ntuple_reconstruct.root");
    auto model = RNTupleModel::Create();
-   auto fieldPt = model->MakeField<float>("pt", 42.0);
-   auto fieldNnlo = model->MakeField<std::vector<std::vector<float>>>("nnlo");
-   auto fieldKlass = model->MakeField<CustomStruct>("klass");
-   auto fieldArray = model->MakeField<std::array<double, 2>>("array");
-   auto fieldVariant = model->MakeField<std::variant<double, std::variant<std::string, double>>>("variant");
+   *model->MakeField<float>("pt") = 42.0;
+   model->MakeField<std::vector<std::vector<float>>>("nnlo");
+   model->MakeField<CustomStruct>("klass");
+   model->MakeField<std::array<double, 2>>("array");
+   model->MakeField<std::variant<double, std::variant<std::string, double>>>("variant");
    model->Freeze();
    {
       RPageSinkFile sink("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions());
@@ -23,7 +23,7 @@ TEST(RNTuple, ReconstructModel)
    try {
       source.SetEntryRange({0, source.GetNEntries() + 1});
       FAIL() << "invalid entry range should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid entry range"));
    }
    // Should not throw
@@ -33,7 +33,7 @@ TEST(RNTuple, ReconstructModel)
    try {
       modelReconstructed->GetDefaultEntry().GetPtr<float>("xyz");
       FAIL() << "invalid field name should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name"));
    }
    auto vecPtr = modelReconstructed->GetDefaultEntry().GetPtr<std::vector<std::vector<float>>>("nnlo");
@@ -45,6 +45,16 @@ TEST(RNTuple, ReconstructModel)
    auto variant =
       modelReconstructed->GetDefaultEntry().GetPtr<std::variant<double, std::variant<std::string, double>>>("variant");
    EXPECT_TRUE(variant != nullptr);
+
+   auto createOpts = RNTupleDescriptor::RCreateModelOptions();
+   createOpts.fCreateBare = true;
+   auto modelReconstructedBare = source.GetSharedDescriptorGuard()->CreateModel(createOpts);
+   try {
+      modelReconstructedBare->GetDefaultEntry();
+      FAIL() << "getting the default entry of a bare model should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("bare model"));
+   }
 }
 
 TEST(RNTuple, MultipleInFile)
@@ -53,13 +63,13 @@ TEST(RNTuple, MultipleInFile)
    auto file = TFile::Open(fileGuard.GetPath().c_str(), "RECREATE");
    {
       auto model = RNTupleModel::Create();
-      auto fieldPt = model->MakeField<float>("pt", 42.0);
+      *model->MakeField<float>("pt") = 42.0;
       auto ntuple = RNTupleWriter::Append(std::move(model), "first", *file);
       ntuple->Fill();
    }
    {
       auto model = RNTupleModel::Create();
-      auto fieldPt = model->MakeField<float>("E", 1.0);
+      *model->MakeField<float>("E") = 1.0;
       auto ntuple = RNTupleWriter::Append(std::move(model), "second", *file);
       ntuple->Fill();
    }
@@ -85,16 +95,15 @@ TEST(RNTuple, MultipleInFile)
    EXPECT_EQ(1, n);
 }
 
-
 TEST(RNTuple, WriteRead)
 {
    FileRaii fileGuard("test_ntuple_writeread.root");
 
    auto modelWrite = RNTupleModel::Create();
-   auto wrSignal = modelWrite->MakeField<bool>("signal", true);
-   auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
-   auto wrEnergy = modelWrite->MakeField<float>("energy", 7.0);
-   auto wrTag = modelWrite->MakeField<std::string>("tag", "xyz");
+   *modelWrite->MakeField<bool>("signal") = true;
+   *modelWrite->MakeField<float>("pt") = 42.0;
+   *modelWrite->MakeField<float>("energy") = 7.0;
+   *modelWrite->MakeField<std::string>("tag") = "xyz";
    auto wrJets = modelWrite->MakeField<std::vector<float>>("jets");
    wrJets->push_back(1.0);
    wrJets->push_back(2.0);
@@ -189,20 +198,39 @@ TEST(RNTuple, WriteReadInlinedModel)
    EXPECT_FLOAT_EQ(3.2, (*readvpz)[2]);
 }
 
+TEST(RNTuple, WriteReadSubdir)
+{
+   FileRaii fileGuard("test_ntuple_writeread_subdir.root");
+
+   auto model = RNTupleModel::Create();
+   *model->MakeField<float>("pt") = 137.0;
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto dir = file->mkdir("foo");
+      auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *dir);
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("/foo/ntpl", fileGuard.GetPath());
+   EXPECT_EQ(1U, reader->GetNEntries());
+   reader->LoadEntry(0);
+   EXPECT_FLOAT_EQ(137.0, *reader->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
+}
+
 TEST(RNTuple, FileAnchor)
 {
    FileRaii fileGuard("test_ntuple_file_anchor.root");
 
    {
       auto model = RNTupleModel::Create();
-      model->MakeField<int>("a", 42);
+      *model->MakeField<int>("a") = 42;
       auto writer = RNTupleWriter::Recreate(std::move(model), "A", fileGuard.GetPath());
       writer->Fill();
    }
 
    {
       auto model = RNTupleModel::Create();
-      model->MakeField<int>("b", 137);
+      *model->MakeField<int>("b") = 137;
       auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "UPDATE"));
       {
          auto writer = RNTupleWriter::Append(std::move(model), "B", *f);
@@ -214,7 +242,8 @@ TEST(RNTuple, FileAnchor)
    auto readerB = RNTupleReader::Open("B", fileGuard.GetPath());
 
    auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
-   auto readerA = RNTupleReader::Open(f->Get<RNTuple>("A"));
+   auto ntuple = std::unique_ptr<ROOT::RNTuple>(f->Get<ROOT::RNTuple>("A"));
+   auto readerA = RNTupleReader::Open(*ntuple);
 
    EXPECT_EQ(1U, readerA->GetNEntries());
    EXPECT_EQ(1U, readerB->GetNEntries());
@@ -232,8 +261,8 @@ TEST(RNTuple, Clusters)
    FileRaii fileGuard("test_ntuple_clusters.root");
 
    auto modelWrite = RNTupleModel::Create();
-   auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
-   auto wrTag = modelWrite->MakeField<std::string>("tag", "xyz");
+   auto wrPt = modelWrite->MakeField<float>("pt");
+   auto wrTag = modelWrite->MakeField<std::string>("tag");
    auto wrNnlo = modelWrite->MakeField<std::vector<std::vector<float>>>("nnlo");
    auto wrFourVec = modelWrite->MakeField<std::array<float, 4>>("fourVec");
    wrNnlo->push_back(std::vector<float>());
@@ -249,6 +278,8 @@ TEST(RNTuple, Clusters)
 
    {
       auto writer = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      *wrPt = 42.0;
+      *wrTag = "xyz";
       writer->Fill();
       writer->CommitCluster();
       *wrPt = 24.0;
@@ -307,16 +338,71 @@ TEST(RNTuple, ClusterEntries)
 {
    FileRaii fileGuard("test_ntuple_cluster_entries.root");
    auto model = RNTupleModel::Create();
-   auto field = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+   *model->MakeField<float>({"pt", "transverse momentum"}) = 42.0;
 
    {
       RNTupleWriteOptions opt;
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), opt);
       for (int i = 0; i < 100; i++) {
          ntuple->Fill();
-         if (i && ((i % 5) == 0))
+         if (((i + 1) % 5) == 0)
             ntuple->CommitCluster();
       }
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   // 100 entries / 5 entries per cluster
+   EXPECT_EQ(20, ntuple->GetDescriptor().GetNClusters());
+}
+
+TEST(RNTuple, ClusterEntriesAuto)
+{
+   FileRaii fileGuard("test_ntuple_cluster_entries_auto.root");
+   auto model = RNTupleModel::Create();
+   model->MakeField<float>({"pt", "transverse momentum"});
+
+   {
+      RNTupleWriteOptions options;
+      options.SetCompression(0);
+      options.SetEnablePageChecksums(false);
+      options.SetApproxZippedClusterSize(5 * sizeof(float));
+      options.SetPageBufferBudget(1000 * 1000);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
+      for (int i = 0; i < 100; i++) {
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   // 100 entries / 5 entries per cluster
+   EXPECT_EQ(20, ntuple->GetDescriptor().GetNClusters());
+}
+
+TEST(RNTuple, ClusterEntriesAutoStatus)
+{
+   FileRaii fileGuard("test_ntuple_cluster_entries_auto_status.root");
+   {
+      auto model = RNTupleModel::CreateBare();
+      model->MakeField<float>({"pt", "transverse momentum"});
+
+      int FlushClusterCalled = 0;
+      RNTupleFillStatus status;
+
+      RNTupleWriteOptions options;
+      options.SetCompression(0);
+      options.SetEnablePageChecksums(false);
+      options.SetApproxZippedClusterSize(5 * sizeof(float));
+      options.SetPageBufferBudget(1000 * 1000);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
+      auto entry = ntuple->CreateEntry();
+      for (int i = 0; i < 100; i++) {
+         ntuple->FillNoFlush(*entry, status);
+         if (status.ShouldFlushCluster()) {
+            ntuple->FlushCluster();
+            FlushClusterCalled++;
+         }
+      }
+      EXPECT_EQ(20, FlushClusterCalled);
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
@@ -328,16 +414,15 @@ TEST(RNTuple, PageSize)
 {
    FileRaii fileGuard("test_ntuple_elements_per_page.root");
    auto model = RNTupleModel::Create();
-   auto field = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+   *model->MakeField<float>({"pt", "transverse momentum"}) = 42.0;
 
    {
       RNTupleWriteOptions opt;
-      opt.SetApproxUnzippedPageSize(200);
-      auto ntuple = RNTupleWriter::Recreate(
-         std::move(model), "ntuple", fileGuard.GetPath(), opt
-      );
+      opt.SetInitialUnzippedPageSize(40);
+      opt.SetMaxUnzippedPageSize(200);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), opt);
       for (int i = 0; i < 1000; i++) {
-         ntuple->Fill();
+         writer->Fill();
       }
    }
 
@@ -347,125 +432,24 @@ TEST(RNTuple, PageSize)
    EXPECT_EQ(20, col0_pages.fPageInfos.size());
 }
 
-TEST(RNTupleModel, EnforceValidFieldNames)
+TEST(RNTupleWriteOptions, SamePageMergingChecksum)
 {
-   auto model = RNTupleModel::Create();
+   RNTupleWriteOptions options;
+   options.SetEnableSamePageMerging(false);
+   // Should not have turned off page checksums
+   EXPECT_TRUE(options.GetEnablePageChecksums());
 
-   // MakeField
-   try {
-      auto field3 = model->MakeField<float>("", 42.0);
-      FAIL() << "empty string as field name should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("name cannot be empty string"));
-   }
-   try {
-      auto field3 = model->MakeField<float>("pt.pt", 42.0);
-      FAIL() << "field name with periods should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("name 'pt.pt' cannot contain dot characters '.'"));
-   }
-
-   // Previous failures to create 'pt' should not block the name
-   auto field = model->MakeField<float>("pt", 42.0);
+   options.SetEnableSamePageMerging(true);
+   options.SetEnablePageChecksums(false);
+   // Should have automatically turned off same page merging
+   EXPECT_FALSE(options.GetEnableSamePageMerging());
 
    try {
-      auto field2 = model->MakeField<float>("pt", 42.0);
-      FAIL() << "repeated field names should throw";
-   } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
+      options.SetEnableSamePageMerging(true);
+      FAIL() << "enable same page merging should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("requires page checksums"));
    }
-
-   // AddField
-   try {
-      model->AddField(std::make_unique<RField<float>>("pt"));
-      FAIL() << "repeated field names should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
-   }
-
-   // MakeCollection
-   try {
-      auto otherModel = RNTupleModel::Create();
-      auto collection = model->MakeCollection("pt", std::move(otherModel));
-      FAIL() << "repeated field names should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("field name 'pt' already exists"));
-   }
-
-   // subfield names don't throw because full name differs (otherModel.pt)
-   auto otherModel = RNTupleModel::Create();
-   auto otherField = otherModel->MakeField<float>("pt", 42.0);
-   auto collection = model->MakeCollection("otherModel", std::move(otherModel));
-}
-
-TEST(RNTupleModel, FieldDescriptions)
-{
-   FileRaii fileGuard("test_ntuple_field_descriptions.root");
-   auto model = RNTupleModel::Create();
-
-   auto pt = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
-
-   auto charge = std::make_unique<RField<float>>(RField<float>("charge"));
-   charge->SetDescription("electric charge");
-   model->AddField(std::move(charge));
-
-   {
-      RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-   }
-
-   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   std::vector<std::string> fieldDescriptions;
-   for (auto &f : ntuple->GetDescriptor().GetTopLevelFields()) {
-      fieldDescriptions.push_back(f.GetFieldDescription());
-   }
-   ASSERT_EQ(2u, fieldDescriptions.size());
-   EXPECT_EQ(std::string("transverse momentum"), fieldDescriptions[0]);
-   EXPECT_EQ(std::string("electric charge"), fieldDescriptions[1]);
-}
-
-TEST(RNTupleModel, CollectionFieldDescriptions)
-{
-   FileRaii fileGuard("test_ntuple_collection_field_descriptions.root");
-   {
-      auto muon = RNTupleModel::Create();
-      muon->SetDescription("muons after basic selection");
-
-      auto model = RNTupleModel::Create();
-      model->MakeCollection("Muon", std::move(muon));
-      RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-   }
-
-   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto &muon_desc = *ntuple->GetDescriptor().GetTopLevelFields().begin();
-   EXPECT_EQ(std::string("muons after basic selection"), muon_desc.GetFieldDescription());
-}
-
-TEST(RNTupleModel, GetField)
-{
-   auto m = RNTupleModel::Create();
-   m->MakeField<int>("x");
-   m->MakeField<CustomStruct>("cs");
-   m->Freeze();
-   EXPECT_EQ(m->GetField("x").GetFieldName(), "x");
-   EXPECT_EQ(m->GetField("x").GetTypeName(), "std::int32_t");
-   EXPECT_EQ(m->GetField("cs.v1").GetFieldName(), "v1");
-   EXPECT_EQ(m->GetField("cs.v1").GetTypeName(), "std::vector<float>");
-   try {
-      m->GetField("nonexistent");
-      FAIL() << "invalid field name should throw";
-   } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
-   }
-   try {
-      m->GetField("");
-      FAIL() << "empty field name should throw";
-   } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field"));
-   }
-   EXPECT_EQ("", m->GetFieldZero().GetQualifiedFieldName());
-   EXPECT_EQ("x", m->GetField("x").GetQualifiedFieldName());
-   EXPECT_EQ("cs", m->GetField("cs").GetQualifiedFieldName());
-   EXPECT_EQ("cs.v1", m->GetField("cs.v1").GetQualifiedFieldName());
 }
 
 TEST(RNTuple, EmptyString)
@@ -475,13 +459,13 @@ TEST(RNTuple, EmptyString)
       auto model = RNTupleModel::Create();
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", "");
       FAIL() << "empty writer storage location should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("empty storage location"));
    }
    try {
       auto ntuple = RNTupleReader::Open("myNTuple", "");
       FAIL() << "empty reader storage location should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("empty storage location"));
    }
 
@@ -490,31 +474,24 @@ TEST(RNTuple, EmptyString)
       auto model = RNTupleModel::Create();
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "", "file.root");
       FAIL() << "empty RNTuple name should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("empty RNTuple name"));
    }
    try {
       auto ntuple = RNTupleReader::Open("", "file.root");
       FAIL() << "empty RNTuple name should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("empty RNTuple name"));
    }
 }
 
 TEST(RNTuple, NullSafety)
 {
-   // RNTupleModel
    auto model = RNTupleModel::Create();
-   try {
-      auto bad = model->MakeCollection("bad", nullptr);
-      FAIL() << "null submodels should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("null collectionModel"));
-   }
    try {
       model->AddField(nullptr);
       FAIL() << "null fields should throw";
-   } catch (const RException& err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("null field"));
    }
 }
@@ -525,6 +502,7 @@ TEST(RNTuple, ModelId)
    auto m2 = RNTupleModel::Create();
    EXPECT_FALSE(m1->IsFrozen());
    EXPECT_NE(m1->GetModelId(), m2->GetModelId());
+   EXPECT_NE(m1->GetSchemaId(), m2->GetSchemaId());
 
    m1->Freeze();
    EXPECT_TRUE(m1->IsFrozen());
@@ -532,13 +510,13 @@ TEST(RNTuple, ModelId)
    try {
       m1->SetDescription("abc");
       FAIL() << "changing frozen model should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
    }
    try {
       m1->MakeField<float>("pt");
       FAIL() << "changing frozen model should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
    }
 
@@ -548,34 +526,65 @@ TEST(RNTuple, ModelId)
    EXPECT_TRUE(m1->IsFrozen());
    EXPECT_EQ(id, m1->GetModelId());
 
+   // At this point, m1 is frozen while m2 is not.
+   auto m1c = m1->Clone();
+   EXPECT_TRUE(m1c->IsFrozen());
+   EXPECT_NE(m1->GetModelId(), m1c->GetModelId());
+   EXPECT_EQ(m1->GetSchemaId(), m1c->GetSchemaId());
+
    auto m2c = m2->Clone();
+   EXPECT_FALSE(m2c->IsFrozen());
    EXPECT_NE(m2->GetModelId(), m2c->GetModelId());
+   EXPECT_NE(m2->GetSchemaId(), m2c->GetSchemaId());
+
+   // Now unfreeze the cloned model again and it should get new ids.
+   id = m1c->GetModelId();
+   m1c->Unfreeze();
+   EXPECT_FALSE(m1c->IsFrozen());
+   EXPECT_NE(m1c->GetModelId(), id);
+   EXPECT_NE(m1c->GetSchemaId(), m1->GetSchemaId());
 }
 
 TEST(RNTuple, Entry)
 {
-   auto m1 = RNTupleModel::Create();
+   auto m = RNTupleModel::Create();
    try {
-      m1->CreateEntry();
+      m->CreateEntry();
       FAIL() << "creating entry of unfrozen model should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to create entry"));
    }
-   m1->Freeze();
-   auto e1 = m1->CreateEntry();
+   m->Freeze();
+   auto e = m->CreateEntry();
 
-   auto m2 = RNTupleModel::Create();
-   m2->Freeze();
-   auto e2 = m2->CreateEntry();
+   auto mWrite = m->Clone();
+   mWrite->Freeze();
+   auto eWrite = mWrite->CreateEntry();
 
    FileRaii fileGuard("test_ntuple_entry.root");
-   auto ntuple = RNTupleWriter::Recreate(std::move(m1), "ntpl", fileGuard.GetPath());
-   ntuple->Fill();
-   ntuple->Fill(*e1);
+   {
+      auto ntuple = RNTupleWriter::Recreate(std::move(mWrite), "ntpl", fileGuard.GetPath());
+      ntuple->Fill();
+      ntuple->Fill(*eWrite);
+      try {
+         ntuple->Fill(*e);
+         FAIL() << "filling with wrong entry should throw";
+      } catch (const ROOT::RException &err) {
+         EXPECT_THAT(err.what(), testing::HasSubstr("mismatch between entry and model"));
+      }
+   }
+
+   auto mRead = m->Clone();
+   mRead->Freeze();
+   auto eRead = mRead->CreateEntry();
+
+   auto ntuple = RNTupleReader::Open(std::move(mRead), "ntpl", fileGuard.GetPath());
+   ntuple->LoadEntry(0);
+   ntuple->LoadEntry(0, *eRead);
    try {
-      ntuple->Fill(*e2);
-      FAIL() << "filling with wrong entry should throw";
-   } catch (const RException &err) {
+      ntuple->LoadEntry(0, *e);
+      FAIL() << "loading the wrong entry should throw";
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("mismatch between entry and model"));
    }
 }
@@ -584,6 +593,7 @@ TEST(RNTuple, BareEntry)
 {
    auto m = RNTupleModel::CreateBare();
    auto f = m->MakeField<float>("pt");
+   EXPECT_TRUE(m->IsBare());
    EXPECT_FALSE(f);
 
    FileRaii fileGuard("test_ntuple_bare_entry.root");
@@ -593,13 +603,13 @@ TEST(RNTuple, BareEntry)
       try {
          model.GetDefaultEntry();
          FAIL() << "accessing default entry of bare model should throw";
-      } catch (const RException &err) {
+      } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to use default entry of bare model"));
       }
       try {
          model.GetDefaultEntry().GetPtr<float>("pt");
          FAIL() << "accessing default entry of bare model should throw";
-      } catch (const RException &err) {
+      } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to use default entry of bare model"));
       }
 
@@ -643,7 +653,7 @@ TEST(RNTuple, ReadCallback)
    FileRaii fileGuard("test_ntuple_readcb.ntuple");
    {
       auto model = RNTupleModel::Create();
-      auto fieldI32 = model->MakeField<std::int32_t>("i32", 0);
+      auto fieldI32 = model->MakeField<std::int32_t>("i32");
       auto fieldKlass = model->MakeField<CustomStruct>("klass");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       fieldKlass->a = 42.0;
@@ -685,72 +695,21 @@ TEST(RNTuple, FillBytesWritten)
 {
    FileRaii fileGuard("test_ntuple_fillbytes.ntuple");
 
-   auto checkFillReturnValue = [&](const RNTupleWriteOptions &options) {
-      const std::size_t indexColumnSz = options.GetHasSmallClusters() ? sizeof(std::uint32_t) : sizeof(std::uint64_t);
-
-      // TODO(jalopezg): improve test coverage by adding other field types
-      auto model = RNTupleModel::Create();
-      auto fieldI32 = model->MakeField<std::int32_t>("i32");
-      auto fieldStr = model->MakeField<std::string>("s");
-      auto fieldBoolVec = model->MakeField<std::vector<bool>>("bool_vec");
-      auto fieldFloatVec = model->MakeField<std::vector<float>>("float_vec");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
-      *fieldI32 = 42;
-      *fieldStr = "abc";
-      // A 32bit integer + "abc" literal + one (32|64)bit integer for each index column
-      EXPECT_EQ(7U + (3 * indexColumnSz), ntuple->Fill());
-      *fieldBoolVec = {true, false, true};
-      *fieldFloatVec = {42.0f, 1.1f};
-      // A 32bit integer + "abc" literal + one (32|64)bit integer for each index column + 3 bools + 2 floats
-      EXPECT_EQ(18U + (3 * indexColumnSz), ntuple->Fill());
-   };
-
-   checkFillReturnValue({});
-
-   RNTupleWriteOptions optsSmall;
-   optsSmall.SetHasSmallClusters(true);
-   checkFillReturnValue(optsSmall);
-}
-
-TEST(RNTuple, FillBytesWrittenCollections)
-{
-   FileRaii fileGuard("test_ntuple_fillbytes_collections.root");
-
-   auto eventModel = RNTupleModel::Create();
-   auto fldPt = eventModel->MakeField<float>("pt", 0.0);
-
-   auto hitModel = RNTupleModel::Create();
-   auto fldHitX = hitModel->MakeField<float>("x", 0.0);
-   auto fldHitY = hitModel->MakeField<float>("y", 0.0);
-
-   auto trackModel = RNTupleModel::Create();
-   auto fldTrackEnergy = trackModel->MakeField<float>("energy", 0.0);
-
-   auto fldHits = trackModel->MakeCollection("hits", std::move(hitModel));
-   auto fldTracks = eventModel->MakeCollection("tracks", std::move(trackModel));
-
-   {
-      RNTupleWriteOptions options;
-      options.SetApproxZippedClusterSize(1024 * 1024);
-      auto writer = RNTupleWriter::Recreate(std::move(eventModel), "myNTuple", fileGuard.GetPath(), options);
-
-      for (unsigned i = 0; i < 30000; ++i) {
-         for (unsigned t = 0; t < 3; ++t) {
-            for (unsigned h = 0; h < 2; ++h) {
-               *fldHitX = 4.0;
-               *fldHitY = 8.0;
-               EXPECT_EQ(4 + 4, fldHits->Fill());
-            }
-            *fldTrackEnergy = i * t;
-            EXPECT_EQ(2 * (4 + 4) + 8 + 4, fldTracks->Fill());
-         }
-         *fldPt = float(i);
-         EXPECT_EQ(3 * (2 * (4 + 4) + 8 + 4) + 8 + 4, writer->Fill());
-      }
-   }
-
-   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   EXPECT_EQ(reader->GetDescriptor().GetNClusters(), 2);
+   // TODO(jalopezg): improve test coverage by adding other field types
+   auto model = RNTupleModel::Create();
+   auto fieldI32 = model->MakeField<std::int32_t>("i32");
+   auto fieldStr = model->MakeField<std::string>("s");
+   auto fieldBoolVec = model->MakeField<std::vector<bool>>("bool_vec");
+   auto fieldFloatVec = model->MakeField<std::vector<float>>("float_vec");
+   auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+   *fieldI32 = 42;
+   *fieldStr = "abc";
+   // A 32bit integer + "abc" literal + one 64bit integer for each index column
+   EXPECT_EQ(7U + (3 * sizeof(std::uint64_t)), ntuple->Fill());
+   *fieldBoolVec = {true, false, true};
+   *fieldFloatVec = {42.0f, 1.1f};
+   // A 32bit integer + "abc" literal + one 64bit integer for each index column + 3 bools + 2 floats
+   EXPECT_EQ(18U + (3 * sizeof(std::uint64_t)), ntuple->Fill());
 }
 
 TEST(RNTuple, RValue)
@@ -777,34 +736,61 @@ TEST(RNTuple, RValue)
 TEST(REntry, Basics)
 {
    auto model = RNTupleModel::Create();
+   EXPECT_FALSE(model->IsBare());
    model->MakeField<float>("pt");
    model->Freeze();
 
    auto e = model->CreateEntry();
    EXPECT_EQ(e->GetModelId(), model->GetModelId());
+   EXPECT_EQ(e->GetSchemaId(), model->GetSchemaId());
    for (const auto &v : *e) {
       EXPECT_STREQ("pt", v.GetField().GetFieldName().c_str());
    }
 
-   EXPECT_THROW(e->GetToken(""), ROOT::Experimental::RException);
-   EXPECT_THROW(e->GetToken("eta"), ROOT::Experimental::RException);
-   EXPECT_THROW(model->GetToken("eta"), ROOT::Experimental::RException);
+   EXPECT_THROW(e->GetToken(""), ROOT::RException);
+   EXPECT_THROW(e->GetToken("eta"), ROOT::RException);
+   EXPECT_THROW(model->GetToken("eta"), ROOT::RException);
 
-   std::shared_ptr<float> ptrPt;
+   EXPECT_EQ("float", e->GetTypeName("pt"));
+   EXPECT_EQ("float", e->GetTypeName(model->GetToken("pt")));
+
+   auto ptrPt = std::make_shared<float>();
    e->BindValue("pt", ptrPt);
    EXPECT_EQ(ptrPt.get(), e->GetPtr<float>("pt").get());
 
-   auto model2 = model->Clone();
-   EXPECT_THROW(e->GetPtr<void>(model2->GetDefaultEntry().GetToken("pt")), ROOT::Experimental::RException);
+   EXPECT_EQ(ptrPt.get(), e->GetPtr<void>(e->GetToken("pt")).get());
+   EXPECT_EQ(ptrPt.get(), e->GetPtr<void>(model->GetToken("pt")).get());
+   EXPECT_EQ(ptrPt.get(), e->GetPtr<void>(model->GetDefaultEntry().GetToken("pt")).get());
+
+   // Using tokens across frozen clones works
+   auto clone = model->Clone();
+   EXPECT_EQ(ptrPt.get(), e->GetPtr<void>(clone->GetToken("pt")).get());
+   EXPECT_EQ(ptrPt.get(), e->GetPtr<void>(clone->GetDefaultEntry().GetToken("pt")).get());
+
+   // Tokens from a new model are incompatible
+   auto model2 = RNTupleModel::Create();
+   model2->MakeField<float>("pt");
+   model2->Freeze();
+   EXPECT_THROW(e->GetPtr<void>(model2->GetToken("pt")), ROOT::RException);
+   EXPECT_THROW(e->GetPtr<void>(model2->GetDefaultEntry().GetToken("pt")), ROOT::RException);
    std::shared_ptr<double> ptrDouble;
-   EXPECT_THROW(e->BindValue("pt", ptrDouble), ROOT::Experimental::RException);
+   EXPECT_THROW(e->BindValue("pt", ptrDouble), ROOT::RException);
+
+   // Default constructed tokens cannot be used
+   ROOT::Experimental::REntry::RFieldToken token;
+   EXPECT_THROW(e->GetPtr<void>(token), ROOT::RException);
 
    float pt;
    e->BindRawPtr("pt", &pt);
    EXPECT_EQ(&pt, e->GetPtr<void>("pt").get());
 
    e->EmplaceNewValue(model->GetToken("pt"));
-   EXPECT_NE(&pt, e->GetPtr<void>("pt").get());
+   ptrPt = e->GetPtr<float>("pt");
+   EXPECT_NE(&pt, ptrPt.get());
+
+   // Tokens are standalone and can be used after model destruction
+   model.reset();
+   EXPECT_EQ(ptrPt, e->GetPtr<float>("pt"));
 }
 
 TEST(RFieldBase, CreateObject)
@@ -823,8 +809,81 @@ TEST(RFieldBase, CreateObject)
       delete static_cast<int *>(p.get()); // avoid release
    }
 
-   EXPECT_THROW(RField<int>("name").CreateObject<float>(), RException);
+   EXPECT_THROW(RField<int>("name").CreateObject<float>(), ROOT::RException);
 
    auto ptrClass = RField<LowPrecisionFloats>("name").CreateObject<LowPrecisionFloats>();
    EXPECT_DOUBLE_EQ(1.0, ptrClass->b);
+}
+
+TEST(RNTupleWriter, ForbidModelWithSubfields)
+{
+   FileRaii fileGuard("test_ntuple_writer_forbid_model_with_subfields.root");
+
+   auto model = RNTupleModel::Create();
+   model->MakeField<CustomStruct>("struct");
+   model->RegisterSubfield("struct.a");
+
+   try {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      FAIL() << "should not able to create a writer using a model with registered subfields";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(),
+                  testing::HasSubstr("cannot create an RNTupleWriter from a model with registered subfields"));
+   }
+}
+
+TEST(RNTupleWriter, ForbidNonRootTFiles)
+{
+   FileRaii fileGuard("test_ntuple_writer_forbid_xml.xml");
+
+   auto model = RNTupleModel::Create();
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   // Opening an XML TFile should fail
+   EXPECT_THROW(RNTupleWriter::Append(std::move(model), "ntpl", *file), ROOT::RException);
+}
+
+TEST(RNTupleWriter, ForbiddenCharactersInRNTupleName)
+{
+   FileRaii fileGuard("test_ntuple_writer_forbidden_characters_in_rntuple_name.root");
+
+   std::array<const char *, 6> names{"ntu.ple", "nt/uple", "n tuple", "ntupl\\e", "n\ntuple", "ntup\tle"};
+
+   for (auto &&name : names) {
+      try {
+         auto writer = RNTupleWriter::Recreate(RNTupleModel::Create(), name, fileGuard.GetPath());
+         FAIL() << "Should not be able to create an RNTuple with name '" << name << "'.";
+      } catch (const ROOT::RException &err) {
+         EXPECT_THAT(err.what(),
+                     testing::HasSubstr("RNTuple name '" + std::string(name) + "' cannot contain character"));
+      }
+   }
+}
+
+TEST(RNTuple, ForbiddenCharactersInField)
+{
+   std::array<const char *, 6> names{"fie.ld", "fi/eld", "f ield", "fiel\\d", "f\nield", "fi\teld"};
+
+   for (auto &&name : names) {
+      try {
+         auto field = RFieldBase::Create(name, "int").Unwrap();
+         FAIL() << "Should not be able to create an RNTuple field with name '" << name << "'.";
+      } catch (const ROOT::RException &err) {
+         EXPECT_THAT(err.what(), testing::HasSubstr("Field name '" + std::string(name) + "' cannot contain character"));
+      }
+   }
+}
+
+TEST(RNTuple, ForbiddenCharactersInModelField)
+{
+   std::array<const char *, 6> names{"fie.ld", "fi/eld", "f ield", "fiel\\d", "f\nield", "fi\teld"};
+
+   auto model = RNTupleModel::Create();
+   for (auto &&name : names) {
+      try {
+         auto field = model->MakeField<int>(name);
+         FAIL() << "Should not be able to create an RNTuple field with name '" << name << "'.";
+      } catch (const ROOT::RException &err) {
+         EXPECT_THAT(err.what(), testing::HasSubstr("Field name '" + std::string(name) + "' cannot contain character"));
+      }
+   }
 }

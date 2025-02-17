@@ -15,8 +15,7 @@ namespace ROOT {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-  int CompressionSettings(RCompressionSetting::EAlgorithm::EValues algorithm,
-                          int compressionLevel)
+  int CompressionSettings(RCompressionSetting::EAlgorithm::EValues algorithm, int compressionLevel)
   {
     if (compressionLevel < 0) compressionLevel = 0;
     if (compressionLevel > 99) compressionLevel = 99;
@@ -25,24 +24,14 @@ namespace ROOT {
     return algo * 100 + compressionLevel;
   }
 
-  int CompressionSettings(ROOT::ECompressionAlgorithm algorithm,
-                          int compressionLevel)
-  {
-    if (compressionLevel < 0) compressionLevel = 0;
-    if (compressionLevel > 99) compressionLevel = 99;
-    int algo = algorithm;
-    if (algorithm >= ROOT::ECompressionAlgorithm::kUndefinedCompressionAlgorithm) algo = 0;
-    return algo * 100 + compressionLevel;
-  }
-
   std::string RCompressionSetting::AlgorithmToString(RCompressionSetting::EAlgorithm::EValues algorithm)
   {
      switch (algorithm) {
-     case EAlgorithm::EValues::kZLIB: return "zlib"; break;
-     case EAlgorithm::EValues::kLZMA: return "LZMA"; break;
-     case EAlgorithm::EValues::kOldCompressionAlgo: return "Old compression algorithm"; break;
-     case EAlgorithm::EValues::kLZ4: return "lz4"; break;
-     case EAlgorithm::EValues::kZSTD: return "zstd"; break;
+     case EAlgorithm::EValues::kZLIB: return "zlib";
+     case EAlgorithm::EValues::kLZMA: return "LZMA";
+     case EAlgorithm::EValues::kOldCompressionAlgo: return "Old compression algorithm";
+     case EAlgorithm::EValues::kLZ4: return "lz4";
+     case EAlgorithm::EValues::kZSTD: return "zstd";
      default: return "Undefined compression algorithm";
      }
   }

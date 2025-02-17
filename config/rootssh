@@ -42,25 +42,39 @@ elif [[ "$1" == "--as-listener--" ]] ; then
    used_browser=$4
 
    flag=1
+   NUM=1
 
-   while [ $flag -ne 0 ] ; do
+   touch $listener_socket.log
 
-      line="$(nc -l -U $listener_socket)"
+   # on MacOS it is not possible to start netcat multiple times with same socket
+   # therefore run it permanently and redirect output to log file
+   nc -k -l -U $listener_socket >$listener_socket.log 2>/dev/null  &
 
-      if [[ "${line:0:5}" == "http:" ]] ; then
-         remoteport=${line:5}
-         # echo "Want to map remote port $localport:localhost:$remoteport"
-      elif [[ "${line:0:7}" == "socket:" ]] ; then
-         remotesocket=${line:7}
-         #  echo "Remote socket was created $remotesocket"
+   #remember processid to be able kill it
+   nc_procid=$!
+
+   # protect socket and log file from reading
+   chmod 0700 $listener_socket $listener_socket.log
+
+   # remove netcat listening on socket
+   trap "kill -SIGINT $nc_procid >/dev/null 2>&1; rm -f $listener_socket.log" 0 1 2 3 6
+
+   while [[ ($flag -ne 0) && (-f $listener_socket.log) ]] ; do
+
+      line=$(sed "${NUM}q;d" $listener_socket.log)
+
+      if [[ "${line}" == "" ]] ; then
+         sleep 0.2
       elif [[ "${line:0:4}" == "win:" ]] ; then
+         NUM=$((NUM+1))
          winurl=${line:4}
          # echo "Start window http://localhost:$local_port/$winurl"
          $used_browser "http://localhost:$local_port/$winurl"
       elif [[ "$line" == "stop" ]] ; then
+         # echo "Get stop command $line"
          flag=0
       else
-         echo "Command not recognized $line - stop"
+         echo "rootssh: got $line - not recoginzed, stop listener"
          flag=0
       fi
    done
@@ -147,24 +161,16 @@ else
 
    listener_processid=$!
 
-   # start ssh
+   # by the exit kill listener and remove temporary files
+   trap "kill -SIGINT $listener_processid > /dev/null 2>&1; rm -f $listener_local $listener_local.log $listener_remote $root_socket" 0 1 2 3 6
+
+   # starting ssh
 
    if [[ "x$ssh_command" == "x" ]] ; then
       ssh_command="\$SHELL"
    fi
 
    ssh -t -R $listener_remote:$listener_local -L $localport:$root_socket $ssh_destination $ssh_args \
-   "chmod 0700 $listener_remote; export ROOT_LISTENER_SOCKET=$listener_remote; export ROOT_WEBGUI_SOCKET=$root_socket; $ssh_command; rm -f $listener_remote $root_socket"
+   "chmod 0700 $listener_remote; export ROOT_WEBDISPLAY=server; export ROOT_LISTENER_SOCKET=$listener_remote; export ROOT_WEBGUI_SOCKET=$root_socket; $ssh_command; rm -f $listener_remote $root_socket"
 
-   # try to stop listener with "stop" message
-
-   echo "stop" | nc -U $listener_local -q 1 >/dev/null 2>&1
-
-   # Kill listener process
-
-   kill -9 $listener_processid > /dev/null 2>&1
-
-   # Remove temporary files
-
-   rm -f $listener_local $listener_remote
 fi

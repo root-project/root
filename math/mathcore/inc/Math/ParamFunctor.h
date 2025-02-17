@@ -32,6 +32,10 @@ namespace ROOT {
 
 namespace Math {
 
+/**
+ * \defgroup ParamFunctor_int N-D parametric functions
+ * \brief Multi-dimensional parametric functions
+ */
 
 /** class defining the signature for multi-dim parametric functions
 

@@ -87,7 +87,12 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
             std::string func_name = PyUnicode_AsUTF8(key);
 
             // figure out number of variables required
+#if PY_VERSION_HEX < 0x30d00f0
             PyObject *func_code = PyObject_GetAttrString(attr, (char *)"func_code");
+#else
+            PyObject *func_code = nullptr;
+            PyObject_GetOptionalAttrString(attr, (char *)"func_code", &func_code);
+#endif
             PyObject *var_names = func_code ? PyObject_GetAttrString(func_code, (char *)"co_varnames") : NULL;
             int nVars = var_names ? PyTuple_GET_SIZE(var_names) : 0 /* TODO: probably large number, all default? */;
             if (nVars < 0)

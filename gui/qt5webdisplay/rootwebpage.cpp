@@ -17,9 +17,9 @@
 #include "TEnv.h"
 #include <iostream>
 
-ROOT::Experimental::RLogChannel &QtWebDisplayLog()
+ROOT::RLogChannel &QtWebDisplayLog()
 {
-   static ROOT::Experimental::RLogChannel sChannel("ROOT.QtWebDisplay");
+   static ROOT::RLogChannel sChannel("ROOT.QtWebDisplay");
    return sChannel;
 }
 

@@ -1,9 +1,9 @@
+#include "ntuple_test.hxx"
 #include "gtest/gtest.h"
 
 #include <ROOT/RCluster.hxx>
 #include <ROOT/RClusterPool.hxx>
 #include <ROOT/RColumn.hxx>
-#include <ROOT/RColumnModel.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleReader.hxx>
@@ -24,45 +24,35 @@
 #include <utility>
 #include <vector>
 
-using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
-using RCluster = ROOT::Experimental::Internal::RCluster;
-using RClusterPool = ROOT::Experimental::Internal::RClusterPool;
-using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
-using ROnDiskPage = ROOT::Experimental::Internal::ROnDiskPage;
-using RPage = ROOT::Experimental::Internal::RPage;
-using RPageSource = ROOT::Experimental::Internal::RPageSource;
+using ROOT::Experimental::RNTupleDescriptor;
+using ROOT::Experimental::Internal::RCluster;
+using ROOT::Experimental::Internal::RClusterPool;
+using ROOT::Experimental::Internal::ROnDiskPage;
+using ROOT::Experimental::Internal::RPage;
+using ROOT::Experimental::Internal::RPageRef;
+using ROOT::Experimental::Internal::RPageSource;
 
 namespace {
-
-/**
- * An RAII wrapper around an open temporary file on disk. It cleans up the guarded file when the wrapper object
- * goes out of scope.
- */
-class FileRaii {
-private:
-   std::string fPath;
-public:
-   explicit FileRaii(const std::string &path) : fPath(path) { }
-   FileRaii(const FileRaii&) = delete;
-   FileRaii& operator=(const FileRaii&) = delete;
-   ~FileRaii() { std::remove(fPath.c_str()); }
-   std::string GetPath() const { return fPath; }
-};
 
 /**
  * Used to track LoadClusters calls triggered by ClusterPool::GetCluster
  */
 class RPageSourceMock : public RPageSource {
 protected:
-   RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
+   void LoadStructureImpl() final {}
+   RNTupleDescriptor AttachImpl(RNTupleSerializer::EDescriptorDeserializeMode) final { return RNTupleDescriptor(); }
+   std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
+   RPageRef LoadPageImpl(ColumnHandle_t, const RClusterInfo &, ROOT::NTupleSize_t) final { return RPageRef(); }
 
 public:
    /// Records the cluster IDs requests by LoadClusters() calls
-   std::vector<ROOT::Experimental::DescriptorId_t> fReqsClusterIds;
+   std::vector<ROOT::DescriptorId_t> fReqsClusterIds;
    std::vector<ROOT::Experimental::Internal::RCluster::ColumnSet_t> fReqsColumns;
 
-   RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions()) {
+   RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions())
+   {
       ROOT::Experimental::Internal::RNTupleDescriptorBuilder descBuilder;
+      descBuilder.SetNTuple("ntpl", "");
       for (unsigned i = 0; i <= 5; ++i) {
          descBuilder.AddCluster(ROOT::Experimental::Internal::RClusterDescriptorBuilder()
                                    .ClusterId(i)
@@ -71,20 +61,14 @@ public:
                                    .MoveDescriptor()
                                    .Unwrap());
       }
-      descBuilder.AddClusterGroup(ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder()
-                                     .ClusterGroupId(0)
-                                     .MinEntry(0)
-                                     .EntrySpan(6)
-                                     .MoveDescriptor()
-                                     .Unwrap());
+      ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder cgBuilder;
+      cgBuilder.ClusterGroupId(0).MinEntry(0).EntrySpan(6).NClusters(6);
+      cgBuilder.AddSortedClusters({0, 1, 2, 3, 4, 5});
+      descBuilder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
       auto descriptorGuard = GetExclDescriptorGuard();
       descriptorGuard.MoveIn(descBuilder.MoveDescriptor());
    }
-   std::unique_ptr<RPageSource> Clone() const final { return nullptr; }
-   RPage PopulatePage(ColumnHandle_t, ROOT::Experimental::NTupleSize_t) final { return RPage(); }
-   RPage PopulatePage(ColumnHandle_t, ROOT::Experimental::RClusterIndex) final { return RPage(); }
-   void ReleasePage(RPage &) final {}
-   void LoadSealedPage(ROOT::Experimental::DescriptorId_t, ROOT::Experimental::RClusterIndex, RSealedPage &) final {}
+   void LoadSealedPage(ROOT::DescriptorId_t, ROOT::RNTupleLocalIndex, RSealedPage &) final {}
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final
    {
       std::vector<std::unique_ptr<RCluster>> result;
@@ -106,7 +90,6 @@ public:
 
 } // anonymous namespace
 
-
 TEST(Cluster, Allocate)
 {
    auto cluster = new ROOT::Experimental::Internal::ROnDiskPageMapHeap(nullptr);
@@ -115,7 +98,6 @@ TEST(Cluster, Allocate)
    cluster = new ROOT::Experimental::Internal::ROnDiskPageMapHeap(std::make_unique<unsigned char[]>(1));
    delete cluster;
 }
-
 
 TEST(Cluster, Basics)
 {
@@ -175,7 +157,6 @@ TEST(Cluster, AdoptPageMaps)
    EXPECT_EQ(2U, onDiskPage->GetSize());
 }
 
-
 TEST(Cluster, AdoptClusters)
 {
    auto mem1 = new unsigned char[3];
@@ -216,7 +197,6 @@ TEST(Cluster, AdoptClusters)
    EXPECT_TRUE((onDiskPage->GetAddress() == &mem1[1]) || (onDiskPage->GetAddress() == &mem2[1]));
    EXPECT_EQ(2U, onDiskPage->GetSize());
 }
-
 
 TEST(ClusterPool, GetClusterBasics)
 {
@@ -327,17 +307,17 @@ TEST(ClusterPool, GetClusterIncrementally)
    EXPECT_EQ(RCluster::ColumnSet_t({1}), p1.fReqsColumns[2]);
 }
 
-
 TEST(PageStorageFile, LoadClusters)
 {
    FileRaii fileGuard("test_pagestoragefile_loadclusters.root");
 
    auto modelWrite = ROOT::Experimental::RNTupleModel::Create();
-   auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
-   auto wrTag = modelWrite->MakeField<std::int32_t>("tag", 0);
+   auto wrPt = modelWrite->MakeField<float>("pt");
+   auto wrTag = modelWrite->MakeField<std::int32_t>("tag");
 
    {
       auto writer = ROOT::Experimental::RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      *wrPt = 42.0;
       writer->Fill();
       writer->CommitCluster();
       *wrPt = 24.0;
@@ -349,14 +329,14 @@ TEST(PageStorageFile, LoadClusters)
                                                         ROOT::Experimental::RNTupleReadOptions());
    source.Attach();
 
-   ROOT::Experimental::DescriptorId_t ptId;
-   ROOT::Experimental::DescriptorId_t colId;
+   ROOT::DescriptorId_t ptId;
+   ROOT::DescriptorId_t colId;
    {
       auto descriptorGuard = source.GetSharedDescriptorGuard();
       ptId = descriptorGuard->FindFieldId("pt");
-      EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, ptId);
-      colId = descriptorGuard->FindPhysicalColumnId(ptId, 0);
-      EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, colId);
+      EXPECT_NE(ROOT::kInvalidDescriptorId, ptId);
+      colId = descriptorGuard->FindPhysicalColumnId(ptId, 0, 0);
+      EXPECT_NE(ROOT::kInvalidDescriptorId, colId);
    }
 
    std::vector<ROOT::Experimental::Internal::RCluster::RKey> clusterKeys;
@@ -365,8 +345,7 @@ TEST(PageStorageFile, LoadClusters)
    EXPECT_EQ(0U, cluster->GetId());
    EXPECT_EQ(0U, cluster->GetNOnDiskPages());
 
-   auto column = ROOT::Experimental::Internal::RColumn::Create<float>(
-      ROOT::Experimental::RColumnModel(ROOT::Experimental::EColumnType::kReal32, false), 0);
+   auto column = ROOT::Experimental::Internal::RColumn::Create<float>(ROOT::ENTupleColumnType::kReal32, 0, 0);
    column->ConnectPageSource(ptId, source);
    clusterKeys[0].fClusterId = 1;
    clusterKeys[0].fPhysicalColumnSet.insert(colId);
@@ -395,7 +374,7 @@ TEST(PageStorageFile, LoadClustersIMT)
 
    {
       auto model = ROOT::Experimental::RNTupleModel::Create();
-      auto wrPt = model->MakeField<float>("pt", 42.0);
+      *model->MakeField<float>("pt") = 42.0;
 
       auto writer = ROOT::Experimental::RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
       writer->Fill();

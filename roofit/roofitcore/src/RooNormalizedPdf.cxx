@@ -10,10 +10,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include "RooNormalizedPdf.h"
+#include "RooFit/Detail/RooNormalizedPdf.h"
+
 #include "RooBatchCompute.h"
 
 #include <array>
+
 
 /**
  * \class RooNormalizedPdf
@@ -21,6 +23,9 @@
  * A RooNormalizedPdf wraps a pdf divided by its integral for a given
  * normalization set into a new self-normalized pdf.
  */
+
+namespace RooFit {
+namespace Detail {
 
 void RooNormalizedPdf::doEval(RooFit::EvalContext &ctx) const
 {
@@ -48,8 +53,5 @@ void RooNormalizedPdf::doEval(RooFit::EvalContext &ctx) const
    }
 }
 
-void RooNormalizedPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   // For now just return function/normalization integral.
-   ctx.addResult(this, ctx.getResult(_pdf) + "/" + ctx.getResult(_normIntegral));
-}
+} // namespace Detail
+} // namespace RooFit

@@ -818,7 +818,7 @@ prepareMethod(bool HasParameters, bool HasVariables, const char* FuncName,
    // We need an extra Double_t* for the gradient return result.
    if (AddCladArrayRef) {
       prototypeArguments.Append(",");
-      prototypeArguments.Append("clad::array_ref<Double_t>");
+      prototypeArguments.Append("Double_t*");
    }
 
    // Initialize the method call using real function name (cling name) defined
@@ -3156,9 +3156,9 @@ GetFuncPtr(std::string FuncName, Int_t Npar, Int_t Ndim, Bool_t Vectorized) {
    return prepareFuncPtr(method.get());
 }
 
-static void CallCladFunction(TInterpreter::CallFuncIFacePtr_t::Generic_t FuncPtr,
-                             const Double_t *vars, const Double_t *pars,
-                             Double_t *result, const Int_t result_size) {
+static void CallCladFunction(TInterpreter::CallFuncIFacePtr_t::Generic_t FuncPtr, const Double_t *vars,
+                             const Double_t *pars, Double_t *result, const Int_t /*result_size*/)
+{
    void *args[3];
    args[0] = &vars;
    if (!pars) {
@@ -3177,24 +3177,13 @@ static void CallCladFunction(TInterpreter::CallFuncIFacePtr_t::Generic_t FuncPtr
    } else {
       // __attribute__((used)) extern "C" void __cf_0(void* obj, int nargs, void** args, void* ret)
       // {
-      //    ((void (&)(double*, double*,
-      //               clad::array_ref<double>))TFormula____id_grad_1)(*(double**)args[0],
-      //                                                             *(double**)args[1],
-      //                                                             *(clad::array_ref<double> *)args[2]);
+      //    ((void (&)(double*, double*, double*))TFormula____id_grad_1)(*(double**)args[0],
+      //                                                                 *(double**)args[1],
+      //                                                                 *(double**)args[2]);
       //    return;
       // }
       args[1] = &pars;
-
-      // Using the interpreter to obtain the pointer to clad::array_ref is too
-      // slow and we do not want to expose clad::array_ref to the interpreter
-      // so this struct acts as a lightweight implementation of it
-      struct array_ref_interface {
-        Double_t *arr;
-        std::size_t size;
-      };
-
-      array_ref_interface ari{result, static_cast<size_t>(result_size)};
-      args[2] = &ari;
+      args[2] = &result;
       (*FuncPtr)(nullptr, 3, args, /*ret*/nullptr); // We do not use ret in a return-void func.
    }
 }
@@ -3604,7 +3593,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
 
 TString TFormula::GetGradientFormula() const {
    std::unique_ptr<TInterpreterValue> v = gInterpreter->MakeInterpreterValue();
-   std::string s("(void (&)(Double_t *, Double_t *, clad::array_ref<Double_t>)) ");
+   std::string s("(void (&)(Double_t *, Double_t *, Double_t *)) ");
    s += GetGradientFuncName();
    gInterpreter->Evaluate(s.c_str(), *v);
    return v->ToString();

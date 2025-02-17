@@ -16,11 +16,19 @@
 #ifndef ROO_ABS_BINNING
 #define ROO_ABS_BINNING
 
-#include "Rtypes.h"
-#include "RooPrintable.h"
-#include "TNamed.h"
+#include <Rtypes.h>
+#include <RooPrintable.h>
+
+#include <TNamed.h>
+
 class RooAbsRealLValue ;
+class RooAbsArg ;
 class RooAbsReal ;
+namespace RooFit {
+namespace Experimental {
+class CodegenContext;
+}
+}
 
 class RooAbsBinning : public TNamed, public RooPrintable {
 public:
@@ -62,6 +70,8 @@ public:
     binNumbers(&x, &out, 1);
     return out;
   }
+
+  virtual std::string translateBinNumber(RooFit::Experimental::CodegenContext &ctx, RooAbsArg const &var, int coef) const;
 
   virtual double binCenter(Int_t bin) const = 0 ;
   virtual double binWidth(Int_t bin) const = 0 ;

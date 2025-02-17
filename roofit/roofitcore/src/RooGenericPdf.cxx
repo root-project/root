@@ -51,7 +51,6 @@ the names of the arguments are not hard coded.
 
 using std::istream, std::ostream, std::endl;
 
-ClassImp(RooGenericPdf);
 
 RooGenericPdf::RooGenericPdf() {}
 
@@ -159,7 +158,7 @@ void RooGenericPdf::printMultiline(ostream& os, Int_t content, bool verbose, TSt
 {
   RooAbsPdf::printMultiline(os,content,verbose,indent);
   if (verbose) {
-    os << " --- RooGenericPdf --- " << endl ;
+    os << " --- RooGenericPdf --- " << std::endl ;
     indent.Append("  ");
     os << indent ;
     formula().printMultiline(os,content,verbose,indent);
@@ -196,32 +195,13 @@ bool RooGenericPdf::readFromStream(istream& /*is*/, bool /*compact*/, bool /*ver
 void RooGenericPdf::writeToStream(ostream& os, bool compact) const
 {
   if (compact) {
-    os << getVal() << endl ;
+    os << getVal() << std::endl ;
   } else {
     os << GetTitle() ;
   }
 }
 
-void RooGenericPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
+std::string RooGenericPdf::getUniqueFuncName() const
 {
-   // If the number of elements to sum is less than 3, just build a sum expression.
-   // Otherwise build a loop to sum over the values.
-   unsigned int eleSize = _actualVars.size();
-   std::string className = GetName();
-   std::string varName = "elements" + className;
-   std::string sumName = "sum" + className;
-   std::string code;
-   std::string decl = "double " + varName + "[" + std::to_string(eleSize) + "]{";
-   int idx = 0;
-   for (RooAbsArg *it : _actualVars) {
-      decl += ctx.getResult(*it) + ",";
-      ctx.addResult(it, varName + "[" + std::to_string(idx) + "]");
-      idx++;
-   }
-   decl.back() = '}';
-   code += decl + ";\n";
-
-   ctx.addResult(this, (_formula->getTFormula()->GetUniqueFuncName() + "(" + varName + ")").Data());
-   ctx.addToCodeBody(this, code);
+   return formula().getTFormula()->GetUniqueFuncName().Data();
 }
-

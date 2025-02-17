@@ -1,4 +1,4 @@
-#ifdef __CINT__
+#ifdef __CLING__
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
@@ -14,12 +14,14 @@
 #pragma link C++ class RooBukinPdf+ ;
 #pragma link C++ class RooCrystalBall+ ;
 #pragma link C++ class RooCBShape+ ;
+#pragma link C++ class RooFit::Detail::RooPyBind<RooAbsReal>+ ;
+#pragma link C++ class RooFit::Detail::RooPyBind<RooAbsPdf>+ ;
 #pragma link C++ class RooChebychev+ ;
 #pragma link C++ class RooDecay+ ;
 #pragma link C++ class RooDstD0BG+ ;
 #pragma link C++ class RooExponential+ ;
-#pragma link C++ class RooExpPoly+ ;
-#pragma link C++ class RooPower+ ;
+#pragma link C++ class RooLegacyExpPoly+ ;
+#pragma link C++ class RooPowerSum+ ;
 #pragma link C++ class RooGaussian+ ;
 #pragma link C++ class RooLognormal+ ;
 #pragma link C++ class RooGamma+ ;

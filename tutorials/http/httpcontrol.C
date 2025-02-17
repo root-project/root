@@ -39,7 +39,7 @@ void httpcontrol()
 
    // One could specify location of newer version of JSROOT
    // serv->SetJSROOT("https://root.cern/js/latest/");
-   // serv->SetJSROOT("http://jsroot.gsi.de/latest/");
+   // serv->SetJSROOT("https://jsroot.gsi.de/latest/");
 
    // register histograms
    serv->Register("/", hpx);

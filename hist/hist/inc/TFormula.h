@@ -148,7 +148,7 @@ protected:
    TString                             fFormula;            ///<   String representing the formula expression
    Int_t                               fNdim;               ///<   Dimension - needed for lambda expressions
    Int_t                               fNpar;               ///<!  Number of parameter (transient since we save the vector)
-   Int_t                               fNumber;             ///<!
+   Int_t                               fNumber;             ///<   Number used to identify pre-defined functions (gaus, expo,..)
    std::vector<TObject*>               fLinearParts;        ///<   Vector of linear functions
    Bool_t                              fVectorized = false; ///<   Whether we should use vectorized or regular variables
    // (we default to false since a lot of functions still cannot be expressed in vectorized form)
@@ -286,7 +286,7 @@ public:
    void           SetVariables(const std::pair<TString,Double_t> *vars, const Int_t size);
    void SetVectorized(Bool_t vectorized);
 
-   ClassDefOverride(TFormula,13)
+   ClassDefOverride(TFormula,14)
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -321,7 +321,7 @@ void TFormula::SetParNames(Args &&...args)
 /// and evaluate formula.
 
 template <typename... Args>
-Double_t TFormula::Eval(Args... args) const 
+Double_t TFormula::Eval(Args... args) const
 {
    if (sizeof...(args) > 4) {
       Error("Eval", "Eval() only support setting up to 4 variables");

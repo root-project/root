@@ -243,6 +243,7 @@ using `TH1::GetOption`:
 | "Y+"     | The Y-axis is drawn on the right side of the plot. |
 | "MIN0"   | Set minimum value for the Y axis to 0, equivalent to gStyle->SetHistMinimumZero(). |
 
+
 \anchor HP01b
 #### Options supported for 1D histograms
 
@@ -270,6 +271,7 @@ using `TH1::GetOption`:
 | "PIE"    | Draw histogram as a Pie Chart.|
 | "*H"     | Draw histogram with a * at each bin.|
 | "LF2"    | Draw histogram like with option "L" but with a fill area. Note that "L" draws also a fill area if the hist fill color is set but the fill area corresponds to the histogram contour.|
+
 
 
 \anchor HP01c
@@ -328,6 +330,7 @@ using `TH1::GetOption`:
 | "[cutg]"     | Draw only the sub-range selected by the TCutG named "cutg".|
 
 
+
 \anchor HP01d
 #### Options supported for 3D histograms
 
@@ -341,7 +344,6 @@ using `TH1::GetOption`:
 | "BOX2Z"  | Same as "BOX2". In addition the color palette is also drawn.|
 | "BOX3"   | Same as BOX1, but the border lines of each lego-bar are not drawn.|
 | "LEGO"   | Same as `BOX`.|
-
 
 \anchor HP01e
 #### Options supported for histograms' stacks (`THStack`)
@@ -456,15 +458,15 @@ is determined according to the number of objects having palette coloring in
 the current pad.
 
 Begin_Macro(source)
-../../../tutorials/hist/histpalettecolor.C
+../../../tutorials/hist/hist005_TH1_palettecolor.C
 End_Macro
 
 Begin_Macro(source)
-../../../tutorials/hist/thstackpalettecolor.C
+../../../tutorials/hist/hist027_THStack_palette_color.C
 End_Macro
 
 Begin_Macro(source)
-../../../tutorials/hist/thstack2palettecolor.C
+../../../tutorials/hist/hist025_THStack_2d_palette_color.C
 End_Macro
 
 \anchor HP06
@@ -806,7 +808,7 @@ End_Macro
 When the option `bar` or `hbar` is specified, a bar chart is drawn. A vertical
 bar-chart is drawn with the options `bar`, `bar0`, `bar1`, `bar2`, `bar3`, `bar4`.
 An horizontal bar-chart is drawn with the options `hbar`, `hbar0`, `hbar1`,
-`hbar2`, `hbar3`, `hbar4` (hbars.C).
+`hbar2`, `hbar3`, `hbar4` (hist006_TH1_bar_charts.C).
 
 - The bar is filled with the histogram fill color.
 - The left side of the bar is drawn with a light fill color.
@@ -821,7 +823,7 @@ An horizontal bar-chart is drawn with the options `hbar`, `hbar0`, `hbar1`,
 When an histogram has errors the option ["HIST"](\ref OPTHIST) together with the `(h)bar` option.
 
 Begin_Macro(source)
-../../../tutorials/hist/hbars.C
+../../../tutorials/hist/hist006_TH1_bar_charts.C
 End_Macro
 
 To control the bar width (default is the bin width) `TH1::SetBarWidth()`
@@ -1293,7 +1295,7 @@ X (option `CANDLE` or `CANDLEX`) or Y (option `CANDLEY`).
 Each TH1 is represented as one candle.
 
 Begin_Macro(source)
-../../../tutorials/hist/candleplotwhiskers.C
+../../../tutorials/hist/hist052_Graphics_candle_plot_whiskers.C
 End_Macro
 
 The candle reduces the information coming from a whole distribution into few values.
@@ -1520,7 +1522,7 @@ Also the color, the line width, the size of the points and so on can be changed 
 standard attribute setting methods such as SetLineColor() SetLineWidth().
 
 Begin_Macro(source)
-../../../tutorials/hist/candleplot.C
+../../../tutorials/hist/hist049_Graphics_candle_plot.C
 End_Macro
 
 \anchor HP140b
@@ -1618,7 +1620,7 @@ End_Macro
 The next example illustrates a time development of a certain value:
 
 Begin_Macro(source)
-../../../tutorials/hist/candledecay.C
+../../../tutorials/hist/hist047_Graphics_candle_decay.C
 End_Macro
 
 
@@ -1874,10 +1876,10 @@ To access the first graph in the list one should do:
     TGraph *gr1 = (TGraph*)list->First();
 
 
-The following example (ContourList.C) shows how to use this functionality.
+The following example (hist102_TH2_contour_list.C) shows how to use this functionality.
 
 Begin_Macro(source)
-../../../tutorials/hist/ContourList.C
+../../../tutorials/hist/hist102_TH2_contour_list.C
 End_Macro
 
 \anchor HP16b
@@ -1894,7 +1896,7 @@ sky maps or exposure maps (earth.C).
 | "PARABOLIC"  | Draw a contour via an Parabolic projection.|
 
 Begin_Macro(source)
-../../../tutorials/graphics/earth.C
+../../../tutorials/visualisation/graphics/earth.C
 End_Macro
 
 
@@ -2381,10 +2383,10 @@ End_Macro
 
 Rectangular bins are a frequent case. The special version of
 the `AddBin` method allows to define them more easily like
-shown in the following example (th2polyBoxes.C).
+shown in the following example (hist037_TH2Poly_boxes.C).
 
 Begin_Macro(source)
-../../../tutorials/hist/th2polyBoxes.C
+../../../tutorials/hist/hist037_TH2Poly_boxes.C
 End_Macro
 
 One `TH2Poly` bin can be a list of polygons. Such bins are defined
@@ -2522,9 +2524,9 @@ The following value of `ncolors` give access to:
     if ncolors = 51 and colors=0, a Deep Sea palette is used.
     if ncolors = 52 and colors=0, a Grey Scale palette is used.
     if ncolors = 53 and colors=0, a Dark Body Radiator palette is used.
-    if ncolors = 54 and colors=0, a two-color hue palette palette is used.(dark blue through neutral gray to bright yellow)
-    if ncolors = 55 and colors=0, a Rain Bow palette is used.
-    if ncolors = 56 and colors=0, an inverted Dark Body Radiator palette is used.
+    if ncolors = 54 and colors=0, a two-color hue palette palette is used.(dark blue through neutral gray to bright
+yellow) if ncolors = 55 and colors=0, a Rain Bow palette is used. if ncolors = 56 and colors=0, an inverted Dark Body
+Radiator palette is used.
 
 
 If `ncolors > 0 && colors == 0`, the default palette is used with a maximum of ncolors.
@@ -2739,10 +2741,10 @@ If the option `PADS` is specified, the current pad/canvas is
 subdivided into a number of pads equal to the number of histograms and each
 histogram is paint into a separate pad.
 
-The following example shows various types of stacks (hstack.C).
+The following example shows various types of stacks (hist023_THStack_simple.C).
 
 Begin_Macro(source)
-../../../tutorials/hist/hstack.C
+../../../tutorials/hist/hist023_THStack_simple.C
 End_Macro
 
 The option `nostackb` allows to draw the histograms next to each
@@ -2918,7 +2920,7 @@ The supported option is:
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| "GLCOL"  | H3 is drawn using semi-transparent colored boxes.  See `$ROOTSYS/tutorials/gl/glvox1.C`.|
+| "GLCOL"  | H3 is drawn using semi-transparent colored boxes.  See `$ROOTSYS/tutorials/visualisation/gl/glvox1.C`.|
 
 
 
@@ -2959,7 +2961,7 @@ The supported option is:
 \anchor HP29e
 #### Parametric surfaces
 
-`$ROOTSYS/tutorials/gl/glparametric.C` shows how to create parametric
+`$ROOTSYS/tutorials/visualisation/gl/glparametric.C` shows how to create parametric
 equations and visualize the surface.
 
 \anchor HP29f
@@ -3069,8 +3071,8 @@ highlight mode is on, mouse movement over the bin will be represented
 graphically. Bin will be highlighted as "bin box" (presented by box
 object). Moreover, any highlight (change of bin) emits signal
 `TCanvas::Highlighted()` which allows the user to react and call their own
-function. For a better understanding see also the tutorials
-`$ROOTSYS/tutorials/hist/hlHisto*.C` files.
+function. For a better understanding see also the tutorial `hist043` to `hist046`
+lacated in `$ROOTSYS/tutorials/hist/`.
 
 Highlight mode is switched on/off by `TH1::SetHighlight()` function
 or interactively from `TH1` context menu. `TH1::IsHighlight()` to verify
@@ -3150,7 +3152,7 @@ void hlprint()
 
 \image html hlsimple.gif "Highlight mode and simple user function"
 
-For more complex demo please see for example `$ROOTSYS/tutorials/tree/temperature.C` file.
+For more complex demo please see for example `$ROOTSYS/tutorials/io/tree/tree200_temperature.C` file.
 
 */
 
@@ -5075,7 +5077,6 @@ void THistPainter::PaintBar(Option_t *)
       } else {
          umin = xmin + bar*(xmax-xmin)/10.;
          umax = xmax - bar*(xmax-xmin)/10.;
-         //box.SetFillColor(hcolor+150); //bright
          box.SetFillColor(TColor::GetColorBright(hcolor)); //bright
          box.PaintBox(xmin,ymin,umin,ymax);
          box.SetFillColor(hcolor);
@@ -6785,7 +6786,7 @@ void THistPainter::PaintFrame()
    if (Hoption.Lego || Hoption.Surf || Hoption.Tri ||
        Hoption.Contour == 14 || Hoption.Error >= 100) {
       TObject *frame = gPad->FindObject("TFrame");
-      if (frame) gPad->GetListOfPrimitives()->Remove(frame);
+      if (frame) gPad->Remove(frame);
       return;
    }
 
@@ -8820,7 +8821,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    }
 
    if (!done) fFunctions->Add(stats);
-   stats->Paint();
+   stats->Paint(stats->GetOption());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9033,7 +9034,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    }
 
    if (!done) fFunctions->Add(stats);
-   stats->Paint();
+   stats->Paint(stats->GetOption());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9247,7 +9248,7 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
    }
 
    if (!done) fFunctions->Add(stats);
-   stats->Paint();
+   stats->Paint(stats->GetOption());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9662,7 +9663,7 @@ void THistPainter::PaintTable(Option_t *option)
          if (Hoption.Text)         PaintTH2PolyText(option);
          if (Hoption.Line)         PaintTH2PolyBins("l");
          if (Hoption.Mark)         PaintTH2PolyBins("P");
-      } else if (fH->GetEntries() != 0 && Hoption.Axis<=0) {
+      } else if (Hoption.Axis<=0) {
          if (Hoption.Scat)         PaintScatterPlot(option);
          if (Hoption.Arrow)        PaintArrows(option);
          if (Hoption.Box)          PaintBoxes(option);
@@ -10058,7 +10059,7 @@ void THistPainter::PaintText(Option_t *)
 {
 
    TLatex text;
-   text.SetTextFont(gStyle->GetTextFont());
+   text.SetTextFont(((int)gStyle->GetTextFont()/10)*10+2); // font precision must be 2
    text.SetTextColor(fH->GetMarkerColor());
    text.SetTextSize(0.02*fH->GetMarkerSize());
 
@@ -10301,7 +10302,7 @@ void THistPainter::PaintTitle()
    ptitle->AddText(fH->GetTitle());
    ptitle->SetBit(kCanDelete);
    ptitle->Draw();
-   ptitle->Paint();
+   ptitle->Paint("blNDC");
 
    if(!gPad->IsEditable()) delete ptitle;
 }

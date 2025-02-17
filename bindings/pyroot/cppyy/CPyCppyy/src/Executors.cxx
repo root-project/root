@@ -508,6 +508,7 @@ PyObject* CPyCppyy::name##ArrayExecutor::Execute(                            \
 }
 
 CPPYY_IMPL_ARRAY_EXEC(Bool,     bool,                    )
+CPPYY_IMPL_ARRAY_EXEC(SChar,    signed char,             )
 CPPYY_IMPL_ARRAY_EXEC(UChar,    unsigned char,           )
 #if __cplusplus > 201402L
 CPPYY_IMPL_ARRAY_EXEC(Byte,     std::byte,               )
@@ -566,7 +567,7 @@ PyObject* CPyCppyy::STLStringExecutor::Execute(
 
     PyObject* pyresult =
         CPyCppyy_PyText_FromStringAndSize(result->c_str(), result->size());
-    ::operator delete(result); // calls Cppyy::CallO which calls ::operator new
+    delete result; // Cppyy::CallO allocates and constructs a string, so it must be properly destroyed
 
     return pyresult;
 }
@@ -584,7 +585,7 @@ PyObject* CPyCppyy::STLWStringExecutor::Execute(
     }
 
     PyObject* pyresult = PyUnicode_FromWideChar(result->c_str(), result->size());
-    ::operator delete(result); // calls Cppyy::CallO which calls ::operator new
+    delete result; // Cppyy::CallO allocates and constructs a string, so it must be properly destroyed
 
     return pyresult;
 }
@@ -632,24 +633,9 @@ PyObject* CPyCppyy::InstanceExecutor::Execute(
 CPyCppyy::IteratorExecutor::IteratorExecutor(Cppyy::TCppType_t klass) :
     InstanceExecutor(klass)
 {
-    fFlags |= CPPInstance::kNoWrapConv;     // adds to flags from base class
+    fFlags |= CPPInstance::kNoMemReg | CPPInstance::kNoWrapConv;     // adds to flags from base class
 }
 
-//----------------------------------------------------------------------------
-PyObject* CPyCppyy::IteratorExecutor::Execute(
-    Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, CallContext* ctxt)
-{
-    PyObject* iter = this->InstanceExecutor::Execute(method, self, ctxt);
-    if (iter && ctxt->fPyContext) {
-    // set life line to tie iterator life time to the container (which may
-    // be a temporary)
-        std::ostringstream attr_name;
-        attr_name << "__" << (intptr_t)iter;
-        if (PyObject_SetAttrString(ctxt->fPyContext, (char*)attr_name.str().c_str(), iter))
-            PyErr_Clear();
-    }
-    return iter;
-}
 
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::InstanceRefExecutor::Execute(
@@ -740,7 +726,7 @@ PyObject* CPyCppyy::InstancePtrRefExecutor::Execute(
         return BindCppObject(*result, fClass);
 
     CPPInstance* cppinst = (CPPInstance*)fAssignable;
-    *result = cppinst->GetObject();;
+    *result = cppinst->GetObject();
 
     Py_DECREF(fAssignable);
     fAssignable = nullptr;
@@ -918,6 +904,23 @@ bool CPyCppyy::RegisterExecutor(const std::string& name, ef_t fac)
 
 //----------------------------------------------------------------------------
 CPYCPPYY_EXPORT
+bool CPyCppyy::RegisterExecutorAlias(const std::string& name, const std::string& target)
+{
+// register a custom executor that is a reference to an existing converter
+    auto f = gExecFactories.find(name);
+    if (f != gExecFactories.end())
+        return false;
+
+    auto t = gExecFactories.find(target);
+    if (t == gExecFactories.end())
+        return false;
+
+    gExecFactories[name] = t->second;
+    return true;
+}
+
+//----------------------------------------------------------------------------
+CPYCPPYY_EXPORT
 bool CPyCppyy::UnregisterExecutor(const std::string& name)
 {
 // remove a custom executor
@@ -1019,6 +1022,8 @@ public:
 #if __cplusplus > 201402L
         gf["std::byte ptr"] =               (ef_t)+[](cdims_t d) { return new ByteArrayExecutor{d};     };
         gf["const std::byte ptr"] =         gf["std::byte ptr"];
+        gf["byte ptr"] =                    gf["std::byte ptr"];
+        gf["const byte ptr"] =              gf["std::byte ptr"];
 #endif
         gf["int8_t ptr"] =                  (ef_t)+[](cdims_t d) { return new Int8ArrayExecutor{d};    };
         gf["uint8_t ptr"] =                 (ef_t)+[](cdims_t d) { return new UInt8ArrayExecutor{d};   };
@@ -1043,8 +1048,11 @@ public:
         gf["internal_enum_type_t ptr"] =    gf["int ptr"];
 #if __cplusplus > 201402L
         gf["std::byte"] =                   gf["uint8_t"];
+        gf["byte"] =                        gf["uint8_t"];
         gf["std::byte&"] =                  gf["uint8_t&"];
+        gf["byte&"] =                       gf["uint8_t&"];
         gf["const std::byte&"] =            gf["const uint8_t&"];
+        gf["const byte&"] =                 gf["const uint8_t&"];
 #endif
         gf["std::int8_t"] =                 gf["int8_t"];
         gf["std::int8_t&"] =                gf["int8_t&"];
@@ -1066,16 +1074,6 @@ public:
         gf[CCOMPLEX_D "&"] =                gf["std::complex<double>&"];
         gf[CCOMPLEX_F " ptr"] =             gf["std::complex<float> ptr"];
         gf[CCOMPLEX_D " ptr"] =             gf["std::complex<double> ptr"];
-        gf["Long64_t"] =                    gf["long long"];
-        gf["Long64_t&"] =                   gf["long long&"];
-        gf["Long64_t ptr"] =                gf["long long ptr"];
-        gf["ULong64_t"] =                   gf["unsigned long long"];
-        gf["ULong64_t&"] =                  gf["unsigned long long&"];
-        gf["ULong64_t ptr"] =               gf["unsigned long long ptr"];
-        gf["Float16_t"] =                   gf["float"];
-        gf["Float16_t&"] =                  gf["float&"];
-        gf["Double32_t"] =                  gf["double"];
-        gf["Double32_t&"] =                 gf["double&"];
 
     // factories for special cases
         gf["const char*"] =                 (ef_t)+[](cdims_t) { static CStringExecutor e{};     return &e; };
@@ -1083,7 +1081,8 @@ public:
         gf["const char*&"] =                (ef_t)+[](cdims_t) { static CStringRefExecutor e{};     return &e; };
         gf["char*&"] =                      gf["const char*&"];
         gf["const signed char*"] =          gf["const char*"];
-        gf["signed char*"] =                gf["char*"];
+        //gf["signed char*"] =                gf["char*"];
+        gf["signed char ptr"] =             (ef_t)+[](cdims_t d) { return new SCharArrayExecutor{d};    };
         gf["wchar_t*"] =                    (ef_t)+[](cdims_t) { static WCStringExecutor e{};    return &e;};
         gf["char16_t*"] =                   (ef_t)+[](cdims_t) { static CString16Executor e{};   return &e;};
         gf["char32_t*"] =                   (ef_t)+[](cdims_t) { static CString32Executor e{};   return &e;};

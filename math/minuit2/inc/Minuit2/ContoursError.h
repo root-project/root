@@ -13,6 +13,8 @@
 #include "Minuit2/MnConfig.h"
 #include "Minuit2/MinosError.h"
 
+#include <ROOT/RSpan.hxx>
+
 #include <vector>
 #include <utility>
 
@@ -23,13 +25,11 @@ namespace Minuit2 {
 class ContoursError {
 
 public:
-   ContoursError(unsigned int parX, unsigned int parY, const std::vector<std::pair<double, double>> &points,
+   ContoursError(unsigned int parX, unsigned int parY, std::span<const std::pair<double, double>> points,
                  const MinosError &xmnos, const MinosError &ymnos, unsigned int nfcn)
-      : fParX(parX), fParY(parY), fPoints(points), fXMinos(xmnos), fYMinos(ymnos), fNFcn(nfcn)
+      : fParX(parX), fParY(parY), fPoints(points.begin(), points.end()), fXMinos(xmnos), fYMinos(ymnos), fNFcn(nfcn)
    {
    }
-
-   ~ContoursError() {}
 
    ContoursError(const ContoursError &cont)
       : fParX(cont.fParX), fParY(cont.fParY), fPoints(cont.fPoints), fXMinos(cont.fXMinos), fYMinos(cont.fYMinos),

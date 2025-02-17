@@ -46,6 +46,7 @@ public:
    double ux1{0}, ux2{0}, uy1{0}, uy2{0}, uz1{0}, uz2{0};  ///< frame axis range - real ranges
    unsigned bits{0};                          ///< canvas status bits like tool editor
    double zx1{0}, zx2{0}, zy1{0}, zy2{0}, zz1{0}, zz2{0}; ///< zooming ranges
+   double phi{0}, theta{0};                   ///< angles in 3D view
    std::vector<TWebObjectOptions> primitives; ///< drawing options for primitives
 };
 

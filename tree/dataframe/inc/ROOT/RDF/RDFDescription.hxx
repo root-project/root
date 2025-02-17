@@ -31,7 +31,6 @@ class RDFDescription {
    unsigned int fFileCount;
 
 public:
-   RDFDescription(const std::string &briefDescription, const std::string &fullDescription);
    RDFDescription(const std::string &briefDescription, const std::string &fullDescription, unsigned int filecount);
 
    std::string AsString(bool shortFormat = false) const;

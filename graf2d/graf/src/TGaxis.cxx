@@ -98,7 +98,7 @@ Where:
 The example below generates various kind of axis.
 
 Begin_Macro(source)
-../../../tutorials/graphics/gaxis.C
+../../../tutorials/visualisation/graphics/gaxis.C
 End_Macro
 
 \anchor GA01
@@ -314,7 +314,7 @@ only with histograms because the labels'definition is stored in `TAxis`.
 The following example demonstrates how to create such labels.
 
 Begin_Macro(source)
-../../../tutorials/hist/hlabels2.C
+../../../tutorials/hist/hist036_TH2_labels.C
 End_Macro
 
 Because the alphanumeric labels are usually longer that the numeric labels, their
@@ -417,8 +417,8 @@ Histograms' axis can be defined as "time axis". To do that it is enough to activ
 the TAxis::SetTimeDisplay attribute on a given axis. If `h` is an histogram, it is
 done the following way:
 
-~~~ .cpp
-h->GetXaxis()->SetTimeDisplay(1);  // The X axis is a time axis
+~~~ {.cpp}
+    h->GetXaxis()->SetTimeDisplay(1);  // The X axis is a time axis
 ~~~
 
 Two parameters can be adjusted in order to define time axis:
@@ -447,8 +447,8 @@ It's a string containing the following formatting characters:
  The other characters are output as is. For example to have a format like
  `dd/mm/yyyy` one should do:
 
-~~~ .cpp
-h->GetXaxis()->SetTimeFormat("%d\/%m\/%Y");
+~~~ {.cpp}
+    h->GetXaxis()->SetTimeFormat("%d\/%m\/%Y");
 ~~~
 
 ### The time offset:
@@ -460,9 +460,9 @@ three ways to define the time offset:
 
 #### By setting the global default time offset:
 
-~~~ .cpp
-TDatime da(2003,02,28,12,00,00);
-gStyle->SetTimeOffset(da.Convert());
+~~~ {.cpp}
+    TDatime da(2003,02,28,12,00,00);
+    gStyle->SetTimeOffset(da.Convert());
 ~~~
 
   If no time offset is defined for a particular axis, the default time offset
@@ -471,9 +471,9 @@ gStyle->SetTimeOffset(da.Convert());
 
 #### By setting a time offset to a particular axis:
 
-~~~ .cpp
-TDatime dh(2001,09,23,15,00,00);
-h->GetXaxis()->SetTimeOffset(dh.Convert());
+~~~ {.cpp}
+    TDatime dh(2001,09,23,15,00,00);
+    h->GetXaxis()->SetTimeOffset(dh.Convert());
 ~~~
 
 #### Together with the time format using TAxis::SetTimeFormat:
@@ -484,8 +484,8 @@ the normal time format. **%F** is followed by the date in the format:
 
 Example:
 
-~~~ .cpp
-h->GetXaxis()->SetTimeFormat("%d\/%m\/%y%F2000-02-28 13:00:01");
+~~~ {.cpp}
+    h->GetXaxis()->SetTimeFormat("%d\/%m\/%y%F2000-02-28 13:00:01");
 ~~~
 
 
@@ -589,8 +589,8 @@ and maximum values (in seconds) of the axis. Let's take again an example. Having
 defined "2003, February 28 at 12h" we would like to see the axis a day before and
 a day after. A TGaxis can be created the following way (a day has 86400 seconds):
 
-~~~ .cpp
-TGaxis *axis = new TGaxis(x1,y1,x2,y2,-100000,150000,2405,"t");
+~~~ {.cpp}
+    TGaxis *axis = new TGaxis(x1,y1,x2,y2,-100000,150000,2405,"t");
 ~~~
 
 the `t` option (in lower case) means it is a "time axis". The axis goes form
@@ -600,7 +600,7 @@ So the complete macro is:
 
 Begin_Macro(source)
 {
-   c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
+   auto c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
    c1->Range(-10,-1,10,1);
 
    TGaxis *axis = new TGaxis(-8,0.,8,0.,-100000,150000,2405,"tS");
@@ -619,16 +619,16 @@ End_Macro
 Thanks to the TLatex directive `#splitline` it is possible to write the time
 labels on two lines. In the previous example changing the `SetTimeFormat` line by
 
-~~~ .cpp
-   axis->SetLabelOffset(0.15);
-   axis->SetTimeFormat("#splitline{%Y}{%d\/%m}");
+~~~ {.cpp}
+    axis->SetLabelOffset(0.15);
+    axis->SetTimeFormat("#splitline{%Y}{%d\/%m}");
 ~~~
 
 will produce the following axis:
 
 Begin_Macro
 {
-   c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
+   auto c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
    c1->Range(-10,-1,10,1);
 
    TGaxis *axis = new TGaxis(-8,0.,8,0.,-100000,150000,2405,"tS");
@@ -675,7 +675,7 @@ and `localtime` give with what gives `TGaxis`. It can be used
 as referenced test to check if the time option of `TGaxis` is working properly.
 
 Begin_Macro(source)
-../../../tutorials/graphs/timeonaxis3.C
+../../../tutorials/visualisation/graphics/timeonaxis3.C
 End_Macro
 
 
@@ -683,7 +683,7 @@ The following macro illustrates the use, with histograms axis, of the time mode 
 with different time intervals and time formats.
 
 Begin_Macro(source)
-../../../tutorials/graphs/timeonaxis.C
+../../../tutorials/hist/hist061_TH1_timeonaxis.C
 End_Macro
 
 */
@@ -3079,4 +3079,9 @@ void TGaxis::Streamer(TBuffer &R__b)
    } else {
       R__b.WriteClassBuffer(TGaxis::Class(),this);
    }
+}
+
+void TGaxis::SetLabelColor(TColorNumber lcolor)
+{
+   SetLineColor(lcolor.number());
 }

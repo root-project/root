@@ -33,7 +33,7 @@ in the two sets.
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
 #include "RooNameReg.h"
-#include "RooNLLVarNew.h"
+#include "RooFit/Detail/RooNLLVarNew.h"
 #include "RooMsgService.h"
 #include "RooBatchCompute.h"
 
@@ -45,7 +45,6 @@ in the two sets.
 #include <algorithm>
 #include <cmath>
 
-ClassImp(RooAddition);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,7 +52,6 @@ ClassImp(RooAddition);
 /// \param[in] name Name of the PDF
 /// \param[in] title Title
 /// \param[in] sumSet The value of the function will be the sum of the values in this set
-/// \param[in] takeOwnership If true, the RooAddition object will take ownership of the arguments in `sumSet`
 
 RooAddition::RooAddition(const char *name, const char *title, const RooArgList &sumSet)
    : RooAbsReal(name, title), _set("!set", "set of components", this), _cacheMgr(this, 10)
@@ -75,7 +73,6 @@ RooAddition::RooAddition(const char *name, const char *title, const RooArgList &
 /// \param[in] title Title
 /// \param[in] sumSet1 Left-hand element of the pair-wise products
 /// \param[in] sumSet2 Right-hand element of the pair-wise products
-/// \param[in] takeOwnership If true, the RooAddition object will take ownership of the arguments in the `sumSets`
 ///
 RooAddition::RooAddition(const char *name, const char *title, const RooArgList &sumSet1, const RooArgList &sumSet2)
    : RooAbsReal(name, title), _set("!set", "set of components", this), _cacheMgr(this, 10)
@@ -157,47 +154,6 @@ void RooAddition::doEval(RooFit::EvalContext &ctx) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void RooAddition::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   // If the number of elements to sum is less than 3, just build a sum expression.
-   // else build a loop to sum over the values.
-   unsigned int eleSize = _set.size();
-   std::string result;
-   if (eleSize > 3) {
-      std::string className = GetName();
-      std::string varName = "elements" + className;
-      std::string sumName = "sum" + className;
-      std::string code;
-      std::string decl = "double " + varName + "[" + std::to_string(eleSize) + "]{";
-      int idx = 0;
-      for (RooAbsArg *it : _set) {
-         decl += ctx.getResult(*it) + ",";
-         ctx.addResult(it, varName + "[" + std::to_string(idx) + "]");
-         idx++;
-      }
-      decl.back() = '}';
-      code += decl + ";\n";
-
-      ctx.addToGlobalScope("double " + sumName + " = 0;\n");
-      std::string iterator = "i_" + className;
-      code += "for(int " + iterator + " = 0; " + iterator + " < " + std::to_string(eleSize) + "; " + iterator +
-              "++) {\n" + sumName + " += " + varName + "[" + iterator + "];\n}\n";
-      result = sumName;
-      ctx.addResult(this, result);
-
-      ctx.addToCodeBody(this, code);
-   }
-
-   result = "(";
-   for (RooAbsArg *it : _set) {
-      result += ctx.getResult(*it) + '+';
-   }
-   result.back() = ')';
-   ctx.addResult(this, result);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Return the default error level for MINUIT error analysis
 /// If the addition contains one or more RooNLLVars and
 /// no RooChi2Vars, return the defaultErrorLevel() of
@@ -213,7 +169,7 @@ double RooAddition::defaultErrorLevel() const
 
   std::unique_ptr<RooArgSet> comps{getComponents()};
   for(RooAbsArg * arg : *comps) {
-    if (dynamic_cast<RooNLLVarNew*>(arg)) {
+    if (dynamic_cast<RooFit::Detail::RooNLLVarNew*>(arg)) {
       nllArg = static_cast<RooAbsReal*>(arg) ;
     }
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND

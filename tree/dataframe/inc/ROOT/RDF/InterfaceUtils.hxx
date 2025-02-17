@@ -265,14 +265,10 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
    const auto &outputColNames = snapHelperArgs->fOutputColNames;
    const auto &options = snapHelperArgs->fOptions;
 
-   auto makeIsDefine = [&] {
-      std::vector<bool> isDef;
-      isDef.reserve(sizeof...(ColTypes));
-      for (auto i = 0u; i < sizeof...(ColTypes); ++i)
-         isDef.push_back(colRegister.IsDefineOrAlias(colNames[i]));
-      return isDef;
-   };
-   std::vector<bool> isDefine = makeIsDefine();
+   auto sz = sizeof...(ColTypes);
+   std::vector<bool> isDefine(sz);
+   for (auto i = 0u; i < sz; ++i)
+      isDefine[i] = colRegister.IsDefineOrAlias(colNames[i]);
 
    std::unique_ptr<RActionBase> actionPtr;
    if (!ROOT::IsImplicitMTEnabled()) {
@@ -349,7 +345,7 @@ BookVariationJit(const std::vector<std::string> &colNames, std::string_view vari
 std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
                            const unsigned int nSlots, const RColumnRegister &colRegister, RDataSource *ds,
-                           std::weak_ptr<RJittedAction> *jittedActionOnHeap);
+                           std::weak_ptr<RJittedAction> *jittedActionOnHeap, const bool vector2RVec = true);
 
 // Allocate a weak_ptr on the heap, return a pointer to it. The user is responsible for deleting this weak_ptr.
 // This function is meant to be used by RInterface's methods that book code for jitting.
@@ -381,7 +377,7 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
 
 std::vector<std::string> GetValidatedArgTypes(const ColumnNames_t &colNames, const RColumnRegister &colRegister,
                                               TTree *tree, RDataSource *ds, const std::string &context,
-                                              bool vector2rvec);
+                                              bool vector2RVec);
 
 std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, const ColumnNames_t &definedDSCols);
 

@@ -64,8 +64,6 @@
 #include "RooRealVar.h"
 #include "RooAbsDataStore.h"
 
-ClassImp(RooChi2Var);
-
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsReal &func, RooDataHist &data, bool extended,
                        RooDataHist::ErrorType etype, RooAbsTestStatistic::Configuration const &cfg)
    : RooAbsOptTestStatistic(name, title, func, data, RooArgSet{}, cfg),
@@ -141,7 +139,7 @@ double RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEve
       return 0.;
     }
 
-//     cout << "Chi2Var[" << i << "] nData = " << nData << " nPdf = " << nPdf << " errorExt = " << eExt << " errorInt = " << eInt << " contrib = " << eExt*eExt/(eInt*eInt) << endl ;
+//     std::cout << "Chi2Var[" << i << "] nData = " << nData << " nPdf = " << nPdf << " errorExt = " << eExt << " errorInt = " << eInt << " contrib = " << eExt*eExt/(eInt*eInt) << std::endl ;
 
     double term = eExt*eExt/(eInt*eInt) ;
     double y = term - carry;

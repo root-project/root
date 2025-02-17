@@ -98,10 +98,24 @@ public:
       fHelper.InitTask(r, slot);
    }
 
+   template <typename ColType>
+   auto GetValueChecked(unsigned int slot, std::size_t readerIdx, Long64_t entry) -> ColType &
+   {
+      if (auto *val = fValues[slot][readerIdx]->template TryGet<ColType>(entry))
+         return *val;
+
+      throw std::out_of_range{"RDataFrame: Action (" + fHelper.GetActionName() +
+                              ") could not retrieve value for column '" + fColumnNames[readerIdx] + "' for entry " +
+                              std::to_string(entry) +
+                              ". You can use the DefaultValueFor operation to provide a default value, or "
+                              "FilterAvailable/FilterMissing to discard/keep entries with missing values instead."};
+   }
+
    template <typename... ColTypes, std::size_t... S>
    void CallExec(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
-      fHelper.Exec(slot, fValues[slot][S]->template Get<ColTypes>(entry)...);
+      ROOT::Internal::RDF::CallGuaranteedOrder{[&](auto &&...args) { return fHelper.Exec(slot, args...); },
+                                               GetValueChecked<ColTypes>(slot, S, entry)...};
       (void)entry; // avoid unused parameter warning (gcc 12.1)
    }
 
@@ -143,7 +157,7 @@ public:
 
       auto upmostNode = AddDefinesToGraph(thisNode, GetColRegister(), prevColumns, visitedMap);
 
-      thisNode->AddDefinedColumns(GetColRegister().GetNames());
+      thisNode->AddDefinedColumns(GetColRegister().GenerateColumnNames());
       upmostNode->SetPrevNode(prevNode);
       return thisNode;
    }
@@ -154,14 +168,15 @@ public:
 
    std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&results) final
    {
-      const auto nVariations = GetVariations().size();
+      auto &&variations = GetVariations();
+      auto &&nVariations = variations.size();
       assert(results.size() == nVariations);
 
       std::vector<Helper> helpers;
       helpers.reserve(nVariations);
 
-      for (auto &&res : results)
-         helpers.emplace_back(fHelper.CallMakeNew(res));
+      for (decltype(nVariations) i{}; i < nVariations; i++)
+         helpers.emplace_back(fHelper.CallMakeNew(results[i], variations[i]));
 
       return std::unique_ptr<RActionBase>(new RVariedAction<Helper, PrevNode, ColumnTypes_t>{
          std::move(helpers), GetColumnNames(), fPrevNodePtr, GetColRegister()});

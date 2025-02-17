@@ -37,7 +37,6 @@ arguments.
 #include "RooHelpers.h"
 #include "RooAbsCategoryLValue.h"
 
-ClassImp(RooConstraintSum);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,11 +76,6 @@ double RooConstraintSum::evaluate() const
   }
 
   return sum;
-}
-
-void RooConstraintSum::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::constraintSumEvaluate", _set1, _set1.size()));
 }
 
 void RooConstraintSum::doEval(RooFit::EvalContext &ctx) const

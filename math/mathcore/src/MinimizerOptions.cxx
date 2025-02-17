@@ -27,7 +27,7 @@ namespace ROOT {
 namespace Math {
 
    namespace Minim {
-      static std::string gDefaultMinimizer = ""; // take from /etc/system.rootrc in ROOT Fitter
+      static std::string gDefaultMinimizer; // take from /etc/system.rootrc in ROOT Fitter
       static std::string gDefaultMinimAlgo = "Migrad";
       static double gDefaultErrorDef = 1.;
       static double gDefaultTolerance = 1.E-2;

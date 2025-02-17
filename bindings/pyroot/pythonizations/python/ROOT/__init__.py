@@ -171,7 +171,7 @@ if _is_ipython:
     ip = get_ipython()
     if hasattr(ip, "kernel"):
         import JupyROOT
-        import JsMVA
+        from . import JsMVA
 
 # Register cleanup
 import atexit
@@ -183,21 +183,5 @@ def cleanup():
     if "app" in facade.__dict__ and hasattr(facade.__dict__["app"], "process_root_events"):
         facade.__dict__["app"].keep_polling = False
         facade.__dict__["app"].process_root_events.join()
-
-    if "libROOTPythonizations" in sys.modules:
-        backend = sys.modules["libROOTPythonizations"]
-
-        # Make sure all the objects regulated by PyROOT are deleted and their
-        # Python proxies are properly nonified.
-        backend.ClearProxiedObjects()
-
-        from ROOT import PyConfig
-
-        if PyConfig.ShutDown:
-            # Hard teardown: run part of the gROOT shutdown sequence.
-            # Running it here ensures that it is done before any ROOT libraries
-            # are off-loaded, with unspecified order of static object destruction.
-            backend.gROOT.EndOfProcessCleanups()
-
 
 atexit.register(cleanup)

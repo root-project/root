@@ -224,7 +224,7 @@ Automatic coloring according to the current palette is available as shown in the
 following example:
 
 Begin_Macro(source)
-../../../tutorials/graphs/multigraphpalettecolor.C
+../../../tutorials/visualisation/graphs/gr105_multigraphpalettecolor.C
 End_Macro
 
 \anchor MG01f
@@ -324,7 +324,7 @@ overlap. The following example shows how to make them all visible.
 
 
 Begin_Macro(source)
-../../../tutorials/graphs/multigraph.C
+../../../tutorials/visualisation/graphs/gr007_multigraph.C
 End_Macro
 
 \anchor MG03
@@ -362,13 +362,10 @@ Begin_Macro(source)
 End_Macro
 */
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TMultiGraph default constructor.
 
-TMultiGraph::TMultiGraph(): TNamed()
-{
-}
+TMultiGraph::TMultiGraph() {}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1311,16 +1308,20 @@ void TMultiGraph::Paint(Option_t *choptin)
          fHistogram->SetMaximum(rwymax);
          fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
          fHistogram->SetDirectory(nullptr);
+         fHistogram->Sumw2(kFALSE);
          if (!xtitle.empty()) fHistogram->GetXaxis()->SetTitle(xtitle.c_str());
          if (!ytitle.empty()) fHistogram->GetYaxis()->SetTitle(ytitle.c_str());
          if (firstx != lastx) fHistogram->GetXaxis()->SetRange(firstx,lastx);
          if (timedisplay) {fHistogram->GetXaxis()->SetTimeDisplay(timedisplay);}
          if (!timeformat.empty()) fHistogram->GetXaxis()->SetTimeFormat(timeformat.c_str());
       }
-      TString chopth = "0";
-      if (strstr(chopt.Data(),"X+")) chopth.Append("X+");
-      if (strstr(chopt.Data(),"Y+")) chopth.Append("Y+");
-      if (strstr(chopt.Data(),"I"))  chopth.Append("A");
+      TString chopth("0");
+      if (chopt.Contains("X+"))
+         chopth.Append("X+");
+      if (chopt.Contains("Y+"))
+         chopth.Append("Y+");
+      if (chopt.Contains("I"))
+         chopth.Append("A");
       fHistogram->Paint(chopth.Data());
    }
 

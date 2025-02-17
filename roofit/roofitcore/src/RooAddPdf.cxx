@@ -71,6 +71,7 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include <RooDataSet.h>
 #include <RooGenericPdf.h>
 #include <RooGlobalFunc.h>
+#include <RooProdPdf.h>
 #include <RooProduct.h>
 #include <RooRatio.h>
 #include <RooRealConstant.h>
@@ -90,7 +91,6 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include <set>
 #include <sstream>
 
-ClassImp(RooAddPdf);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -397,7 +397,6 @@ void RooAddPdf::fixCoefRange(const char* rangeName)
 /// Retrieve cache element for the computation of the PDF normalisation.
 /// \param[in] nset Current normalisation set (integration over these variables yields 1).
 /// \param[in] iset Integration set. Variables to be integrated over (if integrations are performed).
-/// \param[in] rangeName Reference range for the integrals.
 ///
 /// If a cache element does not exist, create and fill it on the fly. The cache also contains
 /// - Supplemental normalization terms (in case not all added p.d.f.s have the same observables)
@@ -544,11 +543,6 @@ double RooAddPdf::getValV(const RooArgSet* normSet) const
   }
 
   return _value;
-}
-
-void RooAddPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   RooRealSumPdf::translateImpl(ctx, this, _pdfList, _coefList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -716,7 +710,7 @@ double RooAddPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, con
   cxcoutD(Caching) << "RooAddPdf::aiWN(" << GetName() << ") calling getProjCache with nset = " << (normSet?*normSet:RooArgSet()) << std::endl ;
 
   if ((normSet==nullptr || normSet->empty()) && !_refCoefNorm.empty()) {
-//     cout << "WVE integration of RooAddPdf without normalization, but have reference set, using ref set for normalization" << std::endl ;
+//     std::cout << "WVE integration of RooAddPdf without normalization, but have reference set, using ref set for normalization" << std::endl ;
     normSet = &_refCoefNorm ;
   }
 
@@ -812,7 +806,7 @@ std::unique_ptr<RooAbsReal> RooAddPdf::createExpectedEventsFunc(const RooArgSet 
    if (!_allExtendable) {
       // If the _refCoefNorm is empty or it's equal to normSet anyway, this is not
       // a conditional pdf and we don't need to do any transformation. See also
-      // RooAddPdf::compleForNormSet() for more explanations on a similar logic.
+      // RooAddPdf::compileForNormSet() for more explanations on a similar logic.
       if (!_refCoefNorm.empty() && !nset->equals(_refCoefNorm)) {
          prodList.addOwned(std::unique_ptr<RooAbsReal>{createIntegral(*nset, _refCoefNorm)});
       }
@@ -829,7 +823,10 @@ std::unique_ptr<RooAbsReal> RooAddPdf::createExpectedEventsFunc(const RooArgSet 
          // too and we can't add them all in one go as owned objects of the
          // final integral sum.
          for (auto *pdf : static_range_cast<RooAbsPdf *>(_pdfList)) {
-            auto next = std::unique_ptr<RooAbsReal>{pdf->createIntegral(*nset, *nset, _normRange)};
+            auto integrl = std::unique_ptr<RooAbsReal>{pdf->createIntegral(*nset, *nset)};
+            auto formulaName = std::string(pdf->GetName()) + "_formulaVar";
+            auto next = std::make_unique<RooFormulaVar>(formulaName.c_str(), "1./x[0]", RooArgList{*integrl});
+            next->addOwnedComponents(std::move(integrl));
             terms.add(*next);
             if (owner)
                next->addOwnedComponents(std::move(owner));
@@ -972,15 +969,53 @@ RooAddPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileCo
    auto newArg = std::unique_ptr<RooAbsReal>{static_cast<RooAbsReal *>(Clone())};
    ctx.markAsCompiled(*newArg);
 
+   // If we set the normalization ranges of the component pdfs to the
+   // normalization range of the RooAddPdf, the RooAddPdf doesn't need to
+   // compute as many correction factor integrals internally.
+   // Remember the previous normalizations ranges to reset later.
+   class ResetNormRangesRAII {
+   public:
+      ResetNormRangesRAII(RooAbsCollection const &pdfs, std::string const &normRange)
+      {
+         _componentPdfs.reserve(pdfs.size());
+         _oldNormRanges.reserve(pdfs.size());
+
+         bool isMultiRange = normRange.find(',') != std::string::npos;
+
+         for (auto *componentPdf : static_range_cast<RooAbsPdf *>(pdfs)) {
+
+            // The RooProdPdf is not able to deal with a multi-range _normRange
+            // for now, so skip the changing the range in this case.
+            bool changeRange = !(isMultiRange && dynamic_cast<RooProdPdf *>(componentPdf));
+
+            const char *old = componentPdf->normRange();
+            const char *newVal = changeRange ? normRange.c_str() : old;
+            componentPdf->setNormRange(newVal);
+            _componentPdfs.emplace_back(componentPdf);
+            _oldNormRanges.emplace_back(old ? old : "");
+         }
+      }
+      ~ResetNormRangesRAII()
+      {
+         for (std::size_t i = 0; i < _componentPdfs.size(); ++i) {
+            _componentPdfs[i]->setNormRange(_oldNormRanges[i].c_str());
+         }
+      }
+
+   private:
+      std::vector<RooAbsPdf *> _componentPdfs;
+      std::vector<std::string> _oldNormRanges;
+   } resetNormRangesRAII{_pdfList, _normRange.Data()};
+
    // In case conditional observables, e.g. p(x|y), the _refCoefNorm is set to
    // all observables (x, y) and the normSet doesn't contain the conditional
    // observables (so it only contains x in this example).
 
    // If the _refCoefNorm is empty or it's equal to normSet anyway, this is not
    // a conditional pdf and we don't need to do any transformation.
-   if(_refCoefNorm.empty() || normSet.equals(_refCoefNorm)) {
-     ctx.compileServers(*newArg, normSet);
-     return newArg;
+   if (_refCoefNorm.empty() || normSet.equals(_refCoefNorm)) {
+      ctx.compileServers(*newArg, normSet);
+      return newArg;
    }
 
    // In the conditional case, things become more complicated. The original

@@ -48,15 +48,13 @@ public:
 
    FumiliFCNAdapter(const Function &f, unsigned int ndim, double up = 1.) : FumiliFCNBase(ndim), fFunc(f), fUp(up) {}
 
-   ~FumiliFCNAdapter() override {}
-
-   double operator()(const std::vector<double> &v) const override { return fFunc.operator()(&v[0]); }
+   double operator()(std::vector<double> const &v) const override { return fFunc.operator()(&v[0]); }
    double operator()(const double *v) const { return fFunc.operator()(v); }
    double Up() const override { return fUp; }
 
    void SetErrorDef(double up) override { fUp = up; }
 
-   // virtual std::vector<double> Gradient(const std::vector<double>&) const;
+   // virtual std::vector<double> Gradient(std::vector<double> const &) const;
 
    // forward interface
    // virtual double operator()(int npar, double* params,int iflag = 4) const;
@@ -64,21 +62,17 @@ public:
    /**
        evaluate gradient hessian and function value needed by fumili
      */
-   void EvaluateAll(const std::vector<double> &v) override;
+   void EvaluateAll(std::vector<double> const &v) override;
 
 private:
-   // data member
-
    const Function &fFunc;
    double fUp;
 };
 
 template <class Function>
-void FumiliFCNAdapter<Function>::EvaluateAll(const std::vector<double> &v)
+void FumiliFCNAdapter<Function>::EvaluateAll(std::vector<double> const &v)
 {
    MnPrint print("FumiliFCNAdapter");
-
-   // typedef FumiliFCNAdapter::Function Function;
 
    // evaluate all elements
    unsigned int npar = Dimension();

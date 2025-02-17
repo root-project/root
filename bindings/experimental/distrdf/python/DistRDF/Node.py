@@ -59,9 +59,12 @@ class Node(object):
         rdf_node: A reference to the result of calling a function of the
             RDataFrame API with the current operation. This is practically a
             node of the true computation graph, which is being executed in some
-            distributed task. It is a transient attribute. On the client, it
-            is always None. The value is computed and stored only during a task
-            on a worker.
+            distributed task. It is a transient attribute. On the client, this
+            is filled when the operation being called is a transformation. It is
+            done to ensure information regarding e.g. column names and types is
+            populated and available locally with the right dependencies. On a
+            worker, this attribute can represent any node of the C++ computation
+            graph and its created and processed within the worker.
     """
 
     def __init__(self, get_head: Callable[[], HeadNode], node_id: int = 0,

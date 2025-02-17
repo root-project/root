@@ -31,7 +31,6 @@ Returns `1.0` if variable is within given a range and `0.0` otherwise.
 #include "RooArgList.h"
 #include "RooMsgService.h"
 
-ClassImp(RooRangeBoolean);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -56,7 +56,7 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
   // is independent of any existing objects.
   RooArgSet nodes(func,func.GetName());
   if (nodes.snapshot(_cloneSet, true)) {
-    oocoutE(nullptr, Generation) << "RooAbsNumGenerator::RooAbsNumGenerator(" << func.GetName() << ") Couldn't deep-clone function, abort," << endl ;
+    oocoutE(nullptr, Generation) << "RooAbsNumGenerator::RooAbsNumGenerator(" << func.GetName() << ") Couldn't deep-clone function, abort," << std::endl ;
     RooErrorHandler::softAbort() ;
   }
 
@@ -72,7 +72,7 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
   for (RooAbsArg const* arg : genVars) {
     if(!arg->isFundamental()) {
       oocoutE(nullptr, Generation) << func.GetName() << "::RooAbsNumGenerator: cannot generate values for derived \""
-         << arg->GetName() << "\"" << endl;
+         << arg->GetName() << "\"" << std::endl;
       _isValid= false;
       continue;
     }
@@ -97,18 +97,18 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
       }
       else {
    oocoutE(nullptr, Generation) << func.GetName() << "::RooAbsNumGenerator: cannot generate values for \""
-           << realVar->GetName() << "\" with unbound range" << endl;
+           << realVar->GetName() << "\" with unbound range" << std::endl;
    _isValid= false;
       }
     }
     else {
       oocoutE(nullptr, Generation) << func.GetName() << "::RooAbsNumGenerator" << ": cannot generate values for \""
-         << arg->GetName() << "\" with unexpected type" << endl;
+         << arg->GetName() << "\" with unexpected type" << std::endl;
       _isValid= false;
     }
   }
   if(!_isValid) {
-    oocoutE(nullptr, Generation) << func.GetName() << "::RooAbsNumGenerator" << ": constructor failed with errors" << endl;
+    oocoutE(nullptr, Generation) << func.GetName() << "::RooAbsNumGenerator" << ": constructor failed with errors" << std::endl;
     return;
   }
 

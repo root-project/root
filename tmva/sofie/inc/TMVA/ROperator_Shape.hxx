@@ -20,8 +20,8 @@ class ROperator_Shape final : public ROperator
 private:
 
    /* Attributes*/
-   int fStart = 0;
-   int fEnd = -1;
+   int fStart = 0;  // default is beginning
+   int fEnd = 0; // default is input length (all input tensor shape included)
    std::string fNX;
    std::string fNY;
    std::vector<size_t> fShape;
@@ -44,14 +44,36 @@ public:
 
    void Initialize(RModel& model){
       if (model.CheckIfTensorAlreadyExist(fNX) == false){   //input must be a graph input, or already initialized intermediate tensor
-         throw std::runtime_error("TMVA SOFIE Shape Op Input Tensor is not found in model");
+         throw std::runtime_error("TMVA SOFIE Shape Op Input Tensor " + fNX + " is not found in model");
       }
       fShape = model.GetTensorShape(fNX);
-      size_t length = ConvertShapeToLength(fShape);
+      size_t length = fShape.size();  // this the size of shape not length of tensor
+      fStart = std::max(fStart,(int) -length);
+      fStart = std::min(fStart,(int) length);
       if (fStart < 0) fStart += length;
+      fEnd = std::max(fEnd,(int) -length);
+      fEnd = std::min(fEnd, (int) length);
       if (fEnd < 0) fEnd += length;
-      fOutput_shape = { size_t(fEnd - fStart) + 1};
-      model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
+      if (fEnd > fStart)
+         fOutput_shape = { size_t(fEnd - fStart) };
+      // in case input tensor is not a dynamic tensor we should register the output as a Constant tensor since we know
+      // its content
+      if (!model.IsDynamicTensor(fNX) && !fOutput_shape.empty()) {
+         std::shared_ptr<void> data(malloc(length * sizeof(int64_t)), free);
+         auto shape_values = std::vector<int64_t>(fShape.begin()+fStart, fShape.begin() + fEnd );
+         std::memcpy(data.get(), (void*) shape_values.data(), length * sizeof(int64_t));
+         model.AddConstantTensor(fNY, ETensorType::INT64, fOutput_shape, data);
+         if (model.Verbose()) {
+            std::cout << "Output of Shape is constant tensor with shape " << ConvertShapeToString(fOutput_shape) << " and values ";
+            for (size_t i = 0; i < shape_values.size(); i++)
+               std::cout << shape_values[i] << "  ";
+            std::cout << std::endl;
+         }
+      }
+      else
+         model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
+
+
    }
 
    std::string Generate(std::string OpName){

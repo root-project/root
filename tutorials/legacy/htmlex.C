@@ -1,10 +1,8 @@
 /// \file
 /// \ingroup tutorial_legacy
 /// This file demonstrates how THtml can document sources.
-///
-/// See the [Users Guide](https://root.cern/root/htmldoc/guides/users-guide/ROOTUsersGuide.html)
-/// chapter [Automatic HTML Documentation](https://root.cern/root/htmldoc/guides/users-guide/ROOTUsersGuideChapters/HTMLDoc.pdf), and
-/// [THtml's class documentation](https://root.cern/doc/master/classTHtml.html).
+/// THTML had features Doxygen did not yet have, and acquired 
+/// only at a later time.
 ///
 /// To see this demo script in action start up ROOT and run
 /// ~~~{.cpp}

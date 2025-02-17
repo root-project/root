@@ -93,12 +93,11 @@ This class does not support copying
       */
       ~GSLMinimizer1D() override;
 
-   private:
-      // usually copying is non trivial, so we make this unaccessible
-      GSLMinimizer1D(const GSLMinimizer1D &);
-      GSLMinimizer1D & operator = (const GSLMinimizer1D &);
-
-   public:
+      // usually copying is non trivial, so we delete this
+      GSLMinimizer1D(const GSLMinimizer1D &) = delete;
+      GSLMinimizer1D & operator = (const GSLMinimizer1D &) = delete;
+      GSLMinimizer1D(GSLMinimizer1D &&) = delete;
+      GSLMinimizer1D & operator = (GSLMinimizer1D &&) = delete;
 
 
       /**

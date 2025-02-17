@@ -17,6 +17,7 @@
 
 #include <numeric>
 #include <algorithm>
+#include <iomanip>
 
 #include "../src/RooRombergIntegrator.h"
 

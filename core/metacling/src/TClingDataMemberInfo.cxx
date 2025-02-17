@@ -397,16 +397,17 @@ Longptr_t TClingDataMemberInfo::Offset()
    // clang there is misbehaviour in MangleContext::shouldMangleDeclName.
    // enum constants are essentially numbers and don't get addresses. However
    // ROOT expects the address to the enum constant initializer to be returned.
-   else if (const EnumConstantDecl *ECD = dyn_cast<EnumConstantDecl>(D))
+   else if (const EnumConstantDecl *ECD = dyn_cast<EnumConstantDecl>(D)) {
       // The raw data is stored as a long long, so we need to find the 'long'
       // part.
-#ifdef R__BYTESWAP
-      // In this case at the beginning.
-      return reinterpret_cast<Longptr_t>(ECD->getInitVal().getRawData());
-#else
-      // In this case in the second part.
-      return reinterpret_cast<Longptr_t>(((char*)ECD->getInitVal().getRawData())+sizeof(Longptr_t) );
-#endif
+
+      // The memory leak for `EnumConstantDecl` was fixed in:
+      // https://github.com/llvm/llvm-project/pull/78311
+      // We were relying on the leak to provide the address for EnumConstantDecl.
+      // Now store the data value as a member instead.
+      fEnumValue = ECD->getInitVal().getExtValue();
+      return reinterpret_cast<Longptr_t>(&fEnumValue);
+   }
    return -1L;
 }
 
@@ -453,22 +454,25 @@ long TClingDataMemberInfo::Property() const
    };
 
    getParentAccessAndNonTransparentDC();
-
+   // TODO: Now that we have the kIsNotReacheable we could return the property
+   // to be reflecting the local information.  However it is unclear if the
+   // information is used as-is (it appears to not be used in ROOT proper)
    switch (strictestAccess) {
       case clang::AS_public:
          property |= kIsPublic;
          break;
       case clang::AS_protected:
-         property |= kIsProtected;
+         property |= kIsProtected | kIsNotReacheable;
          break;
       case clang::AS_private:
-         property |= kIsPrivate;
+         property |= kIsPrivate | kIsNotReacheable;
          break;
       case clang::AS_none: //?
          property |= kIsPublic;
          break;
       default:
          // IMPOSSIBLE
+         assert(false && "Unexpected value for the access property value in Clang");
          break;
    }
    if (llvm::isa<clang::UsingShadowDecl>(thisDecl))

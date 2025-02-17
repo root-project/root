@@ -168,7 +168,7 @@ double RooMCIntegrator::integral(const double* /*yvec*/)
 
 double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, double *absError)
 {
-  //cout << "VEGAS stage = " << stage << " calls = " << calls << " iterations = " << iterations << endl ;
+  //cout << "VEGAS stage = " << stage << " calls = " << calls << " iterations = " << iterations << std::endl ;
 
   // reset the grid to its initial state if we are starting from scratch
   if(stage == AllStages) _grid.initialize(*_function);
@@ -192,7 +192,7 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
     if(_mode != ImportanceOnly) {
       // calculate the largest number of equal subdivisions ("boxes") along each
       // axis that results in an average of no more than 2 integrand calls per cell
-      boxes = (UInt_t)floor(TMath::Power(calls/2.0,1.0/dim));
+      boxes = (UInt_t)floor(std::pow(calls/2.0,1.0/dim));
       // use stratified sampling if we are allowed enough calls (or equivalently,
       // if the dimension is low enough)
       _mode = Importance;
@@ -204,16 +204,16 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
    if(bins > RooGrid::maxBins) bins= RooGrid::maxBins;
    boxes = box_per_bin * bins;
    oocxcoutD((TObject*)nullptr,Integration) << "RooMCIntegrator: using stratified sampling with " << bins << " bins and "
-                << box_per_bin << " boxes/bin" << endl;
+                << box_per_bin << " boxes/bin" << std::endl;
       }
       else {
    oocxcoutD((TObject*)nullptr,Integration) << "RooMCIntegrator: using importance sampling with " << bins << " bins and "
-                << boxes << " boxes" << endl;
+                << boxes << " boxes" << std::endl;
       }
     }
 
     // calculate the total number of n-dim boxes for this step
-    double tot_boxes = TMath::Power((double)boxes,(double)dim);
+    double tot_boxes = std::pow((double)boxes,(double)dim);
 
     // increase the total number of calls to get at least 2 calls per box, if necessary
     _calls_per_box = (UInt_t)(calls/tot_boxes);
@@ -221,7 +221,7 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
     calls= (UInt_t)(_calls_per_box*tot_boxes);
 
     // calculate the Jacobean factor: volume/(avg # of calls/bin)
-    _jac = _grid.getVolume()*TMath::Power((double)bins,(double)dim)/calls;
+    _jac = _grid.getVolume()*std::pow((double)bins,(double)dim)/calls;
 
     // setup our grid to use the calculated number of boxes and bins
     _grid.setNBoxes(boxes);
@@ -286,7 +286,7 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
           sizeOfDim *= _grid.getNBoxes();
         }
         oocoutP(nullptr, Integration) << "RooMCIntegrator: still working ... iteration "
-            << it << '/' << iterations << "  box " << index << "/"<< std::pow(_grid.getNBoxes(), _grid.getDimension()) << endl;
+            << it << '/' << iterations << "  box " << index << "/"<< std::pow(_grid.getNBoxes(), _grid.getDimension()) << std::endl;
         _timer.Start(true);
       }
       else {
@@ -328,9 +328,9 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
       cum_int += (intgrl - cum_int) / (it + 1.0);
       cum_sig = 0.0;
     }
-    oocxcoutD((TObject*)nullptr,Integration) << "=== Iteration " << _it_num << " : I = " << intgrl << " +/- " << sqrt(sig) << endl
+    oocxcoutD((TObject*)nullptr,Integration) << "=== Iteration " << _it_num << " : I = " << intgrl << " +/- " << sqrt(sig) << std::endl
                  << "    Cumulative : I = " << cum_int << " +/- " << cum_sig << "( chi2 = " << _chisq
-                 << ")" << endl;
+                 << ")" << std::endl;
     // print the grid after the final iteration
     if (oodologD((TObject*)nullptr,Integration)) {
       if(it + 1 == iterations) _grid.print(std::cout, true);

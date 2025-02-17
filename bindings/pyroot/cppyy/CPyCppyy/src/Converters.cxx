@@ -203,6 +203,7 @@ static bool IsPyCArgObject(PyObject* pyobject)
     return Py_TYPE(pyobject) == pycarg_type;
 }
 
+#if PY_VERSION_HEX < 0x30d0000
 static bool IsCTypesArrayOrPointer(PyObject* pyobject)
 {
     static PyTypeObject* cstgdict_type = nullptr;
@@ -219,6 +220,43 @@ static bool IsCTypesArrayOrPointer(PyObject* pyobject)
         return true;
     return false;
 }
+#else
+// the internals of ctypes have been redone, requiring a more complex checking
+namespace {
+
+typedef struct {
+    PyTypeObject *DictRemover_Type;
+    PyTypeObject *PyCArg_Type;
+    PyTypeObject *PyCField_Type;
+    PyTypeObject *PyCThunk_Type;
+    PyTypeObject *StructParam_Type;
+    PyTypeObject *PyCType_Type;
+    PyTypeObject *PyCStructType_Type;
+    PyTypeObject *UnionType_Type;
+    PyTypeObject *PyCPointerType_Type;
+// ... unused fields omitted ...
+} _cppyy_ctypes_state;
+
+} // unnamed namespace
+
+static bool IsCTypesArrayOrPointer(PyObject* pyobject)
+{
+    static _cppyy_ctypes_state* state = nullptr;
+    if (!state) {
+        PyObject* ctmod = PyImport_AddModule("_ctypes");   // the extension module, not the Python one
+        if (ctmod)
+            state = (_cppyy_ctypes_state*)PyModule_GetState(ctmod);
+    }
+
+    // verify for object types that have a C payload
+    if (state && (PyObject_IsInstance((PyObject*)Py_TYPE(pyobject), (PyObject*)state->PyCType_Type) ||
+                  PyObject_IsInstance((PyObject*)Py_TYPE(pyobject), (PyObject*)state->PyCPointerType_Type))) {
+        return true;
+    }
+
+    return false;
+}
+#endif
 
 
 //- helper to establish life lines -------------------------------------------
@@ -841,6 +879,13 @@ CPPYY_IMPL_BASIC_CONVERTER_NI(
 //----------------------------------------------------------------------------
 CPPYY_IMPL_BASIC_CHAR_CONVERTER(Char,  char,          CHAR_MIN,  CHAR_MAX)
 CPPYY_IMPL_BASIC_CHAR_CONVERTER(UChar, unsigned char,        0, UCHAR_MAX)
+
+PyObject* CPyCppyy::SCharAsIntConverter::FromMemory(void* address)
+{
+// special case to be used with arrays: return a Python int instead of str
+// (following the same convention as module array.array)
+    return PyInt_FromLong((long)*((signed char*)address));
+}
 
 PyObject* CPyCppyy::UCharAsIntConverter::FromMemory(void* address)
 {
@@ -1857,8 +1902,8 @@ CPyCppyy::name##Converter::name##Converter(bool keepControl) :               \
 bool CPyCppyy::name##Converter::SetArg(                                      \
     PyObject* pyobject, Parameter& para, CallContext* ctxt)                  \
 {                                                                            \
-    if (CPyCppyy_PyUnicodeAsBytes2Buffer(pyobject, fStringBuffer)) {         \
-        para.fValue.fVoidp = &fStringBuffer;                                 \
+    if (CPyCppyy_PyUnicodeAsBytes2Buffer(pyobject, fBuffer)) {               \
+        para.fValue.fVoidp = &fBuffer;                                       \
         para.fTypeCode = 'V';                                                \
         return true;                                                         \
     }                                                                        \
@@ -1891,53 +1936,7 @@ bool CPyCppyy::name##Converter::ToMemory(                                    \
 
 CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(TString, TString, Data, Length)
 CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(STLString, std::string, c_str, size)
-#if __cplusplus > 201402L
-CPPYY_IMPL_STRING_AS_PRIMITIVE_CONVERTER(STLStringViewBase, std::string_view, data, size)
-bool CPyCppyy::STLStringViewConverter::SetArg(
-    PyObject* pyobject, Parameter& para, CallContext* ctxt)
-{
-    if (this->STLStringViewBaseConverter::SetArg(pyobject, para, ctxt)) {
-        // One extra step compared to the regular std::string converter:
-        // Create a corresponding std::string_view and set the parameter value
-        // accordingly.
-        fStringView = *reinterpret_cast<std::string*>(para.fValue.fVoidp);
-        para.fValue.fVoidp = &fStringView;
-        return true;
-    }
 
-    if (!CPPInstance_Check(pyobject))
-        return false;
-
-    static Cppyy::TCppScope_t sStringID = Cppyy::GetScope("std::string");
-    CPPInstance* pyobj = (CPPInstance*)pyobject;
-    if (pyobj->ObjectIsA() == sStringID) {
-        void* ptr = pyobj->GetObject();
-        if (!ptr)
-            return false;
-
-        // Copy the string to ensure the lifetime of the string_view and the
-        // underlying string is identical.
-        fStringBuffer = *((std::string*)ptr);
-        // Create the string_view on the copy
-        fStringView = fStringBuffer;
-        para.fValue.fVoidp = &fStringView;
-        para.fTypeCode = 'V';
-        return true;
-    }
-
-    return false;
-}
-bool CPyCppyy::STLStringViewConverter::ToMemory(
-    PyObject* value, void* address, PyObject* ctxt)
-{
-    if (CPyCppyy_PyUnicodeAsBytes2Buffer(value, fStringBuffer)) {
-        fStringView = fStringBuffer;
-        *reinterpret_cast<std::string_view*>(address) = fStringView;
-        return true;
-    }
-    return InstanceConverter::ToMemory(value, address, ctxt);
-}
-#endif
 
 CPyCppyy::STLWStringConverter::STLWStringConverter(bool keepControl) :
     InstanceConverter(Cppyy::GetScope("std::wstring"), keepControl) {}
@@ -1947,9 +1946,9 @@ bool CPyCppyy::STLWStringConverter::SetArg(
 {
     if (PyUnicode_Check(pyobject)) {
         Py_ssize_t len = CPyCppyy_PyUnicode_GET_SIZE(pyobject);
-        fStringBuffer.resize(len);
-        CPyCppyy_PyUnicode_AsWideChar(pyobject, &fStringBuffer[0], len);
-        para.fValue.fVoidp = &fStringBuffer;
+        fBuffer.resize(len);
+        CPyCppyy_PyUnicode_AsWideChar(pyobject, &fBuffer[0], len);
+        para.fValue.fVoidp = &fBuffer;
         para.fTypeCode = 'V';
         return true;
     }
@@ -2000,6 +1999,89 @@ bool CPyCppyy::STLWStringConverter::ToMemory(PyObject* value, void* address, PyO
     }
     return InstanceConverter::ToMemory(value, address, ctxt);
 }
+
+
+#if __cplusplus > 201402L
+CPyCppyy::STLStringViewConverter::STLStringViewConverter(bool keepControl) :
+    InstanceConverter(Cppyy::GetScope("std::string_view"), keepControl) {}
+
+bool CPyCppyy::STLStringViewConverter::SetArg(
+    PyObject* pyobject, Parameter& para, CallContext* ctxt)
+{
+// normal instance convertion (eg. string_view object passed)
+    if (!PyInt_Check(pyobject) && !PyLong_Check(pyobject)) {
+        CallContextRAII<CallContext::kNoImplicit> noimp(ctxt);
+        if (InstanceConverter::SetArg(pyobject, para, ctxt)) {
+            para.fTypeCode = 'V';
+            return true;
+        } else
+            PyErr_Clear();
+    }
+
+// passing of a Python string; buffering done Python-side b/c str is immutable
+    Py_ssize_t len;
+    const char* cstr = CPyCppyy_PyText_AsStringAndSize(pyobject, &len);
+    if (cstr) {
+        SetLifeLine(ctxt->fPyContext, pyobject, (intptr_t)this);
+        fBuffer = std::string_view(cstr, (std::string_view::size_type)len);
+        para.fValue.fVoidp = &fBuffer;
+        para.fTypeCode = 'V';
+        return true;
+    }
+
+    if (!CPPInstance_Check(pyobject))
+        return false;
+
+// special case of a C++ std::string object; life-time management is left to
+// the caller to ensure any external changes propagate correctly
+    if (CPPInstance_Check(pyobject)) {
+        static Cppyy::TCppScope_t sStringID = Cppyy::GetScope("std::string");
+        CPPInstance* pyobj = (CPPInstance*)pyobject;
+        if (pyobj->ObjectIsA() == sStringID) {
+            void* ptr = pyobj->GetObject();
+            if (!ptr)
+                return false;     // leaves prior conversion error for report
+
+            PyErr_Clear();
+
+            fBuffer = *((std::string*)ptr);
+            para.fValue.fVoidp = &fBuffer;
+            para.fTypeCode = 'V';
+            return true;
+        }
+    }
+
+    return false;
+}
+
+PyObject* CPyCppyy::STLStringViewConverter::FromMemory(void* address)
+{
+    if (address)
+        return InstanceConverter::FromMemory(address);
+    auto* empty = new std::string_view();
+    return BindCppObjectNoCast(empty, fClass, CPPInstance::kIsOwner);
+}
+
+bool CPyCppyy::STLStringViewConverter::ToMemory(
+    PyObject* value, void* address, PyObject* ctxt)
+{
+// common case of simple object assignment
+    if (InstanceConverter::ToMemory(value, address, ctxt))
+        return true;
+
+// assignment of a Python string; buffering done Python-side b/c str is immutable
+    Py_ssize_t len;
+    const char* cstr = CPyCppyy_PyText_AsStringAndSize(value, &len);
+    if (cstr) {
+        SetLifeLine(ctxt, value, (intptr_t)this);
+        *reinterpret_cast<std::string_view*>(address) = \
+            std::string_view(cstr, (std::string_view::size_type)len);
+        return true;
+    }
+
+    return false;
+}
+#endif
 
 
 bool CPyCppyy::STLStringMoveConverter::SetArg(
@@ -2738,12 +2820,9 @@ bool CPyCppyy::StdFunctionConverter::SetArg(
     PyObject* pyobject, Parameter& para, CallContext* ctxt)
 {
 // prefer normal "object" conversion
-    bool rf = ctxt->fFlags & CallContext::kNoImplicit;
-    ctxt->fFlags |= CallContext::kNoImplicit;
-    if (fConverter->SetArg(pyobject, para, ctxt)) {
-        if (!rf) ctxt->fFlags &= ~CallContext::kNoImplicit;
+    CallContextRAII<CallContext::kNoImplicit> noimp(ctxt);
+    if (fConverter->SetArg(pyobject, para, ctxt))
         return true;
-    }
 
     PyErr_Clear();
 
@@ -2757,12 +2836,10 @@ bool CPyCppyy::StdFunctionConverter::SetArg(
             bool result = fConverter->SetArg(func, para, ctxt);
             if (result) ctxt->AddTemporary(func);
             else Py_DECREF(func);
-            if (!rf) ctxt->fFlags &= ~CallContext::kNoImplicit;
             return result;
         }
     }
 
-    if (!rf) ctxt->fFlags &= ~CallContext::kNoImplicit;
     return false;
 }
 
@@ -3289,6 +3366,23 @@ bool CPyCppyy::RegisterConverter(const std::string& name, cf_t fac)
 
 //----------------------------------------------------------------------------
 CPYCPPYY_EXPORT
+bool CPyCppyy::RegisterConverterAlias(const std::string& name, const std::string& target)
+{
+// register a custom converter that is a reference to an existing converter
+    auto f = gConvFactories.find(name);
+    if (f != gConvFactories.end())
+        return false;
+
+    auto t = gConvFactories.find(target);
+    if (t == gConvFactories.end())
+        return false;
+
+    gConvFactories[name] = t->second;
+    return true;
+}
+
+//----------------------------------------------------------------------------
+CPYCPPYY_EXPORT
 bool CPyCppyy::UnregisterConverter(const std::string& name)
 {
 // remove a custom converter
@@ -3341,6 +3435,7 @@ public:
         gf["unsigned char"] =               (cf_t)+[](cdims_t) { static UCharConverter c{};          return &c; };
         gf["const unsigned char&"] =        (cf_t)+[](cdims_t) { static ConstUCharRefConverter c{};  return &c; };
         gf["unsigned char&"] =              (cf_t)+[](cdims_t) { static UCharRefConverter c{};       return &c; };
+        gf["SCharAsInt"] =                  (cf_t)+[](cdims_t) { static SCharAsIntConverter c{};     return &c; };
         gf["UCharAsInt"] =                  (cf_t)+[](cdims_t) { static UCharAsIntConverter c{};     return &c; };
         gf["wchar_t"] =                     (cf_t)+[](cdims_t) { static WCharConverter c{};          return &c; };
         gf["char16_t"] =                    (cf_t)+[](cdims_t) { static Char16Converter c{};         return &c; };
@@ -3394,11 +3489,12 @@ public:
 
     // pointer/array factories
         gf["bool ptr"] =                    (cf_t)+[](cdims_t d) { return new BoolArrayConverter{d}; };
-        gf["const signed char[]"] =         (cf_t)+[](cdims_t d) { return new SCharArrayConverter{d}; };
-        gf["signed char[]"] =               gf["const signed char[]"];
+        gf["signed char ptr"] =             (cf_t)+[](cdims_t d) { return new SCharArrayConverter{d}; };
         gf["signed char**"] =               (cf_t)+[](cdims_t)   { return new SCharArrayConverter{{UNKNOWN_SIZE, UNKNOWN_SIZE}}; };
         gf["const unsigned char*"] =        (cf_t)+[](cdims_t d) { return new UCharArrayConverter{d}; };
         gf["unsigned char ptr"] =           (cf_t)+[](cdims_t d) { return new UCharArrayConverter{d}; };
+        gf["SCharAsInt*"] =                 gf["signed char ptr"];
+        gf["SCharAsInt[]"] =                gf["signed char ptr"];
         gf["UCharAsInt*"] =                 gf["unsigned char ptr"];
         gf["UCharAsInt[]"] =                gf["unsigned char ptr"];
 #if __cplusplus > 201402L
@@ -3426,8 +3522,11 @@ public:
         gf["const signed char&"] =          gf["const char&"];
 #if __cplusplus > 201402L
         gf["std::byte"] =                   gf["uint8_t"];
+        gf["byte"] =                        gf["uint8_t"];
         gf["const std::byte&"] =            gf["const uint8_t&"];
+        gf["const byte&"] =                 gf["const uint8_t&"];
         gf["std::byte&"] =                  gf["uint8_t&"];
+        gf["byte&"] =                       gf["uint8_t&"];
 #endif
         gf["std::int8_t"] =                 gf["int8_t"];
         gf["const std::int8_t&"] =          gf["const int8_t&"];
@@ -3453,19 +3552,6 @@ public:
         gf["const " CCOMPLEX_D "&"] =       gf["const std::complex<double>&"];
         gf[CCOMPLEX_F " ptr"] =             gf["std::complex<float> ptr"];
         gf[CCOMPLEX_D " ptr"] =             gf["std::complex<double> ptr"];
-        gf["Long64_t"] =                    gf["long long"];
-        gf["Long64_t ptr"] =                gf["long long ptr"];
-        gf["Long64_t&"] =                   gf["long long&"];
-        gf["const Long64_t&"] =             gf["const long long&"];
-        gf["ULong64_t"] =                   gf["unsigned long long"];
-        gf["ULong64_t ptr"] =               gf["unsigned long long ptr"];
-        gf["ULong64_t&"] =                  gf["unsigned long long&"];
-        gf["const ULong64_t&"] =            gf["const unsigned long long&"];
-        gf["Float16_t"] =                   gf["float"];
-        gf["const Float16_t&"] =            gf["const float&"];
-        gf["Double32_t"] =                  gf["double"];
-        gf["Double32_t&"] =                 gf["double&"];
-        gf["const Double32_t&"] =           gf["const double&"];
 
     // factories for special cases
         gf["TString"] =                     (cf_t)+[](cdims_t) { return new TStringConverter{}; };

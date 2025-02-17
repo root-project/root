@@ -62,29 +62,20 @@ static bool NameExistsElsewhere(const char* name){
    if (lastPos != nullptr) {
       // We have a scope
       const auto enName = lastPos + 1;
-      const auto scopeNameSize = ((Long64_t)lastPos - (Long64_t)name) / sizeof(decltype(*lastPos)) - 1;
-#ifdef R__WIN32
-      char *scopeName = new char[scopeNameSize + 1];
-#else
-      char scopeName[scopeNameSize + 1]; // on the stack, +1 for the terminating character '\0'
-#endif
-      strncpy(scopeName, name, scopeNameSize);
-      scopeName[scopeNameSize] = '\0';
+      const size_t scopeNameSize = (lastPos - name) / sizeof(decltype(*lastPos)) - 1;
+      std::string scopeName{name, scopeNameSize};
       // We have now an enum name and a scope name
       // We look first in the classes
-      if(auto scope = dynamic_cast<TClass*>(gROOT->GetListOfClasses()->FindObject(scopeName))){
+      if (auto scope = dynamic_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName.c_str()))) {
          theEnum = ((TListOfEnums*)scope->GetListOfEnums(false))->THashList::FindObject(enName);
       }
       // And then if not found in the protoclasses
       if (!theEnum){
-         if (auto scope = TClassTable::GetProtoNorm(scopeName)){
+         if (auto scope = TClassTable::GetProtoNorm(scopeName.c_str())) {
             if (auto listOfEnums = (TListOfEnums*)scope->GetListOfEnums())
                theEnum = listOfEnums->THashList::FindObject(enName);
          }
       }
-#ifdef R__WIN32
-      delete [] scopeName;
-#endif
    } else { // Here we look in the global scope
       theEnum = ((TListOfEnums*)gROOT->GetListOfEnums())->THashList::FindObject(name);
    }

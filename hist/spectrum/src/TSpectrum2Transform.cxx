@@ -56,7 +56,7 @@ TSpectrum2Transform::TSpectrum2Transform()
 /// The constructor creates TSpectrum2Transform object. Its sizes must be > than zero and must be power of 2.
 /// It sets default transform type to be Cosine transform. Transform parameters can be changed using setter functions.
 
-TSpectrum2Transform::TSpectrum2Transform(Int_t sizeX, Int_t sizeY) :TObject()
+TSpectrum2Transform::TSpectrum2Transform(Int_t sizeX, Int_t sizeY)
 {
    Int_t n;
    if (sizeX <= 0 || sizeY <= 0){

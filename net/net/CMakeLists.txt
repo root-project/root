@@ -108,3 +108,5 @@ if(ssl)
   target_include_directories(Net PRIVATE ${OPENSSL_INCLUDE_DIR})
   target_link_libraries(Net PRIVATE ${OPENSSL_LIBRARIES})
 endif()
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)

@@ -196,11 +196,6 @@ int VfsRdOnlyOpen(sqlite3_vfs * /*vfs*/, const char *zName, sqlite3_file *pFile,
       return SQLITE_IOERR;
    }
 
-   if (!(p->fRawFile->GetFeatures() & ROOT::Internal::RRawFile::kFeatureHasSize)) {
-      ::Error("VfsRdOnlyOpen", "cannot determine file size of %s\n", zName);
-      return SQLITE_IOERR;
-   }
-
    p->pFile.pMethods = &io_methods;
    return SQLITE_OK;
 }

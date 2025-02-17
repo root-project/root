@@ -12,38 +12,10 @@
 /** \class TEntryList
 \ingroup tree
 
-A List of entry numbers in a TTree or TChain.
+A List of entry numbers in a TTree or TChain. 
 
-There are two types of entry lists:
-
-#### 1.
-    for a TTree (fBlocks data member is non-zero)
-    Entry numbers are stored in TEntryListBlocks, which, in their turn, are stored
-    in the TObjArray fBlocks. The range of the entry numbers is cut into intervals
-    of kBlockSize entries (currently 64000), so that the first block contains
-    information which entries out of the first 64000 pass the selection, the second
-    block - which entries out of the 64000-127999 interval pass the selection, etc.
-    Some blocks, obviously, might be empty. The internal representation of entry
-    numbers in the blocks is described in the TEntryListBlock class description, and
-    this representation might be changed by calling OptimizeStorage() function
-    (when the list is filled via the Enter() function, this is done automatically,
-    except for the last block).
-    Individual entry lists can be merged (functions Merge() and Add())
-    to make an entry list for a TChain of corresponding TTrees.
-Begin_Macro
-entrylist_figure1.C
-End_Macro
-
-#### 2.
-    for a TChain (fLists data member is non-zero)
-    It contains a TList of sub-lists (TEntryList objects, corresponding to each TTree)
-    Trees and lists are matched by the TTree name and its file name (full path).
-    All sub-lists are returned by the GetLists() function and individual lists are
-    returned by GetEntryList() function. Such lists are no different from the lists for
-    TTrees, described above.
-Begin_Macro
-entrylist_figure2.C
-End_Macro
+Note: It is recommended to use approaches such as TTreeReader::SetEntryRange or 
+ROOT::RDataFrame instead of TEntryList if possible.
 
 ## Operations on entry lists
 
@@ -142,6 +114,40 @@ TTreeFormula expressions.
 
 TTree::SetEventList() and TChain::SetEventList() transform a TEventList into a TEntryList
 See comments to those functions for more details
+
+## Types of entry lists
+There are two types of entry lists:
+
+#### 1.
+    for a TTree (fBlocks data member is non-zero)
+    Entry numbers are stored in TEntryListBlocks, which, in their turn, are stored
+    in the TObjArray fBlocks. The range of the entry numbers is cut into intervals
+    of kBlockSize entries (currently 64000), so that the first block contains
+    information which entries out of the first 64000 pass the selection, the second
+    block - which entries out of the 64000-127999 interval pass the selection, etc.
+    Some blocks, obviously, might be empty. The internal representation of entry
+    numbers in the blocks is described in the TEntryListBlock class description, and
+    this representation might be changed by calling OptimizeStorage() function
+    (when the list is filled via the Enter() function, this is done automatically,
+    except for the last block).
+    Individual entry lists can be merged (functions Merge() and Add())
+    to make an entry list for a TChain of corresponding TTrees.
+Begin_Macro
+entrylist_figure1.C
+End_Macro
+
+#### 2.
+    for a TChain (fLists data member is non-zero)
+    It contains a TList of sub-lists (TEntryList objects, corresponding to each TTree)
+    Trees and lists are matched by the TTree name and its file name (full path).
+    All sub-lists are returned by the GetLists() function and individual lists are
+    returned by GetEntryList() function. Such lists are no different from the lists for
+    TTrees, described above.
+Begin_Macro
+entrylist_figure2.C
+End_Macro
+
+
 */
 
 #include "TEntryList.h"

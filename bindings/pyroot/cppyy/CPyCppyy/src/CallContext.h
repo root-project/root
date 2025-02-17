@@ -154,6 +154,24 @@ inline bool UseStrictOwnership(CallContext* ctxt) {
     return CallContext::sMemoryPolicy == CallContext::kUseStrict;
 }
 
+template<CallContext::ECallFlags F>
+class CallContextRAII {
+public:
+    CallContextRAII(CallContext* ctxt) : fCtxt(ctxt) {
+        fPrior = fCtxt->fFlags & F;
+        fCtxt->fFlags |= F;
+    }
+    CallContextRAII(const CallContextRAII&) = delete;
+    CallContextRAII& operator=(const CallContextRAII&) = delete;
+    ~CallContextRAII() {
+        if (!fPrior) fCtxt->fFlags &= ~F;
+    }
+
+private:
+    CallContext* fCtxt;
+    bool fPrior;
+};
+
 } // namespace CPyCppyy
 
 #endif // !CPYCPPYY_CALLCONTEXT_H

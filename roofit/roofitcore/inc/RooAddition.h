@@ -56,8 +56,6 @@ public:
 
   void doEval(RooFit::EvalContext &) const override;
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-
 protected:
 
   RooArgList   _ownedList ;      ///< List of owned components

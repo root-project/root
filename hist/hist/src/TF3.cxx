@@ -34,7 +34,7 @@ A 3-Dim function with parameters
 ////////////////////////////////////////////////////////////////////////////////
 /// F3 default constructor
 
-TF3::TF3(): TF2()
+TF3::TF3()
 {
    fNpz  = 0;
    fZmin = 0;

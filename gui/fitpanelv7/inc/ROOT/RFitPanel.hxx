@@ -113,7 +113,7 @@ public:
    void AssignHistogram(std::shared_ptr<RH1D> &hist);
 
    /// show FitPanel in specified place
-   void Show(const std::string &where = "");
+   void Show(const RWebDisplayArgs &args = "");
 
    /// hide FitPanel
    void Hide();

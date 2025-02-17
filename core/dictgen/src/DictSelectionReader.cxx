@@ -369,7 +369,7 @@ bool DictSelectionReader::SecondPass(const clang::RecordDecl &recordDecl)
                userDefinedProperty = propNames::comment + propNames::separator + "||";
             }
             if (!userDefinedProperty.empty()) {
-               fieldPtr->addAttr(clang::AnnotateAttr::CreateImplicit(C, userDefinedProperty));
+               fieldPtr->addAttr(clang::AnnotateAttr::CreateImplicit(C, userDefinedProperty, nullptr, 0));
                userDefinedProperty = "";
             }
          }

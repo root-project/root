@@ -39,8 +39,9 @@ private:
    std::string  fQualName;                // Fully qualified type name
    EDataType    fUnderlyingType = kInt_t; // Type (size) used to store the enum in memory
 
-   enum EBits {
-     kBitIsScopedEnum = BIT(14) ///< The enum is an enum class.
+   enum EStatusBits {
+      kBitIsScopedEnum = BIT(14), ///< The enum is an enum class.
+      kBitIsValid = BIT(15)       ///< The TEnum object was read from file (assumed valid)
    };
 
 public:

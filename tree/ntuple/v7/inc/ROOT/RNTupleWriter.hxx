@@ -20,6 +20,7 @@
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleFillContext.hxx>
+#include <ROOT/RNTupleFillStatus.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
@@ -31,7 +32,7 @@
 #include <string_view>
 #include <utility>
 
-class TFile;
+class TDirectory;
 
 namespace ROOT {
 namespace Experimental {
@@ -53,7 +54,7 @@ CreateRNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Interna
 An output ntuple can be filled with entries. The caller has to make sure that the data that gets filled into an ntuple
 is not modified for the time of the Fill() call. The fill call serializes the C++ object into the column format and
 writes data into the corresponding column page buffers.  Writing of the buffers to storage is deferred and can be
-triggered by CommitCluster() or by destructing the writer.  On I/O errors, an exception is thrown.
+triggered by FlushCluster() or by destructing the writer.  On I/O errors, an exception is thrown.
 */
 // clang-format on
 class RNTupleWriter {
@@ -68,11 +69,11 @@ private:
    RNTupleFillContext fFillContext;
    Detail::RNTupleMetrics fMetrics;
 
-   NTupleSize_t fLastCommittedClusterGroup = 0;
+   ROOT::NTupleSize_t fLastCommittedClusterGroup = 0;
 
    RNTupleWriter(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSink> sink);
 
-   RNTupleModel &GetUpdatableModel() { return *fFillContext.fModel; }
+   RNTupleModel &GetUpdatableModel();
    Internal::RPageSink &GetSink() { return *fFillContext.fSink; }
 
    // Helper function that is called from CommitCluster() when necessary
@@ -93,7 +94,7 @@ public:
             std::string_view storage, const RNTupleWriteOptions &options = RNTupleWriteOptions());
    /// Throws an exception if the model is null.
    static std::unique_ptr<RNTupleWriter> Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
-                                                TFile &file,
+                                                TDirectory &fileOrDirectory,
                                                 const RNTupleWriteOptions &options = RNTupleWriteOptions());
    RNTupleWriter(const RNTupleWriter &) = delete;
    RNTupleWriter &operator=(const RNTupleWriter &) = delete;
@@ -106,22 +107,36 @@ public:
    /// a light check whether the entry comes from the ntuple's own model.
    /// \return The number of uncompressed bytes written.
    std::size_t Fill(REntry &entry) { return fFillContext.Fill(entry); }
+   /// Fill an entry into this ntuple, but don't commit the cluster. The calling code must pass an RNTupleFillStatus
+   /// and check RNTupleFillStatus::ShouldFlushCluster.
+   void FillNoFlush(REntry &entry, RNTupleFillStatus &status) { fFillContext.FillNoFlush(entry, status); }
+   /// Flush column data, preparing for CommitCluster or to reduce memory usage. This will trigger compression of pages,
+   /// but not actually write to storage (unless buffered writing is turned off).
+   void FlushColumns() { fFillContext.FlushColumns(); }
+   /// Flush so far filled entries to storage
+   void FlushCluster() { fFillContext.FlushCluster(); }
    /// Ensure that the data from the so far seen Fill calls has been written to storage
    void CommitCluster(bool commitClusterGroup = false)
    {
-      fFillContext.CommitCluster();
+      fFillContext.FlushCluster();
       if (commitClusterGroup)
          CommitClusterGroup();
    }
+   /// Closes the underlying file (page sink) and expires the model. Automatically called on destruct.
+   /// Once the dataset is committed, calls to Fill(), [Commit|Flush]Cluster(), FlushColumns(), CreateEntry(),
+   /// and model updating fail.
+   void CommitDataset();
 
    std::unique_ptr<REntry> CreateEntry() { return fFillContext.CreateEntry(); }
 
+   /// Return the entry number that was last flushed in a cluster.
+   ROOT::NTupleSize_t GetLastFlushed() const { return fFillContext.GetLastFlushed(); }
    /// Return the entry number that was last committed in a cluster.
-   NTupleSize_t GetLastCommitted() const { return fFillContext.GetLastCommitted(); }
+   ROOT::NTupleSize_t GetLastCommitted() const { return fFillContext.GetLastFlushed(); }
    /// Return the entry number that was last committed in a cluster group.
-   NTupleSize_t GetLastCommittedClusterGroup() const { return fLastCommittedClusterGroup; }
+   ROOT::NTupleSize_t GetLastCommittedClusterGroup() const { return fLastCommittedClusterGroup; }
    /// Return the number of entries filled so far.
-   NTupleSize_t GetNEntries() const { return fFillContext.GetNEntries(); }
+   ROOT::NTupleSize_t GetNEntries() const { return fFillContext.GetNEntries(); }
 
    void EnableMetrics() { fMetrics.Enable(); }
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }

@@ -34,13 +34,11 @@ RooPolynomial::RooPolynomial(const char*, const char*, RooAbsReal&, const RooArg
 #include "RooMsgService.h"
 #include "RooPolyVar.h"
 
-#include <RooFit/Detail/AnalyticalIntegrals.h>
-#include <RooFit/Detail/EvaluateFuncs.h>
+#include <RooFit/Detail/MathFuncs.h>
 
 #include "TError.h"
 #include <vector>
 
-ClassImp(RooPolynomial);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a polynomial in the variable `x`.
@@ -109,19 +107,7 @@ double RooPolynomial::evaluate() const
 
    RooPolyVar::fillCoeffValues(_wksp, _coefList);
 
-   return RooFit::Detail::EvaluateFuncs::polynomialEvaluate<true>(_wksp.data(), sz, _lowestOrder, _x);
-}
-
-void RooPolynomial::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   const unsigned sz = _coefList.size();
-   if (!sz) {
-      ctx.addResult(this, std::to_string((_lowestOrder ? 1. : 0.)));
-      return;
-   }
-
-   ctx.addResult(
-      this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::polynomialEvaluate<true>", _coefList, sz, _lowestOrder, _x));
+   return RooFit::Detail::MathFuncs::polynomial<true>(_wksp.data(), sz, _lowestOrder, _x);
 }
 
 /// Compute multiple values of Polynomial.
@@ -151,18 +137,5 @@ double RooPolynomial::analyticalIntegral(Int_t code, const char *rangeName) cons
 
    RooPolyVar::fillCoeffValues(_wksp, _coefList);
 
-   return RooFit::Detail::AnalyticalIntegrals::polynomialIntegral<true>(_wksp.data(), sz, _lowestOrder, xmin, xmax);
-}
-
-std::string RooPolynomial::buildCallToAnalyticIntegral(Int_t /* code */, const char *rangeName,
-                                                       RooFit::Detail::CodeSquashContext &ctx) const
-{
-   const double xmin = _x.min(rangeName);
-   const double xmax = _x.max(rangeName);
-   const unsigned sz = _coefList.size();
-   if (!sz)
-      return std::to_string(_lowestOrder ? xmax - xmin : 0.0);
-
-   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::polynomialIntegral<true>", _coefList, sz, _lowestOrder,
-                        xmin, xmax);
+   return RooFit::Detail::MathFuncs::polynomialIntegral<true>(_wksp.data(), sz, _lowestOrder, xmin, xmax);
 }

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cstddef>     // std::size_t
+#include <cstdint>
 #include <stdexcept>   // std::runtime_error
 #include <sstream>     // std::stringstream
 #include <memory>      // std::shared_ptr
@@ -214,7 +215,7 @@ public:
    {
       fSize = Internal::GetSizeFromShape(shape);
       fStrides = Internal::ComputeStridesFromShape(shape, layout);
-      fData = &(*container->begin());
+      fData = std::data(*fContainer);
    }
 
    /// \brief Construct a tensor owning data initialized with new container
@@ -228,7 +229,7 @@ public:
       fSize = Internal::GetSizeFromShape(shape);
       fStrides = Internal::ComputeStridesFromShape(shape, layout);
       fContainer = std::make_shared<Container_t>(fSize);
-      fData = &(*fContainer->begin());
+      fData = std::data(*fContainer);
    }
 
    // Access elements

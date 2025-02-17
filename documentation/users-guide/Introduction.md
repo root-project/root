@@ -208,8 +208,7 @@ Procedure-Oriented Programming:
 ## Installing ROOT
 \index{install ROOT}
 
-To install ROOT you will need to go to the ROOT website at:
-<http://root.cern.ch/root/Availability.html>. You have a choice to
+To install ROOT you have the choice to
 download the binaries or the source. The source is quicker to transfer
 since it is only \~22 MB, but you will need to compile and link it. The
 binaries compiled with no debug information range from \~35 MB to \~45
@@ -598,7 +597,7 @@ is explicitly documented on its own web page, which is always up to
 date with the latest official release of ROOT.
 
 The ROOT Reference Guide web pages can be found at class index
-reference guide <http://root.cern.ch/root/html/ClassIndex.html>. Each
+reference guide <https://root.cern/doc/master/classes.html>. Each
 page contains a class description, and an explanation of each method.
 It shows the class inheritance tree and lets you jump to the parent
 class page by clicking on the class name. If you want more details,

@@ -20,13 +20,13 @@ struct IsCollectionProxy<CyclicCollectionProxy> : std::true_type {
 
 TEST(RNTuple, TClass) {
    auto modelFail = RNTupleModel::Create();
-   EXPECT_THROW(modelFail->MakeField<RNoDictionary>("nodict"), ROOT::Experimental::RException);
+   EXPECT_THROW(modelFail->MakeField<RNoDictionary>("nodict"), ROOT::RException);
 
    auto model = RNTupleModel::Create();
    auto ptrKlass = model->MakeField<CustomStruct>("klass");
 
-   // TDatime would be a supported class layout but it is unsplittable due to its custom streamer
-   EXPECT_THROW(model->MakeField<TDatime>("datime"), RException);
+   // TDatime would be a supported class layout but it is blocked due to its custom streamer
+   EXPECT_THROW(model->MakeField<TDatime>("datime"), ROOT::RException);
 
    FileRaii fileGuard("test_ntuple_tclass.root");
    auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
@@ -35,12 +35,12 @@ TEST(RNTuple, TClass) {
 TEST(RNTuple, CyclicClass)
 {
    auto modelFail = RNTupleModel::Create();
-   EXPECT_THROW(modelFail->MakeField<Cyclic>("cyclic"), ROOT::Experimental::RException);
+   EXPECT_THROW(modelFail->MakeField<Cyclic>("cyclic"), ROOT::RException);
 
    CyclicCollectionProxy ccp;
    auto cl = TClass::GetClass("CyclicCollectionProxy");
    cl->CopyCollectionProxy(ccp);
-   EXPECT_THROW(RFieldBase::Create("f", "CyclicCollectionProxy").Unwrap(), ROOT::Experimental::RException);
+   EXPECT_THROW(RFieldBase::Create("f", "CyclicCollectionProxy").Unwrap(), ROOT::RException);
 }
 
 TEST(RNTuple, DiamondInheritance)
@@ -50,7 +50,7 @@ TEST(RNTuple, DiamondInheritance)
    {
       auto model = RNTupleModel::Create();
       auto d = model->MakeField<DuplicateBaseD>("d");
-      EXPECT_THROW(model->MakeField<DiamondVirtualD>("vd"), RException);
+      EXPECT_THROW(model->MakeField<DiamondVirtualD>("vd"), ROOT::RException);
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       d->DuplicateBaseB::a = 1.0;
       d->DuplicateBaseC::a = 1.5;
@@ -75,7 +75,7 @@ TEST(RNTuple, DiamondInheritance)
 TEST(RTNuple, TObject)
 {
    // Ensure that TObject cannot be accidentally handled through the generic RClassField field
-   EXPECT_THROW(std::make_unique<ROOT::Experimental::RClassField>("obj", "TObject"), RException);
+   EXPECT_THROW(ROOT::Experimental::RClassField("obj", "TObject"), ROOT::RException);
 
    FileRaii fileGuard("test_ntuple_tobject.root");
    {
@@ -139,7 +139,7 @@ TEST(RTNuple, TObjectReferenced)
       writer->Fill();
 
       ptrObject->SetBit(TObject::kIsReferenced);
-      EXPECT_THROW(writer->Fill(), RException);
+      EXPECT_THROW(writer->Fill(), ROOT::RException);
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
@@ -149,7 +149,7 @@ TEST(RTNuple, TObjectReferenced)
    reader->LoadEntry(0);
    EXPECT_EQ(0u, ptrObject->GetUniqueID());
    ptrObject->SetBit(TObject::kIsReferenced);
-   EXPECT_THROW(reader->LoadEntry(0), RException);
+   EXPECT_THROW(reader->LoadEntry(0), ROOT::RException);
 }
 
 TEST(RTNuple, TObjectShow)
@@ -208,4 +208,76 @@ TEST(RTNuple, TObjectDerived)
 
    EXPECT_FLOAT_EQ(1.0, ptrMultiple->x);
    EXPECT_EQ(137u, ptrMultiple->GetUniqueID());
+}
+
+TEST(RNTuple, TClassTypeChecksum)
+{
+   auto f0 = RFieldBase::Create("f0", "std::vector<int>").Unwrap();
+   EXPECT_FALSE(f0->GetTraits() & RFieldBase::kTraitTypeChecksum);
+   EXPECT_EQ(0u, f0->GetTypeChecksum());
+
+   auto f1 = RFieldBase::Create("f1", "CustomStruct").Unwrap();
+   EXPECT_TRUE(f1->GetTraits() & RFieldBase::kTraitTypeChecksum);
+   EXPECT_EQ(TClass::GetClass("CustomStruct")->GetCheckSum(), f1->GetTypeChecksum());
+
+   auto f2 = std::make_unique<ROOT::Experimental::RStreamerField>("f2", "TRotation");
+   EXPECT_TRUE(f2->GetTraits() & RFieldBase::kTraitTypeChecksum);
+   EXPECT_EQ(TClass::GetClass("TRotation")->GetCheckSum(), f2->GetTypeChecksum());
+
+   auto f3 = RFieldBase::Create("f1", "TObject").Unwrap();
+   EXPECT_TRUE(f3->GetTraits() & RFieldBase::kTraitTypeChecksum);
+   EXPECT_EQ(TClass::GetClass("TObject")->GetCheckSum(), f3->GetTypeChecksum());
+}
+
+TEST(RNTuple, TClassReadRules)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kWarning, "[ROOT.NTuple]", "ignoring I/O customization rule with non-transient member: a", false);
+   diags.requiredDiag(kWarning, "[ROOT.NTuple]",
+                      "ignoring I/O customization rule due to conflicting source member type: float vs. double "
+                      "for member a",
+                      false);
+
+   FileRaii fileGuard("test_ntuple_tclassrules.root");
+   char c[4] = {'R', 'O', 'O', 'T'};
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrClass = model->MakeField<StructWithIORules>("class");
+      auto ptrCoord = model->MakeField<CoordinatesWithIORules>("coord");
+      ptrCoord->fX = 1.0;
+      ptrCoord->fY = 1.0;
+      auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      for (int i = 0; i < 5; i++) {
+         *ptrClass = StructWithIORules{/*a=*/static_cast<float>(i), /*chars=*/c};
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(5U, reader->GetNEntries());
+   EXPECT_EQ(TClass::GetClass("StructWithIORules")->GetCheckSum(),
+             reader->GetModel().GetConstField("class").GetOnDiskTypeChecksum());
+   auto viewKlass = reader->GetView<StructWithIORules>("class");
+   for (auto i : reader->GetEntryRange()) {
+      float fi = static_cast<float>(i);
+      EXPECT_EQ(fi, viewKlass(i).a);
+      EXPECT_TRUE(0 == memcmp(c, viewKlass(i).s.chars, sizeof(c)));
+
+      // The following values are set from a read rule; see CustomStructLinkDef.h
+      EXPECT_FLOAT_EQ(fi + 1.0f, viewKlass(i).b);
+      EXPECT_FLOAT_EQ(viewKlass(i).a + viewKlass(i).b, viewKlass(i).c);
+      EXPECT_FLOAT_EQ(2 * (viewKlass(i).a + viewKlass(i).b), viewKlass(i).cDerived);
+      EXPECT_STREQ("ROOT", viewKlass(i).s.str.c_str());
+
+      // The following member is set by a checksum based rule
+      EXPECT_FLOAT_EQ(42.0, viewKlass(i).checksumA);
+      // The following member is not touched by a rule due to a checksum mismatch
+      EXPECT_FLOAT_EQ(137.0, viewKlass(i).checksumB);
+   }
+
+   auto viewCoord = reader->GetView<CoordinatesWithIORules>("coord");
+   EXPECT_FLOAT_EQ(1.0, viewCoord(0).fX);
+   EXPECT_FLOAT_EQ(1.0, viewCoord(0).fY);
+   EXPECT_FLOAT_EQ(sqrt(2), viewCoord(0).fR);
+   EXPECT_FLOAT_EQ(M_PI / 4., viewCoord(0).fPhi);
 }

@@ -96,7 +96,7 @@ namespace TMVA {
 
       TRandom3*fRandomGenerator;    ///< random Generator for this population
 
-      mutable MsgLogger* fLogger;   ///< message logger
+      mutable MsgLogger* fLogger;   ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
 
       Int_t fPopulationSizeLimit;

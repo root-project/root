@@ -81,11 +81,7 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TFormulaPrimitive::TFormulaPrimitive() : TNamed(),
-                                         fFuncG(nullptr),
-                                         fType(0),fNArguments(0),fNParameters(0),fIsStatic(kTRUE)
-{
-}
+TFormulaPrimitive::TFormulaPrimitive() : fFuncG(nullptr), fType(0), fNArguments(0), fNParameters(0), fIsStatic(true) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

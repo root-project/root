@@ -30,9 +30,8 @@
 #include "TMath.h"
 #include "TH1.h"
 
-using std::cout, std::endl, std::string, std::vector;
+using std::string, std::vector;
 
-ClassImp(RooMomentMorphFunc)
 
 //_____________________________________________________________________________
 RooMomentMorphFunc::RooMomentMorphFunc()
@@ -84,12 +83,12 @@ RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooA
    for (auto *mref : mrefList) {
       if (!dynamic_cast<RooAbsReal *>(mref)) {
          coutE(InputArguments) << "RooMomentMorphFunc::ctor(" << GetName() << ") ERROR: mref " << mref->GetName()
-                               << " is not of type RooAbsReal" << endl;
+                               << " is not of type RooAbsReal" << std::endl;
          throw string("RooPolyMorh::ctor() ERROR mref is not of type RooAbsReal");
       }
       if (!dynamic_cast<RooConstVar *>(mref)) {
          coutW(InputArguments) << "RooMomentMorphFunc::ctor(" << GetName() << ") WARNING mref point " << i
-                               << " is not a constant, taking a snapshot of its value" << endl;
+                               << " is not a constant, taking a snapshot of its value" << std::endl;
       }
       (*_mref)[i] = static_cast<RooAbsReal *>(mref)->getVal();
       ++i;
@@ -132,7 +131,7 @@ void RooMomentMorphFunc::initialize()
 
    // other quantities needed
    if (nPdf != _mref->GetNrows()) {
-      coutE(InputArguments) << "RooMomentMorphFunc::initialize(" << GetName() << ") ERROR: nPdf != nRefPoints" << endl;
+      coutE(InputArguments) << "RooMomentMorphFunc::initialize(" << GetName() << ") ERROR: nPdf != nRefPoints" << std::endl;
       assert(0);
    }
 
@@ -149,7 +148,7 @@ void RooMomentMorphFunc::initialize()
    }
    for (Int_t i = 1; i < _mref->GetNrows(); ++i) {
       for (Int_t j = 1; j < _mref->GetNrows(); ++j) {
-         M(i, j) = TMath::Power((*dm)[i], (double)j);
+         M(i, j) = std::pow((*dm)[i], (double)j);
       }
    }
    (*_M) = M.Invert();
@@ -378,7 +377,7 @@ void RooMomentMorphFunc::CacheElem::calculateFractions(const RooMomentMorphFunc 
    for (Int_t i = 0; i < nPdf; ++i) {
       double ffrac = 0.;
       for (Int_t j = 0; j < nPdf; ++j) {
-         ffrac += (*self._M)(j, i) * (j == 0 ? 1. : TMath::Power(dm, (double)j));
+         ffrac += (*self._M)(j, i) * (j == 0 ? 1. : std::pow(dm, (double)j));
       }
       if (ffrac >= 0)
          sumposfrac += ffrac;
@@ -387,7 +386,7 @@ void RooMomentMorphFunc::CacheElem::calculateFractions(const RooMomentMorphFunc 
       // fractions for rms and mean
       const_cast<RooRealVar *>(frac(nPdf + i))->setVal(ffrac);
       if (verbose) {
-         cout << ffrac << endl;
+         std::cout << ffrac << std::endl;
       }
    }
 
@@ -402,7 +401,7 @@ void RooMomentMorphFunc::CacheElem::calculateFractions(const RooMomentMorphFunc 
 
    case SineLinear:
       mfrac =
-         TMath::Sin(TMath::PiOver2() * mfrac); // this gives a continuous differentiable transition between grid points.
+         std::sin(TMath::PiOver2() * mfrac); // this gives a continuous differentiable transition between grid points.
 
    // now fall through to Linear case
 

@@ -27,30 +27,32 @@ if(dataframe)
     # RReader
     ROOT_ADD_GTEST(rreader rreader.cxx LIBRARIES ROOTVecOps TMVA ROOTDataFrame)
     # Tree inference system and user interface
-    ROOT_ADD_GTEST(branchlessForest branchlessForest.cxx LIBRARIES TMVA)
-    ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVAUtils)
+    # Commented out right now because RBDT doesn't provide low-level interfaces
+    # since the sync with FastForest. Only the construction from XGBoost models
+    # is supported. If this feature becomes necessary to implement, one can
+    # resurrect these tests.
+    # ROOT_ADD_GTEST(branchlessForest branchlessForest.cxx LIBRARIES TMVA)
+    # ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVAUtils)
 endif()
 
-# Disabled because RBDT doesn't support the imbalanced tree structure of
-# XGBoost models. See https://github.com/root-project/root/issues/15197
-# TODO: Re-enable once fixed
-# if(dataframe)
-#   find_python_module(xgboost QUIET)
-#   if (PY_XGBOOST_FOUND)
-#     ROOT_ADD_PYUNITTEST(rbdt_xgboost rbdt_xgboost.py)
-#   endif()
-# endif()
+if(dataframe)
+  ROOT_FIND_PYTHON_MODULE(xgboost QUIET)
+  if (ROOT_XGBOOST_FOUND)
+    ROOT_ADD_PYUNITTEST(rbdt_xgboost rbdt_xgboost.py)
+  endif()
+endif()
 
 #--stressTMVA--------------------------------------------------------------------------------------
 
 ROOT_EXECUTABLE(stressTMVA stressTMVA.cxx LIBRARIES TMVA)
 
-if(tmva-gpu)
-  target_compile_definitions(stressTMVA PRIVATE DNNCUDA)
-endif()
+ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA -b LABELS longtest TIMEOUT 1800)
 
 if(tmva-cpu)
   target_compile_definitions(stressTMVA PRIVATE DNNCPU)
 endif()
 
-ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA -b LABELS longtest TIMEOUT 1800)
+if(tmva-gpu)
+  target_compile_definitions(stressTMVA PRIVATE DNNCUDA)
+  set_property(TEST test-stresstmva PROPERTY RESOURCE_LOCK GPU)
+endif()

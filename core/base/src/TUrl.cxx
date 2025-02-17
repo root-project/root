@@ -137,7 +137,8 @@ void TUrl::SetUrl(const char *url, Bool_t defaultIsFile)
    // Find protocol
    char *s, sav;
 
-   char *u, *u0 = Strip(url);
+   TString surl = url;
+   char *u, *u0 = Strip(defaultIsFile && surl.EndsWith(":/") ? TString(surl(0,surl.Length()-2)).Data() : url);
 tryfile:
    u = u0;
 
@@ -195,7 +196,7 @@ tryfile:
       // allow url of form: "proto://"
    } else {
       if (defaultIsFile) {
-         const std::size_t bufferSize = strlen("file:") + strlen(u0) + 1;
+         const std::size_t bufferSize = std::char_traits<char>::length("file:") + strlen(u0) + 1;
          char *newu = new char [bufferSize];
          snprintf(newu, bufferSize, "file:%s", u0);
          delete [] u0;
@@ -573,7 +574,7 @@ void TUrl::Print(Option_t *) const
 
 TObjArray *TUrl::GetSpecialProtocols()
 {
-   static std::atomic_bool usedEnv = ATOMIC_VAR_INIT(false);
+   static std::atomic_bool usedEnv { false };
 
    if (!gEnv) {
       R__LOCKGUARD(gROOTMutex);

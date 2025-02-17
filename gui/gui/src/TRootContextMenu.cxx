@@ -655,7 +655,7 @@ void TRootContextMenu::OnlineHelp()
 {
    TString clname;
    TString cmd;
-   TString url = gEnv->GetValue("Browser.StartUrl", "http://root.cern.ch/root/html/");
+   TString url = gEnv->GetValue("Browser.StartUrl", "https://root.cern.ch/doc/master");
    if (url.EndsWith(".html", TString::kIgnoreCase)) {
       if (url.Last('/') != kNPOS)
          url.Remove(url.Last('/'));

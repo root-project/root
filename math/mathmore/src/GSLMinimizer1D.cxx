@@ -83,18 +83,6 @@ GSLMinimizer1D::~GSLMinimizer1D()
    if (fFunction)  delete  fFunction;
 }
 
-GSLMinimizer1D::GSLMinimizer1D(const GSLMinimizer1D &): IMinimizer1D()
-{
-   // dummy copy ctr
-}
-
-GSLMinimizer1D & GSLMinimizer1D::operator = (const GSLMinimizer1D &rhs)
-{
-   // dummy operator =
-   if (this == &rhs) return *this;  // time saving self-test
-   return *this;
-}
-
 void GSLMinimizer1D::SetFunction(  GSLFuncPointer f, void * p, double xmin, double xlow, double xup) {
    // set the function to be minimized
    assert(fFunction);

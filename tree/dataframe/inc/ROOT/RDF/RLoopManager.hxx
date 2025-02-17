@@ -17,13 +17,17 @@
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "ROOT/RDF/RNewSampleNotifier.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
+#include "ROOT/RDF/Utils.hxx"
 
 #include <functional>
 #include <limits>
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
+#include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 // forward declarations
@@ -44,6 +48,8 @@ std::vector<std::string> GetBranchNames(TTree &t, bool allowDuplicates = true);
 class GraphNode;
 class RActionBase;
 class RVariationBase;
+class RDefinesWithReaders;
+class RVariationsWithReaders;
 
 namespace GraphDrawing {
 class GraphCreatorHelper;
@@ -132,13 +138,13 @@ class RLoopManager : public RNodeBase {
 
    /// Friends of the fTree. Only used if we constructed fTree ourselves.
    std::vector<std::unique_ptr<TChain>> fFriends;
-   const ColumnNames_t fDefaultColumns;
+   ColumnNames_t fDefaultColumns;
    /// Range of entries created when no data source is specified.
    std::pair<ULong64_t, ULong64_t> fEmptyEntryRange{};
-   const unsigned int fNSlots{1};
+   unsigned int fNSlots{1};
    bool fMustRunNamedFilters{true};
-   const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
-   const std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
+   ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
+   std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
    /// Registered callbacks to be executed every N events.
    /// The registration happens via the RegisterCallback method.
    std::vector<RDFInternal::RCallback> fCallbacksEveryNEvents;
@@ -176,22 +182,36 @@ class RLoopManager : public RNodeBase {
    void UpdateSampleInfo(unsigned int slot, const std::pair<ULong64_t, ULong64_t> &range);
    void UpdateSampleInfo(unsigned int slot, TTreeReader &r);
 
+   // List of branches for which we want to suppress the printed error about
+   // missing branch when switching to a new tree. This is modified by readers,
+   // so must be declared before them in this class.
+   std::vector<std::string> fSuppressErrorsForMissingBranches{};
+   ROOT::Internal::RDF::RStringCache fCachedColNames;
+   std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RDefinesWithReaders>>>
+      fUniqueDefinesWithReaders;
+   std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RVariationsWithReaders>>>
+      fUniqueVariationsWithReaders;
+
 public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
    RLoopManager(std::unique_ptr<TTree> tree, const ColumnNames_t &defaultBranches);
    RLoopManager(ULong64_t nEmptyEntries);
    RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches);
    RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec);
+
+   // Rule of five
+
    RLoopManager(const RLoopManager &) = delete;
    RLoopManager &operator=(const RLoopManager &) = delete;
+   RLoopManager(RLoopManager &&) = delete;
+   RLoopManager &operator=(RLoopManager &&) = delete;
+   ~RLoopManager() override;
 
-   void JitDeclarations();
    void Jit();
    RLoopManager *GetLoopManagerUnchecked() final { return this; }
    void Run(bool jit = true);
    const ColumnNames_t &GetDefaultColumnNames() const;
    TTree *GetTree() const;
-   ::TDirectory *GetDirectory() const;
    ULong64_t GetNEmptyEntries() const { return fEmptyEntryRange.second - fEmptyEntryRange.first; }
    RDataSource *GetDataSource() const { return fDataSource.get(); }
    void Register(RDFInternal::RActionBase *actionPtr);
@@ -242,7 +262,26 @@ public:
    void AddSampleCallback(void *nodePtr, ROOT::RDF::SampleCallback_t &&callback);
 
    void SetEmptyEntryRange(std::pair<ULong64_t, ULong64_t> &&newRange);
+   void ChangeBeginAndEndEntries(Long64_t begin, Long64_t end);
    void ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec);
+
+   ROOT::Internal::RDF::RStringCache &GetColumnNamesCache() { return fCachedColNames; }
+   std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RDefinesWithReaders>>> &
+   GetUniqueDefinesWithReaders()
+   {
+      return fUniqueDefinesWithReaders;
+   }
+   std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RVariationsWithReaders>>> &
+   GetUniqueVariationsWithReaders()
+   {
+      return fUniqueVariationsWithReaders;
+   }
+
+   std::vector<std::string> &GetSuppressErrorsForMissingBranches() { return fSuppressErrorsForMissingBranches; }
+   const std::vector<std::string> &GetSuppressErrorsForMissingBranches() const
+   {
+      return fSuppressErrorsForMissingBranches;
+   }
 };
 
 /// \brief Create an RLoopManager that reads a TChain.

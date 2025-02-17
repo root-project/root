@@ -1744,7 +1744,6 @@ typedef struct SSL_CTX SSL_CTX;
 #include <openssl/conf.h>
 #include <openssl/crypto.h>
 #include <openssl/dh.h>
-#include <openssl/engine.h>
 #include <openssl/err.h>
 #include <openssl/opensslv.h>
 #include <openssl/pem.h>

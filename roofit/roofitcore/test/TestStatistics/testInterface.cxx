@@ -70,7 +70,7 @@ TEST(Interface, createNLLModularLAndOffset)
 
    RooHelpers::HijackMessageStream hijack(RooFit::ERROR, RooFit::InputArguments);
 
-   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data, RooFit::Offset(true), RooFit::ModularL(true))};
+   std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data, RooFit::Offset("initial"), RooFit::ModularL(true))};
 
    EXPECT_NE(hijack.str().find("ERROR"), std::string::npos) << "Stream contents: " << hijack.str();
 

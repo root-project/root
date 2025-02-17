@@ -6,7 +6,7 @@ on:
 
 jobs:
   no-container:
-    runs-on: [self-hosted, linux, x64]
+    runs-on: [self-hosted, linux, x64, cpu]
     steps:
       - name: Print debug info
         run:  'printf "%s@%s\\n" $(whoami) $(hostname); pwd; ls -la; ls -la /'
@@ -27,7 +27,7 @@ jobs:
       matrix:
         image: ["","","","","","","","","","","","","","","","","","","",""]
 
-    runs-on: [self-hosted, linux, x64]
+    runs-on: [self-hosted, linux, x64, cpu]
 
     container:
       image: ubuntu

@@ -78,16 +78,6 @@ namespace RooStats {
       return std::sqrt(za2);
    }
 
-   /// Use an offset in NLL calculations.
-   void UseNLLOffset(bool on) {
-      GetGlobalRooStatsConfig().useLikelihoodOffset = on;
-   }
-
-   /// Test of RooStats should by default offset NLL calculations.
-   bool IsNLLOffset() {
-      return GetGlobalRooStatsConfig().useLikelihoodOffset;
-   }
-
    void FactorizePdf(const RooArgSet &observables, RooAbsPdf &pdf, RooArgList &obsTerms, RooArgList &constraints) {
    // utility function to factorize constraint terms from a pdf
    // (from G. Petrucciani)
@@ -125,7 +115,7 @@ namespace RooStats {
       // utility function to factorize constraint terms from a pdf
       // (from G. Petrucciani)
       if (!model.GetObservables() ) {
-         oocoutE(nullptr,InputArguments) << "RooStatsUtils::FactorizePdf - invalid input model: missing observables" << endl;
+         oocoutE(nullptr,InputArguments) << "RooStatsUtils::FactorizePdf - invalid input model: missing observables" << std::endl;
          return;
       }
       return FactorizePdf(*model.GetObservables(), pdf, obsTerms, constraints);
@@ -138,7 +128,7 @@ namespace RooStats {
       RooArgList constraints;
       FactorizePdf(observables, pdf, obsTerms, constraints);
       if(constraints.empty()) {
-         oocoutW(nullptr, Eval) << "RooStatsUtils::MakeNuisancePdf - no constraints found on nuisance parameters in the input model" << endl;
+         oocoutW(nullptr, Eval) << "RooStatsUtils::MakeNuisancePdf - no constraints found on nuisance parameters in the input model" << std::endl;
          return nullptr;
       }
       return new RooProdPdf(name,"", constraints);
@@ -147,7 +137,7 @@ namespace RooStats {
    RooAbsPdf * MakeNuisancePdf(const RooStats::ModelConfig &model, const char *name) {
       // make a nuisance pdf by factorizing out all constraint terms in a common pdf
       if (!model.GetPdf() || !model.GetObservables() ) {
-         oocoutE(nullptr, InputArguments) << "RooStatsUtils::MakeNuisancePdf - invalid input model: missing pdf and/or observables" << endl;
+         oocoutE(nullptr, InputArguments) << "RooStatsUtils::MakeNuisancePdf - invalid input model: missing pdf and/or observables" << std::endl;
          return nullptr;
       }
       return MakeNuisancePdf(*model.GetPdf(), *model.GetObservables(), name);
@@ -221,7 +211,7 @@ namespace RooStats {
       // make a clone pdf without all constraint terms in a common pdf
       RooAbsPdf * unconstrainedPdf = StripConstraints(pdf, observables);
       if(!unconstrainedPdf) {
-         oocoutE(nullptr, InputArguments) << "RooStats::MakeUnconstrainedPdf - invalid observable list passed (observables not found in original pdf) or invalid pdf passed (without observables)" << endl;
+         oocoutE(nullptr, InputArguments) << "RooStats::MakeUnconstrainedPdf - invalid observable list passed (observables not found in original pdf) or invalid pdf passed (without observables)" << std::endl;
          return nullptr;
       }
       if(name != nullptr) unconstrainedPdf->SetName(name);
@@ -231,7 +221,7 @@ namespace RooStats {
    RooAbsPdf * MakeUnconstrainedPdf(const RooStats::ModelConfig &model, const char *name) {
       // make a clone pdf without all constraint terms in a common pdf
       if(!model.GetPdf() || !model.GetObservables()) {
-         oocoutE(nullptr, InputArguments) << "RooStatsUtils::MakeUnconstrainedPdf - invalid input model: missing pdf and/or observables" << endl;
+         oocoutE(nullptr, InputArguments) << "RooStatsUtils::MakeUnconstrainedPdf - invalid input model: missing pdf and/or observables" << std::endl;
          return nullptr;
       }
       return MakeUnconstrainedPdf(*model.GetPdf(), *model.GetObservables(), name);
@@ -344,13 +334,12 @@ namespace RooStats {
 
    // clone a workspace, copying all needed components and discarding all others
    // start off with the old workspace
-   RooWorkspace* MakeCleanWorkspace(RooWorkspace *oldWS, const char *newName,
+   RooWorkspace* MakeReducedWorkspace(RooWorkspace *oldWS, const char *newName,
                                    bool copySnapshots, const char *mcname,
-                                   const char *newmcname) {
+                                   const char *newmcname, bool copyData) {
       auto objects = oldWS->allGenericObjects();
       RooStats::ModelConfig *oldMC =
           dynamic_cast<RooStats::ModelConfig *>(oldWS->obj(mcname));
-      auto data = oldWS->allData();
       for (auto it : objects) {
         if (!oldMC) {
           oldMC = dynamic_cast<RooStats::ModelConfig *>(it);
@@ -398,8 +387,10 @@ namespace RooStats {
       RooAbsPdf *newPdf = newWS->pdf(pdf->GetName());
       newMC->SetPdf(*newPdf);
 
-      for (auto d : data) {
-        newWS->import(*d);
+      if (copyData) {
+        for (auto d : oldWS->allData()) {
+          newWS->import(*d);
+        }
       }
 
       RooArgSet poiset;

@@ -2,53 +2,50 @@
 
 ## About
 
-The ROOT system provides a set of modules with all the functionality
-needed to handle and analyze large amounts of data in a very efficient way.
-Having the data defined as a set of objects, specialized storage methods are
-used to get direct access to the separate attributes of the selected objects,
-without having to touch the bulk of the data. Included are histograming
-methods in an arbitrary number of dimensions, curve fitting, function
-evaluation, minimization, graphics and visualization classes to allow
-the easy setup of an analysis system that can query and process the data
+ROOT is a unified software package for the storage, processing, and analysis of 
+scientific data: from its acquisition to the final visualization in form of highly 
+customizable, publication-ready plots. It is reliable, performant and well supported,
+easy to use and obtain, and strives to maximize the quantity and impact of scientific 
+results obtained per unit cost, both of human effort and computing resources.
+
+ROOT provides a very efficient storage system for data models, 
+that demonstrated to scale at the Large Hadron Collider experiments: Exabytes 
+of scientific data are written in columnar ROOT format.
+ROOT comes with histogramming capabilities in an arbitrary number of 
+dimensions, curve fitting, statistical modelling, minimization, to allow
+the easy setup of a data analysis system that can query and process the data
 interactively or in batch mode, as well as a general parallel processing
-framework, PROOF, that can considerably speed up an analysis.
+framework, RDataFrame, that can considerably speed up an analysis, taking 
+full advantage of multi-core and distributed systems.
 
-Thanks to the built-in C++ interpreter cling, the command, the
-scripting and the programming language are all C++. The interpreter
-allows for fast prototyping of the macros since it removes the time
-consuming compile/link cycle. It also provides a good environment to
-learn C++. If more performance is needed the interactively developed
-macros can be compiled using a C++ compiler via a machine independent
-transparent compiler interface called ACliC.
+ROOT is performance critical software written in C++ and enables rapid prototyping 
+powered by a unique C++ compliant interpreter called Cling. 
+Cling also enables performant C++ type introspection which is a building block of automatic 
+interoperability with Python. Thanks to PyROOT, leveraging the cppyy technology, 
+ROOT offers efficient, on-demand C++/Python interoperability in a uniform cross-language 
+execution environment.
 
-The system has been designed in such a way that it can query its databases
-in parallel on clusters of workstations or many-core machines. ROOT is
-an open system that can be dynamically extended by linking external
-libraries. This makes ROOT a premier platform on which to build data
-acquisition, simulation and data analysis systems.
+ROOT fully embraces open-source, it's made with passion by its community,
+for the benefit of its community.
 
 [![License: LGPL v2.1+](https://img.shields.io/badge/License-LGPL%20v2.1+-blue.svg)](https://www.gnu.org/licenses/lgpl.html)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5060/badge)](https://bestpractices.coreinfrastructure.org/projects/5060)
 
-## Cite
+## Contribution Guidelines
+- [How to contribute](https://github.com/root-project/root/blob/master/CONTRIBUTING.md)
+- [Coding conventions](https://root.cern/coding-conventions)
+- [Meetings](https://root.cern/meetings)
 
+## Cite
 When citing ROOT, please use both the reference reported below and the DOI specific to your ROOT version available [on Zenodo](https://zenodo.org/badge/latestdoi/10994345) [![DOI](https://zenodo.org/badge/10994345.svg)](https://zenodo.org/badge/latestdoi/10994345). For example, you can copy-paste and fill in the following citation:
 
     Rene Brun and Fons Rademakers, ROOT - An Object Oriented Data Analysis Framework,
     Proceedings AIHENP'96 Workshop, Lausanne, Sep. 1996,
     Nucl. Inst. & Meth. in Phys. Res. A 389 (1997) 81-86.
-    See also "ROOT" [software], Release vX.YY/ZZ, dd/mm/yyyy,
-    (Select the right link for your release here: https://zenodo.org/search?page=1&size=20&q=conceptrecid:848818&all_versions&sort=-version).
+    See also "ROOT" [software], Release vX.YY/ZZ, dd/mm/yyyy
 
 ## Live Demo for CERN Users
-[![](https://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png)](http://cern.ch/swanserver/cgi-bin/go?projurl=https://github.com/cernphsft/rootbinder.git)
-
-## Screenshots
-These screenshots shows some of the plots (produced using ROOT) presented when the Higgs boson discovery was [announced at CERN](http://home.cern/topics/higgs-boson):
-
-![CMS Data MC Ratio Plot](https://root.cern/gallery/higgs_plots/CMS_Data_MC_Ratio_Plot.png)
-
-![Atlas P0 Trends](https://root.cern/gallery/higgs_plots/Atlas_P0_Trends.png)
+[![](https://img.shields.io/badge/Launch-SWAN-orange)](http://cern.ch/swanserver/cgi-bin/go?projurl=https://github.com/cernphsft/rootbinder.git)
 
 See more screenshots on our [gallery](https://root.cern/gallery).
 
@@ -56,17 +53,11 @@ See more screenshots on our [gallery](https://root.cern/gallery).
 See https://root.cern/install for installation instructions.
 For instructions on how to build ROOT from these source files, see https://root.cern/install/build_from_source.
 
-Our ["Getting started with ROOT"](https://root.cern/get_started) page is then the perfect place to get familiar with ROOT.
+Our ["Getting started with ROOT"](https://root.cern/learn) page is then the perfect place to get familiar with ROOT.
 
 ## Help and Support
 - [Forum](https://root.cern/forum/)
 - [Issue tracker](https://github.com/root-project/root/issues)
   * [Previous now read-only Jira issue tracker](https://sft.its.cern.ch/jira/projects/ROOT/issues/ROOT-5820?filter=allopenissues)
-- [Mailing lists](https://groups.cern.ch/group/root-dev/default.aspx)
 - [Documentation](https://root.cern/guides/reference-guide)
 - [Tutorials](https://root.cern/doc/master/group__Tutorials.html)
-
-## Contribution Guidelines
-- [How to contribute](https://github.com/root-project/root/blob/master/CONTRIBUTING.md)
-- [Coding conventions](https://root.cern/coding-conventions)
-- [Meetings](https://root.cern/meetings)

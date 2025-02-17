@@ -194,7 +194,7 @@ public:
 
    std::string GetActionName() { return "Count"; }
 
-   CountHelper MakeNew(void *newResult)
+   CountHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<ULong64_t> *>(newResult);
       return CountHelper(result, fCounts.size());
@@ -226,7 +226,13 @@ public:
 
    std::string GetActionName() { return "Report"; }
 
-   // TODO implement MakeNew. Requires some smartness in passing the appropriate previous node.
+   ReportHelper MakeNew(void *newResult, std::string_view variation = "nominal")
+   {
+      auto &&result = *static_cast<std::shared_ptr<RCutFlowReport> *>(newResult);
+      return ReportHelper{result,
+                          std::static_pointer_cast<RNode_t>(fNode->GetVariedFilter(std::string(variation))).get(),
+                          fReturnEmptyReport};
+   }
 };
 
 /// This helper fills TH1Ds for which no axes were specified by buffering the fill values to pick good axes limits.
@@ -330,7 +336,7 @@ public:
       return std::string(fResultHist->IsA()->GetName()) + "\\n" + std::string(fResultHist->GetName());
    }
 
-   BufferedFillHelper MakeNew(void *newResult)
+   BufferedFillHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<Hist_t> *>(newResult);
       result->Reset();
@@ -548,7 +554,7 @@ public:
    }
 
    template <typename H = HIST>
-   FillHelper MakeNew(void *newResult)
+   FillHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<H> *>(newResult);
       ResetIfPossible(result.get());
@@ -636,7 +642,7 @@ public:
 
    Result_t &PartialUpdate(unsigned int slot) { return *fGraphs[slot]; }
 
-   FillTGraphHelper MakeNew(void *newResult)
+   FillTGraphHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<TGraph> *>(newResult);
       result->Set(0);
@@ -742,7 +748,7 @@ public:
 
    Result_t &PartialUpdate(unsigned int slot) { return *fGraphAsymmErrors[slot]; }
 
-   FillTGraphAsymmErrorsHelper MakeNew(void *newResult)
+   FillTGraphAsymmErrorsHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<TGraphAsymmErrors> *>(newResult);
       result->Set(0);
@@ -808,7 +814,7 @@ public:
 
    std::string GetActionName() { return "Take"; }
 
-   TakeHelper MakeNew(void *newResult)
+   TakeHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<COLL> *>(newResult);
       result->clear();
@@ -861,7 +867,7 @@ public:
 
    std::string GetActionName() { return "Take"; }
 
-   TakeHelper MakeNew(void *newResult)
+   TakeHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<std::vector<T>> *>(newResult);
       result->clear();
@@ -906,7 +912,7 @@ public:
 
    std::string GetActionName() { return "Take"; }
 
-   TakeHelper MakeNew(void *newResult)
+   TakeHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<COLL> *>(newResult);
       result->clear();
@@ -958,7 +964,7 @@ public:
 
    std::string GetActionName() { return "Take"; }
 
-   TakeHelper MakeNew(void *newResult)
+   TakeHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<typename decltype(fColls)::value_type *>(newResult);
       result->clear();
@@ -1033,19 +1039,12 @@ public:
 
    std::string GetActionName() { return "Min"; }
 
-   MinHelper MakeNew(void *newResult)
+   MinHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<ResultType> *>(newResult);
       return MinHelper(result, fMins.size());
    }
 };
-
-// TODO
-// extern template void MinHelper::Exec(unsigned int, const std::vector<float> &);
-// extern template void MinHelper::Exec(unsigned int, const std::vector<double> &);
-// extern template void MinHelper::Exec(unsigned int, const std::vector<char> &);
-// extern template void MinHelper::Exec(unsigned int, const std::vector<int> &);
-// extern template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) MaxHelper : public RActionImpl<MaxHelper<ResultType>> {
@@ -1090,19 +1089,12 @@ public:
 
    std::string GetActionName() { return "Max"; }
 
-   MaxHelper MakeNew(void *newResult)
+   MaxHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<ResultType> *>(newResult);
       return MaxHelper(result, fMaxs.size());
    }
 };
-
-// TODO
-// extern template void MaxHelper::Exec(unsigned int, const std::vector<float> &);
-// extern template void MaxHelper::Exec(unsigned int, const std::vector<double> &);
-// extern template void MaxHelper::Exec(unsigned int, const std::vector<char> &);
-// extern template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
-// extern template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) SumHelper : public RActionImpl<SumHelper<ResultType>> {
@@ -1180,7 +1172,7 @@ public:
 
    std::string GetActionName() { return "Sum"; }
 
-   SumHelper MakeNew(void *newResult)
+   SumHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<ResultType> *>(newResult);
       *result = NeutralElement(*result, -1);
@@ -1231,18 +1223,12 @@ public:
 
    std::string GetActionName() { return "Mean"; }
 
-   MeanHelper MakeNew(void *newResult)
+   MeanHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<double> *>(newResult);
       return MeanHelper(result, fSums.size());
    }
 };
-
-extern template void MeanHelper::Exec(unsigned int, const std::vector<float> &);
-extern template void MeanHelper::Exec(unsigned int, const std::vector<double> &);
-extern template void MeanHelper::Exec(unsigned int, const std::vector<char> &);
-extern template void MeanHelper::Exec(unsigned int, const std::vector<int> &);
-extern template void MeanHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 class R__CLING_PTRCHECK(off) StdDevHelper : public RActionImpl<StdDevHelper> {
    // Number of subsets of data
@@ -1285,18 +1271,12 @@ public:
 
    std::string GetActionName() { return "StdDev"; }
 
-   StdDevHelper MakeNew(void *newResult)
+   StdDevHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<double> *>(newResult);
       return StdDevHelper(result, fCounts.size());
    }
 };
-
-extern template void StdDevHelper::Exec(unsigned int, const std::vector<float> &);
-extern template void StdDevHelper::Exec(unsigned int, const std::vector<double> &);
-extern template void StdDevHelper::Exec(unsigned int, const std::vector<char> &);
-extern template void StdDevHelper::Exec(unsigned int, const std::vector<int> &);
-extern template void StdDevHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 template <typename PrevNodeType>
 class R__CLING_PTRCHECK(off) DisplayHelper : public RActionImpl<DisplayHelper<PrevNodeType>> {
@@ -1544,8 +1524,18 @@ public:
    SnapshotHelper(SnapshotHelper &&) = default;
    ~SnapshotHelper()
    {
-      if (!fTreeName.empty() /*not moved from*/ && !fOutputFile /* did not run */ && fOptions.fLazy)
-         Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+      if (!fTreeName.empty() /*not moved from*/ && !fOutputFile /* did not run */ && fOptions.fLazy) {
+         const auto fileOpenMode = [&]() {
+            TString checkupdate = fOptions.fMode;
+            checkupdate.ToLower();
+            return checkupdate == "update" ? "updated" : "created";
+         }();
+         Warning("Snapshot",
+                 "A lazy Snapshot action was booked but never triggered. The tree '%s' in output file '%s' was not %s. "
+                 "In case it was desired instead, remember to trigger the Snapshot operation, by storing "
+                 "its result in a variable and for example calling the GetValue() method on it.",
+                 fTreeName.c_str(), fFileName.c_str(), fileOpenMode);
+      }
    }
 
    void InitTask(TTreeReader *r, unsigned int /* slot */)
@@ -1650,7 +1640,7 @@ public:
     * also involves changing the name of the output file, otherwise the cloned
     * Snapshot would overwrite the same file.
     */
-   SnapshotHelper MakeNew(void *newName)
+   SnapshotHelper MakeNew(void *newName, std::string_view /*variation*/ = "nominal")
    {
       const std::string finalName = *reinterpret_cast<const std::string *>(newName);
       return SnapshotHelper{
@@ -1698,9 +1688,19 @@ public:
    SnapshotHelperMT(SnapshotHelperMT &&) = default;
    ~SnapshotHelperMT()
    {
-      if (!fTreeName.empty() /*not moved from*/ && fOptions.fLazy &&
-          std::all_of(fOutputFiles.begin(), fOutputFiles.end(), [](const auto &f) { return !f; }) /* never run */)
-         Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+      if (!fTreeName.empty() /*not moved from*/ && fOptions.fLazy && !fOutputFiles.empty() &&
+          std::all_of(fOutputFiles.begin(), fOutputFiles.end(), [](const auto &f) { return !f; }) /* never run */) {
+         const auto fileOpenMode = [&]() {
+            TString checkupdate = fOptions.fMode;
+            checkupdate.ToLower();
+            return checkupdate == "update" ? "updated" : "created";
+         }();
+         Warning("Snapshot",
+                 "A lazy Snapshot action was booked but never triggered. The tree '%s' in output file '%s' was not %s. "
+                 "In case it was desired instead, remember to trigger the Snapshot operation, by storing "
+                 "its result in a variable and for example calling the GetValue() method on it.",
+                 fTreeName.c_str(), fFileName.c_str(), fileOpenMode);
+      }
    }
 
    void InitTask(TTreeReader *r, unsigned int slot)
@@ -1836,7 +1836,7 @@ public:
     * also involves changing the name of the output file, otherwise the cloned
     * Snapshot would overwrite the same file.
     */
-   SnapshotHelperMT MakeNew(void *newName)
+   SnapshotHelperMT MakeNew(void *newName, std::string_view /*variation*/ = "nominal")
    {
       const std::string finalName = *reinterpret_cast<const std::string *>(newName);
       return SnapshotHelperMT{fNSlots,           finalName,          fDirName, fTreeName,
@@ -1905,7 +1905,7 @@ public:
 
    std::string GetActionName() { return "Aggregate"; }
 
-   AggregateHelper MakeNew(void *newResult)
+   AggregateHelper MakeNew(void *newResult, std::string_view /*variation*/ = "nominal")
    {
       auto &result = *static_cast<std::shared_ptr<U> *>(newResult);
       return AggregateHelper(fAggregate, fMerge, result, fAggregators.size());

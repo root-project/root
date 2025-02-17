@@ -12,6 +12,8 @@
 
 #include "Minuit2/MnConfig.h"
 
+#include <ROOT/RSpan.hxx>
+
 #include <vector>
 
 namespace ROOT {
@@ -47,7 +49,7 @@ public:
 
    */
 
-   virtual double operator()(const std::vector<double> &x) const = 0;
+   virtual double operator()(std::vector<double> const& x) const = 0;
 };
 
 } // namespace Minuit2

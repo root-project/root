@@ -9,6 +9,7 @@
 #ifndef ROOT7_RVirtualCanvasPainter
 #define ROOT7_RVirtualCanvasPainter
 
+#include <cstdint>
 #include <memory>
 #include <functional>
 #include <string>
@@ -68,6 +69,8 @@ public:
    virtual void NewDisplay(const std::string &where) = 0;
 
    virtual int NumDisplays() const = 0;
+
+   virtual std::shared_ptr<ROOT::RWebWindow> GetWindow() = 0;
 
    virtual std::string GetWindowAddr() const = 0;
 

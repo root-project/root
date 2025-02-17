@@ -55,21 +55,6 @@ public:
    */
    ~TFumiliMinimizer () override;
 
-private:
-   // usually copying is non trivial, so we make this unaccessible
-
-   /**
-      Copy constructor
-   */
-   TFumiliMinimizer(const TFumiliMinimizer &);
-
-   /**
-      Assignment operator
-   */
-   TFumiliMinimizer & operator = (const TFumiliMinimizer & rhs);
-
-public:
-
    /// set the function to minimize
    void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
 

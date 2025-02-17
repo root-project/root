@@ -41,7 +41,8 @@ TEST(RNTupleShow, BasicTypes)
       auto field64uint = model->MakeField<std::uint64_t>("uint64");
       auto fieldstring = model->MakeField<std::string>("string");
       auto fieldbool = model->MakeField<bool>("boolean");
-      auto fieldchar = model->MakeField<uint8_t>("uint8");
+      auto fieldu8 = model->MakeField<uint8_t>("uint8");
+      auto fieldi8 = model->MakeField<int8_t>("int8");
       auto fieldbitset = model->MakeField<std::bitset<65>>("bitset");
       auto fielduniqueptr = model->MakeField<std::unique_ptr<std::string>>("pstring");
       auto fieldatomic = model->MakeField<std::atomic<bool>>("atomic");
@@ -55,7 +56,8 @@ TEST(RNTupleShow, BasicTypes)
       *field64uint = 44444444444ull;
       *fieldstring = "TestString";
       *fieldbool = true;
-      *fieldchar = 97;
+      *fieldu8 = 97;
+      *fieldi8 = 97;
       *fieldbitset = std::bitset<65>("10000000000000000000000000000010000000000000000000000000000010010");
       *fielduniqueptr = std::make_unique<std::string>("abc");
       *fieldatomic = false;
@@ -69,7 +71,8 @@ TEST(RNTupleShow, BasicTypes)
       *field64uint = 2299994967294ull;
       *fieldstring = "TestString2";
       *fieldbool = false;
-      *fieldchar = 98;
+      *fieldu8 = 98;
+      *fieldi8 = 98;
       fieldbitset->flip();
       fielduniqueptr->reset();
       *fieldatomic = true;
@@ -92,6 +95,7 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"string\": \"TestString\",\n"
       + "  \"boolean\": true,\n"
       + "  \"uint8\": 97,\n"
+      + "  \"int8\": 97,\n"
       + "  \"bitset\": \"10000000000000000000000000000010000000000000000000000000000010010\",\n"
       + "  \"pstring\": \"abc\",\n"
       + "  \"atomic\": false\n"
@@ -113,6 +117,7 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"string\": \"TestString2\",\n"
       + "  \"boolean\": false,\n"
       + "  \"uint8\": 98,\n"
+      + "  \"int8\": 98,\n"
       + "  \"bitset\": \"01111111111111111111111111111101111111111111111111111111111101101\",\n"
       + "  \"pstring\": null,\n"
       + "  \"atomic\": true\n"
@@ -123,7 +128,7 @@ TEST(RNTupleShow, BasicTypes)
    try {
       ntuple2->LoadEntry(2);
       FAIL() << "loading a non-existing entry should throw";
-   } catch (const RException &err) {
+   } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("entry with index 2 out of bounds"));
    }
 }
@@ -333,47 +338,60 @@ TEST(RNTupleShow, Objects)
 
 TEST(RNTupleShow, Collections)
 {
+   using ROOT::Experimental::RRecordField;
+   using ROOT::Experimental::RVectorField;
+
    std::string rootFileName{"test_ntuple_show_collection.root"};
    std::string ntupleName{"Collections"};
    FileRaii fileGuard(rootFileName);
    {
+      struct MyStruct {
+         short myShort;
+         float myFloat;
+      };
+
       auto model = RNTupleModel::Create();
-      auto collection_model = RNTupleModel::Create();
-      auto int_field = collection_model->MakeField<int>("myInt");
-      auto float_field = collection_model->MakeField<float>("myFloat");
-      auto collection = model->MakeCollection("collection", std::move(collection_model));
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
-      *int_field = 0;
-      *float_field = 10.0;
-      collection->Fill();
-      *int_field = 1;
-      *float_field = 20.0;
-      collection->Fill();
-      ntuple->Fill();
+      std::vector<std::unique_ptr<RFieldBase>> leafFields;
+      leafFields.emplace_back(std::make_unique<RField<short>>("myShort"));
+      leafFields.emplace_back(std::make_unique<RField<float>>("myFloat"));
+      auto recordField = std::make_unique<RRecordField>("_0", std::move(leafFields));
+      EXPECT_EQ(offsetof(MyStruct, myShort), recordField->GetOffsets()[0]);
+      EXPECT_EQ(offsetof(MyStruct, myFloat), recordField->GetOffsets()[1]);
+
+      auto collectionField = RVectorField::CreateUntyped("myCollection", std::move(recordField));
+      model->AddField(std::move(collectionField));
+      model->Freeze();
+
+      auto v = std::static_pointer_cast<std::vector<MyStruct>>(model->GetDefaultEntry().GetPtr<void>("myCollection"));
+      auto writer = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
+
+      v->emplace_back(MyStruct({1, 10.0}));
+      v->emplace_back(MyStruct({2, 20.0}));
+      writer->Fill();
    }
 
-   auto ntuple = RNTupleReader::Open(ntupleName, rootFileName);
+   auto reader = RNTupleReader::Open(ntupleName, rootFileName);
    std::ostringstream osData;
-   ntuple->Show(0, osData);
+   reader->Show(0, osData);
    // clang-format off
    std::string outputData{ std::string("")
       + "{\n"
-      + "  \"collection\": [{\"myInt\": 0, \"myFloat\": 10}, {\"myInt\": 1, \"myFloat\": 20}]\n"
+      + "  \"myCollection\": [{\"myShort\": 1, \"myFloat\": 10}, {\"myShort\": 2, \"myFloat\": 20}]\n"
       + "}\n" };
    // clang-format on
    EXPECT_EQ(outputData, osData.str());
 
    std::ostringstream osFields;
-   ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, osFields);
+   reader->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, osFields);
    // clang-format off
    std::string outputFields{ std::string("")
       + "************************************ NTUPLE ************************************\n"
       + "* N-Tuple : Collections                                                        *\n"
       + "* Entries : 1                                                                  *\n"
       + "********************************************************************************\n"
-      + "* Field 1           : collection (std::vector<>)                               *\n"
+      + "* Field 1           : myCollection                                             *\n"
       + "*   Field 1.1       : _0                                                       *\n"
-      + "*     Field 1.1.1   : myInt (std::int32_t)                                     *\n"
+      + "*     Field 1.1.1   : myShort (std::int16_t)                                   *\n"
       + "*     Field 1.1.2   : myFloat (float)                                          *\n"
       + "********************************************************************************\n" };
    // clang-format on
@@ -625,22 +643,4 @@ TEST(RNTupleShow, Friends)
       *bar = 2.72;
       writer->Fill();
    }
-
-   std::vector<RNTupleReader::ROpenSpec> friends = {{"ntpl1", fileGuard1.GetPath()}, {"ntpl2", fileGuard2.GetPath()}};
-   auto ntuple = RNTupleReader::OpenFriends(friends);
-   std::ostringstream os;
-   ntuple->Show(0, os);
-   // clang-format off
-   std::string expected{std::string("")
-      + "{\n"
-      + "  \"ntpl1\": {\n"
-      + "    \"foo\": 3.14\n"
-      + "  },\n"
-      + "  \"ntpl2\": {\n"
-      + "    \"bar\": 2.72\n"
-      + "  }\n"
-      + "}\n"
-   };
-   // clang-format on
-   EXPECT_EQ(os.str(), expected);
 }

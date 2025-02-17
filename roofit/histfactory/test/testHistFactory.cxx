@@ -27,8 +27,6 @@
 #include <TCanvas.h>
 #include <gtest/gtest.h>
 
-#include "../src/JSONTool.h"
-
 #include "../../roofitcore/test/gtest_wrapper.h"
 
 #include <set>
@@ -40,13 +38,15 @@ const bool writeJsonFiles = false;
 
 std::vector<double> getValues(RooAbsReal const &real, RooRealVar &obs, bool normalize, bool useBatchMode)
 {
+   RooArgSet normSet{obs};
+
    std::vector<double> out;
    // We want to evaluate the function at the bin centers
    std::vector<double> binCenters(obs.numBins());
    for (int iBin = 0; iBin < obs.numBins(); ++iBin) {
       obs.setBin(iBin);
       binCenters[iBin] = obs.getVal();
-      out.push_back(normalize ? real.getVal(obs) : real.getVal());
+      out.push_back(normalize ? real.getVal(normSet) : real.getVal());
    }
 
    if (useBatchMode == false) {
@@ -274,8 +274,6 @@ public:
          meas.AddConstantParam("gamma_stat_channel1_bin_0");
          meas.AddConstantParam("gamma_stat_channel1_bin_1");
       }
-
-      meas.SetExportOnly(true);
 
       meas.SetLumi(1.0);
       meas.SetLumiRelErr(0.10);
@@ -513,59 +511,6 @@ void setInitialFitParameters(RooWorkspace &ws, MakeModelMode makeModelMode)
    }
 }
 
-TEST_P(HFFixture, HistFactoryJSONTool)
-{
-   const MakeModelMode makeModelMode = std::get<0>(GetParam());
-
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-
-   if (writeJsonFiles) {
-      RooStats::HistFactory::JSONTool{*_measurement}.PrintJSON(_name + "_1.json");
-   }
-   std::stringstream ss;
-   RooStats::HistFactory::JSONTool{*_measurement}.PrintJSON(ss);
-
-   RooWorkspace wsFromJson{"ws1"};
-   RooJSONFactoryWSTool{wsFromJson}.importJSONfromString(ss.str());
-
-   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
-   EXPECT_TRUE(mc != nullptr);
-
-   auto *mcFromJson = dynamic_cast<RooStats::ModelConfig *>(wsFromJson.obj("ModelConfig"));
-   EXPECT_TRUE(mcFromJson != nullptr);
-
-   RooAbsPdf *pdf = mc->GetPdf();
-   EXPECT_TRUE(pdf != nullptr);
-
-   RooAbsPdf *pdfFromJson = mcFromJson->GetPdf();
-   EXPECT_TRUE(pdfFromJson != nullptr);
-
-   RooAbsData *data = ws->data("obsData");
-   EXPECT_TRUE(data != nullptr);
-
-   RooAbsData *dataFromJson = wsFromJson.data("obsData");
-   EXPECT_TRUE(dataFromJson != nullptr);
-
-   RooArgSet const &globs = *mc->GetGlobalObservables();
-   RooArgSet const &globsFromJson = *mcFromJson->GetGlobalObservables();
-
-   setInitialFitParameters(*ws, makeModelMode);
-   setInitialFitParameters(wsFromJson, makeModelMode);
-
-   using namespace RooFit;
-   using Res = std::unique_ptr<RooFitResult>;
-
-   Res result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()), GlobalObservables(globs),
-                         PrintLevel(-1), Save())};
-
-   Res resultFromJson{pdfFromJson->fitTo(*dataFromJson, Strategy(1), Minos(*mcFromJson->GetParametersOfInterest()),
-                                         GlobalObservables(globsFromJson), PrintLevel(-1), Save())};
-
-   // Do also the reverse comparison to check that the set of constant parameters matches
-   EXPECT_TRUE(result->isIdentical(*resultFromJson));
-   EXPECT_TRUE(resultFromJson->isIdentical(*result));
-}
-
 TEST_P(HFFixture, HS3ClosureLoop)
 {
    const MakeModelMode makeModelMode = std::get<0>(GetParam());
@@ -580,7 +525,7 @@ TEST_P(HFFixture, HS3ClosureLoop)
 
    std::string const &js = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
    if (writeJsonFiles) {
-      RooJSONFactoryWSTool{*ws}.exportJSON(_name + "_2.json");
+      RooJSONFactoryWSTool{*ws}.exportJSON(_name + "_1.json");
    }
 
    RooWorkspace wsFromJson("new");
@@ -590,7 +535,7 @@ TEST_P(HFFixture, HS3ClosureLoop)
    std::string const &js3 = RooJSONFactoryWSTool{wsFromJson}.exportJSONtoString();
 
    if (writeJsonFiles) {
-      RooJSONFactoryWSTool{wsFromJson}.exportJSON(_name + "_3.json");
+      RooJSONFactoryWSTool{wsFromJson}.exportJSON(_name + "_2.json");
    }
 
    // Chack that JSON > WS > JSON doesn't change the JSON
@@ -690,13 +635,8 @@ TEST_P(HFFixtureFit, Fit)
          if (!par) {
             // Parameter was constant in this fit
             par = dynamic_cast<RooRealVar *>(fitResult->constPars().find(param.c_str()));
-            if (evalBackend != RooFit::EvalBackend::Codegen()) {
-               ASSERT_NE(par, nullptr) << param;
-               EXPECT_DOUBLE_EQ(par->getVal(), target) << "Constant parameter " << param << " is off target.";
-            } else {
-               // We expect "codegen" to strip away constant RooRealVars
-               ASSERT_EQ(par, nullptr) << param;
-            }
+            ASSERT_NE(par, nullptr) << param;
+            EXPECT_DOUBLE_EQ(par->getVal(), target) << "Constant parameter " << param << " is off target.";
          } else {
             EXPECT_NEAR(par->getVal(), target, par->getError())
                << "Parameter " << param << " close to target " << target << " within uncertainty";
@@ -771,18 +711,5 @@ INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureFit,
                          testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst,
                                                           MakeModelMode::StatSyst, MakeModelMode::ShapeSyst),
                                           testing::Values(false, true), // non-uniform bins or not
-                                          testing::Values(ROOFIT_EVAL_BACKENDS)),
+                                          testing::Values(ROOFIT_EVAL_BACKENDS_WITH_CODEGEN)),
                          getNameFromInfo);
-
-#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS) // See https://github.com/vgvassilev/clad/issues/752
-#ifdef TEST_CODEGEN_AD
-// TODO: merge with the previous HFFixtureFix test suite once the codegen AD
-// supports all of HistFactory
-INSTANTIATE_TEST_SUITE_P(HistFactoryCodeGen, HFFixtureFit,
-                         testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst,
-                                                          MakeModelMode::StatSyst, MakeModelMode::ShapeSyst),
-                                          testing::Values(false), // no non-uniform bins
-                                          testing::Values(RooFit::EvalBackend::Codegen())),
-                         getNameFromInfo);
-#endif // TEST_CODEGEN_AD
-#endif // R__WIN32

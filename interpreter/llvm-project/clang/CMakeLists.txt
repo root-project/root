@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13.4)
+cmake_minimum_required(VERSION 3.20.0)
 
 if(NOT DEFINED LLVM_COMMON_CMAKE_UTILS)
   set(LLVM_COMMON_CMAKE_UTILS ${CMAKE_CURRENT_SOURCE_DIR}/../cmake)
@@ -54,7 +54,7 @@ if(CLANG_BUILT_STANDALONE)
   option(LLVM_INSTALL_TOOLCHAIN_ONLY
     "Only include toolchain files in the 'install' target." OFF)
 
-  option(LLVM_FORCE_USE_OLD_HOST_TOOLCHAIN
+  option(LLVM_FORCE_USE_OLD_TOOLCHAIN
     "Set to ON to force using an old, unsupported host toolchain." OFF)
   option(CLANG_ENABLE_BOOTSTRAP "Generate the clang bootstrap target" OFF)
   option(LLVM_ENABLE_LIBXML2 "Use libxml2 if available." ON)
@@ -82,10 +82,10 @@ if(CLANG_BUILT_STANDALONE)
   set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX} )
   set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX} )
 
-  if(LLVM_INCLUDE_TESTS)
-    find_package(Python3 ${LLVM_MINIMUM_PYTHON_VERSION} REQUIRED
-      COMPONENTS Interpreter)
+  find_package(Python3 ${LLVM_MINIMUM_PYTHON_VERSION} REQUIRED
+    COMPONENTS Interpreter)
 
+  if(LLVM_INCLUDE_TESTS)
     # Check prebuilt llvm/utils.
     if(EXISTS ${LLVM_TOOLS_BINARY_DIR}/FileCheck${CMAKE_EXECUTABLE_SUFFIX}
         AND EXISTS ${LLVM_TOOLS_BINARY_DIR}/count${CMAKE_EXECUTABLE_SUFFIX}
@@ -111,12 +111,10 @@ if(CLANG_BUILT_STANDALONE)
         set(LLVM_UTILS_PROVIDED ON)
         set(CLANG_TEST_DEPS FileCheck count not)
       endif()
-      set(UNITTEST_DIR ${LLVM_THIRD_PARTY_DIR}/unittest)
-      if(EXISTS ${UNITTEST_DIR}/googletest/include/gtest/gtest.h
-          AND NOT EXISTS ${LLVM_LIBRARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}
-          AND EXISTS ${UNITTEST_DIR}/CMakeLists.txt)
-        add_subdirectory(${UNITTEST_DIR} third-party/unittest)
-      endif()
+    endif()
+
+    if (NOT TARGET llvm_gtest)
+        message(FATAL_ERROR "llvm-gtest not found. Please install llvm-gtest or disable tests with -DLLVM_INCLUDE_TESTS=OFF")
     endif()
 
     if(LLVM_LIT)
@@ -169,6 +167,23 @@ endif()
 include(CheckIncludeFile)
 check_include_file(sys/resource.h CLANG_HAVE_RLIMITS)
 
+# This check requires _GNU_SOURCE on linux
+check_include_file(dlfcn.h CLANG_HAVE_DLFCN_H)
+if( CLANG_HAVE_DLFCN_H )
+  include(CheckLibraryExists)
+  include(CheckSymbolExists)
+  check_library_exists(dl dlopen "" HAVE_LIBDL)
+  if( HAVE_LIBDL )
+    list(APPEND CMAKE_REQUIRED_LIBRARIES dl)
+  endif()
+  list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
+  check_symbol_exists(dladdr dlfcn.h CLANG_HAVE_DLADDR)
+  list(REMOVE_ITEM CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
+  if( HAVE_LIBDL )
+    list(REMOVE_ITEM CMAKE_REQUIRED_LIBRARIES dl)
+  endif()
+endif()
+
 set(CLANG_RESOURCE_DIR "" CACHE STRING
   "Relative directory from the Clang binary to its resource files.")
 
@@ -178,6 +193,12 @@ set(C_INCLUDE_DIRS "" CACHE STRING
 set(GCC_INSTALL_PREFIX "" CACHE PATH "Directory where gcc is installed." )
 set(DEFAULT_SYSROOT "" CACHE STRING
   "Default <path> to all compiler invocations for --sysroot=<path>." )
+if(GCC_INSTALL_PREFIX)
+  message(WARNING "GCC_INSTALL_PREFIX is deprecated and will be removed. Use "
+    "configuration files (https://clang.llvm.org/docs/UsersManual.html#configuration-files)"
+    "to specify the default --gcc-install-dir= or --gcc-triple=. --gcc-toolchain= is discouraged. "
+    "See https://github.com/llvm/llvm-project/pull/77537 for detail.")
+endif()
 
 set(ENABLE_LINKER_BUILD_ID OFF CACHE BOOL "pass --build-id to ld")
 
@@ -292,8 +313,10 @@ endif()
 if(NOT DEFINED CLANG_VERSION_PATCHLEVEL)
   set(CLANG_VERSION_PATCHLEVEL ${LLVM_VERSION_PATCH})
 endif()
-# Unlike PACKAGE_VERSION, CLANG_VERSION does not include LLVM_VERSION_SUFFIX.
-set(CLANG_VERSION "${CLANG_VERSION_MAJOR}.${CLANG_VERSION_MINOR}.${CLANG_VERSION_PATCHLEVEL}")
+if(NOT DEFINED CLANG_VERSION_SUFFIX)
+  set(CLANG_VERSION_SUFFIX ${LLVM_VERSION_SUFFIX})
+endif()
+set(CLANG_VERSION "${CLANG_VERSION_MAJOR}.${CLANG_VERSION_MINOR}.${CLANG_VERSION_PATCHLEVEL}${CLANG_VERSION_SUFFIX}")
 message(STATUS "Clang version: ${CLANG_VERSION}")
 
 # Configure the Version.inc file.
@@ -457,6 +480,7 @@ get_property(CLANG_TABLEGEN_TARGETS GLOBAL PROPERTY CLANG_TABLEGEN_TARGETS)
 add_custom_target(clang-tablegen-targets
   DEPENDS
   omp_gen
+  ClangDriverOptions
   ${CLANG_TABLEGEN_TARGETS})
 set_target_properties(clang-tablegen-targets PROPERTIES FOLDER "Misc")
 list(APPEND LLVM_COMMON_DEPENDS clang-tablegen-targets)
@@ -499,13 +523,11 @@ endif()
 
 
 if( CLANG_INCLUDE_TESTS )
-  if(EXISTS ${LLVM_THIRD_PARTY_DIR}/unittest/googletest/include/gtest/gtest.h)
-    add_subdirectory(unittests)
-    list(APPEND CLANG_TEST_DEPS ClangUnitTests)
-    list(APPEND CLANG_TEST_PARAMS
-      clang_unit_site_config=${CMAKE_CURRENT_BINARY_DIR}/test/Unit/lit.site.cfg
-      )
-  endif()
+  add_subdirectory(unittests)
+  list(APPEND CLANG_TEST_DEPS ClangUnitTests)
+  list(APPEND CLANG_TEST_PARAMS
+    clang_unit_site_config=${CMAKE_CURRENT_BINARY_DIR}/test/Unit/lit.site.cfg
+  )
   add_subdirectory(test)
   add_subdirectory(bindings/python/tests)
 
@@ -588,6 +610,14 @@ if (CLANG_ENABLE_BOOTSTRAP)
     add_dependencies(clang-bootstrap-deps lld)
   endif()
 
+  if (WIN32)
+    # Build llvm-rc and llvm-mt which are needed by the Windows build.
+    add_dependencies(clang-bootstrap-deps llvm-rc)
+    if(LLVM_ENABLE_LIBXML2)
+      add_dependencies(clang-bootstrap-deps llvm-mt)
+    endif()
+  endif()
+
   # If the next stage is LTO we need to depend on LTO and possibly lld or LLVMgold
   if(BOOTSTRAP_LLVM_ENABLE_LTO OR LLVM_ENABLE_LTO AND NOT LLVM_BUILD_INSTRUMENTED)
     if(APPLE)
@@ -602,6 +632,9 @@ if (CLANG_ENABLE_BOOTSTRAP)
       # variable, and have LLVM's CMake append the envar to the archiver calls.
       set(LTO_LIBRARY -DDARWIN_LTO_LIBRARY=${LLVM_SHLIB_OUTPUT_INTDIR}/libLTO.dylib
         -DDYLD_LIBRARY_PATH=${LLVM_LIBRARY_OUTPUT_INTDIR})
+    elseif(MSVC)
+      add_dependencies(clang-bootstrap-deps llvm-lib)
+      set(${CLANG_STAGE}_AR -DCMAKE_AR=${LLVM_RUNTIME_OUTPUT_INTDIR}/llvm-lib)
     elseif(NOT WIN32)
       add_dependencies(clang-bootstrap-deps llvm-ar llvm-ranlib)
       if(NOT BOOTSTRAP_LLVM_ENABLE_LLD AND LLVM_BINUTILS_INCDIR)
@@ -642,12 +675,11 @@ if (CLANG_ENABLE_BOOTSTRAP)
     CLANG_VERSION_MAJOR
     CLANG_VERSION_MINOR
     CLANG_VERSION_PATCHLEVEL
+    CLANG_VERSION_SUFFIX
     CLANG_VENDOR
     LLVM_VERSION_SUFFIX
     LLVM_BINUTILS_INCDIR
     CLANG_REPOSITORY_STRING
-    CMAKE_C_COMPILER_LAUNCHER
-    CMAKE_CXX_COMPILER_LAUNCHER
     CMAKE_MAKE_PROGRAM
     CMAKE_OSX_ARCHITECTURES
     CMAKE_BUILD_TYPE
@@ -846,11 +878,8 @@ endif()
 
 if (CLANG_BOLT_INSTRUMENT AND NOT LLVM_BUILD_INSTRUMENTED)
   set(CLANG_PATH ${LLVM_RUNTIME_OUTPUT_INTDIR}/clang)
-  set(CLANGXX_PATH ${CLANG_PATH}++)
   set(CLANG_INSTRUMENTED ${CLANG_PATH}-bolt.inst)
-  set(CLANGXX_INSTRUMENTED ${CLANGXX_PATH}-bolt.inst)
-  set(CLANG_OPTIMIZED ${CLANG_PATH}-bolt)
-  set(CLANGXX_OPTIMIZED ${CLANGXX_PATH}-bolt)
+  set(BOLT_FDATA ${CMAKE_CURRENT_BINARY_DIR}/utils/perf-training/prof.fdata)
 
   # Instrument clang with BOLT
   add_custom_target(clang-instrumented
@@ -860,74 +889,13 @@ if (CLANG_BOLT_INSTRUMENT AND NOT LLVM_BUILD_INSTRUMENTED)
     DEPENDS clang llvm-bolt
     COMMAND llvm-bolt ${CLANG_PATH} -o ${CLANG_INSTRUMENTED}
       -instrument --instrumentation-file-append-pid
-      --instrumentation-file=${CMAKE_CURRENT_BINARY_DIR}/prof.fdata
+      --instrumentation-file=${BOLT_FDATA}
     COMMENT "Instrumenting clang binary with BOLT"
     VERBATIM
   )
 
-  # Make a symlink from clang-bolt.inst to clang++-bolt.inst
-  add_custom_target(clang++-instrumented
-    DEPENDS ${CLANGXX_INSTRUMENTED}
-  )
-  add_custom_command(OUTPUT ${CLANGXX_INSTRUMENTED}
-    DEPENDS clang-instrumented
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-      ${CLANG_INSTRUMENTED}
-      ${CLANGXX_INSTRUMENTED}
-    COMMENT "Creating symlink from BOLT instrumented clang to clang++"
-    VERBATIM
-  )
-
-  # Build specified targets with instrumented Clang to collect the profile
-  set(STAMP_DIR ${CMAKE_CURRENT_BINARY_DIR}/bolt-instrumented-clang-stamps/)
-  set(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/bolt-instrumented-clang-bins/)
-  set(build_configuration "$<CONFIG>")
-  include(ExternalProject)
-  ExternalProject_Add(bolt-instrumentation-profile
-    DEPENDS clang++-instrumented
-    PREFIX bolt-instrumentation-profile
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}
-    STAMP_DIR ${STAMP_DIR}
-    BINARY_DIR ${BINARY_DIR}
-    EXCLUDE_FROM_ALL 1
-    CMAKE_ARGS
-                ${CLANG_BOLT_INSTRUMENT_EXTRA_CMAKE_FLAGS}
-                # We shouldn't need to set this here, but INSTALL_DIR doesn't
-                # seem to work, so instead I'm passing this through
-                -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-                -DCMAKE_C_COMPILER=${CLANG_INSTRUMENTED}
-                -DCMAKE_CXX_COMPILER=${CLANGXX_INSTRUMENTED}
-                -DCMAKE_ASM_COMPILER=${CLANG_INSTRUMENTED}
-                -DCMAKE_ASM_COMPILER_ID=Clang
-                -DCMAKE_BUILD_TYPE=Release
-                -DLLVM_ENABLE_PROJECTS=${CLANG_BOLT_INSTRUMENT_PROJECTS}
-                -DLLVM_TARGETS_TO_BUILD=${LLVM_TARGETS_TO_BUILD}
-    BUILD_COMMAND ${CMAKE_COMMAND} --build ${BINARY_DIR}
-                                   --config ${build_configuration}
-                                   --target ${CLANG_BOLT_INSTRUMENT_TARGETS}
-    INSTALL_COMMAND ""
-    STEP_TARGETS configure build
-    USES_TERMINAL_CONFIGURE 1
-    USES_TERMINAL_BUILD 1
-    USES_TERMINAL_INSTALL 1
-  )
-
-  # Merge profiles into one using merge-fdata
-  add_custom_target(clang-bolt-profile
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/prof.fdata
-  )
-  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/prof.fdata
-    DEPENDS merge-fdata bolt-instrumentation-profile-build
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMAND ${Python3_EXECUTABLE}
-      ${CMAKE_CURRENT_SOURCE_DIR}/utils/perf-training/perf-helper.py merge-fdata
-      $<TARGET_FILE:merge-fdata> ${CMAKE_CURRENT_BINARY_DIR}/prof.fdata
-      ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Preparing BOLT profile"
-    VERBATIM
-  )
-
   # Optimize original (pre-bolt) Clang using the collected profile
+  set(CLANG_OPTIMIZED ${CMAKE_CURRENT_BINARY_DIR}/clang.bolt)
   add_custom_target(clang-bolt
     DEPENDS ${CLANG_OPTIMIZED}
   )
@@ -935,23 +903,11 @@ if (CLANG_BOLT_INSTRUMENT AND NOT LLVM_BUILD_INSTRUMENTED)
     DEPENDS clang-bolt-profile
     COMMAND llvm-bolt ${CLANG_PATH}
       -o ${CLANG_OPTIMIZED}
-      -data ${CMAKE_CURRENT_BINARY_DIR}/prof.fdata
+      -data ${BOLT_FDATA}
       -reorder-blocks=ext-tsp -reorder-functions=hfsort+ -split-functions
       -split-all-cold -split-eh -dyno-stats -icf=1 -use-gnu-stack
+    COMMAND ${CMAKE_COMMAND} -E rename ${CLANG_OPTIMIZED} $<TARGET_FILE:clang>
     COMMENT "Optimizing Clang with BOLT"
-    VERBATIM
-  )
-
-  # Make a symlink from clang-bolt to clang++-bolt
-  add_custom_target(clang++-bolt
-    DEPENDS ${CLANGXX_OPTIMIZED}
-  )
-  add_custom_command(OUTPUT ${CLANGXX_OPTIMIZED}
-    DEPENDS clang-bolt
-    COMMAND ${CMAKE_COMMAND} -E create_symlink
-      ${CLANG_OPTIMIZED}
-      ${CLANGXX_OPTIMIZED}
-    COMMENT "Creating symlink from BOLT optimized clang to clang++"
     VERBATIM
   )
 endif()

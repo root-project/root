@@ -222,7 +222,12 @@ void TDataMember::Init(bool afterReading)
             fDataType = gROOT->GetType(name,kTRUE);
          }
       } else {
-         fDataType = gROOT->GetType("Int_t", kTRUE); // In rare instance we are called before Int_t has been added to the list of types in TROOT, the kTRUE insures it is there.
+         auto enumdesc = TEnum::GetEnum(GetFullTypeName(), TEnum::kNone);
+         if (enumdesc)
+            fDataType = TDataType::GetDataType(enumdesc->GetUnderlyingType());
+         else
+            fDataType = gROOT->GetType("Int_t", kTRUE); // In rare instance we are called before Int_t has been added to
+                                                        // the list of types in TROOT, the kTRUE insures it is there.
       }
       //         if (!fDataType)
       //            Error("TDataMember", "basic data type %s not found in list of basic types",
@@ -507,8 +512,15 @@ Longptr_t TDataMember::GetOffsetCint() const
 Int_t TDataMember::GetUnitSize() const
 {
    if (IsaPointer()) return sizeof(void*);
-   if (IsEnum()    ) return sizeof(Int_t);
-   if (IsBasic()   ) return GetDataType()->Size();
+   if (IsEnum()) {
+      auto e = TEnum::GetEnum(GetTypeName());
+      if (e)
+         return TDataType::GetDataType(e->GetUnderlyingType())->Size();
+      else
+         return sizeof(Int_t);
+   }
+   if (IsBasic())
+      return GetDataType()->Size();
 
    TClass *cl = TClass::GetClass(GetTypeName());
    if (!cl) cl = TClass::GetClass(GetTrueTypeName());
@@ -595,7 +607,14 @@ Long_t TDataMember::Property() const
    if (!fInfo || !gCling->DataMemberInfo_IsValid(fInfo)) return 0;
    int prop  = gCling->DataMemberInfo_Property(fInfo);
    int propt = gCling->DataMemberInfo_TypeProperty(fInfo);
-   t->fProperty = prop|propt;
+   t->fProperty = (prop | propt) & ~(kIsPublic | kIsProtected | kIsPrivate);
+   // Set to the strictest access of the member and the type
+   if ((prop | propt) & kIsPrivate)
+      t->fProperty |= kIsPrivate;
+   else if ((prop | propt) & kIsProtected)
+      t->fProperty |= kIsProtected;
+   else
+      t->fProperty |= kIsPublic;
 
    t->fFullTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeName(fInfo));
    t->fTrueTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeTrueName(fInfo));

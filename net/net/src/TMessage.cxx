@@ -68,7 +68,7 @@ TMessage::TMessage(UInt_t what, Int_t bufsiz) :
 /// Create a TMessage object for reading objects. The objects will be
 /// read from buf. Use the What() method to get the message type.
 
-TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsize, buf),
+TMessage::TMessage(void *buf, Int_t bufsize, Bool_t adopt) : TBufferFile(TBuffer::kRead, bufsize, buf, adopt),
                                                fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
 {
    // skip space at the beginning of the message reserved for the message length
@@ -88,6 +88,9 @@ TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsi
       fBufCompCur = fBuffer + bufsize;
       fBuffer     = nullptr;
       Uncompress();
+      if (adopt) {
+         SetBit(kIsOwnerComp); // bufcomp points to the original buf
+      }
    }
 
    if (fWhat == kMESS_OBJECT) {
@@ -105,7 +108,9 @@ TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsi
 
 TMessage::~TMessage()
 {
-   delete [] fBufComp;
+   // We only own fBufComp when we explictly created it or adopt and kMESS_ZIP were true
+   if (TestBit(kIsOwnerComp))
+      delete [] fBufComp;
    delete fInfos;
 }
 
@@ -182,7 +187,9 @@ void TMessage::Reset()
    ResetMap();
 
    if (fBufComp) {
-      delete [] fBufComp;
+      // We only own fBufComp when we explictly created it or adopt and kMESS_ZIP were true
+      if (TestBit(kIsOwnerComp))
+         delete [] fBufComp;
       fBufComp    = nullptr;
       fBufCompCur = nullptr;
       fCompPos    = nullptr;
@@ -250,7 +257,9 @@ void TMessage::SetCompressionAlgorithm(Int_t algorithm)
       newCompress = 100 * algorithm + level;
    }
    if (newCompress != fCompress && fBufComp) {
-      delete [] fBufComp;
+      // We only own fBufComp when we explictly created it or adopt and kMESS_ZIP were true
+      if (TestBit(kIsOwnerComp))
+         delete [] fBufComp;
       fBufComp    = nullptr;
       fBufCompCur = nullptr;
       fCompPos    = nullptr;
@@ -274,7 +283,9 @@ void TMessage::SetCompressionLevel(Int_t level)
       newCompress = 100 * algorithm + level;
    }
    if (newCompress != fCompress && fBufComp) {
-      delete [] fBufComp;
+      // We only own fBufComp when we explictly created it or adopt and kMESS_ZIP were true
+      if (TestBit(kIsOwnerComp))
+         delete [] fBufComp;
       fBufComp    = nullptr;
       fBufCompCur = nullptr;
       fCompPos    = nullptr;
@@ -288,7 +299,9 @@ void TMessage::SetCompressionLevel(Int_t level)
 void TMessage::SetCompressionSettings(Int_t settings)
 {
    if (settings != fCompress && fBufComp) {
-      delete [] fBufComp;
+      // We only own fBufComp when we explictly created it or adopt and kMESS_ZIP were true
+      if (TestBit(kIsOwnerComp))
+         delete [] fBufComp;
       fBufComp    = nullptr;
       fBufCompCur = nullptr;
       fCompPos    = nullptr;
@@ -310,7 +323,9 @@ Int_t TMessage::Compress()
    if (compressionLevel <= 0) {
       // no compression specified
       if (fBufComp) {
-         delete [] fBufComp;
+         // We only own fBufComp when we explictly created it or adopt and kMESS_ZIP were true
+         if (TestBit(kIsOwnerComp))
+            delete [] fBufComp;
          fBufComp    = nullptr;
          fBufCompCur = nullptr;
          fCompPos    = nullptr;
@@ -325,7 +340,9 @@ Int_t TMessage::Compress()
 
    // remove any existing compressed buffer before compressing modified message
    if (fBufComp) {
-      delete [] fBufComp;
+      // We only own fBufComp when we explictly created it or adopt and kMESS_ZIP were true
+      if (TestBit(kIsOwnerComp))
+         delete [] fBufComp;
       fBufComp    = nullptr;
       fBufCompCur = nullptr;
       fCompPos    = nullptr;
@@ -349,6 +366,7 @@ Int_t TMessage::Compress()
    fBufComp       = new char[buflen];
    char *messbuf  = Buffer() + hdrlen;
    char *bufcur   = fBufComp + chdrlen;
+   SetBit(kIsOwnerComp);
    Int_t nzip     = 0;
    Int_t nout, bufmax;
    for (Int_t i = 0; i < nbuffers; ++i) {
@@ -360,7 +378,8 @@ Int_t TMessage::Compress()
                               static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compressionAlgorithm));
       if (nout == 0 || nout >= messlen) {
          //this happens when the buffer cannot be compressed
-         delete [] fBufComp;
+         if (TestBit(kIsOwnerComp))
+            delete [] fBufComp;
          fBufComp    = nullptr;
          fBufCompCur = nullptr;
          fCompPos    = nullptr;
@@ -409,6 +428,9 @@ Int_t TMessage::Uncompress()
    fBufCur  = fBuffer + sizeof(UInt_t) + sizeof(fWhat);
    fBufMax  = fBuffer + fBufSize;
    char *messbuf = fBuffer + hdrlen;
+   
+   // Force being owner of the newly created buffer
+   SetBit(kIsOwner);
 
    Int_t nout;
    Int_t noutot = 0;

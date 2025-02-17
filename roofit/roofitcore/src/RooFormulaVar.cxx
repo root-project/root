@@ -58,9 +58,8 @@
 #include "RooChi2Var.h"
 #endif
 
-using std::cout,std::endl, std::ostream, std::istream, std::list;
+using std::ostream, std::istream, std::list;
 
-ClassImp(RooFormulaVar);
 
 RooFormulaVar::RooFormulaVar() {}
 
@@ -211,7 +210,7 @@ void RooFormulaVar::printMetaArgs(ostream& os) const
 
 bool RooFormulaVar::readFromStream(istream& /*is*/, bool /*compact*/, bool /*verbose*/)
 {
-  coutE(InputArguments) << "RooFormulaVar::readFromStream(" << GetName() << "): can't read" << endl ;
+  coutE(InputArguments) << "RooFormulaVar::readFromStream(" << GetName() << "): can't read" << std::endl ;
   return true ;
 }
 
@@ -223,7 +222,7 @@ bool RooFormulaVar::readFromStream(istream& /*is*/, bool /*compact*/, bool /*ver
 void RooFormulaVar::writeToStream(ostream& os, bool compact) const
 {
   if (compact) {
-    cout << getVal() << endl ;
+    std::cout << getVal() << std::endl ;
   } else {
     os << GetTitle() ;
   }
@@ -296,46 +295,24 @@ double RooFormulaVar::defaultErrorLevel() const
 
   if (nllArg && !chi2Arg) {
     coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName()
-         << ") Formula contains a RooNLLVar, using its error level" << endl ;
+         << ") Formula contains a RooNLLVar, using its error level" << std::endl ;
     return nllArg->defaultErrorLevel() ;
   } else if (chi2Arg && !nllArg) {
     coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName()
-    << ") Formula contains a RooChi2Var, using its error level" << endl ;
+    << ") Formula contains a RooChi2Var, using its error level" << std::endl ;
     return chi2Arg->defaultErrorLevel() ;
   } else if (!nllArg && !chi2Arg) {
     coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName() << ") WARNING: "
-            << "Formula contains neither RooNLLVar nor RooChi2Var server, using default level of 1.0" << endl ;
+            << "Formula contains neither RooNLLVar nor RooChi2Var server, using default level of 1.0" << std::endl ;
   } else {
     coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName() << ") WARNING: "
-         << "Formula contains BOTH RooNLLVar and RooChi2Var server, using default level of 1.0" << endl ;
+         << "Formula contains BOTH RooNLLVar and RooChi2Var server, using default level of 1.0" << std::endl ;
   }
 
   return 1.0 ;
 }
 
-void RooFormulaVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
+std::string RooFormulaVar::getUniqueFuncName() const
 {
-   // If the number of elements to sum is less than 3, just build a sum expression.
-   // Otherwise build a loop to sum over the values.
-   unsigned int eleSize = _actualVars.size();
-   std::string className = GetName();
-   std::string varName = "elements" + className;
-   std::string sumName = "sum" + className;
-   std::string code;
-   std::string decl = "double " + varName + "[" + std::to_string(eleSize) + "]{";
-   int idx = 0;
-   for (RooAbsArg *it : _actualVars) {
-      decl += ctx.getResult(*it) + ",";
-      ctx.addResult(it, varName + "[" + std::to_string(idx) + "]");
-      idx++;
-   }
-   decl.back() = '}';
-   code += decl + ";\n";
-
-   ctx.addResult(this, (_formula->getTFormula()->GetUniqueFuncName() + "(" + varName + ")").Data());
-
-   ctx.addToCodeBody(this, code);
+   return getFormula().getTFormula()->GetUniqueFuncName().Data();
 }
-
-
-

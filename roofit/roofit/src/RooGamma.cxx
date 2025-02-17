@@ -54,7 +54,6 @@ RooPoison(N,mu) and treating the function as a PDF in mu.
 
 #include <cmath>
 
-ClassImp(RooGamma);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -86,13 +85,6 @@ double RooGamma::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void RooGamma::translate(RooFit::Detail::CodeSquashContext &ctx) const
-{
-   ctx.addResult(this, ctx.buildCall("TMath::GammaDist", x, gamma, mu, beta));
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Gamma PDF.
 void RooGamma::doEval(RooFit::EvalContext &ctx) const
 {
@@ -117,16 +109,6 @@ double RooGamma::analyticalIntegral(Int_t /*code*/, const char *rangeName) const
           ROOT::Math::gamma_cdf(x.min(rangeName), gamma, beta, mu);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-std::string RooGamma::buildCallToAnalyticIntegral(Int_t /*code*/, const char *rangeName,
-                                                  RooFit::Detail::CodeSquashContext &ctx) const
-{
-   const std::string a = ctx.buildCall("ROOT::Math::gamma_cdf", x.max(rangeName), gamma, beta, mu);
-   const std::string b = ctx.buildCall("ROOT::Math::gamma_cdf", x.min(rangeName), gamma, beta, mu);
-   return a + " - " + b;
-}
-
 namespace {
 
 inline double randomGamma(double gamma, double beta, double mu, double xmin, double xmax)
@@ -134,7 +116,7 @@ inline double randomGamma(double gamma, double beta, double mu, double xmin, dou
    while (true) {
 
       double d = gamma - 1. / 3.;
-      double c = 1. / TMath::Sqrt(9. * d);
+      double c = 1. / std::sqrt(9. * d);
       double xgen = 0;
       double v = 0;
 
@@ -150,7 +132,7 @@ inline double randomGamma(double gamma, double beta, double mu, double xmin, dou
             return x;
          }
       }
-      if (TMath::Log(u) < 0.5 * xgen * xgen + d * (1. - v + TMath::Log(v))) {
+      if (std::log(u) < 0.5 * xgen * xgen + d * (1. - v + TMath::Log(v))) {
          double x = ((d * v) * beta + mu);
          if ((x < xmax) && (x > xmin)) {
             return x;

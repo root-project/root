@@ -35,8 +35,6 @@ public:
    {
    }
 
-   ~HessianGradientCalculator() override {}
-
    FunctionGradient operator()(const MinimumParameters &) const override;
 
    FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;
@@ -50,8 +48,6 @@ public:
    const MnStrategy &Strategy() const { return fStrategy; }
 
    unsigned int Ncycle() const;
-   double StepTolerance() const;
-   double GradTolerance() const;
 
 private:
    const MnFcn &fFcn;

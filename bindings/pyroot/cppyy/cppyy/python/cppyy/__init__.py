@@ -50,21 +50,25 @@ __all__ = [
     'set_debug',              # enable/disable debug output
     ]
 
-from ._version import __version__
-
-import ctypes, os, sys, sysconfig, warnings
+import ctypes
+import os
+import sys
+import sysconfig
+import warnings
 
 if not 'CLING_STANDARD_PCH' in os.environ:
     def _set_pch():
         try:
             import cppyy_backend as cpb
-            local_pch = os.path.join(os.path.dirname(__file__), 'allDict.cxx.pch.'+str(cpb.__version__))
+            local_pch = os.path.join(
+                    os.path.dirname(__file__), 'allDict.cxx.pch.'+str(cpb.__version__))
             if os.path.exists(local_pch):
                 os.putenv('CLING_STANDARD_PCH', local_pch)
                 os.environ['CLING_STANDARD_PCH'] = local_pch
         except (ImportError, AttributeError):
             pass
-    _set_pch(); del _set_pch
+    _set_pch()
+    del _set_pch
 
 try:
     import __pypy__
@@ -72,6 +76,9 @@ try:
     ispypy = True
 except ImportError:
     ispypy = False
+
+from . import _typemap
+from ._version import __version__
 
 # import separately instead of in the above try/except block for easier to
 # understand tracebacks
@@ -87,7 +94,6 @@ sys.modules['cppyy.gbl.std'] = gbl.std
 
 
 #- external typemap ----------------------------------------------------------
-from . import _typemap
 _typemap.initialize(_backend)               # also creates (u)int8_t mapper
 
 try:
@@ -166,7 +172,7 @@ class make_smartptr(object):
                 return py_make_smartptr(cls, self.ptrcls)
         except AttributeError:
             pass
-        if type(cls) == str and not cls in ('int', 'float'):
+        if isinstance(cls, str) and not cls in ('int', 'float'):
             return py_make_smartptr(getattr(gbl, cls), self.ptrcls)
         return self.maker[cls]
 
@@ -178,27 +184,38 @@ del make_smartptr
 #--- interface to Cling ------------------------------------------------------
 class _stderr_capture(object):
     def __init__(self):
-       self._capture = not gbl.gDebug and True or False
-       self.err = ""
+        self._capture = not gbl.gDebug and True or False
+        self.err = ""
 
     def __enter__(self):
         if self._capture:
-           _begin_capture_stderr()
+            _begin_capture_stderr()
         return self
 
     def __exit__(self, tp, val, trace):
         if self._capture:
             self.err = _end_capture_stderr()
 
+def _cling_report(msg, errcode, msg_is_error=False):
+  # errcode should be authorative, but at least on MacOS, Cling does not report an
+  # error when it should, so also check for the typical compilation signature that
+  # Cling puts out as an indicator than an error occurred
+    if 'input_line' in msg:
+        if 'warning' in msg and not 'error' in msg:
+            warnings.warn(msg, SyntaxWarning)
+            msg_is_error=False
+
+        if 'error' in msg:
+            errcode = 1
+
+    if errcode or (msg and msg_is_error):
+        raise SyntaxError('Failed to parse the given C++ code%s' % msg)
+
 def cppdef(src):
     """Declare C++ source <src> to Cling."""
     with _stderr_capture() as err:
         errcode = gbl.gInterpreter.Declare(src)
-    if not errcode or err.err:
-        if 'warning' in err.err.lower() and not 'error' in err.err.lower():
-            warnings.warn(err.err, SyntaxWarning)
-            return True
-        raise SyntaxError('Failed to parse the given C++ code%s' % err.err)
+    _cling_report(err.err, int(not errcode), msg_is_error=True)
     return True
 
 def cppexec(stmt):
@@ -214,11 +231,11 @@ def cppexec(stmt):
             gbl.gInterpreter.ProcessLine(stmt, ctypes.pointer(errcode))
         except Exception as e:
             sys.stderr.write("%s\n\n" % str(e))
-            if not errcode.value: errcode.value = 1
+            if not errcode.value:
+                errcode.value = 1
 
-    if errcode.value:
-        raise SyntaxError('Failed to parse the given C++ code%s' % err.err)
-    elif err.err and err.err[1:] != '\n':
+    _cling_report(err.err, errcode.value)
+    if err.err and err.err[1:] != '\n':
         sys.stderr.write(err.err[1:])
 
     return True
@@ -305,24 +322,34 @@ if not ispypy:
 
     if apipath_extra is None:
         try:
-            import pkg_resources as pr
+            if 0x30a0000 <= sys.hexversion:
+                import importlib.metadata as m
 
-            d = pr.get_distribution('CPyCppyy')
-            for line in d.get_metadata_lines('RECORD'):
-                if 'API.h' in line:
-                    part = line[0:line.find(',')]
+                for p in m.files('CPyCppyy'):
+                    if p.match('API.h'):
+                        ape = p.locate()
+                        break
+                del p, m
+            else:
+                import pkg_resources as pr
 
-            ape = os.path.join(d.location, part)
+                d = pr.get_distribution('CPyCppyy')
+                for line in d.get_metadata_lines('RECORD'):
+                    if 'API.h' in line:
+                        ape = os.path.join(d.location, line[0:line.find(',')])
+                        break
+                del line, d, pr
+
             if os.path.exists(ape):
                 apipath_extra = os.path.dirname(os.path.dirname(ape))
-
-            del part, d, pr
+            del ape
         except Exception:
             pass
 
     if apipath_extra is None:
         ldversion = sysconfig.get_config_var('LDVERSION')
-        if not ldversion: ldversion = sys.version[:3]
+        if not ldversion:
+            ldversion = sys.version[:3]
 
         apipath_extra = os.path.join(os.path.dirname(apipath), 'site', 'python'+ldversion)
         if not os.path.exists(os.path.join(apipath_extra, 'CPyCppyy')):
@@ -348,7 +375,9 @@ if not ispypy:
 
     if apipath_extra.lower() != 'none':
         if not os.path.exists(os.path.join(apipath_extra, 'CPyCppyy')):
-            warnings.warn("CPyCppyy API not found (tried: %s); set CPPYY_API_PATH envar to the 'CPyCppyy' API directory to fix" % apipath_extra)
+            warnings.warn("CPyCppyy API not found (tried: %s); "
+                          "set CPPYY_API_PATH envar to the 'CPyCppyy' API directory to fix"
+                          % apipath_extra)
         else:
             add_include_path(apipath_extra)
 
@@ -357,15 +386,20 @@ if not ispypy:
 if os.getenv('CONDA_PREFIX'):
   # MacOS, Linux
     include_path = os.path.join(os.getenv('CONDA_PREFIX'), 'include')
-    if os.path.exists(include_path): add_include_path(include_path)
+    if os.path.exists(include_path):
+        add_include_path(include_path)
 
   # Windows
     include_path = os.path.join(os.getenv('CONDA_PREFIX'), 'Library', 'include')
-    if os.path.exists(include_path): add_include_path(include_path)
+    if os.path.exists(include_path):
+        add_include_path(include_path)
 
-# assuming that we are in PREFIX/lib/python/site-packages/cppyy, add PREFIX/include to the search path
-include_path = os.path.abspath(os.path.join(os.path.dirname(__file__), *(4*[os.path.pardir]+['include'])))
-if os.path.exists(include_path): add_include_path(include_path)
+# assuming that we are in PREFIX/lib/python/site-packages/cppyy,
+# add PREFIX/include to the search path
+include_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), *(4*[os.path.pardir]+['include'])))
+if os.path.exists(include_path):
+    add_include_path(include_path)
 
 del include_path, apipath, ispypy
 
@@ -383,7 +417,7 @@ def set_debug(enable=True):
         gbl.gDebug =  0
 
 def _get_name(tt):
-    if type(tt) == str:
+    if isinstance(tt, str):
         return tt
     try:
         ttname = tt.__cpp_name__
@@ -394,7 +428,7 @@ def _get_name(tt):
 _sizes = {}
 def sizeof(tt):
     """Returns the storage size (in chars) of C++ type <tt>."""
-    if not isinstance(tt, type) and not type(tt) == str:
+    if not isinstance(tt, type) and not isinstance(tt, str):
         tt = type(tt)
     try:
         return _sizes[tt]
@@ -425,8 +459,9 @@ def typeid(tt):
 def multi(*bases):      # after six, see also _typemap.py
     """Resolve metaclasses for multiple inheritance."""
   # contruct a "no conflict" meta class; the '_meta' is needed by convention
-    nc_meta = type.__new__(type, 'cppyy_nc_meta', tuple(type(b) for b in bases if type(b) is not type), {})
+    nc_meta = type.__new__(
+            type, 'cppyy_nc_meta', tuple(type(b) for b in bases if type(b) is not type), {})
     class faux_meta(type):
-        def __new__(cls, name, this_bases, d):
+        def __new__(mcs, name, this_bases, d):
             return nc_meta(name, bases, d)
     return type.__new__(faux_meta, 'faux_meta', (), {})

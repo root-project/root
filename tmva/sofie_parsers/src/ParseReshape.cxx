@@ -40,24 +40,19 @@ ParserFuncSignature ParseReshape = [](RModelParser_ONNX &parser, const onnx::Nod
       attr_value = nodeproto.attribute(0).i();
 
    std::vector<int64_t> attr_axes = {};
-   if (nodeproto.input_size() == 1 && (opMode == Squeeze || opMode == Unsqueeze)) {
+   // this is for older ONNX versions ( <= 11)
+   if (nodeproto.input_size() == 1 && nodeproto.attribute_size() > 0 && (opMode == Squeeze || opMode == Unsqueeze)) {
       std::string attribute_name = nodeproto.attribute(0).name();
       if (attribute_name == "axes")
          attr_axes = {nodeproto.attribute(0).ints().begin(), nodeproto.attribute(0).ints().end()};
    }
 
    std::string output_name = nodeproto.output(0);
-   switch (input_type) {
-   case ETensorType::FLOAT:
-      if (attr_axes.empty())
-         op.reset(new ROperator_Reshape<float>(opMode, attr_value, input_name, shape_name, output_name));
-      else // for old Squeeze and Unsqueeze
-         op.reset(new ROperator_Reshape<float>(opMode, attr_axes, input_name, output_name));
-      break;
-   default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Reshape does not yet support input type " +
-                               std::to_string(static_cast<int>(input_type)));
-   }
+
+   if (attr_axes.empty())
+      op.reset(new ROperator_Reshape(opMode, attr_value, input_name, shape_name, output_name));
+   else // for old Squeeze and Unsqueeze
+      op.reset(new ROperator_Reshape(opMode, attr_axes, input_name, output_name));
 
    if (!parser.IsRegisteredTensorType(output_name)) {
       parser.RegisterTensorType(output_name, input_type);

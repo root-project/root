@@ -1,15 +1,14 @@
 import unittest
 
 import ROOT
-from libcppyy import SetOwnership
 
 
 class TObjectContains(unittest.TestCase):
     """
-    Test for the __contains__ pythonisation of TObject and subclasses.
-    Such pythonisation relies on TObject::FindObject, which is redefined
+    Test for the __contains__ pythonization of TObject and subclasses.
+    Such pythonization relies on TObject::FindObject, which is redefined
     in some of its subclasses, such as TCollection.
-    Thanks to this pythonisation, we can use the syntax `obj in col`
+    Thanks to this pythonization, we can use the syntax `obj in col`
     to know if col contains obj.
     """
 
@@ -21,7 +20,7 @@ class TObjectContains(unittest.TestCase):
         for _ in range(self.num_elems):
             o = ROOT.TObject()
             # Prevent immediate deletion of C++ TObjects
-            SetOwnership(o, False)
+            ROOT.SetOwnership(o, False)
             l.Add(o)
 
         return l

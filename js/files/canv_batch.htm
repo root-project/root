@@ -1,4 +1,4 @@
-<!-- file used in batch mode to produce canvas images with headless chrome or firefox -->
+<!-- file used in batch mode to produce canvas images with headless browser -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,87 +9,162 @@
         @page { margin: $page_margin; size: $page_width $page_height; }
      }
   </style>
-  <script src="$jsrootsys/build/jsroot.js"></script>
+  <script id="jsroot" src="$jsrootsys/build/jsroot.js"></script>
 </head>
 
 <body style="margin:0; padding:0; overflow:hidden">
 </body>
 
 <script id="data">
-   globalThis.main_kind = "$draw_kind";
-   globalThis.main_widths = $draw_widths;
-   globalThis.main_heights = $draw_heights;
    globalThis.main_objects = $draw_objects;
 </script>
 
-<script>
+<script id="main">
 
    JSROOT.setBatchMode(true);
 
-   function complete() {
+   const kinds = $draw_kind,
+         widths = $draw_widths,
+         heights = $draw_heights,
+         num_objects = globalThis.main_objects.length,
+         keep_as_is = (kinds === 1111) || (kinds === 2222),
+         result_div = document.createElement('div');
+
+   // remove HTML element with data
+   document.getElementById('data').remove();
+
+   // remove JSROOT script itself
+   document.getElementById('jsroot').remove();
+
+   // place before actual drawings
+   document.body.append(result_div);
+
+   let multi_pdf_args = null, multi_pdf_ind, current_painter, current_dom;
+
+   function appendResult(image_src, svg_code) {
+      if (image_src) {
+         const img = document.createElement('img');
+         img.setAttribute('src', image_src);
+         result_div.appendChild(img);
+      } else {
+         const elem = document.createElement('div');
+         elem.innerHTML = svg_code;
+         result_div.appendChild(elem);
+      }
+   }
+
+   async function drawNext(indx) {
+      if (indx >= num_objects)
+         return true;
+
+      let paint_promise;
+
+      const source_data = globalThis.main_objects[indx];
+
+      if (source_data === 'same') {
+
+         paint_promise = current_painter ? Promise.resolve(current_painter) : Promise.reject(new Error('failure'));
+
+      } else {
+         if (current_dom && !keep_as_is) {
+            JSROOT.cleanup(current_dom);
+            current_dom.innerHTML = '';
+            current_dom.remove();
+            current_dom = null;
+         }
+
+         current_painter = null;
+
+         const current_obj = JSROOT.parse(source_data);
+
+         // create HTML element for drawings
+         current_dom = document.createElement('div');
+         current_dom.style.overflow = 'hidden';
+         current_dom.style.margin = '0';
+         current_dom.style.padding = '0';
+         current_dom.style.width = widths[indx] + 'px';
+         current_dom.style.height = heights[indx] + 'px';
+         if (indx > 0)
+            current_dom.style['page-break-before'] = (kinds === 1111) ? 'avoid' : 'always';
+         current_dom.style['page-break-inside'] = 'avoid';
+         document.body.append(current_dom);
+
+         paint_promise = JSROOT.draw(current_dom, current_obj, '');
+      }
+
+      return paint_promise.then(painter => {
+         if (!current_painter)
+            current_painter = painter;
+
+         if (keep_as_is)
+            return drawNext(indx + 1);
+
+         let kind = kinds[indx], last_page_pdf = false;
+         if ((kind === 'pdf') && (indx < num_objects - 1) && !kinds[indx + 1]) {
+            multi_pdf_args = { as_doc: true };
+            multi_pdf_indx = indx;
+         } else if (!kind && multi_pdf_args) {
+            kind = 'pdf';
+            last_page_pdf = (indx === num_objects - 1) || kinds[indx + 1];
+         }
+
+         return painter.produceImage(true, kind, multi_pdf_args).then(res => {
+            if (last_page_pdf) {
+               appendResult(multi_pdf_args.doc?.output('dataurlstring'));
+               multi_pdf_args = null;
+            } else if (multi_pdf_args) {
+               // do nothing, need to add more pages
+            } else if (kind === 'svg') {
+               appendResult(null, res);
+            } else {
+               appendResult(res);
+            }
+
+            return drawNext(indx + 1);
+         });
+      }).catch(() => {
+         // in case happens something wrong
+         if (keep_as_is)
+            return drawNext(indx + 1);
+
+         // drawing fails - do not try to cleanup
+         if (current_dom) {
+            current_dom.innerHTML = '';
+            current_dom.remove();
+            current_dom = null;
+         }
+         current_painter = null;
+
+         if (kinds[indx] === 'svg')
+            appendResult('', 'failure');
+         else
+            appendResult('jsroot;base64,failure');
+
+         if (multi_pdf_args) {
+            multi_pdf_args = null;
+            while ((indx < num_objects) && !kinds[indx + 1])
+               indx++;
+         }
+
+         return drawNext(indx + 1);
+      });
+   }
+
+   drawNext(0).then(() => {
+
+      appendResult(null, '###batch###job###done###');
+
+      current_dom?.remove();
+
+      // remove main script from dump
+      document.getElementById('main').remove();
+
       if (JSROOT.browser.isFirefox && window && (typeof window.dump == "function")) {
          window.dump(document.body.innerHTML);
          window.close();
       }
-   }
-
-   let doms = [], promises = [];
-
-   for (let i = 0; i < globalThis.main_objects.length; ++i) {
-      let dom = document.createElement('div');
-      dom.style.overflow = 'hidden';
-      dom.style.margin = '0';
-      dom.style.padding = '0';
-      dom.style.width = globalThis.main_widths[i] + 'px';
-      dom.style.height = globalThis.main_heights[i] + 'px';
-      if (i > 0) dom.style['page-break-before'] = 'always';
-      dom.style['page-break-inside'] = 'avoid';
-      document.body.append(dom);
-      doms.push(dom);
-   }
-
-   for (let i = 0; i < globalThis.main_objects.length; ++i) {
-      let obj = JSROOT.parse(globalThis.main_objects[i]);
-      let pr = JSROOT.draw(doms[i], obj, '');
-      promises.push(pr);
-   }
-
-   // remove data
-   document.getElementById('data').remove();
-
-   // complete drawings
-   Promise.all(promises).then(arr => {
-      // as result, got array of painters
-      if (globalThis.main_kind == 'draw')
-         return complete();
-
-      let promises2 = [];
-
-      for(let i = 0; i < arr.length; ++i) {
-         let painter = arr[i],
-             pr2 = painter.produceImage(true, globalThis.main_kind);
-         promises2.push(pr2);
-      }
-
-      return Promise.all(promises2).then(arr2 => {
-         // as result, got array of images
-
-         for(let i = 0; i < arr2.length; ++i) {
-            let res = arr2[i], elem = doms[i];
-            elem.removeAttribute('style');
-            if (globalThis.main_kind == 'svg') {
-               elem.innerHTML = res;
-            } else {
-               elem.innerHTML = '';
-               let img = document.createElement('img');
-               img.setAttribute('src', res);
-               elem.appendChild(img);
-            }
-         }
-
-         complete();
-      });
    });
+
 </script>
 
 </html>

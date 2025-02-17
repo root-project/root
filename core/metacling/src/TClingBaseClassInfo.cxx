@@ -541,6 +541,10 @@ long TClingBaseClassInfo::Property() const
          break;
       case clang::AS_none:
          // IMPOSSIBLE
+         assert(false && "Unexpected value for the access property value in Clang");
+         break;
+      default:
+         assert(false && "Unexpected value for the access property value in Clang");
          break;
    }
    return property;

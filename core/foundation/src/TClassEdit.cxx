@@ -26,6 +26,7 @@
 #include <memory>
 #include <string_view>
 #include <algorithm>
+#include <string>
 
 #include "TSpinLockGuard.h"
 
@@ -621,13 +622,20 @@ static size_t findNameEnd(const std::string &full, size_t pos)
 bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
 {
    string_view a( allocname );
+   // In Windows, allocname might be 'class const std::allocator<int>',
+   // (never 'const class ...'), so we start by stripping the 'class ', if any
+   constexpr auto length = std::char_traits<char>::length;
+   constexpr static int clalloclen = length("class ");
+   if (a.compare(0,clalloclen,"class ") == 0) {
+      a.remove_prefix(clalloclen);
+   }
    RemoveStd(a);
 
    if (a=="alloc")                              return true;
    if (a=="__default_alloc_template<true,0>")   return true;
    if (a=="__malloc_alloc_template<0>")         return true;
 
-   const static int alloclen = strlen("allocator<");
+   constexpr static int alloclen = length("allocator<");
    if (a.compare(0,alloclen,"allocator<") != 0) {
       return false;
    }
@@ -676,7 +684,8 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
    string_view a( allocname );
    RemoveStd(a);
 
-   const static int alloclen = strlen("allocator<");
+   constexpr auto length = std::char_traits<char>::length;
+   constexpr static int alloclen = length("allocator<");
    if (a.compare(0,alloclen,"allocator<") != 0) {
       return false;
    }
@@ -684,7 +693,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
 
    RemoveStd(a);
 
-   const static int pairlen = strlen("pair<");
+   constexpr static int pairlen = length("pair<");
    if (a.compare(0,pairlen,"pair<") != 0) {
       return false;
    }
@@ -1075,8 +1084,10 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
             if (full.compare(offset, 5, "std::") == 0) {
                offset += 5;
             }
-            static const char* char_traits_s = "char_traits<char>";
-            static const unsigned int char_traits_len = strlen(char_traits_s);
+            constexpr auto char_traits_s = "char_traits<char>";
+            // or 
+            // static constexpr char const* const char_traits_s = "char_traits<char>";
+            static constexpr unsigned int char_traits_len = std::char_traits<char>::length(char_traits_s);
             if (full.compare(offset, char_traits_len, char_traits_s) == 0) {
                offset += char_traits_len;
                if ( full[offset] == '>') {
@@ -1340,7 +1351,7 @@ bool TClassEdit::IsInterpreterDetail(const char *type)
 bool TClassEdit::IsSTLBitset(const char *classname)
 {
    size_t offset = StdLen(classname);
-   if ( strncmp(classname+offset,"bitset<",strlen("bitset<"))==0) return true;
+   if ( strncmp(classname+offset,"bitset<",std::char_traits<char>::length("bitset<"))==0) return true;
    return false;
 }
 
@@ -1417,32 +1428,33 @@ int TClassEdit::IsSTLCont(const char *type, int testAlloc)
 
 bool TClassEdit::IsStdClass(const char *classname)
 {
+   constexpr auto length = std::char_traits<char>::length;
    classname += StdLen( classname );
    if ( strcmp(classname,"string")==0 ) return true;
-   if ( strncmp(classname,"bitset<",strlen("bitset<"))==0) return true;
+   if ( strncmp(classname,"bitset<",length("bitset<"))==0) return true;
    if ( IsStdPair(classname) ) return true;
    if ( strcmp(classname,"allocator")==0) return true;
-   if ( strncmp(classname,"allocator<",strlen("allocator<"))==0) return true;
-   if ( strncmp(classname,"greater<",strlen("greater<"))==0) return true;
-   if ( strncmp(classname,"less<",strlen("less<"))==0) return true;
-   if ( strncmp(classname,"equal_to<",strlen("equal_to<"))==0) return true;
-   if ( strncmp(classname,"hash<",strlen("hash<"))==0) return true;
-   if ( strncmp(classname,"auto_ptr<",strlen("auto_ptr<"))==0) return true;
+   if ( strncmp(classname,"allocator<",length("allocator<"))==0) return true;
+   if ( strncmp(classname,"greater<",length("greater<"))==0) return true;
+   if ( strncmp(classname,"less<",length("less<"))==0) return true;
+   if ( strncmp(classname,"equal_to<",length("equal_to<"))==0) return true;
+   if ( strncmp(classname,"hash<",length("hash<"))==0) return true;
+   if ( strncmp(classname,"auto_ptr<",length("auto_ptr<"))==0) return true;
 
-   if ( strncmp(classname,"vector<",strlen("vector<"))==0) return true;
-   if ( strncmp(classname,"list<",strlen("list<"))==0) return true;
-   if ( strncmp(classname,"forward_list<",strlen("forward_list<"))==0) return true;
-   if ( strncmp(classname,"deque<",strlen("deque<"))==0) return true;
-   if ( strncmp(classname,"map<",strlen("map<"))==0) return true;
-   if ( strncmp(classname,"multimap<",strlen("multimap<"))==0) return true;
-   if ( strncmp(classname,"set<",strlen("set<"))==0) return true;
-   if ( strncmp(classname,"multiset<",strlen("multiset<"))==0) return true;
-   if ( strncmp(classname,"unordered_set<",strlen("unordered_set<"))==0) return true;
-   if ( strncmp(classname,"unordered_multiset<",strlen("unordered_multiset<"))==0) return true;
-   if ( strncmp(classname,"unordered_map<",strlen("unordered_map<"))==0) return true;
-   if ( strncmp(classname,"unordered_multimap<",strlen("unordered_multimap<"))==0) return true;
-   if ( strncmp(classname,"bitset<",strlen("bitset<"))==0) return true;
-   if ( strncmp(classname,"ROOT::VecOps::RVec<",strlen("ROOT::VecOps::RVec<"))==0) return true;
+   if ( strncmp(classname,"vector<",length("vector<"))==0) return true;
+   if ( strncmp(classname,"list<",length("list<"))==0) return true;
+   if ( strncmp(classname,"forward_list<",length("forward_list<"))==0) return true;
+   if ( strncmp(classname,"deque<",length("deque<"))==0) return true;
+   if ( strncmp(classname,"map<",length("map<"))==0) return true;
+   if ( strncmp(classname,"multimap<",length("multimap<"))==0) return true;
+   if ( strncmp(classname,"set<",length("set<"))==0) return true;
+   if ( strncmp(classname,"multiset<",length("multiset<"))==0) return true;
+   if ( strncmp(classname,"unordered_set<",length("unordered_set<"))==0) return true;
+   if ( strncmp(classname,"unordered_multiset<",length("unordered_multiset<"))==0) return true;
+   if ( strncmp(classname,"unordered_map<",length("unordered_map<"))==0) return true;
+   if ( strncmp(classname,"unordered_multimap<",length("unordered_multimap<"))==0) return true;
+   if ( strncmp(classname,"bitset<",length("bitset<"))==0) return true;
+   if ( strncmp(classname,"ROOT::VecOps::RVec<",length("ROOT::VecOps::RVec<"))==0) return true;
 
    return false;
 }
@@ -1533,14 +1545,15 @@ static void ResolveTypedefImpl(const char *tname,
       }
       while (tname[cursor]==' ') ++cursor;
    }
-
-   if (tname[cursor]=='c' && (cursor+6<len)) {
-      if (strncmp(tname+cursor,"const ",6) == 0) {
-         cursor += 6;
-         if (modified) result += "const ";
-      }
+   // In Windows, we might have 'class const ...' as name,
+   // (never 'const class ...'), so skip the leading 'class ', if any
+   if (strncmp(tname+cursor,"class ",6) == 0) {
+      cursor += 6;
+   }
+   if (strncmp(tname+cursor,"const ",6) == 0) {
+      cursor += 6;
+      if (modified) result += "const ";
       constprefix = true;
-
    }
 
    if (len > 2 && strncmp(tname+cursor,"::",2) == 0) {
@@ -2062,6 +2075,7 @@ public:
          // ROOT-9933: we remove const if present.
          TClassEdit::TSplitType tst(name.c_str());
          tst.ShortType(name, 1);
+         name += "*";
          fHasChanged = true;
          return name;
       }
@@ -2106,7 +2120,7 @@ std::string TClassEdit::GetNameForIO(const std::string& templateInstanceName,
    auto nameForIO = node.ToString();
    if (hasChanged) {
       *hasChanged = node.HasChanged();
-      }
+   }
    return nameForIO;
 }
 
