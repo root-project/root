@@ -301,6 +301,14 @@ void AddProgressBar(ROOT::RDF::RNode df);
 /// For more details see ROOT::RDF::Experimental::ProgressHelper Class.
 void AddProgressBar(ROOT::RDataFrame df);
 
+/// @brief Set the number of threads sharing one TH3 in RDataFrame.
+/// When RDF runs multi-threaded, each thread typically clones every histogram in the computation graph.
+/// If this consumes too much memory, N threads can share one clone.
+/// Higher values might slow down RDF because they lead to higher contention on the TH3Ds, but save memory.
+/// Lower values run faster with less contention at the cost of higher memory usage.
+/// @param nThread Number of threads that share a TH3D.
+void ThreadsPerTH3(unsigned int nThread = 1);
+
 class ProgressBarAction;
 
 /// RDF progress helper.
