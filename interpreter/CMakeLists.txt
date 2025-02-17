@@ -136,19 +136,6 @@ if (NOT MSVC AND NOT APPLE)
 endif()
 set(CMAKE_VISIBILITY_INLINES_HIDDEN "ON")
 
-#--- Build LLVM/Clang with modules -----------------------------------------------------------------
-if(cxxmodules)
-  # LLVM knows how to configure its modules builds. We cannot just add the flags
-  # because the cxxmodules builds in llvm have different build dependency order.
-  string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-  string(REPLACE "${ROOT_CXXMODULES_CFLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
-  if(libcxx)
-    # FIXME: We cannot build LLVM/clang with modules on with libstdc++, yet.
-    # FIXME: We cannot build LLVM/clang with modules on with libc++, too.
-    #set (LLVM_ENABLE_MODULES ON CACHE BOOL "Override the default LLVM_ENABLE_MODULES option value." )
-  endif(libcxx)
-endif(cxxmodules)
-
 if(gcctoolchain)
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS --gcc-toolchain=${gcctoolchain})
 endif()
