@@ -95,11 +95,12 @@ class RNTupleMerger final {
    std::unique_ptr<RNTupleModel> fModel;
 
    void MergeCommonColumns(RClusterPool &clusterPool, ROOT::DescriptorId_t clusterId,
-                           std::span<RColumnMergeInfo> commonColumns, const RCluster::ColumnSet_t &commonColumnSet,
-                           RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData);
+                           std::span<const RColumnMergeInfo> commonColumns,
+                           const RCluster::ColumnSet_t &commonColumnSet, RSealedPageMergeData &sealedPageData,
+                           const RNTupleMergeData &mergeData);
 
-   void MergeSourceClusters(RPageSource &source, std::span<RColumnMergeInfo> commonColumns,
-                            std::span<RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
+   void MergeSourceClusters(RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
+                            std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
 
    /// Creates a RNTupleMerger with the given destination.
    /// The model must be given if and only if `destination` has been initialized with that model

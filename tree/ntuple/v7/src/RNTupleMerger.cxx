@@ -575,10 +575,81 @@ static void ExtendDestinationModel(std::span<const RFieldDescriptor *> newFields
    }
 }
 
+// Generates default (zero) values for the given columns
+static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<const RColumnMergeInfo> columns,
+                                        RSealedPageMergeData &sealedPageData, const RNTupleDescriptor &srcDescriptor,
+                                        const RNTupleDescriptor &dstDescriptor)
+{
+   for (const auto &column : columns) {
+      const auto &columnId = column.fInputId;
+      const auto &columnDesc = dstDescriptor.GetColumnDescriptor(columnId);
+      const RFieldDescriptor *field = column.fParentField;
+
+      // Skip all auxiliary columns
+      if (field->GetLogicalColumnIds()[0] != columnId)
+         continue;
+
+      // Check if this column is a child of a Collection or a Variant. If so, it has no data
+      // and can be skipped.
+      bool skipColumn = false;
+      auto nRepetitions = std::max<std::uint64_t>(field->GetNRepetitions(), 1);
+      for (auto parentId = field->GetParentId(); parentId != ROOT::kInvalidDescriptorId;) {
+         const RFieldDescriptor &parent = srcDescriptor.GetFieldDescriptor(parentId);
+         if (parent.GetStructure() == ROOT::ENTupleStructure::kCollection ||
+             parent.GetStructure() == ROOT::ENTupleStructure::kVariant) {
+            skipColumn = true;
+            break;
+         }
+         nRepetitions *= std::max<std::uint64_t>(parent.GetNRepetitions(), 1);
+         parentId = parent.GetParentId();
+      }
+      if (skipColumn)
+         continue;
+
+      const auto structure = field->GetStructure();
+
+      if (structure == ROOT::ENTupleStructure::kStreamer) {
+         Fatal(
+            "RNTuple::Merge",
+            "Destination RNTuple contains a streamer field (%s) that is not present in one of the sources. "
+            "Creating a default value for a streamer field is ill-defined, therefore the merging process will abort.",
+            field->GetFieldName().c_str());
+         continue;
+      }
+
+      // NOTE: we cannot have a Record here because it has no associated columns.
+      R__ASSERT(structure == ROOT::ENTupleStructure::kCollection || structure == ROOT::ENTupleStructure::kVariant ||
+                structure == ROOT::ENTupleStructure::kLeaf);
+
+      const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
+      const auto nElements = nEntriesToGenerate * nRepetitions;
+      const auto nBytesOnStorage = colElement->GetPackedSize(nElements);
+      constexpr auto kPageSizeLimit = 256 * 1024;
+      // TODO(gparolini): consider coalescing the last page if its size is less than some threshold
+      const size_t nPages = nBytesOnStorage / kPageSizeLimit + !!(nBytesOnStorage % kPageSizeLimit);
+      for (size_t i = 0; i < nPages; ++i) {
+         const auto pageSize = (i < nPages - 1) ? kPageSizeLimit : nBytesOnStorage - kPageSizeLimit * (nPages - 1);
+         const auto checksumSize = RPageStorage::kNBytesPageChecksum;
+         const auto bufSize = pageSize + checksumSize;
+         auto &buffer = sealedPageData.fBuffers.emplace_back(new unsigned char[bufSize]);
+
+         RPageStorage::RSealedPage sealedPage{buffer.get(), bufSize, static_cast<std::uint32_t>(nElements), true};
+         // TODO: properly seal this page; currently we're always writing it uncompressed!
+         memset(buffer.get(), 0, pageSize);
+         sealedPage.ChecksumIfEnabled();
+
+         sealedPageData.fPagesV.push_back({sealedPage});
+      }
+
+      sealedPageData.fGroups.emplace_back(column.fOutputId, sealedPageData.fPagesV.back().cbegin(),
+                                          sealedPageData.fPagesV.back().cend());
+   }
+}
+
 // Merges all columns appearing both in the source and destination RNTuples, just copying them if their
 // compression matches ("fast merge") or by unsealing and resealing them with the proper compression.
 void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, ROOT::DescriptorId_t clusterId,
-                                       std::span<RColumnMergeInfo> commonColumns,
+                                       std::span<const RColumnMergeInfo> commonColumns,
                                        const RCluster::ColumnSet_t &commonColumnSet,
                                        RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData)
 {
@@ -672,83 +743,13 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, ROOT::Descript
    } // end loop over common columns
 }
 
-// Generates default values for columns that are not present in the current source RNTuple
-// but are present in the destination's schema.
-static void GenerateExtraDstColumns(size_t nClusterEntries, std::span<RColumnMergeInfo> extraDstColumns,
-                                    RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData)
-{
-   for (const auto &column : extraDstColumns) {
-      const auto &columnId = column.fInputId;
-      const auto &columnDesc = mergeData.fDstDescriptor.GetColumnDescriptor(columnId);
-      const RFieldDescriptor *field = column.fParentField;
-
-      // Skip all auxiliary columns
-      if (field->GetLogicalColumnIds()[0] != columnId)
-         continue;
-
-      // Check if this column is a child of a Collection or a Variant. If so, it has no data
-      // and can be skipped.
-      bool skipColumn = false;
-      auto nRepetitions = std::max<std::uint64_t>(field->GetNRepetitions(), 1);
-      for (auto parentId = field->GetParentId(); parentId != ROOT::kInvalidDescriptorId;) {
-         const RFieldDescriptor &parent = mergeData.fSrcDescriptor->GetFieldDescriptor(parentId);
-         if (parent.GetStructure() == ROOT::ENTupleStructure::kCollection ||
-             parent.GetStructure() == ROOT::ENTupleStructure::kVariant) {
-            skipColumn = true;
-            break;
-         }
-         nRepetitions *= std::max<std::uint64_t>(parent.GetNRepetitions(), 1);
-         parentId = parent.GetParentId();
-      }
-      if (skipColumn)
-         continue;
-
-      const auto structure = field->GetStructure();
-
-      if (structure == ROOT::ENTupleStructure::kStreamer) {
-         Fatal(
-            "RNTuple::Merge",
-            "Destination RNTuple contains a streamer field (%s) that is not present in one of the sources. "
-            "Creating a default value for a streamer field is ill-defined, therefore the merging process will abort.",
-            field->GetFieldName().c_str());
-         continue;
-      }
-
-      // NOTE: we cannot have a Record here because it has no associated columns.
-      R__ASSERT(structure == ROOT::ENTupleStructure::kCollection || structure == ROOT::ENTupleStructure::kVariant ||
-                structure == ROOT::ENTupleStructure::kLeaf);
-
-      const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
-      const auto nElements = nClusterEntries * nRepetitions;
-      const auto nBytesOnStorage = colElement->GetPackedSize(nElements);
-      constexpr auto kPageSizeLimit = 256 * 1024;
-      // TODO(gparolini): consider coalescing the last page if its size is less than some threshold
-      const size_t nPages = nBytesOnStorage / kPageSizeLimit + !!(nBytesOnStorage % kPageSizeLimit);
-      for (size_t i = 0; i < nPages; ++i) {
-         const auto pageSize = (i < nPages - 1) ? kPageSizeLimit : nBytesOnStorage - kPageSizeLimit * (nPages - 1);
-         const auto checksumSize = RPageStorage::kNBytesPageChecksum;
-         const auto bufSize = pageSize + checksumSize;
-         auto &buffer = sealedPageData.fBuffers.emplace_back(new unsigned char[bufSize]);
-
-         RPageStorage::RSealedPage sealedPage{buffer.get(), bufSize, static_cast<std::uint32_t>(nElements), true};
-         memset(buffer.get(), 0, pageSize);
-         sealedPage.ChecksumIfEnabled();
-
-         sealedPageData.fPagesV.push_back({sealedPage});
-      }
-
-      sealedPageData.fGroups.emplace_back(column.fOutputId, sealedPageData.fPagesV.back().cbegin(),
-                                          sealedPageData.fPagesV.back().cend());
-   }
-}
-
 // Iterates over all clusters of `source` and merges their pages into `destination`.
 // It is assumed that all columns in `commonColumns` are present (and compatible) in both the source and
 // the destination's schemas.
 // The pages may be "fast-merged" (i.e. simply copied with no decompression/recompression) if the target
 // compression is unspecified or matches the original compression settings.
-void RNTupleMerger::MergeSourceClusters(RPageSource &source, std::span<RColumnMergeInfo> commonColumns,
-                                        std::span<RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData)
+void RNTupleMerger::MergeSourceClusters(RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
+                                        std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData)
 {
    RClusterPool clusterPool{source};
 
@@ -774,7 +775,8 @@ void RNTupleMerger::MergeSourceClusters(RPageSource &source, std::span<RColumnMe
 
       RSealedPageMergeData sealedPageData;
       MergeCommonColumns(clusterPool, clusterId, commonColumns, commonColumnSet, sealedPageData, mergeData);
-      GenerateExtraDstColumns(nClusterEntries, extraDstColumns, sealedPageData, mergeData);
+      GenerateZeroPagesForColumns(nClusterEntries, extraDstColumns, sealedPageData, *mergeData.fSrcDescriptor,
+                                  mergeData.fDstDescriptor);
 
       // Commit the pages and the clusters
       mergeData.fDestination.CommitSealedPageV(sealedPageData.fGroups);
