@@ -56,3 +56,8 @@ std::string ROOT::Internal::RDF::GetDataSourceLabel(const ROOT::RDF::RNode &node
       return "EmptyDS";
    }
 }
+
+void ROOT::Internal::RDF::SetTTreeLifeline(ROOT::RDF::RNode &node, std::any lifeline)
+{
+   node.GetLoopManager()->SetTTreeLifeline(std::move(lifeline));
+}

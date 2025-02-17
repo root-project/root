@@ -1245,6 +1245,11 @@ void RLoopManager::ChangeBeginAndEndEntries(Long64_t begin, Long64_t end)
    fEndEntry = end;
 }
 
+void ROOT::Detail::RDF::RLoopManager::SetTTreeLifeline(std::any lifeline)
+{
+   fTTreeLifeline = std::move(lifeline);
+}
+
 /**
  * \brief Helper function to open a file (or the first file from a glob).
  * This function is used at construction time of an RDataFrame, to check the
