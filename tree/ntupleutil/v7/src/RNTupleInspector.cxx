@@ -289,7 +289,7 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
       break;
    }
 
-   default: throw RException(R__ASSERT("Invalid print format"));
+   default: R__ASSERT(false && "Invalid print format");
    }
 }
 
