@@ -46,8 +46,6 @@ constexpr size_t GetTypeSize(ETensorType type) {
         case ETensorType::UINT64:    return sizeof(uint64_t);
         case ETensorType::BOOL:      return sizeof(bool);
         case ETensorType::STRING:    return sizeof(std::string);
-        case ETensorType::COMPLEX64: return sizeof(std::complex<float>);
-        case ETensorType::COMPLEX28: return sizeof(std::complex<double>);
         default: return 0;
     }
 }
