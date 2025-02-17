@@ -59,6 +59,7 @@
 #include <unordered_set>
 #include <utility> // std::index_sequence
 #include <vector>
+#include <any>
 
 class TGraph;
 
@@ -93,6 +94,7 @@ void ChangeBeginAndEndEntries(const RNode &node, Long64_t begin, Long64_t end);
 void ChangeSpec(const ROOT::RDF::RNode &node, ROOT::RDF::Experimental::RDatasetSpec &&spec);
 void TriggerRun(ROOT::RDF::RNode node);
 std::string GetDataSourceLabel(const ROOT::RDF::RNode &node);
+void SetTTreeLifeline(ROOT::RDF::RNode &node, std::any lifeline);
 } // namespace RDF
 } // namespace Internal
 
@@ -127,6 +129,7 @@ class RInterface : public RInterfaceBase {
    friend void RDFInternal::ChangeBeginAndEndEntries(const RNode &node, Long64_t start, Long64_t end);
    friend void RDFInternal::ChangeSpec(const RNode &node, ROOT::RDF::Experimental::RDatasetSpec &&spec);
    friend std::string ROOT::Internal::RDF::GetDataSourceLabel(const RNode &node);
+   friend void ROOT::Internal::RDF::SetTTreeLifeline(ROOT::RDF::RNode &node, std::any lifeline);
    std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this RInterface.
 
 public:
