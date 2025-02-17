@@ -69,6 +69,14 @@ using namespace ROOT::TypeTraits;
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;
 
+/// Obtain or set the number of threads that will share a clone of a thread-safe 3D histogram.
+/// Setting it to N will make N threads share a clone, setting it to 0 or 1 will use one clone
+/// per thread.
+/// Setting it to higher numbers reduces the RDF memory consumption, but might create contention
+/// on TH3Ds. When the RDF computation graph consists mostly of filling TH3Ds, lower values are better.
+/// \return A reference to the current divider.
+unsigned int &NThreadPerTH3();
+
 /// Check for container traits.
 ///
 /// Note that for all uses in RDF we don't want to classify std::string as a container.
