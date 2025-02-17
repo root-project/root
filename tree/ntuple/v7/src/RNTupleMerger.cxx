@@ -586,6 +586,7 @@ static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<con
       const RFieldDescriptor *field = column.fParentField;
 
       // Skip all auxiliary columns
+      assert(!field->GetLogicalColumnIds().empty());
       if (field->GetLogicalColumnIds()[0] != columnId)
          continue;
 
@@ -695,6 +696,12 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, ROOT::Descript
       // bother reserving memory for them.
       if (needsCompressionChange)
          sealedPageData.fBuffers.resize(sealedPageData.fBuffers.size() + pages.fPageInfos.size());
+
+      // Synthesize zero pages for deferred columns (unless this is the first source)
+      if (columnDesc.GetFirstElementIndex() > 0 && mergeData.fNumDstEntries > 0) {
+         GenerateZeroPagesForColumns(columnDesc.GetFirstElementIndex(), {&column, 1}, sealedPageData,
+                                     *mergeData.fSrcDescriptor, mergeData.fDstDescriptor);
+      }
 
       // Loop over the pages
       std::uint64_t pageIdx = 0;
@@ -851,9 +858,13 @@ static void AddColumnsFromField(std::vector<RColumnMergeInfo> &columns, const RN
       RColumnMergeInfo info{};
       info.fColumnName = name + '.' + std::to_string(srcColumn.GetIndex());
       info.fInputId = srcColumn.GetPhysicalId();
-      // Since the parent field is only relevant for extra dst columns, the choice of src or dstFieldDesc as a parent
-      // is arbitrary (they're the same field).
-      info.fParentField = &dstFieldDesc;
+      // NOTE(gparolini): the parent field is used when synthesizing zero pages, which happens in 2 situations:
+      // 1. when adding extra dst columns (in which case we need to synthesize zero pages for the incoming src), and
+      // 2. when merging a deferred column into an existing column (in which case we need to fill the "hole" with
+      // zeroes). For the first case srcFieldDesc and dstFieldDesc are the same (see the calling site of this function),
+      // but for the second case they're not, and we need to pick the source field because we will then check the
+      // column's *input* id inside fParentField to see if it's a suppressed column (see GenerateZeroPagesForColumns()).
+      info.fParentField = &srcFieldDesc;
 
       if (auto it = mergeData.fColumnIdMap.find(info.fColumnName); it != mergeData.fColumnIdMap.end()) {
          info.fOutputId = it->second.fColumnId;
