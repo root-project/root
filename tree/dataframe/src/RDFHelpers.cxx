@@ -140,6 +140,11 @@ namespace RDF {
 
 namespace Experimental {
 
+void CloneTH3(bool state)
+{
+   ROOT::Internal::RDF::CloneHisto3DState() = state;
+}
+
 ProgressHelper::ProgressHelper(std::size_t increment, unsigned int totalFiles, unsigned int progressBarWidth,
                                unsigned int printInterval, bool useColors)
    : fPrintInterval(printInterval),
