@@ -25,6 +25,9 @@
 #include "TMath.h"
 #include "TObjString.h"
 
+#include <atomic>
+#include <stdexcept>
+
 ClassImp(TH3);
 
 /** \addtogroup Histograms
@@ -427,6 +430,59 @@ Int_t TH3::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
    return bin;
 }
 
+#ifdef __cpp_lib_atomic_ref
+////////////////////////////////////////////////////////////////////////////////
+/// Atomically increment cell defined by x,y,z by a weight w.
+///
+/// This function is thread safe, but it cannot be called concurrently with any
+/// other function of the histogram.
+/// \note This function requires compiling with c++20
+/// \note If the weight is not equal to 1, Sumw2() must have been called before starting to fill.
+/// \note In contrast to Fill(double,double,double,double), the histogram is not able
+///   to extend its own axes, so out-of-range fills will go into overflow.
+/// \note Automatic binning is not supported.
+void TH3D::FillThreadSafe(Double_t x, Double_t y, Double_t z, Double_t w)
+{
+   if (fBuffer)
+      throw std::logic_error("TH3 cannot be filled atomically when buffer is active.");
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))
+      throw std::logic_error(
+         "Weighted filling 'Sumw2()' needs to be activated before FillThreadSafe is called with weights");
+
+   std::atomic_ref<decltype(fEntries)> atomicEntries{fEntries};
+   atomicEntries += 1.;
+
+   const auto binx = fXaxis.FindFixBin(x);
+   const auto biny = fYaxis.FindFixBin(y);
+   const auto binz = fZaxis.FindFixBin(z);
+   if (binx < 0 || biny < 0 || binz < 0)
+      return;
+   const auto bin = binx + (fXaxis.GetNbins() + 2) * (biny + (fYaxis.GetNbins() + 2) * binz);
+   if (fSumw2.fN) {
+      std::atomic_ref{fSumw2.fArray[bin]} += w * w;
+   }
+
+   std::atomic_ref{fArray[bin]} += w;
+
+   if (binx == 0 || binx > fXaxis.GetNbins() || biny == 0 || biny > fYaxis.GetNbins() || binz == 0 ||
+       binz > fZaxis.GetNbins()) {
+      if (!GetStatOverflowsBehaviour())
+         return;
+   }
+
+   std::atomic_ref{fTsumw} += w;
+   std::atomic_ref{fTsumw2} += w * w;
+   std::atomic_ref{fTsumwx} += w * x;
+   std::atomic_ref{fTsumwx2} += w * x * x;
+   std::atomic_ref{fTsumwy} += w * y;
+   std::atomic_ref{fTsumwy2} += w * y * y;
+   std::atomic_ref{fTsumwxy} += w * x * y;
+   std::atomic_ref{fTsumwz} += w * z;
+   std::atomic_ref{fTsumwz2} += w * z * z;
+   std::atomic_ref{fTsumwxz} += w * x * z;
+   std::atomic_ref{fTsumwyz} += w * y * z;
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment cell defined by namex,namey,namez by a weight w
