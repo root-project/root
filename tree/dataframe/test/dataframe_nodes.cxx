@@ -103,3 +103,9 @@ TEST(RDataFrameNodes, InheritanceOfDefines)
    ROOT::RDataFrame(1).Define("x", createStat).Snapshot<TStatistic>("t", ofileName, {"x"})->Foreach(checkStat, {"x"});
    gSystem->Unlink(ofileName);
 }
+
+TEST(RDataFrameNodes, InvalidLoopType)
+{
+   ROOT::Detail::RDF::RLoopManager lm{};
+   EXPECT_THROW(lm.Run(), std::runtime_error) << "An invalid event loop was run!";
+}
