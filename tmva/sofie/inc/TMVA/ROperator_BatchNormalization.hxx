@@ -219,6 +219,77 @@ public:
       return out.str();
    }
 
+   std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
+      OpName = "op_" + OpName;
+      
+
+      if (fShapeX.empty()){
+         throw std::runtime_error("TMVA SOFIE Batch Normalization called to Generate without being initialized first");
+      }
+
+      std::stringstream out;
+      //// Batch Norm op
+      size_t batchSize = fShapeX[0];
+      size_t channels = fShapeX[1];
+      size_t height = (fShapeX.size() > 2) ? fShapeX[2] : 1;
+      size_t width = (fShapeX.size() > 3) ? fShapeX[3] : 1;
+      size_t n = batchSize * channels * height * width;
+
+      // Copy X into Y
+      out << SP*3 << "constexpr int " << OpName << "_N =" << batchSize * channels * height * width << ";\n";
+      out << SP*3 << "constexpr int "<<OpName<< "_incx = 1;\n";
+      out << SP*3 << "constexpr int "<<OpName<< "_incy = 1;\n";
+
+      if (gpu_blas == MKLBLAS) {
+         out << SP*3 << copy << OpName << "_N, " << "buf_tensor_" << fNX;
+         out << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n\n";
+      }
+      else {
+         out << SP*3 << copy << OpName << "_N, " << "blas::BufferIterator(buf_tensor_" << fNX;
+         out << "), " << OpName << "_incx, blas::BufferIterator(buf_tensor_" << fNY << "), " << OpName << "_incy);\n\n";
+      }
+
+      // blas axpy (Y = -Bmean + Y = X - Bmean)
+      out << SP*3 << "float "<<OpName<< "_alpha = -1;\n"; 
+      if (gpu_blas == MKLBLAS) {
+         out << SP*3 << axpy << OpName << "_N, " << OpName << "_alpha, buf_tensor_" << fNMean;
+         out << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n\n";
+      }
+      else {
+         out << SP*3 << axpy << OpName << "_N, " << OpName << "_alpha, blas::BufferIterator(buf_tensor_" << fNMean;
+         out << "), " << OpName << "_incx, blas::BufferIterator(buf_tensor_" << fNY << "), " << OpName << "_incy);\n\n";
+      }
+
+      out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+      out << SP*4 << "auto acc_tensor_" << fNVar << " = cl::sycl::accessor{buf_tensor_" << fNVar;
+      out << ", cgh, cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_tensor_" << fNScale << " = cl::sycl::accessor{buf_tensor_" << fNScale;
+      out << ", cgh, cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
+      out << ", cgh, cl::sycl::read_write};\n";
+
+      out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << n;
+      out << "), [=](cl::sycl::id<1> id){\n";
+      out << SP*5 << "acc_tensor_" << fNY << "[id] *= acc_tensor_" << fNVar << "[id] * acc_tensor_" << fNScale << "[id];\n";
+      out << SP*4 << "});\n";
+      out << SP*3 << "});\n";
+
+      // blas axpy Y = Bbias + Y = (X - Bmean) * Scale * Var + Bbias
+      out << SP*3 << OpName << "_alpha = 1;\n";
+
+      if (gpu_blas == MKLBLAS) {
+         out << SP*3 << axpy << OpName << "_N, " << OpName << "_alpha, ";
+         out << "buf_tensor_" << fNB << ", " << OpName << "_incx, buf_tensor_" << fNY << ", " << OpName << "_incy);\n\n";
+      }
+      else {
+         out << SP*3 << axpy << OpName << "_N, " << OpName << "_alpha, ";
+         out << "blas::BufferIterator(buf_tensor_" << fNB << "), " << OpName << "_incx, blas::BufferIterator(buf_tensor_" << fNY << "), " << OpName << "_incy);\n\n";
+      }
+      
+      return out.str();
+   }
+
    std::vector<std::string> GetBlasRoutines() { return { std::string("Copy"), std::string("Axpy") }; }
 };
 

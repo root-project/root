@@ -121,6 +121,9 @@ template <typename T> class ROperator_RNN final : public ROperator {
     */
    std::string Generate(std::string OpName);
 
+   std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal);
+   
    // generate code for Session data members (e.g. internal vectors)
    std::string GenerateSessionMembersCode(std::string opName);
 

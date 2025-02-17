@@ -331,6 +331,10 @@ public:
       return out.str();
    }
 
+   std::string GenerateGPU(std::string OpName) {
+      return std::string();
+   }
+
    std::vector<std::string> GetBlasRoutines() override {
       return { std::string("Gemm") };
    }

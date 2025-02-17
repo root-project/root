@@ -475,6 +475,246 @@ public:
 
       return out.str();
    }
+
+   std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
+      OpName = "op_" + OpName;
+
+      if (fShapeX.empty() || fShapeY.empty()) {
+         throw std::runtime_error("TMVA SOFIE Pool Op called to Generate without being initialized first");
+      }
+
+      std::stringstream out;
+
+      out << "\n" << SP*3 << "//----  operator " << Name() << "  " << OpName << "\n";
+      out << SP*3 << "{\n"; // create a new scope to avoid name clash
+
+      assert(fShapeX[0] == fShapeY[0]);
+      assert(fShapeX[1] == fShapeY[1]);
+      assert(fAttrPads.size() == 6);
+      assert(fAttrKernelShape.size() == 3);
+      // find lower bounds of filtered area
+      int hmin = - fAttrPads[0];   // minimum lower bound value of filter area
+      int hmax = fShapeX[2] + fAttrPads[1] - fAttrKernelShape[0] +1;  // maximum lower bound value + 1
+      int wmin,wmax,dmin,dmax;
+
+      if(fDim >= 2){
+         wmin = - fAttrPads[2];   // minimum lower bound value of filter area
+         wmax = fShapeX[3] + fAttrPads[3] - fAttrKernelShape[1] +1;  // maximum lower bound value + 1
+      }
+      else{
+         wmin=1;
+         wmax=1;
+      }
+      if(fDim == 3){
+         dmin = - fAttrPads[4];   // minimum lower bound value of filter area
+         dmax = fShapeX[4] + fAttrPads[5] - fAttrKernelShape[2] +1;  // maximum lower bound value + 1
+      }
+      else{
+         dmin=1;
+         dmax=1;
+      }
+
+      out << SP*4 << "constexpr int hsize = " << fShapeX[2] << ";\n";
+      out << SP*4 << "constexpr int hmin = " << hmin << ";\n";
+      out << SP*4 << "constexpr int hmax = " << hmax << ";\n";
+      out << SP*4 << "constexpr int kh = " << fAttrKernelShape[0] << ";\n";
+      if (fDim > 1) {
+         size_t wsize = fShapeX[3];
+         out << SP*4 << "constexpr int wsize = " << wsize << ";\n";
+         out << SP*4 << "constexpr int wmin = " << wmin << ";\n";
+         out << SP*4 << "constexpr int wmax = " << wmax << ";\n";
+         out << SP*4 << "constexpr int kw = " << fAttrKernelShape[1] << ";\n";
+         if (fDim > 2) {
+            size_t dsize = fShapeX[4];
+            out << SP*4 << "constexpr int dsize = " << dsize << ";\n";
+            out << SP*4 << "constexpr int dwsize = " << dsize*wsize << ";\n"; // hstride
+            out << SP*4 << "constexpr int dmin = " << dmin << ";\n";
+            out << SP*4 << "constexpr int dmax = " << dmax << ";\n";
+            out << SP*4 << "constexpr int kd = " << fAttrKernelShape[2] << ";\n";
+         }
+      }
+
+      bool doPadding = false;
+      for ( auto & e : fAttrPads)
+         doPadding |= (e > 0);
+
+      if (fDim == 1) {
+         // loop on batches and channels
+         out << SP*4 << "size_t num_work_items = " << fShapeX[0] * fShapeX[1] * static_cast<int>(std::ceil((hmax - hmin) / float(fAttrStrides[0]))) << ";\n";
+         
+         out << SP*4 << "q.submit([&](cl::sycl::handler& cgh){\n";
+         out << SP*5 << "auto acc_tensor_" << fNX << "= cl::sycl::accessor{buf_tensor_" << fNX;
+         out << ", cgh, cl::sycl::read_only};\n";
+         out << SP*5 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
+         out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+   
+         out << SP*5 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>{num_work_items}, [=](cl::sycl::id<1> id){\n";
+         out << SP*6 << "auto tid = id;\n";
+         out << SP*6 << "int i = static_cast<int>(tid % " << static_cast<int>(std::ceil((hmax - hmin) / float(fAttrStrides[0]))) << " * " << fAttrStrides[0] << " + hmin);\n";
+         out << SP*6 << "int n = static_cast<int>(tid / " << static_cast<int>(std::ceil((hmax - hmin) / float(fAttrStrides[0]))) << ");\n";
+         out << SP*6 << "size_t inputOffset = n * " << fShapeX[2] << ";\n";
+         
+         if (fPoolMode == MaxPool) {
+            out << SP*6 << "float value = -INFINITY;\n";
+         }
+         else if (fPoolMode == AveragePool) {
+            out << SP*6 << "float value = 0;\n";
+            if (fAttrCountIncludePad == 0 && doPadding) {
+               out << SP*6 << "int nsum = 0;\n";
+            }
+            else {
+               out << SP*6 << "constexpr int nsum = kh;\n";
+            }
+         }
+
+         out << SP*6 << "for (int l = cl::sycl::max(i, 0); l < cl::sycl::min(i + kh, hsize); l++) {\n";
+         out << SP*7 << "int index = inputOffset + l;\n";
+         if (fPoolMode == MaxPool) {
+            out << SP*7 << "auto xval = acc_tensor_" << fNX << "[index];\n";
+            out << SP*7 << "value = cl::sycl::max(xval, value);\n";
+         }
+         else if (fPoolMode == AveragePool) {
+            out << SP*7 << "value += acc_tensor_" << fNX << "[index];\n";
+            if (fAttrCountIncludePad == 0 && doPadding)
+               out << SP*7 << "nsum++;\n";
+         }
+         out << SP*6 << "}\n";
+
+         if (fPoolMode == AveragePool) {
+            out << SP*6 << "value /= float(nsum);\n";
+         }
+
+         out << SP*6 << "acc_tensor_" << fNY << "[id] = value;\n";
+
+         out << SP*5 << "});\n";
+         out << SP*4 << "});\n";
+      }
+      else if (fDim == 2) {
+         out << SP*4 << "auto num_work_items = cl::sycl::range{" << fShapeX[0] * fShapeX[1] * static_cast<int>(std::ceil((hmax - hmin ) / float(fAttrStrides[0])));
+         out << ", " << static_cast<int>(std::ceil((wmax - wmin) / float(fAttrStrides[1]))) << "};\n";
+   
+         out << SP*4 << "q.submit([&](cl::sycl::handler& cgh) {\n";
+         out << SP*5 << "auto acc_tensor_" << fNX << "= cl::sycl::accessor{buf_tensor_" << fNX;
+         out << ", cgh, cl::sycl::read_only};\n";
+         out << SP*5 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
+         out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+
+         out << SP*5 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<2>{num_work_items}, [=](cl::sycl::id<2> id){\n";
+         out << SP*6 << "auto tid_0 = id[0];\n";
+         out << SP*6 << "auto tid_1 = id[1];\n";
+         out << SP*6 << "int i = static_cast<int>(tid_0 % " << static_cast<int>(std::ceil((hmax - hmin) / float(fAttrStrides[0]))) << " * " << fAttrStrides[0] << " + hmin);\n";
+         out << SP*6 << "int j = static_cast<int>(tid_1 * " << fAttrStrides[1] << " + wmin);\n";
+         out << SP*6 << "int n = static_cast<int>(tid_0 /" << static_cast<int>(std::ceil((hmax - hmin) / float(fAttrStrides[0]))) << ");\n";
+         out << SP*6 << "size_t inputOffset = n * " << fShapeX[2] * fShapeX[3] << ";\n";
+         
+         if (fPoolMode == MaxPool) {
+            out << SP*6 << "float value = -INFINITY;\n";
+         }
+         else if (fPoolMode == AveragePool) {
+            out << SP*6 << "float value = 0;\n";
+            if (fAttrCountIncludePad == 0 && doPadding) {
+               out << SP*6 << "int nsum = 0;\n";
+            }
+            else {
+               out << SP*6 << "constexpr int nsum = kh * kw;\n";
+            }
+         }
+
+         out << SP*6 << "for (int l = cl::sycl::max(i, 0); l < cl::sycl::min(i + kh, hsize); l++) {\n";
+         out << SP*7 << "for (int m = cl::sycl::max(j, 0); m < cl::sycl::min(j + kw, wsize); m++) {\n";
+         out << SP*8 << "int index = inputOffset + l*wsize + m;\n";
+
+         if (fPoolMode == MaxPool) {
+            out << SP*8 << "auto xval = acc_tensor_" << fNX << "[index];\n";
+            out << SP*8 << "value = cl::sycl::max(xval, value);\n";
+         }
+         else if (fPoolMode == AveragePool) {
+            out << SP*8 << "value += acc_tensor_" << fNX <<"[index];\n";
+            if (fAttrCountIncludePad == 0 && doPadding)
+               out << SP*8 << "nsum++;\n";
+         }
+
+         out << SP*7 << "}\n";
+         out << SP*6 << "}\n";
+
+         if (fPoolMode == AveragePool) {
+            out << SP*6 << "value /= float(nsum);\n";
+         }
+
+         out << SP*6 << "acc_tensor_" << fNY << "[id[0] * (wmax - wmin) + id[1] * " << fAttrStrides[1] << "] = value;\n";
+         out << SP*5 << "});\n";
+         out << SP*4 << "});\n";
+      }
+      else if (fDim==3) {
+         out << SP*4 << "auto num_work_items = cl::sycl::range{" << fShapeX[0] * fShapeX[1] * (hmax - hmin) / fAttrStrides[0] << ", ";
+         out << static_cast<int>(std::ceil((wmax - wmin) / float(fAttrStrides[1]))) << ", ";
+         out << static_cast<int>(std::ceil((dmax - dmin) / float(fAttrStrides[2]))) << "};\n";
+
+         out << SP*4 << "q.submit([&](cl::sycl::handler& cgh) {\n";
+         out << SP*5 << "auto acc_tensor_" << fNX << "= cl::sycl::accessor{buf_tensor_" << fNX;
+         out << ", cgh, cl::sycl::read_only};\n";
+         out << SP*5 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
+         out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+
+         out << SP*5 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<3>{num_work_items}, [=](cl::sycl::id<3> id){\n";
+         out << SP*6 << "auto tid_0 = id[0];\n";
+         out << SP*6 << "auto tid_1 = id[1];\n";
+         out << SP*6 << "auto tid_2 = id[2];\n";
+         out << SP*6 << "int i = static_cast<int>(tid_0 % " << static_cast<int>(std::ceil((hmax - hmin) / float(fAttrStrides[0])))<< " * " << fAttrStrides[0] << " + hmin);\n";
+         out << SP*6 << "int j = static_cast<int>(tid_1 * " << fAttrStrides[1] << " + wmin);\n";
+         out << SP*6 << "int k = static_cast<int>(tid_2 * " << fAttrStrides[2] << " + dmin);\n";
+         out << SP*6 << "int n = static_cast<int>(tid_0 /" << static_cast<int>(std::ceil((hmax - hmin) / float(fAttrStrides[0]))) << ");\n";
+         out << SP*6 << "size_t inputOffset = n * " << fShapeX[2] * fShapeX[3] * fShapeX[4] << ";\n";
+         
+         if (fPoolMode == MaxPool) {
+            out << SP*6 << "float value = -INFINITY;\n";
+         }
+         else if (fPoolMode == AveragePool) {
+            out << SP*6 << "float value = 0;\n";
+            if (fAttrCountIncludePad == 0 && doPadding) {
+               out << SP*6 << "int nsum = 0;\n";
+            }
+            else {
+               out << SP*6 << "constexpr int nsum = kh * kw * kd;\n";
+            }
+         }
+
+         out << SP*6 << "for (int l = cl::sycl::max(i, 0); l < cl::sycl::min(i + kh, hsize); l++) {\n";
+         out << SP*7 << "for (int m = cl::sycl::max(j, 0); m < cl::sycl::min(j + kw, wsize); m++) {\n";
+         out << SP*8 << "for (int p = cl::sycl::max(k, 0); p < cl::sycl::min(k + kd, dsize); p++) {\n";
+         out << SP*9 << "int index = inputOffset + l*dwsize + m*dsize + p;\n";
+
+         if (fPoolMode == MaxPool) {
+            out << SP*9 << "auto xval = acc_tensor_" << fNX << "[index];\n";
+            out << SP*9 << "value = cl::sycl::max(xval, value);\n";
+         }
+         else if (fPoolMode == AveragePool) {
+            out << SP*9 << "value += acc_tensor_" << fNX <<"[index];\n";
+            if (fAttrCountIncludePad == 0 && doPadding)
+               out << SP*9 << "nsum++;\n";
+         }
+
+         out << SP*8 << "}\n";
+         out << SP*7 << "}\n";
+         out << SP*6 << "}\n";
+
+         if (fPoolMode == AveragePool) {
+            out << SP*6 << "value /= float(nsum);\n";
+         }
+
+         out << SP*6 << "acc_tensor_" << fNY << "[id[0] * (wmax - wmin) * (dmax - dmin) + id[1] * (dmax - dmin) + id[2]] = value;\n";
+         
+       
+         out << SP*5 << "});\n";
+         out << SP*4 << "});\n";
+      }
+
+      out << SP << "}\n";
+
+      return out.str();
+   }
+
 };
 
 } // namespace SOFIE

@@ -123,7 +123,10 @@ template <typename T> class ROperator_GRU final : public ROperator {
     * \param OpName name of the operator
     */
    std::string Generate(std::string /*OpName*/);
-
+  
+   std::string GenerateGPU(std::string, std::string gemm, std::string copy, 
+   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal);
+   
    /*! \brief Generate the code for the Session internal data vectors
     *
     * \param opName name of the operator
