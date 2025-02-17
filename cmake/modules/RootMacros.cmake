@@ -319,7 +319,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
        endforeach()
     endif()
 
-    # if (cxxmodules OR runtime_cxxmodules)
     # Comments from Vassil:
     # FIXME: We prepend ROOTSYS/include because if we have built a module
     # and try to resolve the 'same' header from a different location we will
@@ -335,7 +334,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/externals")
     list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/builtins")
     list(INSERT incdirs 0 ${CMAKE_BINARY_DIR}/include)
-    # endif()
 
     # this instruct rootcling do not store such paths in dictionary
     set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/ginclude ${CMAKE_BINARY_DIR}/externals ${CMAKE_BINARY_DIR}/builtins)
