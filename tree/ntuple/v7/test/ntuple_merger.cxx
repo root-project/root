@@ -834,11 +834,20 @@ static bool VerifyPageCompression(const std::string_view fileName, std::uint32_t
    sealedPage.SetBuffer(buffer.get());
    source->LoadSealedPage(0, {0, 0}, sealedPage);
 
-   // size_t uncompSize = sealedPage.GetNElements() * colElement->GetSize();
    std::uint32_t compAlgo =
       R__getCompressionAlgorithm((const unsigned char *)sealedPage.GetBuffer(), sealedPage.GetDataSize());
    if (compAlgo == ROOT::RCompressionSetting::EAlgorithm::kUndefined)
       compAlgo = 0;
+   if (compAlgo == 0) {
+      // This page might be uncompressed because compressing it wouldn't have saved space: check if that's the case.
+      const auto nbytesComp =
+         RNTupleCompressor::Zip(sealedPage.GetBuffer(), sealedPage.GetDataSize(), expectedComp, buffer.get());
+      if (nbytesComp == sealedPage.GetDataSize()) {
+         // Yep, the page was uncompressible. Accept that and return true.
+         return true;
+      }
+      // Not good, the page should have been compressed! Fall through and follow the usual error flow.
+   }
    if (compAlgo != (expectedComp / 100)) {
       std::cerr << "Actual compression is wrong: " << compAlgo << " instead of " << (expectedComp / 100) << "\n";
       ok = false;
