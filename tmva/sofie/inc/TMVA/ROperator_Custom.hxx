@@ -85,7 +85,7 @@ public:
       }
 
       for(long unsigned int i = 0; i<fOutputNames.size(); ++i){
-        args+="std::span<float>(tensor_"+std::string(fOutputNames[i])+", "+ConvertShapeToLength(fOutputShapes[i])+"),";
+        args+="std::span<"+TensorType<T>::Name()+">(tensor_"+std::string(fOutputNames[i])+", "+ConvertShapeToLength(fOutputShapes[i])+"),";
       }
       args.pop_back();
       out << SP << fOpName<<"::Compute("+args+");\n";
