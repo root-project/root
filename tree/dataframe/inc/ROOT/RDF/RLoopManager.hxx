@@ -29,6 +29,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <any>
 
 // forward declarations
 class TTree;
@@ -192,6 +193,10 @@ class RLoopManager : public RNodeBase {
    std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RVariationsWithReaders>>>
       fUniqueVariationsWithReaders;
 
+   /// A wrapped reference to a TTree dataset that can be shared by many computation graphs. Ensures lifetime
+   /// management.
+   std::any fTTreeLifeline{};
+
 public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
    RLoopManager(std::unique_ptr<TTree> tree, const ColumnNames_t &defaultBranches);
@@ -282,6 +287,8 @@ public:
    {
       return fSuppressErrorsForMissingBranches;
    }
+
+   void SetTTreeLifeline(std::any lifeline);
 };
 
 /// \brief Create an RLoopManager that reads a TChain.

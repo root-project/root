@@ -77,9 +77,20 @@ def _rdataframe(local_rdf, distributed_rdf):
     """
 
     def rdataframe(*args, **kwargs):
+        import ROOT
+        from libROOTPythonizations import PyObjRefCounterAsStdAny
+
         if kwargs.get("executor", None) is not None:
-            return distributed_rdf(*args, **kwargs)
+            rdf = distributed_rdf(*args, **kwargs)
+            rnode = ROOT.RDF.AsRNode(rdf._headnode.rdf_node)
         else:
-            return local_rdf(*args, **kwargs)
+            rdf = local_rdf(*args, **kwargs)
+            rnode = ROOT.RDF.AsRNode(rdf)
+
+        if args and isinstance(args[0], ROOT.TTree):
+            ROOT.Internal.RDF.SetTTreeLifeline(
+                rnode, PyObjRefCounterAsStdAny(args[0]))
+
+        return rdf
 
     return rdataframe
