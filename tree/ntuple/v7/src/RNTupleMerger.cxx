@@ -913,7 +913,7 @@ GatherColumnInfos(const RDescriptorsComparison &descCmp, const RNTupleDescriptor
    return res;
 }
 
-RNTupleMerger::RNTupleMerger(std::unique_ptr<RPageSink> destination, std::unique_ptr<RNTupleModel> model)
+RNTupleMerger::RNTupleMerger(std::unique_ptr<RPagePersistentSink> destination, std::unique_ptr<RNTupleModel> model)
    // TODO(gparolini): consider using an arena allocator instead, since we know the precise lifetime
    // of the RNTuples we are going to handle (e.g. we can reset the arena at every source)
    : fDestination(std::move(destination)), fPageAlloc(std::make_unique<RPageAllocatorHeap>()), fModel(std::move(model))
@@ -926,7 +926,10 @@ RNTupleMerger::RNTupleMerger(std::unique_ptr<RPageSink> destination, std::unique
 #endif
 }
 
-RNTupleMerger::RNTupleMerger(std::unique_ptr<RPageSink> destination) : RNTupleMerger(std::move(destination), nullptr) {}
+RNTupleMerger::RNTupleMerger(std::unique_ptr<RPagePersistentSink> destination)
+   : RNTupleMerger(std::move(destination), nullptr)
+{
+}
 
 ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const RNTupleMergeOptions &mergeOptsIn)
 {
