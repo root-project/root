@@ -4,6 +4,8 @@
 #include "TTree.h"
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
+#include "ROOT/TTreeReaderValueFast.hxx"
+#include "TNtuple.h"
 
 #include "gtest/gtest.h"
 
@@ -172,4 +174,21 @@ TEST(TTreeReaderRegressions, IndexedFriend)
    }
 
    gSystem->Unlink(fname);
+}
+
+// ROOT-8842
+TEST(TTreeReaderRegressions, ValueFastTuple)
+{
+    TNtuple tree("tuple", "ROOT-8842", "px:py:pz:energy");
+    for(auto i=0; i<1000000; ++i)
+        tree.Fill(i,i+1,i+2,i+3);
+    ROOT::Experimental::TTreeReaderFast reader(&tree);
+    ROOT::Experimental::TTreeReaderValueFast<float> px(reader, "px");
+    ROOT::Experimental::TTreeReaderValueFast<float> py(reader, "py");
+    ROOT::Experimental::TTreeReaderValueFast<float> pz(reader, "pz");
+    double total = 0.0;
+    // reader.SetEntry(0); If I uncomment this, the crash disappears
+    for (auto it = reader.begin();  it != reader.end();  ++it)
+        total += sqrt((*px)*(*px) + (*py)*(*py) + (*pz)*(*pz));
+    EXPECT_EQ(total, 8.6602627e+11);
 }
