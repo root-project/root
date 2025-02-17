@@ -1324,8 +1324,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
    const auto nExtraTypeInfos = desc.GetNExtraTypeInfos();
    const auto &onDiskFields = context.GetOnDiskFieldList();
    R__ASSERT(onDiskFields.size() >= fieldListOffset);
-   std::span<const ROOT::DescriptorId_t> fieldList{onDiskFields.data() + fieldListOffset,
-                                                   onDiskFields.size() - fieldListOffset};
+   std::span<const ROOT::DescriptorId_t> fieldList{onDiskFields.data() + fieldListOffset, nFields};
 
    auto frame = pos;
    pos += SerializeListFramePreamble(nFields, *where);
