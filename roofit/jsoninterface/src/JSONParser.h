@@ -42,7 +42,7 @@ public:
       Node(TJSONTree *t, Impl &other);
       Node(TJSONTree *t);
       Node(const Node &other);
-      virtual ~Node() = default;
+      virtual ~Node();
       Node &operator<<(std::string const &s) override;
       Node &operator<<(int i) override;
       Node &operator<<(double d) override;

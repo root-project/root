@@ -119,6 +119,8 @@ TJSONTree::Node::Node(TJSONTree *t, Impl &other)
 
 TJSONTree::Node::Node(const Node &other) : Node(other.tree, *other.node) {}
 
+TJSONTree::Node::~Node() = default;
+
 // TJSONNode interface
 
 void TJSONTree::Node::writeJSON(std::ostream &os) const
