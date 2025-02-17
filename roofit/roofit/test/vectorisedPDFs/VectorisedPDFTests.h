@@ -14,6 +14,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+#include "RooAbsPdf.h"
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 #include "RooDataSet.h"
