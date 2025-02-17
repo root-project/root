@@ -160,5 +160,33 @@ TEST(TFileMerger, ImportBranches)
    ASSERT_TRUE(a0tree.FindBranch("a") != nullptr);
    EXPECT_EQ(a0tree.FindBranch("a")->GetEntries(),2);
    ASSERT_TRUE(a0tree.FindBranch("b") != nullptr);
-   EXPECT_EQ(a0tree.FindBranch("b")->GetEntries(),2);  
+   EXPECT_EQ(a0tree.FindBranch("b")->GetEntries(),2);
+
+   // Case 4 - this 1 entry (3 branch) + 1 entry (1 branch) + (0 entry / 1 branch)
+   TTree abctree("abctree", "abctitle");
+   abctree.Branch("a", &value);
+   abctree.Branch("b", &value);
+   abctree.Branch("c", &value);
+   value = 11;
+   abctree.Fill();
+   TTree ctree("ctree", "ctitle");
+   ctree.Branch("c", &value);
+   value = 42;
+   ctree.Fill();
+   TTree c0tree("c0tree", "c0title");
+   c0tree.Branch("c", &value);
+   std::unique_ptr<TFile> file4(TFile::Open("e4716.root", "RECREATE"));
+   TFileMergeInfo info4(file4.get());
+   info4.fOptions += " ImportBranches";
+   treelist.Clear();
+   treelist.Add(&ctree);
+   treelist.Add(&c0tree);
+   abctree.Merge(&treelist, &info4);
+   file4->Write();
+   ASSERT_TRUE(abctree.FindBranch("a") != nullptr);
+   ASSERT_TRUE(abctree.FindBranch("b") != nullptr);
+   ASSERT_TRUE(abctree.FindBranch("c") != nullptr);
+   EXPECT_EQ(abctree.FindBranch("a")->GetEntries(),2);
+   EXPECT_EQ(abctree.FindBranch("b")->GetEntries(),2);
+   EXPECT_EQ(abctree.FindBranch("c")->GetEntries(),2);
 }
