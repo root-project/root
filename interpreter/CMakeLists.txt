@@ -209,6 +209,11 @@ if(builtin_llvm)
 
   set(LLVM_ENABLE_PROJECTS "clang" CACHE STRING "")
 
+  # Always build LLVM with C++17. It is not necessary to compile with the same
+  # C++ standard as the rest of ROOT and sometimes it doesn't even work.
+  set(_cxx_standard ${CMAKE_CXX_STANDARD})
+  set(CMAKE_CXX_STANDARD 17)
+
   #---Reduce log level to suppress STATUS messages from LLVM
   if(NOT DEFINED CMAKE_MESSAGE_LOG_LEVEL)
     set(CMAKE_MESSAGE_LOG_LEVEL "NOTICE")
@@ -225,6 +230,8 @@ if(builtin_llvm)
   if(DEFINED _unset_log_level)
     unset(CMAKE_MESSAGE_LOG_LEVEL)
   endif()
+
+  set(CMAKE_CXX_STANDARD ${_cxx_standard})
 
   set(LLVM_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/include
     ${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm/include
@@ -372,7 +379,14 @@ else()
     # Disable linking against shared LLVM
     set(LLVM_LINK_LLVM_DYLIB OFF)
 
+    # Always build LLVM with C++17. It is not necessary to compile with the same
+    # C++ standard as the rest of ROOT and sometimes it doesn't even work.
+    set(_cxx_standard ${CMAKE_CXX_STANDARD})
+    set(CMAKE_CXX_STANDARD 17)
+
     add_subdirectory(llvm-project/clang EXCLUDE_FROM_ALL)
+
+    set(CMAKE_CXX_STANDARD ${_cxx_standard})
   endif(builtin_clang)
 
   set( CLANG_BUILT_STANDALONE 1 )
