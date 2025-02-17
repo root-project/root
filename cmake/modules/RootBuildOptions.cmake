@@ -409,11 +409,6 @@ foreach(opt minuit2_omp minuit2_mpi)
   endif()
 endforeach()
 
-#---Replaced options--------------------------------------------------------------------------
-if(python)
-  message(STATUS ">>> INFO: 'python' option was removed. Instead, please check, that it was enabled a 'pyroot' option (by default it is ON).")
-endif()
-
 #---Avoid creating dependencies to 'non-standard' header files -------------------------------
 include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
 
