@@ -16,6 +16,7 @@ ABC describing GUI independent browser implementation protocol.
 */
 
 #include "TBrowserImp.h"
+#include "TBrowser.h"
 
 ClassImp(TBrowserImp);
 
@@ -41,4 +42,13 @@ TBrowserImp::TBrowserImp(TBrowser *, const char *, UInt_t, UInt_t, Option_t *) :
 TBrowserImp::TBrowserImp(TBrowser *, const char *, Int_t, Int_t, UInt_t, UInt_t, Option_t *)
    : fBrowser(nullptr), fShowCycles(kFALSE)
 {
+}
+
+///////////////////////////////////////////////////////////////////
+/// Destructor
+
+TBrowserImp::~TBrowserImp()
+{
+   if (fBrowser && fBrowser->GetBrowserImp() == this)
+      fBrowser->SetBrowserImp(nullptr);
 }
