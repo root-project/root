@@ -12,6 +12,7 @@
 #define ROOT_RLOOPMANAGER
 
 #include "ROOT/InternalTreeUtils.hxx" // RNoCleanupNotifier
+#include "ROOT/RDataSource.hxx"
 #include "ROOT/RDF/RColumnReaderBase.hxx"
 #include "ROOT/RDF/RDatasetSpec.hxx"
 #include "ROOT/RDF/RNodeBase.hxx"
@@ -114,7 +115,15 @@ using ROOT::RDF::RDataSource;
 /// This class is responsible of running the event loop.
 class RLoopManager : public RNodeBase {
    using ColumnNames_t = std::vector<std::string>;
-   enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
+   enum class ELoopType {
+      kInvalid,
+      kROOTFiles,
+      kROOTFilesMT,
+      kNoFiles,
+      kNoFilesMT,
+      kDataSource,
+      kDataSourceMT
+   };
 
    friend struct RCallCleanUpTask;
 
@@ -144,8 +153,9 @@ class RLoopManager : public RNodeBase {
    std::pair<ULong64_t, ULong64_t> fEmptyEntryRange{};
    unsigned int fNSlots{1};
    bool fMustRunNamedFilters{true};
-   ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
-   std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
+   /// The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
+   ELoopType fLoopType{ELoopType::kInvalid};
+   std::unique_ptr<RDataSource> fDataSource{}; ///< Owning pointer to a data-source object. Null if no data-source
    /// Registered callbacks to be executed every N events.
    /// The registration happens via the RegisterCallback method.
    std::vector<RDFInternal::RCallback> fCallbacksEveryNEvents;
@@ -198,6 +208,7 @@ class RLoopManager : public RNodeBase {
    std::any fTTreeLifeline{};
 
 public:
+   RLoopManager(const ColumnNames_t &defaultColumns = {});
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
    RLoopManager(std::unique_ptr<TTree> tree, const ColumnNames_t &defaultBranches);
    RLoopManager(ULong64_t nEmptyEntries);
@@ -289,6 +300,8 @@ public:
    }
 
    void SetTTreeLifeline(std::any lifeline);
+
+   void SetDataSource(std::unique_ptr<ROOT::RDF::RDataSource> dataSource);
 };
 
 /// \brief Create an RLoopManager that reads a TChain.
