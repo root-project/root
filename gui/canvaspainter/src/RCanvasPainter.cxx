@@ -233,7 +233,7 @@ RCanvasPainter::~RCanvasPainter()
    CancelCommands();
    CancelUpdates();
    if (fWindow)
-      fWindow->CloseConnections();
+      fWindow->Reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
