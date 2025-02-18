@@ -194,7 +194,15 @@ public:
          }
       }
 
-      ROOT::Experimental::Internal::CallConnectPageSourceOnField(*fField, source);
+      try {
+         ROOT::Experimental::Internal::CallConnectPageSourceOnField(*fField, source);
+      } catch (const ROOT::RException &err) {
+         auto onDiskType = source.GetSharedDescriptorGuard()->GetFieldDescriptor(fField->GetOnDiskId()).GetTypeName();
+         std::string msg = "RNTupleDS: invalid type \"" + fField->GetTypeName() + "\" for column \"" +
+                           fDataSource->fFieldId2QualifiedName[fField->GetOnDiskId()] + "\" with on-disk type \"" +
+                           onDiskType + "\"";
+         throw std::runtime_error(msg);
+      }
 
       if (fValuePtr) {
          // When the reader reconnects to a new file, the fValuePtr is already set
