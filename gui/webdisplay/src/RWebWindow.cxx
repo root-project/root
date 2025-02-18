@@ -1838,6 +1838,22 @@ void RWebWindow::SetCallBacks(WebWindowConnectCallback_t conn, WebWindowDataCall
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// Reset window call-backs and close connections
+/// Should be invoked in widget destructor to simplify cleanup process
+
+void RWebWindow::Reset()
+{
+   CloseConnections();
+
+   fConnCallback = nullptr;
+   fDataCallback = nullptr;
+   fDisconnCallback = nullptr;
+
+   if (fWSHandler)
+      fWSHandler->SetDisabled();
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Waits until provided check function or lambdas returns non-zero value
 /// Check function has following signature: int func(double spent_tm)
 /// Waiting will be continued, if function returns zero.
