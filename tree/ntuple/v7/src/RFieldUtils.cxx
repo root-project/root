@@ -5,7 +5,7 @@
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
 
-#include "RFieldUtils.hxx"
+#include <ROOT/RFieldUtils.hxx>
 
 #include <ROOT/RField.hxx>
 #include <ROOT/RLogger.hxx>

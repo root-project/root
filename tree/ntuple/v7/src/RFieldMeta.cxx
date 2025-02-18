@@ -19,7 +19,7 @@
 
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldBase.hxx>
-#include "RFieldUtils.hxx"
+#include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RSpan.hxx>
 
