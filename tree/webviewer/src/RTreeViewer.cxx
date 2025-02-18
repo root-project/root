@@ -134,7 +134,8 @@ RTreeViewer::RTreeViewer(TTree *tree)
 
 RTreeViewer::~RTreeViewer()
 {
-
+   if (fWebWindow)
+      fWebWindow->Reset();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
