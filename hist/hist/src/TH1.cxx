@@ -6203,6 +6203,26 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// @brief Normalize a histogram to its maximum value or integral.
+/// @note Works for TH1, TH2, TH3, ...
+/// @param option `"max"`, `"width"` or `""` (default)
+/// If it contains `max`, this histogram is normalized by 1/GetMaximum()
+/// else it is normalized by `1/Integral(option)`, ie it is normalized by `1/sum`
+/// in the default case or by `1/(sum*bin_width)` if option is "width".
+/// In case the norm is zero, it raises an error.
+
+void TH1::Normalize(Option_t *option)
+{
+   const Double_t norm = TString(option).Contains("max", TString::kIgnoreCase) ? GetMaximum() : this->Integral(option);
+
+   if (norm == 0) {
+      Error("Normalize", "Attempt to normalize histogram with zero integral");
+   } else {
+      Scale(1.0 / norm, option);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Control routine to paint any kind of histograms.
 ///
 /// This function is automatically called by TCanvas::Update.
