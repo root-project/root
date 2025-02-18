@@ -20,7 +20,7 @@ TMVA.PyMethodBase.PyInitialize()
 reader = TMVA.Reader("Color:!Silent")
 
 # Load data
-data = TFile.Open(gROOT.GetTutorialDir() + "/machine_learning/data/tmva_class_example.root")
+data = TFile.Open(str(gROOT.GetTutorialDir()) + "/machine_learning/data/tmva_class_example.root")
 signal = data.Get('TreeS')
 background = data.Get('TreeB')
 

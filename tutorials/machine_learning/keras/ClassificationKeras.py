@@ -10,7 +10,7 @@
 # \date 2017
 # \author TMVA Team
 
-from ROOT import TMVA, TFile, TCut
+from ROOT import TMVA, TFile, TCut, gROOT
 from subprocess import call
 from os.path import isfile
 
@@ -37,7 +37,7 @@ def create_model():
 
 
 def run():
-    with TFile.Open('TMVA_Classification_Keras.root', 'RECREATE') as output, TFile.Open(gROOT.GetTutorialDir() + '/machine_learning/data/tmva_class_example.root') as data:
+    with TFile.Open('TMVA_Classification_Keras.root', 'RECREATE') as output, TFile.Open(str(gROOT.GetTutorialDir()) + '/machine_learning/data/tmva_class_example.root') as data:
         factory = TMVA.Factory('TMVAClassification', output,
                                '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=Classification')
 
