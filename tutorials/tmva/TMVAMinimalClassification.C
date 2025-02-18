@@ -6,9 +6,10 @@
 ///
 /// This is intended as a simple foundation to build on. It assumes you are
 /// familiar with TMVA already. As such concepts like the Factory, the DataLoader
-/// and others are not explained. For descriptions and tutorials use the TMVA
-/// User's Guide (https://root.cern/root-user-guides-and-manuals under TMVA)
-/// or the more detailed examples provided with TMVA e.g. TMVAClassification.C.
+/// and others are not explained. For descriptions and tutorials use the TMVA online manual
+/// https://root.cern/manual/tmva/ or the more detailed examples provided with TMVA
+///  e.g. TMVAClassification.C. or the TMVA Users Guide
+/// https://github.com/root-project/root/blob/master/documentation/tmva/UsersGuide/TMVAUsersGuide.pdf
 ///
 /// Sets up a minimal binary classification example with two slightly overlapping
 /// 2-D gaussian distributions and trains a BDT classifier to discriminate the
