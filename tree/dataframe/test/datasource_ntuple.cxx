@@ -339,8 +339,9 @@ TEST_F(RNTupleDSTest, AlternativeColumnTypes)
          .Take<std::size_t, ROOT::RVec<std::size_t>>("firstJet")
          .GetValue();
       FAIL() << "specifying templated actions with incompatible column types should throw";
-   } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("No on-disk field information for `jets._1`"));
+   } catch (const std::runtime_error &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("RNTupleDS: invalid type \"std::pair<float,float>\" for column "
+                                                 "\"jets\" with on-disk type \"std::vector<float>\""));
    }
 
    try {
@@ -350,9 +351,9 @@ TEST_F(RNTupleDSTest, AlternativeColumnTypes)
          .Take<std::size_t, ROOT::RVec<std::size_t>>("nJets")
          .GetValue();
       FAIL() << "specifying templated actions with incompatible column types should throw";
-   } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("On-disk column types {`SplitReal32`} for field `jets._0` cannot be "
-                                                 "matched to its in-memory type `std::uint64_t`"));
+   } catch (const std::runtime_error &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("RNTupleDS: invalid type \"std::vector<std::uint64_t>\" for column "
+                                                 "\"jets\" with on-disk type \"std::vector<float>\""));
    }
 }
 
