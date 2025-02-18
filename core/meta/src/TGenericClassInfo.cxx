@@ -247,6 +247,13 @@ namespace Internal {
       if (!gROOT)
          ::Fatal("TClass::TClass", "ROOT system not initialized");
 
+      if (gROOT->TestBit(kInvalidObject)) {
+         if (gDebug > 1)
+            ::Warning("TClass::TClass", "ROOT system is being torn down");
+         // We are at the end of time, let's do the minimum, silently.
+         return new TClass(GetClassName(), true);
+      }
+
       if (!fClass && fAction) {
          R__LOCKGUARD(gInterpreterMutex);
          // Check again, while we waited for the lock, something else might
