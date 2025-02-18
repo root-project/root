@@ -270,7 +270,7 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
          output << std::setw(15) << Internal::RColumnElementBase::GetColumnTypeName(colType) << " |" << std::setw(8)
                 << typeInfo.count << " |" << std::setw(12) << typeInfo.nElems << " |" << std::setw(16)
                 << typeInfo.compressedSize << " |" << std::setw(18) << typeInfo.uncompressedSize << " |" << std::fixed
-                << std::setprecision(3) << std::setw(17) << typeInfo.GetCompressionRatio() << " |" << std::setw(6)
+                << std::setprecision(3) << std::setw(19) << typeInfo.GetCompressionRatio() << " |" << std::setw(6)
                 << typeInfo.nPages << " " << std::endl;
       }
       break;
