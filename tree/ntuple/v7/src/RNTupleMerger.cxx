@@ -545,15 +545,17 @@ static void ExtendDestinationModel(std::span<const RFieldDescriptor *> newFields
    dstModel.Unfreeze();
    RNTupleModelChangeset changeset{dstModel};
 
-   std::string msg = "destination doesn't contain field";
-   if (newFields.size() > 1)
-      msg += 's';
-   msg += ' ';
-   msg += std::accumulate(newFields.begin(), newFields.end(), std::string{}, [](const auto &acc, const auto *field) {
-      return acc + (acc.length() ? ", " : "") + '`' + field->GetFieldName() + '`';
-   });
-   Info("RNTuple::Merge", "%s: adding %s to the destination model (entry #%" PRIu64 ").", msg.c_str(),
-        (newFields.size() > 1 ? "them" : "it"), mergeData.fNumDstEntries);
+   if (mergeData.fMergeOpts.fExtraVerbose) {
+      std::string msg = "destination doesn't contain field";
+      if (newFields.size() > 1)
+         msg += 's';
+      msg += ' ';
+      msg += std::accumulate(newFields.begin(), newFields.end(), std::string{}, [](const auto &acc, const auto *field) {
+         return acc + (acc.length() ? ", " : "") + '`' + field->GetFieldName() + '`';
+      });
+      Info("RNTuple::Merge", "%s: adding %s to the destination model (entry #%" PRIu64 ").", msg.c_str(),
+           (newFields.size() > 1 ? "them" : "it"), mergeData.fNumDstEntries);
+   }
 
    changeset.fAddedFields.reserve(newFields.size());
    // First add all non-projected fields...
