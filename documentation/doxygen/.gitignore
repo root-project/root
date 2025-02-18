@@ -3,3 +3,11 @@ NumberOfImages.dat
 filter
 htmlfooter.html
 stdout.dat
+*.eps
+*.pcm
+*.jpg
+*.root
+*.csv
+*.png
+*.pdf
+*.dot
