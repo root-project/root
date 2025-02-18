@@ -215,9 +215,11 @@ TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
 
 TWebCanvas::~TWebCanvas()
 {
+   if(fWindow)
+      fWindow->Reset();
+
    delete fTimer;
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Add font to static list of fonts supported by the canvas
