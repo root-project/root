@@ -704,17 +704,24 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, ROOT::Descript
 
       // Each column range potentially has a distinct compression settings
       const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).fCompressionSettings.value();
-      const bool needsCompressionChange =
-         colRangeCompressionSettings != mergeData.fMergeOpts.fCompressionSettings.value();
+      // If either the compression or the encoding of the source doesn't match that of the destination, we need
+      // to reseal the page. Otherwise, if both match, we can fast merge.
+      const bool needsResealing =
+         colRangeCompressionSettings != mergeData.fMergeOpts.fCompressionSettings.value() ||
+         srcColElement->GetIdentifier().fOnDiskType != dstColElement->GetIdentifier().fOnDiskType;
 
-      if (needsCompressionChange && mergeData.fMergeOpts.fExtraVerbose)
-         Info("RNTuple::Merge", "Column %s: changing source compression from %d to %d", column.fColumnName.c_str(),
-              colRangeCompressionSettings, mergeData.fMergeOpts.fCompressionSettings.value());
+      if (needsResealing && mergeData.fMergeOpts.fExtraVerbose) {
+         Info("RNTuple::Merge", "Resealing column %s: { compression: %d => %d, onDiskType: %s => %s }",
+              column.fColumnName.c_str(), colRangeCompressionSettings,
+              mergeData.fMergeOpts.fCompressionSettings.value(),
+              RColumnElementBase::GetColumnTypeName(srcColElement->GetIdentifier().fOnDiskType),
+              RColumnElementBase::GetColumnTypeName(dstColElement->GetIdentifier().fOnDiskType));
+      }
 
       size_t pageBufferBaseIdx = sealedPageData.fBuffers.size();
       // If the column range already has the right compression we don't need to allocate any new buffer, so we don't
       // bother reserving memory for them.
-      if (needsCompressionChange)
+      if (needsResealing)
          sealedPageData.fBuffers.resize(sealedPageData.fBuffers.size() + pages.fPageInfos.size());
 
       // Synthesize zero pages for deferred columns (unless this is the first source)
@@ -743,7 +750,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, ROOT::Descript
          sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
          R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
 
-         if (needsCompressionChange) {
+         if (needsResealing) {
             const auto uncompressedSize = srcColElement->GetSize() * sealedPage.GetNElements();
             auto &buffer = sealedPageData.fBuffers[pageBufferBaseIdx + pageIdx];
             buffer = MakeUninitArray<std::uint8_t>(uncompressedSize + checksumSize);
