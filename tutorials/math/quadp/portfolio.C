@@ -293,10 +293,8 @@ void portfolio()
       f = TFile::Open(fname);
    } else if (!gSystem->AccessPathName(Form("%s/quadp/%s", TROOT::GetTutorialDir().Data(), fname))) {
       f = TFile::Open(Form("%s/quadp/%s", TROOT::GetTutorialDir().Data(), fname));
-   } else {
-      printf("accessing %s file from http://root.cern/files\n",fname);
-      f = TFile::Open(Form("http://root.cern/files/%s",fname));
    }
+   
    if (!f) return;
 
    TArrayF *data = new TArrayF[nrStocks];
