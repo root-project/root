@@ -532,10 +532,12 @@ public:
    void UpdateSchema(const RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final;
    void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
-   /// Initialize sink based on an existing descriptor and fill into the descriptor builder.
+   /// Initialize sink based on an existing descriptor and fill into the descriptor builder, optionally copying over
+   /// the descriptor's clusters to this sink's descriptor.
    /// \return The model created from the new sink's descriptor. This model should be kept alive
    /// for at least as long as the sink.
-   [[nodiscard]] std::unique_ptr<RNTupleModel> InitFromDescriptor(const RNTupleDescriptor &descriptor);
+   [[nodiscard]] std::unique_ptr<RNTupleModel>
+   InitFromDescriptor(const RNTupleDescriptor &descriptor, bool copyClusters);
 
    void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;

@@ -205,7 +205,7 @@ try {
       auto outSource = RPageSourceFile::CreateFromAnchor(*outNTuple);
       outSource->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
       auto desc = outSource->GetSharedDescriptorGuard();
-      model = destination->InitFromDescriptor(desc.GetRef());
+      model = destination->InitFromDescriptor(desc.GetRef(), true /* copyClusters */);
    }
 
    // Interface conversion
@@ -1005,16 +1005,13 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
 
    // Merge main loop
    for (RPageSource *source : sources) {
-      source->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kRaw);
+      source->Attach(RNTupleSerializer::EDescriptorDeserializeMode::kForWriting);
       auto srcDescriptor = source->GetSharedDescriptorGuard();
       mergeData.fSrcDescriptor = &srcDescriptor.GetRef();
 
       // Create sink from the input model if not initialized
       if (!fModel) {
-         auto opts = RNTupleDescriptor::RCreateModelOptions();
-         opts.SetReconstructProjections(true);
-         fModel = srcDescriptor->CreateModel(opts);
-         fDestination->Init(*fModel);
+         fModel = fDestination->InitFromDescriptor(srcDescriptor.GetRef(), false /* copyClusters */);
       }
 
       for (const auto &extraTypeInfoDesc : srcDescriptor->GetExtraTypeInfoIterable())
