@@ -71,6 +71,9 @@ RGeomViewer::RGeomViewer(TGeoManager *mgr, const std::string &volname)
 RGeomViewer::~RGeomViewer()
 {
    fDesc.RemoveSignalHandler(this);
+
+   if (fWebWindow)
+      fWebWindow->Reset();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
