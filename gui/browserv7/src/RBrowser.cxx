@@ -344,6 +344,7 @@ RBrowser::~RBrowser()
    if (fWebWindow) {
       fWebWindow->GetManager()->SetShowCallback(nullptr);
       fWebWindow->GetManager()->SetDeleteCallback(nullptr);
+      fWebWindow->Reset();
    }
 }
 
