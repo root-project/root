@@ -20,10 +20,7 @@ TMVA.PyMethodBase.PyInitialize()
 reader = TMVA.Reader("Color:!Silent")
 
 # Load data
-if not isfile('tmva_reg_example.root'):
-    call(['curl', '-L', '-O', 'http://root.cern/files/tmva_reg_example.root'])
-
-data = TFile.Open(gROOT.GetTutorialDir() + '/machine_learning/data/tmva_reg_example.root')
+data = TFile.Open(str(gROOT.GetTutorialDir()) + '/machine_learning/data/tmva_reg_example.root')
 tree = data.Get('TreeR')
 
 branches = {}

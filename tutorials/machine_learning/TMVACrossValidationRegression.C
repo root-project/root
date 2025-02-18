@@ -75,14 +75,10 @@
 #include "TMVA/CrossValidation.h"
 
 TFile * getDataFile(TString fname) {
-   TFile *input(0);
+   TFile *input(nullptr);
 
    if (!gSystem->AccessPathName(fname)) {
       input = TFile::Open(fname); // check if file in local directory exists
-   } else {
-      // if not: download from ROOT server
-      TFile::SetCacheFileDir(".");
-      input = TFile::Open("http://root.cern/files/tmva_reg_example.root", "CACHEREAD");
    }
 
    if (!input) {
@@ -104,7 +100,7 @@ int TMVACrossValidationRegression()
    TString outfileName("TMVARegCv.root");
    TFile * outputFile = TFile::Open(outfileName, "RECREATE");
 
-   TString infileName("./files/tmva_reg_example.root");
+   TString infileName = gROOT->GetTutorialDir() + "/machine_learning/data/tmva_reg_example.root";
    TFile * inputFile = getDataFile(infileName);
 
    TMVA::DataLoader *dataloader=new TMVA::DataLoader("datasetcvreg");
