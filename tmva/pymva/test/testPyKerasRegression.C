@@ -4,6 +4,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TSystem.h"
+#include "TROOT.h"
 #include "TMVA/Factory.h"
 #include "TMVA/Reader.h"
 #include "TMVA/DataLoader.h"
@@ -23,12 +24,12 @@ model.save(\"kerasModelRegression.h5\")\n";
 int testPyKerasRegression(){
    // Get data file
    std::cout << "Get test data..." << std::endl;
-   TString fname = "./tmva_reg_example.root";
-   if (gSystem->AccessPathName(fname)) {
-      // file does not exist in local directory
-      gSystem->Exec("curl -L -O http://root.cern/files/tmva_reg_example.root");
-   }
+   TString fname = gROOT->GetTutorialDir() + "/machine_learning/data/tmva_reg_example.root";
    TFile *input = TFile::Open(fname);
+   if (!input) {
+      std::cout << "ERROR: could not open data file " << fname << std::endl;
+      return 1;
+   }
 
    // Build model from python file
    std::cout << "Generate keras model..." << std::endl;

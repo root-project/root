@@ -12,7 +12,7 @@ import tensorflow as tf
 import ROOT
 
 tree_name = "sig_tree"
-file_name = "http://root.cern/files/Higgs_data.root"
+file_name = str(ROOT.gROOT.GetTutorialDir()) + "/machine_learning/data/Higgs_data.root"
 
 batch_size = 128
 chunk_size = 5_000
@@ -50,7 +50,7 @@ num_features = len(input_columns)
 
 # Define TensorFlow model
 model = tf.keras.Sequential(
-    [   
+    [
         tf.keras.layers.Input(shape=(num_features,)),
         tf.keras.layers.Dense(300, activation=tf.nn.tanh),
         tf.keras.layers.Dense(300, activation=tf.nn.tanh),
