@@ -16,6 +16,7 @@ void write_vector(int n = 10)
    for (int i = 0; i < n; ++i) {
       cl->Property(); // Force a call at each iteration to increase reproducibility of race.
       cl->Streamer(&vec, buf);
+      buf.Reset();
    }
    // std::cout << "Thread done\n";
 }
@@ -27,7 +28,7 @@ void tclassStlImpl(int repeat = 10, int nThreads = 100, int internalRepeat = 10,
    for (auto &inner : vec) {
       inner.resize(nElem);
       for (auto &vp : inner)
-         vp.resize(nElem);
+         vp.resize(nElem / 10);
    }
 
    for (int r = 0; r < repeat; ++r) {
