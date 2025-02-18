@@ -393,6 +393,25 @@ void TBrowser::Create(TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Draw browser again if it was closed before
+/// If browser exists - just call Show method
+
+void TBrowser::Draw(Option_t *)
+{
+   if (fImp) {
+      fImp->Show();
+   } else {
+      Float_t cx = gStyle->GetScreenFactor();
+      UInt_t w = UInt_t(cx*800);
+      UInt_t h = UInt_t(cx*500);
+      fImp = gGuiFactory->CreateBrowserImp(this, "ROOT Object Browser", w, h, "");
+      if (fImp)
+         fImp->BrowseObj(gROOT);
+   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Execute default action for selected object (action is specified
 /// in the `$HOME/.root.mimes` or `$ROOTSYS/etc/root.mimes file`).
 
