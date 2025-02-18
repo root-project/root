@@ -16,6 +16,7 @@
 
 #include <ROOT/RDF/RColumnReaderBase.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleDS.hxx>
@@ -445,12 +446,37 @@ RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view /* n
 }
 
 std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
-RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std::type_info & /*tid*/)
+RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std::type_info &tid)
 {
    // At this point we can assume that `name` will be found in fColumnNames
-   // TODO(jblomer): check incoming type
    const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
-   auto field = fProtoFields[index].get();
+   const auto requestedType = Internal::GetRenormalizedTypeName(ROOT::Internal::RDF::TypeID2TypeName(tid));
+
+   RFieldBase *field;
+   // If the field corresponding to the provided name is not a cardinality column and the requested type is different
+   // from the proto field that was created when the data source was constructed, we first have to create an
+   // alternative proto field for the column reader. Otherwise, we can directly use the existing proto field.
+   if (name.substr(0, 13) != "R_rdf_sizeof_" && requestedType != fColumnTypes[index]) {
+      auto &altProtoFields = fAlternativeProtoFields[index];
+      auto altProtoField = std::find_if(
+         altProtoFields.begin(), altProtoFields.end(),
+         [&requestedType](const std::unique_ptr<RFieldBase> &fld) { return fld->GetTypeName() == requestedType; });
+      if (altProtoField != altProtoFields.end()) {
+         field = altProtoField->get();
+      } else {
+         auto newAltProtoFieldOrException = RFieldBase::Create(std::string(name), requestedType);
+         if (!newAltProtoFieldOrException) {
+            throw std::runtime_error("RNTupleDS: Could not create field with type \"" + requestedType +
+                                     "\" for column \"" + std::string(name));
+         }
+         auto newAltProtoField = newAltProtoFieldOrException.Unwrap();
+         newAltProtoField->SetOnDiskId(fProtoFields[index]->GetOnDiskId());
+         field = newAltProtoField.get();
+         altProtoFields.emplace_back(std::move(newAltProtoField));
+      }
+   } else {
+      field = fProtoFields[index].get();
+   }
 
    // Map the field's and subfields' IDs to qualified names so that we can later connect the fields to
    // other page sources from the chain
