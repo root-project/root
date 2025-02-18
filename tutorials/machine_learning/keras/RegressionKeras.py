@@ -36,7 +36,7 @@ def create_model():
 
 def run():
 
-    with TFile.Open('TMVA_Regression_Keras.root', 'RECREATE') as output, TFile.Open('tmva_reg_example.root') as data:
+    with TFile.Open('TMVA_Regression_Keras.root', 'RECREATE') as output, TFile.Open(gROOT.GetTutorialDir() + '/machine_learning/data/tmva_reg_example.root') as data:
         factory = TMVA.Factory('TMVARegression', output,
                                '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=Regression')
 
