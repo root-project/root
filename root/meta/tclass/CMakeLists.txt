@@ -108,6 +108,7 @@ ROOTTEST_ADD_TEST(execInitOrder
 
 ROOTTEST_ADD_TEST(tclassStl
                   MACRO tclassStl.cxx+
-		  OUTREF tclassStl.ref)
+		  OUTREF tclassStl.ref
+		  RUN_SERIAL)
 
 ROOTTEST_ADD_TESTDIRS()
