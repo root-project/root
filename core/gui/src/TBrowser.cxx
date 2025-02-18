@@ -377,7 +377,8 @@ void TBrowser::Create(TObject *obj)
    gROOT->GetListOfGlobals(kTRUE);
    gROOT->GetListOfGlobalFunctions(kTRUE);
 
-   fContextMenu = new TContextMenu("BrowserContextMenu") ;
+   if (!IsWeb())
+      fContextMenu = new TContextMenu("BrowserContextMenu") ;
 
    // Fill the first list from the present TObject obj
    if (obj) {
