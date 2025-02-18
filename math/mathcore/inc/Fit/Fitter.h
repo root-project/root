@@ -20,6 +20,8 @@ Classes used for fitting (regression analysis) and estimation of parameter value
 
 @ingroup MathCore
 
+@see ROOT::Math::MinimizerOptions::SetDefaultMinimizer documentation for minimizer options
+
 */
 
 #include "Fit/BinData.h"

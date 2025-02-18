@@ -36,6 +36,8 @@ class IOptions;
 
          ROOT::Math::MinimizerOptions::PrintDefault();
 
+   @see ROOT::Math::MinimizerOptions::SetDefaultMinimizer documentation for available options
+
 */
 class MinimizerOptions {
 
