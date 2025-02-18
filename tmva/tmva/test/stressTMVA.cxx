@@ -1915,18 +1915,16 @@ void MethodUnitTestWithROCLimits::run()
    dataloader->AddVariable(_VariableNames->at(2), "Variable 3", "units", 'F');
    dataloader->AddVariable(_VariableNames->at(3), "Variable 4", "units", 'F');
 
-   TFile *input(0);
+   TFile *input(nullptr);
    FileStat_t stat;
 
-   TString fname = "./tmva_class_example.root";
+   TString fname = gROOT->GetTutorialDir() + "/machine_learning/data/tmva_class_example.root";
    if (!gSystem->GetPathInfo(fname, stat)) {
       input = TFile::Open(fname);
-   } else {
-      TFile::SetCacheFileDir(".");
-      input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD");
    }
-   if (input == NULL) {
-      cerr << "broken/inaccessible input file" << endl;
+   if (!input) {
+      cerr << "broken/inaccessible input file " << fname << endl;
+      return;
    }
 
    TTree *signal = (TTree *)input->Get("TreeS");
@@ -2301,6 +2299,7 @@ private:
 
 #include "TFile.h"
 #include "TSystem.h"
+#include "TROOT.h"
 #include "TMVA/MethodBase.h"
 #include "TMVA/Reader.h"
 #include <cstdlib>
@@ -2354,18 +2353,16 @@ void RegressionUnitTestWithDeviation::run()
    TString _targetname = "fvalue";
    dataloader->AddTarget(_targetname.Data()); // fix me _targetname.Data()
 
-   TFile *input(0);
+   TFile *input(nullptr);
    FileStat_t stat;
 
-   TString fname = "./tmva_reg_example.root";
+   TString fname = gROOT->GetTutorialDir() + "/machine_learning/data/tmva_reg_example.root";
    if (!gSystem->GetPathInfo(fname, stat)) {
       input = TFile::Open(fname);
-   } else {
-      TFile::SetCacheFileDir(".");
-      input = TFile::Open("http://root.cern.ch/files/tmva_reg_example.root", "CACHEREAD");
    }
-   if (input == NULL) {
-      cerr << "broken/inaccessible input file" << endl;
+   if (!input) {
+      cerr << "broken/inaccessible input file " << fname << endl;
+      return;
    }
 
    TTree *regTree = (TTree *)input->Get("TreeR");

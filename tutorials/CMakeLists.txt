@@ -296,6 +296,12 @@ endif()
 if (NOT ROOT_tmva_FOUND)
   list(APPEND tmva_veto machine_learning/*.C machine_learning/*.py machine_learning/envelope/*.C machine_learning/keras/*.C machine_learning/keras/*.py machine_learning/pytorch/*.py )
 else()
+  #copy input data files
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/data/tmva_class_example.root ${CMAKE_CURRENT_BINARY_DIR}/machine_learning/data COPYONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/data/tmva_reg_example.root ${CMAKE_CURRENT_BINARY_DIR}/machine_learning/data COPYONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/data/tmva_multiclass_example.root ${CMAKE_CURRENT_BINARY_DIR}/machine_learning/data COPYONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/data/Higgs_data.root ${CMAKE_CURRENT_BINARY_DIR}/machine_learning/data COPYONLY)
+
   #---These do not need to run for TMVA
   list(APPEND tmva_veto machine_learning/createData.C)
   if(MSVC AND NOT win_broken_tests)

@@ -141,14 +141,10 @@ void TMVARegressionApplication( TString myMethodList = "" )
    // in this example, there is a toy tree with signal and one with background events
    // we'll later on use only the "signal" events for the test in this example.
    //
-   TFile *input(0);
-   TString fname = "./tmva_reg_example.root";
+   TFile *input(nullptr);
+   TString fname =  gROOT->GetTutorialDir() + "/machine_learning/data/tmva_reg_example.root";
    if (!gSystem->AccessPathName( fname )) {
       input = TFile::Open( fname ); // check if file in local directory exists
-   }
-   else {
-      TFile::SetCacheFileDir(".");
-      input = TFile::Open("http://root.cern/files/tmva_reg_example.root", "CACHEREAD"); // if not: download from ROOT server
    }
    if (!input) {
       std::cout << "ERROR: could not open data file" << std::endl;
