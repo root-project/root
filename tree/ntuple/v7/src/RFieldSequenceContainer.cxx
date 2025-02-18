@@ -8,7 +8,7 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldBase.hxx>
 #include <ROOT/RFieldVisitor.hxx>
-#include "RFieldUtils.hxx"
+#include <ROOT/RFieldUtils.hxx>
 
 #include <cstdlib> // for malloc, free
 #include <memory>

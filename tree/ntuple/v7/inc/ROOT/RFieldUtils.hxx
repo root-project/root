@@ -38,7 +38,11 @@ long long ParseIntTypeToken(const std::string &intToken);
 unsigned long long ParseUIntTypeToken(const std::string &uintToken);
 
 /// Possible settings for the "rntuple.streamerMode" class attribute in the dictionary.
-enum class ERNTupleSerializationMode { kForceNativeMode, kForceStreamerMode, kUnset };
+enum class ERNTupleSerializationMode {
+   kForceNativeMode,
+   kForceStreamerMode,
+   kUnset
+};
 
 ERNTupleSerializationMode GetRNTupleSerializationMode(TClass *cl);
 
