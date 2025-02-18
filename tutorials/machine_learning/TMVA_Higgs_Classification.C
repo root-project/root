@@ -68,8 +68,7 @@ Define now input data file and signal and background trees
 
  **/
 
-   TString inputFileName = "Higgs_data.root";
-   TString inputFileLink = "http://root.cern/files/" + inputFileName;
+   TString inputFileName = gROOT->GetTutorialDir() + "/machine_learning/data/Higgs_data.root";
 
    TFile *inputFile = nullptr;
 
@@ -77,16 +76,9 @@ Define now input data file and signal and background trees
       // file exists
       inputFile = TFile::Open( inputFileName );
    }
-
    if (!inputFile) {
-      // download file from Cernbox location
-      Info("TMVA_Higgs_Classification","Download Higgs_data.root file");
-      TFile::SetCacheFileDir(".");
-      inputFile = TFile::Open(inputFileLink, "CACHEREAD");
-      if (!inputFile) {
-         Error("TMVA_Higgs_Classification","Input file cannot be downloaded - exit");
-         return;
-      }
+      Error("TMVA_Higgs_Classification","Input file is not found - exit");
+      return;
    }
 
 // --- Register the training and test trees

@@ -172,11 +172,8 @@ int TMVAClassification( TString myMethodList = "" )
 
    // Read training and test data
    // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
-   // Set the cache directory for the TFile to the current directory. The input
-   // data file will be downloaded here if not present yet, then it will be read
-   // from the cache path directly.
-   TFile::SetCacheFileDir(".");
-   std::unique_ptr<TFile> input{TFile::Open("http://root.cern/files/tmva_class_example.root", "CACHEREAD")};
+   TString inputFile = gROOT->GetTutorialDir() + "/machine_learning/data/tmva_class_example.root";
+   std::unique_ptr<TFile> input{TFile::Open(inputFile)};
    if (!input || input->IsZombie()) {
       throw std::runtime_error("ERROR: could not open data file");
    }

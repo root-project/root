@@ -2,12 +2,13 @@
 
 #include <TMVA/RStandardScaler.hxx>
 #include <TMVA/RTensorUtils.hxx>
+#include "TROOT.h"
 
 #include <cmath>
 
 using namespace TMVA::Experimental;
 
-static const std::string filename_ = "http://root.cern/files/tmva_class_example.root";
+static const std::string filename_ = std::string(gROOT->GetTutorialDir()) + "/machine_learning/data/tmva_class_example.root";
 static const std::vector<std::string> variables = {"var1", "var2", "var3", "var4"};
 
 TEST(RStandardScaler, TensorOutputShape)

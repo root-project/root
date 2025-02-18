@@ -17,7 +17,7 @@
 import torch
 from torch import nn
 
-from ROOT import TMVA, TFile, TTree, TCut
+from ROOT import TMVA, TFile, TCut, gROOT
 from subprocess import call
 from os.path import isfile
 
@@ -32,10 +32,7 @@ factory = TMVA.Factory('TMVAClassification',
 
 
 # Load data
-if not isfile('tmva_class_example.root'):
-    call(['curl', '-L', '-O', 'http://root.cern.ch/files/tmva_class_example.root'])
-
-data = TFile.Open('tmva_class_example.root')
+data = TFile.Open(gROOT.GetTutorialDir() + '/machine_learning/data/tmva_class_example.root')
 signal = data.Get('TreeS')
 background = data.Get('TreeB')
 

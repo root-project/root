@@ -49,8 +49,12 @@ void Training(){
    std::string factoryOptions( "!V:!Silent:Transformations=I;D;P;G,D:AnalysisType=Classification" );
    TString fname = "./tmva_example_multiple_background.root";
 
-   TFile *input(0);
+   TFile *input(nullptr);
    input = TFile::Open( fname );
+   if (!input) {
+      std::cout << "ERROR: could not open data file" << std::endl;
+      exit(1);
+   }
 
    TTree *signal      = (TTree*)input->Get("TreeS");
    TTree *background0 = (TTree*)input->Get("TreeB0");

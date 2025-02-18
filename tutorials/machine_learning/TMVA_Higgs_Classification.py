@@ -68,19 +68,11 @@ factory = TMVA.Factory(
 
 # Define now input data file and signal and background trees
 
-inputFileName = "Higgs_data.root"
-inputFileLink = "http://root.cern.ch/files/" + inputFileName
+inputFileName = str(ROOT.gROOT.GetTutorialDir()) + "/machine_learning/data/Higgs_data.root"
 
-
-if ROOT.gSystem.AccessPathName(inputFileName):
-    ROOT.Info("TMVA_Higgs_Classification", "Download Higgs_data.root file")
-    TFile.SetCacheFileDir(".")
-    inputFile = TFile.Open(inputFileLink, "CACHEREAD")
-    if inputFile is None:
-        raise FileNotFoundError("Input file cannot be downloaded - exit")
-else:
-    # file exists
-    inputFile = TFile.Open(inputFileName)
+inputFile = TFile.Open(inputFileName)
+if inputFile is None:
+   raise FileNotFoundError("Input file is not found - exit")
 
 
 # --- Register the training and test trees

@@ -18,7 +18,7 @@ ROOT.TMVA.PyMethodBase.PyInitialize()
 
 # check if the input file exists
 modelFile = "Higgs_trained_model.h5"
-modelName = "Higgs_trained_model";  
+modelName = "Higgs_trained_model";
 
 if not exists(modelFile):
     raise FileNotFoundError("You need to run TMVA_Higgs_Classification.C to generate the Keras trained model")
@@ -37,7 +37,7 @@ ROOT.gInterpreter.Declare('#include "Higgs_trained_model_generated.hxx"')
 ROOT.gInterpreter.Declare('auto sofie_functor = TMVA::Experimental::SofieFunctor<7,TMVA_SOFIE_'+modelName+'::Session>(0,"Higgs_trained_model_generated.dat");')
 
 # run inference over input data
-inputFile = "http://root.cern/files/Higgs_data.root"
+inputFile = ROOT.gROOT.GetTutorialDir() + "machine_learning/data/Higgs_data.root"
 df1 = ROOT.RDataFrame("sig_tree", inputFile)
 h1 = df1.Define("DNN_Value", "sofie_functor(rdfslot_,m_jj, m_jjj, m_lv, m_jlv, m_bb, m_wbb, m_wwbb)").Histo1D(("h_sig", "", 100, 0, 1),"DNN_Value")
 

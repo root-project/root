@@ -15,7 +15,7 @@
 # See also: https://github.com/wlav/cppyy/issues/227
 import torch
 
-from ROOT import TMVA, TFile, TString
+from ROOT import TMVA, TFile, TString, gROOT
 from array import array
 from subprocess import call
 from os.path import isfile
@@ -28,10 +28,7 @@ reader = TMVA.Reader("Color:!Silent")
 
 
 # Load data
-if not isfile('tmva_reg_example.root'):
-    call(['curl', '-L', '-O', 'http://root.cern.ch/files/tmva_reg_example.root'])
-
-data = TFile.Open('tmva_reg_example.root')
+data = TFile.Open(str(gROOT.GetTutorialDir()) + "/machine_learning/data/tmva_reg_example.root")
 tree = data.Get('TreeR')
 
 branches = {}
@@ -51,7 +48,7 @@ reader.BookMVA('PyTorch', TString('dataset/weights/TMVARegression_PyTorch.weight
 def predict(model, test_X, batch_size=32):
     # Set to eval mode
     model.eval()
-   
+
     test_dataset = torch.utils.data.TensorDataset(torch.Tensor(test_X))
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
@@ -62,7 +59,7 @@ def predict(model, test_X, batch_size=32):
             outputs = model(X)
             predictions.append(outputs)
         preds = torch.cat(predictions)
-   
+
     return preds.numpy()
 
 load_model_custom_objects = {"optimizer": None, "criterion": None, "train_func": None, "predict_func": predict}

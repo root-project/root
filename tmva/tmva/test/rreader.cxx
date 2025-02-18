@@ -2,6 +2,7 @@
 
 #include <TFile.h>
 #include <TTree.h>
+#include <TROOT.h>
 #include <TSystem.h>
 #include <TMVA/Factory.h>
 #include <TMVA/DataLoader.h>
@@ -15,7 +16,7 @@ using namespace TMVA::Experimental;
 
 // Classification
 static const std::string modelClassification = "RReaderClassification/weights/RReaderClassification_BDT.weights.xml";
-static const std::string filenameClassification = "http://root.cern/files/tmva_class_example.root";
+static const std::string filenameClassification = std::string(gROOT->GetTutorialDir()) + "/machine_learning/data/tmva_class_example.root";
 static const std::vector<std::string> variablesClassification = {"var1", "var2", "var3", "var4"};
 
 void TrainClassificationModel()

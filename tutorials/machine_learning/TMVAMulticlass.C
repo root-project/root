@@ -96,14 +96,10 @@ void TMVAMulticlass( TString myMethodList = "" )
    dataloader->AddVariable( "var3", "Variable 3", "units", 'F' );
    dataloader->AddVariable( "var4", "Variable 4", "units", 'F' );
 
-   TFile *input(0);
-   TString fname = "./tmva_example_multiclass.root";
+   TFile *input(nullptr);
+   TString fname = gROOT->GetTutorialDir() + "/machine_learning/data/tmva_multiclass_example.root";
    if (!gSystem->AccessPathName( fname )) {
       input = TFile::Open( fname ); // check if file in local directory exists
-   }
-   else {
-      TFile::SetCacheFileDir(".");
-      input = TFile::Open("http://root.cern/files/tmva_multiclass_example.root", "CACHEREAD");
    }
    if (!input) {
       std::cout << "ERROR: could not open data file" << std::endl;

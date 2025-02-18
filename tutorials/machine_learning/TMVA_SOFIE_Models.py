@@ -41,8 +41,7 @@ def CreateModel(nlayers = 4, nunits = 64):
 
 def PrepareData() :
    #get the input data
-   inputFileName = "Higgs_data.root"
-   inputFile = "http://root.cern.ch/files/" + inputFileName
+   inputFile = ROOT.gROOT.GetTutorialDir() + "machine_learning/data/Higgs_data.root"
 
    df1 = ROOT.RDataFrame("sig_tree", inputFile)
    sigData = df1.AsNumpy(columns=['m_jj', 'm_jjj', 'm_lv', 'm_jlv', 'm_bb', 'm_wbb', 'm_wwbb'])

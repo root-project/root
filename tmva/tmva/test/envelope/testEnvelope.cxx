@@ -17,6 +17,7 @@
 #include <TFile.h>
 #include <TSystem.h>
 #include <TString.h>
+#include <TROOT.h>
 
 using namespace TMVA;
 
@@ -119,12 +120,9 @@ public:
    EnvelopeTest2()
    {
       TMVA::Tools::Instance();
-      TString fname = "./tmva_class_example.root";
+      TString fname = gROOT->GetTutorialDir() + "/machine_learning/data/tmva_class_example.root";
       if (!gSystem->AccessPathName(fname)) {
          inputfile = TFile::Open(fname); // check if file in local directory exists
-      } else {
-         TFile::SetCacheFileDir(".");
-         inputfile = TFile::Open("http://root.cern/files/tmva_class_example.root", "CACHEREAD");
       }
       if (!inputfile) {
          std::cout << "ERROR: could not open data file" << std::endl;
