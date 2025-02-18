@@ -267,6 +267,66 @@ TEST_F(RNTupleDSTest, ChainMT)
    ChainTest(fNtplName, fFileName);
 }
 
+TEST_F(RNTupleDSTest, AlternativeColumnTypes)
+{
+   auto df = ROOT::RDF::Experimental::FromRNTuple(fNtplName, fFileName);
+
+   auto usingDouble = df.Define("nJets", [](ROOT::RVec<double> jets) { return jets.size(); }, {"jets"})
+                         .Take<std::size_t, ROOT::RVec<std::size_t>>("nJets")
+                         .GetValue();
+   EXPECT_EQ(2ull, ROOT::VecOps::Sum(usingDouble));
+
+   auto asStdVec = df.Define("nJets", [](std::vector<float> jets) { return jets.size(); }, {"jets"})
+                      .Take<std::size_t, ROOT::RVec<std::size_t>>("nJets")
+                      .GetValue();
+   EXPECT_EQ(2ull, ROOT::VecOps::Sum(asStdVec));
+
+   auto asRVec = df.Define("nJets", [](ROOT::RVec<float> jets) { return jets.size(); }, {"jets"})
+                    .Take<std::size_t, ROOT::RVec<std::size_t>>("nJets")
+                    .GetValue();
+   EXPECT_EQ(2ull, ROOT::VecOps::Sum(asRVec));
+
+   auto multipleAlternativeTypes =
+      df.Define("nJets", [](std::vector<float> jets) { return jets.size(); }, {"jets"})
+         .Define("smallestJet", [](std::set<float> jets) { return *(jets.begin()); }, {"jets"})
+         .Min<float>("smallestJet")
+         .GetValue();
+   EXPECT_FLOAT_EQ(1.f, multipleAlternativeTypes);
+
+   auto jitted = df.Define("jetsType", "ROOT::Internal::RDF::TypeID2TypeName(typeid(jets))")
+                    .Take<std::string>("jetsType")
+                    .GetValue();
+   EXPECT_EQ("ROOT::VecOps::RVec<float>", jitted[0]);
+
+   auto nested = df.Define("nNnlo", [](std::vector<std::vector<float>> nnlo) { return nnlo.size(); }, {"nnlo"})
+                    .Take<std::size_t, ROOT::RVec<std::size_t>>("nNnlo")
+                    .GetValue();
+   EXPECT_EQ(3ull, ROOT::VecOps::Sum(nested));
+
+   try {
+      // Invalid outer field type
+      auto dfInvalid = ROOT::RDF::Experimental::FromRNTuple(fNtplName, fFileName);
+      dfInvalid.Define("firstJet", [](std::pair<float, float> jets) { return jets.first; }, {"jets"})
+         .Take<std::size_t, ROOT::RVec<std::size_t>>("firstJet")
+         .GetValue();
+      FAIL() << "specifying templated actions with incompatible column types should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("No on-disk field information for `jets._1`"));
+   }
+
+   try {
+      // Invalid inner field types
+      auto dfInvalid = ROOT::RDF::Experimental::FromRNTuple(fNtplName, fFileName);
+      dfInvalid.Define("nJets", [](std::vector<std::uint64_t> jets) { return jets.size(); }, {"jets"})
+         .Take<std::size_t, ROOT::RVec<std::size_t>>("nJets")
+         .GetValue();
+      FAIL() << "specifying templated actions with incompatible column types should throw";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("On-disk column types {`SplitReal32`} for field `jets._0` cannot be "
+                                                 "matched to its in-memory type `std::uint64_t`"));
+   }
+}
+
 TEST_F(RNTupleDSTest, ChainTailScheduling)
 {
    IMTRAII _;
