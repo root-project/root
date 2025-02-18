@@ -922,7 +922,8 @@ void ROOT::Experimental::Internal::RPagePersistentSink::InitImpl(RNTupleModel &m
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel>
-ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTupleDescriptor &srcDescriptor)
+ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTupleDescriptor &srcDescriptor,
+                                                                      bool copyClusters)
 {
    // Create new descriptor
    fDescriptorBuilder.SetSchemaFromExisting(srcDescriptor);
@@ -946,30 +947,36 @@ ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTu
       fOpenPageRanges.emplace_back(std::move(pageRange));
    }
 
-   // Clone and add all cluster descriptors
-   auto clusterId = srcDescriptor.FindClusterId(0, 0);
-   while (clusterId != ROOT::kInvalidDescriptorId) {
-      auto &cluster = srcDescriptor.GetClusterDescriptor(clusterId);
-      auto nEntries = cluster.GetNEntries();
-      for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
-         R__ASSERT(fOpenColumnRanges[i].fPhysicalColumnId == i);
-         if (!cluster.ContainsColumn(i)) // a cluster may not contain a column if that column is deferred
-            break;
-         const auto &columnRange = cluster.GetColumnRange(i);
-         R__ASSERT(columnRange.fPhysicalColumnId == i);
-         // TODO: properly handle suppressed columns (check MarkSuppressedColumnRange())
-         fOpenColumnRanges[i].fFirstElementIndex += columnRange.fNElements;
-      }
-      fDescriptorBuilder.AddCluster(cluster.Clone());
-      fPrevClusterNEntries += nEntries;
+   if (copyClusters) {
+      // Clone and add all cluster descriptors
+      auto clusterId = srcDescriptor.FindClusterId(0, 0);
+      while (clusterId != ROOT::kInvalidDescriptorId) {
+         auto &cluster = srcDescriptor.GetClusterDescriptor(clusterId);
+         auto nEntries = cluster.GetNEntries();
+         for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
+            R__ASSERT(fOpenColumnRanges[i].fPhysicalColumnId == i);
+            if (!cluster.ContainsColumn(i)) // a cluster may not contain a column if that column is deferred
+               break;
+            const auto &columnRange = cluster.GetColumnRange(i);
+            R__ASSERT(columnRange.fPhysicalColumnId == i);
+            // TODO: properly handle suppressed columns (check MarkSuppressedColumnRange())
+            fOpenColumnRanges[i].fFirstElementIndex += columnRange.fNElements;
+         }
+         fDescriptorBuilder.AddCluster(cluster.Clone());
+         fPrevClusterNEntries += nEntries;
 
-      clusterId = srcDescriptor.FindNextClusterId(clusterId);
+         clusterId = srcDescriptor.FindNextClusterId(clusterId);
+      }
    }
 
    // Create model
    auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
    modelOpts.SetReconstructProjections(true);
    auto model = descriptor.CreateModel(modelOpts);
+   if (!copyClusters) {
+      auto &projectedFields = GetProjectedFieldsOfModel(*model);
+      projectedFields.GetFieldZero().SetOnDiskId(model->GetConstFieldZero().GetOnDiskId());
+   }
 
    // Serialize header and init from it
    fSerializationContext = RNTupleSerializer::SerializeHeader(nullptr, descriptor);
@@ -1143,8 +1150,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitStagedClusters(std
             clusterBuilder.MarkSuppressedColumnRange(colId);
          } else {
             clusterBuilder.CommitColumnRange(colId, fOpenColumnRanges[colId].fFirstElementIndex,
-                                             columnInfo.fCompressionSettings,
-                                             columnInfo.fPageRange);
+                                             columnInfo.fCompressionSettings, columnInfo.fPageRange);
             fOpenColumnRanges[colId].fFirstElementIndex += columnInfo.fNElements;
          }
       }
