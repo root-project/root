@@ -4379,8 +4379,7 @@ void astress_decomp_io(Int_t msize)
 
 void stress_backward_io()
 {
-  TFile::SetCacheFileDir(".");
-  TFile *f = TFile::Open("http://root.cern/files/linearIO.root","CACHEREAD");
+  TFile *f = TFile::Open("./linearIO.root");
 
   TMatrixF mf1 = THilbertMatrixF(-5,5,-5,5);
   mf1[1][2] = TMath::Pi();
