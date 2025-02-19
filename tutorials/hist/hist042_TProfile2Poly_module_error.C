@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Simulate faulty detector panel w.r.t. particle charge
+/// \preview Simulate faulty detector panel w.r.t. particle charge
 ///
 /// \macro_image
 /// \macro_code

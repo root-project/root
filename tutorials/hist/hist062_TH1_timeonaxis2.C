@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Define the time offset as 2003, January 1st.
+/// \preview Define the time offset as 2003, January 1st.
 ///
 /// \macro_image
 /// \macro_code

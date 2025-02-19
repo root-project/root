@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook -js
-/// Create and draw two graphs with error bars, superposed on the same canvas
+/// \preview Create and draw two graphs with error bars, superposed on the same canvas
 ///
 /// We first draw an empty frame with the axes, then draw the graphs on top of it
 /// Note that the graphs should have the same or very close ranges (in both axis),

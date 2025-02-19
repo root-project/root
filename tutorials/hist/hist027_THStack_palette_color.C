@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Palette coloring for histograms' stack is activated thanks to the options `PFC`
+/// \preview Palette coloring for histograms' stack is activated thanks to the options `PFC`
 /// (Palette Fill Color), `PLC` (Palette Line Color) and `AMC` (Palette Marker Color).
 /// When one of these options is given to `THStack::Draw` the histograms  in the
 /// `THStack` get their color from the current color palette defined by

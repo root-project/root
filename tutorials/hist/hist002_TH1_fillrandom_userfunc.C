@@ -3,7 +3,6 @@
 /// \notebook
 /// Fill a 1D histogram from a user-defined parametric function.
 ///
-/// \macro_image
 /// \macro_code
 ///
 /// \date November 2024

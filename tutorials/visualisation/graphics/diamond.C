@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// Draw a diamond.
+/// \preview Draw a diamond.
 ///
 /// \macro_image
 /// \macro_code

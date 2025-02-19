@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Example of candle plot with 2-D histograms.
+/// \preview Example of candle plot with 2-D histograms.
 ///
 /// \macro_image (tcanvas_js)
 /// \macro_code

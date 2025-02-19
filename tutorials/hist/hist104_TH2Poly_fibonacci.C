@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// A TH2Poly build with Fibonacci numbers.
+/// \preview A TH2Poly build with Fibonacci numbers.
 ///
 /// In mathematics, the Fibonacci sequence is a suite of integer in which
 /// every number is the sum of the two preceding one.

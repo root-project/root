@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// Illustrate use of the TH1::GetCumulative method.
+/// \preview Illustrate use of the TH1::GetCumulative method.
 ///
 /// \macro_image
 /// \macro_code

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// Draw parametric functions with log scales.
+/// \preview Draw parametric functions with log scales.
 ///
 /// \macro_image
 /// \macro_code
