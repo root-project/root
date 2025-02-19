@@ -120,7 +120,7 @@ ROOT_LINKER_LIBRARY(Cling
 add_dependencies(Cling rootcling_stage1)
 
 if(testing)
-  add_dependencies(Cling CppInterOpUnitTests)
+  set_target_properties(CppInterOpUnitTests PROPERTIES EXCLUDE_FROM_ALL OFF)
 endif()
 
 if(MSVC)
