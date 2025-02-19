@@ -34,6 +34,7 @@ public:
     ExecutorAddr Instance;
     ExecutorAddr Open;
     ExecutorAddr Lookup;
+    ExecutorAddr Resolve;
   };
 
   /// Create an EPCGenericMemoryAccess instance from a given set of
@@ -56,6 +57,17 @@ public:
   /// Looks up symbols within the given dylib.
   Expected<std::vector<ExecutorSymbolDef>>
   lookup(tpctypes::DylibHandle H, const RemoteSymbolLookupSet &Lookup);
+
+  using ResolveSymbolsCompleteFn =
+      unique_function<void(Expected<ResolveResult>)>;
+
+  /// Look up and resolve symbols across all available dynamic libraries.
+  void resolveAsync(const SymbolLookupSet &Lookup,
+                    ResolveSymbolsCompleteFn Complete);
+
+  /// Look up and resolve symbols across all available dynamic libraries.
+  void resolveAsync(const RemoteSymbolLookupSet &Lookup,
+                    ResolveSymbolsCompleteFn Complete);
 
 private:
   ExecutorProcessControl &EPC;

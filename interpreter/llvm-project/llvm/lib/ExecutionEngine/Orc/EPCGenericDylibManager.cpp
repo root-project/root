@@ -105,5 +105,36 @@ EPCGenericDylibManager::lookup(tpctypes::DylibHandle H,
   return Result;
 }
 
+void EPCGenericDylibManager::resolveAsync(const SymbolLookupSet &Lookup,
+                                          ResolveSymbolsCompleteFn Complete) {
+  EPC.callSPSWrapperAsync<rt::SPSSimpleExecutorDylibManagerResolveSignature>(
+      SAs.Resolve,
+      [Complete = std::move(Complete)](Error SerializationErr,
+                                       Expected<ResolveResult> Result) mutable {
+        if (SerializationErr) {
+          cantFail(Result.takeError());
+          Complete(std::move(SerializationErr));
+          return;
+        }
+        Complete(std::move(Result));
+      },
+      SAs.Instance, Lookup);
+}
+
+void EPCGenericDylibManager::resolveAsync(const RemoteSymbolLookupSet &Lookup,
+                                          ResolveSymbolsCompleteFn Complete) {
+  EPC.callSPSWrapperAsync<rt::SPSSimpleExecutorDylibManagerResolveSignature>(
+      SAs.Resolve,
+      [Complete = std::move(Complete)](Error SerializationErr,
+                                       Expected<ResolveResult> Result) mutable {
+        if (SerializationErr) {
+          cantFail(Result.takeError());
+          Complete(std::move(SerializationErr));
+          return;
+        }
+        Complete(std::move(Result));
+      },
+      SAs.Instance, Lookup);
+}
 } // end namespace orc
 } // end namespace llvm

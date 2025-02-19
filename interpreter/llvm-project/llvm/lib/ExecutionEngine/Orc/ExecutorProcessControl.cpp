@@ -116,6 +116,11 @@ SelfExecutorProcessControl::lookupSymbols(ArrayRef<LookupRequest> Request) {
   return R;
 }
 
+void SelfExecutorProcessControl::resolveSymbolsAsync(
+    ArrayRef<SymbolLookupSet> Request, ResolveSymbolsCompleteFn Complete) {
+  llvm_unreachable("Unsupported");
+}
+
 Expected<int32_t>
 SelfExecutorProcessControl::runAsMain(ExecutorAddr MainFnAddr,
                                       ArrayRef<std::string> Args) {

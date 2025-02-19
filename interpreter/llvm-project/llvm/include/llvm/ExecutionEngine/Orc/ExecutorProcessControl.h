@@ -15,6 +15,8 @@
 
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ExecutionEngine/JITLink/JITLinkMemoryManager.h"
+#include "llvm/ExecutionEngine/Orc/Shared/AutoLoadDylibLookup.h"
+#include "llvm/ExecutionEngine/Orc/Shared/AutoLoadDylibUtils.h"
 #include "llvm/ExecutionEngine/Orc/Shared/ExecutorAddress.h"
 #include "llvm/ExecutionEngine/Orc/Shared/TargetProcessControlTypes.h"
 #include "llvm/ExecutionEngine/Orc/Shared/WrapperFunctionUtils.h"
@@ -284,6 +286,12 @@ public:
   /// the target process.
   virtual Expected<tpctypes::DylibHandle> loadDylib(const char *DylibPath) = 0;
 
+  using ResolveSymbolsCompleteFn = unique_function<void(
+      Expected<std::vector<ResolveResult>>)>;
+
+  virtual void resolveSymbolsAsync(ArrayRef<SymbolLookupSet> Request,
+                                   ResolveSymbolsCompleteFn F) = 0;
+
   /// Search for symbols in the target process.
   ///
   /// The result of the lookup is a 2-dimensional array of target addresses
@@ -467,6 +475,11 @@ public:
     llvm_unreachable("Unsupported");
   }
 
+  void resolveSymbolsAsync(ArrayRef<SymbolLookupSet> Request,
+                           ResolveSymbolsCompleteFn F) override {
+    llvm_unreachable("Unsupported");
+  }
+
   Expected<int32_t> runAsMain(ExecutorAddr MainFnAddr,
                               ArrayRef<std::string> Args) override {
     llvm_unreachable("Unsupported");
@@ -513,6 +526,9 @@ public:
   Expected<std::vector<tpctypes::LookupResult>>
   lookupSymbols(ArrayRef<LookupRequest> Request) override;
 
+  void resolveSymbolsAsync(ArrayRef<SymbolLookupSet> Request,
+                           ResolveSymbolsCompleteFn F) override;
+
   Expected<int32_t> runAsMain(ExecutorAddr MainFnAddr,
                               ArrayRef<std::string> Args) override;
 
@@ -532,6 +548,7 @@ private:
                                        const char *Data, size_t Size);
 
   std::unique_ptr<jitlink::JITLinkMemoryManager> OwnedMemMgr;
+  std::optional<AutoLoadDynamicLibraryLookup> DylibLookup;
   char GlobalManglingPrefix = 0;
 };
 
