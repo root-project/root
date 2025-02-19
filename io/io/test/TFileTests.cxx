@@ -125,6 +125,8 @@ void TestReadWithoutGlobalRegistrationIfPossible(const char *fname)
 }
 
 // https://github.com/root-project/root/issues/10742
+#ifndef R__WIN32
+// We prefer not to read remotely files from Windows, if possible
 TEST(TFile, ReadWithoutGlobalRegistrationWeb)
 {
    const auto webFile = "http://root.cern/files/h1/dstarmb.root";
@@ -135,6 +137,7 @@ TEST(TFile, ReadWithoutGlobalRegistrationNet)
    const auto netFile = "root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root";
    TestReadWithoutGlobalRegistrationIfPossible(netFile);
 }
+#endif 
 
 // https://github.com/root-project/root/issues/16189
 TEST(TFile, k630forwardCompatibility)
