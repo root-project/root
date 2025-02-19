@@ -273,7 +273,7 @@ std::list<double>* RooBinSamplingPdf::plotSamplingHint(RooAbsRealLValue& obs, do
 ///   intOptions.SetRelTolerance(1.E-9); // Smaller tolerance -> more subdivisions
 ///   pdf.integrator()->SetOptions(intOptions);
 /// ```
-/// \see ROOT::Math::IntegratorOneDim::SetOptions for more details on integration options.
+/// \note see ROOT::Math::IntegratorOneDim::SetOptions for more details on integration options.
 /// \note When RooBinSamplingPdf is loaded from files, integrator options will fall back to the default values.
 std::unique_ptr<ROOT::Math::IntegratorOneDim>& RooBinSamplingPdf::integrator() const {
   if (!_integrator) {

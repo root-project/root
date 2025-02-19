@@ -1893,7 +1893,7 @@ void TStyle::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \see TColor::CreateColorTableFromFile, (which calls TColor::SetPalette)
+/// \see TColor::CreateColorTableFromFile, TColor::SetPalette
 void TStyle::SetPalette(TString fileName, Float_t alpha)
 {
    TColor::CreateColorTableFromFile(fileName, alpha);
