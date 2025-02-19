@@ -30,6 +30,9 @@
 #include "TROOT.h"
 #include "TSystem.h"
 
+// CppInterOp
+#include "clang/Interpreter/CppInterOp.h"
+
 // Standard
 #include <assert.h>
 #include <algorithm>     // for std::count, std::remove
