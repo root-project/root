@@ -67,6 +67,7 @@ This release changes that behavior, meaning the `Scale(bool)` command argument i
 
 ## IO
 
+* Honour the `Davix.GSI.CACheck` parameter also in the `ROOT::Internal::RRawFileDavix` class.
 * New options have been added to TFileMerger (which can be passed as whitespace-separated TStrings via `TFileMerger::SetMergeOptions`)
   * "FirstSrcCompression": when merging multiple files, instructs the class-specific merger to use the same compression as the
     first object of the destination's class as the destination's compression. Currently only recognized by the RNTuple merger;
