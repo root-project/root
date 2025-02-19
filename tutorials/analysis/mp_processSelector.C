@@ -19,11 +19,11 @@
 
 #include <memory>
 
-const auto file0 = "http://root.cern/files/h1/dstarmb.root";
+const auto file0 = "root://eospublic.cern.ch//eos/root-eos/h1/dstarmb.root";
 const std::vector<std::string> files = {file0,
-                                        "http://root.cern/files/h1/dstarp1a.root",
-                                        "http://root.cern/files/h1/dstarp1b.root",
-                                        "http://root.cern/files/h1/dstarp2.root"};
+                                        "root://eospublic.cern.ch//eos/root-eos/h1/dstarp1a.root",
+                                        "root://eospublic.cern.ch//eos/root-eos/h1/dstarp1b.root",
+                                        "root://eospublic.cern.ch//eos/root-eos/h1/dstarp2.root"};
 
 int mp_processSelector()
 {
