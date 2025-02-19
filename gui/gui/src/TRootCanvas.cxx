@@ -28,6 +28,7 @@ drawing area. The widgets used are the new native ROOT GUI widgets.
 #include "TGCanvas.h"
 #include "TGMenu.h"
 #include "TGWidget.h"
+#include "TGFileBrowser.h"
 #include "TGFileDialog.h"
 #include "TGStatusBar.h"
 #include "TGTextEditDialogs.h"
@@ -840,6 +841,17 @@ Bool_t TRootCanvas::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
                         if (!fi.fFilename) return kTRUE;
                         dir = fi.fIniDir;
                         new TFile(fi.fFilename, "update");
+                        TIter next(gROOT->GetListOfBrowsers());
+                        TBrowser *b;
+                        while ((b = (TBrowser*) next())) {
+                           TRootBrowser *rb = dynamic_cast<TRootBrowser *>(b->GetBrowserImp());
+                           if (rb) {
+                              TGFileBrowser *fb = dynamic_cast<TGFileBrowser *>(rb->GetActBrowser());
+                              if (fb)
+                                 fb->Selected(0);
+                           }
+                        }
+                        gROOT->RefreshBrowsers();
                      }
                      break;
                   case kFileSaveAs:
