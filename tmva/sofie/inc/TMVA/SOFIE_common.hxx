@@ -294,8 +294,8 @@ T* BroadcastConvBias(const T* data, const size_t channel, const std::vector<size
 // Broadcast a tensor from shape to targetShape according to numpy broadcasting rules
 // See more at https://numpy.org/doc/stable/user/basics.broadcasting.html
 // and https://github.com/onnx/onnx/blob/main/docs/Broadcasting.md .
-template<typename T, class ContT = std::span<T> >
-void BroadcastTensor(ContT data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, ContT broadcastedData) {
+template<typename T, class ConstContT = std::span<const T>, class ContT = std::span<T> >
+void BroadcastTensor(ConstContT data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, ContT broadcastedData) {
    // Size of the shapes (tensor input here have shapes with same sizes, we have already added the needed ones )
    size_t size = shape.size();
    // Current length of the broadcasted tensor
@@ -361,19 +361,19 @@ void BroadcastTensor(ContT data, const std::vector<size_t>& shape, const std::ve
 
 // interface where we allocate a new array for broadcasted data
 template<typename T>
-T* CreateBroadcastTensor(T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, size_t targetLength) {
+T* CreateBroadcastTensor(const T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, size_t targetLength) {
    // newShape is an array of size equal to dimension along which we are broadcasting the tensor
    T* broadcastedData = new T[targetLength];
    std::span<T> bData(broadcastedData, broadcastedData+targetLength);
    size_t curLength = ConvertShapeToLength(shape);
-   std::span<T> inData(data, data+curLength);
-   BroadcastTensor<T, std::span<T>>(inData, shape, targetShape, bData);
+   std::span<const T> inData(data, curLength);
+   BroadcastTensor<T, std::span<const T>, std::span<T>>(inData, shape, targetShape, bData);
    return broadcastedData;
 }
 // Unidirectional broadcasting shape to targetShape// In unidirectional broadcast - only tensor B can have the shape changed not
 // tensor A - otherwise is a multidirectional broadcast
 template<typename T>
-T* UnidirectionalBroadcast(T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape) {
+T* UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape) {
    // Prepend shape with ones
    if (shape.size() < targetShape.size()) {
       size_t targetSize = targetShape.size();
@@ -387,9 +387,9 @@ T* UnidirectionalBroadcast(T* data, const std::vector<size_t>& shape, const std:
 
 // Unidirectional broadcasting shape to targetShape using a passed vector to avoid allocations
 template<typename T>
-void UnidirectionalBroadcast(T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, std::span<T> broadcastedData) {
+void UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, std::span<T> broadcastedData) {
    size_t curLength = ConvertShapeToLength(shape);
-   std::span<T> inData(data, data+curLength);
+   std::span<T> inData(const_cast<T*>(data), curLength);
    // Prepend shape with ones
    if (shape.size() < targetShape.size()) {
       size_t targetSize = targetShape.size();
