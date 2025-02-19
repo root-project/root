@@ -2073,7 +2073,9 @@ public:
    /// auto myHist2 = myDf.Histo3D<double, double, float>({"name", "title", 64u, 0., 128., 32u, -4., 4., 8u, -2., 2.},
    ///                                                    "myValueX", "myValueY", "myValueZ");
    /// ~~~
-   ///
+   /// \note If three-dimensional histograms consume too much memory in multithreaded runs, the cloning of TH3D
+   /// per thread can be reduced using ROOT::RDF::Experimental::ThreadsPerTH3(). See the section "Memory Usage" in
+   /// the RDataFrame description.
    /// \note Differently from other ROOT interfaces, the returned histogram is not associated to gDirectory
    /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
    /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).
