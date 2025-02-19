@@ -840,7 +840,7 @@ Bool_t TRootCanvas::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
                         new TGFileDialog(fClient->GetDefaultRoot(), this, kFDOpen,&fi);
                         if (!fi.fFilename) return kTRUE;
                         dir = fi.fIniDir;
-                        new TFile(fi.fFilename, "update");
+                        TFile::Open(fi.fFilename, "update");
                         TIter next(gROOT->GetListOfBrowsers());
                         TBrowser *b;
                         while ((b = (TBrowser *)next())) {
