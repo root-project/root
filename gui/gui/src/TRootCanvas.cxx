@@ -843,7 +843,7 @@ Bool_t TRootCanvas::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
                         new TFile(fi.fFilename, "update");
                         TIter next(gROOT->GetListOfBrowsers());
                         TBrowser *b;
-                        while ((b = (TBrowser*) next())) {
+                        while ((b = (TBrowser *)next())) {
                            TRootBrowser *rb = dynamic_cast<TRootBrowser *>(b->GetBrowserImp());
                            if (rb) {
                               TGFileBrowser *fb = dynamic_cast<TGFileBrowser *>(rb->GetActBrowser());
