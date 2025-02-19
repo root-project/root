@@ -150,7 +150,7 @@ endif()
 ROOT_EXECUTABLE(stressLinear stressLinear.cxx LIBRARIES Matrix Hist RIO)
 ROOT_ADD_TEST(test-stresslinear COMMAND stressLinear FAILREGEX "FAILED|Error in" LABELS longtest)
 ROOT_ADD_TEST(test-stresslinear-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressLinear.cxx
-              FAILREGEX "FAILED|Error in" DEPENDS test-stresslinear LABELS longtest)
+              FAILREGEX "FAILED|Error in" LABELS longtest)
 
 #--stressGraphics------------------------------------------------------------------------------------
 if(ROOT_opengl_FOUND)
@@ -198,7 +198,7 @@ endif()
 ROOT_EXECUTABLE(stressHistogram stressHistogram.cxx LIBRARIES Hist RIO)
 ROOT_ADD_TEST(test-stresshistogram COMMAND stressHistogram FAILREGEX "FAILED|Error in" LABELS longtest)
 ROOT_ADD_TEST(test-stresshistogram-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressHistogram.cxx
-              FAILREGEX "FAILED|Error in" DEPENDS test-stresshistogram )
+              FAILREGEX "FAILED|Error in")
 
 #--stressGUI---------------------------------------------------------------------------------------
 if(ROOT_asimage_FOUND)
