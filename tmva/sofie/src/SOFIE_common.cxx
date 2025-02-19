@@ -387,9 +387,9 @@ void UTILITY::UnidirectionalBroadcast(const std::vector<bool> & data, const std:
       std::vector<size_t> newShape(targetSize, 1);
       size_t offset = targetSize - shape.size();
       std::copy(shape.begin(), shape.end(), newShape.begin() + offset);
-      UTILITY::BroadcastTensor<bool, std::vector<bool> &>(ncdata, newShape, targetShape, broadcastedData);
+      UTILITY::BroadcastTensor<bool, const std::vector<bool> &, std::vector<bool> &>(ncdata, newShape, targetShape, broadcastedData);
    }
-   UTILITY::BroadcastTensor<bool, std::vector<bool> &>(ncdata, shape, targetShape, broadcastedData);
+   UTILITY::BroadcastTensor<bool, const std::vector<bool> &, std::vector<bool> &>(ncdata, shape, targetShape, broadcastedData);
 }
 
 std::string UTILITY::Clean_name(std::string input_tensor_name){

@@ -56,7 +56,7 @@ public:
       if (fEnd < 0) fEnd += length;
       if (fEnd > fStart)
          fOutput_shape = { size_t(fEnd - fStart) };
-      // in case input tensor is not a dynamic tensor we should register the output as a Constant tensor since we know
+      // in case the input tensor is not a dynamic tensor we should register the output as a Constant tensor since we know
       // its content
       if (!model.IsDynamicTensor(fNX) && !fOutput_shape.empty()) {
          std::shared_ptr<void> data(malloc(length * sizeof(int64_t)), free);
@@ -69,6 +69,7 @@ public:
                std::cout << shape_values[i] << "  ";
             std::cout << std::endl;
          }
+         fIsOutputConstant = true;
       }
       else
          model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
@@ -77,6 +78,9 @@ public:
    }
 
    std::string Generate(std::string OpName){
+      // no need to generate code if the output is constant
+      if (fIsOutputConstant) return "";
+
       OpName = "op_" + OpName;
       if (fShape.empty()) {
          throw std::runtime_error("TMVA SOFIE Shape op called to Generate without being initialized first");
