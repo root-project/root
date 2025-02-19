@@ -52,8 +52,8 @@ protected:
 //   static Double_t        fgPrecision; //maximum precision
 //   static TString         fgDefault;   //name of the default fitter ("Minuit","Fumili",etc)
 
-   TVirtualFitter(const TVirtualFitter& tvf);
-   TVirtualFitter& operator=(const TVirtualFitter& tvf);
+   TVirtualFitter(const TVirtualFitter &) = delete;
+   TVirtualFitter& operator=(const TVirtualFitter &) = delete;
 
 public:
    TVirtualFitter();
