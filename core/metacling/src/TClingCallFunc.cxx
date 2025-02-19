@@ -79,10 +79,6 @@ using std::string, std::map, std::ostringstream, std::make_pair;
 static unsigned long long gWrapperSerial = 0LL;
 static const string kIndentString("   ");
 
-static map<const Decl *, void *> gWrapperStore;
-static map<const Decl *, void *> gCtorWrapperStore;
-static map<const Decl *, void *> gDtorWrapperStore;
-
 static
 inline
 void
@@ -181,9 +177,9 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, 
          QT.print(OS, Policy, type_name);
          OS.flush();
       }
-      for (int i = 0; i < indent_level; ++i) {
-         typedefbuf << kIndentString;
-      }
+
+      indent(typedefbuf, indent_level);
+
       typedefbuf << "typedef " << fp_typedef_name << ";\n";
       return;
    } else if (QT->isMemberPointerType()) {
@@ -196,9 +192,9 @@ void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, 
          QT.print(OS, Policy, type_name);
          OS.flush();
       }
-      for (int i = 0; i < indent_level; ++i) {
-         typedefbuf << kIndentString;
-      }
+
+      indent(typedefbuf, indent_level);
+
       typedefbuf << "typedef " << mp_typedef_name << ";\n";
       return;
    } else if (QT->isPointerType()) {
@@ -286,9 +282,7 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
             callbuf << ' ';
          } else {
             callbuf << "\n";
-            for (int j = 0; j <= indent_level; ++j) {
-               callbuf << kIndentString;
-            }
+            indent(callbuf, indent_level);
          }
       }
       if (refType != kNotReference) {
@@ -350,9 +344,7 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
                   callbuf << ' ';
                } else {
                   callbuf << "\n";
-                  for (int j = 0; j <= indent_level; ++j) {
-                     callbuf << kIndentString;
-                  }
+                  indent(callbuf, indent_level);
                }
             }
             const ParmVarDecl *PVD = FD->getParamDecl(i);
@@ -414,9 +406,7 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
             callbuf << ' ';
          } else {
             callbuf << "\n";
-            for (int j = 0; j <= indent_level; ++j) {
-               callbuf << kIndentString;
-            }
+            indent(callbuf, indent_level);
          }
       }
 
@@ -456,9 +446,7 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
    //    new ClassName(args...);
    // }
    //
-   for (int i = 0; i < indent_level; ++i) {
-      buf << kIndentString;
-   }
+   indent(buf, indent_level);
    buf << "if (ret) {\n";
    ++indent_level;
    {
@@ -467,9 +455,7 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
       //
       //  Write the return value assignment part.
       //
-      for (int i = 0; i < indent_level; ++i) {
-         callbuf << kIndentString;
-      }
+      indent(callbuf, indent_level);
       callbuf << "(*(" << class_name << "**)ret) = ";
       //
       //  Write the actual new expression.
@@ -479,9 +465,7 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
       //  End the new expression statement.
       //
       callbuf << ";\n";
-      for (int i = 0; i < indent_level; ++i) {
-         callbuf << kIndentString;
-      }
+      indent(callbuf, indent_level);
       callbuf << "return;\n";
       //
       //  Output the whole new expression and return statement.
@@ -530,6 +514,29 @@ const clang::DeclContext *TClingCallFunc::GetDeclContext() const {
    return fMethod->GetDecl()->getDeclContext();
 }
 
+// Helper to extract a fully qualified name from a Decl or DeclContext.
+static std::string getDeclName(const clang::Decl *D, ASTContext &Context)
+{
+   PrintingPolicy Policy(Context.getPrintingPolicy());
+   Policy.SuppressTagKeyword = true;
+   Policy.SuppressUnwrittenScope = true;
+   std::string name;
+   if (const TypeDecl *TD = dyn_cast<TypeDecl>(D)) {
+      // Handle typedefs to anonymous types.
+      QualType QT;
+      if (const TypedefDecl *Typedef = dyn_cast<const TypedefDecl>(TD))
+         QT = Typedef->getTypeSourceInfo()->getType();
+      else
+         QT = QualType(TD->getTypeForDecl(), 0);
+      GetTypeAsString(QT, name, Context, Policy);
+   } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
+      raw_string_ostream stream(name);
+      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+      stream.flush();
+   }
+   return name;
+}
+
 int TClingCallFunc::get_wrapper_code(std::string &wrapper_name, std::string &wrapper)
 {
    const FunctionDecl *FD = GetDecl();
@@ -541,16 +548,27 @@ int TClingCallFunc::get_wrapper_code(std::string &wrapper_name, std::string &wra
    //
    string class_name;
    const clang::DeclContext *DC = GetDeclContext();
-   if (const TypeDecl *TD = dyn_cast<TypeDecl>(DC)) {
-      // This is a class, struct, or union member.
-      QualType QT(TD->getTypeForDecl(), 0);
-      GetTypeAsString(QT, class_name, Context, Policy);
-   } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(DC)) {
-      // This is a namespace member.
-      raw_string_ostream stream(class_name);
-      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
-      stream.flush();
-   }
+
+   class_name = getDeclName(cast<Decl>(DC), Context);
+
+   // START HERE
+   //  if (const TypeDecl *TD = dyn_cast<TypeDecl>(DC)) {
+   //     // This is a class, struct, or union member.
+   //     // Handle the typedefs to anonymous types.
+   //     QualType QT;
+   //     if (const TypedefDecl *Typedef = dyn_cast<const TypedefDecl>(TD))
+   //        QT = Typedef->getTypeSourceInfo()->getType();
+   //     else
+   //        QT = {TD->getTypeForDecl(), 0};
+   //     GetTypeAsString(QT, class_name, Context, Policy);
+   //  } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(DC)) {
+   //     // This is a namespace member.
+   //     raw_string_ostream stream(class_name);
+   //     ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+   //     stream.flush();
+   //  }
+   //  END HERE
+
    //
    //  Check to make sure that we can
    //  instantiate and codegen this function.
@@ -895,16 +913,12 @@ int TClingCallFunc::get_wrapper_code(std::string &wrapper_name, std::string &wra
       // We need one function call clause compiled for every
       // possible number of arguments per call.
       for (unsigned N = min_args; N <= num_params; ++N) {
-         for (int i = 0; i < indent_level; ++i) {
-            buf << kIndentString;
-         }
+         indent(buf, indent_level);
          buf << "if (nargs == " << N << ") {\n";
          ++indent_level;
          make_narg_call_with_return(N, class_name, buf, indent_level);
          --indent_level;
-         for (int i = 0; i < indent_level; ++i) {
-            buf << kIndentString;
-         }
+         indent(buf, indent_level);
          buf << "}\n";
       }
    }
@@ -948,20 +962,14 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
    if (QT->isVoidType()) {
       ostringstream typedefbuf;
       ostringstream callbuf;
-      for (int i = 0; i < indent_level; ++i) {
-         callbuf << kIndentString;
-      }
+      indent(callbuf, indent_level);
       make_narg_call("void", N, typedefbuf, callbuf, class_name, indent_level);
       callbuf << ";\n";
-      for (int i = 0; i < indent_level; ++i) {
-         callbuf << kIndentString;
-      }
+      indent(callbuf, indent_level);
       callbuf << "return;\n";
       buf << typedefbuf.str() << callbuf.str();
    } else {
-      for (int i = 0; i < indent_level; ++i) {
-         buf << kIndentString;
-      }
+      indent(buf, indent_level);
 
       string type_name;
       EReferenceType refType = kNotReference;
@@ -975,9 +983,7 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          //
          //  Write the placement part of the placement new.
          //
-         for (int i = 0; i < indent_level; ++i) {
-            callbuf << kIndentString;
-         }
+         indent(callbuf, indent_level);
          callbuf << "new (ret) ";
          collect_type_info(QT, typedefbuf, callbuf, type_name,
                            refType, isPointer, indent_level, false);
@@ -1002,9 +1008,7 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          //  End the placement new.
          //
          callbuf << ");\n";
-         for (int i = 0; i < indent_level; ++i) {
-            callbuf << kIndentString;
-         }
+         indent(callbuf, indent_level);
          callbuf << "return;\n";
          //
          //  Output the whole placement new expression and return statement.
@@ -1012,43 +1016,40 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          buf << typedefbuf.str() << callbuf.str();
       }
       --indent_level;
-      for (int i = 0; i < indent_level; ++i) {
-         buf << kIndentString;
-      }
+      indent(buf, indent_level);
       buf << "}\n";
-      for (int i = 0; i < indent_level; ++i) {
-         buf << kIndentString;
-      }
+      indent(buf, indent_level);
       buf << "else {\n";
       ++indent_level;
       {
          ostringstream typedefbuf;
          ostringstream callbuf;
-         for (int i = 0; i < indent_level; ++i) {
-            callbuf << kIndentString;
-         }
+         indent(callbuf, indent_level);
          callbuf << "(void)(";
          make_narg_call(type_name, N, typedefbuf, callbuf, class_name, indent_level);
          callbuf << ");\n";
-         for (int i = 0; i < indent_level; ++i) {
-            callbuf << kIndentString;
-         }
+         indent(callbuf, indent_level);
          callbuf << "return;\n";
          buf << typedefbuf.str() << callbuf.str();
       }
       --indent_level;
-      for (int i = 0; i < indent_level; ++i) {
-         buf << kIndentString;
-      }
+      indent(buf, indent_level);
       buf << "}\n";
    }
 }
 
 tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
 {
+   static map<const Decl *, void *> gWrapperStore;
+
    R__LOCKGUARD_CLING(gInterpreterMutex);
 
    const Decl *D = GetFunctionOrShadowDecl();
+
+   auto I = gWrapperStore.find(D);
+   if (I != gWrapperStore.end())
+      return (tcling_callfunc_Wrapper_t)I->second;
+
    string wrapper_name;
    string wrapper;
 
@@ -1058,7 +1059,11 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    //
    //  Compile the wrapper code.
    //
-   void *F = compile_wrapper(wrapper_name, wrapper);
+   bool withAccessControl = true;
+   // We should be able to call private default constructors.
+   if (auto Ctor = dyn_cast<CXXConstructorDecl>(D))
+      withAccessControl = !Ctor->isDefaultConstructor();
+   void *F = compile_wrapper(wrapper_name, wrapper, withAccessControl);
    if (F) {
       gWrapperStore.insert(make_pair(D, F));
    } else {
@@ -1067,6 +1072,33 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
             wrapper.c_str());
    }
    return (tcling_callfunc_Wrapper_t)F;
+}
+
+// FIXME: Sink in the code duplication from get_wrapper_code.
+static std::string PrepareStructorWrapper(const Decl *D, const char *wrapper_prefix, std::string &class_name)
+{
+   ASTContext &Context = D->getASTContext();
+   //
+   //  Get the class or namespace name.
+   //
+   class_name = getDeclName(D, Context);
+
+   //
+   //  Make the wrapper name.
+   //
+   string wrapper_name;
+   {
+      ostringstream buf;
+      buf << wrapper_prefix;
+      // const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
+      // string mn;
+      // fInterp->maybeMangleDeclName(ND, mn);
+      // buf << '_dtor_' << mn;
+      buf << '_' << gWrapperSerial++;
+      wrapper_name = buf.str();
+   }
+
+   return wrapper_name;
 }
 
 tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingClassInfo *info,
@@ -1140,40 +1172,21 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    // CINT did.
    //
    //--
-   ASTContext &Context = info->GetDecl()->getASTContext();
-   PrintingPolicy Policy(Context.getPrintingPolicy());
-   Policy.SuppressTagKeyword = true;
-   Policy.SuppressUnwrittenScope = true;
-   //
-   //  Get the class or namespace name.
-   //
-   string class_name;
-   if (const TypeDecl *TD = dyn_cast<TypeDecl>(info->GetDecl())) {
-      // This is a class, struct, or union member.
-      QualType QT(TD->getTypeForDecl(), 0);
-      GetTypeAsString(QT, class_name, Context, Policy);
-   } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(info->GetDecl())) {
-      // This is a namespace member.
-      raw_string_ostream stream(class_name);
-      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
-      stream.flush();
-   }
 
+   static map<const Decl *, void *> gCtorWrapperStore;
+
+   R__LOCKGUARD_CLING(gInterpreterMutex);
+
+   auto D = info->GetDecl();
+   auto I = gCtorWrapperStore.find(D);
+   if (I != gCtorWrapperStore.end())
+      return (tcling_callfunc_ctor_Wrapper_t)I->second;
 
    //
    //  Make the wrapper name.
    //
-   string wrapper_name;
-   {
-      ostringstream buf;
-      buf << "__ctor";
-      //const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
-      //string mn;
-      //fInterp->maybeMangleDeclName(ND, mn);
-      //buf << '_dtor_' << mn;
-      buf << '_' << gWrapperSerial++;
-      wrapper_name = buf.str();
-   }
+   string class_name;
+   string wrapper_name = PrepareStructorWrapper(D, "__ctor", class_name);
 
    string constr_arg;
    if (kind == ROOT::TMetaUtils::EIOCtorCategory::kIOPtrType)
@@ -1270,7 +1283,7 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    void *F = compile_wrapper(wrapper_name, wrapper,
                              /*withAccessControl=*/false);
    if (F) {
-      gCtorWrapperStore.insert(make_pair(info->GetDecl(), F));
+      gCtorWrapperStore.insert(make_pair(D, F));
    } else {
       ::Error("TClingCallFunc::make_ctor_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
@@ -1309,38 +1322,21 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
    // }
    //
    //--
-   ASTContext &Context = info->GetDecl()->getASTContext();
-   PrintingPolicy Policy(Context.getPrintingPolicy());
-   Policy.SuppressTagKeyword = true;
-   Policy.SuppressUnwrittenScope = true;
-   //
-   //  Get the class or namespace name.
-   //
-   string class_name;
-   if (const TypeDecl *TD = dyn_cast<TypeDecl>(info->GetDecl())) {
-      // This is a class, struct, or union member.
-      QualType QT(TD->getTypeForDecl(), 0);
-      GetTypeAsString(QT, class_name, Context, Policy);
-   } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(info->GetDecl())) {
-      // This is a namespace member.
-      raw_string_ostream stream(class_name);
-      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
-      stream.flush();
-   }
+
+   static map<const Decl *, void *> gDtorWrapperStore;
+
+   R__LOCKGUARD_CLING(gInterpreterMutex);
+
+   const Decl *D = info->GetDecl();
+   auto I = gDtorWrapperStore.find(D);
+   if (I != gDtorWrapperStore.end())
+      return (tcling_callfunc_dtor_Wrapper_t)I->second;
+
    //
    //  Make the wrapper name.
    //
-   string wrapper_name;
-   {
-      ostringstream buf;
-      buf << "__dtor";
-      //const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
-      //string mn;
-      //fInterp->maybeMangleDeclName(ND, mn);
-      //buf << '_dtor_' << mn;
-      buf << '_' << gWrapperSerial++;
-      wrapper_name = buf.str();
-   }
+   std::string class_name;
+   string wrapper_name = PrepareStructorWrapper(D, "__dtor", class_name);
    //
    //  Write the wrapper code.
    //
@@ -1434,7 +1430,7 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
    void *F = compile_wrapper(wrapper_name, wrapper,
                              /*withAccessControl=*/false);
    if (F) {
-      gDtorWrapperStore.insert(make_pair(info->GetDecl(), F));
+      gDtorWrapperStore.insert(make_pair(D, F));
    } else {
       ::Error("TClingCallFunc::make_dtor_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
@@ -1649,10 +1645,7 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
       ::Error("TClingCallFunc::ExecDefaultConstructor", "Invalid class info!");
       return nullptr;
    }
-   tcling_callfunc_ctor_Wrapper_t wrapper = nullptr;
-   {
-      R__LOCKGUARD_CLING(gInterpreterMutex);
-      auto D = info->GetDecl();
+   if (tcling_callfunc_ctor_Wrapper_t wrapper = make_ctor_wrapper(info, kind, type_name)) {
       //if (!info->HasDefaultConstructor()) {
       //   // FIXME: We might have a ROOT ioctor, we might
       //   //        have to check for that here.
@@ -1661,21 +1654,12 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info,
       //         info->Name());
       //   return 0;
       //}
-      auto I = gCtorWrapperStore.find(D);
-      if (I != gCtorWrapperStore.end()) {
-         wrapper = (tcling_callfunc_ctor_Wrapper_t) I->second;
-      } else {
-         wrapper = make_ctor_wrapper(info, kind, type_name);
-      }
+      void *obj = nullptr;
+      wrapper(&obj, address, nary);
+      return obj;
    }
-   if (!wrapper) {
-      ::Error("TClingCallFunc::ExecDefaultConstructor",
-            "Called with no wrapper, not implemented!");
-      return nullptr;
-   }
-   void *obj = nullptr;
-   (*wrapper)(&obj, address, nary);
-   return obj;
+   ::Error("TClingCallFunc::ExecDefaultConstructor", "Called with no wrapper, not implemented!");
+   return nullptr;
 }
 
 void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /*=0*/,
@@ -1686,23 +1670,12 @@ void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /
       return;
    }
 
-   tcling_callfunc_dtor_Wrapper_t wrapper = nullptr;
-   {
-      R__LOCKGUARD_CLING(gInterpreterMutex);
-      const Decl *D = info->GetDecl();
-      map<const Decl *, void *>::iterator I = gDtorWrapperStore.find(D);
-      if (I != gDtorWrapperStore.end()) {
-         wrapper = (tcling_callfunc_dtor_Wrapper_t) I->second;
-      } else {
-         wrapper = make_dtor_wrapper(info);
-      }
-   }
-   if (!wrapper) {
-      ::Error("TClingCallFunc::ExecDestructor",
-            "Called with no wrapper, not implemented!");
+   if (tcling_callfunc_dtor_Wrapper_t wrapper = make_dtor_wrapper(info)) {
+      wrapper(address, nary, withFree);
       return;
    }
-   (*wrapper)(address, nary, withFree);
+
+   ::Error("TClingCallFunc::ExecDestructor", "Called with no wrapper, not implemented!");
 }
 
 TClingMethodInfo *
@@ -1737,20 +1710,10 @@ void *TClingCallFunc::InterfaceMethod()
    if (!IsValid()) {
       return nullptr;
    }
-   if (!fWrapper) {
-      const Decl *decl = GetFunctionOrShadowDecl();
 
-      R__LOCKGUARD_CLING(gInterpreterMutex);
-      // check if another thread already did it
-      if (!fWrapper) {
-         map<const Decl *, void *>::iterator I = gWrapperStore.find(decl);
-         if (I != gWrapperStore.end()) {
-            fWrapper = (tcling_callfunc_Wrapper_t)I->second;
-         } else {
-            fWrapper = make_wrapper();
-         }
-      }
-   }
+   if (!fWrapper)
+      fWrapper = make_wrapper();
+
    return (void *)fWrapper.load();
 }
 
@@ -1769,20 +1732,10 @@ TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
             "Attempt to get interface while invalid.");
       return TInterpreter::CallFuncIFacePtr_t();
    }
-   if (!fWrapper) {
-      const Decl *decl = GetFunctionOrShadowDecl();
 
-      R__LOCKGUARD_CLING(gInterpreterMutex);
-      // check if another thread already did it
-      if (!fWrapper) {
-         map<const Decl *, void *>::iterator I = gWrapperStore.find(decl);
-         if (I != gWrapperStore.end()) {
-            fWrapper = (tcling_callfunc_Wrapper_t)I->second;
-         } else {
-            fWrapper = make_wrapper();
-         }
-      }
-   }
+   if (!fWrapper)
+      fWrapper = make_wrapper();
+
    return TInterpreter::CallFuncIFacePtr_t(fWrapper);
 }
 
