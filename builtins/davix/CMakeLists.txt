@@ -96,5 +96,3 @@ target_link_libraries(davix INTERFACE $<BUILD_INTERFACE:${DAVIX_LIBRARIES}>)
 add_dependencies(davix DAVIX)
 
 add_library(Davix::Davix ALIAS davix)
-
-set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS DAVIX)
