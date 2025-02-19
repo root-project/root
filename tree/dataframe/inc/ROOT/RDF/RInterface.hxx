@@ -901,7 +901,7 @@ public:
    /// hx["x:1"].Draw("SAME");
    /// ~~~
    ///
-   /// \sa This Vary() overload for more information.
+   /// \note See also This Vary() overload for more information.
    template <typename F>
    RInterface<Proxied, DS_t> Vary(std::string_view colName, F &&expression, const ColumnNames_t &inputColumns,
                                   std::size_t nVariations, std::string_view variationName = "")
@@ -948,7 +948,7 @@ public:
    /// hx["ptAndEta:up"].Draw("SAME");
    /// ~~~
    ///
-   /// \sa This Vary() overload for more information.
+   /// \note See also This Vary() overload for more information.
 
    template <typename F>
    RInterface<Proxied, DS_t>
@@ -971,7 +971,7 @@ public:
    /// \note This overload ensures that the ambiguity between C++20 string, vector<string> construction from init list
    /// is avoided.
    ///
-   /// \sa This Vary() overload for more information.
+   /// \note See also This Vary() overload for more information.
    template <typename F>
    RInterface<Proxied, DS_t>
    Vary(std::initializer_list<std::string> colNames, F &&expression, const ColumnNames_t &inputColumns,
@@ -1011,7 +1011,7 @@ public:
    /// hx["ptAndEta:1"].Draw("SAME");
    /// ~~~
    ///
-   /// \sa This Vary() overload for more information.
+   /// \note See also This Vary() overload for more information.
    template <typename F>
    RInterface<Proxied, DS_t>
    Vary(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
@@ -1042,7 +1042,7 @@ public:
    /// \note This overload ensures that the ambiguity between C++20 string, vector<string> construction from init list
    /// is avoided.
    ///
-   /// \sa This Vary() overload for more information.
+   /// \note See also This Vary() overload for more information.
    template <typename F>
    RInterface<Proxied, DS_t>
    Vary(std::initializer_list<std::string> colNames, F &&expression, const ColumnNames_t &inputColumns,
@@ -1075,7 +1075,7 @@ public:
    /// hx["pt:up"].Draw("SAME");
    /// ~~~
    ///
-   /// \sa This Vary() overload for more information.
+   /// \note See also This Vary() overload for more information.
    RInterface<Proxied, DS_t> Vary(std::string_view colName, std::string_view expression,
                                   const std::vector<std::string> &variationTags, std::string_view variationName = "")
    {
@@ -1108,7 +1108,7 @@ public:
    /// hx["pt:1"].Draw("SAME");
    /// ~~~
    ///
-   /// \sa This Vary() overload for more information.
+   /// \note See also This Vary() overload for more information.
    RInterface<Proxied, DS_t> Vary(std::string_view colName, std::string_view expression, std::size_t nVariations,
                                   std::string_view variationName = "")
    {
@@ -1145,7 +1145,7 @@ public:
    /// hx["xy:1"].Draw("SAME");
    /// ~~~
    ///
-   /// \sa This Vary() overload for more information.
+   /// \note See also This Vary() overload for more information.
    RInterface<Proxied, DS_t> Vary(const std::vector<std::string> &colNames, std::string_view expression,
                                   std::size_t nVariations, std::string_view variationName)
    {
@@ -1169,7 +1169,7 @@ public:
    /// \note This overload ensures that the ambiguity between C++20 string, vector<string> construction from init list
    /// is avoided.
    ///
-   /// \sa This Vary() overload for more information.
+   /// \note See also This Vary() overload for more information.
    RInterface<Proxied, DS_t> Vary(std::initializer_list<std::string> colNames, std::string_view expression,
                                   std::size_t nVariations, std::string_view variationName)
    {
@@ -1197,7 +1197,7 @@ public:
    /// hx["xy:up"].Draw("SAME");
    /// ~~~
    ///
-   /// \sa This Vary() overload for more information.
+   /// \note See also This Vary() overload for more information.
    RInterface<Proxied, DS_t> Vary(const std::vector<std::string> &colNames, std::string_view expression,
                                   const std::vector<std::string> &variationTags, std::string_view variationName)
    {

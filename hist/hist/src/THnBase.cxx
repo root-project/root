@@ -543,7 +543,7 @@ TFitResultPtr THnBase::Fit(TF1 *f ,Option_t *option ,Option_t *goption)
 /// \param idx an array of bin index in each dimension.
 /// \return vector of bin centers in each dimension; empty in case of error.
 /// \note Throws error if size is different from nDimensions.
-/// \sa GetAxis(dim)::GetBinCenter(idx) as an alternative
+/// \note See also GetAxis(dim)::GetBinCenter(idx) as an alternative
 std::vector<Double_t> THnBase::GetBinCenter(const std::vector<Int_t> &idx) const
 {
    if (idx.size() != static_cast<decltype(idx.size())>(fNdimensions)) {
@@ -1352,7 +1352,7 @@ void THnBase::ResetBase(Option_t * /*option = ""*/)
 /// \brief Compute integral (sum of counts) of histogram in all dimensions
 /// \param respectAxisRange if false, count all bins including under/overflows,
 ///                         if true, restrict sum to the user-set axis range
-/// \sa Projection(0)::Integral() as alternative
+/// \note See also Projection(0)::Integral() as alternative
 /// \note this function is different from ComputeIntegral, that is a normalized
 /// cumulative sum
 Double_t THnBase::Integral(Bool_t respectAxisRange) const

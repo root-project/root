@@ -110,7 +110,8 @@ public:
   double weight(std::size_t i) const { return _wgt[i]; }
   double weightFast(const RooArgSet& bin, int intOrder, bool correctForBinSize, bool cdfBoundaries);
   double weight(const RooArgSet& bin, Int_t intOrder=1, bool correctForBinSize=false, bool cdfBoundaries=false, bool oneSafe=false);
-  /// Return squared weight sum of i-th bin. \see getIndex(). If sumw2 is not
+  /// Return squared weight sum of i-th bin. \see getIndex().
+  /// If sumw2 is not
   /// being tracked, assume that all previous fill operations had a
   /// weight of 1, i.e., return the bare weight of the bin.
   double weightSquared(std::size_t i) const { return _sumw2 ? _sumw2[i] : _wgt[i]; }

@@ -187,7 +187,7 @@ THttpServer *RWebWindow::GetServer()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Show window in specified location
-/// \see ROOT::RWebWindowsManager::Show for more info
+/// \see ROOT::RWebWindowsManager::Show
 /// \return (future) connection id (or 0 when fails)
 
 unsigned RWebWindow::Show(const RWebDisplayArgs &args)
@@ -198,8 +198,8 @@ unsigned RWebWindow::Show(const RWebDisplayArgs &args)
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Start headless browser for specified window
 /// Normally only single instance is used, but many can be created
-/// See ROOT::RWebWindowsManager::Show() docu for more info
-/// returns (future) connection id (or 0 when fails)
+/// \see ROOT::RWebWindowsManager::Show
+/// \return (future) connection id (or 0 when fails)
 
 unsigned RWebWindow::MakeHeadless(bool create_new)
 {

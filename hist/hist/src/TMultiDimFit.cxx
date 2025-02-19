@@ -1719,7 +1719,7 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
 /// assumed to be in `<classname>.h` and assumed to be provided by the
 /// user.
 ///
-/// \see TMultiDimFit::MakeRealCode for a list of options
+/// \note see TMultiDimFit::MakeRealCode for a list of options
 ///
 /// The minimal class definition is:
 ///   \code{.cpp}

@@ -32,7 +32,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TMinuitMinimizer
-/// \see Minuit2 for a newer version of this class
+/// \note See ROOT::Minuit2 for a newer version of this class
 /// TMinuitMinimizer class implementing the ROOT::Math::Minimizer interface
 /// using TMinuit. This class is normally instantiated using the plug-in manager
 /// (plug-in with name Minuit or TMinuit).

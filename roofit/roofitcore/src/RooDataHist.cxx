@@ -1095,7 +1095,7 @@ std::size_t RooDataHist::calcTreeIndex(const RooAbsCollection& coords, bool fast
 /// frame in mode specified by plot options 'o'. The main purpose of
 /// this function is to match the specified binning on 'o' to the
 /// internal binning of the plot observable in this RooDataHist.
-/// \see RooAbsData::plotOn() for plotting options.
+/// \note see RooAbsData::plotOn() for plotting options.
 RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
 {
   checkInit() ;
@@ -1545,7 +1545,7 @@ void RooDataHist::initializeAsymErrArrays() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the asymmetric errors on the current weight.
-/// \see weightError(ErrorType) const for symmetric error.
+/// \note see weightError(ErrorType) const for symmetric error.
 /// \param[out] lo Low error.
 /// \param[out] hi High error.
 /// \param[in] etype Type of error to compute. May throw if not supported.

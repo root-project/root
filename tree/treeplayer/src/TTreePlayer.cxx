@@ -12,9 +12,9 @@
 /**
  * \defgroup treeplayer TreePlayer Library
  * \brief It contains utilities to plot data stored in a TTree.
- * \sa Tree package documentation
- * \sa Chapter about Trees and Selectors in the Users Guide
- * \sa ROOT examples in tutorials and test directories: Event application, benchmarks
+ * \note See also Tree package documentation
+ * \note See also Chapter about Trees and Selectors in the Users Guide
+ * \note See also ROOT examples in tutorials and test directories: Event application, benchmarks
  */
 
 /** \class TTreePlayer

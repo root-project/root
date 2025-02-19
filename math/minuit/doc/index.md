@@ -1,7 +1,7 @@
 \defgroup MinuitOld TMinuit
 \ingroup Math
 \brief The Minuit Minimization package.
-\see Minuit2 for a newer version of this package
+\note see ROOT::Minuit2 for a newer version of this package
 
 Direct C++ implementation of the Minuit minimization package.
 
