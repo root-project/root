@@ -6198,7 +6198,7 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @brief Normalize a histogram to its maximum value or integral.
+/// @brief Normalize a histogram to its integral or to its maximum.
 /// @note Works for TH1, TH2, TH3, ...
 /// @param option`"width"` (default) or `"max"` or `""`
 /// If it contains `max`, this histogram is normalized by 1/GetMaximum()
