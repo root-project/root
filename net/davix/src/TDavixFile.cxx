@@ -40,6 +40,7 @@
 #include "TBase64.h"
 #include "TVirtualPerfStats.h"
 #include "TDavixFileInternal.h"
+#include "utils.h"
 #include "snprintf.h"
 
 #include <cerrno>
@@ -88,16 +89,6 @@ ROOT::RLogChannel &TDavixLogChannel()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-bool isno(const char *str)
-{
-   if (!str) return false;
-
-   if (!strcmp(str, "n") || !strcmp(str, "no") || !strcmp(str, "0") || !strcmp(str, "false")) return true;
-
-   return false;
-
-}
 
 bool strToBool(const char *str, bool defvalue) {
     if(!str) return defvalue;
