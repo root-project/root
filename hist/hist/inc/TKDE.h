@@ -177,8 +177,8 @@ public:
 
 private:
 
-   TKDE(TKDE& kde);           // Disallowed copy constructor
-   TKDE operator=(TKDE& kde); // Disallowed assign operator
+   TKDE(TKDE& kde) = delete;
+   TKDE operator=(TKDE& kde) = delete;
 
    // Kernel function pointer. It is managed by class for internal kernels or externally for user defined kernels
    typedef ROOT::Math::IBaseFunctionOneDim* KernelFunction_Ptr;
