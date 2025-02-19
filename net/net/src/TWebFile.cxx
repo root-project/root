@@ -217,7 +217,11 @@ void TWebFile::Init(Bool_t readHeadOnly)
    fSocket     = nullptr;
    fSize       = -1;
    fHasModRoot = kFALSE;
+#if defined(R__WIN32) && defined(R__SSL)
+   fHTTP11     = kTRUE;
+#else
    fHTTP11     = kFALSE;
+#endif
    fFullCache  = nullptr;
    fFullCacheSize = 0;
    SetMsgReadBuffer10();
@@ -839,7 +843,8 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nse
                pos += ll;
             }
 
-            if (gDebug>0) Info("GetFromWeb10","Complete reading %d bytes in %d segments out of full size %lld", len, nseg, fullsize);
+            if (gDebug > 0)
+               Info("GetFromWeb10", "Complete reading %d bytes in %d segments out of full size %lld", len, nseg, fullsize);
 
             break;
          }
@@ -862,9 +867,9 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nse
       }
 
       TString res = line;
-
-      if (res.BeginsWith("HTTP/1.")) {
-         if (res.BeginsWith("HTTP/1.1")) {
+      res.ToLower();
+      if (res.BeginsWith("HTTP/1.", TString::kIgnoreCase)) {
+         if (res.BeginsWith("HTTP/1.1", TString::kIgnoreCase)) {
             if (!fHTTP11)
                fMsgReadBuffer10  = "";
             fHTTP11 = kTRUE;
@@ -909,34 +914,19 @@ Int_t TWebFile::GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nse
                     fUrl.GetHost());
 
          }
-      } else if (res.BeginsWith("Content-Type: multipart")) {
-         boundary = res(res.Index("boundary=")+9, 1000);
-         if (boundary[0]=='"' && boundary[boundary.Length()-1]=='"') {
-            boundary = boundary(1,boundary.Length()-2);
+      } else if (res.BeginsWith("content-type: multipart", TString::kIgnoreCase)) {
+         boundary = res(res.Index("boundary=", TString::kIgnoreCase) + 9, 1000);
+         if (boundary[0] == '"' && boundary[boundary.Length()-1] == '"') {
+            boundary = boundary(1, boundary.Length() - 2);
          }
          boundary = "--" + boundary;
          boundaryEnd = boundary + "--";
-      } else if (res.BeginsWith("Content-range:")) {
-#ifdef R__WIN32
-         sscanf(res.Data(), "Content-range: bytes %I64d-%I64d/%I64d", &first, &last, &tot);
-#else
-         sscanf(res.Data(), "Content-range: bytes %lld-%lld/%lld", &first, &last, &tot);
-#endif
+      } else if (res.BeginsWith("content-range:", TString::kIgnoreCase)) {
+         sscanf(res.Data(), "content-range: bytes %lld-%lld/%lld", &first, &last, &tot);
          if (fSize == -1) fSize = tot;
-      } else if (res.BeginsWith("Content-Range:")) {
-#ifdef R__WIN32
-         sscanf(res.Data(), "Content-Range: bytes %I64d-%I64d/%I64d", &first, &last, &tot);
-#else
-         sscanf(res.Data(), "Content-Range: bytes %lld-%lld/%lld", &first, &last, &tot);
-#endif
-         if (fSize == -1) fSize = tot;
-      } else if (res.BeginsWith("Content-Length:") && (fullsize == -200)) {
-#ifdef R__WIN32
-         sscanf(res.Data(), "Content-Length: %I64d", &fullsize);
-#else
-         sscanf(res.Data(), "Content-Length: %lld", &fullsize);
-#endif
-      } else if (res.BeginsWith("Location:") && redirect) {
+      } else if (res.BeginsWith("content-length:", TString::kIgnoreCase) && (fullsize == -200)) {
+         sscanf(res.Data(), "content-length: %lld", &fullsize);
+      } else if (res.BeginsWith("location:", TString::kIgnoreCase) && redirect) {
          redir = res(10, 1000);
          if (redirect == 2)   // temp redirect
             SetMsgReadBuffer10(redir, kTRUE);
@@ -1184,10 +1174,10 @@ Int_t TWebFile::GetHead()
             TString mess = res(13, 1000);
             Error("GetHead", "%s: %s (%d)", fBasicUrl.Data(), mess.Data(), code);
          }
-      } else if (res.BeginsWith("Content-Length:")) {
+      } else if (res.BeginsWith("Content-Length:", TString::kIgnoreCase)) {
          TString slen = res(16, 1000);
          fSize = slen.Atoll();
-      } else if (res.BeginsWith("Location:") && redirect) {
+      } else if (res.BeginsWith("Location:", TString::kIgnoreCase) && redirect) {
          redir = res(10, 1000);
          if (redirect == 2)   // temp redirect
             SetMsgReadBuffer10(redir, kTRUE);
