@@ -84,5 +84,3 @@ target_include_directories(pcre_builtin INTERFACE $<BUILD_INTERFACE:${PCRE_INCLU
 target_link_libraries(pcre_builtin INTERFACE $<BUILD_INTERFACE:${PCRE_LIBRARIES}>)
 add_library(PCRE::PCRE ALIAS pcre_builtin)
 add_dependencies(pcre_builtin PCRE)
-
-set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS PCRE)
