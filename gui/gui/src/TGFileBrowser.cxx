@@ -218,8 +218,8 @@ void TGFileBrowser::CreateBrowser()
    fListLevel   = 0;
    fCurrentDir  = 0;
    fRootDir     = 0;
-   fDir         = 0;
-   fFile        = 0;
+   fDir         = nullptr;
+   fFile        = nullptr;
    fNKeys       = 0;
    fCnt         = 0;
    fFilterStr   = "*";
@@ -261,6 +261,8 @@ TGFileBrowser::~TGFileBrowser()
    delete fContextMenu;
    delete fListTree;
    delete fFilter;
+   delete fDir;
+   delete fFile;
    if (fRootIcon) fClient->FreePicture(fRootIcon);
    if (fCachedPic && (fCachedPic != fFileIcon))
       fClient->FreePicture(fCachedPic);
