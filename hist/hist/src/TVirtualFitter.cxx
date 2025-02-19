@@ -88,55 +88,6 @@ TVirtualFitter::TVirtualFitter() :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
-
-TVirtualFitter::TVirtualFitter(const TVirtualFitter& tvf) :
-  TNamed(tvf),
-  fOption(tvf.fOption),
-  fXfirst(tvf.fXfirst),
-  fXlast(tvf.fXlast),
-  fYfirst(tvf.fYfirst),
-  fYlast(tvf.fYlast),
-  fZfirst(tvf.fZfirst),
-  fZlast(tvf.fZlast),
-  fNpoints(tvf.fNpoints),
-  fPointSize(tvf.fPointSize),
-  fCacheSize(tvf.fCacheSize),
-  fCache(tvf.fCache),
-  fObjectFit(tvf.fObjectFit),
-  fUserFunc(tvf.fUserFunc),
-  fMethodCall(tvf.fMethodCall),
-  fFCN(tvf.fFCN)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///assignment operator
-
-TVirtualFitter& TVirtualFitter::operator=(const TVirtualFitter& tvf)
-{
-   if(this!=&tvf) {
-      TNamed::operator=(tvf);
-      fOption=tvf.fOption;
-      fXfirst=tvf.fXfirst;
-      fXlast=tvf.fXlast;
-      fYfirst=tvf.fYfirst;
-      fYlast=tvf.fYlast;
-      fZfirst=tvf.fZfirst;
-      fZlast=tvf.fZlast;
-      fNpoints=tvf.fNpoints;
-      fPointSize=tvf.fPointSize;
-      fCacheSize=tvf.fCacheSize;
-      fCache=tvf.fCache;
-      fObjectFit=tvf.fObjectFit;
-      fUserFunc=tvf.fUserFunc;
-      fMethodCall=tvf.fMethodCall;
-      fFCN=tvf.fFCN;
-   }
-   return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Cleanup virtual fitter.
 
 TVirtualFitter::~TVirtualFitter()
