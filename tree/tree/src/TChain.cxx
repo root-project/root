@@ -30,6 +30,7 @@ the trees in the chain.
 #include <iostream>
 #include <cfloat>
 #include <string>
+#include <map>
 
 #include "TBranch.h"
 #include "TBrowser.h"
@@ -65,6 +66,26 @@ the trees in the chain.
 #include "snprintf.h"
 
 ClassImp(TChain);
+
+/**
+ * @brief Helper function getting a map between treeNumber (key) defined in an entryList, and the position of the latter in the collection (value).
+ * Only those entry lists that are active (treeNumber != -1) are used to fill the map.
+ * @param elist the TChain's TEntryList
+ * @return map of int to int
+ */
+ std::map<Int_t, Int_t> GetEntryListMap(const TEntryList* elist)
+ {
+    const auto *elists = elist->GetLists();
+    const auto ne = elists->GetEntries();
+    std::map<Int_t, Int_t> map_elists;
+    for (Int_t e = 0; e < ne; ++e) {
+       auto el = static_cast<TEntryList*>(elists->At(e));
+       if (el && el->GetTreeNumber()>=0) {
+          map_elists[el->GetTreeNumber()] = e;
+       }
+    }
+    return map_elists;
+ }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -1169,12 +1190,31 @@ TObjArray* TChain::GetListOfLeaves()
 Double_t TChain::GetMaximum(const char* columname)
 {
    Double_t theMax = -DBL_MAX;
-   for (Int_t file = 0; file < fNtrees; file++) {
-      Long64_t first = fTreeOffset[file];
-      LoadTree(first);
-      Double_t curmax = fTree->GetMaximum(columname);
-      if (curmax > theMax) {
-         theMax = curmax;
+   auto elist = GetEntryList();
+   if (!elist || !elist->GetLists()) {
+      for (Int_t file = 0; file < fNtrees; file++) {
+         Long64_t first = fTreeOffset[file];
+         LoadTree(first);
+         Double_t curmax = fTree->GetMaximum(columname);
+         if (curmax > theMax) {
+            theMax = curmax;
+         }
+      }
+   }
+   else {
+      auto map_elists = GetEntryListMap(elist);
+      for (Int_t file = 0; file < fNtrees; file++) {
+         Long64_t first = fTreeOffset[file];
+         LoadTree(first);
+         const auto prev = fTree->GetEntryList();
+         if (map_elists.find(file) != map_elists.end()) {
+            fTree->SetEntryList(static_cast<TEntryList*>(elist->GetLists()->At(map_elists[file])));
+         }
+         Double_t curmax = fTree->GetMaximum(columname);
+         fTree->SetEntryList(prev);
+         if (curmax > theMax) {
+            theMax = curmax;
+         }
       }
    }
    return theMax;
@@ -1186,12 +1226,31 @@ Double_t TChain::GetMaximum(const char* columname)
 Double_t TChain::GetMinimum(const char* columname)
 {
    Double_t theMin = DBL_MAX;
-   for (Int_t file = 0; file < fNtrees; file++) {
-      Long64_t first = fTreeOffset[file];
-      LoadTree(first);
-      Double_t curmin = fTree->GetMinimum(columname);
-      if (curmin < theMin) {
-         theMin = curmin;
+   auto elist = GetEntryList();
+   if (!elist || !elist->GetLists()) {
+      for (Int_t file = 0; file < fNtrees; file++) {
+         Long64_t first = fTreeOffset[file];
+         LoadTree(first);
+         Double_t curmin = fTree->GetMinimum(columname);
+         if (curmin < theMin) {
+            theMin = curmin;
+         }
+      }
+   }
+   else {
+      auto map_elists = GetEntryListMap(elist);
+      for (Int_t file = 0; file < fNtrees; file++) {
+         Long64_t first = fTreeOffset[file];
+         LoadTree(first);
+         const auto prev = fTree->GetEntryList();
+         if (map_elists.find(file) != map_elists.end()) {
+            fTree->SetEntryList(static_cast<TEntryList*>(elist->GetLists()->At(map_elists[file])));
+         }
+         Double_t curmin = fTree->GetMinimum(columname);
+         fTree->SetEntryList(prev);
+         if (curmin < theMin) {
+            theMin = curmin;
+         }
       }
    }
    return theMin;
