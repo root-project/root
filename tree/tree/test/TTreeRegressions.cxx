@@ -169,6 +169,7 @@ TEST(TTreeRegressions, PrintTopOnly)
 }
 
 // Issue ROOT-7926
+struct Event { double x; double y; };
 TEST(TTreeRegressions, PrintTopOnlySplit)
 {
    gInterpreter->Declare("struct Event { double x; double y; };");
