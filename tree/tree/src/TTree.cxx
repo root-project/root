@@ -7308,7 +7308,7 @@ void TTree::Print(Option_t* option) const
          leaf = (TLeaf *)const_cast<TTree*>(this)->GetListOfLeaves()->At(l);
          br   = leaf->GetBranch();
          // branch is its own (top level) mother only for the top level branches.
-         if ( br != br->GetMother() ) {
+         if (br != br->GetMother()) {
             count[l] = -1;
             count[keep] += br->GetZipBytes();
          } else {
