@@ -39,20 +39,24 @@ public:
    };
 
 public:
-   MinimumError(unsigned int n) : fPtr{new Data{{n}, 1.0, MnUnset}} {}
+   MinimumError(unsigned int n) : fPtr{new Data{{n}, {0}, 1.0, MnUnset}} {}
 
-   MinimumError(const MnAlgebraicSymMatrix &mat, double dcov) : fPtr{new Data{mat, dcov, MnPosDef}} {}
+   MinimumError(const MnAlgebraicSymMatrix &mat, double dcov) : fPtr{new Data{mat, {0}, dcov, MnPosDef}} {}
 
-   MinimumError(const MnAlgebraicSymMatrix &mat, Status status) : fPtr{new Data{mat, 1.0, status}} {}
+   MinimumError(const MnAlgebraicSymMatrix &mat, const MnAlgebraicSymMatrix &hess, double dcov) : fPtr{new Data{mat, hess, dcov, MnPosDef}} {}
+
+   MinimumError(const MnAlgebraicSymMatrix &mat, Status status) : fPtr{new Data{mat, {0}, 1.0, status}} {}
 
    MnAlgebraicSymMatrix Matrix() const { return 2. * fPtr->fMatrix; } // why *2 ?
 
    const MnAlgebraicSymMatrix &InvHessian() const { return fPtr->fMatrix; }
 
    // calculate invert of matrix. Used to compute Hessian  by inverting matrix
-   MnAlgebraicSymMatrix Hessian() const
+   const MnAlgebraicSymMatrix & Hessian() const
    {
-      return InvertMatrix(fPtr->fMatrix);
+      if (fPtr->fHessian.size() == 0)
+         fPtr->fHessian = InvertMatrix(fPtr->fMatrix);
+      return fPtr->fHessian;
    }
 
    static MnAlgebraicSymMatrix InvertMatrix(const MnAlgebraicSymMatrix & matrix, int & ifail) {
@@ -87,9 +91,10 @@ public:
    bool HasReachedCallLimit() const { return GetStatus() == MnReachedCallLimit; }
    bool IsAvailable() const { return GetStatus() != MnUnset; }
 
-private:
+public:
    struct Data {
       MnAlgebraicSymMatrix fMatrix;
+      MnAlgebraicSymMatrix fHessian;  // optional stored also Hessian (used in Fumili)
       double fDCovar;
       Status fStatus;
    };
