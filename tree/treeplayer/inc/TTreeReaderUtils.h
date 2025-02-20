@@ -88,6 +88,7 @@ namespace Internal {
       virtual ~TVirtualCollectionReader();
       virtual size_t GetSize(Detail::TBranchProxy*) = 0;
       virtual void* At(Detail::TBranchProxy*, size_t /*idx*/) = 0;
+      virtual bool IsContiguous(Detail::TBranchProxy *) = 0;
    };
 
 }
