@@ -474,7 +474,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpe
 
    // If no join fields have been specified, an aligned join is assumed and an join table won't be created.
    if (joinFields.size() > 0)
-      fJoinTables.emplace_back(Internal::RNTupleJoinTable::Create(joinFields, *pageSource, true /* deferBuild */));
+      fJoinTables.emplace_back(Internal::RNTupleJoinTable::Create(joinFields, *pageSource));
 
    fAuxiliaryPageSources.emplace_back(std::move(pageSource));
 }
