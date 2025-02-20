@@ -151,7 +151,7 @@ TEST(RNTuple, ArrayField)
       auto array1_field = ntuple->GetModel().GetDefaultEntry().GetPtr<float[2]>("array1");
       auto array2_field = ntuple->GetModel().GetDefaultEntry().GetPtr<unsigned char[4]>("array2");
       for (int i = 0; i < 2; i++) {
-         new (struct_field.get()) StructWithArrays({{'n', 't', 'p', 'l'}, {1.0, 42.0}, {{2*i}, {2*i + 1}}});
+         new (struct_field.get()) StructWithArrays({{'n', 't', 'p', 'l'}, {1.0, 42.0}, {{2 * i}, {2 * i + 1}}});
          new (array1_field.get()) float[2]{0.0f, static_cast<float>(i)};
          memcpy(array2_field.get(), charArray, sizeof(charArray));
          ntuple->Fill();
@@ -167,8 +167,8 @@ TEST(RNTuple, ArrayField)
       EXPECT_EQ(0, memcmp(viewStruct(i).c, "ntpl", 4));
       EXPECT_EQ(1.0f, viewStruct(i).f[0]);
       EXPECT_EQ(42.0f, viewStruct(i).f[1]);
-      EXPECT_EQ(2*i, viewStruct(i).i[0][0]);
-      EXPECT_EQ(2*i + 1, viewStruct(i).i[1][0]);
+      EXPECT_EQ(2 * i, viewStruct(i).i[0][0]);
+      EXPECT_EQ(2 * i + 1, viewStruct(i).i[1][0]);
 
       float fs[] = {0.0f, static_cast<float>(i)};
       EXPECT_EQ(0, memcmp(viewArray1(i), fs, sizeof(fs)));
@@ -235,17 +235,15 @@ TEST(RNTuple, StdPair)
    EXPECT_EQ((alignof(std::pair<int64_t, float>)), field.GetAlignment());
    EXPECT_EQ((alignof(std::pair<int64_t, float>)), otherField->GetAlignment());
 
-   auto pairPairField = RField<std::pair<std::pair<int64_t, float>,
-      std::vector<std::pair<CustomStruct, double>>>>("pairPairField");
+   auto pairPairField =
+      RField<std::pair<std::pair<int64_t, float>, std::vector<std::pair<CustomStruct, double>>>>("pairPairField");
    EXPECT_STREQ("std::pair<std::pair<std::int64_t,float>,std::vector<std::pair<CustomStruct,double>>>",
                 pairPairField.GetTypeName().c_str());
 
    FileRaii fileGuard("test_ntuple_rfield_stdpair.root");
    {
       auto model = RNTupleModel::Create();
-      auto pair_field = model->MakeField<std::pair<double, std::string>>(
-         {"myPair", "a very cool field"}
-      );
+      auto pair_field = model->MakeField<std::pair<double, std::string>>({"myPair", "a very cool field"});
       auto myPair2 = RFieldBase::Create("myPair2", "std::pair<double, std::string>").Unwrap();
       model->AddField(std::move(myPair2));
 
@@ -2029,13 +2027,12 @@ TEST(RNTuple, TClassStlDerived)
       RNTupleWriteOptions options;
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
       for (int i = 0; i < 10000; i++) {
-         new (fieldKlass.get()) PackedContainer<int>({i + 2, i + 3},
-                                                     {/*m_nbits=*/ (uint8_t)i,
-                                                      /*m_nmantissa=*/ (uint8_t)i,
-                                                      /*m_scale=*/ static_cast<float>(i + 1),
-                                                      /*m_flags=*/ 0,
-                                                      /*m_sgkey=*/ (uint32_t)(i + 1),
-                                                      /*c_uint=*/ (uint8_t)i});
+         new (fieldKlass.get()) PackedContainer<int>({i + 2, i + 3}, {/*m_nbits=*/(uint8_t)i,
+                                                                      /*m_nmantissa=*/(uint8_t)i,
+                                                                      /*m_scale=*/static_cast<float>(i + 1),
+                                                                      /*m_flags=*/0,
+                                                                      /*m_sgkey=*/(uint32_t)(i + 1),
+                                                                      /*c_uint=*/(uint8_t)i});
          ntuple->Fill();
       }
    }
@@ -2052,8 +2049,7 @@ TEST(RNTuple, TClassStlDerived)
       EXPECT_EQ(((uint8_t)i), viewKlass(i).m_params.c_uint);
       EXPECT_EQ(((uint32_t)(i + 1)), viewKlass(i).m_params.m_sgkey);
 
-      EXPECT_EQ((std::vector<int>{static_cast<int>(i + 2),
-                                  static_cast<int>(i + 3)}), viewKlass(i));
+      EXPECT_EQ((std::vector<int>{static_cast<int>(i + 2), static_cast<int>(i + 3)}), viewKlass(i));
    }
 }
 
