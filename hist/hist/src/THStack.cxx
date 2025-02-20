@@ -787,8 +787,12 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint, Bool_t rebuild_stac
       while (lnk) {
          auto subpad = padsav->GetPad(i++);
          if (!subpad) break;
-         subpad->Clear();
-         subpad->Add(lnk->GetObject(), lnk->GetOption());
+         // check if histogram already drawn on the pad
+         if (!subpad->FindObject(lnk->GetObject())) {
+            subpad->Clear();
+            subpad->Add(lnk->GetObject(), lnk->GetOption());
+            subpad->Paint(); // need to re-paint subpad immediately
+         }
          lnk = lnk->Next();
       }
       padsav->cd();
