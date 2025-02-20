@@ -276,7 +276,7 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
                 << typeInfo.nPages << " " << std::endl;
       break;
    case ENTupleInspectorPrintFormat::kCSV:
-      output << "columnType,count,nElements,compressedSize,uncompressedSize,compressionRatio,nPages" << std::endl;
+      output << "columnType,count,nElements,compressedSize,uncompressedSize,compressionFactor,nPages" << std::endl;
       for (const auto &[colType, typeInfo] : colTypeInfo) {
          output << Internal::RColumnElementBase::GetColumnTypeName(colType) << "," << typeInfo.count << ","
                 << typeInfo.nElems << "," << typeInfo.compressedSize << "," << typeInfo.uncompressedSize << ","
