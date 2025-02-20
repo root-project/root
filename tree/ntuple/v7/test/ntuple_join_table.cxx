@@ -21,7 +21,7 @@ TEST(RNTupleJoinTable, Basic)
    EXPECT_FALSE(joinTable->IsBuilt());
 
    try {
-      joinTable->GetFirstEntryNumber<std::uint64_t>(0);
+      joinTable->GetEntryIndexes({nullptr});
       FAIL() << "querying an unbuilt join table should not be possible";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("join table has not been built yet"));
@@ -38,7 +38,7 @@ TEST(RNTupleJoinTable, Basic)
    for (unsigned i = 0; i < ntuple->GetNEntries(); ++i) {
       auto fldValue = fld(i);
       EXPECT_EQ(fldValue, i * 2);
-      EXPECT_EQ(joinTable->GetFirstEntryNumber({&fldValue}), i);
+      EXPECT_EQ(joinTable->GetEntryIndexes({&fldValue}), std::vector{static_cast<ROOT::NTupleSize_t>(i)});
    }
 }
 
@@ -136,12 +136,13 @@ TEST(RNTupleJoinTable, SparseSecondary)
       auto event = fldEvent(i);
 
       if (i % 2 == 1) {
-         EXPECT_EQ(joinTable->GetFirstEntryNumber<std::uint64_t>(event), ROOT::kInvalidNTupleIndex)
+         EXPECT_EQ(joinTable->GetEntryIndexes({&event}), std::vector<ROOT::NTupleSize_t>{})
             << "entry should not be present in the join table";
       } else {
-         auto idx = joinTable->GetFirstEntryNumber<std::uint64_t>(event);
-         EXPECT_EQ(idx, i / 2);
-         EXPECT_FLOAT_EQ(fldX(idx), static_cast<float>(idx) / 3.14);
+         auto entryIdxs = joinTable->GetEntryIndexes({&event});
+         ASSERT_EQ(1ul, entryIdxs.size());
+         EXPECT_EQ(entryIdxs[0], i / 2);
+         EXPECT_FLOAT_EQ(fldX(entryIdxs[0]), static_cast<float>(entryIdxs[0]) / 3.14);
       }
    }
 }
@@ -181,23 +182,26 @@ TEST(RNTupleJoinTable, MultipleFields)
    for (std::uint64_t i = 0; i < pageSource->GetNEntries(); ++i) {
       run = i / 5;
       event = i % 5;
-      auto entryIdx = joinTable->GetFirstEntryNumber({&run, &event});
-      EXPECT_EQ(fld(entryIdx), fld(i));
+      auto entryIdxs = joinTable->GetEntryIndexes({&run, &event});
+      ASSERT_EQ(1ul, entryIdxs.size());
+      EXPECT_EQ(fld(entryIdxs[0]), fld(i));
    }
 
-   auto idx1 = joinTable->GetFirstEntryNumber<std::int16_t, std::uint64_t>(2, 1);
-   auto idx2 = joinTable->GetFirstEntryNumber<std::int16_t, std::uint64_t>(1, 2);
+   run = 1;
+   event = 2;
+   auto idx1 = joinTable->GetEntryIndexes({&run, &event});
+   auto idx2 = joinTable->GetEntryIndexes({&event, &run});
    EXPECT_NE(idx1, idx2);
 
    try {
-      joinTable->GetAllEntryNumbers<std::int16_t, std::uint64_t, std::uint64_t>(0, 2, 3);
+      joinTable->GetEntryIndexes({&run, &event, &event});
       FAIL() << "querying the join table with more values than join field values should not be possible";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("number of values must match number of join fields"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("number of value pointers must match number of join fields"));
    }
 
    try {
-      joinTable->GetAllEntryNumbers({0});
+      joinTable->GetEntryIndexes({&run});
       FAIL() << "querying the join table with fewer values than join field values should not be possible";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("number of value pointers must match number of join fields"));
@@ -229,15 +233,16 @@ TEST(RNTupleJoinTable, MultipleMatches)
 
    EXPECT_EQ(3ULL, joinTable->GetSize());
 
-   auto entryIdxs = joinTable->GetAllEntryNumbers<std::uint64_t>(1);
-   auto expected = std::vector<std::uint64_t>{0, 1, 2, 3, 4};
-   EXPECT_EQ(expected, *entryIdxs);
-   entryIdxs = joinTable->GetAllEntryNumbers<std::uint64_t>(2);
+   std::uint64_t run = 1;
+   auto entryIdxs = joinTable->GetEntryIndexes({&run});
+   auto expected = std::vector<ROOT::NTupleSize_t>{0, 1, 2, 3, 4};
+   EXPECT_EQ(expected, entryIdxs);
+   entryIdxs = joinTable->GetEntryIndexes({&(++run)});
    expected = {5, 6, 7};
-   EXPECT_EQ(expected, *entryIdxs);
-   entryIdxs = joinTable->GetAllEntryNumbers<std::uint64_t>(3);
+   EXPECT_EQ(expected, entryIdxs);
+   entryIdxs = joinTable->GetEntryIndexes({&(++run)});
    expected = {8, 9};
-   EXPECT_EQ(expected, *entryIdxs);
-   entryIdxs = joinTable->GetAllEntryNumbers<std::uint64_t>(4);
-   EXPECT_EQ(nullptr, entryIdxs);
+   EXPECT_EQ(expected, entryIdxs);
+   entryIdxs = joinTable->GetEntryIndexes({&(++run)});
+   EXPECT_EQ(std::vector<ROOT::NTupleSize_t>{}, entryIdxs);
 }

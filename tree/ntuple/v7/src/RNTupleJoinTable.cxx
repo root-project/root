@@ -104,17 +104,8 @@ void ROOT::Experimental::Internal::RNTupleJoinTable::Build(RPageSource &pageSour
    fIsBuilt = true;
 }
 
-ROOT::NTupleSize_t
-ROOT::Experimental::Internal::RNTupleJoinTable::GetFirstEntryNumber(const std::vector<void *> &valuePtrs) const
-{
-   const auto entryIndices = GetAllEntryNumbers(valuePtrs);
-   if (!entryIndices)
-      return ROOT::kInvalidNTupleIndex;
-   return entryIndices->front();
-}
-
-const std::vector<ROOT::NTupleSize_t> *
-ROOT::Experimental::Internal::RNTupleJoinTable::GetAllEntryNumbers(const std::vector<void *> &valuePtrs) const
+std::vector<ROOT::NTupleSize_t>
+ROOT::Experimental::Internal::RNTupleJoinTable::GetEntryIndexes(const std::vector<void *> &valuePtrs) const
 {
    EnsureBuilt();
 
@@ -128,10 +119,10 @@ ROOT::Experimental::Internal::RNTupleJoinTable::GetAllEntryNumbers(const std::ve
       joinFieldValues.push_back(CastValuePtr(valuePtrs[i], fJoinFieldValueSizes[i]));
    }
 
-   auto entryNumber = fJoinTable.find(RCombinedJoinFieldValue(joinFieldValues));
+   auto entryIdxs = fJoinTable.find(RCombinedJoinFieldValue(joinFieldValues));
 
-   if (entryNumber == fJoinTable.end())
-      return nullptr;
+   if (entryIdxs == fJoinTable.end())
+      return {};
 
-   return &(entryNumber->second);
+   return entryIdxs->second;
 }
