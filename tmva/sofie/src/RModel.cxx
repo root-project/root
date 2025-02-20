@@ -827,6 +827,11 @@ void RModel::GenerateSessionCode()
       intermediate_memory_alloc_string += AllocateIntermediateMemory(fOperators[op_idx]->GetOpOutputTensors());
       CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
    }
+
+   std::cout<<"Still in available memory: ";
+   for (const auto &it: fIntermediateMemoryInfo.available_stack){
+      std::cout<<"chunk_idx: "<<it.first<<", chunk_size: "<<it.second<<"\n";
+   }
    
    // generate the memory pool to be used by intermediate tensors
    GenerateIntermediateMemoryPool();
