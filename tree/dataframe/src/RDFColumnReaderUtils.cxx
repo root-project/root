@@ -34,8 +34,8 @@ GetCollectionInfo(const std::string &typeName)
 
 ROOT::Detail::RDF::RColumnReaderBase *
 ROOT::Internal::RDF::GetColumnReader(unsigned int slot, ROOT::Detail::RDF::RColumnReaderBase *defineOrVariationReader,
-                                     ROOT::Detail::RDF::RLoopManager &lm, TTreeReader *treeReader,
-                                     std::string_view colName, const std::type_info &ti)
+                                     ROOT::Detail::RDF::RLoopManager &lm, TTreeReader *, std::string_view colName,
+                                     const std::type_info &ti)
 {
    if (defineOrVariationReader != nullptr)
       return defineOrVariationReader;
@@ -46,21 +46,34 @@ ROOT::Internal::RDF::GetColumnReader(unsigned int slot, ROOT::Detail::RDF::RColu
    if (datasetColReader != nullptr)
       return datasetColReader;
 
-   assert(treeReader != nullptr &&
-          "We could not find a reader for this column, this should never happen at this point.");
+   return lm.AddDataSourceColumnReader(slot, colName, ti);
+}
+
+ROOT::Detail::RDF::RColumnReaderBase *
+ROOT::Internal::RDF::GetColumnReaderForTTreeIMT(unsigned int slot,
+                                                ROOT::Detail::RDF::RColumnReaderBase *defineOrVariationReader,
+                                                ROOT::Detail::RDF::RLoopManager &lm, TTreeReader &treeReader,
+                                                const std::string &colName, const std::type_info &ti)
+{
+   if (defineOrVariationReader != nullptr)
+      return defineOrVariationReader;
+
+   auto *datasetColReader = lm.GetDatasetColumnReader(slot, colName, ti);
+   if (datasetColReader != nullptr)
+      return datasetColReader;
 
    // Make a RTreeColumnReader for this column and insert it in RLoopManager's map
    auto createColReader = [&]() -> std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> {
       if (ti == typeid(void))
-         return std::make_unique<ROOT::Internal::RDF::RTreeOpaqueColumnReader>(*treeReader, colName);
+         return std::make_unique<ROOT::Internal::RDF::RTreeOpaqueColumnReader>(treeReader, colName);
 
       const auto typeName = ROOT::Internal::RDF::TypeID2TypeName(ti);
       if (auto &&[toConvert, innerTypeName, collType] = GetCollectionInfo(typeName); toConvert)
-         return std::make_unique<ROOT::Internal::RDF::RTreeUntypedArrayColumnReader>(*treeReader, colName,
-                                                                                     innerTypeName, collType);
+         return std::make_unique<ROOT::Internal::RDF::RTreeUntypedArrayColumnReader>(treeReader, colName, innerTypeName,
+                                                                                     collType);
       else
-         return std::make_unique<ROOT::Internal::RDF::RTreeUntypedValueColumnReader>(*treeReader, colName, typeName);
+         return std::make_unique<ROOT::Internal::RDF::RTreeUntypedValueColumnReader>(treeReader, colName, typeName);
    };
 
-   return lm.AddTreeColumnReader(slot, std::string(colName), createColReader(), ti);
+   return lm.AddTreeColumnReader(slot, colName, createColReader(), ti);
 }
