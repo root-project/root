@@ -95,10 +95,10 @@ class RNTupleMerger final {
    std::optional<TTaskGroup> fTaskGroup;
    std::unique_ptr<RNTupleModel> fModel;
 
-   void MergeCommonColumns(RClusterPool &clusterPool, ROOT::DescriptorId_t clusterId,
+   void MergeCommonColumns(RClusterPool &clusterPool, const RClusterDescriptor &clusterDesc,
                            std::span<const RColumnMergeInfo> commonColumns,
-                           const RCluster::ColumnSet_t &commonColumnSet, RSealedPageMergeData &sealedPageData,
-                           const RNTupleMergeData &mergeData);
+                           const RCluster::ColumnSet_t &commonColumnSet, std::size_t nCommonColumnsInCluster,
+                           RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData);
 
    void MergeSourceClusters(RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
                             std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
