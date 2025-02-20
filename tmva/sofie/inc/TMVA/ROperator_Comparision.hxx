@@ -73,7 +73,12 @@ private:
 public:
    ROperator_Comparision(){}
    ROperator_Comparision(const std::string & nameX1, const std::string & nameX2, const std::string & nameY):
-      fNX1(UTILITY::Clean_name(nameX1)), fNX2(UTILITY::Clean_name(nameX2)), fNY(UTILITY::Clean_name(nameY)){}
+      fNX1(UTILITY::Clean_name(nameX1)), fNX2(UTILITY::Clean_name(nameX2)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNX1, fNX2 };
+         
+         // output will be a boolean vector so should not be considered for memory optimized pool
+         fOutputTensorNames = { fNY };
+      }
 
    // type of output given input
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
@@ -86,7 +91,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model) override {
+   void Initialize(RModel& model){
       // input must be a graph input, or already initialized intermediate tensor
       if (!model.CheckIfTensorAlreadyExist(fNX1)){
          throw std::runtime_error(std::string("TMVA SOFIE Comparision Op Input Tensor ") + fNX1 + "is not found in model");

@@ -29,6 +29,9 @@ public:
    ROperator_Elu(float alpha,std::string nameX, std::string nameY):
    falpha(alpha),fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY))
    {
+      fInputTensorNames = { fNX };
+      fOutputTensorNames = { fNY };
+      
       if(std::is_same<T, float>::value){
          fType = "float";
       }

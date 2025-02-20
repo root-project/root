@@ -9,8 +9,10 @@
 #include <type_traits>
 #include <cstdint>
 #include <cstring>
+#include <complex>
 #include <string>
 #include <vector>
+#include <map>
 #include <memory>
 #include <regex>
 #include <sstream>
@@ -29,6 +31,24 @@ enum class ETensorType{
    UNDEFINED = 0, FLOAT = 1, UNINT8 = 2, INT8 = 3, UINT16 = 4, INT16 = 5, INT32 = 6, INT64 = 7, STRING = 8, BOOL = 9, //order sensitive
     FLOAT16 = 10, DOUBLE = 11, UINT32 = 12, UINT64 = 13, COMPLEX64 = 14, COMPLEX28 = 15, BFLOAT16 = 16
 };
+
+constexpr size_t GetTypeSize(ETensorType type) {
+    switch (type) {
+        case ETensorType::FLOAT:     return sizeof(float);
+        case ETensorType::DOUBLE:    return sizeof(double);
+        case ETensorType::UNINT8:     return sizeof(uint8_t);
+        case ETensorType::INT8:      return sizeof(int8_t);
+        case ETensorType::UINT16:    return sizeof(uint16_t);
+        case ETensorType::INT16:     return sizeof(int16_t);
+        case ETensorType::INT32:     return sizeof(int32_t);
+        case ETensorType::INT64:     return sizeof(int64_t);
+        case ETensorType::UINT32:    return sizeof(uint32_t);
+        case ETensorType::UINT64:    return sizeof(uint64_t);
+        case ETensorType::BOOL:      return sizeof(bool);
+        case ETensorType::STRING:    return sizeof(std::string);
+        default: return 0;
+    }
+}
 
 typedef std::int64_t int_t;
 
@@ -98,6 +118,32 @@ struct TensorType<uint64_t> {
    static const std::string Name() { return "uint64_t"; }
 };
 
+struct TensorMemoryInfo {
+   std::string_view tensor_name;
+   size_t tensor_size;
+
+   TensorMemoryInfo split(const std::string_view new_name, size_t new_size) {
+        if (new_size > tensor_size) {
+            throw std::invalid_argument("New size exceeds available tensor size.");
+        }
+        tensor_size -= new_size;
+        return TensorMemoryInfo{new_name, new_size};
+   }
+
+    // Method to merge another struct into this one
+   void merge(const TensorMemoryInfo& other) {
+        tensor_size += other.tensor_size;
+   }
+};
+
+struct MemoryPoolInfo {
+
+   // ordered map with chunk_idx as key and TensorMemoryInfo as value
+   std::map<size_t, TensorMemoryInfo> total_stack;
+
+   // ordered map with chunk_idx as key and chunk_size as value
+   std::map<size_t, size_t> available_stack;
+};
 
 std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape);
 

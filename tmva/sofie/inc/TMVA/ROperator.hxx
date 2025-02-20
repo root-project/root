@@ -33,7 +33,6 @@ public:
    virtual std::string GenerateSessionMembersCode(std::string /*opName*/) { return ""; }
    virtual std::string Header() { return "";}
 
-
    //virtual void Forward_reference() = 0;
    //virtual void Forward_blas() = 0;
    virtual ~ROperator(){}
@@ -43,6 +42,19 @@ protected:
    const std::string SP = "   ";    ///< space used to correctly indent the generated C++ code
    bool fUseSession = false;        ///< flag to identify if using the session class
    bool fIsOutputConstant = false;  ///< flag to identify if operator has a constant output (no need to generate code)
+   
+   mutable std::vector<std::string_view> fInputTensorNames;
+   mutable std::vector<std::string_view> fOutputTensorNames;
+
+public:
+   std::span<const std::string_view> GetOpInputTensors() const {
+      return fInputTensorNames;
+   }
+
+   std::span<const std::string_view> GetOpOutputTensors() const {
+      return fOutputTensorNames;
+   }
+   
 };
 
 
