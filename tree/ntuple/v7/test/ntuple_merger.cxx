@@ -2032,6 +2032,171 @@ TEST_P(RNTupleMergerDeferred, MergeSecondDeferred)
    }
 }
 
+TEST_P(RNTupleMergerDeferred, MergeSecondDeferredTwoClusters)
+{
+   // Like MergeSecondDeferred but the deferred column in the second rntuple appears in a different cluster
+   FileRaii fileGuard1("test_ntuple_merge_second_deferred_2clusters_in_1.root");
+   FileRaii fileGuard2("test_ntuple_merge_second_deferred_2clusters_in_2.root");
+
+   const auto [nEntriesPerFile, outComp] = GetParam();
+   constexpr auto firstDeferredIdx = 5;
+   assert(nEntriesPerFile > firstDeferredIdx);
+
+   // First RNTuple with regular field "flt"
+   {
+      auto model = RNTupleModel::Create();
+      auto pFlt = model->MakeField<float>("flt");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (int i = 0; i < nEntriesPerFile; ++i) {
+         *pFlt = i;
+         writer->Fill();
+      }
+   }
+
+   // Second RNTuple with deferred field "flt"
+   {
+      auto model = RNTupleModel::Create();
+      // Add a non-deferred field so we can write some entries before we extend the model and obtain
+      // actual deferred columns in the extension header.
+      auto pInt = model->MakeField<int>("int");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      for (int i = 0; i < firstDeferredIdx; ++i) {
+         *pInt = nEntriesPerFile + i;
+         writer->Fill();
+      }
+      writer->CommitCluster();
+      auto updater = writer->CreateModelUpdater();
+      updater->BeginUpdate();
+      updater->AddField(RFieldBase::Create("flt", "float").Unwrap());
+      updater->CommitUpdate();
+      auto pFlt = writer->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+      for (int i = firstDeferredIdx; i < nEntriesPerFile; ++i) {
+         *pInt = nEntriesPerFile + i;
+         *pFlt = nEntriesPerFile + i;
+         writer->Fill();
+      }
+   }
+
+   // Now merge them
+   std::vector<std::unique_ptr<RPageSource>> sources;
+   sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+   sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+   std::vector<RPageSource *> sourcePtrs;
+   for (const auto &s : sources) {
+      sourcePtrs.push_back(s.get());
+   }
+
+   FileRaii fileGuardOut("test_ntuple_merge_second_deferred_out.root");
+   auto wopts = RNTupleWriteOptions();
+   wopts.SetCompression(outComp);
+   auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), wopts);
+   RNTupleMerger merger{std::move(destination)};
+   auto opts = RNTupleMergeOptions();
+   opts.fMergingMode = ENTupleMergingMode::kUnion;
+   auto res = merger.Merge(sourcePtrs, opts);
+   EXPECT_TRUE(bool(res));
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+   EXPECT_EQ(reader->GetNEntries(), 2 * nEntriesPerFile);
+
+   auto pInt = reader->GetModel().GetDefaultEntry().GetPtr<int>("int");
+   auto pFlt = reader->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+   for (auto i = 0u; i < reader->GetNEntries(); ++i) {
+      reader->LoadEntry(i);
+      float expectedFlt = ((int)i >= nEntriesPerFile && (int)i < nEntriesPerFile + firstDeferredIdx) ? 0 : i;
+      EXPECT_FLOAT_EQ(*pFlt, expectedFlt);
+      int expectedInt = ((int)i >= nEntriesPerFile) * i;
+      EXPECT_EQ(*pInt, expectedInt);
+   }
+}
+
+TEST_P(RNTupleMergerDeferred, MergeSecondDeferredTwoClustersUnaligned)
+{
+   // Like MergeSecondDeferredTwoClusters but the deferred column is not aligned with cluster boundaries
+   FileRaii fileGuard1("test_ntuple_merge_second_deferred_2clusters_unaligned_in_1.root");
+   FileRaii fileGuard2("test_ntuple_merge_second_deferred_2clusters_unaligned_in_2.root");
+
+   const auto [nEntriesPerFile, outComp] = GetParam();
+   constexpr auto nEntriesPerCluster = 4;
+   constexpr auto firstDeferredIdx = 5;
+   assert(nEntriesPerFile > firstDeferredIdx);
+
+   // First RNTuple with regular field "flt"
+   {
+      auto model = RNTupleModel::Create();
+      auto pFlt = model->MakeField<float>("flt");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      for (int i = 0; i < nEntriesPerFile; ++i) {
+         *pFlt = i;
+         writer->Fill();
+         if (i % nEntriesPerCluster == 0) {
+            writer->CommitCluster();
+         }
+      }
+   }
+
+   // Second RNTuple with deferred field "flt"
+   {
+      auto model = RNTupleModel::Create();
+      // Add a non-deferred field so we can write some entries before we extend the model and obtain
+      // actual deferred columns in the extension header.
+      auto pInt = model->MakeField<int>("int");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      for (int i = 0; i < firstDeferredIdx; ++i) {
+         *pInt = nEntriesPerFile + i;
+         writer->Fill();
+         if (i > 0 && i % nEntriesPerCluster == 0) {
+            writer->CommitCluster();
+         }
+      }
+      auto updater = writer->CreateModelUpdater();
+      updater->BeginUpdate();
+      updater->AddField(RFieldBase::Create("flt", "float").Unwrap());
+      updater->CommitUpdate();
+      auto pFlt = writer->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+      for (int i = firstDeferredIdx; i < nEntriesPerFile; ++i) {
+         *pInt = nEntriesPerFile + i;
+         *pFlt = nEntriesPerFile + i;
+         writer->Fill();
+         if (i % nEntriesPerCluster == 0) {
+            writer->CommitCluster();
+         }
+      }
+   }
+
+   // Now merge them
+   std::vector<std::unique_ptr<RPageSource>> sources;
+   sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+   sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+   std::vector<RPageSource *> sourcePtrs;
+   for (const auto &s : sources) {
+      sourcePtrs.push_back(s.get());
+   }
+
+   FileRaii fileGuardOut("test_ntuple_merge_second_deferred_unaligned_out.root");
+   auto wopts = RNTupleWriteOptions();
+   wopts.SetCompression(outComp);
+   auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), wopts);
+   RNTupleMerger merger{std::move(destination)};
+   auto opts = RNTupleMergeOptions();
+   opts.fMergingMode = ENTupleMergingMode::kUnion;
+   auto res = merger.Merge(sourcePtrs, opts);
+   EXPECT_TRUE(bool(res));
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+   EXPECT_EQ(reader->GetNEntries(), 2 * nEntriesPerFile);
+
+   auto pInt = reader->GetModel().GetDefaultEntry().GetPtr<int>("int");
+   auto pFlt = reader->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+   for (auto i = 0u; i < reader->GetNEntries(); ++i) {
+      reader->LoadEntry(i);
+      float expectedFlt = ((int)i >= nEntriesPerFile && (int)i < nEntriesPerFile + firstDeferredIdx) ? 0 : i;
+      EXPECT_FLOAT_EQ(*pFlt, expectedFlt);
+      int expectedInt = ((int)i >= nEntriesPerFile) * i;
+      EXPECT_EQ(*pInt, expectedInt);
+   }
+}
+
 TEST_P(RNTupleMergerDeferred, MergeFirstDeferred)
 {
    // Try merging 2 RNTuples, the first having a deferred column "flt" and the second having a regular column "flt".
@@ -2089,6 +2254,172 @@ TEST_P(RNTupleMergerDeferred, MergeFirstDeferred)
    }
 
    FileRaii fileGuardOut("test_ntuple_merge_deferred_out.root");
+   auto wopts = RNTupleWriteOptions();
+   wopts.SetCompression(outComp);
+   auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), wopts);
+   RNTupleMerger merger{std::move(destination)};
+   auto opts = RNTupleMergeOptions();
+   opts.fMergingMode = ENTupleMergingMode::kUnion;
+   auto res = merger.Merge(sourcePtrs, opts);
+   EXPECT_TRUE(bool(res));
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+   EXPECT_EQ(reader->GetNEntries(), 2 * nEntriesPerFile);
+
+   auto pInt = reader->GetModel().GetDefaultEntry().GetPtr<int>("int");
+   auto pFlt = reader->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+   for (auto i = 0u; i < reader->GetNEntries(); ++i) {
+      reader->LoadEntry(i);
+      float expectedFlt = (i < firstDeferredIdx) ? 0 : i;
+      EXPECT_FLOAT_EQ(*pFlt, expectedFlt);
+      int expectedInt = ((int)i < nEntriesPerFile) * i;
+      EXPECT_EQ(*pInt, expectedInt);
+   }
+}
+
+TEST_P(RNTupleMergerDeferred, MergeFirstDeferredTwoClusters)
+{
+   // Like MergeFirstDeferred but the deferred column in the first rntuple appears in a different cluster
+   FileRaii fileGuard1("test_ntuple_merge_deferred_2clusters_in_1.root");
+   FileRaii fileGuard2("test_ntuple_merge_deferred_2clusters_in_2.root");
+
+   const auto [nEntriesPerFile, outComp] = GetParam();
+   constexpr auto firstDeferredIdx = 5;
+   assert(nEntriesPerFile > firstDeferredIdx);
+
+   // First RNTuple with deferred field "flt"
+   {
+      auto model1 = RNTupleModel::Create();
+      // Add a non-deferred field so we can write some entries before we extend the model and obtain
+      // actual deferred columns in the extension header.
+      auto pInt = model1->MakeField<int>("int");
+      auto wopts = RNTupleWriteOptions();
+      wopts.SetCompression(0);
+      auto writer1 = RNTupleWriter::Recreate(std::move(model1), "ntuple", fileGuard1.GetPath(), wopts);
+      for (int i = 0; i < firstDeferredIdx; ++i) {
+         *pInt = i;
+         writer1->Fill();
+      }
+      writer1->CommitCluster();
+      auto updater = writer1->CreateModelUpdater();
+      updater->BeginUpdate();
+      updater->AddField(RFieldBase::Create("flt", "float").Unwrap());
+      updater->CommitUpdate();
+      auto pFlt1 = writer1->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+      for (int i = firstDeferredIdx; i < nEntriesPerFile; ++i) {
+         *pInt = i;
+         *pFlt1 = i;
+         writer1->Fill();
+      }
+   }
+
+   // Second RNTuple with regular field "flt"
+   {
+      auto model2 = RNTupleModel::Create();
+      auto pFlt2 = model2->MakeField<float>("flt");
+      auto writer2 = RNTupleWriter::Recreate(std::move(model2), "ntuple", fileGuard2.GetPath());
+      for (int i = 0; i < nEntriesPerFile; ++i) {
+         *pFlt2 = nEntriesPerFile + i;
+         writer2->Fill();
+      }
+   }
+
+   // Now merge them
+   std::vector<std::unique_ptr<RPageSource>> sources;
+   sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+   sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+   std::vector<RPageSource *> sourcePtrs;
+   for (const auto &s : sources) {
+      sourcePtrs.push_back(s.get());
+   }
+
+   FileRaii fileGuardOut("test_ntuple_merge_deferred_2clusters_out.root");
+   auto wopts = RNTupleWriteOptions();
+   wopts.SetCompression(outComp);
+   auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), wopts);
+   RNTupleMerger merger{std::move(destination)};
+   auto opts = RNTupleMergeOptions();
+   opts.fMergingMode = ENTupleMergingMode::kUnion;
+   auto res = merger.Merge(sourcePtrs, opts);
+   EXPECT_TRUE(bool(res));
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+   EXPECT_EQ(reader->GetNEntries(), 2 * nEntriesPerFile);
+
+   auto pInt = reader->GetModel().GetDefaultEntry().GetPtr<int>("int");
+   auto pFlt = reader->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+   for (auto i = 0u; i < reader->GetNEntries(); ++i) {
+      reader->LoadEntry(i);
+      float expectedFlt = (i < firstDeferredIdx) ? 0 : i;
+      EXPECT_FLOAT_EQ(*pFlt, expectedFlt);
+      int expectedInt = ((int)i < nEntriesPerFile) * i;
+      EXPECT_EQ(*pInt, expectedInt);
+   }
+}
+
+TEST_P(RNTupleMergerDeferred, MergeFirstDeferredTwoClustersUnaligned)
+{
+   // Like MergeFirstDeferredTwoClusters but the deferred column doesn't align to a cluster boundary
+   FileRaii fileGuard1("test_ntuple_merge_deferred_2clusters_unaligned_in_1.root");
+   FileRaii fileGuard2("test_ntuple_merge_deferred_2clusters_unaligned_in_2.root");
+
+   const auto [nEntriesPerFile, outComp] = GetParam();
+   constexpr auto nEntriesPerCluster = 4;
+   constexpr auto firstDeferredIdx = 5;
+   assert(nEntriesPerFile > firstDeferredIdx);
+
+   // First RNTuple with deferred field "flt"
+   {
+      auto model1 = RNTupleModel::Create();
+      // Add a non-deferred field so we can write some entries before we extend the model and obtain
+      // actual deferred columns in the extension header.
+      auto pInt = model1->MakeField<int>("int");
+      auto wopts = RNTupleWriteOptions();
+      wopts.SetCompression(0);
+      auto writer1 = RNTupleWriter::Recreate(std::move(model1), "ntuple", fileGuard1.GetPath(), wopts);
+      for (int i = 0; i < firstDeferredIdx; ++i) {
+         *pInt = i;
+         writer1->Fill();
+         if (i == nEntriesPerCluster)
+            writer1->CommitCluster();
+      }
+      auto updater = writer1->CreateModelUpdater();
+      updater->BeginUpdate();
+      updater->AddField(RFieldBase::Create("flt", "float").Unwrap());
+      updater->CommitUpdate();
+      auto pFlt1 = writer1->GetModel().GetDefaultEntry().GetPtr<float>("flt");
+      for (int i = firstDeferredIdx; i < nEntriesPerFile; ++i) {
+         *pInt = i;
+         *pFlt1 = i;
+         writer1->Fill();
+         if (i % nEntriesPerCluster == 0)
+            writer1->CommitCluster();
+      }
+   }
+
+   // Second RNTuple with regular field "flt"
+   {
+      auto model2 = RNTupleModel::Create();
+      auto pFlt2 = model2->MakeField<float>("flt");
+      auto writer2 = RNTupleWriter::Recreate(std::move(model2), "ntuple", fileGuard2.GetPath());
+      for (int i = 0; i < nEntriesPerFile; ++i) {
+         *pFlt2 = nEntriesPerFile + i;
+         writer2->Fill();
+         if (i % nEntriesPerCluster == 0)
+            writer2->CommitCluster();
+      }
+   }
+
+   // Now merge them
+   std::vector<std::unique_ptr<RPageSource>> sources;
+   sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+   sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+   std::vector<RPageSource *> sourcePtrs;
+   for (const auto &s : sources) {
+      sourcePtrs.push_back(s.get());
+   }
+
+   FileRaii fileGuardOut("test_ntuple_merge_deferred_2clusters_unaligned_out.root");
    auto wopts = RNTupleWriteOptions();
    wopts.SetCompression(outComp);
    auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), wopts);
