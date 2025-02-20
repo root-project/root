@@ -13,6 +13,7 @@
 
 #include "RColumnRegister.hxx"
 #include <ROOT/RDF/RAction.hxx>
+#include <ROOT/RDF/RActionSnapshot.hxx>
 #include <ROOT/RDF/ActionHelpers.hxx> // for BuildAction
 #include <ROOT/RDF/RColumnRegister.hxx>
 #include <ROOT/RDF/RDefine.hxx>
@@ -286,6 +287,33 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
          Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options, std::move(isDefine)),
          colNames, prevNode, colRegister));
    }
+   return actionPtr;
+}
+
+template <typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperArgs> &snapHelperArgs,
+            const unsigned int /*nSlots*/, std::shared_ptr<PrevNodeType> prevNode, const RColumnRegister &colRegister)
+{
+   const auto &filename = snapHelperArgs->fFileName;
+   const auto &dirname = snapHelperArgs->fDirName;
+   const auto &treename = snapHelperArgs->fTreeName;
+   const auto &outputColNames = snapHelperArgs->fOutputColNames;
+   const auto &options = snapHelperArgs->fOptions;
+
+   auto sz = colNames.size();
+   std::vector<bool> isDefine(sz);
+   for (auto i = 0u; i < sz; ++i)
+      isDefine[i] = colRegister.IsDefineOrAlias(colNames[i]);
+
+   std::unique_ptr<RActionBase> actionPtr;
+
+   using Helper_t = UntypedSnapshotHelper;
+   using Action_t = RActionSnapshot<Helper_t, PrevNodeType>;
+   actionPtr.reset(
+      new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options, std::move(isDefine)),
+                   colNames, prevNode, colRegister));
+
    return actionPtr;
 }
 
