@@ -75,8 +75,6 @@ public:
         fValues(lm.GetNSlots())
    {
       fLoopManager->Register(this);
-      // We suppress errors that TTreeReader prints regarding the missing branch
-      fLoopManager->GetSuppressErrorsForMissingBranches().push_back(fColumnNames[0]);
    }
 
    RDefaultValueFor(const RDefaultValueFor &) = delete;
@@ -86,14 +84,22 @@ public:
    ~RDefaultValueFor()
    {
       fLoopManager->Deregister(this);
-      ROOT::Internal::RDF::Erase(fColumnNames[0], fLoopManager->GetSuppressErrorsForMissingBranches());
+      fLoopManager->EraseSuppressErrorsForMissingBranch(fColumnNames[0]);
    }
 
-   void InitSlot(TTreeReader *r, unsigned int slot) final
+   void InitSlot(TTreeReader *, unsigned int slot) final
    {
-      fValues[slot] = RDFInternal::GetColumnReader<T>(
-         slot, fColRegister.GetReader(slot, fColumnNames[0], fVariation, typeid(T)), *fLoopManager, r, fColumnNames[0]);
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
+   }
+
+   void RefreshColumnReaders(TTreeReader *r, unsigned int slot) final
+   {
+      fValues[slot] =
+         (r ? RDFInternal::GetColumnReaderForTTreeIMT(
+                 slot, fColRegister.GetReader(slot, fColumnNames[0], fVariation, typeid(T)), *fLoopManager, *r,
+                 fColumnNames[0], typeid(T))
+            : RDFInternal::GetColumnReader(slot, fColRegister.GetReader(slot, fColumnNames[0], fVariation, typeid(T)),
+                                           *fLoopManager, fColumnNames[0], typeid(T)));
    }
 
    /// Return the (type-erased) address of the Define'd value for the given processing slot.

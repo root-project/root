@@ -16,10 +16,12 @@ using namespace ROOT::Detail::RDF;
 
 RJittedDefine::~RJittedDefine() {}
 
-void RJittedDefine::InitSlot(TTreeReader *r, unsigned int slot)
+void RJittedDefine::InitSlot(TTreeReader *, unsigned int) {}
+
+void RJittedDefine::RefreshColumnReaders(TTreeReader *r, unsigned int slot)
 {
    assert(fConcreteDefine != nullptr);
-   fConcreteDefine->InitSlot(r, slot);
+   fConcreteDefine->RefreshColumnReaders(r, slot);
 }
 
 void *RJittedDefine::GetValuePtr(unsigned int slot)

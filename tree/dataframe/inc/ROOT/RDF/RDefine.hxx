@@ -120,11 +120,15 @@ public:
    RDefine &operator=(const RDefine &) = delete;
    ~RDefine() { fLoopManager->Deregister(this); }
 
-   void InitSlot(TTreeReader *r, unsigned int slot) final
+   void InitSlot(TTreeReader *, unsigned int slot) final
+   {
+      fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
+   }
+
+   void RefreshColumnReaders(TTreeReader *r, unsigned int slot) final
    {
       RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), *fLoopManager};
       fValues[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
-      fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
    }
 
    /// Return the (type-erased) address of the Define'd value for the given processing slot.

@@ -60,6 +60,7 @@ public:
    virtual ~RVariationBase();
 
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
+   virtual void RefreshColumnReaders(TTreeReader *r, unsigned int slot) = 0;
 
    /// Return the (type-erased) address of the value of one variation of one column (can be safely cast back to a T*).
    virtual void *GetValuePtr(unsigned int slot, const std::string &column, const std::string &variation) = 0;

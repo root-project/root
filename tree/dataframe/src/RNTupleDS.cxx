@@ -35,6 +35,7 @@
 #include <vector>
 #include <typeinfo>
 #include <utility>
+#include <unordered_map>
 
 // clang-format off
 /**

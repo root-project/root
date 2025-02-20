@@ -79,10 +79,12 @@ void RJittedAction::Initialize()
    fConcreteAction->Initialize();
 }
 
-void RJittedAction::InitSlot(TTreeReader *r, unsigned int slot)
+void RJittedAction::InitSlot(TTreeReader *, unsigned int) {}
+
+void RJittedAction::RefreshColumnReaders(TTreeReader *r, unsigned int slot)
 {
    assert(fConcreteAction != nullptr);
-   fConcreteAction->InitSlot(r, slot);
+   fConcreteAction->RefreshColumnReaders(r, slot);
 }
 
 void RJittedAction::TriggerChildrenCount()

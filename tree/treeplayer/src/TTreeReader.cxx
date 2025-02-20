@@ -573,10 +573,19 @@ void TTreeReader::Restart()
    fDirector->SetReadEntry(-1);
    fProxiesSet = false; // we might get more value readers, meaning new proxies.
    fEntry = -1;
-   if (const auto curFile = fTree->GetCurrentFile()) {
-      if (auto tc = fTree->GetTree()->GetReadCache(curFile, true)) {
-         tc->DropBranch("*", true);
-         tc->ResetCache();
+   // Reset the TTreeCaches for the whole dataset (current TTree + friends)
+   if (auto curTree = fTree->GetTree()) {
+      curTree->DropBranchFromCache("*", true);
+      if (auto curFile = curTree->GetCurrentFile())
+         if (auto tc = curTree->GetReadCache(curFile, true))
+            tc->ResetCache();
+      for (auto *frElement : TRangeDynCast<TFriendElement>(curTree->GetListOfFriends())) {
+         if (auto *frTree = frElement->GetTree()) {
+            frTree->DropBranchFromCache("*", true);
+            if (auto curFriendFile = frTree->GetCurrentFile())
+               if (auto ftc = frTree->GetReadCache(curFriendFile, true))
+                  ftc->ResetCache();
+         }
       }
    }
 }

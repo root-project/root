@@ -74,6 +74,8 @@ public:
 
    void InitSlot(TTreeReader *, unsigned int) final {}
 
+   void RefreshColumnReaders(TTreeReader *, unsigned int) final {}
+
    void FinalizeSlot(unsigned int) final {}
 
    // No-op for RDefinePerSample: it never depends on systematic variations
