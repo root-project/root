@@ -1081,9 +1081,13 @@ bool Cppyy::IsAbstract(TCppType_t klass)
 bool Cppyy::IsEnum(const std::string& type_name)
 {
     if (type_name.empty()) return false;
-    std::string tn_short = TClassEdit::ShortType(type_name.c_str(), 1);
-    if (tn_short.empty()) return false;
-    return gInterpreter->ClassInfo_IsEnum(tn_short.c_str());
+    // std::string tn_short = TClassEdit::ShortType(type_name.c_str(), 1);
+    // if (tn_short.empty()) return false;
+    // return gInterpreter->ClassInfo_IsEnum(tn_short.c_str());
+    if (auto type = Cpp::GetType(type_name))
+        return Cpp::IsEnumType(type);
+    else
+        return false;
 }
 
 bool Cppyy::IsAggregate(TCppType_t klass)
