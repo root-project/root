@@ -249,7 +249,7 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
       {
          if (uncompressedSize == 0)
             return 1.0;
-         return static_cast<float>(compressedSize) / static_cast<float>(uncompressedSize);
+         return static_cast<float>(uncompressedSize) / static_cast<float>(compressedSize);
       }
    };
 
