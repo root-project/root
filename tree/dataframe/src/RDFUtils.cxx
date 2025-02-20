@@ -55,6 +55,12 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
+bool &CloneHisto3DState()
+{
+   static bool useCloning = true;
+   return useCloning;
+}
+
 /// Return the type_info associated to a name. If the association fails, an
 /// exception is thrown.
 /// References and pointers are not supported since those cannot be stored in

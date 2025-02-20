@@ -791,4 +791,58 @@ TEST(RDFHelpers, ProgressHelper_existence_singleTTreeInput)
 
    EXPECT_FALSE(strCout.str().empty());
 }
+
+TEST(RDFHelpers, Histo3DThreadSafe)
+{
+   constexpr unsigned int N = 10;
+   ROOT::RDataFrame rdf1(N);
+   auto d1 = rdf1.Define("x", [](ULong64_t x) { return x; }, {"rdfentry_"})
+                .Define("y", [](ULong64_t x) { return x + .1; }, {"x"})
+                .Define("z", [](ULong64_t x) { return x + .2; }, {"x"})
+                .Define("w", []() { return 0.1; });
+   auto h1 = d1.Histo3D(::TH3D("h1", "h1", 10, 0, 10, 5, 0, 10, 2, 0, 10), "x", "y", "z");
+   auto h1w = d1.Histo3D(::TH3D("h1w", "h1w", 10, 0, 10, 5, 0, 10, 2, 0, 10), "x", "y", "z", "w");
+
+   // Trigger event loop before going MT:
+   h1->GetEntries();
+
+   ROOT::EnableImplicitMT(16);
+   ROOT::RDF::Experimental::CloneTH3(false);
+
+   ROOT::RDataFrame rdf2(N);
+   auto d2 = rdf2.Define("x", [](ULong64_t x) { return x; }, {"rdfentry_"})
+                .Define("y", [](ULong64_t x) { return x + .1; }, {"x"})
+                .Define("z", [](ULong64_t x) { return x + .2; }, {"x"})
+                .Define("w", []() { return 0.1; });
+   auto h2 = d2.Histo3D(::TH3D("h1", "h1", 10, 0, 10, 5, 0, 10, 2, 0, 10), "x", "y", "z");
+   auto h2w = d2.Histo3D(::TH3D("h1w", "h1w", 10, 0, 10, 5, 0, 10, 2, 0, 10), "x", "y", "z", "w");
+
+   constexpr double xMean = 4.5;
+   for (auto h : {h1, h2}) {
+      EXPECT_EQ(h->GetEntries(), N);
+      EXPECT_EQ(h->GetSumOfWeights(), N);
+      EXPECT_NEAR(h->GetMean(1), xMean, 1.E-14);
+      EXPECT_NEAR(h->GetMean(2), xMean + 0.1, 1.E-14);
+      EXPECT_NEAR(h->GetMean(3), xMean + 0.2, 1.E-14);
+   }
+
+   for (auto h : {h1w, h2w}) {
+      EXPECT_EQ(h->GetEntries(), N);
+      EXPECT_DOUBLE_EQ(h->GetSumOfWeights(), N * 0.1);
+      EXPECT_NEAR(h->GetMean(1), xMean, 1.E-14);
+      EXPECT_NEAR(h->GetMean(2), xMean + 0.1, 1.E-14);
+      EXPECT_NEAR(h->GetMean(3), xMean + 0.2, 1.E-14);
+   }
+
+   for (auto axis : {1, 2, 3, 11, 12, 13}) {
+      EXPECT_NEAR(h1->GetMean(axis), h2->GetMean(axis), h1->GetMean() * 1.E-14);
+      EXPECT_NEAR(h1w->GetMean(axis), h2w->GetMean(axis), h1w->GetMean() * 1.E-14);
+   }
+
+   const auto nbin = (h1->GetNbinsX() + 2) * (h1->GetNbinsY() + 2) + (h1->GetNbinsZ() + 2);
+   for (int i = 0; i < nbin; ++i) {
+      EXPECT_NEAR(h1->GetBinContent(i), h2->GetBinContent(i), fabs(h1->GetBinContent(i)) * 1.E-13);
+      EXPECT_NEAR(h1w->GetBinContent(i), h2w->GetBinContent(i), fabs(h1w->GetBinContent(i)) * 1.E-13);
+   }
+}
 #endif // R__USE_IMT

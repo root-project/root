@@ -67,6 +67,11 @@ using namespace ROOT::TypeTraits;
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;
 
+/// Get RDF's internal config as to whether Histo3D should be cloned in multithreaded runs.
+/// \return Reference to the internal flag. This can be used both for reading and for writing
+/// a new state.
+bool &CloneHisto3DState();
+
 /// Check for container traits.
 ///
 /// Note that for all uses in RDF we don't want to classify std::string as a container.
