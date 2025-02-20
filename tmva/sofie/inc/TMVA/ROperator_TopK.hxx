@@ -126,7 +126,7 @@ public:
       // [m,n,o,k,p] => boundary's size = length/(m*n*o)
       size_t groupSize = length/bound; //final search space for topK elements
 
-      size_t jump= groupSize/fShapeX[fAttrAxis];
+      size_t jump= groupSize/fShapeX[axis]; /// this is stride[axis]
       //candidates to check in group
       size_t numOfChecksInGrp=groupSize/jump;
       size_t numOfCheckersInGrp=groupSize/numOfChecksInGrp;
@@ -148,13 +148,13 @@ public:
       out<<SP<<SP<<"}\n";
       if (fAttrSorted) {
          if (fAttrLargest) {
-            out<<SP<<SP << "std::sort(elements.begin(),elements.end(),[](std::pair<float,int>a,std::pair<float,int>b){return "
+            out<<SP<<SP << "std::partial_sort(elements.begin(),elements.begin()+" << fK << ",elements.end(),[](std::pair<float,int>a,std::pair<float,int>b){return "
                    "a.first>b.first;});\n";
          } else
-            out<<SP<<SP << "std::sort(elements.begin(),elements.end(),[](std::pair<float,int>a,std::pair<float,int>b){return "
+            out<<SP<<SP << "std::partial_sort(elements.begin(),elements.begin()+" << fK << ",elements.end(),[](std::pair<float,int>a,std::pair<float,int>b){return "
                    "a.first<b.first;});\n";
       } else
-         out<<SP<<SP << "std::sort(elements.begin(),elements.end());\n";
+         out<<SP<<SP << "std::partial_sort(elements.begin(),elements.begin()+" << fK << ",elements.end());\n";
 
       out<<SP<<SP<<"itr++;\n";
       out<<SP<<SP<<"std::vector<std::pair<float,int>>kelems;\n";
