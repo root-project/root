@@ -262,7 +262,6 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
 
    switch (format) {
    case ENTupleInspectorPrintFormat::kTable:
-      // table header with compression ratio and pages
       output << " column type    | count   | # elements  | compressed bytes | uncompressed bytes | compression ratio | "
                 "# pages \n"
              << "----------------|---------|-------------|------------------|--------------------|-------------------|-"
