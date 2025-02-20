@@ -61,15 +61,9 @@ template <typename T>
 class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Detail::RDF::RColumnReaderBase {
    std::unique_ptr<TTreeReaderArray<T>> fTreeArray;
 
-   /// Enumerator for the memory layout of the branch
-   enum class EStorageType : char { kContiguous, kUnknown, kSparse };
-
    /// We return a reference to this RVec to clients, to guarantee a stable address and contiguous memory layout.
    RVec<T> fRVec;
 
-   /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
-   /// in contiguous memory.
-   EStorageType fStorageType = EStorageType::kUnknown;
    Long64_t fLastEntry = -1;
 
    /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
@@ -81,29 +75,13 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
          return &fRVec; // we already pointed our fRVec to the right address
 
       auto &readerArray = *fTreeArray;
-      // We only use TTreeReaderArrays to read columns that users flagged as type `RVec`, so we need to check
-      // that the branch stores the array as contiguous memory that we can actually wrap in an `RVec`.
-      // Currently we need the first entry to have been loaded to perform the check
-      // TODO Move check to constructor once ROOT-10823 is fixed and TTreeReaderArray itself exposes this information
       const auto readerArraySize = readerArray.GetSize();
 
       // The reader could not read an array, signal this back to the node requesting the value
       if (R__unlikely(readerArray.GetReadStatus() == ROOT::Internal::TTreeReaderValueBase::EReadStatus::kReadError))
          return nullptr;
 
-      if (EStorageType::kUnknown == fStorageType && readerArraySize > 1) {
-         // We can decide since the array is long enough
-         fStorageType = EStorageType::kContiguous;
-         for (auto i = 0u; i < readerArraySize - 1; ++i) {
-            if ((char *)&readerArray[i + 1] - (char *)&readerArray[i] != sizeof(T)) {
-               fStorageType = EStorageType::kSparse;
-               break;
-            }
-         }
-      }
-
-      if (EStorageType::kContiguous == fStorageType ||
-          (EStorageType::kUnknown == fStorageType && readerArray.GetSize() < 2)) {
+      if (readerArray.IsContiguous()) {
          if (readerArraySize > 0) {
             // trigger loading of the contents of the TTreeReaderArray
             // the address of the first element in the reader array is not necessarily equal to

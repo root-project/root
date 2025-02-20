@@ -35,6 +35,8 @@ public:
 
    EReadStatus GetReadStatus() const override { return fImpl ? fImpl->fReadStatus : kReadError; }
 
+   bool IsContiguous() const { return fImpl->IsContiguous(GetProxy()); }
+
 protected:
    void *UntypedAt(std::size_t idx) const { return fImpl->At(GetProxy(), idx); }
    void CreateProxy() override;
