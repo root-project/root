@@ -68,19 +68,19 @@ the trees in the chain.
 ClassImp(TChain);
 
 /**
- * @brief Helper function getting a map between treeNumber (key) defined in an entryList, and the position of the latter in the collection (value).
- * Only those entry lists that are active (treeNumber != -1) are used to fill the map.
+ * @brief Helper function getting a map between treeNumber (key) defined in an entryList, and the position of the latter
+ * in the collection (value). Only those entry lists that are active (treeNumber != -1) are used to fill the map.
  * @param elist the TChain's TEntryList
  * @return map of int to int
  */
- std::map<Int_t, Int_t> GetEntryListMap(const TEntryList* elist)
+ std::map<Int_t, Int_t> GetEntryListMap(const TEntryList *elist)
  {
     const auto *elists = elist->GetLists();
     const auto ne = elists->GetEntries();
     std::map<Int_t, Int_t> map_elists;
     for (Int_t e = 0; e < ne; ++e) {
-       auto el = static_cast<TEntryList*>(elists->At(e));
-       if (el && el->GetTreeNumber()>=0) {
+       auto el = static_cast<TEntryList *>(elists->At(e));
+       if (el && el->GetTreeNumber() >= 0) {
           map_elists[el->GetTreeNumber()] = e;
        }
     }
@@ -1200,15 +1200,14 @@ Double_t TChain::GetMaximum(const char* columname)
             theMax = curmax;
          }
       }
-   }
-   else {
+   } else {
       auto map_elists = GetEntryListMap(elist);
       for (Int_t file = 0; file < fNtrees; file++) {
          Long64_t first = fTreeOffset[file];
          LoadTree(first);
          const auto prev = fTree->GetEntryList();
          if (map_elists.find(file) != map_elists.end()) {
-            fTree->SetEntryList(static_cast<TEntryList*>(elist->GetLists()->At(map_elists[file])));
+            fTree->SetEntryList(static_cast<TEntryList *>(elist->GetLists()->At(map_elists[file])));
          }
          Double_t curmax = fTree->GetMaximum(columname);
          fTree->SetEntryList(prev);
@@ -1236,15 +1235,14 @@ Double_t TChain::GetMinimum(const char* columname)
             theMin = curmin;
          }
       }
-   }
-   else {
+   } else {
       auto map_elists = GetEntryListMap(elist);
       for (Int_t file = 0; file < fNtrees; file++) {
          Long64_t first = fTreeOffset[file];
          LoadTree(first);
          const auto prev = fTree->GetEntryList();
          if (map_elists.find(file) != map_elists.end()) {
-            fTree->SetEntryList(static_cast<TEntryList*>(elist->GetLists()->At(map_elists[file])));
+            fTree->SetEntryList(static_cast<TEntryList *>(elist->GetLists()->At(map_elists[file])));
          }
          Double_t curmin = fTree->GetMinimum(columname);
          fTree->SetEntryList(prev);

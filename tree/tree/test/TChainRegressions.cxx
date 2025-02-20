@@ -53,7 +53,7 @@ TEST(TChain, GetMinMaxEntryList)
 
    std::unique_ptr<TFile> file2(TFile::Open("t2_7067.root", "RECREATE"));
    TTree t2("t", "");
-   //int value;
+   // int value;
    t2.Branch("value", &value);
    value = 10;
    t2.Fill();
@@ -72,7 +72,7 @@ TEST(TChain, GetMinMaxEntryList)
    EXPECT_FLOAT_EQ(ch.GetMinimum("value"), 0.);
    EXPECT_FLOAT_EQ(ch.GetMaximum("value"), 13.);
    ch.Draw(">>myList", "value<11 && value >1", "entrylist");
-   TEntryList* myList = static_cast<TEntryList*>(gDirectory->Get("myList"));
+   TEntryList* myList = static_cast<TEntryList *>(gDirectory->Get("myList"));
    ch.SetEntryList(myList);
    EXPECT_FLOAT_EQ(ch.GetMinimum("value"), 2.);
    EXPECT_FLOAT_EQ(ch.GetMaximum("value"), 10.);
