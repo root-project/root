@@ -543,6 +543,7 @@ TEST(RNTupleInspector, PageSizeDistribution)
       auto nFldInt = model->MakeField<std::int64_t>("int");
       auto nFldFloat = model->MakeField<float>("float");
       auto nFldFloatVec = model->MakeField<std::vector<float>>("floatVec");
+      auto nFldDoubleVec = model->MakeField<std::vector<double>>("doubleVec");
 
       auto writeOptions = RNTupleWriteOptions();
       writeOptions.SetCompression(505);
@@ -554,6 +555,7 @@ TEST(RNTupleInspector, PageSizeDistribution)
          *nFldInt = static_cast<std::int64_t>(i);
          *nFldFloat = static_cast<float>(i) * .1f;
          *nFldFloatVec = {static_cast<float>(i), 3.14f, static_cast<float>(i) * *nFldFloat};
+         *nFldDoubleVec = {};
          ntuple->Fill();
       }
    }
@@ -622,6 +624,10 @@ TEST(RNTupleInspector, PageSizeDistribution)
    // Requesting a histogram for a column type not present in the given RNTuple should give an empty histogram
    auto nonExistingTypeHisto = inspector->GetPageSizeDistribution(ENTupleColumnType::kReal32);
    EXPECT_EQ(0, nonExistingTypeHisto->Integral());
+
+   // Requesting a histogram for a column type without columns in the given RNTuple should give an empty histogram
+   auto emptyTypeHisto = inspector->GetPageSizeDistribution(ENTupleColumnType::kSplitReal64);
+   EXPECT_EQ(0, emptyTypeHisto->Integral());
 }
 
 TEST(RNTupleInspector, FieldInfoCompressed)
