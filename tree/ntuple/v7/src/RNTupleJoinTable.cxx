@@ -33,30 +33,6 @@ CastValuePtr(void *valuePtr, const ROOT::Experimental::RFieldBase &field)
 }
 } // anonymous namespace
 
-ROOT::Experimental::Internal::RNTupleJoinTable::RNTupleJoinTable(const std::vector<std::string> &fieldNames,
-                                                                 const RPageSource &pageSource)
-   : fPageSource(pageSource.Clone())
-{
-   fPageSource->Attach();
-   auto desc = fPageSource->GetSharedDescriptorGuard();
-
-   fJoinFields.reserve(fieldNames.size());
-
-   for (const auto &fieldName : fieldNames) {
-      auto fieldId = desc->FindFieldId(fieldName);
-      if (fieldId == ROOT::kInvalidDescriptorId)
-         throw RException(R__FAIL("could not find join field \"" + std::string(fieldName) + "\" in RNTuple \"" +
-                                  fPageSource->GetNTupleName() + "\""));
-
-      const auto &fieldDesc = desc->GetFieldDescriptor(fieldId);
-      auto field = fieldDesc.CreateField(desc.GetRef());
-
-      CallConnectPageSourceOnField(*field, *fPageSource);
-
-      fJoinFields.push_back(std::move(field));
-   }
-}
-
 void ROOT::Experimental::Internal::RNTupleJoinTable::EnsureBuilt() const
 {
    if (!fIsBuilt)
@@ -64,15 +40,14 @@ void ROOT::Experimental::Internal::RNTupleJoinTable::EnsureBuilt() const
 }
 
 std::unique_ptr<ROOT::Experimental::Internal::RNTupleJoinTable>
-ROOT::Experimental::Internal::RNTupleJoinTable::Create(const std::vector<std::string> &fieldNames,
-                                                       const RPageSource &pageSource)
+ROOT::Experimental::Internal::RNTupleJoinTable::Create(const std::vector<std::string> &fieldNames)
 {
-   auto joinTable = std::unique_ptr<RNTupleJoinTable>(new RNTupleJoinTable(fieldNames, pageSource));
+   auto joinTable = std::unique_ptr<RNTupleJoinTable>(new RNTupleJoinTable(fieldNames));
 
    return joinTable;
 }
 
-void ROOT::Experimental::Internal::RNTupleJoinTable::Build()
+void ROOT::Experimental::Internal::RNTupleJoinTable::Build(RPageSource &pageSource)
 {
    if (fIsBuilt)
       return;
@@ -81,21 +56,38 @@ void ROOT::Experimental::Internal::RNTupleJoinTable::Build()
                                                                 "std::int64_t",  "std::uint8_t", "std::uint16_t",
                                                                 "std::uint32_t", "std::uint64_t"};
 
-   std::vector<RFieldBase::RValue> fieldValues;
-   fieldValues.reserve(fJoinFields.size());
+   pageSource.Attach();
+   auto desc = pageSource.GetSharedDescriptorGuard();
 
-   for (const auto &field : fJoinFields) {
-      if (allowedTypes.find(field->GetTypeName()) == allowedTypes.end()) {
-         throw RException(R__FAIL("cannot use field \"" + field->GetFieldName() + "\" with type \"" +
-                                  field->GetTypeName() + "\" in join table: only integral types are allowed"));
+   fJoinFields.reserve(fJoinFieldNames.size());
+   std::vector<RFieldBase::RValue> fieldValues;
+   fieldValues.reserve(fJoinFieldNames.size());
+
+   for (const auto &fieldName : fJoinFieldNames) {
+      auto fieldId = desc->FindFieldId(fieldName);
+      if (fieldId == ROOT::kInvalidDescriptorId)
+         throw RException(R__FAIL("could not find join field \"" + std::string(fieldName) + "\" in RNTuple \"" +
+                                  pageSource.GetNTupleName() + "\""));
+
+      const auto &fieldDesc = desc->GetFieldDescriptor(fieldId);
+
+      if (allowedTypes.find(fieldDesc.GetTypeName()) == allowedTypes.end()) {
+         throw RException(R__FAIL("cannot use field \"" + fieldName + "\" with type \"" + fieldDesc.GetTypeName() +
+                                  "\" in join table: only integral types are allowed"));
       }
+
+      auto field = fieldDesc.CreateField(desc.GetRef());
+
+      CallConnectPageSourceOnField(*field, pageSource);
+
       fieldValues.emplace_back(field->CreateValue());
+      fJoinFields.push_back(std::move(field));
    }
 
    std::vector<NTupleJoinValue_t> joinFieldValues;
-   joinFieldValues.reserve(fJoinFields.size());
+   joinFieldValues.reserve(fJoinFieldNames.size());
 
-   for (unsigned i = 0; i < fPageSource->GetNEntries(); ++i) {
+   for (unsigned i = 0; i < pageSource.GetNEntries(); ++i) {
       joinFieldValues.clear();
       for (auto &fieldValue : fieldValues) {
          // TODO(fdegeus): use bulk reading
@@ -122,13 +114,13 @@ ROOT::Experimental::Internal::RNTupleJoinTable::GetFirstEntryNumber(const std::v
 const std::vector<ROOT::NTupleSize_t> *
 ROOT::Experimental::Internal::RNTupleJoinTable::GetAllEntryNumbers(const std::vector<void *> &valuePtrs) const
 {
-   if (valuePtrs.size() != fJoinFields.size())
-      throw RException(R__FAIL("number of value pointers must match number of join fields"));
-
    EnsureBuilt();
 
+   if (valuePtrs.size() != fJoinFieldNames.size())
+      throw RException(R__FAIL("number of value pointers must match number of join fields"));
+
    std::vector<NTupleJoinValue_t> joinFieldValues;
-   joinFieldValues.reserve(fJoinFields.size());
+   joinFieldValues.reserve(valuePtrs.size());
 
    for (unsigned i = 0; i < valuePtrs.size(); ++i) {
       joinFieldValues.push_back(CastValuePtr(valuePtrs[i], *fJoinFields[i]));
