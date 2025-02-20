@@ -294,6 +294,7 @@ bool ROOT::Detail::TBranchProxy::Setup()
          fClass = fElement->GetClassPointer();
          fMemberOffset = fElement->GetOffset();
          fArrayLength = fElement->GetArrayLength();
+         fValueSize = fElement->GetSize();
       } else {
          Error("Setup","Data member %s seems no longer be in class %s",fDataMember.Data(),pcl->GetName());
          return false;
@@ -357,6 +358,7 @@ bool ROOT::Detail::TBranchProxy::Setup()
          if (leaf2) {
             fWhere = leaf2->GetValuePointer();
             fArrayLength = leaf2->GetLen();
+            fValueSize = leaf2->GetLenType();
             if (leaf2->GetLeafCount()) {
                fLeafCount = leaf2->GetLeafCount();
                fHasLeafCount = true;
@@ -392,6 +394,7 @@ bool ROOT::Detail::TBranchProxy::Setup()
             fElement = (TStreamerElement*)info->GetElements()->At(id);
             fIsaPointer = fElement->IsaPointer();
             fClass = fElement->GetClassPointer();
+            fValueSize = fElement->GetSize();
 
             if ((fIsMember || (be->GetType()!=3 && be->GetType() !=4))
                   && (be->GetType()!=31 && be->GetType()!=41)) {
@@ -533,16 +536,16 @@ bool ROOT::Detail::TBranchProxy::Setup()
 
             fElement = (TStreamerElement*)
                fClass->GetStreamerInfo()->GetElements()->FindObject(fDataMember);
-            if (fElement)
+            if (fElement) {
                fMemberOffset = fElement->GetOffset();
-            else {
+               fValueSize = fElement->GetSize();
+            } else {
                // Need to compose the proper sub name
 
                TString member;
 
                member += fDataMember;
                fMemberOffset = fClass->GetDataMemberOffset(member);
-
             }
             if (fMemberOffset < 0) {
                Error("Setup", "%s",
