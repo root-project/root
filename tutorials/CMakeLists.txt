@@ -436,6 +436,7 @@ if(MSVC)
   # disable run_h1analysis.C because of Endpoint Security HTTP traffic scanning,
   # which is corrupting the data on Windows
   list(APPEND extra_veto analysis/tree/run_h1analysis.C)
+  list(APPEND extra_veto legacy/hist040_TH2Poly_europe.C) # needs to download from the web
 endif()
 
 if(MSVC AND NOT llvm13_broken_tests)
