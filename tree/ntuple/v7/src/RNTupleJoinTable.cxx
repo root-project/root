@@ -65,12 +65,9 @@ void ROOT::Experimental::Internal::RNTupleJoinTable::EnsureBuilt() const
 
 std::unique_ptr<ROOT::Experimental::Internal::RNTupleJoinTable>
 ROOT::Experimental::Internal::RNTupleJoinTable::Create(const std::vector<std::string> &fieldNames,
-                                                       const RPageSource &pageSource, bool deferBuild)
+                                                       const RPageSource &pageSource)
 {
    auto joinTable = std::unique_ptr<RNTupleJoinTable>(new RNTupleJoinTable(fieldNames, pageSource));
-
-   if (!deferBuild)
-      joinTable->Build();
 
    return joinTable;
 }
