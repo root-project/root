@@ -106,12 +106,10 @@ public:
    /// \param[in] fieldNames The names of the join fields to use for the join table. Only integral-type fields are
    /// allowed.
    /// \param[in] pageSource The page source.
-   /// \param[in] deferBuild When set to `true`, an empty join table will be created. A call to RNTupleJoinTable::Build
-   /// is required before the join table can actually be used.
    ///
    /// \return A pointer to the newly-created join table.
    static std::unique_ptr<RNTupleJoinTable>
-   Create(const std::vector<std::string> &fieldNames, const RPageSource &pageSource, bool deferBuild = false);
+   Create(const std::vector<std::string> &fieldNames, const RPageSource &pageSource);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Build the join table.
