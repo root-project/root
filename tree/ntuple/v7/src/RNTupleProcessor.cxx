@@ -537,7 +537,12 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
       if (!joinTable->IsBuilt())
          joinTable->Build(*fAuxiliaryPageSources[i]);
 
-      auxEntryIdxs.push_back(joinTable->GetFirstEntryNumber(valPtrs));
+      auto entryIdxs = joinTable->GetEntryIndexes(valPtrs);
+
+      if (entryIdxs.empty())
+         auxEntryIdxs.push_back(kInvalidNTupleIndex);
+      else
+         auxEntryIdxs.push_back(entryIdxs[0]);
    }
 
    // For each auxiliary field, load its value according to the entry number we just found of the ntuple it belongs to.

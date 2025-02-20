@@ -140,59 +140,13 @@ public:
    bool IsBuilt() const { return fIsBuilt; }
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the first entry number corresponding to the given join field value(s).
-   ///
-   /// \param[in] valuePtrs A vector of pointers to the join field values to look up.
-   ///
-   /// \return The first entry number that corresponds to `valuePtrs`. When no such entry exists, `kInvalidNTupleIndex`
-   /// is returned.
-   ///
-   /// Note that in case multiple entries corresponding to the provided join field value exist, the first occurrence is
-   /// returned. Use RNTupleJoinTable::GetAllEntryNumbers to get all entries.
-   ROOT::NTupleSize_t GetFirstEntryNumber(const std::vector<void *> &valuePtrs) const;
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get the entry number corresponding to the given join field value(s).
-   ///
-   /// \sa GetFirstEntryNumber(std::vector<void *> valuePtrs)
-   template <typename... Ts>
-   ROOT::NTupleSize_t GetFirstEntryNumber(Ts... values) const
-   {
-      if (sizeof...(Ts) != fJoinFieldNames.size())
-         throw RException(R__FAIL("number of values must match number of join fields"));
-
-      std::vector<void *> valuePtrs;
-      valuePtrs.reserve(sizeof...(Ts));
-      ([&] { valuePtrs.push_back(&values); }(), ...);
-
-      return GetFirstEntryNumber(valuePtrs);
-   }
-
-   /////////////////////////////////////////////////////////////////////////////
    /// \brief Get all entry numbers for the given join field value(s).
    ///
    /// \param[in] valuePtrs A vector of pointers to the join field values to look up.
    ///
-   /// \return The entry numbers that corresponds to `valuePtrs`. When no such entry exists, an empty vector is
-   /// returned.
-   const std::vector<ROOT::NTupleSize_t> *GetAllEntryNumbers(const std::vector<void *> &valuePtrs) const;
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get all entry numbers for the given join field value(s).
-   ///
-   /// \sa GetAllEntryNumbers(std::vector<void *> valuePtrs)
-   template <typename... Ts>
-   const std::vector<ROOT::NTupleSize_t> *GetAllEntryNumbers(Ts... values) const
-   {
-      if (sizeof...(Ts) != fJoinFieldNames.size())
-         throw RException(R__FAIL("number of values must match number of join fields"));
-
-      std::vector<void *> valuePtrs;
-      valuePtrs.reserve(sizeof...(Ts));
-      ([&] { valuePtrs.push_back(&values); }(), ...);
-
-      return GetAllEntryNumbers(valuePtrs);
-   }
+   /// \return The entry indexes that correspond to `valuePtrs`. An empty vector is returned when there are no matching
+   /// indexes.
+   std::vector<ROOT::NTupleSize_t> GetEntryIndexes(const std::vector<void *> &valuePtrs) const;
 };
 } // namespace Internal
 } // namespace Experimental
