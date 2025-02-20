@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_hist
 ## \notebook -js
-## A Simple histogram drawing example
+## A Simple histogram drawing example.
 ##
 ## \macro_image
 ## \macro_output
