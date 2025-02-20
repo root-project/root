@@ -16,10 +16,20 @@
 #include "TEnum.h"
 #include "TError.h"
 #include "TFile.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+// Shadowing warnings can not be fixed without breaking backward compatibility
+// so just silence them. see https://github.com/root-project/root/pull/15379#issuecomment-2083159907
 #include "TProtoClass.h"
+#pragma clang diagnostic pop
 #include "TDataMember.h"
 #include "TROOT.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
+// Shadowing warnings can not be fixed without breaking backward compatibility
+// so just silence them. see https://github.com/root-project/root/pull/15379#issuecomment-2083159907
 #include "TStreamerInfo.h"
+#pragma clang diagnostic pop
 #include "TClassEdit.h"
 #include <memory>
 
