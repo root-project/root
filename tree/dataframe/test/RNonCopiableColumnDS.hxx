@@ -45,8 +45,7 @@ public:
       auto entryRanges(std::move(fEntryRanges)); // empty fEntryRanges
       return entryRanges;
    };
-   bool SetEntry(unsigned int, ULong64_t) final { return true;};
-   void SetNSlots(unsigned int) final {};
+   bool SetEntry(unsigned int, ULong64_t) final { return true; };
    std::string GetLabel() final {
       return "NonCopiableColumnDS";
    }

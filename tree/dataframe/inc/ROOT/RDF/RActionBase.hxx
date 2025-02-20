@@ -66,6 +66,7 @@ public:
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void Initialize() = 0;
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
+   virtual void RefreshColumnReaders(TTreeReader *r, unsigned int slot) = 0;
    virtual void TriggerChildrenCount() = 0;
    virtual void FinalizeSlot(unsigned int) = 0;
    virtual void Finalize() = 0;

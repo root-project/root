@@ -50,6 +50,7 @@ public:
    void Run(unsigned int slot, Long64_t entry) final;
    void Initialize() final;
    void InitSlot(TTreeReader *r, unsigned int slot) final;
+   void RefreshColumnReaders(TTreeReader *r, unsigned int slot) final;
    void TriggerChildrenCount() final;
    void FinalizeSlot(unsigned int) final;
    void Finalize() final;

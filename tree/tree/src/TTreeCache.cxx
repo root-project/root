@@ -585,11 +585,14 @@ Int_t TTreeCache::DropBranch(TBranch *b, bool subbranches /*= false*/)
 
 Int_t TTreeCache::DropBranch(const char *bname, bool subbranches /*= false*/)
 {
+   Int_t nleaves = (fTree->GetListOfLeaves())->GetEntriesFast();
+   if (nleaves == 0)
+      return 0;
+
    TBranch *branch, *bcount;
    TLeaf *leaf, *leafcount;
 
    Int_t i;
-   Int_t nleaves = (fTree->GetListOfLeaves())->GetEntriesFast();
    TRegexp re(bname,true);
    Int_t nb = 0;
    Int_t res = 0;
@@ -655,6 +658,15 @@ Int_t TTreeCache::DropBranch(const char *bname, bool subbranches /*= false*/)
                res = -1;
             }
             ++foundInFriend;
+         }
+         if (all) {
+            if (auto friendFile = t->GetCurrentFile()) {
+               if (auto friendTreeCache = t->GetReadCache(friendFile, true)) {
+                  if (auto frDropRes = friendTreeCache->DropBranch("*", true); frDropRes == 0)
+                     foundInFriend++;
+                  friendTreeCache->ResetCache();
+               }
+            }
          }
       }
    }

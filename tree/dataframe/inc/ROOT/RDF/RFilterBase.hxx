@@ -63,6 +63,7 @@ public:
    ~RFilterBase() override;
 
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
+   virtual void RefreshColumnReaders(TTreeReader *r, unsigned int slot) = 0;
    bool HasName() const;
    std::string GetName() const;
    virtual void FillReport(ROOT::RDF::RCutFlowReport &) const;
