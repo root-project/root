@@ -73,19 +73,19 @@ ClassImp(TChain);
  * @param elist the TChain's TEntryList
  * @return map of int to int
  */
- std::map<Int_t, Int_t> GetEntryListMap(const TEntryList *elist)
- {
-    const auto *elists = elist->GetLists();
-    const auto ne = elists->GetEntries();
-    std::map<Int_t, Int_t> map_elists;
-    for (Int_t e = 0; e < ne; ++e) {
-       auto el = static_cast<TEntryList *>(elists->At(e));
-       if (el && el->GetTreeNumber() >= 0) {
-          map_elists[el->GetTreeNumber()] = e;
-       }
-    }
-    return map_elists;
- }
+std::map<Int_t, Int_t> GetEntryListMap(const TEntryList *elist)
+{
+   const auto *elists = elist->GetLists();
+   const auto ne = elists->GetEntries();
+   std::map<Int_t, Int_t> map_elists;
+   for (Int_t e = 0; e < ne; ++e) {
+      auto el = static_cast<TEntryList *>(elists->At(e));
+      if (el && el->GetTreeNumber() >= 0) {
+         map_elists[el->GetTreeNumber()] = e;
+      }
+   }
+   return map_elists;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
