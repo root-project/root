@@ -151,16 +151,32 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, TClass 
          continue;
       }
 
-      std::string typeName{dataMember->GetFullTypeName()};
+      // NOTE: we use the already-resolved type name for the fields, otherwise TClass::GetClass may fail to resolve
+      // context-dependent types (e.g. typedefs defined in the class itself - which will not be fully qualified in
+      // the string returned by dataMember->GetFullTypeName())
+      std::string typeName{dataMember->GetTrueTypeName()};
+      // RFieldBase::Create() set subField->fTypeAlias based on the assumption that the user specified typeName, which
+      // already went through one round of type resolution.
+      std::string origTypeName{dataMember->GetFullTypeName()};
+
       // For C-style arrays, complete the type name with the size for each dimension, e.g. `int[4][2]`
       if (dataMember->Property() & kIsArray) {
-         for (int dim = 0, n = dataMember->GetArrayDim(); dim < n; ++dim)
-            typeName += "[" + std::to_string(dataMember->GetMaxIndex(dim)) + "]";
+         for (int dim = 0, n = dataMember->GetArrayDim(); dim < n; ++dim) {
+            const auto addedStr = "[" + std::to_string(dataMember->GetMaxIndex(dim)) + "]";
+            typeName += addedStr;
+            origTypeName += addedStr;
+         }
       }
 
-      std::unique_ptr<RFieldBase> subField;
+      auto subField = RFieldBase::Create(dataMember->GetName(), typeName).Unwrap();
 
-      subField = RFieldBase::Create(dataMember->GetName(), typeName).Unwrap();
+      const auto normTypeName = Internal::GetNormalizedUnresolvedTypeName(origTypeName);
+      if (normTypeName == subField->GetTypeName()) {
+         subField->fTypeAlias = "";
+      } else {
+         subField->fTypeAlias = normTypeName;
+      }
+
       fTraits &= subField->GetTraits();
       Attach(std::move(subField), RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
    }
