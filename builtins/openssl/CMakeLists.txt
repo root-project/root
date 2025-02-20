@@ -84,5 +84,3 @@ find_package_handle_standard_args(OpenSSL
   VERSION_VAR
     OPENSSL_VERSION_STRING
 )
-
-set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS OPENSSL)
