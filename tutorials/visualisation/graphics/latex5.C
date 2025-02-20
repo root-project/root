@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// This draws the Mathematical Symbols letters as a table and save the result
+/// \preview This draws the Mathematical Symbols letters as a table and save the result
 /// as GIF, PS, PDF and SVG files.
 ///
 /// ### png output:

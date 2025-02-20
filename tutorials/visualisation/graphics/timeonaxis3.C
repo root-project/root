@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// This example compares what the system time function gmtime and localtime give
+/// \preview This example compares what the system time function gmtime and localtime give
 /// with what gives TGaxis. It can be used as referenced test to check if TGaxis
 /// is working properly.
 /// The original code was developed by Philippe Gras (CEA Saclay. IRFU/SEDI)

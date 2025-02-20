@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Palette coloring for graphs is activated thanks to the options `PFC` (Palette Fill
+/// \preview Palette coloring for graphs is activated thanks to the options PFC (Palette Fill
 /// Color), `PLC` (Palette Line Color) and `AMC` (Palette Marker Color). When
 /// one of these options is given to `TGraph::Draw` the `TGraph` get its color
 /// from the current color palette defined by `gStyle->SetPalette(...)`. The color

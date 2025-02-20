@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Getting Contours From TH2D.
+/// \preview Getting Contours From TH2D.
 ///
 /// #### Image produced by `.x ContourList.C`
 /// The contours values are drawn next to each contour.

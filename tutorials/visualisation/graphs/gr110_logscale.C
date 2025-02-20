@@ -1,8 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-///  
-/// This tutorial demonstrates how to set a logarithmic scale for the axes of a graph using the `SetLogScale()` method.
+/// \preview This tutorial demonstrates how to set a logarithmic scale for the axes of a graph using the `SetLogScale()` method.
 /// The logarithmic scale can be applied to either the x-axis, the y-axis, or both axes at the same time.
 /// When using a logarithmic scale, the data must be positive since the logarithm is undefined for non-positive values and zero.
 ///

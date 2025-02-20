@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// This example demonstrates how to display a histogram and its two projections.
+/// \preview This example demonstrates how to display a histogram and its two projections.
 /// A TExec allows to redraw automatically the projections when a zoom is performed
 /// on the 2D histogram.
 ///

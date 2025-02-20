@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Drawing stack histograms on subpads.
+/// \preview Drawing stack histograms on subpads.
 ///
 /// In this example three histograms are displayed on separate pads.
 /// If canvas divided in advance - provided subpads will be used by the THStack.

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// The legend can be placed automatically in the current pad in an empty space
+/// \preview The legend can be placed automatically in the current pad in an empty space
 /// found at painting time.
 ///
 /// The following example illustrate this facility. Only the width and height of the

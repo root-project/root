@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 ///
-/// This tutorial demonstrates how to use the highlight mode on graph, thanks to the TCanvas [HighlightConnect](https://root.cern/doc/master/classTCanvas.html#a462b8dc286a2d29152fefa9b31f89920) method.
+/// \preview This tutorial demonstrates how to use the highlight mode on graph, thanks to the TCanvas [HighlightConnect](https://root.cern/doc/master/classTCanvas.html#a462b8dc286a2d29152fefa9b31f89920) method.
 ///
 /// \macro_code
 /// \date March 2018

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Example showing an histogram with reverse axis.
+/// \preview Example showing an histogram with reverse axis.
 ///
 /// \macro_image
 /// \macro_code

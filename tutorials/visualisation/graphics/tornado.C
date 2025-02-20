@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// Show 3-d polymarker.
+/// \preview Show 3-d polymarker.
 ///
 /// \macro_image
 /// \macro_code
