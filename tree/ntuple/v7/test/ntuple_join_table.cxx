@@ -18,36 +18,6 @@ TEST(RNTupleJoinTable, Basic)
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
    auto joinTable = RNTupleJoinTable::Create({"fld"}, *pageSource);
-
-   EXPECT_EQ(10UL, joinTable->GetSize());
-
-   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   auto fld = ntuple->GetView<std::uint64_t>("fld");
-
-   for (unsigned i = 0; i < ntuple->GetNEntries(); ++i) {
-      auto fldValue = fld(i);
-      EXPECT_EQ(fldValue, i * 2);
-      EXPECT_EQ(joinTable->GetFirstEntryNumber({&fldValue}), i);
-   }
-}
-
-TEST(RNTupleJoinTable, DeferBuild)
-{
-   FileRaii fileGuard("test_ntuple_join_table_defer_build.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fld = model->MakeField<std::uint64_t>("fld");
-
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-
-      for (int i = 0; i < 10; ++i) {
-         *fld = i * 2;
-         ntuple->Fill();
-      }
-   }
-
-   auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto joinTable = RNTupleJoinTable::Create({"fld"}, *pageSource, true /* deferBuild */);
    EXPECT_FALSE(joinTable->IsBuilt());
 
    try {
@@ -60,7 +30,16 @@ TEST(RNTupleJoinTable, DeferBuild)
    joinTable->Build();
    EXPECT_TRUE(joinTable->IsBuilt());
 
-   EXPECT_EQ(0, joinTable->GetFirstEntryNumber<std::uint64_t>(0));
+   EXPECT_EQ(10UL, joinTable->GetSize());
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   auto fld = ntuple->GetView<std::uint64_t>("fld");
+
+   for (unsigned i = 0; i < ntuple->GetNEntries(); ++i) {
+      auto fldValue = fld(i);
+      EXPECT_EQ(fldValue, i * 2);
+      EXPECT_EQ(joinTable->GetFirstEntryNumber({&fldValue}), i);
+   }
 }
 
 TEST(RNTupleJoinTable, InvalidTypes)
@@ -81,10 +60,11 @@ TEST(RNTupleJoinTable, InvalidTypes)
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
 
    auto joinTable = RNTupleJoinTable::Create({"fldInt"}, *pageSource);
+   joinTable->Build();
    EXPECT_EQ(1UL, joinTable->GetSize());
 
    try {
-      RNTupleJoinTable::Create({"fldFloat"}, *pageSource);
+      RNTupleJoinTable::Create({"fldFloat"}, *pageSource)->Build();
       FAIL() << "non-integral-type field should not be allowed as join fields";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(
@@ -94,7 +74,7 @@ TEST(RNTupleJoinTable, InvalidTypes)
    }
 
    try {
-      RNTupleJoinTable::Create({"fldString"}, *pageSource);
+      RNTupleJoinTable::Create({"fldString"}, *pageSource)->Build();
       FAIL() << "non-integral-type field should not be allowed as join fields";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(
@@ -104,7 +84,7 @@ TEST(RNTupleJoinTable, InvalidTypes)
    }
 
    try {
-      RNTupleJoinTable::Create({"fldStruct"}, *pageSource);
+      RNTupleJoinTable::Create({"fldStruct"}, *pageSource)->Build();
       FAIL() << "non-integral-type field should not be allowed as join fields";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("cannot use field \"fldStruct\" with type \"CustomStruct\" in "
@@ -147,6 +127,8 @@ TEST(RNTupleJoinTable, SparseSecondary)
 
    auto secondaryPageSource = RPageSource::Create("secondary", fileGuardSecondary.GetPath());
    auto joinTable = RNTupleJoinTable::Create({"event"}, *secondaryPageSource);
+   joinTable->Build();
+
    auto secondaryNTuple = RNTupleReader::Open("secondary", fileGuardSecondary.GetPath());
    auto fldX = secondaryNTuple->GetView<float>("x");
 
@@ -187,6 +169,7 @@ TEST(RNTupleJoinTable, MultipleFields)
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
    auto joinTable = RNTupleJoinTable::Create({"run", "event"}, *pageSource);
+   joinTable->Build();
 
    EXPECT_EQ(15ULL, joinTable->GetSize());
 
@@ -242,6 +225,7 @@ TEST(RNTupleJoinTable, MultipleMatches)
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
    auto joinTable = RNTupleJoinTable::Create({"run"}, *pageSource);
+   joinTable->Build();
 
    EXPECT_EQ(3ULL, joinTable->GetSize());
 
