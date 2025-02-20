@@ -938,7 +938,7 @@ namespace cling {
            ArgQT = Args->get(i).getAsType();
         }
         else if (TTP->hasDefaultArgument()) {
-           ArgQT = TTP->getDefaultArgument();
+           ArgQT = TTP->getDefaultArgument().getArgument().getAsType();
         }
         if (!ArgQT.isNull()) {
           QualType ArgFQQT
