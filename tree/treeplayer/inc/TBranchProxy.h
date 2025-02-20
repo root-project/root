@@ -551,6 +551,8 @@ public:
       Int_t GetOffset() { return fOffset; }
 
       bool GetSuppressErrorsForMissingBranch() const { return fSuppressMissingBranchError; }
+
+      Int_t GetStreamerElementSize() const;
    };
 } // namespace Detail
 
