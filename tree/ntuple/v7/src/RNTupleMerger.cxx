@@ -285,6 +285,7 @@ using ColumnIdMap_t = std::unordered_map<std::string, RColumnOutInfo>;
 
 struct RColumnInfoGroup {
    std::vector<RColumnMergeInfo> fExtraDstColumns;
+   // These are sorted by InputId
    std::vector<RColumnMergeInfo> fCommonColumns;
 };
 
@@ -602,6 +603,9 @@ static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<con
                                         RSealedPageMergeData &sealedPageData, const RNTupleDescriptor &srcDescriptor,
                                         const RNTupleDescriptor &dstDescriptor)
 {
+   if (!nEntriesToGenerate)
+      return;
+
    for (const auto &column : columns) {
       const auto &columnId = column.fInputId;
       const auto &columnDesc = dstDescriptor.GetColumnDescriptor(columnId);
@@ -671,23 +675,24 @@ static void GenerateZeroPagesForColumns(size_t nEntriesToGenerate, std::span<con
 
 // Merges all columns appearing both in the source and destination RNTuples, just copying them if their
 // compression matches ("fast merge") or by unsealing and resealing them with the proper compression.
-void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, ROOT::DescriptorId_t clusterId,
+void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const RClusterDescriptor &clusterDesc,
                                        std::span<const RColumnMergeInfo> commonColumns,
                                        const RCluster::ColumnSet_t &commonColumnSet,
-                                       RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData)
+                                       std::size_t nCommonColumnsInCluster, RSealedPageMergeData &sealedPageData,
+                                       const RNTupleMergeData &mergeData)
 {
-   assert(commonColumns.size() == commonColumnSet.size());
-   if (commonColumns.empty())
+   assert(nCommonColumnsInCluster == commonColumnSet.size());
+   assert(nCommonColumnsInCluster <= commonColumns.size());
+   if (nCommonColumnsInCluster == 0)
       return;
 
-   const RCluster *cluster = clusterPool.GetCluster(clusterId, commonColumnSet);
+   const RCluster *cluster = clusterPool.GetCluster(clusterDesc.GetId(), commonColumnSet);
    // we expect the cluster pool to contain the requested set of columns, since they were
    // validated by CompareDescriptorStructure().
    assert(cluster);
 
-   const auto &clusterDesc = mergeData.fSrcDescriptor->GetClusterDescriptor(clusterId);
-
-   for (const auto &column : commonColumns) {
+   for (size_t colIdx = 0; colIdx < nCommonColumnsInCluster; ++colIdx) {
+      const auto &column = commonColumns[colIdx];
       const auto &columnId = column.fInputId;
       R__ASSERT(clusterDesc.ContainsColumn(columnId));
 
@@ -726,10 +731,15 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, ROOT::Descript
       if (needsResealing)
          sealedPageData.fBuffers.resize(sealedPageData.fBuffers.size() + pages.fPageInfos.size());
 
-      // Synthesize zero pages for deferred columns (unless this is the first source)
-      if (columnDesc.GetFirstElementIndex() > 0 && mergeData.fNumDstEntries > 0) {
-         GenerateZeroPagesForColumns(columnDesc.GetFirstElementIndex(), {&column, 1}, sealedPageData,
-                                     *mergeData.fSrcDescriptor, mergeData.fDstDescriptor);
+      // If this column is deferred, we may need to fill "holes" until its real start. We fill any missing entry
+      // with zeroes, like we do for extraDstColumns.
+      // As an optimization, we don't do this for the first source (since we can rely on the FirstElementIndex and
+      // deferred column mechanism in that case).
+      // TODO: also avoid doing this if we added no real page of this column to the destination yet.
+      if (columnDesc.GetFirstElementIndex() > clusterDesc.GetFirstEntryIndex() && mergeData.fNumDstEntries > 0) {
+         const auto nMissingEntries = columnDesc.GetFirstElementIndex() - clusterDesc.GetFirstEntryIndex();
+         GenerateZeroPagesForColumns(nMissingEntries, {&column, 1}, sealedPageData, *mergeData.fSrcDescriptor,
+                                     mergeData.fDstDescriptor);
       }
 
       // Loop over the pages
@@ -789,16 +799,7 @@ void RNTupleMerger::MergeSourceClusters(RPageSource &source, std::span<const RCo
 {
    RClusterPool clusterPool{source};
 
-   // Convert columns to a ColumnSet for the ClusterPool query
-   RCluster::ColumnSet_t commonColumnSet;
-   commonColumnSet.reserve(commonColumns.size());
-   for (const auto &column : commonColumns)
-      commonColumnSet.emplace(column.fInputId);
-
-   RCluster::ColumnSet_t extraDstColumnSet;
-   extraDstColumnSet.reserve(extraDstColumns.size());
-   for (const auto &column : extraDstColumns)
-      extraDstColumnSet.emplace(column.fInputId);
+   std::vector<RColumnMergeInfo> missingColumns{extraDstColumns.begin(), extraDstColumns.end()};
 
    // Loop over all clusters in this file.
    // descriptor->GetClusterIterable() doesn't guarantee any specific order, so we explicitly
@@ -809,9 +810,36 @@ void RNTupleMerger::MergeSourceClusters(RPageSource &source, std::span<const RCo
       const auto nClusterEntries = clusterDesc.GetNEntries();
       R__ASSERT(nClusterEntries > 0);
 
+      // NOTE: just because a column is in `commonColumns` it doesn't mean that each cluster in the source contains it,
+      // as it may be a deferred column that only has real data in a future cluster.
+      // We need to figure out which columns are actually present in this cluster so we only merge their pages (the
+      // missing columns are handled by synthesizing zero pages - see below).
+      size_t nCommonColumnsInCluster = commonColumns.size();
+      do {
+         // Since `commonColumns` is sorted by column input id, we can simply traverse it from the back and stop as
+         // soon as we find a common column that appears in this cluster: we know that in that case all previous
+         // columns must appear as well.
+         if (clusterDesc.ContainsColumn(commonColumns[nCommonColumnsInCluster - 1].fInputId))
+            break;
+         --nCommonColumnsInCluster;
+      } while (nCommonColumnsInCluster > 0);
+
+      // Convert columns to a ColumnSet for the ClusterPool query
+      RCluster::ColumnSet_t commonColumnSet;
+      commonColumnSet.reserve(nCommonColumnsInCluster);
+      for (size_t i = 0; i < nCommonColumnsInCluster; ++i)
+         commonColumnSet.emplace(commonColumns[i].fInputId);
+
+      // For each cluster, the "missing columns" are the union of the extraDstColumns and the common columns
+      // that are not present in the cluster. We generate zero pages for all of them.
+      missingColumns.resize(extraDstColumns.size());
+      for (size_t i = nCommonColumnsInCluster; i < commonColumns.size(); ++i)
+         missingColumns.push_back(commonColumns[i]);
+
       RSealedPageMergeData sealedPageData;
-      MergeCommonColumns(clusterPool, clusterId, commonColumns, commonColumnSet, sealedPageData, mergeData);
-      GenerateZeroPagesForColumns(nClusterEntries, extraDstColumns, sealedPageData, *mergeData.fSrcDescriptor,
+      MergeCommonColumns(clusterPool, clusterDesc, commonColumns, commonColumnSet, nCommonColumnsInCluster,
+                         sealedPageData, mergeData);
+      GenerateZeroPagesForColumns(nClusterEntries, missingColumns, sealedPageData, *mergeData.fSrcDescriptor,
                                   mergeData.fDstDescriptor);
 
       // Commit the pages and the clusters
@@ -951,6 +979,11 @@ GatherColumnInfos(const RDescriptorsComparison &descCmp, const RNTupleDescriptor
    for (const auto &[srcField, dstField] : descCmp.fCommonFields) {
       AddColumnsFromField(res.fCommonColumns, srcDesc, mergeData, *srcField, *dstField);
    }
+
+   // Sort the commonColumns by ID so we can more easily tell how many common columns each cluster has
+   // (since each cluster must contain all columns of the previous cluster plus potentially some new ones)
+   std::sort(res.fCommonColumns.begin(), res.fCommonColumns.end(),
+             [](const auto &a, const auto &b) { return a.fInputId < b.fInputId; });
 
    return res;
 }
