@@ -178,7 +178,12 @@ void RooFuncWrapper::createGradient()
       throw std::runtime_error(errorMsg.str().c_str());
    }
 
-   _grad = reinterpret_cast<Grad>(gInterpreter->ProcessLine((gradName + ";").c_str()));
+   // Clad provides different overloads for the gradient, and we need to
+   // resolve to the one that we want. Without the static_cast, getting the
+   // function pointer would be ambiguous.
+   std::stringstream ss;
+   ss << "static_cast<void (*)(double *, double const *, double const *, double *)>(" << gradName << ");";
+   _grad = reinterpret_cast<Grad>(gInterpreter->ProcessLine(ss.str().c_str()));
    _hasGradient = true;
 }
 
