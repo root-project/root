@@ -171,6 +171,30 @@ protected:
    const char *GetDerivedTypeName() const { return ""; }
 };
 
+class R__CLING_PTRCHECK(off) TTreeReaderUntypedValue final : public TTreeReaderValueBase {
+   std::string fElementTypeName;
+
+public:
+   TTreeReaderUntypedValue(TTreeReader &tr, std::string_view branchName, std::string_view typeName)
+      : TTreeReaderValueBase(&tr, branchName.data(), TDictionary::GetDictionary(typeName.data())),
+        fElementTypeName(typeName)
+   {
+   }
+
+   void *Get()
+   {
+      if (!fProxy) {
+         ErrorAboutMissingProxyIfNeeded();
+         return nullptr;
+      }
+      void *address = GetAddress(); // Needed to figure out if it's a pointer
+      return fProxy->IsaPointer() ? *(void **)address : (void *)address;
+   }
+
+protected:
+   const char *GetDerivedTypeName() const final { return fElementTypeName.c_str(); }
+};
+
 } // namespace Internal
 } // namespace ROOT
 

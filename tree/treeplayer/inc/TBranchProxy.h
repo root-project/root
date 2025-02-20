@@ -108,6 +108,8 @@ namespace Detail {
       void    *fWhere;    // memory location of the data
       TVirtualCollectionProxy *fCollection; // Handle to the collection containing the data chunk.
 
+      std::size_t fValueSize{}; // Size of the data type of the proxied branch.
+
    public:
       virtual void Print();
 
@@ -551,6 +553,8 @@ public:
       Int_t GetOffset() { return fOffset; }
 
       bool GetSuppressErrorsForMissingBranch() const { return fSuppressMissingBranchError; }
+
+      std::size_t GetValueSize() const { return fValueSize; }
    };
 } // namespace Detail
 
