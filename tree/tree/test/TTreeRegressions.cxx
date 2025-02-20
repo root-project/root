@@ -179,6 +179,7 @@ TEST(TTreeRegressions, PrintTopOnlySplit)
    TTree tree("newtree", "");
    Event ev;
    tree.Branch("ev", &ev); // by default, this calls splitlevel=1
+   tree.Fill();
 
    testing::internal::CaptureStdout();
 
@@ -187,7 +188,7 @@ TEST(TTreeRegressions, PrintTopOnlySplit)
    const std::string output = testing::internal::GetCapturedStdout();
    const auto ref = "******************************************************************************\n"
                     "*Tree    :newtree   :                                                        *\n"
-                    "*Entries :        0 : Total =            1864 bytes  File  Size =          0 *\n"
+                    "*Entries :        1 : Total =            2188 bytes  File  Size =          0 *\n"
                     "*        :          : Tree compression factor =   1.00                       *\n"
                     "******************************************************************************\n"
                     "branch: ev                           0\n";
