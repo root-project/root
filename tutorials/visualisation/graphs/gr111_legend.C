@@ -1,9 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
-/// \notebook
-///  
-/// Simple graph with legend. For more details on TLegend [see documentation](https://root.cern/doc/master/classTLegend.html)
-///
+/// \notebook  
+/// \preview Simple graph with legend. For more details on TLegend [see documentation](https://root.cern/doc/master/classTLegend.html)
 ///
 /// \macro_image
 /// \macro_code

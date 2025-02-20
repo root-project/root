@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook -js
-/// Draw a graph with multiple errors. Multi errors can be usefull for distinguishing different type of errors,
+/// \preview Draw a graph with multiple errors. Multi errors can be usefull for distinguishing different type of errors,
 /// for example statistical and systematic errors.
 ///
 /// \macro_image

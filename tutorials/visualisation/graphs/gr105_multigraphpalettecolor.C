@@ -1,15 +1,15 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Palette coloring for multi-graphs is activated thanks to the options `PFC`
-/// (Palette Fill Color), `PLC` (Palette Line Color) and `AMC` (Palette Marker Color).
-/// When one of these options is given to `TMultiGraph::Draw` the `TGraph`s  in the
-/// `TMultiGraph` get their color from the current color palette defined by
-/// `gStyle->SetPalette(...)`. The color is determined according to the number of
-/// `TGraph`s.
+/// \preview Palette coloring for multi-graphs is activated thanks to the options PFC
+/// (Palette Fill Color), PLC (Palette Line Color) and AMC (Palette Marker Color).
+/// When one of these options is given to TMultiGraph::Draw the TGraphs  in the
+/// TMultiGraph get their color from the current color palette defined by
+/// gStyle->SetPalette(...). The color is determined according to the number of
+/// TGraphs.
 ///
 /// In this example four graphs are displayed with palette coloring for lines and
-/// and markers. The color of each graph is picked inside the default palette `kBird`.
+/// and markers. The color of each graph is picked inside the default palette kBird.
 ///
 /// \macro_image
 /// \macro_code

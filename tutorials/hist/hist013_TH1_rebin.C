@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// Rebin a variable bin-width histogram.
+/// \preview Rebin a variable bin-width histogram.
 ///
 /// This tutorial illustrates how to:
 ///   - create a variable bin-width histogram with a binning such

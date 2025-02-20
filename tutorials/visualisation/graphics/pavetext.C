@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// Draw a pave text.
+/// \preview Draw a pave text.
 /// The text lines are added in order using the AddText method
 /// Line separator can be added using AddLine.
 ///

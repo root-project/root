@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Draw spherical waves interference. Two closed TGraphs filled with white are used
+/// \preview Draw spherical waves interference. Two closed TGraphs filled with white are used
 /// here to draw triangles on top of a 2D function in order to hide parts of it.
 ///
 /// \macro_image

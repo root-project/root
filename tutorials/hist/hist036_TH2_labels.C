@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// 2-D histograms with alphanumeric labels.
+/// \preview 2-D histograms with alphanumeric labels.
 ///
 /// \macro_image
 /// \macro_code

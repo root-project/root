@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// This macro is an example of graphs in log scales with annotations.
+/// \preview This macro is an example of graphs in log scales with annotations.
 ///
 /// The presented results are predictions of invariant cross-section
 /// of Direct Photons produced at RHIC energies, based on the universality of

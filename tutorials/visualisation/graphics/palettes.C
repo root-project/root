@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// This macro draws all the high definition palettes available in ROOT.
+/// \preview This macro draws all the high definition palettes available in ROOT.
 /// It generates a png file for each palette and one pdf file, with a table of
 /// content, containing all the palettes.
 ///

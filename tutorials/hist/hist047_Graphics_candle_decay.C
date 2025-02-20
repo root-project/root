@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Candle Decay, illustrate a time development of a certain value.
+/// \preview Candle Decay, illustrate a time development of a certain value.
 ///
 /// \macro_image (tcanvas_js)
 /// \macro_code

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Show scatter plot smoothers: ksmooth, lowess, supsmu,
+/// \preview Show scatter plot smoothers: ksmooth, lowess, supsmu,
 /// as described in:
 ///
 ///      Modern Applied Statistics with S-Plus, 3rd Edition

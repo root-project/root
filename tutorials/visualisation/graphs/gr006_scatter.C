@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Draw a scatter plot for 4 variables, mapped to: x, y, marker colour and marker size.
+/// \preview Draw a scatter plot for 4 variables, mapped to: x, y, marker colour and marker size.
 ///
 /// TScatter is available since ROOT v.6.30. See the [TScatter documentation](https://root.cern/doc/master/classTScatter.html)
 ///

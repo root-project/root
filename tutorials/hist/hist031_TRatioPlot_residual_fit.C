@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Example which shows how you can get the graph of the lower plot and set the y axis range for it.
+/// \preview Example which shows how you can get the graph of the lower plot and set the y axis range for it.
 ///
 /// Since the lower plot is not created until `TRatioPlot::Draw` is called, you can only use the method
 /// afterwards.

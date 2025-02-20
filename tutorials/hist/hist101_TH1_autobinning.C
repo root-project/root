@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_hist
-/// Fill multiple histograms with different functions and automatic binning.
+/// \preview Fill multiple histograms with different functions and automatic binning.
 /// Illustrates merging with the power-of-two autobin algorithm
 ///
 /// \macro_output

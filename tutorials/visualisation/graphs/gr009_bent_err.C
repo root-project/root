@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook -js
-/// Graph with bent error bars. See the [TGraphBentErrors documentation](https://root.cern/doc/master/classTGraphBentErrors.html)
+/// \preview Graph with bent error bars. See the [TGraphBentErrors documentation](https://root.cern/doc/master/classTGraphBentErrors.html)
 ///
 /// exl / exh: low and high (left/right) errors in x; similar for y
 /// e*d: delta, in axis units, to be added/subtracted (if >0 or <0) in x or y from

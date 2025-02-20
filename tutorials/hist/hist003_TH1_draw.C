@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Draw a 1D histogram to a canvas.
+/// \preview Draw a 1D histogram to a canvas.
 ///
 /// \note When using graphics inside a ROOT macro the objects must be created with `new`.
 ///

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// Pie chart example.
+/// \preview Pie chart example.
 ///
 /// \macro_image
 /// \macro_code

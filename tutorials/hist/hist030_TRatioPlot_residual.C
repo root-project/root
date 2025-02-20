@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Example of a fit residual plot.
+/// \preview Example of a fit residual plot.
 ///
 /// Creates a histogram filled with random numbers from a gaussian distribution
 /// and fits it with a standard gaussian function. The result is passed to the `TRatioPlot`

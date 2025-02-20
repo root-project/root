@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Example of stacked histograms: class THStack.
+/// \preview Example of stacked histograms: class THStack.
 ///
 /// \macro_image
 /// \macro_code

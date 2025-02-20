@@ -1,8 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-///
-/// This tutorial demonstrates the use of TGraphAsymmErrors to plot a graph with asymmetrical errors on both the x and y axes.
+/// \preview This tutorial demonstrates the use of TGraphAsymmErrors to plot a graph with asymmetrical errors on both the x and y axes.
 /// The errors for the x values are divided into low (left side of the marker) and high (right side of the marker) errors.
 /// Similarly, for the y values, there are low (lower side of the marker) and high (upper side of the marker) errors.
 ///

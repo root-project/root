@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// This script illustrates the danger of using asymmetric symbols.
+/// \preview This script illustrates the danger of using asymmetric symbols.
 ///
 /// \macro_image
 ///

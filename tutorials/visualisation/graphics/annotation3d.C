@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// This example show how to put some annotation on a 3D plot using 3D
+/// \preview This example show how to put some annotation on a 3D plot using 3D
 /// polylines. It also demonstrates how the axis labels can be modified.
 /// It was created for the book:
 /// [Statistical Methods for Data Analysis in Particle Physics](http://www.springer.com/la/book/9783319201757)

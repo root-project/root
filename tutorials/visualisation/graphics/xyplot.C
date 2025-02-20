@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// Example showing how to produce a plot with an orthogonal axis system
+/// \preview Example showing how to produce a plot with an orthogonal axis system
 /// centered at (0,0).
 ///
 /// \macro_image

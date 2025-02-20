@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Example of TGraphTime. See the [TGraphTime documentation](https://root.cern/doc/master/classTGraphTime.html)
+/// \preview Example of TGraphTime. See the [TGraphTime documentation](https://root.cern/doc/master/classTGraphTime.html)
 ///
 /// \macro_image
 /// \macro_code

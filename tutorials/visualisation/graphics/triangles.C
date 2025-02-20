@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// Create small triangles at random positions on the canvas.
+///  \preview Create small triangles at random positions on the canvas.
 /// Assign a unique ID to each triangle, and give each one a random color from the color palette.
 ///
 /// ~~~{.cpp}

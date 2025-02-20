@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// This tutorial illustrates the special contour options.
+/// \preview This tutorial illustrates the special contour options.
 ///
 ///   - "AITOFF"     : Draw a contour via an AITOFF projection
 ///   - "MERCATOR"   : Draw a contour via an Mercator projection

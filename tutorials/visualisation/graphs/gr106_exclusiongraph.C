@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Draw three graphs with an exclusion zone.
+/// \preview Draw three graphs with an exclusion zone.
 ///
 /// The shaded areas are obtained with a fill for the graph and controlled with `SetLineWidth`.
 /// `SetLineWidth` for exclusion graphs is explained in the [TGraphPainter documentation](https://root.cern/doc/master/classTGraphPainter.html#GrP2)

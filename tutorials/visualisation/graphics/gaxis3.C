@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// Example illustrating how to modify individual labels of a TGaxis. The method
+/// \preview Example illustrating how to modify individual labels of a TGaxis. The method
 /// `ChangeLabel` allows to do that.
 ///
 /// The first parameter of this method is the label number to be modified. If

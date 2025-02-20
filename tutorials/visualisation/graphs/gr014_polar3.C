@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Create a polar graph using a TF1 and draw it with PI axis.
+/// \preview Create a polar graph using a TF1 and draw it with PI axis.
 /// See the [TGraphPolar documentation](https://root.cern/doc/master/classTGraphPolar.html)
 ///
 /// Since TGraphPolar is a TGraphErrors, it is painted with

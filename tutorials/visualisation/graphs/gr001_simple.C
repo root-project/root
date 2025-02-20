@@ -1,8 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-///
-/// This tutorial demonstrates how to create simple graphs in ROOT. The example is divided into two sections:
+/// \preview This tutorial demonstrates how to create simple graphs in ROOT. The example is divided into two sections:
 /// - The first section plots data generated from arrays.
 /// - The second section plots data read from a text file.
 ///

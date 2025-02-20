@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// Example illustrating a TPaveText with Latex inside.
+/// \preview Example illustrating a TPaveText with Latex inside.
 ///
 /// \macro_image
 /// \macro_code

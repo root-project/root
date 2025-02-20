@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// Draw Feynman diagrams.
+/// \preview Draw Feynman diagrams.
 ///
 /// \macro_image
 /// \macro_code

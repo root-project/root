@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Create and draw a polar graph. See the [TGraphPolar documentation](https://root.cern/doc/master/classTGraphPolar.html)
+/// \preview Create and draw a polar graph. See the [TGraphPolar documentation](https://root.cern/doc/master/classTGraphPolar.html)
 ///
 /// Since TGraphPolar is a TGraphErrors, it is painted with
 /// [TGraphPainter](https://root.cern/doc/master/classTGraphPainter.html) options.

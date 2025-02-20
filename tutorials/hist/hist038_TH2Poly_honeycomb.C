@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// This tutorial illustrates how to create an histogram with hexagonal
+/// \preview This tutorial illustrates how to create an histogram with hexagonal
 /// bins (TH2Poly). The method TH2Poly::Honeycomb allows to build automatically
 /// an honeycomb binning.
 ///

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// This macro illustrates the use of the time mode on the axis
+/// \preview This macro illustrates the use of the time mode on the axis
 /// with different time intervals and time formats.
 /// Through all this script, the time is expressed in UTC. some
 /// information about this format (and others like GPS) may be found at

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// This tutorial illustrates how to create an histogram with polygonal
+/// \preview This tutorial illustrates how to create an histogram with polygonal
 /// bins (TH2Poly), fill it and draw it using the `col` option. The initial data
 /// are stored in TMultiGraphs. They represent the USA map. Such histograms can
 /// be rendered in 3D using the option `legogl`.

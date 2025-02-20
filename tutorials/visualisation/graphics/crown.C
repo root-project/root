@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// Draw crowns.
+/// \preview Draw crowns.
 ///
 /// \macro_image
 /// \macro_code

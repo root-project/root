@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// This example tests the reverse graphs obtained with Draw("a  pl rx ry ") on a TGraph, where rx and ry refere to the reversing of x and y axis.
+/// \preview This example tests the reverse graphs obtained with Draw("a  pl rx ry ") on a TGraph, where rx and ry refere to the reversing of x and y axis.
 ///
 /// \macro_image
 /// \macro_code

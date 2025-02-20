@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// Examples of use of the spline classes.
+/// \preview Examples of use of the spline classes.
 ///
 /// \macro_image
 /// \macro_code

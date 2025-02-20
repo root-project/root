@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// Histograms filled and drawn in a loop.
+/// \preview Histograms filled and drawn in a loop.
 /// Simple example illustrating how to use the C++ interpreter
 /// to fill histograms in a loop and show the graphics results
 ///

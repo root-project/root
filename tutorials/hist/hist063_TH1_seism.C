@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// Strip chart example.
+/// \preview Strip chart example.
 ///
 /// \macro_image
 /// \macro_code
