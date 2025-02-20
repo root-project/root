@@ -15,6 +15,7 @@
 #include "TTreeReaderValue.h"
 #include "TTreeReaderUtils.h"
 #include <type_traits>
+#include <cstddef>
 
 namespace ROOT {
 namespace Internal {
@@ -37,6 +38,9 @@ public:
 
    bool IsContiguous() const { return fImpl->IsContiguous(GetProxy()); }
 
+   // Returns the `sizeof` of the collection element type.
+   UInt_t GetValueSize() const { return fImpl ? fImpl->GetValueSize(GetProxy()): 0; }
+
 protected:
    void *UntypedAt(std::size_t idx) const { return fImpl->At(GetProxy(), idx); }
    void CreateProxy() override;
@@ -49,6 +53,22 @@ protected:
 
    // FIXME: re-introduce once we have ClassDefInline!
    // ClassDefOverride(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
+};
+
+class R__CLING_PTRCHECK(off) TTreeReaderUntypedArray final : public TTreeReaderArrayBase {
+   std::string fArrayElementTypeName;
+
+public:
+   TTreeReaderUntypedArray(TTreeReader &tr, std::string_view branchName, std::string_view innerTypeName)
+      : TTreeReaderArrayBase(&tr, branchName.data(), TDictionary::GetDictionary(innerTypeName.data())),
+        fArrayElementTypeName(innerTypeName)
+   {
+   }
+
+   std::byte *At(std::size_t idx) const { return reinterpret_cast<std::byte *>(UntypedAt(idx)); }
+
+protected:
+   const char *GetDerivedTypeName() const final { return fArrayElementTypeName.c_str(); }
 };
 
 } // namespace Internal
