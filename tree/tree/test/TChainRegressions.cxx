@@ -72,7 +72,7 @@ TEST(TChain, GetMinMaxEntryList)
    EXPECT_FLOAT_EQ(ch.GetMinimum("value"), 0.);
    EXPECT_FLOAT_EQ(ch.GetMaximum("value"), 13.);
    ch.Draw(">>myList", "value<11 && value >1", "entrylist");
-   TEntryList* myList = static_cast<TEntryList *>(gDirectory->Get("myList"));
+   TEntryList *myList = static_cast<TEntryList *>(gDirectory->Get("myList"));
    ch.SetEntryList(myList);
    EXPECT_FLOAT_EQ(ch.GetMinimum("value"), 2.);
    EXPECT_FLOAT_EQ(ch.GetMaximum("value"), 10.);
