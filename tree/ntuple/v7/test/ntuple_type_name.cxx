@@ -118,3 +118,65 @@ TEST(RNTuple, TemplateArgIntegerNormalization)
    EXPECT_THROW(RFieldBase::Create("f", "IntegerTemplates<-1u,0u>").Unwrap(), ROOT::RException);
    EXPECT_THROW(RFieldBase::Create("f", "IntegerTemplates<1u,0x>").Unwrap(), ROOT::RException);
 }
+
+TEST(RNTuple, ContextDependentTypeNames)
+{
+   // Adapted from https://gitlab.cern.ch/amete/rntuple-bug-report-20250219, reproducer of
+   // https://github.com/root-project/root/issues/17774
+
+   FileRaii fileGuard("test_ntuple_type_name_contextdep.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldBase = RFieldBase::Create("foo", "DerivedWithTypedef").Unwrap();
+      model->AddField(std::move(fieldBase));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto entry = ntuple->GetModel().CreateBareEntry();
+      auto ptr = std::make_unique<DerivedWithTypedef>();
+      entry->BindRawPtr("foo", ptr.get());
+      for (auto i = 0; i < 10; ++i) {
+         ptr->m.push_back(i);
+         ntuple->Fill(*entry);
+         ptr->m.clear();
+      }
+   }
+
+   {
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      EXPECT_EQ(reader->GetNEntries(), 10);
+
+      const auto &desc = reader->GetDescriptor();
+      const auto fooId = desc.FindFieldId("foo");
+      const auto baseId = desc.GetFieldDescriptor(fooId).GetLinkIds()[0];
+      {
+         const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("m", fooId));
+         EXPECT_EQ(fdesc.GetTypeName(), "std::vector<std::int32_t>");
+         EXPECT_EQ(fdesc.GetTypeAlias(), "MyVec<std::int32_t>");
+      }
+      {
+         const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("a", baseId));
+         EXPECT_EQ(fdesc.GetTypeName(), "float");
+         EXPECT_EQ(fdesc.GetTypeAlias(), "");
+      }
+      {
+         const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("v1", baseId));
+         EXPECT_EQ(fdesc.GetTypeName(), "std::vector<float>");
+         EXPECT_EQ(fdesc.GetTypeAlias(), "");
+      }
+      {
+         const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("v2", baseId));
+         EXPECT_EQ(fdesc.GetTypeName(), "std::vector<std::vector<float>>");
+         EXPECT_EQ(fdesc.GetTypeAlias(), "");
+      }
+      {
+         const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("s", baseId));
+         EXPECT_EQ(fdesc.GetTypeName(), "std::string");
+         EXPECT_EQ(fdesc.GetTypeAlias(), "");
+      }
+      {
+         const auto &fdesc = desc.GetFieldDescriptor(desc.FindFieldId("b", baseId));
+         EXPECT_EQ(fdesc.GetTypeName(), "std::byte");
+         EXPECT_EQ(fdesc.GetTypeAlias(), "");
+      }
+   }
+}
