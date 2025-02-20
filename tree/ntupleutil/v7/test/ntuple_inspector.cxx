@@ -445,7 +445,7 @@ TEST(RNTupleInspector, PrintColumnTypeInfo)
 
    std::string line;
    std::getline(csvOutput, line);
-   EXPECT_EQ("columnType,count,nElements,compressedSize,uncompressedSize", line);
+   EXPECT_EQ("columnType,count,nElements,compressedSize,uncompressedSize,compressionRatio,npages", line);
 
    size_t nLines = 0;
    std::string colTypeStr;
@@ -462,10 +462,10 @@ TEST(RNTupleInspector, PrintColumnTypeInfo)
    inspector->PrintColumnTypeInfo(ROOT::Experimental::ENTupleInspectorPrintFormat::kTable, tableOutput);
 
    std::getline(tableOutput, line);
-   EXPECT_EQ(" column type    | count   | # elements      | compressed bytes  | uncompressed bytes", line);
+   EXPECT_EQ(" column type    | count   | # elements  | compressed bytes | uncompressed bytes | compression ratio | #pages ", line);
 
    std::getline(tableOutput, line);
-   EXPECT_EQ("----------------|---------|-----------------|-------------------|--------------------", line);
+   EXPECT_EQ("----------------|---------|-------------|------------------|--------------------|-------------------|-------", line);
 
    nLines = 0;
    while (std::getline(tableOutput, line)) {

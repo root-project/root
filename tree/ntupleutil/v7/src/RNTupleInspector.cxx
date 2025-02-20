@@ -229,7 +229,9 @@ const std::vector<ROOT::ENTupleColumnType> ROOT::Experimental::RNTupleInspector:
 void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorPrintFormat format, std::ostream &output)
 {
    struct ColumnTypeInfo {
-      std::uint64_t nElems = 0, compressedSize = 0, uncompressedSize = 0;
+      std::uint64_t nElems = 0;
+      std::uint64_t compressedSize = 0;
+      std::uint64_t uncompressedSize = 0;
       std::uint64_t nPages = 0;
       std::uint32_t count = 0;
 
@@ -243,11 +245,11 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
       }
 
       // Helper method to calculate compression ratio
-      double GetCompressionRatio() const
+      float GetCompressionFactor() const
       {
          if (uncompressedSize == 0)
             return 1.0;
-         return static_cast<double>(compressedSize) / static_cast<double>(uncompressedSize);
+         return static_cast<float>(compressedSize) / static_cast<float>(uncompressedSize);
       }
    };
 
@@ -259,36 +261,28 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
    }
 
    switch (format) {
-   case ENTupleInspectorPrintFormat::kTable: {
+   case ENTupleInspectorPrintFormat::kTable: 
       // table header with compression ratio and pages
       output
-         << " column type    | count   | # elements  | compressed bytes | uncompressed bytes | compression ratio | pages \n"
+         << " column type    | count   | # elements  | compressed bytes | uncompressed bytes | compression ratio | #pages \n"
          << "----------------|---------|-------------|------------------|--------------------|-------------------|-------"
          << std::endl;
-
-      for (const auto &[colType, typeInfo] : colTypeInfo) {
+      for (const auto &[colType, typeInfo] : colTypeInfo) 
          output << std::setw(15) << Internal::RColumnElementBase::GetColumnTypeName(colType) << " |" << std::setw(8)
-                << typeInfo.count << " |" << std::setw(12) << typeInfo.nElems << " |" << std::setw(16)
+                << typeInfo.count << " |" << std::setw(12) << typeInfo.nElems << " |" << std::setw(17)
                 << typeInfo.compressedSize << " |" << std::setw(19) << typeInfo.uncompressedSize << " |" << std::fixed
-                << std::setprecision(3) << std::setw(17) << typeInfo.GetCompressionRatio() << " |" << std::setw(6)
+                << std::setprecision(3) << std::setw(18) << typeInfo.GetCompressionFactor() << " |" << std::setw(6)
                 << typeInfo.nPages << " " << std::endl;
-      }
       break;
-   }
-
-   case ENTupleInspectorPrintFormat::kCSV: {
-
-      output << "columnType,count,nElements,compressedSize,uncompressedSize,compressionRatio,pages" << std::endl;
-
+   case ENTupleInspectorPrintFormat::kCSV: 
+      output << "columnType,count,nElements,compressedSize,uncompressedSize,compressionRatio,npages" << std::endl;
       for (const auto &[colType, typeInfo] : colTypeInfo) {
          output << Internal::RColumnElementBase::GetColumnTypeName(colType) << "," << typeInfo.count << ","
                 << typeInfo.nElems << "," << typeInfo.compressedSize << "," << typeInfo.uncompressedSize << ","
-                << std::fixed << std::setprecision(3) << typeInfo.GetCompressionRatio() << "," << typeInfo.nPages
+                << std::fixed << std::setprecision(3) << typeInfo.GetCompressionFactor() << "," << typeInfo.nPages
                 << std::endl;
       }
       break;
-   }
-
    default: R__ASSERT(false && "Invalid print format");
    }
 }
