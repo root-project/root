@@ -51,7 +51,6 @@ class RNTupleModel;
 
 namespace Internal {
 class RColumn;
-class RNTupleCompressor;
 struct RNTupleModelChangeset;
 class RPageAllocator;
 
