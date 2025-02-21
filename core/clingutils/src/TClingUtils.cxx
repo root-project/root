@@ -5033,7 +5033,10 @@ ROOT::ESTLType ROOT::TMetaUtils::STLKind(const llvm::StringRef type)
        ROOT::kNotSTL
       };
    //              kind of stl container
-   for(int k=1;stls[k];k++) {if (type.equals(stls[k])) return values[k];}
+   for (int k = 1; stls[k]; k++) {
+      if (type == stls[k])
+         return values[k];
+   }
    return ROOT::kNotSTL;
 }
 
