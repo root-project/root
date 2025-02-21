@@ -15,7 +15,7 @@
 #include "TFile.h"
 #include "TGeoTube.h"
 
-const char *histFile = "http://root.cern/files/cms_calo_hist.root";
+const char *histFile = "http://root-test.web.cern.ch/files/cms_calo_hist.root";
 
 const Double_t kR_min = 128;
 const Double_t kR_max = 129;

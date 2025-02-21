@@ -14,7 +14,7 @@
 
 void geomAlice_itsv()
 {
-   TGeoManager::Import("http://root.cern/files/alice2.root");
+   TGeoManager::Import("http://root-test.web.cern.ch/files/alice2.root");
    gGeoManager->DefaultColors();
    gGeoManager->GetVolume("ITSV")->Draw("ogl");
    new TBrowser;
