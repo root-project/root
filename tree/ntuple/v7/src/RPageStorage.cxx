@@ -45,7 +45,7 @@
 using ROOT::Internal::RNTupleDecompressor;
 
 ROOT::Experimental::Internal::RPageStorage::RPageStorage(std::string_view name)
-   : fMetrics(""), fPageAllocator(std::make_unique<RPageAllocatorHeap>()), fNTupleName(name)
+   : fMetrics(""), fPageAllocator(std::make_unique<ROOT::Internal::RPageAllocatorHeap>()), fNTupleName(name)
 {
 }
 

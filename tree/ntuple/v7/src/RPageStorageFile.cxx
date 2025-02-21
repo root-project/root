@@ -44,6 +44,8 @@
 #include <mutex>
 
 using ROOT::Internal::RNTupleDecompressor;
+using ROOT::Internal::RPage;
+using ROOT::Internal::RPagePool;
 
 ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName,
                                                            const RNTupleWriteOptions &options)
@@ -414,10 +416,9 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadSealedPage(ROOT::Descrip
    sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
 }
 
-ROOT::Experimental::Internal::RPageRef
-ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t columnHandle,
-                                                            const RClusterInfo &clusterInfo,
-                                                            ROOT::NTupleSize_t idxInCluster)
+ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t columnHandle,
+                                                                                     const RClusterInfo &clusterInfo,
+                                                                                     ROOT::NTupleSize_t idxInCluster)
 {
    const auto columnId = columnHandle.fPhysicalId;
    const auto clusterId = clusterInfo.fClusterId;
