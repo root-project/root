@@ -72,6 +72,8 @@ namespace ROOT {
 
    - Fumili (class TFumiliMinimizer)
 
+   - Linear (see TLinearFitter and TLinearMinimizer) minimizer (fitter) working only for linear functions 
+
    - GSLMultiMin (class ROOT::Math::GSLMinimizer) available when ROOT is built with `mathmore` support
      - BFGS2 (Default)
      - BFGS
