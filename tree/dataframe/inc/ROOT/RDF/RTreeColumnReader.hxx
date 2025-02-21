@@ -14,6 +14,7 @@
 
 #include "RColumnReaderBase.hxx"
 #include <ROOT/RVec.hxx>
+#include "ROOT/RDF/Utils.hxx"
 #include <Rtypes.h>  // Long64_t, R__CLING_PTRCHECK
 #include <TTreeReader.h>
 #include <TTreeReaderValue.h>
@@ -22,6 +23,7 @@
 #include <array>
 #include <memory>
 #include <string>
+#include <cstddef>
 
 namespace ROOT {
 namespace Internal {
@@ -30,13 +32,13 @@ namespace RDF {
 /// RTreeColumnReader specialization for TTree values read via TTreeReaderValues
 template <typename T>
 class R__CLING_PTRCHECK(off) RTreeColumnReader final : public ROOT::Detail::RDF::RColumnReaderBase {
-   std::unique_ptr<TTreeReaderValue<T>> fTreeValue;
+   std::unique_ptr<TTreeReaderUntypedValue> fTreeValue;
 
    void *GetImpl(Long64_t) final { return fTreeValue->Get(); }
 public:
    /// Construct the RTreeColumnReader. Actual initialization is performed lazily by the Init method.
    RTreeColumnReader(TTreeReader &r, const std::string &colName)
-      : fTreeValue(std::make_unique<TTreeReaderValue<T>>(r, colName.c_str()))
+      : fTreeValue(std::make_unique<TTreeReaderUntypedValue>(r, colName.c_str(), ROOT::Internal::RDF::TypeID2TypeName(typeid(T))))
    {
    }
 };
@@ -59,10 +61,12 @@ public:
 /// TTreeReaderArrays are used whenever the RDF column type is RVec<T>.
 template <typename T>
 class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Detail::RDF::RColumnReaderBase {
-   std::unique_ptr<TTreeReaderArray<T>> fTreeArray;
+   std::unique_ptr<TTreeReaderUntypedArray> fTreeArray;
+
+   using Byte_t = std::byte;
 
    /// We return a reference to this RVec to clients, to guarantee a stable address and contiguous memory layout.
-   RVec<T> fRVec;
+   RVec<Byte_t> fRVec;
 
    Long64_t fLastEntry = -1;
 
@@ -86,11 +90,10 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
             // trigger loading of the contents of the TTreeReaderArray
             // the address of the first element in the reader array is not necessarily equal to
             // the address returned by the GetAddress method
-            auto readerArrayAddr = &readerArray.At(0);
-            RVec<T> rvec(readerArrayAddr, readerArraySize);
+            RVec<Byte_t> rvec(readerArray.At(0), readerArraySize);
             swap(fRVec, rvec);
          } else {
-            RVec<T> emptyVec{};
+            RVec<Byte_t> emptyVec{};
             swap(fRVec, emptyVec);
          }
       } else {
@@ -107,10 +110,17 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
          (void)fCopyWarningPrinted;
 #endif
          if (readerArraySize > 0) {
-            RVec<T> rvec(readerArray.begin(), readerArray.end());
-            swap(fRVec, rvec);
+            // Array is not contiguous, make a full copy of it.
+            fRVec = RVec<Byte_t>();
+            fRVec.reserve(readerArraySize * sizeof(T));
+            for (std::size_t i{0}; i < readerArraySize; i++)
+            {
+               auto val = readerArray.At(i);
+               std::copy(val, val + sizeof(T), std::back_inserter(fRVec));
+            }
+            fRVec.resize(readerArraySize);
          } else {
-            RVec<T> emptyVec{};
+            RVec<Byte_t> emptyVec{};
             swap(fRVec, emptyVec);
          }
       }
@@ -120,7 +130,7 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
 
 public:
    RTreeColumnReader(TTreeReader &r, const std::string &colName)
-      : fTreeArray(std::make_unique<TTreeReaderArray<T>>(r, colName.c_str()))
+      : fTreeArray(std::make_unique<TTreeReaderUntypedArray>(r, colName, ROOT::Internal::RDF::TypeID2TypeName(typeid(T))))
    {
    }
 };
@@ -131,10 +141,12 @@ public:
 template <>
 class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<bool>> final : public ROOT::Detail::RDF::RColumnReaderBase {
 
-   std::unique_ptr<TTreeReaderArray<bool>> fTreeArray;
+   using Byte_t = std::byte;
+
+   std::unique_ptr<TTreeReaderUntypedArray> fTreeArray;
 
    /// We return a reference to this RVec to clients, to guarantee a stable address and contiguous memory layout
-   RVec<bool> fRVec;
+   RVec<Byte_t> fRVec;
 
    // We always copy the contents of TTreeReaderArray<bool> into an RVec<bool> (never take a view into the memory
    // buffer) because the underlying memory buffer might be the one of a std::vector<bool>, which is not a contiguous
@@ -146,11 +158,17 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<bool>> final : public ROOT::
       auto &readerArray = *fTreeArray;
       const auto readerArraySize = readerArray.GetSize();
       if (readerArraySize > 0) {
-         // always perform a copy
-         RVec<bool> rvec(readerArray.begin(), readerArray.end());
-         swap(fRVec, rvec);
+         // Always perform a copy
+         fRVec = RVec<Byte_t>();
+         fRVec.reserve(readerArraySize * sizeof(bool));
+         for (std::size_t i{0}; i < readerArraySize; i++)
+         {
+            auto val = readerArray.At(i);
+            std::copy(val, val + sizeof(bool), std::back_inserter(fRVec));
+         }
+         fRVec.resize(readerArraySize);
       } else {
-         RVec<bool> emptyVec{};
+         RVec<Byte_t> emptyVec{};
          swap(fRVec, emptyVec);
       }
       return &fRVec;
@@ -158,7 +176,7 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<bool>> final : public ROOT::
 
 public:
    RTreeColumnReader(TTreeReader &r, const std::string &colName)
-      : fTreeArray(std::make_unique<TTreeReaderArray<bool>>(r, colName.c_str()))
+      : fTreeArray(std::make_unique<TTreeReaderUntypedArray>(r, colName.c_str(), ROOT::Internal::RDF::TypeID2TypeName(typeid(bool))))
    {
    }
 };
@@ -168,32 +186,18 @@ public:
 /// This specialization is used when the requested type for reading is std::array
 template <typename T, std::size_t N>
 class R__CLING_PTRCHECK(off) RTreeColumnReader<std::array<T, N>> final : public ROOT::Detail::RDF::RColumnReaderBase {
-   std::unique_ptr<TTreeReaderArray<T>> fTreeArray;
-
-   /// We return a reference to this RVec to clients, to guarantee a stable address and contiguous memory layout
-   RVec<T> fArray;
+   std::unique_ptr<TTreeReaderUntypedArray> fTreeArray;
 
    Long64_t fLastEntry = -1;
 
-   void *GetImpl(Long64_t entry) final
+   void *GetImpl(Long64_t) final
    {
-      if (entry == fLastEntry)
-         return fArray.data();
-
-      // This is a non-owning view on the contents of the TTreeReaderArray
-      RVec<T> view{&fTreeArray->At(0), fTreeArray->GetSize()};
-      swap(fArray, view);
-
-      fLastEntry = entry;
-      // The data member of this class is an RVec, to avoid an extra copy
-      // but we need to return the array buffer as the reader expects
-      // a std::array
-      return fArray.data();
+      return fTreeArray->At(0);
    }
 
 public:
    RTreeColumnReader(TTreeReader &r, const std::string &colName)
-      : fTreeArray(std::make_unique<TTreeReaderArray<T>>(r, colName.c_str()))
+      : fTreeArray(std::make_unique<TTreeReaderUntypedArray>(r, colName.c_str(), ROOT::Internal::RDF::TypeID2TypeName(typeid(T))))
    {
    }
 };

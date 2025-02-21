@@ -32,6 +32,7 @@
 
 #include <memory>
 #include <optional>
+#include <iostream>
 
 // pin vtable
 ROOT::Internal::TVirtualCollectionReader::~TVirtualCollectionReader() {}
@@ -72,6 +73,8 @@ public:
    }
 
    bool IsContiguous(ROOT::Detail::TBranchProxy *) override { return false; }
+
+   UInt_t GetValueSize(ROOT::Detail::TBranchProxy *) override { return sizeof(TObject *); }
 };
 
 bool IsCPContiguous(const TVirtualCollectionProxy &cp)
@@ -84,6 +87,11 @@ bool IsCPContiguous(const TVirtualCollectionProxy &cp)
    case ROOT::kROOTRVec: return true;
    default: return false;
    }
+}
+
+UInt_t GetCPValueSize(const TVirtualCollectionProxy &cp)
+{
+   return cp.Sizeof();
 }
 
 // Reader interface for STL
@@ -130,6 +138,12 @@ public:
    {
       auto cp = GetCP(proxy);
       return IsCPContiguous(*cp);
+   }
+
+   UInt_t GetValueSize(ROOT::Detail::TBranchProxy *proxy) override
+   {
+      auto cp = GetCP(proxy);
+      return GetCPValueSize(*cp);
    }
 };
 
@@ -190,6 +204,12 @@ public:
       auto cp = GetCP(proxy);
       return IsCPContiguous(*cp);
    }
+
+   UInt_t GetValueSize(ROOT::Detail::TBranchProxy *proxy) override
+   {
+      auto cp = GetCP(proxy);
+      return GetCPValueSize(*cp);
+   }
 };
 
 // Reader interface for leaf list
@@ -243,6 +263,12 @@ public:
    void SetBasicTypeSize(Int_t size) { fBasicTypeSize = size; }
 
    bool IsContiguous(ROOT::Detail::TBranchProxy *) override { return true; }
+
+   UInt_t GetValueSize(ROOT::Detail::TBranchProxy *proxy) override
+   {
+      auto cp = GetCP(proxy);
+      return GetCPValueSize(*cp);
+   }
 };
 
 template <class BASE>
@@ -387,6 +413,12 @@ public:
    }
 
    bool IsContiguous(ROOT::Detail::TBranchProxy *) override { return false; }
+
+   UInt_t GetValueSize(ROOT::Detail::TBranchProxy *proxy) override
+   {
+      auto cp = GetCP(proxy);
+      return GetCPValueSize(*cp);
+   }
 };
 
 class TBasicTypeClonesReader final : public TClonesReader {
@@ -433,6 +465,12 @@ public:
    }
 
    bool IsContiguous(ROOT::Detail::TBranchProxy *) override { return true; }
+
+   UInt_t GetValueSize(ROOT::Detail::TBranchProxy *) override
+   {
+      auto *leaf = fValueReader->GetLeaf();
+      return leaf ? leaf->GetLenType(): 0;
+   }
 
 protected:
    void ProxyRead() { fValueReader->ProxyRead(); }
