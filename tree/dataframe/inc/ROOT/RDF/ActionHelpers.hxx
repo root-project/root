@@ -35,7 +35,7 @@
 #include "TClassRef.h"
 #include "TDirectory.h"
 #include "TError.h" // for R__ASSERT, Warning
-#include "TFile.h" // for SnapshotHelper
+#include "TFile.h"  // for SnapshotHelper
 #include "TH1.h"
 #include "TGraph.h"
 #include "TGraphAsymmErrors.h"
@@ -57,7 +57,8 @@
 #include <utility> // std::index_sequence
 #include <vector>
 #include <iomanip>
-#include <numeric> // std::accumulate in MeanHelper
+#include <numeric>  // std::accumulate in MeanHelper
+#include <optional> // std::optional<int> in SetBranchesHelper
 
 /// \cond HIDDEN_SYMBOLS
 
@@ -156,16 +157,20 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
 
    template <typename... Args>
-   void Exec(unsigned int slot, Args &&... args)
+   void Exec(unsigned int slot, Args &&...args)
    {
       // check that the decayed types of Args are the same as the branch types
       static_assert(std::is_same<TypeList<std::decay_t<Args>...>, ColumnTypes_t>::value, "");
       fCallable(slot, std::forward<Args>(args)...);
    }
 
-   void Initialize() { /* noop */}
+   void Initialize()
+   { /* noop */
+   }
 
-   void Finalize() { /* noop */}
+   void Finalize()
+   { /* noop */
+   }
 
    std::string GetActionName() { return "ForeachSlot"; }
 };
@@ -181,7 +186,9 @@ public:
    CountHelper(const CountHelper &) = delete;
    void InitTask(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot);
-   void Initialize() { /* noop */}
+   void Initialize()
+   { /* noop */
+   }
    void Finalize();
 
    // Helper functions for RMergeableValue
@@ -217,7 +224,9 @@ public:
    ReportHelper(const ReportHelper &) = delete;
    void InitTask(TTreeReader *, unsigned int) {}
    void Exec(unsigned int /* slot */) {}
-   void Initialize() { /* noop */}
+   void Initialize()
+   { /* noop */
+   }
    void Finalize()
    {
       if (!fReturnEmptyReport)
@@ -321,7 +330,9 @@ public:
 
    Hist_t &PartialUpdate(unsigned int);
 
-   void Initialize() { /* noop */}
+   void Initialize()
+   { /* noop */
+   }
 
    void Finalize();
 
@@ -367,9 +378,7 @@ class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
          "not implement a Reset method, so we cannot safely re-initialize variations of the result. Aborting.");
    }
 
-   void UnsetDirectoryIfPossible(TH1 *h) {
-      h->SetDirectory(nullptr);
-   }
+   void UnsetDirectoryIfPossible(TH1 *h) { h->SetDirectory(nullptr); }
 
    void UnsetDirectoryIfPossible(...) {}
 
@@ -396,8 +405,9 @@ class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
    template <typename T>
    void Merge(T, ...)
    {
-      static_assert(sizeof(T) < 0,
-                    "The type passed to Fill does not provide a Merge(TCollection*) or Merge(const std::vector&) method.");
+      static_assert(
+         sizeof(T) < 0,
+         "The type passed to Fill does not provide a Merge(TCollection*) or Merge(const std::vector&) method.");
    }
 
    // class which wraps a pointer and implements a no-op increment operator
@@ -517,7 +527,9 @@ public:
                     "columns passed did not match the signature of the object's `Fill` method.");
    }
 
-   void Initialize() { /* noop */}
+   void Initialize()
+   { /* noop */
+   }
 
    void Finalize()
    {
@@ -531,7 +543,10 @@ public:
          delete *it;
    }
 
-   HIST &PartialUpdate(unsigned int slot) { return *fObjects[slot]; }
+   HIST &PartialUpdate(unsigned int slot)
+   {
+      return *fObjects[slot];
+   }
 
    // Helper functions for RMergeableValue
    std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
@@ -763,13 +778,15 @@ public:
 // 4. The column is an RVec, the collection is a vector
 
 template <typename V, typename COLL>
-void FillColl(V&& v, COLL& c) {
+void FillColl(V &&v, COLL &c)
+{
    c.emplace_back(v);
 }
 
 // Use push_back for bool since some compilers do not support emplace_back.
 template <typename COLL>
-void FillColl(bool v, COLL& c) {
+void FillColl(bool v, COLL &c)
+{
    c.push_back(v);
 }
 
@@ -794,7 +811,9 @@ public:
 
    void Exec(unsigned int slot, T &v) { FillColl(v, *fColls[slot]); }
 
-   void Initialize() { /* noop */}
+   void Initialize()
+   { /* noop */
+   }
 
    void Finalize()
    {
@@ -847,7 +866,9 @@ public:
 
    void Exec(unsigned int slot, T &v) { FillColl(v, *fColls[slot]); }
 
-   void Initialize() { /* noop */}
+   void Initialize()
+   { /* noop */
+   }
 
    // This is optimised to treat vectors
    void Finalize()
@@ -897,7 +918,9 @@ public:
 
    void Exec(unsigned int slot, RVec<RealT_t> av) { fColls[slot]->emplace_back(av.begin(), av.end()); }
 
-   void Initialize() { /* noop */}
+   void Initialize()
+   { /* noop */
+   }
 
    void Finalize()
    {
@@ -946,7 +969,9 @@ public:
 
    void Exec(unsigned int slot, RVec<RealT_t> av) { fColls[slot]->emplace_back(av.begin(), av.end()); }
 
-   void Initialize() { /* noop */}
+   void Initialize()
+   { /* noop */
+   }
 
    // This is optimised to treat vectors
    void Finalize()
@@ -982,7 +1007,8 @@ TakeHelper<RealT_t, T, std::vector<T>>::TakeHelper(TakeHelper<RealT_t, T, std::v
 template <typename RealT_t, typename COLL>
 TakeHelper<RealT_t, RVec<RealT_t>, COLL>::TakeHelper(TakeHelper<RealT_t, RVec<RealT_t>, COLL> &&) = default;
 template <typename RealT_t>
-TakeHelper<RealT_t, RVec<RealT_t>, std::vector<RealT_t>>::TakeHelper(TakeHelper<RealT_t, RVec<RealT_t>, std::vector<RealT_t>> &&) = default;
+TakeHelper<RealT_t, RVec<RealT_t>, std::vector<RealT_t>>::TakeHelper(
+   TakeHelper<RealT_t, RVec<RealT_t>, std::vector<RealT_t>> &&) = default;
 
 // External templates are disabled for gcc5 since this version wrongly omits the C++11 ABI attribute
 #if __GNUC__ > 5
@@ -1020,7 +1046,9 @@ public:
          fMins[slot] = std::min(static_cast<ResultType>(v), fMins[slot]);
    }
 
-   void Initialize() { /* noop */}
+   void Initialize()
+   { /* noop */
+   }
 
    void Finalize()
    {
@@ -1069,7 +1097,9 @@ public:
          fMaxs[slot] = std::max(static_cast<ResultType>(v), fMaxs[slot]);
    }
 
-   void Initialize() { /* noop */}
+   void Initialize()
+   { /* noop */
+   }
 
    void Finalize()
    {
@@ -1121,7 +1151,8 @@ public:
    SumHelper(SumHelper &&) = default;
    SumHelper(const SumHelper &) = delete;
    SumHelper(const std::shared_ptr<ResultType> &sumVPtr, const unsigned int nSlots)
-      : fResultSum(sumVPtr), fSums(nSlots, NeutralElement(*sumVPtr, -1)),
+      : fResultSum(sumVPtr),
+        fSums(nSlots, NeutralElement(*sumVPtr, -1)),
         fCompensations(nSlots, NeutralElement(*sumVPtr, -1))
    {
    }
@@ -1144,7 +1175,9 @@ public:
       }
    }
 
-   void Initialize() { /* noop */}
+   void Initialize()
+   { /* noop */
+   }
 
    void Finalize()
    {
@@ -1208,7 +1241,9 @@ public:
       }
    }
 
-   void Initialize() { /* noop */}
+   void Initialize()
+   { /* noop */
+   }
 
    void Finalize();
 
@@ -1256,7 +1291,9 @@ public:
       }
    }
 
-   void Initialize() { /* noop */}
+   void Initialize()
+   { /* noop */
+   }
 
    void Finalize();
 
@@ -1296,7 +1333,7 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
 
    template <typename... Columns>
-   void Exec(unsigned int, Columns &... columns)
+   void Exec(unsigned int, Columns &...columns)
    {
       if (fEntriesToProcess == 0)
          return;
@@ -1335,7 +1372,7 @@ void *GetData(T & /*v*/)
 template <typename T>
 void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &inName, const std::string &name,
                        TBranch *&branch, void *&branchAddress, T *address, RBranchSet &outputBranches,
-                       bool /*isDefine*/)
+                       bool /*isDefine*/, const std::optional<int> &basketSize)
 {
    static TClassRef TBOClRef("TBranchObject");
 
@@ -1366,7 +1403,10 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
       // In particular, by keeping splitlevel equal to 0 if this was the case for `inputBranch`, we avoid
       // writing garbage when unsplit objects cannot be written as split objects (e.g. in case of a polymorphic
       // TObject branch, see https://bit.ly/2EjLMId ).
-      const auto bufSize = inputBranch->GetBasketSize();
+      const auto bufSize = basketSize.has_value()
+                              ? basketSize.value()
+                              : inputBranch->GetBasketSize(); // Use original basket size for existing branches
+                                                              // otherwise custom basket size for new branches
       const auto splitLevel = inputBranch->GetSplitLevel();
 
       if (inputBranch->IsA() == TBOClRef) {
@@ -1377,7 +1417,10 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
          outputBranch = outputTree.Branch(name.c_str(), address, bufSize, splitLevel);
       }
    } else {
-      outputBranch = outputTree.Branch(name.c_str(), address);
+      // Set Custom basket size for new branches.
+      const auto buffSize =
+         basketSize.has_value() ? basketSize.value() : (inputBranch ? inputBranch->GetBasketSize() : 32000);
+      outputBranch = outputTree.Branch(name.c_str(), address, buffSize);
    }
    outputBranches.Insert(name, outputBranch);
    // This is not an array branch, so we don't register the address of the output branch here
@@ -1397,7 +1440,8 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
 /// `branchAddress`) so we can intercept changes in the address of the input branch and tell the output branch.
 template <typename T>
 void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &inName, const std::string &outName,
-                       TBranch *&branch, void *&branchAddress, RVec<T> *ab, RBranchSet &outputBranches, bool isDefine)
+                       TBranch *&branch, void *&branchAddress, RVec<T> *ab, RBranchSet &outputBranches, bool isDefine,
+                       const std::optional<int> &basketSize)
 {
    TBranch *inputBranch = nullptr;
    if (inputTree) {
@@ -1434,7 +1478,10 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
          // needs to be SetObject (not SetAddress) to mimic what happens when this TBranchElement is constructed
          outputBranch->SetObject(ab);
       } else {
-         auto *b = outputTree.Branch(outName.c_str(), ab);
+         // Set Custom basket size for new branches if specified, otherwise get basket size from input branches
+         const auto buffSize =
+            basketSize.has_value() ? basketSize.value() : (inputBranch ? inputBranch->GetBasketSize() : 32000);
+         auto *b = outputTree.Branch(outName.c_str(), ab, buffSize);
          outputBranches.Insert(outName, b);
       }
       return;
@@ -1462,7 +1509,9 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
          // added to the output tree yet. However, the size leaf has to be available for the creation of the array
          // branch to be successful. So we create the size leaf here.
          const auto sizeTypeStr = TypeName2ROOTTypeName(sizeLeaf->GetTypeName());
-         const auto sizeBufSize = sizeLeaf->GetBranch()->GetBasketSize();
+         // Use Original basket size for Existing Branches otherwise use Custom basket Size.
+         const auto sizeBufSize = basketSize.has_value() ? basketSize.value() : sizeLeaf->GetBranch()->GetBasketSize();
+         ;
          // The null branch address is a placeholder. It will be set when SetBranchesHelper is called for `sizeLeafName`
          auto *sizeBranch = outputTree.Branch(sizeLeafName.c_str(), (void *)nullptr,
                                               (sizeLeafName + '/' + sizeTypeStr).c_str(), sizeBufSize);
@@ -1478,7 +1527,9 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
                  bname);
       } else {
          const auto leaflist = std::string(bname) + "[" + sizeLeafName + "]/" + rootbtype;
-         outputBranch = outputTree.Branch(outName.c_str(), dataPtr, leaflist.c_str());
+         // Use original basket size for existing branches and new basket size for new branches
+         const auto branchBufSize = basketSize.has_value() ? basketSize.value() : inputBranch->GetBasketSize();
+         outputBranch = outputTree.Branch(outName.c_str(), dataPtr, leaflist.c_str(), branchBufSize);
          outputBranch->SetTitle(inputBranch->GetTitle());
          outputBranches.Insert(outName, outputBranch);
          branch = outputBranch;
@@ -1503,7 +1554,7 @@ class R__CLING_PTRCHECK(off) SnapshotHelper : public RActionImpl<SnapshotHelper<
    ColumnNames_t fOutputBranchNames;
    TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitTask`)
    // TODO we might be able to unify fBranches, fBranchAddresses and fOutputBranches
-   std::vector<TBranch *> fBranches; // Addresses of branches in output, non-null only for the ones holding C arrays
+   std::vector<TBranch *> fBranches;     // Addresses of branches in output, non-null only for the ones holding C arrays
    std::vector<void *> fBranchAddresses; // Addresses of objects associated to output branches
    RBranchSet fOutputBranches;
    std::vector<bool> fIsDefine;
@@ -1513,9 +1564,15 @@ public:
    SnapshotHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
                   const ColumnNames_t &vbnames, const ColumnNames_t &bnames, const RSnapshotOptions &options,
                   std::vector<bool> &&isDefine)
-      : fFileName(filename), fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
-        fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fBranches(vbnames.size(), nullptr),
-        fBranchAddresses(vbnames.size(), nullptr), fIsDefine(std::move(isDefine))
+      : fFileName(filename),
+        fDirName(dirname),
+        fTreeName(treename),
+        fOptions(options),
+        fInputBranchNames(vbnames),
+        fOutputBranchNames(ReplaceDotWithUnderscore(bnames)),
+        fBranches(vbnames.size(), nullptr),
+        fBranchAddresses(vbnames.size(), nullptr),
+        fIsDefine(std::move(isDefine))
    {
       ValidateSnapshotOutput(fOptions, fTreeName, fFileName);
    }
@@ -1545,7 +1602,7 @@ public:
       fBranchAddressesNeedReset = true;
    }
 
-   void Exec(unsigned int /* slot */, ColTypes &... values)
+   void Exec(unsigned int /* slot */, ColTypes &...values)
    {
       using ind_t = std::index_sequence_for<ColTypes...>;
       if (!fBranchAddressesNeedReset) {
@@ -1558,7 +1615,7 @@ public:
    }
 
    template <std::size_t... S>
-   void UpdateCArraysPtrs(ColTypes &... values, std::index_sequence<S...> /*dummy*/)
+   void UpdateCArraysPtrs(ColTypes &...values, std::index_sequence<S...> /*dummy*/)
    {
       // This code deals with branches which hold C arrays of variable size. It can happen that the buffers
       // associated to those is re-allocated. As a result the value of the pointer can change therewith
@@ -1574,13 +1631,14 @@ public:
    }
 
    template <std::size_t... S>
-   void SetBranches(ColTypes &... values, std::index_sequence<S...> /*dummy*/)
+   void SetBranches(ColTypes &...values, std::index_sequence<S...> /*dummy*/)
    {
       // create branches in output tree
-      int expander[] = {(SetBranchesHelper(fInputTree, *fOutputTree, fInputBranchNames[S], fOutputBranchNames[S],
-                                           fBranches[S], fBranchAddresses[S], &values, fOutputBranches, fIsDefine[S]),
-                         0)...,
-                        0};
+      int expander[] = {
+         (SetBranchesHelper(fInputTree, *fOutputTree, fInputBranchNames[S], fOutputBranchNames[S], fBranches[S],
+                            fBranchAddresses[S], &values, fOutputBranches, fIsDefine[S], fOptions.fBasketSize),
+          0)...,
+         0};
       fOutputBranches.AssertNoNullBranchAddresses();
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
    }
@@ -1590,7 +1648,7 @@ public:
       fOutputFile.reset(
          TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/"",
                      ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel)));
-      if(!fOutputFile)
+      if (!fOutputFile)
          throw std::runtime_error("Snapshot: could not create output file " + fFileName);
 
       TDirectory *outputDir = fOutputFile.get();
@@ -1598,7 +1656,7 @@ public:
          TString checkupdate = fOptions.fMode;
          checkupdate.ToLower();
          if (checkupdate == "update")
-            outputDir = fOutputFile->mkdir(fDirName.c_str(), "", true);  // do not overwrite existing directory
+            outputDir = fOutputFile->mkdir(fDirName.c_str(), "", true); // do not overwrite existing directory
          else
             outputDir = fOutputFile->mkdir(fDirName.c_str());
       }
@@ -1656,7 +1714,7 @@ class R__CLING_PTRCHECK(off) SnapshotHelperMT : public RActionImpl<SnapshotHelpe
    std::vector<std::shared_ptr<ROOT::TBufferMergerFile>> fOutputFiles;
    std::vector<std::unique_ptr<TTree>> fOutputTrees;
    std::vector<int> fBranchAddressesNeedReset; // vector<bool> does not allow concurrent writing of different elements
-   std::string fFileName;           // name of the output file name
+   std::string fFileName;                      // name of the output file name
    std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
    std::string fTreeName;           // name of output tree
    RSnapshotOptions fOptions;       // struct holding options to pass down to TFile and TTree in this action
@@ -1675,11 +1733,20 @@ public:
    SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
                     std::string_view treename, const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
                     const RSnapshotOptions &options, std::vector<bool> &&isDefine)
-      : fNSlots(nSlots), fOutputFiles(fNSlots), fOutputTrees(fNSlots), fBranchAddressesNeedReset(fNSlots, 1),
-        fFileName(filename), fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
-        fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots),
+      : fNSlots(nSlots),
+        fOutputFiles(fNSlots),
+        fOutputTrees(fNSlots),
+        fBranchAddressesNeedReset(fNSlots, 1),
+        fFileName(filename),
+        fDirName(dirname),
+        fTreeName(treename),
+        fOptions(options),
+        fInputBranchNames(vbnames),
+        fOutputBranchNames(ReplaceDotWithUnderscore(bnames)),
+        fInputTrees(fNSlots),
         fBranches(fNSlots, std::vector<TBranch *>(vbnames.size(), nullptr)),
-        fBranchAddresses(fNSlots, std::vector<void *>(vbnames.size(), nullptr)), fOutputBranches(fNSlots),
+        fBranchAddresses(fNSlots, std::vector<void *>(vbnames.size(), nullptr)),
+        fOutputBranches(fNSlots),
         fIsDefine(std::move(isDefine))
    {
       ValidateSnapshotOutput(fOptions, fTreeName, fFileName);
@@ -1740,7 +1807,7 @@ public:
       fOutputBranches[slot].Clear();
    }
 
-   void Exec(unsigned int slot, ColTypes &... values)
+   void Exec(unsigned int slot, ColTypes &...values)
    {
       using ind_t = std::index_sequence_for<ColTypes...>;
       if (fBranchAddressesNeedReset[slot] == 0) {
@@ -1757,7 +1824,7 @@ public:
    }
 
    template <std::size_t... S>
-   void UpdateCArraysPtrs(unsigned int slot, ColTypes &... values, std::index_sequence<S...> /*dummy*/)
+   void UpdateCArraysPtrs(unsigned int slot, ColTypes &...values, std::index_sequence<S...> /*dummy*/)
    {
       // This code deals with branches which hold C arrays of variable size. It can happen that the buffers
       // associated to those is re-allocated. As a result the value of the pointer can change therewith
@@ -1770,16 +1837,16 @@ public:
                          fBranchAddresses[slot][S] = GetData(values), 0 : 0, 0)...,
                         0};
       (void)expander; // avoid unused parameter warnings (gcc 12.1)
-      (void)slot; // Also "slot" might be unused, in case "values" is empty
+      (void)slot;     // Also "slot" might be unused, in case "values" is empty
    }
 
    template <std::size_t... S>
-   void SetBranches(unsigned int slot, ColTypes &... values, std::index_sequence<S...> /*dummy*/)
+   void SetBranches(unsigned int slot, ColTypes &...values, std::index_sequence<S...> /*dummy*/)
    {
       // hack to call TTree::Branch on all variadic template arguments
       int expander[] = {(SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fInputBranchNames[S],
                                            fOutputBranchNames[S], fBranches[slot][S], fBranchAddresses[slot][S],
-                                           &values, fOutputBranches[slot], fIsDefine[S]),
+                                           &values, fOutputBranches[slot], fIsDefine[S], fOptions.fBasketSize),
                          0)...,
                         0};
       fOutputBranches[slot].AssertNoNullBranchAddresses();
@@ -1790,7 +1857,7 @@ public:
    {
       const auto cs = ROOT::CompressionSettings(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
       auto out_file = TFile::Open(fFileName.c_str(), fOptions.fMode.c_str(), /*ftitle=*/fFileName.c_str(), cs);
-      if(!out_file)
+      if (!out_file)
          throw std::runtime_error("Snapshot: could not create output file " + fFileName);
       fMerger = std::make_unique<ROOT::TBufferMerger>(std::unique_ptr<TFile>(out_file));
    }
@@ -1883,7 +1950,9 @@ public:
       fAggregate(fAggregators[slot], value);
    }
 
-   void Initialize() { /* noop */}
+   void Initialize()
+   { /* noop */
+   }
 
    template <typename MergeRet = typename CallableTraits<Merge>::ret_type,
              bool MergeAll = std::is_same<void, MergeRet>::value>
@@ -1912,9 +1981,9 @@ public:
    }
 };
 
-} // end of NS RDF
-} // end of NS Internal
-} // end of NS ROOT
+} // namespace RDF
+} // namespace Internal
+} // namespace ROOT
 
 /// \endcond
 
