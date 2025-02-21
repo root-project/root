@@ -177,6 +177,11 @@ public:
       out << SP << "}\n"; // end operator scope
       return out.str();
    }
+
+   std::string GenerateGPU(std::string OpName)  {
+      return std::string();
+   }
+   
 };
 
 } // nameSPace SOFIE

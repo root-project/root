@@ -1474,6 +1474,15 @@ auto ROperator_LSTM<T>::Generate(std::string OpName)
    return out.str();
 }
 
+template<typename T>
+auto ROperator_LSTM<T>::GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal)
+-> std::string {
+   
+   std::cout << "TMVA-SOFIE Operator LSTM not currently supported in SYCL" << std::endl;
+   return std::string();
+} 
+
 } // namespace SOFIE
 } // namespace Experimental
 } // namespace TMVA

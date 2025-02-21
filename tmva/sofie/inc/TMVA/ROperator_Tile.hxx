@@ -139,6 +139,11 @@ public:
       out << "}\n";  // end of scope
       return out.str();
    }
+
+   std::string GenerateGPU(std::string OpName)  {
+      return std::string();
+   }
+   
 };
 
 }//SOFIE

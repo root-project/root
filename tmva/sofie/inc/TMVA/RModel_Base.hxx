@@ -49,10 +49,14 @@ protected:
 
    std::string fName = "UnnamedModel";
    std::string fGC; // generated code
+   std::string fGC_CPU; //generated code for CPU
+   std::string fGC_GPU; //generated code for GPU
    bool fUseWeightFile = true;
    bool fUseSession = true;
    bool fIsGNN = false;
    bool fIsGNNComponent = false;
+   int gpu_blas = GPU_BLAS;
+   int target_gpu = TARGET_GPU;
 
 public:
    /**
@@ -83,10 +87,15 @@ public:
        fCustomOpHeaders.insert(filename);
    }
    void GenerateHeaderInfo(std::string &hgname);
-   void PrintGenerated() { std::cout << fGC; }
-
+   void PrintGenerated(){
+      std::cout << fGC_CPU;
+   }
+   void PrintGeneratedGPU(){
+      std::cout << fGC_GPU;
+   }
    std::string ReturnGenerated() { return fGC; }
    void OutputGenerated(std::string filename = "", bool append = false);
+   void OutputGeneratedGPU(std::string filename = "");
    void SetFilename(std::string filename) { fName = filename; }
    std::string GetFilename() { return fName; }
    const std::string & GetName() const { return fName;}

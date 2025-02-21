@@ -20,6 +20,7 @@ template <typename T>
 struct BinaryOperatorTrait<T, Add> {
    static const std::string Name() { return "Add"; }
    static std::string Op(const std::string & t1, const std::string t2) { return t1 + " + " + t2; }
+   static std::string Op_GPU(const std::string & t1, const std::string t2) {return t1 + " + " + t2;}
    static T Func(T t1, T t2) {return  t1 + t2;}
 };
 
@@ -27,6 +28,7 @@ template <typename T>
 struct BinaryOperatorTrait<T, Sub> {
    static const std::string Name() { return "Sub"; }
    static std::string Op(const std::string & t1, const std::string t2) { return t1 + " - " + t2; }
+   static std::string Op_GPU(const std::string & t1, const std::string t2) {return t1 + " - " + t2;}
    static T Func (T t1, T t2) { return t1 - t2;}
 };
 
@@ -34,6 +36,7 @@ template <typename T>
 struct BinaryOperatorTrait<T, Mul> {
    static const std::string Name() { return "Mul"; }
    static std::string Op(const std::string & t1, const std::string t2) { return t1 + " * " + t2; }
+   static std::string Op_GPU(const std::string & t1, const std::string t2) {return t1 + " * " + t2;}
    static T Func (T t1, T t2) { return  t1 * t2;}
 };
 
@@ -41,6 +44,7 @@ template <typename T>
 struct BinaryOperatorTrait<T, Div> {
    static const std::string Name() { return "Div"; }
    static std::string Op(const std::string & t1, const std::string t2) { return t1 + " / " + t2; }
+   static std::string Op_GPU(const std::string & t1, const std::string t2) {return t1 + " / " + t2;}
    static T Func (T t1, T t2) { return t1/t2;}
 };
 
@@ -48,6 +52,7 @@ template <typename T>
 struct BinaryOperatorTrait<T, Pow> {
    static const std::string Name() { return "Pow"; }
    static std::string Op(const std::string & t1, const std::string t2) { return "std::pow(" + t1 + "," + t2 + ")"; }
+   static std::string Op_GPU(const std::string & t1, const std::string t2) {return "cl::sycl::pow(" + t1 + ", " + t2 + ")"; }
    static T Func (T t1, T t2) { return std::pow(t1,t2);}
 };
 
@@ -197,6 +202,67 @@ public:
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
       out << SP << SP << "tensor_" << fNY << "[id] = "  << BinaryOperatorTrait<T,Op>::Op( "tensor_" + nameA + "[id]" , "tensor_" + nameB + "[id]") <<  " ;\n";
       out << SP << "}\n";
+      return out.str();
+   }
+
+   std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) override {
+      OpName = "op_" + OpName;
+      if (fShapeY.empty()) {
+         throw std::runtime_error("TMVA SOFIE Binary Op called to Generate without being initialized first");
+      }
+      std::stringstream out;
+      out << "\n" << SP*3 << "//------ " << BinaryOperatorTrait<T,Op>::Name() << "\n";
+      size_t length = ConvertShapeToLength(fShapeY);
+      // Broadcast A if it's uninitialized
+      if (!fNBroadcadstedA.empty()) {
+         out << SP*3 << "// Broadcasting uninitialized tensor " << fNA << "\n";
+         out << SP*3 << "{\n";
+         out << SP*4 << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(fTensor_" << fNA << ".data(), " << ConvertShapeToString(fShapeA) << ", " << ConvertShapeToString(fShapeY) << ");\n";
+         out << SP*4 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range<1>(" << length << "), props};\n";
+         out << SP*4 << "buf_data.set_final_data(nullptr);\n";
+         out << SP*5 << "q.submit([&](cl::sycl::handler& cgh){\n";
+         out << SP*6 << "auto acc_" << fNBroadcadstedA << " = cl::sycl::accessor{buf_tensor_";
+         out << fNBroadcadstedA<< ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+         out << SP*6 << "cgh.copy(data, acc_" << fNBroadcadstedA << ");\n";
+         out << SP*5 << "}).wait();\n";
+         out << SP*4 << "delete[] data;\n";
+         out << SP*3 << "}\n";
+      }
+
+      // Broadcast B if it's uninitialized
+      if (!fNBroadcadstedB.empty()) {
+         out << SP*3 << "// Broadcasting uninitialized tensor " << fNB << "\n";
+         out << SP*3 << "{\n";
+         out << SP*4 << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(fTensor_" << fNB << ".data(), " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeY) << ");\n";
+         out << SP*4 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range<1>(" << length << "), props};\n";
+         out << SP*4 << "buf_data.set_final_data(nullptr);\n";
+         out << SP*5 << "q.submit([&](cl::sycl::handler& cgh){\n";
+         out << SP*6 << "auto acc_" << fNBroadcadstedB << " = cl::sycl::accessor{buf_tensor_";
+         out << fNBroadcadstedB << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+         out << SP*6 << "cgh.copy(data, acc_" << fNBroadcadstedB << ");\n";
+         out << SP*5 << "}).wait();\n";
+         out << SP*4 << "delete[] data;\n";
+         out << SP*3 << "}\n";
+      }
+
+      const std::string& nameA = fNBroadcadstedA.empty()? fNA : fNBroadcadstedA;
+      const std::string& nameB = fNBroadcadstedB.empty()? fNB : fNBroadcadstedB;
+
+      out << "\n";
+      out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+      out << SP*4 << "auto acc_tensor_" << nameA << " = cl::sycl::accessor{buf_tensor_" << nameA << ", cgh";
+      out << ", cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_tensor_" << nameB << " = cl::sycl::accessor{buf_tensor_" << nameB << ", cgh";
+      out << ", cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY << ", cgh";
+      out << ", cl::sycl::write_only, cl::sycl::no_init};\n";
+      out << SP*4 << "cgh.parallel_for<class " << OpName <<">(cl::sycl::range<1>(" << length << ")";
+      out << ", [=](cl::sycl::id<1> id){\n";
+      out << SP*5 << "acc_tensor_" << fNY << "[id] = " << BinaryOperatorTrait<T, Op>::Op_GPU("acc_tensor_" + nameA + "[id]", "acc_tensor_" + nameB + "[id]") << ";\n"; 
+      out << SP*4 << "});\n";
+      out << SP*3 << "});\n";
+
       return out.str();
    }
 
