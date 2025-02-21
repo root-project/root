@@ -1804,7 +1804,7 @@ RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const Colu
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe.
 /// \param[in] treeName Name of the tree contained in the directory
-/// \param[in] filenameglob TDirectory where the tree is stored, e.g. a TFile.
+/// \param[in] fileNameGlob TDirectory where the tree is stored, e.g. a TFile.
 /// \param[in] defaultColumns Collection of default columns.
 ///
 /// The filename glob supports the same type of expressions as TChain::Add(), and it is passed as-is to TChain's
@@ -1827,8 +1827,8 @@ RDataFrame::RDataFrame(std::string_view treeName, std::string_view fileNameGlob,
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe.
-/// \param[in] treeName Name of the tree contained in the directory
-/// \param[in] fileglobs Collection of file names of filename globs
+/// \param[in] datasetName Name of the dataset contained in the directory
+/// \param[in] fileNameGlobs Collection of file names of filename globs
 /// \param[in] defaultColumns Collection of default columns.
 ///
 /// The filename globs support the same type of expressions as TChain::Add(), and each glob is passed as-is

@@ -34,12 +34,12 @@ namespace Detail {
  * ranges for the gamma parameter and provides a reasonable starting point for
  * pre-fit errors.
  *
- * @param gammas   The gamma parameters to be configured.
- * @param sigmaRel The relative sigma values to be used for configuring the
- *                 limits and errors.
- * @param minSigma The minimum relative sigma threshold. If a relative sigma is
- *                 below this threshold, the gamma parameter is set to be
- *                 constant.
+ * @param gammas    The gamma parameters to be configured.
+ * @param relSigmas The relative sigma values to be used for configuring the
+ *                  limits and errors.
+ * @param minSigma  The minimum relative sigma threshold. If a relative sigma is
+ *                  below this threshold, the gamma parameter is set to be
+ *                  constant.
  */
 void configureConstrainedGammas(RooArgList const &gammas, std::span<const double> relSigmas, double minSigma)
 {
