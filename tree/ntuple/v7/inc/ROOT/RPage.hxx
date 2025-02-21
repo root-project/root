@@ -24,7 +24,6 @@
 #include <memory>
 
 namespace ROOT {
-namespace Experimental {
 namespace Internal {
 
 class RPageAllocator;
@@ -32,7 +31,7 @@ class RPageRef;
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RPage
+\class ROOT::Internal::RPage
 \ingroup NTuple
 \brief A page is a slice of a column that is mapped into memory
 
@@ -181,7 +180,6 @@ public:
 }; // class RPage
 
 } // namespace Internal
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

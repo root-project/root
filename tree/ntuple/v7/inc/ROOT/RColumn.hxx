@@ -53,13 +53,13 @@ private:
    /// (RNTupleWriteOptions::fInitialUnzippedPageSize, which corresponds to fInitialElements) and expand as needed and
    /// as memory for page buffers is still available (RNTupleWriteOptions::fPageBufferBudget) or the maximum page
    /// size is reached (RNTupleWriteOptions::fMaxUnzippedPageSize).
-   RPage fWritePage;
+   ROOT::Internal::RPage fWritePage;
    /// The initial number of elements in a page
    ROOT::NTupleSize_t fInitialNElements = 1;
    /// The number of elements written resp. available in the column
    ROOT::NTupleSize_t fNElements = 0;
    /// The currently mapped page for reading
-   RPageRef fReadPageRef;
+   ROOT::Internal::RPageRef fReadPageRef;
    /// The column id in the column descriptor, once connected to a sink or source
    ROOT::DescriptorId_t fOnDiskId = ROOT::kInvalidDescriptorId;
    /// Global index of the first element in this column; usually == 0, unless it is a deferred column
