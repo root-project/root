@@ -20,8 +20,7 @@
 
 #include <algorithm>
 
-ROOT::Experimental::Internal::RPage
-ROOT::Experimental::Internal::RPageAllocatorHeap::NewPage(std::size_t elementSize, std::size_t nElements)
+ROOT::Internal::RPage ROOT::Internal::RPageAllocatorHeap::NewPage(std::size_t elementSize, std::size_t nElements)
 {
    R__ASSERT((elementSize > 0) && (nElements > 0));
    auto nbytes = elementSize * nElements;
@@ -29,7 +28,7 @@ ROOT::Experimental::Internal::RPageAllocatorHeap::NewPage(std::size_t elementSiz
    return RPage(buffer, this, elementSize, nElements);
 }
 
-void ROOT::Experimental::Internal::RPageAllocatorHeap::DeletePage(RPage &page)
+void ROOT::Internal::RPageAllocatorHeap::DeletePage(RPage &page)
 {
    delete[] reinterpret_cast<unsigned char *>(page.GetBuffer());
 }
