@@ -556,10 +556,9 @@ double ParamHistFunc::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find all bins corresponding to the values of the observables in `evalData`, and evaluate
-/// the associated parameters.
-/// \param[in,out] evalData Input/output data for evaluating the ParamHistFunc.
-/// \param[in] normSet Normalisation set passed on to objects that are serving values to us.
+/// Find all bins corresponding to the values of the observables in `ctx`,
+// and evaluate the associated parameters.
+/// \param[in,out] ctx Input/output data for evaluating the ParamHistFunc.
 void ParamHistFunc::doEval(RooFit::EvalContext & ctx) const
 {
   std::span<double> output = ctx.output();

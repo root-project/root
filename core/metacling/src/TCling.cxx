@@ -1335,6 +1335,7 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
 /// \param title title for TInterpreter
 /// \param argv - array of arguments passed to the cling::Interpreter constructor
 ///               e.g. `-DFOO=bar`. The last element of the array must be `nullptr`.
+/// \param interpLibHandle handle to interpreter library
 
 TCling::TCling(const char *name, const char *title, const char* const argv[], void *interpLibHandle)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fMapfile(nullptr),

@@ -529,9 +529,11 @@ Bool_t TRootSnifferFull::ProduceXml(const std::string &path, const std::string &
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute command for specified object
 ///
-/// options include method and extra list of parameters
+/// @param path the object path
+/// @param options include method and extra list of parameters
 /// sniffer should be not-readonly to allow execution of the commands
 /// @param reskind defines kind of result 0 - debug, 1 - json, 2 - binary
+/// @param res_str result string
 
 Bool_t TRootSnifferFull::ProduceExe(const std::string &path, const std::string &options, Int_t reskind, std::string &res_str)
 {
