@@ -59,6 +59,7 @@ set(CMAKE_CXX_EXTENSIONS NO)
 include(GNUInstallDirs)
   option(CPPINTEROP_USE_CLING "Use Cling as backend" OFF)
   option(CPPINTEROP_USE_REPL "Use clang-repl as backend" ON)
+  option(CPPINTEROP_ENABLE_TESTING "Enable the CppInterOp testing infrastructure." ON)
 
   if (CPPINTEROP_USE_CLING AND CPPINTEROP_USE_REPL)
     message(FATAL_ERROR "We can only use Cling (CPPINTEROP_USE_CLING=On) or Repl (CPPINTEROP_USE_REPL=On), but not both of them.")
@@ -453,10 +454,7 @@ option(CPPINTEROP_ENABLE_SPHINX "Use sphinx to generage CppInterOp user document
 
 if(EMSCRIPTEN)
     message("Build with emscripten")
-    option(CPPINTEROP_ENABLE_TESTING "Enables the testing infrastructure." OFF)
-else()
-    message("Build with cmake")
-    option(CPPINTEROP_ENABLE_TESTING "Enables the testing infrastructure." ON)
+    set(CPPINTEROP_ENABLE_TESTING OFF)
 endif()
 
 if(MSVC)
