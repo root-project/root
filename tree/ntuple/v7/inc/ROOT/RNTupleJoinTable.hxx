@@ -73,9 +73,9 @@ private:
    /// Names of the join fields used for the mapping to their respective entry numbers.
    std::vector<std::string> fJoinFieldNames;
 
-   /// The fields for which the join table is built, corresponding to `fJoinFieldNames`. Used to compute the hashes for
-   /// each entry value.
-   std::vector<std::unique_ptr<RFieldBase>> fJoinFields;
+   /// The size (in bytes) for each join field, corresponding to `fJoinFieldNames`. This information is stored to be
+   /// able to properly cast incoming void pointers to the join field values in `GetAllEntryNumbers`.
+   std::vector<std::size_t> fJoinFieldValueSizes;
 
    /// Only built join tables can be queried.
    bool fIsBuilt = false;

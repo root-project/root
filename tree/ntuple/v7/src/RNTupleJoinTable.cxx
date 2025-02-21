@@ -17,11 +17,11 @@
 
 namespace {
 ROOT::Experimental::Internal::RNTupleJoinTable::NTupleJoinValue_t
-CastValuePtr(void *valuePtr, const ROOT::Experimental::RFieldBase &field)
+CastValuePtr(void *valuePtr, std::size_t fieldValueSize)
 {
    ROOT::Experimental::Internal::RNTupleJoinTable::NTupleJoinValue_t value;
 
-   switch (field.GetValueSize()) {
+   switch (fieldValueSize) {
    case 1: value = *reinterpret_cast<std::uint8_t *>(valuePtr); break;
    case 2: value = *reinterpret_cast<std::uint16_t *>(valuePtr); break;
    case 4: value = *reinterpret_cast<std::uint32_t *>(valuePtr); break;
@@ -59,7 +59,8 @@ void ROOT::Experimental::Internal::RNTupleJoinTable::Build(RPageSource &pageSour
    pageSource.Attach();
    auto desc = pageSource.GetSharedDescriptorGuard();
 
-   fJoinFields.reserve(fJoinFieldNames.size());
+   fJoinFieldValueSizes.reserve(fJoinFieldNames.size());
+   std::vector<std::unique_ptr<RFieldBase>> fields;
    std::vector<RFieldBase::RValue> fieldValues;
    fieldValues.reserve(fJoinFieldNames.size());
 
@@ -81,7 +82,8 @@ void ROOT::Experimental::Internal::RNTupleJoinTable::Build(RPageSource &pageSour
       CallConnectPageSourceOnField(*field, pageSource);
 
       fieldValues.emplace_back(field->CreateValue());
-      fJoinFields.push_back(std::move(field));
+      fJoinFieldValueSizes.emplace_back(field->GetValueSize());
+      fields.emplace_back(std::move(field));
    }
 
    std::vector<NTupleJoinValue_t> joinFieldValues;
@@ -94,7 +96,7 @@ void ROOT::Experimental::Internal::RNTupleJoinTable::Build(RPageSource &pageSour
          fieldValue.Read(i);
 
          auto valuePtr = fieldValue.GetPtr<void>();
-         joinFieldValues.push_back(CastValuePtr(valuePtr.get(), fieldValue.GetField()));
+         joinFieldValues.push_back(CastValuePtr(valuePtr.get(), fieldValue.GetField().GetValueSize()));
       }
       fJoinTable[RCombinedJoinFieldValue(joinFieldValues)].push_back(i);
    }
@@ -123,7 +125,7 @@ ROOT::Experimental::Internal::RNTupleJoinTable::GetAllEntryNumbers(const std::ve
    joinFieldValues.reserve(valuePtrs.size());
 
    for (unsigned i = 0; i < valuePtrs.size(); ++i) {
-      joinFieldValues.push_back(CastValuePtr(valuePtrs[i], *fJoinFields[i]));
+      joinFieldValues.push_back(CastValuePtr(valuePtrs[i], fJoinFieldValueSizes[i]));
    }
 
    auto entryNumber = fJoinTable.find(RCombinedJoinFieldValue(joinFieldValues));
