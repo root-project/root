@@ -4116,13 +4116,19 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
          ssize_t len = getxattr(fileurl.GetFile(), "eos.url.xroot", nullptr, 0);
          if (len > 0) {
             std::string xurl(len, 0);
-            if (getxattr(fileurl.GetFile(), "eos.url.xroot", &xurl[0], len) == len) {
-               if ((f = TFile::Open(xurl.c_str(), options, ftitle, compress, netopt))) {
-                  if (!f->IsZombie()) {
-                     return f;
-                  } else {
-                     delete f;
-                     f = nullptr;
+            std::string fileNameFromUrl{fileurl.GetFile()};
+            if (getxattr(fileNameFromUrl.c_str(), "eos.url.xroot", &xurl[0], len) == len) {
+               // Sometimes the `getxattr` call may return an invalid URL due
+               // to the POSIX attribute not being yet completely filled by EOS.
+               if (auto baseName = fileNameFromUrl.substr(fileNameFromUrl.find_last_of("/") + 1);
+                   std::equal(baseName.crbegin(), baseName.crend(), xurl.crbegin())) {
+                  if ((f = TFile::Open(xurl.c_str(), options, ftitle, compress, netopt))) {
+                     if (!f->IsZombie()) {
+                        return f;
+                     } else {
+                        delete f;
+                        f = nullptr;
+                     }
                   }
                }
             }
