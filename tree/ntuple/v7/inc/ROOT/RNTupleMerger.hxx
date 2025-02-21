@@ -91,7 +91,7 @@ class RNTupleMerger final {
    friend class ROOT::RNTuple;
 
    std::unique_ptr<RPagePersistentSink> fDestination;
-   std::unique_ptr<RPageAllocator> fPageAlloc;
+   std::unique_ptr<ROOT::Internal::RPageAllocator> fPageAlloc;
    std::optional<TTaskGroup> fTaskGroup;
    std::unique_ptr<RNTupleModel> fModel;
 

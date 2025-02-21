@@ -30,13 +30,11 @@
 #include <vector>
 
 namespace ROOT {
-namespace Experimental {
-
 namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RPagePool
+\class ROOT::Internal::RPagePool
 \ingroup NTuple
 \brief A thread-safe cache of pages loaded from the page source.
 
@@ -168,7 +166,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RPageRef
+\class ROOT::Internal::RPageRef
 \ingroup NTuple
 \brief Reference to a page stored in the page pool
 
@@ -219,8 +217,6 @@ public:
 };
 
 } // namespace Internal
-
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

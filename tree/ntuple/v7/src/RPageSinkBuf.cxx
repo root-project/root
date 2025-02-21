@@ -142,7 +142,8 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitSuppressedColumn(ColumnHa
    fSuppressedColumns.emplace_back(columnHandle);
 }
 
-void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
+void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle,
+                                                            const ROOT::Internal::RPage &page)
 {
    auto colId = columnHandle.fPhysicalId;
    const auto &element = *columnHandle.fColumn->GetElement();
@@ -214,7 +215,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
       shrinkSealedPage();
       zipItem.fSealedPage = &sealedPage;
       // Release the uncompressed page. This works because the "page allocator must be thread-safe."
-      zipItem.fPage = RPage();
+      zipItem.fPage = ROOT::Internal::RPage();
    });
 }
 
@@ -296,7 +297,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitDatasetImpl()
    fInnerSink->CommitDataset();
 }
 
-ROOT::Experimental::Internal::RPage
+ROOT::Internal::RPage
 ROOT::Experimental::Internal::RPageSinkBuf::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
    return fInnerSink->ReservePage(columnHandle, nElements);

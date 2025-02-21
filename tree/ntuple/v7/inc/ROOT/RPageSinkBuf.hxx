@@ -45,7 +45,7 @@ private:
    class RColumnBuf {
    public:
       struct RPageZipItem {
-         RPage fPage;
+         ROOT::Internal::RPage fPage;
          // Compression scratch buffer for fSealedPage.
          std::unique_ptr<unsigned char[]> fBuf;
          RPageStorage::RSealedPage *fSealedPage = nullptr;
@@ -140,7 +140,7 @@ public:
    void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
    void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
-   void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
+   void CommitPage(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) final;
    void CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    std::uint64_t CommitCluster(ROOT::NTupleSize_t nNewEntries) final;
@@ -149,7 +149,7 @@ public:
    void CommitClusterGroup() final;
    void CommitDatasetImpl() final;
 
-   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
+   ROOT::Internal::RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
 }; // RPageSinkBuf
 
 } // namespace Internal
