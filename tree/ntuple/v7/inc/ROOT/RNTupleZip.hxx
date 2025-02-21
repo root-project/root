@@ -27,12 +27,11 @@
 #include <utility>
 
 namespace ROOT {
-namespace Experimental {
 namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RNTupleCompressor
+\class ROOT::Internal::RNTupleCompressor
 \ingroup NTuple
 \brief Helper class to compress data blocks in the ROOT compression frame format
 */
@@ -87,7 +86,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RNTupleDecompressor
+\class ROOT::Internal::RNTupleDecompressor
 \ingroup NTuple
 \brief Helper class to uncompress data blocks in the ROOT compression frame format
 */
@@ -138,7 +137,6 @@ public:
 };
 
 } // namespace Internal
-} // namespace Experimental
 } // namespace ROOT
 
 #endif
