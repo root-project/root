@@ -404,7 +404,8 @@ std::vector<size_t> PyMethodBase::GetDataFromList(PyObject* listObject){
 ///        dictionary object and returns the associated value or throws runtime
 ///        error.
 ///
-/// \param[in] listObject Python Dict object
+/// \param[in] dict Python Dict object
+/// \param[in] key the key to search for in the dict
 /// \return Associated value PyObject
 PyObject *PyMethodBase::GetValueFromDict(PyObject *dict, const char *key)
 {

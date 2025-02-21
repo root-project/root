@@ -158,8 +158,7 @@ double RooBinSamplingPdf::evaluate() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Integrate the PDF over all its bins, and return a batch with those values.
-/// \param[in,out] evalData Struct with evaluation data.
-/// \param[in] normSet Normalisation set that's used to evaluate the PDF.
+/// \param[in,out] ctx Struct with evaluation data
 void RooBinSamplingPdf::doEval(RooFit::EvalContext &ctx) const
 {
    std::span<double> output = ctx.output();
