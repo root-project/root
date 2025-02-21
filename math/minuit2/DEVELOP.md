@@ -58,5 +58,5 @@ After this happens, all the standard CMake machinery can produce the source dist
 
 
 [ROOT]: https://root.cern
-[minuitdoc]: https://root.cern.ch/doc/master/Minuit2Page.html
+[minuitdoc]: https://root.cern/doc/master/Minuit2Page.html
 [CMake]: https://cmake.org

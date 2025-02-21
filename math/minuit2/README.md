@@ -64,5 +64,5 @@ make package
 
 [DEVELOP.md]: ./DEVELOP.md
 [ROOT]: https://root.cern
-[minuitdoc]: https://root.cern.ch/doc/master/Minuit2Page.html
+[minuitdoc]: https://root.cern/doc/master/Minuit2Page.html
 [CMake]: https://cmake.org
