@@ -146,10 +146,10 @@ void Analyze()
    auto max_value = df.Max("AverageTemperature");
 
    // Functions to filter by each season from date formatted "1944-12-01."
-   auto fnWinter = [](int month) { return month == 12 || month == 1 || month == 2; };
-   auto fnSpring = [](int month) { return month == 3 || month == 4 || month == 5; };
-   auto fnSummer = [](int month) { return month == 6 || month == 7 || month == 8; };
-   auto fnFall = [](int month) { return month == 9 || month == 10 || month == 11; };
+   auto fnWinter = [](std::uint32_t month) { return month == 12 || month == 1 || month == 2; };
+   auto fnSpring = [](std::uint32_t month) { return month == 3 || month == 4 || month == 5; };
+   auto fnSummer = [](std::uint32_t month) { return month == 6 || month == 7 || month == 8; };
+   auto fnFall = [](std::uint32_t month) { return month == 9 || month == 10 || month == 11; };
 
    // Create a RDataFrame per season.
    auto dfWinter = df.Filter(fnWinter, {"Month"});
@@ -164,8 +164,8 @@ void Analyze()
    auto fallCount = dfFall.Count();
 
    // Functions to filter for the time period between 2003-2013, and 1993-2002.
-   auto fn1993_to_2002 = [](int year) { return year >= 1993 && year <= 2002; };
-   auto fn2003_to_2013 = [](int year) { return year >= 2003 && year <= 2013; };
+   auto fn1993_to_2002 = [](std::uint32_t year) { return year >= 1993 && year <= 2002; };
+   auto fn2003_to_2013 = [](std::uint32_t year) { return year >= 2003 && year <= 2013; };
 
    // Create a RDataFrame for decades 1993_to_2002 & 2003_to_2013.
    auto df1993_to_2002 = df.Filter(fn1993_to_2002, {"Year"});
