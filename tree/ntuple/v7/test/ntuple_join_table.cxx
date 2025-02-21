@@ -17,7 +17,18 @@ TEST(RNTupleJoinTable, Basic)
    }
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto joinTable = RNTupleJoinTable::Create({"fld"}, *pageSource);
+   auto joinTable = RNTupleJoinTable::Create({"fld"});
+   EXPECT_FALSE(joinTable->IsBuilt());
+
+   try {
+      joinTable->GetFirstEntryNumber<std::uint64_t>(0);
+      FAIL() << "querying an unbuilt join table should not be possible";
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("join table has not been built yet"));
+   }
+
+   joinTable->Build(*pageSource);
+   EXPECT_TRUE(joinTable->IsBuilt());
 
    EXPECT_EQ(10UL, joinTable->GetSize());
 
@@ -29,38 +40,6 @@ TEST(RNTupleJoinTable, Basic)
       EXPECT_EQ(fldValue, i * 2);
       EXPECT_EQ(joinTable->GetFirstEntryNumber({&fldValue}), i);
    }
-}
-
-TEST(RNTupleJoinTable, DeferBuild)
-{
-   FileRaii fileGuard("test_ntuple_join_table_defer_build.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fld = model->MakeField<std::uint64_t>("fld");
-
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
-
-      for (int i = 0; i < 10; ++i) {
-         *fld = i * 2;
-         ntuple->Fill();
-      }
-   }
-
-   auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto joinTable = RNTupleJoinTable::Create({"fld"}, *pageSource, true /* deferBuild */);
-   EXPECT_FALSE(joinTable->IsBuilt());
-
-   try {
-      joinTable->GetFirstEntryNumber<std::uint64_t>(0);
-      FAIL() << "querying an unbuilt join table should not be possible";
-   } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("join table has not been built yet"));
-   }
-
-   joinTable->Build();
-   EXPECT_TRUE(joinTable->IsBuilt());
-
-   EXPECT_EQ(0, joinTable->GetFirstEntryNumber<std::uint64_t>(0));
 }
 
 TEST(RNTupleJoinTable, InvalidTypes)
@@ -80,11 +59,12 @@ TEST(RNTupleJoinTable, InvalidTypes)
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
 
-   auto joinTable = RNTupleJoinTable::Create({"fldInt"}, *pageSource);
+   auto joinTable = RNTupleJoinTable::Create({"fldInt"});
+   joinTable->Build(*pageSource);
    EXPECT_EQ(1UL, joinTable->GetSize());
 
    try {
-      RNTupleJoinTable::Create({"fldFloat"}, *pageSource);
+      RNTupleJoinTable::Create({"fldFloat"})->Build(*pageSource);
       FAIL() << "non-integral-type field should not be allowed as join fields";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(
@@ -94,7 +74,7 @@ TEST(RNTupleJoinTable, InvalidTypes)
    }
 
    try {
-      RNTupleJoinTable::Create({"fldString"}, *pageSource);
+      RNTupleJoinTable::Create({"fldString"})->Build(*pageSource);
       FAIL() << "non-integral-type field should not be allowed as join fields";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(
@@ -104,7 +84,7 @@ TEST(RNTupleJoinTable, InvalidTypes)
    }
 
    try {
-      RNTupleJoinTable::Create({"fldStruct"}, *pageSource);
+      RNTupleJoinTable::Create({"fldStruct"})->Build(*pageSource);
       FAIL() << "non-integral-type field should not be allowed as join fields";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("cannot use field \"fldStruct\" with type \"CustomStruct\" in "
@@ -146,7 +126,9 @@ TEST(RNTupleJoinTable, SparseSecondary)
    auto fldEvent = mainNtuple->GetView<std::uint64_t>("event");
 
    auto secondaryPageSource = RPageSource::Create("secondary", fileGuardSecondary.GetPath());
-   auto joinTable = RNTupleJoinTable::Create({"event"}, *secondaryPageSource);
+   auto joinTable = RNTupleJoinTable::Create({"event"});
+   joinTable->Build(*secondaryPageSource);
+
    auto secondaryNTuple = RNTupleReader::Open("secondary", fileGuardSecondary.GetPath());
    auto fldX = secondaryNTuple->GetView<float>("x");
 
@@ -186,7 +168,8 @@ TEST(RNTupleJoinTable, MultipleFields)
    }
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto joinTable = RNTupleJoinTable::Create({"run", "event"}, *pageSource);
+   auto joinTable = RNTupleJoinTable::Create({"run", "event"});
+   joinTable->Build(*pageSource);
 
    EXPECT_EQ(15ULL, joinTable->GetSize());
 
@@ -241,7 +224,8 @@ TEST(RNTupleJoinTable, MultipleMatches)
    }
 
    auto pageSource = RPageSource::Create("ntuple", fileGuard.GetPath());
-   auto joinTable = RNTupleJoinTable::Create({"run"}, *pageSource);
+   auto joinTable = RNTupleJoinTable::Create({"run"});
+   joinTable->Build(*pageSource);
 
    EXPECT_EQ(3ULL, joinTable->GetSize());
 

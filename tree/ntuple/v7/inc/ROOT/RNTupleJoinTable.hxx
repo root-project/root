@@ -70,11 +70,12 @@ private:
    /// fields) to their respective entry numbers.
    std::unordered_map<RCombinedJoinFieldValue, std::vector<ROOT::NTupleSize_t>, RCombinedJoinFieldValueHash> fJoinTable;
 
-   /// The page source belonging to the RNTuple for which to build the join table.
-   std::unique_ptr<RPageSource> fPageSource;
+   /// Names of the join fields used for the mapping to their respective entry numbers.
+   std::vector<std::string> fJoinFieldNames;
 
-   /// The fields for which the join table is built. Used to compute the hashes for each entry value.
-   std::vector<std::unique_ptr<RFieldBase>> fJoinFields;
+   /// The size (in bytes) for each join field, corresponding to `fJoinFieldNames`. This information is stored to be
+   /// able to properly cast incoming void pointers to the join field values in `GetAllEntryNumbers`.
+   std::vector<std::size_t> fJoinFieldValueSizes;
 
    /// Only built join tables can be queried.
    bool fIsBuilt = false;
@@ -84,8 +85,7 @@ private:
    ///
    /// \param[in] fieldNames The names of the join fields to use for the join table. Only integral-type fields are
    /// allowed.
-   //  \param[in] pageSource The page source.
-   RNTupleJoinTable(const std::vector<std::string> &fieldNames, const RPageSource &pageSource);
+   RNTupleJoinTable(const std::vector<std::string> &fieldNames) : fJoinFieldNames(fieldNames) {}
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Ensure the RNTupleJoinTable has been built.
@@ -105,20 +105,18 @@ public:
    ///
    /// \param[in] fieldNames The names of the join fields to use for the join table. Only integral-type fields are
    /// allowed.
-   /// \param[in] pageSource The page source.
-   /// \param[in] deferBuild When set to `true`, an empty join table will be created. A call to RNTupleJoinTable::Build
-   /// is required before the join table can actually be used.
    ///
    /// \return A pointer to the newly-created join table.
-   static std::unique_ptr<RNTupleJoinTable>
-   Create(const std::vector<std::string> &fieldNames, const RPageSource &pageSource, bool deferBuild = false);
+   static std::unique_ptr<RNTupleJoinTable> Create(const std::vector<std::string> &fieldNames);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Build the join table.
    ///
+   /// \param[in] pageSource The page source of the RNTuple for which to build the join table.
+   ///
    /// Only a built join table can be queried (with RNTupleJoinTable::GetFirstEntryNumber or
    /// RNTupleJoinTable::GetAllEntryNumbers).
-   void Build();
+   void Build(RPageSource &pageSource);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the number of entries in the join table.
@@ -160,7 +158,7 @@ public:
    template <typename... Ts>
    ROOT::NTupleSize_t GetFirstEntryNumber(Ts... values) const
    {
-      if (sizeof...(Ts) != fJoinFields.size())
+      if (sizeof...(Ts) != fJoinFieldNames.size())
          throw RException(R__FAIL("number of values must match number of join fields"));
 
       std::vector<void *> valuePtrs;
@@ -186,7 +184,7 @@ public:
    template <typename... Ts>
    const std::vector<ROOT::NTupleSize_t> *GetAllEntryNumbers(Ts... values) const
    {
-      if (sizeof...(Ts) != fJoinFields.size())
+      if (sizeof...(Ts) != fJoinFieldNames.size())
          throw RException(R__FAIL("number of values must match number of join fields"));
 
       std::vector<void *> valuePtrs;
