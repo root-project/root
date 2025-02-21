@@ -1174,9 +1174,11 @@ Double_t TChain::GetMaximum(const char* columname)
    Int_t treenumber = -1;
    for (Long64_t i = 0; i < fEntries; ++i) {
       Long64_t entryNumber = this->GetEntryNumber(i);
-      if (entryNumber < 0) break;
+      if (entryNumber < 0)
+         break;
       Long64_t localEntryNumber = this->LoadTree(entryNumber);
-      if (localEntryNumber < 0) break;
+      if (localEntryNumber < 0)
+         break;
       if (treenumber != this->GetTreeNumber()) {
          leaf = this->GetLeaf(columname);
          if (leaf)
@@ -1207,9 +1209,11 @@ Double_t TChain::GetMinimum(const char* columname)
    Int_t treenumber = -1;
    for (Long64_t i = 0; i < fEntries; ++i) {
       Long64_t entryNumber = this->GetEntryNumber(i);
-      if (entryNumber < 0) break;
+      if (entryNumber < 0)
+         break;
       Long64_t localEntryNumber = this->LoadTree(entryNumber);
-      if (localEntryNumber < 0) break;
+      if (localEntryNumber < 0)
+         break;
       if (treenumber != this->GetTreeNumber()) {
          leaf = this->GetLeaf(columname);
          if (leaf)
