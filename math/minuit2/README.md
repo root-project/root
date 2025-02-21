@@ -11,7 +11,7 @@ There are two ways to get Minuit2; you can checkout the [ROOT] source, then just
 To build, use the standard [CMake] procedure; on most systems, this looks like:
 
 ```bash
-mkdir PATH_TO_MINIUT2_BUILD
+mkdir PATH_TO_MINUIT2_BUILD
 cd PATH_TO_MINUIT2_BUILD
 cmake PATH_TO_MINUIT2_SOURCE
 cmake --build .
@@ -64,5 +64,5 @@ make package
 
 [DEVELOP.md]: ./DEVELOP.md
 [ROOT]: https://root.cern
-[minuitdoc]: https://root.cern/root/htmldoc/guides/users-guide/ROOTUsersGuide.html#minuit2-package
+[minuitdoc]: https://root.cern/doc/master/Minuit2Page.html
 [CMake]: https://cmake.org
