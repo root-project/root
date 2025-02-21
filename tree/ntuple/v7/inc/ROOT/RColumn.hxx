@@ -28,11 +28,13 @@
 #include <memory>
 #include <utility>
 
-namespace ROOT::Experimental::Internal {
+namespace ROOT::Internal {
+
+using namespace ROOT::Experimental::Internal;
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RColumn
+\class ROOT::Internal::RColumn
 \ingroup NTuple
 \brief A column is a storage-backed array of a simple, fixed-size type, from which pages can be mapped into memory.
 */

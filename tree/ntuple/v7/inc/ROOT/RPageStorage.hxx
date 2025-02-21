@@ -45,15 +45,26 @@
 #include <vector>
 
 namespace ROOT {
+namespace Internal {
+class RColumn;
+class RNTupleCompressor;
+class RPageAllocator;
+}
+
 namespace Experimental {
 
 class RNTupleModel;
 
 namespace Internal {
-class RColumn;
-class RNTupleCompressor;
 struct RNTupleModelChangeset;
-class RPageAllocator;
+
+// TODO: remove these when moving RPage(Sink|Source) out of experimental
+using ROOT::Internal::RColumn;
+using ROOT::Internal::RNTupleCompressor;
+using ROOT::Internal::RPage;
+using ROOT::Internal::RPageAllocator;
+using ROOT::Internal::RPagePool;
+using ROOT::Internal::RPageRef;
 
 enum class EPageStorageType {
    kSink,
