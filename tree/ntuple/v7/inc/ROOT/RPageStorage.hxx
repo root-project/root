@@ -45,15 +45,20 @@
 #include <vector>
 
 namespace ROOT {
+namespace Internal {
+class RColumn;
+}
+
 namespace Experimental {
 
 class RNTupleModel;
 
 namespace Internal {
-class RColumn;
 class RNTupleCompressor;
 struct RNTupleModelChangeset;
 class RPageAllocator;
+
+using ROOT::Internal::RColumn;
 
 enum class EPageStorageType {
    kSink,
