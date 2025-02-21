@@ -505,7 +505,7 @@ void FilterTutorial()
          string name = gMacroName;
          int width = 150;
          ReplaceAll(name,".C","_8C.html");
-         ReplaceAll(gLineString, "\\preview", StringFormat("\\htmlonly <a href=\"%s\"><img src=\"pict1_%s.png\" valign=\"middle\" width=\"%d\"/></a>\\endhtmlonly",name.c_str(),gMacroName.c_str(),width));
+         ReplaceAll(gLineString, "\\preview", StringFormat("\\htmlonly <a href=\"%s\"><img src=\"pict1_%s.png\" style=\"float: left; margin-right: 10px;\" width=\"%d\"/></a>\\endhtmlonly",name.c_str(),gMacroName.c_str(),width));
       }
 
       // \macro_output found

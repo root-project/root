@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_hist
 ## \notebook -js
-## Simple example illustrating how to use the C++ interpreter
+## Simple example illustrating how to use the C++ interpreter.
 ##
 ## \macro_image
 ## \macro_code
