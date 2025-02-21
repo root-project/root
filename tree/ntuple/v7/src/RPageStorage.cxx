@@ -21,6 +21,7 @@
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
+#include "ROOT/RNTupleZip.hxx"
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
@@ -40,6 +41,8 @@
 #include <string_view>
 #include <unordered_map>
 #include <utility>
+
+using ROOT::Internal::RNTupleDecompressor;
 
 ROOT::Experimental::Internal::RPageStorage::RPageStorage(std::string_view name)
    : fMetrics(""), fPageAllocator(std::make_unique<RPageAllocatorHeap>()), fNTupleName(name)

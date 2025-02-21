@@ -47,6 +47,7 @@
 namespace ROOT {
 namespace Internal {
 class RColumn;
+class RNTupleCompressor;
 }
 
 namespace Experimental {
@@ -54,11 +55,11 @@ namespace Experimental {
 class RNTupleModel;
 
 namespace Internal {
-class RNTupleCompressor;
 struct RNTupleModelChangeset;
 class RPageAllocator;
 
 using ROOT::Internal::RColumn;
+using ROOT::Internal::RNTupleCompressor;
 
 enum class EPageStorageType {
    kSink,

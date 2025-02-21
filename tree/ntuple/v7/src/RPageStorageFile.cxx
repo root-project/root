@@ -43,6 +43,8 @@
 #include <functional>
 #include <mutex>
 
+using ROOT::Internal::RNTupleDecompressor;
+
 ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName,
                                                            const RNTupleWriteOptions &options)
    : RPagePersistentSink(ntupleName, options)

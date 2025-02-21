@@ -180,7 +180,7 @@ struct RDaosContainerNTupleLocator {
       if ((err = cont.ReadSingleAkey(zipBuffer.get(), anchor.fNBytesHeader, oidMetadata, kDistributionKeyDefault,
                                      kAttributeKeyHeader, kCidMetadata)))
          return err;
-      ROOT::Experimental::Internal::RNTupleDecompressor::Unzip(zipBuffer.get(), anchor.fNBytesHeader, anchor.fLenHeader,
+      ROOT::Internal::RNTupleDecompressor::Unzip(zipBuffer.get(), anchor.fNBytesHeader, anchor.fLenHeader,
                                                                buffer.get());
       ROOT::Experimental::Internal::RNTupleSerializer::DeserializeHeader(buffer.get(), anchor.fLenHeader, builder);
 
@@ -190,7 +190,7 @@ struct RDaosContainerNTupleLocator {
       if ((err = cont.ReadSingleAkey(zipBuffer.get(), anchor.fNBytesFooter, oidMetadata, kDistributionKeyDefault,
                                      kAttributeKeyFooter, kCidMetadata)))
          return err;
-      ROOT::Experimental::Internal::RNTupleDecompressor::Unzip(zipBuffer.get(), anchor.fNBytesFooter, anchor.fLenFooter,
+      ROOT::Internal::RNTupleDecompressor::Unzip(zipBuffer.get(), anchor.fNBytesFooter, anchor.fLenFooter,
                                                                buffer.get());
       ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(buffer.get(), anchor.fLenFooter, builder);
 
@@ -530,7 +530,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::AttachImpl(RNTupleSerializer::EDe
       fDaosContainer->ReadSingleAkey(
          zipBuffer.get(), cgDesc.GetPageListLocator().GetNBytesOnStorage(), oidPageList, kDistributionKeyDefault,
          cgDesc.GetPageListLocator().GetPosition<RNTupleLocatorObject64>().GetLocation(), kCidMetadata);
-      RNTupleDecompressor::Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().GetNBytesOnStorage(),
+      ROOT::Internal::RNTupleDecompressor::Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().GetNBytesOnStorage(),
                                  cgDesc.GetPageListLength(), buffer.get());
 
       RNTupleSerializer::DeserializePageList(buffer.get(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc, mode);
