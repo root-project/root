@@ -5838,7 +5838,6 @@ void THistPainter::PaintColorLevels(Option_t*)
          Int_t bin  = j*(fXaxis->GetNbins()+2) + i;
          xk    = fXaxis->GetBinLowEdge(i);
          xstep = fXaxis->GetBinWidth(i);
-         if (Hoption.System == kPOLAR && xk<0) xk= 2*TMath::Pi()+xk;
          if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
          z     = fH->GetBinContent(bin);
          // if fH is a profile histogram do not draw empty bins
@@ -5870,22 +5869,20 @@ void THistPainter::PaintColorLevels(Option_t*)
          }
          yup  = yk + ystep;
          ylow = yk;
-         if (Hoption.System != kPOLAR) {
-            if (Hoption.Logy) {
-               if (yup > 0)  yup  = TMath::Log10(yup);
-               else continue;
-               if (ylow > 0) ylow = TMath::Log10(ylow);
-               else continue;
-            }
-            if (xup  < gPad->GetUxmin()) continue;
-            if (yup  < gPad->GetUymin()) continue;
-            if (xlow > gPad->GetUxmax()) continue;
-            if (ylow > gPad->GetUymax()) continue;
-            if (xlow < gPad->GetUxmin()) xlow = gPad->GetUxmin();
-            if (ylow < gPad->GetUymin()) ylow = gPad->GetUymin();
-            if (xup  > gPad->GetUxmax()) xup  = gPad->GetUxmax();
-            if (yup  > gPad->GetUymax()) yup  = gPad->GetUymax();
+         if (Hoption.Logy) {
+            if (yup > 0)  yup  = TMath::Log10(yup);
+            else continue;
+            if (ylow > 0) ylow = TMath::Log10(ylow);
+            else continue;
          }
+         if (xup  < gPad->GetUxmin()) continue;
+         if (yup  < gPad->GetUymin()) continue;
+         if (xlow > gPad->GetUxmax()) continue;
+         if (ylow > gPad->GetUymax()) continue;
+         if (xlow < gPad->GetUxmin()) xlow = gPad->GetUxmin();
+         if (ylow < gPad->GetUymin()) ylow = gPad->GetUymin();
+         if (xup  > gPad->GetUxmax()) xup  = gPad->GetUxmax();
+         if (yup  > gPad->GetUymax()) yup  = gPad->GetUymax();
 
          if (fH->TestBit(TH1::kUserContour)) {
             zc = fH->GetContourLevelPad(0);
@@ -5905,13 +5902,22 @@ void THistPainter::PaintColorLevels(Option_t*)
 
          Int_t theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
          if (theColor > ncolors-1) theColor = ncolors-1;
-         fH->SetFillColor(gStyle->GetColorPalette(theColor));
-         fH->TAttFill::Modify();
+         auto fillColor = gStyle->GetColorPalette(theColor);
          if (Hoption.System != kPOLAR) {
+            fH->SetFillColor(fillColor);
+            fH->TAttFill::Modify();
             gPad->PaintBox(xlow, ylow, xup, yup);
          } else  {
-            TCrown crown(0,0,ylow,yup,xlow*TMath::RadToDeg(),xup*TMath::RadToDeg());
-            crown.SetFillColor(gStyle->GetColorPalette(theColor));
+            Double_t midx = (gPad->GetUxmin() + gPad->GetUxmax()) / 2,
+                     midy = (gPad->GetUymin() + gPad->GetUymax()) / 2,
+                     a1 = (xlow - gPad->GetUxmin()) / (gPad->GetUxmax() - gPad->GetUxmin()) * 360,
+                     a2 = (xup - gPad->GetUxmin()) / (gPad->GetUxmax() - gPad->GetUxmin()) * 360,
+                     r0 = TMath::Min(gPad->GetUxmax() - gPad->GetUxmin(), gPad->GetUymax() - gPad->GetUymin()),
+                     r1 = (ylow - gPad->GetUymin()) / (gPad->GetUymax() - gPad->GetUymin()) * r0 / 2,
+                     r2 = (yup - gPad->GetUymin()) / (gPad->GetUymax() - gPad->GetUymin()) * r0 / 2;
+
+            TCrown crown(midx, midy, r1, r2, a1, a2);
+            crown.SetFillColor(fillColor);
             crown.SetLineColor(fH->GetLineColor());
             crown.SetLineWidth(fH->GetLineWidth());
             crown.SetLineStyle(fH->GetLineStyle());
