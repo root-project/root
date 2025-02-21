@@ -429,6 +429,9 @@ ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(std::initializer_l
          pageSizesForColType.insert(pageSizesForColType.end(), colInfo.GetCompressedPageSizes().begin(),
                                     colInfo.GetCompressedPageSizes().end());
       });
+      if (pageSizesForColType.empty())
+         continue;
+
       pageSizes.emplace(colType, pageSizesForColType);
 
       auto histMinMax = std::minmax_element(pageSizesForColType.begin(), pageSizesForColType.end());
