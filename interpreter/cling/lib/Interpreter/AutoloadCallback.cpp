@@ -116,9 +116,9 @@ namespace cling {
         ConstSearchDirIterator* CurDir = nullptr;
         bool needCacheUpdate = false;
 
-        if (FileName.equals(m_PrevFileName.first))
+        if (FileName == m_PrevFileName.first)
           FE = m_PrevFE.first;
-        else if (FileName.equals(m_PrevFileName.second))
+        else if (FileName == m_PrevFileName.second)
           FE = m_PrevFE.second;
         else if (auto FERef = m_PP->LookupFile(fileNameLoc, FileName, isAngled,
                                                FromDir, FromFile, CurDir,
@@ -376,7 +376,7 @@ namespace cling {
         else if (auto VD = dyn_cast<VarDecl>(D)) {
           HaveAutoLoadingMapMarker
             = VD->hasExternalStorage() && VD->getIdentifier()
-              && VD->getName().equals("__Cling_AutoLoading_Map");
+              && VD->getName() == "__Cling_AutoLoading_Map";
           if (!HaveAutoLoadingMapMarker)
             return;
           break;

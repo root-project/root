@@ -787,7 +787,7 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
    // Prevent redundant declarations for control statements (e.g., for, if, while)
    // that have already been annotated.
    if (auto annot = Wrapper->getAttr<AnnotateAttr>())
-      if (annot->getAnnotation().equals("__ResolveAtRuntime") && S->isControlScope())
+      if (annot->getAnnotation() == "__ResolveAtRuntime" && S->isControlScope())
          return false;
 
    VarDecl* Result = VarDecl::Create(C, TU, Loc, Loc, II, C.DependentTy,
