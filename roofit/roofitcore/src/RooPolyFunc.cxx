@@ -223,6 +223,8 @@ void fixObservables(const RooAbsCollection &observables)
 //////////////////////////////////////////////////////////////////////////////
 /// Taylor expanding given function in terms of observables around
 /// observableValues. Supports expansions upto order 2.
+/// \param[in] name the name
+/// \param[in] title the title
 /// \param[in] func Function of variables that is taylor expanded.
 /// \param[in] observables Set of variables to perform the expansion.
 ///            It's type is RooArgList to ensure that it is always ordered the

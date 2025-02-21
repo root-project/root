@@ -308,6 +308,7 @@ public:
 /// \param[in] datasetName Name of the TChain
 /// \param[in] fileNameGlob File name (or glob) in which the TChain is stored.
 /// \param[in] defaultColumns List of default columns, see
+/// \param[in] checkFile file validator boolean
 /// \ref https://root.cern/doc/master/classROOT_1_1RDataFrame.html#default-branches "Default column lists"
 /// \return the RLoopManager instance.
 std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
@@ -318,6 +319,7 @@ CreateLMFromTTree(std::string_view datasetName, std::string_view fileNameGlob,
 /// \param[in] datasetName Name of the TChain
 /// \param[in] fileNameGlobs List of file names (potentially globs).
 /// \param[in] defaultColumns List of default columns, see
+/// \param[in] checkFile file validator boolean
 /// \ref https://root.cern/doc/master/classROOT_1_1RDataFrame.html#default-branches "Default column lists"
 /// \return the RLoopManager instance.
 std::shared_ptr<ROOT::Detail::RDF::RLoopManager>

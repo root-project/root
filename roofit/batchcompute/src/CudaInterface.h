@@ -85,7 +85,7 @@ void copyDeviceToDeviceImpl(const void *src, void *dest, std::size_t n, CudaStre
  *
  * @param[in] src             Pointer to the source memory on the host.
  * @param[in] dest            Pointer to the destination memory on the device.
- * @param[in] nBytes          Number of bytes to copy.
+ * @param[in] n               Number of bytes to copy.
  * @param[in] stream          CudaStream for asynchronous memory transfer (optional).
  */
 template <class T>
@@ -99,7 +99,7 @@ void copyHostToDevice(const T *src, T *dest, std::size_t n, CudaStream * = nullp
  *
  * @param[in] src             Pointer to the source memory on the device.
  * @param[in] dest            Pointer to the destination memory on the host.
- * @param[in] nBytes          Number of bytes to copy.
+ * @param[in] n               Number of bytes to copy.
  * @param[in] stream          CudaStream for asynchronous memory transfer (optional).
  */
 template <class T>
@@ -113,7 +113,7 @@ void copyDeviceToHost(const T *src, T *dest, std::size_t n, CudaStream * = nullp
  *
  * @param[in] src             Pointer to the source memory on the device.
  * @param[in] dest            Pointer to the destination memory on the device.
- * @param[in] nBytes          Number of bytes to copy.
+ * @param[in] n               Number of bytes to copy.
  * @param[in] stream          CudaStream for asynchronous memory transfer (optional).
  */
 template <class T>

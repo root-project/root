@@ -763,6 +763,7 @@ std::unique_ptr<ROperator> MakeKerasIdentity(PyObject* fLayer)
 
 //////////////////////////////////////////////////////////////////////////////////
 /// \param[in] filename file location of Keras .h5
+/// \param[in] batch_size if not given, 1 is used if the model does not provide it
 /// \return Parsed RModel object
 ///
 /// The `Parse()` function defined in `TMVA::Experimental::SOFIE::PyKeras` will
