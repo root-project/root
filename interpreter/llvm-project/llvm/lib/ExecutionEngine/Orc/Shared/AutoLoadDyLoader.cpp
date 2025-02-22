@@ -33,6 +33,28 @@
 #include <unordered_set>
 #include <vector>
 
+#if defined(__FreeBSD__)
+#include <sys/param.h>
+#include <sys/queue.h>
+#include <sys/types.h>
+#include <sys/user.h>
+
+// libprocstat pulls in sys/elf.h which seems to clash with
+// llvm/BinaryFormat/ELF.h similar collision happens with ZFS. Defining ZFS
+// disables this include.
+#ifndef ZFS
+#define ZFS
+#define defined_ZFS_for_libprocstat
+#endif
+#include <libprocstat.h>
+#ifdef defined_ZFS_for_libprocstat
+#undef ZFS
+#undef defined_ZFS_for_libprocstat
+#endif
+
+#include <libutil.h>
+#endif
+
 #ifdef LLVM_ON_UNIX
 #include <dlfcn.h>
 #include <sys/stat.h>
@@ -47,8 +69,6 @@
 #endif // __APPLE__
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
 #include <libloaderapi.h> // For GetModuleFileNameA
 #include <memoryapi.h>    // For VirtualQuery
 #include <windows.h>
