@@ -247,7 +247,7 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
       // Helper method to calculate compression factor
       float GetCompressionFactor() const
       {
-         if (uncompressedSize == 0)
+         if (compressedSize == 0)
             return 1.0;
          return static_cast<float>(uncompressedSize) / static_cast<float>(compressedSize);
       }
