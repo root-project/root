@@ -2828,7 +2828,7 @@ void ROOT::TMetaUtils::foreachHeaderInModule(const clang::Module &module,
       // We want to check for all headers except the list of excluded headers here.
       for (auto HK : {clang::Module::HK_Normal, clang::Module::HK_Textual, clang::Module::HK_Private,
                       clang::Module::HK_PrivateTextual}) {
-         auto &headerList = m->Headers[HK];
+         const auto &headerList = m->getHeaders(HK);
          for (const clang::Module::Header &moduleHeader : headerList) {
             closure(moduleHeader);
          }
