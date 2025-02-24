@@ -499,9 +499,9 @@ private:
    std::vector<std::unique_ptr<Internal::RPageSource>> fAuxiliaryPageSources;
    /// Tokens representing the join fields present in the main RNTuple
    std::vector<REntry::RFieldToken> fJoinFieldTokens;
-   std::vector<std::unique_ptr<Internal::RNTupleJoinTable>> fJoinIndices;
+   std::vector<std::unique_ptr<Internal::RNTupleJoinTable>> fJoinTables;
 
-   bool IsUsingIndex() const { return fJoinIndices.size() > 0; }
+   bool HasJoinTable() const { return fJoinTables.size() > 0; }
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Load the entry identified by the provided entry number of the primary RNTuple.
