@@ -48,7 +48,7 @@ void CallCommitClusterOnField(RFieldBase &);
 void CallConnectPageSinkOnField(RFieldBase &, RPageSink &, ROOT::NTupleSize_t firstEntry = 0);
 void CallConnectPageSourceOnField(RFieldBase &, RPageSource &);
 ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
-CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName, const RCreateFieldOptions &options,
+CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName, const ROOT::RCreateFieldOptions &options,
                     const RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 
 } // namespace Internal
@@ -83,7 +83,7 @@ class RFieldBase {
    friend void Internal::CallConnectPageSourceOnField(RFieldBase &, Internal::RPageSource &);
    friend ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
    Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
-                                 const RCreateFieldOptions &options, const RNTupleDescriptor *desc,
+                                 const ROOT::RCreateFieldOptions &options, const RNTupleDescriptor *desc,
                                  ROOT::DescriptorId_t fieldId);
 
    using ReadCallback_t = std::function<void(void *)>;
@@ -482,8 +482,8 @@ protected:
    /// normalized type name and type alias.
    /// `desc` and `fieldId` must be passed if `options.fEmulateUnknownTypes` is true, otherwise they can be left blank.
    static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &typeName,
-                                                      const RCreateFieldOptions &options, const RNTupleDescriptor *desc,
-                                                      ROOT::DescriptorId_t fieldId);
+                                                      const ROOT::RCreateFieldOptions &options,
+                                                      const RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 
 public:
    template <bool IsConstT>

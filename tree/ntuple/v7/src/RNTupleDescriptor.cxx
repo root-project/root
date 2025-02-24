@@ -67,7 +67,7 @@ ROOT::Experimental::RFieldDescriptor ROOT::Experimental::RFieldDescriptor::Clone
 
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc,
-                                                  const RCreateFieldOptions &options) const
+                                                  const ROOT::RCreateFieldOptions &options) const
 {
    if (GetStructure() == ROOT::ENTupleStructure::kStreamer) {
       auto streamerField = std::make_unique<RStreamerField>(GetFieldName(), GetTypeName());
@@ -640,7 +640,7 @@ ROOT::Experimental::RNTupleDescriptor::CreateModel(const RCreateModelOptions &op
    fieldZero->SetOnDiskId(GetFieldZeroId());
    auto model =
       options.fCreateBare ? RNTupleModel::CreateBare(std::move(fieldZero)) : RNTupleModel::Create(std::move(fieldZero));
-   RCreateFieldOptions createFieldOpts;
+   ROOT::RCreateFieldOptions createFieldOpts;
    createFieldOpts.SetReturnInvalidOnError(options.fForwardCompatible);
    createFieldOpts.SetEmulateUnknownTypes(options.fEmulateUnknownTypes);
    for (const auto &topDesc : GetTopLevelFields()) {
