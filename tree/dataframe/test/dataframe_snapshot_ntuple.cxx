@@ -1,6 +1,7 @@
 #include "ROOT/TestSupport.hxx"
 #include "ROOT/RDataFrame.hxx"
 
+#include "ROOT/RNTuple.hxx"
 #include "ROOT/RNTupleModel.hxx"
 #include "ROOT/RNTupleWriter.hxx"
 #include "ROOT/RNTupleReader.hxx"
@@ -427,6 +428,24 @@ TEST(RDFSnapshotRNTuple, UpdateSameName)
 
    std::vector<std::string> expected = {"x", "y"};
    EXPECT_EQ(expected, sdf->GetColumnNames());
+}
+
+TEST(RDFSnapshotRNTuple, TDirectory)
+{
+   FileRAII fileGuard{"RDFSnapshotRNTuple_snap_tdirectory.root"};
+
+   auto df = ROOT::RDataFrame(1);
+
+   RSnapshotOptions opts;
+   opts.fOutputFormat = ESnapshotOutputFormat::kRNTuple;
+
+   try {
+      auto sdf = df.Define("x", [] { return 10; }).Snapshot<int>("dir/ntuple", fileGuard.GetPath(), {"x"}, opts);
+      FAIL() << "attempting to snapshot a RNTuple to a TFile sub-directory should fail";
+   } catch (const std::runtime_error &err) {
+      EXPECT_STREQ(err.what(),
+                   "RDataFrame: Snapshotting an RNTuple to a TFile sub-directory is currently not supported.");
+   }
 }
 
 void WriteTestTree(const std::string &tname, const std::string &fname)
