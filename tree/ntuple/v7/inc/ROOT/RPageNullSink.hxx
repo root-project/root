@@ -38,7 +38,9 @@ class RPageNullSink : public RPageSink {
    std::uint64_t fNBytesCurrentCluster = 0;
 
 public:
-   RPageNullSink(std::string_view ntupleName, const RNTupleWriteOptions &options) : RPageSink(ntupleName, options) {}
+   RPageNullSink(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options) : RPageSink(ntupleName, options)
+   {
+   }
 
    ColumnHandle_t AddColumn(ROOT::DescriptorId_t, RColumn &column) final { return {fNColumns++, &column}; }
 

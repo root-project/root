@@ -660,7 +660,7 @@ bool ROOT::Experimental::Internal::RWritePageMemoryManager::TryUpdate(RColumn &c
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::Internal::RPageSink::RPageSink(std::string_view name, const RNTupleWriteOptions &options)
+ROOT::Experimental::Internal::RPageSink::RPageSink(std::string_view name, const ROOT::RNTupleWriteOptions &options)
    : RPageStorage(name), fOptions(options.Clone()), fWritePageMemoryManager(options.GetPageBufferBudget())
 {
    ROOT::Experimental::Internal::EnsureValidNameForRNTuple(name, "RNTuple").ThrowOnError();
@@ -745,7 +745,7 @@ ROOT::Experimental::Internal::RPageSink::ReservePage(ColumnHandle_t columnHandle
 
 std::unique_ptr<ROOT::Experimental::Internal::RPageSink>
 ROOT::Experimental::Internal::RPagePersistentSink::Create(std::string_view ntupleName, std::string_view location,
-                                                          const RNTupleWriteOptions &options)
+                                                          const ROOT::RNTupleWriteOptions &options)
 {
    if (ntupleName.empty()) {
       throw RException(R__FAIL("empty RNTuple name"));
@@ -766,7 +766,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::Create(std::string_view ntupl
 }
 
 ROOT::Experimental::Internal::RPagePersistentSink::RPagePersistentSink(std::string_view name,
-                                                                       const RNTupleWriteOptions &options)
+                                                                       const ROOT::RNTupleWriteOptions &options)
    : RPageSink(name, options)
 {
 }

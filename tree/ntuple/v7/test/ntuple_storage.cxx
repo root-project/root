@@ -14,8 +14,8 @@
 
 #include <limits>
 
-using ROOT::Experimental::Internal::RNTupleWriteOptionsManip;
 using ROOT::Experimental::Internal::RPageNullSink;
+using ROOT::Internal::RNTupleWriteOptionsManip;
 
 #include <cstring>
 
@@ -56,7 +56,7 @@ protected:
    void CommitDatasetImpl() final {}
 
 public:
-   RPageSinkMock(const ROOT::Experimental::RNTupleWriteOptions &options) : RPageSink("test", options) {}
+   RPageSinkMock(const ROOT::RNTupleWriteOptions &options) : RPageSink("test", options) {}
 };
 } // namespace
 

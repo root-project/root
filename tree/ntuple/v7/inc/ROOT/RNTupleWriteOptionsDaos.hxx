@@ -33,7 +33,7 @@ namespace Experimental {
 \brief DAOS-specific user-tunable settings for storing ntuples
 */
 // clang-format on
-class RNTupleWriteOptionsDaos : public RNTupleWriteOptions {
+class RNTupleWriteOptionsDaos : public ROOT::RNTupleWriteOptions {
    std::string fObjectClass{"SX"};
    /// The maximum cage size is set to the equivalent of 16 uncompressed pages - 16MiB by default.
    /// A `fMaxCageSize` of 0 disables the caging mechanism.

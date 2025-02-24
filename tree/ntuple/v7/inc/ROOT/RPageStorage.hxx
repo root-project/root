@@ -276,7 +276,7 @@ public:
    };
 
 protected:
-   std::unique_ptr<RNTupleWriteOptions> fOptions;
+   std::unique_ptr<ROOT::RNTupleWriteOptions> fOptions;
 
    /// Helper to zip pages and header/footer; includes a 16MB (kMAXZIPBUF) zip buffer.
    /// There could be concrete page sinks that don't need a compressor.  Therefore, and in order to stay consistent
@@ -301,7 +301,7 @@ private:
    RWritePageMemoryManager fWritePageMemoryManager;
 
 public:
-   RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
+   RPageSink(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options);
 
    RPageSink(const RPageSink &) = delete;
    RPageSink &operator=(const RPageSink &) = delete;
@@ -311,7 +311,7 @@ public:
 
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
    /// Returns the sink's write options.
-   const RNTupleWriteOptions &GetWriteOptions() const { return *fOptions; }
+   const ROOT::RNTupleWriteOptions &GetWriteOptions() const { return *fOptions; }
 
    void DropColumn(ColumnHandle_t /*columnHandle*/) final {}
 
@@ -509,7 +509,7 @@ protected:
    void EnableDefaultMetrics(const std::string &prefix);
 
 public:
-   RPagePersistentSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
+   RPagePersistentSink(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options);
 
    RPagePersistentSink(const RPagePersistentSink &) = delete;
    RPagePersistentSink &operator=(const RPagePersistentSink &) = delete;
@@ -519,7 +519,7 @@ public:
 
    /// Guess the concrete derived page source from the location
    static std::unique_ptr<RPageSink> Create(std::string_view ntupleName, std::string_view location,
-                                            const RNTupleWriteOptions &options = RNTupleWriteOptions());
+                                            const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
 
    ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, RColumn &column) final;
 

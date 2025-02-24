@@ -23,7 +23,6 @@
 #include <memory>
 
 namespace ROOT {
-namespace Experimental {
 
 class RNTupleWriteOptions;
 
@@ -38,7 +37,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleWriteOptions
+\class ROOT::RNTupleWriteOptions
 \ingroup NTuple
 \brief Common user-tunable settings for storing ntuples
 
@@ -158,9 +157,15 @@ inline void RNTupleWriteOptionsManip::SetMaxKeySize(RNTupleWriteOptions &options
 {
    options.fMaxKeySize = maxKeySize;
 }
+
 } // namespace Internal
 
+namespace Experimental {
+// TODO(gparolini): remove before branching ROOT v6.36
+using RNTupleWriteOptions [[deprecated("ROOT::Experimental::RNTupleWriteOptions moved to ROOT::RNTupleWriteOptions")]] =
+   ROOT::RNTupleWriteOptions;
 } // namespace Experimental
+
 } // namespace ROOT
 
 #endif // ROOT7_RNTupleWriteOptions

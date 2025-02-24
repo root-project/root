@@ -60,8 +60,7 @@ protected:
    void CommitDatasetImpl() final {}
 
 public:
-   RPageSinkMock(const RColumnElementBase &elt)
-      : RPageSink("test", ROOT::Experimental::RNTupleWriteOptions()), fElement(elt)
+   RPageSinkMock(const RColumnElementBase &elt) : RPageSink("test", ROOT::RNTupleWriteOptions()), fElement(elt)
    {
       fOptions->SetEnablePageChecksums(false);
       fCompressor = std::make_unique<ROOT::Experimental::Internal::RNTupleCompressor>();

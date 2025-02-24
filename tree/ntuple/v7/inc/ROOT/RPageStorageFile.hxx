@@ -72,7 +72,7 @@ private:
    std::unique_ptr<RNTupleFileWriter> fWriter;
    /// Number of bytes committed to storage in the current cluster
    std::uint64_t fNBytesCurrentCluster = 0;
-   RPageSinkFile(std::string_view ntupleName, const RNTupleWriteOptions &options);
+   RPageSinkFile(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options);
 
    /// We pass bytesPacked so that TFile::ls() reports a reasonable value for the compression ratio of the corresponding
    /// key. It is not strictly necessary to write and read the sealed page.
@@ -98,8 +98,8 @@ protected:
    void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
 
 public:
-   RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
-   RPageSinkFile(std::string_view ntupleName, TDirectory &fileOrDirectory, const RNTupleWriteOptions &options);
+   RPageSinkFile(std::string_view ntupleName, std::string_view path, const ROOT::RNTupleWriteOptions &options);
+   RPageSinkFile(std::string_view ntupleName, TDirectory &fileOrDirectory, const ROOT::RNTupleWriteOptions &options);
    RPageSinkFile(const RPageSinkFile &) = delete;
    RPageSinkFile &operator=(const RPageSinkFile &) = delete;
    RPageSinkFile(RPageSinkFile &&) = default;

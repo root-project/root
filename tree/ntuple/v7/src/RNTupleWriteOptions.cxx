@@ -47,36 +47,36 @@ void EnsureValidTunables(std::size_t zippedClusterSize, std::size_t unzippedClus
 
 } // anonymous namespace
 
-std::unique_ptr<ROOT::Experimental::RNTupleWriteOptions> ROOT::Experimental::RNTupleWriteOptions::Clone() const
+std::unique_ptr<ROOT::RNTupleWriteOptions> ROOT::RNTupleWriteOptions::Clone() const
 {
    return std::make_unique<RNTupleWriteOptions>(*this);
 }
 
-void ROOT::Experimental::RNTupleWriteOptions::SetApproxZippedClusterSize(std::size_t val)
+void ROOT::RNTupleWriteOptions::SetApproxZippedClusterSize(std::size_t val)
 {
    EnsureValidTunables(val, fMaxUnzippedClusterSize, fInitialUnzippedPageSize, fMaxUnzippedPageSize);
    fApproxZippedClusterSize = val;
 }
 
-void ROOT::Experimental::RNTupleWriteOptions::SetMaxUnzippedClusterSize(std::size_t val)
+void ROOT::RNTupleWriteOptions::SetMaxUnzippedClusterSize(std::size_t val)
 {
    EnsureValidTunables(fApproxZippedClusterSize, val, fInitialUnzippedPageSize, fMaxUnzippedPageSize);
    fMaxUnzippedClusterSize = val;
 }
 
-void ROOT::Experimental::RNTupleWriteOptions::SetInitialUnzippedPageSize(std::size_t val)
+void ROOT::RNTupleWriteOptions::SetInitialUnzippedPageSize(std::size_t val)
 {
    EnsureValidTunables(fApproxZippedClusterSize, fMaxUnzippedClusterSize, val, fMaxUnzippedPageSize);
    fInitialUnzippedPageSize = val;
 }
 
-void ROOT::Experimental::RNTupleWriteOptions::SetMaxUnzippedPageSize(std::size_t val)
+void ROOT::RNTupleWriteOptions::SetMaxUnzippedPageSize(std::size_t val)
 {
    EnsureValidTunables(fApproxZippedClusterSize, fMaxUnzippedClusterSize, fInitialUnzippedPageSize, val);
    fMaxUnzippedPageSize = val;
 }
 
-void ROOT::Experimental::RNTupleWriteOptions::SetEnableSamePageMerging(bool val)
+void ROOT::RNTupleWriteOptions::SetEnableSamePageMerging(bool val)
 {
    if (val && !fEnablePageChecksums) {
       throw RException(R__FAIL("same page merging requires page checksums, which were previously disabled"));
@@ -84,7 +84,7 @@ void ROOT::Experimental::RNTupleWriteOptions::SetEnableSamePageMerging(bool val)
    fEnableSamePageMerging = val;
 }
 
-std::size_t ROOT::Experimental::RNTupleWriteOptions::GetPageBufferBudget() const
+std::size_t ROOT::RNTupleWriteOptions::GetPageBufferBudget() const
 {
    if (fPageBufferBudget != 0)
       return fPageBufferBudget;

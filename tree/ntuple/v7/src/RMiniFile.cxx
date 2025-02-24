@@ -1129,7 +1129,7 @@ ROOT::Experimental::Internal::RNTupleFileWriter::~RNTupleFileWriter() {}
 std::unique_ptr<ROOT::Experimental::Internal::RNTupleFileWriter>
 ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupleName, std::string_view path,
                                                           EContainerFormat containerFormat,
-                                                          const RNTupleWriteOptions &options)
+                                                          const ROOT::RNTupleWriteOptions &options)
 {
    std::string fileName(path);
    size_t idxDirSep = fileName.find_last_of("\\/");

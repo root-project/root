@@ -157,7 +157,7 @@ void ROOT::Experimental::RNTupleParallelWriter::CommitDataset()
 
 std::unique_ptr<ROOT::Experimental::RNTupleParallelWriter>
 ROOT::Experimental::RNTupleParallelWriter::Recreate(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
-                                                    std::string_view storage, const RNTupleWriteOptions &options)
+                                                    std::string_view storage, const ROOT::RNTupleWriteOptions &options)
 {
    if (!options.GetUseBufferedWrite()) {
       throw RException(R__FAIL("parallel writing requires buffering"));
@@ -170,7 +170,7 @@ ROOT::Experimental::RNTupleParallelWriter::Recreate(std::unique_ptr<RNTupleModel
 
 std::unique_ptr<ROOT::Experimental::RNTupleParallelWriter>
 ROOT::Experimental::RNTupleParallelWriter::Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
-                                                  TDirectory &fileOrDirectory, const RNTupleWriteOptions &options)
+                                                  TDirectory &fileOrDirectory, const ROOT::RNTupleWriteOptions &options)
 {
    auto file = fileOrDirectory.GetFile();
    if (!file) {

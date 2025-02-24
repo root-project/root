@@ -35,10 +35,10 @@
 class TDirectory;
 
 namespace ROOT {
-namespace Experimental {
 
 class RNTupleWriteOptions;
 
+namespace Experimental {
 namespace Internal {
 // Non-public factory method for an RNTuple writer that uses an already constructed page sink
 std::unique_ptr<RNTupleWriter>
@@ -82,20 +82,20 @@ private:
    /// Create a writer, potentially wrapping the sink in a RPageSinkBuf.
    static std::unique_ptr<RNTupleWriter> Create(std::unique_ptr<RNTupleModel> model,
                                                 std::unique_ptr<Internal::RPageSink> sink,
-                                                const RNTupleWriteOptions &options);
+                                                const ROOT::RNTupleWriteOptions &options);
 
 public:
    /// Throws an exception if the model is null.
-   static std::unique_ptr<RNTupleWriter> Recreate(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
-                                                  std::string_view storage,
-                                                  const RNTupleWriteOptions &options = RNTupleWriteOptions());
+   static std::unique_ptr<RNTupleWriter>
+   Recreate(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName, std::string_view storage,
+            const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
    static std::unique_ptr<RNTupleWriter>
    Recreate(std::initializer_list<std::pair<std::string_view, std::string_view>> fields, std::string_view ntupleName,
-            std::string_view storage, const RNTupleWriteOptions &options = RNTupleWriteOptions());
+            std::string_view storage, const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
    /// Throws an exception if the model is null.
    static std::unique_ptr<RNTupleWriter> Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
                                                 TDirectory &fileOrDirectory,
-                                                const RNTupleWriteOptions &options = RNTupleWriteOptions());
+                                                const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
    RNTupleWriter(const RNTupleWriter &) = delete;
    RNTupleWriter &operator=(const RNTupleWriter &) = delete;
    ~RNTupleWriter();

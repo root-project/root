@@ -11,11 +11,11 @@
 
 using ROOT::ENTupleColumnType;
 using ROOT::RNTuple;
+using ROOT::RNTupleWriteOptions;
 using ROOT::Experimental::RField;
 using ROOT::Experimental::RFieldBase;
 using ROOT::Experimental::RNTupleInspector;
 using ROOT::Experimental::RNTupleModel;
-using ROOT::Experimental::RNTupleWriteOptions;
 using ROOT::Experimental::RNTupleWriter;
 
 TEST(RNTupleInspector, CreateFromPointer)

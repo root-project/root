@@ -207,7 +207,7 @@ private:
    std::string fDestFileName;
    std::string fNTupleName;
    std::unique_ptr<TFile> fDestFile;
-   RNTupleWriteOptions fWriteOptions;
+   ROOT::RNTupleWriteOptions fWriteOptions;
 
    /// Whether or not dot characters in branch names should be converted to underscores. If this option is not set and a
    /// branch with a '.' is encountered, the importer will throw an exception.
@@ -252,8 +252,8 @@ public:
    /// Directly uses the provided tree and opens the output file for writing (update).
    static std::unique_ptr<RNTupleImporter> Create(TTree *sourceTree, std::string_view destFileName);
 
-   RNTupleWriteOptions GetWriteOptions() const { return fWriteOptions; }
-   void SetWriteOptions(RNTupleWriteOptions options) { fWriteOptions = options; }
+   ROOT::RNTupleWriteOptions GetWriteOptions() const { return fWriteOptions; }
+   void SetWriteOptions(ROOT::RNTupleWriteOptions options) { fWriteOptions = options; }
    void SetNTupleName(const std::string &name) { fNTupleName = name; }
    void SetMaxEntries(std::uint64_t maxEntries) { fMaxEntries = maxEntries; };
 

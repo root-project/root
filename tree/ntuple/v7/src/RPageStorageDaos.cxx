@@ -275,7 +275,7 @@ std::uint32_t ROOT::Experimental::Internal::RDaosNTupleAnchor::GetSize()
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::Internal::RPageSinkDaos::RPageSinkDaos(std::string_view ntupleName, std::string_view uri,
-                                                           const RNTupleWriteOptions &options)
+                                                           const ROOT::RNTupleWriteOptions &options)
    : RPagePersistentSink(ntupleName, options), fURI(uri)
 {
    static std::once_flag once;
