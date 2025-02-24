@@ -111,4 +111,9 @@ ROOTTEST_ADD_TEST(tclassStl
 		  OUTREF tclassStl.ref
 		  RUN_SERIAL)
 
+ROOTTEST_ADD_TEST(TClassAtTearDown
+                  MACRO execTClassAtTearDown.C
+		  COPY_TO_BUILDDIR empty.root
+		  OUTREF execTClassAtTearDown.ref)
+
 ROOTTEST_ADD_TESTDIRS()
