@@ -16,7 +16,7 @@
 #ifndef ROOT7_RCreateFieldOptions
 #define ROOT7_RCreateFieldOptions
 
-namespace ROOT::Experimental {
+namespace ROOT {
 
 struct RCreateFieldOptions {
 private:
@@ -34,6 +34,12 @@ public:
    bool GetEmulateUnknownTypes() const { return fEmulateUnknownTypes; }
 };
 
-} // namespace ROOT::Experimental
+namespace Experimental {
+// TODO(gparolini): remove before branching ROOT v6.36
+using RCreateFieldOptions [[deprecated("ROOT::Experimental::RCreateFieldOptions moved to ROOT::RCreateFieldOptions")]] =
+   ROOT::RCreateFieldOptions;
+} // namespace Experimental
+
+} // namespace ROOT
 
 #endif
