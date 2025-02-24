@@ -638,17 +638,17 @@ ROOT::Experimental::RNTupleDescriptor::CreateModel(const RCreateModelOptions &op
 {
    auto fieldZero = std::make_unique<RFieldZero>();
    fieldZero->SetOnDiskId(GetFieldZeroId());
-   auto model =
-      options.fCreateBare ? RNTupleModel::CreateBare(std::move(fieldZero)) : RNTupleModel::Create(std::move(fieldZero));
+   auto model = options.GetCreateBare() ? RNTupleModel::CreateBare(std::move(fieldZero))
+                                        : RNTupleModel::Create(std::move(fieldZero));
    ROOT::RCreateFieldOptions createFieldOpts;
-   createFieldOpts.SetReturnInvalidOnError(options.fForwardCompatible);
-   createFieldOpts.SetEmulateUnknownTypes(options.fEmulateUnknownTypes);
+   createFieldOpts.SetReturnInvalidOnError(options.GetForwardCompatible());
+   createFieldOpts.SetEmulateUnknownTypes(options.GetEmulateUnknownTypes());
    for (const auto &topDesc : GetTopLevelFields()) {
       auto field = topDesc.CreateField(*this, createFieldOpts);
       if (field->GetTraits() & RFieldBase::kTraitInvalidField)
          continue;
 
-      if (options.fReconstructProjections && topDesc.IsProjectedField()) {
+      if (options.GetReconstructProjections() && topDesc.IsProjectedField()) {
          model->AddProjectedField(std::move(field), [this](const std::string &targetName) -> std::string {
             return GetQualifiedFieldName(GetFieldDescriptor(FindFieldId(targetName)).GetProjectionSourceId());
          });

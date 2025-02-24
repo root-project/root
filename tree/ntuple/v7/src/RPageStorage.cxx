@@ -968,7 +968,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTu
 
    // Create model
    auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
-   modelOpts.fReconstructProjections = true;
+   modelOpts.SetReconstructProjections(true);
    auto model = descriptor.CreateModel(modelOpts);
 
    // Serialize header and init from it

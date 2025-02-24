@@ -205,7 +205,7 @@ TEST(RNTupleCompat, FutureColumnType)
 
    {
       auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
-      modelOpts.fForwardCompatible = true;
+      modelOpts.SetForwardCompatible(true);
       auto model = desc.CreateModel(modelOpts);
 
       // The future column should not show up in the model
@@ -257,7 +257,7 @@ TEST(RNTupleCompat, FutureColumnType_Nested)
 
    {
       auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
-      modelOpts.fForwardCompatible = true;
+      modelOpts.SetForwardCompatible(true);
       auto model = desc.CreateModel(modelOpts);
 
       // The future column should not show up in the model
@@ -317,7 +317,7 @@ TEST(RNTupleCompat, FutureFieldStructuralRole)
    EXPECT_THROW(desc.CreateModel(), ROOT::RException);
 
    auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
-   modelOpts.fForwardCompatible = true;
+   modelOpts.SetForwardCompatible(true);
    auto model = desc.CreateModel(modelOpts);
    try {
       model->GetConstField("future");
@@ -354,7 +354,7 @@ TEST(RNTupleCompat, FutureFieldStructuralRole_Nested)
    EXPECT_THROW(desc.CreateModel(), ROOT::RException);
 
    auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
-   modelOpts.fForwardCompatible = true;
+   modelOpts.SetForwardCompatible(true);
    auto model = desc.CreateModel(modelOpts);
    const auto &floatFld = model->GetConstField("float");
    EXPECT_EQ(floatFld.GetTypeName(), "float");

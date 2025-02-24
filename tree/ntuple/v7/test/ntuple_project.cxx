@@ -49,7 +49,7 @@ TEST(RNTupleProjection, Basics)
    EXPECT_EQ(2U, viewVecSize(0));
 
    RNTupleDescriptor::RCreateModelOptions options;
-   options.fReconstructProjections = true;
+   options.SetReconstructProjections(true);
    auto reconstructedModel = reader->GetDescriptor().CreateModel(options);
    auto itrFields = reconstructedModel->GetConstFieldZero().cbegin();
    EXPECT_EQ("met", itrFields->GetQualifiedFieldName());

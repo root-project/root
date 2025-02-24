@@ -56,7 +56,7 @@ struct Outer_Simple {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = false;
+      opts.SetEmulateUnknownTypes(false);
       try {
          auto model = desc.CreateModel(opts);
          FAIL() << "Creating a model without fEmulateUnknownTypes should fail";
@@ -67,7 +67,7 @@ struct Outer_Simple {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = true;
+      opts.SetEmulateUnknownTypes(true);
       auto model = desc.CreateModel(opts);
       ASSERT_NE(model, nullptr);
 
@@ -92,7 +92,7 @@ struct Outer_Simple {
    // NOTE: using a TFile-based reader exercises the code path where the user-defined type
    // gets loaded as an Emulated TClass, which we must make sure we handle properly.
    RNTupleDescriptor::RCreateModelOptions cmOpts;
-   cmOpts.fEmulateUnknownTypes = true;
+   cmOpts.SetEmulateUnknownTypes(true);
 
    ROOT::TestSupport::CheckDiagsRAII diagRAII;
    diagRAII.optionalDiag(kWarning, "TClass::Init", "no dictionary for class",
@@ -158,7 +158,7 @@ struct Outer_Vecs {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = false;
+      opts.SetEmulateUnknownTypes(false);
       try {
          auto model = desc.CreateModel(opts);
          FAIL() << "Creating a model without fEmulateUnknownTypes should fail";
@@ -169,7 +169,7 @@ struct Outer_Vecs {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = true;
+      opts.SetEmulateUnknownTypes(true);
       auto model = desc.CreateModel(opts);
       ASSERT_NE(model, nullptr);
 
@@ -204,7 +204,7 @@ struct Outer_Vecs {
 
    // Now test loading entries with a reader
    RNTupleDescriptor::RCreateModelOptions cmOpts;
-   cmOpts.fEmulateUnknownTypes = true;
+   cmOpts.SetEmulateUnknownTypes(true);
    reader = RNTupleReader::Open(cmOpts, "ntpl", fileGuard.GetPath());
    reader->LoadEntry(0);
 }
@@ -249,7 +249,7 @@ struct Outer_EmptyStruct {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = false;
+      opts.SetEmulateUnknownTypes(false);
       try {
          auto model = desc.CreateModel(opts);
          FAIL() << "Creating a model without fEmulateUnknownTypes should fail";
@@ -260,7 +260,7 @@ struct Outer_EmptyStruct {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = true;
+      opts.SetEmulateUnknownTypes(true);
       auto model = desc.CreateModel(opts);
       ASSERT_NE(model, nullptr);
 
@@ -280,7 +280,7 @@ struct Outer_EmptyStruct {
 
    // Now test loading entries with a reader
    RNTupleDescriptor::RCreateModelOptions cmOpts;
-   cmOpts.fEmulateUnknownTypes = true;
+   cmOpts.SetEmulateUnknownTypes(true);
    reader = RNTupleReader::Open(cmOpts, "ntpl", fileGuard.GetPath());
    reader->LoadEntry(0);
 }
@@ -327,7 +327,7 @@ struct Inner_EmptyVec {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = false;
+      opts.SetEmulateUnknownTypes(false);
       try {
          auto model = desc.CreateModel(opts);
          FAIL() << "Creating a model without fEmulateUnknownTypes should fail";
@@ -338,7 +338,7 @@ struct Inner_EmptyVec {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = true;
+      opts.SetEmulateUnknownTypes(true);
       auto model = desc.CreateModel(opts);
       ASSERT_NE(model, nullptr);
 
@@ -359,7 +359,7 @@ struct Inner_EmptyVec {
 
    // Now test loading entries with a reader
    RNTupleDescriptor::RCreateModelOptions cmOpts;
-   cmOpts.fEmulateUnknownTypes = true;
+   cmOpts.SetEmulateUnknownTypes(true);
    reader = RNTupleReader::Open(cmOpts, "ntpl", fileGuard.GetPath());
    reader->LoadEntry(0);
 }
@@ -403,7 +403,7 @@ struct Outer_Write {
    });
 
    RNTupleDescriptor::RCreateModelOptions cmOpts;
-   cmOpts.fEmulateUnknownTypes = true;
+   cmOpts.SetEmulateUnknownTypes(true);
    auto reader = RNTupleReader::Open(cmOpts, "ntpl", fileGuard.GetPath());
    reader->LoadEntry(0);
 
