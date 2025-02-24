@@ -32,8 +32,6 @@ public:
    {
    }
 
-   ~MnUserFcn() override {}
-
    double operator()(const MnAlgebraicVector &) const override;
 
    // Access the parameter transformations.
