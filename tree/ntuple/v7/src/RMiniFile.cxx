@@ -870,11 +870,10 @@ void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, siz
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static constexpr auto kBlobKeyLen = ROOT::Experimental::Internal::RNTupleFileWriter::kBlobKeyLen;
-
 /// Prepare a blob key in the provided buffer, which must provide space for kBlobKeyLen bytes. Note that the array type
 /// is purely documentation, the argument is actually just a pointer.
-static void PrepareBlobKey(std::int64_t offset, size_t nbytes, size_t len, unsigned char buffer[kBlobKeyLen])
+void ROOT::Experimental::Internal::RNTupleFileWriter::PrepareBlobKey(std::int64_t offset, size_t nbytes, size_t len,
+                                                                     unsigned char buffer[kBlobKeyLen])
 {
    RTFString strClass{kBlobClassName};
    RTFString strObject;

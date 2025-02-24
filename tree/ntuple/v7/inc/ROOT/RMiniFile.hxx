@@ -112,6 +112,10 @@ public:
    /// The key length of a blob. It is always a big key (version > 1000) with class name RBlob.
    static constexpr std::size_t kBlobKeyLen = 42;
 
+   /// Prepares buffer for a new record as an RBlob key at offset.
+   /// (Note that the array type is purely documentation, the argument is actually just a pointer.)
+   static void PrepareBlobKey(std::int64_t offset, size_t nbytes, size_t len, unsigned char buffer[kBlobKeyLen]);
+
 private:
    struct RFileProper {
       /// A sub directory in fFile or nullptr if the data is stored in the root directory of the file
