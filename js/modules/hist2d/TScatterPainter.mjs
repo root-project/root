@@ -163,6 +163,7 @@ class TScatterPainter extends TGraphPainter {
       return this;
    }
 
+   /** @summary Draw TScatter object */
    static async draw(dom, obj, opt) {
       return TGraphPainter._drawGraph(new TScatterPainter(dom, obj), opt);
    }

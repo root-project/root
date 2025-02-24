@@ -40,7 +40,7 @@ class TASImagePainter extends ObjectPainter {
 
       for (let lvl = 0, indx = 1; lvl <= nlevels; ++lvl) {
          const l = lvl/nlevels;
-         while ((pal.fPoints[indx] < l) && (indx < pal.fPoints.length-1)) indx++;
+         while ((pal.fPoints[indx] < l) && (indx < pal.fPoints.length - 1)) indx++;
 
          const r1 = (pal.fPoints[indx] - l) / (pal.fPoints[indx] - pal.fPoints[indx-1]),
                r2 = (l - pal.fPoints[indx-1]) / (pal.fPoints[indx] - pal.fPoints[indx-1]);
@@ -79,7 +79,7 @@ class TASImagePainter extends ObjectPainter {
          getPaletteColor(pal, zval) {
             if (!this.arr || !this.rgba)
                return 'white';
-            const indx = Math.round((zval - this.arr[0]) / (this.arr[this.arr.length-1] - this.arr[0]) * (this.rgba.length-4)/4) * 4;
+            const indx = Math.round((zval - this.arr[0]) / (this.arr.at(-1) - this.arr.at(0)) * (this.rgba.length - 4)/4) * 4;
             return toColor(this.rgba[indx]/255, this.rgba[indx+1]/255, this.rgba[indx+2]/255, this.rgba[indx+3]/255);
          }
       };

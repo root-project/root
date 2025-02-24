@@ -514,7 +514,7 @@ class TGraphPainter extends ObjectPainter {
    /** @summary append exclusion area to created path */
    appendExclusion(is_curve, path, drawbins, excl_width) {
       const extrabins = [];
-      for (let n = drawbins.length-1; n >= 0; --n) {
+      for (let n = drawbins.length - 1; n >= 0; --n) {
          const bin = drawbins[n],
              dlen = Math.sqrt(bin.dgrx**2 + bin.dgry**2);
          if (dlen > 1e-10) {
@@ -562,7 +562,7 @@ class TGraphPainter extends ObjectPainter {
          const path1 = buildSvgCurve(drawbins, { line: options.EF < 2, qubic: true }),
              bins2 = [];
 
-         for (let n = drawbins.length-1; n >= 0; --n) {
+         for (let n = drawbins.length - 1; n >= 0; --n) {
             const bin = drawbins[n];
             bin.gry = funcs.gry(bin.y + bin.eyhigh);
             bins2.push(bin);
@@ -1392,7 +1392,16 @@ class TGraphPainter extends ObjectPainter {
    fillContextMenuItems(menu) {
       if (!this.snapid) {
          menu.addchk(this.testEditable(), 'Editable', () => { this.testEditable('toggle'); this.drawGraph(); });
-
+         if (this.axes_draw) {
+            menu.add('Title', () => menu.input('Enter graph title', this.getObject().fTitle).then(res => {
+               this.getObject().fTitle = res;
+               const hist_painter = this.getMainPainter();
+               if (hist_painter?.isSecondary(this)) {
+                  setHistogramTitle(hist_painter.getHisto(), res);
+                  this.interactiveRedraw('pad');
+               }
+            }));
+         }
          menu.addRedrawMenu(this.getPrimary());
       }
    }
@@ -1400,7 +1409,8 @@ class TGraphPainter extends ObjectPainter {
    /** @summary Execute menu command
      * @private */
    executeMenuCommand(method, args) {
-      if (super.executeMenuCommand(method, args)) return true;
+      if (super.executeMenuCommand(method, args))
+         return true;
 
       const canp = this.getCanvPainter(), pmain = this.get_main();
 
@@ -1616,6 +1626,7 @@ class TGraphPainter extends ObjectPainter {
       });
    }
 
+   /** @summary Draw TGraph in 2D only */
    static async draw(dom, graph, opt) {
       return TGraphPainter._drawGraph(new TGraphPainter(dom, graph), opt);
    }

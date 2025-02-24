@@ -196,9 +196,10 @@ function addColor(rgb, lst) {
       rgb = d3_color(rgb).formatRgb();
 
    const indx = lst.indexOf(rgb);
-   if (indx >= 0) return indx;
+   if (indx >= 0)
+      return indx;
    lst.push(rgb);
-   return lst.length-1;
+   return lst.length - 1;
 }
 
 /**
