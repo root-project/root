@@ -47,7 +47,7 @@ TEST(RNTuple, ReconstructModel)
    EXPECT_TRUE(variant != nullptr);
 
    auto createOpts = RNTupleDescriptor::RCreateModelOptions();
-   createOpts.fCreateBare = true;
+   createOpts.SetCreateBare(true);
    auto modelReconstructedBare = source.GetSharedDescriptorGuard()->CreateModel(createOpts);
    try {
       modelReconstructedBare->GetDefaultEntry();
