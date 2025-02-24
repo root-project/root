@@ -44,7 +44,7 @@
 #include <mutex>
 
 ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName,
-                                                           const RNTupleWriteOptions &options)
+                                                           const ROOT::RNTupleWriteOptions &options)
    : RPagePersistentSink(ntupleName, options)
 {
    fCompressor = std::make_unique<RNTupleCompressor>();
@@ -53,14 +53,14 @@ ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntup
 }
 
 ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, std::string_view path,
-                                                           const RNTupleWriteOptions &options)
+                                                           const ROOT::RNTupleWriteOptions &options)
    : RPageSinkFile(ntupleName, options)
 {
    fWriter = RNTupleFileWriter::Recreate(ntupleName, path, RNTupleFileWriter::EContainerFormat::kTFile, options);
 }
 
 ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, TDirectory &fileOrDirectory,
-                                                           const RNTupleWriteOptions &options)
+                                                           const ROOT::RNTupleWriteOptions &options)
    : RPageSinkFile(ntupleName, options)
 {
    fWriter = RNTupleFileWriter::Append(ntupleName, fileOrDirectory, options.GetMaxKeySize());

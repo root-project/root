@@ -81,13 +81,13 @@ private:
 
 public:
    /// Recreate a new file and return a writer to write an ntuple.
-   static std::unique_ptr<RNTupleParallelWriter> Recreate(std::unique_ptr<RNTupleModel> model,
-                                                          std::string_view ntupleName, std::string_view storage,
-                                                          const RNTupleWriteOptions &options = RNTupleWriteOptions());
+   static std::unique_ptr<RNTupleParallelWriter>
+   Recreate(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName, std::string_view storage,
+            const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
    /// Append an ntuple to the existing file, which must not be accessed while data is filled into any created context.
-   static std::unique_ptr<RNTupleParallelWriter> Append(std::unique_ptr<RNTupleModel> model,
-                                                        std::string_view ntupleName, TDirectory &fileOrDirectory,
-                                                        const RNTupleWriteOptions &options = RNTupleWriteOptions());
+   static std::unique_ptr<RNTupleParallelWriter>
+   Append(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName, TDirectory &fileOrDirectory,
+          const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
 
    ~RNTupleParallelWriter();
 

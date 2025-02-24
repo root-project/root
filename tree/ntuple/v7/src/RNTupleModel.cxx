@@ -565,7 +565,7 @@ void ROOT::Experimental::RNTupleModel::SetDescription(std::string_view descripti
    fDescription = std::string(description);
 }
 
-std::size_t ROOT::Experimental::RNTupleModel::EstimateWriteMemoryUsage(const RNTupleWriteOptions &options) const
+std::size_t ROOT::Experimental::RNTupleModel::EstimateWriteMemoryUsage(const ROOT::RNTupleWriteOptions &options) const
 {
    std::size_t bytes = 0;
    std::size_t minPageBufferSize = 0;
@@ -587,7 +587,7 @@ std::size_t ROOT::Experimental::RNTupleModel::EstimateWriteMemoryUsage(const RNT
       // Use the target cluster size as an estimate for all compressed pages combined.
       bytes += options.GetApproxZippedClusterSize();
       int compression = options.GetCompression();
-      if (compression != 0 && options.GetUseImplicitMT() == RNTupleWriteOptions::EImplicitMT::kDefault) {
+      if (compression != 0 && options.GetUseImplicitMT() == ROOT::RNTupleWriteOptions::EImplicitMT::kDefault) {
          // With IMT, compression happens asynchronously which means that the uncompressed pages also stay around. Use a
          // compression factor of 2x as a very rough estimate.
          bytes += 2 * options.GetApproxZippedClusterSize();

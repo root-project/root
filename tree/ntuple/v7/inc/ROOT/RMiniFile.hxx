@@ -38,9 +38,9 @@ namespace Internal {
 class RRawFile;
 }
 
-namespace Experimental {
-
 class RNTupleWriteOptions;
+
+namespace Experimental {
 
 namespace Internal {
 /// Holds status information of an open ROOT file during writing
@@ -221,7 +221,7 @@ public:
    /// Uses a C stream for writing
    static std::unique_ptr<RNTupleFileWriter> Recreate(std::string_view ntupleName, std::string_view path,
                                                       EContainerFormat containerFormat,
-                                                      const RNTupleWriteOptions &options);
+                                                      const ROOT::RNTupleWriteOptions &options);
    /// The directory parameter can also be a TFile object (TFile inherits from TDirectory).
    static std::unique_ptr<RNTupleFileWriter>
    Append(std::string_view ntupleName, TDirectory &fileOrDirectory, std::uint64_t maxKeySize);

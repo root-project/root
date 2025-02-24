@@ -135,7 +135,7 @@ protected:
    void WriteNTupleAnchor();
 
 public:
-   RPageSinkDaos(std::string_view ntupleName, std::string_view uri, const RNTupleWriteOptions &options);
+   RPageSinkDaos(std::string_view ntupleName, std::string_view uri, const ROOT::RNTupleWriteOptions &options);
    ~RPageSinkDaos() override;
 }; // class RPageSinkDaos
 
