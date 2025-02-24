@@ -368,17 +368,17 @@ class RFramePainter extends RObjectPainter {
          this.recalculateRange(0);
 
          this.x_handle = new RAxisPainter(pp, this, this.xaxis, 'x_');
-         this.x_handle.snapid = this.snapid;
+         this.x_handle.assignSnapId(this.snapid);
          this.x_handle.draw_swapside = (sidex < 0);
          this.x_handle.draw_ticks = ticksx;
 
          this.y_handle = new RAxisPainter(pp, this, this.yaxis, 'y_');
-         this.y_handle.snapid = this.snapid;
+         this.y_handle.assignSnapId(this.snapid);
          this.y_handle.draw_swapside = (sidey < 0);
          this.y_handle.draw_ticks = ticksy;
 
          this.z_handle = new RAxisPainter(pp, this, this.zaxis, 'z_');
-         this.z_handle.snapid = this.snapid;
+         this.z_handle.assignSnapId(this.snapid);
 
          this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, false, [0, w], w, { reverse: false });
          this.x_handle.assignFrameMembers(this, 'x');
@@ -462,7 +462,7 @@ class RFramePainter extends RObjectPainter {
            this.scale_x2max = this.x2max;
          }
          this.x2_handle = new RAxisPainter(pp, this, this.x2axis, 'x2_');
-         this.x2_handle.snapid = this.snapid;
+         this.x2_handle.assignSnapId(this.snapid);
 
          this.x2_handle.configureAxis('x2axis', this.x2min, this.x2max, this.scale_x2min, this.scale_x2max, false, [0, w], w, { reverse: false });
          this.x2_handle.assignFrameMembers(this, 'x2');
@@ -480,7 +480,7 @@ class RFramePainter extends RObjectPainter {
          }
 
          this.y2_handle = new RAxisPainter(pp, this, this.y2axis, 'y2_');
-         this.y2_handle.snapid = this.snapid;
+         this.y2_handle.assignSnapId(this.snapid);
 
          this.y2_handle.configureAxis('y2axis', this.y2min, this.y2max, this.scale_y2min, this.scale_y2max, true, [h, 0], -h, { reverse: false });
          this.y2_handle.assignFrameMembers(this, 'y2');

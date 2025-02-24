@@ -316,7 +316,7 @@ function buildSvgCurve(p, args) {
    }, conv = val => {
       if (!args.ndig || (Math.round(val) === val))
          return val.toFixed(0);
-      let s = val.toFixed(args.ndig), p = s.length-1;
+      let s = val.toFixed(args.ndig), p = s.length - 1;
       while (s[p] === '0') p--;
       if (s[p] === '.') p--;
       s = s.slice(0, p+1);
@@ -429,7 +429,7 @@ function buildSvgCurve(p, args) {
    }
 
    if (args.height)
-      args.close = `L${conv(p[p.length-1].grx)},${conv(Math.max(args.maxy, args.height))}H${conv(p[0].grx)}Z`;
+      args.close = `L${conv(p.at(-1).grx)},${conv(Math.max(args.maxy, args.height))}H${conv(p[0].grx)}Z`;
 
    return path;
 }
@@ -444,8 +444,8 @@ function compressSVG(svg) {
             .replace(/ title=""/g, '')                                 // remove all empty titles
             .replace(/ style=""/g, '')                                 // remove all empty styles
             .replace(/<g objname="\w*" objtype="\w*"/g, '<g')          // remove object ids
-            .replace(/<g transform="translate\(\d+,\d+\)"><\/g>/g, '') // remove all empty groups with transform
-            .replace(/<g transform="translate\(\d+,\d+\)" style="display: none;"><\/g>/g, '') // remove hidden title
+            .replace(/<g transform="translate\([0-9,]+\)"><\/g>/g, '')  // remove all empty groups with transform
+            .replace(/<g transform="translate\([0-9,]+\)" style="display: none;"><\/g>/g, '') // remove hidden title
             .replace(/<g><\/g>/g, '');                                 // remove all empty groups
 
    // remove all empty frame svg, typically appears in 3D drawings, maybe should be improved in frame painter itself
@@ -462,10 +462,13 @@ function compressSVG(svg) {
 
 class BasePainter {
 
+   #divid;  // either id of DOM element or element itself
+   #selected_main; // d3.select for dom elements
+
    /** @summary constructor
      * @param {object|string} [dom] - dom element or id of dom element */
    constructor(dom) {
-      this.divid = null; // either id of DOM element or element itself
+      this.#divid = null; // either id of DOM element or element itself
       if (dom) this.setDom(dom);
    }
 
@@ -475,36 +478,37 @@ class BasePainter {
      * @protected */
    setDom(elem) {
       if (elem !== undefined) {
-         this.divid = elem;
-         delete this._selected_main;
+         this.#divid = elem;
+         this.#selected_main = null;
       }
    }
 
    /** @summary Returns assigned dom element */
-   getDom() {
-      return this.divid;
-   }
+   getDom() { return this.#divid; }
 
    /** @summary Selects main HTML element assigned for drawing
      * @desc if main element was layout, returns main element inside layout
      * @param {string} [is_direct] - if 'origin' specified, returns original element even if actual drawing moved to some other place
      * @return {object} d3.select object for main element for drawing */
    selectDom(is_direct) {
-      if (!this.divid) return d3_select(null);
+      if (!this.#divid)
+         return d3_select(null);
 
-      let res = this._selected_main;
+      let res = this.#selected_main;
       if (!res) {
-         if (isStr(this.divid)) {
-            let id = this.divid;
+         if (isStr(this.#divid)) {
+            let id = this.#divid;
             if (id[0] !== '#') id = '#' + id;
             res = d3_select(id);
-            if (!res.empty()) this.divid = res.node();
+            if (!res.empty())
+               this.#divid = res.node();
          } else
-            res = d3_select(this.divid);
-         this._selected_main = res;
+            res = d3_select(this.#divid);
+         this.#selected_main = res;
       }
 
-      if (!res || res.empty() || (is_direct === 'origin')) return res;
+      if (!res || res.empty() || (is_direct === 'origin'))
+         return res;
 
       const use_enlarge = res.property('use_enlarge'),
             layout = res.property('layout') || 'simple',
@@ -522,7 +526,7 @@ class BasePainter {
 
    /** @summary Access/change top painter
      * @private */
-   _accessTopPainter(on) {
+   #accessTopPainter(on) {
       const chld = this.selectDom().node()?.firstChild;
       if (!chld) return null;
       if (on === true)
@@ -535,21 +539,15 @@ class BasePainter {
    /** @summary Set painter, stored in first child element
      * @desc Only make sense after first drawing is completed and any child element add to configured DOM
      * @protected */
-   setTopPainter() {
-      this._accessTopPainter(true);
-   }
+   setTopPainter() { this.#accessTopPainter(true); }
 
    /** @summary Return top painter set for the selected dom element
      * @protected */
-   getTopPainter() {
-      return this._accessTopPainter();
-   }
+   getTopPainter() { return this.#accessTopPainter(); }
 
    /** @summary Clear reference on top painter
      * @protected */
-   clearTopPainter() {
-      this._accessTopPainter(false);
-   }
+   clearTopPainter() { this.#accessTopPainter(false); }
 
    /** @summary Generic method to cleanup painter
      * @desc Removes all visible elements and all internal data */
@@ -557,8 +555,8 @@ class BasePainter {
       this.clearTopPainter();
       const origin = this.selectDom('origin');
       if (!origin.empty() && !keep_origin) origin.html('');
-      this.divid = null;
-      delete this._selected_main;
+      this.#divid = null;
+      this.#selected_main = undefined;
 
       if (isFunc(this._hpainter?.removePainter))
          this._hpainter.removePainter(this);
@@ -785,33 +783,38 @@ async function svgToImage(svg, image_format, args) {
 
    // required with df104.py/df105.py example with RCanvas or any special symbols in TLatex
    const doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
-   svg = encodeURIComponent(doctype + svg);
-   svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
-       const c = String.fromCharCode('0x'+p1);
-       return c === '%' ? '%25' : c;
-   });
-
-   // Cannot use prSVG because of some special cases like RCanvas/rh2
-   const img_src = 'data:image/svg+xml;base64,' + btoa_func(decodeURIComponent(svg));
 
    if (isNodeJs()) {
+      svg = encodeURIComponent(doctype + svg);
+      svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
+         const c = String.fromCharCode('0x'+p1);
+         return c === '%' ? '%25' : c;
+      });
+
+      const img_src = 'data:image/svg+xml;base64,' + btoa_func(decodeURIComponent(svg));
+
       return import('canvas').then(async handle => {
          return handle.default.loadImage(img_src).then(img => {
             const canvas = handle.default.createCanvas(img.width, img.height);
 
             canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height);
 
-            if (args?.as_buffer) return canvas.toBuffer('image/' + image_format);
+            if (args?.as_buffer)
+               return canvas.toBuffer('image/' + image_format);
 
             return image_format ? canvas.toDataURL('image/' + image_format) : canvas;
          });
       });
    }
 
+   const img_src = URL.createObjectURL(new Blob([doctype + svg], { type: 'image/svg+xml;charset=utf-8' }));
+
    return new Promise(resolveFunc => {
       const image = document.createElement('img');
 
       image.onload = function() {
+         URL.revokeObjectURL(img_src);
+
          const canvas = document.createElement('canvas');
          canvas.width = image.width;
          canvas.height = image.height;
@@ -824,11 +827,12 @@ async function svgToImage(svg, image_format, args) {
             resolveFunc(image_format ? canvas.toDataURL('image/' + image_format) : canvas);
       };
       image.onerror = function(arg) {
+         URL.revokeObjectURL(img_src);
          console.log(`IMAGE ERROR ${arg}`);
          resolveFunc(null);
       };
 
-      image.src = img_src;
+      image.setAttribute('src', img_src);
    });
 }
 

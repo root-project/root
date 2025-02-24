@@ -82,7 +82,7 @@ function drawTH2PolyLego(painter) {
                faces = null;
             }
 
-            if (faces && (faces.length > pnts.length-3)) break;
+            if (faces && (faces.length > pnts.length - 3)) break;
          }
 
          if (faces?.length && pnts) {
@@ -178,20 +178,19 @@ function drawTH2PolyLego(painter) {
 
       mesh.tooltip = function(/* intersects */) {
          const p = this.painter, main = p.getFramePainter(),
-             bin = p.getObject().fBins.arr[this.bins_index],
-
-          tip = {
-           use_itself: true, // indicate that use mesh itself for highlighting
-           x1: main.grx(bin.fXmin),
-           x2: main.grx(bin.fXmax),
-           y1: main.gry(bin.fYmin),
-           y2: main.gry(bin.fYmax),
-           z1: this.draw_z0,
-           z2: this.draw_z1,
-           bin: this.bins_index,
-           value: bin.fContent,
-           color: this.tip_color,
-           lines: p.getPolyBinTooltips(this.bins_index)
+               bin = p.getObject().fBins.arr[this.bins_index],
+         tip = {
+            use_itself: true, // indicate that use mesh itself for highlighting
+            x1: main.grx(bin.fXmin),
+            x2: main.grx(bin.fXmax),
+            y1: main.gry(bin.fYmin),
+            y2: main.gry(bin.fYmax),
+            z1: this.draw_z0,
+            z2: this.draw_z1,
+            bin: this.bins_index,
+            value: bin.fContent,
+            color: this.tip_color,
+            lines: p.getPolyBinTooltips(this.bins_index)
          };
 
          return tip;

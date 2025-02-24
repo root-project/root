@@ -210,10 +210,13 @@ class LongPollSocket {
 
 class FileDumpSocket {
 
+   #wait_for_file;
+
    constructor(receiver) {
       this.receiver = receiver;
       this.protocol = [];
       this.cnt = 0;
+      this.sendcnt = 0;
       httpRequest('protocol.json', 'text').then(res => this.getProtocol(res));
    }
 
@@ -221,7 +224,8 @@ class FileDumpSocket {
    getProtocol(res) {
       if (!res) return;
       this.protocol = JSON.parse(res);
-      if (isFunc(this.onopen)) this.onopen();
+      if (isFunc(this.onopen))
+         this.onopen();
       this.nextOperation();
    }
 
@@ -230,7 +234,8 @@ class FileDumpSocket {
       if (this.protocol[this.cnt] === 'send') {
          this.cnt++;
          setTimeout(() => this.nextOperation(), 10);
-      }
+      } else
+         this.sendcnt++;
    }
 
    /** @summary Emulate close */
@@ -239,15 +244,24 @@ class FileDumpSocket {
    /** @summary Read data for next operation */
    nextOperation() {
       // when file request running - just ignore
-      if (this.wait_for_file) return;
+      if (this.#wait_for_file)
+         return;
       const fname = this.protocol[this.cnt];
-
       if (!fname) return;
-      if (fname === 'send') return; // waiting for send
-      this.wait_for_file = true;
+
+      if (fname === 'send') {
+         if (this.sendcnt > 0) {
+            this.sendcnt--;
+            this.cnt++;
+            this.nextOperation();
+         }
+         return;
+      }
+
+      this.#wait_for_file = true;
       this.cnt++;
       httpRequest(fname, (fname.indexOf('.bin') > 0 ? 'buf' : 'text')).then(res => {
-         this.wait_for_file = false;
+         this.#wait_for_file = false;
          if (!res) return;
          const p = fname.indexOf('_ch'),
                chid = (p > 0) ? Number.parseInt(fname.slice(p+3, fname.indexOf('.', p))) : 1;
@@ -417,11 +431,14 @@ class WebWindowHandle {
       if (this.master)
          return this.master.send(msg, this.channelid);
 
-      if (!this._websocket || (this.state <= 0)) return false;
+      if (!this._websocket || (this.state <= 0))
+         return false;
 
-      if (!Number.isInteger(chid)) chid = 1; // when not configured, channel 1 is used - main widget
+      if (!Number.isInteger(chid))
+         chid = 1; // when not configured, channel 1 is used - main widget
 
-      if (this.cansend <= 0) console.error(`should be queued before sending cansend: ${this.cansend}`);
+      if (this.cansend <= 0)
+         console.error(`should be queued before sending cansend: ${this.cansend}`);
 
       const prefix = `${this.send_seq++}:${this.ackn}:${this.cansend}:${chid}:`;
       this.ackn = 0;
@@ -547,7 +564,7 @@ class WebWindowHandle {
          return this.href;
       let addr = this.href;
       if (relative_path.indexOf('../') === 0) {
-         const ddd = addr.lastIndexOf('/', addr.length-2);
+         const ddd = addr.lastIndexOf('/', addr.length - 2);
          addr = addr.slice(0, ddd) + relative_path.slice(2);
       } else
          addr += relative_path;
@@ -851,7 +868,7 @@ class WebWindowHandle {
   * @param {object} arg.receiver - instance of receiver for websocket events, allows to initiate connection immediately
   * @param {string} [arg.first_recv] - required prefix in the first message from RWebWindow, remain part of message will be returned in handle.first_msg
   * @param {string} [arg.href] - URL to RWebWindow, using window.location.href by default
-  * @return {Promise} for ready-to-use {@link WebWindowHandle} instance  */
+  * @return {Promise} {@link WebWindowHandle} instance  */
 async function connectWebWindow(arg) {
    // mark that jsroot used with RWebWindow
    browser.webwindow = true;

@@ -4,7 +4,7 @@ import { loadScript, loadModules, findFunction, internals, settings, getPromise,
          clTObject, clTNamed, clTString, clTAttLine, clTAttFill, clTAttMarker, clTAttText,
          clTObjString, clTFile, clTList, clTHashList, clTMap, clTObjArray, clTClonesArray,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond, clTLegend, clTPaletteAxis,
-         clTText, clTLink, clTLine, clTBox, clTLatex, clTMathText, clTAnnotation, clTMultiGraph, clTH2, clTF1, clTF2, clTF3, clTH3,
+         clTText, clTLink, clTLine, clTBox, clTLatex, clTMathText, clTAnnotation, clTMultiGraph, clTH2, clTF1, clTF12, clTF2, clTF3, clTH3,
          clTProfile, clTProfile2D, clTProfile3D, clTFrame,
          clTColor, clTHStack, clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG, clTPolyLine, clTPolyLine3D, clTPolyMarker3D,
@@ -98,6 +98,7 @@ drawFuncs = { lst: [
    { name: 'kind:Text', icon: 'img_text', func: drawRawText },
    { name: clTObjString, icon: 'img_text', func: drawRawText },
    { name: clTF1, icon: 'img_tf1', class: () => import('./hist/TF1Painter.mjs').then(h => h.TF1Painter), opt: ';L;C;FC;FL' },
+   { name: clTF12, sameas: clTF1 },
    { name: clTF2, icon: 'img_tf2', class: () => import('./hist/TF2Painter.mjs').then(h => h.TF2Painter), opt: ';BOX;ARR;SURF;SURF1;SURF2;SURF4;SURF6;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same' },
    { name: clTF3, icon: 'img_histo3d', class: () => import('./hist/TF3Painter.mjs').then(h => h.TF3Painter), opt: ';SURF' },
    { name: clTSpline3, icon: 'img_tf1', class: () => import('./draw/TSplinePainter.mjs').then(h => h.TSplinePainter) },
@@ -709,7 +710,7 @@ function assignPadPainterDraw(PadPainterClass) {
 // only now one can draw primitives in the canvas
 assignPadPainterDraw(TPadPainter);
 
-// load v7 only by demand
+// load v7 only on demand
 async function init_v7(arg) {
    return import('./gpad/RCanvasPainter.mjs').then(h => {
       // only now one can draw primitives in the canvas

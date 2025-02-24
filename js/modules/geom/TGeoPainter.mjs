@@ -2020,7 +2020,7 @@ class TGeoPainter extends ObjectPainter {
             if (!geo_stack) geo_stack = active_mesh[0].stack;
          }
 
-         const lst = this._highlight_handlers || (!this._main_painter ? this._slave_painters : this._main_painter._slave_painters.concat([this._main_painter]));
+         const lst = this._highlight_handlers || (!this._master_painter ? this._slave_painters : this._master_painter._slave_painters.concat([this._master_painter]));
 
          for (let k = 0; k < lst?.length; ++k) {
             if (lst[k] !== this)
@@ -2419,11 +2419,11 @@ class TGeoPainter extends ObjectPainter {
       if (this.isStage(stageWaitMain)) {
          // wait for main painter to be ready
 
-         if (!this._main_painter) {
+         if (!this._master_painter) {
             this.changeStage(stageInit, 'Lost main painter');
             return false;
          }
-         if (!this._main_painter._drawing_ready) return 1;
+         if (!this._master_painter._drawing_ready) return 1;
 
          this.changeStage(stageBuildProj); // just do projection
       }
@@ -2501,15 +2501,15 @@ class TGeoPainter extends ObjectPainter {
    getProjectionSource() {
       if (this._clones_owner)
          return this._full_geom;
-      if (!this._main_painter) {
+      if (!this._master_painter) {
          console.warn('MAIN PAINTER DISAPPER');
          return null;
       }
-      if (!this._main_painter._drawing_ready) {
+      if (!this._master_painter._drawing_ready) {
          console.warn('MAIN PAINTER NOT READY WHEN DO PROJECTION');
          return null;
       }
-      return this._main_painter._toplevel;
+      return this._master_painter._toplevel;
    }
 
    /** @summary Extend custom geometry bounding box */
@@ -3956,9 +3956,9 @@ class TGeoPainter extends ObjectPainter {
          this._new_draw_nodes = draw_obj;
          this.ctrl.use_worker = 0;
          this._geom_viewer = true; // indicate that working with geom viewer
-      } else if (this._main_painter) {
+      } else if (this._master_painter) {
          this._clones_owner = false;
-         this._clones = this._main_painter._clones;
+         this._clones = this._master_painter._clones;
          console.log(`Reuse clones ${this._clones.nodes.length} from main painter`);
       } else if (!draw_obj) {
          this._clones_owner = false;
@@ -4374,9 +4374,9 @@ class TGeoPainter extends ObjectPainter {
    /** @summary start draw geometries on master and all slaves
      * @private */
    testGeomChanges() {
-      if (this._main_painter) {
+      if (this._master_painter) {
          console.warn('Get testGeomChanges call for slave painter');
-         return this._main_painter.testGeomChanges();
+         return this._master_painter.testGeomChanges();
       }
       this.startDrawGeometry();
       for (let k = 0; k < this._slave_painters.length; ++k)
@@ -4465,8 +4465,8 @@ class TGeoPainter extends ObjectPainter {
                ticks = x_handle.createTicks();
 
          if (ticks.major?.length > 1) {
-            x1 = ticks.major[ticks.major.length-2];
-            x2 = ticks.major[ticks.major.length-1];
+            x1 = ticks.major.at(-2);
+            x2 = ticks.major.at(-1);
          }
 
          buf = new Float32Array(3*6); pos = 0;
@@ -4950,7 +4950,7 @@ class TGeoPainter extends ObjectPainter {
          check_extras = false;
          // if extra object where append, redraw them at the end
          this.getExtrasContainer('delete'); // delete old container
-         const extras = (this._main_painter ? this._main_painter._extraObjects : null) || this._extraObjects;
+         const extras = (this._master_painter ? this._master_painter._extraObjects : null) || this._extraObjects;
          promise = this.drawExtras(extras, '', false);
       } else if (this._first_drawing || this._full_redrawing) {
          if (this.ctrl.tracks && this.geo_manager)
@@ -4992,7 +4992,7 @@ class TGeoPainter extends ObjectPainter {
          if (check_extras) {
             // if extra object where append, redraw them at the end
             this.getExtrasContainer('delete'); // delete old container
-            const extras = this._main_painter?._extraObjects || this._extraObjects;
+            const extras = this._master_painter?._extraObjects || this._extraObjects;
             return this.drawExtras(extras, '', false);
          }
       }).then(() => {
@@ -5106,14 +5106,14 @@ class TGeoPainter extends ObjectPainter {
                delete obj.fVolume.$geo_painter;
          }
 
-         if (this._main_painter?._slave_painters) {
-            const pos = this._main_painter._slave_painters.indexOf(this);
-            if (pos >= 0) this._main_painter._slave_painters.splice(pos, 1);
+         if (this._master_painter?._slave_painters) {
+            const pos = this._master_painter._slave_painters.indexOf(this);
+            if (pos >= 0) this._master_painter._slave_painters.splice(pos, 1);
          }
 
          for (let k = 0; k < this._slave_painters?.length; ++k) {
             const slave = this._slave_painters[k];
-            if (slave?._main_painter === this) slave._main_painter = null;
+            if (slave?._master_painter === this) slave._master_painter = null;
          }
 
          delete this.geo_manager;
@@ -5132,12 +5132,12 @@ class TGeoPainter extends ObjectPainter {
       if (this._slave_painters) {
          for (const k in this._slave_painters) {
             const slave = this._slave_painters[k];
-            slave._main_painter = null;
+            slave._master_painter = null;
             if (slave._clones === this._clones) slave._clones = null;
          }
       }
 
-      this._main_painter = null;
+      this._master_painter = null;
       this._slave_painters = [];
 
       if (this._render_resolveFuncs) {
@@ -5397,8 +5397,8 @@ class TGeoPainter extends ObjectPainter {
          obj.$geo_painter = painter;
 
       if (!painter.ctrl.is_main && painter.ctrl.project && obj.$geo_painter) {
-         painter._main_painter = obj.$geo_painter;
-         painter._main_painter._slave_painters.push(painter);
+         painter._master_painter = obj.$geo_painter;
+         painter._master_painter._slave_painters.push(painter);
       }
 
       if (is_eve && (!painter.ctrl.vislevel || (painter.ctrl.vislevel < 9)))
@@ -5721,8 +5721,8 @@ function createItem(node, obj, name) {
    if (!sub._name) {
       if (isStr(node._name)) {
          sub._name = node._name;
-         if (sub._name.lastIndexOf('s') === sub._name.length-1)
-            sub._name = sub._name.slice(0, sub._name.length-1);
+         if (sub._name.at(-1) === 's')
+            sub._name = sub._name.slice(0, sub._name.length - 1);
          sub._name += '_' + node._childs.length;
       } else
          sub._name = 'item_' + node._childs.length;

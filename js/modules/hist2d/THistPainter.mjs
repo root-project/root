@@ -1,6 +1,6 @@
 import { gStyle, BIT, settings, constants, create, isObject, isFunc, isStr, getPromise,
          clTList, clTPaveText, clTPaveStats, clTPaletteAxis, clTProfile, clTProfile2D, clTProfile3D, clTPad,
-         clTAxis, clTF1, clTF2, kNoZoom, clTCutG, kNoStats, kTitle } from '../core.mjs';
+         clTAxis, clTF1, clTF2, kNoZoom, clTCutG, kNoStats, kTitle, setHistogramTitle } from '../core.mjs';
 import { getColor, getColorPalette } from '../base/colors.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter, EAxisBits, kAxisTime, kAxisLabels } from '../base/ObjectPainter.mjs';
@@ -706,7 +706,7 @@ class HistContour {
       for (let n = 0; n < levels.length; ++n)
          this.arr.push(levels[n]);
 
-      if (this.colzmax > this.arr[this.arr.length-1])
+      if (this.colzmax > this.arr.at(-1))
          this.arr.push(this.colzmax);
    }
 
@@ -727,9 +727,9 @@ class HistContour {
          return this.exact_min_indx;
 
       if (!this.custom)
-         return Math.floor(0.01+(zc-this.colzmin)*(this.arr.length-1)/(this.colzmax-this.colzmin));
+         return Math.floor(0.01 + (zc - this.colzmin) * (this.arr.length - 1) / (this.colzmax - this.colzmin));
 
-      let l = 0, r = this.arr.length-1;
+      let l = 0, r = this.arr.length - 1;
       if (zc < this.arr[0]) return -1;
       if (zc >= this.arr[r]) return r;
       while (l < r-1) {
@@ -776,7 +776,7 @@ class FunctionsHandler {
       // find painters associated with histogram/graph/...
       if (!only_draw) {
          pp?.forEachPainterInPad(objp => {
-            if (objp.isSecondary(painter) && objp._secondary_id?.match(/^func_|^indx_/))
+            if (objp.isSecondary(painter) && objp.getSecondaryId()?.match(/^func_|^indx_/))
                painters.push(objp);
          }, 'objects');
       }
@@ -849,7 +849,7 @@ class FunctionsHandler {
       if (!func || this.pp?.findPainterFor(func))
          return this.drawNext(indx+1);
 
-      const func_secondary_id = func?.fName ? `func_${func.fName}` : `indx_${indx}`;
+      const func_id = func?.fName ? `func_${func.fName}` : `indx_${indx}`;
 
       // Required to correctly draw multiple stats boxes
       // TODO: set reference via weak pointer
@@ -860,7 +860,7 @@ class FunctionsHandler {
             : this.pp.drawObject(this.pp, func, fopt);
 
       return promise.then(fpainter => {
-         fpainter.setSecondaryId(this.painter, func_secondary_id);
+         fpainter.setSecondaryId(this.painter, func_id);
          return this.drawNext(indx+1);
       });
    }
@@ -919,9 +919,7 @@ class THistPainter extends ObjectPainter {
    isTF1() { return false; }
 
    /** @summary Returns true if TH1K */
-   isTH1K() {
-      return this.matchObjectType('TH1K');
-   }
+   isTH1K() { return this.matchObjectType('TH1K'); }
 
    /** @summary Returns true if TH2Poly */
    isTH2Poly() {
@@ -1423,7 +1421,9 @@ class THistPainter extends ObjectPainter {
       Object.assign(pt, { fName: kTitle, fOption: 'blNDC', fFillColor: st.fTitleColor, fFillStyle: st.fTitleStyle, fBorderSize: st.fTitleBorderSize,
                           fTextFont: st.fTitleFont, fTextSize: st.fTitleFontSize, fTextColor: st.fTitleTextColor, fTextAlign: 22 });
 
-      if (draw_title) pt.AddText(histo.fTitle);
+      if (draw_title)
+         pt.AddText(histo.fTitle);
+
       return TPavePainter.draw(pp, pt, kPosTitle).then(p => { p?.setSecondaryId(this, kTitle); return this; });
    }
 
@@ -1799,13 +1799,21 @@ class THistPainter extends ObjectPainter {
    fillContextMenuItems(menu) {
       const histo = this.getHisto(),
             fp = this.getFramePainter();
-      if (!histo) return;
+      if (!histo)
+         return;
 
       if ((this.options.Axis <= 0) && !this.isTF1())
          menu.addchk(this.toggleStat('only-check'), 'Show statbox', () => this.toggleStat());
 
-      if (histo.fTitle && this.isMainPainter())
-         menu.addchk(this.toggleTitle('only-check'), 'Show title', () => this.toggleTitle());
+      if (this.isMainPainter()) {
+         menu.sub('Title');
+         menu.addchk(this.toggleTitle('only-check'), 'Show', () => this.toggleTitle());
+         menu.add('Edit', () => menu.input('Enter histogram title', histo.fTitle).then(res => {
+            setHistogramTitle(histo, res);
+            this.interactiveRedraw();
+         }));
+         menu.endsub();
+      }
 
       if (this.draw_content) {
          if (this.getDimension() === 1)
@@ -2367,7 +2375,9 @@ class THistPainter extends ObjectPainter {
                i2: args.nozoom ? this.nbinsx : this.getSelectIndex('x', 'right', 1 + args.extra),
                j1: (hdim === 1) ? 0 : (args.nozoom ? 0 : this.getSelectIndex('y', 'left', 0 - args.extra)),
                j2: (hdim === 1) ? 1 : (args.nozoom ? this.nbinsy : this.getSelectIndex('y', 'right', 1 + args.extra)),
-               min: 0, max: 0, sumz: 0, xbar1: 0, xbar2: 1, ybar1: 0, ybar2: 1
+               min: 0, max: 0, sumz: 0, xbar1: 0, xbar2: 1, ybar1: 0, ybar2: 1,
+               width: pmain?.getFrameWidth() ?? 600,
+               height: pmain?.getFrameHeight() ?? 400
             };
 
       if (args.cutg) {
