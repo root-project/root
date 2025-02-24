@@ -2027,6 +2027,8 @@ TEST(RNTuple, TClassStlDerived)
       RNTupleWriteOptions options;
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
       for (int i = 0; i < 10000; i++) {
+         if (fieldKlass)
+            fieldKlass->~PackedContainer<int>();
          new (fieldKlass.get()) PackedContainer<int>({i + 2, i + 3}, {/*m_nbits=*/(uint8_t)i,
                                                                       /*m_nmantissa=*/(uint8_t)i,
                                                                       /*m_scale=*/static_cast<float>(i + 1),
