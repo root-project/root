@@ -142,7 +142,7 @@ bool ROOT::Experimental::Internal::RPageSource::REntryRange::IntersectsWith(cons
    return true;
 }
 
-ROOT::Experimental::Internal::RPageSource::RPageSource(std::string_view name, const RNTupleReadOptions &options)
+ROOT::Experimental::Internal::RPageSource::RPageSource(std::string_view name, const ROOT::RNTupleReadOptions &options)
    : RPageStorage(name), fOptions(options)
 {
 }
@@ -151,7 +151,7 @@ ROOT::Experimental::Internal::RPageSource::~RPageSource() {}
 
 std::unique_ptr<ROOT::Experimental::Internal::RPageSource>
 ROOT::Experimental::Internal::RPageSource::Create(std::string_view ntupleName, std::string_view location,
-                                                  const RNTupleReadOptions &options)
+                                                  const ROOT::RNTupleReadOptions &options)
 {
    if (ntupleName.empty()) {
       throw RException(R__FAIL("empty RNTuple name"));
@@ -347,7 +347,7 @@ void ROOT::Experimental::Internal::RPageSource::UpdateLastUsedCluster(ROOT::Desc
    }
    std::size_t poolWindow = 0;
    while ((itr != fPreloadedClusters.end()) &&
-          (poolWindow < 2 * RNTupleReadOptionsManip::GetClusterBunchSize(fOptions))) {
+          (poolWindow < 2 * ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(fOptions))) {
       ++itr;
       ++poolWindow;
    }

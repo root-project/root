@@ -695,7 +695,7 @@ protected:
 
    std::unique_ptr<RCounters> fCounters;
 
-   RNTupleReadOptions fOptions;
+   ROOT::RNTupleReadOptions fOptions;
    /// The active columns are implicitly defined by the model fields or views
    RActivePhysicalColumns fActivePhysicalColumns;
 
@@ -733,7 +733,7 @@ protected:
    RExclDescriptorGuard GetExclDescriptorGuard() { return RExclDescriptorGuard(fDescriptor, fDescriptorLock); }
 
 public:
-   RPageSource(std::string_view ntupleName, const RNTupleReadOptions &fOptions);
+   RPageSource(std::string_view ntupleName, const ROOT::RNTupleReadOptions &fOptions);
    RPageSource(const RPageSource &) = delete;
    RPageSource &operator=(const RPageSource &) = delete;
    RPageSource(RPageSource &&) = delete;
@@ -741,7 +741,7 @@ public:
    ~RPageSource() override;
    /// Guess the concrete derived page source from the file name (location)
    static std::unique_ptr<RPageSource> Create(std::string_view ntupleName, std::string_view location,
-                                              const RNTupleReadOptions &options = RNTupleReadOptions());
+                                              const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
    /// Open the same storage multiple time, e.g. for reading in multiple threads.
    /// If the source is already attached, the clone will be attached, too. The clone will use, however,
    /// it's own connection to the underlying storage (e.g., file descriptor, XRootD handle, etc.)
@@ -754,7 +754,7 @@ public:
                                     RPageAllocator &pageAlloc);
 
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
-   const RNTupleReadOptions &GetReadOptions() const { return fOptions; }
+   const ROOT::RNTupleReadOptions &GetReadOptions() const { return fOptions; }
 
    /// Takes the read lock for the descriptor. Multiple threads can take the lock concurrently.
    /// The underlying `std::shared_mutex`, however, is neither read nor write recursive:

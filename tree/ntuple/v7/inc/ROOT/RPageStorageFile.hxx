@@ -147,7 +147,7 @@ private:
    /// Populated by LoadStructureImpl(), reset at the end of Attach()
    RStructureBuffer fStructureBuffer;
 
-   RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
+   RPageSourceFile(std::string_view ntupleName, const ROOT::RNTupleReadOptions &options);
 
    /// Helper function for LoadClusters: it prepares the memory buffer (page map) and the
    /// read requests for a given cluster and columns.  The reead requests are appended to
@@ -166,13 +166,13 @@ protected:
    LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, ROOT::NTupleSize_t idxInCluster) final;
 
 public:
-   RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
+   RPageSourceFile(std::string_view ntupleName, std::string_view path, const ROOT::RNTupleReadOptions &options);
    RPageSourceFile(std::string_view ntupleName, std::unique_ptr<ROOT::Internal::RRawFile> file,
-                   const RNTupleReadOptions &options);
+                   const ROOT::RNTupleReadOptions &options);
    /// Used from the RNTuple class to build a datasource if the anchor is already available.
    /// Requires the RNTuple object to be streamed from a file.
    static std::unique_ptr<RPageSourceFile>
-   CreateFromAnchor(const RNTuple &anchor, const RNTupleReadOptions &options = RNTupleReadOptions());
+   CreateFromAnchor(const RNTuple &anchor, const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
 
    RPageSourceFile(const RPageSourceFile &) = delete;
    RPageSourceFile &operator=(const RPageSourceFile &) = delete;

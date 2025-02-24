@@ -404,19 +404,19 @@ RNTupleDS::RNTupleDS(std::unique_ptr<Internal::RPageSource> pageSource)
 
 namespace {
 
-const ROOT::Experimental::RNTupleReadOptions &GetOpts()
+const ROOT::RNTupleReadOptions &GetOpts()
 {
    // The setting is for now a global one, must be decided before running the
    // program by setting the appropriate environment variable. Make sure that
    // option configuration is thread-safe and happens only once.
-   static ROOT::Experimental::RNTupleReadOptions opts;
+   static ROOT::RNTupleReadOptions opts;
    static std::once_flag flag;
    std::call_once(flag, []() {
       if (auto env = gSystem->Getenv("ROOT_RNTUPLE_CLUSTERBUNCHSIZE"); env != nullptr && strlen(env) > 0) {
          std::string envStr{env};
          auto envNum{std::stoul(envStr)};
          envNum = envNum == 0 ? 1 : envNum;
-         Internal::RNTupleReadOptionsManip::SetClusterBunchSize(opts, envNum);
+         ROOT::Internal::RNTupleReadOptionsManip::SetClusterBunchSize(opts, envNum);
       }
    });
    return opts;
