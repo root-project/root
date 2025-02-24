@@ -386,12 +386,14 @@ ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(std::initializer_l
                        colInfo.GetCompressedPageSizes().end());
    });
 
-   auto histMinMax = std::minmax_element(pageSizes.begin(), pageSizes.end());
-   hist->SetBins(nBins, *histMinMax.first,
-                 *histMinMax.second + ((*histMinMax.second - *histMinMax.first) / static_cast<double>(nBins)));
+   if (!pageSizes.empty()) {
+      auto histMinMax = std::minmax_element(pageSizes.begin(), pageSizes.end());
+      hist->SetBins(nBins, *histMinMax.first,
+                    *histMinMax.second + ((*histMinMax.second - *histMinMax.first) / static_cast<double>(nBins)));
 
-   for (const auto pageSize : pageSizes) {
-      hist->Fill(pageSize);
+      for (const auto pageSize : pageSizes) {
+         hist->Fill(pageSize);
+      }
    }
 
    return hist;
