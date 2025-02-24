@@ -632,6 +632,12 @@ TEST(RNTupleInspector, PageSizeDistribution)
    // Requesting a histogram for a column type without pages in the given RNTuple should give an empty histogram
    auto emptyTypeHisto = inspector->GetPageSizeDistribution(ENTupleColumnType::kSplitReal64);
    EXPECT_EQ(0, emptyTypeHisto->Integral());
+
+   // Requesting a histogram for a column  without pages in the given RNTuple should give an empty histogram
+   auto doubleColumns = inspector->GetColumnsByType(ENTupleColumnType::kSplitReal64);
+   ASSERT_EQ(1, doubleColumns.size());
+   auto emptyColumnHisto = inspector->GetPageSizeDistribution({doubleColumns[0]});
+   EXPECT_EQ(0, emptyColumnHisto->Integral());
 }
 
 TEST(RNTupleInspector, FieldInfoCompressed)
