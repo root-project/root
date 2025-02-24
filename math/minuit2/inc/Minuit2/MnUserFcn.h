@@ -12,6 +12,8 @@
 
 #include "Minuit2/MnFcn.h"
 
+#include <vector>
+
 namespace ROOT {
 
 namespace Minuit2 {
@@ -33,6 +35,12 @@ public:
    ~MnUserFcn() override {}
 
    double operator()(const MnAlgebraicVector &) const override;
+
+   // Access the parameter transformations.
+   // For internal use in the Minuit2 implementation.
+   const MnUserTransformation &transform() const { return fTransform; }
+
+   double callWithTransformedParams(std::vector<double> const &vpar) const;
 
 private:
    const MnUserTransformation &fTransform;
