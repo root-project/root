@@ -472,9 +472,9 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpe
 
    fEntry.swap(newEntry);
 
-   // If no join fields have been specified, an aligned join is assumed and an index won't be necessary.
+   // If no join fields have been specified, an aligned join is assumed and an join table won't be created.
    if (joinFields.size() > 0)
-      fJoinIndices.emplace_back(Internal::RNTupleJoinTable::Create(joinFields, *pageSource, true /* deferBuild */));
+      fJoinTables.emplace_back(Internal::RNTupleJoinTable::Create(joinFields, *pageSource, true /* deferBuild */));
 
    fAuxiliaryPageSources.emplace_back(std::move(pageSource));
 }
@@ -505,10 +505,10 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
    if (entryNumber >= fPageSource->GetNEntries())
       return ROOT::kInvalidNTupleIndex;
 
-   // Read the values of the primary ntuple. If no index is used (i.e., the join is aligned), also read the values of
-   // auxiliary ntuples.
+   // Read the values of the primary ntuple. If no join table is used (i.e., the join is aligned), also read the values
+   // of auxiliary ntuples.
    for (const auto &[_, fieldContext] : fFieldContexts) {
-      if (!fieldContext.IsAuxiliary() || !IsUsingIndex()) {
+      if (!fieldContext.IsAuxiliary() || !HasJoinTable()) {
          auto &value = fEntry->GetValue(fieldContext.fToken);
          value.Read(entryNumber);
       }
@@ -517,8 +517,8 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
    fCurrentEntryNumber = entryNumber;
    fNEntriesProcessed++;
 
-   // If no index is used (i.e., the join is aligned), there's nothing left to do.
-   if (!IsUsingIndex())
+   // If no join table is used (i.e., the join is aligned), there's nothing left to do.
+   if (!HasJoinTable())
       return entryNumber;
 
    // Collect the values of the join fields for this entry.
@@ -529,15 +529,15 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
       valPtrs.push_back(ptr.get());
    }
 
-   // Find the index entry number corresponding to the join field values for each auxiliary ntuple.
-   std::vector<ROOT::NTupleSize_t> indexEntryNumbers;
-   indexEntryNumbers.reserve(fJoinIndices.size());
-   for (unsigned i = 0; i < fJoinIndices.size(); ++i) {
-      auto &joinIndex = fJoinIndices[i];
-      if (!joinIndex->IsBuilt())
-         joinIndex->Build();
+   // Find the entry index corresponding to the join field values for each auxiliary ntuple.
+   std::vector<ROOT::NTupleSize_t> auxEntryIdxs;
+   auxEntryIdxs.reserve(fJoinTables.size());
+   for (unsigned i = 0; i < fJoinTables.size(); ++i) {
+      auto &joinTable = fJoinTables[i];
+      if (!joinTable->IsBuilt())
+         joinTable->Build();
 
-      indexEntryNumbers.push_back(joinIndex->GetFirstEntryNumber(valPtrs));
+      auxEntryIdxs.push_back(joinTable->GetFirstEntryNumber(valPtrs));
    }
 
    // For each auxiliary field, load its value according to the entry number we just found of the ntuple it belongs to.
@@ -546,13 +546,13 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
          continue;
 
       auto &value = fEntry->GetValue(fieldContext.fToken);
-      if (indexEntryNumbers[fieldContext.fNTupleIdx - 1] == ROOT::kInvalidNTupleIndex) {
+      if (auxEntryIdxs[fieldContext.fNTupleIdx - 1] == ROOT::kInvalidNTupleIndex) {
          // No matching entry exists, so we reset the field's value to a default value.
          // TODO(fdegeus): further consolidate how non-existing join matches should be handled. N.B.: in case
          // ConstructValue is not used anymore in the future, remove friend in RFieldBase.
          fieldContext.fProtoField->ConstructValue(value.GetPtr<void>().get());
       } else {
-         value.Read(indexEntryNumbers[fieldContext.fNTupleIdx - 1]);
+         value.Read(auxEntryIdxs[fieldContext.fNTupleIdx - 1]);
       }
    }
 
