@@ -153,6 +153,9 @@ jobs:
         with:
           build-directory: /Users/sftnight/ROOT-CI/src/
 
+      - name: Set up curl CA bundle for Davix to work with https
+        run: 'echo SSL_CERT_FILE=/opt/local/share/curl/curl-ca-bundle.crt >> $GITHUB_ENV'
+
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
         env:
