@@ -72,8 +72,8 @@ C++ interpreter and the Clang C++ compiler, not CINT.
 #include <sstream>
 
 using namespace ROOT;
-using namespace llvm;
 using namespace clang;
+using llvm::APSInt, llvm::raw_string_ostream;
 using std::string, std::map, std::ostringstream, std::make_pair;
 
 static unsigned long long gWrapperSerial = 0LL;
