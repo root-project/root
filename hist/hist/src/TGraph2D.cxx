@@ -987,6 +987,18 @@ void TGraph2D::CreateInterpolator(Bool_t oldInterp)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to function with name.
+///
+/// Functions such as TGraph2D::Fit store the fitted function in the list of
+/// functions of this graph.
+
+TF2 *TGraph2D::GetFunction(const char *name) const
+{
+   if (!fFunctions) return nullptr;
+   return (TF2*)fFunctions->FindObject(name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// By default returns a pointer to the Delaunay histogram. If fHistogram
 /// doesn't exist, books the 2D histogram fHistogram with a margin around
 /// the hull. Calls TGraphDelaunay::Interpolate at each bin centre to build up
