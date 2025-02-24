@@ -91,7 +91,6 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/MnUserParameterState.h
       Minuit2/MnUserParameters.h
       Minuit2/MnUserTransformation.h
-      Minuit2/MnVectorTransform.h
       Minuit2/ModularFunctionMinimizer.h
       Minuit2/NegativeG2LineSearch.h
       Minuit2/Numerical2PGradientCalculator.h

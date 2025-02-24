@@ -9,7 +9,6 @@
 
 #include "Minuit2/MnFcn.h"
 #include "Minuit2/FCNBase.h"
-#include "Minuit2/MnVectorTransform.h"
 
 namespace ROOT {
 
@@ -24,7 +23,7 @@ double MnFcn::operator()(const MnAlgebraicVector &v) const
 {
    // evaluate FCN converting from from MnAlgebraicVector to std::vector
    fNumCall++;
-   return fFCN(MnVectorTransform()(v));
+   return fFCN(std::vector<double>{v.Data(), v.Data() + v.size()});
 }
 
 // double MnFcn::operator()(const std::vector<double>& par) const {
