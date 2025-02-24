@@ -26,7 +26,6 @@
 #include "Minuit2/MinosError.h"
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MinuitParameter.h"
-#include "Minuit2/MnUserFcn.h"
 #include "Minuit2/MnPrint.h"
 #include "Minuit2/VariableMetricMinimizer.h"
 #include "Minuit2/SimplexMinimizer.h"
