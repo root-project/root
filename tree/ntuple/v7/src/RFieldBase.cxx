@@ -272,8 +272,8 @@ ROOT::Experimental::RFieldBase::Check(const std::string &fieldName, const std::s
 {
    RFieldZero fieldZero;
    RCreateFieldOptions cfOpts{};
-   cfOpts.fReturnInvalidOnError = true;
-   cfOpts.fEmulateUnknownTypes = false;
+   cfOpts.SetReturnInvalidOnError(true);
+   cfOpts.SetEmulateUnknownTypes(false);
    fieldZero.Attach(RFieldBase::Create(fieldName, typeName, cfOpts, nullptr, kInvalidDescriptorId).Unwrap());
 
    std::vector<RCheckResult> result;
@@ -298,7 +298,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
 
    thread_local CreateContext createContext;
    CreateContextGuard createContextGuard(createContext);
-   if (options.fReturnInvalidOnError)
+   if (options.GetReturnInvalidOnError())
       createContextGuard.SetContinueOnError(true);
 
    auto fnFail = [&fieldName,
@@ -568,7 +568,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
                   result = std::make_unique<RClassField>(fieldName, typeName);
                }
             }
-         } else if (options.fEmulateUnknownTypes) {
+         } else if (options.GetEmulateUnknownTypes()) {
             assert(desc);
             const auto &fieldDesc = desc->GetFieldDescriptor(fieldId);
 
