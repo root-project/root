@@ -146,13 +146,15 @@ function drawEllipse() {
          x = funcs.x(ellipse.fX1),
          y = funcs.y(ellipse.fY1),
          rx = is_crown && (ellipse.fR1 <= 0) ? (funcs.x(ellipse.fX1 + ellipse.fR2) - x) : (funcs.x(ellipse.fX1 + ellipse.fR1) - x),
-         ry = y - funcs.y(ellipse.fY1 + ellipse.fR2);
+         ry = y - funcs.y(ellipse.fY1 + ellipse.fR2),
+         dr = Math.PI/180;
 
    let path = '';
 
    if (is_crown && (ellipse.fR1 > 0)) {
-      const rx1 = rx, ry2 = ry,
-            ry1 = y - funcs.y(ellipse.fY1 + ellipse.fR1),
+      const ratio = ellipse.fYXRatio ?? 1,
+            rx1 = rx, ry2 = ratio * ry,
+            ry1 = ratio * (y - funcs.y(ellipse.fY1 + ellipse.fR1)),
             rx2 = funcs.x(ellipse.fX1 + ellipse.fR2) - x;
 
       if (closed_ellipse) {
@@ -160,7 +162,7 @@ function drawEllipse() {
                 `M${-rx2},0A${rx2},${ry2},0,1,0,${rx2},0A${rx2},${ry2},0,1,0,${-rx2},0`;
       } else {
          const large_arc = (ellipse.fPhimax-ellipse.fPhimin>=180) ? 1 : 0,
-               a1 = ellipse.fPhimin*Math.PI/180, a2 = ellipse.fPhimax*Math.PI/180,
+               a1 = ellipse.fPhimin*dr, a2 = ellipse.fPhimax*dr,
                dx1 = Math.round(rx1*Math.cos(a1)), dy1 = Math.round(ry1*Math.sin(a1)),
                dx2 = Math.round(rx1*Math.cos(a2)), dy2 = Math.round(ry1*Math.sin(a2)),
                dx3 = Math.round(rx2*Math.cos(a1)), dy3 = Math.round(ry2*Math.sin(a1)),
@@ -173,22 +175,22 @@ function drawEllipse() {
       if (closed_ellipse)
          path = `M${-rx},0A${rx},${ry},0,1,0,${rx},0A${rx},${ry},0,1,0,${-rx},0Z`;
       else {
-         const x1 = Math.round(rx * Math.cos(ellipse.fPhimin*Math.PI/180)),
-               y1 = Math.round(ry * Math.sin(ellipse.fPhimin*Math.PI/180)),
-               x2 = Math.round(rx * Math.cos(ellipse.fPhimax*Math.PI/180)),
-               y2 = Math.round(ry * Math.sin(ellipse.fPhimax*Math.PI/180));
+         const x1 = Math.round(rx * Math.cos(ellipse.fPhimin*dr)),
+               y1 = Math.round(ry * Math.sin(ellipse.fPhimin*dr)),
+               x2 = Math.round(rx * Math.cos(ellipse.fPhimax*dr)),
+               y2 = Math.round(ry * Math.sin(ellipse.fPhimax*dr));
          path = `M0,0L${x1},${y1}A${rx},${ry},0,1,1,${x2},${y2}Z`;
       }
    } else {
-     const ct = Math.cos(ellipse.fTheta*Math.PI/180),
-           st = Math.sin(ellipse.fTheta*Math.PI/180),
-           phi1 = ellipse.fPhimin*Math.PI/180,
-           phi2 = ellipse.fPhimax*Math.PI/180,
-           np = 200,
-           dphi = (phi2-phi1) / (np - (closed_ellipse ? 0 : 1));
-     let lastx = 0, lasty = 0;
-     if (!closed_ellipse) path = 'M0,0';
-     for (let n = 0; n < np; ++n) {
+      const ct = Math.cos(ellipse.fTheta*dr),
+            st = Math.sin(ellipse.fTheta*dr),
+            phi1 = ellipse.fPhimin*dr,
+            phi2 = ellipse.fPhimax*dr,
+            np = 200,
+            dphi = (phi2-phi1) / (np - (closed_ellipse ? 0 : 1));
+      let lastx = 0, lasty = 0;
+      if (!closed_ellipse) path = 'M0,0';
+      for (let n = 0; n < np; ++n) {
          const angle = phi1 + n*dphi,
                dx = ellipse.fR1 * Math.cos(angle),
                dy = ellipse.fR2 * Math.sin(angle),
@@ -203,8 +205,8 @@ function drawEllipse() {
          else
             path += `l${px-lastx},${py-lasty}`;
          lastx = px; lasty = py;
-     }
-     path += 'Z';
+      }
+      path += 'Z';
    }
 
    this.x = x;

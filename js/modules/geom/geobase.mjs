@@ -919,9 +919,9 @@ function createTubeBuffer(shape, faces_limit) {
    if (faces_limit < 0) return numfaces;
 
    const phi0 = thetaStart*Math.PI/180,
-       dphi = thetaLength/radiusSegments*Math.PI/180,
-       _sin = new Float32Array(radiusSegments+1),
-       _cos = new Float32Array(radiusSegments+1);
+         dphi = thetaLength/radiusSegments*Math.PI/180,
+         _sin = new Float32Array(radiusSegments+1),
+         _cos = new Float32Array(radiusSegments+1);
 
    for (let seg = 0; seg <= radiusSegments; ++seg) {
       _cos[seg] = Math.cos(phi0+seg*dphi);
