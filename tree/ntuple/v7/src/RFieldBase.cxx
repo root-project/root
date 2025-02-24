@@ -88,8 +88,8 @@ void ROOT::Experimental::Internal::CallConnectPageSourceOnField(RFieldBase &fiel
 
 ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
 ROOT::Experimental::Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
-                                                  const RCreateFieldOptions &options, const RNTupleDescriptor *desc,
-                                                  ROOT::DescriptorId_t fieldId)
+                                                  const ROOT::RCreateFieldOptions &options,
+                                                  const RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId)
 {
    return RFieldBase::Create(fieldName, typeName, options, desc, fieldId);
 }
@@ -264,14 +264,14 @@ ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
 ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
 {
    return R__FORWARD_RESULT(
-      RFieldBase::Create(fieldName, typeName, RCreateFieldOptions{}, nullptr, ROOT::kInvalidDescriptorId));
+      RFieldBase::Create(fieldName, typeName, ROOT::RCreateFieldOptions{}, nullptr, ROOT::kInvalidDescriptorId));
 }
 
 std::vector<ROOT::Experimental::RFieldBase::RCheckResult>
 ROOT::Experimental::RFieldBase::Check(const std::string &fieldName, const std::string &typeName)
 {
    RFieldZero fieldZero;
-   RCreateFieldOptions cfOpts{};
+   ROOT::RCreateFieldOptions cfOpts{};
    cfOpts.SetReturnInvalidOnError(true);
    cfOpts.SetEmulateUnknownTypes(false);
    fieldZero.Attach(RFieldBase::Create(fieldName, typeName, cfOpts, nullptr, kInvalidDescriptorId).Unwrap());
@@ -291,7 +291,7 @@ ROOT::Experimental::RFieldBase::Check(const std::string &fieldName, const std::s
 
 ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
 ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::string &typeName,
-                                       const RCreateFieldOptions &options, const RNTupleDescriptor *desc,
+                                       const ROOT::RCreateFieldOptions &options, const RNTupleDescriptor *desc,
                                        ROOT::DescriptorId_t fieldId)
 {
    const auto resolvedType = Internal::GetCanonicalTypePrefix(TClassEdit::ResolveTypedef(typeName.c_str()));
