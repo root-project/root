@@ -78,7 +78,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
    // The structure may be unknown if the descriptor comes from a deserialized field with an unknown structural role.
    // For forward compatibility, we allow this case and return an InvalidField.
    if (GetStructure() == ROOT::ENTupleStructure::kUnknown) {
-      if (options.fReturnInvalidOnError) {
+      if (options.GetReturnInvalidOnError()) {
          auto invalidField = std::make_unique<RInvalidField>(GetFieldName(), GetTypeName(), "",
                                                              RInvalidField::RCategory::kUnknownStructure);
          invalidField->SetOnDiskId(fFieldId);
@@ -140,7 +140,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
 
       return field;
    } catch (RException &ex) {
-      if (options.fReturnInvalidOnError)
+      if (options.GetReturnInvalidOnError())
          return std::make_unique<RInvalidField>(GetFieldName(), GetTypeName(), ex.GetError().GetReport(),
                                                 RInvalidField::RCategory::kGeneric);
       else
@@ -640,9 +640,9 @@ ROOT::Experimental::RNTupleDescriptor::CreateModel(const RCreateModelOptions &op
    fieldZero->SetOnDiskId(GetFieldZeroId());
    auto model =
       options.fCreateBare ? RNTupleModel::CreateBare(std::move(fieldZero)) : RNTupleModel::Create(std::move(fieldZero));
-   RCreateFieldOptions createFieldOpts{};
-   createFieldOpts.fReturnInvalidOnError = options.fForwardCompatible;
-   createFieldOpts.fEmulateUnknownTypes = options.fEmulateUnknownTypes;
+   RCreateFieldOptions createFieldOpts;
+   createFieldOpts.SetReturnInvalidOnError(options.fForwardCompatible);
+   createFieldOpts.SetEmulateUnknownTypes(options.fEmulateUnknownTypes);
    for (const auto &topDesc : GetTopLevelFields()) {
       auto field = topDesc.CreateField(*this, createFieldOpts);
       if (field->GetTraits() & RFieldBase::kTraitInvalidField)
