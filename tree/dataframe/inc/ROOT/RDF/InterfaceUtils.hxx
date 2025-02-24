@@ -287,8 +287,9 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
 
       return actionPtr;
 #else
-      throw std::runtime_error("Cannot snapshot to RNTuple: this installation of ROOT has not been build with ROOT7 "
-                               "components enabled.");
+      throw std::runtime_error(
+         "RDataFrame: Cannot snapshot to RNTuple - this installation of ROOT has not been build with ROOT7 "
+         "components enabled.");
 #endif
    } else {
       if (!ROOT::IsImplicitMTEnabled()) {

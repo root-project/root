@@ -1375,8 +1375,9 @@ public:
             colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr,
             colListNoAliasesWithSizeBranches.size());
 #else
-         throw std::runtime_error("Cannot snapshot to RNTuple: this installation of ROOT has not been build with ROOT7 "
-                                  "components enabled.");
+         throw std::runtime_error(
+            "RDataFrame: Cannot snapshot to RNTuple - this installation of ROOT has not been build with ROOT7 "
+            "components enabled.");
 #endif
       } else {
          // The CreateLMFromTTree function by default opens the file passed as input
@@ -3267,8 +3268,9 @@ private:
          resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, ColumnTypes...>(validCols, newRDF, snapHelperArgs,
                                                                                   fProxiedPtr);
 #else
-         throw std::runtime_error("Cannot snapshot to RNTuple: this installation of ROOT has not been build with ROOT7 "
-                                  "components enabled.");
+         throw std::runtime_error(
+            "RDataFrame: Cannot snapshot to RNTuple - this installation of ROOT has not been build with ROOT7 "
+            "components enabled.");
 #endif
       } else {
          // The CreateLMFromTTree function by default opens the file passed as input
