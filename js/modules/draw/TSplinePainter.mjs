@@ -17,11 +17,14 @@ class TSplinePainter extends ObjectPainter {
    updateObject(obj, opt) {
       const spline = this.getObject();
 
-      if (spline._typename !== obj._typename) return false;
+      if (spline._typename !== obj._typename)
+         return false;
 
-      if (spline !== obj) Object.assign(spline, obj);
+      if (spline !== obj)
+         Object.assign(spline, obj);
 
-      if (opt !== undefined) this.decodeOptions(opt);
+      if (opt !== undefined)
+         this.decodeOptions(opt);
 
       return true;
    }
@@ -50,7 +53,7 @@ class TSplinePainter extends ObjectPainter {
       if (x >= spline.fXmax) return khig;
 
       if (spline.fKstep) {
-         // Equidistant knots, use histogramming
+         // Equidistant knots, use histogram
          klow = Math.round((x - spline.fXmin)/spline.fDelta);
          // Correction for rounding errors
          if (x < spline.fPoly[klow].fX)

@@ -21,6 +21,8 @@ export * from './hist/TH2Painter.mjs';
 
 export * from './hist/TH3Painter.mjs';
 
+export * from './hist/TGraphPainter.mjs';
+
 export { geoCfg } from './geom/geobase.mjs';
 
 export { createGeoPainter, TGeoPainter } from './geom/TGeoPainter.mjs';

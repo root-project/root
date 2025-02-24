@@ -120,8 +120,8 @@ class RPalettePainter extends RObjectPainter {
       if (!framep)
          return console.log('no frame painter - no palette');
 
-      const zmin = contour[0],
-            zmax = contour[contour.length-1],
+      const zmin = contour.at(0),
+            zmax = contour.at(-1),
             rect = framep.getFrameRect(),
             pad_width = this.getPadPainter().getPadWidth(),
             pad_height = this.getPadPainter().getPadHeight(),
@@ -183,10 +183,10 @@ class RPalettePainter extends RObjectPainter {
       else
          framep.z_handle.configureAxis('zaxis', gmin, gmax, zmin, zmax, false, [0, palette_width], palette_width, { reverse: false });
 
-      for (let i = 0; i < contour.length-1; ++i) {
+      for (let i = 0; i < contour.length - 1; ++i) {
          const z0 = Math.round(framep.z_handle.gr(contour[i])),
                z1 = Math.round(framep.z_handle.gr(contour[i+1])),
-               col = palette.getContourColor((contour[i]+contour[i+1])/2),
+               col = palette.getContourColor((contour[i] + contour[i+1]) / 2),
 
          r = g_btns.append('svg:path')
                    .attr('d', vertical ? `M0,${z1}H${palette_width}V${z0}H0Z` : `M${z0},0V${palette_height}H${z1}V0Z`)

@@ -1105,9 +1105,12 @@ class JSRootMenu {
                if ((arg.fTitle === 'Option_t*') || (arg.fTitle === 'const char*')) {
                   // check quotes,
                   // TODO: need to make more precise checking of escape characters
-                  if (!value) value = '""';
-                  if (value[0] !== '"') value = '"' + value;
-                  if (value[value.length-1] !== '"') value += '"';
+                  if (!value)
+                     value = '""';
+                  if (value[0] !== '"')
+                     value = '"' + value;
+                  if (value.at(-1) !== '"')
+                     value += '"';
                }
 
                args += (k > 0 ? ',' : '') + value;
@@ -1173,7 +1176,7 @@ class StandaloneMenu extends JSRootMenu {
      * @param {string} name - item name
      * @param {function} func - func called when item is selected */
    add(name, arg, func, title) {
-      let curr = this.stack[this.stack.length-1];
+      let curr = this.stack.at(-1);
 
       if (name === sSeparator)
          return curr.push({ divider: true });
@@ -1183,15 +1186,14 @@ class StandaloneMenu extends JSRootMenu {
 
       if (name === sEndsub) {
          this.stack.pop();
-         curr = this.stack[this.stack.length-1];
-         if (curr[curr.length-1].sub.length === 0)
-            curr[curr.length-1].sub = undefined;
+         curr = this.stack.at(-1);
+         if (curr.at(-1).sub.length === 0)
+            curr.at(-1).sub = undefined;
          return;
       }
 
       if (name === 'endcolumn:')
          return this.stack.pop();
-
 
       if (isFunc(arg)) { title = func; func = arg; arg = name; }
 
@@ -1368,7 +1370,7 @@ class StandaloneMenu extends JSRootMenu {
 
             const sub = doc.createElement('span');
             if (d.text.indexOf('<nobr>') === 0)
-               sub.textContent = d.text.slice(6, d.text.length-7);
+               sub.textContent = d.text.slice(6, d.text.length - 7);
             else
                sub.textContent = d.text;
             text.appendChild(sub);

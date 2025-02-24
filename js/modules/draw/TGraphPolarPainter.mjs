@@ -306,7 +306,7 @@ class TGraphPolargramPainter extends ObjectPainter {
                .style('pointer-events', pointer_events)
                .call(this.lineatt.func);
 
-            if ((n < ticks.length-1) || !exclude_last) {
+            if ((n < ticks.length - 1) || !exclude_last) {
                const halign = ca > 0.7 ? 1 : (ca > 0 ? 3 : (ca > -0.7 ? 1 : 3)),
                      valign = Math.abs(ca) < 0.7 ? 1 : 3;
                this.drawText({ align: 10 * halign + valign,

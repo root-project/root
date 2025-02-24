@@ -15,7 +15,8 @@ class TGraphTimePainter extends ObjectPainter {
 
    /** @summary Redraw object */
    redraw() {
-      if (this.step === undefined) this.startDrawing();
+      if (this.step === undefined)
+         this.startDrawing();
    }
 
    /** @summary Decode drawing options */

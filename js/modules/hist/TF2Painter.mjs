@@ -15,6 +15,8 @@ import { THistPainter } from '../hist2d/THistPainter.mjs';
 
 class TF2Painter extends TH2Painter {
 
+   #use_saved_points; // use saved points for drawing
+
    /** @summary Returns drawn object name */
    getObjectName() { return this.$func?.fName ?? 'func'; }
 
@@ -47,7 +49,7 @@ class TF2Painter extends TH2Painter {
    /** @summary Redraw TF2
      * @private */
    redraw(reason) {
-      if (!this._use_saved_points && (reason === 'logx' || reason === 'logy' || reason === 'zoom')) {
+      if (!this.#use_saved_points && (reason === 'logx' || reason === 'logy' || reason === 'zoom')) {
          this.createTF2Histogram(this.$func, this.getHisto());
          this.scanContent();
       }
@@ -62,7 +64,7 @@ class TF2Painter extends TH2Painter {
       if ((nsave > 0) && (nsave !== (func.fSave[nsave+4]+1) * (func.fSave[nsave+5]+1)))
          nsave = 0;
 
-      this._use_saved_points = (nsave > 0) && (settings.PreferSavedPoints || (this.use_saved > 1));
+      this.#use_saved_points = (nsave > 0) && (settings.PreferSavedPoints || (this.use_saved > 1));
 
       const fp = this.getFramePainter(),
             pad = this.getPadPainter()?.getRootPad(true),
@@ -103,7 +105,7 @@ class TF2Painter extends TH2Painter {
 
       delete this._fail_eval;
 
-      if (!this._use_saved_points) {
+      if (!this.#use_saved_points) {
          let iserror = false;
 
          if (!func.evalPar && !proivdeEvalPar(func))
@@ -141,10 +143,10 @@ class TF2Painter extends TH2Painter {
             this._fail_eval = true;
 
          if (iserror && (nsave > 6))
-            this._use_saved_points = true;
+            this.#use_saved_points = true;
       }
 
-      if (this._use_saved_points) {
+      if (this.#use_saved_points) {
          npx = Math.round(func.fSave[nsave+4]);
          npy = Math.round(func.fSave[nsave+5]);
          const xmin = func.fSave[nsave], xmax = func.fSave[nsave+1],
@@ -209,7 +211,7 @@ class TF2Painter extends TH2Painter {
 
       const func = this.$func, nsave = func?.fSave.length ?? 0;
 
-      if (nsave > 6 && this._use_saved_points) {
+      if (nsave > 6 && this.#use_saved_points) {
          this.xmin = Math.min(this.xmin, func.fSave[nsave-6]);
          this.xmax = Math.max(this.xmax, func.fSave[nsave-5]);
          this.ymin = Math.min(this.ymin, func.fSave[nsave-4]);
@@ -251,7 +253,7 @@ class TF2Painter extends TH2Painter {
 
    /** @summary process tooltip event for TF2 object */
    processTooltipEvent(pnt) {
-      if (this._use_saved_points)
+      if (this.#use_saved_points)
          return super.processTooltipEvent(pnt);
 
       let ttrect = this.draw_g?.selectChild('.tooltip_bin');

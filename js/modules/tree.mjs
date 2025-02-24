@@ -323,7 +323,7 @@ function findBranchComplex(tree, name, lst = undefined, only_search = false) {
 
    for (let n = 0; n < lst.arr.length; ++n) {
       let brname = lst.arr[n].fName;
-      if (brname[brname.length - 1] === ']')
+      if (brname.at(-1) === ']')
          brname = brname.slice(0, brname.indexOf('['));
 
       // special case when branch name includes STL map name
@@ -474,7 +474,7 @@ class TDrawVariable {
 
             // when code ends with the point - means object itself will be accessed
             // sometime branch name itself ends with the point
-            if ((pos2 >= code.length - 1) && (code[code.length - 1] === '.')) {
+            if ((pos2 >= code.length - 1) && (code.at(-1) === '.')) {
                arriter.push('$self$');
                pos2 = code.length;
             }
@@ -794,7 +794,7 @@ class TDrawSelector extends TSelector {
          else if (pos < 0) {
             this.want_hist = true;
             this.hist_name = harg;
-         } else if ((harg[0] === '(') && (harg[harg.length - 1] === ')')) {
+         } else if ((harg[0] === '(') && (harg.at(-1) === ')')) {
             this.want_hist = true;
             harg = harg.slice(1, harg.length - 1).split(',');
             let isok = true;
@@ -1518,7 +1518,7 @@ function defineMemberTypeName(file, parent_class, member_name) {
       return '';
 
    let clname = elem.fTypeName;
-   if (clname[clname.length - 1] === '*')
+   if (clname.at(-1) === '*')
       clname = clname.slice(0, clname.length - 1);
 
    return clname;
@@ -1765,7 +1765,7 @@ async function treeProcess(tree, selector, args) {
             return true;
 
          let match_prefix = branch.fName;
-         if (match_prefix[match_prefix.length - 1] === '.')
+         if (match_prefix.at(-1) === '.')
             match_prefix = match_prefix.slice(0, match_prefix.length - 1);
          if (isStr(read_mode) && (read_mode[0] === '.'))
             match_prefix += read_mode;
@@ -2435,7 +2435,8 @@ async function treeProcess(tree, selector, args) {
       if (totalsz > 0)
          return readBaskets(bitems).then(processBaskets);
 
-      if (is_direct) return processBaskets([]); // directly process baskets
+      if (is_direct)
+         return processBaskets([]); // directly process baskets
 
       throw new Error('No any data is requested - never come here');
    }
@@ -2577,7 +2578,7 @@ async function treeProcess(tree, selector, args) {
   * @param {number} [args.numentries=undefined] - number of entries to process, all by default
   * @param {object} [args.branch=undefined] - TBranch object from TTree itself for the direct drawing
   * @param {function} [args.progress=undefined] - function called during histogram accumulation with obj argument
-  * @return {Promise} with produced object  */
+  * @return {Promise} with produced object */
 async function treeDraw(tree, args) {
    if (isStr(args)) args = { expr: args };
 

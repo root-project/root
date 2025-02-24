@@ -18,6 +18,12 @@ import { getRootColors } from './colors.mjs';
 
 class ObjectPainter extends BasePainter {
 
+   #draw_object;     // drawn object
+   #main_painter;    // main painter in the pad - temporary pointer on the painter
+   #primary_id;      // unique id of primary painter
+   #secondary_id;    // id of this painter in relation to primary painter
+   #options_store;   // stored draw options used to check changes
+
    /** @summary constructor
      * @param {object|string} dom - dom element or identifier or pad painter
      * @param {object} obj - object to draw
@@ -32,7 +38,6 @@ class ObjectPainter extends BasePainter {
       super(dom);
 
       // this.draw_g = undefined; // container for all drawn objects
-      // this._main_painter = undefined;  // main painter in the correspondent pad
       this.pad_name = pp?.this_pad_name ?? ''; // name of pad where object is drawn
       this.assignObject(obj);
       if (isStr(opt))
@@ -42,11 +47,11 @@ class ObjectPainter extends BasePainter {
    /** @summary Assign object to the painter
      * @protected */
    assignObject(obj) {
-      if (isObject(obj))
-         this.draw_object = obj;
-      else
-         delete this.draw_object;
+      this.#draw_object = isObject(obj) ? obj : null;
    }
+
+   /** @summary Returns drawn object */
+   getObject() { return this.#draw_object; }
 
    /** @summary Assigns pad name where element will be drawn
      * @desc Should happened before first draw of element is performed, only for special use case
@@ -86,18 +91,17 @@ class ObjectPainter extends BasePainter {
 
       // cleanup all existing references
       delete this.pad_name;
-      delete this._main_painter;
-      this.draw_object = null;
+      this.#main_painter = null;
+      this.#draw_object = null;
       delete this.snapid;
 
       // remove attributes objects (if any)
       delete this.fillatt;
       delete this.lineatt;
       delete this.markeratt;
-      delete this.bins;
-      delete this.root_colors;
+      delete this._root_colors;
       delete this.options;
-      delete this.options_store;
+      this.#options_store = undefined;
 
       // remove extra fields from v7 painters
       delete this.rstyle;
@@ -105,9 +109,6 @@ class ObjectPainter extends BasePainter {
 
       super.cleanup(keep_origin);
    }
-
-   /** @summary Returns drawn object */
-   getObject() { return this.draw_object; }
 
    /** @summary Returns drawn object name */
    getObjectName() { return this.getObject()?.fName ?? ''; }
@@ -151,7 +152,7 @@ class ObjectPainter extends BasePainter {
       const pp = original.indexOf(';;');
       if (pp >= 0) original = original.slice(0, pp);
       this.options.original = original;
-      this.options_store = Object.assign({}, this.options);
+      this.#options_store = Object.assign({}, this.options);
    }
 
    /** @summary Return dom argument for object drawing
@@ -170,11 +171,11 @@ class ObjectPainter extends BasePainter {
       if (isFunc(this.options.asString)) {
          let changed = false;
          const pp = this.getPadPainter();
-         if (!this.options_store || pp?._interactively_changed)
+         if (!this.#options_store || pp?._interactively_changed)
             changed = true;
          else {
-            for (const k in this.options_store) {
-               if (this.options[k] !== this.options_store[k]) {
+            for (const k in this.#options_store) {
+               if (this.options[k] !== this.#options_store[k]) {
                   if ((k[0] !== '_') && (k[0] !== '$') && (k[0].toLowerCase() !== k[0]))
                      changed = true;
                }
@@ -234,7 +235,7 @@ class ObjectPainter extends BasePainter {
    /** @summary Returns string with object hint
      * @desc It is either item name or object name or class name.
      * Such string typically used as object tooltip.
-     * If result string larger than 20 symbols, it will be cutted. */
+     * If result string larger than 20 symbols, it will be shorten. */
    getObjectHint() {
       const iname = this.getItemName();
       if (iname)
@@ -248,10 +249,10 @@ class ObjectPainter extends BasePainter {
      * @return {string} with SVG color name or rgb()
      * @protected */
    getColor(indx) {
-      if (!this.root_colors)
-         this.root_colors = this.getCanvPainter()?.root_colors || getRootColors();
+      if (!this._root_colors)
+         this._root_colors = this.getCanvPainter()?._root_colors || getRootColors();
 
-      return this.root_colors[indx];
+      return this._root_colors[indx];
    }
 
    /** @summary Add color to list of colors
@@ -259,12 +260,13 @@ class ObjectPainter extends BasePainter {
      * @return {number} new color index
      * @protected */
    addColor(color) {
-      if (!this.root_colors)
-         this.root_colors = this.getCanvPainter()?.root_colors || getRootColors();
-      const indx = this.root_colors.indexOf(color);
-      if (indx >= 0) return indx;
-      this.root_colors.push(color);
-      return this.root_colors.length - 1;
+      if (!this._root_colors)
+         this._root_colors = this.getCanvPainter()?._root_colors || getRootColors();
+      const indx = this._root_colors.indexOf(color);
+      if (indx >= 0)
+         return indx;
+      this._root_colors.push(color);
+      return this._root_colors.length - 1;
    }
 
    /** @summary returns tooltip allowed flag
@@ -396,7 +398,8 @@ class ObjectPainter extends BasePainter {
       return c;
    }
 
-   /** @summary Assign unique identifier for the painter
+   /** @summary Returns unique identifier for the painter
+     * @param {boolean} [only_read] if not specified, also assign unique id to the painter
      * @private */
    getUniqueId(only_read = false) {
       if (!only_read && (this._unique_painter_id === undefined))
@@ -406,18 +409,24 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Assign secondary id
      * @private */
-   setSecondaryId(main, name) {
-      this._main_painter_id = main.getUniqueId();
-      this._secondary_id = name;
+   setSecondaryId(primary, name) {
+      this.#primary_id = primary.getUniqueId();
+      this.#secondary_id = name;
+   }
+
+   /** @summary Returns secondary id
+     * @private */
+   getSecondaryId() {
+      return this.#secondary_id;
    }
 
    /** @summary Check if this is secondary painter
-     * @desc if main painter provided - check if this really main for this
+     * @desc if primary painter provided - check if this really main for this
      * @private */
-   isSecondary(main) {
-      if (this._main_painter_id === undefined)
+   isSecondary(primary) {
+      if (this.#primary_id === undefined)
          return false;
-      return !isObject(main) ? true : this._main_painter_id === main.getUniqueId(true);
+      return !isObject(primary) ? true : this.#primary_id === primary.getUniqueId(true);
    }
 
    /** @summary Return primary object
@@ -605,13 +614,14 @@ class ObjectPainter extends BasePainter {
      * @param {boolean} [not_store] - if true, prevent temporary storage of main painter reference
      * @protected */
    getMainPainter(not_store) {
-      let res = this._main_painter;
+      let res = this.#main_painter;
       if (!res) {
          const pp = this.getPadPainter();
          res = pp ? pp.getMainPainter() : this.getTopPainter();
-         if (!res) res = null;
+         if (!res)
+            res = null;
          if (!not_store)
-            this._main_painter = res;
+            this.#main_painter = res;
       }
       return res;
    }
@@ -917,11 +927,14 @@ class ObjectPainter extends BasePainter {
    showObjectStatus(name, title, info, info2) {
       let cp = this.getCanvPainter();
 
-      if (cp && !isFunc(cp.showCanvasStatus)) cp = null;
+      if (!isFunc(cp?.showCanvasStatus))
+         cp = null;
 
-      if (!cp && !isFunc(internals.showStatus)) return false;
+      if (!cp && !isFunc(internals.showStatus))
+         return false;
 
-      if (this.enlargeMain('state') === 'on') return false;
+      if (this.enlargeMain('state') === 'on')
+         return false;
 
       if ((name === undefined) && (title === undefined)) {
          const obj = this.getObject();
@@ -1007,10 +1020,10 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Analyze if all text draw operations are completed
      * @private */
-   _checkAllTextDrawing(draw_g, resolveFunc, try_optimize) {
+   #checkAllTextDrawing(draw_g, resolveFunc, try_optimize) {
       let all_args = draw_g.property('all_args'), missing = 0;
       if (!all_args) {
-         console.log('Text drawing is finished - why calling _checkAllTextDrawing?????');
+         console.log('Text drawing is finished - why calling #checkAllTextDrawing?????');
          all_args = [];
       }
 
@@ -1184,7 +1197,7 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Post-process plain text drawing
      * @private */
-   _postprocessDrawText(arg, txt_node) {
+   #postprocessDrawText(arg, txt_node) {
       // complete rectangle with very rough size estimations
       arg.box = !isNodeJs() && !settings.ApproxTextSize && !arg.fast
                  ? getElementRect(txt_node, 'bbox')
@@ -1325,10 +1338,10 @@ class ObjectPainter extends BasePainter {
                produceLatex(this, arg.txt_g, arg);
             }
             arg.ready = true;
-            this._postprocessDrawText(arg, arg.txt_g || arg.txt_node);
+            this.#postprocessDrawText(arg, arg.txt_g || arg.txt_node);
 
             if (arg.draw_g.property('draw_text_completed'))
-               this._checkAllTextDrawing(arg.draw_g); // check if all other elements are completed
+               this.#checkAllTextDrawing(arg.draw_g); // check if all other elements are completed
             return 0;
          }
 
@@ -1336,7 +1349,7 @@ class ObjectPainter extends BasePainter {
          arg.txt_node.text(arg.text);
          arg.ready = true;
 
-         return this._postprocessDrawText(arg, arg.txt_node);
+         return this.#postprocessDrawText(arg, arg.txt_node);
       }
 
       arg.mj_node = arg.draw_g.append('svg:g').attr('visibility', 'hidden'); // hide text until drawing is finished
@@ -1344,7 +1357,7 @@ class ObjectPainter extends BasePainter {
       produceMathjax(this, arg.mj_node, arg).then(() => {
          arg.ready = true;
          if (arg.draw_g.property('draw_text_completed'))
-            this._checkAllTextDrawing(arg.draw_g);
+            this.#checkAllTextDrawing(arg.draw_g);
       });
 
       return 0;
@@ -1356,14 +1369,15 @@ class ObjectPainter extends BasePainter {
      * @return {Promise} when text drawing completed
      * @protected */
    async finishTextDrawing(draw_g, try_optimize) {
-      if (!draw_g) draw_g = this.draw_g;
+      if (!draw_g)
+         draw_g = this.draw_g;
       if (!draw_g || draw_g.empty())
          return false;
 
       draw_g.property('draw_text_completed', true); // mark that text drawing is completed
 
       return new Promise(resolveFunc => {
-         this._checkAllTextDrawing(draw_g, resolveFunc, try_optimize);
+         this.#checkAllTextDrawing(draw_g, resolveFunc, try_optimize);
       });
    }
 
@@ -1429,7 +1443,7 @@ class ObjectPainter extends BasePainter {
             if (!args) return;
             if (execp.executeMenuCommand(item, args)) return;
 
-            const exec = item.fExec.slice(0, item.fExec.length-1) + args + ')';
+            const exec = item.fExec.slice(0, item.fExec.length - 1) + args + ')';
             if (cp?.v7canvas)
                cp.submitExec(execp, exec, kind);
             else
@@ -1572,7 +1586,8 @@ class ObjectPainter extends BasePainter {
       // only after timeout user function will be called
       this._user_tooltip_handle = setTimeout(() => {
          delete this._user_tooltip_handle;
-         if (this._user_tooltip_handler) this._user_tooltip_handler(data);
+         if (this._user_tooltip_handler)
+            this._user_tooltip_handler(data);
       }, this._user_tooltip_timeout);
    }
 
@@ -1606,12 +1621,15 @@ class ObjectPainter extends BasePainter {
      * @param {Object} evnt - object with clientX and clientY positions
      * @private */
    getToolTip(evnt) {
-      if ((evnt?.clientX === undefined) || (evnt?.clientY === undefined)) return null;
+      if ((evnt?.clientX === undefined) || (evnt?.clientY === undefined))
+         return null;
 
       const frame = this.getFrameSvg();
-      if (frame.empty()) return null;
+      if (frame.empty())
+         return null;
       const layer = frame.selectChild('.main_layer');
-      if (layer.empty()) return null;
+      if (layer.empty())
+         return null;
 
       const pos = d3_pointer(evnt, layer.node()),
             pnt = { touch: false, x: pos[0], y: pos[1] };
@@ -1779,6 +1797,5 @@ const EAxisBits = {
 Object.assign(internals.jsroot, { ObjectPainter, cleanup, resize });
 
 export { getElementCanvPainter, getElementMainPainter, drawingJSON,
-         selectActivePad, getActivePad, cleanup, resize,
-         ObjectPainter, drawRawText,
-         EAxisBits, kAxisLabels, kAxisNormal, kAxisFunc, kAxisTime };
+         selectActivePad, getActivePad, cleanup, resize, drawRawText,
+         ObjectPainter, EAxisBits, kAxisLabels, kAxisNormal, kAxisFunc, kAxisTime };

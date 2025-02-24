@@ -372,7 +372,7 @@ class TH1Painter extends THistPainter {
             stat.addText('Underflow = ' + stat.format((histo.fArray.length > 0) ? histo.fArray[0] : 0, 'entries'));
 
          if (print_over > 0)
-            stat.addText('Overflow = ' + stat.format((histo.fArray.length > 0) ? histo.fArray[histo.fArray.length - 1] : 0, 'entries'));
+            stat.addText('Overflow = ' + stat.format((histo.fArray.length > 0) ? histo.fArray.at(-1) : 0, 'entries'));
 
          if (print_integral > 0)
             stat.addText('Integral = ' + stat.format(data.integral, 'entries'));
@@ -624,7 +624,8 @@ class TH1Painter extends THistPainter {
             mx1 = Math.round(funcs.grx(xaxis.GetBinLowEdge(bin+1)));
             mx2 = Math.round(funcs.grx(xaxis.GetBinLowEdge(bin+2)));
             midx = Math.round((mx1 + mx2) / 2);
-            if (startmidx === undefined) startmidx = midx;
+            if (startmidx === undefined)
+               startmidx = midx;
             my = Math.round(funcs.gry(bincont));
             if (show_errors) {
                binerr = this.getBinErrors(histo, bin + 1, bincont);
@@ -762,9 +763,11 @@ class TH1Painter extends THistPainter {
                      if (bestimin === bestimax)
                         draw_bin(bestimin);
                      else if (bestimin < bestimax) {
-                        draw_bin(bestimin); draw_bin(bestimax);
+                        draw_bin(bestimin);
+                        draw_bin(bestimax);
                      } else {
-                        draw_bin(bestimax); draw_bin(bestimin);
+                        draw_bin(bestimax);
+                        draw_bin(bestimin);
                      }
                   }
 
@@ -800,8 +803,10 @@ class TH1Painter extends THistPainter {
                }
                // end of use_minmax
             } else if ((gry !== curry) || lastbin) {
-               if (grx !== currx) res += `h${grx-currx}`;
-               if (gry !== curry) res += `v${gry-curry}`;
+               if (grx !== currx)
+                  res += `h${grx-currx}`;
+               if (gry !== curry)
+                  res += `v${gry-curry}`;
                curry = gry;
                currx = grx;
             }
@@ -1336,7 +1341,7 @@ class TH1Painter extends THistPainter {
       return this.callDrawFunc(reason);
    }
 
-   /** @summary draw TH1 object */
+   /** @summary draw TH1 object in 2D only */
    static async draw(dom, histo, opt) {
       return THistPainter._drawHist(new TH1Painter(dom, histo), opt);
    }

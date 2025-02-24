@@ -225,9 +225,11 @@ class RAxisPainter extends RObjectPainter {
             handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func, minor: ticks, middle: ticks, major: ticks };
 
       if (only_major_as_array) {
-         const res = handle.major, delta = (this.scale_max - this.scale_min)*1e-5;
-         if (res[0] > this.scale_min + delta) res.unshift(this.scale_min);
-         if (res[res.length-1] < this.scale_max - delta) res.push(this.scale_max);
+         const res = handle.major, delta = (this.scale_max - this.scale_min) * 1e-5;
+         if (res.at(0) > this.scale_min + delta)
+            res.unshift(this.scale_min);
+         if (res.at(-1) < this.scale_max - delta)
+            res.push(this.scale_max);
          return res;
       }
 
@@ -290,10 +292,10 @@ class RAxisPainter extends RObjectPainter {
          let maxorder = 0, minorder = 0, exclorder3 = false;
 
          if (!optionNoexp) {
-            const maxtick = Math.max(Math.abs(handle.major[0]), Math.abs(handle.major[handle.major.length-1])),
-                mintick = Math.min(Math.abs(handle.major[0]), Math.abs(handle.major[handle.major.length-1])),
-                ord1 = (maxtick > 0) ? Math.round(Math.log10(maxtick)/3)*3 : 0,
-                ord2 = (mintick > 0) ? Math.round(Math.log10(mintick)/3)*3 : 0;
+            const maxtick = Math.max(Math.abs(handle.major.at(0)), Math.abs(handle.major.at(-1))),
+                  mintick = Math.min(Math.abs(handle.major.at(0)), Math.abs(handle.major.at(-1))),
+                  ord1 = (maxtick > 0) ? Math.round(Math.log10(maxtick)/3)*3 : 0,
+                  ord2 = (mintick > 0) ? Math.round(Math.log10(mintick)/3)*3 : 0;
 
              exclorder3 = (maxtick < 2e4); // do not show 10^3 for values below 20000
 
@@ -664,7 +666,7 @@ class RAxisPainter extends RObjectPainter {
             let pos = Math.round(this.func(lbl_pos[nmajor]));
 
             arg.gap_before = (nmajor > 0) ? Math.abs(Math.round(pos - this.func(lbl_pos[nmajor-1]))) : 0;
-            arg.gap_after = (nmajor < lbl_pos.length-1) ? Math.abs(Math.round(this.func(lbl_pos[nmajor+1])-pos)) : 0;
+            arg.gap_after = (nmajor < lbl_pos.length - 1) ? Math.abs(Math.round(this.func(lbl_pos[nmajor+1])-pos)) : 0;
 
             if (center_lbls) {
                const gap = arg.gap_after || arg.gap_before;

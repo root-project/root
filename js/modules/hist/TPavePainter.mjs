@@ -981,8 +981,8 @@ class TPavePainter extends ObjectPainter {
             zmax = framep.zoom_zmax;
             if (zmin === zmax) { zmin = gzmin; zmax = gzmax; }
          } else {
-            zmin = levels[0];
-            zmax = levels[levels.length-1];
+            zmin = levels.at(0);
+            zmax = levels.at(-1);
          }
       } else if ((main.gmaxbin !== undefined) && (main.gminbin !== undefined)) {
          // this is case of TH2 (needs only for size adjustment)
@@ -1018,7 +1018,7 @@ class TPavePainter extends ObjectPainter {
                     .attr('d', `M0,0H${s_width}V${s_height}H0Z`)
                     .style('fill', 'white');
       } else {
-         for (let i = 0; i < levels.length-1; ++i) {
+         for (let i = 0; i < levels.length - 1; ++i) {
             let z0 = Math.round(this.z_handle.gr(levels[i])),
                 z1 = Math.round(this.z_handle.gr(levels[i+1])),
                 lvl = (levels[i] + levels[i+1])*0.5, d;
@@ -1455,7 +1455,7 @@ class TPavePainter extends ObjectPainter {
       } else if (id < 0)
          return '.1f';
 
-      return `.${tv.length-id-1}f`;
+      return `.${tv.length - id - 1}f`;
    }
 
    /** @summary Fill function parameters */

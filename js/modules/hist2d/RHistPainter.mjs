@@ -20,13 +20,15 @@ function assignRAxisMethods(axis) {
       axis.GetBinCoord = function(bin) { return this.fLow + bin/this.fInvBinWidth; };
       axis.FindBin = function(x, add) { return Math.floor((x - this.fLow)*this.fInvBinWidth + add); };
    } else if (axis._typename === `${nsREX}RAxisIrregular`) {
-      axis.min = axis.fBinBorders[0];
-      axis.max = axis.fBinBorders[axis.fBinBorders.length - 1];
+      axis.min = axis.fBinBorders.at(0);
+      axis.max = axis.fBinBorders.at(-1);
       axis.GetNumBins = function() { return this.fBinBorders.length; };
       axis.GetBinCoord = function(bin) {
          const indx = Math.round(bin);
-         if (indx <= 0) return this.fBinBorders[0];
-         if (indx >= this.fBinBorders.length) return this.fBinBorders[this.fBinBorders.length - 1];
+         if (indx <= 0)
+            return this.fBinBorders.at(0);
+         if (indx >= this.fBinBorders.length)
+            return this.fBinBorders.at(-1);
          if (indx === bin) return this.fBinBorders[indx];
          const indx2 = (bin < indx) ? indx - 1 : indx + 1;
          return this.fBinBorders[indx] * Math.abs(bin-indx2) + this.fBinBorders[indx2] * Math.abs(bin-indx);

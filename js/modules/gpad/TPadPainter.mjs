@@ -18,64 +18,67 @@ import { BrowserLayout, getHPainter } from '../gui/display.mjs';
 
 const clTButton = 'TButton', kIsGrayscale = BIT(22);
 
-function getButtonSize(handler, fact) {
-   const cp = handler.getCanvPainter();
-   return Math.round((fact || 1) * (cp?._pad_scale || 1) * (cp === handler ? 16 : 12));
-}
-
 function isPadPainter(p) {
    return p?.pad && isFunc(p.forEachPainterInPad);
 }
 
-function toggleButtonsVisibility(handler, action, evnt) {
-   evnt?.preventDefault();
-   evnt?.stopPropagation();
-
-   const group = handler.getLayerSvg('btns_layer', handler.this_pad_name),
-         btn = group.select('[name=\'Toggle\']');
-
-   if (btn.empty()) return;
-
-   let state = btn.property('buttons_state');
-
-   if (btn.property('timout_handler')) {
-      if (action !== 'timeout') clearTimeout(btn.property('timout_handler'));
-      btn.property('timout_handler', null);
-   }
-
-   let is_visible = false;
-   switch (action) {
-      case 'enable':
-         is_visible = true;
-         handler.btns_active_flag = true;
-         break;
-      case 'enterbtn':
-         handler.btns_active_flag = true;
-         return; // do nothing, just cleanup timeout
-      case 'timeout': is_visible = false; break;
-      case 'toggle':
-         state = !state;
-         btn.property('buttons_state', state);
-         is_visible = state;
-         break;
-      case 'disable':
-      case 'leavebtn':
-         handler.btns_active_flag = false;
-         if (!state)
-            btn.property('timout_handler', setTimeout(() => toggleButtonsVisibility(handler, 'timeout'), 1200));
-         return;
-   }
-
-   group.selectAll('svg').each(function() {
-      if (this !== btn.node())
-         d3_select(this).style('display', is_visible ? '' : 'none');
-   });
-}
-
 const PadButtonsHandler = {
 
+   getButtonSize(fact) {
+      const cp = this.getCanvPainter();
+      return Math.round((fact || 1) * (cp?.getPadScale() || 1) * (cp === this ? 16 : 12));
+   },
+
+   toggleButtonsVisibility(action, evnt) {
+      evnt?.preventDefault();
+      evnt?.stopPropagation();
+
+      const group = this.getLayerSvg('btns_layer', this.this_pad_name),
+            btn = group.select('[name=\'Toggle\']');
+
+      if (btn.empty()) return;
+
+      let state = btn.property('buttons_state');
+
+      if (btn.property('timout_handler')) {
+         if (action !== 'timeout')
+            clearTimeout(btn.property('timout_handler'));
+         btn.property('timout_handler', null);
+      }
+
+      let is_visible = false;
+      switch (action) {
+         case 'enable':
+            is_visible = true;
+            this.btns_active_flag = true;
+            break;
+         case 'enterbtn':
+            this.btns_active_flag = true;
+            return; // do nothing, just cleanup timeout
+         case 'timeout':
+            break;
+         case 'toggle':
+            state = !state;
+            btn.property('buttons_state', state);
+            is_visible = state;
+            break;
+         case 'disable':
+         case 'leavebtn':
+            this.btns_active_flag = false;
+            if (!state)
+               btn.property('timout_handler', setTimeout(() => this.toggleButtonsVisibility('timeout'), 1200));
+            return;
+      }
+
+      group.selectAll('svg').each(function() {
+         if (this !== btn.node())
+            d3_select(this).style('display', is_visible ? '' : 'none');
+      });
+   },
+
+
    alignButtons(btns, width, height) {
-      const sz0 = getButtonSize(this, 1.25), nextx = (btns.property('nextx') || 0) + sz0;
+      const sz0 = this.getButtonSize(1.25), nextx = (btns.property('nextx') || 0) + sz0;
       let btns_x, btns_y;
 
       if (btns.property('vertical')) {
@@ -118,19 +121,19 @@ const PadButtonsHandler = {
       if (!this._buttons) return;
 
       const iscan = this.iscan || !this.has_canvas, y = 0;
-      let ctrl, x = group.property('leftside') ? getButtonSize(this, 1.25) : 0;
+      let ctrl, x = group.property('leftside') ? this.getButtonSize(1.25) : 0;
 
       if (this._fast_drawing) {
-         ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.circle, getButtonSize(this), 'enlargePad', false)
+         ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.circle, this.getButtonSize(), 'enlargePad', false)
                             .attr('name', 'Enlarge').attr('x', 0).attr('y', 0)
                             .on('click', evnt => this.clickPadButton('enlargePad', evnt));
       } else {
-         ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.rect, getButtonSize(this), 'Toggle tool buttons', false)
+         ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.rect, this.getButtonSize(), 'Toggle tool buttons', false)
                             .attr('name', 'Toggle').attr('x', 0).attr('y', 0)
                             .property('buttons_state', (settings.ToolBar !== 'popup') || browser.touches)
-                            .on('click', evnt => toggleButtonsVisibility(this, 'toggle', evnt));
-         ctrl.node()._mouseenter = () => toggleButtonsVisibility(this, 'enable');
-         ctrl.node()._mouseleave = () => toggleButtonsVisibility(this, 'disable');
+                            .on('click', evnt => this.toggleButtonsVisibility('toggle', evnt));
+         ctrl.node()._mouseenter = () => this.toggleButtonsVisibility('enable');
+         ctrl.node()._mouseleave = () => this.toggleButtonsVisibility('disable');
 
          for (let k = 0; k < this._buttons.length; ++k) {
             const item = this._buttons[k];
@@ -141,7 +144,7 @@ const PadButtonsHandler = {
             if (!btn)
                btn = ToolbarIcons.circle;
 
-            const svg = ToolbarIcons.createSVG(group, btn, getButtonSize(this),
+            const svg = ToolbarIcons.createSVG(group, btn, this.getButtonSize(),
                         item.tooltip + (iscan ? '' : (` on pad ${this.this_pad_name}`)) + (item.keyname ? ` (keyshortcut ${item.keyname})` : ''), false);
 
             if (group.property('vertical'))
@@ -154,10 +157,10 @@ const PadButtonsHandler = {
                .attr('key', item.keyname || null)
                .on('click', evnt => this.clickPadButton(item.funcname, evnt));
 
-            svg.node()._mouseenter = () => toggleButtonsVisibility(this, 'enterbtn');
-            svg.node()._mouseleave = () => toggleButtonsVisibility(this, 'leavebtn');
+            svg.node()._mouseenter = () => this.toggleButtonsVisibility('enterbtn');
+            svg.node()._mouseleave = () => this.toggleButtonsVisibility('leavebtn');
 
-            x += getButtonSize(this, 1.25);
+            x += this.getButtonSize(1.25);
          }
       }
 
@@ -200,6 +203,18 @@ function createWebObjectOptions(painter) {
   */
 
 class TPadPainter extends ObjectPainter {
+
+   #pad_scale;  // scale factor of the pad
+   #pad_x;      // pad x coordinate
+   #pad_y;      // pad y coordinate
+   #pad_width;  // pad width
+   #pad_height; // pad height
+   #doing_draw; // drawing handles
+   #last_grayscale; // grayscale change flag
+   #custom_palette; // custom palette
+   #custom_colors;  // custom colors
+   #custom_palette_indexes; // custom palette indexes
+   #custom_palette_colors; // custom palette colors
 
    /** @summary constructor
      * @param {object|string} dom - DOM element for drawing or element id
@@ -268,7 +283,7 @@ class TPadPainter extends ObjectPainter {
 
    /** @summary cleanup pad and all primitives inside */
    cleanup() {
-      if (this._doing_draw)
+      if (this.#doing_draw)
          console.error('pad drawing is not completed when cleanup is called');
 
       this.painters.forEach(p => p.cleanup());
@@ -282,19 +297,12 @@ class TPadPainter extends ObjectPainter {
       delete this.main_painter_ref;
       delete this.frame_painter_ref;
       delete this.pads_cache;
-      delete this.custom_palette;
-      delete this._pad_x;
-      delete this._pad_y;
-      delete this._pad_width;
-      delete this._pad_height;
-      delete this._doing_draw;
+      this.#pad_x = this.#pad_y = this.#pad_width = this.#pad_height = undefined;
+      this.#doing_draw = undefined;
       delete this._interactively_changed;
       delete this._snap_primitives;
-      delete this._last_grayscale;
-      delete this._custom_colors;
-      delete this._custom_palette_indexes;
-      delete this._custom_palette_colors;
-      delete this.root_colors;
+      this.#last_grayscale = undefined;
+      this.#custom_palette = this.#custom_colors = this.#custom_palette_indexes = this.#custom_palette_colors = undefined;
 
       this.painters = [];
       this.pad = null;
@@ -311,19 +319,19 @@ class TPadPainter extends ObjectPainter {
    getFramePainter() { return this.frame_painter_ref; }
 
    /** @summary get pad width */
-   getPadWidth() { return this._pad_width || 0; }
+   getPadWidth() { return this.#pad_width || 0; }
 
    /** @summary get pad height */
-   getPadHeight() { return this._pad_height || 0; }
+   getPadHeight() { return this.#pad_height || 0; }
 
    /** @summary get pad height */
-   getPadScale() { return this._pad_scale || 1; }
+   getPadScale() { return this.#pad_scale || 1; }
 
    /** @summary get pad rect */
    getPadRect() {
       return {
-         x: this._pad_x || 0,
-         y: this._pad_y || 0,
+         x: this.#pad_x || 0,
+         y: this.#pad_y || 0,
          width: this.getPadWidth(),
          height: this.getPadHeight()
       };
@@ -384,7 +392,7 @@ class TPadPainter extends ObjectPainter {
 
       let pad_cleanup = false, is_any = false;
 
-      for (let k = this.painters.length-1; k >= 0; --k) {
+      for (let k = this.painters.length - 1; k >= 0; --k) {
          const subp = this.painters[k];
          if (selector(subp)) {
             if (isPadPainter(subp))
@@ -425,7 +433,7 @@ class TPadPainter extends ObjectPainter {
       // loop to extract all dependent painters
       let len0 = 0;
       while (len0 < arr.length) {
-         for (let k = this.painters.length-1; k >= 0; --k) {
+         for (let k = this.painters.length - 1; k >= 0; --k) {
             if (this.painters[k].isSecondary(arr[len0])) {
                arr.push(this.painters[k]);
                this.painters.splice(k, 1);
@@ -453,13 +461,15 @@ class TPadPainter extends ObjectPainter {
 
   /** @summary returns custom palette associated with pad or top canvas
     * @private */
-   getCustomPalette() {
-      return this.custom_palette || this.getCanvPainter()?.custom_palette;
+   getCustomPalette(no_recursion) {
+      return this.#custom_palette || (no_recursion ? null : this.getCanvPainter()?.getCustomPalette(true));
    }
 
    /** @summary Returns number of painters
      * @private */
    getNumPainters() { return this.painters.length; }
+
+   _getCustomPaletteIndexes() { return this.#custom_palette_indexes; }
 
    /** @summary Provides automatic color
     * @desc Uses ROOT colors palette if possible
@@ -473,7 +483,12 @@ class TPadPainter extends ObjectPainter {
       this._auto_color = (indx + 1) % numprimitives;
       if (indx >= numprimitives) indx = numprimitives - 1;
 
-      const indexes = this._custom_palette_indexes || this.getCanvPainter()?._custom_palette_indexes;
+      let indexes = this._getCustomPaletteIndexes();
+      if (!indexes) {
+         const cp = this.getCanvPainter();
+         if ((cp !== this) && isFunc(cp?._getCustomPaletteIndexes))
+            indexes = cp._getCustomPaletteIndexes();
+      }
 
       if (indexes?.length) {
          const p = Math.round(indx * (indexes.length - 3) / (numprimitives - 1));
@@ -571,7 +586,8 @@ class TPadPainter extends ObjectPainter {
    /** @summary Returns true if canvas configured with grayscale
      * @private */
    isGrayscale() {
-      if (!this.iscan) return false;
+      if (!this.iscan)
+         return false;
       return this.pad?.TestBit(kIsGrayscale) ?? false;
    }
 
@@ -593,7 +609,7 @@ class TPadPainter extends ObjectPainter {
 
       if (flag === undefined) {
          flag = this.pad?.TestBit(kIsGrayscale) ?? false;
-         changed = (this._last_grayscale !== undefined) && (this._last_grayscale !== flag);
+         changed = (this.#last_grayscale !== undefined) && (this.#last_grayscale !== flag);
       } else if (flag !== this.pad?.TestBit(kIsGrayscale)) {
          this.pad?.InvertBit(kIsGrayscale);
          changed = true;
@@ -602,11 +618,11 @@ class TPadPainter extends ObjectPainter {
       if (changed)
          this.forEachPainter(p => { delete p._color_palette; });
 
-      this.root_colors = flag ? getGrayColors(this._custom_colors) : this._custom_colors;
+      this._root_colors = flag ? getGrayColors(this.#custom_colors) : this.#custom_colors;
 
-      this._last_grayscale = flag;
+      this.#last_grayscale = flag;
 
-      this.custom_palette = this._custom_palette_colors ? new ColorPalette(this._custom_palette_colors, flag) : null;
+      this.#custom_palette = this.#custom_palette_colors ? new ColorPalette(this.#custom_palette_colors, flag) : null;
    }
 
    /** @summary Create SVG element for canvas */
@@ -694,10 +710,10 @@ class TPadPainter extends ObjectPainter {
       if ((rect.width <= lmt) || (rect.height <= lmt)) {
          svg.style('display', 'none');
          console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
-         if (this._pad_width && this._pad_height) {
+         if (this.#pad_width && this.#pad_height) {
             // use last valid dimensions
-            rect.width = this._pad_width;
-            rect.height = this._pad_height;
+            rect.width = this.#pad_width;
+            rect.height = this.#pad_height;
          } else {
             // just to complete drawing.
             rect.width = 800;
@@ -715,26 +731,26 @@ class TPadPainter extends ObjectPainter {
 
       svg.style('filter', settings.DarkMode || this.pad?.$dark ? 'invert(100%)' : null);
 
-      this._pad_scale = settings.CanvasScale || 1;
-      this._pad_x = 0;
-      this._pad_y = 0;
-      this._pad_width = rect.width * this._pad_scale;
-      this._pad_height = rect.height * this._pad_scale;
+      this.#pad_scale = settings.CanvasScale || 1;
+      this.#pad_x = 0;
+      this.#pad_y = 0;
+      this.#pad_width = rect.width * this.#pad_scale;
+      this.#pad_height = rect.height * this.#pad_scale;
 
-      svg.attr('viewBox', `0 0 ${this._pad_width} ${this._pad_height}`)
+      svg.attr('viewBox', `0 0 ${this.#pad_width} ${this.#pad_height}`)
          .attr('preserveAspectRatio', 'none')  // we do not preserve relative ratio
          .property('height_factor', factor)
-         .property('draw_x', this._pad_x)
-         .property('draw_y', this._pad_y)
-         .property('draw_width', this._pad_width)
-         .property('draw_height', this._pad_height);
+         .property('draw_x', this.#pad_x)
+         .property('draw_y', this.#pad_y)
+         .property('draw_width', this.#pad_width)
+         .property('draw_height', this.#pad_height);
 
       this.addPadBorder(svg, frect);
 
-      this.setFastDrawing(this._pad_width * (1 - this.pad.fLeftMargin - this.pad.fRightMargin), this._pad_height * (1 - this.pad.fBottomMargin - this.pad.fTopMargin));
+      this.setFastDrawing(this.#pad_width * (1 - this.pad.fLeftMargin - this.pad.fRightMargin), this.#pad_height * (1 - this.pad.fBottomMargin - this.pad.fTopMargin));
 
       if (this.alignButtons && btns)
-         this.alignButtons(btns, this._pad_width, this._pad_height);
+         this.alignButtons(btns, this.#pad_width, this.#pad_height);
 
       let dt = info.selectChild('.canvas_date');
       if (!gStyle.fOptDate)
@@ -742,9 +758,9 @@ class TPadPainter extends ObjectPainter {
        else {
          if (dt.empty())
             dt = info.append('text').attr('class', 'canvas_date');
-         const posy = Math.round(this._pad_height * (1 - gStyle.fDateY)),
+         const posy = Math.round(this.#pad_height * (1 - gStyle.fDateY)),
                date = new Date();
-         let posx = Math.round(this._pad_width * gStyle.fDateX);
+         let posx = Math.round(this.#pad_width * gStyle.fDateX);
          if (!is_batch && (posx < 25))
             posx = 25;
          if (gStyle.fOptDate > 3)
@@ -905,11 +921,11 @@ class TPadPainter extends ObjectPainter {
              .property('draw_width', w)
              .property('draw_height', h);
 
-      this._pad_scale = this.getCanvPainter().getPadScale();
-      this._pad_x = x;
-      this._pad_y = y;
-      this._pad_width = w;
-      this._pad_height = h;
+      this.#pad_scale = this.getCanvPainter().getPadScale();
+      this.#pad_x = x;
+      this.#pad_y = y;
+      this.#pad_width = w;
+      this.#pad_height = h;
 
       this.addPadBorder(svg_pad, svg_border, true);
 
@@ -922,7 +938,7 @@ class TPadPainter extends ObjectPainter {
       }
 
       if (this.alignButtons && btns)
-         this.alignButtons(btns, this._pad_width, this._pad_height);
+         this.alignButtons(btns, this.#pad_width, this.#pad_height);
 
       return pad_visible;
    }
@@ -933,7 +949,7 @@ class TPadPainter extends ObjectPainter {
       if (!svg_border)
          return;
 
-      svg_border.attr('d', `M0,0H${this._pad_width}V${this._pad_height}H0Z`)
+      svg_border.attr('d', `M0,0H${this.#pad_width}V${this.#pad_height}H0Z`)
                 .call(this.fillatt.func);
       if (draw_line)
          svg_border.call(this.lineatt.func);
@@ -944,7 +960,7 @@ class TPadPainter extends ObjectPainter {
           svg_border2 = svg_pad.selectChild('.root_pad_border2');
 
       if (this.pad.fBorderMode && this.pad.fBorderSize) {
-         const arr = getBoxDecorations(0, 0, this._pad_width, this._pad_height, this.pad.fBorderMode, this.pad.fBorderSize, this.pad.fBorderSize);
+         const arr = getBoxDecorations(0, 0, this.#pad_width, this.#pad_height, this.pad.fBorderMode, this.pad.fBorderSize, this.pad.fBorderSize);
 
          if (svg_border2.empty())
             svg_border2 = svg_pad.insert('svg:path', '.primitives_layer').attr('class', 'root_pad_border2');
@@ -980,7 +996,7 @@ class TPadPainter extends ObjectPainter {
 
       addDragHandler(this, {
          cleanup, // do cleanup to let assign new handlers later on
-         x: this._pad_x, y: this._pad_y, width: this._pad_width, height: this._pad_height, no_transform: true,
+         x: this.#pad_x, y: this.#pad_y, width: this.#pad_width, height: this.#pad_height, no_transform: true,
          only_resize: true, // !cleanup && (this._disable_dragging || this.getFramePainter()?.mode3d),
          is_disabled: kind => svg_can.property('pad_enlarged') || this.btns_active_flag ||
                              (kind === 'move' && (this._disable_dragging || this.getFramePainter()?.mode3d)),
@@ -1033,14 +1049,15 @@ class TPadPainter extends ObjectPainter {
                if (!col) { console.log('Fail to create color for palette'); arr = null; break; }
                arr.push(col);
             }
-            if (arr) this.custom_palette = new ColorPalette(arr);
+            if (arr.length)
+               this.#custom_palette = new ColorPalette(arr);
          }
 
          if (!this.options || this.options.GlobalColors) // set global list of colors
             adoptRootColors(obj);
 
          // copy existing colors and extend with new values
-         this._custom_colors = this.options?.LocalColors ? extendRootColors(null, obj) : null;
+         this.#custom_colors = this.options?.LocalColors ? extendRootColors(null, obj) : null;
          return true;
       }
 
@@ -1059,8 +1076,8 @@ class TPadPainter extends ObjectPainter {
          }
 
          const apply = (!this.options || (!missing && !this.options.IgnorePalette));
-         this._custom_palette_indexes = apply ? indx : null;
-         this._custom_palette_colors = apply ? arr : null;
+         this.#custom_palette_indexes = apply ? indx : null;
+         this.#custom_palette_colors = apply ? arr : null;
 
          return true;
       }
@@ -1127,14 +1144,14 @@ class TPadPainter extends ObjectPainter {
      * @private */
    syncDraw(kind) {
       const entry = { kind: kind || 'redraw' };
-      if (this._doing_draw === undefined) {
-         this._doing_draw = [entry];
+      if (this.#doing_draw === undefined) {
+         this.#doing_draw = [entry];
          return Promise.resolve(true);
       }
       // if queued operation registered, ignore next calls, indx === 0 is running operation
-      if ((entry.kind !== true) && (this._doing_draw.findIndex((e, i) => (i > 0) && (e.kind === entry.kind)) > 0))
+      if ((entry.kind !== true) && (this.#doing_draw.findIndex((e, i) => (i > 0) && (e.kind === entry.kind)) > 0))
          return false;
-      this._doing_draw.push(entry);
+      this.#doing_draw.push(entry);
       return new Promise(resolveFunc => {
          entry.func = resolveFunc;
       });
@@ -1143,19 +1160,19 @@ class TPadPainter extends ObjectPainter {
    /** @summary indicates if painter performing objects draw
      * @private */
    doingDraw() {
-      return this._doing_draw !== undefined;
+      return this.#doing_draw !== undefined;
    }
 
    /** @summary confirms that drawing is completed, may trigger next drawing immediately
      * @private */
    confirmDraw() {
-      if (this._doing_draw === undefined)
+      if (this.#doing_draw === undefined)
          return console.warn('failure, should not happen');
-      this._doing_draw.shift();
-      if (this._doing_draw.length === 0)
-         delete this._doing_draw;
+      this.#doing_draw.shift();
+      if (this.#doing_draw.length === 0)
+         this.#doing_draw = undefined;
        else {
-         const entry = this._doing_draw[0];
+         const entry = this.#doing_draw[0];
          if (entry.func) { entry.func(); delete entry.func; }
       }
    }
@@ -1566,7 +1583,7 @@ class TPadPainter extends ObjectPainter {
       this.pad.fY1 = obj.fY1;
       this.pad.fY2 = obj.fY2;
 
-      // this is main coordinates for subpad relative to canvas
+      // this is main coordinates for sub-pad relative to canvas
       this.pad.fAbsWNDC = obj.fAbsWNDC;
       this.pad.fAbsHNDC = obj.fAbsHNDC;
       this.pad.fAbsXlowNDC = obj.fAbsXlowNDC;
@@ -1690,13 +1707,13 @@ class TPadPainter extends ObjectPainter {
          if (this.painters.indexOf(objpainter) < 0)
             this.painters.push(objpainter);
 
-         objpainter.snapid = lst[indx].fObjectID;
+         objpainter.assignSnapId(lst[indx].fObjectID);
          const setSubSnaps = p => {
-            if (!p._unique_painter_id) return;
+            if (!p.getUniqueId(true)) return;
             for (let k = 0; k < this.painters.length; ++k) {
                const sub = this.painters[k];
-               if ((sub._main_painter_id === p._unique_painter_id) && sub._secondary_id) {
-                  sub.snapid = p.snapid + '#' + sub._secondary_id;
+               if (sub.isSecondary(p) && sub.getSecondaryId()) {
+                  sub.assignSnapId(p.snapid + '#' + sub.getSecondaryId());
                   setSubSnaps(sub);
                }
             }
@@ -1725,7 +1742,7 @@ class TPadPainter extends ObjectPainter {
             colors = extendRootColors(null, ListOfColors, greyscale);
 
       // copy existing colors and extend with new values
-      this._custom_colors = this.options?.LocalColors ? colors : null;
+      this.#custom_colors = this.options?.LocalColors ? colors : null;
 
       // set palette
       if (snap.fSnapshot.fBuf && (!this.options || !this.options.IgnorePalette)) {
@@ -1734,14 +1751,11 @@ class TPadPainter extends ObjectPainter {
             indexes[n] = Math.round(snap.fSnapshot.fBuf[n]);
             palette[n] = colors[indexes[n]];
          }
-         this._custom_palette_indexes = indexes;
-         this._custom_palette_colors = palette;
-         this.custom_palette = new ColorPalette(palette, greyscale);
-      } else {
-         delete this._custom_palette_indexes;
-         delete this._custom_palette_colors;
-         delete this.custom_palette;
-      }
+         this.#custom_palette_indexes = indexes;
+         this.#custom_palette_colors = palette;
+         this.#custom_palette = new ColorPalette(palette, greyscale);
+      } else
+         this.#custom_palette = this.#custom_palette_indexes = this.#custom_palette_colors = undefined;
    }
 
    /** @summary Process snap with custom font
@@ -1839,7 +1853,7 @@ class TPadPainter extends ObjectPainter {
          const padpainter = new TPadPainter(this, subpad, false);
          padpainter.decodeOptions(snap.fOption);
          padpainter.addToPadPrimitives();
-         padpainter.snapid = snap.fObjectID;
+         padpainter.assignSnapId(snap.fObjectID);
          padpainter.is_active_pad = !!snap.fActive; // enforce boolean flag
          padpainter._readonly = snap.fReadOnly ?? false; // readonly flag
          padpainter._snap_primitives = snap.fPrimitives; // keep list to be able find primitive
@@ -1921,9 +1935,10 @@ class TPadPainter extends ObjectPainter {
       if (this.snapid === undefined) {
          // first time getting snap, create all gui elements first
 
-         this.snapid = snap.fObjectID;
+         this.assignSnapId(snap.fObjectID);
 
-         this.draw_object = this.pad = first; // first object is pad
+         this.assignObject(first);
+         this.pad = first; // first object is pad
 
          // this._fixed_size = true;
 
@@ -2212,39 +2227,40 @@ class TPadPainter extends ObjectPainter {
    /** @summary Show context menu for specified item
      * @private */
    itemContextMenu(name) {
-       const rrr = this.svg_this_pad().node().getBoundingClientRect(),
-             evnt = { clientX: rrr.left + 10, clientY: rrr.top + 10 };
+      const rrr = this.svg_this_pad().node().getBoundingClientRect(),
+            evnt = { clientX: rrr.left + 10, clientY: rrr.top + 10 };
 
-       // use timeout to avoid conflict with mouse click and automatic menu close
-       if (name === 'pad')
-          return postponePromise(() => this.padContextMenu(evnt), 50);
+      // use timeout to avoid conflict with mouse click and automatic menu close
+      if (name === 'pad')
+         return postponePromise(() => this.padContextMenu(evnt), 50);
 
-       let selp = null, selkind;
+      let selp = null, selkind;
 
-       switch (name) {
-          case 'xaxis':
-          case 'yaxis':
-          case 'zaxis':
-             selp = this.getFramePainter();
-             selkind = name[0];
-             break;
-          case 'frame':
-             selp = this.getFramePainter();
-             break;
-          default: {
-             const indx = parseInt(name);
-             if (Number.isInteger(indx))
-                selp = this.painters[indx];
-          }
-       }
+      switch (name) {
+         case 'xaxis':
+         case 'yaxis':
+         case 'zaxis':
+            selp = this.getFramePainter();
+            selkind = name[0];
+            break;
+         case 'frame':
+            selp = this.getFramePainter();
+            break;
+         default: {
+            const indx = parseInt(name);
+            if (Number.isInteger(indx))
+               selp = this.painters[indx];
+         }
+      }
 
-       if (!isFunc(selp?.fillContextMenu)) return;
+      if (!isFunc(selp?.fillContextMenu))
+         return;
 
-       return createMenu(evnt, selp).then(menu => {
-          const offline_menu = selp.fillContextMenu(menu, selkind);
-          if (offline_menu || selp.snapid)
-             return selp.fillObjectExecMenu(menu, selkind).then(() => postponePromise(() => menu.show(), 50));
-       });
+      return createMenu(evnt, selp).then(menu => {
+         const offline_menu = selp.fillContextMenu(menu, selkind);
+         if (offline_menu || selp.snapid)
+            return selp.fillObjectExecMenu(menu, selkind).then(() => postponePromise(() => menu.show(), 50));
+      });
    }
 
    /** @summary Save pad as image
