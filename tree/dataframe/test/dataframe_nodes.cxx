@@ -45,13 +45,13 @@ TEST(RDataFrameNodes, RSlotStackPutBackTooMany)
 
 TEST(RDataFrameNodes, RLoopManagerGetLoopManagerUnchecked)
 {
-   ROOT::Detail::RDF::RLoopManager lm(nullptr, {});
+   ROOT::Detail::RDF::RLoopManager lm{};
    ASSERT_EQ(&lm, lm.GetLoopManagerUnchecked());
 }
 
 TEST(RDataFrameNodes, RLoopManagerJitWrongCode)
 {
-   ROOT::Detail::RDF::RLoopManager lm(nullptr, {});
+   ROOT::Detail::RDF::RLoopManager lm{};
    lm.ToJitExec("souble d = 3.14");
    EXPECT_THROW(lm.Run(), std::runtime_error) << "Bogus C++ code was jitted and nothing was detected!";
 }
