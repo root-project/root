@@ -17,6 +17,7 @@
 
 
 class TCrown : public TEllipse {
+   Double_t fYXRatio = 1;  // ratio between Y and X axis
 
 public:
    TCrown();
@@ -24,6 +25,9 @@ public:
           Double_t phimin=0,Double_t phimax=360);
    TCrown(const TCrown &crown);
    ~TCrown() override;
+
+   void SetYXRatio(Double_t v = 1) { fYXRatio = v; }
+   Double_t GetYXRatio() const { return fYXRatio; }
 
    void Copy(TObject &crown) const override;
    Int_t   DistancetoPrimitive(Int_t px, Int_t py) override;
@@ -34,7 +38,7 @@ public:
    void    Paint(Option_t *option="") override;
    void    SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDefOverride(TCrown,1)  //A crown or segment of crown
+   ClassDefOverride(TCrown,2)  //A crown or segment of crown
 };
 
 #endif
