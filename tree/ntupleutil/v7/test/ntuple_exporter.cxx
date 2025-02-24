@@ -39,7 +39,7 @@ void CreateExportRNTuple(std::string_view fileName, bool checksums)
    auto pFlt = model->MakeField<float>("flt");
    auto pVec = model->MakeField<std::vector<int>>("vec");
 
-   auto opts = RNTupleWriteOptions();
+   auto opts = ROOT::RNTupleWriteOptions();
    opts.SetCompression(0);
    opts.SetEnablePageChecksums(checksums);
    auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileName, opts);
@@ -213,7 +213,7 @@ TEST(RNTupleExporter, ExportToFilesManyPages)
       auto pFlt = model->MakeField<float>("flt");
       auto pVec = model->MakeField<std::vector<int>>("vec");
 
-      auto opts = RNTupleWriteOptions();
+      auto opts = ROOT::RNTupleWriteOptions();
       opts.SetCompression(0);
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), opts);
       for (int i = 0; i < 1000; ++i) {
@@ -258,7 +258,7 @@ TEST(RNTupleExporter, ExportToFilesCustomPath)
       auto pFlt = model->MakeField<float>("flt");
       auto pVec = model->MakeField<std::vector<int>>("vec");
 
-      auto opts = RNTupleWriteOptions();
+      auto opts = ROOT::RNTupleWriteOptions();
       opts.SetCompression(505);
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), opts);
       for (int i = 0; i < 100; ++i) {

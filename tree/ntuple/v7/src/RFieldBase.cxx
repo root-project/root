@@ -921,7 +921,7 @@ void ROOT::Experimental::RFieldBase::RemoveReadCallback(size_t idx)
    fIsSimple = (fTraits & kTraitMappable) && !fIsArtificial && fReadCallbacks.empty();
 }
 
-void ROOT::Experimental::RFieldBase::AutoAdjustColumnTypes(const RNTupleWriteOptions &options)
+void ROOT::Experimental::RFieldBase::AutoAdjustColumnTypes(const ROOT::RNTupleWriteOptions &options)
 {
    if ((options.GetCompression() == 0) && HasDefaultColumnRepresentative()) {
       ColumnRepresentation_t rep = GetColumnRepresentations().GetSerializationDefault();

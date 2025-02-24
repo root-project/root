@@ -375,7 +375,7 @@ protected:
    /// When connecting a field to a page sink, the field's default column representation is subject
    /// to adjustment according to the write options. E.g., if compression is turned off, encoded columns
    /// are changed to their unencoded counterparts.
-   void AutoAdjustColumnTypes(const RNTupleWriteOptions &options);
+   void AutoAdjustColumnTypes(const ROOT::RNTupleWriteOptions &options);
 
    /// Called by Clone(), which additionally copies the on-disk ID
    virtual std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const = 0;

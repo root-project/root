@@ -9,7 +9,7 @@
 
 #include <cstring>
 
-using ROOT::Experimental::Internal::RNTupleWriteOptionsManip;
+using ROOT::Internal::RNTupleWriteOptionsManip;
 
 namespace {
 bool IsEqual(const ROOT::RNTuple &a, const ROOT::RNTuple &b)

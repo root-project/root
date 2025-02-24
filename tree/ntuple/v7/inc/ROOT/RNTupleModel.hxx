@@ -31,11 +31,13 @@
 #include <utility>
 
 namespace ROOT {
+
+class RNTupleWriteOptions;
+
 namespace Experimental {
 
 class RNTupleModel;
 class RNTupleWriter;
-class RNTupleWriteOptions;
 
 namespace Internal {
 class RProjectedFields;
@@ -340,7 +342,7 @@ public:
    /// This will return an estimate in bytes for the internal page and compression buffers. The value should be
    /// understood per sequential RNTupleWriter or per RNTupleFillContext created for a RNTupleParallelWriter
    /// constructed with this model.
-   std::size_t EstimateWriteMemoryUsage(const RNTupleWriteOptions &options = RNTupleWriteOptions()) const;
+   std::size_t EstimateWriteMemoryUsage(const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions()) const;
 };
 
 namespace Internal {
