@@ -2786,18 +2786,6 @@ void ROOT::TMetaUtils::foreachHeaderInModule(const clang::Module &module,
 {
    // Iterates over all headers in a module and calls the closure on each.
 
-   // FIXME: We currently have to hardcode '4' to do this. Maybe we
-   // will have a nicer way to do this in the future.
-   // NOTE: This is on purpose '4', not '5' which is the size of the
-   // vector. The last element is the list of excluded headers which we
-   // obviously don't want to check here.
-   const std::size_t publicHeaderIndex = 4;
-
-   // Integrity check in case this array changes its size at some point.
-   const std::size_t maxArrayLength = ((sizeof module.Headers) / (sizeof *module.Headers));
-   static_assert(publicHeaderIndex + 1 == maxArrayLength,
-                 "'Headers' has changed it's size, we need to update publicHeaderIndex");
-
    // Make a list of modules and submodules that we can check for headers.
    // We use a SetVector to prevent an infinite loop in unlikely case the
    // modules somehow are messed up and don't form a tree...
@@ -2816,8 +2804,10 @@ void ROOT::TMetaUtils::foreachHeaderInModule(const clang::Module &module,
          }
       }
 
-      for (std::size_t i = 0; i < publicHeaderIndex; i++) {
-         auto &headerList = m->Headers[i];
+      // We want to check for all headers except the list of excluded headers here.
+      for (auto HK : {clang::Module::HK_Normal, clang::Module::HK_Textual, clang::Module::HK_Private,
+                      clang::Module::HK_PrivateTextual}) {
+         auto &headerList = m->Headers[HK];
          for (const clang::Module::Header &moduleHeader : headerList) {
             closure(moduleHeader);
          }
