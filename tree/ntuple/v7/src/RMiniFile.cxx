@@ -1190,6 +1190,16 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Append(std::string_view ntupleN
    return writer;
 }
 
+void ROOT::Experimental::Internal::RNTupleFileWriter::Seek(std::uint64_t offset)
+{
+   if (!fFileSimple)
+      throw RException(R__FAIL("invalid attempt to seek non-simple writer"));
+
+   fFileSimple.fFilePos = offset;
+   fFileSimple.fKeyOffset = offset;
+   // The next Write() will Flush() if necessary.
+}
+
 void ROOT::Experimental::Internal::RNTupleFileWriter::UpdateStreamerInfos(
    const RNTupleSerializer::StreamerInfoMap_t &streamerInfos)
 {

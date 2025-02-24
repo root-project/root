@@ -236,6 +236,10 @@ public:
    RNTupleFileWriter &operator=(RNTupleFileWriter &&other) = delete;
    ~RNTupleFileWriter();
 
+   /// Seek a simple writer to offset. Note that previous data is not flushed immediately, but only by the next write
+   /// (if necessary).
+   void Seek(std::uint64_t offset);
+
    /// Writes the compressed header and registeres its location; lenHeader is the size of the uncompressed header.
    std::uint64_t WriteNTupleHeader(const void *data, size_t nbytes, size_t lenHeader);
    /// Writes the compressed footer and registeres its location; lenFooter is the size of the uncompressed footer.
