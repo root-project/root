@@ -112,7 +112,7 @@ TEST_F(RPageStorageDaos, Extended)
    }
 
    RNTupleReadOptions options;
-   ROOT::Experimental::Internal::RNTupleReadOptionsManip::SetClusterBunchSize(options, 5);
+   ROOT::Internal::RNTupleReadOptionsManip::SetClusterBunchSize(options, 5);
    auto ntuple = RNTupleReader::Open(ntupleName, daosUri, options);
    auto rdVector = ntuple->GetModel().GetDefaultEntry().GetPtr<std::vector<double>>("vector");
 
@@ -155,11 +155,11 @@ TEST_F(RPageStorageDaos, Options)
    }
 
    auto readOptions = RNTupleReadOptions();
-   ROOT::Experimental::Internal::RNTupleReadOptionsManip::SetClusterBunchSize(readOptions, 3);
+   ROOT::Internal::RNTupleReadOptionsManip::SetClusterBunchSize(readOptions, 3);
    ROOT::Experimental::Internal::RPageSourceDaos source(ntupleName, daosUri, readOptions);
    source.Attach();
    EXPECT_STREQ("RP_XSF", source.GetObjectClass().c_str());
-   EXPECT_EQ(3U, ROOT::Experimental::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(source.GetReadOptions()));
+   EXPECT_EQ(3U, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(source.GetReadOptions()));
    EXPECT_EQ(1U, source.GetNEntries());
 }
 
@@ -286,7 +286,7 @@ TEST_F(RPageStorageDaos, CagedPages)
    {
       RNTupleReadOptions options;
       options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOn);
-      ROOT::Experimental::Internal::RNTupleReadOptionsManip::SetClusterBunchSize(options, 5);
+      ROOT::Internal::RNTupleReadOptionsManip::SetClusterBunchSize(options, 5);
       auto ntuple = RNTupleReader::Open(ntupleName, daosUri, options);
       auto rdVector = ntuple->GetModel().GetDefaultEntry().GetPtr<std::vector<double>>("vector");
 

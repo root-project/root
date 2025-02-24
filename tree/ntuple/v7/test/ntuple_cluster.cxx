@@ -49,7 +49,7 @@ public:
    std::vector<ROOT::DescriptorId_t> fReqsClusterIds;
    std::vector<ROOT::Experimental::Internal::RCluster::ColumnSet_t> fReqsColumns;
 
-   RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions())
+   RPageSourceMock() : RPageSource("test", RNTupleReadOptions())
    {
       ROOT::Experimental::Internal::RNTupleDescriptorBuilder descBuilder;
       descBuilder.SetNTuple("ntpl", "");
@@ -325,8 +325,7 @@ TEST(PageStorageFile, LoadClusters)
       writer->Fill();
    }
 
-   ROOT::Experimental::Internal::RPageSourceFile source("myNTuple", fileGuard.GetPath(),
-                                                        ROOT::Experimental::RNTupleReadOptions());
+   ROOT::Experimental::Internal::RPageSourceFile source("myNTuple", fileGuard.GetPath(), RNTupleReadOptions());
    source.Attach();
 
    ROOT::DescriptorId_t ptId;

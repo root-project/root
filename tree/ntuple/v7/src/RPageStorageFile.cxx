@@ -251,16 +251,17 @@ void ROOT::Experimental::Internal::RPageSinkFile::CommitDatasetImpl(unsigned cha
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName,
-                                                               const RNTupleReadOptions &opts)
+                                                               const ROOT::RNTupleReadOptions &opts)
    : RPageSource(ntupleName, opts),
-     fClusterPool(std::make_unique<RClusterPool>(*this, Internal::RNTupleReadOptionsManip::GetClusterBunchSize(opts)))
+     fClusterPool(
+        std::make_unique<RClusterPool>(*this, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(opts)))
 {
    EnableDefaultMetrics("RPageSourceFile");
 }
 
 ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName,
                                                                std::unique_ptr<ROOT::Internal::RRawFile> file,
-                                                               const RNTupleReadOptions &options)
+                                                               const ROOT::RNTupleReadOptions &options)
    : RPageSourceFile(ntupleName, options)
 {
    fFile = std::move(file);
@@ -269,14 +270,14 @@ ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view 
 }
 
 ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName, std::string_view path,
-                                                               const RNTupleReadOptions &options)
+                                                               const ROOT::RNTupleReadOptions &options)
    : RPageSourceFile(ntupleName, ROOT::Internal::RRawFile::Create(path), options)
 {
 }
 
 std::unique_ptr<ROOT::Experimental::Internal::RPageSourceFile>
 ROOT::Experimental::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &anchor,
-                                                                const RNTupleReadOptions &options)
+                                                                const ROOT::RNTupleReadOptions &options)
 {
    if (!anchor.fFile)
       throw RException(R__FAIL("This RNTuple object was not streamed from a ROOT file (TFile or descendant)"));
@@ -440,7 +441,7 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t colum
    sealedPage.SetBufferSize(pageInfo.fLocator.GetNBytesOnStorage() + pageInfo.fHasChecksum * kNBytesPageChecksum);
    std::unique_ptr<unsigned char[]> directReadBuffer; // only used if cluster pool is turned off
 
-   if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
+   if (fOptions.GetClusterCache() == ROOT::RNTupleReadOptions::EClusterCache::kOff) {
       directReadBuffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
       {
          Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);

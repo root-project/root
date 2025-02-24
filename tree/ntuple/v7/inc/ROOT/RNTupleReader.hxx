@@ -92,9 +92,9 @@ private:
    std::optional<RNTupleDescriptor::RCreateModelOptions> fCreateModelOptions;
 
    RNTupleReader(std::unique_ptr<RNTupleModel> model, std::unique_ptr<Internal::RPageSource> source,
-                 const RNTupleReadOptions &options);
+                 const ROOT::RNTupleReadOptions &options);
    /// The model is generated from the ntuple metadata on storage.
-   explicit RNTupleReader(std::unique_ptr<Internal::RPageSource> source, const RNTupleReadOptions &options);
+   explicit RNTupleReader(std::unique_ptr<Internal::RPageSource> source, const ROOT::RNTupleReadOptions &options);
 
    void ConnectModel(RNTupleModel &model);
    RNTupleReader *GetDisplayReader();
@@ -152,27 +152,27 @@ public:
    /// std::cout << "myNTuple has " << ntuple->GetNEntries() << " entries\n";
    /// ~~~
    static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName, std::string_view storage,
-                                              const RNTupleReadOptions &options = RNTupleReadOptions());
+                                              const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
    static std::unique_ptr<RNTupleReader>
-   Open(const RNTuple &ntuple, const RNTupleReadOptions &options = RNTupleReadOptions());
+   Open(const RNTuple &ntuple, const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
 
    /// The caller imposes a model, which must be compatible with the model found in the data on storage.
    static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
                                               std::string_view storage,
-                                              const RNTupleReadOptions &options = RNTupleReadOptions());
+                                              const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
    static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model, const RNTuple &ntuple,
-                                              const RNTupleReadOptions &options = RNTupleReadOptions());
+                                              const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
 
    /// The caller imposes the way the model is reconstructed
    static std::unique_ptr<RNTupleReader> Open(const RNTupleDescriptor::RCreateModelOptions &createModelOpts,
                                               std::string_view ntupleName, std::string_view storage,
-                                              const RNTupleReadOptions &options = RNTupleReadOptions());
+                                              const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
    static std::unique_ptr<RNTupleReader> Open(const RNTupleDescriptor::RCreateModelOptions &createModelOpts,
                                               const RNTuple &ntuple,
-                                              const RNTupleReadOptions &options = RNTupleReadOptions());
+                                              const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
    std::unique_ptr<RNTupleReader> Clone()
    {
-      auto options = RNTupleReadOptions{};
+      auto options = ROOT::RNTupleReadOptions{};
       options.SetEnableMetrics(fMetrics.IsEnabled());
       return std::unique_ptr<RNTupleReader>(new RNTupleReader(fSource->Clone(), options));
    }

@@ -92,7 +92,7 @@ protected:
 
 public:
    RPageSourceMock(const std::vector<RPageStorage::RSealedPage> &pages, const RColumnElementBase &elt)
-      : RPageSource("test", ROOT::Experimental::RNTupleReadOptions()), fElement(elt), fPages(pages)
+      : RPageSource("test", ROOT::RNTupleReadOptions()), fElement(elt), fPages(pages)
    {
    }
 
