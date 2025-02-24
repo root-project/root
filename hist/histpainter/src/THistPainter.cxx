@@ -5912,11 +5912,13 @@ void THistPainter::PaintColorLevels(Option_t*)
                      midy = (gPad->GetUymin() + gPad->GetUymax()) / 2,
                      a1 = (xlow - gPad->GetUxmin()) / (gPad->GetUxmax() - gPad->GetUxmin()) * 360,
                      a2 = (xup - gPad->GetUxmin()) / (gPad->GetUxmax() - gPad->GetUxmin()) * 360,
-                     r0 = TMath::Min(gPad->GetUxmax() - gPad->GetUxmin(), gPad->GetUymax() - gPad->GetUymin()),
-                     r1 = (ylow - gPad->GetUymin()) / (gPad->GetUymax() - gPad->GetUymin()) * r0 / 2,
-                     r2 = (yup - gPad->GetUymin()) / (gPad->GetUymax() - gPad->GetUymin()) * r0 / 2;
+                     rx = gPad->GetUxmax() - gPad->GetUxmin(),
+                     ry = gPad->GetUymax() - gPad->GetUymin(),
+                     r1 = (ylow - gPad->GetUymin()) / (gPad->GetUymax() - gPad->GetUymin()) * rx / 2,
+                     r2 = (yup - gPad->GetUymin()) / (gPad->GetUymax() - gPad->GetUymin()) * rx / 2;
 
             TCrown crown(midx, midy, r1, r2, a1, a2);
+            crown.SetYXRatio(rx > 0 ? ry / rx : 1);
             crown.SetFillColor(fillColor);
             crown.SetLineColor(fH->GetLineColor());
             crown.SetLineWidth(fH->GetLineWidth());
