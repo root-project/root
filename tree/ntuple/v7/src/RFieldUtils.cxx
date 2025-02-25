@@ -106,6 +106,25 @@ std::string ROOT::Experimental::Internal::GetCanonicalTypePrefix(const std::stri
       canonicalType.erase(0, 2);
    }
 
+   // TClassEdit::CleanType inserts blanks between closing angle brackets, as they were required before C++11. We want
+   // to remove them for RNTuple.
+   auto angle = canonicalType.find('<');
+   if (angle != std::string::npos) {
+      auto dst = canonicalType.begin() + angle;
+      auto end = canonicalType.end();
+      for (auto src = dst; src != end; ++src) {
+         if (*src == ' ') {
+            auto next = src + 1;
+            if (next != end && *next == '>') {
+               // Skip this space before a closing angle bracket.
+               continue;
+            }
+         }
+         *(dst++) = *src;
+      }
+      canonicalType.erase(dst, end);
+   }
+
    if (canonicalType.substr(0, 6) == "array<") {
       canonicalType = "std::" + canonicalType;
    } else if (canonicalType.substr(0, 7) == "atomic<") {
