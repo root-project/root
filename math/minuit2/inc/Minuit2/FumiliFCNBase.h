@@ -72,8 +72,6 @@ public:
 
    //   FumiliFCNBase(const ParametricFunction& modelFCN) { fModelFunction = &modelFCN; }
 
-   ~FumiliFCNBase() override {}
-
    /**
 
       Evaluate function Value, Gradient and Hessian using Fumili approximation, for values of parameters p

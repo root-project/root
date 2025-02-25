@@ -31,8 +31,6 @@ class PowerLawFunc {
 public:
    PowerLawFunc(double _p0, double _p1) : fP0(_p0), fP1(_p1) {}
 
-   ~PowerLawFunc() {}
-
    double operator()(double x) const { return p1() * std::exp(std::log(x) * p0()); }
 
    double p0() const { return fP0; }

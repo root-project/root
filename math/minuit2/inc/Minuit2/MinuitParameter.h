@@ -66,8 +66,6 @@ public:
       }
    }
 
-   ~MinuitParameter() {}
-
    MinuitParameter(const MinuitParameter &par)
       : fNum(par.fNum), fValue(par.fValue), fError(par.fError), fConst(par.fConst), fFix(par.fFix),
         fLoLimit(par.fLoLimit), fUpLimit(par.fUpLimit), fLoLimValid(par.fLoLimValid), fUpLimValid(par.fUpLimValid),
