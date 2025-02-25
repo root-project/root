@@ -29,8 +29,6 @@ public:
 
    MnGlobalCorrelationCoeff(const MnAlgebraicSymMatrix &);
 
-   ~MnGlobalCorrelationCoeff() {}
-
    const std::vector<double> &GlobalCC() const { return fGlobalCC; }
 
    bool IsValid() const { return fValid; }

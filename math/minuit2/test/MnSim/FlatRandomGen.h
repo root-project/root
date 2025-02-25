@@ -19,11 +19,9 @@ namespace Minuit2 {
 class FlatRandomGen {
 
 public:
-   FlatRandomGen() : fMean(0.5), fDelta(0.5) {}
+   FlatRandomGen() = default;
 
    FlatRandomGen(double mean, double delta) : fMean(mean), fDelta(delta) {}
-
-   ~FlatRandomGen() {}
 
    double Mean() const { return fMean; }
 
@@ -32,8 +30,8 @@ public:
    double operator()() const { return 2. * Delta() * (std::rand() / double(RAND_MAX) - 0.5) + Mean(); }
 
 private:
-   double fMean;
-   double fDelta;
+   double fMean = 0.5;
+   double fDelta = 0.5;
 };
 
 } // namespace Minuit2
