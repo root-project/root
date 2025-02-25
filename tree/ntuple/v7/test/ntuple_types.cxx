@@ -2231,3 +2231,43 @@ TEST(RNTuple, RColumnRepresentations)
                                                   {ROOT::ENTupleColumnType::kReal16}}),
              colReps2.GetDeserializationTypes());
 }
+
+TEST(RNTuple, ContextDependentTypes)
+{
+   // Adapted from https://gitlab.cern.ch/amete/rntuple-bug-report-20250219, reproducer of
+   // https://github.com/root-project/root/issues/17774
+
+   FileRaii fileGuard("test_ntuple_types_contextdep.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldBase = RFieldBase::Create("foo", "DerivedWithTypedef").Unwrap();
+      model->AddField(std::move(fieldBase));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto entry = ntuple->GetModel().CreateBareEntry();
+      auto ptr = std::make_unique<DerivedWithTypedef>();
+      entry->BindRawPtr("foo", ptr.get());
+      for (auto i = 0; i < 10; ++i) {
+         ptr->m.push_back(i);
+         ntuple->Fill(*entry);
+         ptr->m.clear();
+      }
+   }
+
+   {
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      EXPECT_EQ(reader->GetNEntries(), 10);
+
+      const auto &model = reader->GetModel();
+      const auto &field = model.GetConstField("foo");
+      EXPECT_EQ(field.GetTypeName(), "DerivedWithTypedef");
+      const auto &vec = model.GetConstField("foo.m");
+      EXPECT_EQ(vec.GetTypeName(), "std::vector<std::int32_t>");
+      EXPECT_EQ(vec.GetTypeAlias(), "MyVec<std::int32_t>");
+
+      auto vecView = reader->GetView<DerivedWithTypedef::MyVec<int>>("foo.m");
+      for (const auto &i : reader->GetEntryRange()) {
+         EXPECT_EQ(vecView(i), std::vector{static_cast<int>(i)});
+      }
+   }
+}
