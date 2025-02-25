@@ -24,6 +24,7 @@
 #include <ROOT/RNTupleTypes.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RRawPtrWriteEntry.hxx>
+#include <ROOT/RNTupleAttributes.hxx>
 
 #include <cstddef>
 #include <cstdint>
@@ -36,6 +37,10 @@ class TDirectory;
 namespace ROOT {
 
 class RNTupleWriteOptions;
+
+namespace Experimental {
+class RNTupleAttributeSet;
+}
 
 namespace Internal {
 // Non-public factory method for an RNTuple writer that uses an already constructed page sink
@@ -106,6 +111,8 @@ class RNTupleWriter {
 private:
    Experimental::RNTupleFillContext fFillContext;
    Experimental::Detail::RNTupleMetrics fMetrics;
+   /// All the Attribute Sets created from this Writer
+   std::unordered_map<std::string, std::unique_ptr<Experimental::RNTupleAttributeSet>> fAttributeSets;
 
    ROOT::NTupleSize_t fLastCommittedClusterGroup = 0;
 
@@ -237,6 +244,11 @@ public:
    {
       return std::make_unique<ROOT::RNTupleModel::RUpdater>(*this);
    }
+
+   /// Creates a new Attribute Set called `name` associated to this Writer and returns a non-owning pointer to it.
+   /// The lifetime of the Attribute Set ends at the same time as the Writer's.
+   ROOT::RResult<Experimental::RNTupleAttributeSet *>
+   CreateAttributeSet(std::string_view name, std::unique_ptr<RNTupleModel> model);
 }; // class RNTupleWriter
 
 } // namespace ROOT
