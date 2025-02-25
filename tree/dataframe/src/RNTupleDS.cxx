@@ -284,26 +284,12 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
       // Inner fields of collections are provided as projected collections of only that inner field,
       // E.g. we provide a projected collection RVec<RVec<float>> for "event.tracks.hits.x" in the example
       // above.
+      bool representableAsRVec =
+         convertToRVec && (fieldDesc.GetTypeName().substr(0, 19) == "ROOT::VecOps::RVec<" ||
+                           fieldDesc.GetTypeName().substr(0, 12) == "std::vector<" || fieldDesc.GetTypeName() == "");
+      const auto &f = *desc.GetFieldIterable(fieldDesc.GetId()).begin();
+      AddField(desc, colName, f.GetId(), fieldInfos, representableAsRVec);
 
-      if (fieldDesc.GetTypeName().empty()) {
-         // Anonymous collection with one or several sub fields
-         auto cardinalityField = std::make_unique<ROOT::Experimental::Internal::RRDFCardinalityField>();
-         cardinalityField->SetOnDiskId(fieldId);
-         fColumnNames.emplace_back("R_rdf_sizeof_" + std::string(colName));
-         fColumnTypes.emplace_back(cardinalityField->GetTypeName());
-         fProtoFields.emplace_back(std::move(cardinalityField));
-
-         for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
-            AddField(desc, std::string(colName) + "." + f.GetFieldName(), f.GetId(), fieldInfos);
-         }
-      } else {
-         // Collection with exactly one sub field. Only convert to an `RVec` if all of its parent collections can also
-         // be added as an `RVec`.
-         bool representableAsRVec = convertToRVec && (fieldDesc.GetTypeName().substr(0, 19) == "ROOT::VecOps::RVec<" ||
-                                                      fieldDesc.GetTypeName().substr(0, 12) == "std::vector<");
-         const auto &f = *desc.GetFieldIterable(fieldDesc.GetId()).begin();
-         AddField(desc, colName, f.GetId(), fieldInfos, representableAsRVec);
-      }
       // Note that at the end of the recursion, we handled the inner sub collections as well as the
       // collection as whole, so we are done.
       return;
