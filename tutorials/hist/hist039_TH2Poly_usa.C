@@ -47,7 +47,7 @@ void hist039_TH2Poly_usa()
    if(gSystem->AccessPathName(fileName))
       TFile::Cp(fileNameUrl, fileName);
 
-   auto f = TFile::Open(fileNameUrl);
+   auto f = TFile::Open(fileName);
 
    if (!f) {
       printf("Cannot access %s. Is internet working ?\n", fileName);
