@@ -40,12 +40,18 @@ ROOT::RFieldZero &ROOT::Internal::GetFieldZeroOfModel(ROOT::RNTupleModel &model)
    return *model.fFieldZero;
 }
 
-ROOT::Internal::RProjectedFields &ROOT::Internal::GetProjectedFieldsOfModel(ROOT::RNTupleModel &model)
+const ROOT::Internal::RProjectedFields &ROOT::Internal::GetProjectedFieldsOfModel(const ROOT::RNTupleModel &model)
 {
    if (model.IsExpired()) {
       throw RException(R__FAIL("invalid use of expired model"));
    }
    return *model.fProjectedFields;
+}
+
+ROOT::Internal::RProjectedFields &ROOT::Internal::GetProjectedFieldsOfModel(ROOT::RNTupleModel &model)
+{
+   const auto &constModel = const_cast<const ROOT::RNTupleModel &>(model);
+   return const_cast<ROOT::Internal::RProjectedFields &>(GetProjectedFieldsOfModel(constModel));
 }
 
 //------------------------------------------------------------------------------

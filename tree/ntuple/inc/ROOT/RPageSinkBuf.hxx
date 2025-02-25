@@ -148,6 +148,8 @@ public:
    void CommitDatasetImpl() final;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
+
+   TDirectory *GetUnderlyingDirectory() const final { return fInnerSink->GetUnderlyingDirectory(); }
 }; // RPageSinkBuf
 
 } // namespace Internal

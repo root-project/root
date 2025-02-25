@@ -52,6 +52,7 @@ sequential writing, please refer to RNTupleWriter.
 class RNTupleFillContext {
    friend class ROOT::RNTupleWriter;
    friend class RNTupleParallelWriter;
+   friend class RNTupleAttributeSet;
 
 private:
    /// The page sink's parallel page compression scheduler if IMT is on.
