@@ -237,8 +237,8 @@ TEST_F(TTreeReaderFriends, EntryChainFriend)
       int entry;
       tree.Branch("entry", &entry);
       for (int j = 0; j < 3 * kEntriesPerTree; ++j) {
-        entry = j + i * kEntriesPerTree;
-        tree.Fill();
+         entry = j + i * kEntriesPerTree;
+         tree.Fill();
       }
       tree.Write();
    }
@@ -253,7 +253,7 @@ TEST_F(TTreeReaderFriends, EntryChainFriend)
       TChain *chain = chainMain.get();
       EXPECT_EQ(chain->GetEntries(), 30);
       EXPECT_EQ(chainFriend->GetEntries(), 30);
-      
+
       int mainVal;
       int friendVal;
       chain->SetBranchAddress("val", &mainVal);
