@@ -376,13 +376,17 @@ TEST(RNTupleDS, CollectionFieldTypes)
       *model->MakeField<std::set<std::set<Electron>>>("electronSetSet") =
          std::set<std::set<Electron>>{{Electron{1.f}, Electron{2.f}}, {Electron{3.f}}};
 
-      // Mimic the collection stucture of NanoAOD
+      // Untyped collection
+      auto fldJetPt = ROOT::Experimental::RVectorField::CreateUntyped(
+         "jet_pt", std::make_unique<ROOT::Experimental::RField<float>>("_0"));
+      model->AddField(std::move(fldJetPt));
+
+      // Untyped collection with an untyped record, with a projection
       std::vector<std::unique_ptr<ROOT::Experimental::RFieldBase>> muon;
       muon.emplace_back(std::make_unique<ROOT::Experimental::RField<float>>("muon_pt"));
       auto fldMuonRecord = std::make_unique<ROOT::Experimental::RRecordField>("_0", std::move(muon));
       auto fldMuons = ROOT::Experimental::RVectorField::CreateUntyped("muon", std::move(fldMuonRecord));
       model->AddField(std::move(fldMuons));
-
       auto muonPtField = ROOT::Experimental::RFieldBase::Create("muon_pt", "ROOT::VecOps::RVec<float>").Unwrap();
       model->AddProjectedField(std::move(muonPtField), [](const std::string &fieldName) {
          if (fieldName == "muon_pt")
@@ -399,7 +403,7 @@ TEST(RNTupleDS, CollectionFieldTypes)
 
    auto colNames = ds.GetColumnNames();
 
-   ASSERT_EQ(19, colNames.size());
+   ASSERT_EQ(20, colNames.size());
 
    EXPECT_TRUE(ds.HasColumn("intSet"));
    EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_intSet"));
@@ -407,10 +411,12 @@ TEST(RNTupleDS, CollectionFieldTypes)
    EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_electronSet"));
    EXPECT_TRUE(ds.HasColumn("electronSet.pt"));
    EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_electronSet.pt"));
+   EXPECT_TRUE(ds.HasColumn("jet_pt"));
+   EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_jet_pt"));
    EXPECT_TRUE(ds.HasColumn("muon_pt"));
    EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_muon_pt"));
-   EXPECT_TRUE(ds.HasColumn("muon._0.muon_pt"));
-   EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_muon._0.muon_pt"));
+   EXPECT_TRUE(ds.HasColumn("muon.muon_pt"));
+   EXPECT_TRUE(ds.HasColumn("R_rdf_sizeof_muon.muon_pt"));
 
    EXPECT_STREQ("std::set<std::int32_t>", ds.GetTypeName("intSet").c_str());
    EXPECT_STREQ("std::set<Electron>", ds.GetTypeName("electronSet").c_str());
@@ -419,8 +425,9 @@ TEST(RNTupleDS, CollectionFieldTypes)
    EXPECT_STREQ("ROOT::VecOps::RVec<ROOT::VecOps::RVec<float>>", ds.GetTypeName("electronSetSet.pt").c_str());
    // TODO(fdegeus) figure out how to (cleanly) still add inner vectors etc. as RVecs.
    EXPECT_STREQ("std::set<std::vector<Electron>>", ds.GetTypeName("electronSetVec").c_str());
+   EXPECT_STREQ("ROOT::VecOps::RVec<float>", ds.GetTypeName("jet_pt").c_str());
    EXPECT_STREQ("ROOT::VecOps::RVec<float>", ds.GetTypeName("muon_pt").c_str());
-   EXPECT_STREQ(ds.GetTypeName("muon._0.muon_pt").c_str(), ds.GetTypeName("muon_pt").c_str());
+   EXPECT_STREQ(ds.GetTypeName("muon.muon_pt").c_str(), ds.GetTypeName("muon_pt").c_str());
 }
 
 TEST_F(RNTupleDSTest, AlternativeColumnTypes)
