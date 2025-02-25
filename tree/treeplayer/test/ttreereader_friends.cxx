@@ -283,8 +283,8 @@ TEST_F(TTreeReaderFriends, EntryChainFriend)
       TTreeReaderValue<int> friendVal(reader, "entry");
       int entry = 0;
       while (reader.Next()) {
-         EXPECT_EQ(mainVal, -entry);
-         EXPECT_EQ(friendVal, entry);
+         EXPECT_EQ(*mainVal, -entry);
+         EXPECT_EQ(*friendVal, entry);
          ++entry;
       }
    }
