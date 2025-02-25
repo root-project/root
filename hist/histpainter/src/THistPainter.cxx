@@ -1696,8 +1696,9 @@ Begin_Macro(source)
    htext5->SetMarkerSize(1.8);
    htext5->SetMarkerColor(kRed);
    htext4->SetBarOffset(0.2);
-   htext4->Draw("COL TEXT SAME");
    htext5->SetBarOffset(-0.2);
+   htext3->Draw("COL");
+   htext4->Draw("TEXT SAME");
    htext5->Draw("TEXT SAME");
 }
 End_Macro
