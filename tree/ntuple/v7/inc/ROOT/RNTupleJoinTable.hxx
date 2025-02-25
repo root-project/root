@@ -67,14 +67,14 @@ private:
    };
 
    /// The join table itself. Maps field values (or combinations thereof in case the join table is defined for multiple
-   /// fields) to their respective entry numbers.
+   /// fields) to their respective entry indexes.
    std::unordered_map<RCombinedJoinFieldValue, std::vector<ROOT::NTupleSize_t>, RCombinedJoinFieldValueHash> fJoinTable;
 
-   /// Names of the join fields used for the mapping to their respective entry numbers.
+   /// Names of the join fields used for the mapping to their respective entry indexes.
    std::vector<std::string> fJoinFieldNames;
 
    /// The size (in bytes) for each join field, corresponding to `fJoinFieldNames`. This information is stored to be
-   /// able to properly cast incoming void pointers to the join field values in `GetAllEntryNumbers`.
+   /// able to properly cast incoming void pointers to the join field values in `GetEntryIndexes`.
    std::vector<std::size_t> fJoinFieldValueSizes;
 
    /// Only built join tables can be queried.
@@ -114,8 +114,7 @@ public:
    ///
    /// \param[in] pageSource The page source of the RNTuple for which to build the join table.
    ///
-   /// Only a built join table can be queried (with RNTupleJoinTable::GetFirstEntryNumber or
-   /// RNTupleJoinTable::GetAllEntryNumbers).
+   /// Only a built join table can be queried (with RNTupleJoinTable::GetEntryIndexes).
    void Build(RPageSource &pageSource);
 
    /////////////////////////////////////////////////////////////////////////////
@@ -140,7 +139,7 @@ public:
    bool IsBuilt() const { return fIsBuilt; }
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get all entry numbers for the given join field value(s).
+   /// \brief Get all entry indexes for the given join field value(s).
    ///
    /// \param[in] valuePtrs A vector of pointers to the join field values to look up.
    ///
