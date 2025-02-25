@@ -1,9 +1,11 @@
 #include <memory>
 #include <vector>
+#include <string>
 
 #include "gtest/gtest.h"
 
 #include "TFile.h"
+#include "TDirectory.h"
 #include "TKey.h"
 #include "TNamed.h"
 #include "TPluginManager.h"
@@ -155,4 +157,37 @@ TEST(TFile, k630forwardCompatibility)
    ASSERT_EQ(fileu.TestBit(TFile::k630forwardCompatibility), true);  
    fileu.Close();
    gSystem->Unlink(filename.c_str());
+}
+
+// https://github.com/root-project/root/issues/17824
+TEST(TFile, MakeSubDirectory)
+{
+   // create test file
+   TFile outFile("dirTest17824.root", "RECREATE");
+   // create test dir
+   auto d = outFile.mkdir("test");
+   // check if returned pointer points to test dir
+   EXPECT_EQ(std::string(d->GetName()), "test");
+   // move to dir and check
+   d->cd();
+   EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetPath()), "dirTest17824.root:/test");
+   EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetName()), "test");
+
+   // make test2 subdir
+   auto d2 = outFile.mkdir("test/test2");
+   // check if returned pointer points to test2 subdir
+   EXPECT_FALSE(d2 == d);
+   EXPECT_EQ(std::string(d2->GetName()), "test2");
+   // move to test2 subdir
+   d2->cd();
+   EXPECT_EQ(d2, gDirectory->GetDirectory(0));
+   EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetPath()), "dirTest17824.root:/test/test2");
+   EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetName()), "test2");
+   // rebase (because paths in cd() are relative) and move to test2 subdir via gDirectory and explicit path
+   outFile.cd();
+   gDirectory->cd("test/test2");
+   // check location again
+   EXPECT_EQ(d2, gDirectory->GetDirectory(0));
+   EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetPath()), "dirTest17824.root:/test/test2");
+   EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetName()), "test2");
 }
