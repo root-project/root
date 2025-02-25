@@ -209,6 +209,80 @@ struct Outer_Vecs {
    reader->LoadEntry(0);
 }
 
+TEST(RNTupleEmulated, EmulatedFields_VecsTemplatedWrapper)
+{
+   FileRaii fileGuard("test_ntuple_emulated_fields_vecs_templated_wrapper.root");
+
+   ExecInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+template <typename T>
+struct TemplatedWrapper {
+   T fValue;
+};
+)"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("vec", "std::vector<TemplatedWrapper<float>>").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("vec").get();
+      DeclarePointer("std::vector<TemplatedWrapper<float>>", "ptrVec", ptr);
+
+      ProcessLine("ptrVec->push_back(TemplatedWrapper<float>{1.0f});");
+      writer->Fill();
+
+      writer.reset();
+   });
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+
+   {
+      RNTupleDescriptor::RCreateModelOptions opts;
+      opts.fEmulateUnknownTypes = false;
+      try {
+         auto model = desc.CreateModel(opts);
+         FAIL() << "Creating a model without fEmulateUnknownTypes should fail";
+      } catch (const ROOT::RException &ex) {
+         ASSERT_THAT(ex.GetError().GetReport(), testing::HasSubstr("unknown type"));
+      }
+   }
+
+   {
+      RNTupleDescriptor::RCreateModelOptions opts;
+      opts.fEmulateUnknownTypes = true;
+      auto model = desc.CreateModel(opts);
+      ASSERT_NE(model, nullptr);
+
+      const auto &vecField = model->GetConstField("vec");
+      ASSERT_EQ(vecField.GetTypeName(), "std::vector<TemplatedWrapper<float>>");
+      ASSERT_EQ(vecField.GetStructure(), ROOT::ENTupleStructure::kCollection);
+      ASSERT_EQ(vecField.GetSubFields().size(), 1);
+
+      const auto *wrapperField = vecField.GetSubFields()[0];
+      ASSERT_EQ(wrapperField->GetTypeName(), "TemplatedWrapper<float>");
+      ASSERT_EQ(wrapperField->GetStructure(), ROOT::ENTupleStructure::kRecord);
+      ASSERT_NE(wrapperField->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
+      ASSERT_EQ(wrapperField->GetSubFields().size(), 1);
+
+      const auto *innerField = wrapperField->GetSubFields()[0];
+      ASSERT_EQ(innerField->GetTypeName(), "float");
+      ASSERT_EQ(innerField->GetFieldName(), "fValue");
+      ASSERT_EQ(innerField->GetStructure(), ROOT::ENTupleStructure::kLeaf);
+   }
+
+   // Now test loading entries with a reader
+   RNTupleDescriptor::RCreateModelOptions cmOpts;
+   cmOpts.fEmulateUnknownTypes = true;
+   reader = RNTupleReader::Open(cmOpts, "ntpl", fileGuard.GetPath());
+   reader->LoadEntry(0);
+}
+
 TEST(RNTupleEmulated, EmulatedFields_EmptyStruct)
 {
    // Test struct containing an empty struct
