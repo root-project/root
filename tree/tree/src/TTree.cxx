@@ -5523,6 +5523,8 @@ Long64_t TTree::GetEntriesFriend() const
 /// The function returns the number of bytes read from the input buffer.
 /// If entry does not exist the function returns 0.
 /// If an I/O error occurs, the function returns -1.
+/// If all branches are disabled and getall == 0, it also returns 0
+/// even if the specified entry exists in the tree, since zero bytes were read.
 ///
 /// If the Tree has friends, also read the friends entry.
 ///
