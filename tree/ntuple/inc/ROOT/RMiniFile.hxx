@@ -32,13 +32,19 @@ class TVirtualStreamerInfo;
 
 namespace ROOT {
 
-namespace Internal {
-class RRawFile;
-}
-
 class RNTupleWriteOptions;
 
 namespace Internal {
+class RNTupleFileWriter;
+}
+
+namespace Experimental::Internal {
+TDirectory *GetUnderlyingDirectory(ROOT::Internal::RNTupleFileWriter &writer);
+}
+
+namespace Internal {
+class RRawFile;
+
 /// Holds status information of an open ROOT file during writing
 struct RTFileControlBlock;
 
@@ -107,6 +113,8 @@ A stand-alone version of RNTuple can remove the TFile based writer.
 */
 // clang-format on
 class RNTupleFileWriter {
+   friend TDirectory *ROOT::Experimental::Internal::GetUnderlyingDirectory(ROOT::Internal::RNTupleFileWriter &writer);
+
 public:
    /// The key length of a blob. It is always a big key (version > 1000) with class name RBlob.
    static constexpr std::size_t kBlobKeyLen = 42;
