@@ -21,10 +21,6 @@ namespace Minuit2 {
 class CombinedMinimumBuilder : public MinimumBuilder {
 
 public:
-   CombinedMinimumBuilder() : fVMMinimizer(VariableMetricMinimizer()), fSimplexMinimizer(SimplexMinimizer()) {}
-
-   ~CombinedMinimumBuilder() override {}
-
    FunctionMinimum Minimum(const MnFcn &, const GradientCalculator &, const MinimumSeed &, const MnStrategy &,
                                    unsigned int, double) const override;
 

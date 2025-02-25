@@ -44,8 +44,6 @@ public:
          fErrorUpdator = std::unique_ptr<MinimumErrorUpdator>(new DavidonErrorUpdator());
    }
 
-   ~VariableMetricBuilder() override {}
-
    FunctionMinimum Minimum(const MnFcn &, const GradientCalculator &, const MinimumSeed &, const MnStrategy &,
                                    unsigned int, double) const override;
 

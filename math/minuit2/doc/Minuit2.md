@@ -1872,8 +1872,6 @@ The user's model function is a Gaussian.
       GaussFunction(double mean, double sig, double constant) :
         theMean(mean), theSigma(sig), theConstant(constant) {}
 
-      ~GaussFunction() {}
-
       double m() const {return theMean;}
       double s() const {return theSigma;}
       double c() const {return theConstant;}
@@ -1916,8 +1914,6 @@ The user's `FCN` (GaussFcn) to calculate the $\chi^2$
                           thePositions(pos),
                     theMVariances(mvar),
                     theErrorDef(1.) {}
-
-      ~GaussFcn() {}
 
       virtual double up() const {return theErrorDef;}
       virtual double operator()(const std::vector<double>&) const;

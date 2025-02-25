@@ -42,8 +42,6 @@ public:
 
    MnParabola(double a, double b, double c) : fA(a), fB(b), fC(c) {}
 
-   ~MnParabola() {}
-
    /**
 
    Evaluates the parabola a the point x.

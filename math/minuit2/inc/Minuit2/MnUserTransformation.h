@@ -50,8 +50,6 @@ public:
 
    MnUserTransformation(std::span<const double>, std::span<const double>);
 
-   ~MnUserTransformation() {}
-
    MnUserTransformation(const MnUserTransformation &trafo)
       : fPrecision(trafo.fPrecision), fParameters(trafo.fParameters), fExtOfInt(trafo.fExtOfInt),
         fDoubleLimTrafo(trafo.fDoubleLimTrafo), fUpperLimTrafo(trafo.fUpperLimTrafo),

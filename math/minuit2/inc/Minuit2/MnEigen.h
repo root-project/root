@@ -24,16 +24,9 @@ class MnUserCovariance;
  */
 
 class MnEigen {
-
 public:
-   MnEigen() {}
-
-   ~MnEigen() {}
-
    /// calculate the eigenvalues
    std::vector<double> operator()(const MnUserCovariance &) const;
-
-private:
 };
 
 } // namespace Minuit2

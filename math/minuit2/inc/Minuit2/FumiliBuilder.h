@@ -43,11 +43,6 @@ public:
 
    enum FumiliMethodType { kLineSearch = 0, kTrustRegion = 1, kTrustRegionScaled = 2};
 
-
-   FumiliBuilder() : fEstimator(VariableMetricEDMEstimator()), fErrorUpdator(FumiliErrorUpdator()) {}
-
-   ~FumiliBuilder() override {}
-
    void SetMethod(FumiliMethodType type) { fMethodType = type;}
 
    /**
