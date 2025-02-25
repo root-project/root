@@ -33,8 +33,6 @@ public:
    // user defined strategy (0, 1, 2, >=3)
    explicit MnStrategy(unsigned int);
 
-   ~MnStrategy() {}
-
    unsigned int Strategy() const { return fStrategy; }
 
    unsigned int GradientNCycles() const { return fGradNCyc; }

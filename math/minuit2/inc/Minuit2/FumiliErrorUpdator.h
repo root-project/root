@@ -47,10 +47,6 @@ section 5
 class FumiliErrorUpdator : public MinimumErrorUpdator {
 
 public:
-   FumiliErrorUpdator() {}
-
-   ~FumiliErrorUpdator() override {}
-
    /**
 
    Member function that calculates the Error matrix (or the Hessian
@@ -88,8 +84,6 @@ public:
    */
 
    MinimumError Update(const MinimumState &, const MinimumParameters &, const FunctionGradient &) const override;
-
-private:
 };
 
 } // namespace Minuit2

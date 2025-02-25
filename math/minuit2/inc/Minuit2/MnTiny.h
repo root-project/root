@@ -17,16 +17,12 @@ namespace Minuit2 {
 class MnTiny {
 
 public:
-   MnTiny() : fOne(1.) {}
-
-   ~MnTiny() {}
-
    double One() const;
 
    double operator()(double epsp1) const;
 
 private:
-   double fOne;
+   double fOne = 1.;
 };
 
 } // namespace Minuit2

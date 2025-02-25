@@ -40,10 +40,6 @@ and Lorenzo Moneta
 class MnLineSearch {
 
 public:
-   MnLineSearch() {}
-
-   ~MnLineSearch() {}
-
    MnParabolaPoint operator()(const MnFcn &, const MinimumParameters &, const MnAlgebraicVector &, double,
                               const MnMachinePrecision &) const;
 
@@ -54,8 +50,6 @@ public:
    MnParabolaPoint BrentSearch(const MnFcn &, const MinimumParameters &, const MnAlgebraicVector &, double, double,
                                const MnMachinePrecision &) const;
 #endif
-
-private:
 };
 
 } // namespace Minuit2

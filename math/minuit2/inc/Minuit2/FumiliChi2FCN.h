@@ -49,10 +49,6 @@ section 5
 class FumiliChi2FCN : public FumiliFCNBase {
 
 public:
-   FumiliChi2FCN() {}
-
-   ~FumiliChi2FCN() override {}
-
    /**
 
    Sets the model function for the data (for example gaussian+linear for a peak)

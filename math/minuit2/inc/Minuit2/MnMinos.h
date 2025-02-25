@@ -39,8 +39,6 @@ public:
    /// construct from FCN + Minimum + strategy
    MnMinos(const FCNBase &fcn, const FunctionMinimum &min, const MnStrategy &stra);
 
-   ~MnMinos() {}
-
    /// returns the negative (pair.first) and the positive (pair.second)
    /// Minos Error of the Parameter
    std::pair<double, double> operator()(unsigned int, unsigned int maxcalls = 0, double toler = 0.1) const;

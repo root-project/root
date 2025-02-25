@@ -28,17 +28,12 @@ namespace Minuit2 {
 class MnPlot {
 
 public:
-   MnPlot() : fPageWidth(80), fPageLength(30) {}
+   MnPlot() = default;
 
-   MnPlot(unsigned int width, unsigned int length) : fPageWidth(width), fPageLength(length)
+   MnPlot(unsigned int width, unsigned int length)
+      : fPageWidth(std::min(width, 120u)), fPageLength(std::min(length, 56u))
    {
-      if (fPageWidth > 120)
-         fPageWidth = 120;
-      if (fPageLength > 56)
-         fPageLength = 56;
    }
-
-   ~MnPlot() {}
 
    void operator()(std::span<const std::pair<double, double>> ) const;
    void operator()(double, double, std::span<const std::pair<double, double>> ) const;
@@ -47,8 +42,8 @@ public:
    unsigned int Length() const { return fPageLength; }
 
 private:
-   unsigned int fPageWidth;
-   unsigned int fPageLength;
+   unsigned int fPageWidth = 80;
+   unsigned int fPageLength = 30;
 };
 
 } // namespace Minuit2

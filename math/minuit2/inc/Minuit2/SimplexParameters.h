@@ -36,8 +36,6 @@ public:
    {
    }
 
-   ~SimplexParameters() {}
-
    void Update(double, const MnAlgebraicVector &);
 
    const std::vector<std::pair<double, MnAlgebraicVector>> &Simplex() const { return fSimplexParameters; }

@@ -32,8 +32,6 @@ public:
    {
    }
 
-   ~MinosError() {}
-
    MinosError(const MinosError &err)
       : fParameter(err.fParameter), fMinParValue(err.fMinParValue), fUpper(err.fUpper), fLower(err.fLower)
    {

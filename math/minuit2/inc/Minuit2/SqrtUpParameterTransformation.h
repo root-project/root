@@ -28,13 +28,7 @@ class MnMachinePrecision;
  */
 
 class SqrtUpParameterTransformation /* : public ParameterTransformation */ {
-
 public:
-   // create with user defined precision
-   SqrtUpParameterTransformation() {}
-
-   ~SqrtUpParameterTransformation() {}
-
    // transformation from internal to external
    long double Int2ext(long double Value, long double Upper) const;
 
@@ -46,8 +40,6 @@ public:
 
    // derivative of transformation from external to internal
    long double DExt2Int(long double Value, long double Upper) const;
-
-private:
 };
 
 } // namespace Minuit2

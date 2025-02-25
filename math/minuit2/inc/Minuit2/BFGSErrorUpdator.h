@@ -20,15 +20,8 @@ namespace Minuit2 {
    Update of the covariance matrix for the Variable Metric minimizer (MIGRAD)
  */
 class BFGSErrorUpdator : public MinimumErrorUpdator {
-
 public:
-   BFGSErrorUpdator() {}
-
-   ~BFGSErrorUpdator() override {}
-
    MinimumError Update(const MinimumState &, const MinimumParameters &, const FunctionGradient &) const override;
-
-private:
 };
 
 } // namespace Minuit2

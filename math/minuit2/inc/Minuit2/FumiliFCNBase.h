@@ -71,8 +71,6 @@ public:
    }
 
 
-   ~FumiliFCNBase() override {}
-
    /**
 
       Evaluate function Value, Gradient and Hessian using Fumili approximation, for values of parameters p

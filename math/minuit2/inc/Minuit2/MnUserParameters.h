@@ -40,8 +40,6 @@ public:
 
    MnUserParameters(std::span<const double>, std::span<const double>);
 
-   ~MnUserParameters() {}
-
    MnUserParameters(const MnUserParameters &par) : fTransformation(par.fTransformation) {}
 
    MnUserParameters &operator=(const MnUserParameters &par)
