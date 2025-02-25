@@ -34,6 +34,11 @@ class TDirectory;
 namespace ROOT {
 class RNTuple; // for making RPageSourceFile a friend of RNTuple
 class RNTupleLocator;
+class RNTupleWriter;
+
+namespace Internal {
+class RPageSinkFile;
+}
 
 namespace Internal {
 class RClusterPool;
@@ -98,6 +103,11 @@ public:
    RPageSinkFile(RPageSinkFile &&) = default;
    RPageSinkFile &operator=(RPageSinkFile &&) = default;
    ~RPageSinkFile() override;
+
+   virtual TDirectory *GetUnderlyingDirectory() const final
+   {
+      return Experimental::Internal::GetUnderlyingDirectory(*fWriter);
+   }
 }; // class RPageSinkFile
 
 // clang-format off
