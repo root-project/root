@@ -991,7 +991,6 @@ void TFormula::FillVecFunctionsShurtCuts() {
    // do nothing in case Veccore is not enabled
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///    Handling polN
 ///    If before 'pol' exist any name, this name will be treated as variable used in polynomial
@@ -1006,8 +1005,7 @@ void TFormula::FillVecFunctionsShurtCuts() {
 
 void TFormula::HandlePolN(TString &formula)
 {
-   
-   
+
    Int_t polPos = formula.Index("pol");
    while (polPos != kNPOS && !IsAParameterName(formula, polPos)) {
       Bool_t defaultVariable = false;
@@ -1026,20 +1024,21 @@ void TFormula::HandlePolN(TString &formula)
          if (args.Contains(",")) {
             isNewFormat = true;
             sdegree = formula(polPos + 3, openingBracketPos - polPos - 3);
-            if (!sdegree.IsDigit()) sdegree = "1";
+            if (!sdegree.IsDigit())
+               sdegree = "1";
             degree = sdegree.Atoi();
-            
+
             std::vector<TString> tokens;
             std::stringstream ss(args.Data());
             std::string token;
-            while (std::getline(ss, token, ',')) {    // spliting string at ,
+            while (std::getline(ss, token, ',')) { // spliting string at ,
                tokens.push_back(TString(token));
             }
-            
+
             if (!tokens.empty()) {
                variable = tokens[0];
                variable.Strip(TString::kBoth);
-               
+
                // extract counter if provided as a numeric value, without this it was not working with [A], [B]
                if (tokens.size() > 1) {
                   TString counterStr = tokens[1];
@@ -1056,7 +1055,7 @@ void TFormula::HandlePolN(TString &formula)
                   if (paramStr.BeginsWith("[") && paramStr.EndsWith("]")) {
                      paramStr = paramStr(1, paramStr.Length() - 2);
                      paramNames.push_back(paramStr);
-                     
+
                      if (fParams.find(paramStr) == fParams.end()) {
                         fParams[paramStr] = fNpar;
                         fClingParameters.push_back(0.0);
@@ -1144,12 +1143,12 @@ void TFormula::HandlePolN(TString &formula)
                formula.Data(), pattern.Data(), replacement.Data());
          break;
       }
-      
+
       if (formula == pattern) {
          SetBit(kLinear, true);
          fNumber = 300 + degree;
       }
-      
+
       formula.ReplaceAll(pattern, replacement);
       polPos = formula.Index("pol");
    }
