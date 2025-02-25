@@ -985,7 +985,14 @@ Long64_t TChain::GetEntries() const
       return fProofChain->GetEntries();
    }
    if (fEntries == TTree::kMaxEntries) {
-      const_cast<TChain*>(this)->LoadTree(TTree::kMaxEntries-1);
+      const auto readEntry = fReadEntry;
+      auto *thisChain = const_cast<TChain *>(this);
+      thisChain->LoadTree(TTree::kMaxEntries - 1);
+      thisChain->InvalidateCurrentTree();
+      if (readEntry >= 0)
+         thisChain->LoadTree(readEntry);
+      else
+         thisChain->fReadEntry = readEntry;
    }
    return fEntries;
 }
