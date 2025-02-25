@@ -18,15 +18,8 @@ class FunctionGradient;
 class MinimumError;
 
 class VariableMetricEDMEstimator {
-
 public:
-   VariableMetricEDMEstimator() {}
-
-   ~VariableMetricEDMEstimator() {}
-
    double Estimate(const FunctionGradient &, const MinimumError &) const;
-
-private:
 };
 
 } // namespace Minuit2
