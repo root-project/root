@@ -21,8 +21,6 @@ class GaussFunction {
 public:
    GaussFunction(double mean, double sig, double constant) : fMean(mean), fSigma(sig), fConstant(constant) {}
 
-   ~GaussFunction() {}
-
    double m() const { return fMean; }
    double s() const { return fSigma; }
    double c() const { return fConstant; }

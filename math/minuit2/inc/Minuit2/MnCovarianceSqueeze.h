@@ -24,19 +24,12 @@ class MinimumError;
    removing the corresponding row and index
  */
 class MnCovarianceSqueeze {
-
 public:
-   MnCovarianceSqueeze() {}
-
-   ~MnCovarianceSqueeze() {}
-
    MnUserCovariance operator()(const MnUserCovariance &, unsigned int) const;
 
    MinimumError operator()(const MinimumError &, unsigned int) const;
 
    MnAlgebraicSymMatrix operator()(const MnAlgebraicSymMatrix &, unsigned int) const;
-
-private:
 };
 
 } // namespace Minuit2

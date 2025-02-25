@@ -29,8 +29,6 @@ public:
    {
    }
 
-   ~AnalyticalGradientCalculator() override {}
-
    FunctionGradient operator()(const MinimumParameters &) const override;
 
    FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;

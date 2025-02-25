@@ -21,8 +21,6 @@ class GaussDataGen {
 public:
    GaussDataGen(unsigned int npar = 100);
 
-   ~GaussDataGen() {}
-
    std::vector<double> Positions() const { return fPositions; }
    std::vector<double> Measurements() const { return fMeasurements; }
    std::vector<double> Variances() const { return fVariances; }

@@ -47,8 +47,6 @@ public:
 
    MnParabolaPoint(double x, double y) : fX(x), fY(y) {}
 
-   ~MnParabolaPoint() {}
-
    /**
 
    Accessor to the x (first) coordinate.

@@ -50,8 +50,6 @@ public:
    {
    }
 
-   ~MnContours() {}
-
    /// ask for one Contour (points only) from number of points (>=4) and parameter indices
    std::vector<std::pair<double, double>> operator()(unsigned int, unsigned int, unsigned int npoints = 20) const;
 
