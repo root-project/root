@@ -391,7 +391,8 @@ ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 ROOT_CREATE_HEADER_COPY_TARGETS()
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
-add_custom_target(move_headers DEPENDS ${__allHeaders} gitinfotxt)
+get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)
+add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins} gitinfotxt)
 
 #---CXX MODULES-----------------------------------------------------------------------------------
 if(MSVC)
