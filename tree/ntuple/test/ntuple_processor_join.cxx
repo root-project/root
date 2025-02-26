@@ -221,24 +221,23 @@ TEST_F(RNTupleJoinProcessorTest, MissingEntries)
    auto proc =
       RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {{fNTupleNames[3], fFileNames[3]}}, {"i"});
 
-   int nEntries = 0;
    auto i = proc->GetEntry().GetPtr<int>("i");
    auto a = proc->GetEntry().GetPtr<float>("ntuple4.a");
    std::vector<float> yExpected;
-   for ([[maybe_unused]] auto &entry : *proc) {
-      EXPECT_EQ(proc->GetCurrentEntryNumber(), nEntries++);
 
-      EXPECT_FLOAT_EQ(proc->GetCurrentEntryNumber(), *i);
-
-      if (*i == 3 || *i == 9) {
-         EXPECT_EQ(0.f, *a) << "entries with i=3 and i=9 are missing from ntuple4, ntuple4.a should have been "
-                               "default-initialized";
-      } else {
-         EXPECT_EQ(*i * 0.1f, *a);
-      }
+   auto procIter = proc->begin();
+   EXPECT_EQ(*i * 0.1f, *a);
+   ++procIter;
+   EXPECT_EQ(*i * 0.1f, *a);
+   ++procIter;
+   EXPECT_EQ(2ULL, proc->GetCurrentEntryNumber());
+   try {
+      ++procIter;
+   } catch (const ROOT::RException &err) {
+      EXPECT_THAT(err.what(),
+                  testing::HasSubstr(
+                     "entry 3 in the primary processor has no corresponding entry in auxiliary processor \"ntuple4\""));
    }
-
-   EXPECT_EQ(10, proc->GetNEntriesProcessed());
 }
 
 TEST_F(RNTupleJoinProcessorTest, WithModel)
