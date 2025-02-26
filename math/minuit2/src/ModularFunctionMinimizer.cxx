@@ -23,7 +23,6 @@
 #include "Minuit2/FCNBase.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnLineSearch.h"
-#include "Minuit2/MnParabolaPoint.h"
 #include "Minuit2/MnPrint.h"
 
 namespace ROOT {
