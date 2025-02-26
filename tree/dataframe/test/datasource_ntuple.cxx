@@ -492,7 +492,7 @@ TEST_F(RNTupleDSTest, AlternativeColumnTypes)
       // Invalid outer field type
       auto dfInvalid = ROOT::RDF::Experimental::FromRNTuple(fNtplName, fFileName);
       dfInvalid.Define("firstJet", [](const std::pair<float, float> &jets) { return jets.first; }, {"jets"})
-         .Take<std::size_t, ROOT::RVec<std::size_t>>("firstJet")
+         .Take<float, ROOT::RVec<float>>("firstJet")
          .GetValue();
       FAIL() << "specifying templated actions with incompatible column types should throw";
    } catch (const std::runtime_error &err) {
