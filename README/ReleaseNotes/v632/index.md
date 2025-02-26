@@ -34,7 +34,7 @@ The following people have contributed to this new version:
  Bernhard Manfred Gruber,\
  Enrico Guiraud,
  Jonas Hahnfeld, CERN/Goethe University Frankfurt,\
- Fernando Hueso Gonzalez, University of Valencia\
+ Fernando Hueso Gonzalez, CSIC/University of Valencia\
  Attila Krasznahorkay, CERN/EP-ADP-OS,\
  Wim Lavrijsen, LBL,\
  Dennis Klein, GSI,\
@@ -79,6 +79,7 @@ The following people have contributed to this new version:
 - Support for external (ie. non-builtin) libAfterImage is now deprecated and it will be removed in next release 6.34.
 - The `TList::TList(TObject*)` constructor is deprecated and will be removed in ROOT 6.34
 - The deprecated `TProofOutputList::TProofOutputList(TObject *o)` constructor was removed
+- In the ROOT terminal, CINT-like declarations `i=0` are now deprecated and might be no longer supported in future ROOT releases. Please use instead `auto i=0`. In the meantime, you can still use it and this warning will be emitted: `declaration without the 'auto' keyword is deprecated`.
 
 ## Core Libraries
 
