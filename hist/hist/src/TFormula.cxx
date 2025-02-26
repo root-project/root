@@ -1101,7 +1101,7 @@ void TFormula::HandlePolN(TString &formula)
       // build replacement string (modified)
       TString replacement;
       if (isNewFormat && !paramNames.empty()) {
-         for (size_t i = 0; i <= degree && i < paramNames.size(); i++) {
+         for (Int_t i = 0; i <= degree && i < static_cast<Int_t>(paramNames.size()); i++) {
             if (i == 0) {
                replacement = TString::Format("[%s]", paramNames[i].Data());
             } else if (i == 1) {
