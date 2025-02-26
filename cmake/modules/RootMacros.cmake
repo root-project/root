@@ -1287,7 +1287,10 @@ macro(ROOT_CREATE_HEADER_COPY_TARGETS)
 
     list(LENGTH inputs LIST_LENGTH)
     # Windows doesn't support long command lines, so split them in packs:
-    foreach(range_start RANGE 0 ${LIST_LENGTH} 100)
+    # foreach(.. RANGE start stop) is inclusive for both start and stop, so we
+    # need to decrement the LIST_LENGTH to get the desired logic.
+    math(EXPR LIST_LENGTH_MINUS_ONE "${LIST_LENGTH}-1")
+    foreach(range_start RANGE 0 ${LIST_LENGTH_MINUS_ONE} 100)
       list(SUBLIST outputs ${range_start} 100 sub_outputs)
       list(SUBLIST inputs ${range_start} 100 sub_inputs)
       list(LENGTH sub_outputs SUB_LENGTH)
