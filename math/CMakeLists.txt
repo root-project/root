@@ -3,8 +3,13 @@
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
+cmake_minimum_required(VERSION 3.19)
+project(ROOT::math)
 
-add_subdirectory(mathcore)
+include(${ROOT_MAIN_SOURCE_DIR}/cmake/modules/RootInitExternalProject.cmake)
+ROOT_INIT_EXTERNAL_PROJECT(ROOT::math)
+
+#add_subdirectory(mathcore)
 if(mathmore)
   add_subdirectory(mathmore)
 endif()

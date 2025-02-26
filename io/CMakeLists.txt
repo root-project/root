@@ -6,7 +6,9 @@
 
 add_subdirectory(io)  # special CMakeLists.txt
 add_subdirectory(rootpcm)
-add_subdirectory(sql)
+if(ROOT_ENABLE_PROJECTS AND ROOT_ENABLE_PROJECTS STREQUAL "All")
+  add_subdirectory(sql)
+endif()
 add_subdirectory(xml)
 if(xml)
   add_subdirectory(xmlparser)
