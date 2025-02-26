@@ -310,6 +310,58 @@ TEST_F(RNTupleDSTest, ChainTailScheduling)
 }
 #endif
 
+TEST_F(RNTupleDSTest, ModifyColumnValues)
+{
+   auto df = ROOT::RDF::Experimental::FromRNTuple(fNtplName, fFileName);
+   auto dfCorrected =
+      df.Define("jetsCorrected",
+                [](ROOT::RVec<float> &jets) {
+                   for (auto &jet : jets) {
+                      jet *= 1.1;
+                   }
+                   return jets;
+                },
+                {"jets"})
+         .Define("jetsFiltered", [](const ROOT::RVec<float> &jets) { return jets[jets <= 2.f]; }, {"jetsCorrected"});
+
+   ROOT::RVec<float> jetsExpected{1.f, 2.f};
+   ROOT::RVec<float> jetsCorrectedExpected{1.1f, 2.2f};
+   ROOT::RVec<float> jetsFilteredExpected{1.1f};
+
+   // In the same action, we expect "jets" and "jetsCorrected" to be equal, with the modified values after the first
+   // "Define", because "jets" is modified in-place here.
+   dfCorrected.Foreach(
+      [&jetsCorrectedExpected, &jetsFilteredExpected](const ROOT::RVec<float> &jets, const ROOT::RVec<float> &jetsC,
+                                                      const ROOT::RVec<float> &jetsF) {
+         EXPECT_VEC_EQ(jetsCorrectedExpected, jets);
+         EXPECT_VEC_EQ(jets, jetsC);
+         EXPECT_VEC_EQ(jetsFilteredExpected, jetsF);
+      },
+      {"jets", "jetsCorrected", "jetsFiltered"});
+
+   // Even though "jetsCorrected" is not used, "jets" should still be modified because "jetsFiltered" is defined from
+   // "jetsCorrected".
+   dfCorrected.Foreach(
+      [&jetsCorrectedExpected, &jetsFilteredExpected](const ROOT::RVec<float> &jets, const ROOT::RVec<float> &jetsF) {
+         EXPECT_VEC_EQ(jetsCorrectedExpected, jets);
+         EXPECT_VEC_EQ(jetsFilteredExpected, jetsF);
+      },
+      {"jets", "jetsFiltered"});
+
+   // In separate actions, we expect "jets" to have its original on-disk value, but "jetsCorrected" (and by
+   // extension, "jetsFiltered") to have the modified values.
+   auto jets = dfCorrected.Take<ROOT::RVec<float>>("jets").GetValue();
+   auto jetsCorrected = dfCorrected.Take<ROOT::RVec<float>>("jetsCorrected").GetValue();
+   auto jetsFiltered = dfCorrected.Take<ROOT::RVec<float>>("jetsFiltered").GetValue();
+
+   ASSERT_EQ(1ull, jets.size());
+   ASSERT_EQ(1ull, jetsCorrected.size());
+   ASSERT_EQ(1ull, jetsFiltered.size());
+   EXPECT_VEC_EQ(jetsExpected, jets[0]);
+   EXPECT_VEC_EQ(jetsCorrectedExpected, jetsCorrected[0]);
+   EXPECT_VEC_EQ(jetsFilteredExpected, jetsFiltered[0]);
+}
+
 TEST(RNTupleDS, CollectionFieldTypes)
 {
    // NB: The other tests already cover std::vector and std::array (and nestings thereof).
