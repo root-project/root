@@ -688,9 +688,9 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RSealPageConfig &config)
    }
    auto nBytesZipped = nBytesPacked;
 
-   if ((config.fCompressionSetting != 0) || !config.fElement->IsMappable() || !config.fAllowAlias ||
+   if ((config.fCompressionSettings != 0) || !config.fElement->IsMappable() || !config.fAllowAlias ||
        config.fWriteChecksum) {
-      nBytesZipped = RNTupleCompressor::Zip(pageBuf, nBytesPacked, config.fCompressionSetting, config.fBuffer);
+      nBytesZipped = RNTupleCompressor::Zip(pageBuf, nBytesPacked, config.fCompressionSettings, config.fBuffer);
       if (!isAdoptedBuffer)
          delete[] pageBuf;
       pageBuf = reinterpret_cast<unsigned char *>(config.fBuffer);
@@ -715,7 +715,7 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RPage &page, const RColu
    RSealPageConfig config;
    config.fPage = &page;
    config.fElement = &element;
-   config.fCompressionSetting = GetWriteOptions().GetCompression();
+   config.fCompressionSettings = GetWriteOptions().GetCompression();
    config.fWriteChecksum = GetWriteOptions().GetEnablePageChecksums();
    config.fAllowAlias = true;
    config.fBuffer = fSealPageBuffer.data();
