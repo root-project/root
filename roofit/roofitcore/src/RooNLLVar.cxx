@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -356,3 +358,5 @@ void RooNLLVar::enableBinOffsetting(bool flag)
    }
    setValueDirty();
 }
+
+/// \endcond

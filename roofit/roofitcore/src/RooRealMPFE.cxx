@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -418,7 +420,7 @@ void RooRealMPFE::serverLoop()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Client-side function that instructs server process to start
-/// asynchronuous (re)calculation of function value. This function
+/// asynchronous (re)calculation of function value. This function
 /// returns immediately. The calculated value can be retrieved
 /// using getVal()
 
@@ -797,3 +799,4 @@ void RooMPSentinel::remove(RooRealMPFE& mpfe)
   _mpfeSet.remove(mpfe,true) ;
 }
 
+/// \endcond

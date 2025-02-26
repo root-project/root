@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -534,3 +536,5 @@ void RooFormula::installFormulaOrThrow(const std::string& formula) {
 
   _tFormula = std::move(theFormula);
 }
+
+/// \endcond

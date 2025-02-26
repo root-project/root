@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -381,3 +383,5 @@ RooArgSet RooXYChi2Var::requiredExtraObservables() const
   if (_yvar) return RooArgSet(*_yvar) ;
   return RooArgSet() ;
 }
+
+/// \endcond

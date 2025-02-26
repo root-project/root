@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -193,3 +195,5 @@ void RooBinIntegrator::recursive_integration(const UInt_t d, const double delta,
       }
    }
 }
+
+/// \endcond
