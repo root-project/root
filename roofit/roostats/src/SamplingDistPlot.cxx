@@ -388,8 +388,8 @@ void SamplingDistPlot::GetAbsoluteInterval(double &theMin, double &theMax, doubl
 /// Sets line color for given sampling distribution and
 /// fill color for the associated shaded TH1F.
 
-void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *samplDist) {
-   if (samplDist == nullptr) {
+void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *sampleDist) {
+   if (sampleDist == nullptr) {
       fHist->SetLineColor(color);
 
       TString shadedName(fHist->GetName());
@@ -404,11 +404,11 @@ void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *s
       }
    } else {
 
-      TString shadedName(samplDist->GetName());
+      TString shadedName(sampleDist->GetName());
       shadedName += "_shaded";
 
       for(auto * obj : static_range_cast<TH1F*>(fItems)) {
-         if (!strcmp(obj->GetName(), samplDist->GetName())) {
+         if (!strcmp(obj->GetName(), sampleDist->GetName())) {
             obj->SetLineColor(color);
             //break;
          }
@@ -425,14 +425,14 @@ void SamplingDistPlot::SetLineColor(Color_t color, const SamplingDistribution *s
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SamplingDistPlot::SetLineWidth(Width_t lwidth, const SamplingDistribution *samplDist)
+void SamplingDistPlot::SetLineWidth(Width_t lwidth, const SamplingDistribution *sampleDist)
 {
-  if(samplDist == nullptr){
+  if(sampleDist == nullptr){
     fHist->SetLineWidth(lwidth);
   }
   else{
     for(auto * obj : static_range_cast<TH1F*>(fItems)) {
-      if(!strcmp(obj->GetName(),samplDist->GetName())){
+      if(!strcmp(obj->GetName(),sampleDist->GetName())){
    obj->SetLineWidth(lwidth);
    break;
       }
@@ -444,14 +444,14 @@ void SamplingDistPlot::SetLineWidth(Width_t lwidth, const SamplingDistribution *
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SamplingDistPlot::SetLineStyle(Style_t style, const SamplingDistribution *samplDist)
+void SamplingDistPlot::SetLineStyle(Style_t style, const SamplingDistribution *sampleDist)
 {
-  if(samplDist == nullptr){
+  if(sampleDist == nullptr){
     fHist->SetLineStyle(style);
   }
   else{
     for(auto * obj : static_range_cast<TH1F*>(fItems)) {
-      if(!strcmp(obj->GetName(),samplDist->GetName())){
+      if(!strcmp(obj->GetName(),sampleDist->GetName())){
    obj->SetLineStyle(style);
    break;
       }
@@ -463,14 +463,14 @@ void SamplingDistPlot::SetLineStyle(Style_t style, const SamplingDistribution *s
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SamplingDistPlot::SetMarkerStyle(Style_t style, const SamplingDistribution *samplDist)
+void SamplingDistPlot::SetMarkerStyle(Style_t style, const SamplingDistribution *sampleDist)
 {
-  if(samplDist == nullptr){
+  if(sampleDist == nullptr){
     fHist->SetMarkerStyle(style);
   }
   else{
     for(auto * obj : static_range_cast<TH1F*>(fItems)) {
-      if(!strcmp(obj->GetName(),samplDist->GetName())){
+      if(!strcmp(obj->GetName(),sampleDist->GetName())){
    obj->SetMarkerStyle(style);
    break;
       }
@@ -482,14 +482,14 @@ void SamplingDistPlot::SetMarkerStyle(Style_t style, const SamplingDistribution 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SamplingDistPlot::SetMarkerColor(Color_t color, const SamplingDistribution *samplDist)
+void SamplingDistPlot::SetMarkerColor(Color_t color, const SamplingDistribution *sampleDist)
 {
-  if(samplDist == nullptr){
+  if(sampleDist == nullptr){
     fHist->SetMarkerColor(color);
   }
   else{
     for(auto * obj : static_range_cast<TH1F*>(fItems)) {
-      if(!strcmp(obj->GetName(),samplDist->GetName())){
+      if(!strcmp(obj->GetName(),sampleDist->GetName())){
    obj->SetMarkerColor(color);
    break;
       }
@@ -501,14 +501,14 @@ void SamplingDistPlot::SetMarkerColor(Color_t color, const SamplingDistribution 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SamplingDistPlot::SetMarkerSize(Size_t size, const SamplingDistribution *samplDist)
+void SamplingDistPlot::SetMarkerSize(Size_t size, const SamplingDistribution *sampleDist)
 {
-  if(samplDist == nullptr){
+  if(sampleDist == nullptr){
     fHist->SetMarkerSize(size);
   }
   else{
     for(auto * obj : static_range_cast<TH1F*>(fItems)) {
-      if(!strcmp(obj->GetName(),samplDist->GetName())){
+      if(!strcmp(obj->GetName(),sampleDist->GetName())){
    obj->SetMarkerSize(size);
    break;
       }
@@ -520,13 +520,13 @@ void SamplingDistPlot::SetMarkerSize(Size_t size, const SamplingDistribution *sa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TH1F* SamplingDistPlot::GetTH1F(const SamplingDistribution *samplDist)
+TH1F* SamplingDistPlot::GetTH1F(const SamplingDistribution *sampleDist)
 {
-  if(samplDist == nullptr){
+  if(sampleDist == nullptr){
     return fHist;
   }else{
     for(auto * obj : static_range_cast<TH1F*>(fItems)) {
-      if(!strcmp(obj->GetName(),samplDist->GetName())){
+      if(!strcmp(obj->GetName(),sampleDist->GetName())){
         return obj;
       }
     }
@@ -537,14 +537,14 @@ TH1F* SamplingDistPlot::GetTH1F(const SamplingDistribution *samplDist)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void SamplingDistPlot::RebinDistribution(Int_t rebinFactor, const SamplingDistribution *samplDist)
+void SamplingDistPlot::RebinDistribution(Int_t rebinFactor, const SamplingDistribution *sampleDist)
 {
-  if(samplDist == nullptr){
+  if(sampleDist == nullptr){
     fHist->Rebin(rebinFactor);
   }
   else{
     for(auto * obj : static_range_cast<TH1F*>(fItems)) {
-      if(!strcmp(obj->GetName(),samplDist->GetName())){
+      if(!strcmp(obj->GetName(),sampleDist->GetName())){
    obj->Rebin(rebinFactor);
    break;
       }

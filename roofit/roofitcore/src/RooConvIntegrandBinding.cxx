@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -166,3 +168,5 @@ double RooConvIntegrandBinding::getMaxLimit(UInt_t index) const
   assert(isValid());
   return _vars[index]->getMax();
 }
+
+/// \endcond

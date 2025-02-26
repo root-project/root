@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -319,3 +321,5 @@ std::string const& RooAcceptReject::generatorName() const {
    static const std::string name = "RooAcceptReject";
    return name;
 }
+
+/// \endcond

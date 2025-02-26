@@ -29,10 +29,11 @@ class RooLinkedListIterImpl ;
 class RooFIter;
 class TIterator ;
 class RooAbsArg ;
-template<class T>
-class RooSTLRefCountList;
 
 /// \cond ROOFIT_INTERNAL
+
+template<class T>
+class RooSTLRefCountList;
 
 namespace RooLinkedListImplDetails {
     class Chunk;
@@ -114,7 +115,9 @@ protected:
   RooLinkedListElem* createElement(TObject* obj, RooLinkedListElem* elem=nullptr) ;
   void deleteElement(RooLinkedListElem*) ;
 
+  /// \cond ROOFIT_INTERNAL
   template<class T> friend class RooSTLRefCountList;
+  /// \endcond
   friend class RooLinkedListIterImpl ;
   friend class RooFIterForLinkedList ;
 

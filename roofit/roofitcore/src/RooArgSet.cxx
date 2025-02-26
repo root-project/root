@@ -21,8 +21,9 @@
 ///  - Every object it contains must have a unique name returned by GetName().
 ///
 ///  - Contained objects are not ordered, although the set can be traversed
-///    using an iterator returned by createIterator(). The iterator does not
-///    necessarily follow the object insertion order.
+///    just like standard library containers such as `std::vector`
+///    (in fact, the RooArgSet uses a `std::vector<RooAbsArg *>` under the hood).
+///    The iterator does not necessarily follow the object insertion order.
 ///
 ///  - Objects can be retrieved by name only, and not by index.
 ///

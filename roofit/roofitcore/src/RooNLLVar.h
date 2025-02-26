@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*
  * Project: RooFit
  *
@@ -74,3 +76,4 @@ private:
 
 #endif
 
+/// \endcond

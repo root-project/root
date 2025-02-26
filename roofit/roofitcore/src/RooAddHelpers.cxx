@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*
  * Project: RooFit
  *
@@ -316,3 +318,5 @@ void RooAddHelpers::updateCoefficients(RooAbsPdf const &addPdf, std::vector<doub
       coefCache[i] /= coefSum;
    }
 }
+
+/// \endcond

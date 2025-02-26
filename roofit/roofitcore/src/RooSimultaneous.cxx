@@ -1017,7 +1017,7 @@ RooDataHist* RooSimultaneous::fillDataHist(RooDataHist *hist,
 ////////////////////////////////////////////////////////////////////////////////
 /// Special generator interface for generation of 'global observables' -- for RooStats tools.
 ///
-/// \note Why one can't just use RooAbsPdf::generate()? That's becaues when
+/// \note Why one can't just use RooAbsPdf::generate()? That's because when
 /// using the regular generate() method, a specific component pdf is selected
 /// for each generated entry according to the index category value. However,
 /// global observable values are independent of the current index category,

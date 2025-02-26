@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -145,3 +147,5 @@ void RooMinimizerFcn::setOffsetting(bool flag)
 {
    _funct->enableOffsetting(flag);
 }
+
+/// \endcond

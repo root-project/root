@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*
  * Project: RooFit
  * Authors:
@@ -22,3 +24,5 @@ std::unique_ptr<RooAbsReal> createConstraintTerm(std::string const &name, RooAbs
                                                  bool takeGlobalObservablesFromData);
 
 #endif
+
+/// \endcond

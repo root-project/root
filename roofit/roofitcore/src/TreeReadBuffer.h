@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*
  * Project: RooFit
  * Authors:
@@ -42,3 +44,5 @@ std::unique_ptr<TreeReadBuffer> createTreeReadBuffer(const TString &branchName, 
 }
 
 #endif
+
+/// \endcond
