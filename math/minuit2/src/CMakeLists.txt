@@ -73,7 +73,6 @@ set(MINUIT2_HEADERS
     MnSeedGenerator.h
     MnSimplex.h
     MnStrategy.h
-    MnTiny.h
     MnTraceObject.h
     MnUserCovariance.h
     MnUserFcn.h
@@ -137,7 +136,6 @@ set(MINUIT2_SOURCES
     MnScan.cxx
     MnSeedGenerator.cxx
     MnStrategy.cxx
-    MnTiny.cxx
     MnTraceObject.cxx
     MnUserFcn.cxx
     MnUserParameterState.cxx
