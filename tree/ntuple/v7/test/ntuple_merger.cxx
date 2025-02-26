@@ -1979,7 +1979,7 @@ TEST_P(RNTupleMergerDeferred, MergeSecondDeferred)
    // Second RNTuple with deferred field "flt"
    {
       auto model = RNTupleModel::Create();
-      // Add a non-deferred field so we can write some entries before we extend the model and obtain
+      // Add a non-late model extended field so we can write some entries before we extend the model and obtain
       // actual deferred columns in the extension header.
       auto pInt = model->MakeField<int>("int");
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
@@ -2056,7 +2056,7 @@ TEST_P(RNTupleMergerDeferred, MergeSecondDeferredTwoClusters)
    // Second RNTuple with deferred field "flt"
    {
       auto model = RNTupleModel::Create();
-      // Add a non-deferred field so we can write some entries before we extend the model and obtain
+      // Add a non-late model extended field so we can write some entries before we extend the model and obtain
       // actual deferred columns in the extension header.
       auto pInt = model->MakeField<int>("int");
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
@@ -2138,7 +2138,7 @@ TEST_P(RNTupleMergerDeferred, MergeSecondDeferredTwoClustersUnaligned)
    // Second RNTuple with deferred field "flt"
    {
       auto model = RNTupleModel::Create();
-      // Add a non-deferred field so we can write some entries before we extend the model and obtain
+      // Add a non-late model extended field so we can write some entries before we extend the model and obtain
       // actual deferred columns in the extension header.
       auto pInt = model->MakeField<int>("int");
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
@@ -2199,8 +2199,8 @@ TEST_P(RNTupleMergerDeferred, MergeSecondDeferredTwoClustersUnaligned)
 
 TEST_P(RNTupleMergerDeferred, MergeFirstDeferred)
 {
-   // Try merging 2 RNTuples, the first having a deferred column "flt" and the second having a regular column "flt".
-   // Verify that the merged file contains the expected values.
+   // Try merging 2 RNTuples, the first having a late model extended field "flt" (with a deferred column) and the second
+   // having a regular field "flt". Verify that the merged file contains the expected values.
    FileRaii fileGuard1("test_ntuple_merge_deferred_in_1.root");
    FileRaii fileGuard2("test_ntuple_merge_deferred_in_2.root");
 
@@ -2211,7 +2211,7 @@ TEST_P(RNTupleMergerDeferred, MergeFirstDeferred)
    // First RNTuple with deferred field "flt"
    {
       auto model1 = RNTupleModel::Create();
-      // Add a non-deferred field so we can write some entries before we extend the model and obtain
+      // Add a non-late model extended field so we can write some entries before we extend the model and obtain
       // actual deferred columns in the extension header.
       auto pInt = model1->MakeField<int>("int");
       auto wopts = RNTupleWriteOptions();
@@ -2290,7 +2290,7 @@ TEST_P(RNTupleMergerDeferred, MergeFirstDeferredTwoClusters)
    // First RNTuple with deferred field "flt"
    {
       auto model1 = RNTupleModel::Create();
-      // Add a non-deferred field so we can write some entries before we extend the model and obtain
+      // Add a non-late model extended field so we can write some entries before we extend the model and obtain
       // actual deferred columns in the extension header.
       auto pInt = model1->MakeField<int>("int");
       auto wopts = RNTupleWriteOptions();
@@ -2368,10 +2368,10 @@ TEST_P(RNTupleMergerDeferred, MergeFirstDeferredTwoClustersUnaligned)
    constexpr auto firstDeferredIdx = 5;
    assert(nEntriesPerFile > firstDeferredIdx);
 
-   // First RNTuple with deferred field "flt"
+   // First RNTuple with late model extended field "flt"
    {
       auto model1 = RNTupleModel::Create();
-      // Add a non-deferred field so we can write some entries before we extend the model and obtain
+      // Add a non-late model extended field so we can write some entries before we extend the model and obtain
       // actual deferred columns in the extension header.
       auto pInt = model1->MakeField<int>("int");
       auto wopts = RNTupleWriteOptions();
@@ -2452,8 +2452,8 @@ INSTANTIATE_TEST_SUITE_P(Seq, RNTupleMergerDeferred,
 
 TEST(RNTupleMerger, MergeDeferredAdvanced)
 {
-   // Try merging 3 RNTuples, the first 2 having a deferred column "flt" and the third having a regular column "flt".
-   // Verify that the merged file contains the expected values.
+   // Try merging 3 RNTuples, the first 2 having a late-model extended field "flt" (where the second one has a deferred
+   // column) and the third having a regular field "flt". Verify that the merged file contains the expected values.
    FileRaii fileGuard1("test_ntuple_merge_deferred_adv_in_1.root");
    FileRaii fileGuard2("test_ntuple_merge_deferred_adv_in_2.root");
    FileRaii fileGuard3("test_ntuple_merge_deferred_adv_in_3.root");
@@ -2475,10 +2475,10 @@ TEST(RNTupleMerger, MergeDeferredAdvanced)
       }
    }
 
-   // Second RNTuple with deferred field "flt"
+   // Second RNTuple with late model extended field "flt"
    {
       auto model2 = RNTupleModel::Create();
-      // Add a non-deferred field so we can write some entries before we extend the model and obtain
+      // Add a non-late model extended field so we can write some entries before we extend the model and obtain
       // actual deferred columns in the extension header.
       auto pInt = model2->MakeField<int>("int");
       auto wopts = RNTupleWriteOptions();
