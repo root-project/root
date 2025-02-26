@@ -52,8 +52,12 @@ public:
    void ComputePrecision();
 
 private:
+   double One() const;
+   double Tiny(double epsp1) const;
+
    double fEpsMac;
    double fEpsMa2;
+   double fOne = 1.;
 };
 
 } // namespace Minuit2
