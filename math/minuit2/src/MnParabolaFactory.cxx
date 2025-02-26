@@ -9,14 +9,13 @@
 
 #include "Minuit2/MnParabolaFactory.h"
 #include "Minuit2/MnParabola.h"
-#include "Minuit2/MnParabolaPoint.h"
+#include "Minuit2/MnPoint.h"
 
 namespace ROOT {
 
 namespace Minuit2 {
 
-MnParabola MnParabolaFactory::
-operator()(const MnParabolaPoint &p1, const MnParabolaPoint &p2, const MnParabolaPoint &p3) const
+MnParabola MnParabolaFactory::operator()(const MnPoint &p1, const MnPoint &p2, const MnPoint &p3) const
 {
    // construct the parabola from 3 points p1,p2,p3
    double x1 = p1.X();
@@ -49,7 +48,7 @@ operator()(const MnParabolaPoint &p1, const MnParabolaPoint &p2, const MnParabol
    return MnParabola(a, b, c);
 }
 
-MnParabola MnParabolaFactory::operator()(const MnParabolaPoint &p1, double dxdy1, const MnParabolaPoint &p2) const
+MnParabola MnParabolaFactory::operator()(const MnPoint &p1, double dxdy1, const MnPoint &p2) const
 {
    // construct the parabola from 2 points + derivative at first point dxdy1
    double x1 = p1.X();
