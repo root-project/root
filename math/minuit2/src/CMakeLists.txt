@@ -63,9 +63,9 @@ set(MINUIT2_HEADERS
     MnMinos.h
     MnParabola.h
     MnParabolaFactory.h
-    MnParabolaPoint.h
     MnParameterScan.h
     MnPlot.h
+    MnPoint.h
     MnPosDef.h
     MnPrint.h
     MnScan.h

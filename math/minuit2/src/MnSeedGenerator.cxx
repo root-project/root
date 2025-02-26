@@ -20,7 +20,6 @@
 #include "Minuit2/MnMachinePrecision.h"
 #include "Minuit2/MinuitParameter.h"
 #include "Minuit2/MnLineSearch.h"
-#include "Minuit2/MnParabolaPoint.h"
 #include "Minuit2/MinimumState.h"
 #include "Minuit2/MnUserParameterState.h"
 #include "Minuit2/MnStrategy.h"
