@@ -13,7 +13,6 @@
 #include "Minuit2/GradientCalculator.h"
 #include "Minuit2/MnMachinePrecision.h"
 #include "Minuit2/MnLineSearch.h"
-#include "Minuit2/MnParabolaPoint.h"
 #include "Minuit2/VariableMetricEDMEstimator.h"
 #include "Minuit2/MnPrint.h"
 
@@ -85,7 +84,7 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
             print.Debug("Iter", iter, "param", i, pa.Vec()(i), "grad2", dgrad.G2()(i), "grad",
                         dgrad.Vec()(i), "grad step", step(i), " gdel ", gdel);
 
-            MnParabolaPoint pp = lsearch(fcn, pa, step, gdel, prec);
+            auto pp = lsearch(fcn, pa, step, gdel, prec);
 
             print.Debug("Line search result", pp.X(), "f(0)", pa.Fval(), "f(1)", pp.Y());
 
