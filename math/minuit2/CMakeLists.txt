@@ -73,9 +73,9 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/MnMinos.h
       Minuit2/MnParabola.h
       Minuit2/MnParabolaFactory.h
-      Minuit2/MnParabolaPoint.h
       Minuit2/MnParameterScan.h
       Minuit2/MnPlot.h
+      Minuit2/MnPoint.h
       Minuit2/MnPosDef.h
       Minuit2/MnPrint.h
       Minuit2/MnScan.h

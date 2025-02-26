@@ -11,8 +11,6 @@
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnMigrad.h"
 #include "Minuit2/FCNBase.h"
-#include "Minuit2/MnParabola.h"
-#include "Minuit2/MnParabolaPoint.h"
 #include "Minuit2/MnParabolaFactory.h"
 #include "Minuit2/MnCross.h"
 #include "Minuit2/MnMachinePrecision.h"
@@ -388,8 +386,7 @@ L500:
 
    do {
       // do parabola fit
-      MnParabola parbol = MnParabolaFactory()(MnParabolaPoint(alsb[0], flsb[0]), MnParabolaPoint(alsb[1], flsb[1]),
-                                              MnParabolaPoint(alsb[2], flsb[2]));
+      MnParabola parbol = MnParabolaFactory()({alsb[0], flsb[0]}, {alsb[1], flsb[1]}, {alsb[2], flsb[2]});
       //   aopt = parbol.X_pos(aim);
       // std::cout<<"alsb1,2,3= "<<alsb[0]<<", "<<alsb[1]<<", "<<alsb[2]<<std::endl;
       // std::cout<<"flsb1,2,3= "<<flsb[0]<<", "<<flsb[1]<<", "<<flsb[2]<<std::endl;
