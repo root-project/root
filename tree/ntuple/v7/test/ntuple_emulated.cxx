@@ -244,7 +244,7 @@ struct TemplatedWrapper {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = false;
+      opts.SetEmulateUnknownTypes(false);
       try {
          auto model = desc.CreateModel(opts);
          FAIL() << "Creating a model without fEmulateUnknownTypes should fail";
@@ -255,7 +255,7 @@ struct TemplatedWrapper {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = true;
+      opts.SetEmulateUnknownTypes(true);
       auto model = desc.CreateModel(opts);
       ASSERT_NE(model, nullptr);
 
@@ -278,7 +278,7 @@ struct TemplatedWrapper {
 
    // Now test loading entries with a reader
    RNTupleDescriptor::RCreateModelOptions cmOpts;
-   cmOpts.fEmulateUnknownTypes = true;
+   cmOpts.SetEmulateUnknownTypes(true);
    reader = RNTupleReader::Open(cmOpts, "ntpl", fileGuard.GetPath());
    reader->LoadEntry(0);
 }
