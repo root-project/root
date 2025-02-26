@@ -63,7 +63,10 @@ namespace {
 
     // make static initialization function names (__cxx_global_var_init) unique
     bool runOnFunction(Function& F, const StringRef ModuleName) {
-      if (F.hasName() && F.getName().starts_with("__cxx_global_var_init")) {
+      if (F.hasName() &&
+         (F.getName().starts_with("__cxx_global_var_init") ||
+          F.getName().starts_with("__stmts__"))
+      ) {
         F.setName(add_module_suffix(F.getName(), ModuleName));
         return true;
       }
