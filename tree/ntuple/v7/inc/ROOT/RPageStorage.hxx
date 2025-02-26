@@ -268,7 +268,7 @@ public:
       struct RColumnInfo {
          RClusterDescriptor::RPageRange fPageRange;
          ROOT::NTupleSize_t fNElements = ROOT::kInvalidNTupleIndex;
-         int fCompressionSettings;
+         std::uint32_t fCompressionSettings;
          bool fIsSuppressed = false;
       };
 
@@ -342,7 +342,7 @@ public:
    struct RSealPageConfig {
       const RPage *fPage = nullptr;                 ///< Input page to be sealed
       const RColumnElementBase *fElement = nullptr; ///< Corresponds to the page's elements, for size calculation etc.
-      int fCompressionSetting = 0;                  ///< Compression algorithm and level to apply
+      std::uint32_t fCompressionSetting = 0;        ///< Compression algorithm and level to apply
       /// Adds a 8 byte little-endian xxhash3 checksum to the page payload. The buffer has to be large enough to
       /// to store the additional 8 bytes.
       bool fWriteChecksum = true;
