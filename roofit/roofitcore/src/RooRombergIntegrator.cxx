@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -550,3 +552,5 @@ double RooRombergIntegrator::integral(int iDim, int nSeg, std::span<double> wksp
 
    return output;
 }
+
+/// \endcond

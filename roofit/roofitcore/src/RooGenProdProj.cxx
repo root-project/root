@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -273,3 +275,5 @@ void RooGenProdProj::operModeHook()
   _intList.at(0)->setOperMode(_operMode) ;
   if (_haveD) _intList.at(1)->setOperMode(Auto) ; // Denominator always stays in Auto mode (normalization integral)
 }
+
+/// \endcond

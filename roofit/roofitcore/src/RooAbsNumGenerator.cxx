@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -149,3 +151,5 @@ void RooAbsNumGenerator::attachParameters(const RooArgSet& vars)
   newParams.remove(*_cache->get(),true,true) ;
   _funcClone->recursiveRedirectServers(newParams) ;
 }
+
+/// \endcond

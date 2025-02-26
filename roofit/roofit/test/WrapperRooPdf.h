@@ -56,9 +56,7 @@ public:
       fParams->Print("v");
 #endif
       //       // iterate on fX
-      //       TIterator* itr = fX->createIterator() ;
-      //       RooAbsArg* arg = 0;
-      //       while( ( arg = dynamic_cast<RooAbsArg*>(itr->Next() ) ) ) {
+      //       for (auto *arg : *fX) {
       //          assert(arg != 0);
       //          arg->setDirtyInhibit(true); // for having faster setter later  in DoEval
       //       }
@@ -106,9 +104,7 @@ public:
    //    double operator() (double *x, double * p = 0)  {
    //       if (p != 0) SetParameters(p);
    //       // iterate on observables
-   //       TIterator* itr = fX->createIterator() ;
-   //       RooRealVar* var = 0;
-   //       while( ( var = dynamic_cast<RooRealVar*>(itr->Next() ) ) ) {
+   //       for (auto *var : dynamic_range_cast<RooRealVar *>(*fX)) {
    //          assert(var != 0);
    //          var->setVal(*x++);
    //       }

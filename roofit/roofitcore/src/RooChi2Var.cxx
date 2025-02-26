@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -151,3 +153,5 @@ double RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEve
   _evalCarry = carry;
   return result ;
 }
+
+/// \endcond

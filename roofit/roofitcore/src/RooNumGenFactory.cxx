@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -195,3 +197,5 @@ RooAbsNumGenerator* RooNumGenFactory::createSampler(RooAbsReal& func, const RooA
   RooAbsNumGenerator* engine =  proto->clone(func,genVars,condVars,config,verbose,maxFuncVal) ;
   return engine ;
 }
+
+/// \endcond

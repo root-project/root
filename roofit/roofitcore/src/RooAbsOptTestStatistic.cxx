@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -769,3 +771,5 @@ void RooAbsOptTestStatistic::runRecalculateCache(std::size_t firstEvent, std::si
 {
    _dataClone->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, _skipZeroWeights);
 }
+
+/// \endcond

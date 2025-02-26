@@ -56,7 +56,7 @@ public:
   bool forceAnalyticalInt(const RooAbsArg& /*dep*/) const override {
      // Just like with other wrapper classes like RooExtendPdf, we can safely
      // use the analytical integration capabilities of the wrapped object,
-     // becuase we don't do any no-linear transformation.
+     // because we don't do any no-linear transformation.
      return true;
   }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,
