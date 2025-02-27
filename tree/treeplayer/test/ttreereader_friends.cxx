@@ -267,8 +267,6 @@ TEST_F(TTreeReaderFriends, EntryChainFriend)
 
    // Equivalent test using TTreeReader
    {
-      // For some reason, if we reuse the chain from the main scope before
-      // it crashes when reaching entry number 10, dunno why, TODO debug
       std::unique_ptr<TChain> chainFriend{new TChain("friend")};
       chainFriend->Add("friendtree9886_*.root");
       std::unique_ptr<TChain> chainMain{new TChain("tree")};
