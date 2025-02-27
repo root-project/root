@@ -144,7 +144,9 @@ TEST(RNTuple, SerializeEnvelope)
    testEnvelope.typeAndSize = RByteSwap<8>::bswap(testEnvelope.typeAndSize);
 #endif
 
-   EXPECT_EQ(8u, RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16));
+   EXPECT_EQ(
+      8u,
+      RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16).Unwrap());
    testEnvelope.xxhash3 = 0;
    try {
       RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope), 137).Unwrap();
@@ -159,7 +161,9 @@ TEST(RNTuple, SerializeEnvelope)
    testEnvelope.typeAndSize = 137;
 #endif
 
-   EXPECT_EQ(8u, RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16));
+   EXPECT_EQ(
+      8u,
+      RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16).Unwrap());
    try {
       RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope), 138).Unwrap();
       FAIL() << "unsupported envelope type should throw";
@@ -173,7 +177,9 @@ TEST(RNTuple, SerializeEnvelope)
    testEnvelope.typeAndSize = 137;
 #endif
 
-   EXPECT_EQ(8u, RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16));
+   EXPECT_EQ(
+      8u,
+      RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16).Unwrap());
    try {
       RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope) - 1, 137).Unwrap();
       FAIL() << "too small envelope buffer should throw";
@@ -228,7 +234,7 @@ TEST(RNTuple, SerializeFrame)
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
-   EXPECT_EQ(0u, RNTupleSerializer::SerializeFramePostscript(buffer, 10));
+   EXPECT_EQ(0u, RNTupleSerializer::SerializeFramePostscript(buffer, 10).Unwrap());
 
    try {
       RNTupleSerializer::DeserializeFrameHeader(buffer, 8, frameSize).Unwrap();
@@ -247,7 +253,7 @@ TEST(RNTuple, SerializeFrame)
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("too short"));
    }
-   EXPECT_EQ(0u, RNTupleSerializer::SerializeFramePostscript(buffer, 14));
+   EXPECT_EQ(0u, RNTupleSerializer::SerializeFramePostscript(buffer, 14).Unwrap());
 
    try {
       RNTupleSerializer::DeserializeFrameHeader(buffer, 11, frameSize, nitems).Unwrap();
@@ -271,7 +277,7 @@ TEST(RNTuple, SerializeLongFrame)
    auto buffer = std::make_unique<char[]>(bufSize);
    buffer[12] = 'x';
    EXPECT_EQ(12u, RNTupleSerializer::SerializeListFramePreamble(2, buffer.get()));
-   EXPECT_EQ(0u, RNTupleSerializer::SerializeFramePostscript(buffer.get(), payloadSize + 12));
+   EXPECT_EQ(0u, RNTupleSerializer::SerializeFramePostscript(buffer.get(), payloadSize + 12).Unwrap());
 
    try {
       RNTupleSerializer::DeserializeFrameHeader(buffer.get(), payloadSize, frameSize).Unwrap();
@@ -290,14 +296,14 @@ TEST(RNTuple, SerializeFeatureFlags)
    std::vector<std::uint64_t> flags;
    unsigned char buffer[16];
 
-   EXPECT_EQ(8u, RNTupleSerializer::SerializeFeatureFlags(flags, nullptr));
-   EXPECT_EQ(8u, RNTupleSerializer::SerializeFeatureFlags(flags, buffer));
+   EXPECT_EQ(8u, RNTupleSerializer::SerializeFeatureFlags(flags, nullptr).Unwrap());
+   EXPECT_EQ(8u, RNTupleSerializer::SerializeFeatureFlags(flags, buffer).Unwrap());
    EXPECT_EQ(8u, RNTupleSerializer::DeserializeFeatureFlags(buffer, 8, flags).Unwrap());
    ASSERT_EQ(1u, flags.size());
    EXPECT_EQ(0, flags[0]);
 
    flags[0] = 1;
-   EXPECT_EQ(8u, RNTupleSerializer::SerializeFeatureFlags(flags, buffer));
+   EXPECT_EQ(8u, RNTupleSerializer::SerializeFeatureFlags(flags, buffer).Unwrap());
    EXPECT_EQ(8u, RNTupleSerializer::DeserializeFeatureFlags(buffer, 8, flags).Unwrap());
    ASSERT_EQ(1u, flags.size());
    EXPECT_EQ(1, flags[0]);
@@ -311,7 +317,7 @@ TEST(RNTuple, SerializeFeatureFlags)
    }
 
    flags[1] = 2;
-   EXPECT_EQ(16u, RNTupleSerializer::SerializeFeatureFlags(flags, buffer));
+   EXPECT_EQ(16u, RNTupleSerializer::SerializeFeatureFlags(flags, buffer).Unwrap());
    EXPECT_EQ(16u, RNTupleSerializer::DeserializeFeatureFlags(buffer, 16, flags).Unwrap());
    ASSERT_EQ(2u, flags.size());
    EXPECT_EQ(1, flags[0]);
@@ -339,8 +345,8 @@ TEST(RNTuple, SerializeLocator)
    locator.SetPosition(1U);
    locator.SetNBytesOnStorage(2);
 
-   EXPECT_EQ(12u, RNTupleSerializer::SerializeLocator(locator, nullptr));
-   EXPECT_EQ(12u, RNTupleSerializer::SerializeLocator(locator, buffer));
+   EXPECT_EQ(12u, RNTupleSerializer::SerializeLocator(locator, nullptr).Unwrap());
+   EXPECT_EQ(12u, RNTupleSerializer::SerializeLocator(locator, buffer).Unwrap());
 
    locator = RNTupleLocator{};
    try {
@@ -361,11 +367,11 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(RNTupleLocator::kTypeFile, locator.GetType());
 
    locator.SetNBytesOnStorage(std::numeric_limits<std::int32_t>::max());
-   EXPECT_EQ(12u, RNTupleSerializer::SerializeLocator(locator, buffer));
+   EXPECT_EQ(12u, RNTupleSerializer::SerializeLocator(locator, buffer).Unwrap());
    EXPECT_EQ(12u, RNTupleSerializer::DeserializeLocator(buffer, 12, locator).Unwrap());
    EXPECT_EQ(std::numeric_limits<std::int32_t>::max(), locator.GetNBytesOnStorage());
    locator.SetNBytesOnStorage(static_cast<std::uint64_t>(std::numeric_limits<std::int32_t>::max()) + 1);
-   EXPECT_EQ(20u, RNTupleSerializer::SerializeLocator(locator, buffer));
+   EXPECT_EQ(20u, RNTupleSerializer::SerializeLocator(locator, buffer).Unwrap());
    EXPECT_EQ(20u, RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap());
    EXPECT_EQ(static_cast<std::uint64_t>(std::numeric_limits<std::int32_t>::max()) + 1, locator.GetNBytesOnStorage());
    EXPECT_EQ(1u, locator.GetPosition<std::uint64_t>());
@@ -375,7 +381,7 @@ TEST(RNTuple, SerializeLocator)
    locator.SetPosition(RNTupleLocatorObject64{1337U});
    locator.SetNBytesOnStorage(420420U);
    locator.SetReserved(0x5a);
-   EXPECT_EQ(16u, RNTupleSerializer::SerializeLocator(locator, buffer));
+   EXPECT_EQ(16u, RNTupleSerializer::SerializeLocator(locator, buffer).Unwrap());
    locator = RNTupleLocator{};
    EXPECT_EQ(16u, RNTupleSerializer::DeserializeLocator(buffer, 16, locator).Unwrap());
    EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeDAOS);
@@ -384,7 +390,7 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().GetLocation());
 
    locator.SetNBytesOnStorage(static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()) + 1);
-   EXPECT_EQ(20u, RNTupleSerializer::SerializeLocator(locator, buffer));
+   EXPECT_EQ(20u, RNTupleSerializer::SerializeLocator(locator, buffer).Unwrap());
    locator = RNTupleLocator{};
    EXPECT_EQ(20u, RNTupleSerializer::DeserializeLocator(buffer, 20, locator).Unwrap());
    EXPECT_EQ(locator.GetType(), RNTupleLocator::kTypeDAOS);
@@ -434,8 +440,8 @@ TEST(RNTuple, SerializeClusterSummary)
    summary.fFlags = 0x02;
 
    unsigned char buffer[24];
-   ASSERT_EQ(24u, RNTupleSerializer::SerializeClusterSummary(summary, nullptr));
-   EXPECT_EQ(24u, RNTupleSerializer::SerializeClusterSummary(summary, buffer));
+   ASSERT_EQ(24u, RNTupleSerializer::SerializeClusterSummary(summary, nullptr).Unwrap());
+   EXPECT_EQ(24u, RNTupleSerializer::SerializeClusterSummary(summary, buffer).Unwrap());
    RNTupleSerializer::RClusterSummary reco;
    try {
       RNTupleSerializer::DeserializeClusterSummary(buffer, 23, reco).Unwrap();
@@ -449,7 +455,7 @@ TEST(RNTuple, SerializeClusterSummary)
    EXPECT_EQ(summary.fFlags, reco.fFlags);
 
    summary.fFlags |= 0x01;
-   EXPECT_EQ(24u, RNTupleSerializer::SerializeClusterSummary(summary, buffer));
+   EXPECT_EQ(24u, RNTupleSerializer::SerializeClusterSummary(summary, buffer).Unwrap());
    try {
       RNTupleSerializer::DeserializeClusterSummary(buffer, 24, reco).Unwrap();
       FAIL() << "sharded cluster flag should fail";
@@ -505,7 +511,7 @@ TEST(RNTuple, SerializeClusterGroup)
    pos += RNTupleSerializer::SerializeUInt32(group.fNClusters, pos);
    pos += RNTupleSerializer::SerializeEnvelopeLink(group.fPageListEnvelopeLink, pos);
    pos += RNTupleSerializer::SerializeUInt16(7, pos);
-   pos += RNTupleSerializer::SerializeFramePostscript(buffer, pos - buffer);
+   pos += RNTupleSerializer::SerializeFramePostscript(buffer, pos - buffer).Unwrap();
    pos += RNTupleSerializer::SerializeUInt16(13, pos);
    EXPECT_EQ(50u, RNTupleSerializer::DeserializeClusterGroup(buffer, 50, reco).Unwrap());
    EXPECT_EQ(group.fMinEntry, reco.fMinEntry);
