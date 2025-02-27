@@ -256,13 +256,13 @@ public:
    DeserializeFeatureFlags(const void *buffer, std::uint64_t bufSize, std::vector<std::uint64_t> &flags);
 
    static RResult<std::uint32_t> SerializeLocator(const RNTupleLocator &locator, void *buffer);
-   static std::uint32_t SerializeEnvelopeLink(const REnvelopeLink &envelopeLink, void *buffer);
+   static RResult<std::uint32_t> SerializeEnvelopeLink(const REnvelopeLink &envelopeLink, void *buffer);
    static RResult<std::uint32_t> DeserializeLocator(const void *buffer, std::uint64_t bufSize, RNTupleLocator &locator);
    static RResult<std::uint32_t>
    DeserializeEnvelopeLink(const void *buffer, std::uint64_t bufSize, REnvelopeLink &envelopeLink);
 
    static RResult<std::uint32_t> SerializeClusterSummary(const RClusterSummary &clusterSummary, void *buffer);
-   static std::uint32_t SerializeClusterGroup(const RClusterGroup &clusterGroup, void *buffer);
+   static RResult<std::uint32_t> SerializeClusterGroup(const RClusterGroup &clusterGroup, void *buffer);
    static RResult<std::uint32_t>
    DeserializeClusterSummary(const void *buffer, std::uint64_t bufSize, RClusterSummary &clusterSummary);
    static RResult<std::uint32_t>
@@ -270,15 +270,16 @@ public:
 
    /// Serialize the schema description in `desc` into `buffer`. If `forHeaderExtension` is true, serialize only the
    /// fields and columns tagged as part of the header extension (see `RNTupleDescriptorBuilder::BeginHeaderExtension`).
-   static std::uint32_t SerializeSchemaDescription(void *buffer, const RNTupleDescriptor &desc, const RContext &context,
-                                                   bool forHeaderExtension = false);
+   static RResult<std::uint32_t> SerializeSchemaDescription(void *buffer, const RNTupleDescriptor &desc,
+                                                            const RContext &context, bool forHeaderExtension = false);
    static RResult<std::uint32_t>
    DeserializeSchemaDescription(const void *buffer, std::uint64_t bufSize, RNTupleDescriptorBuilder &descBuilder);
 
-   static RContext SerializeHeader(void *buffer, const RNTupleDescriptor &desc);
-   static std::uint32_t SerializePageList(void *buffer, const RNTupleDescriptor &desc,
-                                          std::span<ROOT::DescriptorId_t> physClusterIDs, const RContext &context);
-   static std::uint32_t SerializeFooter(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
+   static RResult<RContext> SerializeHeader(void *buffer, const RNTupleDescriptor &desc);
+   static RResult<std::uint32_t> SerializePageList(void *buffer, const RNTupleDescriptor &desc,
+                                                   std::span<ROOT::DescriptorId_t> physClusterIDs,
+                                                   const RContext &context);
+   static RResult<std::uint32_t> SerializeFooter(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
 
    static RResult<void>
    DeserializeHeader(const void *buffer, std::uint64_t bufSize, RNTupleDescriptorBuilder &descBuilder);
