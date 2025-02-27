@@ -200,5 +200,4 @@ TEST(TFile, MakeSubDirectory)
    EXPECT_EQ(c, gDirectory->GetDirectory(0));
    EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetPath()), "dirTest17824.root:/a/b/c");
    EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetName()), "c");
-   outFile.Close();
 }
