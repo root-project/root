@@ -2146,26 +2146,17 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
 
 void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   out << "   " << std::endl;
    static Int_t frameNumber = 0;
    frameNumber++;
 
-   TString fXName, fYName;
-
+   TString args;
    if (fNpoints >= 1) {
-      fXName = SaveArray(out, "fx", frameNumber, fX);
-      fYName = SaveArray(out, "fy", frameNumber, fY);
+      auto xname = SaveArray(out, "fx", frameNumber, fX);
+      auto yname = SaveArray(out, "fy", frameNumber, fY);
+      args.Form("%d, %s, %s", fNpoints, xname.Data(), yname.Data());
    }
 
-   if (gROOT->ClassSaved(TGraph::Class()))
-      out << "   ";
-   else
-      out << "   TGraph *";
-
-   if (fNpoints >= 1)
-      out << "graph = new TGraph(" << fNpoints << "," << fXName << "," << fYName << ");" << std::endl;
-   else
-      out << "graph = new TGraph();" << std::endl;
+   SavePrimitiveConstructor(out, Class(), "graph", args);
 
    SaveHistogramAndFunctions(out, "graph", frameNumber, option);
 }
@@ -2183,7 +2174,7 @@ TString TGraph::SaveArray(std::ostream &out, const char *suffix, Int_t frameNumb
 
    out << "   Double_t " << arrname << "[" << fNpoints << "] = { ";
    const auto old_precision{out.precision()};
-   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1}; 
+   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
    out << std::setprecision(max_precision);
    for (Int_t i = 0; i < fNpoints-1; i++) {
       out << arr[i] << ",";
