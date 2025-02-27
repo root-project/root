@@ -53,7 +53,7 @@ std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &fieldDe
    pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetFieldVersion(), *where);
    pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetTypeVersion(), *where);
    pos += RNTupleSerializer::SerializeUInt32(onDiskParentId, *where);
-   pos += RNTupleSerializer::SerializeFieldStructure(fieldDesc.GetStructure(), *where);
+   pos += RNTupleSerializer::SerializeFieldStructure(fieldDesc.GetStructure(), *where).Unwrap();
 
    std::uint16_t flags = 0;
    if (fieldDesc.GetNRepetitions() > 0)
@@ -135,7 +135,8 @@ ROOT::RResult<std::uint32_t> DeserializeField(const void *buffer, std::uint64_t 
    // initialize properly for call to SerializeFieldStructure()
    ENTupleStructure structure{ENTupleStructure::kLeaf};
    std::uint16_t flags;
-   if (fnFrameSizeLeft() < 3 * sizeof(std::uint32_t) + RNTupleSerializer::SerializeFieldStructure(structure, nullptr) +
+   if (fnFrameSizeLeft() < 3 * sizeof(std::uint32_t) +
+                              RNTupleSerializer::SerializeFieldStructure(structure, nullptr).Unwrap() +
                               sizeof(std::uint16_t)) {
       return R__FAIL("field record frame too short");
    }
@@ -210,7 +211,7 @@ std::uint32_t SerializePhysicalColumn(const ROOT::Experimental::RColumnDescripto
 
    pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
 
-   pos += RNTupleSerializer::SerializeColumnType(columnDesc.GetType(), *where);
+   pos += RNTupleSerializer::SerializeColumnType(columnDesc.GetType(), *where).Unwrap();
    pos += RNTupleSerializer::SerializeUInt16(columnDesc.GetBitsOnStorage(), *where);
    pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskFieldId(columnDesc.GetFieldId()), *where);
    std::uint16_t flags = 0;
@@ -235,7 +236,7 @@ std::uint32_t SerializePhysicalColumn(const ROOT::Experimental::RColumnDescripto
       pos += RNTupleSerializer::SerializeUInt64(intMax, *where);
    }
 
-   pos += RNTupleSerializer::SerializeFramePostscript(buffer ? base : nullptr, pos - base);
+   pos += RNTupleSerializer::SerializeFramePostscript(buffer ? base : nullptr, pos - base).Unwrap();
 
    return pos - base;
 }
@@ -290,8 +291,8 @@ ROOT::RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t
    std::uint16_t flags;
    std::uint16_t representationIndex;
    std::int64_t firstElementIdx = 0;
-   if (fnFrameSizeLeft() <
-       RNTupleSerializer::SerializeColumnType(type, nullptr) + sizeof(std::uint16_t) + 2 * sizeof(std::uint32_t)) {
+   if (fnFrameSizeLeft() < RNTupleSerializer::SerializeColumnType(type, nullptr).Unwrap() + sizeof(std::uint16_t) +
+                              2 * sizeof(std::uint32_t)) {
       return R__FAIL("column record frame too short");
    }
    result = RNTupleSerializer::DeserializeColumnType(bytes, type);
@@ -335,7 +336,7 @@ std::uint32_t SerializeExtraTypeInfo(const ROOT::Experimental::RExtraTypeInfoDes
 
    pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
 
-   pos += RNTupleSerializer::SerializeExtraTypeInfoId(desc.GetContentId(), *where);
+   pos += RNTupleSerializer::SerializeExtraTypeInfoId(desc.GetContentId(), *where).Unwrap();
    pos += RNTupleSerializer::SerializeUInt32(desc.GetTypeVersion(), *where);
    pos += RNTupleSerializer::SerializeString(desc.GetTypeName(), *where);
    pos += RNTupleSerializer::SerializeString(desc.GetContent(), *where);
@@ -437,8 +438,8 @@ std::uint32_t SerializeLocatorPayloadObject64(const ROOT::RNTupleLocator &locato
    return sizeofNBytesOnStorage + sizeof(std::uint64_t);
 }
 
-void DeserializeLocatorPayloadObject64(const unsigned char *buffer, std::uint32_t sizeofLocatorPayload,
-                                       ROOT::RNTupleLocator &locator)
+ROOT::RResult<void> DeserializeLocatorPayloadObject64(const unsigned char *buffer, std::uint32_t sizeofLocatorPayload,
+                                                      ROOT::RNTupleLocator &locator)
 {
    std::uint64_t location;
    if (sizeofLocatorPayload == 12) {
@@ -452,9 +453,10 @@ void DeserializeLocatorPayloadObject64(const unsigned char *buffer, std::uint32_
       locator.SetNBytesOnStorage(nBytesOnStorage);
       RNTupleSerializer::DeserializeUInt64(buffer + sizeof(std::uint64_t), location);
    } else {
-      throw ROOT::RException(R__FAIL("invalid DAOS locator payload size: " + std::to_string(sizeofLocatorPayload)));
+      return R__FAIL("invalid DAOS locator payload size: " + std::to_string(sizeofLocatorPayload));
    }
    locator.SetPosition(ROOT::RNTupleLocatorObject64{location});
+   return ROOT::RResult<void>::Success();
 }
 
 std::uint32_t SerializeAliasColumn(const ROOT::Experimental::RColumnDescriptor &columnDesc,
@@ -472,7 +474,7 @@ std::uint32_t SerializeAliasColumn(const ROOT::Experimental::RColumnDescriptor &
    pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskColumnId(columnDesc.GetPhysicalId()), *where);
    pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskFieldId(columnDesc.GetFieldId()), *where);
 
-   pos += RNTupleSerializer::SerializeFramePostscript(buffer ? base : nullptr, pos - base);
+   pos += RNTupleSerializer::SerializeFramePostscript(buffer ? base : nullptr, pos - base).Unwrap();
 
    return pos - base;
 }
@@ -678,7 +680,8 @@ ROOT::RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::De
    return sizeof(std::uint32_t) + length;
 }
 
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(ENTupleColumnType type, void *buffer)
+ROOT::RResult<std::uint32_t>
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(ENTupleColumnType type, void *buffer)
 {
    switch (type) {
    case ENTupleColumnType::kBit: return SerializeUInt16(0x00, buffer);
@@ -713,7 +716,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnTy
    default:
       if (type == ROOT::Internal::kTestFutureType)
          return SerializeUInt16(0x99, buffer);
-      throw RException(R__FAIL("ROOT bug: unexpected column type"));
+      return R__FAIL("unexpected column type");
    }
 }
 
@@ -762,7 +765,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(const voi
    return result;
 }
 
-std::uint32_t
+ROOT::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RNTupleSerializer::SerializeFieldStructure(ROOT::ENTupleStructure structure, void *buffer)
 {
    using ENTupleStructure = ROOT::ENTupleStructure;
@@ -775,7 +778,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFieldStructure(ROOT::E
    default:
       if (structure == ROOT::Internal::kTestFutureFieldStructure)
          return SerializeUInt16(0x99, buffer);
-      throw RException(R__FAIL("ROOT bug: unexpected field structure type"));
+      return R__FAIL("unexpected field structure type");
    }
 }
 
@@ -798,14 +801,14 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFieldStructure(const
    return result;
 }
 
-std::uint32_t
+ROOT::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RNTupleSerializer::SerializeExtraTypeInfoId(ROOT::Experimental::EExtraTypeInfoIds id,
                                                                           void *buffer)
 {
    using ROOT::Experimental::EExtraTypeInfoIds;
    switch (id) {
    case EExtraTypeInfoIds::kStreamerInfo: return SerializeUInt32(0x00, buffer);
-   default: throw RException(R__FAIL("ROOT bug: unexpected extra type info id"));
+   default: return R__FAIL("unexpected extra type info id");
    }
 }
 
@@ -837,14 +840,14 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopePreamble(std::
    return pos - base;
 }
 
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopePostscript(unsigned char *envelope,
-                                                                                           std::uint64_t size,
-                                                                                           std::uint64_t &xxhash3)
+ROOT::RResult<std::uint32_t>
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopePostscript(unsigned char *envelope,
+                                                                             std::uint64_t size, std::uint64_t &xxhash3)
 {
    if (size < sizeof(std::uint64_t))
-      throw RException(R__FAIL("envelope size too small"));
+      return R__FAIL("envelope size too small");
    if (size >= static_cast<uint64_t>(1) << 48)
-      throw RException(R__FAIL("envelope size too big"));
+      return R__FAIL("envelope size too big");
    if (envelope) {
       std::uint64_t typeAndSize;
       DeserializeUInt64(envelope, typeAndSize);
@@ -854,11 +857,12 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelope
    return SerializeXxHash3(envelope, size, xxhash3, envelope ? (envelope + size) : nullptr);
 }
 
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopePostscript(unsigned char *envelope,
-                                                                                           std::uint64_t size)
+ROOT::RResult<std::uint32_t>
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopePostscript(unsigned char *envelope,
+                                                                             std::uint64_t size)
 {
    std::uint64_t xxhash3;
-   return SerializeEnvelopePostscript(envelope, size, xxhash3);
+   return R__FORWARD_RESULT(SerializeEnvelopePostscript(envelope, size, xxhash3));
 }
 
 ROOT::RResult<std::uint32_t>
@@ -921,16 +925,17 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeListFramePreamble(std:
    return pos - base;
 }
 
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFramePostscript(void *frame, std::uint64_t size)
+ROOT::RResult<std::uint32_t>
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeFramePostscript(void *frame, std::uint64_t size)
 {
    auto preambleSize = sizeof(std::int64_t);
    if (size < preambleSize)
-      throw RException(R__FAIL("frame too short: " + std::to_string(size)));
+      return R__FAIL("frame too short: " + std::to_string(size));
    if (frame) {
       std::int64_t marker;
       DeserializeInt64(frame, marker);
       if ((marker < 0) && (size < (sizeof(std::uint32_t) + preambleSize)))
-         throw RException(R__FAIL("frame too short: " + std::to_string(size)));
+         return R__FAIL("frame too short: " + std::to_string(size));
       SerializeInt64(marker * static_cast<int64_t>(size), frame);
    }
    return 0;
@@ -978,7 +983,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFrameHeader(const vo
    return R__FORWARD_RESULT(DeserializeFrameHeader(buffer, bufSize, frameSize, nitems));
 }
 
-std::uint32_t
+ROOT::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RNTupleSerializer::SerializeFeatureFlags(const std::vector<std::uint64_t> &flags,
                                                                        void *buffer)
 {
@@ -990,7 +995,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFeatureFlags(const std
 
       for (unsigned i = 0; i < flags.size(); ++i) {
          if (flags[i] & 0x8000000000000000)
-            throw RException(R__FAIL("feature flag out of bounds"));
+            return R__FAIL("feature flag out of bounds");
 
          // The MSb indicates that another Int64 follows; set this bit to 1 for all except the last element
          if (i == (flags.size() - 1))
@@ -1021,11 +1026,11 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFeatureFlags(const v
    return (flags.size() * sizeof(std::uint64_t));
 }
 
-std::uint32_t
+ROOT::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(const RNTupleLocator &locator, void *buffer)
 {
    if (locator.GetType() > RNTupleLocator::kLastSerializableType)
-      throw RException(R__FAIL("locator is not serializable"));
+      return R__FAIL("locator is not serializable");
 
    std::uint32_t size = 0;
    if ((locator.GetType() == RNTupleLocator::kTypeFile) &&
@@ -1053,7 +1058,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(const RNTupleL
          size += SerializeLocatorPayloadObject64(locator, payloadp);
          locatorType = 0x7e;
       } else {
-         throw RException(R__FAIL("locator has unknown type"));
+         return R__FAIL("locator has unknown type");
       }
    }
    std::int32_t head = sizeof(std::int32_t) + size;
@@ -1113,7 +1118,8 @@ std::uint32_t
 ROOT::Experimental::Internal::RNTupleSerializer::SerializeEnvelopeLink(const REnvelopeLink &envelopeLink, void *buffer)
 {
    auto size = SerializeUInt64(envelopeLink.fLength, buffer);
-   size += SerializeLocator(envelopeLink.fLocator, buffer ? reinterpret_cast<unsigned char *>(buffer) + size : nullptr);
+   size += SerializeLocator(envelopeLink.fLocator, buffer ? reinterpret_cast<unsigned char *>(buffer) + size : nullptr)
+              .Unwrap();
    return size;
 }
 
@@ -1134,12 +1140,12 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeEnvelopeLink(const v
    return bytes - reinterpret_cast<const unsigned char *>(buffer);
 }
 
-std::uint32_t
+ROOT::RResult<std::uint32_t>
 ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterSummary(const RClusterSummary &clusterSummary,
                                                                          void *buffer)
 {
    if (clusterSummary.fNEntries >= (static_cast<std::uint64_t>(1) << 56)) {
-      throw RException(R__FAIL("number of entries in cluster exceeds maximum of 2^56"));
+      return R__FAIL("number of entries in cluster exceeds maximum of 2^56");
    }
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
@@ -1154,7 +1160,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterSummary(const R
    pos += SerializeUInt64(nEntriesAndFlags, *where);
 
    auto size = pos - frame;
-   pos += SerializeFramePostscript(frame, size);
+   pos += SerializeFramePostscript(frame, size).Unwrap();
    return size;
 }
 
@@ -1205,7 +1211,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeClusterGroup(const RCl
    pos += SerializeUInt32(clusterGroup.fNClusters, *where);
    pos += SerializeEnvelopeLink(clusterGroup.fPageListEnvelopeLink, *where);
    auto size = pos - frame;
-   pos += SerializeFramePostscript(frame, size);
+   pos += SerializeFramePostscript(frame, size).Unwrap();
    return size;
 }
 
@@ -1329,7 +1335,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
    auto frame = pos;
    pos += SerializeListFramePreamble(nFields, *where);
    pos += SerializeFieldList(desc, fieldList, /*firstOnDiskId=*/fieldListOffset, context, *where);
-   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
+   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame).Unwrap();
 
    frame = pos;
    pos += SerializeListFramePreamble(nColumns, *where);
@@ -1339,7 +1345,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
          pos += SerializePhysicalColumn(c.get(), context, *where);
       }
    }
-   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
+   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame).Unwrap();
 
    frame = pos;
    pos += SerializeListFramePreamble(nAliasColumns, *where);
@@ -1349,7 +1355,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
          pos += SerializeAliasColumn(c.get(), context, *where);
       }
    }
-   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
+   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame).Unwrap();
 
    frame = pos;
    // We only serialize the extra type info list in the header extension.
@@ -1359,7 +1365,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
    } else {
       pos += SerializeListFramePreamble(0, *where);
    }
-   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
+   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame).Unwrap();
 
    return static_cast<std::uint32_t>(pos - base);
 }
@@ -1520,7 +1526,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeader(void *buffer,
 
    pos += SerializeEnvelopePreamble(kEnvelopeTypeHeader, *where);
    // So far we don't make use of feature flags
-   pos += SerializeFeatureFlags(desc.GetFeatureFlags(), *where);
+   pos += SerializeFeatureFlags(desc.GetFeatureFlags(), *where).Unwrap();
    pos += SerializeString(desc.GetName(), *where);
    pos += SerializeString(desc.GetDescription(), *where);
    pos += SerializeString(std::string("ROOT v") + ROOT_RELEASE, *where);
@@ -1530,7 +1536,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeader(void *buffer,
 
    std::uint64_t size = pos - base;
    std::uint64_t xxhash3 = 0;
-   size += SerializeEnvelopePostscript(base, size, xxhash3);
+   size += SerializeEnvelopePostscript(base, size, xxhash3).Unwrap();
 
    context.SetHeaderSize(size);
    context.SetHeaderXxHash3(xxhash3);
@@ -1557,9 +1563,9 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
    for (auto clusterId : physClusterIDs) {
       const auto &clusterDesc = desc.GetClusterDescriptor(context.GetMemClusterId(clusterId));
       RClusterSummary summary{clusterDesc.GetFirstEntryIndex(), clusterDesc.GetNEntries(), 0};
-      pos += SerializeClusterSummary(summary, *where);
+      pos += SerializeClusterSummary(summary, *where).Unwrap();
    }
-   pos += SerializeFramePostscript(buffer ? clusterSummaryFrame : nullptr, pos - clusterSummaryFrame);
+   pos += SerializeFramePostscript(buffer ? clusterSummaryFrame : nullptr, pos - clusterSummaryFrame).Unwrap();
 
    // Page locations
    auto topMostFrame = pos;
@@ -1591,20 +1597,20 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
                std::int32_t nElements =
                   pi.HasChecksum() ? -static_cast<std::int32_t>(pi.GetNElements()) : pi.GetNElements();
                pos += SerializeUInt32(nElements, *where);
-               pos += SerializeLocator(pi.GetLocator(), *where);
+               pos += SerializeLocator(pi.GetLocator(), *where).Unwrap();
             }
             pos += SerializeInt64(columnRange.GetFirstElementIndex(), *where);
             pos += SerializeUInt32(columnRange.GetCompressionSettings().value(), *where);
          }
 
-         pos += SerializeFramePostscript(buffer ? innerFrame : nullptr, pos - innerFrame);
+         pos += SerializeFramePostscript(buffer ? innerFrame : nullptr, pos - innerFrame).Unwrap();
       }
-      pos += SerializeFramePostscript(buffer ? outerFrame : nullptr, pos - outerFrame);
+      pos += SerializeFramePostscript(buffer ? outerFrame : nullptr, pos - outerFrame).Unwrap();
    }
 
-   pos += SerializeFramePostscript(buffer ? topMostFrame : nullptr, pos - topMostFrame);
+   pos += SerializeFramePostscript(buffer ? topMostFrame : nullptr, pos - topMostFrame).Unwrap();
    std::uint64_t size = pos - base;
-   size += SerializeEnvelopePostscript(base, size);
+   size += SerializeEnvelopePostscript(base, size).Unwrap();
    return size;
 }
 
@@ -1620,14 +1626,14 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooter(void *buffer,
    pos += SerializeEnvelopePreamble(kEnvelopeTypeFooter, *where);
 
    // So far we don't make use of footer feature flags
-   pos += SerializeFeatureFlags(std::vector<std::uint64_t>(), *where);
+   pos += SerializeFeatureFlags(std::vector<std::uint64_t>(), *where).Unwrap();
    pos += SerializeUInt64(context.GetHeaderXxHash3(), *where);
 
    // Schema extension, i.e. incremental changes with respect to the header
    auto frame = pos;
    pos += SerializeRecordFramePreamble(*where);
    pos += SerializeSchemaDescription(*where, desc, context, /*forHeaderExtension=*/true);
-   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
+   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame).Unwrap();
 
    // Cluster groups
    frame = pos;
@@ -1643,10 +1649,10 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooter(void *buffer,
       clusterGroup.fPageListEnvelopeLink.fLocator = cgDesc.GetPageListLocator();
       pos += SerializeClusterGroup(clusterGroup, *where);
    }
-   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
+   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame).Unwrap();
 
    std::uint32_t size = pos - base;
-   size += SerializeEnvelopePostscript(base, size);
+   size += SerializeEnvelopePostscript(base, size).Unwrap();
    return size;
 }
 
