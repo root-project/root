@@ -116,4 +116,12 @@ ROOTTEST_ADD_TEST(TClassAtTearDown
 		  COPY_TO_BUILDDIR empty.root
 		  OUTREF execTClassAtTearDown.ref)
 
+ROOTTEST_GENERATE_EXECUTABLE(TFileTearDown TFileTearDown.cxx
+                             LIBRARIES Core RIO Hist Rint
+                             FIXTURES_SETUP TFileTearDownExec)
+
+ROOTTEST_ADD_TEST(TFileTearDown
+                  EXEC ./TFileTearDown
+                  FIXTURES_REQUIRED TFileTearDownExec)
+
 ROOTTEST_ADD_TESTDIRS()
