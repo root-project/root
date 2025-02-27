@@ -65,7 +65,7 @@ sap.ui.define(['sap/ui/core/Component',
          };
 
          consoleObj.stdwarn = console.warn.bind(console);
-         console.warning = function ()
+         console.warn = function ()
          {
             consoleObj.data.push({ type: "Warning", title: Array.from(arguments), counter: ++consoleObj.cntWarn });
             consoleObj.stdwarn.apply(console, arguments);
