@@ -790,8 +790,7 @@ void TGraph2D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 TObject *TGraph2D::FindObject(const char *name) const
 {
-   if (fFunctions) return fFunctions->FindObject(name);
-   return nullptr;
+   return fFunctions ? fFunctions->FindObject(name) : nullptr;
 }
 
 
@@ -800,8 +799,7 @@ TObject *TGraph2D::FindObject(const char *name) const
 
 TObject *TGraph2D::FindObject(const TObject *obj) const
 {
-   if (fFunctions) return fFunctions->FindObject(obj);
-   return nullptr;
+   return fFunctions ? fFunctions->FindObject(obj) : nullptr;
 }
 
 
@@ -984,6 +982,17 @@ void TGraph2D::CreateInterpolator(Bool_t oldInterp)
       ResetBit(kOldInterpolation);
       if (!hl->FindObject("TGraphDelaunay2D")) hl->Add(fDelaunay);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to function with name.
+///
+/// Functions such as TGraph2D::Fit store the fitted function in the list of
+/// functions of this graph.
+
+TF2 *TGraph2D::GetFunction(const char *name) const
+{
+   return dynamic_cast<TF2*>(FindObject(name));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
