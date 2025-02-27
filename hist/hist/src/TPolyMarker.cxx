@@ -303,19 +303,29 @@ void TPolyMarker::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    char quote = '"';
    out<<"   "<<std::endl;
-   out<<"   Double_t *dum = 0;"<<std::endl;
+   out<<"   Double_t pmx[" << Size() << "] = {" ;
+   for (Int_t i=0; i<Size(); i++) {
+      out<< fX[i]<<",";
+      if (i%10 == 0)
+         out << std::endl;
+   }
+   out << "};" << std::endl;
+   out<<"   Double_t pmy[" << Size() << "] = {" ;
+   for (Int_t i=0; i<Size(); i++) {
+      out<< fY[i]<<",";
+      if (i%10 == 0)
+         out << std::endl;
+   }
+   out << "};" << std::endl;
    if (gROOT->ClassSaved(TPolyMarker::Class())) {
       out<<"   ";
    } else {
       out<<"   TPolyMarker *";
    }
-   out<<"pmarker = new TPolyMarker("<<fN<<",dum,dum,"<<quote<<fOption<<quote<<");"<<std::endl;
+   out<<"pmarker = new TPolyMarker("<<fN<<",pmx,pmy,"<<quote<<fOption<<quote<<");"<<std::endl;
 
    SaveMarkerAttributes(out,"pmarker",1,1,1);
 
-   for (Int_t i=0;i<Size();i++) {
-      out<<"   pmarker->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<std::endl;
-   }
    if (!strstr(option, "nodraw")) {
       out<<"   pmarker->Draw("
          <<quote<<option<<quote<<");"<<std::endl;
