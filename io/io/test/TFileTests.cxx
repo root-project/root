@@ -163,7 +163,8 @@ TEST(TFile, k630forwardCompatibility)
 TEST(TFile, MakeSubDirectory)
 {
    // create test file
-   TFile outFile("dirTest17824.root", "RECREATE");
+   constexpr auto filename = "dirTest17824.root";
+   TFile outFile(filename, "RECREATE");
    // create test dir
    auto d = outFile.mkdir("test");
    // check if returned pointer points to test dir
@@ -176,7 +177,7 @@ TEST(TFile, MakeSubDirectory)
    // make test2 subdir
    auto d2 = outFile.mkdir("test/test2");
    // check if returned pointer points to test2 subdir
-   EXPECT_FALSE(d2 == d);
+   EXPECT_NE(d2, d);
    EXPECT_EQ(std::string(d2->GetName()), "test2");
    // move to test2 subdir
    d2->cd();
@@ -190,4 +191,6 @@ TEST(TFile, MakeSubDirectory)
    EXPECT_EQ(d2, gDirectory->GetDirectory(0));
    EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetPath()), "dirTest17824.root:/test/test2");
    EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetName()), "test2");
+  outFile.Close();
+  gSystem->Unlink(filename);
 }
