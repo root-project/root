@@ -1417,8 +1417,7 @@ Double_t TGraph::GetErrorYlow(Int_t) const
 
 TF1 *TGraph::GetFunction(const char *name) const
 {
-   if (!fFunctions) return nullptr;
-   return (TF1*)fFunctions->FindObject(name);
+   return dynamic_cast<TF1*>(FindObject(name));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
