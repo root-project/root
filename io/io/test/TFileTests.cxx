@@ -190,6 +190,7 @@ TEST(TFile, MakeSubDirectory)
    EXPECT_EQ(d2, gDirectory->GetDirectory(0));
    EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetPath()), "dirTest17824.root:/test/test2");
    EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetName()), "test2");
+   // test now three-level as in the doxygen docu
    outFile.cd();
    auto c = outFile.mkdir("a/b/c");
    EXPECT_EQ(std::string(c->GetPath()), "dirTest17824.root:/a/b/c");
