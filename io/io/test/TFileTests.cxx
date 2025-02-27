@@ -171,8 +171,8 @@ TEST(TFile, MakeSubDirectory)
    EXPECT_EQ(std::string(d->GetName()), "test");
    // move to dir and check
    d->cd();
-   EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetPath()), "dirTest17824.root:/test");
-   EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetName()), "test");
+   EXPECT_EQ(std::string(gDirectory->GetPath()), "dirTest17824.root:/test");
+   EXPECT_EQ(std::string(gDirectory->GetName()), "test");
 
    // make test2 subdir
    auto d2 = outFile.mkdir("test/test2");
@@ -181,23 +181,23 @@ TEST(TFile, MakeSubDirectory)
    EXPECT_EQ(std::string(d2->GetName()), "test2");
    // move to test2 subdir
    d2->cd();
-   EXPECT_EQ(d2, gDirectory->GetDirectory(0));
-   EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetPath()), "dirTest17824.root:/test/test2");
-   EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetName()), "test2");
+   EXPECT_EQ(d2, gDirectory);
+   EXPECT_EQ(std::string(gDirectory->GetPath()), "dirTest17824.root:/test/test2");
+   EXPECT_EQ(std::string(gDirectory->GetName()), "test2");
    // rebase (because paths in cd() are relative) and move to test2 subdir via gDirectory and explicit path
    outFile.cd();
    gDirectory->cd("test/test2");
    // check location again
-   EXPECT_EQ(d2, gDirectory->GetDirectory(0));
-   EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetPath()), "dirTest17824.root:/test/test2");
-   EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetName()), "test2");
+   EXPECT_EQ(d2, gDirectory);
+   EXPECT_EQ(std::string(gDirectory->GetPath()), "dirTest17824.root:/test/test2");
+   EXPECT_EQ(std::string(gDirectory->GetName()), "test2");
    // test now three-level as in the doxygen docu
    outFile.cd();
    auto c = outFile.mkdir("a/b/c");
    EXPECT_EQ(std::string(c->GetPath()), "dirTest17824.root:/a/b/c");
    EXPECT_EQ(std::string(c->GetName()), "c");
    gDirectory->cd("a/b/c");
-   EXPECT_EQ(c, gDirectory->GetDirectory(0));
-   EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetPath()), "dirTest17824.root:/a/b/c");
-   EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetName()), "c");
+   EXPECT_EQ(c, gDirectory);
+   EXPECT_EQ(std::string(gDirectory->GetPath()), "dirTest17824.root:/a/b/c");
+   EXPECT_EQ(std::string(gDirectory->GetName()), "c");
 }
