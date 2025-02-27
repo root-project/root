@@ -2151,8 +2151,8 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    TString args;
    if (fNpoints >= 1) {
-      auto xname = SaveArray(out, "fx", frameNumber, fX);
-      auto yname = SaveArray(out, "fy", frameNumber, fY);
+      TString xname = SaveArray(out, "fx", frameNumber, fX);
+      TString yname = SaveArray(out, "fy", frameNumber, fY);
       args.Form("%d, %s, %s", fNpoints, xname.Data(), yname.Data());
    }
 
