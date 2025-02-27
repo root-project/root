@@ -9,7 +9,7 @@
    >
    <Toolbar id="tbar">
       <content>
-         <Label text="TriggerTable" id="titleLabel" width="100%" textAlign="Center"/>
+         <Label text="Lego" id="titleLabel" width="100%" textAlign="Center"/>
          <Button icon="sap-icon://move" press="switchSingle" tooltip="single view"/>
          <Button icon="sap-icon://arrow-right" press="swap" tooltip="swap"/>
          <Button icon="sap-icon://decline" press="detachViewer" tooltip="destroy"/>
@@ -23,7 +23,6 @@
             </OverflowToolbar>
         </headerToolbar>
         <content>
-           <FormattedText id="legoX"/>
            <html:div id="legoPlotPlace" style="position:relative;left:0;right:0;top:0;bottom:0;height:100%;width:100%"/>
         </content>
     </Panel>
