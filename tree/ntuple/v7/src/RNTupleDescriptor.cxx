@@ -1266,6 +1266,17 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddExtraTypeInfo(RExtraT
    return RResult<void>::Success();
 }
 
+void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::ReplaceExtraTypeInfo(
+   RExtraTypeInfoDescriptor &&extraTypeInfoDesc)
+{
+   auto it = std::find(fDescriptor.fExtraTypeInfoDescriptors.begin(), fDescriptor.fExtraTypeInfoDescriptors.end(),
+                       extraTypeInfoDesc);
+   if (it != fDescriptor.fExtraTypeInfoDescriptors.end())
+      *it = std::move(extraTypeInfoDesc);
+   else
+      fDescriptor.fExtraTypeInfoDescriptors.emplace_back(std::move(extraTypeInfoDesc));
+}
+
 ROOT::Experimental::Internal::RNTupleSerializer::StreamerInfoMap_t
 ROOT::Experimental::Internal::RNTupleDescriptorBuilder::BuildStreamerInfos() const
 {

@@ -618,11 +618,6 @@ TEST(RNTuple, SerializeHeader)
                         .Index(1)
                         .MakeDescriptor()
                         .Unwrap());
-   builder.AddExtraTypeInfo(RExtraTypeInfoDescriptorBuilder()
-                               .ContentId(EExtraTypeInfoIds::kStreamerInfo)
-                               .Content("xyz")
-                               .MoveDescriptor()
-                               .Unwrap());
 
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeader(nullptr, desc);
@@ -641,12 +636,6 @@ TEST(RNTuple, SerializeHeader)
    EXPECT_TRUE(desc.GetFieldDescriptor(ptAliasFieldId).IsProjectedField());
    EXPECT_EQ(ptFieldId, desc.GetFieldDescriptor(ptAliasFieldId).GetProjectionSourceId());
    EXPECT_FALSE(desc.GetFieldDescriptor(ptFieldId).IsProjectedField());
-   EXPECT_EQ(1u, desc.GetNExtraTypeInfos());
-   const auto &extraTypeInfoDesc = *desc.GetExtraTypeInfoIterable().begin();
-   EXPECT_EQ(EExtraTypeInfoIds::kStreamerInfo, extraTypeInfoDesc.GetContentId());
-   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersion());
-   EXPECT_TRUE(extraTypeInfoDesc.GetTypeName().empty());
-   EXPECT_STREQ("xyz", extraTypeInfoDesc.GetContent().c_str());
 }
 
 TEST(RNTuple, SerializeFooter)
