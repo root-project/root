@@ -214,6 +214,9 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleSingleProcessor::LoadEntry(ROOT::N
 {
    Connect();
 
+   if (entryNumber == kInvalidNTupleIndex)
+      fEntry->Reset();
+
    if (entryNumber >= fNEntries)
       return kInvalidNTupleIndex;
 
@@ -320,6 +323,9 @@ void ROOT::Experimental::RNTupleChainProcessor::SetEntryPointers(const ROOT::REn
 
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NTupleSize_t entryNumber)
 {
+   if (entryNumber == kInvalidNTupleIndex)
+      fEntry->Reset();
+
    ROOT::NTupleSize_t localEntryNumber = entryNumber;
    size_t currProcessor = 0;
 
@@ -495,6 +501,9 @@ void ROOT::Experimental::RNTupleJoinProcessor::SetEntryPointers(const ROOT::REnt
 
 ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTupleSize_t entryNumber)
 {
+   if (entryNumber == kInvalidNTupleIndex)
+      fEntry->Reset();
+
    if (entryNumber >= fPageSource->GetNEntries())
       return ROOT::kInvalidNTupleIndex;
 
