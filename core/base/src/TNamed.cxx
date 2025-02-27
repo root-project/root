@@ -131,6 +131,16 @@ void TNamed::Print(Option_t *) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Save object name and title into the output stream "out".
+
+void TNamed::SavePrimitiveNameTitle(std::ostream &out, const char *variable_name)
+{
+   TString name = GetName(), title = GetTitle();
+   out << "   " << variable_name << "->SetName(\"" << name.ReplaceSpecialCppChars() << "\");" << std::endl;
+   out << "   " << variable_name << "->SetTitle(\"" << title.ReplaceSpecialCppChars() << "\");" << std::endl;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set the name of the TNamed.
 ///
 /// WARNING: if the object is a member of a THashTable or THashList container

@@ -32,6 +32,8 @@ protected:
    TString   fName;            //object identifier
    TString   fTitle;           //object title
 
+   void SavePrimitiveNameTitle(std::ostream &out, const char *variable_name);
+
 public:
    TNamed(): fName(), fTitle() { } // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    TNamed(const char *name, const char *title) : fName(name), fTitle(title) { }
