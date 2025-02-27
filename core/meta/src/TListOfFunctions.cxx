@@ -22,6 +22,7 @@ unloaded function.
 #include "TMethod.h"
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
+#include "TROOT.h"
 
 ClassImp(TListOfFunctions);
 
@@ -267,6 +268,11 @@ TFunction *TListOfFunctions::Get(DeclId_t id)
    //need the Find and possible Add to be one atomic operation
    TFunction *f = Find(id);
    if (f) return f;
+
+   if (gROOT->TestBit(kInvalidObject)) {
+      // Abort early during tear down.
+      return nullptr;
+   }
 
    if (fClass) {
       if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return nullptr;
