@@ -1559,8 +1559,7 @@ void TDirectoryFile::Save()
       auto lnk = fList->FirstLink()->shared_from_this();
       while (lnk) {
          TObject *idcur = lnk->GetObject();
-         if (idcur && idcur->InheritsFrom(TDirectoryFile::Class())) {
-            TDirectoryFile *dir = (TDirectoryFile *)idcur;
+         if (TDirectoryFile *dir = dynamic_cast<TDirectoryFile *>(idcur)) {
             dir->Save();
          }
          lnk = lnk->NextSP();
