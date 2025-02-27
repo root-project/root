@@ -918,9 +918,9 @@ void ROOT::Experimental::Internal::RPagePersistentSink::InitImpl(RNTupleModel &m
       initialChangeset.fAddedProjectedFields.emplace_back(f);
    UpdateSchema(initialChangeset, 0U);
 
-   fSerializationContext = RNTupleSerializer::SerializeHeader(nullptr, descriptor);
+   fSerializationContext = RNTupleSerializer::SerializeHeader(nullptr, descriptor).Unwrap();
    auto buffer = MakeUninitArray<unsigned char>(fSerializationContext.GetHeaderSize());
-   fSerializationContext = RNTupleSerializer::SerializeHeader(buffer.get(), descriptor);
+   fSerializationContext = RNTupleSerializer::SerializeHeader(buffer.get(), descriptor).Unwrap();
    InitImpl(buffer.get(), fSerializationContext.GetHeaderSize());
 
    fDescriptorBuilder.BeginHeaderExtension();
@@ -984,9 +984,9 @@ ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTu
    }
 
    // Serialize header and init from it
-   fSerializationContext = RNTupleSerializer::SerializeHeader(nullptr, descriptor);
+   fSerializationContext = RNTupleSerializer::SerializeHeader(nullptr, descriptor).Unwrap();
    auto buffer = MakeUninitArray<unsigned char>(fSerializationContext.GetHeaderSize());
-   fSerializationContext = RNTupleSerializer::SerializeHeader(buffer.get(), descriptor);
+   fSerializationContext = RNTupleSerializer::SerializeHeader(buffer.get(), descriptor).Unwrap();
    InitImpl(buffer.get(), fSerializationContext.GetHeaderSize());
 
    fDescriptorBuilder.BeginHeaderExtension();
@@ -1189,7 +1189,8 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitClusterGroup()
       physClusterIDs.emplace_back(fSerializationContext.MapClusterId(i));
    }
 
-   auto szPageList = RNTupleSerializer::SerializePageList(nullptr, descriptor, physClusterIDs, fSerializationContext);
+   auto szPageList =
+      RNTupleSerializer::SerializePageList(nullptr, descriptor, physClusterIDs, fSerializationContext).Unwrap();
    auto bufPageList = MakeUninitArray<unsigned char>(szPageList);
    RNTupleSerializer::SerializePageList(bufPageList.get(), descriptor, physClusterIDs, fSerializationContext);
 
@@ -1243,7 +1244,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitDatasetImpl()
 
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
-   auto szFooter = RNTupleSerializer::SerializeFooter(nullptr, descriptor, fSerializationContext);
+   auto szFooter = RNTupleSerializer::SerializeFooter(nullptr, descriptor, fSerializationContext).Unwrap();
    auto bufFooter = MakeUninitArray<unsigned char>(szFooter);
    RNTupleSerializer::SerializeFooter(bufFooter.get(), descriptor, fSerializationContext);
 
