@@ -1262,7 +1262,6 @@ TDirectory *TDirectoryFile::mkdir(const char *name, const char *title, Bool_t re
         return nullptr;
       }
    }
-   TDirectoryFile *newdir = nullptr;
    if (const char *slash = strchr(name,'/')) {
       TString workname(name, Long_t(slash-name));
       TDirectoryFile *tmpdir = nullptr;
@@ -1271,15 +1270,12 @@ TDirectory *TDirectoryFile::mkdir(const char *name, const char *title, Bool_t re
          tmpdir = (TDirectoryFile*)mkdir(workname.Data(),title);
          if (!tmpdir) return nullptr;
       }
-      if (!newdir) newdir = tmpdir;
       return tmpdir->mkdir(slash + 1);
    }
 
    TDirectory::TContext ctxt(this);
 
-   newdir = new TDirectoryFile(name, title, "", this);
-
-   return newdir;
+   return new TDirectoryFile(name, title, "", this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
