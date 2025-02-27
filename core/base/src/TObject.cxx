@@ -764,6 +764,21 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Save object constructor in the output stream "out".
+/// Can be used as first statement when implementing SavePrimitive() method for the object
+
+void TObject::SavePrimitiveConstructor(std::ostream &out, TClass *cl, const char *variable_name, const char *constructor_agrs, Bool_t empty_line)
+{
+   if (empty_line)
+      out << "   " << std::endl;
+
+   out << "   ";
+   if (!gROOT->ClassSaved(cl))
+      out << cl->GetName() << " *";
+   out << variable_name << " = new " << cl->GetName() << "(" << constructor_agrs << ");" << std::endl;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Save a primitive as a C++ statement(s) on output stream "out".
 
 void TObject::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
