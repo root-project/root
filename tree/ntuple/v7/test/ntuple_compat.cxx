@@ -44,12 +44,12 @@ TEST(RNTupleCompat, FeatureFlag)
    auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), EContainerFormat::kTFile, options);
    RNTupleSerializer serializer;
 
-   auto ctx = serializer.SerializeHeader(nullptr, descBuilder.GetDescriptor());
+   auto ctx = serializer.SerializeHeader(nullptr, descBuilder.GetDescriptor()).Unwrap();
    auto buffer = std::make_unique<unsigned char[]>(ctx.GetHeaderSize());
-   ctx = serializer.SerializeHeader(buffer.get(), descBuilder.GetDescriptor());
+   ctx = serializer.SerializeHeader(buffer.get(), descBuilder.GetDescriptor()).Unwrap();
    writer->WriteNTupleHeader(buffer.get(), ctx.GetHeaderSize(), ctx.GetHeaderSize());
 
-   auto szFooter = serializer.SerializeFooter(nullptr, descBuilder.GetDescriptor(), ctx);
+   auto szFooter = serializer.SerializeFooter(nullptr, descBuilder.GetDescriptor(), ctx).Unwrap();
    buffer = std::make_unique<unsigned char[]>(szFooter);
    serializer.SerializeFooter(buffer.get(), descBuilder.GetDescriptor(), ctx);
    writer->WriteNTupleFooter(buffer.get(), szFooter, szFooter);
