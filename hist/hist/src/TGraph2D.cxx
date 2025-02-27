@@ -994,8 +994,7 @@ void TGraph2D::CreateInterpolator(Bool_t oldInterp)
 
 TF2 *TGraph2D::GetFunction(const char *name) const
 {
-   if (!fFunctions) return nullptr;
-   return (TF2*)fFunctions->FindObject(name);
+   return dynamic_cast<TF2*>(FindObject(name));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
