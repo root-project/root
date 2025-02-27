@@ -164,7 +164,7 @@ TEST(TFile, MakeSubDirectory)
 {
    // create test file
    constexpr auto filename = "dirTest17824.root";
-   TFile outFile(filename, "RECREATE");
+   TMemFile outFile(filename, "RECREATE");
    // create test dir
    auto d = outFile.mkdir("test");
    // check if returned pointer points to test dir
@@ -191,6 +191,5 @@ TEST(TFile, MakeSubDirectory)
    EXPECT_EQ(d2, gDirectory->GetDirectory(0));
    EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetPath()), "dirTest17824.root:/test/test2");
    EXPECT_EQ(std::string(gDirectory->GetDirectory(0)->GetName()), "test2");
-  outFile.Close();
-  gSystem->Unlink(filename);
+   outFile.Close();
 }
