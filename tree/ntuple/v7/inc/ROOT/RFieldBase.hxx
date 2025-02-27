@@ -723,6 +723,7 @@ public:
    void BindRawPtr(void *rawPtr);
    /// Replace the current object pointer by a pointer to a new object constructed by the field
    void EmplaceNew() { fObjPtr = fField->CreateValue().GetPtr<void>(); }
+   void Reset() { fField->ConstructValue(fObjPtr.get()); }
 
    template <typename T>
    std::shared_ptr<T> GetPtr() const
