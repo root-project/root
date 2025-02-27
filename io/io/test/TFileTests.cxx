@@ -163,8 +163,7 @@ TEST(TFile, k630forwardCompatibility)
 TEST(TFile, MakeSubDirectory)
 {
    // create test file
-   constexpr auto filename = "dirTest17824.root";
-   TMemFile outFile(filename, "RECREATE");
+   TMemFile outFile("dirTest17824.root", "RECREATE");
    // create test dir
    auto d = outFile.mkdir("test");
    // check if returned pointer points to test dir
