@@ -5,6 +5,7 @@
 #include "gtest/gtest.h"
 
 #include "TFile.h"
+#include "TMemFile.h"
 #include "TDirectory.h"
 #include "TKey.h"
 #include "TNamed.h"
