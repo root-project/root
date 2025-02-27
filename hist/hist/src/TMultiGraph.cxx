@@ -654,7 +654,7 @@ TFitResultPtr TMultiGraph::Fit(const char *fname, Option_t *option, Option_t *, 
 ///
 ///  ### Associated functions
 ///
-///  One or more object (typically a TF1*) can be added to the list
+///  One or more objects (typically a TF1*) can be added to the list
 ///  of functions (fFunctions) associated to each graph.
 ///  When TGraph::Fit is invoked, the fitted function is added to this list.
 ///  Given a graph gr, one can retrieve an associated function

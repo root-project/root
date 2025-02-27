@@ -106,6 +106,7 @@ public:
    virtual void          FitPanel(); // *MENU*
    TList                *GetContourList(Double_t contour);
    TDirectory           *GetDirectory() const {return fDirectory;}
+   TF2                  *GetFunction(const char *name) const;
    Int_t                 GetNpx() const {return fNpx;}
    Int_t                 GetNpy() const {return fNpy;}
    TH2D                 *GetHistogram(Option_t *option="");

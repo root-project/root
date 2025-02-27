@@ -390,10 +390,10 @@ When using the options 2 or 3 above, the labels are automatically
 
 \anchor associated-functions
 ### Associated functions
- One or more object (typically a TF1*) can be added to the list
+ One or more objects (typically a TF1*) can be added to the list
  of functions (fFunctions) associated to each histogram.
  When TH1::Fit is invoked, the fitted function is added to this list.
- Given a histogram h, one can retrieve an associated function
+ Given a histogram (or TGraph) `h`, one can retrieve an associated function
  with:
 ~~~ {.cpp}
         TF1 *myfunc = h->GetFunction("myfunc");
@@ -4063,7 +4063,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///
 /// ##### Associated functions
 ///
-/// One or more object ( can be added to the list
+/// One or more objects (typically a TF1*) can be added to the list
 /// of functions (fFunctions) associated to each histogram.
 /// When TH1::Fit is invoked, the fitted function is added to the histogram list of functions (fFunctions).
 /// If the histogram is made persistent, the list of associated functions is also persistent.
