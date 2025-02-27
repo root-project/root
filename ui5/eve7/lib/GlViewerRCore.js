@@ -69,6 +69,24 @@ sap.ui.define([
                if (this._logLevel >= 2)
                   console.log("GlViewerRCore.onInit - RenderCore.js loaded");
                RC = module;
+
+               RC.Canvas.prototype.generateCanvasDOM = function(id="eve7-rc-canvas") {
+                  if (RC.Canvas.prototype._xxcount === undefined) { RC.Canvas.prototype._xxcount = 0; }
+
+                  const canvasDOM = document.createElement("canvas");
+                  canvasDOM.id = id + "-" + RC.Canvas.prototype._xxcount;
+                  ++RC.Canvas.prototype._xxcount;
+
+                  //make it visually fill the positioned parent
+                  //set the display size of the canvas
+                  canvasDOM.style.width = "100%";
+                  canvasDOM.style.height = "100%";
+                  canvasDOM.style.padding = '0';
+                  canvasDOM.style.margin = '0';
+
+                  return canvasDOM;
+               };
+
                pthis.bootstrap();
             });
          } else {
@@ -127,7 +145,26 @@ sap.ui.define([
 
       createRCoreRenderer()
       {
-         this.canvas = new RC.Canvas(this.get_view().getDomRef());
+         let canvasParentDOM = document.createElement("div");
+         let vid = this.get_view().sId + "--rcore";
+         canvasParentDOM.setAttribute("id", vid);
+         canvasParentDOM.style.width = "100%";
+         canvasParentDOM.style.height = "100%";
+
+         // in case of openui5 rooter, the canvas element accumulates
+         // destroy the old canvas element
+	      let cn = this.get_view().getDomRef().childNodes;
+         let oldCanvas = -1;
+         for (let i =0; i < cn.length; ++i) {
+           if (cn[i].id === vid)
+                oldCanvas = i;
+         }
+         if (oldCanvas !== -1) {
+            this.get_view().getDomRef().removeChild(cn[oldCanvas]);
+         }
+
+         this.get_view().getDomRef().appendChild(canvasParentDOM);
+         this.canvas = new RC.Canvas(canvasParentDOM);
          let w = this.canvas.width;
          let h = this.canvas.height;
          this.fixCssSize();
@@ -277,7 +314,8 @@ sap.ui.define([
          this.ttip.setAttribute('class', 'eve_tooltip');
          this.ttip_text = document.createElement('div');
          this.ttip.appendChild(this.ttip_text);
-         this.get_view().getDomRef().appendChild(this.ttip);
+         this.canvas.parentDOM.appendChild(this.ttip)
+
 
          // Setup some event pre-handlers
          let glc = this;
@@ -573,7 +611,11 @@ sap.ui.define([
             this.axis.add(ss);
          }
 
-         let url_base = this.eve_path + 'sdf-fonts/LiberationSerif-Regular';
+<<<<<<< HEAD
+         let url_base = this.eve_path + 'sdf-fonts/LiberationMono-Regular';
+=======
+         let url_base = this.eve_path + 'sdf-fonts/LiberationSans-Regular';
+>>>>>>> 83b8f00f15 (Filter and table-column expressions checking, fix axis labels.)
          this.tex_cache.deliver_font(url_base,
             (texture, font_metrics) => {
                let diag = new RC.Vector3;
@@ -822,7 +864,23 @@ sap.ui.define([
                console.log("GlViewerRCore onResizeTimeout -- canvas is not set yet.");
             return;
          }
+         {
+            let dome = this.get_view().getDomRef();
+            console.log(dome, dome.childElementCount);
 
+            let vid = this.get_view().sId + "--rcore";
+            let hasCanvas = false;
+            for (const child of dome.children) {
+               if (child.id === vid) {
+                  hasCanvas = true;
+               }
+            }
+
+            if (hasCanvas === false)
+            {
+               dome.appendChild(this.canvas.parentDOM);
+            }
+         }
          this.floatCssSize();
          this.canvas.updateSize();
          let w = this.canvas.width;
@@ -879,7 +937,7 @@ sap.ui.define([
          let c = pstate.ctrl;
          let idx = c.extractIndex(pstate.instance);
 
-         c.elementHighlighted(idx, null, pstate.object);
+         c.elementHighlighted(idx, null);
 
          if (this.highlighted_top_object !== pstate.top_object)
          {
@@ -1016,7 +1074,7 @@ sap.ui.define([
 
          if (pstate) {
             let c = pstate.ctrl;
-            c.elementSelected(c.extractIndex(pstate.instance), event, pstate.object);
+            c.elementSelected(c.extractIndex(pstate.instance), event);
             // WHY ??? this.highlighted_scene = pstate.top_object.scene;
          } else {
             // XXXX HACK - handlersMIR senders should really be in the mgr
