@@ -1217,10 +1217,23 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitClusterGroup()
 void ROOT::Experimental::Internal::RPagePersistentSink::CommitDatasetImpl()
 {
    if (!fStreamerInfos.empty()) {
+      // De-duplicate extra type infos before writing. Usually we won't have them already in the descriptor, but
+      // this may happen when we are writing back an already-existing RNTuple, e.g. when doing incremental merging.
+      for (const auto &etDesc : fDescriptorBuilder.GetDescriptor().GetExtraTypeInfoIterable()) {
+         if (etDesc.GetContentId() == EExtraTypeInfoIds::kStreamerInfo) {
+            // The specification mandates that the type name for a kStreamerInfo should be empty and the type version
+            // should be zero.
+            R__ASSERT(etDesc.GetTypeName().empty());
+            R__ASSERT(etDesc.GetTypeVersion() == 0);
+            auto etInfo = RNTupleSerializer::DeserializeStreamerInfos(etDesc.GetContent()).Unwrap();
+            fStreamerInfos.merge(etInfo);
+         }
+      }
+
       RExtraTypeInfoDescriptorBuilder extraInfoBuilder;
       extraInfoBuilder.ContentId(EExtraTypeInfoIds::kStreamerInfo)
          .Content(RNTupleSerializer::SerializeStreamerInfos(fStreamerInfos));
-      fDescriptorBuilder.AddExtraTypeInfo(extraInfoBuilder.MoveDescriptor().Unwrap());
+      fDescriptorBuilder.ReplaceExtraTypeInfo(extraInfoBuilder.MoveDescriptor().Unwrap());
    }
 
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();

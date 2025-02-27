@@ -1352,8 +1352,13 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    frame = pos;
-   pos += SerializeListFramePreamble(nExtraTypeInfos, *where);
-   pos += SerializeExtraTypeInfoList(desc, *where);
+   // We only serialize the extra type info list in the header extension.
+   if (forHeaderExtension) {
+      pos += SerializeListFramePreamble(nExtraTypeInfos, *where);
+      pos += SerializeExtraTypeInfoList(desc, *where);
+   } else {
+      pos += SerializeListFramePreamble(0, *where);
+   }
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    return static_cast<std::uint32_t>(pos - base);
