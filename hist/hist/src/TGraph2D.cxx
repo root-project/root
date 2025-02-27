@@ -790,8 +790,7 @@ void TGraph2D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 TObject *TGraph2D::FindObject(const char *name) const
 {
-   if (fFunctions) return fFunctions->FindObject(name);
-   return nullptr;
+   return fFunctions ? fFunctions->FindObject(name) : nullptr;
 }
 
 
@@ -800,8 +799,7 @@ TObject *TGraph2D::FindObject(const char *name) const
 
 TObject *TGraph2D::FindObject(const TObject *obj) const
 {
-   if (fFunctions) return fFunctions->FindObject(obj);
-   return nullptr;
+   return fFunctions ? fFunctions->FindObject(obj) : nullptr;
 }
 
 
