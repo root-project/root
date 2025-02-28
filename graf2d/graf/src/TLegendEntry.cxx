@@ -111,25 +111,20 @@ void TLegendEntry::Print( Option_t *) const
 /// Save this TLegendEntry as C++ statements on output stream out
 ///  to be used with the SaveAs .C option
 
-void TLegendEntry::SaveEntry(std::ostream &out, const char* name )
+void TLegendEntry::SaveEntry(std::ostream &out, const char* name)
 {
-   char quote = '"';
-   if ( gROOT->ClassSaved( TLegendEntry::Class() ) ) {
-      out << "   entry=";
-   } else {
-      out << "   TLegendEntry *entry=";
-   }
-   TString objname = "NULL";
-   if ( fObject ) objname = fObject->GetName();
-   TString tL(fLabel);
-   tL.ReplaceAll("\\","\\\\");
-   tL.ReplaceAll("\"","\\\"");
-   out << name << "->AddEntry("<<quote<<objname<<quote<<","<<quote<<
-      tL.Data()<<quote<<","<<quote<<fOption.Data()<<quote<<");"<<std::endl;
-   SaveFillAttributes(out,"entry",0,0);
-   SaveLineAttributes(out,"entry",0,0,0);
-   SaveMarkerAttributes(out,"entry",0,0,0);
-   SaveTextAttributes(out,"entry",0,0,0,0,0);
+   if (gROOT->ClassSaved(TLegendEntry::Class()))
+      out << "   legentry = ";
+   else
+      out << "   TLegendEntry *legentry = ";
+
+   TString objname = fObject ? fObject->GetName() : "NULL";
+   out << name << "->AddEntry(\"" << objname << "\",\"" << TString(fLabel).ReplaceSpecialCppChars() << "\",\""
+       << TString(fOption).ReplaceSpecialCppChars() << "\");" << std::endl;
+   SaveFillAttributes(out, "legentry", 0, 0);
+   SaveLineAttributes(out, "legentry", 0, 0, 0);
+   SaveMarkerAttributes(out, "legentry", 0, 0, 0);
+   SaveTextAttributes(out, "legentry", 0, 0, 0, 0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -126,7 +126,7 @@ TCutG::TCutG(const char *name, Int_t n)
    auto obj = gROOT->GetListOfSpecials()->FindObject(name);
    if (obj) {
       Warning("TCutG","Replacing existing %s: %s (Potential memory leak).",
-                 obj->IsA()->GetName(),obj->GetName()); 
+                 obj->IsA()->GetName(),obj->GetName());
       delete obj;
    }
    gROOT->GetListOfSpecials()->Add(this);
@@ -172,7 +172,7 @@ TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
    auto obj = gROOT->GetListOfSpecials()->FindObject(name);
    if (obj) {
       Warning("TCutG","Replacing existing %s: %s (Potential memory leak).",
-                 obj->IsA()->GetName(),obj->GetName()); 
+                 obj->IsA()->GetName(),obj->GetName());
       delete obj;
    }
    gROOT->GetListOfSpecials()->Add(this);
@@ -218,7 +218,7 @@ TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
    auto obj = gROOT->GetListOfSpecials()->FindObject(name);
    if (obj) {
       Warning("TCutG","Replacing existing %s: %s (Potential memory leak).",
-                 obj->IsA()->GetName(),obj->GetName()); 
+                 obj->IsA()->GetName(),obj->GetName());
       delete obj;
    }
    gROOT->GetListOfSpecials()->Add(this);
@@ -370,27 +370,18 @@ Double_t TCutG::IntegralHist(TH2 *h, Option_t *option) const
 
 void TCutG::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TCutG::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TCutG *";
-   }
-   out<<"cutg = new TCutG("<<quote<<GetName()<<quote<<","<<fNpoints<<");"<<std::endl;
-   out<<"   cutg->SetVarX("<<quote<<GetVarX()<<quote<<");"<<std::endl;
-   out<<"   cutg->SetVarY("<<quote<<GetVarY()<<quote<<");"<<std::endl;
-   out<<"   cutg->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "cutg", TString::Format("\"%s\", %d", GetName(), fNpoints));
+   out << "   cutg->SetVarX(\"" << GetVarX() << "\");" << std::endl;
+   out << "   cutg->SetVarY(\"" << GetVarY() << "\");" << std::endl;
+   out << "   cutg->SetTitle(\"" << TString(GetTitle()).ReplaceSpecialCppChars() << "\");" << std::endl;
 
    SaveFillAttributes(out,"cutg",0,1001);
    SaveLineAttributes(out,"cutg",1,1,1);
    SaveMarkerAttributes(out,"cutg",1,1,1);
 
-   for (Int_t i=0;i<fNpoints;i++) {
-      out<<"   cutg->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<std::endl;
-   }
-   out<<"   cutg->Draw("
-      <<quote<<option<<quote<<");"<<std::endl;
+   for (Int_t i = 0; i < fNpoints; i++)
+      out << "   cutg->SetPoint(" << i << "," << fX[i] << "," << fY[i] << ");" << std::endl;
+   out << "   cutg->Draw(\"" << option << "\");" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
