@@ -2712,24 +2712,17 @@ void TLatex::Savefs(TLatex::TLatexFormSize *fs)
 
 void TLatex::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   char quote = '"';
-
-   if (gROOT->ClassSaved(TLatex::Class()))
-      out<<"   ";
-   else
-      out<<"   TLatex *";
-
-   TString s = GetTitle();
-   s.ReplaceSpecialCppChars();
-
-   out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s<<quote<<");"<<std::endl;
-   if (TestBit(kTextNDC))
-      out<<"   tex->SetNDC();"<<std::endl;
+   SavePrimitiveConstructor(
+      out, Class(), "tex",
+      TString::Format("%g, %g, \"%s\"", fX, fY, TString(GetTitle()).ReplaceSpecialCppChars().Data()), kFALSE);
 
    SaveTextAttributes(out, "tex", 11, 0, 1, 62, 0.05);
    SaveLineAttributes(out, "tex", 1, 1, 1);
 
-   out<<"   tex->Draw();"<<std::endl;
+   if (TestBit(kTextNDC))
+      out << "   tex->SetNDC();" << std::endl;
+
+   out << "   tex->Draw();" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

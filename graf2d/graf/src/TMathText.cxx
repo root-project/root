@@ -676,26 +676,15 @@ void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
 
 void TMathText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   const char quote = '"';
+   SavePrimitiveConstructor(
+      out, Class(), "mathtex",
+      TString::Format("%g, %g, \"%s\"", fX, fY, TString(GetTitle()).ReplaceSpecialCppChars().Data()), kFALSE);
 
-   if (gROOT->ClassSaved(TMathText::Class())) {
-      out << "   ";
-   } else {
-      out << "   TMathText *";
-   }
-
-   TString s = GetTitle();
-
-   s.ReplaceAll("\\","\\\\");
-   s.ReplaceAll("\"","\\\"");
-   out << "mathtex = new TMathText("<< fX << "," << fY << ","
-      << quote << s.Data() << quote << ");" << std::endl;
-   if (TestBit(kTextNDC)) {
+   if (TestBit(kTextNDC))
       out << "mathtex->SetNDC();" << std::endl;
-   }
 
    SaveTextAttributes(out, "mathtex", 11, 0, 1, 42, 0.05);
    SaveFillAttributes(out, "mathtex", 0, 1001);
 
-   out<<"   mathtex->Draw();" << std::endl;
+   out << "   mathtex->Draw();" << std::endl;
 }
