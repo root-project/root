@@ -503,3 +503,30 @@ TEST(RDFSnapshotRNTuple, DisallowFromTTreeJITted)
                                "to convert TTrees to RNTuple is through the RNTupleImporter.");
    }
 }
+
+#ifdef R__USE_IMT
+struct TIMTEnabler {
+   TIMTEnabler(unsigned int nSlots) { ROOT::EnableImplicitMT(nSlots); }
+   ~TIMTEnabler() { ROOT::DisableImplicitMT(); }
+};
+
+TEST(RDFSnapshotRNTuple, ThrowIfMT)
+{
+   TIMTEnabler _(4);
+
+   FileRAII fileGuard{"RDFSnapshotRNTuple_throw_if_mt.root"};
+
+   auto df = ROOT::RDataFrame(25ull).Define("x", [] { return 10; });
+
+   RSnapshotOptions opts;
+   opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+
+   try {
+      auto sdf = df.Snapshot<std::int32_t>("ntuple", fileGuard.GetPath(), {"x"}, opts);
+      *sdf;
+      FAIL() << "MT snapshotting to RNTuple is not supported yet";
+   } catch (const std::runtime_error &err) {
+      EXPECT_STREQ(err.what(), "Snapshot: Snapshotting to RNTuple with IMT enabled is not supported yet.");
+   }
+}
+#endif // R__USE_IMT
