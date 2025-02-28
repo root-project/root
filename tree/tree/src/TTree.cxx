@@ -6856,7 +6856,7 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
       TTree *tree = (TTree*)obj;
       if (tree->GetListOfBranches()->IsEmpty()) {
          if (gDebug > 2) {
-            Warning("MergeTrees","TTree %s has no branches, skipping.", tree->GetName());
+            tree->Warning("MergeTrees","TTree %s has no branches, skipping.", tree->GetName());
          }
          continue; // Completely ignore the empty trees.
       }
