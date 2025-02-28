@@ -1240,12 +1240,15 @@ TFile *TDirectoryFile::OpenFile(const char *name, Option_t *option,const char *f
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a sub-directory "a" or a hierarchy of sub-directories "a/b/c/...".
 ///
-/// Returns 0 in case of error or if a sub-directory (hierarchy) with the requested
-/// name already exists.
-/// returnExistingDirectory returns a pointer to an already existing sub-directory instead of 0.
-/// Returns a pointer to the created sub-directory or to the top sub-directory of
-/// the hierarchy (in the above example, the returned TDirectory * always points
-/// to "a").
+/// @param name the name or hierarchy of the subdirectory ("a" or "a/b/c")
+/// @param title the title
+/// @param returnExistingDirectory if key-name is already existing, the returned
+/// value points to preexisting sub-directory if true and to `nullptr` if false.
+/// @return a pointer to the created sub-directory, not to the top sub-directory
+/// of the hierarchy (in the above example, the returned TDirectory * points
+/// to "c"). In case of an error, it returns `nullptr`. In case of a preexisting
+/// sub-directory (hierarchy) with the requested name, the return value depends
+/// on the parameter returnExistingDirectory.
 
 TDirectory *TDirectoryFile::mkdir(const char *name, const char *title, Bool_t returnExistingDirectory)
 {
@@ -1259,7 +1262,6 @@ TDirectory *TDirectoryFile::mkdir(const char *name, const char *title, Bool_t re
         return nullptr;
       }
    }
-   TDirectoryFile *newdir = nullptr;
    if (const char *slash = strchr(name,'/')) {
       TString workname(name, Long_t(slash-name));
       TDirectoryFile *tmpdir = nullptr;
@@ -1268,16 +1270,12 @@ TDirectory *TDirectoryFile::mkdir(const char *name, const char *title, Bool_t re
          tmpdir = (TDirectoryFile*)mkdir(workname.Data(),title);
          if (!tmpdir) return nullptr;
       }
-      if (!newdir) newdir = tmpdir;
-      tmpdir->mkdir(slash+1);
-      return newdir;
+      return tmpdir->mkdir(slash + 1);
    }
 
    TDirectory::TContext ctxt(this);
 
-   newdir = new TDirectoryFile(name, title, "", this);
-
-   return newdir;
+   return new TDirectoryFile(name, title, "", this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
