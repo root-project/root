@@ -799,22 +799,16 @@ void TText::Print(Option_t *) const
 
 void TText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   char quote = '"';
-   if (gROOT->ClassSaved(TText::Class()))
-      out<<"   ";
-   else
-      out<<"   TText *";
-
-   TString s = GetTitle();
-   s.ReplaceSpecialCppChars();
-
-   out<<"text = new TText("<<fX<<","<<fY<<","<<quote<<s<<quote<<");"<<std::endl;
-   if (TestBit(kTextNDC))
-      out<<"   text->SetNDC();"<<std::endl;
+   SavePrimitiveConstructor(
+      out, Class(), "text",
+      TString::Format("%g, %g, \"%s\"", fX, fY, TString(GetTitle()).ReplaceSpecialCppChars().Data()), kFALSE);
 
    SaveTextAttributes(out, "text", 11, 0, 1, 62, 0.05);
 
-   out<<"   text->Draw();"<<std::endl;
+   if (TestBit(kTextNDC))
+      out << "   text->SetNDC();" << std::endl;
+
+   out << "   text->Draw();" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -822,8 +816,7 @@ void TText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
 void TText::SetNDC(Bool_t isNDC)
 {
-   ResetBit(kTextNDC);
-   if (isNDC) SetBit(kTextNDC);
+   SetBit(kTextNDC, isNDC);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
