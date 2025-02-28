@@ -47,7 +47,6 @@ ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntup
                                                            const ROOT::RNTupleWriteOptions &options)
    : RPagePersistentSink(ntupleName, options)
 {
-   fCompressor = std::make_unique<RNTupleCompressor>();
    EnableDefaultMetrics("RPageSinkFile");
    fFeatures.fCanMergePages = true;
 }

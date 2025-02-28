@@ -278,19 +278,12 @@ public:
 protected:
    std::unique_ptr<ROOT::RNTupleWriteOptions> fOptions;
 
-   /// Helper to zip pages and header/footer; includes a 16MB (kMAXZIPBUF) zip buffer.
-   /// There could be concrete page sinks that don't need a compressor.  Therefore, and in order to stay consistent
-   /// with the page source, we leave it up to the derived class whether or not the compressor gets constructed.
-   std::unique_ptr<RNTupleCompressor> fCompressor;
-
    /// Flag if sink was initialized
    bool fIsInitialized = false;
 
    /// Helper for streaming a page. This is commonly used in derived, concrete page sinks. Note that if
    /// compressionSetting is 0 (uncompressed) and the page is mappable and not checksummed, the returned sealed page
-   /// will point directly to the input page buffer.  Otherwise, the sealed page references an internal buffer
-   /// of fCompressor.  Thus, the buffer pointed to by the RSealedPage should never be freed.
-   /// Usage of this method requires construction of fCompressor.
+   /// will point directly to the input page buffer.
    RSealedPage SealPage(const RPage &page, const RColumnElementBase &element);
 
 private:
