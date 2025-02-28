@@ -550,9 +550,6 @@ void TGraphBentErrors::Scale(Double_t c1, Option_t *option)
 
 void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   static Int_t frameNumber = 2000;
-   frameNumber++;
-
    auto xname  = SavePrimitiveArray(out, "grbe_fx", fNpoints, fX);
    auto yname  = SavePrimitiveArray(out, "grbe_fy", fNpoints, fY);
    auto exlname = SavePrimitiveArray(out, "grbe_fexl", fNpoints, fEXlow);
@@ -570,7 +567,7 @@ void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
          xname.Data(), yname.Data(), exlname.Data(), exhname.Data(), eylname.Data(), eyhname.Data(),
          exldname.Data(), exhdname.Data(), eyldname.Data(), eyhdname.Data()));
 
-   SaveHistogramAndFunctions(out, "grbe", frameNumber, option);
+   SaveHistogramAndFunctions(out, "grbe", option);
 }
 
 
