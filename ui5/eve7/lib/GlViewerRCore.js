@@ -611,11 +611,7 @@ sap.ui.define([
             this.axis.add(ss);
          }
 
-<<<<<<< HEAD
-         let url_base = this.eve_path + 'sdf-fonts/LiberationMono-Regular';
-=======
-         let url_base = this.eve_path + 'sdf-fonts/LiberationSans-Regular';
->>>>>>> 83b8f00f15 (Filter and table-column expressions checking, fix axis labels.)
+         let url_base = this.eve_path + 'sdf-fonts/LiberationSerif-Regular';
          this.tex_cache.deliver_font(url_base,
             (texture, font_metrics) => {
                let diag = new RC.Vector3;
