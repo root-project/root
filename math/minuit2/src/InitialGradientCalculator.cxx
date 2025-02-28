@@ -22,13 +22,13 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters &par) const
+/// Initial rough estimate of the gradient using the parameter step size.
+FunctionGradient
+calculateInitialGradient(const MinimumParameters &par, const MnUserTransformation &trafo, double errorDef)
 {
-   // initial rough  estimate of the gradient using the parameter step size
-
    assert(par.IsValid());
 
-   unsigned int n = Trafo().VariableParameters();
+   unsigned int n = trafo.VariableParameters();
    assert(n == par.Vec().size());
 
    MnPrint print("InitialGradientCalculator");
@@ -38,32 +38,32 @@ FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters &
    MnAlgebraicVector gr(n), gr2(n), gst(n);
 
    for (unsigned int i = 0; i < n; i++) {
-      unsigned int exOfIn = Trafo().ExtOfInt(i);
+      unsigned int exOfIn = trafo.ExtOfInt(i);
 
       double var = par.Vec()(i);
-      double werr = Trafo().Parameter(exOfIn).Error();
-      double save1 = Trafo().Int2ext(i, var);
+      double werr = trafo.Parameter(exOfIn).Error();
+      double save1 = trafo.Int2ext(i, var);
       double save2 = save1 + werr;
-      if (Trafo().Parameter(exOfIn).HasLimits()) {
-         if (Trafo().Parameter(exOfIn).HasUpperLimit() && save2 > Trafo().Parameter(exOfIn).UpperLimit())
-            save2 = Trafo().Parameter(exOfIn).UpperLimit();
+      if (trafo.Parameter(exOfIn).HasLimits()) {
+         if (trafo.Parameter(exOfIn).HasUpperLimit() && save2 > trafo.Parameter(exOfIn).UpperLimit())
+            save2 = trafo.Parameter(exOfIn).UpperLimit();
       }
-      double var2 = Trafo().Ext2int(exOfIn, save2);
+      double var2 = trafo.Ext2int(exOfIn, save2);
       double vplu = var2 - var;
       save2 = save1 - werr;
-      if (Trafo().Parameter(exOfIn).HasLimits()) {
-         if (Trafo().Parameter(exOfIn).HasLowerLimit() && save2 < Trafo().Parameter(exOfIn).LowerLimit())
-            save2 = Trafo().Parameter(exOfIn).LowerLimit();
+      if (trafo.Parameter(exOfIn).HasLimits()) {
+         if (trafo.Parameter(exOfIn).HasLowerLimit() && save2 < trafo.Parameter(exOfIn).LowerLimit())
+            save2 = trafo.Parameter(exOfIn).LowerLimit();
       }
-      var2 = Trafo().Ext2int(exOfIn, save2);
+      var2 = trafo.Ext2int(exOfIn, save2);
       double vmin = var2 - var;
-      double gsmin = 8. * Precision().Eps2() * (std::fabs(var) + Precision().Eps2());
+      double gsmin = 8. * trafo.Precision().Eps2() * (std::fabs(var) + trafo.Precision().Eps2());
       // protect against very small step sizes which can cause dirin to zero and then nan values in grd
       double dirin = std::max(0.5 * (std::fabs(vplu) + std::fabs(vmin)), gsmin);
-      double g2 = 2.0 * fFcn.ErrorDef() / (dirin * dirin);
+      double g2 = 2.0 * errorDef / (dirin * dirin);
       double gstep = std::max(gsmin, 0.1 * dirin);
       double grd = g2 * dirin;
-      if (Trafo().Parameter(exOfIn).HasLimits()) {
+      if (trafo.Parameter(exOfIn).HasLimits()) {
          if (gstep > 0.5)
             gstep = 0.5;
       }
@@ -71,23 +71,11 @@ FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters &
       gr2(i) = g2;
       gst(i) = gstep;
 
-      print.Trace("Computed initial gradient for parameter", Trafo().Name(exOfIn), "value", var, "[", vmin, ",", vplu,
+      print.Trace("Computed initial gradient for parameter", trafo.Name(exOfIn), "value", var, "[", vmin, ",", vplu,
                   "]", "dirin", dirin, "grd", grd, "g2", g2);
    }
 
    return FunctionGradient(gr, gr2, gst);
-}
-
-FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters &par, const FunctionGradient &) const
-{
-   // Base class interface
-   return (*this)(par);
-}
-
-const MnMachinePrecision &InitialGradientCalculator::Precision() const
-{
-   // return precision (is set in transformation class)
-   return fTransformation.Precision();
 }
 
 } // namespace Minuit2

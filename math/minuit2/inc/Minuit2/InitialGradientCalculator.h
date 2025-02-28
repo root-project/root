@@ -16,30 +16,9 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-class MnFcn;
 class MnUserTransformation;
-class MnMachinePrecision;
 
-/**
-   Class to calculate an initial estimate of the gradient
- */
-class InitialGradientCalculator : public GradientCalculator {
-
-public:
-   InitialGradientCalculator(const MnFcn &fcn, const MnUserTransformation &par) : fFcn(fcn), fTransformation(par) {}
-
-   FunctionGradient operator()(const MinimumParameters &) const override;
-
-   FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;
-
-   const MnFcn &Fcn() const { return fFcn; }
-   const MnUserTransformation &Trafo() const { return fTransformation; }
-   const MnMachinePrecision &Precision() const;
-
-private:
-   const MnFcn &fFcn;
-   const MnUserTransformation &fTransformation;
-};
+FunctionGradient calculateInitialGradient(const MinimumParameters &, const MnUserTransformation &, double errorDef);
 
 } // namespace Minuit2
 
