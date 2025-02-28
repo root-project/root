@@ -26,7 +26,6 @@ End_Macro
 */
 
 #include "TCurlyLine.h"
-#include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TMath.h"
@@ -339,19 +338,15 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TCurlyLine::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   if (gROOT->ClassSaved(TCurlyLine::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TCurlyLine *";
-   }
-   out<<"curlyline = new TCurlyLine("
-     <<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<","
-     <<fWaveLength<<","<<fAmplitude<<");"<<std::endl;
-   if (!fIsCurly) {
-      out<<"   curlyline->SetWavy();"<<std::endl;
-   }
-   SaveLineAttributes(out,"curlyline",1,1,1);
-   out<<"   curlyline->Draw();"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "curlyline",
+                            TString::Format("%g, %g, %g, %g, %g, %g", fX1, fY1, fX2, fY2, fWaveLength, fAmplitude));
+
+   SaveLineAttributes(out, "curlyline", 1, 1, 1);
+
+   if (!fIsCurly)
+      out << "   curlyline->SetWavy();" << std::endl;
+
+   out << "   curlyline->Draw();" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

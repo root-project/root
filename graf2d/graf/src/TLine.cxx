@@ -430,19 +430,20 @@ void TLine::Print(Option_t *) const
 
 void TLine::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   if (gROOT->ClassSaved(TLine::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TLine *";
-   }
-   out<<"line = new TLine("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "line", TString::Format("%g, %g, %g, %g", fX1, fY1, fX2, fY2), kFALSE);
 
-   SaveLineAttributes(out,"line",1,1,1);
+   SaveLineAttributes(out, "line", 1, 1, 1);
 
    if (TestBit(kLineNDC))
-      out<<"   line->SetNDC();"<<std::endl;
+      out << "   line->SetNDC();" << std::endl;
 
-   out<<"   line->Draw();"<<std::endl;
+   if (TestBit(kVertical))
+      out << "   line->SetBit(TLine::kVertical);" << std::endl;
+
+   if (TestBit(kHorizontal))
+      out << "   line->SetBit(TLine::kHorizontal);" << std::endl;
+
+   out << "   line->Draw();" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -466,8 +467,7 @@ Bool_t TLine::IsVertical()
 
 void TLine::SetNDC(Bool_t isNDC)
 {
-   ResetBit(kLineNDC);
-   if (isNDC) SetBit(kLineNDC);
+   SetBit(kLineNDC, isNDC);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

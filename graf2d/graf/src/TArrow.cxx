@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include <iostream>
-#include "TROOT.h"
 #include "TMath.h"
 #include "TArrow.h"
 #include "TVirtualPad.h"
@@ -364,28 +363,21 @@ void TArrow::PaintArrowNDC(Double_t u1, Double_t v1,Double_t u2 ,Double_t v2,
 
 void TArrow::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
+   SavePrimitiveConstructor(out, Class(), "arrow",
+                            TString::Format("%g, %g, %g, %g, %g, \"%s\"", fX1, fY1, fX2, fY2, fArrowSize,
+                                            TString(GetDrawOption()).ReplaceSpecialCppChars().Data()));
 
-   char quote = '"';
-   if (gROOT->ClassSaved(TArrow::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TArrow *";
-   }
-   out<<"arrow = new TArrow("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-      <<","<<fArrowSize<<","<<quote<<GetDrawOption()<<quote<<");"<<std::endl;
-
-   SaveFillAttributes(out,"arrow",0,1);
-   SaveLineAttributes(out,"arrow",1,1,1);
+   SaveFillAttributes(out, "arrow", 0, 1);
+   SaveLineAttributes(out, "arrow", 1, 1, 1);
 
    if (TestBit(kLineNDC))
-      out<<"   arrow->SetNDC();"<<std::endl;
+      out << "   arrow->SetNDC();" << std::endl;
 
-   if (fAngle!=60)
+   if (GetAngle() != 60)
       out << "   arrow->SetAngle(" << GetAngle() << ");" << std::endl;
 
-   out<<"   arrow->Draw();"<<std::endl;
+   out << "   arrow->Draw();" << std::endl;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set default angle.
