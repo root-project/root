@@ -117,6 +117,16 @@ void TListOfDataMembers::AddAt(TObject *obj, Int_t idx)
    MapObject(obj);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object at location idx in the list, with options.
+
+void TListOfDataMembers::AddAt(TObject *obj, Int_t idx, Option_t *opt)
+{
+   THashList::AddAt(obj, idx, opt);
+   MapObject(obj);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Insert object after object after in the list.
 
@@ -136,6 +146,24 @@ void TListOfDataMembers::AddAfter(TObjLink *after, TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Insert object after object after in the list, with options.
+
+void TListOfDataMembers::AddAfter(const TObject *after, TObject *obj, Option_t *opt)
+{
+   THashList::AddAfter(after, obj, opt);
+   MapObject(obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object after object after in the list, with options.
+
+void TListOfDataMembers::AddAfter(TObjLink *after, TObject *obj, Option_t *opt)
+{
+   THashList::AddAfter(after, obj, opt);
+   MapObject(obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Insert object before object before in the list.
 
 void TListOfDataMembers::AddBefore(const TObject *before, TObject *obj)
@@ -150,6 +178,24 @@ void TListOfDataMembers::AddBefore(const TObject *before, TObject *obj)
 void TListOfDataMembers::AddBefore(TObjLink *before, TObject *obj)
 {
    THashList::AddBefore(before, obj);
+   MapObject(obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object before object before in the list, with options.
+
+void TListOfDataMembers::AddBefore(const TObject *before, TObject *obj, Option_t *opt)
+{
+   THashList::AddBefore(before, obj, opt);
+   MapObject(obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object before object before in the list, with options.
+
+void TListOfDataMembers::AddBefore(TObjLink *before, TObject *obj, Option_t *opt)
+{
+   THashList::AddBefore(before, obj, opt);
    MapObject(obj);
 }
 

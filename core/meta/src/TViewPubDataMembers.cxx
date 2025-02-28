@@ -170,6 +170,15 @@ void TViewPubDataMembers::AddAt(TObject * /* obj */, Int_t /* idx */)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// AddAt is not allowed in this class.
+/// See TList::AddAt for the intended behavior.
+
+void TViewPubDataMembers::AddAt(TObject * /* obj */, Int_t /* idx */, Option_t * /* opt */)
+{
+   ::Error("TViewPubDataMembers::AddAt","Operation not allowed on a view.");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// AddAfter is not allowed in this class.
 /// See TList::AddAfter for the intended behavior.
 
@@ -188,6 +197,24 @@ void TViewPubDataMembers::AddAfter(TObjLink * /* after */, TObject * /* obj */)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// AddAfter is not allowed in this class.
+/// See TList::AddAfter for the intended behavior.
+
+void TViewPubDataMembers::AddAfter(const TObject * /* after */, TObject * /* obj */, Option_t * /* opt */)
+{
+   ::Error("TViewPubDataMembers::RemAddLastove","Operation not allowed on a view.");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// AddAfter is not allowed in this class.
+/// See TList::AddAfter for the intended behavior.
+
+void TViewPubDataMembers::AddAfter(TObjLink * /* after */, TObject * /* obj */, Option_t * /* opt */)
+{
+   ::Error("TViewPubDataMembers::AddAfter","Operation not allowed on a view.");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// AddBefore is not allowed in this class.
 /// See TList::AddBefore for the intended behavior.
 
@@ -201,6 +228,24 @@ void TViewPubDataMembers::AddBefore(const TObject * /* before */, TObject * /* o
 /// See TList::AddBefore for the intended behavior.
 
 void TViewPubDataMembers::AddBefore(TObjLink * /* before */, TObject * /* obj */)
+{
+   ::Error("TViewPubDataMembers::AddBefore","Operation not allowed on a view.");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// AddBefore is not allowed in this class.
+/// See TList::AddBefore for the intended behavior.
+
+void TViewPubDataMembers::AddBefore(const TObject * /* before */, TObject * /* obj */, Option_t * /* opt */)
+{
+   ::Error("TViewPubDataMembers::AddBefore","Operation not allowed on a view.");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// AddBefore is not allowed in this class.
+/// See TList::AddBefore for the intended behavior.
+
+void TViewPubDataMembers::AddBefore(TObjLink * /* before */, TObject * /* obj */, Option_t * /* opt */)
 {
    ::Error("TViewPubDataMembers::AddBefore","Operation not allowed on a view.");
 }

@@ -299,6 +299,116 @@ void TList::AddAfter(TObjLink *after, TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Insert object before object before in the list, with options.
+
+void TList::AddBefore(const TObject *before, TObject *obj, Option_t *opt)
+{
+   R__COLLECTION_WRITE_GUARD();
+   
+   if (IsArgNull("AddBefore", obj)) return;
+   
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+   
+   if (!before)
+      TList::AddFirst(obj, opt);
+   else {
+      Int_t    idx;
+      TObjLink *t = FindLink(before, idx);
+      if (!t) {
+         Error("AddBefore", "before not found, object not added");
+         return;
+      }
+      if (t == fFirst.get())
+         TList::AddFirst(obj, opt);
+      else {
+         NewOptLink(obj, opt, t->fPrev.lock());
+         fSize++;
+         Changed();
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object before the specified ObjLink object. If before = 0 then add
+/// to the head of the list. An ObjLink can be obtained by looping over a list
+/// using the above describe iterator method 3. Options can be specified.
+
+void TList::AddBefore(TObjLink *before, TObject *obj, Option_t *opt)
+{
+   R__COLLECTION_WRITE_GUARD();
+   
+   if (IsArgNull("AddBefore", obj)) return;
+   
+   if (!before)
+      TList::AddFirst(obj, opt);
+   else {
+      if (before == fFirst.get())
+         TList::AddFirst(obj, opt);
+      else {
+         NewOptLink(obj, opt, before->fPrev.lock());
+         fSize++;
+         Changed();
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object after object after in the list, with options.
+
+void TList::AddAfter(const TObject *after, TObject *obj, Option_t *opt)
+{
+   R__COLLECTION_WRITE_GUARD();
+   
+   if (IsArgNull("AddAfter", obj)) return;
+   
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+   
+   if (!after)
+      TList::AddLast(obj, opt);
+   else {
+      Int_t    idx;
+      TObjLink *t = FindLink(after, idx);
+      if (!t) {
+         Error("AddAfter", "after not found, object not added");
+         return;
+      }
+      if (t == fLast.get())
+         TList::AddLast(obj, opt);
+      else {
+         NewOptLink(obj, opt, t->shared_from_this());
+         fSize++;
+         Changed();
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object after the specified ObjLink object. If after = 0 then add
+/// to the tail of the list. An ObjLink can be obtained by looping over a list
+/// using the above describe iterator method 3. Options can be specified.
+
+void TList::AddAfter(TObjLink *after, TObject *obj, Option_t *opt)
+{
+   R__COLLECTION_WRITE_GUARD();
+   
+   if (IsArgNull("AddAfter", obj)) return;
+   
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+   
+   if (!after)
+      TList::AddLast(obj, opt);
+   else {
+      if (after == fLast.get())
+         TList::AddLast(obj, opt);
+      else {
+         NewOptLink(obj, opt, after->shared_from_this());
+         fSize++;
+         Changed();
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Insert object at position idx in the list.
 
 void TList::AddAt(TObject *obj, Int_t idx)
@@ -316,6 +426,29 @@ void TList::AddAt(TObject *obj, Int_t idx)
       TList::AddFirst(obj);
    else {
       NewLink(obj, lnk->fPrev.lock());
+      fSize++;
+      Changed();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object at position idx in the list, with options.
+
+void TList::AddAt(TObject *obj, Int_t idx, Option_t *opt)
+{
+   R__COLLECTION_WRITE_GUARD();
+   
+   if (IsArgNull("AddAt", obj)) return;
+   
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+   
+   TObjLink *lnk = LinkAt(idx);
+   if (!lnk)
+      TList::AddLast(obj, opt);
+   else if (lnk == fFirst.get())
+      TList::AddFirst(obj, opt);
+   else {
+      NewOptLink(obj, opt, lnk->fPrev.lock());
       fSize++;
       Changed();
    }

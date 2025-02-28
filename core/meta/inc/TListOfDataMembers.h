@@ -82,10 +82,15 @@ public:
    void       AddLast(TObject *obj) override;
    void       AddLast(TObject *obj, Option_t *opt) override;
    void       AddAt(TObject *obj, Int_t idx) override;
+   void       AddAt(TObject *obj, Int_t idx, Option_t *opt) override;
    void       AddAfter(const TObject *after, TObject *obj) override;
    void       AddAfter(TObjLink *after, TObject *obj) override;
+   void       AddAfter(const TObject *after, TObject *obj, Option_t *opt) override;
+   void       AddAfter(TObjLink *after, TObject *obj, Option_t *opt) override;
    void       AddBefore(const TObject *before, TObject *obj) override;
    void       AddBefore(TObjLink *before, TObject *obj) override;
+   void       AddBefore(const TObject *before, TObject *obj, Option_t *opt) override;
+   void       AddBefore(TObjLink *before, TObject *obj, Option_t *opt) override;
 
    TClass    *GetClass() const { return fClass; }
    void       SetClass(TClass* cl) { fClass = cl; }
