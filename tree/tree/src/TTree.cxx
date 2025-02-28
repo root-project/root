@@ -6854,8 +6854,12 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
    while ((obj=next())) {
       if (!obj->InheritsFrom(TTree::Class())) continue;
       TTree *tree = (TTree*)obj;
-      if (tree->GetListOfBranches()->IsEmpty())
+      if (tree->GetListOfBranches()->IsEmpty()) {
+         if (gDebug > 2) {
+            Warning("MergeTrees","TTree %s has no branches, skipping.", tree->GetName());
+         }
          continue; // Completely ignore the empty trees.
+      }
       Long64_t nentries = tree->GetEntries();
       if (newtree && nentries == 0)
          continue; // If we already have the structure and we have no entry, save time and skip
@@ -6898,8 +6902,12 @@ Long64_t TTree::Merge(TCollection* li, Option_t *options)
       TIter next(li);
       TTree *tree;
       while ((tree = (TTree *)next())) {
-         if (tree == this || tree->GetListOfBranches()->IsEmpty())
+         if (tree == this || tree->GetListOfBranches()->IsEmpty()) {
+            if (gDebug > 2) {
+               Warning("Merge","TTree %s has no branches, skipping.", tree->GetName());
+            }
             continue;
+         }
          // We could come from a list made up of different names, the first one still wins
          tree->SetName(this->GetName());
          auto prevEntries = tree->GetEntries();
@@ -6966,6 +6974,9 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
       TTree *tree;
       while ((tree = (TTree *)next())) {
          if (tree == this || tree->GetListOfBranches()->IsEmpty())
+            if (gDebug > 2) {
+               Warning("Merge","TTree %s has no branches, skipping.", tree->GetName());
+            }
             continue;
          // We could come from a list made up of different names, the first one still wins
          tree->SetName(this->GetName());
