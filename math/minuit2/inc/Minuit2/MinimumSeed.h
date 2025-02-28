@@ -23,6 +23,7 @@ namespace Minuit2 {
 class MinimumSeed {
 
 public:
+
    MinimumSeed(const MinimumState &state, const MnUserTransformation &trafo) : fPtr{new Data{state, trafo, true}} {}
 
    const MinimumState &State() const { return fPtr->fState; }

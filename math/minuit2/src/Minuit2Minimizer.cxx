@@ -486,6 +486,7 @@ bool Minuit2Minimizer::Minimize()
    fMinuitFCN->SetErrorDef(ErrorDef());
 
    const int printLevel = PrintLevel();
+   print.Debug("Minuit print level is", printLevel);
    if (PrintLevel() >= 1) {
       // print the real number of maxfcn used (defined in ModularFunctionMinimizer)
       int maxfcn_used = maxfcn;
@@ -519,6 +520,17 @@ bool Minuit2Minimizer::Minimize()
       bool ret = minuit2Opt->GetValue("StorageLevel", storageLevel);
       if (ret)
          SetStorageLevel(storageLevel);
+
+      // fumili options
+      if (fUseFumili) {
+         std::string fumiliMethod;
+         ret = minuit2Opt->GetValue("FumiliMethod", fumiliMethod);
+         if (ret) {
+            auto fumiliMinimizer = dynamic_cast<ROOT::Minuit2::FumiliMinimizer*>(fMinimizer);
+            if (fumiliMinimizer)
+               fumiliMinimizer->SetMethod(fumiliMethod);
+         }
+      }
 
       if (printLevel > 0) {
          std::cout << "Minuit2Minimizer::Minuit  - Changing default options" << std::endl;
