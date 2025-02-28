@@ -31,8 +31,7 @@ operator()(const MnFcn &fcn, const GradientCalculator &, const MnUserParameterSt
    MnAlgebraicVector x(st.IntParameters());
    double fcnmin = MnFcnCaller{fcn}(x);
    MinimumParameters pa(x, fcnmin);
-   InitialGradientCalculator igc(fcn, st.Trafo());
-   FunctionGradient dgrad = igc(pa);
+   FunctionGradient dgrad = calculateInitialGradient(pa, st.Trafo(), fcn.ErrorDef());
    MnAlgebraicSymMatrix mat(n);
    double dcovar = 1.;
    for (unsigned int i = 0; i < n; i++)
