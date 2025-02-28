@@ -30,7 +30,7 @@
 /** \class TTree
 \ingroup tree
 
-A TTree represents a columnar dataset. Any C++ type can be stored in its columns. The modern 
+A TTree represents a columnar dataset. Any C++ type can be stored in its columns. The modern
 version of TTree is RNTuple: please consider using it before opting for TTree.
 
 A TTree, often called in jargon *tree*, consists of a list of independent columns or *branches*,
@@ -141,19 +141,19 @@ It is strongly recommended to persistify those as objects rather than lists of l
 ~~~ {.cpp}
     auto branch = tree.Branch( branchname, STLcollection, buffsize, splitlevel);
 ~~~
-`STLcollection` is the address of a pointer to a container of the standard 
-library such as `std::vector`, `std::list`, containing pointers, fundamental types 
+`STLcollection` is the address of a pointer to a container of the standard
+library such as `std::vector`, `std::list`, containing pointers, fundamental types
 or objects.
 If the splitlevel is a value bigger than 100 (`TTree::kSplitCollectionOfPointers`)
-then the collection will be written in split mode, i.e. transparently storing 
+then the collection will be written in split mode, i.e. transparently storing
 individual data members as arrays, therewith potentially increasing compression ratio.
 
-### Note 
-In case of dynamic structures changing with each entry, see e.g. 
+### Note
+In case of dynamic structures changing with each entry, see e.g.
 ~~~ {.cpp}
     branch->SetAddress(void *address)
 ~~~
-one must redefine the branch address before filling the branch 
+one must redefine the branch address before filling the branch
 again. This is done via the `TBranch::SetAddress` member function.
 
 \anchor addingacolumnofobjs
@@ -186,8 +186,8 @@ Another available syntax is the following:
 - `p_object` is a pointer to an object.
 - If `className` is not specified, the `Branch` method uses the type of `p_object`
   to determine the type of the object.
-- If `className` is used to specify explicitly the object type, the `className` 
-  must be of a type related to the one pointed to by the pointer. It should be 
+- If `className` is used to specify explicitly the object type, the `className`
+  must be of a type related to the one pointed to by the pointer. It should be
   either a parent or derived class.
 
 Note: The pointer whose address is passed to `TTree::Branch` must not
@@ -205,13 +205,13 @@ or not
     tree.Branch(branchname, &p_object);
 ~~~
 In either case, the ownership of the object is not taken over by the `TTree`.
-Even though in the first case an object is be allocated by `TTree::Branch`, 
+Even though in the first case an object is be allocated by `TTree::Branch`,
 the object will <b>not</b> be deleted when the `TTree` is deleted.
 
 \anchor addingacolumnoftclonesarray
 ## Add a column holding TClonesArray instances
 
-*The usage of `TClonesArray` should be abandoned in favour of `std::vector`, 
+*The usage of `TClonesArray` should be abandoned in favour of `std::vector`,
 for which `TTree` has been heavily optimised, as well as `RNTuple`.*
 
 ~~~ {.cpp}
@@ -347,7 +347,7 @@ int main()
 ~~~
 ## TTree Diagram
 
-The following diagram shows the organisation of the federation of classes related to TTree. 
+The following diagram shows the organisation of the federation of classes related to TTree.
 
 Begin_Macro
 ../../../tutorials/legacy/tree/tree.C
@@ -6841,6 +6841,8 @@ bool TTree::MemoryFull(Int_t nbytes)
 ///
 /// Trees in the list can be memory or disk-resident trees.
 /// The new tree is created in the current directory (memory if gROOT).
+/// Trees with no branches will be skipped, the branch structure
+/// will be taken from the first non-zero-branch Tree of {li}
 
 TTree* TTree::MergeTrees(TList* li, Option_t* options)
 {
@@ -6852,8 +6854,15 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
    while ((obj=next())) {
       if (!obj->InheritsFrom(TTree::Class())) continue;
       TTree *tree = (TTree*)obj;
+      if (tree->GetListOfBranches()->IsEmpty()) {
+         if (gDebug > 2) {
+            tree->Warning("MergeTrees","TTree %s has no branches, skipping.", tree->GetName());
+         }
+         continue; // Completely ignore the empty trees.
+      }
       Long64_t nentries = tree->GetEntries();
-      if (nentries == 0) continue;
+      if (newtree && nentries == 0)
+         continue; // If we already have the structure and we have no entry, save time and skip
       if (!newtree) {
          newtree = (TTree*)tree->CloneTree(-1, options);
          if (!newtree) continue;
@@ -6867,7 +6876,8 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
          newtree->ResetBranchAddresses();
          continue;
       }
-
+      if (nentries == 0)
+         continue;
       newtree->CopyEntries(tree, -1, options, true);
    }
    if (newtree && newtree->GetTreeIndex()) {
@@ -6880,9 +6890,43 @@ TTree* TTree::MergeTrees(TList* li, Option_t* options)
 /// Merge the trees in the TList into this tree.
 ///
 /// Returns the total number of entries in the merged tree.
+/// Trees with no branches will be skipped, the branch structure
+/// will be taken from the first non-zero-branch Tree of {this+li}
 
 Long64_t TTree::Merge(TCollection* li, Option_t *options)
 {
+   if (fBranches.IsEmpty()) {
+      if (!li || li->IsEmpty())
+         return 0; // Nothing to do ....
+      // Let's find the first non-empty
+      TIter next(li);
+      TTree *tree;
+      while ((tree = (TTree *)next())) {
+         if (tree == this || tree->GetListOfBranches()->IsEmpty()) {
+            if (gDebug > 2) {
+               Warning("Merge","TTree %s has no branches, skipping.", tree->GetName());
+            }
+            continue;
+         }
+         // We could come from a list made up of different names, the first one still wins
+         tree->SetName(this->GetName());
+         auto prevEntries = tree->GetEntries();
+         auto result = tree->Merge(li, options);
+         if (result != prevEntries) {
+            // If there is no additional entries, the first write was enough.
+            tree->Write();
+         }
+         // Make sure things are really written out to disk before attempting any reading.
+         if (tree->GetCurrentFile()) {
+            tree->GetCurrentFile()->Flush();
+            // Read back the complete info in this TTree, so that caller does not
+            // inadvertently write the empty tree.
+            tree->GetDirectory()->ReadTObject(this, this->GetName());
+         }
+         return result;
+      }
+      return 0; // All trees have empty branches
+   }
    if (!li) return 0;
    Long64_t storeAutoSave = fAutoSave;
    // Disable the autosave as the TFileMerge keeps a list of key and deleting the underlying
@@ -6915,11 +6959,43 @@ Long64_t TTree::Merge(TCollection* li, Option_t *options)
 /// info->fOutputDirectory and then overlay the new TTree information onto
 /// this TTree object (so that this TTree object is now the appropriate to
 /// use for further merging).
+/// Trees with no branches will be skipped, the branch structure
+/// will be taken from the first non-zero-branch Tree of {this+li}
 ///
 /// Returns the total number of entries in the merged tree.
 
 Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
 {
+   if (fBranches.IsEmpty()) {
+      if (!li || li->IsEmpty())
+         return 0; // Nothing to do ....
+      // Let's find the first non-empty
+      TIter next(li);
+      TTree *tree;
+      while ((tree = (TTree *)next())) {
+         if (tree == this || tree->GetListOfBranches()->IsEmpty()) {
+            if (gDebug > 2) {
+               Warning("Merge","TTree %s has no branches, skipping.", tree->GetName());
+            }
+            continue;
+         }
+         // We could come from a list made up of different names, the first one still wins
+         tree->SetName(this->GetName());
+         auto prevEntries = tree->GetEntries();
+         auto result = tree->Merge(li, info);
+         if (result != prevEntries) {
+            // If there is no additional entries, the first write was enough.
+            tree->Write();
+         }
+         // Make sure things are really written out to disk before attempting any reading.
+         info->fOutputDirectory->GetFile()->Flush();
+         // Read back the complete info in this TTree, so that TFileMerge does not
+         // inadvertently write the empty tree.
+         info->fOutputDirectory->ReadTObject(this, this->GetName());
+         return result;
+      }
+      return 0; // All trees have empty branches
+   }
    const char *options = info ? info->fOptions.Data() : "";
    if (info && info->fIsFirst && info->fOutputDirectory && info->fOutputDirectory->GetFile() != GetCurrentFile()) {
       if (GetCurrentFile() == nullptr) {
