@@ -678,7 +678,7 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
 ////////////////////////////////////////////////////////////////////////////////
 /// Save lines of this pavetext as C++ statements on output stream out
 
-void TPaveText::SaveLines(std::ostream &out, const char *name, Bool_t saved)
+void TPaveText::SaveLines(std::ostream &out, const char *name, Bool_t)
 {
    if (!fLines) return;
    Int_t nlines = GetSize();
@@ -687,96 +687,43 @@ void TPaveText::SaveLines(std::ostream &out, const char *name, Bool_t saved)
    if (!name || !*name)
       name = "pt";
 
+   static int linecnt = 0;
+
    // Iterate over all lines
-   char quote = '"';
    TIter next(fLines);
 
-   Bool_t savedlt = kFALSE, savedt = kFALSE, savedl = kFALSE, savedb = kFALSE;
-
    while (auto line = next()) {
-      // Next primitive is a line
       if (line->IsA() == TLine::Class()) {
-         auto linel = (TLine*)line;
-         if (saved || savedl) {
-            out<<"   ";
-         } else {
-            out<<"   TLine *";
-            savedl = kTRUE;
-         }
-
-         auto line_name = TString::Format("%s_Line", name);
-
-         out<<line_name<<" = "<<name<<"->AddLine("
-            <<linel->GetX1()<<","<<linel->GetY1()<<","<<linel->GetX2()<<","<<linel->GetY2()<<");"<<std::endl;
-
+         // Next primitive is a line
+         auto linel = static_cast<TLine *>(line);
+         auto line_name = TString::Format("%s_line%d", name, linecnt++);
+         out << "   TLine *" << line_name << " = " << name << "->AddLine(" << linel->GetX1() << "," << linel->GetY1()
+             << "," << linel->GetX2() << "," << linel->GetY2() << ");" << std::endl;
          linel->SaveLineAttributes(out, line_name.Data(), 1, 1, 1);
-         continue;
-      }
-      // Next primitive is a box
-      if (line->IsA() == TBox::Class()) {
-         auto lineb = (TBox*)line;
-         if (saved || savedb) {
-            out<<"   ";
-         } else {
-            out<<"   TBox *";
-            savedb = kTRUE;
-         }
-
-         auto box_name = TString::Format("%s_Box", name);
-
-         out<<box_name<<" = "<<name<<"->AddBox("
-            <<lineb->GetX1()<<","<<lineb->GetY1()<<","<<lineb->GetX2()<<","<<lineb->GetY2()<<");"<<std::endl;
-
+      } else if (line->IsA() == TBox::Class()) {
+         // Next primitive is a box
+         auto lineb = static_cast<TBox *>(line);
+         auto box_name = TString::Format("%s_box%d", name, linecnt++);
+         out << "   TBox *" << box_name << " = " << name << "->AddBox(" << lineb->GetX1() << "," << lineb->GetY1()
+             << "," << lineb->GetX2() << "," << lineb->GetY2() << ");" << std::endl;
          lineb->SaveFillAttributes(out, box_name.Data(), 18, 1001);
          lineb->SaveLineAttributes(out, box_name.Data(), 1, 1, 1);
-         continue;
-      }
-      // Next primitive is a text
-      if (line->IsA() == TText::Class()) {
-         auto linet = (TText*)line;
-         if (saved || savedt) {
-            out<<"   ";
-         } else {
-            out<<"   TText *";
-            savedt = kTRUE;
-         }
-
-         auto text_name = TString::Format("%s_Text", name);
+      } else if (line->IsA() == TText::Class() || line->IsA() == TLatex::Class()) {
+         // Next primitive is a text
+         auto linet = static_cast<TText *>(line);
+         auto text_name = TString::Format("%s_text%d", name, linecnt++);
 
          TString s = linet->GetTitle();
          s.ReplaceSpecialCppChars();
 
+         out << "   TText *" << text_name << " = ";
+
          if (!linet->GetX() && !linet->GetY())
-            out<<text_name<<" = "<<name<<"->AddText(" <<quote<<s<<quote<<");"<<std::endl;
+            out << name << "->AddText(\"" << s << "\");" << std::endl;
          else
-            out<<text_name<<" = "<<name<<"->AddText("
-               <<linet->GetX()<<","<<linet->GetY()<<","<<quote<<s<<quote<<");"<<std::endl;
+            out << name << "->AddText(" << linet->GetX() << ", " << linet->GetY() << ", \"" << s << "\");" << std::endl;
 
          linet->SaveTextAttributes(out, text_name.Data(), 0, GetTextAngle(), 0, 0, 0);
-         continue;
-      }
-      // Next primitive is a Latex text
-      if (line->IsA() == TLatex::Class()) {
-         auto latex = (TLatex*)line;
-         if (saved || savedlt) {
-            out<<"   ";
-         } else {
-            out<<"   TText *";
-            savedlt = kTRUE;
-         }
-
-         auto latex_name = TString::Format("%s_LaTex", name);
-
-         TString sl = latex->GetTitle();
-         sl.ReplaceSpecialCppChars();
-
-         if (!latex->GetX() && !latex->GetY())
-            out<< latex_name << " = "<<name<<"->AddText(" <<quote<<sl<<quote<<");"<<std::endl;
-         else
-            out<< latex_name << " = "<<name<<"->AddText("
-               <<latex->GetX()<<","<<latex->GetY()<<","<<quote<<sl<<quote<<");"<<std::endl;
-
-         latex->SaveTextAttributes(out, latex_name.Data(), 0, GetTextAngle(), 0, 0, 0);
       }
    }
 }
@@ -786,35 +733,27 @@ void TPaveText::SaveLines(std::ostream &out, const char *name, Bool_t saved)
 
 void TPaveText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   char quote = '"';
-   Bool_t saved = gROOT->ClassSaved(TPaveText::Class());
-   out<<"   "<<std::endl;
-   if (saved) {
-      out<<"   ";
-   } else {
-      out<<"   "<<ClassName()<<" *";
-   }
-   if (fOption.Contains("NDC")) {
-      out<<"pt = new "<<ClassName()<<"("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
-      <<","<<quote<<fOption<<quote<<");"<<std::endl;
-   } else {
-      out<<"pt = new "<<ClassName()<<"("<<gPad->PadtoX(fX1)<<","<<gPad->PadtoY(fY1)<<","<<gPad->PadtoX(fX2)<<","<<gPad->PadtoY(fY2)
-      <<","<<quote<<fOption<<quote<<");"<<std::endl;
-   }
-   if (strcmp(GetName(),"TPave")) {
-      out<<"   pt->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
-   }
-   if (fLabel.Length() > 0) {
-      out<<"   pt->SetLabel("<<quote<<fLabel<<quote<<");"<<std::endl;
-   }
-   if (fBorderSize != 4) {
-      out<<"   pt->SetBorderSize("<<fBorderSize<<");"<<std::endl;
-   }
-   SaveFillAttributes(out,"pt",19,1001);
-   SaveLineAttributes(out,"pt",1,1,1);
-   SaveTextAttributes(out,"pt",22,0,1,62,0);
-   SaveLines(out,"pt",saved);
-   out<<"   pt->Draw();"<<std::endl;
+   TString args;
+   if (fOption.Contains("NDC"))
+      args.Form("%g, %g, %g, %g, \"%s\"", fX1NDC, fY1NDC, fX2NDC, fY2NDC,
+                TString(fOption).ReplaceSpecialCppChars().Data());
+   else if (gPad)
+      args.Form("%g, %g, %g, %g, \"%s\"", gPad->PadtoX(fX1), gPad->PadtoY(fY1), gPad->PadtoX(fX2), gPad->PadtoY(fY2),
+                TString(fOption).ReplaceSpecialCppChars().Data());
+
+   SavePrimitiveConstructor(out, Class(), "pt", args);
+
+   if (strcmp(GetName(), "TPave"))
+      out << "   pt->SetName(\"" << GetName() << "\");" << std::endl;
+   if (fLabel.Length() > 0)
+      out << "   pt->SetLabel(\"" << TString(fLabel).ReplaceSpecialCppChars() << "\");" << std::endl;
+   if (fBorderSize != 4)
+      out << "   pt->SetBorderSize(" << fBorderSize << ");" << std::endl;
+   SaveFillAttributes(out, "pt", 19, 1001);
+   SaveLineAttributes(out, "pt", 1, 1, 1);
+   SaveTextAttributes(out, "pt", 22, 0, 1, 62, 0);
+   SaveLines(out, "pt", kTRUE);
+   out << "   pt->Draw();" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -460,18 +460,12 @@ void TDiamond::Paint(Option_t *)
 
 void TDiamond::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   Bool_t saved = gROOT->ClassSaved(TDiamond::Class());
-   if (saved) {
-      out<<"   ";
-   } else {
-      out<<"   TDiamond *";
-   }
-   out<<"diamond = new TDiamond("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "diamond", TString::Format("%g, %g, %g, %g", fX1, fY1, fX2, fY2));
 
-   SaveFillAttributes(out,"diamond",0,1001);
-   SaveLineAttributes(out,"diamond",1,1,1);
-   SaveTextAttributes(out,"diamond",11,0,1,62,0.05);
+   SaveFillAttributes(out, "diamond", 0, 1001);
+   SaveLineAttributes(out, "diamond", 1, 1, 1);
+   SaveTextAttributes(out, "diamond", 11, 0, 1, 62, 0.05);
 
-   SaveLines(out,"diamond",saved);
-   out<<"   diamond->Draw();"<<std::endl;
+   SaveLines(out, "diamond", kTRUE);
+   out << "   diamond->Draw();" << std::endl;
 }
