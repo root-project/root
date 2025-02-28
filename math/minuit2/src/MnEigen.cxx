@@ -15,18 +15,16 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-LAVector eigenvalues(const LASymMatrix &);
-
 std::vector<double> MnEigen::operator()(const MnUserCovariance &covar) const
 {
    // wrapper to calculate eigenvalues of the covariance matrix using mneigen function
 
-   LASymMatrix cov(covar.Nrow());
+   MnAlgebraicSymMatrix cov(covar.Nrow());
    for (unsigned int i = 0; i < covar.Nrow(); i++)
       for (unsigned int j = i; j < covar.Nrow(); j++)
          cov(i, j) = covar(i, j);
 
-   LAVector eigen = eigenvalues(cov);
+   MnAlgebraicVector eigen = eigenvalues(cov);
 
    std::vector<double> result(eigen.Data(), eigen.Data() + covar.Nrow());
    return result;
