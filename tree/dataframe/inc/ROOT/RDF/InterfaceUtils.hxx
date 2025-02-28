@@ -275,15 +275,21 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
    std::unique_ptr<RActionBase> actionPtr;
    if (snapHelperArgs->fToNTuple) {
 #ifdef R__HAS_ROOT7
-      // TODO(fdegeus) Add MT snapshotting
-      using Helper_t = SnapshotRNTupleHelper<ColTypes...>;
-      using Action_t = RAction<Helper_t, PrevNodeType>;
+      if (!ROOT::IsImplicitMTEnabled()) {
+         // single-thread snapshot
+         using Helper_t = SnapshotRNTupleHelper<ColTypes...>;
+         using Action_t = RAction<Helper_t, PrevNodeType>;
 
-      auto loopManager = snapHelperArgs->fLoopManager;
+         auto loopManager = snapHelperArgs->fLoopManager;
 
-      actionPtr.reset(
-         new Action_t(Helper_t(filename, treename, colNames, outputColNames, options, loopManager, std::move(isDefine)),
-                      colNames, prevNode, colRegister));
+         actionPtr.reset(new Action_t(
+            Helper_t(filename, treename, colNames, outputColNames, options, loopManager, std::move(isDefine)), colNames,
+            prevNode, colRegister));
+      } else {
+         // multi-thread snapshot to RNTuple is not yet supported
+         // TODO(fdegeus) Add MT snapshotting
+         throw std::runtime_error("Snapshot: Snapshotting to RNTuple with IMT enabled is not supported yet.");
+      }
 
       return actionPtr;
 #else
