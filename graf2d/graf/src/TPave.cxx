@@ -616,28 +616,22 @@ void TPave::Print(Option_t *option) const
 
 void TPave::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   char quote = '"';
-   if (gROOT->ClassSaved(TPave::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TPave *";
-   }
-   if (fOption.Contains("NDC")) {
-      out<<"pave = new TPave("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
-         <<","<<fBorderSize<<","<<quote<<fOption<<quote<<");"<<std::endl;
-   } else {
-      out<<"pave = new TPave("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-         <<","<<fBorderSize<<","<<quote<<fOption<<quote<<");"<<std::endl;
-   }
-   if (strcmp(GetName(),"TPave")) {
-      out<<"   pave->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
-   }
-   if (fCornerRadius) {
-      out<<"   pave->SetCornerRadius("<<fCornerRadius<<");"<<std::endl;
-   }
-   SaveFillAttributes(out,"pave",19,1001);
-   SaveLineAttributes(out,"pave",1,1,1);
-   out<<"   pave->Draw();"<<std::endl;
+   TString args;
+   if (fOption.Contains("NDC"))
+      args.Form("%g, %g, %g, %g, %d, \"%s\"", fX1NDC, fY1NDC, fX2NDC, fY2NDC, fBorderSize,
+                TString(fOption).ReplaceSpecialCppChars().Data());
+   else
+      args.Form("%g, %g, %g, %g, %d, \"%s\"", fX1, fY1, fX2, fY2, fBorderSize,
+                TString(fOption).ReplaceSpecialCppChars().Data());
+
+   SavePrimitiveConstructor(out, Class(), "pave", args);
+   SaveFillAttributes(out, "pave", 19, 1001);
+   SaveLineAttributes(out, "pave", 1, 1, 1);
+   if (strcmp(GetName(), "TPave"))
+      out << "   pave->SetName(\"" << GetName() << "\");" << std::endl;
+   if (fCornerRadius)
+      out << "   pave->SetCornerRadius(" << fCornerRadius << ");" << std::endl;
+   out << "   pave->Draw();" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

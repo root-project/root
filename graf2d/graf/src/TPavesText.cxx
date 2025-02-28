@@ -121,29 +121,20 @@ void TPavesText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    if (!strcmp(GetName(),"stats")) return;
    if (!strcmp(GetName(),"title")) return;
-   Bool_t saved = gROOT->ClassSaved(TPavesText::Class());
-   char quote = '"';
-   out<<"   "<<std::endl;
-   if (saved) {
-      out<<"   ";
-   } else {
-      out<<"   TPavesText *";
-   }
-   out<<"pst = new TPavesText("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-      <<","<<fNpaves<<","<<quote<<fOption<<quote<<");"<<std::endl;
 
-   if (strcmp(GetName(),"TPave")) {
-      out<<"   pst->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
-   }
-   if (fLabel.Length() > 0) {
-      out<<"   pst->SetLabel("<<quote<<fLabel<<quote<<");"<<std::endl;
-   }
-   if (fBorderSize != 4) {
-      out<<"   pst->SetBorderSize("<<fBorderSize<<");"<<std::endl;
-   }
-   SaveFillAttributes(out,"pst",0,1001);
-   SaveLineAttributes(out,"pst",1,1,1);
-   SaveTextAttributes(out,"pst",22,0,1,62,0);
-   TPaveText::SaveLines(out,"pst",saved);
-   out<<"   pst->Draw();"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "pst",
+                            TString::Format("%g, %g, %g, %g, %d, \"%s\"", fX1, fY1, fX2, fY2, fNpaves,
+                                            TString(fOption).ReplaceSpecialCppChars().Data()));
+
+   if (strcmp(GetName(), "TPave"))
+      out << "   pst->SetName(\"" << GetName() << "\");" << std::endl;
+   if (fLabel.Length() > 0)
+      out << "   pst->SetLabel(\"" << TString(fLabel).ReplaceSpecialCppChars() << "\");" << std::endl;
+   if (fBorderSize != 4)
+      out << "   pst->SetBorderSize(" << fBorderSize << ");" << std::endl;
+   SaveFillAttributes(out, "pst", 0, 1001);
+   SaveLineAttributes(out, "pst", 1, 1, 1);
+   SaveTextAttributes(out, "pst", 22, 0, 1, 62, 0);
+   SaveLines(out, "pst", kTRUE);
+   out << "   pst->Draw();" << std::endl;
 }
