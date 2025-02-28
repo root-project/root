@@ -351,6 +351,11 @@ template <typename HIST = Hist_t>
 class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
    std::vector<HIST *> fObjects;
 
+   std::map<std::string, int> fCategoryToBin; // For categorical string data
+   std::vector<std::string> fBinLabels;       // Bin labels for strings
+   std::mutex fMutex;                         // Thread safety for category map
+
+
    template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
    void ResetIfPossible(H *h)
    {
@@ -482,6 +487,23 @@ public:
       fObjects[slot]->Fill(x...);
    }
 
+   void Exec(unsigned int slot, const std::string &value)
+   {
+      int bin = -1;
+      {
+         std::lock_guard<std::mutex> lock(fMutex);
+         auto it = fCategoryToBin.find(value);
+         if (it == fCategoryToBin.end()) {
+            bin = fBinLabels.size() + 1; // Bin numbers start at 1
+            fCategoryToBin[value] = bin;
+            fBinLabels.emplace_back(value);
+         } else {
+            bin = it->second;
+         }
+      }
+      fObjects[slot]->Fill(bin - 0.5); // Center in bin
+   }
+
    // at least one container argument
    template <typename... Xs, std::enable_if_t<Disjunction<IsDataContainer<Xs>...>::value, int> = 0>
    auto Exec(unsigned int slot, const Xs &...xs) -> decltype(fObjects[slot]->Fill(*MakeBegin(xs)...), void())
@@ -521,6 +543,22 @@ public:
 
    void Finalize()
    {
+
+      if (!fBinLabels.empty()) {
+         const int nBins = fBinLabels.size();
+         if (nBins == 0) {
+            Warning("FillHelper", "No categories found. Result will be an empty histogram.");
+            fObjects[0]->SetBins(1, 0, 1);
+         } else {
+            for (unsigned int i = 0; i < fObjects.size(); ++i) {
+               fObjects[i]->SetBins(nBins, 0, nBins);
+               for (int j = 0; j < nBins; ++j) {
+                  fObjects[i]->GetXaxis()->SetBinLabel(j + 1, fBinLabels[j].c_str());
+               }
+            }
+         }
+      }
+    
       if (fObjects.size() == 1)
          return;
 
