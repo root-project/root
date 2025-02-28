@@ -43,7 +43,6 @@ public:
 
    FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;
 
-   const MnFcn &Fcn() const { return fFcn; }
    const MnUserTransformation &Trafo() const { return fTransformation; }
    const MnMachinePrecision &Precision() const;
    const MnStrategy &Strategy() const { return fStrategy; }
