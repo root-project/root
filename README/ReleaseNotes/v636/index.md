@@ -42,6 +42,7 @@ The following people have contributed to this new version:
 * The build option `html` has been removed.
 * The ClassImp macro and derived macros have no effect now and will be deprecated in ROOT 6.38.
 * The default TTreeFormula constructor (without arguments) is now deleted, since it lead to an unusable and unsafe object. Instead, this implementation has been reserved now for ROOT I/O exclusively via the TRootIOCtor argument tag.
+* The `RooStats::HLFactory` class was deprecated will be removed in ROOT 6.38. It provided little advantage over using the RooWorkspace directly or any of the other higher-level frameworks that exist in the RooFit ecosystem.
 
 ## Python Interface
 
@@ -56,8 +57,17 @@ The following people have contributed to this new version:
     This pattern was not appropriate for a modern C++ library.
     If you absolutely need the old return type, wrap the call to `format()` inside `new TString{var.format(..)}`. However, this is not recommended.
 
+### Fix for `RooAbsReal::createHistogram()` with extended pdfs
+
+There was a problem with [RooAbsReal::createHistogram()](https://root.cern.ch/doc/master/classRooAbsReal.html#a9451168bb4159899fe1854f591f69814) when using it to get histograms with predicted yields for extended pdfs.
+The `Scale(bool)` argument was always set internally to `false` in case `createHistogram()` was called on an extended pdf. There was no way for the user to override that.
+This meant that one could not get yield histograms that were correctly scaled by the bin volumes using that function.
+This release changes that behavior, meaning the `Scale(bool)` command argument is now respected for extended pdfs.
+
+
 ## IO
 
+* Honour the `Davix.GSI.CACheck` parameter also in the `ROOT::Internal::RRawFileDavix` class.
 * New options have been added to TFileMerger (which can be passed as whitespace-separated TStrings via `TFileMerger::SetMergeOptions`)
   * "FirstSrcCompression": when merging multiple files, instructs the class-specific merger to use the same compression as the
     first object of the destination's class as the destination's compression. Currently only recognized by the RNTuple merger;

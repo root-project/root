@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Create and draw a polar graph with errors and polar axis in radians (PI fractions).
+/// \preview Create and draw a polar graph with errors and polar axis in radians (PI fractions).
 /// See the [TGraphPolar documentation](https://root.cern/doc/master/classTGraphPolar.html)
 ///
 /// Since TGraphPolar is a TGraphErrors, it is painted with

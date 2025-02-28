@@ -120,6 +120,16 @@
 #include "TMatrixDEigen.h"
 #include "TMatrixDSymEigen.h"
 
+#ifdef __CLING__
+const auto tmp_vmatrix_file_name = "stress-vmatrix_interpreted.root";
+const auto tmp_vvector_file_name = "stress-vvector_interpreted.root";
+const auto tmp_vdecomp_file_name ="stress-vdecomp_interpreted.root";
+#else
+const auto tmp_vmatrix_file_name = "stress-vmatrix.root";
+const auto tmp_vvector_file_name = "stress-vvector.root";
+const auto tmp_vdecomp_file_name = "stress-vdecomp.root";
+#endif
+
 void stressLinear                  (Int_t maxSizeReq=100,Int_t verbose=0);
 void StatusPrint                   (Int_t id,const TString &title,Bool_t status);
 
@@ -2075,7 +2085,7 @@ void mstress_matrix_io()
   Bool_t ok = kTRUE;
   const Double_t pattern = TMath::Pi();
 
-  TFile *f = new TFile("stress-vmatrix.root", "RECREATE");
+  TFile *f = new TFile(tmp_vmatrix_file_name, "RECREATE");
 
   Char_t name[80];
   Int_t iloop = gNrLoop;
@@ -2122,7 +2132,7 @@ void mstress_matrix_io()
 
   if (gVerbose)
     std::cout << "\nOpen database in read-only mode and read matrix" << std::endl;
-  TFile *f1 = new TFile("stress-vmatrix.root");
+  TFile *f1 = new TFile(tmp_vmatrix_file_name);
 
   iloop = gNrLoop;
   while (iloop >= 0) {
@@ -3110,7 +3120,7 @@ void spstress_matrix_io()
   Bool_t ok = kTRUE;
   const Double_t pattern = TMath::Pi();
 
-  TFile *f = new TFile("stress-vmatrix.root", "RECREATE");
+  TFile *f = new TFile(tmp_vmatrix_file_name, "RECREATE");
 
   Char_t name[80];
   Int_t iloop = gNrLoop;
@@ -3143,7 +3153,7 @@ void spstress_matrix_io()
 
   if (gVerbose)
     std::cout << "\nOpen database in read-only mode and read matrix" << std::endl;
-  TFile *f1 = new TFile("stress-vmatrix.root");
+  TFile *f1 = new TFile(tmp_vmatrix_file_name);
 
   iloop = gNrLoop;
   while (iloop >= 0) {
@@ -3749,7 +3759,7 @@ void vstress_vector_io()
   Bool_t ok = kTRUE;
   const Double_t pattern = TMath::Pi();
 
-  TFile *f = new TFile("stress-vvector.root","RECREATE");
+  TFile *f = new TFile(tmp_vvector_file_name,"RECREATE");
 
   Char_t name[80];
   Int_t iloop = gNrLoop;
@@ -3786,7 +3796,7 @@ void vstress_vector_io()
 
   if (gVerbose)
     std::cout << "\nOpen database in read-only mode and read vector" << std::endl;
-  TFile *f1 = new TFile("stress-vvector.root");
+  TFile *f1 = new TFile(tmp_vvector_file_name);
 
   iloop = gNrLoop;
   while (iloop >= 0) {
@@ -4275,7 +4285,7 @@ void astress_decomp_io(Int_t msize)
   if (gVerbose)
     std::cout << "\nWrite decomp m to database" << std::endl;
 
-  TFile *f = new TFile("stress-vdecomp.root", "RECREATE");
+  TFile *f = new TFile(tmp_vdecomp_file_name, "RECREATE");
 
   TDecompLU   lu(m,1.0e-20);
   TDecompQRH  qrh(m,1.0e-20);
@@ -4295,7 +4305,7 @@ void astress_decomp_io(Int_t msize)
 
   if (gVerbose)
     std::cout << "\nOpen database in read-only mode and read matrix" << std::endl;
-  TFile *f1 = new TFile("stress-vdecomp.root");
+  TFile *f1 = new TFile(tmp_vdecomp_file_name);
 
   if (gVerbose)
     std::cout << "\nRead decompositions should create same solutions" << std::endl;
@@ -4379,8 +4389,7 @@ void astress_decomp_io(Int_t msize)
 
 void stress_backward_io()
 {
-  TFile::SetCacheFileDir(".");
-  TFile *f = TFile::Open("http://root.cern/files/linearIO.root","CACHEREAD");
+  TFile *f = TFile::Open("./linearIO.root");
 
   TMatrixF mf1 = THilbertMatrixF(-5,5,-5,5);
   mf1[1][2] = TMath::Pi();
@@ -4418,7 +4427,7 @@ void stress_backward_io()
 
 void cleanup()
 {
-  gSystem->Unlink("stress-vmatrix.root");
-  gSystem->Unlink("stress-vvector.root");
-  gSystem->Unlink("stress-vdecomp.root");
+  gSystem->Unlink(tmp_vmatrix_file_name);
+  gSystem->Unlink(tmp_vvector_file_name);
+  gSystem->Unlink(tmp_vdecomp_file_name);
 }

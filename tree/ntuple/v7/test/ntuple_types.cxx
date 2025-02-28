@@ -10,25 +10,6 @@
 #include <type_traits>
 #include <utility>
 
-TEST(RNTuple, TypeName) {
-   EXPECT_STREQ("float", ROOT::Experimental::RField<float>::TypeName().c_str());
-   EXPECT_STREQ("std::vector<std::string>",
-                ROOT::Experimental::RField<std::vector<std::string>>::TypeName().c_str());
-   EXPECT_STREQ("CustomStruct",
-                ROOT::Experimental::RField<CustomStruct>::TypeName().c_str());
-   EXPECT_STREQ("DerivedB",
-                ROOT::Experimental::RField<DerivedB>::TypeName().c_str());
-
-   auto field = RField<DerivedB>("derived");
-   EXPECT_EQ(sizeof(DerivedB), field.GetValueSize());
-
-   EXPECT_STREQ("std::pair<std::pair<float,CustomStruct>,std::int32_t>", (ROOT::Experimental::RField<
-                 std::pair<std::pair<float,CustomStruct>,int>>::TypeName().c_str()));
-   EXPECT_STREQ(
-      "std::tuple<std::tuple<char,CustomStruct,char>,std::int32_t>",
-      (ROOT::Experimental::RField<std::tuple<std::tuple<char, CustomStruct, char>, int>>::TypeName().c_str()));
-}
-
 TEST(RNTuple, EnumBasics)
 {
    // Needs fix of TEnum
@@ -170,7 +151,7 @@ TEST(RNTuple, ArrayField)
       auto array1_field = ntuple->GetModel().GetDefaultEntry().GetPtr<float[2]>("array1");
       auto array2_field = ntuple->GetModel().GetDefaultEntry().GetPtr<unsigned char[4]>("array2");
       for (int i = 0; i < 2; i++) {
-         new (struct_field.get()) StructWithArrays({{'n', 't', 'p', 'l'}, {1.0, 42.0}, {{2*i}, {2*i + 1}}});
+         new (struct_field.get()) StructWithArrays({{'n', 't', 'p', 'l'}, {1.0, 42.0}, {{2 * i}, {2 * i + 1}}});
          new (array1_field.get()) float[2]{0.0f, static_cast<float>(i)};
          memcpy(array2_field.get(), charArray, sizeof(charArray));
          ntuple->Fill();
@@ -186,8 +167,8 @@ TEST(RNTuple, ArrayField)
       EXPECT_EQ(0, memcmp(viewStruct(i).c, "ntpl", 4));
       EXPECT_EQ(1.0f, viewStruct(i).f[0]);
       EXPECT_EQ(42.0f, viewStruct(i).f[1]);
-      EXPECT_EQ(2*i, viewStruct(i).i[0][0]);
-      EXPECT_EQ(2*i + 1, viewStruct(i).i[1][0]);
+      EXPECT_EQ(2 * i, viewStruct(i).i[0][0]);
+      EXPECT_EQ(2 * i + 1, viewStruct(i).i[1][0]);
 
       float fs[] = {0.0f, static_cast<float>(i)};
       EXPECT_EQ(0, memcmp(viewArray1(i), fs, sizeof(fs)));
@@ -254,17 +235,15 @@ TEST(RNTuple, StdPair)
    EXPECT_EQ((alignof(std::pair<int64_t, float>)), field.GetAlignment());
    EXPECT_EQ((alignof(std::pair<int64_t, float>)), otherField->GetAlignment());
 
-   auto pairPairField = RField<std::pair<std::pair<int64_t, float>,
-      std::vector<std::pair<CustomStruct, double>>>>("pairPairField");
+   auto pairPairField =
+      RField<std::pair<std::pair<int64_t, float>, std::vector<std::pair<CustomStruct, double>>>>("pairPairField");
    EXPECT_STREQ("std::pair<std::pair<std::int64_t,float>,std::vector<std::pair<CustomStruct,double>>>",
                 pairPairField.GetTypeName().c_str());
 
    FileRaii fileGuard("test_ntuple_rfield_stdpair.root");
    {
       auto model = RNTupleModel::Create();
-      auto pair_field = model->MakeField<std::pair<double, std::string>>(
-         {"myPair", "a very cool field"}
-      );
+      auto pair_field = model->MakeField<std::pair<double, std::string>>({"myPair", "a very cool field"});
       auto myPair2 = RFieldBase::Create("myPair2", "std::pair<double, std::string>").Unwrap();
       model->AddField(std::move(myPair2));
 
@@ -1631,16 +1610,16 @@ TEST(RNTuple, Optional)
 TEST(RNTuple, UnsupportedStdTypes)
 {
    try {
-      auto field = RField<std::weak_ptr<int>>("myWeakPtr");
+      auto field = RField<std::weak_ptr<float>>("myWeakPtr");
       FAIL() << "should not be able to make a std::weak_ptr field";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<int> is not supported"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<float> is not supported"));
    }
    try {
-      auto field = RField<std::vector<std::weak_ptr<int>>>("weak_ptr_vec");
+      auto field = RField<std::vector<std::weak_ptr<float>>>("weak_ptr_vec");
       FAIL() << "should not be able to make a std::vector<std::weak_ptr> field";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<int> is not supported"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("weak_ptr<float> is not supported"));
    }
 }
 
@@ -2048,13 +2027,14 @@ TEST(RNTuple, TClassStlDerived)
       RNTupleWriteOptions options;
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath(), options);
       for (int i = 0; i < 10000; i++) {
-         new (fieldKlass.get()) PackedContainer<int>({i + 2, i + 3},
-                                                     {/*m_nbits=*/ (uint8_t)i,
-                                                      /*m_nmantissa=*/ (uint8_t)i,
-                                                      /*m_scale=*/ static_cast<float>(i + 1),
-                                                      /*m_flags=*/ 0,
-                                                      /*m_sgkey=*/ (uint32_t)(i + 1),
-                                                      /*c_uint=*/ (uint8_t)i});
+         if (fieldKlass)
+            fieldKlass->~PackedContainer<int>();
+         new (fieldKlass.get()) PackedContainer<int>({i + 2, i + 3}, {/*m_nbits=*/(uint8_t)i,
+                                                                      /*m_nmantissa=*/(uint8_t)i,
+                                                                      /*m_scale=*/static_cast<float>(i + 1),
+                                                                      /*m_flags=*/0,
+                                                                      /*m_sgkey=*/(uint32_t)(i + 1),
+                                                                      /*c_uint=*/(uint8_t)i});
          ntuple->Fill();
       }
    }
@@ -2071,8 +2051,7 @@ TEST(RNTuple, TClassStlDerived)
       EXPECT_EQ(((uint8_t)i), viewKlass(i).m_params.c_uint);
       EXPECT_EQ(((uint32_t)(i + 1)), viewKlass(i).m_params.m_sgkey);
 
-      EXPECT_EQ((std::vector<int>{static_cast<int>(i + 2),
-                                  static_cast<int>(i + 3)}), viewKlass(i));
+      EXPECT_EQ((std::vector<int>{static_cast<int>(i + 2), static_cast<int>(i + 3)}), viewKlass(i));
    }
 }
 
@@ -2251,4 +2230,44 @@ TEST(RNTuple, RColumnRepresentations)
                                                   {ROOT::ENTupleColumnType::kReal32},
                                                   {ROOT::ENTupleColumnType::kReal16}}),
              colReps2.GetDeserializationTypes());
+}
+
+TEST(RNTuple, ContextDependentTypes)
+{
+   // Adapted from https://gitlab.cern.ch/amete/rntuple-bug-report-20250219, reproducer of
+   // https://github.com/root-project/root/issues/17774
+
+   FileRaii fileGuard("test_ntuple_types_contextdep.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldBase = RFieldBase::Create("foo", "DerivedWithTypedef").Unwrap();
+      model->AddField(std::move(fieldBase));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto entry = ntuple->GetModel().CreateBareEntry();
+      auto ptr = std::make_unique<DerivedWithTypedef>();
+      entry->BindRawPtr("foo", ptr.get());
+      for (auto i = 0; i < 10; ++i) {
+         ptr->m.push_back(i);
+         ntuple->Fill(*entry);
+         ptr->m.clear();
+      }
+   }
+
+   {
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      EXPECT_EQ(reader->GetNEntries(), 10);
+
+      const auto &model = reader->GetModel();
+      const auto &field = model.GetConstField("foo");
+      EXPECT_EQ(field.GetTypeName(), "DerivedWithTypedef");
+      const auto &vec = model.GetConstField("foo.m");
+      EXPECT_EQ(vec.GetTypeName(), "std::vector<std::int32_t>");
+      EXPECT_EQ(vec.GetTypeAlias(), "MyVec<std::int32_t>");
+
+      auto vecView = reader->GetView<DerivedWithTypedef::MyVec<int>>("foo.m");
+      for (const auto &i : reader->GetEntryRange()) {
+         EXPECT_EQ(vecView(i), std::vector{static_cast<int>(i)});
+      }
+   }
 }

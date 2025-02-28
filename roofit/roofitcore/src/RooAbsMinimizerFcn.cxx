@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -387,3 +389,5 @@ RooArgList RooAbsMinimizerFcn::initFloatParams() const
 
    return out;
 }
+
+/// \endcond

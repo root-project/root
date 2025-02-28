@@ -44,6 +44,7 @@ target_include_directories(MetaCling SYSTEM PRIVATE
   ${CLANG_INCLUDE_DIRS}
   ${LLVM_INCLUDE_DIRS}
   ${CLAD_INCLUDE_DIRS}
+  ${CPPINTEROP_INCLUDE_DIRS}
 )
 
 target_include_directories(MetaCling PRIVATE
@@ -74,7 +75,7 @@ if(MSVC)
    set_source_files_properties(TCling.cxx COMPILE_FLAGS /bigobj)
 endif()
 
-add_dependencies(MetaCling CLING)
+add_dependencies(MetaCling CLING clangCppInterOp)
 
 ##### libCling #############################################################
 
@@ -113,10 +114,14 @@ ROOT_LINKER_LIBRARY(Cling
         $<TARGET_OBJECTS:ClingUtils>
         $<TARGET_OBJECTS:Dictgen>
         $<TARGET_OBJECTS:MetaCling>
-        LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CLING_PLUGIN_LINK_LIBS})
+        LIBRARIES ${CLING_LIBRARIES} clangCppInterOp ${LINK_LIBS} ${CLING_PLUGIN_LINK_LIBS})
 
 # When these two link at the same time, they can exhaust the RAM on many machines, since they both link against llvm.
 add_dependencies(Cling rootcling_stage1)
+
+if(testing)
+  set_target_properties(CppInterOpUnitTests PROPERTIES EXCLUDE_FROM_ALL OFF)
+endif()
 
 if(MSVC)
   set_target_properties(Cling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)

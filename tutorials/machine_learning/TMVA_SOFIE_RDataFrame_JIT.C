@@ -68,7 +68,7 @@ void TMVA_SOFIE_RDataFrame_JIT(std::string modelFile = "Higgs_trained_model.h5")
     CompileModelForRDF(modelHeaderFile,7);
 
     std::string inputFileName = "Higgs_data.root";
-    std::string inputFile = "http://root.cern.ch/files/" + inputFileName;
+    std::string inputFile = gROOT->GetTutorialDir() + "/machine_learning/data/" + inputFileName;
 
     ROOT::RDataFrame df1("sig_tree", inputFile);
     auto h1 = df1.Define("DNN_Value", "sofie_functor(rdfslot_,m_jj, m_jjj, m_lv, m_jlv, m_bb, m_wbb, m_wwbb)")

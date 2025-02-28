@@ -25,6 +25,7 @@
 #include "RConfigure.h"
 
 // Standard
+#include <any>
 #include <string>
 #include <sstream>
 #include <utility>
@@ -58,6 +59,67 @@ PyObject *RegisterExecutorAlias(PyObject * /*self*/, PyObject *args)
    CPyCppyy::RegisterExecutorAlias(PyUnicode_AsUTF8(name), PyUnicode_AsUTF8(target));
 
    Py_RETURN_NONE;
+}
+
+/// \brief A PyObject wrapper to track reference counting of external objects
+///
+/// This wrapper can be useful in shared ownership scenarios when a C++ object
+/// is created on the Python side and there is no easy way to track its ownership
+/// on the C++ side. If multiple instances of this class are given the same
+/// Python proxy, they will increase/decrease its reference counting following
+/// Python rules and ensure proper destruction of the underlying C++ object when
+/// no other Python objects are referencing it.
+class PyObjRefCounter final {
+   PyObject *fObject{nullptr};
+
+   void Reset(PyObject *object)
+   {
+      if (fObject) {
+         Py_DECREF(fObject);
+         fObject = nullptr;
+      }
+      if (object) {
+         Py_INCREF(object);
+         fObject = object;
+      }
+   }
+
+public:
+   PyObjRefCounter(PyObject *object) { Reset(object); }
+
+   ~PyObjRefCounter() { Reset(nullptr); }
+
+   PyObjRefCounter(const PyObjRefCounter &other) { Reset(other.fObject); }
+
+   PyObjRefCounter &operator=(const PyObjRefCounter &other)
+   {
+      Reset(other.fObject);
+      return *this;
+   }
+
+   PyObjRefCounter(PyObjRefCounter &&other)
+   {
+      fObject = other.fObject;
+      other.fObject = nullptr;
+   }
+
+   PyObjRefCounter &operator=(PyObjRefCounter &&other)
+   {
+      fObject = other.fObject;
+      other.fObject = nullptr;
+      return *this;
+   }
+};
+
+PyObject *PyObjRefCounterAsStdAny(PyObject * /*self*/, PyObject *args)
+{
+   PyObject *object = nullptr;
+
+   PyArg_ParseTuple(args, "O:PyObjRefCounterAsStdAny", &object);
+
+   // The std::any is managed by Python
+   return CPyCppyy::Instance_FromVoidPtr(new std::any{std::in_place_type<PyObjRefCounter>, object}, "std::any",
+                                         /*python_owns=*/true);
 }
 
 } // namespace PyROOT
@@ -104,6 +166,8 @@ static PyMethodDef gPyROOTMethods[] = {
     (char *)"Register a custom converter that is a reference to an existing converter"},
    {(char *)"CPyCppyyRegisterExecutorAlias", (PyCFunction)PyROOT::RegisterExecutorAlias, METH_VARARGS,
     (char *)"Register a custom executor that is a reference to an existing executor"},
+   {(char *)"PyObjRefCounterAsStdAny", (PyCFunction)PyROOT::PyObjRefCounterAsStdAny, METH_VARARGS,
+    (char *)"Wrap a reference count to any Python object in a std::any for resource management in C++"},
    {NULL, NULL, 0, NULL}};
 
 struct module_state {

@@ -195,21 +195,33 @@ void ROOT::Experimental::RNTupleModel::RUpdater::CommitUpdate()
    fWriter.GetSink().UpdateSchema(toCommit, fWriter.GetNEntries());
 }
 
-void ROOT::Experimental::RNTupleModel::RUpdater::AddField(std::unique_ptr<RFieldBase> field)
+void ROOT::Experimental::Internal::RNTupleModelChangeset::AddField(std::unique_ptr<RFieldBase> field)
 {
    auto fieldp = field.get();
-   fOpenChangeset.fModel.AddField(std::move(field));
-   fOpenChangeset.fAddedFields.emplace_back(fieldp);
+   fModel.AddField(std::move(field));
+   fAddedFields.emplace_back(fieldp);
+}
+
+void ROOT::Experimental::RNTupleModel::RUpdater::AddField(std::unique_ptr<RFieldBase> field)
+{
+   fOpenChangeset.AddField(std::move(field));
+}
+
+ROOT::RResult<void>
+ROOT::Experimental::Internal::RNTupleModelChangeset::AddProjectedField(std::unique_ptr<RFieldBase> field,
+                                                                       RNTupleModel::FieldMappingFunc_t mapping)
+{
+   auto fieldp = field.get();
+   auto result = fModel.AddProjectedField(std::move(field), mapping);
+   if (result)
+      fAddedProjectedFields.emplace_back(fieldp);
+   return R__FORWARD_RESULT(result);
 }
 
 ROOT::RResult<void> ROOT::Experimental::RNTupleModel::RUpdater::AddProjectedField(std::unique_ptr<RFieldBase> field,
                                                                                   FieldMappingFunc_t mapping)
 {
-   auto fieldp = field.get();
-   auto result = fOpenChangeset.fModel.AddProjectedField(std::move(field), mapping);
-   if (result)
-      fOpenChangeset.fAddedProjectedFields.emplace_back(fieldp);
-   return R__FORWARD_RESULT(result);
+   return R__FORWARD_RESULT(fOpenChangeset.AddProjectedField(std::move(field), std::move(mapping)));
 }
 
 void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fieldName)
@@ -240,7 +252,8 @@ void ROOT::Experimental::RNTupleModel::EnsureNotBare() const
 
 ROOT::Experimental::RNTupleModel::RNTupleModel(std::unique_ptr<RFieldZero> fieldZero)
    : fFieldZero(std::move(fieldZero)), fModelId(GetNewModelId()), fSchemaId(fModelId)
-{}
+{
+}
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::CreateBare()
 {
@@ -552,7 +565,7 @@ void ROOT::Experimental::RNTupleModel::SetDescription(std::string_view descripti
    fDescription = std::string(description);
 }
 
-std::size_t ROOT::Experimental::RNTupleModel::EstimateWriteMemoryUsage(const RNTupleWriteOptions &options) const
+std::size_t ROOT::Experimental::RNTupleModel::EstimateWriteMemoryUsage(const ROOT::RNTupleWriteOptions &options) const
 {
    std::size_t bytes = 0;
    std::size_t minPageBufferSize = 0;
@@ -574,7 +587,7 @@ std::size_t ROOT::Experimental::RNTupleModel::EstimateWriteMemoryUsage(const RNT
       // Use the target cluster size as an estimate for all compressed pages combined.
       bytes += options.GetApproxZippedClusterSize();
       int compression = options.GetCompression();
-      if (compression != 0 && options.GetUseImplicitMT() == RNTupleWriteOptions::EImplicitMT::kDefault) {
+      if (compression != 0 && options.GetUseImplicitMT() == ROOT::RNTupleWriteOptions::EImplicitMT::kDefault) {
          // With IMT, compression happens asynchronously which means that the uncompressed pages also stay around. Use a
          // compression factor of 2x as a very rough estimate.
          bytes += 2 * options.GetApproxZippedClusterSize();

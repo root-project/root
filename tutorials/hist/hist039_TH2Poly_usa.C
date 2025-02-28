@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// This tutorial illustrates how to create an histogram with polygonal
+/// \preview This tutorial illustrates how to create an histogram with polygonal
 /// bins (TH2Poly), fill it and draw it using the `col` option. The initial data
 /// are stored in TMultiGraphs. They represent the USA map. Such histograms can
 /// be rendered in 3D using the option `legogl`.
@@ -34,19 +34,23 @@ void hist039_TH2Poly_usa()
                        9380884,  646844,  11542645, 3687050,  3825657, 12604767, 1053209, 4561242,  812383,  6296254,
                        24782302, 2784572, 621760,   7882590,  6664195, 1819777,  5654774, 544270};
 
-   TCanvas *usa = new TCanvas("USA", "USA");
+   auto usa = new TCanvas("USA", "USA");
    usa->ToggleEventStatus();
    Double_t lon1 = -130;
    Double_t lon2 = -65;
    Double_t lat1 = 24;
    Double_t lat2 = 50;
-   TH2Poly *p = new TH2Poly("Lower48", "Lower 48 Population (2009);Latitude;Longitude", lon1, lon2, lat1, lat2);
+   auto p = new TH2Poly("Lower48", "Lower 48 Population (2009);Latitude;Longitude", lon1, lon2, lat1, lat2);
 
-   TFile::SetCacheFileDir(".");
-   TFile *f = TFile::Open("http://root.cern/files/usa.root", "CACHEREAD");
+   const auto fileName = "usa.root";
+   const auto fileNameUrl = "http://root.cern/files/usa.root";
+   if(gSystem->AccessPathName(fileName))
+      TFile::Cp(fileNameUrl, fileName);
+
+   auto f = TFile::Open(fileName);
 
    if (!f) {
-      printf("Cannot access usa.root. Is internet working ?\n");
+      printf("Cannot access %s. Is internet working ?\n", fileName);
       return;
    }
 

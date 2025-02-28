@@ -319,7 +319,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
        endforeach()
     endif()
 
-    # if (cxxmodules OR runtime_cxxmodules)
     # Comments from Vassil:
     # FIXME: We prepend ROOTSYS/include because if we have built a module
     # and try to resolve the 'same' header from a different location we will
@@ -335,7 +334,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/externals")
     list(FILTER incdirs EXCLUDE REGEX "^${CMAKE_BINARY_DIR}/builtins")
     list(INSERT incdirs 0 ${CMAKE_BINARY_DIR}/include)
-    # endif()
 
     # this instruct rootcling do not store such paths in dictionary
     set(excludepaths ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR}/ginclude ${CMAKE_BINARY_DIR}/externals ${CMAKE_BINARY_DIR}/builtins)
@@ -1217,7 +1215,9 @@ function(ROOT_FIND_DIRS_WITH_HEADERS result_dirs)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_INSTALL_HEADERS([dir1 dir2 ...] OPTIONS [options])
+#---ROOT_INSTALL_HEADERS([dir1 dir2 ...] [FILTER <regex>])
+# Glob for headers in the folder where this target is defined, and install them in
+# <buildDir>/include
 #---------------------------------------------------------------------------------------------------
 function(ROOT_INSTALL_HEADERS)
   CMAKE_PARSE_ARGUMENTS(ARG "OPTIONS" "" "FILTER" ${ARGN})
@@ -1232,34 +1232,79 @@ function(ROOT_INSTALL_HEADERS)
     set (options ${options} REGEX "${f}" EXCLUDE)
   endforeach()
   set (filter "(${filter})")
+  set(include_files "")
   foreach(d ${dirs})
     install(DIRECTORY ${d} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
                            COMPONENT headers
                            ${options})
     string(REGEX REPLACE "(.*)/$" "\\1" d ${d})
-    ROOT_GLOB_FILES(include_files
+    ROOT_GLOB_FILES(globbed_files
       RECURSE
-      RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/${d}
+      RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       FILTER ${filter}
       ${d}/*.h ${d}/*.hxx ${d}/*.icc )
-    foreach (include_file ${include_files})
-      set (src ${CMAKE_CURRENT_SOURCE_DIR}/${d}/${include_file})
-      set (dst ${CMAKE_BINARY_DIR}/include/${include_file})
-      add_custom_command(
-        OUTPUT ${dst}
-        COMMAND ${CMAKE_COMMAND} -E copy ${src} ${dst}
-        COMMENT "Copying header ${src} to ${CMAKE_BINARY_DIR}/include"
-        DEPENDS ${src})
-      list(APPEND dst_list ${dst})
-    endforeach()
+    list(APPEND include_files ${globbed_files})
   endforeach()
-  if (dst_list)
-    string(REPLACE ${CMAKE_SOURCE_DIR} "" tgt ${CMAKE_CURRENT_SOURCE_DIR})
-    string(MAKE_C_IDENTIFIER move_header${tgt} tgt)
-    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS ${tgt})
-    add_custom_target(${tgt} DEPENDS ${dst_list})
-  endif()
+
+  string(REPLACE ${CMAKE_SOURCE_DIR} "" target_name ${CMAKE_CURRENT_SOURCE_DIR})
+  string(REPLACE / _ target_name "copy_header_${target_name}")
+  string(REGEX REPLACE "_$" "" target_name ${target_name})
+
+  # Register the files to be copied for each target directory (e.g. include/ include/ROOT include/v7/inc/ ...)
+  list(REMOVE_DUPLICATES include_files)
+  list(TRANSFORM include_files REPLACE "(.*)/[^/]*" "\\1/" OUTPUT_VARIABLE subdirs)
+  list(REMOVE_DUPLICATES subdirs)
+  foreach(subdir ${subdirs})
+    set(input_files ${include_files})
+    list(FILTER input_files INCLUDE REGEX "^${subdir}[^/]*$")
+    set(output_files ${input_files})
+
+    string(REGEX REPLACE ".*/*inc/" "" destination ${subdir})
+
+    list(TRANSFORM input_files  PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/")
+    list(TRANSFORM output_files REPLACE ".*/" "${CMAKE_BINARY_DIR}/include/${destination}")
+
+    set(destination destination_${destination})
+
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_COPY_LISTS ${destination})
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_INPUT_${destination} ${input_files})
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_OUTPUT_${destination} ${output_files})
+  endforeach()
 endfunction()
+
+#---------------------------------------------------------------------------------------------------
+#--- ROOT_CREATE_HEADER_COPY_TARGETS
+#    Creates a target to copy all headers that have been registered for copy in ROOT_INSTALL_HEADERS
+#---------------------------------------------------------------------------------------------------
+macro(ROOT_CREATE_HEADER_COPY_TARGETS)
+  get_property(HEADER_COPY_LISTS GLOBAL PROPERTY ROOT_HEADER_COPY_LISTS)
+  list(REMOVE_DUPLICATES HEADER_COPY_LISTS)
+  foreach(copy_list ${HEADER_COPY_LISTS})
+    get_property(inputs  GLOBAL PROPERTY ROOT_HEADER_INPUT_${copy_list})
+    get_property(outputs GLOBAL PROPERTY ROOT_HEADER_OUTPUT_${copy_list})
+
+    string(REPLACE "destination_" "${CMAKE_BINARY_DIR}/include/" destination ${copy_list})
+
+    list(LENGTH inputs LIST_LENGTH)
+    # Windows doesn't support long command lines, so split them in packs:
+    # foreach(.. RANGE start stop) is inclusive for both start and stop, so we
+    # need to decrement the LIST_LENGTH to get the desired logic.
+    math(EXPR LIST_LENGTH_MINUS_ONE "${LIST_LENGTH}-1")
+    foreach(range_start RANGE 0 ${LIST_LENGTH_MINUS_ONE} 100)
+      list(SUBLIST outputs ${range_start} 100 sub_outputs)
+      list(SUBLIST inputs ${range_start} 100 sub_inputs)
+      list(LENGTH sub_outputs SUB_LENGTH)
+      if(NOT SUB_LENGTH EQUAL 0)
+        add_custom_command(OUTPUT ${sub_outputs}
+          COMMAND ${CMAKE_COMMAND} -E copy_if_different ${sub_inputs} ${destination}
+          COMMENT "Copy headers for ${destination} ${range_start}"
+          DEPENDS ${sub_inputs})
+      endif()
+    endforeach()
+    file(MAKE_DIRECTORY ${destination})
+    set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS ${outputs})
+  endforeach()
+endmacro()
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_STANDARD_LIBRARY_PACKAGE(libname

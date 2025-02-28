@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// This macro draw all possible symbols provided by TMathtext.
+/// \preview This macro draw all possible symbols provided by TMathtext.
 /// \macro_image
 /// \author Olivier Couet
 

@@ -14,8 +14,8 @@
 \class TFile
 \ingroup IO
 \brief A ROOT file is an on-disk file, usually with extension .root, that stores objects in a file-system-like logical structure, possibly including subdirectory hierarchies.
-\sa \ref IO
-\sa \ref rootio (or `io/doc/TFile` folder in your codebase)
+\note See also \ref IO
+\note See also \ref rootio (or `io/doc/TFile` folder in your codebase)
 
 <details>
 <summary>ROOT file data format specification</summary>

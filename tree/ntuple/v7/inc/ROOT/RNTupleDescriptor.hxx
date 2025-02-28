@@ -120,7 +120,7 @@ public:
    /// In general, we create a field simply from the C++ type name. For untyped fields, however, we potentially need
    /// access to sub fields, which is provided by the ntuple descriptor argument.
    std::unique_ptr<RFieldBase>
-   CreateField(const RNTupleDescriptor &ntplDesc, const RCreateFieldOptions &options = {}) const;
+   CreateField(const RNTupleDescriptor &ntplDesc, const ROOT::RCreateFieldOptions &options = {}) const;
 
    ROOT::DescriptorId_t GetId() const { return fFieldId; }
    std::uint32_t GetFieldVersion() const { return fFieldVersion; }
@@ -609,7 +609,7 @@ public:
 
    /// Modifiers passed to `CreateModel`
    struct RCreateModelOptions {
-      RCreateModelOptions() {} // Work around compiler bug, see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88165
+   private:
       /// If set to true, projected fields will be reconstructed as such. This will prevent the model to be used
       /// with an RNTupleReader, but it is useful, e.g., to accurately merge data.
       bool fReconstructProjections = false;
@@ -622,6 +622,21 @@ public:
       /// If true, fields with a user defined type that have no available dictionaries will be reconstructed
       /// as record fields from the on-disk information; otherwise, they will cause an error.
       bool fEmulateUnknownTypes = false;
+
+   public:
+      RCreateModelOptions() {} // Work around compiler bug, see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88165
+
+      void SetReconstructProjections(bool v) { fReconstructProjections = v; }
+      bool GetReconstructProjections() const { return fReconstructProjections; }
+
+      void SetForwardCompatible(bool v) { fForwardCompatible = v; }
+      bool GetForwardCompatible() const { return fForwardCompatible; }
+
+      void SetCreateBare(bool v) { fCreateBare = v; }
+      bool GetCreateBare() const { return fCreateBare; }
+
+      void SetEmulateUnknownTypes(bool v) { fEmulateUnknownTypes = v; }
+      bool GetEmulateUnknownTypes() const { return fEmulateUnknownTypes; }
    };
 
    RNTupleDescriptor() = default;

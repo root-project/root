@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// Normalizing a Histogram
+/// \preview Normalizing a Histogram.
 ///
 /// Image produced by `.x NormalizeHistogram.C`
 /// Two different methods of normalizing histograms

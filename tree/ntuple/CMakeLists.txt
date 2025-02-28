@@ -22,6 +22,7 @@ HEADERS
   ROOT/REntry.hxx
   ROOT/RField.hxx
   ROOT/RFieldBase.hxx
+  ROOT/RFieldUtils.hxx
   ROOT/RFieldVisitor.hxx
   ROOT/RMiniFile.hxx
   ROOT/RNTuple.hxx
@@ -29,7 +30,7 @@ HEADERS
   ROOT/RNTupleFillContext.hxx
   ROOT/RNTupleFillStatus.hxx
   ROOT/RNTupleImtTaskScheduler.hxx
-  ROOT/RNTupleIndex.hxx
+  ROOT/RNTupleJoinTable.hxx
   ROOT/RNTupleMerger.hxx
   ROOT/RNTupleMetrics.hxx
   ROOT/RNTupleModel.hxx
@@ -68,7 +69,7 @@ SOURCES
   v7/src/RNTupleDescriptor.cxx
   v7/src/RNTupleDescriptorFmt.cxx
   v7/src/RNTupleFillContext.cxx
-  v7/src/RNTupleIndex.cxx
+  v7/src/RNTupleJoinTable.cxx
   v7/src/RNTupleMerger.cxx
   v7/src/RNTupleMetrics.cxx
   v7/src/RNTupleModel.cxx

@@ -448,16 +448,16 @@ class PolygonsCreator {
             polygon.vertices.push(this.mnormal ? this.v2 : this.v3);
             this.polygons.push(polygon);
          } else {
-            polygon = this.polygons[this.polygons.length-1];
+            polygon = this.polygons.at(-1);
             // check that last vertex equals to v2
-            const last = this.mnormal ? polygon.vertices[polygon.vertices.length-1] : polygon.vertices[0],
+            const last = this.mnormal ? polygon.vertices.at(-1) : polygon.vertices.at(0),
                   comp = this.mnormal ? this.v2 : this.v3;
 
             if (comp.diff(last) > 1e-12)
                console.error('vertex missmatch when building polygon');
          }
 
-         const first = this.mnormal ? polygon.vertices[0] : polygon.vertices[polygon.vertices.length-1],
+         const first = this.mnormal ? polygon.vertices[0] : polygon.vertices.at(-1),
                next = this.mnormal ? this.v3 : this.v2;
 
          if (next.diff(first) < 1e-12) {
@@ -919,9 +919,9 @@ function createTubeBuffer(shape, faces_limit) {
    if (faces_limit < 0) return numfaces;
 
    const phi0 = thetaStart*Math.PI/180,
-       dphi = thetaLength/radiusSegments*Math.PI/180,
-       _sin = new Float32Array(radiusSegments+1),
-       _cos = new Float32Array(radiusSegments+1);
+         dphi = thetaLength/radiusSegments*Math.PI/180,
+         _sin = new Float32Array(radiusSegments+1),
+         _cos = new Float32Array(radiusSegments+1);
 
    for (let seg = 0; seg <= radiusSegments; ++seg) {
       _cos[seg] = Math.cos(phi0+seg*dphi);
@@ -1351,7 +1351,7 @@ function createXtruBuffer(shape, faces_limit) {
       pnts.push(new THREE.Vector2(shape.fX[vert], shape.fY[vert]));
 
    let faces = THREE.ShapeUtils.triangulateShape(pnts, []);
-   if (faces.length < pnts.length-2) {
+   if (faces.length < pnts.length - 2) {
       geoWarn(`Problem with XTRU shape ${shape.fName} with ${pnts.length} vertices`);
       faces = [];
    } else
@@ -1675,7 +1675,7 @@ function getNodeMatrix(kind, node) {
          case 'ParaY':
          case 'ParaZ': {
             const _shift = finder.fStart + (node.fIndex + 0.5) * finder.fStep;
-            switch (part[part.length-1]) {
+            switch (part.at(-1)) {
                case 'X': matrix.setPosition(_shift, 0, 0); break;
                case 'Y': matrix.setPosition(0, _shift, 0); break;
                case 'Z': matrix.setPosition(0, 0, _shift); break;

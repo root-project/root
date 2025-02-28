@@ -48,6 +48,8 @@ RGeomHierarchy::RGeomHierarchy(RGeomDescription &desc, bool use_server_threads) 
 RGeomHierarchy::~RGeomHierarchy()
 {
    fDesc.RemoveSignalHandler(this);
+   if (fWebWindow)
+      fWebWindow->Reset();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////

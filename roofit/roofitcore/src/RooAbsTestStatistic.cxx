@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -611,3 +613,5 @@ void RooAbsTestStatistic::enableOffsetting(bool flag)
 
 double RooAbsTestStatistic::getCarry() const
 { return _evalCarry; }
+
+/// \endcond

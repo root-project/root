@@ -70,7 +70,21 @@ public:
       } else
          return nullptr;
    }
+
+   bool IsContiguous(ROOT::Detail::TBranchProxy *) override { return false; }
 };
+
+bool IsCPContiguous(const TVirtualCollectionProxy &cp)
+{
+   if (cp.GetProperties() & TVirtualCollectionProxy::kIsEmulated)
+      return true;
+
+   switch (cp.GetCollectionType()) {
+   case ROOT::kSTLvector:
+   case ROOT::kROOTRVec: return true;
+   default: return false;
+   }
+}
 
 // Reader interface for STL
 class TSTLReader final : public TVirtualCollectionReader {
@@ -110,6 +124,12 @@ public:
       } else {
          return myCollectionProxy->At(idx);
       }
+   }
+
+   bool IsContiguous(ROOT::Detail::TBranchProxy *proxy) override
+   {
+      auto cp = GetCP(proxy);
+      return IsCPContiguous(*cp);
    }
 };
 
@@ -164,6 +184,12 @@ public:
          return myCollectionProxy->At(idx);
       }
    }
+
+   bool IsContiguous(ROOT::Detail::TBranchProxy *proxy) override
+   {
+      auto cp = GetCP(proxy);
+      return IsCPContiguous(*cp);
+   }
 };
 
 // Reader interface for leaf list
@@ -215,6 +241,8 @@ public:
    }
 
    void SetBasicTypeSize(Int_t size) { fBasicTypeSize = size; }
+
+   bool IsContiguous(ROOT::Detail::TBranchProxy *) override { return true; }
 };
 
 template <class BASE>
@@ -357,6 +385,8 @@ public:
          return nullptr;
       return (Byte_t *)myCollectionProxy->At(idx) + proxy->GetOffset();
    }
+
+   bool IsContiguous(ROOT::Detail::TBranchProxy *) override { return false; }
 };
 
 class TBasicTypeClonesReader final : public TClonesReader {
@@ -401,6 +431,8 @@ public:
       }
       return (Byte_t *)address + (fElementSize * idx);
    }
+
+   bool IsContiguous(ROOT::Detail::TBranchProxy *) override { return true; }
 
 protected:
    void ProxyRead() { fValueReader->ProxyRead(); }

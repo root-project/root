@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// A “Perceptual” colormap explicitly identifies a fixed value in the data
+/// \preview A “Perceptual” colormap explicitly identifies a fixed value in the data.
 ///
 /// On geographical plot this fixed point can, for instance, the "sea level". A perceptual
 /// colormap provides a monotonic luminance variations above and below this fixed value.

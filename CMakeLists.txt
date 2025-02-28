@@ -321,8 +321,11 @@ if(webgui)
 endif()
 
 foreach(dir_to_copy ${directories_to_copy})
-  # For target dependencies:
+  # Create a list of files for which we want dependency tracking.
+  # Exclude certain endings, e.g. ACLiC artifacts, so CMake doesn't complain when they are deleted (JIRA#9688)
   file(GLOB_RECURSE artifacts_in ${dir_to_copy}/*)
+  list(FILTER artifacts_in EXCLUDE REGEX "\.(d|swp|so|dylib|lib|dll|pcm|bak)$")
+
   set(artifacts_out ${artifacts_in})
   list(TRANSFORM artifacts_out REPLACE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
   list(APPEND all_artifacts ${artifacts_out})
@@ -382,6 +385,10 @@ endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
+
+# Each subdirectory added above will register headers to be copied to the build tree.
+# Here, the copy targets are created:
+ROOT_CREATE_HEADER_COPY_TARGETS()
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
 get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)

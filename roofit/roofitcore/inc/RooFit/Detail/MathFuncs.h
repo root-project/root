@@ -256,7 +256,7 @@ inline double flexibleInterpSingle(unsigned int code, double low, double high, d
       } else if (paramVal < -1) {
          return -1 * (2 * a - b) * (paramVal + 1) + low - nominal;
       } else {
-         return a * std::pow(paramVal, 2) + b * paramVal + c;
+         return a * paramVal * paramVal + b * paramVal + c;
       }
       // According to an old comment in the source code, code 3 was apparently
       // meant to be a "parabolic version of log-normal", but it never got
@@ -306,10 +306,10 @@ inline double flexibleInterpSingle(unsigned int code, double low, double high, d
          low /= nominal;
 
          // GHL: Swagato's suggestions
-         double powUp = std::pow(high, x0);
-         double powDown = std::pow(low, x0);
          double logHi = std::log(high);
          double logLo = std::log(low);
+         double powUp = std::exp(x0 * logHi);
+         double powDown = std::exp(x0 * logLo);
          double powUpLog = high <= 0.0 ? 0.0 : powUp * logHi;
          double powDownLog = low <= 0.0 ? 0.0 : -powDown * logLo;
          double powUpLog2 = high <= 0.0 ? 0.0 : powUpLog * logHi;
@@ -324,12 +324,14 @@ inline double flexibleInterpSingle(unsigned int code, double low, double high, d
 
          // fcns+der+2nd_der are eq at bd
 
+         double x0Sq = x0 * x0;
+
          double a = 1. / (8 * x0) * (15 * A0 - 7 * x0 * S1 + x0 * x0 * A2);
-         double b = 1. / (8 * x0 * x0) * (-24 + 24 * S0 - 9 * x0 * A1 + x0 * x0 * S2);
-         double c = 1. / (4 * std::pow(x0, 3)) * (-5 * A0 + 5 * x0 * S1 - x0 * x0 * A2);
-         double d = 1. / (4 * std::pow(x0, 4)) * (12 - 12 * S0 + 7 * x0 * A1 - x0 * x0 * S2);
-         double e = 1. / (8 * std::pow(x0, 5)) * (+3 * A0 - 3 * x0 * S1 + x0 * x0 * A2);
-         double f = 1. / (8 * std::pow(x0, 6)) * (-8 + 8 * S0 - 5 * x0 * A1 + x0 * x0 * S2);
+         double b = 1. / (8 * x0Sq) * (-24 + 24 * S0 - 9 * x0 * A1 + x0 * x0 * S2);
+         double c = 1. / (4 * x0Sq * x0) * (-5 * A0 + 5 * x0 * S1 - x0 * x0 * A2);
+         double d = 1. / (4 * x0Sq * x0Sq) * (12 - 12 * S0 + 7 * x0 * A1 - x0 * x0 * S2);
+         double e = 1. / (8 * x0Sq * x0Sq * x0) * (+3 * A0 - 3 * x0 * S1 + x0 * x0 * A2);
+         double f = 1. / (8 * x0Sq * x0Sq * x0Sq) * (-8 + 8 * S0 - 5 * x0 * A1 + x0 * x0 * S2);
 
          // evaluate the 6-th degree polynomial using Horner's method
          double value = 1. + x * (a + x * (b + x * (c + x * (d + x * (e + x * f)))));

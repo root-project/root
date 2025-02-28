@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -341,3 +343,5 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
   if(absError) *absError = cum_sig;
   return cum_int;
 }
+
+/// \endcond

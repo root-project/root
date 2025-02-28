@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Draw 1D histograms as bar charts
+/// \preview Draw 1D histograms as bar charts.
 ///
 /// \macro_image
 /// \macro_code

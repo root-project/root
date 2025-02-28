@@ -1539,7 +1539,7 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 /// Same as TTree::Branch() with added check that addobj matches className.
 ///
-/// \see TTree::Branch() for other details.
+/// \see TTree::Branch()
 ///
 
 TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel)
@@ -1588,7 +1588,7 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Same as TTree::Branch but automatic detection of the class name.
-/// \see TTree::Branch for other details.
+/// \see TTree::Branch
 
 TBranch* TTree::BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel)
 {
@@ -1621,7 +1621,7 @@ TBranch* TTree::BranchImp(const char* branchname, TClass* ptrClass, void* addobj
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Same as TTree::Branch but automatic detection of the class name.
-/// \see TTree::Branch for other details.
+/// \see TTree::Branch
 
 TBranch* TTree::BranchImpRef(const char* branchname, const char *classname, TClass* ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel)
 {
@@ -1681,7 +1681,7 @@ TBranch* TTree::BranchImpRef(const char* branchname, const char *classname, TCla
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Same as TTree::Branch but automatic detection of the class name.
-/// \see TTree::Branch for other details.
+/// \see TTree::Branch
 
 TBranch* TTree::BranchImpRef(const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel)
 {
@@ -2626,7 +2626,7 @@ void TTree::Browse(TBrowser* b)
 /// If an index is already existing, this is replaced by the new one without being
 /// deleted. This behaviour prevents the deletion of a previously external index
 /// assigned to the TTree via the TTree::SetTreeIndex() method.
-/// \see also comments in TTree::SetTreeIndex().
+/// \see TTree::SetTreeIndex()
 
 Int_t TTree::BuildIndex(const char* majorname, const char* minorname /* = "0" */)
 {
@@ -7307,7 +7307,8 @@ void TTree::Print(Option_t* option) const
       for (l=0;l<nl;l++) {
          leaf = (TLeaf *)const_cast<TTree*>(this)->GetListOfLeaves()->At(l);
          br   = leaf->GetBranch();
-         if (strchr(br->GetName(),'.')) {
+         // branch is its own (top level) mother only for the top level branches.
+         if (br != br->GetMother()) {
             count[l] = -1;
             count[keep] += br->GetZipBytes();
          } else {
@@ -7604,7 +7605,7 @@ char TTree::GetNewlineValue(std::istream &inputStream)
 ////////////////////////////////////////////////////////////////////////////////
 /// Create or simply read branches from an input stream.
 ///
-/// \see reference information for TTree::ReadFile
+/// \see TTree::ReadFile
 
 Long64_t TTree::ReadStream(std::istream& inputStream, const char *branchDescriptor, char delimiter)
 {
@@ -8087,8 +8088,8 @@ void TTree::ResetBranchAddresses()
 ///
 /// \param firstentry first entry to scan
 /// \param nentries total number of entries to scan (starting from firstentry). Defaults to all entries.
-/// \see TTree::SetScanField to control how many lines are printed between pagination breaks (Use 0 to disable pagination)
-/// \see TTreePlayer::Scan for more information
+/// \note see TTree::SetScanField to control how many lines are printed between pagination breaks (Use 0 to disable pagination)
+/// \see TTreePlayer::Scan
 
 Long64_t TTree::Scan(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
@@ -9648,7 +9649,7 @@ void TTree::Streamer(TBuffer& b)
 ///
 /// funcname is a TF1 function.
 ///
-/// \see TTree::Draw for explanations of the other parameters.
+/// \note see TTree::Draw for explanations of the other parameters.
 ///
 /// Fit the variable varexp using the function funcname using the
 /// selection cuts given by selection.

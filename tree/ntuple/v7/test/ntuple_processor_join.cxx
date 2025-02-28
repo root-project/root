@@ -94,6 +94,12 @@ TEST_F(RNTupleJoinProcessorTest, Basic)
    ntuples = {{fNTupleNames[0], fFileNames[0]}};
 
    auto proc = RNTupleProcessor::CreateJoin(ntuples, {});
+   EXPECT_STREQ("ntuple1", proc->GetProcessorName().c_str());
+
+   {
+      auto namedProc = RNTupleProcessor::CreateJoin(ntuples, {}, "my_ntuple");
+      EXPECT_STREQ("my_ntuple", namedProc->GetProcessorName().c_str());
+   }
 
    int nEntries = 0;
    for (const auto &entry : *proc) {
@@ -198,8 +204,9 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
 
    try {
       std::vector<RNTupleOpenSpec> unfitNTuples = {{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}};
-      RNTupleProcessor::CreateJoin(unfitNTuples, {"i", "j", "k"});
-      FAIL() << "trying to create a join processor where not all join fields are present should throw";
+      auto proc = RNTupleProcessor::CreateJoin(unfitNTuples, {"i", "j", "k"});
+      proc->begin();
+      FAIL() << "trying to use a join processor where not all join fields are present should throw";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("could not find join field \"j\" in RNTuple \"ntuple2\""));
    }

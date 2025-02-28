@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*
  * ValueChecking.h
  *
@@ -90,3 +92,5 @@ class FormatPdfTree {
 
 
 #endif /* ROOFIT_ROOFITCORE_INC_VALUECHECKING_H_ */
+
+/// \endcond

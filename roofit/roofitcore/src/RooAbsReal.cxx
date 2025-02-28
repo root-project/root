@@ -1016,27 +1016,18 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
     zvar= dynamic_cast<RooRealVar*>(plotClones.find(plotVars.at(2)->GetName()));
     zaxis= hist->GetZaxis();
     assert(nullptr != zvar && nullptr != zaxis);
-    if (scaleForDensity) {
-      scaleFactor*= (zaxis->GetXmax() - zaxis->GetXmin())/zbins;
-    }
     // fall through to next case...
   case 2:
     ybins= hist->GetNbinsY();
     yvar= dynamic_cast<RooRealVar*>(plotClones.find(plotVars.at(1)->GetName()));
     yaxis= hist->GetYaxis();
     assert(nullptr != yvar && nullptr != yaxis);
-    if (scaleForDensity) {
-      scaleFactor*= (yaxis->GetXmax() - yaxis->GetXmin())/ybins;
-    }
     // fall through to next case...
   case 1:
     xbins= hist->GetNbinsX();
     xvar= dynamic_cast<RooRealVar*>(plotClones.find(plotVars.at(0)->GetName()));
     xaxis= hist->GetXaxis();
     assert(nullptr != xvar && nullptr != xaxis);
-    if (scaleForDensity) {
-      scaleFactor*= (xaxis->GetXmax() - xaxis->GetXmin())/xbins;
-    }
     break;
   default:
     coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: cannot fill histogram with "
@@ -1074,7 +1065,13 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
       break;
     }
 
-    double result= scaleFactor*projected->getVal();
+    // Bin volume scaling
+    double scaleFactorBin = scaleFactor;
+    scaleFactorBin *= scaleForDensity && hdim > 2 ? hist->GetZaxis()->GetBinWidth(zbin) : 1.0;
+    scaleFactorBin *= scaleForDensity && hdim > 1 ? hist->GetYaxis()->GetBinWidth(ybin) : 1.0;
+    scaleFactorBin *= scaleForDensity && hdim > 0 ? hist->GetXaxis()->GetBinWidth(xbin) : 1.0;
+
+    double result= scaleFactorBin * projected->getVal();
     if (RooAbsReal::numEvalErrors()>0) {
       coutW(Plotting) << "WARNING: Function evaluation error(s) at coordinates [x]=" << xvar->getVal() ;
       if (hdim==2) ccoutW(Plotting) << " [y]=" << yvar->getVal() ;
@@ -1411,8 +1408,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 
   double scaleFactor(1.0) ;
   if (doExtended) {
-    scaleFactor = pdfSelf->expectedEvents(vars) ;
-    doScaling=false ;
+     scaleFactor = pdfSelf->expectedEvents(vars);
   }
 
   fillHistogram(histo,vars,scaleFactor,intObs,doScaling,projObs,false) ;
@@ -2008,31 +2004,14 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     if (projDataNeededVars->size() < o.projData->get()->size()) {
 
       // Determine if there are any slice variables in the projection set
-        std::unique_ptr<RooArgSet> sliceDataSet{sliceSet.selectCommon(*o.projData->get())};
-      TString cutString ;
-      if (!sliceDataSet->empty()) {
-   bool first(true) ;
-   for(RooAbsArg * sliceVar : *sliceDataSet) {
-     if (!first) {
-       cutString.Append("&&") ;
-     } else {
-       first=false ;
-     }
+      RooArgSet sliceDataSet;
+      sliceSet.selectCommon(*o.projData->get(), sliceDataSet);
+      std::string cutString = RooFit::Detail::makeSliceCutString(sliceDataSet);
 
-     RooAbsRealLValue* real ;
-     RooAbsCategoryLValue* cat ;
-     if ((real = dynamic_cast<RooAbsRealLValue*>(sliceVar))) {
-       cutString.Append(Form("%s==%f",real->GetName(),real->getVal())) ;
-     } else if ((cat = dynamic_cast<RooAbsCategoryLValue*>(sliceVar))) {
-       cutString.Append(Form("%s==%d",cat->GetName(),cat->getCurrentIndex())) ;
-     }
-   }
-      }
-
-      if (!cutString.IsNull()) {
+      if (!cutString.empty()) {
        coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") reducing given projection dataset to entries with " << cutString << std::endl ;
       }
-      projDataSelOwned = std::unique_ptr<RooAbsData>{const_cast<RooAbsData*>(o.projData)->reduce(*projDataNeededVars, cutString.IsNull() ? nullptr : cutString)};
+      projDataSelOwned = std::unique_ptr<RooAbsData>{projDataSel->reduce(RooFit::SelectVars(*projDataNeededVars), RooFit::Cut(cutString.c_str()))};
       projDataSel = projDataSelOwned.get();
       coutI(Plotting) << "RooAbsReal::plotOn(" << GetName()
             << ") only the following components of the projection data will be used: " << *projDataNeededVars << std::endl ;
@@ -2347,31 +2326,13 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
       // Determine if there are any slice variables in the projection set
       RooArgSet sliceDataSet;
       sliceSet.selectCommon(*o.projData->get(), sliceDataSet);
-      TString cutString ;
-      if (!sliceDataSet.empty()) {
-   bool first(true) ;
-   for(RooAbsArg * sliceVar : sliceDataSet) {
-     if (!first) {
-       cutString.Append("&&") ;
-     } else {
-       first=false ;
-     }
+      std::string cutString = RooFit::Detail::makeSliceCutString(sliceDataSet);
 
-     RooAbsRealLValue* real ;
-     RooAbsCategoryLValue* cat ;
-     if ((real = dynamic_cast<RooAbsRealLValue*>(sliceVar))) {
-       cutString.Append(Form("%s==%f",real->GetName(),real->getVal())) ;
-     } else if ((cat = dynamic_cast<RooAbsCategoryLValue*>(sliceVar))) {
-       cutString.Append(Form("%s==%d",cat->GetName(),cat->getCurrentIndex())) ;
-     }
-   }
-      }
-
-      if (!cutString.IsNull()) {
+      if (!cutString.empty()) {
    coutI(Plotting) << "RooAbsReal::plotAsymOn(" << GetName()
          << ") reducing given projection dataset to entries with " << cutString << std::endl ;
       }
-      projDataSelOwned = std::unique_ptr<RooAbsData>{const_cast<RooAbsData*>(o.projData)->reduce(*projDataNeededVars,cutString.IsNull() ? nullptr : cutString)};
+      projDataSelOwned = std::unique_ptr<RooAbsData>{projDataSel->reduce(RooFit::SelectVars(*projDataNeededVars),RooFit::Cut(cutString.c_str()))};
       projDataSel = projDataSelOwned.get();
       coutI(Plotting) << "RooAbsReal::plotAsymOn(" << GetName()
             << ") only the following components of the projection data will be used: " << *projDataNeededVars << std::endl ;

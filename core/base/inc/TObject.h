@@ -53,6 +53,8 @@ protected:
    void MakeZombie() { fBits |= kZombie; }
    virtual void DoError(int level, const char *location, const char *fmt, va_list va) const;
 
+   static void SavePrimitiveConstructor(std::ostream &out, TClass *cl, const char *variable_name, const char *constructor_agrs = "", Bool_t empty_line = kTRUE);
+
 public:
    //----- Global bits (can be set for any object and should not be reused).
    //----- Bits 0 - 13 are reserved as global bits. Bits 14 - 23 can be used

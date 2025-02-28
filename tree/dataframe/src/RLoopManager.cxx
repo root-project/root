@@ -367,6 +367,15 @@ ColumnNames_t ROOT::Internal::RDF::GetBranchNames(TTree &t, bool allowDuplicates
    return bNames;
 }
 
+ROOT::Detail::RDF::RLoopManager::RLoopManager(const ROOT::Detail::RDF::ColumnNames_t &defaultColumns)
+   : fDefaultColumns(defaultColumns),
+     fNSlots(RDFInternal::GetNSlots()),
+     fNewSampleNotifier(fNSlots),
+     fSampleInfos(fNSlots),
+     fDatasetColumnReaders(fNSlots)
+{
+}
+
 RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})),
      fDefaultColumns(defaultBranches),
@@ -996,6 +1005,9 @@ void RLoopManager::Run(bool jit)
    s.Start();
 
    switch (fLoopType) {
+   case ELoopType::kInvalid:
+      throw std::runtime_error("RDataFrame: executing the computation graph without a data source, aborting.");
+      break;
    case ELoopType::kNoFilesMT: RunEmptySourceMT(); break;
    case ELoopType::kROOTFilesMT: RunTreeProcessorMT(); break;
    case ELoopType::kDataSourceMT: RunDataSourceMT(); break;
@@ -1245,6 +1257,11 @@ void RLoopManager::ChangeBeginAndEndEntries(Long64_t begin, Long64_t end)
    fEndEntry = end;
 }
 
+void ROOT::Detail::RDF::RLoopManager::SetTTreeLifeline(std::any lifeline)
+{
+   fTTreeLifeline = std::move(lifeline);
+}
+
 /**
  * \brief Helper function to open a file (or the first file from a glob).
  * This function is used at construction time of an RDataFrame, to check the
@@ -1387,3 +1404,12 @@ ROOT::Detail::RDF::CreateLMFromFile(std::string_view datasetName, const std::vec
 
 // outlined to pin virtual table
 ROOT::Detail::RDF::RLoopManager::~RLoopManager() = default;
+
+void ROOT::Detail::RDF::RLoopManager::SetDataSource(std::unique_ptr<ROOT::RDF::RDataSource> dataSource)
+{
+   if (dataSource) {
+      fDataSource = std::move(dataSource);
+      fDataSource->SetNSlots(fNSlots);
+      fLoopType = ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource;
+   }
+}

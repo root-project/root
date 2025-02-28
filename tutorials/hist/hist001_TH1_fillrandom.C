@@ -1,9 +1,8 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Fill a 1D histogram with random values using predefined functions
+/// Fill a 1D histogram with random values using predefined functions.
 ///
-/// \macro_image
 /// \macro_code
 ///
 /// \date November 2024

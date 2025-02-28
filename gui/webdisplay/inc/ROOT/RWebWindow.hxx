@@ -394,6 +394,8 @@ public:
 
    void SetCallBacks(WebWindowConnectCallback_t conn, WebWindowDataCallback_t data, WebWindowConnectCallback_t disconn = nullptr);
 
+   void Reset();
+
    void SetConnectCallBack(WebWindowConnectCallback_t func);
 
    void SetDataCallBack(WebWindowDataCallback_t func);

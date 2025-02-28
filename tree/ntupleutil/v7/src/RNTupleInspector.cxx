@@ -93,7 +93,8 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
          }
       }
 
-      fCompressedSize += std::accumulate(compressedPageSizes.begin(), compressedPageSizes.end(), static_cast<std::uint64_t>(0));
+      fCompressedSize +=
+         std::accumulate(compressedPageSizes.begin(), compressedPageSizes.end(), static_cast<std::uint64_t>(0));
       fColumnInfo.emplace(colId, RColumnInspector(colDesc, compressedPageSizes, elemSize, nElems));
    }
 }
@@ -228,8 +229,11 @@ const std::vector<ROOT::ENTupleColumnType> ROOT::Experimental::RNTupleInspector:
 void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorPrintFormat format, std::ostream &output)
 {
    struct ColumnTypeInfo {
-      std::uint32_t count;
-      std::uint64_t nElems, compressedSize, uncompressedSize;
+      std::uint64_t nElems = 0;
+      std::uint64_t compressedSize = 0;
+      std::uint64_t uncompressedSize = 0;
+      std::uint64_t nPages = 0;
+      std::uint32_t count = 0;
 
       void operator+=(const RColumnInspector &colInfo)
       {
@@ -237,33 +241,49 @@ void ROOT::Experimental::RNTupleInspector::PrintColumnTypeInfo(ENTupleInspectorP
          this->nElems += colInfo.GetNElements();
          this->compressedSize += colInfo.GetCompressedSize();
          this->uncompressedSize += colInfo.GetUncompressedSize();
+         this->nPages += colInfo.GetNPages();
+      }
+
+      // Helper method to calculate compression factor
+      float GetCompressionFactor() const
+      {
+         if (compressedSize == 0)
+            return 1.0;
+         return static_cast<float>(uncompressedSize) / static_cast<float>(compressedSize);
       }
    };
 
-   std::map<ROOT::ENTupleColumnType, ColumnTypeInfo> colTypeInfo;
+   std::map<ENTupleColumnType, ColumnTypeInfo> colTypeInfo;
 
+   // Collect information for each column
    for (const auto &[colId, colInfo] : fColumnInfo) {
       colTypeInfo[colInfo.GetType()] += colInfo;
    }
 
    switch (format) {
    case ENTupleInspectorPrintFormat::kTable:
-      output << " column type    | count   | # elements      | compressed bytes  | uncompressed bytes\n"
-             << "----------------|---------|-----------------|-------------------|--------------------" << std::endl;
-      for (const auto &[colType, typeInfo] : colTypeInfo) {
+      output << " column type    | count   | # elements  | compressed bytes | uncompressed bytes | compression ratio | "
+                "# pages \n"
+             << "----------------|---------|-------------|------------------|--------------------|-------------------|-"
+                "------"
+             << std::endl;
+      for (const auto &[colType, typeInfo] : colTypeInfo)
          output << std::setw(15) << Internal::RColumnElementBase::GetColumnTypeName(colType) << " |" << std::setw(8)
-                << typeInfo.count << " |" << std::setw(16) << typeInfo.nElems << " |" << std::setw(18)
-                << typeInfo.compressedSize << " |" << std::setw(18) << typeInfo.uncompressedSize << " " << std::endl;
-      }
+                << typeInfo.count << " |" << std::setw(12) << typeInfo.nElems << " |" << std::setw(17)
+                << typeInfo.compressedSize << " |" << std::setw(19) << typeInfo.uncompressedSize << " |" << std::fixed
+                << std::setprecision(3) << std::setw(18) << typeInfo.GetCompressionFactor() << " |" << std::setw(6)
+                << typeInfo.nPages << " " << std::endl;
       break;
    case ENTupleInspectorPrintFormat::kCSV:
-      output << "columnType,count,nElements,compressedSize,uncompressedSize" << std::endl;
+      output << "columnType,count,nElements,compressedSize,uncompressedSize,compressionFactor,nPages" << std::endl;
       for (const auto &[colType, typeInfo] : colTypeInfo) {
          output << Internal::RColumnElementBase::GetColumnTypeName(colType) << "," << typeInfo.count << ","
-                << typeInfo.nElems << "," << typeInfo.compressedSize << "," << typeInfo.uncompressedSize << std::endl;
+                << typeInfo.nElems << "," << typeInfo.compressedSize << "," << typeInfo.uncompressedSize << ","
+                << std::fixed << std::setprecision(3) << typeInfo.GetCompressionFactor() << "," << typeInfo.nPages
+                << std::endl;
       }
       break;
-   default: throw RException(R__FAIL("Invalid print format"));
+   default: R__ASSERT(false && "Invalid print format");
    }
 }
 
@@ -366,12 +386,14 @@ ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(std::initializer_l
                        colInfo.GetCompressedPageSizes().end());
    });
 
-   auto histMinMax = std::minmax_element(pageSizes.begin(), pageSizes.end());
-   hist->SetBins(nBins, *histMinMax.first,
-                 *histMinMax.second + ((*histMinMax.second - *histMinMax.first) / static_cast<double>(nBins)));
+   if (!pageSizes.empty()) {
+      auto histMinMax = std::minmax_element(pageSizes.begin(), pageSizes.end());
+      hist->SetBins(nBins, *histMinMax.first,
+                    *histMinMax.second + ((*histMinMax.second - *histMinMax.first) / static_cast<double>(nBins)));
 
-   for (const auto pageSize : pageSizes) {
-      hist->Fill(pageSize);
+      for (const auto pageSize : pageSizes) {
+         hist->Fill(pageSize);
+      }
    }
 
    return hist;
@@ -409,6 +431,9 @@ ROOT::Experimental::RNTupleInspector::GetPageSizeDistribution(std::initializer_l
          pageSizesForColType.insert(pageSizesForColType.end(), colInfo.GetCompressedPageSizes().begin(),
                                     colInfo.GetCompressedPageSizes().end());
       });
+      if (pageSizesForColType.empty())
+         continue;
+
       pageSizes.emplace(colType, pageSizesForColType);
 
       auto histMinMax = std::minmax_element(pageSizesForColType.begin(), pageSizesForColType.end());

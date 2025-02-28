@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Different charges depending on region
+/// \preview Different charges depending on region.
 ///
 /// \macro_image
 /// \macro_code

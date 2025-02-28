@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// Draw 2-Dim functions.
+/// \preview Draw 2-Dim functions.
 ///
 /// \macro_image
 /// \macro_code

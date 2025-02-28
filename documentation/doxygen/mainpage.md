@@ -25,6 +25,6 @@ to Reference Guides for all %ROOT versions.
 ### Provide your feedback
 If you have suggestions about how to improve this documentation, you can let us know:
 
-- With a [PR](https://github.com/root-project/root)
+- With a [pull request](https://github.com/root-project/root/pulls)
 - On the [ROOT Forum](https://root-forum.cern.ch)
-- On [our tracker](https://github.com/root-project/root/issues)
+- On [our issue tracker](https://github.com/root-project/root/issues)

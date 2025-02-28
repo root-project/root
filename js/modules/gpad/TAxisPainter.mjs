@@ -178,7 +178,7 @@ const AxisPainterMethods = {
          let res = val.toFixed(this.ndig);
          const p = res.indexOf('.');
          if ((p > 0) && settings.StripAxisLabels) {
-            while ((res.length >= p) && ((res[res.length-1] === '0') || (res[res.length-1] === '.')))
+            while ((res.length >= p) && ((res.at(-1) === '0') || (res.at(-1) === '.')))
                res = res.slice(0, res.length - 1);
          }
          return res;
@@ -233,8 +233,8 @@ const AxisPainterMethods = {
             sum1 += diff;
             sum2 += diff**2;
          }
-         const mean = sum1/(arr.length-1),
-             dev = sum2/(arr.length-1) - mean**2;
+         const mean = sum1/(arr.length - 1),
+             dev = sum2/(arr.length - 1) - mean**2;
 
          if (dev <= 0) return true;
          if (Math.abs(mean) < 1e-100) return false;
@@ -660,9 +660,11 @@ class TAxisPainter extends ObjectPainter {
       handle.minor = handle.middle = handle.major = ticks;
 
       if (only_major_as_array) {
-         const res = handle.major, delta = (this.scale_max - this.scale_min)*1e-5;
-         if (res[0] > this.scale_min + delta) res.unshift(this.scale_min);
-         if (res[res.length-1] < this.scale_max - delta) res.push(this.scale_max);
+         const res = handle.major, delta = (this.scale_max - this.scale_min) * 1e-5;
+         if (res.at(0) > this.scale_min + delta)
+            res.unshift(this.scale_min);
+         if (res.at(-1) < this.scale_max - delta)
+            res.push(this.scale_max);
          return res;
       }
 
@@ -726,8 +728,8 @@ class TAxisPainter extends ObjectPainter {
          let maxorder = 0, minorder = 0, exclorder3 = false;
 
          if (!optionNoexp && !this.cutLabels()) {
-            const maxtick = Math.max(Math.abs(handle.major[0]), Math.abs(handle.major[handle.major.length-1])),
-                  mintick = Math.min(Math.abs(handle.major[0]), Math.abs(handle.major[handle.major.length-1])),
+            const maxtick = Math.max(Math.abs(handle.major.at(0)), Math.abs(handle.major.at(-1))),
+                  mintick = Math.min(Math.abs(handle.major.at(0)), Math.abs(handle.major.at(-1))),
                   ord1 = (maxtick > 0) ? Math.round(Math.log10(maxtick)/3)*3 : 0,
                   ord2 = (mintick > 0) ? Math.round(Math.log10(mintick)/3)*3 : 0;
 

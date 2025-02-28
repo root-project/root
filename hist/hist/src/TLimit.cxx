@@ -75,7 +75,7 @@
  infile->Close();
 ~~~
  More information can still be found on [this page](http://cern.ch/aleph-proj-alphapp/doc/tlimit.html)
- \see https://doi.org/10.1088/0954-3899/28/10/313 and https://cds.cern.ch/record/451614/files/open-2000-205.pdf
+ \see https://doi.org/10.1088/0954-3899/28/10/313, https://cds.cern.ch/record/451614/files/open-2000-205.pdf
  \note see note about: "Should I use TRolke, TFeldmanCousins, TLimit?" in the TRolke class description.
  */
 

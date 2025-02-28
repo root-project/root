@@ -605,15 +605,6 @@ if(MSVC)
   string(REPLACE "-I${CMAKE_SOURCE_DIR}/cmake/win" "" __cflags "${__cflags}")
 endif()
 
-if (cxxmodules)
-  # Re-add the -Wno-module-import-in-extern-c which we just filtered out.
-  # We want it because it changes the module cache hash and causes modules to be
-  # rebuilt.
-  # FIXME: We should review how we do the regex.
-  set(ROOT_CXX_FLAGS "${ROOT_CXX_FLAGS} -Wno-module-import-in-extern-c")
-  set(ROOT_C_FLAGS "${ROOT_C_FLAGS} -Wno-module-import-in-extern-c")
-endif()
-
 string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __fflags "${CMAKE_Fortran_FLAGS}")
 string(REGEX MATCHALL "(-Wp,)?-(D|U)[^ ]*" __defs "${CMAKE_CXX_FLAGS}")
 set(ROOT_COMPILER_FLAG_HINTS "#

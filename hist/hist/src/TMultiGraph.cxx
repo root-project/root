@@ -654,7 +654,7 @@ TFitResultPtr TMultiGraph::Fit(const char *fname, Option_t *option, Option_t *, 
 ///
 ///  ### Associated functions
 ///
-///  One or more object (typically a TF1*) can be added to the list
+///  One or more objects (typically a TF1*) can be added to the list
 ///  of functions (fFunctions) associated to each graph.
 ///  When TGraph::Fit is invoked, the fitted function is added to this list.
 ///  Given a graph gr, one can retrieve an associated function
@@ -1595,15 +1595,8 @@ void TMultiGraph::RecursiveRemove(TObject *obj)
 
 void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TMultiGraph::Class()))
-      out<<"   ";
-   else
-      out<<"   TMultiGraph *";
-   out<<"multigraph = new TMultiGraph();"<<std::endl;
-   out<<"   multigraph->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
-   out<<"   multigraph->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "multigraph");
+   SavePrimitiveNameTitle(out, "multigraph");
 
    TIter iter(fGraphs);
 
@@ -1614,7 +1607,7 @@ void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (l) {
       out<<"   "<<l+7<<"->AddBin(multigraph);"<<std::endl;
    } else {
-      out<<"   multigraph->Draw(" <<quote<<option<<quote<<");"<<std::endl;
+      out<<"   multigraph->Draw(\"" << option << "\");"<<std::endl;
    }
    TAxis *xaxis = GetXaxis();
    TAxis *yaxis = GetYaxis();

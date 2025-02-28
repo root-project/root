@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Example creating a simple ratio plot of two histograms using the `pois` division option.
+/// \preview Example creating a simple ratio plot of two histograms using the "pois" division option.
 /// Two histograms are set up and filled with random numbers. The constructor of `TRatioPlot`
 /// takes the two histograms, name and title for the object, drawing options for the histograms
 /// (`hist` and `E` in this case) and a drawing option for the output graph.

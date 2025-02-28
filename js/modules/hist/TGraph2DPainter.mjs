@@ -1412,7 +1412,7 @@ class TGraph2DPainter extends ObjectPainter {
       if (this.options.Triangles)
          this.drawTriangles(fp, graph, levels, palette);
 
-      for (let lvl = 0; lvl < levels.length-1; ++lvl) {
+      for (let lvl = 0; lvl < levels.length - 1; ++lvl) {
          const lvl_zmin = Math.max(levels[lvl], fp.scale_zmin),
                lvl_zmax = Math.min(levels[lvl+1], fp.scale_zmax);
 

@@ -67,7 +67,7 @@ ROOT::Experimental::RFieldDescriptor ROOT::Experimental::RFieldDescriptor::Clone
 
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc,
-                                                  const RCreateFieldOptions &options) const
+                                                  const ROOT::RCreateFieldOptions &options) const
 {
    if (GetStructure() == ROOT::ENTupleStructure::kStreamer) {
       auto streamerField = std::make_unique<RStreamerField>(GetFieldName(), GetTypeName());
@@ -78,7 +78,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
    // The structure may be unknown if the descriptor comes from a deserialized field with an unknown structural role.
    // For forward compatibility, we allow this case and return an InvalidField.
    if (GetStructure() == ROOT::ENTupleStructure::kUnknown) {
-      if (options.fReturnInvalidOnError) {
+      if (options.GetReturnInvalidOnError()) {
          auto invalidField = std::make_unique<RInvalidField>(GetFieldName(), GetTypeName(), "",
                                                              RInvalidField::RCategory::kUnknownStructure);
          invalidField->SetOnDiskId(fFieldId);
@@ -125,7 +125,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
       // NOTE: Unwrap() here may throw an exception, hence the try block.
       // If options.fReturnInvalidOnError is false we just rethrow it, otherwise we return an InvalidField wrapping the
       // error.
-      auto field = Internal::CallFieldBaseCreate(fieldName, typeName, typeName, options, &ntplDesc, fFieldId).Unwrap();
+      auto field = Internal::CallFieldBaseCreate(fieldName, typeName, options, &ntplDesc, fFieldId).Unwrap();
       field->SetOnDiskId(fFieldId);
 
       for (auto &subfield : *field) {
@@ -140,7 +140,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
 
       return field;
    } catch (RException &ex) {
-      if (options.fReturnInvalidOnError)
+      if (options.GetReturnInvalidOnError())
          return std::make_unique<RInvalidField>(GetFieldName(), GetTypeName(), ex.GetError().GetReport(),
                                                 RInvalidField::RCategory::kGeneric);
       else
@@ -638,17 +638,17 @@ ROOT::Experimental::RNTupleDescriptor::CreateModel(const RCreateModelOptions &op
 {
    auto fieldZero = std::make_unique<RFieldZero>();
    fieldZero->SetOnDiskId(GetFieldZeroId());
-   auto model =
-      options.fCreateBare ? RNTupleModel::CreateBare(std::move(fieldZero)) : RNTupleModel::Create(std::move(fieldZero));
-   RCreateFieldOptions createFieldOpts{};
-   createFieldOpts.fReturnInvalidOnError = options.fForwardCompatible;
-   createFieldOpts.fEmulateUnknownTypes = options.fEmulateUnknownTypes;
+   auto model = options.GetCreateBare() ? RNTupleModel::CreateBare(std::move(fieldZero))
+                                        : RNTupleModel::Create(std::move(fieldZero));
+   ROOT::RCreateFieldOptions createFieldOpts;
+   createFieldOpts.SetReturnInvalidOnError(options.GetForwardCompatible());
+   createFieldOpts.SetEmulateUnknownTypes(options.GetEmulateUnknownTypes());
    for (const auto &topDesc : GetTopLevelFields()) {
       auto field = topDesc.CreateField(*this, createFieldOpts);
       if (field->GetTraits() & RFieldBase::kTraitInvalidField)
          continue;
 
-      if (options.fReconstructProjections && topDesc.IsProjectedField()) {
+      if (options.GetReconstructProjections() && topDesc.IsProjectedField()) {
          model->AddProjectedField(std::move(field), [this](const std::string &targetName) -> std::string {
             return GetQualifiedFieldName(GetFieldDescriptor(FindFieldId(targetName)).GetProjectionSourceId());
          });

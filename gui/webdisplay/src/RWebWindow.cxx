@@ -187,7 +187,7 @@ THttpServer *RWebWindow::GetServer()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Show window in specified location
-/// \see ROOT::RWebWindowsManager::Show for more info
+/// \see ROOT::RWebWindowsManager::Show
 /// \return (future) connection id (or 0 when fails)
 
 unsigned RWebWindow::Show(const RWebDisplayArgs &args)
@@ -198,8 +198,8 @@ unsigned RWebWindow::Show(const RWebDisplayArgs &args)
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Start headless browser for specified window
 /// Normally only single instance is used, but many can be created
-/// See ROOT::RWebWindowsManager::Show() docu for more info
-/// returns (future) connection id (or 0 when fails)
+/// \see ROOT::RWebWindowsManager::Show
+/// \return (future) connection id (or 0 when fails)
 
 unsigned RWebWindow::MakeHeadless(bool create_new)
 {
@@ -519,11 +519,12 @@ unsigned RWebWindow::AddDisplayHandle(bool headless_mode, const std::string &key
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Check if provided hash, ntry parameters from the connection request could be accepted
-/// \param hash - provided hash value which should match with HMAC hash for generated before connection key
-/// \param ntry - connection attempt number provided together with request, must come in increasing order
-/// \param remote - boolean flag indicating if request comming from remote (via real http),
+/// \param conn shared pointer to the web connection
+/// \param hash provided hash value which should match with HMAC hash for generated before connection key
+/// \param ntry connection attempt number provided together with request, must come in increasing order
+/// \param remote boolean flag indicating if request comming from remote (via real http),
 ///                 for local displays like Qt5 or CEF simpler connection rules are applied
-/// \param test_first_time - true if hash/ntry tested for the first time, false appears only with
+/// \param test_first_time true if hash/ntry tested for the first time, false appears only with
 ///                          websocket when connection accepted by server
 
 bool RWebWindow::_CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &hash, const std::string &ntry, bool remote, bool test_first_time)
@@ -1835,6 +1836,22 @@ void RWebWindow::SetCallBacks(WebWindowConnectCallback_t conn, WebWindowDataCall
    fConnCallback = conn;
    fDataCallback = data;
    fDisconnCallback = disconn;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Reset window call-backs and close connections
+/// Should be invoked in widget destructor to simplify cleanup process
+
+void RWebWindow::Reset()
+{
+   CloseConnections();
+
+   fConnCallback = nullptr;
+   fDataCallback = nullptr;
+   fDisconnCallback = nullptr;
+
+   if (fWSHandler)
+      fWSHandler->SetDisabled();
 }
 
 /////////////////////////////////////////////////////////////////////////////////

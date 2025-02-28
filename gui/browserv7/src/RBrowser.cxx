@@ -344,6 +344,7 @@ RBrowser::~RBrowser()
    if (fWebWindow) {
       fWebWindow->GetManager()->SetShowCallback(nullptr);
       fWebWindow->GetManager()->SetDeleteCallback(nullptr);
+      fWebWindow->Reset();
    }
 }
 
@@ -510,8 +511,6 @@ void RBrowser::Show(const RWebDisplayArgs &args, bool always_start_new_browser)
 {
    if (!fWebWindow->NumConnections() || always_start_new_browser) {
       fWebWindow->Show(args);
-   } else {
-      SendInitMsg(0);
    }
 }
 

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Create grey scale of `200 x 200` boxes.
+/// \preview Create grey scale of 200x200 boxes.
 ///
 /// \macro_image
 /// \macro_code

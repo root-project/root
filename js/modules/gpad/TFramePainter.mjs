@@ -1013,7 +1013,8 @@ const TooltipHandler = {
       }
 
       // ignore all events from non-left button
-      if (evnt.button !== 0) return;
+      if (evnt.button !== 0)
+         return;
 
       evnt.preventDefault();
 
@@ -2581,6 +2582,7 @@ class TFramePainter extends ObjectPainter {
    }
 
    /** @summary Change log state of specified axis
+     * @param {string} axis - name of axis like 'x' or 'y'
      * @param {number} value - 0 (linear), 1 (log) or 2 (log2) */
    changeAxisLog(axis, value) {
       const pp = this.getPadPainter(),
@@ -2843,7 +2845,7 @@ class TFramePainter extends ObjectPainter {
    }
 
    /** @summary Function can be used for zooming into specified range
-     * @desc if both limits for each axis 0 (like xmin === xmax === 0), axis will be unzoomed
+     * @desc if both limits for each axis 0 (like xmin === xmax === 0), axis will be un-zoomed
      * @param {number} xmin
      * @param {number} xmax
      * @param {number} [ymin]

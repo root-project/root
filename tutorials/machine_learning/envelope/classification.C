@@ -9,22 +9,20 @@
 #include "TMVA/Factory.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/Tools.h"
+#include "TROOT.h"
 #include "TMVA/Classification.h"
 
 void classification(UInt_t jobs = 4)
 {
    TMVA::Tools::Instance();
 
-   TFile *input(0);
-   TString fname = "./tmva_class_example.root";
+   TFile *input(nullptr);
+   TString fname = gROOT->GetTutorialDir() + "/machine_learning/data/tmva_class_example.root";
    if (!gSystem->AccessPathName(fname)) {
       input = TFile::Open(fname); // check if file in local directory exists
-   } else {
-      TFile::SetCacheFileDir(".");
-      input = TFile::Open("http://root.cern/files/tmva_class_example.root", "CACHEREAD");
    }
    if (!input) {
-      std::cout << "ERROR: could not open data file" << std::endl;
+      std::cout << "ERROR: could not open data file" << fname << std::endl;
       exit(1);
    }
 

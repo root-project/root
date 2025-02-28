@@ -265,13 +265,6 @@ namespace cling {
     }
 
     Sema& SemaRef = getSema();
-    Preprocessor& PP = SemaRef.getPreprocessor();
-
-    m_LookupHelper.reset(new LookupHelper(new Parser(PP, SemaRef,
-                                                     /*SkipFunctionBodies*/false,
-                                                     /*isTemp*/true), this));
-    if (!m_LookupHelper)
-      return;
 
     if (!isInSyntaxOnlyMode() && !m_Opts.CompilerOpts.CUDADevice) {
       m_Executor.reset(new IncrementalExecutor(SemaRef.Diags, *getCI(),
@@ -316,6 +309,10 @@ namespace cling {
         m_IncrParser->commitTransaction(I, false);
       return;
     }
+
+    m_LookupHelper.reset(new LookupHelper(m_IncrParser->getParser(), this));
+    if (!m_LookupHelper)
+      return;
 
     // When not using C++ modules, we now have a PCH and we can safely setup
     // our callbacks without fearing that they get overwritten by clang code.
@@ -672,7 +669,7 @@ namespace cling {
     llvm::raw_ostream &where = cling::log();
     // `.stats decl' and `.stats asttree FILTER' cause deserialization; force transaction
     PushTransactionRAII RAII(this);
-    if (what.equals("asttree")) {
+    if (what == "asttree") {
       std::unique_ptr<clang::ASTConsumer> printer =
         clang::CreateASTDumper(nullptr /*Dump to stdout.*/,
                                filter, true  /*DumpDecls*/,
@@ -681,11 +678,11 @@ namespace cling {
                                false /*DumpDeclTypes*/,
                                ADOF_Default /*DumpFormat*/);
       printer->HandleTranslationUnit(getSema().getASTContext());
-    } else if (what.equals("ast"))
+    } else if (what == "ast")
       getSema().getASTContext().PrintStats();
-    else if (what.equals("decl"))
+    else if (what == "decl")
       ClangInternalState::printLookupTables(where, getSema().getASTContext());
-    else if (what.equals("undo"))
+    else if (what == "undo")
       m_IncrParser->printTransactionStructure();
   }
 

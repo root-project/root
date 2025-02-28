@@ -136,19 +136,6 @@ if (NOT MSVC AND NOT APPLE)
 endif()
 set(CMAKE_VISIBILITY_INLINES_HIDDEN "ON")
 
-#--- Build LLVM/Clang with modules -----------------------------------------------------------------
-if(cxxmodules)
-  # LLVM knows how to configure its modules builds. We cannot just add the flags
-  # because the cxxmodules builds in llvm have different build dependency order.
-  string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-  string(REPLACE "${ROOT_CXXMODULES_CFLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
-  if(libcxx)
-    # FIXME: We cannot build LLVM/clang with modules on with libstdc++, yet.
-    # FIXME: We cannot build LLVM/clang with modules on with libc++, too.
-    #set (LLVM_ENABLE_MODULES ON CACHE BOOL "Override the default LLVM_ENABLE_MODULES option value." )
-  endif(libcxx)
-endif(cxxmodules)
-
 if(gcctoolchain)
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS --gcc-toolchain=${gcctoolchain})
 endif()
@@ -262,77 +249,20 @@ if(builtin_llvm)
     set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/bin/llvm-tblgen")
   endif()
 else()
-  # Rely on llvm-config.
-  set(CONFIG_OUTPUT)
-  find_program(LLVM_CONFIG NAMES "llvm-config-${ROOT_LLVM_VERSION_REQUIRED_MAJOR}" "llvm-config")
-  if(LLVM_CONFIG)
-    message(STATUS "Found LLVM_CONFIG as ${LLVM_CONFIG}")
-    set(CONFIG_COMMAND ${LLVM_CONFIG}
-      "--assertion-mode"
-      "--bindir"
-      "--libdir"
-      "--includedir"
-      "--prefix"
-      "--cmakedir"
-      "--build-mode"
-      "--version")
-    execute_process(
-      COMMAND ${CONFIG_COMMAND}
-      RESULT_VARIABLE HAD_ERROR
-      OUTPUT_VARIABLE CONFIG_OUTPUT
-    )
-    if(NOT HAD_ERROR)
-      string(REGEX REPLACE
-        "[ \t]*[\r\n]+[ \t]*" ";"
-        CONFIG_OUTPUT ${CONFIG_OUTPUT})
-    else()
-      string(REPLACE ";" " " CONFIG_COMMAND_STR "${CONFIG_COMMAND}")
-      message(STATUS "${CONFIG_COMMAND_STR}")
-      message(FATAL_ERROR "llvm-config failed with status ${HAD_ERROR}")
-    endif()
-  else()
-    message(FATAL_ERROR "llvm-config not found -- ${LLVM_CONFIG}")
-  endif()
+  find_package(LLVM REQUIRED CONFIG)
+  message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION} in ${LLVM_CMAKE_DIR}")
 
-  list(GET CONFIG_OUTPUT 0 ENABLE_ASSERTIONS)
-  list(GET CONFIG_OUTPUT 1 TOOLS_BINARY_DIR)
-  list(GET CONFIG_OUTPUT 2 LIBRARY_DIR)
-  list(GET CONFIG_OUTPUT 3 INCLUDE_DIR)
-  list(GET CONFIG_OUTPUT 4 LLVM_OBJ_ROOT)
-  list(GET CONFIG_OUTPUT 5 LLVM_CONFIG_CMAKE_PATH)
-  list(GET CONFIG_OUTPUT 6 LLVM_BUILD_MODE)
-  list(GET CONFIG_OUTPUT 7 LLVM_VERSION)
+  separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
+  add_definitions(${LLVM_DEFINITIONS_LIST})
+  include_directories(${LLVM_INCLUDE_DIRS})
 
-  message(STATUS "External llvm built in ${LLVM_BUILD_MODE} mode.")
-
-  if(NOT MSVC_IDE)
-    set(LLVM_ENABLE_ASSERTIONS ${ENABLE_ASSERTIONS}
-      CACHE BOOL "Enable assertions")
-    # Assertions should follow llvm-config's.
-    mark_as_advanced(LLVM_ENABLE_ASSERTIONS)
-  endif()
-
-  set(LLVM_TOOLS_BINARY_DIR ${TOOLS_BINARY_DIR} CACHE PATH "Path to llvm/bin")
-  set(LLVM_LIBRARY_DIR ${LIBRARY_DIR} CACHE PATH "Path to llvm/lib")
-  set(LLVM_MAIN_INCLUDE_DIR ${INCLUDE_DIR} CACHE PATH "Path to llvm/include")
-  set(LLVM_BINARY_DIR ${LLVM_OBJ_ROOT} CACHE PATH "Path to LLVM build tree")
-
-  set(LLVM_DIR "${LLVM_BINARY_DIR}")
-
-  # Normalize LLVM_CMAKE_PATH. --cmakedir might contain backslashes.
-  # CMake assumes slashes as PATH.
-  file(TO_CMAKE_PATH ${LLVM_CONFIG_CMAKE_PATH} LLVM_CMAKE_PATH)
+  # Make some LLVM variables globally available.
+  set(LLVM_INCLUDE_DIRS ${LLVM_INCLUDE_DIRS} CACHE PATH "Path to llvm/include")
+  set(LLVM_LIBRARY_DIR ${LLVM_LIBRARY_DIR} CACHE PATH "Path to llvm/lib")
 
   find_program(LLVM_TABLEGEN_EXE "llvm-tblgen" ${LLVM_TOOLS_BINARY_DIR}
     NO_DEFAULT_PATH)
 
-  set(LLVMCONFIG_FILE "${LLVM_CMAKE_PATH}/LLVMConfig.cmake")
-  if(EXISTS ${LLVMCONFIG_FILE})
-    list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_PATH}")
-    include(${LLVMCONFIG_FILE})
-  else()
-    message(FATAL_ERROR "Not found: ${LLVMCONFIG_FILE}")
-  endif()
   # We already FORCE-d the CACHE value to OFF, but LLVMConfig.cmake might have
   # set the variable to ON again...
   set(LLVM_ENABLE_WARNINGS OFF)
@@ -373,13 +303,6 @@ else()
   if (NOT DEFINED LLVM_INCLUDE_TESTS)
     set(LLVM_INCLUDE_TESTS ON)
   endif()
-
-  include_directories("${LLVM_BINARY_DIR}/include" "${LLVM_MAIN_INCLUDE_DIR}")
-  link_directories("${LLVM_LIBRARY_DIR}")
-
-#  set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin )
-#  set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX} )
-#  set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX} )
 
   if(LLVM_INCLUDE_TESTS OR clingtest)
     find_package(Python3 3.8 REQUIRED COMPONENTS Interpreter)
@@ -435,10 +358,6 @@ else()
     endif()
   endif()
 
-  set(LLVM_INCLUDE_DIRS ${LLVM_MAIN_INCLUDE_DIR}
-    CACHE STRING "System LLVM include directories."
-    )
-
   # We checked above that LLVM_VERSION is what we require in ROOT_LLVM_VERSION_REQUIRED_MAJOR.
   # To simplify code, just forward that requirement to the rest of ROOT, for example to
   # construct the resource directory in core/clingutils.
@@ -472,7 +391,8 @@ if (builtin_clang)
     CACHE STRING "Clang include directories.")
   set(CLANG_CMAKE_DIR "${CMAKE_BINARY_DIR}/lib/cmake/clang/")
 else()
-  set(CLANG_CMAKE_DIR "${LLVM_BINARY_DIR}/lib/cmake/clang/")
+  find_package(Clang REQUIRED CONFIG)
+  message(STATUS "Found Clang ${CLANG_PACKAGE_VERSION} in ${CLANG_CMAKE_DIR}")
 endif()
 
 # Reset the compiler flags after compiling LLVM and Clang
@@ -594,3 +514,15 @@ mark_as_advanced(FORCE BUG_REPORT_URL BUILD_CLANG_FORMAT_VS_PLUGIN BUILD_SHARED_
                        C_INCLUDE_DIRS DEFAULT_SYSROOT FFI_INCLUDE_DIR FFI_LIBRARY_DIR
                        GCC_INSTALL_PREFIX LIBCLANG_BUILD_STATIC TOOL_INFO_PLIST)
 mark_as_advanced(CLEAR LLVM_ENABLE_ASSERTIONS LLVM_BUILD_TYPE)
+
+##################### LIBINTEROP ###########################
+
+#---Set InterOp include directories, for any ROOT component that requires the headers--------------------------------------------------------
+set(CPPINTEROP_INCLUDE_DIRS
+  ${CMAKE_CURRENT_SOURCE_DIR}/CppInterOp/include
+  CACHE STRING "CppInterOp include directories.")
+
+#---Set InterOp to build on Cling, this can be toggled to use Clang-REPL-------------------------------------------------------
+set(CPPINTEROP_USE_CLING ON BOOL "Use Cling as backend")
+
+add_subdirectory(CppInterOp)

@@ -53,7 +53,7 @@ struct BasisFunction {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TLinearMinimizer
-/// \see Minuit2 for a newer version of this class
+/// \note See ROOT::Minuit2 for a newer version of this class.
 ///
 /// TLinearMinimizer, simple class implementing the ROOT::Math::Minimizer
 /// interface usingTLinearFitter. This class uses TLinearFitter to find directly

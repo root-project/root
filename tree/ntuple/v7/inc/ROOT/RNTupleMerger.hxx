@@ -34,7 +34,8 @@ namespace Experimental::Internal {
 
 enum class ENTupleMergingMode {
    /// The merger will discard all columns that aren't present in the prototype model (i.e. the model of the first
-   /// source)
+   /// source); also all subsequent RNTuples must contain at least all the columns that are present in the prototype
+   /// model
    kFilter,
    /// The merger will refuse to merge any 2 RNTuples whose schema doesn't match exactly
    kStrict,
@@ -82,33 +83,34 @@ struct RNTupleMergeOptions {
 /**
  * \class ROOT::Experimental::Internal::RNTupleMerger
  * \ingroup NTuple
- * \brief Given a set of RPageSources merge them into an RPageSink, optionally changing their compression.
+ * \brief Given a set of RPageSources merge them into an RPagePersistentSink, optionally changing their compression.
  *        This can also be used to change the compression of a single RNTuple by just passing a single source.
  */
 // clang-format on
 class RNTupleMerger final {
    friend class ROOT::RNTuple;
 
-   std::unique_ptr<RPageSink> fDestination;
+   std::unique_ptr<RPagePersistentSink> fDestination;
    std::unique_ptr<RPageAllocator> fPageAlloc;
    std::optional<TTaskGroup> fTaskGroup;
    std::unique_ptr<RNTupleModel> fModel;
 
    void MergeCommonColumns(RClusterPool &clusterPool, ROOT::DescriptorId_t clusterId,
-                           std::span<RColumnMergeInfo> commonColumns, const RCluster::ColumnSet_t &commonColumnSet,
-                           RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData);
+                           std::span<const RColumnMergeInfo> commonColumns,
+                           const RCluster::ColumnSet_t &commonColumnSet, RSealedPageMergeData &sealedPageData,
+                           const RNTupleMergeData &mergeData);
 
-   void MergeSourceClusters(RPageSource &source, std::span<RColumnMergeInfo> commonColumns,
-                            std::span<RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
+   void MergeSourceClusters(RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
+                            std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
 
    /// Creates a RNTupleMerger with the given destination.
    /// The model must be given if and only if `destination` has been initialized with that model
    /// (i.e. in case of incremental merging).
-   RNTupleMerger(std::unique_ptr<RPageSink> destination, std::unique_ptr<RNTupleModel> model);
+   RNTupleMerger(std::unique_ptr<RPagePersistentSink> destination, std::unique_ptr<RNTupleModel> model);
 
 public:
    /// Creates a RNTupleMerger with the given destination.
-   explicit RNTupleMerger(std::unique_ptr<RPageSink> destination);
+   explicit RNTupleMerger(std::unique_ptr<RPagePersistentSink> destination);
 
    /// Merge a given set of sources into the destination.
    RResult<void> Merge(std::span<RPageSource *> sources, const RNTupleMergeOptions &mergeOpts = RNTupleMergeOptions());

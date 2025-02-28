@@ -142,7 +142,7 @@ bool ROOT::Experimental::Internal::RPageSource::REntryRange::IntersectsWith(cons
    return true;
 }
 
-ROOT::Experimental::Internal::RPageSource::RPageSource(std::string_view name, const RNTupleReadOptions &options)
+ROOT::Experimental::Internal::RPageSource::RPageSource(std::string_view name, const ROOT::RNTupleReadOptions &options)
    : RPageStorage(name), fOptions(options)
 {
 }
@@ -151,7 +151,7 @@ ROOT::Experimental::Internal::RPageSource::~RPageSource() {}
 
 std::unique_ptr<ROOT::Experimental::Internal::RPageSource>
 ROOT::Experimental::Internal::RPageSource::Create(std::string_view ntupleName, std::string_view location,
-                                                  const RNTupleReadOptions &options)
+                                                  const ROOT::RNTupleReadOptions &options)
 {
    if (ntupleName.empty()) {
       throw RException(R__FAIL("empty RNTuple name"));
@@ -347,7 +347,7 @@ void ROOT::Experimental::Internal::RPageSource::UpdateLastUsedCluster(ROOT::Desc
    }
    std::size_t poolWindow = 0;
    while ((itr != fPreloadedClusters.end()) &&
-          (poolWindow < 2 * RNTupleReadOptionsManip::GetClusterBunchSize(fOptions))) {
+          (poolWindow < 2 * ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(fOptions))) {
       ++itr;
       ++poolWindow;
    }
@@ -660,7 +660,7 @@ bool ROOT::Experimental::Internal::RWritePageMemoryManager::TryUpdate(RColumn &c
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::Internal::RPageSink::RPageSink(std::string_view name, const RNTupleWriteOptions &options)
+ROOT::Experimental::Internal::RPageSink::RPageSink(std::string_view name, const ROOT::RNTupleWriteOptions &options)
    : RPageStorage(name), fOptions(options.Clone()), fWritePageMemoryManager(options.GetPageBufferBudget())
 {
    ROOT::Experimental::Internal::EnsureValidNameForRNTuple(name, "RNTuple").ThrowOnError();
@@ -688,9 +688,9 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RSealPageConfig &config)
    }
    auto nBytesZipped = nBytesPacked;
 
-   if ((config.fCompressionSetting != 0) || !config.fElement->IsMappable() || !config.fAllowAlias ||
+   if ((config.fCompressionSettings != 0) || !config.fElement->IsMappable() || !config.fAllowAlias ||
        config.fWriteChecksum) {
-      nBytesZipped = RNTupleCompressor::Zip(pageBuf, nBytesPacked, config.fCompressionSetting, config.fBuffer);
+      nBytesZipped = RNTupleCompressor::Zip(pageBuf, nBytesPacked, config.fCompressionSettings, config.fBuffer);
       if (!isAdoptedBuffer)
          delete[] pageBuf;
       pageBuf = reinterpret_cast<unsigned char *>(config.fBuffer);
@@ -715,7 +715,7 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RPage &page, const RColu
    RSealPageConfig config;
    config.fPage = &page;
    config.fElement = &element;
-   config.fCompressionSetting = GetWriteOptions().GetCompression();
+   config.fCompressionSettings = GetWriteOptions().GetCompression();
    config.fWriteChecksum = GetWriteOptions().GetEnablePageChecksums();
    config.fAllowAlias = true;
    config.fBuffer = fSealPageBuffer.data();
@@ -745,7 +745,7 @@ ROOT::Experimental::Internal::RPageSink::ReservePage(ColumnHandle_t columnHandle
 
 std::unique_ptr<ROOT::Experimental::Internal::RPageSink>
 ROOT::Experimental::Internal::RPagePersistentSink::Create(std::string_view ntupleName, std::string_view location,
-                                                          const RNTupleWriteOptions &options)
+                                                          const ROOT::RNTupleWriteOptions &options)
 {
    if (ntupleName.empty()) {
       throw RException(R__FAIL("empty RNTuple name"));
@@ -766,7 +766,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::Create(std::string_view ntupl
 }
 
 ROOT::Experimental::Internal::RPagePersistentSink::RPagePersistentSink(std::string_view name,
-                                                                       const RNTupleWriteOptions &options)
+                                                                       const ROOT::RNTupleWriteOptions &options)
    : RPageSink(name, options)
 {
 }
@@ -968,7 +968,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTu
 
    // Create model
    auto modelOpts = RNTupleDescriptor::RCreateModelOptions();
-   modelOpts.fReconstructProjections = true;
+   modelOpts.SetReconstructProjections(true);
    auto model = descriptor.CreateModel(modelOpts);
 
    // Serialize header and init from it

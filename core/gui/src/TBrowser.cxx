@@ -377,7 +377,8 @@ void TBrowser::Create(TObject *obj)
    gROOT->GetListOfGlobals(kTRUE);
    gROOT->GetListOfGlobalFunctions(kTRUE);
 
-   fContextMenu = new TContextMenu("BrowserContextMenu") ;
+   if (!IsWeb())
+      fContextMenu = new TContextMenu("BrowserContextMenu") ;
 
    // Fill the first list from the present TObject obj
    if (obj) {
@@ -391,6 +392,25 @@ void TBrowser::Create(TObject *obj)
    // The first list will be filled by TWin32BrowserImp ctor
    // with all browsable classes from TROOT
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw browser again if it was closed before
+/// If browser exists - just call Show method
+
+void TBrowser::Draw(Option_t *)
+{
+   if (fImp) {
+      fImp->Show();
+   } else {
+      Float_t cx = gStyle->GetScreenFactor();
+      UInt_t w = UInt_t(cx*800);
+      UInt_t h = UInt_t(cx*500);
+      fImp = gGuiFactory->CreateBrowserImp(this, "ROOT Object Browser", w, h, "");
+      if (fImp)
+         fImp->BrowseObj(gROOT);
+   }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute default action for selected object (action is specified

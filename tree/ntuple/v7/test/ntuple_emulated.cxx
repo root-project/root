@@ -56,7 +56,7 @@ struct Outer_Simple {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = false;
+      opts.SetEmulateUnknownTypes(false);
       try {
          auto model = desc.CreateModel(opts);
          FAIL() << "Creating a model without fEmulateUnknownTypes should fail";
@@ -67,7 +67,7 @@ struct Outer_Simple {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = true;
+      opts.SetEmulateUnknownTypes(true);
       auto model = desc.CreateModel(opts);
       ASSERT_NE(model, nullptr);
 
@@ -88,10 +88,19 @@ struct Outer_Simple {
       ASSERT_EQ(inner->GetSubFields()[0]->GetFieldName(), "fInt1");
    }
 
-   // Now test loading entries with a reader
+   // Now test loading entries with a reader.
+   // NOTE: using a TFile-based reader exercises the code path where the user-defined type
+   // gets loaded as an Emulated TClass, which we must make sure we handle properly.
    RNTupleDescriptor::RCreateModelOptions cmOpts;
-   cmOpts.fEmulateUnknownTypes = true;
-   reader = RNTupleReader::Open(cmOpts, "ntpl", fileGuard.GetPath());
+   cmOpts.SetEmulateUnknownTypes(true);
+
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   diagRAII.optionalDiag(kWarning, "TClass::Init", "no dictionary for class",
+                         /*matchFullMessage=*/false);
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
+   std::unique_ptr<ROOT::RNTuple> ntpl(file->Get<ROOT::RNTuple>("ntpl"));
+   reader = RNTupleReader::Open(cmOpts, *ntpl);
+
    reader->LoadEntry(0);
 }
 
@@ -149,7 +158,7 @@ struct Outer_Vecs {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = false;
+      opts.SetEmulateUnknownTypes(false);
       try {
          auto model = desc.CreateModel(opts);
          FAIL() << "Creating a model without fEmulateUnknownTypes should fail";
@@ -160,7 +169,7 @@ struct Outer_Vecs {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = true;
+      opts.SetEmulateUnknownTypes(true);
       auto model = desc.CreateModel(opts);
       ASSERT_NE(model, nullptr);
 
@@ -195,7 +204,81 @@ struct Outer_Vecs {
 
    // Now test loading entries with a reader
    RNTupleDescriptor::RCreateModelOptions cmOpts;
-   cmOpts.fEmulateUnknownTypes = true;
+   cmOpts.SetEmulateUnknownTypes(true);
+   reader = RNTupleReader::Open(cmOpts, "ntpl", fileGuard.GetPath());
+   reader->LoadEntry(0);
+}
+
+TEST(RNTupleEmulated, EmulatedFields_VecsTemplatedWrapper)
+{
+   FileRaii fileGuard("test_ntuple_emulated_fields_vecs_templated_wrapper.root");
+
+   ExecInFork([&] {
+      // The child process writes the file and exits, but the file must be preserved to be read by the parent.
+      fileGuard.PreserveFile();
+
+      ASSERT_TRUE(gInterpreter->Declare(R"(
+template <typename T>
+struct TemplatedWrapper {
+   T fValue;
+};
+)"));
+
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("vec", "std::vector<TemplatedWrapper<float>>").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+
+      void *ptr = writer->GetModel().GetDefaultEntry().GetPtr<void>("vec").get();
+      DeclarePointer("std::vector<TemplatedWrapper<float>>", "ptrVec", ptr);
+
+      ProcessLine("ptrVec->push_back(TemplatedWrapper<float>{1.0f});");
+      writer->Fill();
+
+      writer.reset();
+   });
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+
+   {
+      RNTupleDescriptor::RCreateModelOptions opts;
+      opts.SetEmulateUnknownTypes(false);
+      try {
+         auto model = desc.CreateModel(opts);
+         FAIL() << "Creating a model without fEmulateUnknownTypes should fail";
+      } catch (const ROOT::RException &ex) {
+         ASSERT_THAT(ex.GetError().GetReport(), testing::HasSubstr("unknown type"));
+      }
+   }
+
+   {
+      RNTupleDescriptor::RCreateModelOptions opts;
+      opts.SetEmulateUnknownTypes(true);
+      auto model = desc.CreateModel(opts);
+      ASSERT_NE(model, nullptr);
+
+      const auto &vecField = model->GetConstField("vec");
+      ASSERT_EQ(vecField.GetTypeName(), "std::vector<TemplatedWrapper<float>>");
+      ASSERT_EQ(vecField.GetStructure(), ROOT::ENTupleStructure::kCollection);
+      ASSERT_EQ(vecField.GetSubFields().size(), 1);
+
+      const auto *wrapperField = vecField.GetSubFields()[0];
+      ASSERT_EQ(wrapperField->GetTypeName(), "TemplatedWrapper<float>");
+      ASSERT_EQ(wrapperField->GetStructure(), ROOT::ENTupleStructure::kRecord);
+      ASSERT_NE(wrapperField->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
+      ASSERT_EQ(wrapperField->GetSubFields().size(), 1);
+
+      const auto *innerField = wrapperField->GetSubFields()[0];
+      ASSERT_EQ(innerField->GetTypeName(), "float");
+      ASSERT_EQ(innerField->GetFieldName(), "fValue");
+      ASSERT_EQ(innerField->GetStructure(), ROOT::ENTupleStructure::kLeaf);
+   }
+
+   // Now test loading entries with a reader
+   RNTupleDescriptor::RCreateModelOptions cmOpts;
+   cmOpts.SetEmulateUnknownTypes(true);
    reader = RNTupleReader::Open(cmOpts, "ntpl", fileGuard.GetPath());
    reader->LoadEntry(0);
 }
@@ -240,7 +323,7 @@ struct Outer_EmptyStruct {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = false;
+      opts.SetEmulateUnknownTypes(false);
       try {
          auto model = desc.CreateModel(opts);
          FAIL() << "Creating a model without fEmulateUnknownTypes should fail";
@@ -251,7 +334,7 @@ struct Outer_EmptyStruct {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = true;
+      opts.SetEmulateUnknownTypes(true);
       auto model = desc.CreateModel(opts);
       ASSERT_NE(model, nullptr);
 
@@ -271,7 +354,7 @@ struct Outer_EmptyStruct {
 
    // Now test loading entries with a reader
    RNTupleDescriptor::RCreateModelOptions cmOpts;
-   cmOpts.fEmulateUnknownTypes = true;
+   cmOpts.SetEmulateUnknownTypes(true);
    reader = RNTupleReader::Open(cmOpts, "ntpl", fileGuard.GetPath());
    reader->LoadEntry(0);
 }
@@ -318,7 +401,7 @@ struct Inner_EmptyVec {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = false;
+      opts.SetEmulateUnknownTypes(false);
       try {
          auto model = desc.CreateModel(opts);
          FAIL() << "Creating a model without fEmulateUnknownTypes should fail";
@@ -329,7 +412,7 @@ struct Inner_EmptyVec {
 
    {
       RNTupleDescriptor::RCreateModelOptions opts;
-      opts.fEmulateUnknownTypes = true;
+      opts.SetEmulateUnknownTypes(true);
       auto model = desc.CreateModel(opts);
       ASSERT_NE(model, nullptr);
 
@@ -350,7 +433,7 @@ struct Inner_EmptyVec {
 
    // Now test loading entries with a reader
    RNTupleDescriptor::RCreateModelOptions cmOpts;
-   cmOpts.fEmulateUnknownTypes = true;
+   cmOpts.SetEmulateUnknownTypes(true);
    reader = RNTupleReader::Open(cmOpts, "ntpl", fileGuard.GetPath());
    reader->LoadEntry(0);
 }
@@ -394,7 +477,7 @@ struct Outer_Write {
    });
 
    RNTupleDescriptor::RCreateModelOptions cmOpts;
-   cmOpts.fEmulateUnknownTypes = true;
+   cmOpts.SetEmulateUnknownTypes(true);
    auto reader = RNTupleReader::Open(cmOpts, "ntpl", fileGuard.GetPath());
    reader->LoadEntry(0);
 

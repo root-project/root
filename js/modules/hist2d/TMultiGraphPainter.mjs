@@ -336,7 +336,7 @@ class TMultiGraphPainter extends ObjectPainter {
       });
    }
 
-   /** @summary Draw TMultiGraph object */
+   /** @summary Draw TMultiGraph object in 2D only */
    static async draw(dom, mgraph, opt) {
       const painter = new TMultiGraphPainter(dom, mgraph, opt);
       return painter.redrawWith(opt, true);

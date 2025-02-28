@@ -2,7 +2,7 @@
 ### \ingroup tutorial_tmva
 ### \notebook -nodraw
 ### This macro provides an example of using a trained model with Keras
-### and make inference using SOFIE directly from Numpy 
+### and make inference using SOFIE directly from Numpy
 ### This macro uses as input a Keras model generated with the
 ### TMVA_Higgs_Classification.C tutorial
 ### You need to run that macro before this one.
@@ -49,7 +49,7 @@ print("Generating inference code for the Keras model from ",modelFile,"in the he
 #Generating inference
 
 inputFileName = "Higgs_data.root"
-inputFile = "http://root.cern.ch/files/" + inputFileName
+inputFile = ROOT.gROOT.GetTutorialDir() + "/machine_learning/data/" + inputFileName
 
 
 
@@ -66,7 +66,7 @@ xsig = np.column_stack(list(sigData.values()))
 dataset_size = xsig.shape[0]
 print("size of data", dataset_size)
 
-#instantiate SOFIE session class 
+#instantiate SOFIE session class
 session = ROOT.TMVA_SOFIE_Higgs_trained_model.Session()
 
 hs = ROOT.TH1D("hs","Signal result",100,0,1)

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Create, draw and fit a TGraph2DErrors. See the [TGraph2DErrors documentation](https://root.cern/doc/master/classTGraph2DErrors.html)
+/// \preview Create, draw and fit a TGraph2DErrors. See the [TGraph2DErrors documentation](https://root.cern/doc/master/classTGraph2DErrors.html)
 ///
 /// \macro_image
 /// \macro_code

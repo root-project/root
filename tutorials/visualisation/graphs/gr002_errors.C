@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook -js
-/// Create and draw a graph with error bars. If more graphs are needed, see the
+/// \preview Create and draw a graph with error bars. If more graphs are needed, see the
 /// [gr03_err2gr.C](https://root.cern/doc/master/gerrors2_8C.html) tutorial
 ///
 /// See the [TGraphErrors documentation](https://root.cern/doc/master/classTGraphErrors.html)

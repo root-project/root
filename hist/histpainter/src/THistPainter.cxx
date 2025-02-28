@@ -81,7 +81,7 @@
 - [Setting line, fill, marker, and text attributes](\ref HP03)
 - [Setting Tick marks on the histogram axis](\ref HP04)
 - [Giving titles to the X, Y and Z axis](\ref HP05)
-- [The option "SAME"](\ref HP060)
+- [The option SAME](\ref HP060)
    - [Limitations](\ref HP060a)
 - [Colors automatically picked in palette](\ref HP061)
 - [Superimposing two histograms with different scales in the same pad](\ref HP06)
@@ -89,7 +89,7 @@
 - [Fit Statistics](\ref HP08)
 - [The error bars options](\ref HP09)
 - [The bar chart option](\ref HP100)
-- [The "BAR" and "HBAR" options](\ref HP10)
+- [The BAR and HBAR options](\ref HP10)
 - [The SCATter plot option (legacy draw option)](\ref HP11)
 - [The ARRow option](\ref HP12)
 - [The BOX option](\ref HP13)
@@ -102,12 +102,12 @@
    - [The LIST option](\ref HP16a)
    - [The AITOFF, MERCATOR, SINUSOIDAL and PARABOLIC options](\ref HP16b)
 - [The LEGO options](\ref HP17)
-- [The "SURFace" options](\ref HP18)
+- [The SURFace options](\ref HP18)
 - [Cylindrical, Polar, Spherical and PseudoRapidity/Phi options](\ref HP19)
 - [Base line for bar-charts and lego plots](\ref HP20)
 - [TH2Poly Drawing](\ref HP20a)
 - [The SPEC option](\ref HP21)
-- [Option "Z" : Adding the color palette on the right side of the pad](\ref HP22)
+- [Option Z : Adding the color palette on the right side of the pad](\ref HP22)
 - [Setting the color palette](\ref HP23)
 - [Drawing a sub-range of a 2-D histogram; the [cutg] option](\ref HP24)
 - [Drawing options for 3D histograms](\ref HP25)
@@ -127,7 +127,7 @@
    - [Panning](\ref HP29i)
    - [Box cut](\ref HP29j)
    - [Plot specific interactions (dynamic slicing etc.)](\ref HP29k)
-   - [Surface with option "GLSURF"](\ref HP29l)
+   - [Surface with option GLSURF](\ref HP29l)
    - [TF3](\ref HP29m)
    - [Box](\ref HP29n)
    - [Iso](\ref HP29o)
@@ -1696,8 +1696,9 @@ Begin_Macro(source)
    htext5->SetMarkerSize(1.8);
    htext5->SetMarkerColor(kRed);
    htext4->SetBarOffset(0.2);
-   htext4->Draw("COL TEXT SAME");
    htext5->SetBarOffset(-0.2);
+   htext3->Draw("COL");
+   htext4->Draw("TEXT SAME");
    htext5->Draw("TEXT SAME");
 }
 End_Macro
@@ -5838,7 +5839,6 @@ void THistPainter::PaintColorLevels(Option_t*)
          Int_t bin  = j*(fXaxis->GetNbins()+2) + i;
          xk    = fXaxis->GetBinLowEdge(i);
          xstep = fXaxis->GetBinWidth(i);
-         if (Hoption.System == kPOLAR && xk<0) xk= 2*TMath::Pi()+xk;
          if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
          z     = fH->GetBinContent(bin);
          // if fH is a profile histogram do not draw empty bins
@@ -5870,22 +5870,20 @@ void THistPainter::PaintColorLevels(Option_t*)
          }
          yup  = yk + ystep;
          ylow = yk;
-         if (Hoption.System != kPOLAR) {
-            if (Hoption.Logy) {
-               if (yup > 0)  yup  = TMath::Log10(yup);
-               else continue;
-               if (ylow > 0) ylow = TMath::Log10(ylow);
-               else continue;
-            }
-            if (xup  < gPad->GetUxmin()) continue;
-            if (yup  < gPad->GetUymin()) continue;
-            if (xlow > gPad->GetUxmax()) continue;
-            if (ylow > gPad->GetUymax()) continue;
-            if (xlow < gPad->GetUxmin()) xlow = gPad->GetUxmin();
-            if (ylow < gPad->GetUymin()) ylow = gPad->GetUymin();
-            if (xup  > gPad->GetUxmax()) xup  = gPad->GetUxmax();
-            if (yup  > gPad->GetUymax()) yup  = gPad->GetUymax();
+         if (Hoption.Logy) {
+            if (yup > 0)  yup  = TMath::Log10(yup);
+            else continue;
+            if (ylow > 0) ylow = TMath::Log10(ylow);
+            else continue;
          }
+         if (xup  < gPad->GetUxmin()) continue;
+         if (yup  < gPad->GetUymin()) continue;
+         if (xlow > gPad->GetUxmax()) continue;
+         if (ylow > gPad->GetUymax()) continue;
+         if (xlow < gPad->GetUxmin()) xlow = gPad->GetUxmin();
+         if (ylow < gPad->GetUymin()) ylow = gPad->GetUymin();
+         if (xup  > gPad->GetUxmax()) xup  = gPad->GetUxmax();
+         if (yup  > gPad->GetUymax()) yup  = gPad->GetUymax();
 
          if (fH->TestBit(TH1::kUserContour)) {
             zc = fH->GetContourLevelPad(0);
@@ -5905,13 +5903,24 @@ void THistPainter::PaintColorLevels(Option_t*)
 
          Int_t theColor = Int_t((color+0.99)*Float_t(ncolors)/Float_t(ndivz));
          if (theColor > ncolors-1) theColor = ncolors-1;
-         fH->SetFillColor(gStyle->GetColorPalette(theColor));
-         fH->TAttFill::Modify();
+         auto fillColor = gStyle->GetColorPalette(theColor);
          if (Hoption.System != kPOLAR) {
+            fH->SetFillColor(fillColor);
+            fH->TAttFill::Modify();
             gPad->PaintBox(xlow, ylow, xup, yup);
          } else  {
-            TCrown crown(0,0,ylow,yup,xlow*TMath::RadToDeg(),xup*TMath::RadToDeg());
-            crown.SetFillColor(gStyle->GetColorPalette(theColor));
+            Double_t midx = (gPad->GetUxmin() + gPad->GetUxmax()) / 2,
+                     midy = (gPad->GetUymin() + gPad->GetUymax()) / 2,
+                     a1 = (xlow - gPad->GetUxmin()) / (gPad->GetUxmax() - gPad->GetUxmin()) * 360,
+                     a2 = (xup - gPad->GetUxmin()) / (gPad->GetUxmax() - gPad->GetUxmin()) * 360,
+                     rx = gPad->GetUxmax() - gPad->GetUxmin(),
+                     ry = gPad->GetUymax() - gPad->GetUymin(),
+                     r1 = (ylow - gPad->GetUymin()) / (gPad->GetUymax() - gPad->GetUymin()) * rx / 2,
+                     r2 = (yup - gPad->GetUymin()) / (gPad->GetUymax() - gPad->GetUymin()) * rx / 2;
+
+            TCrown crown(midx, midy, r1, r2, a1, a2);
+            crown.SetYXRatio(rx > 0 ? ry / rx : 1);
+            crown.SetFillColor(fillColor);
             crown.SetLineColor(fH->GetLineColor());
             crown.SetLineWidth(fH->GetLineWidth());
             crown.SetLineStyle(fH->GetLineStyle());

@@ -1,0 +1,10 @@
+name: CppInterOp-wasm
+channels:
+  - https://repo.prefix.dev/emscripten-forge-dev
+dependencies:
+  - emscripten-abi==3.1.73
+  - nlohmann_json
+  - xeus-lite
+  - xeus
+  - cpp-argparse
+  - pugixml

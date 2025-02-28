@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook -js
-/// Show some basic primitives.
+/// \preview Show some basic primitives.
 ///
 /// \macro_image
 /// \macro_code

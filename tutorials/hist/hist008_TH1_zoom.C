@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook -js
-/// Changing the Range on the X-Axis of a Histogram
+/// \preview Changing the Range on the X-Axis of a Histogram.
 ///
 /// Image produced by `.x ZoomHistogram.C`
 ///

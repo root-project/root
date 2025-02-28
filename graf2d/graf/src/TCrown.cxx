@@ -31,22 +31,22 @@ Example:
 Begin_Macro(source)
 {
    TCanvas *c1 = new TCanvas("c1","c1",400,400);
-   TCrown cr1(.5,.5,.3,.4);
-   cr1.SetLineStyle(2);
-   cr1.SetLineWidth(4);
-   cr1.Draw();
-   TCrown cr2(.5,.5,.2,.3,45,315);
-   cr2.SetFillColor(38);
-   cr2.SetFillStyle(3010);
-   cr2.Draw();
-   TCrown cr3(.5,.5,.2,.3,-45,45);
-   cr3.SetFillColor(50);
-   cr3.SetFillStyle(3025);
-   cr3.Draw();
-   TCrown cr4(.5,.5,.0,.2);
-   cr4.SetFillColor(4);
-   cr4.SetFillStyle(3008);
-   cr4.Draw();
+   auto cr1 = new TCrown(.5,.5,.3,.4);
+   cr1->SetLineStyle(2);
+   cr1->SetLineWidth(4);
+   cr1->Draw();
+   auto cr2 = new TCrown(.5,.5,.2,.3,45,315);
+   cr2->SetFillColor(38);
+   cr2->SetFillStyle(3010);
+   cr2->Draw();
+   auto cr3 = new TCrown(.5,.5,.2,.3,-45,45);
+   cr3->SetFillColor(50);
+   cr3->SetFillStyle(3025);
+   cr3->Draw();
+   auto cr4 = new TCrown(.5,.5,.0,.2);
+   cr4->SetFillColor(4);
+   cr4->SetFillStyle(3008);
+   cr4->Draw();
    return c1;
 }
 End_Macro
@@ -98,6 +98,7 @@ TCrown::~TCrown()
 void TCrown::Copy(TObject &crown) const
 {
    TEllipse::Copy(crown);
+   static_cast<TCrown &>(crown).fYXRatio = fYXRatio;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +112,7 @@ Int_t TCrown::DistancetoPrimitive(Int_t px, Int_t py)
    if (!gPad) return 9999;
    const Double_t kPI = TMath::Pi();
    Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px)) - fX1;
-   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py)) - fY1;
+   Double_t y = (gPad->PadtoY(gPad->AbsPixeltoY(py)) - fY1) / fYXRatio;
 
    Double_t r1 = fR1;
    Double_t r2 = fR2;
@@ -157,6 +158,7 @@ TCrown *TCrown::DrawCrown(Double_t x1, Double_t y1,Double_t radin,Double_t radou
    TCrown *newcrown = new TCrown(x1, y1, radin, radout, phimin, phimax);
    TAttLine::Copy(*newcrown);
    TAttFill::Copy(*newcrown);
+   newcrown->SetYXRatio(GetYXRatio());
    newcrown->SetBit(kCanDelete);
    newcrown->AppendPad(option);
    return newcrown;
@@ -169,8 +171,7 @@ TCrown *TCrown::DrawCrown(Double_t x1, Double_t y1,Double_t radin,Double_t radou
 
 void TCrown::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-
-   TEllipse::ExecuteEvent(event,px,py);
+   TEllipse::ExecuteEvent(event, px, py);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -179,10 +180,9 @@ void TCrown::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 Int_t TCrown::IsInside(Double_t x, Double_t y) const
 {
-
    const Double_t kPI = TMath::Pi();
    const Int_t np = 40;
-   static Double_t xc[2 * np + 3], yc[2 * np +3];
+   static Double_t xc[2 * np + 3], yc[2 * np + 3];
 
    Double_t angle, dx, dy;
    Double_t dphi = (fPhimax - fPhimin) * kPI / (180 * np);
@@ -194,7 +194,7 @@ Int_t TCrown::IsInside(Double_t x, Double_t y) const
    for (i = 0; i <= np; i++) {
       angle = fPhimin * kPI / 180 + Double_t(i) * dphi;
       dx = fR2 * TMath::Cos(angle);
-      dy = fR2 * TMath::Sin(angle);
+      dy = fR2 * fYXRatio * TMath::Sin(angle);
       xc[i] = fX1 + dx * ct - dy * st;
       yc[i] = fY1 + dx * st + dy * ct;
    }
@@ -202,7 +202,7 @@ Int_t TCrown::IsInside(Double_t x, Double_t y) const
    for (i = 0; i <= np; i++) {
       angle = fPhimin * kPI / 180 + Double_t(i) * dphi;
       dx = fR1 * TMath::Cos(angle);
-      dy = fR1 * TMath::Sin(angle);
+      dy = fR1 * fYXRatio * TMath::Sin(angle);
       xc[2 * np - i + 1]  = fX1 + dx * ct - dy * st;
       yc[2 * np - i + 1]  = fY1 + dx * st + dy * ct;
    }
@@ -225,7 +225,7 @@ void TCrown::Paint(Option_t *)
    TAttLine::Modify();
    TAttFill::Modify();
 
-   Double_t angle,dx,dy;
+   Double_t angle, dx, dy;
    Double_t dphi = (fPhimax - fPhimin) * kPI / (180 * np);
    Double_t ct = TMath::Cos(kPI * fTheta / 180);
    Double_t st = TMath::Sin(kPI * fTheta / 180);
@@ -234,7 +234,7 @@ void TCrown::Paint(Option_t *)
    for (i = 0; i <= np; i++) {
       angle = fPhimin * kPI / 180 + Double_t(i) * dphi;
       dx = fR2 * TMath::Cos(angle);
-      dy = fR2 * TMath::Sin(angle);
+      dy = fR2 * fYXRatio * TMath::Sin(angle);
       x[i] = fX1 + dx * ct - dy * st;
       y[i] = fY1 + dx * st + dy * ct;
    }
@@ -242,7 +242,7 @@ void TCrown::Paint(Option_t *)
    for (i = 0; i <= np; i++) {
       angle = fPhimin * kPI / 180 + Double_t(i) * dphi;
       dx = fR1 * TMath::Cos(angle);
-      dy = fR1 * TMath::Sin(angle);
+      dy = fR1 * fYXRatio * TMath::Sin(angle);
       x[2 * np - i + 1]  = fX1 + dx * ct - dy * st;
       y[2 * np - i + 1]  = fY1 + dx * st + dy * ct;
    }
@@ -270,7 +270,6 @@ void TCrown::Paint(Option_t *)
 
 void TCrown::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TCrown::Class())) {
       out<<"   ";
@@ -283,7 +282,11 @@ void TCrown::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveFillAttributes(out,"crown",0,1001);
    SaveLineAttributes(out,"crown",1,1,1);
 
-   if (GetNoEdges()) out<<"   crown->SetNoEdges();"<<std::endl;
+   if (GetNoEdges())
+      out << "   crown->SetNoEdges();" << std::endl;
+
+   if (fYXRatio != 1)
+      out << "   crown->SetYXRatio(" << fYXRatio << ");" << std::endl;
 
    out<<"   crown->Draw();"<<std::endl;
 }

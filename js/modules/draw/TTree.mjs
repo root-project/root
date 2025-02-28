@@ -425,8 +425,9 @@ async function drawTree(dom, obj, opt) {
       if (p === 0) {
          args.player = true;
          args.expr = args.expr.slice(6);
-         if (args.expr[0] === ':') args.expr = args.expr.slice(1);
-      } else if ((p >= 0) && (p === args.expr.length-6)) {
+         if (args.expr[0] === ':')
+            args.expr = args.expr.slice(1);
+      } else if ((p >= 0) && (p === args.expr.length - 6)) {
          args.player = true;
          args.expr = args.expr.slice(0, p);
          if ((p > 0) && (args.expr[p-1] === ';')) args.expr = args.expr.slice(0, p-1);

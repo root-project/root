@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -177,3 +179,4 @@ double RooAdaptiveIntegratorND::integral(const double* /*yvec*/)
   return ret ;
 }
 
+/// \endcond

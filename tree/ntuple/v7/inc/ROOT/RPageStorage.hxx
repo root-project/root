@@ -268,7 +268,7 @@ public:
       struct RColumnInfo {
          RClusterDescriptor::RPageRange fPageRange;
          ROOT::NTupleSize_t fNElements = ROOT::kInvalidNTupleIndex;
-         int fCompressionSettings;
+         std::uint32_t fCompressionSettings;
          bool fIsSuppressed = false;
       };
 
@@ -276,7 +276,7 @@ public:
    };
 
 protected:
-   std::unique_ptr<RNTupleWriteOptions> fOptions;
+   std::unique_ptr<ROOT::RNTupleWriteOptions> fOptions;
 
    /// Helper to zip pages and header/footer; includes a 16MB (kMAXZIPBUF) zip buffer.
    /// There could be concrete page sinks that don't need a compressor.  Therefore, and in order to stay consistent
@@ -301,7 +301,7 @@ private:
    RWritePageMemoryManager fWritePageMemoryManager;
 
 public:
-   RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
+   RPageSink(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options);
 
    RPageSink(const RPageSink &) = delete;
    RPageSink &operator=(const RPageSink &) = delete;
@@ -311,7 +311,7 @@ public:
 
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
    /// Returns the sink's write options.
-   const RNTupleWriteOptions &GetWriteOptions() const { return *fOptions; }
+   const ROOT::RNTupleWriteOptions &GetWriteOptions() const { return *fOptions; }
 
    void DropColumn(ColumnHandle_t /*columnHandle*/) final {}
 
@@ -342,7 +342,7 @@ public:
    struct RSealPageConfig {
       const RPage *fPage = nullptr;                 ///< Input page to be sealed
       const RColumnElementBase *fElement = nullptr; ///< Corresponds to the page's elements, for size calculation etc.
-      int fCompressionSetting = 0;                  ///< Compression algorithm and level to apply
+      std::uint32_t fCompressionSettings = 0;       ///< Compression algorithm and level to apply
       /// Adds a 8 byte little-endian xxhash3 checksum to the page payload. The buffer has to be large enough to
       /// to store the additional 8 bytes.
       bool fWriteChecksum = true;
@@ -509,7 +509,7 @@ protected:
    void EnableDefaultMetrics(const std::string &prefix);
 
 public:
-   RPagePersistentSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
+   RPagePersistentSink(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options);
 
    RPagePersistentSink(const RPagePersistentSink &) = delete;
    RPagePersistentSink &operator=(const RPagePersistentSink &) = delete;
@@ -519,7 +519,7 @@ public:
 
    /// Guess the concrete derived page source from the location
    static std::unique_ptr<RPageSink> Create(std::string_view ntupleName, std::string_view location,
-                                            const RNTupleWriteOptions &options = RNTupleWriteOptions());
+                                            const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
 
    ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, RColumn &column) final;
 
@@ -695,7 +695,7 @@ protected:
 
    std::unique_ptr<RCounters> fCounters;
 
-   RNTupleReadOptions fOptions;
+   ROOT::RNTupleReadOptions fOptions;
    /// The active columns are implicitly defined by the model fields or views
    RActivePhysicalColumns fActivePhysicalColumns;
 
@@ -733,7 +733,7 @@ protected:
    RExclDescriptorGuard GetExclDescriptorGuard() { return RExclDescriptorGuard(fDescriptor, fDescriptorLock); }
 
 public:
-   RPageSource(std::string_view ntupleName, const RNTupleReadOptions &fOptions);
+   RPageSource(std::string_view ntupleName, const ROOT::RNTupleReadOptions &fOptions);
    RPageSource(const RPageSource &) = delete;
    RPageSource &operator=(const RPageSource &) = delete;
    RPageSource(RPageSource &&) = delete;
@@ -741,7 +741,7 @@ public:
    ~RPageSource() override;
    /// Guess the concrete derived page source from the file name (location)
    static std::unique_ptr<RPageSource> Create(std::string_view ntupleName, std::string_view location,
-                                              const RNTupleReadOptions &options = RNTupleReadOptions());
+                                              const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
    /// Open the same storage multiple time, e.g. for reading in multiple threads.
    /// If the source is already attached, the clone will be attached, too. The clone will use, however,
    /// it's own connection to the underlying storage (e.g., file descriptor, XRootD handle, etc.)
@@ -754,7 +754,7 @@ public:
                                     RPageAllocator &pageAlloc);
 
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
-   const RNTupleReadOptions &GetReadOptions() const { return fOptions; }
+   const ROOT::RNTupleReadOptions &GetReadOptions() const { return fOptions; }
 
    /// Takes the read lock for the descriptor. Multiple threads can take the lock concurrently.
    /// The underlying `std::shared_mutex`, however, is neither read nor write recursive:

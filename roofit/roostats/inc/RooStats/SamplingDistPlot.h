@@ -60,15 +60,15 @@ namespace RooStats {
     /// Applies a predefined style if fApplyStyle is true (default).
     void ApplyDefaultStyle(void);
 
-    void SetLineColor(Color_t color, const SamplingDistribution *samplDist = nullptr);
-    void SetLineWidth(Width_t lwidth, const SamplingDistribution *samplDist = nullptr);
-    void SetLineStyle(Style_t style, const SamplingDistribution *samplDist = nullptr);
+    void SetLineColor(Color_t color, const SamplingDistribution *sampleDist = nullptr);
+    void SetLineWidth(Width_t lwidth, const SamplingDistribution *sampleDist = nullptr);
+    void SetLineStyle(Style_t style, const SamplingDistribution *sampleDist = nullptr);
 
-    void SetMarkerColor(Color_t color, const SamplingDistribution *samplDist = nullptr);
-    void SetMarkerStyle(Style_t style, const SamplingDistribution *samplDist = nullptr);
-    void SetMarkerSize(Size_t size, const SamplingDistribution *samplDist = nullptr);
+    void SetMarkerColor(Color_t color, const SamplingDistribution *sampleDist = nullptr);
+    void SetMarkerStyle(Style_t style, const SamplingDistribution *sampleDist = nullptr);
+    void SetMarkerSize(Size_t size, const SamplingDistribution *sampleDist = nullptr);
 
-    void RebinDistribution(Int_t rebinFactor, const SamplingDistribution *samplDist = nullptr);
+    void RebinDistribution(Int_t rebinFactor, const SamplingDistribution *sampleDist = nullptr);
 
     void SetAxisTitle(char *varName) { fVarName = TString(varName); }
 
@@ -80,8 +80,8 @@ namespace RooStats {
     /// Intended use: Access to member functions of TH1F like GetMean(),
     /// GetRMS() etc.
     /// The return objects is managed by  SamplingDistPlot
-    TH1F* GetTH1F(const SamplingDistribution *samplDist = nullptr);
-    TH1 * GetHistogram(const SamplingDistribution *samplDist = nullptr) { return GetTH1F(samplDist); }
+    TH1F* GetTH1F(const SamplingDistribution *sampleDist = nullptr);
+    TH1 * GetHistogram(const SamplingDistribution *sampleDist = nullptr) { return GetTH1F(sampleDist); }
 
     /// return plotter class used to draw the sampling distribution histograms
     /// object is managed by SamplingDistPlot

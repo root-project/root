@@ -870,11 +870,10 @@ void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, siz
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static constexpr auto kBlobKeyLen = ROOT::Experimental::Internal::RNTupleFileWriter::kBlobKeyLen;
-
 /// Prepare a blob key in the provided buffer, which must provide space for kBlobKeyLen bytes. Note that the array type
 /// is purely documentation, the argument is actually just a pointer.
-static void PrepareBlobKey(std::int64_t offset, size_t nbytes, size_t len, unsigned char buffer[kBlobKeyLen])
+void ROOT::Experimental::Internal::RNTupleFileWriter::PrepareBlobKey(std::int64_t offset, size_t nbytes, size_t len,
+                                                                     unsigned char buffer[kBlobKeyLen])
 {
    RTFString strClass{kBlobClassName};
    RTFString strObject;
@@ -1129,7 +1128,7 @@ ROOT::Experimental::Internal::RNTupleFileWriter::~RNTupleFileWriter() {}
 std::unique_ptr<ROOT::Experimental::Internal::RNTupleFileWriter>
 ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupleName, std::string_view path,
                                                           EContainerFormat containerFormat,
-                                                          const RNTupleWriteOptions &options)
+                                                          const ROOT::RNTupleWriteOptions &options)
 {
    std::string fileName(path);
    size_t idxDirSep = fileName.find_last_of("\\/");
@@ -1189,6 +1188,16 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Append(std::string_view ntupleN
    auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize));
    writer->fFileProper.fDirectory = &fileOrDirectory;
    return writer;
+}
+
+void ROOT::Experimental::Internal::RNTupleFileWriter::Seek(std::uint64_t offset)
+{
+   if (!fFileSimple)
+      throw RException(R__FAIL("invalid attempt to seek non-simple writer"));
+
+   fFileSimple.fFilePos = offset;
+   fFileSimple.fKeyOffset = offset;
+   // The next Write() will Flush() if necessary.
 }
 
 void ROOT::Experimental::Internal::RNTupleFileWriter::UpdateStreamerInfos(

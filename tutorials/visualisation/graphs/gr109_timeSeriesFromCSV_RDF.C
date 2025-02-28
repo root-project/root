@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook -js
-/// This macro illustrates the use of the time axis on a TGraph
+/// \preview This macro illustrates the use of the time axis on a TGraph
 /// with data read from a text file containing the SWAN usage
 /// statistics during July 2017.
 /// We exploit the TDataFrame for reading from the file. See the [RDataFrame documentation](https://root.cern/doc/master/classROOT_1_1RDataFrame.html) and [RDataFrame tutorials](https://root.cern/doc/master/group__tutorial__dataframe.html)

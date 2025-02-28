@@ -386,7 +386,7 @@ endif()
 #---Removed options------------------------------------------------------------
 # Please notify SPI when adding to this list
 foreach(opt afdsmgrd afs alien bonjour builtin_afterimage castor chirp cxx11 cxx14 cxx17
-        exceptions geocad gfal glite globus gsl_shared hdfs html ios jemalloc krb5
+        cxxmodules exceptions geocad gfal glite globus gsl_shared hdfs html ios jemalloc krb5
         ldap memstat minuit2 monalisa oracle pyroot-python2 pyroot_legacy
         pythia6 pythia6_nolink python qt qtgsi rfio ruby sapdb srp table
         tcmalloc vmc xproofd)
@@ -408,11 +408,6 @@ foreach(opt minuit2_omp minuit2_mpi)
       message(WARNING "The option '${opt}' can only be used to minimise thread-safe functions in Minuit2. It cannot be used for Histogram/Graph fitting and for RooFit. If you want to use Minuit2 with OpenMP or MPI support, it is better to build Minuit2 as a standalone library.")
   endif()
 endforeach()
-
-#---Replaced options--------------------------------------------------------------------------
-if(python)
-  message(STATUS ">>> INFO: 'python' option was removed. Instead, please check, that it was enabled a 'pyroot' option (by default it is ON).")
-endif()
 
 #---Avoid creating dependencies to 'non-standard' header files -------------------------------
 include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")

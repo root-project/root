@@ -19,7 +19,7 @@
 
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldBase.hxx>
-#include "RFieldUtils.hxx"
+#include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RSpan.hxx>
 
@@ -34,6 +34,7 @@
 #include <TRealData.h>
 #include <TSchemaRule.h>
 #include <TSchemaRuleSet.h>
+#include <TStreamerElement.h>
 #include <TVirtualObject.h>
 #include <TVirtualStreamerInfo.h>
 
@@ -49,6 +50,28 @@
 #include <utility>
 #include <variant>
 
+namespace {
+
+TClass *EnsureValidClass(std::string_view className)
+{
+   auto cl = TClass::GetClass(std::string(className).c_str());
+   if (cl == nullptr) {
+      throw ROOT::RException(R__FAIL("RField: no I/O support for type " + std::string(className)));
+   }
+   return cl;
+}
+
+TEnum *EnsureValidEnum(std::string_view enumName)
+{
+   auto e = TEnum::GetEnum(std::string(enumName).c_str());
+   if (e == nullptr) {
+      throw ROOT::RException(R__FAIL("RField: no I/O support for enum type " + std::string(enumName)));
+   }
+   return e;
+}
+
+} // anonymous namespace
+
 ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, const RClassField &source)
    : ROOT::Experimental::RFieldBase(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kRecord,
                                     false /* isSimple */),
@@ -63,37 +86,38 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, const R
 }
 
 ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::string_view className)
-   : RClassField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
+   : RClassField(fieldName, EnsureValidClass(className))
 {
 }
 
-ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::string_view className, TClass *classp)
-   : ROOT::Experimental::RFieldBase(fieldName, className, ROOT::ENTupleStructure::kRecord, false /* isSimple */),
+ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, TClass *classp)
+   : ROOT::Experimental::RFieldBase(fieldName, Internal::GetRenormalizedTypeName(classp->GetName()),
+                                    ROOT::ENTupleStructure::kRecord, false /* isSimple */),
      fClass(classp)
 {
-   if (fClass == nullptr) {
-      throw RException(R__FAIL("RField: no I/O support for type " + std::string(className)));
+   if (fClass->GetState() < TClass::kInterpreted) {
+      throw RException(R__FAIL(std::string("RField: RClassField \"") + classp->GetName() +
+                               " cannot be constructed from a class that's not at least Interpreted"));
    }
    // Avoid accidentally supporting std types through TClass.
    if (fClass->Property() & kIsDefinedInStd) {
-      throw RException(R__FAIL(std::string(className) + " is not supported"));
+      throw RException(R__FAIL(std::string(GetTypeName()) + " is not supported"));
    }
-   if (className == "TObject") {
+   if (GetTypeName() == "TObject") {
       throw RException(R__FAIL("TObject is only supported through RField<TObject>"));
    }
    if (fClass->GetCollectionProxy()) {
-      throw RException(
-         R__FAIL(std::string(className) + " has an associated collection proxy; use RProxiedCollectionField instead"));
+      throw RException(R__FAIL(std::string(GetTypeName()) + " has an associated collection proxy; "
+                                                            "use RProxiedCollectionField instead"));
    }
    // Classes with, e.g., custom streamers are not supported through this field. Empty classes, however, are.
    // Can be overwritten with the "rntuple.streamerMode=true" class attribute
    if (!fClass->CanSplit() && fClass->Size() > 1 &&
        Internal::GetRNTupleSerializationMode(fClass) != Internal::ERNTupleSerializationMode::kForceNativeMode) {
-      throw RException(R__FAIL(std::string(className) + " cannot be stored natively in RNTuple"));
+      throw RException(R__FAIL(GetTypeName() + " cannot be stored natively in RNTuple"));
    }
    if (Internal::GetRNTupleSerializationMode(fClass) == Internal::ERNTupleSerializationMode::kForceStreamerMode) {
-      throw RException(
-         R__FAIL(std::string(className) + " has streamer mode enforced, not supported as native RNTuple class"));
+      throw RException(R__FAIL(GetTypeName() + " has streamer mode enforced, not supported as native RNTuple class"));
    }
 
    if (!(fClass->ClassProperty() & kClassHasExplicitCtor))
@@ -102,9 +126,11 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
       fTraits |= kTraitTriviallyDestructible;
 
    int i = 0;
-   for (auto baseClass : ROOT::Detail::TRangeStaticCast<TBaseClass>(*fClass->GetListOfBases())) {
+   const auto *bases = fClass->GetListOfBases();
+   assert(bases);
+   for (auto baseClass : ROOT::Detail::TRangeStaticCast<TBaseClass>(*bases)) {
       if (baseClass->GetDelta() < 0) {
-         throw RException(R__FAIL(std::string("virtual inheritance is not supported: ") + std::string(className) +
+         throw RException(R__FAIL(std::string("virtual inheritance is not supported: ") + GetTypeName() +
                                   " virtually inherits from " + baseClass->GetName()));
       }
       TClass *c = baseClass->GetClassPointer();
@@ -125,18 +151,32 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
          continue;
       }
 
-      std::string typeName{Internal::GetNormalizedTypeName(dataMember->GetTrueTypeName())};
-      std::string typeAlias{Internal::GetNormalizedTypeName(dataMember->GetFullTypeName())};
+      // NOTE: we use the already-resolved type name for the fields, otherwise TClass::GetClass may fail to resolve
+      // context-dependent types (e.g. typedefs defined in the class itself - which will not be fully qualified in
+      // the string returned by dataMember->GetFullTypeName())
+      std::string typeName{dataMember->GetTrueTypeName()};
+      // RFieldBase::Create() set subField->fTypeAlias based on the assumption that the user specified typeName, which
+      // already went through one round of type resolution.
+      std::string origTypeName{dataMember->GetFullTypeName()};
 
       // For C-style arrays, complete the type name with the size for each dimension, e.g. `int[4][2]`
       if (dataMember->Property() & kIsArray) {
-         for (int dim = 0, n = dataMember->GetArrayDim(); dim < n; ++dim)
-            typeName += "[" + std::to_string(dataMember->GetMaxIndex(dim)) + "]";
+         for (int dim = 0, n = dataMember->GetArrayDim(); dim < n; ++dim) {
+            const auto addedStr = "[" + std::to_string(dataMember->GetMaxIndex(dim)) + "]";
+            typeName += addedStr;
+            origTypeName += addedStr;
+         }
       }
 
-      std::unique_ptr<RFieldBase> subField;
+      auto subField = RFieldBase::Create(dataMember->GetName(), typeName).Unwrap();
 
-      subField = RFieldBase::Create(dataMember->GetName(), typeName, typeAlias).Unwrap();
+      const auto normTypeName = Internal::GetNormalizedUnresolvedTypeName(origTypeName);
+      if (normTypeName == subField->GetTypeName()) {
+         subField->fTypeAlias = "";
+      } else {
+         subField->fTypeAlias = normTypeName;
+      }
+
       fTraits &= subField->GetTraits();
       Attach(std::move(subField), RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
    }
@@ -150,24 +190,88 @@ void ROOT::Experimental::RClassField::Attach(std::unique_ptr<RFieldBase> child, 
    RFieldBase::Attach(std::move(child));
 }
 
-void ROOT::Experimental::RClassField::AddReadCallbacksFromIORules(const std::span<const ROOT::TSchemaRule *> rules,
-                                                                  TClass *classp)
+std::vector<const ROOT::TSchemaRule *> ROOT::Experimental::RClassField::FindRules(const RFieldDescriptor *fieldDesc)
 {
-   for (const auto rule : rules) {
+   ROOT::Detail::TSchemaRuleSet::TMatches rules;
+   const auto ruleset = fClass->GetSchemaRules();
+   if (!ruleset)
+      return rules;
+
+   if (!fieldDesc) {
+      // If we have no on-disk information for the field, we still process the rules on the current in-memory version
+      // of the class
+      rules = ruleset->FindRules(fClass->GetName(), fClass->GetClassVersion(), fClass->GetCheckSum());
+   } else {
+      // We do have an on-disk field that correspond to the current RClassField instance. Ask for rules matching the
+      // on-disk version of the field.
+      if (fieldDesc->GetTypeChecksum()) {
+         rules =
+            ruleset->FindRules(fieldDesc->GetTypeName(), fieldDesc->GetTypeVersion(), *fieldDesc->GetTypeChecksum());
+      } else {
+         rules = ruleset->FindRules(fieldDesc->GetTypeName(), fieldDesc->GetTypeVersion());
+      }
+   }
+
+   // Cleanup and sort rules
+   // Check that any any given source member uses the same type in all rules
+   std::unordered_map<std::string, std::string> sourceNameAndType;
+   std::size_t nskip = 0; // skip whole-object-rules that were moved to the end of the rules vector
+   for (auto itr = rules.begin(); itr != rules.end() - nskip;) {
+      const auto rule = *itr;
+
+      // Erase unknown rule types
       if (rule->GetRuleType() != ROOT::TSchemaRule::kReadRule) {
-         R__LOG_WARNING(ROOT::Internal::NTupleLog()) << "ignoring I/O customization rule with unsupported type";
+         R__LOG_WARNING(ROOT::Internal::NTupleLog())
+            << "ignoring I/O customization rule with unsupported type: " << rule->GetRuleType();
+         itr = rules.erase(itr);
          continue;
       }
-      auto func = rule->GetReadFunctionPointer();
-      R__ASSERT(func != nullptr);
-      fReadCallbacks.emplace_back([func, classp](void *target) {
-         TVirtualObject oldObj{nullptr};
-         oldObj.fClass = classp;
-         oldObj.fObject = target;
-         func(static_cast<char *>(target), &oldObj);
-         oldObj.fClass = nullptr; // TVirtualObject does not own the value
-      });
+
+      bool hasConflictingSourceMembers = false;
+      for (auto source : TRangeDynCast<TSchemaRule::TSources>(rule->GetSource())) {
+         auto memberType = source->GetTypeForDeclaration() + source->GetDimensions();
+         auto [itrSrc, isNew] = sourceNameAndType.emplace(source->GetName(), memberType);
+         if (!isNew && (itrSrc->second != memberType)) {
+            R__LOG_WARNING(ROOT::Internal::NTupleLog())
+               << "ignoring I/O customization rule due to conflicting source member type: " << itrSrc->second << " vs. "
+               << memberType << " for member " << source->GetName();
+            hasConflictingSourceMembers = true;
+            break;
+         }
+      }
+      if (hasConflictingSourceMembers) {
+         itr = rules.erase(itr);
+         continue;
+      }
+
+      // Rules targeting the entire object need to be executed at the end
+      if (rule->GetTarget() == nullptr) {
+         nskip++;
+         if (itr != rules.end() - nskip)
+            std::iter_swap(itr++, rules.end() - nskip);
+         continue;
+      }
+
+      // For the time being, we only support rules targeting transient members
+      bool hasPersistentTarget = false;
+      for (auto target : ROOT::Detail::TRangeStaticCast<TObjString>(*rule->GetTarget())) {
+         const auto dataMember = fClass->GetDataMember(target->GetString());
+         if (!dataMember || dataMember->IsPersistent()) {
+            R__LOG_WARNING(ROOT::Internal::NTupleLog())
+               << "ignoring I/O customization rule with non-transient member: " << dataMember->GetName();
+            hasPersistentTarget = true;
+            break;
+         }
+      }
+      if (hasPersistentTarget) {
+         itr = rules.erase(itr);
+         continue;
+      }
+
+      ++itr;
    }
+
+   return rules;
 }
 
 std::unique_ptr<ROOT::Experimental::RFieldBase>
@@ -187,6 +291,9 @@ std::size_t ROOT::Experimental::RClassField::AppendImpl(const void *from)
 
 void ROOT::Experimental::RClassField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
+   for (const auto &[_, si] : fStagingItems) {
+      CallReadOn(*si.fField, globalIndex, fStagingArea.get() + si.fOffset);
+   }
    for (unsigned i = 0; i < fSubFields.size(); i++) {
       CallReadOn(*fSubFields[i], globalIndex, static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
    }
@@ -194,32 +301,135 @@ void ROOT::Experimental::RClassField::ReadGlobalImpl(ROOT::NTupleSize_t globalIn
 
 void ROOT::Experimental::RClassField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
 {
+   for (const auto &[_, si] : fStagingItems) {
+      CallReadOn(*si.fField, localIndex, fStagingArea.get() + si.fOffset);
+   }
    for (unsigned i = 0; i < fSubFields.size(); i++) {
       CallReadOn(*fSubFields[i], localIndex, static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
    }
 }
 
+ROOT::DescriptorId_t ROOT::Experimental::RClassField::LookupMember(const RNTupleDescriptor &desc,
+                                                                   std::string_view memberName,
+                                                                   ROOT::DescriptorId_t classFieldId)
+{
+   auto idSourceMember = desc.FindFieldId(memberName, classFieldId);
+   if (idSourceMember != ROOT::kInvalidDescriptorId)
+      return idSourceMember;
+
+   for (const auto &subFieldDesc : desc.GetFieldIterable(classFieldId)) {
+      const auto subFieldName = subFieldDesc.GetFieldName();
+      if (subFieldName.length() > 2 && subFieldName[0] == ':' && subFieldName[1] == '_') {
+         idSourceMember = LookupMember(desc, memberName, subFieldDesc.GetId());
+         if (idSourceMember != ROOT::kInvalidDescriptorId)
+            return idSourceMember;
+      }
+   }
+
+   return ROOT::kInvalidDescriptorId;
+}
+
+void ROOT::Experimental::RClassField::SetStagingClass(const std::string &className, unsigned int classVersion)
+{
+   TClass::GetClass(className.c_str())->GetStreamerInfo(classVersion);
+   if (classVersion != GetTypeVersion()) {
+      fStagingClass = TClass::GetClass((className + std::string("@@") + std::to_string(classVersion)).c_str());
+   } else {
+      fStagingClass = fClass;
+   }
+   R__ASSERT(fStagingClass);
+}
+
+void ROOT::Experimental::RClassField::PrepareStagingArea(const std::vector<const TSchemaRule *> &rules,
+                                                         const RNTupleDescriptor &desc,
+                                                         const RFieldDescriptor &classFieldDesc)
+{
+   std::size_t stagingAreaSize = 0;
+   for (const auto rule : rules) {
+      for (auto source : TRangeDynCast<TSchemaRule::TSources>(rule->GetSource())) {
+         auto [itr, isNew] = fStagingItems.emplace(source->GetName(), RStagingItem());
+         if (!isNew) {
+            // This source member has already been processed by another rule (and we only support one type per member)
+            continue;
+         }
+         RStagingItem &stagingItem = itr->second;
+
+         const auto memberFieldId = LookupMember(desc, source->GetName(), classFieldDesc.GetId());
+         if (memberFieldId == kInvalidDescriptorId) {
+            throw RException(R__FAIL(std::string("cannot find on disk rule source member ") + GetTypeName() + "." +
+                                     source->GetName()));
+         }
+         const auto &memberFieldDesc = desc.GetFieldDescriptor(memberFieldId);
+
+         auto memberType = source->GetTypeForDeclaration() + source->GetDimensions();
+         stagingItem.fField = Create("" /* we don't need a field name */, std::string(memberType)).Unwrap();
+         stagingItem.fField->SetOnDiskId(memberFieldDesc.GetId());
+
+         stagingItem.fOffset = fStagingClass->GetDataMemberOffset(source->GetName());
+         // Since we successfully looked up the source member in the RNTuple on-disk meta-data, we expect it
+         // to be present in the TClass instance, too.
+         R__ASSERT(stagingItem.fOffset != TVirtualStreamerInfo::kMissing);
+         stagingAreaSize = std::max(stagingAreaSize, stagingItem.fOffset + stagingItem.fField->GetValueSize());
+      }
+   }
+
+   if (stagingAreaSize) {
+      R__ASSERT(static_cast<Int_t>(stagingAreaSize) <= fStagingClass->Size()); // we may have removed rules
+      fStagingArea = Internal::MakeUninitArray<unsigned char>(stagingAreaSize);
+   }
+}
+
+void ROOT::Experimental::RClassField::AddReadCallbacksFromIORule(const TSchemaRule *rule)
+{
+   auto func = rule->GetReadFunctionPointer();
+   R__ASSERT(func != nullptr);
+   fReadCallbacks.emplace_back([func, stagingClass = fStagingClass, stagingArea = fStagingArea.get()](void *target) {
+      TVirtualObject onfileObj{nullptr};
+      onfileObj.fClass = stagingClass;
+      onfileObj.fObject = stagingArea;
+      func(static_cast<char *>(target), &onfileObj);
+      onfileObj.fObject = nullptr; // TVirtualObject does not own the value
+   });
+}
+
 void ROOT::Experimental::RClassField::BeforeConnectPageSource(Internal::RPageSource &pageSource)
 {
-   // This can happen for added base classes or non-simple members.
-   if (GetOnDiskId() == ROOT::kInvalidDescriptorId) {
-      return;
-   }
-   // Gather all known sub fields in the descriptor.
+   std::vector<const TSchemaRule *> rules;
    std::unordered_set<std::string> knownSubFields;
-   {
+
+   if (GetOnDiskId() == kInvalidDescriptorId) {
+      // This can happen for added base classes or added members of class type
+      rules = FindRules(nullptr);
+      if (!rules.empty())
+         SetStagingClass(GetTypeName(), GetTypeVersion());
+   } else {
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
       const RNTupleDescriptor &desc = descriptorGuard.GetRef();
       const auto &fieldDesc = desc.GetFieldDescriptor(GetOnDiskId());
+
       // Check that we have the same type.
-      if (GetTypeName() != fieldDesc.GetTypeName())
+      // TODO(jblomer): relax for class rename rule
+      if (GetTypeName() != fieldDesc.GetTypeName()) {
          throw RException(R__FAIL("incompatible type name for field " + GetFieldName() + ": " + GetTypeName() +
                                   " vs. " + fieldDesc.GetTypeName()));
+      }
 
       for (auto linkId : fieldDesc.GetLinkIds()) {
          const auto &subFieldDesc = desc.GetFieldDescriptor(linkId);
          knownSubFields.insert(subFieldDesc.GetFieldName());
       }
+
+      rules = FindRules(&fieldDesc);
+      if (!rules.empty()) {
+         SetStagingClass(fieldDesc.GetTypeName(), fieldDesc.GetTypeVersion());
+         PrepareStagingArea(rules, desc, fieldDesc);
+         for (auto &[_, si] : fStagingItems)
+            Internal::CallConnectPageSourceOnField(*si.fField, pageSource);
+      }
+   }
+
+   for (const auto rule : rules) {
+      AddReadCallbacksFromIORule(rule);
    }
 
    // Iterate over all sub fields in memory and mark those as missing that are not in the descriptor.
@@ -228,33 +438,6 @@ void ROOT::Experimental::RClassField::BeforeConnectPageSource(Internal::RPageSou
          field->SetArtificial();
       }
    }
-}
-
-void ROOT::Experimental::RClassField::OnConnectPageSource()
-{
-   // Add post-read callbacks for I/O customization rules; only rules that target transient members are allowed for now
-   // TODO(jalopezg): revise after supporting schema evolution
-   const auto ruleset = fClass->GetSchemaRules();
-   if (!ruleset)
-      return;
-   auto referencesNonTransientMembers = [klass = fClass](const ROOT::TSchemaRule *rule) {
-      if (rule->GetTarget() == nullptr)
-         return false;
-      for (auto target : ROOT::Detail::TRangeStaticCast<TObjString>(*rule->GetTarget())) {
-         const auto dataMember = klass->GetDataMember(target->GetString());
-         if (!dataMember || dataMember->IsPersistent()) {
-            R__LOG_WARNING(ROOT::Internal::NTupleLog())
-               << "ignoring I/O customization rule with non-transient member: " << dataMember->GetName();
-            return true;
-         }
-      }
-      return false;
-   };
-
-   auto rules = ruleset->FindRules(fClass->GetName(), static_cast<Int_t>(GetOnDiskTypeVersion()),
-                                   static_cast<UInt_t>(GetOnDiskTypeChecksum()));
-   rules.erase(std::remove_if(rules.begin(), rules.end(), referencesNonTransientMembers), rules.end());
-   AddReadCallbacksFromIORules(rules, fClass);
 }
 
 void ROOT::Experimental::RClassField::ConstructValue(void *where) const
@@ -304,19 +487,17 @@ void ROOT::Experimental::RClassField::AcceptVisitor(Detail::RFieldVisitor &visit
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::string_view enumName)
-   : REnumField(fieldName, enumName, TEnum::GetEnum(std::string(enumName).c_str()))
+   : REnumField(fieldName, EnsureValidEnum(enumName))
 {
 }
 
-ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::string_view enumName, TEnum *enump)
-   : ROOT::Experimental::RFieldBase(fieldName, enumName, ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
+ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, TEnum *enump)
+   : ROOT::Experimental::RFieldBase(fieldName, Internal::GetRenormalizedTypeName(enump->GetQualifiedName()),
+                                    ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
 {
-   if (enump == nullptr) {
-      throw RException(R__FAIL("RField: no I/O support for enum type " + std::string(enumName)));
-   }
    // Avoid accidentally supporting std types through TEnum.
    if (enump->Property() & kIsDefinedInStd) {
-      throw RException(R__FAIL(std::string(enumName) + " is not supported"));
+      throw RException(R__FAIL(GetTypeName() + " is not supported"));
    }
 
    switch (enump->GetUnderlyingType()) {
@@ -330,7 +511,7 @@ ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::stri
    case kLong64_t: Attach(std::make_unique<RField<int64_t>>("_0")); break;
    case kULong_t:
    case kULong64_t: Attach(std::make_unique<RField<uint64_t>>("_0")); break;
-   default: throw RException(R__FAIL("Unsupported underlying integral type for enum type " + std::string(enumName)));
+   default: throw RException(R__FAIL("Unsupported underlying integral type for enum type " + GetTypeName()));
    }
 
    fTraits |= kTraitTriviallyConstructible | kTraitTriviallyDestructible;
@@ -420,14 +601,13 @@ ROOT::Experimental::RProxiedCollectionField::RCollectionIterableOnce::GetIterato
    return ifuncs;
 }
 
-ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName,
-                                                                     std::string_view typeName, TClass *classp)
-   : RFieldBase(fieldName, typeName, ROOT::ENTupleStructure::kCollection, false /* isSimple */), fNWritten(0)
+ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName, TClass *classp)
+   : RFieldBase(fieldName, Internal::GetRenormalizedTypeName(classp->GetName()), ROOT::ENTupleStructure::kCollection,
+                false /* isSimple */),
+     fNWritten(0)
 {
-   if (classp == nullptr)
-      throw RException(R__FAIL("RField: no I/O support for collection proxy type " + std::string(typeName)));
    if (!classp->GetCollectionProxy())
-      throw RException(R__FAIL(std::string(typeName) + " has no associated collection proxy"));
+      throw RException(R__FAIL(std::string(GetTypeName()) + " has no associated collection proxy"));
 
    fProxy.reset(classp->GetCollectionProxy()->Generate());
    fProperties = fProxy->GetProperties();
@@ -436,7 +616,7 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
       throw RException(R__FAIL("collection proxies whose value type is a pointer are not supported"));
    if (!fProxy->GetCollectionClass()->HasDictionary()) {
       throw RException(R__FAIL("dictionary not available for type " +
-                               Internal::GetNormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
+                               Internal::GetRenormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
    }
 
    fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readFromDisk */);
@@ -446,7 +626,7 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
 ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName,
                                                                      std::string_view typeName,
                                                                      std::unique_ptr<RFieldBase> itemField)
-   : RProxiedCollectionField(fieldName, typeName, TClass::GetClass(std::string(typeName).c_str()))
+   : RProxiedCollectionField(fieldName, EnsureValidClass(typeName))
 {
    fItemSize = itemField->GetValueSize();
    Attach(std::move(itemField));
@@ -454,7 +634,7 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
 
 ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName,
                                                                      std::string_view typeName)
-   : RProxiedCollectionField(fieldName, typeName, TClass::GetClass(std::string(typeName).c_str()))
+   : RProxiedCollectionField(fieldName, EnsureValidClass(typeName))
 {
    // NOTE (fdegeus): std::map is supported, custom associative might be supported in the future if the need arises.
    if (fProperties & TVirtualCollectionProxy::kIsAssociative)
@@ -601,7 +781,7 @@ void ROOT::Experimental::RProxiedCollectionField::AcceptVisitor(Detail::RFieldVi
 
 ROOT::Experimental::RMapField::RMapField(std::string_view fieldName, std::string_view typeName,
                                          std::unique_ptr<RFieldBase> itemField)
-   : RProxiedCollectionField(fieldName, typeName, TClass::GetClass(std::string(typeName).c_str()))
+   : RProxiedCollectionField(fieldName, EnsureValidClass(typeName))
 {
    if (!dynamic_cast<RPairField *>(itemField.get()))
       throw RException(R__FAIL("RMapField inner field type must be of RPairField"));
@@ -644,21 +824,17 @@ public:
 
 ROOT::Experimental::RStreamerField::RStreamerField(std::string_view fieldName, std::string_view className,
                                                    std::string_view typeAlias)
-   : RStreamerField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
+   : RStreamerField(fieldName, EnsureValidClass(className))
 {
    fTypeAlias = typeAlias;
 }
 
-ROOT::Experimental::RStreamerField::RStreamerField(std::string_view fieldName, std::string_view className,
-                                                   TClass *classp)
-   : ROOT::Experimental::RFieldBase(fieldName, className, ROOT::ENTupleStructure::kStreamer, false /* isSimple */),
+ROOT::Experimental::RStreamerField::RStreamerField(std::string_view fieldName, TClass *classp)
+   : ROOT::Experimental::RFieldBase(fieldName, Internal::GetRenormalizedTypeName(classp->GetName()),
+                                    ROOT::ENTupleStructure::kStreamer, false /* isSimple */),
      fClass(classp),
      fIndex(0)
 {
-   if (fClass == nullptr) {
-      throw RException(R__FAIL("RStreamerField: no I/O support for type " + std::string(className)));
-   }
-
    fTraits |= kTraitTypeChecksum;
    if (!(fClass->ClassProperty() & kClassHasExplicitCtor))
       fTraits |= kTraitTriviallyConstructible;
@@ -834,9 +1010,9 @@ void ROOT::Experimental::RField<TObject>::ReadGlobalImpl(ROOT::NTupleSize_t glob
    *reinterpret_cast<UInt_t *>(reinterpret_cast<unsigned char *>(to) + GetOffsetBits()) = bits;
 }
 
-void ROOT::Experimental::RField<TObject>::OnConnectPageSource()
+void ROOT::Experimental::RField<TObject>::AfterConnectPageSource()
 {
-   if (GetTypeVersion() != 1) {
+   if (GetOnDiskTypeVersion() != 1) {
       throw RException(R__FAIL("unsupported on-disk version of TObject: " + std::to_string(GetTypeVersion())));
    }
 }

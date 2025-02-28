@@ -16,6 +16,7 @@
 
 #include <ROOT/RDF/RColumnReaderBase.hxx>
 #include <ROOT/RField.hxx>
+#include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleDS.hxx>
@@ -68,9 +69,8 @@ protected:
    void ConstructValue(void *where) const final { *static_cast<std::size_t *>(where) = 0; }
 
 public:
-   static std::string TypeName() { return "std::size_t"; }
    RRDFCardinalityField()
-      : ROOT::Experimental::RFieldBase("", TypeName(), ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
+      : ROOT::Experimental::RFieldBase("", "std::size_t", ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
    {
    }
    RRDFCardinalityField(RRDFCardinalityField &&other) = default;
@@ -194,7 +194,15 @@ public:
          }
       }
 
-      ROOT::Experimental::Internal::CallConnectPageSourceOnField(*fField, source);
+      try {
+         ROOT::Experimental::Internal::CallConnectPageSourceOnField(*fField, source);
+      } catch (const ROOT::RException &err) {
+         auto onDiskType = source.GetSharedDescriptorGuard()->GetFieldDescriptor(fField->GetOnDiskId()).GetTypeName();
+         std::string msg = "RNTupleDS: invalid type \"" + fField->GetTypeName() + "\" for column \"" +
+                           fDataSource->fFieldId2QualifiedName[fField->GetOnDiskId()] + "\" with on-disk type \"" +
+                           onDiskType + "\"";
+         throw std::runtime_error(msg);
+      }
 
       if (fValuePtr) {
          // When the reader reconnects to a new file, the fValuePtr is already set
@@ -231,7 +239,7 @@ public:
 RNTupleDS::~RNTupleDS() = default;
 
 void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName, ROOT::DescriptorId_t fieldId,
-                         std::vector<RNTupleDS::RFieldInfo> fieldInfos)
+                         std::vector<RNTupleDS::RFieldInfo> fieldInfos, bool convertToRVec)
 {
    // As an example for the mapping of RNTuple fields to RDF columns, let's consider an RNTuple
    // using the following types and with a top-level field named "event" of type Event:
@@ -276,23 +284,12 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
       // Inner fields of collections are provided as projected collections of only that inner field,
       // E.g. we provide a projected collection RVec<RVec<float>> for "event.tracks.hits.x" in the example
       // above.
+      bool representableAsRVec =
+         convertToRVec && (fieldDesc.GetTypeName().substr(0, 19) == "ROOT::VecOps::RVec<" ||
+                           fieldDesc.GetTypeName().substr(0, 12) == "std::vector<" || fieldDesc.GetTypeName() == "");
+      const auto &f = *desc.GetFieldIterable(fieldDesc.GetId()).begin();
+      AddField(desc, colName, f.GetId(), fieldInfos, representableAsRVec);
 
-      if (fieldDesc.GetTypeName().empty()) {
-         // Anonymous collection with one or several sub fields
-         auto cardinalityField = std::make_unique<ROOT::Experimental::Internal::RRDFCardinalityField>();
-         cardinalityField->SetOnDiskId(fieldId);
-         fColumnNames.emplace_back("R_rdf_sizeof_" + std::string(colName));
-         fColumnTypes.emplace_back(cardinalityField->GetTypeName());
-         fProtoFields.emplace_back(std::move(cardinalityField));
-
-         for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
-            AddField(desc, std::string(colName) + "." + f.GetFieldName(), f.GetId(), fieldInfos);
-         }
-      } else {
-         // ROOT::RVec with exactly one sub field
-         const auto &f = *desc.GetFieldIterable(fieldDesc.GetId()).begin();
-         AddField(desc, colName, f.GetId(), fieldInfos);
-      }
       // Note that at the end of the recursion, we handled the inner sub collections as well as the
       // collection as whole, so we are done.
       return;
@@ -306,6 +303,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
       // Inner fields of records are provided as individual RDF columns, e.g. "event.id"
       for (const auto &f : desc.GetFieldIterable(fieldDesc.GetId())) {
          auto innerName = colName.empty() ? f.GetFieldName() : (std::string(colName) + "." + f.GetFieldName());
+         // Inner fields of collections of records are always exposed as ROOT::RVec
          AddField(desc, innerName, f.GetId(), fieldInfos);
       }
    }
@@ -340,8 +338,14 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
          valueField =
             std::make_unique<ROOT::Experimental::RArrayAsRVecField>("", std::move(valueField), fieldInfo.fNRepetitions);
       } else {
-         // Actual ROOT::RVec
-         valueField = std::make_unique<ROOT::Experimental::RRVecField>("", std::move(valueField));
+         // Actual collection. A std::vector or ROOT::RVec gets added as a ROOT::RVec. All other collection types keep
+         // their original type.
+         if (convertToRVec) {
+            valueField = std::make_unique<ROOT::Experimental::RRVecField>("", std::move(valueField));
+         } else {
+            auto outerFieldType = desc.GetFieldDescriptor(fieldInfo.fFieldId).GetTypeName();
+            valueField = RFieldBase::Create("", outerFieldType).Unwrap();
+         }
       }
 
       valueField->SetOnDiskId(fieldInfo.fFieldId);
@@ -386,19 +390,19 @@ RNTupleDS::RNTupleDS(std::unique_ptr<Internal::RPageSource> pageSource)
 
 namespace {
 
-const ROOT::Experimental::RNTupleReadOptions &GetOpts()
+const ROOT::RNTupleReadOptions &GetOpts()
 {
    // The setting is for now a global one, must be decided before running the
    // program by setting the appropriate environment variable. Make sure that
    // option configuration is thread-safe and happens only once.
-   static ROOT::Experimental::RNTupleReadOptions opts;
+   static ROOT::RNTupleReadOptions opts;
    static std::once_flag flag;
    std::call_once(flag, []() {
       if (auto env = gSystem->Getenv("ROOT_RNTUPLE_CLUSTERBUNCHSIZE"); env != nullptr && strlen(env) > 0) {
          std::string envStr{env};
          auto envNum{std::stoul(envStr)};
          envNum = envNum == 0 ? 1 : envNum;
-         Internal::RNTupleReadOptionsManip::SetClusterBunchSize(opts, envNum);
+         ROOT::Internal::RNTupleReadOptionsManip::SetClusterBunchSize(opts, envNum);
       }
    });
    return opts;
@@ -436,12 +440,37 @@ RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view /* n
 }
 
 std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
-RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std::type_info & /*tid*/)
+RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std::type_info &tid)
 {
    // At this point we can assume that `name` will be found in fColumnNames
-   // TODO(jblomer): check incoming type
    const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
-   auto field = fProtoFields[index].get();
+   const auto requestedType = Internal::GetRenormalizedTypeName(ROOT::Internal::RDF::TypeID2TypeName(tid));
+
+   RFieldBase *field;
+   // If the field corresponding to the provided name is not a cardinality column and the requested type is different
+   // from the proto field that was created when the data source was constructed, we first have to create an
+   // alternative proto field for the column reader. Otherwise, we can directly use the existing proto field.
+   if (name.substr(0, 13) != "R_rdf_sizeof_" && requestedType != fColumnTypes[index]) {
+      auto &altProtoFields = fAlternativeProtoFields[index];
+      auto altProtoField = std::find_if(
+         altProtoFields.begin(), altProtoFields.end(),
+         [&requestedType](const std::unique_ptr<RFieldBase> &fld) { return fld->GetTypeName() == requestedType; });
+      if (altProtoField != altProtoFields.end()) {
+         field = altProtoField->get();
+      } else {
+         auto newAltProtoFieldOrException = RFieldBase::Create(std::string(name), requestedType);
+         if (!newAltProtoFieldOrException) {
+            throw std::runtime_error("RNTupleDS: Could not create field with type \"" + requestedType +
+                                     "\" for column \"" + std::string(name));
+         }
+         auto newAltProtoField = newAltProtoFieldOrException.Unwrap();
+         newAltProtoField->SetOnDiskId(fProtoFields[index]->GetOnDiskId());
+         field = newAltProtoField.get();
+         altProtoFields.emplace_back(std::move(newAltProtoField));
+      }
+   } else {
+      field = fProtoFields[index].get();
+   }
 
    // Map the field's and subfields' IDs to qualified names so that we can later connect the fields to
    // other page sources from the chain

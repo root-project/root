@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -293,3 +295,5 @@ double RooImproperIntegrator1D::integral(const double* yvec)
   if(_integrator3) result+= _integrator3->integral(yvec);
   return result;
 }
+
+/// \endcond

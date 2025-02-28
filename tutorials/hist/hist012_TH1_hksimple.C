@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Illustrates the advantages of a TH1K histogram
+/// \preview  Illustrates the advantages of a TH1K histogram.
 ///
 /// \macro_image
 /// \macro_code

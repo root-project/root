@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook
-/// An example with basic graphics illustrating the Object Oriented User Interface of ROOT.
+/// \preview An example with basic graphics illustrating the Object Oriented User Interface of ROOT.
 ///
 /// \macro_image
 /// \macro_code

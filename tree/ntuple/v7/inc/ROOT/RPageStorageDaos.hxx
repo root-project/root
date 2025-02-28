@@ -135,7 +135,7 @@ protected:
    void WriteNTupleAnchor();
 
 public:
-   RPageSinkDaos(std::string_view ntupleName, std::string_view uri, const RNTupleWriteOptions &options);
+   RPageSinkDaos(std::string_view ntupleName, std::string_view uri, const ROOT::RNTupleWriteOptions &options);
    ~RPageSinkDaos() override;
 }; // class RPageSinkDaos
 
@@ -171,7 +171,7 @@ protected:
    std::unique_ptr<RPageSource> CloneImpl() const final;
 
 public:
-   RPageSourceDaos(std::string_view ntupleName, std::string_view uri, const RNTupleReadOptions &options);
+   RPageSourceDaos(std::string_view ntupleName, std::string_view uri, const ROOT::RNTupleReadOptions &options);
    ~RPageSourceDaos() override;
 
    void

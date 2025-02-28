@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// TMultiGraph is used to combine multiple graphs into one plot. 
+/// \preview TMultiGraph is used to combine multiple graphs into one plot. 
 /// Allowing to overlay different graphs can be useful for comparing different datasets
 /// or for plotting multiple related graphs on the same canvas.
 ///

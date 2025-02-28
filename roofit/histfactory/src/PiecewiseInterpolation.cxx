@@ -204,8 +204,7 @@ inline double broadcast(std::span<const double> const &s, std::size_t i)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Interpolate between input distributions for all values of the observable in `evalData`.
-/// \param[in,out] evalData Struct holding spans pointing to input data. The results of this function will be stored here.
-/// \param[in] normSet Arguments to normalise over.
+/// \param[in,out] ctx Struct holding spans pointing to input data. The results of this function will be stored here.
 void PiecewiseInterpolation::doEval(RooFit::EvalContext &ctx) const
 {
    std::span<double> sum = ctx.output();

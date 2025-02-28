@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphics
 /// \notebook -js
-/// This macro produces the flowchart of TFormula::Compile
+/// \preview This macro produces the flowchart of TFormula::Compile.
 ///
 /// \macro_image
 /// \macro_code

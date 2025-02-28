@@ -44,6 +44,9 @@ set(TUTORIAL_ENV ${ROOT_environ} OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NU
 #---Copy the CTestCustom.cmake file into the build directory--------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
+#---Copy the input file of the quadp portfolio example to the build directory--------
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/math/quadp/stock.root ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+
 #---Provide a rootlogon.C file in the current build directory that
 #   will affect the way we run all tutorials.
 #   This overwrites the existing rootlogon.C and rootalias.C in the
@@ -296,6 +299,12 @@ endif()
 if (NOT ROOT_tmva_FOUND)
   list(APPEND tmva_veto machine_learning/*.C machine_learning/*.py machine_learning/envelope/*.C machine_learning/keras/*.C machine_learning/keras/*.py machine_learning/pytorch/*.py )
 else()
+  #copy input data files
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/data/tmva_class_example.root ${CMAKE_CURRENT_BINARY_DIR}/machine_learning/data COPYONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/data/tmva_reg_example.root ${CMAKE_CURRENT_BINARY_DIR}/machine_learning/data COPYONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/data/tmva_multiclass_example.root ${CMAKE_CURRENT_BINARY_DIR}/machine_learning/data COPYONLY)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/data/Higgs_data.root ${CMAKE_CURRENT_BINARY_DIR}/machine_learning/data COPYONLY)
+
   #---These do not need to run for TMVA
   list(APPEND tmva_veto machine_learning/createData.C)
   if(MSVC AND NOT win_broken_tests)
@@ -427,6 +436,7 @@ if(MSVC)
   # disable run_h1analysis.C because of Endpoint Security HTTP traffic scanning,
   # which is corrupting the data on Windows
   list(APPEND extra_veto analysis/tree/run_h1analysis.C)
+  list(APPEND extra_veto legacy/hist040_TH2Poly_europe.C) # needs to download from the web
 endif()
 
 if(MSVC AND NOT llvm13_broken_tests)
@@ -649,6 +659,13 @@ if (ROOT_SONNET_FOUND AND ROOT_GRAPH_NETS_FOUND)
   PASSRC 0 FAILREGEX "Error in" ": error:" LABELS tutorial ENVIRONMENT ${TUTORIAL_ENV})
   set (machine_learning-TMVA_SOFIE_GNN_Application-depends tutorial-machine_learning-TMVA_SOFIE_GNN_Parser)
 endif()
+
+# Download open data csv only once from a python tutorial, the C++ ones depend on it
+set(analysis-dataframe-df014_CSVDataSource-depends tutorial-analysis-dataframe-df014_CSVDataSource-py)
+set(analysis-dataframe-df015_LazyDataSource-depends tutorial-analysis-dataframe-df014_CSVDataSource-py)
+
+# Download the input root file only once from a python tutorial, the C++ one depends on it
+set(hist-hist039_TH2Poly_usa-depends tutorial-hist-hist039_TH2Poly_usa-py)
 
 #---Loop over all tutorials and define the corresponding test---------
 foreach(t ${tutorials})
@@ -939,11 +956,17 @@ if(ROOT_pyroot_FOUND)
       endif()
     endforeach()
 
+    if(NOT ${${tname}-depends} STREQUAL ${tutorial_name})
+      set(tutorial_dependency ${${tname}-depends})
+    else()
+      set(tutorial_dependency "")
+    endif()
+
     ROOT_ADD_TEST(${tutorial_name}
                 COMMAND ${Python3_EXECUTABLE} ${setThreadPoolSize} ${thisTestPoolSize} ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS ${labels}
-                DEPENDS ${${tname}-depends}
+                DEPENDS ${tutorial_dependency}
                 ENVIRONMENT ${TUTORIAL_ENV}
                 PYTHON_DEPS ${python_deps}
                 ${py_will_fail})

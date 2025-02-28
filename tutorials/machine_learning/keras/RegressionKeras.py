@@ -10,7 +10,7 @@
 # \date 2017
 # \author TMVA Team
 
-from ROOT import TMVA, TFile, TCut
+from ROOT import TMVA, TFile, TCut, gROOT
 from subprocess import call
 from os.path import isfile
 
@@ -36,7 +36,7 @@ def create_model():
 
 def run():
 
-    with TFile.Open('TMVA_Regression_Keras.root', 'RECREATE') as output, TFile.Open('tmva_reg_example.root') as data:
+    with TFile.Open('TMVA_Regression_Keras.root', 'RECREATE') as output, TFile.Open(str(gROOT.GetTutorialDir()) + '/machine_learning/data/tmva_reg_example.root') as data:
         factory = TMVA.Factory('TMVARegression', output,
                                '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=Regression')
 
@@ -70,10 +70,6 @@ if __name__ == "__main__":
     # Setup TMVA
     TMVA.Tools.Instance()
     TMVA.PyMethodBase.PyInitialize()
-
-    # Load data
-    if not isfile('tmva_reg_example.root'):
-        call(['curl', '-L', '-O', 'http://root.cern/files/tmva_reg_example.root'])
 
     # Generate model
     create_model()

@@ -86,6 +86,12 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// Only the clone connects to the backing page store and acquires I/O resources.
    /// The field IDs are set in the context of the first source and used as keys in fFieldId2QualifiedName.
    std::vector<std::unique_ptr<ROOT::Experimental::RFieldBase>> fProtoFields;
+   /// Columns may be requested with types other than with which they were initially added as proto fields. For example,
+   /// a column with a `ROOT::RVec<float>` proto field may instead be requested as a `std::vector<float>`. In case this
+   /// happens, we create an alternative proto field and store it here, with the original index in `fProtoFields` as
+   /// key. A single column can have more than one alternative proto fields.
+   std::unordered_map<std::size_t, std::vector<std::unique_ptr<ROOT::Experimental::RFieldBase>>>
+      fAlternativeProtoFields;
    /// Connects the IDs of active proto fields and their subfields to their fully qualified name (a.b.c.d).
    /// This enables the column reader to rewire the field IDs when the file changes (chain),
    /// using the fully qualified name as a search key in the descriptor of the other page sources.
@@ -133,13 +139,21 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// AddField recurses into the sub fields. The fieldInfos argument is a list of objects holding info
    /// about the fields of the outer collection(s) (w.r.t. fieldId). For instance, if fieldId refers to an
    /// `std::vector<Jet>`, with
+   /// ~~~{.cpp}
    /// struct Jet {
    ///    float pt;
    ///    float eta;
    /// };
-   /// AddField will recurse into Jet.pt and Jet.eta and provide the two inner fields as std::vector<float> each.
+   /// ~~~
+   /// AddField will recurse into `Jet.pt` and `Jet.eta` and provide the two inner fields as `ROOT::VecOps::RVec<float>`
+   /// each.
+   ///
+   /// In case the field is a collection of type `ROOT::VecOps::RVec`, `std::vector` or `std::array`, its corresponding
+   /// column is added as a `ROOT::VecOps::RVec`. Otherwise, the collection field's on-disk type is used. Note, however,
+   /// that inner record members of such collections will still be added as `ROOT::VecOps::RVec` (e.g., `std::set<Jet>
+   /// will be added as a `std::set`, but `Jet.[pt|eta] will be added as `ROOT::VecOps::RVec<float>).
    void AddField(const RNTupleDescriptor &desc, std::string_view colName, ROOT::DescriptorId_t fieldId,
-                 std::vector<RFieldInfo> fieldInfos);
+                 std::vector<RFieldInfo> fieldInfos, bool convertToRVec = true);
 
    /// The main function of the fThreadStaging background thread
    void ExecStaging();

@@ -921,7 +921,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    this.x_handle = new AxisPainter(null, this.xaxis);
    if (opts.v7) {
       this.x_handle.pad_name = this.pad_name;
-      this.x_handle.snapid = this.snapid;
+      this.x_handle.assignSnapId(this.snapid);
    } else if (opts.hist_painter)
       this.x_handle.setHistPainter(opts.hist_painter, 'x');
 
@@ -933,7 +933,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    this.y_handle = new AxisPainter(null, this.yaxis);
    if (opts.v7) {
       this.y_handle.pad_name = this.pad_name;
-      this.y_handle.snapid = this.snapid;
+      this.y_handle.assignSnapId(this.snapid);
    } else if (opts.hist_painter)
       this.y_handle.setHistPainter(opts.hist_painter, 'y');
    this.y_handle.configureAxis('yaxis', this.ymin, this.ymax, ymin, ymax, false, [grminy, grmaxy],
@@ -944,7 +944,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    this.z_handle = new AxisPainter(null, this.zaxis);
    if (opts.v7) {
       this.z_handle.pad_name = this.pad_name;
-      this.z_handle.snapid = this.snapid;
+      this.z_handle.assignSnapId(this.snapid);
    } else if (opts.hist_painter)
       this.z_handle.setHistPainter(opts.hist_painter, 'z');
    this.z_handle.configureAxis('zaxis', this.zmin, this.zmax, zmin, zmax, false, [grminz, grmaxz],
@@ -1684,8 +1684,8 @@ function drawBinsLego(painter, is_v7 = false) {
          palette = main.getHistPalette();
          painter.createContour(main, palette, { full_z_range: true });
          levels = palette.getContour();
-         axis_zmin = levels[0];
-         axis_zmax = levels[levels.length-1];
+         axis_zmin = levels.at(0);
+         axis_zmax = levels.at(-1);
       } else {
          const cntr = painter.createContour(histo.fContour ? histo.fContour.length : 20, main.lego_zmin, main.lego_zmax);
          levels = cntr.arr;
@@ -1693,12 +1693,12 @@ function drawBinsLego(painter, is_v7 = false) {
       }
    }
 
-   for (let nlevel = 0; nlevel < levels.length-1; ++nlevel) {
+   for (let nlevel = 0; nlevel < levels.length - 1; ++nlevel) {
       zmin = levels[nlevel];
       zmax = levels[nlevel+1];
 
       // artificially extend last level of color palette to maximal visible value
-      if (palette && (nlevel === levels.length-2) && zmax < axis_zmax) zmax = axis_zmax;
+      if (palette && (nlevel === levels.length - 2) && zmax < axis_zmax) zmax = axis_zmax;
 
       const grzmin = main.grz(zmin), grzmax = main.grz(zmax);
       let z1 = 0, z2 = 0, numvertices = 0, num2vertices = 0;
@@ -1710,7 +1710,7 @@ function drawBinsLego(painter, is_v7 = false) {
             if (!getBinContent(i, j, nlevel)) continue;
 
             nobottom = !reduced && (nlevel > 0);
-            notop = !reduced && (binz2 > zmax) && (nlevel < levels.length-2);
+            notop = !reduced && (binz2 > zmax) && (nlevel < levels.length - 2);
 
             numvertices += (reduced ? 12 : indicies.length);
             if (nobottom) numvertices -= 6;
@@ -1739,7 +1739,7 @@ function drawBinsLego(painter, is_v7 = false) {
             if (!getBinContent(i, j, nlevel)) continue;
 
             nobottom = !reduced && (nlevel > 0);
-            notop = !reduced && (binz2 > zmax) && (nlevel < levels.length-2);
+            notop = !reduced && (binz2 > zmax) && (nlevel < levels.length - 2);
 
             y1 = handle.gry[j] + handle.ybar1*(handle.gry[j+1] - handle.gry[j]);
             y2 = handle.gry[j] + handle.ybar2*(handle.gry[j+1] - handle.gry[j]);

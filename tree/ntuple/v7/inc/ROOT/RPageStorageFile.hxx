@@ -72,7 +72,7 @@ private:
    std::unique_ptr<RNTupleFileWriter> fWriter;
    /// Number of bytes committed to storage in the current cluster
    std::uint64_t fNBytesCurrentCluster = 0;
-   RPageSinkFile(std::string_view ntupleName, const RNTupleWriteOptions &options);
+   RPageSinkFile(std::string_view ntupleName, const ROOT::RNTupleWriteOptions &options);
 
    /// We pass bytesPacked so that TFile::ls() reports a reasonable value for the compression ratio of the corresponding
    /// key. It is not strictly necessary to write and read the sealed page.
@@ -98,8 +98,8 @@ protected:
    void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
 
 public:
-   RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
-   RPageSinkFile(std::string_view ntupleName, TDirectory &fileOrDirectory, const RNTupleWriteOptions &options);
+   RPageSinkFile(std::string_view ntupleName, std::string_view path, const ROOT::RNTupleWriteOptions &options);
+   RPageSinkFile(std::string_view ntupleName, TDirectory &fileOrDirectory, const ROOT::RNTupleWriteOptions &options);
    RPageSinkFile(const RPageSinkFile &) = delete;
    RPageSinkFile &operator=(const RPageSinkFile &) = delete;
    RPageSinkFile(RPageSinkFile &&) = default;
@@ -147,7 +147,7 @@ private:
    /// Populated by LoadStructureImpl(), reset at the end of Attach()
    RStructureBuffer fStructureBuffer;
 
-   RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
+   RPageSourceFile(std::string_view ntupleName, const ROOT::RNTupleReadOptions &options);
 
    /// Helper function for LoadClusters: it prepares the memory buffer (page map) and the
    /// read requests for a given cluster and columns.  The reead requests are appended to
@@ -166,13 +166,13 @@ protected:
    LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, ROOT::NTupleSize_t idxInCluster) final;
 
 public:
-   RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
+   RPageSourceFile(std::string_view ntupleName, std::string_view path, const ROOT::RNTupleReadOptions &options);
    RPageSourceFile(std::string_view ntupleName, std::unique_ptr<ROOT::Internal::RRawFile> file,
-                   const RNTupleReadOptions &options);
+                   const ROOT::RNTupleReadOptions &options);
    /// Used from the RNTuple class to build a datasource if the anchor is already available.
    /// Requires the RNTuple object to be streamed from a file.
    static std::unique_ptr<RPageSourceFile>
-   CreateFromAnchor(const RNTuple &anchor, const RNTupleReadOptions &options = RNTupleReadOptions());
+   CreateFromAnchor(const RNTuple &anchor, const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
 
    RPageSourceFile(const RPageSourceFile &) = delete;
    RPageSourceFile &operator=(const RPageSourceFile &) = delete;

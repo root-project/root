@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook -js
-/// Create a TGraphSmooth and show the usage of the interpolation function Approx
+/// \preview Create a TGraphSmooth and show the usage of the interpolation function Approx.
 ///
 /// See the [TGraphSmooth documentation](https://root.cern/doc/master/classTGraphSmooth.html)
 ///

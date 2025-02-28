@@ -233,12 +233,19 @@ TEST(RNTuple, TClassReadRules)
 {
    ROOT::TestSupport::CheckDiagsRAII diags;
    diags.requiredDiag(kWarning, "[ROOT.NTuple]", "ignoring I/O customization rule with non-transient member: a", false);
+   diags.requiredDiag(kWarning, "[ROOT.NTuple]",
+                      "ignoring I/O customization rule due to conflicting source member type: float vs. double "
+                      "for member a",
+                      false);
 
    FileRaii fileGuard("test_ntuple_tclassrules.root");
    char c[4] = {'R', 'O', 'O', 'T'};
    {
       auto model = RNTupleModel::Create();
       auto ptrClass = model->MakeField<StructWithIORules>("class");
+      auto ptrCoord = model->MakeField<CoordinatesWithIORules>("coord");
+      ptrCoord->fX = 1.0;
+      ptrCoord->fY = 1.0;
       auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       for (int i = 0; i < 5; i++) {
          *ptrClass = StructWithIORules{/*a=*/static_cast<float>(i), /*chars=*/c};
@@ -257,8 +264,9 @@ TEST(RNTuple, TClassReadRules)
       EXPECT_TRUE(0 == memcmp(c, viewKlass(i).s.chars, sizeof(c)));
 
       // The following values are set from a read rule; see CustomStructLinkDef.h
-      EXPECT_EQ(fi + 1.0f, viewKlass(i).b);
-      EXPECT_EQ(viewKlass(i).a + viewKlass(i).b, viewKlass(i).c);
+      EXPECT_FLOAT_EQ(fi + 1.0f, viewKlass(i).b);
+      EXPECT_FLOAT_EQ(viewKlass(i).a + viewKlass(i).b, viewKlass(i).c);
+      EXPECT_FLOAT_EQ(2 * (viewKlass(i).a + viewKlass(i).b), viewKlass(i).cDerived);
       EXPECT_STREQ("ROOT", viewKlass(i).s.str.c_str());
 
       // The following member is set by a checksum based rule
@@ -266,4 +274,10 @@ TEST(RNTuple, TClassReadRules)
       // The following member is not touched by a rule due to a checksum mismatch
       EXPECT_FLOAT_EQ(137.0, viewKlass(i).checksumB);
    }
+
+   auto viewCoord = reader->GetView<CoordinatesWithIORules>("coord");
+   EXPECT_FLOAT_EQ(1.0, viewCoord(0).fX);
+   EXPECT_FLOAT_EQ(1.0, viewCoord(0).fY);
+   EXPECT_FLOAT_EQ(sqrt(2), viewCoord(0).fR);
+   EXPECT_FLOAT_EQ(M_PI / 4., viewCoord(0).fPhi);
 }

@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -64,7 +66,7 @@ parallelized calculation of test statistics.
 
 #include "ROOT/StringUtils.hxx"
 
-using std::endl, std::ostream;
+using std::ostream;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a test statistic, and optimise its calculation.
@@ -669,11 +671,7 @@ bool RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, bool cloneData, bo
 
   if (cloneData) {
     // Cloning input dataset
-    if (_rangeName.empty()) {
-      _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(*indata.get())}.release();
-    } else {
-      _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(RooFit::SelectVars(*indata.get()),RooFit::CutRange(_rangeName.c_str()))}.release();
-    }
+    _dataClone = std::unique_ptr<RooAbsData>{indata.reduce(RooFit::SelectVars(*indata.get()),RooFit::CutRange(_rangeName.c_str()))}.release();
     _ownData = true ;
 
   } else {
@@ -773,3 +771,5 @@ void RooAbsOptTestStatistic::runRecalculateCache(std::size_t firstEvent, std::si
 {
    _dataClone->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, _skipZeroWeights);
 }
+
+/// \endcond

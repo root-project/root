@@ -305,7 +305,7 @@ TEST(RooDataSet, ReduceWithCompositeDataStore)
                                RooFit::Link({{"physics", &dataSetWeighted}}));
 
    // Reduce the dataset with the RooCompositeDataStore
-   std::unique_ptr<RooAbsData> dataSetReducedPtr{dataSetComposite.reduce("true")};
+   std::unique_ptr<RooAbsData> dataSetReducedPtr{dataSetComposite.reduce(RooFit::Cut("true"))};
    auto &dataSetReduced = static_cast<RooDataSet &>(*dataSetReducedPtr);
 
    // Get the first row of all datasets
@@ -486,7 +486,7 @@ TEST(RooDataSet, RooStringVarStorage)
    ASSERT_STREQ(dataClone.get(1)->getStringValue("str"), "str2");
 }
 
-// root-project/root#15744: Test that reducing a RooCompositeDataStore with a cut tha depends on its index category
+// root-project/root#15744: Test that reducing a RooCompositeDataStore with a cut that depends on its index category
 // works properly
 TEST(RooDataSet, ReduceCompositeDataStoreByIndexCat)
 {

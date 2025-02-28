@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Palette coloring for TH1
+/// \preview Palette coloring for TH1.
 ///
 /// Palette coloring for histogram is activated thanks to the options `PFC`
 /// (Palette Fill Color), `PLC` (Palette Line Color) and `PMC` (Palette Marker Color).

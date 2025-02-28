@@ -12,6 +12,7 @@
 #define ROOT_RLOOPMANAGER
 
 #include "ROOT/InternalTreeUtils.hxx" // RNoCleanupNotifier
+#include "ROOT/RDataSource.hxx"
 #include "ROOT/RDF/RColumnReaderBase.hxx"
 #include "ROOT/RDF/RDatasetSpec.hxx"
 #include "ROOT/RDF/RNodeBase.hxx"
@@ -29,6 +30,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <any>
 
 // forward declarations
 class TTree;
@@ -113,7 +115,15 @@ using ROOT::RDF::RDataSource;
 /// This class is responsible of running the event loop.
 class RLoopManager : public RNodeBase {
    using ColumnNames_t = std::vector<std::string>;
-   enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
+   enum class ELoopType {
+      kInvalid,
+      kROOTFiles,
+      kROOTFilesMT,
+      kNoFiles,
+      kNoFilesMT,
+      kDataSource,
+      kDataSourceMT
+   };
 
    friend struct RCallCleanUpTask;
 
@@ -143,8 +153,9 @@ class RLoopManager : public RNodeBase {
    std::pair<ULong64_t, ULong64_t> fEmptyEntryRange{};
    unsigned int fNSlots{1};
    bool fMustRunNamedFilters{true};
-   ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
-   std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
+   /// The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
+   ELoopType fLoopType{ELoopType::kInvalid};
+   std::unique_ptr<RDataSource> fDataSource{}; ///< Owning pointer to a data-source object. Null if no data-source
    /// Registered callbacks to be executed every N events.
    /// The registration happens via the RegisterCallback method.
    std::vector<RDFInternal::RCallback> fCallbacksEveryNEvents;
@@ -192,7 +203,12 @@ class RLoopManager : public RNodeBase {
    std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RVariationsWithReaders>>>
       fUniqueVariationsWithReaders;
 
+   /// A wrapped reference to a TTree dataset that can be shared by many computation graphs. Ensures lifetime
+   /// management.
+   std::any fTTreeLifeline{};
+
 public:
+   RLoopManager(const ColumnNames_t &defaultColumns = {});
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
    RLoopManager(std::unique_ptr<TTree> tree, const ColumnNames_t &defaultBranches);
    RLoopManager(ULong64_t nEmptyEntries);
@@ -282,12 +298,17 @@ public:
    {
       return fSuppressErrorsForMissingBranches;
    }
+
+   void SetTTreeLifeline(std::any lifeline);
+
+   void SetDataSource(std::unique_ptr<ROOT::RDF::RDataSource> dataSource);
 };
 
 /// \brief Create an RLoopManager that reads a TChain.
 /// \param[in] datasetName Name of the TChain
 /// \param[in] fileNameGlob File name (or glob) in which the TChain is stored.
 /// \param[in] defaultColumns List of default columns, see
+/// \param[in] checkFile file validator boolean
 /// \ref https://root.cern/doc/master/classROOT_1_1RDataFrame.html#default-branches "Default column lists"
 /// \return the RLoopManager instance.
 std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
@@ -298,6 +319,7 @@ CreateLMFromTTree(std::string_view datasetName, std::string_view fileNameGlob,
 /// \param[in] datasetName Name of the TChain
 /// \param[in] fileNameGlobs List of file names (potentially globs).
 /// \param[in] defaultColumns List of default columns, see
+/// \param[in] checkFile file validator boolean
 /// \ref https://root.cern/doc/master/classROOT_1_1RDataFrame.html#default-branches "Default column lists"
 /// \return the RLoopManager instance.
 std::shared_ptr<ROOT::Detail::RDF::RLoopManager>

@@ -1784,7 +1784,7 @@ using ColumnNamesPtr_t = std::shared_ptr<const ColumnNames_t>;
 ///
 /// The default columns are looked at in case no column is specified in the
 /// booking of actions or transformations.
-/// \see ROOT::RDF::RInterface for the documentation of the methods available.
+/// \note see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const ColumnNames_t &defaultColumns)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultColumns))
 {
@@ -1804,7 +1804,7 @@ RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const Colu
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe.
 /// \param[in] treeName Name of the tree contained in the directory
-/// \param[in] filenameglob TDirectory where the tree is stored, e.g. a TFile.
+/// \param[in] fileNameGlob TDirectory where the tree is stored, e.g. a TFile.
 /// \param[in] defaultColumns Collection of default columns.
 ///
 /// The filename glob supports the same type of expressions as TChain::Add(), and it is passed as-is to TChain's
@@ -1812,7 +1812,7 @@ RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const Colu
 ///
 /// The default columns are looked at in case no column is specified in the
 /// booking of actions or transformations.
-/// \see ROOT::RDF::RInterface for the documentation of the methods available.
+/// \note see ROOT::RDF::RInterface for the documentation of the methods available.
 #ifdef R__HAS_ROOT7
 RDataFrame::RDataFrame(std::string_view treeName, std::string_view fileNameGlob, const ColumnNames_t &defaultColumns)
    : RInterface(ROOT::Detail::RDF::CreateLMFromFile(treeName, fileNameGlob, defaultColumns))
@@ -1827,15 +1827,15 @@ RDataFrame::RDataFrame(std::string_view treeName, std::string_view fileNameGlob,
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe.
-/// \param[in] treeName Name of the tree contained in the directory
-/// \param[in] fileglobs Collection of file names of filename globs
+/// \param[in] datasetName Name of the dataset contained in the directory
+/// \param[in] fileNameGlobs Collection of file names of filename globs
 /// \param[in] defaultColumns Collection of default columns.
 ///
 /// The filename globs support the same type of expressions as TChain::Add(), and each glob is passed as-is
 /// to TChain's constructor.
 ///
 /// The default columns are looked at in case no column is specified in the booking of actions or transformations.
-/// \see ROOT::RDF::RInterface for the documentation of the methods available.
+/// \note see ROOT::RDF::RInterface for the documentation of the methods available.
 #ifdef R__HAS_ROOT7
 RDataFrame::RDataFrame(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
                        const ColumnNames_t &defaultColumns)
@@ -1857,7 +1857,7 @@ RDataFrame::RDataFrame(std::string_view datasetName, const std::vector<std::stri
 ///
 /// The default columns are looked at in case no column is specified in the
 /// booking of actions or transformations.
-/// \see ROOT::RDF::RInterface for the documentation of the methods available.
+/// \note see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(TTree &tree, const ColumnNames_t &defaultColumns)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(&tree, defaultColumns))
 {
@@ -1870,7 +1870,7 @@ RDataFrame::RDataFrame(TTree &tree, const ColumnNames_t &defaultColumns)
 /// An empty-source dataframe constructed with a number of entries will
 /// generate those entries on the fly when some action is triggered,
 /// and it will do so for all the previously-defined columns.
-/// \see ROOT::RDF::RInterface for the documentation of the methods available.
+/// \note see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(ULong64_t numEntries)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(numEntries))
 
@@ -1883,7 +1883,7 @@ RDataFrame::RDataFrame(ULong64_t numEntries)
 /// \param[in] defaultColumns Collection of default column names to fall back to when none is specified.
 ///
 /// A dataframe associated to a data source will query it to access column values.
-/// \see ROOT::RDF::RInterface for the documentation of the methods available.
+/// \note see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource> ds, const ColumnNames_t &defaultColumns)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(std::move(ds), defaultColumns))
 {

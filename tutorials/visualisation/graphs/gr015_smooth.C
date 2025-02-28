@@ -1,12 +1,11 @@
 /// \file
 /// \ingroup tutorial_graphs
 /// \notebook
-/// Show scatter plot smoothers: ksmooth, lowess, supsmu,
+/// \preview Show scatter plot smoothers: ksmooth, lowess, supsmu,
 /// as described in:
-///
-///      Modern Applied Statistics with S-Plus, 3rd Edition
-///      W.N. Venables and B.D. Ripley
-///      Chapter 9: Smooth Regression, Figure 9.1
+///  Modern Applied Statistics with S-Plus, 3rd Edition
+///  W.N. Venables and B.D. Ripley
+///  Chapter 9: Smooth Regression, Figure 9.1
 ///
 /// Example is a set of data on 133 observations of acceleration against time
 /// for a simulated motorcycle accident, taken from Silverman (1985). The data

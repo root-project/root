@@ -1890,7 +1890,7 @@ RooPlot *RooAbsData::plotOn(RooPlot *frame, PlotOpt o) const
   RooAbsRealLValue* dataVar = static_cast<RooAbsRealLValue*>(_vars.find(var->GetName())) ;
   double nEnt(sumEntries()) ;
   if (dataVar->getMin()<var->getMin() || dataVar->getMax()>var->getMax()) {
-    std::unique_ptr<RooAbsData> tmp{const_cast<RooAbsData*>(this)->reduce(*var)};
+    std::unique_ptr<RooAbsData> tmp{const_cast<RooAbsData*>(this)->reduce(RooFit::SelectVars(*var))};
     nEnt = tmp->sumEntries() ;
   }
 
@@ -2410,7 +2410,7 @@ bool RooAbsData::hasFilledCache() const
 const TTree *RooAbsData::tree() const
 {
    if (storageType == RooAbsData::Tree) {
-      return _dstore->tree();
+      return static_cast<RooTreeDataStore&>(*_dstore).tree();
    } else {
       coutW(InputArguments) << "RooAbsData::tree(" << GetName() << ") WARNING: is not of StorageType::Tree. "
                             << "Use GetClonedTree() instead or convert to tree storage." << std::endl;
@@ -2425,11 +2425,10 @@ const TTree *RooAbsData::tree() const
 TTree *RooAbsData::GetClonedTree() const
 {
    if (storageType == RooAbsData::Tree) {
-      auto tmp = const_cast<TTree *>(_dstore->tree());
-      return tmp->CloneTree();
+      return static_cast<RooTreeDataStore&>(*_dstore).tree()->CloneTree();
    } else {
       RooTreeDataStore buffer(GetName(), GetTitle(), *get(), *_dstore);
-      return buffer.tree().CloneTree();
+      return buffer.tree()->CloneTree();
    }
 }
 

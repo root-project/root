@@ -143,17 +143,20 @@ if(geom)
                 FAILREGEX "FAILED|Error in")
 
   #--stressGeometry------------------------------------------------------------------------------------
-  ROOT_EXECUTABLE(stressGeometry stressGeometry.cxx LIBRARIES Geom Tree GenVector Gpad)
-  ROOT_ADD_TEST(test-stressgeometry COMMAND stressGeometry -b FAILREGEX "FAILED|Error in" LABELS longtest)
-  ROOT_ADD_TEST(test-stressgeometry-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGeometry.cxx
-                FAILREGEX "FAILED|Error in" DEPENDS test-stressgeometry LABELS longtest)
+  if (NOT MSVC) # Prevents the access to the web, which could happen through https
+    ROOT_EXECUTABLE(stressGeometry stressGeometry.cxx LIBRARIES Geom Tree GenVector Gpad)
+    ROOT_ADD_TEST(test-stressgeometry COMMAND stressGeometry -b FAILREGEX "FAILED|Error in" LABELS longtest)
+    ROOT_ADD_TEST(test-stressgeometry-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressGeometry.cxx
+                  FAILREGEX "FAILED|Error in" DEPENDS test-stressgeometry LABELS longtest)
+  endif()
 endif()
 
 #--stressLinear------------------------------------------------------------------------------------
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/linearIO.root ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 ROOT_EXECUTABLE(stressLinear stressLinear.cxx LIBRARIES Matrix Hist RIO)
 ROOT_ADD_TEST(test-stresslinear COMMAND stressLinear FAILREGEX "FAILED|Error in" LABELS longtest)
 ROOT_ADD_TEST(test-stresslinear-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressLinear.cxx
-              FAILREGEX "FAILED|Error in" DEPENDS test-stresslinear LABELS longtest)
+              FAILREGEX "FAILED|Error in" LABELS longtest)
 
 #--stressGraphics------------------------------------------------------------------------------------
 if(ROOT_opengl_FOUND)
@@ -197,10 +200,11 @@ if(ROOT_opengl_FOUND)
 endif()
 
 #--stressHistogram------------------------------------------------------------------------------------
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/stressHistogram.5.18.00.root ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 ROOT_EXECUTABLE(stressHistogram stressHistogram.cxx LIBRARIES Hist RIO)
 ROOT_ADD_TEST(test-stresshistogram COMMAND stressHistogram FAILREGEX "FAILED|Error in" LABELS longtest)
 ROOT_ADD_TEST(test-stresshistogram-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressHistogram.cxx
-              FAILREGEX "FAILED|Error in" DEPENDS test-stresshistogram )
+              FAILREGEX "FAILED|Error in")
 
 #--stressGUI---------------------------------------------------------------------------------------
 if(ROOT_asimage_FOUND)
@@ -370,43 +374,27 @@ if(TARGET g2root)
 endif()
 
 #--periodic----------------------------------------------------------------------------------------
-if (NOT cxxmodules)
-  # There are two problems with this test and cxxmodules. First, it picks up a
-  # header files from $ROOTSYS/include and builds a library. Naturally, we should
-  # build pcm files, however, building module MathCore requires specific -I to
-  # build the needed VecCore and Vc components. This test does not have access
-  # to the include relevant include paths. Secondly, if we want to reuse the
-  # modules from ROOT which makes most sense we can't because we get a hard
-  # error such as: fatal error: malformed or corrupted AST file:
-  # 'SourceLocation remap refers to unknown module, cannot find include/pcms/1WYSNQV9VBZK7/stl-2OZGQN92C38MI.pcm
-  #
-  # FIXME: We can fix the first point by moving out all VecCore-related headers
-  # such as Math/Types.h and all of its includers in a separate module. Thus,
-  # the current test will not require the VecCore (as in the textual case).
-  # Alternatively, we can trace the origin of the fatal error and try to remap
-  # the source locations.
-  if(MSVC)
-    set(build_generator_args --build-generator ${CMAKE_GENERATOR})
-    if(CMAKE_GENERATOR_PLATFORM)
-      list(APPEND build_generator_args --build-generator-platform ${CMAKE_GENERATOR_PLATFORM})
-    endif()
-    if(CMAKE_GENERATOR_TOOLSET)
-      list(APPEND build_generator_args --build-generator-toolset ${CMAKE_GENERATOR_TOOLSET})
-    endif()
-    ROOT_ADD_TEST(test-periodic-build
-      COMMAND ${CMAKE_CTEST_COMMAND} ${build_generator_args}
-        --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
-        --build-options -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
-    )
-  else()
-    ROOT_ADD_TEST(test-periodic-build
-      COMMAND
-        env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
-        ${CMAKE_CTEST_COMMAND} --build-generator ${CMAKE_GENERATOR}
-        --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
-        --build-options -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
-    )
+if(MSVC)
+  set(build_generator_args --build-generator ${CMAKE_GENERATOR})
+  if(CMAKE_GENERATOR_PLATFORM)
+    list(APPEND build_generator_args --build-generator-platform ${CMAKE_GENERATOR_PLATFORM})
   endif()
+  if(CMAKE_GENERATOR_TOOLSET)
+    list(APPEND build_generator_args --build-generator-toolset ${CMAKE_GENERATOR_TOOLSET})
+  endif()
+  ROOT_ADD_TEST(test-periodic-build
+    COMMAND ${CMAKE_CTEST_COMMAND} ${build_generator_args}
+      --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
+      --build-options -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
+  )
+else()
+  ROOT_ADD_TEST(test-periodic-build
+    COMMAND
+      env CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
+      ${CMAKE_CTEST_COMMAND} --build-generator ${CMAKE_GENERATOR}
+      --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build
+      --build-options -DCMAKE_PREFIX_PATH=${CMAKE_BINARY_DIR}
+  )
 endif()
 
 #--canary tests------------------------------------------------------------------------------------

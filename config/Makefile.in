@@ -99,11 +99,6 @@ OSXSDK         := @osxsdk@
 IOSVERS        := @iosvers@
 IOSSDK         := @iossdk@
 
-CXX11          := @c++11@
-CXX14          := @c++14@
-CXXMODULES     := @cxxmodules@
-LIBCXX         := @libc++@
-
 ENABLETHREAD   := @enable_thread@
 OSTHREADFLAG   := @threadflag@
 OSTHREADLIBDIR := @threadlibdir@

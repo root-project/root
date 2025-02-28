@@ -9,7 +9,7 @@
 ## \date 2017
 ## \author TMVA Team
 
-from ROOT import TMVA, TFile, TString
+from ROOT import TMVA, TFile, TString, gROOT
 from array import array
 from subprocess import call
 from os.path import isfile
@@ -20,10 +20,7 @@ TMVA.PyMethodBase.PyInitialize()
 reader = TMVA.Reader("Color:!Silent")
 
 # Load data
-if not isfile('tmva_reg_example.root'):
-    call(['curl', '-L', '-O', 'http://root.cern/files/tmva_reg_example.root'])
-
-data = TFile.Open('tmva_reg_example.root')
+data = TFile.Open(str(gROOT.GetTutorialDir()) + '/machine_learning/data/tmva_reg_example.root')
 tree = data.Get('TreeR')
 
 branches = {}

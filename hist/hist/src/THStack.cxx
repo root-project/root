@@ -787,8 +787,12 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint, Bool_t rebuild_stac
       while (lnk) {
          auto subpad = padsav->GetPad(i++);
          if (!subpad) break;
-         subpad->Clear();
-         subpad->Add(lnk->GetObject(), lnk->GetOption());
+         // check if histogram already drawn on the pad
+         if (!subpad->FindObject(lnk->GetObject())) {
+            subpad->Clear();
+            subpad->Add(lnk->GetObject(), lnk->GetOption());
+            subpad->Paint(); // need to re-paint subpad immediately
+         }
          lnk = lnk->Next();
       }
       padsav->cd();
@@ -1030,16 +1034,8 @@ void THStack::RecursiveRemove(TObject *obj)
 
 void THStack::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(THStack::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   THStack *";
-   }
-   out<<GetName()<<" = new THStack();"<<std::endl;
-   out<<"   "<<GetName()<<"->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
-   out<<"   "<<GetName()<<"->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), GetName());
+   SavePrimitiveNameTitle(out, GetName());
 
    if (fMinimum != -1111) {
       out<<"   "<<GetName()<<"->SetMinimum("<<fMinimum<<");"<<std::endl;
@@ -1067,12 +1063,12 @@ void THStack::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
          TString hname = h->GetName();
          h->SetName(TString::Format("%s_stack_%d", hname.Data(), ++hcount).Data());
          h->SavePrimitive(out,"nodraw");
-         out<<"   "<<GetName()<<"->Add("<<h->GetName()<<","<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
-         lnk = lnk->Next();
+         out<<"   "<<GetName()<<"->Add("<<h->GetName()<<", \""<<lnk->GetOption()<<"\");"<<std::endl;
          h->SetName(hname.Data()); // restore histogram name
+         lnk = lnk->Next();
       }
    }
-   out<<"   "<<GetName()<<"->Draw("<<quote<<option<<quote<<");"<<std::endl;
+   out << "   " << GetName() << "->Draw(\n" << option << "\");" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -48,8 +48,8 @@ void CallCommitClusterOnField(RFieldBase &);
 void CallConnectPageSinkOnField(RFieldBase &, RPageSink &, ROOT::NTupleSize_t firstEntry = 0);
 void CallConnectPageSourceOnField(RFieldBase &, RPageSource &);
 ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
-CallFieldBaseCreate(const std::string &fieldName, const std::string &canonicalType, const std::string &typeAlias,
-                    const RCreateFieldOptions &options, const RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
+CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName, const ROOT::RCreateFieldOptions &options,
+                    const RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 
 } // namespace Internal
 
@@ -82,9 +82,9 @@ class RFieldBase {
    friend void Internal::CallConnectPageSinkOnField(RFieldBase &, Internal::RPageSink &, ROOT::NTupleSize_t);
    friend void Internal::CallConnectPageSourceOnField(RFieldBase &, Internal::RPageSource &);
    friend ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
-   Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &canonicalType,
-                                 const std::string &typeAlias, const RCreateFieldOptions &options,
-                                 const RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
+   Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
+                                 const ROOT::RCreateFieldOptions &options, const RNTupleDescriptor *desc,
+                                 ROOT::DescriptorId_t fieldId);
 
    using ReadCallback_t = std::function<void(void *)>;
 
@@ -375,7 +375,7 @@ protected:
    /// When connecting a field to a page sink, the field's default column representation is subject
    /// to adjustment according to the write options. E.g., if compression is turned off, encoded columns
    /// are changed to their unencoded counterparts.
-   void AutoAdjustColumnTypes(const RNTupleWriteOptions &options);
+   void AutoAdjustColumnTypes(const ROOT::RNTupleWriteOptions &options);
 
    /// Called by Clone(), which additionally copies the on-disk ID
    virtual std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const = 0;
@@ -476,23 +476,14 @@ protected:
    virtual void BeforeConnectPageSource(Internal::RPageSource &) {}
 
    /// Called by `ConnectPageSource()` once connected; derived classes may override this as appropriate
-   virtual void OnConnectPageSource() {}
+   virtual void AfterConnectPageSource() {}
 
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
    /// normalized type name and type alias.
    /// `desc` and `fieldId` must be passed if `options.fEmulateUnknownTypes` is true, otherwise they can be left blank.
-   /// TODO(jalopezg): this overload may eventually be removed leaving only the `RFieldBase::Create()` that takes a
-   /// single type name
-   static RResult<std::unique_ptr<RFieldBase>>
-   Create(const std::string &fieldName, const std::string &canonicalType, const std::string &typeAlias,
-          const RCreateFieldOptions &options = {}, const RNTupleDescriptor *desc = nullptr,
-          ROOT::DescriptorId_t fieldId = ROOT::kInvalidDescriptorId);
-
-   /// Same as the above overload of Create, but infers the normalized type name and the canonical type name from
-   /// `typeName`.
    static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &typeName,
-                                                      const RCreateFieldOptions &options, const RNTupleDescriptor *desc,
-                                                      ROOT::DescriptorId_t fieldId);
+                                                      const ROOT::RCreateFieldOptions &options,
+                                                      const RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 
 public:
    template <bool IsConstT>
@@ -527,7 +518,9 @@ public:
    /// Copies the field and its sub fields using a possibly new name and a new, unconnected set of columns
    std::unique_ptr<RFieldBase> Clone(std::string_view newName) const;
 
-   /// Factory method to resurrect a field from the stored on-disk type information
+   /// Factory method to create a field from a certain type given as string.
+   /// Note that the provided type name must be a valid C++ type name. Template arguments of templated types
+   /// must be type names or integers (e.g., no expressions).
    static RResult<std::unique_ptr<RFieldBase>>
    Create(const std::string &fieldName, const std::string &typeName);
 

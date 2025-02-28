@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// Display the various 2-d drawing options
+/// \preview  Display the various 2-d drawing options.
 ///
 /// \macro_image
 /// \macro_code

@@ -275,7 +275,7 @@ std::uint32_t ROOT::Experimental::Internal::RDaosNTupleAnchor::GetSize()
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::Internal::RPageSinkDaos::RPageSinkDaos(std::string_view ntupleName, std::string_view uri,
-                                                           const RNTupleWriteOptions &options)
+                                                           const ROOT::RNTupleWriteOptions &options)
    : RPagePersistentSink(ntupleName, options), fURI(uri)
 {
    static std::once_flag once;
@@ -489,10 +489,11 @@ void ROOT::Experimental::Internal::RPageSinkDaos::WriteNTupleAnchor()
 ////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::Internal::RPageSourceDaos::RPageSourceDaos(std::string_view ntupleName, std::string_view uri,
-                                                               const RNTupleReadOptions &options)
+                                                               const ROOT::RNTupleReadOptions &options)
    : RPageSource(ntupleName, options),
      fURI(uri),
-     fClusterPool(std::make_unique<RClusterPool>(*this, RNTupleReadOptionsManip::GetClusterBunchSize(options)))
+     fClusterPool(
+        std::make_unique<RClusterPool>(*this, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(options)))
 {
    EnableDefaultMetrics("RPageSourceDaos");
 
@@ -618,7 +619,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t colum
    sealedPage.SetBufferSize(pageInfo.fLocator.GetNBytesOnStorage() + pageInfo.fHasChecksum * kNBytesPageChecksum);
    std::unique_ptr<unsigned char[]> directReadBuffer; // only used if cluster pool is turned off
 
-   if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
+   if (fOptions.GetClusterCache() == ROOT::RNTupleReadOptions::EClusterCache::kOff) {
       if (pageInfo.fLocator.GetReserved() & EDaosLocatorFlags::kCagedPage) {
          throw ROOT::RException(R__FAIL("accessing caged pages is only supported in conjunction with cluster cache"));
       }

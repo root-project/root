@@ -992,8 +992,8 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source)
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace all direct servers of this object with the new servers in `newServerList`.
 /// This substitutes objects that we receive values from with new objects that have the same name.
-/// \see recursiveRedirectServers() Use recursive version if servers that are only indirectly serving this object should be replaced as well.
-/// \see redirectServers() If only the direct servers of an object need to be replaced.
+/// See: recursiveRedirectServers() Use recursive version if servers that are only indirectly serving this object should be replaced as well.
+/// See: redirectServers() If only the direct servers of an object need to be replaced.
 ///
 /// Note that changing the types of objects is generally allowed, but can be wrong if the interface of an object changes.
 /// For example, one can reparametrise a model by substituting a variable with a function:
@@ -1284,7 +1284,7 @@ bool RooAbsArg::recursiveRedirectServers(RooAbsCollection const &newSet, bool mu
 /// overload this function, don't forget to also call the function of the
 /// base class.
 ///
-/// \see redirectServers() For a detailed explanation of the function parameters.
+/// See: redirectServers() For a detailed explanation of the function parameters.
 ///
 // \param[in] newServerList One of the original parameters passed to redirectServers().
 // \param[in] mustReplaceAll One of the original parameters passed to redirectServers().
@@ -2291,7 +2291,7 @@ RooAbsArg* RooAbsArg::cloneTree(const char* newname) const
 void RooAbsArg::attachToStore(RooAbsDataStore& store)
 {
   if (dynamic_cast<RooTreeDataStore*>(&store)) {
-    attachToTree((static_cast<RooTreeDataStore&>(store)).tree()) ;
+    attachToTree(*static_cast<RooTreeDataStore&>(store).tree()) ;
   } else if (dynamic_cast<RooVectorDataStore*>(&store)) {
     attachToVStore(static_cast<RooVectorDataStore&>(store)) ;
   }

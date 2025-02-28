@@ -11,11 +11,11 @@
 
 using ROOT::ENTupleColumnType;
 using ROOT::RNTuple;
+using ROOT::RNTupleWriteOptions;
 using ROOT::Experimental::RField;
 using ROOT::Experimental::RFieldBase;
 using ROOT::Experimental::RNTupleInspector;
 using ROOT::Experimental::RNTupleModel;
-using ROOT::Experimental::RNTupleWriteOptions;
 using ROOT::Experimental::RNTupleWriter;
 
 TEST(RNTupleInspector, CreateFromPointer)
@@ -445,7 +445,7 @@ TEST(RNTupleInspector, PrintColumnTypeInfo)
 
    std::string line;
    std::getline(csvOutput, line);
-   EXPECT_EQ("columnType,count,nElements,compressedSize,uncompressedSize", line);
+   EXPECT_EQ("columnType,count,nElements,compressedSize,uncompressedSize,compressionFactor,nPages", line);
 
    size_t nLines = 0;
    std::string colTypeStr;
@@ -462,10 +462,14 @@ TEST(RNTupleInspector, PrintColumnTypeInfo)
    inspector->PrintColumnTypeInfo(ROOT::Experimental::ENTupleInspectorPrintFormat::kTable, tableOutput);
 
    std::getline(tableOutput, line);
-   EXPECT_EQ(" column type    | count   | # elements      | compressed bytes  | uncompressed bytes", line);
+   EXPECT_EQ(
+      " column type    | count   | # elements  | compressed bytes | uncompressed bytes | compression ratio | # pages ",
+      line);
 
    std::getline(tableOutput, line);
-   EXPECT_EQ("----------------|---------|-----------------|-------------------|--------------------", line);
+   EXPECT_EQ(
+      "----------------|---------|-------------|------------------|--------------------|-------------------|-------",
+      line);
 
    nLines = 0;
    while (std::getline(tableOutput, line)) {
@@ -543,6 +547,7 @@ TEST(RNTupleInspector, PageSizeDistribution)
       auto nFldInt = model->MakeField<std::int64_t>("int");
       auto nFldFloat = model->MakeField<float>("float");
       auto nFldFloatVec = model->MakeField<std::vector<float>>("floatVec");
+      auto nFldDoubleVec = model->MakeField<std::vector<double>>("doubleVec");
 
       auto writeOptions = RNTupleWriteOptions();
       writeOptions.SetCompression(505);
@@ -554,6 +559,7 @@ TEST(RNTupleInspector, PageSizeDistribution)
          *nFldInt = static_cast<std::int64_t>(i);
          *nFldFloat = static_cast<float>(i) * .1f;
          *nFldFloatVec = {static_cast<float>(i), 3.14f, static_cast<float>(i) * *nFldFloat};
+         *nFldDoubleVec = {};
          ntuple->Fill();
       }
    }
@@ -622,6 +628,16 @@ TEST(RNTupleInspector, PageSizeDistribution)
    // Requesting a histogram for a column type not present in the given RNTuple should give an empty histogram
    auto nonExistingTypeHisto = inspector->GetPageSizeDistribution(ENTupleColumnType::kReal32);
    EXPECT_EQ(0, nonExistingTypeHisto->Integral());
+
+   // Requesting a histogram for a column type without pages in the given RNTuple should give an empty histogram
+   auto emptyTypeHisto = inspector->GetPageSizeDistribution(ENTupleColumnType::kSplitReal64);
+   EXPECT_EQ(0, emptyTypeHisto->Integral());
+
+   // Requesting a histogram for a column  without pages in the given RNTuple should give an empty histogram
+   auto doubleColumns = inspector->GetColumnsByType(ENTupleColumnType::kSplitReal64);
+   ASSERT_EQ(1, doubleColumns.size());
+   auto emptyColumnHisto = inspector->GetPageSizeDistribution({doubleColumns[0]});
+   EXPECT_EQ(0, emptyColumnHisto->Integral());
 }
 
 TEST(RNTupleInspector, FieldInfoCompressed)

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_hist
 /// \notebook
-/// 1D histograms with alphanumeric labels.
+/// \preview 1D histograms with alphanumeric labels.
 ///
 /// A TH1 can have named bins that are filled with the method overload TH1::Fill(const char*, double)
 ///
