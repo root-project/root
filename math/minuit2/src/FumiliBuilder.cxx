@@ -21,8 +21,6 @@
 #include "Minuit2/MnMachinePrecision.h"
 #include "Minuit2/MnPosDef.h"
 #include "Minuit2/MnParabolaPoint.h"
-#include "Minuit2/LaSum.h"
-#include "Minuit2/LaProd.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnPrint.h"
@@ -30,8 +28,6 @@
 namespace ROOT {
 
 namespace Minuit2 {
-
-double inner_product(const LAVector &, const LAVector &);
 
 FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculator &gc, const MinimumSeed &seed,
                                        const MnStrategy &strategy, unsigned int maxfcn, double edmval) const

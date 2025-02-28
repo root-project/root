@@ -9,17 +9,11 @@
 
 #include "Minuit2/DavidonErrorUpdator.h"
 #include "Minuit2/MinimumState.h"
-#include "Minuit2/LaSum.h"
-#include "Minuit2/LaProd.h"
 #include "Minuit2/MnPrint.h"
 
 namespace ROOT {
 
 namespace Minuit2 {
-
-double inner_product(const LAVector &, const LAVector &);
-double similarity(const LAVector &, const LASymMatrix &);
-double sum_of_elements(const LASymMatrix &);
 
 MinimumError
 DavidonErrorUpdator::Update(const MinimumState &s0, const MinimumParameters &p1, const FunctionGradient &g1) const

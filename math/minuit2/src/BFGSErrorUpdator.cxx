@@ -9,8 +9,6 @@
 
 #include "Minuit2/BFGSErrorUpdator.h"
 #include "Minuit2/MinimumState.h"
-#include "Minuit2/LaSum.h"
-#include "Minuit2/LaProd.h"
 #include "Minuit2/MnPrint.h"
 
 #include <vector>
@@ -18,10 +16,6 @@
 namespace ROOT {
 
 namespace Minuit2 {
-
-double inner_product(const LAVector &, const LAVector &);
-double similarity(const LAVector &, const LASymMatrix &);
-double sum_of_elements(const LASymMatrix &);
 
 // define here a square matrix that it is needed for computing the BFGS update
 //  define just the class, no need for defining operations as done for the Symmetric matrices
