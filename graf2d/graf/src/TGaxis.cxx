@@ -2554,44 +2554,37 @@ void TGaxis::Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
 
 void TGaxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   SavePrimitiveConstructor(
-      out, Class(), "gaxis",
-      TString::Format("%g, %g, %g, %g, %g, %g, %d, \"%s\"", fX1, fY1, fX2, fY2, fWmin, fWmax, fNdiv, fChopt.Data()));
+   SavePrimitiveConstructor(out, Class(), "gaxis",
+                            TString::Format("%g, %g, %g, %g, %14.12g, %14.12g, %d, \"%s\", %g", fX1, fY1, fX2, fY2, fWmin, fWmax,
+                                            fNdiv, fChopt.Data(), GetGridLength()));
 
-   out << "   gaxis->SetLabelOffset(" << GetLabelOffset() << ");" << std::endl;
-   out << "   gaxis->SetLabelSize(" << GetLabelSize() << ");" << std::endl;
-   out << "   gaxis->SetTickSize(" << GetTickSize() << ");" << std::endl;
-   out << "   gaxis->SetGridLength(" << GetGridLength() << ");" << std::endl;
-   out << "   gaxis->SetTitleOffset(" << GetTitleOffset() << ");" << std::endl;
-   out << "   gaxis->SetTitleSize(" << GetTitleSize() << ");" << std::endl;
-   out << "   gaxis->SetTitleColor(" << GetTextColor() << ");" << std::endl;
-   out << "   gaxis->SetTitleFont(" << GetTextFont() << ");" << std::endl;
+   SaveLineAttributes(out, "gaxis", 1, 1, 1);
+   SaveTextAttributes(out, "gaxis", 11, 0, 1, 62, 0.04);
 
    if (strlen(GetName()))
       out << "   gaxis->SetName(\"" << GetName() << "\");" << std::endl;
    if (strlen(GetTitle()))
       out << "   gaxis->SetTitle(\"" << TString(GetTitle()).ReplaceSpecialCppChars() << "\");" << std::endl;
+   if (fTimeFormat.Length() > 0)
+      out << "   gaxis->SetTimeFormat(\"" << TString(fTimeFormat).ReplaceSpecialCppChars() << "\");" << std::endl;
 
+   out << "   gaxis->SetLabelOffset(" << GetLabelOffset() << ");" << std::endl;
+   out << "   gaxis->SetLabelSize(" << GetLabelSize() << ");" << std::endl;
    if (fLabelColor != 1) {
       if (TColor::SaveColor(out, fLabelColor))
          out << "   gaxis->SetLabelColor(ci);" << std::endl;
       else
          out << "   gaxis->SetLabelColor(" << GetLabelColor() << ");" << std::endl;
    }
-   if (fLineColor != 1) {
-      if (TColor::SaveColor(out, fLineColor))
-         out << "   gaxis->SetLineColor(ci);" << std::endl;
-      else
-         out << "   gaxis->SetLineColor(" << GetLineColor() << ");" << std::endl;
-   }
-   if (fLineStyle != 1)
-      out << "   gaxis->SetLineStyle(" << GetLineStyle() << ");" << std::endl;
-   if (fLineWidth != 1)
-      out << "   gaxis->SetLineWidth(" << GetLineWidth() << ");" << std::endl;
    if (fLabelFont != 62)
       out << "   gaxis->SetLabelFont(" << GetLabelFont() << ");" << std::endl;
    if (TestBit(TAxis::kMoreLogLabels))
       out << "   gaxis->SetMoreLogLabels();" << std::endl;
+
+   out << "   gaxis->SetTickSize(" << GetTickSize() << ");" << std::endl;
+   out << "   gaxis->SetTitleOffset(" << GetTitleOffset() << ");" << std::endl;
+   out << "   gaxis->SetTitleSize(" << GetTitleSize() << ");" << std::endl;
+
    if (TestBit(TAxis::kNoExponent))
       out << "   gaxis->SetNoExponent();" << std::endl;
    if (fModLabs) {
