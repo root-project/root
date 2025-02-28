@@ -2145,9 +2145,6 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
 
 void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   static Int_t frameNumber = 0;
-   frameNumber++;
-
    TString args;
    if (fNpoints >= 1) {
       TString xname = SavePrimitiveArray(out, "graph_x", fNpoints, fX);
@@ -2157,19 +2154,18 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    SavePrimitiveConstructor(out, Class(), "graph", args);
 
-   SaveHistogramAndFunctions(out, "graph", frameNumber, option);
+   SaveHistogramAndFunctions(out, "graph", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save histogram and list of functions of TGraph as C++ statement
 /// Used in all TGraph-derived classes
 
-void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, Int_t &frameNumber, Option_t *option)
+void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, Option_t *option)
 {
-   char quote = '"';
+   static Int_t frameNumber = 0;
 
-   out << "   "<<varname<<"->SetName(" << quote << GetName() << quote << ");" << std::endl;
-   out << "   "<<varname<<"->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
+   SavePrimitiveNameTitle(out, varname);
 
    SaveFillAttributes(out, varname, 0, 1001);
    SaveLineAttributes(out, varname, 1, 1, 1);
@@ -2177,7 +2173,7 @@ void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, I
 
    if (fHistogram) {
       TString hname = fHistogram->GetName();
-      fHistogram->SetName(TString::Format("Graph_%s%d", hname.Data(), frameNumber).Data());
+      fHistogram->SetName(TString::Format("Graph_%s%d", hname.Data(), ++frameNumber).Data());
       fHistogram->SavePrimitive(out, "nodraw");
       out << "   " <<varname << "->SetHistogram(" << gInterpreter->MapCppName(fHistogram->GetName()) << ");"
           << std::endl;
@@ -2193,7 +2189,7 @@ void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, I
          out << "   "<<varname<<"->GetListOfFunctions()->Add(ptstats);" << std::endl;
          out << "   ptstats->SetParent("<<varname<<"->GetListOfFunctions());" << std::endl;
       } else {
-         auto objname = TString::Format("%s%d",obj->GetName(), frameNumber);
+         auto objname = TString::Format("%s%d", obj->GetName(), frameNumber);
          if (obj->InheritsFrom("TF1")) {
             out << "   " << objname << "->SetParent("<<varname<<");\n";
          }
@@ -2204,7 +2200,7 @@ void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, I
    const char *soption = option ? option : "";
    const char *l = strstr(soption, "multigraph");
    if (l) {
-      out << "   multigraph->Add("<<varname<<"," << quote << l + 10 << quote << ");" << std::endl;
+      out << "   multigraph->Add("<<varname<<",\"" << l + 10 << "\");" << std::endl;
       return;
    }
    l = strstr(soption, "th2poly");
@@ -2212,8 +2208,7 @@ void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, I
       out << "   " << l + 7 << "->AddBin("<<varname<<");" << std::endl;
       return;
    }
-   out << "   "<<varname<<"->Draw(" << quote << soption << quote << ");" << std::endl;
-
+   out << "   "<<varname<<"->Draw(\"" << soption << "\");" << std::endl;
 }
 
 

@@ -1728,16 +1728,7 @@ void TGraphMultiErrors::Print(Option_t *) const
 
 void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   out << "   " << std::endl;
-   static Int_t frameNumber = 5000;
-   frameNumber++;
-
-   if (gROOT->ClassSaved(TGraphMultiErrors::Class()))
-      out << "   ";
-   else
-      out << "   TGraphMultiErrors* ";
-
-   out << "tgme = new TGraphMultiErrors(" << fNpoints << ", " << fNYErrors << ");" << std::endl;
+   SavePrimitiveConstructor(out, Class(), "tgme", TString::Format("%d, %d", fNpoints, fNYErrors));
 
    for (Int_t j = 0; j < fNYErrors; j++) {
       fAttFill[j].SaveFillAttributes(out, TString::Format("tgme->GetAttFill(%d)", j).Data(), 0, 1001);
@@ -1753,7 +1744,7 @@ void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t *option)
              << std::endl;
    }
 
-   SaveHistogramAndFunctions(out, "tgme", frameNumber, option);
+   SaveHistogramAndFunctions(out, "tgme", option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
