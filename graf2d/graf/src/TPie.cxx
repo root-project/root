@@ -1119,22 +1119,16 @@ void TPie::Paint(Option_t *option)
 
 void TPie::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   out << "   " << std::endl;
-   if (gROOT->ClassSaved(TPie::Class()))
-      out << "   ";
-   else
-      out << "   TPie *";
+   SavePrimitiveConstructor(out, Class(), "pie", TString::Format("\"%s\", \"%s\", %d", GetName(), TString(GetTitle()).ReplaceSpecialCppChars().Data(), fNvals));
 
-   out << "pie = new TPie(\"" << GetName() << "\", \"" << GetTitle()
-       << "\", " << fNvals << ");" << std::endl;
    out << "   pie->SetCircle(" << fX << ", " << fY << ", " << fRadius << ");" << std::endl;
    out << "   pie->SetValueFormat(\"" << GetValueFormat() << "\");" << std::endl;
    out << "   pie->SetLabelFormat(\"" << GetLabelFormat() << "\");" << std::endl;
-   out << "   pie->SetPercentFormat(\"" << GetPercentFormat()   << "\");" << std::endl;
+   out << "   pie->SetPercentFormat(\"" << GetPercentFormat() << "\");" << std::endl;
    out << "   pie->SetLabelsOffset(" << GetLabelsOffset() << ");" << std::endl;
    out << "   pie->SetAngularOffset(" << GetAngularOffset() << ");" << std::endl;
 
-   SaveTextAttributes(out,"pie",11,0,1,62,0.05);
+   SaveTextAttributes(out, "pie", 11, 0, 1, 62, 0.05);
 
    // Save the values for the slices
    for (Int_t i = 0; i < fNvals; ++i) {
