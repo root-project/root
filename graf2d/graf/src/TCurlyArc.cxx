@@ -412,19 +412,14 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TCurlyArc::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   if (gROOT->ClassSaved(TCurlyArc::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TCurlyArc *";
-   }
-   out<<"curlyarc = new TCurlyArc("
-     <<fX1<<","<<fY1<<","<<fR1<<","<<fPhimin<<","<<fPhimax<<","
-      <<fWaveLength<<","<<fAmplitude<<");"<<std::endl;
-   if (!fIsCurly) {
-      out<<"   curlyarc->SetWavy();"<<std::endl;
-   }
-   SaveLineAttributes(out,"curlyarc",1,1,1);
-   out<<"   curlyarc->Draw();"<<std::endl;
+   SavePrimitiveConstructor(
+      out, Class(), "curlyarc",
+      TString::Format("%g, %g, %g, %g, %g, %g, %g", fX1, fY1, fR1, fPhimin, fPhimax, fWaveLength, fAmplitude));
+
+   SaveLineAttributes(out, "curlyarc", 1, 1, 1);
+   if (!fIsCurly)
+      out << "   curlyarc->SetWavy();" << std::endl;
+   out << "   curlyarc->Draw();" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

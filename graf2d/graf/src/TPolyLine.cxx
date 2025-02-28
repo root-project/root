@@ -579,22 +579,16 @@ void TPolyLine::Print(Option_t *) const
 
 void TPolyLine::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TPolyLine::Class()))
-      out<<"   ";
-   else
-      out<<"   TPolyLine *";
-
-   out<<"pline = new TPolyLine("<<fN<<","<<quote<<fOption<<quote<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "pline",
+                            TString::Format("%d, \"%s\"", fN, TString(fOption).ReplaceSpecialCppChars().Data()));
 
    SaveFillAttributes(out, "pline", 0, 1001);
    SaveLineAttributes(out, "pline", 1, 1, 1);
 
-   for (Int_t i=0;i<Size();i++)
-      out<<"   pline->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<std::endl;
+   for (Int_t i = 0; i < Size(); i++)
+      out << "   pline->SetPoint(" << i << "," << fX[i] << "," << fY[i] << ");" << std::endl;
 
-   out<<"   pline->Draw("<<quote<<option<<quote<<");"<<std::endl;
+   out << "   pline->Draw(\"" << option << "\");" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
