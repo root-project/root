@@ -6973,11 +6973,12 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
       TIter next(li);
       TTree *tree;
       while ((tree = (TTree *)next())) {
-         if (tree == this || tree->GetListOfBranches()->IsEmpty())
+         if (tree == this || tree->GetListOfBranches()->IsEmpty()) {
             if (gDebug > 2) {
                Warning("Merge","TTree %s has no branches, skipping.", tree->GetName());
             }
             continue;
+         }
          // We could come from a list made up of different names, the first one still wins
          tree->SetName(this->GetName());
          auto prevEntries = tree->GetEntries();
