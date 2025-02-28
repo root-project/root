@@ -721,23 +721,17 @@ void TGraphErrors::Print(Option_t *) const
 
 void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   out << "   " << std::endl;
    static Int_t frameNumber = 1000;
    frameNumber++;
 
-   auto fXName  = SaveArray(out, "fx", frameNumber, fX);
-   auto fYName  = SaveArray(out, "fy", frameNumber, fY);
-   auto fEXName = SaveArray(out, "fex", frameNumber, fEX);
-   auto fEYName = SaveArray(out, "fey", frameNumber, fEY);
+   auto xname  = SavePrimitiveArray(out, "gre_fx", fNpoints, fX);
+   auto yname  = SavePrimitiveArray(out, "gre_fy", fNpoints, fY);
+   auto exname = SavePrimitiveArray(out, "gre_fex", fNpoints, fEX);
+   auto eyname = SavePrimitiveArray(out, "gre_fey", fNpoints, fEY);
 
-   if (gROOT->ClassSaved(TGraphErrors::Class()))
-      out << "   ";
-   else
-      out << "   TGraphErrors *";
-   out << "gre = new TGraphErrors(" << fNpoints << ","
-                                    << fXName   << ","  << fYName  << ","
-                                    << fEXName  << ","  << fEYName << ");"
-                                    << std::endl;
+   SavePrimitiveConstructor(
+      out, Class(), "gre",
+      TString::Format("%d, %s, %s, %s, %s", fNpoints, xname.Data(), yname.Data(), exname.Data(), eyname.Data()));
 
    SaveHistogramAndFunctions(out, "gre", frameNumber, option);
 }
