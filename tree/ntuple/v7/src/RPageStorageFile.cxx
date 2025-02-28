@@ -71,8 +71,8 @@ ROOT::Experimental::Internal::RPageSinkFile::~RPageSinkFile() {}
 void ROOT::Experimental::Internal::RPageSinkFile::InitImpl(unsigned char *serializedHeader, std::uint32_t length)
 {
    auto zipBuffer = MakeUninitArray<unsigned char>(length);
-   auto szZipHeader = fCompressor->Zip(serializedHeader, length, GetWriteOptions().GetCompression(),
-                                       RNTupleCompressor::MakeMemCopyWriter(zipBuffer.get()));
+   auto szZipHeader =
+      RNTupleCompressor::Zip(serializedHeader, length, GetWriteOptions().GetCompression(), zipBuffer.get());
    fWriter->WriteNTupleHeader(zipBuffer.get(), szZipHeader, length);
 }
 
@@ -228,8 +228,8 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitClusterGroupImpl(unsigned cha
                                                                     std::uint32_t length)
 {
    auto bufPageListZip = MakeUninitArray<unsigned char>(length);
-   auto szPageListZip = fCompressor->Zip(serializedPageList, length, GetWriteOptions().GetCompression(),
-                                         RNTupleCompressor::MakeMemCopyWriter(bufPageListZip.get()));
+   auto szPageListZip =
+      RNTupleCompressor::Zip(serializedPageList, length, GetWriteOptions().GetCompression(), bufPageListZip.get());
 
    RNTupleLocator result;
    result.SetNBytesOnStorage(szPageListZip);
@@ -242,8 +242,8 @@ void ROOT::Experimental::Internal::RPageSinkFile::CommitDatasetImpl(unsigned cha
 {
    fWriter->UpdateStreamerInfos(fDescriptorBuilder.BuildStreamerInfos());
    auto bufFooterZip = MakeUninitArray<unsigned char>(length);
-   auto szFooterZip = fCompressor->Zip(serializedFooter, length, GetWriteOptions().GetCompression(),
-                                       RNTupleCompressor::MakeMemCopyWriter(bufFooterZip.get()));
+   auto szFooterZip =
+      RNTupleCompressor::Zip(serializedFooter, length, GetWriteOptions().GetCompression(), bufFooterZip.get());
    fWriter->WriteNTupleFooter(bufFooterZip.get(), szFooterZip, length);
    fWriter->Commit(GetWriteOptions().GetCompression());
 }

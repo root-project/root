@@ -311,8 +311,8 @@ void ROOT::Experimental::Internal::RPageSinkDaos::InitImpl(unsigned char *serial
    fNTupleIndex = locator.GetIndex();
 
    auto zipBuffer = MakeUninitArray<unsigned char>(length);
-   auto szZipHeader = fCompressor->Zip(serializedHeader, length, GetWriteOptions().GetCompression(),
-                                       RNTupleCompressor::MakeMemCopyWriter(zipBuffer.get()));
+   auto szZipHeader =
+      RNTupleCompressor::Zip(serializedHeader, length, GetWriteOptions().GetCompression(), zipBuffer.get());
    WriteNTupleHeader(zipBuffer.get(), szZipHeader, length);
 }
 
@@ -432,8 +432,8 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitClusterGroupImpl(unsigned cha
                                                                     std::uint32_t length)
 {
    auto bufPageListZip = MakeUninitArray<unsigned char>(length);
-   auto szPageListZip = fCompressor->Zip(serializedPageList, length, GetWriteOptions().GetCompression(),
-                                         RNTupleCompressor::MakeMemCopyWriter(bufPageListZip.get()));
+   auto szPageListZip =
+      RNTupleCompressor::Zip(serializedPageList, length, GetWriteOptions().GetCompression(), bufPageListZip.get());
 
    auto offsetData = fClusterGroupId.fetch_add(1);
    fDaosContainer->WriteSingleAkey(
@@ -452,8 +452,8 @@ void ROOT::Experimental::Internal::RPageSinkDaos::CommitDatasetImpl(unsigned cha
                                                                     std::uint32_t length)
 {
    auto bufFooterZip = MakeUninitArray<unsigned char>(length);
-   auto szFooterZip = fCompressor->Zip(serializedFooter, length, GetWriteOptions().GetCompression(),
-                                       RNTupleCompressor::MakeMemCopyWriter(bufFooterZip.get()));
+   auto szFooterZip =
+      RNTupleCompressor::Zip(serializedFooter, length, GetWriteOptions().GetCompression(), bufFooterZip.get());
    WriteNTupleFooter(bufFooterZip.get(), szFooterZip, length);
    WriteNTupleAnchor();
 }
