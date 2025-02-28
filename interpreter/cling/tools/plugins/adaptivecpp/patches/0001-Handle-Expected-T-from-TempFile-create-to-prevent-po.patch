@@ -1,0 +1,147 @@
+From 01a2ddfdb56e66766d931dc8bbb509621e86785b Mon Sep 17 00:00:00 2001
+From: Devajith Valaparambil Sreeramaswamy
+ <devajith.valaparambil.sreeramaswamy@cern.ch>
+Date: Tue, 3 Dec 2024 10:55:44 +0100
+Subject: [PATCH] Handle Expected<T> from TempFile::create() to prevent
+ potential crashes
+
+Add proper error handling for `TempFile::create()` by checking
+`takeError()` for output files and ensure proper cleanup with
+`discard()` and log errors
+
+I get the following error without this change:
+
+```
+Expected<T> must be checked before access or destruction.
+Expected<T> value was in success state. (Note: Expected<T> values in
+success mode must still be checked prior to being destroyed).
+```
+---
+ .../llvm-to-backend/amdgpu/LLVMToAmdgpu.cpp   | 27 ++++++++++++++-----
+ .../llvm-to-backend/ptx/LLVMToPtx.cpp         | 24 +++++++++++------
+ .../llvm-to-backend/spirv/LLVMToSpirv.cpp     | 10 +++++--
+ 3 files changed, 44 insertions(+), 17 deletions(-)
+
+diff --git a/src/compiler/llvm-to-backend/amdgpu/LLVMToAmdgpu.cpp b/src/compiler/llvm-to-backend/amdgpu/LLVMToAmdgpu.cpp
+index 54d5a0c4..aef029cb 100644
+--- a/src/compiler/llvm-to-backend/amdgpu/LLVMToAmdgpu.cpp
++++ b/src/compiler/llvm-to-backend/amdgpu/LLVMToAmdgpu.cpp
+@@ -92,7 +92,10 @@ bool getCommandOutput(const std::string &Program, const llvm::SmallVector<std::s
+     return false;
+   }
+
+-  AtScopeExit DestroyOutputFile([&]() { auto Err = OutputFile->discard(); });
++  AtScopeExit DestroyOutputFile([&]() {
++    if (auto Err = OutputFile->discard())
++      ;
++  });
+
+   llvm::SmallVector<llvm::StringRef> InvocationRef;
+   for(const auto& S: Invocation)
+@@ -423,8 +426,6 @@ bool LLVMToAmdgpuTranslator::clangJitLink(llvm::Module& FlavoredModule, std::str
+   auto OutputFile = llvm::sys::fs::TempFile::create("acpp-sscp-amdgpu-%%%%%%.hipfb");
+   auto DummyFile = llvm::sys::fs::TempFile::create("acpp-sscp-amdgpu-dummy-%%%%%%.cpp");
+
+-  std::string OutputFilename = OutputFile->TmpName;
+-
+   auto checkFileError = [&](auto& F) {
+     auto E = F.takeError();
+     if(E){
+@@ -435,12 +436,24 @@ bool LLVMToAmdgpuTranslator::clangJitLink(llvm::Module& FlavoredModule, std::str
+   };
+
+   if(!checkFileError(InputFile)) return false;
++  if(!checkFileError(OutputFile)) return false;
+   if(!checkFileError(DummyFile)) return false;
+
+-  AtScopeExit DestroyInputFile([&]() { auto Err = InputFile->discard(); });
+-  AtScopeExit DestroyOutputFile([&]() { auto Err = OutputFile->discard(); });
+-  AtScopeExit DestroyDummyFile([&]() { auto Err = DummyFile->discard(); });
+-
++  std::string OutputFilename = OutputFile->TmpName;
++
++  AtScopeExit DestroyInputFile([&]() {
++    if (auto Err = InputFile->discard())
++      ;
++  });
++  AtScopeExit DestroyOutputFile([&]() {
++    if (auto Err = OutputFile->discard())
++      ;
++  });
++  AtScopeExit DestroyDummyFile([&]() {
++    if (auto Err = DummyFile->discard())
++      ;
++  });
++
+   llvm::raw_fd_ostream InputStream{InputFile->FD, false};
+   llvm::raw_fd_ostream DummyStream{DummyFile->FD, false};
+
+diff --git a/src/compiler/llvm-to-backend/ptx/LLVMToPtx.cpp b/src/compiler/llvm-to-backend/ptx/LLVMToPtx.cpp
+index 74ea4f54..ba977d2f 100644
+--- a/src/compiler/llvm-to-backend/ptx/LLVMToPtx.cpp
++++ b/src/compiler/llvm-to-backend/ptx/LLVMToPtx.cpp
+@@ -230,17 +230,25 @@ bool LLVMToPtxTranslator::translateToBackendFormat(llvm::Module &FlavoredModule,
+
+   auto InputFile = llvm::sys::fs::TempFile::create("acpp-sscp-ptx-%%%%%%.bc");
+   auto OutputFile = llvm::sys::fs::TempFile::create("acpp-sscp-ptx-%%%%%%.s");
+-
+-  std::string OutputFilename = OutputFile->TmpName;
+-
+-  auto E = InputFile.takeError();
+-  if(E){
++
++  if (auto Err = InputFile.takeError()) {
+     this->registerError("LLVMToPtx: Could not create temp file: "+InputFile->TmpName);
+     return false;
+   }
+
+-  AtScopeExit DestroyInputFile([&]() { auto Err = InputFile->discard(); });
+-  AtScopeExit DestroyOutputFile([&]() { auto Err = OutputFile->discard(); });
++  if (auto Err = OutputFile.takeError()) {
++    this->registerError("LLVMToPtx: Could not create temp file: " + OutputFile->TmpName);
++    return false;
++  }
++
++  AtScopeExit DestroyInputFile([&]() {
++    if (auto Err = InputFile->discard())
++      ;
++  });
++  AtScopeExit DestroyOutputFile([&]() {
++    if (auto Err = OutputFile->discard())
++      ;
++  });
+
+   std::error_code EC;
+   llvm::raw_fd_ostream InputStream{InputFile->FD, false};
+@@ -265,7 +273,7 @@ bool LLVMToPtxTranslator::translateToBackendFormat(llvm::Module &FlavoredModule,
+                                                     "-x",
+                                                     "ir",
+                                                     "-o",
+-                                                    OutputFilename,
++                                                    OutputFile->TmpName,
+                                                     InputFile->TmpName};
+   if(IsFastMath)
+     Invocation.push_back("-ffast-math");
+diff --git a/src/compiler/llvm-to-backend/spirv/LLVMToSpirv.cpp b/src/compiler/llvm-to-backend/spirv/LLVMToSpirv.cpp
+index e50040bb..506dbab2 100644
+--- a/src/compiler/llvm-to-backend/spirv/LLVMToSpirv.cpp
++++ b/src/compiler/llvm-to-backend/spirv/LLVMToSpirv.cpp
+@@ -231,8 +231,14 @@ bool LLVMToSpirvTranslator::translateToBackendFormat(llvm::Module &FlavoredModul
+     return false;
+   }
+
+-  AtScopeExit DestroyInputFile([&]() { auto Err = InputFile->discard(); });
+-  AtScopeExit DestroyOutputFile([&]() { auto Err = OutputFile->discard(); });
++  AtScopeExit DestroyInputFile([&]() {
++    if (auto Err = InputFile->discard())
++      ;
++  });
++  AtScopeExit DestroyOutputFile([&]() {
++    if (auto Err = OutputFile->discard())
++      ;
++  });
+
+   std::error_code EC;
+   llvm::raw_fd_ostream InputStream{InputFile->FD, false};
+--
+2.43.5
