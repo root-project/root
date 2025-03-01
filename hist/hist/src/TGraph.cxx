@@ -2163,7 +2163,7 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, Option_t *option)
 {
-   static Int_t frameNumber = 0;
+   thread_local Int_t frameNumber = 0;
 
    SavePrimitiveNameTitle(out, varname);
 
