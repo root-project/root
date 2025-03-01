@@ -185,6 +185,15 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, TClass 
 
 void ROOT::Experimental::RClassField::Attach(std::unique_ptr<RFieldBase> child, RSubFieldInfo info)
 {
+   auto *cls = TClass::GetClass(GetTypeName().c_str());
+   if(cls) {
+      TIter memberIter(cls->GetListOfDataMembers());
+      TDataMember *dataMember;
+      while ((dataMember = (TDataMember*)memberIter())) {
+         std::size_t maxAlign = dataMember->GetUnitSize();
+         fMaxAlignment = std::max(fMaxAlignment, maxAlign);
+      }
+   }
    fMaxAlignment = std::max(fMaxAlignment, child->GetAlignment());
    fSubFieldsInfo.push_back(info);
    RFieldBase::Attach(std::move(child));
