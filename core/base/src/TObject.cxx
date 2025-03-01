@@ -785,7 +785,7 @@ void TObject::SavePrimitiveConstructor(std::ostream &out, TClass *cl, const char
 
 TString TObject::SavePrimitiveArray(std::ostream &out, const char *prefix, Int_t len, Double_t *arr)
 {
-   static int arrid = 0;
+   thread_local int arrid = 0;
 
    TString arrname = TString::Format("%s_darr%d", prefix, arrid++);
 
