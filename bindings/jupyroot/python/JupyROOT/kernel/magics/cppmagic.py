@@ -13,22 +13,21 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from metakernel import Magic, option
+from IPython.core.magic import Magics, cell_magic, magics_class
 
 import sys
 
 #NOTE:actually JupyROOT is not capturing the error on %%cpp -d if the function is wrong
-class CppMagics(Magic):
-    def __init__(self, kernel):
-        super(CppMagics, self).__init__(kernel)
-    @option(
-        '-a', '--aclic', action='store', default="default", help='Compile code with ACLiC.'
-    )
-    @option(
-        '-d', '--declare', action='store', default=None, help='Declare functions and/or classes.'
-    )
+@magics_class
+class CppMagics(Magics):
+    @cell_magic
     def cell_cpp(self, args):
-        '''Executes the content of the cell as C++ code.'''
+        """Executes the content of the cell as C++ code.
+
+        Options (mutually exclusive):
+            -a : Compile code with ACLiC.
+            -d : Declare functions and/or classes.:
+        """
         if self.code.strip():
              execFunc = None
              if args == '-a':
