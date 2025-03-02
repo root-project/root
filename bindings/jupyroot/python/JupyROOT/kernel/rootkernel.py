@@ -18,11 +18,6 @@ from __future__ import print_function
 
 import sys
 
-try:
-    from metakernel import MetaKernel
-except ImportError:
-    raise Exception("Error: package metakernel not found.(install it running 'pip install metakernel')")
-
 import ROOT
 
 from JupyROOT.helpers.utils import setStyle, invokeAclic, GetDrawers
