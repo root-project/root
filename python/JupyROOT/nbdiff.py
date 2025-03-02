@@ -187,12 +187,6 @@ if __name__ == "__main__":
         raise ImportError("Cannot import jupyter")
 
     kernelName = getKernelName(nbFileName)
-    if kernelName == 'root':
-        try:
-            # We need metakernel for ROOT C++ notebooks
-            import metakernel
-        except:
-            raise ImportError("Cannot import metakernel")
 
     retCode = canReproduceNotebook(nbFileName, kernelName, needsCompare)
     sys.exit(retCode)
