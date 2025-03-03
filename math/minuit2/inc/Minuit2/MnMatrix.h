@@ -12,6 +12,8 @@
 
 #include <Minuit2/MnMatrixfwd.h> // For typedefs
 
+#include <ROOT/RSpan.hxx>
+
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
@@ -820,11 +822,12 @@ public:
          StackAllocatorHolder::Get().Deallocate(fData);
    }
 
-   LAVector(const LAVector &v)
+   LAVector(const LAVector &v) : LAVector{std::span<const double>{v.Data(), v.size()}} {}
+
+   explicit LAVector(std::span<const double> v)
       : fSize(v.size()), fData((double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * v.size()))
    {
-      //     std::cout<<"LAVector(const LAVector& v)"<<std::endl;
-      std::memcpy(fData, v.Data(), fSize * sizeof(double));
+      std::memcpy(fData, v.data(), fSize * sizeof(double));
    }
 
    LAVector &operator=(const LAVector &v)
