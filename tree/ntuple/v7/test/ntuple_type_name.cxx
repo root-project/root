@@ -119,6 +119,88 @@ TEST(RNTuple, TemplateArgIntegerNormalization)
    EXPECT_THROW(RFieldBase::Create("f", "IntegerTemplates<1u,0x>").Unwrap(), ROOT::RException);
 }
 
+TEST(RNTuple, TClassDefaultTemplateParameterInner)
+{
+   FileRaii fileGuard("test_ntuple_default_template_parameter_inner.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<DataVector<int>::Inner>("f1"); // default second template parameters is double
+      model->MakeField<DataVector<int, float>::Inner>("f2");
+      model->AddField(RFieldBase::Create("f3", "DataVector<int>::Inner").Unwrap());
+      model->AddField(RFieldBase::Create("f4", "DataVector<Double32_t>::Inner").Unwrap());
+      model->AddField(RFieldBase::Create("f5", "DataVector<int, double>::Inner").Unwrap());
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(0u, reader->GetNEntries());
+
+   const auto &desc = reader->GetDescriptor();
+   EXPECT_EQ("DataVector<std::int32_t,double>::Inner", desc.GetFieldDescriptor(desc.FindFieldId("f1")).GetTypeName());
+   EXPECT_EQ("", desc.GetFieldDescriptor(desc.FindFieldId("f1")).GetTypeAlias());
+
+   EXPECT_EQ("DataVector<std::int32_t,float>::Inner", desc.GetFieldDescriptor(desc.FindFieldId("f2")).GetTypeName());
+   EXPECT_EQ("", desc.GetFieldDescriptor(desc.FindFieldId("f2")).GetTypeAlias());
+
+   EXPECT_EQ("DataVector<std::int32_t,double>::Inner", desc.GetFieldDescriptor(desc.FindFieldId("f3")).GetTypeName());
+   EXPECT_EQ("", desc.GetFieldDescriptor(desc.FindFieldId("f3")).GetTypeAlias());
+
+   EXPECT_EQ("DataVector<double,double>::Inner", desc.GetFieldDescriptor(desc.FindFieldId("f4")).GetTypeName());
+   EXPECT_EQ("DataVector<Double32_t,double>::Inner", desc.GetFieldDescriptor(desc.FindFieldId("f4")).GetTypeAlias());
+
+   EXPECT_EQ("DataVector<std::int32_t,double>::Inner", desc.GetFieldDescriptor(desc.FindFieldId("f5")).GetTypeName());
+   EXPECT_EQ("", desc.GetFieldDescriptor(desc.FindFieldId("f5")).GetTypeAlias());
+
+   auto v1 = reader->GetView<DataVector<int>::Inner>("f1");
+   auto v3 = reader->GetView<DataVector<int>::Inner>("f3");
+   EXPECT_THROW(reader->GetView<DataVector<int>::Inner>("f2"), ROOT::RException);
+}
+
+TEST(RNTuple, TClassDefaultTemplateParameterNested)
+{
+   FileRaii fileGuard("test_ntuple_default_template_parameter_nested.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<DataVector<int>::Nested<int>>("f1"); // default second template parameters are double
+      model->MakeField<DataVector<int, float>::Nested<int, float>>("f2");
+      model->AddField(RFieldBase::Create("f3", "DataVector<int>::Nested<int>").Unwrap());
+      model->AddField(RFieldBase::Create("f4", "DataVector<Double32_t>::Nested<Double32_t>").Unwrap());
+      model->AddField(RFieldBase::Create("f5", "DataVector<int, double>::Nested<int, double>").Unwrap());
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(0u, reader->GetNEntries());
+
+   const auto &desc = reader->GetDescriptor();
+   EXPECT_EQ("DataVector<std::int32_t,double>::Nested<std::int32_t,double>",
+             desc.GetFieldDescriptor(desc.FindFieldId("f1")).GetTypeName());
+   EXPECT_EQ("", desc.GetFieldDescriptor(desc.FindFieldId("f1")).GetTypeAlias());
+
+   EXPECT_EQ("DataVector<std::int32_t,float>::Nested<std::int32_t,float>",
+             desc.GetFieldDescriptor(desc.FindFieldId("f2")).GetTypeName());
+   EXPECT_EQ("", desc.GetFieldDescriptor(desc.FindFieldId("f2")).GetTypeAlias());
+
+   EXPECT_EQ("DataVector<std::int32_t,double>::Nested<std::int32_t,double>",
+             desc.GetFieldDescriptor(desc.FindFieldId("f3")).GetTypeName());
+   EXPECT_EQ("", desc.GetFieldDescriptor(desc.FindFieldId("f3")).GetTypeAlias());
+
+   EXPECT_EQ("DataVector<double,double>::Nested<double,double>",
+             desc.GetFieldDescriptor(desc.FindFieldId("f4")).GetTypeName());
+   EXPECT_EQ("DataVector<Double32_t,double>::Nested<Double32_t,double>",
+             desc.GetFieldDescriptor(desc.FindFieldId("f4")).GetTypeAlias());
+
+   EXPECT_EQ("DataVector<std::int32_t,double>::Nested<std::int32_t,double>",
+             desc.GetFieldDescriptor(desc.FindFieldId("f5")).GetTypeName());
+   EXPECT_EQ("", desc.GetFieldDescriptor(desc.FindFieldId("f5")).GetTypeAlias());
+
+   auto v1 = reader->GetView<DataVector<int>::Nested<int>>("f1");
+   auto v3 = reader->GetView<DataVector<int>::Nested<int>>("f3");
+   EXPECT_THROW(reader->GetView<DataVector<int>::Nested<int>>("f2"), ROOT::RException);
+}
+
 TEST(RNTuple, ContextDependentTypeNames)
 {
    // Adapted from https://gitlab.cern.ch/amete/rntuple-bug-report-20250219, reproducer of

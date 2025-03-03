@@ -80,17 +80,44 @@ std::string GetNormalizedTemplateArg(const std::string &arg, F fnTypeNormalizer)
    return qualifier + fnTypeNormalizer(arg);
 }
 
-std::pair<std::string, std::string> SplitTypePrefixFromTemplateArgs(const std::string &typeName)
+using AnglePos = std::pair<std::string::size_type, std::string::size_type>;
+std::vector<AnglePos> FindTemplateAngleBrackets(const std::string &typeName)
 {
-   auto idxOpen = typeName.find('<');
-   if (idxOpen == std::string::npos)
-      return {typeName, ""};
+   std::vector<AnglePos> result;
+   std::string::size_type currentPos = 0;
+   while (currentPos < typeName.size()) {
+      const auto posOpen = typeName.find('<', currentPos);
+      if (posOpen == std::string::npos) {
+         // If there are no more templates, the function is done.
+         break;
+      }
 
-   R__ASSERT(idxOpen > 0);
-   R__ASSERT(typeName.back() == '>');
-   R__ASSERT((typeName.size() - 1) > idxOpen);
+      auto posClose = posOpen + 1;
+      int level = 1;
+      while (posClose < typeName.size()) {
+         const auto c = typeName[posClose];
+         if (c == '<') {
+            level++;
+         } else if (c == '>') {
+            if (level == 1) {
+               break;
+            }
+            level--;
+         }
+         posClose++;
+      }
+      // We should have found a closing angle bracket at the right level.
+      R__ASSERT(posClose < typeName.size());
+      result.emplace_back(posOpen, posClose);
 
-   return {typeName.substr(0, idxOpen), typeName.substr(idxOpen + 1, typeName.size() - idxOpen - 2)};
+      // If we are not at the end yet, the following two characeters should be :: for nested types.
+      if (posClose < typeName.size() - 1) {
+         R__ASSERT(typeName.substr(posClose + 1, 2) == "::");
+      }
+      currentPos = posClose + 1;
+   }
+
+   return result;
 }
 
 } // namespace
@@ -203,18 +230,36 @@ std::string ROOT::Experimental::Internal::GetRenormalizedTypeName(const std::str
    if (canonicalTypePrefix == "Double32_t")
       return "double";
 
-   const auto [typePrefix, argList] = SplitTypePrefixFromTemplateArgs(canonicalTypePrefix);
-   if (argList.empty())
-      return typePrefix;
-
-   auto templateArgs = TokenizeTypeList(argList);
-   R__ASSERT(!templateArgs.empty());
-
-   std::string normName = typePrefix + "<";
-   for (const auto &a : templateArgs) {
-      normName += GetNormalizedTemplateArg(a, GetRenormalizedTypeName) + ",";
+   if (canonicalTypePrefix.find('<') == std::string::npos) {
+      // If there are no templates, the function is done.
+      return canonicalTypePrefix;
    }
-   normName[normName.size() - 1] = '>';
+
+   const auto angleBrackets = FindTemplateAngleBrackets(canonicalTypePrefix);
+   R__ASSERT(!angleBrackets.empty());
+
+   std::string normName;
+   std::string::size_type currentPos = 0;
+   for (std::size_t i = 0; i < angleBrackets.size(); i++) {
+      const auto [posOpen, posClose] = angleBrackets[i];
+      // Append the type prefix until the open angle bracket.
+      normName += canonicalTypePrefix.substr(currentPos, posOpen + 1 - currentPos);
+
+      const auto argList = canonicalTypePrefix.substr(posOpen + 1, posClose - posOpen - 1);
+      const auto templateArgs = TokenizeTypeList(argList);
+      R__ASSERT(!templateArgs.empty());
+
+      for (const auto &a : templateArgs) {
+         normName += GetNormalizedTemplateArg(a, GetRenormalizedTypeName) + ",";
+      }
+
+      normName[normName.size() - 1] = '>';
+      currentPos = posClose + 1;
+   }
+
+   // Append the rest of the type from the last closing angle bracket.
+   const auto lastClosePos = angleBrackets.back().second;
+   normName += canonicalTypePrefix.substr(lastClosePos + 1);
 
    return normName;
 }
@@ -228,12 +273,13 @@ std::string ROOT::Experimental::Internal::GetNormalizedUnresolvedTypeName(const 
    splitname.ShortType(canonicalTypePrefix, modType);
    canonicalTypePrefix = GetCanonicalTypePrefix(canonicalTypePrefix);
 
-   const auto [typePrefix, argList] = SplitTypePrefixFromTemplateArgs(canonicalTypePrefix);
-   if (argList.empty())
+   if (canonicalTypePrefix.find('<') == std::string::npos) {
+      // If there are no templates, the function is done.
       return canonicalTypePrefix;
+   }
 
-   auto templateArgs = TokenizeTypeList(argList);
-   R__ASSERT(!templateArgs.empty());
+   const auto angleBrackets = FindTemplateAngleBrackets(canonicalTypePrefix);
+   R__ASSERT(!angleBrackets.empty());
 
    // Get default-initialized template arguments; we only need to do this for user-defined class types
    auto expandedName = canonicalTypePrefix;
@@ -242,17 +288,41 @@ std::string ROOT::Experimental::Internal::GetNormalizedUnresolvedTypeName(const 
       if (cl)
          expandedName = cl->GetName();
    }
-   auto expandedTemplateArgs = TokenizeTypeList(SplitTypePrefixFromTemplateArgs(expandedName).second);
-   R__ASSERT(expandedTemplateArgs.size() >= templateArgs.size());
+   const auto expandedAngleBrackets = FindTemplateAngleBrackets(expandedName);
+   R__ASSERT(expandedAngleBrackets.size() == angleBrackets.size());
 
-   std::string normName = typePrefix + "<";
-   for (const auto &a : templateArgs) {
-      normName += GetNormalizedTemplateArg(a, GetNormalizedUnresolvedTypeName) + ",";
+   std::string normName;
+   std::string::size_type currentPos = 0;
+   for (std::size_t i = 0; i < angleBrackets.size(); i++) {
+      const auto [posOpen, posClose] = angleBrackets[i];
+      // Append the type prefix until the open angle bracket.
+      normName += canonicalTypePrefix.substr(currentPos, posOpen + 1 - currentPos);
+
+      const auto argList = canonicalTypePrefix.substr(posOpen + 1, posClose - posOpen - 1);
+      const auto templateArgs = TokenizeTypeList(argList);
+      R__ASSERT(!templateArgs.empty());
+
+      for (const auto &a : templateArgs) {
+         normName += GetNormalizedTemplateArg(a, GetNormalizedUnresolvedTypeName) + ",";
+      }
+
+      // Append default-initialized template arguments.
+      const auto [expandedPosOpen, expandedPosClose] = expandedAngleBrackets[i];
+      const auto expandedArgList = expandedName.substr(expandedPosOpen + 1, expandedPosClose - expandedPosOpen - 1);
+      const auto expandedTemplateArgs = TokenizeTypeList(expandedArgList);
+      R__ASSERT(expandedTemplateArgs.size() >= templateArgs.size());
+
+      for (std::size_t i = templateArgs.size(); i < expandedTemplateArgs.size(); ++i) {
+         normName += GetNormalizedTemplateArg(expandedTemplateArgs[i], GetNormalizedUnresolvedTypeName) + ",";
+      }
+
+      normName[normName.size() - 1] = '>';
+      currentPos = posClose + 1;
    }
-   for (std::size_t i = templateArgs.size(); i < expandedTemplateArgs.size(); ++i) {
-      normName += GetNormalizedTemplateArg(expandedTemplateArgs[i], GetNormalizedUnresolvedTypeName) + ",";
-   }
-   normName[normName.size() - 1] = '>';
+
+   // Append the rest of the type from the last closing angle bracket.
+   const auto lastClosePos = angleBrackets.back().second;
+   normName += canonicalTypePrefix.substr(lastClosePos + 1);
 
    return normName;
 }
