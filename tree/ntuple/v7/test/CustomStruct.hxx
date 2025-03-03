@@ -93,6 +93,13 @@ public:
    T fMember;
 };
 
+template <int I>
+class EdmHash {
+public:
+   typedef std::string value_type;
+   value_type fHash;
+};
+
 template <typename FirstT, typename SecondT = double>
 class DataVector {
 public:
