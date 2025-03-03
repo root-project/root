@@ -3189,7 +3189,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
       TString opt = option;
       opt.ToLower();
       if (opt.Contains("p")) {
-         char pb[13];
+         char pb[14];
          char pbv[100];
          for (j=0;j<fNpar;j++) {
             snprintf(pb,sizeof(pb),"[%d]",j);
