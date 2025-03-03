@@ -197,20 +197,20 @@ std::string ROOT::Experimental::Internal::GetCanonicalTypePrefix(const std::stri
 
 std::string ROOT::Experimental::Internal::GetRenormalizedTypeName(const std::string &metaNormalizedName)
 {
-   std::string normName{GetCanonicalTypePrefix(metaNormalizedName)};
+   const std::string canonicalTypePrefix{GetCanonicalTypePrefix(metaNormalizedName)};
    // RNTuple resolves Double32_t for the normalized type name but keeps Double32_t for the type alias
    // (also in template parameters)
-   if (normName == "Double32_t")
+   if (canonicalTypePrefix == "Double32_t")
       return "double";
 
-   const auto [typePrefix, argList] = SplitTypePrefixFromTemplateArgs(normName);
+   const auto [typePrefix, argList] = SplitTypePrefixFromTemplateArgs(canonicalTypePrefix);
    if (argList.empty())
       return typePrefix;
 
    auto templateArgs = TokenizeTypeList(argList);
    R__ASSERT(!templateArgs.empty());
 
-   normName = typePrefix + "<";
+   std::string normName = typePrefix + "<";
    for (const auto &a : templateArgs) {
       normName += GetNormalizedTemplateArg(a, GetRenormalizedTypeName) + ",";
    }
@@ -223,20 +223,20 @@ std::string ROOT::Experimental::Internal::GetNormalizedUnresolvedTypeName(const 
 {
    const TClassEdit::EModType modType = static_cast<TClassEdit::EModType>(
       TClassEdit::kDropStlDefault | TClassEdit::kDropComparator | TClassEdit::kDropHash);
-   std::string normName{origName};
-   TClassEdit::TSplitType splitname(normName.c_str(), modType);
-   splitname.ShortType(normName, modType);
-   normName = GetCanonicalTypePrefix(normName);
+   TClassEdit::TSplitType splitname(origName.c_str(), modType);
+   std::string canonicalTypePrefix;
+   splitname.ShortType(canonicalTypePrefix, modType);
+   canonicalTypePrefix = GetCanonicalTypePrefix(canonicalTypePrefix);
 
-   const auto [typePrefix, argList] = SplitTypePrefixFromTemplateArgs(normName);
+   const auto [typePrefix, argList] = SplitTypePrefixFromTemplateArgs(canonicalTypePrefix);
    if (argList.empty())
-      return normName;
+      return canonicalTypePrefix;
 
    auto templateArgs = TokenizeTypeList(argList);
    R__ASSERT(!templateArgs.empty());
 
    // Get default-initialized template arguments; we only need to do this for user-defined class types
-   auto expandedName = normName;
+   auto expandedName = canonicalTypePrefix;
    if ((expandedName.substr(0, 5) != "std::") && (expandedName.substr(0, 19) != "ROOT::VecOps::RVec<")) {
       auto cl = TClass::GetClass(origName.c_str());
       if (cl)
@@ -245,7 +245,7 @@ std::string ROOT::Experimental::Internal::GetNormalizedUnresolvedTypeName(const 
    auto expandedTemplateArgs = TokenizeTypeList(SplitTypePrefixFromTemplateArgs(expandedName).second);
    R__ASSERT(expandedTemplateArgs.size() >= templateArgs.size());
 
-   normName = typePrefix + "<";
+   std::string normName = typePrefix + "<";
    for (const auto &a : templateArgs) {
       normName += GetNormalizedTemplateArg(a, GetNormalizedUnresolvedTypeName) + ",";
    }
