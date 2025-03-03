@@ -59,7 +59,6 @@ set(MINUIT2_HEADERS
     MnLineSearch.h
     MnMachinePrecision.h
     MnMatrix.h
-    MnMatrix.h
     MnMatrixfwd.h
     MnMigrad.h
     MnMinimize.h
@@ -128,6 +127,7 @@ set(MINUIT2_SOURCES
     MnGlobalCorrelationCoeff.cxx
     MnHesse.cxx
     MnLineSearch.cxx
+    MnMatrix.cxx
     MnMachinePrecision.cxx
     MnMinos.cxx
     MnParabolaFactory.cxx
