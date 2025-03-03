@@ -36,6 +36,7 @@ namespace SOFIE{
       std::string fNC2; // bias tensor name after broadcasting
       std::string fNY;
       std::string fType;
+      EActivationType fActivation;
       std::vector<Dim> fShapeA;
       std::vector<Dim> fShapeB;
       std::vector<size_t> fShapeC;
@@ -44,10 +45,11 @@ namespace SOFIE{
    public:
 
       ROperator_Gemm(){}
-      ROperator_Gemm(float alpha, float beta, int_t transA, int_t transB, std::string nameA, std::string nameB, std::string nameY):
+      ROperator_Gemm(float alpha, float beta, int_t transA, int_t transB, std::string nameA, std::string nameB, std::string nameY, EActivationType activation=EActivationType::UNDEFINED):
          fAttrAlpha(alpha), fAttrBeta(beta), fAttrTransA(transA), fAttrTransB(transB), fNA(UTILITY::Clean_name(nameA)),
          fNB(UTILITY::Clean_name(nameB)), fNY(UTILITY::Clean_name(nameY))
-      {
+      {  
+         fActivation = activation;
          fType = "float";
          static_assert(std::is_same_v<T, float>,
                   "TMVA::SOFIE - Unsupported type parsing a Gemm operator");
@@ -55,14 +57,13 @@ namespace SOFIE{
          fOutputTensorNames = { fNY };
       }
 
-      ROperator_Gemm(float alpha, float beta, int_t transA, int_t transB, std::string nameA, std::string nameB, std::string nameC, std::string nameY):
+      ROperator_Gemm(float alpha, float beta, int_t transA, int_t transB, std::string nameA, std::string nameB, std::string nameC, std::string nameY, EActivationType activation=EActivationType::UNDEFINED):
          fAttrAlpha(alpha), fAttrBeta(beta), fAttrTransA(transA), fAttrTransB(transB), fNA(UTILITY::Clean_name(nameA)),
-         fNB(UTILITY::Clean_name(nameB)), fNC(UTILITY::Clean_name(nameC)), fNY(UTILITY::Clean_name(nameY))
+         fNB(UTILITY::Clean_name(nameB)), fNC(UTILITY::Clean_name(nameC)), fNY(UTILITY::Clean_name(nameY)), fActivation(activation)
       {
+         fActivation = activation;
          fType = "float";
-         static_assert(std::is_same_v<T, float>,
-                  "TMVA::SOFIE - Unsupported type parsing a Gemm operator");
-         fInputTensorNames = { fNA, fNB, fNC };
+
          fOutputTensorNames = { fNY };
       }
 
@@ -136,7 +137,7 @@ namespace SOFIE{
 
 
 
-      void Initialize(RModel& model){
+      void Initialize(RModel& model) override {
          //TODO: propagate A or B as specified by ONNX standard
 
          if ((model.CheckIfTensorAlreadyExist(fNA) == false) || (model.CheckIfTensorAlreadyExist(fNB) == false) ){   //input must be a graph input, or already initialized intermediate tensor
@@ -374,6 +375,12 @@ namespace SOFIE{
              << "tensor_" << fNY;
              if (doStackMul) out << " + " << opName << "_yoffset";
              out << ", &" << opName << "_n);\n";
+
+            if(fActivation == EActivationType::RELU){
+               out << SP << "for (int id = 0; id < " << TMVA::Experimental::SOFIE::ConvertDynamicShapeToLength(fShapeY) << " ; id++){\n";
+               out << SP << SP << "tensor_" << fNY << "[id] = ((tensor_" << fNY << "[id] > 0 )? tensor_" << fNY << "[id] : 0);\n";
+               out << SP << "}\n";
+            }
          }
 
          if (doStackMul) {
