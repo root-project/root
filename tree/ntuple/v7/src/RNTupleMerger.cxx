@@ -815,14 +815,14 @@ void RNTupleMerger::MergeSourceClusters(RPageSource &source, std::span<const RCo
       // We need to figure out which columns are actually present in this cluster so we only merge their pages (the
       // missing columns are handled by synthesizing zero pages - see below).
       size_t nCommonColumnsInCluster = commonColumns.size();
-      do {
+      while (nCommonColumnsInCluster > 0) {
          // Since `commonColumns` is sorted by column input id, we can simply traverse it from the back and stop as
          // soon as we find a common column that appears in this cluster: we know that in that case all previous
          // columns must appear as well.
          if (clusterDesc.ContainsColumn(commonColumns[nCommonColumnsInCluster - 1].fInputId))
             break;
          --nCommonColumnsInCluster;
-      } while (nCommonColumnsInCluster > 0);
+      }
 
       // Convert columns to a ColumnSet for the ClusterPool query
       RCluster::ColumnSet_t commonColumnSet;
