@@ -583,3 +583,8 @@ bool ROOT::Detail::TBranchProxy::Setup()
       return false;
    }
 }
+
+Int_t ROOT::Detail::TBranchProxy::GetStreamerElementSize() const
+{
+   return fElement ? fElement->GetSize() : 0;
+}
