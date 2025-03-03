@@ -1344,10 +1344,7 @@ public:
 
       RResultPtr<RInterface<RLoopManager>> resPtr;
 
-      bool isBasedOnRNTuple = RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS";
-
-      if (options.fOutputFormat == ESnapshotOutputFormat::kRNTuple ||
-          (options.fOutputFormat == ESnapshotOutputFormat::kDefault && isBasedOnRNTuple)) {
+      if (options.fOutputFormat == ESnapshotOutputFormat::kRNTuple) {
 #ifdef R__HAS_ROOT7
          if (fLoopManager->GetTree()) {
             throw std::runtime_error("Snapshotting from TTree to RNTuple is not yet supported. The current recommended "
@@ -1380,6 +1377,14 @@ public:
             "components enabled.");
 #endif
       } else {
+         if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS" &&
+             options.fOutputFormat == ESnapshotOutputFormat::kDefault) {
+            Warning("Snapshot",
+                    "The default Snapshot output data format is TTree, but the input data format is RNTuple. If you "
+                    "want to Snapshot to RNTuple or suppress this warning, set the appropriate fOutputFormat option in "
+                    "RSnapshotOptions. Note that this current default behaviour might change in the future.");
+         }
+
          // The CreateLMFromTTree function by default opens the file passed as input
          // to check for the presence of the TTree inside. But at this moment the
          // filename we are using here corresponds to a file which does not exist yet,
@@ -3240,10 +3245,7 @@ private:
 
       RResultPtr<RInterface<RLoopManager>> resPtr;
 
-      bool isBasedOnRNTuple = RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS";
-
-      if (options.fOutputFormat == ESnapshotOutputFormat::kRNTuple ||
-          (options.fOutputFormat == ESnapshotOutputFormat::kDefault && isBasedOnRNTuple)) {
+      if (options.fOutputFormat == ESnapshotOutputFormat::kRNTuple) {
 #ifdef R__HAS_ROOT7
          if (fLoopManager->GetTree()) {
             throw std::runtime_error("Snapshotting from TTree to RNTuple is not yet supported. The current recommended "
@@ -3273,6 +3275,14 @@ private:
             "components enabled.");
 #endif
       } else {
+         if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS" &&
+             options.fOutputFormat == ESnapshotOutputFormat::kDefault) {
+            Warning("Snapshot",
+                    "The default Snapshot output data format is TTree, but the input data format is RNTuple. If you "
+                    "want to Snapshot to RNTuple or suppress this warning, set the appropriate fOutputFormat option in "
+                    "RSnapshotOptions. Note that this current default behaviour might change in the future.");
+         }
+
          // The CreateLMFromTTree function by default opens the file passed as input
          // to check for the presence of the TTree inside. But at this moment the
          // filename we are using here corresponds to a file which does not exist yet,
