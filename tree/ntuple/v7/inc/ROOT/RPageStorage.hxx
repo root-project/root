@@ -283,7 +283,8 @@ protected:
 
    /// Helper for streaming a page. This is commonly used in derived, concrete page sinks. Note that if
    /// compressionSetting is 0 (uncompressed) and the page is mappable and not checksummed, the returned sealed page
-   /// will point directly to the input page buffer.
+   /// will point directly to the input page buffer. Otherwise, the sealed page references fSealPageBuffer.  Thus,
+   /// the buffer pointed to by the RSealedPage should never be freed.
    RSealedPage SealPage(const RPage &page, const RColumnElementBase &element);
 
 private:
