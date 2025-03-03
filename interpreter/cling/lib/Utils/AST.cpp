@@ -1760,6 +1760,7 @@ namespace utils {
     PrintingPolicy Policy(Ctx.getPrintingPolicy());
     Policy.SuppressScope = false;
     Policy.AnonymousTagLocations = false;
+    Policy.AlwaysIncludeTypeForTemplateArgument = true;
     return FQQT.getAsString(Policy);
   }
 
