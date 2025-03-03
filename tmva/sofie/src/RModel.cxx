@@ -819,7 +819,7 @@ void RModel::GenerateSessionCode()
 
    // generate code for declaring the initialized tensors
    GenerateInitializedTensorInfo();
-   
+
    // evaluate total intermediate memory and position intermediate tensor addresses
    std::string intermediate_memory_alloc_string = "";
    intermediate_memory_alloc_string += "\n// --- Positioning intermediate tensor memory --";
@@ -828,10 +828,10 @@ void RModel::GenerateSessionCode()
       CheckAndFlushIntermediateMemory(fOperators[op_idx]->GetOpInputTensors(), op_idx);
    }
 
-   std::cout<<"Still in available memory: ";
-   for (const auto &it: fIntermediateMemoryInfo.available_stack){
-      std::cout<<"chunk_idx: "<<it.first<<", chunk_size: "<<it.second<<"\n";
-   }
+   // to check remaining unused fragments after memory allocation (lesser the better)
+   // for (const auto &it: fIntermediateMemoryInfo.available_stack){
+   //    std::cout<<"chunk_idx: "<<it.first<<", chunk_size: "<<it.second<<"\n";
+   // }
    
    // generate the memory pool to be used by intermediate tensors
    GenerateIntermediateMemoryPool();

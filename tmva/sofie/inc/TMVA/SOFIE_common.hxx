@@ -32,6 +32,10 @@ enum class ETensorType{
     FLOAT16 = 10, DOUBLE = 11, UINT32 = 12, UINT64 = 13, COMPLEX64 = 14, COMPLEX28 = 15, BFLOAT16 = 16
 };
 
+enum class EActivationType{
+   UNDEFINED = 0, RELU = 1, SOFTMAX = 2, SIGMOID = 3, LEAKYRELU = 4, TANH = 5, ELU = 6
+};
+
 constexpr size_t GetTypeSize(ETensorType type) {
     switch (type) {
         case ETensorType::FLOAT:     return sizeof(float);

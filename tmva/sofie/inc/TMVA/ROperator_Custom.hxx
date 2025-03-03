@@ -43,7 +43,7 @@ public:
     std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>>) {return {{}};};
     std::vector<ETensorType> TypeInference(std::vector<ETensorType>){ return {};};
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
       model.AddNeededCustomHeader(fHeaderName);
       fInputType = model.GetTensorType(fInputNames[0]);
 

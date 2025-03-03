@@ -118,7 +118,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
       for (auto &it : fNInputs) {
          if (!model.CheckIfTensorAlreadyExist(it)) {
             throw std::runtime_error("TMVA SOFIE BasicNary Op Input Tensor " + it + " is not found in model");
