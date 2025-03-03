@@ -27,6 +27,8 @@
 
 #include "Minuit2/MPIProcess.h"
 
+#include "./MnFcnCaller.h"
+
 namespace ROOT {
 
 namespace Minuit2 {
@@ -51,6 +53,8 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
    //    std::cout<<"initial grd: "<<Gradient.Grad()<<std::endl;
    //    std::cout<<"position: "<<par.Vec()<<std::endl;
    MnPrint print("Numerical2PGradientCalculator");
+
+   MnFcnCaller mfcnCaller{fFcn};
 
    assert(par.IsValid());
 
@@ -137,13 +141,13 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
          stepb4 = step;
          //       MnAlgebraicVector pstep(n);
          //       pstep(i) = step;
-         //       double fs1 = fFcn(pstate + pstep);
-         //       double fs2 = fFcn(pstate - pstep);
+         //       double fs1 = mfcnCaller(pstate + pstep);
+         //       double fs2 = mfcnCaller(pstate - pstep);
 
          x(i) = xtf + step;
-         double fs1 = fFcn(x);
+         double fs1 = mfcnCaller(x);
          x(i) = xtf - step;
-         double fs2 = fFcn(x);
+         double fs2 = mfcnCaller(x);
          x(i) = xtf;
 
          double grdb4 = grd(i);
