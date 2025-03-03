@@ -96,6 +96,17 @@ public:
 template <typename FirstT, typename SecondT = double>
 class DataVector {
 public:
+   class Inner {
+      FirstT fFirst;
+      SecondT fSecond;
+   };
+
+   template <typename FirstU, typename SecondU = double>
+   class Nested {
+      FirstU fFirst;
+      SecondU fSecond;
+   };
+
    FirstT fFirst;
    SecondT fSecond;
 };
