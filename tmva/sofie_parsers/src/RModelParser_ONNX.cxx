@@ -87,6 +87,8 @@ extern ParserFuncSignature ParseEinsum;
 extern ParserFuncSignature ParseRandom;
 // Declaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
+extern ParserFuseFuncSignature ParseFuseGemmRelu;
+extern ParserFuseFuncSignature ParseFuseBatchnormRelu;
 extern ParserFuseFuncSignature ParseFuseConvTransposeAdd;
 extern ParserFuseFuncSignature ParseFuseMatMulAdd;
 
@@ -300,6 +302,19 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
                return ParseFuseConvTransposeAdd(*this, graphproto.node(idx), graphproto.node(idx2));
             }
          }
+      } else if (nodeproto.op_type() == "Gemm") {
+            // Fuse Gemm with activation operators
+            if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Relu") {
+                  return ParseFuseGemmRelu(*this, graphproto.node(idx), graphproto.node(idx2));
+            } 
+            
+            // else if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Softmax") {
+            //       return ParseFuseGemmSoftmax(*this, graphproto.node(idx), graphproto.node(idx2));
+            // }
+      } else if (nodeproto.op_type() == "BatchNormalization") {
+         if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Relu") {
+            return ParseFuseBatchnormRelu(*this, graphproto.node(idx), graphproto.node(idx2));
+         }
       }
    }
 
@@ -309,6 +324,12 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
       if (graphproto.node(idx0).op_type() == "MatMul")
          return nullptr;
       else if (graphproto.node(idx0).op_type() == "ConvTranspose")
+         return nullptr;
+   } else if(idx > 0 && op_type == "Relu"){
+      int idx0 = nodes[i - 1];
+      if (graphproto.node(idx0).op_type() == "Gemm")
+         return nullptr;
+      else if (graphproto.node(idx0).op_type() == "BatchNormalization")
          return nullptr;
    }
 
