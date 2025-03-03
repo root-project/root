@@ -281,15 +281,9 @@ std::string ROOT::Experimental::Internal::GetNormalizedUnresolvedTypeName(const 
    const auto angleBrackets = FindTemplateAngleBrackets(canonicalTypePrefix);
    R__ASSERT(!angleBrackets.empty());
 
-   // Get default-initialized template arguments; we only need to do this for user-defined class types
-   auto expandedName = canonicalTypePrefix;
-   if ((expandedName.substr(0, 5) != "std::") && (expandedName.substr(0, 19) != "ROOT::VecOps::RVec<")) {
-      auto cl = TClass::GetClass(origName.c_str());
-      if (cl)
-         expandedName = cl->GetName();
-   }
-   const auto expandedAngleBrackets = FindTemplateAngleBrackets(expandedName);
-   R__ASSERT(expandedAngleBrackets.size() == angleBrackets.size());
+   // For user-defined class types, we will need to get the default-initialized template arguments.
+   const bool isUserClass =
+      (canonicalTypePrefix.substr(0, 5) != "std::") && (canonicalTypePrefix.substr(0, 19) != "ROOT::VecOps::RVec<");
 
    std::string normName;
    std::string::size_type currentPos = 0;
@@ -306,14 +300,25 @@ std::string ROOT::Experimental::Internal::GetNormalizedUnresolvedTypeName(const 
          normName += GetNormalizedTemplateArg(a, GetNormalizedUnresolvedTypeName) + ",";
       }
 
-      // Append default-initialized template arguments.
-      const auto [expandedPosOpen, expandedPosClose] = expandedAngleBrackets[i];
-      const auto expandedArgList = expandedName.substr(expandedPosOpen + 1, expandedPosClose - expandedPosOpen - 1);
-      const auto expandedTemplateArgs = TokenizeTypeList(expandedArgList);
-      R__ASSERT(expandedTemplateArgs.size() >= templateArgs.size());
+      // For user-defined classes, append default-initialized template arguments.
+      if (isUserClass) {
+         const auto cl = TClass::GetClass(canonicalTypePrefix.substr(0, posClose + 1).c_str());
+         if (cl) {
+            const std::string expandedName = cl->GetName();
+            const auto expandedAngleBrackets = FindTemplateAngleBrackets(expandedName);
+            // We can have fewer pairs than angleBrackets, for example in case of type aliases.
+            R__ASSERT(!expandedAngleBrackets.empty());
 
-      for (std::size_t i = templateArgs.size(); i < expandedTemplateArgs.size(); ++i) {
-         normName += GetNormalizedTemplateArg(expandedTemplateArgs[i], GetNormalizedUnresolvedTypeName) + ",";
+            const auto [expandedPosOpen, expandedPosClose] = expandedAngleBrackets.back();
+            const auto expandedArgList =
+               expandedName.substr(expandedPosOpen + 1, expandedPosClose - expandedPosOpen - 1);
+            const auto expandedTemplateArgs = TokenizeTypeList(expandedArgList);
+            R__ASSERT(expandedTemplateArgs.size() >= templateArgs.size());
+
+            for (std::size_t i = templateArgs.size(); i < expandedTemplateArgs.size(); ++i) {
+               normName += GetNormalizedTemplateArg(expandedTemplateArgs[i], GetNormalizedUnresolvedTypeName) + ",";
+            }
+         }
       }
 
       normName[normName.size() - 1] = '>';
