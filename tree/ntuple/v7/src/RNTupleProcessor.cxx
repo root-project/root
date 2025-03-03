@@ -538,8 +538,8 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
    auxEntryIdxs.reserve(fJoinTables.size());
    for (unsigned i = 0; i < fJoinTables.size(); ++i) {
       auto &joinTable = fJoinTables[i];
-      if (!joinTable->IsBuilt())
-         joinTable->Build(*fAuxiliaryPageSources[i]);
+      if (!fJoinTablesAreBuilt)
+         joinTable->Add(*fAuxiliaryPageSources[i]);
 
       auto entryIdxs = joinTable->GetEntryIndexes(valPtrs);
 

@@ -33,25 +33,10 @@ CastValuePtr(void *valuePtr, std::size_t fieldValueSize)
 }
 } // anonymous namespace
 
-void ROOT::Experimental::Internal::RNTupleJoinTable::EnsureBuilt() const
+ROOT::Experimental::Internal::RNTupleJoinTable::REntryMapping::REntryMapping(
+   RPageSource &pageSource, const std::vector<std::string> &joinFieldNames)
+   : fJoinFieldNames(joinFieldNames)
 {
-   if (!fIsBuilt)
-      throw RException(R__FAIL("join table has not been built yet"));
-}
-
-std::unique_ptr<ROOT::Experimental::Internal::RNTupleJoinTable>
-ROOT::Experimental::Internal::RNTupleJoinTable::Create(const std::vector<std::string> &fieldNames)
-{
-   auto joinTable = std::unique_ptr<RNTupleJoinTable>(new RNTupleJoinTable(fieldNames));
-
-   return joinTable;
-}
-
-void ROOT::Experimental::Internal::RNTupleJoinTable::Build(RPageSource &pageSource)
-{
-   if (fIsBuilt)
-      return;
-
    static const std::unordered_set<std::string> allowedTypes = {"std::int8_t",   "std::int16_t", "std::int32_t",
                                                                 "std::int64_t",  "std::uint8_t", "std::uint16_t",
                                                                 "std::uint32_t", "std::uint64_t"};
@@ -59,7 +44,6 @@ void ROOT::Experimental::Internal::RNTupleJoinTable::Build(RPageSource &pageSour
    pageSource.Attach();
    auto desc = pageSource.GetSharedDescriptorGuard();
 
-   fJoinFieldValueSizes.reserve(fJoinFieldNames.size());
    std::vector<std::unique_ptr<ROOT::RFieldBase>> fields;
    std::vector<ROOT::RFieldBase::RValue> fieldValues;
    fieldValues.reserve(fJoinFieldNames.size());
@@ -78,7 +62,6 @@ void ROOT::Experimental::Internal::RNTupleJoinTable::Build(RPageSource &pageSour
       }
 
       auto field = fieldDesc.CreateField(desc.GetRef());
-
       ROOT::Internal::CallConnectPageSourceOnField(*field, pageSource);
 
       fieldValues.emplace_back(field->CreateValue());
@@ -98,17 +81,14 @@ void ROOT::Experimental::Internal::RNTupleJoinTable::Build(RPageSource &pageSour
          auto valuePtr = fieldValue.GetPtr<void>();
          joinFieldValues.push_back(CastValuePtr(valuePtr.get(), fieldValue.GetField().GetValueSize()));
       }
-      fJoinTable[RCombinedJoinFieldValue(joinFieldValues)].push_back(i);
-   }
 
-   fIsBuilt = true;
+      fMapping[RCombinedJoinFieldValue(joinFieldValues)].push_back(i);
+   }
 }
 
-std::vector<ROOT::NTupleSize_t>
-ROOT::Experimental::Internal::RNTupleJoinTable::GetEntryIndexes(const std::vector<void *> &valuePtrs) const
+const std::vector<ROOT::NTupleSize_t> *
+ROOT ::Experimental::Internal::RNTupleJoinTable::REntryMapping::GetEntryIndexes(std::vector<void *> valuePtrs) const
 {
-   EnsureBuilt();
-
    if (valuePtrs.size() != fJoinFieldNames.size())
       throw RException(R__FAIL("number of value pointers must match number of join fields"));
 
@@ -119,10 +99,80 @@ ROOT::Experimental::Internal::RNTupleJoinTable::GetEntryIndexes(const std::vecto
       joinFieldValues.push_back(CastValuePtr(valuePtrs[i], fJoinFieldValueSizes[i]));
    }
 
-   auto entryIdxs = fJoinTable.find(RCombinedJoinFieldValue(joinFieldValues));
+   if (const auto &entries = fMapping.find(RCombinedJoinFieldValue(joinFieldValues)); entries != fMapping.end()) {
+      return &entries->second;
+   }
 
-   if (entryIdxs == fJoinTable.end())
+   return nullptr;
+}
+
+//------------------------------------------------------------------------------
+
+std::unique_ptr<ROOT::Experimental::Internal::RNTupleJoinTable>
+ROOT::Experimental::Internal::RNTupleJoinTable::Create(const std::vector<std::string> &fieldNames)
+{
+   return std::unique_ptr<RNTupleJoinTable>(new RNTupleJoinTable(fieldNames));
+}
+
+ROOT::Experimental::Internal::RNTupleJoinTable &
+ROOT::Experimental::Internal::RNTupleJoinTable::Add(RPageSource &pageSource, PartitionKey_t partitionKey)
+{
+   auto joinMapping = std::unique_ptr<REntryMapping>(new REntryMapping(pageSource, fJoinFieldNames));
+   fPartitions[partitionKey].emplace_back(std::move(joinMapping));
+
+   return *this;
+}
+
+std::vector<ROOT::NTupleSize_t>
+ROOT::Experimental::Internal::RNTupleJoinTable::GetEntryIndexes(const std::vector<void *> &valuePtrs,
+                                                                PartitionKey_t partitionKey) const
+{
+   auto partition = fPartitions.find(partitionKey);
+   if (partition == fPartitions.end())
       return {};
 
-   return entryIdxs->second;
+   std::vector<ROOT::NTupleSize_t> entryIdxs{};
+
+   for (const auto &joinMapping : partition->second) {
+      auto entriesForMapping = joinMapping->GetEntryIndexes(valuePtrs);
+      if (entriesForMapping)
+         entryIdxs.insert(entryIdxs.end(), entriesForMapping->begin(), entriesForMapping->end());
+   }
+
+   return entryIdxs;
+}
+
+std::unordered_map<ROOT::Experimental::Internal::RNTupleJoinTable::PartitionKey_t, std::vector<ROOT::NTupleSize_t>>
+ROOT::Experimental::Internal::RNTupleJoinTable::GetPartitionedEntryIndexes(
+   const std::vector<void *> &valuePtrs, const std::vector<PartitionKey_t> &partitionKeys) const
+{
+   std::unordered_map<PartitionKey_t, std::vector<ROOT::NTupleSize_t>> entryIdxs{};
+
+   for (const auto &partitionKey : partitionKeys) {
+      auto entriesForPartition = GetEntryIndexes(valuePtrs, partitionKey);
+      if (!entriesForPartition.empty()) {
+         entryIdxs[partitionKey].insert(entryIdxs[partitionKey].end(), entriesForPartition.begin(),
+                                        entriesForPartition.end());
+      }
+   }
+
+   return entryIdxs;
+}
+
+std::unordered_map<ROOT::Experimental::Internal::RNTupleJoinTable::PartitionKey_t, std::vector<ROOT::NTupleSize_t>>
+ROOT::Experimental::Internal::RNTupleJoinTable::GetPartitionedEntryIndexes(const std::vector<void *> &valuePtrs) const
+{
+   std::unordered_map<PartitionKey_t, std::vector<ROOT::NTupleSize_t>> entryIdxs{};
+
+   for (const auto &partition : fPartitions) {
+      for (const auto &joinMapping : partition.second) {
+         auto entriesForMapping = joinMapping->GetEntryIndexes(valuePtrs);
+         if (entriesForMapping) {
+            entryIdxs[partition.first].insert(entryIdxs[partition.first].end(), entriesForMapping->begin(),
+                                              entriesForMapping->end());
+         }
+      }
+   }
+
+   return entryIdxs;
 }

@@ -503,6 +503,7 @@ private:
    /// Tokens representing the join fields present in the main RNTuple
    std::vector<REntry::RFieldToken> fJoinFieldTokens;
    std::vector<std::unique_ptr<Internal::RNTupleJoinTable>> fJoinTables;
+   bool fJoinTablesAreBuilt = false;
 
    bool HasJoinTable() const { return fJoinTables.size() > 0; }
 
