@@ -243,14 +243,15 @@ TEST_F(TTreeReaderFriends, EntryChainFriend)
       tree.Write();
    }
 
+   std::unique_ptr<TChain> chainFriend{new TChain("friend")};
+   chainFriend->Add("friendtree9886_*.root");
+   std::unique_ptr<TChain> chainMain{new TChain("tree")};
+   chainMain->Add("maintree9886_*.root");
+   chainMain->AddFriend(chainFriend.get());
+   TChain *chain = chainMain.get();
+   
    // Test using traditional SetBranchAddress
    {
-      std::unique_ptr<TChain> chainFriend{new TChain("friend")};
-      chainFriend->Add("friendtree9886_*.root");
-      std::unique_ptr<TChain> chainMain{new TChain("tree")};
-      chainMain->Add("maintree9886_*.root");
-      chainMain->AddFriend(chainFriend.get());
-      TChain *chain = chainMain.get();
       EXPECT_EQ(chain->GetEntries(), 30);
       EXPECT_EQ(chainFriend->GetEntries(), 30);
 
@@ -267,12 +268,6 @@ TEST_F(TTreeReaderFriends, EntryChainFriend)
 
    // Equivalent test using TTreeReader
    {
-      std::unique_ptr<TChain> chainFriend{new TChain("friend")};
-      chainFriend->Add("friendtree9886_*.root");
-      std::unique_ptr<TChain> chainMain{new TChain("tree")};
-      chainMain->Add("maintree9886_*.root");
-      chainMain->AddFriend(chainFriend.get());
-      TChain *chain = chainMain.get();
       EXPECT_EQ(chain->GetEntries(), 30);
       EXPECT_EQ(chainFriend->GetEntries(), 30);
 
