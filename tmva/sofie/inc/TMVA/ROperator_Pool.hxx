@@ -200,7 +200,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
 
       fUseSession = model.UseSession();
 
