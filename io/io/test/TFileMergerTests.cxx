@@ -2,6 +2,7 @@
 
 #include "TFileMerger.h"
 #include "TFileMergeInfo.h"
+#include "TBranch.h"
 
 #include "TMemFile.h"
 #include "TTree.h"
