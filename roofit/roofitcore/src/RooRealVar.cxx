@@ -91,7 +91,7 @@ RooRealVarSharedProperties& RooRealVar::_nullProp()
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(new RooUniformBinning())
+RooRealVar::RooRealVar()
 {
   _fast = true ;
   TRACE_CREATE;

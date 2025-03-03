@@ -148,9 +148,9 @@ public:
 
   double chopAt(double what, Int_t where) const ;
 
-  double _error;      ///< Symmetric error associated with current value
-  double _asymErrLo ; ///< Low side of asymmetric error associated with current value
-  double _asymErrHi ; ///< High side of asymmetric error associated with current value
+  double _error = 0.0;     ///< Symmetric error associated with current value
+  double _asymErrLo = 0.0; ///< Low side of asymmetric error associated with current value
+  double _asymErrHi = 0.0; ///< High side of asymmetric error associated with current value
   std::unique_ptr<RooAbsBinning> _binning;
   std::unordered_map<std::string,std::unique_ptr<RooAbsBinning>> _altNonSharedBinning ; ///<! Non-shareable alternative binnings
 
