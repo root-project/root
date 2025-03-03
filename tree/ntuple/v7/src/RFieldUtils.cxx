@@ -82,7 +82,7 @@ std::string GetNormalizedTemplateArg(const std::string &arg, F fnTypeNormalizer)
 
 std::pair<std::string, std::string> SplitTypePrefixFromTemplateArgs(const std::string &typeName)
 {
-   auto idxOpen = typeName.find_first_of("<");
+   auto idxOpen = typeName.find('<');
    if (idxOpen == std::string::npos)
       return {typeName, ""};
 
@@ -348,7 +348,7 @@ ROOT::Experimental::Internal::ParseArrayType(const std::string &typeName)
    std::string prefix{typeName};
    while (prefix.back() == ']') {
       auto posRBrace = prefix.size() - 1;
-      auto posLBrace = prefix.find_last_of('[', posRBrace);
+      auto posLBrace = prefix.rfind('[', posRBrace);
       if (posLBrace == std::string_view::npos) {
          throw RException(R__FAIL(std::string("invalid array type: ") + typeName));
       }
