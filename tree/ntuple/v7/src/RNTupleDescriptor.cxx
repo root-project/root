@@ -415,8 +415,12 @@ ROOT::DescriptorId_t ROOT::Experimental::RNTupleDescriptor::FindClusterId(ROOT::
       const auto &clusterIds = GetClusterGroupDescriptor(fSortedClusterGroupIds[cgMidpoint]).GetClusterIds();
       R__ASSERT(!clusterIds.empty());
 
-      const auto firstElementInGroup =
-         GetClusterDescriptor(clusterIds.front()).GetColumnRange(physicalColumnId).GetFirstElementIndex();
+      const auto &clusterDesc = GetClusterDescriptor(clusterIds.front());
+      // this may happen if the RNTuple has an empty schema
+      if (!clusterDesc.ContainsColumn(physicalColumnId))
+         return ROOT::kInvalidDescriptorId;
+
+      const auto firstElementInGroup = clusterDesc.GetColumnRange(physicalColumnId).GetFirstElementIndex();
       if (firstElementInGroup > index) {
          // Look into the lower half of cluster groups
          R__ASSERT(cgMidpoint > 0);
