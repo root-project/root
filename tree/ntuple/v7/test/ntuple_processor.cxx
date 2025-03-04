@@ -180,13 +180,13 @@ TEST_F(RNTupleProcessorTest, ChainedChain)
 TEST_F(RNTupleProcessorTest, ChainedJoin)
 {
    std::vector<std::unique_ptr<RNTupleProcessor>> innerProcs;
-   // The ntuples are aligned
+   // The ntuples are aligned, no join key necessary.
    innerProcs.push_back(
-      RNTupleProcessor::CreateJoin({{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}}, {}));
-   // The ntuples are unaligned, so we join on "i"
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[1], fFileNames[1]}}, {}));
+   // Use the same ntuples, but pretend they are unaligned an join them on "i".
    innerProcs.push_back(
-      RNTupleProcessor::CreateJoin({{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[2], fFileNames[2]}}, {"i"}));
-   // The chain processor shouldn't care about the fact that the first join is aligned, but the second one isn't
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[2], fFileNames[2]}}, {"i"}));
+
    auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
 
    int nEntries = 0;

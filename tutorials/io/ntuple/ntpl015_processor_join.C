@@ -79,15 +79,14 @@ void Read()
    TH1F hPy("h", "This is the px + py distribution", 100, -4, 4);
    hPy.SetFillColor(48);
 
-   // The ntuples to generate and subsequently process. The first ntuple is the main ntuple and will be used to drive
-   // the processor loop. All subsequent ntuples are auxiliary and will be joined with the entries from the main ntuple.
-   std::vector<RNTupleOpenSpec> ntuples = {{kMainNTupleName, kMainNTuplePath}, {kAuxNTupleName, kAuxNTuplePath}};
-
+   // The first specified ntuple is the main ntuple and will be used to drive the processor loop. The subsequent
+   // list of ntuples (in this case, only one) are auxiliary and will be joined with the entries from the main ntuple.
    // We specify field "i" as the join field. This field, which should be present in all ntuples specified is used to
    // identify which entries belong together. Multiple join fields can be specified, in which case the combination of
    // field values is used. It is possible to specify up to 4 join fields. Providing an empty list of join fields
    // signals to the processor that all entries are aligned.
-   auto processor = RNTupleProcessor::CreateJoin(ntuples, {"i"});
+   auto processor =
+      RNTupleProcessor::CreateJoin({kMainNTupleName, kMainNTuplePath}, {{kAuxNTupleName, kAuxNTuplePath}}, {"i"});
 
    float px, py;
    for (const auto &entry : *processor) {
