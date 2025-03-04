@@ -233,8 +233,14 @@ class RClusterDescriptor final {
    friend class Internal::RClusterDescriptorBuilder;
 
 public:
-   /// The window of element indexes of a particular column in a particular cluster
-   struct RColumnRange {
+   // clang-format off
+   /**
+   \class ROOT::Experimental::RClusterDescriptor::RColumnRange
+   \ingroup NTuple
+   \brief The window of element indexes of a particular column in a particular cluster
+   */
+   // clang-format on
+   class RColumnRange {
       ROOT::DescriptorId_t fPhysicalColumnId = ROOT::kInvalidDescriptorId;
       /// The global index of the first column element in the cluster
       ROOT::NTupleSize_t fFirstElementIndex = ROOT::kInvalidNTupleIndex;
@@ -251,6 +257,37 @@ public:
 
       // TODO(jblomer): we perhaps want to store summary information, such as average, min/max, etc.
       // Should this be done on the field level?
+
+   public:
+      RColumnRange() = default;
+
+      RColumnRange(ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t firstElementIndex,
+                   ROOT::NTupleSize_t nElements, std::optional<std::uint32_t> compressionSettings,
+                   bool suppressed = false)
+         : fPhysicalColumnId(physicalColumnId),
+           fFirstElementIndex(firstElementIndex),
+           fNElements(nElements),
+           fCompressionSettings(compressionSettings),
+           fIsSuppressed(suppressed)
+      {
+      }
+
+      ROOT::DescriptorId_t GetPhysicalColumnId() const { return fPhysicalColumnId; }
+      void SetPhysicalColumnId(ROOT::DescriptorId_t id) { fPhysicalColumnId = id; }
+
+      ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
+      void SetFirstElementIndex(ROOT::NTupleSize_t idx) { fFirstElementIndex = idx; }
+      void IncrementFirstElementIndex(ROOT::NTupleSize_t by) { fFirstElementIndex += by; }
+
+      ROOT::NTupleSize_t GetNElements() const { return fNElements; }
+      void SetNElements(ROOT::NTupleSize_t n) { fNElements = n; }
+      void IncrementNElements(ROOT::NTupleSize_t by) { fNElements += by; }
+
+      std::optional<std::uint32_t> GetCompressionSettings() const { return fCompressionSettings; }
+      void SetCompressionSettings(std::optional<std::uint32_t> comp) { fCompressionSettings = comp; }
+
+      bool IsSuppressed() const { return fIsSuppressed; }
+      void SetIsSuppressed(bool suppressed) { fIsSuppressed = suppressed; }
 
       bool operator==(const RColumnRange &other) const
       {
