@@ -264,6 +264,7 @@ TEST_F(TTreeReaderFriends, EntryChainFriend)
          EXPECT_EQ(mainVal, -entry);
          EXPECT_EQ(friendVal, entry);
       }
+      EXPECT_EQ(entry, 30);
    }
 
    // Equivalent test using TTreeReader
@@ -280,5 +281,6 @@ TEST_F(TTreeReaderFriends, EntryChainFriend)
          EXPECT_EQ(*friendVal, entry);
          ++entry;
       }
+      EXPECT_EQ(entry, 30);
    }
 }
