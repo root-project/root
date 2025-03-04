@@ -81,23 +81,14 @@ protected:
    }
 };
 
-TEST_F(RNTupleJoinProcessorTest, Basic)
+TEST_F(RNTupleJoinProcessorTest, PrimaryOnly)
 {
-   std::vector<RNTupleOpenSpec> ntuples;
-   try {
-      auto proc = RNTupleProcessor::CreateJoin(ntuples, {});
-      FAIL() << "creating a processor without at least one RNTuple should throw";
-   } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("at least one RNTuple must be provided"));
-   }
-
-   ntuples = {{fNTupleNames[0], fFileNames[0]}};
-
-   auto proc = RNTupleProcessor::CreateJoin(ntuples, {});
+   // Primary ntuple only
+   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {}, {});
    EXPECT_STREQ("ntuple1", proc->GetProcessorName().c_str());
 
    {
-      auto namedProc = RNTupleProcessor::CreateJoin(ntuples, {}, "my_ntuple");
+      auto namedProc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {}, {}, "my_ntuple");
       EXPECT_STREQ("my_ntuple", namedProc->GetProcessorName().c_str());
    }
 
@@ -117,16 +108,14 @@ TEST_F(RNTupleJoinProcessorTest, Basic)
 TEST_F(RNTupleJoinProcessorTest, Aligned)
 {
    try {
-      std::vector<RNTupleOpenSpec> ntuples = {{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[0], fFileNames[0]}};
-      auto proc = RNTupleProcessor::CreateJoin(ntuples, {});
+      auto proc =
+         RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[0], fFileNames[0]}}, {});
       FAIL() << "ntuples with the same name cannot be joined horizontally";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("horizontal joining of RNTuples with the same name is not allowed"));
    }
 
-   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}};
-
-   auto proc = RNTupleProcessor::CreateJoin(ntuples, {});
+   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {{fNTupleNames[2], fFileNames[2]}}, {});
 
    int nEntries = 0;
    std::vector<float> yExpected;
@@ -147,9 +136,7 @@ TEST_F(RNTupleJoinProcessorTest, Aligned)
 
 TEST_F(RNTupleJoinProcessorTest, IdenticalFieldNames)
 {
-   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}};
-
-   auto proc = RNTupleProcessor::CreateJoin(ntuples, {});
+   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {{fNTupleNames[2], fFileNames[2]}}, {});
 
    auto i = proc->GetEntry().GetPtr<int>("i");
    for (auto &entry : *proc) {
@@ -162,9 +149,8 @@ TEST_F(RNTupleJoinProcessorTest, IdenticalFieldNames)
 
 TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
 {
-   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}};
-
-   auto proc = RNTupleProcessor::CreateJoin(ntuples, {"i"});
+   auto proc =
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[1], fFileNames[1]}}, {"i"});
 
    int nEntries = 0;
    auto i = proc->GetEntry().GetPtr<int>("i");
@@ -186,32 +172,32 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedSingleJoinField)
 
 TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
 {
-   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[3], fFileNames[3]}};
-
    try {
-      RNTupleProcessor::CreateJoin(ntuples, {"i", "j", "k", "l", "m"});
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[3], fFileNames[3]}},
+                                   {"i", "j", "k", "l", "m"});
       FAIL() << "trying to create a join processor with more than four join fields should throw";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("a maximum of four join fields is allowed"));
    }
 
    try {
-      RNTupleProcessor::CreateJoin(ntuples, {"i", "i"});
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[3], fFileNames[3]}}, {"i", "i"});
       FAIL() << "trying to create a join processor with duplicate join fields should throw";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("join fields must be unique"));
    }
 
    try {
-      std::vector<RNTupleOpenSpec> unfitNTuples = {{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}};
-      auto proc = RNTupleProcessor::CreateJoin(unfitNTuples, {"i", "j", "k"});
+      auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[1], fFileNames[1]}},
+                                               {"i", "j", "k"});
       proc->begin();
       FAIL() << "trying to use a join processor where not all join fields are present should throw";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("could not find join field \"j\" in RNTuple \"ntuple2\""));
    }
 
-   auto proc = RNTupleProcessor::CreateJoin(ntuples, {"i", "j", "k"});
+   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[3], fFileNames[3]}},
+                                            {"i", "j", "k"});
 
    int nEntries = 0;
    auto i = proc->GetEntry().GetPtr<int>("i");
@@ -230,9 +216,8 @@ TEST_F(RNTupleJoinProcessorTest, UnalignedMultipleJoinFields)
 
 TEST_F(RNTupleJoinProcessorTest, MissingEntries)
 {
-   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[3], fFileNames[3]}};
-
-   auto proc = RNTupleProcessor::CreateJoin(ntuples, {"i"});
+   auto proc =
+      RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {{fNTupleNames[3], fFileNames[3]}}, {"i"});
 
    int nEntries = 0;
    auto i = proc->GetEntry().GetPtr<int>("i");
@@ -271,10 +256,9 @@ TEST_F(RNTupleJoinProcessorTest, WithModel)
    models.push_back(std::move(model2));
    models.push_back(std::move(model3));
 
-   std::vector<RNTupleOpenSpec> ntuples = {
-      {fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}};
-
-   auto proc = RNTupleProcessor::CreateJoin(ntuples, {"i"}, std::move(models));
+   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]},
+                                            {{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}, {"i"},
+                                            std::move(models));
 
    int nEntries = 0;
    std::vector<float> yExpected;
