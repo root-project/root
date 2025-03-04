@@ -87,7 +87,7 @@ TEST(RPageStorage, ReadSealedPages)
       ASSERT_GE(sealedPage.GetBufferSize(), 12U);
       ASSERT_GE(sealedPage.GetDataSize(), 4U);
       EXPECT_EQ(firstElementInPage, ReadRawInt(sealedPage.GetBuffer()));
-      firstElementInPage += pi.fNElements;
+      firstElementInPage += pi.GetNElements();
    }
 }
 

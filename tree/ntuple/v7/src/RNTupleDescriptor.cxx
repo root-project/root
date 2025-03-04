@@ -221,7 +221,7 @@ ROOT::Experimental::RClusterDescriptor::RPageRange::Find(ROOT::NTupleSize_t idxI
    auto pageInfo = fPageInfos[midpoint];
    decltype(idxInCluster) firstInPage = (midpoint == 0) ? 0 : fCumulativeNElements[midpoint - 1];
    R__ASSERT(firstInPage <= idxInCluster);
-   R__ASSERT((firstInPage + pageInfo.fNElements) > idxInCluster);
+   R__ASSERT((firstInPage + pageInfo.GetNElements()) > idxInCluster);
    return RPageInfoExtended{pageInfo, firstInPage, midpoint};
 }
 
@@ -233,8 +233,9 @@ ROOT::Experimental::RClusterDescriptor::RPageRange::ExtendToFitColumnRange(const
    R__ASSERT(fPhysicalColumnId == columnRange.GetPhysicalColumnId());
    R__ASSERT(!columnRange.IsSuppressed());
 
-   const auto nElements = std::accumulate(fPageInfos.begin(), fPageInfos.end(), 0U,
-                                          [](std::size_t n, const auto &PI) { return n + PI.fNElements; });
+   const auto nElements =
+      std::accumulate(fPageInfos.begin(), fPageInfos.end(), 0U,
+                      [](std::size_t n, const auto &pageInfo) { return n + pageInfo.GetNElements(); });
    const auto nElementsRequired = static_cast<std::uint64_t>(columnRange.GetNElements());
 
    if (nElementsRequired == nElements)
@@ -246,12 +247,14 @@ ROOT::Experimental::RClusterDescriptor::RPageRange::ExtendToFitColumnRange(const
    const std::uint64_t nElementsPerPage = pageSize / element.GetSize();
    R__ASSERT(nElementsPerPage > 0);
    for (auto nRemainingElements = nElementsRequired - nElements; nRemainingElements > 0;) {
-      RPageInfo PI;
-      PI.fNElements = std::min(nElementsPerPage, nRemainingElements);
-      PI.fLocator.SetType(RNTupleLocator::kTypePageZero);
-      PI.fLocator.SetNBytesOnStorage(element.GetPackedSize(PI.fNElements));
-      pageInfos.emplace_back(PI);
-      nRemainingElements -= PI.fNElements;
+      RPageInfo pageInfo;
+      pageInfo.SetNElements(std::min(nElementsPerPage, nRemainingElements));
+      RNTupleLocator locator;
+      locator.SetType(RNTupleLocator::kTypePageZero);
+      locator.SetNBytesOnStorage(element.GetPackedSize(pageInfo.GetNElements()));
+      pageInfo.SetLocator(locator);
+      pageInfos.emplace_back(pageInfo);
+      nRemainingElements -= pageInfo.GetNElements();
    }
 
    pageInfos.insert(pageInfos.end(), std::make_move_iterator(fPageInfos.begin()),
@@ -271,7 +274,7 @@ std::uint64_t ROOT::Experimental::RClusterDescriptor::GetNBytesOnStorage() const
    std::uint64_t nbytes = 0;
    for (const auto &pr : fPageRanges) {
       for (const auto &pi : pr.second.fPageInfos) {
-         nbytes += pi.fLocator.GetNBytesOnStorage();
+         nbytes += pi.GetLocator().GetNBytesOnStorage();
       }
    }
    return nbytes;
@@ -742,7 +745,7 @@ ROOT::RResult<void> ROOT::Experimental::Internal::RClusterDescriptorBuilder::Com
       return R__FAIL("column ID conflict");
    RClusterDescriptor::RColumnRange columnRange{physicalId, firstElementIndex, 0, compressionSettings};
    for (const auto &pi : pageRange.fPageInfos) {
-      columnRange.IncrementNElements(pi.fNElements);
+      columnRange.IncrementNElements(pi.GetNElements());
    }
    fCluster.fPageRanges[physicalId] = pageRange.Clone();
    fCluster.fColumnRanges[physicalId] = columnRange;
@@ -877,7 +880,7 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::MoveDescriptor()
       pr.second.fCumulativeNElements.reserve(pr.second.fPageInfos.size());
       ROOT::NTupleSize_t sum = 0;
       for (const auto &pi : pr.second.fPageInfos) {
-         sum += pi.fNElements;
+         sum += pi.GetNElements();
          pr.second.fCumulativeNElements.emplace_back(sum);
       }
    }

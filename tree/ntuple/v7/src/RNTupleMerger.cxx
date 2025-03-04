@@ -747,16 +747,16 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const RCluster
       for (const auto &pageInfo : pages.fPageInfos) {
          assert(pageIdx < sealedPages.size());
          assert(sealedPageData.fBuffers.size() == 0 || pageIdx < sealedPageData.fBuffers.size());
-         assert(pageInfo.fLocator.GetType() != RNTupleLocator::kTypePageZero);
+         assert(pageInfo.GetLocator().GetType() != RNTupleLocator::kTypePageZero);
 
          ROnDiskPage::Key key{columnId, pageIdx};
          auto onDiskPage = cluster->GetOnDiskPage(key);
 
-         const auto checksumSize = pageInfo.fHasChecksum * RPageStorage::kNBytesPageChecksum;
+         const auto checksumSize = pageInfo.HasChecksum() * RPageStorage::kNBytesPageChecksum;
          RPageStorage::RSealedPage &sealedPage = sealedPages[pageIdx];
-         sealedPage.SetNElements(pageInfo.fNElements);
-         sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
-         sealedPage.SetBufferSize(pageInfo.fLocator.GetNBytesOnStorage() + checksumSize);
+         sealedPage.SetNElements(pageInfo.GetNElements());
+         sealedPage.SetHasChecksum(pageInfo.HasChecksum());
+         sealedPage.SetBufferSize(pageInfo.GetLocator().GetNBytesOnStorage() + checksumSize);
          sealedPage.SetBuffer(onDiskPage->GetAddress());
          // TODO(gparolini): more graceful error handling (skip the page?)
          sealedPage.VerifyChecksumIfEnabled().ThrowOnError();

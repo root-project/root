@@ -267,9 +267,9 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
          for (const auto &pi : pageRange.fPageInfos) {
             auto onDiskPage = cluster->GetOnDiskPage(ROnDiskPage::Key{columnId, pageNo});
             RSealedPage sealedPage;
-            sealedPage.SetNElements(pi.fNElements);
-            sealedPage.SetHasChecksum(pi.fHasChecksum);
-            sealedPage.SetBufferSize(pi.fLocator.GetNBytesOnStorage() + pi.fHasChecksum * kNBytesPageChecksum);
+            sealedPage.SetNElements(pi.GetNElements());
+            sealedPage.SetHasChecksum(pi.HasChecksum());
+            sealedPage.SetBufferSize(pi.GetLocator().GetNBytesOnStorage() + pi.HasChecksum() * kNBytesPageChecksum);
             sealedPage.SetBuffer(onDiskPage->GetAddress());
             R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
 
@@ -291,7 +291,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
 
             fTaskScheduler->AddTask(taskFunc);
 
-            firstInPage += pi.fNElements;
+            firstInPage += pi.GetNElements();
             pageNo++;
          } // for all pages in column
 
@@ -321,10 +321,10 @@ void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
       const auto &pageRange = clusterDesc.GetPageRange(physicalColumnId);
       ROOT::NTupleSize_t pageNo = 0;
       for (const auto &pageInfo : pageRange.fPageInfos) {
-         if (pageInfo.fLocator.GetType() == RNTupleLocator::kTypePageZero) {
+         if (pageInfo.GetLocator().GetType() == RNTupleLocator::kTypePageZero) {
             pageZeroMap.Register(
                ROnDiskPage::Key{physicalColumnId, pageNo},
-               ROnDiskPage(const_cast<void *>(RPage::GetPageZeroBuffer()), pageInfo.fLocator.GetNBytesOnStorage()));
+               ROnDiskPage(const_cast<void *>(RPage::GetPageZeroBuffer()), pageInfo.GetLocator().GetNBytesOnStorage()));
          } else {
             perPageFunc(physicalColumnId, pageNo, pageInfo);
          }
@@ -390,7 +390,7 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
       clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
    }
 
-   if (clusterInfo.fPageInfo.fLocator.GetType() == RNTupleLocator::kTypeUnknown)
+   if (clusterInfo.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypeUnknown)
       throw RException(R__FAIL("tried to read a page with an unknown locator"));
 
    UpdateLastUsedCluster(clusterInfo.fClusterId);
@@ -426,7 +426,7 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
       clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
    }
 
-   if (clusterInfo.fPageInfo.fLocator.GetType() == RNTupleLocator::kTypeUnknown)
+   if (clusterInfo.fPageInfo.GetLocator().GetType() == RNTupleLocator::kTypeUnknown)
       throw RException(R__FAIL("tried to read a page with an unknown locator"));
 
    UpdateLastUsedCluster(clusterInfo.fClusterId);
@@ -1002,9 +1002,9 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitPage(ColumnHandle_
    fOpenColumnRanges.at(columnHandle.fPhysicalId).IncrementNElements(page.GetNElements());
 
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-   pageInfo.fNElements = page.GetNElements();
-   pageInfo.fLocator = CommitPageImpl(columnHandle, page);
-   pageInfo.fHasChecksum = GetWriteOptions().GetEnablePageChecksums();
+   pageInfo.SetNElements(page.GetNElements());
+   pageInfo.SetLocator(CommitPageImpl(columnHandle, page));
+   pageInfo.SetHasChecksum(GetWriteOptions().GetEnablePageChecksums());
    fOpenPageRanges.at(columnHandle.fPhysicalId).fPageInfos.emplace_back(pageInfo);
 }
 
@@ -1014,9 +1014,9 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPage(ROOT::D
    fOpenColumnRanges.at(physicalColumnId).IncrementNElements(sealedPage.GetNElements());
 
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-   pageInfo.fNElements = sealedPage.GetNElements();
-   pageInfo.fLocator = CommitSealedPageImpl(physicalColumnId, sealedPage);
-   pageInfo.fHasChecksum = sealedPage.GetHasChecksum();
+   pageInfo.SetNElements(sealedPage.GetNElements());
+   pageInfo.SetLocator(CommitSealedPageImpl(physicalColumnId, sealedPage));
+   pageInfo.SetHasChecksum(sealedPage.GetHasChecksum());
    fOpenPageRanges.at(physicalColumnId).fPageInfos.emplace_back(pageInfo);
 }
 
@@ -1098,9 +1098,9 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageV(
          fOpenColumnRanges.at(range.fPhysicalColumnId).IncrementNElements(sealedPageIt->GetNElements());
 
          RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-         pageInfo.fNElements = sealedPageIt->GetNElements();
-         pageInfo.fLocator = locators[locatorIndexes[i++]];
-         pageInfo.fHasChecksum = sealedPageIt->GetHasChecksum();
+         pageInfo.SetNElements(sealedPageIt->GetNElements());
+         pageInfo.SetLocator(locators[locatorIndexes[i++]]);
+         pageInfo.SetHasChecksum(sealedPageIt->GetHasChecksum());
          fOpenPageRanges.at(range.fPhysicalColumnId).fPageInfos.emplace_back(pageInfo);
       }
    }
