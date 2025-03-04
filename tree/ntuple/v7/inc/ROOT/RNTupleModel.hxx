@@ -313,6 +313,10 @@ public:
    std::uint64_t GetModelId() const { return fModelId; }
    std::uint64_t GetSchemaId() const { return fSchemaId; }
 
+   /// Returns the names of the fields currently present in the model, including projected fields. Registered subfields
+   /// are not included, use GetRegisteredSubfields() for this.
+   const std::unordered_set<std::string> &GetFieldNames() const { return fFieldNames; }
+
    std::unique_ptr<REntry> CreateEntry() const;
    /// In a bare entry, all values point to nullptr. The resulting entry shall use BindValue() in order
    /// set memory addresses to be serialized / deserialized
