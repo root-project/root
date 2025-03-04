@@ -265,6 +265,7 @@ TEST_F(TTreeReaderFriends, EntryChainFriend)
          EXPECT_EQ(friendVal, entry);
       }
       EXPECT_EQ(entry, 30);
+      chain->ResetBranchAddresses();
    }
 
    // Equivalent test using TTreeReader
