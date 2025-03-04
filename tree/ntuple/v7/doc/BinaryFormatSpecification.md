@@ -497,7 +497,7 @@ The column type and bits on storage integers can have one of the following value
 | 0x10 |   96 | Switch       | Tuple of a kIndex64 value followed by a 32 bits dispatch tag to a column ID                   |
 | 0x11 |   16 | SplitInt16   | Like Int16 but in split + zigzag encoding                                                     |
 | 0x12 |   16 | SplitUInt16  | Like UInt16 but in split encoding                                                             |
-| 0x13 |   64 | SplitInt32   | Like Int32 but in split + zigzag encoding                                                     |
+| 0x13 |   32 | SplitInt32   | Like Int32 but in split + zigzag encoding                                                     |
 | 0x14 |   32 | SplitUInt32  | Like UInt32 but in split encoding                                                             |
 | 0x15 |   64 | SplitInt64   | Like Int64 but in split + zigzag encoding                                                     |
 | 0x16 |   64 | SplitUInt64  | Like UInt64 but in split encoding                                                             |
