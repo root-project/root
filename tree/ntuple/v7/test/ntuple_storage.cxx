@@ -217,10 +217,10 @@ TEST(RNTuple, PageFilling)
    const auto &prX = clusterDesc.GetPageRange(colIdX);
    const auto &prY = clusterDesc.GetPageRange(colIdY);
    ASSERT_EQ(1u, prX.fPageInfos.size());
-   EXPECT_EQ(6u, prX.fPageInfos[0].fNElements);
+   EXPECT_EQ(6u, prX.fPageInfos[0].GetNElements());
    ASSERT_EQ(2u, prY.fPageInfos.size());
-   EXPECT_EQ(3u, prY.fPageInfos[0].fNElements);
-   EXPECT_EQ(3u, prY.fPageInfos[1].fNElements);
+   EXPECT_EQ(3u, prY.fPageInfos[0].GetNElements());
+   EXPECT_EQ(3u, prY.fPageInfos[1].GetNElements());
 }
 
 TEST(RNTuple, PageFillingString)
@@ -269,20 +269,20 @@ TEST(RNTuple, PageFillingString)
    const auto &cd1 = desc.GetClusterDescriptor(desc.FindClusterId(1, 0));
    const auto &pr1 = cd1.GetPageRange(1);
    ASSERT_EQ(2u, pr1.fPageInfos.size());
-   EXPECT_EQ(16u, pr1.fPageInfos[0].fNElements);
-   EXPECT_EQ(1u, pr1.fPageInfos[1].fNElements);
+   EXPECT_EQ(16u, pr1.fPageInfos[0].GetNElements());
+   EXPECT_EQ(1u, pr1.fPageInfos[1].GetNElements());
    const auto &cd2 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd1.GetId()));
    const auto &pr2 = cd2.GetPageRange(1);
    ASSERT_EQ(1u, pr2.fPageInfos.size());
-   EXPECT_EQ(16u, pr2.fPageInfos[0].fNElements);
+   EXPECT_EQ(16u, pr2.fPageInfos[0].GetNElements());
    const auto &cd3 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd2.GetId()));
    const auto &pr3 = cd3.GetPageRange(1);
    ASSERT_EQ(0u, pr3.fPageInfos.size());
    const auto &cd4 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd3.GetId()));
    const auto &pr4 = cd4.GetPageRange(1);
    ASSERT_EQ(2u, pr4.fPageInfos.size());
-   EXPECT_EQ(16u, pr4.fPageInfos[0].fNElements);
-   EXPECT_EQ(10u, pr4.fPageInfos[1].fNElements);
+   EXPECT_EQ(16u, pr4.fPageInfos[0].GetNElements());
+   EXPECT_EQ(10u, pr4.fPageInfos[1].GetNElements());
 }
 
 TEST(RNTuple, FlushColumns)
@@ -312,8 +312,8 @@ TEST(RNTuple, FlushColumns)
    auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0, 0);
    auto &pageInfos = descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos;
    ASSERT_EQ(pageInfos.size(), 2);
-   EXPECT_EQ(pageInfos[0].fNElements, 1);
-   EXPECT_EQ(pageInfos[1].fNElements, 1);
+   EXPECT_EQ(pageInfos[0].GetNElements(), 1);
+   EXPECT_EQ(pageInfos[1].GetNElements(), 1);
 }
 
 TEST(RNTuple, WritePageBudgetLimit)
@@ -462,25 +462,25 @@ TEST(RNTuple, WritePageBudget)
    const auto &prDD = clusterDesc.GetPageRange(colIdDD);
 
    EXPECT_EQ(1u, prA.fPageInfos.size());
-   EXPECT_EQ(4u, prA.fPageInfos[0].fNElements);
+   EXPECT_EQ(4u, prA.fPageInfos[0].GetNElements());
    EXPECT_EQ(1u, prB.fPageInfos.size());
-   EXPECT_EQ(4u, prB.fPageInfos[0].fNElements);
+   EXPECT_EQ(4u, prB.fPageInfos[0].GetNElements());
    EXPECT_EQ(1u, prC.fPageInfos.size());
-   EXPECT_EQ(4u, prC.fPageInfos[0].fNElements);
+   EXPECT_EQ(4u, prC.fPageInfos[0].GetNElements());
    EXPECT_EQ(1u, prD.fPageInfos.size());
-   EXPECT_EQ(4u, prD.fPageInfos[0].fNElements);
+   EXPECT_EQ(4u, prD.fPageInfos[0].GetNElements());
    EXPECT_EQ(1u, prAD.fPageInfos.size());
-   EXPECT_EQ(4u, prAD.fPageInfos[0].fNElements);
+   EXPECT_EQ(4u, prAD.fPageInfos[0].GetNElements());
    EXPECT_EQ(2u, prBD.fPageInfos.size());
-   EXPECT_EQ(32u, prBD.fPageInfos[0].fNElements);
-   EXPECT_EQ(8u, prBD.fPageInfos[1].fNElements);
+   EXPECT_EQ(32u, prBD.fPageInfos[0].GetNElements());
+   EXPECT_EQ(8u, prBD.fPageInfos[1].GetNElements());
    EXPECT_EQ(2u, prCD.fPageInfos.size());
-   EXPECT_EQ(20u, prCD.fPageInfos[0].fNElements);
-   EXPECT_EQ(4u, prCD.fPageInfos[1].fNElements);
+   EXPECT_EQ(20u, prCD.fPageInfos[0].GetNElements());
+   EXPECT_EQ(4u, prCD.fPageInfos[1].GetNElements());
    EXPECT_EQ(3u, prDD.fPageInfos.size());
-   EXPECT_EQ(16u, prDD.fPageInfos[0].fNElements);
-   EXPECT_EQ(16u, prDD.fPageInfos[1].fNElements);
-   EXPECT_EQ(7u, prDD.fPageInfos[2].fNElements);
+   EXPECT_EQ(16u, prDD.fPageInfos[0].GetNElements());
+   EXPECT_EQ(16u, prDD.fPageInfos[1].GetNElements());
+   EXPECT_EQ(7u, prDD.fPageInfos[2].GetNElements());
 }
 
 #ifdef R__HAS_DAVIX
@@ -590,7 +590,7 @@ TEST(RPageSinkBuf, Basics)
    for (std::size_t i = 0; i < num_columns; i++) {
       const auto &columnPages = cluster0.GetPageRange(i);
       for (const auto &page : columnPages.fPageInfos) {
-         pagePositions.push_back(std::make_pair(i, page.fLocator.GetPosition<std::uint64_t>()));
+         pagePositions.push_back(std::make_pair(i, page.GetLocator().GetPosition<std::uint64_t>()));
       }
    }
 
@@ -921,13 +921,15 @@ TEST(RPageStorageFile, MultiKeyBlob_Pages)
                    .GetClusterDescriptor(0)
                    .GetPageRange(0)
                    .fPageInfos[0]
-                   .fLocator.GetNBytesOnStorage(),
+                   .GetLocator()
+                   .GetNBytesOnStorage(),
                 kMaxKeySize);
       EXPECT_GT(ntupleUcmp->GetDescriptor()
                    .GetClusterDescriptor(0)
                    .GetPageRange(0)
                    .fPageInfos[0]
-                   .fLocator.GetNBytesOnStorage(),
+                   .GetLocator()
+                   .GetNBytesOnStorage(),
                 kMaxKeySize);
 
       TRandom3 rnd(42);
@@ -1094,8 +1096,8 @@ TEST(RPageSink, SamePageMerging)
       const auto pyColId = desc.FindPhysicalColumnId(desc.FindFieldId("py"), 0, 0);
       const auto clusterId = desc.FindClusterId(pxColId, 0);
       const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
-      EXPECT_EQ(enable, clusterDesc.GetPageRange(pxColId).Find(0).fLocator.GetPosition<std::uint64_t>() ==
-                           clusterDesc.GetPageRange(pyColId).Find(0).fLocator.GetPosition<std::uint64_t>());
+      EXPECT_EQ(enable, clusterDesc.GetPageRange(pxColId).Find(0).GetLocator().GetPosition<std::uint64_t>() ==
+                           clusterDesc.GetPageRange(pyColId).Find(0).GetLocator().GetPosition<std::uint64_t>());
 
       auto viewPx = reader->GetView<float>("px");
       auto viewPy = reader->GetView<float>("py");

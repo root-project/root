@@ -24,6 +24,7 @@ TEST(RNTuple, ReadString)
    if (ntuple->GetDescriptor().GetClusterDescriptor(0).GetPageRange(1).fPageInfos.size() < 2) {
       FAIL(); // This means all entries are inside the same page and numEntries should be increased.
    }
-   int nElementsPerPage = ntuple->GetDescriptor().GetClusterDescriptor(0).GetPageRange(1).fPageInfos.at(1).fNElements;
+   int nElementsPerPage =
+      ntuple->GetDescriptor().GetClusterDescriptor(0).GetPageRange(1).fPageInfos.at(1).GetNElements();
    EXPECT_EQ(contentString, viewSt(nElementsPerPage/7));
 }

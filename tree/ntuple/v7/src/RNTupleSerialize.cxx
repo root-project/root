@@ -1588,9 +1588,10 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
             pos += SerializeListFramePreamble(pageRange.fPageInfos.size(), *where);
 
             for (const auto &pi : pageRange.fPageInfos) {
-               std::int32_t nElements = pi.fHasChecksum ? -static_cast<std::int32_t>(pi.fNElements) : pi.fNElements;
+               std::int32_t nElements =
+                  pi.HasChecksum() ? -static_cast<std::int32_t>(pi.GetNElements()) : pi.GetNElements();
                pos += SerializeUInt32(nElements, *where);
-               pos += SerializeLocator(pi.fLocator, *where);
+               pos += SerializeLocator(pi.GetLocator(), *where);
             }
             pos += SerializeInt64(columnRange.GetFirstElementIndex(), *where);
             pos += SerializeUInt32(columnRange.GetCompressionSettings().value(), *where);
@@ -1885,7 +1886,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageListRaw(const vo
             result = DeserializeLocator(bytes, fnInnerFrameSizeLeft(), locator);
             if (!result)
                return R__FORWARD_ERROR(result);
-            pageRange.fPageInfos.push_back({static_cast<std::uint32_t>(nElements), locator, hasChecksum});
+            pageRange.fPageInfos.emplace_back(static_cast<std::uint32_t>(nElements), locator, hasChecksum);
             bytes += result.Unwrap();
          }
 
