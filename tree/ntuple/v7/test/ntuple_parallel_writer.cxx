@@ -333,8 +333,8 @@ TEST(RNTupleFillContext, FlushColumns)
    auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0, 0);
    auto &pageInfos = descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos;
    ASSERT_EQ(pageInfos.size(), 2);
-   EXPECT_EQ(pageInfos[0].fNElements, 1);
-   EXPECT_EQ(pageInfos[1].fNElements, 1);
+   EXPECT_EQ(pageInfos[0].GetNElements(), 1);
+   EXPECT_EQ(pageInfos[1].GetNElements(), 1);
 }
 
 TEST(RNTupleParallelWriter, ExplicitCommit)

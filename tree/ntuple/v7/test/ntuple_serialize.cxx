@@ -672,13 +672,13 @@ TEST(RNTuple, SerializeFooter)
    ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
    pageRange.fPhysicalColumnId = 17;
    // Two pages adding up to 100 elements, one with checksum one without
-   pageInfo.fNElements = 40;
-   pageInfo.fLocator.SetPosition(7000U);
-   pageInfo.fHasChecksum = true;
+   pageInfo.SetNElements(40);
+   pageInfo.GetLocator().SetPosition(7000U);
+   pageInfo.SetHasChecksum(true);
    pageRange.fPageInfos.emplace_back(pageInfo);
-   pageInfo.fNElements = 60;
-   pageInfo.fLocator.SetPosition(8000U);
-   pageInfo.fHasChecksum = false;
+   pageInfo.SetNElements(60);
+   pageInfo.GetLocator().SetPosition(8000U);
+   pageInfo.SetHasChecksum(false);
    pageRange.fPageInfos.emplace_back(pageInfo);
    clusterBuilder.CommitColumnRange(17, 0, 100, pageRange);
    builder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
@@ -750,12 +750,12 @@ TEST(RNTuple, SerializeFooter)
    EXPECT_EQ(0u, columnRange.GetFirstElementIndex());
    pageRange = clusterDesc.GetPageRange(0).Clone();
    EXPECT_EQ(2u, pageRange.fPageInfos.size());
-   EXPECT_EQ(40u, pageRange.fPageInfos[0].fNElements);
-   EXPECT_EQ(7000u, pageRange.fPageInfos[0].fLocator.GetPosition<std::uint64_t>());
-   EXPECT_TRUE(pageRange.fPageInfos[0].fHasChecksum);
-   EXPECT_EQ(60u, pageRange.fPageInfos[1].fNElements);
-   EXPECT_EQ(8000u, pageRange.fPageInfos[1].fLocator.GetPosition<std::uint64_t>());
-   EXPECT_FALSE(pageRange.fPageInfos[1].fHasChecksum);
+   EXPECT_EQ(40u, pageRange.fPageInfos[0].GetNElements());
+   EXPECT_EQ(7000u, pageRange.fPageInfos[0].GetLocator().GetPosition<std::uint64_t>());
+   EXPECT_TRUE(pageRange.fPageInfos[0].HasChecksum());
+   EXPECT_EQ(60u, pageRange.fPageInfos[1].GetNElements());
+   EXPECT_EQ(8000u, pageRange.fPageInfos[1].GetLocator().GetPosition<std::uint64_t>());
+   EXPECT_FALSE(pageRange.fPageInfos[1].HasChecksum());
 }
 
 TEST(RNTuple, SerializeFooterXHeader)
@@ -993,7 +993,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    clusterBuilder.MarkSuppressedColumnRange(0);
    clusterBuilder.MarkSuppressedColumnRange(1);
    pageRange.fPhysicalColumnId = 2;
-   pageInfo.fNElements = 1;
+   pageInfo.SetNElements(1);
    pageRange.fPageInfos.emplace_back(pageInfo);
    clusterBuilder.CommitColumnRange(2, 0, 505, pageRange);
    pageRange.fPhysicalColumnId = 3;
@@ -1006,11 +1006,11 @@ TEST(RNTuple, SerializeMultiColumnRepresentation)
    clusterBuilder.MarkSuppressedColumnRange(2);
    clusterBuilder.MarkSuppressedColumnRange(3);
    pageRange.fPhysicalColumnId = 0;
-   pageInfo.fNElements = 1;
+   pageInfo.SetNElements(1);
    pageRange.fPageInfos.emplace_back(pageInfo);
    clusterBuilder.CommitColumnRange(0, 1, 505, pageRange);
    pageRange.fPhysicalColumnId = 1;
-   pageRange.fPageInfos[0].fNElements = 3;
+   pageRange.fPageInfos[0].SetNElements(3);
    clusterBuilder.CommitColumnRange(1, 0, 505, pageRange);
    clusterBuilder.CommitSuppressedColumnRanges(builder.GetDescriptor()).ThrowOnError();
    builder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
@@ -1188,7 +1188,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationProjection)
    clusterBuilder.ClusterId(13).FirstEntryIndex(0).NEntries(1);
    clusterBuilder.MarkSuppressedColumnRange(0);
    pageRange.fPhysicalColumnId = 1;
-   pageInfo.fNElements = 1;
+   pageInfo.SetNElements(1);
    pageRange.fPageInfos.emplace_back(pageInfo);
    clusterBuilder.CommitColumnRange(1, 0, 505, pageRange);
    clusterBuilder.CommitSuppressedColumnRanges(builder.GetDescriptor()).ThrowOnError();
@@ -1313,7 +1313,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
    clusterBuilder.ClusterId(17).FirstEntryIndex(1).NEntries(2);
    clusterBuilder.MarkSuppressedColumnRange(1);
    pageRange.fPhysicalColumnId = 0;
-   pageInfo.fNElements = 1;
+   pageInfo.SetNElements(1);
    pageRange.fPageInfos.emplace_back(pageInfo);
    clusterBuilder.CommitColumnRange(0, 1, 505, pageRange);
    clusterBuilder.CommitSuppressedColumnRanges(builder.GetDescriptor()).ThrowOnError();
@@ -1421,7 +1421,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
    ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    clusterBuilder.ClusterId(13).FirstEntryIndex(0).NEntries(1);
    pageRange.fPhysicalColumnId = 0;
-   pageInfo.fNElements = 1;
+   pageInfo.SetNElements(1);
    pageRange.fPageInfos.emplace_back(pageInfo);
    clusterBuilder.CommitColumnRange(0, 0, 505, pageRange);
    clusterBuilder.CommitSuppressedColumnRanges(builder.GetDescriptor()).ThrowOnError();
@@ -1557,7 +1557,7 @@ TEST(RNTuple, DeserializeDescriptorModes)
       RClusterDescriptorBuilder clusterBuilder;
       clusterBuilder.ClusterId(13).FirstEntryIndex(0).NEntries(1);
       pageRange.fPhysicalColumnId = 0;
-      pageInfo.fNElements = 1;
+      pageInfo.SetNElements(1);
       pageRange.fPageInfos.emplace_back(pageInfo);
       clusterBuilder.MarkSuppressedColumnRange(1);
       clusterBuilder.CommitColumnRange(0, 0, 505, pageRange);
@@ -1590,10 +1590,10 @@ TEST(RNTuple, DeserializeDescriptorModes)
       clusterBuilder.ClusterId(17).FirstEntryIndex(1).NEntries(2);
       clusterBuilder.MarkSuppressedColumnRange(0);
       pageRange.fPhysicalColumnId = 1;
-      pageRange.fPageInfos[0].fNElements = 2;
+      pageRange.fPageInfos[0].SetNElements(2);
       clusterBuilder.CommitColumnRange(1, 0, 505, pageRange);
       pageRange.fPhysicalColumnId = 2;
-      pageRange.fPageInfos[0].fNElements = 2;
+      pageRange.fPageInfos[0].SetNElements(2);
       clusterBuilder.CommitColumnRange(2, 1, 505, pageRange);
       clusterBuilder.CommitSuppressedColumnRanges(builder.GetDescriptor()).ThrowOnError();
       builder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
@@ -1831,7 +1831,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred_HeaderExtBeforeSerializ
    clusterBuilder.ClusterId(17).FirstEntryIndex(1).NEntries(2);
    clusterBuilder.MarkSuppressedColumnRange(1);
    pageRange.fPhysicalColumnId = 0;
-   pageInfo.fNElements = 1;
+   pageInfo.SetNElements(1);
    pageRange.fPageInfos.emplace_back(pageInfo);
    clusterBuilder.CommitColumnRange(0, 1, 505, pageRange);
    clusterBuilder.CommitSuppressedColumnRanges(builder.GetDescriptor()).ThrowOnError();
@@ -1957,7 +1957,7 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferredInMainHeader)
    clusterBuilder.ClusterId(17).FirstEntryIndex(1).NEntries(2);
    clusterBuilder.MarkSuppressedColumnRange(1);
    pageRange.fPhysicalColumnId = 0;
-   pageInfo.fNElements = 1;
+   pageInfo.SetNElements(1);
    pageRange.fPageInfos.emplace_back(pageInfo);
    clusterBuilder.CommitColumnRange(0, 1, 505, pageRange);
    clusterBuilder.CommitSuppressedColumnRanges(builder.GetDescriptor()).ThrowOnError();

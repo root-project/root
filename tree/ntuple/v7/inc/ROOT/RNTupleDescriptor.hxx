@@ -327,6 +327,7 @@ public:
       /// We do not need to store the element size / uncompressed page size because we know to which column
       /// the page belongs
       struct RPageInfo {
+      private:
          /// The sum of the elements of all the pages must match the corresponding fNElements field in fColumnRanges
          std::uint32_t fNElements = std::uint32_t(-1);
          /// The meaning of fLocator depends on the storage backend.
@@ -334,11 +335,29 @@ public:
          /// If true, the 8 bytes following the serialized page are an xxhash of the on-disk page data
          bool fHasChecksum = false;
 
+      public:
+         RPageInfo() = default;
+         RPageInfo(std::uint32_t nElements, const RNTupleLocator &locator, bool hasChecksum)
+            : fNElements(nElements), fLocator(locator), fHasChecksum(hasChecksum)
+         {
+         }
+
          bool operator==(const RPageInfo &other) const
          {
             return fNElements == other.fNElements && fLocator == other.fLocator;
          }
+
+         std::uint32_t GetNElements() const { return fNElements; }
+         void SetNElements(std::uint32_t n) { fNElements = n; }
+
+         const RNTupleLocator &GetLocator() const { return fLocator; }
+         RNTupleLocator &GetLocator() { return fLocator; }
+         void SetLocator(const RNTupleLocator &locator) { fLocator = locator; }
+
+         bool HasChecksum() const { return fHasChecksum; }
+         void SetHasChecksum(bool hasChecksum) { fHasChecksum = hasChecksum; }
       };
+
       struct RPageInfoExtended : RPageInfo {
          /// Index (in cluster) of the first element in page.
          ROOT::NTupleSize_t fFirstInPage = 0;

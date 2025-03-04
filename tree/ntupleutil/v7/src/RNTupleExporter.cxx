@@ -157,13 +157,13 @@ RNTupleExporter::RPagesResult RNTupleExporter::ExportPages(RPageSource &source, 
 
             // dump the page
             const void *pageBuf = onDiskPage->GetAddress();
-            const bool incChecksum = (options.fFlags & RPagesOptions::kIncludeChecksums) != 0 && pageInfo.fHasChecksum;
+            const bool incChecksum = (options.fFlags & RPagesOptions::kIncludeChecksums) != 0 && pageInfo.HasChecksum();
             const std::size_t maybeChecksumSize = incChecksum * 8;
-            const std::uint64_t pageBufSize = pageInfo.fLocator.GetNBytesOnStorage() + maybeChecksumSize;
+            const std::uint64_t pageBufSize = pageInfo.GetLocator().GetNBytesOnStorage() + maybeChecksumSize;
             std::ostringstream ss{options.fOutputPath, std::ios_base::ate};
             assert(colRange.GetCompressionSettings());
             ss << "/cluster_" << clusterDesc.GetId() << "_" << colInfo.fQualifiedName << "_page_" << pageIdx
-               << "_elems_" << pageInfo.fNElements << "_comp_" << *colRange.GetCompressionSettings() << ".page";
+               << "_elems_" << pageInfo.GetNElements() << "_comp_" << *colRange.GetCompressionSettings() << ".page";
             const auto outFileName = ss.str();
             std::ofstream outFile{outFileName, std::ios_base::binary};
             if (!outFile)
