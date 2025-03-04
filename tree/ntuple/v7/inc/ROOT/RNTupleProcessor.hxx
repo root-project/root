@@ -353,43 +353,46 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
    ///
-   /// \param[in] ntuples A list specifying the names and locations of the RNTuples to process. The first RNTuple in the
-   /// list will be considered the primary RNTuple and drives the processor iteration loop. Subsequent RNTuples are
-   /// considered auxiliary, whose entries to be read are determined by the primary RNTuple (and do not necessarily
-   /// have to be in sequential order).
+   /// \param[in] primaryNTuple The name and location of the primary RNTuple. Its entries are processed in sequential
+   /// order.
+   /// \param[in] auxNTuples The names and locations of the RNTuples to join the primary RNTuple with. The order in
+   /// which their entries are processed are determined by the primary RNTuple and doesn't necessarily have to be
+   /// sequential.
    /// \param[in] joinFields The names of the fields on which to join, in case the specified RNTuples are unaligned.
    /// The join is made based on the combined join field values, and therefore each field has to be present in each
    /// specified RNTuple. If an empty list is provided, it is assumed that the specified ntuple are fully aligned.
-   /// \param[in] models A list of models for the RNTuples. This list must either contain a model for each RNTuple in
-   /// `ntuples` (following the specification order), or be empty. When the list is empty, the default model (i.e.
-   /// containing all fields) will be used for each RNTuple.
+   /// \param[in] models A list of models for the RNTuples. This list must either contain a model for the primary
+   /// RNTuple and each auxiliary RNTuple (following the specification order), or be empty. When the list is empty, the
+   /// default model (i.e. containing all fields) will be used for each RNTuple.
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
-   static std::unique_ptr<RNTupleProcessor> CreateJoin(const std::vector<RNTupleOpenSpec> &ntuples,
-                                                       const std::vector<std::string> &joinFields,
-                                                       std::vector<std::unique_ptr<RNTupleModel>> models = {});
+   static std::unique_ptr<RNTupleProcessor>
+   CreateJoin(const RNTupleOpenSpec &primaryNTuple, const std::vector<RNTupleOpenSpec> &auxNTuples,
+              const std::vector<std::string> &joinFields, std::vector<std::unique_ptr<RNTupleModel>> models = {});
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
    ///
-   /// \param[in] ntuples A list specifying the names and locations of the RNTuples to process. The first RNTuple in the
-   /// list will be considered the primary RNTuple and drives the processor iteration loop. Subsequent RNTuples are
-   /// considered auxiliary, whose entries to be read are determined by the primary RNTuple (and do not necessarily
-   /// have to be in sequential order).
+   /// \param[in] primaryNTuple The name and location of the primary RNTuple. Its entries are processed in sequential
+   /// order.
+   /// \param[in] auxNTuples The names and locations of the RNTuples to join the primary RNTuple with. The order in
+   /// which their entries are processed are determined by the primary RNTuple and doesn't necessarily have to be
+   /// sequential.
    /// \param[in] joinFields The names of the fields on which to join, in case the specified RNTuples are unaligned.
    /// The join is made based on the combined join field values, and therefore each field has to be present in each
    /// specified RNTuple. If an empty list is provided, it is assumed that the specified RNTuple are fully aligned.
    /// \param[in] processorName The name to give to the processor. Use
-   /// CreateJoin(const std::vector<RNTupleOpenSpec> &, const std::vector<std::string> &, std::unique_ptr<RNTupleModel>)
-   /// to automatically use the name of the input RNTuple instead.
-   /// \param[in] models A list of models for the RNTuples. This list must either contain a model for each RNTuple in
-   /// `ntuples` (following the specification order), or be empty. When the list is empty, the default model (i.e.
-   //// containing all fields) will be used for each RNTuple.
+   /// CreateJoin(const RNTupleOpenSpec &, const std::vector<RNTupleOpenSpec> &, const std::vector<std::string> &,
+   /// std::vector<std::unique_ptr<RNTupleModel>>) to automatically use the name of the input RNTuple instead.
+   /// \param[in] models A list of models for the RNTuples. This list must either contain a model for the primary
+   /// RNTuple and each auxiliary RNTuple (following the specification order), or be empty. When the list is empty, the
+   /// default model (i.e. containing all fields) will be used for each RNTuple.
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
-   CreateJoin(const std::vector<RNTupleOpenSpec> &ntuples, const std::vector<std::string> &joinFields,
-              std::string_view processorName, std::vector<std::unique_ptr<RNTupleModel>> models = {});
+   CreateJoin(const RNTupleOpenSpec &primaryNTuple, const std::vector<RNTupleOpenSpec> &auxNTuples,
+              const std::vector<std::string> &joinFields, std::string_view processorName,
+              std::vector<std::unique_ptr<RNTupleModel>> models = {});
 };
 
 // clang-format off

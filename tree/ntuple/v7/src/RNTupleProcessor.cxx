@@ -19,10 +19,10 @@
 
 namespace {
 using ROOT::Experimental::RNTupleOpenSpec;
-void EnsureUniqueNTupleNames(const std::vector<RNTupleOpenSpec> &ntuples)
+void EnsureUniqueNTupleNames(const RNTupleOpenSpec &primaryNTuple, const std::vector<RNTupleOpenSpec> &auxNTuples)
 {
-   std::unordered_set<std::string> uniqueNTupleNames;
-   for (const auto &ntuple : ntuples) {
+   std::unordered_set<std::string> uniqueNTupleNames{primaryNTuple.fNTupleName};
+   for (const auto &ntuple : auxNTuples) {
       auto res = uniqueNTupleNames.emplace(ntuple.fNTupleName);
       if (!res.second) {
          throw ROOT::RException(R__FAIL("horizontal joining of RNTuples with the same name is not allowed"));
@@ -106,25 +106,22 @@ ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<std::unique_ptr<RN
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::CreateJoin(const std::vector<RNTupleOpenSpec> &ntuples,
+ROOT::Experimental::RNTupleProcessor::CreateJoin(const RNTupleOpenSpec &primaryNTuple,
+                                                 const std::vector<RNTupleOpenSpec> &auxNTuples,
                                                  const std::vector<std::string> &joinFields,
                                                  std::vector<std::unique_ptr<RNTupleModel>> models)
 {
-   if (ntuples.empty())
-      throw RException(R__FAIL("at least one RNTuple must be provided"));
-   return CreateJoin(ntuples, joinFields, ntuples[0].fNTupleName, std::move(models));
+   return CreateJoin(primaryNTuple, auxNTuples, joinFields, primaryNTuple.fNTupleName, std::move(models));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::CreateJoin(const std::vector<RNTupleOpenSpec> &ntuples,
+ROOT::Experimental::RNTupleProcessor::CreateJoin(const RNTupleOpenSpec &primaryNTuple,
+                                                 const std::vector<RNTupleOpenSpec> &auxNTuples,
                                                  const std::vector<std::string> &joinFields,
                                                  std::string_view processorName,
                                                  std::vector<std::unique_ptr<RNTupleModel>> models)
 {
-   if (ntuples.size() < 1)
-      throw RException(R__FAIL("at least one RNTuple must be provided"));
-
-   if (models.size() > 0 && models.size() != ntuples.size()) {
+   if (!models.empty() && models.size() != (auxNTuples.size() + 1)) {
       throw RException(R__FAIL("number of provided models must match number of specified ntuples"));
    }
 
@@ -138,21 +135,21 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(const std::vector<RNTupleOpenSp
 
    // TODO(fdegeus) allow for the provision of aliases for ntuples with the same name, removing the constraint of
    // uniquely-named ntuples.
-   EnsureUniqueNTupleNames(ntuples);
+   EnsureUniqueNTupleNames(primaryNTuple, auxNTuples);
 
    std::unique_ptr<RNTupleJoinProcessor> processor;
    if (models.size() > 0) {
       processor = std::unique_ptr<RNTupleJoinProcessor>(
-         new RNTupleJoinProcessor(ntuples[0], processorName, std::move(models[0])));
+         new RNTupleJoinProcessor(primaryNTuple, processorName, std::move(models[0])));
    } else {
-      processor = std::unique_ptr<RNTupleJoinProcessor>(new RNTupleJoinProcessor(ntuples[0], processorName));
+      processor = std::unique_ptr<RNTupleJoinProcessor>(new RNTupleJoinProcessor(primaryNTuple, processorName));
    }
 
-   for (unsigned i = 1; i < ntuples.size(); ++i) {
+   for (unsigned i = 0; i < auxNTuples.size(); ++i) {
       if (models.size() > 0)
-         processor->AddAuxiliary(ntuples[i], joinFields, std::move(models[i]));
+         processor->AddAuxiliary(auxNTuples[i], joinFields, std::move(models[i + 1]));
       else
-         processor->AddAuxiliary(ntuples[i], joinFields);
+         processor->AddAuxiliary(auxNTuples[i], joinFields);
    }
 
    processor->SetJoinFieldTokens(joinFields);
