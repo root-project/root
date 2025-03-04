@@ -112,7 +112,7 @@ TEST_F(RNTupleJoinProcessorTest, Aligned)
          RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[0], fFileNames[0]}}, {});
       FAIL() << "ntuples with the same name cannot be joined horizontally";
    } catch (const ROOT::RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("horizontal joining of RNTuples with the same name is not allowed"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("joining RNTuples with the same name is not allowed"));
    }
 
    auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[1], fFileNames[1]}, {{fNTupleNames[2], fFileNames[2]}}, {});
