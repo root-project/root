@@ -337,6 +337,9 @@ public:
    const std::string &GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);
 
+   /// Get the names of the fields currently present in the model, including projected fields. Registered subfields
+   /// are not included, use GetRegisteredSubfieldnames() for this.
+   const std::unordered_set<std::string> &GetFieldNames() const { return fFieldNames; }
    /// Get the (qualified) names of subfields that have been registered to be included in entries from this model.
    const std::unordered_set<std::string> &GetRegisteredSubfieldNames() const { return fRegisteredSubfields; }
 
