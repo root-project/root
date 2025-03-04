@@ -257,7 +257,7 @@ public:
    ///    ntuple->Show(i);
    /// }
    /// ~~~
-   RNTupleGlobalRange GetEntryRange() { return RNTupleGlobalRange(0, GetNEntries()); }
+   ROOT::RNTupleGlobalRange GetEntryRange() { return ROOT::RNTupleGlobalRange(0, GetNEntries()); }
 
    /// Provides access to an individual field that can contain either a scalar value or a collection, e.g.
    /// GetView<double>("particles.pt") or GetView<std::vector<double>>("particle").  It can as well be the index
