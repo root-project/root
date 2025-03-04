@@ -64,7 +64,7 @@ class RClusterPool;
 ///   - "rntuple.ErrBehavior=(Abort|Skip|...)"   -> sets fErrBehavior
 ///   - "rntuple.ExtraVerbose"                   -> sets fExtraVerbose to true
 /// Rules about the string-based options:
-///   1. there must be no space between the separators (i.e. `:` and `=`)
+///   1. there must be no space between the separators (i.e. `.` and `=`)
 ///   2. all string matching is case insensitive
 struct RNTupleMergeOptions {
    /// If fCompressionSettings is empty (the default), the merger will not change the
