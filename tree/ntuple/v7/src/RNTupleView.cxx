@@ -19,7 +19,7 @@
 #include <ROOT/RNTupleView.hxx>
 #include <ROOT/RPageStorage.hxx>
 
-ROOT::Experimental::RNTupleGlobalRange
+ROOT::RNTupleGlobalRange
 ROOT::Experimental::Internal::GetFieldRange(const RFieldBase &field, const RPageSource &pageSource)
 {
    const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
@@ -39,9 +39,9 @@ ROOT::Experimental::Internal::GetFieldRange(const RFieldBase &field, const RPage
    }
 
    if (columnId == ROOT::kInvalidDescriptorId) {
-      return RNTupleGlobalRange(ROOT::kInvalidNTupleIndex, ROOT::kInvalidNTupleIndex);
+      return ROOT::RNTupleGlobalRange(ROOT::kInvalidNTupleIndex, ROOT::kInvalidNTupleIndex);
    }
 
    auto arraySize = std::max(std::uint64_t(1), desc.GetFieldDescriptor(field.GetOnDiskId()).GetNRepetitions());
-   return RNTupleGlobalRange(0, desc.GetNElements(columnId) / arraySize);
+   return ROOT::RNTupleGlobalRange(0, desc.GetNElements(columnId) / arraySize);
 }
