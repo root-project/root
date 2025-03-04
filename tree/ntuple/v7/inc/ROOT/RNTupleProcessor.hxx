@@ -390,6 +390,22 @@ public:
    static std::unique_ptr<RNTupleProcessor>
    CreateJoin(const std::vector<RNTupleOpenSpec> &ntuples, const std::vector<std::string> &joinFields,
               std::string_view processorName, std::vector<std::unique_ptr<RNTupleModel>> models = {});
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Prepare a model containing fields from the primary and auxiliary RNTuples for joining.
+   ///
+   /// \param[in] primaryModel The model of the primary RNTuple.
+   /// \param[in] auxModels Models of the auxiliary RNTuples.
+   /// \param[in] auxNTupleNames Names of the auxiliary RNTuples, corresponding to the models in `auxModels`.
+   ///
+   /// \return A new RNTupleModel containing the fields of all provided models.
+   ///
+   /// To prevent field name clashes when one or more models have fields with duplicate names, fields from each
+   /// auxiliary model are stored as a anonymous record, and subsequently registered as subfields in the join model.
+   /// This way, they can be accessed from the processor's entry as `auxNTupleName.fieldName`.
+   static std::unique_ptr<RNTupleModel> PrepareJoinModel(const RNTupleModel &primaryModel,
+                                                         const std::vector<RNTupleModel *> &auxModels,
+                                                         const std::vector<std::string> &auxNTupleNames);
 };
 
 // clang-format off

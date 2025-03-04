@@ -22,6 +22,34 @@ TEST(RNTupleProcessor, EmptyNTuple)
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
 }
 
+TEST(RNTupleProcessor, PrepareJoinModel)
+{
+   auto primaryModel = RNTupleModel::Create();
+   primaryModel->MakeField<int>("i");
+   primaryModel->MakeField<float>("x");
+
+   auto auxModel1 = RNTupleModel::Create();
+   auxModel1->MakeField<int>("i");
+   auxModel1->MakeField<float>("y");
+
+   auto auxModel2 = RNTupleModel::Create();
+   auxModel2->MakeField<int>("i");
+   auxModel2->MakeField<float>("z");
+
+   auto joinModel =
+      RNTupleProcessor::PrepareJoinModel(*primaryModel, {auxModel1.get(), auxModel2.get()}, {"aux1", "aux2"});
+
+   EXPECT_NO_THROW(joinModel->GetConstField("i"));
+   EXPECT_NO_THROW(joinModel->GetConstField("x"));
+   EXPECT_NO_THROW(joinModel->GetConstField("aux1.i"));
+   EXPECT_NO_THROW(joinModel->GetConstField("aux1.y"));
+   EXPECT_THROW(joinModel->GetConstField("y"), ROOT::RException);
+   EXPECT_NO_THROW(joinModel->GetConstField("aux2.i"));
+   EXPECT_NO_THROW(joinModel->GetConstField("aux2.z"));
+   EXPECT_THROW(joinModel->GetConstField("z"), ROOT::RException);
+   // TODO add test for projected fields
+}
+
 class RNTupleProcessorTest : public testing::Test {
 protected:
    const std::array<std::string, 2> fFileNames{"test_ntuple_processor1.root", "test_ntuple_processor2.root"};

@@ -161,6 +161,41 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(const std::vector<RNTupleOpenSp
    return processor;
 }
 
+std::unique_ptr<ROOT::Experimental::RNTupleModel>
+ROOT::Experimental::RNTupleProcessor::PrepareJoinModel(const RNTupleModel &primaryModel,
+                                                       const std::vector<RNTupleModel *> &auxModels,
+                                                       const std::vector<std::string> &auxNTupleNames)
+{
+   if (auxModels.size() != auxNTupleNames.size())
+      throw RException(R__FAIL("number of auxiliary models and auxiliary RNTuples does not match"));
+
+   auto joinModel = primaryModel.Clone();
+
+   // Create an anonymous record field for each auxiliary ntuple, containing their top-level fields. These original
+   // top-level fields are registered as subfields in the join model, such that they can be accessed as
+   // `auxNTupleName.fieldName`.
+   for (unsigned i = 0; i < auxModels.size(); ++i) {
+      std::vector<std::unique_ptr<RFieldBase>> auxFields;
+
+      for (const auto &fieldName : auxModels[i]->GetFieldNames()) {
+         auxFields.emplace_back(auxModels[i]->GetConstField(fieldName).Clone(fieldName));
+      }
+
+      auto auxParentField = std::make_unique<RRecordField>(auxNTupleNames[i], std::move(auxFields));
+      if (!auxParentField) {
+         throw RException(R__FAIL("cannot add fields of auxiliary RNTuple \"" + auxNTupleNames[i] + "\""));
+      }
+
+      const auto &subFields = auxParentField->GetSubFields();
+      joinModel->AddField(std::move(auxParentField));
+      for (const auto &field : subFields) {
+         joinModel->RegisterSubfield(field->GetQualifiedFieldName());
+      }
+   }
+
+   return joinModel;
+}
+
 void ROOT::Experimental::RNTupleProcessor::ConnectField(RFieldContext &fieldContext, Internal::RPageSource &pageSource,
                                                         REntry &entry)
 {
