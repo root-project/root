@@ -25,7 +25,7 @@ void EnsureUniqueNTupleNames(const RNTupleOpenSpec &primaryNTuple, const std::ve
    for (const auto &ntuple : auxNTuples) {
       auto res = uniqueNTupleNames.emplace(ntuple.fNTupleName);
       if (!res.second) {
-         throw ROOT::RException(R__FAIL("horizontal joining of RNTuples with the same name is not allowed"));
+         throw ROOT::RException(R__FAIL("joining RNTuples with the same name is not allowed"));
       }
    }
 }
