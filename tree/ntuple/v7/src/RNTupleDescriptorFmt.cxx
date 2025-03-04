@@ -117,12 +117,12 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
 
       for (const auto &cluster : fClusterDescriptors) {
          auto columnRange = cluster.second.GetColumnRange(column.second.GetPhysicalId());
-         if (columnRange.fIsSuppressed)
+         if (columnRange.IsSuppressed())
             continue;
 
-         info.fNElements += columnRange.fNElements;
-         if (compression == -1 && columnRange.fCompressionSettings) {
-            compression = *columnRange.fCompressionSettings;
+         info.fNElements += columnRange.GetNElements();
+         if (compression == -1 && columnRange.GetCompressionSettings()) {
+            compression = *columnRange.GetCompressionSettings();
          }
          const auto &pageRange = cluster.second.GetPageRange(column.second.GetPhysicalId());
          auto idx = cluster2Idx[cluster.first];

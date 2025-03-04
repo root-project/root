@@ -1570,7 +1570,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
       // Get an ordered set of physical column ids
       std::set<ROOT::DescriptorId_t> onDiskColumnIds;
       for (const auto &columnRange : clusterDesc.GetColumnRangeIterable())
-         onDiskColumnIds.insert(context.GetOnDiskColumnId(columnRange.fPhysicalColumnId));
+         onDiskColumnIds.insert(context.GetOnDiskColumnId(columnRange.GetPhysicalColumnId()));
 
       auto outerFrame = pos;
       pos += SerializeListFramePreamble(onDiskColumnIds.size(), *where);
@@ -1579,7 +1579,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
          const auto &columnRange = clusterDesc.GetColumnRange(memId);
 
          auto innerFrame = pos;
-         if (columnRange.fIsSuppressed) {
+         if (columnRange.IsSuppressed()) {
             // Empty page range
             pos += SerializeListFramePreamble(0, *where);
             pos += SerializeInt64(kSuppressedColumnMarker, *where);
@@ -1592,8 +1592,8 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
                pos += SerializeUInt32(nElements, *where);
                pos += SerializeLocator(pi.fLocator, *where);
             }
-            pos += SerializeInt64(columnRange.fFirstElementIndex, *where);
-            pos += SerializeUInt32(columnRange.fCompressionSettings.value(), *where);
+            pos += SerializeInt64(columnRange.GetFirstElementIndex(), *where);
+            pos += SerializeUInt32(columnRange.GetCompressionSettings().value(), *where);
          }
 
          pos += SerializeFramePostscript(buffer ? innerFrame : nullptr, pos - innerFrame);

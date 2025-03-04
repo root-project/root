@@ -149,7 +149,7 @@ RNTupleExporter::RPagesResult RNTupleExporter::ExportPages(RPageSource &source, 
             << "exporting column \"" << colInfo.fQualifiedName << "\" (" << pages.fPageInfos.size() << " pages)";
 
          // We should never try to export a suppressed column range
-         assert(!colRange.fIsSuppressed || pages.fPageInfos.empty());
+         assert(!colRange.IsSuppressed() || pages.fPageInfos.empty());
 
          for (const auto &pageInfo : pages.fPageInfos) {
             ROnDiskPage::Key key{columnId, pageIdx};
@@ -161,9 +161,9 @@ RNTupleExporter::RPagesResult RNTupleExporter::ExportPages(RPageSource &source, 
             const std::size_t maybeChecksumSize = incChecksum * 8;
             const std::uint64_t pageBufSize = pageInfo.fLocator.GetNBytesOnStorage() + maybeChecksumSize;
             std::ostringstream ss{options.fOutputPath, std::ios_base::ate};
-            assert(colRange.fCompressionSettings);
+            assert(colRange.GetCompressionSettings());
             ss << "/cluster_" << clusterDesc.GetId() << "_" << colInfo.fQualifiedName << "_page_" << pageIdx
-               << "_elems_" << pageInfo.fNElements << "_comp_" << *colRange.fCompressionSettings << ".page";
+               << "_elems_" << pageInfo.fNElements << "_comp_" << *colRange.GetCompressionSettings() << ".page";
             const auto outFileName = ss.str();
             std::ofstream outFile{outFileName, std::ios_base::binary};
             if (!outFile)

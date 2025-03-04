@@ -275,7 +275,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
 
             auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
                              &foundChecksumFailure,
-                             indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex]() {
+                             indexOffset = clusterDescriptor.GetColumnRange(columnId).GetFirstElementIndex()]() {
                const RPagePool::RKey keyPagePool{columnId, element->GetIdentifier().fInMemoryType};
                auto rv = UnsealPage(sealedPage, *element);
                if (!rv) {
@@ -315,7 +315,7 @@ void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
    const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterKey.fClusterId);
 
    for (auto physicalColumnId : clusterKey.fPhysicalColumnSet) {
-      if (clusterDesc.GetColumnRange(physicalColumnId).fIsSuppressed)
+      if (clusterDesc.GetColumnRange(physicalColumnId).IsSuppressed())
          continue;
 
       const auto &pageRange = clusterDesc.GetPageRange(physicalColumnId);
@@ -381,10 +381,10 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
 
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterInfo.fClusterId);
       const auto &columnRange = clusterDescriptor.GetColumnRange(columnId);
-      if (columnRange.fIsSuppressed)
+      if (columnRange.IsSuppressed())
          return RPageRef();
 
-      clusterInfo.fColumnOffset = columnRange.fFirstElementIndex;
+      clusterInfo.fColumnOffset = columnRange.GetFirstElementIndex();
       R__ASSERT(clusterInfo.fColumnOffset <= globalIndex);
       idxInCluster = globalIndex - clusterInfo.fColumnOffset;
       clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
@@ -418,11 +418,11 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
       auto descriptorGuard = GetSharedDescriptorGuard();
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
       const auto &columnRange = clusterDescriptor.GetColumnRange(columnId);
-      if (columnRange.fIsSuppressed)
+      if (columnRange.IsSuppressed())
          return RPageRef();
 
       clusterInfo.fClusterId = clusterId;
-      clusterInfo.fColumnOffset = columnRange.fFirstElementIndex;
+      clusterInfo.fColumnOffset = columnRange.GetFirstElementIndex();
       clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
    }
 
@@ -865,13 +865,13 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
    fOpenPageRanges.reserve(fOpenPageRanges.size() + (nColumns - nColumnsBeforeUpdate));
    for (ROOT::DescriptorId_t i = nColumnsBeforeUpdate; i < nColumns; ++i) {
       RClusterDescriptor::RColumnRange columnRange;
-      columnRange.fPhysicalColumnId = i;
+      columnRange.SetPhysicalColumnId(i);
       // We set the first element index in the current cluster to the first element that is part of a materialized page
       // (i.e., that is part of a page list). For columns created during late model extension, however, the column range
       // is fixed up as needed by `RClusterDescriptorBuilder::AddExtendedColumnRanges()` on read back.
-      columnRange.fFirstElementIndex = descriptor.GetColumnDescriptor(i).GetFirstElementIndex();
-      columnRange.fNElements = 0;
-      columnRange.fCompressionSettings = GetWriteOptions().GetCompression();
+      columnRange.SetFirstElementIndex(descriptor.GetColumnDescriptor(i).GetFirstElementIndex());
+      columnRange.SetNElements(0);
+      columnRange.SetCompressionSettings(GetWriteOptions().GetCompression());
       fOpenColumnRanges.emplace_back(columnRange);
       RClusterDescriptor::RPageRange pageRange;
       pageRange.fPhysicalColumnId = i;
@@ -937,10 +937,10 @@ ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTu
    for (ROOT::DescriptorId_t i = 0; i < nColumns; ++i) {
       const auto &column = descriptor.GetColumnDescriptor(i);
       RClusterDescriptor::RColumnRange columnRange;
-      columnRange.fPhysicalColumnId = i;
-      columnRange.fFirstElementIndex = column.GetFirstElementIndex();
-      columnRange.fNElements = 0;
-      columnRange.fCompressionSettings = GetWriteOptions().GetCompression();
+      columnRange.SetPhysicalColumnId(i);
+      columnRange.SetFirstElementIndex(column.GetFirstElementIndex());
+      columnRange.SetNElements(0);
+      columnRange.SetCompressionSettings(GetWriteOptions().GetCompression());
       fOpenColumnRanges.emplace_back(columnRange);
       RClusterDescriptor::RPageRange pageRange;
       pageRange.fPhysicalColumnId = i;
@@ -954,13 +954,13 @@ ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTu
          auto &cluster = srcDescriptor.GetClusterDescriptor(clusterId);
          auto nEntries = cluster.GetNEntries();
          for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
-            R__ASSERT(fOpenColumnRanges[i].fPhysicalColumnId == i);
+            R__ASSERT(fOpenColumnRanges[i].GetPhysicalColumnId() == i);
             if (!cluster.ContainsColumn(i)) // a cluster may not contain a column if that column is deferred
                break;
             const auto &columnRange = cluster.GetColumnRange(i);
-            R__ASSERT(columnRange.fPhysicalColumnId == i);
+            R__ASSERT(columnRange.GetPhysicalColumnId() == i);
             // TODO: properly handle suppressed columns (check MarkSuppressedColumnRange())
-            fOpenColumnRanges[i].fFirstElementIndex += columnRange.fNElements;
+            fOpenColumnRanges[i].IncrementFirstElementIndex(columnRange.GetNElements());
          }
          fDescriptorBuilder.AddCluster(cluster.Clone());
          fPrevClusterNEntries += nEntries;
@@ -994,12 +994,12 @@ ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTu
 
 void ROOT::Experimental::Internal::RPagePersistentSink::CommitSuppressedColumn(ColumnHandle_t columnHandle)
 {
-   fOpenColumnRanges.at(columnHandle.fPhysicalId).fIsSuppressed = true;
+   fOpenColumnRanges.at(columnHandle.fPhysicalId).SetIsSuppressed(true);
 }
 
 void ROOT::Experimental::Internal::RPagePersistentSink::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {
-   fOpenColumnRanges.at(columnHandle.fPhysicalId).fNElements += page.GetNElements();
+   fOpenColumnRanges.at(columnHandle.fPhysicalId).IncrementNElements(page.GetNElements());
 
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    pageInfo.fNElements = page.GetNElements();
@@ -1011,7 +1011,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitPage(ColumnHandle_
 void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPage(ROOT::DescriptorId_t physicalColumnId,
                                                                          const RPageStorage::RSealedPage &sealedPage)
 {
-   fOpenColumnRanges.at(physicalColumnId).fNElements += sealedPage.GetNElements();
+   fOpenColumnRanges.at(physicalColumnId).IncrementNElements(sealedPage.GetNElements());
 
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    pageInfo.fNElements = sealedPage.GetNElements();
@@ -1095,7 +1095,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageV(
 
    for (auto &range : ranges) {
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-         fOpenColumnRanges.at(range.fPhysicalColumnId).fNElements += sealedPageIt->GetNElements();
+         fOpenColumnRanges.at(range.fPhysicalColumnId).IncrementNElements(sealedPageIt->GetNElements());
 
          RClusterDescriptor::RPageRange::RPageInfo pageInfo;
          pageInfo.fNElements = sealedPageIt->GetNElements();
@@ -1115,20 +1115,20 @@ ROOT::Experimental::Internal::RPagePersistentSink::StageCluster(ROOT::NTupleSize
 
    for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
       RStagedCluster::RColumnInfo columnInfo;
-      columnInfo.fCompressionSettings = fOpenColumnRanges[i].fCompressionSettings.value();
-      if (fOpenColumnRanges[i].fIsSuppressed) {
+      columnInfo.fCompressionSettings = fOpenColumnRanges[i].GetCompressionSettings().value();
+      if (fOpenColumnRanges[i].IsSuppressed()) {
          assert(fOpenPageRanges[i].fPageInfos.empty());
          columnInfo.fPageRange.fPhysicalColumnId = i;
          columnInfo.fIsSuppressed = true;
          // We reset suppressed columns to the state they would have if they were active (not suppressed).
-         fOpenColumnRanges[i].fNElements = 0;
-         fOpenColumnRanges[i].fIsSuppressed = false;
+         fOpenColumnRanges[i].SetNElements(0);
+         fOpenColumnRanges[i].SetIsSuppressed(false);
       } else {
          std::swap(columnInfo.fPageRange, fOpenPageRanges[i]);
          fOpenPageRanges[i].fPhysicalColumnId = i;
 
-         columnInfo.fNElements = fOpenColumnRanges[i].fNElements;
-         fOpenColumnRanges[i].fNElements = 0;
+         columnInfo.fNElements = fOpenColumnRanges[i].GetNElements();
+         fOpenColumnRanges[i].SetNElements(0);
       }
       stagedCluster.fColumnInfos.push_back(std::move(columnInfo));
    }
@@ -1149,9 +1149,9 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitStagedClusters(std
             assert(columnInfo.fPageRange.fPageInfos.empty());
             clusterBuilder.MarkSuppressedColumnRange(colId);
          } else {
-            clusterBuilder.CommitColumnRange(colId, fOpenColumnRanges[colId].fFirstElementIndex,
+            clusterBuilder.CommitColumnRange(colId, fOpenColumnRanges[colId].GetFirstElementIndex(),
                                              columnInfo.fCompressionSettings, columnInfo.fPageRange);
-            fOpenColumnRanges[colId].fFirstElementIndex += columnInfo.fNElements;
+            fOpenColumnRanges[colId].IncrementFirstElementIndex(columnInfo.fNElements);
          }
       }
 
@@ -1164,8 +1164,8 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitStagedClusters(std
          // cluster. This information has been determined for the committed cluster descriptor through
          // CommitSuppressedColumnRanges(), so we can use the information from the descriptor.
          const auto &columnRangeFromDesc = clusterBuilder.GetColumnRange(colId);
-         fOpenColumnRanges[colId].fFirstElementIndex =
-            columnRangeFromDesc.fFirstElementIndex + columnRangeFromDesc.fNElements;
+         fOpenColumnRanges[colId].SetFirstElementIndex(columnRangeFromDesc.GetFirstElementIndex() +
+                                                       columnRangeFromDesc.GetNElements());
       }
 
       fDescriptorBuilder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());

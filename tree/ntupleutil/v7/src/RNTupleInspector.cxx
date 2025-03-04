@@ -67,21 +67,21 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
          }
 
          auto columnRange = clusterDescriptor.GetColumnRange(colId);
-         if (columnRange.fIsSuppressed)
+         if (columnRange.IsSuppressed())
             continue;
 
-         nElems += columnRange.fNElements;
+         nElems += columnRange.GetNElements();
 
-         if (!fCompressionSettings && columnRange.fCompressionSettings) {
-            fCompressionSettings = *columnRange.fCompressionSettings;
-         } else if (fCompressionSettings && columnRange.fCompressionSettings &&
-                    (*fCompressionSettings != *columnRange.fCompressionSettings)) {
+         if (!fCompressionSettings && columnRange.GetCompressionSettings()) {
+            fCompressionSettings = *columnRange.GetCompressionSettings();
+         } else if (fCompressionSettings && columnRange.GetCompressionSettings() &&
+                    (*fCompressionSettings != *columnRange.GetCompressionSettings())) {
             // Note that currently all clusters and columns are compressed with the same settings and it is not yet
             // possible to do otherwise. This means that currently, this exception should never be thrown, but this
             // could change in the future.
             throw RException(R__FAIL("compression setting mismatch between column ranges (" +
                                      std::to_string(*fCompressionSettings) + " vs " +
-                                     std::to_string(*columnRange.fCompressionSettings) +
+                                     std::to_string(*columnRange.GetCompressionSettings()) +
                                      ") for column with physical ID " + std::to_string(colId)));
          }
 

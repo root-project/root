@@ -815,7 +815,7 @@ static bool VerifyPageCompression(const std::string_view fileName, std::uint32_t
    bool ok = true;
    {
       auto reader = RNTupleReader::Open("ntuple", fileName);
-      auto compSettings = *reader->GetDescriptor().GetClusterDescriptor(0).GetColumnRange(0).fCompressionSettings;
+      auto compSettings = *reader->GetDescriptor().GetClusterDescriptor(0).GetColumnRange(0).GetCompressionSettings();
       if (compSettings != expectedComp) {
          std::cerr << "Advertised compression is wrong: " << compSettings << " instead of " << expectedComp << "\n";
          ok = false;

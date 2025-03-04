@@ -744,10 +744,10 @@ TEST(RNTuple, SerializeFooter)
    EXPECT_EQ(100, clusterDesc.GetNEntries());
    auto columnIds = clusterDesc.GetColumnRangeIterable();
    EXPECT_EQ(1u, columnIds.size());
-   EXPECT_EQ(0, columnIds.begin()->fPhysicalColumnId);
+   EXPECT_EQ(0, columnIds.begin()->GetPhysicalColumnId());
    columnRange = clusterDesc.GetColumnRange(0);
-   EXPECT_EQ(100u, columnRange.fNElements);
-   EXPECT_EQ(0u, columnRange.fFirstElementIndex);
+   EXPECT_EQ(100u, columnRange.GetNElements());
+   EXPECT_EQ(0u, columnRange.GetFirstElementIndex());
    pageRange = clusterDesc.GetPageRange(0).Clone();
    EXPECT_EQ(2u, pageRange.fPageInfos.size());
    EXPECT_EQ(40u, pageRange.fPageInfos[0].fNElements);
@@ -1735,8 +1735,8 @@ TEST(RNTuple, DeserializeDescriptorModes)
             const auto columnRange0_1 = clusterDesc0.GetColumnRange(columnIds[1]);
             RClusterDescriptor::RColumnRange expect0_0{0, 0, 1, 505, false};
             RClusterDescriptor::RColumnRange expect0_1{};
-            expect0_1.fPhysicalColumnId = 1;
-            expect0_1.fIsSuppressed = true;
+            expect0_1.SetPhysicalColumnId(1);
+            expect0_1.SetIsSuppressed(true);
             EXPECT_EQ(expect0_0, columnRange0_0);
             EXPECT_EQ(expect0_1, columnRange0_1);
 
@@ -1745,8 +1745,8 @@ TEST(RNTuple, DeserializeDescriptorModes)
             const auto columnRange1_0 = clusterDesc1.GetColumnRange(columnIds[0]);
             const auto columnRange1_1 = clusterDesc1.GetColumnRange(columnIds[1]);
             RClusterDescriptor::RColumnRange expect1_0{};
-            expect1_0.fPhysicalColumnId = 0;
-            expect1_0.fIsSuppressed = true;
+            expect1_0.SetPhysicalColumnId(0);
+            expect1_0.SetIsSuppressed(true);
             RClusterDescriptor::RColumnRange expect1_1{1, 0, 2, 505, false};
             EXPECT_EQ(expect1_0, columnRange1_0);
             EXPECT_EQ(expect1_1, columnRange1_1);
