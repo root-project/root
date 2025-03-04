@@ -189,7 +189,7 @@ try {
                   inFile->GetName());
             return -1;
          }
-         compression = (*firstColRange).fCompressionSettings.value();
+         compression = (*firstColRange).GetCompressionSettings().value();
          Info("RNTuple::Merge", "Using the first RNTuple's compression: %u", *compression);
       }
       sources.push_back(std::move(source));
@@ -710,7 +710,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const RCluster
       sealedPages.resize(pages.fPageInfos.size());
 
       // Each column range potentially has a distinct compression settings
-      const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).fCompressionSettings.value();
+      const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).GetCompressionSettings().value();
       // If either the compression or the encoding of the source doesn't match that of the destination, we need
       // to reseal the page. Otherwise, if both match, we can fast merge.
       const bool needsResealing =
