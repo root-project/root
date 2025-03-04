@@ -377,7 +377,6 @@ sap.ui.define([
          });
 
          dome.addEventListener("mousedown", function(event) {
-            console.log("event mousedown", event);
             if (event.button == 0 || event.button == 2)
             {
                glc.handleOverlayMouseDown(event);
@@ -589,10 +588,6 @@ sap.ui.define([
          let bb = new RC.Box3();
          bb.setFromObject(this.scene);
 
-         console.log(formatFloat(bb.max.x), formatFloat(bb.min.x),
-         formatFloat(bb.max.y), formatFloat(bb.min.y),
-         formatFloat(bb.max.z), formatFloat(bb.min.z));
-
          let lines = [];
          lines.push({ "p": new RC.Vector3(bb.min.x, 0, 0), "c": new RC.Color(1, 0, 0), "text": "x " + formatFloat(bb.min.x) });
          lines.push({ "p": new RC.Vector3(bb.max.x, 0, 0), "c": new RC.Color(1, 0, 0), "text": "x " + formatFloat(bb.max.x) });
@@ -789,8 +784,6 @@ sap.ui.define([
          this.rqt.pick_begin(x, y);
 
          let state_overlay = this.rqt.pick_overlay(x, y, detect_depth);
-
-         console.log("Overlay pick state", state_overlay);
 
          if (state_overlay.object === null) {
             this.rqt.pick_end();
