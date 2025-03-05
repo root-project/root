@@ -386,6 +386,7 @@ if(NOT builtin_zstd)
 endif()
 
 if(builtin_zstd)
+  list(APPEND ROOT_BUILTINS zstd)
   list(APPEND ROOT_BUILTINS ZSTD)
   add_subdirectory(builtins/zstd)
 endif()
