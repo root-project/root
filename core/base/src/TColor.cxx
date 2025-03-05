@@ -1915,7 +1915,8 @@ void TColor::Allocate()
 ////////////////////////////////////////////////////////////////////////////////
 /// Static method returning color number for color specified by
 /// hex color string of form: "#rrggbb", where rr, gg and bb are in
-/// hex between [0,FF], e.g. "#c0c0c0".
+/// hex between [0,FF], e.g. "#c0c0c0". Also alpha channel is applied when
+/// hex string includes fourth number e.g "#c0c0c0ff"
 ///
 /// The color retrieval is done using a threshold defined by SetColorThreshold.
 ///
@@ -1925,8 +1926,10 @@ void TColor::Allocate()
 Int_t TColor::GetColor(const char *hexcolor)
 {
    if (hexcolor && *hexcolor == '#') {
-      Int_t r, g, b;
-      if (sscanf(hexcolor+1, "%02x%02x%02x", &r, &g, &b) == 3)
+      Int_t r, g, b, a;
+      if (strlen(hexcolor) == 9 && sscanf(hexcolor + 1, "%02x%02x%02x%02x", &r, &g, &b, &a) == 4)
+         return GetColor(r, g, b, a / 255.);
+      if (sscanf(hexcolor + 1, "%02x%02x%02x", &r, &g, &b) == 3)
          return GetColor(r, g, b);
    }
    ::Error("TColor::GetColor(const char*)", "incorrect color string");
