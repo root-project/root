@@ -2147,12 +2147,12 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    TString args;
    if (fNpoints >= 1) {
-      TString xname = SavePrimitiveArray(out, "graph_x", fNpoints, fX);
+      TString xname = SavePrimitiveArray(out, "graph_x", fNpoints, fX, kTRUE);
       TString yname = SavePrimitiveArray(out, "graph_y", fNpoints, fY);
       args.Form("%d, %s, %s", fNpoints, xname.Data(), yname.Data());
    }
 
-   SavePrimitiveConstructor(out, Class(), "graph", args);
+   SavePrimitiveConstructor(out, Class(), "graph", args, fNpoints < 1);
 
    SaveHistogramAndFunctions(out, "graph", option);
 }
