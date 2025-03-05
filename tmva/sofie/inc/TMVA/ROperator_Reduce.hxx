@@ -48,6 +48,13 @@ public:
    ROperator_Reduce(int keepdims, std::vector<int64_t> attrAxes, std::string nameX, std::string nameAxes, std::string nameY):
    fkeepdims(keepdims), fAttrAxes(attrAxes), fNX(UTILITY::Clean_name(nameX)), fNAxes(UTILITY::Clean_name(nameAxes)), fNY(UTILITY::Clean_name(nameY)) {
       fReduceOpMode = Op;
+      
+      fInputTensorNames = { fNX };
+      if(!fNAxes.empty()){
+         fInputTensorNames.emplace_back(fNAxes);
+      }
+
+      fOutputTensorNames = { fNY };
    }
 
    // type of output given input
@@ -82,7 +89,7 @@ public:
       }
       return ret;
    }
-   void Initialize(RModel &model) {
+   void Initialize(RModel& model) override {
 
       fUseSession = model.UseSession();
 
@@ -110,6 +117,7 @@ public:
       if (model.Verbose()){
          std::cout << Name() << " : " << fNX << " -> " << fNY << " shape " << ConvertShapeToString(fShapeY) << std::endl;
       }
+      model.AddNeededStdLib("algorithm");
    }
 
    std::string Generate(std::string opName){
@@ -188,9 +196,9 @@ public:
          // case reduction is at beginning
          // reset output tensors
          if (fReduceOpMode == ReduceProd)
-            out << SP << "fTensor_" << fNY << ".assign(" << outputLength << ",1);\n";
+            out << SP << "std::fill(tensor_" << fNY <<", tensor_"<< fNY <<" + "<< outputLength << ", 1);\n";
          else
-            out << SP << "fTensor_" << fNY << ".assign(" << outputLength << ",0);\n";
+            out << SP << "std::fill(tensor_" << fNY <<", tensor_"<< fNY <<" + "<< outputLength << ", 0);\n";
 
          out << SP << "for (size_t i = 0; i < " << reducedLength << "; i++) {\n";
          out << SP << SP << "for (size_t j = 0; j < " << outputLength << "; j++) {\n";
@@ -215,9 +223,9 @@ public:
          //std::cout << "reduction for operator " << opName << " is middle" << std::endl;
          // reset output tensors
          if (fReduceOpMode == ReduceProd)
-            out << SP << "fTensor_" << fNY << ".assign(" << outputLength << ",1);\n";
+            out << SP << "std::fill(tensor_" << fNY <<", tensor_"<< fNY <<" + "<< outputLength << ", 1);\n";
          else
-            out << SP << "fTensor_" << fNY << ".assign(" << outputLength << ",0);\n";
+            out << SP << "std::fill(tensor_" << fNY <<", tensor_"<< fNY <<" + "<< outputLength << ",0);\n";
 
          out << SP << "for (size_t i = 0; i < " << inputLength << "; i++) {\n";
 

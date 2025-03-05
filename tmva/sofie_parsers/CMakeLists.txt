@@ -56,6 +56,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseElu.cxx
     src/ParseFuseConvAdd.cxx
     src/ParseFuseConvTransposeAdd.cxx
+    src/ParseFuseGemmRelu.cxx
+    src/ParseFuseBatchnormRelu.cxx
     src/ParseFuseMatMulAdd.cxx
     src/ParseMatMul.cxx
     src/ParseComparision.cxx

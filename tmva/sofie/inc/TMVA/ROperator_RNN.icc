@@ -35,7 +35,7 @@ auto ROperator_RNN<T>::ShapeInference(std::vector<std::vector<size_t>> input)
 }
 
 template <typename T>
-auto ROperator_RNN<T>::Initialize(RModel &model)
+auto ROperator_RNN<T>::Initialize(RModel& model)
 -> void {
    fUseSession = model.UseSession();
    // Check the input and output tensors

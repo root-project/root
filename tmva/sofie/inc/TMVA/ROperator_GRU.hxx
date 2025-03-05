@@ -92,6 +92,26 @@ template <typename T> class ROperator_GRU final : public ROperator {
          fNSequence_lens(UTILITY::Clean_name(nameSequence_lens)),
          fNInitial_h(UTILITY::Clean_name(nameInitial_h)),
          fNY(UTILITY::Clean_name(nameY)), fNY_h(UTILITY::Clean_name(nameY_h)) {
+      
+      fInputTensorNames = { fNX, fNW, fNR };
+      if (!fNB.empty()){
+        fInputTensorNames.emplace_back(fNB);
+      }
+      if (!fNSequence_lens.empty()){
+        fInputTensorNames.emplace_back(fNSequence_lens);
+      }
+      if (!fNInitial_h.empty()){
+        fInputTensorNames.emplace_back(fNInitial_h);
+      }
+
+      fOutputTensorNames = { };
+      if (!fNY.empty()){
+        fOutputTensorNames.emplace_back(fNY);
+      }
+      if (!fNY_h.empty()){
+        fOutputTensorNames.emplace_back(fNY_h);
+      }
+
       if (std::is_same<T, float>::value) {
          fType = "float";
       } else {
@@ -116,7 +136,7 @@ template <typename T> class ROperator_GRU final : public ROperator {
     *
     * \param model Model
     */
-   void Initialize(RModel & /*model*/);
+   void Initialize(RModel &);
 
    /*! \brief Generate the inference code
     *

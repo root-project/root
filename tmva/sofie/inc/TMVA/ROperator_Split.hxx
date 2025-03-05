@@ -34,6 +34,11 @@ public:
          fNYs.reserve(namesY.size());
          for (auto & name : namesY)
             fNYs.push_back(UTILITY::Clean_name(name));
+      
+         fInputTensorNames = { fNX };
+         fOutputTensorNames.resize(fNYs.size());
+         std::transform(fNYs.begin(), fNYs.end(), fOutputTensorNames.begin(),
+                   [](const std::string& s) -> std::string_view { return s; });
       }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
@@ -45,7 +50,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
       if (model.CheckIfTensorAlreadyExist(fNX) == false){   //input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA SOFIE Split Op Input Tensor is not found in model");
       }

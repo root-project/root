@@ -94,6 +94,25 @@ template <typename T> class ROperator_RNN final : public ROperator {
          throw std::runtime_error(
              "TMVA SOFIE Encountered unsupported type parsing a RNN operator");
       }
+
+      fInputTensorNames = { fNX, fNW, fNR };
+      if(!fNB.empty()){
+         fInputTensorNames.emplace_back(fNB);
+      }
+      if(!fNSequence_lens.empty()){
+         fInputTensorNames.emplace_back(fNSequence_lens);
+      }
+      if(!fNInitial_h.empty()){
+         fInputTensorNames.emplace_back(fNInitial_h);
+      }
+
+      fOutputTensorNames = { };
+      if(!fNY.empty()){
+         fOutputTensorNames.emplace_back(fNY);
+      }
+      if(!fNY_h.empty()){
+         fOutputTensorNames.emplace_back(fNY_h);
+      }
    }
 
    /*! \brief Infers the type of the output tensors
@@ -113,7 +132,7 @@ template <typename T> class ROperator_RNN final : public ROperator {
     *
     * \param model Model
     */
-   void Initialize(RModel &model);
+   void Initialize(RModel &);
 
    /*! \brief Generates the inference code
     *

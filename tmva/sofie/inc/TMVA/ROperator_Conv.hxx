@@ -33,6 +33,9 @@ private:
    std::string fNB2; // bias tensor name after broadcasting
    std::string fNY;
 
+   std::string convK;
+   std::string imcol;
+
    std::vector<size_t> fShapeX;
    std::vector<size_t> fShapeW;
    std::vector<size_t> fShapeB;
@@ -62,6 +65,8 @@ public:
          throw
             std::runtime_error("TMVA SOFIE Encountered unsupported type parsing a Conv operator");
       }
+      fInputTensorNames = { fNX, fNB };
+      fOutputTensorNames = { fNY };
    }
 
    ROperator_Conv(std::string autopad, std::vector<size_t> dilations,
@@ -78,6 +83,8 @@ public:
          throw
             std::runtime_error("TMVA SOFIE Encountered unsupported type parsing a Conv operator");
       }
+      fInputTensorNames = { fNX };
+      fOutputTensorNames = { fNY };
    }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) {
@@ -194,7 +201,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model) {
+   void Initialize(RModel& model) override {
       fUseSession = model.UseSession();
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw
@@ -257,6 +264,22 @@ public:
             }
          }
       }
+
+      size_t outputChannelSize = fShapeY[2];  // size/channel = D * H * W
+      size_t kernelSize = fAttrKernelShape[0];
+      for (size_t i = 1; i < fDim; i++) {
+         outputChannelSize *= fShapeY[2 + i];
+         kernelSize *= fAttrKernelShape[i];
+      }
+
+      std::vector<size_t> shape1 = {fShapeW[0], fShapeW[1], kernelSize};
+      std::vector<size_t> shape2 = {fShapeW[1], kernelSize, outputChannelSize};
+      model.AddIntermediateTensor(fNX +"_f", ConvertStringToType(fType), shape1 );
+      model.AddIntermediateTensor(fNX +"_xcol", ConvertStringToType(fType), shape2 );
+      convK = fNX +"_f";
+      imcol = fNX +"_xcol";
+      fOutputTensorNames.emplace_back(convK);
+      fOutputTensorNames.emplace_back(imcol);
    }
 
    std::string GenerateInitCode() {
@@ -290,12 +313,12 @@ public:
       opName = "op_" + opName;
       std::stringstream out;
       // matrix with convolution kernels
-      out << "std::vector<" << fType << "> fVec_" << opName << "_f = std::vector<" << fType << ">("
-          << fShapeW[0] * fShapeW[1] * kernelSize << ");\n";
-      // output matrix of im2col
-      out << "std::vector<" << fType << "> fVec_" << opName << "_xcol = std::vector<" << fType << ">("
-          << fShapeW[1] * kernelSize * outputChannelSize << ");\n";
-      out << "\n";
+      // out << "std::vector<" << fType << "> fVec_" << opName << "_f = std::vector<" << fType << ">("
+      //     << fShapeW[0] * fShapeW[1] * kernelSize << ");\n";
+      // // output matrix of im2col
+      // out << "std::vector<" << fType << "> fVec_" << opName << "_xcol = std::vector<" << fType << ">("
+      //     << fShapeW[1] * kernelSize * outputChannelSize << ");\n";
+      // out << "\n";
 
       return out.str();
    }
@@ -323,10 +346,8 @@ public:
       out << "\n//----  operator Conv " << OpName << "\n";
 
       // create first matrix with convolution kernels
-      if (fUseSession)
-         out << SP << fType << " * " << OpName << "_f = fVec_" << OpName << "_f.data();\n";
-      else
-         out << SP << fType << " " << OpName << "_f[" << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] << "] = {0};\n";
+      if (!fUseSession)
+         out << SP << fType << " tensor_" << fNX << "_f[" << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] << "] = {0};\n";
 
       // vectorize the (dilated)convolution kernels into a matrix
       // no need to transpose the matrix
@@ -354,7 +375,7 @@ public:
          out << SP << SP << SP << "for (std::size_t kh = 0; kh < " << kHeight << "; kh++) {\n";
       out << SP << SP << SP << SP << "for (std::size_t kw = 0; kw < " << kWidth << "; kw++) {\n";
 
-      out << SP << SP << SP << SP << SP << OpName <<  "_f[oc * "
+      out << SP << SP << SP << SP << SP << "tensor_" <<fNX <<  "_f[oc * "
           << ocstrideDil << " + ic * " << icstrideDil;
       if (fDim > 2) out << " + kd * " << dstrideDil;
       if (fDim > 1) out << " + kh * " << hstrideDil;
@@ -380,11 +401,8 @@ public:
       out << SP << "float " << OpName << "_alpha = 1.0;\n";
       out << SP << "float " << OpName << "_beta = 0.0;\n";
 
-      if (fUseSession) {
-         out << SP << fType << " * " << OpName << "_xcol = fVec_" << OpName << "_xcol.data();\n";
-      }
-      else {
-         out << SP << fType << " " << OpName << "_xcol["
+      if (!fUseSession) {
+         out << SP << fType << " tensor_" << fNX << "_xcol["
              << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fAttrKernelShape[2] * oDepth * oHeight * oWidth
              << "] = {0};\n";
       }
@@ -443,7 +461,7 @@ public:
                out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
                    << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
                    << fAttrDilations[1];
-            out << "," << OpName << "_xcol);\n\n ";
+            out << "," << "tensor_" <<fNX << "_xcol);\n\n ";
          } else {
             // 3d im2col
             out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col_3d<float>(tensor_" << fNX
@@ -456,13 +474,13 @@ public:
                 << fAttrPads[0] << "," << fAttrPads[1] << "," << fAttrPads[2] << ","
                 << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2] << ","
                 << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << ","
-                << OpName << "_xcol);\n\n ";
+                << "tensor_" << fNX << "_xcol);\n\n ";
          }
          // BLAS
          out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
-             << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, " << OpName << "_xcol, &" << OpName
+             << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, " << "tensor_" << fNX << "_xcol, &" << OpName
              << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-         out << SP << SP << SP << OpName << "_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
+         out << SP << SP << SP << "tensor_" << fNX << "_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
              << " + out_offset, &" << OpName << "_m);\n";
       } else {
          // case of group convolution
@@ -489,7 +507,7 @@ public:
                out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
                    << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
                    << fAttrDilations[1];
-            out << "," << OpName << "_xcol);\n\n ";
+            out << ", tensor_" << fNX << "_xcol);\n\n ";
          } else {
             // 3d im2col
             out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col_3d<float>(tensor_" << fNX
@@ -500,7 +518,7 @@ public:
                 << fShapeW[1] << "," << iDepth << "," << iHeight << "," << iWidth << "," << fAttrKernelShape[0] << ","
                 << fAttrKernelShape[1] << "," << fAttrKernelShape[2] << "," << fAttrPads[0] << "," << fAttrPads[1]
                 << "," << fAttrPads[2] << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrStrides[2]
-                << "," << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << "," << OpName
+                << "," << fAttrDilations[0] << "," << fAttrDilations[1] << "," << fAttrDilations[2] << ",tensor_" << fNX
                 << "_xcol);\n\n ";
          }
 
@@ -512,9 +530,9 @@ public:
              << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fAttrKernelShape[2] / fAttrGroup
              << ";\n";
          out << SP << SP << "BLAS::sgemm_(&" << OpName << "_transA, &" << OpName << "_transB, &" << OpName << "_m, &"
-             << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, " << OpName << "_xcol, &" << OpName
+             << OpName << "_n, &" << OpName << "_k, &" << OpName << "_alpha, tensor_" << fNX << "_xcol, &" << OpName
              << "_m,\n"; // use m if op_xcol is not transpose , otherwise k
-         out << SP << SP << SP << OpName << "_f + offset_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
+         out << SP << SP << SP << "tensor_" << fNX << "_f + offset_f, &" << OpName << "_k, &" << OpName << "_beta, tensor_" << fNY
              << " + out_offset"
              << ", &" << OpName << "_m);\n";
 

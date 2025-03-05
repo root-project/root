@@ -50,6 +50,8 @@ public:
         fNames[i] = UTILITY::Clean_name(names[i]);
     }
 
+    fInputTensorNames = { fNData };
+    fOutputTensorNames = { fNOutput };
    }
    // ctor for versions < 10
    ROperator_Slice(std::string nameData, std::vector<IType> starts, std::vector<IType> ends, std::vector<IType> axes, std::string nameOutput)
@@ -80,7 +82,7 @@ public:
    }
 
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
       if (model.CheckIfTensorAlreadyExist(fNData) == false){   //input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA Slice Op Input Tensor is not found in model");
       }

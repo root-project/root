@@ -80,6 +80,8 @@ public:
          throw
             std::runtime_error("TMVA SOFIE Encountered unsupported type parsing a Pool operator");
       }
+      fInputTensorNames = { fNX };
+      fOutputTensorNames = { fNY };
    }
 
    // return input type (defined abstract in ROperator class )
@@ -198,7 +200,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model) {
+   void Initialize(RModel& model) override {
 
       fUseSession = model.UseSession();
 
