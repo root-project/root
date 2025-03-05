@@ -132,11 +132,15 @@ public:
       (void)entry;
    }
 
-   void InitSlot(TTreeReader *r, unsigned int slot) final
+   void InitSlot(TTreeReader *, unsigned int slot) final
+   {
+      fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
+   }
+
+   void RefreshColumnReaders(TTreeReader *r, unsigned int slot) final
    {
       RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), *fLoopManager};
       fValues[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
-      fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
    }
 
    // recursive chain of `Report`s

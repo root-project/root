@@ -144,8 +144,9 @@ protected:
    template <typename... ColumnTypes>
    void CheckAndFillDSColumns(ColumnNames_t validCols, TTraits::TypeList<ColumnTypes...> typeList)
    {
-      if (auto dataSource = GetDataSource())
+      if (auto dataSource = GetDataSource()) {
          RDFInternal::AddDSColumns(validCols, *fLoopManager, *dataSource, typeList, fColRegister);
+      }
    }
 
    /// Create RAction object, return RResultPtr for the action
@@ -204,6 +205,8 @@ protected:
       fLoopManager->ToJitExec(toJit);
       return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
    }
+
+   std::shared_ptr<RDFDetail::RLoopManager> GetLMSharedPtr() const { return fLoopManager; }
 
 public:
    RInterfaceBase(std::shared_ptr<RDFDetail::RLoopManager> lm);

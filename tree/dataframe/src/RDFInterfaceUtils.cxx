@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include <ROOT/RDataSource.hxx>
+#include <ROOT/RTTreeDS.hxx>
 #include <ROOT/RDF/InterfaceUtils.hxx>
 #include <ROOT/RDF/RColumnRegister.hxx>
 #include <ROOT/RDF/RDisplay.hxx>
@@ -931,10 +932,9 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
       // Look for a possible overlap between the unknown columns and the
       // columns we should ignore for the purpose of the following exception
       std::set<std::string> intersection;
-      auto colsToIgnore = lm.GetSuppressErrorsForMissingBranches();
+      const auto &colsToIgnore = lm.GetSuppressErrorsForMissingBranches();
       std::sort(unknownColumns.begin(), unknownColumns.end());
-      std::sort(colsToIgnore.begin(), colsToIgnore.end());
-      std::set_intersection(unknownColumns.begin(), unknownColumns.end(), colsToIgnore.begin(), colsToIgnore.end(),
+      std::set_intersection(unknownColumns.cbegin(), unknownColumns.cend(), colsToIgnore.cbegin(), colsToIgnore.cend(),
                             std::inserter(intersection, intersection.begin()));
       if (intersection.empty()) {
          std::string errMsg = std::string("Unknown column") + (unknownColumns.size() > 1 ? "s: " : ": ");
@@ -998,9 +998,12 @@ void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols)
 /// Return copies of colsWithoutAliases and colsWithAliases with size branches for variable-sized array branches added
 /// in the right positions (i.e. before the array branches that need them).
 std::pair<std::vector<std::string>, std::vector<std::string>>
-AddSizeBranches(const std::vector<std::string> &branches, TTree *tree, std::vector<std::string> &&colsWithoutAliases,
-                std::vector<std::string> &&colsWithAliases)
+AddSizeBranches(const std::vector<std::string> &branches, ROOT::RDF::RDataSource *ds,
+                std::vector<std::string> &&colsWithoutAliases, std::vector<std::string> &&colsWithAliases)
 {
+   TTree *tree{};
+   if (auto treeDS = dynamic_cast<ROOT::Internal::RDF::RTTreeDS *>(ds))
+      tree = treeDS->GetTree();
    if (!tree) // nothing to do
       return {std::move(colsWithoutAliases), std::move(colsWithAliases)};
 

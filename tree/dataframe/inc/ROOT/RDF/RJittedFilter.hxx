@@ -53,6 +53,7 @@ public:
    void SetFilter(std::unique_ptr<RFilterBase> f);
 
    void InitSlot(TTreeReader *r, unsigned int slot) final;
+   void RefreshColumnReaders(TTreeReader *r, unsigned int slot) final;
    bool CheckFilters(unsigned int slot, Long64_t entry) final;
    void Report(ROOT::RDF::RCutFlowReport &) const final;
    void PartialReport(ROOT::RDF::RCutFlowReport &) const final;

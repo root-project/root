@@ -57,6 +57,7 @@ public:
    RDefineBase &operator=(RDefineBase &&) = delete;
    virtual ~RDefineBase();
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
+   virtual void RefreshColumnReaders(TTreeReader *r, unsigned int slot) = 0;
    /// Return the (type-erased) address of the Define'd value for the given processing slot.
    virtual void *GetValuePtr(unsigned int slot) = 0;
    virtual const std::type_info &GetTypeId() const = 0;

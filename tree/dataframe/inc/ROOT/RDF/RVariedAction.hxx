@@ -131,13 +131,16 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
+      std::for_each(fHelpers.begin(), fHelpers.end(), [=](Helper &h) { h.InitTask(r, slot); });
+   }
+
+   void RefreshColumnReaders(TTreeReader *r, unsigned int slot) final
+   {
       RColumnReadersInfo info{GetColumnNames(), GetColRegister(), fIsDefine.data(), *fLoopManager};
 
       // get readers for each systematic variation
       for (const auto &variation : GetVariations())
          fInputValues[slot].emplace_back(GetColumnReaders(slot, r, ColumnTypes_t{}, info, variation));
-
-      std::for_each(fHelpers.begin(), fHelpers.end(), [=](Helper &h) { h.InitTask(r, slot); });
    }
 
    template <typename ColType>

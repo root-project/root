@@ -90,12 +90,13 @@ public:
 
    void Initialize() final { fHelper.Initialize(); }
 
-   void InitSlot(TTreeReader *r, unsigned int slot) final
+   void InitSlot(TTreeReader *r, unsigned int slot) final { fHelper.InitTask(r, slot); }
+
+   void RefreshColumnReaders(TTreeReader *r, unsigned int slot) final
    {
       RColumnReadersInfo info{RActionBase::GetColumnNames(), RActionBase::GetColRegister(), fIsDefine.data(),
                               *fLoopManager};
       fValues[slot] = GetColumnReaders(slot, r, ColumnTypes_t{}, info);
-      fHelper.InitTask(r, slot);
    }
 
    template <typename ColType>
