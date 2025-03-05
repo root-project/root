@@ -29,6 +29,14 @@ struct NaryOperatorTraits<T, EBasicNaryOperator::Max> {
       }
       return out.str();
    }
+   static std::string Op_GPU(const std::string& res, std::vector<std::string>& inputs) {
+      std::stringstream out;
+      out << "\t" << "\t" << res << " = " << inputs[0] << ";\n";
+      for (size_t i = 1; i < inputs.size(); i++) {
+         out << "\t" << "\t" << res << " = cl::sycl::max(" << res << ", " << inputs[i] << ");\n";
+      }
+      return out.str();
+   }
 };
 
 template<typename T>
@@ -39,6 +47,14 @@ struct NaryOperatorTraits<T, EBasicNaryOperator::Min> {
       out << "\t" << "\t" << res << " = " << inputs[0] << ";\n";
       for (size_t i = 1; i < inputs.size(); i++) {
          out << "\t" << "\t" << res << " = std::min(" << res << ", " << inputs[i] << ");\n";
+      }
+      return out.str();
+   }
+   static std::string Op_GPU(const std::string& res, std::vector<std::string>& inputs) {
+      std::stringstream out;
+      out << "\t" << "\t" << res << " = " << inputs[0] << ";\n";
+      for (size_t i = 1; i < inputs.size(); i++) {
+         out << "\t" << "\t" << res << " = cl::sycl::min(" << res << ", " << inputs[i] << ");\n";
       }
       return out.str();
    }
@@ -59,6 +75,9 @@ struct NaryOperatorTraits<float, EBasicNaryOperator::Mean> {
       out << ") / float(" << inputs.size() << ");\n";
       return out.str();
    }
+   static std::string Op_GPU(const std::string& res, std::vector<std::string>& inputs) {
+      return Op(res, inputs);
+   }
 };
 
 template<typename T>
@@ -72,6 +91,9 @@ struct NaryOperatorTraits<T, EBasicNaryOperator::Sum> {
       }
       out << ";\n";
       return out.str();
+   }
+   static std::string Op_GPU(const std::string& res, std::vector<std::string>& inputs) {
+      return Op(res, inputs);
    }
 };
 
@@ -175,7 +197,74 @@ public:
       }
       return out.str();
    }
-
+   
+   std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+      std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
+         OpName = "op_" + OpName;
+         if (fShapeY.empty()) {
+            throw std::runtime_error("TMVA SOFIE BasicNary called to Generate without being initialized first");
+         }
+         std::stringstream out;
+         size_t length = ConvertShapeToLength(fShapeY);
+         out << "\n" << SP*3 << "//------ BasicNary operator\n";
+   
+         if (fBroadcast) {
+            for (size_t i=0; i < fNInputs.size(); i++) {
+               if (fNBroadcastedInputs[i] != fNInputs[i]) {
+                  out << SP*4 << "// Broadcasting " << fNInputs[i] << " to " << ConvertShapeToString(fShapeY) << "\n";
+                  out << SP*4 << "{\n";
+                  out << SP*5 << fType << "* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << fType << ">(fTensor_" + fNInputs[i] << ".data(), " << ConvertShapeToString(fShapeInputs[i]);
+                  out << ", " << ConvertShapeToString(fShapeY) << ");\n";
+                  out << SP*5 << "auto buf_data = cl::sycl::buffer{data, cl::sycl::range{" << length << "}, props};\n";
+                  out << SP*5 << "q.submit([&](cl::sycl::handler& cgh){\n";
+                  out << SP*6 << "auto acc_" << fNBroadcastedInputs[i] << " = cl::sycl::accessor{buf_";
+                  out << fNBroadcastedInputs[i]<< ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+                  out << SP*6 << "cgh.copy(data, acc_" << fNBroadcastedInputs[i] << ");\n";
+                  out << SP*5 << "}).wait();\n";
+   
+                  out << SP*5 << "delete[] data;\n";
+                  out << SP*4 << "}\n";
+               }
+            }
+         }
+   
+         if (fNInputs.size() == 1) {
+            out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+            out << SP*4 << "auto acc_" << fNInputs[0] << " = cl::sycl::accessor{buf_" << fNInputs[0];
+            out << ", cgh, cl::sycl::read_only};\n";
+            out << SP*4 << "auto acc_" << fNY << "= cl::sycl::accessor{buf_tensor_" << fNY;
+            out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+            out << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << length << "), ";
+            out << "[=](cl::sycl::id<1> id){\n";
+            out << SP*5 << "acc_tensor_" << fNY << "[id] = acc_" << fNInputs[0] << "[id];\n";
+            out << SP*4 << "});\n";
+            out << SP*3 << "});\n";
+         }
+         else {
+            out << SP*3 << "q.submit([&](cl::sycl::handler &cgh){\n";
+            for (size_t i=0; i<fNBroadcastedInputs.size(); i++) {
+               out << SP*4 << "auto acc_" << fNBroadcastedInputs[i] << "= cl::sycl::accessor{buf_" << fNBroadcastedInputs[i];
+               out << ", cgh, cl::sycl::read_only};\n"; 
+            }
+   
+            out << SP*4 << "auto acc_tensor_" << fNY << "= cl::sycl::accessor{buf_tensor_" << fNY;
+            out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+   
+            std::vector<std::string> inputs(fNBroadcastedInputs.size());
+            for (size_t i = 0; i < fNBroadcastedInputs.size(); i++) {
+               inputs[i] = "acc_" + fNBroadcastedInputs[i] + "[id]";
+            }
+   
+            out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(";
+            out << length << "), [=](cl::sycl::id<1> id){\n";
+            out << SP*5 << NaryOperatorTraits<T, Op>::Op_GPU("acc_tensor_" + fNY + "[id]", inputs);
+            out << SP*4 << "});\n";
+            out << SP*3 << "});\n";
+         }
+   
+         return out.str();
+      }
+   
    std::vector<std::string> GetStdLibs() {return { std::string("cmath") }; }
 };
 

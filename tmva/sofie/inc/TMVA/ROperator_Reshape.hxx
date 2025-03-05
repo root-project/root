@@ -241,6 +241,46 @@ public:
           << ");\n";
       return out.str();
    }
+
+   std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
+      OpName = "op_" + OpName;
+      OpName = "op_" + OpName;
+      if (fShapeInput.empty() || fShapeOutput.empty()) {
+         throw std::runtime_error("TMVA SOFIE Reshape Op called to Generate without being initialized first");
+      }
+
+      // output of reshape is same as input
+      size_t length = ConvertShapeToLength(fShapeOutput);
+      if (length != ConvertShapeToLength(fShapeInput)) {
+         throw std::runtime_error("TMVA SOFIE Reshape Op : wrong output shape - is " +
+                                  ConvertShapeToString(fShapeOutput) + " and input is " +
+                                  ConvertShapeToString(fShapeInput));
+      }
+      for (auto &i : fShapeOutput) {
+         length *= i;
+      }
+
+      std::stringstream out;
+      std::string opName = "Reshape";
+      if (fOpMode == Flatten)
+         opName = "Flatten";
+      else if (fOpMode == Squeeze)
+         opName = "Squeeze";
+      else if (fOpMode == Unsqueeze)
+         opName = "Unsquueze";
+
+      out << "\n" << SP*3 << "///--------" << opName << " operator\n" << std::endl;
+
+      if (gpu_blas == MKLBLAS) {
+         out << SP*3 << copy << "buf_tensor_" << fNData << ".size(), buf_tensor_" << fNData << ", 1, buf_tensor_" << fNOutput << ", 1);\n";
+      }
+      else {
+         out << SP*3 << copy << "buf_tensor_" << fNData << ".size(), blas::BufferIterator(buf_tensor_" << fNData << "), 1, blas::BufferIterator(buf_tensor_" << fNOutput << "), 1);\n";
+      }
+      return out.str();
+   }
+
 };
 
 }//SOFIE
