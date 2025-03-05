@@ -7,13 +7,6 @@
 #pragma link C++ namespace RooStats;
 #pragma link C++ namespace RooStats::HistFactory;
 
-// for auto-loading namespaces
-#ifdef USE_FOR_AUTLOADING
-#pragma link C++ class RooStats::HistFactory;
-#pragma link C++ class RooStats;
-#endif
-
-
 #pragma link C++ class PiecewiseInterpolation- ;
 #pragma link C++ class ParamHistFunc+ ;
 #pragma link C++ class RooStats::HistFactory::LinInterpVar+ ;
