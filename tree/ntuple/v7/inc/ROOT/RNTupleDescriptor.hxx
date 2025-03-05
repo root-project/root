@@ -233,8 +233,14 @@ class RClusterDescriptor final {
    friend class Internal::RClusterDescriptorBuilder;
 
 public:
-   /// The window of element indexes of a particular column in a particular cluster
-   struct RColumnRange {
+   // clang-format off
+   /**
+   \class ROOT::Experimental::RClusterDescriptor::RColumnRange
+   \ingroup NTuple
+   \brief The window of element indexes of a particular column in a particular cluster
+   */
+   // clang-format on
+   class RColumnRange {
       ROOT::DescriptorId_t fPhysicalColumnId = ROOT::kInvalidDescriptorId;
       /// The global index of the first column element in the cluster
       ROOT::NTupleSize_t fFirstElementIndex = ROOT::kInvalidNTupleIndex;
@@ -251,6 +257,37 @@ public:
 
       // TODO(jblomer): we perhaps want to store summary information, such as average, min/max, etc.
       // Should this be done on the field level?
+
+   public:
+      RColumnRange() = default;
+
+      RColumnRange(ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t firstElementIndex,
+                   ROOT::NTupleSize_t nElements, std::optional<std::uint32_t> compressionSettings,
+                   bool suppressed = false)
+         : fPhysicalColumnId(physicalColumnId),
+           fFirstElementIndex(firstElementIndex),
+           fNElements(nElements),
+           fCompressionSettings(compressionSettings),
+           fIsSuppressed(suppressed)
+      {
+      }
+
+      ROOT::DescriptorId_t GetPhysicalColumnId() const { return fPhysicalColumnId; }
+      void SetPhysicalColumnId(ROOT::DescriptorId_t id) { fPhysicalColumnId = id; }
+
+      ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
+      void SetFirstElementIndex(ROOT::NTupleSize_t idx) { fFirstElementIndex = idx; }
+      void IncrementFirstElementIndex(ROOT::NTupleSize_t by) { fFirstElementIndex += by; }
+
+      ROOT::NTupleSize_t GetNElements() const { return fNElements; }
+      void SetNElements(ROOT::NTupleSize_t n) { fNElements = n; }
+      void IncrementNElements(ROOT::NTupleSize_t by) { fNElements += by; }
+
+      std::optional<std::uint32_t> GetCompressionSettings() const { return fCompressionSettings; }
+      void SetCompressionSettings(std::optional<std::uint32_t> comp) { fCompressionSettings = comp; }
+
+      bool IsSuppressed() const { return fIsSuppressed; }
+      void SetIsSuppressed(bool suppressed) { fIsSuppressed = suppressed; }
 
       bool operator==(const RColumnRange &other) const
       {
@@ -290,6 +327,7 @@ public:
       /// We do not need to store the element size / uncompressed page size because we know to which column
       /// the page belongs
       struct RPageInfo {
+      protected:
          /// The sum of the elements of all the pages must match the corresponding fNElements field in fColumnRanges
          std::uint32_t fNElements = std::uint32_t(-1);
          /// The meaning of fLocator depends on the storage backend.
@@ -297,22 +335,49 @@ public:
          /// If true, the 8 bytes following the serialized page are an xxhash of the on-disk page data
          bool fHasChecksum = false;
 
+      public:
+         RPageInfo() = default;
+         RPageInfo(std::uint32_t nElements, const RNTupleLocator &locator, bool hasChecksum)
+            : fNElements(nElements), fLocator(locator), fHasChecksum(hasChecksum)
+         {
+         }
+
          bool operator==(const RPageInfo &other) const
          {
             return fNElements == other.fNElements && fLocator == other.fLocator;
          }
-      };
-      struct RPageInfoExtended : RPageInfo {
-         /// Index (in cluster) of the first element in page.
-         ROOT::NTupleSize_t fFirstInPage = 0;
-         /// Page number in the corresponding RPageRange.
-         ROOT::NTupleSize_t fPageNo = 0;
 
+         std::uint32_t GetNElements() const { return fNElements; }
+         void SetNElements(std::uint32_t n) { fNElements = n; }
+
+         const RNTupleLocator &GetLocator() const { return fLocator; }
+         RNTupleLocator &GetLocator() { return fLocator; }
+         void SetLocator(const RNTupleLocator &locator) { fLocator = locator; }
+
+         bool HasChecksum() const { return fHasChecksum; }
+         void SetHasChecksum(bool hasChecksum) { fHasChecksum = hasChecksum; }
+      };
+
+      struct RPageInfoExtended : RPageInfo {
+      private:
+         /// Index (in cluster) of the first element in page.
+         ROOT::NTupleSize_t fFirstElementIndex = 0;
+         /// Page number in the corresponding RPageRange.
+         ROOT::NTupleSize_t fPageNumber = 0;
+
+      public:
          RPageInfoExtended() = default;
-         RPageInfoExtended(const RPageInfo &pi, ROOT::NTupleSize_t i, ROOT::NTupleSize_t n)
-            : RPageInfo(pi), fFirstInPage(i), fPageNo(n)
+         RPageInfoExtended(const RPageInfo &pageInfo, ROOT::NTupleSize_t firstElementIndex,
+                           ROOT::NTupleSize_t pageNumber)
+            : RPageInfo(pageInfo), fFirstElementIndex(firstElementIndex), fPageNumber(pageNumber)
          {
          }
+
+         ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
+         void SetFirstElementIndex(ROOT::NTupleSize_t firstInPage) { fFirstElementIndex = firstInPage; }
+
+         ROOT::NTupleSize_t GetPageNumber() const { return fPageNumber; }
+         void SetPageNumber(ROOT::NTupleSize_t pageNumber) { fPageNumber = pageNumber; }
       };
 
       RPageRange() = default;

@@ -396,16 +396,16 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadSealedPage(ROOT::Descrip
       pageInfo = clusterDescriptor.GetPageRange(physicalColumnId).Find(localIndex.GetIndexInCluster());
    }
 
-   sealedPage.SetBufferSize(pageInfo.fLocator.GetNBytesOnStorage() + pageInfo.fHasChecksum * kNBytesPageChecksum);
-   sealedPage.SetNElements(pageInfo.fNElements);
-   sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
+   sealedPage.SetBufferSize(pageInfo.GetLocator().GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum);
+   sealedPage.SetNElements(pageInfo.GetNElements());
+   sealedPage.SetHasChecksum(pageInfo.HasChecksum());
    if (!sealedPage.GetBuffer())
       return;
-   if (pageInfo.fLocator.GetType() != RNTupleLocator::kTypePageZero) {
+   if (pageInfo.GetLocator().GetType() != RNTupleLocator::kTypePageZero) {
       fReader.ReadBuffer(const_cast<void *>(sealedPage.GetBuffer()), sealedPage.GetBufferSize(),
-                         pageInfo.fLocator.GetPosition<std::uint64_t>());
+                         pageInfo.GetLocator().GetPosition<std::uint64_t>());
    } else {
-      assert(!pageInfo.fHasChecksum);
+      assert(!pageInfo.HasChecksum());
       memcpy(const_cast<void *>(sealedPage.GetBuffer()), RPage::GetPageZeroBuffer(), sealedPage.GetBufferSize());
    }
 
@@ -425,19 +425,19 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t colum
    const auto elementSize = element->GetSize();
    const auto elementInMemoryType = element->GetIdentifier().fInMemoryType;
 
-   if (pageInfo.fLocator.GetType() == RNTupleLocator::kTypePageZero) {
-      auto pageZero = fPageAllocator->NewPage(elementSize, pageInfo.fNElements);
-      pageZero.GrowUnchecked(pageInfo.fNElements);
+   if (pageInfo.GetLocator().GetType() == RNTupleLocator::kTypePageZero) {
+      auto pageZero = fPageAllocator->NewPage(elementSize, pageInfo.GetNElements());
+      pageZero.GrowUnchecked(pageInfo.GetNElements());
       memset(pageZero.GetBuffer(), 0, pageZero.GetNBytes());
-      pageZero.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
+      pageZero.SetWindow(clusterInfo.fColumnOffset + pageInfo.GetFirstElementIndex(),
                          RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
       return fPagePool.RegisterPage(std::move(pageZero), RPagePool::RKey{columnId, elementInMemoryType});
    }
 
    RSealedPage sealedPage;
-   sealedPage.SetNElements(pageInfo.fNElements);
-   sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
-   sealedPage.SetBufferSize(pageInfo.fLocator.GetNBytesOnStorage() + pageInfo.fHasChecksum * kNBytesPageChecksum);
+   sealedPage.SetNElements(pageInfo.GetNElements());
+   sealedPage.SetHasChecksum(pageInfo.HasChecksum());
+   sealedPage.SetBufferSize(pageInfo.GetLocator().GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum);
    std::unique_ptr<unsigned char[]> directReadBuffer; // only used if cluster pool is turned off
 
    if (fOptions.GetClusterCache() == ROOT::RNTupleReadOptions::EClusterCache::kOff) {
@@ -445,7 +445,7 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t colum
       {
          Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
          fReader.ReadBuffer(directReadBuffer.get(), sealedPage.GetBufferSize(),
-                            pageInfo.fLocator.GetPosition<std::uint64_t>());
+                            pageInfo.GetLocator().GetPosition<std::uint64_t>());
       }
       fCounters->fNPageRead.Inc();
       fCounters->fNRead.Inc();
@@ -461,7 +461,7 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t colum
       if (!cachedPageRef.Get().IsNull())
          return cachedPageRef;
 
-      ROnDiskPage::Key key(columnId, pageInfo.fPageNo);
+      ROnDiskPage::Key key(columnId, pageInfo.GetPageNumber());
       auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
       R__ASSERT(onDiskPage && (sealedPage.GetBufferSize() == onDiskPage->GetSize()));
       sealedPage.SetBuffer(onDiskPage->GetAddress());
@@ -471,10 +471,10 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t colum
    {
       Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
       newPage = UnsealPage(sealedPage, *element).Unwrap();
-      fCounters->fSzUnzip.Add(elementSize * pageInfo.fNElements);
+      fCounters->fSzUnzip.Add(elementSize * pageInfo.GetNElements());
    }
 
-   newPage.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
+   newPage.SetWindow(clusterInfo.fColumnOffset + pageInfo.GetFirstElementIndex(),
                      RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
    fCounters->fNPageUnsealed.Inc();
    return fPagePool.RegisterPage(std::move(newPage), RPagePool::RKey{columnId, elementInMemoryType});
@@ -507,11 +507,11 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    PrepareLoadCluster(clusterKey, *pageZeroMap,
                       [&](ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t pageNo,
                           const RClusterDescriptor::RPageRange::RPageInfo &pageInfo) {
-                         const auto &pageLocator = pageInfo.fLocator;
+                         const auto &pageLocator = pageInfo.GetLocator();
                          if (pageLocator.GetType() == RNTupleLocator::kTypeUnknown)
                             throw RException(R__FAIL("tried to read a page with an unknown locator"));
                          const auto nBytes =
-                            pageLocator.GetNBytesOnStorage() + pageInfo.fHasChecksum * kNBytesPageChecksum;
+                            pageLocator.GetNBytesOnStorage() + pageInfo.HasChecksum() * kNBytesPageChecksum;
                          activeSize += nBytes;
                          onDiskPages.push_back(
                             {physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), nBytes, 0});

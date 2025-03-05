@@ -189,7 +189,7 @@ try {
                   inFile->GetName());
             return -1;
          }
-         compression = (*firstColRange).fCompressionSettings.value();
+         compression = (*firstColRange).GetCompressionSettings().value();
          Info("RNTuple::Merge", "Using the first RNTuple's compression: %u", *compression);
       }
       sources.push_back(std::move(source));
@@ -710,7 +710,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const RCluster
       sealedPages.resize(pages.fPageInfos.size());
 
       // Each column range potentially has a distinct compression settings
-      const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).fCompressionSettings.value();
+      const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).GetCompressionSettings().value();
       // If either the compression or the encoding of the source doesn't match that of the destination, we need
       // to reseal the page. Otherwise, if both match, we can fast merge.
       const bool needsResealing =
@@ -747,16 +747,16 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const RCluster
       for (const auto &pageInfo : pages.fPageInfos) {
          assert(pageIdx < sealedPages.size());
          assert(sealedPageData.fBuffers.size() == 0 || pageIdx < sealedPageData.fBuffers.size());
-         assert(pageInfo.fLocator.GetType() != RNTupleLocator::kTypePageZero);
+         assert(pageInfo.GetLocator().GetType() != RNTupleLocator::kTypePageZero);
 
          ROnDiskPage::Key key{columnId, pageIdx};
          auto onDiskPage = cluster->GetOnDiskPage(key);
 
-         const auto checksumSize = pageInfo.fHasChecksum * RPageStorage::kNBytesPageChecksum;
+         const auto checksumSize = pageInfo.HasChecksum() * RPageStorage::kNBytesPageChecksum;
          RPageStorage::RSealedPage &sealedPage = sealedPages[pageIdx];
-         sealedPage.SetNElements(pageInfo.fNElements);
-         sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
-         sealedPage.SetBufferSize(pageInfo.fLocator.GetNBytesOnStorage() + checksumSize);
+         sealedPage.SetNElements(pageInfo.GetNElements());
+         sealedPage.SetHasChecksum(pageInfo.HasChecksum());
+         sealedPage.SetBufferSize(pageInfo.GetLocator().GetNBytesOnStorage() + checksumSize);
          sealedPage.SetBuffer(onDiskPage->GetAddress());
          // TODO(gparolini): more graceful error handling (skip the page?)
          sealedPage.VerifyChecksumIfEnabled().ThrowOnError();

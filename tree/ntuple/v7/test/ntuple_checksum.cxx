@@ -104,8 +104,8 @@ TEST(RNTupleChecksum, OmitPageChecksum)
    const auto clusterId = descGuard->FindClusterId(pxColId, 0);
    const auto &clusterDesc = descGuard->GetClusterDescriptor(clusterId);
    const auto pageInfo = clusterDesc.GetPageRange(pxColId).fPageInfos[0];
-   EXPECT_EQ(4u, pageInfo.fLocator.GetNBytesOnStorage());
-   EXPECT_FALSE(pageInfo.fHasChecksum);
+   EXPECT_EQ(4u, pageInfo.GetLocator().GetNBytesOnStorage());
+   EXPECT_FALSE(pageInfo.HasChecksum());
 
    RPageStorage::RSealedPage sealedPage;
    pageSource->LoadSealedPage(pxColId, RNTupleLocalIndex{clusterId, 0}, sealedPage);
