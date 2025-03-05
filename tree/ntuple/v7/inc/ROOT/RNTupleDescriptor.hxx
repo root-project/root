@@ -361,19 +361,20 @@ public:
       struct RPageInfoExtended : RPageInfo {
       private:
          /// Index (in cluster) of the first element in page.
-         ROOT::NTupleSize_t fFirstInPage = 0;
+         ROOT::NTupleSize_t fFirstElementIndex = 0;
          /// Page number in the corresponding RPageRange.
          ROOT::NTupleSize_t fPageNumber = 0;
 
       public:
          RPageInfoExtended() = default;
-         RPageInfoExtended(const RPageInfo &pageInfo, ROOT::NTupleSize_t firstInPage, ROOT::NTupleSize_t pageNumber)
-            : RPageInfo(pageInfo), fFirstInPage(firstInPage), fPageNumber(pageNumber)
+         RPageInfoExtended(const RPageInfo &pageInfo, ROOT::NTupleSize_t firstElementIndex,
+                           ROOT::NTupleSize_t pageNumber)
+            : RPageInfo(pageInfo), fFirstElementIndex(firstElementIndex), fPageNumber(pageNumber)
          {
          }
 
-         ROOT::NTupleSize_t GetFirstInPage() const { return fFirstInPage; }
-         void SetFirstInPage(ROOT::NTupleSize_t firstInPage) { fFirstInPage = firstInPage; }
+         ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
+         void SetFirstElementIndex(ROOT::NTupleSize_t firstInPage) { fFirstElementIndex = firstInPage; }
 
          ROOT::NTupleSize_t GetPageNumber() const { return fPageNumber; }
          void SetPageNumber(ROOT::NTupleSize_t pageNumber) { fPageNumber = pageNumber; }

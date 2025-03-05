@@ -429,7 +429,7 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t colum
       auto pageZero = fPageAllocator->NewPage(elementSize, pageInfo.GetNElements());
       pageZero.GrowUnchecked(pageInfo.GetNElements());
       memset(pageZero.GetBuffer(), 0, pageZero.GetNBytes());
-      pageZero.SetWindow(clusterInfo.fColumnOffset + pageInfo.GetFirstInPage(),
+      pageZero.SetWindow(clusterInfo.fColumnOffset + pageInfo.GetFirstElementIndex(),
                          RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
       return fPagePool.RegisterPage(std::move(pageZero), RPagePool::RKey{columnId, elementInMemoryType});
    }
@@ -474,7 +474,7 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadPageImpl(ColumnHandle_t colum
       fCounters->fSzUnzip.Add(elementSize * pageInfo.GetNElements());
    }
 
-   newPage.SetWindow(clusterInfo.fColumnOffset + pageInfo.GetFirstInPage(),
+   newPage.SetWindow(clusterInfo.fColumnOffset + pageInfo.GetFirstElementIndex(),
                      RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
    fCounters->fNPageUnsealed.Inc();
    return fPagePool.RegisterPage(std::move(newPage), RPagePool::RKey{columnId, elementInMemoryType});
