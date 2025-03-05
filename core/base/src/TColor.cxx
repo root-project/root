@@ -1915,7 +1915,8 @@ void TColor::Allocate()
 ////////////////////////////////////////////////////////////////////////////////
 /// Static method returning color number for color specified by
 /// hex color string of form: "#rrggbb", where rr, gg and bb are in
-/// hex between [0,FF], e.g. "#c0c0c0".
+/// hex between [0,FF], e.g. "#c0c0c0". Also alpha channel is applied when
+/// hex string includes fourth number e.g "#c0c0c0ff"
 ///
 /// The color retrieval is done using a threshold defined by SetColorThreshold.
 ///
@@ -1925,8 +1926,10 @@ void TColor::Allocate()
 Int_t TColor::GetColor(const char *hexcolor)
 {
    if (hexcolor && *hexcolor == '#') {
-      Int_t r, g, b;
-      if (sscanf(hexcolor+1, "%02x%02x%02x", &r, &g, &b) == 3)
+      Int_t r, g, b, a;
+      if (strlen(hexcolor) == 9 && sscanf(hexcolor + 1, "%02x%02x%02x%02x", &r, &g, &b, &a) == 4)
+         return GetColor(r, g, b, a / 255.);
+      if (sscanf(hexcolor + 1, "%02x%02x%02x", &r, &g, &b) == 3)
          return GetColor(r, g, b);
    }
    ::Error("TColor::GetColor(const char*)", "incorrect color string");
@@ -2554,36 +2557,29 @@ Bool_t TColor::SaveColor(std::ostream &out, Int_t ci)
    if (ci <= 228)
       return kFALSE;
 
-   char quote = '"';
-
    TColor *c = gROOT->GetColor(ci);
    if (!c)
       return kFALSE;
 
-   if (gROOT->ClassSaved(TColor::Class())) {
-      out << std::endl;
-   } else {
-      out << std::endl;
-      out << "   Int_t ci;      // for color index setting" << std::endl;
-      out << "   TColor *color; // for color definition with alpha" << std::endl;
-   }
+   if (gROOT->ClassSaved(TColor::Class()))
+      out << "   ci = ";
+   else
+      out << "   Int_t ci = ";
 
    Float_t r, g, b, a;
 
    c->GetRGB(r, g, b);
    a = c->GetAlpha();
+   Int_t ri = (Int_t)(255 * r), gi = (Int_t)(255 * g), bi = (Int_t)(255 * b), ai = (Int_t)(255 * a);
 
-   if (a < 1.) {
-      out<<"   ci = "<<ci<<";"<<std::endl;
-      out<<"   color = new TColor(ci, "<<r<<", "<<g<<", "<<b<<", "
-      <<"\" \", "<<a<<");"<<std::endl;
-   } else {
-      Int_t ri = (Int_t)(255*r),
-            gi = (Int_t)(255*g),
-            bi = (Int_t)(255*b);
-      TString cname = TString::Format("#%02x%02x%02x", ri, gi, bi);
-      out<<"   ci = TColor::GetColor("<<quote<<cname.Data()<<quote<<");"<<std::endl;
-   }
+   TString cname;
+
+   if (ai < 255)
+      cname.Form("#%02x%02x%02x%02x", ri, gi, bi, ai);
+   else
+      cname.Form("#%02x%02x%02x", ri, gi, bi);
+
+   out << "TColor::GetColor(\"" << cname << "\");" << std::endl;
 
    return kTRUE;
 }
