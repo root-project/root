@@ -378,10 +378,13 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpen
    }
 
    for (unsigned i = 0; i < auxNTuples.size(); ++i) {
-      if (models.empty())
+      if (models.empty()) {
          AddAuxiliary(auxNTuples[i], joinFields);
-      else
+      } else {
+         // The size of `models` is checked in `CreateJoin`; at this point we can safely assume that `models.size() ==
+         // auxNTuples.size() + 1`.
          AddAuxiliary(auxNTuples[i], joinFields, std::move(models[i + 1]));
+      }
    }
 }
 
