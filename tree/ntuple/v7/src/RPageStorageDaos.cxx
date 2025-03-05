@@ -315,8 +315,8 @@ void ROOT::Experimental::Internal::RPageSinkDaos::InitImpl(unsigned char *serial
    WriteNTupleHeader(zipBuffer.get(), szZipHeader, length);
 }
 
-ROOT::RNTupleLocator
-ROOT::Experimental::Internal::RPageSinkDaos::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
+ROOT::RNTupleLocator ROOT::Experimental::Internal::RPageSinkDaos::CommitPageImpl(ColumnHandle_t columnHandle,
+                                                                                 const ROOT::Internal::RPage &page)
 {
    auto element = columnHandle.fColumn->GetElement();
    RPageStorage::RSealedPage sealedPage;
@@ -565,7 +565,8 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(ROOT::Descrip
 
    if (pageInfo.fLocator.GetType() == RNTupleLocator::kTypePageZero) {
       assert(!pageInfo.fHasChecksum);
-      memcpy(const_cast<void *>(sealedPage.GetBuffer()), RPage::GetPageZeroBuffer(), sealedPage.GetBufferSize());
+      memcpy(const_cast<void *>(sealedPage.GetBuffer()), ROOT::Internal::RPage::GetPageZeroBuffer(),
+             sealedPage.GetBufferSize());
       return;
    }
 
@@ -590,10 +591,9 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(ROOT::Descrip
    sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
 }
 
-ROOT::Experimental::Internal::RPageRef
-ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t columnHandle,
-                                                            const RClusterInfo &clusterInfo,
-                                                            ROOT::NTupleSize_t idxInCluster)
+ROOT::Internal::RPageRef ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t columnHandle,
+                                                                                     const RClusterInfo &clusterInfo,
+                                                                                     ROOT::NTupleSize_t idxInCluster)
 {
    const auto columnId = columnHandle.fPhysicalId;
    const auto clusterId = clusterInfo.fClusterId;
@@ -608,8 +608,9 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t colum
       pageZero.GrowUnchecked(pageInfo.fNElements);
       memset(pageZero.GetBuffer(), 0, pageZero.GetNBytes());
       pageZero.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
-                         RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
-      return fPagePool.RegisterPage(std::move(pageZero), RPagePool::RKey{columnId, elementInMemoryType});
+                         ROOT::Internal::RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
+      return fPagePool.RegisterPage(std::move(pageZero),
+                                    ROOT::Internal::RPagePool::RKey{columnId, elementInMemoryType});
    }
 
    RSealedPage sealedPage;
@@ -637,8 +638,8 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t colum
          fCurrentCluster = fClusterPool->GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
       R__ASSERT(fCurrentCluster->ContainsColumn(columnId));
 
-      auto cachedPageRef =
-         fPagePool.GetPage(RPagePool::RKey{columnId, elementInMemoryType}, RNTupleLocalIndex(clusterId, idxInCluster));
+      auto cachedPageRef = fPagePool.GetPage(ROOT::Internal::RPagePool::RKey{columnId, elementInMemoryType},
+                                             RNTupleLocalIndex(clusterId, idxInCluster));
       if (!cachedPageRef.Get().IsNull())
          return cachedPageRef;
 
@@ -648,7 +649,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t colum
       sealedPage.SetBuffer(onDiskPage->GetAddress());
    }
 
-   RPage newPage;
+   ROOT::Internal::RPage newPage;
    {
       Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
       newPage = UnsealPage(sealedPage, *element).Unwrap();
@@ -656,9 +657,9 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadPageImpl(ColumnHandle_t colum
    }
 
    newPage.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
-                     RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
+                     ROOT::Internal::RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
    fCounters->fNPageUnsealed.Inc();
-   return fPagePool.RegisterPage(std::move(newPage), RPagePool::RKey{columnId, elementInMemoryType});
+   return fPagePool.RegisterPage(std::move(newPage), ROOT::Internal::RPagePool::RKey{columnId, elementInMemoryType});
 }
 
 std::unique_ptr<ROOT::Experimental::Internal::RPageSource>

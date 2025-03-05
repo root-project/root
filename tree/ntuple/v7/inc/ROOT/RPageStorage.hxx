@@ -45,13 +45,17 @@
 #include <vector>
 
 namespace ROOT {
+
+namespace Internal {
+class RPageAllocator;
+}
+
 namespace Experimental {
 
 class RNTupleModel;
 
 namespace Internal {
 class RColumn;
-class RNTupleCompressor;
 struct RNTupleModelChangeset;
 class RPageAllocator;
 
@@ -149,7 +153,7 @@ protected:
    Detail::RNTupleMetrics fMetrics;
 
    /// For the time being, we will use the heap allocator for all sources and sinks. This may change in the future.
-   std::unique_ptr<RPageAllocator> fPageAllocator;
+   std::unique_ptr<ROOT::Internal::RPageAllocator> fPageAllocator;
 
    std::string fNTupleName;
    RTaskScheduler *fTaskScheduler = nullptr;
@@ -285,7 +289,7 @@ protected:
    /// compressionSetting is 0 (uncompressed) and the page is mappable and not checksummed, the returned sealed page
    /// will point directly to the input page buffer. Otherwise, the sealed page references fSealPageBuffer.  Thus,
    /// the buffer pointed to by the RSealedPage should never be freed.
-   RSealedPage SealPage(const RPage &page, const RColumnElementBase &element);
+   RSealedPage SealPage(const ROOT::Internal::RPage &page, const RColumnElementBase &element);
 
 private:
    std::vector<Callback_t> fOnDatasetCommitCallbacks;
@@ -334,7 +338,7 @@ protected:
 public:
    /// Parameters for the SealPage() method
    struct RSealPageConfig {
-      const RPage *fPage = nullptr;                 ///< Input page to be sealed
+      const ROOT::Internal::RPage *fPage = nullptr; ///< Input page to be sealed
       const RColumnElementBase *fElement = nullptr; ///< Corresponds to the page's elements, for size calculation etc.
       std::uint32_t fCompressionSettings = 0;       ///< Compression algorithm and level to apply
       /// Adds a 8 byte little-endian xxhash3 checksum to the page payload. The buffer has to be large enough to
@@ -364,7 +368,7 @@ public:
    /// For any given column and cluster, there must be no calls to both CommitSuppressedColumn() and page commits.
    virtual void CommitSuppressedColumn(ColumnHandle_t columnHandle) = 0;
    /// Write a page to the storage. The column must have been added before.
-   virtual void CommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
+   virtual void CommitPage(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) = 0;
    /// Write a preprocessed page to storage. The column must have been added before.
    virtual void
    CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
@@ -395,7 +399,7 @@ public:
 
    /// Get a new, empty page for the given column that can be filled with up to nElements;
    /// nElements must be larger than zero.
-   virtual RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements);
+   virtual ROOT::Internal::RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements);
 
    /// An RAII wrapper used to synchronize a page sink. See GetSinkGuard().
    class RSinkGuard {
@@ -474,7 +478,7 @@ protected:
 
    virtual void InitImpl(unsigned char *serializedHeader, std::uint32_t length) = 0;
 
-   virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
+   virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) = 0;
    virtual RNTupleLocator
    CommitSealedPageImpl(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
    /// Vector commit of preprocessed pages. The `ranges` array specifies a range of sealed pages to be
@@ -534,7 +538,7 @@ public:
    InitFromDescriptor(const RNTupleDescriptor &descriptor, bool copyClusters);
 
    void CommitSuppressedColumn(ColumnHandle_t columnHandle) final;
-   void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
+   void CommitPage(ColumnHandle_t columnHandle, const ROOT::Internal::RPage &page) final;
    void CommitSealedPage(ROOT::DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    RStagedCluster StageCluster(ROOT::NTupleSize_t nNewEntries) final;
@@ -696,7 +700,7 @@ protected:
    RActivePhysicalColumns fActivePhysicalColumns;
 
    /// Pages that are unzipped with IMT are staged into the page pool
-   RPagePool fPagePool;
+   ROOT::Internal::RPagePool fPagePool;
 
    virtual void LoadStructureImpl() = 0;
    /// `LoadStructureImpl()` has been called before `AttachImpl()` is called
@@ -706,7 +710,7 @@ protected:
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(RCluster *cluster);
    // Returns a page from storage if not found in the page pool. Should be able to handle zero page locators.
-   virtual RPageRef
+   virtual ROOT::Internal::RPageRef
    LoadPageImpl(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo, ROOT::NTupleSize_t idxInCluster) = 0;
 
    /// Prepare a page range read for the column set in `clusterKey`.  Specifically, pages referencing the
@@ -746,8 +750,8 @@ public:
    /// Helper for unstreaming a page. This is commonly used in derived, concrete page sources.  The implementation
    /// currently always makes a memory copy, even if the sealed page is uncompressed and in the final memory layout.
    /// The optimization of directly mapping pages is left to the concrete page source implementations.
-   RResult<RPage> static UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element,
-                                    RPageAllocator &pageAlloc);
+   RResult<ROOT::Internal::RPage> static UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element,
+                                                    ROOT::Internal::RPageAllocator &pageAlloc);
 
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
    const ROOT::RNTupleReadOptions &GetReadOptions() const { return fOptions; }
@@ -783,11 +787,11 @@ public:
    REntryRange GetEntryRange() const { return fEntryRange; }
 
    /// Allocates and fills a page that contains the index-th element. The default implementation searches
-   /// the page and calls LoadPageImpl(). Returns a default-constructed RPage for suppressed columns.
-   virtual RPageRef LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleSize_t globalIndex);
+   /// the page and calls LoadPageImpl(). Returns a default-constructed ROOT::Internal::RPage for suppressed columns.
+   virtual ROOT::Internal::RPageRef LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleSize_t globalIndex);
    /// Another version of `LoadPage` that allows to specify cluster-relative indexes.
-   /// Returns a default-constructed RPage for suppressed columns.
-   virtual RPageRef LoadPage(ColumnHandle_t columnHandle, RNTupleLocalIndex localIndex);
+   /// Returns a default-constructed ROOT::Internal::RPage for suppressed columns.
+   virtual ROOT::Internal::RPageRef LoadPage(ColumnHandle_t columnHandle, RNTupleLocalIndex localIndex);
 
    /// Read the packed and compressed bytes of a page into the memory buffer provided by `sealedPage`. The sealed page
    /// can be used subsequently in a call to `RPageSink::CommitSealedPage`.
@@ -814,7 +818,7 @@ public:
    void UnzipCluster(RCluster *cluster);
 
    // TODO(gparolini): for symmetry with SealPage(), we should either make this private or SealPage() public.
-   RResult<RPage> UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element);
+   RResult<ROOT::Internal::RPage> UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element);
 }; // class RPageSource
 
 } // namespace Internal
