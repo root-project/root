@@ -3142,9 +3142,16 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
    }
 
    // If we are a chain, switch to the first tree.
-   if ((fEntries > 0) && (LoadTree(0) < 0)) {
-         // FIXME: We need an error message here.
+   if (fEntries > 0) {
+      const auto res = LoadTree(0);
+      if (res < -2 || res == -1) {
+         // -1 is not accepted, it happens when no trees were defined
+         // -2 is accepted, it happens when one or more trees exists but have no entries,
+         // i.e. serial entry 0 is too large for the whole chain
+         // Other errors (-3, ...) are not accepted
+         Error("CloneTree", "returning nullptr since LoadTree failed with code %d.", res);
          return nullptr;
+      }
    }
 
    // Note: For a tree we get the this pointer, for
