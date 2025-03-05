@@ -87,7 +87,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw
             std::runtime_error("TMVA SOFIE BatchNormalization op Input Tensor " + fNX + " fnx is not found in model");

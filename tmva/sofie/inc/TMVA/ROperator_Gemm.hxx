@@ -137,7 +137,7 @@ namespace SOFIE{
 
 
 
-      void Initialize(RModel& model){
+      void Initialize(RModel& model) override {
          //TODO: propagate A or B as specified by ONNX standard
 
          if ((model.CheckIfTensorAlreadyExist(fNA) == false) || (model.CheckIfTensorAlreadyExist(fNB) == false) ){   //input must be a graph input, or already initialized intermediate tensor

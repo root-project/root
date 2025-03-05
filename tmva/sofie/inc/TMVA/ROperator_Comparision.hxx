@@ -91,7 +91,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
       // input must be a graph input, or already initialized intermediate tensor
       if (!model.CheckIfTensorAlreadyExist(fNX1)){
          throw std::runtime_error(std::string("TMVA SOFIE Comparision Op Input Tensor ") + fNX1 + "is not found in model");

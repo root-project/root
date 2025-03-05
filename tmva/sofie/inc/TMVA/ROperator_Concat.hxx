@@ -143,7 +143,7 @@
             return ret;
          }
 
-      void Initialize(RModel& model){
+      void Initialize(RModel& model) override {
             for (auto &it : fInputs) {
                if (model.CheckIfTensorAlreadyExist(it) == false) {
                   throw std::runtime_error("TMVA SOFIE Concat Op Input Tensor " + it + " is not found in model");

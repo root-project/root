@@ -48,7 +48,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
       if (!model.CheckIfTensorAlreadyExist(fNX)) {
          throw std::runtime_error("TMVA SOFIE Gather Op Input Tensor " + fNX + " is not found in model");
       }
