@@ -113,6 +113,8 @@ public:
    explicit RNTupleMerger(std::unique_ptr<RPagePersistentSink> destination);
 
    /// Merge a given set of sources into the destination.
+   /// Note that sources with an empty schema (i.e. created from a Model that had no fields added to it) are in
+   /// general valid (depending on the merging mode) but add no entries to the destination.
    RResult<void> Merge(std::span<RPageSource *> sources, const RNTupleMergeOptions &mergeOpts = RNTupleMergeOptions());
 
 }; // end of class RNTupleMerger
