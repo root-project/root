@@ -524,13 +524,19 @@ private:
    /// \brief Construct a new RNTupleJoinProcessor.
    ///
    /// \param[in] mainNTuple The source specification (name and storage location) of the primary RNTuple.
+   /// \param[in] auxNTUples The source specifications (name and storage location) of the auxiliary RNTuples.
+   /// \param[in] joinFields The names of the fields on which to join, in case the specified RNTuples are unaligned.
+   /// The join is made based on the combined join field values, and therefore each field has to be present in each
+   /// specified RNTuple. If an empty list is provided, it is assumed that the RNTuples are fully aligned.
    /// \param[in] processorName Name of the processor. Unless specified otherwise in RNTupleProcessor::CreateJoin, this
    /// is the name of the main RNTuple.
-   /// \param[in] model The model that specifies which fields should be read by the processor. The pointer returned by
-   /// RNTupleModel::MakeField can be used to access a field's value during the processor iteration. When no model is
-   /// specified, it is created from the RNTuple's descriptor.
-   RNTupleJoinProcessor(const RNTupleOpenSpec &mainNTuple, std::string_view processorName,
-                        std::unique_ptr<RNTupleModel> model = nullptr);
+   /// \param[in] models The models that specify which fields should be read by the processor, ordered according to
+   /// {mainNTuple, auxNTuple[0], ...}. The pointer returned by RNTupleModel::MakeField can be used to access a field's
+   /// value during the processor iteration. When an empty list is passed, the models are created from the descriptor of
+   /// each RNTuple specified in `mainNTuple` and `auxNTuple`.
+   RNTupleJoinProcessor(const RNTupleOpenSpec &mainNTuple, const std::vector<RNTupleOpenSpec> &auxNTuples,
+                        const std::vector<std::string> &joinFields, std::string_view processorName,
+                        std::vector<std::unique_ptr<RNTupleModel>> models = {});
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add an auxiliary RNTuple to the processor.
