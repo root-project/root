@@ -2524,6 +2524,12 @@ void TChain::ResetBranchAddresses()
    if (fTree) {
       fTree->ResetBranchAddresses();
    }
+   for (TObject *frel : *fFriends) {
+      TTree *frtree = ((TFriendElement *)frel)->GetTree();
+      if (frtree) {
+         frtree->ResetBranchAddresses();
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
