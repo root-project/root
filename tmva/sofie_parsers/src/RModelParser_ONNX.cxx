@@ -273,7 +273,7 @@ ETensorType RModelParser_ONNX::GetTensorType(const std::string &name)
 // Parse an operator
 std::unique_ptr<ROperator>
 RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphproto, const std::vector<size_t> &nodes)
-{
+{  
    if (i >= nodes.size())
       throw std::runtime_error("TMVA::SOFIE - Error in parsing ordered operators " + std::to_string(i) + " is >=  " + std::to_string(nodes.size()));
    int idx = nodes[i];
@@ -694,6 +694,10 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
    if (verbose) {
       std::cout << "Fill RModel with operators...\n";
    }
+  
+   // we have to record order of node execution separately to
+   // account for fused operators
+   size_t node_order_exec = 0;
    for (int i = 0; i < graph.node_size(); i++) {
       std::string op_type = graph.node(nodesOrder[i]).op_type();
 
@@ -709,7 +713,7 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
          // for skipping the fused nodes like Add after MatMul
          continue;
       }
-      rmodel.AddOperator(std::move(op), i);
+      rmodel.AddOperator(std::move(op), node_order_exec++);
    }
 
    std::vector<std::string> outputnames;

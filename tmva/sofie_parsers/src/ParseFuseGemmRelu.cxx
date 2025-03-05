@@ -7,7 +7,7 @@ namespace Experimental {
 namespace SOFIE {
 
 ParserFuseFuncSignature ParseFuseGemmRelu = [](RModelParser_ONNX &parser, const onnx::NodeProto &gemmnode,
-                                                const onnx::NodeProto &relunode) {
+                                                const onnx::NodeProto &relunode) -> std::unique_ptr<ROperator> {
    ETensorType input_type = ETensorType::UNDEFINED;
    // check input type - only first input from Gemm
    auto input_name = gemmnode.input(0);
@@ -45,7 +45,6 @@ ParserFuseFuncSignature ParseFuseGemmRelu = [](RModelParser_ONNX &parser, const 
                    << gemmnode.name() << " is not defined in ONNX IR and not applied!\n";
       }
    }
-
    switch (input_type) {
    case ETensorType::FLOAT:
       if (gemmnode.input_size() == 2) {
