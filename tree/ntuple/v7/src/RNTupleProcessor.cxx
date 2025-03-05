@@ -138,7 +138,7 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(const RNTupleOpenSpec &primaryN
    EnsureUniqueNTupleNames(primaryNTuple, auxNTuples);
 
    std::unique_ptr<RNTupleJoinProcessor> processor;
-   if (models.size() > 0) {
+   if (!models.empty()) {
       processor = std::unique_ptr<RNTupleJoinProcessor>(
          new RNTupleJoinProcessor(primaryNTuple, processorName, std::move(models[0])));
    } else {
@@ -146,7 +146,7 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(const RNTupleOpenSpec &primaryN
    }
 
    for (unsigned i = 0; i < auxNTuples.size(); ++i) {
-      if (models.size() > 0)
+      if (!models.empty())
          processor->AddAuxiliary(auxNTuples[i], joinFields, std::move(models[i + 1]));
       else
          processor->AddAuxiliary(auxNTuples[i], joinFields);
@@ -470,7 +470,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpe
    fEntry.swap(newEntry);
 
    // If no join fields have been specified, an aligned join is assumed and an join table won't be created.
-   if (joinFields.size() > 0)
+   if (!joinFields.empty())
       fJoinTables.emplace_back(Internal::RNTupleJoinTable::Create(joinFields));
 
    fAuxiliaryPageSources.emplace_back(std::move(pageSource));
