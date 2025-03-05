@@ -797,7 +797,7 @@ TString TObject::SavePrimitiveArray(std::ostream &out, const char *prefix, Int_t
       for (Int_t i = 0; i < len-1; i++) {
          out << arr[i] << ",";
          if (i && (i % 16 == 0))
-            out << std::endl << "   ";
+            out << "\n   ";
          else
             out << " ";
       }
