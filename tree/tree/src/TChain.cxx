@@ -2524,7 +2524,7 @@ void TChain::ResetBranchAddresses()
    if (fTree) {
       fTree->ResetBranchAddresses();
    }
-   for (auto *frEl: TRangeDynCast<TFriendElement>(fFriends)) {
+   for (auto *frEl : TRangeDynCast<TFriendElement>(fFriends)) {
       auto *frTree = frEl->GetTree();
       if (frTree) {
          frTree->ResetBranchAddresses();
