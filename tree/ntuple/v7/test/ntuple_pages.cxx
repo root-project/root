@@ -43,8 +43,8 @@ TEST(Pages, Pool)
          EXPECT_FALSE(pageRef.Get().IsNull());
          EXPECT_EQ(50U, pageRef.Get().GetGlobalRangeFirst());
          EXPECT_EQ(59U, pageRef.Get().GetGlobalRangeLast());
-         EXPECT_EQ(10U, pageRef.Get().GetClusterRangeFirst());
-         EXPECT_EQ(19U, pageRef.Get().GetClusterRangeLast());
+         EXPECT_EQ(10U, pageRef.Get().GetLocalRangeFirst());
+         EXPECT_EQ(19U, pageRef.Get().GetLocalRangeLast());
 
          auto pageRef2 =
             pool.GetPage(RPagePool::RKey{1, std::type_index(typeid(void))}, ROOT::RNTupleLocalIndex(0, 15));

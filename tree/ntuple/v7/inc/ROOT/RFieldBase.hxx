@@ -825,7 +825,7 @@ public:
    }
 
    /// Overload to read all elements in the given cluster range.
-   void *ReadBulk(RNTupleClusterRange range) { return ReadBulk(*range.begin(), nullptr, range.size()); }
+   void *ReadBulk(RNTupleLocalRange range) { return ReadBulk(*range.begin(), nullptr, range.size()); }
 };
 
 namespace Internal {

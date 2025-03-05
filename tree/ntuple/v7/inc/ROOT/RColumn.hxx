@@ -176,7 +176,7 @@ public:
       }
       const auto elemSize = fElement->GetSize();
       void *from = static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) +
-                   (localIndex.GetIndexInCluster() - fReadPageRef.Get().GetClusterRangeFirst()) * elemSize;
+                   (localIndex.GetIndexInCluster() - fReadPageRef.Get().GetLocalRangeFirst()) * elemSize;
       std::memcpy(to, from, elemSize);
    }
 
@@ -211,7 +211,7 @@ public:
          if (!fReadPageRef.Get().Contains(localIndex)) {
             MapPage(localIndex);
          }
-         ROOT::NTupleSize_t idxInPage = localIndex.GetIndexInCluster() - fReadPageRef.Get().GetClusterRangeFirst();
+         ROOT::NTupleSize_t idxInPage = localIndex.GetIndexInCluster() - fReadPageRef.Get().GetLocalRangeFirst();
 
          const void *from = static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) + idxInPage * elemSize;
          const ROOT::NTupleSize_t nBatch = std::min(count, fReadPageRef.Get().GetNElements() - idxInPage);
@@ -257,9 +257,9 @@ public:
          MapPage(localIndex);
       }
       // +1 to go from 0-based indexing to 1-based number of items
-      nItems = fReadPageRef.Get().GetClusterRangeLast() - localIndex.GetIndexInCluster() + 1;
+      nItems = fReadPageRef.Get().GetLocalRangeLast() - localIndex.GetIndexInCluster() + 1;
       return reinterpret_cast<CppT *>(static_cast<unsigned char *>(fReadPageRef.Get().GetBuffer()) +
-                                      (localIndex.GetIndexInCluster() - fReadPageRef.Get().GetClusterRangeFirst()) *
+                                      (localIndex.GetIndexInCluster() - fReadPageRef.Get().GetLocalRangeFirst()) *
                                          sizeof(CppT));
    }
 
