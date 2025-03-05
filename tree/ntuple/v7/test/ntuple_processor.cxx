@@ -165,11 +165,11 @@ TEST_F(RNTupleProcessorTest, ChainedChain)
 
 TEST_F(RNTupleProcessorTest, ChainedJoin)
 {
-   std::vector<RNTupleOpenSpec> ntuples{{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}};
-
    std::vector<std::unique_ptr<RNTupleProcessor>> innerProcs;
-   innerProcs.push_back(RNTupleProcessor::CreateJoin(ntuples, {}));
-   innerProcs.push_back(RNTupleProcessor::CreateJoin(ntuples, {"i"}));
+   innerProcs.push_back(
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[1], fFileNames[1]}}, {}));
+   innerProcs.push_back(
+      RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[1], fFileNames[1]}}, {"i"}));
 
    auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
 
