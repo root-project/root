@@ -27,6 +27,8 @@
 
 #include "Minuit2/MPIProcess.h"
 
+#include "./MnFcnCaller.h"
+
 namespace ROOT {
 
 namespace Minuit2 {
@@ -41,25 +43,6 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    return (*this)(par, gra);
 }
 
-// comment it, because it was added
-FunctionGradient Numerical2PGradientCalculator::operator()(std::span<const double> params) const
-{
-   // calculate gradient from an std;:vector of paramteters
-
-   int npar = params.size();
-
-   MnAlgebraicVector par(npar);
-   for (int i = 0; i < npar; ++i) {
-      par(i) = params[i];
-   }
-
-   double fval = Fcn()(par);
-
-   MinimumParameters minpars = MinimumParameters(par, fval);
-
-   return (*this)(minpars);
-}
-
 FunctionGradient Numerical2PGradientCalculator::
 operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
 {
@@ -71,6 +54,8 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
    //    std::cout<<"position: "<<par.Vec()<<std::endl;
    MnPrint print("Numerical2PGradientCalculator");
 
+   MnFcnCaller mfcnCaller{fFcn};
+
    assert(par.IsValid());
 
    double fcnmin = par.Fval();
@@ -81,7 +66,7 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
 
    //print.Trace("Assumed precision eps", eps, "eps2", eps2);
 
-   double dfmin = 8. * eps2 * (std::fabs(fcnmin) + Fcn().Up());
+   double dfmin = 8. * eps2 * (std::fabs(fcnmin) + fFcn.Up());
    double vrysml = 8. * eps * eps;
    //   double vrysml = std::max(1.e-4, eps2);
    //    std::cout<<"dfmin= "<<dfmin<<std::endl;
@@ -156,13 +141,13 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
          stepb4 = step;
          //       MnAlgebraicVector pstep(n);
          //       pstep(i) = step;
-         //       double fs1 = Fcn()(pstate + pstep);
-         //       double fs2 = Fcn()(pstate - pstep);
+         //       double fs1 = mfcnCaller(pstate + pstep);
+         //       double fs2 = mfcnCaller(pstate - pstep);
 
          x(i) = xtf + step;
-         double fs1 = Fcn()(x);
+         double fs1 = mfcnCaller(x);
          x(i) = xtf - step;
-         double fs2 = Fcn()(x);
+         double fs2 = mfcnCaller(x);
          x(i) = xtf;
 
          double grdb4 = grd(i);

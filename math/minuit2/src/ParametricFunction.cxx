@@ -14,6 +14,7 @@
 #include "Minuit2/Numerical2PGradientCalculator.h"
 #include "Minuit2/FunctionGradient.h"
 #include "Minuit2/MnVectorTransform.h"
+#include "Minuit2/MinimumParameters.h"
 
 namespace ROOT {
 
@@ -35,7 +36,8 @@ std::vector<double> ParametricFunction::GetGradient(std::vector<double> const &x
    MnUserParameterState st(x, err);
 
    Numerical2PGradientCalculator gc(mfcn, st.Trafo(), strategy);
-   FunctionGradient g = gc(x);
+   MnAlgebraicVector xVec{x};
+   FunctionGradient g = gc(MinimumParameters{xVec, mfcn(xVec)});
    const MnAlgebraicVector &grad = g.Vec();
    assert(grad.size() == x.size());
    MnVectorTransform vt;
