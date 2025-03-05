@@ -140,16 +140,10 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(const RNTupleOpenSpec &primaryN
    std::unique_ptr<RNTupleJoinProcessor> processor;
    if (!models.empty()) {
       processor = std::unique_ptr<RNTupleJoinProcessor>(
-         new RNTupleJoinProcessor(primaryNTuple, processorName, std::move(models[0])));
+         new RNTupleJoinProcessor(primaryNTuple, auxNTuples, joinFields, processorName, std::move(models)));
    } else {
-      processor = std::unique_ptr<RNTupleJoinProcessor>(new RNTupleJoinProcessor(primaryNTuple, processorName));
-   }
-
-   for (unsigned i = 0; i < auxNTuples.size(); ++i) {
-      if (!models.empty())
-         processor->AddAuxiliary(auxNTuples[i], joinFields, std::move(models[i + 1]));
-      else
-         processor->AddAuxiliary(auxNTuples[i], joinFields);
+      processor = std::unique_ptr<RNTupleJoinProcessor>(
+         new RNTupleJoinProcessor(primaryNTuple, auxNTuples, joinFields, processorName));
    }
 
    processor->SetJoinFieldTokens(joinFields);
@@ -342,8 +336,10 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NT
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpenSpec &mainNTuple,
+                                                               const std::vector<RNTupleOpenSpec> &auxNTuples,
+                                                               const std::vector<std::string> &joinFields,
                                                                std::string_view processorName,
-                                                               std::unique_ptr<RNTupleModel> model)
+                                                               std::vector<std::unique_ptr<RNTupleModel>> models)
    : RNTupleProcessor(processorName, nullptr)
 {
    fNTuples.emplace_back(mainNTuple);
@@ -356,10 +352,11 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpen
 
    fNEntries = fPageSource->GetNEntries();
 
-   if (!model)
-      model = fPageSource->GetSharedDescriptorGuard()->CreateModel();
+   if (models.empty())
+      fModel = fPageSource->GetSharedDescriptorGuard()->CreateModel();
+   else
+      fModel = models[0]->Clone();
 
-   fModel = model->Clone();
    fModel->Freeze();
    fEntry = fModel->CreateEntry();
 
@@ -367,17 +364,24 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpen
       auto &field = value.GetField();
       const auto &fieldName = field.GetQualifiedFieldName();
 
-      // If the model has a default entry, use the value pointers from the default entry of the model that was passed to
-      // this constructor. This way, the pointers returned by RNTupleModel::MakeField can be used in the processor loop
-      // to access the corresponding field values.
-      if (!fModel->IsBare()) {
-         auto valuePtr = model->GetDefaultEntry().GetPtr<void>(fieldName);
+      // If the model provided by the user has a default entry, use the value pointers from the default entry of the
+      // model that was passed to this constructor. This way, the pointers returned by RNTupleModel::MakeField can be
+      // used in the processor loop to access the corresponding field values.
+      if (!models.empty() && !models[0]->IsBare()) {
+         auto valuePtr = models[0]->GetDefaultEntry().GetPtr<void>(fieldName);
          fEntry->BindValue(fieldName, valuePtr);
       }
 
       const auto &[fieldContext, _] =
          fFieldContexts.try_emplace(fieldName, field.Clone(fieldName), fEntry->GetToken(fieldName));
       ConnectField(fieldContext->second, *fPageSource, *fEntry);
+   }
+
+   for (unsigned i = 0; i < auxNTuples.size(); ++i) {
+      if (models.empty())
+         AddAuxiliary(auxNTuples[i], joinFields);
+      else
+         AddAuxiliary(auxNTuples[i], joinFields, std::move(models[i + 1]));
    }
 }
 
