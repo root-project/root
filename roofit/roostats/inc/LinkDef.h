@@ -17,12 +17,6 @@
 #pragma link C++ namespace RooStats;
 #pragma link C++ namespace RooStats::NumberCountingUtils;
 
-// for auto-loading namespaces
-#ifdef USE_FOR_AUTLOADING
-#pragma link C++ class RooStats::NumberCountingUtils;
-#pragma link C++ class RooStats;
-#endif
-
 #pragma link C++ class RooStats::SPlot+;
 #pragma link C++ class RooStats::NumberCountingPdfFactory+;
 
