@@ -513,6 +513,7 @@ void RecursiveGlob(TList &out, const std::string &glob)
 std::vector<std::string> ExpandGlob(const std::string &glob)
 {
    TList l;
+   l.SetOwner();
    RecursiveGlob(l, glob);
 
    // Sort the files in alphanumeric order
