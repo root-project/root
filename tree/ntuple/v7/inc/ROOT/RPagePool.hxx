@@ -107,7 +107,7 @@ private:
       // Constructor used to store a page in fLookupByKey
       explicit RPagePosition(const RPage &page)
          : fGlobalFirstElement(page.GetGlobalRangeFirst()),
-           fClusterFirstElement({page.GetClusterInfo().GetId(), page.GetClusterRangeFirst()})
+           fClusterFirstElement({page.GetClusterInfo().GetId(), page.GetLocalRangeFirst()})
       {
       }
 

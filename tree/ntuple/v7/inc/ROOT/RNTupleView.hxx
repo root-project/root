@@ -308,22 +308,22 @@ public:
    RNTupleCollectionView &operator=(RNTupleCollectionView &&other) = default;
    ~RNTupleCollectionView() = default;
 
-   RNTupleClusterRange GetCollectionRange(ROOT::NTupleSize_t globalIndex)
+   RNTupleLocalRange GetCollectionRange(ROOT::NTupleSize_t globalIndex)
    {
       ROOT::NTupleSize_t size;
       RNTupleLocalIndex collectionStart;
       fField.GetCollectionInfo(globalIndex, &collectionStart, &size);
-      return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndexInCluster(),
-                                 collectionStart.GetIndexInCluster() + size);
+      return RNTupleLocalRange(collectionStart.GetClusterId(), collectionStart.GetIndexInCluster(),
+                               collectionStart.GetIndexInCluster() + size);
    }
 
-   RNTupleClusterRange GetCollectionRange(RNTupleLocalIndex localIndex)
+   RNTupleLocalRange GetCollectionRange(RNTupleLocalIndex localIndex)
    {
       ROOT::NTupleSize_t size;
       RNTupleLocalIndex collectionStart;
       fField.GetCollectionInfo(localIndex, &collectionStart, &size);
-      return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndexInCluster(),
-                                 collectionStart.GetIndexInCluster() + size);
+      return RNTupleLocalRange(collectionStart.GetClusterId(), collectionStart.GetIndexInCluster(),
+                               collectionStart.GetIndexInCluster() + size);
    }
 
    /// Raises an exception if there is no field with the given name.
