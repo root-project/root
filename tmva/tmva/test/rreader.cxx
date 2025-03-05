@@ -288,8 +288,14 @@ TEST(RReader, MulticlassComputeDataFrame)
 TEST(RReader, UndefinedVariables)
 {
    std::vector<double> evData = {1, 2};
+   testing::internal::CaptureStderr();
+   std::string err:
    TMVA::DataLoader dl;
    dl.AddEvent("class1", TMVA::Types::kTraining, evData, 1.0);
+   err = testing::internal::GetCapturedStderr();
+   EXPECT_TRUE(err.empty()) << err;
    TMVA::DataLoader d("dataset");
    d.AddSignalTrainingEvent({0.0}, 1.0);
+   err = testing::internal::GetCapturedStderr();
+   EXPECT_TRUE(err.empty()) << err;
 }
