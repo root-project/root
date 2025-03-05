@@ -40,6 +40,10 @@ This allows us to revert changes when needed, without affecting anything else.
 > During a code review, it may be useful to make smaller commits to track intermediate changes, and rebase after the PR
 > is approved to ensure the above points are met and to reduce clutter.
 
+> [!TIP]
+> Enable the CMake build option `dev=ON` to enable extra checks that are normally off. Most notably, this will turn
+> compiler warnings into errors, preventing you from accidentally push code that causes warnings.
+
 ### Your Commit Message
 
 The commit summary (i.e. the first line of the commit message) should be preceded by the a tag indicating the scope of
