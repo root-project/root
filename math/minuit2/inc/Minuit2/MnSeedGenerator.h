@@ -21,19 +21,12 @@ namespace Minuit2 {
  */
 
 class MnSeedGenerator : public MinimumSeedGenerator {
-
 public:
-   MnSeedGenerator() {}
-
-   ~MnSeedGenerator() override {}
-
-   MinimumSeed
-   operator()(const MnFcn &, const GradientCalculator &, const MnUserParameterState &, const MnStrategy &) const override;
+   MinimumSeed operator()(const MnFcn &, const GradientCalculator &, const MnUserParameterState &,
+                          const MnStrategy &) const override;
 
    MinimumSeed operator()(const MnFcn &, const AnalyticalGradientCalculator &, const MnUserParameterState &,
-                                  const MnStrategy &) const override;
-
-private:
+                          const MnStrategy &) const override;
 };
 
 } // namespace Minuit2

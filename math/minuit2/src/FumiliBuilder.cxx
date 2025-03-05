@@ -10,7 +10,6 @@
 #include "Minuit2/FumiliBuilder.h"
 #include "Minuit2/FumiliStandardMaximumLikelihoodFCN.h"
 #include "Minuit2/GradientCalculator.h"
-//#include "Minuit2/Numerical2PGradientCalculator.h"
 #include "Minuit2/MinimumState.h"
 #include "Minuit2/MinimumError.h"
 #include "Minuit2/FunctionGradient.h"
@@ -20,7 +19,6 @@
 #include "Minuit2/MnFcn.h"
 #include "Minuit2/MnMachinePrecision.h"
 #include "Minuit2/MnPosDef.h"
-#include "Minuit2/MnParabolaPoint.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnPrint.h"
@@ -233,7 +231,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
          }
       }
 
-      //     MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
+      //     auto pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
 
       //     if(std::fabs(pp.Y() - s0.Fval()) < prec.Eps()) {
       //       std::cout<<"FumiliBuilder: no improvement"<<std::endl;
@@ -252,7 +250,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
       // in that case do a line search
       if (p.Fval() >= s0.Fval()) {
          MnLineSearch lsearch;
-         MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
+         auto pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
 
          if (std::fabs(pp.Y() - s0.Fval()) < prec.Eps()) {
             // std::cout<<"FumiliBuilder: no improvement"<<std::endl;

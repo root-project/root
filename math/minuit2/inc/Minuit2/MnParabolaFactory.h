@@ -10,25 +10,18 @@
 #ifndef ROOT_Minuit2_MnParabolaFactory
 #define ROOT_Minuit2_MnParabolaFactory
 
+#include "Minuit2/MnParabola.h"
+#include "Minuit2/MnPoint.h"
+
 namespace ROOT {
 
 namespace Minuit2 {
 
-class MnParabola;
-class MnParabolaPoint;
-
 class MnParabolaFactory {
-
 public:
-   MnParabolaFactory() {}
+   MnParabola operator()(const MnPoint &, const MnPoint &, const MnPoint &) const;
 
-   ~MnParabolaFactory() {}
-
-   MnParabola operator()(const MnParabolaPoint &, const MnParabolaPoint &, const MnParabolaPoint &) const;
-
-   MnParabola operator()(const MnParabolaPoint &, double, const MnParabolaPoint &) const;
-
-private:
+   MnParabola operator()(const MnPoint &, double, const MnPoint &) const;
 };
 
 } // namespace Minuit2

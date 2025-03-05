@@ -39,15 +39,12 @@ public:
    {
    }
 
-   ~Numerical2PGradientCalculator() override {}
-
    FunctionGradient operator()(const MinimumParameters &) const override;
 
    virtual FunctionGradient operator()(std::span<const double> params) const;
 
    FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;
 
-   const MnFcn &Fcn() const { return fFcn; }
    const MnUserTransformation &Trafo() const { return fTransformation; }
    const MnMachinePrecision &Precision() const;
    const MnStrategy &Strategy() const { return fStrategy; }

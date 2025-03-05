@@ -59,30 +59,27 @@ set(MINUIT2_HEADERS
     MnLineSearch.h
     MnMachinePrecision.h
     MnMatrix.h
-    MnMatrix.h
     MnMatrixfwd.h
     MnMigrad.h
     MnMinimize.h
     MnMinos.h
     MnParabola.h
     MnParabolaFactory.h
-    MnParabolaPoint.h
     MnParameterScan.h
     MnPlot.h
+    MnPoint.h
     MnPosDef.h
     MnPrint.h
     MnScan.h
     MnSeedGenerator.h
     MnSimplex.h
     MnStrategy.h
-    MnTiny.h
     MnTraceObject.h
     MnUserCovariance.h
     MnUserFcn.h
     MnUserParameterState.h
     MnUserParameters.h
     MnUserTransformation.h
-    MnVectorTransform.h
     ModularFunctionMinimizer.h
     NegativeG2LineSearch.h
     Numerical2PGradientCalculator.h
@@ -128,6 +125,7 @@ set(MINUIT2_SOURCES
     MnGlobalCorrelationCoeff.cxx
     MnHesse.cxx
     MnLineSearch.cxx
+    MnMatrix.cxx
     MnMachinePrecision.cxx
     MnMinos.cxx
     MnParabolaFactory.cxx
@@ -139,7 +137,6 @@ set(MINUIT2_SOURCES
     MnScan.cxx
     MnSeedGenerator.cxx
     MnStrategy.cxx
-    MnTiny.cxx
     MnTraceObject.cxx
     MnUserFcn.cxx
     MnUserParameterState.cxx
