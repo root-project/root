@@ -1240,7 +1240,7 @@ void TGraphAsymmErrors::Print(Option_t *) const
 
 void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   auto xname  = SavePrimitiveArray(out, "grae_fx", fNpoints, fX);
+   auto xname  = SavePrimitiveArray(out, "grae_fx", fNpoints, fX, kTRUE);
    auto yname  = SavePrimitiveArray(out, "grae_fy", fNpoints, fY);
    auto exlname = SavePrimitiveArray(out, "grae_fexl", fNpoints, fEXlow);
    auto exhname = SavePrimitiveArray(out, "grae_fexh", fNpoints, fEXhigh);
@@ -1250,7 +1250,7 @@ void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
    SavePrimitiveConstructor(
       out, Class(), "grae",
       TString::Format("%d, %s, %s, %s, %s, %s, %s", fNpoints,
-         xname.Data(), yname.Data(), exlname.Data(), exhname.Data(), eylname.Data(), eyhname.Data()));
+         xname.Data(), yname.Data(), exlname.Data(), exhname.Data(), eylname.Data(), eyhname.Data()), kFALSE);
 
    SaveHistogramAndFunctions(out, "grae", option);
 }
