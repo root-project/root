@@ -76,12 +76,12 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleClusterRange
+\class ROOT::Experimental::RNTupleLocalRange
 \ingroup NTuple
 \brief Used to loop over entries of collections in a single cluster
 */
 // clang-format on
-class RNTupleClusterRange {
+class RNTupleLocalRange {
 private:
    const ROOT::DescriptorId_t fClusterId;
    const ROOT::NTupleSize_t fStart;
@@ -121,7 +121,7 @@ public:
       bool operator!=(const iterator &rh) const { return fLocalIndex != rh.fLocalIndex; }
    };
 
-   RNTupleClusterRange(ROOT::DescriptorId_t clusterId, ROOT::NTupleSize_t start, ROOT::NTupleSize_t end)
+   RNTupleLocalRange(ROOT::DescriptorId_t clusterId, ROOT::NTupleSize_t start, ROOT::NTupleSize_t end)
       : fClusterId(clusterId), fStart(start), fEnd(end)
    {
    }
