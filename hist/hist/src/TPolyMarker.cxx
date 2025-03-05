@@ -304,14 +304,14 @@ void TPolyMarker::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TString args;
 
    if (Size() > 0) {
-      TString arrxname = SavePrimitiveArray(out, "pmarker", Size(), fX);
+      TString arrxname = SavePrimitiveArray(out, "pmarker", Size(), fX, kTRUE);
       TString arryname = SavePrimitiveArray(out, "pmarker", Size(), fY);
       args.Form("%d, %s, %s, \"", Size(), arrxname.Data(), arryname.Data());
    } else
       args = "0, \"";
    args.Append(TString(fOption).ReplaceSpecialCppChars() + "\"");
 
-   SavePrimitiveConstructor(out, Class(), "pmarker", args);
+   SavePrimitiveConstructor(out, Class(), "pmarker", args, Size() == 0);
 
    SaveMarkerAttributes(out,"pmarker",1,1,1);
 
