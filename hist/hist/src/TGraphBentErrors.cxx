@@ -550,7 +550,7 @@ void TGraphBentErrors::Scale(Double_t c1, Option_t *option)
 
 void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   auto xname  = SavePrimitiveArray(out, "grbe_fx", fNpoints, fX);
+   auto xname  = SavePrimitiveArray(out, "grbe_fx", fNpoints, fX, kTRUE);
    auto yname  = SavePrimitiveArray(out, "grbe_fy", fNpoints, fY);
    auto exlname = SavePrimitiveArray(out, "grbe_fexl", fNpoints, fEXlow);
    auto exhname = SavePrimitiveArray(out, "grbe_fexh", fNpoints, fEXhigh);
@@ -565,7 +565,7 @@ void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
       out, Class(), "grbe",
       TString::Format("%d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s", fNpoints,
          xname.Data(), yname.Data(), exlname.Data(), exhname.Data(), eylname.Data(), eyhname.Data(),
-         exldname.Data(), exhdname.Data(), eyldname.Data(), eyhdname.Data()));
+         exldname.Data(), exhdname.Data(), eyldname.Data(), eyhdname.Data()), kFALSE);
 
    SaveHistogramAndFunctions(out, "grbe", option);
 }
