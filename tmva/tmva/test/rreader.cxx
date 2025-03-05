@@ -282,3 +282,14 @@ TEST(RReader, MulticlassComputeDataFrame)
    auto y = df2.Take<std::vector<float>>("y");
    EXPECT_EQ(y->size(), *c);
 }
+
+// https://its.cern.ch/jira/browse/ROOT-9833
+// https://its.cern.ch/jira/browse/ROOT-10018
+TEST(RReader, UndefinedVariables)
+{
+   std::vector<double> evData = {1, 2};
+   TMVA::DataLoader dl;
+   dl.AddEvent("class1", TMVA::Types::kTraining, evData, 1.0);
+   TMVA::DataLoader d("dataset");
+   d.AddSignalTrainingEvent({0.0}, 1.0);
+}
