@@ -2557,36 +2557,29 @@ Bool_t TColor::SaveColor(std::ostream &out, Int_t ci)
    if (ci <= 228)
       return kFALSE;
 
-   char quote = '"';
-
    TColor *c = gROOT->GetColor(ci);
    if (!c)
       return kFALSE;
 
-   if (gROOT->ClassSaved(TColor::Class())) {
-      out << std::endl;
-   } else {
-      out << std::endl;
-      out << "   Int_t ci;      // for color index setting" << std::endl;
-      out << "   TColor *color; // for color definition with alpha" << std::endl;
-   }
+   if (gROOT->ClassSaved(TColor::Class()))
+      out << "   ci = ";
+   else
+      out << "   Int_t ci = ";
 
    Float_t r, g, b, a;
 
    c->GetRGB(r, g, b);
    a = c->GetAlpha();
+   Int_t ri = (Int_t)(255 * r), gi = (Int_t)(255 * g), bi = (Int_t)(255 * b), ai = (Int_t)(255 * a);
 
-   if (a < 1.) {
-      out<<"   ci = "<<ci<<";"<<std::endl;
-      out<<"   color = new TColor(ci, "<<r<<", "<<g<<", "<<b<<", "
-      <<"\" \", "<<a<<");"<<std::endl;
-   } else {
-      Int_t ri = (Int_t)(255*r),
-            gi = (Int_t)(255*g),
-            bi = (Int_t)(255*b);
-      TString cname = TString::Format("#%02x%02x%02x", ri, gi, bi);
-      out<<"   ci = TColor::GetColor("<<quote<<cname.Data()<<quote<<");"<<std::endl;
-   }
+   TString cname;
+
+   if (ai < 255)
+      cname.Form("#%02x%02x%02x%02x", ri, gi, bi, ai);
+   else
+      cname.Form("#%02x%02x%02x", ri, gi, bi);
+
+   out << "TColor::GetColor(\"" << cname << "\");" << std::endl;
 
    return kTRUE;
 }
