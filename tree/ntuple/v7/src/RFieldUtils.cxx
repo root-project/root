@@ -315,8 +315,8 @@ std::string ROOT::Experimental::Internal::GetNormalizedUnresolvedTypeName(const 
             const auto expandedTemplateArgs = TokenizeTypeList(expandedArgList);
             R__ASSERT(expandedTemplateArgs.size() >= templateArgs.size());
 
-            for (std::size_t i = templateArgs.size(); i < expandedTemplateArgs.size(); ++i) {
-               normName += GetNormalizedTemplateArg(expandedTemplateArgs[i], GetNormalizedUnresolvedTypeName) + ",";
+            for (std::size_t j = templateArgs.size(); j < expandedTemplateArgs.size(); ++j) {
+               normName += GetNormalizedTemplateArg(expandedTemplateArgs[j], GetNormalizedUnresolvedTypeName) + ",";
             }
          }
       }
