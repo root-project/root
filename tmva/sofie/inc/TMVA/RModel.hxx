@@ -170,7 +170,6 @@ public:
 
    void PrintIntermediateTensors();
    void PrintOutputTensors();
-   void OutputGenerated(std::string filename = "", bool append = false);
    std::vector<std::string> GetOutputTensorNames() { return fOutputTensorNames; }
    void SetFilename(std::string filename) { fName = filename; }
 
