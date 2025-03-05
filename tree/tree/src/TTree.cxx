@@ -8129,7 +8129,7 @@ void TTree::ResetAfterMerge(TFileMergeInfo *info)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Tell a branch to set their address to zero.
+/// Tell a branch to set its address to zero.
 ///
 /// @note If the branch owns any objects, they are deleted.
 
