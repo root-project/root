@@ -17,7 +17,7 @@ sap.ui.define(['sap/ui/core/Component',
    return Controller.extend("rootui5.eve7.controller.Main", {
       onInit: function () {
          this.mgr = new EveManager();
-         this.initClientLog();
+         // this.initClientLog();
 
          let conn_handle = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
          this.mgr.UseConnection(conn_handle);
@@ -65,7 +65,7 @@ sap.ui.define(['sap/ui/core/Component',
          };
 
          consoleObj.stdwarn = console.warn.bind(console);
-         console.warning = function ()
+         console.warn = function ()
          {
             consoleObj.data.push({ type: "Warning", title: Array.from(arguments), counter: ++consoleObj.cntWarn });
             consoleObj.stdwarn.apply(console, arguments);
@@ -285,7 +285,6 @@ sap.ui.define(['sap/ui/core/Component',
             for (let i = 0; i < siList.length; ++i)
             {
                let scene = this.mgr.GetElement(siList[i].fSceneId);
-               console.log("going to destroy ", scene);
                this.mgr.recursiveDestroy(scene);
             }
 

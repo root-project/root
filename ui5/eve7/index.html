@@ -37,14 +37,23 @@
       })).then(handle => {
          // sap.ui.loader.config({ paths: { rootui5: "../rootui5/" } });  // used for offline
 
+         const urlParams = new URLSearchParams(window.location.search);
+
+         let mode_mm = urlParams.get('Single');
+         let manifestPath = true;
+         if (mode_mm && mode_mm.length >= 0)
+             manifestPath = "rootui5sys/eve7/manifest-mini.json";
+
+         
          sap.ui.require(["sap/ui/core/ComponentContainer"], ComponentContainer => {
             new ComponentContainer({
                name: "rootui5.eve7",
-               manifest: true,
+               manifest: manifestPath,
                async: true,
                settings: {
                   componentData: {
-                     conn_handle: handle
+                     conn_handle: handle,
+                     sgv_undock: mode_mm
                   }
                },
                height: "100%"

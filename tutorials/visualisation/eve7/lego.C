@@ -13,7 +13,7 @@
 
 namespace REX = ROOT::Experimental;
 
-REX::REvePointSet *createPointSet(int npoints = 2, float s = 2, int color = 28)
+REX::REvePointSet *createPointSet(int npoints = 200, float s = 2, int color = 28)
 {
    TRandom &r = *gRandom;
 
@@ -43,28 +43,8 @@ void lego()
    scene->AddElement(ps);
 
    {
-      // gROOT->SetBatch();
-
-      // TPad *p = new TPad("LegoPad", "Lego Pad Tit", 0, 0, 1, 1);
-      TPad *p = new TCanvas("LegoPad", "Lego Pad Tit", 800, 400);
+      TPad *p = new TCanvas("LegoPad", "Lego Pad", 800, 400);
       p->SetMargin(0, 0, 0, 0);
-
-      // *** Simple TH2
-      /*
-      TH2F* h = new TH2F("Booboo","exampul",128,-5,5,64,-2.5,2.5);
-      TRandom r;
-      for(int i=0;i<1000000;++i) {
-         h->Fill(r.Gaus() - 2, r.Gaus());
-         h->Fill(r.Gaus() + 2, r.Gaus());
-      }
-      for(int i=0;i<6000;++i) {
-         h->Fill(0.1*r.Gaus() - 2, 0.1*r.Gaus());
-         h->Fill(0.1*r.Gaus() + 2, 0.1*r.Gaus());
-      }
-      // h->Draw("LEGO2");
-      p->Add(h, "LEGO2");
-      p->Modified(kTRUE);
-      */
 
       // *** Load std CMS calo demo
       const char *histFile = "http://root.cern/files/cms_calo_hist.root";
@@ -73,13 +53,11 @@ void lego()
       auto ecalHist = (TH2F *)hf->Get("ecalLego");
       auto hcalHist = (TH2F *)hf->Get("hcalLego");
 
-      THStack *s = new THStack("LegoStack", ""); // "ECal undt HCal");
+      THStack *s = new THStack("LegoStack", ""); // "ECal and HCal";
       ecalHist->SetFillColor(kRed);
       ecalHist->GetXaxis()->SetLabelSize(1);
-      // ecalHist->GetXaxis()->SetTitle(reinterpret_cast<const char *>(u8"\u03B7"));
       ecalHist->GetXaxis()->SetTitle("#eta");
       ecalHist->GetYaxis()->SetLabelSize(1);
-      // ecalHist->GetYaxis()->SetTitle(reinterpret_cast<const char *>(u8"\u03C6"));
       ecalHist->GetYaxis()->SetTitle("#varphi");
       ecalHist->GetZaxis()->SetLabelSize(1);
       s->Add(ecalHist);

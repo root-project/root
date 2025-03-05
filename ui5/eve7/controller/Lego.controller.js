@@ -41,8 +41,6 @@ sap.ui.define([
 
             let scene = this.mgr.GetElement(sceneId);
             let chld = scene.childs[0];
-            let element = this.byId("legoX");
-            element.setHtmlText("Pointset infected by TCanvas / Lego Stack");
 
             this.eve_lego = chld;
             this.canvas_json = EVE.JSR.parse(atob(chld.fTitle));
