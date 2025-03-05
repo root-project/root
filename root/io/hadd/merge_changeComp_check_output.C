@@ -23,7 +23,7 @@ int merge_changeComp_check_output(int expectedCompressionRNT, int expectedCompre
       }
    }
 
-   Internal::RPageSourceFile source("ntpl", fnameOut, RNTupleReadOptions());
+   Internal::RPageSourceFile source("ntpl", fnameOut, ROOT::RNTupleReadOptions());
    source.Attach();
 
    Internal::RClusterPool pool{source};
@@ -33,7 +33,7 @@ int merge_changeComp_check_output(int expectedCompressionRNT, int expectedCompre
    auto clusterIter = desc->GetClusterIterable();
    for (const auto &clusterDesc : clusterIter) {
       // check advertised compression
-      int advertisedCompression = clusterDesc.GetColumnRange(0).fCompressionSettings.value();
+      int advertisedCompression = clusterDesc.GetColumnRange(0).GetCompressionSettings().value();
       if (advertisedCompression != expectedCompressionRNT) {
          std::cerr << "Expected advertised compression to be " << expectedCompressionRNT << " but it is "
                    << advertisedCompression << "\n";
