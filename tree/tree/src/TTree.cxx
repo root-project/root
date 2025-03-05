@@ -3149,7 +3149,7 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
          // -2 is accepted, it happens when one or more trees exists but have no entries,
          // i.e. serial entry 0 is too large for the whole chain
          // Other errors (-3, ...) are not accepted
-         Error("CloneTree", "returning nullptr since LoadTree failed with code %d.", res);
+         Error("CloneTree", "returning nullptr since LoadTree failed with code %lld.", res);
          return nullptr;
       }
    }

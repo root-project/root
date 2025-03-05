@@ -34,7 +34,7 @@ TEST(TChain, GetReadCacheBug)
 // https://its.cern.ch/jira/browse/ROOT-7855
 TEST(TChain, CloneTreeZeroEntries)
 {
-   auto filename = "file7855.root"
+   auto filename = "file7855.root";
    {
       TFile f(filename, "RECREATE");
       TTree t("tree", "tree");
