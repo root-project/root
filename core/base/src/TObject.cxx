@@ -771,7 +771,7 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
 void TObject::SavePrimitiveConstructor(std::ostream &out, TClass *cl, const char *variable_name, const char *constructor_agrs, Bool_t empty_line)
 {
    if (empty_line)
-      out << "   " << std::endl;
+      out << "   \n";
 
    out << "   ";
    if (!gROOT->ClassSaved(cl))
@@ -783,11 +783,14 @@ void TObject::SavePrimitiveConstructor(std::ostream &out, TClass *cl, const char
 /// Save array in the output stream "out".
 /// Create unique variable name based on prefix value
 
-TString TObject::SavePrimitiveArray(std::ostream &out, const char *prefix, Int_t len, Double_t *arr)
+TString TObject::SavePrimitiveArray(std::ostream &out, const char *prefix, Int_t len, Double_t *arr, Bool_t empty_line)
 {
    thread_local int arrid = 0;
 
    TString arrname = TString::Format("%s_darr%d", prefix, arrid++);
+
+   if (empty_line)
+      out << "   \n";
 
    out << "   Double_t " << arrname << "[" << len << "] = { ";
    if (len > 0) {
