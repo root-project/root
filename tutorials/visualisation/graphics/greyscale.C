@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_hist
+/// \ingroup tutorial_graphics
 /// \notebook
 /// \preview Create grey scale of 200x200 boxes.
 ///
