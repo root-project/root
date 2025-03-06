@@ -242,7 +242,7 @@ void TAttFill::SaveFillAttributes(std::ostream &out, const char *name, Int_t col
    if (fFillColor != coldef)
       out << "   " << name << "->SetFillColor(" << TColor::SavePrimitiveColor(fFillColor) << ");\n";
    if (fFillStyle != stydef)
-      out<<"   "<<name<<"->SetFillStyle("<<fFillStyle<<");"<<std::endl;
+      out << "   " << name << "->SetFillStyle(" << fFillStyle << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

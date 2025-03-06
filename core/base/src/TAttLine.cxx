@@ -276,12 +276,10 @@ void TAttLine::SaveLineAttributes(std::ostream &out, const char *name, Int_t col
 {
    if (fLineColor != coldef)
       out << "   " << name << "->SetLineColor(" << TColor::SavePrimitiveColor(fLineColor) << ");\n";
-   if (fLineStyle != stydef) {
-      out<<"   "<<name<<"->SetLineStyle("<<fLineStyle<<");"<<std::endl;
-   }
-   if (fLineWidth != widdef) {
-      out<<"   "<<name<<"->SetLineWidth("<<fLineWidth<<");"<<std::endl;
-   }
+   if (fLineStyle != stydef)
+      out << "   " << name << "->SetLineStyle(" << fLineStyle << ");\n";
+   if (fLineWidth != widdef)
+      out << "   " << name << "->SetLineWidth(" << fLineWidth << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
