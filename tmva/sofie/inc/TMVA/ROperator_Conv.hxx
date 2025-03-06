@@ -537,263 +537,263 @@ public:
       }
 
       std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
-   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
-         OpName = "op_" + OpName;
-
-         if (fShapeX.empty() || fShapeW.empty() || (fNB != "" && fShapeB.empty()) || fShapeY.empty()) {
-            throw
-               std::runtime_error("TMVA SOFIE Conv Op called to Generate without being initialized first");
-         }
-
-         std::stringstream out;
-         size_t bsize = fShapeX[0];
-         size_t kDepth = (fDim > 2) ?  fShapeW[2] : 1;  // kernel depth
-         size_t kHeight = (fDim > 1) ? fShapeW[fDim] : 1;  // kernel height
-         size_t kWidth = fShapeW[fDim+1]; // kernel width
-         size_t iDepth = (fDim > 2) ?  fShapeX[2] : 1;  // input depth
-         size_t iHeight = (fDim > 1) ? fShapeX[fDim] : 1; // input height
-         size_t iWidth = fShapeX[fDim+1]; // input width
-         size_t oDepth = (fDim > 2) ? fShapeY[2] : 1; // output depth
-         size_t oHeight = (fDim > 1) ? fShapeY[fDim] : 1;  // ouput height
-         size_t oWidth = fShapeY[fDim+1]; // output width
-
-         out << "\n" << SP*3 << "//----  operator Conv " << OpName << "\n";
-
-         // create first matrix with convolution kernels
-         if (fUseSession)
-            out << SP*3 << fType << " * " << OpName << "_f = fVec_" << OpName << "_f.data();\n";
-         else
-            out << SP*3 << fType << " " << OpName << "_f[" << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] << "] = {0};\n";
-
-         out << SP*3 << "auto buf_" << OpName << "_f = cl::sycl::buffer{fVec_" << OpName << "_f.data(), cl::sycl::range{fVec_" << OpName << "_f.size()}};\n";
-
-         // vectorize the (dilated)convolution kernels into a matrix
-         // no need to transpose the matrix
-         // to fix for 1d and 3d
-
-         size_t id = (fDim > 2) ? fDim-3 : 2;
-         size_t ih = (fDim > 1) ? fDim-2 : 1;
-         size_t iw = fDim-1;
-
-         size_t wstrideDil = fAttrDilations[iw];
-         size_t hstride = kWidth;
-         size_t hstrideDil = fAttrDilations[ih] * fAttrKernelShape[iw];  // stride dilated in the height
-         size_t dstride = kHeight * kWidth;
-         size_t dstrideDil = fAttrDilations[id] * fAttrKernelShape[ih] * fAttrKernelShape[iw];
-         size_t icstride = kHeight * kWidth * kDepth;
-         size_t icstrideDil = fAttrKernelShape[id] * fAttrKernelShape[ih] * fAttrKernelShape[iw];
-         size_t ocstride = fShapeW[1] * icstride;
-         size_t ocstrideDil = fShapeW[1] * icstrideDil;
-
-         size_t num_threads = fShapeW[0] * fShapeW[1];
-         if (fDim > 2) 
-            num_threads *= kDepth;
-         if (fDim > 1)
-            num_threads *= kHeight;
-         num_threads *= kWidth;
-
-         out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
-         out << SP*4 << "auto acc_tensor_" << fNW << " = cl::sycl::accessor{buf_tensor_" << fNW;
-         out << ", cgh, cl::sycl::read_only};\n";
-         out << SP*4 << "auto acc_" << OpName << "_f = cl::sycl::accessor{buf_" << OpName << "_f, cgh, ";
-         out << "cl::sycl::write_only, cl::sycl::no_init};\n";
-         
-         
-         out << SP*4 << "cgh.parallel_for<class " << OpName <<">(cl::sycl::range<1>{" << num_threads << "}, ";
-         out << "[=](cl::sycl::id<1> id){\n";
-         out << SP*5 << "auto tid = id;\n";
-         out << SP*5 << "auto kw = tid % " << kWidth << ";\n";
-         out << SP*5 << "tid /= " << kWidth << ";\n";
-
-         if (fDim > 2) {
-            out << SP*5 << "auto kd = tid % " << kDepth << ";\n";
-            out << SP*5 << "tid /= " << kDepth << ";\n";
-         }
-
-         if (fDim > 1) {
-            out << SP*5 << "auto kh = tid % " << kHeight << ";\n";
-            out << SP*5 << "tid /= " << kHeight << ";\n";
-         }
-
-         out << SP*5 << "auto ic = tid % " << fShapeW[1] << ";\n";
-         out << SP*5 << "auto oc = tid / " << fShapeW[1] << ";\n";
-
-         out << SP*5 << "acc_" << OpName << "_f[oc * " << ocstrideDil << " + ic * " << icstrideDil;
-         if (fDim > 2)
-            out << " + kd * " << dstrideDil;
-         if (fDim > 1) 
-            out << "+ kh * " << hstrideDil;
-         out << " + kw * " << wstrideDil << "] = acc_tensor_" << fNW << "[oc * ";
-         out << ocstride << "+ ic * " << icstride;
-         if (fDim > 2) out << "+ kd * " << dstride;
-         if (fDim > 1) out << " + kh * " << hstride;
-         out << " + kw];\n";
-         out << SP*4 << "});\n";
-         out << SP*3 << "});\n";
-
-         out << SP*3 << transpose << OpName << "_transA = " << nontrans << ";\n";
-         out << SP*3 << transpose << OpName << "_transB = " << nontrans << ";\n";
-         out << SP*3 << "int " << OpName << "_m = " << oHeight * oWidth * oDepth << ";\n"; // output h*w
-         assert(fShapeY[1] == fShapeW[0]);
-         assert(fShapeW[1] == fShapeX[1] / fAttrGroup);
-         out << SP*3 << "int " << OpName << "_n = " << fShapeW[0] << ";\n"; // output channels
-         out << SP*3 << "int " << OpName << "_k = " << fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fAttrKernelShape[2] << ";\n";
-         out << SP*3 << "float " << OpName << "_alpha = 1.0;\n";
-         out << SP*3 << "float " << OpName << "_beta = 0.0;\n";
-
-         if (fUseSession) {
-            out << SP*3 << fType << " * " << OpName << "_xcol = fVec_" << OpName << "_xcol.data();\n"; 
-         }
-         else {
-            out << SP*3 << fType << " " << OpName << "_xcol[" << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fAttrKernelShape[2] * oDepth * oHeight * oWidth
-            << "] = {0};\n";
-         }
-
-         out << SP*3 << "auto buf_" << OpName << "_xcol = cl::sycl::buffer{fVec_" << OpName << "_xcol.data(), cl::sycl::range{fVec_" << OpName << "_xcol.size()}};\n";
-
-         // Loop on batch size
-         out << SP*3 << "for (size_t n = 0; n < " << bsize << "; n++) {\n";
-         if (fDim ==1) {
-         if (fAttrPads[0] != fAttrPads[1] ) {
-            std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding "
-                      << std::endl;
-            fAttrPads[0] = (fAttrPads[0] + fAttrPads[1]) / 2;
-         }
-         fAttrPads[1] = 0;
-         fAttrStrides[1] = 1;
-         }
-         if (fDim == 2) {
-            if (fAttrPads[0] != fAttrPads[2] || fAttrPads[1] != fAttrPads[3]) {
-               std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding " << std::endl;
-               fAttrPads[0] = (fAttrPads[0] + fAttrPads[2]) / 2;
-               fAttrPads[1] = (fAttrPads[1] + fAttrPads[3]) / 2;
+         std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
+            OpName = "op_" + OpName;
+   
+            if (fShapeX.empty() || fShapeW.empty() || (fNB != "" && fShapeB.empty()) || fShapeY.empty()) {
+               throw
+                  std::runtime_error("TMVA SOFIE Conv Op called to Generate without being initialized first");
             }
-         }
-         if (fDim == 3) {
-            if (fAttrPads[0] != fAttrPads[3] || fAttrPads[1] != fAttrPads[4] || fAttrPads[2] != fAttrPads[5]) {
-               std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding " << std::endl;
-               fAttrPads[0] = (fAttrPads[0] + fAttrPads[3]) / 2;
-               fAttrPads[1] = (fAttrPads[1] + fAttrPads[4]) / 2;
-               fAttrPads[2] = (fAttrPads[2] + fAttrPads[5]) / 2;
-            }
-         }
-
-         out << SP*4 << "size_t out_offset = n * " << fShapeY[1] * oDepth * oHeight * oWidth << ";\n";
-         if (fAttrGroup == 1) {
-            out << SP*4 << "size_t x_offset = n * " << fShapeX[1] * iHeight * iWidth << ";\n";
-            // when using im2col - resulting matrix is transposed, the dimension is (input_c * filter_h * filter_y,  output_h *
-            // output_w)
-            if (fDim < 3) {
-               out << SP*4 << "auto tmp_buf_tensor_" << fNX << " = cl::sycl::buffer{buf_tensor_" << fNX << ", cl::sycl::id<1>(x_offset), cl::sycl::range<1>(";
-               out << fShapeX[1] * iHeight * iWidth << ")};\n";
-               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col<float, 1>(q, tmp_buf_tensor_" << fNX;
-               out << ", " << fShapeW[1] << ", " << iHeight << ", " << iWidth << ",";
+   
+            std::stringstream out;
+            size_t bsize = fShapeX[0];
+            size_t kDepth = (fDim > 2) ?  fShapeW[2] : 1;  // kernel depth
+            size_t kHeight = (fDim > 1) ? fShapeW[fDim] : 1;  // kernel height
+            size_t kWidth = fShapeW[fDim+1]; // kernel width
+            size_t iDepth = (fDim > 2) ?  fShapeX[2] : 1;  // input depth
+            size_t iHeight = (fDim > 1) ? fShapeX[fDim] : 1; // input height
+            size_t iWidth = fShapeX[fDim+1]; // input width
+            size_t oDepth = (fDim > 2) ? fShapeY[2] : 1; // output depth
+            size_t oHeight = (fDim > 1) ? fShapeY[fDim] : 1;  // ouput height
+            size_t oWidth = fShapeY[fDim+1]; // output width
+   
+            out << "\n" << SP*3 << "//----  operator Conv " << OpName << "\n";
+   
+            // create first matrix with convolution kernels
+            if (fUseSession)
+               out << SP*3 << fType << " * " << OpName << "_f = fVec_" << OpName << "_f.data();\n";
+            else
+               out << SP*3 << fType << " " << OpName << "_f[" << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] << "] = {0};\n";
+   
+            out << SP*3 << "auto buf_" << OpName << "_f = cl::sycl::buffer{fVec_" << OpName << "_f.data(), cl::sycl::range{fVec_" << OpName << "_f.size()}};\n";
+   
+            // vectorize the (dilated)convolution kernels into a matrix
+            // no need to transpose the matrix
+            // to fix for 1d and 3d
+   
+            size_t id = (fDim > 2) ? fDim-3 : 2;
+            size_t ih = (fDim > 1) ? fDim-2 : 1;
+            size_t iw = fDim-1;
+   
+            size_t wstrideDil = fAttrDilations[iw];
+            size_t hstride = kWidth;
+            size_t hstrideDil = fAttrDilations[ih] * fAttrKernelShape[iw];  // stride dilated in the height
+            size_t dstride = kHeight * kWidth;
+            size_t dstrideDil = fAttrDilations[id] * fAttrKernelShape[ih] * fAttrKernelShape[iw];
+            size_t icstride = kHeight * kWidth * kDepth;
+            size_t icstrideDil = fAttrKernelShape[id] * fAttrKernelShape[ih] * fAttrKernelShape[iw];
+            size_t ocstride = fShapeW[1] * icstride;
+            size_t ocstrideDil = fShapeW[1] * icstrideDil;
+   
+            size_t num_threads = fShapeW[0] * fShapeW[1];
+            if (fDim > 2) 
+               num_threads *= kDepth;
+            if (fDim > 1)
+               num_threads *= kHeight;
+            num_threads *= kWidth;
+   
+            out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+            out << SP*4 << "auto acc_tensor_" << fNW << " = cl::sycl::accessor{buf_tensor_" << fNW;
+            out << ", cgh, cl::sycl::read_only};\n";
+            out << SP*4 << "auto acc_" << OpName << "_f = cl::sycl::accessor{buf_" << OpName << "_f, cgh, ";
+            out << "cl::sycl::write_only, cl::sycl::no_init};\n";
             
-               if (fDim == 1)
-               out << "1, " << fAttrKernelShape[0] << ",0," << fAttrPads[0] << ",1," << fAttrStrides[0] << ",1,"
-                   << fAttrDilations[0];
-               else // dim ==2
-                  out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
-                     << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
-                     << fAttrDilations[1];
-               out << ", buf_" << OpName << "_xcol);\n\n ";
-            }
-            else {
-               out << SP*4 << "auto tmp_buf_tensor_" << fNX << " = cl::sycl::buffer{buf_tensor_" << fNX << ", cl::sycl::id<1>(x_offset), cl::sycl::range<1>(";
-               out << fShapeX[1] * iHeight * iWidth  << ")};\n";
-               out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col_3d<float, 1>(q, tmp_buf_tensor_" << fNX;
-               out << ", " << fShapeW[1] << ", " << iDepth << ", " << iHeight << ", " << iWidth << ", ";
-               out << fAttrKernelShape[0] << ", " << fAttrKernelShape[1] << ", " << fAttrKernelShape[2] << ", ";
-               out << fAttrPads[0] << ", " << fAttrPads[1] << ", " << fAttrPads[2] << ", ";
-               out << fAttrStrides[0] << ", " << fAttrStrides[1] << ", " << fAttrStrides[2] << ", ";
-               out << fAttrDilations[0] << ", " << fAttrDilations[1] << ", " << fAttrDilations[2] << ", buf_" << OpName;
-               out << "_xcol);\n";
-            }
-            out << SP*4 << "auto tmp_buf_tensor_" << fNY << " = cl::sycl::buffer{buf_tensor_" << fNY << ", cl::sycl::id<1>(out_offset), cl::sycl::range<1>(";
-            out << fShapeY[1] * oDepth * oHeight * oWidth << ")};\n";
-            out << SP*4 << gemm << OpName << "_transA, " << OpName << "_transB, " << OpName;
-
-            if (gpu_blas == MKLBLAS) {
-               out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, buf_" << OpName << "_xcol, " << OpName;
-               out << "_m, buf_" << OpName << "_f, " << OpName << "_k, " << OpName << "_beta, tmp_buf_tensor_" << fNY;
-               out << ", " << OpName << "_m);\n";
-            }
-            else {
-               out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, blas::BufferIterator(buf_" << OpName << "_xcol), " << OpName;
-               out << "_m, blas::BufferIterator(buf_" << OpName << "_f), " << OpName << "_k, " << OpName << "_beta, blas::BufferIterator(tmp_buf_tensor_" << fNY;
-               out << "), " << OpName << "_m);\n";
-            }
-         } 
-         else {
-            out << SP*4 << "for (size_t g = 0; g < " << fAttrGroup << "; g++) {\n";
-            out << SP*5 << "size_t x_offset = n * " << fShapeX[1] * iDepth * iHeight * iWidth << " + g * "
-             << fShapeW[1] * iDepth * iHeight * iWidth << ";\n ";
-            out << SP*5 << "size_t out_offset = n * " << fShapeY[1] * oDepth * oHeight * oWidth << " + g * "
-             << fShapeW[0] * oDepth * oHeight * oWidth / fAttrGroup << ";\n ";  
-         
-            if (fDim < 3) {
-               out << SP*5 << "auto tmp_buf_tensor_" << fNX << " = cl::sycl::buffer{buf_tensor_" << fNX << ", cl::sycl::id<1>(x_offset), cl::sycl::range<1>(";
-               out << fShapeW[1] * iDepth * iHeight * iWidth  << ")};\n";
-               out << SP*5 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col<float, 1>(q, tmp_buf_tensor_" << fNX;
-               out << ", " << fShapeW[1] << ", " << iHeight << ", " << iWidth << ",";
             
-               if (fDim == 1)
-               out << "1, " << fAttrKernelShape[0] << ",0," << fAttrPads[0] << ",1," << fAttrStrides[0] << ",1,"
-                   << fAttrDilations[0];
-               else // dim ==2
-                  out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
-                     << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
-                     << fAttrDilations[1];
-               out << ", buf_" << OpName << "_xcol);\n\n ";
+            out << SP*4 << "cgh.parallel_for<class " << OpName <<">(cl::sycl::range<1>{" << num_threads << "}, ";
+            out << "[=](cl::sycl::id<1> id){\n";
+            out << SP*5 << "auto tid = id;\n";
+            out << SP*5 << "auto kw = tid % " << kWidth << ";\n";
+            out << SP*5 << "tid /= " << kWidth << ";\n";
+   
+            if (fDim > 2) {
+               out << SP*5 << "auto kd = tid % " << kDepth << ";\n";
+               out << SP*5 << "tid /= " << kDepth << ";\n";
+            }
+   
+            if (fDim > 1) {
+               out << SP*5 << "auto kh = tid % " << kHeight << ";\n";
+               out << SP*5 << "tid /= " << kHeight << ";\n";
+            }
+   
+            out << SP*5 << "auto ic = tid % " << fShapeW[1] << ";\n";
+            out << SP*5 << "auto oc = tid / " << fShapeW[1] << ";\n";
+   
+            out << SP*5 << "acc_" << OpName << "_f[oc * " << ocstrideDil << " + ic * " << icstrideDil;
+            if (fDim > 2)
+               out << " + kd * " << dstrideDil;
+            if (fDim > 1) 
+               out << "+ kh * " << hstrideDil;
+            out << " + kw * " << wstrideDil << "] = acc_tensor_" << fNW << "[oc * ";
+            out << ocstride << "+ ic * " << icstride;
+            if (fDim > 2) out << "+ kd * " << dstride;
+            if (fDim > 1) out << " + kh * " << hstride;
+            out << " + kw];\n";
+            out << SP*4 << "});\n";
+            out << SP*3 << "});\n";
+   
+            out << SP*3 << transpose << OpName << "_transA = " << nontrans << ";\n";
+            out << SP*3 << transpose << OpName << "_transB = " << nontrans << ";\n";
+            out << SP*3 << "int " << OpName << "_m = " << oHeight * oWidth * oDepth << ";\n"; // output h*w
+            assert(fShapeY[1] == fShapeW[0]);
+            assert(fShapeW[1] == fShapeX[1] / fAttrGroup);
+            out << SP*3 << "int " << OpName << "_n = " << fShapeW[0] << ";\n"; // output channels
+            out << SP*3 << "int " << OpName << "_k = " << fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fAttrKernelShape[2] << ";\n";
+            out << SP*3 << "float " << OpName << "_alpha = 1.0;\n";
+            out << SP*3 << "float " << OpName << "_beta = 0.0;\n";
+   
+            if (fUseSession) {
+               out << SP*3 << fType << " * " << OpName << "_xcol = fVec_" << OpName << "_xcol.data();\n"; 
             }
             else {
-               out << SP*5 << "auto tmp_buf_tensor_" << fNX << " = cl::sycl::buffer{buf_tensor_" << fNX << ", cl::sycl::id<1>(x_offset), cl::sycl::range<1>(";
-               out << fShapeW[1] * iDepth * iHeight * iWidth  << ")};\n";
-               out << SP*5 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col_3d<float, 1>(q, tmp_buf_tensor_" << fNX;
-               out << ", " << fShapeW[1] << ", " << iDepth << ", " << iHeight << ", " << iWidth << ", ";
-               out << fAttrKernelShape[0] << ", " << fAttrKernelShape[1] << ", " << fAttrKernelShape[2] << ", ";
-               out << fAttrPads[0] << ", " << fAttrPads[1] << ", " << fAttrPads[2] << ", ";
-               out << fAttrStrides[0] << ", " << fAttrStrides[1] << ", " << fAttrStrides[2] << ", ";
-               out << fAttrDilations[0] << ", " << fAttrDilations[1] << ", " << fAttrDilations[2] << ", buf_" << OpName;
-               out << "_xcol);\n";
+               out << SP*3 << fType << " " << OpName << "_xcol[" << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fAttrKernelShape[2] * oDepth * oHeight * oWidth
+               << "] = {0};\n";
             }
-            out << SP*5 << "auto tmp_buf_tensor_" << fNY << " = cl::sycl::buffer{buf_tensor_" << fNY << ", cl::sycl::id<1>(out_offset), cl::sycl::range<1>(";
-            out << fShapeW[0] * oDepth * oHeight * oWidth / fAttrGroup << ")};\n";
-            out << SP*5 << gemm << OpName << "_transA, " << OpName << "_transB, " << OpName;
-
-            if (gpu_blas == MKLBLAS) {
-               out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, buf_" << OpName << "_xcol, " << OpName;
-               out << "_m, buf_" << OpName << "_f, " << OpName << "_k, " << OpName << "_beta, tmp_buf_tensor_" << fNY;
-               out << ", " << OpName << "_m);\n";
+   
+            out << SP*3 << "auto buf_" << OpName << "_xcol = cl::sycl::buffer{fVec_" << OpName << "_xcol.data(), cl::sycl::range{fVec_" << OpName << "_xcol.size()}};\n";
+   
+            // Loop on batch size
+            out << SP*3 << "for (size_t n = 0; n < " << bsize << "; n++) {\n";
+            if (fDim ==1) {
+            if (fAttrPads[0] != fAttrPads[1] ) {
+               std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding "
+                           << std::endl;
+               fAttrPads[0] = (fAttrPads[0] + fAttrPads[1]) / 2;
             }
+            fAttrPads[1] = 0;
+            fAttrStrides[1] = 1;
+            }
+            if (fDim == 2) {
+               if (fAttrPads[0] != fAttrPads[2] || fAttrPads[1] != fAttrPads[3]) {
+                  std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding " << std::endl;
+                  fAttrPads[0] = (fAttrPads[0] + fAttrPads[2]) / 2;
+                  fAttrPads[1] = (fAttrPads[1] + fAttrPads[3]) / 2;
+               }
+            }
+            if (fDim == 3) {
+               if (fAttrPads[0] != fAttrPads[3] || fAttrPads[1] != fAttrPads[4] || fAttrPads[2] != fAttrPads[5]) {
+                  std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding " << std::endl;
+                  fAttrPads[0] = (fAttrPads[0] + fAttrPads[3]) / 2;
+                  fAttrPads[1] = (fAttrPads[1] + fAttrPads[4]) / 2;
+                  fAttrPads[2] = (fAttrPads[2] + fAttrPads[5]) / 2;
+               }
+            }
+   
+            out << SP*4 << "size_t out_offset = n * " << fShapeY[1] * oDepth * oHeight * oWidth << ";\n";
+            if (fAttrGroup == 1) {
+               out << SP*4 << "size_t x_offset = n * " << fShapeX[1] * iHeight * iWidth << ";\n";
+               // when using im2col - resulting matrix is transposed, the dimension is (input_c * filter_h * filter_y,  output_h *
+               // output_w)
+               if (fDim < 3) {
+                  out << SP*4 << "auto tmp_buf_tensor_" << fNX << " = cl::sycl::buffer{buf_tensor_" << fNX << ", cl::sycl::id<1>(x_offset), cl::sycl::range<1>(";
+                  out << fShapeX[1] * iHeight * iWidth << ")};\n";
+                  out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col<float, 1>(q, tmp_buf_tensor_" << fNX;
+                  out << ", " << fShapeW[1] << ", " << iHeight << ", " << iWidth << ",";
+               
+                  if (fDim == 1)
+                  out << "1, " << fAttrKernelShape[0] << ",0," << fAttrPads[0] << ",1," << fAttrStrides[0] << ",1,"
+                        << fAttrDilations[0];
+                  else // dim ==2
+                     out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
+                        << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
+                        << fAttrDilations[1];
+                  out << ", buf_" << OpName << "_xcol);\n\n ";
+               }
+               else {
+                  out << SP*4 << "auto tmp_buf_tensor_" << fNX << " = cl::sycl::buffer{buf_tensor_" << fNX << ", cl::sycl::id<1>(x_offset), cl::sycl::range<1>(";
+                  out << fShapeX[1] * iHeight * iWidth  << ")};\n";
+                  out << SP*4 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col_3d<float, 1>(q, tmp_buf_tensor_" << fNX;
+                  out << ", " << fShapeW[1] << ", " << iDepth << ", " << iHeight << ", " << iWidth << ", ";
+                  out << fAttrKernelShape[0] << ", " << fAttrKernelShape[1] << ", " << fAttrKernelShape[2] << ", ";
+                  out << fAttrPads[0] << ", " << fAttrPads[1] << ", " << fAttrPads[2] << ", ";
+                  out << fAttrStrides[0] << ", " << fAttrStrides[1] << ", " << fAttrStrides[2] << ", ";
+                  out << fAttrDilations[0] << ", " << fAttrDilations[1] << ", " << fAttrDilations[2] << ", buf_" << OpName;
+                  out << "_xcol);\n";
+               }
+               out << SP*4 << "auto tmp_buf_tensor_" << fNY << " = cl::sycl::buffer{buf_tensor_" << fNY << ", cl::sycl::id<1>(out_offset), cl::sycl::range<1>(";
+               out << fShapeY[1] * oDepth * oHeight * oWidth << ")};\n";
+               out << SP*4 << gemm << OpName << "_transA, " << OpName << "_transB, " << OpName;
+   
+               if (gpu_blas == MKLBLAS) {
+                  out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, buf_" << OpName << "_xcol, " << OpName;
+                  out << "_m, buf_" << OpName << "_f, " << OpName << "_k, " << OpName << "_beta, tmp_buf_tensor_" << fNY;
+                  out << ", " << OpName << "_m);\n";
+               }
+               else {
+                  out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, blas::BufferIterator(buf_" << OpName << "_xcol), " << OpName;
+                  out << "_m, blas::BufferIterator(buf_" << OpName << "_f), " << OpName << "_k, " << OpName << "_beta, blas::BufferIterator(tmp_buf_tensor_" << fNY;
+                  out << "), " << OpName << "_m);\n";
+               }
+            } 
             else {
-               out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, blas::BufferIterator(buf_" << OpName << "_xcol), " << OpName;
-               out << "_m, blas::BufferIterator(buf_" << OpName << "_f), " << OpName << "_k, " << OpName << "_beta, blas::BufferIterator(tmp_buf_tensor_" << fNY;
-               out << "), " << OpName << "_m);\n";
+               out << SP*4 << "for (size_t g = 0; g < " << fAttrGroup << "; g++) {\n";
+               out << SP*5 << "size_t x_offset = n * " << fShapeX[1] * iDepth * iHeight * iWidth << " + g * "
+                  << fShapeW[1] * iDepth * iHeight * iWidth << ";\n ";
+               out << SP*5 << "size_t out_offset = n * " << fShapeY[1] * oDepth * oHeight * oWidth << " + g * "
+                  << fShapeW[0] * oDepth * oHeight * oWidth / fAttrGroup << ";\n ";  
+            
+               if (fDim < 3) {
+                  out << SP*5 << "auto tmp_buf_tensor_" << fNX << " = cl::sycl::buffer{buf_tensor_" << fNX << ", cl::sycl::id<1>(x_offset), cl::sycl::range<1>(";
+                  out << fShapeW[1] * iDepth * iHeight * iWidth  << ")};\n";
+                  out << SP*5 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col<float, 1>(q, tmp_buf_tensor_" << fNX;
+                  out << ", " << fShapeW[1] << ", " << iHeight << ", " << iWidth << ",";
+               
+                  if (fDim == 1)
+                  out << "1, " << fAttrKernelShape[0] << ",0," << fAttrPads[0] << ",1," << fAttrStrides[0] << ",1,"
+                        << fAttrDilations[0];
+                  else // dim ==2
+                     out << fAttrKernelShape[0] << "," << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1]
+                        << "," << fAttrStrides[0] << "," << fAttrStrides[1] << "," << fAttrDilations[0] << ","
+                        << fAttrDilations[1];
+                  out << ", buf_" << OpName << "_xcol);\n\n ";
+               }
+               else {
+                  out << SP*5 << "auto tmp_buf_tensor_" << fNX << " = cl::sycl::buffer{buf_tensor_" << fNX << ", cl::sycl::id<1>(x_offset), cl::sycl::range<1>(";
+                  out << fShapeW[1] * iDepth * iHeight * iWidth  << ")};\n";
+                  out << SP*5 << "TMVA::Experimental::SOFIE_GPU::UTILITY::Im2col_3d<float, 1>(q, tmp_buf_tensor_" << fNX;
+                  out << ", " << fShapeW[1] << ", " << iDepth << ", " << iHeight << ", " << iWidth << ", ";
+                  out << fAttrKernelShape[0] << ", " << fAttrKernelShape[1] << ", " << fAttrKernelShape[2] << ", ";
+                  out << fAttrPads[0] << ", " << fAttrPads[1] << ", " << fAttrPads[2] << ", ";
+                  out << fAttrStrides[0] << ", " << fAttrStrides[1] << ", " << fAttrStrides[2] << ", ";
+                  out << fAttrDilations[0] << ", " << fAttrDilations[1] << ", " << fAttrDilations[2] << ", buf_" << OpName;
+                  out << "_xcol);\n";
+               }
+               out << SP*5 << "auto tmp_buf_tensor_" << fNY << " = cl::sycl::buffer{buf_tensor_" << fNY << ", cl::sycl::id<1>(out_offset), cl::sycl::range<1>(";
+               out << fShapeW[0] * oDepth * oHeight * oWidth / fAttrGroup << ")};\n";
+               out << SP*5 << gemm << OpName << "_transA, " << OpName << "_transB, " << OpName;
+   
+               if (gpu_blas == MKLBLAS) {
+                  out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, buf_" << OpName << "_xcol, " << OpName;
+                  out << "_m, buf_" << OpName << "_f, " << OpName << "_k, " << OpName << "_beta, tmp_buf_tensor_" << fNY;
+                  out << ", " << OpName << "_m);\n";
+               }
+               else {
+                  out << "_m, " << OpName << "_n, " << OpName << "_k, " << OpName << "_alpha, blas::BufferIterator(buf_" << OpName << "_xcol), " << OpName;
+                  out << "_m, blas::BufferIterator(buf_" << OpName << "_f), " << OpName << "_k, " << OpName << "_beta, blas::BufferIterator(tmp_buf_tensor_" << fNY;
+                  out << "), " << OpName << "_m);\n";
+               }
             }
-         }
-         
-         if (fNB2!= "") {
-            out << SP*3 << "int " << OpName << "_size = " << fShapeY[1] * oDepth * oHeight * oWidth << ";\n";
-            out << SP*3 << "float " << OpName << "_gamma = 1.0;\n";
-            out << SP*3 << "int " << OpName << "_incx = 1;\n";
-            out << SP*3 << "int " << OpName << "_incy = 1;\n";
-
-            if (gpu_blas == MKLBLAS) {
-               out << SP*3 << axpy << OpName << "_size, " << OpName << "_gamma, buf_tensor_" << fNB2;
-               out << ", " << OpName << "_incx, tmp_buf_tensor_" << fNY << ", " << OpName << "_incy);\n";
+            
+            if (fNB2!= "") {
+               out << SP*3 << "int " << OpName << "_size = " << fShapeY[1] * oDepth * oHeight * oWidth << ";\n";
+               out << SP*3 << "float " << OpName << "_gamma = 1.0;\n";
+               out << SP*3 << "int " << OpName << "_incx = 1;\n";
+               out << SP*3 << "int " << OpName << "_incy = 1;\n";
+   
+               if (gpu_blas == MKLBLAS) {
+                  out << SP*3 << axpy << OpName << "_size, " << OpName << "_gamma, buf_tensor_" << fNB2;
+                  out << ", " << OpName << "_incx, tmp_buf_tensor_" << fNY << ", " << OpName << "_incy);\n";
+               }
+               else {
+                  out << SP*3 << axpy << OpName << "_size, " << OpName << "_gamma, blas::BufferIterator(buf_tensor_" << fNB2;
+                  out << "), " << OpName << "_incx, blas::BufferIterator(tmp_buf_tensor_" << fNY << "), " << OpName << "_incy);\n";
+               }
             }
-            else {
-               out << SP*3 << axpy << OpName << "_size, " << OpName << "_gamma, blas::BufferIterator(buf_tensor_" << fNB2;
-               out << "), " << OpName << "_incx, blas::BufferIterator(tmp_buf_tensor_" << fNY << "), " << OpName << "_incy);\n";
-            }
-         }
-
-         out << SP*3 << "}\n"; // end of batch size loop
-
-
-         return out.str();
-   }
+   
+            out << SP*3 << "}\n"; // end of batch size loop
+   
+   
+            return out.str();
+      }
 
    /*! \brief Returns the blas routines needed to compile the generated code
     */
