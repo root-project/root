@@ -280,10 +280,18 @@ void TAxis::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find bin number corresponding to abscissa x. NOTE: this method does not work with alphanumeric bins !!!
+/// Find bin number corresponding to abscissa `x`. NOTE: this method does not work with alphanumeric bins !!!
 ///
-/// If x is underflow or overflow, attempt to extend the axis if TAxis::kCanExtend is true.
-/// Otherwise, return 0 or fNbins+1.
+/// If `x` is underflow or overflow, attempt to extend the axis if TAxis::kCanExtend is true.
+/// Otherwise, return `0` or `fNbins+1`.
+///
+/// @note The underflow bin (`0`) is for any `x` strictly smaller than `fXmin`,
+/// whereas the overflow bin (`nbins+1`) is for any `x` greater or equal than `fXmax`,
+/// as well as for `NaN`. The first regular bin (`1`) is for any `x`
+/// greater or equal than `fXmin` and strictly smaller than `fXmin + binwidth`, and so on.
+/// @note The bin assignment equation uses doubles, thus rounding errors are
+/// expected to appear at the edges. For example: `TAxis(1, -1., 0.).FindBin(-1e-17)`
+/// returns the overflow bin (`2`) rather than the theoretically correct bin (`1`).
 
 Int_t TAxis::FindBin(Double_t x)
 {
@@ -406,17 +414,18 @@ Int_t TAxis::FindFixBin(const char *label) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find bin number corresponding to abscissa x
+/// Find bin number corresponding to abscissa `x`
 ///
-/// Identical to TAxis::FindBin except that if x is an underflow/overflow
+/// Identical to TAxis::FindBin except that if `x` is an underflow/overflow
 /// no attempt is made to extend the axis.
+/// @see TAxis::FindBin
 
 Int_t TAxis::FindFixBin(Double_t x) const
 {
    Int_t bin;
    if (x < fXmin) {              //*-* underflow
       bin = 0;
-   } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN
+   } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN)
       bin = fNbins+1;
    } else {
       if (!fXbins.fN) {        //*-* fix bins
