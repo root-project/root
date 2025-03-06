@@ -120,7 +120,7 @@ public:
    }
 
    std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
-   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) override {
+      std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) override {
       OpName = "op_" + OpName;
 
       if (fShapeY.empty()) {
