@@ -189,7 +189,7 @@ TEST(RColumnElementEndian, DeltaSplit)
 #ifndef R__BYTESWAP
    GTEST_SKIP() << "Skipping test on big endian node";
 #else
-   RColumnElement<ROOT::Experimental::Internal::RColumnIndex, ENTupleColumnType::kSplitIndex32> element;
+   RColumnElement<ROOT::Internal::RColumnIndex, ENTupleColumnType::kSplitIndex32> element;
    EXPECT_EQ(element.IsMappable(), false);
 
    RPageSinkMock sink1(element);

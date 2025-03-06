@@ -864,10 +864,10 @@ static std::optional<std::type_index> ColumnInMemoryType(std::string_view fieldT
 {
    if (onDiskType == ENTupleColumnType::kIndex32 || onDiskType == ENTupleColumnType::kSplitIndex32 ||
        onDiskType == ENTupleColumnType::kIndex64 || onDiskType == ENTupleColumnType::kSplitIndex64)
-      return typeid(ROOT::Experimental::Internal::RColumnIndex);
+      return typeid(ROOT::Internal::RColumnIndex);
 
    if (onDiskType == ENTupleColumnType::kSwitch)
-      return typeid(ROOT::Experimental::Internal::RColumnSwitch);
+      return typeid(ROOT::Internal::RColumnSwitch);
 
    // clang-format off
    if (fieldType == "bool")          return typeid(bool);
