@@ -556,12 +556,6 @@ namespace cling {
         m_Sema->IdResolver.RemoveDecl(ND);
     }
 
-    // Cleanup the lookup tables.
-    // DeclContexts like EnumDecls don't have lookup maps.
-    // FIXME: Remove once we upstream this patch: D119675
-    if (StoredDeclsMap* Map = DC->getPrimaryContext()->getLookupPtr())
-      eraseDeclFromMap(Map, ND);
-
     return Successful;
   }
 
