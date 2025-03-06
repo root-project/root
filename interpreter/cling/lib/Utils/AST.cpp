@@ -265,6 +265,18 @@ namespace utils {
         ASTContext &mutableCtx( const_cast<ASTContext&>(Ctx) );
         arg = TemplateArgument::CreatePackCopy(mutableCtx, desArgs);
       }
+    } else if (arg.getKind() == TemplateArgument::Integral) {
+
+      const llvm::APSInt &Val = arg.getAsIntegral();
+      QualType T = arg.getIntegralType();
+
+      // Handle cases where the value is too large to fit into the underlying type
+      // i.e. where the unsignedness matters.
+      if (T->isBuiltinType()) {
+        if (Val.isUnsigned() && Val.getBitWidth() == 64 && Val.countLeadingOnes()) {
+          const_cast<clang::PrintingPolicy &>(Ctx.getPrintingPolicy()).AlwaysIncludeTypeForTemplateArgument = true;
+        }
+      }
     }
     return changed;
   }
@@ -1760,7 +1772,6 @@ namespace utils {
     PrintingPolicy Policy(Ctx.getPrintingPolicy());
     Policy.SuppressScope = false;
     Policy.AnonymousTagLocations = false;
-    Policy.AlwaysIncludeTypeForTemplateArgument = true;
     return FQQT.getAsString(Policy);
   }
 
