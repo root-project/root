@@ -621,18 +621,9 @@ void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out<<f3Name.Data()<<" = new TF3("<<quote<<f3Name.Data()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<","<<GetNpar()<<");"<<std::endl;
    }
 
-   if (GetFillColor() != 0) {
-      if (TColor::SaveColor(out, GetFillColor()))
-         out<<"   "<<f3Name.Data()<<"->SetFillColor(ci);" << std::endl;
-      else
-         out<<"   "<<f3Name.Data()<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
-   }
-   if (GetLineColor() != 1) {
-      if (TColor::SaveColor(out, GetLineColor()))
-         out<<"   "<<f3Name.Data()<<"->SetLineColor(ci);" << std::endl;
-      else
-         out<<"   "<<f3Name.Data()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
-   }
+   SaveFillAttributes(out, f3Name.Data(), 0, 1001);
+   SaveMarkerAttributes(out, f3Name.Data(), 1, 1, 1);
+   SaveLineAttributes(out, f3Name.Data(), 1, 1, 4);
 
    if (GetNpx() != 30)
       out<<"   "<<f3Name.Data()<<"->SetNpx("<<GetNpx()<<");"<<std::endl;
