@@ -381,21 +381,16 @@ void TMacro::SaveSource(FILE *fp)
 
 void TMacro::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TMacro::Class()))
-      out<<"   ";
-   else
-      out<<"   "<<ClassName()<<" *";
-
-   out<<"macro = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<");"<<std::endl;
+   SavePrimitiveConstructor(
+      out, Class(), "macro",
+      TString::Format("\"%s\", \"%s\"", GetName(), TString(GetTitle()).ReplaceSpecialCppChars().Data()));
 
    TIter next(fLines);
    while (auto obj = next()) {
       TString s = obj->GetName();
-      out<<"   macro->AddLine("<<quote<<s.ReplaceSpecialCppChars()<<quote<<");"<<std::endl;
+      out << "   macro->AddLine(\"" << s.ReplaceSpecialCppChars() << "\");\n";
    }
-   out<<"   macro->Draw("<<quote<<option<<quote<<");"<<std::endl;
+   out << "   macro->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

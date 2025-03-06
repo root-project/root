@@ -776,7 +776,7 @@ void TObject::SavePrimitiveConstructor(std::ostream &out, TClass *cl, const char
    out << "   ";
    if (!gROOT->ClassSaved(cl))
       out << cl->GetName() << " *";
-   out << variable_name << " = new " << cl->GetName() << "(" << constructor_agrs << ");" << std::endl;
+   out << variable_name << " = new " << cl->GetName() << "(" << constructor_agrs << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
