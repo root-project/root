@@ -8,7 +8,7 @@
  * Copyright: (C) 2008 by Universita' and INFN, Milan                      *
  ***************************************************************************/
 
-#include "Minuit2/MPIProcess.h"
+#include "./MPIProcess.h"
 
 #include <iostream>
 

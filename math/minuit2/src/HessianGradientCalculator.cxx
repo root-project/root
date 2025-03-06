@@ -16,7 +16,8 @@
 #include "Minuit2/FunctionGradient.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnPrint.h"
-#include "Minuit2/MPIProcess.h"
+
+#include "./MPIProcess.h"
 
 #include <cmath>
 #include <cassert>

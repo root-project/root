@@ -44,7 +44,6 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/GradientCalculator.h
       Minuit2/HessianGradientCalculator.h
       Minuit2/InitialGradientCalculator.h
-      Minuit2/MPIProcess.h
       Minuit2/MinimumBuilder.h
       Minuit2/MinimumError.h
       Minuit2/MinimumErrorUpdator.h
