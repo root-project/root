@@ -283,45 +283,40 @@ void TButton::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   char quote = '"';
-   if (gROOT->ClassSaved(TButton::Class()))
-      out<<"   ";
-   else
-      out<<"   TButton *";
+   SavePrimitiveConstructor(out, Class(), "button",
+                            TString::Format("\"%s\", \"%s\", %g, %g, %g, %g",
+                                            TString(GetTitle()).ReplaceSpecialCppChars().Data(),
+                                            TString(GetMethod()).ReplaceSpecialCppChars().Data(), fXlowNDC, fYlowNDC,
+                                            fXlowNDC + fWNDC, fYlowNDC + fHNDC));
 
-   TString cmethod = GetMethod();
-
-   out << "button = new TButton(" << quote << GetTitle() << quote << ","
-         << quote << cmethod.ReplaceSpecialCppChars() << quote << "," << fXlowNDC << "," << fYlowNDC
-         << "," << fXlowNDC + fWNDC << "," << fYlowNDC + fHNDC << ");"
-         << std::endl;
-
-   SaveFillAttributes(out,"button",0,1001);
-   SaveLineAttributes(out,"button",1,1,1);
-   SaveTextAttributes(out,"button",22,0,1,61,.65);
+   SaveFillAttributes(out, "button", 0, 1001);
+   SaveLineAttributes(out, "button", 1, 1, 1);
+   SaveTextAttributes(out, "button", 22, 0, 1, 61, .65);
 
    if (GetBorderSize() != 2)
-      out<<"   button->SetBorderSize("<<GetBorderSize()<<");"<<std::endl;
+      out << "   button->SetBorderSize(" << GetBorderSize() << ");\n";
    if (GetBorderMode() != 1)
-      out<<"   button->SetBorderMode("<<GetBorderMode()<<");"<<std::endl;
+      out << "   button->SetBorderMode(" << GetBorderMode() << ");\n";
 
-   if (GetFraming()) out<<"button->SetFraming();"<<std::endl;
-   if (IsEditable()) out<<"button->SetEditable(kTRUE);"<<std::endl;
+   if (GetFraming())
+      out << "button->SetFraming();\n";
+   if (IsEditable())
+      out << "button->SetEditable(kTRUE);\n";
 
-   out<<"   button->Draw();"<<std::endl;
+   out << "   button->Draw();\n";
 
    TIter next(GetListOfPrimitives());
-   next();  //do not save first primitive which should be text
+   next(); // do not save first primitive which should be text
 
    Int_t nprim = 0;
    while (auto obj = next()) {
       if (nprim++ == 0)
-         out<<"   button->cd();"<<std::endl;
+         out << "   button->cd();\n";
       obj->SavePrimitive(out, next.GetOption());
    }
 
    if ((nprim > 0) && gPad)
-      out<<"   "<<gPad->GetName()<<"->cd();"<<std::endl;
+      out << "   " << gPad->GetName() << "->cd();\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
