@@ -2570,12 +2570,8 @@ void TGaxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
    out << "   gaxis->SetLabelOffset(" << GetLabelOffset() << ");" << std::endl;
    out << "   gaxis->SetLabelSize(" << GetLabelSize() << ");" << std::endl;
-   if (fLabelColor != 1) {
-      if (TColor::SaveColor(out, fLabelColor))
-         out << "   gaxis->SetLabelColor(ci);" << std::endl;
-      else
-         out << "   gaxis->SetLabelColor(" << GetLabelColor() << ");" << std::endl;
-   }
+   if (fLabelColor != 1)
+      out << "   gaxis->SetLabelColor(" << TColor::SavePrimitiveColor(GetLabelColor()) << ");\n";
    if (fLabelFont != 62)
       out << "   gaxis->SetLabelFont(" << GetLabelFont() << ");" << std::endl;
    if (TestBit(TAxis::kMoreLogLabels))
