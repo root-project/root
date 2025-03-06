@@ -51,7 +51,6 @@ class RLazyDS final : public ROOT::RDF::RDataSource {
    const PointerHolderPtrs_t fPointerHoldersModels;
    std::vector<PointerHolderPtrs_t> fPointerHolders;
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges{};
-   unsigned int fNSlots{0};
 
    Record_t GetColumnReadersImpl(std::string_view colName, const std::type_info &id) final
    {

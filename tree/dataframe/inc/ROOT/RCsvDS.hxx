@@ -73,7 +73,6 @@ private:
    std::int64_t fDataLineNumber = 0;
    std::int64_t fLineNumber = 0;     // used to skip the last lines
    std::int64_t fMaxLineNumber = -1; // set to non-negative if fOptions.fSkipLastNLines is set
-   unsigned int fNSlots = 0U;
    std::unique_ptr<ROOT::Internal::RRawFile> fCsvFile;
    ULong64_t fEntryRangesRequested = 0ULL;
    ULong64_t fProcessedLines = 0ULL; // marks the progress of the consumption of the csv lines
