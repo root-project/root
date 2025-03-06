@@ -255,7 +255,7 @@ public:
    }
 
    std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
-   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal)  {
+      std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal){
       OpName = "op_" + OpName;
       if (fShapeInput.empty() || fShapeOutput.empty()){
          throw std::runtime_error("TMVA SOFIE Slice Op called to Generate without being initialized first");
@@ -268,7 +268,7 @@ public:
       size_t ndim = fShapeInput.size();
       std::vector<size_t> strides(ndim,1);
       for (int i = int(ndim-2); i >=0 ; i--) {
-          strides[i] = strides[i+1]*fShapeInput[i+1];
+            strides[i] = strides[i+1]*fShapeInput[i+1];
       }
 
       out << SP*3 << "size_t iOut = 0;\n";

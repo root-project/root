@@ -163,7 +163,7 @@ public:
    }
 
    std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
-   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal)  {
+      std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal)  {
       OpName = "op_" + OpName;
       if (fShapeData.empty() || fShapeOutput.empty()){
          throw std::runtime_error("TMVA SOFIE Transpose Op called to Generate without being initialized first");
@@ -176,7 +176,7 @@ public:
 
       std::stringstream out;
       out << "\n" << SP*3 << "///------- Transpose operator\n";
-  
+   
       out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
       out << SP*4 << "auto acc_tensor_" << fNData << " = cl::sycl::accessor{buf_tensor_" << fNData;
       out << ", cgh, cl::sycl::read_only};\n";
@@ -216,7 +216,7 @@ public:
       out << SP*3 << "});\n";
       
       return out.str();
-   }
+   }   
 
 };
 
