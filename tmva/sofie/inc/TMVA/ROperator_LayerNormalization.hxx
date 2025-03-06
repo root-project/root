@@ -326,15 +326,15 @@ public:
    }
 
    std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
-   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) override {
+      std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) override {
       OpName = "op_" + OpName;
       if (fShapeX.empty()) {
          throw std::runtime_error("TMVA::SOFIE LayerNormalization operator " + OpName +
-                                  " called to generate without beging initialized first.");
+                                    " called to generate without beging initialized first.");
       }
       if (fShapeX.size() > 5) {
          throw std::runtime_error("TMVA::SOFIE LayerNormalization operator not "
-                                  "implemented for input tensor of size > 5.");
+                                    "implemented for input tensor of size > 5.");
       }
 
       std::stringstream out;
