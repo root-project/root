@@ -21,8 +21,8 @@
 #include "Minuit2/VariableMetricEDMEstimator.h"
 #include "Minuit2/FunctionMinimum.h"
 #include "Minuit2/MnPrint.h"
-#include "Minuit2/MPIProcess.h"
 
+#include "./MPIProcess.h"
 #include "./MnFcnCaller.h"
 
 namespace ROOT {

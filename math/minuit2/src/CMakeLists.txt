@@ -34,7 +34,6 @@ set(MINUIT2_HEADERS
     GradientCalculator.h
     HessianGradientCalculator.h
     InitialGradientCalculator.h
-    MPIProcess.h
     MinimumBuilder.h
     MinimumError.h
     MinimumErrorUpdator.h
