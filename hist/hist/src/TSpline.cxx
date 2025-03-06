@@ -965,28 +965,25 @@ void TSpline3::SaveAs(const char *filename, Option_t * /*option*/) const
 
 void TSpline3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TSpline3::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TSpline3 *";
-   }
-   out<<"spline3 = new TSpline3("<<quote<<GetTitle()<<quote<<","
-      <<fXmin<<","<<fXmax<<",(TF1*)0,"<<fNp<<","<<quote<<quote<<","
-      <<fValBeg<<","<<fValEnd<<");"<<std::endl;
-   out<<"   spline3->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "spline3",
+                            TString::Format("\"%s\", %g, %g, (TF1 *)nullptr, %d, \"\", %g, %g",
+                                            TString(GetTitle()).ReplaceSpecialCppChars().Data(), fXmin, fXmax, fNp,
+                                            fValBeg, fValEnd));
 
-   SaveFillAttributes(out,"spline3",0,1001);
-   SaveLineAttributes(out,"spline3",1,1,1);
-   SaveMarkerAttributes(out,"spline3",1,1,1);
-   if (fNpx != 100) out<<"   spline3->SetNpx("<<fNpx<<");"<<std::endl;
+   out << "   spline3->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
 
-   for (Int_t i=0;i<fNp;i++) {
-      out<<"   spline3->SetPoint("<<i<<","<<fPoly[i].X()<<","<<fPoly[i].Y()<<");"<<std::endl;
-      out<<"   spline3->SetPointCoeff("<<i<<","<<fPoly[i].B()<<","<<fPoly[i].C()<<","<<fPoly[i].D()<<");"<<std::endl;
+   SaveFillAttributes(out, "spline3", 0, 1001);
+   SaveLineAttributes(out, "spline3", 1, 1, 1);
+   SaveMarkerAttributes(out, "spline3", 1, 1, 1);
+   if (fNpx != 100)
+      out << "   spline3->SetNpx(" << fNpx << ");\n";
+
+   for (Int_t i = 0; i < fNp; i++) {
+      out << "   spline3->SetPoint(" << i << "," << fPoly[i].X() << "," << fPoly[i].Y() << ");\n";
+      out << "   spline3->SetPointCoeff(" << i << "," << fPoly[i].B() << "," << fPoly[i].C() << "," << fPoly[i].D()
+          << ");\n";
    }
-   out<<"   spline3->Draw("<<quote<<option<<quote<<");"<<std::endl;
+   out << "   spline3->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1772,32 +1769,31 @@ void TSpline5::SaveAs(const char *filename, Option_t * /*option*/) const
 
 void TSpline5::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TSpline5::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TSpline5 *";
-   }
    Double_t b1 = fPoly[1].Y();
-   Double_t e1 = fPoly[fNp-1].Y();
+   Double_t e1 = fPoly[fNp - 1].Y();
    Double_t b2 = fPoly[2].Y();
-   Double_t e2 = fPoly[fNp-1].Y();
-   out<<"spline5 = new TSpline5("<<quote<<GetTitle()<<quote<<","
-      <<fXmin<<","<<fXmax<<",(TF1*)0,"<<fNp<<","<<quote<<quote<<","
-      <<b1<<","<<e1<<","<<b2<<","<<e2<<");"<<std::endl;
-   out<<"   spline5->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
+   Double_t e2 = fPoly[fNp - 1].Y();
 
-   SaveFillAttributes(out,"spline5",0,1001);
-   SaveLineAttributes(out,"spline5",1,1,1);
-   SaveMarkerAttributes(out,"spline5",1,1,1);
-   if (fNpx != 100) out<<"   spline5->SetNpx("<<fNpx<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "spline5",
+                            TString::Format("\"%s\", %g, %g, (TF1 *)nullptr, %d, \"\", %g, %g, %g, %g",
+                                            TString(GetTitle()).ReplaceSpecialCppChars().Data(), fXmin, fXmax, fNp, b1,
+                                            e1, b2, e2));
 
-   for (Int_t i=0;i<fNp;i++) {
-      out<<"   spline5->SetPoint("<<i<<","<<fPoly[i].X()<<","<<fPoly[i].Y()<<");"<<std::endl;
-      out<<"   spline5->SetPointCoeff("<<i<<","<<fPoly[i].B()<<","<<fPoly[i].C()<<","<<fPoly[i].D()<<","<<fPoly[i].E()<<","<<fPoly[i].F()<<");"<<std::endl;
+   out << "   spline5->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
+
+   SaveFillAttributes(out, "spline5", 0, 1001);
+   SaveLineAttributes(out, "spline5", 1, 1, 1);
+   SaveMarkerAttributes(out, "spline5", 1, 1, 1);
+   if (fNpx != 100)
+      out << "   spline5->SetNpx(" << fNpx << ");\n";
+
+   for (Int_t i = 0; i < fNp; i++) {
+      out << "   spline5->SetPoint(" << i << "," << fPoly[i].X() << "," << fPoly[i].Y() << ");\n";
+      out << "   spline5->SetPointCoeff(" << i << "," << fPoly[i].B() << "," << fPoly[i].C() << "," << fPoly[i].D()
+          << "," << fPoly[i].E() << "," << fPoly[i].F() << ");\n";
    }
-   out<<"   spline5->Draw("<<quote<<option<<quote<<");"<<std::endl;
+
+   out << "   spline5->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
