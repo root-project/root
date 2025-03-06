@@ -350,7 +350,7 @@ constexpr char const *RSqliteDS::fgTypeNames[];
 ///
 /// The constructor opens the sqlite file, prepares the query engine and determines the column names and types.
 RSqliteDS::RSqliteDS(const std::string &fileName, const std::string &query)
-   : fDataSet(std::make_unique<Internal::RSqliteDSDataSet>()), fNSlots(0), fNRow(0)
+   : fDataSet(std::make_unique<Internal::RSqliteDSDataSet>()), fNRow(0)
 {
    static bool hasSqliteVfs = RegisterSqliteVfs();
    if (!hasSqliteVfs)
