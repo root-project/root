@@ -23,13 +23,15 @@
 #include <cassert>
 #include <utility>
 
-ROOT::Experimental::Internal::RColumn::RColumn(ENTupleColumnType type, std::uint32_t columnIndex,
-                                               std::uint16_t representationIndex)
+using ROOT::Experimental::Internal::RPageSink;
+using ROOT::Experimental::Internal::RPageSource;
+
+ROOT::Internal::RColumn::RColumn(ENTupleColumnType type, std::uint32_t columnIndex, std::uint16_t representationIndex)
    : fType(type), fIndex(columnIndex), fRepresentationIndex(representationIndex), fTeam({this})
 {
 }
 
-ROOT::Experimental::Internal::RColumn::~RColumn()
+ROOT::Internal::RColumn::~RColumn()
 {
    if (fHandleSink)
       fPageSink->DropColumn(fHandleSink);
@@ -37,8 +39,8 @@ ROOT::Experimental::Internal::RColumn::~RColumn()
       fPageSource->DropColumn(fHandleSource);
 }
 
-void ROOT::Experimental::Internal::RColumn::ConnectPageSink(ROOT::DescriptorId_t fieldId, RPageSink &pageSink,
-                                                            ROOT::NTupleSize_t firstElementIndex)
+void ROOT::Internal::RColumn::ConnectPageSink(ROOT::DescriptorId_t fieldId, RPageSink &pageSink,
+                                              ROOT::NTupleSize_t firstElementIndex)
 {
    fInitialNElements = pageSink.GetWriteOptions().GetInitialUnzippedPageSize() / fElement->GetSize();
    if (fInitialNElements < 1) {
@@ -54,7 +56,7 @@ void ROOT::Experimental::Internal::RColumn::ConnectPageSink(ROOT::DescriptorId_t
       throw RException(R__FAIL("page buffer memory budget too small"));
 }
 
-void ROOT::Experimental::Internal::RColumn::ConnectPageSource(ROOT::DescriptorId_t fieldId, RPageSource &pageSource)
+void ROOT::Internal::RColumn::ConnectPageSource(ROOT::DescriptorId_t fieldId, RPageSource &pageSource)
 {
    fPageSource = &pageSource;
    fHandleSource = fPageSource->AddColumn(fieldId, *this);
@@ -66,7 +68,7 @@ void ROOT::Experimental::Internal::RColumn::ConnectPageSource(ROOT::DescriptorId
    }
 }
 
-void ROOT::Experimental::Internal::RColumn::Flush()
+void ROOT::Internal::RColumn::Flush()
 {
    if (fWritePage.GetNElements() == 0)
       return;
@@ -77,12 +79,12 @@ void ROOT::Experimental::Internal::RColumn::Flush()
    fWritePage.Reset(fNElements);
 }
 
-void ROOT::Experimental::Internal::RColumn::CommitSuppressed()
+void ROOT::Internal::RColumn::CommitSuppressed()
 {
    fPageSink->CommitSuppressedColumn(fHandleSink);
 }
 
-bool ROOT::Experimental::Internal::RColumn::TryMapPage(ROOT::NTupleSize_t globalIndex)
+bool ROOT::Internal::RColumn::TryMapPage(ROOT::NTupleSize_t globalIndex)
 {
    const auto nTeam = fTeam.size();
    std::size_t iTeam = 1;
@@ -97,7 +99,7 @@ bool ROOT::Experimental::Internal::RColumn::TryMapPage(ROOT::NTupleSize_t global
    return fReadPageRef.Get().Contains(globalIndex);
 }
 
-bool ROOT::Experimental::Internal::RColumn::TryMapPage(RNTupleLocalIndex localIndex)
+bool ROOT::Internal::RColumn::TryMapPage(RNTupleLocalIndex localIndex)
 {
    const auto nTeam = fTeam.size();
    std::size_t iTeam = 1;
@@ -112,7 +114,7 @@ bool ROOT::Experimental::Internal::RColumn::TryMapPage(RNTupleLocalIndex localIn
    return fReadPageRef.Get().Contains(localIndex);
 }
 
-void ROOT::Experimental::Internal::RColumn::MergeTeams(RColumn &other)
+void ROOT::Internal::RColumn::MergeTeams(RColumn &other)
 {
    // We are working on very small vectors here, so quadratic complexity works
    for (auto *c : other.fTeam) {

@@ -44,6 +44,7 @@
 
 using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RColumnElementBase;
+using ROOT::Internal::RColumn;
 
 ROOT::Experimental::Internal::RPageStorage::RPageStorage(std::string_view name)
    : fMetrics(""), fPageAllocator(std::make_unique<ROOT::Internal::RPageAllocatorHeap>()), fNTupleName(name)
