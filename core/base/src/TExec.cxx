@@ -167,14 +167,9 @@ void TExec::Paint(Option_t *)
 
 void TExec::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   char quote = '"';
-   if (gROOT->ClassSaved(TExec::Class()))
-      out<<"   ";
-   else
-      out<<"   TExec *";
+   SavePrimitiveConstructor(
+      out, Class(), "exec",
+      TString::Format("\"%s\", \"%s\"", GetName(), TString(GetTitle()).ReplaceSpecialCppChars().Data()));
 
-   out<<"exec = new TExec("<<quote<<GetName()<<quote<<", "
-      <<quote<<TString(GetTitle()).ReplaceSpecialCppChars()<<quote<<");"<<std::endl;
-
-   out<<"   exec->Draw();"<<std::endl;
+   out << "   exec->Draw();\n";
 }
