@@ -381,15 +381,17 @@ namespace SOFIE{
          return out.str();
       }
 
-      std::string GenerateGPU(std::string OpName) {
+      std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+         std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
          OpName = "op_" + OpName;
          if (fShapeA.empty() || fShapeB.empty() || fShapeY.empty() || (fNC != "" && fShapeC.empty())) {
             throw std::runtime_error("TMVA SOFIE Gemm Op called to Generate without being initialized first");
          }
          std::stringstream out;
+
          out << "\n" << SP*3 << "//--------- Gemm\n";
-         out << SP*3 << "oneapi::mkl::transpose " << OpName << "_transA = oneapi::mkl::transpose::" << (fAttrTransA ? "trans" : "nontrans") << ";\n";
-         out << SP*3 << "oneapi::mkl::transpose " << OpName << "_transB = oneapi::mkl::transpose::" << (fAttrTransB ? "trans" : "nontrans") << ";\n";
+         out << SP*3 << transpose << OpName << "_transA = " << (fAttrTransA ?  trans : nontrans) << ";\n";
+         out << SP*3 << transpose << OpName << "_transB = " << (fAttrTransB ? trans : nontrans) << ";\n";
          int m = (fAttrTransA ? fShapeA[1] : fShapeA[0]);
          int n = (fAttrTransB ? fShapeB[0] : fShapeB[1]);
          int k = (fAttrTransA ? fShapeA[0] : fShapeA[1]);
@@ -400,6 +402,7 @@ namespace SOFIE{
          out << SP*3 << "float " << OpName << "_beta = " << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrBeta << ";\n";
          out << SP*3 << "int " << OpName << "_lda = " << (fAttrTransA ? m : k) << ";\n";
          out << SP*3 << "int " << OpName << "_ldb = " << (fAttrTransB ? k : n) << ";\n";
+
          if (fNC != ""){
             size_t length = ConvertShapeToLength(fShapeY);
             if (fNC2 == fNC)
@@ -409,7 +412,7 @@ namespace SOFIE{
             out << SP*4 << "auto acc_tensor_" << fNY << " = cl::sycl::accessor{buf_tensor_" << fNY;
             out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
             out << SP*4 << "cgh.copy(tensor_" << fNC2 << ", acc_tensor_" << fNY << ");\n";
-            out << SP*3 << "});\n";
+            out << SP*3 << "}).wait();\n";
          } else {
             //in this case fAttrBeta needs to be equal to zero otherwise second time we run we will use
             // the previous result
@@ -418,11 +421,20 @@ namespace SOFIE{
             }
          }
          if (fType == "float"){
-            out << SP*3 << "oneapi::mkl::blas::gemm(q, " << OpName << "_transB, " << OpName << "_transA, ";
-            out << OpName << "_n, " << OpName << "_m, " << OpName << "_k, " << OpName << "_alpha, ";
-            out << "buf_tensor_" << fNB << ", " << OpName << "_ldb, buf_tensor_" << fNA << ", " << OpName;
-            out << "_lda, " << OpName << "_beta, buf_tensor_" << fNY << ", " << OpName << "_n);\n";
+            out << SP*3 << gemm << OpName << "_transB, " << OpName << "_transA, ";
+
+            if (gpu_blas == MKLBLAS) {
+               out << OpName << "_n, " << OpName << "_m, " << OpName << "_k, " << OpName << "_alpha, ";
+               out << "buf_tensor_" << fNB << ", " << OpName << "_ldb, buf_tensor_" << fNA << ", " << OpName;
+               out << "_lda, " << OpName << "_beta, buf_tensor_" << fNY << ", " << OpName << "_n);\n";
+            }
+            else {
+               out << OpName << "_n, " << OpName << "_m, " << OpName << "_k, " << OpName << "_alpha, ";
+               out << "blas::BufferIterator(buf_tensor_" << fNB << "), " << OpName << "_ldb, blas::BufferIterator(buf_tensor_" << fNA << "), " << OpName;
+               out << "_lda, " << OpName << "_beta, blas::BufferIterator(buf_tensor_" << fNY << "), " << OpName << "_n);\n";
+            }
          }
+
          return out.str();
       }
 
