@@ -47,10 +47,12 @@ void RJittedFilter::SetFilter(std::unique_ptr<RFilterBase> f)
    fConcreteFilter = std::move(f);
 }
 
-void RJittedFilter::InitSlot(TTreeReader *r, unsigned int slot)
+void RJittedFilter::InitSlot(TTreeReader *, unsigned int) {}
+
+void RJittedFilter::RefreshColumnReaders(TTreeReader *r, unsigned int slot)
 {
    assert(fConcreteFilter != nullptr);
-   fConcreteFilter->InitSlot(r, slot);
+   fConcreteFilter->RefreshColumnReaders(r, slot);
 }
 
 bool RJittedFilter::CheckFilters(unsigned int slot, Long64_t entry)

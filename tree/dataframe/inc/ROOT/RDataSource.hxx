@@ -17,13 +17,28 @@
 #include "TString.h"
 
 #include <algorithm> // std::transform
+#include <cstdint>
+#include <optional>
+#include <set>
 #include <string>
 #include <typeinfo>
+#include <unordered_map>
+#include <variant>
 #include <vector>
+#include <functional>
+
+class TTreeReader;
+namespace ROOT::Detail::RDF {
+class RLoopManager;
+}
 
 namespace ROOT {
 namespace RDF {
 class RDataSource;
+class RSampleInfo;
+namespace Experimental {
+class RSample;
+}
 }
 }
 
@@ -70,6 +85,22 @@ public:
 };
 
 } // ns TDS
+
+namespace RDF {
+using DataSourceMTFuncVariant =
+   std::variant<std::function<void(const std::pair<ULong64_t, ULong64_t> &)>, std::function<void(TTreeReader &)>>;
+std::string GetTypeNameWithOpts(const ROOT::RDF::RDataSource &ds, std::string_view colName, bool vector2RVec);
+const std::vector<std::string> &GetTopLevelFieldNames(const ROOT::RDF::RDataSource &ds);
+const std::vector<std::string> &GetColumnNamesNoDuplicates(const ROOT::RDF::RDataSource &ds);
+void CallInitializeWithOpts(ROOT::RDF::RDataSource &ds, const std::set<std::string> &suppressErrorsForMissingColumns);
+std::string DescribeDataset(ROOT::RDF::RDataSource &ds);
+ROOT::RDF::RSampleInfo
+CreateSampleInfo(const ROOT::RDF::RDataSource &ds,
+                 const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &sampleMap);
+void RunFinalChecks(const ROOT::RDF::RDataSource &ds, bool nodesLeftNotRun);
+void ProcessMT(ROOT::RDF::RDataSource &ds, ROOT::Detail::RDF::RLoopManager &lm);
+} // namespace RDF
+
 } // ns Internal
 
 namespace RDF {
@@ -109,10 +140,42 @@ RDataSource implementations must support running multiple event-loops consecutiv
 class RDataSource {
    // clang-format on
 protected:
+   unsigned int fNSlots{};
+   std::optional<std::pair<ULong64_t, ULong64_t>> fGlobalEntryRange{};
+
    using Record_t = std::vector<void *>;
    friend std::string cling::printValue(::ROOT::RDF::RDataSource *);
 
    virtual std::string AsString() { return "generic data source"; };
+
+   friend std::string
+   ROOT::Internal::RDF::GetTypeNameWithOpts(const RDataSource &df, std::string_view colName, bool vector2RVec);
+   virtual std::string GetTypeNameWithOpts(std::string_view colName, bool) const { return GetTypeName(colName); }
+
+   friend const std::vector<std::string> &ROOT::Internal::RDF::GetTopLevelFieldNames(const ROOT::RDF::RDataSource &df);
+   virtual const std::vector<std::string> &GetTopLevelFieldNames() const { return GetColumnNames(); }
+
+   friend const std::vector<std::string> &
+   ROOT::Internal::RDF::GetColumnNamesNoDuplicates(const ROOT::RDF::RDataSource &df);
+   virtual const std::vector<std::string> &GetColumnNamesNoDuplicates() const { return GetColumnNames(); }
+
+   friend void ROOT::Internal::RDF::CallInitializeWithOpts(ROOT::RDF::RDataSource &, const std::set<std::string> &);
+   virtual void InitializeWithOpts(const std::set<std::string> &) { Initialize(); }
+
+   friend std::string ROOT::Internal::RDF::DescribeDataset(ROOT::RDF::RDataSource &);
+   virtual std::string DescribeDataset() { return "Dataframe from datasource " + GetLabel(); }
+
+   friend ROOT::RDF::RSampleInfo
+   ROOT::Internal::RDF::CreateSampleInfo(const ROOT::RDF::RDataSource &,
+                                         const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &);
+   virtual ROOT::RDF::RSampleInfo
+   CreateSampleInfo(const std::unordered_map<std::string, ROOT::RDF::Experimental::RSample *> &) const;
+
+   friend void ROOT::Internal::RDF::RunFinalChecks(const ROOT::RDF::RDataSource &, bool);
+   virtual void RunFinalChecks(bool) const {}
+
+   friend void ROOT::Internal::RDF::ProcessMT(RDataSource &, ROOT::Detail::RDF::RLoopManager &lm);
+   virtual void ProcessMT(ROOT::Detail::RDF::RLoopManager &lm);
 
 public:
    RDataSource() = default;
@@ -128,7 +191,7 @@ public:
    /// Slots numbers are used to simplify parallel execution: RDataFrame guarantees that different threads will always
    /// pass different slot values when calling methods concurrently.
    // clang-format on
-   virtual void SetNSlots(unsigned int nSlots) = 0;
+   virtual void SetNSlots(unsigned int nSlots);
 
    /// \brief Returns the number of files from which the dataset is constructed
    virtual std::size_t GetNFiles() const { return 0; }
@@ -233,6 +296,13 @@ public:
    /// the datasource in the visualization of the computation graph.
    /// Concrete datasources can override the default implementation.
    virtual std::string GetLabel() { return "Custom Datasource"; }
+
+   /// \brief Restrict processing to a [begin, end) range of entries.
+   /// \param entryRange The range of entries to process.
+   virtual void SetGlobalEntryRange(std::pair<ULong64_t, ULong64_t> entryRange)
+   {
+      fGlobalEntryRange = std::move(entryRange);
+   };
 
 protected:
    /// type-erased vector of pointers to pointers to column values - one per slot

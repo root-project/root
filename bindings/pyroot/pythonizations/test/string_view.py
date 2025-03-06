@@ -27,7 +27,7 @@ class StringView(unittest.TestCase):
 
         df = ROOT.RDataFrame(treename, filename)
         self.assertEqual(
-            str(df), "A data frame built on top of the tree dataset.")
+            str(df), "A data frame associated to the data source \"TTree data source\"")
         os.remove(filename)
 
     def test_17497(self):

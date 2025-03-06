@@ -16,10 +16,12 @@ using namespace ROOT::Internal::RDF;
 
 RJittedVariation::~RJittedVariation() {}
 
-void RJittedVariation::InitSlot(TTreeReader *r, unsigned int slot)
+void RJittedVariation::InitSlot(TTreeReader *, unsigned int) {}
+
+void RJittedVariation::RefreshColumnReaders(TTreeReader *r, unsigned int slot)
 {
    assert(fConcreteVariation != nullptr);
-   fConcreteVariation->InitSlot(r, slot);
+   fConcreteVariation->RefreshColumnReaders(r, slot);
 }
 
 void *RJittedVariation::GetValuePtr(unsigned int slot, const std::string &column, const std::string &variation)

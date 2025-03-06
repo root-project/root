@@ -1132,6 +1132,8 @@ Int_t TTree::AddBranchToCache(TBranch *b, bool subbranches)
 
 Int_t TTree::DropBranchFromCache(const char*bname, bool subbranches)
 {
+   const bool all = (*bname == '*');
+
    if (!GetTree()) {
       if (LoadTree(0)<0) {
          Error("DropBranchFromCache","Could not load a tree");
@@ -1149,15 +1151,27 @@ Int_t TTree::DropBranchFromCache(const char*bname, bool subbranches)
 
    TFile *f = GetCurrentFile();
    if (!f) {
-      Error("DropBranchFromCache", "No file is available. Branch was not dropped from the cache");
+      if (!all)
+         Error("DropBranchFromCache", "No file is available. Branch was not dropped from the cache");
       return -1;
    }
    TTreeCache *tc = GetReadCache(f,true);
    if (!tc) {
-      Error("DropBranchFromCache", "No cache is available, branch not dropped");
+      if (!all)
+         Error("DropBranchFromCache", "No cache is available, branch not dropped");
       return -1;
    }
-   return tc->DropBranch(bname,subbranches);
+
+   if (!all)
+      return tc->DropBranch(bname, subbranches);
+
+   // If the "*" option was requested, drop all branches from the cache
+   Int_t res{};
+   for (auto *branch : TRangeDynCast<TBranch>(GetTree()->GetListOfBranches())) {
+      res += tc->DropBranch(branch, subbranches);
+   }
+   // Always return -1 as error code
+   return res == 0 ? res : -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

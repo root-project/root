@@ -52,6 +52,7 @@
 #include "ROOT/RNTupleDS.hxx"
 #include "ROOT/RNTupleWriter.hxx" // for SnapshotRNTupleHelper
 #endif
+#include "ROOT/RTTreeDS.hxx"
 
 #include <algorithm>
 #include <functional>
@@ -1530,12 +1531,15 @@ class R__CLING_PTRCHECK(off) SnapshotTTreeHelper : public RActionImpl<SnapshotTT
    std::vector<void *> fBranchAddresses; // Addresses of objects associated to output branches
    RBranchSet fOutputBranches;
    std::vector<bool> fIsDefine;
+   std::weak_ptr<ROOT::Detail::RDF::RLoopManager> fOutputLoopManager;
+   ROOT::RDF::RDataSource *fInputDataSource;
 
 public:
    using ColumnTypes_t = TypeList<ColTypes...>;
    SnapshotTTreeHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
                        const ColumnNames_t &vbnames, const ColumnNames_t &bnames, const RSnapshotOptions &options,
-                       std::vector<bool> &&isDefine)
+                       std::vector<bool> &&isDefine, std::weak_ptr<ROOT::Detail::RDF::RLoopManager> loopManager,
+                       ROOT::RDF::RDataSource *inputDataSource)
       : fFileName(filename),
         fDirName(dirname),
         fTreeName(treename),
@@ -1544,7 +1548,9 @@ public:
         fOutputBranchNames(ReplaceDotWithUnderscore(bnames)),
         fBranches(vbnames.size(), nullptr),
         fBranchAddresses(vbnames.size(), nullptr),
-        fIsDefine(std::move(isDefine))
+        fIsDefine(std::move(isDefine)),
+        fOutputLoopManager(loopManager),
+        fInputDataSource(inputDataSource)
    {
       EnsureValidSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
    }
@@ -1571,6 +1577,8 @@ public:
    {
       if (r)
          fInputTree = r->GetTree();
+      else if (auto treeDS = dynamic_cast<ROOT::Internal::RDF::RTTreeDS *>(fInputDataSource))
+         fInputTree = treeDS->GetTree();
       fBranchAddressesNeedReset = true;
    }
 
@@ -1650,6 +1658,11 @@ public:
       // must destroy the TTree first, otherwise TFile will delete it too leading to a double delete
       fOutputTree.reset();
       fOutputFile->Close();
+
+      // Now connect the data source to the loop manager so it can be used for further processing
+      auto fullTreeName = fDirName.empty() ? fTreeName : fDirName + '/' + fTreeName;
+      if (auto lmPtr = fOutputLoopManager.lock())
+         lmPtr->SetDataSource(std::make_unique<ROOT::Internal::RDF::RTTreeDS>(fullTreeName, fFileName));
    }
 
    std::string GetActionName() { return "Snapshot"; }
@@ -1673,8 +1686,15 @@ public:
    SnapshotTTreeHelper MakeNew(void *newName, std::string_view /*variation*/ = "nominal")
    {
       const std::string finalName = *reinterpret_cast<const std::string *>(newName);
-      return SnapshotTTreeHelper{
-         finalName, fDirName, fTreeName, fInputBranchNames, fOutputBranchNames, fOptions, std::vector<bool>(fIsDefine)};
+      return SnapshotTTreeHelper{finalName,
+                                 fDirName,
+                                 fTreeName,
+                                 fInputBranchNames,
+                                 fOutputBranchNames,
+                                 fOptions,
+                                 std::vector<bool>(fIsDefine),
+                                 fOutputLoopManager,
+                                 fInputDataSource};
    }
 };
 
@@ -1699,12 +1719,17 @@ class R__CLING_PTRCHECK(off) SnapshotTTreeHelperMT : public RActionImpl<Snapshot
    std::vector<std::vector<void *>> fBranchAddresses;
    std::vector<RBranchSet> fOutputBranches;
    std::vector<bool> fIsDefine;
+   std::weak_ptr<ROOT::Detail::RDF::RLoopManager> fOutputLoopManager;
+   ROOT::RDF::RDataSource *fInputDataSource;
 
 public:
    using ColumnTypes_t = TypeList<ColTypes...>;
+
    SnapshotTTreeHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
                          std::string_view treename, const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
-                         const RSnapshotOptions &options, std::vector<bool> &&isDefine)
+                         const RSnapshotOptions &options, std::vector<bool> &&isDefine,
+                         std::weak_ptr<ROOT::Detail::RDF::RLoopManager> loopManager,
+                         ROOT::RDF::RDataSource *inputDataSource)
       : fNSlots(nSlots),
         fOutputFiles(fNSlots),
         fOutputTrees(fNSlots),
@@ -1719,7 +1744,9 @@ public:
         fBranches(fNSlots, std::vector<TBranch *>(vbnames.size(), nullptr)),
         fBranchAddresses(fNSlots, std::vector<void *>(vbnames.size(), nullptr)),
         fOutputBranches(fNSlots),
-        fIsDefine(std::move(isDefine))
+        fIsDefine(std::move(isDefine)),
+        fOutputLoopManager(loopManager),
+        fInputDataSource(inputDataSource)
    {
       EnsureValidSnapshotTTreeOutput(fOptions, fTreeName, fFileName);
    }
@@ -1766,7 +1793,9 @@ public:
       if (r) {
          // not an empty-source RDF
          fInputTrees[slot] = r->GetTree();
-      }
+      } else if (auto treeDS = dynamic_cast<ROOT::Internal::RDF::RTTreeDS *>(fInputDataSource))
+         fInputTrees[slot] = treeDS->GetTree();
+
       fBranchAddressesNeedReset[slot] = 1; // reset first event flag for this slot
    }
 
@@ -1855,6 +1884,11 @@ public:
       // flush all buffers to disk by destroying the TBufferMerger
       fOutputFiles.clear();
       fMerger.reset();
+
+      // Now connect the data source to the loop manager so it can be used for further processing
+      auto fullTreeName = fDirName.empty() ? fTreeName : fDirName + '/' + fTreeName;
+      if (auto lmPtr = fOutputLoopManager.lock())
+         lmPtr->SetDataSource(std::make_unique<ROOT::Internal::RDF::RTTreeDS>(fullTreeName, fFileName));
    }
 
    std::string GetActionName() { return "Snapshot"; }
@@ -1878,8 +1912,16 @@ public:
    SnapshotTTreeHelperMT MakeNew(void *newName, std::string_view /*variation*/ = "nominal")
    {
       const std::string finalName = *reinterpret_cast<const std::string *>(newName);
-      return SnapshotTTreeHelperMT{fNSlots,           finalName,          fDirName, fTreeName,
-                                   fInputBranchNames, fOutputBranchNames, fOptions, std::vector<bool>(fIsDefine)};
+      return SnapshotTTreeHelperMT{fNSlots,
+                                   finalName,
+                                   fDirName,
+                                   fTreeName,
+                                   fInputBranchNames,
+                                   fOutputBranchNames,
+                                   fOptions,
+                                   std::vector<bool>(fIsDefine),
+                                   fOutputLoopManager,
+                                   fInputDataSource};
    }
 };
 
@@ -1906,7 +1948,7 @@ class R__CLING_PTRCHECK(off) SnapshotRNTupleHelper : public RActionImpl<Snapshot
    std::unique_ptr<TFile> fOutputFile{nullptr};
 
    RSnapshotOptions fOptions;
-   ROOT::Detail::RDF::RLoopManager *fLoopManager;
+   std::weak_ptr<ROOT::Detail::RDF::RLoopManager> fOutputLoopManager;
    ColumnNames_t fInputFieldNames; // This contains the resolved aliases
    ColumnNames_t fOutputFieldNames;
    std::unique_ptr<ROOT::Experimental::RNTupleWriter> fWriter{nullptr};
@@ -1919,11 +1961,11 @@ public:
    using ColumnTypes_t = TypeList<ColTypes...>;
    SnapshotRNTupleHelper(std::string_view filename, std::string_view ntuplename, const ColumnNames_t &vfnames,
                          const ColumnNames_t &fnames, const RSnapshotOptions &options,
-                         ROOT::Detail::RDF::RLoopManager *lm, std::vector<bool> &&isDefine)
+                         std::weak_ptr<ROOT::Detail::RDF::RLoopManager> lm, std::vector<bool> &&isDefine)
       : fFileName(filename),
         fNTupleName(ntuplename),
         fOptions(options),
-        fLoopManager(lm),
+        fOutputLoopManager(lm),
         fInputFieldNames(vfnames),
         fOutputFieldNames(ReplaceDotWithUnderscore(fnames)),
         fIsDefine(std::move(isDefine))
@@ -1937,7 +1979,7 @@ public:
    SnapshotRNTupleHelper &operator=(SnapshotRNTupleHelper &&) = default;
    ~SnapshotRNTupleHelper()
    {
-      if (!fNTupleName.empty() && !fLoopManager->GetDataSource() && fOptions.fLazy)
+      if (auto lm = fOutputLoopManager.lock(); lm && !fNTupleName.empty() && !lm->GetDataSource() && fOptions.fLazy)
          Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
    }
 
@@ -1993,7 +2035,8 @@ public:
    {
       fWriter.reset();
       // We can now set the data source of the loop manager for the RDataFrame that is returned by the Snapshot call.
-      fLoopManager->SetDataSource(std::make_unique<ROOT::Experimental::RNTupleDS>(fNTupleName, fFileName));
+      if (auto lm = fOutputLoopManager.lock())
+         lm->SetDataSource(std::make_unique<ROOT::Experimental::RNTupleDS>(fNTupleName, fFileName));
    }
 
    std::string GetActionName() { return "Snapshot"; }
@@ -2022,7 +2065,7 @@ public:
                                    fInputFieldNames,
                                    fOutputFieldNames,
                                    fOptions,
-                                   fLoopManager,
+                                   fOutputLoopManager,
                                    std::vector<bool>(fIsDefine)};
    }
 };

@@ -208,11 +208,12 @@ public:
    RVariation &operator=(const RVariation &) = delete;
    ~RVariation() { fLoopManager->Deregister(this); }
 
-   void InitSlot(TTreeReader *r, unsigned int slot) final
+   void InitSlot(TTreeReader *, unsigned int slot) final { fLastCheckedEntry[slot * CacheLineStep<Long64_t>()] = -1; }
+
+   void RefreshColumnReaders(TTreeReader *r, unsigned int slot) final
    {
       RColumnReadersInfo info{fInputColumns, fColumnRegister, fIsDefine.data(), *fLoopManager};
       fValues[slot] = GetColumnReaders(slot, r, ColumnTypes_t{}, info);
-      fLastCheckedEntry[slot * CacheLineStep<Long64_t>()] = -1;
    }
 
    /// Return the (type-erased) address of the value for the given processing slot.
