@@ -270,6 +270,7 @@ For this reasons, ROOT offers the concept of friends for TTree and TChain.
 \anchor fullexample
 ## A Complete Example
 
+Start by creating a file and histogram:
 ~~~ {.cpp}
 // A simple example creating a tree
 // Compile it with: `g++ myTreeExample.cpp -o myTreeExample `root-config --cflags --libs`
@@ -288,7 +289,11 @@ int main()
 
    // Define a histogram and some simple structures
    TH1D hpx("hpx", "This is the px distribution", 100, -4, 4);
-
+   
+   ~~~
+   
+   Next, define the data structures:
+   ~~~ {.cpp}
    typedef struct {
       Float_t x, y, z;
    } Point;
@@ -300,13 +305,18 @@ int main()
    } Event;
    Point point;
    Event event;
+   
+   ~~~
+   
+   Finally, create  a tree, and branches, and fill it with data:
+   ~~~ {.cpp}
 
    // Create a ROOT Tree
    TTree tree("T", "An example of ROOT tree with a few branches");
    tree.Branch("point", &point, "x:y:z");
    tree.Branch("event", &event, "ntrack/I:nseg:nvertex:flag/i:temperature/F");
    tree.Branch("hpx", &hpx);
-
+   
    float px, py;
 
    TRandom3 myGenerator;
