@@ -113,18 +113,10 @@ void TAttAxis::SaveAttributes(std::ostream &out, const char *name, const char *s
    if (fNdivisions != 510) {
       out<<"   "<<name<<subname<<"->SetNdivisions("<<fNdivisions<<");"<<std::endl;
    }
-   if (fAxisColor != 1) {
-      if (TColor::SaveColor(out, fAxisColor))
-         out<<"   "<<name<<subname<<"->SetAxisColor(ci);" << std::endl;
-      else
-         out<<"   "<<name<<subname<<"->SetAxisColor("<<fAxisColor<<");"<<std::endl;
-   }
-   if (fLabelColor != 1) {
-      if (TColor::SaveColor(out, fLabelColor))
-         out<<"   "<<name<<subname<<"->SetLabelColor(ci);" << std::endl;
-      else
-         out<<"   "<<name<<subname<<"->SetLabelColor("<<fLabelColor<<");"<<std::endl;
-   }
+   if (fAxisColor != 1)
+      out << "   " << name << subname << "->SetAxisColor(" << TColor::SavePrimitiveColor(fAxisColor) << ");\n";
+   if (fLabelColor != 1)
+      out << "   " << name << subname << "->SetLabelColor(" << TColor::SavePrimitiveColor(fLabelColor) << ");\n";
    if (fLabelFont != 62) {
       out<<"   "<<name<<subname<<"->SetLabelFont("<<fLabelFont<<");"<<std::endl;
    }
@@ -143,12 +135,8 @@ void TAttAxis::SaveAttributes(std::ostream &out, const char *name, const char *s
    if (TMath::Abs(fTitleOffset) > 0.001) {
       out<<"   "<<name<<subname<<"->SetTitleOffset("<<fTitleOffset<<");"<<std::endl;
    }
-   if (fTitleColor != 1) {
-      if (TColor::SaveColor(out, fTitleColor))
-         out<<"   "<<name<<subname<<"->SetTitleColor(ci);" << std::endl;
-      else
-         out<<"   "<<name<<subname<<"->SetTitleColor("<<fTitleColor<<");"<<std::endl;
-   }
+   if (fTitleColor != 1)
+      out << "   " << name << subname << "->SetTitleColor(" << TColor::SavePrimitiveColor(fTitleColor) << ");\n";
    if (fTitleFont != 62) {
       out<<"   "<<name<<subname<<"->SetTitleFont("<<fTitleFont<<");"<<std::endl;
    }
