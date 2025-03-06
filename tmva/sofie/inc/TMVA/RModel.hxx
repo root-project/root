@@ -138,6 +138,10 @@ public:
    {
       Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize, pos, verbose);
    }
+   void GenerateGPU(std::underlying_type_t<Options> options, int batchSize = 1);
+   void GenerateGPU(Options options = Options::kDefault, int batchSize = 1) {
+      GenerateGPU(static_cast<std::underlying_type_t<Options>>(options), batchSize);
+   }
    // generate the infer function signature. If isdecl= false generate the calling infer function
    // used to infer the sub-graphs
    std::string GenerateInferSignature(bool isdecl = true);
@@ -166,7 +170,6 @@ public:
 
    void PrintIntermediateTensors();
    void PrintOutputTensors();
-   void OutputGenerated(std::string filename = "", bool append = false);
    std::vector<std::string> GetOutputTensorNames() { return fOutputTensorNames; }
    void SetFilename(std::string filename) { fName = filename; }
 

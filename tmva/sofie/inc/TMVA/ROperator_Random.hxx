@@ -136,6 +136,10 @@ public:
       return out.str();
    }
 
+   std::string GenerateGPU(std::string OpName) {
+      return std::string();
+   }
+   
    std::vector<std::string> GetStdLibs() override {
       std::vector<std::string> ret = {"memory"};   // for unique ptr
       return ret;

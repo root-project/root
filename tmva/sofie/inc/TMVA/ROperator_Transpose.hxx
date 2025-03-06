@@ -162,6 +162,61 @@ public:
       return out.str();
    }
 
+   std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
+      std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal)  {
+      OpName = "op_" + OpName;
+      if (fShapeData.empty() || fShapeOutput.empty()){
+         throw std::runtime_error("TMVA SOFIE Transpose Op called to Generate without being initialized first");
+      }
+      int dim = fShapeData.size();
+      auto inStrides = UTILITY::ComputeStrideFromShape(fShapeData);
+      auto outStrides = UTILITY::ComputeStrideFromShape(fShapeOutput);
+      size_t length = inStrides[0]*fShapeData[0];  // total tensor size
+      assert (length == outStrides[0]*fShapeOutput[0]);
+
+      std::stringstream out;
+      out << "\n" << SP*3 << "///------- Transpose operator\n";
+   
+      out << SP*3 << "q.submit([&](cl::sycl::handler& cgh){\n";
+      out << SP*4 << "auto acc_tensor_" << fNData << " = cl::sycl::accessor{buf_tensor_" << fNData;
+      out << ", cgh, cl::sycl::read_only};\n";
+      out << SP*4 << "auto acc_tensor_" << fNOutput << " = cl::sycl::accessor{buf_tensor_" << fNOutput;
+      out << ", cgh, cl::sycl::write_only, cl::sycl::no_init};\n";
+
+      out << SP*4 << "cgh.parallel_for<class " << OpName << ">(cl::sycl::range<1>(" << length;
+      out << "), [=](cl::sycl::id<1> id){\n";
+      out << SP*5 << "acc_tensor_" << fNOutput << "[id] = acc_tensor_" << fNData << "[";
+      std::vector<std::string> i_out(dim);
+      for (int k = 0; k < dim; k++){
+         if (k < dim - 1) {
+            i_out[k] = "( id / " + std::to_string(outStrides[k]) + ")";
+         }
+         else {
+            i_out[k] = "( id % " + std::to_string(fShapeOutput[k]) + ")";
+         }
+         
+         if (k > 0 && k < dim - 1) {
+            i_out[k] += " % " + std::to_string(fShapeOutput[k]);
+         }
+      }
+
+      for (int k = 0; k < dim; k++) {
+         // find value in fAtrrPerm corresponding to k
+         int l = std::find(fAttrPerm.begin(), fAttrPerm.end(), k) - fAttrPerm.begin();
+         assert(l >= 0 && l < dim);
+         out << "( " << i_out[l] << " )";
+         if (k < dim-1) {
+            out << " * " << inStrides[k];
+            out << " + ";
+         }
+      }
+
+      out << "];\n";
+      out << SP*4 << "});\n";
+      out << SP*3 << "});\n";
+      
+      return out.str();
+   }   
 
 };
 
