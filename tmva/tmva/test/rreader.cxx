@@ -1,9 +1,11 @@
 #include <gtest/gtest.h>
+#include <stdexcept>
 
 #include <TFile.h>
 #include <TTree.h>
 #include <TROOT.h>
 #include <TSystem.h>
+#include <TError.h>
 #include <TMVA/Factory.h>
 #include <TMVA/DataLoader.h>
 
@@ -283,20 +285,22 @@ TEST(RReader, MulticlassComputeDataFrame)
    EXPECT_EQ(y->size(), *c);
 }
 
+void NonDefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
+{
+   DefaultErrorHandler(level, kFALSE, location, msg);
+   if (abort_bool) {
+      throw std::runtime_error(msg);
+   }
+}
+
 // https://its.cern.ch/jira/browse/ROOT-9833
 // https://its.cern.ch/jira/browse/ROOT-10018
 TEST(RReader, UndefinedVariables)
 {
+   SetErrorHandler(NonDefaultErrorHandler);
    std::vector<double> evData = {1, 2};
-   testing::internal::CaptureStderr();
-   std::string err;
    TMVA::DataLoader dl;
-   dl.AddEvent("class1", TMVA::Types::kTraining, evData, 1.0);
-   err = testing::internal::GetCapturedStderr();
-   EXPECT_FALSE(err.empty());
-   err = "";
+   EXPECT_THROW(dl.AddEvent("class1", TMVA::Types::kTraining, evData, 1.0), std::runtime_error);   
    TMVA::DataLoader d("dataset");
-   d.AddSignalTrainingEvent({0.0}, 1.0);
-   err = testing::internal::GetCapturedStderr();
-   EXPECT_FALSE(err.empty());
+   EXPECT_THROW(d.AddSignalTrainingEvent({0.0}, 1.0), std::runtime_error);
 }
