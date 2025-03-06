@@ -258,56 +258,34 @@ void TScatter::SetMargin(Double_t margin)
 
 void TScatter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   out << "   " << std::endl;
-   static Int_t frameNumber = 1000;
-   frameNumber++;
+   TString arr_x = SavePrimitiveArray(out, "scat_x", fNpoints, fGraph->GetX(), kTRUE);
+   TString arr_y = SavePrimitiveArray(out, "scat_y", fNpoints, fGraph->GetY());
+   TString arr_col = SavePrimitiveArray(out, "scat_col", fNpoints, fColor);
+   TString arr_size = SavePrimitiveArray(out, "scat_size", fNpoints, fSize);
 
-   Int_t i;
-   Double_t *X        = fGraph->GetX();
-   Double_t *Y        = fGraph->GetY();
-   TString fXName     = TString::Format("%s_fx%d",GetName(),frameNumber);
-   TString fYName     = TString::Format("%s_fy%d", GetName(),frameNumber);
-   TString fColorName = TString::Format("%s_fcolor%d",GetName(),frameNumber);
-   TString fSizeName  = TString::Format("%s_fsize%d",GetName(),frameNumber);
-   out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << X[i] << "," << std::endl;
-   out << "   " << X[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << Y[i] << "," << std::endl;
-   out << "   " << Y[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fColorName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fColor[i] << "," << std::endl;
-   out << "   " << fColor[fNpoints-1] << "};" << std::endl;
-   out << "   Double_t " << fSizeName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fSize[i] << "," << std::endl;
-   out << "   " << fSize[fNpoints-1] << "};" << std::endl;
+   SavePrimitiveConstructor(
+      out, Class(), "scat",
+      TString::Format("%d, %s, %s, %s, %s", fNpoints, arr_x.Data(), arr_y.Data(), arr_col.Data(), arr_size.Data()),
+      kFALSE);
 
-   if (gROOT->ClassSaved(TScatter::Class()))
-      out << "   ";
-   else
-      out << "   TScatter *";
-   out << "scat = new TScatter(" << fNpoints << "," << fXName   << ","  << fYName  << ","
-                                 << fColorName  << ","  << fSizeName << ");" << std::endl;
-
-   out << "   scat->SetName(" << quote << GetName() << quote << ");" << std::endl;
-   out << "   scat->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
-   out << "   scat->SetMargin(" << GetMargin() << ");" << std::endl;
-   out << "   scat->SetMinMarkerSize(" << GetMinMarkerSize() << ");" << std::endl;
-   out << "   scat->SetMaxMarkerSize(" << GetMaxMarkerSize() << ");" << std::endl;
-
+   SavePrimitiveNameTitle(out, "scat");
    SaveFillAttributes(out, "scat", 0, 1001);
    SaveLineAttributes(out, "scat", 1, 1, 1);
    SaveMarkerAttributes(out, "scat", 1, 1, 1);
 
+   out << "   scat->SetMargin(" << GetMargin() << ");\n";
+   out << "   scat->SetMinMarkerSize(" << GetMinMarkerSize() << ");\n";
+   out << "   scat->SetMaxMarkerSize(" << GetMaxMarkerSize() << ");\n";
+
    if (fHistogram) {
+      static int histcnt = 0;
       TString hname = fHistogram->GetName();
-      fHistogram->SetName(TString::Format("Graph_%s%d", hname.Data(), frameNumber));
+      fHistogram->SetName(TString::Format("scat_stack_hist%d", histcnt++));
       fHistogram->SavePrimitive(out, "nodraw");
-      out << "   scat->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
-      out << "   " << std::endl;
+      out << "   scat->SetHistogram(" << fHistogram->GetName() << ");\n";
+      out << "   \n";
       fHistogram->SetName(hname);
    }
 
-   out << "   scat->Draw(" << quote << option << quote << ");" << std::endl;
+   out << "   scat->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
