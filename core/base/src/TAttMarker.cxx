@@ -347,12 +347,8 @@ void TAttMarker::ResetAttMarker(Option_t *)
 
 void TAttMarker::SaveMarkerAttributes(std::ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t sizdef)
 {
-   if (fMarkerColor != coldef) {
-      if (TColor::SaveColor(out, fMarkerColor))
-         out<<"   "<<name<<"->SetMarkerColor(ci);" << std::endl;
-      else
-         out<<"   "<<name<<"->SetMarkerColor("<<fMarkerColor<<");"<<std::endl;
-   }
+   if (fMarkerColor != coldef)
+      out << "   " << name << "->SetMarkerColor(" << TColor::SavePrimitiveColor(fMarkerColor) << ");\n";
    if (fMarkerStyle != stydef) {
       out<<"   "<<name<<"->SetMarkerStyle("<<fMarkerStyle<<");"<<std::endl;
    }
@@ -370,7 +366,7 @@ void TAttMarker::SetMarkerAttributes()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set a transparent marker color. 
+/// Set a transparent marker color.
 /// \param mcolor defines the marker color
 /// \param malpha defines the percentage of opacity from 0. (fully transparent) to 1. (fully opaque).
 /// \note malpha is ignored (treated as 1) if the TCanvas has no GL support activated.
