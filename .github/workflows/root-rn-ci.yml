@@ -79,7 +79,7 @@ jobs:
           echo +++ Retrieving the secret
           echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
           echo +++ Creating the token
-          kinit -kt ${KT_FILE_NAME} ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }}
+          kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
           echo +++ Running the copy
           export DIRNAME=`ls -1|grep -v relnotes|grep -v root`
           xrdfs ${EOS_ENDPOINT} mkdir ${EOS_PATH}/${DIRNAME}
