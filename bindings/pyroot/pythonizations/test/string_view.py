@@ -26,8 +26,7 @@ class StringView(unittest.TestCase):
             f.WriteObject(t, treename)
 
         df = ROOT.RDataFrame(treename, filename)
-        self.assertEqual(
-            str(df), "A data frame built on top of the tree dataset.")
+        self.assertEqual(df.GetNRuns(), 0)
         os.remove(filename)
 
     def test_17497(self):
