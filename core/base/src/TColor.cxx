@@ -2549,22 +2549,15 @@ const char *TColor::PixelAsHexString(ULong_t pixel)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save a color with index > 228 as a C++ statement(s) on output stream out.
-/// Return kFALSE if color not saved in the output stream
+/// Convert color in C++ statement which can be used in SetColor directives
+/// Produced statement either includes TColor::GetColor() invocation or just plain color index as integer
+/// Method should be used is SavePrimitive methods for color storage
 
-Bool_t TColor::SaveColor(std::ostream &out, Int_t ci)
+TString TColor::SavePrimitiveColor(Int_t ci)
 {
-   if (ci <= 228)
-      return kFALSE;
-
-   TColor *c = gROOT->GetColor(ci);
+   TColor *c = ci <= 228 ? nullptr : gROOT->GetColor(ci);
    if (!c)
-      return kFALSE;
-
-   if (gROOT->ClassSaved(TColor::Class()))
-      out << "   ci = ";
-   else
-      out << "   Int_t ci = ";
+      return TString::Format("%d", ci);
 
    Float_t r, g, b, a;
 
@@ -2572,14 +2565,28 @@ Bool_t TColor::SaveColor(std::ostream &out, Int_t ci)
    a = c->GetAlpha();
    Int_t ri = (Int_t)(255 * r), gi = (Int_t)(255 * g), bi = (Int_t)(255 * b), ai = (Int_t)(255 * a);
 
-   TString cname;
-
    if (ai < 255)
-      cname.Form("#%02x%02x%02x%02x", ri, gi, bi, ai);
-   else
-      cname.Form("#%02x%02x%02x", ri, gi, bi);
+      return TString::Format("TColor::GetColor(\"#%02x%02x%02x%02x\")", ri, gi, bi, ai);
 
-   out << "TColor::GetColor(\"" << cname << "\");" << std::endl;
+   return TString::Format("TColor::GetColor(\"#%02x%02x%02x\")", ri, gi, bi);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save a color with index > 228 as a C++ statement(s) on output stream out.
+/// Return kFALSE if color not saved in the output stream
+/// Consider use of SavePrimitiveColor() method instead
+
+Bool_t TColor::SaveColor(std::ostream &out, Int_t ci)
+{
+   if ((ci <= 228) || !gROOT->GetColor(ci))
+      return kFALSE;
+
+   if (gROOT->ClassSaved(TColor::Class()))
+      out << "   ci = ";
+   else
+      out << "   Int_t ci = ";
+
+   out << SavePrimitiveColor(ci) << ";\n";
 
    return kTRUE;
 }
