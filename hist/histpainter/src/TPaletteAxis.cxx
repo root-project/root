@@ -622,40 +622,32 @@ void TPaletteAxis::Paint(Option_t *)
 
 void TPaletteAxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   if (!fH) return;
+   if (!fH)
+      return;
 
-   char quote = '"';
+   TString args;
+   if (fOption.Contains("NDC"))
+      args.Form("%g, %g, %g, %g, %s", fX1NDC, fY1NDC, fX2NDC, fY2NDC, fH->GetName());
+   else
+      args.Form("%g, %g, %g, %g, %s", fX1, fY1, fX2, fY2, fH->GetName());
 
-   out << "   " << std::endl;
-   if (gROOT->ClassSaved(TPaletteAxis::Class())) {
-      out << "   ";
-   } else {
-      out << "   " << ClassName() << " *";
-   }
-   if (fOption.Contains("NDC")) {
-      out << "palette = new " << ClassName() << "(" << fX1NDC << "," << fY1NDC << "," << fX2NDC << "," << fY2NDC
-          << "," << fH->GetName() << ");" << std::endl;
-   } else {
-      out << "palette = new " << ClassName() << "(" << fX1 << "," << fY1 << "," << fX2 << "," << fY2
-          << "," << fH->GetName() << ");" << std::endl;
-   }
-   out << "   palette->SetNdivisions(" << fH->GetZaxis()->GetNdivisions() << ");" << std::endl;
-   out << "   palette->SetAxisColor(" << fH->GetZaxis()->GetAxisColor() << ");" << std::endl;
-   out << "   palette->SetLabelColor(" << fH->GetZaxis()->GetLabelColor() << ");" << std::endl;
-   out << "   palette->SetLabelFont(" << fH->GetZaxis()->GetLabelFont() << ");" << std::endl;
-   out << "   palette->SetLabelOffset(" << fH->GetZaxis()->GetLabelOffset() << ");" << std::endl;
-   out << "   palette->SetLabelSize(" << fH->GetZaxis()->GetLabelSize() << ");" << std::endl;
-   out << "   palette->SetMaxDigits(" << fH->GetZaxis()->GetMaxDigits() << ");" << std::endl;
-   out << "   palette->SetTickLength(" << fH->GetZaxis()->GetTickLength() << ");" << std::endl;
-   out << "   palette->SetTitleOffset(" << fH->GetZaxis()->GetTitleOffset() << ");" << std::endl;
-   out << "   palette->SetTitleSize(" << fH->GetZaxis()->GetTitleSize() << ");" << std::endl;
-   out << "   palette->SetTitleColor(" << fH->GetZaxis()->GetTitleColor() << ");" << std::endl;
-   out << "   palette->SetTitleFont(" << fH->GetZaxis()->GetTitleFont() << ");" << std::endl;
-   out << "   palette->SetTitle(" << quote << fH->GetZaxis()->GetTitle() << quote << ");" << std::endl;
+   SavePrimitiveConstructor(out, Class(), "palette", args);
+   out << "   palette->SetNdivisions(" << fH->GetZaxis()->GetNdivisions() << ");\n";
+   out << "   palette->SetAxisColor(" << fH->GetZaxis()->GetAxisColor() << ");\n";
+   out << "   palette->SetLabelColor(" << fH->GetZaxis()->GetLabelColor() << ");\n";
+   out << "   palette->SetLabelFont(" << fH->GetZaxis()->GetLabelFont() << ");\n";
+   out << "   palette->SetLabelOffset(" << fH->GetZaxis()->GetLabelOffset() << ");\n";
+   out << "   palette->SetLabelSize(" << fH->GetZaxis()->GetLabelSize() << ");\n";
+   out << "   palette->SetMaxDigits(" << fH->GetZaxis()->GetMaxDigits() << ");\n";
+   out << "   palette->SetTickLength(" << fH->GetZaxis()->GetTickLength() << ");\n";
+   out << "   palette->SetTitleOffset(" << fH->GetZaxis()->GetTitleOffset() << ");\n";
+   out << "   palette->SetTitleSize(" << fH->GetZaxis()->GetTitleSize() << ");\n";
+   out << "   palette->SetTitleColor(" << fH->GetZaxis()->GetTitleColor() << ");\n";
+   out << "   palette->SetTitleFont(" << fH->GetZaxis()->GetTitleFont() << ");\n";
+   out << "   palette->SetTitle(\"" << TString(fH->GetZaxis()->GetTitle()).ReplaceSpecialCppChars() << "\");\n";
    SaveFillAttributes(out, "palette", -1, -1);
    SaveLineAttributes(out, "palette", 1, 1, 1);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Unzoom the palette
