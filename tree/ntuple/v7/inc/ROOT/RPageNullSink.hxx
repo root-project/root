@@ -42,7 +42,10 @@ public:
    {
    }
 
-   ColumnHandle_t AddColumn(ROOT::DescriptorId_t, RColumn &column) final { return {fNColumns++, &column}; }
+   ColumnHandle_t AddColumn(ROOT::DescriptorId_t, ROOT::Internal::RColumn &column) final
+   {
+      return {fNColumns++, &column};
+   }
 
    const RNTupleDescriptor &GetDescriptor() const final
    {

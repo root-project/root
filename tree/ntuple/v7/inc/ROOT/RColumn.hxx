@@ -28,11 +28,11 @@
 #include <memory>
 #include <utility>
 
-namespace ROOT::Experimental::Internal {
+namespace ROOT::Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RColumn
+\class ROOT::Internal::RColumn
 \ingroup NTuple
 \brief A column is a storage-backed array of a simple, fixed-size type, from which pages can be mapped into memory.
 */
@@ -45,10 +45,10 @@ private:
    std::uint32_t fIndex;
    /// Fields can have multiple column representations, distinguished by representation index
    std::uint16_t fRepresentationIndex;
-   RPageSink *fPageSink = nullptr;
-   RPageSource *fPageSource = nullptr;
-   RPageStorage::ColumnHandle_t fHandleSink;
-   RPageStorage::ColumnHandle_t fHandleSource;
+   ROOT::Experimental::Internal::RPageSink *fPageSink = nullptr;
+   ROOT::Experimental::Internal::RPageSource *fPageSource = nullptr;
+   ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t fHandleSink;
+   ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t fHandleSource;
    /// The page into which new elements are being written. The page will initially be small
    /// (RNTupleWriteOptions::fInitialUnzippedPageSize, which corresponds to fInitialElements) and expand as needed and
    /// as memory for page buffers is still available (RNTupleWriteOptions::fPageBufferBudget) or the maximum page
@@ -120,9 +120,10 @@ public:
    /// Connect the column to a page sink.  `firstElementIndex` can be used to specify the first column element index
    /// with backing storage for this column.  On read back, elements before `firstElementIndex` will cause the zero page
    /// to be mapped.
-   void ConnectPageSink(ROOT::DescriptorId_t fieldId, RPageSink &pageSink, ROOT::NTupleSize_t firstElementIndex = 0U);
+   void ConnectPageSink(ROOT::DescriptorId_t fieldId, ROOT::Experimental::Internal::RPageSink &pageSink,
+                        ROOT::NTupleSize_t firstElementIndex = 0U);
    /// Connect the column to a page source.
-   void ConnectPageSource(ROOT::DescriptorId_t fieldId, RPageSource &pageSource);
+   void ConnectPageSource(ROOT::DescriptorId_t fieldId, ROOT::Experimental::Internal::RPageSource &pageSource);
 
    void Append(const void *from)
    {
@@ -353,16 +354,16 @@ public:
    std::uint16_t GetRepresentationIndex() const { return fRepresentationIndex; }
    ROOT::DescriptorId_t GetOnDiskId() const { return fOnDiskId; }
    ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
-   RPageSource *GetPageSource() const { return fPageSource; }
-   RPageSink *GetPageSink() const { return fPageSink; }
-   RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
-   RPageStorage::ColumnHandle_t GetHandleSink() const { return fHandleSink; }
+   ROOT::Experimental::Internal::RPageSource *GetPageSource() const { return fPageSource; }
+   ROOT::Experimental::Internal::RPageSink *GetPageSink() const { return fPageSink; }
+   ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
+   ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t GetHandleSink() const { return fHandleSink; }
 
    void SetBitsOnStorage(std::size_t bits) { fElement->SetBitsOnStorage(bits); }
    std::size_t GetWritePageCapacity() const { return fWritePage.GetCapacity(); }
    void SetValueRange(double min, double max) { fElement->SetValueRange(min, max); }
 }; // class RColumn
 
-} // namespace ROOT::Experimental::Internal
+} // namespace ROOT::Internal
 
 #endif
