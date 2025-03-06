@@ -17,6 +17,9 @@
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnPrint.h"
 
+#include "./MPIProcess.h"
+#include "./MnFcnCaller.h"
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -24,10 +27,6 @@
 #include <cmath>
 #include <cassert>
 #include <iomanip>
-
-#include "Minuit2/MPIProcess.h"
-
-#include "./MnFcnCaller.h"
 
 namespace ROOT {
 
