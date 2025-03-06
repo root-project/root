@@ -343,7 +343,7 @@ TEST(PageStorageFile, LoadClusters)
    EXPECT_EQ(0U, cluster->GetId());
    EXPECT_EQ(0U, cluster->GetNOnDiskPages());
 
-   auto column = ROOT::Experimental::Internal::RColumn::Create<float>(ROOT::ENTupleColumnType::kReal32, 0, 0);
+   auto column = ROOT::Internal::RColumn::Create<float>(ROOT::ENTupleColumnType::kReal32, 0, 0);
    column->ConnectPageSource(ptId, source);
    clusterKeys[0].fClusterId = 1;
    clusterKeys[0].fPhysicalColumnSet.insert(colId);

@@ -30,7 +30,7 @@ public:
    } fCounters{};
 
 protected:
-   ColumnHandle_t AddColumn(ROOT::DescriptorId_t, ROOT::Experimental::Internal::RColumn &) final { return {}; }
+   ColumnHandle_t AddColumn(ROOT::DescriptorId_t, ROOT::Internal::RColumn &) final { return {}; }
 
    const RNTupleDescriptor &GetDescriptor() const final
    {

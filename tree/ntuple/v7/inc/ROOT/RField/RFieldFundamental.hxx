@@ -377,7 +377,7 @@ protected:
       const auto n = r.size();
       fAvailableColumns.reserve(n);
       for (std::uint16_t i = 0; i < n; ++i) {
-         auto &column = fAvailableColumns.emplace_back(Internal::RColumn::Create<T>(r[i][0], 0, i));
+         auto &column = fAvailableColumns.emplace_back(ROOT::Internal::RColumn::Create<T>(r[i][0], 0, i));
          if (r[i][0] == ROOT::ENTupleColumnType::kReal32Trunc) {
             column->SetBitsOnStorage(fBitWidth);
          } else if (r[i][0] == ROOT::ENTupleColumnType::kReal32Quant) {
@@ -397,7 +397,7 @@ protected:
             break;
 
          auto &column =
-            fAvailableColumns.emplace_back(Internal::RColumn::Create<T>(onDiskTypes[0], 0, representationIndex));
+            fAvailableColumns.emplace_back(ROOT::Internal::RColumn::Create<T>(onDiskTypes[0], 0, representationIndex));
          if (onDiskTypes[0] == ROOT::ENTupleColumnType::kReal32Trunc) {
             const auto &fdesc = desc.GetFieldDescriptor(Base::GetOnDiskId());
             const auto &coldesc = desc.GetColumnDescriptor(fdesc.GetLogicalColumnIds()[0]);

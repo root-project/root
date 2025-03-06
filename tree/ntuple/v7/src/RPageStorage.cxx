@@ -43,6 +43,7 @@
 #include <utility>
 
 using ROOT::Internal::MakeUninitArray;
+using ROOT::Internal::RColumn;
 using ROOT::Internal::RColumnElementBase;
 
 ROOT::Experimental::Internal::RPageStorage::RPageStorage(std::string_view name)

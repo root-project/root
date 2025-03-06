@@ -267,13 +267,13 @@ protected:
    /// When reading, points to any column of the column team of the active representation. Usually, this is just
    /// the first column.
    /// When writing, points to the first column index of the currently active (not suppressed) column representation.
-   Internal::RColumn *fPrincipalColumn = nullptr;
+   ROOT::Internal::RColumn *fPrincipalColumn = nullptr;
    /// Some fields have a second column in its column representation. In this case, fAuxiliaryColumn points into
    /// fAvailableColumns to the column that immediately follows the column fPrincipalColumn points to.
-   Internal::RColumn *fAuxiliaryColumn = nullptr;
+   ROOT::Internal::RColumn *fAuxiliaryColumn = nullptr;
    /// The columns are connected either to a sink or to a source (not to both); they are owned by the field.
    /// Contains all columns of all representations in order of representation and column index.
-   std::vector<std::unique_ptr<Internal::RColumn>> fAvailableColumns;
+   std::vector<std::unique_ptr<ROOT::Internal::RColumn>> fAvailableColumns;
    /// Properties of the type that allow for optimizations of collections of that type
    std::uint32_t fTraits = 0;
    /// A typedef or using name that was used when creating the field
@@ -301,7 +301,7 @@ protected:
    {
       assert(ColumnIndexT < representation.size());
       auto &column = fAvailableColumns.emplace_back(
-         Internal::RColumn::Create<HeadT>(representation[ColumnIndexT], ColumnIndexT, representationIndex));
+         ROOT::Internal::RColumn::Create<HeadT>(representation[ColumnIndexT], ColumnIndexT, representationIndex));
 
       // Initially, the first two columns become the active column representation
       if (representationIndex == 0 && !fPrincipalColumn) {
@@ -450,7 +450,7 @@ protected:
    static void *CallCreateObjectRawPtrOn(RFieldBase &other) { return other.CreateObjectRawPtr(); }
 
    /// Fields may need direct access to the principal column of their sub fields, e.g. in RRVecField::ReadBulk
-   static Internal::RColumn *GetPrincipalColumnOf(const RFieldBase &other) { return other.fPrincipalColumn; }
+   static ROOT::Internal::RColumn *GetPrincipalColumnOf(const RFieldBase &other) { return other.fPrincipalColumn; }
 
    /// Set a user-defined function to be called after reading a value, giving a chance to inspect and/or modify the
    /// value object.

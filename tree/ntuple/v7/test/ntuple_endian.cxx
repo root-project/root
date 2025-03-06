@@ -25,10 +25,10 @@ using ROOT::NTupleSize_t;
 using ROOT::Experimental::RNTupleDescriptor;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::Internal::RCluster;
-using ROOT::Experimental::Internal::RColumn;
 using ROOT::Experimental::Internal::RPageSink;
 using ROOT::Experimental::Internal::RPageSource;
 using ROOT::Experimental::Internal::RPageStorage;
+using ROOT::Internal::RColumn;
 using ROOT::Internal::RColumnElementBase;
 using ROOT::Internal::RPage;
 using ROOT::Internal::RPageRef;
@@ -39,7 +39,7 @@ protected:
    const RColumnElementBase &fElement;
    std::vector<RPageStorage::RSealedPage> fPages;
 
-   ColumnHandle_t AddColumn(ROOT::DescriptorId_t, RColumn &) final { return {}; }
+   ColumnHandle_t AddColumn(ROOT::DescriptorId_t, ROOT::Internal::RColumn &) final { return {}; }
 
    const RNTupleDescriptor &GetDescriptor() const final
    {

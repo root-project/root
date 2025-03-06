@@ -48,6 +48,7 @@ namespace ROOT {
 
 namespace Internal {
 class RPageAllocator;
+class RColumn;
 }
 
 namespace Experimental {
@@ -55,7 +56,6 @@ namespace Experimental {
 class RNTupleModel;
 
 namespace Internal {
-class RColumn;
 struct RNTupleModelChangeset;
 
 enum class EPageStorageType {
@@ -176,7 +176,7 @@ public:
 
    struct RColumnHandle {
       ROOT::DescriptorId_t fPhysicalId = ROOT::kInvalidDescriptorId;
-      RColumn *fColumn = nullptr;
+      ROOT::Internal::RColumn *fColumn = nullptr;
 
       /// Returns true for a valid column handle; fColumn and fPhysicalId should always either both
       /// be valid or both be invalid.
@@ -187,7 +187,7 @@ public:
 
    /// Register a new column.  When reading, the column must exist in the ntuple on disk corresponding to the meta-data.
    /// When writing, every column can only be attached once.
-   virtual ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, RColumn &column) = 0;
+   virtual ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, ROOT::Internal::RColumn &column) = 0;
    /// Unregisters a column.  A page source decreases the reference counter for the corresponding active column.
    /// For a page sink, dropping columns is currently a no-op.
    virtual void DropColumn(ColumnHandle_t columnHandle) = 0;
@@ -216,7 +216,7 @@ It will flush (and shrink) large pages of other columns on the attempt to expand
 class RWritePageMemoryManager {
 private:
    struct RColumnInfo {
-      RColumn *fColumn = nullptr;
+      ROOT::Internal::RColumn *fColumn = nullptr;
       std::size_t fCurrentPageSize = 0;
       std::size_t fInitialPageSize = 0;
 
@@ -242,7 +242,7 @@ public:
    /// Try to register the new write page size for the given column. Flush large columns to make space, if necessary.
    /// If not enough space is available after all (sum of write pages would be larger than fMaxAllocatedBytes),
    /// return false.
-   bool TryUpdate(RColumn &column, std::size_t newWritePageSize);
+   bool TryUpdate(ROOT::Internal::RColumn &column, std::size_t newWritePageSize);
 };
 
 // clang-format off
@@ -519,7 +519,7 @@ public:
    static std::unique_ptr<RPageSink> Create(std::string_view ntupleName, std::string_view location,
                                             const ROOT::RNTupleWriteOptions &options = ROOT::RNTupleWriteOptions());
 
-   ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, RColumn &column) final;
+   ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, ROOT::Internal::RColumn &column) final;
 
    const RNTupleDescriptor &GetDescriptor() const final { return fDescriptorBuilder.GetDescriptor(); }
 
@@ -768,7 +768,7 @@ public:
       return RSharedDescriptorGuard(fDescriptor, fDescriptorLock);
    }
 
-   ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, RColumn &column) override;
+   ColumnHandle_t AddColumn(ROOT::DescriptorId_t fieldId, ROOT::Internal::RColumn &column) override;
    void DropColumn(ColumnHandle_t columnHandle) override;
 
    /// Loads header and footer without decompressing or deserializing them. This can be used to asynchronously open
