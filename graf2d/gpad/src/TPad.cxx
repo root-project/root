@@ -5947,24 +5947,16 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
       out<<"   "<<cname<<"->SetBottomMargin("<<GetBottomMargin()<<");"<<std::endl;
    }
 
-   if (GetFrameFillColor() != GetFillColor()) {
-      if (TColor::SaveColor(out, GetFrameFillColor()))
-         out<<"   "<<cname<<"->SetFrameFillColor(ci);" << std::endl;
-      else
-         out<<"   "<<cname<<"->SetFrameFillColor("<<GetFrameFillColor()<<");"<<std::endl;
-   }
+   if (GetFrameFillColor() != GetFillColor())
+      out << "   " << cname << "->SetFrameFillColor(" << TColor::SavePrimitiveColor(GetFrameFillColor()) << ");\n";
    if (GetFrameFillStyle() != 1001) {
       out<<"   "<<cname<<"->SetFrameFillStyle("<<GetFrameFillStyle()<<");"<<std::endl;
    }
    if (GetFrameLineStyle() != 1) {
       out<<"   "<<cname<<"->SetFrameLineStyle("<<GetFrameLineStyle()<<");"<<std::endl;
    }
-   if (GetFrameLineColor() != 1) {
-      if (TColor::SaveColor(out, GetFrameLineColor()))
-         out<<"   "<<cname<<"->SetFrameLineColor(ci);" << std::endl;
-      else
-         out<<"   "<<cname<<"->SetFrameLineColor("<<GetFrameLineColor()<<");"<<std::endl;
-   }
+   if (GetFrameLineColor() != 1)
+      out << "   " << cname << "->SetFrameLineColor(" << TColor::SavePrimitiveColor(GetFrameLineColor()) << ");\n";
    if (GetFrameLineWidth() != 1) {
       out<<"   "<<cname<<"->SetFrameLineWidth("<<GetFrameLineWidth()<<");"<<std::endl;
    }
@@ -5978,24 +5970,16 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
    TFrame *frame = fFrame;
    if (!frame) frame = (TFrame*)GetPrimitive("TFrame");
    if (frame) {
-      if (frame->GetFillColor() != GetFillColor()) {
-         if (TColor::SaveColor(out, frame->GetFillColor()))
-            out<<"   "<<cname<<"->SetFrameFillColor(ci);" << std::endl;
-         else
-            out<<"   "<<cname<<"->SetFrameFillColor("<<frame->GetFillColor()<<");"<<std::endl;
-      }
+      if (frame->GetFillColor() != GetFillColor())
+         out << "   " << cname << "->SetFrameFillColor(" << TColor::SavePrimitiveColor(frame->GetFillColor()) << ");\n";
       if (frame->GetFillStyle() != 1001) {
          out<<"   "<<cname<<"->SetFrameFillStyle("<<frame->GetFillStyle()<<");"<<std::endl;
       }
       if (frame->GetLineStyle() != 1) {
          out<<"   "<<cname<<"->SetFrameLineStyle("<<frame->GetLineStyle()<<");"<<std::endl;
       }
-      if (frame->GetLineColor() != 1) {
-         if (TColor::SaveColor(out, frame->GetLineColor()))
-            out<<"   "<<cname<<"->SetFrameLineColor(ci);" << std::endl;
-         else
-            out<<"   "<<cname<<"->SetFrameLineColor("<<frame->GetLineColor()<<");"<<std::endl;
-      }
+      if (frame->GetLineColor() != 1)
+         out << "   " << cname << "->SetFrameLineColor(" << TColor::SavePrimitiveColor(frame->GetLineColor()) << ");\n";
       if (frame->GetLineWidth() != 1) {
          out<<"   "<<cname<<"->SetFrameLineWidth("<<frame->GetLineWidth()<<");"<<std::endl;
       }
