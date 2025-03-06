@@ -119,10 +119,6 @@ ROOT_LINKER_LIBRARY(Cling
 # When these two link at the same time, they can exhaust the RAM on many machines, since they both link against llvm.
 add_dependencies(Cling rootcling_stage1)
 
-if(testing)
-  set_target_properties(CppInterOpUnitTests PROPERTIES EXCLUDE_FROM_ALL OFF)
-endif()
-
 if(MSVC)
   set_target_properties(Cling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set(cling_exports ${cling_exports}

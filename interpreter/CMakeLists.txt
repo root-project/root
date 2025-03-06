@@ -523,6 +523,17 @@ set(CPPINTEROP_INCLUDE_DIRS
   CACHE STRING "CppInterOp include directories.")
 
 #---Set InterOp to build on Cling, this can be toggled to use Clang-REPL-------------------------------------------------------
-set(CPPINTEROP_USE_CLING ON BOOL "Use Cling as backend")
+set(CPPINTEROP_USE_CLING ON CACHE BOOL "" FORCE)
+set(CPPINTEROP_USE_REPL OFF CACHE BOOL "" FORCE)
+
+#---Disable testing on InterOp if ROOT's testing is OFF (InterOp tests are enabled by default) -------------------------------------------------------
+if(testing)
+  set(CPPINTEROP_ENABLE_TESTING ON CACHE BOOL "" FORCE)
+else()
+  set(CPPINTEROP_ENABLE_TESTING OFF CACHE BOOL "")
+endif()
 
 add_subdirectory(CppInterOp)
+if(testing)
+  set_target_properties(CppInterOpUnitTests PROPERTIES EXCLUDE_FROM_ALL OFF)
+endif()
