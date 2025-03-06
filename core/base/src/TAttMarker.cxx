@@ -349,12 +349,10 @@ void TAttMarker::SaveMarkerAttributes(std::ostream &out, const char *name, Int_t
 {
    if (fMarkerColor != coldef)
       out << "   " << name << "->SetMarkerColor(" << TColor::SavePrimitiveColor(fMarkerColor) << ");\n";
-   if (fMarkerStyle != stydef) {
-      out<<"   "<<name<<"->SetMarkerStyle("<<fMarkerStyle<<");"<<std::endl;
-   }
-   if (fMarkerSize != sizdef) {
-      out<<"   "<<name<<"->SetMarkerSize("<<fMarkerSize<<");"<<std::endl;
-   }
+   if (fMarkerStyle != stydef)
+      out << "   " << name << "->SetMarkerStyle(" << fMarkerStyle << ");\n";
+   if (fMarkerSize != sizdef)
+      out << "   " << name << "->SetMarkerSize(" << fMarkerSize << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
