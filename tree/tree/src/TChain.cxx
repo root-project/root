@@ -1179,16 +1179,34 @@ TObjArray* TChain::GetListOfLeaves()
 
 Double_t TChain::GetMaximum(const char* columname)
 {
-   Double_t theMax = -DBL_MAX;
-   for (Int_t file = 0; file < fNtrees; file++) {
-      Long64_t first = fTreeOffset[file];
-      LoadTree(first);
-      Double_t curmax = fTree->GetMaximum(columname);
-      if (curmax > theMax) {
-         theMax = curmax;
+   Double_t cmax = -DBL_MAX;
+   TLeaf *leaf = nullptr;
+   TBranch *branch = nullptr;
+   Int_t treenumber = -1;
+   for (Long64_t i = 0; i < fEntries; ++i) {
+      Long64_t entryNumber = this->GetEntryNumber(i);
+      if (entryNumber < 0)
+         break;
+      Long64_t localEntryNumber = this->LoadTree(entryNumber);
+      if (localEntryNumber < 0)
+         break;
+      if (treenumber != this->GetTreeNumber()) {
+         leaf = this->GetLeaf(columname);
+         if (leaf)
+            branch = leaf->GetBranch();
+      }
+      treenumber = this->GetTreeNumber();
+      if (!branch)
+         continue;
+      branch->GetEntry(localEntryNumber);
+      for (Int_t j = 0; j < leaf->GetLen(); ++j) {
+         Double_t val = leaf->GetValue(j);
+         if (val > cmax) {
+            cmax = val;
+         }
       }
    }
-   return theMax;
+   return cmax;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1196,16 +1214,34 @@ Double_t TChain::GetMaximum(const char* columname)
 
 Double_t TChain::GetMinimum(const char* columname)
 {
-   Double_t theMin = DBL_MAX;
-   for (Int_t file = 0; file < fNtrees; file++) {
-      Long64_t first = fTreeOffset[file];
-      LoadTree(first);
-      Double_t curmin = fTree->GetMinimum(columname);
-      if (curmin < theMin) {
-         theMin = curmin;
+   Double_t cmin = DBL_MAX;
+   TLeaf *leaf = nullptr;
+   TBranch *branch = nullptr;
+   Int_t treenumber = -1;
+   for (Long64_t i = 0; i < fEntries; ++i) {
+      Long64_t entryNumber = this->GetEntryNumber(i);
+      if (entryNumber < 0)
+         break;
+      Long64_t localEntryNumber = this->LoadTree(entryNumber);
+      if (localEntryNumber < 0)
+         break;
+      if (treenumber != this->GetTreeNumber()) {
+         leaf = this->GetLeaf(columname);
+         if (leaf)
+            branch = leaf->GetBranch();
+      }
+      treenumber = this->GetTreeNumber();
+      if (!branch)
+         continue;
+      branch->GetEntry(localEntryNumber);
+      for (Int_t j = 0; j < leaf->GetLen(); ++j) {
+         Double_t val = leaf->GetValue(j);
+         if (val < cmin) {
+            cmin = val;
+         }
       }
    }
-   return theMin;
+   return cmin;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
