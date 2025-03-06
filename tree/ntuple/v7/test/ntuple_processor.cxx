@@ -24,8 +24,9 @@ TEST(RNTupleProcessor, EmptyNTuple)
 
 class RNTupleProcessorTest : public testing::Test {
 protected:
-   const std::array<std::string, 2> fFileNames{"test_ntuple_processor1.root", "test_ntuple_processor2.root"};
-   const std::array<std::string, 2> fNTupleNames{"ntuple", "ntuple_aux"};
+   const std::array<std::string, 3> fFileNames{"test_ntuple_processor1.root", "test_ntuple_processor2.root",
+                                               "test_ntuple_processor3.root"};
+   const std::array<std::string, 3> fNTupleNames{"ntuple", "ntuple_aux", "ntuple_aux"};
 
    void SetUp() override
    {
@@ -50,6 +51,19 @@ protected:
          auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleNames[1], fFileNames[1]);
 
          for (unsigned i = 0; i < 5; ++i) {
+            *fldI = i;
+            *fldZ = i * 2.f;
+            ntuple->Fill();
+         }
+      }
+      // Same as above, but entries in reverse order
+      {
+         auto model = RNTupleModel::Create();
+         auto fldI = model->MakeField<int>("i");
+         auto fldZ = model->MakeField<float>("z");
+         auto ntuple = RNTupleWriter::Recreate(std::move(model), fNTupleNames[2], fFileNames[2]);
+
+         for (int i = 4; i >= 0; --i) {
             *fldI = i;
             *fldZ = i * 2.f;
             ntuple->Fill();
@@ -165,12 +179,14 @@ TEST_F(RNTupleProcessorTest, ChainedChain)
 
 TEST_F(RNTupleProcessorTest, ChainedJoin)
 {
-   std::vector<RNTupleOpenSpec> ntuples{{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}};
-
    std::vector<std::unique_ptr<RNTupleProcessor>> innerProcs;
-   innerProcs.push_back(RNTupleProcessor::CreateJoin(ntuples, {}));
-   innerProcs.push_back(RNTupleProcessor::CreateJoin(ntuples, {"i"}));
-
+   // The ntuples are aligned
+   innerProcs.push_back(
+      RNTupleProcessor::CreateJoin({{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[1], fFileNames[1]}}, {}));
+   // The ntuples are unaligned, so we join on "i"
+   innerProcs.push_back(
+      RNTupleProcessor::CreateJoin({{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[2], fFileNames[2]}}, {"i"}));
+   // The chain processor shouldn't care about the fact that the first join is aligned, but the second one isn't
    auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
 
    int nEntries = 0;
