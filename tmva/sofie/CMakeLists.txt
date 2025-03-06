@@ -116,7 +116,7 @@ endif()
 set_target_properties(ROOTTMVASofie PROPERTIES
   POSITION_INDEPENDENT_CODE TRUE)
 
-  if (${TARGET_GPU} STREQUAL "Intel")
+if (${TARGET_GPU} STREQUAL "Intel")
   target_compile_definitions(ROOTTMVASofie PUBLIC TARGET_GPU=0)
 elseif(${TARGET_GPU} STREQUAL "NVIDIA")
   target_compile_definitions(ROOTTMVASofie PUBLIC TARGET_GPU=1)
