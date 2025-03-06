@@ -241,24 +241,28 @@ TEST_F(RNTupleJoinProcessorTest, MissingEntries)
 
 TEST_F(RNTupleJoinProcessorTest, WithModel)
 {
-   auto model1 = RNTupleModel::Create();
-   auto i = model1->MakeField<int>("i");
-   auto x = model1->MakeField<float>("x");
+   auto primaryModel = RNTupleModel::Create();
+   primaryModel->MakeField<int>("i");
+   primaryModel->MakeField<float>("x");
 
-   auto model2 = RNTupleModel::Create();
-   auto y = model2->MakeField<std::vector<float>>("y");
+   std::vector<std::unique_ptr<RNTupleModel>> auxModels;
 
-   auto model3 = RNTupleModel::Create();
-   auto z = model3->MakeField<float>("z");
+   auxModels.push_back(RNTupleModel::Create());
+   auxModels.back()->MakeField<std::vector<float>>("y");
 
-   std::vector<std::unique_ptr<RNTupleModel>> models;
-   models.push_back(std::move(model1));
-   models.push_back(std::move(model2));
-   models.push_back(std::move(model3));
+   auxModels.push_back(RNTupleModel::Create());
+   auxModels.back()->MakeField<float>("z");
 
-   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]},
-                                            {{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}, {"i"},
-                                            std::move(models));
+   std::vector<RNTupleOpenSpec> auxNTuples{{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}};
+
+   auto joinModel = RNTupleProcessor::CreateJoinModel(std::move(primaryModel), std::move(auxModels), auxNTuples);
+
+   auto i = joinModel->GetDefaultEntry().GetPtr<int>("i");
+   auto x = joinModel->GetDefaultEntry().GetPtr<float>("x");
+   auto y = joinModel->GetDefaultEntry().GetPtr<std::vector<float>>(fNTupleNames[1] + ".y");
+   auto z = joinModel->GetDefaultEntry().GetPtr<float>(fNTupleNames[2] + ".z");
+
+   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, auxNTuples, {"i"}, std::move(joinModel));
 
    int nEntries = 0;
    std::vector<float> yExpected;
