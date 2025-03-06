@@ -255,7 +255,7 @@ public:
    }
    
    std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
-   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
+      std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
       OpName = "op_" + OpName;
       if (fShapeX.empty() || fShapeY.empty()) {
          throw std::runtime_error("TMVA SOFIE Reduce Op called to Generate without being initialized first");
@@ -329,7 +329,6 @@ public:
       out << SP*4 << "});\n";
       
       return out.str();
-
    }
 
 };
