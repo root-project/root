@@ -130,6 +130,7 @@ set(py_sources
   ROOT/_pythonization/_ttree.py
   ROOT/_pythonization/_tvector3.py
   ROOT/_pythonization/_tvectort.py
+  ROOT/_pythonization/_uhi.py
   ${PYROOT_EXTRA_PYTHON_SOURCES}
 )
 
