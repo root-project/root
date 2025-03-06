@@ -486,22 +486,21 @@ void TPolyMarker3D::Print(Option_t *option) const
 
 void TPolyMarker3D::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TPolyMarker3D::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TPolyMarker3D *";
-   }
-   out<<"pmarker3D = new TPolyMarker3D("<<fN<<","<<GetMarkerStyle()<<","<<quote<<fOption<<quote<<");"<<std::endl;
-   out<<"   pmarker3D->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
+   std::vector<Double_t> arr(Size() * 3);
+   for (Int_t i = 0; i < Size() * 3; i++)
+      arr[i] = fP[i];
 
-   SaveMarkerAttributes(out,"pmarker3D",1,1,1);
+   TString arrname = SavePrimitiveArray(out, "pmarker3D", Size() * 3, arr.data(), kTRUE);
 
-   for (Int_t i=0;i<Size();i++) {
-      out<<"   pmarker3D->SetPoint("<<i<<","<<fP[3*i]<<","<<fP[3*i+1]<<","<<fP[3*i+2]<<");"<<std::endl;
-   }
-   out<<"   pmarker3D->Draw();"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "pmarker3D",
+                            TString::Format("%d, %s, %d, \"%s\"", Size(), arrname.Data(), GetMarkerStyle(),
+                                            TString(fOption).ReplaceSpecialCppChars().Data()),
+                            kFALSE);
+
+   out << "   pmarker3D->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
+
+   SaveMarkerAttributes(out, "pmarker3D", 1, 1, 1);
+   out << "   pmarker3D->Draw();\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
