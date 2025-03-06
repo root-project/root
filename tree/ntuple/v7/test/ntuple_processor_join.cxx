@@ -243,24 +243,21 @@ TEST_F(RNTupleJoinProcessorTest, MissingEntries)
 
 TEST_F(RNTupleJoinProcessorTest, WithModel)
 {
-   auto model1 = RNTupleModel::Create();
-   auto i = model1->MakeField<int>("i");
-   auto x = model1->MakeField<float>("x");
+   auto primaryModel = RNTupleModel::Create();
+   auto i = primaryModel->MakeField<int>("i");
+   auto x = primaryModel->MakeField<float>("x");
 
-   auto model2 = RNTupleModel::Create();
-   auto y = model2->MakeField<std::vector<float>>("y");
+   std::vector<std::unique_ptr<RNTupleModel>> auxModels;
 
-   auto model3 = RNTupleModel::Create();
-   auto z = model3->MakeField<float>("z");
+   auxModels.push_back(RNTupleModel::Create());
+   auto y = auxModels.back()->MakeField<std::vector<float>>("y");
 
-   std::vector<std::unique_ptr<RNTupleModel>> models;
-   models.push_back(std::move(model1));
-   models.push_back(std::move(model2));
-   models.push_back(std::move(model3));
+   auxModels.push_back(RNTupleModel::Create());
+   auto z = auxModels.back()->MakeField<float>("z");
 
    auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]},
                                             {{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}, {"i"},
-                                            std::move(models));
+                                            std::move(primaryModel), std::move(auxModels));
 
    int nEntries = 0;
    std::vector<float> yExpected;
