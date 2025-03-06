@@ -249,8 +249,6 @@ public:
    }
 };
 
-namespace Experimental {
-
 namespace Internal {
 
 /// The in-memory representation of a 32bit or 64bit on-disk index column. Wraps the integer in a
@@ -298,8 +296,6 @@ public:
 };
 
 } // namespace Internal
-
-} // namespace Experimental
 
 namespace Internal {
 

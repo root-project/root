@@ -60,7 +60,7 @@ ROOT::Experimental::RCardinalityField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RCardinalityField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<Internal::RColumnIndex>(desc);
+   GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
 void ROOT::Experimental::RCardinalityField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
@@ -460,12 +460,12 @@ ROOT::Experimental::RField<std::string>::GetColumnRepresentations() const
 
 void ROOT::Experimental::RField<std::string>::GenerateColumns()
 {
-   GenerateColumnsImpl<Internal::RColumnIndex, char>();
+   GenerateColumnsImpl<ROOT::Internal::RColumnIndex, char>();
 }
 
 void ROOT::Experimental::RField<std::string>::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<Internal::RColumnIndex, char>(desc);
+   GenerateColumnsImpl<ROOT::Internal::RColumnIndex, char>(desc);
 }
 
 std::size_t ROOT::Experimental::RField<std::string>::AppendImpl(const void *from)
@@ -739,18 +739,18 @@ ROOT::Experimental::RNullableField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RNullableField::GenerateColumns()
 {
-   GenerateColumnsImpl<Internal::RColumnIndex>();
+   GenerateColumnsImpl<ROOT::Internal::RColumnIndex>();
 }
 
 void ROOT::Experimental::RNullableField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<Internal::RColumnIndex>(desc);
+   GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
 std::size_t ROOT::Experimental::RNullableField::AppendNull()
 {
    fPrincipalColumn->Append(&fNWritten);
-   return sizeof(Internal::RColumnIndex);
+   return sizeof(ROOT::Internal::RColumnIndex);
 }
 
 std::size_t ROOT::Experimental::RNullableField::AppendValue(const void *from)
@@ -758,7 +758,7 @@ std::size_t ROOT::Experimental::RNullableField::AppendValue(const void *from)
    auto nbytesItem = CallAppendOn(*fSubfields[0], from);
    fNWritten++;
    fPrincipalColumn->Append(&fNWritten);
-   return sizeof(Internal::RColumnIndex) + nbytesItem;
+   return sizeof(ROOT::Internal::RColumnIndex) + nbytesItem;
 }
 
 ROOT::RNTupleLocalIndex ROOT::Experimental::RNullableField::GetItemIndex(ROOT::NTupleSize_t globalIndex)

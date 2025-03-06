@@ -724,12 +724,12 @@ ROOT::Experimental::RProxiedCollectionField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RProxiedCollectionField::GenerateColumns()
 {
-   GenerateColumnsImpl<Internal::RColumnIndex>();
+   GenerateColumnsImpl<ROOT::Internal::RColumnIndex>();
 }
 
 void ROOT::Experimental::RProxiedCollectionField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<Internal::RColumnIndex>(desc);
+   GenerateColumnsImpl<ROOT::Internal::RColumnIndex>(desc);
 }
 
 void ROOT::Experimental::RProxiedCollectionField::ConstructValue(void *where) const
@@ -885,12 +885,12 @@ ROOT::Experimental::RStreamerField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RStreamerField::GenerateColumns()
 {
-   GenerateColumnsImpl<Internal::RColumnIndex, std::byte>();
+   GenerateColumnsImpl<ROOT::Internal::RColumnIndex, std::byte>();
 }
 
 void ROOT::Experimental::RStreamerField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<Internal::RColumnIndex, std::byte>(desc);
+   GenerateColumnsImpl<ROOT::Internal::RColumnIndex, std::byte>(desc);
 }
 
 void ROOT::Experimental::RStreamerField::ConstructValue(void *where) const
@@ -1217,9 +1217,9 @@ std::size_t ROOT::Experimental::RVariantField::AppendImpl(const void *from)
       nbytes += CallAppendOn(*fSubfields[tag - 1], reinterpret_cast<const unsigned char *>(from) + fVariantOffset);
       index = fNWritten[tag - 1]++;
    }
-   Internal::RColumnSwitch varSwitch(index, tag);
+   ROOT::Internal::RColumnSwitch varSwitch(index, tag);
    fPrincipalColumn->Append(&varSwitch);
-   return nbytes + sizeof(Internal::RColumnSwitch);
+   return nbytes + sizeof(ROOT::Internal::RColumnSwitch);
 }
 
 void ROOT::Experimental::RVariantField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
@@ -1249,12 +1249,12 @@ ROOT::Experimental::RVariantField::GetColumnRepresentations() const
 
 void ROOT::Experimental::RVariantField::GenerateColumns()
 {
-   GenerateColumnsImpl<Internal::RColumnSwitch>();
+   GenerateColumnsImpl<ROOT::Internal::RColumnSwitch>();
 }
 
 void ROOT::Experimental::RVariantField::GenerateColumns(const RNTupleDescriptor &desc)
 {
-   GenerateColumnsImpl<Internal::RColumnSwitch>(desc);
+   GenerateColumnsImpl<ROOT::Internal::RColumnSwitch>(desc);
 }
 
 void ROOT::Experimental::RVariantField::ConstructValue(void *where) const

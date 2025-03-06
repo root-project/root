@@ -289,17 +289,17 @@ public:
       // Try to avoid jumping back to the previous page and jumping back to the previous cluster
       if (R__likely(globalIndex > 0)) {
          if (R__likely(fReadPageRef.Get().Contains(globalIndex - 1))) {
-            idxStart = *Map<RColumnIndex>(globalIndex - 1);
-            idxEnd = *Map<RColumnIndex>(globalIndex);
+            idxStart = *Map<ROOT::Internal::RColumnIndex>(globalIndex - 1);
+            idxEnd = *Map<ROOT::Internal::RColumnIndex>(globalIndex);
             if (R__unlikely(fReadPageRef.Get().GetClusterInfo().GetIndexOffset() == globalIndex))
                idxStart = 0;
          } else {
-            idxEnd = *Map<RColumnIndex>(globalIndex);
+            idxEnd = *Map<ROOT::Internal::RColumnIndex>(globalIndex);
             auto selfOffset = fReadPageRef.Get().GetClusterInfo().GetIndexOffset();
-            idxStart = (globalIndex == selfOffset) ? 0 : *Map<RColumnIndex>(globalIndex - 1);
+            idxStart = (globalIndex == selfOffset) ? 0 : *Map<ROOT::Internal::RColumnIndex>(globalIndex - 1);
          }
       } else {
-         idxEnd = *Map<RColumnIndex>(globalIndex);
+         idxEnd = *Map<ROOT::Internal::RColumnIndex>(globalIndex);
       }
       *collectionSize = idxEnd - idxStart;
       *collectionStart = RNTupleLocalIndex(fReadPageRef.Get().GetClusterInfo().GetId(), idxStart);
@@ -309,8 +309,8 @@ public:
                           ROOT::NTupleSize_t *collectionSize)
    {
       auto index = localIndex.GetIndexInCluster();
-      auto idxStart = (index == 0) ? 0 : *Map<RColumnIndex>(localIndex - 1);
-      auto idxEnd = *Map<RColumnIndex>(localIndex);
+      auto idxStart = (index == 0) ? 0 : *Map<ROOT::Internal::RColumnIndex>(localIndex - 1);
+      auto idxEnd = *Map<ROOT::Internal::RColumnIndex>(localIndex);
       *collectionSize = idxEnd - idxStart;
       *collectionStart = RNTupleLocalIndex(localIndex.GetClusterId(), idxStart);
    }
@@ -318,7 +318,7 @@ public:
    /// Get the currently active cluster id
    void GetSwitchInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *varIndex, std::uint32_t *tag)
    {
-      auto varSwitch = Map<RColumnSwitch>(globalIndex);
+      auto varSwitch = Map<ROOT::Internal::RColumnSwitch>(globalIndex);
       *varIndex = RNTupleLocalIndex(fReadPageRef.Get().GetClusterInfo().GetId(), varSwitch->GetIndex());
       *tag = varSwitch->GetTag();
    }
