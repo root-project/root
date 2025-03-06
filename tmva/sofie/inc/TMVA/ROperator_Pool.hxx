@@ -477,7 +477,7 @@ public:
    }
 
    std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
-   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
+      std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
       OpName = "op_" + OpName;
 
       if (fShapeX.empty() || fShapeY.empty()) {
@@ -705,7 +705,7 @@ public:
 
          out << SP*6 << "acc_tensor_" << fNY << "[id[0] * (wmax - wmin) * (dmax - dmin) + id[1] * (dmax - dmin) + id[2]] = value;\n";
          
-       
+         
          out << SP*5 << "});\n";
          out << SP*4 << "});\n";
       }
