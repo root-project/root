@@ -287,7 +287,7 @@ TEST(RReader, MulticlassComputeDataFrame)
 
 void NonDefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
 {
-   DefaultErrorHandler(level, kFALSE, location, msg);
+   DefaultErrorHandler(level, abort_bool, location, msg);
    if (level >= kError) {
       throw std::runtime_error(msg);
    }
