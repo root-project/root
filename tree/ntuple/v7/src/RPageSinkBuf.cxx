@@ -58,7 +58,7 @@ ROOT::Experimental::Internal::RPageSinkBuf::~RPageSinkBuf()
 }
 
 ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t
-ROOT::Experimental::Internal::RPageSinkBuf::AddColumn(ROOT::DescriptorId_t /*fieldId*/, RColumn &column)
+ROOT::Experimental::Internal::RPageSinkBuf::AddColumn(ROOT::DescriptorId_t /*fieldId*/, ROOT::Internal::RColumn &column)
 {
    return ColumnHandle_t{fNColumns++, &column};
 }
