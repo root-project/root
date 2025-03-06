@@ -125,7 +125,7 @@ template <typename T> class ROperator_GRU final : public ROperator {
    std::string Generate(std::string /*OpName*/);
   
    std::string GenerateGPU(std::string, std::string gemm, std::string copy, 
-   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal);
+    std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal);
    
    /*! \brief Generate the code for the Session internal data vectors
     *
