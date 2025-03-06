@@ -221,42 +221,36 @@ void TGroupButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 void TGroupButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    TVirtualPad::TContext ctxt(kTRUE);
-   char quote = '"';
-   if (gROOT->ClassSaved(TGroupButton::Class()))
-      out<<"   ";
-   else
-      out<<"   TGroupButton *";
 
-   out<<"grbutton = new TGroupButton("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
-      <<quote<<","<<quote<<GetMethod()<<quote
-      <<","<<fXlowNDC
-      <<","<<fYlowNDC
-      <<","<<fXlowNDC+fWNDC
-      <<","<<fYlowNDC+fHNDC
-      <<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "grbutton",
+                            TString::Format("\"%s\", \"%s\", \"%s\", %g, %g, %g, %g",
+                                            TString(GetName()).ReplaceSpecialCppChars().Data(),
+                                            TString(GetTitle()).ReplaceSpecialCppChars().Data(),
+                                            TString(GetMethod()).ReplaceSpecialCppChars().Data(), fXlowNDC, fYlowNDC,
+                                            fXlowNDC + fWNDC, fYlowNDC + fHNDC));
 
    SaveFillAttributes(out, "grbutton", 0, 1001);
    SaveLineAttributes(out, "grbutton", 1, 1, 1);
    SaveTextAttributes(out, "grbutton", 22, 0, 1, 62, .75);
 
    if (GetBorderSize() != 2)
-      out<<"   grbutton->SetBorderSize("<<GetBorderSize()<<");"<<std::endl;
+      out << "   grbutton->SetBorderSize(" << GetBorderSize() << ");\n";
 
    if (GetBorderMode() != 1)
-      out<<"   grbutton->SetBorderMode("<<GetBorderMode()<<");"<<std::endl;
+      out << "   grbutton->SetBorderMode(" << GetBorderMode() << ");\n";
 
-   out<<"   grbutton->Draw();"<<std::endl;
+   out << "   grbutton->Draw();\n";
 
    TIter next(GetListOfPrimitives());
-   next();  //do not save first primitive
+   next(); // do not save first primitive
 
    Int_t nprim = 0;
    while (auto obj = next()) {
       if (nprim++ == 0)
-         out<<"   grbutton->cd();"<<std::endl;
-      obj->SavePrimitive(out, (Option_t *)next.GetOption());
+         out << "   grbutton->cd();\n";
+      obj->SavePrimitive(out, next.GetOption());
    }
 
    if (ctxt.GetSaved() && (nprim > 0))
-      out<<"   "<<ctxt.GetSaved()->GetName()<<"->cd();"<<std::endl;
+      out << "   " << ctxt.GetSaved()->GetName() << "->cd();\n";
 }
