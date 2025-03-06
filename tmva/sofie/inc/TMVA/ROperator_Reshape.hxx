@@ -243,7 +243,7 @@ public:
    }
 
    std::string GenerateGPU(std::string OpName, std::string gemm, std::string copy, 
-   std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
+      std::string axpy, std::string transpose, std::string nontrans, std::string trans, std::string copy_batch, std::string scal) {
       OpName = "op_" + OpName;
       OpName = "op_" + OpName;
       if (fShapeInput.empty() || fShapeOutput.empty()) {
@@ -254,8 +254,8 @@ public:
       size_t length = ConvertShapeToLength(fShapeOutput);
       if (length != ConvertShapeToLength(fShapeInput)) {
          throw std::runtime_error("TMVA SOFIE Reshape Op : wrong output shape - is " +
-                                  ConvertShapeToString(fShapeOutput) + " and input is " +
-                                  ConvertShapeToString(fShapeInput));
+                                    ConvertShapeToString(fShapeOutput) + " and input is " +
+                                    ConvertShapeToString(fShapeInput));
       }
       for (auto &i : fShapeOutput) {
          length *= i;
