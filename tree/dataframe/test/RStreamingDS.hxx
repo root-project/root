@@ -8,7 +8,6 @@
 
 /// A RDataSource that provides multiple entry ranges
 class RStreamingDS final : public ROOT::RDF::RDataSource {
-   unsigned int fNSlots = 0u;
    unsigned int fCounter = 0u;
    const int fAns = 42;
    const int *fAnsPtr = &fAns;

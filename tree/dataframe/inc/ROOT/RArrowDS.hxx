@@ -32,7 +32,6 @@ private:
    std::shared_ptr<arrow::Table> fTable;
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges;
    std::vector<std::string> fColumnNames;
-   size_t fNSlots = 0U;
 
    std::vector<std::pair<size_t, size_t>> fGetterIndex; // (columnId, visitorId)
    std::vector<std::unique_ptr<ROOT::Internal::RDF::TValueGetter>> fValueGetters; // Visitors to be used to track and get entries. One per column.

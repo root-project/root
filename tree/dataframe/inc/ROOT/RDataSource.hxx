@@ -114,6 +114,8 @@ protected:
 
    virtual std::string AsString() { return "generic data source"; };
 
+   unsigned int fNSlots{};
+
 public:
    RDataSource() = default;
    // Rule of five

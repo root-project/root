@@ -101,7 +101,6 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// to new page sources when the files in the chain change.
    std::vector<std::vector<Internal::RNTupleColumnReader *>> fActiveColumnReaders;
 
-   unsigned int fNSlots = 0;
    ULong64_t fSeenEntries = 0;                ///< The number of entries so far returned by GetEntryRanges()
    std::vector<REntryRangeDS> fCurrentRanges; ///< Basis for the ranges returned by the last GetEntryRanges() call
    std::vector<REntryRangeDS> fNextRanges;    ///< Basis for the ranges populated by the PrepareNextRanges() call
