@@ -7264,89 +7264,52 @@ TString TH1::ProvideSaveName(Option_t *option, Bool_t testfdir)
 void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // empty the buffer before if it exists
-   if (fBuffer) BufferEmpty();
+   if (fBuffer)
+      BufferEmpty();
 
-   Bool_t nonEqiX = kFALSE;
-   Bool_t nonEqiY = kFALSE;
-   Bool_t nonEqiZ = kFALSE;
-   Int_t i;
-   static Int_t nxaxis = 0;
-   static Int_t nyaxis = 0;
-   static Int_t nzaxis = 0;
-   TString sxaxis="xAxis",syaxis="yAxis",szaxis="zAxis";
+   TString sxaxis, syaxis, szaxis;
+
+   TString hname = ProvideSaveName(option);
+   TString savedName = GetName();
+   SetName(hname);
+
+   out <<"   \n";
+
+   // Check if the histogram has equidistant X bins or not.  If not, we
+   // create an array holding the bins.
+   if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray)
+      sxaxis = SavePrimitiveArray(out, hname + "_x", GetXaxis()->GetXbins()->fN, GetXaxis()->GetXbins()->fArray);
+   // If the histogram is 2 or 3 dimensional, check if the histogram
+   // has equidistant Y bins or not.  If not, we create an array
+   // holding the bins.
+   if (fDimension > 1 && GetYaxis()->GetXbins()->fN && GetYaxis()->GetXbins()->fArray)
+      syaxis = SavePrimitiveArray(out, hname + "_y", GetYaxis()->GetXbins()->fN, GetYaxis()->GetXbins()->fArray);
+   // IF the histogram is 3 dimensional, check if the histogram
+   // has equidistant Z bins or not.  If not, we create an array
+   // holding the bins.
+   if (fDimension > 2 && GetZaxis()->GetXbins()->fN && GetZaxis()->GetXbins()->fArray)
+      szaxis = SavePrimitiveArray(out, hname + "_z", GetZaxis()->GetXbins()->fN, GetZaxis()->GetXbins()->fArray);
 
    const auto old_precision{out.precision()};
    constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
    out << std::setprecision(max_precision);
-   // Check if the histogram has equidistant X bins or not.  If not, we
-   // create an array holding the bins.
-   if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray) {
-      nonEqiX = kTRUE;
-      nxaxis++;
-      sxaxis += nxaxis;
-      out << "   Double_t "<<sxaxis<<"[" << GetXaxis()->GetXbins()->fN
-         << "] = {";
-      for (i = 0; i < GetXaxis()->GetXbins()->fN; i++) {
-         if (i != 0) out << ", ";
-         out << GetXaxis()->GetXbins()->fArray[i];
-      }
-      out << "}; " << std::endl;
-   }
-   // If the histogram is 2 or 3 dimensional, check if the histogram
-   // has equidistant Y bins or not.  If not, we create an array
-   // holding the bins.
-   if (fDimension > 1 && GetYaxis()->GetXbins()->fN &&
-      GetYaxis()->GetXbins()->fArray) {
-         nonEqiY = kTRUE;
-         nyaxis++;
-         syaxis += nyaxis;
-         out << "   Double_t "<<syaxis<<"[" << GetYaxis()->GetXbins()->fN
-            << "] = {";
-         for (i = 0; i < GetYaxis()->GetXbins()->fN; i++) {
-            if (i != 0) out << ", ";
-            out << GetYaxis()->GetXbins()->fArray[i];
-         }
-         out << "}; " << std::endl;
-   }
-   // IF the histogram is 3 dimensional, check if the histogram
-   // has equidistant Z bins or not.  If not, we create an array
-   // holding the bins.
-   if (fDimension > 2 && GetZaxis()->GetXbins()->fN &&
-      GetZaxis()->GetXbins()->fArray) {
-         nonEqiZ = kTRUE;
-         nzaxis++;
-         szaxis += nzaxis;
-         out << "   Double_t "<<szaxis<<"[" << GetZaxis()->GetXbins()->fN
-            << "] = {";
-         for (i = 0; i < GetZaxis()->GetXbins()->fN; i++) {
-            if (i != 0) out << ", ";
-            out << GetZaxis()->GetXbins()->fArray[i];
-         }
-         out << "}; " << std::endl;
-   }
 
-   TString savedName = GetName();
-
-   TString hname = ProvideSaveName(option);
-   SetName(hname);
-
-   out <<"   \n";
    out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
        << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << GetXaxis()->GetNbins();
-   if (nonEqiX)
+   if (!sxaxis.IsNull())
       out << ", " << sxaxis;
    else
       out << ", " << GetXaxis()->GetXmin() << ", " << GetXaxis()->GetXmax();
    if (fDimension > 1) {
       out << ", " << GetYaxis()->GetNbins();
-      if (nonEqiY)
+      if (!syaxis.IsNull())
          out << ", " << syaxis;
       else
          out << ", " << GetYaxis()->GetXmin() << ", " << GetYaxis()->GetXmax();
    }
    if (fDimension > 2) {
       out << ", " << GetZaxis()->GetNbins();
-      if (nonEqiZ)
+      if (!szaxis.IsNull())
          out << ", " << szaxis;
       else
          out << ", " << GetZaxis()->GetXmin() << ", " << GetZaxis()->GetXmax();
@@ -7374,7 +7337,7 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    TH1::SavePrimitiveHelp(out, hname, option);
    out << std::setprecision(old_precision);
-   this->SetName(savedName.Data());
+   SetName(savedName.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
