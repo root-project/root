@@ -94,5 +94,5 @@ jobs:
           echo +++ Content
           ls
           echo +++ Running the command
-          export DIRNAME=`ls -1|grep -v relnotes|grep -v root`
-          aws s3 sync ${DIRNAME}/ s3://root/doc/${DIRNAME}
+          export S3DIRNAME=`ls -1|grep -v relnotes|grep -v root`
+          aws s3 sync ${S3DIRNAME}/ s3://root/doc/${S3DIRNAME}
