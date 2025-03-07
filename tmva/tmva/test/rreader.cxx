@@ -285,22 +285,19 @@ TEST(RReader, MulticlassComputeDataFrame)
    EXPECT_EQ(y->size(), *c);
 }
 
-void NonDefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
-{
-   DefaultErrorHandler(level, abort_bool, location, msg);
-   if (level >= kError) {
-      throw std::runtime_error(msg);
-   }
-}
-
 // https://its.cern.ch/jira/browse/ROOT-9833
 // https://its.cern.ch/jira/browse/ROOT-10018
 TEST(RReader, UndefinedVariables)
 {
-   SetErrorHandler(NonDefaultErrorHandler);
    std::vector<double> evData = {1, 2};
    TMVA::DataLoader dl;
-   EXPECT_THROW(dl.AddEvent("class1", TMVA::Types::kTraining, evData, 1.0), std::runtime_error);   
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   dl.AddEvent("class1", TMVA::Types::kTraining, evData, 1.0);
+   diagRAII.requiredDiag(kError, "AddEvent",
+      "Number of variables defined through DataLoader::AddVariable (0) is inconsistent with number of variables given to DataLoader::Add*Event (2). Please check your variable definitions and statement ordering. This event will not be added.");
    TMVA::DataLoader d("dataset");
-   EXPECT_THROW(d.AddSignalTrainingEvent({0.0}, 1.0), std::runtime_error);
+   d.AddSignalTrainingEvent({0.0}, 1.0);
+   diagRAII.requiredDiag(kError, "AddEvent",
+      "Number of variables defined through DataLoader::AddVariable (0) is inconsistent with number of variables given to DataLoader::Add*Event (1). Please check your variable definitions and statement ordering. This event will not be added.");
+   
 }
