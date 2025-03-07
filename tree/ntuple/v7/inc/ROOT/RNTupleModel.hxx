@@ -335,7 +335,7 @@ public:
    void SetDescription(std::string_view description);
 
    /// Get the (qualified) names of subfields that have been registered to be included in entries from this model.
-   const std::unordered_set<std::string> &GetRegisteredSubfields() const { return fRegisteredSubfields; }
+   const std::unordered_set<std::string> &GetRegisteredSubfieldNames() const { return fRegisteredSubfields; }
 
    /// Estimate the memory usage for this model during writing
    ///
