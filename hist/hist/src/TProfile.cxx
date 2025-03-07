@@ -1632,27 +1632,57 @@ void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << GetXaxis()->GetXmin() << ", " << GetXaxis()->GetXmax();
    out << ", \"" << TString(GetErrorOption()).ReplaceSpecialCppChars() << "\");\n";
 
-   // save bin entries
+   Bool_t save_errors = fSumw2.fN > 0;
+   Int_t numentries = 0, numcontent = 0, numerrors = 0;
+
+   std::vector<Double_t> entries(fNcells), content(fNcells), errors(save_errors ? fNcells : 0);
    for (Int_t bin = 0; bin < fNcells; bin++) {
-      Double_t bi = GetBinEntries(bin);
-      if (bi) {
-         out << "   " << hname << "->SetBinEntries(" << bin << "," << bi << ");\n";
+      entries[bin] = GetBinEntries(bin);
+      if (entries[bin])
+         numentries++;
+      content[bin] = fArray[bin];
+      if (content[bin])
+         numcontent++;
+      if (save_errors) {
+         errors[bin] = TMath::Sqrt(fSumw2.fArray[bin]);
+         if (errors[bin])
+            numerrors++;
       }
    }
-   // save bin contents
-   for (Int_t bin = 0; bin < fNcells; bin++) {
-      Double_t bc = fArray[bin];
-      if (bc) {
-         out << "   " << hname << "->SetBinContent(" << bin << "," << bc << ");\n";
-      }
-   }
-   // save bin errors
-   if (fSumw2.fN) {
+
+   if ((numentries < 100) && (numcontent < 100) && (numerrors < 100)) {
+      // in case of few non-empty bins store them as before
       for (Int_t bin = 0; bin < fNcells; bin++) {
-         Double_t be = TMath::Sqrt(fSumw2.fArray[bin]);
-         if (be) {
-            out << "   " << hname << "->SetBinError(" << bin << "," << be << ");\n";
+         if (entries[bin])
+            out << "   " << hname << "->SetBinEntries(" << bin << "," << entries[bin] << ");\n";
+      }
+      for (Int_t bin = 0; bin < fNcells; bin++) {
+         if (content[bin])
+            out << "   " << hname << "->SetBinContent(" << bin << "," << content[bin] << ");\n";
+      }
+      if (save_errors)
+         for (Int_t bin = 0; bin < fNcells; bin++) {
+            if (errors[bin])
+               out << "   " << hname << "->SetBinError(" << bin << "," << errors[bin] << ");\n";
          }
+   } else {
+      if (numentries > 0) {
+         TString arr = SavePrimitiveArray(out, hname, fNcells, entries.data());
+         out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
+         out << "      if (" << arr << "[bin])\n";
+         out << "         " << hname << "->SetBinEntries(bin, " << arr << "[bin]);\n";
+      }
+      if (numcontent > 0) {
+         TString arr = SavePrimitiveArray(out, hname, fNcells, content.data());
+         out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
+         out << "      if (" << arr << "[bin])\n";
+         out << "         " << hname << "->SetBinContent(bin, " << arr << "[bin]);\n";
+      }
+      if (numerrors > 0) {
+         TString arr = SavePrimitiveArray(out, hname, fNcells, errors.data());
+         out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
+         out << "      if (" << arr << "[bin])\n";
+         out << "         " << hname << "->SetBinError(bin, " << arr << "[bin]);\n";
       }
    }
 
