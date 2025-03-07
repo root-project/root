@@ -36,6 +36,8 @@ class IOptions;
 
          ROOT::Math::MinimizerOptions::PrintDefault();
 
+   @see ROOT::Math::MinimizerOptions::SetDefaultMinimizer
+
 */
 class MinimizerOptions {
 
@@ -70,8 +72,14 @@ public:
    ///    - SteepestDescent
    /// - GSLMultiFit Minimizer based on GSL for minimizing only non linear least-squared functions (using an approximation similar to Fumili). See ROOT::Math::GSLMultiFit.
    /// - GSLSimAn Simulated annealing minimizer from GSL (see ROOT::Math::GSLSimAnMinimizer). It is a stochastic minimization algorithm using only function values and not the gradient.
-   /// - Genetic Genetic minimization algorithms (see TMVA::Genetic)
-   ///
+   /// - Genetic Genetic minimization algorithms (see TMVA::Genetic and ROOT::Math::GeneticMinimizer)
+   /// - RMinimizer (class ROOT::Math::RMinimizer)  available when ROOT is built with `r` support
+   ///    - BFGS (default)
+   ///    - L-BFGS-S
+   ///    - Nelder-Mead
+   ///    - CG
+   ///    - and more methods, see the Details in the documentation of the function `optimix` of the [optmix R package](https://cran.r-project.org/web/packages/optimx/optimx.pdf)
+   /// @see ROOT::Math::Minimizer
    static void SetDefaultMinimizer(const char *type, const char *algo = nullptr);
 
    /// Set the default level for computing the parameter errors.

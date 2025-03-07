@@ -42,6 +42,8 @@ namespace ROOT {
    Class describing the configuration of the fit, options and parameter settings
    using the ROOT::Fit::ParameterSettings class
 
+   @see ROOT::Math::MinimizerOptions::SetDefaultMinimizer
+
    @ingroup FitMain
 */
 class FitConfig {
@@ -168,13 +170,15 @@ public:
 
 
    /**
-      set all the minimizer options using class MinimizerOptions
+      set all the minimizer options using class ROOT::Math::MinimizerOptions
+      @see ROOT::Math::MinimizerOptions::SetDefaultMinimizer
     */
    void SetMinimizerOptions(const ROOT::Math::MinimizerOptions & minopt);
 
 
    /**
-      set minimizer type
+      set minimizer type and algorithm
+      @see ROOT::Math::MinimizerOptions::SetDefaultMinimizer
    */
    void SetMinimizer(const char *type, const char *algo = nullptr) {
       if (type) fMinimizerOpts.SetMinimizerType(type);
