@@ -70,25 +70,12 @@ MnHesse::operator()(const FCNBase &fcn, const MnUserParameterState &state, unsig
    return MnUserParameterState(tmp, fcn.Up(), state.Trafo());
 }
 
-void MnHesse::operator()(const FCNBase &fcn, FunctionMinimum &min, unsigned int maxcalls) const
-{
-   // interface from FunctionMinimum to be used after minimization
-   // use last state from the minimization without the need to re-create a new state
-   // do not reset function calls and keep updating them
-   MnUserFcn mfcn(fcn, min.UserState().Trafo(), min.NFcn());
-   MinimumState st = (*this)(mfcn, min.State(), min.UserState().Trafo(), maxcalls);
-   min.Add(st);
-}
-
 MinimumState MnHesse::operator()(const MnFcn &mfcn, const MinimumState &st, const MnUserTransformation &trafo,
                                  unsigned int maxcalls) const
 {
-   // check first if we have an analytical gradient
-   if (st.Gradient().IsAnalytical()) {
-      // check if we can compute analytical Hessian
-      if (mfcn.Fcn().HasGradient() && mfcn.Fcn().HasHessian()) {
-         return ComputeAnalytical(mfcn.Fcn(), st, trafo);
-      }
+   // check first if we have an analytical gradient and if we can compute analytical Hessian
+   if (st.Gradient().IsAnalytical() && mfcn.Fcn().HasGradient() && mfcn.Fcn().HasHessian()) {
+      return ComputeAnalytical(mfcn.Fcn(), st, trafo);
    }
    // case of numerical computation or only analytical first derivatives
    return ComputeNumerical(mfcn, st, trafo, maxcalls, fStrategy);
