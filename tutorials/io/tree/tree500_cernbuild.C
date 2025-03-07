@@ -4,6 +4,7 @@
 /// Read data (CERN staff) from an ascii file and create a root file with a Tree.
 ///
 /// \macro_code
+/// \macro_output
 ///
 /// \author Rene Brun
 
