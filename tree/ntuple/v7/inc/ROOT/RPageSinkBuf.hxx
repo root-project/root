@@ -118,7 +118,7 @@ private:
    ROOT::DescriptorId_t fNFields = 0;
    ROOT::DescriptorId_t fNColumns = 0;
 
-   void ConnectFields(const std::vector<RFieldBase *> &fields, ROOT::NTupleSize_t firstEntry);
+   void ConnectFields(const std::vector<ROOT::RFieldBase *> &fields, ROOT::NTupleSize_t firstEntry);
    void FlushClusterImpl(std::function<void(void)> FlushClusterFn);
 
 public:

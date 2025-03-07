@@ -586,7 +586,7 @@ TEST(RNTupleDescriptor, BuildStreamerInfos)
    EXPECT_TRUE(streamerInfoMap.empty());
 
    std::vector<std::unique_ptr<RFieldBase>> itemFields;
-   streamerInfoMap = fnBuildStreamerInfosOf(ROOT::Experimental::RRecordField("f", std::move(itemFields)));
+   streamerInfoMap = fnBuildStreamerInfosOf(ROOT::RRecordField("f", std::move(itemFields)));
    EXPECT_TRUE(streamerInfoMap.empty());
 
    streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "CustomStruct").Unwrap());

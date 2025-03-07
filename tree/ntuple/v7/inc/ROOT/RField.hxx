@@ -48,10 +48,13 @@ class TSchemaRule;
 namespace Experimental {
 
 class REntry;
+class RNTupleCollectionView;
 
 namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
+
+} // namespace Experimental
 
 /// The container field for an ntuple model, which itself has no physical representation.
 /// Therefore, the zero field must not be connected to a page source or sink.
@@ -67,7 +70,7 @@ public:
    size_t GetValueSize() const final { return 0; }
    size_t GetAlignment() const final { return 0; }
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 /// Used in RFieldBase::Check() to record field creation failures.
@@ -163,21 +166,22 @@ private:
 
    /// Returns the id of member 'name' in the class field given by 'fieldId', or kInvalidDescriptorId if no such
    /// member exist. Looks recursively in base classes.
-   ROOT::DescriptorId_t
-   LookupMember(const RNTupleDescriptor &desc, std::string_view memberName, ROOT::DescriptorId_t classFieldId);
+   ROOT::DescriptorId_t LookupMember(const ROOT::Experimental::RNTupleDescriptor &desc, std::string_view memberName,
+                                     ROOT::DescriptorId_t classFieldId);
    /// Sets fStagingClass according to the given name and version
    void SetStagingClass(const std::string &className, unsigned int classVersion);
    /// If there are rules with inputs (source members), create the staging area according to the TClass instance
    /// that corresponds to the on-disk field.
-   void PrepareStagingArea(const std::vector<const TSchemaRule *> &rules, const RNTupleDescriptor &desc,
-                           const RFieldDescriptor &classFieldId);
+   void PrepareStagingArea(const std::vector<const TSchemaRule *> &rules,
+                           const ROOT::Experimental::RNTupleDescriptor &desc,
+                           const ROOT::Experimental::RFieldDescriptor &classFieldId);
    /// Register post-read callback corresponding to a ROOT I/O customization rules.
    void AddReadCallbacksFromIORule(const TSchemaRule *rule);
    /// Given the on-disk information from the page source, find all the I/O customization rules that apply
    /// to the class field at hand, to which the fieldDesc descriptor, if provided, must correspond.
    /// Fields may not have an on-disk representation (e.g., when inserted by schema evolution), in which case the passed
    /// field descriptor is nullptr.
-   std::vector<const TSchemaRule *> FindRules(const RFieldDescriptor *fieldDesc);
+   std::vector<const TSchemaRule *> FindRules(const ROOT::Experimental::RFieldDescriptor *fieldDesc);
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -188,7 +192,7 @@ protected:
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final;
-   void BeforeConnectPageSource(Internal::RPageSource &pageSource) final;
+   void BeforeConnectPageSource(ROOT::Experimental::Internal::RPageSource &pageSource) final;
 
 public:
    RClassField(std::string_view fieldName, std::string_view className);
@@ -201,7 +205,7 @@ public:
    size_t GetAlignment() const final { return fMaxAlignment; }
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 /// The field for a class using ROOT standard streaming
@@ -217,7 +221,8 @@ private:
    };
 
    TClass *fClass = nullptr;
-   Internal::RNTupleSerializer::StreamerInfoMap_t fStreamerInfos; ///< streamer info records seen during writing
+   ROOT::Experimental::Internal::RNTupleSerializer::StreamerInfoMap_t
+      fStreamerInfos;                                             ///< streamer info records seen during writing
    ROOT::Internal::RColumnIndex fIndex;                           ///< number of bytes written in the current cluster
 
 private:
@@ -228,7 +233,7 @@ protected:
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &) final;
+   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &) final;
 
    void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RStreamerFieldDeleter>(fClass); }
@@ -240,7 +245,7 @@ protected:
 
    bool HasExtraTypeInfo() const final { return true; }
    // Returns the list of seen streamer infos
-   RExtraTypeInfoDescriptor GetExtraTypeInfo() const final;
+   ROOT::Experimental::RExtraTypeInfoDescriptor GetExtraTypeInfo() const final;
 
 public:
    RStreamerField(std::string_view fieldName, std::string_view className, std::string_view typeAlias = "");
@@ -252,7 +257,7 @@ public:
    size_t GetAlignment() const final;
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 /// The field for an unscoped or scoped enum with dictionary
@@ -279,7 +284,7 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return fSubfields[0]->GetValueSize(); }
    size_t GetAlignment() const final { return fSubfields[0]->GetAlignment(); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 /// Classes with dictionaries that can be inspected by TClass
@@ -312,7 +317,7 @@ public:
 /// It is used in the templated RField<RNTupleCardinality<SizeT>> form, which represents the collection sizes either
 /// as 32bit unsigned int (std::uint32_t) or as 64bit unsigned int (std::uint64_t).
 class RCardinalityField : public RFieldBase {
-   friend class RNTupleCollectionView; // to access GetCollectionInfo()
+   friend class ROOT::Experimental::RNTupleCollectionView; // to access GetCollectionInfo()
 
 private:
    void GetCollectionInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size)
@@ -333,14 +338,14 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    // Field is only used for reading
    void GenerateColumns() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
-   void GenerateColumns(const RNTupleDescriptor &) final;
+   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &) final;
 
 public:
    RCardinalityField(RCardinalityField &&other) = default;
    RCardinalityField &operator=(RCardinalityField &&other) = default;
    ~RCardinalityField() override = default;
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 
    const RField<RNTupleCardinality<std::uint32_t>> *As32Bit() const;
    const RField<RNTupleCardinality<std::uint64_t>> *As64Bit() const;
@@ -350,7 +355,7 @@ template <typename T>
 class RSimpleField : public RFieldBase {
 protected:
    void GenerateColumns() override { GenerateColumnsImpl<T>(); }
-   void GenerateColumns(const RNTupleDescriptor &desc) override { GenerateColumnsImpl<T>(desc); }
+   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc) override { GenerateColumnsImpl<T>(desc); }
 
    void ConstructValue(void *where) const final { new (where) T{0}; }
 
@@ -383,7 +388,6 @@ public:
 /// Template specializations for concrete C++ types
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace Experimental
 } // namespace ROOT
 
 #include "RField/RFieldFundamental.hxx"
@@ -393,12 +397,11 @@ public:
 #include "RField/RFieldSTLMisc.hxx"
 
 namespace ROOT {
-namespace Experimental {
 
 template <typename SizeT>
 class RField<RNTupleCardinality<SizeT>> final : public RCardinalityField {
 protected:
-   std::unique_ptr<ROOT::Experimental::RFieldBase> CloneImpl(std::string_view newName) const final
+   std::unique_ptr<ROOT::RFieldBase> CloneImpl(std::string_view newName) const final
    {
       return std::make_unique<RField<RNTupleCardinality<SizeT>>>(newName);
    }
@@ -494,7 +497,7 @@ public:
    size_t GetAlignment() const final;
    std::uint32_t GetTypeVersion() const final;
    std::uint32_t GetTypeChecksum() const final;
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 // Has to be implemented after the definition of all RField<T> types
@@ -518,9 +521,26 @@ struct RFieldBase::RCreateObjectDeleter<void> {
 
 template <>
 std::unique_ptr<void, typename RFieldBase::RCreateObjectDeleter<void>::deleter>
-ROOT::Experimental::RFieldBase::CreateObject<void>() const;
+ROOT::RFieldBase::CreateObject<void>() const;
 
+namespace Experimental {
+// TODO(gparolini): remove before branching ROOT v6.36
+using RFieldZero [[deprecated("ROOT::Experimental::RFieldZero moved to ROOT::RFieldZero")]] = ROOT::RFieldZero;
+using RClassField [[deprecated("ROOT::Experimental::RClassField moved to ROOT::RClassField")]] = ROOT::RClassField;
+using REnumField [[deprecated("ROOT::Experimental::REnumField moved to ROOT::REnumField")]] = ROOT::REnumField;
+using RStreamerField [[deprecated("ROOT::Experimental::RStreamerField moved to ROOT::RStreamerField")]] =
+   ROOT::RStreamerField;
+template <typename T>
+using RSimpleField [[deprecated("ROOT::Experimental::RSimpleField moved to ROOT::RSimpleField")]] =
+   ROOT::RSimpleField<T>;
+using RInvalidField [[deprecated("ROOT::Experimental::RInvalidField moved to ROOT::RInvalidField")]] =
+   ROOT::RInvalidField;
+using RCardinalityField [[deprecated("ROOT::Experimental::RCardinalityField moved to ROOT::RCardinalityField")]] =
+   ROOT::RCardinalityField;
+template <typename T>
+using RField [[deprecated("ROOT::Experimental::RField moved to ROOT::RField")]] = ROOT::RField<T>;
 } // namespace Experimental
+
 } // namespace ROOT
 
 #endif

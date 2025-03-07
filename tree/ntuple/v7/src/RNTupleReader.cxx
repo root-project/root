@@ -38,7 +38,7 @@ void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
       if (field->GetOnDiskId() == ROOT::kInvalidDescriptorId) {
          field->SetOnDiskId(fSource->GetSharedDescriptorGuard()->FindFieldId(field->GetFieldName(), fieldZeroId));
       }
-      Internal::CallConnectPageSourceOnField(*field, *fSource);
+      ROOT::Internal::CallConnectPageSourceOnField(*field, *fSource);
    }
 }
 

@@ -28,12 +28,6 @@ using namespace ROOT::Browsable;
 
 using namespace std::string_literals;
 
-// FIXME: this exposes RField and RIntegralField into the global namespace
-template<typename T>
-using RField = ROOT::Experimental::RField<T>;
-template<typename T>
-using RIntegralField = ROOT::Experimental::RIntegralField<T>;
-
 // ==============================================================================================
 
 /** \class RFieldProvider
@@ -83,7 +77,7 @@ class RFieldProvider : public RProvider {
       }
 
       template <typename T>
-      void FillHistogramImpl(const ROOT::Experimental::RFieldBase &field, ROOT::Experimental::RNTupleView<T> &view)
+      void FillHistogramImpl(const ROOT::RFieldBase &field, ROOT::Experimental::RNTupleView<T> &view)
       {
          std::string title = "Drawing of RField "s + field.GetFieldName();
 
@@ -107,21 +101,21 @@ class RFieldProvider : public RProvider {
          fHist->BufferEmpty();
       }
 
-      template<typename T>
-      void FillHistogram(const RIntegralField<T> &field)
+      template <typename T>
+      void FillHistogram(const ROOT::RIntegralField<T> &field)
       {
          auto view = fNtplReader->GetView<T>(field.GetOnDiskId());
          FillHistogramImpl(field, view);
       }
 
-      template<typename T>
-      void FillHistogram(const RField<T> &field)
+      template <typename T>
+      void FillHistogram(const ROOT::RField<T> &field)
       {
          auto view = fNtplReader->GetView<T>(field.GetOnDiskId());
          FillHistogramImpl(field, view);
       }
 
-      void FillStringHistogram(const RField<std::string> &field)
+      void FillStringHistogram(const ROOT::RField<std::string> &field)
       {
          std::map<std::string, int> values;
 
@@ -161,21 +155,21 @@ class RFieldProvider : public RProvider {
          return fHist.release();
       }
 
-      void VisitField(const ROOT::Experimental::RFieldBase & /* field */) final {}
-      void VisitBoolField(const RField<bool> &field) final { FillHistogram(field); }
-      void VisitFloatField(const RField<float> &field) final { FillHistogram(field); }
-      void VisitDoubleField(const RField<double> &field) final { FillHistogram(field); }
-      void VisitCharField(const RField<char> &field) final { FillHistogram(field); }
-      void VisitInt8Field(const RIntegralField<std::int8_t> &field) final { FillHistogram(field); }
-      void VisitInt16Field(const RIntegralField<std::int16_t> &field) final { FillHistogram(field); }
-      void VisitInt32Field(const RIntegralField<std::int32_t> &field) final { FillHistogram(field); }
-      void VisitInt64Field(const RIntegralField<std::int64_t> &field) final { FillHistogram(field); }
-      void VisitStringField(const RField<std::string> &field) final { FillStringHistogram(field); }
-      void VisitUInt16Field(const RIntegralField<std::uint16_t> &field) final { FillHistogram(field); }
-      void VisitUInt32Field(const RIntegralField<std::uint32_t> &field) final { FillHistogram(field); }
-      void VisitUInt64Field(const RIntegralField<std::uint64_t> &field) final { FillHistogram(field); }
-      void VisitUInt8Field(const RIntegralField<std::uint8_t> &field) final { FillHistogram(field); }
-      void VisitCardinalityField(const ROOT::Experimental::RCardinalityField &field) final
+      void VisitField(const ROOT::RFieldBase & /* field */) final {}
+      void VisitBoolField(const ROOT::RField<bool> &field) final { FillHistogram(field); }
+      void VisitFloatField(const ROOT::RField<float> &field) final { FillHistogram(field); }
+      void VisitDoubleField(const ROOT::RField<double> &field) final { FillHistogram(field); }
+      void VisitCharField(const ROOT::RField<char> &field) final { FillHistogram(field); }
+      void VisitInt8Field(const ROOT::RIntegralField<std::int8_t> &field) final { FillHistogram(field); }
+      void VisitInt16Field(const ROOT::RIntegralField<std::int16_t> &field) final { FillHistogram(field); }
+      void VisitInt32Field(const ROOT::RIntegralField<std::int32_t> &field) final { FillHistogram(field); }
+      void VisitInt64Field(const ROOT::RIntegralField<std::int64_t> &field) final { FillHistogram(field); }
+      void VisitStringField(const ROOT::RField<std::string> &field) final { FillStringHistogram(field); }
+      void VisitUInt16Field(const ROOT::RIntegralField<std::uint16_t> &field) final { FillHistogram(field); }
+      void VisitUInt32Field(const ROOT::RIntegralField<std::uint32_t> &field) final { FillHistogram(field); }
+      void VisitUInt64Field(const ROOT::RIntegralField<std::uint64_t> &field) final { FillHistogram(field); }
+      void VisitUInt8Field(const ROOT::RIntegralField<std::uint8_t> &field) final { FillHistogram(field); }
+      void VisitCardinalityField(const ROOT::RCardinalityField &field) final
       {
          if (const auto f32 = field.As32Bit()) {
             FillHistogram(*f32);

@@ -102,20 +102,20 @@ protected:
       friend class RNTupleJoinProcessor;
 
    private:
-      std::unique_ptr<RFieldBase> fProtoField;
-      std::unique_ptr<RFieldBase> fConcreteField;
+      std::unique_ptr<ROOT::RFieldBase> fProtoField;
+      std::unique_ptr<ROOT::RFieldBase> fConcreteField;
       REntry::RFieldToken fToken;
       // Which RNTuple the field belongs to, in case the field belongs to an auxiliary RNTuple, according to the order
       // in which it was specified. For chained RNTuples, this value will always be 0.
       std::size_t fNTupleIdx;
 
    public:
-      RFieldContext(std::unique_ptr<RFieldBase> protoField, REntry::RFieldToken token, std::size_t ntupleIdx = 0)
+      RFieldContext(std::unique_ptr<ROOT::RFieldBase> protoField, REntry::RFieldToken token, std::size_t ntupleIdx = 0)
          : fProtoField(std::move(protoField)), fToken(token), fNTupleIdx(ntupleIdx)
       {
       }
 
-      const RFieldBase &GetProtoField() const { return *fProtoField; }
+      const ROOT::RFieldBase &GetProtoField() const { return *fProtoField; }
       /// Concrete pages need to be reset explicitly before the page source they belong to is destroyed.
       void ResetConcreteField() { fConcreteField.reset(); }
       void SetConcreteField() { fConcreteField = fProtoField->Clone(fProtoField->GetFieldName()); }

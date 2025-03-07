@@ -42,7 +42,7 @@ class RNTupleWriter;
 namespace Internal {
 class RProjectedFields;
 
-RFieldZero &GetFieldZeroOfModel(RNTupleModel &model);
+ROOT::RFieldZero &GetFieldZeroOfModel(RNTupleModel &model);
 RProjectedFields &GetProjectedFieldsOfModel(RNTupleModel &model);
 
 // clang-format off
@@ -62,12 +62,12 @@ class RProjectedFields {
 public:
    /// The map keys are the projected target fields, the map values are the backing source fields
    /// Note that sub fields are treated individually and indepently of their parent field
-   using FieldMap_t = std::unordered_map<const RFieldBase *, const RFieldBase *>;
+   using FieldMap_t = std::unordered_map<const ROOT::RFieldBase *, const ROOT::RFieldBase *>;
 
 private:
-   explicit RProjectedFields(std::unique_ptr<RFieldZero> fieldZero) : fFieldZero(std::move(fieldZero)) {}
+   explicit RProjectedFields(std::unique_ptr<ROOT::RFieldZero> fieldZero) : fFieldZero(std::move(fieldZero)) {}
    /// The projected fields are attached to this zero field
-   std::unique_ptr<RFieldZero> fFieldZero;
+   std::unique_ptr<ROOT::RFieldZero> fFieldZero;
    /// Maps the source fields from fModel to the target projected fields attached to fFieldZero
    FieldMap_t fFieldMap;
    /// The model this set of projected fields belongs to
@@ -75,10 +75,13 @@ private:
 
    /// Asserts that the passed field is a valid target of the source field provided in the field map.
    /// Checks the field without looking into sub fields.
-   RResult<void> EnsureValidMapping(const RFieldBase *target, const FieldMap_t &fieldMap);
+   RResult<void> EnsureValidMapping(const ROOT::RFieldBase *target, const FieldMap_t &fieldMap);
 
 public:
-   explicit RProjectedFields(const RNTupleModel &model) : fFieldZero(std::make_unique<RFieldZero>()), fModel(&model) {}
+   explicit RProjectedFields(const RNTupleModel &model)
+      : fFieldZero(std::make_unique<ROOT::RFieldZero>()), fModel(&model)
+   {
+   }
    RProjectedFields(const RProjectedFields &) = delete;
    RProjectedFields(RProjectedFields &&) = default;
    RProjectedFields &operator=(const RProjectedFields &) = delete;
@@ -88,11 +91,11 @@ public:
    /// The new model needs to be a clone of fModel
    std::unique_ptr<RProjectedFields> Clone(const RNTupleModel &newModel) const;
 
-   RFieldZero &GetFieldZero() { return *fFieldZero; }
-   const RFieldBase *GetSourceField(const RFieldBase *target) const;
+   ROOT::RFieldZero &GetFieldZero() { return *fFieldZero; }
+   const ROOT::RFieldBase *GetSourceField(const ROOT::RFieldBase *target) const;
    /// Adds a new projected field. The field map needs to provide valid source fields of fModel for 'field'
    /// and each of its sub fields.
-   RResult<void> Add(std::unique_ptr<RFieldBase> field, const FieldMap_t &fieldMap);
+   RResult<void> Add(std::unique_ptr<ROOT::RFieldBase> field, const FieldMap_t &fieldMap);
    bool IsEmpty() const { return fFieldZero->begin() == fFieldZero->end(); }
 };
 
@@ -117,7 +120,7 @@ that were used for writing and are no longer connected to a page sink.
 */
 // clang-format on
 class RNTupleModel {
-   friend RFieldZero &Internal::GetFieldZeroOfModel(RNTupleModel &);
+   friend ROOT::RFieldZero &Internal::GetFieldZeroOfModel(RNTupleModel &);
    friend Internal::RProjectedFields &Internal::GetProjectedFieldsOfModel(RNTupleModel &);
 
 public:
@@ -149,7 +152,7 @@ private:
    };
 
    /// Hierarchy of fields consisting of simple types and collections (sub trees)
-   std::unique_ptr<RFieldZero> fFieldZero;
+   std::unique_ptr<ROOT::RFieldZero> fFieldZero;
    /// Contains field values corresponding to the created top-level fields, as well as registered subfields
    std::unique_ptr<REntry> fDefaultEntry;
    /// Keeps track of which field names are taken, including projected field names.
@@ -180,13 +183,13 @@ private:
    void EnsureNotBare() const;
 
    /// The field name can be a top-level field or a nested field. Returns nullptr if the field is not in the model.
-   RFieldBase *FindField(std::string_view fieldName) const;
+   ROOT::RFieldBase *FindField(std::string_view fieldName) const;
 
    /// Add a subfield to the provided entry. If `initializeValue` is false, a nullptr will be bound to the entry value
    /// (used in bare models).
    void AddSubfield(std::string_view fieldName, REntry &entry, bool initializeValue = true) const;
 
-   RNTupleModel(std::unique_ptr<RFieldZero> fieldZero);
+   RNTupleModel(std::unique_ptr<ROOT::RFieldZero> fieldZero);
 
 public:
    RNTupleModel(const RNTupleModel &) = delete;
@@ -195,10 +198,10 @@ public:
 
    std::unique_ptr<RNTupleModel> Clone() const;
    static std::unique_ptr<RNTupleModel> Create();
-   static std::unique_ptr<RNTupleModel> Create(std::unique_ptr<RFieldZero> fieldZero);
+   static std::unique_ptr<RNTupleModel> Create(std::unique_ptr<ROOT::RFieldZero> fieldZero);
    /// A bare model has no default entry
    static std::unique_ptr<RNTupleModel> CreateBare();
-   static std::unique_ptr<RNTupleModel> CreateBare(std::unique_ptr<RFieldZero> fieldZero);
+   static std::unique_ptr<RNTupleModel> CreateBare(std::unique_ptr<ROOT::RFieldZero> fieldZero);
 
    /// Creates a new field given a `name` or `{name, description}` pair and a
    /// corresponding, default-constructed value that is managed by a shared pointer.
@@ -242,7 +245,7 @@ public:
    {
       EnsureNotFrozen();
       EnsureValidFieldName(fieldNameDesc.fName);
-      auto field = std::make_unique<RField<T>>(fieldNameDesc.fName);
+      auto field = std::make_unique<ROOT::RField<T>>(fieldNameDesc.fName);
       field->SetDescription(fieldNameDesc.fDescription);
       std::shared_ptr<T> ptr;
       if (fDefaultEntry)
@@ -255,7 +258,7 @@ public:
    /// Adds a field whose type is not known at compile time.  Thus there is no shared pointer returned.
    ///
    /// Throws an exception if the field is null.
-   void AddField(std::unique_ptr<RFieldBase> field);
+   void AddField(std::unique_ptr<ROOT::RFieldBase> field);
 
    /// Register a subfield so it can be accessed directly from entries belonging to the model. Because registering a
    /// subfield does not fundamentally change the model, previously created entries will not be invalidated, nor
@@ -276,7 +279,7 @@ public:
    /// ~~~ {.cpp}
    /// auto model = RNTupleModel::Create();
    /// model->MakeField<float>("met");
-   /// auto metProjection = RFieldBase::Create("missingE", "float").Unwrap();
+   /// auto metProjection = ROOT::RFieldBase::Create("missingE", "float").Unwrap();
    /// model->AddProjectedField(std::move(metProjection), [](const std::string &) { return "met"; });
    /// ~~~
    ///
@@ -292,7 +295,7 @@ public:
    ///
    /// auto model = RNTupleModel::Create();
    /// model->MakeField<std::vector<P>>("points");
-   /// auto pxProjection = RFieldBase::Create("pxs", "std::vector<int>").Unwrap();
+   /// auto pxProjection = ROOT::RFieldBase::Create("pxs", "std::vector<int>").Unwrap();
    /// model->AddProjectedField(std::move(pxProjection), [](const std::string &fieldName) {
    ///   if (fieldName == "pxs")
    ///     return "points";
@@ -302,7 +305,7 @@ public:
    /// ~~~
    ///
    /// Creating projections for fields containing `std::variant` or fixed-size arrays is unsupported.
-   RResult<void> AddProjectedField(std::unique_ptr<RFieldBase> field, FieldMappingFunc_t mapping);
+   RResult<void> AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, FieldMappingFunc_t mapping);
 
    void Freeze();
    void Unfreeze();
@@ -320,16 +323,16 @@ public:
    /// Creates a token to be used in REntry methods to address a field present in the entry
    REntry::RFieldToken GetToken(std::string_view fieldName) const;
    /// Calls the given field's CreateBulk() method. Throws an exception if no field with the given name exists.
-   RFieldBase::RBulk CreateBulk(std::string_view fieldName) const;
+   ROOT::RFieldBase::RBulk CreateBulk(std::string_view fieldName) const;
 
    REntry &GetDefaultEntry();
    const REntry &GetDefaultEntry() const;
 
    /// Mutable access to the root field is used to make adjustments to the fields.
-   RFieldZero &GetMutableFieldZero();
-   const RFieldZero &GetConstFieldZero() const { return *fFieldZero; }
-   RFieldBase &GetMutableField(std::string_view fieldName);
-   const RFieldBase &GetConstField(std::string_view fieldName) const;
+   ROOT::RFieldZero &GetMutableFieldZero();
+   const ROOT::RFieldZero &GetConstFieldZero() const { return *fFieldZero; }
+   ROOT::RFieldBase &GetMutableField(std::string_view fieldName);
+   const ROOT::RFieldBase &GetConstField(std::string_view fieldName) const;
 
    const std::string &GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);
@@ -361,15 +364,16 @@ You will not normally use this directly; see `RNTupleModel::RUpdater` instead.
 struct RNTupleModelChangeset {
    RNTupleModel &fModel;
    /// Points to the fields in fModel that were added as part of an updater transaction
-   std::vector<RFieldBase *> fAddedFields;
+   std::vector<ROOT::RFieldBase *> fAddedFields;
    /// Points to the projected fields in fModel that were added as part of an updater transaction
-   std::vector<RFieldBase *> fAddedProjectedFields;
+   std::vector<ROOT::RFieldBase *> fAddedProjectedFields;
 
    RNTupleModelChangeset(RNTupleModel &model) : fModel(model) {}
    bool IsEmpty() const { return fAddedFields.empty() && fAddedProjectedFields.empty(); }
 
-   void AddField(std::unique_ptr<RFieldBase> field);
-   ROOT::RResult<void> AddProjectedField(std::unique_ptr<RFieldBase> field, RNTupleModel::FieldMappingFunc_t mapping);
+   void AddField(std::unique_ptr<ROOT::RFieldBase> field);
+   ROOT::RResult<void>
+   AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, RNTupleModel::FieldMappingFunc_t mapping);
 };
 
 } // namespace Internal
@@ -408,9 +412,9 @@ public:
       return objPtr;
    }
 
-   void AddField(std::unique_ptr<RFieldBase> field);
+   void AddField(std::unique_ptr<ROOT::RFieldBase> field);
 
-   RResult<void> AddProjectedField(std::unique_ptr<RFieldBase> field, FieldMappingFunc_t mapping);
+   RResult<void> AddProjectedField(std::unique_ptr<ROOT::RFieldBase> field, FieldMappingFunc_t mapping);
 };
 
 } // namespace Experimental

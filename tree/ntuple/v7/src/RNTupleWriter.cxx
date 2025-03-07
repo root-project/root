@@ -63,7 +63,7 @@ ROOT::Experimental::RNTupleWriter::Create(std::unique_ptr<RNTupleModel> model,
       throw RException(R__FAIL("cannot create an RNTupleWriter from a model with registered subfields"));
    }
    for (const auto &field : model->GetConstFieldZero()) {
-      if (field.GetTraits() & RFieldBase::kTraitEmulatedField)
+      if (field.GetTraits() & ROOT::RFieldBase::kTraitEmulatedField)
          throw RException(
             R__FAIL("creating a RNTupleWriter from a model containing emulated fields is currently unsupported."));
    }
@@ -91,7 +91,7 @@ ROOT::Experimental::RNTupleWriter::Recreate(std::initializer_list<std::pair<std:
    for (const auto &fieldDesc : fields) {
       std::string typeName(fieldDesc.first);
       std::string fieldName(fieldDesc.second);
-      auto field = RFieldBase::Create(fieldName, typeName);
+      auto field = ROOT::RFieldBase::Create(fieldName, typeName);
       model->AddField(field.Unwrap());
    }
    return Create(std::move(model), std::move(sink), options);

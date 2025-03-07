@@ -177,12 +177,12 @@ TEST(RNTupleParallelWriter, StagedMultiColumn)
       *px = 1.0;
       c->Fill(*e);
       c->FlushCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(c->GetModel().GetConstField("px")), 1);
       *px = 2.0;
       c->Fill(*e);
       c->FlushCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(c->GetModel().GetConstField("px")), 0);
       *px = 3.0;
       c->Fill(*e);

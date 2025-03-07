@@ -37,6 +37,8 @@ namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
 
+} // namespace Experimental
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Template specializations for concrete C++ fundamental types
 ////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +78,7 @@ public:
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 extern template class RSimpleField<char>;
@@ -98,7 +100,7 @@ public:
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 // For other integral types, we introduce an intermediate RIntegralField. It is specialized for fixed-width integer
@@ -125,7 +127,7 @@ public:
    RIntegralField &operator=(RIntegralField &&other) = default;
    ~RIntegralField() override = default;
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 extern template class RSimpleField<std::uint8_t>;
@@ -142,7 +144,7 @@ public:
    RIntegralField &operator=(RIntegralField &&other) = default;
    ~RIntegralField() override = default;
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 extern template class RSimpleField<std::int16_t>;
@@ -159,7 +161,7 @@ public:
    RIntegralField &operator=(RIntegralField &&other) = default;
    ~RIntegralField() override = default;
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 extern template class RSimpleField<std::uint16_t>;
@@ -176,7 +178,7 @@ public:
    RIntegralField &operator=(RIntegralField &&other) = default;
    ~RIntegralField() override = default;
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 extern template class RSimpleField<std::int32_t>;
@@ -193,7 +195,7 @@ public:
    RIntegralField &operator=(RIntegralField &&other) = default;
    ~RIntegralField() override = default;
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 extern template class RSimpleField<std::uint32_t>;
@@ -210,7 +212,7 @@ public:
    RIntegralField &operator=(RIntegralField &&other) = default;
    ~RIntegralField() override = default;
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 extern template class RSimpleField<std::int64_t>;
@@ -227,7 +229,7 @@ public:
    RIntegralField &operator=(RIntegralField &&other) = default;
    ~RIntegralField() override = default;
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 extern template class RSimpleField<std::uint64_t>;
@@ -244,7 +246,7 @@ public:
    RIntegralField &operator=(RIntegralField &&other) = default;
    ~RIntegralField() override = default;
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 namespace Internal {
@@ -388,7 +390,7 @@ protected:
       fPrincipalColumn = fAvailableColumns[0].get();
    }
 
-   void GenerateColumns(const RNTupleDescriptor &desc) final
+   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc) final
    {
       std::uint16_t representationIndex = 0;
       do {
@@ -493,7 +495,7 @@ public:
 
    explicit RField(std::string_view name) : RRealField<float>(name, TypeName()) {}
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -512,12 +514,19 @@ public:
 
    explicit RField(std::string_view name) : RRealField<double>(name, TypeName()) {}
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 
    // Set the column representation to 32 bit floating point and the type alias to Double32_t
    void SetDouble32();
 };
+
+namespace Experimental {
+// TODO(gparolini): remove before branching ROOT v6.36
+template <typename T>
+using RIntegralField [[deprecated("ROOT::Experimental::RIntegralField moved to ROOT::RIntegralField")]] =
+   ROOT::RIntegralField<T>;
 } // namespace Experimental
+
 } // namespace ROOT
 
 #endif
