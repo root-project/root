@@ -16,7 +16,6 @@
 class TClass;
 
 namespace ROOT {
-namespace Experimental {
 namespace Internal {
 
 /// Applies RNTuple specific type name normalization rules (see specs) that help the string parsing in
@@ -59,8 +58,6 @@ std::tuple<std::string, std::vector<std::size_t>> ParseArrayType(const std::stri
 std::vector<std::string> TokenizeTypeList(std::string_view templateType);
 
 } // namespace Internal
-
-} // namespace Experimental
 } // namespace ROOT
 
 #endif
