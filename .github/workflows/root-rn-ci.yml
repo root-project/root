@@ -8,9 +8,6 @@ on:
         type: string
         required: true
         default: "master"
-  pull_request:
-    branches:
-      - '**'
 
 jobs:
   create_release_notes:
@@ -46,22 +43,10 @@ jobs:
         run: wget https://raw.githubusercontent.com/root-project/rootspi/refs/heads/master/rdoc/relnotes_gh.py
 
       - name: Create Release Notes
-        # this line is here for testing please remove
-        if:   github.event_name == 'workflow_dispatch'
         working-directory: ${{ env.WORKDIR }}
         run: |
           echo +++ Running the command
           python relnotes_gh.py root ${{ inputs.branch }}
-          echo +++ New Content
-          ls
-
-      # this entire step is here for testing please remove
-      - name: Create Release Notes Pull Request
-        if:   github.event_name == 'pull_request'
-        working-directory: ${{ env.WORKDIR }}
-        run: |
-          echo +++ Running the command
-          python relnotes_gh.py root master
           echo +++ New Content
           ls
 
