@@ -2800,6 +2800,9 @@ TEST(RNTupleMerger, MergeEmptySchema)
          sourcePtrs.push_back(s.get());
       }
 
+      ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.requiredDiag(kWarning, "RNTuple::Merge", "Output RNTuple 'ntuple' has no entries.");
+
       RNTupleMergeOptions opts;
       {
          auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
