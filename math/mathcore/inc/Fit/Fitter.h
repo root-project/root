@@ -362,7 +362,7 @@ public:
 
    /**
        Set the fitted function (model function) from a parametric function interface.
-       @param useGradient if true, the minimizer uses the gradient as an aid for the fitting
+       @param useGradient if true, the minimizer uses the gradient information provided by the user, otherwise a numerical gradient is computed and used.
    */
    void  SetFunction(const IModelFunction & func, bool useGradient = false);
 
