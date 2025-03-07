@@ -1,4 +1,4 @@
-name: 'EOS ROOT Release Notes'
+name: 'ROOT Release Notes'
 
 on:
   workflow_dispatch:
