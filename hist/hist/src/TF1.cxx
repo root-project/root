@@ -3214,6 +3214,25 @@ void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Doubl
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Start saving function as primitive
+/// Declare variable in stream according to provided draw options
+/// When TH1 or TGraph stores list of functions, it applies special coding of created variable names
+
+TString TF1::ProvideSaveName(Option_t *option)
+{
+   thread_local Int_t storeNumber = 0;
+   TString funcName = GetName();
+   const char *l = strstr(option, "#");
+   Int_t number = ++storeNumber;
+   if (l != nullptr)
+      sscanf(l + 1, "%d", &number);
+
+   funcName += number;
+   return funcName;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
 void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
@@ -3221,7 +3240,7 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    Int_t i;
    char quote = '"';
 
-   // Save the function as C code independant from ROOT.
+   // Save the function as C code independent from ROOT.
    if (strstr(option, "cc")) {
       out << "double " << GetName() << "(double xv) {" << std::endl;
       Double_t dx = (fXmax - fXmin) / (fNpx - 1);
@@ -3262,21 +3281,11 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       return;
    }
 
-   out << "   " << std::endl;
-
-   // Either f1Number is computed locally or set from outside
-   static Int_t f1Number = 0;
-   TString f1Name(GetName());
-   const char *l = strstr(option, "#");
-   if (l != nullptr) {
-      sscanf(&l[1], "%d", &f1Number);
-   } else {
-      ++f1Number;
-   }
-   f1Name += f1Number;
+   TString f1Name = ProvideSaveName(option);
 
    const char *addToGlobList = fParent ? ", TF1::EAddToList::kNo" : ", TF1::EAddToList::kDefault";
 
+   out << "   " << std::endl;
    if (!fType) {
       out << "   TF1 *" << f1Name.Data() << " = new TF1(" << quote << GetName() << quote << "," << quote << GetTitle() << quote << "," << fXmin << "," << fXmax <<  addToGlobList << ");" << std::endl;
       if (fNpx != 100) {
@@ -3329,10 +3338,8 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       GetParLimits(i, parmin, parmax);
       out << "   " << f1Name.Data() << "->SetParLimits(" << i << "," << parmin << "," << parmax << ");" << std::endl;
    }
-   if (!strstr(option, "nodraw")) {
-      out << "   " << f1Name.Data() << "->Draw("
-          << quote << option << quote << ");" << std::endl;
-   }
+   if (!strstr(option, "nodraw"))
+      out << "   " << f1Name.Data() << "->Draw(" << quote << option << quote << ");" << std::endl;
 }
 
 

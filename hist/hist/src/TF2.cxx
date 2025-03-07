@@ -842,13 +842,9 @@ void TF2::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
 void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    char quote = '"';
-   TString f2Name(GetName());
+   TString f2Name = ProvideSaveName(option);
    out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TF2::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TF2 *";
-   }
+   out<<"   TF2 *";
    if (!fMethodCall) {
       out<<f2Name.Data()<<" = new TF2("<<quote<<f2Name.Data()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<");"<<std::endl;
    } else {
@@ -874,7 +870,8 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       GetParLimits(i,parmin,parmax);
       out<<"   "<<f2Name.Data()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
    }
-   out<<"   "<<f2Name.Data()<<"->Draw("<<quote<<option<<quote<<");"<<std::endl;
+   if (!strstr(option, "nodraw"))
+      out<<"   "<<f2Name.Data()<<"->Draw("<<quote<<option<<quote<<");"<<std::endl;
 
    if (GetXaxis()) GetXaxis()->SaveAttributes(out, f2Name.Data(), "->GetXaxis()");
    if (GetYaxis()) GetYaxis()->SaveAttributes(out, f2Name.Data(), "->GetYaxis()");
