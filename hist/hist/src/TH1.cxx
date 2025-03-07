@@ -7316,22 +7316,44 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
    out << ");\n";
 
-   // save bin contents
-   Int_t bin;
-   for (bin=0;bin<fNcells;bin++) {
-      Double_t bc = RetrieveBinContent(bin);
-      if (bc) {
-         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");\n";
+   Bool_t save_errors = fSumw2.fN > 0;
+   Int_t numbins = 0, numerrors = 0;
+
+   std::vector<Double_t> content(fNcells), errors(save_errors ? fNcells : 0);
+   for (Int_t bin = 0; bin < fNcells; bin++) {
+      content[bin] = RetrieveBinContent(bin);
+      if (content[bin])
+         numbins++;
+      if (save_errors) {
+         errors[bin] = GetBinError(bin);
+         if (errors[bin])
+            numerrors++;
       }
    }
 
-   // save bin errors
-   if (fSumw2.fN) {
-      for (bin=0;bin<fNcells;bin++) {
-         Double_t be = GetBinError(bin);
-         if (be) {
-            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");\n";
+   if ((numbins < 100) && (numerrors < 100)) {
+      // in case of few non-empty bins store them as before
+      for (Int_t bin = 0; bin < fNcells; bin++) {
+         if (content[bin])
+            out << "   " << hname << "->SetBinContent(" << bin << "," << content[bin] << ");\n";
+      }
+      if (save_errors)
+         for (Int_t bin = 0; bin < fNcells; bin++) {
+            if (errors[bin])
+               out << "   " << hname << "->SetBinError(" << bin << "," << errors[bin] << ");\n";
          }
+   } else {
+      if (numbins > 0) {
+         TString arr = SavePrimitiveArray(out, hname, fNcells, content.data());
+         out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
+         out << "      if (" << arr << "[bin])\n";
+         out << "         " << hname << "->SetBinContent(bin, " << arr << "[bin]);\n";
+      }
+      if (numerrors > 0) {
+         TString arr = SavePrimitiveArray(out, hname, fNcells, errors.data());
+         out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
+         out << "      if (" << arr << "[bin])\n";
+         out << "         " << hname << "->SetBinError(bin, " << arr << "[bin]);\n";
       }
    }
 
