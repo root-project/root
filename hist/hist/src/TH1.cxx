@@ -7368,65 +7368,52 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   if (TMath::Abs(GetBarOffset()) > 1e-5) {
-      out<<"   "<<hname<<"->SetBarOffset("<<GetBarOffset()<<");"<<std::endl;
-   }
-   if (TMath::Abs(GetBarWidth()-1) > 1e-5) {
-      out<<"   "<<hname<<"->SetBarWidth("<<GetBarWidth()<<");"<<std::endl;
-   }
-   if (fMinimum != -1111) {
-      out<<"   "<<hname<<"->SetMinimum("<<fMinimum<<");"<<std::endl;
-   }
-   if (fMaximum != -1111) {
-      out<<"   "<<hname<<"->SetMaximum("<<fMaximum<<");"<<std::endl;
-   }
-   if (fNormFactor != 0) {
-      out<<"   "<<hname<<"->SetNormFactor("<<fNormFactor<<");"<<std::endl;
-   }
-   if (fEntries != 0) {
-      out<<"   "<<hname<<"->SetEntries("<<fEntries<<");"<<std::endl;
-   }
-   if (!fDirectory) {
-      out<<"   "<<hname<<"->SetDirectory(nullptr);"<<std::endl;
-   }
-   if (TestBit(kNoStats)) {
-      out<<"   "<<hname<<"->SetStats(0);"<<std::endl;
-   }
-   if (fOption.Length() != 0) {
-      out<<"   "<<hname<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<std::endl;
-   }
+   if (TMath::Abs(GetBarOffset()) > 1e-5)
+      out << "   " << hname << "->SetBarOffset(" << GetBarOffset() << ");\n";
+   if (TMath::Abs(GetBarWidth() - 1) > 1e-5)
+      out << "   " << hname << "->SetBarWidth(" << GetBarWidth() << ");\n";
+   if (fMinimum != -1111)
+      out << "   " << hname << "->SetMinimum(" << fMinimum << ");\n";
+   if (fMaximum != -1111)
+      out << "   " << hname << "->SetMaximum(" << fMaximum << ");\n";
+   if (fNormFactor != 0)
+      out << "   " << hname << "->SetNormFactor(" << fNormFactor << ");\n";
+   if (fEntries != 0)
+      out << "   " << hname << "->SetEntries(" << fEntries << ");\n";
+   if (!fDirectory)
+      out << "   " << hname << "->SetDirectory(nullptr);\n";
+   if (TestBit(kNoStats))
+      out << "   " << hname << "->SetStats(0);\n";
+   if (fOption.Length() != 0)
+      out << "   " << hname << "->SetOption(\n" << TString(fOption).ReplaceSpecialCppChars() << "\");\n";
 
    // save contour levels
    Int_t ncontours = GetContour();
    if (ncontours > 0) {
-      out<<"   "<<hname<<"->SetContour("<<ncontours<<");"<<std::endl;
+      out << "   " << hname << "->SetContour(" << ncontours << ");\n";
       Double_t zlevel;
-      for (Int_t bin=0;bin<ncontours;bin++) {
+      for (Int_t bin = 0; bin < ncontours; bin++) {
          if (gPad->GetLogz()) {
-            zlevel = TMath::Power(10,GetContourLevel(bin));
+            zlevel = TMath::Power(10, GetContourLevel(bin));
          } else {
             zlevel = GetContourLevel(bin);
          }
-         out<<"   "<<hname<<"->SetContourLevel("<<bin<<","<<zlevel<<");"<<std::endl;
+         out << "   " << hname << "->SetContourLevel(" << bin << "," << zlevel << ");\n";
       }
    }
 
    SavePrimitiveFunctions(out, hname, fFunctions);
 
    // save attributes
-   SaveFillAttributes(out,hname,0,1001);
-   SaveLineAttributes(out,hname,1,1,1);
-   SaveMarkerAttributes(out,hname,1,1,1);
-   fXaxis.SaveAttributes(out,hname,"->GetXaxis()");
-   fYaxis.SaveAttributes(out,hname,"->GetYaxis()");
-   fZaxis.SaveAttributes(out,hname,"->GetZaxis()");
-   TString opt = option;
-   opt.ToLower();
-   if (!opt.Contains("nodraw")) {
-      out<<"   "<<hname<<"->Draw("
-         <<quote<<option<<quote<<");"<<std::endl;
-   }
+   SaveFillAttributes(out, hname, 0, 1001);
+   SaveLineAttributes(out, hname, 1, 1, 1);
+   SaveMarkerAttributes(out, hname, 1, 1, 1);
+   fXaxis.SaveAttributes(out, hname, "->GetXaxis()");
+   fYaxis.SaveAttributes(out, hname, "->GetYaxis()");
+   fZaxis.SaveAttributes(out, hname, "->GetZaxis()");
+
+   if (!option || !strstr(option, "nodraw"))
+      out << "   " << hname << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
