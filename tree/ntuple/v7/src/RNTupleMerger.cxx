@@ -1096,6 +1096,9 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
       MergeSourceClusters(*source, columnInfos.fCommonColumns, columnInfos.fExtraDstColumns, mergeData);
    } // end loop over sources
 
+   if (fDestination->GetNEntries() == 0)
+      Warning("RNTuple::Merge", "Output RNTuple '%s' has no entries.", fDestination->GetNTupleName().c_str());
+
    // Commit the output
    fDestination->CommitClusterGroup();
    fDestination->CommitDataset();
