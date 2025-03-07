@@ -108,12 +108,6 @@ ROOT ::Experimental::Internal::RNTupleJoinTable::REntryMapping::GetEntryIndexes(
 
 //------------------------------------------------------------------------------
 
-void ROOT::Experimental::Internal::RNTupleJoinTable::EnsureBuilt() const
-{
-   if (!fIsBuilt)
-      throw RException(R__FAIL("join table has not been built yet"));
-}
-
 std::unique_ptr<ROOT::Experimental::Internal::RNTupleJoinTable>
 ROOT::Experimental::Internal::RNTupleJoinTable::Create(const std::vector<std::string> &fieldNames)
 {
@@ -189,7 +183,8 @@ std::vector<ROOT::NTupleSize_t>
 ROOT::Experimental::Internal::RNTupleJoinTable::GetEntryIndexes(const std::vector<void *> &valuePtrs,
                                                                 const std::vector<PartitionKey_t> &partitionKeys) const
 {
-   EnsureBuilt();
+   if (!fIsBuilt)
+      throw RException(R__FAIL("join table has not been built yet"));
 
    std::vector<ROOT::NTupleSize_t> entryIdxs{};
 
