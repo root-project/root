@@ -113,7 +113,7 @@ using EContainerFormat = RNTupleFileWriter::EContainerFormat;
 template <typename T>
 using RNTupleView = ROOT::Experimental::RNTupleView<T>;
 
-using ROOT::Experimental::Internal::MakeUninitArray;
+using ROOT::Internal::MakeUninitArray;
 
 /**
  * An RAII wrapper around an open temporary file on disk. It cleans up the guarded file when the wrapper object

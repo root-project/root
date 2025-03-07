@@ -23,6 +23,8 @@
 #include <algorithm>
 #include <memory>
 
+using ROOT::Internal::MakeUninitArray;
+
 void ROOT::Experimental::Internal::RPageSinkBuf::RColumnBuf::DropBufferedPages()
 {
    fBufferedPages.clear();

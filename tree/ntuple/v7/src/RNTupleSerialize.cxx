@@ -711,7 +711,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnTy
    case ENTupleColumnType::kReal32Trunc: return SerializeUInt16(0x1C, buffer);
    case ENTupleColumnType::kReal32Quant: return SerializeUInt16(0x1D, buffer);
    default:
-      if (type == kTestFutureType)
+      if (type == ROOT::Internal::kTestFutureType)
          return SerializeUInt16(0x99, buffer);
       throw RException(R__FAIL("ROOT bug: unexpected column type"));
    }
@@ -773,7 +773,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeFieldStructure(ROOT::E
    case ENTupleStructure::kVariant: return SerializeUInt16(0x03, buffer);
    case ENTupleStructure::kStreamer: return SerializeUInt16(0x04, buffer);
    default:
-      if (structure == ROOT::Experimental::Internal::kTestFutureFieldStructure)
+      if (structure == ROOT::Internal::kTestFutureFieldStructure)
          return SerializeUInt16(0x99, buffer);
       throw RException(R__FAIL("ROOT bug: unexpected field structure type"));
    }
@@ -1048,7 +1048,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(const RNTupleL
       locatorType = 0x02;
       break;
    default:
-      if (locator.GetType() == kTestLocatorType) {
+      if (locator.GetType() == ROOT::Internal::kTestLocatorType) {
          // For the testing locator, use the same payload as Object64. We're not gonna really read it back anyway.
          size += SerializeLocatorPayloadObject64(locator, payloadp);
          locatorType = 0x7e;

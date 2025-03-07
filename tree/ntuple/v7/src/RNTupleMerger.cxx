@@ -40,6 +40,7 @@
 #include <vector>
 
 using ROOT::ENTupleColumnType;
+using ROOT::Internal::MakeUninitArray;
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Internal;
 
