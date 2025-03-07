@@ -1067,6 +1067,45 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    return (tcling_callfunc_Wrapper_t)F;
 }
 
+// FIXME: Sink in the code duplication from get_wrapper_code.
+static std::string PrepareStructorWrapper(const Decl *D, const char *wrapper_prefix, std::string &class_name)
+{
+   ASTContext &Context = D->getASTContext();
+   PrintingPolicy Policy(Context.getPrintingPolicy());
+   Policy.SuppressTagKeyword = true;
+   Policy.SuppressUnwrittenScope = true;
+   //
+   //  Get the class or namespace name.
+   //
+   if (const TypeDecl *TD = dyn_cast<TypeDecl>(D)) {
+      // This is a class, struct, or union member.
+      QualType QT(TD->getTypeForDecl(), 0);
+      GetTypeAsString(QT, class_name, Context, Policy);
+   } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
+      // This is a namespace member.
+      raw_string_ostream stream(class_name);
+      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+      stream.flush();
+   }
+
+   //
+   //  Make the wrapper name.
+   //
+   string wrapper_name;
+   {
+      ostringstream buf;
+      buf << wrapper_prefix;
+      // const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
+      // string mn;
+      // fInterp->maybeMangleDeclName(ND, mn);
+      // buf << '_dtor_' << mn;
+      buf << '_' << gWrapperSerial++;
+      wrapper_name = buf.str();
+   }
+
+   return wrapper_name;
+}
+
 tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingClassInfo *info,
       ROOT::TMetaUtils::EIOCtorCategory kind, const std::string &type_name)
 {
@@ -1148,40 +1187,11 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    if (I != gCtorWrapperStore.end())
       return (tcling_callfunc_ctor_Wrapper_t)I->second;
 
-   ASTContext &Context = info->GetDecl()->getASTContext();
-   PrintingPolicy Policy(Context.getPrintingPolicy());
-   Policy.SuppressTagKeyword = true;
-   Policy.SuppressUnwrittenScope = true;
-   //
-   //  Get the class or namespace name.
-   //
-   string class_name;
-   if (const TypeDecl *TD = dyn_cast<TypeDecl>(info->GetDecl())) {
-      // This is a class, struct, or union member.
-      QualType QT(TD->getTypeForDecl(), 0);
-      GetTypeAsString(QT, class_name, Context, Policy);
-   } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(info->GetDecl())) {
-      // This is a namespace member.
-      raw_string_ostream stream(class_name);
-      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
-      stream.flush();
-   }
-
-
    //
    //  Make the wrapper name.
    //
-   string wrapper_name;
-   {
-      ostringstream buf;
-      buf << "__ctor";
-      //const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
-      //string mn;
-      //fInterp->maybeMangleDeclName(ND, mn);
-      //buf << '_dtor_' << mn;
-      buf << '_' << gWrapperSerial++;
-      wrapper_name = buf.str();
-   }
+   string class_name;
+   string wrapper_name = PrepareStructorWrapper(D, "__ctor", class_name);
 
    string constr_arg;
    if (kind == ROOT::TMetaUtils::EIOCtorCategory::kIOPtrType)
@@ -1278,7 +1288,7 @@ tcling_callfunc_ctor_Wrapper_t TClingCallFunc::make_ctor_wrapper(const TClingCla
    void *F = compile_wrapper(wrapper_name, wrapper,
                              /*withAccessControl=*/false);
    if (F) {
-      gCtorWrapperStore.insert(make_pair(info->GetDecl(), F));
+      gCtorWrapperStore.insert(make_pair(D, F));
    } else {
       ::Error("TClingCallFunc::make_ctor_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
@@ -1327,38 +1337,11 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
    if (I != gDtorWrapperStore.end())
       return (tcling_callfunc_dtor_Wrapper_t)I->second;
 
-   ASTContext &Context = info->GetDecl()->getASTContext();
-   PrintingPolicy Policy(Context.getPrintingPolicy());
-   Policy.SuppressTagKeyword = true;
-   Policy.SuppressUnwrittenScope = true;
-   //
-   //  Get the class or namespace name.
-   //
-   string class_name;
-   if (const TypeDecl *TD = dyn_cast<TypeDecl>(info->GetDecl())) {
-      // This is a class, struct, or union member.
-      QualType QT(TD->getTypeForDecl(), 0);
-      GetTypeAsString(QT, class_name, Context, Policy);
-   } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(info->GetDecl())) {
-      // This is a namespace member.
-      raw_string_ostream stream(class_name);
-      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
-      stream.flush();
-   }
    //
    //  Make the wrapper name.
    //
-   string wrapper_name;
-   {
-      ostringstream buf;
-      buf << "__dtor";
-      //const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
-      //string mn;
-      //fInterp->maybeMangleDeclName(ND, mn);
-      //buf << '_dtor_' << mn;
-      buf << '_' << gWrapperSerial++;
-      wrapper_name = buf.str();
-   }
+   std::string class_name;
+   string wrapper_name = PrepareStructorWrapper(D, "__dtor", class_name);
    //
    //  Write the wrapper code.
    //
@@ -1452,7 +1435,7 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo *info)
    void *F = compile_wrapper(wrapper_name, wrapper,
                              /*withAccessControl=*/false);
    if (F) {
-      gDtorWrapperStore.insert(make_pair(info->GetDecl(), F));
+      gDtorWrapperStore.insert(make_pair(D, F));
    } else {
       ::Error("TClingCallFunc::make_dtor_wrapper",
             "Failed to compile\n  ==== SOURCE BEGIN ====\n%s\n  ==== SOURCE END ====",
