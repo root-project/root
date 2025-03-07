@@ -7232,6 +7232,33 @@ void TH1::SaveAs(const char *filename, Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Provide variable name for histogram for saving as primitive
+/// Histogram pointer has by default the histogram name with an incremental suffix.
+/// If the histogram belongs to a graph or a stack the suffix is not added because
+/// the graph and stack objects are not aware of this new name. Same thing if
+/// the histogram is drawn with the option COLZ because the TPaletteAxis drawn
+/// when this option is selected, does not know this new name either.
+
+TString TH1::ProvideSaveName(Option_t *option, Bool_t testfdir)
+{
+   thread_local Int_t storeNumber = 0;
+
+   TString opt = option;
+   opt.ToLower();
+   TString histName = GetName();
+   // for TProfile and TH2Poly also fDirectory should be tested
+   if (!histName.Contains("Graph") && !histName.Contains("_stack_") && !opt.Contains("colz") &&
+       (!testfdir || !fDirectory)) {
+      storeNumber++;
+      histName += "__";
+      histName += storeNumber;
+   }
+   if (histName.IsNull())
+      histName = "unnamed";
+   return gInterpreter->MapCppName(histName);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
 void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
@@ -7298,66 +7325,40 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
          out << "}; " << std::endl;
    }
 
-   char quote = '"';
-   out <<"   "<<std::endl;
-   out <<"   "<< ClassName() <<" *";
-
-   // Histogram pointer has by default the histogram name with an incremental suffix.
-   // If the histogram belongs to a graph or a stack the suffix is not added because
-   // the graph and stack objects are not aware of this new name. Same thing if
-   // the histogram is drawn with the option COLZ because the TPaletteAxis drawn
-   // when this option is selected, does not know this new name either.
-   TString opt = option;
-   opt.ToLower();
-   static Int_t hcounter = 0;
-   TString histName = GetName();
-   if (     !histName.Contains("Graph")
-         && !histName.Contains("_stack_")
-         && !opt.Contains("colz")) {
-      hcounter++;
-      histName += "__";
-      histName += hcounter;
-   }
-   histName = gInterpreter-> MapCppName(histName);
-   const char *hname = histName.Data();
-   if (!strlen(hname)) hname = "unnamed";
    TString savedName = GetName();
-   this->SetName(hname);
-   TString t(GetTitle());
-   t.ReplaceAll("\\","\\\\");
-   t.ReplaceAll("\"","\\\"");
-   out << hname << " = new " << ClassName() << "(" << quote
-       << hname << quote << "," << quote<< t.Data() << quote
-       << "," << GetXaxis()->GetNbins();
+
+   TString hname = ProvideSaveName(option);
+   SetName(hname);
+
+   out <<"   \n";
+   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
+       << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << GetXaxis()->GetNbins();
    if (nonEqiX)
-      out << ", "<<sxaxis;
+      out << ", " << sxaxis;
    else
-      out << "," << GetXaxis()->GetXmin()
-      << "," << GetXaxis()->GetXmax();
+      out << ", " << GetXaxis()->GetXmin() << ", " << GetXaxis()->GetXmax();
    if (fDimension > 1) {
-      out << "," << GetYaxis()->GetNbins();
+      out << ", " << GetYaxis()->GetNbins();
       if (nonEqiY)
-         out << ", "<<syaxis;
+         out << ", " << syaxis;
       else
-         out << "," << GetYaxis()->GetXmin()
-         << "," << GetYaxis()->GetXmax();
+         out << ", " << GetYaxis()->GetXmin() << ", " << GetYaxis()->GetXmax();
    }
    if (fDimension > 2) {
-      out << "," << GetZaxis()->GetNbins();
+      out << ", " << GetZaxis()->GetNbins();
       if (nonEqiZ)
-         out << ", "<<szaxis;
+         out << ", " << szaxis;
       else
-         out << "," << GetZaxis()->GetXmin()
-         << "," << GetZaxis()->GetXmax();
+         out << ", " << GetZaxis()->GetXmin() << ", " << GetZaxis()->GetXmax();
    }
-   out << ");" << std::endl;
+   out << ");\n";
 
    // save bin contents
    Int_t bin;
    for (bin=0;bin<fNcells;bin++) {
       Double_t bc = RetrieveBinContent(bin);
       if (bc) {
-         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");"<<std::endl;
+         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");\n";
       }
    }
 
@@ -7366,7 +7367,7 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       for (bin=0;bin<fNcells;bin++) {
          Double_t be = GetBinError(bin);
          if (be) {
-            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");"<<std::endl;
+            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");\n";
          }
       }
    }

@@ -1630,43 +1630,33 @@ void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << "}; " << std::endl;
    }
 
-   char quote = '"';
-   out<<"   "<<std::endl;
-   out<<"   "<<ClassName()<<" *";
-
    //histogram pointer has by default the histogram name.
    //however, in case histogram has no directory, it is safer to add a incremental suffix
-   static Int_t hcounter = 0;
-   TString histName = gInterpreter->MapCppName(GetName());
-   if (!fDirectory) {
-      hcounter++;
-      histName += "__";
-      histName += hcounter;
-   }
-   const char *hname = histName.Data();
+   TString hname = ProvideSaveName(option, kTRUE);
 
-   out << hname << " = new " << ClassName() << "(" << quote << hname << quote << "," << quote << GetTitle() << quote
-       << "," << GetXaxis()->GetNbins();
+   out<<"   \n";
+
+   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
+       << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << GetXaxis()->GetNbins();
    if (nonEqiX)
       out << ", xAxis";
    else
-      out << "," << GetXaxis()->GetXmin()
-          << "," << GetXaxis()->GetXmax()
-          <<","<<quote<<GetErrorOption()<<quote<<");"<<std::endl;
+      out << ", " << GetXaxis()->GetXmin() << ", " << GetXaxis()->GetXmax() << ", \""
+          << TString(GetErrorOption()).ReplaceSpecialCppChars() << "\");\n";
 
    // save bin entries
    Int_t bin;
    for (bin=0;bin<fNcells;bin++) {
       Double_t bi = GetBinEntries(bin);
       if (bi) {
-         out<<"   "<<hname<<"->SetBinEntries("<<bin<<","<<bi<<");"<<std::endl;
+         out<<"   "<<hname<<"->SetBinEntries("<<bin<<","<<bi<<");\n";
       }
    }
    //save bin contents
    for (bin=0;bin<fNcells;bin++) {
       Double_t bc = fArray[bin];
       if (bc) {
-         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");"<<std::endl;
+         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");\n";
       }
    }
    // save bin errors
@@ -1674,7 +1664,7 @@ void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       for (bin=0;bin<fNcells;bin++) {
          Double_t be = TMath::Sqrt(fSumw2.fArray[bin]);
          if (be) {
-            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");"<<std::endl;
+            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");\n";
          }
       }
    }

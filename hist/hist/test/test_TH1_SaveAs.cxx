@@ -129,7 +129,7 @@ struct TestSaveAs {
       constexpr Int_t NC = 29; // lines in C file (excl. empty and commented out lines)
       Int_t idx = 0;
       TString ref[NC] = {"{",
-                         "   TH1D *h__1 = new TH1D(\"h__1\",\"h_title\",5,0,5);",
+                         "   TH1D *h__1 = new TH1D(\"h__1\", \"h_title\", 5, 0, 5);",
                          "   h__1->SetBinContent(0,5.2);",
                          "   h__1->SetBinContent(2,10.8);",
                          "   h__1->SetBinContent(3,12.3);",
