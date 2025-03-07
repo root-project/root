@@ -117,7 +117,7 @@ void ROOT::Experimental::RFieldBase::RValue::BindRawPtr(void *rawPtr)
 {
    // Set fObjPtr to an aliased shared_ptr of the input raw pointer. Note that
    // fObjPtr will be non-empty but have use count zero.
-   fObjPtr = ROOT::Experimental::Internal::MakeAliasedSharedPtr(rawPtr);
+   fObjPtr = ROOT::Internal::MakeAliasedSharedPtr(rawPtr);
 }
 
 //------------------------------------------------------------------------------
@@ -246,7 +246,7 @@ ROOT::Experimental::RFieldBase::RFieldBase(std::string_view name, std::string_vi
      fPrincipalColumn(nullptr),
      fTraits(isSimple ? kTraitMappable : 0)
 {
-   ROOT::Experimental::Internal::EnsureValidNameForRNTuple(name, "Field");
+   ROOT::Internal::EnsureValidNameForRNTuple(name, "Field");
 }
 
 std::string ROOT::Experimental::RFieldBase::GetQualifiedFieldName() const

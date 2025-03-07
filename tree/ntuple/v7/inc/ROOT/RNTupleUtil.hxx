@@ -297,6 +297,12 @@ public:
    std::uint32_t GetTag() const { return fTag; }
 };
 
+} // namespace Internal
+
+} // namespace Experimental
+
+namespace Internal {
+
 template <typename T>
 auto MakeAliasedSharedPtr(T *rawPtr)
 {
@@ -327,6 +333,8 @@ static_assert(kTestLocatorType < RNTupleLocator::ELocatorType::kLastSerializable
 RResult<void> EnsureValidNameForRNTuple(std::string_view name, std::string_view where);
 
 } // namespace Internal
+
+namespace Experimental {
 
 // TODO(jblomer): remove before branching ROOT v6.36
 using EColumnType [[deprecated("ROOT::Experimental::EColumnType moved to ROOT::ENTupleColumnType")]] =

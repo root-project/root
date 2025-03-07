@@ -318,9 +318,9 @@ inline void CastZigzagSplitUnpack(void *destination, const void *source, std::si
 namespace {
 
 using ROOT::ENTupleColumnType;
-using ROOT::Experimental::Internal::kTestFutureType;
-using ROOT::Experimental::Internal::MakeUninitArray;
 using ROOT::Experimental::Internal::RColumnElementBase;
+using ROOT::Internal::kTestFutureType;
+using ROOT::Internal::MakeUninitArray;
 
 template <typename CppT, ENTupleColumnType>
 class RColumnElement;

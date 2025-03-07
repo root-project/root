@@ -92,7 +92,9 @@ protected:
    }
 
    RNTupleViewBase(std::unique_ptr<RFieldBase> field, ROOT::RNTupleGlobalRange range, T *rawPtr)
-      : fField(std::move(field)), fFieldRange(range), fValue(fField->BindValue(Internal::MakeAliasedSharedPtr(rawPtr)))
+      : fField(std::move(field)),
+        fFieldRange(range),
+        fValue(fField->BindValue(ROOT::Internal::MakeAliasedSharedPtr(rawPtr)))
    {
    }
 
