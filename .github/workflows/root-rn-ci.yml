@@ -68,7 +68,7 @@ jobs:
       - name: Sync documentation to EOS
         env:
           RWEBEOS_KT: ${{ secrets.RWEBEOS_KT }}
-          KT_FILE_NAME: decoded.keytab
+          KT_FILE_NAME: /tmp/decoded.keytab
           EOS_PATH: /eos/project/r/root-eos/website/doc
           EOS_ENDPOINT: root://eosproject-r.cern.ch
           KRB5CCNAME: /tmp/krb5cc
