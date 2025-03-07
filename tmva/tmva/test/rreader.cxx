@@ -285,7 +285,7 @@ TEST(RReader, MulticlassComputeDataFrame)
 
 // https://its.cern.ch/jira/browse/ROOT-9833
 // https://its.cern.ch/jira/browse/ROOT-10018
-TEST(RReader, UndefinedVariables)
+TEST(RReader, DataLoaderUndefinedVariables)
 {
    std::vector<double> evData = {1, 2};
    TMVA::DataLoader dl;
