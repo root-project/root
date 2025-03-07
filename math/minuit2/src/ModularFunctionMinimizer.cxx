@@ -33,35 +33,23 @@ namespace Minuit2 {
 FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, const MnUserParameterState &st,
                                                    const MnStrategy &strategy, unsigned int maxfcn, double toler) const
 {
+   // need MnUserFcn for difference int-ext parameters
+   MnUserFcn mfcn(fcn, st.Trafo());
+   std::unique_ptr<GradientCalculator> gc;
+
    if (!fcn.HasGradient()) {
       // minimize from a FCNBase and a MnUserparameterState - interface used by all the previous ones
       // based on FCNBase. Create in this case a NumericalGradient calculator
       // Create the minuit FCN wrapper (MnUserFcn) containing the transformation (int<->ext)
-
-      // need MnUserFcn for difference int-ext parameters
-      MnUserFcn mfcn(fcn, st.Trafo());
-      Numerical2PGradientCalculator gc(mfcn, st.Trafo(), strategy);
-
-      unsigned int npar = st.VariableParameters();
-      if (maxfcn == 0)
-         maxfcn = 200 + 100 * npar + 5 * npar * npar;
-      MinimumSeed mnseeds = SeedGenerator()(mfcn, gc, st, strategy);
-
-      return Minimize(mfcn, gc, mnseeds, strategy, maxfcn, toler);
-   }
-   // minimize from a function with gradient and a MnUserParameterState -
-   // interface based on function with gradient (external/analytical gradients)
-   // Create in this case an AnalyticalGradient calculator
-   // Create the minuit FCN wrapper (MnUserFcn) containing the transformation (int<->ext)
-
-   MnUserFcn mfcn(fcn, st.Trafo());
-   std::unique_ptr<AnalyticalGradientCalculator> gc;
-   if (fcn.gradParameterSpace() == GradientParameterSpace::Internal) {
-        //        std::cout << "-- ModularFunctionMinimizer::Minimize: Internal parameter space" << std::endl;
-        gc = std::unique_ptr<AnalyticalGradientCalculator>(new ExternalInternalGradientCalculator(fcn, st.Trafo()));
+      gc = std::make_unique<Numerical2PGradientCalculator>(mfcn, st.Trafo(), strategy);
+   } else if (fcn.gradParameterSpace() == GradientParameterSpace::Internal) {
+      // minimize from a function with gradient and a MnUserParameterState -
+      // interface based on function with gradient (external/analytical gradients)
+      // Create in this case an AnalyticalGradient calculator
+      // Create the minuit FCN wrapper (MnUserFcn) containing the transformation (int<->ext)
+      gc = std::make_unique<ExternalInternalGradientCalculator>(fcn, st.Trafo());
    } else {
-        //        std::cout << "-- ModularFunctionMinimizer::Minimize: External parameter space" << std::endl;
-        gc = std::make_unique<AnalyticalGradientCalculator>(fcn, st.Trafo());
+      gc = std::make_unique<AnalyticalGradientCalculator>(fcn, st.Trafo());
    }
 
    unsigned int npar = st.VariableParameters();
