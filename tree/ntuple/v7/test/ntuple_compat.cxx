@@ -163,7 +163,7 @@ protected:
    }
    const RColumnRepresentations &GetColumnRepresentations() const final
    {
-      static const RColumnRepresentations representations{{{Internal::kTestFutureType}}, {}};
+      static const RColumnRepresentations representations{{{ROOT::Internal::kTestFutureType}}, {}};
       return representations;
    }
 
@@ -285,10 +285,7 @@ class RFutureField : public RFieldBase {
    std::size_t AppendImpl(const void *) final { return 0; }
 
 public:
-   RFutureField(std::string_view name)
-      : RFieldBase(name, "Future", ROOT::Experimental::Internal::kTestFutureFieldStructure, false)
-   {
-   }
+   RFutureField(std::string_view name) : RFieldBase(name, "Future", ROOT::Internal::kTestFutureFieldStructure, false) {}
 
    std::size_t GetValueSize() const final { return 0; }
    std::size_t GetAlignment() const final { return 0; }
@@ -372,7 +369,7 @@ class RPageSinkTestLocator : public RPageSinkFile {
       auto payload = ROOT::RNTupleLocatorObject64{0x420};
       RNTupleLocator result;
       result.SetPosition(payload);
-      result.SetType(ROOT::Experimental::Internal::kTestLocatorType);
+      result.SetType(ROOT::Internal::kTestLocatorType);
       result.SetNBytesOnStorage(sealedPage.GetDataSize());
       return result;
    }

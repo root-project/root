@@ -42,6 +42,8 @@
 #include <unordered_map>
 #include <utility>
 
+using ROOT::Internal::MakeUninitArray;
+
 ROOT::Experimental::Internal::RPageStorage::RPageStorage(std::string_view name)
    : fMetrics(""), fPageAllocator(std::make_unique<RPageAllocatorHeap>()), fNTupleName(name)
 {
@@ -665,7 +667,7 @@ bool ROOT::Experimental::Internal::RWritePageMemoryManager::TryUpdate(RColumn &c
 ROOT::Experimental::Internal::RPageSink::RPageSink(std::string_view name, const ROOT::RNTupleWriteOptions &options)
    : RPageStorage(name), fOptions(options.Clone()), fWritePageMemoryManager(options.GetPageBufferBudget())
 {
-   ROOT::Experimental::Internal::EnsureValidNameForRNTuple(name, "RNTuple").ThrowOnError();
+   ROOT::Internal::EnsureValidNameForRNTuple(name, "RNTuple").ThrowOnError();
 }
 
 ROOT::Experimental::Internal::RPageSink::~RPageSink() {}

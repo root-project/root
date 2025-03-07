@@ -944,7 +944,7 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::EnsureFieldExists(ROOT::
 ROOT::RResult<void> ROOT::Experimental::Internal::RNTupleDescriptorBuilder::EnsureValidDescriptor() const
 {
    // Reuse field name validity check
-   auto validName = ROOT::Experimental::Internal::EnsureValidNameForRNTuple(fDescriptor.GetName(), "Field");
+   auto validName = ROOT::Internal::EnsureValidNameForRNTuple(fDescriptor.GetName(), "Field");
    if (!validName) {
       return R__FORWARD_ERROR(validName);
    }
@@ -1066,7 +1066,7 @@ ROOT::Experimental::Internal::RFieldDescriptorBuilder::MakeDescriptor() const
    }
    // FieldZero is usually named "" and would be a false positive here
    if (fField.GetParentId() != ROOT::kInvalidDescriptorId) {
-      auto validName = ROOT::Experimental::Internal::EnsureValidNameForRNTuple(fField.GetFieldName(), "Field");
+      auto validName = ROOT::Internal::EnsureValidNameForRNTuple(fField.GetFieldName(), "Field");
       if (!validName) {
          return R__FORWARD_ERROR(validName);
       }

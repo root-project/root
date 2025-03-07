@@ -43,6 +43,7 @@
 #include <functional>
 #include <mutex>
 
+using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RNTupleCompressor;
 using ROOT::Internal::RNTupleDecompressor;
 
