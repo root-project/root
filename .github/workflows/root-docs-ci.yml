@@ -203,7 +203,7 @@ jobs:
         echo "Foo and bar" > ${DOC_DIR}/html/index.html
         echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
         kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
-        mv /tmp/html ${DOC_DIR}/html
+        echo mv /tmp/html ${DOC_DIR}/html
         xrdcp -rf ${DOC_DIR}/html ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
         rm ${DOC_DIR}/html
         xrdcp -rf ${DOC_DIR} ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
