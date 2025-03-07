@@ -505,7 +505,7 @@ ROOT::Experimental::RRecordField::RRecordField(std::string_view name, const RRec
      fSize(source.fSize),
      fOffsets(source.fOffsets)
 {
-   for (const auto &f : source.GetSubFields())
+   for (const auto &f : source.GetConstSubfields())
       Attach(f->Clone(f->GetFieldName()));
    fTraits = source.fTraits;
 }

@@ -32,7 +32,7 @@ void ROOT::Experimental::RNTupleReader::ConnectModel(RNTupleModel &model)
    fieldZero.SetOnDiskId(fieldZeroId);
    // Iterate only over fieldZero's direct subfields; their descendants are recursively handled in
    // RFieldBase::ConnectPageSource
-   for (auto &field : fieldZero.GetSubFields()) {
+   for (auto &field : fieldZero.GetMutableSubfields()) {
       // If the model has been created from the descriptor, the on-disk IDs are already set.
       // User-provided models instead need to find their corresponding IDs in the descriptor.
       if (field->GetOnDiskId() == ROOT::kInvalidDescriptorId) {

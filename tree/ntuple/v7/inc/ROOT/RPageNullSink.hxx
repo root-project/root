@@ -65,7 +65,7 @@ public:
    void InitImpl(RNTupleModel &model) final
    {
       auto &fieldZero = GetFieldZeroOfModel(model);
-      ConnectFields(fieldZero.GetSubFields(), 0);
+      ConnectFields(fieldZero.GetMutableSubfields(), 0);
    }
    void UpdateSchema(const RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final
    {

@@ -207,7 +207,7 @@ TEST(RNTuple, TypeNameTemplatesNestedAlias)
    EXPECT_EQ("EdmHash<1>", hash->GetTypeName());
    EXPECT_EQ("", hash->GetTypeAlias());
 
-   const auto hashSubFields = hash->GetSubFields();
+   const auto hashSubFields = hash->GetConstSubfields();
    ASSERT_EQ(2, hashSubFields.size());
    EXPECT_EQ("fHash", hashSubFields[0]->GetFieldName());
    EXPECT_EQ("std::string", hashSubFields[0]->GetTypeName());
