@@ -297,5 +297,4 @@ TEST(RReader, DataLoaderUndefinedVariables)
    d.AddSignalTrainingEvent({0.0}, 1.0);
    diagRAII.requiredDiag(kError, "TMVA::DataLoader::AddEvent",
       "Number of variables defined through DataLoader::AddVariable (0) is inconsistent with number of variables given to DataLoader::Add*Event (1). Please check your variable definitions and statement ordering. This event will not be added.");
-   
 }
