@@ -1736,12 +1736,11 @@ void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t *option)
    }
 
    for (Int_t i = 0; i < fNpoints; i++) {
-      out << "   tgme->SetPoint(" << i << ", " << fX[i] << ", " << fY[i] << ");" << std::endl;
-      out << "   tgme->SetPointEX(" << i << ", " << fExL[i] << ", " << fExH[i] << ");" << std::endl;
+      out << "   tgme->SetPoint(" << i << ", " << fX[i] << ", " << fY[i] << ");\n";
+      out << "   tgme->SetPointEX(" << i << ", " << fExL[i] << ", " << fExH[i] << ");\n";
 
       for (Int_t j = 0; j < fNYErrors; j++)
-         out << "   tgme->SetPointEY(" << i << ", " << j << ", " << fEyL[j][i] << ", " << fEyH[j][i] << ");"
-             << std::endl;
+         out << "   tgme->SetPointEY(" << i << ", " << j << ", " << fEyL[j][i] << ", " << fEyH[j][i] << ");\n";
    }
 
    SaveHistogramAndFunctions(out, "tgme", option);

@@ -2173,30 +2173,29 @@ void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, O
 
    if (fHistogram) {
       TString hname = fHistogram->GetName();
-      fHistogram->SetName(TString::Format("Graph_%s%d", hname.Data(), ++frameNumber).Data());
+      fHistogram->SetName(TString::Format("Graph_histogram%d", ++frameNumber).Data());
       fHistogram->SavePrimitive(out, "nodraw");
-      out << "   " <<varname << "->SetHistogram(" << gInterpreter->MapCppName(fHistogram->GetName()) << ");"
-          << std::endl;
-      out << "   " << std::endl;
+      out << "   " <<varname << "->SetHistogram(" << fHistogram->GetName() << ");\n";
+      out << "   \n";
       fHistogram->SetName(hname.Data());
    }
 
    TH1::SavePrimitiveFunctions(out, varname, fFunctions);
 
-   const char *soption = option ? option : "";
-   const char *l = strstr(soption, "multigraph");
+   if (!option)
+      option = "";
+   const char *l = strstr(option, "multigraph");
    if (l) {
-      out << "   multigraph->Add("<<varname<<",\"" << l + 10 << "\");" << std::endl;
+      out << "   multigraph->Add(" << varname << ",\"" << l + 10 << "\");\n";
       return;
    }
-   l = strstr(soption, "th2poly");
+   l = strstr(option, "th2poly");
    if (l) {
-      out << "   " << l + 7 << "->AddBin("<<varname<<");" << std::endl;
+      out << "   " << l + 7 << "->AddBin(" << varname << ");\n";
       return;
    }
-   out << "   "<<varname<<"->Draw(\"" << soption << "\");" << std::endl;
+   out << "   " << varname << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Multiply the values of a TGraph by a constant c1.
