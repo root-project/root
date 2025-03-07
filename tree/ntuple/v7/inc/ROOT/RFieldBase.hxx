@@ -566,8 +566,8 @@ public:
    ROOT::ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
    const RFieldBase *GetParent() const { return fParent; }
-   std::vector<RFieldBase *> GetSubFields();
-   std::vector<const RFieldBase *> GetSubFields() const;
+   std::vector<RFieldBase *> GetMutableSubfields();
+   std::vector<const RFieldBase *> GetConstSubfields() const;
    bool IsSimple() const { return fIsSimple; }
    bool IsArtificial() const { return fIsArtificial; }
    /// Get the field's description

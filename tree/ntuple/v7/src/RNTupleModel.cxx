@@ -300,7 +300,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    cloneModel->fRegisteredSubfields = fRegisteredSubfields;
    if (fDefaultEntry) {
       cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(cloneModel->fModelId, cloneModel->fSchemaId));
-      for (const auto &f : cloneModel->fFieldZero->GetSubFields()) {
+      for (const auto &f : cloneModel->fFieldZero->GetMutableSubfields()) {
          cloneModel->fDefaultEntry->AddValue(f->CreateValue());
       }
       for (const auto &f : cloneModel->fRegisteredSubfields) {
@@ -317,7 +317,7 @@ ROOT::Experimental::RFieldBase *ROOT::Experimental::RNTupleModel::FindField(std:
 
    auto *field = static_cast<ROOT::Experimental::RFieldBase *>(fFieldZero.get());
    for (auto subfieldName : ROOT::Split(fieldName, ".")) {
-      const auto subfields = field->GetSubFields();
+      const auto subfields = field->GetMutableSubfields();
       auto it = std::find_if(subfields.begin(), subfields.end(),
                              [&](const auto *f) { return f->GetFieldName() == subfieldName; });
       if (it != subfields.end()) {
@@ -468,7 +468,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
    }
 
    auto entry = std::unique_ptr<REntry>(new REntry(fModelId, fSchemaId));
-   for (const auto &f : fFieldZero->GetSubFields()) {
+   for (const auto &f : fFieldZero->GetMutableSubfields()) {
       entry->AddValue(f->CreateValue());
    }
    for (const auto &f : fRegisteredSubfields) {
@@ -486,7 +486,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
    }
 
    auto entry = std::unique_ptr<REntry>(new REntry(fModelId, fSchemaId));
-   for (const auto &f : fFieldZero->GetSubFields()) {
+   for (const auto &f : fFieldZero->GetMutableSubfields()) {
       entry->AddValue(f->BindValue(nullptr));
    }
    for (const auto &f : fRegisteredSubfields) {
@@ -497,7 +497,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
 
 ROOT::Experimental::REntry::RFieldToken ROOT::Experimental::RNTupleModel::GetToken(std::string_view fieldName) const
 {
-   const auto &topLevelFields = fFieldZero->GetSubFields();
+   const auto &topLevelFields = fFieldZero->GetConstSubfields();
    auto it = std::find_if(topLevelFields.begin(), topLevelFields.end(),
                           [&fieldName](const RFieldBase *f) { return f->GetFieldName() == fieldName; });
 

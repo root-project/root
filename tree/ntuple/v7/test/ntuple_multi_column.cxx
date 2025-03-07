@@ -288,7 +288,7 @@ TEST(RNTuple, MultiColumnRepresentationNullable)
       auto fldVector = RFieldBase::Create("vector", "std::vector<std::optional<float>>").Unwrap();
       fldScalar->SetColumnRepresentatives(
          {{ROOT::ENTupleColumnType::kIndex32}, {ROOT::ENTupleColumnType::kSplitIndex64}});
-      fldVector->GetSubFields()[0]->SetColumnRepresentatives(
+      fldVector->GetMutableSubfields()[0]->SetColumnRepresentatives(
          {{ROOT::ENTupleColumnType::kSplitIndex64}, {ROOT::ENTupleColumnType::kIndex32}});
       model->AddField(std::move(fldScalar));
       model->AddField(std::move(fldVector));

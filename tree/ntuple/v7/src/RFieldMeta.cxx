@@ -79,7 +79,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, const R
      fSubFieldsInfo(source.fSubFieldsInfo),
      fMaxAlignment(source.fMaxAlignment)
 {
-   for (const auto &f : source.GetSubFields()) {
+   for (const auto &f : source.GetConstSubfields()) {
       RFieldBase::Attach(f->Clone(f->GetFieldName()));
    }
    fTraits = source.GetTraits();
@@ -953,8 +953,8 @@ ROOT::Experimental::RField<TObject>::RField(std::string_view fieldName, const RF
    : ROOT::Experimental::RFieldBase(fieldName, "TObject", ROOT::ENTupleStructure::kRecord, false /* isSimple */)
 {
    fTraits |= kTraitTypeChecksum;
-   Attach(source.GetSubFields()[0]->Clone("fUniqueID"));
-   Attach(source.GetSubFields()[1]->Clone("fBits"));
+   Attach(source.GetConstSubfields()[0]->Clone("fUniqueID"));
+   Attach(source.GetConstSubfields()[1]->Clone("fBits"));
 }
 
 ROOT::Experimental::RField<TObject>::RField(std::string_view fieldName)
@@ -1150,7 +1150,7 @@ ROOT::Experimental::RVariantField::RVariantField(std::string_view name, const RV
      fVariantOffset(source.fVariantOffset),
      fNWritten(source.fNWritten.size(), 0)
 {
-   for (const auto &f : source.GetSubFields())
+   for (const auto &f : source.GetConstSubfields())
       Attach(f->Clone(f->GetFieldName()));
    fTraits = source.fTraits;
 }

@@ -552,13 +552,13 @@ TEST(RNTupleDescriptor, BuildStreamerInfos)
       descBuilder.AddFieldLink(0, 1);
       int i = 2;
       // In this test, we only support field hierarchies up to 2 levels
-      for (const auto &child : field.GetSubFields()) {
+      for (const auto &child : field.GetConstSubfields()) {
          fieldBuilder = RFieldDescriptorBuilder::FromField(*child);
          descBuilder.AddField(fieldBuilder.FieldId(i).MakeDescriptor().Unwrap());
          descBuilder.AddFieldLink(1, i);
          const auto childId = i;
          i++;
-         for (const auto &grandChild : child->GetSubFields()) {
+         for (const auto &grandChild : child->GetConstSubfields()) {
             fieldBuilder = RFieldDescriptorBuilder::FromField(*grandChild);
             descBuilder.AddField(fieldBuilder.FieldId(i).MakeDescriptor().Unwrap());
             descBuilder.AddFieldLink(childId, i);

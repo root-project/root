@@ -910,11 +910,11 @@ void ROOT::Experimental::Internal::RPagePersistentSink::InitImpl(RNTupleModel &m
    projectedFields.GetFieldZero().SetOnDiskId(0);
 
    RNTupleModelChangeset initialChangeset{model};
-   initialChangeset.fAddedFields.reserve(fieldZero.GetSubFields().size());
-   for (auto f : fieldZero.GetSubFields())
+   initialChangeset.fAddedFields.reserve(fieldZero.GetMutableSubfields().size());
+   for (auto f : fieldZero.GetMutableSubfields())
       initialChangeset.fAddedFields.emplace_back(f);
-   initialChangeset.fAddedProjectedFields.reserve(projectedFields.GetFieldZero().GetSubFields().size());
-   for (auto f : projectedFields.GetFieldZero().GetSubFields())
+   initialChangeset.fAddedProjectedFields.reserve(projectedFields.GetFieldZero().GetMutableSubfields().size());
+   for (auto f : projectedFields.GetFieldZero().GetMutableSubfields())
       initialChangeset.fAddedProjectedFields.emplace_back(f);
    UpdateSchema(initialChangeset, 0U);
 

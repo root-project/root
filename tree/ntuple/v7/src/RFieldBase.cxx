@@ -469,8 +469,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
 
          // We use the type names of subfields of the newly created item fields to create the map's type name to
          // ensure the inner type names are properly normalized.
-         auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
-         auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
+         auto keyTypeName = itemField->GetConstSubfields()[0]->GetTypeName();
+         auto valueTypeName = itemField->GetConstSubfields()[1]->GetTypeName();
 
          result = std::make_unique<RMapField>(fieldName, "std::map<" + keyTypeName + "," + valueTypeName + ">",
                                               std::move(itemField));
@@ -485,8 +485,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
 
          // We use the type names of subfields of the newly created item fields to create the map's type name to
          // ensure the inner type names are properly normalized.
-         auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
-         auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
+         auto keyTypeName = itemField->GetConstSubfields()[0]->GetTypeName();
+         auto valueTypeName = itemField->GetConstSubfields()[1]->GetTypeName();
 
          result = std::make_unique<RMapField>(
             fieldName, "std::unordered_map<" + keyTypeName + "," + valueTypeName + ">", std::move(itemField));
@@ -501,8 +501,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
 
          // We use the type names of subfields of the newly created item fields to create the map's type name to
          // ensure the inner type names are properly normalized.
-         auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
-         auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
+         auto keyTypeName = itemField->GetConstSubfields()[0]->GetTypeName();
+         auto valueTypeName = itemField->GetConstSubfields()[1]->GetTypeName();
 
          result = std::make_unique<RMapField>(fieldName, "std::multimap<" + keyTypeName + "," + valueTypeName + ">",
                                               std::move(itemField));
@@ -518,8 +518,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
 
          // We use the type names of subfields of the newly created item fields to create the map's type name to
          // ensure the inner type names are properly normalized.
-         auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
-         auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
+         auto keyTypeName = itemField->GetConstSubfields()[0]->GetTypeName();
+         auto valueTypeName = itemField->GetConstSubfields()[1]->GetTypeName();
 
          result = std::make_unique<RMapField>(
             fieldName, "std::unordered_multimap<" + keyTypeName + "," + valueTypeName + ">", std::move(itemField));
@@ -712,7 +712,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RFieldBase::EntryToColumnElementIndex(ROO
    return result;
 }
 
-std::vector<ROOT::Experimental::RFieldBase *> ROOT::Experimental::RFieldBase::GetSubFields()
+std::vector<ROOT::Experimental::RFieldBase *> ROOT::Experimental::RFieldBase::GetMutableSubfields()
 {
    std::vector<RFieldBase *> result;
    result.reserve(fSubFields.size());
@@ -722,7 +722,7 @@ std::vector<ROOT::Experimental::RFieldBase *> ROOT::Experimental::RFieldBase::Ge
    return result;
 }
 
-std::vector<const ROOT::Experimental::RFieldBase *> ROOT::Experimental::RFieldBase::GetSubFields() const
+std::vector<const ROOT::Experimental::RFieldBase *> ROOT::Experimental::RFieldBase::GetConstSubfields() const
 {
    std::vector<const RFieldBase *> result;
    result.reserve(fSubFields.size());
