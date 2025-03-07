@@ -608,13 +608,10 @@ void TF3::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
 void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    char quote = '"';
-   TString f3Name(GetName());
+   TString f3Name = ProvideSaveName(option);
    out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TF3::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TF3 *";
-   }
+   out<<"   TF3 *";
+
    if (!fMethodCall) {
       out<<f3Name.Data()<<" = new TF3("<<quote<<f3Name.Data()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<");"<<std::endl;
    } else {
@@ -647,8 +644,8 @@ void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (GetYaxis()) GetYaxis()->SaveAttributes(out, f3Name.Data(), "->GetYaxis()");
    if (GetZaxis()) GetZaxis()->SaveAttributes(out, f3Name.Data(), "->GetZaxis()");
 
-   out<<"   "<<f3Name.Data()<<"->Draw("
-      <<quote<<option<<quote<<");"<<std::endl;
+   if (!strstr(option, "nodraw"))
+      out<<"   "<<f3Name.Data()<<"->Draw("<<quote<<option<<quote<<");"<<std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
