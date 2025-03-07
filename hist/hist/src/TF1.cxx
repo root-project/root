@@ -3236,47 +3236,44 @@ TString TF1::ProvideSaveName(Option_t *option)
 
 void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   Int_t i;
-   char quote = '"';
-
    // Save the function as C code independent from ROOT.
-   if (strstr(option, "cc")) {
-      out << "double " << GetName() << "(double xv) {" << std::endl;
+   if (option && strstr(option, "cc")) {
+      out << "double " << GetName() << "(double xv) {\n";
       Double_t dx = (fXmax - fXmin) / (fNpx - 1);
-      out << "   double x[" << fNpx << "] = {" << std::endl;
+      out << "   double x[" << fNpx << "] = {\n";
       out << "   ";
       Int_t n = 0;
-      for (i = 0; i < fNpx; i++) {
-         out << fXmin + dx *i ;
-         if (i < fNpx - 1) out << ", ";
+      for (Int_t i = 0; i < fNpx; i++) {
+         out << fXmin + dx * i;
+         if (i < fNpx - 1)
+            out << ", ";
          if (n++ == 10) {
-            out << std::endl;
-            out << "   ";
+            out << "\n   ";
             n = 0;
          }
       }
-      out << std::endl;
-      out << "   };" << std::endl;
-      out << "   double y[" << fNpx << "] = {" << std::endl;
+      out << "\n";
+      out << "   };\n";
+      out << "   double y[" << fNpx << "] = {\n";
       out << "   ";
       n = 0;
-      for (i = 0; i < fNpx; i++) {
+      for (Int_t i = 0; i < fNpx; i++) {
          out << Eval(fXmin + dx * i);
-         if (i < fNpx - 1) out << ", ";
+         if (i < fNpx - 1)
+            out << ", ";
          if (n++ == 10) {
-            out << std::endl;
-            out << "   ";
+            out << "\n   ";
             n = 0;
          }
       }
-      out << std::endl;
-      out << "   };" << std::endl;
-      out << "   if (xv<x[0]) return y[0];" << std::endl;
-      out << "   if (xv>x[" << fNpx - 1 << "]) return y[" << fNpx - 1 << "];" << std::endl;
-      out << "   int i, j=0;" << std::endl;
-      out << "   for (i=1; i<" << fNpx << "; i++) { if (xv < x[i]) break; j++; }" << std::endl;
-      out << "   return y[j] + (y[j + 1] - y[j]) / (x[j + 1] - x[j]) * (xv - x[j]);" << std::endl;
-      out << "}" << std::endl;
+      out << "\n";
+      out << "   };\n";
+      out << "   if (xv<x[0]) return y[0];\n";
+      out << "   if (xv>x[" << fNpx - 1 << "]) return y[" << fNpx - 1 << "];\n";
+      out << "   int i, j=0;\n";
+      out << "   for (i=1; i<" << fNpx << "; i++) { if (xv < x[i]) break; j++; }\n";
+      out << "   return y[j] + (y[j + 1] - y[j]) / (x[j + 1] - x[j]) * (xv - x[j]);\n";
+      out << "}\n";
       return;
    }
 
@@ -3286,61 +3283,60 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    out << "   " << std::endl;
    if (!fType) {
-      out << "   TF1 *" << f1Name.Data() << " = new TF1(" << quote << GetName() << quote << "," << quote << GetTitle() << quote << "," << fXmin << "," << fXmax <<  addToGlobList << ");" << std::endl;
-      if (fNpx != 100) {
-         out << "   " << f1Name.Data() << "->SetNpx(" << fNpx << ");" << std::endl;
-      }
+      out << "   TF1 *" << f1Name << " = new TF1(\"" << GetName() << "\", \""
+          << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << fXmin << "," << fXmax << addToGlobList << ");\n";
+      if (fNpx != 100)
+         out << "   " << f1Name << "->SetNpx(" << fNpx << ");\n";
    } else {
-      out << "   TF1 *" << f1Name.Data() << " = new TF1(" << quote << "*" << GetName() << quote << "," << fXmin << "," << fXmax << "," << GetNpar() << ");" << std::endl;
-      out << "    //The original function : " << GetTitle() << " had originally been created by:" << std::endl;
-      out << "    //TF1 *" << GetName() << " = new TF1(" << quote << GetName() << quote << "," << GetTitle() << "," << fXmin << "," << fXmax << "," << GetNpar();
-      out << ", 1" << addToGlobList << ");" << std::endl;
-      out << "   " << f1Name.Data() << "->SetRange(" << fXmin << "," << fXmax << ");" << std::endl;
-      out << "   " << f1Name.Data() << "->SetName(" << quote << GetName() << quote << ");" << std::endl;
-      out << "   " << f1Name.Data() << "->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
-      if (fNpx != 100) {
-         out << "   " << f1Name.Data() << "->SetNpx(" << fNpx << ");" << std::endl;
-      }
+      out << "   TF1 *" << f1Name << " = new TF1(\"" << "*" << GetName() << "\", " << fXmin << "," << fXmax
+          << "," << GetNpar() << ");\n";
+      out << "    // The original function : " << GetTitle() << " had originally been created by:\n";
+      out << "    // TF1 *" << GetName() << " = new TF1(\"" << GetName() << "\", " << GetTitle() << ","
+          << fXmin << "," << fXmax << "," << GetNpar() << ", 1" << addToGlobList << ");\n";
+      out << "   " << f1Name << "->SetRange(" << fXmin << "," << fXmax << ");\n";
+      SavePrimitiveNameTitle(out, f1Name);
+      if (fNpx != 100)
+         out << "   " << f1Name << "->SetNpx(" << fNpx << ");\n";
       Double_t dx = (fXmax - fXmin) / fNpx;
       Double_t xv[1];
       Double_t *parameters = GetParameters();
       InitArgs(xv, parameters);
-      for (i = 0; i <= fNpx; i++) {
-         xv[0]    = fXmin + dx * i;
+      for (Int_t i = 0; i <= fNpx; i++) {
+         xv[0] = fXmin + dx * i;
          Double_t save = EvalPar(xv, parameters);
-         out << "   " << f1Name.Data() << "->SetSavedPoint(" << i << "," << save << ");" << std::endl;
+         out << "   " << f1Name << "->SetSavedPoint(" << i << "," << save << ");\n";
       }
-      out << "   " << f1Name.Data() << "->SetSavedPoint(" << fNpx + 1 << "," << fXmin << ");" << std::endl;
-      out << "   " << f1Name.Data() << "->SetSavedPoint(" << fNpx + 2 << "," << fXmax << ");" << std::endl;
+      out << "   " << f1Name << "->SetSavedPoint(" << fNpx + 1 << "," << fXmin << ");\n";
+      out << "   " << f1Name << "->SetSavedPoint(" << fNpx + 2 << "," << fXmax << ");\n";
    }
 
-   if (TestBit(kNotDraw)) {
-      out << "   " << f1Name.Data() << "->SetBit(TF1::kNotDraw);" << std::endl;
-   }
+   if (TestBit(kNotDraw))
+      out << "   " << f1Name.Data() << "->SetBit(TF1::kNotDraw);\n";
 
-   SaveFillAttributes(out, f1Name.Data(), 0, 1001);
-   SaveMarkerAttributes(out, f1Name.Data(), 1, 1, 1);
-   SaveLineAttributes(out, f1Name.Data(), 1, 1, 4);
+   SaveFillAttributes(out, f1Name, 0, 1001);
+   SaveMarkerAttributes(out, f1Name, 1, 1, 1);
+   SaveLineAttributes(out, f1Name, 1, 1, 4);
 
    if (GetChisquare() != 0) {
-      out << "   " << f1Name.Data() << "->SetChisquare(" << GetChisquare() << ");" << std::endl;
-      out << "   " << f1Name.Data() << "->SetNDF(" << GetNDF() << ");" << std::endl;
+      out << "   " << f1Name << "->SetChisquare(" << GetChisquare() << ");\n";
+      out << "   " << f1Name << "->SetNDF(" << GetNDF() << ");\n";
    }
 
-   if (GetXaxis()) GetXaxis()->SaveAttributes(out, f1Name.Data(), "->GetXaxis()");
-   if (GetYaxis()) GetYaxis()->SaveAttributes(out, f1Name.Data(), "->GetYaxis()");
+   if (GetXaxis())
+      GetXaxis()->SaveAttributes(out, f1Name, "->GetXaxis()");
+   if (GetYaxis())
+      GetYaxis()->SaveAttributes(out, f1Name, "->GetYaxis()");
 
    Double_t parmin, parmax;
-   for (i = 0; i < GetNpar(); i++) {
-      out << "   " << f1Name.Data() << "->SetParameter(" << i << "," << GetParameter(i) << ");" << std::endl;
-      out << "   " << f1Name.Data() << "->SetParError(" << i << "," << GetParError(i) << ");" << std::endl;
+   for (Int_t i = 0; i < GetNpar(); i++) {
+      out << "   " << f1Name << "->SetParameter(" << i << "," << GetParameter(i) << ");\n";
+      out << "   " << f1Name << "->SetParError(" << i << "," << GetParError(i) << ");\n";
       GetParLimits(i, parmin, parmax);
-      out << "   " << f1Name.Data() << "->SetParLimits(" << i << "," << parmin << "," << parmax << ");" << std::endl;
+      out << "   " << f1Name << "->SetParLimits(" << i << "," << parmin << "," << parmax << ");\n";
    }
-   if (!strstr(option, "nodraw"))
-      out << "   " << f1Name.Data() << "->Draw(" << quote << option << quote << ");" << std::endl;
+   if (!option || !strstr(option, "nodraw"))
+      out << "   " << f1Name << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function setting the current function.

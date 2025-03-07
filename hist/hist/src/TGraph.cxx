@@ -2194,7 +2194,8 @@ void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, O
       out << "   " << l + 7 << "->AddBin(" << varname << ");\n";
       return;
    }
-   out << "   " << varname << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   if (!option || !strstr(option, "nodraw"))
+      out << "   " << varname << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
