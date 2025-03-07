@@ -137,12 +137,6 @@ private:
    RNTupleJoinTable(const std::vector<std::string> &fieldNames) : fJoinFieldNames(fieldNames) {}
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Ensure the RNTupleJoinTable has been built.
-   ///
-   /// \throws RException If the join table has not been built, and can therefore not be used yet.
-   void EnsureBuilt() const;
-
-   /////////////////////////////////////////////////////////////////////////////
    /// \brief Get all entry mappings in the join table.
    std::vector<REntryMapping *> GetAllMappings() const;
 
