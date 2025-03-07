@@ -1319,46 +1319,42 @@ Long64_t TH2Poly::Merge(TCollection *coll)
 
 void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
 {
-
-   //histogram pointer has by default the histogram name.
-   //however, in case histogram has no directory, it is safer to add a
-   //incremental suffix
+   // histogram pointer has by default the histogram name.
+   // however, in case histogram has no directory, it is safer to add a
+   // incremental suffix
    TString hname = ProvideSaveName(option, kTRUE);
 
-   out <<"   \n";
+   out << "   \n";
 
-   //Construct the class initialization
+   // Construct the class initialization
    out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
        << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << fCellX << ", " << fXaxis.GetXmin() << ", "
        << fXaxis.GetXmax() << ", " << fCellY << ", " << fYaxis.GetXmin() << ", " << fYaxis.GetXmax() << ");\n";
 
    // Save Bins
-   TIter       next(fBins);
-
-   while(auto obj = next()){
-      auto th2pBin = (TH2PolyBin*) obj;
-      th2pBin->GetPolygon()->SavePrimitive(out, TString::Format("th2poly%s",hname.Data()));
+   TIter next(fBins);
+   while (auto obj = next()) {
+      auto th2pBin = (TH2PolyBin *)obj;
+      th2pBin->GetPolygon()->SavePrimitive(out, TString::Format("th2poly%s", hname.Data()));
    }
 
    // save bin contents
-   out<<"   \n";
-   Int_t bin;
-   for (bin=1;bin<=GetNumberOfBins();bin++) {
+   out << "   \n";
+   for (Int_t bin = 1; bin <= GetNumberOfBins(); bin++) {
       Double_t bc = GetBinContent(bin);
-      if (bc) {
-         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");\n";
-      }
+      if (bc)
+         out << "   " << hname << "->SetBinContent(" << bin << "," << bc << ");\n";
    }
 
    // save bin errors
    if (fSumw2.fN) {
-      for (bin=1;bin<=GetNumberOfBins();bin++) {
+      for (Int_t bin = 1; bin <= GetNumberOfBins(); bin++) {
          Double_t be = GetBinError(bin);
-         if (be) {
-            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");\n";
-         }
+         if (be)
+            out << "   " << hname << "->SetBinError(" << bin << "," << be << ");\n";
       }
    }
+
    TH1::SavePrimitiveHelp(out, hname, option);
 }
 
