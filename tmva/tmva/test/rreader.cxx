@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <ROOT/TestSupport.hxx>
 
 #include <TFile.h>
 #include <TTree.h>
