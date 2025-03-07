@@ -9,9 +9,6 @@ on:
       incremental:
         type: boolean
         default: true
-  pull_request:
-    branches:
-      - '**'
 
 jobs:
   build-docs:
