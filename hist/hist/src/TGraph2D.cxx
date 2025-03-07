@@ -1474,36 +1474,32 @@ Int_t TGraph2D::RemovePoint(Int_t ipoint)
 
 void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   out << "   " << std::endl;
-   if (gROOT->ClassSaved(TGraph2D::Class())) {
-      out << "   ";
-   } else {
-      out << "   TGraph2D *";
-   }
+   TString arrx = SavePrimitiveArray(out, "graph2d_x", fNpoints, fX, kTRUE);
+   TString arry = SavePrimitiveArray(out, "graph2d_y", fNpoints, fY);
+   TString arrz = SavePrimitiveArray(out, "graph2d_z", fNpoints, fZ);
 
-   out << "graph2d = new TGraph2D(" << fNpoints << ");" << std::endl;
-   out << "   graph2d->SetName(" << quote << GetName() << quote << ");" << std::endl;
-   out << "   graph2d->SetTitle(" << quote << GetTitle()             << ";"
-                                           << GetXaxis()->GetTitle() << ";"
-                                           << GetYaxis()->GetTitle() << ";"
-                                           << GetZaxis()->GetTitle() << quote << ");" << std::endl;
+   SavePrimitiveConstructor(out, Class(), "graph2d",
+                            TString::Format("%d, %s, %s, %s", fNpoints, arrx.Data(), arry.Data(), arrz.Data()), kFALSE);
 
-   if (fDirectory == nullptr) {
-      out << "   graph2d->SetDirectory(0);" << std::endl;
-   }
+   out << "   graph2d->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");" << std::endl;
+
+   TString title = fTitle;
+   if (fHistogram)
+      title = TString(fHistogram->GetTitle()) + ";" + fHistogram->GetXaxis()->GetTitle() + ";" +
+              fHistogram->GetYaxis()->GetTitle() + ";" + fHistogram->GetZaxis()->GetTitle();
+
+   out << "   graph2d->SetTitle(\"" << title.ReplaceSpecialCppChars() << "\");\n";
+
+   if (!fDirectory)
+      out << "   graph2d->SetDirectory(nullptr);\n";
 
    SaveFillAttributes(out, "graph2d", 0, 1001);
    SaveLineAttributes(out, "graph2d", 1, 1, 1);
    SaveMarkerAttributes(out, "graph2d", 1, 1, 1);
 
-   for (Int_t i = 0; i < fNpoints; i++) {
-      out << "   graph2d->SetPoint(" << i << "," << fX[i] << "," << fY[i] << "," << fZ[i] << ");" << std::endl;
-   }
-
    TH1::SavePrimitiveFunctions(out, "graph2d", fFunctions);
 
-   out << "   graph2d->Draw(" << quote << option << quote << ");" << std::endl;
+   out << "   graph2d->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
