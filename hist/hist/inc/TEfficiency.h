@@ -130,6 +130,7 @@ public:
       TEfficiency&  operator+=(const TEfficiency& rhs);
       TEfficiency&  operator=(const TEfficiency& rhs);
       void          Paint(Option_t* opt) override;
+      void          RecursiveRemove(TObject *obj) override;
       void          SavePrimitive(std::ostream& out,Option_t* opt="") override;
       void          SetBetaAlpha(Double_t alpha);
       void          SetBetaBeta(Double_t beta);

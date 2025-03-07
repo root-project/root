@@ -3150,131 +3150,101 @@ void TEfficiency::Paint(const Option_t* opt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Have histograms fixed bins along each axis?
+/// Recursively remove object from the list of functions
 
-void TEfficiency::SavePrimitive(std::ostream& out,Option_t* opt)
+void TEfficiency::RecursiveRemove(TObject *obj)
 {
-   Bool_t equi_bins = true;
-
-   //indentation
-   TString indent = "   ";
-   //names for arrays containing the bin edges
-   //static counter needed if more objects are saved
-   static Int_t naxis = 0;
-   TString sxaxis="xAxis",syaxis="yAxis",szaxis="zAxis";
-
-   //note the missing break statements!
-   switch(GetDimension()) {
-      case 3:
-         equi_bins = equi_bins && !fTotalHistogram->GetZaxis()->GetXbins()->fArray
-         && !fTotalHistogram->GetZaxis()->GetXbins()->fN;
-      case 2:
-         equi_bins = equi_bins && !fTotalHistogram->GetYaxis()->GetXbins()->fArray
-         && !fTotalHistogram->GetYaxis()->GetXbins()->fN;
-      case 1:
-         equi_bins = equi_bins && !fTotalHistogram->GetXaxis()->GetXbins()->fArray
-         && !fTotalHistogram->GetXaxis()->GetXbins()->fN;
+   if (fFunctions) {
+      if (!fFunctions->TestBit(kInvalidObject))
+         fFunctions->RecursiveRemove(obj);
    }
+   if (fPaintGraph == obj)
+      fPaintGraph = nullptr;
+   if (fPaintGraph2D == obj)
+      fPaintGraph2D = nullptr;
+   if (fPaintHisto == obj)
+      fPaintHisto = nullptr;
+   if (fPassedHistogram == obj)
+      fPassedHistogram = nullptr;
+   if (fTotalHistogram == obj)
+      fTotalHistogram = nullptr;
+}
 
-   //create arrays containing the variable binning
-   if(!equi_bins) {
-      Int_t i;
-      ++naxis;
-      sxaxis += naxis;
-      syaxis += naxis;
-      szaxis += naxis;
-      //x axis
-      out << indent << "Double_t " << sxaxis << "["
-      << fTotalHistogram->GetXaxis()->GetXbins()->fN << "] = {";
-      for (i = 0; i < fTotalHistogram->GetXaxis()->GetXbins()->fN; ++i) {
-         if (i != 0) out << ", ";
-         out << fTotalHistogram->GetXaxis()->GetXbins()->fArray[i];
-      }
-      out << "}; " << std::endl;
-      //y axis
-      if(GetDimension() > 1) {
-         out << indent << "Double_t " << syaxis << "["
-         << fTotalHistogram->GetYaxis()->GetXbins()->fN << "] = {";
-         for (i = 0; i < fTotalHistogram->GetYaxis()->GetXbins()->fN; ++i) {
-            if (i != 0) out << ", ";
-            out << fTotalHistogram->GetYaxis()->GetXbins()->fArray[i];
-         }
-         out << "}; " << std::endl;
-      }
-      //z axis
-      if(GetDimension() > 2) {
-         out << indent << "Double_t " << szaxis << "["
-         << fTotalHistogram->GetZaxis()->GetXbins()->fN << "] = {";
-         for (i = 0; i < fTotalHistogram->GetZaxis()->GetXbins()->fN; ++i) {
-            if (i != 0) out << ", ";
-            out << fTotalHistogram->GetZaxis()->GetXbins()->fArray[i];
-         }
-         out << "}; " << std::endl;
-      }
-   }//creating variable binning
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out.
+
+void TEfficiency::SavePrimitive(std::ostream& out,Option_t* option)
+{
    //TEfficiency pointer has efficiency name + counter
-   static Int_t eff_count = 0;
+   thread_local Int_t eff_count = 0;
    ++eff_count;
-   TString eff_name = GetName();
-   eff_name += eff_count;
+   TString name = GetName();
+   name += eff_count;
+   name = gInterpreter->MapCppName(name);
 
-   const char* name = eff_name.Data();
+   out <<"   \n";
 
-   //construct TEfficiency object
-   const char quote = '"';
-   out << indent << std::endl;
-   out << indent << ClassName() << " * " << name << " = new " << ClassName()
-   << "(" << quote << GetName() << quote << "," << quote
-   << GetTitle() << quote <<",";
-   //fixed bin size -> use n,min,max constructor
-   if(equi_bins) {
-      out << fTotalHistogram->GetXaxis()->GetNbins() << ","
-      << fTotalHistogram->GetXaxis()->GetXmin() << ","
-      << fTotalHistogram->GetXaxis()->GetXmax();
-      if(GetDimension() > 1) {
-         out << "," << fTotalHistogram->GetYaxis()->GetNbins() << ","
-         << fTotalHistogram->GetYaxis()->GetXmin() << ","
-         << fTotalHistogram->GetYaxis()->GetXmax();
-      }
-      if(GetDimension() > 2) {
-         out << "," << fTotalHistogram->GetZaxis()->GetNbins() << ","
-         << fTotalHistogram->GetZaxis()->GetXmin() << ","
-         << fTotalHistogram->GetZaxis()->GetXmax();
-      }
+   TString sxaxis, syaxis, szaxis;
+
+   // Check if the histogram has equidistant X bins or not.  If not, we
+   // create an array holding the bins.
+   if (fTotalHistogram->GetXaxis()->GetXbins()->fN && fTotalHistogram->GetXaxis()->GetXbins()->fArray)
+      sxaxis = SavePrimitiveArray(out, name + "_x", fTotalHistogram->GetXaxis()->GetXbins()->fN, fTotalHistogram->GetXaxis()->GetXbins()->fArray);
+   // If the histogram is 2 or 3 dimensional, check if the histogram
+   // has equidistant Y bins or not.  If not, we create an array
+   // holding the bins.
+   if (GetDimension() > 1 && fTotalHistogram->GetYaxis()->GetXbins()->fN && fTotalHistogram->GetYaxis()->GetXbins()->fArray)
+      syaxis = SavePrimitiveArray(out, name + "_y", fTotalHistogram->GetYaxis()->GetXbins()->fN, fTotalHistogram->GetYaxis()->GetXbins()->fArray);
+   // IF the histogram is 3 dimensional, check if the histogram
+   // has equidistant Z bins or not.  If not, we create an array
+   // holding the bins.
+   if (GetDimension() > 2 && fTotalHistogram->GetZaxis()->GetXbins()->fN && fTotalHistogram->GetZaxis()->GetXbins()->fArray)
+      szaxis = SavePrimitiveArray(out, name + "_z", fTotalHistogram->GetZaxis()->GetXbins()->fN, fTotalHistogram->GetZaxis()->GetXbins()->fArray);
+
+   out << "   " << ClassName() << " *" << name << " = new " << ClassName() << "(\"" << GetName() << "\", \""
+       << TString(GetTitle()).ReplaceSpecialCppChars() << "\"";
+   // X dimentsion args
+   out << ", " << fTotalHistogram->GetXaxis()->GetNbins() << ", ";
+   if (!sxaxis.IsNull())
+      out << sxaxis;
+   else
+      out << fTotalHistogram->GetXaxis()->GetXmin() << "," << fTotalHistogram->GetXaxis()->GetXmax();
+
+   if (GetDimension() > 1) {
+      out << ", " << fTotalHistogram->GetYaxis()->GetNbins() << ", ";
+      if (!syaxis.IsNull())
+         out << syaxis;
+      else
+         out << fTotalHistogram->GetYaxis()->GetXmin() << ", " << fTotalHistogram->GetYaxis()->GetXmax();
    }
-   //variable bin size -> use n,*bins constructor
-   else {
-      out << fTotalHistogram->GetXaxis()->GetNbins() << "," << sxaxis;
-      if(GetDimension() > 1)
-         out << "," << fTotalHistogram->GetYaxis()->GetNbins() << ","
-         << syaxis;
-      if(GetDimension() > 2)
-         out << "," << fTotalHistogram->GetZaxis()->GetNbins() << ","
-         << szaxis;
+
+   if (GetDimension() > 2) {
+      out << ", " << fTotalHistogram->GetZaxis()->GetNbins() << ", ";
+      if (!szaxis.IsNull())
+         out << szaxis;
+      else
+         out << fTotalHistogram->GetZaxis()->GetXmin() << ", " << fTotalHistogram->GetZaxis()->GetXmax();
    }
-   out << ");" << std::endl;
-   out << indent << std::endl;
+
+   out << ");\n";
+   out << "   \n";
 
    //set statistic options
-   out << indent << name << "->SetConfidenceLevel(" << fConfLevel << ");"
-   << std::endl;
-   out << indent << name << "->SetBetaAlpha(" << fBeta_alpha << ");"
-   << std::endl;
-   out << indent << name << "->SetBetaBeta(" << fBeta_beta << ");" << std::endl;
-   out << indent << name << "->SetWeight(" << fWeight << ");" << std::endl;
-   out << indent << name << "->SetStatisticOption(static_cast<EStatOption>(" << fStatisticOption << "));"
-   << std::endl;
-   out << indent << name << "->SetPosteriorMode(" << TestBit(kPosteriorMode) << ");" << std::endl;
-   out << indent << name << "->SetShortestInterval(" << TestBit(kShortestInterval) << ");" << std::endl;
+   out << "   " << name << "->SetConfidenceLevel(" << fConfLevel << ");\n";
+   out << "   " << name << "->SetBetaAlpha(" << fBeta_alpha << ");\n";
+   out << "   " << name << "->SetBetaBeta(" << fBeta_beta << ");\n";
+   out << "   " << name << "->SetWeight(" << fWeight << ");\n";
+   out << "   " << name << "->SetStatisticOption(static_cast<TEfficiency::EStatOption>(" << fStatisticOption << "));\n";
+   out << "   " << name << "->SetPosteriorMode(" << TestBit(kPosteriorMode) << ");\n";
+   out << "   " << name << "->SetShortestInterval(" << TestBit(kShortestInterval) << ");\n";
    if(TestBit(kUseWeights))
-      out << indent << name << "->SetUseWeightedEvents();" << std::endl;
+      out << "   " << name << "->SetUseWeightedEvents();\n";
 
    // save bin-by-bin prior parameters
-   for(unsigned int i = 0; i < fBeta_bin_params.size(); ++i)
-   {
-      out << indent << name << "->SetBetaBinParameters(" << i << "," << fBeta_bin_params.at(i).first
-      << "," << fBeta_bin_params.at(i).second << ");" << std::endl;
+   for (unsigned int i = 0; i < fBeta_bin_params.size(); ++i) {
+      out << "   " << name << "->SetBetaBinParameters(" << i << "," << fBeta_bin_params.at(i).first << ","
+          << fBeta_bin_params.at(i).second << ");\n";
    }
 
    //set bin contents
@@ -3285,35 +3255,21 @@ void TEfficiency::SavePrimitive(std::ostream& out,Option_t* opt)
       nbins *= fTotalHistogram->GetNbinsZ() + 2;
 
    //important: set first total number than passed number
-   for(Int_t i = 0; i < nbins; ++i) {
-      out << indent << name <<"->SetTotalEvents(" << i << "," <<
-      fTotalHistogram->GetBinContent(i) << ");" << std::endl;
-      out << indent << name <<"->SetPassedEvents(" << i << "," <<
-      fPassedHistogram->GetBinContent(i) << ");" << std::endl;
+   for (Int_t i = 0; i < nbins; ++i) {
+      out << "   " << name << "->SetTotalEvents(" << i << "," << fTotalHistogram->GetBinContent(i) << ");\n";
+      out << "   " << name << "->SetPassedEvents(" << i << "," << fPassedHistogram->GetBinContent(i) << ");\n";
    }
 
-   //save list of functions
-   TIter next(fFunctions);
-   TObject* obj = nullptr;
-   while((obj = next())) {
-      obj->SavePrimitive(out,"nodraw");
-      if(obj->InheritsFrom(TF1::Class())) {
-         out << indent << name << "->GetListOfFunctions()->Add("
-         << obj->GetName() << ");" << std::endl;
-      }
-   }
+   TH1::SavePrimitiveFunctions(out, name, fFunctions);
 
    //set style
-   SaveFillAttributes(out,name);
-   SaveLineAttributes(out,name);
-   SaveMarkerAttributes(out,name);
+   SaveFillAttributes(out, name);
+   SaveLineAttributes(out, name);
+   SaveMarkerAttributes(out, name);
 
    //draw TEfficiency object
-   TString option = opt;
-   option.ToLower();
-   if (!option.Contains("nodraw"))
-      out<< indent << name<< "->Draw(" << quote << opt << quote << ");"
-      << std::endl;
+   if (!option || !strstr(option, "nodraw"))
+      out << "   " << name << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
