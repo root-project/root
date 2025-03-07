@@ -291,11 +291,11 @@ TEST(RReader, DataLoaderUndefinedVariables)
    TMVA::DataLoader dl;
    ROOT::TestSupport::CheckDiagsRAII diagRAII;
    dl.AddEvent("class1", TMVA::Types::kTraining, evData, 1.0);
-   diagRAII.requiredDiag(kError, "AddEvent",
+   diagRAII.requiredDiag(kError, "TMVA::DataLoader::AddEvent",
       "Number of variables defined through DataLoader::AddVariable (0) is inconsistent with number of variables given to DataLoader::Add*Event (2). Please check your variable definitions and statement ordering. This event will not be added.");
    TMVA::DataLoader d("dataset");
    d.AddSignalTrainingEvent({0.0}, 1.0);
-   diagRAII.requiredDiag(kError, "AddEvent",
+   diagRAII.requiredDiag(kError, "TMVA::DataLoader::AddEvent",
       "Number of variables defined through DataLoader::AddVariable (0) is inconsistent with number of variables given to DataLoader::Add*Event (1). Please check your variable definitions and statement ordering. This event will not be added.");
    
 }
