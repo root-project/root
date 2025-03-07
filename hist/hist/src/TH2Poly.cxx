@@ -1319,46 +1319,34 @@ Long64_t TH2Poly::Merge(TCollection *coll)
 
 void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   out <<"   "<<std::endl;
-   out <<"   "<< ClassName() <<" *";
 
    //histogram pointer has by default the histogram name.
    //however, in case histogram has no directory, it is safer to add a
    //incremental suffix
-   static Int_t hcounter = 0;
-   TString histName = GetName();
-   if (!fDirectory && !histName.Contains("Graph")) {
-      hcounter++;
-      histName += "__";
-      histName += hcounter;
-   }
+   TString hname = ProvideSaveName(option, kTRUE);
 
-   TString hname = gInterpreter->MapCppName(histName.Data());
+   out <<"   \n";
 
    //Construct the class initialization
-   out << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
-       << GetTitle() << "\", " << fCellX << ", " << fXaxis.GetXmin()
-       << ", " << fXaxis.GetXmax()
-       << ", " << fCellY << ", " << fYaxis.GetXmin() << ", "
-       << fYaxis.GetXmax() << ");" << std::endl;
+   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
+       << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << fCellX << ", " << fXaxis.GetXmin() << ", "
+       << fXaxis.GetXmax() << ", " << fCellY << ", " << fYaxis.GetXmin() << ", " << fYaxis.GetXmax() << ");\n";
 
    // Save Bins
    TIter       next(fBins);
-   TObject    *obj;
-   TH2PolyBin *th2pBin;
 
-   while((obj = next())){
-      th2pBin = (TH2PolyBin*) obj;
+   while(auto obj = next()){
+      auto th2pBin = (TH2PolyBin*) obj;
       th2pBin->GetPolygon()->SavePrimitive(out, TString::Format("th2poly%s",hname.Data()));
    }
 
    // save bin contents
-   out<<"   "<<std::endl;
+   out<<"   \n";
    Int_t bin;
    for (bin=1;bin<=GetNumberOfBins();bin++) {
       Double_t bc = GetBinContent(bin);
       if (bc) {
-         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");"<<std::endl;
+         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");\n";
       }
    }
 
@@ -1367,7 +1355,7 @@ void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
       for (bin=1;bin<=GetNumberOfBins();bin++) {
          Double_t be = GetBinError(bin);
          if (be) {
-            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");"<<std::endl;
+            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");\n";
          }
       }
    }
