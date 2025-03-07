@@ -633,22 +633,22 @@ TEST(RNTuple, BareEntry)
    EXPECT_EQ(2.0, *ntuple->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
 }
 
-namespace ROOT::Experimental::Internal {
+namespace ROOT::Internal {
 struct RFieldCallbackInjector {
    template <typename FieldT>
-   static void Inject(FieldT &field, ROOT::Experimental::RFieldBase::ReadCallback_t func)
+   static void Inject(FieldT &field, ROOT::RFieldBase::ReadCallback_t func)
    {
       field.AddReadCallback(func);
    }
 };
-} // namespace ROOT::Experimental::Internal
+} // namespace ROOT::Internal
 namespace {
 unsigned gNCallReadCallback = 0;
 }
 
 TEST(RNTuple, ReadCallback)
 {
-   using RFieldCallbackInjector = ROOT::Experimental::Internal::RFieldCallbackInjector;
+   using RFieldCallbackInjector = ROOT::Internal::RFieldCallbackInjector;
 
    FileRaii fileGuard("test_ntuple_readcb.ntuple");
    {

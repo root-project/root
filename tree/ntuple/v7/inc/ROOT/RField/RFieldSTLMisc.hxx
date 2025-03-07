@@ -39,6 +39,8 @@ namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
 
+} // namespace Experimental
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Template specializations for C++ std::atomic
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +67,7 @@ public:
    size_t GetValueSize() const final { return fSubfields[0]->GetValueSize(); }
    size_t GetAlignment() const final { return fSubfields[0]->GetAlignment(); }
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 template <typename ItemT>
@@ -100,7 +102,7 @@ protected:
    }
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
+   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc) final;
    void ConstructValue(void *where) const final { memset(where, 0, GetValueSize()); }
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final;
@@ -114,7 +116,7 @@ public:
 
    size_t GetValueSize() const final { return kWordSize * ((fN + kBitsPerWord - 1) / kBitsPerWord); }
    size_t GetAlignment() const final { return alignof(Word_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 
    /// Get the number of bits in the bitset, i.e. the N in std::bitset<N>
    std::size_t GetN() const { return fN; }
@@ -153,7 +155,7 @@ public:
    RField &operator=(RField &&other) = default;
    ~RField() final = default;
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,7 +173,7 @@ class RNullableField : public RFieldBase {
 protected:
    const RFieldBase::RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &) final;
+   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &) final;
 
    std::size_t AppendNull();
    std::size_t AppendValue(const void *from);
@@ -188,7 +190,7 @@ public:
    RNullableField &operator=(RNullableField &&other) = default;
    ~RNullableField() override = default;
 
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 class ROptionalField : public RNullableField {
@@ -299,7 +301,7 @@ private:
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
+   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const final { new (where) std::string(); }
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<std::string>>(); }
@@ -321,7 +323,7 @@ public:
 
    size_t GetValueSize() const final { return sizeof(std::string); }
    size_t GetAlignment() const final { return std::alignment_of<std::string>(); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -375,7 +377,7 @@ protected:
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
+   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final;
@@ -429,7 +431,16 @@ public:
    ~RField() final = default;
 };
 
+namespace Experimental {
+// TODO(gparolini): remove before branching ROOT v6.36
+using RAtomicField [[deprecated("ROOT::Experimental::RAtomicField moved to ROOT::RAtomicField")]] = ROOT::RAtomicField;
+using RVariantField [[deprecated("ROOT::Experimental::RVariantField moved to ROOT::RVariantField")]] =
+   ROOT::RVariantField;
+using RNullableField [[deprecated("ROOT::Experimental::RNullableField moved to ROOT::RNullableField")]] =
+   ROOT::RNullableField;
+using RBitsetField [[deprecated("ROOT::Experimental::RBitsetField moved to ROOT::RBitsetField")]] = ROOT::RBitsetField;
 } // namespace Experimental
+
 } // namespace ROOT
 
 #endif

@@ -4,8 +4,6 @@ class NoDict {};
 
 TEST(RField, Check)
 {
-   using ROOT::Experimental::RFieldBase;
-
    auto report = RFieldBase::Check("f", "CustomStruct");
    EXPECT_TRUE(report.empty());
 

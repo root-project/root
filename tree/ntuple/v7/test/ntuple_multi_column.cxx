@@ -16,12 +16,12 @@ TEST(RNTuple, MultiColumnRepresentationSimple)
       *ptrPx = 1.0;
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("px")), 1);
       *ptrPx = 2.0;
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("px")), 0);
       *ptrPx = 3.0;
       writer->Fill();
@@ -154,16 +154,16 @@ TEST(RNTuple, MultiColumnRepresentationString)
       *ptrStr = "abc";
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("str")), 1);
       ptrStr->clear();
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("str")), 0);
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("str")), 1);
       *ptrStr = "x";
       writer->Fill();
@@ -195,17 +195,17 @@ TEST(RNTuple, MultiColumnRepresentationVector)
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("vec")), 1);
       ptrVec->push_back(1.0);
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("vec")), 0);
       ptrVec->clear();
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("vec")), 1);
       ptrVec->push_back(2.0);
       ptrVec->push_back(3.0);
@@ -245,17 +245,17 @@ TEST(RNTuple, MultiColumnRepresentationMany)
       ptrVec->push_back(1.0);
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("vec")), 1);
       (*ptrVec)[0] = 2.0;
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("vec")), 2);
       (*ptrVec)[0] = 3.0;
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("vec")), 3);
       (*ptrVec)[0] = 4.0;
       writer->Fill();
@@ -299,18 +299,18 @@ TEST(RNTuple, MultiColumnRepresentationNullable)
       ptrVector->push_back(13.0);
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("scalar")), 1);
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("vector._0")), 1);
       ptrScalar->reset();
       ptrVector->clear();
       ptrVector->push_back(std::optional<float>());
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("scalar")), 0);
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("vector._0")), 0);
       *ptrScalar = 3.0;
       ptrVector->clear();
@@ -359,7 +359,7 @@ TEST(RNTuple, MultiColumnRepresentationBulk)
       *ptrPx = 1.0;
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("px")), 1);
       *ptrPx = 2.0;
       writer->Fill();
@@ -399,7 +399,7 @@ TEST(RNTuple, MultiColumnRepresentationFriends)
       *ptrPt = 1.0;
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("pt")), 1);
       *ptrPt = 2.0;
       writer->Fill();
@@ -409,7 +409,7 @@ TEST(RNTuple, MultiColumnRepresentationFriends)
       *ptrEta = 3.0;
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("eta")), 1);
       *ptrEta = 4.0;
       writer->Fill();

@@ -2,7 +2,7 @@
 #include <TRandom3.h>
 
 namespace {
-struct RFieldBaseTest : public ROOT::Experimental::RFieldBase {
+struct RFieldBaseTest : public ROOT::RFieldBase {
    /// Returns the global index of the first entry that has a stored on-disk value.  For deferred fields, this allows
    /// for differentiating zero-initialized values read before the addition of the field from actual stored data.
    ROOT::NTupleSize_t GetFirstEntry() const

@@ -377,17 +377,16 @@ TEST(RNTupleDS, CollectionFieldTypes)
          std::set<std::set<Electron>>{{Electron{1.f}, Electron{2.f}}, {Electron{3.f}}};
 
       // Untyped collection
-      auto fldJetPt = ROOT::Experimental::RVectorField::CreateUntyped(
-         "jet_pt", std::make_unique<ROOT::Experimental::RField<float>>("_0"));
+      auto fldJetPt = ROOT::RVectorField::CreateUntyped("jet_pt", std::make_unique<ROOT::RField<float>>("_0"));
       model->AddField(std::move(fldJetPt));
 
       // Untyped collection with an untyped record, with a projection
-      std::vector<std::unique_ptr<ROOT::Experimental::RFieldBase>> muon;
-      muon.emplace_back(std::make_unique<ROOT::Experimental::RField<float>>("muon_pt"));
-      auto fldMuonRecord = std::make_unique<ROOT::Experimental::RRecordField>("_0", std::move(muon));
-      auto fldMuons = ROOT::Experimental::RVectorField::CreateUntyped("muon", std::move(fldMuonRecord));
+      std::vector<std::unique_ptr<ROOT::RFieldBase>> muon;
+      muon.emplace_back(std::make_unique<ROOT::RField<float>>("muon_pt"));
+      auto fldMuonRecord = std::make_unique<ROOT::RRecordField>("_0", std::move(muon));
+      auto fldMuons = ROOT::RVectorField::CreateUntyped("muon", std::move(fldMuonRecord));
       model->AddField(std::move(fldMuons));
-      auto muonPtField = ROOT::Experimental::RFieldBase::Create("muon_pt", "ROOT::VecOps::RVec<float>").Unwrap();
+      auto muonPtField = ROOT::RFieldBase::Create("muon_pt", "ROOT::VecOps::RVec<float>").Unwrap();
       model->AddProjectedField(std::move(muonPtField), [](const std::string &fieldName) {
          if (fieldName == "muon_pt")
             return "muon";

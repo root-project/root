@@ -31,35 +31,43 @@
 #include <vector>
 
 namespace ROOT {
+
+class RFieldBase;
+class RClassField;
+
 namespace Experimental {
 
-class RClassField;
-class RFieldBase;
 class RNTupleJoinProcessor;
 
 namespace Internal {
-struct RFieldCallbackInjector;
-struct RFieldRepresentationModifier;
 class RPageSink;
 class RPageSource;
-// TODO(jblomer): find a better way to not have these methods in the RFieldBase public API
-void CallFlushColumnsOnField(RFieldBase &);
-void CallCommitClusterOnField(RFieldBase &);
-void CallConnectPageSinkOnField(RFieldBase &, RPageSink &, ROOT::NTupleSize_t firstEntry = 0);
-void CallConnectPageSourceOnField(RFieldBase &, RPageSource &);
-ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
-CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName, const ROOT::RCreateFieldOptions &options,
-                    const RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
-
 } // namespace Internal
 
 namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
 
+} // namespace Experimental
+
+namespace Internal {
+struct RFieldCallbackInjector;
+struct RFieldRepresentationModifier;
+// TODO(jblomer): find a better way to not have these methods in the RFieldBase public API
+void CallFlushColumnsOnField(RFieldBase &);
+void CallCommitClusterOnField(RFieldBase &);
+void CallConnectPageSinkOnField(RFieldBase &, ROOT::Experimental::Internal::RPageSink &,
+                                ROOT::NTupleSize_t firstEntry = 0);
+void CallConnectPageSourceOnField(RFieldBase &, ROOT::Experimental::Internal::RPageSource &);
+ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
+CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName, const ROOT::RCreateFieldOptions &options,
+                    const ROOT::Experimental::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
+
+} // namespace Internal
+
 // clang-format off
 /**
-\class ROOT::Experimental::RFieldBase
+\class ROOT::RFieldBase
 \ingroup NTuple
 \brief A field translates read and write calls from/to underlying columns to/from tree values
 
@@ -73,18 +81,19 @@ This is and can only be partially enforced through C++.
 */
 // clang-format on
 class RFieldBase {
-   friend class ROOT::Experimental::RClassField;                             // to mark members as artificial
-   friend class ROOT::Experimental::RNTupleJoinProcessor;                    // needs ConstructValue
-   friend struct ROOT::Experimental::Internal::RFieldCallbackInjector;       // used for unit tests
-   friend struct ROOT::Experimental::Internal::RFieldRepresentationModifier; // used for unit tests
+   friend class ROOT::RClassField;                             // to mark members as artificial
+   friend class ROOT::Experimental::RNTupleJoinProcessor;      // needs ConstructValue
+   friend struct ROOT::Internal::RFieldCallbackInjector;       // used for unit tests
+   friend struct ROOT::Internal::RFieldRepresentationModifier; // used for unit tests
    friend void Internal::CallFlushColumnsOnField(RFieldBase &);
    friend void Internal::CallCommitClusterOnField(RFieldBase &);
-   friend void Internal::CallConnectPageSinkOnField(RFieldBase &, Internal::RPageSink &, ROOT::NTupleSize_t);
-   friend void Internal::CallConnectPageSourceOnField(RFieldBase &, Internal::RPageSource &);
-   friend ROOT::RResult<std::unique_ptr<ROOT::Experimental::RFieldBase>>
+   friend void
+   Internal::CallConnectPageSinkOnField(RFieldBase &, ROOT::Experimental::Internal::RPageSink &, ROOT::NTupleSize_t);
+   friend void Internal::CallConnectPageSourceOnField(RFieldBase &, ROOT::Experimental::Internal::RPageSource &);
+   friend ROOT::RResult<std::unique_ptr<ROOT::RFieldBase>>
    Internal::CallFieldBaseCreate(const std::string &fieldName, const std::string &typeName,
-                                 const ROOT::RCreateFieldOptions &options, const RNTupleDescriptor *desc,
-                                 ROOT::DescriptorId_t fieldId);
+                                 const ROOT::RCreateFieldOptions &options,
+                                 const ROOT::Experimental::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 
    using ReadCallback_t = std::function<void(void *)>;
 
@@ -237,12 +246,12 @@ private:
    /// Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
    /// can be read or written.  In order to find the field in the page storage, the field's on-disk ID has to be set.
    /// \param firstEntry The global index of the first entry with on-disk data for the connected field
-   void ConnectPageSink(Internal::RPageSink &pageSink, ROOT::NTupleSize_t firstEntry = 0);
+   void ConnectPageSink(ROOT::Experimental::Internal::RPageSink &pageSink, ROOT::NTupleSize_t firstEntry = 0);
    /// Connects the field and its sub field tree to the given page source. Once connected, data can be read.
    /// Only unconnected fields may be connected, i.e. the method is not idempotent. The field ID has to be set prior to
    /// calling this function. For sub fields, a field ID may or may not be set. If the field ID is unset, it will be
    /// determined using the page source descriptor, based on the parent field ID and the sub field name.
-   void ConnectPageSource(Internal::RPageSource &pageSource);
+   void ConnectPageSource(ROOT::Experimental::Internal::RPageSource &pageSource);
 
    void SetArtificial()
    {
@@ -335,7 +344,7 @@ protected:
 
    /// For reading, use the on-disk column list
    template <typename... ColumnCppTs>
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc)
+   void GenerateColumnsImpl(const ROOT::Experimental::RNTupleDescriptor &desc)
    {
       std::uint16_t representationIndex = 0;
       do {
@@ -363,15 +372,15 @@ protected:
    /// Implementations in derived classes should create the backing columns corresponsing to the field type for reading.
    /// The default implementation does not attach any columns to the field. The method should check, using the page
    /// source and fOnDiskId, if the column types match and throw if they don't.
-   virtual void GenerateColumns(const RNTupleDescriptor & /*desc*/) {}
+   virtual void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor & /*desc*/) {}
    /// Returns the on-disk column types found in the provided descriptor for fOnDiskId and the given
    /// representation index. If there are no columns for the given representation index, return an empty
    /// ColumnRepresentation_t list. Otherwise, the returned reference points into the static array returned by
    /// GetColumnRepresentations().
    /// Throws an exception if the types on disk don't match any of the deserialization types from
    /// GetColumnRepresentations().
-   const ColumnRepresentation_t &
-   EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc, std::uint16_t representationIndex) const;
+   const ColumnRepresentation_t &EnsureCompatibleColumnTypes(const ROOT::Experimental::RNTupleDescriptor &desc,
+                                                             std::uint16_t representationIndex) const;
    /// When connecting a field to a page sink, the field's default column representation is subject
    /// to adjustment according to the write options. E.g., if compression is turned off, encoded columns
    /// are changed to their unencoded counterparts.
@@ -467,13 +476,16 @@ protected:
    // The page sink's callback when the data set gets committed will call this method to get the field's extra
    // type information. This has to happen at the end of writing because the type information may change depending
    // on the data that's written, e.g. for polymorphic types in the streamer field.
-   virtual RExtraTypeInfoDescriptor GetExtraTypeInfo() const { return RExtraTypeInfoDescriptor(); }
+   virtual ROOT::Experimental::RExtraTypeInfoDescriptor GetExtraTypeInfo() const
+   {
+      return ROOT::Experimental::RExtraTypeInfoDescriptor();
+   }
 
    /// Add a new subfield to the list of nested fields
    void Attach(std::unique_ptr<RFieldBase> child);
 
    /// Called by `ConnectPageSource()` before connecting; derived classes may override this as appropriate
-   virtual void BeforeConnectPageSource(Internal::RPageSource &) {}
+   virtual void BeforeConnectPageSource(ROOT::Experimental::Internal::RPageSource &) {}
 
    /// Called by `ConnectPageSource()` once connected; derived classes may override this as appropriate
    virtual void AfterConnectPageSource() {}
@@ -481,9 +493,9 @@ protected:
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
    /// normalized type name and type alias.
    /// `desc` and `fieldId` must be passed if `options.fEmulateUnknownTypes` is true, otherwise they can be left blank.
-   static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &typeName,
-                                                      const ROOT::RCreateFieldOptions &options,
-                                                      const RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
+   static RResult<std::unique_ptr<RFieldBase>>
+   Create(const std::string &fieldName, const std::string &typeName, const ROOT::RCreateFieldOptions &options,
+          const ROOT::Experimental::RNTupleDescriptor *desc, ROOT::DescriptorId_t fieldId);
 
 public:
    template <bool IsConstT>
@@ -607,7 +619,7 @@ public:
    RConstSchemaIterator cbegin() const;
    RConstSchemaIterator cend() const;
 
-   virtual void AcceptVisitor(Detail::RFieldVisitor &visitor) const;
+   virtual void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const;
 }; // class RFieldBase
 
 /// Iterates over the sub tree of fields in depth-first search order
@@ -847,7 +859,11 @@ struct RFieldRepresentationModifier {
 };
 } // namespace Internal
 
+namespace Experimental {
+// TODO(gparolini): remove before branching ROOT v6.36
+using RFieldBase [[deprecated("ROOT::Experimental::RFieldBase moved to ROOT::RFieldBase")]] = ROOT::RFieldBase;
 } // namespace Experimental
+
 } // namespace ROOT
 
 #endif

@@ -43,13 +43,14 @@
 
 namespace ROOT {
 
+class RFieldBase;
+
 namespace Internal {
 class RColumnElementBase;
 }
 
 namespace Experimental {
 
-class RFieldBase;
 class RNTupleDescriptor;
 class RNTupleModel;
 
@@ -123,7 +124,7 @@ public:
 
    /// In general, we create a field simply from the C++ type name. For untyped fields, however, we potentially need
    /// access to sub fields, which is provided by the ntuple descriptor argument.
-   std::unique_ptr<RFieldBase>
+   std::unique_ptr<ROOT::RFieldBase>
    CreateField(const RNTupleDescriptor &ntplDesc, const ROOT::RCreateFieldOptions &options = {}) const;
 
    ROOT::DescriptorId_t GetId() const { return fFieldId; }
@@ -1276,7 +1277,7 @@ public:
    explicit RFieldDescriptorBuilder(const RFieldDescriptor &fieldDesc);
 
    /// Make a new RFieldDescriptorBuilder based off a live NTuple field.
-   static RFieldDescriptorBuilder FromField(const RFieldBase &field);
+   static RFieldDescriptorBuilder FromField(const ROOT::RFieldBase &field);
 
    RFieldDescriptorBuilder &FieldId(ROOT::DescriptorId_t fieldId)
    {

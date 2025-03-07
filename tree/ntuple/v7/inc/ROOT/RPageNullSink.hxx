@@ -55,9 +55,11 @@ public:
 
    ROOT::NTupleSize_t GetNEntries() const final { return 0; }
 
-   void ConnectFields(const std::vector<RFieldBase *> &fields, ROOT::NTupleSize_t firstEntry)
+   void ConnectFields(const std::vector<ROOT::RFieldBase *> &fields, ROOT::NTupleSize_t firstEntry)
    {
-      auto connectField = [&](RFieldBase &f) { CallConnectPageSinkOnField(f, *this, firstEntry); };
+      auto connectField = [&](ROOT::RFieldBase &f) {
+         ROOT::Internal::CallConnectPageSinkOnField(f, *this, firstEntry);
+      };
       for (auto *f : fields) {
          connectField(*f);
          for (auto &descendant : *f) {

@@ -338,8 +338,8 @@ TEST(RNTupleShow, Objects)
 
 TEST(RNTupleShow, Collections)
 {
-   using ROOT::Experimental::RRecordField;
-   using ROOT::Experimental::RVectorField;
+   using ROOT::RRecordField;
+   using ROOT::RVectorField;
 
    std::string rootFileName{"test_ntuple_show_collection.root"};
    std::string ntupleName{"Collections"};

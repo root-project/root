@@ -124,16 +124,16 @@ TEST(RNTuple, InsideCollection)
    auto fieldInner = std::unique_ptr<RFieldBase>(RFieldBase::Create("klassVec_a", "float").Unwrap());
    fieldInner->SetOnDiskId(idA);
 
-   auto field = std::make_unique<ROOT::Experimental::RVectorField>("klassVec", std::move(fieldInner));
+   auto field = std::make_unique<ROOT::RVectorField>("klassVec", std::move(fieldInner));
    field->SetOnDiskId(idKlassVec);
-   ROOT::Experimental::Internal::CallConnectPageSourceOnField(*field, *source);
+   ROOT::Internal::CallConnectPageSourceOnField(*field, *source);
 
    auto fieldCardinality64 = RFieldBase::Create("", "ROOT::RNTupleCardinality<std::uint64_t>").Unwrap();
    fieldCardinality64->SetOnDiskId(idKlassVec);
-   ROOT::Experimental::Internal::CallConnectPageSourceOnField(*fieldCardinality64, *source);
+   ROOT::Internal::CallConnectPageSourceOnField(*fieldCardinality64, *source);
    auto fieldCardinality32 = RFieldBase::Create("", "ROOT::RNTupleCardinality<std::uint32_t>").Unwrap();
    fieldCardinality32->SetOnDiskId(idKlassVec);
-   ROOT::Experimental::Internal::CallConnectPageSourceOnField(*fieldCardinality32, *source);
+   ROOT::Internal::CallConnectPageSourceOnField(*fieldCardinality32, *source);
 
    auto value = field->CreateValue();
    value.Read(0);

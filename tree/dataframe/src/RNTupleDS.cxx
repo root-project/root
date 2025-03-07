@@ -61,19 +61,16 @@ namespace Internal {
 /// This field owns the collection offset field but instead of exposing the collection offsets it exposes
 /// the collection sizes (offset(N+1) - offset(N)).  For the time being, we offer this functionality only in RDataFrame.
 /// TODO(jblomer): consider providing a general set of useful virtual fields as part of RNTuple.
-class RRDFCardinalityField final : public ROOT::Experimental::RFieldBase {
+class RRDFCardinalityField final : public ROOT::RFieldBase {
 protected:
-   std::unique_ptr<ROOT::Experimental::RFieldBase> CloneImpl(std::string_view /* newName */) const final
+   std::unique_ptr<ROOT::RFieldBase> CloneImpl(std::string_view /* newName */) const final
    {
       return std::make_unique<RRDFCardinalityField>();
    }
    void ConstructValue(void *where) const final { *static_cast<std::size_t *>(where) = 0; }
 
 public:
-   RRDFCardinalityField()
-      : ROOT::Experimental::RFieldBase("", "std::size_t", ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
-   {
-   }
+   RRDFCardinalityField() : ROOT::RFieldBase("", "std::size_t", ROOT::ENTupleStructure::kLeaf, false /* isSimple */) {}
    RRDFCardinalityField(RRDFCardinalityField &&other) = default;
    RRDFCardinalityField &operator=(RRDFCardinalityField &&other) = default;
    ~RRDFCardinalityField() = default;
@@ -122,11 +119,11 @@ public:
  * This is the implementation of `R_rdf_sizeof_column` in case `column` contains
  * fixed-size arrays on disk.
  */
-class RArraySizeField final : public ROOT::Experimental::RFieldBase {
+class RArraySizeField final : public ROOT::RFieldBase {
 private:
    std::size_t fArrayLength;
 
-   std::unique_ptr<ROOT::Experimental::RFieldBase> CloneImpl(std::string_view) const final
+   std::unique_ptr<ROOT::RFieldBase> CloneImpl(std::string_view) const final
    {
       return std::make_unique<RArraySizeField>(fArrayLength);
    }
@@ -143,7 +140,7 @@ private:
 
 public:
    RArraySizeField(std::size_t arrayLength)
-      : ROOT::Experimental::RFieldBase("", "std::size_t", ROOT::ENTupleStructure::kLeaf, false /* isSimple */),
+      : ROOT::RFieldBase("", "std::size_t", ROOT::ENTupleStructure::kLeaf, false /* isSimple */),
         fArrayLength(arrayLength)
    {
    }
@@ -160,7 +157,7 @@ public:
 
 /// Every RDF column is represented by exactly one RNTuple field
 class RNTupleColumnReader : public ROOT::Detail::RDF::RColumnReaderBase {
-   using RFieldBase = ROOT::Experimental::RFieldBase;
+   using RFieldBase = ROOT::RFieldBase;
    using RPageSource = ROOT::Experimental::Internal::RPageSource;
 
    RNTupleDS *fDataSource;                     ///< The data source that owns this column reader
@@ -199,7 +196,7 @@ public:
       }
 
       try {
-         ROOT::Experimental::Internal::CallConnectPageSourceOnField(*fField, source);
+         ROOT::Internal::CallConnectPageSourceOnField(*fField, source);
       } catch (const ROOT::RException &err) {
          auto onDiskType = source.GetSharedDescriptorGuard()->GetFieldDescriptor(fField->GetOnDiskId()).GetTypeName();
          std::string msg = "RNTupleDS: invalid type \"" + fField->GetTypeName() + "\" for column \"" +
@@ -314,7 +311,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
 
    // The fieldID could be the root field or the class of fieldId might not be loaded.
    // In these cases, only the inner fields are exposed as RDF columns.
-   auto fieldOrException = RFieldBase::Create(fieldDesc.GetFieldName(), fieldDesc.GetTypeName());
+   auto fieldOrException = ROOT::RFieldBase::Create(fieldDesc.GetFieldName(), fieldDesc.GetTypeName());
    if (!fieldOrException)
       return;
    auto valueField = fieldOrException.Unwrap();
@@ -322,7 +319,7 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
    for (auto &f : *valueField) {
       f.SetOnDiskId(desc.FindFieldId(f.GetFieldName(), f.GetParent()->GetOnDiskId()));
    }
-   std::unique_ptr<RFieldBase> cardinalityField;
+   std::unique_ptr<ROOT::RFieldBase> cardinalityField;
    // Collections get the additional "number of" RDF column (e.g. "R_rdf_sizeof_tracks")
    if (!fieldInfos.empty()) {
       const auto &info = fieldInfos.back();
@@ -339,16 +336,15 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
 
       if (fieldInfo.fNRepetitions > 0) {
          // Fixed-size array, read it as ROOT::RVec in memory
-         valueField =
-            std::make_unique<ROOT::Experimental::RArrayAsRVecField>("", std::move(valueField), fieldInfo.fNRepetitions);
+         valueField = std::make_unique<ROOT::RArrayAsRVecField>("", std::move(valueField), fieldInfo.fNRepetitions);
       } else {
          // Actual collection. A std::vector or ROOT::RVec gets added as a ROOT::RVec. All other collection types keep
          // their original type.
          if (convertToRVec) {
-            valueField = std::make_unique<ROOT::Experimental::RRVecField>("", std::move(valueField));
+            valueField = std::make_unique<ROOT::RRVecField>("", std::move(valueField));
          } else {
             auto outerFieldType = desc.GetFieldDescriptor(fieldInfo.fFieldId).GetTypeName();
-            valueField = RFieldBase::Create("", outerFieldType).Unwrap();
+            valueField = ROOT::RFieldBase::Create("", outerFieldType).Unwrap();
          }
       }
 
@@ -359,11 +355,11 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
       if (i != fieldInfos.rbegin()) {
          if (fieldInfo.fNRepetitions > 0) {
             // This collection level refers to a fixed-size array
-            cardinalityField = std::make_unique<ROOT::Experimental::RArrayAsRVecField>("", std::move(cardinalityField),
-                                                                                       fieldInfo.fNRepetitions);
+            cardinalityField =
+               std::make_unique<ROOT::RArrayAsRVecField>("", std::move(cardinalityField), fieldInfo.fNRepetitions);
          } else {
             // This collection level refers to an RVec
-            cardinalityField = std::make_unique<ROOT::Experimental::RRVecField>("", std::move(cardinalityField));
+            cardinalityField = std::make_unique<ROOT::RRVecField>("", std::move(cardinalityField));
          }
 
          cardinalityField->SetOnDiskId(fieldInfo.fFieldId);
@@ -450,19 +446,20 @@ RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std:
    const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
    const auto requestedType = ROOT::Internal::GetRenormalizedTypeName(ROOT::Internal::RDF::TypeID2TypeName(tid));
 
-   RFieldBase *field;
+   ROOT::RFieldBase *field;
    // If the field corresponding to the provided name is not a cardinality column and the requested type is different
    // from the proto field that was created when the data source was constructed, we first have to create an
    // alternative proto field for the column reader. Otherwise, we can directly use the existing proto field.
    if (name.substr(0, 13) != "R_rdf_sizeof_" && requestedType != fColumnTypes[index]) {
       auto &altProtoFields = fAlternativeProtoFields[index];
-      auto altProtoField = std::find_if(
-         altProtoFields.begin(), altProtoFields.end(),
-         [&requestedType](const std::unique_ptr<RFieldBase> &fld) { return fld->GetTypeName() == requestedType; });
+      auto altProtoField = std::find_if(altProtoFields.begin(), altProtoFields.end(),
+                                        [&requestedType](const std::unique_ptr<ROOT::RFieldBase> &fld) {
+                                           return fld->GetTypeName() == requestedType;
+                                        });
       if (altProtoField != altProtoFields.end()) {
          field = altProtoField->get();
       } else {
-         auto newAltProtoFieldOrException = RFieldBase::Create(std::string(name), requestedType);
+         auto newAltProtoFieldOrException = ROOT::RFieldBase::Create(std::string(name), requestedType);
          if (!newAltProtoFieldOrException) {
             throw std::runtime_error("RNTupleDS: Could not create field with type \"" + requestedType +
                                      "\" for column \"" + std::string(name));
