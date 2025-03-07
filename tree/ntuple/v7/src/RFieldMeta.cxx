@@ -50,6 +50,8 @@
 #include <utility>
 #include <variant>
 
+using ROOT::Internal::GetRenormalizedTypeName;
+
 namespace {
 
 TClass *EnsureValidClass(std::string_view className)
@@ -91,7 +93,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
 }
 
 ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, TClass *classp)
-   : ROOT::Experimental::RFieldBase(fieldName, Internal::GetRenormalizedTypeName(classp->GetName()),
+   : ROOT::Experimental::RFieldBase(fieldName, GetRenormalizedTypeName(classp->GetName()),
                                     ROOT::ENTupleStructure::kRecord, false /* isSimple */),
      fClass(classp)
 {
@@ -113,10 +115,12 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, TClass 
    // Classes with, e.g., custom streamers are not supported through this field. Empty classes, however, are.
    // Can be overwritten with the "rntuple.streamerMode=true" class attribute
    if (!fClass->CanSplit() && fClass->Size() > 1 &&
-       Internal::GetRNTupleSerializationMode(fClass) != Internal::ERNTupleSerializationMode::kForceNativeMode) {
+       ROOT::Internal::GetRNTupleSerializationMode(fClass) !=
+          ROOT::Internal::ERNTupleSerializationMode::kForceNativeMode) {
       throw RException(R__FAIL(GetTypeName() + " cannot be stored natively in RNTuple"));
    }
-   if (Internal::GetRNTupleSerializationMode(fClass) == Internal::ERNTupleSerializationMode::kForceStreamerMode) {
+   if (ROOT::Internal::GetRNTupleSerializationMode(fClass) ==
+       ROOT::Internal::ERNTupleSerializationMode::kForceStreamerMode) {
       throw RException(R__FAIL(GetTypeName() + " has streamer mode enforced, not supported as native RNTuple class"));
    }
 
@@ -170,7 +174,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, TClass 
 
       auto subField = RFieldBase::Create(dataMember->GetName(), typeName).Unwrap();
 
-      const auto normTypeName = Internal::GetNormalizedUnresolvedTypeName(origTypeName);
+      const auto normTypeName = ROOT::Internal::GetNormalizedUnresolvedTypeName(origTypeName);
       if (normTypeName == subField->GetTypeName()) {
          subField->fTypeAlias = "";
       } else {
@@ -492,7 +496,7 @@ ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::stri
 }
 
 ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, TEnum *enump)
-   : ROOT::Experimental::RFieldBase(fieldName, Internal::GetRenormalizedTypeName(enump->GetQualifiedName()),
+   : ROOT::Experimental::RFieldBase(fieldName, GetRenormalizedTypeName(enump->GetQualifiedName()),
                                     ROOT::ENTupleStructure::kLeaf, false /* isSimple */)
 {
    // Avoid accidentally supporting std types through TEnum.
@@ -602,7 +606,7 @@ ROOT::Experimental::RProxiedCollectionField::RCollectionIterableOnce::GetIterato
 }
 
 ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName, TClass *classp)
-   : RFieldBase(fieldName, Internal::GetRenormalizedTypeName(classp->GetName()), ROOT::ENTupleStructure::kCollection,
+   : RFieldBase(fieldName, GetRenormalizedTypeName(classp->GetName()), ROOT::ENTupleStructure::kCollection,
                 false /* isSimple */),
      fNWritten(0)
 {
@@ -616,7 +620,7 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
       throw RException(R__FAIL("collection proxies whose value type is a pointer are not supported"));
    if (!fProxy->GetCollectionClass()->HasDictionary()) {
       throw RException(R__FAIL("dictionary not available for type " +
-                               Internal::GetRenormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
+                               GetRenormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
    }
 
    fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readFromDisk */);
@@ -830,7 +834,7 @@ ROOT::Experimental::RStreamerField::RStreamerField(std::string_view fieldName, s
 }
 
 ROOT::Experimental::RStreamerField::RStreamerField(std::string_view fieldName, TClass *classp)
-   : ROOT::Experimental::RFieldBase(fieldName, Internal::GetRenormalizedTypeName(classp->GetName()),
+   : ROOT::Experimental::RFieldBase(fieldName, GetRenormalizedTypeName(classp->GetName()),
                                     ROOT::ENTupleStructure::kStreamer, false /* isSimple */),
      fClass(classp),
      fIndex(0)

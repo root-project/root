@@ -448,7 +448,7 @@ RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std:
 {
    // At this point we can assume that `name` will be found in fColumnNames
    const auto index = std::distance(fColumnNames.begin(), std::find(fColumnNames.begin(), fColumnNames.end(), name));
-   const auto requestedType = Internal::GetRenormalizedTypeName(ROOT::Internal::RDF::TypeID2TypeName(tid));
+   const auto requestedType = ROOT::Internal::GetRenormalizedTypeName(ROOT::Internal::RDF::TypeID2TypeName(tid));
 
    RFieldBase *field;
    // If the field corresponding to the provided name is not a cardinality column and the requested type is different
