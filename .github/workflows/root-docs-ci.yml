@@ -171,6 +171,31 @@ jobs:
         pwd
         ls -l
         aws s3 sync ${DOC_DIR}/html/ s3://root/doc/${WEB_DIR_NAME}/
-        rm -rf ${DOC_DIR}/html
+        mv ${DOC_DIR}/html /tmp/html
         aws s3 sync ${DOC_DIR}/ s3://root/doc/${WEB_DIR_NAME}/
         aws s3 cp ${TAR_NAME}.gz s3://root/download/
+
+    - name: Install Kerberos utilities
+      run: dnf -y install krb5-workstation
+
+    - name: Install XRootD client
+      run: dnf -y install xrootd-client
+
+    - name: Sync documentation to EOS
+      env:
+        RWEBEOS_KT: ${{ secrets.RWEBEOS_KT }}
+        KRB5USER: ${{ secrets.KRB5USER }}
+        KRB5REALM: ${{ secrets.KRB5REALM }}
+        KT_FILE_NAME: /tmp/decoded.keytab
+        EOS_BASE_PATH: /eos/project/r/root-eos/website/
+        EOS_ENDPOINT: root://eosproject-r.cern.ch
+        KRB5CCNAME: /tmp/krb5cc
+      working-directory: ${{ env.WORKDIR }}
+      run: |
+        echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
+        kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
+        mv /tmp/html ${DOC_DIR}/html
+        xrdcp -rf ${DOC_DIR}/html/* ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        rm -r ${DOC_DIR}/html
+        xrdcp -rf ${DOC_DIR}/* ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp -rf ${TAR_NAME}.gz ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download
