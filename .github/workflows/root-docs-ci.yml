@@ -201,6 +201,7 @@ jobs:
         touch ${DOC_DIR}/foo1
         mkdir ${DOC_DIR}/html
         echo "Foo and bar" > ${DOC_DIR}/html/index.html
+        touch htmlmaster.tar.gz
         echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
         kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
         echo mv /tmp/html ${DOC_DIR}/html
