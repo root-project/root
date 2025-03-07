@@ -146,58 +146,29 @@ void   TH1K::Reset(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 /// Note the following restrictions in the code generated:
-///  - variable bin size not implemented
-///  - Objects in list of functions not saved (fits)
-///  - Contours not saved
+///  - variable bin size not implemented, not supported by TH1K
 
 void TH1K::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   out<<"   "<<"TH1 *";
+   TString hname = ProvideSaveName(option);
 
-   out<<GetName()<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote
-                 <<","<<GetXaxis()->GetNbins()
-                 <<","<<GetXaxis()->GetXmin()
-                 <<","<<GetXaxis()->GetXmax()
-                 <<","<<fKOrd;
-   out <<");"<<std::endl;
-
-   if (fDirectory == nullptr) {
-      out<<"   "<<GetName()<<"->SetDirectory(0);"<<std::endl;
-   }
-   if (TestBit(kNoStats)) {
-      out<<"   "<<GetName()<<"->SetStats(0);"<<std::endl;
-   }
-   if (fOption.Length() != 0) {
-      out<<"   "<<GetName()<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<std::endl;
-   }
+   out << "   \n";
+   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << GetName() << "\", \""
+       << TString(GetTitle()).ReplaceSpecialCppChars() << "\"," << GetXaxis()->GetNbins() << ","
+       << GetXaxis()->GetXmin() << "," << GetXaxis()->GetXmax() << "," << fKOrd << ");\n";
 
    if (fNIn) {
-      out<<"   Float_t Arr[]={"<<std::endl;
-      for (int i=0; i<fNIn; i++) {
-         out<< fArray[i];
-         if (i != fNIn-1) {out<< ",";} else { out<< "};";}
-         if (i%10 == 9)   {out<< std::endl;}
-      }
-      out<< std::endl;
-      out<<"   for(int i=0;i<" << fNIn << ";i++)"<<GetName()<<"->Fill(Arr[i]);";
-      out<< std::endl;
-   }
-   SaveFillAttributes(out,GetName(),0,1001);
-   SaveLineAttributes(out,GetName(),1,1,1);
-   SaveMarkerAttributes(out,GetName(),1,1,1);
-   fXaxis.SaveAttributes(out,GetName(),"->GetXaxis()");
-   fYaxis.SaveAttributes(out,GetName(),"->GetYaxis()");
-   fZaxis.SaveAttributes(out,GetName(),"->GetZaxis()");
-   TString opt = option;
-   opt.ToLower();
-   if (!opt.Contains("nodraw")) {
-      out<<"   "<<GetName()<<"->Draw("
-      <<quote<<option<<quote<<");"<<std::endl;
-   }
-}
+      std::vector<Double_t> content(fNIn);
+      for (int i = 0; i < fNIn; i++)
+         content[i] = fArray[i];
 
+      TString arrname = SavePrimitiveArray(out, hname, fNIn, content.data());
+      out << "   for(Int_t i = 0; i < " << fNIn << "; i++)\n";
+      out << "      " << hname << "->Fill(" << arrname << "[i]);\n";
+   }
+
+   TH1::SavePrimitiveHelp(out, hname, option);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compare.
