@@ -82,8 +82,7 @@ jobs:
           kinit  -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
           echo +++ Running the copy
           export DIRNAME=`ls -1|grep -v relnotes|grep -v root`
-          xrdfs ${EOS_ENDPOINT} mkdir ${EOS_PATH}/${DIRNAME}
-          xrdcp -r ${DIRNAME}/* ${EOS_ENDPOINT}/${EOS_PATH}/${DIRNAME}
+          xrdcp -r ${DIRNAME} ${EOS_ENDPOINT}/${EOS_PATH}/
 
       - name: Sync documentation to S3
         env:
