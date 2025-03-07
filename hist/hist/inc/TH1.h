@@ -444,6 +444,7 @@ public:
            void     UseCurrentStyle() override;
    static  TH1     *TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option);
 
+   static void      SavePrimitiveFunctions(std::ostream &out, const char *varname, TList *lst);
 
    // TODO: Remove obsolete methods in v6-04
    virtual Double_t GetCellContent(Int_t binx, Int_t biny) const

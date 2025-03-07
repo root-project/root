@@ -7249,7 +7249,7 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TString sxaxis="xAxis",syaxis="yAxis",szaxis="zAxis";
 
    const auto old_precision{out.precision()};
-   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1}; 
+   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
    out << std::setprecision(max_precision);
    // Check if the histogram has equidistant X bins or not.  If not, we
    // create an array holding the bins.
@@ -7426,31 +7426,7 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
       }
    }
 
-   // save list of functions
-   auto lnk = fFunctions->FirstLink();
-   static Int_t funcNumber = 0;
-   while (lnk) {
-      auto obj = lnk->GetObject();
-      obj->SavePrimitive(out, TString::Format("nodraw #%d\n",++funcNumber).Data());
-      if (obj->InheritsFrom(TF1::Class())) {
-         TString fname;
-         fname.Form("%s%d",obj->GetName(),funcNumber);
-         out << "   " << fname << "->SetParent(" << hname << ");\n";
-         out<<"   "<<hname<<"->GetListOfFunctions()->Add("
-            << fname <<");"<<std::endl;
-      } else if (obj->InheritsFrom("TPaveStats")) {
-         out<<"   "<<hname<<"->GetListOfFunctions()->Add(ptstats);"<<std::endl;
-         out<<"   ptstats->SetParent("<<hname<<");"<<std::endl;
-      } else if (obj->InheritsFrom("TPolyMarker")) {
-         out<<"   "<<hname<<"->GetListOfFunctions()->Add("
-            <<"pmarker ,"<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
-      } else {
-         out<<"   "<<hname<<"->GetListOfFunctions()->Add("
-            <<obj->GetName()
-            <<","<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
-      }
-      lnk = lnk->Next();
-   }
+   SavePrimitiveFunctions(out, hname, fFunctions);
 
    // save attributes
    SaveFillAttributes(out,hname,0,1001);
@@ -7464,6 +7440,40 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
    if (!opt.Contains("nodraw")) {
       out<<"   "<<hname<<"->Draw("
          <<quote<<option<<quote<<");"<<std::endl;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save list of functions
+/// Also can be used by TGraph classes
+
+void TH1::SavePrimitiveFunctions(std::ostream &out, const char *varname, TList *lst)
+{
+   thread_local Int_t funcNumber = 0;
+
+   TObjLink *lnk = lst ? lst->FirstLink() : nullptr;
+   while (lnk) {
+      auto obj = lnk->GetObject();
+      obj->SavePrimitive(out, TString::Format("nodraw #%d\n", ++funcNumber).Data());
+      TString objvarname = obj->GetName();
+      Bool_t withopt = kTRUE;
+      if (obj->InheritsFrom(TF1::Class())) {
+         objvarname += funcNumber;
+         out << "   " << objvarname << "->SetParent(" << varname << ");\n";
+      } else if (obj->InheritsFrom("TPaveStats")) {
+         objvarname = "ptstats";
+         withopt = kFALSE; // pave stats preserve own draw options
+         out << "   " << objvarname << "->SetParent(" << varname << ");\n";
+      } else if (obj->InheritsFrom("TPolyMarker")) {
+         objvarname = "pmarker";
+      }
+
+      out << "   " << varname << "->GetListOfFunctions()->Add(" << objvarname;
+      if (withopt)
+         out << ",\"" << TString(lnk->GetOption()).ReplaceSpecialCppChars() << "\"";
+      out << ");\n";
+
+      lnk = lnk->Next();
    }
 }
 

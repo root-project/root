@@ -2181,21 +2181,7 @@ void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, O
       fHistogram->SetName(hname.Data());
    }
 
-   // save list of functions
-   TIter next(fFunctions);
-   while (auto obj = next()) {
-      obj->SavePrimitive(out, TString::Format("nodraw #%d\n", ++frameNumber).Data());
-      if (obj->InheritsFrom("TPaveStats")) {
-         out << "   "<<varname<<"->GetListOfFunctions()->Add(ptstats);" << std::endl;
-         out << "   ptstats->SetParent("<<varname<<"->GetListOfFunctions());" << std::endl;
-      } else {
-         auto objname = TString::Format("%s%d", obj->GetName(), frameNumber);
-         if (obj->InheritsFrom("TF1")) {
-            out << "   " << objname << "->SetParent("<<varname<<");\n";
-         }
-         out << "   "<<varname<<"->GetListOfFunctions()->Add(" << objname << ");" << std::endl;
-      }
-   }
+   TH1::SavePrimitiveFunctions(out, varname, fFunctions);
 
    const char *soption = option ? option : "";
    const char *l = strstr(soption, "multigraph");
