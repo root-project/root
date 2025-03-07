@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <ROOT/TestSupport.hxx>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -281,4 +282,23 @@ TEST(RReader, MulticlassComputeDataFrame)
    auto c = df3.Count();
    auto y = df2.Take<std::vector<float>>("y");
    EXPECT_EQ(y->size(), *c);
+}
+
+// https://its.cern.ch/jira/browse/ROOT-9833
+// https://its.cern.ch/jira/browse/ROOT-10018
+TEST(RReader, DataLoaderUndefinedVariables)
+{
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   diagRAII.requiredDiag(kError, "TMVA::DataLoader::AddEvent",
+      "Number of variables defined through DataLoader::AddVariable (0) is inconsistent with number of variables given to DataLoader::Add*Event (2)."
+      " Please check your variable definitions and statement ordering. This event will not be added.");
+   diagRAII.requiredDiag(kError, "TMVA::DataLoader::AddEvent",
+      "Number of variables defined through DataLoader::AddVariable (0) is inconsistent with number of variables given to DataLoader::Add*Event (1)."
+      " Please check your variable definitions and statement ordering. This event will not be added.");
+   
+   std::vector<double> evData = {1, 2};
+   TMVA::DataLoader dl;
+   dl.AddEvent("class1", TMVA::Types::kTraining, evData, 1.0);
+   TMVA::DataLoader d("dataset");
+   d.AddSignalTrainingEvent({0.0}, 1.0);
 }
