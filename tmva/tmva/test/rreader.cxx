@@ -1,11 +1,9 @@
 #include <gtest/gtest.h>
-#include <stdexcept>
 
 #include <TFile.h>
 #include <TTree.h>
 #include <TROOT.h>
 #include <TSystem.h>
-#include <TError.h>
 #include <TMVA/Factory.h>
 #include <TMVA/DataLoader.h>
 
