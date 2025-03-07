@@ -25,10 +25,8 @@
 #include <vector>
 
 // Import classes from experimental namespace for the time being
-using ROOT::Experimental::NTupleSize_t;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleParallelWriter;
-using ROOT::Experimental::RNTupleWriteOptions;
 
 // Where to store the ntuple of this example
 constexpr char const *kNTupleFileName = "ntpl013_staged.root";
@@ -48,7 +46,7 @@ void FillData(int id, RNTupleParallelWriter *writer)
    // static variables that are shared between threads; this is done for simplicity in this tutorial, use proper data
    // structures in real code!
    static std::mutex g_Mutex;
-   static NTupleSize_t g_WrittenEntries = 0;
+   static ROOT::NTupleSize_t g_WrittenEntries = 0;
 
    using generator = std::mt19937;
    generator gen;
@@ -98,7 +96,7 @@ void Write()
    // This is for demonstration purposes only to have multiple clusters per
    // thread that are implicitly flushed, and should not be copied into real
    // code!
-   RNTupleWriteOptions options;
+   ROOT::RNTupleWriteOptions options;
    options.SetApproxZippedClusterSize(32'000);
 
    // We hand over the data model to a newly created ntuple of name "NTuple", stored in kNTupleFileName
@@ -119,7 +117,7 @@ void FillDataInBlocks(int id, RNTupleParallelWriter *writer)
    // static variables that are shared between threads; this is done for simplicity in this tutorial, use proper data
    // structures in real code!
    static std::mutex g_Mutex;
-   static NTupleSize_t g_WrittenEntries = 0;
+   static ROOT::NTupleSize_t g_WrittenEntries = 0;
 
    using generator = std::mt19937;
    generator gen;
@@ -188,7 +186,7 @@ void WriteInBlocks()
    // thread and also per block that are implicitly flushed, and can be mixed
    // with explicit calls to FlushCluster(). This should not be copied into real
    // code!
-   RNTupleWriteOptions options;
+   ROOT::RNTupleWriteOptions options;
    options.SetApproxZippedClusterSize(32'000);
 
    // We hand over the data model to a newly created ntuple of name "NTuple", stored in kNTupleFileName
