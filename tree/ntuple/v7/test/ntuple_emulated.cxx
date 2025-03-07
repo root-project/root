@@ -74,9 +74,9 @@ struct Outer_Simple {
       const auto &outer = model->GetConstField("f");
       ASSERT_EQ(outer.GetTypeName(), "Outer_Simple");
       ASSERT_EQ(outer.GetStructure(), ROOT::ENTupleStructure::kRecord);
-      ASSERT_EQ(outer.GetSubFields().size(), 2);
+      ASSERT_EQ(outer.GetConstSubfields().size(), 2);
 
-      const auto subfields = outer.GetSubFields();
+      const auto subfields = outer.GetConstSubfields();
       ASSERT_EQ(subfields[0]->GetFieldName(), "fInt1");
 
       const auto *inner = subfields[1];
@@ -84,8 +84,8 @@ struct Outer_Simple {
       ASSERT_EQ(inner->GetFieldName(), "fInner");
       ASSERT_EQ(inner->GetStructure(), ROOT::ENTupleStructure::kRecord);
       ASSERT_NE(inner->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
-      ASSERT_EQ(inner->GetSubFields().size(), 2);
-      ASSERT_EQ(inner->GetSubFields()[0]->GetFieldName(), "fInt1");
+      ASSERT_EQ(inner->GetConstSubfields().size(), 2);
+      ASSERT_EQ(inner->GetConstSubfields()[0]->GetFieldName(), "fInt1");
    }
 
    // Now test loading entries with a reader.
@@ -176,30 +176,30 @@ struct Outer_Vecs {
       const auto &outers = model->GetConstField("outers");
       ASSERT_EQ(outers.GetTypeName(), "std::vector<Outer_Vecs>");
       ASSERT_EQ(outers.GetStructure(), ROOT::ENTupleStructure::kCollection);
-      ASSERT_EQ(outers.GetSubFields().size(), 1);
+      ASSERT_EQ(outers.GetConstSubfields().size(), 1);
 
-      const auto subfields = outers.GetSubFields();
+      const auto subfields = outers.GetConstSubfields();
       const auto *outer = subfields[0];
       ASSERT_EQ(outer->GetTypeName(), "Outer_Vecs");
       ASSERT_EQ(outer->GetStructure(), ROOT::ENTupleStructure::kRecord);
       ASSERT_NE(outer->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
 
-      const auto outersubfields = outer->GetSubFields();
+      const auto outersubfields = outer->GetConstSubfields();
       ASSERT_EQ(outersubfields.size(), 3);
 
       const auto *inners = outersubfields[0];
       ASSERT_EQ(inners->GetTypeName(), "std::vector<Inner_Vecs>");
       ASSERT_EQ(inners->GetFieldName(), "fInners");
       ASSERT_EQ(inners->GetStructure(), ROOT::ENTupleStructure::kCollection);
-      ASSERT_EQ(inners->GetSubFields().size(), 1);
-      ASSERT_EQ(inners->GetSubFields()[0]->GetFieldName(), "_0");
+      ASSERT_EQ(inners->GetConstSubfields().size(), 1);
+      ASSERT_EQ(inners->GetConstSubfields()[0]->GetFieldName(), "_0");
 
-      const auto innersubfields = inners->GetSubFields();
+      const auto innersubfields = inners->GetConstSubfields();
       const auto *inner = innersubfields[0];
       ASSERT_EQ(inner->GetTypeName(), "Inner_Vecs");
       ASSERT_EQ(inner->GetStructure(), ROOT::ENTupleStructure::kRecord);
-      ASSERT_EQ(inner->GetSubFields().size(), 1);
-      ASSERT_EQ(inner->GetSubFields()[0]->GetFieldName(), "fFlt");
+      ASSERT_EQ(inner->GetConstSubfields().size(), 1);
+      ASSERT_EQ(inner->GetConstSubfields()[0]->GetFieldName(), "fFlt");
    }
 
    // Now test loading entries with a reader
@@ -262,15 +262,15 @@ struct TemplatedWrapper {
       const auto &vecField = model->GetConstField("vec");
       ASSERT_EQ(vecField.GetTypeName(), "std::vector<TemplatedWrapper<float>>");
       ASSERT_EQ(vecField.GetStructure(), ROOT::ENTupleStructure::kCollection);
-      ASSERT_EQ(vecField.GetSubFields().size(), 1);
+      ASSERT_EQ(vecField.GetConstSubfields().size(), 1);
 
-      const auto *wrapperField = vecField.GetSubFields()[0];
+      const auto *wrapperField = vecField.GetConstSubfields()[0];
       ASSERT_EQ(wrapperField->GetTypeName(), "TemplatedWrapper<float>");
       ASSERT_EQ(wrapperField->GetStructure(), ROOT::ENTupleStructure::kRecord);
       ASSERT_NE(wrapperField->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
-      ASSERT_EQ(wrapperField->GetSubFields().size(), 1);
+      ASSERT_EQ(wrapperField->GetConstSubfields().size(), 1);
 
-      const auto *innerField = wrapperField->GetSubFields()[0];
+      const auto *innerField = wrapperField->GetConstSubfields()[0];
       ASSERT_EQ(innerField->GetTypeName(), "float");
       ASSERT_EQ(innerField->GetFieldName(), "fValue");
       ASSERT_EQ(innerField->GetStructure(), ROOT::ENTupleStructure::kLeaf);
@@ -341,15 +341,15 @@ struct Outer_EmptyStruct {
       const auto &outer = model->GetConstField("f");
       ASSERT_EQ(outer.GetTypeName(), "Outer_EmptyStruct");
       ASSERT_EQ(outer.GetStructure(), ROOT::ENTupleStructure::kRecord);
-      ASSERT_EQ(outer.GetSubFields().size(), 1);
+      ASSERT_EQ(outer.GetConstSubfields().size(), 1);
 
-      const auto subfields = outer.GetSubFields();
+      const auto subfields = outer.GetConstSubfields();
       const auto *inner = subfields[0];
       ASSERT_EQ(inner->GetTypeName(), "Inner_EmptyStruct");
       ASSERT_EQ(inner->GetFieldName(), "fInner");
       ASSERT_EQ(inner->GetStructure(), ROOT::ENTupleStructure::kRecord);
       ASSERT_NE(inner->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
-      ASSERT_EQ(inner->GetSubFields().size(), 0);
+      ASSERT_EQ(inner->GetConstSubfields().size(), 0);
    }
 
    // Now test loading entries with a reader
@@ -419,16 +419,16 @@ struct Inner_EmptyVec {
       const auto &outer = model->GetConstField("f");
       ASSERT_EQ(outer.GetTypeName(), "std::vector<Inner_EmptyVec>");
       ASSERT_EQ(outer.GetStructure(), ROOT::ENTupleStructure::kCollection);
-      ASSERT_EQ(outer.GetSubFields().size(), 1);
+      ASSERT_EQ(outer.GetConstSubfields().size(), 1);
       ASSERT_EQ(outer.GetTraits() & RFieldBase::kTraitEmulatedField, 0);
 
-      const auto subfields = outer.GetSubFields();
+      const auto subfields = outer.GetConstSubfields();
       const auto *inner = subfields[0];
       ASSERT_EQ(inner->GetTypeName(), "Inner_EmptyVec");
       ASSERT_EQ(inner->GetFieldName(), "_0");
       ASSERT_EQ(inner->GetStructure(), ROOT::ENTupleStructure::kRecord);
       ASSERT_NE(inner->GetTraits() & RFieldBase::kTraitEmulatedField, 0);
-      ASSERT_EQ(inner->GetSubFields().size(), 0);
+      ASSERT_EQ(inner->GetConstSubfields().size(), 0);
    }
 
    // Now test loading entries with a reader

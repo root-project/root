@@ -143,7 +143,7 @@ void ROOT::Experimental::RNTupleImporter::ReportSchema()
    for (const auto &f : fImportFields) {
       std::cout << "Importing '" << f.fField->GetFieldName() << "' [" << f.fField->GetTypeName() << "]\n";
    }
-   for (const auto &f : Internal::GetProjectedFieldsOfModel(*fModel).GetFieldZero().GetSubFields()) {
+   for (const auto &f : Internal::GetProjectedFieldsOfModel(*fModel).GetFieldZero().GetConstSubfields()) {
       std::cout << "Importing (projected) '" << f->GetFieldName() << "' [" << f->GetTypeName() << "]\n";
    }
 }
@@ -323,7 +323,7 @@ ROOT::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSchema()
       fModel->AddField(std::move(collectionField));
 
       // Add projected fields for all leaf count arrays
-      for (const auto leaf : c.fRecordField->GetSubFields()) {
+      for (const auto leaf : c.fRecordField->GetConstSubfields()) {
          const auto name = leaf->GetFieldName();
          auto projectedField = RFieldBase::Create(name, "ROOT::VecOps::RVec<" + leaf->GetTypeName() + ">").Unwrap();
          fModel->AddProjectedField(std::move(projectedField), [&name, &c](const std::string &fieldName) {
@@ -403,10 +403,10 @@ void ROOT::Experimental::RNTupleImporter::Import()
          const auto sizeOfRecord = c.fRecordField->GetValueSize();
          c.fFieldBuffer.resize(sizeOfRecord * (*c.fCountVal));
 
-         const auto nLeafs = c.fRecordField->GetSubFields().size();
+         const auto nLeafs = c.fRecordField->GetConstSubfields().size();
          for (std::size_t l = 0; l < nLeafs; ++l) {
             const auto offset = c.fRecordField->GetOffsets()[l];
-            const auto sizeOfLeaf = c.fRecordField->GetSubFields()[l]->GetValueSize();
+            const auto sizeOfLeaf = c.fRecordField->GetConstSubfields()[l]->GetValueSize();
             const auto idxImportBranch = c.fLeafBranchIndexes[l];
             for (Int_t j = 0; j < *c.fCountVal; ++j) {
                memcpy(c.fFieldBuffer.data() + j * sizeOfRecord + offset,

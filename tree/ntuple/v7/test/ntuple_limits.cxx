@@ -40,7 +40,7 @@ TEST(RNTuple, Limits_ManyFields)
    const auto &model = reader->GetModel();
 
    EXPECT_EQ(descriptor.GetNFields(), 1 + NumFields);
-   EXPECT_EQ(model.GetConstFieldZero().GetSubFields().size(), NumFields);
+   EXPECT_EQ(model.GetConstFieldZero().GetConstSubfields().size(), NumFields);
    EXPECT_EQ(reader->GetNEntries(), 1);
 
    reader->LoadEntry(0);
