@@ -121,7 +121,7 @@ ROOT::Experimental::RNTupleParallelWriter::RNTupleParallelWriter(std::unique_ptr
                                                                  std::unique_ptr<Internal::RPageSink> sink)
    : fSink(std::move(sink)), fModel(std::move(model)), fMetrics("RNTupleParallelWriter")
 {
-   if (fModel->GetRegisteredSubfields().size() > 0) {
+   if (fModel->GetRegisteredSubfieldNames().size() > 0) {
       throw RException(R__FAIL("cannot create an RNTupleParallelWriter from a model with registered subfields"));
    }
    fModel->Freeze();
