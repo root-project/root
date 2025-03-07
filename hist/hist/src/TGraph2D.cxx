@@ -1421,6 +1421,19 @@ TH1 *TGraph2D::Project(Option_t *option) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Recursively remove object from the list of functions
+
+void TGraph2D::RecursiveRemove(TObject *obj)
+{
+   if (fFunctions) {
+      if (!fFunctions->TestBit(kInvalidObject))
+         fFunctions->RecursiveRemove(obj);
+   }
+   if (fHistogram == obj)
+      fHistogram = nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Deletes point number ipoint
 
 Int_t TGraph2D::RemovePoint(Int_t ipoint)
