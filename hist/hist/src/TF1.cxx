@@ -3214,8 +3214,7 @@ void TF1::Save(Double_t xmin, Double_t xmax, Double_t, Double_t, Double_t, Doubl
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Start saving function as primitive
-/// Declare variable in stream according to provided draw options
+/// Provide variable name for function for saving as primitive
 /// When TH1 or TGraph stores list of functions, it applies special coding of created variable names
 
 TString TF1::ProvideSaveName(Option_t *option)
@@ -3228,7 +3227,7 @@ TString TF1::ProvideSaveName(Option_t *option)
       sscanf(l + 1, "%d", &number);
 
    funcName += number;
-   return funcName;
+   return gInterpreter->MapCppName(funcName);
 }
 
 

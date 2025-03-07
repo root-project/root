@@ -7459,6 +7459,7 @@ void TH1::SavePrimitiveFunctions(std::ostream &out, const char *varname, TList *
       Bool_t withopt = kTRUE;
       if (obj->InheritsFrom(TF1::Class())) {
          objvarname += funcNumber;
+         objvarname = gInterpreter->MapCppName(objvarname);
          out << "   " << objvarname << "->SetParent(" << varname << ");\n";
       } else if (obj->InheritsFrom("TPaveStats")) {
          objvarname = "ptstats";
