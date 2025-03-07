@@ -16,11 +16,11 @@
 
 ROOT::Experimental::RArrayField::RArrayField(std::string_view fieldName, std::unique_ptr<RFieldBase> itemField,
                                              std::size_t arrayLength)
-   : ROOT::Experimental::RFieldBase(fieldName,
-                                    "std::array<" + itemField->GetTypeName() + "," +
-                                       Internal::GetNormalizedInteger(static_cast<unsigned long long>(arrayLength)) +
-                                       ">",
-                                    ROOT::ENTupleStructure::kLeaf, false /* isSimple */, arrayLength),
+   : ROOT::Experimental::RFieldBase(
+        fieldName,
+        "std::array<" + itemField->GetTypeName() + "," +
+           ROOT::Internal::GetNormalizedInteger(static_cast<unsigned long long>(arrayLength)) + ">",
+        ROOT::ENTupleStructure::kLeaf, false /* isSimple */, arrayLength),
      fItemSize(itemField->GetValueSize()),
      fArrayLength(arrayLength)
 {
