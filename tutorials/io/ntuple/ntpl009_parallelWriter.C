@@ -36,7 +36,6 @@
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleParallelWriter;
 using ROOT::Experimental::RNTupleReader;
-using ROOT::Experimental::RNTupleWriteOptions;
 
 // Where to store the ntuple of this example
 constexpr char const *kNTupleFileName = "ntpl009_parallelWriter.root";
@@ -98,7 +97,7 @@ void Write()
 
    // Create RNTupleWriteOptions to make the writing commit multiple clusters (so that "Entry Id vs Thread Id" shows the
    // interleaved clusters).
-   RNTupleWriteOptions options;
+   ROOT::RNTupleWriteOptions options;
    options.SetApproxZippedClusterSize(1024 * 1024);
 
    // We hand-over the data model to a newly created ntuple of name "NTuple", stored in kNTupleFileName
