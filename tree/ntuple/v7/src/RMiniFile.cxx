@@ -56,6 +56,7 @@
 #endif
 #endif /* R__LITTLE_ENDIAN */
 
+using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RNTupleCompressor;
 using ROOT::Internal::RNTupleDecompressor;
 

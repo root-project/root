@@ -44,7 +44,7 @@ namespace {
 using AttributeKey_t = ROOT::Experimental::Internal::RDaosContainer::AttributeKey_t;
 using DistributionKey_t = ROOT::Experimental::Internal::RDaosContainer::DistributionKey_t;
 using ntuple_index_t = ROOT::Experimental::Internal::ntuple_index_t;
-using ROOT::Experimental::Internal::MakeUninitArray;
+using ROOT::Internal::MakeUninitArray;
 using ROOT::Internal::RNTupleCompressor;
 using ROOT::Internal::RNTupleDecompressor;
 
