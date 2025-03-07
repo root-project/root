@@ -36,6 +36,10 @@ target_link_libraries(${libname} Core ${CMAKE_DL_LIBS})
 # cppyy uses ROOT headers from binary directory
 add_dependencies(${libname} move_headers)
 
+# Allows us to use CppInterOp's API
+add_dependencies(${libname} clangCppInterOp)
+target_include_directories(${libname} SYSTEM PRIVATE ${CPPINTEROP_INCLUDE_DIRS})
+
 set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${libname})
 
 # Install library
