@@ -13,7 +13,7 @@ TEST(RNTupleZip, Basics)
 
 TEST(RNTupleZip, Empty)
 {
-   char x;
+   char x = 0;
    char z;
    EXPECT_EQ(0U, RNTupleCompressor::Zip(&x, 0, 0, &z));
    EXPECT_EQ(0U, RNTupleCompressor::Zip(&x, 0, 101, &z));
