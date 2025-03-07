@@ -1481,7 +1481,7 @@ void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    SavePrimitiveConstructor(out, Class(), "graph2d",
                             TString::Format("%d, %s, %s, %s", fNpoints, arrx.Data(), arry.Data(), arrz.Data()), kFALSE);
 
-   out << "   graph2d->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");" << std::endl;
+   out << "   graph2d->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
 
    TString title = fTitle;
    if (fHistogram)
@@ -1499,7 +1499,8 @@ void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    TH1::SavePrimitiveFunctions(out, "graph2d", fFunctions);
 
-   out << "   graph2d->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+   if (!option || !strstr(option, "nodraw"))
+      out << "   graph2d->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
