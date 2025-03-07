@@ -23,12 +23,11 @@
 #include <functional>
 
 namespace ROOT {
-namespace Experimental {
 namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RPageAllocator
+\class ROOT::Internal::RPageAllocator
 \ingroup NTuple
 \brief Abstract interface to allocate and release pages
 
@@ -55,7 +54,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RPageAllocatorHeap
+\class ROOT::Internal::RPageAllocatorHeap
 \ingroup NTuple
 \brief Uses standard C++ memory allocation for the column data pages
 */
@@ -69,7 +68,6 @@ public:
 };
 
 } // namespace Internal
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

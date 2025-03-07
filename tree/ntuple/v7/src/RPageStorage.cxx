@@ -43,7 +43,7 @@
 #include <utility>
 
 ROOT::Experimental::Internal::RPageStorage::RPageStorage(std::string_view name)
-   : fMetrics(""), fPageAllocator(std::make_unique<RPageAllocatorHeap>()), fNTupleName(name)
+   : fMetrics(""), fPageAllocator(std::make_unique<ROOT::Internal::RPageAllocatorHeap>()), fNTupleName(name)
 {
 }
 
@@ -277,7 +277,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
             auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
                              &foundChecksumFailure,
                              indexOffset = clusterDescriptor.GetColumnRange(columnId).GetFirstElementIndex()]() {
-               const RPagePool::RKey keyPagePool{columnId, element->GetIdentifier().fInMemoryType};
+               const ROOT::Internal::RPagePool::RKey keyPagePool{columnId, element->GetIdentifier().fInMemoryType};
                auto rv = UnsealPage(sealedPage, *element);
                if (!rv) {
                   foundChecksumFailure = true;
@@ -286,7 +286,8 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
                auto newPage = rv.Unwrap();
                fCounters->fSzUnzip.Add(element->GetSize() * sealedPage.GetNElements());
 
-               newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
+               newPage.SetWindow(indexOffset + firstInPage,
+                                 ROOT::Internal::RPage::RClusterInfo(clusterId, indexOffset));
                fPagePool.PreloadPage(std::move(newPage), keyPagePool);
             };
 
@@ -323,9 +324,9 @@ void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
       ROOT::NTupleSize_t pageNo = 0;
       for (const auto &pageInfo : pageRange.fPageInfos) {
          if (pageInfo.GetLocator().GetType() == RNTupleLocator::kTypePageZero) {
-            pageZeroMap.Register(
-               ROnDiskPage::Key{physicalColumnId, pageNo},
-               ROnDiskPage(const_cast<void *>(RPage::GetPageZeroBuffer()), pageInfo.GetLocator().GetNBytesOnStorage()));
+            pageZeroMap.Register(ROnDiskPage::Key{physicalColumnId, pageNo},
+                                 ROnDiskPage(const_cast<void *>(ROOT::Internal::RPage::GetPageZeroBuffer()),
+                                             pageInfo.GetLocator().GetNBytesOnStorage()));
          } else {
             perPageFunc(physicalColumnId, pageNo, pageInfo);
          }
@@ -360,12 +361,13 @@ void ROOT::Experimental::Internal::RPageSource::UpdateLastUsedCluster(ROOT::Desc
    fLastUsedCluster = clusterId;
 }
 
-ROOT::Experimental::Internal::RPageRef
+ROOT::Internal::RPageRef
 ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, ROOT::NTupleSize_t globalIndex)
 {
    const auto columnId = columnHandle.fPhysicalId;
    const auto columnElementId = columnHandle.fColumn->GetElement()->GetIdentifier();
-   auto cachedPageRef = fPagePool.GetPage(RPagePool::RKey{columnId, columnElementId.fInMemoryType}, globalIndex);
+   auto cachedPageRef =
+      fPagePool.GetPage(ROOT::Internal::RPagePool::RKey{columnId, columnElementId.fInMemoryType}, globalIndex);
    if (!cachedPageRef.Get().IsNull()) {
       UpdateLastUsedCluster(cachedPageRef.Get().GetClusterInfo().GetId());
       return cachedPageRef;
@@ -383,7 +385,7 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterInfo.fClusterId);
       const auto &columnRange = clusterDescriptor.GetColumnRange(columnId);
       if (columnRange.IsSuppressed())
-         return RPageRef();
+         return ROOT::Internal::RPageRef();
 
       clusterInfo.fColumnOffset = columnRange.GetFirstElementIndex();
       R__ASSERT(clusterInfo.fColumnOffset <= globalIndex);
@@ -398,14 +400,15 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
    return LoadPageImpl(columnHandle, clusterInfo, idxInCluster);
 }
 
-ROOT::Experimental::Internal::RPageRef
+ROOT::Internal::RPageRef
 ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle, RNTupleLocalIndex localIndex)
 {
    const auto clusterId = localIndex.GetClusterId();
    const auto idxInCluster = localIndex.GetIndexInCluster();
    const auto columnId = columnHandle.fPhysicalId;
    const auto columnElementId = columnHandle.fColumn->GetElement()->GetIdentifier();
-   auto cachedPageRef = fPagePool.GetPage(RPagePool::RKey{columnId, columnElementId.fInMemoryType}, localIndex);
+   auto cachedPageRef =
+      fPagePool.GetPage(ROOT::Internal::RPagePool::RKey{columnId, columnElementId.fInMemoryType}, localIndex);
    if (!cachedPageRef.Get().IsNull()) {
       UpdateLastUsedCluster(clusterId);
       return cachedPageRef;
@@ -420,7 +423,7 @@ ROOT::Experimental::Internal::RPageSource::LoadPage(ColumnHandle_t columnHandle,
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
       const auto &columnRange = clusterDescriptor.GetColumnRange(columnId);
       if (columnRange.IsSuppressed())
-         return RPageRef();
+         return ROOT::Internal::RPageRef();
 
       clusterInfo.fClusterId = clusterId;
       clusterInfo.fColumnOffset = columnRange.GetFirstElementIndex();
@@ -529,19 +532,19 @@ void ROOT::Experimental::Internal::RPageSource::EnableDefaultMetrics(const std::
          })});
 }
 
-ROOT::RResult<ROOT::Experimental::Internal::RPage>
+ROOT::RResult<ROOT::Internal::RPage>
 ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element)
 {
    return UnsealPage(sealedPage, element, *fPageAllocator);
 }
 
-ROOT::RResult<ROOT::Experimental::Internal::RPage>
+ROOT::RResult<ROOT::Internal::RPage>
 ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element,
-                                                      RPageAllocator &pageAlloc)
+                                                      ROOT::Internal::RPageAllocator &pageAlloc)
 {
    // Unsealing a page zero is a no-op.  `RPageRange::ExtendToFitColumnRange()` guarantees that the page zero buffer is
    // large enough to hold `sealedPage.fNElements`
-   if (sealedPage.GetBuffer() == RPage::GetPageZeroBuffer()) {
+   if (sealedPage.GetBuffer() == ROOT::Internal::RPage::GetPageZeroBuffer()) {
       auto page = pageAlloc.NewPage(element.GetSize(), sealedPage.GetNElements());
       page.GrowUnchecked(sealedPage.GetNElements());
       memset(page.GetBuffer(), 0, page.GetNBytes());
@@ -709,7 +712,7 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RSealPageConfig &config)
 }
 
 ROOT::Experimental::Internal::RPageStorage::RSealedPage
-ROOT::Experimental::Internal::RPageSink::SealPage(const RPage &page, const RColumnElementBase &element)
+ROOT::Experimental::Internal::RPageSink::SealPage(const ROOT::Internal::RPage &page, const RColumnElementBase &element)
 {
    const auto nBytes = page.GetNBytes() + GetWriteOptions().GetEnablePageChecksums() * kNBytesPageChecksum;
    if (fSealPageBuffer.size() < nBytes)
@@ -733,14 +736,14 @@ void ROOT::Experimental::Internal::RPageSink::CommitDataset()
    CommitDatasetImpl();
 }
 
-ROOT::Experimental::Internal::RPage
+ROOT::Internal::RPage
 ROOT::Experimental::Internal::RPageSink::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
    R__ASSERT(nElements > 0);
    const auto elementSize = columnHandle.fColumn->GetElement()->GetSize();
    const auto nBytes = elementSize * nElements;
    if (!fWritePageMemoryManager.TryUpdate(*columnHandle.fColumn, nBytes))
-      return RPage();
+      return ROOT::Internal::RPage();
    return fPageAllocator->NewPage(elementSize, nElements);
 }
 
@@ -1000,7 +1003,8 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSuppressedColumn(C
    fOpenColumnRanges.at(columnHandle.fPhysicalId).SetIsSuppressed(true);
 }
 
-void ROOT::Experimental::Internal::RPagePersistentSink::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
+void ROOT::Experimental::Internal::RPagePersistentSink::CommitPage(ColumnHandle_t columnHandle,
+                                                                   const ROOT::Internal::RPage &page)
 {
    fOpenColumnRanges.at(columnHandle.fPhysicalId).IncrementNElements(page.GetNElements());
 
