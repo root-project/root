@@ -54,7 +54,6 @@ using ROOT::Experimental::RNTupleFillContext;
 using ROOT::Experimental::RNTupleFillStatus;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleParallelWriter;
-using ROOT::Experimental::RNTupleWriteOptions;
 using ROOT::Experimental::RNTupleWriter;
 
 using ModelTokensPair = std::pair<std::unique_ptr<RNTupleModel>, std::vector<REntry::RFieldToken>>;
@@ -106,7 +105,7 @@ class ParallelOutputter final : public Outputter {
 
 public:
    ParallelOutputter(ModelTokensPair modelTokens, FileService &fileService, std::string_view ntupleName,
-                     const RNTupleWriteOptions &options)
+                     const ROOT::RNTupleWriteOptions &options)
       : fFileService(fileService), fTokens(std::move(modelTokens.second))
    {
       auto &model = modelTokens.first;
@@ -172,7 +171,7 @@ class SerializingOutputter final : public Outputter {
 
 public:
    SerializingOutputter(ModelTokensPair modelTokens, FileService &fileService, std::string_view ntupleName,
-                        const RNTupleWriteOptions &options)
+                        const ROOT::RNTupleWriteOptions &options)
       : fFileService(fileService), fTokens(std::move(modelTokens.second))
    {
       auto &model = modelTokens.first;
@@ -387,7 +386,7 @@ void ntpl014_framework()
 {
    FileService fileService("ntpl014_framework.root", "RECREATE");
 
-   RNTupleWriteOptions options;
+   ROOT::RNTupleWriteOptions options;
    // Parallel writing requires buffered writing; force it on (even if it is the default).
    options.SetUseBufferedWrite(true);
    // For demonstration purposes, reduce the cluster size to 2 MiB.
