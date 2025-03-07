@@ -31,7 +31,6 @@ using ENTupleInfo = ROOT::Experimental::ENTupleInfo;
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
-using RNTupleWriteOptions = ROOT::Experimental::RNTupleWriteOptions;
 
 constexpr char const* kNTupleFileName = "ntpl005_introspection.root";
 
@@ -61,7 +60,7 @@ void Generate()
    auto fldVector3 = model->MakeField<Vector3>("v3");
 
    // Explicitly enforce a certain compression algorithm
-   RNTupleWriteOptions options;
+   ROOT::RNTupleWriteOptions options;
    options.SetCompression(ROOT::RCompressionSetting::EDefaults::kUseGeneralPurpose);
 
    auto ntuple = RNTupleWriter::Recreate(std::move(model), "Vector3", kNTupleFileName, options);
