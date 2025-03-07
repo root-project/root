@@ -1692,8 +1692,8 @@ TEST(RNTuple, HalfPrecisionFloat)
    EXPECT_EQ("float", f1Fld->GetTypeName());
 
    auto fVecFld = RFieldBase::Create("fVec", "std::vector<float>").Unwrap();
-   dynamic_cast<RField<float> *>(fVecFld->GetSubFields()[0])->SetHalfPrecision();
-   EXPECT_EQ(ROOT::ENTupleColumnType::kReal16, fVecFld->GetSubFields()[0]->GetColumnRepresentatives()[0][0]);
+   dynamic_cast<RField<float> *>(fVecFld->GetMutableSubfields()[0])->SetHalfPrecision();
+   EXPECT_EQ(ROOT::ENTupleColumnType::kReal16, fVecFld->GetConstSubfields()[0]->GetColumnRepresentatives()[0][0]);
 
    auto model = RNTupleModel::Create();
    model->AddField(std::move(f1Fld));
@@ -1830,9 +1830,9 @@ TEST(RNTuple, Double32Extended)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    auto obj = reader->GetModel().GetDefaultEntry().GetPtr<LowPrecisionFloats>("obj");
-   EXPECT_EQ("Double32_t", reader->GetModel().GetConstField("obj").GetSubFields()[1]->GetTypeAlias());
+   EXPECT_EQ("Double32_t", reader->GetModel().GetConstField("obj").GetConstSubfields()[1]->GetTypeAlias());
    EXPECT_EQ("Double32_t",
-             reader->GetModel().GetConstField("obj").GetSubFields()[2]->GetSubFields()[0]->GetTypeAlias());
+             reader->GetModel().GetConstField("obj").GetConstSubfields()[2]->GetConstSubfields()[0]->GetTypeAlias());
    EXPECT_DOUBLE_EQ(0.0, obj->a);
    EXPECT_DOUBLE_EQ(1.0, obj->b);
    EXPECT_DOUBLE_EQ(2.0, obj->c[0]);

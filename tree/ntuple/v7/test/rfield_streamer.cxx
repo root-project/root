@@ -107,7 +107,7 @@ TEST(RField, IgnoreUnsplitComment)
    auto fieldClass = RFieldBase::Create("f", "IgnoreUnsplitComment").Unwrap();
 
    // Only one member, so we know that it is first sub field
-   const auto fieldMember = fieldClass->GetSubFields()[0];
+   const auto fieldMember = fieldClass->GetConstSubfields()[0];
    EXPECT_EQ(std::string("v"), fieldMember->GetFieldName());
    EXPECT_EQ(nullptr, dynamic_cast<const ROOT::Experimental::RStreamerField *>(fieldMember));
 }
