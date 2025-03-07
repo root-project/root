@@ -12,7 +12,7 @@ TEST(RField, StreamerDirect)
    FileRaii fileGuard("test_ntuple_rfield_streamer_direct.root");
    {
       auto model = RNTupleModel::Create();
-      model->AddField(std::make_unique<ROOT::Experimental::RStreamerField>("pt", "std::vector<float>"));
+      model->AddField(std::make_unique<ROOT::RStreamerField>("pt", "std::vector<float>"));
       auto ptrPt = model->GetDefaultEntry().GetPtr<std::vector<float>>("pt");
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       ptrPt->push_back(1.0);
@@ -92,14 +92,14 @@ TEST(RField, ForceNativeMode)
    ASSERT_TRUE(cl != nullptr);
    EXPECT_TRUE(cl->CanSplit());
    auto f = RFieldBase::Create("f", "CustomStreamerForceStreamed").Unwrap();
-   EXPECT_TRUE(dynamic_cast<ROOT::Experimental::RStreamerField *>(f.get()) != nullptr);
+   EXPECT_TRUE(dynamic_cast<ROOT::RStreamerField *>(f.get()) != nullptr);
 
    // "Force Streamed" attribute set by selection XML
    cl = TClass::GetClass("ForceStreamedXML");
    ASSERT_TRUE(cl != nullptr);
    EXPECT_TRUE(cl->CanSplit());
    f = RFieldBase::Create("f", "ForceStreamedXML").Unwrap();
-   EXPECT_TRUE(dynamic_cast<ROOT::Experimental::RStreamerField *>(f.get()) != nullptr);
+   EXPECT_TRUE(dynamic_cast<ROOT::RStreamerField *>(f.get()) != nullptr);
 }
 
 TEST(RField, IgnoreUnsplitComment)
@@ -109,12 +109,12 @@ TEST(RField, IgnoreUnsplitComment)
    // Only one member, so we know that it is first sub field
    const auto fieldMember = fieldClass->GetConstSubfields()[0];
    EXPECT_EQ(std::string("v"), fieldMember->GetFieldName());
-   EXPECT_EQ(nullptr, dynamic_cast<const ROOT::Experimental::RStreamerField *>(fieldMember));
+   EXPECT_EQ(nullptr, dynamic_cast<const ROOT::RStreamerField *>(fieldMember));
 }
 
 TEST(RField, UnsupportedStreamed)
 {
-   using ROOT::Experimental::RStreamerField;
+   using ROOT::RStreamerField;
    auto success = std::make_unique<RStreamerField>("name", "std::vector<int>");
    EXPECT_THROW(RStreamerField("name", "int"), ROOT::RException); // no TClass of fundamental types
 

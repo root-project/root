@@ -10,10 +10,10 @@
 #include "ntupleutil_test.hxx"
 
 using ROOT::ENTupleColumnType;
+using ROOT::RField;
+using ROOT::RFieldBase;
 using ROOT::RNTuple;
 using ROOT::RNTupleWriteOptions;
-using ROOT::Experimental::RField;
-using ROOT::Experimental::RFieldBase;
 using ROOT::Experimental::RNTupleInspector;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::RNTupleWriter;
@@ -800,7 +800,7 @@ TEST(RNTupleInspector, MultiColumnRepresentations)
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("px")), 1);
       writer->Fill();
    }

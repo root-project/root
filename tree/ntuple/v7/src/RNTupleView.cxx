@@ -20,7 +20,7 @@
 #include <ROOT/RPageStorage.hxx>
 
 ROOT::RNTupleGlobalRange
-ROOT::Experimental::Internal::GetFieldRange(const RFieldBase &field, const RPageSource &pageSource)
+ROOT::Experimental::Internal::GetFieldRange(const ROOT::RFieldBase &field, const RPageSource &pageSource)
 {
    const auto &desc = pageSource.GetSharedDescriptorGuard().GetRef();
 

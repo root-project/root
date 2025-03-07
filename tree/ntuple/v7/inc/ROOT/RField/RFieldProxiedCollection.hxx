@@ -42,6 +42,8 @@ namespace Detail {
 class RFieldVisitor;
 } // namespace Detail
 
+} // namespace Experimental
+
 /// The field for a class representing a collection of elements via `TVirtualCollectionProxy`.
 /// Objects of such type behave as collections that can be accessed through the corresponding member functions in
 /// `TVirtualCollectionProxy`. For STL collections, these proxies are provided. Custom classes need to implement the
@@ -163,7 +165,7 @@ protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
+   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final;
@@ -182,7 +184,7 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return fProxy->Sizeof(); }
    size_t GetAlignment() const final { return alignof(std::max_align_t); }
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   void AcceptVisitor(ROOT::Experimental::Detail::RFieldVisitor &visitor) const final;
    void
    GetCollectionInfo(ROOT::NTupleSize_t globalIndex, RNTupleLocalIndex *collectionStart, ROOT::NTupleSize_t *size) const
    {
@@ -414,7 +416,15 @@ public:
    ~RField() final = default;
 };
 
+namespace Experimental {
+// TODO(gparolini): remove before branching ROOT v6.36
+using RSetField [[deprecated("ROOT::Experimental::RSetField moved to ROOT::RSetField")]] = ROOT::RSetField;
+using RMapField [[deprecated("ROOT::Experimental::RMapField moved to ROOT::RMapField")]] = ROOT::RMapField;
+using RProxiedCollectionField
+   [[deprecated("ROOT::Experimental::RProxiedCollectionField moved to ROOT::RProxiedCollectionField")]] =
+      ROOT::RProxiedCollectionField;
 } // namespace Experimental
+
 } // namespace ROOT
 
 #endif

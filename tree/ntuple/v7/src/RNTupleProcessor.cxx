@@ -165,7 +165,7 @@ void ROOT::Experimental::RNTupleProcessor::ConnectField(RFieldContext &fieldCont
 
    fieldContext.SetConcreteField();
    fieldContext.fConcreteField->SetOnDiskId(fieldId);
-   Internal::CallConnectPageSourceOnField(*fieldContext.fConcreteField, pageSource);
+   ROOT::Internal::CallConnectPageSourceOnField(*fieldContext.fConcreteField, pageSource);
 
    auto valuePtr = entry.GetPtr<void>(fieldContext.fToken);
    auto value = fieldContext.fConcreteField->BindValue(valuePtr);
@@ -416,15 +416,15 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpe
    // subfields to the join model. This way they can be accessed through the processor as `auxNTupleName.fieldName`,
    // which is necessary in case there are duplicate field names between the main ntuple and (any of the) auxiliary
    // ntuples.
-   std::vector<std::unique_ptr<RFieldBase>> auxFields;
+   std::vector<std::unique_ptr<ROOT::RFieldBase>> auxFields;
    auxFields.reserve(entry->fValues.size());
    for (const auto &val : *entry) {
       auto &field = val.GetField();
 
       auxFields.emplace_back(field.Clone(field.GetQualifiedFieldName()));
    }
-   std::unique_ptr<RFieldBase> auxParentField =
-      std::make_unique<RRecordField>(auxNTuple.fNTupleName, std::move(auxFields));
+   std::unique_ptr<ROOT::RFieldBase> auxParentField =
+      std::make_unique<ROOT::RRecordField>(auxNTuple.fNTupleName, std::move(auxFields));
 
    if (!auxParentField) {
       throw RException(R__FAIL("could not create auxiliary RNTuple parent field"));
@@ -558,7 +558,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
       if (auxEntryIdxs[fieldContext.fNTupleIdx - 1] == ROOT::kInvalidNTupleIndex) {
          // No matching entry exists, so we reset the field's value to a default value.
          // TODO(fdegeus): further consolidate how non-existing join matches should be handled. N.B.: in case
-         // ConstructValue is not used anymore in the future, remove friend in RFieldBase.
+         // ConstructValue is not used anymore in the future, remove friend in ROOT::RFieldBase.
          fieldContext.fProtoField->ConstructValue(value.GetPtr<void>().get());
       } else {
          value.Read(auxEntryIdxs[fieldContext.fNTupleIdx - 1]);

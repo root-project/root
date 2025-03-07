@@ -114,7 +114,7 @@ public:
 };
 } // namespace
 
-namespace ROOT::Experimental {
+namespace ROOT {
 template <>
 struct IsCollectionProxy<StructUsingCollectionProxy<char>> : std::true_type {
 };
@@ -130,6 +130,6 @@ struct IsCollectionProxy<StructUsingCollectionProxy<StructUsingCollectionProxy<f
 };
 
 // Intentionally omit `IsCollectionProxy<StructUsingCollectionProxy<int>>`
-} // namespace ROOT::Experimental
+} // namespace ROOT
 
 #endif

@@ -813,7 +813,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
    if (descriptor.GetNLogicalColumns() > descriptor.GetNPhysicalColumns()) {
       // If we already have alias columns, add an offset to the alias columns so that the new physical columns
       // of the changeset follow immediately the already existing physical columns
-      auto getNColumns = [](const RFieldBase &f) -> std::size_t {
+      auto getNColumns = [](const ROOT::RFieldBase &f) -> std::size_t {
          const auto &reps = f.GetColumnRepresentatives();
          if (reps.empty())
             return 0;
@@ -828,14 +828,14 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
       fDescriptorBuilder.ShiftAliasColumns(nNewPhysicalColumns);
    }
 
-   auto addField = [&](RFieldBase &f) {
+   auto addField = [&](ROOT::RFieldBase &f) {
       auto fieldId = descriptor.GetNFields();
       fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
       fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
       f.SetOnDiskId(fieldId);
-      CallConnectPageSinkOnField(f, *this, firstEntry); // issues in turn calls to `AddColumn()`
+      ROOT::Internal::CallConnectPageSinkOnField(f, *this, firstEntry); // issues in turn calls to `AddColumn()`
    };
-   auto addProjectedField = [&](RFieldBase &f) {
+   auto addProjectedField = [&](ROOT::RFieldBase &f) {
       auto fieldId = descriptor.GetNFields();
       auto sourceFieldId = GetProjectedFieldsOfModel(changeset.fModel).GetSourceField(&f)->GetOnDiskId();
       fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());

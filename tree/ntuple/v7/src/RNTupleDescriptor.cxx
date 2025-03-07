@@ -65,12 +65,12 @@ ROOT::Experimental::RFieldDescriptor ROOT::Experimental::RFieldDescriptor::Clone
    return clone;
 }
 
-std::unique_ptr<ROOT::Experimental::RFieldBase>
+std::unique_ptr<ROOT::RFieldBase>
 ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc,
                                                   const ROOT::RCreateFieldOptions &options) const
 {
    if (GetStructure() == ROOT::ENTupleStructure::kStreamer) {
-      auto streamerField = std::make_unique<RStreamerField>(GetFieldName(), GetTypeName());
+      auto streamerField = std::make_unique<ROOT::RStreamerField>(GetFieldName(), GetTypeName());
       streamerField->SetOnDiskId(fFieldId);
       return streamerField;
    }
@@ -79,8 +79,8 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
    // For forward compatibility, we allow this case and return an InvalidField.
    if (GetStructure() == ROOT::ENTupleStructure::kUnknown) {
       if (options.GetReturnInvalidOnError()) {
-         auto invalidField = std::make_unique<RInvalidField>(GetFieldName(), GetTypeName(), "",
-                                                             RInvalidField::RCategory::kUnknownStructure);
+         auto invalidField = std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), "",
+                                                                   ROOT::RInvalidField::RCategory::kUnknownStructure);
          invalidField->SetOnDiskId(fFieldId);
          return invalidField;
       } else {
@@ -91,16 +91,16 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
    if (GetTypeName().empty()) {
       switch (GetStructure()) {
       case ROOT::ENTupleStructure::kRecord: {
-         std::vector<std::unique_ptr<RFieldBase>> memberFields;
+         std::vector<std::unique_ptr<ROOT::RFieldBase>> memberFields;
          memberFields.reserve(fLinkIds.size());
          for (auto id : fLinkIds) {
             const auto &memberDesc = ntplDesc.GetFieldDescriptor(id);
             auto field = memberDesc.CreateField(ntplDesc, options);
-            if (field->GetTraits() & RFieldBase::kTraitInvalidField)
+            if (field->GetTraits() & ROOT::RFieldBase::kTraitInvalidField)
                return field;
             memberFields.emplace_back(std::move(field));
          }
-         auto recordField = std::make_unique<RRecordField>(GetFieldName(), std::move(memberFields));
+         auto recordField = std::make_unique<ROOT::RRecordField>(GetFieldName(), std::move(memberFields));
          recordField->SetOnDiskId(fFieldId);
          return recordField;
       }
@@ -109,9 +109,9 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
             throw RException(R__FAIL("unsupported untyped collection for field \"" + GetFieldName() + "\""));
          }
          auto itemField = ntplDesc.GetFieldDescriptor(fLinkIds[0]).CreateField(ntplDesc, options);
-         if (itemField->GetTraits() & RFieldBase::kTraitInvalidField)
+         if (itemField->GetTraits() & ROOT::RFieldBase::kTraitInvalidField)
             return itemField;
-         auto collectionField = RVectorField::CreateUntyped(GetFieldName(), std::move(itemField));
+         auto collectionField = ROOT::RVectorField::CreateUntyped(GetFieldName(), std::move(itemField));
          collectionField->SetOnDiskId(fFieldId);
          return collectionField;
       }
@@ -125,14 +125,14 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
       // NOTE: Unwrap() here may throw an exception, hence the try block.
       // If options.fReturnInvalidOnError is false we just rethrow it, otherwise we return an InvalidField wrapping the
       // error.
-      auto field = Internal::CallFieldBaseCreate(fieldName, typeName, options, &ntplDesc, fFieldId).Unwrap();
+      auto field = ROOT::Internal::CallFieldBaseCreate(fieldName, typeName, options, &ntplDesc, fFieldId).Unwrap();
       field->SetOnDiskId(fFieldId);
 
       for (auto &subfield : *field) {
          const auto subfieldId = ntplDesc.FindFieldId(subfield.GetFieldName(), subfield.GetParent()->GetOnDiskId());
          subfield.SetOnDiskId(subfieldId);
-         if (subfield.GetTraits() & RFieldBase::kTraitInvalidField) {
-            auto &invalidField = static_cast<RInvalidField &>(subfield);
+         if (subfield.GetTraits() & ROOT::RFieldBase::kTraitInvalidField) {
+            auto &invalidField = static_cast<ROOT::RInvalidField &>(subfield);
             // A subfield being invalid "infects" its entire ancestry.
             return invalidField.Clone(fieldName);
          }
@@ -141,8 +141,8 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
       return field;
    } catch (RException &ex) {
       if (options.GetReturnInvalidOnError())
-         return std::make_unique<RInvalidField>(GetFieldName(), GetTypeName(), ex.GetError().GetReport(),
-                                                RInvalidField::RCategory::kGeneric);
+         return std::make_unique<ROOT::RInvalidField>(GetFieldName(), GetTypeName(), ex.GetError().GetReport(),
+                                                      ROOT::RInvalidField::RCategory::kGeneric);
       else
          throw ex;
    }
@@ -641,7 +641,7 @@ ROOT::RResult<void> ROOT::Experimental::RNTupleDescriptor::DropClusterGroupDetai
 std::unique_ptr<ROOT::Experimental::RNTupleModel>
 ROOT::Experimental::RNTupleDescriptor::CreateModel(const RCreateModelOptions &options) const
 {
-   auto fieldZero = std::make_unique<RFieldZero>();
+   auto fieldZero = std::make_unique<ROOT::RFieldZero>();
    fieldZero->SetOnDiskId(GetFieldZeroId());
    auto model = options.GetCreateBare() ? RNTupleModel::CreateBare(std::move(fieldZero))
                                         : RNTupleModel::Create(std::move(fieldZero));
@@ -650,7 +650,7 @@ ROOT::Experimental::RNTupleDescriptor::CreateModel(const RCreateModelOptions &op
    createFieldOpts.SetEmulateUnknownTypes(options.GetEmulateUnknownTypes());
    for (const auto &topDesc : GetTopLevelFields()) {
       auto field = topDesc.CreateField(*this, createFieldOpts);
-      if (field->GetTraits() & RFieldBase::kTraitInvalidField)
+      if (field->GetTraits() & ROOT::RFieldBase::kTraitInvalidField)
          continue;
 
       if (options.GetReconstructProjections() && topDesc.IsProjectedField()) {
@@ -846,8 +846,8 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges
                // number of elements should have been if the column was not deferred; fix those and let
                // `ExtendToFitColumnRange()` synthesize RPageInfos accordingly.
                // Note that a deferred column (i.e, whose first element index is > 0) already met the criteria of
-               // `RFieldBase::EntryToColumnElementIndex()`, i.e. it is a principal column reachable from the field zero
-               // excluding subfields of collection and variant fields.
+               // `ROOT::RFieldBase::EntryToColumnElementIndex()`, i.e. it is a principal column reachable from the
+               // field zero excluding subfields of collection and variant fields.
                if (c.IsDeferredColumn()) {
                   columnRange.SetFirstElementIndex(fCluster.GetFirstEntryIndex() * nRepetitions);
                   columnRange.SetNElements(fCluster.GetNEntries() * nRepetitions);
@@ -1037,7 +1037,7 @@ ROOT::Experimental::Internal::RFieldDescriptorBuilder::RFieldDescriptorBuilder(c
 }
 
 ROOT::Experimental::Internal::RFieldDescriptorBuilder
-ROOT::Experimental::Internal::RFieldDescriptorBuilder::FromField(const RFieldBase &field)
+ROOT::Experimental::Internal::RFieldDescriptorBuilder::FromField(const ROOT::RFieldBase &field)
 {
    RFieldDescriptorBuilder fieldDesc;
    fieldDesc.FieldVersion(field.GetFieldVersion())
@@ -1048,7 +1048,7 @@ ROOT::Experimental::Internal::RFieldDescriptorBuilder::FromField(const RFieldBas
       .TypeAlias(field.GetTypeAlias())
       .Structure(field.GetStructure())
       .NRepetitions(field.GetNRepetitions());
-   if (field.GetTraits() & RFieldBase::kTraitTypeChecksum)
+   if (field.GetTraits() & ROOT::RFieldBase::kTraitTypeChecksum)
       fieldDesc.TypeChecksum(field.GetTypeChecksum());
    return fieldDesc;
 }

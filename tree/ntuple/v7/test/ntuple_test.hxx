@@ -67,8 +67,8 @@ using RColumnSwitch = ROOT::Internal::RColumnSwitch;
 using ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder;
 using RFieldDescriptorBuilder = ROOT::Experimental::Internal::RFieldDescriptorBuilder;
 template <class T>
-using RField = ROOT::Experimental::RField<T>;
-using RFieldBase = ROOT::Experimental::RFieldBase;
+using RField = ROOT::RField<T>;
+using RFieldBase = ROOT::RFieldBase;
 using RFieldDescriptor = ROOT::Experimental::RFieldDescriptor;
 using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
 using RNTupleAtomicCounter = ROOT::Experimental::Detail::RNTupleAtomicCounter;

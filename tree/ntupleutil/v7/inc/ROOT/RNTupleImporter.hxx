@@ -103,7 +103,7 @@ Current limitations of the importer:
 class RNTupleImporter {
 public:
    /// Used to make adjustments to the fields of the output model.
-   using FieldModifier_t = std::function<void(RFieldBase &)>;
+   using FieldModifier_t = std::function<void(ROOT::RFieldBase &)>;
 
    /// Used to report every ~100 MB (compressed), and at the end about the status of the import.
    class RProgressCallback {
@@ -137,8 +137,8 @@ private:
       RImportField &operator=(RImportField &&other) = default;
 
       /// The field is kept during schema preparation and transferred to the fModel before the writing starts
-      RFieldBase *fField = nullptr;
-      std::unique_ptr<RFieldBase::RValue> fValue; ///< Set if a value is generated, only for transformed fields
+      ROOT::RFieldBase *fField = nullptr;
+      std::unique_ptr<ROOT::RFieldBase::RValue> fValue; ///< Set if a value is generated, only for transformed fields
       void *fFieldBuffer = nullptr; ///< Usually points to the corresponding RImportBranch::fBranchBuffer but not always
    };
 
@@ -186,9 +186,10 @@ private:
       /// The leafs of the array as we encounter them traversing the TTree schema.
       /// Eventually, the fields are moved as leaves to an untyped collection of untyped records that in turn
       /// is attached to the RNTuple model.
-      std::vector<std::unique_ptr<RFieldBase>> fLeafFields;
+      std::vector<std::unique_ptr<ROOT::RFieldBase>> fLeafFields;
       std::vector<size_t> fLeafBranchIndexes; ///< Points to the correspondings leaf branches in fImportBranches
-      RRecordField *fRecordField = nullptr; ///< Points to the item field of the untyped collection field in the model.
+      ROOT::RRecordField *fRecordField =
+         nullptr; ///< Points to the item field of the untyped collection field in the model.
       std::vector<unsigned char> fFieldBuffer; ///< The collection field memory representation. Bound to the entry.
    };
 

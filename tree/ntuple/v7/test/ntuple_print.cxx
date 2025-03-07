@@ -119,8 +119,7 @@ TEST(RNtuplePrint, ArrayAsRVec)
 {
    std::stringstream os;
    RPrepareVisitor prepVisitor;
-   ROOT::Experimental::RArrayAsRVecField testField("arrayasrvecfield",
-                                                   std::make_unique<ROOT::Experimental::RField<float>>("myfloat"), 0);
+   ROOT::RArrayAsRVecField testField("arrayasrvecfield", std::make_unique<ROOT::RField<float>>("myfloat"), 0);
    testField.AcceptVisitor(prepVisitor);
    RPrintSchemaVisitor visitor(os, '$');
    visitor.SetDeepestLevel(prepVisitor.GetDeepestLevel());

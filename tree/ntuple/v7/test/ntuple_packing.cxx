@@ -266,7 +266,7 @@ AddReal32QuantField(RNTupleModel &model, const std::string &fieldName, std::size
 namespace {
 
 // Test writing index32/64 columns
-class RFieldTestIndexColumn final : public ROOT::Experimental::RSimpleField<RColumnIndex> {
+class RFieldTestIndexColumn final : public ROOT::RSimpleField<RColumnIndex> {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {

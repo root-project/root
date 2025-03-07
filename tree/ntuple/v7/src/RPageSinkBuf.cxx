@@ -63,14 +63,14 @@ ROOT::Experimental::Internal::RPageSinkBuf::AddColumn(ROOT::DescriptorId_t /*fie
    return ColumnHandle_t{fNColumns++, &column};
 }
 
-void ROOT::Experimental::Internal::RPageSinkBuf::ConnectFields(const std::vector<RFieldBase *> &fields,
+void ROOT::Experimental::Internal::RPageSinkBuf::ConnectFields(const std::vector<ROOT::RFieldBase *> &fields,
                                                                ROOT::NTupleSize_t firstEntry)
 {
-   auto connectField = [&](RFieldBase &f) {
+   auto connectField = [&](ROOT::RFieldBase &f) {
       // Field Zero would have id 0.
       ++fNFields;
       f.SetOnDiskId(fNFields);
-      CallConnectPageSinkOnField(f, *this, firstEntry); // issues in turn calls to `AddColumn()`
+      ROOT::Internal::CallConnectPageSinkOnField(f, *this, firstEntry); // issues in turn calls to `AddColumn()`
    };
    for (auto *f : fields) {
       connectField(*f);
@@ -101,13 +101,13 @@ void ROOT::Experimental::Internal::RPageSinkBuf::UpdateSchema(const RNTupleModel
 
    // The buffered page sink maintains a copy of the RNTupleModel for the inner sink; replicate the changes there
    // TODO(jalopezg): we should be able, in general, to simplify the buffered sink.
-   auto cloneAddField = [&](const RFieldBase *field) {
+   auto cloneAddField = [&](const ROOT::RFieldBase *field) {
       auto cloned = field->Clone(field->GetFieldName());
       auto p = &(*cloned);
       fInnerModel->AddField(std::move(cloned));
       return p;
    };
-   auto cloneAddProjectedField = [&](RFieldBase *field) {
+   auto cloneAddProjectedField = [&](ROOT::RFieldBase *field) {
       auto cloned = field->Clone(field->GetFieldName());
       auto p = &(*cloned);
       auto &projectedFields = Internal::GetProjectedFieldsOfModel(changeset.fModel);

@@ -12,11 +12,11 @@ namespace {
 class RNoDictionary {};
 } // namespace
 
-namespace ROOT::Experimental {
+namespace ROOT {
 template <>
 struct IsCollectionProxy<CyclicCollectionProxy> : std::true_type {
 };
-} // namespace ROOT::Experimental
+} // namespace ROOT
 
 TEST(RNTuple, TClass) {
    auto modelFail = RNTupleModel::Create();
@@ -75,7 +75,7 @@ TEST(RNTuple, DiamondInheritance)
 TEST(RTNuple, TObject)
 {
    // Ensure that TObject cannot be accidentally handled through the generic RClassField field
-   EXPECT_THROW(ROOT::Experimental::RClassField("obj", "TObject"), ROOT::RException);
+   EXPECT_THROW(ROOT::RClassField("obj", "TObject"), ROOT::RException);
 
    FileRaii fileGuard("test_ntuple_tobject.root");
    {
@@ -220,7 +220,7 @@ TEST(RNTuple, TClassTypeChecksum)
    EXPECT_TRUE(f1->GetTraits() & RFieldBase::kTraitTypeChecksum);
    EXPECT_EQ(TClass::GetClass("CustomStruct")->GetCheckSum(), f1->GetTypeChecksum());
 
-   auto f2 = std::make_unique<ROOT::Experimental::RStreamerField>("f2", "TRotation");
+   auto f2 = std::make_unique<ROOT::RStreamerField>("f2", "TRotation");
    EXPECT_TRUE(f2->GetTraits() & RFieldBase::kTraitTypeChecksum);
    EXPECT_EQ(TClass::GetClass("TRotation")->GetCheckSum(), f2->GetTypeChecksum());
 

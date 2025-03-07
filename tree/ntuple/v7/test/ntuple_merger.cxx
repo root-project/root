@@ -1244,7 +1244,7 @@ TEST(RNTupleMerger, MultipleRepresentations)
       *ptrPx = 1.0;
       writer->Fill();
       writer->CommitCluster();
-      ROOT::Experimental::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
+      ROOT::Internal::RFieldRepresentationModifier::SetPrimaryColumnRepresentation(
          const_cast<RFieldBase &>(writer->GetModel().GetConstField("px")), 1);
       *ptrPx = 2.0;
       writer->Fill();

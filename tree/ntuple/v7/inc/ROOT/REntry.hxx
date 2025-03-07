@@ -78,7 +78,7 @@ private:
    /// The entry and its tokens are also linked to a specific schema, identified by a schema ID
    std::uint64_t fSchemaId = 0;
    /// Corresponds to the fields of the linked model
-   std::vector<RFieldBase::RValue> fValues;
+   std::vector<ROOT::RFieldBase::RValue> fValues;
    /// For fast lookup of token IDs given a (sub)field name present in the entry
    std::unordered_map<std::string, std::size_t> fFieldName2Token;
    /// To ensure that the entry is standalone, a copy of all field types
@@ -89,7 +89,7 @@ private:
    REntry() = default;
    explicit REntry(std::uint64_t modelId, std::uint64_t schemaId) : fModelId(modelId), fSchemaId(schemaId) {}
 
-   void AddValue(RFieldBase::RValue &&value)
+   void AddValue(ROOT::RFieldBase::RValue &&value)
    {
       fFieldName2Token[value.GetField().GetQualifiedFieldName()] = fValues.size();
       fFieldTypes.push_back(value.GetField().GetTypeName());
@@ -98,7 +98,7 @@ private:
 
    /// While building the entry, adds a new value to the list and return the value's shared pointer
    template <typename T>
-   std::shared_ptr<T> AddValue(RField<T> &field)
+   std::shared_ptr<T> AddValue(ROOT::RField<T> &field)
    {
       fFieldName2Token[field.GetQualifiedFieldName()] = fValues.size();
       fFieldTypes.push_back(field.GetTypeName());
@@ -107,14 +107,14 @@ private:
       return value.template GetPtr<T>();
    }
 
-   /// Update the RValue for a field in the entry. To be used when its underlying RFieldBase changes, which typically
-   /// happens when page source the field values are read from changes.
-   void UpdateValue(RFieldToken token, RFieldBase::RValue &&value) { std::swap(fValues.at(token.fIndex), value); }
-   void UpdateValue(RFieldToken token, RFieldBase::RValue &value) { std::swap(fValues.at(token.fIndex), value); }
+   /// Update the RValue for a field in the entry. To be used when its underlying ROOT::RFieldBase changes, which
+   /// typically happens when page source the field values are read from changes.
+   void UpdateValue(RFieldToken token, ROOT::RFieldBase::RValue &&value) { std::swap(fValues.at(token.fIndex), value); }
+   void UpdateValue(RFieldToken token, ROOT::RFieldBase::RValue &value) { std::swap(fValues.at(token.fIndex), value); }
 
    /// Return the RValue currently bound to the provided field.
-   RFieldBase::RValue &GetValue(RFieldToken token) { return fValues.at(token.fIndex); }
-   RFieldBase::RValue &GetValue(std::string_view fieldName) { return GetValue(GetToken(fieldName)); }
+   ROOT::RFieldBase::RValue &GetValue(RFieldToken token) { return fValues.at(token.fIndex); }
+   ROOT::RFieldBase::RValue &GetValue(std::string_view fieldName) { return GetValue(GetToken(fieldName)); }
 
    void Read(ROOT::NTupleSize_t index)
    {
@@ -157,9 +157,9 @@ private:
    void EnsureMatchingType(RFieldToken token [[maybe_unused]]) const
    {
       if constexpr (!std::is_void_v<T>) {
-         if (fFieldTypes[token.fIndex] != RField<T>::TypeName()) {
+         if (fFieldTypes[token.fIndex] != ROOT::RField<T>::TypeName()) {
             throw RException(R__FAIL("type mismatch for field " + FindFieldName(token) + ": " +
-                                     fFieldTypes[token.fIndex] + " vs. " + RField<T>::TypeName()));
+                                     fFieldTypes[token.fIndex] + " vs. " + ROOT::RField<T>::TypeName()));
          }
       }
    }

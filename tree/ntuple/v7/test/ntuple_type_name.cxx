@@ -2,19 +2,18 @@
 
 TEST(RNTuple, TypeNameBasics)
 {
-   EXPECT_STREQ("float", ROOT::Experimental::RField<float>::TypeName().c_str());
-   EXPECT_STREQ("std::vector<std::string>", ROOT::Experimental::RField<std::vector<std::string>>::TypeName().c_str());
-   EXPECT_STREQ("CustomStruct", ROOT::Experimental::RField<CustomStruct>::TypeName().c_str());
-   EXPECT_STREQ("DerivedB", ROOT::Experimental::RField<DerivedB>::TypeName().c_str());
+   EXPECT_STREQ("float", ROOT::RField<float>::TypeName().c_str());
+   EXPECT_STREQ("std::vector<std::string>", ROOT::RField<std::vector<std::string>>::TypeName().c_str());
+   EXPECT_STREQ("CustomStruct", ROOT::RField<CustomStruct>::TypeName().c_str());
+   EXPECT_STREQ("DerivedB", ROOT::RField<DerivedB>::TypeName().c_str());
 
    auto field = RField<DerivedB>("derived");
    EXPECT_EQ(sizeof(DerivedB), field.GetValueSize());
 
    EXPECT_STREQ("std::pair<std::pair<float,CustomStruct>,std::int32_t>",
-                (ROOT::Experimental::RField<std::pair<std::pair<float, CustomStruct>, int>>::TypeName().c_str()));
-   EXPECT_STREQ(
-      "std::tuple<std::tuple<char,CustomStruct,char>,std::int32_t>",
-      (ROOT::Experimental::RField<std::tuple<std::tuple<char, CustomStruct, char>, int>>::TypeName().c_str()));
+                (ROOT::RField<std::pair<std::pair<float, CustomStruct>, int>>::TypeName().c_str()));
+   EXPECT_STREQ("std::tuple<std::tuple<char,CustomStruct,char>,std::int32_t>",
+                (ROOT::RField<std::tuple<std::tuple<char, CustomStruct, char>, int>>::TypeName().c_str()));
 }
 
 TEST(RNTuple, TypeNameNormalization)

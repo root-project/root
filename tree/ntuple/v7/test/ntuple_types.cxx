@@ -119,7 +119,7 @@ TEST(RNTuple, CreateField)
    std::vector<std::unique_ptr<RFieldBase>> itemFields;
    itemFields.push_back(std::make_unique<RField<std::uint32_t>>("u32"));
    itemFields.push_back(std::make_unique<RField<std::uint8_t>>("u8"));
-   ROOT::Experimental::RRecordField record("test", std::move(itemFields));
+   ROOT::RRecordField record("test", std::move(itemFields));
    EXPECT_EQ(alignof(std::uint32_t), record.GetAlignment());
    // Check that trailing padding is added after `u8` to comply with the alignment requirements of uint32_t
    EXPECT_EQ(sizeof(std::uint32_t) + alignof(std::uint32_t), record.GetValueSize());
@@ -586,8 +586,7 @@ TEST(RNTuple, StdMap)
    EXPECT_THROW(RFieldBase::Create("myInvalidMap", "std::map<char, std::string, int>").Unwrap(), ROOT::RException);
 
    auto invalidInnerField = RFieldBase::Create("someIntField", "int").Unwrap();
-   EXPECT_THROW(std::make_unique<ROOT::Experimental::RMapField>("myInvalidMap", "std::map<char, int>",
-                                                                std::move(invalidInnerField)),
+   EXPECT_THROW(std::make_unique<ROOT::RMapField>("myInvalidMap", "std::map<char, int>", std::move(invalidInnerField)),
                 ROOT::RException);
 
    FileRaii fileGuard("test_ntuple_rfield_stdmap.root");
@@ -1631,7 +1630,7 @@ TEST(RNTuple, Casting)
    fldI1->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kInt32}});
    auto fldI2 = RFieldBase::Create("i2", "std::int32_t").Unwrap();
    fldI2->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kSplitInt32}});
-   auto fldF = ROOT::Experimental::RFieldBase::Create("F", "float").Unwrap();
+   auto fldF = RFieldBase::Create("F", "float").Unwrap();
    fldF->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kReal32}});
    try {
       fldF->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kBit}});
@@ -1652,7 +1651,7 @@ TEST(RNTuple, Casting)
 
    try {
       auto model = RNTupleModel::Create();
-      auto f = ROOT::Experimental::RFieldBase::Create("i1", "std::int32_t").Unwrap();
+      auto f = RFieldBase::Create("i1", "std::int32_t").Unwrap();
       f->SetColumnRepresentatives({{ROOT::ENTupleColumnType::kInt32}});
       model->AddField(std::move(f));
       auto reader = RNTupleReader::Open(std::move(model), "ntuple", fileGuard.GetPath());
@@ -2214,7 +2213,7 @@ TEST(RNTuple, Traits)
 
 TEST(RNTuple, RColumnRepresentations)
 {
-   using RColumnRepresentations = ROOT::Experimental::RFieldBase::RColumnRepresentations;
+   using RColumnRepresentations = RFieldBase::RColumnRepresentations;
    RColumnRepresentations colReps1;
    EXPECT_EQ(RFieldBase::ColumnRepresentation_t(), colReps1.GetSerializationDefault());
    EXPECT_EQ(RColumnRepresentations::Selection_t{RFieldBase::ColumnRepresentation_t()},

@@ -42,39 +42,39 @@ by the RPrintSchemaVisitor class. The RFieldBase class and classes which inherit
 // clang-format on
 class RFieldVisitor {
 public:
-   virtual void VisitField(const RFieldBase &field) = 0;
-   virtual void VisitFieldZero(const RFieldZero &field) { VisitField(field); }
-   virtual void VisitArrayField(const RArrayField &field) { VisitField(field); }
-   virtual void VisitArrayAsRVecField(const RArrayAsRVecField &field) { VisitField(field); }
-   virtual void VisitAtomicField(const RAtomicField &field) { VisitField(field); }
-   virtual void VisitBitsetField(const RBitsetField &field) { VisitField(field); }
-   virtual void VisitBoolField(const RField<bool> &field) { VisitField(field); }
-   virtual void VisitClassField(const RClassField &field) { VisitField(field); }
-   virtual void VisitTObjectField(const RField<TObject> &field) { VisitField(field); }
-   virtual void VisitStreamerField(const RStreamerField &field) { VisitField(field); }
-   virtual void VisitProxiedCollectionField(const RProxiedCollectionField &field) { VisitField(field); }
-   virtual void VisitRecordField(const RRecordField &field) { VisitField(field); }
-   virtual void VisitCardinalityField(const RCardinalityField &field) { VisitField(field); }
-   virtual void VisitDoubleField(const RField<double> &field) { VisitField(field); }
-   virtual void VisitEnumField(const REnumField &field) { VisitField(field); }
-   virtual void VisitFloatField(const RField<float> &field) { VisitField(field); }
-   virtual void VisitByteField(const RField<std::byte> &field) { VisitField(field); }
-   virtual void VisitCharField(const RField<char> &field) { VisitField(field); }
+   virtual void VisitField(const ROOT::RFieldBase &field) = 0;
+   virtual void VisitFieldZero(const ROOT::RFieldZero &field) { VisitField(field); }
+   virtual void VisitArrayField(const ROOT::RArrayField &field) { VisitField(field); }
+   virtual void VisitArrayAsRVecField(const ROOT::RArrayAsRVecField &field) { VisitField(field); }
+   virtual void VisitAtomicField(const ROOT::RAtomicField &field) { VisitField(field); }
+   virtual void VisitBitsetField(const ROOT::RBitsetField &field) { VisitField(field); }
+   virtual void VisitBoolField(const ROOT::RField<bool> &field) { VisitField(field); }
+   virtual void VisitClassField(const ROOT::RClassField &field) { VisitField(field); }
+   virtual void VisitTObjectField(const ROOT::RField<TObject> &field) { VisitField(field); }
+   virtual void VisitStreamerField(const ROOT::RStreamerField &field) { VisitField(field); }
+   virtual void VisitProxiedCollectionField(const ROOT::RProxiedCollectionField &field) { VisitField(field); }
+   virtual void VisitRecordField(const ROOT::RRecordField &field) { VisitField(field); }
+   virtual void VisitCardinalityField(const ROOT::RCardinalityField &field) { VisitField(field); }
+   virtual void VisitDoubleField(const ROOT::RField<double> &field) { VisitField(field); }
+   virtual void VisitEnumField(const ROOT::REnumField &field) { VisitField(field); }
+   virtual void VisitFloatField(const ROOT::RField<float> &field) { VisitField(field); }
+   virtual void VisitByteField(const ROOT::RField<std::byte> &field) { VisitField(field); }
+   virtual void VisitCharField(const ROOT::RField<char> &field) { VisitField(field); }
    // We have to accept RIntegralField here because there can be multiple basic types that map to the same fixed-width
    // integer type; for example on 64-bit Unix systems, both long and long long map to std::int64_t.
-   virtual void VisitInt8Field(const RIntegralField<std::int8_t> &field) { VisitField(field); }
-   virtual void VisitInt16Field(const RIntegralField<std::int16_t> &field) { VisitField(field); }
-   virtual void VisitInt32Field(const RIntegralField<std::int32_t> &field) { VisitField(field); }
-   virtual void VisitInt64Field(const RIntegralField<std::int64_t> &field) { VisitField(field); }
-   virtual void VisitNullableField(const RNullableField &field) { VisitField(field); }
-   virtual void VisitStringField(const RField<std::string> &field) { VisitField(field); }
-   virtual void VisitUInt8Field(const RIntegralField<std::uint8_t> &field) { VisitField(field); }
-   virtual void VisitUInt16Field(const RIntegralField<std::uint16_t> &field) { VisitField(field); }
-   virtual void VisitUInt32Field(const RIntegralField<std::uint32_t> &field) { VisitField(field); }
-   virtual void VisitUInt64Field(const RIntegralField<std::uint64_t> &field) { VisitField(field); }
-   virtual void VisitVectorField(const RVectorField &field) { VisitField(field); }
-   virtual void VisitVectorBoolField(const RField<std::vector<bool>> &field) { VisitField(field); }
-   virtual void VisitRVecField(const RRVecField &field) { VisitField(field); }
+   virtual void VisitInt8Field(const ROOT::RIntegralField<std::int8_t> &field) { VisitField(field); }
+   virtual void VisitInt16Field(const ROOT::RIntegralField<std::int16_t> &field) { VisitField(field); }
+   virtual void VisitInt32Field(const ROOT::RIntegralField<std::int32_t> &field) { VisitField(field); }
+   virtual void VisitInt64Field(const ROOT::RIntegralField<std::int64_t> &field) { VisitField(field); }
+   virtual void VisitNullableField(const ROOT::RNullableField &field) { VisitField(field); }
+   virtual void VisitStringField(const ROOT::RField<std::string> &field) { VisitField(field); }
+   virtual void VisitUInt8Field(const ROOT::RIntegralField<std::uint8_t> &field) { VisitField(field); }
+   virtual void VisitUInt16Field(const ROOT::RIntegralField<std::uint16_t> &field) { VisitField(field); }
+   virtual void VisitUInt32Field(const ROOT::RIntegralField<std::uint32_t> &field) { VisitField(field); }
+   virtual void VisitUInt64Field(const ROOT::RIntegralField<std::uint64_t> &field) { VisitField(field); }
+   virtual void VisitVectorField(const ROOT::RVectorField &field) { VisitField(field); }
+   virtual void VisitVectorBoolField(const ROOT::RField<std::vector<bool>> &field) { VisitField(field); }
+   virtual void VisitRVecField(const ROOT::RRVecField &field) { VisitField(field); }
 }; // class RFieldVisitor
 
 } // namespace Detail
@@ -96,8 +96,8 @@ private:
 
 public:
    RPrepareVisitor() = default;
-   void VisitField(const RFieldBase &field) final;
-   void VisitFieldZero(const RFieldZero &field) final;
+   void VisitField(const ROOT::RFieldBase &field) final;
+   void VisitFieldZero(const ROOT::RFieldZero &field) final;
 
    unsigned int GetDeepestLevel() const { return fDeepestLevel; }
    unsigned int GetNumFields() const { return fNumFields; }
@@ -137,8 +137,8 @@ public:
       SetAvailableSpaceForStrings();
    }
    /// Prints summary of Field
-   void VisitField(const RFieldBase &field) final;
-   void VisitFieldZero(const RFieldZero &fieldZero) final;
+   void VisitField(const ROOT::RFieldBase &field) final;
+   void VisitFieldZero(const ROOT::RFieldZero &fieldZero) final;
    void SetFrameSymbol(char s) { fFrameSymbol = s; }
    void SetWidth(int w) { fWidth = w; }
    void SetDeepestLevel(int d);
@@ -183,56 +183,56 @@ public:
    };
 
 private:
-   RFieldBase::RValue fValue;
+   ROOT::RFieldBase::RValue fValue;
    /// The output is directed to fOutput which may differ from std::cout.
    std::ostream &fOutput;
    unsigned int fLevel;
    RPrintOptions fPrintOptions;
 
    void PrintIndent();
-   void PrintName(const RFieldBase &field);
-   void PrintCollection(const RFieldBase &field);
-   void PrintRecord(const RFieldBase &field);
+   void PrintName(const ROOT::RFieldBase &field);
+   void PrintCollection(const ROOT::RFieldBase &field);
+   void PrintRecord(const ROOT::RFieldBase &field);
 
 public:
-   RPrintValueVisitor(RFieldBase::RValue value, std::ostream &output, unsigned int level = 0,
+   RPrintValueVisitor(ROOT::RFieldBase::RValue value, std::ostream &output, unsigned int level = 0,
                       RPrintOptions options = RPrintOptions())
       : fValue(value), fOutput{output}, fLevel(level), fPrintOptions(options)
    {
    }
 
-   void VisitField(const RFieldBase &field) final;
+   void VisitField(const ROOT::RFieldBase &field) final;
 
-   void VisitBoolField(const RField<bool> &field) final;
-   void VisitDoubleField(const RField<double> &field) final;
-   void VisitFloatField(const RField<float> &field) final;
-   void VisitByteField(const RField<std::byte> &field) final;
-   void VisitCharField(const RField<char> &field) final;
-   void VisitInt8Field(const RIntegralField<std::int8_t> &field) final;
-   void VisitInt16Field(const RIntegralField<std::int16_t> &field) final;
-   void VisitInt32Field(const RIntegralField<std::int32_t> &field) final;
-   void VisitInt64Field(const RIntegralField<std::int64_t> &field) final;
-   void VisitStringField(const RField<std::string> &field) final;
-   void VisitUInt8Field(const RIntegralField<std::uint8_t> &field) final;
-   void VisitUInt16Field(const RIntegralField<std::uint16_t> &field) final;
-   void VisitUInt32Field(const RIntegralField<std::uint32_t> &field) final;
-   void VisitUInt64Field(const RIntegralField<std::uint64_t> &field) final;
+   void VisitBoolField(const ROOT::RField<bool> &field) final;
+   void VisitDoubleField(const ROOT::RField<double> &field) final;
+   void VisitFloatField(const ROOT::RField<float> &field) final;
+   void VisitByteField(const ROOT::RField<std::byte> &field) final;
+   void VisitCharField(const ROOT::RField<char> &field) final;
+   void VisitInt8Field(const ROOT::RIntegralField<std::int8_t> &field) final;
+   void VisitInt16Field(const ROOT::RIntegralField<std::int16_t> &field) final;
+   void VisitInt32Field(const ROOT::RIntegralField<std::int32_t> &field) final;
+   void VisitInt64Field(const ROOT::RIntegralField<std::int64_t> &field) final;
+   void VisitStringField(const ROOT::RField<std::string> &field) final;
+   void VisitUInt8Field(const ROOT::RIntegralField<std::uint8_t> &field) final;
+   void VisitUInt16Field(const ROOT::RIntegralField<std::uint16_t> &field) final;
+   void VisitUInt32Field(const ROOT::RIntegralField<std::uint32_t> &field) final;
+   void VisitUInt64Field(const ROOT::RIntegralField<std::uint64_t> &field) final;
 
-   void VisitCardinalityField(const RCardinalityField &field) final;
-   void VisitArrayField(const RArrayField &field) final;
-   void VisitArrayAsRVecField(const RArrayAsRVecField &field) final;
-   void VisitClassField(const RClassField &field) final;
-   void VisitTObjectField(const RField<TObject> &field) final;
-   void VisitStreamerField(const RStreamerField &field) final;
-   void VisitRecordField(const RRecordField &field) final;
-   void VisitProxiedCollectionField(const RProxiedCollectionField &field) final;
-   void VisitVectorField(const RVectorField &field) final;
-   void VisitVectorBoolField(const RField<std::vector<bool>> &field) final;
-   void VisitRVecField(const RRVecField &field) final;
-   void VisitBitsetField(const RBitsetField &field) final;
-   void VisitNullableField(const RNullableField &field) final;
-   void VisitEnumField(const REnumField &field) final;
-   void VisitAtomicField(const RAtomicField &field) final;
+   void VisitCardinalityField(const ROOT::RCardinalityField &field) final;
+   void VisitArrayField(const ROOT::RArrayField &field) final;
+   void VisitArrayAsRVecField(const ROOT::RArrayAsRVecField &field) final;
+   void VisitClassField(const ROOT::RClassField &field) final;
+   void VisitTObjectField(const ROOT::RField<TObject> &field) final;
+   void VisitStreamerField(const ROOT::RStreamerField &field) final;
+   void VisitRecordField(const ROOT::RRecordField &field) final;
+   void VisitProxiedCollectionField(const ROOT::RProxiedCollectionField &field) final;
+   void VisitVectorField(const ROOT::RVectorField &field) final;
+   void VisitVectorBoolField(const ROOT::RField<std::vector<bool>> &field) final;
+   void VisitRVecField(const ROOT::RRVecField &field) final;
+   void VisitBitsetField(const ROOT::RBitsetField &field) final;
+   void VisitNullableField(const ROOT::RNullableField &field) final;
+   void VisitEnumField(const ROOT::REnumField &field) final;
+   void VisitAtomicField(const ROOT::RAtomicField &field) final;
 };
 
 

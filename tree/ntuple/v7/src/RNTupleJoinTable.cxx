@@ -60,8 +60,8 @@ void ROOT::Experimental::Internal::RNTupleJoinTable::Build(RPageSource &pageSour
    auto desc = pageSource.GetSharedDescriptorGuard();
 
    fJoinFieldValueSizes.reserve(fJoinFieldNames.size());
-   std::vector<std::unique_ptr<RFieldBase>> fields;
-   std::vector<RFieldBase::RValue> fieldValues;
+   std::vector<std::unique_ptr<ROOT::RFieldBase>> fields;
+   std::vector<ROOT::RFieldBase::RValue> fieldValues;
    fieldValues.reserve(fJoinFieldNames.size());
 
    for (const auto &fieldName : fJoinFieldNames) {
@@ -79,7 +79,7 @@ void ROOT::Experimental::Internal::RNTupleJoinTable::Build(RPageSource &pageSour
 
       auto field = fieldDesc.CreateField(desc.GetRef());
 
-      CallConnectPageSourceOnField(*field, pageSource);
+      ROOT::Internal::CallConnectPageSourceOnField(*field, pageSource);
 
       fieldValues.emplace_back(field->CreateValue());
       fJoinFieldValueSizes.emplace_back(field->GetValueSize());

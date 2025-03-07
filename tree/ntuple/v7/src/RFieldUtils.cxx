@@ -25,8 +25,6 @@
 #include <utility>
 #include <vector>
 
-using ROOT::Experimental::RField;
-
 namespace {
 
 const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{

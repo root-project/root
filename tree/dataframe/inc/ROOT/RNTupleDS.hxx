@@ -33,9 +33,9 @@
 
 namespace ROOT {
 class RNTuple;
+class RFieldBase;
 
 namespace Experimental {
-class RFieldBase;
 
 namespace Internal {
 class RNTupleColumnReader;
@@ -84,13 +84,12 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// in GetColumnReaders(), we move a clone of the field into a new column reader for RDataFrame.
    /// Only the clone connects to the backing page store and acquires I/O resources.
    /// The field IDs are set in the context of the first source and used as keys in fFieldId2QualifiedName.
-   std::vector<std::unique_ptr<ROOT::Experimental::RFieldBase>> fProtoFields;
+   std::vector<std::unique_ptr<ROOT::RFieldBase>> fProtoFields;
    /// Columns may be requested with types other than with which they were initially added as proto fields. For example,
    /// a column with a `ROOT::RVec<float>` proto field may instead be requested as a `std::vector<float>`. In case this
    /// happens, we create an alternative proto field and store it here, with the original index in `fProtoFields` as
    /// key. A single column can have more than one alternative proto fields.
-   std::unordered_map<std::size_t, std::vector<std::unique_ptr<ROOT::Experimental::RFieldBase>>>
-      fAlternativeProtoFields;
+   std::unordered_map<std::size_t, std::vector<std::unique_ptr<ROOT::RFieldBase>>> fAlternativeProtoFields;
    /// Connects the IDs of active proto fields and their subfields to their fully qualified name (a.b.c.d).
    /// This enables the column reader to rewire the field IDs when the file changes (chain),
    /// using the fully qualified name as a search key in the descriptor of the other page sources.
