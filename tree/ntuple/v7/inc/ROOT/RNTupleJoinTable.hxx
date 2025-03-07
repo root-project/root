@@ -133,9 +133,9 @@ private:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an a new RNTupleJoinTable for the RNTuple represented by the provided page source.
    ///
-   /// \param[in] fieldNames The names of the join fields to use for the join table. Only integral-type fields are
+   /// \param[in] joinFieldNames The names of the join fields to use for the join table. Only integral-type fields are
    /// allowed.
-   RNTupleJoinTable(const std::vector<std::string> &fieldNames) : fJoinFieldNames(fieldNames) {}
+   RNTupleJoinTable(const std::vector<std::string> &joinFieldNames) : fJoinFieldNames(joinFieldNames) {}
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get all entry mappings in the join table.
@@ -155,11 +155,11 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleJoinTable from an existing RNTuple.
    ///
-   /// \param[in] fieldNames The names of the join fields to use for the join table. Only integral-type fields are
+   /// \param[in] joinFieldNames The names of the join fields to use for the join table. Only integral-type fields are
    /// allowed.
    ///
    /// \return A pointer to the newly-created join table.
-   static std::unique_ptr<RNTupleJoinTable> Create(const std::vector<std::string> &fieldNames);
+   static std::unique_ptr<RNTupleJoinTable> Create(const std::vector<std::string> &joinFieldNames);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add an entry mapping to the join table.
