@@ -28,9 +28,6 @@ class SimplexSeedGenerator : public MinimumSeedGenerator {
 public:
    MinimumSeed operator()(const MnFcn &, const GradientCalculator &, const MnUserParameterState &,
                           const MnStrategy &) const override;
-
-   MinimumSeed operator()(const MnFcn &, const AnalyticalGradientCalculator &, const MnUserParameterState &,
-                          const MnStrategy &) const override;
 };
 
 } // namespace Minuit2
