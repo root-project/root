@@ -41,6 +41,9 @@ namespace Minuit2 {
 MinimumSeed MnSeedGenerator::
 operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameterState &st, const MnStrategy &stra) const
 {
+   if(auto *agc = dynamic_cast<AnalyticalGradientCalculator const*>(&gc)) {
+      return callWithAnalyticalGradientCalculator(fcn, *agc, st, stra);
+   }
 
    MnPrint print("MnSeedGenerator");
 
@@ -56,10 +59,17 @@ operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameter
    MnAlgebraicVector x(n);
    for (unsigned int i = 0; i < n; i++)
       x(i) = st.IntParameters()[i];
-   double fcnmin = fcn(x);
 
-   MinimumParameters pa(x, fcnmin);
+   // We want to time everything with function evaluations. The MnSeedGenerator
+   // with numeric gradient only does one function and one gradient evaluation
+   // by default, and we're timing it here. If the G2 is negative, we also have
+   // to run a NegativeG2LineSearch later, but this is timed separately inside
+   // the line search.
+   auto timingScope = std::make_unique<MnPrint::TimingScope>(print, "Evaluated function and gradient in");
+   MinimumParameters pa(x, fcn(x));
    FunctionGradient dgrad = gc(pa);
+   timingScope.reset();
+
    MnAlgebraicSymMatrix mat(n);
    double dcovar = 1.;
    if (st.HasCovariance()) {
@@ -111,8 +121,9 @@ operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameter
    return MinimumSeed(state, st.Trafo());
 }
 
-MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradientCalculator &gc,
-                                        const MnUserParameterState &st, const MnStrategy &stra) const
+MinimumSeed
+MnSeedGenerator::callWithAnalyticalGradientCalculator(const MnFcn &fcn, const AnalyticalGradientCalculator &gc,
+                                                      const MnUserParameterState &st, const MnStrategy &stra) const
 {
    MnPrint print("MnSeedGenerator");
 

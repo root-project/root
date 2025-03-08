@@ -36,6 +36,7 @@
 #include "Minuit2/MnContours.h"
 #include "Minuit2/MnTraceObject.h"
 #include "Minuit2/MinimumBuilder.h"
+#include "Minuit2/MnUserFcn.h"
 
 #include <cassert>
 #include <iostream>
@@ -570,7 +571,8 @@ bool Minuit2Minimizer::Minimize()
    if (fMinimum->IsValid() && IsValidError() && fMinimum->State().Error().Dcovar() != 0) {
       // run Hesse (Hesse will add results in the last state of fMinimum
       ROOT::Minuit2::MnHesse hesse(strategy);
-      hesse(*fMinuitFCN, *fMinimum, maxfcn);
+      fMinimum->Add(MinimumState{hesse(MnUserFcn{*fMinuitFCN, fMinimum->UserState().Trafo(), fMinimum->NFcn()},
+                                       fMinimum->State(), fMinimum->UserState().Trafo(), maxfcn)});
    }
 
    // -2 is the highest low invalid value for gErrorIgnoreLevel
@@ -1236,7 +1238,8 @@ bool Minuit2Minimizer::Hesse()
       // }
 
       // run hesse and function minimum will be updated with Hesse result
-      hesse(*fMinuitFCN, *fMinimum, maxfcn);
+      fMinimum->Add(hesse(MnUserFcn{*fMinuitFCN, fMinimum->UserState().Trafo(), fMinimum->NFcn()}, fMinimum->State(),
+                         fMinimum->UserState().Trafo(), maxfcn));
       // update user state
       fState = fMinimum->UserState();
    }
