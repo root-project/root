@@ -57,16 +57,18 @@ MnHesse::operator()(const FCNBase &fcn, const MnUserParameterState &state, unsig
    // check if we can use analytical gradient
    if (fcn.HasGradient()) {
       // no need to compute gradient here
-      MinimumState tmp = ComputeAnalytical(fcn, MinimumState(par, MinimumError(MnAlgebraicSymMatrix(n), 1.), FunctionGradient(n),
-        state.Edm(), state.NFcn()), state.Trafo());
+      MinimumState tmp = ComputeAnalytical(fcn, {par, {MnAlgebraicSymMatrix(n), 1.}, FunctionGradient(n),
+        state.Edm(), static_cast<int>(state.NFcn())}, state.Trafo());
       return MnUserParameterState(tmp, fcn.Up(), state.Trafo());
    }
    // case of numerical gradient
-   Numerical2PGradientCalculator gc(mfcn, state.Trafo(), fStrategy);
-   FunctionGradient gra = gc(par);
-   MinimumState tmp = ComputeNumerical(
-      mfcn, MinimumState(par, MinimumError(MnAlgebraicSymMatrix(n), 1.), gra, state.Edm(), state.NFcn()), state.Trafo(),
-      maxcalls, fStrategy);
+   MinimumState tmp = ComputeNumerical(mfcn,
+                                       {par,
+                                        {MnAlgebraicSymMatrix(n), 1.},
+                                        Numerical2PGradientCalculator{mfcn, state.Trafo(), fStrategy}(par),
+                                        state.Edm(),
+                                        static_cast<int>(state.NFcn())},
+                                       state.Trafo(), maxcalls, fStrategy);
    return MnUserParameterState(tmp, fcn.Up(), state.Trafo());
 }
 
@@ -102,12 +104,13 @@ MinimumState ComputeAnalytical(const FCNBase &fcn, const MinimumState &st, const
    MnAlgebraicSymMatrix vhmat(n);
 
    MnPrint print("MnHesse");
+   MnPrint::TimingScope timingScope(print, "Done after");
 
    const MnMachinePrecision &prec = trafo.Precision();
 
    std::unique_ptr<AnalyticalGradientCalculator> hc;
    if (fcn.gradParameterSpace() == GradientParameterSpace::Internal) {
-      hc = std::unique_ptr<AnalyticalGradientCalculator> (new ExternalInternalGradientCalculator(fcn,trafo));
+      hc = std::make_unique<ExternalInternalGradientCalculator>(fcn,trafo);
    }  else {
       hc = std::make_unique<AnalyticalGradientCalculator>(fcn,trafo);
    }
@@ -172,6 +175,8 @@ MinimumState ComputeNumerical(const MnFcn &mfcn, const MinimumState &st, const M
    // internal interface from MinimumState and MnUserTransformation
    // Function who does the real Hessian calculations
    MnPrint print("MnHesse");
+
+   MnPrint::TimingScope timingScope(print, "Done after");
 
    MnFcnCaller mfcnCaller{mfcn};
 
