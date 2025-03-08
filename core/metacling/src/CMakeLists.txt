@@ -75,8 +75,11 @@ if(MSVC)
    set_source_files_properties(TCling.cxx COMPILE_FLAGS /bigobj)
 endif()
 
+if(testing)
+add_dependencies(MetaCling CLING clangCppInterOp CppInterOpUnitTests)
+else()
 add_dependencies(MetaCling CLING clangCppInterOp)
-
+endif()
 ##### libCling #############################################################
 
 if(NOT builtin_clang)
