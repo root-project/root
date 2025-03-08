@@ -34,6 +34,9 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn &fcn, const MinimumSta
    //
    MnPrint print("NegativeG2LineSearch");
 
+   // Print the runtime on returning from the function
+   MnPrint::TimingScope timingScope(print, "Done after");
+
    bool negG2 = HasNegativeG2(st.Gradient(), prec);
    if (!negG2)
       return st;

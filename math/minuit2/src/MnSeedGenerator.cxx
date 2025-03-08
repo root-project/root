@@ -56,10 +56,17 @@ operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameter
    MnAlgebraicVector x(n);
    for (unsigned int i = 0; i < n; i++)
       x(i) = st.IntParameters()[i];
-   double fcnmin = fcn(x);
 
-   MinimumParameters pa(x, fcnmin);
+   // We want to time everything with function evaluations. The MnSeedGenerator
+   // with numeric gradient only does one function and one gradient evaluation
+   // by default, and we're timing it here. If the G2 is negative, we also have
+   // to run a NegativeG2LineSearch later, but this is timed separately inside
+   // the line search.
+   auto timingScope = std::make_unique<MnPrint::TimingScope>(print, "Evaluated function and gradient in");
+   MinimumParameters pa(x, fcn(x));
    FunctionGradient dgrad = gc(pa);
+   timingScope.reset();
+
    MnAlgebraicSymMatrix mat(n);
    double dcovar = 1.;
    if (st.HasCovariance()) {
