@@ -41,6 +41,9 @@ namespace Minuit2 {
 MinimumSeed MnSeedGenerator::
 operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameterState &st, const MnStrategy &stra) const
 {
+   if(auto *agc = dynamic_cast<AnalyticalGradientCalculator const*>(&gc)) {
+      return CallWithAnalyticalGradientCalculator(fcn, *agc, st, stra);
+   }
 
    MnPrint print("MnSeedGenerator");
 
@@ -118,8 +121,9 @@ operator()(const MnFcn &fcn, const GradientCalculator &gc, const MnUserParameter
    return MinimumSeed(state, st.Trafo());
 }
 
-MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradientCalculator &gc,
-                                        const MnUserParameterState &st, const MnStrategy &stra) const
+MinimumSeed
+MnSeedGenerator::CallWithAnalyticalGradientCalculator(const MnFcn &fcn, const AnalyticalGradientCalculator &gc,
+                                                      const MnUserParameterState &st, const MnStrategy &stra) const
 {
    MnPrint print("MnSeedGenerator");
 

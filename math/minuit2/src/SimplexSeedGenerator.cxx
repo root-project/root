@@ -46,13 +46,6 @@ operator()(const MnFcn &fcn, const GradientCalculator &, const MnUserParameterSt
    return MinimumSeed(state, st.Trafo());
 }
 
-MinimumSeed SimplexSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradientCalculator &gc,
-                                             const MnUserParameterState &st, const MnStrategy &stra) const
-{
-   // base class interface
-   return (*this)(fcn, (const GradientCalculator &)(gc), st, stra);
-}
-
 } // namespace Minuit2
 
 } // namespace ROOT
