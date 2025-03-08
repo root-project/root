@@ -477,8 +477,11 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpe
    fEntry.swap(newEntry);
 
    // If no join fields have been specified, an aligned join is assumed and an join table won't be created.
-   if (!joinFields.empty())
-      fJoinTables.emplace_back(Internal::RNTupleJoinTable::Create(joinFields));
+   if (!joinFields.empty()) {
+      auto joinTable = Internal::RNTupleJoinTable::Create(joinFields);
+      joinTable->Add(*pageSource);
+      fJoinTables.emplace_back(std::move(joinTable));
+   }
 
    fAuxiliaryPageSources.emplace_back(std::move(pageSource));
 }
@@ -538,8 +541,9 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleJoinProcessor::LoadEntry(ROOT::NTu
    auxEntryIdxs.reserve(fJoinTables.size());
    for (unsigned i = 0; i < fJoinTables.size(); ++i) {
       auto &joinTable = fJoinTables[i];
-      if (!joinTable->IsBuilt())
-         joinTable->Build(*fAuxiliaryPageSources[i]);
+      if (!joinTable->IsBuilt()) {
+         joinTable->Build();
+      }
 
       auto entryIdxs = joinTable->GetEntryIndexes(valPtrs);
 
