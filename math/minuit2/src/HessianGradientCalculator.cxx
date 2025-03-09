@@ -16,7 +16,8 @@
 #include "Minuit2/FunctionGradient.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnPrint.h"
-#include "Minuit2/MPIProcess.h"
+
+#include "./MPIProcess.h"
 
 #include <cmath>
 #include <cassert>
@@ -28,8 +29,7 @@ namespace Minuit2 {
 FunctionGradient HessianGradientCalculator::operator()(const MinimumParameters &par) const
 {
    // use initial gradient as starting point
-   InitialGradientCalculator gc(fFcn, fTransformation);
-   FunctionGradient gra = gc(par);
+   FunctionGradient gra = calculateInitialGradient(par, fTransformation, fFcn.ErrorDef());
 
    return (*this)(par, gra);
 }

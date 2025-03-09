@@ -11,6 +11,7 @@
 #define ROOT_Minuit2_MnLineSearch
 
 #include "Minuit2/MnMatrix.h"
+#include "Minuit2/MnPoint.h"
 
 namespace ROOT {
 
@@ -19,7 +20,6 @@ namespace Minuit2 {
 class MnFcn;
 class MinimumParameters;
 class MnMachinePrecision;
-class MnParabolaPoint;
 
 /**
 
@@ -40,22 +40,16 @@ and Lorenzo Moneta
 class MnLineSearch {
 
 public:
-   MnLineSearch() {}
-
-   ~MnLineSearch() {}
-
-   MnParabolaPoint operator()(const MnFcn &, const MinimumParameters &, const MnAlgebraicVector &, double,
-                              const MnMachinePrecision &) const;
+   MnPoint operator()(const MnFcn &, const MinimumParameters &, const MnAlgebraicVector &, double,
+                      const MnMachinePrecision &) const;
 
 #ifdef USE_OTHER_LS
-   MnParabolaPoint CubicSearch(const MnFcn &, const MinimumParameters &, const MnAlgebraicVector &, double, double,
-                               const MnMachinePrecision &) const;
+   MnPoint CubicSearch(const MnFcn &, const MinimumParameters &, const MnAlgebraicVector &, double, double,
+                       const MnMachinePrecision &) const;
 
-   MnParabolaPoint BrentSearch(const MnFcn &, const MinimumParameters &, const MnAlgebraicVector &, double, double,
-                               const MnMachinePrecision &) const;
+   MnPoint BrentSearch(const MnFcn &, const MinimumParameters &, const MnAlgebraicVector &, double, double,
+                       const MnMachinePrecision &) const;
 #endif
-
-private:
 };
 
 } // namespace Minuit2

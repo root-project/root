@@ -34,7 +34,6 @@ set(MINUIT2_HEADERS
     GradientCalculator.h
     HessianGradientCalculator.h
     InitialGradientCalculator.h
-    MPIProcess.h
     MinimumBuilder.h
     MinimumError.h
     MinimumErrorUpdator.h
@@ -65,23 +64,21 @@ set(MINUIT2_HEADERS
     MnMinos.h
     MnParabola.h
     MnParabolaFactory.h
-    MnParabolaPoint.h
     MnParameterScan.h
     MnPlot.h
+    MnPoint.h
     MnPosDef.h
     MnPrint.h
     MnScan.h
     MnSeedGenerator.h
     MnSimplex.h
     MnStrategy.h
-    MnTiny.h
     MnTraceObject.h
     MnUserCovariance.h
     MnUserFcn.h
     MnUserParameterState.h
     MnUserParameters.h
     MnUserTransformation.h
-    MnVectorTransform.h
     ModularFunctionMinimizer.h
     NegativeG2LineSearch.h
     Numerical2PGradientCalculator.h
@@ -139,7 +136,6 @@ set(MINUIT2_SOURCES
     MnScan.cxx
     MnSeedGenerator.cxx
     MnStrategy.cxx
-    MnTiny.cxx
     MnTraceObject.cxx
     MnUserFcn.cxx
     MnUserParameterState.cxx

@@ -25,16 +25,9 @@ class MinimumSeed;
  */
 
 class ScanBuilder : public MinimumBuilder {
-
 public:
-   ScanBuilder() {}
-
-   ~ScanBuilder() override {}
-
    FunctionMinimum Minimum(const MnFcn &, const GradientCalculator &, const MinimumSeed &, const MnStrategy &,
-                                   unsigned int, double) const override;
-
-private:
+                           unsigned int, double) const override;
 };
 
 } // namespace Minuit2

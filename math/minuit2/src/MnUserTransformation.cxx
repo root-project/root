@@ -25,8 +25,6 @@ class MnParStr {
 public:
    MnParStr(const std::string &name) : fName(name) {}
 
-   ~MnParStr() {}
-
    bool operator()(const MinuitParameter &par) const
    {
       //      return (strcmp(par.Name(), fName) == 0);

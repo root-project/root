@@ -27,18 +27,11 @@ class FunctionGradient;
  */
 
 class NegativeG2LineSearch {
-
 public:
-   NegativeG2LineSearch() {}
-
-   ~NegativeG2LineSearch() {}
-
    MinimumState
    operator()(const MnFcn &, const MinimumState &, const GradientCalculator &, const MnMachinePrecision &) const;
 
    bool HasNegativeG2(const FunctionGradient &, const MnMachinePrecision &) const;
-
-private:
 };
 
 } // namespace Minuit2
