@@ -34,7 +34,6 @@ set(MINUIT2_HEADERS
     GradientCalculator.h
     HessianGradientCalculator.h
     InitialGradientCalculator.h
-    MPIProcess.h
     MinimumBuilder.h
     MinimumError.h
     MinimumErrorUpdator.h
@@ -81,7 +80,6 @@ set(MINUIT2_HEADERS
     MnUserParameterState.h
     MnUserParameters.h
     MnUserTransformation.h
-    MnVectorTransform.h
     ModularFunctionMinimizer.h
     NegativeG2LineSearch.h
     Numerical2PGradientCalculator.h

@@ -37,8 +37,6 @@ public:
    {
    }
 
-   ~MnFunctionCross() {}
-
    MnCross operator()(std::span<const unsigned int> , std::span<const double>, std::span<const double>,
                       double, unsigned int) const;
 
