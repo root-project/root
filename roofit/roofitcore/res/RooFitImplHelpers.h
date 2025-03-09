@@ -15,6 +15,8 @@
 #include <RooAbsArg.h>
 #include <RooAbsReal.h>
 
+#include <chrono>
+#include <functional>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -104,6 +106,21 @@ std::string makeValidVarName(std::string const &in);
 void replaceAll(std::string &inOut, std::string_view what, std::string_view with);
 
 std::string makeSliceCutString(RooArgSet const &sliceDataSet);
+
+// Similar to ROOT::Minuit2::MnPrint::TimingScope from the Minuit2
+// implementation details.
+class TimingScope {
+
+public:
+   TimingScope(std::function<void(std::string const&)> printer, std::string const &message);
+
+   ~TimingScope();
+
+private:
+   std::chrono::steady_clock::time_point fBegin;
+   std::function<void(std::string const&)> fPrinter;
+   const std::string fMessage;
+};
 
 } // namespace Detail
 } // namespace RooFit
