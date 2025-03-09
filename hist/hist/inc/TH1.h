@@ -146,6 +146,7 @@ protected:
    Int_t            AxisChoice(Option_t *axis) const;
    virtual Int_t    BufferFill(Double_t x, Double_t w);
    virtual Bool_t   FindNewAxisLimits(const TAxis* axis, const Double_t point, Double_t& newMin, Double_t &newMax);
+   TString          ProvideSaveName(Option_t *option, Bool_t testfdir = kFALSE);
    virtual void     SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *option = "");
    static Bool_t    RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis);
    static Bool_t    SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2);
@@ -444,6 +445,7 @@ public:
            void     UseCurrentStyle() override;
    static  TH1     *TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option);
 
+   static void      SavePrimitiveFunctions(std::ostream &out, const char *varname, TList *lst);
 
    // TODO: Remove obsolete methods in v6-04
    virtual Double_t GetCellContent(Int_t binx, Int_t biny) const

@@ -1034,41 +1034,42 @@ void THStack::RecursiveRemove(TObject *obj)
 
 void THStack::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   SavePrimitiveConstructor(out, Class(), GetName());
-   SavePrimitiveNameTitle(out, GetName());
+   TString name = gInterpreter->MapCppName(GetName());
 
-   if (fMinimum != -1111) {
-      out<<"   "<<GetName()<<"->SetMinimum("<<fMinimum<<");"<<std::endl;
-   }
-   if (fMaximum != -1111) {
-      out<<"   "<<GetName()<<"->SetMaximum("<<fMaximum<<");"<<std::endl;
-   }
+   SavePrimitiveConstructor(out, Class(), name);
+   SavePrimitiveNameTitle(out, name);
 
-   static Int_t frameNumber = 0;
+   if (fMinimum != -1111)
+      out << "   " << name << "->SetMinimum(" << fMinimum << ");\n";
+   if (fMaximum != -1111)
+      out << "   " << name << "->SetMaximum(" << fMaximum << ");\n";
+
+   thread_local Int_t hcount = 0;
    if (fHistogram) {
-      frameNumber++;
       TString hname = fHistogram->GetName();
-      fHistogram->SetName(TString::Format("%s_stack_%d", hname.Data(), frameNumber).Data());
-      fHistogram->SavePrimitive(out,"nodraw");
-      out<<"   "<<GetName()<<"->SetHistogram("<<fHistogram->GetName()<<");"<<std::endl;
-      out<<"   "<<std::endl;
+      fHistogram->SetName(TString::Format("%s_stack_%d", name.Data(), ++hcount).Data());
+      fHistogram->SavePrimitive(out, "nodraw");
+      out << "   " << name << "->SetHistogram(" << fHistogram->GetName() << ");\n";
+      out << "   \n";
       fHistogram->SetName(hname.Data()); // restore histogram name
    }
 
    if (fHists) {
       auto lnk = fHists->FirstLink();
-      Int_t hcount = 0;
       while (lnk) {
-         auto h = (TH1 *) lnk->GetObject();
+         auto h = static_cast<TH1 *>(lnk->GetObject());
          TString hname = h->GetName();
-         h->SetName(TString::Format("%s_stack_%d", hname.Data(), ++hcount).Data());
-         h->SavePrimitive(out,"nodraw");
-         out<<"   "<<GetName()<<"->Add("<<h->GetName()<<", \""<<lnk->GetOption()<<"\");"<<std::endl;
+         h->SetName(TString::Format("%s_stack_%d", name.Data(), ++hcount).Data());
+         h->SavePrimitive(out, "nodraw");
+         out << "   " << name << "->Add(" << h->GetName() << ", \""
+             << TString(lnk->GetOption()).ReplaceSpecialCppChars() << "\");\n";
          h->SetName(hname.Data()); // restore histogram name
          lnk = lnk->Next();
       }
    }
-   out << "   " << GetName() << "->Draw(\n" << option << "\");" << std::endl;
+
+   if (!option || !strstr(option, "nodraw"))
+      out << "   " << name << "->Draw(\n" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

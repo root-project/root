@@ -302,7 +302,6 @@ void TPolyMarker::Print(Option_t *) const
 void TPolyMarker::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    TString args;
-
    if (Size() > 0) {
       TString arrxname = SavePrimitiveArray(out, "pmarker", Size(), fX, kTRUE);
       TString arryname = SavePrimitiveArray(out, "pmarker", Size(), fY);
@@ -313,10 +312,10 @@ void TPolyMarker::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    SavePrimitiveConstructor(out, Class(), "pmarker", args, Size() == 0);
 
-   SaveMarkerAttributes(out,"pmarker",1,1,1);
+   SaveMarkerAttributes(out, "pmarker", 1, 1, 1);
 
-   if (!strstr(option, "nodraw"))
-      out<<"   pmarker->Draw(\"" << option << "\");" << std::endl;
+   if (!option || !strstr(option, "nodraw"))
+      out << "   pmarker->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -338,6 +338,8 @@ protected:
    virtual void GetRange(Double_t *xmin, Double_t *xmax) const;
    virtual TH1 *DoCreateHistogram(Double_t xmin, Double_t xmax, Bool_t recreate = kFALSE);
 
+   TString ProvideSaveName(Option_t *option);
+
 public:
 
    // TF1 status bits
