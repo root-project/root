@@ -1346,6 +1346,11 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
                        )
   endif(ARG_OBJECT_LIBRARY)
 
+  # Include directories relative to the installed location for installed targets:
+  if (PROJECT_NAME STREQUAL ROOT)
+    target_include_directories(${libname} PUBLIC $<INSTALL_INTERFACE:include>)
+  endif()
+
   if (NOT (ARG_HEADERS OR ARG_NODEPHEADERS))
     message(AUTHOR_WARNING "Called with no HEADERS and no NODEPHEADER. The generated "
       "dictionary will be empty. Consider using ROOT_LINKER_LIBRARY instead.")
