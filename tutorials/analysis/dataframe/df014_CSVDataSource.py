@@ -25,7 +25,7 @@ import os
 
 # Let's first create a RDF that will read from the CSV file.
 # The types of the columns will be automatically inferred.
-fileNameUrl = "http://root.cern/files/tutorials/df014_CsvDataSource_MuRun2010B.csv"
+fileNameUrl = "http://root-test.web.cern.ch/files/tutorials/df014_CsvDataSource_MuRun2010B.csv"
 fileName = "CsvDataSource_MuRun2010B.csv"
 if not os.path.isfile(fileName):
     urllib.request.urlretrieve(fileNameUrl, fileName)
