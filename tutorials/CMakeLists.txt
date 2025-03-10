@@ -656,6 +656,10 @@ if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
   set (tmva-TMVA_SOFIE_GNN_Application-depends tutorial-tmva-TMVA_SOFIE_GNN_Parser)
 endif()
 
+# Download open data csv only once from a python tutorial, the C++ ones depend on it
+set(dataframe-df014_CSVDataSource-depends tutorial-dataframe-df014_CSVDataSource-py)
+set(dataframe-df015_LazyDataSource-depends tutorial-dataframe-df014_CSVDataSource-py)
+
 #---Loop over all tutorials and define the corresponding test---------
 foreach(t ${tutorials})
   list(FIND returncode_1 ${t} index)
@@ -936,11 +940,17 @@ if(ROOT_pyroot_FOUND)
       endif()
     endforeach()
 
+    if(NOT ${${tname}-depends} STREQUAL ${tutorial_name})
+      set(tutorial_dependency ${${tname}-depends})
+    else()
+      set(tutorial_dependency "")
+    endif()
+
     ROOT_ADD_TEST(${tutorial_name}
                 COMMAND ${Python3_EXECUTABLE} ${setThreadPoolSize} ${thisTestPoolSize} ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS ${labels}
-                DEPENDS ${${tname}-depends}
+                DEPENDS ${tutorial_dependency}
                 ENVIRONMENT ${TUTORIAL_ENV}
                 PYTHON_DEPS ${python_deps}
                 ${py_will_fail})
