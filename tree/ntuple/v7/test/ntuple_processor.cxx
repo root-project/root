@@ -2,6 +2,8 @@
 
 #include <ROOT/RNTupleProcessor.hxx>
 
+#include <TMemFile.h>
+
 TEST(RNTupleProcessor, EmptyNTuple)
 {
    FileRaii fileGuard("test_ntuple_processor_empty.root");
@@ -19,6 +21,34 @@ TEST(RNTupleProcessor, EmptyNTuple)
       nEntries++;
    }
    EXPECT_EQ(0, nEntries);
+   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+}
+
+TEST(RNTupleProcessor, TMemFile)
+{
+   TMemFile memFile("test_ntuple_processor_tmemfile.root", "RECREATE");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<float>("x");
+      auto ntuple = RNTupleWriter::Append(std::move(model), "ntuple", memFile);
+
+      for (unsigned i = 0; i < 5; ++i) {
+         *fldX = static_cast<float>(i);
+         ntuple->Fill();
+      }
+   }
+
+   auto proc = RNTupleProcessor::Create({"ntuple", &memFile});
+   auto x = proc->GetEntry().GetPtr<float>("x");
+
+   int nEntries = 0;
+   for ([[maybe_unused]] const auto &entry : *proc) {
+      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
+      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+
+      EXPECT_FLOAT_EQ(static_cast<float>(nEntries - 1), *x);
+   }
+   EXPECT_EQ(nEntries, 5);
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
 }
 
