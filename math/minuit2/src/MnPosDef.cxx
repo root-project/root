@@ -99,9 +99,7 @@ MinimumError MnPosDef::operator()(const MinimumError &e, const MnMachinePrecisio
 
    print.Warn("Matrix forced pos-def by adding to diagonal", pAdd);
 
-   MinimumError epdf(err, MinimumError::MnMadePosDef);
-   std::cout << epdf.Hessian().size() << "  " << epdf.Hessian().Nrow() << std::endl;
-   return epdf;
+   return MinimumError(err, MinimumError::MnMadePosDef);
 }
 
 } // namespace Minuit2

@@ -1178,7 +1178,7 @@ L4: // New iteration
    n0 = 0;
    for( i = 0; i < n; i++) {
       fGr[i]=0.; // zero gradients
-      if (fPL0[i] > .0) {   // fLO is negstive foa fixed parameters
+      if (fPL0[i] > .0) {   // fLO is negative for fixed parameters
          n0=n0+1;
          // new iteration - new parallelepiped
          if (fPL[i] > .0) fPL0[i]=fPL[i];
