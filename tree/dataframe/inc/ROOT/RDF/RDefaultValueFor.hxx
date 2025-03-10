@@ -91,8 +91,9 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      fValues[slot] = RDFInternal::GetColumnReader<T>(
-         slot, fColRegister.GetReader(slot, fColumnNames[0], fVariation, typeid(T)), *fLoopManager, r, fColumnNames[0]);
+      fValues[slot] =
+         RDFInternal::GetColumnReader(slot, fColRegister.GetReader(slot, fColumnNames[0], fVariation, typeid(T)),
+                                      *fLoopManager, r, fColumnNames[0], typeid(T));
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
    }
 
