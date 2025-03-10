@@ -6,8 +6,6 @@
 /// This is an example of using a RNN in TMVA. We do classification using a toy time dependent data set
 /// that is generated when running this example macro
 ///
-/// \macro_image
-/// \macro_output
 /// \macro_code
 ///
 /// \author Lorenzo Moneta
