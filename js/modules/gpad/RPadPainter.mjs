@@ -436,9 +436,19 @@ class RPadPainter extends RObjectPainter {
       this.createAttFill({ pattern: 1001, color: 0 });
 
       if ((rect.width <= lmt) || (rect.height <= lmt)) {
-         svg.style('display', 'none');
-         console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
-         rect.width = 200; rect.height = 100; // just to complete drawing
+         if (this.snapid === undefined) {
+            svg.style('display', 'none');
+            console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
+         }
+         if (this._pad_width && this._pad_height) {
+            // use last valid dimensions
+            rect.width = this._pad_width;
+            rect.height = this._pad_height;
+         } else {
+            // just to complete drawing.
+            rect.width = 800;
+            rect.height = 600;
+         }
       } else
          svg.style('display', null);
 
@@ -1183,7 +1193,7 @@ class RPadPainter extends RObjectPainter {
 
          const mainid = this.selectDom().attr('id');
 
-         if (!this.isBatchMode() && !this.use_openui && !this.brlayout && mainid && isStr(mainid) && !getHPainter()) {
+         if (!this.isBatchMode() && this.online_canvas && !this.use_openui && !this.brlayout && mainid && isStr(mainid) && !getHPainter()) {
             this.brlayout = new BrowserLayout(mainid, null, this);
             this.brlayout.create(mainid, true);
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas

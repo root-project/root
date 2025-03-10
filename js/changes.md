@@ -1,5 +1,9 @@
 # JSROOT changelog
 
+## Changes in 7.8.x
+1. Fix - hidden canvas in Jupyter Lab, https://root-forum.cern.ch/t/63097/
+
+
 ## Changes in 7.8.1
 1. Fix - correctly position title according to gStyle->GetTitleAlign()
 2. Fix - tooltips on TGraphPolar
