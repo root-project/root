@@ -544,8 +544,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy()
    //   one tree in the chain has that branch
    const auto &suppressErrorsForMissingBranches = fTreeReader->fSuppressErrorsForMissingBranches;
    const bool suppressErrorsForThisBranch =
-      (std::find(suppressErrorsForMissingBranches.cbegin(), suppressErrorsForMissingBranches.cend(),
-                 originalBranchName) != suppressErrorsForMissingBranches.cend());
+      (suppressErrorsForMissingBranches.find(originalBranchName) != suppressErrorsForMissingBranches.cend());
 
    if (!branch) {
       // We had an error, the branch name had no "." or we simply did not find anything.
