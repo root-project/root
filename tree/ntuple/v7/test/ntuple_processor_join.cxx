@@ -2,6 +2,8 @@
 
 #include <ROOT/RNTupleProcessor.hxx>
 
+#include <TMemFile.h>
+
 class RNTupleJoinProcessorTest : public testing::Test {
 protected:
    const std::array<std::string, 4> fFileNames{"test_ntuple_join_processor1.root", "test_ntuple_join_processor2.root",
@@ -283,6 +285,42 @@ TEST_F(RNTupleJoinProcessorTest, WithModel)
       } catch (const ROOT::RException &err) {
          EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: ntuple2.z"));
       }
+   }
+
+   EXPECT_EQ(5, proc->GetNEntriesProcessed());
+}
+
+TEST_F(RNTupleJoinProcessorTest, TMemFile)
+{
+   TMemFile memFile("test_ntuple_processor_join_tmemfile.root", "RECREATE");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldI = model->MakeField<int>("i");
+      auto fldY = model->MakeField<std::vector<float>>("y");
+      auto ntuple = RNTupleWriter::Append(std::move(model), "ntuple_aux", memFile);
+
+      for (unsigned i = 0; i < 10; ++i) {
+         *fldI = i;
+         *fldY = {static_cast<float>(*fldI * 0.2), 3.14, static_cast<float>(*fldI * 1.3)};
+         ntuple->Fill();
+      }
+   }
+
+   auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]}, {{"ntuple_aux", &memFile}}, {"i"});
+
+   int nEntries = 0;
+   auto i = proc->GetEntry().GetPtr<int>("i");
+   auto x = proc->GetEntry().GetPtr<float>("x");
+   auto y = proc->GetEntry().GetPtr<std::vector<float>>("ntuple_aux.y");
+   std::vector<float> yExpected;
+   for ([[maybe_unused]] auto &entry : *proc) {
+      EXPECT_EQ(proc->GetCurrentEntryNumber(), nEntries++);
+
+      EXPECT_FLOAT_EQ(proc->GetCurrentEntryNumber() * 2, *i);
+      EXPECT_FLOAT_EQ(*i * 0.5f, *x);
+
+      yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
+      EXPECT_EQ(yExpected, *y);
    }
 
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
