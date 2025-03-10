@@ -11,6 +11,10 @@
 #include "gtest/gtest.h"
 #include <memory>
 #include <thread>
+
+#include <TTreeReader.h>
+#include <TTreeReaderArray.h>
+
 using namespace ROOT;              // RDataFrame
 using namespace ROOT::RDF;         // RInterface
 using namespace ROOT::VecOps;      // RVec

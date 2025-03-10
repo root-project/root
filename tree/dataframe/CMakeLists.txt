@@ -108,6 +108,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDataFrame.cxx
     src/RDatasetSpec.cxx
     src/RDFActionHelpers.cxx
+    src/RDFColumnReaderUtils.cxx
     src/RDFColumnRegister.cxx
     src/RDFDisplay.cxx
     src/RDFGraphUtils.cxx
@@ -126,6 +127,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RMetaData.cxx
     src/RRangeBase.cxx
     src/RSample.cxx
+    src/RTreeColumnReader.cxx
     src/RResultPtr.cxx
     src/RVariationBase.cxx
     src/RVariationReader.cxx

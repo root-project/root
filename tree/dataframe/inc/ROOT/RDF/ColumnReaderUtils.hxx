@@ -17,13 +17,11 @@
 #include "RDefineReader.hxx"
 #include "RDSColumnReader.hxx"
 #include "RLoopManager.hxx"
-#include "RTreeColumnReader.hxx"
 #include "RVariationBase.hxx"
 #include "RVariationReader.hxx"
 
 #include <ROOT/RDataSource.hxx>
 #include <ROOT/TypeTraits.hxx>
-#include <TTreeReader.h>
 
 #include <array>
 #include <cassert>
@@ -40,25 +38,9 @@ namespace RDF {
 using namespace ROOT::TypeTraits;
 namespace RDFDetail = ROOT::Detail::RDF;
 
-template <typename T>
 RDFDetail::RColumnReaderBase *GetColumnReader(unsigned int slot, RColumnReaderBase *defineOrVariationReader,
-                                              RLoopManager &lm, TTreeReader *r, const std::string &colName)
-{
-   if (defineOrVariationReader != nullptr)
-      return defineOrVariationReader;
-
-   // Check if we already inserted a reader for this column in the dataset column readers (RDataSource or Tree/TChain
-   // readers)
-   auto *datasetColReader = lm.GetDatasetColumnReader(slot, colName, typeid(T));
-   if (datasetColReader != nullptr)
-      return datasetColReader;
-
-   assert(r != nullptr && "We could not find a reader for this column, this should never happen at this point.");
-
-   // Make a RTreeColumnReader for this column and insert it in RLoopManager's map
-   auto treeColReader = std::make_unique<RTreeColumnReader<T>>(*r, colName);
-   return lm.AddTreeColumnReader(slot, colName, std::move(treeColReader), typeid(T));
-}
+                                              RLoopManager &lm, TTreeReader *treeReader, std::string_view colName,
+                                              const std::type_info &ti);
 
 /// This type aggregates some of the arguments passed to GetColumnReaders.
 /// We need to pass a single RColumnReadersInfo object rather than each argument separately because with too many
@@ -84,8 +66,8 @@ GetColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, const
 
    int i = -1;
    std::array<RDFDetail::RColumnReaderBase *, sizeof...(ColTypes)> ret{
-      (++i, GetColumnReader<ColTypes>(slot, colRegister.GetReader(slot, colNames[i], variationName, typeid(ColTypes)),
-                                      lm, r, colNames[i]))...};
+      (++i, GetColumnReader(slot, colRegister.GetReader(slot, colNames[i], variationName, typeid(ColTypes)), lm, r,
+                            colNames[i], typeid(ColTypes)))...};
    return ret;
 }
 
