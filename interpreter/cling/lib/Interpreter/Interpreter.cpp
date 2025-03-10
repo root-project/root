@@ -9,6 +9,9 @@
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Utils/Paths.h"
+#ifdef ADAPTIVECPP_ENABLED
+#include "AdaptiveCppConfig.h"
+#endif
 #ifdef _WIN32
 #include "cling/Utils/Platform.h"
 #endif
@@ -200,6 +203,52 @@ namespace cling {
     Interp.setCallbacks(std::move(AutoLoadCB));
   }
 
+  // Utility function to execute a command and capture its output
+  // FIXME: Move this function to utility
+  std::string runCommand(const std::string& command) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"),
+                                                  pclose);
+    if (!pipe) {
+      throw std::runtime_error("Failed to run command: " + command);
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+      result += buffer.data();
+    }
+    return result;
+  }
+
+  std::vector<std::string> parseCommandOutput(const std::string& output) {
+    std::vector<std::string> args;
+    std::istringstream iss(output);
+    std::string token;
+
+    bool firstTokenSkipped = false;
+    bool dummyTokenSkipped = false;
+
+    while (iss >> token) {
+      if (!firstTokenSkipped) {
+        // Skip the first token (`clang++`) and set the flag
+        firstTokenSkipped = true;
+        continue;
+      }
+
+      if (!dummyTokenSkipped && token == "dummy.cpp") {
+        // Skip the `dummy.cpp` but only once.
+        dummyTokenSkipped = true;
+        continue;
+      }
+      // Cling will raise an unused warning for these
+      if (token.find("-Wl,-rpath") != std::string::npos) {
+        continue;
+      }
+
+      args.push_back(token);
+    }
+    return args;
+  }
+
   Interpreter::Interpreter(int argc, const char* const *argv,
                            const char* llvmdir /*= 0*/,
                            const ModuleFileExtensions& moduleExtensions,
@@ -211,6 +260,35 @@ namespace cling {
     m_DynamicLookupEnabled(false), m_RawInputEnabled(false),
     m_RuntimeOptions{},
     m_OptLevel(parentInterp ? parentInterp->m_OptLevel : -1) {
+
+#ifdef ADAPTIVECPP_ENABLED
+    // Extract AdaptiveCpp arguments
+    std::ostringstream commandStream;
+    commandStream << ADAPTIVE_CPP_BINARY << " --acpp-dryrun dummy.cpp";
+    for (int i = 1; i < argc; ++i) { // Start from 1 to skip cling executable
+      commandStream << " " << argv[i];
+    }
+
+    std::string output = runCommand(commandStream.str());
+    std::vector<std::string> additionalArgs = parseCommandOutput(output);
+
+    std::vector<const char*> argvChar;
+    argvChar.reserve(argc + additionalArgs.size() + 1);
+
+    // Copy existing arguments
+    for (int i = 0; i < argc; ++i) {
+      argvChar.push_back(argv[i]);
+    }
+
+    // Add acpp arguments
+    for (const auto& arg : additionalArgs) {
+      argvChar.push_back(arg.c_str());
+    }
+
+    argvChar.push_back(nullptr); // signal end of array
+
+    m_Opts = InvocationOptions(argvChar.size() - 1, argvChar.data());
+#endif
 
     if (handleSimpleOptions(m_Opts))
       return;
