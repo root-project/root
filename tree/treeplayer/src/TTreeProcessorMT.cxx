@@ -288,7 +288,7 @@ std::unique_ptr<TTreeReader>
 TTreeView::GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::string> &treeNames,
                          const std::vector<std::string> &fileNames, const ROOT::TreeUtils::RFriendInfo &friendInfo,
                          const TEntryList &entryList, const std::vector<Long64_t> &nEntries,
-                         const std::vector<std::string> &suppressErrorsForMissingBranches)
+                         const std::set<std::string> &suppressErrorsForMissingBranches)
 {
    const bool hasEntryList = entryList.GetN() > 0;
    const bool usingLocalEntries = friendInfo.fFriendNames.empty() && !hasEntryList;
@@ -412,7 +412,7 @@ TTreeProcessorMT::TTreeProcessorMT(const std::vector<std::string_view> &filename
 /// \param[in] nThreads Number of threads to create in the underlying thread-pool. The semantics of this argument are
 ///                     the same as for TThreadExecutor.
 TTreeProcessorMT::TTreeProcessorMT(TTree &tree, const TEntryList &entries, UInt_t nThreads,
-                                   const std::vector<std::string> &suppressErrorsForMissingBranches)
+                                   const std::set<std::string> &suppressErrorsForMissingBranches)
    : fFileNames(Internal::TreeUtils::GetFileNamesFromTree(tree)),
      fTreeNames(Internal::TreeUtils::GetTreeFullPaths(tree)),
      fEntryList(entries),
@@ -430,7 +430,7 @@ TTreeProcessorMT::TTreeProcessorMT(TTree &tree, const TEntryList &entries, UInt_
 ///                     the same as for TThreadExecutor.
 /// \param[in] globalRange Global entry range to process, {begin (inclusive), end (exclusive)}.
 TTreeProcessorMT::TTreeProcessorMT(TTree &tree, UInt_t nThreads, const EntryRange &globalRange,
-                                   const std::vector<std::string> &suppressErrorsForMissingBranches)
+                                   const std::set<std::string> &suppressErrorsForMissingBranches)
    : fFileNames(Internal::TreeUtils::GetFileNamesFromTree(tree)),
      fTreeNames(Internal::TreeUtils::GetTreeFullPaths(tree)),
      fFriendInfo(Internal::TreeUtils::GetFriendInfo(tree, /*retrieveEntries*/ true)),

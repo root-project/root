@@ -201,7 +201,7 @@ TTreeReader::TTreeReader() : fNotify(this), fFriendProxies() {}
 ///                  per chain.SetEntryList(&entryList).
 
 TTreeReader::TTreeReader(TTree *tree, TEntryList *entryList /*= nullptr*/, bool warnAboutLongerFriends,
-                         const std::vector<std::string> &suppressErrorsForMissingBranches)
+                         const std::set<std::string> &suppressErrorsForMissingBranches)
    : fTree(tree),
      fEntryList(entryList),
      fNotify(this),
@@ -384,9 +384,8 @@ bool TTreeReader::SetProxies()
       // where the first tree of the chain does not contain that branch. In such
       // case, we need to postpone the creation of the corresponding proxy until
       // we find the branch in a following tree of the chain.
-      const bool suppressErrorsForThisBranch =
-         (std::find(fSuppressErrorsForMissingBranches.cbegin(), fSuppressErrorsForMissingBranches.cend(),
-                    reader->fBranchName.View()) != fSuppressErrorsForMissingBranches.cend());
+      const bool suppressErrorsForThisBranch = (fSuppressErrorsForMissingBranches.find(reader->fBranchName.Data()) !=
+                                                fSuppressErrorsForMissingBranches.cend());
       // Because of the situation described above, we may have some proxies
       // already created and some not, if their branch was not available so far.
       // Make sure we do not recreate the proxy unnecessarily, unless the

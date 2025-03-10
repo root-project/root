@@ -931,10 +931,9 @@ ColumnNames_t GetValidatedColumnNames(RLoopManager &lm, const unsigned int nColu
       // Look for a possible overlap between the unknown columns and the
       // columns we should ignore for the purpose of the following exception
       std::set<std::string> intersection;
-      auto colsToIgnore = lm.GetSuppressErrorsForMissingBranches();
+      const auto &colsToIgnore = lm.GetSuppressErrorsForMissingBranches();
       std::sort(unknownColumns.begin(), unknownColumns.end());
-      std::sort(colsToIgnore.begin(), colsToIgnore.end());
-      std::set_intersection(unknownColumns.begin(), unknownColumns.end(), colsToIgnore.begin(), colsToIgnore.end(),
+      std::set_intersection(unknownColumns.cbegin(), unknownColumns.cend(), colsToIgnore.cbegin(), colsToIgnore.cend(),
                             std::inserter(intersection, intersection.begin()));
       if (intersection.empty()) {
          std::string errMsg = std::string("Unknown column") + (unknownColumns.size() > 1 ? "s: " : ": ");
