@@ -320,7 +320,7 @@ std::unique_ptr<T[]> MakeUninitArray(std::size_t size)
    return std::unique_ptr<T[]>(new T[size]);
 }
 
-inline constexpr ENTupleColumnType kTestFutureType =
+inline constexpr ENTupleColumnType kTestFutureColumnType =
    static_cast<ENTupleColumnType>(std::numeric_limits<std::underlying_type_t<ENTupleColumnType>>::max() - 1);
 
 inline constexpr ROOT::ENTupleStructure kTestFutureFieldStructure =

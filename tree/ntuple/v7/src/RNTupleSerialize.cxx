@@ -711,7 +711,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnTy
    case ENTupleColumnType::kReal32Trunc: return SerializeUInt16(0x1C, buffer);
    case ENTupleColumnType::kReal32Quant: return SerializeUInt16(0x1D, buffer);
    default:
-      if (type == ROOT::Internal::kTestFutureType)
+      if (type == ROOT::Internal::kTestFutureColumnType)
          return SerializeUInt16(0x99, buffer);
       throw RException(R__FAIL("ROOT bug: unexpected column type"));
    }
@@ -753,7 +753,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(const voi
    case 0x1B: type = ENTupleColumnType::kSplitIndex64; break;
    case 0x1C: type = ENTupleColumnType::kReal32Trunc; break;
    case 0x1D: type = ENTupleColumnType::kReal32Quant; break;
-   // case 0x99 => kTestFutureType missing on purpose
+   // case 0x99 => kTestFutureColumnType missing on purpose
    default:
       // may be a column type introduced by a future version
       type = ENTupleColumnType::kUnknown;

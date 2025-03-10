@@ -59,7 +59,7 @@ ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(ENTupleColumn
    case ENTupleColumnType::kReal32Trunc: return std::make_pair(10, 31);
    case ENTupleColumnType::kReal32Quant: return std::make_pair(1, 32);
    default:
-      if (type == kTestFutureType)
+      if (type == kTestFutureColumnType)
          return std::make_pair(32, 32);
       assert(false);
    }
@@ -100,7 +100,7 @@ const char *ROOT::Experimental::Internal::RColumnElementBase::GetColumnTypeName(
    case ENTupleColumnType::kReal32Trunc: return "Real32Trunc";
    case ENTupleColumnType::kReal32Quant: return "Real32Quant";
    default:
-      if (type == kTestFutureType)
+      if (type == kTestFutureColumnType)
          return "TestFutureType";
       return "UNKNOWN";
    }
@@ -143,8 +143,8 @@ ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(ENTupleColumnTy
    case ENTupleColumnType::kReal32Trunc: return std::make_unique<RColumnElement<float, ENTupleColumnType::kReal32Trunc>>();
    case ENTupleColumnType::kReal32Quant: return std::make_unique<RColumnElement<float, ENTupleColumnType::kReal32Quant>>();
    default:
-      if (onDiskType == kTestFutureType)
-         return std::make_unique<RColumnElement<Internal::RTestFutureColumn, kTestFutureType>>();
+      if (onDiskType == kTestFutureColumnType)
+         return std::make_unique<RColumnElement<Internal::RTestFutureColumn, kTestFutureColumnType>>();
       assert(false);
    }
    //clang-format on

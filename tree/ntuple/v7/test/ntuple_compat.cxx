@@ -163,7 +163,7 @@ protected:
    }
    const RColumnRepresentations &GetColumnRepresentations() const final
    {
-      static const RColumnRepresentations representations{{{ROOT::Internal::kTestFutureType}}, {}};
+      static const RColumnRepresentations representations{{{ROOT::Internal::kTestFutureColumnType}}, {}};
       return representations;
    }
 
