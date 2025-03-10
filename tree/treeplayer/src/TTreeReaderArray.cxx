@@ -547,10 +547,8 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
 
    // Tell the branch proxy to suppress the errors for missing branch if this
    // branch name is found in the list of suppressions
-   const bool suppressErrorsForThisBranch =
-      (std::find(fTreeReader->fSuppressErrorsForMissingBranches.cbegin(),
-                 fTreeReader->fSuppressErrorsForMissingBranches.cend(),
-                 fBranchName.Data()) != fTreeReader->fSuppressErrorsForMissingBranches.cend());
+   const bool suppressErrorsForThisBranch = (fTreeReader->fSuppressErrorsForMissingBranches.find(fBranchName.Data()) !=
+                                             fTreeReader->fSuppressErrorsForMissingBranches.cend());
 
    TDictionary *branchActualType = nullptr;
    TBranch *branch = nullptr;
