@@ -44,6 +44,9 @@ set(TUTORIAL_ENV ${ROOT_environ} OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NU
 #---Copy the CTestCustom.cmake file into the build directory--------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
 
+#---Copy the input file of the quadp portfolio example to the build directory--------
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/quadp/stock.root ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+
 #---Provide a rootlogon.C file in the current build directory that
 #   will affect the way we run all tutorials.
 #   This overwrites the existing rootlogon.C and rootalias.C in the
