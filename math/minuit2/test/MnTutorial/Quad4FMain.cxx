@@ -13,6 +13,7 @@
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnUserParameters.h"
 #include "Minuit2/MnPrint.h"
+#include "Minuit2/MnUserFcn.h"
 #include <iostream>
 
 // #include "TimingUtilities/PentiumTimer.h"
@@ -58,8 +59,7 @@ int main()
       std::cout << "minimum with grad calculation : " << min << std::endl;
 
       // try to run hesse
-      MnHesse hesse;
-      hesse(gfcn, min);
+      MnHesse{}(MnUserFcn{gfcn, min.UserState().Trafo(), min.NFcn()}, min.State(), min.UserState().Trafo());
       std::cout << "minimum after hesse: " << min << std::endl;
    }
 

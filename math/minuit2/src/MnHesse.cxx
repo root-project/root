@@ -57,38 +57,27 @@ MnHesse::operator()(const FCNBase &fcn, const MnUserParameterState &state, unsig
    // check if we can use analytical gradient
    if (fcn.HasGradient()) {
       // no need to compute gradient here
-      MinimumState tmp = ComputeAnalytical(fcn, MinimumState(par, MinimumError(MnAlgebraicSymMatrix(n), 1.), FunctionGradient(n),
-        state.Edm(), state.NFcn()), state.Trafo());
+      MinimumState tmp = ComputeAnalytical(fcn, {par, {MnAlgebraicSymMatrix(n), 1.}, FunctionGradient(n),
+        state.Edm(), static_cast<int>(state.NFcn())}, state.Trafo());
       return MnUserParameterState(tmp, fcn.Up(), state.Trafo());
    }
    // case of numerical gradient
-   Numerical2PGradientCalculator gc(mfcn, state.Trafo(), fStrategy);
-   FunctionGradient gra = gc(par);
-   MinimumState tmp = ComputeNumerical(
-      mfcn, MinimumState(par, MinimumError(MnAlgebraicSymMatrix(n), 1.), gra, state.Edm(), state.NFcn()), state.Trafo(),
-      maxcalls, fStrategy);
+   MinimumState tmp = ComputeNumerical(mfcn,
+                                       {par,
+                                        {MnAlgebraicSymMatrix(n), 1.},
+                                        Numerical2PGradientCalculator{mfcn, state.Trafo(), fStrategy}(par),
+                                        state.Edm(),
+                                        static_cast<int>(state.NFcn())},
+                                       state.Trafo(), maxcalls, fStrategy);
    return MnUserParameterState(tmp, fcn.Up(), state.Trafo());
-}
-
-void MnHesse::operator()(const FCNBase &fcn, FunctionMinimum &min, unsigned int maxcalls) const
-{
-   // interface from FunctionMinimum to be used after minimization
-   // use last state from the minimization without the need to re-create a new state
-   // do not reset function calls and keep updating them
-   MnUserFcn mfcn(fcn, min.UserState().Trafo(), min.NFcn());
-   MinimumState st = (*this)(mfcn, min.State(), min.UserState().Trafo(), maxcalls);
-   min.Add(st);
 }
 
 MinimumState MnHesse::operator()(const MnFcn &mfcn, const MinimumState &st, const MnUserTransformation &trafo,
                                  unsigned int maxcalls) const
 {
-   // check first if we have an analytical gradient
-   if (st.Gradient().IsAnalytical()) {
-      // check if we can compute analytical Hessian
-      if (mfcn.Fcn().HasGradient() && mfcn.Fcn().HasHessian()) {
-         return ComputeAnalytical(mfcn.Fcn(), st, trafo);
-      }
+   // check first if we have an analytical gradient and if we can compute analytical Hessian
+   if (st.Gradient().IsAnalytical() && mfcn.Fcn().HasGradient() && mfcn.Fcn().HasHessian()) {
+      return ComputeAnalytical(mfcn.Fcn(), st, trafo);
    }
    // case of numerical computation or only analytical first derivatives
    return ComputeNumerical(mfcn, st, trafo, maxcalls, fStrategy);
@@ -102,12 +91,13 @@ MinimumState ComputeAnalytical(const FCNBase &fcn, const MinimumState &st, const
    MnAlgebraicSymMatrix vhmat(n);
 
    MnPrint print("MnHesse");
+   MnPrint::TimingScope timingScope(print, "Done after");
 
    const MnMachinePrecision &prec = trafo.Precision();
 
    std::unique_ptr<AnalyticalGradientCalculator> hc;
    if (fcn.gradParameterSpace() == GradientParameterSpace::Internal) {
-      hc = std::unique_ptr<AnalyticalGradientCalculator> (new ExternalInternalGradientCalculator(fcn,trafo));
+      hc = std::make_unique<ExternalInternalGradientCalculator>(fcn,trafo);
    }  else {
       hc = std::make_unique<AnalyticalGradientCalculator>(fcn,trafo);
    }
@@ -172,6 +162,8 @@ MinimumState ComputeNumerical(const MnFcn &mfcn, const MinimumState &st, const M
    // internal interface from MinimumState and MnUserTransformation
    // Function who does the real Hessian calculations
    MnPrint print("MnHesse");
+
+   MnPrint::TimingScope timingScope(print, "Done after");
 
    MnFcnCaller mfcnCaller{mfcn};
 

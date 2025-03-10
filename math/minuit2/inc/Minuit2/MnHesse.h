@@ -52,12 +52,6 @@ public:
 
    /// FCN + MnUserParameterState
    MnUserParameterState operator()(const FCNBase &, const MnUserParameterState &, unsigned int maxcalls = 0) const;
-   ///
-   /// API to use MnHesse after minimization when function minimum is avalilable, otherwise information on the last
-   /// state will be lost. (It would be needed to re-call the gradient and spend extra useless function calls) The
-   /// Function Minimum is updated (modified) by adding the Hesse results as last state of minimization
-   ///
-   void operator()(const FCNBase &, FunctionMinimum &, unsigned int maxcalls = 0) const;
 
    /// internal interface
    ///

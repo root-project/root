@@ -12,11 +12,13 @@
 
 #include "Minuit2/MnConfig.h"
 
-#include <sstream>
-#include <utility>
 #include <cassert>
-#include <string>
+#include <chrono>
 #include <ios>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <utility>
 
 namespace ROOT {
 namespace Minuit2 {
@@ -140,6 +142,19 @@ public:
    {
       Log(eTrace, args...);
    }
+
+   class TimingScope {
+
+   public:
+      TimingScope(MnPrint &mnPrint, std::string const &message);
+
+      ~TimingScope();
+
+   private:
+      std::chrono::steady_clock::time_point fBegin;
+      MnPrint &fMnPrint;
+      const std::string fMessage;
+   };
 
 private:
    // low level logging
