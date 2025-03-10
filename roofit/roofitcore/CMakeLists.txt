@@ -454,7 +454,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     Graf
     Matrix
     Tree
-    Minuit
     RIO
     MathCore
     Foam
