@@ -40,10 +40,6 @@ section 5
 class FumiliBuilder : public MinimumBuilder {
 
 public:
-   FumiliBuilder() : fEstimator(VariableMetricEDMEstimator()), fErrorUpdator(FumiliErrorUpdator()) {}
-
-   ~FumiliBuilder() override {}
-
    /**
 
    Class the member function calculating the Minimum and verifies the result

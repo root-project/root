@@ -37,8 +37,6 @@ class FCNGradAdapter : public FCNBase {
 public:
    FCNGradAdapter(const Function &f, double up = 1.) : fFunc(f), fUp(up), fGrad(std::vector<double>(fFunc.NDim())) {}
 
-   ~FCNGradAdapter() override {}
-
    bool HasGradient() const override { return true; }
 
    double operator()(std::vector<double> const& v) const override { return fFunc.operator()(&v[0]); }
