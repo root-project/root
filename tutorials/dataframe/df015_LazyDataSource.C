@@ -26,7 +26,7 @@ int df015_LazyDataSource()
    // Let's first create a RDF that will read from the CSV file.
    // See the tutorial (https://root.cern/doc/master/df014__CSVDataSource_8C.html) on CSV data sources for more details!
    auto fileNameUrl = "http://root.cern/files/tutorials/df014_CsvDataSource_MuRun2010B.csv";
-   auto fileName = "df015_CsvDataSource_MuRun2010B.csv";
+   auto fileName = "CsvDataSource_MuRun2010B.csv";
    if(gSystem->AccessPathName(fileName))
       TFile::Cp(fileNameUrl, fileName);
 
