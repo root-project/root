@@ -81,7 +81,7 @@ public:
    {
       fLoopManager->Register(this);
       // We suppress errors that TTreeReader prints regarding the missing branch
-      fLoopManager->GetSuppressErrorsForMissingBranches().push_back(fColumnNames[0]);
+      fLoopManager->InsertSuppressErrorsForMissingBranch(fColumnNames[0]);
    }
 
    RFilterWithMissingValues(const RFilterWithMissingValues &) = delete;
@@ -93,7 +93,7 @@ public:
       // must Deregister objects from the RLoopManager here, before the fPrevNodePtr data member is destroyed:
       // otherwise if fPrevNodePtr is the RLoopManager, it will be destroyed before the calls to Deregister happen.
       fLoopManager->Deregister(this);
-      ROOT::Internal::RDF::Erase(fColumnNames[0], fLoopManager->GetSuppressErrorsForMissingBranches());
+      fLoopManager->EraseSuppressErrorsForMissingBranch(fColumnNames[0]);
    }
 
    bool CheckFilters(unsigned int slot, Long64_t entry) final
