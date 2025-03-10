@@ -213,18 +213,18 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
    // initial lambda Value
 
 
-   bool doLineSearch = (fMethodType == kLineSearch);
-   bool doTrustRegion = (fMethodType == kTrustRegion || fMethodType == kTrustRegionScaled);
-   bool scaleTR = (fMethodType == kTrustRegionScaled);
+   const bool doLineSearch = (fMethodType == kLineSearch);
+   const bool doTrustRegion = (fMethodType == kTrustRegion || fMethodType == kTrustRegionScaled);
+   const bool scaleTR = (fMethodType == kTrustRegionScaled);
    // trust region parameter
    // use as initial value 0.3 * || x0 ||
    auto & x0 = initialState.Vec();
    double normX0 = std::sqrt(inner_product(x0,x0));
    double delta = 0.3 * std::max(1.0 , normX0);
-   double eta = 0.1;
-   // use GSL defaults
-   double tr_factor_up = 3;
-   double tr_factor_down = 0.5;
+   const double eta = 0.1;
+   // use same values as used in GSL implementation
+   const double tr_factor_up = 3;
+   const double tr_factor_down = 0.5;
    bool acceptNewPoint = true;
 
    if (doLineSearch)
@@ -325,7 +325,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
          // if the proposed point (newton step) is inside the trust region radius accept it
          if (norm <= delta) {
             p = MinimumParameters(s0.Vec() + step, fcn(s0.Vec() + step));
-            print.Debug("Accept full Newton step - it inside TR ",delta);
+            print.Debug("Accept full Newton step - it is inside TR ",delta);
          } else {
             //step = - (delta/norm) * step;
 
@@ -360,54 +360,46 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
             } else {
                // Cauchy point can be inside the trust region
                double tau = std::min( (normGrad2*normGrad)/(gHg*delta), 1.0);
-               if (tau == 1.0) {
-                  // Cauchy is at the boundary
-                  step = - (delta/ normGrad) * s0.Gradient().Grad();
-                  if (scaleTR)
-                    step = Dinv2 * step;
 
-                  print.Debug("tau=1. - Use as new point the Cauchy  point - along gradient with norm=delta ", delta);
+               MnAlgebraicVector stepC(step.size());
+               stepC = -tau * (delta / normGrad) * s0.Gradient().Grad();
+               if (scaleTR)
+                  stepC = Dinv2 * stepC;
+
+               print.Debug("Use as new point the Cauchy  point - along gradient with tau ", tau, "delta = ", delta);
+
+               // compute dog -leg step solving quadratic equation a * t^2 + b * t + c = 0
+               // where a = ||p_n - P_c ||^2
+               //       b  = 2 * p_c * (P_n - P_c)
+               //       c = || pc ||^2 - ||Delta||^2
+               auto diffP = step - stepC;
+               double a = inner_product(diffP, diffP);
+               double b = 2. * inner_product(stepC, diffP);
+               // norm cauchy point is tau*delta
+               double c = (scaleTR) ? inner_product(stepC, stepC) - delta * delta : delta * delta * (tau * tau - 1.);
+
+               print.Debug(" dogleg equation", a, b, c);
+               // solution is
+               double t = 0;
+               // a cannot be negative or zero, otherwise point was accepted
+               if (a <= 0) {
+                  // case a is zero
+                  print.Warn("a is equal to zero!  a = ", a);
+                  print.Info(" delta ", delta, " tau ", tau, " gHg ", gHg, " normgrad2 ", normGrad2);
+                  t = -b / c;
                } else {
-                  MnAlgebraicVector stepC(step.size());
-                  stepC = - tau * (delta/ normGrad) * s0.Gradient().Grad();
-                  if (scaleTR)
-                    stepC = Dinv2 * stepC;
-
-                  print.Debug("Use as new point the Cauchy  point - along gradient with tau ", tau, "delta = ", delta);
-
-                  // compute dog -leg step solving quadratic equation a * t^2 + b * t + c = 0
-                  // where a = ||p_n - P_c ||^2
-                  //       b  = 2 * p_c * (P_n - P_c)
-                  //       c = || pc ||^2 - ||Delta||^2
-                  auto diffP = step - stepC;
-                  double a = inner_product(diffP, diffP);
-                  double b = 2. * inner_product(stepC, diffP);
-                  // norm cauchy point is tau*delta
-                  double c =  (scaleTR) ? inner_product(stepC,stepC) - delta*delta : delta*delta * (tau*tau - 1.);
-
-                  print.Debug(" dogleg equation", a, b, c);
-                  // solution is
-                  double t = 0;
-                  // a cannot be negative or zero, otherwise point was accepted
-                  if (a <= 0) {
-                     // case a is zero
-                     print.Warn("a is equal to zero!  a = ",a);
-                     print.Info(" delta ",delta," tau ",tau," gHg ",gHg," normgrad2 ",normGrad2);
-                     t = -b/c;
-                  } else {
-                     double t1 = (-b + sqrt(b * b - 4. * a * c)) / (2.0 * a);
-                     double t2 = (-b - sqrt(b * b - 4. * a * c)) / (2.0 * a);
-                     // if b is positive solution is
-                     print.Debug(" solution dogleg equation", t1, t2);
-                     if (t1 >= 0 && t1 <= 1.)
-                        t = t1;
-                     else
-                        t = t2;
-                  }
-                  step = stepC + t * diffP;
-                  // need to rescale point per D^-1 >
-                  print.Debug("New dogleg point is t = ", t);
+                  double t1 = (-b + sqrt(b * b - 4. * a * c)) / (2.0 * a);
+                  double t2 = (-b - sqrt(b * b - 4. * a * c)) / (2.0 * a);
+                  // if b is positive solution is
+                  print.Debug(" solution dogleg equation", t1, t2);
+                  if (t1 >= 0 && t1 <= 1.)
+                     t = t1;
+                  else
+                     t = t2;
                }
+               step = stepC + t * diffP;
+               // need to rescale point per D^-1 >
+               print.Debug("New dogleg point is t = ", t);
             }
             print.Debug("New accepted step is ",step);
 
@@ -418,9 +410,9 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
 
          // compute real changes (require an evaluation)
 
-         // expected change is gdel (I could correct for Hessian term but I have only INvHessian stored)
+         // expected change is gdel (can correct for Hessian )
          //double fcexp =  (-gdel - 0.5 * dot(step, hess(x) * step)
-         //double fcexp = -gdel;
+
          double svs = 0.5 * similarity(step, s0.Error().Hessian());
          double rho = (p.Fval()-s0.Fval())/(gdel+svs);
          if (rho < 0.25) {
