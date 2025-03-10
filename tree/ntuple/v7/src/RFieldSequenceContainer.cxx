@@ -31,20 +31,20 @@ ROOT::Experimental::RArrayField::RArrayField(std::string_view fieldName, std::un
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RArrayField::CloneImpl(std::string_view newName) const
 {
-   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
+   auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
    return std::make_unique<RArrayField>(newName, std::move(newItemField), fArrayLength);
 }
 
 std::size_t ROOT::Experimental::RArrayField::AppendImpl(const void *from)
 {
    std::size_t nbytes = 0;
-   if (fSubFields[0]->IsSimple()) {
-      GetPrincipalColumnOf(*fSubFields[0])->AppendV(from, fArrayLength);
-      nbytes += fArrayLength * GetPrincipalColumnOf(*fSubFields[0])->GetElement()->GetPackedSize();
+   if (fSubfields[0]->IsSimple()) {
+      GetPrincipalColumnOf(*fSubfields[0])->AppendV(from, fArrayLength);
+      nbytes += fArrayLength * GetPrincipalColumnOf(*fSubfields[0])->GetElement()->GetPackedSize();
    } else {
       auto arrayPtr = static_cast<const unsigned char *>(from);
       for (unsigned i = 0; i < fArrayLength; ++i) {
-         nbytes += CallAppendOn(*fSubFields[0], arrayPtr + (i * fItemSize));
+         nbytes += CallAppendOn(*fSubfields[0], arrayPtr + (i * fItemSize));
       }
    }
    return nbytes;
@@ -52,26 +52,26 @@ std::size_t ROOT::Experimental::RArrayField::AppendImpl(const void *from)
 
 void ROOT::Experimental::RArrayField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
 {
-   if (fSubFields[0]->IsSimple()) {
-      GetPrincipalColumnOf(*fSubFields[0])->ReadV(globalIndex * fArrayLength, fArrayLength, to);
+   if (fSubfields[0]->IsSimple()) {
+      GetPrincipalColumnOf(*fSubfields[0])->ReadV(globalIndex * fArrayLength, fArrayLength, to);
    } else {
       auto arrayPtr = static_cast<unsigned char *>(to);
       for (unsigned i = 0; i < fArrayLength; ++i) {
-         CallReadOn(*fSubFields[0], globalIndex * fArrayLength + i, arrayPtr + (i * fItemSize));
+         CallReadOn(*fSubfields[0], globalIndex * fArrayLength + i, arrayPtr + (i * fItemSize));
       }
    }
 }
 
 void ROOT::Experimental::RArrayField::ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to)
 {
-   if (fSubFields[0]->IsSimple()) {
-      GetPrincipalColumnOf(*fSubFields[0])
+   if (fSubfields[0]->IsSimple()) {
+      GetPrincipalColumnOf(*fSubfields[0])
          ->ReadV(RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * fArrayLength),
                  fArrayLength, to);
    } else {
       auto arrayPtr = static_cast<unsigned char *>(to);
       for (unsigned i = 0; i < fArrayLength; ++i) {
-         CallReadOn(*fSubFields[0],
+         CallReadOn(*fSubfields[0],
                     RNTupleLocalIndex(localIndex.GetClusterId(), localIndex.GetIndexInCluster() * fArrayLength + i),
                     arrayPtr + (i * fItemSize));
       }
@@ -80,12 +80,12 @@ void ROOT::Experimental::RArrayField::ReadInClusterImpl(RNTupleLocalIndex localI
 
 void ROOT::Experimental::RArrayField::ConstructValue(void *where) const
 {
-   if (fSubFields[0]->GetTraits() & kTraitTriviallyConstructible)
+   if (fSubfields[0]->GetTraits() & kTraitTriviallyConstructible)
       return;
 
    auto arrayPtr = reinterpret_cast<unsigned char *>(where);
    for (unsigned i = 0; i < fArrayLength; ++i) {
-      CallConstructValueOn(*fSubFields[0], arrayPtr + (i * fItemSize));
+      CallConstructValueOn(*fSubfields[0], arrayPtr + (i * fItemSize));
    }
 }
 
@@ -101,8 +101,8 @@ void ROOT::Experimental::RArrayField::RArrayDeleter::operator()(void *objPtr, bo
 
 std::unique_ptr<ROOT::Experimental::RFieldBase::RDeleter> ROOT::Experimental::RArrayField::GetDeleter() const
 {
-   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible))
-      return std::make_unique<RArrayDeleter>(fItemSize, fArrayLength, GetDeleterOf(*fSubFields[0]));
+   if (!(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
+      return std::make_unique<RArrayDeleter>(fItemSize, fArrayLength, GetDeleterOf(*fSubfields[0]));
    return std::make_unique<RDeleter>();
 }
 
@@ -114,7 +114,7 @@ ROOT::Experimental::RArrayField::SplitValue(const RValue &value) const
    result.reserve(fArrayLength);
    for (unsigned i = 0; i < fArrayLength; ++i) {
       result.emplace_back(
-         fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), arrayPtr + (i * fItemSize))));
+         fSubfields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), arrayPtr + (i * fItemSize))));
    }
    return result;
 }
@@ -192,11 +192,11 @@ std::size_t EvalRVecValueSize(std::size_t alignOfT, std::size_t sizeOfT, std::si
    return dataMemberSz + inlineStorageSz + paddingMiddle + paddingEnd;
 }
 
-std::size_t EvalRVecAlignment(std::size_t alignOfSubField)
+std::size_t EvalRVecAlignment(std::size_t alignOfSubfield)
 {
    // the alignment of an RVec<T> is the largest among the alignments of its data members
    // (including the inline buffer which has the same alignment as the RVec::value_type)
-   return std::max({alignof(void *), alignof(std::int32_t), alignOfSubField});
+   return std::max({alignof(void *), alignof(std::int32_t), alignOfSubfield});
 }
 
 void DestroyRVecWithChecks(std::size_t alignOfT, void **beginPtr, char *begin, std::int32_t *capacityPtr)
@@ -225,13 +225,13 @@ ROOT::Experimental::RRVecField::RRVecField(std::string_view fieldName, std::uniq
    if (!(itemField->GetTraits() & kTraitTriviallyDestructible))
       fItemDeleter = GetDeleterOf(*itemField);
    Attach(std::move(itemField));
-   fValueSize = EvalRVecValueSize(fSubFields[0]->GetAlignment(), fSubFields[0]->GetValueSize(), GetAlignment());
+   fValueSize = EvalRVecValueSize(fSubfields[0]->GetAlignment(), fSubfields[0]->GetValueSize(), GetAlignment());
 }
 
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RRVecField::CloneImpl(std::string_view newName) const
 {
-   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
+   auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
    return std::make_unique<RRVecField>(newName, std::move(newItemField));
 }
 
@@ -240,13 +240,13 @@ std::size_t ROOT::Experimental::RRVecField::AppendImpl(const void *from)
    auto [beginPtr, sizePtr, _] = GetRVecDataMembers(from);
 
    std::size_t nbytes = 0;
-   if (fSubFields[0]->IsSimple() && *sizePtr) {
-      GetPrincipalColumnOf(*fSubFields[0])->AppendV(*beginPtr, *sizePtr);
-      nbytes += *sizePtr * GetPrincipalColumnOf(*fSubFields[0])->GetElement()->GetPackedSize();
+   if (fSubfields[0]->IsSimple() && *sizePtr) {
+      GetPrincipalColumnOf(*fSubfields[0])->AppendV(*beginPtr, *sizePtr);
+      nbytes += *sizePtr * GetPrincipalColumnOf(*fSubfields[0])->GetElement()->GetPackedSize();
    } else {
       auto begin = reinterpret_cast<const char *>(*beginPtr); // for pointer arithmetics
       for (std::int32_t i = 0; i < *sizePtr; ++i) {
-         nbytes += CallAppendOn(*fSubFields[0], begin + i * fItemSize);
+         nbytes += CallAppendOn(*fSubfields[0], begin + i * fItemSize);
       }
    }
 
@@ -272,7 +272,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalInd
    // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md for details
    // on the element construction/destrution.
    const bool owns = (*capacityPtr != -1);
-   const bool needsConstruct = !(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible);
+   const bool needsConstruct = !(fSubfields[0]->GetTraits() & kTraitTriviallyConstructible);
    const bool needsDestruct = owns && fItemDeleter;
 
    // Destroy excess elements, if any
@@ -307,7 +307,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalInd
       // Placement new for elements that were already there before the resize
       if (needsConstruct) {
          for (std::size_t i = 0u; i < oldSize; ++i)
-            CallConstructValueOn(*fSubFields[0], begin + (i * fItemSize));
+            CallConstructValueOn(*fSubfields[0], begin + (i * fItemSize));
       }
    }
    *sizePtr = nItems;
@@ -315,30 +315,30 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalInd
    // Placement new for new elements, if any
    if (needsConstruct) {
       for (std::size_t i = oldSize; i < nItems; ++i)
-         CallConstructValueOn(*fSubFields[0], begin + (i * fItemSize));
+         CallConstructValueOn(*fSubfields[0], begin + (i * fItemSize));
    }
 
-   if (fSubFields[0]->IsSimple() && nItems) {
-      GetPrincipalColumnOf(*fSubFields[0])->ReadV(collectionStart, nItems, begin);
+   if (fSubfields[0]->IsSimple() && nItems) {
+      GetPrincipalColumnOf(*fSubfields[0])->ReadV(collectionStart, nItems, begin);
       return;
    }
 
    // Read the new values into the collection elements
    for (std::size_t i = 0; i < nItems; ++i) {
-      CallReadOn(*fSubFields[0], collectionStart + i, begin + (i * fItemSize));
+      CallReadOn(*fSubfields[0], collectionStart + i, begin + (i * fItemSize));
    }
 }
 
 std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSpec)
 {
-   if (!fSubFields[0]->IsSimple())
+   if (!fSubfields[0]->IsSimple())
       return RFieldBase::ReadBulkImpl(bulkSpec);
 
    if (bulkSpec.fAuxData->empty()) {
       /// Initialize auxiliary memory: the first sizeof(size_t) bytes store the value size of the item field.
       /// The following bytes store the item values, consecutively.
       bulkSpec.fAuxData->resize(sizeof(std::size_t));
-      *reinterpret_cast<std::size_t *>(bulkSpec.fAuxData->data()) = fSubFields[0]->GetValueSize();
+      *reinterpret_cast<std::size_t *>(bulkSpec.fAuxData->data()) = fSubfields[0]->GetValueSize();
    }
    const auto itemValueSize = *reinterpret_cast<std::size_t *>(bulkSpec.fAuxData->data());
    unsigned char *itemValueArray = bulkSpec.fAuxData->data() + sizeof(std::size_t);
@@ -390,7 +390,7 @@ std::size_t ROOT::Experimental::RRVecField::ReadBulkImpl(const RBulkSpec &bulkSp
       }
    }
 
-   GetPrincipalColumnOf(*fSubFields[0])->ReadV(firstItemIndex, nItems, itemValueArray - delta);
+   GetPrincipalColumnOf(*fSubfields[0])->ReadV(firstItemIndex, nItems, itemValueArray - delta);
    return RBulkSpec::kAllSet;
 }
 
@@ -442,8 +442,8 @@ void ROOT::Experimental::RRVecField::RRVecDeleter::operator()(void *objPtr, bool
 std::unique_ptr<ROOT::Experimental::RFieldBase::RDeleter> ROOT::Experimental::RRVecField::GetDeleter() const
 {
    if (fItemDeleter)
-      return std::make_unique<RRVecDeleter>(fSubFields[0]->GetAlignment(), fItemSize, GetDeleterOf(*fSubFields[0]));
-   return std::make_unique<RRVecDeleter>(fSubFields[0]->GetAlignment());
+      return std::make_unique<RRVecDeleter>(fSubfields[0]->GetAlignment(), fItemSize, GetDeleterOf(*fSubfields[0]));
+   return std::make_unique<RRVecDeleter>(fSubfields[0]->GetAlignment());
 }
 
 std::vector<ROOT::Experimental::RFieldBase::RValue>
@@ -455,7 +455,7 @@ ROOT::Experimental::RRVecField::SplitValue(const RValue &value) const
    char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
    result.reserve(*sizePtr);
    for (std::int32_t i = 0; i < *sizePtr; ++i) {
-      result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), begin + i * fItemSize)));
+      result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), begin + i * fItemSize)));
    }
    return result;
 }
@@ -467,7 +467,7 @@ size_t ROOT::Experimental::RRVecField::GetValueSize() const
 
 size_t ROOT::Experimental::RRVecField::GetAlignment() const
 {
-   return EvalRVecAlignment(fSubFields[0]->GetAlignment());
+   return EvalRVecAlignment(fSubfields[0]->GetAlignment());
 }
 
 void ROOT::Experimental::RRVecField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
@@ -503,7 +503,7 @@ ROOT::Experimental::RVectorField::CreateUntyped(std::string_view fieldName, std:
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RVectorField::CloneImpl(std::string_view newName) const
 {
-   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
+   auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
    return std::unique_ptr<ROOT::Experimental::RVectorField>(
       new RVectorField(newName, std::move(newItemField), GetTypeName().empty()));
 }
@@ -519,12 +519,12 @@ std::size_t ROOT::Experimental::RVectorField::AppendImpl(const void *from)
    R__ASSERT((typedValue->size() % fItemSize) == 0);
    std::size_t nbytes = 0;
 
-   if (fSubFields[0]->IsSimple() && count) {
-      GetPrincipalColumnOf(*fSubFields[0])->AppendV(typedValue->data(), count);
-      nbytes += count * GetPrincipalColumnOf(*fSubFields[0])->GetElement()->GetPackedSize();
+   if (fSubfields[0]->IsSimple() && count) {
+      GetPrincipalColumnOf(*fSubfields[0])->AppendV(typedValue->data(), count);
+      nbytes += count * GetPrincipalColumnOf(*fSubfields[0])->GetElement()->GetPackedSize();
    } else {
       for (unsigned i = 0; i < count; ++i) {
-         nbytes += CallAppendOn(*fSubFields[0], typedValue->data() + (i * fItemSize));
+         nbytes += CallAppendOn(*fSubfields[0], typedValue->data() + (i * fItemSize));
       }
    }
 
@@ -541,10 +541,10 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(ROOT::NTupleSize_t globalI
    RNTupleLocalIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
-   if (fSubFields[0]->IsSimple()) {
+   if (fSubfields[0]->IsSimple()) {
       typedValue->resize(nItems * fItemSize);
       if (nItems)
-         GetPrincipalColumnOf(*fSubFields[0])->ReadV(collectionStart, nItems, typedValue->data());
+         GetPrincipalColumnOf(*fSubfields[0])->ReadV(collectionStart, nItems, typedValue->data());
       return;
    }
 
@@ -560,14 +560,14 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(ROOT::NTupleSize_t globalI
       }
    }
    typedValue->resize(nItems * fItemSize);
-   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible)) {
+   if (!(fSubfields[0]->GetTraits() & kTraitTriviallyConstructible)) {
       for (std::size_t i = allDeallocated ? 0 : oldNItems; i < nItems; ++i) {
-         CallConstructValueOn(*fSubFields[0], typedValue->data() + (i * fItemSize));
+         CallConstructValueOn(*fSubfields[0], typedValue->data() + (i * fItemSize));
       }
    }
 
    for (std::size_t i = 0; i < nItems; ++i) {
-      CallReadOn(*fSubFields[0], collectionStart + i, typedValue->data() + (i * fItemSize));
+      CallReadOn(*fSubfields[0], collectionStart + i, typedValue->data() + (i * fItemSize));
    }
 }
 
@@ -610,7 +610,7 @@ void ROOT::Experimental::RVectorField::RVectorDeleter::operator()(void *objPtr, 
 std::unique_ptr<ROOT::Experimental::RFieldBase::RDeleter> ROOT::Experimental::RVectorField::GetDeleter() const
 {
    if (fItemDeleter)
-      return std::make_unique<RVectorDeleter>(fItemSize, GetDeleterOf(*fSubFields[0]));
+      return std::make_unique<RVectorDeleter>(fItemSize, GetDeleterOf(*fSubfields[0]));
    return std::make_unique<RVectorDeleter>();
 }
 
@@ -625,7 +625,7 @@ ROOT::Experimental::RVectorField::SplitValue(const RValue &value) const
    result.reserve(nItems);
    for (unsigned i = 0; i < nItems; ++i) {
       result.emplace_back(
-         fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), vec->data() + (i * fItemSize))));
+         fSubfields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), vec->data() + (i * fItemSize))));
    }
    return result;
 }
@@ -650,7 +650,7 @@ std::size_t ROOT::Experimental::RField<std::vector<bool>>::AppendImpl(const void
    auto count = typedValue->size();
    for (unsigned i = 0; i < count; ++i) {
       bool bval = (*typedValue)[i];
-      CallAppendOn(*fSubFields[0], &bval);
+      CallAppendOn(*fSubfields[0], &bval);
    }
    fNWritten += count;
    fPrincipalColumn->Append(&fNWritten);
@@ -668,7 +668,7 @@ void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(ROOT::NTupleS
    typedValue->resize(nItems);
    for (unsigned i = 0; i < nItems; ++i) {
       bool bval;
-      CallReadOn(*fSubFields[0], collectionStart + i, &bval);
+      CallReadOn(*fSubfields[0], collectionStart + i, &bval);
       (*typedValue)[i] = bval;
    }
 }
@@ -703,9 +703,9 @@ ROOT::Experimental::RField<std::vector<bool>>::SplitValue(const RValue &value) c
    result.reserve(count);
    for (unsigned i = 0; i < count; ++i) {
       if (typedValue[i])
-         result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<bool>(new bool(true))));
+         result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<bool>(new bool(true))));
       else
-         result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<bool>(new bool(false))));
+         result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<bool>(new bool(false))));
    }
    return result;
 }
@@ -726,15 +726,15 @@ ROOT::Experimental::RArrayAsRVecField::RArrayAsRVecField(std::string_view fieldN
      fArrayLength(arrayLength)
 {
    Attach(std::move(itemField));
-   fValueSize = EvalRVecValueSize(fSubFields[0]->GetAlignment(), fSubFields[0]->GetValueSize(), GetAlignment());
-   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible))
-      fItemDeleter = GetDeleterOf(*fSubFields[0]);
+   fValueSize = EvalRVecValueSize(fSubfields[0]->GetAlignment(), fSubfields[0]->GetValueSize(), GetAlignment());
+   if (!(fSubfields[0]->GetTraits() & kTraitTriviallyDestructible))
+      fItemDeleter = GetDeleterOf(*fSubfields[0]);
 }
 
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RArrayAsRVecField::CloneImpl(std::string_view newName) const
 {
-   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
+   auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
    return std::make_unique<RArrayAsRVecField>(newName, std::move(newItemField), fArrayLength);
 }
 
@@ -757,7 +757,7 @@ void ROOT::Experimental::RArrayAsRVecField::ConstructValue(void *where) const
    // See "semantics of reading non-trivial objects" in RNTuple's Architecture.md for details
    // on the element construction.
    const bool owns = (*capacityPtr != -1); // RVec is adopting the memory
-   const bool needsConstruct = !(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible);
+   const bool needsConstruct = !(fSubfields[0]->GetTraits() & kTraitTriviallyConstructible);
    const bool needsDestruct = owns && fItemDeleter;
 
    // Destroy old elements: useless work for trivial types, but in case the element type's constructor
@@ -785,17 +785,17 @@ void ROOT::Experimental::RArrayAsRVecField::ConstructValue(void *where) const
    // Placement new for the array elements
    if (needsConstruct) {
       for (std::size_t i = 0; i < fArrayLength; ++i)
-         CallConstructValueOn(*fSubFields[0], begin + (i * fItemSize));
+         CallConstructValueOn(*fSubfields[0], begin + (i * fItemSize));
    }
 }
 
 std::unique_ptr<ROOT::Experimental::RFieldBase::RDeleter> ROOT::Experimental::RArrayAsRVecField::GetDeleter() const
 {
    if (fItemDeleter) {
-      return std::make_unique<RRVecField::RRVecDeleter>(fSubFields[0]->GetAlignment(), fItemSize,
-                                                        GetDeleterOf(*fSubFields[0]));
+      return std::make_unique<RRVecField::RRVecDeleter>(fSubfields[0]->GetAlignment(), fItemSize,
+                                                        GetDeleterOf(*fSubfields[0]));
    }
-   return std::make_unique<RRVecField::RRVecDeleter>(fSubFields[0]->GetAlignment());
+   return std::make_unique<RRVecField::RRVecDeleter>(fSubfields[0]->GetAlignment());
 }
 
 void ROOT::Experimental::RArrayAsRVecField::ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to)
@@ -804,14 +804,14 @@ void ROOT::Experimental::RArrayAsRVecField::ReadGlobalImpl(ROOT::NTupleSize_t gl
    auto [beginPtr, _, __] = GetRVecDataMembers(to);
    auto rvecBeginPtr = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
 
-   if (fSubFields[0]->IsSimple()) {
-      GetPrincipalColumnOf(*fSubFields[0])->ReadV(globalIndex * fArrayLength, fArrayLength, rvecBeginPtr);
+   if (fSubfields[0]->IsSimple()) {
+      GetPrincipalColumnOf(*fSubfields[0])->ReadV(globalIndex * fArrayLength, fArrayLength, rvecBeginPtr);
       return;
    }
 
    // Read the new values into the collection elements
    for (std::size_t i = 0; i < fArrayLength; ++i) {
-      CallReadOn(*fSubFields[0], globalIndex * fArrayLength + i, rvecBeginPtr + (i * fItemSize));
+      CallReadOn(*fSubfields[0], globalIndex * fArrayLength + i, rvecBeginPtr + (i * fItemSize));
    }
 }
 
@@ -823,22 +823,22 @@ void ROOT::Experimental::RArrayAsRVecField::ReadInClusterImpl(RNTupleLocalIndex 
    const auto &clusterId = localIndex.GetClusterId();
    const auto &indexInCluster = localIndex.GetIndexInCluster();
 
-   if (fSubFields[0]->IsSimple()) {
-      GetPrincipalColumnOf(*fSubFields[0])
+   if (fSubfields[0]->IsSimple()) {
+      GetPrincipalColumnOf(*fSubfields[0])
          ->ReadV(RNTupleLocalIndex(clusterId, indexInCluster * fArrayLength), fArrayLength, rvecBeginPtr);
       return;
    }
 
    // Read the new values into the collection elements
    for (std::size_t i = 0; i < fArrayLength; ++i) {
-      CallReadOn(*fSubFields[0], RNTupleLocalIndex(clusterId, indexInCluster * fArrayLength + i),
+      CallReadOn(*fSubfields[0], RNTupleLocalIndex(clusterId, indexInCluster * fArrayLength + i),
                  rvecBeginPtr + (i * fItemSize));
    }
 }
 
 size_t ROOT::Experimental::RArrayAsRVecField::GetAlignment() const
 {
-   return EvalRVecAlignment(fSubFields[0]->GetAlignment());
+   return EvalRVecAlignment(fSubfields[0]->GetAlignment());
 }
 
 std::vector<ROOT::Experimental::RFieldBase::RValue>
@@ -849,7 +849,7 @@ ROOT::Experimental::RArrayAsRVecField::SplitValue(const ROOT::Experimental::RFie
    result.reserve(fArrayLength);
    for (unsigned i = 0; i < fArrayLength; ++i) {
       result.emplace_back(
-         fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), arrayPtr + (i * fItemSize))));
+         fSubfields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), arrayPtr + (i * fItemSize))));
    }
    return result;
 }

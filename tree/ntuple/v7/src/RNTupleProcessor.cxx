@@ -426,9 +426,9 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpe
       throw RException(R__FAIL("could not create auxiliary RNTuple parent field"));
    }
 
-   const auto &subFields = auxParentField->GetConstSubfields();
+   const auto &subfields = auxParentField->GetConstSubfields();
    fModel->AddField(std::move(auxParentField));
-   for (const auto &field : subFields) {
+   for (const auto &field : subfields) {
       fModel->RegisterSubfield(field->GetQualifiedFieldName());
    }
 
