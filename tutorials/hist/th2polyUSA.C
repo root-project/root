@@ -42,7 +42,7 @@ void th2polyUSA()
    auto p = new TH2Poly("Lower48", "Lower 48 Population (2009);Latitude;Longitude", lon1, lon2, lat1, lat2);
 
    const auto fileName = "usa.root";
-   const auto fileNameUrl = "http://root.cern/files/usa.root";
+   const auto fileNameUrl = "http://root-test.web.cern.ch/files/usa.root";
    if(gSystem->AccessPathName(fileName))
       TFile::Cp(fileNameUrl, fileName);
 
