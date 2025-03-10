@@ -695,7 +695,7 @@ void ROOT::Experimental::RFieldBase::Attach(std::unique_ptr<ROOT::Experimental::
    if (fState != EState::kUnconnected)
       throw RException(R__FAIL("invalid attempt to attach subfield to already connected field"));
    child->fParent = this;
-   fSubFields.emplace_back(std::move(child));
+   fSubfields.emplace_back(std::move(child));
 }
 
 ROOT::NTupleSize_t ROOT::Experimental::RFieldBase::EntryToColumnElementIndex(ROOT::NTupleSize_t globalIndex) const
@@ -715,8 +715,8 @@ ROOT::NTupleSize_t ROOT::Experimental::RFieldBase::EntryToColumnElementIndex(ROO
 std::vector<ROOT::Experimental::RFieldBase *> ROOT::Experimental::RFieldBase::GetMutableSubfields()
 {
    std::vector<RFieldBase *> result;
-   result.reserve(fSubFields.size());
-   for (const auto &f : fSubFields) {
+   result.reserve(fSubfields.size());
+   for (const auto &f : fSubfields) {
       result.emplace_back(f.get());
    }
    return result;
@@ -725,8 +725,8 @@ std::vector<ROOT::Experimental::RFieldBase *> ROOT::Experimental::RFieldBase::Ge
 std::vector<const ROOT::Experimental::RFieldBase *> ROOT::Experimental::RFieldBase::GetConstSubfields() const
 {
    std::vector<const RFieldBase *> result;
-   result.reserve(fSubFields.size());
-   for (const auto &f : fSubFields) {
+   result.reserve(fSubfields.size());
+   for (const auto &f : fSubfields) {
       result.emplace_back(f.get());
    }
    return result;
@@ -808,7 +808,7 @@ std::size_t ROOT::Experimental::RFieldBase::ReadBulk(const RBulkSpec &bulkSpec)
 
 ROOT::Experimental::RFieldBase::RSchemaIterator ROOT::Experimental::RFieldBase::begin()
 {
-   return fSubFields.empty() ? RSchemaIterator(this, -1) : RSchemaIterator(fSubFields[0].get(), 0);
+   return fSubfields.empty() ? RSchemaIterator(this, -1) : RSchemaIterator(fSubfields[0].get(), 0);
 }
 
 ROOT::Experimental::RFieldBase::RSchemaIterator ROOT::Experimental::RFieldBase::end()
@@ -818,7 +818,7 @@ ROOT::Experimental::RFieldBase::RSchemaIterator ROOT::Experimental::RFieldBase::
 
 ROOT::Experimental::RFieldBase::RConstSchemaIterator ROOT::Experimental::RFieldBase::begin() const
 {
-   return fSubFields.empty() ? RConstSchemaIterator(this, -1) : RConstSchemaIterator(fSubFields[0].get(), 0);
+   return fSubfields.empty() ? RConstSchemaIterator(this, -1) : RConstSchemaIterator(fSubfields[0].get(), 0);
 }
 
 ROOT::Experimental::RFieldBase::RConstSchemaIterator ROOT::Experimental::RFieldBase::end() const
@@ -828,7 +828,7 @@ ROOT::Experimental::RFieldBase::RConstSchemaIterator ROOT::Experimental::RFieldB
 
 ROOT::Experimental::RFieldBase::RConstSchemaIterator ROOT::Experimental::RFieldBase::cbegin() const
 {
-   return fSubFields.empty() ? RConstSchemaIterator(this, -1) : RConstSchemaIterator(fSubFields[0].get(), 0);
+   return fSubfields.empty() ? RConstSchemaIterator(this, -1) : RConstSchemaIterator(fSubfields[0].get(), 0);
 }
 
 ROOT::Experimental::RFieldBase::RConstSchemaIterator ROOT::Experimental::RFieldBase::cend() const
@@ -987,7 +987,7 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
 
    BeforeConnectPageSource(pageSource);
 
-   for (auto &f : fSubFields) {
+   for (auto &f : fSubfields) {
       if (f->GetOnDiskId() == ROOT::kInvalidDescriptorId) {
          f->SetOnDiskId(pageSource.GetSharedDescriptorGuard()->FindFieldId(f->GetFieldName(), GetOnDiskId()));
       }

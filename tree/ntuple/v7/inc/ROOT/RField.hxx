@@ -142,8 +142,8 @@ private:
    };
 
    TClass *fClass;
-   /// Additional information kept for each entry in `fSubFields`
-   std::vector<RSubFieldInfo> fSubFieldsInfo;
+   /// Additional information kept for each entry in `fSubfields`
+   std::vector<RSubFieldInfo> fSubfieldsInfo;
    std::size_t fMaxAlignment = 1;
 
    /// The staging area stores inputs to I/O rules according to the offsets given by the streamer info of
@@ -264,11 +264,11 @@ private:
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void ConstructValue(void *where) const final { CallConstructValueOn(*fSubFields[0], where); }
+   void ConstructValue(void *where) const final { CallConstructValueOn(*fSubfields[0], where); }
 
-   std::size_t AppendImpl(const void *from) final { return CallAppendOn(*fSubFields[0], from); }
-   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubFields[0], globalIndex, to); }
-   void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final { CallReadOn(*fSubFields[0], localIndex, to); }
+   std::size_t AppendImpl(const void *from) final { return CallAppendOn(*fSubfields[0], from); }
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubfields[0], globalIndex, to); }
+   void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final { CallReadOn(*fSubfields[0], localIndex, to); }
 
 public:
    REnumField(std::string_view fieldName, std::string_view enumName);
@@ -277,8 +277,8 @@ public:
    ~REnumField() override = default;
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   size_t GetValueSize() const final { return fSubFields[0]->GetValueSize(); }
-   size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
+   size_t GetValueSize() const final { return fSubfields[0]->GetValueSize(); }
+   size_t GetAlignment() const final { return fSubfields[0]->GetAlignment(); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 

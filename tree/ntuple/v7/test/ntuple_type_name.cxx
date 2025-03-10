@@ -207,17 +207,17 @@ TEST(RNTuple, TypeNameTemplatesNestedAlias)
    EXPECT_EQ("EdmHash<1>", hash->GetTypeName());
    EXPECT_EQ("", hash->GetTypeAlias());
 
-   const auto hashSubFields = hash->GetConstSubfields();
-   ASSERT_EQ(2, hashSubFields.size());
-   EXPECT_EQ("fHash", hashSubFields[0]->GetFieldName());
-   EXPECT_EQ("std::string", hashSubFields[0]->GetTypeName());
-   EXPECT_EQ("EdmHash<1>::value_type", hashSubFields[0]->GetTypeAlias());
+   const auto hashSubfields = hash->GetConstSubfields();
+   ASSERT_EQ(2, hashSubfields.size());
+   EXPECT_EQ("fHash", hashSubfields[0]->GetFieldName());
+   EXPECT_EQ("std::string", hashSubfields[0]->GetTypeName());
+   EXPECT_EQ("EdmHash<1>::value_type", hashSubfields[0]->GetTypeAlias());
 
-   EXPECT_EQ("fHash2", hashSubFields[1]->GetFieldName());
-   EXPECT_EQ("std::string", hashSubFields[1]->GetTypeName());
+   EXPECT_EQ("fHash2", hashSubfields[1]->GetFieldName());
+   EXPECT_EQ("std::string", hashSubfields[1]->GetTypeName());
    // FIXME: This should really be EdmHash<1>::value_typeT<EdmHash<1>::value_type>, but this is the value we get from
    // TDataMember::GetFullTypeName right now...
-   EXPECT_EQ("value_typeT<EdmHash<1>::value_type>", hashSubFields[1]->GetTypeAlias());
+   EXPECT_EQ("value_typeT<EdmHash<1>::value_type>", hashSubfields[1]->GetTypeAlias());
 }
 
 TEST(RNTuple, ContextDependentTypeNames)

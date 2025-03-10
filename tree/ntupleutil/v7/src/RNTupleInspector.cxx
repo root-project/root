@@ -482,12 +482,12 @@ ROOT::Experimental::RNTupleInspector::GetFieldTreeInspector(std::string_view fie
 }
 
 size_t ROOT::Experimental::RNTupleInspector::GetFieldCountByType(const std::regex &typeNamePattern,
-                                                                 bool includeSubFields) const
+                                                                 bool includeSubfields) const
 {
    size_t typeCount = 0;
 
    for (auto &[fldId, fldInfo] : fFieldTreeInfo) {
-      if (!includeSubFields && fldInfo.GetDescriptor().GetParentId() != fDescriptor.GetFieldZeroId()) {
+      if (!includeSubfields && fldInfo.GetDescriptor().GetParentId() != fDescriptor.GetFieldZeroId()) {
          continue;
       }
 
@@ -500,13 +500,13 @@ size_t ROOT::Experimental::RNTupleInspector::GetFieldCountByType(const std::rege
 }
 
 const std::vector<ROOT::DescriptorId_t>
-ROOT::Experimental::RNTupleInspector::GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubFields) const
+ROOT::Experimental::RNTupleInspector::GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubfields) const
 {
    std::vector<ROOT::DescriptorId_t> fieldIds;
 
    for (auto &[fldId, fldInfo] : fFieldTreeInfo) {
 
-      if (!searchInSubFields && fldInfo.GetDescriptor().GetParentId() != fDescriptor.GetFieldZeroId()) {
+      if (!searchInSubfields && fldInfo.GetDescriptor().GetParentId() != fDescriptor.GetFieldZeroId()) {
          continue;
       }
 

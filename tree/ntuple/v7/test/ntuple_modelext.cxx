@@ -21,8 +21,8 @@ struct RFieldBaseTest : public ROOT::Experimental::RFieldBase {
 
       if (fPrincipalColumn)
          return fnColumnElementIndexToEntry(fPrincipalColumn->GetFirstElementIndex());
-      if (!fSubFields.empty())
-         return static_cast<const RFieldBaseTest &>(*fSubFields[0]).GetFirstEntry();
+      if (!fSubfields.empty())
+         return static_cast<const RFieldBaseTest &>(*fSubfields[0]).GetFirstEntry();
       R__ASSERT(false);
       return 0;
    }
