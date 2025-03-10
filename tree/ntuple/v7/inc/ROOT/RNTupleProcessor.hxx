@@ -39,9 +39,11 @@ struct RNTupleProcessorEntryLoader;
 /// Used to specify the underlying RNTuples in RNTupleProcessor
 struct RNTupleOpenSpec {
    std::string fNTupleName;
-   std::string fStorage;
+   std::variant<std::string, TDirectory *> fStorage;
 
-   RNTupleOpenSpec(std::string_view n, std::string_view s) : fNTupleName(n), fStorage(s) {}
+   RNTupleOpenSpec(std::string_view n, const std::variant<std::string, TDirectory *> &s) : fNTupleName(n), fStorage(s)
+   {
+   }
 };
 
 // clang-format off
