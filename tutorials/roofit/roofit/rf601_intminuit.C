@@ -91,8 +91,8 @@ void rf601_intminuit()
    // problems (e.g. zero probabilities during likelihood evaluation)
    std::unique_ptr<RooFitResult> fitResult{m.save()};
 
-   // Make contour plot of mx vs sx at 1,2,3 sigma
-   RooPlot *frame = m.contour(frac, sigma_g2, 1, 2, 3);
+   // Make contour plot of mx vs sx at 1,2,3,4 sigma
+   RooPlot *frame = m.contour(frac, sigma_g2, 1, 2, 3, 4);
    frame->SetTitle("Minuit contour plot");
 
    // Print the fit result snapshot
