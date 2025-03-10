@@ -36,7 +36,7 @@ async function loadFontFile(fname) {
 
    if (entry?.promises !== undefined) {
       return new Promise(resolveFunc => {
-         cfg.promises.push(resolveFunc);
+         entry.promises.push(resolveFunc);
       });
    }
 

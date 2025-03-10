@@ -682,8 +682,10 @@ class TPadPainter extends ObjectPainter {
       this.createAttFill({ attr: this.pad });
 
       if ((rect.width <= lmt) || (rect.height <= lmt)) {
-         svg.style('display', 'none');
-         console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
+         if (this.snapid === undefined) {
+            svg.style('display', 'none');
+            console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
+         }
          if (this._pad_width && this._pad_height) {
             // use last valid dimensions
             rect.width = this._pad_width;
@@ -1879,7 +1881,7 @@ class TPadPainter extends ObjectPainter {
 
          const mainid = this.selectDom().attr('id');
 
-         if (!this.isBatchMode() && !this.use_openui && !this.brlayout && mainid && isStr(mainid) && !getHPainter()) {
+         if (!this.isBatchMode() && this.online_canvas && !this.use_openui && !this.brlayout && mainid && isStr(mainid) && !getHPainter()) {
             this.brlayout = new BrowserLayout(mainid, null, this);
             this.brlayout.create(mainid, true);
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas
