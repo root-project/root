@@ -103,7 +103,7 @@ void ntpl012_processor_chain()
       {"ntuple1", "ntuple1.root"}, {"ntuple2", "ntuple2.root"}, {"ntuple3", "ntuple3.root"}};
 
    for (const auto &ntuple : ntuples) {
-      Write(ntuple.fNTupleName, ntuple.fStorage);
+      Write(ntuple.fNTupleName, std::get<std::string>(ntuple.fStorage));
    }
 
    Read(ntuples);
