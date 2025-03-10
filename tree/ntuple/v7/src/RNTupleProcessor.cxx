@@ -16,6 +16,10 @@
 #include <ROOT/RNTupleProcessor.hxx>
 
 #include <ROOT/RFieldBase.hxx>
+#include <ROOT/RNTuple.hxx>
+#include <ROOT/RPageStorageFile.hxx>
+
+#include <TDirectory.h>
 
 namespace {
 using ROOT::Experimental::RNTupleOpenSpec;
@@ -28,6 +32,16 @@ void EnsureUniqueNTupleNames(const RNTupleOpenSpec &primaryNTuple, const std::ve
          throw ROOT::RException(R__FAIL("joining RNTuples with the same name is not allowed"));
       }
    }
+}
+
+std::unique_ptr<ROOT::Experimental::Internal::RPageSource> CreatePageSourceFromSpec(const RNTupleOpenSpec &spec)
+{
+   if (const std::string *storagePath = std::get_if<std::string>(&spec.fStorage))
+      return ROOT::Experimental::Internal::RPageSource::Create(spec.fNTupleName, *storagePath);
+
+   auto dir = std::get<TDirectory *>(spec.fStorage);
+   auto ntuple = std::unique_ptr<ROOT::RNTuple>(dir->Get<ROOT::RNTuple>(spec.fNTupleName.c_str()));
+   return ROOT::Experimental::Internal::RPageSourceFile::CreateFromAnchor(*ntuple);
 }
 } // anonymous namespace
 
@@ -66,7 +80,7 @@ ROOT::Experimental::RNTupleProcessor::CreateChain(const std::vector<RNTupleOpenS
 
    // If no model is provided, infer it from the first ntuple.
    if (!model) {
-      auto firstPageSource = Internal::RPageSource::Create(ntuples[0].fNTupleName, ntuples[0].fStorage);
+      auto firstPageSource = CreatePageSourceFromSpec(ntuples[0]);
       firstPageSource->Attach();
       model = firstPageSource->GetSharedDescriptorGuard()->CreateModel();
    }
@@ -180,7 +194,7 @@ ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(const RNTuple
    : RNTupleProcessor(processorName, std::move(model)), fNTupleSpec(ntuple)
 {
    if (!fModel) {
-      fPageSource = Internal::RPageSource::Create(fNTupleSpec.fNTupleName, fNTupleSpec.fStorage);
+      fPageSource = CreatePageSourceFromSpec(fNTupleSpec);
       fPageSource->Attach();
       fModel = fPageSource->GetSharedDescriptorGuard()->CreateModel();
    }
@@ -236,7 +250,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect()
       return;
 
    if (!fPageSource)
-      fPageSource = Internal::RPageSource::Create(fNTupleSpec.fNTupleName, fNTupleSpec.fStorage);
+      fPageSource = CreatePageSourceFromSpec(fNTupleSpec);
    fPageSource->Attach();
    fNEntries = fPageSource->GetNEntries();
 
@@ -343,7 +357,7 @@ ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpen
    : RNTupleProcessor(processorName, nullptr)
 {
    fNTuples.emplace_back(mainNTuple);
-   fPageSource = Internal::RPageSource::Create(mainNTuple.fNTupleName, mainNTuple.fStorage);
+   fPageSource = CreatePageSourceFromSpec(mainNTuple);
    fPageSource->Attach();
 
    if (fPageSource->GetNEntries() == 0) {
@@ -396,7 +410,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpe
 
    fNTuples.emplace_back(auxNTuple);
 
-   auto pageSource = Internal::RPageSource::Create(auxNTuple.fNTupleName, auxNTuple.fStorage);
+   auto pageSource = CreatePageSourceFromSpec(auxNTuple);
    pageSource->Attach();
 
    if (pageSource->GetNEntries() == 0) {
