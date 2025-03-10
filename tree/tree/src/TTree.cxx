@@ -8131,9 +8131,9 @@ void TTree::ResetAfterMerge(TFileMergeInfo *info)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Tell all of our branches to set their addresses to zero.
+/// Tell a branch to set its address to zero.
 ///
-/// Note: If any of our branches own any objects, they are deleted.
+/// @note If the branch owns any objects, they are deleted.
 
 void TTree::ResetBranchAddress(TBranch *br)
 {
@@ -8147,11 +8147,25 @@ void TTree::ResetBranchAddress(TBranch *br)
 
 void TTree::ResetBranchAddresses()
 {
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (kResetBranchAddresses & fFriendLockStatus) {
+      return;
+   }
    TObjArray* branches = GetListOfBranches();
    Int_t nbranches = branches->GetEntriesFast();
    for (Int_t i = 0; i < nbranches; ++i) {
       TBranch* branch = (TBranch*) branches->UncheckedAt(i);
       branch->ResetAddress();
+   }
+   if (fFriends) {
+      TFriendLock lock(this, kResetBranchAddresses);
+      for (auto *frEl : TRangeDynCast<TFriendElement>(fFriends)) {
+         auto *frTree = frEl->GetTree();
+         if (frTree) {
+            frTree->ResetBranchAddresses();
+         }
+      }
    }
 }
 

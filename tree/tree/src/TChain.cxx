@@ -2516,6 +2516,11 @@ void TChain::ResetBranchAddress(TBranch *branch)
 
 void TChain::ResetBranchAddresses()
 {
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (kResetBranchAddresses & fFriendLockStatus) {
+      return;
+   }
    TIter next(fStatus);
    TChainElement* element = nullptr;
    while ((element = (TChainElement*) next())) {
@@ -2523,6 +2528,15 @@ void TChain::ResetBranchAddresses()
    }
    if (fTree) {
       fTree->ResetBranchAddresses();
+   }
+   if (fFriends) {
+      TFriendLock lock(this, kResetBranchAddresses);
+      for (auto *frEl : TRangeDynCast<TFriendElement>(fFriends)) {
+         auto *frTree = frEl->GetTree();
+         if (frTree) {
+            frTree->ResetBranchAddresses();
+         }
+      }
    }
 }
 
