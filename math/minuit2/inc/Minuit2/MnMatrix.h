@@ -464,6 +464,15 @@ public:
       std::memcpy(fData, v.Data(), fSize * sizeof(double));
    }
 
+   LASymMatrix(LASymMatrix &&v)
+      : fSize(v.size()),
+        fNRow(v.Nrow()),
+        fData(v.fData)
+   {
+      v.fData = nullptr;
+   }
+
+
    LASymMatrix &operator=(const LASymMatrix &v)
    {
       if (fSize < v.size()) {
@@ -472,8 +481,19 @@ public:
          fSize = v.size();
          fNRow = v.Nrow();
          fData = (double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * fSize);
+      } else if (fSize > v.size()) {
+         throw std::runtime_error("Can't assign smaller LASymMatrix to larger LASymMatrix");
       }
       std::memcpy(fData, v.Data(), fSize * sizeof(double));
+      return *this;
+   }
+
+   LASymMatrix &operator=(LASymMatrix &&v)
+   {
+      fSize = v.size();
+      fNRow = v.Nrow();
+      fData = v.Data();
+      v.fData = nullptr;
       return *this;
    }
 
@@ -822,6 +842,12 @@ public:
          StackAllocatorHolder::Get().Deallocate(fData);
    }
 
+   LAVector(LAVector &&v)
+      : fSize(v.size()), fData(v.Data())
+   {
+      fData = nullptr;
+   }
+
    LAVector(const LAVector &v) : LAVector{std::span<const double>{v.Data(), v.size()}} {}
 
    explicit LAVector(std::span<const double> v)
@@ -838,8 +864,18 @@ public:
             StackAllocatorHolder::Get().Deallocate(fData);
          fSize = v.size();
          fData = (double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * fSize);
+      } else if (fSize > v.size()) {
+         throw std::runtime_error("Can't assign smaller LAVector to larger LAVector");
       }
       std::memcpy(fData, v.Data(), fSize * sizeof(double));
+      return *this;
+   }
+
+   LAVector &operator=(LAVector &&v)
+   {
+      fSize = v.fSize;
+      fData = v.fData;
+      v.fData = nullptr;
       return *this;
    }
 
