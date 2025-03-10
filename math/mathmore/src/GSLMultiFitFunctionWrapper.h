@@ -49,7 +49,7 @@ namespace Math {
 
 
 /**
-   wrapper to a multi-dim function withtout  derivatives for multi-dimensional
+   wrapper to a multi-dim function without  derivatives for multi-dimensional
    minimization algorithm
 
    @ingroup MultiMin

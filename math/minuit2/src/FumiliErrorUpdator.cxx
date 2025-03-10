@@ -46,11 +46,13 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState &s0, const MinimumPar
    // we apply also the Marquard lambda factor to increase weight of diagonal term
    // as suggester in Numerical Receipt for Marquard method
 
+   MnPrint print("FumiliErrorUpdator");
+   print.Debug("Compute covariance matrix using Fumili method");
+
    // need to downcast to FumiliGradientCalculator
    FumiliGradientCalculator *fgc = dynamic_cast<FumiliGradientCalculator *>(const_cast<GradientCalculator *>(&gc));
    assert(fgc != nullptr);
 
-   MnPrint print("FumiliErrorUpdator");
 
    // get Hessian from Gradient calculator
 
@@ -72,23 +74,31 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState &s0, const MinimumPar
       }
    }
 
-   int ifail = Invert(h);
+   MnAlgebraicSymMatrix cov(h);
+   int ifail = Invert(cov);
    if (ifail != 0) {
       print.Warn("inversion fails; return diagonal matrix");
 
-      for (unsigned int i = 0; i < h.Nrow(); i++) {
-         h(i, i) = 1. / h(i, i);
+      for (unsigned int i = 0; i < cov.Nrow(); i++) {
+         cov(i, i) = 1. / cov(i, i);
       }
+
+      // shiould we return the Hessian in addition to cov in this case?
+      return MinimumError(cov, MinimumError::MnInvertFailed);
    }
 
-   const MnAlgebraicSymMatrix &v0 = s0.Error().InvHessian();
+   double dcov = -1;
+   if (s0.IsValid()) {
+
+      const MnAlgebraicSymMatrix &v0 = s0.Error().InvHessian();
 
    // calculate by how much did the covariance matrix changed
    // (if it changed a lot since the last step, probably we
    // are not yet near the Minimum)
-   double dcov = 0.5 * (s0.Error().Dcovar() + sum_of_elements(h - v0) / sum_of_elements(h));
+      dcov = 0.5 * (s0.Error().Dcovar() + sum_of_elements(cov - v0) / sum_of_elements(cov));
+   }
 
-   return MinimumError(h, dcov);
+   return MinimumError(cov, h, dcov);
 }
 
 } // namespace Minuit2

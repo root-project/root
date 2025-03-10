@@ -13,6 +13,7 @@
 #include "Minuit2/MnPrint.h"
 
 #include <algorithm>
+#include <iostream>
 
 namespace ROOT {
 
