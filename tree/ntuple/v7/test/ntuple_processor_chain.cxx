@@ -2,6 +2,8 @@
 
 #include <ROOT/RNTupleProcessor.hxx>
 
+#include <TMemFile.h>
+
 class RNTupleChainProcessorTest : public testing::Test {
 protected:
    const std::array<std::string, 4> fFileNames{"test_ntuple_chain_processor1.root", "test_ntuple_chain_processor2.root",
@@ -257,4 +259,34 @@ TEST_F(RNTupleChainProcessorTest, LoadRandomEntry)
    EXPECT_EQ(0, proc->GetCurrentProcessorNumber());
 
    EXPECT_EQ(ROOT::kInvalidNTupleIndex, RNTupleProcessorEntryLoader::LoadEntry(*proc, 8));
+}
+
+TEST_F(RNTupleChainProcessorTest, TMemFile)
+{
+   TMemFile memFile("test_ntuple_processor_chain_tmemfile_second.root", "RECREATE");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<float>("x");
+      auto fldY = model->MakeField<std::vector<float>>("y");
+      auto ntuple = RNTupleWriter::Append(std::move(model), fNTupleName, memFile);
+
+      for (unsigned i = 5; i < 10; i++) {
+         *fldX = static_cast<float>(i);
+         *fldY = {static_cast<float>(i), static_cast<float>(i * 2)};
+         ntuple->Fill();
+      }
+   }
+
+   auto proc = RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, &memFile}});
+
+   std::uint64_t nEntries = 0;
+   auto x = proc->GetEntry().GetPtr<float>("x");
+   for ([[maybe_unused]] const auto &entry : *proc) {
+      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
+      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+
+      EXPECT_EQ(static_cast<float>(nEntries - 1), *x);
+   }
+   EXPECT_EQ(nEntries, 10);
+   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
 }
