@@ -361,14 +361,15 @@ public:
    /// \param[in] joinFields The names of the fields on which to join, in case the specified RNTuples are unaligned.
    /// The join is made based on the combined join field values, and therefore each field has to be present in each
    /// specified RNTuple. If an empty list is provided, it is assumed that the specified ntuple are fully aligned.
-   /// \param[in] models A list of models for the RNTuples. This list must either contain a model for the primary
-   /// RNTuple and each auxiliary RNTuple (following the specification order), or be empty. When the list is empty, the
-   /// default model (i.e. containing all fields) will be used for each RNTuple.
+   /// \param[in] model The model that specifies which fields should be read by the processor, containing fields from
+   /// both the primary and auxiliary RNTuples. To prevent field name clashes, the auxiliary RNTuples are expected to be
+   /// contained in an untyped record field with the name of the RNTuple. To create such a model automatically, use
+   /// `CreateJoinModel`. When no model is provided, it will be inferred from the descriptors of the specified RNTuples.
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
    CreateJoin(const RNTupleOpenSpec &primaryNTuple, const std::vector<RNTupleOpenSpec> &auxNTuples,
-              const std::vector<std::string> &joinFields, std::vector<std::unique_ptr<RNTupleModel>> models = {});
+              const std::vector<std::string> &joinFields, std::unique_ptr<RNTupleModel> model = nullptr);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create an RNTupleProcessor for a *join* (i.e., a horizontal combination) of RNTuples.
@@ -383,16 +384,34 @@ public:
    /// specified RNTuple. If an empty list is provided, it is assumed that the specified RNTuple are fully aligned.
    /// \param[in] processorName The name to give to the processor. Use
    /// CreateJoin(const RNTupleOpenSpec &, const std::vector<RNTupleOpenSpec> &, const std::vector<std::string> &,
-   /// std::vector<std::unique_ptr<RNTupleModel>>) to automatically use the name of the input RNTuple instead.
-   /// \param[in] models A list of models for the RNTuples. This list must either contain a model for the primary
-   /// RNTuple and each auxiliary RNTuple (following the specification order), or be empty. When the list is empty, the
-   /// default model (i.e. containing all fields) will be used for each RNTuple.
+   /// std::unique_ptr<RNTupleModel>) to automatically use the name of the input RNTuple instead.
+   /// \param[in] model The model that specifies which fields should be read by the processor, containing fields from
+   /// both the primary and auxiliary RNTuples. To prevent field name clashes, the auxiliary RNTuples are expected to be
+   /// contained in an untyped record field with the name of the RNTuple. To create such a model automatically, use
+   /// `CreateJoinModel`. When no model is provided, it will be inferred from the descriptors of the specified RNTuples.
    ///
    /// \return A pointer to the newly created RNTupleProcessor.
    static std::unique_ptr<RNTupleProcessor>
    CreateJoin(const RNTupleOpenSpec &primaryNTuple, const std::vector<RNTupleOpenSpec> &auxNTuples,
               const std::vector<std::string> &joinFields, std::string_view processorName,
-              std::vector<std::unique_ptr<RNTupleModel>> models = {});
+              std::unique_ptr<RNTupleModel> model = nullptr);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Create a model containing fields from the primary and auxiliary RNTuples for joining.
+   ///
+   /// \param[in] primaryModel The model of the primary RNTuple.
+   /// \param[in] auxModels Models of the auxiliary RNTuples.
+   /// \param[in] auxNTuples Names and locations of the auxiliary RNTuples to be used in `CreateJoin`, corresponding to
+   /// the models in `auxModels`.
+   ///
+   /// \return A new RNTupleModel containing the fields of all provided models.
+   ///
+   /// To prevent field name clashes when one or more models have fields with duplicate names, fields from each
+   /// auxiliary model are stored as a anonymous record, and subsequently registered as subfields in the join model.
+   /// This way, they can be accessed from the processor's entry as `auxNTupleName.fieldName`.
+   static std::unique_ptr<RNTupleModel> CreateJoinModel(std::unique_ptr<RNTupleModel> primaryModel,
+                                                        const std::vector<std::unique_ptr<RNTupleModel>> &auxModels,
+                                                        const std::vector<RNTupleOpenSpec> &auxNTuples);
 };
 
 // clang-format off
@@ -530,24 +549,22 @@ private:
    /// specified RNTuple. If an empty list is provided, it is assumed that the RNTuples are fully aligned.
    /// \param[in] processorName Name of the processor. Unless specified otherwise in RNTupleProcessor::CreateJoin, this
    /// is the name of the main RNTuple.
-   /// \param[in] models The models that specify which fields should be read by the processor, ordered according to
-   /// {mainNTuple, auxNTuple[0], ...}. The pointer returned by RNTupleModel::MakeField can be used to access a field's
-   /// value during the processor iteration. When an empty list is passed, the models are created from the descriptor of
-   /// each RNTuple specified in `mainNTuple` and `auxNTuple`.
+   /// \param[in] model The model that specifies which fields should be read by the processor, containing fields from
+   /// both the primary and auxiliary RNTuples. To prevent field name clashes, the auxiliary RNTuples are expected to be
+   /// contained in an untyped record field with the name of the RNTuple. To create such a model automatically, use
+   /// `CreateJoinModel`. When no model is provided, it will be inferred from the descriptors of the specified RNTuples.
    RNTupleJoinProcessor(const RNTupleOpenSpec &mainNTuple, const std::vector<RNTupleOpenSpec> &auxNTuples,
                         const std::vector<std::string> &joinFields, std::string_view processorName,
-                        std::vector<std::unique_ptr<RNTupleModel>> models = {});
+                        std::unique_ptr<RNTupleModel> model = nullptr);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add an auxiliary RNTuple to the processor.
    ///
    /// \param[in] auxNTuple The source specification (name and storage location) of the auxiliary RNTuple.
    /// \param[in] joinFields The names of the fields used in the join.
-   /// \param[in] model The model that specifies which fields should be read by the processor. The pointer returned by
-   /// RNTupleModel::MakeField can be used to access a field's value during the processor iteration. When no model is
-   /// specified, it is created from the RNTuple's descriptor.
-   void AddAuxiliary(const RNTupleOpenSpec &auxNTuple, const std::vector<std::string> &joinFields,
-                     std::unique_ptr<RNTupleModel> model = nullptr);
+   /// \param[in] ntupleIdx The index of the ntuple according to fNTuples.
+   void
+   AddAuxiliary(const RNTupleOpenSpec &auxNTuple, const std::vector<std::string> &joinFields, std::size_t ntupleIdx);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect all fields, once the primary and all auxiliary RNTuples have been added.

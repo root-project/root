@@ -22,6 +22,39 @@ TEST(RNTupleProcessor, EmptyNTuple)
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
 }
 
+TEST(RNTupleProcessor, CreateJoinModel)
+{
+   auto primaryModel = RNTupleModel::Create();
+   primaryModel->MakeField<int>("i");
+   primaryModel->MakeField<float>("x");
+
+   std::vector<std::unique_ptr<RNTupleModel>> auxModels;
+   auxModels.emplace_back(RNTupleModel::Create());
+   auxModels.back()->MakeField<int>("i");
+   auxModels.back()->MakeField<float>("y");
+
+   auxModels.emplace_back(RNTupleModel::Create());
+   auxModels.back()->MakeField<int>("i");
+   auxModels.back()->MakeField<float>("z");
+
+   auto joinModel =
+      RNTupleProcessor::CreateJoinModel(std::move(primaryModel), std::move(auxModels), {{"aux1", ""}, {"aux2", ""}});
+
+   std::unordered_set<std::string> expectedTopLevelFields = {"i", "x", "aux1", "aux2"};
+   EXPECT_EQ(expectedTopLevelFields, joinModel->GetFieldNames());
+   std::unordered_set<std::string> expectedSubFields = {"aux1.i", "aux1.y", "aux2.i", "aux2.z"};
+   EXPECT_EQ(expectedSubFields, joinModel->GetRegisteredSubfieldNames());
+
+   EXPECT_NO_THROW(joinModel->GetConstField("i"));
+   EXPECT_NO_THROW(joinModel->GetConstField("x"));
+   EXPECT_NO_THROW(joinModel->GetConstField("aux1.i"));
+   EXPECT_NO_THROW(joinModel->GetConstField("aux1.y"));
+   EXPECT_THROW(joinModel->GetConstField("y"), ROOT::RException);
+   EXPECT_NO_THROW(joinModel->GetConstField("aux2.i"));
+   EXPECT_NO_THROW(joinModel->GetConstField("aux2.z"));
+   EXPECT_THROW(joinModel->GetConstField("z"), ROOT::RException);
+}
+
 class RNTupleProcessorTest : public testing::Test {
 protected:
    const std::array<std::string, 3> fFileNames{"test_ntuple_processor1.root", "test_ntuple_processor2.root",
