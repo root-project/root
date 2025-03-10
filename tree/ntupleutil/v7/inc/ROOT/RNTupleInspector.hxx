@@ -435,18 +435,18 @@ public:
    ///
    /// \param[in] typeNamePattern The type or class name to count. May contain regular expression patterns for grouping
    /// multiple kinds of types or classes.
-   /// \param[in] searchInSubFields If set to `false`, only top-level fields will be considered.
+   /// \param[in] searchInSubfields If set to `false`, only top-level fields will be considered.
    ///
    /// \return The number of fields that matches the provided type.
-   size_t GetFieldCountByType(const std::regex &typeNamePattern, bool searchInSubFields = true) const;
+   size_t GetFieldCountByType(const std::regex &typeNamePattern, bool searchInSubfields = true) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the number of fields of a given type or class present in the RNTuple.
    ///
-   /// \see GetFieldCountByType(const std::regex &typeNamePattern, bool searchInSubFields) const
-   size_t GetFieldCountByType(std::string_view typeNamePattern, bool searchInSubFields = true) const
+   /// \see GetFieldCountByType(const std::regex &typeNamePattern, bool searchInSubfields) const
+   size_t GetFieldCountByType(std::string_view typeNamePattern, bool searchInSubfields = true) const
    {
-      return GetFieldCountByType(std::regex{std::string(typeNamePattern)}, searchInSubFields);
+      return GetFieldCountByType(std::regex{std::string(typeNamePattern)}, searchInSubfields);
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -455,20 +455,20 @@ public:
    /// \param[in] fieldNamePattern The name of the field name to get. Because field names are unique by design,
    /// providing a single field name will return a vector containing just the ID of that field. However, regular
    /// expression patterns are supported in order to get the IDs of all fields whose name follow a certain structure.
-   /// \param[in] searchInSubFields If set to `false`, only top-level fields will be considered.
+   /// \param[in] searchInSubfields If set to `false`, only top-level fields will be considered.
    ///
    /// \return A vector containing the IDs of fields that match the provided name.
    const std::vector<ROOT::DescriptorId_t>
-   GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubFields = true) const;
+   GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubfields = true) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the IDs of (sub-)fields whose name matches the given string.
    ///
-   /// \see GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubFields) const
+   /// \see GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubfields) const
    const std::vector<ROOT::DescriptorId_t>
-   GetFieldsByName(std::string_view fieldNamePattern, bool searchInSubFields = true)
+   GetFieldsByName(std::string_view fieldNamePattern, bool searchInSubfields = true)
    {
-      return GetFieldsByName(std::regex{std::string(fieldNamePattern)}, searchInSubFields);
+      return GetFieldsByName(std::regex{std::string(fieldNamePattern)}, searchInSubfields);
    }
 };
 } // namespace Experimental

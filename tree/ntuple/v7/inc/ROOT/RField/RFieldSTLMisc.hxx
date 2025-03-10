@@ -47,12 +47,12 @@ class RAtomicField : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void ConstructValue(void *where) const final { CallConstructValueOn(*fSubFields[0], where); }
-   std::unique_ptr<RDeleter> GetDeleter() const final { return GetDeleterOf(*fSubFields[0]); }
+   void ConstructValue(void *where) const final { CallConstructValueOn(*fSubfields[0], where); }
+   std::unique_ptr<RDeleter> GetDeleter() const final { return GetDeleterOf(*fSubfields[0]); }
 
-   std::size_t AppendImpl(const void *from) final { return CallAppendOn(*fSubFields[0], from); }
-   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubFields[0], globalIndex, to); }
-   void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final { CallReadOn(*fSubFields[0], localIndex, to); }
+   std::size_t AppendImpl(const void *from) final { return CallAppendOn(*fSubfields[0], from); }
+   void ReadGlobalImpl(ROOT::NTupleSize_t globalIndex, void *to) final { CallReadOn(*fSubfields[0], globalIndex, to); }
+   void ReadInClusterImpl(RNTupleLocalIndex localIndex, void *to) final { CallReadOn(*fSubfields[0], localIndex, to); }
 
 public:
    RAtomicField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
@@ -62,8 +62,8 @@ public:
 
    std::vector<RValue> SplitValue(const RValue &value) const final;
 
-   size_t GetValueSize() const final { return fSubFields[0]->GetValueSize(); }
-   size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
+   size_t GetValueSize() const final { return fSubfields[0]->GetValueSize(); }
+   size_t GetAlignment() const final { return fSubfields[0]->GetAlignment(); }
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };

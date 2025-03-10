@@ -76,7 +76,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, const R
    : ROOT::Experimental::RFieldBase(fieldName, source.GetTypeName(), ROOT::ENTupleStructure::kRecord,
                                     false /* isSimple */),
      fClass(source.fClass),
-     fSubFieldsInfo(source.fSubFieldsInfo),
+     fSubfieldsInfo(source.fSubfieldsInfo),
      fMaxAlignment(source.fMaxAlignment)
 {
    for (const auto &f : source.GetConstSubfields()) {
@@ -186,7 +186,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, TClass 
 void ROOT::Experimental::RClassField::Attach(std::unique_ptr<RFieldBase> child, RSubFieldInfo info)
 {
    fMaxAlignment = std::max(fMaxAlignment, child->GetAlignment());
-   fSubFieldsInfo.push_back(info);
+   fSubfieldsInfo.push_back(info);
    RFieldBase::Attach(std::move(child));
 }
 
@@ -283,8 +283,8 @@ ROOT::Experimental::RClassField::CloneImpl(std::string_view newName) const
 std::size_t ROOT::Experimental::RClassField::AppendImpl(const void *from)
 {
    std::size_t nbytes = 0;
-   for (unsigned i = 0; i < fSubFields.size(); i++) {
-      nbytes += CallAppendOn(*fSubFields[i], static_cast<const unsigned char *>(from) + fSubFieldsInfo[i].fOffset);
+   for (unsigned i = 0; i < fSubfields.size(); i++) {
+      nbytes += CallAppendOn(*fSubfields[i], static_cast<const unsigned char *>(from) + fSubfieldsInfo[i].fOffset);
    }
    return nbytes;
 }
@@ -294,8 +294,8 @@ void ROOT::Experimental::RClassField::ReadGlobalImpl(ROOT::NTupleSize_t globalIn
    for (const auto &[_, si] : fStagingItems) {
       CallReadOn(*si.fField, globalIndex, fStagingArea.get() + si.fOffset);
    }
-   for (unsigned i = 0; i < fSubFields.size(); i++) {
-      CallReadOn(*fSubFields[i], globalIndex, static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
+   for (unsigned i = 0; i < fSubfields.size(); i++) {
+      CallReadOn(*fSubfields[i], globalIndex, static_cast<unsigned char *>(to) + fSubfieldsInfo[i].fOffset);
    }
 }
 
@@ -304,8 +304,8 @@ void ROOT::Experimental::RClassField::ReadInClusterImpl(RNTupleLocalIndex localI
    for (const auto &[_, si] : fStagingItems) {
       CallReadOn(*si.fField, localIndex, fStagingArea.get() + si.fOffset);
    }
-   for (unsigned i = 0; i < fSubFields.size(); i++) {
-      CallReadOn(*fSubFields[i], localIndex, static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
+   for (unsigned i = 0; i < fSubfields.size(); i++) {
+      CallReadOn(*fSubfields[i], localIndex, static_cast<unsigned char *>(to) + fSubfieldsInfo[i].fOffset);
    }
 }
 
@@ -395,7 +395,7 @@ void ROOT::Experimental::RClassField::AddReadCallbacksFromIORule(const TSchemaRu
 void ROOT::Experimental::RClassField::BeforeConnectPageSource(Internal::RPageSource &pageSource)
 {
    std::vector<const TSchemaRule *> rules;
-   std::unordered_set<std::string> knownSubFields;
+   std::unordered_set<std::string> knownSubfields;
 
    if (GetOnDiskId() == kInvalidDescriptorId) {
       // This can happen for added base classes or added members of class type
@@ -416,7 +416,7 @@ void ROOT::Experimental::RClassField::BeforeConnectPageSource(Internal::RPageSou
 
       for (auto linkId : fieldDesc.GetLinkIds()) {
          const auto &subFieldDesc = desc.GetFieldDescriptor(linkId);
-         knownSubFields.insert(subFieldDesc.GetFieldName());
+         knownSubfields.insert(subFieldDesc.GetFieldName());
       }
 
       rules = FindRules(&fieldDesc);
@@ -433,8 +433,8 @@ void ROOT::Experimental::RClassField::BeforeConnectPageSource(Internal::RPageSou
    }
 
    // Iterate over all sub fields in memory and mark those as missing that are not in the descriptor.
-   for (auto &field : fSubFields) {
-      if (knownSubFields.count(field->GetFieldName()) == 0) {
+   for (auto &field : fSubfields) {
+      if (knownSubfields.count(field->GetFieldName()) == 0) {
          field->SetArtificial();
       }
    }
@@ -456,10 +456,10 @@ ROOT::Experimental::RClassField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
    auto basePtr = value.GetPtr<unsigned char>().get();
-   result.reserve(fSubFields.size());
-   for (unsigned i = 0; i < fSubFields.size(); i++) {
+   result.reserve(fSubfields.size());
+   for (unsigned i = 0; i < fSubfields.size(); i++) {
       result.emplace_back(
-         fSubFields[i]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), basePtr + fSubFieldsInfo[i].fOffset)));
+         fSubfields[i]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), basePtr + fSubfieldsInfo[i].fOffset)));
    }
    return result;
 }
@@ -528,7 +528,7 @@ ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::stri
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::REnumField::CloneImpl(std::string_view newName) const
 {
-   auto newIntField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
+   auto newIntField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
    return std::unique_ptr<REnumField>(new REnumField(newName, GetTypeName(), std::move(newIntField)));
 }
 
@@ -536,7 +536,7 @@ std::vector<ROOT::Experimental::RFieldBase::RValue>
 ROOT::Experimental::REnumField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
-   result.emplace_back(fSubFields[0]->BindValue(value.GetPtr<void>()));
+   result.emplace_back(fSubfields[0]->BindValue(value.GetPtr<void>()));
    return result;
 }
 
@@ -671,7 +671,7 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
 std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RProxiedCollectionField::CloneImpl(std::string_view newName) const
 {
-   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
+   auto newItemField = fSubfields[0]->Clone(fSubfields[0]->GetFieldName());
    return std::unique_ptr<RProxiedCollectionField>(
       new RProxiedCollectionField(newName, GetTypeName(), std::move(newItemField)));
 }
@@ -683,7 +683,7 @@ std::size_t ROOT::Experimental::RProxiedCollectionField::AppendImpl(const void *
    TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), const_cast<void *>(from));
    for (auto ptr : RCollectionIterableOnce{const_cast<void *>(from), fIFuncsWrite, fProxy.get(),
                                            (fCollectionType == kSTLvector ? fItemSize : 0U)}) {
-      nbytes += CallAppendOn(*fSubFields[0], ptr);
+      nbytes += CallAppendOn(*fSubfields[0], ptr);
       count++;
    }
 
@@ -705,7 +705,7 @@ void ROOT::Experimental::RProxiedCollectionField::ReadGlobalImpl(ROOT::NTupleSiz
    unsigned i = 0;
    for (auto elementPtr : RCollectionIterableOnce{obj, fIFuncsRead, fProxy.get(),
                                                   (fCollectionType == kSTLvector || obj != to ? fItemSize : 0U)}) {
-      CallReadOn(*fSubFields[0], collectionStart + (i++), elementPtr);
+      CallReadOn(*fSubfields[0], collectionStart + (i++), elementPtr);
    }
    if (obj != to)
       fProxy->Commit(obj);
@@ -742,7 +742,7 @@ ROOT::Experimental::RProxiedCollectionField::GetDeleter() const
 {
    if (fProperties & TVirtualCollectionProxy::kNeedDelete) {
       std::size_t itemSize = fCollectionType == kSTLvector ? fItemSize : 0U;
-      return std::make_unique<RProxiedCollectionDeleter>(fProxy, GetDeleterOf(*fSubFields[0]), itemSize);
+      return std::make_unique<RProxiedCollectionDeleter>(fProxy, GetDeleterOf(*fSubfields[0]), itemSize);
    }
    return std::make_unique<RProxiedCollectionDeleter>(fProxy);
 }
@@ -767,7 +767,7 @@ ROOT::Experimental::RProxiedCollectionField::SplitValue(const RValue &value) con
    TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), valueRawPtr);
    for (auto ptr : RCollectionIterableOnce{valueRawPtr, fIFuncsWrite, fProxy.get(),
                                            (fCollectionType == kSTLvector ? fItemSize : 0U)}) {
-      result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), ptr)));
+      result.emplace_back(fSubfields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), ptr)));
    }
    return result;
 }
@@ -983,11 +983,11 @@ std::size_t ROOT::Experimental::RField<TObject>::AppendImpl(const void *from)
    }
 
    std::size_t nbytes = 0;
-   nbytes += CallAppendOn(*fSubFields[0], reinterpret_cast<const unsigned char *>(from) + GetOffsetUniqueID());
+   nbytes += CallAppendOn(*fSubfields[0], reinterpret_cast<const unsigned char *>(from) + GetOffsetUniqueID());
 
    UInt_t bits = *reinterpret_cast<const UInt_t *>(reinterpret_cast<const unsigned char *>(from) + GetOffsetBits());
    bits &= (~TObject::kIsOnHeap & ~TObject::kNotDeleted);
-   nbytes += CallAppendOn(*fSubFields[1], &bits);
+   nbytes += CallAppendOn(*fSubfields[1], &bits);
 
    return nbytes;
 }
@@ -1001,11 +1001,11 @@ void ROOT::Experimental::RField<TObject>::ReadGlobalImpl(ROOT::NTupleSize_t glob
       throw RException(R__FAIL("RNTuple I/O on referenced TObject is unsupported"));
    }
 
-   CallReadOn(*fSubFields[0], globalIndex, static_cast<unsigned char *>(to) + GetOffsetUniqueID());
+   CallReadOn(*fSubfields[0], globalIndex, static_cast<unsigned char *>(to) + GetOffsetUniqueID());
 
    const UInt_t bitIsOnHeap = obj->TestBit(TObject::kIsOnHeap) ? TObject::kIsOnHeap : 0;
    UInt_t bits;
-   CallReadOn(*fSubFields[1], globalIndex, &bits);
+   CallReadOn(*fSubfields[1], globalIndex, &bits);
    bits |= bitIsOnHeap | TObject::kNotDeleted;
    *reinterpret_cast<UInt_t *>(reinterpret_cast<unsigned char *>(to) + GetOffsetBits()) = bits;
 }
@@ -1038,9 +1038,9 @@ ROOT::Experimental::RField<TObject>::SplitValue(const RValue &value) const
    std::vector<RValue> result;
    auto basePtr = value.GetPtr<unsigned char>().get();
    result.emplace_back(
-      fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), basePtr + GetOffsetUniqueID())));
+      fSubfields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), basePtr + GetOffsetUniqueID())));
    result.emplace_back(
-      fSubFields[1]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), basePtr + GetOffsetBits())));
+      fSubfields[1]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), basePtr + GetOffsetBits())));
    return result;
 }
 
@@ -1099,7 +1099,7 @@ ROOT::Experimental::RTupleField::RTupleField(std::string_view fieldName,
    // following the order of the type list.
    // Use TClass to get their offsets; in case a particular `std::tuple` implementation does not define such
    // members, the assertion below will fail.
-   for (unsigned i = 0; i < fSubFields.size(); ++i) {
+   for (unsigned i = 0; i < fSubfields.size(); ++i) {
       std::string memberName("_" + std::to_string(i));
       auto member = c->GetRealData(memberName.c_str());
       if (!member)
@@ -1214,7 +1214,7 @@ std::size_t ROOT::Experimental::RVariantField::AppendImpl(const void *from)
    std::size_t nbytes = 0;
    auto index = 0;
    if (tag > 0) {
-      nbytes += CallAppendOn(*fSubFields[tag - 1], reinterpret_cast<const unsigned char *>(from) + fVariantOffset);
+      nbytes += CallAppendOn(*fSubfields[tag - 1], reinterpret_cast<const unsigned char *>(from) + fVariantOffset);
       index = fNWritten[tag - 1]++;
    }
    Internal::RColumnSwitch varSwitch(index, tag);
@@ -1234,8 +1234,8 @@ void ROOT::Experimental::RVariantField::ReadGlobalImpl(ROOT::NTupleSize_t global
    // any `std::holds_alternative<T>` check fail later.
    if (R__likely(tag > 0)) {
       void *varPtr = reinterpret_cast<unsigned char *>(to) + fVariantOffset;
-      CallConstructValueOn(*fSubFields[tag - 1], varPtr);
-      CallReadOn(*fSubFields[tag - 1], variantIndex, varPtr);
+      CallConstructValueOn(*fSubfields[tag - 1], varPtr);
+      CallReadOn(*fSubfields[tag - 1], variantIndex, varPtr);
    }
    SetTag(to, fTagOffset, tag);
 }
@@ -1260,7 +1260,7 @@ void ROOT::Experimental::RVariantField::GenerateColumns(const RNTupleDescriptor 
 void ROOT::Experimental::RVariantField::ConstructValue(void *where) const
 {
    memset(where, 0, GetValueSize());
-   CallConstructValueOn(*fSubFields[0], reinterpret_cast<unsigned char *>(where) + fVariantOffset);
+   CallConstructValueOn(*fSubfields[0], reinterpret_cast<unsigned char *>(where) + fVariantOffset);
    SetTag(where, fTagOffset, 1);
 }
 
@@ -1276,8 +1276,8 @@ void ROOT::Experimental::RVariantField::RVariantDeleter::operator()(void *objPtr
 std::unique_ptr<ROOT::Experimental::RFieldBase::RDeleter> ROOT::Experimental::RVariantField::GetDeleter() const
 {
    std::vector<std::unique_ptr<RDeleter>> itemDeleters;
-   itemDeleters.reserve(fSubFields.size());
-   for (const auto &f : fSubFields) {
+   itemDeleters.reserve(fSubfields.size());
+   for (const auto &f : fSubfields) {
       itemDeleters.emplace_back(GetDeleterOf(*f));
    }
    return std::make_unique<RVariantDeleter>(fTagOffset, fVariantOffset, std::move(itemDeleters));
