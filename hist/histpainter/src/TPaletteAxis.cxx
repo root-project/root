@@ -633,8 +633,8 @@ void TPaletteAxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
    SavePrimitiveConstructor(out, Class(), "palette", args);
    out << "   palette->SetNdivisions(" << fH->GetZaxis()->GetNdivisions() << ");\n";
-   out << "   palette->SetAxisColor(" << fH->GetZaxis()->GetAxisColor() << ");\n";
-   out << "   palette->SetLabelColor(" << fH->GetZaxis()->GetLabelColor() << ");\n";
+   out << "   palette->SetAxisColor(" << TColor::SavePrimitiveColor(fH->GetZaxis()->GetAxisColor()) << ");\n";
+   out << "   palette->SetLabelColor(" << TColor::SavePrimitiveColor(fH->GetZaxis()->GetLabelColor()) << ");\n";
    out << "   palette->SetLabelFont(" << fH->GetZaxis()->GetLabelFont() << ");\n";
    out << "   palette->SetLabelOffset(" << fH->GetZaxis()->GetLabelOffset() << ");\n";
    out << "   palette->SetLabelSize(" << fH->GetZaxis()->GetLabelSize() << ");\n";
@@ -642,7 +642,7 @@ void TPaletteAxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out << "   palette->SetTickLength(" << fH->GetZaxis()->GetTickLength() << ");\n";
    out << "   palette->SetTitleOffset(" << fH->GetZaxis()->GetTitleOffset() << ");\n";
    out << "   palette->SetTitleSize(" << fH->GetZaxis()->GetTitleSize() << ");\n";
-   out << "   palette->SetTitleColor(" << fH->GetZaxis()->GetTitleColor() << ");\n";
+   out << "   palette->SetTitleColor(" << TColor::SavePrimitiveColor(fH->GetZaxis()->GetTitleColor()) << ");\n";
    out << "   palette->SetTitleFont(" << fH->GetZaxis()->GetTitleFont() << ");\n";
    out << "   palette->SetTitle(\"" << TString(fH->GetZaxis()->GetTitle()).ReplaceSpecialCppChars() << "\");\n";
    SaveFillAttributes(out, "palette", -1, -1);
