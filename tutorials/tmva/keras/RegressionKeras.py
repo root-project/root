@@ -73,7 +73,7 @@ if __name__ == "__main__":
 
     # Load data
     if not isfile('tmva_reg_example.root'):
-        call(['curl', '-L', '-O', 'http://root.cern/files/tmva_reg_example.root'])
+        call(['curl', '-L', '-O', 'http://root-test.web.cern.ch/files/tmva_reg_example.root'])
 
     # Generate model
     create_model()

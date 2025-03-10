@@ -13,7 +13,7 @@
 /// \author Rene Brun
 
 void geomBrahms() {
-   TGeoManager::Import("http://root.cern/files/brahms.root");
+   TGeoManager::Import("http://root-test.web.cern.ch/files/brahms.root");
    gGeoManager->GetVolume("CAVE")->Draw("ogl");
    new TBrowser;
 }

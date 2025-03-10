@@ -25,7 +25,7 @@ macro(ROOT_CHECK_CONNECTION option)
     # Do something only if connection check is not already done
   if(NOT DEFINED NO_CONNECTION)
     message(STATUS "Checking internet connectivity")
-    file(DOWNLOAD https://root.cern/files/cmake_connectivity_test.txt ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt
+    file(DOWNLOAD https://root-test.web.cern.ch/files/cmake_connectivity_test.txt ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt
       TIMEOUT 10 STATUS DOWNLOAD_STATUS
     )
     # Get the status code from the download status

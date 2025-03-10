@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     # Load data
     if not isfile('tmva_class_example.root'):
-        call(['curl', '-L', '-O', 'http://root.cern/files/tmva_class_example.root'])
+        call(['curl', '-L', '-O', 'http://root-test.web.cern.ch/files/tmva_class_example.root'])
 
     # Run TMVA
     run()
