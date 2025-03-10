@@ -92,6 +92,8 @@ void Read(const std::vector<RNTupleOpenSpec> &ntuples)
       }
    }
 
+   std::cout << "Processed a total of " << processor->GetNEntriesProcessed() << " entries" << std::endl;
+
    hPx.DrawCopy();
 }
 
