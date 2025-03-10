@@ -52,6 +52,37 @@ TEST(RNTupleProcessor, TMemFile)
    EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
 }
 
+TEST(RNTupleProcessor, TDirectory)
+{
+   FileRaii fileGuard("test_ntuple_processor_tdirectoryfile.root");
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto dir = std::unique_ptr<TDirectory>(file->mkdir("a/b"));
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<float>("x");
+      auto ntuple = RNTupleWriter::Append(std::move(model), "ntuple", *dir);
+
+      for (unsigned i = 0; i < 5; ++i) {
+         *fldX = static_cast<float>(i);
+         ntuple->Fill();
+      }
+   }
+
+   auto file = std::make_unique<TFile>(fileGuard.GetPath().c_str());
+   auto proc = RNTupleProcessor::Create({"a/b/ntuple", file.get()});
+   auto x = proc->GetEntry().GetPtr<float>("x");
+
+   int nEntries = 0;
+   for ([[maybe_unused]] const auto &entry : *proc) {
+      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
+      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+
+      EXPECT_FLOAT_EQ(static_cast<float>(nEntries - 1), *x);
+   }
+   EXPECT_EQ(nEntries, 5);
+   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
+}
+
 class RNTupleProcessorTest : public testing::Test {
 protected:
    const std::array<std::string, 3> fFileNames{"test_ntuple_processor1.root", "test_ntuple_processor2.root",
