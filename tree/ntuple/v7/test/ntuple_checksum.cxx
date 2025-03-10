@@ -103,7 +103,7 @@ TEST(RNTupleChecksum, OmitPageChecksum)
    const auto pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0, 0);
    const auto clusterId = descGuard->FindClusterId(pxColId, 0);
    const auto &clusterDesc = descGuard->GetClusterDescriptor(clusterId);
-   const auto pageInfo = clusterDesc.GetPageRange(pxColId).fPageInfos[0];
+   const auto pageInfo = clusterDesc.GetPageRange(pxColId).GetPageInfos()[0];
    EXPECT_EQ(4u, pageInfo.GetLocator().GetNBytesOnStorage());
    EXPECT_FALSE(pageInfo.HasChecksum());
 

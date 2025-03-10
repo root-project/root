@@ -126,7 +126,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
          }
          const auto &pageRange = cluster.second.GetPageRange(column.second.GetPhysicalId());
          auto idx = cluster2Idx[cluster.first];
-         for (const auto &page : pageRange.fPageInfos) {
+         for (const auto &page : pageRange.GetPageInfos()) {
             nBytesOnStorage += page.GetLocator().GetNBytesOnStorage();
             nBytesInMemory += page.GetNElements() * elementSize;
             clusters[idx].fNBytesOnStorage += page.GetLocator().GetNBytesOnStorage();

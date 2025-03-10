@@ -1716,9 +1716,9 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
             pos += SerializeInt64(kSuppressedColumnMarker, *where);
          } else {
             const auto &pageRange = clusterDesc.GetPageRange(memId);
-            pos += SerializeListFramePreamble(pageRange.fPageInfos.size(), *where);
+            pos += SerializeListFramePreamble(pageRange.GetPageInfos().size(), *where);
 
-            for (const auto &pi : pageRange.fPageInfos) {
+            for (const auto &pi : pageRange.GetPageInfos()) {
                std::int32_t nElements =
                   pi.HasChecksum() ? -static_cast<std::int32_t>(pi.GetNElements()) : pi.GetNElements();
                pos += SerializeUInt32(nElements, *where);
@@ -2058,7 +2058,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageListRaw(const vo
          }
 
          RClusterDescriptor::RPageRange pageRange;
-         pageRange.fPhysicalColumnId = j;
+         pageRange.SetPhysicalColumnId(j);
          for (std::uint32_t k = 0; k < nPages; ++k) {
             if (fnInnerFrameSizeLeft() < static_cast<int>(sizeof(std::uint32_t)))
                return R__FAIL("inner frame too short");
@@ -2075,7 +2075,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageListRaw(const vo
             } else {
                return R__FORWARD_ERROR(res);
             }
-            pageRange.fPageInfos.push_back({static_cast<std::uint32_t>(nElements), locator, hasChecksum});
+            pageRange.GetPageInfos().push_back({static_cast<std::uint32_t>(nElements), locator, hasChecksum});
          }
 
          if (fnInnerFrameSizeLeft() < static_cast<int>(sizeof(std::int64_t)))
