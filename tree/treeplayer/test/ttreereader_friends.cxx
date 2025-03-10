@@ -4,6 +4,7 @@
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 #include "ROOT/TestSupport.hxx"
+#include <string>
 
 struct TTreeReaderFriends : public ::testing::Test {
    constexpr static auto fMainTreeName{"tree_10entries"};
@@ -213,4 +214,74 @@ TEST_F(TTreeReaderFriends, MainTreeShorterTChainExtraFriend)
                          "' has more entries beyond the end of the main tree.",
                       /*matchFullMessage*/ true);
    r.SetEntry(2);
+}
+
+// ROOT-9886 "Reader: Unexpected value in friend tree: expected 13, read 3"
+TEST_F(TTreeReaderFriends, EntryChainFriend)
+{
+   constexpr const int kEntriesPerTree = 10;
+   for (int i = 0; i < 3; ++i) {
+      TFile file(std::string("maintree9886_" + std::to_string(i) + ".root").c_str(), "RECREATE");
+      TTree tree("tree", "Main tree");
+      int val;
+      tree.Branch("val", &val);
+      for (int j = 0; j < kEntriesPerTree; ++j) {
+         val = -(j + i * kEntriesPerTree);
+         tree.Fill();
+      }
+      tree.Write();
+   }
+   for (int i = 0; i < 1; ++i) {
+      TFile file(std::string("friendtree9886_" + std::to_string(i) + ".root").c_str(), "RECREATE");
+      TTree tree("friend", "Friend tree");
+      int entry;
+      tree.Branch("entry", &entry);
+      for (int j = 0; j < 3 * kEntriesPerTree; ++j) {
+         entry = j + i * kEntriesPerTree;
+         tree.Fill();
+      }
+      tree.Write();
+   }
+
+   std::unique_ptr<TChain> chainFriend{new TChain("friend")};
+   chainFriend->Add("friendtree9886_*.root");
+   std::unique_ptr<TChain> chainMain{new TChain("tree")};
+   chainMain->Add("maintree9886_*.root");
+   chainMain->AddFriend(chainFriend.get());
+   TChain *chain = chainMain.get();
+   
+   // Test using traditional SetBranchAddress
+   {
+      EXPECT_EQ(chain->GetEntries(), 30);
+      EXPECT_EQ(chainFriend->GetEntries(), 30);
+
+      int mainVal;
+      int friendVal;
+      chain->SetBranchAddress("val", &mainVal);
+      chain->SetBranchAddress("entry", &friendVal);
+      int entry = -1;
+      while (chain->GetEntry(++entry)) {
+         EXPECT_EQ(mainVal, -entry);
+         EXPECT_EQ(friendVal, entry);
+      }
+      EXPECT_EQ(entry, 30);
+      chain->ResetBranchAddresses();
+   }
+
+   // Equivalent test using TTreeReader
+   {
+      EXPECT_EQ(chain->GetEntries(), 30);
+      EXPECT_EQ(chainFriend->GetEntries(), 30);
+
+      TTreeReader reader(chain);
+      TTreeReaderValue<int> mainVal(reader, "val");
+      TTreeReaderValue<int> friendVal(reader, "entry");
+      int entry = 0;
+      while (reader.Next()) {
+         EXPECT_EQ(*mainVal, -entry);
+         EXPECT_EQ(*friendVal, entry);
+         ++entry;
+      }
+      EXPECT_EQ(entry, 30);
+   }
 }
