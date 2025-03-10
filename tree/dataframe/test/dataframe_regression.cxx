@@ -5,6 +5,7 @@
 #include "TVector3.h"
 #include "TSystem.h"
 #include "Math/Vector4D.h"
+#include "ROOT/TestSupport.hxx"
 
 #include <algorithm>
 
@@ -56,6 +57,11 @@ TEST(RDFRegressionTests, AliasAndSubBranches)
    t.Fill();
    t.Fill();
 
+#ifndef NDEBUG
+   ROOT::TestSupport::CheckDiagsRAII diagRAII{kWarning, "RTreeColumnReader::Get",
+                                              "Branch topbranch.fCoordinates.fX hangs from a non-split branch. A copy "
+                                              "is being performed in order to properly read the content."};
+#endif
    auto df = ROOT::RDataFrame(t).Alias("alias", "topbranch");
    // Here, before the fix for #11207 we transformed `"alias.fCoordinates.fX.size() == 2"` into
    // `[](std::vector<XYZTVector> &var0) { return var0.fCoordinates.fX.size() == 2; }`, which is not valid C++

@@ -122,29 +122,11 @@ public:
       return fLastResult[slot * cacheLineStepint];
    }
 
-   ROOT::Detail::RDF::RColumnReaderBase *GetOrCreateColumnReader(TTreeReader *r, unsigned int slot)
-   {
-      // Try to check if there is an available reader from the column register first
-      // We do not check that the type of the reader matches the type of the input column of this node,
-      // because this node does not keep track of that anyway
-      if (auto *defineOrVariationReader = fColRegister.GetReaderUnchecked(slot, fColumnNames[0], fVariation))
-         return defineOrVariationReader;
-
-      // Check if we already inserted a reader for this column in the dataset column readers (RDataSource or Tree/TChain
-      // readers)
-      if (auto *datasetColReader = fLoopManager->GetDatasetColumnReader(slot, fColumnNames[0], typeid(void)))
-         return datasetColReader;
-
-      // Create a column reader that does not need type information. It is used only to check if an entry of the
-      // column can be read validly.
-      return fLoopManager->AddTreeColumnReader(
-         slot, fColumnNames[0], std::make_unique<ROOT::Internal::RDF::RTreeOpaqueColumnReader>(*r, fColumnNames[0]),
-         typeid(void));
-   }
-
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      fValues[slot] = GetOrCreateColumnReader(r, slot);
+      fValues[slot] =
+         RDFInternal::GetColumnReader(slot, fColRegister.GetReaderUnchecked(slot, fColumnNames[0], fVariation),
+                                      *fLoopManager, r, fColumnNames[0], typeid(void));
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
    }
 
