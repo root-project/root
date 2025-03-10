@@ -708,7 +708,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const RCluster
       const auto &pages = clusterDesc.GetPageRange(columnId);
 
       RPageStorage::SealedPageSequence_t sealedPages;
-      sealedPages.resize(pages.fPageInfos.size());
+      sealedPages.resize(pages.GetPageInfos().size());
 
       // Each column range potentially has a distinct compression settings
       const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).GetCompressionSettings().value();
@@ -730,7 +730,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const RCluster
       // If the column range already has the right compression we don't need to allocate any new buffer, so we don't
       // bother reserving memory for them.
       if (needsResealing)
-         sealedPageData.fBuffers.resize(sealedPageData.fBuffers.size() + pages.fPageInfos.size());
+         sealedPageData.fBuffers.resize(sealedPageData.fBuffers.size() + pages.GetPageInfos().size());
 
       // If this column is deferred, we may need to fill "holes" until its real start. We fill any missing entry
       // with zeroes, like we do for extraDstColumns.
@@ -745,7 +745,7 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const RCluster
 
       // Loop over the pages
       std::uint64_t pageIdx = 0;
-      for (const auto &pageInfo : pages.fPageInfos) {
+      for (const auto &pageInfo : pages.GetPageInfos()) {
          assert(pageIdx < sealedPages.size());
          assert(sealedPageData.fBuffers.size() == 0 || pageIdx < sealedPageData.fBuffers.size());
          assert(pageInfo.GetLocator().GetType() != RNTupleLocator::kTypePageZero);

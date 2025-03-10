@@ -97,7 +97,7 @@ int CountPages(const RNTupleDescriptor &desc, std::span<const RColumnExportInfo>
       const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
       for (const auto &colInfo : columns) {
          const auto &pages = clusterDesc.GetPageRange(colInfo.fColDesc->GetPhysicalId());
-         nPages += pages.fPageInfos.size();
+         nPages += pages.GetPageInfos().size();
       }
       clusterId = desc.FindNextClusterId(clusterId);
    }
@@ -146,12 +146,12 @@ RNTupleExporter::RPagesResult RNTupleExporter::ExportPages(RPageSource &source, 
          std::uint64_t pageIdx = 0;
 
          R__LOG_DEBUG(0, RNTupleExporterLog())
-            << "exporting column \"" << colInfo.fQualifiedName << "\" (" << pages.fPageInfos.size() << " pages)";
+            << "exporting column \"" << colInfo.fQualifiedName << "\" (" << pages.GetPageInfos().size() << " pages)";
 
          // We should never try to export a suppressed column range
-         assert(!colRange.IsSuppressed() || pages.fPageInfos.empty());
+         assert(!colRange.IsSuppressed() || pages.GetPageInfos().empty());
 
-         for (const auto &pageInfo : pages.fPageInfos) {
+         for (const auto &pageInfo : pages.GetPageInfos()) {
             ROnDiskPage::Key key{columnId, pageIdx};
             const ROnDiskPage *onDiskPage = cluster->GetOnDiskPage(key);
 

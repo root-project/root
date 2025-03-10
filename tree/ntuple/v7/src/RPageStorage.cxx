@@ -267,7 +267,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
          const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
          std::uint64_t pageNo = 0;
          std::uint64_t firstInPage = 0;
-         for (const auto &pi : pageRange.fPageInfos) {
+         for (const auto &pi : pageRange.GetPageInfos()) {
             auto onDiskPage = cluster->GetOnDiskPage(ROnDiskPage::Key{columnId, pageNo});
             RSealedPage sealedPage;
             sealedPage.SetNElements(pi.GetNElements());
@@ -323,7 +323,7 @@ void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(
 
       const auto &pageRange = clusterDesc.GetPageRange(physicalColumnId);
       ROOT::NTupleSize_t pageNo = 0;
-      for (const auto &pageInfo : pageRange.fPageInfos) {
+      for (const auto &pageInfo : pageRange.GetPageInfos()) {
          if (pageInfo.GetLocator().GetType() == RNTupleLocator::kTypePageZero) {
             pageZeroMap.Register(
                ROnDiskPage::Key{physicalColumnId, pageNo},
@@ -879,7 +879,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
       columnRange.SetCompressionSettings(GetWriteOptions().GetCompression());
       fOpenColumnRanges.emplace_back(columnRange);
       RClusterDescriptor::RPageRange pageRange;
-      pageRange.fPhysicalColumnId = i;
+      pageRange.SetPhysicalColumnId(i);
       fOpenPageRanges.emplace_back(std::move(pageRange));
    }
 
@@ -948,7 +948,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTu
       columnRange.SetCompressionSettings(GetWriteOptions().GetCompression());
       fOpenColumnRanges.emplace_back(columnRange);
       RClusterDescriptor::RPageRange pageRange;
-      pageRange.fPhysicalColumnId = i;
+      pageRange.SetPhysicalColumnId(i);
       fOpenPageRanges.emplace_back(std::move(pageRange));
    }
 
@@ -1010,7 +1010,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitPage(ColumnHandle_
    pageInfo.SetNElements(page.GetNElements());
    pageInfo.SetLocator(CommitPageImpl(columnHandle, page));
    pageInfo.SetHasChecksum(GetWriteOptions().GetEnablePageChecksums());
-   fOpenPageRanges.at(columnHandle.fPhysicalId).fPageInfos.emplace_back(pageInfo);
+   fOpenPageRanges.at(columnHandle.fPhysicalId).GetPageInfos().emplace_back(pageInfo);
 }
 
 void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPage(ROOT::DescriptorId_t physicalColumnId,
@@ -1022,7 +1022,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPage(ROOT::D
    pageInfo.SetNElements(sealedPage.GetNElements());
    pageInfo.SetLocator(CommitSealedPageImpl(physicalColumnId, sealedPage));
    pageInfo.SetHasChecksum(sealedPage.GetHasChecksum());
-   fOpenPageRanges.at(physicalColumnId).fPageInfos.emplace_back(pageInfo);
+   fOpenPageRanges.at(physicalColumnId).GetPageInfos().emplace_back(pageInfo);
 }
 
 std::vector<ROOT::RNTupleLocator> ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageVImpl(
@@ -1106,7 +1106,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageV(
          pageInfo.SetNElements(sealedPageIt->GetNElements());
          pageInfo.SetLocator(locators[locatorIndexes[i++]]);
          pageInfo.SetHasChecksum(sealedPageIt->GetHasChecksum());
-         fOpenPageRanges.at(range.fPhysicalColumnId).fPageInfos.emplace_back(pageInfo);
+         fOpenPageRanges.at(range.fPhysicalColumnId).GetPageInfos().emplace_back(pageInfo);
       }
    }
 }
@@ -1122,15 +1122,15 @@ ROOT::Experimental::Internal::RPagePersistentSink::StageCluster(ROOT::NTupleSize
       RStagedCluster::RColumnInfo columnInfo;
       columnInfo.fCompressionSettings = fOpenColumnRanges[i].GetCompressionSettings().value();
       if (fOpenColumnRanges[i].IsSuppressed()) {
-         assert(fOpenPageRanges[i].fPageInfos.empty());
-         columnInfo.fPageRange.fPhysicalColumnId = i;
+         assert(fOpenPageRanges[i].GetPageInfos().empty());
+         columnInfo.fPageRange.SetPhysicalColumnId(i);
          columnInfo.fIsSuppressed = true;
          // We reset suppressed columns to the state they would have if they were active (not suppressed).
          fOpenColumnRanges[i].SetNElements(0);
          fOpenColumnRanges[i].SetIsSuppressed(false);
       } else {
          std::swap(columnInfo.fPageRange, fOpenPageRanges[i]);
-         fOpenPageRanges[i].fPhysicalColumnId = i;
+         fOpenPageRanges[i].SetPhysicalColumnId(i);
 
          columnInfo.fNElements = fOpenColumnRanges[i].GetNElements();
          fOpenColumnRanges[i].SetNElements(0);
@@ -1149,9 +1149,9 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitStagedClusters(std
          .FirstEntryIndex(fPrevClusterNEntries)
          .NEntries(cluster.fNEntries);
       for (const auto &columnInfo : cluster.fColumnInfos) {
-         const auto colId = columnInfo.fPageRange.fPhysicalColumnId;
+         const auto colId = columnInfo.fPageRange.GetPhysicalColumnId();
          if (columnInfo.fIsSuppressed) {
-            assert(columnInfo.fPageRange.fPageInfos.empty());
+            assert(columnInfo.fPageRange.GetPageInfos().empty());
             clusterBuilder.MarkSuppressedColumnRange(colId);
          } else {
             clusterBuilder.CommitColumnRange(colId, fOpenColumnRanges[colId].GetFirstElementIndex(),
@@ -1164,7 +1164,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitStagedClusters(std
       for (const auto &columnInfo : cluster.fColumnInfos) {
          if (!columnInfo.fIsSuppressed)
             continue;
-         const auto colId = columnInfo.fPageRange.fPhysicalColumnId;
+         const auto colId = columnInfo.fPageRange.GetPhysicalColumnId();
          // For suppressed columns, we need to reset the first element index to the first element of the next (upcoming)
          // cluster. This information has been determined for the committed cluster descriptor through
          // CommitSuppressedColumnRanges(), so we can use the information from the descriptor.

@@ -311,17 +311,6 @@ public:
    // clang-format on
    class RPageRange {
       friend class Internal::RClusterDescriptorBuilder;
-      /// Extend this RPageRange to fit the given RColumnRange, i.e. prepend as many synthetic RPageInfos as needed to
-      /// cover the range in `columnRange`. `RPageInfo`s are constructed to contain as many elements of type `element`
-      /// given a page size limit of `pageSize` (in bytes); the locator for the referenced pages is `kTypePageZero`.
-      /// This function is used to make up `RPageRange`s for clusters that contain deferred columns.
-      /// \return The number of column elements covered by the synthesized RPageInfos
-      std::size_t ExtendToFitColumnRange(const RColumnRange &columnRange, const Internal::RColumnElementBase &element,
-                                         std::size_t pageSize);
-
-      /// Has the same length than fPageInfos and stores the sum of the number of elements of all the pages
-      /// up to and including a given index. Used for binary search in Find().
-      std::vector<ROOT::NTupleSize_t> fCumulativeNElements;
 
    public:
       /// We do not need to store the element size / uncompressed page size because we know to which column
@@ -380,6 +369,23 @@ public:
          void SetPageNumber(ROOT::NTupleSize_t pageNumber) { fPageNumber = pageNumber; }
       };
 
+   private:
+      /// Extend this RPageRange to fit the given RColumnRange, i.e. prepend as many synthetic RPageInfos as needed to
+      /// cover the range in `columnRange`. `RPageInfo`s are constructed to contain as many elements of type `element`
+      /// given a page size limit of `pageSize` (in bytes); the locator for the referenced pages is `kTypePageZero`.
+      /// This function is used to make up `RPageRange`s for clusters that contain deferred columns.
+      /// \return The number of column elements covered by the synthesized RPageInfos
+      std::size_t ExtendToFitColumnRange(const RColumnRange &columnRange, const Internal::RColumnElementBase &element,
+                                         std::size_t pageSize);
+
+      /// Has the same length than fPageInfos and stores the sum of the number of elements of all the pages
+      /// up to and including a given index. Used for binary search in Find().
+      std::vector<ROOT::NTupleSize_t> fCumulativeNElements;
+
+      ROOT::DescriptorId_t fPhysicalColumnId = ROOT::kInvalidDescriptorId;
+      std::vector<RPageInfo> fPageInfos;
+
+   public:
       RPageRange() = default;
       RPageRange(const RPageRange &other) = delete;
       RPageRange &operator=(const RPageRange &other) = delete;
@@ -398,8 +404,11 @@ public:
       /// Find the page in the RPageRange that contains the given element. The element must exist.
       RPageInfoExtended Find(ROOT::NTupleSize_t idxInCluster) const;
 
-      ROOT::DescriptorId_t fPhysicalColumnId = ROOT::kInvalidDescriptorId;
-      std::vector<RPageInfo> fPageInfos;
+      ROOT::DescriptorId_t GetPhysicalColumnId() const { return fPhysicalColumnId; }
+      void SetPhysicalColumnId(ROOT::DescriptorId_t id) { fPhysicalColumnId = id; }
+
+      const std::vector<RPageInfo> &GetPageInfos() const { return fPageInfos; }
+      std::vector<RPageInfo> &GetPageInfos() { return fPageInfos; }
 
       bool operator==(const RPageRange &other) const
       {

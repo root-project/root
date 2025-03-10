@@ -273,7 +273,7 @@ std::uint64_t ROOT::Experimental::RClusterDescriptor::GetNBytesOnStorage() const
 {
    std::uint64_t nbytes = 0;
    for (const auto &pr : fPageRanges) {
-      for (const auto &pi : pr.second.fPageInfos) {
+      for (const auto &pi : pr.second.GetPageInfos()) {
          nbytes += pi.GetLocator().GetNBytesOnStorage();
       }
    }
