@@ -216,11 +216,11 @@ TEST(RNTuple, PageFilling)
    const auto &clusterDesc = desc.GetClusterDescriptor(desc.FindClusterId(0, 0));
    const auto &prX = clusterDesc.GetPageRange(colIdX);
    const auto &prY = clusterDesc.GetPageRange(colIdY);
-   ASSERT_EQ(1u, prX.fPageInfos.size());
-   EXPECT_EQ(6u, prX.fPageInfos[0].GetNElements());
-   ASSERT_EQ(2u, prY.fPageInfos.size());
-   EXPECT_EQ(3u, prY.fPageInfos[0].GetNElements());
-   EXPECT_EQ(3u, prY.fPageInfos[1].GetNElements());
+   ASSERT_EQ(1u, prX.GetPageInfos().size());
+   EXPECT_EQ(6u, prX.GetPageInfos()[0].GetNElements());
+   ASSERT_EQ(2u, prY.GetPageInfos().size());
+   EXPECT_EQ(3u, prY.GetPageInfos()[0].GetNElements());
+   EXPECT_EQ(3u, prY.GetPageInfos()[1].GetNElements());
 }
 
 TEST(RNTuple, PageFillingString)
@@ -268,21 +268,21 @@ TEST(RNTuple, PageFillingString)
    EXPECT_EQ(4u, desc.GetNClusters());
    const auto &cd1 = desc.GetClusterDescriptor(desc.FindClusterId(1, 0));
    const auto &pr1 = cd1.GetPageRange(1);
-   ASSERT_EQ(2u, pr1.fPageInfos.size());
-   EXPECT_EQ(16u, pr1.fPageInfos[0].GetNElements());
-   EXPECT_EQ(1u, pr1.fPageInfos[1].GetNElements());
+   ASSERT_EQ(2u, pr1.GetPageInfos().size());
+   EXPECT_EQ(16u, pr1.GetPageInfos()[0].GetNElements());
+   EXPECT_EQ(1u, pr1.GetPageInfos()[1].GetNElements());
    const auto &cd2 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd1.GetId()));
    const auto &pr2 = cd2.GetPageRange(1);
-   ASSERT_EQ(1u, pr2.fPageInfos.size());
-   EXPECT_EQ(16u, pr2.fPageInfos[0].GetNElements());
+   ASSERT_EQ(1u, pr2.GetPageInfos().size());
+   EXPECT_EQ(16u, pr2.GetPageInfos()[0].GetNElements());
    const auto &cd3 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd2.GetId()));
    const auto &pr3 = cd3.GetPageRange(1);
-   ASSERT_EQ(0u, pr3.fPageInfos.size());
+   ASSERT_EQ(0u, pr3.GetPageInfos().size());
    const auto &cd4 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd3.GetId()));
    const auto &pr4 = cd4.GetPageRange(1);
-   ASSERT_EQ(2u, pr4.fPageInfos.size());
-   EXPECT_EQ(16u, pr4.fPageInfos[0].GetNElements());
-   EXPECT_EQ(10u, pr4.fPageInfos[1].GetNElements());
+   ASSERT_EQ(2u, pr4.GetPageInfos().size());
+   EXPECT_EQ(16u, pr4.GetPageInfos()[0].GetNElements());
+   EXPECT_EQ(10u, pr4.GetPageInfos()[1].GetNElements());
 }
 
 TEST(RNTuple, FlushColumns)
@@ -310,7 +310,7 @@ TEST(RNTuple, FlushColumns)
 
    auto fieldId = descriptor.FindFieldId("pt");
    auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0, 0);
-   auto &pageInfos = descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos;
+   auto &pageInfos = descriptor.GetClusterDescriptor(0).GetPageRange(columnId).GetPageInfos();
    ASSERT_EQ(pageInfos.size(), 2);
    EXPECT_EQ(pageInfos[0].GetNElements(), 1);
    EXPECT_EQ(pageInfos[1].GetNElements(), 1);
@@ -461,26 +461,26 @@ TEST(RNTuple, WritePageBudget)
    const auto &prCD = clusterDesc.GetPageRange(colIdCD);
    const auto &prDD = clusterDesc.GetPageRange(colIdDD);
 
-   EXPECT_EQ(1u, prA.fPageInfos.size());
-   EXPECT_EQ(4u, prA.fPageInfos[0].GetNElements());
-   EXPECT_EQ(1u, prB.fPageInfos.size());
-   EXPECT_EQ(4u, prB.fPageInfos[0].GetNElements());
-   EXPECT_EQ(1u, prC.fPageInfos.size());
-   EXPECT_EQ(4u, prC.fPageInfos[0].GetNElements());
-   EXPECT_EQ(1u, prD.fPageInfos.size());
-   EXPECT_EQ(4u, prD.fPageInfos[0].GetNElements());
-   EXPECT_EQ(1u, prAD.fPageInfos.size());
-   EXPECT_EQ(4u, prAD.fPageInfos[0].GetNElements());
-   EXPECT_EQ(2u, prBD.fPageInfos.size());
-   EXPECT_EQ(32u, prBD.fPageInfos[0].GetNElements());
-   EXPECT_EQ(8u, prBD.fPageInfos[1].GetNElements());
-   EXPECT_EQ(2u, prCD.fPageInfos.size());
-   EXPECT_EQ(20u, prCD.fPageInfos[0].GetNElements());
-   EXPECT_EQ(4u, prCD.fPageInfos[1].GetNElements());
-   EXPECT_EQ(3u, prDD.fPageInfos.size());
-   EXPECT_EQ(16u, prDD.fPageInfos[0].GetNElements());
-   EXPECT_EQ(16u, prDD.fPageInfos[1].GetNElements());
-   EXPECT_EQ(7u, prDD.fPageInfos[2].GetNElements());
+   EXPECT_EQ(1u, prA.GetPageInfos().size());
+   EXPECT_EQ(4u, prA.GetPageInfos()[0].GetNElements());
+   EXPECT_EQ(1u, prB.GetPageInfos().size());
+   EXPECT_EQ(4u, prB.GetPageInfos()[0].GetNElements());
+   EXPECT_EQ(1u, prC.GetPageInfos().size());
+   EXPECT_EQ(4u, prC.GetPageInfos()[0].GetNElements());
+   EXPECT_EQ(1u, prD.GetPageInfos().size());
+   EXPECT_EQ(4u, prD.GetPageInfos()[0].GetNElements());
+   EXPECT_EQ(1u, prAD.GetPageInfos().size());
+   EXPECT_EQ(4u, prAD.GetPageInfos()[0].GetNElements());
+   EXPECT_EQ(2u, prBD.GetPageInfos().size());
+   EXPECT_EQ(32u, prBD.GetPageInfos()[0].GetNElements());
+   EXPECT_EQ(8u, prBD.GetPageInfos()[1].GetNElements());
+   EXPECT_EQ(2u, prCD.GetPageInfos().size());
+   EXPECT_EQ(20u, prCD.GetPageInfos()[0].GetNElements());
+   EXPECT_EQ(4u, prCD.GetPageInfos()[1].GetNElements());
+   EXPECT_EQ(3u, prDD.GetPageInfos().size());
+   EXPECT_EQ(16u, prDD.GetPageInfos()[0].GetNElements());
+   EXPECT_EQ(16u, prDD.GetPageInfos()[1].GetNElements());
+   EXPECT_EQ(7u, prDD.GetPageInfos()[2].GetNElements());
 }
 
 #ifdef R__HAS_DAVIX
@@ -589,7 +589,7 @@ TEST(RPageSinkBuf, Basics)
    const auto &cluster0 = ntupleBuf->GetDescriptor().GetClusterDescriptor(0);
    for (std::size_t i = 0; i < num_columns; i++) {
       const auto &columnPages = cluster0.GetPageRange(i);
-      for (const auto &page : columnPages.fPageInfos) {
+      for (const auto &page : columnPages.GetPageInfos()) {
          pagePositions.push_back(std::make_pair(i, page.GetLocator().GetPosition<std::uint64_t>()));
       }
    }
@@ -920,14 +920,14 @@ TEST(RPageStorageFile, MultiKeyBlob_Pages)
       EXPECT_GT(ntupleComp->GetDescriptor()
                    .GetClusterDescriptor(0)
                    .GetPageRange(0)
-                   .fPageInfos[0]
+                   .GetPageInfos()[0]
                    .GetLocator()
                    .GetNBytesOnStorage(),
                 kMaxKeySize);
       EXPECT_GT(ntupleUcmp->GetDescriptor()
                    .GetClusterDescriptor(0)
                    .GetPageRange(0)
-                   .fPageInfos[0]
+                   .GetPageInfos()[0]
                    .GetLocator()
                    .GetNBytesOnStorage(),
                 kMaxKeySize);

@@ -76,9 +76,9 @@ TEST(RPageStorage, ReadSealedPages)
    ASSERT_NE(clusterId, index.GetClusterId());
    const auto clusterDesc = source.GetSharedDescriptorGuard()->GetClusterDescriptor(clusterId).Clone();
    const auto &pageRange = clusterDesc.GetPageRange(columnId);
-   EXPECT_GT(pageRange.fPageInfos.size(), 1U);
+   EXPECT_GT(pageRange.GetPageInfos().size(), 1U);
    std::uint32_t firstElementInPage = 0;
-   for (const auto &pi : pageRange.fPageInfos) {
+   for (const auto &pi : pageRange.GetPageInfos()) {
       sealedPage.SetBuffer(nullptr);
       source.LoadSealedPage(columnId, RNTupleLocalIndex(clusterId, firstElementInPage), sealedPage);
       buffer = MakeUninitArray<unsigned char>(sealedPage.GetBufferSize());
