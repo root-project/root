@@ -1675,6 +1675,9 @@ namespace Cpp {
       //
       ASTContext& C = FD->getASTContext();
       PrintingPolicy Policy(C.getPrintingPolicy());
+#if CLANG_VERSION_MAJOR > 16
+      Policy.SuppressElaboration = true;
+#endif
       refType = kNotReference;
       if (QT->isRecordType() && forArgument) {
         get_type_as_string(QT, type_name, C, Policy);
@@ -1989,18 +1992,22 @@ namespace Cpp {
         EReferenceType refType = kNotReference;
         bool isPointer = false;
 
+        std::ostringstream typedefbuf;
+        std::ostringstream callbuf;
+
+        collect_type_info(FD, QT, typedefbuf, callbuf, type_name, refType,
+                          isPointer, indent_level, false);
+
+        buf << typedefbuf.str();
+
         buf << "if (ret) {\n";
         ++indent_level;
         {
-          std::ostringstream typedefbuf;
-          std::ostringstream callbuf;
           //
           //  Write the placement part of the placement new.
           //
           indent(callbuf, indent_level);
           callbuf << "new (ret) ";
-          collect_type_info(FD, QT, typedefbuf, callbuf, type_name, refType,
-                            isPointer, indent_level, false);
           //
           //  Write the type part of the placement new.
           //

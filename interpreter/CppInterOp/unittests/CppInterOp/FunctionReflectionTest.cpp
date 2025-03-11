@@ -888,6 +888,9 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
       int f3() { return 3; }
 
       extern "C" int f4() { return 4; }
+
+      typedef int(*int_func)(void);
+      int_func f5() { return f3; }
     }
   )");
 
@@ -922,6 +925,18 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
 
   FCI4.Invoke(&ret4);
   EXPECT_EQ(ret4, 4);
+
+#if CLANG_VERSION_MAJOR > 16
+  Cpp::JitCall FCI5 =
+      Cpp::MakeFunctionCallable(Cpp::GetNamed("f5", Cpp::GetNamed("NS")));
+  EXPECT_TRUE(FCI5.getKind() == Cpp::JitCall::kGenericCall);
+
+  typedef int (*int_func)();
+  int_func callback = nullptr;
+  FCI5.Invoke((void*)&callback);
+  EXPECT_TRUE(callback);
+  EXPECT_EQ(callback(), 3);
+#endif
 
   // FIXME: Do we need to support private ctors?
   Interp->process(R"(

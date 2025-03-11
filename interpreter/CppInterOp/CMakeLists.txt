@@ -6,6 +6,16 @@ set(CMAKE_MODULE_PATH
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules"
   )
 
+enable_language(CXX)
+set(CMAKE_CXX_EXTENSIONS NO)
+
+option(CPPINTEROP_USE_CLING "Use Cling as backend" OFF)
+option(CPPINTEROP_USE_REPL "Use clang-repl as backend" ON)
+option(CPPINTEROP_ENABLE_TESTING "Enable the CppInterOp testing infrastructure." ON)
+
+if (CPPINTEROP_USE_CLING AND CPPINTEROP_USE_REPL)
+message(FATAL_ERROR "We can only use Cling (${CPPINTEROP_USE_CLING}=On) or Repl (CPPINTEROP_USE_REPL=On), but not both of them.")
+endif()
 # If we are not building as a part of LLVM, build CppInterOp as a standalone
 # project, using LLVM as an external library:
 if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
@@ -51,19 +61,10 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
     endif()
     if (NOT DEFINED Clang_DIR)
       set(Clang_DIR ${Cling_DIR})
-    endif()
   endif()
+endif()
 
-enable_language(CXX)
-set(CMAKE_CXX_EXTENSIONS NO)
 include(GNUInstallDirs)
-  option(CPPINTEROP_USE_CLING "Use Cling as backend" OFF)
-  option(CPPINTEROP_USE_REPL "Use clang-repl as backend" ON)
-
-  if (CPPINTEROP_USE_CLING AND CPPINTEROP_USE_REPL)
-    message(FATAL_ERROR "We can only use Cling (CPPINTEROP_USE_CLING=On) or Repl (CPPINTEROP_USE_REPL=On), but not both of them.")
-  endif()
-  
   ## Define supported version of clang and llvm
 
   set(CLANG_MIN_SUPPORTED 13.0)
@@ -292,16 +293,15 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # In rare cases we might want to have clang installed in a different place
 # than llvm and the header files should be found first (even though the
 # LLVM_INCLUDE_DIRS) contain clang headers, too.
-if (CPPINTEROP_USE_CLING)
+if(CPPINTEROP_USE_CLING)
   add_definitions(-DCPPINTEROP_USE_CLING)
   include_directories(SYSTEM ${CLING_INCLUDE_DIRS})
-  else()
-  if (NOT CPPINTEROP_USE_REPL)
-  message(FATAL_ERROR "We need either CPPINTEROP_USE_CLING or CPPINTEROP_USE_REPL")
-  endif()
+elseif(CPPINTEROP_USE_REPL)
   add_definitions(-DCPPINTEROP_USE_REPL)
+else()
+  message(FATAL_ERROR "We need either CPPINTEROP_USE_CLING or CPPINTEROP_USE_REPL")
+endif()
 
-endif(CPPINTEROP_USE_CLING)
 include_directories(SYSTEM ${CLANG_INCLUDE_DIRS})
 include_directories(SYSTEM ${LLVM_INCLUDE_DIRS})
 separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
@@ -453,10 +453,7 @@ option(CPPINTEROP_ENABLE_SPHINX "Use sphinx to generage CppInterOp user document
 
 if(EMSCRIPTEN)
     message("Build with emscripten")
-    option(CPPINTEROP_ENABLE_TESTING "Enables the testing infrastructure." OFF)
-else()
-    message("Build with cmake")
-    option(CPPINTEROP_ENABLE_TESTING "Enables the testing infrastructure." ON)
+    set(CPPINTEROP_ENABLE_TESTING OFF)
 endif()
 
 if(MSVC)
