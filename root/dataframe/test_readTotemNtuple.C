@@ -22,9 +22,14 @@ int test_readTotemNtuple() {
    *count2;
 
    // Jitted filter with multi-dotted branch name
+   // In debug mode RDataFrame warns when it needs to copy collection elements for reading
+   // Ignore the warnings which are not important for this test
+   auto previousEIL = gErrorIgnoreLevel;
+   gErrorIgnoreLevel = kError;
    std::cout << "Jitted filter, multi-dotted name:" << std::endl;
    auto count3 = d.Filter("cout << par_patterns_rp_0.u.w << endl; return true;").Count();
    *count3;
+   gErrorIgnoreLevel = previousEIL;
 
    return 0;
 }
