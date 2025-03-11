@@ -3317,9 +3317,9 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (TestBit(kNotDraw))
       out << "   " << f1Name.Data() << "->SetBit(TF1::kNotDraw);\n";
 
-   SaveFillAttributes(out, f1Name, 0, 1001);
-   SaveMarkerAttributes(out, f1Name, 1, 1, 1);
-   SaveLineAttributes(out, f1Name, 1, 1, 4);
+   SaveFillAttributes(out, f1Name, -1, 0);
+   SaveMarkerAttributes(out, f1Name, -1, -1, -1);
+   SaveLineAttributes(out, f1Name, -1, -1, -1);
 
    if (GetChisquare() != 0) {
       out << "   " << f1Name << "->SetChisquare(" << GetChisquare() << ");\n";
@@ -3629,16 +3629,9 @@ void TF1::Update()
    if (fHistogram) {
       TString XAxisTitle = fHistogram->GetXaxis()->GetTitle();
       TString YAxisTitle = fHistogram->GetYaxis()->GetTitle();
-      Int_t XLabCol = fHistogram->GetXaxis()->GetLabelColor();
-      Int_t YLabCol = fHistogram->GetYaxis()->GetLabelColor();
-      Int_t XLabFont = fHistogram->GetXaxis()->GetLabelFont();
-      Int_t YLabFont = fHistogram->GetYaxis()->GetLabelFont();
-      Float_t XLabOffset = fHistogram->GetXaxis()->GetLabelOffset();
-      Float_t YLabOffset = fHistogram->GetYaxis()->GetLabelOffset();
-      Float_t XLabSize = fHistogram->GetXaxis()->GetLabelSize();
-      Float_t YLabSize = fHistogram->GetYaxis()->GetLabelSize();
-      Int_t XNdiv = fHistogram->GetXaxis()->GetNdivisions();
-      Int_t YNdiv = fHistogram->GetYaxis()->GetNdivisions();
+      TAttAxis attx, atty;
+      fHistogram->GetXaxis()->TAttAxis::Copy(attx);
+      fHistogram->GetYaxis()->TAttAxis::Copy(atty);
 
       delete fHistogram;
       fHistogram = nullptr;
@@ -3646,16 +3639,8 @@ void TF1::Update()
 
       fHistogram->GetXaxis()->SetTitle(XAxisTitle.Data());
       fHistogram->GetYaxis()->SetTitle(YAxisTitle.Data());
-      fHistogram->GetXaxis()->SetLabelColor(XLabCol);
-      fHistogram->GetYaxis()->SetLabelColor(YLabCol);
-      fHistogram->GetXaxis()->SetLabelFont(XLabFont);
-      fHistogram->GetYaxis()->SetLabelFont(YLabFont);
-      fHistogram->GetXaxis()->SetLabelOffset(XLabOffset);
-      fHistogram->GetYaxis()->SetLabelOffset(YLabOffset);
-      fHistogram->GetXaxis()->SetLabelSize(XLabSize);
-      fHistogram->GetYaxis()->SetLabelSize(YLabSize);
-      fHistogram->GetXaxis()->SetNdivisions(XNdiv);
-      fHistogram->GetYaxis()->SetNdivisions(YNdiv);
+      attx.Copy(*(fHistogram->GetXaxis()));
+      atty.Copy(*(fHistogram->GetYaxis()));
    }
    if (!fIntegral.empty()) {
       fIntegral.clear();
