@@ -1109,6 +1109,12 @@ operator+(const ABObj<vec, LAVector> &a, const ABObj<vec, LAVector> &b)
    return {ABSum<ABObj<vec, LAVector>, ABObj<vec, LAVector>>(a, b)};
 }
 
+template <class V>
+ABObj<vec, ABSum<ABObj<vec, LAVector>, ABObj<vec, V>>> operator+(const ABObj<vec, LAVector> &a, const ABObj<vec, V> &b)
+{
+   return {ABSum<ABObj<vec, LAVector>, ABObj<vec, V>>(a, b)};
+}
+
 inline ABObj<vec, ABSum<ABObj<vec, LAVector>, ABObj<vec, LAVector>>>
 operator-(const ABObj<vec, LAVector> &a, const ABObj<vec, LAVector> &b)
 {
