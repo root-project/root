@@ -5768,7 +5768,7 @@ void THistPainter::PaintColorLevelsFast(Option_t*)
 
 void THistPainter::PaintColorLevels(Option_t*)
 {
-   Double_t z, zc, xk, xstep, yk, ystep, xlow, xup, ylow, yup;
+   Double_t z, e, zc, xk, xstep, yk, ystep, xlow, xup, ylow, yup;
 
    Double_t zmin = fH->GetMinimum();
    Double_t zmax = fH->GetMaximum();
@@ -5841,6 +5841,7 @@ void THistPainter::PaintColorLevels(Option_t*)
          xstep = fXaxis->GetBinWidth(i);
          if (!IsInside(xk+0.5*xstep,yk+0.5*ystep)) continue;
          z     = fH->GetBinContent(bin);
+         e     = fH->GetBinError(bin);
          // if fH is a profile histogram do not draw empty bins
          if (prof2d) {
             const Double_t binEntries = prof2d->GetBinEntries(bin);
@@ -5849,7 +5850,7 @@ void THistPainter::PaintColorLevels(Option_t*)
          } else {
             // don't draw the empty bins for non-profile histograms
             // with positive content
-            if (z == 0) {
+            if (z == 0 && e == 0) {
                if (zmin >= 0 || Hoption.Logz) continue;
                if (Hoption.Color == 2) continue;
             }
