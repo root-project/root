@@ -600,3 +600,67 @@ TEST(VariableReflectionTest, GetEnumConstantDatamembers) {
   Cpp::GetEnumConstantDatamembers(MyEnumClass, datamembers2, false);
   EXPECT_EQ(datamembers2.size(), 6);
 }
+
+TEST(VariableReflectionTest, Is_Get_Pointer) {
+  Cpp::CreateInterpreter();
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+  class A {};
+  int a;
+  int *b;
+  double c;
+  double *d;
+  A e;
+  A *f;
+  )";
+
+  GetAllTopLevelDecls(code, Decls);
+
+  EXPECT_FALSE(Cpp::IsPointerType(Cpp::GetVariableType(Decls[1])));
+  EXPECT_TRUE(Cpp::IsPointerType(Cpp::GetVariableType(Decls[2])));
+  EXPECT_FALSE(Cpp::IsPointerType(Cpp::GetVariableType(Decls[3])));
+  EXPECT_TRUE(Cpp::IsPointerType(Cpp::GetVariableType(Decls[4])));
+  EXPECT_FALSE(Cpp::IsPointerType(Cpp::GetVariableType(Decls[5])));
+  EXPECT_TRUE(Cpp::IsPointerType(Cpp::GetVariableType(Decls[6])));
+
+  EXPECT_EQ(Cpp::GetPointeeType(Cpp::GetVariableType(Decls[2])),
+            Cpp::GetVariableType(Decls[1]));
+  EXPECT_EQ(Cpp::GetPointeeType(Cpp::GetVariableType(Decls[4])),
+            Cpp::GetVariableType(Decls[3]));
+  EXPECT_EQ(Cpp::GetPointeeType(Cpp::GetVariableType(Decls[6])),
+            Cpp::GetVariableType(Decls[5]));
+
+  EXPECT_FALSE(Cpp::GetPointeeType(Cpp::GetVariableType(Decls[5])));
+}
+
+TEST(VariableReflectionTest, Is_Get_Reference) {
+  Cpp::CreateInterpreter();
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+  class A {};
+  int a;
+  int &b = a;
+  double c;
+  double &d = c;
+  A e;
+  A &f = e;
+  )";
+
+  GetAllTopLevelDecls(code, Decls);
+
+  EXPECT_FALSE(Cpp::IsReferenceType(Cpp::GetVariableType(Decls[1])));
+  EXPECT_TRUE(Cpp::IsReferenceType(Cpp::GetVariableType(Decls[2])));
+  EXPECT_FALSE(Cpp::IsReferenceType(Cpp::GetVariableType(Decls[3])));
+  EXPECT_TRUE(Cpp::IsReferenceType(Cpp::GetVariableType(Decls[4])));
+  EXPECT_FALSE(Cpp::IsReferenceType(Cpp::GetVariableType(Decls[5])));
+  EXPECT_TRUE(Cpp::IsReferenceType(Cpp::GetVariableType(Decls[6])));
+
+  EXPECT_EQ(Cpp::GetNonReferenceType(Cpp::GetVariableType(Decls[2])),
+            Cpp::GetVariableType(Decls[1]));
+  EXPECT_EQ(Cpp::GetNonReferenceType(Cpp::GetVariableType(Decls[4])),
+            Cpp::GetVariableType(Decls[3]));
+  EXPECT_EQ(Cpp::GetNonReferenceType(Cpp::GetVariableType(Decls[6])),
+            Cpp::GetVariableType(Decls[5]));
+
+  EXPECT_FALSE(Cpp::GetNonReferenceType(Cpp::GetVariableType(Decls[5])));
+}

@@ -133,6 +133,8 @@ else()
     LINK_LIBS
     ${link_libs}
   )
+
+  target_compile_definitions(clangCppInterOp PUBLIC "_CINDEX_LIB_") # workaround for the use of `CINDEX_LINKAGE`
 endif()
 
 string(REPLACE ";" "\;" _VER CPPINTEROP_VERSION)
