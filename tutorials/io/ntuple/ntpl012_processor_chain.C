@@ -29,7 +29,7 @@ using ROOT::Experimental::RNTupleWriter;
 // Number of events to generate for each ntuple.
 constexpr int kNEvents = 10000;
 
-void Write(std::string_view ntupleName, std::string_view ntupleFileName)
+void Write(const RNTupleOpenSpec &ntuple)
 {
    auto model = RNTupleModel::Create();
 
@@ -38,7 +38,7 @@ void Write(std::string_view ntupleName, std::string_view ntupleFileName)
    auto fldVpz = model->MakeField<std::vector<float>>("vpz");
    auto fldN = model->MakeField<std::uint64_t>("vn");
 
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, ntupleFileName);
+   auto writer = RNTupleWriter::Recreate(std::move(model), ntuple.fNTupleName, ntuple.fStorage);
 
    for (int i = 0; i < kNEvents; ++i) {
       fldVpx->clear();
@@ -56,7 +56,7 @@ void Write(std::string_view ntupleName, std::string_view ntupleFileName)
          fldVpz->emplace_back(pz);
       }
 
-      ntuple->Fill();
+      writer->Fill();
    }
 }
 
@@ -92,6 +92,8 @@ void Read(const std::vector<RNTupleOpenSpec> &ntuples)
       }
    }
 
+   std::cout << "Processed a total of " << processor->GetNEntriesProcessed() << " entries" << std::endl;
+
    hPx.DrawCopy();
 }
 
@@ -103,7 +105,7 @@ void ntpl012_processor_chain()
       {"ntuple1", "ntuple1.root"}, {"ntuple2", "ntuple2.root"}, {"ntuple3", "ntuple3.root"}};
 
    for (const auto &ntuple : ntuples) {
-      Write(ntuple.fNTupleName, ntuple.fStorage);
+      Write(ntuple);
    }
 
    Read(ntuples);
