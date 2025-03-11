@@ -345,9 +345,12 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadStructureImpl()
       fCounters->fNRead.Add(2);
    } else {
       Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
-      ROOT::Internal::RRawFile::RIOVec readRequests[2] = {
-         {fStructureBuffer.fPtrHeader, fAnchor->GetSeekHeader(), fAnchor->GetNBytesHeader(), 0},
-         {fStructureBuffer.fPtrFooter, fAnchor->GetSeekFooter(), fAnchor->GetNBytesFooter(), 0}};
+      R__ASSERT(fAnchor->GetNBytesHeader() < std::numeric_limits<std::size_t>::max());
+      R__ASSERT(fAnchor->GetNBytesFooter() < std::numeric_limits<std::size_t>::max());
+      ROOT::Internal::RRawFile::RIOVec readRequests[2] = {{fStructureBuffer.fPtrHeader, fAnchor->GetSeekHeader(),
+                                                           static_cast<std::size_t>(fAnchor->GetNBytesHeader()), 0},
+                                                          {fStructureBuffer.fPtrFooter, fAnchor->GetSeekFooter(),
+                                                           static_cast<std::size_t>(fAnchor->GetNBytesFooter()), 0}};
       fFile->ReadV(readRequests, 2);
       fCounters->fNReadV.Inc();
    }
