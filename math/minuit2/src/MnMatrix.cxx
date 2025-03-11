@@ -102,55 +102,112 @@ double sum_of_elements(const LASymMatrix &m)
 }
 
 // Updates A := alpha*x*x' + A, where ap stores the upper triangle of A
-inline void mndspr(unsigned int n, double alpha, const double *x, double *ap)
+void mndspr(unsigned int n, double alpha, const double *x, double *ap)
 {
-   if (alpha == 0.) {
+   /* System generated locals */
+   int i__1, i__2;
+
+   /* Local variables */
+   double temp;
+   int i__, j, k;
+   int kk;
+
+   /* Parameter adjustments */
+   --ap;
+   --x;
+
+   /*     Quick return if possible. */
+
+   if (n == 0 || alpha == 0.) {
       return;
    }
 
-   unsigned int kk = 0;
+   /*     Start the operations. In this version the Elements of the array AP */
+   /*     are accessed sequentially with one pass through AP. */
 
-   for (unsigned int j = 0; j < n; ++j) {
+   kk = 1;
+
+   /*        Form  A  when Upper triangle is stored in AP. */
+
+   i__1 = n;
+   for (j = 1; j <= i__1; ++j) {
       if (x[j] != 0.) {
-         double temp = alpha * x[j];
-         unsigned int k = kk;
-         for (unsigned int l = 0; l < j + 1; ++l) {
-            ap[k] += x[l] * temp;
+         temp = alpha * x[j];
+         k = kk;
+         i__2 = j;
+         for (i__ = 1; i__ <= i__2; ++i__) {
+            ap[k] += x[i__] * temp;
             ++k;
          }
       }
-      kk += j + 1;
+      kk += j;
    }
 }
 
 // Updates y := alpha*A*x + beta*y, where ap stores the upper triangle of A
 void Mndspmv(unsigned int n, double alpha, const double *ap, const double *x, double beta, double *y)
 {
-   // First form  y := beta*y.
+   /* System generated locals */
+   int i__1, i__2;
+
+   /* Local variables */
+   double temp1, temp2;
+   int i__, j, k;
+   int kk;
+
+   /* Parameter adjustments */
+   --y;
+   --x;
+   --ap;
+
+   /*     Quick return if possible. */
+
+   if ((n == 0) || (alpha == 0. && beta == 1.)) {
+      return;
+   }
+
+   /*     Set up the start points in  X  and  Y. */
+
+   /*     Start the operations. In this version the Elements of the array AP */
+   /*     are accessed sequentially with one pass through AP. */
+
+   /*     First form  y := beta*y. */
 
    if (beta != 1.) {
-      for (unsigned int i = 0; i < n; ++i) {
-         y[i] = beta * y[i];
+      if (beta == 0.) {
+         i__1 = n;
+         for (i__ = 1; i__ <= i__1; ++i__) {
+            y[i__] = 0.;
+            /* L10: */
+         }
+      } else {
+         i__1 = n;
+         for (i__ = 1; i__ <= i__1; ++i__) {
+            y[i__] = beta * y[i__];
+            /* L20: */
+         }
       }
    }
    if (alpha == 0.) {
       return;
    }
+   kk = 1;
 
-   // Form  y  when AP contains the Upper triangle.
+   /*        Form  y  when AP contains the Upper triangle. */
 
-   unsigned int kk = 0;
-   for (unsigned int j = 0; j < n; ++j) {
-      double temp1 = alpha * x[j];
-      double temp2 = 0.;
-      unsigned int k = kk;
-      for (unsigned int l = 0; l < j; ++l) {
-         y[l] += temp1 * ap[k];
-         temp2 += ap[k] * x[l];
+   i__1 = n;
+   for (j = 1; j <= i__1; ++j) {
+      temp1 = alpha * x[j];
+      temp2 = 0.;
+      k = kk;
+      i__2 = j - 1;
+      for (i__ = 1; i__ <= i__2; ++i__) {
+         y[i__] += temp1 * ap[k];
+         temp2 += ap[k] * x[i__];
          ++k;
       }
-      y[j] = y[j] + temp1 * ap[kk + j] + alpha * temp2;
-      kk += j + 1;
+      y[j] = y[j] + temp1 * ap[kk + j - 1] + alpha * temp2;
+      kk += j;
    }
 }
 
@@ -197,8 +254,40 @@ void Outer_prod(LASymMatrix &A, const LAVector &v, double f)
 
 void Mndaxpy(unsigned int n, double da, const double *dx, double *dy)
 {
-   for (unsigned int i = 0; i < n; ++i) {
-      dy[i] += da * dx[i];
+   /* System generated locals */
+   int i__1;
+
+   /* Local variables */
+   int i__, m, mp1;
+
+   /* Parameter adjustments */
+   --dy;
+   --dx;
+
+   /* Function Body */
+   if (n <= 0) {
+      return;
+   }
+   if (da == 0.) {
+      return;
+   }
+   m = n % 4;
+   if (m != 0) {
+      i__1 = m;
+      for (i__ = 1; i__ <= i__1; ++i__) {
+         dy[i__] += da * dx[i__];
+      }
+      if (n < 4) {
+         return;
+      }
+   }
+   mp1 = m + 1;
+   i__1 = n;
+   for (i__ = mp1; i__ <= i__1; i__ += 4) {
+      dy[i__] += da * dx[i__];
+      dy[i__ + 1] += da * dx[i__ + 1];
+      dy[i__ + 2] += da * dx[i__ + 2];
+      dy[i__ + 3] += da * dx[i__ + 3];
    }
 }
 
