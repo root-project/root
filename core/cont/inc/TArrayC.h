@@ -42,6 +42,8 @@ public:
    void          Copy(TArrayC &array) const {array.Set(fN,fArray);}
    const Char_t *GetArray() const { return fArray; }
    Char_t       *GetArray() { return fArray; }
+   const void *GetVoidArray() const { return static_cast<const void *>(fArray); }
+   void *GetVoidArray() { return static_cast<void *>(fArray); }
    Double_t      GetAt(Int_t i) const override { return At(i); }
    Stat_t        GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
    void          Reset(Char_t val=0)  {memset(fArray,val,fN*sizeof(Char_t));}
