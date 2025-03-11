@@ -44,7 +44,7 @@ int merge_changeComp_check_output(int expectedCompressionRNT, int expectedCompre
       for (const auto &column : desc->GetColumnIterable()) {
          const auto &pages = clusterDesc.GetPageRange(column.GetLogicalId());
          std::uint64_t pageIdx = 0;
-         for (const auto &pageInfo : pages.fPageInfos) {
+         for (const auto &pageInfo : pages.GetPageInfos()) {
             auto cluster = pool.GetCluster(clusterDesc.GetId(), {column.GetPhysicalId()});
             Internal::ROnDiskPage::Key key{column.GetPhysicalId(), pageIdx};
             auto onDiskPage = cluster->GetOnDiskPage(key);
