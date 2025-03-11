@@ -3281,7 +3281,7 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    const char *addToGlobList = fParent ? ", TF1::EAddToList::kNo" : ", TF1::EAddToList::kDefault";
 
-   out << "   " << std::endl;
+   out << "   \n";
    if (!fType) {
       out << "   TF1 *" << f1Name << " = new TF1(\"" << GetName() << "\", \""
           << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << fXmin << "," << fXmax << addToGlobList << ");\n";
@@ -3297,21 +3297,20 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       SavePrimitiveNameTitle(out, f1Name);
       if (fNpx != 100)
          out << "   " << f1Name << "->SetNpx(" << fNpx << ");\n";
-      Double_t dx = (fXmax - fXmin) / fNpx;
-      Double_t xv[1];
-      Double_t *parameters = GetParameters();
-      InitArgs(xv, parameters);
-      std::vector<Double_t> saved_points(fNpx + 3);
-      for (Int_t i = 0; i <= fNpx; i++) {
-         xv[0] = fXmin + dx * i;
-         saved_points[i] = EvalPar(xv, parameters);
-      }
-      saved_points[fNpx + 1] = fXmin;
-      saved_points[fNpx + 2] = fXmax;
-      TString arrs = SavePrimitiveArray(out, f1Name, fNpx + 3, saved_points.data());
 
-      out << "   for (int n = 0; n < " << (fNpx + 3) << "; n++)\n";
-      out << "      " << f1Name << "->SetSavedPoint(n, "  << arrs << "[n]);\n";
+      Bool_t saved = kFALSE;
+      if (fSave.empty() && (fType != EFType::kCompositionFcn)) {
+         saved = kTRUE;
+         Save(fXmin, fXmax, 0, 0, 0, 0);
+      }
+      if (!fSave.empty()) {
+         TString arrs = SavePrimitiveArray(out, f1Name, fSave.size(), fSave.data());
+         out << "   for (int n = 0; n < " << fSave.size() << "; n++)\n";
+         out << "      " << f1Name << "->SetSavedPoint(n, "  << arrs << "[n]);\n";
+      }
+
+      if (saved)
+         fSave.clear();
    }
 
    if (TestBit(kNotDraw))
