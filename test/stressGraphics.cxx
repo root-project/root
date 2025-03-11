@@ -2654,7 +2654,7 @@ void waves()
    line = new TLine(13.8,-10, 14, 10);
    line->SetLineWidth(10); line->SetLineColor(0); line->Draw();
 
-   TestReport(C, "TGraph, TArc, TPalette and TColor", kSkipCCode);
+   TestReport(C, "TGraph, TArc, TPalette and TColor");
 }
 
 
