@@ -136,8 +136,18 @@ TF2::TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmi
    fNpx    = 30;
    fNpy    = 30;
    fContour.Set(0);
-
 }
+
+TF2::TF2(const char *name, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim):
+   TF1(name, xmin, xmax, npar, ndim, EAddToList::kDefault)
+{
+   fYmin   = ymin;
+   fYmax   = ymax;
+   fNpx    = 30;
+   fNpy    = 30;
+   fContour.Set(0);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// F2 constructor using a pointer to a compiled function
@@ -837,23 +847,32 @@ void TF2::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Restore value of function saved at point
+
+void TF2::SetSavedPoint(Int_t point, Double_t value)
+{
+   if (fSave.empty())
+      fSave.resize((fNpx + 1) * (fNpy + 1) + 6);
+   if (point >= 0 && point < (Int_t)fSave.size())
+      fSave[point] = value;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
 void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    TString f2Name = ProvideSaveName(option);
    out << "   \n";
-   out << "   TF2 *";
-   if (!fMethodCall)
-      out << f2Name << " = new TF2(\"" << GetName() << "\", \"" << TString(GetTitle()).ReplaceSpecialCppChars()
-          << "\", " << fXmin << "," << fXmax << "," << fYmin << "," << fYmax << ");\n";
-   else
-      out << f2Name << " = new TF2(\"" << GetName() << "\", " << GetTitle() << ", " << fXmin << "," << fXmax << ","
+   if (!fType)
+      out << "   TF2 *" << f2Name << " = new TF2(\"" << GetName() << "\", \""
+          << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << fXmin << "," << fXmax << "," << fYmin << ","
+          << fYmax << ");\n";
+   else {
+      out << "   TF2 *" << f2Name << " = new TF2(\"" << "*" << GetName() << "\", " << fXmin << "," << fXmax << ","
           << fYmin << "," << fYmax << "," << GetNpar() << ");\n";
-
-   SaveFillAttributes(out, f2Name, 0, 1001);
-   SaveMarkerAttributes(out, f2Name, 1, 1, 1);
-   SaveLineAttributes(out, f2Name, 1, 1, 4);
+      SavePrimitiveNameTitle(out, f2Name);
+   }
 
    if (GetNpx() != 30)
       out << "   " << f2Name << "->SetNpx(" << GetNpx() << ");\n";
@@ -871,12 +890,31 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << "   " << f2Name << "->SetParLimits(" << i << "," << parmin << "," << parmax << ");\n";
    }
 
-   if (GetXaxis())
+   Bool_t saved = kFALSE;
+
+   if ((fType != EFType::kFormula) && ((Int_t) fSave.size() != ((GetNpx() + 1) * (GetNpy() + 1) + 6))) {
+      saved = kTRUE;
+      Save(fXmin, fXmax, fYmin, fYmax, 0, 0);
+   }
+
+   if (!fSave.empty()) {
+      TString arrs = SavePrimitiveArray(out, f2Name, fSave.size(), fSave.data());
+      out << "   for (int n = 0; n < " << fSave.size() << "; n++)\n";
+      out << "      " << f2Name << "->SetSavedPoint(n, " << arrs << "[n]);\n";
+   }
+
+   if (saved)
+      fSave.clear();
+
+   SaveFillAttributes(out, f2Name, -1, 0);
+   SaveMarkerAttributes(out, f2Name, -1, -1, -1);
+   SaveLineAttributes(out, f2Name, -1, -1, -1);
+
+   if (fHistogram && !strstr(option, "same")) {
       GetXaxis()->SaveAttributes(out, f2Name, "->GetXaxis()");
-   if (GetYaxis())
       GetYaxis()->SaveAttributes(out, f2Name, "->GetYaxis()");
-   if (GetZaxis())
       GetZaxis()->SaveAttributes(out, f2Name, "->GetZaxis()");
+   }
 
    if (!option || !strstr(option, "nodraw"))
       out << "   " << f2Name << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
