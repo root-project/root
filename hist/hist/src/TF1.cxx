@@ -3290,8 +3290,8 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    } else {
       out << "   TF1 *" << f1Name << " = new TF1(\"" << "*" << GetName() << "\", " << fXmin << "," << fXmax
           << "," << GetNpar() << ");\n";
-      out << "    // The original function : " << GetTitle() << " had originally been created by:\n";
-      out << "    // TF1 *" << GetName() << " = new TF1(\"" << GetName() << "\", " << GetTitle() << ","
+      out << "   // The original function : " << GetTitle() << " had originally been created by:\n";
+      out << "   // TF1 *" << GetName() << " = new TF1(\"" << GetName() << "\", \"" << GetTitle() << "\", "
           << fXmin << "," << fXmax << "," << GetNpar() << ", 1" << addToGlobList << ");\n";
       out << "   " << f1Name << "->SetRange(" << fXmin << "," << fXmax << ");\n";
       SavePrimitiveNameTitle(out, f1Name);
@@ -3301,13 +3301,17 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       Double_t xv[1];
       Double_t *parameters = GetParameters();
       InitArgs(xv, parameters);
+      std::vector<Double_t> saved_points(fNpx + 3);
       for (Int_t i = 0; i <= fNpx; i++) {
          xv[0] = fXmin + dx * i;
-         Double_t save = EvalPar(xv, parameters);
-         out << "   " << f1Name << "->SetSavedPoint(" << i << "," << save << ");\n";
+         saved_points[i] = EvalPar(xv, parameters);
       }
-      out << "   " << f1Name << "->SetSavedPoint(" << fNpx + 1 << "," << fXmin << ");\n";
-      out << "   " << f1Name << "->SetSavedPoint(" << fNpx + 2 << "," << fXmax << ");\n";
+      saved_points[fNpx + 1] = fXmin;
+      saved_points[fNpx + 2] = fXmax;
+      TString arrs = SavePrimitiveArray(out, f1Name, fNpx + 3, saved_points.data());
+
+      out << "   for (int n = 0; n < " << (fNpx + 3) << "; n++)\n";
+      out << "      " << f1Name << "->SetSavedPoint(n, "  << arrs << "[n]);\n";
    }
 
    if (TestBit(kNotDraw))
@@ -3322,18 +3326,19 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << "   " << f1Name << "->SetNDF(" << GetNDF() << ");\n";
    }
 
-   if (GetXaxis())
-      GetXaxis()->SaveAttributes(out, f1Name, "->GetXaxis()");
-   if (GetYaxis())
-      GetYaxis()->SaveAttributes(out, f1Name, "->GetYaxis()");
-
    Double_t parmin, parmax;
    for (Int_t i = 0; i < GetNpar(); i++) {
-      out << "   " << f1Name << "->SetParameter(" << i << "," << GetParameter(i) << ");\n";
-      out << "   " << f1Name << "->SetParError(" << i << "," << GetParError(i) << ");\n";
+      out << "   " << f1Name << "->SetParameter(" << i << ", " << GetParameter(i) << ");\n";
+      out << "   " << f1Name << "->SetParError(" << i << ", " << GetParError(i) << ");\n";
       GetParLimits(i, parmin, parmax);
-      out << "   " << f1Name << "->SetParLimits(" << i << "," << parmin << "," << parmax << ");\n";
+      out << "   " << f1Name << "->SetParLimits(" << i << ", " << parmin << ", " << parmax << ");\n";
    }
+
+   if (fHistogram && !strstr(option, "same")) {
+      GetXaxis()->SaveAttributes(out, f1Name, "->GetXaxis()");
+      GetYaxis()->SaveAttributes(out, f1Name, "->GetYaxis()");
+   }
+
    if (!option || !strstr(option, "nodraw"))
       out << "   " << f1Name << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
