@@ -842,11 +842,8 @@ void TParallelCoordVar::SavePrimitive(std::ostream & out, Option_t* options)
       out<<"   var->SetHistogramHeight("<<fHistoHeight<<");"<<std::endl;
       out<<"   var->GetMinMaxMean();"<<std::endl;
       out<<"   var->GetHistogram();"<<std::endl;
-      out<<"   var->SetFillStyle("<<GetFillStyle()<<");"<<std::endl;
-      out<<"   var->SetFillColor("<<GetFillColor()<<");"<<std::endl;
-      out<<"   var->SetLineColor("<<GetLineColor()<<");"<<std::endl;
-      out<<"   var->SetLineWidth("<<GetLineWidth()<<");"<<std::endl;
-      out<<"   var->SetLineStyle("<<GetLineStyle()<<");"<<std::endl;
+      SaveFillAttributes(out, "var", -1, -1);
+      SaveLineAttributes(out, "var", -1, -1, -1);
       if (TestBit(kShowBox)) out<<"   var->GetQuantiles();"<<std::endl;
       TIter next(fRanges);
       TParallelCoordRange* range;
