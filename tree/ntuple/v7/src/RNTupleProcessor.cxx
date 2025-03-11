@@ -21,56 +21,45 @@
 
 #include <TDirectory.h>
 
-namespace {
-using ROOT::Experimental::RNTupleOpenSpec;
-void EnsureUniqueNTupleNames(const RNTupleOpenSpec &primaryNTuple, const std::vector<RNTupleOpenSpec> &auxNTuples)
+std::unique_ptr<ROOT::Experimental::Internal::RPageSource> ROOT::Experimental::RNTupleOpenSpec::CreatePageSource() const
 {
-   std::unordered_set<std::string> uniqueNTupleNames{primaryNTuple.fNTupleName};
-   for (const auto &ntuple : auxNTuples) {
-      auto res = uniqueNTupleNames.emplace(ntuple.fNTupleName);
-      if (!res.second) {
-         throw ROOT::RException(R__FAIL("joining RNTuples with the same name is not allowed"));
-      }
-   }
-}
+   if (const std::string *storagePath = std::get_if<std::string>(&fStorage))
+      return ROOT::Experimental::Internal::RPageSource::Create(fNTupleName, *storagePath);
 
-std::unique_ptr<ROOT::Experimental::Internal::RPageSource> CreatePageSourceFromSpec(const RNTupleOpenSpec &spec)
-{
-   if (const std::string *storagePath = std::get_if<std::string>(&spec.fStorage))
-      return ROOT::Experimental::Internal::RPageSource::Create(spec.fNTupleName, *storagePath);
-
-   auto dir = std::get<TDirectory *>(spec.fStorage);
-   auto ntuple = std::unique_ptr<ROOT::RNTuple>(dir->Get<ROOT::RNTuple>(spec.fNTupleName.c_str()));
+   auto dir = std::get<TDirectory *>(fStorage);
+   auto ntuple = std::unique_ptr<ROOT::RNTuple>(dir->Get<ROOT::RNTuple>(fNTupleName.c_str()));
    return ROOT::Experimental::Internal::RPageSourceFile::CreateFromAnchor(*ntuple);
 }
-} // anonymous namespace
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::Create(const RNTupleOpenSpec &ntuple, std::unique_ptr<RNTupleModel> model)
+ROOT::Experimental::RNTupleProcessor::Create(RNTupleOpenSpec ntuple, std::unique_ptr<RNTupleModel> model)
 {
-   return Create(ntuple, ntuple.fNTupleName, std::move(model));
+   auto processorName = ntuple.fNTupleName;
+   return Create(std::move(ntuple), processorName, std::move(model));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::Create(const RNTupleOpenSpec &ntuple, std::string_view processorName,
+ROOT::Experimental::RNTupleProcessor::Create(RNTupleOpenSpec ntuple, std::string_view processorName,
                                              std::unique_ptr<RNTupleModel> model)
 {
-   return std::unique_ptr<RNTupleSingleProcessor>(new RNTupleSingleProcessor(ntuple, processorName, std::move(model)));
+   return std::unique_ptr<RNTupleSingleProcessor>(
+      new RNTupleSingleProcessor(std::move(ntuple), processorName, std::move(model)));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::CreateChain(const std::vector<RNTupleOpenSpec> &ntuples,
+ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<RNTupleOpenSpec> ntuples,
                                                   std::unique_ptr<RNTupleModel> model)
 {
    if (ntuples.empty())
       throw RException(R__FAIL("at least one RNTuple must be provided"));
 
-   return CreateChain(ntuples, ntuples[0].fNTupleName, std::move(model));
+   auto processorName = ntuples[0].fNTupleName;
+   return CreateChain(std::move(ntuples), processorName, std::move(model));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::CreateChain(const std::vector<RNTupleOpenSpec> &ntuples,
-                                                  std::string_view processorName, std::unique_ptr<RNTupleModel> model)
+ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<RNTupleOpenSpec> ntuples, std::string_view processorName,
+                                                  std::unique_ptr<RNTupleModel> model)
 {
    if (ntuples.empty())
       throw RException(R__FAIL("at least one RNTuple must be provided"));
@@ -80,13 +69,13 @@ ROOT::Experimental::RNTupleProcessor::CreateChain(const std::vector<RNTupleOpenS
 
    // If no model is provided, infer it from the first ntuple.
    if (!model) {
-      auto firstPageSource = CreatePageSourceFromSpec(ntuples[0]);
+      auto firstPageSource = ntuples[0].CreatePageSource();
       firstPageSource->Attach();
       model = firstPageSource->GetSharedDescriptorGuard()->CreateModel();
    }
 
-   for (const auto &ntuple : ntuples) {
-      innerProcessors.emplace_back(Create(ntuple, model->Clone()));
+   for (auto &ntuple : ntuples) {
+      innerProcessors.emplace_back(Create(std::move(ntuple), model->Clone()));
    }
 
    return CreateChain(std::move(innerProcessors), processorName, std::move(model));
@@ -120,17 +109,16 @@ ROOT::Experimental::RNTupleProcessor::CreateChain(std::vector<std::unique_ptr<RN
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::CreateJoin(const RNTupleOpenSpec &primaryNTuple,
-                                                 const std::vector<RNTupleOpenSpec> &auxNTuples,
+ROOT::Experimental::RNTupleProcessor::CreateJoin(RNTupleOpenSpec primaryNTuple, std::vector<RNTupleOpenSpec> auxNTuples,
                                                  const std::vector<std::string> &joinFields,
                                                  std::vector<std::unique_ptr<RNTupleModel>> models)
 {
-   return CreateJoin(primaryNTuple, auxNTuples, joinFields, primaryNTuple.fNTupleName, std::move(models));
+   auto processorName = primaryNTuple.fNTupleName;
+   return CreateJoin(std::move(primaryNTuple), std::move(auxNTuples), joinFields, processorName, std::move(models));
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleProcessor>
-ROOT::Experimental::RNTupleProcessor::CreateJoin(const RNTupleOpenSpec &primaryNTuple,
-                                                 const std::vector<RNTupleOpenSpec> &auxNTuples,
+ROOT::Experimental::RNTupleProcessor::CreateJoin(RNTupleOpenSpec primaryNTuple, std::vector<RNTupleOpenSpec> auxNTuples,
                                                  const std::vector<std::string> &joinFields,
                                                  std::string_view processorName,
                                                  std::vector<std::unique_ptr<RNTupleModel>> models)
@@ -147,17 +135,24 @@ ROOT::Experimental::RNTupleProcessor::CreateJoin(const RNTupleOpenSpec &primaryN
       throw RException(R__FAIL("join fields must be unique"));
    }
 
+   // Ensure that all ntuples are uniquely named to prevent name clashes.
    // TODO(fdegeus) allow for the provision of aliases for ntuples with the same name, removing the constraint of
    // uniquely-named ntuples.
-   EnsureUniqueNTupleNames(primaryNTuple, auxNTuples);
+   std::unordered_set<std::string> uniqueNTupleNames{primaryNTuple.fNTupleName};
+   for (const auto &ntuple : auxNTuples) {
+      auto res = uniqueNTupleNames.emplace(ntuple.fNTupleName);
+      if (!res.second) {
+         throw ROOT::RException(R__FAIL("joining RNTuples with the same name is not allowed"));
+      }
+   }
 
    std::unique_ptr<RNTupleJoinProcessor> processor;
    if (!models.empty()) {
-      processor = std::unique_ptr<RNTupleJoinProcessor>(
-         new RNTupleJoinProcessor(primaryNTuple, auxNTuples, joinFields, processorName, std::move(models)));
+      processor = std::unique_ptr<RNTupleJoinProcessor>(new RNTupleJoinProcessor(
+         std::move(primaryNTuple), std::move(auxNTuples), joinFields, processorName, std::move(models)));
    } else {
       processor = std::unique_ptr<RNTupleJoinProcessor>(
-         new RNTupleJoinProcessor(primaryNTuple, auxNTuples, joinFields, processorName));
+         new RNTupleJoinProcessor(std::move(primaryNTuple), std::move(auxNTuples), joinFields, processorName));
    }
 
    processor->SetJoinFieldTokens(joinFields);
@@ -188,13 +183,13 @@ void ROOT::Experimental::RNTupleProcessor::ConnectField(RFieldContext &fieldCont
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(const RNTupleOpenSpec &ntuple,
+ROOT::Experimental::RNTupleSingleProcessor::RNTupleSingleProcessor(RNTupleOpenSpec ntuple,
                                                                    std::string_view processorName,
                                                                    std::unique_ptr<RNTupleModel> model)
-   : RNTupleProcessor(processorName, std::move(model)), fNTupleSpec(ntuple)
+   : RNTupleProcessor(processorName, std::move(model)), fNTupleSpec(std::move(ntuple))
 {
    if (!fModel) {
-      fPageSource = CreatePageSourceFromSpec(fNTupleSpec);
+      fPageSource = fNTupleSpec.CreatePageSource();
       fPageSource->Attach();
       fModel = fPageSource->GetSharedDescriptorGuard()->CreateModel();
    }
@@ -250,7 +245,7 @@ void ROOT::Experimental::RNTupleSingleProcessor::Connect()
       return;
 
    if (!fPageSource)
-      fPageSource = CreatePageSourceFromSpec(fNTupleSpec);
+      fPageSource = fNTupleSpec.CreatePageSource();
    fPageSource->Attach();
    fNEntries = fPageSource->GetNEntries();
 
@@ -349,15 +344,15 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleChainProcessor::LoadEntry(ROOT::NT
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(const RNTupleOpenSpec &mainNTuple,
-                                                               const std::vector<RNTupleOpenSpec> &auxNTuples,
+ROOT::Experimental::RNTupleJoinProcessor::RNTupleJoinProcessor(RNTupleOpenSpec mainNTuple,
+                                                               std::vector<RNTupleOpenSpec> auxNTuples,
                                                                const std::vector<std::string> &joinFields,
                                                                std::string_view processorName,
                                                                std::vector<std::unique_ptr<RNTupleModel>> models)
    : RNTupleProcessor(processorName, nullptr)
 {
    fNTuples.emplace_back(mainNTuple);
-   fPageSource = CreatePageSourceFromSpec(mainNTuple);
+   fPageSource = mainNTuple.CreatePageSource();
    fPageSource->Attach();
 
    if (fPageSource->GetNEntries() == 0) {
@@ -410,7 +405,7 @@ void ROOT::Experimental::RNTupleJoinProcessor::AddAuxiliary(const RNTupleOpenSpe
 
    fNTuples.emplace_back(auxNTuple);
 
-   auto pageSource = CreatePageSourceFromSpec(auxNTuple);
+   auto pageSource = auxNTuple.CreatePageSource();
    pageSource->Attach();
 
    if (pageSource->GetNEntries() == 0) {
