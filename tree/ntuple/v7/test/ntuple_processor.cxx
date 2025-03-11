@@ -13,8 +13,7 @@ TEST(RNTupleProcessor, EmptyNTuple)
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
    }
 
-   RNTupleOpenSpec ntuple{"ntuple", fileGuard.GetPath()};
-   auto proc = RNTupleProcessor::Create(ntuple);
+   auto proc = RNTupleProcessor::Create({"ntuple", fileGuard.GetPath()});
 
    int nEntries = 0;
    for ([[maybe_unused]] const auto &entry : *proc) {
@@ -142,8 +141,7 @@ protected:
 
 TEST_F(RNTupleProcessorTest, Base)
 {
-   RNTupleOpenSpec ntuple{fNTupleNames[0], fFileNames[0]};
-   auto proc = RNTupleProcessor::Create(ntuple);
+   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
 
    int nEntries = 0;
 
@@ -162,12 +160,11 @@ TEST_F(RNTupleProcessorTest, Base)
 
 TEST_F(RNTupleProcessorTest, BaseWithModel)
 {
-   RNTupleOpenSpec ntuple{fNTupleNames[0], fFileNames[0]};
 
    auto model = RNTupleModel::Create();
    auto fldX = model->MakeField<float>("x");
 
-   auto proc = RNTupleProcessor::Create(ntuple, std::move(model));
+   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]}, std::move(model));
 
    int nEntries = 0;
 
@@ -190,17 +187,15 @@ TEST_F(RNTupleProcessorTest, BaseWithModel)
 
 TEST_F(RNTupleProcessorTest, BaseWithBareModel)
 {
-   RNTupleOpenSpec ntuple{fNTupleNames[0], fFileNames[0]};
-
    auto model = RNTupleModel::CreateBare();
    model->MakeField<float>("x");
 
-   auto proc = RNTupleProcessor::Create(ntuple, std::move(model));
+   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]}, std::move(model));
 
    EXPECT_STREQ("ntuple", proc->GetProcessorName().c_str());
 
    {
-      auto namedProc = RNTupleProcessor::Create(ntuple, "my_ntuple");
+      auto namedProc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]}, "my_ntuple");
       EXPECT_STREQ("my_ntuple", namedProc->GetProcessorName().c_str());
    }
 
@@ -225,11 +220,10 @@ TEST_F(RNTupleProcessorTest, BaseWithBareModel)
 
 TEST_F(RNTupleProcessorTest, ChainedChain)
 {
-   std::vector<RNTupleOpenSpec> ntuples{{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[0], fFileNames[0]}};
-
    std::vector<std::unique_ptr<RNTupleProcessor>> innerProcs;
-   innerProcs.push_back(RNTupleProcessor::CreateChain(ntuples));
-   innerProcs.push_back(RNTupleProcessor::Create(ntuples[0]));
+   innerProcs.push_back(
+      RNTupleProcessor::CreateChain({{fNTupleNames[0], fFileNames[0]}, {fNTupleNames[0], fFileNames[0]}}));
+   innerProcs.push_back(RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]}));
 
    auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
 
