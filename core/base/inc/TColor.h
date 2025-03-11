@@ -104,6 +104,7 @@ public:
    static const char *PixelAsHexString(ULong_t pixel);
    static TString SavePrimitiveColor(Int_t ci);
    static Bool_t  SaveColor(std::ostream &out, Int_t ci);
+   static void    SaveColorsPalette(std::ostream &out);
    static void    SetColorThreshold(Float_t t);
    static Bool_t  DefinedColors(Int_t set_always_on = 0);
    static void    InvertPalette();

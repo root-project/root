@@ -1925,6 +1925,8 @@ void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
    if (GetHighLightColor() != 5)
       out << "   " << GetName() << "->SetHighLightColor(" << TColor::SavePrimitiveColor(GetHighLightColor()) << ");\n";
 
+   TColor::SaveColorsPalette(out);
+
    //   Now recursively scan all pads of this canvas
    cd();
    if (invalid) fName = cname;
