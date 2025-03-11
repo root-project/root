@@ -442,6 +442,11 @@ jobs:
         CONTAINER_IMAGE: "registry.cern.ch/root-ci/${{ matrix.image }}:buildready" #KEEP IN SYNC WITH ABOVE
         CONTAINER_OPTIONS: "--security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }}" #KEEP IN SYNC WITH ABOVE
 
+    env:
+      BUILD_DIR: /github/home/ROOT-CI/build
+      INSTALL_DIR: /github/home/ROOT-CI/install
+      POST_INSTALL_DIR: /github/home/ROOT-CI/PostInstall
+
     steps:
       - name: Configure large ccache
         if: ${{ matrix.is_special }}
@@ -585,6 +590,18 @@ jobs:
       - name: ccache info (post)
         run: |
           ccache -s || true
+
+      - name: Install
+        run: "cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.INSTALL_DIR }}"
+
+      - name: Build post-install test project
+        run: |
+          cmake -S test/PostInstall/ -B ${{ env.POST_INSTALL_DIR }} -DCMAKE_PREFIX_PATH=${{ env.INSTALL_DIR }};
+          cmake --build ${{ env.POST_INSTALL_DIR }};
+
+      - name: CTest in post-install test project
+        working-directory: ${{ env.POST_INSTALL_DIR }}
+        run: ctest -j $(nproc)
 
   event_file:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
