@@ -34,7 +34,8 @@ typedef struct CXInterpreterImpl* CXInterpreter;
  *
  * \returns a \c CXInterpreter.
  */
-CXInterpreter clang_createInterpreter(const char* const* argv, int argc);
+CINDEX_LINKAGE CXInterpreter clang_createInterpreter(const char* const* argv,
+                                                     int argc);
 
 typedef void* TInterp_t;
 
@@ -43,27 +44,29 @@ typedef void* TInterp_t;
  *
  * \returns a \c CXInterpreter.
  */
-CXInterpreter clang_createInterpreterFromRawPtr(TInterp_t I);
+CINDEX_LINKAGE CXInterpreter clang_createInterpreterFromRawPtr(TInterp_t I);
 
 /**
  * Returns a pointer to the underlying interpreter.
  */
-void* clang_Interpreter_getClangInterpreter(CXInterpreter I);
+CINDEX_LINKAGE void* clang_Interpreter_getClangInterpreter(CXInterpreter I);
 
 /**
  * Returns a \c TInterp_t and takes the ownership.
  */
-TInterp_t clang_Interpreter_takeInterpreterAsPtr(CXInterpreter I);
+CINDEX_LINKAGE TInterp_t
+clang_Interpreter_takeInterpreterAsPtr(CXInterpreter I);
 
 /**
  * Undo N previous incremental inputs.
  */
-enum CXErrorCode clang_Interpreter_undo(CXInterpreter I, unsigned int N);
+CINDEX_LINKAGE enum CXErrorCode clang_Interpreter_undo(CXInterpreter I,
+                                                       unsigned int N);
 
 /**
  * Dispose of the given interpreter context.
  */
-void clang_Interpreter_dispose(CXInterpreter I);
+CINDEX_LINKAGE void clang_Interpreter_dispose(CXInterpreter I);
 
 /**
  * Describes the return result of the different routines that do the incremental
@@ -95,8 +98,9 @@ typedef enum {
  *
  * \param prepend Whether to prepend the directory to the search path.
  */
-void clang_Interpreter_addSearchPath(CXInterpreter I, const char* dir,
-                                     bool isUser, bool prepend);
+CINDEX_LINKAGE void clang_Interpreter_addSearchPath(CXInterpreter I,
+                                                    const char* dir,
+                                                    bool isUser, bool prepend);
 
 /**
  * Add an include path.
@@ -105,7 +109,8 @@ void clang_Interpreter_addSearchPath(CXInterpreter I, const char* dir,
  *
  * \param dir The directory to add.
  */
-void clang_Interpreter_addIncludePath(CXInterpreter I, const char* dir);
+CINDEX_LINKAGE void clang_Interpreter_addIncludePath(CXInterpreter I,
+                                                     const char* dir);
 
 /**
  * Declares a code snippet in \c code and does not execute it.
@@ -118,8 +123,8 @@ void clang_Interpreter_addIncludePath(CXInterpreter I, const char* dir);
  *
  * \returns a \c CXErrorCode.
  */
-enum CXErrorCode clang_Interpreter_declare(CXInterpreter I, const char* code,
-                                           bool silent);
+CINDEX_LINKAGE enum CXErrorCode
+clang_Interpreter_declare(CXInterpreter I, const char* code, bool silent);
 
 /**
  * Declares and executes a code snippet in \c code.
@@ -130,7 +135,8 @@ enum CXErrorCode clang_Interpreter_declare(CXInterpreter I, const char* code,
  *
  * \returns a \c CXErrorCode.
  */
-enum CXErrorCode clang_Interpreter_process(CXInterpreter I, const char* code);
+CINDEX_LINKAGE enum CXErrorCode clang_Interpreter_process(CXInterpreter I,
+                                                          const char* code);
 
 /**
  * An opaque pointer representing a lightweight struct that is used for carrying
@@ -143,14 +149,14 @@ typedef void* CXValue;
  *
  * \returns a \c CXValue.
  */
-CXValue clang_createValue(void);
+CINDEX_LINKAGE CXValue clang_createValue(void);
 
 /**
  * Dispose of the given CXValue.
  *
  * \param V The CXValue to dispose.
  */
-void clang_Value_dispose(CXValue V);
+CINDEX_LINKAGE void clang_Value_dispose(CXValue V);
 
 /**
  * Declares, executes and stores the execution result to \c V.
@@ -163,8 +169,8 @@ void clang_Value_dispose(CXValue V);
  *
  * \returns a \c CXErrorCode.
  */
-enum CXErrorCode clang_Interpreter_evaluate(CXInterpreter I, const char* code,
-                                            CXValue V);
+CINDEX_LINKAGE enum CXErrorCode
+clang_Interpreter_evaluate(CXInterpreter I, const char* code, CXValue V);
 
 /**
  * Looks up the library if access is enabled.
@@ -175,7 +181,8 @@ enum CXErrorCode clang_Interpreter_evaluate(CXInterpreter I, const char* code,
  *
  * \returns the path to the library.
  */
-CXString clang_Interpreter_lookupLibrary(CXInterpreter I, const char* lib_name);
+CINDEX_LINKAGE CXString clang_Interpreter_lookupLibrary(CXInterpreter I,
+                                                        const char* lib_name);
 
 /**
  * Finds \c lib_stem considering the list of search paths and loads it by
@@ -189,9 +196,8 @@ CXString clang_Interpreter_lookupLibrary(CXInterpreter I, const char* lib_name);
  *
  * \returns a \c CXInterpreter_CompilationResult.
  */
-CXInterpreter_CompilationResult
-clang_Interpreter_loadLibrary(CXInterpreter I, const char* lib_stem,
-                              bool lookup);
+CINDEX_LINKAGE CXInterpreter_CompilationResult clang_Interpreter_loadLibrary(
+    CXInterpreter I, const char* lib_stem, bool lookup);
 
 /**
  * Finds \c lib_stem considering the list of search paths and unloads it by
@@ -201,7 +207,8 @@ clang_Interpreter_loadLibrary(CXInterpreter I, const char* lib_stem,
  *
  * \param lib_stem The stem of the library to unload.
  */
-void clang_Interpreter_unloadLibrary(CXInterpreter I, const char* lib_stem);
+CINDEX_LINKAGE void clang_Interpreter_unloadLibrary(CXInterpreter I,
+                                                    const char* lib_stem);
 
 /**
  * @}
@@ -226,40 +233,41 @@ typedef struct {
 } CXScope;
 
 // for debugging purposes
-void clang_scope_dump(CXScope S);
+CINDEX_LINKAGE void clang_scope_dump(CXScope S);
 
 /**
  * Checks if a class has a default constructor.
  */
-bool clang_hasDefaultConstructor(CXScope S);
+CINDEX_LINKAGE bool clang_hasDefaultConstructor(CXScope S);
 
 /**
  * Returns the default constructor of a class, if any.
  */
-CXScope clang_getDefaultConstructor(CXScope S);
+CINDEX_LINKAGE CXScope clang_getDefaultConstructor(CXScope S);
 
 /**
  * Returns the class destructor, if any.
  */
-CXScope clang_getDestructor(CXScope S);
+CINDEX_LINKAGE CXScope clang_getDestructor(CXScope S);
 
 /**
  * Returns a stringified version of a given function signature in the form:
  * void N::f(int i, double d, long l = 0, char ch = 'a').
  */
-CXString clang_getFunctionSignature(CXScope func);
+CINDEX_LINKAGE CXString clang_getFunctionSignature(CXScope func);
 
 /**
  * Checks if a function is a templated function.
  */
-bool clang_isTemplatedFunction(CXScope func);
+CINDEX_LINKAGE bool clang_isTemplatedFunction(CXScope func);
 
 /**
  * This function performs a lookup to check if there is a templated function of
  * that type. \c parent is mandatory, the global scope should be used as the
  * default value.
  */
-bool clang_existsFunctionTemplate(const char* name, CXScope parent);
+CINDEX_LINKAGE bool clang_existsFunctionTemplate(const char* name,
+                                                 CXScope parent);
 
 typedef struct {
   void* Type;
@@ -282,9 +290,8 @@ typedef struct {
  * \returns a \c CXScope representing the instantiated templated
  * class/function/variable.
  */
-CXScope clang_instantiateTemplate(CXScope tmpl,
-                                  CXTemplateArgInfo* template_args,
-                                  size_t template_args_size);
+CINDEX_LINKAGE CXScope clang_instantiateTemplate(
+    CXScope tmpl, CXTemplateArgInfo* template_args, size_t template_args_size);
 
 /**
  * A fake CXType for working with the interpreter.
@@ -299,12 +306,12 @@ typedef struct {
 /**
  * Gets the string of the type that is passed as a parameter.
  */
-CXString clang_getTypeAsString(CXQualType type);
+CINDEX_LINKAGE CXString clang_getTypeAsString(CXQualType type);
 
 /**
  * Returns the complex of the provided type.
  */
-CXQualType clang_getComplexType(CXQualType eltype);
+CINDEX_LINKAGE CXQualType clang_getComplexType(CXQualType eltype);
 
 /**
  * An opaque pointer representing the object of a given type (\c CXScope).
@@ -314,18 +321,18 @@ typedef void* CXObject;
 /**
  * Allocates memory for the given type.
  */
-CXObject clang_allocate(unsigned int n);
+CINDEX_LINKAGE CXObject clang_allocate(unsigned int n);
 
 /**
  * Deallocates memory for a given class.
  */
-void clang_deallocate(CXObject address);
+CINDEX_LINKAGE void clang_deallocate(CXObject address);
 
 /**
  * Creates an object of class \c scope and calls its default constructor. If \c
  * arena is set it uses placement new.
  */
-CXObject clang_construct(CXScope scope, void* arena);
+CINDEX_LINKAGE CXObject clang_construct(CXScope scope, void* arena);
 
 /**
  * Creates a trampoline function and makes a call to a generic function or
@@ -341,8 +348,8 @@ CXObject clang_construct(CXScope scope, void* arena);
  *
  * \param self The 'this pointer' of the object.
  */
-void clang_invoke(CXScope func, void* result, void** args, size_t n,
-                  void* self);
+CINDEX_LINKAGE void clang_invoke(CXScope func, void* result, void** args,
+                                 size_t n, void* self);
 
 /**
  * Calls the destructor of object of type \c type. When withFree is true it
@@ -354,7 +361,7 @@ void clang_invoke(CXScope func, void* result, void** args, size_t n,
  *
  * \param withFree Whether to call operator delete/free or not.
  */
-void clang_destruct(CXObject This, CXScope S, bool withFree);
+CINDEX_LINKAGE void clang_destruct(CXObject This, CXScope S, bool withFree);
 
 /**
  * @}

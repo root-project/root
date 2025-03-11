@@ -61,8 +61,8 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
     endif()
     if (NOT DEFINED Clang_DIR)
       set(Clang_DIR ${Cling_DIR})
+    endif()
   endif()
-endif()
 
 include(GNUInstallDirs)
   ## Define supported version of clang and llvm

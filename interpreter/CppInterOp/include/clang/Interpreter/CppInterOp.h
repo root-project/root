@@ -210,6 +210,9 @@ namespace Cpp {
   /// Checks if the scope is a class or not.
   CPPINTEROP_API bool IsClass(TCppScope_t scope);
 
+  /// Checks if the scope is a function.
+  CPPINTEROP_API bool IsFunction(TCppScope_t scope);
+
   /// Checks if the type is a function pointer.
   CPPINTEROP_API bool IsFunctionPointerType(TCppType_t type);
 
@@ -504,6 +507,18 @@ namespace Cpp {
   /// Checks if the provided parameter is a Plain Old Data Type (POD).
   CPPINTEROP_API bool IsPODType(TCppType_t type);
 
+  /// Checks if type is a pointer
+  CPPINTEROP_API bool IsPointerType(TCppType_t type);
+
+  /// Get the underlying pointee type
+  CPPINTEROP_API TCppType_t GetPointeeType(TCppType_t type);
+
+  /// Checks if type is a reference
+  CPPINTEROP_API bool IsReferenceType(TCppType_t type);
+
+  /// Get the type that the reference refers to
+  CPPINTEROP_API TCppType_t GetNonReferenceType(TCppType_t type);
+
   /// Gets the pure, Underlying Type (as opposed to the Using Type).
   CPPINTEROP_API TCppType_t GetUnderlyingType(TCppType_t type);
 
@@ -694,17 +709,16 @@ namespace Cpp {
   CPPINTEROP_API TCppFunction_t
   InstantiateTemplateFunctionFromString(const char* function_template);
 
-  /// Finds best template match based on explicit template parameters and
-  /// argument types
+  /// Finds best overload match based on explicit template parameters (if any)
+  /// and argument types.
   ///
-  ///\param[in] candidates - Vector of suitable candidates that come under the
-  ///           parent scope and have the same name (obtained using
-  ///           GetClassTemplatedMethods)
+  ///\param[in] candidates - vector of overloads that come under the
+  ///           parent scope and have the same name
   ///\param[in] explicit_types - set of expicitly instantiated template types
   ///\param[in] arg_types - set of argument types
   ///\returns Instantiated function pointer
   CPPINTEROP_API TCppFunction_t
-  BestTemplateFunctionMatch(const std::vector<TCppFunction_t>& candidates,
+  BestOverloadFunctionMatch(const std::vector<TCppFunction_t>& candidates,
                             const std::vector<TemplateArgInfo>& explicit_types,
                             const std::vector<TemplateArgInfo>& arg_types);
 

@@ -313,6 +313,11 @@ TEST(FunctionReflectionTest, GetFunctionReturnType) {
           return sizeof(A) + i;
       }
     };
+
+    template<class ...T> struct RTTest_TemplatedList {};
+    template<class ...T> auto rttest_make_tlist(T ... args) {
+      return RTTest_TemplatedList<T...>{};
+    }
     )";
 
   GetAllTopLevelDecls(code, Decls, true);
@@ -348,6 +353,16 @@ TEST(FunctionReflectionTest, GetFunctionReturnType) {
   EXPECT_EQ(
       Cpp::GetTypeAsString(Cpp::GetFunctionReturnType(TemplateSubDecls[3])),
       "long");
+
+  ASTContext& C = Interp->getCI()->getASTContext();
+  std::vector<Cpp::TemplateArgInfo> args = {C.IntTy.getAsOpaquePtr(),
+                                            C.DoubleTy.getAsOpaquePtr()};
+  std::vector<Cpp::TemplateArgInfo> explicit_args;
+  std::vector<Cpp::TCppFunction_t> candidates = {Decls[14]};
+  EXPECT_EQ(
+      Cpp::GetTypeAsString(Cpp::GetFunctionReturnType(
+          Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args))),
+      "RTTest_TemplatedList<int, double>");
 }
 
 TEST(FunctionReflectionTest, GetFunctionNumArgs) {
@@ -590,7 +605,7 @@ TEST(FunctionReflectionTest, InstantiateTemplateMethod) {
   EXPECT_TRUE(TA1.getAsType()->isIntegerType());
 }
 
-TEST(FunctionReflectionTest, BestTemplateFunctionMatch) {
+TEST(FunctionReflectionTest, BestOverloadFunctionMatch1) {
   std::vector<Decl*> Decls;
   std::string code = R"(
     class MyTemplatedMethodClass {
@@ -598,7 +613,8 @@ TEST(FunctionReflectionTest, BestTemplateFunctionMatch) {
           template<class A> long get_size(A&);
           template<class A> long get_size();
           template<class A, class B> long get_size(A a, B b);
-          template<class A> long add_size(float a);
+          template<class A> long get_size(float a);
+          template <int N, class T> long get_size(T a);
       };
 
       template<class A>
@@ -612,13 +628,18 @@ TEST(FunctionReflectionTest, BestTemplateFunctionMatch) {
       }
 
       template<class A>
-      long MyTemplatedMethodClass::add_size(float a) {
+      long MyTemplatedMethodClass::get_size(float a) {
           return sizeof(A) + long(a);
       }
 
       template<class A, class B>
       long MyTemplatedMethodClass::get_size(A a, B b) {
           return sizeof(A) + sizeof(B);
+      }
+      
+      template <int N, class T>
+      long MyTemplatedMethodClass::get_size(T a) {
+        return N + sizeof(T) + a;
       }
   )";
 
@@ -631,17 +652,26 @@ TEST(FunctionReflectionTest, BestTemplateFunctionMatch) {
   ASTContext& C = Interp->getCI()->getASTContext();
 
   std::vector<Cpp::TemplateArgInfo> args0;
-  std::vector<Cpp::TemplateArgInfo> args1 = {C.IntTy.getAsOpaquePtr()};
+  std::vector<Cpp::TemplateArgInfo> args1 = {
+      C.getLValueReferenceType(C.IntTy).getAsOpaquePtr()};
   std::vector<Cpp::TemplateArgInfo> args2 = {C.CharTy.getAsOpaquePtr(), C.FloatTy.getAsOpaquePtr()};
   std::vector<Cpp::TemplateArgInfo> args3 = {C.FloatTy.getAsOpaquePtr()};
 
   std::vector<Cpp::TemplateArgInfo> explicit_args0;
   std::vector<Cpp::TemplateArgInfo> explicit_args1 = {C.IntTy.getAsOpaquePtr()};
+  std::vector<Cpp::TemplateArgInfo> explicit_args2 = {
+      {C.IntTy.getAsOpaquePtr(), "1"}, C.IntTy.getAsOpaquePtr()};
 
-  Cpp::TCppFunction_t func1 = Cpp::BestTemplateFunctionMatch(candidates, explicit_args0, args1);
-  Cpp::TCppFunction_t func2 = Cpp::BestTemplateFunctionMatch(candidates, explicit_args1, args0);
-  Cpp::TCppFunction_t func3 = Cpp::BestTemplateFunctionMatch(candidates, explicit_args0, args2);
-  Cpp::TCppFunction_t func4 = Cpp::BestTemplateFunctionMatch(candidates, explicit_args1, args3);
+  Cpp::TCppFunction_t func1 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args0, args1);
+  Cpp::TCppFunction_t func2 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args1, args0);
+  Cpp::TCppFunction_t func3 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args0, args2);
+  Cpp::TCppFunction_t func4 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args1, args3);
+  Cpp::TCppFunction_t func5 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args2, args3);
 
   EXPECT_EQ(Cpp::GetFunctionSignature(func1),
             "template<> long MyTemplatedMethodClass::get_size<int>(int &)");
@@ -650,7 +680,228 @@ TEST(FunctionReflectionTest, BestTemplateFunctionMatch) {
   EXPECT_EQ(Cpp::GetFunctionSignature(func3),
             "template<> long MyTemplatedMethodClass::get_size<char, float>(char a, float b)");
   EXPECT_EQ(Cpp::GetFunctionSignature(func4),
-            "template<> long MyTemplatedMethodClass::get_size<float>(float &)");
+            "template<> long MyTemplatedMethodClass::get_size<int>(float a)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(func5),
+            "template<> long MyTemplatedMethodClass::get_size<1, int>(int a)");
+}
+
+TEST(FunctionReflectionTest, BestOverloadFunctionMatch2) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    template<typename T>
+    struct A { T value; };
+
+    A<int> a;
+
+    template<typename T>
+    void somefunc(A<T> arg) {}
+
+    template<typename T>
+    void somefunc(T arg) {}
+
+    template<typename T>
+    void somefunc(A<T> arg1, A<T> arg2) {}
+
+    template<typename T>
+    void somefunc(T arg1, T arg2) {}
+
+    void somefunc(int arg1, double arg2) {}
+  )";
+
+  GetAllTopLevelDecls(code, Decls);
+  std::vector<Cpp::TCppFunction_t> candidates;
+
+  for (auto decl : Decls)
+    if (Cpp::IsFunction(decl) || Cpp::IsTemplatedFunction(decl))
+      candidates.push_back((Cpp::TCppFunction_t)decl);
+
+  EXPECT_EQ(candidates.size(), 5);
+
+  ASTContext& C = Interp->getCI()->getASTContext();
+
+  std::vector<Cpp::TemplateArgInfo> args1 = {C.IntTy.getAsOpaquePtr()};
+  std::vector<Cpp::TemplateArgInfo> args2 = {
+      Cpp::GetVariableType(Cpp::GetNamed("a"))};
+  std::vector<Cpp::TemplateArgInfo> args3 = {C.IntTy.getAsOpaquePtr(),
+                                             C.IntTy.getAsOpaquePtr()};
+  std::vector<Cpp::TemplateArgInfo> args4 = {
+      Cpp::GetVariableType(Cpp::GetNamed("a")),
+      Cpp::GetVariableType(Cpp::GetNamed("a"))};
+  std::vector<Cpp::TemplateArgInfo> args5 = {C.IntTy.getAsOpaquePtr(),
+                                             C.DoubleTy.getAsOpaquePtr()};
+
+  std::vector<Cpp::TemplateArgInfo> explicit_args;
+
+  Cpp::TCppFunction_t func1 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args1);
+  Cpp::TCppFunction_t func2 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args2);
+  Cpp::TCppFunction_t func3 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args3);
+  Cpp::TCppFunction_t func4 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args4);
+  Cpp::TCppFunction_t func5 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args5);
+
+  EXPECT_EQ(Cpp::GetFunctionSignature(func1),
+            "template<> void somefunc<int>(int arg)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(func2),
+            "template<> void somefunc<int>(A<int> arg)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(func3),
+            "template<> void somefunc<int>(int arg1, int arg2)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(func4),
+            "template<> void somefunc<int>(A<int> arg1, A<int> arg2)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(func5),
+            "void somefunc(int arg1, double arg2)");
+}
+
+TEST(FunctionReflectionTest, BestOverloadFunctionMatch3) {
+  std::vector<Decl*> Decls;
+  std::string code = R"(
+    template<typename T>
+    struct A {
+      T value;
+      
+      template<typename TT>
+      A<TT> operator-(A<TT> rhs) {
+        return A<TT>{value - rhs.value};
+      }
+    };
+
+    A<int> a;
+
+    template<typename T>
+    A<T> operator+(A<T> lhs, A<T> rhs) {
+      return A<T>{lhs.value + rhs.value};
+    }
+
+    template<typename T>
+    A<T> operator+(A<T> lhs, int rhs) {
+      return A<T>{lhs.value + rhs};
+    }
+  )";
+
+  GetAllTopLevelDecls(code, Decls);
+  std::vector<Cpp::TCppFunction_t> candidates;
+
+  for (auto decl : Decls)
+    if (Cpp::IsTemplatedFunction(decl))
+      candidates.push_back((Cpp::TCppFunction_t)decl);
+
+  EXPECT_EQ(candidates.size(), 2);
+
+  ASTContext& C = Interp->getCI()->getASTContext();
+
+  std::vector<Cpp::TemplateArgInfo> args1 = {
+      Cpp::GetVariableType(Cpp::GetNamed("a")),
+      Cpp::GetVariableType(Cpp::GetNamed("a"))};
+  std::vector<Cpp::TemplateArgInfo> args2 = {
+      Cpp::GetVariableType(Cpp::GetNamed("a")), C.IntTy.getAsOpaquePtr()};
+  std::vector<Cpp::TemplateArgInfo> args3 = {
+      Cpp::GetVariableType(Cpp::GetNamed("a")), C.DoubleTy.getAsOpaquePtr()};
+
+  std::vector<Cpp::TemplateArgInfo> explicit_args;
+
+  Cpp::TCppFunction_t func1 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args1);
+  Cpp::TCppFunction_t func2 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args2);
+  Cpp::TCppFunction_t func3 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args3);
+
+  candidates.clear();
+  Cpp::GetOperator(
+      Cpp::GetScopeFromType(Cpp::GetVariableType(Cpp::GetNamed("a"))),
+      Cpp::Operator::OP_Minus, candidates);
+
+  EXPECT_EQ(candidates.size(), 1);
+
+  std::vector<Cpp::TemplateArgInfo> args4 = {
+      Cpp::GetVariableType(Cpp::GetNamed("a"))};
+
+  Cpp::TCppFunction_t func4 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args, args4);
+
+  EXPECT_EQ(Cpp::GetFunctionSignature(func1),
+            "template<> A<int> operator+<int>(A<int> lhs, A<int> rhs)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(func2),
+            "template<> A<int> operator+<int>(A<int> lhs, int rhs)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(func3),
+            "template<> A<int> operator+<int>(A<int> lhs, int rhs)");
+
+  EXPECT_EQ(Cpp::GetFunctionSignature(func4),
+            "template<> A<int> A<int>::operator-<int>(A<int> rhs)");
+}
+
+TEST(FunctionReflectionTest, BestOverloadFunctionMatch4) {
+  std::vector<Decl*> Decls, SubDecls;
+  std::string code = R"(
+    template<typename T>
+    struct A { T value; };
+
+    class B {
+    public:
+      void fn() {}
+      template <typename T>
+      void fn(T x) {}
+      template <typename T>
+      void fn(A<T> x) {}
+      template <typename T1, typename T2>
+      void fn(A<T1> x, A<T2> y) {}
+    };
+
+    A<int> a;
+    A<double> b;
+  )";
+
+  GetAllTopLevelDecls(code, Decls);
+  GetAllSubDecls(Decls[1], SubDecls);
+  std::vector<Cpp::TCppFunction_t> candidates;
+  for (auto i : SubDecls) {
+    if ((Cpp::IsFunction(i) || Cpp::IsTemplatedFunction(i)) &&
+        Cpp::GetName(i) == "fn")
+      candidates.push_back(i);
+  }
+
+  EXPECT_EQ(candidates.size(), 4);
+
+  ASTContext& C = Interp->getCI()->getASTContext();
+
+  std::vector<Cpp::TemplateArgInfo> args1 = {};
+  std::vector<Cpp::TemplateArgInfo> args2 = {C.IntTy.getAsOpaquePtr()};
+  std::vector<Cpp::TemplateArgInfo> args3 = {
+      Cpp::GetVariableType(Cpp::GetNamed("a"))};
+  std::vector<Cpp::TemplateArgInfo> args4 = {
+      Cpp::GetVariableType(Cpp::GetNamed("a")),
+      Cpp::GetVariableType(Cpp::GetNamed("b"))};
+  std::vector<Cpp::TemplateArgInfo> args5 = {
+      Cpp::GetVariableType(Cpp::GetNamed("a")),
+      Cpp::GetVariableType(Cpp::GetNamed("a"))};
+
+  std::vector<Cpp::TemplateArgInfo> explicit_args1;
+  std::vector<Cpp::TemplateArgInfo> explicit_args2 = {C.IntTy.getAsOpaquePtr(),
+                                                      C.IntTy.getAsOpaquePtr()};
+
+  Cpp::TCppFunction_t func1 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args1, args1);
+  Cpp::TCppFunction_t func2 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args1, args2);
+  Cpp::TCppFunction_t func3 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args1, args3);
+  Cpp::TCppFunction_t func4 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args1, args4);
+  Cpp::TCppFunction_t func5 =
+      Cpp::BestOverloadFunctionMatch(candidates, explicit_args2, args5);
+
+  EXPECT_EQ(Cpp::GetFunctionSignature(func1), "void B::fn()");
+  EXPECT_EQ(Cpp::GetFunctionSignature(func2),
+            "template<> void B::fn<int>(int x)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(func3),
+            "template<> void B::fn<int>(A<int> x)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(func4),
+            "template<> void B::fn<int, double>(A<int> x, A<double> y)");
+  EXPECT_EQ(Cpp::GetFunctionSignature(func5),
+            "template<> void B::fn<int, int>(A<int> x, A<int> y)");
 }
 
 TEST(FunctionReflectionTest, IsPublicMethod) {
@@ -1043,6 +1294,34 @@ TEST(FunctionReflectionTest, GetFunctionCallWrapper) {
   FCI_f.Invoke(&res, {nullptr, 0});
   EXPECT_TRUE(res);
 #endif
+
+  // templated operators
+  Interp->process(R"(
+    class TOperator{
+    public:
+      template<typename T>
+      bool operator<(T t) { return true; }
+    };
+  )");
+  Cpp::TCppScope_t TOperator = Cpp::GetNamed("TOperator");
+
+  auto* TOperatorCtor = Cpp::GetDefaultConstructor(TOperator);
+  auto FCI_TOperatorCtor = Cpp::MakeFunctionCallable(TOperatorCtor);
+  void* toperator = nullptr;
+  FCI_TOperatorCtor.Invoke((void*)&toperator);
+
+  EXPECT_TRUE(toperator);
+  std::vector<Cpp::TCppScope_t> operators;
+  Cpp::GetOperator(TOperator, Cpp::OP_Less, operators);
+  EXPECT_EQ(operators.size(), 1);
+
+  Cpp::TCppScope_t op_templated = operators[0];
+  auto TAI = Cpp::TemplateArgInfo(Cpp::GetType("int"));
+  Cpp::TCppScope_t op = Cpp::InstantiateTemplate(op_templated, &TAI, 1);
+  auto FCI_op = Cpp::MakeFunctionCallable(op);
+  bool boolean = false;
+  FCI_op.Invoke((void*)&boolean, {args, /*args_size=*/1}, object);
+  EXPECT_TRUE(boolean);
 }
 
 TEST(FunctionReflectionTest, IsConstMethod) {
