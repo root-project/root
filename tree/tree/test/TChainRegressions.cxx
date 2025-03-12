@@ -51,4 +51,5 @@ TEST(TChain, CloneTreeZeroEntries)
    auto tc = c->GetTree()->CloneTree(-1, "fast OptimizeBaskets");
    EXPECT_NE(tc, nullptr);
    EXPECT_NE(tc->FindBranch("n"), nullptr);
+   gSystem->Unlink(filename);
 }

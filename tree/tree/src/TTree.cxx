@@ -3146,7 +3146,7 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
       const auto res = LoadTree(0);
       if (res < -2 || res == -1) {
          // -1 is not accepted, it happens when no trees were defined
-         // -2 is accepted, it happens when one or more trees exists but have no entries,
+         // -2 is the only acceptable error, when the chain has zero entries, but tree(s) were defined
          // i.e. serial entry 0 is too large for the whole chain
          // Other errors (-3, ...) are not accepted
          Error("CloneTree", "returning nullptr since LoadTree failed with code %lld.", res);
