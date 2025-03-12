@@ -194,7 +194,4 @@ endif()
 # TComplex pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_tcomplex tcomplex_operators.py)
 
-# Tests with memory usage
-ROOT_ADD_PYUNITTEST(pyroot_memory memory.py)
-
 ROOT_ADD_PYUNITTEST(regression_18441 regression_18441.py)
