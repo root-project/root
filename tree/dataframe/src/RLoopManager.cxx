@@ -737,10 +737,10 @@ void RLoopManager::RunDataSource()
 {
    assert(fDataSource != nullptr);
    DSRunRAII _{*fDataSource};
+   RCallCleanUpTask cleanup(*this);
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty() && fNStopsReceived < fNChildren) {
       RDSRangeRAII __{*this, 0u, 0ull};
-      RCallCleanUpTask cleanup(*this);
       try {
          for (const auto &range : ranges) {
             const auto start = range.first;
