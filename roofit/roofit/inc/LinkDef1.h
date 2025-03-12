@@ -22,6 +22,7 @@
 #pragma link C++ class RooExponential+ ;
 #pragma link C++ class RooLegacyExpPoly+ ;
 #pragma link C++ class RooPowerSum+ ;
+#pragma link C++ class RooGaussExpTailDas+ ;
 #pragma link C++ class RooGaussian+ ;
 #pragma link C++ class RooLognormal+ ;
 #pragma link C++ class RooGamma+ ;
