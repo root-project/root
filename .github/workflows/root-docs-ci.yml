@@ -189,11 +189,11 @@ jobs:
         EOS_BASE_PATH: /eos/project/r/root-eos/website/
         EOS_ENDPOINT: root://eosproject-r.cern.ch
         KRB5CCNAME: /tmp/krb5cc
-      working-directory: ${{ env.WORKDIR }}
+      working-directory: ${{ env.DOC_LOCATION }}
       run: |
         echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
         kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
         xrdcp -rf ${DOC_DIR}/html/* ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
         rm -r ${DOC_DIR}/html
-        xrdcp -rf ${DOC_DIR}/* ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --streams 12 -rf ${DOC_DIR}/* ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
         xrdcp -rf ${TAR_NAME}.gz ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download
