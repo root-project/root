@@ -721,6 +721,17 @@ struct DSRunRAII {
 };
 } // namespace
 
+struct ROOT::Internal::RDF::RDSRangeRAII {
+   ROOT::Detail::RDF::RLoopManager &fLM;
+   unsigned int fSlot;
+   RDSRangeRAII(ROOT::Detail::RDF::RLoopManager &lm, unsigned int slot, ULong64_t firstEntry) : fLM(lm), fSlot(slot)
+   {
+      fLM.InitNodeSlots(nullptr, fSlot);
+      fLM.GetDataSource()->InitSlot(fSlot, firstEntry);
+   }
+   ~RDSRangeRAII() { fLM.GetDataSource()->FinalizeSlot(fSlot); }
+};
+
 /// Run event loop over data accessed through a DataSource, in sequence.
 void RLoopManager::RunDataSource()
 {
@@ -728,8 +739,7 @@ void RLoopManager::RunDataSource()
    DSRunRAII _{*fDataSource};
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty() && fNStopsReceived < fNChildren) {
-      InitNodeSlots(nullptr, 0u);
-      fDataSource->InitSlot(0u, 0ull);
+      RDSRangeRAII __{*this, 0u, 0ull};
       RCallCleanUpTask cleanup(*this);
       try {
          for (const auto &range : ranges) {
@@ -746,7 +756,6 @@ void RLoopManager::RunDataSource()
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      fDataSource->FinalizeSlot(0u);
       ranges = fDataSource->GetEntryRanges();
    }
 }
@@ -763,9 +772,8 @@ void RLoopManager::RunDataSourceMT()
    auto runOnRange = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
       ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
       const auto slot = slotRAII.fSlot;
-      InitNodeSlots(nullptr, slot);
+      RDSRangeRAII _{*this, slot, range.first};
       RCallCleanUpTask cleanup(*this, slot);
-      fDataSource->InitSlot(slot, range.first);
       const auto start = range.first;
       const auto end = range.second;
       R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, slot});
@@ -779,7 +787,6 @@ void RLoopManager::RunDataSourceMT()
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      fDataSource->FinalizeSlot(slot);
    };
 
    DSRunRAII _{*fDataSource};
