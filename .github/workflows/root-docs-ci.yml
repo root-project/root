@@ -171,8 +171,7 @@ jobs:
         pwd
         ls -l
         aws s3 sync ${DOC_DIR}/html/ s3://root/doc/${WEB_DIR_NAME}/
-        mv ${DOC_DIR}/html /tmp/html
-        aws s3 sync ${DOC_DIR}/ s3://root/doc/${WEB_DIR_NAME}/
+        aws s3 sync ${DOC_DIR}/ s3://root/doc/${WEB_DIR_NAME}/ --exclude "${DOC_DIR}/html/*"
         aws s3 cp ${TAR_NAME}.gz s3://root/download/
 
     - name: Install Kerberos utilities
@@ -194,7 +193,6 @@ jobs:
       run: |
         echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
         kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
-        mv /tmp/html ${DOC_DIR}/html
         xrdcp -rf ${DOC_DIR}/html/* ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
         rm -r ${DOC_DIR}/html
         xrdcp -rf ${DOC_DIR}/* ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
