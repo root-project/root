@@ -985,7 +985,18 @@ Long64_t TChain::GetEntries() const
       return fProofChain->GetEntries();
    }
    if (fEntries == TTree::kMaxEntries) {
-      const_cast<TChain*>(this)->LoadTree(TTree::kMaxEntries-1);
+      // If the following is true, we are within a recursion about friend,
+      // and `LoadTree` will be no-op.
+      if (kLoadTree & fFriendLockStatus)
+         return fEntries;
+      const auto readEntry = fReadEntry;
+      auto *thisChain = const_cast<TChain *>(this);
+      thisChain->LoadTree(TTree::kMaxEntries - 1);
+      thisChain->InvalidateCurrentTree();
+      if (readEntry >= 0)
+         thisChain->LoadTree(readEntry);
+      else
+         thisChain->fReadEntry = readEntry;
    }
    return fEntries;
 }
@@ -2505,6 +2516,11 @@ void TChain::ResetBranchAddress(TBranch *branch)
 
 void TChain::ResetBranchAddresses()
 {
+   // We already have been visited while recursively looking
+   // through the friends tree, let return
+   if (kResetBranchAddresses & fFriendLockStatus) {
+      return;
+   }
    TIter next(fStatus);
    TChainElement* element = nullptr;
    while ((element = (TChainElement*) next())) {
@@ -2512,6 +2528,15 @@ void TChain::ResetBranchAddresses()
    }
    if (fTree) {
       fTree->ResetBranchAddresses();
+   }
+   if (fFriends) {
+      TFriendLock lock(this, kResetBranchAddresses);
+      for (auto *frEl : TRangeDynCast<TFriendElement>(fFriends)) {
+         auto *frTree = frEl->GetTree();
+         if (frTree) {
+            frTree->ResetBranchAddresses();
+         }
+      }
    }
 }
 

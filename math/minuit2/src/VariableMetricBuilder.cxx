@@ -19,8 +19,6 @@
 #include "Minuit2/MnMachinePrecision.h"
 #include "Minuit2/MnPosDef.h"
 #include "Minuit2/MnParabolaPoint.h"
-#include "Minuit2/LaSum.h"
-#include "Minuit2/LaProd.h"
 #include "Minuit2/MnStrategy.h"
 #include "Minuit2/MnHesse.h"
 #include "Minuit2/MnPrint.h"
@@ -31,8 +29,6 @@
 namespace ROOT {
 
 namespace Minuit2 {
-
-double inner_product(const LAVector &, const LAVector &);
 
 void VariableMetricBuilder::AddResult(std::vector<MinimumState> &result, const MinimumState &state) const
 {

@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
 #include "TArc.h"
+#include "TString.h"
 
 #include <iostream>
 
@@ -91,19 +91,14 @@ TArc *TArc::DrawArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_
 
 void TArc::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TArc::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TArc *";
-   }
-   out<<"arc = new TArc("<<fX1<<","<<fY1<<","<<fR1
-      <<","<<fPhimin<<","<<fPhimax<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "arc",
+                            TString::Format("%g, %g, %g, %g, %g", fX1, fY1, fR1, fPhimin, fPhimax));
 
-   SaveFillAttributes(out,"arc",0,1001);
-   SaveLineAttributes(out,"arc",1,1,1);
+   SaveFillAttributes(out, "arc", 0, 1001);
+   SaveLineAttributes(out, "arc", 1, 1, 1);
 
-   if (GetNoEdges()) out<<"   arc->SetNoEdges();"<<std::endl;
+   if (GetNoEdges())
+      out << "   arc->SetNoEdges();" << std::endl;
 
-   out<<"   arc->Draw();"<<std::endl;
+   out << "   arc->Draw();" << std::endl;
 }

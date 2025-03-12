@@ -136,8 +136,18 @@ TF2::TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmi
    fNpx    = 30;
    fNpy    = 30;
    fContour.Set(0);
-
 }
+
+TF2::TF2(const char *name, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim):
+   TF1(name, xmin, xmax, npar, ndim, EAddToList::kDefault)
+{
+   fYmin   = ymin;
+   fYmax   = ymax;
+   fNpx    = 30;
+   fNpy    = 30;
+   fContour.Set(0);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// F2 constructor using a pointer to a compiled function
@@ -837,51 +847,88 @@ void TF2::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Restore value of function saved at point
+
+void TF2::SetSavedPoint(Int_t point, Double_t value)
+{
+   if (fSave.empty())
+      fSave.resize((fNpx + 1) * (fNpy + 1) + 6);
+   if (point >= 0 && point < (Int_t)fSave.size())
+      fSave[point] = value;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
 void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   TString f2Name(GetName());
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TF2::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TF2 *";
+   TString f2Name = ProvideSaveName(option);
+   out << "   \n";
+   if (!fType)
+      out << "   TF2 *" << f2Name << " = new TF2(\"" << GetName() << "\", \""
+          << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << fXmin << "," << fXmax << "," << fYmin << ","
+          << fYmax << ");\n";
+   else {
+      out << "   TF2 *" << f2Name << " = new TF2(\"" << "*" << GetName() << "\", " << fXmin << "," << fXmax << ","
+          << fYmin << "," << fYmax << "," << GetNpar() << ");\n";
+      SavePrimitiveNameTitle(out, f2Name);
    }
-   if (!fMethodCall) {
-      out<<f2Name.Data()<<" = new TF2("<<quote<<f2Name.Data()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<");"<<std::endl;
-   } else {
-      out<<f2Name.Data()<<" = new TF2("<<quote<<f2Name.Data()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<GetNpar()<<");"<<std::endl;
-   }
-
-   SaveFillAttributes(out, f2Name.Data(), 0, 1001);
-   SaveMarkerAttributes(out, f2Name.Data(), 1, 1, 1);
-   SaveLineAttributes(out, f2Name.Data(), 1, 1, 4);
 
    if (GetNpx() != 30)
-      out<<"   "<<f2Name.Data()<<"->SetNpx("<<GetNpx()<<");"<<std::endl;
+      out << "   " << f2Name << "->SetNpx(" << GetNpx() << ");\n";
    if (GetNpy() != 30)
-      out<<"   "<<f2Name.Data()<<"->SetNpy("<<GetNpy()<<");"<<std::endl;
+      out << "   " << f2Name << "->SetNpy(" << GetNpy() << ");\n";
 
    if (GetChisquare() != 0)
-      out<<"   "<<f2Name.Data()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
+      out << "   " << f2Name << "->SetChisquare(" << GetChisquare() << ");\n";
 
    Double_t parmin, parmax;
-   for (Int_t i=0;i<GetNpar();i++) {
-      out<<"   "<<f2Name.Data()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
-      out<<"   "<<f2Name.Data()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<std::endl;
-      GetParLimits(i,parmin,parmax);
-      out<<"   "<<f2Name.Data()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
+   for (Int_t i = 0; i < GetNpar(); i++) {
+      out << "   " << f2Name << "->SetParameter(" << i << "," << GetParameter(i) << ");\n";
+      out << "   " << f2Name << "->SetParError(" << i << "," << GetParError(i) << ");\n";
+      GetParLimits(i, parmin, parmax);
+      out << "   " << f2Name << "->SetParLimits(" << i << "," << parmin << "," << parmax << ");\n";
    }
-   out<<"   "<<f2Name.Data()<<"->Draw("<<quote<<option<<quote<<");"<<std::endl;
 
-   if (GetXaxis()) GetXaxis()->SaveAttributes(out, f2Name.Data(), "->GetXaxis()");
-   if (GetYaxis()) GetYaxis()->SaveAttributes(out, f2Name.Data(), "->GetYaxis()");
-   if (GetZaxis()) GetZaxis()->SaveAttributes(out, f2Name.Data(), "->GetZaxis()");
+   Bool_t saved = kFALSE;
+
+   if ((fType != EFType::kFormula) && ((Int_t) fSave.size() != ((GetNpx() + 1) * (GetNpy() + 1) + 6))) {
+      saved = kTRUE;
+      Save(fXmin, fXmax, fYmin, fYmax, 0, 0);
+   }
+
+   if (!fSave.empty()) {
+      TString arrs = SavePrimitiveArray(out, f2Name, fSave.size(), fSave.data());
+      out << "   for (int n = 0; n < " << fSave.size() << "; n++)\n";
+      out << "      " << f2Name << "->SetSavedPoint(n, " << arrs << "[n]);\n";
+   }
+
+   if (saved)
+      fSave.clear();
+
+   if (fContour.fN > 0) {
+      TString arrname;
+      if (fContour.fArray[0] != -9999)
+         arrname = SavePrimitiveArray(out, f2Name, fContour.fN, fContour.GetArray());
+      out << "   " << f2Name << "->SetContour(" << fContour.fN;
+      if (!arrname.IsNull())
+         out << ", " << arrname;
+      out << ");\n";
+   }
+
+   SaveFillAttributes(out, f2Name, -1, 0);
+   SaveMarkerAttributes(out, f2Name, -1, -1, -1);
+   SaveLineAttributes(out, f2Name, -1, -1, -1);
+
+   if (fHistogram && !strstr(option, "same")) {
+      GetXaxis()->SaveAttributes(out, f2Name, "->GetXaxis()");
+      GetYaxis()->SaveAttributes(out, f2Name, "->GetYaxis()");
+      GetZaxis()->SaveAttributes(out, f2Name, "->GetZaxis()");
+   }
+
+   if (!option || !strstr(option, "nodraw"))
+      out << "   " << f2Name << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the number and values of contour levels

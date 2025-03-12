@@ -46,6 +46,7 @@ class hierarchies (watch out for overlaps).
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 
 #include "Varargs.h"
 #include "snprintf.h"
@@ -770,13 +771,46 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
 void TObject::SavePrimitiveConstructor(std::ostream &out, TClass *cl, const char *variable_name, const char *constructor_agrs, Bool_t empty_line)
 {
    if (empty_line)
-      out << "   " << std::endl;
+      out << "   \n";
 
    out << "   ";
    if (!gROOT->ClassSaved(cl))
       out << cl->GetName() << " *";
-   out << variable_name << " = new " << cl->GetName() << "(" << constructor_agrs << ");" << std::endl;
+   out << variable_name << " = new " << cl->GetName() << "(" << constructor_agrs << ");\n";
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save array in the output stream "out".
+/// Create unique variable name based on prefix value
+
+TString TObject::SavePrimitiveArray(std::ostream &out, const char *prefix, Int_t len, Double_t *arr, Bool_t empty_line)
+{
+   thread_local int arrid = 0;
+
+   TString arrname = TString::Format("%s_darr%d", prefix, arrid++);
+
+   if (empty_line)
+      out << "   \n";
+
+   out << "   Double_t " << arrname << "[" << len << "] = { ";
+   if (len > 0) {
+      const auto old_precision{out.precision()};
+      constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
+      out << std::setprecision(max_precision);
+      for (Int_t i = 0; i < len-1; i++) {
+         out << arr[i] << ",";
+         if (i && (i % 16 == 0))
+            out << "\n   ";
+         else
+            out << " ";
+      }
+      out << arr[len - 1];
+      out << std::setprecision(old_precision);
+   }
+   out << " };" << std::endl;
+   return arrname;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save a primitive as a C++ statement(s) on output stream "out".

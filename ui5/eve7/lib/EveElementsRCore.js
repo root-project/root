@@ -239,7 +239,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
          res.geom.push(mesh);
 
-         console.log(body, mesh, res);
+         // console.log(body, mesh, res);
       }
 
       extractIndex(instance)
@@ -799,12 +799,12 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          if (obj && rnr_data && rnr_data.vtxBuff) {
             return false;
          }
-         console.log("test rnr failed for obj =  ", obj);
-         console.log("test rnr failed for rnr_data =  ", rnr_data);
-         console.log("test rnr failed for rnr_data vtcBuff =  ", rnr_data.vtxBuff);
+         // console.log("test rnr failed for obj =  ", obj);
+         // console.log("test rnr failed for rnr_data =  ", rnr_data);
+         // console.log("test rnr failed for rnr_data vtcBuff =  ", rnr_data.vtxBuff);
 
          let cnt = this[name] || 0;
-         if (cnt++ < 5) console.log(name, obj, rnr_data);
+         if (cnt++ < 1) console.log(name, obj, rnr_data);
          this[name] = cnt;
          return true;
       }

@@ -340,7 +340,7 @@ TEST(RNTupleModel, Expire)
    auto token = model->GetToken("struct");
    EXPECT_FLOAT_EQ(1.0, model->GetDefaultEntry().GetPtr<CustomStruct>(token)->a);
 
-   EXPECT_TRUE(model->GetRegisteredSubfields().empty());
+   EXPECT_TRUE(model->GetRegisteredSubfieldNames().empty());
    EXPECT_TRUE(model->GetDescription().empty());
 
    EXPECT_THROW(model->MakeField<float>("E"), ROOT::RException);

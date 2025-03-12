@@ -13,16 +13,29 @@
 
 #include "clang/AST/CXXInheritance.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclAccessPair.h"
+#include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclarationName.h"
+#include "clang/AST/Expr.h"
+#include "clang/AST/ExprCXX.h"
 #include "clang/AST/GlobalDecl.h"
 #include "clang/AST/Mangle.h"
+#include "clang/AST/NestedNameSpecifier.h"
 #include "clang/AST/QualTypeNames.h"
 #include "clang/AST/RecordLayout.h"
+#include "clang/AST/Stmt.h"
+#include "clang/AST/Type.h"
 #include "clang/Basic/DiagnosticSema.h"
 #include "clang/Basic/Linkage.h"
+#include "clang/Basic/OperatorKinds.h"
+#include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/Specifiers.h"
 #include "clang/Basic/Version.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Sema/Lookup.h"
+#include "clang/Sema/Overload.h"
+#include "clang/Sema/Ownership.h"
 #include "clang/Sema/Sema.h"
 #if CLANG_VERSION_MAJOR >= 19
 #include "clang/Sema/Redeclaration.h"
@@ -208,6 +221,11 @@ namespace Cpp {
   bool IsClass(TCppScope_t scope) {
     Decl *D = static_cast<Decl*>(scope);
     return isa<CXXRecordDecl>(D);
+  }
+
+  bool IsFunction(TCppScope_t scope) {
+    Decl* D = static_cast<Decl*>(scope);
+    return isa<FunctionDecl>(D);
   }
 
   bool IsFunctionPointerType(TCppType_t type) {
@@ -877,8 +895,19 @@ namespace Cpp {
   TCppType_t GetFunctionReturnType(TCppFunction_t func)
   {
     auto *D = (clang::Decl *) func;
-    if (auto* FD = llvm::dyn_cast_or_null<clang::FunctionDecl>(D))
-      return FD->getReturnType().getAsOpaquePtr();
+    if (auto* FD = llvm::dyn_cast_or_null<clang::FunctionDecl>(D)) {
+      QualType Type = FD->getReturnType();
+      if (Type->isUndeducedAutoType() && IsTemplatedFunction(FD) &&
+          !FD->isDefined()) {
+#ifdef CPPINTEROP_USE_CLING
+        cling::Interpreter::PushTransactionRAII RAII(&getInterp());
+#endif
+        getSema().InstantiateFunctionDefinition(SourceLocation(), FD, true,
+                                                true);
+        Type = FD->getReturnType();
+      }
+      return Type.getAsOpaquePtr();
+    }
 
     if (auto* FD = llvm::dyn_cast_or_null<clang::FunctionTemplateDecl>(D))
       return (FD->getTemplatedDecl())->getReturnType().getAsOpaquePtr();
@@ -1026,62 +1055,89 @@ namespace Cpp {
         funcs.push_back(Found);
   }
 
+  // Adapted from inner workings of Sema::BuildCallExpr
   TCppFunction_t
-  BestTemplateFunctionMatch(const std::vector<TCppFunction_t>& candidates,
+  BestOverloadFunctionMatch(const std::vector<TCppFunction_t>& candidates,
                             const std::vector<TemplateArgInfo>& explicit_types,
                             const std::vector<TemplateArgInfo>& arg_types) {
-
-    for (const auto& candidate : candidates) {
-      auto* TFD = (FunctionTemplateDecl*)candidate;
-      clang::TemplateParameterList* tpl = TFD->getTemplateParameters();
-
-      // template parameter size does not match
-      if (tpl->size() < explicit_types.size())
-        continue;
-
-      // right now uninstantiated functions give template typenames instead of
-      // actual types. We make this match solely based on count
-
-      const FunctionDecl* func = TFD->getTemplatedDecl();
+    auto& S = getSema();
+    auto& C = S.getASTContext();
 
 #ifdef CPPINTEROP_USE_CLING
-      if (func->getNumParams() > arg_types.size())
-        continue;
-#else // CLANG_REPL
-      if (func->getMinRequiredArguments() > arg_types.size())
-        continue;
+    cling::Interpreter::PushTransactionRAII RAII(&getInterp());
 #endif
 
-      // TODO(aaronj0) : first score based on the type similarity before forcing
-      // instantiation.
+    // The overload resolution interfaces in Sema require a list of expressions.
+    // However, unlike handwritten C++, we do not always have a expression.
+    // Here we synthesize a placeholder expression to be able to use
+    // Sema::AddOverloadCandidate. Made up expressions are fine because the
+    // interface uses the list size and the expression types.
+    struct WrapperExpr : public OpaqueValueExpr {
+      WrapperExpr() : OpaqueValueExpr(clang::Stmt::EmptyShell()) {}
+    };
+    auto* Exprs = new WrapperExpr[arg_types.size()];
+    llvm::SmallVector<Expr*> Args;
+    Args.reserve(arg_types.size());
+    size_t idx = 0;
+    for (auto i : arg_types) {
+      QualType Type = QualType::getFromOpaquePtr(i.m_Type);
+      ExprValueKind ExprKind = ExprValueKind::VK_PRValue;
+      if (Type->isReferenceType())
+        ExprKind = ExprValueKind::VK_LValue;
 
-      TCppFunction_t instantiated =
-          InstantiateTemplate(candidate, arg_types.data(), arg_types.size());
-      if (instantiated)
-        return instantiated;
-
-      // Force the instantiation with template params in case of no args
-      // maybe steer instantiation better with arg set returned from
-      // TemplateProxy?
-      instantiated = InstantiateTemplate(candidate, explicit_types.data(),
-                                          explicit_types.size());
-      if (instantiated)
-        return instantiated;
-
-      // join explicit and arg_types
-      std::vector<TemplateArgInfo> total_arg_set;
-      total_arg_set.reserve(explicit_types.size() + arg_types.size());
-      total_arg_set.insert(total_arg_set.end(), explicit_types.begin(),
-                           explicit_types.end());
-      total_arg_set.insert(total_arg_set.end(), arg_types.begin(),
-                           arg_types.end());
-
-      instantiated = InstantiateTemplate(candidate, total_arg_set.data(),
-                                         total_arg_set.size());
-      if (instantiated)
-        return instantiated;
+      new (&Exprs[idx]) OpaqueValueExpr(SourceLocation::getFromRawEncoding(1),
+                                        Type.getNonReferenceType(), ExprKind);
+      Args.push_back(&Exprs[idx]);
+      ++idx;
     }
-    return nullptr;
+
+    // Create a list of template arguments.
+    llvm::SmallVector<TemplateArgument> TemplateArgs;
+    TemplateArgs.reserve(explicit_types.size());
+    for (auto explicit_type : explicit_types) {
+      QualType ArgTy = QualType::getFromOpaquePtr(explicit_type.m_Type);
+      if (explicit_type.m_IntegralValue) {
+        // We have a non-type template parameter. Create an integral value from
+        // the string representation.
+        auto Res = llvm::APSInt(explicit_type.m_IntegralValue);
+        Res = Res.extOrTrunc(C.getIntWidth(ArgTy));
+        TemplateArgs.push_back(TemplateArgument(C, Res, ArgTy));
+      } else {
+        TemplateArgs.push_back(ArgTy);
+      }
+    }
+
+    TemplateArgumentListInfo ExplicitTemplateArgs{};
+    for (auto TA : TemplateArgs)
+      ExplicitTemplateArgs.addArgument(
+          S.getTrivialTemplateArgumentLoc(TA, QualType(), SourceLocation()));
+
+    OverloadCandidateSet Overloads(
+        SourceLocation(), OverloadCandidateSet::CandidateSetKind::CSK_Normal);
+
+    for (void* i : candidates) {
+      Decl* D = static_cast<Decl*>(i);
+      if (auto* FD = dyn_cast<FunctionDecl>(D)) {
+        S.AddOverloadCandidate(FD, DeclAccessPair::make(FD, FD->getAccess()),
+                               Args, Overloads);
+      } else if (auto* FTD = dyn_cast<FunctionTemplateDecl>(D)) {
+        // AddTemplateOverloadCandidate is causing a memory leak
+        // It is a known bug at clang
+        // call stack: AddTemplateOverloadCandidate -> MakeDeductionFailureInfo
+        // source:
+        // https://github.com/llvm/llvm-project/blob/release/19.x/clang/lib/Sema/SemaOverload.cpp#L731-L756
+        S.AddTemplateOverloadCandidate(
+            FTD, DeclAccessPair::make(FTD, FTD->getAccess()),
+            &ExplicitTemplateArgs, Args, Overloads);
+      }
+    }
+
+    OverloadCandidateSet::iterator Best;
+    Overloads.BestViableFunction(S, SourceLocation(), Best);
+
+    FunctionDecl* Result = Best != Overloads.end() ? Best->Function : nullptr;
+    delete[] Exprs;
+    return Result;
   }
 
   // Gets the AccessSpecifier of the function and checks if it is equal to
@@ -1493,6 +1549,30 @@ namespace Cpp {
     return QT.isPODType(getASTContext());
   }
 
+  bool IsPointerType(TCppType_t type) {
+    QualType QT = QualType::getFromOpaquePtr(type);
+    return QT->isPointerType();
+  }
+
+  TCppType_t GetPointeeType(TCppType_t type) {
+    if (!IsPointerType(type))
+      return nullptr;
+    QualType QT = QualType::getFromOpaquePtr(type);
+    return QT->getPointeeType().getAsOpaquePtr();
+  }
+
+  bool IsReferenceType(TCppType_t type) {
+    QualType QT = QualType::getFromOpaquePtr(type);
+    return QT->isReferenceType();
+  }
+
+  TCppType_t GetNonReferenceType(TCppType_t type) {
+    if (!IsReferenceType(type))
+      return nullptr;
+    QualType QT = QualType::getFromOpaquePtr(type);
+    return QT.getNonReferenceType().getAsOpaquePtr();
+  }
+
   TCppType_t GetUnderlyingType(TCppType_t type)
   {
     QualType QT = QualType::getFromOpaquePtr(type);
@@ -1675,6 +1755,9 @@ namespace Cpp {
       //
       ASTContext& C = FD->getASTContext();
       PrintingPolicy Policy(C.getPrintingPolicy());
+#if CLANG_VERSION_MAJOR > 16
+      Policy.SuppressElaboration = true;
+#endif
       refType = kNotReference;
       if (QT->isRecordType() && forArgument) {
         get_type_as_string(QT, type_name, C, Policy);
@@ -1859,10 +1942,22 @@ namespace Cpp {
       {
         std::string name;
         {
-          llvm::raw_string_ostream stream(name);
+          std::string complete_name;
+          llvm::raw_string_ostream stream(complete_name);
           FD->getNameForDiagnostic(stream,
                                    FD->getASTContext().getPrintingPolicy(),
                                    /*Qualified=*/false);
+
+          // insert space between template argument list and the function name
+          // this is require if the function is `operator<`
+          // `operator<<type1, type2, ...>` is invalid syntax
+          // whereas `operator< <type1, type2, ...>` is valid
+          std::string simple_name = FD->getNameAsString();
+          size_t idx = complete_name.find(simple_name, 0) + simple_name.size();
+          std::string name_without_template_args = complete_name.substr(0, idx);
+          std::string template_args = complete_name.substr(idx);
+          name = name_without_template_args +
+                 (template_args.empty() ? "" : " " + template_args);
         }
         callbuf << name;
       }
@@ -1989,18 +2084,22 @@ namespace Cpp {
         EReferenceType refType = kNotReference;
         bool isPointer = false;
 
+        std::ostringstream typedefbuf;
+        std::ostringstream callbuf;
+
+        collect_type_info(FD, QT, typedefbuf, callbuf, type_name, refType,
+                          isPointer, indent_level, false);
+
+        buf << typedefbuf.str();
+
         buf << "if (ret) {\n";
         ++indent_level;
         {
-          std::ostringstream typedefbuf;
-          std::ostringstream callbuf;
           //
           //  Write the placement part of the placement new.
           //
           indent(callbuf, indent_level);
           callbuf << "new (ret) ";
-          collect_type_info(FD, QT, typedefbuf, callbuf, type_name, refType,
-                            isPointer, indent_level, false);
           //
           //  Write the type part of the placement new.
           //

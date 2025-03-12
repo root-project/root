@@ -78,7 +78,7 @@ public:
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetLength() const { return fArrayLength; }
    size_t GetValueSize() const final { return fItemSize * fArrayLength; }
-   size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
+   size_t GetAlignment() const final { return fSubfields[0]->GetAlignment(); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 

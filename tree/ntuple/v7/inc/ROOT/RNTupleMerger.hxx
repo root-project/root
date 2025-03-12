@@ -64,7 +64,7 @@ class RClusterPool;
 ///   - "rntuple.ErrBehavior=(Abort|Skip|...)"   -> sets fErrBehavior
 ///   - "rntuple.ExtraVerbose"                   -> sets fExtraVerbose to true
 /// Rules about the string-based options:
-///   1. there must be no space between the separators (i.e. `:` and `=`)
+///   1. there must be no space between the separators (i.e. `.` and `=`)
 ///   2. all string matching is case insensitive
 struct RNTupleMergeOptions {
    /// If fCompressionSettings is empty (the default), the merger will not change the
@@ -91,14 +91,14 @@ class RNTupleMerger final {
    friend class ROOT::RNTuple;
 
    std::unique_ptr<RPagePersistentSink> fDestination;
-   std::unique_ptr<RPageAllocator> fPageAlloc;
+   std::unique_ptr<ROOT::Internal::RPageAllocator> fPageAlloc;
    std::optional<TTaskGroup> fTaskGroup;
    std::unique_ptr<RNTupleModel> fModel;
 
-   void MergeCommonColumns(RClusterPool &clusterPool, ROOT::DescriptorId_t clusterId,
+   void MergeCommonColumns(RClusterPool &clusterPool, const RClusterDescriptor &clusterDesc,
                            std::span<const RColumnMergeInfo> commonColumns,
-                           const RCluster::ColumnSet_t &commonColumnSet, RSealedPageMergeData &sealedPageData,
-                           const RNTupleMergeData &mergeData);
+                           const RCluster::ColumnSet_t &commonColumnSet, std::size_t nCommonColumnsInCluster,
+                           RSealedPageMergeData &sealedPageData, const RNTupleMergeData &mergeData);
 
    void MergeSourceClusters(RPageSource &source, std::span<const RColumnMergeInfo> commonColumns,
                             std::span<const RColumnMergeInfo> extraDstColumns, RNTupleMergeData &mergeData);
@@ -113,6 +113,8 @@ public:
    explicit RNTupleMerger(std::unique_ptr<RPagePersistentSink> destination);
 
    /// Merge a given set of sources into the destination.
+   /// Note that sources with an empty schema (i.e. created from a Model that had no fields added to it) are in
+   /// general valid (depending on the merging mode) but add no entries to the destination.
    RResult<void> Merge(std::span<RPageSource *> sources, const RNTupleMergeOptions &mergeOpts = RNTupleMergeOptions());
 
 }; // end of class RNTupleMerger

@@ -525,34 +525,27 @@ void TPaveStats::Paint(Option_t *option)
 
 void TPaveStats::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   Bool_t saved = gROOT->ClassSaved(TPaveStats::Class());
-   if (saved) {
-      out<<"   ";
-   } else {
-      out<<"   "<<ClassName()<<" *";
-   }
-   if (fOption.Contains("NDC")) {
-      out<<"ptstats = new "<<ClassName()<<"("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
-      <<","<<quote<<fOption<<quote<<");"<<std::endl;
-   } else {
-      out<<"ptstats = new "<<ClassName()<<"("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-      <<","<<quote<<fOption<<quote<<");"<<std::endl;
-   }
-   if (strcmp(GetName(),"TPave")) {
-      out<<"   ptstats->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
-   }
-   if (fBorderSize != 4) {
-      out<<"   ptstats->SetBorderSize("<<fBorderSize<<");"<<std::endl;
-   }
-   SaveFillAttributes(out,"ptstats",19,1001);
-   SaveLineAttributes(out,"ptstats",1,1,1);
-   SaveTextAttributes(out,"ptstats",22,0,1,62,0);
-   SaveLines(out,"ptstats",saved);
-   out<<"   ptstats->SetOptStat("<<GetOptStat()<<");"<<std::endl;
-   out<<"   ptstats->SetOptFit("<<GetOptFit()<<");"<<std::endl;
-   out<<"   ptstats->Draw();"<<std::endl;
+   TString args;
+   if (fOption.Contains("NDC"))
+      args.Form("%g, %g, %g, %g, \"%s\"", fX1NDC, fY1NDC, fX2NDC, fY2NDC,
+                TString(fOption).ReplaceSpecialCppChars().Data());
+   else
+      args.Form("%g, %g, %g, %g, \"%s\"", fX1, fY1, fX2, fY2, TString(fOption).ReplaceSpecialCppChars().Data());
+
+   SavePrimitiveConstructor(out, Class(), "ptstats", args);
+
+   if (strcmp(GetName(), "TPave"))
+      out << "   ptstats->SetName(\"" << GetName() << "\");" << std::endl;
+   if (fBorderSize != 4)
+      out << "   ptstats->SetBorderSize(" << fBorderSize << ");" << std::endl;
+
+   SaveFillAttributes(out, "ptstats", 19, 1001);
+   SaveLineAttributes(out, "ptstats", 1, 1, 1);
+   SaveTextAttributes(out, "ptstats", 22, 0, 1, 62, 0);
+   SaveLines(out, "ptstats", kTRUE);
+   out << "   ptstats->SetOptStat(" << GetOptStat() << ");" << std::endl;
+   out << "   ptstats->SetOptFit(" << GetOptFit() << ");" << std::endl;
+   out << "   ptstats->Draw();" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

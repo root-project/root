@@ -24,7 +24,10 @@ private:
 public:
    ROperator_Relu(){}
    ROperator_Relu(std::string nameX, std::string nameY):
-      fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){}
+      fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
+      }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;
@@ -35,7 +38,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
       if (model.CheckIfTensorAlreadyExist(fNX) == false){   //input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA SOFIE Relu Op Input Tensor " + fNX + " is not found in model");
       }

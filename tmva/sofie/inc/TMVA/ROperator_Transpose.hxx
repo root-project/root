@@ -32,10 +32,14 @@ public:
    ROperator_Transpose(){}
    ROperator_Transpose(std::vector<int_t> attr_perm, std::string nameData, std::string nameOutput):
       fAttrPerm(attr_perm), fNData(UTILITY::Clean_name(nameData)), fNOutput(UTILITY::Clean_name(nameOutput)) {
+            fInputTensorNames = { fNData };
+            fOutputTensorNames = { fNOutput };
    }
 
    ROperator_Transpose(std::string nameData, std::string nameOutput):
       fNData(UTILITY::Clean_name(nameData)), fNOutput(UTILITY::Clean_name(nameOutput)) {
+         fInputTensorNames = { fNData };
+         fOutputTensorNames = { fNOutput };
    }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
@@ -58,9 +62,9 @@ public:
    }
 
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
       if (model.CheckIfTensorAlreadyExist(fNData) == false){   //input must be a graph input, or already initialized intermediate tensor
-         std::cout<<"Input tensor for transspose: "<<fNData<<'\n';
+         std::cout<<"Input tensor for transpose: "<<fNData<<'\n';
          throw std::runtime_error("TMVA SOFIE Tranpose Op Input Tensor is not found in model");
       }
       fShapeData = model.GetTensorShape(fNData);

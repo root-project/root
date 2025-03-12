@@ -1032,30 +1032,21 @@ void TLegend::RecursiveRemove(TObject *obj)
 
 void TLegend::SavePrimitive(std::ostream &out, Option_t* )
 {
+   SavePrimitiveConstructor(out, Class(), "leg",
+                            TString::Format("%g, %g, %g, %g, nullptr, \"%s\"", GetX1NDC(), GetY1NDC(), GetX2NDC(),
+                                            GetY2NDC(), TString(fOption).ReplaceSpecialCppChars().Data()));
 
-   out << "   " << std::endl;
-   char quote = '"';
-   if ( gROOT->ClassSaved( TLegend::Class() ) ) {
-      out << "   ";
-   } else {
-      out << "   TLegend *";
-   }
-   // note, we can always use NULL header, since its included in primitives
-   out << "leg = new TLegend("<<GetX1NDC()<<","<<GetY1NDC()<<","
-       <<GetX2NDC()<<","<<GetY2NDC()<<","
-       << "NULL" << "," <<quote<< fOption <<quote<<");" << std::endl;
-   if (fBorderSize != 4) {
-      out<<"   leg->SetBorderSize("<<fBorderSize<<");"<<std::endl;
-   }
-   SaveTextAttributes(out,"leg",12,0,1,42,0);
-   SaveLineAttributes(out,"leg",-1,-1,-1);
-   SaveFillAttributes(out,"leg",-1,-1);
-   if ( fPrimitives ) {
+   if (fBorderSize != 4)
+      out << "   leg->SetBorderSize(" << fBorderSize << ");" << std::endl;
+   SaveTextAttributes(out, "leg", 12, 0, 1, 42, 0);
+   SaveLineAttributes(out, "leg", -1, -1, -1);
+   SaveFillAttributes(out, "leg", -1, -1);
+   if (fPrimitives) {
       TIter next(fPrimitives);
-      TLegendEntry *entry;
-      while (( entry = (TLegendEntry *)next() )) entry->SaveEntry(out,"leg");
+      while (auto entry = static_cast<TLegendEntry *>(next()))
+         entry->SaveEntry(out, "leg");
    }
-   out << "   leg->Draw();"<<std::endl;
+   out << "   leg->Draw();" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

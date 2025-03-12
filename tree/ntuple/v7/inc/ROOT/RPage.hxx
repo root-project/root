@@ -24,7 +24,6 @@
 #include <memory>
 
 namespace ROOT {
-namespace Experimental {
 namespace Internal {
 
 class RPageAllocator;
@@ -32,7 +31,7 @@ class RPageRef;
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RPage
+\class ROOT::Internal::RPage
 \ingroup NTuple
 \brief A page is a slice of a column that is mapped into memory
 
@@ -125,11 +124,8 @@ public:
    std::uint32_t GetMaxElements() const { return fMaxElements; }
    ROOT::NTupleSize_t GetGlobalRangeFirst() const { return fRangeFirst; }
    ROOT::NTupleSize_t GetGlobalRangeLast() const { return fRangeFirst + ROOT::NTupleSize_t(fNElements) - 1; }
-   ROOT::NTupleSize_t GetClusterRangeFirst() const { return fRangeFirst - fClusterInfo.GetIndexOffset(); }
-   ROOT::NTupleSize_t GetClusterRangeLast() const
-   {
-      return GetClusterRangeFirst() + ROOT::NTupleSize_t(fNElements) - 1;
-   }
+   ROOT::NTupleSize_t GetLocalRangeFirst() const { return fRangeFirst - fClusterInfo.GetIndexOffset(); }
+   ROOT::NTupleSize_t GetLocalRangeLast() const { return GetLocalRangeFirst() + ROOT::NTupleSize_t(fNElements) - 1; }
    const RClusterInfo& GetClusterInfo() const { return fClusterInfo; }
 
    bool Contains(ROOT::NTupleSize_t globalIndex) const
@@ -184,7 +180,6 @@ public:
 }; // class RPage
 
 } // namespace Internal
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

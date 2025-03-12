@@ -13,7 +13,6 @@
 #include "Minuit2/MnConfig.h"
 #include "Minuit2/MnMatrix.h"
 #include "Minuit2/MnPrint.h"
-#include "Minuit2/LaSum.h"
 
 #include <memory>
 

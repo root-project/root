@@ -209,19 +209,20 @@ protected:
 
    // use to update fFriendLockStatus
    enum ELockStatusBits {
-      kFindBranch        = BIT(0),
-      kFindLeaf          = BIT(1),
-      kGetAlias          = BIT(2),
-      kGetBranch         = BIT(3),
-      kGetEntry          = BIT(4),
-      kGetEntryWithIndex = BIT(5),
-      kGetFriend         = BIT(6),
-      kGetFriendAlias    = BIT(7),
-      kGetLeaf           = BIT(8),
-      kLoadTree          = BIT(9),
-      kPrint             = BIT(10),
-      kRemoveFriend      = BIT(11),
-      kSetBranchStatus   = BIT(12)
+      kFindBranch           = BIT(0),
+      kFindLeaf             = BIT(1),
+      kGetAlias             = BIT(2),
+      kGetBranch            = BIT(3),
+      kGetEntry             = BIT(4),
+      kGetEntryWithIndex    = BIT(5),
+      kGetFriend            = BIT(6),
+      kGetFriendAlias       = BIT(7),
+      kGetLeaf              = BIT(8),
+      kLoadTree             = BIT(9),
+      kPrint                = BIT(10),
+      kRemoveFriend         = BIT(11),
+      kSetBranchStatus      = BIT(12),
+      kResetBranchAddresses = BIT(13)
    };
 
 public:

@@ -20,6 +20,8 @@ Classes used for fitting (regression analysis) and estimation of parameter value
 
 @ingroup MathCore
 
+@see ROOT::Math::MinimizerOptions::SetDefaultMinimizer
+
 */
 
 #include "Fit/BinData.h"
@@ -359,7 +361,8 @@ public:
 
 
    /**
-       Set the fitted function (model function) from a parametric function interface
+       Set the fitted function (model function) from a parametric function interface.
+       @param useGradient if true, the minimizer uses the gradient information provided by the user, otherwise a numerical gradient is computed and used.
    */
    void  SetFunction(const IModelFunction & func, bool useGradient = false);
 

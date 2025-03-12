@@ -274,18 +274,12 @@ void TAttLine::ResetAttLine(Option_t *)
 
 void TAttLine::SaveLineAttributes(std::ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t widdef)
 {
-   if (fLineColor != coldef) {
-      if (TColor::SaveColor(out, fLineColor))
-         out<<"   "<<name<<"->SetLineColor(ci);" << std::endl;
-      else
-         out<<"   "<<name<<"->SetLineColor("<<fLineColor<<");"<<std::endl;
-   }
-   if (fLineStyle != stydef) {
-      out<<"   "<<name<<"->SetLineStyle("<<fLineStyle<<");"<<std::endl;
-   }
-   if (fLineWidth != widdef) {
-      out<<"   "<<name<<"->SetLineWidth("<<fLineWidth<<");"<<std::endl;
-   }
+   if (fLineColor != coldef)
+      out << "   " << name << "->SetLineColor(" << TColor::SavePrimitiveColor(fLineColor) << ");\n";
+   if (fLineStyle != stydef)
+      out << "   " << name << "->SetLineStyle(" << fLineStyle << ");\n";
+   if (fLineWidth != widdef)
+      out << "   " << name << "->SetLineWidth(" << fLineWidth << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -297,7 +291,7 @@ void TAttLine::SetLineAttributes()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set a transparent line color. 
+/// Set a transparent line color.
 /// \param lcolor defines the line color
 /// \param lalpha defines the percentage of opacity from 0. (fully transparent) to 1. (fully opaque).
 /// \note lalpha is ignored (treated as 1) if the TCanvas has no GL support activated.

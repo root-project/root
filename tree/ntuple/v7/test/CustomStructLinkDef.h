@@ -23,10 +23,19 @@
 #pragma link C++ class LowPrecisionFloats+;
 
 #pragma link C++ class EdmWrapper<CustomStruct> +;
+#pragma link C++ class EdmHash < 1> + ;
 
 #pragma link C++ class DataVector < int, double> + ;
 #pragma link C++ class DataVector < int, float> + ;
 #pragma link C++ class DataVector < bool, std::vector < unsigned int>> + ;
+#pragma link C++ class DataVector < int, double> ::Inner + ;
+#pragma link C++ class DataVector < int, double> ::Inner + ;
+#pragma link C++ class DataVector < int, float> ::Inner + ;
+#pragma link C++ class DataVector < int, float> ::Inner + ;
+#pragma link C++ class DataVector < int, double> ::Nested < int, double> + ;
+#pragma link C++ class DataVector < int, double> ::Nested < int, float> + ;
+#pragma link C++ class DataVector < int, float> ::Nested < int, double> + ;
+#pragma link C++ class DataVector < int, float> ::Nested < int, float> + ;
 #pragma link C++ class InnerCV < const int, const volatile int, volatile const int, volatile int> + ;
 #pragma link C++ class IntegerTemplates < 0, 0> + ;
 #pragma link C++ class IntegerTemplates < -1, 1> + ;

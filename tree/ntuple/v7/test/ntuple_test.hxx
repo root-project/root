@@ -74,8 +74,8 @@ using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
 using RNTupleAtomicCounter = ROOT::Experimental::Detail::RNTupleAtomicCounter;
 using RNTupleAtomicTimer = ROOT::Experimental::Detail::RNTupleAtomicTimer;
 using RNTupleCalcPerf = ROOT::Experimental::Detail::RNTupleCalcPerf;
-using RNTupleCompressor = ROOT::Experimental::Internal::RNTupleCompressor;
-using RNTupleDecompressor = ROOT::Experimental::Internal::RNTupleDecompressor;
+using RNTupleCompressor = ROOT::Internal::RNTupleCompressor;
+using RNTupleDecompressor = ROOT::Internal::RNTupleDecompressor;
 using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
 using RNTupleFillStatus = ROOT::Experimental::RNTupleFillStatus;
 using RNTupleDescriptorBuilder = ROOT::Experimental::Internal::RNTupleDescriptorBuilder;
@@ -97,9 +97,9 @@ using RNTuplePlainCounter = ROOT::Experimental::Detail::RNTuplePlainCounter;
 using RNTuplePlainTimer = ROOT::Experimental::Detail::RNTuplePlainTimer;
 using RNTupleProcessor = ROOT::Experimental::RNTupleProcessor;
 using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
-using RPage = ROOT::Experimental::Internal::RPage;
-using RPageAllocatorHeap = ROOT::Experimental::Internal::RPageAllocatorHeap;
-using RPagePool = ROOT::Experimental::Internal::RPagePool;
+using RPage = ROOT::Internal::RPage;
+using RPageAllocatorHeap = ROOT::Internal::RPageAllocatorHeap;
+using RPagePool = ROOT::Internal::RPagePool;
 using RPageSink = ROOT::Experimental::Internal::RPageSink;
 using RPageSinkBuf = ROOT::Experimental::Internal::RPageSinkBuf;
 using RPageSinkFile = ROOT::Experimental::Internal::RPageSinkFile;
@@ -113,7 +113,7 @@ using EContainerFormat = RNTupleFileWriter::EContainerFormat;
 template <typename T>
 using RNTupleView = ROOT::Experimental::RNTupleView<T>;
 
-using ROOT::Experimental::Internal::MakeUninitArray;
+using ROOT::Internal::MakeUninitArray;
 
 /**
  * An RAII wrapper around an open temporary file on disk. It cleans up the guarded file when the wrapper object

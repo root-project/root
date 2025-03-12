@@ -37,6 +37,12 @@ ROOT_OBJECT_LIBRARY(MetaCling
   TClingValue.cxx
 )
 
+# This directory contains files that include llvm, which can give warnings.
+if(NOT MSVC)
+  target_compile_options(MetaCling PRIVATE -Wno-error)
+endif()
+
+
 # Register the llvm include directories after clangs. This instructs the compiler to resolve
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
 # and we have installed clang headers, too.
@@ -118,10 +124,6 @@ ROOT_LINKER_LIBRARY(Cling
 
 # When these two link at the same time, they can exhaust the RAM on many machines, since they both link against llvm.
 add_dependencies(Cling rootcling_stage1)
-
-if(testing)
-  set_target_properties(CppInterOpUnitTests PROPERTIES EXCLUDE_FROM_ALL OFF)
-endif()
 
 if(MSVC)
   set_target_properties(Cling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)

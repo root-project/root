@@ -250,9 +250,11 @@ struct SnapshotHelperArgs {
    std::string fTreeName;
    std::vector<std::string> fOutputColNames;
    ROOT::RDF::RSnapshotOptions fOptions;
+   RDFDetail::RLoopManager *fLoopManager;
+   bool fToNTuple;
 };
 
-// Snapshot action
+// SnapshotTTree action
 template <typename... ColTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperArgs> &snapHelperArgs,
@@ -271,20 +273,46 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
       isDefine[i] = colRegister.IsDefineOrAlias(colNames[i]);
 
    std::unique_ptr<RActionBase> actionPtr;
-   if (!ROOT::IsImplicitMTEnabled()) {
-      // single-thread snapshot
-      using Helper_t = SnapshotHelper<ColTypes...>;
-      using Action_t = RAction<Helper_t, PrevNodeType>;
-      actionPtr.reset(
-         new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options, std::move(isDefine)),
-                      colNames, prevNode, colRegister));
+   if (snapHelperArgs->fToNTuple) {
+#ifdef R__HAS_ROOT7
+      if (!ROOT::IsImplicitMTEnabled()) {
+         // single-thread snapshot
+         using Helper_t = SnapshotRNTupleHelper<ColTypes...>;
+         using Action_t = RAction<Helper_t, PrevNodeType>;
+
+         auto loopManager = snapHelperArgs->fLoopManager;
+
+         actionPtr.reset(new Action_t(
+            Helper_t(filename, treename, colNames, outputColNames, options, loopManager, std::move(isDefine)), colNames,
+            prevNode, colRegister));
+      } else {
+         // multi-thread snapshot to RNTuple is not yet supported
+         // TODO(fdegeus) Add MT snapshotting
+         throw std::runtime_error("Snapshot: Snapshotting to RNTuple with IMT enabled is not supported yet.");
+      }
+
+      return actionPtr;
+#else
+      throw std::runtime_error(
+         "RDataFrame: Cannot snapshot to RNTuple - this installation of ROOT has not been build with ROOT7 "
+         "components enabled.");
+#endif
    } else {
-      // multi-thread snapshot
-      using Helper_t = SnapshotHelperMT<ColTypes...>;
-      using Action_t = RAction<Helper_t, PrevNodeType>;
-      actionPtr.reset(new Action_t(
-         Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options, std::move(isDefine)),
-         colNames, prevNode, colRegister));
+      if (!ROOT::IsImplicitMTEnabled()) {
+         // single-thread snapshot
+         using Helper_t = SnapshotTTreeHelper<ColTypes...>;
+         using Action_t = RAction<Helper_t, PrevNodeType>;
+         actionPtr.reset(
+            new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options, std::move(isDefine)),
+                         colNames, prevNode, colRegister));
+      } else {
+         // multi-thread snapshot
+         using Helper_t = SnapshotTTreeHelperMT<ColTypes...>;
+         using Action_t = RAction<Helper_t, PrevNodeType>;
+         actionPtr.reset(new Action_t(
+            Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options, std::move(isDefine)),
+            colNames, prevNode, colRegister));
+      }
    }
    return actionPtr;
 }
@@ -776,6 +804,10 @@ AddSizeBranches(const std::vector<std::string> &branches, TTree *tree, std::vect
                 std::vector<std::string> &&colsWithAliases);
 
 void RemoveDuplicates(ColumnNames_t &columnNames);
+
+#ifdef R__HAS_ROOT7
+void RemoveRNTupleSubFields(ColumnNames_t &columnNames);
+#endif
 
 } // namespace RDF
 } // namespace Internal

@@ -579,22 +579,21 @@ void TPolyLine::Print(Option_t *) const
 
 void TPolyLine::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TPolyLine::Class()))
-      out<<"   ";
-   else
-      out<<"   TPolyLine *";
+   TString args;
+   if (Size() > 0) {
+      TString arrx = SavePrimitiveArray(out, "polyline", Size(), fX, kTRUE);
+      TString arry = SavePrimitiveArray(out, "polyline", Size(), fY);
+      args.Form("%d, %s, %s, ", Size(), arrx.Data(), arry.Data());
+   } else {
+      args.Form("%d, ", fN);
+   }
+   args.Append(TString::Format("\"%s\"", TString(fOption).ReplaceSpecialCppChars().Data()));
 
-   out<<"pline = new TPolyLine("<<fN<<","<<quote<<fOption<<quote<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "polyline", args, Size() == 0);
+   SaveFillAttributes(out, "polyline", 0, 1001);
+   SaveLineAttributes(out, "polyline", 1, 1, 1);
 
-   SaveFillAttributes(out, "pline", 0, 1001);
-   SaveLineAttributes(out, "pline", 1, 1, 1);
-
-   for (Int_t i=0;i<Size();i++)
-      out<<"   pline->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<std::endl;
-
-   out<<"   pline->Draw("<<quote<<option<<quote<<");"<<std::endl;
+   out << "   polyline->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

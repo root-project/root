@@ -248,7 +248,7 @@ private:
    {
       fIsSimple = false;
       fIsArtificial = true;
-      for (auto &field : fSubFields) {
+      for (auto &field : fSubfields) {
          field->SetArtificial();
       }
    }
@@ -258,7 +258,7 @@ protected:
    struct RBulkSpec;
 
    /// Collections and classes own sub fields
-   std::vector<std::unique_ptr<RFieldBase>> fSubFields;
+   std::vector<std::unique_ptr<RFieldBase>> fSubfields;
    /// Sub fields point to their mother field
    RFieldBase *fParent;
    /// All fields that have columns have a distinct main column. E.g., for simple fields (float, int, ...), the
@@ -566,8 +566,8 @@ public:
    ROOT::ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
    const RFieldBase *GetParent() const { return fParent; }
-   std::vector<RFieldBase *> GetSubFields();
-   std::vector<const RFieldBase *> GetSubFields() const;
+   std::vector<RFieldBase *> GetMutableSubfields();
+   std::vector<const RFieldBase *> GetConstSubfields() const;
    bool IsSimple() const { return fIsSimple; }
    bool IsArtificial() const { return fIsArtificial; }
    /// Get the field's description
@@ -640,13 +640,13 @@ public:
    void Advance()
    {
       auto itr = fStack.rbegin();
-      if (!itr->fFieldPtr->fSubFields.empty()) {
-         fStack.emplace_back(Position(itr->fFieldPtr->fSubFields[0].get(), 0));
+      if (!itr->fFieldPtr->fSubfields.empty()) {
+         fStack.emplace_back(Position(itr->fFieldPtr->fSubfields[0].get(), 0));
          return;
       }
 
       unsigned int nextIdxInParent = ++(itr->fIdxInParent);
-      while (nextIdxInParent >= itr->fFieldPtr->fParent->fSubFields.size()) {
+      while (nextIdxInParent >= itr->fFieldPtr->fParent->fSubfields.size()) {
          if (fStack.size() == 1) {
             itr->fFieldPtr = itr->fFieldPtr->fParent;
             itr->fIdxInParent = -1;
@@ -656,7 +656,7 @@ public:
          itr = fStack.rbegin();
          nextIdxInParent = ++(itr->fIdxInParent);
       }
-      itr->fFieldPtr = itr->fFieldPtr->fParent->fSubFields[nextIdxInParent].get();
+      itr->fFieldPtr = itr->fFieldPtr->fParent->fSubfields[nextIdxInParent].get();
    }
 
    iterator operator++(int) /* postfix */
@@ -825,7 +825,7 @@ public:
    }
 
    /// Overload to read all elements in the given cluster range.
-   void *ReadBulk(RNTupleClusterRange range) { return ReadBulk(*range.begin(), nullptr, range.size()); }
+   void *ReadBulk(ROOT::RNTupleLocalRange range) { return ReadBulk(*range.begin(), nullptr, range.size()); }
 };
 
 namespace Internal {

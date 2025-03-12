@@ -77,6 +77,12 @@ public:
         fNX(UTILITY::Clean_name(nameX)), fNW(UTILITY::Clean_name(nameW)), fNB(UTILITY::Clean_name(nameB)),
         fNY(UTILITY::Clean_name(nameY))
    {
+      fInputTensorNames = { fNX, fNW };
+      fOutputTensorNames = { fNY };
+      if (!fNB.empty()) {
+         fInputTensorNames.emplace_back(fNB);
+      }
+
       if (std::is_same<T, float>::value) {
          fType = "float";
       } else {
@@ -101,7 +107,7 @@ public:
    /*! \brief Initialize the model
     * \param model Model
     */
-   void Initialize(RModel & /*model*/) override;
+   void Initialize(RModel &) override;
 
    /*! \brief Generate code for initializing the op
     */

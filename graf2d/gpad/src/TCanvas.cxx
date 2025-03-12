@@ -1799,12 +1799,8 @@ void TCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (GetShowToolBar()) {
       out<<"   "<<GetName()<<"->ToggleToolBar();"<<std::endl;
    }
-   if (GetHighLightColor() != 5) {
-      if (TColor::SaveColor(out, GetHighLightColor()))
-         out<<"   "<<GetName()<<"->SetHighLightColor(ci);" << std::endl;
-      else
-         out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<std::endl;
-   }
+   if (GetHighLightColor() != 5)
+      out << "   " << GetName() << "->SetHighLightColor(" << TColor::SavePrimitiveColor(GetHighLightColor()) << ");\n";
 
    // Now recursively scan all pads of this canvas
    cd();
@@ -1926,12 +1922,10 @@ void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
    if (GetShowToolTips()) {
       out<<"   "<<GetName()<<"->ToggleToolTips();"<<std::endl;
    }
-   if (GetHighLightColor() != 5) {
-      if (TColor::SaveColor(out, GetHighLightColor()))
-         out<<"   "<<GetName()<<"->SetHighLightColor(ci);" << std::endl;
-      else
-         out<<"   "<<GetName()<<"->SetHighLightColor("<<GetHighLightColor()<<");"<<std::endl;
-   }
+   if (GetHighLightColor() != 5)
+      out << "   " << GetName() << "->SetHighLightColor(" << TColor::SavePrimitiveColor(GetHighLightColor()) << ");\n";
+
+   TColor::SaveColorsPalette(out);
 
    //   Now recursively scan all pads of this canvas
    cd();

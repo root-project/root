@@ -78,7 +78,6 @@ private:
    void SqliteError(int errcode);
 
    std::unique_ptr<Internal::RSqliteDSDataSet> fDataSet;
-   unsigned int fNSlots;
    ULong64_t fNRow;
    std::vector<std::string> fColumnNames;
    std::vector<ETypes> fColumnTypes;

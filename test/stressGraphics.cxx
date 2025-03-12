@@ -2391,26 +2391,28 @@ void zoomtf1()
 {
    TCanvas *C = StartTest(800,800);
 
-   TF1* f[6];
+   TF1 *f0 = nullptr;
 
    for (int i=0;i<6;++i) {
-      f[i] = new TF1(Form("f%d",i),fg, 0,2, 1);
-      f[i]->SetParameter(0,i+1);
-      f[i]->SetLineColor(i+1);
+      auto f = new TF1(TString::Format("f%d",i), fg, 0, 2, 1);
+      f->SetParameter(0, i+1);
+      f->SetLineColor(i+1);
       if (i==0) {
-         f[i]->GetYaxis()->SetTitle("Y axis title on the right side of the plot");
-         f[i]->GetXaxis()->SetTitle("X axis");
-         f[i]->GetYaxis()->SetTitleOffset(-13.);
-         f[i]->SetTitle("Zoom/UnZoom a collection of TF1 and change axis attributes");
+         f->GetYaxis()->SetTitle("Y axis title on the right side of the plot");
+         f->GetXaxis()->SetTitle("X axis");
+         f->GetYaxis()->SetTitleOffset(-13.);
+         f->SetTitle("Zoom/UnZoom a collection of TF1 and change axis attributes");
+         f0 = f;
       }
-      f[i]->Draw(i?"same":"");
+      f->Draw(i?"same":"");
    }
-   f[0]->GetXaxis()->SetRangeUser(.1,.3);
+   f0->GetXaxis()->SetRangeUser(.1, .3);
    gPad->Update();
-   f[0]->GetXaxis()->UnZoom();
+
+   f0->GetXaxis()->UnZoom();
    gPad->Modified();
 
-   TestReport(C, "Zoom/UnZoom a collection of TF1", kSkipCCode);
+   TestReport(C, "Zoom/UnZoom a collection of TF1");
 }
 
 
@@ -2652,7 +2654,7 @@ void waves()
    line = new TLine(13.8,-10, 14, 10);
    line->SetLineWidth(10); line->SetLineColor(0); line->Draw();
 
-   TestReport(C, "TGraph, TArc, TPalette and TColor", kSkipCCode);
+   TestReport(C, "TGraph, TArc, TPalette and TColor");
 }
 
 

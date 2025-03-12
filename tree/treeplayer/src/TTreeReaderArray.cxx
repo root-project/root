@@ -32,6 +32,7 @@
 
 #include <memory>
 #include <optional>
+#include <iostream>
 
 // pin vtable
 ROOT::Internal::TVirtualCollectionReader::~TVirtualCollectionReader() {}
@@ -72,6 +73,12 @@ public:
    }
 
    bool IsContiguous(ROOT::Detail::TBranchProxy *) override { return false; }
+
+   std::size_t GetValueSize(ROOT::Detail::TBranchProxy *proxy) override
+   {
+      auto *ca = GetCA(proxy);
+      return ca ? ca->GetClass()->Size() : 0;
+   }
 };
 
 bool IsCPContiguous(const TVirtualCollectionProxy &cp)
@@ -84,6 +91,14 @@ bool IsCPContiguous(const TVirtualCollectionProxy &cp)
    case ROOT::kROOTRVec: return true;
    default: return false;
    }
+}
+
+UInt_t GetCPValueSize(const TVirtualCollectionProxy &cp)
+{
+   // This works only if the collection proxy value type is a fundamental type
+   auto &&eDataType = cp.GetType();
+   auto *tDataType = TDataType::GetDataType(eDataType);
+   return tDataType ? tDataType->Size() : 0;
 }
 
 // Reader interface for STL
@@ -130,6 +145,12 @@ public:
    {
       auto cp = GetCP(proxy);
       return IsCPContiguous(*cp);
+   }
+
+   std::size_t GetValueSize(ROOT::Detail::TBranchProxy *proxy) override
+   {
+      auto cp = GetCP(proxy);
+      return GetCPValueSize(*cp);
    }
 };
 
@@ -190,6 +211,12 @@ public:
       auto cp = GetCP(proxy);
       return IsCPContiguous(*cp);
    }
+
+   std::size_t GetValueSize(ROOT::Detail::TBranchProxy *proxy) override
+   {
+      auto cp = GetCP(proxy);
+      return GetCPValueSize(*cp);
+   }
 };
 
 // Reader interface for leaf list
@@ -243,6 +270,15 @@ public:
    void SetBasicTypeSize(Int_t size) { fBasicTypeSize = size; }
 
    bool IsContiguous(ROOT::Detail::TBranchProxy *) override { return true; }
+
+   std::size_t GetValueSize(ROOT::Detail::TBranchProxy *proxy) override
+   {
+      auto cp = GetCP(proxy);
+      if (cp)
+         return GetCPValueSize(*cp);
+      else
+         return proxy->GetValueSize();
+   }
 };
 
 template <class BASE>
@@ -387,6 +423,18 @@ public:
    }
 
    bool IsContiguous(ROOT::Detail::TBranchProxy *) override { return false; }
+
+   std::size_t GetValueSize(ROOT::Detail::TBranchProxy *proxy) override
+   {
+      if (!proxy->Read()) {
+         fReadStatus = TTreeReaderValueBase::kReadError;
+         if (!proxy->GetSuppressErrorsForMissingBranch())
+            Error("TBasicTypeArrayReader::GetValueSize()", "Read error in TBranchProxy.");
+         return 0;
+      }
+      fReadStatus = TTreeReaderValueBase::kReadSuccess;
+      return proxy->GetValueSize();
+   }
 };
 
 class TBasicTypeClonesReader final : public TClonesReader {
@@ -433,6 +481,12 @@ public:
    }
 
    bool IsContiguous(ROOT::Detail::TBranchProxy *) override { return true; }
+
+   std::size_t GetValueSize(ROOT::Detail::TBranchProxy *) override
+   {
+      auto *leaf = fValueReader->GetLeaf();
+      return leaf ? leaf->GetLenType() : 0;
+   }
 
 protected:
    void ProxyRead() { fValueReader->ProxyRead(); }
@@ -493,10 +547,8 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
 
    // Tell the branch proxy to suppress the errors for missing branch if this
    // branch name is found in the list of suppressions
-   const bool suppressErrorsForThisBranch =
-      (std::find(fTreeReader->fSuppressErrorsForMissingBranches.cbegin(),
-                 fTreeReader->fSuppressErrorsForMissingBranches.cend(),
-                 fBranchName.Data()) != fTreeReader->fSuppressErrorsForMissingBranches.cend());
+   const bool suppressErrorsForThisBranch = (fTreeReader->fSuppressErrorsForMissingBranches.find(fBranchName.Data()) !=
+                                             fTreeReader->fSuppressErrorsForMissingBranches.cend());
 
    TDictionary *branchActualType = nullptr;
    TBranch *branch = nullptr;

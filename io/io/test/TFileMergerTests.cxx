@@ -1,6 +1,8 @@
 #include "ROOT/TestSupport.hxx"
 
 #include "TFileMerger.h"
+#include "TFileMergeInfo.h"
+#include "TBranch.h"
 
 #include "TMemFile.h"
 #include "TTree.h"
@@ -84,12 +86,12 @@ TEST(TFileMerger, MergeSingleOnlyListed)
    hist3->Fill(1);   hist3->Fill(1);   hist3->Fill(1);
    hist4->Fill(1);   hist4->Fill(1);   hist4->Fill(1);   hist4->Fill(1);
    a.Write();
-   
+
    TFileMerger merger;
    auto output = std::unique_ptr<TFile>(new TFile("SingleOnlyListed.root", "RECREATE"));
    bool success = merger.OutputFile(std::move(output));
    ASSERT_TRUE(success);
-   
+
    merger.AddObjectNames("hist1");
    merger.AddObjectNames("hist2");
    merger.AddFile(&a, false);
@@ -100,4 +102,61 @@ TEST(TFileMerger, MergeSingleOnlyListed)
    output = std::unique_ptr<TFile>(TFile::Open("SingleOnlyListed.root"));
    ASSERT_TRUE(output.get() && output->GetListOfKeys());
    EXPECT_EQ(output->GetListOfKeys()->GetSize(), 2);
+}
+
+// https://github.com/root-project/root/issues/14558 aka https://its.cern.ch/jira/browse/ROOT-4716
+TEST(TFileMerger, MergeBranches)
+{
+   TTree atree("atree", "atitle");
+   int value;
+   atree.Branch("a", &value);
+
+   TTree abtree("abtree", "abtitle");
+   abtree.Branch("a", &value);
+   abtree.Branch("b", &value);
+   value = 11;
+   abtree.Fill();
+   value = 42;
+   abtree.Fill();
+
+   TTree dummy("emptytree", "emptytitle");
+   TList treelist;
+
+   // Case 1 - Static: NoBranch + NoEntries + 2 entries
+   treelist.Add(&dummy);
+   treelist.Add(&atree);
+   treelist.Add(&abtree);
+   std::unique_ptr<TFile> file1(TFile::Open("b_4716.root", "RECREATE"));
+   auto rtree = TTree::MergeTrees(&treelist);
+   ASSERT_TRUE(rtree->FindBranch("a") != nullptr);
+   EXPECT_EQ(rtree->FindBranch("a")->GetEntries(), 2);
+   ASSERT_TRUE(rtree->FindBranch("b") == nullptr);
+   file1->Write();
+
+   // Case 2 - This (NoBranch) + NoEntries + 2 entries
+   treelist.Clear();
+   treelist.Add(&atree);
+   treelist.Add(&abtree);
+   std::unique_ptr<TFile> file2(TFile::Open("c_4716.root", "RECREATE"));
+   TFileMergeInfo info2(file2.get());
+   dummy.Merge(&treelist, &info2);
+   ASSERT_TRUE(dummy.FindBranch("a") != nullptr);
+   ASSERT_TRUE(dummy.FindBranch("b") == nullptr);
+   EXPECT_EQ(dummy.FindBranch("a")->GetEntries(), 2);
+   EXPECT_EQ(atree.FindBranch("a")->GetEntries(), 2);
+   // atree has now 2 entries instead of zero since it was used as skeleton for dummy
+   file2->Write();
+
+   // Case 3 - This (NoEntries) + 2 entries
+   TTree a0tree("a0tree", "a0title"); // We cannot reuse atree since it was cannibalized by dummy
+   a0tree.Branch("a", &value);
+   treelist.Clear();
+   treelist.Add(&abtree);
+   std::unique_ptr<TFile> file3(TFile::Open("d_4716.root", "RECREATE"));
+   TFileMergeInfo info3(file3.get());
+   a0tree.Merge(&treelist, &info3);
+   ASSERT_TRUE(a0tree.FindBranch("a") != nullptr);
+   ASSERT_TRUE(a0tree.FindBranch("b") == nullptr);
+   EXPECT_EQ(a0tree.FindBranch("a")->GetEntries(), 2);
+   file3->Write();
 }

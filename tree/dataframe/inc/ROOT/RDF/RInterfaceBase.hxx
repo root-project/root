@@ -53,8 +53,6 @@ class RInterfaceBase {
 protected:
    ///< The RLoopManager at the root of this computation graph. Never null.
    std::shared_ptr<ROOT::Detail::RDF::RLoopManager> fLoopManager;
-   /// Non-owning pointer to a data-source object. Null if no data-source. RLoopManager has ownership of the object.
-   RDataSource *fDataSource = nullptr;
 
    /// Contains the columns defined up to this node.
    RDFInternal::RColumnRegister fColRegister;
@@ -77,7 +75,7 @@ protected:
 
       for (auto &colName : colNames) {
          RDFInternal::CheckForDefinition("Vary", colName, fColRegister, fLoopManager->GetBranchNames(),
-                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+                                         GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
       }
       RDFInternal::CheckValidCppVarName(variationName, "Vary");
 
@@ -136,17 +134,18 @@ protected:
    }
 
    RDFDetail::RLoopManager *GetLoopManager() const { return fLoopManager.get(); }
+   RDataSource *GetDataSource() const { return fLoopManager->GetDataSource(); }
 
    ColumnNames_t GetValidatedColumnNames(const unsigned int nColumns, const ColumnNames_t &columns)
    {
-      return RDFInternal::GetValidatedColumnNames(*fLoopManager, nColumns, columns, fColRegister, fDataSource);
+      return RDFInternal::GetValidatedColumnNames(*fLoopManager, nColumns, columns, fColRegister, GetDataSource());
    }
 
    template <typename... ColumnTypes>
    void CheckAndFillDSColumns(ColumnNames_t validCols, TTraits::TypeList<ColumnTypes...> typeList)
    {
-      if (fDataSource != nullptr)
-         RDFInternal::AddDSColumns(validCols, *fLoopManager, *fDataSource, typeList, fColRegister);
+      if (auto dataSource = GetDataSource())
+         RDFInternal::AddDSColumns(validCols, *fLoopManager, *dataSource, typeList, fColRegister);
    }
 
    /// Create RAction object, return RResultPtr for the action
@@ -201,7 +200,7 @@ protected:
 
       auto toJit = RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(HelperArgType),
                                                typeid(ActionTag), helperArgOnHeap, tree, nSlots, fColRegister,
-                                               fDataSource, jittedActionOnHeap, vector2RVec);
+                                               GetDataSource(), jittedActionOnHeap, vector2RVec);
       fLoopManager->ToJitExec(toJit);
       return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
    }

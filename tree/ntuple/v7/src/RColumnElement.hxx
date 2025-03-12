@@ -318,9 +318,9 @@ inline void CastZigzagSplitUnpack(void *destination, const void *source, std::si
 namespace {
 
 using ROOT::ENTupleColumnType;
-using ROOT::Experimental::Internal::kTestFutureType;
-using ROOT::Experimental::Internal::MakeUninitArray;
 using ROOT::Experimental::Internal::RColumnElementBase;
+using ROOT::Internal::kTestFutureColumnType;
+using ROOT::Internal::MakeUninitArray;
 
 template <typename CppT, ENTupleColumnType>
 class RColumnElement;
@@ -368,8 +368,8 @@ std::unique_ptr<RColumnElementBase> GenerateColumnElementInternal(ENTupleColumnT
    case ENTupleColumnType::kReal32Quant:
       return std::make_unique<RColumnElement<CppT, ENTupleColumnType::kReal32Quant>>();
    default:
-      if (onDiskType == kTestFutureType)
-         return std::make_unique<RColumnElement<CppT, kTestFutureType>>();
+      if (onDiskType == kTestFutureColumnType)
+         return std::make_unique<RColumnElement<CppT, kTestFutureColumnType>>();
       R__ASSERT(false);
    }
    // never here
@@ -1496,7 +1496,7 @@ DECLARE_RCOLUMNELEMENT_SPEC(ROOT::Experimental::Internal::RColumnIndex, ENTupleC
                             RColumnElementDeltaSplitLE, <std::uint64_t, std::uint32_t>);
 
 template <>
-class RColumnElement<ROOT::Experimental::Internal::RTestFutureColumn, kTestFutureType> final
+class RColumnElement<ROOT::Experimental::Internal::RTestFutureColumn, kTestFutureColumnType> final
    : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = false;
@@ -1510,7 +1510,7 @@ public:
 
    RIdentifier GetIdentifier() const final
    {
-      return RIdentifier{typeid(ROOT::Experimental::Internal::RTestFutureColumn), kTestFutureType};
+      return RIdentifier{typeid(ROOT::Experimental::Internal::RTestFutureColumn), kTestFutureColumnType};
    }
 };
 

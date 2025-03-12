@@ -29,6 +29,7 @@
 #include <deque>
 #include <iterator>
 #include <unordered_map>
+#include <set>
 #include <string>
 
 class TDictionary;
@@ -184,7 +185,7 @@ public:
    TTreeReader();
 
    TTreeReader(TTree *tree, TEntryList *entryList = nullptr, bool warnAboutLongerFriends = true,
-               const std::vector<std::string> &suppressErrorsForMissingBranches = {});
+               const std::set<std::string> &suppressErrorsForMissingBranches = {});
    TTreeReader(const char *keyname, TDirectory *dir, TEntryList *entryList = nullptr);
    TTreeReader(const char *keyname, TEntryList *entryList = nullptr) : TTreeReader(keyname, nullptr, entryList) {}
 
@@ -338,7 +339,7 @@ private:
 
    // List of branches for which we want to suppress the printed error about
    // missing branch when switching to a new tree
-   std::vector<std::string> fSuppressErrorsForMissingBranches{};
+   std::set<std::string> fSuppressErrorsForMissingBranches{};
    std::vector<std::string> fMissingProxies{};
 
    friend class ROOT::Internal::TTreeReaderValueBase;

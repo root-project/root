@@ -10,6 +10,7 @@
 
 #include "ROOT/RDF/ActionHelpers.hxx"
 #include "ROOT/RDF/Utils.hxx" // CacheLineStep
+#include "ROOT/RNTuple.hxx"   // ValidateSnapshotRNTupleOutput
 
 namespace ROOT {
 namespace Internal {
@@ -211,7 +212,8 @@ template class TakeHelper<float, float, std::vector<float>>;
 template class TakeHelper<double, double, std::vector<double>>;
 #endif
 
-void ValidateSnapshotOutput(const RSnapshotOptions &opts, const std::string &treeName, const std::string &fileName)
+void EnsureValidSnapshotTTreeOutput(const RSnapshotOptions &opts, const std::string &treeName,
+                                    const std::string &fileName)
 {
    TString fileMode = opts.fMode;
    fileMode.ToLower();
@@ -241,6 +243,56 @@ void ValidateSnapshotOutput(const RSnapshotOptions &opts, const std::string &tre
       throw std::invalid_argument(msg);
    }
 }
+
+#ifdef R__HAS_ROOT7
+void EnsureValidSnapshotRNTupleOutput(const RSnapshotOptions &opts, const std::string &ntupleName,
+                                      const std::string &fileName)
+{
+   TString fileMode = opts.fMode;
+   fileMode.ToLower();
+   if (fileMode != "update")
+      return;
+
+   // output file opened in "update" mode: must check whether output RNTuple is already present in file
+   std::unique_ptr<TFile> outFile{TFile::Open(fileName.c_str(), "update")};
+   if (!outFile || outFile->IsZombie())
+      throw std::invalid_argument("Snapshot: cannot open file \"" + fileName + "\" in update mode");
+
+   auto *outNTuple = outFile->Get<ROOT::RNTuple>(ntupleName.c_str());
+
+   if (outNTuple) {
+      if (opts.fOverwriteIfExists) {
+         outFile->Delete((ntupleName + ";*").c_str());
+         return;
+      } else {
+         const std::string msg = "Snapshot: RNTuple \"" + ntupleName + "\" already present in file \"" + fileName +
+                                 "\". If you want to delete the original ntuple and write another, please set "
+                                 "the 'fOverwriteIfExists' option to true in RSnapshotOptions.";
+         throw std::invalid_argument(msg);
+      }
+   }
+
+   // Also check if there is any object other than an RNTuple with the provided ntupleName.
+   TObject *outObj = outFile->Get(ntupleName.c_str());
+
+   if (!outObj)
+      return;
+
+   // An object called ntupleName is already present in the file.
+   if (opts.fOverwriteIfExists) {
+      if (auto tree = dynamic_cast<TTree *>(outObj)) {
+         tree->Delete("all");
+      } else {
+         outFile->Delete((ntupleName + ";*").c_str());
+      }
+   } else {
+      const std::string msg = "Snapshot: object \"" + ntupleName + "\" already present in file \"" + fileName +
+                              "\". If you want to delete the original object and write a new RNTuple, please set "
+                              "the 'fOverwriteIfExists' option to true in RSnapshotOptions.";
+      throw std::invalid_argument(msg);
+   }
+}
+#endif
 
 } // end NS RDF
 } // end NS Internal

@@ -350,16 +350,11 @@ void TMarker::Print(Option_t *) const
 
 void TMarker::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   if (gROOT->ClassSaved(TMarker::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TMarker *";
-   }
-   out<<"marker = new TMarker("<<fX<<","<<fY<<","<<fMarkerStyle<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "marker", TString::Format("%g, %g, %d", fX, fY, fMarkerStyle), kFALSE);
 
-   SaveMarkerAttributes(out,"marker",1,1,1);
+   SaveMarkerAttributes(out, "marker", 1, 1, 1);
 
-   out<<"   marker->Draw();"<<std::endl;
+   out << "   marker->Draw();" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

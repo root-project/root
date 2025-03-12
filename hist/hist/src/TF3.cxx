@@ -607,57 +607,48 @@ void TF3::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
 
 void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   TString f3Name(GetName());
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TF3::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TF3 *";
-   }
-   if (!fMethodCall) {
-      out<<f3Name.Data()<<" = new TF3("<<quote<<f3Name.Data()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<");"<<std::endl;
-   } else {
-      out<<f3Name.Data()<<" = new TF3("<<quote<<f3Name.Data()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<","<<GetNpar()<<");"<<std::endl;
-   }
+   TString f3Name = ProvideSaveName(option);
+   out << "   \n";
+   out << "   TF3 *";
 
-   if (GetFillColor() != 0) {
-      if (TColor::SaveColor(out, GetFillColor()))
-         out<<"   "<<f3Name.Data()<<"->SetFillColor(ci);" << std::endl;
-      else
-         out<<"   "<<f3Name.Data()<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
-   }
-   if (GetLineColor() != 1) {
-      if (TColor::SaveColor(out, GetLineColor()))
-         out<<"   "<<f3Name.Data()<<"->SetLineColor(ci);" << std::endl;
-      else
-         out<<"   "<<f3Name.Data()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
-   }
+   if (!fMethodCall)
+      out << f3Name << " = new TF3(\"" << GetName() << "\", \"" << TString(GetTitle()).ReplaceSpecialCppChars() << "\","
+          << fXmin << "," << fXmax << "," << fYmin << "," << fYmax << "," << fZmin << "," << fZmax << ");\n";
+   else
+      out << f3Name << " = new TF3(\"" << GetName() << "\", " << GetTitle() << "," << fXmin << "," << fXmax << ","
+          << fYmin << "," << fYmax << "," << fZmin << "," << fZmax << "," << GetNpar() << ");\n";
+
+   SaveFillAttributes(out, f3Name, 0, 1001);
+   SaveMarkerAttributes(out, f3Name, 1, 1, 1);
+   SaveLineAttributes(out, f3Name, 1, 1, 4);
 
    if (GetNpx() != 30)
-      out<<"   "<<f3Name.Data()<<"->SetNpx("<<GetNpx()<<");"<<std::endl;
+      out << "   " << f3Name << "->SetNpx(" << GetNpx() << ");\n";
    if (GetNpy() != 30)
-      out<<"   "<<f3Name.Data()<<"->SetNpy("<<GetNpy()<<");"<<std::endl;
+      out << "   " << f3Name << "->SetNpy(" << GetNpy() << ");\n";
    if (GetNpz() != 30)
-      out<<"   "<<f3Name.Data()<<"->SetNpz("<<GetNpz()<<");"<<std::endl;
+      out << "   " << f3Name << "->SetNpz(" << GetNpz() << ");\n";
 
    if (GetChisquare() != 0)
-      out<<"   "<<f3Name.Data()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
+      out << "   " << f3Name << "->SetChisquare(" << GetChisquare() << ");\n";
 
    Double_t parmin, parmax;
-   for (Int_t i=0;i<GetNpar();i++) {
-      out<<"   "<<f3Name.Data()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
-      out<<"   "<<f3Name.Data()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<std::endl;
-      GetParLimits(i,parmin,parmax);
-      out<<"   "<<f3Name.Data()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
+   for (Int_t i = 0; i < GetNpar(); i++) {
+      out << "   " << f3Name << "->SetParameter(" << i << "," << GetParameter(i) << ");\n";
+      out << "   " << f3Name << "->SetParError(" << i << "," << GetParError(i) << ");\n";
+      GetParLimits(i, parmin, parmax);
+      out << "   " << f3Name << "->SetParLimits(" << i << "," << parmin << "," << parmax << ");\n";
    }
 
-   if (GetXaxis()) GetXaxis()->SaveAttributes(out, f3Name.Data(), "->GetXaxis()");
-   if (GetYaxis()) GetYaxis()->SaveAttributes(out, f3Name.Data(), "->GetYaxis()");
-   if (GetZaxis()) GetZaxis()->SaveAttributes(out, f3Name.Data(), "->GetZaxis()");
+   if (GetXaxis())
+      GetXaxis()->SaveAttributes(out, f3Name, "->GetXaxis()");
+   if (GetYaxis())
+      GetYaxis()->SaveAttributes(out, f3Name, "->GetYaxis()");
+   if (GetZaxis())
+      GetZaxis()->SaveAttributes(out, f3Name, "->GetZaxis()");
 
-   out<<"   "<<f3Name.Data()<<"->Draw("
-      <<quote<<option<<quote<<");"<<std::endl;
+   if (!option || !strstr(option, "nodraw"))
+      out << "   " << f3Name << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

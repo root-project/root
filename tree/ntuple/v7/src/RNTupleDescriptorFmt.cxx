@@ -117,22 +117,22 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
 
       for (const auto &cluster : fClusterDescriptors) {
          auto columnRange = cluster.second.GetColumnRange(column.second.GetPhysicalId());
-         if (columnRange.fIsSuppressed)
+         if (columnRange.IsSuppressed())
             continue;
 
-         info.fNElements += columnRange.fNElements;
-         if (compression == -1 && columnRange.fCompressionSettings) {
-            compression = *columnRange.fCompressionSettings;
+         info.fNElements += columnRange.GetNElements();
+         if (compression == -1 && columnRange.GetCompressionSettings()) {
+            compression = *columnRange.GetCompressionSettings();
          }
          const auto &pageRange = cluster.second.GetPageRange(column.second.GetPhysicalId());
          auto idx = cluster2Idx[cluster.first];
-         for (const auto &page : pageRange.fPageInfos) {
-            nBytesOnStorage += page.fLocator.GetNBytesOnStorage();
-            nBytesInMemory += page.fNElements * elementSize;
-            clusters[idx].fNBytesOnStorage += page.fLocator.GetNBytesOnStorage();
-            clusters[idx].fNBytesInMemory += page.fNElements * elementSize;
+         for (const auto &page : pageRange.GetPageInfos()) {
+            nBytesOnStorage += page.GetLocator().GetNBytesOnStorage();
+            nBytesInMemory += page.GetNElements() * elementSize;
+            clusters[idx].fNBytesOnStorage += page.GetLocator().GetNBytesOnStorage();
+            clusters[idx].fNBytesInMemory += page.GetNElements() * elementSize;
             ++clusters[idx].fNPages;
-            info.fNBytesOnStorage += page.fLocator.GetNBytesOnStorage();
+            info.fNBytesOnStorage += page.GetLocator().GetNBytesOnStorage();
             ++info.fNPages;
             ++nPages;
          }

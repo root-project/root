@@ -22,8 +22,8 @@
 #include <cstdlib>
 #include <utility>
 
-ROOT::Experimental::Internal::RPagePool::REntry &
-ROOT::Experimental::Internal::RPagePool::AddPage(RPage page, const RKey &key, std::int64_t initialRefCounter)
+ROOT::Internal::RPagePool::REntry &
+ROOT::Internal::RPagePool::AddPage(RPage page, const RKey &key, std::int64_t initialRefCounter)
 {
    assert(fLookupByBuffer.count(page.GetBuffer()) == 0);
 
@@ -48,13 +48,13 @@ ROOT::Experimental::Internal::RPagePool::AddPage(RPage page, const RKey &key, st
    return fEntries.emplace_back(REntry{std::move(page), key, initialRefCounter});
 }
 
-ROOT::Experimental::Internal::RPageRef ROOT::Experimental::Internal::RPagePool::RegisterPage(RPage page, RKey key)
+ROOT::Internal::RPageRef ROOT::Internal::RPagePool::RegisterPage(RPage page, RKey key)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    return RPageRef(AddPage(std::move(page), key, 1).fPage, this);
 }
 
-void ROOT::Experimental::Internal::RPagePool::PreloadPage(RPage page, RKey key)
+void ROOT::Internal::RPagePool::PreloadPage(RPage page, RKey key)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    const auto &entry = AddPage(std::move(page), key, 0);
@@ -62,8 +62,7 @@ void ROOT::Experimental::Internal::RPagePool::PreloadPage(RPage page, RKey key)
       fUnusedPages[entry.fPage.GetClusterInfo().GetId()].emplace(entry.fPage.GetBuffer());
 }
 
-void ROOT::Experimental::Internal::RPagePool::ErasePage(std::size_t entryIdx,
-                                                        decltype(fLookupByBuffer)::iterator lookupByBufferItr)
+void ROOT::Internal::RPagePool::ErasePage(std::size_t entryIdx, decltype(fLookupByBuffer)::iterator lookupByBufferItr)
 {
    fLookupByBuffer.erase(lookupByBufferItr);
 
@@ -88,7 +87,7 @@ void ROOT::Experimental::Internal::RPagePool::ErasePage(std::size_t entryIdx,
    fEntries.resize(N - 1);
 }
 
-void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
+void ROOT::Internal::RPagePool::ReleasePage(const RPage &page)
 {
    if (page.IsNull()) return;
    std::lock_guard<std::mutex> lockGuard(fLock);
@@ -103,7 +102,7 @@ void ROOT::Experimental::Internal::RPagePool::ReleasePage(const RPage &page)
    }
 }
 
-void ROOT::Experimental::Internal::RPagePool::RemoveFromUnusedPages(const RPage &page)
+void ROOT::Internal::RPagePool::RemoveFromUnusedPages(const RPage &page)
 {
    auto itr = fUnusedPages.find(page.GetClusterInfo().GetId());
    assert(itr != fUnusedPages.end());
@@ -112,8 +111,7 @@ void ROOT::Experimental::Internal::RPagePool::RemoveFromUnusedPages(const RPage 
       fUnusedPages.erase(itr);
 }
 
-ROOT::Experimental::Internal::RPageRef
-ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, ROOT::NTupleSize_t globalIndex)
+ROOT::Internal::RPageRef ROOT::Internal::RPagePool::GetPage(RKey key, ROOT::NTupleSize_t globalIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    auto itrPageSet = fLookupByKey.find(key);
@@ -135,8 +133,7 @@ ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, ROOT::NTupleSize_t gl
    return RPageRef();
 }
 
-ROOT::Experimental::Internal::RPageRef
-ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, RNTupleLocalIndex localIndex)
+ROOT::Internal::RPageRef ROOT::Internal::RPagePool::GetPage(RKey key, RNTupleLocalIndex localIndex)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    auto itrPageSet = fLookupByKey.find(key);
@@ -158,7 +155,7 @@ ROOT::Experimental::Internal::RPagePool::GetPage(RKey key, RNTupleLocalIndex loc
    return RPageRef();
 }
 
-void ROOT::Experimental::Internal::RPagePool::Evict(ROOT::DescriptorId_t clusterId)
+void ROOT::Internal::RPagePool::Evict(ROOT::DescriptorId_t clusterId)
 {
    std::lock_guard<std::mutex> lockGuard(fLock);
    auto itr = fUnusedPages.find(clusterId);

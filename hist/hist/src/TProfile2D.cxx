@@ -1848,56 +1848,98 @@ TProfile2D * TProfile2D::RebinY(Int_t ngroup,const char * newname ) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.
-///
-/// Note the following restrictions in the code generated:
-///  - variable bin size not implemented
-///  - SetErrorOption not implemented
 
 void TProfile2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   out <<"   "<<std::endl;
-   out <<"   "<<ClassName()<<" *";
+   TString hname = ProvideSaveName(option, kTRUE);
 
-   out << GetName() << " = new " << ClassName() << "(" << quote
-   << GetName() << quote << "," << quote<< GetTitle() << quote
-   << "," << GetXaxis()->GetNbins();
-   out << "," << GetXaxis()->GetXmin()
-   << "," << GetXaxis()->GetXmax();
-   out << "," << GetYaxis()->GetNbins();
-   out << "," << GetYaxis()->GetXmin()
-   << "," << GetYaxis()->GetXmax();
-   out << "," << fZmin
-       << "," << fZmax;
-   out << ");" << std::endl;
+   TString sxaxis, syaxis;
 
+   out << "   \n";
 
-   // save bin entries
-   Int_t bin;
-   for (bin=0;bin<fNcells;bin++) {
-      Double_t bi = GetBinEntries(bin);
-      if (bi) {
-         out<<"   "<<GetName()<<"->SetBinEntries("<<bin<<","<<bi<<");"<<std::endl;
+   // Check if the profile has equidistant X bins or not.  If not, we
+   // create an array holding the bins.
+   if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray)
+      sxaxis = SavePrimitiveArray(out, hname + "_x", GetXaxis()->GetXbins()->fN, GetXaxis()->GetXbins()->fArray);
+
+   // Check if the profile has equidistant y bins or not.  If not, we
+   // create an array holding the bins.
+   if (GetYaxis()->GetXbins()->fN && GetYaxis()->GetXbins()->fArray)
+      syaxis = SavePrimitiveArray(out, hname + "_y", GetYaxis()->GetXbins()->fN, GetYaxis()->GetXbins()->fArray);
+
+   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
+       << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << GetXaxis()->GetNbins() << ", ";
+   if (!sxaxis.IsNull())
+      out << sxaxis;
+   else
+      out << GetXaxis()->GetXmin() << ", " << GetXaxis()->GetXmax();
+
+   out << ", " << GetYaxis()->GetNbins() << ", ";
+   if (!syaxis.IsNull())
+      out << syaxis;
+   else
+      out << GetYaxis()->GetXmin() << ", " << GetYaxis()->GetXmax();
+
+   if (sxaxis.IsNull() && syaxis.IsNull())
+      out << ", " << fZmin << ", " << fZmax;
+
+   out << ", \"" << TString(GetErrorOption()).ReplaceSpecialCppChars() << "\");\n";
+
+   Bool_t save_errors = fSumw2.fN > 0;
+   Int_t numentries = 0, numcontent = 0, numerrors = 0;
+
+   std::vector<Double_t> entries(fNcells), content(fNcells), errors(save_errors ? fNcells : 0);
+   for (Int_t bin = 0; bin < fNcells; bin++) {
+      entries[bin] = GetBinEntries(bin);
+      if (entries[bin])
+         numentries++;
+      content[bin] = fArray[bin];
+      if (content[bin])
+         numcontent++;
+      if (save_errors) {
+         errors[bin] = TMath::Sqrt(fSumw2.fArray[bin]);
+         if (errors[bin])
+            numerrors++;
       }
    }
-   //save bin contents
-   for (bin=0;bin<fNcells;bin++) {
-      Double_t bc = fArray[bin];
-      if (bc) {
-         out<<"   "<<GetName()<<"->SetBinContent("<<bin<<","<<bc<<");"<<std::endl;
+
+   if ((numentries < 100) && (numcontent < 100) && (numerrors < 100)) {
+      // in case of few non-empty bins store them as before
+      for (Int_t bin = 0; bin < fNcells; bin++) {
+         if (entries[bin])
+            out << "   " << hname << "->SetBinEntries(" << bin << "," << entries[bin] << ");\n";
       }
-   }
-   // save bin errors
-   if (fSumw2.fN) {
-      for (bin=0;bin<fNcells;bin++) {
-         Double_t be = TMath::Sqrt(fSumw2.fArray[bin]);
-         if (be) {
-            out<<"   "<<GetName()<<"->SetBinError("<<bin<<","<<be<<");"<<std::endl;
+      for (Int_t bin = 0; bin < fNcells; bin++) {
+         if (content[bin])
+            out << "   " << hname << "->SetBinContent(" << bin << "," << content[bin] << ");\n";
+      }
+      if (save_errors)
+         for (Int_t bin = 0; bin < fNcells; bin++) {
+            if (errors[bin])
+               out << "   " << hname << "->SetBinError(" << bin << "," << errors[bin] << ");\n";
          }
+   } else {
+      if (numentries > 0) {
+         TString arr = SavePrimitiveArray(out, hname, fNcells, entries.data());
+         out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
+         out << "      if (" << arr << "[bin])\n";
+         out << "         " << hname << "->SetBinEntries(bin, " << arr << "[bin]);\n";
+      }
+      if (numcontent > 0) {
+         TString arr = SavePrimitiveArray(out, hname, fNcells, content.data());
+         out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
+         out << "      if (" << arr << "[bin])\n";
+         out << "         " << hname << "->SetBinContent(bin, " << arr << "[bin]);\n";
+      }
+      if (numerrors > 0) {
+         TString arr = SavePrimitiveArray(out, hname, fNcells, errors.data());
+         out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
+         out << "      if (" << arr << "[bin])\n";
+         out << "         " << hname << "->SetBinError(bin, " << arr << "[bin]);\n";
       }
    }
 
-   TH1::SavePrimitiveHelp(out, GetName(), option);
+   TH1::SavePrimitiveHelp(out, hname, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

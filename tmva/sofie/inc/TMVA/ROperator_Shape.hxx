@@ -30,7 +30,10 @@ private:
 public:
    ROperator_Shape(){}
    ROperator_Shape(int start, int end, std::string nameX, std::string nameY):
-   fStart(start) ,fEnd(end), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){}
+   fStart(start) ,fEnd(end), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
+   }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;
@@ -42,7 +45,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
       if (model.CheckIfTensorAlreadyExist(fNX) == false){   //input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA SOFIE Shape Op Input Tensor " + fNX + " is not found in model");
       }
@@ -56,19 +59,21 @@ public:
       if (fEnd < 0) fEnd += length;
       if (fEnd > fStart)
          fOutput_shape = { size_t(fEnd - fStart) };
-      // in case input tensor is not a dynamic tensor we should register the output as a Constant tensor since we know
+      // in case the input tensor is not a dynamic tensor we should register the output as a Constant tensor since we know
       // its content
       if (!model.IsDynamicTensor(fNX) && !fOutput_shape.empty()) {
          std::shared_ptr<void> data(malloc(length * sizeof(int64_t)), free);
          auto shape_values = std::vector<int64_t>(fShape.begin()+fStart, fShape.begin() + fEnd );
          std::memcpy(data.get(), (void*) shape_values.data(), length * sizeof(int64_t));
          model.AddConstantTensor(fNY, ETensorType::INT64, fOutput_shape, data);
+         fOutputTensorNames.pop_back();
          if (model.Verbose()) {
             std::cout << "Output of Shape is constant tensor with shape " << ConvertShapeToString(fOutput_shape) << " and values ";
             for (size_t i = 0; i < shape_values.size(); i++)
                std::cout << shape_values[i] << "  ";
             std::cout << std::endl;
          }
+         fIsOutputConstant = true;
       }
       else
          model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
@@ -77,6 +82,9 @@ public:
    }
 
    std::string Generate(std::string OpName){
+      // no need to generate code if the output is constant
+      if (fIsOutputConstant) return "";
+
       OpName = "op_" + OpName;
       if (fShape.empty()) {
          throw std::runtime_error("TMVA SOFIE Shape op called to Generate without being initialized first");

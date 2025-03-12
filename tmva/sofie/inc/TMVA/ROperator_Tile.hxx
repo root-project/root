@@ -26,7 +26,10 @@ private:
 public:
    ROperator_Tile(){}
    ROperator_Tile(std::string nameRepeat, std::string nameInput, std::string nameY):
-      fNRepeats(UTILITY::Clean_name(nameRepeat)),fNInput(UTILITY::Clean_name(nameInput)), fNY(UTILITY::Clean_name(nameY)){}
+      fNRepeats(UTILITY::Clean_name(nameRepeat)),fNInput(UTILITY::Clean_name(nameInput)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNRepeats, fNInput };
+         fOutputTensorNames = { fNY };
+      }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;
@@ -41,7 +44,7 @@ public:
       return {ret};
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
        //input must be a graph input, or already initialized intermediate tensor
       if (model.CheckIfTensorAlreadyExist(fNInput) == false){
         throw std::runtime_error("TMVA SOFIE Tile Op Input Tensor is not found in model");

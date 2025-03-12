@@ -7232,148 +7232,134 @@ void TH1::SaveAs(const char *filename, Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Provide variable name for histogram for saving as primitive
+/// Histogram pointer has by default the histogram name with an incremental suffix.
+/// If the histogram belongs to a graph or a stack the suffix is not added because
+/// the graph and stack objects are not aware of this new name. Same thing if
+/// the histogram is drawn with the option COLZ because the TPaletteAxis drawn
+/// when this option is selected, does not know this new name either.
+
+TString TH1::ProvideSaveName(Option_t *option, Bool_t testfdir)
+{
+   thread_local Int_t storeNumber = 0;
+
+   TString opt = option;
+   opt.ToLower();
+   TString histName = GetName();
+   // for TProfile and TH2Poly also fDirectory should be tested
+   if (!histName.Contains("Graph") && !histName.Contains("_stack_") && !opt.Contains("colz") &&
+       (!testfdir || !fDirectory)) {
+      storeNumber++;
+      histName += "__";
+      histName += storeNumber;
+   }
+   if (histName.IsNull())
+      histName = "unnamed";
+   return gInterpreter->MapCppName(histName);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
 void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    // empty the buffer before if it exists
-   if (fBuffer) BufferEmpty();
+   if (fBuffer)
+      BufferEmpty();
 
-   Bool_t nonEqiX = kFALSE;
-   Bool_t nonEqiY = kFALSE;
-   Bool_t nonEqiZ = kFALSE;
-   Int_t i;
-   static Int_t nxaxis = 0;
-   static Int_t nyaxis = 0;
-   static Int_t nzaxis = 0;
-   TString sxaxis="xAxis",syaxis="yAxis",szaxis="zAxis";
+   TString sxaxis, syaxis, szaxis;
 
-   const auto old_precision{out.precision()};
-   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1}; 
-   out << std::setprecision(max_precision);
+   TString hname = ProvideSaveName(option);
+   TString savedName = GetName();
+   SetName(hname);
+
+   out <<"   \n";
+
    // Check if the histogram has equidistant X bins or not.  If not, we
    // create an array holding the bins.
-   if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray) {
-      nonEqiX = kTRUE;
-      nxaxis++;
-      sxaxis += nxaxis;
-      out << "   Double_t "<<sxaxis<<"[" << GetXaxis()->GetXbins()->fN
-         << "] = {";
-      for (i = 0; i < GetXaxis()->GetXbins()->fN; i++) {
-         if (i != 0) out << ", ";
-         out << GetXaxis()->GetXbins()->fArray[i];
-      }
-      out << "}; " << std::endl;
-   }
+   if (GetXaxis()->GetXbins()->fN && GetXaxis()->GetXbins()->fArray)
+      sxaxis = SavePrimitiveArray(out, hname + "_x", GetXaxis()->GetXbins()->fN, GetXaxis()->GetXbins()->fArray);
    // If the histogram is 2 or 3 dimensional, check if the histogram
    // has equidistant Y bins or not.  If not, we create an array
    // holding the bins.
-   if (fDimension > 1 && GetYaxis()->GetXbins()->fN &&
-      GetYaxis()->GetXbins()->fArray) {
-         nonEqiY = kTRUE;
-         nyaxis++;
-         syaxis += nyaxis;
-         out << "   Double_t "<<syaxis<<"[" << GetYaxis()->GetXbins()->fN
-            << "] = {";
-         for (i = 0; i < GetYaxis()->GetXbins()->fN; i++) {
-            if (i != 0) out << ", ";
-            out << GetYaxis()->GetXbins()->fArray[i];
-         }
-         out << "}; " << std::endl;
-   }
+   if (fDimension > 1 && GetYaxis()->GetXbins()->fN && GetYaxis()->GetXbins()->fArray)
+      syaxis = SavePrimitiveArray(out, hname + "_y", GetYaxis()->GetXbins()->fN, GetYaxis()->GetXbins()->fArray);
    // IF the histogram is 3 dimensional, check if the histogram
    // has equidistant Z bins or not.  If not, we create an array
    // holding the bins.
-   if (fDimension > 2 && GetZaxis()->GetXbins()->fN &&
-      GetZaxis()->GetXbins()->fArray) {
-         nonEqiZ = kTRUE;
-         nzaxis++;
-         szaxis += nzaxis;
-         out << "   Double_t "<<szaxis<<"[" << GetZaxis()->GetXbins()->fN
-            << "] = {";
-         for (i = 0; i < GetZaxis()->GetXbins()->fN; i++) {
-            if (i != 0) out << ", ";
-            out << GetZaxis()->GetXbins()->fArray[i];
-         }
-         out << "}; " << std::endl;
-   }
+   if (fDimension > 2 && GetZaxis()->GetXbins()->fN && GetZaxis()->GetXbins()->fArray)
+      szaxis = SavePrimitiveArray(out, hname + "_z", GetZaxis()->GetXbins()->fN, GetZaxis()->GetXbins()->fArray);
 
-   char quote = '"';
-   out <<"   "<<std::endl;
-   out <<"   "<< ClassName() <<" *";
+   const auto old_precision{out.precision()};
+   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
+   out << std::setprecision(max_precision);
 
-   // Histogram pointer has by default the histogram name with an incremental suffix.
-   // If the histogram belongs to a graph or a stack the suffix is not added because
-   // the graph and stack objects are not aware of this new name. Same thing if
-   // the histogram is drawn with the option COLZ because the TPaletteAxis drawn
-   // when this option is selected, does not know this new name either.
-   TString opt = option;
-   opt.ToLower();
-   static Int_t hcounter = 0;
-   TString histName = GetName();
-   if (     !histName.Contains("Graph")
-         && !histName.Contains("_stack_")
-         && !opt.Contains("colz")) {
-      hcounter++;
-      histName += "__";
-      histName += hcounter;
-   }
-   histName = gInterpreter-> MapCppName(histName);
-   const char *hname = histName.Data();
-   if (!strlen(hname)) hname = "unnamed";
-   TString savedName = GetName();
-   this->SetName(hname);
-   TString t(GetTitle());
-   t.ReplaceAll("\\","\\\\");
-   t.ReplaceAll("\"","\\\"");
-   out << hname << " = new " << ClassName() << "(" << quote
-       << hname << quote << "," << quote<< t.Data() << quote
-       << "," << GetXaxis()->GetNbins();
-   if (nonEqiX)
-      out << ", "<<sxaxis;
+   out << "   " << ClassName() << " *" << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
+       << TString(GetTitle()).ReplaceSpecialCppChars() << "\", " << GetXaxis()->GetNbins();
+   if (!sxaxis.IsNull())
+      out << ", " << sxaxis;
    else
-      out << "," << GetXaxis()->GetXmin()
-      << "," << GetXaxis()->GetXmax();
+      out << ", " << GetXaxis()->GetXmin() << ", " << GetXaxis()->GetXmax();
    if (fDimension > 1) {
-      out << "," << GetYaxis()->GetNbins();
-      if (nonEqiY)
-         out << ", "<<syaxis;
+      out << ", " << GetYaxis()->GetNbins();
+      if (!syaxis.IsNull())
+         out << ", " << syaxis;
       else
-         out << "," << GetYaxis()->GetXmin()
-         << "," << GetYaxis()->GetXmax();
+         out << ", " << GetYaxis()->GetXmin() << ", " << GetYaxis()->GetXmax();
    }
    if (fDimension > 2) {
-      out << "," << GetZaxis()->GetNbins();
-      if (nonEqiZ)
-         out << ", "<<szaxis;
+      out << ", " << GetZaxis()->GetNbins();
+      if (!szaxis.IsNull())
+         out << ", " << szaxis;
       else
-         out << "," << GetZaxis()->GetXmin()
-         << "," << GetZaxis()->GetXmax();
+         out << ", " << GetZaxis()->GetXmin() << ", " << GetZaxis()->GetXmax();
    }
-   out << ");" << std::endl;
+   out << ");\n";
 
-   // save bin contents
-   Int_t bin;
-   for (bin=0;bin<fNcells;bin++) {
-      Double_t bc = RetrieveBinContent(bin);
-      if (bc) {
-         out<<"   "<<hname<<"->SetBinContent("<<bin<<","<<bc<<");"<<std::endl;
+   Bool_t save_errors = fSumw2.fN > 0;
+   Int_t numbins = 0, numerrors = 0;
+
+   std::vector<Double_t> content(fNcells), errors(save_errors ? fNcells : 0);
+   for (Int_t bin = 0; bin < fNcells; bin++) {
+      content[bin] = RetrieveBinContent(bin);
+      if (content[bin])
+         numbins++;
+      if (save_errors) {
+         errors[bin] = GetBinError(bin);
+         if (errors[bin])
+            numerrors++;
       }
    }
 
-   // save bin errors
-   if (fSumw2.fN) {
-      for (bin=0;bin<fNcells;bin++) {
-         Double_t be = GetBinError(bin);
-         if (be) {
-            out<<"   "<<hname<<"->SetBinError("<<bin<<","<<be<<");"<<std::endl;
+   if ((numbins < 100) && (numerrors < 100)) {
+      // in case of few non-empty bins store them as before
+      for (Int_t bin = 0; bin < fNcells; bin++) {
+         if (content[bin])
+            out << "   " << hname << "->SetBinContent(" << bin << "," << content[bin] << ");\n";
+      }
+      if (save_errors)
+         for (Int_t bin = 0; bin < fNcells; bin++) {
+            if (errors[bin])
+               out << "   " << hname << "->SetBinError(" << bin << "," << errors[bin] << ");\n";
          }
+   } else {
+      if (numbins > 0) {
+         TString arr = SavePrimitiveArray(out, hname, fNcells, content.data());
+         out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
+         out << "      if (" << arr << "[bin])\n";
+         out << "         " << hname << "->SetBinContent(bin, " << arr << "[bin]);\n";
+      }
+      if (numerrors > 0) {
+         TString arr = SavePrimitiveArray(out, hname, fNcells, errors.data());
+         out << "   for (Int_t bin = 0; bin < " << fNcells << "; bin++)\n";
+         out << "      if (" << arr << "[bin])\n";
+         out << "         " << hname << "->SetBinError(bin, " << arr << "[bin]);\n";
       }
    }
 
    TH1::SavePrimitiveHelp(out, hname, option);
    out << std::setprecision(old_precision);
-   this->SetName(savedName.Data());
+   SetName(savedName.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7382,88 +7368,86 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *option /*= ""*/)
 {
-   char quote = '"';
-   if (TMath::Abs(GetBarOffset()) > 1e-5) {
-      out<<"   "<<hname<<"->SetBarOffset("<<GetBarOffset()<<");"<<std::endl;
-   }
-   if (TMath::Abs(GetBarWidth()-1) > 1e-5) {
-      out<<"   "<<hname<<"->SetBarWidth("<<GetBarWidth()<<");"<<std::endl;
-   }
-   if (fMinimum != -1111) {
-      out<<"   "<<hname<<"->SetMinimum("<<fMinimum<<");"<<std::endl;
-   }
-   if (fMaximum != -1111) {
-      out<<"   "<<hname<<"->SetMaximum("<<fMaximum<<");"<<std::endl;
-   }
-   if (fNormFactor != 0) {
-      out<<"   "<<hname<<"->SetNormFactor("<<fNormFactor<<");"<<std::endl;
-   }
-   if (fEntries != 0) {
-      out<<"   "<<hname<<"->SetEntries("<<fEntries<<");"<<std::endl;
-   }
-   if (!fDirectory) {
-      out<<"   "<<hname<<"->SetDirectory(nullptr);"<<std::endl;
-   }
-   if (TestBit(kNoStats)) {
-      out<<"   "<<hname<<"->SetStats(0);"<<std::endl;
-   }
-   if (fOption.Length() != 0) {
-      out<<"   "<<hname<<"->SetOption("<<quote<<fOption.Data()<<quote<<");"<<std::endl;
-   }
+   if (TMath::Abs(GetBarOffset()) > 1e-5)
+      out << "   " << hname << "->SetBarOffset(" << GetBarOffset() << ");\n";
+   if (TMath::Abs(GetBarWidth() - 1) > 1e-5)
+      out << "   " << hname << "->SetBarWidth(" << GetBarWidth() << ");\n";
+   if (fMinimum != -1111)
+      out << "   " << hname << "->SetMinimum(" << fMinimum << ");\n";
+   if (fMaximum != -1111)
+      out << "   " << hname << "->SetMaximum(" << fMaximum << ");\n";
+   if (fNormFactor != 0)
+      out << "   " << hname << "->SetNormFactor(" << fNormFactor << ");\n";
+   if (fEntries != 0)
+      out << "   " << hname << "->SetEntries(" << fEntries << ");\n";
+   if (!fDirectory)
+      out << "   " << hname << "->SetDirectory(nullptr);\n";
+   if (TestBit(kNoStats))
+      out << "   " << hname << "->SetStats(0);\n";
+   if (fOption.Length() != 0)
+      out << "   " << hname << "->SetOption(\n" << TString(fOption).ReplaceSpecialCppChars() << "\");\n";
 
    // save contour levels
    Int_t ncontours = GetContour();
    if (ncontours > 0) {
-      out<<"   "<<hname<<"->SetContour("<<ncontours<<");"<<std::endl;
+      out << "   " << hname << "->SetContour(" << ncontours << ");\n";
       Double_t zlevel;
-      for (Int_t bin=0;bin<ncontours;bin++) {
+      for (Int_t bin = 0; bin < ncontours; bin++) {
          if (gPad->GetLogz()) {
-            zlevel = TMath::Power(10,GetContourLevel(bin));
+            zlevel = TMath::Power(10, GetContourLevel(bin));
          } else {
             zlevel = GetContourLevel(bin);
          }
-         out<<"   "<<hname<<"->SetContourLevel("<<bin<<","<<zlevel<<");"<<std::endl;
+         out << "   " << hname << "->SetContourLevel(" << bin << "," << zlevel << ");\n";
       }
    }
 
-   // save list of functions
-   auto lnk = fFunctions->FirstLink();
-   static Int_t funcNumber = 0;
-   while (lnk) {
-      auto obj = lnk->GetObject();
-      obj->SavePrimitive(out, TString::Format("nodraw #%d\n",++funcNumber).Data());
-      if (obj->InheritsFrom(TF1::Class())) {
-         TString fname;
-         fname.Form("%s%d",obj->GetName(),funcNumber);
-         out << "   " << fname << "->SetParent(" << hname << ");\n";
-         out<<"   "<<hname<<"->GetListOfFunctions()->Add("
-            << fname <<");"<<std::endl;
-      } else if (obj->InheritsFrom("TPaveStats")) {
-         out<<"   "<<hname<<"->GetListOfFunctions()->Add(ptstats);"<<std::endl;
-         out<<"   ptstats->SetParent("<<hname<<");"<<std::endl;
-      } else if (obj->InheritsFrom("TPolyMarker")) {
-         out<<"   "<<hname<<"->GetListOfFunctions()->Add("
-            <<"pmarker ,"<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
-      } else {
-         out<<"   "<<hname<<"->GetListOfFunctions()->Add("
-            <<obj->GetName()
-            <<","<<quote<<lnk->GetOption()<<quote<<");"<<std::endl;
-      }
-      lnk = lnk->Next();
-   }
+   SavePrimitiveFunctions(out, hname, fFunctions);
 
    // save attributes
-   SaveFillAttributes(out,hname,0,1001);
-   SaveLineAttributes(out,hname,1,1,1);
-   SaveMarkerAttributes(out,hname,1,1,1);
-   fXaxis.SaveAttributes(out,hname,"->GetXaxis()");
-   fYaxis.SaveAttributes(out,hname,"->GetYaxis()");
-   fZaxis.SaveAttributes(out,hname,"->GetZaxis()");
-   TString opt = option;
-   opt.ToLower();
-   if (!opt.Contains("nodraw")) {
-      out<<"   "<<hname<<"->Draw("
-         <<quote<<option<<quote<<");"<<std::endl;
+   SaveFillAttributes(out, hname, 0, 1001);
+   SaveLineAttributes(out, hname, 1, 1, 1);
+   SaveMarkerAttributes(out, hname, 1, 1, 1);
+   fXaxis.SaveAttributes(out, hname, "->GetXaxis()");
+   fYaxis.SaveAttributes(out, hname, "->GetYaxis()");
+   fZaxis.SaveAttributes(out, hname, "->GetZaxis()");
+
+   if (!option || !strstr(option, "nodraw"))
+      out << "   " << hname << "->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save list of functions
+/// Also can be used by TGraph classes
+
+void TH1::SavePrimitiveFunctions(std::ostream &out, const char *varname, TList *lst)
+{
+   thread_local Int_t funcNumber = 0;
+
+   TObjLink *lnk = lst ? lst->FirstLink() : nullptr;
+   while (lnk) {
+      auto obj = lnk->GetObject();
+      obj->SavePrimitive(out, TString::Format("nodraw #%d\n", ++funcNumber).Data());
+      TString objvarname = obj->GetName();
+      Bool_t withopt = kTRUE;
+      if (obj->InheritsFrom(TF1::Class())) {
+         objvarname += funcNumber;
+         objvarname = gInterpreter->MapCppName(objvarname);
+         out << "   " << objvarname << "->SetParent(" << varname << ");\n";
+      } else if (obj->InheritsFrom("TPaveStats")) {
+         objvarname = "ptstats";
+         withopt = kFALSE; // pave stats preserve own draw options
+         out << "   " << objvarname << "->SetParent(" << varname << ");\n";
+      } else if (obj->InheritsFrom("TPolyMarker")) {
+         objvarname = "pmarker";
+      }
+
+      out << "   " << varname << "->GetListOfFunctions()->Add(" << objvarname;
+      if (withopt)
+         out << ",\"" << TString(lnk->GetOption()).ReplaceSpecialCppChars() << "\"";
+      out << ");\n";
+
+      lnk = lnk->Next();
    }
 }
 

@@ -38,7 +38,7 @@ namespace Internal {
 /// by the number of elements of the first principal column found in the subfields searched by BFS.
 /// If the field hierarchy is empty on columns, the returned field range is invalid (start and end set to
 /// kInvalidNTupleIndex). An attempt to use such a field range in RNTupleViewBase::GetFieldRange will throw.
-RNTupleGlobalRange GetFieldRange(const RFieldBase &field, const RPageSource &pageSource);
+ROOT::RNTupleGlobalRange GetFieldRange(const RFieldBase &field, const RPageSource &pageSource);
 
 } // namespace Internal
 
@@ -61,7 +61,7 @@ template <typename T>
 class RNTupleViewBase {
 protected:
    std::unique_ptr<RFieldBase> fField;
-   RNTupleGlobalRange fFieldRange;
+   ROOT::RNTupleGlobalRange fFieldRange;
    RFieldBase::RValue fValue;
 
    static std::unique_ptr<RFieldBase> CreateField(ROOT::DescriptorId_t fieldId, Internal::RPageSource &pageSource)
@@ -81,18 +81,20 @@ protected:
       return field;
    }
 
-   RNTupleViewBase(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range)
+   RNTupleViewBase(std::unique_ptr<RFieldBase> field, ROOT::RNTupleGlobalRange range)
       : fField(std::move(field)), fFieldRange(range), fValue(fField->CreateValue())
    {
    }
 
-   RNTupleViewBase(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range, std::shared_ptr<T> objPtr)
+   RNTupleViewBase(std::unique_ptr<RFieldBase> field, ROOT::RNTupleGlobalRange range, std::shared_ptr<T> objPtr)
       : fField(std::move(field)), fFieldRange(range), fValue(fField->BindValue(objPtr))
    {
    }
 
-   RNTupleViewBase(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range, T *rawPtr)
-      : fField(std::move(field)), fFieldRange(range), fValue(fField->BindValue(Internal::MakeAliasedSharedPtr(rawPtr)))
+   RNTupleViewBase(std::unique_ptr<RFieldBase> field, ROOT::RNTupleGlobalRange range, T *rawPtr)
+      : fField(std::move(field)),
+        fFieldRange(range),
+        fValue(fField->BindValue(ROOT::Internal::MakeAliasedSharedPtr(rawPtr)))
    {
    }
 
@@ -107,7 +109,7 @@ public:
    RFieldBase::RBulk CreateBulk() { return fField->CreateBulk(); }
 
    const RFieldBase::RValue &GetValue() const { return fValue; }
-   RNTupleGlobalRange GetFieldRange() const
+   ROOT::RNTupleGlobalRange GetFieldRange() const
    {
       if (!fFieldRange.IsValid()) {
          throw RException(R__FAIL("field iteration over empty fields is unsupported: " + fField->GetFieldName()));
@@ -133,17 +135,17 @@ class RNTupleView : public RNTupleViewBase<T> {
    friend class RNTupleCollectionView;
 
 protected:
-   RNTupleView(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range)
+   RNTupleView(std::unique_ptr<RFieldBase> field, ROOT::RNTupleGlobalRange range)
       : RNTupleViewBase<T>(std::move(field), range)
    {
    }
 
-   RNTupleView(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range, std::shared_ptr<T> objPtr)
+   RNTupleView(std::unique_ptr<RFieldBase> field, ROOT::RNTupleGlobalRange range, std::shared_ptr<T> objPtr)
       : RNTupleViewBase<T>(std::move(field), range, objPtr)
    {
    }
 
-   RNTupleView(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range, T *rawPtr)
+   RNTupleView(std::unique_ptr<RFieldBase> field, ROOT::RNTupleGlobalRange range, T *rawPtr)
       : RNTupleViewBase<T>(std::move(field), range, rawPtr)
    {
    }
@@ -181,17 +183,17 @@ class RNTupleView<void> final : public RNTupleViewBase<void> {
    friend class RNTupleCollectionView;
 
 protected:
-   RNTupleView(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range)
+   RNTupleView(std::unique_ptr<RFieldBase> field, ROOT::RNTupleGlobalRange range)
       : RNTupleViewBase<void>(std::move(field), range)
    {
    }
 
-   RNTupleView(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range, std::shared_ptr<void> objPtr)
+   RNTupleView(std::unique_ptr<RFieldBase> field, ROOT::RNTupleGlobalRange range, std::shared_ptr<void> objPtr)
       : RNTupleViewBase<void>(std::move(field), range, objPtr)
    {
    }
 
-   RNTupleView(std::unique_ptr<RFieldBase> field, RNTupleGlobalRange range, void *rawPtr)
+   RNTupleView(std::unique_ptr<RFieldBase> field, ROOT::RNTupleGlobalRange range, void *rawPtr)
       : RNTupleViewBase<void>(std::move(field), range, rawPtr)
    {
    }
@@ -221,7 +223,7 @@ class RNTupleDirectAccessView {
 
 protected:
    RField<T> fField;
-   RNTupleGlobalRange fFieldRange;
+   ROOT::RNTupleGlobalRange fFieldRange;
 
    static RField<T> CreateField(ROOT::DescriptorId_t fieldId, Internal::RPageSource &pageSource)
    {
@@ -237,7 +239,10 @@ protected:
       return field;
    }
 
-   RNTupleDirectAccessView(RField<T> field, RNTupleGlobalRange range) : fField(std::move(field)), fFieldRange(range) {}
+   RNTupleDirectAccessView(RField<T> field, ROOT::RNTupleGlobalRange range)
+      : fField(std::move(field)), fFieldRange(range)
+   {
+   }
 
 public:
    RNTupleDirectAccessView(const RNTupleDirectAccessView &other) = delete;
@@ -247,7 +252,7 @@ public:
    ~RNTupleDirectAccessView() = default;
 
    const RFieldBase &GetField() const { return fField; }
-   RNTupleGlobalRange GetFieldRange() const { return fFieldRange; }
+   ROOT::RNTupleGlobalRange GetFieldRange() const { return fFieldRange; }
 
    const T &operator()(ROOT::NTupleSize_t globalIndex) { return *fField.Map(globalIndex); }
    const T &operator()(RNTupleLocalIndex localIndex) { return *fField.Map(localIndex); }
@@ -308,22 +313,22 @@ public:
    RNTupleCollectionView &operator=(RNTupleCollectionView &&other) = default;
    ~RNTupleCollectionView() = default;
 
-   RNTupleClusterRange GetCollectionRange(ROOT::NTupleSize_t globalIndex)
+   ROOT::RNTupleLocalRange GetCollectionRange(ROOT::NTupleSize_t globalIndex)
    {
       ROOT::NTupleSize_t size;
       RNTupleLocalIndex collectionStart;
       fField.GetCollectionInfo(globalIndex, &collectionStart, &size);
-      return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndexInCluster(),
-                                 collectionStart.GetIndexInCluster() + size);
+      return ROOT::RNTupleLocalRange(collectionStart.GetClusterId(), collectionStart.GetIndexInCluster(),
+                                     collectionStart.GetIndexInCluster() + size);
    }
 
-   RNTupleClusterRange GetCollectionRange(RNTupleLocalIndex localIndex)
+   ROOT::RNTupleLocalRange GetCollectionRange(RNTupleLocalIndex localIndex)
    {
       ROOT::NTupleSize_t size;
       RNTupleLocalIndex collectionStart;
       fField.GetCollectionInfo(localIndex, &collectionStart, &size);
-      return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndexInCluster(),
-                                 collectionStart.GetIndexInCluster() + size);
+      return ROOT::RNTupleLocalRange(collectionStart.GetClusterId(), collectionStart.GetIndexInCluster(),
+                                     collectionStart.GetIndexInCluster() + size);
    }
 
    /// Raises an exception if there is no field with the given name.

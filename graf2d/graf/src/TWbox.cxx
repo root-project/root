@@ -206,15 +206,10 @@ void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 
 void TWbox::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   if (gROOT->ClassSaved(TWbox::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TWbox *";
-   }
-   out<<"wbox = new TWbox("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "wbox", TString::Format("%g, %g, %g, %g", fX1, fY1, fX2, fY2), kFALSE);
 
-   SaveFillAttributes(out,"wbox",0,1001);
-   SaveLineAttributes(out,"wbox",1,1,1);
+   SaveFillAttributes(out, "wbox", 0, 1001);
+   SaveLineAttributes(out, "wbox", 1, 1, 1);
 
-   out<<"   wbox->Draw();"<<std::endl;
+   out << "   wbox->Draw();" << std::endl;
 }

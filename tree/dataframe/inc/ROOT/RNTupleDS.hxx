@@ -17,7 +17,6 @@
 #ifndef ROOT_RNTupleDS
 #define ROOT_RNTupleDS
 
-#include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDataSource.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
@@ -102,7 +101,6 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// to new page sources when the files in the chain change.
    std::vector<std::vector<Internal::RNTupleColumnReader *>> fActiveColumnReaders;
 
-   unsigned int fNSlots = 0;
    ULong64_t fSeenEntries = 0;                ///< The number of entries so far returned by GetEntryRanges()
    std::vector<REntryRangeDS> fCurrentRanges; ///< Basis for the ranges returned by the last GetEntryRanges() call
    std::vector<REntryRangeDS> fNextRanges;    ///< Basis for the ranges populated by the PrepareNextRanges() call
@@ -204,13 +202,14 @@ protected:
 
 } // namespace Experimental
 
+class RDataFrame;
+
 namespace RDF {
 namespace Experimental {
 RDataFrame FromRNTuple(std::string_view ntupleName, std::string_view fileName);
 RDataFrame FromRNTuple(std::string_view ntupleName, const std::vector<std::string> &fileNames);
 } // namespace Experimental
 } // namespace RDF
-
-} // ns ROOT
+} // namespace ROOT
 
 #endif

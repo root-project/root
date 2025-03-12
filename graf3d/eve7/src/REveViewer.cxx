@@ -16,8 +16,10 @@
 #include <ROOT/REveSceneInfo.hxx>
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveSelection.hxx>
+#include <ROOT/REveText.hxx>
 
 #include <nlohmann/json.hpp>
+#include "TROOT.h"
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -106,6 +108,11 @@ List of Viewers providing common operations on REveViewer collections.
 void REveViewer::SetAxesType(int at)
 {
    fAxesType = (EAxesType)at;
+   if (fAxesType != kAxesNone) {
+      std::string fn = "LiberationSerif-Regular";
+      std::string rf_dir = std::string(TROOT::GetDataDir().Data()) + "/fonts/";
+      REX::REveText::AssertSdfFont(fn, rf_dir + fn + ".ttf");
+   }
    StampObjProps();
 }
 

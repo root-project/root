@@ -117,7 +117,7 @@ void ROOT::Experimental::RFieldBase::RValue::BindRawPtr(void *rawPtr)
 {
    // Set fObjPtr to an aliased shared_ptr of the input raw pointer. Note that
    // fObjPtr will be non-empty but have use count zero.
-   fObjPtr = ROOT::Experimental::Internal::MakeAliasedSharedPtr(rawPtr);
+   fObjPtr = ROOT::Internal::MakeAliasedSharedPtr(rawPtr);
 }
 
 //------------------------------------------------------------------------------
@@ -246,7 +246,7 @@ ROOT::Experimental::RFieldBase::RFieldBase(std::string_view name, std::string_vi
      fPrincipalColumn(nullptr),
      fTraits(isSimple ? kTraitMappable : 0)
 {
-   ROOT::Experimental::Internal::EnsureValidNameForRNTuple(name, "Field");
+   ROOT::Internal::EnsureValidNameForRNTuple(name, "Field");
 }
 
 std::string ROOT::Experimental::RFieldBase::GetQualifiedFieldName() const
@@ -469,8 +469,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
 
          // We use the type names of subfields of the newly created item fields to create the map's type name to
          // ensure the inner type names are properly normalized.
-         auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
-         auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
+         auto keyTypeName = itemField->GetConstSubfields()[0]->GetTypeName();
+         auto valueTypeName = itemField->GetConstSubfields()[1]->GetTypeName();
 
          result = std::make_unique<RMapField>(fieldName, "std::map<" + keyTypeName + "," + valueTypeName + ">",
                                               std::move(itemField));
@@ -485,8 +485,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
 
          // We use the type names of subfields of the newly created item fields to create the map's type name to
          // ensure the inner type names are properly normalized.
-         auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
-         auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
+         auto keyTypeName = itemField->GetConstSubfields()[0]->GetTypeName();
+         auto valueTypeName = itemField->GetConstSubfields()[1]->GetTypeName();
 
          result = std::make_unique<RMapField>(
             fieldName, "std::unordered_map<" + keyTypeName + "," + valueTypeName + ">", std::move(itemField));
@@ -501,8 +501,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
 
          // We use the type names of subfields of the newly created item fields to create the map's type name to
          // ensure the inner type names are properly normalized.
-         auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
-         auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
+         auto keyTypeName = itemField->GetConstSubfields()[0]->GetTypeName();
+         auto valueTypeName = itemField->GetConstSubfields()[1]->GetTypeName();
 
          result = std::make_unique<RMapField>(fieldName, "std::multimap<" + keyTypeName + "," + valueTypeName + ">",
                                               std::move(itemField));
@@ -518,8 +518,8 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
 
          // We use the type names of subfields of the newly created item fields to create the map's type name to
          // ensure the inner type names are properly normalized.
-         auto keyTypeName = itemField->GetSubFields()[0]->GetTypeName();
-         auto valueTypeName = itemField->GetSubFields()[1]->GetTypeName();
+         auto keyTypeName = itemField->GetConstSubfields()[0]->GetTypeName();
+         auto valueTypeName = itemField->GetConstSubfields()[1]->GetTypeName();
 
          result = std::make_unique<RMapField>(
             fieldName, "std::unordered_multimap<" + keyTypeName + "," + valueTypeName + ">", std::move(itemField));
@@ -695,7 +695,7 @@ void ROOT::Experimental::RFieldBase::Attach(std::unique_ptr<ROOT::Experimental::
    if (fState != EState::kUnconnected)
       throw RException(R__FAIL("invalid attempt to attach subfield to already connected field"));
    child->fParent = this;
-   fSubFields.emplace_back(std::move(child));
+   fSubfields.emplace_back(std::move(child));
 }
 
 ROOT::NTupleSize_t ROOT::Experimental::RFieldBase::EntryToColumnElementIndex(ROOT::NTupleSize_t globalIndex) const
@@ -712,21 +712,21 @@ ROOT::NTupleSize_t ROOT::Experimental::RFieldBase::EntryToColumnElementIndex(ROO
    return result;
 }
 
-std::vector<ROOT::Experimental::RFieldBase *> ROOT::Experimental::RFieldBase::GetSubFields()
+std::vector<ROOT::Experimental::RFieldBase *> ROOT::Experimental::RFieldBase::GetMutableSubfields()
 {
    std::vector<RFieldBase *> result;
-   result.reserve(fSubFields.size());
-   for (const auto &f : fSubFields) {
+   result.reserve(fSubfields.size());
+   for (const auto &f : fSubfields) {
       result.emplace_back(f.get());
    }
    return result;
 }
 
-std::vector<const ROOT::Experimental::RFieldBase *> ROOT::Experimental::RFieldBase::GetSubFields() const
+std::vector<const ROOT::Experimental::RFieldBase *> ROOT::Experimental::RFieldBase::GetConstSubfields() const
 {
    std::vector<const RFieldBase *> result;
-   result.reserve(fSubFields.size());
-   for (const auto &f : fSubFields) {
+   result.reserve(fSubfields.size());
+   for (const auto &f : fSubfields) {
       result.emplace_back(f.get());
    }
    return result;
@@ -808,7 +808,7 @@ std::size_t ROOT::Experimental::RFieldBase::ReadBulk(const RBulkSpec &bulkSpec)
 
 ROOT::Experimental::RFieldBase::RSchemaIterator ROOT::Experimental::RFieldBase::begin()
 {
-   return fSubFields.empty() ? RSchemaIterator(this, -1) : RSchemaIterator(fSubFields[0].get(), 0);
+   return fSubfields.empty() ? RSchemaIterator(this, -1) : RSchemaIterator(fSubfields[0].get(), 0);
 }
 
 ROOT::Experimental::RFieldBase::RSchemaIterator ROOT::Experimental::RFieldBase::end()
@@ -818,7 +818,7 @@ ROOT::Experimental::RFieldBase::RSchemaIterator ROOT::Experimental::RFieldBase::
 
 ROOT::Experimental::RFieldBase::RConstSchemaIterator ROOT::Experimental::RFieldBase::begin() const
 {
-   return fSubFields.empty() ? RConstSchemaIterator(this, -1) : RConstSchemaIterator(fSubFields[0].get(), 0);
+   return fSubfields.empty() ? RConstSchemaIterator(this, -1) : RConstSchemaIterator(fSubfields[0].get(), 0);
 }
 
 ROOT::Experimental::RFieldBase::RConstSchemaIterator ROOT::Experimental::RFieldBase::end() const
@@ -828,7 +828,7 @@ ROOT::Experimental::RFieldBase::RConstSchemaIterator ROOT::Experimental::RFieldB
 
 ROOT::Experimental::RFieldBase::RConstSchemaIterator ROOT::Experimental::RFieldBase::cbegin() const
 {
-   return fSubFields.empty() ? RConstSchemaIterator(this, -1) : RConstSchemaIterator(fSubFields[0].get(), 0);
+   return fSubfields.empty() ? RConstSchemaIterator(this, -1) : RConstSchemaIterator(fSubfields[0].get(), 0);
 }
 
 ROOT::Experimental::RFieldBase::RConstSchemaIterator ROOT::Experimental::RFieldBase::cend() const
@@ -987,7 +987,7 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
 
    BeforeConnectPageSource(pageSource);
 
-   for (auto &f : fSubFields) {
+   for (auto &f : fSubfields) {
       if (f->GetOnDiskId() == ROOT::kInvalidDescriptorId) {
          f->SetOnDiskId(pageSource.GetSharedDescriptorGuard()->FindFieldId(f->GetFieldName(), GetOnDiskId()));
       }

@@ -837,8 +837,7 @@ void TParallelCoord::SavePrimitive(std::ostream & out, Option_t* options)
    while ((sel = (TParallelCoordSelect*)next())) {
       out<<"   para->AddSelection(\""<<sel->GetTitle()<<"\");"<<std::endl;
       out<<"   sel = (TParallelCoordSelect*)para->GetSelectList()->Last();"<<std::endl;
-      out<<"   sel->SetLineColor("<<sel->GetLineColor()<<");"<<std::endl;
-      out<<"   sel->SetLineWidth("<<sel->GetLineWidth()<<");"<<std::endl;
+      sel->SaveLineAttributes(out, "sel", -1, -1, 1);
    }
    TIter nextbis(fVarList);
    TParallelCoordVar* var;
@@ -864,7 +863,7 @@ void TParallelCoord::SavePrimitive(std::ostream & out, Option_t* options)
    out<<"   para->SetCurrentN("<<fCurrentN<<");"<<std::endl;
    out<<"   para->SetWeightCut("<<fWeightCut<<");"<<std::endl;
    out<<"   para->SetDotsSpacing("<<fDotsSpacing<<");"<<std::endl;
-   out<<"   para->SetLineColor("<<GetLineColor()<<");"<<std::endl;
+   out<<"   para->SetLineColor("<<TColor::SavePrimitiveColor(GetLineColor())<<");"<<std::endl;
    out<<"   para->SetLineWidth("<<GetLineWidth()<<");"<<std::endl;
    out<<"   para->SetBit(TParallelCoord::kVertDisplay,"<<TestBit(kVertDisplay)<<");"<<std::endl;
    out<<"   para->SetBit(TParallelCoord::kCurveDisplay,"<<TestBit(kCurveDisplay)<<");"<<std::endl;

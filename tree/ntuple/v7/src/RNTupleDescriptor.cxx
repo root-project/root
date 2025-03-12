@@ -221,7 +221,7 @@ ROOT::Experimental::RClusterDescriptor::RPageRange::Find(ROOT::NTupleSize_t idxI
    auto pageInfo = fPageInfos[midpoint];
    decltype(idxInCluster) firstInPage = (midpoint == 0) ? 0 : fCumulativeNElements[midpoint - 1];
    R__ASSERT(firstInPage <= idxInCluster);
-   R__ASSERT((firstInPage + pageInfo.fNElements) > idxInCluster);
+   R__ASSERT((firstInPage + pageInfo.GetNElements()) > idxInCluster);
    return RPageInfoExtended{pageInfo, firstInPage, midpoint};
 }
 
@@ -230,12 +230,13 @@ ROOT::Experimental::RClusterDescriptor::RPageRange::ExtendToFitColumnRange(const
                                                                            const Internal::RColumnElementBase &element,
                                                                            std::size_t pageSize)
 {
-   R__ASSERT(fPhysicalColumnId == columnRange.fPhysicalColumnId);
-   R__ASSERT(!columnRange.fIsSuppressed);
+   R__ASSERT(fPhysicalColumnId == columnRange.GetPhysicalColumnId());
+   R__ASSERT(!columnRange.IsSuppressed());
 
-   const auto nElements = std::accumulate(fPageInfos.begin(), fPageInfos.end(), 0U,
-                                          [](std::size_t n, const auto &PI) { return n + PI.fNElements; });
-   const auto nElementsRequired = static_cast<std::uint64_t>(columnRange.fNElements);
+   const auto nElements =
+      std::accumulate(fPageInfos.begin(), fPageInfos.end(), 0U,
+                      [](std::size_t n, const auto &pageInfo) { return n + pageInfo.GetNElements(); });
+   const auto nElementsRequired = static_cast<std::uint64_t>(columnRange.GetNElements());
 
    if (nElementsRequired == nElements)
       return 0U;
@@ -246,12 +247,14 @@ ROOT::Experimental::RClusterDescriptor::RPageRange::ExtendToFitColumnRange(const
    const std::uint64_t nElementsPerPage = pageSize / element.GetSize();
    R__ASSERT(nElementsPerPage > 0);
    for (auto nRemainingElements = nElementsRequired - nElements; nRemainingElements > 0;) {
-      RPageInfo PI;
-      PI.fNElements = std::min(nElementsPerPage, nRemainingElements);
-      PI.fLocator.SetType(RNTupleLocator::kTypePageZero);
-      PI.fLocator.SetNBytesOnStorage(element.GetPackedSize(PI.fNElements));
-      pageInfos.emplace_back(PI);
-      nRemainingElements -= PI.fNElements;
+      RPageInfo pageInfo;
+      pageInfo.SetNElements(std::min(nElementsPerPage, nRemainingElements));
+      RNTupleLocator locator;
+      locator.SetType(RNTupleLocator::kTypePageZero);
+      locator.SetNBytesOnStorage(element.GetPackedSize(pageInfo.GetNElements()));
+      pageInfo.SetLocator(locator);
+      pageInfos.emplace_back(pageInfo);
+      nRemainingElements -= pageInfo.GetNElements();
    }
 
    pageInfos.insert(pageInfos.end(), std::make_move_iterator(fPageInfos.begin()),
@@ -270,8 +273,8 @@ std::uint64_t ROOT::Experimental::RClusterDescriptor::GetNBytesOnStorage() const
 {
    std::uint64_t nbytes = 0;
    for (const auto &pr : fPageRanges) {
-      for (const auto &pi : pr.second.fPageInfos) {
-         nbytes += pi.fLocator.GetNBytesOnStorage();
+      for (const auto &pi : pr.second.GetPageInfos()) {
+         nbytes += pi.GetLocator().GetNBytesOnStorage();
       }
    }
    return nbytes;
@@ -330,7 +333,7 @@ ROOT::NTupleSize_t ROOT::Experimental::RNTupleDescriptor::GetNElements(ROOT::Des
       if (!cd.second.ContainsColumn(physicalColumnId))
          continue;
       auto columnRange = cd.second.GetColumnRange(physicalColumnId);
-      result = std::max(result, columnRange.fFirstElementIndex + columnRange.fNElements);
+      result = std::max(result, columnRange.GetFirstElementIndex() + columnRange.GetNElements());
    }
    return result;
 }
@@ -412,8 +415,12 @@ ROOT::DescriptorId_t ROOT::Experimental::RNTupleDescriptor::FindClusterId(ROOT::
       const auto &clusterIds = GetClusterGroupDescriptor(fSortedClusterGroupIds[cgMidpoint]).GetClusterIds();
       R__ASSERT(!clusterIds.empty());
 
-      const auto firstElementInGroup =
-         GetClusterDescriptor(clusterIds.front()).GetColumnRange(physicalColumnId).fFirstElementIndex;
+      const auto &clusterDesc = GetClusterDescriptor(clusterIds.front());
+      // this may happen if the RNTuple has an empty schema
+      if (!clusterDesc.ContainsColumn(physicalColumnId))
+         return ROOT::kInvalidDescriptorId;
+
+      const auto firstElementInGroup = clusterDesc.GetColumnRange(physicalColumnId).GetFirstElementIndex();
       if (firstElementInGroup > index) {
          // Look into the lower half of cluster groups
          R__ASSERT(cgMidpoint > 0);
@@ -422,7 +429,7 @@ ROOT::DescriptorId_t ROOT::Experimental::RNTupleDescriptor::FindClusterId(ROOT::
       }
 
       const auto &lastColumnRange = GetClusterDescriptor(clusterIds.back()).GetColumnRange(physicalColumnId);
-      if ((lastColumnRange.fFirstElementIndex + lastColumnRange.fNElements) <= index) {
+      if ((lastColumnRange.GetFirstElementIndex() + lastColumnRange.GetNElements()) <= index) {
          // Look into the upper half of cluster groups
          cgLeft = cgMidpoint + 1;
          continue;
@@ -440,13 +447,13 @@ ROOT::DescriptorId_t ROOT::Experimental::RNTupleDescriptor::FindClusterId(ROOT::
          if (columnRange.Contains(index))
             return clusterId;
 
-         if (columnRange.fFirstElementIndex > index) {
+         if (columnRange.GetFirstElementIndex() > index) {
             R__ASSERT(clusterMidpoint > 0);
             clusterRight = clusterMidpoint - 1;
             continue;
          }
 
-         if (columnRange.fFirstElementIndex + columnRange.fNElements <= index) {
+         if (columnRange.GetFirstElementIndex() + columnRange.GetNElements() <= index) {
             clusterLeft = clusterMidpoint + 1;
             continue;
          }
@@ -742,7 +749,7 @@ ROOT::RResult<void> ROOT::Experimental::Internal::RClusterDescriptorBuilder::Com
       return R__FAIL("column ID conflict");
    RClusterDescriptor::RColumnRange columnRange{physicalId, firstElementIndex, 0, compressionSettings};
    for (const auto &pi : pageRange.fPageInfos) {
-      columnRange.fNElements += pi.fNElements;
+      columnRange.IncrementNElements(pi.GetNElements());
    }
    fCluster.fPageRanges[physicalId] = pageRange.Clone();
    fCluster.fColumnRanges[physicalId] = columnRange;
@@ -756,8 +763,8 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::MarkSuppressedColumnRan
       return R__FAIL("column ID conflict");
 
    RClusterDescriptor::RColumnRange columnRange;
-   columnRange.fPhysicalColumnId = physicalId;
-   columnRange.fIsSuppressed = true;
+   columnRange.SetPhysicalColumnId(physicalId);
+   columnRange.SetIsSuppressed(true);
    fCluster.fColumnRanges[physicalId] = columnRange;
    return RResult<void>::Success();
 }
@@ -766,11 +773,11 @@ ROOT::RResult<void>
 ROOT::Experimental::Internal::RClusterDescriptorBuilder::CommitSuppressedColumnRanges(const RNTupleDescriptor &desc)
 {
    for (auto &[_, columnRange] : fCluster.fColumnRanges) {
-      if (!columnRange.fIsSuppressed)
+      if (!columnRange.IsSuppressed())
          continue;
-      R__ASSERT(columnRange.fFirstElementIndex == ROOT::kInvalidNTupleIndex);
+      R__ASSERT(columnRange.GetFirstElementIndex() == ROOT::kInvalidNTupleIndex);
 
-      const auto &columnDesc = desc.GetColumnDescriptor(columnRange.fPhysicalColumnId);
+      const auto &columnDesc = desc.GetColumnDescriptor(columnRange.GetPhysicalColumnId());
       const auto &fieldDesc = desc.GetFieldDescriptor(columnDesc.GetFieldId());
       // We expect only few columns and column representations per field, so we do a linear search
       for (const auto otherColumnLogicalId : fieldDesc.GetLogicalColumnIds()) {
@@ -782,17 +789,17 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::CommitSuppressedColumnR
 
          // Found corresponding column of a different column representation
          const auto &otherColumnRange = fCluster.GetColumnRange(otherColumnDesc.GetPhysicalId());
-         if (otherColumnRange.fIsSuppressed)
+         if (otherColumnRange.IsSuppressed())
             continue;
 
-         columnRange.fFirstElementIndex = otherColumnRange.fFirstElementIndex;
-         columnRange.fNElements = otherColumnRange.fNElements;
+         columnRange.SetFirstElementIndex(otherColumnRange.GetFirstElementIndex());
+         columnRange.SetNElements(otherColumnRange.GetNElements());
          break;
       }
 
-      if (columnRange.fFirstElementIndex == ROOT::kInvalidNTupleIndex) {
+      if (columnRange.GetFirstElementIndex() == ROOT::kInvalidNTupleIndex) {
          return R__FAIL(std::string("cannot find non-suppressed column for column ID ") +
-                        std::to_string(columnRange.fPhysicalColumnId) +
+                        std::to_string(columnRange.GetPhysicalColumnId()) +
                         ", cluster ID: " + std::to_string(fCluster.GetId()));
       }
    }
@@ -831,11 +838,11 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges
                // Initialize a RColumnRange for `physicalId` if it was not there. Columns that were created during model
                // extension won't have on-disk metadata for the clusters that were already committed before the model
                // was extended. Therefore, these need to be synthetically initialized upon reading.
-               if (columnRange.fPhysicalColumnId == ROOT::kInvalidDescriptorId) {
-                  columnRange.fPhysicalColumnId = physicalId;
-                  columnRange.fFirstElementIndex = 0;
-                  columnRange.fNElements = 0;
-                  columnRange.fIsSuppressed = c.IsSuppressedDeferredColumn();
+               if (columnRange.GetPhysicalColumnId() == ROOT::kInvalidDescriptorId) {
+                  columnRange.SetPhysicalColumnId(physicalId);
+                  columnRange.SetFirstElementIndex(0);
+                  columnRange.SetNElements(0);
+                  columnRange.SetIsSuppressed(c.IsSuppressedDeferredColumn());
                }
                // Fixup the RColumnRange and RPageRange in deferred columns. We know what the first element index and
                // number of elements should have been if the column was not deferred; fix those and let
@@ -844,15 +851,15 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges
                // `RFieldBase::EntryToColumnElementIndex()`, i.e. it is a principal column reachable from the field zero
                // excluding subfields of collection and variant fields.
                if (c.IsDeferredColumn()) {
-                  columnRange.fFirstElementIndex = fCluster.GetFirstEntryIndex() * nRepetitions;
-                  columnRange.fNElements = fCluster.GetNEntries() * nRepetitions;
-                  if (!columnRange.fIsSuppressed) {
+                  columnRange.SetFirstElementIndex(fCluster.GetFirstEntryIndex() * nRepetitions);
+                  columnRange.SetNElements(fCluster.GetNEntries() * nRepetitions);
+                  if (!columnRange.IsSuppressed()) {
                      auto &pageRange = fCluster.fPageRanges[physicalId];
                      pageRange.fPhysicalColumnId = physicalId;
                      const auto element = Internal::RColumnElementBase::Generate<void>(c.GetType());
-                     pageRange.ExtendToFitColumnRange(columnRange, *element, Internal::RPage::kPageZeroSize);
+                     pageRange.ExtendToFitColumnRange(columnRange, *element, ROOT::Internal::RPage::kPageZeroSize);
                   }
-               } else if (!columnRange.fIsSuppressed) {
+               } else if (!columnRange.IsSuppressed()) {
                   fCluster.fPageRanges[physicalId].fPhysicalColumnId = physicalId;
                }
             }
@@ -877,7 +884,7 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::MoveDescriptor()
       pr.second.fCumulativeNElements.reserve(pr.second.fPageInfos.size());
       ROOT::NTupleSize_t sum = 0;
       for (const auto &pi : pr.second.fPageInfos) {
-         sum += pi.fNElements;
+         sum += pi.GetNElements();
          pr.second.fCumulativeNElements.emplace_back(sum);
       }
    }
@@ -937,7 +944,7 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::EnsureFieldExists(ROOT::
 ROOT::RResult<void> ROOT::Experimental::Internal::RNTupleDescriptorBuilder::EnsureValidDescriptor() const
 {
    // Reuse field name validity check
-   auto validName = ROOT::Experimental::Internal::EnsureValidNameForRNTuple(fDescriptor.GetName(), "Field");
+   auto validName = ROOT::Internal::EnsureValidNameForRNTuple(fDescriptor.GetName(), "Field");
    if (!validName) {
       return R__FORWARD_ERROR(validName);
    }
@@ -1059,7 +1066,7 @@ ROOT::Experimental::Internal::RFieldDescriptorBuilder::MakeDescriptor() const
    }
    // FieldZero is usually named "" and would be a false positive here
    if (fField.GetParentId() != ROOT::kInvalidDescriptorId) {
-      auto validName = ROOT::Experimental::Internal::EnsureValidNameForRNTuple(fField.GetFieldName(), "Field");
+      auto validName = ROOT::Internal::EnsureValidNameForRNTuple(fField.GetFieldName(), "Field");
       if (!validName) {
          return R__FORWARD_ERROR(validName);
       }
@@ -1264,6 +1271,17 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddExtraTypeInfo(RExtraT
    }
    fDescriptor.fExtraTypeInfoDescriptors.emplace_back(std::move(extraTypeInfoDesc));
    return RResult<void>::Success();
+}
+
+void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::ReplaceExtraTypeInfo(
+   RExtraTypeInfoDescriptor &&extraTypeInfoDesc)
+{
+   auto it = std::find(fDescriptor.fExtraTypeInfoDescriptors.begin(), fDescriptor.fExtraTypeInfoDescriptors.end(),
+                       extraTypeInfoDesc);
+   if (it != fDescriptor.fExtraTypeInfoDescriptors.end())
+      *it = std::move(extraTypeInfoDesc);
+   else
+      fDescriptor.fExtraTypeInfoDescriptors.emplace_back(std::move(extraTypeInfoDesc));
 }
 
 ROOT::Experimental::Internal::RNTupleSerializer::StreamerInfoMap_t

@@ -233,8 +233,14 @@ class RClusterDescriptor final {
    friend class Internal::RClusterDescriptorBuilder;
 
 public:
-   /// The window of element indexes of a particular column in a particular cluster
-   struct RColumnRange {
+   // clang-format off
+   /**
+   \class ROOT::Experimental::RClusterDescriptor::RColumnRange
+   \ingroup NTuple
+   \brief The window of element indexes of a particular column in a particular cluster
+   */
+   // clang-format on
+   class RColumnRange {
       ROOT::DescriptorId_t fPhysicalColumnId = ROOT::kInvalidDescriptorId;
       /// The global index of the first column element in the cluster
       ROOT::NTupleSize_t fFirstElementIndex = ROOT::kInvalidNTupleIndex;
@@ -251,6 +257,37 @@ public:
 
       // TODO(jblomer): we perhaps want to store summary information, such as average, min/max, etc.
       // Should this be done on the field level?
+
+   public:
+      RColumnRange() = default;
+
+      RColumnRange(ROOT::DescriptorId_t physicalColumnId, ROOT::NTupleSize_t firstElementIndex,
+                   ROOT::NTupleSize_t nElements, std::optional<std::uint32_t> compressionSettings,
+                   bool suppressed = false)
+         : fPhysicalColumnId(physicalColumnId),
+           fFirstElementIndex(firstElementIndex),
+           fNElements(nElements),
+           fCompressionSettings(compressionSettings),
+           fIsSuppressed(suppressed)
+      {
+      }
+
+      ROOT::DescriptorId_t GetPhysicalColumnId() const { return fPhysicalColumnId; }
+      void SetPhysicalColumnId(ROOT::DescriptorId_t id) { fPhysicalColumnId = id; }
+
+      ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
+      void SetFirstElementIndex(ROOT::NTupleSize_t idx) { fFirstElementIndex = idx; }
+      void IncrementFirstElementIndex(ROOT::NTupleSize_t by) { fFirstElementIndex += by; }
+
+      ROOT::NTupleSize_t GetNElements() const { return fNElements; }
+      void SetNElements(ROOT::NTupleSize_t n) { fNElements = n; }
+      void IncrementNElements(ROOT::NTupleSize_t by) { fNElements += by; }
+
+      std::optional<std::uint32_t> GetCompressionSettings() const { return fCompressionSettings; }
+      void SetCompressionSettings(std::optional<std::uint32_t> comp) { fCompressionSettings = comp; }
+
+      bool IsSuppressed() const { return fIsSuppressed; }
+      void SetIsSuppressed(bool suppressed) { fIsSuppressed = suppressed; }
 
       bool operator==(const RColumnRange &other) const
       {
@@ -274,6 +311,65 @@ public:
    // clang-format on
    class RPageRange {
       friend class Internal::RClusterDescriptorBuilder;
+
+   public:
+      /// We do not need to store the element size / uncompressed page size because we know to which column
+      /// the page belongs
+      struct RPageInfo {
+      protected:
+         /// The sum of the elements of all the pages must match the corresponding fNElements field in fColumnRanges
+         std::uint32_t fNElements = std::uint32_t(-1);
+         /// The meaning of fLocator depends on the storage backend.
+         RNTupleLocator fLocator;
+         /// If true, the 8 bytes following the serialized page are an xxhash of the on-disk page data
+         bool fHasChecksum = false;
+
+      public:
+         RPageInfo() = default;
+         RPageInfo(std::uint32_t nElements, const RNTupleLocator &locator, bool hasChecksum)
+            : fNElements(nElements), fLocator(locator), fHasChecksum(hasChecksum)
+         {
+         }
+
+         bool operator==(const RPageInfo &other) const
+         {
+            return fNElements == other.fNElements && fLocator == other.fLocator;
+         }
+
+         std::uint32_t GetNElements() const { return fNElements; }
+         void SetNElements(std::uint32_t n) { fNElements = n; }
+
+         const RNTupleLocator &GetLocator() const { return fLocator; }
+         RNTupleLocator &GetLocator() { return fLocator; }
+         void SetLocator(const RNTupleLocator &locator) { fLocator = locator; }
+
+         bool HasChecksum() const { return fHasChecksum; }
+         void SetHasChecksum(bool hasChecksum) { fHasChecksum = hasChecksum; }
+      };
+
+      struct RPageInfoExtended : RPageInfo {
+      private:
+         /// Index (in cluster) of the first element in page.
+         ROOT::NTupleSize_t fFirstElementIndex = 0;
+         /// Page number in the corresponding RPageRange.
+         ROOT::NTupleSize_t fPageNumber = 0;
+
+      public:
+         RPageInfoExtended() = default;
+         RPageInfoExtended(const RPageInfo &pageInfo, ROOT::NTupleSize_t firstElementIndex,
+                           ROOT::NTupleSize_t pageNumber)
+            : RPageInfo(pageInfo), fFirstElementIndex(firstElementIndex), fPageNumber(pageNumber)
+         {
+         }
+
+         ROOT::NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
+         void SetFirstElementIndex(ROOT::NTupleSize_t firstInPage) { fFirstElementIndex = firstInPage; }
+
+         ROOT::NTupleSize_t GetPageNumber() const { return fPageNumber; }
+         void SetPageNumber(ROOT::NTupleSize_t pageNumber) { fPageNumber = pageNumber; }
+      };
+
+   private:
       /// Extend this RPageRange to fit the given RColumnRange, i.e. prepend as many synthetic RPageInfos as needed to
       /// cover the range in `columnRange`. `RPageInfo`s are constructed to contain as many elements of type `element`
       /// given a page size limit of `pageSize` (in bytes); the locator for the referenced pages is `kTypePageZero`.
@@ -286,35 +382,10 @@ public:
       /// up to and including a given index. Used for binary search in Find().
       std::vector<ROOT::NTupleSize_t> fCumulativeNElements;
 
+      ROOT::DescriptorId_t fPhysicalColumnId = ROOT::kInvalidDescriptorId;
+      std::vector<RPageInfo> fPageInfos;
+
    public:
-      /// We do not need to store the element size / uncompressed page size because we know to which column
-      /// the page belongs
-      struct RPageInfo {
-         /// The sum of the elements of all the pages must match the corresponding fNElements field in fColumnRanges
-         std::uint32_t fNElements = std::uint32_t(-1);
-         /// The meaning of fLocator depends on the storage backend.
-         RNTupleLocator fLocator;
-         /// If true, the 8 bytes following the serialized page are an xxhash of the on-disk page data
-         bool fHasChecksum = false;
-
-         bool operator==(const RPageInfo &other) const
-         {
-            return fNElements == other.fNElements && fLocator == other.fLocator;
-         }
-      };
-      struct RPageInfoExtended : RPageInfo {
-         /// Index (in cluster) of the first element in page.
-         ROOT::NTupleSize_t fFirstInPage = 0;
-         /// Page number in the corresponding RPageRange.
-         ROOT::NTupleSize_t fPageNo = 0;
-
-         RPageInfoExtended() = default;
-         RPageInfoExtended(const RPageInfo &pi, ROOT::NTupleSize_t i, ROOT::NTupleSize_t n)
-            : RPageInfo(pi), fFirstInPage(i), fPageNo(n)
-         {
-         }
-      };
-
       RPageRange() = default;
       RPageRange(const RPageRange &other) = delete;
       RPageRange &operator=(const RPageRange &other) = delete;
@@ -333,8 +404,11 @@ public:
       /// Find the page in the RPageRange that contains the given element. The element must exist.
       RPageInfoExtended Find(ROOT::NTupleSize_t idxInCluster) const;
 
-      ROOT::DescriptorId_t fPhysicalColumnId = ROOT::kInvalidDescriptorId;
-      std::vector<RPageInfo> fPageInfos;
+      ROOT::DescriptorId_t GetPhysicalColumnId() const { return fPhysicalColumnId; }
+      void SetPhysicalColumnId(ROOT::DescriptorId_t id) { fPhysicalColumnId = id; }
+
+      const std::vector<RPageInfo> &GetPageInfos() const { return fPageInfos; }
+      std::vector<RPageInfo> &GetPageInfos() { return fPageInfos; }
 
       bool operator==(const RPageRange &other) const
       {
@@ -1467,6 +1541,7 @@ public:
    RResult<void> AddCluster(RClusterDescriptor &&clusterDesc);
 
    RResult<void> AddExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
+   void ReplaceExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
 
    /// Clears so-far stored clusters, fields, and columns and return to a pristine ntuple descriptor
    void Reset();

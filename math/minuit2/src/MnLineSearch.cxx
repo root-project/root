@@ -14,7 +14,6 @@
 #include "Minuit2/MnParabola.h"
 #include "Minuit2/MnParabolaPoint.h"
 #include "Minuit2/MnParabolaFactory.h"
-#include "Minuit2/LaSum.h"
 #include "Minuit2/MnPrint.h"
 
 #include <algorithm>

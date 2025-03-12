@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include <iostream>
-#include "TROOT.h"
 #include "TMath.h"
 #include "TArrow.h"
 #include "TVirtualPad.h"
@@ -364,28 +363,21 @@ void TArrow::PaintArrowNDC(Double_t u1, Double_t v1,Double_t u2 ,Double_t v2,
 
 void TArrow::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
+   SavePrimitiveConstructor(out, Class(), "arrow",
+                            TString::Format("%g, %g, %g, %g, %g, \"%s\"", fX1, fY1, fX2, fY2, fArrowSize,
+                                            TString(GetDrawOption()).ReplaceSpecialCppChars().Data()));
 
-   char quote = '"';
-   if (gROOT->ClassSaved(TArrow::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TArrow *";
-   }
-   out<<"arrow = new TArrow("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2
-      <<","<<fArrowSize<<","<<quote<<GetDrawOption()<<quote<<");"<<std::endl;
-
-   SaveFillAttributes(out,"arrow",0,1);
-   SaveLineAttributes(out,"arrow",1,1,1);
+   SaveFillAttributes(out, "arrow", 0, 1);
+   SaveLineAttributes(out, "arrow", 1, 1, 1);
 
    if (TestBit(kLineNDC))
-      out<<"   arrow->SetNDC();"<<std::endl;
+      out << "   arrow->SetNDC();\n";
 
-   if (fAngle!=60)
-      out << "   arrow->SetAngle(" << GetAngle() << ");" << std::endl;
+   if (GetAngle() != 60)
+      out << "   arrow->SetAngle(" << GetAngle() << ");\n";
 
-   out<<"   arrow->Draw();"<<std::endl;
+   out << "   arrow->Draw();\n";
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set default angle.
@@ -397,7 +389,7 @@ void TArrow::SetDefaultAngle(Float_t Angle)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set default arrow sive.
+/// Set default arrow size.
 
 void TArrow::SetDefaultArrowSize (Float_t ArrowSize)
 {
@@ -410,7 +402,6 @@ void TArrow::SetDefaultArrowSize (Float_t ArrowSize)
 
 void TArrow::SetDefaultOption(Option_t *Option)
 {
-
    fgDefaultOption = Option;
 }
 
@@ -420,7 +411,6 @@ void TArrow::SetDefaultOption(Option_t *Option)
 
 Float_t TArrow::GetDefaultAngle()
 {
-
    return fgDefaultAngle;
 }
 
@@ -430,7 +420,6 @@ Float_t TArrow::GetDefaultAngle()
 
 Float_t TArrow::GetDefaultArrowSize()
 {
-
    return fgDefaultArrowSize;
 }
 
@@ -440,6 +429,5 @@ Float_t TArrow::GetDefaultArrowSize()
 
 Option_t *TArrow::GetDefaultOption()
 {
-
    return fgDefaultOption.Data();
 }

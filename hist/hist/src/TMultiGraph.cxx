@@ -1603,24 +1603,26 @@ void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    while (auto g = iter())
       g->SavePrimitive(out, TString::Format("multigraph%s", iter.GetOption()).Data());
 
-   const char *l = strstr(option,"th2poly");
+   const char *l = strstr(option, "th2poly");
    if (l) {
-      out<<"   "<<l+7<<"->AddBin(multigraph);"<<std::endl;
+      out << "   " << l + 7 << "->AddBin(multigraph);\n";
    } else {
-      out<<"   multigraph->Draw(\"" << option << "\");"<<std::endl;
+      out << "   multigraph->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
    }
    TAxis *xaxis = GetXaxis();
    TAxis *yaxis = GetYaxis();
 
    if (xaxis) {
-     out<<"   multigraph->GetXaxis()->SetLimits("<<xaxis->GetXmin()<<", "<<xaxis->GetXmax()<<");"<<std::endl;
-     xaxis->SaveAttributes(out, "multigraph","->GetXaxis()");
+      out << "   multigraph->GetXaxis()->SetLimits(" << xaxis->GetXmin() << ", " << xaxis->GetXmax() << ");\n";
+      xaxis->SaveAttributes(out, "multigraph", "->GetXaxis()");
    }
-   if (yaxis) yaxis->SaveAttributes(out, "multigraph","->GetYaxis()");
-   if (fMinimum != -1111) out<<"   multigraph->SetMinimum("<<fMinimum<<");"<<std::endl;
-   if (fMaximum != -1111) out<<"   multigraph->SetMaximum("<<fMaximum<<");"<<std::endl;
+   if (yaxis)
+      yaxis->SaveAttributes(out, "multigraph", "->GetYaxis()");
+   if (fMinimum != -1111)
+      out << "   multigraph->SetMinimum(" << fMinimum << ");\n";
+   if (fMaximum != -1111)
+      out << "   multigraph->SetMaximum(" << fMaximum << ");\n";
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set multigraph maximum.

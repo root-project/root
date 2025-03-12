@@ -25,7 +25,6 @@ namespace RDF {
 /// it returns entries from GetEntryRanges forever or until a Range stops the event loop (for test purposes).
 class RTrivialDS final : public ROOT::RDF::RDataSource {
 private:
-   unsigned int fNSlots = 0U;
    ULong64_t fSize = 0ULL;
    bool fSkipEvenEntries = false;
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges;

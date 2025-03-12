@@ -35,7 +35,8 @@ auto ROperator_GRU<T>::ShapeInference(std::vector<std::vector<size_t>> input)
 }
 
 template<typename T>
-void ROperator_GRU<T>::Initialize(RModel &model) {
+void ROperator_GRU<T>::Initialize(RModel& model){
+
    fUseSession = model.UseSession();
    // Check the input and output tensors
    if (!model.CheckIfTensorAlreadyExist(fNX)) {

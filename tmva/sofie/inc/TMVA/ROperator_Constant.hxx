@@ -33,7 +33,10 @@ public:
       fShape(shape),
       fValues(values),
       fAttrType(type)
-      { }
+      {
+         fInputTensorNames = { };
+         fOutputTensorNames = { };
+      }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;
@@ -44,7 +47,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
        //input must be a graph input, or already initialized intermediate tensor
       size_t length = 1;
       if (!fNX.empty()) {

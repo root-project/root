@@ -93,9 +93,36 @@ public:
    T fMember;
 };
 
+template <typename T>
+struct EdmHashTrait {
+   using value_type = T;
+};
+
+template <int I>
+class EdmHash {
+public:
+   typedef std::string value_type;
+   value_type fHash;
+
+   template <typename T>
+   using value_typeT = typename EdmHashTrait<T>::value_type;
+   value_typeT<value_type> fHash2;
+};
+
 template <typename FirstT, typename SecondT = double>
 class DataVector {
 public:
+   class Inner {
+      FirstT fFirst;
+      SecondT fSecond;
+   };
+
+   template <typename FirstU, typename SecondU = double>
+   class Nested {
+      FirstU fFirst;
+      SecondU fSecond;
+   };
+
    FirstT fFirst;
    SecondT fSecond;
 };

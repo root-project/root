@@ -47,6 +47,9 @@ public:
             fMode = kEdge;
          else if (mode == "wrap")
             fMode = kWrap;
+         
+         fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
       }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
@@ -58,7 +61,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
       if (model.CheckIfTensorAlreadyExist(fNX) == false){   //input must be a graph input, or already initialized intermediate tensor
          throw std::runtime_error("TMVA SOFIE Pad Op Input Tensor is not found in model");
       }

@@ -37,7 +37,7 @@ auto ROperator_LSTM<T>::ShapeInference(std::vector<std::vector<size_t>> input)
 }
 
 template<typename T>
-auto ROperator_LSTM<T>::Initialize(RModel &model)
+auto ROperator_LSTM<T>::Initialize(RModel& model)
 -> void {
    fUseSession = model.UseSession();
    // Check the input and output tensors

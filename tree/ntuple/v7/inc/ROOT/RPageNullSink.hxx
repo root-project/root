@@ -65,7 +65,7 @@ public:
    void InitImpl(RNTupleModel &model) final
    {
       auto &fieldZero = GetFieldZeroOfModel(model);
-      ConnectFields(fieldZero.GetSubFields(), 0);
+      ConnectFields(fieldZero.GetMutableSubfields(), 0);
    }
    void UpdateSchema(const RNTupleModelChangeset &changeset, ROOT::NTupleSize_t firstEntry) final
    {
@@ -74,7 +74,10 @@ public:
    void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &) final {}
 
    void CommitSuppressedColumn(ColumnHandle_t) final {}
-   void CommitPage(ColumnHandle_t, const RPage &page) final { fNBytesCurrentCluster += page.GetNBytes(); }
+   void CommitPage(ColumnHandle_t, const ROOT::Internal::RPage &page) final
+   {
+      fNBytesCurrentCluster += page.GetNBytes();
+   }
    void CommitSealedPage(ROOT::DescriptorId_t, const RSealedPage &page) final
    {
       fNBytesCurrentCluster += page.GetBufferSize();

@@ -110,48 +110,30 @@ void TAttAxis::ResetAttAxis(Option_t *option)
 
 void TAttAxis::SaveAttributes(std::ostream &out, const char *name, const char *subname)
 {
-   if (fNdivisions != 510) {
-      out<<"   "<<name<<subname<<"->SetNdivisions("<<fNdivisions<<");"<<std::endl;
-   }
-   if (fAxisColor != 1) {
-      if (TColor::SaveColor(out, fAxisColor))
-         out<<"   "<<name<<subname<<"->SetAxisColor(ci);" << std::endl;
-      else
-         out<<"   "<<name<<subname<<"->SetAxisColor("<<fAxisColor<<");"<<std::endl;
-   }
-   if (fLabelColor != 1) {
-      if (TColor::SaveColor(out, fLabelColor))
-         out<<"   "<<name<<subname<<"->SetLabelColor(ci);" << std::endl;
-      else
-         out<<"   "<<name<<subname<<"->SetLabelColor("<<fLabelColor<<");"<<std::endl;
-   }
-   if (fLabelFont != 62) {
-      out<<"   "<<name<<subname<<"->SetLabelFont("<<fLabelFont<<");"<<std::endl;
-   }
-   if (TMath::Abs(fLabelOffset-0.005) > 0.0001) {
-      out<<"   "<<name<<subname<<"->SetLabelOffset("<<fLabelOffset<<");"<<std::endl;
-   }
-   if (TMath::Abs(fLabelSize-0.035) > 0.001) {
-      out<<"   "<<name<<subname<<"->SetLabelSize("<<fLabelSize<<");"<<std::endl;
-   }
-   if (TMath::Abs(fTitleSize-0.035) > 0.001) {
-      out<<"   "<<name<<subname<<"->SetTitleSize("<<fTitleSize<<");"<<std::endl;
-   }
-   if (TMath::Abs(fTickLength-0.03) > 0.001) {
-      out<<"   "<<name<<subname<<"->SetTickLength("<<fTickLength<<");"<<std::endl;
-   }
-   if (TMath::Abs(fTitleOffset) > 0.001) {
-      out<<"   "<<name<<subname<<"->SetTitleOffset("<<fTitleOffset<<");"<<std::endl;
-   }
-   if (fTitleColor != 1) {
-      if (TColor::SaveColor(out, fTitleColor))
-         out<<"   "<<name<<subname<<"->SetTitleColor(ci);" << std::endl;
-      else
-         out<<"   "<<name<<subname<<"->SetTitleColor("<<fTitleColor<<");"<<std::endl;
-   }
-   if (fTitleFont != 62) {
-      out<<"   "<<name<<subname<<"->SetTitleFont("<<fTitleFont<<");"<<std::endl;
-   }
+   TString prefix = TString("   ") + name + subname + "->";
+
+   if (fNdivisions != 510)
+      out << prefix << "SetNdivisions(" << fNdivisions << ");\n";
+   if (fAxisColor != 1)
+      out << prefix << "SetAxisColor(" << TColor::SavePrimitiveColor(fAxisColor) << ");\n";
+   if (fLabelColor != 1)
+      out << prefix << "SetLabelColor(" << TColor::SavePrimitiveColor(fLabelColor) << ");\n";
+   if (fLabelFont != 62)
+      out << prefix << "SetLabelFont(" << fLabelFont << ");\n";
+   if (TMath::Abs(fLabelOffset - 0.005) > 0.0001)
+      out << prefix << "SetLabelOffset(" << fLabelOffset << ");\n";
+   if (TMath::Abs(fLabelSize - 0.035) > 0.001)
+      out << prefix << "SetLabelSize(" << fLabelSize << ");\n";
+   if (TMath::Abs(fTitleSize - 0.035) > 0.001)
+      out << prefix << "SetTitleSize(" << fTitleSize << ");\n";
+   if (TMath::Abs(fTickLength - 0.03) > 0.001)
+      out << prefix << "SetTickLength(" << fTickLength << ");\n";
+   if (TMath::Abs(fTitleOffset) > 0.001)
+      out << prefix << "SetTitleOffset(" << fTitleOffset << ");\n";
+   if (fTitleColor != 1)
+      out << prefix << "SetTitleColor(" << TColor::SavePrimitiveColor(fTitleColor) << ");\n";
+   if (fTitleFont != 62)
+      out << prefix << "SetTitleFont(" << fTitleFont << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

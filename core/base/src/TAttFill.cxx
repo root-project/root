@@ -239,14 +239,10 @@ void TAttFill::ResetAttFill(Option_t *)
 
 void TAttFill::SaveFillAttributes(std::ostream &out, const char *name, Int_t coldef, Int_t stydef)
 {
-   if (fFillColor != coldef) {
-      if (TColor::SaveColor(out, fFillColor))
-         out<<"   "<<name<<"->SetFillColor(ci);" << std::endl;
-      else
-         out<<"   "<<name<<"->SetFillColor("<<fFillColor<<");"<<std::endl;
-   }
+   if (fFillColor != coldef)
+      out << "   " << name << "->SetFillColor(" << TColor::SavePrimitiveColor(fFillColor) << ");\n";
    if (fFillStyle != stydef)
-      out<<"   "<<name<<"->SetFillStyle("<<fFillStyle<<");"<<std::endl;
+      out << "   " << name << "->SetFillStyle(" << fFillStyle << ");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -258,7 +254,7 @@ void TAttFill::SetFillAttributes()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set a transparent fill color. 
+/// Set a transparent fill color.
 /// \param fcolor defines the fill color
 /// \param falpha defines the percentage of opacity from 0. (fully transparent) to 1. (fully opaque).
 /// \note falpha is ignored (treated as 1) if the TCanvas has no GL support activated.

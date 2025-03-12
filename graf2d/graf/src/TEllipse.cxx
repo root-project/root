@@ -623,21 +623,17 @@ void TEllipse::Print(Option_t *) const
 
 void TEllipse::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TEllipse::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TEllipse *";
-   }
-   out<<"ellipse = new TEllipse("<<fX1<<","<<fY1<<","<<fR1<<","<<fR2
-      <<","<<fPhimin<<","<<fPhimax<<","<<fTheta<<");"<<std::endl;
+   SavePrimitiveConstructor(
+      out, Class(), "ellipse",
+      TString::Format("%g, %g, %g, %g, %g, %g, %g", fX1, fY1, fR1, fR2, fPhimin, fPhimax, fTheta));
 
-   SaveFillAttributes(out,"ellipse",0,1001);
-   SaveLineAttributes(out,"ellipse",1,1,1);
+   SaveFillAttributes(out, "ellipse", 0, 1001);
+   SaveLineAttributes(out, "ellipse", 1, 1, 1);
 
-   if (GetNoEdges()) out<<"   ellipse->SetNoEdges();"<<std::endl;
+   if (GetNoEdges())
+      out << "   ellipse->SetNoEdges();" << std::endl;
 
-   out<<"   ellipse->Draw();"<<std::endl;
+   out << "   ellipse->Draw();" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

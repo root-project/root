@@ -56,6 +56,10 @@
 #endif
 #endif /* R__LITTLE_ENDIAN */
 
+using ROOT::Internal::MakeUninitArray;
+using ROOT::Internal::RNTupleCompressor;
+using ROOT::Internal::RNTupleDecompressor;
+
 namespace {
 
 // The following types are used to read and write the TFile binary format
@@ -771,8 +775,11 @@ ROOT::RResult<ROOT::RNTuple> ROOT::Experimental::Internal::RMiniFileReader::GetN
    auto objNbytes = key.GetSize() - key.fKeyLen;
    ReadBuffer(ntuple, objNbytes, offset);
    if (objNbytes != key.fObjLen) {
-      RNTupleDecompressor decompressor;
-      decompressor.Unzip(bufAnchor.get(), objNbytes, key.fObjLen);
+      // Decompress into a temporary buffer
+      auto unzipBuf = MakeUninitArray<unsigned char>(key.fObjLen);
+      RNTupleDecompressor::Unzip(bufAnchor.get(), objNbytes, key.fObjLen, unzipBuf.get());
+      // Then copy back to bufAnchor
+      memcpy(bufAnchor.get(), unzipBuf.get(), key.fObjLen);
    }
 
    // We require that future class versions only append members and store the checksum in the last 8 bytes

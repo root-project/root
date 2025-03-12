@@ -33,6 +33,11 @@
             fInputs.reserve(inputs.size());
             for (auto & name : inputs)
                fInputs.push_back(UTILITY::Clean_name(name));
+
+         fInputTensorNames.resize(fInputs.size());
+         std::transform(fInputs.begin(), fInputs.end(), fInputTensorNames.begin(),
+                   [](const std::string& s) -> std::string_view { return s; });
+         fOutputTensorNames = { fOutput };
          }
 
          std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
@@ -138,8 +143,7 @@
             return ret;
          }
 
-         void Initialize(RModel &model)
-         {
+      void Initialize(RModel& model) override {
             for (auto &it : fInputs) {
                if (model.CheckIfTensorAlreadyExist(it) == false) {
                   throw std::runtime_error("TMVA SOFIE Concat Op Input Tensor " + it + " is not found in model");

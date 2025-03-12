@@ -29,7 +29,10 @@ private:
 public:
    ROperator_Expand(){}
    ROperator_Expand(std::string nameX, std::string nameShape, std::string nameY):
-      fNX(UTILITY::Clean_name(nameX)), fNShape(UTILITY::Clean_name(nameShape)), fNY(UTILITY::Clean_name(nameY)){}
+      fNX(UTILITY::Clean_name(nameX)), fNShape(UTILITY::Clean_name(nameShape)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
+      }
 
    // type of output given input
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
@@ -80,6 +83,7 @@ public:
          if (broadcast || model.IsConstantTensor(fNX)) {
             fIsOutputConstant = true; // constant output in this case
             model.AddConstantTensor(fNY, model.GetTensorType(fNX), fShapeY, data);
+            fOutputTensorNames.pop_back();
          } else {
             model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
          }
@@ -89,7 +93,7 @@ public:
       }
       fType = ConvertTypeToString(model.GetTensorType(fNX));
       if (model.Verbose())
-         std::cout << "Expand - output is with shape " << ConvertShapeToString(fShapeY) << std::endl;
+         std::cout << "Expand - output is with shape " << ConvertShapeToString(fShapeY) << std::endl;      
    }
 
    std::string GenerateInitCode() override {
@@ -114,7 +118,7 @@ public:
       if (!fInitialized && fShapeX != fShapeY) {
          out << SP << "// Broadcasting uninitialized tensor " << fNX << "\n";
          out << SP << "TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << fType << ">(tensor_" << fNX << ", " << ConvertShapeToString(fShapeX) << ", " << ConvertShapeToString(fShapeY)
-                   << ", fTensor_" << fNY << ");\n";
+                   << ", std::span<"<<fType<<">(tensor_"<<fNY<<", "<<ConvertShapeToLength(fShapeY)<<"));\n";                   
       }
       return out.str();
    }

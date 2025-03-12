@@ -33,6 +33,10 @@ public:
       {
          for (auto & n : fNYs)
             n = UTILITY::Clean_name(n);
+
+         fInputTensorNames = { fNX };
+         std::transform(fNYs.begin(), fNYs.end(), fOutputTensorNames.begin(),
+                   [](const std::string& s) -> std::string_view { return s; });
       }
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
@@ -44,7 +48,7 @@ public:
       return ret;
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
        //input must be a graph input, or already initialized intermediate tensor
       if (model.CheckIfTensorAlreadyExist(fNX) == false){
         throw std::runtime_error("TMVA SOFIE If Op Input Tensor is not found in model");

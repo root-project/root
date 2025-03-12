@@ -30,8 +30,8 @@
 
 void ROOT::Experimental::RPrepareVisitor::VisitField(const RFieldBase &field)
 {
-   auto subFields = field.GetSubFields();
-   for (auto f : subFields) {
+   auto subfields = field.GetConstSubfields();
+   for (auto f : subfields) {
       RPrepareVisitor visitor;
       f->AcceptVisitor(visitor);
       fNumFields += visitor.fNumFields;
@@ -77,9 +77,9 @@ void ROOT::Experimental::RPrintSchemaVisitor::VisitField(const RFieldBase &field
    fOutput << RNTupleFormatter::FitString(value, fAvailableSpaceValueString);
    fOutput << fFrameSymbol << std::endl;
 
-   auto subFields = field.GetSubFields();
+   auto subfields = field.GetConstSubfields();
    auto fieldNo = 1;
-   for (auto iField = subFields.begin(); iField != subFields.end(); ) {
+   for (auto iField = subfields.begin(); iField != subfields.end();) {
       RPrintSchemaVisitor visitor(*this);
       visitor.fFieldNo = fieldNo++;
       visitor.fFieldNoPrefix += std::to_string(fFieldNo) + ".";
@@ -96,7 +96,7 @@ void ROOT::Experimental::RPrintSchemaVisitor::VisitField(const RFieldBase &field
 void ROOT::Experimental::RPrintSchemaVisitor::VisitFieldZero(const RFieldZero &fieldZero)
 {
    auto fieldNo = 1;
-   for (auto f : fieldZero.GetSubFields()) {
+   for (auto f : fieldZero.GetConstSubfields()) {
       RPrintSchemaVisitor visitor(*this);
       visitor.fFieldNo = fieldNo++;
       f->AcceptVisitor(visitor);

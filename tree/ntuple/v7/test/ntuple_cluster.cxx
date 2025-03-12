@@ -28,9 +28,8 @@ using ROOT::Experimental::RNTupleDescriptor;
 using ROOT::Experimental::Internal::RCluster;
 using ROOT::Experimental::Internal::RClusterPool;
 using ROOT::Experimental::Internal::ROnDiskPage;
-using ROOT::Experimental::Internal::RPage;
-using ROOT::Experimental::Internal::RPageRef;
 using ROOT::Experimental::Internal::RPageSource;
+using ROOT::Internal::RPageRef;
 
 namespace {
 

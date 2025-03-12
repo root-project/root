@@ -31,8 +31,8 @@ jobs:
       contents: read
 
     container:
-      image: registry.cern.ch/root-ci/alma9:buildready # ALSO UPDATE BELOW!
-      options: '--security-opt label=disable --rm --name rootdoc' # ALSO UPDATE BELOW!
+      image: registry.cern.ch/root-ci/alma9:buildready
+      options: '--security-opt label=disable --rm'
       env:
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
         OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
@@ -171,6 +171,31 @@ jobs:
         pwd
         ls -l
         aws s3 sync ${DOC_DIR}/html/ s3://root/doc/${WEB_DIR_NAME}/
-        rm -rf ${DOC_DIR}/html
-        aws s3 sync ${DOC_DIR}/ s3://root/doc/${WEB_DIR_NAME}/
+        aws s3 sync ${DOC_DIR}/ s3://root/doc/${WEB_DIR_NAME}/ --exclude "${DOC_DIR}/html/*"
         aws s3 cp ${TAR_NAME}.gz s3://root/download/
+
+    - name: Install Kerberos utilities
+      run: dnf -y install krb5-workstation
+
+    - name: Install XRootD client
+      run: dnf -y install xrootd-client
+
+    - name: Sync documentation to EOS
+      env:
+        RWEBEOS_KT: ${{ secrets.RWEBEOS_KT }}
+        KRB5USER: ${{ secrets.KRB5USER }}
+        KRB5REALM: ${{ secrets.KRB5REALM }}
+        KT_FILE_NAME: /tmp/decoded.keytab
+        EOS_BASE_PATH: /eos/project/r/root-eos/website/
+        EOS_ENDPOINT: root://eosproject-r.cern.ch
+        KRB5CCNAME: /tmp/krb5cc
+      working-directory: ${{ env.DOC_LOCATION }}
+      run: |
+        echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
+        kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
+        cd ${DOC_DIR}/html/
+        xrdcp -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        cd ..
+        rm -r html
+        xrdcp -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp -rf ${TAR_NAME}.gz ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download

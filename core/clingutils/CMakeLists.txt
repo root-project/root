@@ -25,6 +25,10 @@ ROOT_OBJECT_LIBRARY(ClingUtils
   src/TClingUtils.cxx
 )
 
+if(NOT MSVC)
+  target_compile_options(ClingUtils PRIVATE -Wno-error)
+endif()
+
 add_dependencies(ClingUtils CLING)
 
 target_include_directories(ClingUtils PRIVATE 

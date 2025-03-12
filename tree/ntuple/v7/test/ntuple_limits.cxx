@@ -40,7 +40,7 @@ TEST(RNTuple, Limits_ManyFields)
    const auto &model = reader->GetModel();
 
    EXPECT_EQ(descriptor.GetNFields(), 1 + NumFields);
-   EXPECT_EQ(model.GetConstFieldZero().GetSubFields().size(), NumFields);
+   EXPECT_EQ(model.GetConstFieldZero().GetConstSubfields().size(), NumFields);
    EXPECT_EQ(reader->GetNEntries(), 1);
 
    reader->LoadEntry(0);
@@ -155,7 +155,7 @@ TEST(RNTuple, Limits_ManyPages)
 
    EXPECT_EQ(reader->GetNEntries(), NumEntries);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
-   EXPECT_EQ(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), NumPages);
+   EXPECT_EQ(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).GetPageInfos().size(), NumPages);
 
    auto id = model.GetDefaultEntry().GetPtr<int>("id");
    for (int i = 0; i < NumEntries; i++) {
@@ -198,7 +198,7 @@ TEST(RNTuple, Limits_ManyPagesOneEntry)
 
    EXPECT_EQ(reader->GetNEntries(), 1);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
-   EXPECT_EQ(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), NumPages);
+   EXPECT_EQ(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).GetPageInfos().size(), NumPages);
 
    auto ids = model.GetDefaultEntry().GetPtr<std::vector<int>>("ids");
    reader->LoadEntry(0);
@@ -246,9 +246,10 @@ TEST(RNTuple, DISABLED_Limits_LargePage)
 
    EXPECT_EQ(reader->GetNEntries(), NumElements);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
-   EXPECT_EQ(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), 1);
-   EXPECT_GT(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos[0].fLocator.GetNBytesOnStorage(),
-             static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()));
+   EXPECT_EQ(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).GetPageInfos().size(), 1);
+   EXPECT_GT(
+      descriptor.GetClusterDescriptor(0).GetPageRange(columnId).GetPageInfos()[0].GetLocator().GetNBytesOnStorage(),
+      static_cast<std::uint64_t>(std::numeric_limits<std::uint32_t>::max()));
 
    auto id = model.GetDefaultEntry().GetPtr<std::uint64_t>("id");
    for (int i = 0; i < NumElements; i++) {
@@ -291,7 +292,7 @@ TEST(RNTuple, DISABLED_Limits_LargePageOneEntry)
 
    EXPECT_EQ(reader->GetNEntries(), 1);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
-   EXPECT_EQ(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).fPageInfos.size(), 1);
+   EXPECT_EQ(descriptor.GetClusterDescriptor(0).GetPageRange(columnId).GetPageInfos().size(), 1);
 
    auto ids = model.GetDefaultEntry().GetPtr<std::vector<int>>("ids");
    reader->LoadEntry(0);

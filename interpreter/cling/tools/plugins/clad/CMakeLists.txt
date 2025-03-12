@@ -28,6 +28,13 @@ endif()
 if(NOT _clad_build_type STREQUAL "" AND NOT _clad_build_type STREQUAL ".")
   set(EXTRA_BUILD_ARGS --config ${_clad_build_type})
 endif()
+
+if(NOT MSVC AND CMAKE_VERSION VERSION_LESS 3.31.1)
+  # Workaround for https://gitlab.kitware.com/cmake/cmake/-/issues/26398
+  # The problem got eventually fixed upstream in CMake.
+  list(APPEND EXTRA_BUILD_ARGS "-j 1")
+endif()
+
 set(_CLAD_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/clad-prefix/src/clad-build/${_clad_build_type}/lib${LLVM_LIBDIR_SUFFIX})
 
 # build byproducts only needed by Ninja
@@ -67,7 +74,7 @@ if (DEFINED CLAD_SOURCE_DIR)
   list(APPEND _clad_extra_settings SOURCE_DIR ${CLAD_SOURCE_DIR})
 else()
   list(APPEND _clad_extra_settings GIT_REPOSITORY https://github.com/vgvassilev/clad.git)
-  list(APPEND _clad_extra_settings GIT_TAG v1.7)
+  list(APPEND _clad_extra_settings GIT_TAG v1.9)
 endif()
 
 #list(APPEND _clad_patches_list "patch1.patch" "patch2.patch")
@@ -92,12 +99,8 @@ ExternalProject_Add(
              -DLLVM_DIR=${LLVM_BINARY_DIR}
              -DClang_DIR=${CLANG_CMAKE_DIR}
              ${_clad_extra_cmake_args}
-  # FIXME
-  # Building with 1 core is a temporary workaround for #16654 and has to be 
-  # there until the behaviour of the clad build on ubuntu 24.10 is understood.
-  # The performance penalty in the build is negligible.
-  BUILD_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS} -j 1
-  INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS} -j 1 --target install
+  BUILD_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS}
+  INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS} --target install
   BUILD_BYPRODUCTS ${CLAD_BYPRODUCTS}
   ${_clad_extra_settings}
   # We need the target clangBasic to be built before building clad. However, we

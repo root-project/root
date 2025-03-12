@@ -2,6 +2,7 @@
 
 #include <TDictAttributeMap.h>
 #include <TVirtualStreamerInfo.h>
+#include <TFileMerger.h>
 
 #include "StreamerField.hxx"
 #include "StreamerFieldXML.h"
@@ -106,7 +107,7 @@ TEST(RField, IgnoreUnsplitComment)
    auto fieldClass = RFieldBase::Create("f", "IgnoreUnsplitComment").Unwrap();
 
    // Only one member, so we know that it is first sub field
-   const auto fieldMember = fieldClass->GetSubFields()[0];
+   const auto fieldMember = fieldClass->GetConstSubfields()[0];
    EXPECT_EQ(std::string("v"), fieldMember->GetFieldName());
    EXPECT_EQ(nullptr, dynamic_cast<const ROOT::Experimental::RStreamerField *>(fieldMember));
 }
@@ -206,6 +207,81 @@ TEST(RField, StreamerMerge)
    reader->LoadEntry(1);
    EXPECT_EQ(2, ptrPoly->fPoly->x);
    EXPECT_EQ(200, dynamic_cast<PolyB *>(ptrPoly->fPoly.get())->b);
+
+   const auto &desc = reader->GetDescriptor();
+   EXPECT_EQ(1u, desc.GetNExtraTypeInfos());
+   const auto &typeInfo = *desc.GetExtraTypeInfoIterable().begin();
+   EXPECT_EQ(ROOT::Experimental::EExtraTypeInfoIds::kStreamerInfo, typeInfo.GetContentId());
+   auto streamerInfoMap = RNTupleSerializer::DeserializeStreamerInfos(typeInfo.GetContent()).Unwrap();
+   EXPECT_EQ(4u, streamerInfoMap.size());
+   std::array<bool, 4> seenStreamerInfos{false, false, false, false};
+   for (const auto &[_, streamerInfo] : streamerInfoMap) {
+      if (strcmp(streamerInfo->GetName(), "PolyContainer") == 0)
+         seenStreamerInfos[0] = true;
+      else if (strcmp(streamerInfo->GetName(), "PolyBase") == 0)
+         seenStreamerInfos[1] = true;
+      else if (strcmp(streamerInfo->GetName(), "PolyA") == 0)
+         seenStreamerInfos[2] = true;
+      else if (strcmp(streamerInfo->GetName(), "PolyB") == 0)
+         seenStreamerInfos[3] = true;
+   }
+   EXPECT_TRUE(seenStreamerInfos[0]);
+   EXPECT_TRUE(seenStreamerInfos[1]);
+   EXPECT_TRUE(seenStreamerInfos[2]);
+   EXPECT_TRUE(seenStreamerInfos[3]);
+}
+
+TEST(RField, StreamerMergeIncremental)
+{
+   FileRaii fileGuard1("test_ntuple_merge_streamer_incr_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("p", "PolyContainer").Unwrap());
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard1.GetPath());
+      auto ptrPoly = writer->GetModel().GetDefaultEntry().GetPtr<PolyContainer>("p");
+      ptrPoly->fPoly = std::make_unique<PolyA>();
+      ptrPoly->fPoly->x = 1;
+      static_cast<PolyA &>(*ptrPoly->fPoly).a = 100;
+      writer->Fill();
+   }
+
+   FileRaii fileGuard2("test_ntuple_merge_streamer_incr_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("p", "PolyContainer").Unwrap());
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard2.GetPath());
+      auto ptrPoly = writer->GetModel().GetDefaultEntry().GetPtr<PolyContainer>("p");
+      ptrPoly->fPoly = std::make_unique<PolyB>();
+      ptrPoly->fPoly->x = 2;
+      static_cast<PolyB &>(*ptrPoly->fPoly).b = 200;
+      writer->Fill();
+   }
+
+   // Now merge the inputs
+   FileRaii fileGuard3("test_ntuple_merge_streamer_incr_out.root");
+
+   TFileMerger merger(kFALSE, kFALSE);
+   merger.OutputFile(fileGuard3.GetPath().c_str(), "RECREATE", 505);
+
+   const FileRaii inputFiles[] = {std::move(fileGuard1), std::move(fileGuard2)};
+
+   for (auto i = 0u; i < std::size(inputFiles); ++i) {
+      auto tfile = std::unique_ptr<TFile>(TFile::Open(inputFiles[i].GetPath().c_str(), "READ"));
+      merger.AddFile(tfile.get());
+      bool result =
+         merger.PartialMerge(TFileMerger::kIncremental | TFileMerger::kNonResetable | TFileMerger::kKeepCompression);
+      ASSERT_TRUE(result);
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard3.GetPath());
+   EXPECT_EQ(2u, reader->GetNEntries());
+   auto ptrPoly = reader->GetModel().GetDefaultEntry().GetPtr<PolyContainer>("p");
+   reader->LoadEntry(0);
+   EXPECT_EQ(1, ptrPoly->fPoly->x);
+   EXPECT_EQ(100, static_cast<PolyA &>(*ptrPoly->fPoly).a);
+   reader->LoadEntry(1);
+   EXPECT_EQ(2, ptrPoly->fPoly->x);
+   EXPECT_EQ(200, static_cast<PolyB &>(*ptrPoly->fPoly).b);
 
    const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(1u, desc.GetNExtraTypeInfos());

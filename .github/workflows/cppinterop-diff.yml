@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: compiler-research/CppInterOp
-          ref: 6c6f94a22bd971520a249e2c02e4259cdd3a5be6
+          ref: 33bfa391c9322bd7cb79f954e54eedef486c999a
           path: CppInterOp
       - name: Drop directories that are not added to ROOT
         working-directory: CppInterOp

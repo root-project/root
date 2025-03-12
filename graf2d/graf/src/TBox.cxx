@@ -711,17 +711,12 @@ void TBox::Print(Option_t *) const
 
 void TBox::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   if (gROOT->ClassSaved(TBox::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TBox *";
-   }
-   out<<"box = new TBox("<<fX1<<","<<fY1<<","<<fX2<<","<<fY2<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "box", TString::Format("%g, %g, %g, %g", fX1, fY1, fX2, fY2));
 
-   SaveFillAttributes(out,"box",0,1001);
-   SaveLineAttributes(out,"box",1,1,1);
+   SaveFillAttributes(out, "box", 0, 1001);
+   SaveLineAttributes(out, "box", 1, 1, 1);
 
-   out<<"   box->Draw();"<<std::endl;
+   out << "   box->Draw();" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

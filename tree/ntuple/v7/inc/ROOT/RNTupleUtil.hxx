@@ -297,6 +297,12 @@ public:
    std::uint32_t GetTag() const { return fTag; }
 };
 
+} // namespace Internal
+
+} // namespace Experimental
+
+namespace Internal {
+
 template <typename T>
 auto MakeAliasedSharedPtr(T *rawPtr)
 {
@@ -314,7 +320,7 @@ std::unique_ptr<T[]> MakeUninitArray(std::size_t size)
    return std::unique_ptr<T[]>(new T[size]);
 }
 
-inline constexpr ENTupleColumnType kTestFutureType =
+inline constexpr ENTupleColumnType kTestFutureColumnType =
    static_cast<ENTupleColumnType>(std::numeric_limits<std::underlying_type_t<ENTupleColumnType>>::max() - 1);
 
 inline constexpr ROOT::ENTupleStructure kTestFutureFieldStructure =
@@ -327,6 +333,8 @@ static_assert(kTestLocatorType < RNTupleLocator::ELocatorType::kLastSerializable
 RResult<void> EnsureValidNameForRNTuple(std::string_view name, std::string_view where);
 
 } // namespace Internal
+
+namespace Experimental {
 
 // TODO(jblomer): remove before branching ROOT v6.36
 using EColumnType [[deprecated("ROOT::Experimental::EColumnType moved to ROOT::ENTupleColumnType")]] =

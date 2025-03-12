@@ -5,7 +5,6 @@
 /// Shows how to create, fill and write a histogram to a ROOT file.
 ///
 /// \macro_code
-/// \macro_output
 ///
 /// \date November 2024
 /// \author Giacomo Parolini (CERN)

@@ -67,29 +67,29 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
          }
 
          auto columnRange = clusterDescriptor.GetColumnRange(colId);
-         if (columnRange.fIsSuppressed)
+         if (columnRange.IsSuppressed())
             continue;
 
-         nElems += columnRange.fNElements;
+         nElems += columnRange.GetNElements();
 
-         if (!fCompressionSettings && columnRange.fCompressionSettings) {
-            fCompressionSettings = *columnRange.fCompressionSettings;
-         } else if (fCompressionSettings && columnRange.fCompressionSettings &&
-                    (*fCompressionSettings != *columnRange.fCompressionSettings)) {
+         if (!fCompressionSettings && columnRange.GetCompressionSettings()) {
+            fCompressionSettings = *columnRange.GetCompressionSettings();
+         } else if (fCompressionSettings && columnRange.GetCompressionSettings() &&
+                    (*fCompressionSettings != *columnRange.GetCompressionSettings())) {
             // Note that currently all clusters and columns are compressed with the same settings and it is not yet
             // possible to do otherwise. This means that currently, this exception should never be thrown, but this
             // could change in the future.
             throw RException(R__FAIL("compression setting mismatch between column ranges (" +
                                      std::to_string(*fCompressionSettings) + " vs " +
-                                     std::to_string(*columnRange.fCompressionSettings) +
+                                     std::to_string(*columnRange.GetCompressionSettings()) +
                                      ") for column with physical ID " + std::to_string(colId)));
          }
 
          const auto &pageRange = clusterDescriptor.GetPageRange(colId);
 
-         for (const auto &page : pageRange.fPageInfos) {
-            compressedPageSizes.emplace_back(page.fLocator.GetNBytesOnStorage());
-            fUncompressedSize += page.fNElements * elemSize;
+         for (const auto &page : pageRange.GetPageInfos()) {
+            compressedPageSizes.emplace_back(page.GetLocator().GetNBytesOnStorage());
+            fUncompressedSize += page.GetNElements() * elemSize;
          }
       }
 
@@ -482,12 +482,12 @@ ROOT::Experimental::RNTupleInspector::GetFieldTreeInspector(std::string_view fie
 }
 
 size_t ROOT::Experimental::RNTupleInspector::GetFieldCountByType(const std::regex &typeNamePattern,
-                                                                 bool includeSubFields) const
+                                                                 bool includeSubfields) const
 {
    size_t typeCount = 0;
 
    for (auto &[fldId, fldInfo] : fFieldTreeInfo) {
-      if (!includeSubFields && fldInfo.GetDescriptor().GetParentId() != fDescriptor.GetFieldZeroId()) {
+      if (!includeSubfields && fldInfo.GetDescriptor().GetParentId() != fDescriptor.GetFieldZeroId()) {
          continue;
       }
 
@@ -500,13 +500,13 @@ size_t ROOT::Experimental::RNTupleInspector::GetFieldCountByType(const std::rege
 }
 
 const std::vector<ROOT::DescriptorId_t>
-ROOT::Experimental::RNTupleInspector::GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubFields) const
+ROOT::Experimental::RNTupleInspector::GetFieldsByName(const std::regex &fieldNamePattern, bool searchInSubfields) const
 {
    std::vector<ROOT::DescriptorId_t> fieldIds;
 
    for (auto &[fldId, fldInfo] : fFieldTreeInfo) {
 
-      if (!searchInSubFields && fldInfo.GetDescriptor().GetParentId() != fDescriptor.GetFieldZeroId()) {
+      if (!searchInSubfields && fldInfo.GetDescriptor().GetParentId() != fDescriptor.GetFieldZeroId()) {
          continue;
       }
 

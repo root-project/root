@@ -129,7 +129,7 @@ struct TestSaveAs {
       constexpr Int_t NC = 29; // lines in C file (excl. empty and commented out lines)
       Int_t idx = 0;
       TString ref[NC] = {"{",
-                         "   TH1D *h__1 = new TH1D(\"h__1\",\"h_title\",5,0,5);",
+                         "   TH1D *h__1 = new TH1D(\"h__1\", \"h_title\", 5, 0, 5);",
                          "   h__1->SetBinContent(0,5.2);",
                          "   h__1->SetBinContent(2,10.8);",
                          "   h__1->SetBinContent(3,12.3);",
@@ -143,10 +143,7 @@ struct TestSaveAs {
                          "   h__1->SetBinError(5,2.7);",
                          "   h__1->SetBinError(6,4.7);",
                          "   h__1->SetEntries(7);",
-                         "   Int_t ci;      // for color index setting",
-                         "   TColor *color; // for color definition with alpha",
-                         "   ci = TColor::GetColor(\"#000099\");",
-                         "   h__1->SetLineColor(ci);",
+                         "   h__1->SetLineColor(TColor::GetColor(\"#000099\"));",
                          "   h__1->GetXaxis()->SetLabelFont(42);",
                          "   h__1->GetXaxis()->SetTitleOffset(1);",
                          "   h__1->GetXaxis()->SetTitleFont(42);",
