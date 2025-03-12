@@ -784,13 +784,8 @@ if(ROOT_pyroot_FOUND)
              )
 
   if(NOT dataframe
-     OR DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3}
      OR (MSVC AND NOT win_broken_tests))
     list(APPEND pyveto analysis/dataframe/df038_NumbaDeclare.py)
-  endif()
-
-  if(dataframe AND DEFINED ENV{ROOTTEST_IGNORE_PANDAS_PY3})
-    list(APPEND pyveto analysis/dataframe/df026_AsNumpyArrays.py)
   endif()
 
   # Rules specific to distributed RDataFrame
