@@ -1,0 +1,12 @@
+BLA_VENDOR=OpenBLAS
+builtin_cppzmq=OFF
+builtin_nlohmannjson=ON
+builtin_unuran=OFF
+builtin_zeromq=OFF
+builtin_zlib=ON
+builtin_zstd=ON
+ccache=ON
+pythia8=OFF
+roofit_multiprocess=OFF
+unuran=OFF
+vdt=OFF
