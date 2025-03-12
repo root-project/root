@@ -119,6 +119,8 @@ public:
 
    void SetErrorDef(double up) override { fUp = up; }
 
+   bool VanishingSecondDerivative(int i, int j) const override { return fFunc.VanishingSecondDerivative(i, j); }
+
 private:
    const Function &fFunc;
    double fUp;
