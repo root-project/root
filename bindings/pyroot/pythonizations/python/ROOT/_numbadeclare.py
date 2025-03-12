@@ -265,15 +265,22 @@ def pywrapper({SIGNATURE}):
 
         # Execute the pywrapper code and generate the wrapper function
         # which calls the jitted C function
-        exec(pywrappercode, glob, locals()) in {}
+        # Python 3.13 changes the semantics of the `locals()` builtin function
+        # such that in optimized scopes (e.g. at function scope as it is
+        # happening right now) the dictionary is not updated when changed. Bind
+        # the `locals()` dictionary to a temporary object. This way, the call
+        # to `exec()` will actually change the dictionary and the pywrapper
+        # function will be found. Note that this change is backwards-compatible.
+        local_objects = locals()
+        exec(pywrappercode, glob, local_objects)
 
-        if not 'pywrapper' in locals():
+        if not 'pywrapper' in local_objects:
             raise Exception('Failed to create Python wrapper function:\n{}'.format(pywrappercode))
 
         # Jit the Python wrapper code
         c_return_type, c_input_types = get_c_signature(input_types, return_type)
         try:
-            nbcfunc = nb.cfunc(c_return_type(*c_input_types), nopython=True)(locals()['pywrapper'])
+            nbcfunc = nb.cfunc(c_return_type(*c_input_types), nopython=True)(local_objects['pywrapper'])
         except:
             raise Exception('Failed to jit Python wrapper with numba.cfunc')
         func.__py_wrapper__ = pywrappercode
