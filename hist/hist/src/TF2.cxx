@@ -906,6 +906,16 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (saved)
       fSave.clear();
 
+   if (fContour.fN > 0) {
+      TString arrname;
+      if (fContour.fArray[0] != -9999)
+         arrname = SavePrimitiveArray(out, f2Name, fContour.fN, fContour.GetArray());
+      out << "   " << f2Name << "->SetContour(" << fContour.fN;
+      if (!arrname.IsNull())
+         out << ", " << arrname;
+      out << ");\n";
+   }
+
    SaveFillAttributes(out, f2Name, -1, 0);
    SaveMarkerAttributes(out, f2Name, -1, -1, -1);
    SaveLineAttributes(out, f2Name, -1, -1, -1);
