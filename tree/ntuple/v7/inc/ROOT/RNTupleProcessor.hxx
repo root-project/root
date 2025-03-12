@@ -562,6 +562,22 @@ private:
    void SetModel(std::unique_ptr<RNTupleModel> primaryModel, std::vector<std::unique_ptr<RNTupleModel>> auxModels);
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Connect all fields, once the primary and all auxiliary RNTuples have been added.
+   void ConnectFields();
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Populate fJoinFieldTokens with tokens for join fields belonging to the main RNTuple in the join model.
+   ///
+   /// \param[in] joinFields The names of the fields used in the join.
+   void SetJoinFieldTokens(const std::vector<std::string> &joinFields)
+   {
+      fJoinFieldTokens.reserve(joinFields.size());
+      for (const auto &fieldName : joinFields) {
+         fJoinFieldTokens.emplace_back(fEntry->GetToken(fieldName));
+      }
+   }
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Construct a new RNTupleJoinProcessor.
    ///
    /// \param[in] mainNTuple The source specification (name and storage location) of the primary RNTuple.
@@ -581,22 +597,6 @@ private:
                         const std::vector<std::string> &joinFields, std::string_view processorName,
                         std::unique_ptr<RNTupleModel> primaryModel = nullptr,
                         std::vector<std::unique_ptr<RNTupleModel>> auxModels = {});
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Connect all fields, once the primary and all auxiliary RNTuples have been added.
-   void ConnectFields();
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Populate fJoinFieldTokens with tokens for join fields belonging to the main RNTuple in the join model.
-   ///
-   /// \param[in] joinFields The names of the fields used in the join.
-   void SetJoinFieldTokens(const std::vector<std::string> &joinFields)
-   {
-      fJoinFieldTokens.reserve(joinFields.size());
-      for (const auto &fieldName : joinFields) {
-         fJoinFieldTokens.emplace_back(fEntry->GetToken(fieldName));
-      }
-   }
 
 public:
    RNTupleJoinProcessor(const RNTupleJoinProcessor &) = delete;
