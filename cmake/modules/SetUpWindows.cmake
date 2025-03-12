@@ -80,8 +80,9 @@ elseif(MSVC)
   endif()
 
   #---Set Linker flags----------------------------------------------------------------------
-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ignore:4049,4206,4217,4221") # -incremental:no")
-  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -ignore:4049,4206,4217,4221") # -incremental:no")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ignore:4049,4206,4217,4221 -incremental:no")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -ignore:4049,4206,4217,4221 -incremental:no")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ignore:4049,4206,4217,4221 -incremental:no")
 
   string(TIMESTAMP CURRENT_YEAR "%Y")
   set(ROOT_RC_SCRIPT ${CMAKE_BINARY_DIR}/etc/root.rc)
