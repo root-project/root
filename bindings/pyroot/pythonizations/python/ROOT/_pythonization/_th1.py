@@ -230,15 +230,14 @@ for klass in _th1_derived_classes_to_pythonize:
 
     from ROOT._pythonization._uhi import add_plotting_features
     
-    # Add UHI components
-    uhi_components = [add_plotting_features]
-    for uc in uhi_components:
-        pythonization(klass)(uc)
+    # Add UHI plotting features
+    pythonization(klass)(add_plotting_features)
 
 @pythonization('TH1')
 def pythonize_th1(klass):
     # Parameters:
     # klass: class to be pythonized
+    from ROOT._pythonization._uhi import add_indexing_features
 
     # Support hist *= scalar
     klass.__imul__ = _imul
@@ -249,5 +248,8 @@ def pythonize_th1(klass):
 
     klass._Original_SetDirectory = klass.SetDirectory
     klass.SetDirectory = _SetDirectory_SetOwnership
+
+    # Add UHI indexing features
+    add_indexing_features(klass)
 
     inject_clone_releasing_ownership(klass)
