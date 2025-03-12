@@ -64,8 +64,7 @@ if (tmva-cpu)  # we need BLAS for compiling the models
 ROOT_ADD_GTEST(TestCustomModelsFromONNX TestCustomModelsFromONNX.cxx
   LIBRARIES
     ROOTTMVASofie
-    ${BLAS_LINKER_FLAGS}
-    ${BLAS_LIBRARIES}
+    ROOT::BLAS
   INCLUDE_DIRS
     ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -107,8 +106,7 @@ if (tmva-cpu)
 ROOT_ADD_GTEST(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
   LIBRARIES
     ROOTTMVASofie
-    ${BLAS_LINKER_FLAGS}
-    ${BLAS_LIBRARIES}
+    ROOT::BLAS
   INCLUDE_DIRS
     ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -131,8 +129,7 @@ if (tmva-cpu)
     LIBRARIES
       ROOTTMVASofie
       ROOTTMVASofieParser
-      ${BLAS_LINKER_FLAGS}
-      ${BLAS_LIBRARIES}
+      ROOT::BLAS
     INCLUDE_DIRS
       ${CMAKE_CURRENT_BINARY_DIR}
   )

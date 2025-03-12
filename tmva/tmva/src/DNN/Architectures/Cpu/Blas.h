@@ -20,7 +20,11 @@
 
 #include <iostream>
 
-#ifndef DNN_USE_CBLAS
+#if defined(ROOT_BLAS_GSL)
+#include <gsl/gsl_cblas.h>
+#elif defined(ROOT_BLAS_FLEXIBLAS)
+#include <flexiblas/cblas.h>
+#else
 // External Library Routines
 //____________________________________________________________________________
 extern "C" void saxpy_(const int * n, const float * alpha, const float * x,
@@ -54,8 +58,6 @@ extern "C" void sgemm_(const char * transa, const char * transb,
                        const float * B, const int * ldb, const float * beta,
                        float * C, const int * ldc);
 
-#else
-#include "gsl/gsl_cblas.h"
 #endif
 
 namespace TMVA
@@ -65,58 +67,26 @@ namespace DNN
 namespace Blas
 {
 
-// Type-Generic Wrappers
-//____________________________________________________________________________
+#if !defined(ROOT_BLAS_GSL) && !defined(ROOT_BLAS_FLEXIBLAS)
+
 /** Add the vector \p x scaled by \p alpha to \p y scaled by `\beta` */
-template <typename AReal>
-inline void Axpy(const int * n, const AReal * alpha,
-                 const AReal * x, const int * incx,
-                 AReal * y, const int * incy);
-
-/** Multiply the vector \p x with the matrix \p A and store the result in \p y. */
-template <typename AReal>
-inline void Gemv(const char *trans, const int * m, const int * n,
-                 const AReal * alpha, const AReal * A, const int * lda,
-                 const AReal * x, const int * incx,
-                 const AReal * beta, AReal * y, const int * incy);
-
-/** Multiply the matrix \p A with the matrix \p B and store the result in \p C. */
-template <typename AReal>
-inline void Gemm(const char *transa, const char *transb,
-                 const int * m, const int * n, const int* k,
-                 const AReal * alpha, const AReal * A, const int * lda,
-                 const AReal * B, const int * ldb, const AReal * beta,
-                 AReal * C, const int * ldc);
-
-/** Add the outer product of \p x and \p y to the matrix \p A. */
-template <typename AReal>
-inline void Ger(const int * m, const int * n, const AReal * alpha,
-                const AReal * x, const int * incx,
-                const AReal * y, const int * incy,
-                AReal * A, const int * lda);
-
-// Specializations
-//____________________________________________________________________________
-#ifndef DNN_USE_CBLAS
-
-template<>
-inline void Axpy<double>(const int * n, const double * alpha,
+inline void Axpy(const int * n, const double * alpha,
                          const double * x, const int * incx,
                          double * y, const int * incy)
 {
    daxpy_(n, alpha, x, incx, y, incy);
 }
 
-template<>
-inline void Axpy<float>(const int * n, const float * alpha,
+/** Add the vector \p x scaled by \p alpha to \p y scaled by `\beta` */
+inline void Axpy(const int * n, const float * alpha,
                         const float * x, const int * incx,
                         float * y, const int * incy)
 {
    saxpy_(n, alpha, x, incx, y, incy);
 }
 
-template<>
-inline void Gemv<double>(const char *trans, const int * m, const int * n,
+/** Multiply the vector \p x with the matrix \p A and store the result in \p y. */
+inline void Gemv(const char *trans, const int * m, const int * n,
                          const double * alpha, const double * A, const int * lda,
                          const double * x, const int * incx,
                          const double * beta, double * y, const int * incy)
@@ -124,8 +94,8 @@ inline void Gemv<double>(const char *trans, const int * m, const int * n,
    dgemv_(trans, m, n, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-template<>
-inline void Gemv<float>(const char *trans, const int * m, const int * n,
+/** Multiply the vector \p x with the matrix \p A and store the result in \p y. */
+inline void Gemv(const char *trans, const int * m, const int * n,
                         const float * alpha, const float * A, const int * lda,
                         const float * x, const int * incx,
                         const float * beta, float * y, const int * incy)
@@ -133,8 +103,8 @@ inline void Gemv<float>(const char *trans, const int * m, const int * n,
    sgemv_(trans, m, n, alpha, A, lda, x, incx, beta, y, incy);
 }
 
-template<>
-inline void Gemm<double>(const char *transa, const char *transb,
+/** Multiply the matrix \p A with the matrix \p B and store the result in \p C. */
+inline void Gemm(const char *transa, const char *transb,
                          const int * m, const int * n, const int* k,
                          const double * alpha, const double * A, const int * lda,
                          const double * B, const int * ldb, const double * beta,
@@ -143,8 +113,8 @@ inline void Gemm<double>(const char *transa, const char *transb,
     dgemm_(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 
-template<>
-inline void Gemm<float>(const char *transa, const char *transb,
+/** Multiply the matrix \p A with the matrix \p B and store the result in \p C. */
+inline void Gemm(const char *transa, const char *transb,
                         const int * m, const int * n, const int* k,
                         const float * alpha, const float * A, const int * lda,
                         const float * B, const int * ldb, const float * beta,
@@ -153,8 +123,8 @@ inline void Gemm<float>(const char *transa, const char *transb,
     sgemm_(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 }
 
-template <>
-inline void Ger<double>(const int * m, const int * n, const double * alpha,
+/** Add the outer product of \p x and \p y to the matrix \p A. */
+inline void Ger(const int * m, const int * n, const double * alpha,
                         const double * x, const int * incx,
                         const double * y, const int * incy,
                         double * A, const int * lda)
@@ -162,8 +132,8 @@ inline void Ger<double>(const int * m, const int * n, const double * alpha,
    dger_(m, n, alpha, x, incx, y, incy, A, lda);
 }
 
-template <>
-inline void Ger<float>(const int * m, const int * n, const float * alpha,
+/** Add the outer product of \p x and \p y to the matrix \p A. */
+inline void Ger(const int * m, const int * n, const float * alpha,
                        const float * x, const int * incx,
                        const float * y, const int * incy,
                        float * A, const int * lda)
@@ -175,24 +145,24 @@ inline void Ger<float>(const int * m, const int * n, const float * alpha,
 //--------------------------------------------------------
 // cblas implementation
 //-----------------------------------------------------------
-template<>
-inline void Axpy<double>(const int * n, const double * alpha,
+/** Add the vector \p x scaled by \p alpha to \p y scaled by `\beta` */
+inline void Axpy(const int * n, const double * alpha,
                          const double * x, const int * incx,
                          double * y, const int * incy)
 {
    cblas_daxpy(*n, *alpha, x, *incx, y, *incy);
 }
 
-template<>
-inline void Axpy<float>(const int * n, const float * alpha,
+/** Add the vector \p x scaled by \p alpha to \p y scaled by `\beta` */
+inline void Axpy(const int * n, const float * alpha,
                         const float * x, const int * incx,
                         float * y, const int * incy)
 {
    cblas_saxpy(*n, *alpha, x, *incx, y, *incy);
 }
 
-template<>
-inline void Gemv<double>(const char *trans, const int * m, const int * n,
+/** Multiply the vector \p x with the matrix \p A and store the result in \p y. */
+inline void Gemv(const char *trans, const int * m, const int * n,
                          const double * alpha, const double * A, const int * lda,
                          const double * x, const int * incx,
                          const double * beta, double * y, const int * incy)
@@ -201,8 +171,8 @@ inline void Gemv<double>(const char *trans, const int * m, const int * n,
    cblas_dgemv(CblasColMajor, kTrans, *m, *n, *alpha, A, *lda, x, *incx, *beta, y, *incy);
 }
 
-template<>
-inline void Gemv<float>(const char *trans, const int * m, const int * n,
+/** Multiply the vector \p x with the matrix \p A and store the result in \p y. */
+inline void Gemv(const char *trans, const int * m, const int * n,
                         const float * alpha, const float * A, const int * lda,
                         const float * x, const int * incx,
                         const float * beta, float * y, const int * incy)
@@ -211,8 +181,8 @@ inline void Gemv<float>(const char *trans, const int * m, const int * n,
    cblas_sgemv(CblasColMajor, kTrans, *m, *n, *alpha, A, *lda, x, *incx, *beta, y, *incy);
 }
 
-template<>
-inline void Gemm<double>(const char *transa, const char *transb,
+/** Multiply the matrix \p A with the matrix \p B and store the result in \p C. */
+inline void Gemm(const char *transa, const char *transb,
                          const int * m, const int * n, const int* k,
                          const double * alpha, const double * A, const int * lda,
                          const double * B, const int * ldb, const double * beta,
@@ -223,8 +193,8 @@ inline void Gemm<double>(const char *transa, const char *transb,
    cblas_dgemm(CblasColMajor, kTransA, kTransB, *m, *n, *k, *alpha, A, *lda, B, *ldb, *beta, C, *ldc);
 }
 
-template<>
-inline void Gemm<float>(const char *transa, const char *transb,
+/** Multiply the matrix \p A with the matrix \p B and store the result in \p C. */
+inline void Gemm(const char *transa, const char *transb,
                         const int * m, const int * n, const int* k,
                         const float * alpha, const float * A, const int * lda,
                         const float * B, const int * ldb, const float * beta,
@@ -235,8 +205,8 @@ inline void Gemm<float>(const char *transa, const char *transb,
    cblas_sgemm(CblasColMajor, kTransA, kTransB, *m, *n, *k, *alpha, A, *lda, B, *ldb, *beta, C, *ldc);
 }
 
-template <>
-inline void Ger<double>(const int * m, const int * n, const double * alpha,
+/** Add the outer product of \p x and \p y to the matrix \p A. */
+inline void Ger(const int * m, const int * n, const double * alpha,
                         const double * x, const int * incx,
                         const double * y, const int * incy,
                         double * A, const int * lda)
@@ -244,8 +214,8 @@ inline void Ger<double>(const int * m, const int * n, const double * alpha,
    cblas_dger(CblasColMajor, *m, *n, *alpha, x, *incx, y, *incy, A, *lda);
 }
 
-template <>
-inline void Ger<float>(const int * m, const int * n, const float * alpha,
+/** Add the outer product of \p x and \p y to the matrix \p A. */
+inline void Ger(const int * m, const int * n, const float * alpha,
                        const float * x, const int * incx,
                        const float * y, const int * incy,
                        float * A, const int * lda)

@@ -93,7 +93,6 @@ if(ROOT_TORCH_FOUND)
          SYSTEM
          ${CMAKE_CURRENT_BINARY_DIR}
       )
-   target_link_libraries(TestRModelParserPyTorch ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
 
 endif(ROOT_TORCH_FOUND)
 
@@ -137,6 +136,5 @@ if((ROOT_KERAS_FOUND AND ROOT_THEANO_FOUND) OR (ROOT_KERAS_FOUND AND ROOT_TENSOR
     SYSTEM
     ${CMAKE_CURRENT_BINARY_DIR}
    )
-   target_link_libraries(TestRModelParserKeras ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
 
 endif()
