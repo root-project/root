@@ -70,6 +70,13 @@ protected:
          }
       }
    }
+
+   void TearDown() override
+   {
+      for (const auto &fileName : fFileNames) {
+         std::remove(fileName.c_str());
+      }
+   }
 };
 
 TEST_F(RNTupleProcessorTest, Base)
