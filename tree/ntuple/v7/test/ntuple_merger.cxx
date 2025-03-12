@@ -2840,7 +2840,6 @@ TEST(RNTupleMerger, MergeFirstEmptySchema)
 {
    // Try merging two ntuples, the first of which has an empty schema
    FileRaii fileGuard1("test_ntuple_merge_firstempty_1.root");
-   fileGuard1.PreserveFile();
    {
       auto model = RNTupleModel::Create();
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
@@ -2926,7 +2925,6 @@ TEST(RNTupleMerger, MergeSecondEmptySchema)
 {
    // Try merging two ntuples, the second of which has an empty schema
    FileRaii fileGuard1("test_ntuple_merge_secondempty_1.root");
-   fileGuard1.PreserveFile();
    {
       auto model = RNTupleModel::Create();
       auto pi = model->MakeField<int>("int");
