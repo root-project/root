@@ -297,6 +297,15 @@ void AddProgressBar(ROOT::RDF::RNode df);
 /// For more details see ROOT::RDF::Experimental::ProgressHelper Class.
 void AddProgressBar(ROOT::RDataFrame df);
 
+/// Enable or disable the cloning of 3-d histograms.
+/// When RDataFrame runs with multiple threads, all histograms are cloned for each thread.
+/// This can consume a prohibitive amount of memory. When the cloning is disabled using this
+/// function, RDataFrame will use only one histogram, and fill it in a thread-safe manner.
+/// This might be slower if there is high contention on the histogram, but saves a significant
+/// amount of memory.
+/// \param[in] state Enable or disable the cloning.
+void CloneTH3(bool state);
+
 class ProgressBarAction;
 
 /// RDF progress helper.
