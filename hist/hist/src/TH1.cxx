@@ -7390,16 +7390,17 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
    // save contour levels
    Int_t ncontours = GetContour();
    if (ncontours > 0) {
-      out << "   " << hname << "->SetContour(" << ncontours << ");\n";
-      Double_t zlevel;
-      for (Int_t bin = 0; bin < ncontours; bin++) {
-         if (gPad->GetLogz()) {
-            zlevel = TMath::Power(10, GetContourLevel(bin));
-         } else {
-            zlevel = GetContourLevel(bin);
-         }
-         out << "   " << hname << "->SetContourLevel(" << bin << "," << zlevel << ");\n";
+      TString arrname;
+      if (TestBit(kUserContour)) {
+         std::vector<Double_t> levels(ncontours);
+         for (Int_t bin = 0; bin < ncontours; bin++)
+            levels[bin] = GetContourLevel(bin);
+         arrname = SavePrimitiveArray(out, hname, ncontours, levels.data());
       }
+      out << "   " << hname << "->SetContour(" << ncontours;
+      if (!arrname.IsNull())
+         out << ", " << arrname;
+      out << ");\n";
    }
 
    SavePrimitiveFunctions(out, hname, fFunctions);
