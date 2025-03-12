@@ -583,15 +583,6 @@ private:
                         std::vector<std::unique_ptr<RNTupleModel>> auxModels = {});
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Add an auxiliary RNTuple to the processor.
-   ///
-   /// \param[in] auxNTuple The source specification (name and storage location) of the auxiliary RNTuple.
-   /// \param[in] joinFields The names of the fields used in the join.
-   /// \param[in] ntupleIdx The index of the ntuple according to fNTuples.
-   void
-   AddAuxiliary(const RNTupleOpenSpec &auxNTuple, const std::vector<std::string> &joinFields, std::size_t ntupleIdx);
-
-   /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect all fields, once the primary and all auxiliary RNTuples have been added.
    void ConnectFields();
 
