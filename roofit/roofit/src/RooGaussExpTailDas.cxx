@@ -92,7 +92,7 @@ Int_t RooGaussExpTailDas::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& a
 //_____________________________________________________________________________
 Double_t RooGaussExpTailDas::analyticalIntegral(Int_t code, const char* rangeName) const
 {
-   assert(code==1);
+   R__ASSERT(code == 1);
    double result = 0;
 
    double sig = std::abs((Double_t)sigma_);
