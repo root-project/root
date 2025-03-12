@@ -1947,12 +1947,13 @@ endfunction()
 #----------------------------------------------------------------------------
 # ROOT_ADD_PYUNITTEST( <name> <file>
 #                     [WILLFAIL]
+#                     [GENERIC] # Run a generic Python command `python <file>` to run the test.
 #                     [COPY_TO_BUILDDIR copy_file1 copy_file1 ...]
 #                     [ENVIRONMENT var1=val1 var2=val2 ...]
 #                     [PYTHON_DEPS dep_x dep_y ...] # Communicate that this test requires python packages. A fixture checking for these will be run before the test.)
 #----------------------------------------------------------------------------
 function(ROOT_ADD_PYUNITTEST name file)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL" "" "COPY_TO_BUILDDIR;ENVIRONMENT;PYTHON_DEPS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;GENERIC" "" "COPY_TO_BUILDDIR;ENVIRONMENT;PYTHON_DEPS" ${ARGN})
   if(MSVC)
     set(ROOT_ENV ROOTSYS=${ROOTSYS}
         PYTHONPATH=${ROOTSYS}/bin;$ENV{PYTHONPATH})
@@ -1985,8 +1986,15 @@ function(ROOT_ADD_PYUNITTEST name file)
 
   ROOT_PATH_TO_STRING(name_with_path ${good_name} PATH_SEPARATOR_REPLACEMENT "-")
   string(REPLACE "-test-" "-" clean_name_with_path ${name_with_path})
+
+  if(ARG_GENERIC)
+    set(test_cmd COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${file_name})
+  else()
+    set(test_cmd COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v)
+  endif()
+
   ROOT_ADD_TEST(pyunittests${clean_name_with_path}
-              COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
+              ${test_cmd}
               ENVIRONMENT ${ROOT_ENV} ${ARG_ENVIRONMENT}
               LABELS ${labels}
               ${copy_to_builddir}
