@@ -1714,8 +1714,7 @@ TEST(RNTuple, HalfPrecisionFloat)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
 
-   EXPECT_EQ(4,
-             ROOT::Experimental::Internal::RColumnElementBase::Generate(ROOT::ENTupleColumnType::kReal16)->GetSize());
+   EXPECT_EQ(4, ROOT::Internal::RColumnElementBase::Generate(ROOT::ENTupleColumnType::kReal16)->GetSize());
 
    const auto &desc = reader->GetDescriptor();
    EXPECT_EQ(ROOT::ENTupleColumnType::kReal16, (*desc.GetColumnIterable(desc.FindFieldId("f1")).begin()).GetType());

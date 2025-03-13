@@ -28,8 +28,7 @@
 using ROOT::Internal::RColumnIndex;
 using ROOT::Internal::RColumnSwitch;
 
-std::pair<std::uint16_t, std::uint16_t>
-ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(ENTupleColumnType type)
+std::pair<std::uint16_t, std::uint16_t> ROOT::Internal::RColumnElementBase::GetValidBitRange(ENTupleColumnType type)
 {
    switch (type) {
    case ENTupleColumnType::kIndex64: return std::make_pair(64, 64);
@@ -70,7 +69,7 @@ ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(ENTupleColumn
    return std::make_pair(0, 0);
 }
 
-const char *ROOT::Experimental::Internal::RColumnElementBase::GetColumnTypeName(ENTupleColumnType type)
+const char *ROOT::Internal::RColumnElementBase::GetColumnTypeName(ENTupleColumnType type)
 {
    switch (type) {
    case ENTupleColumnType::kIndex64: return "Index64";
@@ -110,8 +109,8 @@ const char *ROOT::Experimental::Internal::RColumnElementBase::GetColumnTypeName(
 }
 
 template <>
-std::unique_ptr<ROOT::Experimental::Internal::RColumnElementBase>
-ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(ENTupleColumnType onDiskType)
+std::unique_ptr<ROOT::Internal::RColumnElementBase>
+ROOT::Internal::RColumnElementBase::Generate<void>(ENTupleColumnType onDiskType)
 {
    //clang-format off
    switch (onDiskType) {
@@ -155,8 +154,8 @@ ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(ENTupleColumnTy
    return nullptr;
 }
 
-std::unique_ptr<ROOT::Experimental::Internal::RColumnElementBase>
-ROOT::Experimental::Internal::GenerateColumnElement(std::type_index inMemoryType, ENTupleColumnType onDiskType)
+std::unique_ptr<ROOT::Internal::RColumnElementBase>
+ROOT::Internal::GenerateColumnElement(std::type_index inMemoryType, ENTupleColumnType onDiskType)
 {
    if (inMemoryType == std::type_index(typeid(char))) {
       return GenerateColumnElementInternal<char>(onDiskType);
@@ -197,14 +196,14 @@ ROOT::Experimental::Internal::GenerateColumnElement(std::type_index inMemoryType
    return nullptr;
 }
 
-std::unique_ptr<ROOT::Experimental::Internal::RColumnElementBase>
-ROOT::Experimental::Internal::GenerateColumnElement(const RColumnElementBase::RIdentifier &elementId)
+std::unique_ptr<ROOT::Internal::RColumnElementBase>
+ROOT::Internal::GenerateColumnElement(const RColumnElementBase::RIdentifier &elementId)
 {
    return GenerateColumnElement(elementId.fInMemoryType, elementId.fOnDiskType);
 }
 
-void ROOT::Experimental::Internal::BitPacking::PackBits(void *dst, const void *src, std::size_t count,
-                                                        std::size_t sizeofSrc, std::size_t nDstBits)
+void ROOT::Internal::BitPacking::PackBits(void *dst, const void *src, std::size_t count, std::size_t sizeofSrc,
+                                          std::size_t nDstBits)
 {
    assert(sizeofSrc <= sizeof(Word_t));
    assert(0 < nDstBits && nDstBits <= sizeofSrc * 8);
@@ -259,8 +258,8 @@ void ROOT::Experimental::Internal::BitPacking::PackBits(void *dst, const void *s
    assert(dstIdx == expDstCount);
 }
 
-void ROOT::Experimental::Internal::BitPacking::UnpackBits(void *dst, const void *src, std::size_t count,
-                                                          std::size_t sizeofDst, std::size_t nSrcBits)
+void ROOT::Internal::BitPacking::UnpackBits(void *dst, const void *src, std::size_t count, std::size_t sizeofDst,
+                                            std::size_t nSrcBits)
 {
    assert(sizeofDst <= sizeof(Word_t));
    assert(0 < nSrcBits && nSrcBits <= sizeofDst * 8);

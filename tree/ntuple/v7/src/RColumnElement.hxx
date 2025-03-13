@@ -28,7 +28,7 @@
 #endif
 #endif /* R__LITTLE_ENDIAN */
 
-namespace ROOT::Experimental::Internal::BitPacking {
+namespace ROOT::Internal::BitPacking {
 
 using Word_t = std::uintmax_t;
 inline constexpr std::size_t kBitsPerWord = sizeof(Word_t) * 8;
@@ -54,7 +54,7 @@ void PackBits(void *dst, const void *src, std::size_t count, std::size_t sizeofS
 /// `dst` must be at least `count * sizeofDst` bytes long.
 void UnpackBits(void *dst, const void *src, std::size_t count, std::size_t sizeofDst, std::size_t nSrcBits);
 
-} // namespace ROOT::Experimental::Internal::BitPacking
+} // namespace ROOT::Internal::BitPacking
 
 namespace {
 
@@ -318,9 +318,9 @@ inline void CastZigzagSplitUnpack(void *destination, const void *source, std::si
 namespace {
 
 using ROOT::ENTupleColumnType;
-using ROOT::Experimental::Internal::RColumnElementBase;
 using ROOT::Internal::kTestFutureColumnType;
 using ROOT::Internal::MakeUninitArray;
+using ROOT::Internal::RColumnElementBase;
 
 template <typename CppT, ENTupleColumnType>
 class RColumnElement;
@@ -905,7 +905,7 @@ class RColumnElement<float, ENTupleColumnType::kReal32Trunc> : public RColumnEle
 public:
    void Pack(void *dst, const void *src, std::size_t count) const final
    {
-      using namespace ROOT::Experimental::Internal::BitPacking;
+      using namespace ROOT::Internal::BitPacking;
 
       R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
 
@@ -923,7 +923,7 @@ public:
 
    void Unpack(void *dst, const void *src, std::size_t count) const final
    {
-      using namespace ROOT::Experimental::Internal::BitPacking;
+      using namespace ROOT::Internal::BitPacking;
 
       R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
 
@@ -939,7 +939,7 @@ class RColumnElement<double, ENTupleColumnType::kReal32Trunc> : public RColumnEl
 public:
    void Pack(void *dst, const void *src, std::size_t count) const final
    {
-      using namespace ROOT::Experimental::Internal::BitPacking;
+      using namespace ROOT::Internal::BitPacking;
 
       R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
 
@@ -964,7 +964,7 @@ public:
 
    void Unpack(void *dst, const void *src, std::size_t count) const final
    {
-      using namespace ROOT::Experimental::Internal::BitPacking;
+      using namespace ROOT::Internal::BitPacking;
 
       R__ASSERT(GetPackedSize(count) == MinBufSize(count, fBitsOnStorage));
 
@@ -1121,7 +1121,7 @@ public:
 
    void Pack(void *dst, const void *src, std::size_t count) const final
    {
-      using namespace ROOT::Experimental;
+      using namespace ROOT::Internal;
 
       // TODO(gparolini): see if we can avoid this allocation
       auto quantized = MakeUninitArray<Quantize::Quantized_t>(count);
@@ -1134,18 +1134,18 @@ public:
                                         " values were found of of range for quantization while packing (range is [" +
                                         std::to_string(min) + ", " + std::to_string(max) + "])"));
       }
-      Internal::BitPacking::PackBits(dst, quantized.get(), count, sizeof(Quantize::Quantized_t), fBitsOnStorage);
+      BitPacking::PackBits(dst, quantized.get(), count, sizeof(Quantize::Quantized_t), fBitsOnStorage);
    }
 
    void Unpack(void *dst, const void *src, std::size_t count) const final
    {
-      using namespace ROOT::Experimental;
+      using namespace ROOT::Internal;
 
       // TODO(gparolini): see if we can avoid this allocation
       auto quantized = MakeUninitArray<Quantize::Quantized_t>(count);
       assert(fValueRange);
       const auto [min, max] = *fValueRange;
-      Internal::BitPacking::UnpackBits(quantized.get(), src, count, sizeof(Quantize::Quantized_t), fBitsOnStorage);
+      BitPacking::UnpackBits(quantized.get(), src, count, sizeof(Quantize::Quantized_t), fBitsOnStorage);
       [[maybe_unused]] const int nOutOfRange =
          Quantize::UnquantizeReals(reinterpret_cast<T *>(dst), quantized.get(), count, min, max, fBitsOnStorage);
       // NOTE: here, differently from Pack(), we don't ever expect to have values out of range, since the quantized
@@ -1493,11 +1493,10 @@ DECLARE_RCOLUMNELEMENT_SPEC(ROOT::Internal::RColumnIndex, ENTupleColumnType::kSp
                             RColumnElementDeltaSplitLE, <std::uint64_t, std::uint32_t>);
 
 template <>
-class RColumnElement<ROOT::Experimental::Internal::RTestFutureColumn, kTestFutureColumnType> final
-   : public RColumnElementBase {
+class RColumnElement<ROOT::Internal::RTestFutureColumn, kTestFutureColumnType> final : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = false;
-   static constexpr std::size_t kSize = sizeof(ROOT::Experimental::Internal::RTestFutureColumn);
+   static constexpr std::size_t kSize = sizeof(ROOT::Internal::RTestFutureColumn);
    static constexpr std::size_t kBitsOnStorage = kSize * 8;
    RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
 
@@ -1507,7 +1506,7 @@ public:
 
    RIdentifier GetIdentifier() const final
    {
-      return RIdentifier{typeid(ROOT::Experimental::Internal::RTestFutureColumn), kTestFutureColumnType};
+      return RIdentifier{typeid(ROOT::Internal::RTestFutureColumn), kTestFutureColumnType};
    }
 };
 

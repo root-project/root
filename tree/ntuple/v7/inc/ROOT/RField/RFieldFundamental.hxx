@@ -443,7 +443,7 @@ public:
    void SetTruncated(std::size_t nBits)
    {
       const auto &[minBits, maxBits] =
-         Internal::RColumnElementBase::GetValidBitRange(ROOT::ENTupleColumnType::kReal32Trunc);
+         ROOT::Internal::RColumnElementBase::GetValidBitRange(ROOT::ENTupleColumnType::kReal32Trunc);
       if (nBits < minBits || nBits > maxBits) {
          throw RException(R__FAIL("SetTruncated() argument nBits = " + std::to_string(nBits) +
                                   " is out of valid range [" + std::to_string(minBits) + ", " +
@@ -464,7 +464,7 @@ public:
    void SetQuantized(double minValue, double maxValue, std::size_t nBits)
    {
       const auto &[minBits, maxBits] =
-         Internal::RColumnElementBase::GetValidBitRange(ROOT::ENTupleColumnType::kReal32Quant);
+         ROOT::Internal::RColumnElementBase::GetValidBitRange(ROOT::ENTupleColumnType::kReal32Quant);
       if (nBits < minBits || nBits > maxBits) {
          throw RException(R__FAIL("SetQuantized() argument nBits = " + std::to_string(nBits) +
                                   " is out of valid range [" + std::to_string(minBits) + ", " +
