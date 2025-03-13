@@ -307,6 +307,7 @@
 #include "Sin_FromONNX.hxx"
 
 #include "Cos_FromONNX.hxx"
+#include "Abs_FromONNX.hxx"
 
 #include "Einsum_matmul_FromONNX.hxx"
 #include "Einsum_dotprod_FromONNX.hxx"
@@ -609,7 +610,7 @@ TEST(ONNX, TopK)
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard all-ones input
-   std::vector<float> input({9.0, 8.0, 4.5, 1.7, 2.9, 3.2, 4, 2.6, 7.});
+   std::vector<float> input({9.0, 8.0, 4.5, 1.7, 2.9, 3.2, 4, 2.6, 7.4});
    TMVA_SOFIE_TopK::Session s("TopK_FromONNX.dat");
    auto output = s.infer(input.data());
    std::vector<float> values = std::get<0>(output);
@@ -2999,6 +3000,26 @@ TEST(ONNX, Cos)
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
       EXPECT_LE(std::abs(output[i] - std::cos(input[i])), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Abs)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the random input
+   std::vector<float> input({1.,-2.,-3,4,-5.,6});
+
+   TMVA_SOFIE_Abs::Session s("Abs_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), input.size());
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - std::abs(input[i])), TOLERANCE);
    }
 }
 // tests of Einsum operator

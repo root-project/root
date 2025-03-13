@@ -71,8 +71,14 @@ SOFIE also supports generating inference code with RDataFrame as inputs, refer t
 
 ## Supported ONNX operators
 
-Here is the updated list of supported ONNX operators
+Here is the updated list of supported ONNX operators. You can obtain this list by doing
+```cpp
+using namespace TMVA::Experimental;
+SOFIE::RModelParser_ONNX parser;
+std::vector<std::string> supportedOperators = parser.GetRegisteredOperators();
+```
 
+- [x] Abs
 - [x] Add
 - [x] AveragePool
 - [x] BatchNormalization
@@ -83,6 +89,7 @@ Here is the updated list of supported ONNX operators
 - [x] Conv
 - [x] ConvTranspose
 - [x] Cos
+- [x] Div
 - [x] Einsum
 - [x] Elu
 - [x] Equal
@@ -91,6 +98,7 @@ Here is the updated list of supported ONNX operators
 - [x] Expand
 - [x] EyeLike
 - [x] Flatten
+- [x] GRU
 - [x] Gather
 - [x] Gemm
 - [x] GlobalAveragePool
@@ -99,12 +107,12 @@ Here is the updated list of supported ONNX operators
 - [x] GRU
 - [x] Identity
 - [x] If
+- [x] LSTM
 - [x] LayerNormalization
 - [x] LeakyRelu
 - [x] Less
 - [x] LessOrEqual
 - [x] Log
-- [x] LSTM
 - [x] MatMul
 - [x] Max
 - [x] MaxPool
@@ -113,13 +121,13 @@ Here is the updated list of supported ONNX operators
 - [x] Mul
 - [x] Neg
 - [x] Pad
-- [x] Pool
 - [x] Pow
-- [x] Range
+- [x] RNN
 - [x] RandomNormal
 - [x] RandomNormalLike
 - [x] RandomUniform
 - [x] RandomUniformLike
+- [x] Range
 - [x] Reciprocal
 - [x] ReduceMean
 - [x] ReduceProd
@@ -127,8 +135,8 @@ Here is the updated list of supported ONNX operators
 - [x] ReduceSumSquare
 - [x] Relu
 - [x] Reshape
-- [x] RNN
 - [x] Selu
+- [x] Shape
 - [x] Sigmoid
 - [x] Sin
 - [x] Slice
@@ -136,6 +144,8 @@ Here is the updated list of supported ONNX operators
 - [x] Split
 - [x] Sqrt
 - [x] Squeeze
+- [x] Sub
+- [x] Sum
 - [x] Tanh
 - [x] Tile
 - [x] TopK
@@ -151,6 +161,12 @@ The above operators are supported for tensors of the following types:
 - [x] int64
 - [x] bool (for comparison operators)
 
+You can also check your model whether all operators are implemented by doing the following:
+```c++
+using namespace TMVA::Experimental;
+SOFIE::RModelParser_ONNX parser;
+parser.CheckModel("example_model.ONNX");
+```
 
 
 
