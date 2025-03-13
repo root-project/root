@@ -201,7 +201,7 @@ class JSRootMenu {
    addColorMenu(name, value, set_func, fill_kind) {
       if (value === undefined) return;
       const useid = !isStr(value);
-      this.sub('' + name, () => {
+      this.sub(name, () => {
          this.input('Enter color ' + (useid ? '(only id number)' : '(name or id)'), value, useid ? 'int' : 'text', useid ? 0 : undefined, useid ? 9999 : undefined).then(col => {
             const id = parseInt(col);
             if (Number.isInteger(id) && getColor(id))
@@ -267,7 +267,7 @@ class JSRootMenu {
          values = values.sort((a, b) => a > b);
       }
 
-      this.sub('' + name, () => this.input('Enter value of ' + name, conv(size_value, true), (step >= 1) ? 'int' : 'float').then(set_func), title);
+      this.sub(name, () => this.input('Enter value of ' + name, conv(size_value, true), (step >= 1) ? 'int' : 'float').then(set_func), title);
       values.forEach(v => this.addchk(match(v), conv(v), v, res => set_func((step >= 1) ? Number.parseInt(res) : Number.parseFloat(res))));
       this.endsub();
    }
@@ -390,7 +390,7 @@ class JSRootMenu {
      * @protected */
    addSelectMenu(name, values, value, set_func, title) {
       const use_number = (typeof value === 'number');
-      this.sub('' + name, undefined, undefined, title);
+      this.sub(name, undefined, undefined, title);
       for (let n = 0; n < values.length; ++n)
          this.addchk(use_number ? (n === value) : (values[n] === value), values[n], use_number ? n : values[n], res => set_func(use_number ? Number.parseInt(res) : res));
       this.endsub();
@@ -402,7 +402,7 @@ class JSRootMenu {
       // if (value === undefined) return;
       const colors = ['default', 'black', 'white', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
 
-      this.sub('' + name, () => {
+      this.sub(name, () => {
          this.input('Enter color name - empty string will reset color', value).then(set_func);
       });
       let fillcol = 'black';
@@ -464,7 +464,7 @@ class JSRootMenu {
    /** @summary Add fill style menu
      * @private */
    addFillStyleMenu(name, value, color_index, set_func) {
-      this.sub('' + name, () => {
+      this.sub(name, () => {
          this.input('Enter fill style id (1001-solid, 3100..4000)', value, 'int', 0, 4000).then(id => {
             if ((id >= 0) && (id <= 4000)) set_func(id);
          });
@@ -502,7 +502,7 @@ class JSRootMenu {
    addFontMenu(name, value, set_func) {
       const prec = value && Number.isInteger(value) ? value % 10 : 2;
 
-      this.sub('' + name, () => {
+      this.sub(name, () => {
          this.input('Enter font id from [0..20]', Math.floor(value/10), 'int', 0, 20).then(id => {
             if ((id >= 0) && (id <= 20)) set_func(id*10 + prec);
          });
@@ -892,7 +892,7 @@ class JSRootMenu {
 
       const setStyleField = arg => { gStyle[arg.slice(1)] = parseInt(arg[0]); },
             addStyleIntField = (name, field, arr) => {
-         this.sub('' + name);
+         this.sub(name);
          const curr = gStyle[field] >= arr.length ? 1 : gStyle[field];
          for (let v = 0; v < arr.length; ++v)
             this.addchk(curr === v, arr[v], `${v}${field}`, setStyleField);
@@ -1035,7 +1035,7 @@ class JSRootMenu {
      * @return {Promise} with true when 'Ok' pressed or false when 'Cancel' pressed
      * @protected */
    async confirm(title, message) {
-      return this.runModal(title, message, { btns: true, height: 120, width: 400 }).then(elem => { return !!elem; });
+      return this.runModal(title, message, { btns: true, height: 120, width: 400 }).then(elem => Boolean(elem));
    }
 
    /** @summary Input value
@@ -1378,14 +1378,14 @@ class StandaloneMenu extends JSRootMenu {
 
          hovArea.appendChild(text);
 
-         function changeFocus(item, on) {
+         function changeFocus(fitem, on) {
             if (on) {
-               item.classList.add(clfocus);
-               item.style['background-color'] = 'rgb(220, 220, 220)';
-            } else if (item.classList.contains(clfocus)) {
-               item.style['background-color'] = null;
-               item.classList.remove(clfocus);
-               item.querySelector(`.${clname}`)?.remove();
+               fitem.classList.add(clfocus);
+               fitem.style['background-color'] = 'rgb(220, 220, 220)';
+            } else if (fitem.classList.contains(clfocus)) {
+               fitem.style['background-color'] = null;
+               fitem.classList.remove(clfocus);
+               fitem.querySelector(`.${clname}`)?.remove();
             }
          }
 
@@ -1623,7 +1623,7 @@ function createMenu(evnt, handler, menuname) {
 function closeMenu(menuname) {
    const element = getDocument().getElementById(menuname || sDfltName);
    element?.remove();
-   return !!element;
+   return Boolean(element);
 }
 
 /** @summary Returns true if menu or modal dialog present

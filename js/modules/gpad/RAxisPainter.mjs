@@ -578,7 +578,7 @@ class RAxisPainter extends RObjectPainter {
       }
 
       while (this.handle.next(true)) {
-         let h1 = Math.round(this.ticksSize/4), h2 = 0;
+         let h1 = Math.round(this.ticksSize/4), h2;
 
          if (this.handle.kind < 3)
             h1 = Math.round(this.ticksSize/2);
@@ -763,7 +763,7 @@ class RAxisPainter extends RObjectPainter {
             rotated = this.isTitleRotated();
 
       return this.startTextDrawingAsync(this.titleFont, 'font', title_g).then(() => {
-         let title_shift_x = 0, title_shift_y = 0, title_basepos = 0;
+         let title_shift_x, title_shift_y, title_basepos;
 
          this.title_align = this.titleCenter ? 'middle' : (this.titleOpposite ^ (this.isReverseAxis() || rotated) ? 'begin' : 'end');
 
@@ -1006,11 +1006,12 @@ class RAxisPainter extends RObjectPainter {
                evnt.stopPropagation();
                evnt.preventDefault();
 
-               const pos = d3_pointer(evnt, this.draw_g.node()),
-                   coord = this.vertical ? (1 - pos[1] / len) : pos[0] / len,
-                   item = this.analyzeWheelEvent(evnt, coord);
+               const pos2 = d3_pointer(evnt, this.draw_g.node()),
+                     coord = this.vertical ? (1 - pos2[1] / len) : pos2[0] / len,
+                     item = this.analyzeWheelEvent(evnt, coord);
 
-               if (item.changed) this.zoomStandalone(item.min, item.max);
+               if (item.changed)
+                  this.zoomStandalone(item.min, item.max);
             });
          }
       });
@@ -1031,12 +1032,12 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Change axis attribute, submit changes to server and redraw axis when specified
      * @desc Arguments as redraw_mode, name1, value1, name2, value2, ... */
-   changeAxisAttr(redraw_mode) {
+   changeAxisAttr(redraw_mode, ...args) {
       const changes = {};
-      let indx = 1;
-      while (indx < arguments.length - 1) {
-         this.v7AttrChange(changes, arguments[indx], arguments[indx+1]);
-         this.v7SetAttr(arguments[indx], arguments[indx+1]);
+      let indx = 0;
+      while (indx < args.length) {
+         this.v7AttrChange(changes, args[indx], args[indx + 1]);
+         this.v7SetAttr(args[indx], args[indx+1]);
          indx += 2;
       }
       this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server

@@ -19,8 +19,8 @@ import { getRootColors } from './colors.mjs';
 class ObjectPainter extends BasePainter {
 
    #draw_object;     // drawn object
-   #main_painter;    // main painter in the pad - temporary pointer on the painter
-   #primary_id;      // unique id of primary painter
+   #main_painter;    // WeakRef to main painter in the pad
+   #primary_ref;     // reference of primary painter - if any
    #secondary_id;    // id of this painter in relation to primary painter
    #options_store;   // stored draw options used to check changes
 
@@ -94,6 +94,9 @@ class ObjectPainter extends BasePainter {
       this.#main_painter = null;
       this.#draw_object = null;
       delete this.snapid;
+      this._is_primary = undefined;
+      this.#primary_ref = undefined;
+      this.#secondary_id = undefined;
 
       // remove attributes objects (if any)
       delete this.fillatt;
@@ -127,7 +130,7 @@ class ObjectPainter extends BasePainter {
          return arg === clname;
       if (isStr(arg._typename))
          return arg._typename === clname;
-      return !!clname.match(arg);
+      return Boolean(clname.match(arg));
    }
 
    /** @summary Change item name
@@ -352,7 +355,7 @@ class ObjectPainter extends BasePainter {
                     .attr('objtype', (clname || 'type').replace(/[^\w]/g, '_'));
       }
 
-      this.draw_g.property('in_frame', !!frame_layer); // indicates coordinate system
+      this.draw_g.property('in_frame', Boolean(frame_layer)); // indicates coordinate system
 
       return this.draw_g;
    }
@@ -398,49 +401,30 @@ class ObjectPainter extends BasePainter {
       return c;
    }
 
-   /** @summary Returns unique identifier for the painter
-     * @param {boolean} [only_read] if not specified, also assign unique id to the painter
-     * @private */
-   getUniqueId(only_read = false) {
-      if (!only_read && (this._unique_painter_id === undefined))
-         this._unique_painter_id = internals.id_counter++; // assign unique identifier
-      return this._unique_painter_id;
-   }
-
    /** @summary Assign secondary id
      * @private */
    setSecondaryId(primary, name) {
-      this.#primary_id = primary.getUniqueId();
+      primary._is_primary = true; // mark as primary, used later
+      this.#primary_ref = new WeakRef(primary);
       this.#secondary_id = name;
    }
 
    /** @summary Returns secondary id
      * @private */
-   getSecondaryId() {
-      return this.#secondary_id;
-   }
+   getSecondaryId() { return this.#secondary_id; }
 
    /** @summary Check if this is secondary painter
      * @desc if primary painter provided - check if this really main for this
      * @private */
    isSecondary(primary) {
-      if (this.#primary_id === undefined)
+      if (!this.#primary_ref)
          return false;
-      return !isObject(primary) ? true : this.#primary_id === primary.getUniqueId(true);
+      return !isObject(primary) ? true : this.#primary_ref.deref() === primary;
    }
 
    /** @summary Return primary object
      * @private */
-   getPrimary() {
-      let res = null;
-      if (this.isSecondary()) {
-         this.forEachPainter(p => {
-            if (this.isSecondary(p))
-               res = p;
-         });
-      }
-      return res;
-   }
+   getPrimary() { return this.#primary_ref?.deref(); }
 
    /** @summary Provides identifier on server for requested sub-element */
    getSnapId(subelem) {
@@ -614,16 +598,13 @@ class ObjectPainter extends BasePainter {
      * @param {boolean} [not_store] - if true, prevent temporary storage of main painter reference
      * @protected */
    getMainPainter(not_store) {
-      let res = this.#main_painter;
+      let res = this.#main_painter?.deref();
       if (!res) {
          const pp = this.getPadPainter();
          res = pp ? pp.getMainPainter() : this.getTopPainter();
-         if (!res)
-            res = null;
-         if (!not_store)
-            this.#main_painter = res;
+         this.#main_painter = not_store || !res ? null : new WeakRef(res);
       }
-      return res;
+      return res || null;
    }
 
    /** @summary Returns true if this is main painter
@@ -1160,7 +1141,7 @@ class ObjectPainter extends BasePainter {
          // use translate and then rotate to avoid complex sign calculations
          let trans = makeTranslate(Math.round(arg.x), Math.round(arg.y)) || '';
          const dtrans = makeTranslate(Math.round(dx), Math.round(dy)),
-               append = arg => { if (trans) trans += ' '; trans += arg; };
+               append = aaa => { if (trans) trans += ' '; trans += aaa; };
 
          if (arg.rotate)
             append(`rotate(${Math.round(arg.rotate)})`);
@@ -1433,10 +1414,8 @@ class ObjectPainter extends BasePainter {
             return;
 
          if (!item.fArgs) {
-            if (cp?.v7canvas)
-               return cp.submitExec(execp, item.fExec, kind);
-            else
-               return execp.submitCanvExec(item.fExec, item.$execid);
+            return cp?.v7canvas ? cp.submitExec(execp, item.fExec, kind)
+                                : execp.submitCanvExec(item.fExec, item.$execid);
          }
 
          menu.showMethodArgsDialog(item).then(args => {
@@ -1660,22 +1639,24 @@ function drawRawText(dom, txt /* , opt */) {
    };
 
    painter.drawText = async function() {
-      let txt = (this.txt._typename === clTObjString) ? this.txt.fString : this.txt.value;
-      if (!isStr(txt)) txt = '<undefined>';
+      let stxt = (this.txt._typename === clTObjString) ? this.txt.fString : this.txt.value;
+      if (!isStr(stxt))
+         stxt = '<undefined>';
 
       const mathjax = this.txt.mathjax || (settings.Latex === constants.Latex.AlwaysMathJax);
 
       if (!mathjax && !('as_is' in this.txt)) {
-         const arr = txt.split('\n'); txt = '';
+         const arr = stxt.split('\n');
+         stxt = '';
          for (let i = 0; i < arr.length; ++i)
-            txt += `<pre style='margin:0'>${arr[i]}</pre>`;
+            stxt += `<pre style='margin:0'>${arr[i]}</pre>`;
       }
 
       const frame = this.selectDom();
       let main = frame.select('div');
       if (main.empty())
          main = frame.append('div').attr('style', 'max-width:100%;max-height:100%;overflow:auto');
-      main.html(txt);
+      main.html(stxt);
 
       // (re) set painter to first child element, base painter not requires canvas
       this.setTopPainter();

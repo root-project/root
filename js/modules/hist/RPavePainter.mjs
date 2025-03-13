@@ -1,5 +1,5 @@
 import { settings, isFunc, isStr, gStyle, nsREX } from '../core.mjs';
-import { floatToString, makeTranslate } from '../base/BasePainter.mjs';
+import { makeTranslate } from '../base/BasePainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
 import { addDragHandler } from '../gpad/TFramePainter.mjs';
@@ -105,7 +105,7 @@ class RPavePainter extends RObjectPainter {
             rect = this.getPadPainter().getPadRect(),
             fr = this.onFrame ? this.getFramePainter().getFrameRect() : rect,
             changes = {};
-      let offsetx = 0, offsety = 0;
+      let offsetx, offsety;
 
       switch (this.corner) {
          case ECorner.kTopLeft:
@@ -338,11 +338,11 @@ class RHistStatsPainter extends RPavePainter {
 
    /** @summary Change mask */
    changeMask(nbit) {
-      const obj = this.getObject(), mask = (1<<nbit);
+      const obj = this.getObject(), mask = 1 << nbit;
       if (obj.fShowMask & mask)
-         obj.fShowMask = obj.fShowMask & ~mask;
+         obj.fShowMask &= ~mask;
       else
-         obj.fShowMask = obj.fShowMask | mask;
+         obj.fShowMask |= mask;
 
       if (this.fillStatistic())
          this.drawStatistic(this.stats_lines);

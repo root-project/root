@@ -138,7 +138,7 @@ class RPadPainter extends RObjectPainter {
    getPadScale() { return this.#pad_scale || 1; }
 
    /** @summary return pad log state x or y are allowed */
-   getPadLog(name) { return false; }
+   getPadLog(/* name */) { return false; }
 
    /** @summary get pad rect */
    getPadRect() {
@@ -205,7 +205,7 @@ class RPadPainter extends RObjectPainter {
      * @return new index to continue loop or -111 if main painter removed
      * @private */
    removePrimitive(arg, clean_only_secondary) {
-      let indx = -1, prim = null;
+      let indx, prim = null;
       if (Number.isInteger(arg)) {
          indx = arg; prim = this.painters[indx];
       } else {
@@ -246,7 +246,7 @@ class RPadPainter extends RObjectPainter {
    /** @summary try to find object by name in list of pad primitives
      * @desc used to find title drawing
      * @private */
-   findInPrimitives(objname, objtype) {
+   findInPrimitives(/* objname, objtype */) {
       console.warn('findInPrimitives not implemented for RPad');
       return null;
    }
@@ -384,7 +384,7 @@ class RPadPainter extends RObjectPainter {
    /** @summary Create SVG element for the canvas */
    createCanvasSvg(check_resize, new_size) {
       const lmt = 5;
-      let factor = null, svg = null, rect = null, btns, frect;
+      let factor, svg, rect, btns, frect;
 
       if (check_resize > 0) {
          if (this._fixed_size)
@@ -457,9 +457,19 @@ class RPadPainter extends RObjectPainter {
       this.createAttFill({ pattern: 1001, color: 0 });
 
       if ((rect.width <= lmt) || (rect.height <= lmt)) {
-         svg.style('display', 'none');
-         console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
-         rect.width = 200; rect.height = 100; // just to complete drawing
+         if (this.snapid === undefined) {
+            svg.style('display', 'none');
+            console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
+         }
+         if (this.#pad_width && this.#pad_height) {
+            // use last valid dimensions
+            rect.width = this.#pad_width;
+            rect.height = this.#pad_height;
+         } else {
+            // just to complete drawing.
+            rect.width = 800;
+            rect.height = 600;
+         }
       } else
          svg.style('display', null);
 
@@ -556,7 +566,7 @@ class RPadPainter extends RObjectPainter {
             pad_enlarged = svg_can.property('pad_enlarged');
       let pad_visible = true,
           w = width, h = height, x = 0, y = 0,
-          svg_pad = null, svg_rect = null, btns = null;
+          svg_pad, svg_rect, btns = null;
 
       if (this.pad?.fPos && this.pad?.fSize) {
          x = Math.round(width * this.pad.fPos.fHoriz.fArr[0]);
@@ -652,7 +662,7 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary Add pad interactive features like dragging and resize
     * @private */
-   addPadInteractive(cleanup = false) {
+   addPadInteractive(/* cleanup = false */) {
       if (isFunc(this.$userInteractive)) {
          this.$userInteractive();
          delete this.$userInteractive;
@@ -1147,8 +1157,8 @@ class RPadPainter extends RObjectPainter {
       this.next_rstyle = snap.fStyle || this.rstyle;
 
       // TODO - fDrawable is v7, fObject from v6, maybe use same data member?
-      return this.drawObject(this, snap.fDrawable || snap.fObject || snap, snap.fOption || '').then(objpainter => {
-         this.addObjectPainter(objpainter, lst, indx);
+      return this.drawObject(this, snap.fDrawable || snap.fObject || snap, snap.fOption || '').then(objp => {
+         this.addObjectPainter(objp, lst, indx);
          return this.drawNextSnap(lst, pindx, indx);
       });
    }
@@ -1206,7 +1216,7 @@ class RPadPainter extends RObjectPainter {
 
          const mainid = this.selectDom().attr('id');
 
-         if (!this.isBatchMode() && !this.use_openui && !this.brlayout && mainid && isStr(mainid) && !getHPainter()) {
+         if (!this.isBatchMode() && this.online_canvas && !this.use_openui && !this.brlayout && mainid && isStr(mainid) && !getHPainter()) {
             this.brlayout = new BrowserLayout(mainid, null, this);
             this.brlayout.create(mainid, true);
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas

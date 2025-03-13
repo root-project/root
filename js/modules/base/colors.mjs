@@ -463,7 +463,7 @@ function decodeWebCanvasColors(oper) {
       grad.fEnd = { fX: data[cnt++], fY: data[cnt++] };
       if (grad._typename === clTRadialGradient && cnt < data.length) {
          grad.fR1 = data[cnt++];
-         grad.fR2 = data[cnt++];
+         grad.fR2 = data[cnt];
       }
 
       colors[colindx] = grad;

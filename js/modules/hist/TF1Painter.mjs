@@ -167,7 +167,7 @@ class TF1Painter extends TH1Painter {
             let y = 0;
             try {
                y = tf1.evalPar(x);
-            } catch (err) {
+            } catch {
                iserror = true;
             }
 
@@ -265,7 +265,7 @@ class TF1Painter extends TH1Painter {
       return (axis === 'x') || (axis === 'y');
    }
 
-      /** @summary return tooltips for TF2 */
+   /** @summary return tooltips for TF2 */
    getTF1Tooltips(pnt) {
       delete this.$tmp_tooltip;
       const lines = [this.getObjectHint()],
@@ -279,12 +279,12 @@ class TF1Painter extends TH1Painter {
       const x = funcs.revertAxis('x', pnt.x);
       let y = 0, gry = 0, iserror = false;
 
-       try {
-          y = this.$func.evalPar(x);
-          gry = Math.round(funcs.gry(y));
-       } catch {
-          iserror = true;
-       }
+      try {
+         y = this.$func.evalPar(x);
+         gry = Math.round(funcs.gry(y));
+      } catch {
+         iserror = true;
+      }
 
       lines.push('x = ' + funcs.axisAsText('x', x),
                  'value = ' + (iserror ? '<fail>' : floatToString(y, gStyle.fStatFormat)));

@@ -56,10 +56,9 @@ class TAttMarkerHandler {
       if (isObject(args) && (typeof args.fMarkerStyle === 'number')) args = { attr: args };
 
       if (args.attr) {
-         if (args.color === undefined)
-            args.color = args.painter ? args.painter.getColor(args.attr.fMarkerColor) : getColor(args.attr.fMarkerColor);
+         args.color ??= args.painter ? args.painter.getColor(args.attr.fMarkerColor) : getColor(args.attr.fMarkerColor);
          if (!args.style || (args.style < 0)) args.style = args.attr.fMarkerStyle;
-         if (!args.size) args.size = args.attr.fMarkerSize;
+         args.size ??= args.attr.fMarkerSize;
       }
 
       this.color = args.color;

@@ -145,110 +145,6 @@ function getHistPainter3DCfg(painter) {
 }
 
 
-/** @summary create list entity for geo object
-  * @private */
-function createList(parent, lst, name, title) {
-   if (!lst?.arr?.length) return;
-
-   const list_item = {
-       _name: name,
-       _kind: prROOT + clTList,
-       _title: title,
-       _more: true,
-       _geoobj: lst,
-       _parent: parent,
-       _get(item /* , itemname */) {
-          return Promise.resolve(item._geoobj || null);
-       },
-       _expand(node, lst) {
-          // only childs
-
-          if (lst.fVolume)
-             lst = lst.fVolume.fNodes;
-
-          if (!lst.arr) return false;
-
-          node._childs = [];
-
-          checkDuplicates(null, lst.arr);
-
-          for (const n in lst.arr)
-             createItem(node, lst.arr[n]);
-
-          return true;
-       }
-   };
-
-   if (!parent._childs)
-      parent._childs = [];
-   parent._childs.push(list_item);
-}
-
-
-/** @summary Expand geo object
-  * @private */
-function expandGeoObject(parent, obj) {
-   injectGeoStyle();
-
-   if (!parent || !obj) return false;
-
-   const isnode = (obj._typename.indexOf(clTGeoNode) === 0),
-         isvolume = (obj._typename.indexOf(clTGeoVolume) === 0),
-         ismanager = (obj._typename === clTGeoManager),
-         iseve = ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)),
-         isoverlap = (obj._typename === clTGeoOverlap);
-
-   if (!isnode && !isvolume && !ismanager && !iseve && !isoverlap) return false;
-
-   if (parent._childs) return true;
-
-   if (ismanager) {
-      createList(parent, obj.fMaterials, 'Materials', 'list of materials');
-      createList(parent, obj.fMedia, 'Media', 'list of media');
-      createList(parent, obj.fTracks, 'Tracks', 'list of tracks');
-      createList(parent, obj.fOverlaps, 'Overlaps', 'list of detected overlaps');
-      createItem(parent, obj.fMasterVolume);
-      return true;
-   }
-
-   if (isoverlap) {
-      createItem(parent, obj.fVolume1);
-      createItem(parent, obj.fVolume2);
-      createItem(parent, obj.fMarker, 'Marker');
-      return true;
-   }
-
-   let volume, subnodes, shape;
-
-   if (iseve) {
-      subnodes = obj.fElements?.arr;
-      shape = obj.fShape;
-   } else {
-      volume = isnode ? obj.fVolume : obj;
-      subnodes = volume?.fNodes?.arr;
-      shape = volume?.fShape;
-   }
-
-   if (!subnodes && (shape?._typename === clTGeoCompositeShape) && shape?.fNode) {
-      if (!parent._childs) {
-         createItem(parent, shape.fNode.fLeft, 'Left');
-         createItem(parent, shape.fNode.fRight, 'Right');
-      }
-
-      return true;
-   }
-
-   if (!subnodes) return false;
-
-   checkDuplicates(obj, subnodes);
-
-   for (let i = 0; i < subnodes.length; ++i)
-      createItem(parent, subnodes[i]);
-
-   return true;
-}
-
-
 /** @summary find item with 3d painter
   * @private */
 function findItemWithPainter(hitem, funcname) {
@@ -588,7 +484,7 @@ class TGeoPainter extends ObjectPainter {
             { name: 'MeshMatcapMaterial', value: 'matcap' },
             { name: 'MeshToonMaterial', value: 'toon' }
          ],
-         getMaterialCfg: function() {
+         getMaterialCfg() {
              let cfg;
              this.materialKinds.forEach(item => {
                 if (item.value === this.material_kind)
@@ -1496,6 +1392,8 @@ class TGeoPainter extends ObjectPainter {
       // Scene Options
 
       const scene = this._gui.addFolder('Scene');
+      // following items used in handlers and cannot be constants
+      let light_pnts = null, strength = null, hcolor = null, overlay = null;
 
       scene.add(this.ctrl.light, 'kind', makeLil(this.ctrl.lightKindItems)).name('Light')
            .listen().onChange(() => {
@@ -1504,7 +1402,7 @@ class TGeoPainter extends ObjectPainter {
            });
 
       this.ctrl.light._pnts = this.ctrl.light.specular ? 0 : (this.ctrl.light.front ? 1 : 2);
-      const light_pnts = scene.add(this.ctrl.light, '_pnts', { specular: 0, front: 1, box: 2 })
+      light_pnts = scene.add(this.ctrl.light, '_pnts', { specular: 0, front: 1, box: 2 })
                 .name('Positions')
                 .show(this.ctrl.light.kind === 'mix' || this.ctrl.light.kind === 'points')
                 .onChange(v => {
@@ -1533,9 +1431,9 @@ class TGeoPainter extends ObjectPainter {
                    hcolor.show(this.ctrl._highlight === 1);
                 });
 
-      const hcolor = appearance.addColor(this.ctrl, 'highlight_color').name('Hightlight color')
-                         .show(this.ctrl._highlight === 1),
-            strength = appearance.add(this.ctrl, 'bloom_strength', 0, 3).name('Bloom strength')
+      hcolor = appearance.addColor(this.ctrl, 'highlight_color').name('Hightlight color')
+                         .show(this.ctrl._highlight === 1);
+      strength = appearance.add(this.ctrl, 'bloom_strength', 0, 3).name('Bloom strength')
                            .listen().onChange(() => this.changedHighlight())
                            .show(this.ctrl._highlight === 2);
 
@@ -1603,7 +1501,7 @@ class TGeoPainter extends ObjectPainter {
 
       camera.add(this, 'focusCamera').name('Reset position');
 
-      const overlay = camera.add(this.ctrl, 'camera_overlay', makeLil(this.ctrl.cameraOverlayItems))
+      overlay = camera.add(this.ctrl, 'camera_overlay', makeLil(this.ctrl.cameraOverlayItems))
                       .name('Overlay').listen().onChange(() => this.changeCamera())
                       .show(this.ctrl.camera_kind.indexOf('ortho') === 0);
 
@@ -1803,8 +1701,8 @@ class TGeoPainter extends ObjectPainter {
                      menu.add('Hide all before', n, indx => {
                         const items = [];
                         for (let i = 0; i < indx; ++i) {
-                           const stack = getIntersectStack(intersects[i]);
-                           if (stack) items.push(this.getStackFullName(stack));
+                           const stack2 = getIntersectStack(intersects[i]);
+                           if (stack2) items.push(this.getStackFullName(stack2));
                         }
                         this.hidePhysicalNode(items);
                      });
@@ -1836,15 +1734,14 @@ class TGeoPainter extends ObjectPainter {
                      if (this._last_manifest)
                         this._last_manifest.wireframe = !this._last_manifest.wireframe;
 
-                     if (this._last_hidden)
-                        this._last_hidden.forEach(obj => { obj.visible = true; });
+                     this._last_hidden?.forEach(obj2 => { obj2.visible = true; });
 
                      this._last_hidden = [];
 
                      for (let i = 0; i < indx; ++i)
                         this._last_hidden.push(intersects[i].object);
 
-                     this._last_hidden.forEach(obj => { obj.visible = false; });
+                     this._last_hidden.forEach(obj2 => { obj2.visible = false; });
 
                      this._last_manifest = intersects[indx].object.material;
 
@@ -2042,7 +1939,8 @@ class TGeoPainter extends ObjectPainter {
          for (let k = 0; (k < curr_mesh.length) && same; ++k)
             if ((curr_mesh[k] !== active_mesh[k]) || get_ctrl(curr_mesh[k]).checkHighlightIndex(geo_index)) same = false;
       }
-      if (same) return !!curr_mesh;
+      if (same)
+         return Boolean(curr_mesh);
 
       if (curr_mesh) {
          for (let k = 0; k < curr_mesh.length; ++k)
@@ -2058,7 +1956,7 @@ class TGeoPainter extends ObjectPainter {
 
       this.render3D(0);
 
-      return !!active_mesh;
+      return Boolean(active_mesh);
    }
 
    /** @summary handle mouse click event */
@@ -2224,7 +2122,7 @@ class TGeoPainter extends ObjectPainter {
              matrix = null, frustum = null;
 
          if (!numvis)
-            numvis = this._clones.markVisibles(false, false, !!this.geo_manager && !this.ctrl.showtop);
+            numvis = this._clones.markVisibles(false, false, Boolean(this.geo_manager) && !this.ctrl.showtop);
 
          if (this.ctrl.select_in_view && !this._first_drawing) {
             // extract camera projection matrix for selection
@@ -2332,18 +2230,15 @@ class TGeoPainter extends ObjectPainter {
             const job = { limit: this._current_face_limit, shapes: [] };
             let cnt = 0;
             for (let n = 0; n < this._build_shapes.length; ++n) {
-               let cl = null;
                const item = this._build_shapes[n];
                // only submit not-done items
                if (item.ready || item.geom) {
                   // this is place holder for existing geometry
-                  cl = { id: item.id, ready: true, nfaces: countGeometryFaces(item.geom), refcnt: item.refcnt };
+                  job.shapes.push({ id: item.id, ready: true, nfaces: countGeometryFaces(item.geom), refcnt: item.refcnt });
                } else {
-                  cl = clone(item, null, true);
+                  job.shapes.push(clone(item, null, true));
                   cnt++;
                }
-
-               job.shapes.push(cl);
             }
 
             if (cnt > 0) {
@@ -2619,7 +2514,8 @@ class TGeoPainter extends ObjectPainter {
          switch (this._camera._lights) {
             case 'ambient' : this._camera.add(new THREE.AmbientLight(0xefefef, p)); break;
             case 'hemisphere' : this._camera.add(new THREE.HemisphereLight(0xffffbb, 0x080820, p)); break;
-            case 'mix': this._camera.add(new THREE.AmbientLight(0xefefef, p)); // intentionally without break
+            case 'mix': this._camera.add(new THREE.AmbientLight(0xefefef, p));
+            // eslint-disable-next-line  no-fallthrough
             default: // 6 point lights
                for (let n = 0; n < 6; ++n) {
                   const l = new THREE.DirectionalLight(0xefefef, p);
@@ -3245,10 +3141,8 @@ class TGeoPainter extends ObjectPainter {
 
          if (this._animating)
             requestAnimationFrame(animate);
-          else {
-            if (!this._geom_viewer)
-               this.startDrawGeometry();
-         }
+          else if (!this._geom_viewer)
+            this.startDrawGeometry();
          const smoothFactor = -Math.cos((2.0*Math.PI*step)/frames) + 1.0;
          this._camera.position.add(posIncrement.clone().multiplyScalar(smoothFactor));
          oldTarget.add(targetIncrement.clone().multiplyScalar(smoothFactor));
@@ -3458,10 +3352,11 @@ class TGeoPainter extends ObjectPainter {
          if (indx >= 0) this._extraObjects.opt[indx] = itemname;
       }
 
-      if (indx < 0) return;
+      if (indx < 0)
+         return;
 
       const obj = this._extraObjects.arr[indx];
-      let res = !!obj.$hidden_via_menu;
+      let res = Boolean(obj.$hidden_via_menu);
 
       if (toggle) {
          obj.$hidden_via_menu = res;
@@ -3734,6 +3629,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Draw extra shape on the geometry */
    drawExtraShape(obj, itemname) {
+      // eslint-disable-next-line no-use-before-define
       const mesh = build(obj);
       if (!mesh) return false;
 
@@ -3849,7 +3745,8 @@ class TGeoPainter extends ObjectPainter {
          while (indx < lines.length) {
             let line = lines[indx++].trim();
 
-            if (line.indexOf('//') === 0) continue;
+            if (line.indexOf('//') === 0)
+               continue;
 
             if (line.indexOf('gGeoManager') < 0) continue;
             line = line.replace('->GetVolume', '.GetVolume');
@@ -3860,12 +3757,13 @@ class TGeoPainter extends ObjectPainter {
             line = line.replace('->SetTransparency', '.SetTransparency');
             line = line.replace('->SetLineColor', '.SetLineColor');
             line = line.replace('->SetVisLevel', '.SetVisLevel');
-            if (line.indexOf('->') >= 0) continue;
+            if (line.indexOf('->') >= 0)
+               continue;
 
             try {
                const func = new Function('gGeoManager', line);
                func(mgr);
-            } catch (err) {
+            } catch {
                console.error(`Problem by processing ${line}`);
             }
          }
@@ -3981,7 +3879,7 @@ class TGeoPainter extends ObjectPainter {
 
          this._clones.name_prefix = name_prefix;
 
-         const hide_top_volume = !!this.geo_manager && !this.ctrl.showtop;
+         const hide_top_volume = Boolean(this.geo_manager) && !this.ctrl.showtop;
          let uniquevis = this.ctrl.no_screen ? 0 : this._clones.markVisibles(true, false, hide_top_volume);
 
          if (uniquevis <= 0)
@@ -4007,7 +3905,7 @@ class TGeoPainter extends ObjectPainter {
 
          const pp = this.getPadPainter();
 
-         this._on_pad = !!pp;
+         this._on_pad = Boolean(pp);
 
          if (this._on_pad) {
             let size, render3d, fp;
@@ -4048,7 +3946,7 @@ class TGeoPainter extends ObjectPainter {
             this._fit_main_area = (size.can3d === -1);
 
             promise = this.createScene(size.width, size.height, render3d)
-                          .then(dom => this.add3dCanvas(size, dom, this._webgl));
+                          .then(dom2 => this.add3dCanvas(size, dom2, this._webgl));
          }
       }
 
@@ -4386,12 +4284,12 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Draw axes and camera overlay */
    drawAxesAndOverlay(norender) {
       const res1 = this.drawAxes(),
-          res2 = this.drawOverlay();
+            res2 = this.drawOverlay();
 
       if (!res1 && !res2)
          return norender ? null : this.render3D();
-      else
-         return this.changedDepthMethod(norender ? 'norender' : undefined);
+
+      return this.changedDepthMethod(norender ? 'norender' : undefined);
    }
 
    /** @summary Draw overlay for the orthographic cameras */
@@ -4401,18 +4299,18 @@ class TGeoPainter extends ObjectPainter {
          return false;
 
       const zoom = 0.5 / this._camera.zoom,
-          midx = (this._camera.left + this._camera.right) / 2,
-          midy = (this._camera.bottom + this._camera.top) / 2,
-          xmin = midx - (this._camera.right - this._camera.left) * zoom,
-          xmax = midx + (this._camera.right - this._camera.left) * zoom,
-          ymin = midy - (this._camera.top - this._camera.bottom) * zoom,
-          ymax = midy + (this._camera.top - this._camera.bottom) * zoom,
-          tick_size = (ymax - ymin) * 0.02,
-          text_size = (ymax - ymin) * 0.015,
-          grid_gap = (ymax - ymin) * 0.001,
-          x1 = xmin + text_size * 5, x2 = xmax - text_size * 5,
-          y1 = ymin + text_size * 3, y2 = ymax - text_size * 3,
-          x_handle = new TAxisPainter(null, create(clTAxis));
+            midx = (this._camera.left + this._camera.right) / 2,
+            midy = (this._camera.bottom + this._camera.top) / 2,
+            xmin = midx - (this._camera.right - this._camera.left) * zoom,
+            xmax = midx + (this._camera.right - this._camera.left) * zoom,
+            ymin = midy - (this._camera.top - this._camera.bottom) * zoom,
+            ymax = midy + (this._camera.top - this._camera.bottom) * zoom,
+            tick_size = (ymax - ymin) * 0.02,
+            text_size = (ymax - ymin) * 0.015,
+            grid_gap = (ymax - ymin) * 0.001,
+            x1 = xmin + text_size * 5, x2 = xmax - text_size * 5,
+            y1 = ymin + text_size * 3, y2 = ymax - text_size * 3,
+            x_handle = new TAxisPainter(null, create(clTAxis));
 
       x_handle.configureAxis('xaxis', x1, x2, x1, x2, false, [x1, x2],
                              { log: 0, reverse: false });
@@ -4458,36 +4356,37 @@ class TGeoPainter extends ObjectPainter {
       if (this.ctrl.camera_overlay === 'bar') {
          const container = this.getExtrasContainer('create', 'overlay');
 
-         let x1 = xmin * 0.15 + xmax * 0.85,
-             x2 = xmin * 0.05 + xmax * 0.95;
-         const y1 = ymax * 0.9 + ymin * 0.1,
-               y2 = ymax * 0.86 + ymin * 0.14,
+         let ox1 = xmin * 0.15 + xmax * 0.85,
+             ox2 = xmin * 0.05 + xmax * 0.95;
+         const oy1 = ymax * 0.9 + ymin * 0.1,
+               oy2 = ymax * 0.86 + ymin * 0.14,
                ticks = x_handle.createTicks();
 
          if (ticks.major?.length > 1) {
-            x1 = ticks.major.at(-2);
-            x2 = ticks.major.at(-1);
+            ox1 = ticks.major.at(-2);
+            ox2 = ticks.major.at(-1);
          }
 
-         buf = new Float32Array(3*6); pos = 0;
+         buf = new Float32Array(3*6);
+         pos = 0;
 
-         addPoint(x1, y1, midZ);
-         addPoint(x1, y2, midZ);
+         addPoint(ox1, oy1, midZ);
+         addPoint(ox1, oy2, midZ);
 
-         addPoint(x1, (y1 + y2) / 2, midZ);
-         addPoint(x2, (y1 + y2) / 2, midZ);
+         addPoint(ox1, (oy1 + oy2) / 2, midZ);
+         addPoint(ox2, (oy1 + oy2) / 2, midZ);
 
-         addPoint(x2, y1, midZ);
-         addPoint(x2, y2, midZ);
+         addPoint(ox2, oy1, midZ);
+         addPoint(ox2, oy2, midZ);
 
          const lineMaterial = new THREE.LineBasicMaterial({ color: 'green' }),
                textMaterial = new THREE.MeshBasicMaterial({ color: 'green', vertexColors: false });
 
          container.add(createLineSegments(buf, lineMaterial));
 
-         const text3d = createText(x_handle.format(x2-x1, true), Math.abs(y2-y1));
+         const text3d = createText(x_handle.format(ox2 - ox1, true), Math.abs(oy2 - oy1));
 
-         container.add(createTextMesh(text3d, textMaterial, (x2 + x1) / 2, (y1 + y2) / 2 + text3d._height * 0.8, midZ));
+         container.add(createTextMesh(text3d, textMaterial, (ox2 + ox1) / 2, (oy1 + oy2) / 2 + text3d._height * 0.8, midZ));
          return true;
       }
 
@@ -4662,10 +4561,10 @@ class TGeoPainter extends ObjectPainter {
          mesh = new THREE.Mesh(text3d, textMaterial);
          mesh._no_clip = true; // skip from clipping
 
-         function setSideRotation(mesh, normal) {
-            mesh._other_side = false;
-            mesh._axis_norm = normal ?? new THREE.Vector3(1, 0, 0);
-            mesh._axis_flip = function(vect) {
+         function setSideRotation(mesh2, normal) {
+            mesh2._other_side = false;
+            mesh2._axis_norm = normal ?? new THREE.Vector3(1, 0, 0);
+            mesh2._axis_flip = function(vect) {
                const other_side = vect.dot(this._axis_norm) < 0;
                if (this._other_side !== other_side) {
                   this._other_side = other_side;
@@ -4674,10 +4573,10 @@ class TGeoPainter extends ObjectPainter {
             };
          }
 
-         function setTopRotation(mesh, first_angle = -1) {
-            mesh._last_angle = first_angle;
-            mesh._axis_flip = function(vect) {
-               let angle = 0;
+         function setTopRotation(mesh2, first_angle = -1) {
+            mesh2._last_angle = first_angle;
+            mesh2._axis_flip = function(vect) {
+               let angle;
                switch (this._axis_name) {
                   case 'x': angle = -Math.atan2(vect.y, vect.z); break;
                   case 'y': angle = -Math.atan2(vect.z, vect.x); break;
@@ -4821,13 +4720,13 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Specify wireframe mode */
    setWireFrame(on) {
-      this.ctrl.wireframe = !!on;
+      this.ctrl.wireframe = Boolean(on);
       this.changedWireFrame();
    }
 
    /** @summary Specify showtop draw options, relevant only for TGeoManager */
    setShowTop(on) {
-      this.ctrl.showtop = !!on;
+      this.ctrl.showtop = Boolean(on);
       this.redrawObject('same');
    }
 
@@ -4898,8 +4797,8 @@ class TGeoPainter extends ObjectPainter {
 
       this._clipCfg = clip_cfg;
 
-      const any_clipping = !!panels, ci = this.ctrl.clipIntersect,
-          material_side = any_clipping ? THREE.DoubleSide : THREE.FrontSide;
+      const any_clipping = Boolean(panels), ci = this.ctrl.clipIntersect,
+            material_side = any_clipping ? THREE.DoubleSide : THREE.FrontSide;
 
       if (force_traverse || changed) {
          this._scene.traverse(node => {
@@ -5376,7 +5275,6 @@ class TGeoPainter extends ObjectPainter {
       } else
          obj = null;
 
-
       if (isStr(opt) && opt.indexOf('comp') === 0 && shape && (shape._typename === clTGeoCompositeShape) && shape.fNode) {
          let maxlvl = 1;
          opt = opt.slice(4);
@@ -5384,13 +5282,13 @@ class TGeoPainter extends ObjectPainter {
          obj = buildCompositeVolume(shape, maxlvl);
       }
 
-      if (!obj && shape) {
-         obj = Object.assign(create(clTNamed),
-                   { _typename: clTEveGeoShapeExtract, fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 1], fElements: null, fRnrSelf: true });
-      }
+      if (!obj && shape)
+         obj = Object.assign(create(clTNamed), { _typename: clTEveGeoShapeExtract, fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 1], fElements: null, fRnrSelf: true });
 
-      if (!obj) return null;
+      if (!obj)
+         return null;
 
+      // eslint-disable-next-line no-use-before-define
       const painter = createGeoPainter(dom, obj, opt);
 
       if (painter.ctrl.is_main && !obj.$geo_painter)
@@ -5416,6 +5314,55 @@ class TGeoPainter extends ObjectPainter {
 
 
 let add_settings = false;
+
+/** @summary Get icon for the browser
+  * @private */
+function getBrowserIcon(hitem, hpainter) {
+   let icon = '';
+   switch (hitem._kind) {
+      case prROOT + clTEveTrack: icon = 'img_evetrack'; break;
+      case prROOT + clTEvePointSet: icon = 'img_evepoints'; break;
+      case prROOT + clTPolyMarker3D: icon = 'img_evepoints'; break;
+   }
+   if (icon) {
+      const drawitem = findItemWithPainter(hitem);
+      if (drawitem?._painter?.extraObjectVisible(hpainter, hitem))
+         icon += ' geovis_this';
+   }
+   return icon;
+}
+
+/** @summary handle click on browser icon
+  * @private */
+function browserIconClick(hitem, hpainter) {
+   if (hitem._volume) {
+      if (hitem._more && hitem._volume.fNodes?.arr?.length)
+         toggleGeoBit(hitem._volume, geoBITS.kVisDaughters);
+      else
+         toggleGeoBit(hitem._volume, geoBITS.kVisThis);
+
+      updateBrowserIcons(hitem._volume, hpainter);
+
+      findItemWithPainter(hitem, 'testGeomChanges');
+      return false; // no need to update icon - we did it ourself
+   }
+
+   if (hitem._geoobj && ((hitem._geoobj._typename === clTEveGeoShapeExtract) || (hitem._geoobj._typename === clREveGeoShapeExtract))) {
+      hitem._geoobj.fRnrSelf = !hitem._geoobj.fRnrSelf;
+
+      updateBrowserIcons(hitem._geoobj, hpainter);
+      findItemWithPainter(hitem, 'testGeomChanges');
+      return false; // no need to update icon - we did it ourself
+   }
+
+   // first check that geo painter assigned with the item
+   const drawitem = findItemWithPainter(hitem),
+         newstate = drawitem?._painter?.extraObjectVisible(hpainter, hitem, true);
+
+   // return true means browser should update icon for the item
+   return newstate !== undefined;
+}
+
 
 /** @summary Create geo-related css entries
   * @private */
@@ -5493,25 +5440,26 @@ function provideMenu(menu, item, hpainter) {
    const obj = item._geoobj, vol = item._volume,
          iseve = ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract));
 
-   if (!vol && !iseve) return false;
+   if (!vol && !iseve)
+      return false;
 
    menu.separator();
 
-   const scanEveVisible = (obj, arg, skip_this) => {
+   const scanEveVisible = (obj2, arg, skip_this) => {
       if (!arg) arg = { visible: 0, hidden: 0 };
 
       if (!skip_this) {
          if (arg.assign !== undefined)
-            obj.fRnrSelf = arg.assign;
-         else if (obj.fRnrSelf)
+            obj2.fRnrSelf = arg.assign;
+         else if (obj2.fRnrSelf)
             arg.vis++;
          else
             arg.hidden++;
       }
 
-      if (obj.fElements) {
-         for (let n = 0; n < obj.fElements.arr.length; ++n)
-            scanEveVisible(obj.fElements.arr[n], arg, false);
+      if (obj2.fElements) {
+         for (let n = 0; n < obj2.fElements.arr.length; ++n)
+            scanEveVisible(obj2.fElements.arr[n], arg, false);
       }
 
       return arg;
@@ -5589,59 +5537,118 @@ function provideMenu(menu, item, hpainter) {
    return true;
 }
 
-/** @summary handle click on browser icon
+let createItem = null;
+
+/** @summary create list entity for geo object
   * @private */
-function browserIconClick(hitem, hpainter) {
-   if (hitem._volume) {
-      if (hitem._more && hitem._volume.fNodes?.arr?.length)
-         toggleGeoBit(hitem._volume, geoBITS.kVisDaughters);
-      else
-         toggleGeoBit(hitem._volume, geoBITS.kVisThis);
+function createList(parent, lst, name, title) {
+   if (!lst?.arr?.length)
+      return;
 
-      updateBrowserIcons(hitem._volume, hpainter);
+   const list_item = {
+      _name: name,
+      _kind: prROOT + clTList,
+      _title: title,
+      _more: true,
+      _geoobj: lst,
+      _parent: parent,
+      _get(item /* , itemname */) {
+         return Promise.resolve(item._geoobj || null);
+      },
+      _expand(node, lst2) {
+         // only childs
 
-      findItemWithPainter(hitem, 'testGeomChanges');
-      return false; // no need to update icon - we did it ourself
-   }
+         if (lst2.fVolume)
+            lst2 = lst2.fVolume.fNodes;
 
-   if (hitem._geoobj && ((hitem._geoobj._typename === clTEveGeoShapeExtract) || (hitem._geoobj._typename === clREveGeoShapeExtract))) {
-      hitem._geoobj.fRnrSelf = !hitem._geoobj.fRnrSelf;
+         if (!lst2.arr)
+            return false;
 
-      updateBrowserIcons(hitem._geoobj, hpainter);
-      findItemWithPainter(hitem, 'testGeomChanges');
-      return false; // no need to update icon - we did it ourself
-   }
+         node._childs = [];
 
-   // first check that geo painter assigned with the item
-   const drawitem = findItemWithPainter(hitem),
-       newstate = drawitem?._painter?.extraObjectVisible(hpainter, hitem, true);
+         checkDuplicates(null, lst2.arr);
 
-   // return true means browser should update icon for the item
-   return newstate !== undefined;
+         for (const n in lst2.arr)
+            createItem(node, lst2.arr[n]);
+
+         return true;
+      }
+   };
+
+   if (!parent._childs)
+      parent._childs = [];
+   parent._childs.push(list_item);
 }
 
 
-/** @summary Get icon for the browser
+/** @summary Expand geo object
   * @private */
-function getBrowserIcon(hitem, hpainter) {
-   let icon = '';
-   switch (hitem._kind) {
-      case prROOT + clTEveTrack: icon = 'img_evetrack'; break;
-      case prROOT + clTEvePointSet: icon = 'img_evepoints'; break;
-      case prROOT + clTPolyMarker3D: icon = 'img_evepoints'; break;
+function expandGeoObject(parent, obj) {
+   injectGeoStyle();
+
+   if (!parent || !obj) return false;
+
+   const isnode = (obj._typename.indexOf(clTGeoNode) === 0),
+         isvolume = (obj._typename.indexOf(clTGeoVolume) === 0),
+         ismanager = (obj._typename === clTGeoManager),
+         iseve = ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)),
+         isoverlap = (obj._typename === clTGeoOverlap);
+
+   if (!isnode && !isvolume && !ismanager && !iseve && !isoverlap) return false;
+
+   if (parent._childs) return true;
+
+   if (ismanager) {
+      createList(parent, obj.fMaterials, 'Materials', 'list of materials');
+      createList(parent, obj.fMedia, 'Media', 'list of media');
+      createList(parent, obj.fTracks, 'Tracks', 'list of tracks');
+      createList(parent, obj.fOverlaps, 'Overlaps', 'list of detected overlaps');
+      createItem(parent, obj.fMasterVolume);
+      return true;
    }
-   if (icon) {
-      const drawitem = findItemWithPainter(hitem);
-      if (drawitem?._painter?.extraObjectVisible(hpainter, hitem))
-         icon += ' geovis_this';
+
+   if (isoverlap) {
+      createItem(parent, obj.fVolume1);
+      createItem(parent, obj.fVolume2);
+      createItem(parent, obj.fMarker, 'Marker');
+      return true;
    }
-   return icon;
+
+   let volume, subnodes, shape;
+
+   if (iseve) {
+      subnodes = obj.fElements?.arr;
+      shape = obj.fShape;
+   } else {
+      volume = isnode ? obj.fVolume : obj;
+      subnodes = volume?.fNodes?.arr;
+      shape = volume?.fShape;
+   }
+
+   if (!subnodes && (shape?._typename === clTGeoCompositeShape) && shape?.fNode) {
+      if (!parent._childs) {
+         createItem(parent, shape.fNode.fLeft, 'Left');
+         createItem(parent, shape.fNode.fRight, 'Right');
+      }
+
+      return true;
+   }
+
+   if (!subnodes)
+      return false;
+
+   checkDuplicates(obj, subnodes);
+
+   for (let i = 0; i < subnodes.length; ++i)
+      createItem(parent, subnodes[i]);
+
+   return true;
 }
 
 
 /** @summary create hierarchy item for geo object
   * @private */
-function createItem(node, obj, name) {
+createItem = function(node, obj, name) {
    const sub = {
       _kind: prROOT + obj._typename,
       _name: name || getObjectName(obj),
@@ -5689,9 +5696,9 @@ function createItem(node, obj, name) {
       } else if (shape && (shape._typename === clTGeoCompositeShape) && shape.fNode) {
          sub._more = true;
          sub._shape = shape;
-         sub._expand = function(node /* , obj */) {
-            createItem(node, node._shape.fNode.fLeft, 'Left');
-            createItem(node, node._shape.fNode.fRight, 'Right');
+         sub._expand = function(node2 /* , obj */) {
+            createItem(node2, node2._shape.fNode.fLeft, 'Left');
+            createItem(node2, node2._shape.fNode.fRight, 'Right');
             return true;
          };
       }
@@ -5716,7 +5723,8 @@ function createItem(node, obj, name) {
       sub._icon_click = browserIconClick;
    }
 
-   if (!node._childs) node._childs = [];
+   if (!node._childs)
+      node._childs = [];
 
    if (!sub._name) {
       if (isStr(node._name)) {
@@ -5731,7 +5739,7 @@ function createItem(node, obj, name) {
    node._childs.push(sub);
 
    return sub;
-}
+};
 
 /** @summary Draw dummy geometry
   * @private */
@@ -5801,7 +5809,7 @@ function build(obj, opt) {
 
    opt.info = { num_meshes: 0, num_faces: 0 };
 
-   let clones = null, visibles = null;
+   let clones, visibles;
 
    if (obj.visibles && obj.nodes && obj.numnodes) {
       // case of draw message from geometry viewer

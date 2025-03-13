@@ -89,8 +89,8 @@ class TGraphPainter extends ObjectPainter {
          opt = opt.slice(5);
 
       const graph = this.getGraph(),
-          is_gme = !!this.get_gme(),
-          has_main = first_time ? !!this.getMainPainter() : !this.axes_draw;
+          is_gme = Boolean(this.get_gme()),
+          has_main = first_time ? Boolean(this.getMainPainter()) : !this.axes_draw;
       let blocks_gme = [];
 
       if (!this.options) this.options = {};
@@ -748,10 +748,10 @@ class TGraphPainter extends ObjectPainter {
 
       if (options.Errors) {
          // to show end of error markers, use line width attribute
-         let lw = lineatt.width + gStyle.fEndErrorSize, bb = 0;
+         let lw = lineatt.width + gStyle.fEndErrorSize;
          const vv = options.Ends ? `m0,${lw}v${-2*lw}` : '',
                hh = options.Ends ? `m${lw},0h${-2*lw}` : '';
-         let vleft = vv, vright = vv, htop = hh, hbottom = hh;
+         let vleft = vv, vright = vv, htop = hh, hbottom = hh, bb;
 
          const mainLine = (dx, dy) => {
             if (!options.MainError) return `M${dx},${dy}`;
@@ -871,20 +871,18 @@ class TGraphPainter extends ObjectPainter {
             yxmin = (graph.fYq2 - graph.fYq1)*(funcs.scale_xmin-graph.fXq1)/(graph.fXq2-graph.fXq1) + graph.fYq1,
             yxmax = (graph.fYq2-graph.fYq1)*(funcs.scale_xmax-graph.fXq1)/(graph.fXq2-graph.fXq1) + graph.fYq1;
 
-      let path2 = '';
+      let path2;
       if (yxmin < funcs.scale_ymin) {
          const xymin = (graph.fXq2 - graph.fXq1)*(funcs.scale_ymin-graph.fYq1)/(graph.fYq2-graph.fYq1) + graph.fXq1;
          path2 = makeLine(xymin, funcs.scale_ymin, xqmin, yqmin);
       } else
          path2 = makeLine(funcs.scale_xmin, yxmin, xqmin, yqmin);
 
-
       if (yxmax > funcs.scale_ymax) {
          const xymax = (graph.fXq2-graph.fXq1)*(funcs.scale_ymax-graph.fYq1)/(graph.fYq2-graph.fYq1) + graph.fXq1;
          path2 += makeLine(xqmax, yqmax, xymax, funcs.scale_ymax);
       } else
          path2 += makeLine(xqmax, yqmax, funcs.scale_xmax, yxmax);
-
 
       const latt1 = this.createAttLine({ style: 1, width: 1, color: kBlack, std: false }),
             latt2 = this.createAttLine({ style: 2, width: 1, color: kBlack, std: false });
@@ -937,7 +935,7 @@ class TGraphPainter extends ObjectPainter {
       if (this.options.pos3d)
          return this.drawBins3D(pmain, graph);
 
-      const is_gme = !!this.get_gme(),
+      const is_gme = Boolean(this.get_gme()),
             funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
             w = pmain.getFrameWidth(),
             h = pmain.getFrameHeight();
@@ -1142,7 +1140,7 @@ class TGraphPainter extends ObjectPainter {
 
          const IsInside = (x, x1, x2) => ((x1 >= x) && (x >= x2)) || ((x1 <= x) && (x <= x2));
 
-         let bin0 = this.bins[0], grx0 = funcs.grx(bin0.x), gry0, posy = 0;
+         let bin0 = this.bins[0], grx0 = funcs.grx(bin0.x), gry0, posy;
          for (n = 1; n < this.bins.length; ++n) {
             bin = this.bins[n];
             grx = funcs.grx(bin.x);
@@ -1613,7 +1611,7 @@ class TGraphPainter extends ObjectPainter {
       if ((!painter.getMainPainter() || painter.options.second_x || painter.options.second_y) && painter.options.Axis) {
          promise = painter.drawAxisHisto().then(hist_painter => {
             hist_painter?.setSecondaryId(painter, 'hist');
-            painter.axes_draw = !!hist_painter;
+            painter.axes_draw = Boolean(hist_painter);
          });
       }
 
