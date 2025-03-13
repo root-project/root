@@ -3001,9 +3001,9 @@ int main(int argc, char *argv[])
          printf("  -p=prefix: Provide custom prefix for generated files, default \"sg\"\n");
          printf("  -skip3d : skip 3D testing.\n");
          printf("  -v : increase verbosity.\n");
-         printf("  --web=chrome|firefox : Configure web mode\n");
+         printf("  --web=chrome|firefox|off : Configure web mode\n");
          printf("  -h : Print usage\n");
-         printf("  --build file1.txt file2.tx file3.txt: Build ref file\n");
+         printf("  --build file1.txt file2.txt file3.txt: Build ref file\n");
          printf("      One run stressGraphics on different platforms with -r flag and store into text files.\n");
          printf("      Based on these files one generate ref file which can be commited to repository\n");
          printf("  Any other option is ignored.\n");
