@@ -251,6 +251,49 @@ class ArrayIterator {
 } // class ArrayIterator
 
 
+/** @summary return TStreamerElement associated with the branch - if any
+  * @desc unfortunately, branch.fID is not number of element in streamer info
+  * @private */
+function findBrachStreamerElement(branch, file) {
+   if (!branch || !file || (branch._typename !== clTBranchElement) || (branch.fID < 0) || (branch.fStreamerType < 0)) return null;
+
+   const s_i = file.findStreamerInfo(branch.fClassName, branch.fClassVersion, branch.fCheckSum),
+         arr = (s_i && s_i.fElements) ? s_i.fElements.arr : null;
+   if (!arr) return null;
+
+   let match_name = branch.fName,
+      pos = match_name.indexOf('[');
+   if (pos > 0) match_name = match_name.slice(0, pos);
+   pos = match_name.lastIndexOf('.');
+   if (pos > 0) match_name = match_name.slice(pos + 1);
+
+   function match_elem(elem) {
+      if (!elem) return false;
+      if (elem.fName !== match_name) return false;
+      if (elem.fType === branch.fStreamerType) return true;
+      if ((elem.fType === kBool) && (branch.fStreamerType === kUChar)) return true;
+      if (((branch.fStreamerType === kSTL) || (branch.fStreamerType === kSTL + kOffsetL) ||
+           (branch.fStreamerType === kSTLp) || (branch.fStreamerType === kSTLp + kOffsetL)) &&
+          (elem.fType === kStreamer)) return true;
+      console.warn(`Should match element ${elem.fType} with branch ${branch.fStreamerType}`);
+      return false;
+   }
+
+   // first check branch fID - in many cases gut guess
+   if (match_elem(arr[branch.fID]))
+      return arr[branch.fID];
+
+   for (let k = 0; k < arr.length; ++k) {
+      if ((k !== branch.fID) && match_elem(arr[k]))
+         return arr[k];
+   }
+
+   console.error(`Did not found/match element for branch ${branch.fName} class ${branch.fClassName}`);
+
+   return null;
+}
+
+
 /** @summary return class name of the object, stored in the branch
   * @private */
 function getBranchObjectClass(branch, tree, with_clones = false, with_leafs = false) {
@@ -437,7 +480,7 @@ class TDrawVariable {
 
       this.code = (only_branch?.fName ?? '') + code;
 
-      let pos = 0, pos2 = 0, br = null;
+      let pos = 0, pos2 = 0, br;
       while ((pos < code.length) || only_branch) {
          let arriter = [];
 
@@ -457,7 +500,7 @@ class TDrawVariable {
                }
                if (repl) {
                   code = code.slice(0, pos) + repl + code.slice(pos2 + 1);
-                  pos = pos + repl.length;
+                  pos += repl.length;
                   continue;
                }
             }
@@ -576,7 +619,7 @@ class TDrawVariable {
 
          const replace = 'arg.var' + (this.branches.length - 1);
          code = code.slice(0, pos) + replace + code.slice(pos2);
-         pos = pos + replace.length;
+         pos += replace.length;
       }
 
       // support usage of some standard TMath functions
@@ -823,7 +866,7 @@ class TDrawSelector extends TSelector {
       // parse option for histogram creation
       this.hist_title = `drawing '${expr}' from ${tree.fName}`;
 
-      let pos = 0;
+      let pos;
       if (args.cut)
          cut = args.cut;
       else {
@@ -1114,7 +1157,7 @@ class TDrawSelector extends TSelector {
          this.y = y;
          this.z = z;
       } else
-         hist.fBits = hist.fBits | kNoStats;
+         hist.fBits |= kNoStats;
 
       return hist;
    }
@@ -1452,48 +1495,6 @@ class TDrawSelector extends TSelector {
 } // class TDrawSelector
 
 
-/** @summary return TStreamerElement associated with the branch - if any
-  * @desc unfortunately, branch.fID is not number of element in streamer info
-  * @private */
-function findBrachStreamerElement(branch, file) {
-   if (!branch || !file || (branch._typename !== clTBranchElement) || (branch.fID < 0) || (branch.fStreamerType < 0)) return null;
-
-   const s_i = file.findStreamerInfo(branch.fClassName, branch.fClassVersion, branch.fCheckSum),
-         arr = (s_i && s_i.fElements) ? s_i.fElements.arr : null;
-   if (!arr) return null;
-
-   let match_name = branch.fName,
-      pos = match_name.indexOf('[');
-   if (pos > 0) match_name = match_name.slice(0, pos);
-   pos = match_name.lastIndexOf('.');
-   if (pos > 0) match_name = match_name.slice(pos + 1);
-
-   function match_elem(elem) {
-      if (!elem) return false;
-      if (elem.fName !== match_name) return false;
-      if (elem.fType === branch.fStreamerType) return true;
-      if ((elem.fType === kBool) && (branch.fStreamerType === kUChar)) return true;
-      if (((branch.fStreamerType === kSTL) || (branch.fStreamerType === kSTL + kOffsetL) ||
-           (branch.fStreamerType === kSTLp) || (branch.fStreamerType === kSTLp + kOffsetL)) &&
-          (elem.fType === kStreamer)) return true;
-      console.warn(`Should match element ${elem.fType} with branch ${branch.fStreamerType}`);
-      return false;
-   }
-
-   // first check branch fID - in many cases gut guess
-   if (match_elem(arr[branch.fID]))
-      return arr[branch.fID];
-
-   for (let k = 0; k < arr.length; ++k) {
-      if ((k !== branch.fID) && match_elem(arr[k]))
-         return arr[k];
-   }
-
-   console.error(`Did not found/match element for branch ${branch.fName} class ${branch.fClassName}`);
-
-   return null;
-}
-
 /** @summary return type name of given member in the class
   * @private */
 function defineMemberTypeName(file, parent_class, member_name) {
@@ -1587,7 +1588,7 @@ async function treeProcess(tree, selector, args) {
       process_arrays: true // one can process all branches as arrays
    }, createLeafElem = (leaf, name) => {
       // function creates TStreamerElement which corresponds to the elementary leaf
-      let datakind = 0;
+      let datakind;
       switch (leaf._typename) {
          case 'TLeafF': datakind = kFloat; break;
          case 'TLeafD': datakind = kDouble; break;
@@ -1711,7 +1712,7 @@ async function treeProcess(tree, selector, args) {
       let elem = null, // TStreamerElement used to create reader
           member = null, // member for actual reading of the branch
           child_scan = 0, // scan child branches after main branch is appended
-          item_cnt = null, item_cnt2 = null, object_class = '';
+          item_cnt = null, item_cnt2 = null, object_class;
 
       if (branch.fBranchCount) {
          item_cnt = findInHandle(branch.fBranchCount);
@@ -1776,15 +1777,18 @@ async function treeProcess(tree, selector, args) {
             if ((chld_kind > 0) && (br.fType !== chld_kind)) continue;
 
             if (br.fType === kBaseClassNode) {
-               if (!scanBranches(br.fBranches, master_target, chld_kind)) return false;
+               if (!scanBranches(br.fBranches, master_target, chld_kind))
+                  return false;
                continue;
             }
 
-            const elem = findBrachStreamerElement(br, handle.file);
-            if (elem?.fTypeName === kBaseClass) {
+            const elem2 = findBrachStreamerElement(br, handle.file);
+            if (elem2?.fTypeName === kBaseClass) {
                // if branch is data of base class, map it to original target
-               if (br.fTotBytes && !addBranchForReading(br, target_object, target_name, read_mode)) return false;
-               if (!scanBranches(br.fBranches, master_target, chld_kind)) return false;
+               if (br.fTotBytes && !addBranchForReading(br, target_object, target_name, read_mode))
+                  return false;
+               if (!scanBranches(br.fBranches, master_target, chld_kind))
+                  return false;
                continue;
             }
 
@@ -1818,8 +1822,7 @@ async function treeProcess(tree, selector, args) {
             typename: branch.fClassName,
             virtual: leaf.fVirtual,
             func(buf, obj) {
-               let clname = this.typename;
-               if (this.virtual) clname = buf.readFastString(buf.ntou1() + 1);
+               const clname = this.virtual ? buf.readFastString(buf.ntou1() + 1) : this.typename;
                obj[this.name] = buf.classStreamer({}, clname);
             }
          };
@@ -2325,7 +2328,7 @@ async function treeProcess(tree, selector, args) {
 
             const req = extractPlaces();
             if (req)
-               return handle.file.readBuffer(req.places, req.filename, readProgress).then(blobs => processBlobs(blobs)).catch(() => { return null; });
+               return handle.file.readBuffer(req.places, req.filename, readProgress).then(blobs2 => processBlobs(blobs2)).catch(() => null);
 
             return Promise.resolve(bitems);
           }
@@ -2341,6 +2344,8 @@ async function treeProcess(tree, selector, args) {
 
       return Promise.resolve(null);
    }
+
+   let processBaskets = null;
 
    function readNextBaskets() {
       const bitems = [];
@@ -2441,7 +2446,7 @@ async function treeProcess(tree, selector, args) {
       throw new Error('No any data is requested - never come here');
    }
 
-   function processBaskets(bitems) {
+   processBaskets = function(bitems) {
       // this is call-back when next baskets are read
 
       if ((handle.selector._break !== 0) || (bitems === null)) {
@@ -2556,7 +2561,7 @@ async function treeProcess(tree, selector, args) {
             return resolveFunc(handle.selector);
          }
       }
-   }
+   };
 
    return new Promise((resolve, reject) => {
       resolveFunc = resolve;
@@ -2589,10 +2594,8 @@ async function treeDraw(tree, args) {
    if (args.branch) {
       if (!selector.drawOnlyBranch(tree, args.branch, args.expr, args))
         return Promise.reject(Error(`Fail to create draw expression ${args.expr} for branch ${args.branch.fName}`));
-   } else {
-      if (!selector.parseDrawExpression(tree, args))
-          return Promise.reject(Error(`Fail to create draw expression ${args.expr}`));
-   }
+   } else if (!selector.parseDrawExpression(tree, args))
+      return Promise.reject(Error(`Fail to create draw expression ${args.expr}`));
 
    selector.setCallback(null, args.progress);
 
@@ -2690,9 +2693,10 @@ function treeIOTest(tree, args) {
 
 /** @summary Create hierarchy of TTree object
   * @private */
-function treeHierarchy(node, obj) {
+function treeHierarchy(tree_node, obj) {
    function createBranchItem(node, branch, tree, parent_branch) {
-      if (!node || !branch) return false;
+      if (!node || !branch)
+         return false;
 
       const nb_branches = branch.fBranches?.arr?.length ?? 0,
             nb_leaves = branch.fLeaves?.arr?.length ?? 0;
@@ -2792,11 +2796,11 @@ function treeHierarchy(node, obj) {
    if (obj.fBranches === undefined)
       return false;
 
-   node._childs = [];
-   node._tree = obj;  // set reference, will be used later by TTree::Draw
+   tree_node._childs = [];
+   tree_node._tree = obj;  // set reference, will be used later by TTree::Draw
 
    for (let i = 0; i < obj.fBranches.arr?.length; ++i)
-      createBranchItem(node, obj.fBranches.arr[i], obj);
+      createBranchItem(tree_node, obj.fBranches.arr[i], obj);
 
    return true;
 }

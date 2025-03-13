@@ -39,12 +39,12 @@ class RH1Painter extends RH1Painter2D {
 
       return pr.then(() => this.drawingBins(reason)).then(() => {
          // called when bins received from server, must be reentrant
-         const main = this.getFramePainter();
+         const fp = this.getFramePainter();
 
          drawBinsLego(this, true);
          this.updatePaletteDraw();
-         main.render3D();
-         main.addKeysHandler();
+         fp.render3D();
+         fp.addKeysHandler();
          return this;
       });
    }

@@ -181,7 +181,7 @@ class TGaxisPainter extends TAxisPainter {
       res.eval = function(v) {
          try {
             v = res._func.evalPar(v);
-         } catch (err) {
+         } catch {
             v = 0;
          }
          return Number.isFinite(v) ? v : 0;

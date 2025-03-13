@@ -278,8 +278,8 @@ class TGraphDelaunay {
                nx = sy;
                ny = -sx;
                nn = Math.sqrt(nx*nx+ny*ny);
-               nx = nx/nn;
-               ny = ny/nn;
+               nx /= nn;
+               ny /= nn;
                mx = this.fXN[p3]-xm;
                my = this.fYN[p3]-ym;
                mdotn = mx*nx+my*ny;
@@ -469,6 +469,7 @@ class TGraphDelaunay {
       let thevalue,
           it, ntris_tried, p, n, m,
           i, j, k, l, z, f, d, o1, o2, a, b, t1, t2, t3,
+          /* eslint-disable-next-line no-useless-assignment */
           ndegen = 0, degen = 0, fdegen = 0, o1degen = 0, o2degen = 0,
           vxN, vyN,
           d1, d2, d3, c1, c2, dko1, dko2, dfo1,
@@ -627,15 +628,13 @@ class TGraphDelaunay {
                            // different fZ's. If they don't then this is harmless.
                            console.warn(`Interpolate Two of these three points are coincident ${a} ${b} ${z}`);
                         }
-                     } else {
-                        if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) < 0) {
-                           skip_this_triangle = true;
-                           break;
-                           // goto L90;
-                        } else if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) === 0) {
-                           // At least two points are sitting on top of each other - see above.
-                           console.warn(`Interpolate Two of these three points are coincident ${a} ${b} ${z}`);
-                        }
+                     } else if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) < 0) {
+                        skip_this_triangle = true;
+                        break;
+                        // goto L90;
+                     } else if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) === 0) {
+                        // At least two points are sitting on top of each other - see above.
+                        console.warn(`Interpolate Two of these three points are coincident ${a} ${b} ${z}`);
                      }
                      // point is outside the circle, move to next point
                      continue; // goto L50;
@@ -823,10 +822,10 @@ class TGraphDelaunay {
       if (!this.fNdt)
          return null;
 
-      let graph = null,     // current graph
+      let graph,     // current graph
           // Find all the segments making the contour
           r21, r20, r10, p0, p1, p2, x0, y0, z0, x1, y1, z1, x2, y2, z2,
-          i, it, i0, i1, i2, nbSeg = 0,
+          it, i0, i1, i2, nbSeg = 0,
           // Allocate space to store the segments. They cannot be more than the
           // number of triangles.
           xs0c, ys0c, xs1c, ys1c;
@@ -854,6 +853,7 @@ class TGraphDelaunay {
 
          // Order along Z axis the points (xi,yi,zi) where "i" belongs to {0,1,2}
          // After this z0 < z1 < z2
+         /* eslint-disable-next-line no-useless-assignment */
          i0 = i1 = i2 = 0;
          if (this.fZ[p1] <= z0) { z0 = this.fZ[p1]; x0 = this.fX[p1]; y0 = this.fY[p1]; i0 = 1; }
          if (this.fZ[p1] > z2) { z2 = this.fZ[p1]; x2 = this.fX[p1]; y2 = this.fY[p1]; i2 = 1; }
@@ -861,7 +861,7 @@ class TGraphDelaunay {
          if (this.fZ[p2] > z2) { z2 = this.fZ[p2]; x2 = this.fX[p2]; y2 = this.fY[p2]; i2 = 2; }
          if (i0 === 0 && i2 === 0) {
             console.error('GetContourList: wrong vertices ordering');
-            return nullptr;
+            return null;
          }
 
          i1 = 3 - i2 - i0;
@@ -1010,7 +1010,8 @@ class TGraphDelaunay {
    /** @summary Function handles tooltips in the mesh */
 function graph2DTooltip(intersect) {
    let indx = Math.floor(intersect.index / this.nvertex);
-   if ((indx < 0) || (indx >= this.index.length)) return null;
+   if ((indx < 0) || (indx >= this.index.length))
+      return null;
    const sqr = v => v*v;
 
    indx = this.index[indx];
@@ -1056,7 +1057,7 @@ function graph2DTooltip(intersect) {
 class TGraph2DPainter extends ObjectPainter {
 
    /** @summary Decode options string  */
-   decodeOptions(opt, _gr) {
+   decodeOptions(opt) {
       const d = new DrawOptions(opt);
 
       if (!this.options)
@@ -1370,11 +1371,9 @@ class TGraph2DPainter extends ObjectPainter {
       const countSelected = (zmin, zmax) => {
          let cnt = 0;
          for (let i = 0; i < graph.fNpoints; ++i) {
-            if ((graph.fX[i] < fp.scale_xmin) || (graph.fX[i] > fp.scale_xmax) ||
-                (graph.fY[i] < fp.scale_ymin) || (graph.fY[i] > fp.scale_ymax) ||
-                (graph.fZ[i] < zmin) || (graph.fZ[i] >= zmax)) continue;
-
-            ++cnt;
+            if ((graph.fX[i] >= fp.scale_xmin) && (graph.fX[i] <= fp.scale_xmax) &&
+                (graph.fY[i] >= fp.scale_ymin) && (graph.fY[i] <= fp.scale_ymax) &&
+                (graph.fZ[i] >= zmin) && (graph.fZ[i] < zmax)) ++cnt;
          }
          return cnt;
       };
@@ -1400,7 +1399,8 @@ class TGraph2DPainter extends ObjectPainter {
       if (this.options.Circles)
          scale = 0.06 * fp.size_x3d;
 
-      if (fp.usesvg) scale *= 0.3;
+      if (fp.usesvg)
+         scale *= 0.3;
 
       scale *= 7 * Math.max(fp.size_x3d / fp.getFrameWidth(), fp.size_z3d / fp.getFrameHeight());
 
@@ -1416,23 +1416,17 @@ class TGraph2DPainter extends ObjectPainter {
          const lvl_zmin = Math.max(levels[lvl], fp.scale_zmin),
                lvl_zmax = Math.min(levels[lvl+1], fp.scale_zmax);
 
-         if (lvl_zmin >= lvl_zmax) continue;
+         if (lvl_zmin >= lvl_zmax)
+            continue;
 
          const size = Math.floor(countSelected(lvl_zmin, lvl_zmax) / step),
-               index = new Int32Array(size);
-         let pnts = null, select = 0, icnt = 0,
-             err = null, asymm = false, line = null, ierr = 0, iline = 0;
+               index = new Int32Array(size),
+               pnts = this.options.Markers || this.options.Circles ? new PointsCreator(size, fp.webgl, scale/3) : null,
+               err = this.options.Error ? new Float32Array(size*6*3) : null,
+               asymm = err && this.matchObjectType(clTGraph2DAsymmErrors),
+               line = this.options.Line ? new Float32Array((size-1)*6) : null;
 
-         if (this.options.Markers || this.options.Circles)
-            pnts = new PointsCreator(size, fp.webgl, scale/3);
-
-         if (this.options.Error) {
-            err = new Float32Array(size*6*3);
-            asymm = this.matchObjectType(clTGraph2DAsymmErrors);
-          }
-
-         if (this.options.Line)
-            line = new Float32Array((size-1)*6);
+         let select = 0, icnt = 0, ierr = 0, iline = 0;
 
          for (let i = 0; i < graph.fNpoints; ++i) {
             if ((graph.fX[i] < fp.scale_xmin) || (graph.fX[i] > fp.scale_xmax) ||
@@ -1446,11 +1440,9 @@ class TGraph2DPainter extends ObjectPainter {
 
             index[icnt++] = i; // remember point index for tooltip
 
-            const x = fp.grx(graph.fX[i]),
-                y = fp.gry(graph.fY[i]),
-                z = fp.grz(graph.fZ[i]);
+            const x = fp.grx(graph.fX[i]), y = fp.gry(graph.fY[i]), z = fp.grz(graph.fZ[i]);
 
-            if (pnts) pnts.addPoint(x, y, z);
+            pnts?.addPoint(x, y, z);
 
             if (err) {
                err[ierr] = fp.grx(graph.fX[i] - (asymm ? graph.fEXlow[i] : graph.fEX[i]));
@@ -1477,11 +1469,11 @@ class TGraph2DPainter extends ObjectPainter {
             }
 
             if (line) {
-               if (iline>=6) {
+               if (iline >= 6) {
                   line[iline] = line[iline-3];
                   line[iline+1] = line[iline-2];
                   line[iline+2] = line[iline-1];
-                  iline+=3;
+                  iline += 3;
                }
                line[iline] = x;
                line[iline+1] = y;
@@ -1531,7 +1523,7 @@ class TGraph2DPainter extends ObjectPainter {
             if (!this.options.Circles || this.options.Color)
                color = palette?.calcColor(lvl, levels.length) ?? this.getColor(graph.fMarkerColor);
 
-            const pr = pnts.createPoints({ color, fill: 'white', style: this.options.Circles ? 4 : graph.fMarkerStyle }).then(mesh => {
+            const pr = pnts.createPoints({ color, fill: this.options.Circles ? 'white' : undefined, style: this.options.Circles ? 4 : graph.fMarkerStyle }).then(mesh => {
                mesh.graph = graph;
                mesh.fp = fp;
                mesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
@@ -1548,12 +1540,12 @@ class TGraph2DPainter extends ObjectPainter {
       }
 
       return Promise.all(promises).then(() => {
-         const main = this.getMainPainter(),
-               handle_palette = this.axes_draw || (main?.draw_content === false);
+         const main2 = this.getMainPainter(),
+               handle_palette = this.axes_draw || (main2?.draw_content === false);
          if (!handle_palette)
             return;
 
-         const pal = main?.findFunction(clTPaletteAxis),
+         const pal = main2?.findFunction(clTPaletteAxis),
                pal_painter = this.getPadPainter()?.findPainterFor(pal);
          if (!pal_painter)
             return;
@@ -1562,8 +1554,8 @@ class TGraph2DPainter extends ObjectPainter {
 
          if (this.options.Zscale)
             return pal_painter.drawPave();
-         else
-            pal_painter.removeG(); // completely remove drawing without need to redraw complete pad
+
+         pal_painter.removeG(); // completely remove drawing without need to redraw complete pad
       }).then(() => {
          fp.render3D(100);
          return this;

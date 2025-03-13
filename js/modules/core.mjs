@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '24/02/2025',
+version_date = '13/03/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -13,7 +13,7 @@ version = version_id + ' ' + version_date,
 
 /** @summary Is node.js flag
   * @private */
-nodejs = !!((typeof process === 'object') && isObject(process.versions) && process.versions.node && process.versions.v8),
+nodejs = Boolean((typeof process === 'object') && process.versions?.node && process.versions.v8),
 
 /** @summary internal data
   * @private */
@@ -25,6 +25,38 @@ internals = {
 _src = import.meta?.url,
 
 _src_dir = '$jsrootsys';
+
+
+/** @summary Check if argument is a not-null Object
+  * @private */
+function isObject(arg) { return arg && typeof arg === 'object'; }
+
+/** @summary Check if argument is a Function
+  * @private */
+function isFunc(arg) { return typeof arg === 'function'; }
+
+/** @summary Check if argument is a String
+  * @private */
+function isStr(arg) { return typeof arg === 'string'; }
+
+/** @summary Check if object is a Promise
+  * @private */
+function isPromise(obj) { return isObject(obj) && isFunc(obj.then); }
+
+/** @summary Postpone func execution and return result in promise
+  * @private */
+function postponePromise(func, timeout) {
+   return new Promise(resolveFunc => {
+      setTimeout(() => {
+         const res = isFunc(func) ? func() : func;
+         resolveFunc(res);
+      }, timeout);
+   });
+}
+
+/** @summary Provide promise in any case
+  * @private */
+function getPromise(obj) { return isPromise(obj) ? obj : Promise.resolve(obj); }
 
 
 /** @summary Location of JSROOT modules
@@ -62,7 +94,7 @@ function isBatchMode() { return batch_mode; }
 
 /** @summary Set batch mode
   * @private */
-function setBatchMode(on) { batch_mode = !!on; }
+function setBatchMode(on) { batch_mode = Boolean(on); }
 
 /** @summary Indicates if running inside Node.js */
 function isNodeJs() { return nodejs; }
@@ -96,7 +128,7 @@ if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typ
    } else {
       browser.isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
       browser.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
-      browser.isChrome = !!window.chrome;
+      browser.isChrome = Boolean(window.chrome);
       browser.isChromeHeadless = navigator.userAgent.indexOf('HeadlessChrome') >= 0;
       browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 0;
       browser.isWin = navigator.userAgent.indexOf('Windows') >= 0;
@@ -461,143 +493,10 @@ function getDocument() {
    return undefined;
 }
 
-/** @summary Inject javascript code
-  * @desc Replacement for eval
-  * @return {Promise} when code is injected
+/** @summary Ensure global JSROOT and v6 support methods
   * @private */
-async function injectCode(code) {
-   if (nodejs) {
-      let name, fs;
-      return import('tmp').then(tmp => {
-         name = tmp.tmpNameSync() + '.js';
-         return import('fs');
-      }).then(_fs => {
-         fs = _fs;
-         fs.writeFileSync(name, code);
-         return import(/* webpackIgnore: true */ 'file://' + name);
-      }).finally(() => fs.unlinkSync(name));
-   }
+let _ensureJSROOT = null;
 
-   if (typeof document !== 'undefined') {
-      // check if code already loaded - to avoid duplication
-      const scripts = document.getElementsByTagName('script');
-      for (let n = 0; n < scripts.length; ++n) {
-         if (scripts[n].innerHTML === code)
-            return true;
-      }
-
-      // try to detect if code includes import and must be treated as module
-      const is_v6 = code.indexOf('JSROOT.require') >= 0,
-            is_mjs = !is_v6 && (code.indexOf('import {') > 0) && (code.indexOf('} from \'') > 0),
-            is_batch = !is_v6 && !is_mjs && (code.indexOf('JSROOT.ObjectPainter') >= 0),
-            promise = (is_v6 ? _ensureJSROOT() : Promise.resolve(true));
-
-      if (is_batch && !globalThis.JSROOT)
-         globalThis.JSROOT = internals.jsroot;
-
-      return promise.then(() => {
-         const element = document.createElement('script');
-         element.setAttribute('type', is_mjs ? 'module' : 'text/javascript');
-         element.innerHTML = code;
-         document.head.appendChild(element);
-         // while onload event not fired, just postpone resolve
-         return isBatchMode() ? true : postponePromise(true, 10);
-      });
-   }
-
-   return false;
-}
-
-/** @summary Load ES6 modules
-  * @param {String} arg - single URL or array of URLs
-  * @return {Promise} */
-async function loadModules(arg) {
-   if (isStr(arg))
-      arg = arg.split(';');
-   if (arg.length === 0)
-      return true;
-   return import(/* webpackIgnore: true */ arg.shift()).then(() => loadModules(arg));
-}
-
-/** @summary Load script or CSS file into the browser
-  * @param {String} url - script or css file URL (or array, in this case they all loaded sequentially)
-  * @return {Promise} */
-async function loadScript(url) {
-   if (!url)
-      return true;
-
-   if (isStr(url) && (url.indexOf(';') >= 0))
-      url = url.split(';');
-
-   if (!isStr(url)) {
-      const scripts = url, loadNext = () => {
-         if (!scripts.length) return true;
-         return loadScript(scripts.shift()).then(loadNext, loadNext);
-      };
-      return loadNext();
-   }
-
-   if (url.indexOf('$$$') === 0) {
-      url = url.slice(3);
-      if ((url.indexOf('style/') === 0) && (url.indexOf('.css') < 0))
-         url += '.css';
-      url = source_dir + url;
-   }
-
-   const isstyle = url.indexOf('.css') > 0;
-
-   if (nodejs) {
-      if (isstyle)
-         return null;
-      if ((url.indexOf('http:') === 0) || (url.indexOf('https:') === 0))
-         return httpRequest(url, 'text').then(code => injectCode(code));
-
-      // local files, read and use it
-      if (url.indexOf('./') === 0)
-         return import('fs').then(fs => injectCode(fs.readFileSync(url)));
-
-      return import(/* webpackIgnore: true */ url);
-   }
-
-   const match_url = src => {
-      if (src === url) return true;
-      const indx = src.indexOf(url);
-      return (indx > 0) && (indx + url.length === src.length) && (src[indx-1] === '/');
-   };
-
-   if (isstyle) {
-      const styles = document.getElementsByTagName('link');
-      for (let n = 0; n < styles.length; ++n) {
-         if (!styles[n].href || (styles[n].type !== 'text/css') || (styles[n].rel !== 'stylesheet')) continue;
-         if (match_url(styles[n].href))
-            return true;
-      }
-   } else {
-      const scripts = document.getElementsByTagName('script');
-      for (let n = 0; n < scripts.length; ++n) {
-         if (match_url(scripts[n].src))
-            return true;
-      }
-   }
-
-   let element;
-   if (isstyle) {
-      element = document.createElement('link');
-      element.setAttribute('rel', 'stylesheet');
-      element.setAttribute('type', 'text/css');
-      element.setAttribute('href', url);
-   } else {
-      element = document.createElement('script');
-      element.setAttribute('type', 'text/javascript');
-      element.setAttribute('src', url);
-   }
-
-   return new Promise((resolveFunc, rejectFunc) => {
-      element.onload = () => resolveFunc(true);
-      element.onerror = () => { element.remove(); rejectFunc(Error(`Fail to load ${url}`)); };
-      document.head.appendChild(element);
-   });
-}
 
 /** @summary Generate mask for given bit
   * @param {number} n bit number
@@ -660,12 +559,11 @@ const extend = Object.assign;
 
 /** @summary Adds specific methods to the object.
   * @desc JSROOT implements some basic methods for different ROOT classes.
+  * @function
   * @param {object} obj - object where methods are assigned
   * @param {string} [typename] - optional typename, if not specified, obj._typename will be used
   * @private */
-function addMethods(obj, typename) {
-   extend(obj, getMethods(typename || obj._typename, obj));
-}
+let addMethods = null;
 
 /** @summary Should be used to parse JSON string produced with TBufferJSON class
   * @desc Replace all references inside object like { "$ref": "1" }
@@ -734,8 +632,8 @@ function parse(json) {
             const buf = atob_func(value.b);
             if (arr.buffer) {
                const dv = new DataView(arr.buffer, value.o || 0),
-                     len = Math.min(buf.length, dv.byteLength);
-               for (let k = 0; k < len; ++k)
+                     blen = Math.min(buf.length, dv.byteLength);
+               for (let k = 0; k < blen; ++k)
                   dv.setUint8(k, buf.charCodeAt(k));
             } else
                throw new Error('base64 coding supported only for native arrays with binary data');
@@ -1071,6 +969,154 @@ async function httpRequest(url, kind, post_data) {
       createHttpRequest(url, kind, resolve, reject, true).then(xhr => xhr.send(post_data || null));
    });
 }
+
+/** @summary Inject javascript code
+  * @desc Replacement for eval
+  * @return {Promise} when code is injected
+  * @private */
+async function injectCode(code) {
+   if (nodejs) {
+      let name, fs;
+      return import('tmp').then(tmp => {
+         name = tmp.tmpNameSync() + '.js';
+         return import('fs');
+      }).then(_fs => {
+         fs = _fs;
+         fs.writeFileSync(name, code);
+         return import(/* webpackIgnore: true */ 'file://' + name);
+      }).finally(() => fs.unlinkSync(name));
+   }
+
+   if (typeof document !== 'undefined') {
+      // check if code already loaded - to avoid duplication
+      const scripts = document.getElementsByTagName('script');
+      for (let n = 0; n < scripts.length; ++n) {
+         if (scripts[n].innerHTML === code)
+            return true;
+      }
+
+      // try to detect if code includes import and must be treated as module
+      const is_v6 = code.indexOf('JSROOT.require') >= 0,
+            is_mjs = !is_v6 && (code.indexOf('import {') > 0) && (code.indexOf('} from \'') > 0),
+            is_batch = !is_v6 && !is_mjs && (code.indexOf('JSROOT.ObjectPainter') >= 0),
+            promise = (is_v6 ? _ensureJSROOT() : Promise.resolve(true));
+
+      if (is_batch && !globalThis.JSROOT)
+         globalThis.JSROOT = internals.jsroot;
+
+      return promise.then(() => {
+         const element = document.createElement('script');
+         element.setAttribute('type', is_mjs ? 'module' : 'text/javascript');
+         element.innerHTML = code;
+         document.head.appendChild(element);
+         // while onload event not fired, just postpone resolve
+         return isBatchMode() ? true : postponePromise(true, 10);
+      });
+   }
+
+   return false;
+}
+
+/** @summary Load ES6 modules
+  * @param {String} arg - single URL or array of URLs
+  * @return {Promise} */
+async function loadModules(arg) {
+   if (isStr(arg))
+      arg = arg.split(';');
+   if (arg.length === 0)
+      return true;
+   return import(/* webpackIgnore: true */ arg.shift()).then(() => loadModules(arg));
+}
+
+/** @summary Load script or CSS file into the browser
+  * @param {String} url - script or css file URL (or array, in this case they all loaded sequentially)
+  * @return {Promise} */
+async function loadScript(url) {
+   if (!url)
+      return true;
+
+   if (isStr(url) && (url.indexOf(';') >= 0))
+      url = url.split(';');
+
+   if (!isStr(url)) {
+      const scripts = url, loadNext = () => {
+         if (!scripts.length) return true;
+         return loadScript(scripts.shift()).then(loadNext, loadNext);
+      };
+      return loadNext();
+   }
+
+   if (url.indexOf('$$$') === 0) {
+      url = url.slice(3);
+      if ((url.indexOf('style/') === 0) && (url.indexOf('.css') < 0))
+         url += '.css';
+      url = source_dir + url;
+   }
+
+   const isstyle = url.indexOf('.css') > 0;
+
+   if (nodejs) {
+      if (isstyle)
+         return null;
+      if ((url.indexOf('http:') === 0) || (url.indexOf('https:') === 0))
+         return httpRequest(url, 'text').then(code => injectCode(code));
+
+      // local files, read and use it
+      if (url.indexOf('./') === 0)
+         return import('fs').then(fs => injectCode(fs.readFileSync(url)));
+
+      return import(/* webpackIgnore: true */ url);
+   }
+
+   const match_url = src => {
+      if (src === url) return true;
+      const indx = src.indexOf(url);
+      return (indx > 0) && (indx + url.length === src.length) && (src[indx-1] === '/');
+   };
+
+   if (isstyle) {
+      const styles = document.getElementsByTagName('link');
+      for (let n = 0; n < styles.length; ++n) {
+         if (!styles[n].href || (styles[n].type !== 'text/css') || (styles[n].rel !== 'stylesheet')) continue;
+         if (match_url(styles[n].href))
+            return true;
+      }
+   } else {
+      const scripts = document.getElementsByTagName('script');
+      for (let n = 0; n < scripts.length; ++n) {
+         if (match_url(scripts[n].src))
+            return true;
+      }
+   }
+
+   let element;
+   if (isstyle) {
+      element = document.createElement('link');
+      element.setAttribute('rel', 'stylesheet');
+      element.setAttribute('type', 'text/css');
+      element.setAttribute('href', url);
+   } else {
+      element = document.createElement('script');
+      element.setAttribute('type', 'text/javascript');
+      element.setAttribute('src', url);
+   }
+
+   return new Promise((resolveFunc, rejectFunc) => {
+      element.onload = () => resolveFunc(true);
+      element.onerror = () => { element.remove(); rejectFunc(Error(`Fail to load ${url}`)); };
+      document.head.appendChild(element);
+   });
+}
+
+_ensureJSROOT = async function() {
+   const pr = globalThis.JSROOT ? Promise.resolve(true) : loadScript(source_dir + 'scripts/JSRoot.core.js');
+
+   return pr.then(() => {
+      if (globalThis.JSROOT?._complete_loading)
+         return globalThis.JSROOT._complete_loading();
+   }).then(() => globalThis.JSROOT);
+};
+
 
 const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 'TString', clTObjString = 'TObjString',
       clTKey = 'TKey', clTFile = 'TFile',
@@ -1498,10 +1544,10 @@ function createTGraph(npoints, xpts, ypts) {
   * let h2 = createHistogram('TH1F', nbinsx);
   * let h3 = createHistogram('TH1F', nbinsx);
   * let stack = createTHStack(h1, h2, h3); */
-function createTHStack() {
+function createTHStack(...args) {
    const stack = create(clTHStack);
-   for (let i = 0; i < arguments.length; ++i)
-      stack.fHists.Add(arguments[i], '');
+   for (let i = 0; i < args.length; ++i)
+      stack.fHists.Add(args[i], '');
    return stack;
 }
 
@@ -1513,10 +1559,10 @@ function createTHStack() {
   * let gr2 = createTGraph(100);
   * let gr3 = createTGraph(100);
   * let mgr = createTMultiGraph(gr1, gr2, gr3); */
-function createTMultiGraph() {
+function createTMultiGraph(...args) {
    const mgraph = create(clTMultiGraph);
-   for (let i = 0; i < arguments.length; ++i)
-       mgraph.fGraphs.Add(arguments[i], '');
+   for (let i = 0; i < args.length; ++i)
+      mgraph.fGraphs.Add(args[i], '');
    return mgraph;
 }
 
@@ -1536,7 +1582,7 @@ function getMethods(typename, obj) {
    if ((typename === clTObject) || (typename === clTNamed) || (obj?.fBits !== undefined)) {
       if (typeof m.TestBit === 'undefined') {
          m.TestBit = function(f) { return (this.fBits & f) !== 0; };
-         m.InvertBit = function(f) { this.fBits = this.fBits ^ (f & 0xffffff); };
+         m.InvertBit = function(f) { this.fBits ^= f & 0xffffff; };
          m.SetBit = function(f, on = true) { this.fBits = on ? this.fBits | f : this.fBits & ~f; };
       }
    }
@@ -1548,12 +1594,12 @@ function getMethods(typename, obj) {
          this.arr = [];
          this.opt = [];
       };
-      m.Add = function(obj, opt) {
-         this.arr.push(obj);
+      m.Add = function(elem, opt) {
+         this.arr.push(elem);
          this.opt.push(isStr(opt) ? opt : '');
       };
-      m.AddFirst = function(obj, opt) {
-         this.arr.unshift(obj);
+      m.AddFirst = function(elem, opt) {
+         this.arr.unshift(elem);
          this.opt.unshift(isStr(opt) ? opt : '');
       };
       m.RemoveAt = function(indx) {
@@ -1578,11 +1624,11 @@ function getMethods(typename, obj) {
    }
 
    if ((typename.indexOf(clTF1) === 0) || (typename === clTF12) || (typename === clTF2)) {
-      m.addFormula = function(obj) {
-         if (!obj) return;
+      m.addFormula = function(formula) {
+         if (!formula) return;
          if (this.formulas === undefined)
             this.formulas = [];
-         this.formulas.push(obj);
+         this.formulas.push(formula);
       };
       m.GetParName = function(n) {
          if (this.fParams?.fParNames)
@@ -1867,6 +1913,10 @@ function getMethods(typename, obj) {
    return m;
 }
 
+addMethods = function(obj, typename) {
+   extend(obj, getMethods(typename || obj._typename, obj));
+};
+
 gStyle.fXaxis = create(clTAttAxis);
 gStyle.fYaxis = create(clTAttAxis);
 gStyle.fZaxis = create(clTAttAxis);
@@ -1892,47 +1942,6 @@ function isRootCollection(lst, typename) {
           (typename === clTObjArray) || (typename === clTClonesArray);
 }
 
-/** @summary Check if argument is a not-null Object
-  * @private */
-function isObject(arg) { return arg && typeof arg === 'object'; }
-
-/** @summary Check if argument is a Function
-  * @private */
-function isFunc(arg) { return typeof arg === 'function'; }
-
-/** @summary Check if argument is a String
-  * @private */
-function isStr(arg) { return typeof arg === 'string'; }
-
-/** @summary Check if object is a Promise
-  * @private */
-function isPromise(obj) { return isObject(obj) && isFunc(obj.then); }
-
-/** @summary Postpone func execution and return result in promise
-  * @private */
-function postponePromise(func, timeout) {
-   return new Promise(resolveFunc => {
-      setTimeout(() => {
-         const res = isFunc(func) ? func() : func;
-         resolveFunc(res);
-      }, timeout);
-   });
-}
-
-/** @summary Provide promise in any case
-  * @private */
-function getPromise(obj) { return isPromise(obj) ? obj : Promise.resolve(obj); }
-
-/** @summary Ensure global JSROOT and v6 support methods
-  * @private */
-async function _ensureJSROOT() {
-   const pr = globalThis.JSROOT ? Promise.resolve(true) : loadScript(source_dir + 'scripts/JSRoot.core.js');
-
-   return pr.then(() => {
-      if (globalThis.JSROOT?._complete_loading)
-         return globalThis.JSROOT._complete_loading();
-   }).then(() => globalThis.JSROOT);
-}
 
 /** @summary Internal collection of functions potentially used by batch scripts
   * @private */

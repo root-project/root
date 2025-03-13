@@ -137,9 +137,10 @@ function _getTF1Save(func, x) {
   * @desc First try evaluate, if not possible - check saved buffer
   * @private */
 function getTF1Value(func, x, skip_eval = undefined) {
-   let y = 0, iserr = false;
    if (!func)
       return 0;
+
+   let iserr = false;
 
    if (!skip_eval && !func.evalPar) {
       try {
@@ -152,16 +153,15 @@ function getTF1Value(func, x, skip_eval = undefined) {
 
    if (func.evalPar && !iserr) {
       try {
-         y = func.evalPar(x);
-         return y;
+         return func.evalPar(x);
       } catch {
-         y = 0;
+         /* eslint-disable-next-line  no-useless-assignment */
+         iserr = true;
       }
    }
 
    const np = func.fSave.length - 3;
-   if ((np < 2) || (func.fSave[np + 1] === func.fSave[np + 2])) return 0;
-   return _getTF1Save(func, x);
+   return (np < 2) || (func.fSave[np + 1] === func.fSave[np + 2]) ? 0 : _getTF1Save(func, x);
 }
 
 export { proivdeEvalPar, getTF1Value, _getTF1Save };
