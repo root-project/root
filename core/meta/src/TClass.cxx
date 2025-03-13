@@ -3130,6 +3130,10 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
             auto underlyingTypeDict = TClassTable::GetDictNorm(underlyingTypeName.Data());
             if (underlyingTypeDict){
                loadedcl = underlyingTypeDict();
+               if (loadedcl) {
+                  loadedcl->PostLoadCheck();
+                  return loadedcl;
+               }
             }
 
          }
