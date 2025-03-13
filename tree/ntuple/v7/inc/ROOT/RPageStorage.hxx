@@ -288,7 +288,7 @@ protected:
    /// compressionSetting is 0 (uncompressed) and the page is mappable and not checksummed, the returned sealed page
    /// will point directly to the input page buffer. Otherwise, the sealed page references fSealPageBuffer.  Thus,
    /// the buffer pointed to by the RSealedPage should never be freed.
-   RSealedPage SealPage(const ROOT::Internal::RPage &page, const RColumnElementBase &element);
+   RSealedPage SealPage(const ROOT::Internal::RPage &page, const ROOT::Internal::RColumnElementBase &element);
 
 private:
    std::vector<Callback_t> fOnDatasetCommitCallbacks;
@@ -338,7 +338,8 @@ public:
    /// Parameters for the SealPage() method
    struct RSealPageConfig {
       const ROOT::Internal::RPage *fPage = nullptr; ///< Input page to be sealed
-      const RColumnElementBase *fElement = nullptr; ///< Corresponds to the page's elements, for size calculation etc.
+      const ROOT::Internal::RColumnElementBase *fElement =
+         nullptr;                                   ///< Corresponds to the page's elements, for size calculation etc.
       std::uint32_t fCompressionSettings = 0;       ///< Compression algorithm and level to apply
       /// Adds a 8 byte little-endian xxhash3 checksum to the page payload. The buffer has to be large enough to
       /// to store the additional 8 bytes.
@@ -656,7 +657,7 @@ protected:
    class RActivePhysicalColumns {
    public:
       struct RColumnInfo {
-         RColumnElementBase::RIdentifier fElementId;
+         ROOT::Internal::RColumnElementBase::RIdentifier fElementId;
          std::size_t fRefCounter = 0;
       };
 
@@ -669,8 +670,8 @@ protected:
       std::unordered_map<ROOT::DescriptorId_t, std::vector<RColumnInfo>> fColumnInfos;
 
    public:
-      void Insert(ROOT::DescriptorId_t physicalColumnId, RColumnElementBase::RIdentifier elementId);
-      void Erase(ROOT::DescriptorId_t physicalColumnId, RColumnElementBase::RIdentifier elementId);
+      void Insert(ROOT::DescriptorId_t physicalColumnId, ROOT::Internal::RColumnElementBase::RIdentifier elementId);
+      void Erase(ROOT::DescriptorId_t physicalColumnId, ROOT::Internal::RColumnElementBase::RIdentifier elementId);
       RCluster::ColumnSet_t ToColumnSet() const;
       bool HasColumnInfos(ROOT::DescriptorId_t physicalColumnId) const
       {
@@ -749,7 +750,8 @@ public:
    /// Helper for unstreaming a page. This is commonly used in derived, concrete page sources.  The implementation
    /// currently always makes a memory copy, even if the sealed page is uncompressed and in the final memory layout.
    /// The optimization of directly mapping pages is left to the concrete page source implementations.
-   RResult<ROOT::Internal::RPage> static UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element,
+   RResult<ROOT::Internal::RPage> static UnsealPage(const RSealedPage &sealedPage,
+                                                    const ROOT::Internal::RColumnElementBase &element,
                                                     ROOT::Internal::RPageAllocator &pageAlloc);
 
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
@@ -817,7 +819,8 @@ public:
    void UnzipCluster(RCluster *cluster);
 
    // TODO(gparolini): for symmetry with SealPage(), we should either make this private or SealPage() public.
-   RResult<ROOT::Internal::RPage> UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element);
+   RResult<ROOT::Internal::RPage>
+   UnsealPage(const RSealedPage &sealedPage, const ROOT::Internal::RColumnElementBase &element);
 }; // class RPageSource
 
 } // namespace Internal

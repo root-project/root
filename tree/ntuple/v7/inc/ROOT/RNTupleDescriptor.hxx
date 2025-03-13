@@ -42,6 +42,11 @@
 #include <unordered_set>
 
 namespace ROOT {
+
+namespace Internal {
+class RColumnElementBase;
+}
+
 namespace Experimental {
 
 class RFieldBase;
@@ -49,7 +54,6 @@ class RNTupleDescriptor;
 class RNTupleModel;
 
 namespace Internal {
-class RColumnElementBase;
 class RColumnDescriptorBuilder;
 class RClusterDescriptorBuilder;
 class RClusterGroupDescriptorBuilder;
@@ -375,8 +379,8 @@ public:
       /// given a page size limit of `pageSize` (in bytes); the locator for the referenced pages is `kTypePageZero`.
       /// This function is used to make up `RPageRange`s for clusters that contain deferred columns.
       /// \return The number of column elements covered by the synthesized RPageInfos
-      std::size_t ExtendToFitColumnRange(const RColumnRange &columnRange, const Internal::RColumnElementBase &element,
-                                         std::size_t pageSize);
+      std::size_t ExtendToFitColumnRange(const RColumnRange &columnRange,
+                                         const ROOT::Internal::RColumnElementBase &element, std::size_t pageSize);
 
       /// Has the same length than fPageInfos and stores the sum of the number of elements of all the pages
       /// up to and including a given index. Used for binary search in Find().

@@ -225,10 +225,8 @@ ROOT::Experimental::RClusterDescriptor::RPageRange::Find(ROOT::NTupleSize_t idxI
    return RPageInfoExtended{pageInfo, firstInPage, midpoint};
 }
 
-std::size_t
-ROOT::Experimental::RClusterDescriptor::RPageRange::ExtendToFitColumnRange(const RColumnRange &columnRange,
-                                                                           const Internal::RColumnElementBase &element,
-                                                                           std::size_t pageSize)
+std::size_t ROOT::Experimental::RClusterDescriptor::RPageRange::ExtendToFitColumnRange(
+   const RColumnRange &columnRange, const ROOT::Internal::RColumnElementBase &element, std::size_t pageSize)
 {
    R__ASSERT(fPhysicalColumnId == columnRange.GetPhysicalColumnId());
    R__ASSERT(!columnRange.IsSuppressed());
@@ -856,7 +854,7 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges
                   if (!columnRange.IsSuppressed()) {
                      auto &pageRange = fCluster.fPageRanges[physicalId];
                      pageRange.fPhysicalColumnId = physicalId;
-                     const auto element = Internal::RColumnElementBase::Generate<void>(c.GetType());
+                     const auto element = ROOT::Internal::RColumnElementBase::Generate<void>(c.GetType());
                      pageRange.ExtendToFitColumnRange(columnRange, *element, ROOT::Internal::RPage::kPageZeroSize);
                   }
                } else if (!columnRange.IsSuppressed()) {
@@ -1022,7 +1020,7 @@ ROOT::Experimental::Internal::RColumnDescriptorBuilder::MakeDescriptor() const
    // In general, reading the metadata of an unknown column is fine, it becomes an error only when
    // we try to read the actual data contained in it.
    if (fColumn.GetType() != ENTupleColumnType::kUnknown) {
-      const auto [minBits, maxBits] = RColumnElementBase::GetValidBitRange(fColumn.GetType());
+      const auto [minBits, maxBits] = ROOT::Internal::RColumnElementBase::GetValidBitRange(fColumn.GetType());
       if (fColumn.GetBitsOnStorage() < minBits || fColumn.GetBitsOnStorage() > maxBits)
          return R__FAIL("invalid column bit width");
    }

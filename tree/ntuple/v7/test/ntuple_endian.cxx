@@ -26,10 +26,10 @@ using ROOT::Experimental::RNTupleDescriptor;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::Internal::RCluster;
 using ROOT::Experimental::Internal::RColumn;
-using ROOT::Experimental::Internal::RColumnElementBase;
 using ROOT::Experimental::Internal::RPageSink;
 using ROOT::Experimental::Internal::RPageSource;
 using ROOT::Experimental::Internal::RPageStorage;
+using ROOT::Internal::RColumnElementBase;
 using ROOT::Internal::RPage;
 using ROOT::Internal::RPageRef;
 
