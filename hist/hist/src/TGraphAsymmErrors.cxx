@@ -362,7 +362,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, O
             ntokensToBeSaved++ ;
          }
       }
-      if (ntokens >= 2 && (ntokensToBeSaved < 2 || ntokensToBeSaved > 4)) { //first condition not to repeat the previous error message
+      if (ntokens >= 2 && (ntokensToBeSaved < 2 || ntokensToBeSaved > 6)) { //first condition not to repeat the previous error message
          Error("TGraphAsymmErrors", "Incorrect input format! There are %d \"%%lg\" tag(s) in format whereas 2,3 or 4 are expected!", ntokensToBeSaved);
          delete [] isTokenToBeSaved;
          return ;
