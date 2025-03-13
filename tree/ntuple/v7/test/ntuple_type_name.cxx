@@ -281,3 +281,26 @@ TEST(RNTuple, ContextDependentTypeNames)
       }
    }
 }
+
+TEST(RNTuple, RenormalizedDemangledName)
+{
+   // Test two cases for type name renormalization:
+   // - class with template argument that is normalized by the RNTuple IO (e.g. int to std::int32_t)
+   // - class with template argument which is another template class (e.g. myclass<std::vector<int>>) which by default
+   //   is stripped of the `std::` prefix and has a trailing blank space.
+   FileRaii fileGuard("test_ntuple_atlas_like_datavector.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto f1 = model->MakeField<DataVector<int>>("f1");
+      auto f2 = model->MakeField<DataVector<int, std::vector<CustomStruct>>>("f2");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(0u, reader->GetNEntries());
+
+   // The test would fail because of an exception thrown in REntry::EnsureMatchingType
+   auto f1 = reader->GetModel().GetDefaultEntry().GetPtr<DataVector<int>>("f1");
+   auto f2 = reader->GetModel().GetDefaultEntry().GetPtr<DataVector<int, std::vector<CustomStruct>>>("f2");
+}
