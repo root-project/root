@@ -6,6 +6,8 @@
 #include "ROOT/TestSupport.hxx"
 #include <string>
 
+#include "gtest/gtest.h"
+
 struct TTreeReaderFriends : public ::testing::Test {
    constexpr static auto fMainTreeName{"tree_10entries"};
    constexpr static auto fMainFileName{"tree_10entries.root"};
