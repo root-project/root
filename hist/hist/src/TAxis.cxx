@@ -714,83 +714,68 @@ void TAxis::ImportAttributes(const TAxis *axis)
 
 void TAxis::SaveAttributes(std::ostream &out, const char *name, const char *subname)
 {
-   char quote = '"';
-   if (strlen(GetTitle())) {
-      TString t(GetTitle());
-      t.ReplaceAll("\\","\\\\");
-      out<<"   "<<name<<subname<<"->SetTitle("<<quote<<t.Data()<<quote<<");"<<std::endl;
-   }
+   auto prefix = TString::Format("   %s%s->", name, subname);
+
+   if (strlen(GetTitle()))
+      out << prefix << "SetTitle(\"" << TString(GetTitle()).ReplaceSpecialCppChars() << "\");\n";
    if (fTimeDisplay) {
-      out<<"   "<<name<<subname<<"->SetTimeDisplay(1);"<<std::endl;
-      out<<"   "<<name<<subname<<"->SetTimeFormat("<<quote<<GetTimeFormat()<<quote<<");"<<std::endl;
+      out << prefix << "SetTimeDisplay(1);\n";
+      out << prefix << "SetTimeFormat(\"" << GetTimeFormat() << "\");\n";
    }
    if (fLabels) {
       TIter next(fLabels);
-      TObjString *obj;
-      while ((obj=(TObjString*)next())) {
-         out<<"   "<<name<<subname<<"->SetBinLabel("<<obj->GetUniqueID()<<","<<quote<<obj->GetName()<<quote<<");"<<std::endl;
+      while (auto obj = static_cast<TObjString *>(next())) {
+         out << prefix << "SetBinLabel(" << obj->GetUniqueID() << ", \""
+             << TString(obj->GetName()).ReplaceSpecialCppChars() << "\");\n";
       }
    }
 
-   if (fFirst || fLast) {
-      out<<"   "<<name<<subname<<"->SetRange("<<fFirst<<","<<fLast<<");"<<std::endl;
-   }
+   if (fFirst || fLast)
+      out << prefix << "SetRange(" << fFirst << ", " << fLast << ");\n";
 
-   if (TestBit(kLabelsHori)) {
-      out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsHori);"<<std::endl;
-   }
+   if (TestBit(kLabelsHori))
+      out << prefix << "SetBit(TAxis::kLabelsHori);\n";
 
-   if (TestBit(kLabelsVert)) {
-      out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsVert);"<<std::endl;
-   }
+   if (TestBit(kLabelsVert))
+      out << prefix << "SetBit(TAxis::kLabelsVert);\n";
 
-   if (TestBit(kLabelsDown)) {
-      out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsDown);"<<std::endl;
-   }
+   if (TestBit(kLabelsDown))
+      out << prefix << "SetBit(TAxis::kLabelsDown);\n";
 
-   if (TestBit(kLabelsUp)) {
-      out<<"   "<<name<<subname<<"->SetBit(TAxis::kLabelsUp);"<<std::endl;
-   }
+   if (TestBit(kLabelsUp))
+      out << prefix << "SetBit(TAxis::kLabelsUp);\n";
 
-   if (TestBit(kCenterLabels)) {
-      out<<"   "<<name<<subname<<"->CenterLabels(true);"<<std::endl;
-   }
+   if (TestBit(kCenterLabels))
+      out << prefix << "CenterLabels(true);\n";
 
-   if (TestBit(kCenterTitle)) {
-      out<<"   "<<name<<subname<<"->CenterTitle(true);"<<std::endl;
-   }
+   if (TestBit(kCenterTitle))
+      out << prefix << "CenterTitle(true);\n";
 
-   if (TestBit(kRotateTitle)) {
-      out<<"   "<<name<<subname<<"->RotateTitle(true);"<<std::endl;
-   }
+   if (TestBit(kRotateTitle))
+      out << prefix << "RotateTitle(true);\n";
 
-   if (TestBit(kDecimals)) {
-      out<<"   "<<name<<subname<<"->SetDecimals();"<<std::endl;
-   }
+   if (TestBit(kDecimals))
+      out << prefix << "SetDecimals();\n";
 
-   if (TestBit(kMoreLogLabels)) {
-      out<<"   "<<name<<subname<<"->SetMoreLogLabels();"<<std::endl;
-   }
+   if (TestBit(kMoreLogLabels))
+      out << prefix << "SetMoreLogLabels();\n";
 
-   if (TestBit(kNoExponent)) {
-      out<<"   "<<name<<subname<<"->SetNoExponent();"<<std::endl;
-   }
+   if (TestBit(kNoExponent))
+      out << prefix << "SetNoExponent();\n";
+
    if (fModLabs) {
       TIter next(fModLabs);
-      while (auto ml = (TAxisModLab*)next()) {
+      while (auto ml = static_cast<TAxisModLab *>(next())) {
          if (ml->GetLabNum() == 0)
-            out<<"   "<<name<<subname<<"->ChangeLabelByValue("<<ml->GetLabValue()<<",";
+            out << prefix << "ChangeLabelByValue(" << ml->GetLabValue();
          else
-            out<<"   "<<name<<subname<<"->ChangeLabel("<<ml->GetLabNum()<<",";
-         out<<ml->GetAngle()<<","
-            <<ml->GetSize()<<","
-            <<ml->GetAlign()<<","
-            <<ml->GetColor()<<","
-            <<ml->GetFont()<<","
-            <<quote<<ml->GetText()<<quote<<");"<<std::endl;
+            out << prefix << "ChangeLabel(" << ml->GetLabNum();
+         out << ", " << ml->GetAngle() << ", " << ml->GetSize() << ", " << ml->GetAlign() << ", "
+             << TColor::SavePrimitiveColor(ml->GetColor()) << ", " << ml->GetFont() << ", \""
+             << TString(ml->GetText()).ReplaceSpecialCppChars() << "\");\n";
       }
    }
-   TAttAxis::SaveAttributes(out,name,subname);
+   TAttAxis::SaveAttributes(out, name, subname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
