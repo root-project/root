@@ -3101,6 +3101,10 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
       loadedcl = LoadClassDefault(normalizedName.c_str(),silent);
    } else {
       if (gInterpreter->AutoLoad(normalizedName.c_str(),kTRUE)) {
+          // Check if we just loaded the necessary dictionary.
+          loadedcl = LoadClassDefault(normalizedName.c_str(), silent);
+          if (loadedcl)
+             return loadedcl;
          // At this point more information has been loaded.  This
          // information might be pertinent to the normalization of the name.
          // For example it might contain or be a typedef for which we don't
