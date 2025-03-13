@@ -104,7 +104,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
 
       // We generate the default memory representation for the given column type in order
       // to report the size _in memory_ of column elements
-      auto elementSize = Internal::RColumnElementBase::Generate(column.second.GetType())->GetSize();
+      auto elementSize = ROOT::Internal::RColumnElementBase::Generate(column.second.GetType())->GetSize();
 
       ColumnInfo info;
       info.fPhysicalColumnId = column.second.GetPhysicalId();
@@ -188,7 +188,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       std::string nameAndType = std::string("  ") + col.fFieldName + " [#" + std::to_string(col.fColumnIndex);
       if (col.fRepresentationIndex > 0)
          nameAndType += " / R." + std::to_string(col.fRepresentationIndex);
-      nameAndType += "]  --  " + std::string{Internal::RColumnElementBase::GetColumnTypeName(col.fType)};
+      nameAndType += "]  --  " + std::string{ROOT::Internal::RColumnElementBase::GetColumnTypeName(col.fType)};
       std::string id = std::string("{id:") + std::to_string(col.fLogicalColumnId) + "}";
       if (col.fLogicalColumnId != col.fPhysicalColumnId)
          id += " --alias--> " + std::to_string(col.fPhysicalColumnId);

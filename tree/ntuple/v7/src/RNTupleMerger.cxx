@@ -41,6 +41,8 @@
 
 using ROOT::ENTupleColumnType;
 using ROOT::Internal::MakeUninitArray;
+using ROOT::Internal::RColumnElementBase;
+
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Internal;
 
@@ -699,10 +701,11 @@ void RNTupleMerger::MergeCommonColumns(RClusterPool &clusterPool, const RCluster
 
       const auto &columnDesc = mergeData.fSrcDescriptor->GetColumnDescriptor(columnId);
       const auto srcColElement = column.fInMemoryType
-                                    ? GenerateColumnElement(*column.fInMemoryType, columnDesc.GetType())
+                                    ? ROOT::Internal::GenerateColumnElement(*column.fInMemoryType, columnDesc.GetType())
                                     : RColumnElementBase::Generate(columnDesc.GetType());
-      const auto dstColElement = column.fInMemoryType ? GenerateColumnElement(*column.fInMemoryType, column.fColumnType)
-                                                      : RColumnElementBase::Generate(column.fColumnType);
+      const auto dstColElement = column.fInMemoryType
+                                    ? ROOT::Internal::GenerateColumnElement(*column.fInMemoryType, column.fColumnType)
+                                    : RColumnElementBase::Generate(column.fColumnType);
 
       // Now get the pages for this column in this cluster
       const auto &pages = clusterDesc.GetPageRange(columnId);

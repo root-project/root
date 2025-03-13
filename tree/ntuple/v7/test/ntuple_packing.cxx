@@ -440,7 +440,7 @@ TEST(Packing, OnDiskEncoding)
 
 TEST(Packing, Real32TruncFloat)
 {
-   namespace BitPacking = ROOT::Experimental::Internal::BitPacking;
+   namespace BitPacking = ROOT::Internal::BitPacking;
    {
       constexpr auto kBitsOnStorage = 10;
       RColumnElement<float, ENTupleColumnType::kReal32Trunc> element;
@@ -599,7 +599,7 @@ TEST(Packing, Real32TruncFloat)
 
 TEST(Packing, Real32TruncDouble)
 {
-   namespace BitPacking = ROOT::Experimental::Internal::BitPacking;
+   namespace BitPacking = ROOT::Internal::BitPacking;
    {
       constexpr auto kBitsOnStorage = 10;
       RColumnElement<double, ENTupleColumnType::kReal32Trunc> element;
@@ -831,7 +831,7 @@ TEST(Packing, RealQuantize)
 
 TEST(Packing, Real32QuantFloat)
 {
-   namespace BitPacking = ROOT::Experimental::Internal::BitPacking;
+   namespace BitPacking = ROOT::Internal::BitPacking;
    {
       constexpr auto kBitsOnStorage = 10;
       RColumnElement<float, ENTupleColumnType::kReal32Quant> element;
@@ -956,7 +956,7 @@ TEST(Packing, Real32QuantFloat)
 
 TEST(Packing, Real32QuantDouble)
 {
-   namespace BitPacking = ROOT::Experimental::Internal::BitPacking;
+   namespace BitPacking = ROOT::Internal::BitPacking;
    {
       constexpr auto kBitsOnStorage = 10;
       RColumnElement<double, ENTupleColumnType::kReal32Quant> element;

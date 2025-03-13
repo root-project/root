@@ -35,11 +35,11 @@
 #include <typeinfo>
 #include <utility>
 
-namespace ROOT::Experimental::Internal {
+namespace ROOT::Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Internal::RColumnElementBase
+\class ROOT::Internal::RColumnElementBase
 \ingroup NTuple
 \brief A column element encapsulates the translation between basic C++ types and their column representation.
 
@@ -150,6 +150,6 @@ std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(ROOT::ENTupleCo
 template <>
 std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate<void>(ROOT::ENTupleColumnType onDiskType);
 
-} // namespace ROOT::Experimental::Internal
+} // namespace ROOT::Internal
 
 #endif

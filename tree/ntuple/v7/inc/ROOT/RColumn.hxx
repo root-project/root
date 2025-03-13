@@ -65,7 +65,7 @@ private:
    /// Global index of the first element in this column; usually == 0, unless it is a deferred column
    ROOT::NTupleSize_t fFirstElementIndex = 0;
    /// Used to pack and unpack pages on writing/reading
-   std::unique_ptr<RColumnElementBase> fElement;
+   std::unique_ptr<ROOT::Internal::RColumnElementBase> fElement;
    /// The column team is a set of columns that serve the same column index for different representation IDs.
    /// Initially, the team has only one member, the very column it belongs to. Through MergeTeams(), two columns
    /// can join forces. The team is used to react on suppressed columns: if the current team member has a suppressed
@@ -109,7 +109,7 @@ public:
    Create(ROOT::ENTupleColumnType type, std::uint32_t columnIdx, std::uint16_t representationIdx)
    {
       auto column = std::unique_ptr<RColumn>(new RColumn(type, columnIdx, representationIdx));
-      column->fElement = RColumnElementBase::Generate<CppT>(type);
+      column->fElement = ROOT::Internal::RColumnElementBase::Generate<CppT>(type);
       return column;
    }
 
@@ -337,7 +337,7 @@ public:
    void MergeTeams(RColumn &other);
 
    ROOT::NTupleSize_t GetNElements() const { return fNElements; }
-   RColumnElementBase *GetElement() const { return fElement.get(); }
+   ROOT::Internal::RColumnElementBase *GetElement() const { return fElement.get(); }
    ROOT::ENTupleColumnType GetType() const { return fType; }
    std::uint16_t GetBitsOnStorage() const
    {

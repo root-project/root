@@ -321,7 +321,7 @@ TEST_F(RPageStorageDaos, CagedPages)
       pageSource->LoadSealedPage(colId, RNTupleLocalIndex{clusterId, 0}, sealedPage);
 
       auto colType = desc.GetColumnDescriptor(colId).GetType();
-      auto elem = ROOT::Experimental::Internal::RColumnElementBase::Generate<std::uint32_t>(colType);
+      auto elem = ROOT::Internal::RColumnElementBase::Generate<std::uint32_t>(colType);
       auto page = pageSource->UnsealPage(sealedPage, *elem).Unwrap();
       EXPECT_GT(page.GetNElements(), 0);
       auto ptrData = static_cast<std::uint32_t *>(page.GetBuffer());
