@@ -10,6 +10,7 @@
 
 #include <string>
 #include <string_view>
+#include <typeinfo>
 #include <tuple>
 #include <vector>
 
@@ -25,6 +26,10 @@ std::string GetCanonicalTypePrefix(const std::string &typeName);
 
 /// Given a type name normalized by ROOT meta, renormalize it for RNTuple. E.g., insert std::prefix.
 std::string GetRenormalizedTypeName(const std::string &metaNormalizedName);
+
+/// Given a type info ask ROOT meta to demangle it, then renormalize the resulting type name for RNTuple. Useful to
+/// ensure that e.g. fundamental types are normalized to the type used by RNTuple (e.g. int -> std::int32_t).
+std::string GetRenormalizedDemangledTypeName(const std::type_info &ti);
 
 /// Applies all RNTuple type normalization rules except typedef resolution.
 std::string GetNormalizedUnresolvedTypeName(const std::string &origName);
