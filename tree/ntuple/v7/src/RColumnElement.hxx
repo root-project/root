@@ -821,7 +821,7 @@ public:
       std::uint16_t *uint16Array = reinterpret_cast<std::uint16_t *>(dst);
 
       for (std::size_t i = 0; i < count; ++i) {
-         uint16Array[i] = ROOT::Experimental::Internal::FloatToHalf(floatArray[i]);
+         uint16Array[i] = ROOT::Internal::FloatToHalf(floatArray[i]);
          ByteSwapIfNecessary(uint16Array[i]);
       }
    }
@@ -834,7 +834,7 @@ public:
       for (std::size_t i = 0; i < count; ++i) {
          std::uint16_t val = uint16Array[i];
          ByteSwapIfNecessary(val);
-         floatArray[i] = ROOT::Experimental::Internal::HalfToFloat(val);
+         floatArray[i] = ROOT::Internal::HalfToFloat(val);
       }
    }
 
@@ -856,7 +856,7 @@ public:
       std::uint16_t *uint16Array = reinterpret_cast<std::uint16_t *>(dst);
 
       for (std::size_t i = 0; i < count; ++i) {
-         uint16Array[i] = ROOT::Experimental::Internal::FloatToHalf(static_cast<float>(doubleArray[i]));
+         uint16Array[i] = ROOT::Internal::FloatToHalf(static_cast<float>(doubleArray[i]));
          ByteSwapIfNecessary(uint16Array[i]);
       }
    }
@@ -869,7 +869,7 @@ public:
       for (std::size_t i = 0; i < count; ++i) {
          std::uint16_t val = uint16Array[i];
          ByteSwapIfNecessary(val);
-         doubleArray[i] = static_cast<double>(ROOT::Experimental::Internal::HalfToFloat(val));
+         doubleArray[i] = static_cast<double>(ROOT::Internal::HalfToFloat(val));
       }
    }
 

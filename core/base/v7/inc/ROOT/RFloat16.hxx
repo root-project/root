@@ -59,7 +59,6 @@
 #endif
 
 namespace ROOT {
-namespace Experimental {
 namespace Internal {
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Get the half-precision overflow.
@@ -148,7 +147,6 @@ inline float HalfToFloat(std::uint16_t value)
 #endif
 }
 } // namespace Internal
-} // namespace Experimental
 } // namespace ROOT
 
 #endif // ROOT_RFloat16
