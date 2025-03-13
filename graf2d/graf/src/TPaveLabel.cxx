@@ -200,21 +200,16 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
 
 void TPaveLabel::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   TString args;
-   if (fOption.Contains("NDC"))
-      args.Form("%g, %g, %g, %g, \"%s\", \"%s\"", fX1NDC, fY1NDC, fX2NDC, fY2NDC,
-                TString(fLabel).ReplaceSpecialCppChars().Data(), TString(fOption).ReplaceSpecialCppChars().Data());
-   else if (gPad)
-      args.Form("%g, %g, %g, %g, \"%s\", \"%s\"", gPad->PadtoX(fX1), gPad->PadtoY(fY1), gPad->PadtoX(fX2),
-                gPad->PadtoY(fY2), TString(fLabel).ReplaceSpecialCppChars().Data(),
-                TString(fOption).ReplaceSpecialCppChars().Data());
+   TString lbl_arg = TString::Format("\"%s\"", TString(fLabel).ReplaceSpecialCppChars().Data());
+   SavePrimitiveConstructor(out, Class(), "pavelabel", GetSavePaveArgs(lbl_arg));
+   if (strcmp(GetName(), "TPave"))
+      out << "   pavelabel->SetName(\"" << GetName() << "\");\n";
+   if (fBorderSize != 3)
+      out << "   pavelabel->SetBorderSize(" << fBorderSize << ");\n";
 
-   SavePrimitiveConstructor(out, Class(), "pavelabel", args);
    SaveFillAttributes(out, "pavelabel", 19, 1001);
    SaveLineAttributes(out, "pavelabel", 1, 1, 1);
    SaveTextAttributes(out, "pavelabel", 22, 0, 1, 62, 0);
-   if (fBorderSize != 3)
-      out << "   pavelabel->SetBorderSize(" << fBorderSize << ");" << std::endl;
 
-   out << "   pavelabel->Draw();" << std::endl;
+   out << "   pavelabel->Draw();\n";
 }

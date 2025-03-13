@@ -119,22 +119,20 @@ void TPavesText::Paint(Option_t *option)
 
 void TPavesText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   if (!strcmp(GetName(),"stats")) return;
-   if (!strcmp(GetName(),"title")) return;
+   if (!strcmp(GetName(), "stats") || !strcmp(GetName(), "title"))
+      return;
 
-   SavePrimitiveConstructor(out, Class(), "pst",
-                            TString::Format("%g, %g, %g, %g, %d, \"%s\"", fX1, fY1, fX2, fY2, fNpaves,
-                                            TString(fOption).ReplaceSpecialCppChars().Data()));
+   SavePrimitiveConstructor(out, Class(), "pst", GetSavePaveArgs(TString::Format("%d", fNpaves)));
 
    if (strcmp(GetName(), "TPave"))
-      out << "   pst->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   pst->SetName(\"" << GetName() << "\");\n";
    if (fLabel.Length() > 0)
-      out << "   pst->SetLabel(\"" << TString(fLabel).ReplaceSpecialCppChars() << "\");" << std::endl;
+      out << "   pst->SetLabel(\"" << TString(fLabel).ReplaceSpecialCppChars() << "\");\n";
    if (fBorderSize != 4)
-      out << "   pst->SetBorderSize(" << fBorderSize << ");" << std::endl;
+      out << "   pst->SetBorderSize(" << fBorderSize << ");\n";
    SaveFillAttributes(out, "pst", 0, 1001);
    SaveLineAttributes(out, "pst", 1, 1, 1);
    SaveTextAttributes(out, "pst", 22, 0, 1, 62, 0);
    SaveLines(out, "pst", kTRUE);
-   out << "   pst->Draw();" << std::endl;
+   out << "   pst->Draw();\n";
 }

@@ -612,26 +612,41 @@ void TPave::Print(Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns arguments which should be used when saving primitive constructor
+/// Check if coordinates are initialized, add extra arguments and options
+
+TString TPave::GetSavePaveArgs(const char *extra_arg, Bool_t save_option)
+{
+   TString args;
+   if (fOption.Contains("NDC") && fInit)
+      args.Form("%g, %g, %g, %g", fX1NDC, fY1NDC, fX2NDC, fY2NDC);
+   else
+      args.Form("%g, %g, %g, %g", fX1, fY1, fX2, fY2);
+   if (extra_arg && *extra_arg) {
+      args.Append(", ");
+      args.Append(extra_arg);
+   }
+   if (save_option) {
+      args.Append(", \"");
+      args.Append(TString(fOption).ReplaceSpecialCppChars());
+      args.Append("\"");
+   }
+   return args;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
 void TPave::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   TString args;
-   if (fOption.Contains("NDC"))
-      args.Form("%g, %g, %g, %g, %d, \"%s\"", fX1NDC, fY1NDC, fX2NDC, fY2NDC, fBorderSize,
-                TString(fOption).ReplaceSpecialCppChars().Data());
-   else
-      args.Form("%g, %g, %g, %g, %d, \"%s\"", fX1, fY1, fX2, fY2, fBorderSize,
-                TString(fOption).ReplaceSpecialCppChars().Data());
-
-   SavePrimitiveConstructor(out, Class(), "pave", args);
+   SavePrimitiveConstructor(out, Class(), "pave", GetSavePaveArgs(TString::Format("%d", fBorderSize)));
    SaveFillAttributes(out, "pave", 19, 1001);
    SaveLineAttributes(out, "pave", 1, 1, 1);
    if (strcmp(GetName(), "TPave"))
-      out << "   pave->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   pave->SetName(\"" << GetName() << "\");\n";
    if (fCornerRadius)
-      out << "   pave->SetCornerRadius(" << fCornerRadius << ");" << std::endl;
-   out << "   pave->Draw();" << std::endl;
+      out << "   pave->SetCornerRadius(" << fCornerRadius << ");\n";
+   out << "   pave->Draw();\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
