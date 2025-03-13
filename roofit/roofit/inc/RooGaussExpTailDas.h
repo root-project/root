@@ -1,24 +1,24 @@
-#ifndef RooFit_RooFit_RooGaussExpTailDas_h
-#define RooFit_RooFit_RooGaussExpTailDas_h
+#ifndef RooFit_RooFit_RooGaussExpTails_h
+#define RooFit_RooFit_RooGaussExpTails_h
 
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
 
 class RooAbsReal;
 
-class RooGaussExpTailDas : public RooAbsPdf {
+class RooGaussExpTails : public RooAbsPdf {
 public:
-  RooGaussExpTailDas() { };
-  RooGaussExpTailDas(const char *name, const char *title,
+  RooGaussExpTails() { };
+  RooGaussExpTails(const char *name, const char *title,
                          RooAbsReal::Ref _x,
                          RooAbsReal::Ref _x0,
                          RooAbsReal::Ref _sigma,
                          RooAbsReal::Ref _kL,
                          RooAbsReal::Ref _kH
                          );
-  RooGaussExpTailDas(const RooGaussExpTailDas& other, const char* name=nullptr);
+  RooGaussExpTails(const RooGaussExpTails& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override {
-    return new RooGaussExpTailDas(*this,newname);
+    return new RooGaussExpTails(*this,newname);
   }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override;
@@ -42,7 +42,7 @@ private:
 
 private:
 
-  ClassDefOverride(RooGaussExpTailDas,1) // Gaussian with double-sided exponential tails PDF by DAS https://arxiv.org/abs/1603.08591v1
+  ClassDefOverride(RooGaussExpTails,1) // Gaussian with double-sided exponential tails PDF, see https://arxiv.org/abs/1603.08591v1
 };
 
 #endif

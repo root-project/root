@@ -1,24 +1,24 @@
-/** \class RooGaussExpTailDas
+/** \class RooGaussExpTails
     \ingroup Roofit
 
-PDF implementing the Das Gaussian core + double-sided exponential tail distribution
+PDF implementing a Gaussian core + double-sided exponential tail distribution
 \author Souvik Das (8/1/2013) Initial implementation and
 Giovanni Marchiori (30/3/2016) Implemented analytic integral
-\see http://arxiv.org/pdf/1603.08591v1.pdf
+\see http://arxiv.org/pdf/1603.08591v1.pdf, https://github.com/mpuccio/RooCustomPdfs/blob/master/RooGausDExp.cxx, https://doi.org/10.1142/S0217751X14300440
 \note To use the one-sided version, just set the opposite parameter k to a very large value
 */
 
 
-#include "RooGaussExpTailDas.h"
+#include "RooGaussExpTails.h"
 #include "RooAbsReal.h"
 #include <cmath>
 #include "Math/ProbFuncMathCore.h"
 
-ClassImp(RooGaussExpTailDas)
+ClassImp(RooGaussExpTails)
 
 
 //_____________________________________________________________________________
-RooGaussExpTailDas::RooGaussExpTailDas(const char *name, const char *title,
+RooGaussExpTails::RooGaussExpTails(const char *name, const char *title,
                             RooAbsReal::Ref _x,
                             RooAbsReal::Ref _x0,
                             RooAbsReal::Ref _sigma,
@@ -35,7 +35,7 @@ RooGaussExpTailDas::RooGaussExpTailDas(const char *name, const char *title,
 
 
 //_____________________________________________________________________________
-RooGaussExpTailDas::RooGaussExpTailDas(const RooGaussExpTailDas& other, const char* name) :
+RooGaussExpTails::RooGaussExpTails(const RooGaussExpTails& other, const char* name) :
      RooAbsPdf(other,name),
      x_("x",this,other.x_),
      x0_("x0",this,other.x0_),
@@ -66,7 +66,7 @@ inline double tailIntegral(double tmin, double tmax, double k)
 
 
 //_____________________________________________________________________________
-Double_t RooGaussExpTailDas::evaluate() const
+Double_t RooGaussExpTails::evaluate() const
 {
    Double_t t=(x_-x0_)/sigma_;
 
@@ -80,7 +80,7 @@ Double_t RooGaussExpTailDas::evaluate() const
 
 
 //_____________________________________________________________________________
-Int_t RooGaussExpTailDas::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
+Int_t RooGaussExpTails::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
    if( matchArgs(allVars,analVars,x_) )
       return 1;
@@ -90,7 +90,7 @@ Int_t RooGaussExpTailDas::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& a
 
 
 //_____________________________________________________________________________
-Double_t RooGaussExpTailDas::analyticalIntegral(Int_t code, const char* rangeName) const
+Double_t RooGaussExpTails::analyticalIntegral(Int_t code, const char* rangeName) const
 {
    R__ASSERT(code == 1);
    double result = 0;
