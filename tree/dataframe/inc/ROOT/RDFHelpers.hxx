@@ -244,7 +244,7 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
             // Get the current variation name
             std::string variationName = variations[i];
             // Replace the colon with an underscore
-            std::replace(variationName.begin(), variationName.end(), ':', '_'); 
+            std::replace(variationName.begin(), variationName.end(), ':', '_');
             // Get a pointer to the corresponding varied result
             auto &variedResult = variedResults.back();
             // Set the varied result's name to NOMINALNAME_VARIATIONAME
