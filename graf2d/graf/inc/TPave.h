@@ -30,6 +30,8 @@ protected:
    TString      fOption;        ///< Pave style
    TString      fName;          ///< Pave name
 
+   TString GetSavePaveArgs(const char *extra_arg = nullptr, Bool_t save_option = kTRUE);
+
 public:
    // TPave status bits
    enum {
@@ -38,7 +40,7 @@ public:
 
    TPave();
    TPave(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
-         Int_t bordersize=4 ,Option_t *option="br");
+         Int_t bordersize=4, Option_t *option="br");
    TPave(const TPave &pave);
    ~TPave() override;
 
