@@ -24,6 +24,7 @@ extern ParserFuncSignature ParseExp;
 extern ParserFuncSignature ParseLog;
 extern ParserFuncSignature ParseSin;
 extern ParserFuncSignature ParseCos;
+extern ParserFuncSignature ParseAbs;
 // Binary operators
 extern ParserFuncSignature ParseAdd;
 extern ParserFuncSignature ParseSub;
@@ -160,6 +161,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Log", ParseLog);
    RegisterOperator("Sin", ParseSin);
    RegisterOperator("Cos", ParseCos);
+   RegisterOperator("Abs", ParseAbs);
    // Binary operators
    RegisterOperator("Add", ParseAdd);
    RegisterOperator("Sub", ParseSub);
@@ -252,6 +254,8 @@ std::vector<std::string> RModelParser_ONNX::GetRegisteredOperators()
    for (auto &it : fOperatorsMapImpl->fOperatorsMap) {
       ops.emplace_back(it.first);
    }
+   // return sorted list in alphabetical order
+   std::sort(ops.begin(), ops.end());
    return ops;
 }
 
@@ -273,7 +277,7 @@ ETensorType RModelParser_ONNX::GetTensorType(const std::string &name)
 // Parse an operator
 std::unique_ptr<ROperator>
 RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphproto, const std::vector<size_t> &nodes)
-{  
+{
    if (i >= nodes.size())
       throw std::runtime_error("TMVA::SOFIE - Error in parsing ordered operators " + std::to_string(i) + " is >=  " + std::to_string(nodes.size()));
    int idx = nodes[i];
@@ -306,8 +310,8 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
             // Fuse Gemm with activation operators
             if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Relu") {
                   return ParseFuseGemmRelu(*this, graphproto.node(idx), graphproto.node(idx2));
-            } 
-            
+            }
+
             // else if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Softmax") {
             //       return ParseFuseGemmSoftmax(*this, graphproto.node(idx), graphproto.node(idx2));
             // }
@@ -352,6 +356,8 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
    fTensorTypeMap.clear();
 
    auto model = LoadModel(filename);
+   if (!model)
+      throw std::runtime_error("TMVA::SOFIE - Failed to load onnx file " + filename);
 
    const onnx::GraphProto &graph = model->graph(); // not a memory leak. model freed automatically at the end.
 
@@ -383,7 +389,8 @@ std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(std::string filen
 
    std::fstream input(filename, std::ios::in | std::ios::binary);
    if (!model->ParseFromIstream(&input)) {
-      throw std::runtime_error("TMVA::SOFIE - Failed to parse onnx file " + filename);
+      std::cerr << "TMVA::SOFIE - Failed to open onnx file " <<  filename << std::endl;
+      return std::unique_ptr<onnx::ModelProto>();
    }
 
    // ONNX version is ir_version()  - model_version() returns 0
@@ -430,6 +437,8 @@ bool RModelParser_ONNX::CheckModel(std::string filename, bool verbose) {
 
    fVerbose = verbose;
    auto model = LoadModel(filename);
+   if (!model) return false;
+
    const onnx::GraphProto &graph = model->graph();
     // Initial operator order
    if (fVerbose)
@@ -694,7 +703,7 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
    if (verbose) {
       std::cout << "Fill RModel with operators...\n";
    }
-  
+
    // we have to record order of node execution separately to
    // account for fused operators
    size_t node_order_exec = 0;
