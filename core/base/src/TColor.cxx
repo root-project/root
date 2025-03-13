@@ -214,7 +214,7 @@ Begin_Macro
 ../../../tutorials/visualisation/graphics/accessiblecolorschemes.C
 End_Macro
 
-The example thstackcolorscheme.C illustrates how to use these color schemes in THStack drawings.
+The example hist026_THStack_color_scheme.C illustrates how to use these color schemes in THStack drawings.
 It also demonstrates that they are effective in grayscale.
 
 \anchor C04
