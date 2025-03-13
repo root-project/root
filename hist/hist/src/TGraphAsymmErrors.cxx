@@ -363,7 +363,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, O
          }
       }
       if (ntokens >= 2 && (ntokensToBeSaved < 2 || ntokensToBeSaved > 6)) { //first condition not to repeat the previous error message
-         Error("TGraphAsymmErrors", "Incorrect input format! There are %d \"%%lg\" tag(s) in format whereas 2,3 or 4 are expected!", ntokensToBeSaved);
+         Error("TGraphAsymmErrors", "Incorrect input format! There are %d \"%%lg\" tag(s) in format whereas 2, 3, 4, 5 or 6 are expected!", ntokensToBeSaved);
          delete [] isTokenToBeSaved;
          return ;
       }
@@ -401,7 +401,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, O
                token = R__STRTOK_R(nullptr, option, &rest); // next token
                token_idx++ ;
             }
-            if (!isLineToBeSkipped && value_idx > 1) { //i.e. 2,3 or 4
+            if (!isLineToBeSkipped && value_idx > 1) { //i.e. 2, 3, 4, 5 or 6
                x = value[0];
                y = value[1];
                exl = value[2];
