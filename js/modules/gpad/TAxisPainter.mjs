@@ -126,7 +126,7 @@ const AxisPainterMethods = {
             const ms = dt.getMilliseconds();
             res = new Date(dt.toLocaleString('en-US', { timeZone: settings.TimeZone }));
             res.setMilliseconds(ms);
-         } catch (err) {
+         } catch {
             res = dt;
          }
       }
@@ -152,7 +152,8 @@ const AxisPainterMethods = {
       if (val <= 0) return null;
       let vlog = Math.log10(val);
       const base = this.logbase;
-      if (base !== 10) vlog = vlog / Math.log10(base);
+      if (base !== 10)
+         vlog /= Math.log10(base);
       if (this.moreloglabels || (Math.abs(vlog - Math.round(vlog)) < 0.001)) {
          if (!this.noexp && (asticks !== 2))
             return this.formatExp(base, Math.floor(vlog + 0.01), val);
@@ -167,7 +168,7 @@ const AxisPainterMethods = {
    formatNormal(d, asticks, fmt) {
       let val = parseFloat(d);
       if (asticks && this.order)
-         val = val / Math.pow(10, this.order);
+         val /= Math.pow(10, this.order);
 
       if (gStyle.fStripDecimals && (val === Math.round(val)))
          return Math.abs(val) < 1e9 ? val.toFixed(0) : val.toExponential(4);
@@ -328,34 +329,37 @@ const AxisPainterMethods = {
                factor = 10;
             else if (factor < 0.01)
                factor = 0.01;
-            item.min = item.min / Math.pow(10, factor * delta_left * dmin);
-            item.max = item.max * Math.pow(10, factor * delta_right * (1 - dmin));
+            item.min /= Math.pow(10, factor * delta_left * dmin);
+            item.max *= Math.pow(10, factor * delta_right * (1 - dmin));
             // special handling for Z scale - limit zooming of color scale
             if (this.minposbin && this.name === 'zaxis')
                item.min = Math.max(item.min, 0.3*this.minposbin);
          } else if ((delta_left === -delta_right) && !item.reverse) {
             // shift left/right, try to keep range constant
-            let delta = (item.max - item.min) * delta_right * dmin;
+            let delta_shift = (item.max - item.min) * delta_right * dmin;
 
-            if ((Math.round(item.max) === item.max) && (Math.round(item.min) === item.min) && (Math.abs(delta) > 1)) delta = Math.round(delta);
+            if ((Math.round(item.max) === item.max) && (Math.round(item.min) === item.min) && (Math.abs(delta_shift) > 1))
+               delta_shift = Math.round(delta_shift);
 
-            if (item.min + delta < gmin)
-               delta = gmin - item.min;
-            else if (item.max + delta > gmax)
-               delta = gmax - item.max;
+            if (item.min + delta_shift < gmin)
+               delta_shift = gmin - item.min;
+            else if (item.max + delta_shift > gmax)
+               delta_shift = gmax - item.max;
 
-            if (delta !== 0) {
-               item.min += delta;
-               item.max += delta;
+            if (delta_shift !== 0) {
+               item.min += delta_shift;
+               item.max += delta_shift;
              } else {
                delete item.min;
                delete item.max;
             }
          } else {
             let rx_left = (item.max - item.min), rx_right = rx_left;
-            if (delta_left > 0) rx_left = 1.001 * rx_left / (1-delta_left);
+            if (delta_left > 0)
+               rx_left = 1.001 * rx_left / (1-delta_left);
             item.min += -delta_left*dmin*rx_left;
-            if (delta_right > 0) rx_right = 1.001 * rx_right / (1-delta_right);
+            if (delta_right > 0)
+               rx_right = 1.001 * rx_right / (1-delta_right);
             item.max -= -delta_right*(1-dmin)*rx_right;
          }
          if (item.min >= item.max)
@@ -366,8 +370,8 @@ const AxisPainterMethods = {
                 ((item.max > gmax) && (lmax === gmax)))
                    item.min = item.max = undefined;
          } else {
-            if (item.min < gmin) item.min = gmin;
-            if (item.max > gmax) item.max = gmax;
+            item.min = Math.max(item.min, gmin);
+            item.max = Math.min(item.max, gmax);
          }
       } else
          item.min = item.max = undefined;
@@ -1143,7 +1147,8 @@ class TAxisPainter extends ObjectPainter {
                   arg.rotate = -mod.fTextAngle;
 
                // only for major text drawing scale factor need to be checked
-               if (lcnt === 0)
+               // for modified labels ignore scaling
+               if ((lcnt === 0) && !mod?.fLabText)
                   arg.post_process = process_drawtext_ready;
 
                this.drawText(arg);
@@ -1214,7 +1219,7 @@ class TAxisPainter extends ObjectPainter {
             tickScalingSize = scalingSize || (this.vertical ? h/pad_h*pad_w : w/pad_w*pad_h),
             bit_plus = axis.TestBit(EAxisBits.kTickPlus), bit_minus = axis.TestBit(EAxisBits.kTickMinus);
 
-      let tickSize = 0, titleColor, titleFontId, offset;
+      let tickSize, titleColor, titleFontId, offset;
 
       this.scalingSize = scalingSize || Math.max(Math.min(pad_w, pad_h), 10);
 

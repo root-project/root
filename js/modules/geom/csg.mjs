@@ -475,7 +475,7 @@ class Geometry {
       } else if (geometry instanceof Node) {
          this.tree = geometry;
          this.matrix = null; // new Matrix4;
-         return this;
+         return;
       } else if (geometry instanceof THREE.BufferGeometry) {
          const pos_buf = geometry.getAttribute('position').array,
                norm_buf = geometry.getAttribute('normal').array,
@@ -502,8 +502,9 @@ class Geometry {
          }
 
          this.tree = new Node(polygons, nodeid);
-         if (nodeid !== undefined) this.maxid = this.tree.maxnodeid;
-         return this;
+         if (nodeid !== undefined)
+            this.maxid = this.tree.maxnodeid;
+         return;
       } else if (geometry.polygons && (geometry.polygons[0] instanceof Polygon)) {
          const polygons = geometry.polygons;
 
@@ -522,11 +523,11 @@ class Geometry {
          }
 
          this.tree = new Node(polygons, nodeid);
-         if (nodeid !== undefined) this.maxid = this.tree.maxnodeid;
-         return this;
+         if (nodeid !== undefined)
+            this.maxid = this.tree.maxnodeid;
+         return;
       } else
          throw Error('ThreeBSP: Given geometry is unsupported');
-
 
       const polygons = [], nfaces = geometry.faces.length;
       let face, polygon, vertex, normal, useVertexNormals;

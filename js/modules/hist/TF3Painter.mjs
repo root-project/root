@@ -3,7 +3,7 @@ import { TH2Painter } from '../hist/TH2Painter.mjs';
 import { proivdeEvalPar } from '../base/func.mjs';
 import { produceTAxisLogScale, scanTF1Options } from '../hist/TF1Painter.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
-import { ObjectPainter, getElementMainPainter } from '../base/ObjectPainter.mjs';
+import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
 
 

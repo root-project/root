@@ -182,10 +182,8 @@ class LongPollSocket {
          if (isFunc(this.onclose))
             this.onclose();
          return;
-      } else {
-         if (isFunc(this.onmessage) && res)
-            this.onmessage({ data: res, offset: _offset });
-      }
+      } else if (isFunc(this.onmessage) && res)
+         this.onmessage({ data: res, offset: _offset });
 
       // minimal timeout to reduce load, generate dummy only if client not submit new request immediately
       if (!this.req)
@@ -957,7 +955,7 @@ async function connectWebWindow(arg) {
    const main = new Promise(resolveFunc => {
       const handle = new WebWindowHandle(arg.socket_kind, arg.credits);
       handle.setUserArgs(arg.user_args);
-      handle._can_modify_url = !!d_key; // if key appears in URL, we can put there new key
+      handle._can_modify_url = Boolean(d_key); // if key appears in URL, we can put there new key
       if (arg.href)
          handle.setHRef(arg.href); // apply href now  while connect can be called from other place
       else {
@@ -967,27 +965,31 @@ async function connectWebWindow(arg) {
 
       if (typeof window !== 'undefined') {
          window.onbeforeunload = () => handle.close(true);
-         if (browser.qt5 || browser.qt6) window.onqt5unload = window.onbeforeunload;
+         if (browser.qt5 || browser.qt6)
+            window.onqt5unload = window.onbeforeunload;
       }
 
       if (arg.receiver) {
          // when receiver exists, it handles itself callbacks
          handle.setReceiver(arg.receiver);
          handle.connect();
-         return resolveFunc(handle);
+         resolveFunc(handle);
+         return;
       }
 
-      if (!arg.first_recv)
-         return resolveFunc(handle);
+      if (!arg.first_recv) {
+         resolveFunc(handle);
+         return;
+      }
 
       handle.setReceiver({
          onWebsocketOpened() {}, // dummy function when websocket connected
 
-         onWebsocketMsg(handle, msg) {
+         onWebsocketMsg(h, msg) {
             if (msg.indexOf(arg.first_recv) !== 0)
-               return handle.close();
-            handle.first_msg = msg.slice(arg.first_recv.length);
-            resolveFunc(handle);
+               return h.close();
+            h.first_msg = msg.slice(arg.first_recv.length);
+            resolveFunc(h);
          },
 
          onWebsocketClosed() { closeCurrentWindow(); } // when connection closed, close panel as well

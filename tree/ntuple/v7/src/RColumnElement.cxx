@@ -25,6 +25,9 @@
 #include <memory>
 #include <utility>
 
+using ROOT::Internal::RColumnIndex;
+using ROOT::Internal::RColumnSwitch;
+
 std::pair<std::uint16_t, std::uint16_t>
 ROOT::Experimental::Internal::RColumnElementBase::GetValidBitRange(ENTupleColumnType type)
 {

@@ -88,14 +88,14 @@ async function drawText() {
       if (!this.moveEnd) {
          this.moveEnd = function(not_changed) {
             if (not_changed) return;
-            const text = this.getObject();
+            const txt = this.getObject();
             let fx = this.svgToAxis('x', this.pos_x + this.pos_dx, this.isndc),
                 fy = this.svgToAxis('y', this.pos_y + this.pos_dy, this.isndc);
             if (this.swap_xy)
                [fx, fy] = [fy, fx];
 
-            text.fX = fx;
-            text.fY = fy;
+            txt.fX = fx;
+            txt.fY = fy;
             this.submitCanvExec(`SetX(${fx});;SetY(${fy});;`);
          };
       }
@@ -229,10 +229,10 @@ function drawEllipse() {
 
    this.moveEnd = function(not_changed) {
       if (not_changed) return;
-      const ellipse = this.getObject();
-      ellipse.fX1 = this.svgToAxis('x', this.x);
-      ellipse.fY1 = this.svgToAxis('y', this.y);
-      this.submitCanvExec(`SetX1(${ellipse.fX1});;SetY1(${ellipse.fY1});;Notify();;`);
+      const ell = this.getObject();
+      ell.fX1 = this.svgToAxis('x', this.x);
+      ell.fY1 = this.svgToAxis('y', this.y);
+      this.submitCanvExec(`SetX1(${ell.fX1});;SetY1(${ell.fY1});;Notify();;`);
    };
 }
 
@@ -320,13 +320,13 @@ function drawMarker() {
 
    this.moveEnd = function(not_changed) {
       if (not_changed) return;
-      const marker = this.getObject();
-      let fx = this.svgToAxis('x', this.axisToSvg('x', marker.fX, this.isndc) + this.dx, this.isndc),
-          fy = this.svgToAxis('y', this.axisToSvg('y', marker.fY, this.isndc) + this.dy, this.isndc);
+      const mrk = this.getObject();
+      let fx = this.svgToAxis('x', this.axisToSvg('x', mrk.fX, this.isndc) + this.dx, this.isndc),
+          fy = this.svgToAxis('y', this.axisToSvg('y', mrk.fY, this.isndc) + this.dy, this.isndc);
       if (swap_xy)
          [fx, fy] = [fy, fx];
-      marker.fX = fx;
-      marker.fY = fy;
+      mrk.fX = fx;
+      mrk.fY = fy;
       this.submitCanvExec(`SetX(${fx});;SetY(${fy});;Notify();;`);
       this.redraw();
    };
@@ -366,15 +366,15 @@ function drawPolyMarker() {
 
    this.moveEnd = function(not_changed) {
       if (not_changed) return;
-      const poly = this.getObject(),
-            func = this.getAxisToSvgFunc();
+      const poly2 = this.getObject(),
+            func2 = this.getAxisToSvgFunc();
 
       let exec = '';
-      for (let n = 0; n <= poly.fLastPoint; ++n) {
-         const x = this.svgToAxis('x', func.x(poly.fX[n]) + this.dx),
-               y = this.svgToAxis('y', func.y(poly.fY[n]) + this.dy);
-         poly.fX[n] = x;
-         poly.fY[n] = y;
+      for (let n = 0; n <= poly2.fLastPoint; ++n) {
+         const x = this.svgToAxis('x', func2.x(poly2.fX[n]) + this.dx),
+               y = this.svgToAxis('y', func2.y(poly2.fY[n]) + this.dy);
+         poly2.fX[n] = x;
+         poly2.fY[n] = y;
          exec += `SetPoint(${n},${x},${y});;`;
       }
       this.submitCanvExec(exec + 'Notify();;');

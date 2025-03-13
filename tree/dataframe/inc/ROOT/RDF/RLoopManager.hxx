@@ -97,6 +97,8 @@ public:
    }
 };
 
+struct RDSRangeRAII;
+
 } // namespace RDF
 } // namespace Internal
 } // namespace ROOT
@@ -126,6 +128,7 @@ class RLoopManager : public RNodeBase {
    };
 
    friend struct RCallCleanUpTask;
+   friend struct ROOT::Internal::RDF::RDSRangeRAII;
 
    std::vector<RDFInternal::RActionBase *> fBookedActions; ///< Non-owning pointers to actions to be run
    std::vector<RDFInternal::RActionBase *> fRunActions;    ///< Non-owning pointers to actions already run

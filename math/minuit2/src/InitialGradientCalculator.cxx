@@ -71,7 +71,7 @@ FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters &
       gr2(i) = g2;
       gst(i) = gstep;
 
-      print.Debug("Computed initial gradient for parameter", Trafo().Name(exOfIn), "value", var, "[", vmin, ",", vplu,
+      print.Trace("Computed initial gradient for parameter", Trafo().Name(exOfIn), "value", var, "[", vmin, ",", vplu,
                   "]", "dirin", dirin, "grd", grd, "g2", g2);
    }
 

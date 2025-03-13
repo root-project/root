@@ -128,7 +128,7 @@ public:
 
 protected:
    std::size_t fItemSize;
-   Internal::RColumnIndex fNWritten;
+   ROOT::Internal::RColumnIndex fNWritten;
    std::size_t fValueSize;
 
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -208,7 +208,7 @@ private:
    };
 
    std::size_t fItemSize;
-   Internal::RColumnIndex fNWritten;
+   ROOT::Internal::RColumnIndex fNWritten;
    std::unique_ptr<RDeleter> fItemDeleter;
 
 protected:
@@ -267,7 +267,7 @@ public:
 template <>
 class RField<std::vector<bool>> final : public RFieldBase {
 private:
-   Internal::RColumnIndex fNWritten{0};
+   ROOT::Internal::RColumnIndex fNWritten{0};
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final

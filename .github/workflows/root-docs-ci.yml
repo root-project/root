@@ -190,12 +190,25 @@ jobs:
         EOS_ENDPOINT: root://eosproject-r.cern.ch
         KRB5CCNAME: /tmp/krb5cc
       working-directory: ${{ env.DOC_LOCATION }}
+      # Because of https://github.com/xrootd/xrootd/issues/2235 , the xrd client can copy
+      # only at most 65536 in one go. For this reason, we copy files in batches, dividing
+      # them by extension. Once that is fixed in XRootD, a single command can be used 
+      # instead.
       run: |
         echo ${RWEBEOS_KT} | base64 -d > ${KT_FILE_NAME}
         kinit -p ${{ secrets.KRB5USER }}@${{ secrets.KRB5REALM }} -kt ${KT_FILE_NAME}
         cd ${DOC_DIR}/html/
-        xrdcp -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./*.html ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        rm -rf *.html
+        xrdcp --parallel 64 -rf ./*.svg ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        rm -rf *.svg
+        xrdcp --parallel 64 -rf ./*.map ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        rm -rf *.map
+        xrdcp --parallel 64 -rf ./*.md5 ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        rm -rf *.md5
+        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
         cd ..
         rm -r html
-        xrdcp -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        xrdcp --parallel 64 -rf ./ ${EOS_ENDPOINT}/${EOS_BASE_PATH}/doc/${WEB_DIR_NAME}
+        cd ..
         xrdcp -rf ${TAR_NAME}.gz ${EOS_ENDPOINT}/${EOS_BASE_PATH}/download

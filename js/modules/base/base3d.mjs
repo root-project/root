@@ -138,11 +138,11 @@ function createSVGRenderer(as_is, precision, doc) {
            setAttribute(name, value) {
               this._wrapper.svg_attr[name] = value;
            },
-           appendChild(_node) {
+           appendChild(/* node */) {
               this._wrapper.accPath += `<path style="${this._wrapper.path_attr.style}" d="${this._wrapper.path_attr.d}"/>`;
               this._wrapper.path_attr = {};
            },
-           removeChild(_node) {
+           removeChild(/* node */) {
               this.childNodes = [];
            }
         };
@@ -166,14 +166,14 @@ function createSVGRenderer(as_is, precision, doc) {
    rndr.originalRender = rndr.render;
 
    rndr.render = function(scene, camera) {
-      const originalDocument = globalThis.document;
+      const _doc = globalThis.document;
       if (isNodeJs())
          globalThis.document = this.doc_wrapper;
 
       this.originalRender(scene, camera);
 
       if (isNodeJs())
-         globalThis.document = originalDocument;
+         globalThis.document = _doc;
    };
 
    rndr.clearHTML = function() {
@@ -465,10 +465,13 @@ const Handling3DDrawings = {
          const pos0 = prnt.getBoundingClientRect(), doc = getDocument();
 
          while (prnt) {
-            if (prnt === doc) { prnt = null; break; }
+            if (prnt === doc) {
+               prnt = null;
+               break;
+            }
             try {
                if (getComputedStyle(prnt).position !== 'static') break;
-            } catch (err) {
+            } catch {
                break;
             }
             prnt = prnt.parentNode;
@@ -568,13 +571,13 @@ async function createRender3D(width, height, render3d, args) {
       renderer.originalSetSize = renderer.setSize;
 
       // apply size to dom element
-      renderer.setSize = function(width, height, updateStyle) {
+      renderer.setSize = function(w, h, updateStyle) {
          if (this.jsroot_custom_dom) {
-            this.jsroot_dom.setAttribute('width', width);
-            this.jsroot_dom.setAttribute('height', height);
+            this.jsroot_dom.setAttribute('width', w);
+            this.jsroot_dom.setAttribute('height', h);
          }
 
-         this.originalSetSize(width, height, updateStyle);
+         this.originalSetSize(w, h, updateStyle);
       };
 
       renderer.setSize(width, height);
@@ -876,9 +879,11 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       }
    }
 
-   function render3DFired(painter) {
-      if (!painter || painter.renderer === undefined) return false;
-      return painter.render_tmout !== undefined; // when timeout configured, object is prepared for rendering
+   function render3DFired(_painter) {
+      if (_painter?.renderer === undefined)
+         return false;
+      // when timeout configured, object is prepared for rendering
+      return _painter.render_tmout !== undefined;
    }
 
    function control_mousewheel(evnt) {
@@ -1043,18 +1048,19 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
    control.getInfoAtMousePosition = function(mouse_pos) {
       const intersects = this.getMouseIntersects(mouse_pos);
-      let tip = null, painter = null;
+      let tip = null, _painter = null;
 
       for (let i = 0; i < intersects.length; ++i) {
          if (intersects[i].object.tooltip) {
             tip = intersects[i].object.tooltip(intersects[i]);
-            painter = intersects[i].object.painter;
+            _painter = intersects[i].object.painter;
             break;
          }
       }
 
-      if (tip && painter) {
-         return { obj: painter.getObject(), name: painter.getObject().fName,
+      if (tip && _painter) {
+         return { obj: _painter.getObject(),
+                  name: _painter.getObject().fName,
                   bin: tip.bin, cont: tip.value,
                   binx: tip.ix, biny: tip.iy, binz: tip.iz,
                   grx: (tip.x1+tip.x2)/2, gry: (tip.y1+tip.y2)/2, grz: (tip.z1+tip.z2)/2 };
@@ -1371,8 +1377,6 @@ function disposeThreejsObject(obj, only_childs) {
    delete obj.tooltip;
    delete obj.stack; // used in geom painter
    delete obj.drawn_highlight; // special highlight object
-
-   obj = undefined;
 }
 
 
@@ -1388,7 +1392,7 @@ function createLineSegments(arr, material, index = undefined, only_geometry = fa
    if (material.isLineDashedMaterial) {
       const v1 = new THREE.Vector3(),
             v2 = new THREE.Vector3();
-      let d = 0, distances = null;
+      let d = 0, distances;
 
       if (index) {
          distances = new Float32Array(index.length);
@@ -1427,6 +1431,7 @@ const Box3D = {
               7, 6, 2, 6, 3, 2, 5, 7, 0, 7, 2, 0, 1, 3, 4, 3, 6, 4],
     Normals: [1, 0, 0, -1, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 1, 0, 0, -1],
     Segments: [0, 2, 2, 7, 7, 5, 5, 0, 1, 3, 3, 6, 6, 4, 4, 1, 1, 0, 3, 2, 6, 7, 4, 5],  // segments addresses Vertices
+    Crosses: [0, 7, 2, 5, 0, 3, 1, 2, 7, 3, 2, 6, 5, 6, 4, 7, 5, 1, 0, 4, 3, 4, 1, 6], // addresses Vertices
     MeshSegments: undefined
 };
 
@@ -1636,7 +1641,7 @@ class PointsCreator {
       } else {
          promise = new Promise((resolveFunc, rejectFunc) => {
             const loader = new THREE.TextureLoader();
-            loader.load(dataUrl, res => resolveFunc(res), undefined, () => rejectFunc());
+            loader.load(dataUrl, res => resolveFunc(res), undefined, () => rejectFunc(Error(`Fail to load ${dataUrl}`)));
          });
       }
 

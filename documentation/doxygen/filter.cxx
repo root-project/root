@@ -32,15 +32,15 @@
 /// \notebook
 /// \preview Getting Contours From TH2D.
 ///
-/// #### Image produced by `.x ContourList.C`
+/// #### Image produced by `.x hist102_TH2_contour_list.C`
 /// The contours values are drawn next to each contour.
 /// \macro_image
 ///
-/// #### Output produced by `.x ContourList.C`
+/// #### Output produced by `.x hist102_TH2_contour_list.C`
 /// It shows that 6 contours and 12 graphs were found.
 /// \macro_output
 ///
-/// #### `ContourList.C`
+/// #### `hist102_TH2_contour_list.C`
 /// \macro_code
 ///
 /// \authors  Josh de Bever, Olivier Couet
@@ -504,6 +504,7 @@ void FilterTutorial()
          if (!gImageGenerated) CreateTutorialImage(false);
          string name = gMacroName;
          int width = 150;
+         ReplaceAll(name,"_","__");
          ReplaceAll(name,".C","_8C.html");
          ReplaceAll(gLineString, "\\preview", StringFormat("\\htmlonly <a href=\"%s\"><img src=\"pict1_%s.png\" style=\"float: left; margin-right: 10px;\" width=\"%d\"/></a>\\endhtmlonly",name.c_str(),gMacroName.c_str(),width));
       }

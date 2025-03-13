@@ -43,16 +43,19 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
    print.Debug("Convergence when edm <", edmval);
 
    if (seed.Parameters().Vec().size() == 0) {
+      print.Warn("No variable parameters are defined! - Return current function value ");
       return FunctionMinimum(seed, fcn.Up());
    }
 
-   //   double edm = Estimator().Estimate(seed.Gradient(), seed.Error());
-   double edm = seed.State().Edm();
+   // estimate initial edm value
+   double edm = Estimator().Estimate(seed.Gradient(), seed.Error());
+   print.Debug("initial edm is ", edm);
+   //double edm = seed.State().Edm();
 
    FunctionMinimum min(seed, fcn.Up());
 
    if (edm < 0.) {
-      print.Warn("Initial matrix not pos.def.");
+      print.Error("Initial matrix not positive defined, edm = ",edm,"\nExit minimization ");
       return min;
    }
 
@@ -96,6 +99,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
 
       // call always Hesse (error matrix from Fumili is never accurate since is approximate)
 
+      if (strategy.Strategy() > 0) {
       print.Debug("FumiliBuilder will verify convergence and Error matrix; "
                   "dcov",
                   min.Error().Dcovar());
@@ -117,6 +121,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
       edm = st.Edm();
 
       print.Debug("Edm", edm, "State", st);
+      }
 
       // break the loop if edm is NOT getting smaller
       if (ipass > 0 && edm >= edmprev) {
@@ -195,6 +200,8 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
 
    MnPrint print("FumiliBuilder");
 
+   print.Info("Iterating FumiliBuilder", maxfcn, edmval);
+
    print.Debug("Initial State:", "\n  Parameter", initialState.Vec(), "\n  Gradient", initialState.Gradient().Vec(),
                "\n  Inv Hessian", initialState.Error().InvHessian(), "\n  edm", initialState.Edm(), "\n  maxfcn",
                maxfcn, "\n  tolerance", edmval);
@@ -204,7 +211,31 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
    MnAlgebraicVector step(initialState.Gradient().Vec().size());
 
    // initial lambda Value
-   double lambda = 0.001;
+
+
+   const bool doLineSearch = (fMethodType == kLineSearch);
+   const bool doTrustRegion = (fMethodType == kTrustRegion || fMethodType == kTrustRegionScaled);
+   const bool scaleTR = (fMethodType == kTrustRegionScaled);
+   // trust region parameter
+   // use as initial value 0.3 * || x0 ||
+   auto & x0 = initialState.Vec();
+   double normX0 = std::sqrt(inner_product(x0,x0));
+   double delta = 0.3 * std::max(1.0 , normX0);
+   const double eta = 0.1;
+   // use same values as used in GSL implementation
+   const double tr_factor_up = 3;
+   const double tr_factor_down = 0.5;
+   bool acceptNewPoint = true;
+
+   if (doLineSearch)
+      print.Info("Using Fumili with a line search algorithm");
+   else if (doTrustRegion && scaleTR)
+      print.Info("Using Fumili with a scaled trust region algorithm with factors up/down",tr_factor_up,tr_factor_down);
+   else
+      print.Info("Using Fumili with a trust region algorithm with factors up/down",tr_factor_up,tr_factor_down);
+
+
+   double lambda = (doLineSearch) ? 0.001 : 0;
 
    do {
 
@@ -217,6 +248,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
                   "\n  Internal Parameter values", s0.Vec(), "\n  Newton step", step);
 
       double gdel = inner_product(step, s0.Gradient().Grad());
+      //not sure if this is needed ??
       if (gdel > 0.) {
          print.Warn("Matrix not pos.def, gdel =", gdel, " > 0");
 
@@ -233,24 +265,17 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
          }
       }
 
-      //     MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
-
-      //     if(std::fabs(pp.Y() - s0.Fval()) < prec.Eps()) {
-      //       std::cout<<"FumiliBuilder: no improvement"<<std::endl;
-      //       break; //no improvement
-      //     }
-
-      //     MinimumParameters p(s0.Vec() + pp.X()*step, pp.Y());
-
-      // if taking a full step
 
       // take a full step
 
-      MinimumParameters p(s0.Vec() + step, fcn(s0.Vec() + step));
+      //evaluate function only if doing a line search
+      double fval2 = (doLineSearch) ? fcn(s0.Vec() + step) : 0;
+      MinimumParameters p(s0.Vec() + step, fval2);
 
       // check that taking the full step does not deteriorate minimum
       // in that case do a line search
-      if (p.Fval() >= s0.Fval()) {
+      if (doLineSearch && p.Fval() >= s0.Fval()) {
+         print.Debug("Do a line search", fcn.NumOfCalls());
          MnLineSearch lsearch;
          MnParabolaPoint pp = lsearch(fcn, s0.Parameters(), step, gdel, prec);
 
@@ -259,19 +284,179 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
             break; // no improvement
          }
          p = MinimumParameters(s0.Vec() + pp.X() * step, pp.Y());
+         print.Debug("New point after Line Search :", "\n  FVAL     ", p.Fval(), "\n  Parameter", p.Vec());
       }
+      // use as scaling matrix diagonal of Hessian
+      auto & H = s0.Error().Hessian();
+      unsigned int n = (scaleTR) ?   H.Nrow() : 0;
+
+      MnAlgebraicSymMatrix D(n);
+      MnAlgebraicSymMatrix Dinv(n);
+      MnAlgebraicSymMatrix Dinv2(n);
+      MnAlgebraicVector stepScaled(n);
+      // set the scaling matrix to the sqrt(diagoinal hessian)
+      for (unsigned int i = 0; i < n; i++){
+         double d  = std::sqrt(H(i,i));
+         D(i,i) = d;
+         Dinv(i,i) = 1./d;
+         Dinv2(i,i) = 1./(d*d);
+      }
+
+      if (doTrustRegion) {
+         // do simple trust region using some control delta and eta
+         // compute norm of Newton step
+         double norm = 0;
+         if (scaleTR) {
+            print.Debug("scaling Trust region with diagonal matrix D ",D);
+            stepScaled = D * step;
+            norm = sqrt(inner_product(stepScaled, stepScaled) );
+         }
+         else
+            norm = sqrt(inner_product(step,step));
+         // some conditions
+
+         // double tr_radius = norm;
+         // if (norm < 0.1 * delta) tr_radius = 0.1*delta;
+         // else if (norm > delta) tr_radius = delta;
+
+         // update new point using reduced step
+         //step = (tr_radius/norm) * step;
+
+         // if the proposed point (newton step) is inside the trust region radius accept it
+         if (norm <= delta) {
+            p = MinimumParameters(s0.Vec() + step, fcn(s0.Vec() + step));
+            print.Debug("Accept full Newton step - it is inside TR ",delta);
+         } else {
+            //step = - (delta/norm) * step;
+
+            // if Newton step  is outside try to use the Cauchy point ?
+            double normGrad2 = 0;
+            double gHg = 0;
+            if (scaleTR) {
+               auto gScaled = Dinv * s0.Gradient().Grad();
+               normGrad2 = inner_product(gScaled, gScaled);
+               // compute D-1 H D-1 = H(i,j) * D(i,i) * D(j,j)
+               MnAlgebraicSymMatrix Hscaled(n);
+               for (unsigned int i = 0; i < n; i++) {
+                  for (unsigned int j = 0; j <=i; j++) {
+                     Hscaled(i,j) = H(i,j) * Dinv(i,i) * Dinv(j,j);
+                  }
+               }
+               gHg = similarity(gScaled, Hscaled);
+            } else {
+               normGrad2 = inner_product(s0.Gradient().Grad(),s0.Gradient().Grad());
+               gHg = similarity(s0.Gradient().Grad(), s0.Error().Hessian());
+            }
+            double normGrad = sqrt(normGrad2);
+            // need to compute gTHg :
+
+
+            print.Debug("computed gdel gHg and normGN",gdel,gHg,norm*norm, normGrad2);
+            if (gHg <= 0.) {
+               // Cauchy point is at the trust region boundary)
+               step = - (delta/ normGrad) * s0.Gradient().Grad();
+               if (scaleTR) step = Dinv2 * step;
+               print.Debug("Use as new point the Cauchy  point - along gradient with norm=delta ", delta);
+            } else {
+               // Cauchy point can be inside the trust region
+               double tau = std::min( (normGrad2*normGrad)/(gHg*delta), 1.0);
+
+               MnAlgebraicVector stepC(step.size());
+               stepC = -tau * (delta / normGrad) * s0.Gradient().Grad();
+               if (scaleTR)
+                  stepC = Dinv2 * stepC;
+
+               print.Debug("Use as new point the Cauchy  point - along gradient with tau ", tau, "delta = ", delta);
+
+               // compute dog -leg step solving quadratic equation a * t^2 + b * t + c = 0
+               // where a = ||p_n - P_c ||^2
+               //       b  = 2 * p_c * (P_n - P_c)
+               //       c = || pc ||^2 - ||Delta||^2
+               auto diffP = step - stepC;
+               double a = inner_product(diffP, diffP);
+               double b = 2. * inner_product(stepC, diffP);
+               // norm cauchy point is tau*delta
+               double c = (scaleTR) ? inner_product(stepC, stepC) - delta * delta : delta * delta * (tau * tau - 1.);
+
+               print.Debug(" dogleg equation", a, b, c);
+               // solution is
+               double t = 0;
+               // a cannot be negative or zero, otherwise point was accepted
+               if (a <= 0) {
+                  // case a is zero
+                  print.Warn("a is equal to zero!  a = ", a);
+                  print.Info(" delta ", delta, " tau ", tau, " gHg ", gHg, " normgrad2 ", normGrad2);
+                  t = -b / c;
+               } else {
+                  double t1 = (-b + sqrt(b * b - 4. * a * c)) / (2.0 * a);
+                  double t2 = (-b - sqrt(b * b - 4. * a * c)) / (2.0 * a);
+                  // if b is positive solution is
+                  print.Debug(" solution dogleg equation", t1, t2);
+                  if (t1 >= 0 && t1 <= 1.)
+                     t = t1;
+                  else
+                     t = t2;
+               }
+               step = stepC + t * diffP;
+               // need to rescale point per D^-1 >
+               print.Debug("New dogleg point is t = ", t);
+            }
+            print.Debug("New accepted step is ",step);
+
+            p = MinimumParameters(s0.Vec() + step, fcn(s0.Vec() + step));
+            norm = delta;
+            gdel = inner_product(step, s0.Gradient().Grad());
+         }
+
+         // compute real changes (require an evaluation)
+
+         // expected change is gdel (can correct for Hessian )
+         //double fcexp =  (-gdel - 0.5 * dot(step, hess(x) * step)
+
+         double svs = 0.5 * similarity(step, s0.Error().Hessian());
+         double rho = (p.Fval()-s0.Fval())/(gdel+svs);
+         if (rho < 0.25) {
+            delta = tr_factor_down * delta;
+         } else {
+            if (rho > 0.75 && norm == delta) {
+                delta = std::min(tr_factor_up * delta, 100.*norm);  // 1000. is the delta max
+            }
+         }
+         print.Debug("New point after Trust region :", "norm tr ",norm," rho ", rho," delta ", delta,
+           "  FVAL    ", p.Fval(), "\n  Parameter", p.Vec());
+
+      // check if we need to accept the point ?
+         acceptNewPoint = (rho > eta);
+         if (acceptNewPoint) {
+               // we accept the point
+               // we have already p = s0 + step
+               print.Debug("Trust region: accept new point p = x + step since rho is larger than eta");
+           }
+           else {
+             // we keep old point
+             print.Debug("Trust region reject new point and repeat since rho is smaller than eta");
+             p = MinimumParameters(s0.Vec(), s0.Fval());
+           }
+
+      }
+
+      FunctionGradient g = s0.Gradient();
+
+      if (acceptNewPoint || result.size() == 1) {
 
       print.Debug("Before Gradient - NCalls = ", fcn.NumOfCalls());
 
-      FunctionGradient g = gc(p, s0.Gradient());
+      g = gc(p, s0.Gradient());
 
       print.Debug("After Gradient - NCalls = ", fcn.NumOfCalls());
 
+      }
 
       // move Error updator after Gradient since the Value is cached inside
 
       MinimumError e = ErrorUpdator().Update(s0, p, gc, lambda);
 
+      // should I use here new error instead of old one (so.Error) ?
       edm = Estimator().Estimate(g, s0.Error());
 
       print.Debug("Updated new point:", "\n  FVAL     ", p.Fval(), "\n  Parameter", p.Vec(), "\n  Gradient", g.Vec(),
@@ -292,14 +477,16 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
       }
 
       // check lambda according to step
-      if (p.Fval() < s0.Fval())
-         // fcn is decreasing along the step
-         lambda *= 0.1;
-      else {
-         lambda *= 10;
-         // if close to minimum stop to avoid oscillations around minimum value
-         if (edm < 0.1)
-            break;
+      if (doLineSearch) {
+         if (p.Fval() < s0.Fval())
+            // fcn is decreasing along the step
+            lambda *= 0.1;
+         else {
+            lambda *= 10;
+            // if close to minimum stop to avoid oscillations around minimum value
+            if (edm < 0.1)
+               break;
+         }
       }
 
       print.Debug("finish iteration -", result.size(), "lambda =", lambda, "f1 =", p.Fval(), "f0 =", s0.Fval(),
@@ -313,10 +500,13 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
 
       edm *= (1. + 3. * e.Dcovar());
 
+      //}  // endif on acceptNewPoint
+
+
    } while (edm > edmval && fcn.NumOfCalls() < maxfcn);
 
    if (fcn.NumOfCalls() >= maxfcn) {
-      print.Warn("Call limit exceeded");
+      print.Warn("Call limit exceeded",fcn.NumOfCalls(), maxfcn);
 
       return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnReachedCallLimit);
    }
@@ -335,7 +525,6 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
          return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnAboveMaxEdm);
       }
    }
-   //   std::cout<<"result.back().Error().Dcovar()= "<<result.back().Error().Dcovar()<<std::endl;
 
    print.Debug("Exiting successfully", "Ncalls", fcn.NumOfCalls(), "FCN", result.back().Fval(), "Edm", edm, "Requested",
                edmval);

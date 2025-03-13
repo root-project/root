@@ -3,40 +3,44 @@ import { THREE } from '../base/base3d.mjs';
 import { createBufferGeometry, createNormal,
          Vertex as CsgVertex, Geometry as CsgGeometry, Polygon as CsgPolygon } from './csg.mjs';
 
-const cfg = {
+const _cfg = {
    GradPerSegm: 6,       // grad per segment in cylinder/spherical symmetry shapes
    CompressComp: true    // use faces compression in composite shapes
 };
 
+/** @summary Returns or set geometry config values
+ * @desc Supported 'GradPerSegm' and 'CompressComp'
+ * @private */
+
 function geoCfg(name, value) {
    if (value === undefined)
-      return cfg[name];
+      return _cfg[name];
 
-   cfg[name] = value;
+   _cfg[name] = value;
 }
 
 const kindGeo = 0,    // TGeoNode / TGeoShape
       kindEve = 1,    // TEveShape / TEveGeoShapeExtract
       kindShape = 2,  // special kind for single shape handling
 
-/** @summary TGeo-related bits
-  * @private */
- geoBITS = {
-   kVisOverride: BIT(0),  // volume's vis. attributes are overwritten
-   kVisNone: BIT(1),  // the volume/node is invisible, as well as daughters
-   kVisThis: BIT(2),  // this volume/node is visible
-   kVisDaughters: BIT(3),  // all leaves are visible
-   kVisOneLevel: BIT(4),  // first level daughters are visible (not used)
-   kVisStreamed: BIT(5),  // true if attributes have been streamed
-   kVisTouched: BIT(6),  // true if attributes are changed after closing geom
-   kVisOnScreen: BIT(7),  // true if volume is visible on screen
-   kVisContainers: BIT(12), // all containers visible
-   kVisOnly: BIT(13), // just this visible
-   kVisBranch: BIT(14), // only a given branch visible
-   kVisRaytrace: BIT(15)  // raytracing flag
-},
+      /** @summary TGeo-related bits
+       * @private */
+      geoBITS = {
+         kVisOverride: BIT(0),  // volume's vis. attributes are overwritten
+         kVisNone: BIT(1),  // the volume/node is invisible, as well as daughters
+         kVisThis: BIT(2),  // this volume/node is visible
+         kVisDaughters: BIT(3),  // all leaves are visible
+         kVisOneLevel: BIT(4),  // first level daughters are visible (not used)
+         kVisStreamed: BIT(5),  // true if attributes have been streamed
+         kVisTouched: BIT(6),  // true if attributes are changed after closing geom
+         kVisOnScreen: BIT(7),  // true if volume is visible on screen
+         kVisContainers: BIT(12), // all containers visible
+         kVisOnly: BIT(13), // just this visible
+         kVisBranch: BIT(14), // only a given branch visible
+         kVisRaytrace: BIT(15)  // raytracing flag
+      },
 
- clTGeoBBox = 'TGeoBBox',
+      clTGeoBBox = 'TGeoBBox',
       clTGeoArb8 = 'TGeoArb8',
       clTGeoCone = 'TGeoCone',
       clTGeoConeSeg = 'TGeoConeSeg',
@@ -79,7 +83,7 @@ function setGeoBit(volume, f, value) {
   * @private */
 function toggleGeoBit(volume, f) {
    if (volume.fGeoAtt !== undefined)
-      volume.fGeoAtt = volume.fGeoAtt ^ (f & 0xffffff);
+      volume.fGeoAtt ^= f & 0xffffff;
 }
 
 /** @summary Implementation of TGeoVolume::InvisibleAll
@@ -899,7 +903,7 @@ function createTubeBuffer(shape, faces_limit) {
       thetaLength = shape.fPhi2 - shape.fPhi1;
    }
 
-   const radiusSegments = Math.max(4, Math.round(thetaLength/cfg.GradPerSegm));
+   const radiusSegments = Math.max(4, Math.round(thetaLength / _cfg.GradPerSegm));
 
    // external surface
    let numfaces = radiusSegments * (((outerR[0] <= 0) || (outerR[1] <= 0)) ? 1 : 2);
@@ -1021,7 +1025,7 @@ function createTubeBuffer(shape, faces_limit) {
 /** @summary Creates eltu geometry
   * @private */
 function createEltuBuffer(shape, faces_limit) {
-   const radiusSegments = Math.max(4, Math.round(360/cfg.GradPerSegm));
+   const radiusSegments = Math.max(4, Math.round(360 / _cfg.GradPerSegm));
 
    if (faces_limit < 0) return radiusSegments*4;
 
@@ -1039,7 +1043,7 @@ function createEltuBuffer(shape, faces_limit) {
 
    // create tube faces
    for (let seg = 0; seg < radiusSegments; ++seg) {
-      creator.addFace4(x[seg], y[seg], +shape.fDZ,
+      creator.addFace4(x[seg], y[seg], shape.fDZ,
                        x[seg], y[seg], -shape.fDZ,
                        x[seg+1], y[seg+1], -shape.fDZ,
                        x[seg+1], y[seg+1], shape.fDZ);
@@ -1049,7 +1053,8 @@ function createEltuBuffer(shape, faces_limit) {
       nx2 = x[seg+1] * shape.fRmax / shape.fRmin;
       ny2 = y[seg+1] * shape.fRmin / shape.fRmax;
       const dist = Math.sqrt(nx2**2 + ny2**2);
-      nx2 = nx2 / dist; ny2 = ny2/dist;
+      nx2 /= dist;
+      ny2 /= dist;
 
       creator.setNormal_12_34(nx1, ny1, 0, nx2, ny2, 0);
    }
@@ -1072,8 +1077,8 @@ function createEltuBuffer(shape, faces_limit) {
   * @private */
 function createTorusBuffer(shape, faces_limit) {
    const radius = shape.fR;
-   let radialSegments = Math.max(6, Math.round(360/cfg.GradPerSegm)),
-       tubularSegments = Math.max(8, Math.round(shape.fDphi/cfg.GradPerSegm)),
+   let radialSegments = Math.max(6, Math.round(360 / _cfg.GradPerSegm)),
+       tubularSegments = Math.max(8, Math.round(shape.fDphi / _cfg.GradPerSegm)),
        numfaces = (shape.fRmin > 0 ? 4 : 2) * radialSegments * (tubularSegments + (shape.fDphi !== 360 ? 1 : 0));
 
    if (faces_limit < 0) return numfaces;
@@ -1171,7 +1176,7 @@ function createPolygonBuffer(shape, faces_limit) {
       radiusSegments = shape.fNedges;
       factor = 1.0 / Math.cos(Math.PI/180 * thetaLength / radiusSegments / 2);
    } else {
-      radiusSegments = Math.max(5, Math.round(thetaLength/cfg.GradPerSegm));
+      radiusSegments = Math.max(5, Math.round(thetaLength / _cfg.GradPerSegm));
       factor = 1;
    }
 
@@ -1398,7 +1403,7 @@ function createXtruBuffer(shape, faces_limit) {
 /** @summary Creates para geometry
   * @private */
 function createParaboloidBuffer(shape, faces_limit) {
-   let radiusSegments = Math.max(4, Math.round(360/cfg.GradPerSegm)),
+   let radiusSegments = Math.max(4, Math.round(360 / _cfg.GradPerSegm)),
        heightSegments = 30;
 
    if (faces_limit > 0) {
@@ -1439,11 +1444,13 @@ function createParaboloidBuffer(shape, faces_limit) {
    let lastz = zmin, lastr = 0, lastnxy = 0, lastnz = -1;
 
    for (let layer = 0; layer <= heightSegments + 1; ++layer) {
-      let layerz = 0, radius = 0, nxy = 0, nz = -1;
+      if ((layer === 0) && (rmin === 0))
+         continue;
 
-      if ((layer === 0) && (rmin === 0)) continue;
+      if ((layer === heightSegments + 1) && (lastr === 0))
+         break;
 
-      if ((layer === heightSegments + 1) && (lastr === 0)) break;
+      let layerz, radius;
 
       switch (layer) {
          case 0: layerz = zmin; radius = rmin; break;
@@ -1458,10 +1465,9 @@ function createParaboloidBuffer(shape, faces_limit) {
          }
       }
 
-      nxy = shape.fA * radius;
-      nz = (shape.fA > 0) ? -1 : 1;
-
-      const skip = (lastr === 0) ? 1 : ((radius === 0) ? 2 : 0);
+      const nxy = shape.fA * radius,
+            nz = (shape.fA > 0) ? -1 : 1,
+            skip = (lastr === 0) ? 1 : ((radius === 0) ? 2 : 0);
 
       for (let seg = 0; seg < radiusSegments; ++seg) {
          creator.addFace4(radius*_cos[seg], radius*_sin[seg], layerz,
@@ -1493,11 +1499,12 @@ function createHypeBuffer(shape, faces_limit) {
    if ((shape.fTin === 0) && (shape.fTout === 0))
       return createTubeBuffer(shape, faces_limit);
 
-   let radiusSegments = Math.max(4, Math.round(360/cfg.GradPerSegm)),
+   let radiusSegments = Math.max(4, Math.round(360 / _cfg.GradPerSegm)),
        heightSegments = 30,
        numfaces = radiusSegments * (heightSegments + 1) * ((shape.fRmin > 0) ? 4 : 2);
 
-   if (faces_limit < 0) return numfaces;
+   if (faces_limit < 0)
+      return numfaces;
 
    if ((faces_limit > 0) && (faces_limit > numfaces)) {
       radiusSegments = Math.max(4, Math.floor(radiusSegments/Math.sqrt(numfaces/faces_limit)));
@@ -1601,6 +1608,7 @@ function createMatrix(matrix) {
       case 'TGeoScale': scale = matrix.fScale; break;
       case 'TGeoGenTrans':
          scale = matrix.fScale; // no break, translation and rotation follows
+      // eslint-disable-next-line  no-fallthrough
       case 'TGeoCombiTrans':
          translation = matrix.fTranslation;
          if (matrix.fRotation) rotation = matrix.fRotation.fRotationMatrix;
@@ -1807,9 +1815,9 @@ function createHalfSpace(shape, geom) {
    geometry.computeVertexNormals();
 
    for (let k = 0; k < positions.length; k += 3) {
-      positions[k] = positions[k] + vertex.x;
-      positions[k+1] = positions[k+1] + vertex.y;
-      positions[k+2] = positions[k+2] + vertex.z;
+      positions[k] += vertex.x;
+      positions[k+1] += vertex.y;
+      positions[k+2] += vertex.z;
    }
 
    return geometry;
@@ -1831,6 +1839,8 @@ function countGeometryFaces(geom) {
    const attr = geom.getAttribute('position');
    return attr?.count ? Math.round(attr.count / 3) : 0;
 }
+
+let createGeometry = null;
 
 /** @summary Creates geometry for composite shape
   * @private */
@@ -1881,7 +1891,7 @@ function createComposite(shape, faces_limit) {
       return geom1;
    }
 
-   let bsp1 = new CsgGeometry(geom1, matrix1, cfg.CompressComp ? 0 : undefined);
+   let bsp1 = new CsgGeometry(geom1, matrix1, _cfg.CompressComp ? 0 : undefined);
 
    const bsp2 = new CsgGeometry(geom2, matrix2, bsp1.maxid);
 
@@ -1950,7 +1960,7 @@ function projectGeometry(geom, matrix, projection, position, flippedMesh) {
   *  - if limit < 0 just returns estimated number of faces
   *  - if limit > 0 return list of CsgPolygons (used only for composite shapes)
   * @private */
-function createGeometry(shape, limit) {
+createGeometry = function(shape, limit) {
    if (limit === undefined) limit = 0;
 
    try {
@@ -1985,8 +1995,9 @@ function createGeometry(shape, limit) {
             return res;
          }
          case clTGeoHalfSpace:
-            if (limit < 0) return 1; // half space if just plane used in composite
-            // no break here - warning may appear
+            if (limit < 0)
+               return 1; // half space if just plane used in composite
+         // eslint-disable-next-line  no-fallthrough
          default:
             geoWarn(`unsupported shape type ${shape._typename}`);
       }
@@ -2001,7 +2012,7 @@ function createGeometry(shape, limit) {
    }
 
    return limit < 0 ? 0 : null;
-}
+};
 
 
 /** @summary Create single shape from EVE7 render date
@@ -2067,29 +2078,26 @@ function createServerGeometry(rd, nsegm) {
 
    rd.nsegm = nsegm;
 
-   let g = null;
+   let geom;
 
    if (rd.shape) {
       // case when TGeoShape provided as is
-      g = createGeometry(rd.shape);
+      geom = createGeometry(rd.shape);
    } else {
       if (!rd.raw?.buffer) {
          console.error('No raw data at all');
          return null;
       }
 
-      if (rd.sz)
-         g = makeEveGeometry(rd);
-      else
-         g = makeViewerGeometry(rd);
+      geom = rd.sz ? makeEveGeometry(rd) : makeViewerGeometry(rd);
    }
 
    // shape handle is similar to created in TGeoPainter
    return {
       _typename: '$$Shape$$', // indicate that shape can be used as is
       ready: true,
-      geom: g,
-      nfaces: numGeometryFaces(g)
+      geom,
+      nfaces: numGeometryFaces(geom)
    };
 }
 
@@ -2127,6 +2135,7 @@ function provideObjectInfo(obj) {
       case clTGeoBBox: break;
       case clTGeoPara: info.push(`Alpha=${shape.fAlpha} Phi=${shape.fPhi} Theta=${shape.fTheta}`); break;
       case clTGeoTrd2: info.push(`Dy1=${conv(shape.fDy1)} Dy2=${conv(shape.fDy1)}`); // no break
+      // eslint-disable-next-line  no-fallthrough
       case clTGeoTrd1: info.push(`Dx1=${conv(shape.fDx1)} Dx2=${conv(shape.fDx1)}`); break;
       case clTGeoArb8: break;
       case clTGeoTrap: break;
@@ -2138,7 +2147,7 @@ function provideObjectInfo(obj) {
          break;
       case clTGeoConeSeg:
          info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
-         // intentional no break;
+      // eslint-disable-next-line  no-fallthrough
       case clTGeoCone:
          info.push(`Rmin1=${conv(shape.fRmin1)} Rmax1=${conv(shape.fRmax1)}`,
                    `Rmin2=${conv(shape.fRmin2)} Rmax2=${conv(shape.fRmax2)}`);
@@ -2146,7 +2155,7 @@ function provideObjectInfo(obj) {
       case clTGeoCtub:
       case clTGeoTubeSeg:
          info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
-         // intentional no break
+      // eslint-disable-next-line  no-fallthrough
       case clTGeoEltu:
       case clTGeoTube:
          info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`);
@@ -2347,6 +2356,79 @@ function isSameStack(stack1, stack2) {
 }
 
 
+function createFlippedGeom(geom) {
+   let pos = geom.getAttribute('position').array,
+       norm = geom.getAttribute('normal').array;
+   const index = geom.getIndex();
+
+   if (index) {
+      // we need to unfold all points to
+      const arr = index.array,
+            i0 = geom.drawRange.start;
+      let ilen = geom.drawRange.count;
+      if (i0 + ilen > arr.length) ilen = arr.length - i0;
+
+      const dpos = new Float32Array(ilen*3), dnorm = new Float32Array(ilen*3);
+      for (let ii = 0; ii < ilen; ++ii) {
+         const k = arr[i0 + ii];
+         if ((k < 0) || (k*3 >= pos.length))
+            console.log(`strange index ${k*3} totallen = ${pos.length}`);
+         dpos[ii*3] = pos[k*3];
+         dpos[ii*3+1] = pos[k*3+1];
+         dpos[ii*3+2] = pos[k*3+2];
+         dnorm[ii*3] = norm[k*3];
+         dnorm[ii*3+1] = norm[k*3+1];
+         dnorm[ii*3+2] = norm[k*3+2];
+      }
+
+      pos = dpos; norm = dnorm;
+   }
+
+   const len = pos.length,
+         newpos = new Float32Array(len),
+         newnorm = new Float32Array(len);
+
+   // we should swap second and third point in each face
+   for (let n = 0, shift = 0; n < len; n += 3) {
+      newpos[n] = pos[n+shift];
+      newpos[n+1] = pos[n+1+shift];
+      newpos[n+2] = -pos[n+2+shift];
+
+      newnorm[n] = norm[n+shift];
+      newnorm[n+1] = norm[n+1+shift];
+      newnorm[n+2] = -norm[n+2+shift];
+
+      shift+=3; if (shift===6) shift=-3; // values 0,3,-3
+   }
+
+   const geomZ = new THREE.BufferGeometry();
+   geomZ.setAttribute('position', new THREE.BufferAttribute(newpos, 3));
+   geomZ.setAttribute('normal', new THREE.BufferAttribute(newnorm, 3));
+
+   return geomZ;
+}
+
+
+/** @summary Create flipped mesh for the shape
+  * @desc When transformation matrix includes one or several inversion of axis,
+  * one should inverse geometry object, otherwise three.js cannot correctly draw it
+  * @param {Object} shape - TGeoShape object
+  * @param {Object} material - material
+  * @private */
+function createFlippedMesh(shape, material) {
+   if (shape.geomZ === undefined)
+      shape.geomZ = createFlippedGeom(shape.geom);
+
+   const mesh = new THREE.Mesh(shape.geomZ, material);
+   mesh.scale.copy(new THREE.Vector3(1, 1, -1));
+   mesh.updateMatrix();
+
+   mesh._flippedMesh = true;
+
+   return mesh;
+}
+
+
 /**
   * @summary class for working with cloned nodes
   *
@@ -2464,7 +2546,7 @@ class ClonedNodes {
       this.origin.push(obj);
       if (sublevel > this.maxdepth) this.maxdepth = sublevel;
 
-      let chlds = null;
+      let chlds;
       if (kind === kindGeo)
          chlds = obj.fVolume?.fNodes?.arr || null;
       else
@@ -2476,7 +2558,8 @@ class ClonedNodes {
             this.createClones(chlds[i], sublevel + 1, kind);
       }
 
-      if (sublevel > 1) return;
+      if (sublevel > 1)
+         return;
 
       this.nodes = [];
 
@@ -2492,18 +2575,12 @@ class ClonedNodes {
 
       // than fill children lists
       for (let n = 0; n < this.origin.length; ++n) {
-         const obj = this.origin[n], clone = this.nodes[n];
-         let chlds = null, shape = null;
+         const obj2 = this.origin[n],
+               clone = this.nodes[n],
+               shape = kind === kindEve ? obj2.fShape : obj2.fVolume.fShape,
+               chlds2 = kind === kindEve ? obj2.fElements?.arr : obj2.fVolume.fNodes?.arr,
+               matrix = getNodeMatrix(kind, obj2);
 
-         if (kind === kindEve) {
-            shape = obj.fShape;
-            if (obj.fElements) chlds = obj.fElements.arr;
-         } else if (obj.fVolume) {
-            shape = obj.fVolume.fShape;
-            if (obj.fVolume.fNodes) chlds = obj.fVolume.fNodes.arr;
-         }
-
-         const matrix = getNodeMatrix(kind, obj);
          if (matrix) {
             clone.matrix = matrix.elements; // take only matrix elements, matrix will be constructed in worker
             if (clone.matrix && (clone.matrix[0] === 1)) {
@@ -2523,15 +2600,16 @@ class ClonedNodes {
             if (shape.$nfaces === undefined)
                shape.$nfaces = createGeometry(shape, -1);
             clone.nfaces = shape.$nfaces;
-            if (clone.nfaces <= 0) clone.vol = 0;
+            if (clone.nfaces <= 0)
+               clone.vol = 0;
          }
 
-         if (!chlds) continue;
-
-         // in cloned object children is only list of ids
-         clone.chlds = new Array(chlds.length);
-         for (let k = 0; k < chlds.length; ++k)
-            clone.chlds[k] = chlds[k]._refid;
+         if (chlds2) {
+            // in cloned object children is only list of ids
+            clone.chlds = new Array(chlds2.length);
+            for (let k = 0; k < chlds2.length; ++k)
+               clone.chlds[k] = chlds2[k]._refid;
+         }
       }
 
       // remove _refid identifiers from original objects
@@ -2696,8 +2774,9 @@ class ClonedNodes {
          do_clear = true;
          if (!this.fVisibility) return;
       } else
-         on = !!on;
-      if (!stack) return;
+         on = Boolean(on);
+      if (!stack)
+         return;
 
       if (!this.fVisibility)
          this.fVisibility = [];
@@ -2811,10 +2890,10 @@ class ClonedNodes {
       if ((arg.nodeid === 0) && arg.main_visible)
          node_vis = vislvl + 1;
       else if (arg.testPhysVis) {
-         const res = arg.testPhysVis();
-         if (res !== undefined) {
-            node_vis = res && !node.chlds ? vislvl + 1 : 0;
-            node_nochlds = !res;
+         const res2 = arg.testPhysVis();
+         if (res2 !== undefined) {
+            node_vis = res2 && !node.chlds ? vislvl + 1 : 0;
+            node_nochlds = !res2;
          }
       }
 
@@ -2968,13 +3047,15 @@ class ClonedNodes {
 
    /** @summary Returns true if stack includes at any place provided nodeid */
    isIdInStack(nodeid, stack) {
-      if (!nodeid) return true;
+      if (!nodeid)
+         return true;
 
-      let node = this.nodes[0], id = 0;
+      let node = this.nodes[0];
 
       for (let lvl = 0; lvl < stack.length; ++lvl) {
-         id = node.chlds[stack[lvl]];
-         if (id === nodeid) return true;
+         const id = node.chlds[stack[lvl]];
+         if (id === nodeid)
+            return true;
          node = this.nodes[id];
       }
 
@@ -3490,7 +3571,7 @@ class ClonedNodes {
 
       this.actual_level = arg.vislvl; // not used, can be shown somewhere in the gui
 
-      let minVol = 0, maxVol = 0, camVol = -1, camFact = 10, sortidcut = this.nodes.length + 1;
+      let minVol = 0, maxVol, camVol = -1, camFact = 10, sortidcut = this.nodes.length + 1;
 
       if (arg.facecnt > maxnumfaces) {
          const bignumfaces = maxnumfaces * (frustum ? 0.8 : 1.0),
@@ -3744,78 +3825,6 @@ class ClonedNodes {
    }
 
 } // class ClonedNodes
-
-function createFlippedGeom(geom) {
-   let pos = geom.getAttribute('position').array,
-       norm = geom.getAttribute('normal').array;
-   const index = geom.getIndex();
-
-   if (index) {
-      // we need to unfold all points to
-      const arr = index.array,
-            i0 = geom.drawRange.start;
-      let ilen = geom.drawRange.count;
-      if (i0 + ilen > arr.length) ilen = arr.length - i0;
-
-      const dpos = new Float32Array(ilen*3), dnorm = new Float32Array(ilen*3);
-      for (let ii = 0; ii < ilen; ++ii) {
-         const k = arr[i0 + ii];
-         if ((k < 0) || (k*3 >= pos.length))
-            console.log(`strange index ${k*3} totallen = ${pos.length}`);
-         dpos[ii*3] = pos[k*3];
-         dpos[ii*3+1] = pos[k*3+1];
-         dpos[ii*3+2] = pos[k*3+2];
-         dnorm[ii*3] = norm[k*3];
-         dnorm[ii*3+1] = norm[k*3+1];
-         dnorm[ii*3+2] = norm[k*3+2];
-      }
-
-      pos = dpos; norm = dnorm;
-   }
-
-   const len = pos.length,
-         newpos = new Float32Array(len),
-         newnorm = new Float32Array(len);
-
-   // we should swap second and third point in each face
-   for (let n = 0, shift = 0; n < len; n += 3) {
-      newpos[n] = pos[n+shift];
-      newpos[n+1] = pos[n+1+shift];
-      newpos[n+2] = -pos[n+2+shift];
-
-      newnorm[n] = norm[n+shift];
-      newnorm[n+1] = norm[n+1+shift];
-      newnorm[n+2] = -norm[n+2+shift];
-
-      shift+=3; if (shift===6) shift=-3; // values 0,3,-3
-   }
-
-   const geomZ = new THREE.BufferGeometry();
-   geomZ.setAttribute('position', new THREE.BufferAttribute(newpos, 3));
-   geomZ.setAttribute('normal', new THREE.BufferAttribute(newnorm, 3));
-
-   return geomZ;
-}
-
-
-/** @summary Create flipped mesh for the shape
-  * @desc When transformation matrix includes one or several inversion of axis,
-  * one should inverse geometry object, otherwise three.js cannot correctly draw it
-  * @param {Object} shape - TGeoShape object
-  * @param {Object} material - material
-  * @private */
-function createFlippedMesh(shape, material) {
-   if (shape.geomZ === undefined)
-      shape.geomZ = createFlippedGeom(shape.geom);
-
-   const mesh = new THREE.Mesh(shape.geomZ, material);
-   mesh.scale.copy(new THREE.Vector3(1, 1, -1));
-   mesh.updateMatrix();
-
-   mesh._flippedMesh = true;
-
-   return mesh;
-}
 
 /** @summary extract code of Box3.expandByObject
   * @desc Major difference - do not traverse hierarchy, support InstancedMesh

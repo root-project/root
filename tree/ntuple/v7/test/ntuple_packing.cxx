@@ -280,10 +280,7 @@ protected:
    }
 
 public:
-   explicit RFieldTestIndexColumn(std::string_view name)
-      : RSimpleField(name, "ROOT::Experimental::Internal::RColumnIndex")
-   {
-   }
+   explicit RFieldTestIndexColumn(std::string_view name) : RSimpleField(name, "ROOT::Internal::RColumnIndex") {}
    RFieldTestIndexColumn(RFieldTestIndexColumn &&other) = default;
    RFieldTestIndexColumn &operator=(RFieldTestIndexColumn &&other) = default;
    ~RFieldTestIndexColumn() override = default;
@@ -866,7 +863,7 @@ TEST(Packing, Real32QuantFloat)
       element.SetBitsOnStorage(20);
       element.SetValueRange(-10.f, 10.f);
 
-      float f[5] = { 3.4f, 5.f, -6.f, 10.f, -10.f };
+      float f[5] = {3.4f, 5.f, -6.f, 10.f, -10.f};
       unsigned char out[BitPacking::MinBufSize(std::size(f), 20)];
       element.Pack(out, f, std::size(f));
       float f2[std::size(f)];

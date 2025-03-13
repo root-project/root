@@ -21,10 +21,22 @@ namespace Minuit2 {
 class MinimumParameters {
 
 public:
+
+    enum Status {
+      MnValid,
+      MnInvalid
+   };
+
    MinimumParameters(unsigned int n, double fval = 0)
       : fPtr{new Data{MnAlgebraicVector(n), MnAlgebraicVector(n), fval, false, false}}
    {
    }
+
+   // constructor for case when function has no parameter and only function value
+   MinimumParameters(double fval, Status status)
+      : fPtr{ new Data{MnAlgebraicVector(0), MnAlgebraicVector(0), fval, status == MnValid, false}}
+   {}
+
 
    /** takes the Parameter vector */
    MinimumParameters(const MnAlgebraicVector &avec, double fval)

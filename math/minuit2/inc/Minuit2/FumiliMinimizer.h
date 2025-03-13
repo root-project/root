@@ -86,6 +86,13 @@ public:
    FunctionMinimum Minimize(const FCNBase &, const MnUserParameterState &, const MnStrategy &, unsigned int maxfcn = 0,
                             double toler = 0.1) const override;
 
+   // set the type of Fumili method to use, possible values are:
+   //  LineSearch based : method  = "ls"
+   //  Trust region : method = "tr"
+   //  Scaled trust region: method  = "trs"
+   void SetMethod(const std::string & method);
+
+
    using ModularFunctionMinimizer::Minimize;
 
 private:

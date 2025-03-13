@@ -58,14 +58,22 @@ set(DIR_PERMISSIONS DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE G
 # ROOT build. This is significant e,g. for roottest, which will otherwise have libraries
 # of a different ROOT build available / visible / reachable.
 if(NOT $ENV{ROOTSYS} STREQUAL "")
-  string(REPLACE "$ENV{ROOTSYS}/bin" "" ENV_PATH "$ENV{PATH}")
-  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV_LD_LIBRARY_PATH "$ENV{LD_LIBRARY_PATH}")
-  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV_PYTHONPATH "$ENV{PYTHONPATH}")
-  string(REPLACE "$ENV{ROOTSYS}" "" ENV_CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
-  set(ENV{PATH} "${ENV_PATH}")
-  set(ENV{LD_LIBRARY_PATH} "${ENV_LD_LIBRARY_PATH}")
-  set(ENV{PYTHONPATH} "${ENV_PYTHONPATH}")
-  set(ENV{CMAKE_PREFIX_PATH} "${ENV_CMAKE_PREFIX_PATH}")
+  function(strip_path ENV_VAR _path)
+    string(REPLACE ":${_path}:" ":" _temp_envvar $ENV{${ENV_VAR}})
+    string(REGEX REPLACE "^${_path}:" "" _temp_envvar ${_temp_envvar})
+    string(REGEX REPLACE ":${_path}$" "" _temp_envvar ${_temp_envvar})
+    if (_temp_envvar STREQUAL _path)
+      set(ENV{ENV_VAR} "")
+    else()
+      set(ENV{ENV_VAR} "${_temp_envvar}")
+    endif()
+  endfunction()
+  strip_path("PATH" "$ENV{ROOTSYS}/bin")
+  strip_path("LD_LIBRARY_PATH" "$ENV{ROOTSYS}/lib")
+  strip_path("PYTHONPATH" "$ENV{ROOTSYS}/lib")
+  # if we leave the ':' it will result in an empty entry in the CMAKE_PREFIX_PATH
+  # which will interpreted as the current directory.
+  strip_path("CMAKE_PREFIX_PATH" "$ENV{ROOTSYS}")
   set(ENV{ROOTSYS} ${CMAKE_BINARY_DIR})
 endif()
 

@@ -321,8 +321,8 @@ class RCanvasPainter extends RPadPainter {
                   onWebsocketOpened() {
                   },
 
-                  onWebsocketMsg(panel_handle, msg) {
-                     const panel_name = (msg.indexOf('SHOWPANEL:') === 0) ? msg.slice(10) : '';
+                  onWebsocketMsg(panel_handle, msg2) {
+                     const panel_name = (msg2.indexOf('SHOWPANEL:') === 0) ? msg2.slice(10) : '';
                      this.cpainter.showUI5Panel(panel_name, panel_handle)
                                   .then(res => handle.send(reply + (res ? 'true' : 'false')));
                   },

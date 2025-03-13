@@ -486,6 +486,7 @@ bool Minuit2Minimizer::Minimize()
    fMinuitFCN->SetErrorDef(ErrorDef());
 
    const int printLevel = PrintLevel();
+   print.Debug("Minuit print level is", printLevel);
    if (PrintLevel() >= 1) {
       // print the real number of maxfcn used (defined in ModularFunctionMinimizer)
       int maxfcn_used = maxfcn;
@@ -519,6 +520,17 @@ bool Minuit2Minimizer::Minimize()
       bool ret = minuit2Opt->GetValue("StorageLevel", storageLevel);
       if (ret)
          SetStorageLevel(storageLevel);
+
+      // fumili options
+      if (fUseFumili) {
+         std::string fumiliMethod;
+         ret = minuit2Opt->GetValue("FumiliMethod", fumiliMethod);
+         if (ret) {
+            auto fumiliMinimizer = dynamic_cast<ROOT::Minuit2::FumiliMinimizer*>(fMinimizer);
+            if (fumiliMinimizer)
+               fumiliMinimizer->SetMethod(fumiliMethod);
+         }
+      }
 
       if (printLevel > 0) {
          std::cout << "Minuit2Minimizer::Minuit  - Changing default options" << std::endl;
@@ -1168,7 +1180,7 @@ bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
       fMinimum->SetErrorDef(ErrorDef());
    }
 
-   print.Info("Computing contours -", ErrorDef());
+   print.Info("Computing contours at level -", ErrorDef());
 
    // switch off Minuit2 printing (for level of  0,1)
    const int prev_level = (PrintLevel() <= 1) ? TurnOffPrintInfoLevel() : -2;
@@ -1196,6 +1208,14 @@ bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned in
       x[i] = result[i].first;
       y[i] = result[i].second;
    }
+   print.Info([&](std::ostream &os) {
+                  os << " Computed " << npoints << " points at level " << ErrorDef();
+                  for (unsigned int i = 0; i < npoints; i++) {
+                     if (i %5 == 0) os << std::endl;
+                     os << "( " << x[i] << ", " << y[i] << ") ";
+                  }
+                  os << std::endl << std::endl;
+               });
 
    return true;
 }
