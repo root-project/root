@@ -34,8 +34,8 @@ class TAttLineHandler {
       if (args.attr) {
          this.color_index = args.attr.fLineColor;
          args.color = args.color0 || (args.painter?.getColor(this.color_index) ?? getColor(this.color_index));
-         if (args.width === undefined) args.width = args.attr.fLineWidth;
-         if (args.style === undefined) args.style = args.attr.fLineStyle;
+         args.width ??= args.attr.fLineWidth;
+         args.style ??= args.attr.fLineStyle;
       } else if (isStr(args.color)) {
          if ((args.color !== 'none') && !args.width) args.width = 1;
       } else if (typeof args.color === 'number') {

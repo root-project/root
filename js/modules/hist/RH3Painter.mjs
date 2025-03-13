@@ -244,15 +244,15 @@ class RH3Painter extends RHistPainter {
             if ((indx < 0) || (indx >= this.bins.length)) return null;
 
             const p = this.painter,
-                main = p.getFramePainter(),
-                tip = p.get3DToolTip(this.bins[indx]);
+                  fp = p.getFramePainter(),
+                  tip = p.get3DToolTip(this.bins[indx]);
 
-            tip.x1 = main.grx(p.getAxis('x').GetBinLowEdge(tip.ix));
-            tip.x2 = main.grx(p.getAxis('x').GetBinLowEdge(tip.ix+di));
-            tip.y1 = main.gry(p.getAxis('y').GetBinLowEdge(tip.iy));
-            tip.y2 = main.gry(p.getAxis('y').GetBinLowEdge(tip.iy+dj));
-            tip.z1 = main.grz(p.getAxis('z').GetBinLowEdge(tip.iz));
-            tip.z2 = main.grz(p.getAxis('z').GetBinLowEdge(tip.iz+dk));
+            tip.x1 = fp.grx(p.getAxis('x').GetBinLowEdge(tip.ix));
+            tip.x2 = fp.grx(p.getAxis('x').GetBinLowEdge(tip.ix+di));
+            tip.y1 = fp.gry(p.getAxis('y').GetBinLowEdge(tip.iy));
+            tip.y2 = fp.gry(p.getAxis('y').GetBinLowEdge(tip.iy+dj));
+            tip.z1 = fp.grz(p.getAxis('z').GetBinLowEdge(tip.iz));
+            tip.z2 = fp.grz(p.getAxis('z').GetBinLowEdge(tip.iz+dk));
             tip.color = this.tip_color;
             tip.opacity = 0.3;
 
@@ -373,24 +373,23 @@ class RH3Painter extends RHistPainter {
       }
 
       function getBinTooltip(intersect) {
-         let binid = 0;
+         let binid = this.binid;
 
-         if (this.binid !== undefined)
-            binid = this.binid;
-         else {
-            if ((intersect.instanceId === undefined) || (intersect.instanceId >= this.bins.length)) return;
+         if (binid === undefined) {
+            if ((intersect.instanceId === undefined) || (intersect.instanceId >= this.bins.length))
+               return;
             binid = this.bins[intersect.instanceId];
          }
 
          const p = this.painter,
-               main = p.getFramePainter(),
+               fp = p.getFramePainter(),
                tip = p.get3DToolTip(binid),
-               grx1 = main.grx(xaxis.GetBinCoord(tip.ix-1)),
-               grx2 = main.grx(xaxis.GetBinCoord(tip.ix)),
-               gry1 = main.gry(yaxis.GetBinCoord(tip.iy-1)),
-               gry2 = main.gry(yaxis.GetBinCoord(tip.iy)),
-               grz1 = main.grz(zaxis.GetBinCoord(tip.iz-1)),
-               grz2 = main.grz(zaxis.GetBinCoord(tip.iz)),
+               grx1 = fp.grx(xaxis.GetBinCoord(tip.ix-1)),
+               grx2 = fp.grx(xaxis.GetBinCoord(tip.ix)),
+               gry1 = fp.gry(yaxis.GetBinCoord(tip.iy-1)),
+               gry2 = fp.gry(yaxis.GetBinCoord(tip.iy)),
+               grz1 = fp.grz(zaxis.GetBinCoord(tip.iz-1)),
+               grz2 = fp.grz(zaxis.GetBinCoord(tip.iz)),
                wei2 = (this.use_scale ? Math.pow(Math.abs(tip.value*this.use_scale), 0.3333) : 1) * this.tipscale;
 
          tip.x1 = (grx2 + grx1) / 2 - (grx2 - grx1) * wei2;

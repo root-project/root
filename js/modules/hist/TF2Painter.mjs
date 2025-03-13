@@ -1,8 +1,8 @@
-import { createHistogram, setHistogramTitle, kNoStats, settings, gStyle, clTF2, clTH2F, isStr, isFunc } from '../core.mjs';
+import { createHistogram, setHistogramTitle, kNoStats, settings, gStyle, clTF2, clTH2F, isFunc } from '../core.mjs';
 import { TH2Painter } from '../hist/TH2Painter.mjs';
 import { proivdeEvalPar } from '../base/func.mjs';
 import { produceTAxisLogScale, scanTF1Options } from '../hist/TF1Painter.mjs';
-import { ObjectPainter, getElementMainPainter } from '../base/ObjectPainter.mjs';
+import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { DrawOptions, floatToString } from '../base/BasePainter.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
 
@@ -149,15 +149,13 @@ class TF2Painter extends TH2Painter {
       if (this.#use_saved_points) {
          npx = Math.round(func.fSave[nsave+4]);
          npy = Math.round(func.fSave[nsave+5]);
-         const xmin = func.fSave[nsave], xmax = func.fSave[nsave+1],
-               ymin = func.fSave[nsave+2], ymax = func.fSave[nsave+3],
-               dx = (xmax - xmin) / npx,
-               dy = (ymax - ymin) / npy;
-          function getSave(x, y) {
-            if (x < xmin || x > xmax) return 0;
-            if (dx <= 0) return 0;
-            if (y < ymin || y > ymax) return 0;
-            if (dy <= 0) return 0;
+         xmin = func.fSave[nsave];
+         xmax = func.fSave[nsave+1];
+         ymin = func.fSave[nsave+2];
+         ymax = func.fSave[nsave+3];
+         const dx = (xmax - xmin) / npx, dy = (ymax - ymin) / npy, getSave = (x, y) => {
+            if (x < xmin || x > xmax || dx <= 0) return 0;
+            if (y < ymin || y > ymax || dy <= 0) return 0;
             const ibin = Math.min(npx-1, Math.floor((x-xmin)/dx)),
                   jbin = Math.min(npy-1, Math.floor((y-ymin)/dy)),
                   xlow = xmin + ibin*dx,
@@ -169,7 +167,7 @@ class TF2Painter extends TH2Painter {
                   k3 = (jbin+1)*(npx+1) + ibin +1,
                   k4 = (jbin+1)*(npx+1) + ibin;
             return (1-t)*(1-u)*func.fSave[k1] +t*(1-u)*func.fSave[k2] +t*u*func.fSave[k3] + (1-t)*u*func.fSave[k4];
-         }
+         };
 
          ensureBins(func.fNpx, func.fNpy);
          hist.fXaxis.fXmin = func.fXmin;

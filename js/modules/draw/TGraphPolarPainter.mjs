@@ -1,5 +1,5 @@
 import { settings, gStyle, create, BIT, clTPaveText, kTitle } from '../core.mjs';
-import { scaleLinear, select as d3_select, pointer as d3_pointer } from '../d3.mjs';
+import { scaleLinear, pointer as d3_pointer } from '../d3.mjs';
 import { DrawOptions, buildSvgCurve, makeTranslate } from '../base/BasePainter.mjs';
 import { ObjectPainter, getElementMainPainter } from '../base/ObjectPainter.mjs';
 import { TPavePainter, kPosTitle } from '../hist/TPavePainter.mjs';
@@ -179,7 +179,7 @@ class TGraphPolargramPainter extends ObjectPainter {
    }
 
    /** @summary Process mouse double click event */
-   mouseDoubleClick(evnt) {
+   mouseDoubleClick() {
       if (this.zoom_rmin || this.zoom_rmax) {
          this.zoom_rmin = this.zoom_rmax = 0;
          this.redrawPad();

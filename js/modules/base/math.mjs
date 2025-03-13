@@ -5,6 +5,12 @@
  */
 
 /* eslint-disable curly */
+/* eslint-disable no-loss-of-precision */
+/* eslint-disable no-useless-assignment */
+/* eslint-disable no-use-before-define */
+/* eslint-disable no-else-return */
+/* eslint-disable no-shadow */
+/* eslint-disable operator-assignment */
 /* eslint-disable @stylistic/js/comma-spacing */
 /* eslint-disable @stylistic/js/no-floating-decimal */
 /* eslint-disable @stylistic/js/space-in-parens */
@@ -1988,12 +1994,10 @@ function eff_Bayesian(total,passed,level,bUpper,alpha,beta) {
          return beta_quantile((1+level)/2,a,b);
       else
          return 1;
-   } else {
-      if ((a > 0) && (b > 0))
-         return beta_quantile((1-level)/2,a,b);
-      else
-         return 0;
-   }
+   } else if ((a > 0) && (b > 0))
+      return beta_quantile((1-level)/2,a,b);
+
+   return 0;
 }
 
 /** @summary Return function to calculate boundary of TEfficiency

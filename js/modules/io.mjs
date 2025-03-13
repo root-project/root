@@ -533,46 +533,6 @@ const DirectStreamers = {
       // if ((version % 1000) > 2) buf.shift(18); // skip fUUID
    },
 
-   TBasket(buf, obj) {
-      buf.classStreamer(obj, clTKey);
-      const ver = buf.readVersion();
-      obj.fBufferSize = buf.ntoi4();
-      obj.fNevBufSize = buf.ntoi4();
-      obj.fNevBuf = buf.ntoi4();
-      obj.fLast = buf.ntoi4();
-      if (obj.fLast > obj.fBufferSize) obj.fBufferSize = obj.fLast;
-      const flag = buf.ntoi1();
-
-      if (flag === 0) return;
-
-      if ((flag % 10) !== 2) {
-         if (obj.fNevBuf) {
-            obj.fEntryOffset = buf.readFastArray(buf.ntoi4(), kInt);
-            if ((flag > 20) && (flag < 40)) {
-               for (let i = 0, kDisplacementMask = 0xFF000000; i < obj.fNevBuf; ++i)
-                  obj.fEntryOffset[i] &= ~kDisplacementMask;
-            }
-         }
-
-         if (flag > 40)
-            obj.fDisplacement = buf.readFastArray(buf.ntoi4(), kInt);
-      }
-
-      if ((flag === 1) || (flag > 10)) {
-         // here is reading of raw data
-         const sz = (ver.val <= 1) ? buf.ntoi4() : obj.fLast;
-
-         if (sz > obj.fKeylen) {
-            // buffer includes again complete TKey data - exclude it
-            const blob = buf.extract([buf.o + obj.fKeylen, sz - obj.fKeylen]);
-            obj.fBufferRef = new TBuffer(blob, 0, buf.fFile, sz - obj.fKeylen);
-            obj.fBufferRef.fTagOffset = obj.fKeylen;
-         }
-
-         buf.shift(sz);
-      }
-   },
-
    TRef(buf, obj) {
       buf.classStreamer(obj, clTObject);
       if (obj.fBits & kHasUUID)
@@ -656,6 +616,30 @@ function getTypeId(typname, norecursion) {
    return -1;
 }
 
+/** @summary Analyze and returns arrays kind
+  * @return 0 if TString (or equivalent), positive value - some basic type, -1 - any other kind
+  * @private */
+function getArrayKind(type_name) {
+   if ((type_name === clTString) || (type_name === 'string') ||
+      (CustomStreamers[type_name] === clTString)) return 0;
+   if ((type_name.length < 7) || (type_name.indexOf('TArray') !== 0)) return -1;
+   if (type_name.length === 7) {
+      switch (type_name[6]) {
+         case 'I': return kInt;
+         case 'D': return kDouble;
+         case 'F': return kFloat;
+         case 'S': return kShort;
+         case 'C': return kChar;
+         case 'L': return kLong;
+         default: return -1;
+      }
+   }
+
+   return type_name === 'TArrayL64' ? kLong64 : -1;
+}
+
+let createPairStreamer;
+
 /** @summary create element of the streamer
   * @private  */
 function createStreamerElement(name, typename, file) {
@@ -674,7 +658,8 @@ function createStreamerElement(name, typename, file) {
       typename = elem.fTypeName = BasicTypeNames[elem.fType] || 'int';
    }
 
-   if (elem.fType > 0) return elem; // basic type
+   if (elem.fType > 0)
+      return elem; // basic type
 
    // check if there are STL containers
    const pos = typename.indexOf('<');
@@ -695,6 +680,9 @@ function createStreamerElement(name, typename, file) {
       return elem;
    }
 
+   if ((pos > 0) && (typename.slice(0, pos) == 'pair') && file && isFunc(createPairStreamer))
+      createPairStreamer(typename, file);
+
    const isptr = typename.at(-1) === '*';
 
    if (isptr)
@@ -710,38 +698,107 @@ function createStreamerElement(name, typename, file) {
    return elem;
 }
 
+/** @summary Function to read vector element in the streamer
+  * @private */
+function readVectorElement(buf) {
+   if (this.member_wise) {
+      const n = buf.ntou4(), ver = this.stl_version;
+
+      if (n === 0)
+         return []; // for empty vector no need to search split streamers
+
+      if (n > 1000000)
+         throw new Error(`member-wise streaming of ${this.conttype} num ${n} member ${this.name}`);
+
+      let streamer;
+
+      if ((ver.val === this.member_ver) && (ver.checksum === this.member_checksum))
+         streamer = this.member_streamer;
+      else {
+         streamer = buf.fFile.getStreamer(this.conttype, ver);
+
+         this.member_streamer = streamer = buf.fFile.getSplittedStreamer(streamer);
+         this.member_ver = ver.val;
+         this.member_checksum = ver.checksum;
+      }
+
+      const res = new Array(n);
+      let i, k, member;
+
+      for (i = 0; i < n; ++i)
+         res[i] = { _typename: this.conttype }; // create objects
+      if (!streamer)
+         console.error(`Fail to create split streamer for ${this.conttype} need to read ${n} objects version ${ver}`);
+      else {
+         for (k = 0; k < streamer.length; ++k) {
+            member = streamer[k];
+            if (member.split_func)
+               member.split_func(buf, res, n);
+            else {
+               for (i = 0; i < n; ++i)
+                  member.func(buf, res[i]);
+            }
+         }
+      }
+      return res;
+   }
+
+   const n = buf.ntou4(), res = new Array(n);
+   let i = 0;
+
+   if (n > 200000) {
+      console.error(`vector streaming for ${this.conttype} at ${n}`);
+      return res;
+   }
+
+   if (this.arrkind > 0)
+      while (i < n) res[i++] = buf.readFastArray(buf.ntou4(), this.arrkind);
+   else if (this.arrkind === 0)
+      while (i < n) res[i++] = buf.readTString();
+   else if (this.isptr)
+      while (i < n) res[i++] = buf.readObjectAny();
+   else if (this.submember)
+      while (i < n) res[i++] = this.submember.readelem(buf);
+   else
+      while (i < n) res[i++] = buf.classStreamer({}, this.conttype);
+
+   return res;
+}
+
+/** @summary Create streamer info for pair object
+  * @private */
+createPairStreamer = function(typename, file) {
+   let si = file.findStreamerInfo(typename);
+   if (si)
+      return si;
+   let p1 = typename.indexOf('<');
+   const p2 = typename.lastIndexOf('>');
+   function getNextName() {
+      let res = '', p = p1 + 1, cnt = 0;
+      while ((p < p2) && (cnt >= 0)) {
+         switch (typename[p]) {
+            case '<': cnt++; break;
+            case ',': if (cnt === 0) cnt--; break;
+            case '>': cnt--; break;
+         }
+         if (cnt >= 0) res += typename[p];
+         p++;
+      }
+      p1 = p - 1;
+      return res.trim();
+   }
+   si = { _typename: 'TStreamerInfo', fClassVersion: 0, fName: typename, fElements: create(clTList) };
+   si.fElements.Add(createStreamerElement('first', getNextName(), file));
+   si.fElements.Add(createStreamerElement('second', getNextName(), file));
+   file.fStreamerInfos.arr.push(si);
+   return si;
+}
 
 /** @summary Function creates streamer for std::pair object
   * @private */
 function getPairStreamer(si, typname, file) {
-   if (!si) {
-      if (typname.indexOf('pair') !== 0)
-         return null;
-
-      si = file.findStreamerInfo(typname);
-
-      if (!si) {
-         let p1 = typname.indexOf('<');
-         const p2 = typname.lastIndexOf('>');
-         function getNextName() {
-            let res = '', p = p1 + 1, cnt = 0;
-            while ((p < p2) && (cnt >= 0)) {
-               switch (typname[p]) {
-                  case '<': cnt++; break;
-                  case ',': if (cnt === 0) cnt--; break;
-                  case '>': cnt--; break;
-               }
-               if (cnt >= 0) res += typname[p];
-               p++;
-            }
-            p1 = p - 1;
-            return res.trim();
-         }
-         si = { _typename: 'TStreamerInfo', fVersion: 1, fName: typname, fElements: create(clTList) };
-         si.fElements.Add(createStreamerElement('first', getNextName(), file));
-         si.fElements.Add(createStreamerElement('second', getNextName(), file));
-      }
-   }
+   if (!si)
+      si = createPairStreamer(typname, file);
 
    const streamer = file.getStreamer(typname, null, si);
    if (!streamer) return null;
@@ -761,6 +818,58 @@ function getPairStreamer(si, typname, file) {
    }
 
    return streamer;
+}
+
+/** @summary Function used in streamer to read std::map object
+  * @private */
+function readMapElement(buf) {
+   let streamer = this.streamer;
+
+   if (this.member_wise) {
+      // when member-wise streaming is used, version is written
+      const si = buf.fFile.findStreamerInfo(this.pairtype, this.stl_version.val, this.stl_version.checksum);
+
+      if (si && (this.si !== si)) {
+         streamer = getPairStreamer(si, this.pairtype, buf.fFile);
+         if (streamer?.length !== 2) {
+            console.log(`Fail to produce streamer for ${this.pairtype}`);
+            return null;
+         }
+      }
+   }
+
+   const n = buf.ntoi4(), res = new Array(n);
+
+   // no extra data written for empty map
+   if (n === 0)
+      return res;
+
+   if (this.member_wise && (buf.remain() >= 6)) {
+      if (buf.ntoi2() === kStreamedMemberWise)
+         buf.shift(4); // skip checksum
+      else
+         buf.shift(-2); // rewind
+   }
+
+   for (let i = 0; i < n; ++i) {
+      res[i] = { _typename: this.pairtype };
+      streamer[0].func(buf, res[i]);
+      if (!this.member_wise) streamer[1].func(buf, res[i]);
+   }
+
+   // due-to member-wise streaming second element read after first is completed
+   if (this.member_wise) {
+      if (buf.remain() >= 6) {
+         if (buf.ntoi2() === kStreamedMemberWise)
+            buf.shift(4);  // skip checksum
+         else
+            buf.shift(-2);  // rewind
+      }
+      for (let i = 0; i < n; ++i)
+         streamer[1].func(buf, res[i]);
+   }
+
+   return res;
 }
 
 
@@ -842,8 +951,8 @@ function createMemberStreamer(element, file) {
             member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
             member.minus1 = true;
             member.func = function(buf, obj) {
-               obj[this.name] = buf.readNdimArray(this, (buf, handle) =>
-                  buf.readFastArray(handle.arrlength, handle.type - kOffsetL));
+               obj[this.name] = buf.readNdimArray(this, (buf2, handle) =>
+                  buf2.readFastArray(handle.arrlength, handle.type - kOffsetL));
             };
          }
          break;
@@ -857,8 +966,8 @@ function createMemberStreamer(element, file) {
             member.minus1 = true; // one dimension used for char*
             member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
             member.func = function(buf, obj) {
-               obj[this.name] = buf.readNdimArray(this, (buf, handle) =>
-                  buf.readFastString(handle.arrlength));
+               obj[this.name] = buf.readNdimArray(this, (buf2, handle) =>
+                  buf2.readFastString(handle.arrlength));
             };
          }
          break;
@@ -890,6 +999,7 @@ function createMemberStreamer(element, file) {
       case kOffsetL + kDouble32:
       case kOffsetP + kDouble32:
          member.double32 = true;
+      // eslint-disable-next-line  no-fallthrough
       case kFloat16:
       case kOffsetL + kFloat16:
       case kOffsetP + kFloat16:
@@ -933,7 +1043,7 @@ function createMemberStreamer(element, file) {
                   member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
                   member.minus1 = true;
                   member.func = function(buf, obj) {
-                     obj[this.name] = buf.readNdimArray(this, (buf, handle) => handle.readarr(buf, handle.arrlength));
+                     obj[this.name] = buf.readNdimArray(this, (buf2, handle) => handle.readarr(buf2, handle.arrlength));
                   };
                }
          break;
@@ -941,7 +1051,7 @@ function createMemberStreamer(element, file) {
       case kAnyP:
       case kObjectP:
          member.func = function(buf, obj) {
-            obj[this.name] = buf.readNdimArray(this, buf => buf.readObjectAny());
+            obj[this.name] = buf.readNdimArray(this, buf2 => buf2.readObjectAny());
          };
          break;
 
@@ -965,7 +1075,7 @@ function createMemberStreamer(element, file) {
 
             if (element.fArrayLength > 1) {
                member.func = function(buf, obj) {
-                  obj[this.name] = buf.readNdimArray(this, (buf, handle) => buf.classStreamer({}, handle.classname));
+                  obj[this.name] = buf.readNdimArray(this, (buf2, handle) => buf2.classStreamer({}, handle.classname));
                };
             } else {
                member.func = function(buf, obj) {
@@ -986,10 +1096,12 @@ function createMemberStreamer(element, file) {
          member.arrkind = getArrayKind(classname);
          if (member.arrkind < 0) member.classname = classname;
          member.func = function(buf, obj) {
-            obj[this.name] = buf.readNdimArray(this, (buf, handle) => {
-               if (handle.arrkind > 0) return buf.readFastArray(buf.ntou4(), handle.arrkind);
-               if (handle.arrkind === 0) return buf.readTString();
-               return buf.classStreamer({}, handle.classname);
+            obj[this.name] = buf.readNdimArray(this, (buf2, handle) => {
+               if (handle.arrkind > 0)
+                  return buf2.readFastArray(buf.ntou4(), handle.arrkind);
+               if (handle.arrkind === 0)
+                  return buf2.readTString();
+               return buf2.classStreamer({}, handle.classname);
             });
          };
          break;
@@ -1017,9 +1129,10 @@ function createMemberStreamer(element, file) {
          member.typename = element.fTypeName;
          member.func = function(buf, obj) {
             const ver = buf.readVersion();
-            obj[this.name] = buf.readNdimArray(this, (buf, handle) => {
-               if (handle.typename === clTString) return buf.readTString();
-               return buf.classStreamer({}, handle.typename);
+            obj[this.name] = buf.readNdimArray(this, (buf2, handle) => {
+               if (handle.typename === clTString)
+                  return buf2.readTString();
+               return buf2.classStreamer({}, handle.typename);
             });
             buf.checkByteCount(ver, this.typename + '[]');
          };
@@ -1145,7 +1258,7 @@ function createMemberStreamer(element, file) {
                member.readelem = readVectorElement;
 
                if (!member.isptr && (member.arrkind < 0)) {
-                  const subelem = createStreamerElement('temp', member.conttype);
+                  const subelem = createStreamerElement('temp', member.conttype, file);
                   if (subelem.fType === kStreamer) {
                      subelem.$fictional = true;
                      member.submember = createMemberStreamer(subelem, file);
@@ -1153,6 +1266,7 @@ function createMemberStreamer(element, file) {
                }
             }
          } else if ((stl === kSTLmap) || (stl === kSTLmultimap)) {
+
             const p1 = member.typename.indexOf('<'),
                   p2 = member.typename.lastIndexOf('>');
 
@@ -1189,7 +1303,7 @@ function createMemberStreamer(element, file) {
 
                   this.stl_version = undefined;
                   if (this.member_wise) {
-                     ver.val = ver.val & ~kStreamedMemberWise;
+                     ver.val &= ~kStreamedMemberWise;
                      this.stl_version = { val: buf.ntoi2() };
                      if (this.stl_version.val <= 0) this.stl_version.checksum = buf.ntou4();
                   }
@@ -1253,28 +1367,6 @@ function createMemberStreamer(element, file) {
    return member;
 }
 
-
-/** @summary Analyze and returns arrays kind
-  * @return 0 if TString (or equivalent), positive value - some basic type, -1 - any other kind
-  * @private */
-function getArrayKind(type_name) {
-   if ((type_name === clTString) || (type_name === 'string') ||
-      (CustomStreamers[type_name] === clTString)) return 0;
-   if ((type_name.length < 7) || (type_name.indexOf('TArray') !== 0)) return -1;
-   if (type_name.length === 7) {
-      switch (type_name[6]) {
-         case 'I': return kInt;
-         case 'D': return kDouble;
-         case 'F': return kFloat;
-         case 'S': return kShort;
-         case 'C': return kChar;
-         case 'L': return kLong;
-         default: return -1;
-      }
-   }
-
-   return type_name === 'TArrayL64' ? kLong64 : -1;
-}
 
 /** @summary Let directly assign methods when doing I/O
   * @private */
@@ -1389,7 +1481,7 @@ function ZIP_inflate(arr, tgt) {
       x = Array(BMAX+1).fill(0), // bit offsets, then code stack
       r = { e: 0, b: 0, n: 0, t: null }, // new zip_HuftNode(), // table entry for structure assignment
       el = (n > 256) ? b[256] : BMAX; // set length of EOB code, if any
-      let rr = null, // temporary variable, use in assignment
+      let rr,        // temporary variable, use in assignment
           a,         // counter for codes of length k
           f,         // i repeats in table every f entries
           h,         // table level
@@ -2172,8 +2264,10 @@ class TBuffer {
    readTString() {
       let len = this.ntou1();
       // large strings
-      if (len === 255) len = this.ntou4();
-      if (len === 0) return '';
+      if (len === 255)
+         len = this.ntou4();
+      if (len === 0)
+         return '';
 
       const pos = this.o;
       this.o += len;
@@ -2182,13 +2276,23 @@ class TBuffer {
    }
 
     /** @summary read Char_t array as string
-      * @desc string either contains all symbols or until 0 symbol */
+      * @desc stops when 0 is found */
+    readNullTerminatedString() {
+      let res = '', code;
+      while ((code = this.ntou1()) !== 0)
+         res += String.fromCharCode(code);
+      return res;
+   }
+
+    /** @summary read Char_t array as string */
    readFastString(n) {
-      let res = '', code, closed = false;
-      for (let i = 0; (n < 0) || (i < n); ++i) {
-         code = this.ntou1();
-         if (code === 0) { closed = true; if (n < 0) break; }
-         if (!closed) res += String.fromCharCode(code);
+      let res = '', reading = true;
+      for (let i = 0; i < n; ++i) {
+         const code = this.ntou1();
+         if (code === 0)
+            reading = false;
+         if (reading)
+            res += String.fromCharCode(code);
       }
 
       return res;
@@ -2445,13 +2549,10 @@ class TBuffer {
 
    /** @summary read class definition from I/O buffer */
    readClass() {
-      const classInfo = { name: -1 }, bcnt = this.ntou4(), startpos = this.o;
-      let tag;
-
-      if (!(bcnt & kByteCountMask) || (bcnt === kNewClassTag))
-         tag = bcnt;
-      else
-         tag = this.ntou4();
+      const classInfo = { name: -1 },
+            bcnt = this.ntou4(),
+            startpos = this.o,
+            tag = !(bcnt & kByteCountMask) || (bcnt === kNewClassTag) ? bcnt : this.ntou4();
 
       if (!(tag & kClassMask)) {
          classInfo.objtag = tag + this.fDisplacement; // indicate that we have deal with objects tag
@@ -2459,7 +2560,7 @@ class TBuffer {
       }
       if (tag === kNewClassTag) {
          // got a new class description followed by a new object
-         classInfo.name = this.readFastString(-1);
+         classInfo.name = this.readNullTerminatedString();
 
          if (this.getMappedClass(this.fTagOffset + startpos + kMapOffset) === -1)
             this.mapClass(this.fTagOffset + startpos + kMapOffset, classInfo.name);
@@ -2481,10 +2582,11 @@ class TBuffer {
             clRef = this.readClass();
 
       // class identified as object and should be handled so
-      if ('objtag' in clRef)
+      if (clRef.objtag !== undefined)
          return this.getMappedObject(clRef.objtag);
 
-      if (clRef.name === -1) return null;
+      if (clRef.name === -1)
+         return null;
 
       const arrkind = getArrayKind(clRef.name);
       let obj;
@@ -2534,6 +2636,51 @@ class TBuffer {
    }
 
 } // class TBuffer
+
+// ==============================================================================
+
+/** @summary Direct streamer for TBasket,
+  * @desc uses TBuffer therefore defined later
+  * @private */
+DirectStreamers[clTBasket] = function(buf, obj) {
+   buf.classStreamer(obj, clTKey);
+   const ver = buf.readVersion();
+   obj.fBufferSize = buf.ntoi4();
+   obj.fNevBufSize = buf.ntoi4();
+   obj.fNevBuf = buf.ntoi4();
+   obj.fLast = buf.ntoi4();
+   if (obj.fLast > obj.fBufferSize) obj.fBufferSize = obj.fLast;
+   const flag = buf.ntoi1();
+
+   if (flag === 0) return;
+
+   if ((flag % 10) !== 2) {
+      if (obj.fNevBuf) {
+         obj.fEntryOffset = buf.readFastArray(buf.ntoi4(), kInt);
+         if ((flag > 20) && (flag < 40)) {
+            for (let i = 0, kDisplacementMask = 0xFF000000; i < obj.fNevBuf; ++i)
+               obj.fEntryOffset[i] &= ~kDisplacementMask;
+         }
+      }
+
+      if (flag > 40)
+         obj.fDisplacement = buf.readFastArray(buf.ntoi4(), kInt);
+   }
+
+   if ((flag === 1) || (flag > 10)) {
+      // here is reading of raw data
+      const sz = (ver.val <= 1) ? buf.ntoi4() : obj.fLast;
+
+      if (sz > obj.fKeylen) {
+         // buffer includes again complete TKey data - exclude it
+         const blob = buf.extract([buf.o + obj.fKeylen, sz - obj.fKeylen]);
+         obj.fBufferRef = new TBuffer(blob, 0, buf.fFile, sz - obj.fKeylen);
+         obj.fBufferRef.fTagOffset = obj.fKeylen;
+      }
+
+      buf.shift(sz);
+   }
+};
 
 // ==============================================================================
 
@@ -2651,7 +2798,8 @@ class TFile {
       this.fStreamers = [];
       this.fBasicTypes = {}; // custom basic types, in most case enumerations
 
-      if (!isStr(this.fURL)) return this;
+      if (!isStr(this.fURL))
+         return;
 
       if (this.fURL.at(-1) === '+') {
          this.fURL = this.fURL.slice(0, this.fURL.length - 1);
@@ -3185,18 +3333,19 @@ class TFile {
                      }
                   }
                }
-               if (typ >= 60) continue;
+               if (typ >= 60)
+                  continue;
             } else {
                if ((typ > 20) && (typname.at(-1) === '*'))
                   typname = typname.slice(0, typname.length - 1);
-               typ = typ % 20;
+               typ %= 20;
             }
 
             const kind = getTypeId(typname);
-            if (kind === typ) continue;
-
-            if ((typ === kBits) && (kind === kUInt)) continue;
-            if ((typ === kCounter) && (kind === kInt)) continue;
+            if ((kind === typ) ||
+               ((typ === kBits) && (kind === kUInt)) ||
+               ((typ === kCounter) && (kind === kInt)))
+               continue;
 
             if (typname && typ && (this.fBasicTypes[typname] !== typ))
                this.fBasicTypes[typname] = typ;
@@ -3320,18 +3469,21 @@ class TFile {
          let cache = this.fStreamerInfos.cache;
          if (!cache) cache = this.fStreamerInfos.cache = {};
          let si = cache[checksum];
-         if (si !== undefined)
+         if (si && (!clname || (si.fName === clname)))
             return si;
 
          for (let i = 0; i < len; ++i) {
             si = arr[i];
             if (si.fCheckSum === checksum) {
                cache[checksum] = si;
-               return si;
+               if (!clname || (si.fName === clname))
+                  return si;
             }
          }
          cache[checksum] = null; // checksum did not found, do not try again
-      } else {
+      }
+
+      if (clname) {
          for (let i = 0; i < len; ++i) {
             const si = arr[i];
             if ((si.fName === clname) && ((si.fClassVersion === clversion) || (clversion === undefined)))
@@ -3378,7 +3530,8 @@ class TFile {
       }
 
       // check element in streamer infos, one can have special cases
-      if (!s_i) s_i = this.findStreamerInfo(clname, ver.val, ver.checksum);
+      if (!s_i)
+         s_i = this.findStreamerInfo(clname, ver.val, ver.checksum);
 
       if (!s_i) {
          delete this.fStreamers[fullname];
@@ -3503,128 +3656,6 @@ function reconstructObject(class_name, obj_rawdata, sinfo_rawdata) {
    return obj;
 }
 
-/** @summary Function to read vector element in the streamer
-  * @private */
-function readVectorElement(buf) {
-   if (this.member_wise) {
-      const n = buf.ntou4(), ver = this.stl_version;
-      let streamer = null;
-
-      if (n === 0) return []; // for empty vector no need to search split streamers
-
-      if (n > 1000000)
-         throw new Error(`member-wise streaming of ${this.conttype} num ${n} member ${this.name}`);
-
-      if ((ver.val === this.member_ver) && (ver.checksum === this.member_checksum))
-         streamer = this.member_streamer;
-      else {
-         streamer = buf.fFile.getStreamer(this.conttype, ver);
-
-         this.member_streamer = streamer = buf.fFile.getSplittedStreamer(streamer);
-         this.member_ver = ver.val;
-         this.member_checksum = ver.checksum;
-      }
-
-      const res = new Array(n);
-      let i, k, member;
-
-      for (i = 0; i < n; ++i)
-         res[i] = { _typename: this.conttype }; // create objects
-      if (!streamer)
-         console.error(`Fail to create split streamer for ${this.conttype} need to read ${n} objects version ${ver}`);
-      else {
-         for (k = 0; k < streamer.length; ++k) {
-            member = streamer[k];
-            if (member.split_func)
-               member.split_func(buf, res, n);
-            else {
-               for (i = 0; i < n; ++i)
-                  member.func(buf, res[i]);
-            }
-         }
-      }
-      return res;
-   }
-
-   const n = buf.ntou4(), res = new Array(n);
-   let i = 0;
-
-   if (n > 200000) {
-      console.error(`vector streaming for ${this.conttype} at ${n}`);
-      return res;
-   }
-
-   if (this.arrkind > 0)
-      while (i < n) res[i++] = buf.readFastArray(buf.ntou4(), this.arrkind);
-   else if (this.arrkind === 0)
-      while (i < n) res[i++] = buf.readTString();
-   else if (this.isptr)
-      while (i < n) res[i++] = buf.readObjectAny();
-   else if (this.submember)
-      while (i < n) res[i++] = this.submember.readelem(buf);
-   else
-      while (i < n) res[i++] = buf.classStreamer({}, this.conttype);
-
-   return res;
-}
-
-
-/** @summary Function used in streamer to read std::map object
-  * @private */
-function readMapElement(buf) {
-   let streamer = this.streamer;
-
-   if (this.member_wise) {
-      // when member-wise streaming is used, version is written
-      const ver = this.stl_version;
-
-      if (this.si) {
-         const si = buf.fFile.findStreamerInfo(this.pairtype, ver.val, ver.checksum);
-
-         if (this.si !== si) {
-            streamer = getPairStreamer(si, this.pairtype, buf.fFile);
-            if (!streamer || streamer.length !== 2) {
-               console.log(`Fail to produce streamer for ${this.pairtype}`);
-               return null;
-            }
-         }
-      }
-   }
-
-   const n = buf.ntoi4(), res = new Array(n);
-
-   // no extra data written for empty map
-   if (n === 0)
-      return res;
-
-   if (this.member_wise && (buf.remain() >= 6)) {
-      if (buf.ntoi2() === kStreamedMemberWise)
-         buf.shift(4); // skip checksum
-      else
-         buf.shift(-2); // rewind
-   }
-
-   for (let i = 0; i < n; ++i) {
-      res[i] = { _typename: this.pairtype };
-      streamer[0].func(buf, res[i]);
-      if (!this.member_wise) streamer[1].func(buf, res[i]);
-   }
-
-   // due-to member-wise streaming second element read after first is completed
-   if (this.member_wise) {
-      if (buf.remain() >= 6) {
-         if (buf.ntoi2() === kStreamedMemberWise)
-            buf.shift(4);  // skip checksum
-         else
-            buf.shift(-2);  // rewind
-      }
-      for (let i = 0; i < n; ++i)
-         streamer[1].func(buf, res[i]);
-   }
-
-   return res;
-}
-
 // =============================================================
 
 /**
@@ -3657,19 +3688,27 @@ class TLocalFile extends TFile {
       const file = this.fLocalFile;
 
       return new Promise((resolve, reject) => {
-         if (filename)
-            return reject(Error(`Cannot access other local file ${filename}`));
+         if (filename) {
+            reject(Error(`Cannot access other local file ${filename}`));
+            return;
+         }
 
          const reader = new FileReader(), blobs = [];
          let cnt = 0;
 
          reader.onload = function(evnt) {
             const res = new DataView(evnt.target.result);
-            if (place.length === 2) return resolve(res);
+            if (place.length === 2) {
+               resolve(res);
+               return;
+            }
 
             blobs.push(res);
             cnt += 2;
-            if (cnt >= place.length) return resolve(blobs);
+            if (cnt >= place.length) {
+               resolve(blobs);
+               return;
+            }
             reader.readAsArrayBuffer(file.slice(place[cnt], place[cnt] + place[cnt + 1]));
          };
 
@@ -3704,19 +3743,19 @@ class TNodejsFile extends TFile {
       return import('fs').then(fs => {
          this.fs = fs;
 
-         return new Promise((resolve, reject) =>
-
+         return new Promise((resolve, reject) => {
             this.fs.open(this.fFileName, 'r', (status, fd) => {
                if (status) {
                   console.log(status.message);
-                  return reject(Error(`Not possible to open ${this.fFileName} inside node.js`));
+                  reject(Error(`Not possible to open ${this.fFileName} inside node.js`));
+               } else {
+                  const stats = this.fs.fstatSync(fd);
+                  this.fEND = stats.size;
+                  this.fd = fd;
+                  this.readKeys().then(resolve).catch(reject);
                }
-               const stats = this.fs.fstatSync(fd);
-               this.fEND = stats.size;
-               this.fd = fd;
-               this.readKeys().then(resolve).catch(reject);
-            })
-         );
+            });
+         });
       });
    }
 
@@ -3724,11 +3763,15 @@ class TNodejsFile extends TFile {
      * @return {Promise} with requested blocks */
    async readBuffer(place, filename /* , progress_callback */) {
       return new Promise((resolve, reject) => {
-         if (filename)
-            return reject(Error(`Cannot access other local file ${filename}`));
+         if (filename) {
+            reject(Error(`Cannot access other local file ${filename}`));
+            return;
+         }
 
-         if (!this.fs || !this.fd)
-            return reject(Error(`File is not opened ${this.fFileName}`));
+         if (!this.fs || !this.fd) {
+            reject(Error(`File is not opened ${this.fFileName}`));
+            return;
+         }
 
          const blobs = [];
          let cnt = 0;

@@ -108,7 +108,7 @@ class Sha256 {
     }
     if (this.bytes > 4294967295) {
       this.hBytes += this.bytes / 4294967296 << 0;
-      this.bytes = this.bytes % 4294967296;
+      this.bytes %= 4294967296;
     }
     return this;
   }

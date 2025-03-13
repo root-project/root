@@ -66,12 +66,12 @@ class THStackPainter extends ObjectPainter {
          if (!match && (xnext.fNbins > 0) && (xnext.fNbins < xprev.fNbins) && (xnext.fXmin === xprev.fXmin) &&
              (Math.abs((xnext.fXmax - xnext.fXmin)/xnext.fNbins - (xprev.fXmax - xprev.fXmin)/xprev.fNbins) < 0.0001)) {
             // simple extension of histogram to make sum
-            const arr = new Array(hprev.fNcells).fill(0);
+            const arr2 = new Array(hprev.fNcells).fill(0);
             for (let n = 1; n <= xnext.fNbins; ++n)
-               arr[n] = hnext.fArray[n];
+               arr2[n] = hnext.fArray[n];
             hnext.fNcells = hprev.fNcells;
             Object.assign(xnext, xprev);
-            hnext.fArray = arr;
+            hnext.fArray = arr2;
             match = true;
          }
          if (!match) {
@@ -258,15 +258,16 @@ class THStackPainter extends ObjectPainter {
       const stack = this.getObject(),
             hist = stack.fHistogram || (stack.fHists ? stack.fHists.arr[0] : null) || (this.fStack ? this.fStack.arr[0] : null),
 
-       hasErrors = hist => {
-         if (hist.fSumw2 && (hist.fSumw2.length > 0)) {
-            for (let n = 0; n < hist.fSumw2.length; ++n)
-               if (hist.fSumw2[n] > 0) return true;
+       hasErrors = hist2 => {
+         const len = hist2.fSumw2?.length ?? 0;
+         for (let n = 0; n < len; ++n) {
+            if (hist2.fSumw2[n] > 0)
+               return true;
          }
          return false;
       };
 
-      if (hist && (hist._typename.indexOf(clTH2) === 0))
+      if (hist?._typename.indexOf(clTH2) === 0)
          this.options.ndim = 2;
 
       if ((this.options.ndim === 2) && !opt)

@@ -38,8 +38,9 @@ class RObjectPainter extends ObjectPainter {
          const typ1 = typeof dflt, typ2 = typeof res;
          if (typ1 === typ2) return res;
          if (typ1 === 'boolean') {
-            if (typ2 === 'string') return (res !== '') && (res !== '0') && (res !== 'no') && (res !== 'off');
-            return !!res;
+            if (typ2 === 'string')
+               return (res !== '') && (res !== '0') && (res !== 'no') && (res !== 'off');
+            return Boolean(res);
          }
          if ((typ1 === 'number') && (typ2 === 'string'))
             return parseFloat(res);
@@ -270,7 +271,6 @@ class RObjectPainter extends ObjectPainter {
       if (this.cssprefix) name = this.cssprefix + name;
       req.ids.push(this.snapid);
       req.names.push(name);
-      let obj = null;
 
       if ((value === null) || (value === undefined)) {
         if (!kind) kind = 'none';
@@ -284,10 +284,10 @@ class RObjectPainter extends ObjectPainter {
          }
       }
 
-      obj = { _typename: `${nsREX}RAttrMap::` };
+      const obj = { _typename: `${nsREX}RAttrMap::` };
       switch (kind) {
          case 'none': obj._typename += 'NoValue_t'; break;
-         case 'boolean': obj._typename += 'BoolValue_t'; obj.v = !!value; break;
+         case 'boolean': obj._typename += 'BoolValue_t'; obj.v = Boolean(value); break;
          case 'int': obj._typename += 'IntValue_t'; obj.v = parseInt(value); break;
          case 'double': obj._typename += 'DoubleValue_t'; obj.v = parseFloat(value); break;
          default: obj._typename += 'StringValue_t'; obj.v = isStr(value) ? value : JSON.stringify(value); break;
@@ -302,7 +302,7 @@ class RObjectPainter extends ObjectPainter {
       const canp = this.getCanvPainter();
       if (canp && req?._typename) {
          if (do_update !== undefined)
-            req.update = !!do_update;
+            req.update = Boolean(do_update);
          canp.v7SubmitRequest('', req);
       }
    }

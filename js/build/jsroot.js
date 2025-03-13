@@ -12,7 +12,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '24/02/2025',
+version_date = '13/03/2025',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -21,7 +21,7 @@ version = version_id + ' ' + version_date,
 
 /** @summary Is node.js flag
   * @private */
-nodejs = !!((typeof process === 'object') && isObject(process.versions) && process.versions.node && process.versions.v8),
+nodejs = Boolean((typeof process === 'object') && process.versions?.node && process.versions.v8),
 
 /** @summary internal data
   * @private */
@@ -33,6 +33,38 @@ internals = {
 _src = (typeof document === 'undefined' && typeof location === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : typeof document === 'undefined' ? location.href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('jsroot.js', document.baseURI).href)),
 
 _src_dir = '$jsrootsys';
+
+
+/** @summary Check if argument is a not-null Object
+  * @private */
+function isObject(arg) { return arg && typeof arg === 'object'; }
+
+/** @summary Check if argument is a Function
+  * @private */
+function isFunc(arg) { return typeof arg === 'function'; }
+
+/** @summary Check if argument is a String
+  * @private */
+function isStr(arg) { return typeof arg === 'string'; }
+
+/** @summary Check if object is a Promise
+  * @private */
+function isPromise(obj) { return isObject(obj) && isFunc(obj.then); }
+
+/** @summary Postpone func execution and return result in promise
+  * @private */
+function postponePromise(func, timeout) {
+   return new Promise(resolveFunc => {
+      setTimeout(() => {
+         const res = isFunc(func) ? func() : func;
+         resolveFunc(res);
+      }, timeout);
+   });
+}
+
+/** @summary Provide promise in any case
+  * @private */
+function getPromise(obj) { return isPromise(obj) ? obj : Promise.resolve(obj); }
 
 
 /** @summary Location of JSROOT modules
@@ -70,7 +102,7 @@ function isBatchMode() { return batch_mode; }
 
 /** @summary Set batch mode
   * @private */
-function setBatchMode(on) { batch_mode = !!on; }
+function setBatchMode(on) { batch_mode = Boolean(on); }
 
 /** @summary Indicates if running inside Node.js */
 function isNodeJs() { return nodejs; }
@@ -104,7 +136,7 @@ if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typ
    } else {
       browser.isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
       browser.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
-      browser.isChrome = !!window.chrome;
+      browser.isChrome = Boolean(window.chrome);
       browser.isChromeHeadless = navigator.userAgent.indexOf('HeadlessChrome') >= 0;
       browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 0;
       browser.isWin = navigator.userAgent.indexOf('Windows') >= 0;
@@ -469,143 +501,10 @@ function getDocument() {
    return undefined;
 }
 
-/** @summary Inject javascript code
-  * @desc Replacement for eval
-  * @return {Promise} when code is injected
+/** @summary Ensure global JSROOT and v6 support methods
   * @private */
-async function injectCode(code) {
-   if (nodejs) {
-      let name, fs;
-      return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(tmp => {
-         name = tmp.tmpNameSync() + '.js';
-         return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; });
-      }).then(_fs => {
-         fs = _fs;
-         fs.writeFileSync(name, code);
-         return import(/* webpackIgnore: true */ 'file://' + name);
-      }).finally(() => fs.unlinkSync(name));
-   }
+exports._ensureJSROOT = null;
 
-   if (typeof document !== 'undefined') {
-      // check if code already loaded - to avoid duplication
-      const scripts = document.getElementsByTagName('script');
-      for (let n = 0; n < scripts.length; ++n) {
-         if (scripts[n].innerHTML === code)
-            return true;
-      }
-
-      // try to detect if code includes import and must be treated as module
-      const is_v6 = code.indexOf('JSROOT.require') >= 0,
-            is_mjs = !is_v6 && (code.indexOf('import {') > 0) && (code.indexOf('} from \'') > 0),
-            is_batch = !is_v6 && !is_mjs && (code.indexOf('JSROOT.ObjectPainter') >= 0),
-            promise = (is_v6 ? _ensureJSROOT() : Promise.resolve(true));
-
-      if (is_batch && !globalThis.JSROOT)
-         globalThis.JSROOT = internals.jsroot;
-
-      return promise.then(() => {
-         const element = document.createElement('script');
-         element.setAttribute('type', is_mjs ? 'module' : 'text/javascript');
-         element.innerHTML = code;
-         document.head.appendChild(element);
-         // while onload event not fired, just postpone resolve
-         return isBatchMode() ? true : postponePromise(true, 10);
-      });
-   }
-
-   return false;
-}
-
-/** @summary Load ES6 modules
-  * @param {String} arg - single URL or array of URLs
-  * @return {Promise} */
-async function loadModules(arg) {
-   if (isStr(arg))
-      arg = arg.split(';');
-   if (arg.length === 0)
-      return true;
-   return import(/* webpackIgnore: true */ arg.shift()).then(() => loadModules(arg));
-}
-
-/** @summary Load script or CSS file into the browser
-  * @param {String} url - script or css file URL (or array, in this case they all loaded sequentially)
-  * @return {Promise} */
-async function loadScript(url) {
-   if (!url)
-      return true;
-
-   if (isStr(url) && (url.indexOf(';') >= 0))
-      url = url.split(';');
-
-   if (!isStr(url)) {
-      const scripts = url, loadNext = () => {
-         if (!scripts.length) return true;
-         return loadScript(scripts.shift()).then(loadNext, loadNext);
-      };
-      return loadNext();
-   }
-
-   if (url.indexOf('$$$') === 0) {
-      url = url.slice(3);
-      if ((url.indexOf('style/') === 0) && (url.indexOf('.css') < 0))
-         url += '.css';
-      url = exports.source_dir + url;
-   }
-
-   const isstyle = url.indexOf('.css') > 0;
-
-   if (nodejs) {
-      if (isstyle)
-         return null;
-      if ((url.indexOf('http:') === 0) || (url.indexOf('https:') === 0))
-         return httpRequest(url, 'text').then(code => injectCode(code));
-
-      // local files, read and use it
-      if (url.indexOf('./') === 0)
-         return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(fs => injectCode(fs.readFileSync(url)));
-
-      return import(/* webpackIgnore: true */ url);
-   }
-
-   const match_url = src => {
-      if (src === url) return true;
-      const indx = src.indexOf(url);
-      return (indx > 0) && (indx + url.length === src.length) && (src[indx-1] === '/');
-   };
-
-   if (isstyle) {
-      const styles = document.getElementsByTagName('link');
-      for (let n = 0; n < styles.length; ++n) {
-         if (!styles[n].href || (styles[n].type !== 'text/css') || (styles[n].rel !== 'stylesheet')) continue;
-         if (match_url(styles[n].href))
-            return true;
-      }
-   } else {
-      const scripts = document.getElementsByTagName('script');
-      for (let n = 0; n < scripts.length; ++n) {
-         if (match_url(scripts[n].src))
-            return true;
-      }
-   }
-
-   let element;
-   if (isstyle) {
-      element = document.createElement('link');
-      element.setAttribute('rel', 'stylesheet');
-      element.setAttribute('type', 'text/css');
-      element.setAttribute('href', url);
-   } else {
-      element = document.createElement('script');
-      element.setAttribute('type', 'text/javascript');
-      element.setAttribute('src', url);
-   }
-
-   return new Promise((resolveFunc, rejectFunc) => {
-      element.onload = () => resolveFunc(true);
-      element.onerror = () => { element.remove(); rejectFunc(Error(`Fail to load ${url}`)); };
-      document.head.appendChild(element);
-   });
-}
 
 /** @summary Generate mask for given bit
   * @param {number} n bit number
@@ -668,12 +567,11 @@ const extend$1 = Object.assign;
 
 /** @summary Adds specific methods to the object.
   * @desc JSROOT implements some basic methods for different ROOT classes.
+  * @function
   * @param {object} obj - object where methods are assigned
   * @param {string} [typename] - optional typename, if not specified, obj._typename will be used
   * @private */
-function addMethods(obj, typename) {
-   extend$1(obj, getMethods(typename || obj._typename, obj));
-}
+exports.addMethods = null;
 
 /** @summary Should be used to parse JSON string produced with TBufferJSON class
   * @desc Replace all references inside object like { "$ref": "1" }
@@ -742,8 +640,8 @@ function parse$1(json) {
             const buf = atob_func(value.b);
             if (arr.buffer) {
                const dv = new DataView(arr.buffer, value.o || 0),
-                     len = Math.min(buf.length, dv.byteLength);
-               for (let k = 0; k < len; ++k)
+                     blen = Math.min(buf.length, dv.byteLength);
+               for (let k = 0; k < blen; ++k)
                   dv.setUint8(k, buf.charCodeAt(k));
             } else
                throw new Error('base64 coding supported only for native arrays with binary data');
@@ -788,7 +686,7 @@ function parse$1(json) {
       map.push(value);
 
       // add methods to all objects, where _typename is specified
-      if (value._typename) addMethods(value);
+      if (value._typename) exports.addMethods(value);
 
       for (let k = 0; k < len; ++k) {
          const i = ks[k], res = unref_value(value[i]);
@@ -1079,6 +977,154 @@ async function httpRequest(url, kind, post_data) {
       createHttpRequest(url, kind, resolve, reject, true).then(xhr => xhr.send(post_data || null));
    });
 }
+
+/** @summary Inject javascript code
+  * @desc Replacement for eval
+  * @return {Promise} when code is injected
+  * @private */
+async function injectCode(code) {
+   if (nodejs) {
+      let name, fs;
+      return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(tmp => {
+         name = tmp.tmpNameSync() + '.js';
+         return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; });
+      }).then(_fs => {
+         fs = _fs;
+         fs.writeFileSync(name, code);
+         return import(/* webpackIgnore: true */ 'file://' + name);
+      }).finally(() => fs.unlinkSync(name));
+   }
+
+   if (typeof document !== 'undefined') {
+      // check if code already loaded - to avoid duplication
+      const scripts = document.getElementsByTagName('script');
+      for (let n = 0; n < scripts.length; ++n) {
+         if (scripts[n].innerHTML === code)
+            return true;
+      }
+
+      // try to detect if code includes import and must be treated as module
+      const is_v6 = code.indexOf('JSROOT.require') >= 0,
+            is_mjs = !is_v6 && (code.indexOf('import {') > 0) && (code.indexOf('} from \'') > 0),
+            is_batch = !is_v6 && !is_mjs && (code.indexOf('JSROOT.ObjectPainter') >= 0),
+            promise = (is_v6 ? exports._ensureJSROOT() : Promise.resolve(true));
+
+      if (is_batch && !globalThis.JSROOT)
+         globalThis.JSROOT = internals.jsroot;
+
+      return promise.then(() => {
+         const element = document.createElement('script');
+         element.setAttribute('type', is_mjs ? 'module' : 'text/javascript');
+         element.innerHTML = code;
+         document.head.appendChild(element);
+         // while onload event not fired, just postpone resolve
+         return isBatchMode() ? true : postponePromise(true, 10);
+      });
+   }
+
+   return false;
+}
+
+/** @summary Load ES6 modules
+  * @param {String} arg - single URL or array of URLs
+  * @return {Promise} */
+async function loadModules(arg) {
+   if (isStr(arg))
+      arg = arg.split(';');
+   if (arg.length === 0)
+      return true;
+   return import(/* webpackIgnore: true */ arg.shift()).then(() => loadModules(arg));
+}
+
+/** @summary Load script or CSS file into the browser
+  * @param {String} url - script or css file URL (or array, in this case they all loaded sequentially)
+  * @return {Promise} */
+async function loadScript(url) {
+   if (!url)
+      return true;
+
+   if (isStr(url) && (url.indexOf(';') >= 0))
+      url = url.split(';');
+
+   if (!isStr(url)) {
+      const scripts = url, loadNext = () => {
+         if (!scripts.length) return true;
+         return loadScript(scripts.shift()).then(loadNext, loadNext);
+      };
+      return loadNext();
+   }
+
+   if (url.indexOf('$$$') === 0) {
+      url = url.slice(3);
+      if ((url.indexOf('style/') === 0) && (url.indexOf('.css') < 0))
+         url += '.css';
+      url = exports.source_dir + url;
+   }
+
+   const isstyle = url.indexOf('.css') > 0;
+
+   if (nodejs) {
+      if (isstyle)
+         return null;
+      if ((url.indexOf('http:') === 0) || (url.indexOf('https:') === 0))
+         return httpRequest(url, 'text').then(code => injectCode(code));
+
+      // local files, read and use it
+      if (url.indexOf('./') === 0)
+         return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(fs => injectCode(fs.readFileSync(url)));
+
+      return import(/* webpackIgnore: true */ url);
+   }
+
+   const match_url = src => {
+      if (src === url) return true;
+      const indx = src.indexOf(url);
+      return (indx > 0) && (indx + url.length === src.length) && (src[indx-1] === '/');
+   };
+
+   if (isstyle) {
+      const styles = document.getElementsByTagName('link');
+      for (let n = 0; n < styles.length; ++n) {
+         if (!styles[n].href || (styles[n].type !== 'text/css') || (styles[n].rel !== 'stylesheet')) continue;
+         if (match_url(styles[n].href))
+            return true;
+      }
+   } else {
+      const scripts = document.getElementsByTagName('script');
+      for (let n = 0; n < scripts.length; ++n) {
+         if (match_url(scripts[n].src))
+            return true;
+      }
+   }
+
+   let element;
+   if (isstyle) {
+      element = document.createElement('link');
+      element.setAttribute('rel', 'stylesheet');
+      element.setAttribute('type', 'text/css');
+      element.setAttribute('href', url);
+   } else {
+      element = document.createElement('script');
+      element.setAttribute('type', 'text/javascript');
+      element.setAttribute('src', url);
+   }
+
+   return new Promise((resolveFunc, rejectFunc) => {
+      element.onload = () => resolveFunc(true);
+      element.onerror = () => { element.remove(); rejectFunc(Error(`Fail to load ${url}`)); };
+      document.head.appendChild(element);
+   });
+}
+
+exports._ensureJSROOT = async function() {
+   const pr = globalThis.JSROOT ? Promise.resolve(true) : loadScript(exports.source_dir + 'scripts/JSRoot.core.js');
+
+   return pr.then(() => {
+      if (globalThis.JSROOT?._complete_loading)
+         return globalThis.JSROOT._complete_loading();
+   }).then(() => globalThis.JSROOT);
+};
+
 
 const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 'TString', clTObjString = 'TObjString',
       clTKey = 'TKey', clTFile = 'TFile',
@@ -1395,7 +1441,7 @@ function create$1(typename, target) {
    }
 
    obj._typename = typename;
-   addMethods(obj, typename);
+   exports.addMethods(obj, typename);
    return obj;
 }
 
@@ -1506,10 +1552,10 @@ function createTGraph(npoints, xpts, ypts) {
   * let h2 = createHistogram('TH1F', nbinsx);
   * let h3 = createHistogram('TH1F', nbinsx);
   * let stack = createTHStack(h1, h2, h3); */
-function createTHStack() {
+function createTHStack(...args) {
    const stack = create$1(clTHStack);
-   for (let i = 0; i < arguments.length; ++i)
-      stack.fHists.Add(arguments[i], '');
+   for (let i = 0; i < args.length; ++i)
+      stack.fHists.Add(args[i], '');
    return stack;
 }
 
@@ -1521,10 +1567,10 @@ function createTHStack() {
   * let gr2 = createTGraph(100);
   * let gr3 = createTGraph(100);
   * let mgr = createTMultiGraph(gr1, gr2, gr3); */
-function createTMultiGraph() {
+function createTMultiGraph(...args) {
    const mgraph = create$1(clTMultiGraph);
-   for (let i = 0; i < arguments.length; ++i)
-       mgraph.fGraphs.Add(arguments[i], '');
+   for (let i = 0; i < args.length; ++i)
+      mgraph.fGraphs.Add(args[i], '');
    return mgraph;
 }
 
@@ -1544,7 +1590,7 @@ function getMethods(typename, obj) {
    if ((typename === clTObject) || (typename === clTNamed) || (obj?.fBits !== undefined)) {
       if (typeof m.TestBit === 'undefined') {
          m.TestBit = function(f) { return (this.fBits & f) !== 0; };
-         m.InvertBit = function(f) { this.fBits = this.fBits ^ (f & 0xffffff); };
+         m.InvertBit = function(f) { this.fBits ^= f & 0xffffff; };
          m.SetBit = function(f, on = true) { this.fBits = on ? this.fBits | f : this.fBits & ~f; };
       }
    }
@@ -1556,12 +1602,12 @@ function getMethods(typename, obj) {
          this.arr = [];
          this.opt = [];
       };
-      m.Add = function(obj, opt) {
-         this.arr.push(obj);
+      m.Add = function(elem, opt) {
+         this.arr.push(elem);
          this.opt.push(isStr(opt) ? opt : '');
       };
-      m.AddFirst = function(obj, opt) {
-         this.arr.unshift(obj);
+      m.AddFirst = function(elem, opt) {
+         this.arr.unshift(elem);
          this.opt.unshift(isStr(opt) ? opt : '');
       };
       m.RemoveAt = function(indx) {
@@ -1586,11 +1632,11 @@ function getMethods(typename, obj) {
    }
 
    if ((typename.indexOf(clTF1) === 0) || (typename === clTF12) || (typename === clTF2)) {
-      m.addFormula = function(obj) {
-         if (!obj) return;
+      m.addFormula = function(formula) {
+         if (!formula) return;
          if (this.formulas === undefined)
             this.formulas = [];
-         this.formulas.push(obj);
+         this.formulas.push(formula);
       };
       m.GetParName = function(n) {
          if (this.fParams?.fParNames)
@@ -1875,6 +1921,10 @@ function getMethods(typename, obj) {
    return m;
 }
 
+exports.addMethods = function(obj, typename) {
+   extend$1(obj, getMethods(typename || obj._typename, obj));
+};
+
 gStyle.fXaxis = create$1(clTAttAxis);
 gStyle.fYaxis = create$1(clTAttAxis);
 gStyle.fZaxis = create$1(clTAttAxis);
@@ -1900,47 +1950,6 @@ function isRootCollection(lst, typename) {
           (typename === clTObjArray) || (typename === clTClonesArray);
 }
 
-/** @summary Check if argument is a not-null Object
-  * @private */
-function isObject(arg) { return arg && typeof arg === 'object'; }
-
-/** @summary Check if argument is a Function
-  * @private */
-function isFunc(arg) { return typeof arg === 'function'; }
-
-/** @summary Check if argument is a String
-  * @private */
-function isStr(arg) { return typeof arg === 'string'; }
-
-/** @summary Check if object is a Promise
-  * @private */
-function isPromise(obj) { return isObject(obj) && isFunc(obj.then); }
-
-/** @summary Postpone func execution and return result in promise
-  * @private */
-function postponePromise(func, timeout) {
-   return new Promise(resolveFunc => {
-      setTimeout(() => {
-         const res = isFunc(func) ? func() : func;
-         resolveFunc(res);
-      }, timeout);
-   });
-}
-
-/** @summary Provide promise in any case
-  * @private */
-function getPromise(obj) { return isPromise(obj) ? obj : Promise.resolve(obj); }
-
-/** @summary Ensure global JSROOT and v6 support methods
-  * @private */
-async function _ensureJSROOT() {
-   const pr = globalThis.JSROOT ? Promise.resolve(true) : loadScript(exports.source_dir + 'scripts/JSRoot.core.js');
-
-   return pr.then(() => {
-      if (globalThis.JSROOT?._complete_loading)
-         return globalThis.JSROOT._complete_loading();
-   }).then(() => globalThis.JSROOT);
-}
 
 /** @summary Internal collection of functions potentially used by batch scripts
   * @private */
@@ -1949,8 +1958,8 @@ internals.jsroot = { version, source_dir: exports.source_dir, settings, gStyle, 
 var core = /*#__PURE__*/Object.freeze({
 __proto__: null,
 BIT: BIT,
-_ensureJSROOT: _ensureJSROOT,
-addMethods: addMethods,
+get _ensureJSROOT () { return exports._ensureJSROOT; },
+get addMethods () { return exports.addMethods; },
 atob_func: atob_func,
 browser: browser,
 btoa_func: btoa_func,
@@ -8458,7 +8467,7 @@ function decodeWebCanvasColors(oper) {
       grad.fEnd = { fX: data[cnt++], fY: data[cnt++] };
       if (grad._typename === clTRadialGradient && cnt < data.length) {
          grad.fR1 = data[cnt++];
-         grad.fR2 = data[cnt++];
+         grad.fR2 = data[cnt];
       }
 
       colors[colindx] = grad;
@@ -8784,10 +8793,10 @@ function buildSvgCurve(p, args) {
    }, conv = val => {
       if (!args.ndig || (Math.round(val) === val))
          return val.toFixed(0);
-      let s = val.toFixed(args.ndig), p = s.length - 1;
-      while (s[p] === '0') p--;
-      if (s[p] === '.') p--;
-      s = s.slice(0, p+1);
+      let s = val.toFixed(args.ndig), p1 = s.length - 1;
+      while (s[p1] === '0') p1--;
+      if (s[p1] === '.') p1--;
+      s = s.slice(0, p1+1);
       return (s === '-0') ? '0' : s;
    };
 
@@ -9210,11 +9219,17 @@ async function _loadJSDOM() {
 /** @summary Return translate string for transform attribute of some svg element
   * @return string or null if x and y are zeros
   * @private */
-function makeTranslate(g, x, y) {
+function makeTranslate(g, x, y, scale = 1) {
    if (!isObject(g)) {
-      y = x; x = g; g = null;
+      scale = y; y = x; x = g; g = null;
    }
-   const res = y ? `translate(${x},${y})` : (x ? `translate(${x})` : null);
+   let res = y ? `translate(${x},${y})` : (x ? `translate(${x})` : null);
+   if (scale && scale !== 1) {
+      if (res) res += ' ';
+          else res = '';
+      res += `scale(${scale.toFixed(3)})`;
+   }
+
    return g ? g.attr('transform', res) : res;
 }
 
@@ -9324,7 +9339,7 @@ function convertDate(dt) {
    if (settings.TimeZone && isStr(settings.TimeZone)) {
      try {
         res = dt.toLocaleString('en-GB', { timeZone: settings.TimeZone });
-     } catch (err) {
+     } catch {
         res = '';
      }
    }
@@ -9374,7 +9389,7 @@ async function loadFontFile(fname) {
 
    if (entry?.promises !== undefined) {
       return new Promise(resolveFunc => {
-         cfg.promises.push(resolveFunc);
+         entry.promises.push(resolveFunc);
       });
    }
 
@@ -9442,7 +9457,7 @@ class FontHandler {
 
       this.func = this.setFont.bind(this);
 
-      let cfg = null;
+      let cfg;
 
       if (fontIndex && isObject(fontIndex))
          cfg = fontIndex;
@@ -9471,7 +9486,7 @@ class FontHandler {
       return loadFontFile(this.cfg.file).then(base64 => {
          this.cfg.base64 = this.base64 = base64;
          this.format = 'ttf';
-         return !!base64;
+         return Boolean(base64);
       });
    }
 
@@ -9845,6 +9860,9 @@ extra_symbols_width = {945:1002,946:996,967:917,948:953,949:834,966:1149,947:847
 /** @summary Calculate approximate labels width
   * @private */
 function approximateLabelWidth(label, font, fsize) {
+   if (Number.isInteger(font))
+      font = new FontHandler(font, fsize);
+
    const len = label.length,
          symbol_width = (fsize || font.size) * font.aver_width;
    if (font.isMonospace())
@@ -9924,7 +9942,7 @@ function remapSymbolTtfCode(code) {
       for (const key in symbols_map) {
          const symbol = symbols_map[key];
          if (symbol.length === 1) {
-            let letter = 0;
+            let letter;
             if (cnt < 54) {
                const opGreek = cnt;
                // see code in TLatex.cxx, line 1302
@@ -9943,16 +9961,16 @@ function remapSymbolTtfCode(code) {
                   case 81: letter = 0o44; break; // #exists
                }
             }
-            const code = symbol.charCodeAt(0);
-            if (code > 0x80)
-               symbolsPdfMap[code] = letter;
+            const scode = symbol.charCodeAt(0);
+            if (scode > 0x80)
+               symbolsPdfMap[scode] = letter;
          }
          if (++cnt > 54 + 82) break;
       }
       for (let k = 0; k < symbolsMap.length; ++k) {
-         const code = symbolsMap[k];
-         if (code)
-            symbolsPdfMap[code] = k + 33;
+         const scode2 = symbolsMap[k];
+         if (scode2)
+            symbolsPdfMap[scode2] = k + 33;
       }
    }
    return symbolsPdfMap[code] ?? code;
@@ -10109,8 +10127,8 @@ function parseLatex(node, arg, label, curr) {
          if (!match(lbrace)) {
             console.log(`not starting with ${lbrace} in ${label}`);
             return -1;
-         } else
-            label = label.slice(lbrace.length);
+         }
+         label = label.slice(lbrace.length);
       }
 
       while ((n !== 0) && (pos < label.length)) {
@@ -10376,7 +10394,8 @@ function parseLatex(node, arg, label, curr) {
          }
 
          if (pos_up) {
-            if (!pos_low) yup = Math.min(yup, curr.rect.last_y1);
+            if (!pos_low && curr.rect)
+               yup = Math.min(yup, curr.rect.last_y1);
             positionGNode(pos_up, x+dx, yup - pos_up.rect.y1 - curr.fsize*0.1);
             w1 = pos_up.rect.width;
          }
@@ -10659,11 +10678,18 @@ async function loadMathjax() {
    if (!loading && (typeof globalThis.MathJax !== 'undefined'))
       return globalThis.MathJax;
 
-   if (!loading) _mj_loading = [];
+   if (!loading)
+      _mj_loading = [];
 
-   const promise = new Promise(resolve => { _mj_loading ? _mj_loading.push(resolve) : resolve(globalThis.MathJax); });
+   const promise = new Promise(resolve => {
+      if (_mj_loading)
+         _mj_loading.push(resolve);
+      else
+         resolve(globalThis.MathJax);
+   });
 
-   if (loading) return promise;
+   if (loading)
+      return promise;
 
    const svg = {
        scale: 1,                      // global scaling factor for all expressions
@@ -10717,9 +10743,9 @@ async function loadMathjax() {
    return _loadJSDOM().then(handle => {
       JSDOM = handle.JSDOM;
       return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; });
-   }).then(mj => {
+   }).then(mj0 => {
       // return Promise with mathjax loading
-      mj.init({
+      mj0.init({
          loader: {
             load: ['input/tex', 'output/svg', '[tex]/color', '[tex]/upgreek', '[tex]/mathtools', '[tex]/physics']
           },
@@ -11077,8 +11103,8 @@ function applyAttributesToMathJax(painter, mj_node, svg, arg, font_size, svg_fac
 
    if (Number.isInteger(mh) && Number.isInteger(mw)) {
       if (svg_factor > 0) {
-         mw = mw / svg_factor;
-         mh = mh / svg_factor;
+         mw /= svg_factor;
+         mh /= svg_factor;
          svg.attr('width', Math.round(mw)).attr('height', Math.round(mh));
       }
    } else {
@@ -11088,7 +11114,7 @@ function applyAttributesToMathJax(painter, mj_node, svg, arg, font_size, svg_fac
    }
 
    if ((svg_factor > 0) && arg.valign)
-      arg.valign = arg.valign / svg_factor;
+      arg.valign /= svg_factor;
 
    if (arg.valign === null)
       arg.valign = (font_size - mh) / 2;
@@ -11202,10 +11228,9 @@ class TAttMarkerHandler {
       if (isObject(args) && (typeof args.fMarkerStyle === 'number')) args = { attr: args };
 
       if (args.attr) {
-         if (args.color === undefined)
-            args.color = args.painter ? args.painter.getColor(args.attr.fMarkerColor) : getColor(args.attr.fMarkerColor);
+         args.color ??= args.painter ? args.painter.getColor(args.attr.fMarkerColor) : getColor(args.attr.fMarkerColor);
          if (!args.style || (args.style < 0)) args.style = args.attr.fMarkerStyle;
-         if (!args.size) args.size = args.attr.fMarkerSize;
+         args.size ??= args.attr.fMarkerSize;
       }
 
       this.color = args.color;
@@ -11484,8 +11509,8 @@ class TAttFillHandler {
      * @param {string} [args.color_as_svg] - color in SVG format */
    setArgs(args) {
       if (isObject(args.attr)) {
-         if ((args.pattern === undefined) && (args.attr.fFillStyle !== undefined)) args.pattern = args.attr.fFillStyle;
-         if ((args.color === undefined) && (args.attr.fFillColor !== undefined)) args.color = args.attr.fFillColor;
+         args.pattern ??= args.attr.fFillStyle;
+         args.color ??= args.attr.fFillColor;
       }
 
       if (args.enable !== undefined)
@@ -11644,7 +11669,7 @@ class TAttFillHandler {
 
       if (!svg || svg.empty()) return false;
 
-      let id = '', lines = '', lfill = null, fills = '', fills2 = '', w = 2, h = 2;
+      let id, lines = '', lfill = null, fills = '', fills2 = '', w = 2, h = 2;
 
       if (this.gradient)
          id = `grad_${this.gradient.fNumber}`;
@@ -11739,17 +11764,17 @@ class TAttFillHandler {
                         pos.push(0, y1, w, y2);
                      y1 += step;
                   }
-                  for (let k = 0; k < pos.length; k += 4) {
+                  for (let b = 0; b < pos.length; b += 4) {
                      if (swap) {
-                        x1 = pos[k+1];
-                        y1 = pos[k];
-                        x2 = pos[k+3];
-                        y2 = pos[k+2];
+                        x1 = pos[b+1];
+                        y1 = pos[b];
+                        x2 = pos[b+3];
+                        y2 = pos[b+2];
                      } else {
-                        x1 = pos[k];
-                        y1 = pos[k+1];
-                        x2 = pos[k+2];
-                        y2 = pos[k+3];
+                        x1 = pos[b];
+                        y1 = pos[b+1];
+                        x2 = pos[b+2];
+                        y2 = pos[b+3];
                      }
                      lines += `M${x1},${y1}`;
                      if (y2 === y1)
@@ -11958,8 +11983,8 @@ class TAttLineHandler {
       if (args.attr) {
          this.color_index = args.attr.fLineColor;
          args.color = args.color0 || (args.painter?.getColor(this.color_index) ?? getColor(this.color_index));
-         if (args.width === undefined) args.width = args.attr.fLineWidth;
-         if (args.style === undefined) args.style = args.attr.fLineStyle;
+         args.width ??= args.attr.fLineWidth;
+         args.style ??= args.attr.fLineStyle;
       } else if (isStr(args.color)) {
          if ((args.color !== 'none') && !args.width) args.width = 1;
       } else if (typeof args.color === 'number') {
@@ -12228,8 +12253,8 @@ class TAttTextHandler {
 class ObjectPainter extends BasePainter {
 
    #draw_object;     // drawn object
-   #main_painter;    // main painter in the pad - temporary pointer on the painter
-   #primary_id;      // unique id of primary painter
+   #main_painter;    // WeakRef to main painter in the pad
+   #primary_ref;     // reference of primary painter - if any
    #secondary_id;    // id of this painter in relation to primary painter
    #options_store;   // stored draw options used to check changes
 
@@ -12303,6 +12328,9 @@ class ObjectPainter extends BasePainter {
       this.#main_painter = null;
       this.#draw_object = null;
       delete this.snapid;
+      this._is_primary = undefined;
+      this.#primary_ref = undefined;
+      this.#secondary_id = undefined;
 
       // remove attributes objects (if any)
       delete this.fillatt;
@@ -12336,7 +12364,7 @@ class ObjectPainter extends BasePainter {
          return arg === clname;
       if (isStr(arg._typename))
          return arg._typename === clname;
-      return !!clname.match(arg);
+      return Boolean(clname.match(arg));
    }
 
    /** @summary Change item name
@@ -12561,7 +12589,7 @@ class ObjectPainter extends BasePainter {
                     .attr('objtype', (clname || 'type').replace(/[^\w]/g, '_'));
       }
 
-      this.draw_g.property('in_frame', !!frame_layer); // indicates coordinate system
+      this.draw_g.property('in_frame', Boolean(frame_layer)); // indicates coordinate system
 
       return this.draw_g;
    }
@@ -12607,49 +12635,30 @@ class ObjectPainter extends BasePainter {
       return c;
    }
 
-   /** @summary Returns unique identifier for the painter
-     * @param {boolean} [only_read] if not specified, also assign unique id to the painter
-     * @private */
-   getUniqueId(only_read = false) {
-      if (!only_read && (this._unique_painter_id === undefined))
-         this._unique_painter_id = internals.id_counter++; // assign unique identifier
-      return this._unique_painter_id;
-   }
-
    /** @summary Assign secondary id
      * @private */
    setSecondaryId(primary, name) {
-      this.#primary_id = primary.getUniqueId();
+      primary._is_primary = true; // mark as primary, used later
+      this.#primary_ref = new WeakRef(primary);
       this.#secondary_id = name;
    }
 
    /** @summary Returns secondary id
      * @private */
-   getSecondaryId() {
-      return this.#secondary_id;
-   }
+   getSecondaryId() { return this.#secondary_id; }
 
    /** @summary Check if this is secondary painter
      * @desc if primary painter provided - check if this really main for this
      * @private */
    isSecondary(primary) {
-      if (this.#primary_id === undefined)
+      if (!this.#primary_ref)
          return false;
-      return !isObject(primary) ? true : this.#primary_id === primary.getUniqueId(true);
+      return !isObject(primary) ? true : this.#primary_ref.deref() === primary;
    }
 
    /** @summary Return primary object
      * @private */
-   getPrimary() {
-      let res = null;
-      if (this.isSecondary()) {
-         this.forEachPainter(p => {
-            if (this.isSecondary(p))
-               res = p;
-         });
-      }
-      return res;
-   }
+   getPrimary() { return this.#primary_ref?.deref(); }
 
    /** @summary Provides identifier on server for requested sub-element */
    getSnapId(subelem) {
@@ -12823,16 +12832,13 @@ class ObjectPainter extends BasePainter {
      * @param {boolean} [not_store] - if true, prevent temporary storage of main painter reference
      * @protected */
    getMainPainter(not_store) {
-      let res = this.#main_painter;
+      let res = this.#main_painter?.deref();
       if (!res) {
          const pp = this.getPadPainter();
          res = pp ? pp.getMainPainter() : this.getTopPainter();
-         if (!res)
-            res = null;
-         if (!not_store)
-            this.#main_painter = res;
+         this.#main_painter = not_store || !res ? null : new WeakRef(res);
       }
-      return res;
+      return res || null;
    }
 
    /** @summary Returns true if this is main painter
@@ -13369,7 +13375,7 @@ class ObjectPainter extends BasePainter {
          // use translate and then rotate to avoid complex sign calculations
          let trans = makeTranslate(Math.round(arg.x), Math.round(arg.y)) || '';
          const dtrans = makeTranslate(Math.round(dx), Math.round(dy)),
-               append = arg => { if (trans) trans += ' '; trans += arg; };
+               append = aaa => { if (trans) trans += ' '; trans += aaa; };
 
          if (arg.rotate)
             append(`rotate(${Math.round(arg.rotate)})`);
@@ -13642,10 +13648,8 @@ class ObjectPainter extends BasePainter {
             return;
 
          if (!item.fArgs) {
-            if (cp?.v7canvas)
-               return cp.submitExec(execp, item.fExec, kind);
-            else
-               return execp.submitCanvExec(item.fExec, item.$execid);
+            return cp?.v7canvas ? cp.submitExec(execp, item.fExec, kind)
+                                : execp.submitCanvExec(item.fExec, item.$execid);
          }
 
          menu.showMethodArgsDialog(item).then(args => {
@@ -13869,22 +13873,24 @@ function drawRawText(dom, txt /* , opt */) {
    };
 
    painter.drawText = async function() {
-      let txt = (this.txt._typename === clTObjString) ? this.txt.fString : this.txt.value;
-      if (!isStr(txt)) txt = '<undefined>';
+      let stxt = (this.txt._typename === clTObjString) ? this.txt.fString : this.txt.value;
+      if (!isStr(stxt))
+         stxt = '<undefined>';
 
       const mathjax = this.txt.mathjax || (settings.Latex === constants$1.Latex.AlwaysMathJax);
 
       if (!mathjax && !('as_is' in this.txt)) {
-         const arr = txt.split('\n'); txt = '';
+         const arr = stxt.split('\n');
+         stxt = '';
          for (let i = 0; i < arr.length; ++i)
-            txt += `<pre style='margin:0'>${arr[i]}</pre>`;
+            stxt += `<pre style='margin:0'>${arr[i]}</pre>`;
       }
 
       const frame = this.selectDom();
       let main = frame.select('div');
       if (main.empty())
          main = frame.append('div').attr('style', 'max-width:100%;max-height:100%;overflow:auto');
-      main.html(txt);
+      main.html(stxt);
 
       // (re) set painter to first child element, base painter not requires canvas
       this.setTopPainter();
@@ -14010,7 +14016,7 @@ Object.assign(internals.jsroot, { ObjectPainter, cleanup, resize });
  * Copyright 2010-2025 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
-const REVISION = '173';
+const REVISION = '174';
 
 const MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2, ROTATE: 0, DOLLY: 1, PAN: 2 };
 const TOUCH = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 };
@@ -14172,11 +14178,35 @@ const WebGLCoordinateSystem = 2000;
 const WebGPUCoordinateSystem = 2001;
 
 /**
- * https://github.com/mrdoob/eventdispatcher.js/
+ * This modules allows to dispatch event objects on custom JavaScript objects.
+ *
+ * Main repository: [eventdispatcher.js]{@link https://github.com/mrdoob/eventdispatcher.js/}
+ *
+ * Code Example:
+ * ```js
+ * class Car extends EventDispatcher {
+ * 	start() {
+ *		this.dispatchEvent( { type: 'start', message: 'vroom vroom!' } );
+ *	}
+ *};
+ *
+ * // Using events with the custom object
+ * const car = new Car();
+ * car.addEventListener( 'start', function ( event ) {
+ * 	alert( event.message );
+ * } );
+ *
+ * car.start();
+ * ```
  */
-
 class EventDispatcher {
 
+	/**
+	 * Adds the given event listener to the given event type.
+	 *
+	 * @param {string} type - The type of event to listen to.
+	 * @param {Function} listener - The function that gets called when the event is fired.
+	 */
 	addEventListener( type, listener ) {
 
 		if ( this._listeners === undefined ) this._listeners = {};
@@ -14197,6 +14227,13 @@ class EventDispatcher {
 
 	}
 
+	/**
+	 * Returns `true` if the given event listener has been added to the given event type.
+	 *
+	 * @param {string} type - The type of event.
+	 * @param {Function} listener - The listener to check.
+	 * @return {boolean} Whether the given event listener has been added to the given event type.
+	 */
 	hasEventListener( type, listener ) {
 
 		const listeners = this._listeners;
@@ -14207,6 +14244,12 @@ class EventDispatcher {
 
 	}
 
+	/**
+	 * Removes the given event listener from the given event type.
+	 *
+	 * @param {string} type - The type of event.
+	 * @param {Function} listener - The listener to remove.
+	 */
 	removeEventListener( type, listener ) {
 
 		const listeners = this._listeners;
@@ -14229,6 +14272,11 @@ class EventDispatcher {
 
 	}
 
+	/**
+	 * Dispatches an event object.
+	 *
+	 * @param {Object} event - The event that gets fired.
+	 */
 	dispatchEvent( event ) {
 
 		const listeners = this._listeners;
@@ -14266,8 +14314,15 @@ let _seed = 1234567;
 const DEG2RAD = Math.PI / 180;
 const RAD2DEG = 180 / Math.PI;
 
-// http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript/21963136#21963136
+/**
+ * Generate a [UUID]{@link https://en.wikipedia.org/wiki/Universally_unique_identifier}
+ * (universally unique identifier).
+ *
+ * @return {string} The UUID.
+ */
 function generateUUID() {
+
+	// http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript/21963136#21963136
 
 	const d0 = Math.random() * 0xffffffff | 0;
 	const d1 = Math.random() * 0xffffffff | 0;
@@ -14283,29 +14338,65 @@ function generateUUID() {
 
 }
 
+/**
+ * Clamps the given value between min and max.
+ *
+ * @param {number} value - The value to clamp.
+ * @param {number} min - The min value.
+ * @param {number} max - The max value.
+ * @return {number} The clamped value.
+ */
 function clamp( value, min, max ) {
 
 	return Math.max( min, Math.min( max, value ) );
 
 }
 
-// compute euclidean modulo of m % n
-// https://en.wikipedia.org/wiki/Modulo_operation
+/**
+ * Computes the Euclidean modulo of the given parameters that
+ * is `( ( n % m ) + m ) % m`.
+ *
+ * @param {number} n - The first parameter.
+ * @param {number} m - The second parameter.
+ * @return {number} The Euclidean modulo.
+ */
 function euclideanModulo( n, m ) {
+
+	// https://en.wikipedia.org/wiki/Modulo_operation
 
 	return ( ( n % m ) + m ) % m;
 
 }
 
-// Linear mapping from range <a1, a2> to range <b1, b2>
+/**
+ * Performs a linear mapping from range `<a1, a2>` to range `<b1, b2>`
+ * for the given value.
+ *
+ * @param {number} x - The value to be mapped.
+ * @param {number} a1 - Minimum value for range A.
+ * @param {number} a2 - Maximum value for range A.
+ * @param {number} b1 - Minimum value for range B.
+ * @param {number} b2 - Maximum value for range B.
+ * @return {number} The mapped value.
+ */
 function mapLinear( x, a1, a2, b1, b2 ) {
 
 	return b1 + ( x - a1 ) * ( b2 - b1 ) / ( a2 - a1 );
 
 }
 
-// https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/inverse-lerp-a-super-useful-yet-often-overlooked-function-r5230/
+/**
+ * Returns the percentage in the closed interval `[0, 1]` of the given value
+ * between the start and end point.
+ *
+ * @param {number} x - The start point
+ * @param {number} y - The end point.
+ * @param {number} value - A value between start and end.
+ * @return {number} The interpolation factor.
+ */
 function inverseLerp( x, y, value ) {
+
+	// https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/inverse-lerp-a-super-useful-yet-often-overlooked-function-r5230/
 
 	if ( x !== y ) {
 
@@ -14319,28 +14410,66 @@ function inverseLerp( x, y, value ) {
 
 }
 
-// https://en.wikipedia.org/wiki/Linear_interpolation
+/**
+ * Returns a value linearly interpolated from two known points based on the given interval -
+ * `t = 0` will return `x` and `t = 1` will return `y`.
+ *
+ * @param {number} x - The start point
+ * @param {number} y - The end point.
+ * @param {number} t - The interpolation factor in the closed interval `[0, 1]`.
+ * @return {number} The interpolated value.
+ */
 function lerp( x, y, t ) {
 
 	return ( 1 - t ) * x + t * y;
 
 }
 
-// http://www.rorydriscoll.com/2016/03/07/frame-rate-independent-damping-using-lerp/
+/**
+ * Smoothly interpolate a number from `x` to `y` in  a spring-like manner using a delta
+ * time to maintain frame rate independent movement. For details, see
+ * [Frame rate independent damping using lerp]{@link http://www.rorydriscoll.com/2016/03/07/frame-rate-independent-damping-using-lerp/}.
+ *
+ * @param {number} x - The current point.
+ * @param {number} y - The target point.
+ * @param {number} lambda - A higher lambda value will make the movement more sudden,
+ * and a lower value will make the movement more gradual.
+ * @param {number} dt - Delta time in seconds.
+ * @return {number} The interpolated value.
+ */
 function damp( x, y, lambda, dt ) {
 
 	return lerp( x, y, 1 - Math.exp( - lambda * dt ) );
 
 }
 
-// https://www.desmos.com/calculator/vcsjnyz7x4
+/**
+ * Returns a value that alternates between `0` and the given `length` parameter.
+ *
+ * @param {number} x - The value to pingpong.
+ * @param {number} [length=1] - The positive value the function will pingpong to.
+ * @return {number} The alternated value.
+ */
 function pingpong( x, length = 1 ) {
+
+	// https://www.desmos.com/calculator/vcsjnyz7x4
 
 	return length - Math.abs( euclideanModulo( x, length * 2 ) - length );
 
 }
 
-// http://en.wikipedia.org/wiki/Smoothstep
+/**
+ * Returns a value in the range `[0,1]` that represents the percentage that `x` has
+ * moved between `min` and `max`, but smoothed or slowed down the closer `x` is to
+ * the `min` and `max`.
+ *
+ * See [Smoothstep]{@link http://en.wikipedia.org/wiki/Smoothstep} for more details.
+ *
+ * @param {number} x - The value to evaluate based on its position between min and max.
+ * @param {number} min - The min value. Any x value below min will be `0`.
+ * @param {number} max - The max value. Any x value above max will be `1`.
+ * @return {number} The alternated value.
+ */
 function smoothstep( x, min, max ) {
 
 	if ( x <= min ) return 0;
@@ -14352,6 +14481,15 @@ function smoothstep( x, min, max ) {
 
 }
 
+/**
+ * A [variation on smoothstep]{@link https://en.wikipedia.org/wiki/Smoothstep#Variations}
+ * that has zero 1st and 2nd order derivatives at x=0 and x=1.
+ *
+ * @param {number} x - The value to evaluate based on its position between min and max.
+ * @param {number} min - The min value. Any x value below min will be `0`.
+ * @param {number} max - The max value. Any x value above max will be `1`.
+ * @return {number} The alternated value.
+ */
 function smootherstep( x, min, max ) {
 
 	if ( x <= min ) return 0;
@@ -14363,28 +14501,50 @@ function smootherstep( x, min, max ) {
 
 }
 
-// Random integer from <low, high> interval
+/**
+ * Returns a random integer from `<low, high>` interval.
+ *
+ * @param {number} low - The lower value boundary.
+ * @param {number} high - The upper value boundary
+ * @return {number} A random integer.
+ */
 function randInt( low, high ) {
 
 	return low + Math.floor( Math.random() * ( high - low + 1 ) );
 
 }
 
-// Random float from <low, high> interval
+/**
+ * Returns a random float from `<low, high>` interval.
+ *
+ * @param {number} low - The lower value boundary.
+ * @param {number} high - The upper value boundary
+ * @return {number} A random float.
+ */
 function randFloat( low, high ) {
 
 	return low + Math.random() * ( high - low );
 
 }
 
-// Random float from <-range/2, range/2> interval
+/**
+ * Returns a random integer from `<-range/2, range/2>` interval.
+ *
+ * @param {number} range - Defines the value range.
+ * @return {number} A random float.
+ */
 function randFloatSpread( range ) {
 
 	return range * ( 0.5 - Math.random() );
 
 }
 
-// Deterministic pseudo-random float in the interval [ 0, 1 ]
+/**
+ * Returns a deterministic pseudo-random float in the interval `[0, 1]`.
+ *
+ * @param {number} [s] - The integer seed.
+ * @return {number} A random float.
+ */
 function seededRandom( s ) {
 
 	if ( s !== undefined ) _seed = s;
@@ -14401,43 +14561,80 @@ function seededRandom( s ) {
 
 }
 
+/**
+ * Converts degrees to radians.
+ *
+ * @param {number} degrees - A value in degrees.
+ * @return {number} The converted value in radians.
+ */
 function degToRad( degrees ) {
 
 	return degrees * DEG2RAD;
 
 }
 
+/**
+ * Converts radians to degrees.
+ *
+ * @param {number} radians - A value in radians.
+ * @return {number} The converted value in degrees.
+ */
 function radToDeg( radians ) {
 
 	return radians * RAD2DEG;
 
 }
 
+/**
+ * Returns `true` if the given number is a power of two.
+ *
+ * @param {number} value - The value to check.
+ * @return {boolean} Whether the given number is a power of two or not.
+ */
 function isPowerOfTwo( value ) {
 
 	return ( value & ( value - 1 ) ) === 0 && value !== 0;
 
 }
 
+/**
+ * Returns the smallest power of two that is greater than or equal to the given number.
+ *
+ * @param {number} value - The value to find a POT for.
+ * @return {number} The smallest power of two that is greater than or equal to the given number.
+ */
 function ceilPowerOfTwo( value ) {
 
 	return Math.pow( 2, Math.ceil( Math.log( value ) / Math.LN2 ) );
 
 }
 
+/**
+ * Returns the largest power of two that is less than or equal to the given number.
+ *
+ * @param {number} value - The value to find a POT for.
+ * @return {number} The largest power of two that is less than or equal to the given number.
+ */
 function floorPowerOfTwo( value ) {
 
 	return Math.pow( 2, Math.floor( Math.log( value ) / Math.LN2 ) );
 
 }
 
+/**
+ * Sets the given quaternion from the [Intrinsic Proper Euler Angles]{@link https://en.wikipedia.org/wiki/Euler_angles}
+ * defined by the given angles and order.
+ *
+ * Rotations are applied to the axes in the order specified by order:
+ * rotation by angle `a` is applied first, then by angle `b`, then by angle `c`.
+ *
+ * @param {Quaternion} q - The quaternion to set.
+ * @param {number} a - The rotation applied to the first axis, in radians.
+ * @param {number} b - The rotation applied to the second axis, in radians.
+ * @param {number} c - The rotation applied to the third axis, in radians.
+ * @param {('XYX'|'XZX'|'YXY'|'YZY'|'ZXZ'|'ZYZ')} order - A string specifying the axes order.
+ */
 function setQuaternionFromProperEuler( q, a, b, c, order ) {
-
-	// Intrinsic Proper Euler Angles - see https://en.wikipedia.org/wiki/Euler_angles
-
-	// rotations are applied to the axes in the order specified by 'order'
-	// rotation by angle 'a' is applied first, then by angle 'b', then by angle 'c'
-	// angles are in radians
 
 	const cos = Math.cos;
 	const sin = Math.sin;
@@ -14487,6 +14684,13 @@ function setQuaternionFromProperEuler( q, a, b, c, order ) {
 
 }
 
+/**
+ * Denormalizes the given value according to the given typed array.
+ *
+ * @param {number} value - The value to denormalize.
+ * @param {TypedArray} array - The typed array that defines the data type of the value.
+ * @return {number} The denormalize (float) value in the range `[0,1]`.
+ */
 function denormalize( value, array ) {
 
 	switch ( array.constructor ) {
@@ -14527,6 +14731,13 @@ function denormalize( value, array ) {
 
 }
 
+/**
+ * Normalizes the given value according to the given typed array.
+ *
+ * @param {number} value - The float value in the range `[0,1]` to normalize.
+ * @param {TypedArray} array - The typed array that defines the data type of the value.
+ * @return {number} The normalize value.
+ */
 function normalize$1( value, array ) {
 
 	switch ( array.constructor ) {
@@ -14623,17 +14834,71 @@ var MathUtils$1 = /*#__PURE__*/Object.freeze({
 	smoothstep: smoothstep
 });
 
+/**
+ * Class representing a 2D vector. A 2D vector is an ordered pair of numbers
+ * (labeled x and y), which can be used to represent a number of things, such as:
+ *
+ * - A point in 2D space (i.e. a position on a plane).
+ * - A direction and length across a plane. In three.js the length will
+ * always be the Euclidean distance(straight-line distance) from `(0, 0)` to `(x, y)`
+ * and the direction is also measured from `(0, 0)` towards `(x, y)`.
+ * - Any arbitrary ordered pair of numbers.
+ *
+ * There are other things a 2D vector can be used to represent, such as
+ * momentum vectors, complex numbers and so on, however these are the most
+ * common uses in three.js.
+ *
+ * Iterating through a vector instance will yield its components `(x, y)` in
+ * the corresponding order.
+ * ```js
+ * const a = new THREE.Vector2( 0, 1 );
+ *
+ * //no arguments; will be initialised to (0, 0)
+ * const b = new THREE.Vector2( );
+ *
+ * const d = a.distanceTo( b );
+ * ```
+ */
 class Vector2 {
 
+	/**
+	 * Constructs a new 2D vector.
+	 *
+	 * @param {number} [x=0] - The x value of this vector.
+	 * @param {number} [y=0] - The y value of this vector.
+	 */
 	constructor( x = 0, y = 0 ) {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		Vector2.prototype.isVector2 = true;
 
+		/**
+		 * The x value of this vector.
+		 *
+		 * @type {number}
+		 */
 		this.x = x;
+
+		/**
+		 * The y value of this vector.
+		 *
+		 * @type {number}
+		 */
 		this.y = y;
 
 	}
 
+	/**
+	 * Alias for {@link Vector2#x}.
+	 *
+	 * @type {number}
+	 */
 	get width() {
 
 		return this.x;
@@ -14646,6 +14911,11 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Alias for {@link Vector2#y}.
+	 *
+	 * @type {number}
+	 */
 	get height() {
 
 		return this.y;
@@ -14658,6 +14928,13 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Sets the vector components.
+	 *
+	 * @param {number} x - The value of the x component.
+	 * @param {number} y - The value of the y component.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	set( x, y ) {
 
 		this.x = x;
@@ -14667,6 +14944,12 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Sets the vector components to the same value.
+	 *
+	 * @param {number} scalar - The value to set for all vector components.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	setScalar( scalar ) {
 
 		this.x = scalar;
@@ -14676,6 +14959,12 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Sets the vector's x component to the given value
+	 *
+	 * @param {number} x - The value to set.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	setX( x ) {
 
 		this.x = x;
@@ -14684,6 +14973,12 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Sets the vector's y component to the given value
+	 *
+	 * @param {number} y - The value to set.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	setY( y ) {
 
 		this.y = y;
@@ -14692,6 +14987,13 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Allows to set a vector component with an index.
+	 *
+	 * @param {number} index - The component index. `0` equals to x, `1` equals to y.
+	 * @param {number} value - The value to set.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	setComponent( index, value ) {
 
 		switch ( index ) {
@@ -14706,6 +15008,12 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Returns the value of the vector component which matches the given index.
+	 *
+	 * @param {number} index - The component index. `0` equals to x, `1` equals to y.
+	 * @return {number} A vector component value.
+	 */
 	getComponent( index ) {
 
 		switch ( index ) {
@@ -14718,12 +15026,23 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Returns a new vector with copied values from this instance.
+	 *
+	 * @return {Vector2} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor( this.x, this.y );
 
 	}
 
+	/**
+	 * Copies the values of the given vector to this instance.
+	 *
+	 * @param {Vector2} v - The vector to copy.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	copy( v ) {
 
 		this.x = v.x;
@@ -14733,6 +15052,12 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Adds the given vector to this instance.
+	 *
+	 * @param {Vector2} v - The vector to add.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	add( v ) {
 
 		this.x += v.x;
@@ -14742,6 +15067,12 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Adds the given scalar value to all components of this instance.
+	 *
+	 * @param {number} s - The scalar to add.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	addScalar( s ) {
 
 		this.x += s;
@@ -14751,6 +15082,13 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Adds the given vectors and stores the result in this instance.
+	 *
+	 * @param {Vector2} a - The first vector.
+	 * @param {Vector2} b - The second vector.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	addVectors( a, b ) {
 
 		this.x = a.x + b.x;
@@ -14760,6 +15098,13 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Adds the given vector scaled by the given factor to this instance.
+	 *
+	 * @param {Vector2} v - The vector.
+	 * @param {number} s - The factor that scales `v`.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	addScaledVector( v, s ) {
 
 		this.x += v.x * s;
@@ -14769,6 +15114,12 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Subtracts the given vector from this instance.
+	 *
+	 * @param {Vector2} v - The vector to subtract.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	sub( v ) {
 
 		this.x -= v.x;
@@ -14778,6 +15129,12 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Subtracts the given scalar value from all components of this instance.
+	 *
+	 * @param {number} s - The scalar to subtract.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	subScalar( s ) {
 
 		this.x -= s;
@@ -14787,6 +15144,13 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Subtracts the given vectors and stores the result in this instance.
+	 *
+	 * @param {Vector2} a - The first vector.
+	 * @param {Vector2} b - The second vector.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	subVectors( a, b ) {
 
 		this.x = a.x - b.x;
@@ -14796,6 +15160,12 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Multiplies the given vector with this instance.
+	 *
+	 * @param {Vector2} v - The vector to multiply.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	multiply( v ) {
 
 		this.x *= v.x;
@@ -14805,6 +15175,12 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Multiplies the given scalar value with all components of this instance.
+	 *
+	 * @param {number} scalar - The scalar to multiply.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	multiplyScalar( scalar ) {
 
 		this.x *= scalar;
@@ -14814,6 +15190,12 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Divides this instance by the given vector.
+	 *
+	 * @param {Vector2} v - The vector to divide.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	divide( v ) {
 
 		this.x /= v.x;
@@ -14823,12 +15205,25 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Divides this vector by the given scalar.
+	 *
+	 * @param {number} scalar - The scalar to divide.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	divideScalar( scalar ) {
 
 		return this.multiplyScalar( 1 / scalar );
 
 	}
 
+	/**
+	 * Multiplies this vector (with an implicit 1 as the 3rd component) by
+	 * the given 3x3 matrix.
+	 *
+	 * @param {Matrix3} m - The matrix to apply.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	applyMatrix3( m ) {
 
 		const x = this.x, y = this.y;
@@ -14841,6 +15236,13 @@ class Vector2 {
 
 	}
 
+	/**
+	 * If this vector's x or y value is greater than the given vector's x or y
+	 * value, replace that value with the corresponding min value.
+	 *
+	 * @param {Vector2} v - The vector.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	min( v ) {
 
 		this.x = Math.min( this.x, v.x );
@@ -14850,6 +15252,13 @@ class Vector2 {
 
 	}
 
+	/**
+	 * If this vector's x or y value is less than the given vector's x or y
+	 * value, replace that value with the corresponding max value.
+	 *
+	 * @param {Vector2} v - The vector.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	max( v ) {
 
 		this.x = Math.max( this.x, v.x );
@@ -14859,6 +15268,16 @@ class Vector2 {
 
 	}
 
+	/**
+	 * If this vector's x or y value is greater than the max vector's x or y
+	 * value, it is replaced by the corresponding value.
+	 * If this vector's x or y value is less than the min vector's x or y value,
+	 * it is replaced by the corresponding value.
+	 *
+	 * @param {Vector2} min - The minimum x and y values.
+	 * @param {Vector2} max - The maximum x and y values in the desired range.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	clamp( min, max ) {
 
 		// assumes min < max, componentwise
@@ -14870,6 +15289,16 @@ class Vector2 {
 
 	}
 
+	/**
+	 * If this vector's x or y values are greater than the max value, they are
+	 * replaced by the max value.
+	 * If this vector's x or y values are less than the min value, they are
+	 * replaced by the min value.
+	 *
+	 * @param {number} minVal - The minimum value the components will be clamped to.
+	 * @param {number} maxVal - The maximum value the components will be clamped to.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	clampScalar( minVal, maxVal ) {
 
 		this.x = clamp( this.x, minVal, maxVal );
@@ -14879,6 +15308,16 @@ class Vector2 {
 
 	}
 
+	/**
+	 * If this vector's length is greater than the max value, it is replaced by
+	 * the max value.
+	 * If this vector's length is less than the min value, it is replaced by the
+	 * min value.
+	 *
+	 * @param {number} min - The minimum value the vector length will be clamped to.
+	 * @param {number} max - The maximum value the vector length will be clamped to.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	clampLength( min, max ) {
 
 		const length = this.length();
@@ -14887,6 +15326,11 @@ class Vector2 {
 
 	}
 
+	/**
+	 * The components of this vector are rounded down to the nearest integer value.
+	 *
+	 * @return {Vector2} A reference to this vector.
+	 */
 	floor() {
 
 		this.x = Math.floor( this.x );
@@ -14896,6 +15340,11 @@ class Vector2 {
 
 	}
 
+	/**
+	 * The components of this vector are rounded up to the nearest integer value.
+	 *
+	 * @return {Vector2} A reference to this vector.
+	 */
 	ceil() {
 
 		this.x = Math.ceil( this.x );
@@ -14905,6 +15354,11 @@ class Vector2 {
 
 	}
 
+	/**
+	 * The components of this vector are rounded to the nearest integer value
+	 *
+	 * @return {Vector2} A reference to this vector.
+	 */
 	round() {
 
 		this.x = Math.round( this.x );
@@ -14914,6 +15368,12 @@ class Vector2 {
 
 	}
 
+	/**
+	 * The components of this vector are rounded towards zero (up if negative,
+	 * down if positive) to an integer value.
+	 *
+	 * @return {Vector2} A reference to this vector.
+	 */
 	roundToZero() {
 
 		this.x = Math.trunc( this.x );
@@ -14923,6 +15383,11 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Inverts this vector - i.e. sets x = -x and y = -y.
+	 *
+	 * @return {Vector2} A reference to this vector.
+	 */
 	negate() {
 
 		this.x = - this.x;
@@ -14932,45 +15397,83 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Calculates the dot product of the given vector with this instance.
+	 *
+	 * @param {Vector2} v - The vector to compute the dot product with.
+	 * @return {number} The result of the dot product.
+	 */
 	dot( v ) {
 
 		return this.x * v.x + this.y * v.y;
 
 	}
 
+	/**
+	 * Calculates the cross product of the given vector with this instance.
+	 *
+	 * @param {Vector2} v - The vector to compute the cross product with.
+	 * @return {number} The result of the cross product.
+	 */
 	cross( v ) {
 
 		return this.x * v.y - this.y * v.x;
 
 	}
 
+	/**
+	 * Computes the square of the Euclidean length (straight-line length) from
+	 * (0, 0) to (x, y). If you are comparing the lengths of vectors, you should
+	 * compare the length squared instead as it is slightly more efficient to calculate.
+	 *
+	 * @return {number} The square length of this vector.
+	 */
 	lengthSq() {
 
 		return this.x * this.x + this.y * this.y;
 
 	}
 
+	/**
+	 * Computes the  Euclidean length (straight-line length) from (0, 0) to (x, y).
+	 *
+	 * @return {number} The length of this vector.
+	 */
 	length() {
 
 		return Math.sqrt( this.x * this.x + this.y * this.y );
 
 	}
 
+	/**
+	 * Computes the Manhattan length of this vector.
+	 *
+	 * @return {number} The length of this vector.
+	 */
 	manhattanLength() {
 
 		return Math.abs( this.x ) + Math.abs( this.y );
 
 	}
 
+	/**
+	 * Converts this vector to a unit vector - that is, sets it equal to a vector
+	 * with the same direction as this one, but with a vector length of `1`.
+	 *
+	 * @return {Vector2} A reference to this vector.
+	 */
 	normalize() {
 
 		return this.divideScalar( this.length() || 1 );
 
 	}
 
+	/**
+	 * Computes the angle in radians of this vector with respect to the positive x-axis.
+	 *
+	 * @return {number} The angle in radians.
+	 */
 	angle() {
-
-		// computes the angle in radians with respect to the positive x-axis
 
 		const angle = Math.atan2( - this.y, - this.x ) + Math.PI;
 
@@ -14978,6 +15481,12 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Returns the angle between the given vector and this instance in radians.
+	 *
+	 * @param {Vector2} v - The vector to compute the angle with.
+	 * @return {number} The angle in radians.
+	 */
 	angleTo( v ) {
 
 		const denominator = Math.sqrt( this.lengthSq() * v.lengthSq() );
@@ -14992,12 +15501,26 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Computes the distance from the given vector to this instance.
+	 *
+	 * @param {Vector2} v - The vector to compute the distance to.
+	 * @return {number} The distance.
+	 */
 	distanceTo( v ) {
 
 		return Math.sqrt( this.distanceToSquared( v ) );
 
 	}
 
+	/**
+	 * Computes the squared distance from the given vector to this instance.
+	 * If you are just comparing the distance with another distance, you should compare
+	 * the distance squared instead as it is slightly more efficient to calculate.
+	 *
+	 * @param {Vector2} v - The vector to compute the squared distance to.
+	 * @return {number} The squared distance.
+	 */
 	distanceToSquared( v ) {
 
 		const dx = this.x - v.x, dy = this.y - v.y;
@@ -15005,18 +15528,40 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Computes the Manhattan distance from the given vector to this instance.
+	 *
+	 * @param {Vector2} v - The vector to compute the Manhattan distance to.
+	 * @return {number} The Manhattan distance.
+	 */
 	manhattanDistanceTo( v ) {
 
 		return Math.abs( this.x - v.x ) + Math.abs( this.y - v.y );
 
 	}
 
+	/**
+	 * Sets this vector to a vector with the same direction as this one, but
+	 * with the specified length.
+	 *
+	 * @param {number} length - The new length of this vector.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	setLength( length ) {
 
 		return this.normalize().multiplyScalar( length );
 
 	}
 
+	/**
+	 * Linearly interpolates between the given vector and this instance, where
+	 * alpha is the percent distance along the line - alpha = 0 will be this
+	 * vector, and alpha = 1 will be the given one.
+	 *
+	 * @param {Vector2} v - The vector to interpolate towards.
+	 * @param {number} alpha - The interpolation factor, typically in the closed interval `[0, 1]`.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	lerp( v, alpha ) {
 
 		this.x += ( v.x - this.x ) * alpha;
@@ -15026,6 +15571,16 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Linearly interpolates between the given vectors, where alpha is the percent
+	 * distance along the line - alpha = 0 will be first vector, and alpha = 1 will
+	 * be the second one. The result is stored in this instance.
+	 *
+	 * @param {Vector2} v1 - The first vector.
+	 * @param {Vector2} v2 - The second vector.
+	 * @param {number} alpha - The interpolation factor, typically in the closed interval `[0, 1]`.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	lerpVectors( v1, v2, alpha ) {
 
 		this.x = v1.x + ( v2.x - v1.x ) * alpha;
@@ -15035,12 +15590,26 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Returns `true` if this vector is equal with the given one.
+	 *
+	 * @param {Vector2} v - The vector to test for equality.
+	 * @return {boolean} Whether this vector is equal with the given one.
+	 */
 	equals( v ) {
 
 		return ( ( v.x === this.x ) && ( v.y === this.y ) );
 
 	}
 
+	/**
+	 * Sets this vector's x value to be `array[ offset ]` and y
+	 * value to be `array[ offset + 1 ]`.
+	 *
+	 * @param {Array<number>} array - An array holding the vector component values.
+	 * @param {number} [offset=0] - The offset into the array.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	fromArray( array, offset = 0 ) {
 
 		this.x = array[ offset ];
@@ -15050,6 +15619,14 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Writes the components of this vector to the given array. If no array is provided,
+	 * the method returns a new instance.
+	 *
+	 * @param {Array<number>} [array=[]] - The target array holding the vector components.
+	 * @param {number} [offset=0] - Index of the first element in the array.
+	 * @return {Array<number>} The vector components.
+	 */
 	toArray( array = [], offset = 0 ) {
 
 		array[ offset ] = this.x;
@@ -15059,6 +15636,13 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Sets the components of this vector from the given buffer attribute.
+	 *
+	 * @param {BufferAttribute} attribute - The buffer attribute holding vector data.
+	 * @param {number} index - The index into the attribute.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	fromBufferAttribute( attribute, index ) {
 
 		this.x = attribute.getX( index );
@@ -15068,6 +15652,13 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Rotates this vector around the given center by the given angle.
+	 *
+	 * @param {Vector2} center - The point around which to rotate.
+	 * @param {number} angle - The angle to rotate, in radians.
+	 * @return {Vector2} A reference to this vector.
+	 */
 	rotateAround( center, angle ) {
 
 		const c = Math.cos( angle ), s = Math.sin( angle );
@@ -15082,6 +15673,12 @@ class Vector2 {
 
 	}
 
+	/**
+	 * Sets each component of this vector to a pseudo-random value between `0` and
+	 * `1`, excluding `1`.
+	 *
+	 * @return {Vector2} A reference to this vector.
+	 */
 	random() {
 
 		this.x = Math.random();
@@ -15100,12 +15697,67 @@ class Vector2 {
 
 }
 
+/**
+ * Represents a 3x3 matrix.
+ *
+ * A Note on Row-Major and Column-Major Ordering:
+ *
+ * The constructor and {@link Matrix3#set} method take arguments in
+ * [row-major]{@link https://en.wikipedia.org/wiki/Row-_and_column-major_order#Column-major_order}
+ * order, while internally they are stored in the {@link Matrix3#elements} array in column-major order.
+ * This means that calling:
+ * ```js
+ * const m = new THREE.Matrix();
+ * m.set( 11, 12, 13,
+ *        21, 22, 23,
+ *        31, 32, 33 );
+ * ```
+ * will result in the elements array containing:
+ * ```js
+ * m.elements = [ 11, 21, 31,
+ *                12, 22, 32,
+ *                13, 23, 33 ];
+ * ```
+ * and internally all calculations are performed using column-major ordering.
+ * However, as the actual ordering makes no difference mathematically and
+ * most people are used to thinking about matrices in row-major order, the
+ * three.js documentation shows matrices in row-major order. Just bear in
+ * mind that if you are reading the source code, you'll have to take the
+ * transpose of any matrices outlined here to make sense of the calculations.
+ */
 class Matrix3 {
 
+	/**
+	 * Constructs a new 3x3 matrix. The arguments are supposed to be
+	 * in row-major order. If no arguments are provided, the constructor
+	 * initializes the matrix as an identity matrix.
+	 *
+	 * @param {number} [n11] - 1-1 matrix element.
+	 * @param {number} [n12] - 1-2 matrix element.
+	 * @param {number} [n13] - 1-3 matrix element.
+	 * @param {number} [n21] - 2-1 matrix element.
+	 * @param {number} [n22] - 2-2 matrix element.
+	 * @param {number} [n23] - 2-3 matrix element.
+	 * @param {number} [n31] - 3-1 matrix element.
+	 * @param {number} [n32] - 3-2 matrix element.
+	 * @param {number} [n33] - 3-3 matrix element.
+	 */
 	constructor( n11, n12, n13, n21, n22, n23, n31, n32, n33 ) {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		Matrix3.prototype.isMatrix3 = true;
 
+		/**
+		 * A column-major list of matrix values.
+		 *
+		 * @type {Array<number>}
+		 */
 		this.elements = [
 
 			1, 0, 0,
@@ -15122,6 +15774,21 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Sets the elements of the matrix.The arguments are supposed to be
+	 * in row-major order.
+	 *
+	 * @param {number} [n11] - 1-1 matrix element.
+	 * @param {number} [n12] - 1-2 matrix element.
+	 * @param {number} [n13] - 1-3 matrix element.
+	 * @param {number} [n21] - 2-1 matrix element.
+	 * @param {number} [n22] - 2-2 matrix element.
+	 * @param {number} [n23] - 2-3 matrix element.
+	 * @param {number} [n31] - 3-1 matrix element.
+	 * @param {number} [n32] - 3-2 matrix element.
+	 * @param {number} [n33] - 3-3 matrix element.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	set( n11, n12, n13, n21, n22, n23, n31, n32, n33 ) {
 
 		const te = this.elements;
@@ -15134,6 +15801,11 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Sets this matrix to the 3x3 identity matrix.
+	 *
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	identity() {
 
 		this.set(
@@ -15148,6 +15820,12 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Copies the values of the given matrix to this instance.
+	 *
+	 * @param {Matrix3} m - The matrix to copy.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	copy( m ) {
 
 		const te = this.elements;
@@ -15161,6 +15839,14 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Extracts the basis of this matrix into the three axis vectors provided.
+	 *
+	 * @param {Vector3} xAxis - The basis's x axis.
+	 * @param {Vector3} yAxis - The basis's y axis.
+	 * @param {Vector3} zAxis - The basis's z axis.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	extractBasis( xAxis, yAxis, zAxis ) {
 
 		xAxis.setFromMatrix3Column( this, 0 );
@@ -15171,6 +15857,12 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Set this matrix to the upper 3x3 matrix of the given 4x4 matrix.
+	 *
+	 * @param {Matrix4} m - The 4x4 matrix.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	setFromMatrix4( m ) {
 
 		const me = m.elements;
@@ -15187,18 +15879,38 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Post-multiplies this matrix by the given 3x3 matrix.
+	 *
+	 * @param {Matrix3} m - The matrix to multiply with.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	multiply( m ) {
 
 		return this.multiplyMatrices( this, m );
 
 	}
 
+	/**
+	 * Pre-multiplies this matrix by the given 3x3 matrix.
+	 *
+	 * @param {Matrix3} m - The matrix to multiply with.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	premultiply( m ) {
 
 		return this.multiplyMatrices( m, this );
 
 	}
 
+	/**
+	 * Multiples the given 3x3 matrices and stores the result
+	 * in this matrix.
+	 *
+	 * @param {Matrix3} a - The first matrix.
+	 * @param {Matrix3} b - The second matrix.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	multiplyMatrices( a, b ) {
 
 		const ae = a.elements;
@@ -15229,6 +15941,12 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Multiplies every component of the matrix by the given scalar.
+	 *
+	 * @param {number} s - The scalar.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	multiplyScalar( s ) {
 
 		const te = this.elements;
@@ -15241,6 +15959,11 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Computes and returns the determinant of this matrix.
+	 *
+	 * @return {number} The determinant.
+	 */
 	determinant() {
 
 		const te = this.elements;
@@ -15253,6 +15976,13 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Inverts this matrix, using the [analytic method]{@link https://en.wikipedia.org/wiki/Invertible_matrix#Analytic_solution}.
+	 * You can not invert with a determinant of zero. If you attempt this, the method produces
+	 * a zero matrix instead.
+	 *
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	invert() {
 
 		const te = this.elements,
@@ -15287,6 +16017,11 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Transposes this matrix in place.
+	 *
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	transpose() {
 
 		let tmp;
@@ -15300,12 +16035,25 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Computes the normal matrix which is the inverse transpose of the upper
+	 * left 3x3 portion of the given 4x4 matrix.
+	 *
+	 * @param {Matrix4} matrix4 - The 4x4 matrix.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	getNormalMatrix( matrix4 ) {
 
 		return this.setFromMatrix4( matrix4 ).invert().transpose();
 
 	}
 
+	/**
+	 * Transposes this matrix into the supplied array, and returns itself unchanged.
+	 *
+	 * @param {Array<number>} r - An array to store the transposed matrix elements.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	transposeIntoArray( r ) {
 
 		const m = this.elements;
@@ -15324,6 +16072,18 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Sets the UV transform matrix from offset, repeat, rotation, and center.
+	 *
+	 * @param {number} tx - Offset x.
+	 * @param {number} ty - Offset y.
+	 * @param {number} sx - Repeat x.
+	 * @param {number} sy - Repeat y.
+	 * @param {number} rotation - Rotation, in radians. Positive values rotate counterclockwise.
+	 * @param {number} cx - Center x of rotation.
+	 * @param {number} cy - Center y of rotation
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	setUvTransform( tx, ty, sx, sy, rotation, cx, cy ) {
 
 		const c = Math.cos( rotation );
@@ -15339,8 +16099,13 @@ class Matrix3 {
 
 	}
 
-	//
-
+	/**
+	 * Scales this matrix with the given scalar values.
+	 *
+	 * @param {number} sx - The amount to scale in the X axis.
+	 * @param {number} sy - The amount to scale in the Y axis.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	scale( sx, sy ) {
 
 		this.premultiply( _m3.makeScale( sx, sy ) );
@@ -15349,6 +16114,12 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Rotates this matrix by the given angle.
+	 *
+	 * @param {number} theta - The rotation in radians.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	rotate( theta ) {
 
 		this.premultiply( _m3.makeRotation( - theta ) );
@@ -15357,6 +16128,13 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Translates this matrix by the given scalar values.
+	 *
+	 * @param {number} tx - The amount to translate in the X axis.
+	 * @param {number} ty - The amount to translate in the Y axis.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	translate( tx, ty ) {
 
 		this.premultiply( _m3.makeTranslation( tx, ty ) );
@@ -15367,6 +16145,13 @@ class Matrix3 {
 
 	// for 2D Transforms
 
+	/**
+	 * Sets this matrix as a 2D translation transform.
+	 *
+	 * @param {number|Vector2} x - The amount to translate in the X axis or alternatively a translation vector.
+	 * @param {number} y - The amount to translate in the Y axis.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	makeTranslation( x, y ) {
 
 		if ( x.isVector2 ) {
@@ -15395,6 +16180,12 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Sets this matrix as a 2D rotational transformation.
+	 *
+	 * @param {number} theta - The rotation in radians.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	makeRotation( theta ) {
 
 		// counterclockwise
@@ -15414,6 +16205,13 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Sets this matrix as a 2D scale transform.
+	 *
+	 * @param {number} x - The amount to scale in the X axis.
+	 * @param {number} y - The amount to scale in the Y axis.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	makeScale( x, y ) {
 
 		this.set(
@@ -15428,8 +16226,12 @@ class Matrix3 {
 
 	}
 
-	//
-
+	/**
+	 * Returns `true` if this matrix is equal with the given one.
+	 *
+	 * @param {Matrix3} matrix - The matrix to test for equality.
+	 * @return {boolean} Whether this matrix is equal with the given one.
+	 */
 	equals( matrix ) {
 
 		const te = this.elements;
@@ -15445,6 +16247,13 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Sets the elements of the matrix from the given array.
+	 *
+	 * @param {Array<number>} array - The matrix elements in column-major order.
+	 * @param {number} [offset=0] - Index of the first element in the array.
+	 * @return {Matrix3} A reference to this matrix.
+	 */
 	fromArray( array, offset = 0 ) {
 
 		for ( let i = 0; i < 9; i ++ ) {
@@ -15457,6 +16266,14 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Writes the elements of this matrix to the given array. If no array is provided,
+	 * the method returns a new instance.
+	 *
+	 * @param {Array<number>} [array=[]] - The target array holding the matrix elements in column-major order.
+	 * @param {number} [offset=0] - Index of the first element in the array.
+	 * @return {Array<number>} The matrix elements in column-major order.
+	 */
 	toArray( array = [], offset = 0 ) {
 
 		const te = this.elements;
@@ -15477,6 +16294,11 @@ class Matrix3 {
 
 	}
 
+	/**
+	 * Returns a matrix with copied values from this instance.
+	 *
+	 * @return {Matrix3} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor().fromArray( this.elements );
@@ -15778,8 +16600,19 @@ function LinearToSRGB( c ) {
 
 let _canvas;
 
+/**
+ * A class containing utility functions for images.
+ *
+ * @hideconstructor
+ */
 class ImageUtils {
 
+	/**
+	 * Returns a data URI containing a representation of the given image.
+	 *
+	 * @param {(HTMLImageElement|HTMLCanvasElement)} image - The image object.
+	 * @return {string} The data URI.
+	 */
 	static getDataURL( image ) {
 
 		if ( /^data:/i.test( image.src ) ) {
@@ -15827,6 +16660,12 @@ class ImageUtils {
 
 	}
 
+	/**
+	 * Converts the given sRGB image data to linear color space.
+	 *
+	 * @param {(HTMLImageElement|HTMLCanvasElement|ImageBitmap|Object)} image - The image object.
+	 * @return {HTMLCanvasElement|Object} The converted image.
+	 */
 	static sRGBToLinear( image ) {
 
 		if ( ( typeof HTMLImageElement !== 'undefined' && image instanceof HTMLImageElement ) ||
@@ -16017,64 +16856,343 @@ function serializeImage( image ) {
 
 let _textureId = 0;
 
+/**
+ * Base class for all textures.
+ *
+ * Note: After the initial use of a texture, its dimensions, format, and type
+ * cannot be changed. Instead, call {@link Texture#dispose} on the texture and instantiate a new one.
+ *
+ * @augments EventDispatcher
+ */
 class Texture extends EventDispatcher {
 
+	/**
+	 * Constructs a new texture.
+	 *
+	 * @param {?Object} [image=Texture.DEFAULT_IMAGE] - The image holding the texture data.
+	 * @param {number} [mapping=Texture.DEFAULT_MAPPING] - The texture mapping.
+	 * @param {number} [wrapS=ClampToEdgeWrapping] - The wrapS value.
+	 * @param {number} [wrapT=ClampToEdgeWrapping] - The wrapT value.
+	 * @param {number} [magFilter=LinearFilter] - The mag filter value.
+	 * @param {number} [minFilter=LinearFilter] - The min filter value.
+	 * @param {number} [format=RGBAFormat] - The min filter value.
+	 * @param {number} [type=UnsignedByteType] - The min filter value.
+	 * @param {number} [anisotropy=Texture.DEFAULT_ANISOTROPY] - The min filter value.
+	 * @param {string} [colorSpace=NoColorSpace] - The min filter value.
+	 */
 	constructor( image = Texture.DEFAULT_IMAGE, mapping = Texture.DEFAULT_MAPPING, wrapS = ClampToEdgeWrapping, wrapT = ClampToEdgeWrapping, magFilter = LinearFilter, minFilter = LinearMipmapLinearFilter, format = RGBAFormat, type = UnsignedByteType, anisotropy = Texture.DEFAULT_ANISOTROPY, colorSpace = NoColorSpace ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isTexture = true;
 
+		/**
+		 * The ID of the texture.
+		 *
+		 * @name Texture#id
+		 * @type {number}
+		 * @readonly
+		 */
 		Object.defineProperty( this, 'id', { value: _textureId ++ } );
 
+		/**
+		 * The UUID of the material.
+		 *
+		 * @type {string}
+		 * @readonly
+		 */
 		this.uuid = generateUUID();
 
+		/**
+		 * The name of the material.
+		 *
+		 * @type {string}
+		 */
 		this.name = '';
 
+		/**
+		 * The data definition of a texture. A reference to the data source can be
+		 * shared across textures. This is often useful in context of spritesheets
+		 * where multiple textures render the same data but with different texture
+		 * transformations.
+		 *
+		 * @type {Source}
+		 */
 		this.source = new Source( image );
+
+		/**
+		 * An array holding user-defined mipmaps.
+		 *
+		 * @type {Array<Object>}
+		 */
 		this.mipmaps = [];
 
+		/**
+		 * How the texture is applied to the object. The value `UVMapping`
+		 * is the default, where texture or uv coordinates are used to apply the map.
+		 *
+		 * @type {(UVMapping|CubeReflectionMapping|CubeRefractionMapping|EquirectangularReflectionMapping|EquirectangularRefractionMapping|CubeUVReflectionMapping)}
+		 * @default UVMapping
+		*/
 		this.mapping = mapping;
+
+		/**
+		 * Lets you select the uv attribute to map the texture to. `0` for `uv`,
+		 * `1` for `uv1`, `2` for `uv2` and `3` for `uv3`.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.channel = 0;
 
+		/**
+		 * This defines how the texture is wrapped horizontally and corresponds to
+		 * *U* in UV mapping.
+		 *
+		 * @type {(RepeatWrapping|ClampToEdgeWrapping|MirroredRepeatWrapping)}
+		 * @default ClampToEdgeWrapping
+		 */
 		this.wrapS = wrapS;
+
+		/**
+		 * This defines how the texture is wrapped horizontally and corresponds to
+		 * *V* in UV mapping.
+		 *
+		 * @type {(RepeatWrapping|ClampToEdgeWrapping|MirroredRepeatWrapping)}
+		 * @default ClampToEdgeWrapping
+		 */
 		this.wrapT = wrapT;
 
+		/**
+		 * How the texture is sampled when a texel covers more than one pixel.
+		 *
+		 * @type {(NearestFilter|NearestMipmapNearestFilter|NearestMipmapLinearFilter|LinearFilter|LinearMipmapNearestFilter|LinearMipmapLinearFilter)}
+		 * @default LinearFilter
+		 */
 		this.magFilter = magFilter;
+
+		/**
+		 * How the texture is sampled when a texel covers less than one pixel.
+		 *
+		 * @type {(NearestFilter|NearestMipmapNearestFilter|NearestMipmapLinearFilter|LinearFilter|LinearMipmapNearestFilter|LinearMipmapLinearFilter)}
+		 * @default LinearMipmapLinearFilter
+		 */
 		this.minFilter = minFilter;
 
+		/**
+		 * The number of samples taken along the axis through the pixel that has the
+		 * highest density of texels. By default, this value is `1`. A higher value
+		 * gives a less blurry result than a basic mipmap, at the cost of more
+		 * texture samples being used.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.anisotropy = anisotropy;
 
+		/**
+		 * The format of the texture.
+		 *
+		 * @type {number}
+		 * @default RGBAFormat
+		 */
 		this.format = format;
+
+		/**
+		 * The default internal format is derived from {@link Texture#format} and {@link Texture#type} and
+		 * defines how the texture data is going to be stored on the GPU.
+		 *
+		 * This property allows to overwrite the default format.
+		 *
+		 * @type {?string}
+		 * @default null
+		 */
 		this.internalFormat = null;
+
+		/**
+		 * The data type of the texture.
+		 *
+		 * @type {number}
+		 * @default UnsignedByteType
+		 */
 		this.type = type;
 
+		/**
+		 * How much a single repetition of the texture is offset from the beginning,
+		 * in each direction U and V. Typical range is `0.0` to `1.0`.
+		 *
+		 * @type {Vector2}
+		 * @default (0,0)
+		 */
 		this.offset = new Vector2( 0, 0 );
+
+		/**
+		 * How many times the texture is repeated across the surface, in each
+		 * direction U and V. If repeat is set greater than `1` in either direction,
+		 * the corresponding wrap parameter should also be set to `RepeatWrapping`
+		 * or `MirroredRepeatWrapping` to achieve the desired tiling effect.
+		 *
+		 * @type {Vector2}
+		 * @default (1,1)
+		 */
 		this.repeat = new Vector2( 1, 1 );
+
+		/**
+		 * The point around which rotation occurs. A value of `(0.5, 0.5)` corresponds
+		 * to the center of the texture. Default is `(0, 0)`, the lower left.
+		 *
+		 * @type {Vector2}
+		 * @default (0,0)
+		 */
 		this.center = new Vector2( 0, 0 );
+
+		/**
+		 * How much the texture is rotated around the center point, in radians.
+		 * Positive values are counter-clockwise.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.rotation = 0;
 
+		/**
+		 * Whether to update the texture's uv-transformation {@link Texture#matrix}
+		 * from the properties {@link Texture#offset}, {@link Texture#repeat},
+		 * {@link Texture#rotation}, and {@link Texture#center}.
+		 *
+		 * Set this to `false` if you are specifying the uv-transform matrix directly.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.matrixAutoUpdate = true;
+
+		/**
+		 * The uv-transformation matrix of the texture.
+		 *
+		 * @type {Matrix3}
+		 */
 		this.matrix = new Matrix3();
 
+		/**
+		 * Whether to generate mipmaps (if possible) for a texture.
+		 *
+		 * Set this to `false` if you are creating mipmaps manually.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.generateMipmaps = true;
+
+		/**
+		 * If set to `true`, the alpha channel, if present, is multiplied into the
+		 * color channels when the texture is uploaded to the GPU.
+		 *
+		 * Note that this property has no effect when using `ImageBitmap`. You need to
+		 * configure premultiply alpha on bitmap creation instead.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.premultiplyAlpha = false;
+
+		/**
+		 * If set to `true`, the texture is flipped along the vertical axis when
+		 * uploaded to the GPU.
+		 *
+		 * Note that this property has no effect when using `ImageBitmap`. You need to
+		 * configure the flip on bitmap creation instead.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.flipY = true;
+
+		/**
+		 * Specifies the alignment requirements for the start of each pixel row in memory.
+		 * The allowable values are `1` (byte-alignment), `2` (rows aligned to even-numbered bytes),
+		 * `4` (word-alignment), and `8` (rows start on double-word boundaries).
+		 *
+		 * @type {number}
+		 * @default 4
+		 */
 		this.unpackAlignment = 4;	// valid values: 1, 2, 4, 8 (see http://www.khronos.org/opengles/sdk/docs/man/xhtml/glPixelStorei.xml)
 
+		/**
+		 * Textures containing color data should be annotated with `SRGBColorSpace` or `LinearSRGBColorSpace`.
+		 *
+		 * @type {string}
+		 * @default NoColorSpace
+		 */
 		this.colorSpace = colorSpace;
 
+		/**
+		 * An object that can be used to store custom data about the texture. It
+		 * should not hold references to functions as these will not be cloned.
+		 *
+		 * @type {Object}
+		 */
 		this.userData = {};
 
+		/**
+		 * This starts at `0` and counts how many times {@link Texture#needsUpdate} is set to `true`.
+		 *
+		 * @type {number}
+		 * @readonly
+		 * @default 0
+		 */
 		this.version = 0;
+
+		/**
+		 * A callback function, called when the texture is updated (e.g., when
+		 * {@link Texture#needsUpdate} has been set to true and then the texture is used).
+		 *
+		 * @type {?Function}
+		 * @default null
+		 */
 		this.onUpdate = null;
 
-		this.renderTarget = null; // assign texture to a render target
-		this.isRenderTargetTexture = false; // indicates whether a texture belongs to a render target or not
-		this.pmremVersion = 0; // indicates whether this texture should be processed by PMREMGenerator or not (only relevant for render target textures)
+		/**
+		 * An optional back reference to the textures render target.
+		 *
+		 * @type {?(RenderTarget|WebGLRenderTarget)}
+		 * @default null
+		 */
+		this.renderTarget = null;
+
+		/**
+		 * Indicates whether a texture belongs to a render target or not.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default false
+		 */
+		this.isRenderTargetTexture = false;
+
+		/**
+		 * Indicates whether this texture should be processed by `PMREMGenerator` or not
+		 * (only relevant for render target textures).
+		 *
+		 * @type {number}
+		 * @readonly
+		 * @default 0
+		 */
+		this.pmremVersion = 0;
 
 	}
 
+	/**
+	 * The image object holding the texture data.
+	 *
+	 * @type {?Object}
+	 */
 	get image() {
 
 		return this.source.data;
@@ -16087,18 +17205,33 @@ class Texture extends EventDispatcher {
 
 	}
 
+	/**
+	 * Updates the texture transformation matrix from the from the properties {@link Texture#offset},
+	 * {@link Texture#repeat}, {@link Texture#rotation}, and {@link Texture#center}.
+	 */
 	updateMatrix() {
 
 		this.matrix.setUvTransform( this.offset.x, this.offset.y, this.repeat.x, this.repeat.y, this.rotation, this.center.x, this.center.y );
 
 	}
 
+	/**
+	 * Returns a new texture with copied values from this instance.
+	 *
+	 * @return {Texture} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
 
 	}
 
+	/**
+	 * Copies the values of the given texture to this instance.
+	 *
+	 * @param {Texture} source - The texture to copy.
+	 * @return {Texture} A reference to this instance.
+	 */
 	copy( source ) {
 
 		this.name = source.name;
@@ -16146,6 +17279,13 @@ class Texture extends EventDispatcher {
 
 	}
 
+	/**
+	 * Serializes the texture into JSON.
+	 *
+	 * @param {?(Object|string)} meta - An optional value holding meta information about the serialization.
+	 * @return {Object} A JSON object representing the serialized texture.
+	 * @see {@link ObjectLoader#parse}
+	 */
 	toJSON( meta ) {
 
 		const isRootObject = ( meta === undefined || typeof meta === 'string' );
@@ -16208,12 +17348,30 @@ class Texture extends EventDispatcher {
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever this instance is no longer used in your app.
+	 *
+	 * @fires Texture#dispose
+	 */
 	dispose() {
 
+		/**
+		 * Fires when the texture has been disposed of.
+		 *
+		 * @event Texture#dispose
+		 * @type {Object}
+		 */
 		this.dispatchEvent( { type: 'dispose' } );
 
 	}
 
+	/**
+	 * Transforms the given uv vector with the textures uv transformation matrix.
+	 *
+	 * @param {Vector2} uv - The uv vector.
+	 * @return {Vector2} The transformed uv vector.
+	 */
 	transformUv( uv ) {
 
 		if ( this.mapping !== UVMapping ) return uv;
@@ -16294,6 +17452,15 @@ class Texture extends EventDispatcher {
 
 	}
 
+	/**
+	 * Setting this property to `true` indicates the engine the texture
+	 * must be updated in the next render. This triggers a texture upload
+	 * to the GPU and ensures correct texture parameter configuration.
+	 *
+	 * @type {boolean}
+	 * @default false
+	 * @param {boolean} value
+	 */
 	set needsUpdate( value ) {
 
 		if ( value === true ) {
@@ -16305,6 +17472,14 @@ class Texture extends EventDispatcher {
 
 	}
 
+	/**
+	 * Setting this property to `true` indicates the engine the PMREM
+	 * must be regenerated.
+	 *
+	 * @type {boolean}
+	 * @default false
+	 * @param {boolean} value
+	 */
 	set needsPMREMUpdate( value ) {
 
 		if ( value === true ) {
@@ -16317,23 +17492,113 @@ class Texture extends EventDispatcher {
 
 }
 
+/**
+ * The default image for all textures.
+ *
+ * @static
+ * @type {?Image}
+ * @default null
+ */
 Texture.DEFAULT_IMAGE = null;
+
+/**
+ * The default mapping for all textures.
+ *
+ * @static
+ * @type {number}
+ * @default UVMapping
+ */
 Texture.DEFAULT_MAPPING = UVMapping;
+
+/**
+ * The default anisotropy value for all textures.
+ *
+ * @static
+ * @type {number}
+ * @default 1
+ */
 Texture.DEFAULT_ANISOTROPY = 1;
 
+/**
+ * Class representing a 4D vector. A 4D vector is an ordered quadruplet of numbers
+ * (labeled x, y, z and w), which can be used to represent a number of things, such as:
+ *
+ * - A point in 4D space.
+ * - A direction and length in 4D space. In three.js the length will
+ * always be the Euclidean distance(straight-line distance) from `(0, 0, 0, 0)` to `(x, y, z, w)`
+ * and the direction is also measured from `(0, 0, 0, 0)` towards `(x, y, z, w)`.
+ * - Any arbitrary ordered quadruplet of numbers.
+ *
+ * There are other things a 4D vector can be used to represent, however these
+ * are the most common uses in *three.js*.
+ *
+ * Iterating through a vector instance will yield its components `(x, y, z, w)` in
+ * the corresponding order.
+ * ```js
+ * const a = new THREE.Vector4( 0, 1, 0, 0 );
+ *
+ * //no arguments; will be initialised to (0, 0, 0, 1)
+ * const b = new THREE.Vector4( );
+ *
+ * const d = a.dot( b );
+ * ```
+ */
 class Vector4 {
 
+	/**
+	 * Constructs a new 4D vector.
+	 *
+	 * @param {number} [x=0] - The x value of this vector.
+	 * @param {number} [y=0] - The y value of this vector.
+	 * @param {number} [z=0] - The z value of this vector.
+	 * @param {number} [w=1] - The w value of this vector.
+	 */
 	constructor( x = 0, y = 0, z = 0, w = 1 ) {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		Vector4.prototype.isVector4 = true;
 
+		/**
+		 * The x value of this vector.
+		 *
+		 * @type {number}
+		 */
 		this.x = x;
+
+		/**
+		 * The y value of this vector.
+		 *
+		 * @type {number}
+		 */
 		this.y = y;
+
+		/**
+		 * The z value of this vector.
+		 *
+		 * @type {number}
+		 */
 		this.z = z;
+
+		/**
+		 * The w value of this vector.
+		 *
+		 * @type {number}
+		 */
 		this.w = w;
 
 	}
 
+	/**
+	 * Alias for {@link Vector4#z}.
+	 *
+	 * @type {number}
+	 */
 	get width() {
 
 		return this.z;
@@ -16346,6 +17611,11 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Alias for {@link Vector4#w}.
+	 *
+	 * @type {number}
+	 */
 	get height() {
 
 		return this.w;
@@ -16358,6 +17628,15 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Sets the vector components.
+	 *
+	 * @param {number} x - The value of the x component.
+	 * @param {number} y - The value of the y component.
+	 * @param {number} z - The value of the z component.
+	 * @param {number} w - The value of the w component.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	set( x, y, z, w ) {
 
 		this.x = x;
@@ -16369,6 +17648,12 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Sets the vector components to the same value.
+	 *
+	 * @param {number} scalar - The value to set for all vector components.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	setScalar( scalar ) {
 
 		this.x = scalar;
@@ -16380,6 +17665,12 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Sets the vector's x component to the given value
+	 *
+	 * @param {number} x - The value to set.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	setX( x ) {
 
 		this.x = x;
@@ -16388,6 +17679,12 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Sets the vector's y component to the given value
+	 *
+	 * @param {number} y - The value to set.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	setY( y ) {
 
 		this.y = y;
@@ -16396,6 +17693,12 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Sets the vector's z component to the given value
+	 *
+	 * @param {number} z - The value to set.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	setZ( z ) {
 
 		this.z = z;
@@ -16404,6 +17707,12 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Sets the vector's w component to the given value
+	 *
+	 * @param {number} w - The value to set.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	setW( w ) {
 
 		this.w = w;
@@ -16412,6 +17721,14 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Allows to set a vector component with an index.
+	 *
+	 * @param {number} index - The component index. `0` equals to x, `1` equals to y,
+	 * `2` equals to z, `3` equals to w.
+	 * @param {number} value - The value to set.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	setComponent( index, value ) {
 
 		switch ( index ) {
@@ -16428,6 +17745,13 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Returns the value of the vector component which matches the given index.
+	 *
+	 * @param {number} index - The component index. `0` equals to x, `1` equals to y,
+	 * `2` equals to z, `3` equals to w.
+	 * @return {number} A vector component value.
+	 */
 	getComponent( index ) {
 
 		switch ( index ) {
@@ -16442,12 +17766,23 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Returns a new vector with copied values from this instance.
+	 *
+	 * @return {Vector4} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor( this.x, this.y, this.z, this.w );
 
 	}
 
+	/**
+	 * Copies the values of the given vector to this instance.
+	 *
+	 * @param {Vector3|Vector4} v - The vector to copy.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	copy( v ) {
 
 		this.x = v.x;
@@ -16459,6 +17794,12 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Adds the given vector to this instance.
+	 *
+	 * @param {Vector4} v - The vector to add.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	add( v ) {
 
 		this.x += v.x;
@@ -16470,6 +17811,12 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Adds the given scalar value to all components of this instance.
+	 *
+	 * @param {number} s - The scalar to add.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	addScalar( s ) {
 
 		this.x += s;
@@ -16481,6 +17828,13 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Adds the given vectors and stores the result in this instance.
+	 *
+	 * @param {Vector4} a - The first vector.
+	 * @param {Vector4} b - The second vector.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	addVectors( a, b ) {
 
 		this.x = a.x + b.x;
@@ -16492,6 +17846,13 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Adds the given vector scaled by the given factor to this instance.
+	 *
+	 * @param {Vector4} v - The vector.
+	 * @param {number} s - The factor that scales `v`.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	addScaledVector( v, s ) {
 
 		this.x += v.x * s;
@@ -16503,6 +17864,12 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Subtracts the given vector from this instance.
+	 *
+	 * @param {Vector4} v - The vector to subtract.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	sub( v ) {
 
 		this.x -= v.x;
@@ -16514,6 +17881,12 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Subtracts the given scalar value from all components of this instance.
+	 *
+	 * @param {number} s - The scalar to subtract.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	subScalar( s ) {
 
 		this.x -= s;
@@ -16525,6 +17898,13 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Subtracts the given vectors and stores the result in this instance.
+	 *
+	 * @param {Vector4} a - The first vector.
+	 * @param {Vector4} b - The second vector.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	subVectors( a, b ) {
 
 		this.x = a.x - b.x;
@@ -16536,6 +17916,12 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Multiplies the given vector with this instance.
+	 *
+	 * @param {Vector4} v - The vector to multiply.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	multiply( v ) {
 
 		this.x *= v.x;
@@ -16547,6 +17933,12 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Multiplies the given scalar value with all components of this instance.
+	 *
+	 * @param {number} scalar - The scalar to multiply.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	multiplyScalar( scalar ) {
 
 		this.x *= scalar;
@@ -16558,6 +17950,12 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Multiplies this vector with the given 4x4 matrix.
+	 *
+	 * @param {Matrix4} m - The 4x4 matrix.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	applyMatrix4( m ) {
 
 		const x = this.x, y = this.y, z = this.z, w = this.w;
@@ -16572,6 +17970,12 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Divides this instance by the given vector.
+	 *
+	 * @param {Vector4} v - The vector to divide.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	divide( v ) {
 
 		this.x /= v.x;
@@ -16583,12 +17987,25 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Divides this vector by the given scalar.
+	 *
+	 * @param {number} scalar - The scalar to divide.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	divideScalar( scalar ) {
 
 		return this.multiplyScalar( 1 / scalar );
 
 	}
 
+	/**
+	 * Sets the x, y and z components of this
+	 * vector to the quaternion's axis and w to the angle.
+	 *
+	 * @param {Quaternion} q - The Quaternion to set.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	setAxisAngleFromQuaternion( q ) {
 
 		// http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle/index.htm
@@ -16617,6 +18034,13 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Sets the x, y and z components of this
+	 * vector to the axis of rotation and w to the angle.
+	 *
+	 * @param {Matrix4} m - A 4x4 matrix of which the upper left 3x3 matrix is a pure rotation matrix.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	setAxisAngleFromRotationMatrix( m ) {
 
 		// http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToAngle/index.htm
@@ -16747,6 +18171,13 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Sets the vector components to the position elements of the
+	 * given transformation matrix.
+	 *
+	 * @param {Matrix4} m - The 4x4 matrix.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	setFromMatrixPosition( m ) {
 
 		const e = m.elements;
@@ -16760,6 +18191,13 @@ class Vector4 {
 
 	}
 
+	/**
+	 * If this vector's x, y, z or w value is greater than the given vector's x, y, z or w
+	 * value, replace that value with the corresponding min value.
+	 *
+	 * @param {Vector4} v - The vector.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	min( v ) {
 
 		this.x = Math.min( this.x, v.x );
@@ -16771,6 +18209,13 @@ class Vector4 {
 
 	}
 
+	/**
+	 * If this vector's x, y, z or w value is less than the given vector's x, y, z or w
+	 * value, replace that value with the corresponding max value.
+	 *
+	 * @param {Vector4} v - The vector.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	max( v ) {
 
 		this.x = Math.max( this.x, v.x );
@@ -16782,6 +18227,16 @@ class Vector4 {
 
 	}
 
+	/**
+	 * If this vector's x, y, z or w value is greater than the max vector's x, y, z or w
+	 * value, it is replaced by the corresponding value.
+	 * If this vector's x, y, z or w value is less than the min vector's x, y, z or w value,
+	 * it is replaced by the corresponding value.
+	 *
+	 * @param {Vector4} min - The minimum x, y and z values.
+	 * @param {Vector4} max - The maximum x, y and z values in the desired range.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	clamp( min, max ) {
 
 		// assumes min < max, componentwise
@@ -16795,6 +18250,16 @@ class Vector4 {
 
 	}
 
+	/**
+	 * If this vector's x, y, z or w values are greater than the max value, they are
+	 * replaced by the max value.
+	 * If this vector's x, y, z or w values are less than the min value, they are
+	 * replaced by the min value.
+	 *
+	 * @param {number} minVal - The minimum value the components will be clamped to.
+	 * @param {number} maxVal - The maximum value the components will be clamped to.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	clampScalar( minVal, maxVal ) {
 
 		this.x = clamp( this.x, minVal, maxVal );
@@ -16806,6 +18271,16 @@ class Vector4 {
 
 	}
 
+	/**
+	 * If this vector's length is greater than the max value, it is replaced by
+	 * the max value.
+	 * If this vector's length is less than the min value, it is replaced by the
+	 * min value.
+	 *
+	 * @param {number} min - The minimum value the vector length will be clamped to.
+	 * @param {number} max - The maximum value the vector length will be clamped to.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	clampLength( min, max ) {
 
 		const length = this.length();
@@ -16814,6 +18289,11 @@ class Vector4 {
 
 	}
 
+	/**
+	 * The components of this vector are rounded down to the nearest integer value.
+	 *
+	 * @return {Vector4} A reference to this vector.
+	 */
 	floor() {
 
 		this.x = Math.floor( this.x );
@@ -16825,6 +18305,11 @@ class Vector4 {
 
 	}
 
+	/**
+	 * The components of this vector are rounded up to the nearest integer value.
+	 *
+	 * @return {Vector4} A reference to this vector.
+	 */
 	ceil() {
 
 		this.x = Math.ceil( this.x );
@@ -16836,6 +18321,11 @@ class Vector4 {
 
 	}
 
+	/**
+	 * The components of this vector are rounded to the nearest integer value
+	 *
+	 * @return {Vector4} A reference to this vector.
+	 */
 	round() {
 
 		this.x = Math.round( this.x );
@@ -16847,6 +18337,12 @@ class Vector4 {
 
 	}
 
+	/**
+	 * The components of this vector are rounded towards zero (up if negative,
+	 * down if positive) to an integer value.
+	 *
+	 * @return {Vector4} A reference to this vector.
+	 */
 	roundToZero() {
 
 		this.x = Math.trunc( this.x );
@@ -16858,6 +18354,11 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Inverts this vector - i.e. sets x = -x, y = -y, z = -z, w = -w.
+	 *
+	 * @return {Vector4} A reference to this vector.
+	 */
 	negate() {
 
 		this.x = - this.x;
@@ -16869,42 +18370,87 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Calculates the dot product of the given vector with this instance.
+	 *
+	 * @param {Vector4} v - The vector to compute the dot product with.
+	 * @return {number} The result of the dot product.
+	 */
 	dot( v ) {
 
 		return this.x * v.x + this.y * v.y + this.z * v.z + this.w * v.w;
 
 	}
 
+	/**
+	 * Computes the square of the Euclidean length (straight-line length) from
+	 * (0, 0, 0, 0) to (x, y, z, w). If you are comparing the lengths of vectors, you should
+	 * compare the length squared instead as it is slightly more efficient to calculate.
+	 *
+	 * @return {number} The square length of this vector.
+	 */
 	lengthSq() {
 
 		return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
 
 	}
 
+	/**
+	 * Computes the  Euclidean length (straight-line length) from (0, 0, 0, 0) to (x, y, z, w).
+	 *
+	 * @return {number} The length of this vector.
+	 */
 	length() {
 
 		return Math.sqrt( this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w );
 
 	}
 
+	/**
+	 * Computes the Manhattan length of this vector.
+	 *
+	 * @return {number} The length of this vector.
+	 */
 	manhattanLength() {
 
 		return Math.abs( this.x ) + Math.abs( this.y ) + Math.abs( this.z ) + Math.abs( this.w );
 
 	}
 
+	/**
+	 * Converts this vector to a unit vector - that is, sets it equal to a vector
+	 * with the same direction as this one, but with a vector length of `1`.
+	 *
+	 * @return {Vector4} A reference to this vector.
+	 */
 	normalize() {
 
 		return this.divideScalar( this.length() || 1 );
 
 	}
 
+	/**
+	 * Sets this vector to a vector with the same direction as this one, but
+	 * with the specified length.
+	 *
+	 * @param {number} length - The new length of this vector.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	setLength( length ) {
 
 		return this.normalize().multiplyScalar( length );
 
 	}
 
+	/**
+	 * Linearly interpolates between the given vector and this instance, where
+	 * alpha is the percent distance along the line - alpha = 0 will be this
+	 * vector, and alpha = 1 will be the given one.
+	 *
+	 * @param {Vector4} v - The vector to interpolate towards.
+	 * @param {number} alpha - The interpolation factor, typically in the closed interval `[0, 1]`.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	lerp( v, alpha ) {
 
 		this.x += ( v.x - this.x ) * alpha;
@@ -16916,6 +18462,16 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Linearly interpolates between the given vectors, where alpha is the percent
+	 * distance along the line - alpha = 0 will be first vector, and alpha = 1 will
+	 * be the second one. The result is stored in this instance.
+	 *
+	 * @param {Vector4} v1 - The first vector.
+	 * @param {Vector4} v2 - The second vector.
+	 * @param {number} alpha - The interpolation factor, typically in the closed interval `[0, 1]`.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	lerpVectors( v1, v2, alpha ) {
 
 		this.x = v1.x + ( v2.x - v1.x ) * alpha;
@@ -16927,12 +18483,26 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Returns `true` if this vector is equal with the given one.
+	 *
+	 * @param {Vector4} v - The vector to test for equality.
+	 * @return {boolean} Whether this vector is equal with the given one.
+	 */
 	equals( v ) {
 
 		return ( ( v.x === this.x ) && ( v.y === this.y ) && ( v.z === this.z ) && ( v.w === this.w ) );
 
 	}
 
+	/**
+	 * Sets this vector's x value to be `array[ offset ]`, y value to be `array[ offset + 1 ]`,
+	 * z value to be `array[ offset + 2 ]`, w value to be `array[ offset + 3 ]`.
+	 *
+	 * @param {Array<number>} array - An array holding the vector component values.
+	 * @param {number} [offset=0] - The offset into the array.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	fromArray( array, offset = 0 ) {
 
 		this.x = array[ offset ];
@@ -16944,6 +18514,14 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Writes the components of this vector to the given array. If no array is provided,
+	 * the method returns a new instance.
+	 *
+	 * @param {Array<number>} [array=[]] - The target array holding the vector components.
+	 * @param {number} [offset=0] - Index of the first element in the array.
+	 * @return {Array<number>} The vector components.
+	 */
 	toArray( array = [], offset = 0 ) {
 
 		array[ offset ] = this.x;
@@ -16955,6 +18533,13 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Sets the components of this vector from the given buffer attribute.
+	 *
+	 * @param {BufferAttribute} attribute - The buffer attribute holding vector data.
+	 * @param {number} index - The index into the attribute.
+	 * @return {Vector4} A reference to this vector.
+	 */
 	fromBufferAttribute( attribute, index ) {
 
 		this.x = attribute.getX( index );
@@ -16966,6 +18551,12 @@ class Vector4 {
 
 	}
 
+	/**
+	 * Sets each component of this vector to a pseudo-random value between `0` and
+	 * `1`, excluding `1`.
+	 *
+	 * @return {Vector4} A reference to this vector.
+	 */
 	random() {
 
 		this.x = Math.random();
@@ -17132,12 +18723,12 @@ class RenderTarget extends EventDispatcher {
 			this.textures[ i ].isRenderTargetTexture = true;
 			this.textures[ i ].renderTarget = this;
 
+			// ensure image object is not shared, see #20328
+
+			const image = Object.assign( {}, source.textures[ i ].image );
+			this.textures[ i ].source = new Source( image );
+
 		}
-
-		// ensure image object is not shared, see #20328
-
-		const image = Object.assign( {}, source.texture.image );
-		this.texture.source = new Source( image );
 
 		this.depthBuffer = source.depthBuffer;
 		this.stencilBuffer = source.stencilBuffer;
@@ -17212,20 +18803,110 @@ function hue2rgb( p, q, t ) {
 
 }
 
+/**
+ * A Color instance is represented by RGB components in the linear <i>working
+ * color space</i>, which defaults to `LinearSRGBColorSpace`. Inputs
+ * conventionally using `SRGBColorSpace` (such as hexadecimals and CSS
+ * strings) are converted to the working color space automatically.
+ *
+ * ```js
+ * // converted automatically from SRGBColorSpace to LinearSRGBColorSpace
+ * const color = new THREE.Color().setHex( 0x112233 );
+ * ```
+ * Source color spaces may be specified explicitly, to ensure correct conversions.
+ * ```js
+ * // assumed already LinearSRGBColorSpace; no conversion
+ * const color = new THREE.Color().setRGB( 0.5, 0.5, 0.5 );
+ *
+ * // converted explicitly from SRGBColorSpace to LinearSRGBColorSpace
+ * const color = new THREE.Color().setRGB( 0.5, 0.5, 0.5, SRGBColorSpace );
+ * ```
+ * If THREE.ColorManagement is disabled, no conversions occur. For details,
+ * see <i>Color management</i>. Iterating through a Color instance will yield
+ * its components (r, g, b) in the corresponding order. A Color can be initialised
+ * in any of the following ways:
+ * ```js
+ * //empty constructor - will default white
+ * const color1 = new THREE.Color();
+ *
+ * //Hexadecimal color (recommended)
+ * const color2 = new THREE.Color( 0xff0000 );
+ *
+ * //RGB string
+ * const color3 = new THREE.Color("rgb(255, 0, 0)");
+ * const color4 = new THREE.Color("rgb(100%, 0%, 0%)");
+ *
+ * //X11 color name - all 140 color names are supported.
+ * //Note the lack of CamelCase in the name
+ * const color5 = new THREE.Color( 'skyblue' );
+ * //HSL string
+ * const color6 = new THREE.Color("hsl(0, 100%, 50%)");
+ *
+ * //Separate RGB values between 0 and 1
+ * const color7 = new THREE.Color( 1, 0, 0 );
+ * ```
+ */
 class Color {
 
+	/**
+	 * Constructs a new color.
+	 *
+	 * Note that standard method of specifying color in three.js is with a hexadecimal triplet,
+	 * and that method is used throughout the rest of the documentation.
+	 *
+	 * @param {(number|string|Color)} [r] - The red component of the color. If `g` and `b` are
+	 * not provided, it can be hexadecimal triplet, a CSS-style string or another `Color` instance.
+	 * @param {number} [g] - The green component.
+	 * @param {number} [b] - The blue component.
+	 */
 	constructor( r, g, b ) {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isColor = true;
 
+		/**
+		 * The red component.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.r = 1;
+
+		/**
+		 * The green component.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.g = 1;
+
+		/**
+		 * The blue component.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.b = 1;
 
 		return this.set( r, g, b );
 
 	}
 
+	/**
+	 * Sets the colors's components from the given values.
+	 *
+	 * @param {(number|string|Color)} [r] - The red component of the color. If `g` and `b` are
+	 * not provided, it can be hexadecimal triplet, a CSS-style string or another `Color` instance.
+	 * @param {number} [g] - The green component.
+	 * @param {number} [b] - The blue component.
+	 * @return {Color} A reference to this color.
+	 */
 	set( r, g, b ) {
 
 		if ( g === undefined && b === undefined ) {
@@ -17258,6 +18939,12 @@ class Color {
 
 	}
 
+	/**
+	 * Sets the colors's components to the given scalar value.
+	 *
+	 * @param {number} scalar - The scalar value.
+	 * @return {Color} A reference to this color.
+	 */
 	setScalar( scalar ) {
 
 		this.r = scalar;
@@ -17268,6 +18955,13 @@ class Color {
 
 	}
 
+	/**
+	 * Sets this color from a hexadecimal value.
+	 *
+	 * @param {number} hex - The hexadecimal value.
+	 * @param {string} [colorSpace=SRGBColorSpace] - The color space.
+	 * @return {Color} A reference to this color.
+	 */
 	setHex( hex, colorSpace = SRGBColorSpace ) {
 
 		hex = Math.floor( hex );
@@ -17282,6 +18976,15 @@ class Color {
 
 	}
 
+	/**
+	 * Sets this color from RGB values.
+	 *
+	 * @param {number} r - Red channel value between `0.0` and `1.0`.
+	 * @param {number} g - Green channel value between `0.0` and `1.0`.
+	 * @param {number} b - Blue channel value between `0.0` and `1.0`.
+	 * @param {string} [colorSpace=ColorManagement.workingColorSpace] - The color space.
+	 * @return {Color} A reference to this color.
+	 */
 	setRGB( r, g, b, colorSpace = ColorManagement.workingColorSpace ) {
 
 		this.r = r;
@@ -17294,6 +18997,15 @@ class Color {
 
 	}
 
+	/**
+	 * Sets this color from RGB values.
+	 *
+	 * @param {number} h - Hue value between `0.0` and `1.0`.
+	 * @param {number} s - Saturation value between `0.0` and `1.0`.
+	 * @param {number} l - Lightness value between `0.0` and `1.0`.
+	 * @param {string} [colorSpace=ColorManagement.workingColorSpace] - The color space.
+	 * @return {Color} A reference to this color.
+	 */
 	setHSL( h, s, l, colorSpace = ColorManagement.workingColorSpace ) {
 
 		// h,s,l ranges are in 0.0 - 1.0
@@ -17322,6 +19034,16 @@ class Color {
 
 	}
 
+	/**
+	 * Sets this color from a CSS-style string. For example, `rgb(250, 0,0)`,
+	 * `rgb(100%, 0%, 0%)`, `hsl(0, 100%, 50%)`, `#ff0000`, `#f00`, or `red` ( or
+	 * any [X11 color name]{@link https://en.wikipedia.org/wiki/X11_color_names#Color_name_chart} -
+	 * all 140 color names are supported).
+	 *
+	 * @param {string} style - Color as a CSS-style string.
+	 * @param {string} [colorSpace=SRGBColorSpace] - The color space.
+	 * @return {Color} A reference to this color.
+	 */
 	setStyle( style, colorSpace = SRGBColorSpace ) {
 
 		function handleAlpha( string ) {
@@ -17448,6 +19170,19 @@ class Color {
 
 	}
 
+	/**
+	 * Sets this color from a color name. Faster than {@link Color#setStyle} if
+	 * you don't need the other CSS-style formats.
+	 *
+	 * For convenience, the list of names is exposed in `Color.NAMES` as a hash.
+	 * ```js
+	 * Color.NAMES.aliceblue // returns 0xF0F8FF
+	 * ```
+	 *
+	 * @param {string} style - The color name.
+	 * @param {string} [colorSpace=SRGBColorSpace] - The color space.
+	 * @return {Color} A reference to this color.
+	 */
 	setColorName( style, colorSpace = SRGBColorSpace ) {
 
 		// color keywords
@@ -17469,12 +19204,23 @@ class Color {
 
 	}
 
+	/**
+	 * Returns a new color with copied values from this instance.
+	 *
+	 * @return {Color} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor( this.r, this.g, this.b );
 
 	}
 
+	/**
+	 * Copies the values of the given color to this instance.
+	 *
+	 * @param {Color} color - The color to copy.
+	 * @return {Color} A reference to this color.
+	 */
 	copy( color ) {
 
 		this.r = color.r;
@@ -17485,6 +19231,13 @@ class Color {
 
 	}
 
+	/**
+	 * Copies the given color into this color, and then converts this color from
+	 * `SRGBColorSpace` to `LinearSRGBColorSpace`.
+	 *
+	 * @param {Color} color - The color to copy/convert.
+	 * @return {Color} A reference to this color.
+	 */
 	copySRGBToLinear( color ) {
 
 		this.r = SRGBToLinear( color.r );
@@ -17495,6 +19248,13 @@ class Color {
 
 	}
 
+	/**
+	 * Copies the given color into this color, and then converts this color from
+	 * `LinearSRGBColorSpace` to `SRGBColorSpace`.
+	 *
+	 * @param {Color} color - The color to copy/convert.
+	 * @return {Color} A reference to this color.
+	 */
 	copyLinearToSRGB( color ) {
 
 		this.r = LinearToSRGB( color.r );
@@ -17505,6 +19265,11 @@ class Color {
 
 	}
 
+	/**
+	 * Converts this color from `SRGBColorSpace` to `LinearSRGBColorSpace`.
+	 *
+	 * @return {Color} A reference to this color.
+	 */
 	convertSRGBToLinear() {
 
 		this.copySRGBToLinear( this );
@@ -17513,6 +19278,11 @@ class Color {
 
 	}
 
+	/**
+	 * Converts this color from `LinearSRGBColorSpace` to `SRGBColorSpace`.
+	 *
+	 * @return {Color} A reference to this color.
+	 */
 	convertLinearToSRGB() {
 
 		this.copyLinearToSRGB( this );
@@ -17521,6 +19291,12 @@ class Color {
 
 	}
 
+	/**
+	 * Returns the hexadecimal value of this color.
+	 *
+	 * @param {string} [colorSpace=SRGBColorSpace] - The color space.
+	 * @return {number} The hexadecimal value.
+	 */
 	getHex( colorSpace = SRGBColorSpace ) {
 
 		ColorManagement.fromWorkingColorSpace( _color.copy( this ), colorSpace );
@@ -17529,12 +19305,26 @@ class Color {
 
 	}
 
+	/**
+	 * Returns the hexadecimal value of this color as a string (for example, 'FFFFFF').
+	 *
+	 * @param {string} [colorSpace=SRGBColorSpace] - The color space.
+	 * @return {string} The hexadecimal value as a string.
+	 */
 	getHexString( colorSpace = SRGBColorSpace ) {
 
 		return ( '000000' + this.getHex( colorSpace ).toString( 16 ) ).slice( -6 );
 
 	}
 
+	/**
+	 * Converts the colors RGB values into the HSL format and stores them into the
+	 * given target object.
+	 *
+	 * @param {{h:0,s:0,l:0}} target - The target object that is used to store the method's result.
+	 * @param {string} [colorSpace=ColorManagement.workingColorSpace] - The color space.
+	 * @return {{h:number,s:number,l:number}} The HSL representation of this color.
+	 */
 	getHSL( target, colorSpace = ColorManagement.workingColorSpace ) {
 
 		// h,s,l ranges are in 0.0 - 1.0
@@ -17580,6 +19370,13 @@ class Color {
 
 	}
 
+	/**
+	 * Returns the RGB values of this color and stores them into the given target object.
+	 *
+	 * @param {Color} target - The target color that is used to store the method's result.
+	 * @param {string} [colorSpace=ColorManagement.workingColorSpace] - The color space.
+	 * @return {Color} The RGB representation of this color.
+	 */
 	getRGB( target, colorSpace = ColorManagement.workingColorSpace ) {
 
 		ColorManagement.fromWorkingColorSpace( _color.copy( this ), colorSpace );
@@ -17592,6 +19389,12 @@ class Color {
 
 	}
 
+	/**
+	 * Returns the value of this color as a CSS style string. Example: `rgb(255,0,0)`.
+	 *
+	 * @param {string} [colorSpace=SRGBColorSpace] - The color space.
+	 * @return {string} The CSS representation of this color.
+	 */
 	getStyle( colorSpace = SRGBColorSpace ) {
 
 		ColorManagement.fromWorkingColorSpace( _color.copy( this ), colorSpace );
@@ -17609,6 +19412,16 @@ class Color {
 
 	}
 
+	/**
+	 * Adds the given HSL values to this color's values.
+	 * Internally, this converts the color's RGB values to HSL, adds HSL
+	 * and then converts the color back to RGB.
+	 *
+	 * @param {number} h - Hue value between `0.0` and `1.0`.
+	 * @param {number} s - Saturation value between `0.0` and `1.0`.
+	 * @param {number} l - Lightness value between `0.0` and `1.0`.
+	 * @return {Color} A reference to this color.
+	 */
 	offsetHSL( h, s, l ) {
 
 		this.getHSL( _hslA );
@@ -17617,6 +19430,12 @@ class Color {
 
 	}
 
+	/**
+	 * Adds the RGB values of the given color to the RGB values of this color.
+	 *
+	 * @param {Color} color - The color to add.
+	 * @return {Color} A reference to this color.
+	 */
 	add( color ) {
 
 		this.r += color.r;
@@ -17627,6 +19446,13 @@ class Color {
 
 	}
 
+	/**
+	 * Adds the RGB values of the given colors and stores the result in this instance.
+	 *
+	 * @param {Color} color1 - The first color.
+	 * @param {Color} color2 - The second color.
+	 * @return {Color} A reference to this color.
+	 */
 	addColors( color1, color2 ) {
 
 		this.r = color1.r + color2.r;
@@ -17637,6 +19463,12 @@ class Color {
 
 	}
 
+	/**
+	 * Adds the given scalar value to the RGB values of this color.
+	 *
+	 * @param {number} s - The scalar to add.
+	 * @return {Color} A reference to this color.
+	 */
 	addScalar( s ) {
 
 		this.r += s;
@@ -17647,6 +19479,12 @@ class Color {
 
 	}
 
+	/**
+	 * Subtracts the RGB values of the given color from the RGB values of this color.
+	 *
+	 * @param {Color} color - The color to subtract.
+	 * @return {Color} A reference to this color.
+	 */
 	sub( color ) {
 
 		this.r = Math.max( 0, this.r - color.r );
@@ -17657,6 +19495,12 @@ class Color {
 
 	}
 
+	/**
+	 * Multiplies the RGB values of the given color with the RGB values of this color.
+	 *
+	 * @param {Color} color - The color to multiply.
+	 * @return {Color} A reference to this color.
+	 */
 	multiply( color ) {
 
 		this.r *= color.r;
@@ -17667,6 +19511,12 @@ class Color {
 
 	}
 
+	/**
+	 * Multiplies the given scalar value with the RGB values of this color.
+	 *
+	 * @param {number} s - The scalar to multiply.
+	 * @return {Color} A reference to this color.
+	 */
 	multiplyScalar( s ) {
 
 		this.r *= s;
@@ -17677,6 +19527,15 @@ class Color {
 
 	}
 
+	/**
+	 * Linearly interpolates this color's RGB values toward the RGB values of the
+	 * given color. The alpha argument can be thought of as the ratio between
+	 * the two colors, where `0.0` is this color and `1.0` is the first argument.
+	 *
+	 * @param {Color} color - The color to converge on.
+	 * @param {number} alpha - The interpolation factor in the closed interval `[0,1]`.
+	 * @return {Color} A reference to this color.
+	 */
 	lerp( color, alpha ) {
 
 		this.r += ( color.r - this.r ) * alpha;
@@ -17687,6 +19546,16 @@ class Color {
 
 	}
 
+	/**
+	 * Linearly interpolates between the given colors and stores the result in this instance.
+	 * The alpha argument can be thought of as the ratio between the two colors, where `0.0`
+	 * is the first and `1.0` is the second color.
+	 *
+	 * @param {Color} color1 - The first color.
+	 * @param {Color} color2 - The second color.
+	 * @param {number} alpha - The interpolation factor in the closed interval `[0,1]`.
+	 * @return {Color} A reference to this color.
+	 */
 	lerpColors( color1, color2, alpha ) {
 
 		this.r = color1.r + ( color2.r - color1.r ) * alpha;
@@ -17697,6 +19566,17 @@ class Color {
 
 	}
 
+	/**
+	 * Linearly interpolates this color's HSL values toward the HSL values of the
+	 * given color. It differs from {@link Color#lerp} by not interpolating straight
+	 * from one color to the other, but instead going through all the hues in between
+	 * those two colors. The alpha argument can be thought of as the ratio between
+	 * the two colors, where 0.0 is this color and 1.0 is the first argument.
+	 *
+	 * @param {Color} color - The color to converge on.
+	 * @param {number} alpha - The interpolation factor in the closed interval `[0,1]`.
+	 * @return {Color} A reference to this color.
+	 */
 	lerpHSL( color, alpha ) {
 
 		this.getHSL( _hslA );
@@ -17712,6 +19592,12 @@ class Color {
 
 	}
 
+	/**
+	 * Sets the color's RGB components from the given 3D vector.
+	 *
+	 * @param {Vector3} v - The vector to set.
+	 * @return {Color} A reference to this color.
+	 */
 	setFromVector3( v ) {
 
 		this.r = v.x;
@@ -17722,6 +19608,12 @@ class Color {
 
 	}
 
+	/**
+	 * Transforms this color with the given 3x3 matrix.
+	 *
+	 * @param {Matrix3} m - The matrix.
+	 * @return {Color} A reference to this color.
+	 */
 	applyMatrix3( m ) {
 
 		const r = this.r, g = this.g, b = this.b;
@@ -17735,12 +19627,25 @@ class Color {
 
 	}
 
+	/**
+	 * Returns `true` if this color is equal with the given one.
+	 *
+	 * @param {Color} c - The color to test for equality.
+	 * @return {boolean} Whether this bounding color is equal with the given one.
+	 */
 	equals( c ) {
 
 		return ( c.r === this.r ) && ( c.g === this.g ) && ( c.b === this.b );
 
 	}
 
+	/**
+	 * Sets this color's RGB components from the given array.
+	 *
+	 * @param {Array<number>} array - An array holding the RGB values.
+	 * @param {number} [offset=0] - The offset into the array.
+	 * @return {Color} A reference to this color.
+	 */
 	fromArray( array, offset = 0 ) {
 
 		this.r = array[ offset ];
@@ -17751,6 +19656,14 @@ class Color {
 
 	}
 
+	/**
+	 * Writes the RGB components of this color to the given array. If no array is provided,
+	 * the method returns a new instance.
+	 *
+	 * @param {Array<number>} [array=[]] - The target array holding the color components.
+	 * @param {number} [offset=0] - Index of the first element in the array.
+	 * @return {Array<number>} The color components.
+	 */
 	toArray( array = [], offset = 0 ) {
 
 		array[ offset ] = this.r;
@@ -17761,6 +19674,13 @@ class Color {
 
 	}
 
+	/**
+	 * Sets the components of this color from the given buffer attribute.
+	 *
+	 * @param {BufferAttribute} attribute - The buffer attribute holding color data.
+	 * @param {number} index - The index into the attribute.
+	 * @return {Color} A reference to this color.
+	 */
 	fromBufferAttribute( attribute, index ) {
 
 		this.r = attribute.getX( index );
@@ -17771,6 +19691,12 @@ class Color {
 
 	}
 
+	/**
+	 * This methods defines the serialization result of this class. Returns the color
+	 * as a hexadecimal value.
+	 *
+	 * @return {number} The hexadecimal value.
+	 */
 	toJSON() {
 
 		return this.getHex();
@@ -17789,12 +19715,50 @@ class Color {
 
 const _color = /*@__PURE__*/ new Color();
 
+/**
+ * A dictionary with X11 color names.
+ *
+ * Note that multiple words such as Dark Orange become the string 'darkorange'.
+ *
+ * @static
+ * @type {Object}
+ */
 Color.NAMES = _colorKeywords;
 
+/**
+ * Class for representing a Quaternion. Quaternions are used in three.js to represent rotations.
+ *
+ * Iterating through a vector instance will yield its components `(x, y, z, w)` in
+ * the corresponding order.
+ *
+ * Note that three.js expects Quaternions to be normalized.
+ * ```js
+ * const quaternion = new THREE.Quaternion();
+ * quaternion.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI / 2 );
+ *
+ * const vector = new THREE.Vector3( 1, 0, 0 );
+ * vector.applyQuaternion( quaternion );
+ * ```
+ */
 class Quaternion {
 
+	/**
+	 * Constructs a new quaternion.
+	 *
+	 * @param {number} [x=0] - The x value of this quaternion.
+	 * @param {number} [y=0] - The y value of this quaternion.
+	 * @param {number} [z=0] - The z value of this quaternion.
+	 * @param {number} [w=1] - The w value of this quaternion.
+	 */
 	constructor( x = 0, y = 0, z = 0, w = 1 ) {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isQuaternion = true;
 
 		this._x = x;
@@ -17804,6 +19768,19 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Interpolates between two quaternions via SLERP. This implementation assumes the
+	 * quaternion data are managed  in flat arrays.
+	 *
+	 * @param {Array<number>} dst - The destination array.
+	 * @param {number} dstOffset - An offset into the destination array.
+	 * @param {Array<number>} src0 - The source array of the first quaternion.
+	 * @param {number} srcOffset0 - An offset into the first source array.
+	 * @param {Array<number>} src1 -  The source array of the second quaternion.
+	 * @param {number} srcOffset1 - An offset into the second source array.
+	 * @param {number} t - The interpolation factor in the range `[0,1]`.
+	 * @see {@link Quaternion#slerp}
+	 */
 	static slerpFlat( dst, dstOffset, src0, srcOffset0, src1, srcOffset1, t ) {
 
 		// fuzz-free, array-based Quaternion SLERP operation
@@ -17884,6 +19861,19 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Multiplies two quaternions. This implementation assumes the quaternion data are managed
+	 * in flat arrays.
+	 *
+	 * @param {Array<number>} dst - The destination array.
+	 * @param {number} dstOffset - An offset into the destination array.
+	 * @param {Array<number>} src0 - The source array of the first quaternion.
+	 * @param {number} srcOffset0 - An offset into the first source array.
+	 * @param {Array<number>} src1 -  The source array of the second quaternion.
+	 * @param {number} srcOffset1 - An offset into the second source array.
+	 * @return {Array<number>} The destination array.
+	 * @see {@link Quaternion#multiplyQuaternions}.
+	 */
 	static multiplyQuaternionsFlat( dst, dstOffset, src0, srcOffset0, src1, srcOffset1 ) {
 
 		const x0 = src0[ srcOffset0 ];
@@ -17905,6 +19895,12 @@ class Quaternion {
 
 	}
 
+	/**
+	 * The x value of this quaternion.
+	 *
+	 * @type {number}
+	 * @default 0
+	 */
 	get x() {
 
 		return this._x;
@@ -17918,6 +19914,12 @@ class Quaternion {
 
 	}
 
+	/**
+	 * The y value of this quaternion.
+	 *
+	 * @type {number}
+	 * @default 0
+	 */
 	get y() {
 
 		return this._y;
@@ -17931,6 +19933,12 @@ class Quaternion {
 
 	}
 
+	/**
+	 * The z value of this quaternion.
+	 *
+	 * @type {number}
+	 * @default 0
+	 */
 	get z() {
 
 		return this._z;
@@ -17944,6 +19952,12 @@ class Quaternion {
 
 	}
 
+	/**
+	 * The w value of this quaternion.
+	 *
+	 * @type {number}
+	 * @default 1
+	 */
 	get w() {
 
 		return this._w;
@@ -17957,6 +19971,15 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Sets the quaternion components.
+	 *
+	 * @param {number} x - The x value of this quaternion.
+	 * @param {number} y - The y value of this quaternion.
+	 * @param {number} z - The z value of this quaternion.
+	 * @param {number} w - The w value of this quaternion.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	set( x, y, z, w ) {
 
 		this._x = x;
@@ -17970,12 +19993,23 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Returns a new quaternion with copied values from this instance.
+	 *
+	 * @return {Quaternion} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor( this._x, this._y, this._z, this._w );
 
 	}
 
+	/**
+	 * Copies the values of the given quaternion to this instance.
+	 *
+	 * @param {Quaternion} quaternion - The quaternion to copy.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	copy( quaternion ) {
 
 		this._x = quaternion.x;
@@ -17989,6 +20023,14 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Sets this quaternion from the rotation specified by the given
+	 * Euler angles.
+	 *
+	 * @param {Euler} euler - The Euler angles.
+	 * @param {boolean} [update=true] - Whether the internal `onChange` callback should be executed or not.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	setFromEuler( euler, update = true ) {
 
 		const x = euler._x, y = euler._y, z = euler._z, order = euler._order;
@@ -18063,11 +20105,16 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Sets this quaternion from the given axis and angle.
+	 *
+	 * @param {Vector3} axis - The normalized axis.
+	 * @param {number} angle - The angle in radians.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	setFromAxisAngle( axis, angle ) {
 
 		// http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
-
-		// assumes axis is normalized
 
 		const halfAngle = angle / 2, s = Math.sin( halfAngle );
 
@@ -18082,6 +20129,12 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Sets this quaternion from the given rotation matrix.
+	 *
+	 * @param {Matrix4} m - A 4x4 matrix of which the upper 3x3 of matrix is a pure rotation matrix (i.e. unscaled).
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	setFromRotationMatrix( m ) {
 
 		// http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
@@ -18140,6 +20193,14 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Sets this quaternion to the rotation required to rotate the direction vector
+	 * `vFrom` to the direction vector `vTo`.
+	 *
+	 * @param {Vector3} vFrom - The first (normalized) direction vector.
+	 * @param {Vector3} vTo - The second (normalized) direction vector.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	setFromUnitVectors( vFrom, vTo ) {
 
 		// assumes direction vectors vFrom and vTo are normalized
@@ -18183,12 +20244,26 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Returns the angle between this quaternion and the given one in radians.
+	 *
+	 * @param {Quaternion} q - The quaternion to compute the angle with.
+	 * @return {number} The angle in radians.
+	 */
 	angleTo( q ) {
 
 		return 2 * Math.acos( Math.abs( clamp( this.dot( q ), -1, 1 ) ) );
 
 	}
 
+	/**
+	 * Rotates this quaternion by a given angular step to the given quaternion.
+	 * The method ensures that the final quaternion will not overshoot `q`.
+	 *
+	 * @param {Quaternion} q - The target quaternion.
+	 * @param {number} step - The angular step in radians.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	rotateTowards( q, step ) {
 
 		const angle = this.angleTo( q );
@@ -18203,20 +20278,37 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Sets this quaternion to the identity quaternion; that is, to the
+	 * quaternion that represents "no rotation".
+	 *
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	identity() {
 
 		return this.set( 0, 0, 0, 1 );
 
 	}
 
+	/**
+	 * Inverts this quaternion via {@link Quaternion#conjugate}. The
+	 * quaternion is assumed to have unit length.
+	 *
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	invert() {
-
-		// quaternion is assumed to have unit length
 
 		return this.conjugate();
 
 	}
 
+	/**
+	 * Returns the rotational conjugate of this quaternion. The conjugate of a
+	 * quaternion represents the same rotation in the opposite direction about
+	 * the rotational axis.
+	 *
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	conjugate() {
 
 		this._x *= -1;
@@ -18229,24 +20321,50 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Calculates the dot product of this quaternion and the given one.
+	 *
+	 * @param {Quaternion} v - The quaternion to compute the dot product with.
+	 * @return {number} The result of the dot product.
+	 */
 	dot( v ) {
 
 		return this._x * v._x + this._y * v._y + this._z * v._z + this._w * v._w;
 
 	}
 
+	/**
+	 * Computes the squared Euclidean length (straight-line length) of this quaternion,
+	 * considered as a 4 dimensional vector. This can be useful if you are comparing the
+	 * lengths of two quaternions, as this is a slightly more efficient calculation than
+	 * {@link Quaternion#length}.
+	 *
+	 * @return {number} The squared Euclidean length.
+	 */
 	lengthSq() {
 
 		return this._x * this._x + this._y * this._y + this._z * this._z + this._w * this._w;
 
 	}
 
+	/**
+	 * Computes the Euclidean length (straight-line length) of this quaternion,
+	 * considered as a 4 dimensional vector.
+	 *
+	 * @return {number} The Euclidean length.
+	 */
 	length() {
 
 		return Math.sqrt( this._x * this._x + this._y * this._y + this._z * this._z + this._w * this._w );
 
 	}
 
+	/**
+	 * Normalizes this quaternion - that is, calculated the quaternion that performs
+	 * the same rotation as this one, but has a length equal to `1`.
+	 *
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	normalize() {
 
 		let l = this.length();
@@ -18275,18 +20393,37 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Multiplies this quaternion by the given one.
+	 *
+	 * @param {Quaternion} q - The quaternion.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	multiply( q ) {
 
 		return this.multiplyQuaternions( this, q );
 
 	}
 
+	/**
+	 * Pre-multiplies this quaternion by the given one.
+	 *
+	 * @param {Quaternion} q - The quaternion.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	premultiply( q ) {
 
 		return this.multiplyQuaternions( q, this );
 
 	}
 
+	/**
+	 * Multiplies the given quaternions and stores the result in this instance.
+	 *
+	 * @param {Quaternion} a - The first quaternion.
+	 * @param {Quaternion} b - The second quaternion.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	multiplyQuaternions( a, b ) {
 
 		// from http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/code/index.htm
@@ -18305,6 +20442,13 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Performs a spherical linear interpolation between quaternions.
+	 *
+	 * @param {Quaternion} qb - The target quaternion.
+	 * @param {number} t - The interpolation factor in the closed interval `[0, 1]`.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	slerp( qb, t ) {
 
 		if ( t === 0 ) return this;
@@ -18374,15 +20518,27 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Performs a spherical linear interpolation between the given quaternions
+	 * and stores the result in this quaternion.
+	 *
+	 * @param {Quaternion} qa - The source quaternion.
+	 * @param {Quaternion} qb - The target quaternion.
+	 * @param {number} t - The interpolation factor in the closed interval `[0, 1]`.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	slerpQuaternions( qa, qb, t ) {
 
 		return this.copy( qa ).slerp( qb, t );
 
 	}
 
+	/**
+	 * Sets this quaternion to a uniformly random, normalized quaternion.
+	 *
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	random() {
-
-		// sets this quaternion to a uniform random unit quaternnion
 
 		// Ken Shoemake
 		// Uniform random rotations
@@ -18404,12 +20560,25 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Returns `true` if this quaternion is equal with the given one.
+	 *
+	 * @param {Quaternion} quaternion - The quaternion to test for equality.
+	 * @return {boolean} Whether this quaternion is equal with the given one.
+	 */
 	equals( quaternion ) {
 
 		return ( quaternion._x === this._x ) && ( quaternion._y === this._y ) && ( quaternion._z === this._z ) && ( quaternion._w === this._w );
 
 	}
 
+	/**
+	 * Sets this quaternion's components from the given array.
+	 *
+	 * @param {Array<number>} array - An array holding the quaternion component values.
+	 * @param {number} [offset=0] - The offset into the array.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	fromArray( array, offset = 0 ) {
 
 		this._x = array[ offset ];
@@ -18423,6 +20592,14 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Writes the components of this quaternion to the given array. If no array is provided,
+	 * the method returns a new instance.
+	 *
+	 * @param {Array<number>} [array=[]] - The target array holding the quaternion components.
+	 * @param {number} [offset=0] - Index of the first element in the array.
+	 * @return {Array<number>} The quaternion components.
+	 */
 	toArray( array = [], offset = 0 ) {
 
 		array[ offset ] = this._x;
@@ -18434,6 +20611,13 @@ class Quaternion {
 
 	}
 
+	/**
+	 * Sets the components of this quaternion from the given buffer attribute.
+	 *
+	 * @param {BufferAttribute} attribute - The buffer attribute holding quaternion data.
+	 * @param {number} index - The index into the attribute.
+	 * @return {Quaternion} A reference to this quaternion.
+	 */
 	fromBufferAttribute( attribute, index ) {
 
 		this._x = attribute.getX( index );
@@ -18447,6 +20631,12 @@ class Quaternion {
 
 	}
 
+	/**
+	 * This methods defines the serialization result of this class. Returns the
+	 * numerical elements of this quaternion in an array of format `[x, y, z, w]`.
+	 *
+	 * @return {Array<number>} The serialized quaternion.
+	 */
 	toJSON() {
 
 		return this.toArray();
@@ -18474,18 +20664,82 @@ class Quaternion {
 
 }
 
+/**
+ * Class representing a 3D vector. A 3D vector is an ordered triplet of numbers
+ * (labeled x, y and z), which can be used to represent a number of things, such as:
+ *
+ * - A point in 3D space.
+ * - A direction and length in 3D space. In three.js the length will
+ * always be the Euclidean distance(straight-line distance) from `(0, 0, 0)` to `(x, y, z)`
+ * and the direction is also measured from `(0, 0, 0)` towards `(x, y, z)`.
+ * - Any arbitrary ordered triplet of numbers.
+ *
+ * There are other things a 3D vector can be used to represent, such as
+ * momentum vectors and so on, however these are the most
+ * common uses in three.js.
+ *
+ * Iterating through a vector instance will yield its components `(x, y, z)` in
+ * the corresponding order.
+ * ```js
+ * const a = new THREE.Vector3( 0, 1, 0 );
+ *
+ * //no arguments; will be initialised to (0, 0, 0)
+ * const b = new THREE.Vector3( );
+ *
+ * const d = a.distanceTo( b );
+ * ```
+ */
 class Vector3 {
 
+	/**
+	 * Constructs a new 3D vector.
+	 *
+	 * @param {number} [x=0] - The x value of this vector.
+	 * @param {number} [y=0] - The y value of this vector.
+	 * @param {number} [z=0] - The z value of this vector.
+	 */
 	constructor( x = 0, y = 0, z = 0 ) {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		Vector3.prototype.isVector3 = true;
 
+		/**
+		 * The x value of this vector.
+		 *
+		 * @type {number}
+		 */
 		this.x = x;
+
+		/**
+		 * The y value of this vector.
+		 *
+		 * @type {number}
+		 */
 		this.y = y;
+
+		/**
+		 * The z value of this vector.
+		 *
+		 * @type {number}
+		 */
 		this.z = z;
 
 	}
 
+	/**
+	 * Sets the vector components.
+	 *
+	 * @param {number} x - The value of the x component.
+	 * @param {number} y - The value of the y component.
+	 * @param {number} z - The value of the z component.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	set( x, y, z ) {
 
 		if ( z === undefined ) z = this.z; // sprite.scale.set(x,y)
@@ -18498,6 +20752,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Sets the vector components to the same value.
+	 *
+	 * @param {number} scalar - The value to set for all vector components.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	setScalar( scalar ) {
 
 		this.x = scalar;
@@ -18508,6 +20768,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Sets the vector's x component to the given value
+	 *
+	 * @param {number} x - The value to set.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	setX( x ) {
 
 		this.x = x;
@@ -18516,6 +20782,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Sets the vector's y component to the given value
+	 *
+	 * @param {number} y - The value to set.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	setY( y ) {
 
 		this.y = y;
@@ -18524,6 +20796,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Sets the vector's z component to the given value
+	 *
+	 * @param {number} z - The value to set.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	setZ( z ) {
 
 		this.z = z;
@@ -18532,6 +20810,13 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Allows to set a vector component with an index.
+	 *
+	 * @param {number} index - The component index. `0` equals to x, `1` equals to y, `2` equals to z.
+	 * @param {number} value - The value to set.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	setComponent( index, value ) {
 
 		switch ( index ) {
@@ -18547,6 +20832,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Returns the value of the vector component which matches the given index.
+	 *
+	 * @param {number} index - The component index. `0` equals to x, `1` equals to y, `2` equals to z.
+	 * @return {number} A vector component value.
+	 */
 	getComponent( index ) {
 
 		switch ( index ) {
@@ -18560,12 +20851,23 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Returns a new vector with copied values from this instance.
+	 *
+	 * @return {Vector3} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor( this.x, this.y, this.z );
 
 	}
 
+	/**
+	 * Copies the values of the given vector to this instance.
+	 *
+	 * @param {Vector3} v - The vector to copy.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	copy( v ) {
 
 		this.x = v.x;
@@ -18576,6 +20878,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Adds the given vector to this instance.
+	 *
+	 * @param {Vector3} v - The vector to add.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	add( v ) {
 
 		this.x += v.x;
@@ -18586,6 +20894,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Adds the given scalar value to all components of this instance.
+	 *
+	 * @param {number} s - The scalar to add.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	addScalar( s ) {
 
 		this.x += s;
@@ -18596,6 +20910,13 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Adds the given vectors and stores the result in this instance.
+	 *
+	 * @param {Vector3} a - The first vector.
+	 * @param {Vector3} b - The second vector.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	addVectors( a, b ) {
 
 		this.x = a.x + b.x;
@@ -18606,6 +20927,13 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Adds the given vector scaled by the given factor to this instance.
+	 *
+	 * @param {Vector3|Vector4} v - The vector.
+	 * @param {number} s - The factor that scales `v`.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	addScaledVector( v, s ) {
 
 		this.x += v.x * s;
@@ -18616,6 +20944,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Subtracts the given vector from this instance.
+	 *
+	 * @param {Vector3} v - The vector to subtract.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	sub( v ) {
 
 		this.x -= v.x;
@@ -18626,6 +20960,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Subtracts the given scalar value from all components of this instance.
+	 *
+	 * @param {number} s - The scalar to subtract.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	subScalar( s ) {
 
 		this.x -= s;
@@ -18636,6 +20976,13 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Subtracts the given vectors and stores the result in this instance.
+	 *
+	 * @param {Vector3} a - The first vector.
+	 * @param {Vector3} b - The second vector.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	subVectors( a, b ) {
 
 		this.x = a.x - b.x;
@@ -18646,6 +20993,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Multiplies the given vector with this instance.
+	 *
+	 * @param {Vector3} v - The vector to multiply.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	multiply( v ) {
 
 		this.x *= v.x;
@@ -18656,6 +21009,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Multiplies the given scalar value with all components of this instance.
+	 *
+	 * @param {number} scalar - The scalar to multiply.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	multiplyScalar( scalar ) {
 
 		this.x *= scalar;
@@ -18666,6 +21025,13 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Multiplies the given vectors and stores the result in this instance.
+	 *
+	 * @param {Vector3} a - The first vector.
+	 * @param {Vector3} b - The second vector.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	multiplyVectors( a, b ) {
 
 		this.x = a.x * b.x;
@@ -18676,18 +21042,37 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Applies the given Euler rotation to this vector.
+	 *
+	 * @param {Euler} euler - The Euler angles.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	applyEuler( euler ) {
 
 		return this.applyQuaternion( _quaternion$2.setFromEuler( euler ) );
 
 	}
 
+	/**
+	 * Applies a rotation specified by an axis and an angle to this vector.
+	 *
+	 * @param {Vector3} axis - A normalized vector representing the rotation axis.
+	 * @param {number} angle - The angle in radians.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	applyAxisAngle( axis, angle ) {
 
 		return this.applyQuaternion( _quaternion$2.setFromAxisAngle( axis, angle ) );
 
 	}
 
+	/**
+	 * Multiplies this vector with the given 3x3 matrix.
+	 *
+	 * @param {Matrix3} m - The 3x3 matrix.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	applyMatrix3( m ) {
 
 		const x = this.x, y = this.y, z = this.z;
@@ -18701,12 +21086,26 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Multiplies this vector by the given normal matrix and normalizes
+	 * the result.
+	 *
+	 * @param {Matrix3} m - The normal matrix.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	applyNormalMatrix( m ) {
 
 		return this.applyMatrix3( m ).normalize();
 
 	}
 
+	/**
+	 * Multiplies this vector (with an implicit 1 in the 4th dimension) by m, and
+	 * divides by perspective.
+	 *
+	 * @param {Matrix4} m - The matrix to apply.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	applyMatrix4( m ) {
 
 		const x = this.x, y = this.y, z = this.z;
@@ -18722,6 +21121,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Applies the given Quaternion to this vector.
+	 *
+	 * @param {Quaternion} q - The Quaternion.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	applyQuaternion( q ) {
 
 		// quaternion q is assumed to have unit length
@@ -18743,18 +21148,39 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Projects this vector from world space into the camera's normalized
+	 * device coordinate (NDC) space.
+	 *
+	 * @param {Camera} camera - The camera.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	project( camera ) {
 
 		return this.applyMatrix4( camera.matrixWorldInverse ).applyMatrix4( camera.projectionMatrix );
 
 	}
 
+	/**
+	 * Unprojects this vector from the camera's normalized device coordinate (NDC)
+	 * space into world space.
+	 *
+	 * @param {Camera} camera - The camera.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	unproject( camera ) {
 
 		return this.applyMatrix4( camera.projectionMatrixInverse ).applyMatrix4( camera.matrixWorld );
 
 	}
 
+	/**
+	 * Transforms the direction of this vector by a matrix (the upper left 3 x 3
+	 * subset of the given 4x4 matrix and then normalizes the result.
+	 *
+	 * @param {Matrix4} m - The matrix.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	transformDirection( m ) {
 
 		// input: THREE.Matrix4 affine matrix
@@ -18771,6 +21197,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Divides this instance by the given vector.
+	 *
+	 * @param {Vector3} v - The vector to divide.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	divide( v ) {
 
 		this.x /= v.x;
@@ -18781,12 +21213,25 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Divides this vector by the given scalar.
+	 *
+	 * @param {number} scalar - The scalar to divide.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	divideScalar( scalar ) {
 
 		return this.multiplyScalar( 1 / scalar );
 
 	}
 
+	/**
+	 * If this vector's x, y or z value is greater than the given vector's x, y or z
+	 * value, replace that value with the corresponding min value.
+	 *
+	 * @param {Vector3} v - The vector.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	min( v ) {
 
 		this.x = Math.min( this.x, v.x );
@@ -18797,6 +21242,13 @@ class Vector3 {
 
 	}
 
+	/**
+	 * If this vector's x, y or z value is less than the given vector's x, y or z
+	 * value, replace that value with the corresponding max value.
+	 *
+	 * @param {Vector3} v - The vector.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	max( v ) {
 
 		this.x = Math.max( this.x, v.x );
@@ -18807,6 +21259,16 @@ class Vector3 {
 
 	}
 
+	/**
+	 * If this vector's x, y or z value is greater than the max vector's x, y or z
+	 * value, it is replaced by the corresponding value.
+	 * If this vector's x, y or z value is less than the min vector's x, y or z value,
+	 * it is replaced by the corresponding value.
+	 *
+	 * @param {Vector3} min - The minimum x, y and z values.
+	 * @param {Vector3} max - The maximum x, y and z values in the desired range.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	clamp( min, max ) {
 
 		// assumes min < max, componentwise
@@ -18819,6 +21281,16 @@ class Vector3 {
 
 	}
 
+	/**
+	 * If this vector's x, y or z values are greater than the max value, they are
+	 * replaced by the max value.
+	 * If this vector's x, y or z values are less than the min value, they are
+	 * replaced by the min value.
+	 *
+	 * @param {number} minVal - The minimum value the components will be clamped to.
+	 * @param {number} maxVal - The maximum value the components will be clamped to.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	clampScalar( minVal, maxVal ) {
 
 		this.x = clamp( this.x, minVal, maxVal );
@@ -18829,6 +21301,16 @@ class Vector3 {
 
 	}
 
+	/**
+	 * If this vector's length is greater than the max value, it is replaced by
+	 * the max value.
+	 * If this vector's length is less than the min value, it is replaced by the
+	 * min value.
+	 *
+	 * @param {number} min - The minimum value the vector length will be clamped to.
+	 * @param {number} max - The maximum value the vector length will be clamped to.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	clampLength( min, max ) {
 
 		const length = this.length();
@@ -18837,6 +21319,11 @@ class Vector3 {
 
 	}
 
+	/**
+	 * The components of this vector are rounded down to the nearest integer value.
+	 *
+	 * @return {Vector3} A reference to this vector.
+	 */
 	floor() {
 
 		this.x = Math.floor( this.x );
@@ -18847,6 +21334,11 @@ class Vector3 {
 
 	}
 
+	/**
+	 * The components of this vector are rounded up to the nearest integer value.
+	 *
+	 * @return {Vector3} A reference to this vector.
+	 */
 	ceil() {
 
 		this.x = Math.ceil( this.x );
@@ -18857,6 +21349,11 @@ class Vector3 {
 
 	}
 
+	/**
+	 * The components of this vector are rounded to the nearest integer value
+	 *
+	 * @return {Vector3} A reference to this vector.
+	 */
 	round() {
 
 		this.x = Math.round( this.x );
@@ -18867,6 +21364,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * The components of this vector are rounded towards zero (up if negative,
+	 * down if positive) to an integer value.
+	 *
+	 * @return {Vector3} A reference to this vector.
+	 */
 	roundToZero() {
 
 		this.x = Math.trunc( this.x );
@@ -18877,6 +21380,11 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Inverts this vector - i.e. sets x = -x, y = -y and z = -z.
+	 *
+	 * @return {Vector3} A reference to this vector.
+	 */
 	negate() {
 
 		this.x = - this.x;
@@ -18887,6 +21395,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Calculates the dot product of the given vector with this instance.
+	 *
+	 * @param {Vector3} v - The vector to compute the dot product with.
+	 * @return {number} The result of the dot product.
+	 */
 	dot( v ) {
 
 		return this.x * v.x + this.y * v.y + this.z * v.z;
@@ -18895,36 +21409,75 @@ class Vector3 {
 
 	// TODO lengthSquared?
 
+	/**
+	 * Computes the square of the Euclidean length (straight-line length) from
+	 * (0, 0, 0) to (x, y, z). If you are comparing the lengths of vectors, you should
+	 * compare the length squared instead as it is slightly more efficient to calculate.
+	 *
+	 * @return {number} The square length of this vector.
+	 */
 	lengthSq() {
 
 		return this.x * this.x + this.y * this.y + this.z * this.z;
 
 	}
 
+	/**
+	 * Computes the  Euclidean length (straight-line length) from (0, 0, 0) to (x, y, z).
+	 *
+	 * @return {number} The length of this vector.
+	 */
 	length() {
 
 		return Math.sqrt( this.x * this.x + this.y * this.y + this.z * this.z );
 
 	}
 
+	/**
+	 * Computes the Manhattan length of this vector.
+	 *
+	 * @return {number} The length of this vector.
+	 */
 	manhattanLength() {
 
 		return Math.abs( this.x ) + Math.abs( this.y ) + Math.abs( this.z );
 
 	}
 
+	/**
+	 * Converts this vector to a unit vector - that is, sets it equal to a vector
+	 * with the same direction as this one, but with a vector length of `1`.
+	 *
+	 * @return {Vector3} A reference to this vector.
+	 */
 	normalize() {
 
 		return this.divideScalar( this.length() || 1 );
 
 	}
 
+	/**
+	 * Sets this vector to a vector with the same direction as this one, but
+	 * with the specified length.
+	 *
+	 * @param {number} length - The new length of this vector.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	setLength( length ) {
 
 		return this.normalize().multiplyScalar( length );
 
 	}
 
+	/**
+	 * Linearly interpolates between the given vector and this instance, where
+	 * alpha is the percent distance along the line - alpha = 0 will be this
+	 * vector, and alpha = 1 will be the given one.
+	 *
+	 * @param {Vector3} v - The vector to interpolate towards.
+	 * @param {number} alpha - The interpolation factor, typically in the closed interval `[0, 1]`.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	lerp( v, alpha ) {
 
 		this.x += ( v.x - this.x ) * alpha;
@@ -18935,6 +21488,16 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Linearly interpolates between the given vectors, where alpha is the percent
+	 * distance along the line - alpha = 0 will be first vector, and alpha = 1 will
+	 * be the second one. The result is stored in this instance.
+	 *
+	 * @param {Vector3} v1 - The first vector.
+	 * @param {Vector3} v2 - The second vector.
+	 * @param {number} alpha - The interpolation factor, typically in the closed interval `[0, 1]`.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	lerpVectors( v1, v2, alpha ) {
 
 		this.x = v1.x + ( v2.x - v1.x ) * alpha;
@@ -18945,12 +21508,26 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Calculates the cross product of the given vector with this instance.
+	 *
+	 * @param {Vector3} v - The vector to compute the cross product with.
+	 * @return {Vector3} The result of the cross product.
+	 */
 	cross( v ) {
 
 		return this.crossVectors( this, v );
 
 	}
 
+	/**
+	 * Calculates the cross product of the given vectors and stores the result
+	 * in this instance.
+	 *
+	 * @param {Vector3} a - The first vector.
+	 * @param {Vector3} b - The second vector.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	crossVectors( a, b ) {
 
 		const ax = a.x, ay = a.y, az = a.z;
@@ -18964,6 +21541,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Projects this vector onto the given one.
+	 *
+	 * @param {Vector3} v - The vector to project to.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	projectOnVector( v ) {
 
 		const denominator = v.lengthSq();
@@ -18976,6 +21559,13 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Projects this vector onto a plane by subtracting this
+	 * vector projected onto the plane's normal from this vector.
+	 *
+	 * @param {Vector3} planeNormal - The plane normal.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	projectOnPlane( planeNormal ) {
 
 		_vector$8.copy( this ).projectOnVector( planeNormal );
@@ -18984,15 +21574,23 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Reflects this vector off a plane orthogonal to the given normal vector.
+	 *
+	 * @param {Vector3} normal - The (normalized) normal vector.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	reflect( normal ) {
-
-		// reflect incident vector off plane orthogonal to normal
-		// normal is assumed to have unit length
 
 		return this.sub( _vector$8.copy( normal ).multiplyScalar( 2 * this.dot( normal ) ) );
 
 	}
-
+	/**
+	 * Returns the angle between the given vector and this instance in radians.
+	 *
+	 * @param {Vector3} v - The vector to compute the angle with.
+	 * @return {number} The angle in radians.
+	 */
 	angleTo( v ) {
 
 		const denominator = Math.sqrt( this.lengthSq() * v.lengthSq() );
@@ -19007,12 +21605,26 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Computes the distance from the given vector to this instance.
+	 *
+	 * @param {Vector3} v - The vector to compute the distance to.
+	 * @return {number} The distance.
+	 */
 	distanceTo( v ) {
 
 		return Math.sqrt( this.distanceToSquared( v ) );
 
 	}
 
+	/**
+	 * Computes the squared distance from the given vector to this instance.
+	 * If you are just comparing the distance with another distance, you should compare
+	 * the distance squared instead as it is slightly more efficient to calculate.
+	 *
+	 * @param {Vector3} v - The vector to compute the squared distance to.
+	 * @return {number} The squared distance.
+	 */
 	distanceToSquared( v ) {
 
 		const dx = this.x - v.x, dy = this.y - v.y, dz = this.z - v.z;
@@ -19021,18 +21633,38 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Computes the Manhattan distance from the given vector to this instance.
+	 *
+	 * @param {Vector3} v - The vector to compute the Manhattan distance to.
+	 * @return {number} The Manhattan distance.
+	 */
 	manhattanDistanceTo( v ) {
 
 		return Math.abs( this.x - v.x ) + Math.abs( this.y - v.y ) + Math.abs( this.z - v.z );
 
 	}
 
+	/**
+	 * Sets the vector components from the given spherical coordinates.
+	 *
+	 * @param {Spherical} s - The spherical coordinates.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	setFromSpherical( s ) {
 
 		return this.setFromSphericalCoords( s.radius, s.phi, s.theta );
 
 	}
 
+	/**
+	 * Sets the vector components from the given spherical coordinates.
+	 *
+	 * @param {number} radius - The radius.
+	 * @param {number} phi - The phi angle in radians.
+	 * @param {number} theta - The theta angle in radians.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	setFromSphericalCoords( radius, phi, theta ) {
 
 		const sinPhiRadius = Math.sin( phi ) * radius;
@@ -19045,12 +21677,26 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Sets the vector components from the given cylindrical coordinates.
+	 *
+	 * @param {Cylindrical} c - The cylindrical coordinates.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	setFromCylindrical( c ) {
 
 		return this.setFromCylindricalCoords( c.radius, c.theta, c.y );
 
 	}
 
+	/**
+	 * Sets the vector components from the given cylindrical coordinates.
+	 *
+	 * @param {number} radius - The radius.
+	 * @param {number} theta - The theta angle in radians.
+	 * @param {number} y - The y value.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	setFromCylindricalCoords( radius, theta, y ) {
 
 		this.x = radius * Math.sin( theta );
@@ -19061,6 +21707,13 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Sets the vector components to the position elements of the
+	 * given transformation matrix.
+	 *
+	 * @param {Matrix4} m - The 4x4 matrix.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	setFromMatrixPosition( m ) {
 
 		const e = m.elements;
@@ -19073,6 +21726,13 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Sets the vector components to the scale elements of the
+	 * given transformation matrix.
+	 *
+	 * @param {Matrix4} m - The 4x4 matrix.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	setFromMatrixScale( m ) {
 
 		const sx = this.setFromMatrixColumn( m, 0 ).length();
@@ -19087,18 +21747,38 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Sets the vector components from the specified matrix column.
+	 *
+	 * @param {Matrix4} m - The 4x4 matrix.
+	 * @param {number} index - The column index.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	setFromMatrixColumn( m, index ) {
 
 		return this.fromArray( m.elements, index * 4 );
 
 	}
 
+	/**
+	 * Sets the vector components from the specified matrix column.
+	 *
+	 * @param {Matrix3} m - The 3x3 matrix.
+	 * @param {number} index - The column index.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	setFromMatrix3Column( m, index ) {
 
 		return this.fromArray( m.elements, index * 3 );
 
 	}
 
+	/**
+	 * Sets the vector components from the given Euler angles.
+	 *
+	 * @param {Euler} e - The Euler angles to set.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	setFromEuler( e ) {
 
 		this.x = e._x;
@@ -19109,6 +21789,13 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Sets the vector components from the RGB components of the
+	 * given color.
+	 *
+	 * @param {Color} c - The color to set.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	setFromColor( c ) {
 
 		this.x = c.r;
@@ -19119,12 +21806,26 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Returns `true` if this vector is equal with the given one.
+	 *
+	 * @param {Vector3} v - The vector to test for equality.
+	 * @return {boolean} Whether this vector is equal with the given one.
+	 */
 	equals( v ) {
 
 		return ( ( v.x === this.x ) && ( v.y === this.y ) && ( v.z === this.z ) );
 
 	}
 
+	/**
+	 * Sets this vector's x value to be `array[ offset ]`, y value to be `array[ offset + 1 ]`
+	 * and z value to be `array[ offset + 2 ]`.
+	 *
+	 * @param {Array<number>} array - An array holding the vector component values.
+	 * @param {number} [offset=0] - The offset into the array.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	fromArray( array, offset = 0 ) {
 
 		this.x = array[ offset ];
@@ -19135,6 +21836,14 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Writes the components of this vector to the given array. If no array is provided,
+	 * the method returns a new instance.
+	 *
+	 * @param {Array<number>} [array=[]] - The target array holding the vector components.
+	 * @param {number} [offset=0] - Index of the first element in the array.
+	 * @return {Array<number>} The vector components.
+	 */
 	toArray( array = [], offset = 0 ) {
 
 		array[ offset ] = this.x;
@@ -19145,6 +21854,13 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Sets the components of this vector from the given buffer attribute.
+	 *
+	 * @param {BufferAttribute} attribute - The buffer attribute holding vector data.
+	 * @param {number} index - The index into the attribute.
+	 * @return {Vector3} A reference to this vector.
+	 */
 	fromBufferAttribute( attribute, index ) {
 
 		this.x = attribute.getX( index );
@@ -19155,6 +21871,12 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Sets each component of this vector to a pseudo-random value between `0` and
+	 * `1`, excluding `1`.
+	 *
+	 * @return {Vector3} A reference to this vector.
+	 */
 	random() {
 
 		this.x = Math.random();
@@ -19165,6 +21887,11 @@ class Vector3 {
 
 	}
 
+	/**
+	 * Sets this vector to a uniformly random point on a unit sphere.
+	 *
+	 * @return {Vector3} A reference to this vector.
+	 */
 	randomDirection() {
 
 		// https://mathworld.wolfram.com/SpherePointPicking.html
@@ -19194,17 +21921,52 @@ class Vector3 {
 const _vector$8 = /*@__PURE__*/ new Vector3();
 const _quaternion$2 = /*@__PURE__*/ new Quaternion();
 
+/**
+ * Represents an axis-aligned bounding box (AABB) in 3D space.
+ */
 class Box3 {
 
+	/**
+	 * Constructs a new bounding box.
+	 *
+	 * @param {Vector3} [min=(Infinity,Infinity,Infinity)] - A vector representing the lower boundary of the box.
+	 * @param {Vector3} [max=(-Infinity,-Infinity,-Infinity)] - A vector representing the upper boundary of the box.
+	 */
 	constructor( min = new Vector3( + Infinity, + Infinity, + Infinity ), max = new Vector3( - Infinity, - Infinity, - Infinity ) ) {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isBox3 = true;
 
+		/**
+		 * The lower boundary of the box.
+		 *
+		 * @type {Vector3}
+		 */
 		this.min = min;
+
+		/**
+		 * The upper boundary of the box.
+		 *
+		 * @type {Vector3}
+		 */
 		this.max = max;
 
 	}
 
+	/**
+	 * Sets the lower and upper boundaries of this box.
+	 * Please note that this method only copies the values from the given objects.
+	 *
+	 * @param {Vector3} min - The lower boundary of the box.
+	 * @param {Vector3} max - The upper boundary of the box.
+	 * @return {Box3} A reference to this bounding box.
+	 */
 	set( min, max ) {
 
 		this.min.copy( min );
@@ -19214,6 +21976,13 @@ class Box3 {
 
 	}
 
+	/**
+	 * Sets the upper and lower bounds of this box so it encloses the position data
+	 * in the given array.
+	 *
+	 * @param {Array<number>} array - An array holding 3D position data.
+	 * @return {Box3} A reference to this bounding box.
+	 */
 	setFromArray( array ) {
 
 		this.makeEmpty();
@@ -19228,6 +21997,13 @@ class Box3 {
 
 	}
 
+	/**
+	 * Sets the upper and lower bounds of this box so it encloses the position data
+	 * in the given buffer attribute.
+	 *
+	 * @param {BufferAttribute} attribute - A buffer attribute holding 3D position data.
+	 * @return {Box3} A reference to this bounding box.
+	 */
 	setFromBufferAttribute( attribute ) {
 
 		this.makeEmpty();
@@ -19242,6 +22018,13 @@ class Box3 {
 
 	}
 
+	/**
+	 * Sets the upper and lower bounds of this box so it encloses the position data
+	 * in the given array.
+	 *
+	 * @param {Array<Vector3>} points - An array holding 3D position data as instances of {@link Vector3}.
+	 * @return {Box3} A reference to this bounding box.
+	 */
 	setFromPoints( points ) {
 
 		this.makeEmpty();
@@ -19256,6 +22039,14 @@ class Box3 {
 
 	}
 
+	/**
+	 * Centers this box on the given center vector and sets this box's width, height and
+	 * depth to the given size values.
+	 *
+	 * @param {Vector3} center - The center of the box.
+	 * @param {Vector3} size - The x, y and z dimensions of the box.
+	 * @return {Box3} A reference to this bounding box.
+	 */
 	setFromCenterAndSize( center, size ) {
 
 		const halfSize = _vector$7.copy( size ).multiplyScalar( 0.5 );
@@ -19267,6 +22058,16 @@ class Box3 {
 
 	}
 
+	/**
+	 * Computes the world-axis-aligned bounding box for the given 3D object
+	 * (including its children), accounting for the object's, and children's,
+	 * world transforms. The function may result in a larger box than strictly necessary.
+	 *
+	 * @param {Object3D} object - The 3D object to compute the bounding box for.
+	 * @param {boolean} [precise=false] - If set to `true`, the method computes the smallest
+	 * world-axis-aligned bounding box at the expense of more computation.
+	 * @return {Box3} A reference to this bounding box.
+	 */
 	setFromObject( object, precise = false ) {
 
 		this.makeEmpty();
@@ -19275,12 +22076,23 @@ class Box3 {
 
 	}
 
+	/**
+	 * Returns a new box with copied values from this instance.
+	 *
+	 * @return {Box3} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
 
 	}
 
+	/**
+	 * Copies the values of the given box to this instance.
+	 *
+	 * @param {Box3} box - The box to copy.
+	 * @return {Box3} A reference to this bounding box.
+	 */
 	copy( box ) {
 
 		this.min.copy( box.min );
@@ -19290,6 +22102,11 @@ class Box3 {
 
 	}
 
+	/**
+	 * Makes this box empty which means in encloses a zero space in 3D.
+	 *
+	 * @return {Box3} A reference to this bounding box.
+	 */
 	makeEmpty() {
 
 		this.min.x = this.min.y = this.min.z = + Infinity;
@@ -19299,6 +22116,13 @@ class Box3 {
 
 	}
 
+	/**
+	 * Returns true if this box includes zero points within its bounds.
+	 * Note that a box with equal lower and upper bounds still includes one
+	 * point, the one both bounds share.
+	 *
+	 * @return {boolean} Whether this box is empty or not.
+	 */
 	isEmpty() {
 
 		// this is a more robust check for empty than ( volume <= 0 ) because volume can get positive with two negative axes
@@ -19307,18 +22131,36 @@ class Box3 {
 
 	}
 
+	/**
+	 * Returns the center point of this box.
+	 *
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} The center point.
+	 */
 	getCenter( target ) {
 
 		return this.isEmpty() ? target.set( 0, 0, 0 ) : target.addVectors( this.min, this.max ).multiplyScalar( 0.5 );
 
 	}
 
+	/**
+	 * Returns the dimensions of this box.
+	 *
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} The size.
+	 */
 	getSize( target ) {
 
 		return this.isEmpty() ? target.set( 0, 0, 0 ) : target.subVectors( this.max, this.min );
 
 	}
 
+	/**
+	 * Expands the boundaries of this box to include the given point.
+	 *
+	 * @param {Vector3} point - The point that should be included by the bounding box.
+	 * @return {Box3} A reference to this bounding box.
+	 */
 	expandByPoint( point ) {
 
 		this.min.min( point );
@@ -19328,6 +22170,16 @@ class Box3 {
 
 	}
 
+	/**
+	 * Expands this box equilaterally by the given vector. The width of this
+	 * box will be expanded by the x component of the vector in both
+	 * directions. The height of this box will be expanded by the y component of
+	 * the vector in both directions. The depth of this box will be
+	 * expanded by the z component of the vector in both directions.
+	 *
+	 * @param {Vector3} vector - The vector that should expand the bounding box.
+	 * @return {Box3} A reference to this bounding box.
+	 */
 	expandByVector( vector ) {
 
 		this.min.sub( vector );
@@ -19337,6 +22189,13 @@ class Box3 {
 
 	}
 
+	/**
+	 * Expands each dimension of the box by the given scalar. If negative, the
+	 * dimensions of the box will be contracted.
+	 *
+	 * @param {number} scalar - The scalar value that should expand the bounding box.
+	 * @return {Box3} A reference to this bounding box.
+	 */
 	expandByScalar( scalar ) {
 
 		this.min.addScalar( - scalar );
@@ -19346,6 +22205,17 @@ class Box3 {
 
 	}
 
+	/**
+	 * Expands the boundaries of this box to include the given 3D object and
+	 * its children, accounting for the object's, and children's, world
+	 * transforms. The function may result in a larger box than strictly
+	 * necessary (unless the precise parameter is set to true).
+	 *
+	 * @param {Object3D} object - The 3D object that should expand the bounding box.
+	 * @param {boolean} precise - If set to `true`, the method expands the bounding box
+	 * as little as necessary at the expense of more computation.
+	 * @return {Box3} A reference to this bounding box.
+	 */
 	expandByObject( object, precise = false ) {
 
 		// Computes the world-axis-aligned bounding box of an object (including its children),
@@ -19430,6 +22300,12 @@ class Box3 {
 
 	}
 
+	/**
+	 * Returns `true` if the given point lies within or on the boundaries of this box.
+	 *
+	 * @param {Vector3} point - The point to test.
+	 * @return {boolean} Whether the bounding box contains the given point or not.
+	 */
 	containsPoint( point ) {
 
 		return point.x >= this.min.x && point.x <= this.max.x &&
@@ -19438,6 +22314,13 @@ class Box3 {
 
 	}
 
+	/**
+	 * Returns `true` if this bounding box includes the entirety of the given bounding box.
+	 * If this box and the given one are identical, this function also returns `true`.
+	 *
+	 * @param {Box3} box - The bounding box to test.
+	 * @return {boolean} Whether the bounding box contains the given bounding box or not.
+	 */
 	containsBox( box ) {
 
 		return this.min.x <= box.min.x && box.max.x <= this.max.x &&
@@ -19446,6 +22329,13 @@ class Box3 {
 
 	}
 
+	/**
+	 * Returns a point as a proportion of this box's width, height and depth.
+	 *
+	 * @param {Vector3} point - A point in 3D space.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} A point as a proportion of this box's width, height and depth.
+	 */
 	getParameter( point, target ) {
 
 		// This can potentially have a divide by zero if the box
@@ -19459,6 +22349,12 @@ class Box3 {
 
 	}
 
+	/**
+	 * Returns `true` if the given bounding box intersects with this bounding box.
+	 *
+	 * @param {Box3} box - The bounding box to test.
+	 * @return {boolean} Whether the given bounding box intersects with this bounding box.
+	 */
 	intersectsBox( box ) {
 
 		// using 6 splitting planes to rule out intersections.
@@ -19468,6 +22364,12 @@ class Box3 {
 
 	}
 
+	/**
+	 * Returns `true` if the given bounding sphere intersects with this bounding box.
+	 *
+	 * @param {Sphere} sphere - The bounding sphere to test.
+	 * @return {boolean} Whether the given bounding sphere intersects with this bounding box.
+	 */
 	intersectsSphere( sphere ) {
 
 		// Find the point on the AABB closest to the sphere center.
@@ -19478,6 +22380,12 @@ class Box3 {
 
 	}
 
+	/**
+	 * Returns `true` if the given plane intersects with this bounding box.
+	 *
+	 * @param {Plane} plane - The plane to test.
+	 * @return {boolean} Whether the given plane intersects with this bounding box.
+	 */
 	intersectsPlane( plane ) {
 
 		// We compute the minimum and maximum dot product values. If those values
@@ -19525,6 +22433,12 @@ class Box3 {
 
 	}
 
+	/**
+	 * Returns `true` if the given triangle intersects with this bounding box.
+	 *
+	 * @param {Triangle} triangle - The triangle to test.
+	 * @return {boolean} Whether the given triangle intersects with this bounding box.
+	 */
 	intersectsTriangle( triangle ) {
 
 		if ( this.isEmpty() ) {
@@ -19578,18 +22492,38 @@ class Box3 {
 
 	}
 
+	/**
+	 * Clamps the given point within the bounds of this box.
+	 *
+	 * @param {Vector3} point - The point to clamp.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} The clamped point.
+	 */
 	clampPoint( point, target ) {
 
 		return target.copy( point ).clamp( this.min, this.max );
 
 	}
 
+	/**
+	 * Returns the euclidean distance from any edge of this box to the specified point. If
+	 * the given point lies inside of this box, the distance will be `0`.
+	 *
+	 * @param {Vector3} point - The point to compute the distance to.
+	 * @return {number} The euclidean distance.
+	 */
 	distanceToPoint( point ) {
 
 		return this.clampPoint( point, _vector$7 ).distanceTo( point );
 
 	}
 
+	/**
+	 * Returns a bounding sphere that encloses this bounding box.
+	 *
+	 * @param {Sphere} target - The target sphere that is used to store the method's result.
+	 * @return {Sphere} The bounding sphere that encloses this bounding box.
+	 */
 	getBoundingSphere( target ) {
 
 		if ( this.isEmpty() ) {
@@ -19608,6 +22542,15 @@ class Box3 {
 
 	}
 
+	/**
+	 * Computes the intersection of this bounding box and the given one, setting the upper
+	 * bound of this box to the lesser of the two boxes' upper bounds and the
+	 * lower bound of this box to the greater of the two boxes' lower bounds. If
+	 * there's no overlap, makes this box empty.
+	 *
+	 * @param {Box3} box - The bounding box to intersect with.
+	 * @return {Box3} A reference to this bounding box.
+	 */
 	intersect( box ) {
 
 		this.min.max( box.min );
@@ -19620,6 +22563,14 @@ class Box3 {
 
 	}
 
+	/**
+	 * Computes the union of this box and another and the given one, setting the upper
+	 * bound of this box to the greater of the two boxes' upper bounds and the
+	 * lower bound of this box to the lesser of the two boxes' lower bounds.
+	 *
+	 * @param {Box3} box - The bounding box that will be unioned with this instance.
+	 * @return {Box3} A reference to this bounding box.
+	 */
 	union( box ) {
 
 		this.min.min( box.min );
@@ -19629,6 +22580,12 @@ class Box3 {
 
 	}
 
+	/**
+	 * Transforms this bounding box by the given 4x4 transformation matrix.
+	 *
+	 * @param {Matrix4} matrix - The transformation matrix.
+	 * @return {Box3} A reference to this bounding box.
+	 */
 	applyMatrix4( matrix ) {
 
 		// transform of empty box is an empty box.
@@ -19650,6 +22607,13 @@ class Box3 {
 
 	}
 
+	/**
+	 * Adds the given offset to both the upper and lower bounds of this bounding box,
+	 * effectively moving it in 3D space.
+	 *
+	 * @param {Vector3} offset - The offset that should be used to translate the bounding box.
+	 * @return {Box3} A reference to this bounding box.
+	 */
 	translate( offset ) {
 
 		this.min.add( offset );
@@ -19659,6 +22623,12 @@ class Box3 {
 
 	}
 
+	/**
+	 * Returns `true` if this bounding box is equal with the given one.
+	 *
+	 * @param {Box3} box - The box to test for equality.
+	 * @return {boolean} Whether this bounding box is equal with the given one.
+	 */
 	equals( box ) {
 
 		return box.min.equals( this.min ) && box.max.equals( this.max );
@@ -19729,17 +22699,52 @@ const _box$2 = /*@__PURE__*/ new Box3();
 const _v1$5 = /*@__PURE__*/ new Vector3();
 const _v2$2 = /*@__PURE__*/ new Vector3();
 
+/**
+ * An analytical 3D sphere defined by a center and radius. This class is mainly
+ * used as a Bounding Sphere for 3D objects.
+ */
 class Sphere {
 
+	/**
+	 * Constructs a new sphere.
+	 *
+	 * @param {Vector3} [center=(0,0,0)] - The center of the sphere
+	 * @param {number} [radius=-1] - The radius of the sphere.
+	 */
 	constructor( center = new Vector3(), radius = -1 ) {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isSphere = true;
 
+		/**
+		 * The center of the sphere
+		 *
+		 * @type {Vector3}
+		 */
 		this.center = center;
+
+		/**
+		 * The radius of the sphere.
+		 *
+		 * @type {number}
+		 */
 		this.radius = radius;
 
 	}
 
+	/**
+	 * Sets the sphere's components by copying the given values.
+	 *
+	 * @param {Vector3} center - The center.
+	 * @param {number} radius - The radius.
+	 * @return {Sphere} A reference to this sphere.
+	 */
 	set( center, radius ) {
 
 		this.center.copy( center );
@@ -19749,6 +22754,16 @@ class Sphere {
 
 	}
 
+	/**
+	 * Computes the minimum bounding sphere for list of points.
+	 * If the optional center point is given, it is used as the sphere's
+	 * center. Otherwise, the center of the axis-aligned bounding box
+	 * encompassing the points is calculated.
+	 *
+	 * @param {Array<Vector3>} points - A list of points in 3D space.
+	 * @param {Vector3} [optionalCenter] - The center of the sphere.
+	 * @return {Sphere} A reference to this sphere.
+	 */
 	setFromPoints( points, optionalCenter ) {
 
 		const center = this.center;
@@ -19777,6 +22792,12 @@ class Sphere {
 
 	}
 
+	/**
+	 * Copies the values of the given sphere to this instance.
+	 *
+	 * @param {Sphere} sphere - The sphere to copy.
+	 * @return {Sphere} A reference to this sphere.
+	 */
 	copy( sphere ) {
 
 		this.center.copy( sphere.center );
@@ -19786,12 +22807,25 @@ class Sphere {
 
 	}
 
+	/**
+	 * Returns `true` if the sphere is empty (the radius set to a negative number).
+	 *
+	 * Spheres with a radius of `0` contain only their center point and are not
+	 * considered to be empty.
+	 *
+	 * @return {boolean} Whether this sphere is empty or not.
+	 */
 	isEmpty() {
 
 		return ( this.radius < 0 );
 
 	}
 
+	/**
+	 * Makes this sphere empty which means in encloses a zero space in 3D.
+	 *
+	 * @return {Sphere} A reference to this sphere.
+	 */
 	makeEmpty() {
 
 		this.center.set( 0, 0, 0 );
@@ -19801,18 +22835,39 @@ class Sphere {
 
 	}
 
+	/**
+	 * Returns `true` if this sphere contains the given point inclusive of
+	 * the surface of the sphere.
+	 *
+	 * @param {Vector3} point - The point to check.
+	 * @return {boolean} Whether this sphere contains the given point or not.
+	 */
 	containsPoint( point ) {
 
 		return ( point.distanceToSquared( this.center ) <= ( this.radius * this.radius ) );
 
 	}
 
+	/**
+	 * Returns the closest distance from the boundary of the sphere to the
+	 * given point. If the sphere contains the point, the distance will
+	 * be negative.
+	 *
+	 * @param {Vector3} point - The point to compute the distance to.
+	 * @return {number} The distance to the point.
+	 */
 	distanceToPoint( point ) {
 
 		return ( point.distanceTo( this.center ) - this.radius );
 
 	}
 
+	/**
+	 * Returns `true` if this sphere intersects with the given one.
+	 *
+	 * @param {Sphere} sphere - The sphere to test.
+	 * @return {boolean} Whether this sphere intersects with the given one or not.
+	 */
 	intersectsSphere( sphere ) {
 
 		const radiusSum = this.radius + sphere.radius;
@@ -19821,18 +22876,39 @@ class Sphere {
 
 	}
 
+	/**
+	 * Returns `true` if this sphere intersects with the given box.
+	 *
+	 * @param {Box3} box - The box to test.
+	 * @return {boolean} Whether this sphere intersects with the given box or not.
+	 */
 	intersectsBox( box ) {
 
 		return box.intersectsSphere( this );
 
 	}
 
+	/**
+	 * Returns `true` if this sphere intersects with the given plane.
+	 *
+	 * @param {Plane} plane - The plane to test.
+	 * @return {boolean} Whether this sphere intersects with the given plane or not.
+	 */
 	intersectsPlane( plane ) {
 
 		return Math.abs( plane.distanceToPoint( this.center ) ) <= this.radius;
 
 	}
 
+	/**
+	 * Clamps a point within the sphere. If the point is outside the sphere, it
+	 * will clamp it to the closest point on the edge of the sphere. Points
+	 * already inside the sphere will not be affected.
+	 *
+	 * @param {Vector3} point - The plane to clamp.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} The clamped point.
+	 */
 	clampPoint( point, target ) {
 
 		const deltaLengthSq = this.center.distanceToSquared( point );
@@ -19850,6 +22926,12 @@ class Sphere {
 
 	}
 
+	/**
+	 * Returns a bounding box that encloses this sphere.
+	 *
+	 * @param {Box3} target - The target box that is used to store the method's result.
+	 * @return {Box3} The bounding box that encloses this sphere.
+	 */
 	getBoundingBox( target ) {
 
 		if ( this.isEmpty() ) {
@@ -19867,6 +22949,12 @@ class Sphere {
 
 	}
 
+	/**
+	 * Transforms this sphere with the given 4x4 transformation matrix.
+	 *
+	 * @param {Matrix4} matrix - The transformation matrix.
+	 * @return {Sphere} A reference to this sphere.
+	 */
 	applyMatrix4( matrix ) {
 
 		this.center.applyMatrix4( matrix );
@@ -19876,6 +22964,12 @@ class Sphere {
 
 	}
 
+	/**
+	 * Translates the sphere's center by the given offset.
+	 *
+	 * @param {Vector3} offset - The offset.
+	 * @return {Sphere} A reference to this sphere.
+	 */
 	translate( offset ) {
 
 		this.center.add( offset );
@@ -19884,6 +22978,12 @@ class Sphere {
 
 	}
 
+	/**
+	 * Expands the boundaries of this sphere to include the given point.
+	 *
+	 * @param {Vector3} point - The point to include.
+	 * @return {Sphere} A reference to this sphere.
+	 */
 	expandByPoint( point ) {
 
 		if ( this.isEmpty() ) {
@@ -19918,6 +23018,12 @@ class Sphere {
 
 	}
 
+	/**
+	 * Expands this sphere to enclose both the original sphere and the given sphere.
+	 *
+	 * @param {Sphere} sphere - The sphere to include.
+	 * @return {Sphere} A reference to this sphere.
+	 */
 	union( sphere ) {
 
 		if ( sphere.isEmpty() ) {
@@ -19952,12 +23058,23 @@ class Sphere {
 
 	}
 
+	/**
+	 * Returns `true` if this sphere is equal with the given one.
+	 *
+	 * @param {Sphere} sphere - The sphere to test for equality.
+	 * @return {boolean} Whether this bounding sphere is equal with the given one.
+	 */
 	equals( sphere ) {
 
 		return sphere.center.equals( this.center ) && ( sphere.radius === this.radius );
 
 	}
 
+	/**
+	 * Returns a new sphere with copied values from this instance.
+	 *
+	 * @return {Sphere} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
@@ -19970,19 +23087,54 @@ const _vector1 = /*@__PURE__*/ new Vector3();
 const _vector2$1 = /*@__PURE__*/ new Vector3();
 const _normalMatrix = /*@__PURE__*/ new Matrix3();
 
+/**
+ * A two dimensional surface that extends infinitely in 3D space, represented
+ * in [Hessian normal form]{@link http://mathworld.wolfram.com/HessianNormalForm.html}
+ * by a unit length normal vector and a constant.
+ */
 class Plane {
 
+	/**
+	 * Constructs a new plane.
+	 *
+	 * @param {Vector3} [normal=(1,0,0)] - A unit length vector defining the normal of the plane.
+	 * @param {number} [constant=0] - The signed distance from the origin to the plane.
+	 */
 	constructor( normal = new Vector3( 1, 0, 0 ), constant = 0 ) {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isPlane = true;
 
-		// normal is assumed to be normalized
-
+		/**
+		 * A unit length vector defining the normal of the plane.
+		 *
+		 * @type {Vector3}
+		 */
 		this.normal = normal;
+
+		/**
+		 * The signed distance from the origin to the plane.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.constant = constant;
 
 	}
 
+	/**
+	 * Sets the plane components by copying the given values.
+	 *
+	 * @param {Vector3} normal - The normal.
+	 * @param {number} constant - The constant.
+	 * @return {Plane} A reference to this plane.
+	 */
 	set( normal, constant ) {
 
 		this.normal.copy( normal );
@@ -19992,6 +23144,16 @@ class Plane {
 
 	}
 
+	/**
+	 * Sets the plane components by defining `x`, `y`, `z` as the
+	 * plane normal and `w` as the constant.
+	 *
+	 * @param {number} x - The value for the normal's x component.
+	 * @param {number} y - The value for the normal's y component.
+	 * @param {number} z - The value for the normal's z component.
+	 * @param {number} w - The constant value.
+	 * @return {Plane} A reference to this plane.
+	 */
 	setComponents( x, y, z, w ) {
 
 		this.normal.set( x, y, z );
@@ -20001,6 +23163,14 @@ class Plane {
 
 	}
 
+	/**
+	 * Sets the plane from the given normal and coplanar point (that is a point
+	 * that lies onto the plane).
+	 *
+	 * @param {Vector3} normal - The normal.
+	 * @param {Vector3} point - A coplanar point.
+	 * @return {Plane} A reference to this plane.
+	 */
 	setFromNormalAndCoplanarPoint( normal, point ) {
 
 		this.normal.copy( normal );
@@ -20010,6 +23180,16 @@ class Plane {
 
 	}
 
+	/**
+	 * Sets the plane from three coplanar points. The winding order is
+	 * assumed to be counter-clockwise, and determines the direction of
+	 * the plane normal.
+	 *
+	 * @param {Vector3} a - The first coplanar point.
+	 * @param {Vector3} b - The second coplanar point.
+	 * @param {Vector3} c - The third coplanar point.
+	 * @return {Plane} A reference to this plane.
+	 */
 	setFromCoplanarPoints( a, b, c ) {
 
 		const normal = _vector1.subVectors( c, b ).cross( _vector2$1.subVectors( a, b ) ).normalize();
@@ -20022,6 +23202,12 @@ class Plane {
 
 	}
 
+	/**
+	 * Copies the values of the given plane to this instance.
+	 *
+	 * @param {Plane} plane - The plane to copy.
+	 * @return {Plane} A reference to this plane.
+	 */
 	copy( plane ) {
 
 		this.normal.copy( plane.normal );
@@ -20031,6 +23217,11 @@ class Plane {
 
 	}
 
+	/**
+	 * Normalizes the plane normal and adjusts the constant accordingly.
+	 *
+	 * @return {Plane} A reference to this plane.
+	 */
 	normalize() {
 
 		// Note: will lead to a divide by zero if the plane is invalid.
@@ -20043,6 +23234,11 @@ class Plane {
 
 	}
 
+	/**
+	 * Negates both the plane normal and the constant.
+	 *
+	 * @return {Plane} A reference to this plane.
+	 */
 	negate() {
 
 		this.constant *= -1;
@@ -20052,24 +23248,52 @@ class Plane {
 
 	}
 
+	/**
+	 * Returns the signed distance from the given point to this plane.
+	 *
+	 * @param {Vector3} point - The point to compute the distance for.
+	 * @return {number} The signed distance.
+	 */
 	distanceToPoint( point ) {
 
 		return this.normal.dot( point ) + this.constant;
 
 	}
 
+	/**
+	 * Returns the signed distance from the given sphere to this plane.
+	 *
+	 * @param {Sphere} sphere - The sphere to compute the distance for.
+	 * @return {number} The signed distance.
+	 */
 	distanceToSphere( sphere ) {
 
 		return this.distanceToPoint( sphere.center ) - sphere.radius;
 
 	}
 
+	/**
+	 * Projects a the given point onto the plane.
+	 *
+	 * @param {Vector3} point - The point to project.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} The projected point on the plane.
+	 */
 	projectPoint( point, target ) {
 
 		return target.copy( point ).addScaledVector( this.normal, - this.distanceToPoint( point ) );
 
 	}
 
+	/**
+	 * Returns the intersection point of the passed line and the plane. Returns
+	 * `null` if the line does not intersect. Returns the line's starting point if
+	 * the line is coplanar with the plane.
+	 *
+	 * @param {Line3} line - The line to compute the intersection for.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {?Vector3} The intersection point.
+	 */
 	intersectLine( line, target ) {
 
 		const direction = line.delta( _vector1 );
@@ -20102,6 +23326,12 @@ class Plane {
 
 	}
 
+	/**
+	 * Returns `true` if the given line segment intersects with (passes through) the plane.
+	 *
+	 * @param {Line3} line - The line to test.
+	 * @return {boolean} Whether the given line segment intersects with the plane or not.
+	 */
 	intersectsLine( line ) {
 
 		// Note: this tests if a line intersects the plane, not whether it (or its end-points) are coplanar with it.
@@ -20113,24 +23343,55 @@ class Plane {
 
 	}
 
+	/**
+	 * Returns `true` if the given bounding box intersects with the plane.
+	 *
+	 * @param {Box3} box - The bounding box to test.
+	 * @return {boolean} Whether the given bounding box intersects with the plane or not.
+	 */
 	intersectsBox( box ) {
 
 		return box.intersectsPlane( this );
 
 	}
 
+	/**
+	 * Returns `true` if the given bounding sphere intersects with the plane.
+	 *
+	 * @param {Sphere} sphere - The bounding sphere to test.
+	 * @return {boolean} Whether the given bounding sphere intersects with the plane or not.
+	 */
 	intersectsSphere( sphere ) {
 
 		return sphere.intersectsPlane( this );
 
 	}
 
+	/**
+	 * Returns a coplanar vector to the plane, by calculating the
+	 * projection of the normal at the origin onto the plane.
+	 *
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} The coplanar point.
+	 */
 	coplanarPoint( target ) {
 
 		return target.copy( this.normal ).multiplyScalar( - this.constant );
 
 	}
 
+	/**
+	 * Apply a 4x4 matrix to the plane. The matrix must be an affine, homogeneous transform.
+	 *
+	 * The optional normal matrix can be pre-computed like so:
+	 * ```js
+	 * const optionalNormalMatrix = new THREE.Matrix3().getNormalMatrix( matrix );
+	 * ```
+	 *
+	 * @param {Matrix4} matrix - The transformation matrix.
+	 * @param {Matrix4} [optionalNormalMatrix] - A pre-computed normal matrix.
+	 * @return {Plane} A reference to this plane.
+	 */
 	applyMatrix4( matrix, optionalNormalMatrix ) {
 
 		const normalMatrix = optionalNormalMatrix || _normalMatrix.getNormalMatrix( matrix );
@@ -20145,6 +23406,13 @@ class Plane {
 
 	}
 
+	/**
+	 * Translates the plane by the distance defined by the given offset vector.
+	 * Note that this only affects the plane constant and will not affect the normal vector.
+	 *
+	 * @param {Vector3} offset - The offset vector.
+	 * @return {Plane} A reference to this plane.
+	 */
 	translate( offset ) {
 
 		this.constant -= offset.dot( this.normal );
@@ -20153,12 +23421,23 @@ class Plane {
 
 	}
 
+	/**
+	 * Returns `true` if this plane is equal with the given one.
+	 *
+	 * @param {Plane} plane - The plane to test for equality.
+	 * @return {boolean} Whether this plane is equal with the given one.
+	 */
 	equals( plane ) {
 
 		return plane.normal.equals( this.normal ) && ( plane.constant === this.constant );
 
 	}
 
+	/**
+	 * Returns a new plane with copied values from this instance.
+	 *
+	 * @return {Plane} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
@@ -20170,14 +23449,47 @@ class Plane {
 const _sphere$6 = /*@__PURE__*/ new Sphere();
 const _vector$6 = /*@__PURE__*/ new Vector3();
 
+/**
+ * Frustums are used to determine what is inside the camera's field of view.
+ * They help speed up the rendering process - objects which lie outside a camera's
+ * frustum can safely be excluded from rendering.
+ *
+ * This class is mainly intended for use internally by a renderer.
+ */
 class Frustum {
 
+	/**
+	 * Constructs a new frustum.
+	 *
+	 * @param {Plane} [p0] - The first plane that encloses the frustum.
+	 * @param {Plane} [p1] - The second plane that encloses the frustum.
+	 * @param {Plane} [p2] - The third plane that encloses the frustum.
+	 * @param {Plane} [p3] - The fourth plane that encloses the frustum.
+	 * @param {Plane} [p4] - The fifth plane that encloses the frustum.
+	 * @param {Plane} [p5] - The sixth plane that encloses the frustum.
+	 */
 	constructor( p0 = new Plane(), p1 = new Plane(), p2 = new Plane(), p3 = new Plane(), p4 = new Plane(), p5 = new Plane() ) {
 
+		/**
+		 * This array holds the planes that enclose the frustum.
+		 *
+		 * @type {Array<Plane>}
+		 */
 		this.planes = [ p0, p1, p2, p3, p4, p5 ];
 
 	}
 
+	/**
+	 * Sets the frustum planes by copying the given planes.
+	 *
+	 * @param {Plane} [p0] - The first plane that encloses the frustum.
+	 * @param {Plane} [p1] - The second plane that encloses the frustum.
+	 * @param {Plane} [p2] - The third plane that encloses the frustum.
+	 * @param {Plane} [p3] - The fourth plane that encloses the frustum.
+	 * @param {Plane} [p4] - The fifth plane that encloses the frustum.
+	 * @param {Plane} [p5] - The sixth plane that encloses the frustum.
+	 * @return {Frustum} A reference to this frustum.
+	 */
 	set( p0, p1, p2, p3, p4, p5 ) {
 
 		const planes = this.planes;
@@ -20193,6 +23505,12 @@ class Frustum {
 
 	}
 
+	/**
+	 * Copies the values of the given frustum to this instance.
+	 *
+	 * @param {Frustum} frustum - The frustum to copy.
+	 * @return {Frustum} A reference to this frustum.
+	 */
 	copy( frustum ) {
 
 		const planes = this.planes;
@@ -20207,6 +23525,13 @@ class Frustum {
 
 	}
 
+	/**
+	 * Sets the frustum planes from the given projection matrix.
+	 *
+	 * @param {Matrix4} m - The projection matrix.
+	 * @param {(WebGLCoordinateSystem|WebGPUCoordinateSystem)} coordinateSystem - The coordinate system.
+	 * @return {Frustum} A reference to this frustum.
+	 */
 	setFromProjectionMatrix( m, coordinateSystem = WebGLCoordinateSystem ) {
 
 		const planes = this.planes;
@@ -20240,6 +23565,14 @@ class Frustum {
 
 	}
 
+	/**
+	 * Returns `true` if the 3D object's bounding sphere is intersecting this frustum.
+	 *
+	 * Note that the 3D object must have a geometry so that the bounding sphere can be calculated.
+	 *
+	 * @param {Object3D} object - The 3D object to test.
+	 * @return {boolean} Whether the 3D object's bounding sphere is intersecting this frustum or not.
+	 */
 	intersectsObject( object ) {
 
 		if ( object.boundingSphere !== undefined ) {
@@ -20262,6 +23595,12 @@ class Frustum {
 
 	}
 
+	/**
+	 * Returns `true` if the given sprite is intersecting this frustum.
+	 *
+	 * @param {Sprite} sprite - The sprite to test.
+	 * @return {boolean} Whether the sprite is intersecting this frustum or not.
+	 */
 	intersectsSprite( sprite ) {
 
 		_sphere$6.center.set( 0, 0, 0 );
@@ -20272,6 +23611,12 @@ class Frustum {
 
 	}
 
+	/**
+	 * Returns `true` if the given bounding sphere is intersecting this frustum.
+	 *
+	 * @param {Sphere} sphere - The bounding sphere to test.
+	 * @return {boolean} Whether the bounding sphere is intersecting this frustum or not.
+	 */
 	intersectsSphere( sphere ) {
 
 		const planes = this.planes;
@@ -20294,6 +23639,12 @@ class Frustum {
 
 	}
 
+	/**
+	 * Returns `true` if the given bounding box is intersecting this frustum.
+	 *
+	 * @param {Box3} box - The bounding box to test.
+	 * @return {boolean} Whether the bounding box is intersecting this frustum or not.
+	 */
 	intersectsBox( box ) {
 
 		const planes = this.planes;
@@ -20320,6 +23671,12 @@ class Frustum {
 
 	}
 
+	/**
+	 * Returns `true` if the given point lies within the frustum.
+	 *
+	 * @param {Vector3} point - The point to test.
+	 * @return {boolean} Whether the point lies within this frustum or not.
+	 */
 	containsPoint( point ) {
 
 		const planes = this.planes;
@@ -20338,6 +23695,11 @@ class Frustum {
 
 	}
 
+	/**
+	 * Returns a new frustum with copied values from this instance.
+	 *
+	 * @return {Frustum} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
@@ -20346,12 +23708,84 @@ class Frustum {
 
 }
 
+/**
+ * Represents a 4x4 matrix.
+ *
+ * The most common use of a 4x4 matrix in 3D computer graphics is as a transformation matrix.
+ * For an introduction to transformation matrices as used in WebGL, check out [this tutorial]{@link https://www.opengl-tutorial.org/beginners-tutorials/tutorial-3-matrices}
+ *
+ * This allows a 3D vector representing a point in 3D space to undergo
+ * transformations such as translation, rotation, shear, scale, reflection,
+ * orthogonal or perspective projection and so on, by being multiplied by the
+ * matrix. This is known as `applying` the matrix to the vector.
+ *
+ * A Note on Row-Major and Column-Major Ordering:
+ *
+ * The constructor and {@link Matrix3#set} method take arguments in
+ * [row-major]{@link https://en.wikipedia.org/wiki/Row-_and_column-major_order#Column-major_order}
+ * order, while internally they are stored in the {@link Matrix3#elements} array in column-major order.
+ * This means that calling:
+ * ```js
+ * const m = new THREE.Matrix4();
+ * m.set( 11, 12, 13, 14,
+ *        21, 22, 23, 24,
+ *        31, 32, 33, 34,
+ *        41, 42, 43, 44 );
+ * ```
+ * will result in the elements array containing:
+ * ```js
+ * m.elements = [ 11, 21, 31, 41,
+ *                12, 22, 32, 42,
+ *                13, 23, 33, 43,
+ *                14, 24, 34, 44 ];
+ * ```
+ * and internally all calculations are performed using column-major ordering.
+ * However, as the actual ordering makes no difference mathematically and
+ * most people are used to thinking about matrices in row-major order, the
+ * three.js documentation shows matrices in row-major order. Just bear in
+ * mind that if you are reading the source code, you'll have to take the
+ * transpose of any matrices outlined here to make sense of the calculations.
+ */
 class Matrix4 {
 
+	/**
+	 * Constructs a new 4x4 matrix. The arguments are supposed to be
+	 * in row-major order. If no arguments are provided, the constructor
+	 * initializes the matrix as an identity matrix.
+	 *
+	 * @param {number} [n11] - 1-1 matrix element.
+	 * @param {number} [n12] - 1-2 matrix element.
+	 * @param {number} [n13] - 1-3 matrix element.
+	 * @param {number} [n14] - 1-4 matrix element.
+	 * @param {number} [n21] - 2-1 matrix element.
+	 * @param {number} [n22] - 2-2 matrix element.
+	 * @param {number} [n23] - 2-3 matrix element.
+	 * @param {number} [n24] - 2-4 matrix element.
+	 * @param {number} [n31] - 3-1 matrix element.
+	 * @param {number} [n32] - 3-2 matrix element.
+	 * @param {number} [n33] - 3-3 matrix element.
+	 * @param {number} [n34] - 3-4 matrix element.
+	 * @param {number} [n41] - 4-1 matrix element.
+	 * @param {number} [n42] - 4-2 matrix element.
+	 * @param {number} [n43] - 4-3 matrix element.
+	 * @param {number} [n44] - 4-4 matrix element.
+	 */
 	constructor( n11, n12, n13, n14, n21, n22, n23, n24, n31, n32, n33, n34, n41, n42, n43, n44 ) {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		Matrix4.prototype.isMatrix4 = true;
 
+		/**
+		 * A column-major list of matrix values.
+		 *
+		 * @type {Array<number>}
+		 */
 		this.elements = [
 
 			1, 0, 0, 0,
@@ -20369,6 +23803,28 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Sets the elements of the matrix.The arguments are supposed to be
+	 * in row-major order.
+	 *
+	 * @param {number} [n11] - 1-1 matrix element.
+	 * @param {number} [n12] - 1-2 matrix element.
+	 * @param {number} [n13] - 1-3 matrix element.
+	 * @param {number} [n14] - 1-4 matrix element.
+	 * @param {number} [n21] - 2-1 matrix element.
+	 * @param {number} [n22] - 2-2 matrix element.
+	 * @param {number} [n23] - 2-3 matrix element.
+	 * @param {number} [n24] - 2-4 matrix element.
+	 * @param {number} [n31] - 3-1 matrix element.
+	 * @param {number} [n32] - 3-2 matrix element.
+	 * @param {number} [n33] - 3-3 matrix element.
+	 * @param {number} [n34] - 3-4 matrix element.
+	 * @param {number} [n41] - 4-1 matrix element.
+	 * @param {number} [n42] - 4-2 matrix element.
+	 * @param {number} [n43] - 4-3 matrix element.
+	 * @param {number} [n44] - 4-4 matrix element.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	set( n11, n12, n13, n14, n21, n22, n23, n24, n31, n32, n33, n34, n41, n42, n43, n44 ) {
 
 		const te = this.elements;
@@ -20382,6 +23838,11 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Sets this matrix to the 4x4 identity matrix.
+	 *
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	identity() {
 
 		this.set(
@@ -20397,12 +23858,23 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Returns a matrix with copied values from this instance.
+	 *
+	 * @return {Matrix4} A clone of this instance.
+	 */
 	clone() {
 
 		return new Matrix4().fromArray( this.elements );
 
 	}
 
+	/**
+	 * Copies the values of the given matrix to this instance.
+	 *
+	 * @param {Matrix4} m - The matrix to copy.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	copy( m ) {
 
 		const te = this.elements;
@@ -20417,6 +23889,13 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Copies the translation component of the given matrix
+	 * into this matrix's translation component.
+	 *
+	 * @param {Matrix4} m - The matrix to copy the translation component.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	copyPosition( m ) {
 
 		const te = this.elements, me = m.elements;
@@ -20429,6 +23908,12 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Set the upper 3x3 elements of this matrix to the values of given 3x3 matrix.
+	 *
+	 * @param {Matrix3} m - The 3x3 matrix.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	setFromMatrix3( m ) {
 
 		const me = m.elements;
@@ -20446,6 +23931,14 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Extracts the basis of this matrix into the three axis vectors provided.
+	 *
+	 * @param {Vector3} xAxis - The basis's x axis.
+	 * @param {Vector3} yAxis - The basis's y axis.
+	 * @param {Vector3} zAxis - The basis's z axis.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	extractBasis( xAxis, yAxis, zAxis ) {
 
 		xAxis.setFromMatrixColumn( this, 0 );
@@ -20456,6 +23949,14 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Sets the given basis vectors to this matrix.
+	 *
+	 * @param {Vector3} xAxis - The basis's x axis.
+	 * @param {Vector3} yAxis - The basis's y axis.
+	 * @param {Vector3} zAxis - The basis's z axis.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	makeBasis( xAxis, yAxis, zAxis ) {
 
 		this.set(
@@ -20469,9 +23970,16 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Extracts the rotation component of the given matrix
+	 * into this matrix's rotation component.
+	 *
+	 * Note: This method does not support reflection matrices.
+	 *
+	 * @param {Matrix4} m - The matrix.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	extractRotation( m ) {
-
-		// this method does not support reflection matrices
 
 		const te = this.elements;
 		const me = m.elements;
@@ -20504,6 +24012,16 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Sets the rotation component (the upper left 3x3 matrix) of this matrix to
+	 * the rotation specified by the given Euler angles. The rest of
+	 * the matrix is set to the identity. Depending on the {@link Euler#order},
+	 * there are six possible outcomes. See [this page]{@link https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix}
+	 * for a complete list.
+	 *
+	 * @param {Euler} euler - The Euler angles.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	makeRotationFromEuler( euler ) {
 
 		const te = this.elements;
@@ -20626,12 +24144,29 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Sets the rotation component of this matrix to the rotation specified by
+	 * the given Quaternion as outlined [here]{@link https://en.wikipedia.org/wiki/Rotation_matrix#Quaternion}
+	 * The rest of the matrix is set to the identity.
+	 *
+	 * @param {Quaternion} q - The Quaternion.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	makeRotationFromQuaternion( q ) {
 
 		return this.compose( _zero, q, _one );
 
 	}
 
+	/**
+	 * Sets the rotation component of the transformation matrix, looking from `eye` towards
+	 * `target`, and oriented by the up-direction.
+	 *
+	 * @param {Vector3} eye - The eye vector.
+	 * @param {Vector3} target - The target vector.
+	 * @param {Vector3} up - The up vector.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	lookAt( eye, target, up ) {
 
 		const te = this.elements;
@@ -20679,18 +24214,38 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Post-multiplies this matrix by the given 4x4 matrix.
+	 *
+	 * @param {Matrix4} m - The matrix to multiply with.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	multiply( m ) {
 
 		return this.multiplyMatrices( this, m );
 
 	}
 
+	/**
+	 * Pre-multiplies this matrix by the given 4x4 matrix.
+	 *
+	 * @param {Matrix4} m - The matrix to multiply with.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	premultiply( m ) {
 
 		return this.multiplyMatrices( m, this );
 
 	}
 
+	/**
+	 * Multiples the given 4x4 matrices and stores the result
+	 * in this matrix.
+	 *
+	 * @param {Matrix4} a - The first matrix.
+	 * @param {Matrix4} b - The second matrix.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	multiplyMatrices( a, b ) {
 
 		const ae = a.elements;
@@ -20731,6 +24286,12 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Multiplies every component of the matrix by the given scalar.
+	 *
+	 * @param {number} s - The scalar.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	multiplyScalar( s ) {
 
 		const te = this.elements;
@@ -20744,6 +24305,13 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Computes and returns the determinant of this matrix.
+	 *
+	 * Based on the method outlined [here]{@link http://www.euclideanspace.com/maths/algebra/matrix/functions/inverse/fourD/index.html}.
+	 *
+	 * @return {number} The determinant.
+	 */
 	determinant() {
 
 		const te = this.elements;
@@ -20754,7 +24322,6 @@ class Matrix4 {
 		const n41 = te[ 3 ], n42 = te[ 7 ], n43 = te[ 11 ], n44 = te[ 15 ];
 
 		//TODO: make this more efficient
-		//( based on http://www.euclideanspace.com/maths/algebra/matrix/functions/inverse/fourD/index.htm )
 
 		return (
 			n41 * (
@@ -20794,6 +24361,11 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Transposes this matrix in place.
+	 *
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	transpose() {
 
 		const te = this.elements;
@@ -20811,6 +24383,15 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Sets the position component for this matrix from the given vector,
+	 * without affecting the rest of the matrix.
+	 *
+	 * @param {number|Vector3} x - The x component of the vector or alternatively the vector object.
+	 * @param {number} y - The y component of the vector.
+	 * @param {number} z - The z component of the vector.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	setPosition( x, y, z ) {
 
 		const te = this.elements;
@@ -20833,6 +24414,13 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Inverts this matrix, using the [analytic method]{@link https://en.wikipedia.org/wiki/Invertible_matrix#Analytic_solution}.
+	 * You can not invert with a determinant of zero. If you attempt this, the method produces
+	 * a zero matrix instead.
+	 *
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	invert() {
 
 		// based on http://www.euclideanspace.com/maths/algebra/matrix/functions/inverse/fourD/index.htm
@@ -20878,6 +24466,12 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Multiplies the columns of this matrix by the given vector.
+	 *
+	 * @param {Vector3} v - The scale vector.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	scale( v ) {
 
 		const te = this.elements;
@@ -20892,6 +24486,11 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Gets the maximum scale value of the three axes.
+	 *
+	 * @return {number} The maximum scale.
+	 */
 	getMaxScaleOnAxis() {
 
 		const te = this.elements;
@@ -20904,6 +24503,14 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Sets this matrix as a translation transform from the given vector.
+	 *
+	 * @param {number|Vector3} x - The amount to translate in the X axis or alternatively a translation vector.
+	 * @param {number} y - The amount to translate in the Y axis.
+	 * @param {number} z - The amount to translate in the z axis.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	makeTranslation( x, y, z ) {
 
 		if ( x.isVector3 ) {
@@ -20934,6 +24541,13 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Sets this matrix as a rotational transformation around the X axis by
+	 * the given angle.
+	 *
+	 * @param {number} theta - The rotation in radians.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	makeRotationX( theta ) {
 
 		const c = Math.cos( theta ), s = Math.sin( theta );
@@ -20951,6 +24565,13 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Sets this matrix as a rotational transformation around the Y axis by
+	 * the given angle.
+	 *
+	 * @param {number} theta - The rotation in radians.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	makeRotationY( theta ) {
 
 		const c = Math.cos( theta ), s = Math.sin( theta );
@@ -20968,6 +24589,13 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Sets this matrix as a rotational transformation around the Z axis by
+	 * the given angle.
+	 *
+	 * @param {number} theta - The rotation in radians.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	makeRotationZ( theta ) {
 
 		const c = Math.cos( theta ), s = Math.sin( theta );
@@ -20985,6 +24613,17 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Sets this matrix as a rotational transformation around the given axis by
+	 * the given angle.
+	 *
+	 * This is a somewhat controversial but mathematically sound alternative to
+	 * rotating via Quaternions. See the discussion [here]{@link https://www.gamedev.net/articles/programming/math-and-physics/do-we-really-need-quaternions-r1199}.
+	 *
+	 * @param {Vector3} axis - The normalized rotation axis.
+	 * @param {number} angle - The rotation in radians.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	makeRotationAxis( axis, angle ) {
 
 		// Based on http://www.gamedev.net/reference/articles/article1199.asp
@@ -21008,6 +24647,14 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Sets this matrix as a scale transformation.
+	 *
+	 * @param {number} x - The amount to scale in the X axis.
+	 * @param {number} y - The amount to scale in the Y axis.
+	 * @param {number} z - The amount to scale in the Z axis.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	makeScale( x, y, z ) {
 
 		this.set(
@@ -21023,6 +24670,17 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Sets this matrix as a shear transformation.
+	 *
+	 * @param {number} xy - The amount to shear X by Y.
+	 * @param {number} xz - The amount to shear X by Z.
+	 * @param {number} yx - The amount to shear Y by X.
+	 * @param {number} yz - The amount to shear Y by Z.
+	 * @param {number} zx - The amount to shear Z by X.
+	 * @param {number} zy - The amount to shear Z by Y.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	makeShear( xy, xz, yx, yz, zx, zy ) {
 
 		this.set(
@@ -21038,6 +24696,15 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Sets this matrix to the transformation composed of the given position,
+	 * rotation (Quaternion) and scale.
+	 *
+	 * @param {Vector3} position - The position vector.
+	 * @param {Quaternion} quaternion - The rotation as a Quaternion.
+	 * @param {Vector3} scale - The scale vector.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	compose( position, quaternion, scale ) {
 
 		const te = this.elements;
@@ -21074,6 +24741,19 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Decomposes this matrix into its position, rotation and scale components
+	 * and provides the result in the given objects.
+	 *
+	 * Note: Not all matrices are decomposable in this way. For example, if an
+	 * object has a non-uniformly scaled parent, then the object's world matrix
+	 * may not be decomposable, and this method may not be appropriate.
+	 *
+	 * @param {Vector3} position - The position vector.
+	 * @param {Quaternion} quaternion - The rotation as a Quaternion.
+	 * @param {Vector3} scale - The scale vector.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	decompose( position, quaternion, scale ) {
 
 		const te = this.elements;
@@ -21119,6 +24799,19 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Creates a perspective projection matrix. This is used internally by
+	 * {@link PerspectiveCamera#updateProjectionMatrix}.
+
+	 * @param {number} left - Left boundary of the viewing frustum at the near plane.
+	 * @param {number} right - Right boundary of the viewing frustum at the near plane.
+	 * @param {number} top - Top boundary of the viewing frustum at the near plane.
+	 * @param {number} bottom - Bottom boundary of the viewing frustum at the near plane.
+	 * @param {number} near - The distance from the camera to the near plane.
+	 * @param {number} far - The distance from the camera to the far plane.
+	 * @param {(WebGLCoordinateSystem|WebGPUCoordinateSystem)} [coordinateSystem=WebGLCoordinateSystem] - The coordinate system.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	makePerspective( left, right, top, bottom, near, far, coordinateSystem = WebGLCoordinateSystem ) {
 
 		const te = this.elements;
@@ -21155,6 +24848,19 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Creates a orthographic projection matrix. This is used internally by
+	 * {@link OrthographicCamera#updateProjectionMatrix}.
+
+	 * @param {number} left - Left boundary of the viewing frustum at the near plane.
+	 * @param {number} right - Right boundary of the viewing frustum at the near plane.
+	 * @param {number} top - Top boundary of the viewing frustum at the near plane.
+	 * @param {number} bottom - Bottom boundary of the viewing frustum at the near plane.
+	 * @param {number} near - The distance from the camera to the near plane.
+	 * @param {number} far - The distance from the camera to the far plane.
+	 * @param {(WebGLCoordinateSystem|WebGPUCoordinateSystem)} [coordinateSystem=WebGLCoordinateSystem] - The coordinate system.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	makeOrthographic( left, right, top, bottom, near, far, coordinateSystem = WebGLCoordinateSystem ) {
 
 		const te = this.elements;
@@ -21192,6 +24898,12 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Returns `true` if this matrix is equal with the given one.
+	 *
+	 * @param {Matrix4} matrix - The matrix to test for equality.
+	 * @return {boolean} Whether this matrix is equal with the given one.
+	 */
 	equals( matrix ) {
 
 		const te = this.elements;
@@ -21207,6 +24919,13 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Sets the elements of the matrix from the given array.
+	 *
+	 * @param {Array<number>} array - The matrix elements in column-major order.
+	 * @param {number} [offset=0] - Index of the first element in the array.
+	 * @return {Matrix4} A reference to this matrix.
+	 */
 	fromArray( array, offset = 0 ) {
 
 		for ( let i = 0; i < 16; i ++ ) {
@@ -21219,6 +24938,14 @@ class Matrix4 {
 
 	}
 
+	/**
+	 * Writes the elements of this matrix to the given array. If no array is provided,
+	 * the method returns a new instance.
+	 *
+	 * @param {Array<number>} [array=[]] - The target array holding the matrix elements in column-major order.
+	 * @param {number} [offset=0] - Index of the first element in the array.
+	 * @return {Array<number>} The matrix elements in column-major order.
+	 */
 	toArray( array = [], offset = 0 ) {
 
 		const te = this.elements;
@@ -21953,10 +25680,41 @@ class Float32BufferAttribute extends BufferAttribute {
 const _matrix$2 = /*@__PURE__*/ new Matrix4();
 const _quaternion$1 = /*@__PURE__*/ new Quaternion();
 
+/**
+ * A class representing Euler angles.
+ *
+ * Euler angles describe a rotational transformation by rotating an object on
+ * its various axes in specified amounts per axis, and a specified axis
+ * order.
+ *
+ * Iterating through an instance will yield its components (x, y, z,
+ * order) in the corresponding order.
+ *
+ * ```js
+ * const a = new THREE.Euler( 0, 1, 1.57, 'XYZ' );
+ * const b = new THREE.Vector3( 1, 0, 1 );
+ * b.applyEuler(a);
+ * ```
+ */
 class Euler {
 
+	/**
+	 * Constructs a new euler instance.
+	 *
+	 * @param {number} [x=0] - The angle of the x axis in radians.
+	 * @param {number} [y=0] - The angle of the y axis in radians.
+	 * @param {number} [z=0] - The angle of the z axis in radians.
+	 * @param {string} [order=Euler.DEFAULT_ORDER] - A string representing the order that the rotations are applied.
+	 */
 	constructor( x = 0, y = 0, z = 0, order = Euler.DEFAULT_ORDER ) {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isEuler = true;
 
 		this._x = x;
@@ -21966,6 +25724,12 @@ class Euler {
 
 	}
 
+	/**
+	 * The angle of the x axis in radians.
+	 *
+	 * @type {number}
+	 * @default 0
+	 */
 	get x() {
 
 		return this._x;
@@ -21979,6 +25743,12 @@ class Euler {
 
 	}
 
+	/**
+	 * The angle of the y axis in radians.
+	 *
+	 * @type {number}
+	 * @default 0
+	 */
 	get y() {
 
 		return this._y;
@@ -21992,6 +25762,12 @@ class Euler {
 
 	}
 
+	/**
+	 * The angle of the z axis in radians.
+	 *
+	 * @type {number}
+	 * @default 0
+	 */
 	get z() {
 
 		return this._z;
@@ -22005,6 +25781,12 @@ class Euler {
 
 	}
 
+	/**
+	 * A string representing the order that the rotations are applied.
+	 *
+	 * @type {string}
+	 * @default 'XYZ'
+	 */
 	get order() {
 
 		return this._order;
@@ -22018,6 +25800,15 @@ class Euler {
 
 	}
 
+	/**
+	 * Sets the Euler components.
+	 *
+	 * @param {number} x - The angle of the x axis in radians.
+	 * @param {number} y - The angle of the y axis in radians.
+	 * @param {number} z - The angle of the z axis in radians.
+	 * @param {string} [order] - A string representing the order that the rotations are applied.
+	 * @return {Euler} A reference to this Euler instance.
+	 */
 	set( x, y, z, order = this._order ) {
 
 		this._x = x;
@@ -22031,12 +25822,23 @@ class Euler {
 
 	}
 
+	/**
+	 * Returns a new Euler instance with copied values from this instance.
+	 *
+	 * @return {Euler} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor( this._x, this._y, this._z, this._order );
 
 	}
 
+	/**
+	 * Copies the values of the given Euler instance to this instance.
+	 *
+	 * @param {Euler} euler - The Euler instance to copy.
+	 * @return {Euler} A reference to this Euler instance.
+	 */
 	copy( euler ) {
 
 		this._x = euler._x;
@@ -22050,9 +25852,15 @@ class Euler {
 
 	}
 
+	/**
+	 * Sets the angles of this Euler instance from a pure rotation matrix.
+	 *
+	 * @param {Matrix4} m - A 4x4 matrix of which the upper 3x3 of matrix is a pure rotation matrix (i.e. unscaled).
+	 * @param {string} [order] - A string representing the order that the rotations are applied.
+	 * @param {boolean} [update=true] - Whether the internal `onChange` callback should be executed or not.
+	 * @return {Euler} A reference to this Euler instance.
+	 */
 	setFromRotationMatrix( m, order = this._order, update = true ) {
-
-		// assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
 
 		const te = m.elements;
 		const m11 = te[ 0 ], m12 = te[ 4 ], m13 = te[ 8 ];
@@ -22183,6 +25991,14 @@ class Euler {
 
 	}
 
+	/**
+	 * Sets the angles of this Euler instance from a normalized quaternion.
+	 *
+	 * @param {Quaternion} q - A normalized Quaternion.
+	 * @param {string} [order] - A string representing the order that the rotations are applied.
+	 * @param {boolean} [update=true] - Whether the internal `onChange` callback should be executed or not.
+	 * @return {Euler} A reference to this Euler instance.
+	 */
 	setFromQuaternion( q, order, update ) {
 
 		_matrix$2.makeRotationFromQuaternion( q );
@@ -22191,15 +26007,30 @@ class Euler {
 
 	}
 
+	/**
+	 * Sets the angles of this Euler instance from the given vector.
+	 *
+	 * @param {Vector3} v - The vector.
+	 * @param {string} [order] - A string representing the order that the rotations are applied.
+	 * @return {Euler} A reference to this Euler instance.
+	 */
 	setFromVector3( v, order = this._order ) {
 
 		return this.set( v.x, v.y, v.z, order );
 
 	}
 
+	/**
+	 * Resets the euler angle with a new order by creating a quaternion from this
+	 * euler angle and then setting this euler angle with the quaternion and the
+	 * new order.
+	 *
+	 * Warning: This discards revolution information.
+	 *
+	 * @param {string} [newOrder] - A string representing the new order that the rotations are applied.
+	 * @return {Euler} A reference to this Euler instance.
+	 */
 	reorder( newOrder ) {
-
-		// WARNING: this discards revolution information -bhouston
 
 		_quaternion$1.setFromEuler( this );
 
@@ -22207,12 +26038,26 @@ class Euler {
 
 	}
 
+	/**
+	 * Returns `true` if this Euler instance is equal with the given one.
+	 *
+	 * @param {Euler} euler - The Euler instance to test for equality.
+	 * @return {boolean} Whether this Euler instance is equal with the given one.
+	 */
 	equals( euler ) {
 
 		return ( euler._x === this._x ) && ( euler._y === this._y ) && ( euler._z === this._z ) && ( euler._order === this._order );
 
 	}
 
+	/**
+	 * Sets this Euler instance's components to values from the given array. The first three
+	 * entries of the array are assign to the x,y and z components. An optional fourth entry
+	 * defines the Euler order.
+	 *
+	 * @param {Array<number,number,number,?string>} array - An array holding the Euler component values.
+	 * @return {Euler} A reference to this Euler instance.
+	 */
 	fromArray( array ) {
 
 		this._x = array[ 0 ];
@@ -22226,6 +26071,14 @@ class Euler {
 
 	}
 
+	/**
+	 * Writes the components of this Euler instance to the given array. If no array is provided,
+	 * the method returns a new instance.
+	 *
+	 * @param {Array<number,number,number,string>} [array=[]] - The target array holding the Euler components.
+	 * @param {number} [offset=0] - Index of the first element in the array.
+	 * @return {Array<number,number,number,string>} The Euler components.
+	 */
 	toArray( array = [], offset = 0 ) {
 
 		array[ offset ] = this._x;
@@ -22258,6 +26111,13 @@ class Euler {
 
 }
 
+/**
+ * The default Euler angle order.
+ *
+ * @static
+ * @type {string}
+ * @default 'XYZ'
+ */
 Euler.DEFAULT_ORDER = 'XYZ';
 
 class Layers {
@@ -22333,30 +26193,118 @@ const _xAxis = /*@__PURE__*/ new Vector3( 1, 0, 0 );
 const _yAxis = /*@__PURE__*/ new Vector3( 0, 1, 0 );
 const _zAxis = /*@__PURE__*/ new Vector3( 0, 0, 1 );
 
+/**
+ * Fires when the object has been added to its parent object.
+ *
+ * @event Object3D#added
+ * @type {Object}
+ */
 const _addedEvent = { type: 'added' };
+
+/**
+ * Fires when the object has been removed from its parent object.
+ *
+ * @event Object3D#removed
+ * @type {Object}
+ */
 const _removedEvent = { type: 'removed' };
 
+/**
+ * Fires when a new child object has been added.
+ *
+ * @event Object3D#childadded
+ * @type {Object}
+ */
 const _childaddedEvent = { type: 'childadded', child: null };
+
+/**
+ * Fires when a new child object has been added.
+ *
+ * @event Object3D#childremoved
+ * @type {Object}
+ */
 const _childremovedEvent = { type: 'childremoved', child: null };
 
+/**
+ * This is the base class for most objects in three.js and provides a set of
+ * properties and methods for manipulating objects in 3D space.
+ *
+ * @augments EventDispatcher
+ */
 class Object3D extends EventDispatcher {
 
+	/**
+	 * Constructs a new 3D object.
+	 */
 	constructor() {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isObject3D = true;
 
+		/**
+		 * The ID of the 3D object.
+		 *
+		 * @name Object3D#id
+		 * @type {number}
+		 * @readonly
+		 */
 		Object.defineProperty( this, 'id', { value: _object3DId ++ } );
 
+		/**
+		 * The UUID of the 3D object.
+		 *
+		 * @type {string}
+		 * @readonly
+		 */
 		this.uuid = generateUUID();
 
+		/**
+		 * The name of the 3D object.
+		 *
+		 * @type {string}
+		 */
 		this.name = '';
+
+		/**
+		 * The type property is used for detecting the object type
+		 * in context of serialization/deserialization.
+		 *
+		 * @type {string}
+		 * @readonly
+		 */
 		this.type = 'Object3D';
 
+		/**
+		 * A reference to the parent object.
+		 *
+		 * @type {?Object3D}
+		 * @default null
+		 */
 		this.parent = null;
+
+		/**
+		 * An array holding the child 3D objects of this instance.
+		 *
+		 * @type {Array<Object3D>}
+		 */
 		this.children = [];
 
+		/**
+		 * Defines the `up` direction of the 3D object which influences
+		 * the orientation via methods like {@link Object3D#lookAt}.
+		 *
+		 * The default values for all 3D objects is defined by `Object3D.DEFAULT_UP`.
+		 *
+		 * @type {Vector3}
+		 */
 		this.up = Object3D.DEFAULT_UP.clone();
 
 		const position = new Vector3();
@@ -22380,65 +26328,245 @@ class Object3D extends EventDispatcher {
 		quaternion._onChange( onQuaternionChange );
 
 		Object.defineProperties( this, {
+			/**
+			 * Represents the object's local position.
+			 *
+			 * @name Object3D#position
+			 * @type {Vector3}
+			 * @default (0,0,0)
+			 */
 			position: {
 				configurable: true,
 				enumerable: true,
 				value: position
 			},
+			/**
+			 * Represents the object's local rotation as Euler angles, in radians.
+			 *
+			 * @name Object3D#rotation
+			 * @type {Euler}
+			 * @default (0,0,0)
+			 */
 			rotation: {
 				configurable: true,
 				enumerable: true,
 				value: rotation
 			},
+			/**
+			 * Represents the object's local rotation as Quaternions.
+			 *
+			 * @name Object3D#quaternion
+			 * @type {Quaternion}
+			 */
 			quaternion: {
 				configurable: true,
 				enumerable: true,
 				value: quaternion
 			},
+			/**
+			 * Represents the object's local scale.
+			 *
+			 * @name Object3D#scale
+			 * @type {Vector3}
+			 * @default (1,1,1)
+			 */
 			scale: {
 				configurable: true,
 				enumerable: true,
 				value: scale
 			},
+			/**
+			 * Represents the object's model-view matrix.
+			 *
+			 * @name Object3D#modelViewMatrix
+			 * @type {Matrix4}
+			 */
 			modelViewMatrix: {
 				value: new Matrix4()
 			},
+			/**
+			 * Represents the object's normal matrix.
+			 *
+			 * @name Object3D#normalMatrix
+			 * @type {Matrix3}
+			 */
 			normalMatrix: {
 				value: new Matrix3()
 			}
 		} );
 
+		/**
+		 * Represents the object's transformation matrix in local space.
+		 *
+		 * @type {Matrix4}
+		 */
 		this.matrix = new Matrix4();
+
+		/**
+		 * Represents the object's transformation matrix in world space.
+		 * If the 3D object has no parent, then it's identical to the local transformation matrix
+		 *
+		 * @type {Matrix4}
+		 */
 		this.matrixWorld = new Matrix4();
 
+		/**
+		 * When set to `true`, the engine automatically computes the local matrix from position,
+		 * rotation and scale every frame.
+		 *
+		 * The default values for all 3D objects is defined by `Object3D.DEFAULT_MATRIX_AUTO_UPDATE`.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.matrixAutoUpdate = Object3D.DEFAULT_MATRIX_AUTO_UPDATE;
 
+		/**
+		 * When set to `true`, the engine automatically computes the world matrix from the current local
+		 * matrix and the object's transformation hierarchy.
+		 *
+		 * The default values for all 3D objects is defined by `Object3D.DEFAULT_MATRIX_WORLD_AUTO_UPDATE`.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.matrixWorldAutoUpdate = Object3D.DEFAULT_MATRIX_WORLD_AUTO_UPDATE; // checked by the renderer
+
+		/**
+		 * When set to `true`, it calculates the world matrix in that frame and resets this property
+		 * to `false`.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.matrixWorldNeedsUpdate = false;
 
+		/**
+		 * The layer membership of the 3D object. The 3D object is only visible if it has
+		 * at least one layer in common with the camera in use. This property can also be
+		 * used to filter out unwanted objects in ray-intersection tests when using {@link Raycaster}.
+		 *
+		 * @type {Layers}
+		 */
 		this.layers = new Layers();
+
+		/**
+		 * When set to `true`, the 3D object gets rendered.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.visible = true;
 
+		/**
+		 * When set to `true`, the 3D object gets rendered into shadow maps.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.castShadow = false;
+
+		/**
+		 * When set to `true`, the 3D object is affected by shadows in the scene.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.receiveShadow = false;
 
+		/**
+		 * When set to `true`, the 3D object is honored by view frustum culling.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.frustumCulled = true;
+
+		/**
+		 * This value allows the default rendering order of scene graph objects to be
+		 * overridden although opaque and transparent objects remain sorted independently.
+		 * When this property is set for an instance of {@link Group},all descendants
+		 * objects will be sorted and rendered together. Sorting is from lowest to highest
+		 * render order.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.renderOrder = 0;
 
+		/**
+		 * An array holding the animation clips of the 3D object.
+		 *
+		 * @type {Array<AnimationClip>}
+		 */
 		this.animations = [];
 
+		/**
+		 * An object that can be used to store custom data about the 3D object. It
+		 * should not hold references to functions as these will not be cloned.
+		 *
+		 * @type {Object}
+		 */
 		this.userData = {};
 
 	}
 
+	/**
+	 * A callback that is executed immediately before a 3D object is rendered to a shadow map.
+	 *
+	 * @param {Renderer|WebGLRenderer} renderer - The renderer.
+	 * @param {Object3D} object - The 3D object.
+	 * @param {Camera} camera - The camera that is used to render the scene.
+	 * @param {Camera} shadowCamera - The shadow camera.
+	 * @param {BufferGeometry} geometry - The 3D object's geometry.
+	 * @param {Material} depthMaterial - The depth material.
+	 * @param {Object} group - The geometry group data.
+	 */
 	onBeforeShadow( /* renderer, object, camera, shadowCamera, geometry, depthMaterial, group */ ) {}
 
+	/**
+	 * A callback that is executed immediately after a 3D object is rendered to a shadow map.
+	 *
+	 * @param {Renderer|WebGLRenderer} renderer - The renderer.
+	 * @param {Object3D} object - The 3D object.
+	 * @param {Camera} camera - The camera that is used to render the scene.
+	 * @param {Camera} shadowCamera - The shadow camera.
+	 * @param {BufferGeometry} geometry - The 3D object's geometry.
+	 * @param {Material} depthMaterial - The depth material.
+	 * @param {Object} group - The geometry group data.
+	 */
 	onAfterShadow( /* renderer, object, camera, shadowCamera, geometry, depthMaterial, group */ ) {}
 
+	/**
+	 * A callback that is executed immediately before a 3D object is rendered.
+	 *
+	 * @param {Renderer|WebGLRenderer} renderer - The renderer.
+	 * @param {Object3D} object - The 3D object.
+	 * @param {Camera} camera - The camera that is used to render the scene.
+	 * @param {BufferGeometry} geometry - The 3D object's geometry.
+	 * @param {Material} material - The 3D object's material.
+	 * @param {Object} group - The geometry group data.
+	 */
 	onBeforeRender( /* renderer, scene, camera, geometry, material, group */ ) {}
 
+	/**
+	 * A callback that is executed immediately after a 3D object is rendered.
+	 *
+	 * @param {Renderer|WebGLRenderer} renderer - The renderer.
+	 * @param {Object3D} object - The 3D object.
+	 * @param {Camera} camera - The camera that is used to render the scene.
+	 * @param {BufferGeometry} geometry - The 3D object's geometry.
+	 * @param {Material} material - The 3D object's material.
+	 * @param {Object} group - The geometry group data.
+	 */
 	onAfterRender( /* renderer, scene, camera, geometry, material, group */ ) {}
 
+	/**
+	 * Applies the given transformation matrix to the object and updates the object's position,
+	 * rotation and scale.
+	 *
+	 * @param {Matrix4} matrix - The transformation matrix.
+	 */
 	applyMatrix4( matrix ) {
 
 		if ( this.matrixAutoUpdate ) this.updateMatrix();
@@ -22449,6 +26577,12 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Applies a rotation represented by given the quaternion to the 3D object.
+	 *
+	 * @param {Quaternion} q - The quaternion.
+	 * @return {Object3D} A reference to this instance.
+	 */
 	applyQuaternion( q ) {
 
 		this.quaternion.premultiply( q );
@@ -22457,6 +26591,12 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Sets the given rotation represented as an axis/angle couple to the 3D object.
+	 *
+	 * @param {Vector3} axis - The (normalized) axis vector.
+	 * @param {number} angle - The angle in radians.
+	 */
 	setRotationFromAxisAngle( axis, angle ) {
 
 		// assumes axis is normalized
@@ -22465,12 +26605,23 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Sets the given rotation represented as Euler angles to the 3D object.
+	 *
+	 * @param {Euler} euler - The Euler angles.
+	 */
 	setRotationFromEuler( euler ) {
 
 		this.quaternion.setFromEuler( euler, true );
 
 	}
 
+	/**
+	 * Sets the given rotation represented as rotation matrix to the 3D object.
+	 *
+	 * @param {Matrix4} m - Although a 4x4 matrix is expected, the upper 3x3 portion must be
+	 * a pure rotation matrix (i.e, unscaled).
+	 */
 	setRotationFromMatrix( m ) {
 
 		// assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
@@ -22479,6 +26630,11 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Sets the given rotation represented as a Quaternion to the 3D object.
+	 *
+	 * @param {Quaternion} q - The Quaternion
+	 */
 	setRotationFromQuaternion( q ) {
 
 		// assumes q is normalized
@@ -22487,6 +26643,13 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Rotates the 3D object along an axis in local space.
+	 *
+	 * @param {Vector3} axis - The (normalized) axis vector.
+	 * @param {number} angle - The angle in radians.
+	 * @return {Object3D} A reference to this instance.
+	 */
 	rotateOnAxis( axis, angle ) {
 
 		// rotate object on axis in object space
@@ -22500,6 +26663,13 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Rotates the 3D object along an axis in world space.
+	 *
+	 * @param {Vector3} axis - The (normalized) axis vector.
+	 * @param {number} angle - The angle in radians.
+	 * @return {Object3D} A reference to this instance.
+	 */
 	rotateOnWorldAxis( axis, angle ) {
 
 		// rotate object on axis in world space
@@ -22514,24 +26684,49 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Rotates the 3D object around its X axis in local space.
+	 *
+	 * @param {number} angle - The angle in radians.
+	 * @return {Object3D} A reference to this instance.
+	 */
 	rotateX( angle ) {
 
 		return this.rotateOnAxis( _xAxis, angle );
 
 	}
 
+	/**
+	 * Rotates the 3D object around its Y axis in local space.
+	 *
+	 * @param {number} angle - The angle in radians.
+	 * @return {Object3D} A reference to this instance.
+	 */
 	rotateY( angle ) {
 
 		return this.rotateOnAxis( _yAxis, angle );
 
 	}
 
+	/**
+	 * Rotates the 3D object around its Z axis in local space.
+	 *
+	 * @param {number} angle - The angle in radians.
+	 * @return {Object3D} A reference to this instance.
+	 */
 	rotateZ( angle ) {
 
 		return this.rotateOnAxis( _zAxis, angle );
 
 	}
 
+	/**
+	 * Translate the 3D object by a distance along the given axis in local space.
+	 *
+	 * @param {Vector3} axis - The (normalized) axis vector.
+	 * @param {number} distance - The distance in world units.
+	 * @return {Object3D} A reference to this instance.
+	 */
 	translateOnAxis( axis, distance ) {
 
 		// translate object by distance along axis in object space
@@ -22545,24 +26740,48 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Translate the 3D object by a distance along its X-axis in local space.
+	 *
+	 * @param {number} distance - The distance in world units.
+	 * @return {Object3D} A reference to this instance.
+	 */
 	translateX( distance ) {
 
 		return this.translateOnAxis( _xAxis, distance );
 
 	}
 
+	/**
+	 * Translate the 3D object by a distance along its Y-axis in local space.
+	 *
+	 * @param {number} distance - The distance in world units.
+	 * @return {Object3D} A reference to this instance.
+	 */
 	translateY( distance ) {
 
 		return this.translateOnAxis( _yAxis, distance );
 
 	}
 
+	/**
+	 * Translate the 3D object by a distance along its Z-axis in local space.
+	 *
+	 * @param {number} distance - The distance in world units.
+	 * @return {Object3D} A reference to this instance.
+	 */
 	translateZ( distance ) {
 
 		return this.translateOnAxis( _zAxis, distance );
 
 	}
 
+	/**
+	 * Converts the given vector from this 3D object's local space to world space.
+	 *
+	 * @param {Vector3} vector - The vector to convert.
+	 * @return {Vector3} The converted vector.
+	 */
 	localToWorld( vector ) {
 
 		this.updateWorldMatrix( true, false );
@@ -22571,6 +26790,12 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Converts the given vector from this 3D object's word space to local space.
+	 *
+	 * @param {Vector3} vector - The vector to convert.
+	 * @return {Vector3} The converted vector.
+	 */
 	worldToLocal( vector ) {
 
 		this.updateWorldMatrix( true, false );
@@ -22579,6 +26804,15 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Rotates the object to face a point in world space.
+	 *
+	 * This method does not support objects having non-uniformly-scaled parent(s).
+	 *
+	 * @param {number|Vector3} x - The x coordinate in world space. Alternatively, a vector representing a position in world space
+	 * @param {number} [y] - The y coordinate in world space.
+	 * @param {number} [z] - The z coordinate in world space.
+	 */
 	lookAt( x, y, z ) {
 
 		// This method does not support objects having non-uniformly-scaled parent(s)
@@ -22621,6 +26855,16 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Adds the given 3D object as a child to this 3D object. An arbitrary number of
+	 * objects may be added. Any current parent on an object passed in here will be
+	 * removed, since an object can have at most one parent.
+	 *
+	 * @fires Object3D#added
+	 * @fires Object3D#childadded
+	 * @param {Object3D} object - The 3D object to add.
+	 * @return {Object3D} A reference to this instance.
+	 */
 	add( object ) {
 
 		if ( arguments.length > 1 ) {
@@ -22664,6 +26908,15 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Removes the given 3D object as child from this 3D object.
+	 * An arbitrary number of objects may be removed.
+	 *
+	 * @fires Object3D#removed
+	 * @fires Object3D#childremoved
+	 * @param {Object3D} object - The 3D object to remove.
+	 * @return {Object3D} A reference to this instance.
+	 */
 	remove( object ) {
 
 		if ( arguments.length > 1 ) {
@@ -22697,6 +26950,13 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Removes this 3D object from its current parent.
+	 *
+	 * @fires Object3D#removed
+	 * @fires Object3D#childremoved
+	 * @return {Object3D} A reference to this instance.
+	 */
 	removeFromParent() {
 
 		const parent = this.parent;
@@ -22711,12 +26971,28 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Removes all child objects.
+	 *
+	 * @fires Object3D#removed
+	 * @fires Object3D#childremoved
+	 * @return {Object3D} A reference to this instance.
+	 */
 	clear() {
 
 		return this.remove( ... this.children );
 
 	}
 
+	/**
+	 * Adds the given 3D object as a child of this 3D object, while maintaining the object's world
+	 * transform. This method does not support scene graphs having non-uniformly-scaled nodes(s).
+	 *
+	 * @fires Object3D#added
+	 * @fires Object3D#childadded
+	 * @param {Object3D} object - The 3D object to attach.
+	 * @return {Object3D} A reference to this instance.
+	 */
 	attach( object ) {
 
 		// adds object as a child of this, while maintaining the object's world transform
@@ -22753,18 +27029,40 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Searches through the 3D object and its children, starting with the 3D object
+	 * itself, and returns the first with a matching ID.
+	 *
+	 * @param {number} id - The id.
+	 * @return {Object3D|undefined} The found 3D object. Returns `undefined` if no 3D object has been found.
+	 */
 	getObjectById( id ) {
 
 		return this.getObjectByProperty( 'id', id );
 
 	}
 
+	/**
+	 * Searches through the 3D object and its children, starting with the 3D object
+	 * itself, and returns the first with a matching name.
+	 *
+	 * @param {string} name - The name.
+	 * @return {Object3D|undefined} The found 3D object. Returns `undefined` if no 3D object has been found.
+	 */
 	getObjectByName( name ) {
 
 		return this.getObjectByProperty( 'name', name );
 
 	}
 
+	/**
+	 * Searches through the 3D object and its children, starting with the 3D object
+	 * itself, and returns the first with a matching property value.
+	 *
+	 * @param {string} name - The name of the property.
+	 * @param {any} value - The value.
+	 * @return {Object3D|undefined} The found 3D object. Returns `undefined` if no 3D object has been found.
+	 */
 	getObjectByProperty( name, value ) {
 
 		if ( this[ name ] === value ) return this;
@@ -22786,6 +27084,15 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Searches through the 3D object and its children, starting with the 3D object
+	 * itself, and returns all 3D objects with a matching property value.
+	 *
+	 * @param {string} name - The name of the property.
+	 * @param {any} value - The value.
+	 * @param {Array<Object3D>} result - The method stores the result in this array.
+	 * @return {Array<Object3D>} The found 3D objects.
+	 */
 	getObjectsByProperty( name, value, result = [] ) {
 
 		if ( this[ name ] === value ) result.push( this );
@@ -22802,6 +27109,12 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Returns a vector representing the position of the 3D object in world space.
+	 *
+	 * @param {Vector3} target - The target vector the result is stored to.
+	 * @return {Vector3} The 3D object's position in world space.
+	 */
 	getWorldPosition( target ) {
 
 		this.updateWorldMatrix( true, false );
@@ -22810,6 +27123,12 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Returns a Quaternion representing the position of the 3D object in world space.
+	 *
+	 * @param {Quaternion} target - The target Quaternion the result is stored to.
+	 * @return {Quaternion} The 3D object's rotation in world space.
+	 */
 	getWorldQuaternion( target ) {
 
 		this.updateWorldMatrix( true, false );
@@ -22820,6 +27139,12 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Returns a vector representing the scale of the 3D object in world space.
+	 *
+	 * @param {Vector3} target - The target vector the result is stored to.
+	 * @return {Vector3} The 3D object's scale in world space.
+	 */
 	getWorldScale( target ) {
 
 		this.updateWorldMatrix( true, false );
@@ -22830,6 +27155,12 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Returns a vector representing the ("look") direction of the 3D object in world space.
+	 *
+	 * @param {Vector3} target - The target vector the result is stored to.
+	 * @return {Vector3} The 3D object's direction in world space.
+	 */
 	getWorldDirection( target ) {
 
 		this.updateWorldMatrix( true, false );
@@ -22840,8 +27171,24 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Abstract method to get intersections between a casted ray and this
+	 * 3D object. Renderable 3D objects such as {@link Mesh}, {@link Line} or {@link Points}
+	 * implement this method in order to use raycasting.
+	 *
+	 * @abstract
+	 * @param {Raycaster} raycaster - The raycaster.
+	 * @param {Array<Object>} intersects - An array holding the result of the method.
+	 */
 	raycast( /* raycaster, intersects */ ) {}
 
+	/**
+	 * Executes the callback on this 3D object and all descendants.
+	 *
+	 * Note: Modifying the scene graph inside the callback is discouraged.
+	 *
+	 * @param {Function} callback - A callback function that allows to process the current 3D object.
+	 */
 	traverse( callback ) {
 
 		callback( this );
@@ -22856,6 +27203,14 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Like {@link Object3D#traverse}, but the callback will only be executed for visible 3D objects.
+	 * Descendants of invisible 3D objects are not traversed.
+	 *
+	 * Note: Modifying the scene graph inside the callback is discouraged.
+	 *
+	 * @param {Function} callback - A callback function that allows to process the current 3D object.
+	 */
 	traverseVisible( callback ) {
 
 		if ( this.visible === false ) return;
@@ -22872,6 +27227,13 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Like {@link Object3D#traverse}, but the callback will only be executed for all ancestors.
+	 *
+	 * Note: Modifying the scene graph inside the callback is discouraged.
+	 *
+	 * @param {Function} callback - A callback function that allows to process the current 3D object.
+	 */
 	traverseAncestors( callback ) {
 
 		const parent = this.parent;
@@ -22886,6 +27248,10 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Updates the transformation matrix in local space by computing it from the current
+	 * position, rotation and scale values.
+	 */
 	updateMatrix() {
 
 		this.matrix.compose( this.position, this.quaternion, this.scale );
@@ -22894,6 +27260,17 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Updates the transformation matrix in world space of this 3D objects and its descendants.
+	 *
+	 * To ensure correct results, this method also recomputes the 3D object's transformation matrix in
+	 * local space. The computation of the local and world matrix can be controlled with the
+	 * {@link Object3D#matrixAutoUpdate} and {@link Object3D#matrixWorldAutoUpdate} flags which are both
+	 * `true` by default.  Set these flags to `false` if you need more control over the update matrix process.
+	 *
+	 * @param {boolean} [force=false] - When set to `true`, a recomputation of world matrices is forced even
+	 * when {@link Object3D#matrixWorldAutoUpdate} is set to `false`.
+	 */
 	updateMatrixWorld( force ) {
 
 		if ( this.matrixAutoUpdate ) this.updateMatrix();
@@ -22934,6 +27311,13 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * An alternative version of {@link Object3D#updateMatrixWorld} with more control over the
+	 * update of ancestor and descendant nodes.
+	 *
+	 * @param {boolean} [updateParents=false] Whether ancestor nodes should be updated or not.
+	 * @param {boolean} [updateChildren=false] Whether descendant nodes should be updated or not.
+	 */
 	updateWorldMatrix( updateParents, updateChildren ) {
 
 		const parent = this.parent;
@@ -22978,6 +27362,13 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Serializes the 3D object into JSON.
+	 *
+	 * @param {?(Object|string)} meta - An optional value holding meta information about the serialization.
+	 * @return {Object} A JSON object representing the serialized 3D object.
+	 * @see {@link ObjectLoader#parse}
+	 */
 	toJSON( meta ) {
 
 		// meta is a string when called from JSON.stringify
@@ -23273,12 +27664,25 @@ class Object3D extends EventDispatcher {
 
 	}
 
+	/**
+	 * Returns a new 3D object with copied values from this instance.
+	 *
+	 * @param {boolean} [recursive=true] - When set to `true`, descendants of the 3D object are also cloned.
+	 * @return {Object3D} A clone of this instance.
+	 */
 	clone( recursive ) {
 
 		return new this.constructor().copy( this, recursive );
 
 	}
 
+	/**
+	 * Copies the values of the given 3D object to this instance.
+	 *
+	 * @param {Object3D} source - The 3D object to copy.
+	 * @param {boolean} [recursive=true] - When set to `true`, descendants of the 3D object are cloned.
+	 * @return {Object3D} A reference to this instance.
+	 */
 	copy( source, recursive = true ) {
 
 		this.name = source.name;
@@ -23328,8 +27732,34 @@ class Object3D extends EventDispatcher {
 
 }
 
+/**
+ * The default up direction for objects, also used as the default
+ * position for {@link DirectionalLight} and {@link HemisphereLight}.
+ *
+ * @static
+ * @type {Vector3}
+ * @default (0,1,0)
+ */
 Object3D.DEFAULT_UP = /*@__PURE__*/ new Vector3( 0, 1, 0 );
+
+/**
+ * The default setting for {@link Object3D#matrixAutoUpdate} for
+ * newly created 3D objects.
+ *
+ * @static
+ * @type {boolean}
+ * @default true
+ */
 Object3D.DEFAULT_MATRIX_AUTO_UPDATE = true;
+
+/**
+ * The default setting for {@link Object3D#matrixWorldAutoUpdate} for
+ * newly created 3D objects.
+ *
+ * @static
+ * @type {boolean}
+ * @default true
+ */
 Object3D.DEFAULT_MATRIX_WORLD_AUTO_UPDATE = true;
 
 let _id$1 = 0;
@@ -24432,14 +28862,45 @@ class BufferGeometry extends EventDispatcher {
 
 }
 
+/**
+ * A geometry class for a rectangular cuboid with a given width, height, and depth.
+ * On creation, the cuboid is centred on the origin, with each edge parallel to one
+ * of the axes.
+ *
+ * ```js
+ * const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+ * const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+ * const cube = new THREE.Mesh( geometry, material );
+ * scene.add( cube );
+ * ```
+ *
+ * @augments BufferGeometry
+ */
 class BoxGeometry extends BufferGeometry {
 
+	/**
+	 * Constructs a new box geometry.
+	 *
+	 * @param {number} [width=1] - The width. That is, the length of the edges parallel to the X axis.
+	 * @param {number} [height=1] - The height. That is, the length of the edges parallel to the Y axis.
+	 * @param {number} [depth=1] - The depth. That is, the length of the edges parallel to the Z axis.
+	 * @param {number} [widthSegments=1] - Number of segmented rectangular faces along the width of the sides.
+	 * @param {number} [heightSegments=1] - Number of segmented rectangular faces along the height of the sides.
+	 * @param {number} [depthSegments=1] - Number of segmented rectangular faces along the depth of the sides.
+	 */
 	constructor( width = 1, height = 1, depth = 1, widthSegments = 1, heightSegments = 1, depthSegments = 1 ) {
 
 		super();
 
 		this.type = 'BoxGeometry';
 
+		/**
+		 * Holds the constructor parameters that have been
+		 * used to generate the geometry. Any modification
+		 * after instantiation does not change the geometry.
+		 *
+		 * @type {Object}
+		 */
 		this.parameters = {
 			width: width,
 			height: height,
@@ -24599,6 +29060,13 @@ class BoxGeometry extends BufferGeometry {
 
 	}
 
+	/**
+	 * Factory method for creating an instance of this class from the given
+	 * JSON object.
+	 *
+	 * @param {Object} data - A JSON object representing the serialized geometry.
+	 * @return {BoxGeometry} A new instance.
+	 */
 	static fromJSON( data ) {
 
 		return new BoxGeometry( data.width, data.height, data.depth, data.widthSegments, data.heightSegments, data.depthSegments );
@@ -24607,14 +29075,41 @@ class BoxGeometry extends BufferGeometry {
 
 }
 
+/**
+ * A geometry class for representing a plane.
+ *
+ * ```js
+ * const geometry = new THREE.PlaneGeometry( 1, 1 );
+ * const material = new THREE.MeshBasicMaterial( { color: 0xffff00, side: THREE.DoubleSide } );
+ * const plane = new THREE.Mesh( geometry, material );
+ * scene.add( plane );
+ * ```
+ *
+ * @augments BufferGeometry
+ */
 class PlaneGeometry extends BufferGeometry {
 
+	/**
+	 * Constructs a new plane geometry.
+	 *
+	 * @param {number} [width=1] - The width along the X axis.
+	 * @param {number} [height=1] - The height along the Y axis
+	 * @param {number} [widthSegments=1] - The number of segments along the X axis.
+	 * @param {number} [heightSegments=1] - The number of segments along the Y axis.
+	 */
 	constructor( width = 1, height = 1, widthSegments = 1, heightSegments = 1 ) {
 
 		super();
 
 		this.type = 'PlaneGeometry';
 
+		/**
+		 * Holds the constructor parameters that have been
+		 * used to generate the geometry. Any modification
+		 * after instantiation does not change the geometry.
+		 *
+		 * @type {Object}
+		 */
 		this.parameters = {
 			width: width,
 			height: height,
@@ -24693,6 +29188,13 @@ class PlaneGeometry extends BufferGeometry {
 
 	}
 
+	/**
+	 * Factory method for creating an instance of this class from the given
+	 * JSON object.
+	 *
+	 * @param {Object} data - A JSON object representing the serialized geometry.
+	 * @return {PlaneGeometry} A new instance.
+	 */
 	static fromJSON( data ) {
 
 		return new PlaneGeometry( data.width, data.height, data.widthSegments, data.heightSegments );
@@ -24703,83 +29205,476 @@ class PlaneGeometry extends BufferGeometry {
 
 let _materialId = 0;
 
+/**
+ * Abstract base class for materials.
+ *
+ * Materials define the appearance of renderable 3D objects.
+ *
+ * @abstract
+ * @augments EventDispatcher
+ */
 class Material extends EventDispatcher {
 
+	/**
+	 * Constructs a new material.
+	 */
 	constructor() {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isMaterial = true;
 
+		/**
+		 * The ID of the material.
+		 *
+		 * @name Material#id
+		 * @type {number}
+		 * @readonly
+		 */
 		Object.defineProperty( this, 'id', { value: _materialId ++ } );
 
+		/**
+		 * The UUID of the material.
+		 *
+		 * @type {string}
+		 * @readonly
+		 */
 		this.uuid = generateUUID();
 
+		/**
+		 * The name of the material.
+		 *
+		 * @type {string}
+		 */
 		this.name = '';
+
+		/**
+		 * The type property is used for detecting the object type
+		 * in context of serialization/deserialization.
+		 *
+		 * @type {string}
+		 * @readonly
+		 */
 		this.type = 'Material';
 
+		/**
+		 * Defines the blending type of the material.
+		 *
+		 * It must be set to `CustomBlending` if custom blending properties like
+		 * {@link Material#blendSrc}, {@link Material#blendDst} or {@link Material#blendEquation}
+		 * should have any effect.
+		 *
+		 * @type {(NoBlending|NormalBlending|AdditiveBlending|SubtractiveBlending|MultiplyBlending|CustomBlending)}
+		 * @default NormalBlending
+		 */
 		this.blending = NormalBlending;
+
+		/**
+		 * Defines which side of faces will be rendered - front, back or both.
+		 *
+		 * @type {(FrontSide|BackSide|DoubleSide)}
+		 * @default FrontSide
+		 */
 		this.side = FrontSide;
+
+		/**
+		 * If set to `true`, vertex colors should be used.
+		 *
+		 * The engine supports RGB and RGBA vertex colors depending on whether a three (RGB) or
+		 * four (RGBA) component color buffer attribute is used.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.vertexColors = false;
 
+		/**
+		 * Defines how transparent the material is.
+		 * A value of `0.0` indicates fully transparent, `1.0` is fully opaque.
+		 *
+		 * If the {@link Material#transparent} is not set to `true`,
+		 * the material will remain fully opaque and this value will only affect its color.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.opacity = 1;
+
+		/**
+		 * Defines whether this material is transparent. This has an effect on
+		 * rendering as transparent objects need special treatment and are rendered
+		 * after non-transparent objects.
+		 *
+		 * When set to true, the extent to which the material is transparent is
+		 * controlled by {@link Material#opacity}.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.transparent = false;
+
+		/**
+		 * Enables alpha hashed transparency, an alternative to {@link Material#transparent} or
+		 * {@link Material#alphaTest}. The material will not be rendered if opacity is lower than
+		 * a random threshold. Randomization introduces some grain or noise, but approximates alpha
+		 * blending without the associated problems of sorting. Using TAA can reduce the resulting noise.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.alphaHash = false;
 
+		/**
+		 * Defines the blending source factor.
+		 *
+		 * @type {(ZeroFactor|OneFactor|SrcColorFactor|OneMinusSrcColorFactor|SrcAlphaFactor|OneMinusSrcAlphaFactor|DstAlphaFactor|OneMinusDstAlphaFactor|DstColorFactor|OneMinusDstColorFactor|SrcAlphaSaturateFactor|ConstantColorFactor|OneMinusConstantColorFactor|ConstantAlphaFactor|OneMinusConstantAlphaFactor)}
+		 * @default SrcAlphaFactor
+		 */
 		this.blendSrc = SrcAlphaFactor;
+
+		/**
+		 * Defines the blending destination factor.
+		 *
+		 * @type {(ZeroFactor|OneFactor|SrcColorFactor|OneMinusSrcColorFactor|SrcAlphaFactor|OneMinusSrcAlphaFactor|DstAlphaFactor|OneMinusDstAlphaFactor|DstColorFactor|OneMinusDstColorFactor|SrcAlphaSaturateFactor|ConstantColorFactor|OneMinusConstantColorFactor|ConstantAlphaFactor|OneMinusConstantAlphaFactor)}
+		 * @default OneMinusSrcAlphaFactor
+		 */
 		this.blendDst = OneMinusSrcAlphaFactor;
+
+		/**
+		 * Defines the blending equation.
+		 *
+		 * @type {(AddEquation|SubtractEquation|ReverseSubtractEquation|MinEquation|MaxEquation)}
+		 * @default OneMinusSrcAlphaFactor
+		 */
 		this.blendEquation = AddEquation;
+
+		/**
+		 * Defines the blending source alpha factor.
+		 *
+		 * @type {?(ZeroFactor|OneFactor|SrcColorFactor|OneMinusSrcColorFactor|SrcAlphaFactor|OneMinusSrcAlphaFactor|DstAlphaFactor|OneMinusDstAlphaFactor|DstColorFactor|OneMinusDstColorFactor|SrcAlphaSaturateFactor|ConstantColorFactor|OneMinusConstantColorFactor|ConstantAlphaFactor|OneMinusConstantAlphaFactor)}
+		 * @default null
+		 */
 		this.blendSrcAlpha = null;
+
+		/**
+		 * Defines the blending destination alpha factor.
+		 *
+		 * @type {?(ZeroFactor|OneFactor|SrcColorFactor|OneMinusSrcColorFactor|SrcAlphaFactor|OneMinusSrcAlphaFactor|DstAlphaFactor|OneMinusDstAlphaFactor|DstColorFactor|OneMinusDstColorFactor|SrcAlphaSaturateFactor|ConstantColorFactor|OneMinusConstantColorFactor|ConstantAlphaFactor|OneMinusConstantAlphaFactor)}
+		 * @default null
+		 */
 		this.blendDstAlpha = null;
+
+		/**
+		 * Defines the blending equation of the alpha channel.
+		 *
+		 * @type {(AddEquation|SubtractEquation|ReverseSubtractEquation|MinEquation|MaxEquation)}
+		 * @default OneMinusSrcAlphaFactor
+		 */
 		this.blendEquationAlpha = null;
+
+		/**
+		 * Represents the RGB values of the constant blend color.
+		 *
+		 * This property has only an effect when using custom blending with `ConstantColor` or `OneMinusConstantColor`.
+		 *
+		 * @type {Color}
+		 * @default (0,0,0)
+		 */
 		this.blendColor = new Color( 0, 0, 0 );
+
+		/**
+		 * Represents the alpha value of the constant blend color.
+		 *
+		 * This property has only an effect when using custom blending with `ConstantAlpha` or `OneMinusConstantAlpha`.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.blendAlpha = 0;
 
+		/**
+		 * Defines the depth function.
+		 *
+		 * @type {(NeverDepth|AlwaysDepth|LessDepth|LessEqualDepth|EqualDepth|GreaterEqualDepth|GreaterDepth|NotEqualDepth)}
+		 * @default LessEqualDepth
+		 */
 		this.depthFunc = LessEqualDepth;
+
+		/**
+		 * Whether to have depth test enabled when rendering this material.
+		 * When the depth test is disabled, the depth write will also be implicitly disabled.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.depthTest = true;
+
+		/**
+		 * Whether rendering this material has any effect on the depth buffer.
+		 *
+		 * When drawing 2D overlays it can be useful to disable the depth writing in
+		 * order to layer several things together without creating z-index artifacts.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.depthWrite = true;
 
+		/**
+		 * The bit mask to use when writing to the stencil buffer.
+		 *
+		 * @type {number}
+		 * @default 0xff
+		 */
 		this.stencilWriteMask = 0xff;
+
+		/**
+		 * The stencil comparison function to use.
+		 *
+		 * @type {NeverStencilFunc|LessStencilFunc|EqualStencilFunc|LessEqualStencilFunc|GreaterStencilFunc|NotEqualStencilFunc|GreaterEqualStencilFunc|AlwaysStencilFunc}
+		 * @default AlwaysStencilFunc
+		 */
 		this.stencilFunc = AlwaysStencilFunc;
+
+		/**
+		 * The value to use when performing stencil comparisons or stencil operations.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.stencilRef = 0;
+
+		/**
+		 * The bit mask to use when comparing against the stencil buffer.
+		 *
+		 * @type {number}
+		 * @default 0xff
+		 */
 		this.stencilFuncMask = 0xff;
+
+		/**
+		 * Which stencil operation to perform when the comparison function returns `false`.
+		 *
+		 * @type {ZeroStencilOp|KeepStencilOp|ReplaceStencilOp|IncrementStencilOp|DecrementStencilOp|IncrementWrapStencilOp|DecrementWrapStencilOp|InvertStencilOp}
+		 * @default KeepStencilOp
+		 */
 		this.stencilFail = KeepStencilOp;
+
+		/**
+		 * Which stencil operation to perform when the comparison function returns
+		 * `true` but the depth test fails.
+		 *
+		 * @type {ZeroStencilOp|KeepStencilOp|ReplaceStencilOp|IncrementStencilOp|DecrementStencilOp|IncrementWrapStencilOp|DecrementWrapStencilOp|InvertStencilOp}
+		 * @default KeepStencilOp
+		 */
 		this.stencilZFail = KeepStencilOp;
+
+		/**
+		 * Which stencil operation to perform when the comparison function returns
+		 * `true` and the depth test passes.
+		 *
+		 * @type {ZeroStencilOp|KeepStencilOp|ReplaceStencilOp|IncrementStencilOp|DecrementStencilOp|IncrementWrapStencilOp|DecrementWrapStencilOp|InvertStencilOp}
+		 * @default KeepStencilOp
+		 */
 		this.stencilZPass = KeepStencilOp;
+
+		/**
+		 * Whether stencil operations are performed against the stencil buffer. In
+		 * order to perform writes or comparisons against the stencil buffer this
+		 * value must be `true`.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.stencilWrite = false;
 
+		/**
+		 * User-defined clipping planes specified as THREE.Plane objects in world
+		 * space. These planes apply to the objects this material is attached to.
+		 * Points in space whose signed distance to the plane is negative are clipped
+		 * (not rendered). This requires {@link WebGLRenderer#localClippingEnabled} to
+		 * be `true`.
+		 *
+		 * @type {?Array<Plane>}
+		 * @default null
+		 */
 		this.clippingPlanes = null;
+
+		/**
+		 * Changes the behavior of clipping planes so that only their intersection is
+		 * clipped, rather than their union.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.clipIntersection = false;
+
+		/**
+		 * Defines whether to clip shadows according to the clipping planes specified
+		 * on this material.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.clipShadows = false;
 
+		/**
+		 * Defines which side of faces cast shadows. If `null`, the side casting shadows
+		 * is determined as follows:
+		 *
+		 * - When {@link Material#side} is set to `FrontSide`, the back side cast shadows.
+		 * - When {@link Material#side} is set to `BackSide`, the front side cast shadows.
+		 * - When {@link Material#side} is set to `DoubleSide`, both sides cast shadows.
+		 *
+		 * @type {?(FrontSide|BackSide|DoubleSide)}
+		 * @default null
+		 */
 		this.shadowSide = null;
 
+		/**
+		 * Whether to render the material's color.
+		 *
+		 * This can be used in conjunction with {@link Object3D#renderOder} to create invisible
+		 * objects that occlude other objects.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.colorWrite = true;
 
-		this.precision = null; // override the renderer's default precision for this material
+		/**
+		 * Override the renderer's default precision for this material.
+		 *
+		 * @type {?('highp'|'mediump'|'lowp')}
+		 * @default null
+		 */
+		this.precision = null;
 
+		/**
+		 * Whether to use polygon offset or not. When enabled, each fragment's depth value will
+		 * be offset after it is interpolated from the depth values of the appropriate vertices.
+		 * The offset is added before the depth test is performed and before the value is written
+		 * into the depth buffer.
+		 *
+		 * Can be useful for rendering hidden-line images, for applying decals to surfaces, and for
+		 * rendering solids with highlighted edges.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.polygonOffset = false;
+
+		/**
+		 * Specifies a scale factor that is used to create a variable depth offset for each polygon.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.polygonOffsetFactor = 0;
+
+		/**
+		 * Is multiplied by an implementation-specific value to create a constant depth offset.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.polygonOffsetUnits = 0;
 
+		/**
+		 * Whether to apply dithering to the color to remove the appearance of banding.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.dithering = false;
 
+		/**
+		 * Whether alpha to coverage should be enabled or not. Can only be used with MSAA-enabled contexts
+		 * (meaning when the renderer was created with *antialias* parameter set to `true`). Enabling this
+		 * will smooth aliasing on clip plane edges and alphaTest-clipped edges.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.alphaToCoverage = false;
+
+		/**
+		 * Whether to premultiply the alpha (transparency) value.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.premultipliedAlpha = false;
+
+		/**
+		 * Whether double-sided, transparent objects should be rendered with a single pass or not.
+		 *
+		 * The engine renders double-sided, transparent objects with two draw calls (back faces first,
+		 * then front faces) to mitigate transparency artifacts. There are scenarios however where this
+		 * approach produces no quality gains but still doubles draw calls e.g. when rendering flat
+		 * vegetation like grass sprites. In these cases, set the `forceSinglePass` flag to `true` to
+		 * disable the two pass rendering to avoid performance issues.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.forceSinglePass = false;
 
+		/**
+		 * Defines whether 3D objects using this material are visible.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.visible = true;
 
+		/**
+		 * Defines whether this material is tone mapped according to the renderer's tone mapping setting.
+		 *
+		 * It is ignored when rendering to a render target or using post processing or when using
+		 * `WebGPURenderer`. In all these cases, all materials are honored by tone mapping.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.toneMapped = true;
 
+		/**
+		 * An object that can be used to store custom data about the Material. It
+		 * should not hold references to functions as these will not be cloned.
+		 *
+		 * @type {Object}
+		 */
 		this.userData = {};
 
+		/**
+		 * This starts at `0` and counts how many times {@link Material#needsUpdate} is set to `true`.
+		 *
+		 * @type {number}
+		 * @readonly
+		 * @default 0
+		 */
 		this.version = 0;
 
 		this._alphaTest = 0;
 
 	}
 
+	/**
+	 * Sets the alpha value to be used when running an alpha test. The material
+	 * will not be rendered if the opacity is lower than this value.
+	 *
+	 * @type {number}
+	 * @readonly
+	 * @default 0
+	 */
 	get alphaTest() {
 
 		return this._alphaTest;
@@ -24798,12 +29693,43 @@ class Material extends EventDispatcher {
 
 	}
 
-	// onBeforeRender and onBeforeCompile only supported in WebGLRenderer
-
+	/**
+	 * An optional callback that is executed immediately before the material is used to render a 3D object.
+	 *
+	 * This method can only be used when rendering with {@link WebGLRenderer}.
+	 *
+	 * @param {WebGLRenderer} renderer - The renderer.
+	 * @param {Scene} scene - The scene.
+	 * @param {Camera} camera - The camera that is used to render the scene.
+	 * @param {BufferGeometry} geometry - The 3D object's geometry.
+	 * @param {Object3D} object - The 3D object.
+	 * @param {Object} group - The geometry group data.
+	 */
 	onBeforeRender( /* renderer, scene, camera, geometry, object, group */ ) {}
 
+	/**
+	 * An optional callback that is executed immediately before the shader
+	 * program is compiled. This function is called with the shader source code
+	 * as a parameter. Useful for the modification of built-in materials.
+	 *
+	 * This method can only be used when rendering with {@link WebGLRenderer}. The
+	 * recommended approach when customizing materials is to use `WebGPURenderer` with the new
+	 * Node Material system and [TSL]{@link https://github.com/mrdoob/three.js/wiki/Three.js-Shading-Language}.
+	 *
+	 * @param {{vertexShader:string,fragmentShader:string,uniforms:Object}} shaderobject - The object holds the uniforms and the vertex and fragment shader source.
+	 * @param {WebGLRenderer} renderer - A reference to the renderer.
+	 */
 	onBeforeCompile( /* shaderobject, renderer */ ) {}
 
+	/**
+	 * In case {@link Material#onBeforeCompile} is used, this callback can be used to identify
+	 * values of settings used in `onBeforeCompile()`, so three.js can reuse a cached
+	 * shader or recompile the shader for this material as needed.
+	 *
+	 * This method can only be used when rendering with {@link WebGLRenderer}.
+	 *
+	 * @return {string} The custom program cache key.
+	 */
 	customProgramCacheKey() {
 
 		return this.onBeforeCompile.toString();
@@ -24852,6 +29778,13 @@ class Material extends EventDispatcher {
 
 	}
 
+	/**
+	 * Serializes the material into JSON.
+	 *
+	 * @param {?(Object|string)} meta - An optional value holding meta information about the serialization.
+	 * @return {Object} A JSON object representing the serialized material.
+	 * @see {@link ObjectLoader#parse}
+	 */
 	toJSON( meta ) {
 
 		const isRootObject = ( meta === undefined || typeof meta === 'string' );
@@ -25119,12 +30052,23 @@ class Material extends EventDispatcher {
 
 	}
 
+	/**
+	 * Returns a new material with copied values from this instance.
+	 *
+	 * @return {Material} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
 
 	}
 
+	/**
+	 * Copies the values of the given material to this instance.
+	 *
+	 * @param {Material} source - The material to copy.
+	 * @return {Material} A reference to this instance.
+	 */
 	copy( source ) {
 
 		this.name = source.name;
@@ -25206,12 +30150,32 @@ class Material extends EventDispatcher {
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever this instance is no longer used in your app.
+	 *
+	 * @fires Material#dispose
+	 */
 	dispose() {
 
+		/**
+		 * Fires when the material has been disposed of.
+		 *
+		 * @event Material#dispose
+		 * @type {Object}
+		 */
 		this.dispatchEvent( { type: 'dispose' } );
 
 	}
 
+	/**
+	 * Setting this property to `true` indicates the engine the material
+	 * needs to be recompiled.
+	 *
+	 * @type {boolean}
+	 * @default false
+	 * @param {boolean} value
+	 */
 	set needsUpdate( value ) {
 
 		if ( value === true ) this.version ++;
@@ -25527,15 +30491,45 @@ const _edge1 = /*@__PURE__*/ new Vector3();
 const _edge2 = /*@__PURE__*/ new Vector3();
 const _normal$1 = /*@__PURE__*/ new Vector3();
 
+/**
+ * A ray that emits from an origin in a certain direction. The class is used by
+ * {@link Raycaster} to assist with raycasting. Raycasting is used for
+ * mouse picking (working out what objects in the 3D space the mouse is over)
+ * amongst other things.
+ */
 class Ray {
 
+	/**
+	 * Constructs a new ray.
+	 *
+	 * @param {Vector3} [origin=(0,0,0)] - The origin of the ray.
+	 * @param {Vector3} [direction=(0,0,-1)] - The (normalized) direction of the ray.
+	 */
 	constructor( origin = new Vector3(), direction = new Vector3( 0, 0, -1 ) ) {
 
+		/**
+		 * The origin of the ray.
+		 *
+		 * @type {Vector3}
+		 */
 		this.origin = origin;
+
+		/**
+		 * The (normalized) direction of the ray.
+		 *
+		 * @type {Vector3}
+		 */
 		this.direction = direction;
 
 	}
 
+	/**
+	 * Sets the ray's components by copying the given values.
+	 *
+	 * @param {Vector3} origin - The origin.
+	 * @param {Vector3} direction - The direction.
+	 * @return {Ray} A reference to this ray.
+	 */
 	set( origin, direction ) {
 
 		this.origin.copy( origin );
@@ -25545,6 +30539,12 @@ class Ray {
 
 	}
 
+	/**
+	 * Copies the values of the given ray to this instance.
+	 *
+	 * @param {Ray} ray - The ray to copy.
+	 * @return {Ray} A reference to this ray.
+	 */
 	copy( ray ) {
 
 		this.origin.copy( ray.origin );
@@ -25554,12 +30554,25 @@ class Ray {
 
 	}
 
+	/**
+	 * Returns a vector that is located at a given distance along this ray.
+	 *
+	 * @param {number} t - The distance along the ray to retrieve a position for.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} A position on the ray.
+	 */
 	at( t, target ) {
 
 		return target.copy( this.origin ).addScaledVector( this.direction, t );
 
 	}
 
+	/**
+	 * Adjusts the direction of the ray to point at the given vector in world space.
+	 *
+	 * @param {Vector3} v - The target position.
+	 * @return {Ray} A reference to this ray.
+	 */
 	lookAt( v ) {
 
 		this.direction.copy( v ).sub( this.origin ).normalize();
@@ -25568,6 +30581,12 @@ class Ray {
 
 	}
 
+	/**
+	 * Shift the origin of this ray along its direction by the given distance.
+	 *
+	 * @param {number} t - The distance along the ray to interpolate.
+	 * @return {Ray} A reference to this ray.
+	 */
 	recast( t ) {
 
 		this.origin.copy( this.at( t, _vector$3 ) );
@@ -25576,6 +30595,13 @@ class Ray {
 
 	}
 
+	/**
+	 * Returns the point along this ray that is closest to the given point.
+	 *
+	 * @param {Vector3} point - A point in 3D space to get the closet location on the ray for.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} The closest point on this ray.
+	 */
 	closestPointToPoint( point, target ) {
 
 		target.subVectors( point, this.origin );
@@ -25592,12 +30618,24 @@ class Ray {
 
 	}
 
+	/**
+	 * Returns the distance of the closest approach between this ray and the given point.
+	 *
+	 * @param {Vector3} point - A point in 3D space to compute the distance to.
+	 * @return {number} The distance.
+	 */
 	distanceToPoint( point ) {
 
 		return Math.sqrt( this.distanceSqToPoint( point ) );
 
 	}
 
+	/**
+	 * Returns the squared distance of the closest approach between this ray and the given point.
+	 *
+	 * @param {Vector3} point - A point in 3D space to compute the distance to.
+	 * @return {number} The squared distance.
+	 */
 	distanceSqToPoint( point ) {
 
 		const directionDistance = _vector$3.subVectors( point, this.origin ).dot( this.direction );
@@ -25616,6 +30654,15 @@ class Ray {
 
 	}
 
+	/**
+	 * Returns the squared distance between this ray and the given line segment.
+	 *
+	 * @param {Vector3} v0 - The start point of the line segment.
+	 * @param {Vector3} v1 - The end point of the line segment.
+	 * @param {Vector3} [optionalPointOnRay] - When provided, it receives the point on this ray that is closest to the segment.
+	 * @param {Vector3} [optionalPointOnSegment] - When provided, it receives the point on the line segment that is closest to this ray.
+	 * @return {number} The squared distance.
+	 */
 	distanceSqToSegment( v0, v1, optionalPointOnRay, optionalPointOnSegment ) {
 
 		// from https://github.com/pmjoniak/GeometricTools/blob/master/GTEngine/Include/Mathematics/GteDistRaySegment.h
@@ -25735,6 +30782,14 @@ class Ray {
 
 	}
 
+	/**
+	 * Intersects this ray with the given sphere, returning the intersection
+	 * point or `null` if there is no intersection.
+	 *
+	 * @param {Sphere} sphere - The sphere to intersect.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {?Vector3} The intersection point.
+	 */
 	intersectSphere( sphere, target ) {
 
 		_vector$3.subVectors( sphere.center, this.origin );
@@ -25765,12 +30820,25 @@ class Ray {
 
 	}
 
+	/**
+	 * Returns `true` if this ray intersects with the given sphere.
+	 *
+	 * @param {Sphere} sphere - The sphere to intersect.
+	 * @return {boolean} Whether this ray intersects with the given sphere or not.
+	 */
 	intersectsSphere( sphere ) {
 
 		return this.distanceSqToPoint( sphere.center ) <= ( sphere.radius * sphere.radius );
 
 	}
 
+	/**
+	 * Computes the distance from the ray's origin to the given plane. Returns `null` if the ray
+	 * does not intersect with the plane.
+	 *
+	 * @param {Plane} plane - The plane to compute the distance to.
+	 * @return {?number} Whether this ray intersects with the given sphere or not.
+	 */
 	distanceToPlane( plane ) {
 
 		const denominator = plane.normal.dot( this.direction );
@@ -25798,6 +30866,14 @@ class Ray {
 
 	}
 
+	/**
+	 * Intersects this ray with the given plane, returning the intersection
+	 * point or `null` if there is no intersection.
+	 *
+	 * @param {Plane} plane - The plane to intersect.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {?Vector3} The intersection point.
+	 */
 	intersectPlane( plane, target ) {
 
 		const t = this.distanceToPlane( plane );
@@ -25812,6 +30888,12 @@ class Ray {
 
 	}
 
+	/**
+	 * Returns `true` if this ray intersects with the given plane.
+	 *
+	 * @param {Plane} plane - The plane to intersect.
+	 * @return {boolean} Whether this ray intersects with the given plane or not.
+	 */
 	intersectsPlane( plane ) {
 
 		// check if the ray lies on the plane first
@@ -25838,6 +30920,14 @@ class Ray {
 
 	}
 
+	/**
+	 * Intersects this ray with the given bounding box, returning the intersection
+	 * point or `null` if there is no intersection.
+	 *
+	 * @param {Box3} box - The box to intersect.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {?Vector3} The intersection point.
+	 */
 	intersectBox( box, target ) {
 
 		let tmin, tmax, tymin, tymax, tzmin, tzmax;
@@ -25904,12 +30994,29 @@ class Ray {
 
 	}
 
+	/**
+	 * Returns `true` if this ray intersects with the given box.
+	 *
+	 * @param {Box3} box - The box to intersect.
+	 * @return {boolean} Whether this ray intersects with the given box or not.
+	 */
 	intersectsBox( box ) {
 
 		return this.intersectBox( box, _vector$3 ) !== null;
 
 	}
 
+	/**
+	 * Intersects this ray with the given triangle, returning the intersection
+	 * point or `null` if there is no intersection.
+	 *
+	 * @param {Vector3} a - The first vertex of the triangle.
+	 * @param {Vector3} b - The second vertex of the triangle.
+	 * @param {Vector3} c - The third vertex of the triangle.
+	 * @param {boolean} backfaceCulling - Whether to use backface culling or not.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {?Vector3} The intersection point.
+	 */
 	intersectTriangle( a, b, c, backfaceCulling, target ) {
 
 		// Compute the offset origin, edges, and normal.
@@ -25985,6 +31092,12 @@ class Ray {
 
 	}
 
+	/**
+	 * Transforms this ray with the given 4x4 transformation matrix.
+	 *
+	 * @param {Matrix4} matrix4 - The transformation matrix.
+	 * @return {Ray} A reference to this ray.
+	 */
 	applyMatrix4( matrix4 ) {
 
 		this.origin.applyMatrix4( matrix4 );
@@ -25994,12 +31107,23 @@ class Ray {
 
 	}
 
+	/**
+	 * Returns `true` if this ray is equal with the given one.
+	 *
+	 * @param {Ray} ray - The ray to test for equality.
+	 * @return {boolean} Whether this ray is equal with the given one.
+	 */
 	equals( ray ) {
 
 		return ray.origin.equals( this.origin ) && ray.direction.equals( this.direction );
 
 	}
 
+	/**
+	 * Returns a new ray with copied values from this instance.
+	 *
+	 * @return {Ray} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
@@ -26024,16 +31148,52 @@ const _v40 = /*@__PURE__*/ new Vector4();
 const _v41 = /*@__PURE__*/ new Vector4();
 const _v42 = /*@__PURE__*/ new Vector4();
 
+/**
+ * A geometric triangle as defined by three vectors representing its three corners.
+ */
 class Triangle {
 
+	/**
+	 * Constructs a new triangle.
+	 *
+	 * @param {Vector3} [a=(0,0,0)] - The first corner of the triangle.
+	 * @param {Vector3} [b=(0,0,0)] - The second corner of the triangle.
+	 * @param {Vector3} [c=(0,0,0)] - The third corner of the triangle.
+	 */
 	constructor( a = new Vector3(), b = new Vector3(), c = new Vector3() ) {
 
+		/**
+		 * The first corner of the triangle.
+		 *
+		 * @type {Vector3}
+		 */
 		this.a = a;
+
+		/**
+		 * The second corner of the triangle.
+		 *
+		 * @type {Vector3}
+		 */
 		this.b = b;
+
+		/**
+		 * The third corner of the triangle.
+		 *
+		 * @type {Vector3}
+		 */
 		this.c = c;
 
 	}
 
+	/**
+	 * Computes the normal vector of a triangle.
+	 *
+	 * @param {Vector3} a - The first corner of the triangle.
+	 * @param {Vector3} b - The second corner of the triangle.
+	 * @param {Vector3} c - The third corner of the triangle.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} The triangle's normal.
+	 */
 	static getNormal( a, b, c, target ) {
 
 		target.subVectors( c, b );
@@ -26051,9 +31211,20 @@ class Triangle {
 
 	}
 
-	// static/instance method to calculate barycentric coordinates
-	// based on: http://www.blackpawn.com/texts/pointinpoly/default.html
+	/**
+	 * Computes a barycentric coordinates from the given vector.
+	 * Returns `null` if the triangle is degenerate.
+	 *
+	 * @param {Vector3} point - A point in 3D space.
+	 * @param {Vector3} a - The first corner of the triangle.
+	 * @param {Vector3} b - The second corner of the triangle.
+	 * @param {Vector3} c - The third corner of the triangle.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {?Vector3} The barycentric coordinates for the given point
+	 */
 	static getBarycoord( point, a, b, c, target ) {
+
+		// based on: http://www.blackpawn.com/texts/pointinpoly/default.html
 
 		_v0$2.subVectors( c, a );
 		_v1$2.subVectors( b, a );
@@ -26084,6 +31255,17 @@ class Triangle {
 
 	}
 
+	/**
+	 * Returns `true` if the given point, when projected onto the plane of the
+	 * triangle, lies within the triangle.
+	 *
+	 * @param {Vector3} point - The point in 3D space to test.
+	 * @param {Vector3} a - The first corner of the triangle.
+	 * @param {Vector3} b - The second corner of the triangle.
+	 * @param {Vector3} c - The third corner of the triangle.
+	 * @return {boolean} Whether the given point, when projected onto the plane of the
+	 * triangle, lies within the triangle or not.
+	 */
 	static containsPoint( point, a, b, c ) {
 
 		// if the triangle is degenerate then we can't contain a point
@@ -26097,6 +31279,20 @@ class Triangle {
 
 	}
 
+	/**
+	 * Computes the value barycentrically interpolated for the given point on the
+	 * triangle. Returns `null` if the triangle is degenerate.
+	 *
+	 * @param {Vector3} point - Position of interpolated point.
+	 * @param {Vector3} p1 - The first corner of the triangle.
+	 * @param {Vector3} p2 - The second corner of the triangle.
+	 * @param {Vector3} p3 - The third corner of the triangle.
+	 * @param {Vector3} v1 - Value to interpolate of first vertex.
+	 * @param {Vector3} v2 - Value to interpolate of second vertex.
+	 * @param {Vector3} v3 - Value to interpolate of third vertex.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {?Vector3} The interpolated value.
+	 */
 	static getInterpolation( point, p1, p2, p3, v1, v2, v3, target ) {
 
 		if ( this.getBarycoord( point, p1, p2, p3, _v3$1 ) === null ) {
@@ -26118,6 +31314,17 @@ class Triangle {
 
 	}
 
+	/**
+	 * Computes the value barycentrically interpolated for the given attribute and indices.
+	 *
+	 * @param {BufferAttribute} attr - The attribute to interpolate.
+	 * @param {number} i1 - Index of first vertex.
+	 * @param {number} i2 - Index of second vertex.
+	 * @param {number} i3 - Index of third vertex.
+	 * @param {Vector3} barycoord - The barycoordinate value to use to interpolate.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} The interpolated attribute value.
+	 */
 	static getInterpolatedAttribute( attr, i1, i2, i3, barycoord, target ) {
 
 		_v40.setScalar( 0 );
@@ -26137,6 +31344,15 @@ class Triangle {
 
 	}
 
+	/**
+	 * Returns `true` if the triangle is oriented towards the given direction.
+	 *
+	 * @param {Vector3} a - The first corner of the triangle.
+	 * @param {Vector3} b - The second corner of the triangle.
+	 * @param {Vector3} c - The third corner of the triangle.
+	 * @param {Vector3} direction - The (normalized) direction vector.
+	 * @return {boolean} Whether the triangle is oriented towards the given direction or not.
+	 */
 	static isFrontFacing( a, b, c, direction ) {
 
 		_v0$2.subVectors( c, b );
@@ -26147,6 +31363,14 @@ class Triangle {
 
 	}
 
+	/**
+	 * Sets the triangle's vertices by copying the given values.
+	 *
+	 * @param {Vector3} a - The first corner of the triangle.
+	 * @param {Vector3} b - The second corner of the triangle.
+	 * @param {Vector3} c - The third corner of the triangle.
+	 * @return {Triangle} A reference to this triangle.
+	 */
 	set( a, b, c ) {
 
 		this.a.copy( a );
@@ -26157,6 +31381,15 @@ class Triangle {
 
 	}
 
+	/**
+	 * Sets the triangle's vertices by copying the given array values.
+	 *
+	 * @param {Array<Vector3>} points - An array with 3D points.
+	 * @param {number} i0 - The array index representing the first corner of the triangle.
+	 * @param {number} i1 - The array index representing the second corner of the triangle.
+	 * @param {number} i2 - The array index representing the third corner of the triangle.
+	 * @return {Triangle} A reference to this triangle.
+	 */
 	setFromPointsAndIndices( points, i0, i1, i2 ) {
 
 		this.a.copy( points[ i0 ] );
@@ -26167,6 +31400,15 @@ class Triangle {
 
 	}
 
+	/**
+	 * Sets the triangle's vertices by copying the given attribute values.
+	 *
+	 * @param {BufferAttribute} attribute - A buffer attribute with 3D points data.
+	 * @param {number} i0 - The attribute index representing the first corner of the triangle.
+	 * @param {number} i1 - The attribute index representing the second corner of the triangle.
+	 * @param {number} i2 - The attribute index representing the third corner of the triangle.
+	 * @return {Triangle} A reference to this triangle.
+	 */
 	setFromAttributeAndIndices( attribute, i0, i1, i2 ) {
 
 		this.a.fromBufferAttribute( attribute, i0 );
@@ -26177,12 +31419,23 @@ class Triangle {
 
 	}
 
+	/**
+	 * Returns a new triangle with copied values from this instance.
+	 *
+	 * @return {Triangle} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
 
 	}
 
+	/**
+	 * Copies the values of the given triangle to this instance.
+	 *
+	 * @param {Triangle} triangle - The triangle to copy.
+	 * @return {Triangle} A reference to this triangle.
+	 */
 	copy( triangle ) {
 
 		this.a.copy( triangle.a );
@@ -26193,6 +31446,11 @@ class Triangle {
 
 	}
 
+	/**
+	 * Computes the area of the triangle.
+	 *
+	 * @return {number} The triangle's area.
+	 */
 	getArea() {
 
 		_v0$2.subVectors( this.c, this.b );
@@ -26202,54 +31460,118 @@ class Triangle {
 
 	}
 
+	/**
+	 * Computes the midpoint of the triangle.
+	 *
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} The triangle's midpoint.
+	 */
 	getMidpoint( target ) {
 
 		return target.addVectors( this.a, this.b ).add( this.c ).multiplyScalar( 1 / 3 );
 
 	}
 
+	/**
+	 * Computes the normal of the triangle.
+	 *
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} The triangle's normal.
+	 */
 	getNormal( target ) {
 
 		return Triangle.getNormal( this.a, this.b, this.c, target );
 
 	}
 
+	/**
+	 * Computes a plane the triangle lies within.
+	 *
+	 * @param {Plane} target - The target vector that is used to store the method's result.
+	 * @return {Plane} The plane the triangle lies within.
+	 */
 	getPlane( target ) {
 
 		return target.setFromCoplanarPoints( this.a, this.b, this.c );
 
 	}
 
+	/**
+	 * Computes a barycentric coordinates from the given vector.
+	 * Returns `null` if the triangle is degenerate.
+	 *
+	 * @param {Vector3} point - A point in 3D space.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {?Vector3} The barycentric coordinates for the given point
+	 */
 	getBarycoord( point, target ) {
 
 		return Triangle.getBarycoord( point, this.a, this.b, this.c, target );
 
 	}
 
+	/**
+	 * Computes the value barycentrically interpolated for the given point on the
+	 * triangle. Returns `null` if the triangle is degenerate.
+	 *
+	 * @param {Vector3} point - Position of interpolated point.
+	 * @param {Vector3} v1 - Value to interpolate of first vertex.
+	 * @param {Vector3} v2 - Value to interpolate of second vertex.
+	 * @param {Vector3} v3 - Value to interpolate of third vertex.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {?Vector3} The interpolated value.
+	 */
 	getInterpolation( point, v1, v2, v3, target ) {
 
 		return Triangle.getInterpolation( point, this.a, this.b, this.c, v1, v2, v3, target );
 
 	}
 
+	/**
+	 * Returns `true` if the given point, when projected onto the plane of the
+	 * triangle, lies within the triangle.
+	 *
+	 * @param {Vector3} point - The point in 3D space to test.
+	 * @return {boolean} Whether the given point, when projected onto the plane of the
+	 * triangle, lies within the triangle or not.
+	 */
 	containsPoint( point ) {
 
 		return Triangle.containsPoint( point, this.a, this.b, this.c );
 
 	}
 
+	/**
+	 * Returns `true` if the triangle is oriented towards the given direction.
+	 *
+	 * @param {Vector3} direction - The (normalized) direction vector.
+	 * @return {boolean} Whether the triangle is oriented towards the given direction or not.
+	 */
 	isFrontFacing( direction ) {
 
 		return Triangle.isFrontFacing( this.a, this.b, this.c, direction );
 
 	}
 
+	/**
+	 * Returns `true` if this triangle intersects with the given box.
+	 *
+	 * @param {Box3} box - The box to intersect.
+	 * @return {boolean} Whether this triangle intersects with the given box or not.
+	 */
 	intersectsBox( box ) {
 
 		return box.intersectsTriangle( this );
 
 	}
 
+	/**
+	 * Returns the closest point on the triangle to the given point.
+	 *
+	 * @param {Vector3} p - The point to compute the closest point for.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} The closest point on the triangle.
+	 */
 	closestPointToPoint( p, target ) {
 
 		const a = this.a, b = this.b, c = this.c;
@@ -26331,6 +31653,12 @@ class Triangle {
 
 	}
 
+	/**
+	 * Returns `true` if this triangle is equal with the given one.
+	 *
+	 * @param {Triangle} triangle - The triangle to test for equality.
+	 * @return {boolean} Whether this triangle is equal with the given one.
+	 */
 	equals( triangle ) {
 
 		return triangle.a.equals( this.a ) && triangle.b.equals( this.b ) && triangle.c.equals( this.c );
@@ -26432,18 +31760,75 @@ const _morphA = /*@__PURE__*/ new Vector3();
 const _intersectionPoint = /*@__PURE__*/ new Vector3();
 const _intersectionPointWorld = /*@__PURE__*/ new Vector3();
 
+/**
+ * Class representing triangular polygon mesh based objects.
+ *
+ * ```js
+ * const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+ * const material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+ * const mesh = new THREE.Mesh( geometry, material );
+ * scene.add( mesh );
+ * ```
+ *
+ * @augments Object3D
+ */
 class Mesh extends Object3D {
 
+	/**
+	 * Constructs a new mesh.
+	 *
+	 * @param {BufferGeometry} [geometry] - The mesh geometry.
+	 * @param {Material|Array<Material>} [material] - The mesh material.
+	 */
 	constructor( geometry = new BufferGeometry(), material = new MeshBasicMaterial() ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isMesh = true;
 
 		this.type = 'Mesh';
 
+		/**
+		 * The mesh geometry.
+		 *
+		 * @type {BufferGeometry}
+		 */
 		this.geometry = geometry;
+
+		/**
+		 * The mesh material.
+		 *
+		 * @type {Material|Array<Material>}
+		 * @default MeshBasicMaterial
+		 */
 		this.material = material;
+
+		/**
+		 * A dictionary representing the morph targets in the geometry. The key is the
+		 * morph targets name, the value its attribute index. This member is `undefined`
+		 * by default and only set when morph targets are detected in the geometry.
+		 *
+		 * @type {Object<String,number>|undefined}
+		 * @default undefined
+		 */
+		this.morphTargetDictionary = undefined;
+
+		/**
+		 * An array of weights typically in the range `[0,1]` that specify how much of the morph
+		 * is applied. This member is `undefined` by default and only set when morph targets are
+		 * detected in the geometry.
+		 *
+		 * @type {Array<number>|undefined}
+		 * @default undefined
+		 */
+		this.morphTargetInfluences = undefined;
 
 		this.updateMorphTargets();
 
@@ -26472,6 +31857,10 @@ class Mesh extends Object3D {
 
 	}
 
+	/**
+	 * Sets the values of {@link Mesh#morphTargetDictionary} and {@link Mesh#morphTargetInfluences}
+	 * to make sure existing morph targets can influence this 3D object.
+	 */
 	updateMorphTargets() {
 
 		const geometry = this.geometry;
@@ -26503,6 +31892,14 @@ class Mesh extends Object3D {
 
 	}
 
+	/**
+	 * Returns the local-space position of the vertex at the given index, taking into
+	 * account the current animation state of both morph targets and skinning.
+	 *
+	 * @param {number} index - The vertex index.
+	 * @param {Vector3} target - The target object that is used to store the method's result.
+	 * @return {Vector3} The vertex position in local space.
+	 */
 	getVertexPosition( index, target ) {
 
 		const geometry = this.geometry;
@@ -26547,6 +31944,12 @@ class Mesh extends Object3D {
 
 	}
 
+	/**
+	 * Computes intersection points between a casted ray and this line.
+	 *
+	 * @param {Raycaster} raycaster - The raycaster.
+	 * @param {Array<Object>} intersects - The target array that holds the intersection points.
+	 */
 	raycast( raycaster, intersects ) {
 
 		const geometry = this.geometry;
@@ -29094,21 +34497,59 @@ function WebGLClipping( properties ) {
 
 }
 
+/**
+ * Abstract base class for cameras. This class should always be inherited
+ * when you build a new camera.
+ *
+ * @abstract
+ * @augments Object3D
+ */
 class Camera extends Object3D {
 
+	/**
+	 * Constructs a new camera.
+	 */
 	constructor() {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isCamera = true;
 
 		this.type = 'Camera';
 
+		/**
+		 * The inverse of the camera's world matrix.
+		 *
+		 * @type {Matrix4}
+		 */
 		this.matrixWorldInverse = new Matrix4();
 
+		/**
+		 * The camera's projection matrix.
+		 *
+		 * @type {Matrix4}
+		 */
 		this.projectionMatrix = new Matrix4();
+
+		/**
+		 * The inverse of the camera's projection matrix.
+		 *
+		 * @type {Matrix4}
+		 */
 		this.projectionMatrixInverse = new Matrix4();
 
+		/**
+		 * The coordinate system in which the camera is used.
+		 *
+		 * @type {(WebGLCoordinateSystem|WebGPUCoordinateSystem)}
+		 */
 		this.coordinateSystem = WebGLCoordinateSystem;
 
 	}
@@ -29128,6 +34569,15 @@ class Camera extends Object3D {
 
 	}
 
+	/**
+	 * Returns a vector representing the ("look") direction of the 3D object in world space.
+	 *
+	 * This method is overwritten since cameras have a different forward vector compared to other
+	 * 3D objects. A camera looks down its local, negative z-axis by default.
+	 *
+	 * @param {Vector3} target - The target vector the result is stored to.
+	 * @return {Vector3} The 3D object's direction in world space.
+	 */
 	getWorldDirection( target ) {
 
 		return super.getWorldDirection( target ).negate();
@@ -29162,29 +34612,126 @@ const _v3 = /*@__PURE__*/ new Vector3();
 const _minTarget = /*@__PURE__*/ new Vector2();
 const _maxTarget = /*@__PURE__*/ new Vector2();
 
-
+/**
+ * Camera that uses [perspective projection]{@link https://en.wikipedia.org/wiki/Perspective_(graphical)}.
+ *
+ * This projection mode is designed to mimic the way the human eye sees. It
+ * is the most common projection mode used for rendering a 3D scene.
+ *
+ * ```js
+ * const camera = new THREE.PerspectiveCamera( 45, width / height, 1, 1000 );
+ * scene.add( camera );
+ * ```
+ *
+ * @augments Camera
+ */
 class PerspectiveCamera extends Camera {
 
+	/**
+	 * Constructs a new perspective camera.
+	 *
+	 * @param {number} [fov=50] - The vertical field of view.
+	 * @param {number} [aspect=1] - The aspect ratio.
+	 * @param {number} [near=0.1] - The camera's near plane.
+	 * @param {number} [far=2000] - The camera's far plane.
+	 */
 	constructor( fov = 50, aspect = 1, near = 0.1, far = 2000 ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isPerspectiveCamera = true;
 
 		this.type = 'PerspectiveCamera';
 
+		/**
+		 * The vertical field of view, from bottom to top of view,
+		 * in degrees.
+		 *
+		 * @type {number}
+		 * @default 50
+		 */
 		this.fov = fov;
+
+		/**
+		 * The zoom factor of the camera.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.zoom = 1;
 
+		/**
+		 * The camera's near plane. The valid range is greater than `0`
+		 * and less than the current value of {@link PerspectiveCamera#far}.
+		 *
+		 * Note that, unlike for the {@link OrthographicCamera}, `0` is <em>not</em> a
+		 * valid value for a perspective camera's near plane.
+		 *
+		 * @type {number}
+		 * @default 0.1
+		 */
 		this.near = near;
+
+		/**
+		 * The camera's far plane. Must be greater than the
+		 * current value of {@link PerspectiveCamera#near}.
+		 *
+		 * @type {number}
+		 * @default 2000
+		 */
 		this.far = far;
+
+		/**
+		 * Object distance used for stereoscopy and depth-of-field effects. This
+		 * parameter does not influence the projection matrix unless a
+		 * {@link StereoCamera} is being used.
+		 *
+		 * @type {number}
+		 * @default 10
+		 */
 		this.focus = 10;
 
+		/**
+		 * The aspect ratio, usually the canvas width / canvas height.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.aspect = aspect;
+
+		/**
+		 * Represents the frustum window specification. This property should not be edited
+		 * directly but via {@link PerspectiveCamera#setViewOffset} and {@link PerspectiveCamera#clearViewOffset}.
+		 *
+		 * @type {?Object}
+		 * @default null
+		 */
 		this.view = null;
 
-		this.filmGauge = 35;	// width of the film (default in millimeters)
-		this.filmOffset = 0;	// horizontal film offset (same unit as gauge)
+		/**
+		 * Film size used for the larger axis. Default is `35` (millimeters). This
+		 * parameter does not influence the projection matrix unless {@link PerspectiveCamera#filmOffset}
+		 * is set to a nonzero value.
+		 *
+		 * @type {number}
+		 * @default 35
+		 */
+		this.filmGauge = 35;
+
+		/**
+		 * Horizontal off-center offset in the same unit as {@link PerspectiveCamera#filmGauge}.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
+		this.filmOffset = 0;
 
 		this.updateProjectionMatrix();
 
@@ -29212,7 +34759,7 @@ class PerspectiveCamera extends Camera {
 	}
 
 	/**
-	 * Sets the FOV by focal length in respect to the current .filmGauge.
+	 * Sets the FOV by focal length in respect to the current {@link PerspectiveCamera#filmGauge}.
 	 *
 	 * The default film gauge is 35, so that the focal length can be specified for
 	 * a 35mm (full frame) camera.
@@ -29230,9 +34777,10 @@ class PerspectiveCamera extends Camera {
 	}
 
 	/**
-	 * Calculates the focal length from the current .fov and .filmGauge.
+	 * Returns the focal length from the current {@link PerspectiveCamera#fov} and
+	 * {@link PerspectiveCamera#filmGauge}.
 	 *
-	 * @returns {number}
+	 * @return {number} The computed focal length.
 	 */
 	getFocalLength() {
 
@@ -29242,6 +34790,11 @@ class PerspectiveCamera extends Camera {
 
 	}
 
+	/**
+	 * Returns the current vertical field of view angle in degrees considering {@link PerspectiveCamera#zoom}.
+	 *
+	 * @return {number} The effective FOV.
+	 */
 	getEffectiveFOV() {
 
 		return RAD2DEG * 2 * Math.atan(
@@ -29249,6 +34802,12 @@ class PerspectiveCamera extends Camera {
 
 	}
 
+	/**
+	 * Returns the width of the image on the film. If {@link PerspectiveCamera#aspect} is greater than or
+	 * equal to one (landscape format), the result equals {@link PerspectiveCamera#filmGauge}.
+	 *
+	 * @return {number} The film width.
+	 */
 	getFilmWidth() {
 
 		// film not completely covered in portrait format (aspect < 1)
@@ -29256,6 +34815,12 @@ class PerspectiveCamera extends Camera {
 
 	}
 
+	/**
+	 * Returns the height of the image on the film. If {@link PerspectiveCamera#aspect} is greater than or
+	 * equal to one (landscape format), the result equals {@link PerspectiveCamera#filmGauge}.
+	 *
+	 * @return {number} The film width.
+	 */
 	getFilmHeight() {
 
 		// film not completely covered in landscape format (aspect > 1)
@@ -29265,11 +34830,11 @@ class PerspectiveCamera extends Camera {
 
 	/**
 	 * Computes the 2D bounds of the camera's viewable rectangle at a given distance along the viewing direction.
-	 * Sets minTarget and maxTarget to the coordinates of the lower-left and upper-right corners of the view rectangle.
+	 * Sets `minTarget` and `maxTarget` to the coordinates of the lower-left and upper-right corners of the view rectangle.
 	 *
-	 * @param {number} distance
-	 * @param {Vector2} minTarget
-	 * @param {Vector2} maxTarget
+	 * @param {number} distance - The viewing distance.
+	 * @param {Vector2} minTarget - The lower-left corner of the view rectangle is written into this vector.
+	 * @param {Vector2} maxTarget - The upper-right corner of the view rectangle is written into this vector.
 	 */
 	getViewBounds( distance, minTarget, maxTarget ) {
 
@@ -29286,9 +34851,9 @@ class PerspectiveCamera extends Camera {
 	/**
 	 * Computes the width and height of the camera's viewable rectangle at a given distance along the viewing direction.
 	 *
-	 * @param {number} distance
-	 * @param {Vector2} target - Vector2 target used to store result where x is width and y is height.
-	 * @returns {Vector2}
+	 * @param {number} distance - The viewing distance.
+	 * @param {Vector2} target - The target vector that is used to store result where x is width and y is height.
+	 * @returns {Vector2} The view size.
 	 */
 	getViewSize( distance, target ) {
 
@@ -29304,41 +34869,42 @@ class PerspectiveCamera extends Camera {
 	 *
 	 * For example, if you have 3x2 monitors and each monitor is 1920x1080 and
 	 * the monitors are in grid like this
-	 *
+	 *```
 	 *   +---+---+---+
 	 *   | A | B | C |
 	 *   +---+---+---+
 	 *   | D | E | F |
 	 *   +---+---+---+
+	 *```
+	 * then for each monitor you would call it like this:
+	 *```js
+	 * const w = 1920;
+	 * const h = 1080;
+	 * const fullWidth = w * 3;
+	 * const fullHeight = h * 2;
 	 *
-	 * then for each monitor you would call it like this
+	 * // --A--
+	 * camera.setViewOffset( fullWidth, fullHeight, w * 0, h * 0, w, h );
+	 * // --B--
+	 * camera.setViewOffset( fullWidth, fullHeight, w * 1, h * 0, w, h );
+	 * // --C--
+	 * camera.setViewOffset( fullWidth, fullHeight, w * 2, h * 0, w, h );
+	 * // --D--
+	 * camera.setViewOffset( fullWidth, fullHeight, w * 0, h * 1, w, h );
+	 * // --E--
+	 * camera.setViewOffset( fullWidth, fullHeight, w * 1, h * 1, w, h );
+	 * // --F--
+	 * camera.setViewOffset( fullWidth, fullHeight, w * 2, h * 1, w, h );
+	 * ```
 	 *
-	 *   const w = 1920;
-	 *   const h = 1080;
-	 *   const fullWidth = w * 3;
-	 *   const fullHeight = h * 2;
+	 * Note there is no reason monitors have to be the same size or in a grid.
 	 *
-	 *   --A--
-	 *   camera.setViewOffset( fullWidth, fullHeight, w * 0, h * 0, w, h );
-	 *   --B--
-	 *   camera.setViewOffset( fullWidth, fullHeight, w * 1, h * 0, w, h );
-	 *   --C--
-	 *   camera.setViewOffset( fullWidth, fullHeight, w * 2, h * 0, w, h );
-	 *   --D--
-	 *   camera.setViewOffset( fullWidth, fullHeight, w * 0, h * 1, w, h );
-	 *   --E--
-	 *   camera.setViewOffset( fullWidth, fullHeight, w * 1, h * 1, w, h );
-	 *   --F--
-	 *   camera.setViewOffset( fullWidth, fullHeight, w * 2, h * 1, w, h );
-	 *
-	 *   Note there is no reason monitors have to be the same size or in a grid.
-	 *
-	 * @param {number} fullWidth
-	 * @param {number} fullHeight
-	 * @param {number} x
-	 * @param {number} y
-	 * @param {number} width
-	 * @param {number} height
+	 * @param {number} fullWidth - The full width of multiview setup.
+	 * @param {number} fullHeight - The full height of multiview setup.
+	 * @param {number} x - The horizontal offset of the subcamera.
+	 * @param {number} y - The vertical offset of the subcamera.
+	 * @param {number} width - The width of subcamera.
+	 * @param {number} height - The height of subcamera.
 	 */
 	setViewOffset( fullWidth, fullHeight, x, y, width, height ) {
 
@@ -29370,6 +34936,9 @@ class PerspectiveCamera extends Camera {
 
 	}
 
+	/**
+	 * Removes the view offset from the projection matrix.
+	 */
 	clearViewOffset() {
 
 		if ( this.view !== null ) {
@@ -29382,6 +34951,10 @@ class PerspectiveCamera extends Camera {
 
 	}
 
+	/**
+	 * Updates the camera's projection matrix. Must be called after any change of
+	 * camera properties.
+	 */
 	updateProjectionMatrix() {
 
 		const near = this.near;
@@ -29439,16 +35012,72 @@ class PerspectiveCamera extends Camera {
 const fov = -90; // negative fov is not an error
 const aspect = 1;
 
+/**
+ * A special type of camera that is positioned in 3D space to render its surroundings into a
+ * cube render target. The render target can then be used as an environment map for rendering
+ * realtime reflections in your scene.
+ *
+ * ```js
+ * // Create cube render target
+ * const cubeRenderTarget = new THREE.WebGLCubeRenderTarget( 256, { generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter } );
+ *
+ * // Create cube camera
+ * const cubeCamera = new THREE.CubeCamera( 1, 100000, cubeRenderTarget );
+ * scene.add( cubeCamera );
+ *
+ * // Create car
+ * const chromeMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, envMap: cubeRenderTarget.texture } );
+ * const car = new THREE.Mesh( carGeometry, chromeMaterial );
+ * scene.add( car );
+ *
+ * // Update the render target cube
+ * car.visible = false;
+ * cubeCamera.position.copy( car.position );
+ * cubeCamera.update( renderer, scene );
+ *
+ * // Render the scene
+ * car.visible = true;
+ * renderer.render( scene, camera );
+ * ```
+ *
+ * @augments Object3D
+ */
 class CubeCamera extends Object3D {
 
+	/**
+	 * Constructs a new cube camera.
+	 *
+	 * @param {number} near - The camera's near plane.
+	 * @param {number} far - The camera's far plane.
+	 * @param {WebGLCubeRenderTarget} renderTarget - The cube render target.
+	 */
 	constructor( near, far, renderTarget ) {
 
 		super();
 
 		this.type = 'CubeCamera';
 
+		/**
+		 * A reference to the cube render target.
+		 *
+		 * @type {WebGLCubeRenderTarget}
+		 */
 		this.renderTarget = renderTarget;
+
+		/**
+		 * The current active coordinate system.
+		 *
+		 * @type {?(WebGLCoordinateSystem|WebGPUCoordinateSystem)}
+		 * @default null
+		 */
 		this.coordinateSystem = null;
+
+		/**
+		 * The current active mipmap level
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.activeMipmapLevel = 0;
 
 		const cameraPX = new PerspectiveCamera( fov, aspect, near, far );
@@ -29477,6 +35106,9 @@ class CubeCamera extends Object3D {
 
 	}
 
+	/**
+	 * Must be called when the coordinate system of the cube camera is changed.
+	 */
 	updateCoordinateSystem() {
 
 		const coordinateSystem = this.coordinateSystem;
@@ -29543,6 +35175,13 @@ class CubeCamera extends Object3D {
 
 	}
 
+	/**
+	 * Calling this method will render the given scene with the given renderer
+	 * into the cube render target of the camera.
+	 *
+	 * @param {(Renderer|WebGLRenderer)} renderer - The renderer.
+	 * @param {Scene} scene - The scene to render.
+	 */
 	update( renderer, scene ) {
 
 		if ( this.parent === null ) this.updateMatrixWorld();
@@ -29864,25 +35503,115 @@ function WebGLCubeMaps( renderer ) {
 
 }
 
+/**
+ * Camera that uses [orthographic projection]{@link https://en.wikipedia.org/wiki/Orthographic_projection}.
+ *
+ * In this projection mode, an object's size in the rendered image stays
+ * constant regardless of its distance from the camera. This can be useful
+ * for rendering 2D scenes and UI elements, amongst other things.
+ *
+ * ```js
+ * const camera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, 1, 1000 );
+ * scene.add( camera );
+ * ```
+ *
+ * @augments Camera
+ */
 class OrthographicCamera extends Camera {
 
+	/**
+	 * Constructs a new orthographic camera.
+	 *
+	 * @param {number} [left=-1] - The left plane of the camera's frustum.
+	 * @param {number} [right=1] - The right plane of the camera's frustum.
+	 * @param {number} [top=1] - The top plane of the camera's frustum.
+	 * @param {number} [bottom=-1] - The bottom plane of the camera's frustum.
+	 * @param {number} [near=0.1] - The camera's near plane.
+	 * @param {number} [far=2000] - The camera's far plane.
+	 */
 	constructor( left = -1, right = 1, top = 1, bottom = -1, near = 0.1, far = 2000 ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isOrthographicCamera = true;
 
 		this.type = 'OrthographicCamera';
 
+		/**
+		 * The zoom factor of the camera.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.zoom = 1;
+
+		/**
+		 * Represents the frustum window specification. This property should not be edited
+		 * directly but via {@link PerspectiveCamera#setViewOffset} and {@link PerspectiveCamera#clearViewOffset}.
+		 *
+		 * @type {?Object}
+		 * @default null
+		 */
 		this.view = null;
 
+		/**
+		 * The left plane of the camera's frustum.
+		 *
+		 * @type {number}
+		 * @default -1
+		 */
 		this.left = left;
+
+		/**
+		 * The right plane of the camera's frustum.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.right = right;
+
+		/**
+		 * The top plane of the camera's frustum.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.top = top;
+
+		/**
+		 * The bottom plane of the camera's frustum.
+		 *
+		 * @type {number}
+		 * @default -1
+		 */
 		this.bottom = bottom;
 
+		/**
+		 * The camera's near plane. The valid range is greater than `0`
+		 * and less than the current value of {@link OrthographicCamera#far}.
+		 *
+		 * Note that, unlike for the {@link PerspectiveCamera}, `0` is a
+		 * valid value for an orthographic camera's near plane.
+		 *
+		 * @type {number}
+		 * @default 0.1
+		 */
 		this.near = near;
+
+		/**
+		 * The camera's far plane. Must be greater than the
+		 * current value of {@link OrthographicCamera#near}.
+		 *
+		 * @type {number}
+		 * @default 2000
+		 */
 		this.far = far;
 
 		this.updateProjectionMatrix();
@@ -29907,6 +35636,18 @@ class OrthographicCamera extends Camera {
 
 	}
 
+	/**
+	 * Sets an offset in a larger frustum. This is useful for multi-window or
+	 * multi-monitor/multi-machine setups.
+	 *
+	 * @param {number} fullWidth - The full width of multiview setup.
+	 * @param {number} fullHeight - The full height of multiview setup.
+	 * @param {number} x - The horizontal offset of the subcamera.
+	 * @param {number} y - The vertical offset of the subcamera.
+	 * @param {number} width - The width of subcamera.
+	 * @param {number} height - The height of subcamera.
+	 * @see {@link PerspectiveCamera#setViewOffset}
+	 */
 	setViewOffset( fullWidth, fullHeight, x, y, width, height ) {
 
 		if ( this.view === null ) {
@@ -29935,6 +35676,9 @@ class OrthographicCamera extends Camera {
 
 	}
 
+	/**
+	 * Removes the view offset from the projection matrix.
+	 */
 	clearViewOffset() {
 
 		if ( this.view !== null ) {
@@ -29947,6 +35691,10 @@ class OrthographicCamera extends Camera {
 
 	}
 
+	/**
+	 * Updates the camera's projection matrix. Must be called after any change of
+	 * camera properties.
+	 */
 	updateProjectionMatrix() {
 
 		const dx = ( this.right - this.left ) / ( 2 * this.zoom );
@@ -30034,6 +35782,8 @@ const _axisDirections = [
 	/*@__PURE__*/ new Vector3( -1, 1, 1 ),
 	/*@__PURE__*/ new Vector3( 1, 1, 1 ) ];
 
+const _origin = /*@__PURE__*/ new Vector3();
+
 /**
  * This class generates a Prefiltered, Mipmapped Radiance Environment Map
  * (PMREM) from a cubeMap environment texture. This allows different levels of
@@ -30074,16 +35824,21 @@ class PMREMGenerator {
 	 * Generates a PMREM from a supplied Scene, which can be faster than using an
 	 * image if networking bandwidth is low. Optional sigma specifies a blur radius
 	 * in radians to be applied to the scene before PMREM generation. Optional near
-	 * and far planes ensure the scene is rendered in its entirety (the cubeCamera
-	 * is placed at the origin).
+	 * and far planes ensure the scene is rendered in its entirety.
 	 *
 	 * @param {Scene} scene
 	 * @param {number} sigma
 	 * @param {number} near
 	 * @param {number} far
+	 * @param {Object} [options={}]
 	 * @return {WebGLRenderTarget}
 	 */
-	fromScene( scene, sigma = 0, near = 0.1, far = 100 ) {
+	fromScene( scene, sigma = 0, near = 0.1, far = 100, options = {} ) {
+
+		const {
+			size = 256,
+			position = _origin,
+		} = options;
 
 		_oldTarget = this._renderer.getRenderTarget();
 		_oldActiveCubeFace = this._renderer.getActiveCubeFace();
@@ -30092,12 +35847,12 @@ class PMREMGenerator {
 
 		this._renderer.xr.enabled = false;
 
-		this._setSize( 256 );
+		this._setSize( size );
 
 		const cubeUVRenderTarget = this._allocateTargets();
 		cubeUVRenderTarget.depthBuffer = true;
 
-		this._sceneToCubeUV( scene, near, far, cubeUVRenderTarget );
+		this._sceneToCubeUV( scene, near, far, cubeUVRenderTarget, position );
 
 		if ( sigma > 0 ) {
 
@@ -30119,7 +35874,7 @@ class PMREMGenerator {
 	 * The smallest supported equirectangular image size is 64 x 32.
 	 *
 	 * @param {Texture} equirectangular
-	 * @param {WebGLRenderTarget} [renderTarget=null] - Optional render target.
+	 * @param {?WebGLRenderTarget} [renderTarget=null] - Optional render target.
 	 * @return {WebGLRenderTarget}
 	 */
 	fromEquirectangular( equirectangular, renderTarget = null ) {
@@ -30294,7 +36049,7 @@ class PMREMGenerator {
 
 	}
 
-	_sceneToCubeUV( scene, near, far, cubeUVRenderTarget ) {
+	_sceneToCubeUV( scene, near, far, cubeUVRenderTarget, position ) {
 
 		const fov = 90;
 		const aspect = 1;
@@ -30346,17 +36101,21 @@ class PMREMGenerator {
 			if ( col === 0 ) {
 
 				cubeCamera.up.set( 0, upSign[ i ], 0 );
-				cubeCamera.lookAt( forwardSign[ i ], 0, 0 );
+				cubeCamera.position.set( position.x, position.y, position.z );
+				cubeCamera.lookAt( position.x + forwardSign[ i ], position.y, position.z );
 
 			} else if ( col === 1 ) {
 
 				cubeCamera.up.set( 0, 0, upSign[ i ] );
-				cubeCamera.lookAt( 0, forwardSign[ i ], 0 );
+				cubeCamera.position.set( position.x, position.y, position.z );
+				cubeCamera.lookAt( position.x, position.y + forwardSign[ i ], position.z );
+
 
 			} else {
 
 				cubeCamera.up.set( 0, upSign[ i ], 0 );
-				cubeCamera.lookAt( 0, 0, forwardSign[ i ] );
+				cubeCamera.position.set( position.x, position.y, position.z );
+				cubeCamera.lookAt( position.x, position.y, position.z + forwardSign[ i ] );
 
 			}
 
@@ -31817,6 +37576,7 @@ class DepthTexture extends Texture {
 
 		super.copy( source );
 
+		this.source = new Source( Object.assign( {}, source.image ) ); // see #30540
 		this.compareFunction = source.compareFunction;
 
 		return this;
@@ -37295,7 +43055,7 @@ function WebGLState( gl, extensions ) {
 
 		try {
 
-			gl.compressedTexImage2D.apply( gl, arguments );
+			gl.compressedTexImage2D( ...arguments );
 
 		} catch ( error ) {
 
@@ -37309,7 +43069,7 @@ function WebGLState( gl, extensions ) {
 
 		try {
 
-			gl.compressedTexImage3D.apply( gl, arguments );
+			gl.compressedTexImage3D( ...arguments );
 
 		} catch ( error ) {
 
@@ -37323,7 +43083,7 @@ function WebGLState( gl, extensions ) {
 
 		try {
 
-			gl.texSubImage2D.apply( gl, arguments );
+			gl.texSubImage2D( ...arguments );
 
 		} catch ( error ) {
 
@@ -37337,7 +43097,7 @@ function WebGLState( gl, extensions ) {
 
 		try {
 
-			gl.texSubImage3D.apply( gl, arguments );
+			gl.texSubImage3D( ...arguments );
 
 		} catch ( error ) {
 
@@ -37351,7 +43111,7 @@ function WebGLState( gl, extensions ) {
 
 		try {
 
-			gl.compressedTexSubImage2D.apply( gl, arguments );
+			gl.compressedTexSubImage2D( ...arguments );
 
 		} catch ( error ) {
 
@@ -37365,7 +43125,7 @@ function WebGLState( gl, extensions ) {
 
 		try {
 
-			gl.compressedTexSubImage3D.apply( gl, arguments );
+			gl.compressedTexSubImage3D( ...arguments );
 
 		} catch ( error ) {
 
@@ -37379,7 +43139,7 @@ function WebGLState( gl, extensions ) {
 
 		try {
 
-			gl.texStorage2D.apply( gl, arguments );
+			gl.texStorage2D( ...arguments );
 
 		} catch ( error ) {
 
@@ -37393,7 +43153,7 @@ function WebGLState( gl, extensions ) {
 
 		try {
 
-			gl.texStorage3D.apply( gl, arguments );
+			gl.texStorage3D( ...arguments );
 
 		} catch ( error ) {
 
@@ -37407,7 +43167,7 @@ function WebGLState( gl, extensions ) {
 
 		try {
 
-			gl.texImage2D.apply( gl, arguments );
+			gl.texImage2D( ...arguments );
 
 		} catch ( error ) {
 
@@ -37421,7 +43181,7 @@ function WebGLState( gl, extensions ) {
 
 		try {
 
-			gl.texImage3D.apply( gl, arguments );
+			gl.texImage3D( ...arguments );
 
 		} catch ( error ) {
 
@@ -37644,14 +43404,13 @@ function WebGLState( gl, extensions ) {
 }
 
 /**
- * Given the width, height, format, and type of a texture. Determines how many
- * bytes must be used to represent the texture.
+ * Determines how many bytes must be used to represent the texture.
  *
- * @param {Number} width
- * @param {Number} height
- * @param {Number} format
- * @param {Number} type
- * @return {Number} The number of bytes required to represent the texture.
+ * @param {number} width - The width of the texture.
+ * @param {number} height - The height of the texture.
+ * @param {number} format - The texture's format.
+ * @param {number} type - The texture's type.
+ * @return {number} The byte length.
  */
 function getByteLength( width, height, format, type ) {
 
@@ -40170,14 +45929,42 @@ function WebGLUtils( gl, extensions ) {
 
 }
 
+/**
+ * This type of camera can be used in order to efficiently render a scene with a
+ * predefined set of cameras. This is an important performance aspect for
+ * rendering VR scenes.
+ *
+ * An instance of `ArrayCamera` always has an array of sub cameras. It's mandatory
+ * to define for each sub camera the `viewport` property which determines the
+ * part of the viewport that is rendered with this camera.
+ *
+ * @augments PerspectiveCamera
+ */
 class ArrayCamera extends PerspectiveCamera {
 
+	/**
+	 * Constructs a new array camera.
+	 *
+	 * @param {Array<PerspectiveCamera>} [array=[]] - An array of perspective sub cameras.
+	 */
 	constructor( array = [] ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isArrayCamera = true;
 
+		/**
+		 * An array of perspective sub cameras.
+		 *
+		 * @type {Array<PerspectiveCamera>}
+		 */
 		this.cameras = array;
 		this.index = 0;
 
@@ -40185,12 +45972,36 @@ class ArrayCamera extends PerspectiveCamera {
 
 }
 
+/**
+ * This is almost identical to an {@link Object3D}. Its purpose is to
+ * make working with groups of objects syntactically clearer.
+ *
+ * ```js
+ * // Create a group and add the two cubes.
+ * // These cubes can now be rotated / scaled etc as a group.
+ * const group = new THREE.Group();
+ *
+ * group.add( meshA );
+ * group.add( meshB );
+ *
+ * scene.add( group );
+ * ```
+ *
+ * @augments Object3D
+ */
 let Group$1 = class Group extends Object3D {
 
 	constructor() {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isGroup = true;
 
 		this.type = 'Group';
@@ -40932,7 +46743,10 @@ class WebXRManager extends EventDispatcher {
 							format: RGBAFormat,
 							type: UnsignedByteType,
 							colorSpace: renderer.outputColorSpace,
-							stencilBuffer: attributes.stencil
+							stencilBuffer: attributes.stencil,
+							resolveDepthBuffer: ( glBaseLayer.ignoreDepthValues === false ),
+							resolveStencilBuffer: ( glBaseLayer.ignoreDepthValues === false )
+
 						}
 					);
 
@@ -40975,7 +46789,8 @@ class WebXRManager extends EventDispatcher {
 							stencilBuffer: attributes.stencil,
 							colorSpace: renderer.outputColorSpace,
 							samples: attributes.antialias ? 4 : 0,
-							resolveDepthBuffer: ( glProjLayer.ignoreDepthValues === false )
+							resolveDepthBuffer: ( glProjLayer.ignoreDepthValues === false ),
+							resolveStencilBuffer: ( glProjLayer.ignoreDepthValues === false )
 						} );
 
 				}
@@ -42918,7 +48733,7 @@ class WebGLRenderer {
 
 		this.setClearColor = function () {
 
-			background.setClearColor.apply( background, arguments );
+			background.setClearColor( ...arguments );
 
 		};
 
@@ -42930,7 +48745,7 @@ class WebGLRenderer {
 
 		this.setClearAlpha = function () {
 
-			background.setClearAlpha.apply( background, arguments );
+			background.setClearAlpha( ...arguments );
 
 		};
 
@@ -43266,6 +49081,8 @@ class WebGLRenderer {
 
 				if ( object._multiDrawInstances !== null ) {
 
+					// @deprecated, r174
+					warnOnce( 'THREE.WebGLRenderer: renderMultiDrawInstances has been deprecated and will be removed in r184. Append to renderMultiDraw arguments and use indirection.' );
 					renderer.renderMultiDrawInstances( object._multiDrawStarts, object._multiDrawCounts, object._multiDrawCount, object._multiDrawInstances );
 
 				} else {
@@ -43422,8 +49239,7 @@ class WebGLRenderer {
 
 			} );
 
-			renderStateStack.pop();
-			currentRenderState = null;
+			currentRenderState = renderStateStack.pop();
 
 			return materials;
 
@@ -45347,27 +51163,87 @@ class WebGLRenderer {
 
 }
 
+/**
+ * This class can be used to define a linear fog that grows linearly denser
+ * with the distance.
+ *
+ * ```js
+ * const scene = new THREE.Scene();
+ * scene.fog = new THREE.Fog( 0xcccccc, 10, 15 );
+ * ```
+ */
 class Fog {
 
+	/**
+	 * Constructs a new fog.
+	 *
+	 * @param {number|Color} color - The fog's color.
+	 * @param {number} [near=1] - The minimum distance to start applying fog.
+	 * @param {number} [far=1000] - The maximum distance at which fog stops being calculated and applied.
+	 */
 	constructor( color, near = 1, far = 1000 ) {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isFog = true;
 
+		/**
+		 * The name of the fog.
+		 *
+		 * @type {string}
+		 */
 		this.name = '';
 
+		/**
+		 * The fog's color.
+		 *
+		 * @type {Color}
+		 */
 		this.color = new Color( color );
 
+		/**
+		 * The minimum distance to start applying fog. Objects that are less than
+		 * `near` units from the active camera won't be affected by fog.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.near = near;
+
+		/**
+		 * The maximum distance at which fog stops being calculated and applied.
+		 * Objects that are more than `far` units away from the active camera won't
+		 * be affected by fog.
+		 *
+		 * @type {number}
+		 * @default 1000
+		 */
 		this.far = far;
 
 	}
 
+	/**
+	 * Returns a new fog with copied values from this instance.
+	 *
+	 * @return {Fog} A clone of this instance.
+	 */
 	clone() {
 
 		return new Fog( this.color, this.near, this.far );
 
 	}
 
+	/**
+	 * Serializes the fog into JSON.
+	 *
+	 * @param {?(Object|string)} meta - An optional value holding meta information about the serialization.
+	 * @return {Object} A JSON object representing the serialized fog
+	 */
 	toJSON( /* meta */ ) {
 
 		return {
@@ -45382,27 +51258,114 @@ class Fog {
 
 }
 
+/**
+ * Scenes allow you to set up what is to be rendered and where by three.js.
+ * This is where you place 3D objects like meshes, lines or lights.
+ *
+ * @augments Object3D
+ */
 class Scene extends Object3D {
 
+	/**
+	 * Constructs a new scene.
+	 */
 	constructor() {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isScene = true;
 
 		this.type = 'Scene';
 
+		/**
+		 * Defines the background of the scene. Valid inputs are:
+		 *
+		 * - A color for defining a uniform colored background.
+		 * - A texture for defining a (flat) textured background.
+		 * - Cube textures or equirectangular textures for defining a skybox.
+		 *
+		 * @type {?(Color|Texture)}
+		 * @default null
+		 */
 		this.background = null;
+
+		/**
+		 * Sets the environment map for all physical materials in the scene. However,
+		 * it's not possible to overwrite an existing texture assigned to the `envMap`
+		 * material property.
+		 *
+		 * @type {?Texture}
+		 * @default null
+		 */
 		this.environment = null;
+
+		/**
+		 * A fog instance defining the type of fog that affects everything
+		 * rendered in the scene.
+		 *
+		 * @type {?(Fog|FogExp2)}
+		 * @default null
+		 */
 		this.fog = null;
 
+		/**
+		 * Sets the blurriness of the background. Only influences environment maps
+		 * assigned to {@link Scene#background}. Valid input is a float between `0`
+		 * and `1`.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.backgroundBlurriness = 0;
+
+		/**
+		 * Attenuates the color of the background. Only applies to background textures.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.backgroundIntensity = 1;
+
+		/**
+		 * The rotation of the background in radians. Only influences environment maps
+		 * assigned to {@link Scene#background}.
+		 *
+		 * @type {Euler}
+		 * @default (0,0,0)
+		 */
 		this.backgroundRotation = new Euler();
 
+		/**
+		 * Attenuates the color of the environment. Only influences environment maps
+		 * assigned to {@link Scene#environment}.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.environmentIntensity = 1;
+
+		/**
+		 * The rotation of the environment map in radians. Only influences physical materials
+		 * in the scene when {@link Scene#environment} is used.
+		 *
+		 * @type {Euler}
+		 * @default (0,0,0)
+		 */
 		this.environmentRotation = new Euler();
 
+		/**
+		 * Forces everything in the scene to be rendered with the defined material.
+		 *
+		 * @type {?Material}
+		 * @default null
+		 */
 		this.overrideMaterial = null;
 
 		if ( typeof __THREE_DEVTOOLS__ !== 'undefined' ) {
@@ -45519,21 +51482,87 @@ const _identity = /*@__PURE__*/ new Matrix4();
 const _mesh$1 = /*@__PURE__*/ new Mesh();
 const _sphere$4 = /*@__PURE__*/ new Sphere();
 
+/**
+ * A special version of a mesh with instanced rendering support. Use
+ * this class if you have to render a large number of objects with the same
+ * geometry and material(s) but with different world transformations. The usage
+ * of 'InstancedMesh' will help you to reduce the number of draw calls and thus
+ * improve the overall rendering performance in your application.
+ *
+ * @augments Mesh
+ */
 class InstancedMesh extends Mesh {
 
+	/**
+	 * Constructs a new instanced mesh.
+	 *
+	 * @param {BufferGeometry} [geometry] - The mesh geometry.
+	 * @param {Material|Array<Material>} [material] - The mesh material.
+	 * @param {number} count - The number of instances.
+	 */
 	constructor( geometry, material, count ) {
 
 		super( geometry, material );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isInstancedMesh = true;
 
+		/**
+		 * Represents the local transformation of all instances. You have to set its
+		 * {@link BufferAttribute#needsUpdate} flag to true if you modify instanced data
+		 * via {@link InstancedMesh#setMatrixAt}.
+		 *
+		 * @type {InstancedBufferAttribute}
+		 */
 		this.instanceMatrix = new InstancedBufferAttribute( new Float32Array( count * 16 ), 16 );
+
+		/**
+		 * Represents the color of all instances. You have to set its
+		 * {@link BufferAttribute#needsUpdate} flag to true if you modify instanced data
+		 * via {@link InstancedMesh#setColorAt}.
+		 *
+		 * @type {?InstancedBufferAttribute}
+		 * @default null
+		 */
 		this.instanceColor = null;
+
+		/**
+		 * Represents the morph target weights of all instances. You have to set its
+		 * {@link Texture#needsUpdate} flag to true if you modify instanced data
+		 * via {@link InstancedMesh#setMorphAt}.
+		 *
+		 * @type {?InstancedBufferAttribute}
+		 * @default null
+		 */
 		this.morphTexture = null;
 
+		/**
+		 * The number of instances.
+		 *
+		 * @type {number}
+		 */
 		this.count = count;
 
+		/**
+		 * The bounding box of the instanced mesh. Can be computed via {@link InstancedMesh#computeBoundingBox}.
+		 *
+		 * @type {?Box3}
+		 * @default null
+		 */
 		this.boundingBox = null;
+
+		/**
+		 * The bounding sphere of the instanced mesh. Can be computed via {@link InstancedMesh#computeBoundingSphere}.
+		 *
+		 * @type {?Sphere}
+		 * @default null
+		 */
 		this.boundingSphere = null;
 
 		for ( let i = 0; i < count; i ++ ) {
@@ -45544,6 +51573,11 @@ class InstancedMesh extends Mesh {
 
 	}
 
+	/**
+	 * Computes the bounding box of the instanced mesh, and updates {@link InstancedMesh#boundingBox}.
+	 * The bounding box is not automatically computed by the engine; this method must be called by your app.
+	 * You may need to recompute the bounding box if an instance is transformed via {@link InstancedMesh#setMatrixAt}.
+	 */
 	computeBoundingBox() {
 
 		const geometry = this.geometry;
@@ -45575,6 +51609,11 @@ class InstancedMesh extends Mesh {
 
 	}
 
+	/**
+	 * Computes the bounding sphere of the instanced mesh, and updates {@link InstancedMesh#boundingSphere}
+	 * The engine automatically computes the bounding sphere when it is needed, e.g., for ray casting or view frustum culling.
+	 * You may need to recompute the bounding sphere if an instance is transformed via {@link InstancedMesh#setMatrixAt}.
+	 */
 	computeBoundingSphere() {
 
 		const geometry = this.geometry;
@@ -45624,18 +51663,36 @@ class InstancedMesh extends Mesh {
 
 	}
 
+	/**
+	 * Gets the color of the defined instance.
+	 *
+	 * @param {number} index - The instance index.
+	 * @param {Color} color - The target object that is used to store the method's result.
+	 */
 	getColorAt( index, color ) {
 
 		color.fromArray( this.instanceColor.array, index * 3 );
 
 	}
 
+	/**
+	 * Gets the local transformation matrix of the defined instance.
+	 *
+	 * @param {number} index - The instance index.
+	 * @param {Matrix4} matrix - The target object that is used to store the method's result.
+	 */
 	getMatrixAt( index, matrix ) {
 
 		matrix.fromArray( this.instanceMatrix.array, index * 16 );
 
 	}
 
+	/**
+	 * Gets the morph target weights of the defined instance.
+	 *
+	 * @param {number} index - The instance index.
+	 * @param {Mesh} object - The target object that is used to store the method's result.
+	 */
 	getMorphAt( index, object ) {
 
 		const objectInfluences = object.morphTargetInfluences;
@@ -45706,6 +51763,13 @@ class InstancedMesh extends Mesh {
 
 	}
 
+	/**
+	 * Sets the given color to the defined instance. Make sure you set the `needsUpdate` flag of
+	 * {@link InstancedMesh#instanceColor} to `true` after updating all the colors.
+	 *
+	 * @param {number} index - The instance index.
+	 * @param {Color} color - The instance color.
+	 */
 	setColorAt( index, color ) {
 
 		if ( this.instanceColor === null ) {
@@ -45718,12 +51782,27 @@ class InstancedMesh extends Mesh {
 
 	}
 
+	/**
+	 * Sets the given local transformation matrix to the defined instance. Make sure you set the `needsUpdate` flag of
+	 * {@link InstancedMesh#instanceMatrix} to `true` after updating all the colors.
+	 *
+	 * @param {number} index - The instance index.
+	 * @param {Matrix4} matrix - The the local transformation.
+	 */
 	setMatrixAt( index, matrix ) {
 
 		matrix.toArray( this.instanceMatrix.array, index * 16 );
 
 	}
 
+	/**
+	 * Sets the morph target weights to the defined instance. Make sure you set the `needsUpdate` flag of
+	 * {@link InstancedMesh#morphTexture} to `true` after updating all the influences.
+	 *
+	 * @param {number} index - The instance index.
+	 * @param {Mesh} object -  A mesh which `morphTargetInfluences` property containing the morph target weights
+	 * of a single instance.
+	 */
 	setMorphAt( index, object ) {
 
 		const objectInfluences = object.morphTargetInfluences;
@@ -45760,6 +51839,10 @@ class InstancedMesh extends Mesh {
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever this instance is no longer used in your app.
+	 */
 	dispose() {
 
 		this.dispatchEvent( { type: 'dispose' } );
@@ -45770,8 +51853,6 @@ class InstancedMesh extends Mesh {
 			this.morphTexture = null;
 
 		}
-
-		return this;
 
 	}
 
@@ -45832,18 +51913,83 @@ const _sphere$3 = /*@__PURE__*/ new Sphere();
 const _intersectPointOnRay = /*@__PURE__*/ new Vector3();
 const _intersectPointOnSegment = /*@__PURE__*/ new Vector3();
 
+/**
+ * A continuous line. The line are rendered by connecting consecutive
+ * vertices with straight lines.
+ *
+ * ```js
+ * const material = new THREE.LineBasicMaterial( { color: 0x0000ff } );
+ *
+ * const points = [];
+ * points.push( new THREE.Vector3( - 10, 0, 0 ) );
+ * points.push( new THREE.Vector3( 0, 10, 0 ) );
+ * points.push( new THREE.Vector3( 10, 0, 0 ) );
+ *
+ * const geometry = new THREE.BufferGeometry().setFromPoints( points );
+ *
+ * const line = new THREE.Line( geometry, material );
+ * scene.add( line );
+ * ```
+ *
+ * @augments Object3D
+ */
 let Line$1 = class Line extends Object3D {
 
+	/**
+	 * Constructs a new line.
+	 *
+	 * @param {BufferGeometry} [geometry] - The line geometry.
+	 * @param {Material|Array<Material>} [material] - The line material.
+	 */
 	constructor( geometry = new BufferGeometry(), material = new LineBasicMaterial() ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isLine = true;
 
 		this.type = 'Line';
 
+		/**
+		 * The line geometry.
+		 *
+		 * @type {BufferGeometry}
+		 */
 		this.geometry = geometry;
+
+		/**
+		 * The line material.
+		 *
+		 * @type {Material|Array<Material>}
+		 * @default LineBasicMaterial
+		 */
 		this.material = material;
+
+		/**
+		 * A dictionary representing the morph targets in the geometry. The key is the
+		 * morph targets name, the value its attribute index. This member is `undefined`
+		 * by default and only set when morph targets are detected in the geometry.
+		 *
+		 * @type {Object<String,number>|undefined}
+		 * @default undefined
+		 */
+		this.morphTargetDictionary = undefined;
+
+		/**
+		 * An array of weights typically in the range `[0,1]` that specify how much of the morph
+		 * is applied. This member is `undefined` by default and only set when morph targets are
+		 * detected in the geometry.
+		 *
+		 * @type {Array<number>|undefined}
+		 * @default undefined
+		 */
+		this.morphTargetInfluences = undefined;
 
 		this.updateMorphTargets();
 
@@ -45860,6 +52006,13 @@ let Line$1 = class Line extends Object3D {
 
 	}
 
+	/**
+	 * Computes an array of distance values which are necessary for rendering dashed lines.
+	 * For each vertex in the geometry, the method calculates the cumulative length from the
+	 * current point to the very beginning of the line.
+	 *
+	 * @return {Line} A reference to this line.
+	 */
 	computeLineDistances() {
 
 		const geometry = this.geometry;
@@ -45893,6 +52046,12 @@ let Line$1 = class Line extends Object3D {
 
 	}
 
+	/**
+	 * Computes intersection points between a casted ray and this line.
+	 *
+	 * @param {Raycaster} raycaster - The raycaster.
+	 * @param {Array<Object>} intersects - The target array that holds the intersection points.
+	 */
 	raycast( raycaster, intersects ) {
 
 		const geometry = this.geometry;
@@ -45992,6 +52151,10 @@ let Line$1 = class Line extends Object3D {
 
 	}
 
+	/**
+	 * Sets the values of {@link Line#morphTargetDictionary} and {@link Line#morphTargetInfluences}
+	 * to make sure existing morph targets can influence this 3D object.
+	 */
 	updateMorphTargets() {
 
 		const geometry = this.geometry;
@@ -46061,12 +52224,30 @@ function checkIntersection( object, raycaster, ray, thresholdSq, a, b, i ) {
 const _start = /*@__PURE__*/ new Vector3();
 const _end = /*@__PURE__*/ new Vector3();
 
+/**
+ * A series of lines drawn between pairs of vertices.
+ *
+ * @augments Line
+ */
 class LineSegments extends Line$1 {
 
+	/**
+	 * Constructs a new line segments.
+	 *
+	 * @param {BufferGeometry} [geometry] - The line geometry.
+	 * @param {Material|Array<Material>} [material] - The line material.
+	 */
 	constructor( geometry, material ) {
 
 		super( geometry, material );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isLineSegments = true;
 
 		this.type = 'LineSegments';
@@ -46159,18 +52340,68 @@ const _ray$1 = /*@__PURE__*/ new Ray();
 const _sphere$2 = /*@__PURE__*/ new Sphere();
 const _position = /*@__PURE__*/ new Vector3();
 
+/**
+ * A class for displaying points or point clouds.
+ *
+ * @augments Object3D
+ */
 class Points extends Object3D {
 
+	/**
+	 * Constructs a new point cloud.
+	 *
+	 * @param {BufferGeometry} [geometry] - The points geometry.
+	 * @param {Material|Array<Material>} [material] - The points material.
+	 */
 	constructor( geometry = new BufferGeometry(), material = new PointsMaterial() ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isPoints = true;
 
 		this.type = 'Points';
 
+		/**
+		 * The points geometry.
+		 *
+		 * @type {BufferGeometry}
+		 */
 		this.geometry = geometry;
+
+		/**
+		 * The line material.
+		 *
+		 * @type {Material|Array<Material>}
+		 * @default PointsMaterial
+		 */
 		this.material = material;
+
+		/**
+		 * A dictionary representing the morph targets in the geometry. The key is the
+		 * morph targets name, the value its attribute index. This member is `undefined`
+		 * by default and only set when morph targets are detected in the geometry.
+		 *
+		 * @type {Object<String,number>|undefined}
+		 * @default undefined
+		 */
+		this.morphTargetDictionary = undefined;
+
+		/**
+		 * An array of weights typically in the range `[0,1]` that specify how much of the morph
+		 * is applied. This member is `undefined` by default and only set when morph targets are
+		 * detected in the geometry.
+		 *
+		 * @type {Array<number>|undefined}
+		 * @default undefined
+		 */
+		this.morphTargetInfluences = undefined;
 
 		this.updateMorphTargets();
 
@@ -46187,6 +52418,12 @@ class Points extends Object3D {
 
 	}
 
+	/**
+	 * Computes intersection points between a casted ray and this point cloud.
+	 *
+	 * @param {Raycaster} raycaster - The raycaster.
+	 * @param {Array<Object>} intersects - The target array that holds the intersection points.
+	 */
 	raycast( raycaster, intersects ) {
 
 		const geometry = this.geometry;
@@ -46248,6 +52485,10 @@ class Points extends Object3D {
 
 	}
 
+	/**
+	 * Sets the values of {@link Points#morphTargetDictionary} and {@link Points#morphTargetInfluences}
+	 * to make sure existing morph targets can influence this 3D object.
+	 */
 	updateMorphTargets() {
 
 		const geometry = this.geometry;
@@ -46328,58 +52569,81 @@ class CanvasTexture extends Texture {
 }
 
 /**
- * Extensible curve object.
+ * An abstract base class for creating an analytic curve object that contains methods
+ * for interpolation.
  *
- * Some common of curve methods:
- * .getPoint( t, optionalTarget ), .getTangent( t, optionalTarget )
- * .getPointAt( u, optionalTarget ), .getTangentAt( u, optionalTarget )
- * .getPoints(), .getSpacedPoints()
- * .getLength()
- * .updateArcLengths()
- *
- * This following curves inherit from THREE.Curve:
- *
- * -- 2D curves --
- * THREE.ArcCurve
- * THREE.CubicBezierCurve
- * THREE.EllipseCurve
- * THREE.LineCurve
- * THREE.QuadraticBezierCurve
- * THREE.SplineCurve
- *
- * -- 3D curves --
- * THREE.CatmullRomCurve3
- * THREE.CubicBezierCurve3
- * THREE.LineCurve3
- * THREE.QuadraticBezierCurve3
- *
- * A series of curves can be represented as a THREE.CurvePath.
- *
- **/
-
+ * @abstract
+ */
 class Curve {
 
+	/**
+	 * Constructs a new curve.
+	 */
 	constructor() {
 
+		/**
+		 * The type property is used for detecting the object type
+		 * in context of serialization/deserialization.
+		 *
+		 * @type {string}
+		 * @readonly
+		 */
 		this.type = 'Curve';
 
+		/**
+		 * This value determines the amount of divisions when calculating the
+		 * cumulative segment lengths of a curve via {@link Curve#getLengths}. To ensure
+		 * precision when using methods like {@link Curve#getSpacedPoints}, it is
+		 * recommended to increase the value of this property if the curve is very large.
+		 *
+		 * @type {number}
+		 * @default 200
+		 */
 		this.arcLengthDivisions = 200;
+
+		/**
+		 * Must be set to `true` if the curve parameters have changed.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.needsUpdate = false;
+
+		/**
+		 * An internal cache that holds precomputed curve length values.
+		 *
+		 * @private
+		 * @type {?Array<number>}
+		 * @default null
+		 */
+		this.cacheArcLengths = null;
 
 	}
 
-	// Virtual base class method to overwrite and implement in subclasses
-	//	- t [0 .. 1]
-
+	/**
+	 * This method returns a vector in 2D or 3D space (depending on the curve definition)
+	 * for the given interpolation factor.
+	 *
+	 * @abstract
+	 * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+	 * @param {(Vector2|Vector3)} [optionalTarget] - The optional target vector the result is written to.
+	 * @return {?(Vector2|Vector3)} The position on the curve. It can be a 2D or 3D vector depending on the curve definition.
+	 */
 	getPoint( /* t, optionalTarget */ ) {
 
 		console.warn( 'THREE.Curve: .getPoint() not implemented.' );
-		return null;
 
 	}
 
-	// Get point at relative position in curve according to arc length
-	// - u [0 .. 1]
-
+	/**
+	 * This method returns a vector in 2D or 3D space (depending on the curve definition)
+	 * for the given interpolation factor. Unlike {@link Curve#getPoint}, this method honors the length
+	 * of the curve which equidistant samples.
+	 *
+	 * @param {number} u - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+	 * @param {(Vector2|Vector3)} [optionalTarget] - The optional target vector the result is written to.
+	 * @return {(Vector2|Vector3)} The position on the curve. It can be a 2D or 3D vector depending on the curve definition.
+	 */
 	getPointAt( u, optionalTarget ) {
 
 		const t = this.getUtoTmapping( u );
@@ -46387,8 +52651,13 @@ class Curve {
 
 	}
 
-	// Get sequence of points using getPoint( t )
-
+	/**
+	 * This method samples the curve via {@link Curve#getPoint} and returns an array of points representing
+	 * the curve shape.
+	 *
+	 * @param {number} [divisions=5] - The number of divisions.
+	 * @return {Array<(Vector2|Vector3)>} An array holding the sampled curve values. The number of points is `divisions + 1`.
+	 */
 	getPoints( divisions = 5 ) {
 
 		const points = [];
@@ -46405,6 +52674,14 @@ class Curve {
 
 	// Get sequence of points using getPointAt( u )
 
+	/**
+	 * This method samples the curve via {@link Curve#getPointAt} and returns an array of points representing
+	 * the curve shape. Unlike {@link Curve#getPoints}, this method returns equi-spaced points across the entire
+	 * curve.
+	 *
+	 * @param {number} [divisions=5] - The number of divisions.
+	 * @return {Array<(Vector2|Vector3)>} An array holding the sampled curve values. The number of points is `divisions + 1`.
+	 */
 	getSpacedPoints( divisions = 5 ) {
 
 		const points = [];
@@ -46419,8 +52696,11 @@ class Curve {
 
 	}
 
-	// Get total curve arc length
-
+	/**
+	 * Returns the total arc length of the curve.
+	 *
+	 * @return {number} The length of the curve.
+	 */
 	getLength() {
 
 		const lengths = this.getLengths();
@@ -46428,8 +52708,12 @@ class Curve {
 
 	}
 
-	// Get list of cumulative segment lengths
-
+	/**
+	 * Returns an array of cumulative segment lengths of the curve.
+	 *
+	 * @param {number} [divisions=this.arcLengthDivisions] - The number of divisions.
+	 * @return {Array<number>} An array holding the cumulative segment lengths.
+	 */
 	getLengths( divisions = this.arcLengthDivisions ) {
 
 		if ( this.cacheArcLengths &&
@@ -46463,6 +52747,12 @@ class Curve {
 
 	}
 
+	/**
+	 * Update the cumulative segment distance cache. The method must be called
+	 * every time curve parameters are changed. If an updated curve is part of a
+	 * composed curve like {@link CurvePath}, this method must be called on the
+	 * composed curve, too.
+	 */
 	updateArcLengths() {
 
 		this.needsUpdate = true;
@@ -46470,9 +52760,16 @@ class Curve {
 
 	}
 
-	// Given u ( 0 .. 1 ), get a t to find p. This gives you points which are equidistant
-
-	getUtoTmapping( u, distance ) {
+	/**
+	 * Given an interpolation factor in the range `[0,1]`, this method returns an updated
+	 * interpolation factor in the same range that can be ued to sample equidistant points
+	 * from a curve.
+	 *
+	 * @param {number} u - The interpolation factor.
+	 * @param {?number} distance - An optional distance on the curve.
+	 * @return {number} The updated interpolation factor.
+	 */
+	getUtoTmapping( u, distance = null ) {
 
 		const arcLengths = this.getLengths();
 
@@ -46547,11 +52844,16 @@ class Curve {
 
 	}
 
-	// Returns a unit vector tangent at t
-	// In case any sub curve does not implement its tangent derivation,
-	// 2 points a small delta apart will be used to find its gradient
-	// which seems to give a reasonable approximation
-
+	/**
+	 * Returns a unit vector tangent for the given interpolation factor.
+	 * If the derived curve does not implement its tangent derivation,
+	 * two points a small delta apart will be used to find its gradient
+	 * which seems to give a reasonable approximation.
+	 *
+	 * @param {number} t - The interpolation factor.
+	 * @param {(Vector2|Vector3)} [optionalTarget] - The optional target vector the result is written to.
+	 * @return {(Vector2|Vector3)} The tangent vector.
+	 */
 	getTangent( t, optionalTarget ) {
 
 		const delta = 0.0001;
@@ -46574,6 +52876,14 @@ class Curve {
 
 	}
 
+	/**
+	 * Same as {@link Curve#getTangent} but with equidistant samples.
+	 *
+	 * @param {number} u - The interpolation factor.
+	 * @param {(Vector2|Vector3)} [optionalTarget] - The optional target vector the result is written to.
+	 * @return {(Vector2|Vector3)} The tangent vector.
+	 * @see {@link Curve#getPointAt}
+	 */
 	getTangentAt( u, optionalTarget ) {
 
 		const t = this.getUtoTmapping( u );
@@ -46581,7 +52891,15 @@ class Curve {
 
 	}
 
-	computeFrenetFrames( segments, closed ) {
+	/**
+	 * Generates the Frenet Frames. Requires a curve definition in 3D space. Used
+	 * in geometries like {@link TubeGeometry} or {@link ExtrudeGeometry}.
+	 *
+	 * @param {number} segments - The number of segments.
+	 * @param {boolean} [closed=false] - Whether the curve is closed or not.
+	 * @return {{tangents: Array<Vector3>, normals: Array<Vector3>, binormals: Array<Vector3>}} The Frenet Frames.
+	 */
+	computeFrenetFrames( segments, closed = false ) {
 
 		// see http://www.cs.indiana.edu/pub/techreports/TR425.pdf
 
@@ -46695,12 +53013,23 @@ class Curve {
 
 	}
 
+	/**
+	 * Returns a new curve with copied values from this instance.
+	 *
+	 * @return {Curve} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
 
 	}
 
+	/**
+	 * Copies the values of the given curve to this instance.
+	 *
+	 * @param {Curve} source - The curve to copy.
+	 * @return {Curve} A reference to this curve.
+	 */
 	copy( source ) {
 
 		this.arcLengthDivisions = source.arcLengthDivisions;
@@ -46709,6 +53038,12 @@ class Curve {
 
 	}
 
+	/**
+	 * Serializes the curve into JSON.
+	 *
+	 * @return {Object} A JSON object representing the serialized curve.
+	 * @see {@link ObjectLoader#parse}
+	 */
 	toJSON() {
 
 		const data = {
@@ -46726,6 +53061,12 @@ class Curve {
 
 	}
 
+	/**
+	 * Deserializes the curve from the given JSON.
+	 *
+	 * @param {Object} json - The JSON holding the serialized curve.
+	 * @return {Curve} A reference to this curve.
+	 */
 	fromJSON( json ) {
 
 		this.arcLengthDivisions = json.arcLengthDivisions;
@@ -46736,31 +53077,133 @@ class Curve {
 
 }
 
+/**
+ * A curve representing an ellipse.
+ *
+ * ```js
+ * const curve = new THREE.EllipseCurve(
+ * 	0, 0,
+ * 	10, 10,
+ * 	0, 2 * Math.PI,
+ * 	false,
+ * 	0
+ * );
+ *
+ * const points = curve.getPoints( 50 );
+ * const geometry = new THREE.BufferGeometry().setFromPoints( points );
+ *
+ * const material = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+ *
+ * // Create the final object to add to the scene
+ * const ellipse = new THREE.Line( geometry, material );
+ * ```
+ *
+ * @augments Curve
+ */
 class EllipseCurve extends Curve {
 
+	/**
+	 * Constructs a new ellipse curve.
+	 *
+	 * @param {number} [aX=0] - The X center of the ellipse.
+	 * @param {number} [aY=0] - The Y center of the ellipse.
+	 * @param {number} [xRadius=1] - The radius of the ellipse in the x direction.
+	 * @param {number} [yRadius=1] - The radius of the ellipse in the y direction.
+	 * @param {number} [aStartAngle=0] - The start angle of the curve in radians starting from the positive X axis.
+	 * @param {number} [aEndAngle=Math.PI*2] - The end angle of the curve in radians starting from the positive X axis.
+	 * @param {boolean} [aClockwise=false] - Whether the ellipse is drawn clockwise or not.
+	 * @param {number} [aRotation=0] - The rotation angle of the ellipse in radians, counterclockwise from the positive X axis.
+	 */
 	constructor( aX = 0, aY = 0, xRadius = 1, yRadius = 1, aStartAngle = 0, aEndAngle = Math.PI * 2, aClockwise = false, aRotation = 0 ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isEllipseCurve = true;
 
 		this.type = 'EllipseCurve';
 
+		/**
+		 * The X center of the ellipse.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.aX = aX;
+
+		/**
+		 * The Y center of the ellipse.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.aY = aY;
 
+		/**
+		 * The radius of the ellipse in the x direction.
+		 * Setting the this value equal to the {@link EllipseCurve#yRadius} will result in a circle.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.xRadius = xRadius;
+
+		/**
+		 * The radius of the ellipse in the y direction.
+		 * Setting the this value equal to the {@link EllipseCurve#xRadius} will result in a circle.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.yRadius = yRadius;
 
+		/**
+		 * The start angle of the curve in radians starting from the positive X axis.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.aStartAngle = aStartAngle;
+
+		/**
+		 * The end angle of the curve in radians starting from the positive X axis.
+		 *
+		 * @type {number}
+		 * @default Math.PI*2
+		 */
 		this.aEndAngle = aEndAngle;
 
+		/**
+		 * Whether the ellipse is drawn clockwise or not.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.aClockwise = aClockwise;
 
+		/**
+		 * The rotation angle of the ellipse in radians, counterclockwise from the positive X axis.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.aRotation = aRotation;
 
 	}
 
+	/**
+	 * Returns a point on the curve.
+	 *
+	 * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+	 * @param {Vector2} [optionalTarget] - The optional target vector the result is written to.
+	 * @return {Vector2} The position on the curve.
+	 */
 	getPoint( t, optionalTarget = new Vector2() ) {
 
 		const point = optionalTarget;
@@ -46888,12 +53331,34 @@ class EllipseCurve extends Curve {
 
 }
 
+/**
+ * A curve representing an arc.
+ *
+ * @augments EllipseCurve
+ */
 class ArcCurve extends EllipseCurve {
 
+	/**
+	 * Constructs a new arc curve.
+	 *
+	 * @param {number} [aX=0] - The X center of the ellipse.
+	 * @param {number} [aY=0] - The Y center of the ellipse.
+	 * @param {number} [aRadius=1] - The radius of the ellipse in the x direction.
+	 * @param {number} [aStartAngle=0] - The start angle of the curve in radians starting from the positive X axis.
+	 * @param {number} [aEndAngle=Math.PI*2] - The end angle of the curve in radians starting from the positive X axis.
+	 * @param {boolean} [aClockwise=false] - Whether the ellipse is drawn clockwise or not.
+	 */
 	constructor( aX, aY, aRadius, aStartAngle, aEndAngle, aClockwise ) {
 
 		super( aX, aY, aRadius, aRadius, aStartAngle, aEndAngle, aClockwise );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isArcCurve = true;
 
 		this.type = 'ArcCurve';
@@ -46902,27 +53367,26 @@ class ArcCurve extends EllipseCurve {
 
 }
 
-/**
- * Centripetal CatmullRom Curve - which is useful for avoiding
- * cusps and self-intersections in non-uniform catmull rom curves.
- * http://www.cemyuksel.com/research/catmullrom_param/catmullrom.pdf
- *
- * curve.type accepts centripetal(default), chordal and catmullrom
- * curve.tension is used for catmullrom which defaults to 0.5
- */
-
-
-/*
-Based on an optimized c++ solution in
- - http://stackoverflow.com/questions/9489736/catmull-rom-curve-with-no-cusps-and-no-self-intersections/
- - http://ideone.com/NoEbVM
-
-This CubicPoly class could be used for reusing some variables and calculations,
-but for three.js curve use, it could be possible inlined and flatten into a single function call
-which can be placed in CurveUtils.
-*/
-
 function CubicPoly() {
+
+	/**
+	 * Centripetal CatmullRom Curve - which is useful for avoiding
+	* cusps and self-intersections in non-uniform catmull rom curves.
+	* http://www.cemyuksel.com/research/catmullrom_param/catmullrom.pdf
+	*
+	* curve.type accepts centripetal(default), chordal and catmullrom
+	* curve.tension is used for catmullrom which defaults to 0.5
+	*/
+
+	/*
+	Based on an optimized c++ solution in
+	- http://stackoverflow.com/questions/9489736/catmull-rom-curve-with-no-cusps-and-no-self-intersections/
+	- http://ideone.com/NoEbVM
+
+	This CubicPoly class could be used for reusing some variables and calculations,
+	but for three.js curve use, it could be possible inlined and flatten into a single function call
+	which can be placed in CurveUtils.
+	*/
 
 	let c0 = 0, c1 = 0, c2 = 0, c3 = 0;
 
@@ -46984,23 +53448,95 @@ const px = /*@__PURE__*/ new CubicPoly();
 const py = /*@__PURE__*/ new CubicPoly();
 const pz = /*@__PURE__*/ new CubicPoly();
 
+/**
+ * A curve representing a Catmull-Rom spline.
+ *
+ * ```js
+ * //Create a closed wavey loop
+ * const curve = new THREE.CatmullRomCurve3( [
+ * 	new THREE.Vector3( -10, 0, 10 ),
+ * 	new THREE.Vector3( -5, 5, 5 ),
+ * 	new THREE.Vector3( 0, 0, 0 ),
+ * 	new THREE.Vector3( 5, -5, 5 ),
+ * 	new THREE.Vector3( 10, 0, 10 )
+ * ] );
+ *
+ * const points = curve.getPoints( 50 );
+ * const geometry = new THREE.BufferGeometry().setFromPoints( points );
+ *
+ * const material = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+ *
+ * // Create the final object to add to the scene
+ * const curveObject = new THREE.Line( geometry, material );
+ * ```
+ *
+ * @augments Curve
+ */
 class CatmullRomCurve3 extends Curve {
 
+	/**
+	 * Constructs a new Catmull-Rom curve.
+	 *
+	 * @param {Array<Vector3>} [points] - An array of 3D points defining the curve.
+	 * @param {boolean} [closed=false] - Whether the curve is closed or not.
+	 * @param {('centripetal'|'chordal'|'catmullrom')} [curveType='centripetal'] - The curve type.
+	 * @param {number} [tension=0.5] - Tension of the curve.
+	 */
 	constructor( points = [], closed = false, curveType = 'centripetal', tension = 0.5 ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isCatmullRomCurve3 = true;
 
 		this.type = 'CatmullRomCurve3';
 
+		/**
+		 * An array of 3D points defining the curve.
+		 *
+		 * @type {Array<Vector3>}
+		 */
 		this.points = points;
+
+		/**
+		 * Whether the curve is closed or not.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.closed = closed;
+
+		/**
+		 * The curve type.
+		 *
+		 * @type {('centripetal'|'chordal'|'catmullrom')}
+		 * @default 'centripetal'
+		 */
 		this.curveType = curveType;
+
+		/**
+		 * Tension of the curve.
+		 *
+		 * @type {number}
+		 * @default 0.5
+		 */
 		this.tension = tension;
 
 	}
 
+	/**
+	 * Returns a point on the curve.
+	 *
+	 * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+	 * @param {Vector3} [optionalTarget] - The optional target vector the result is written to.
+	 * @return {Vector3} The position on the curve.
+	 */
 	getPoint( t, optionalTarget = new Vector3() ) {
 
 		const point = optionalTarget;
@@ -47153,11 +53689,18 @@ class CatmullRomCurve3 extends Curve {
 
 }
 
-/**
- * Bezier Curves formulas obtained from
- * https://en.wikipedia.org/wiki/B%C3%A9zier_curve
- */
+// Bezier Curves formulas obtained from: https://en.wikipedia.org/wiki/B%C3%A9zier_curve
 
+/**
+ * Computes a point on a Catmull-Rom spline.
+ *
+ * @param {number} t - The interpolation factor.
+ * @param {number} p0 - The first control point.
+ * @param {number} p1 - The second control point.
+ * @param {number} p2 - The third control point.
+ * @param {number} p3 - The fourth control point.
+ * @return {number} The calculated point on a Catmull-Rom spline.
+ */
 function CatmullRom( t, p0, p1, p2, p3 ) {
 
 	const v0 = ( p2 - p0 ) * 0.5;
@@ -47189,6 +53732,15 @@ function QuadraticBezierP2( t, p ) {
 
 }
 
+/**
+ * Computes a point on a Quadratic Bezier curve.
+ *
+ * @param {number} t - The interpolation factor.
+ * @param {number} p0 - The first control point.
+ * @param {number} p1 - The second control point.
+ * @param {number} p2 - The third control point.
+ * @return {number} The calculated point on a Quadratic Bezier curve.
+ */
 function QuadraticBezier( t, p0, p1, p2 ) {
 
 	return QuadraticBezierP0( t, p0 ) + QuadraticBezierP1( t, p1 ) +
@@ -47224,6 +53776,16 @@ function CubicBezierP3( t, p ) {
 
 }
 
+/**
+ * Computes a point on a Cubic Bezier curve.
+ *
+ * @param {number} t - The interpolation factor.
+ * @param {number} p0 - The first control point.
+ * @param {number} p1 - The second control point.
+ * @param {number} p2 - The third control point.
+ * @param {number} p3 - The fourth control point.
+ * @return {number} The calculated point on a Cubic Bezier curve.
+ */
 function CubicBezier( t, p0, p1, p2, p3 ) {
 
 	return CubicBezierP0( t, p0 ) + CubicBezierP1( t, p1 ) + CubicBezierP2( t, p2 ) +
@@ -47231,23 +53793,90 @@ function CubicBezier( t, p0, p1, p2, p3 ) {
 
 }
 
+/**
+ * A curve representing a 2D Cubic Bezier curve.
+ *
+ * ```js
+ * const curve = new THREE.CubicBezierCurve(
+ * 	new THREE.Vector2( - 0, 0 ),
+ * 	new THREE.Vector2( - 5, 15 ),
+ * 	new THREE.Vector2( 20, 15 ),
+ * 	new THREE.Vector2( 10, 0 )
+ * );
+ *
+ * const points = curve.getPoints( 50 );
+ * const geometry = new THREE.BufferGeometry().setFromPoints( points );
+ *
+ * const material = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+ *
+ * // Create the final object to add to the scene
+ * const curveObject = new THREE.Line( geometry, material );
+ * ```
+ *
+ * @augments Curve
+ */
 class CubicBezierCurve extends Curve {
 
+	/**
+	 * Constructs a new Cubic Bezier curve.
+	 *
+	 * @param {Vector2} [v0] - The start point.
+	 * @param {Vector2} [v1] - The first control point.
+	 * @param {Vector2} [v2] - The second control point.
+	 * @param {Vector2} [v3] - The end point.
+	 */
 	constructor( v0 = new Vector2(), v1 = new Vector2(), v2 = new Vector2(), v3 = new Vector2() ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isCubicBezierCurve = true;
 
 		this.type = 'CubicBezierCurve';
 
+		/**
+		 * The start point.
+		 *
+		 * @type {Vector2}
+		 */
 		this.v0 = v0;
+
+		/**
+		 * The first control point.
+		 *
+		 * @type {Vector2}
+		 */
 		this.v1 = v1;
+
+		/**
+		 * The second control point.
+		 *
+		 * @type {Vector2}
+		 */
 		this.v2 = v2;
+
+		/**
+		 * The end point.
+		 *
+		 * @type {Vector2}
+		 */
 		this.v3 = v3;
 
 	}
 
+	/**
+	 * Returns a point on the curve.
+	 *
+	 * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+	 * @param {Vector2} [optionalTarget] - The optional target vector the result is written to.
+	 * @return {Vector2} The position on the curve.
+	 */
 	getPoint( t, optionalTarget = new Vector2() ) {
 
 		const point = optionalTarget;
@@ -47304,23 +53933,73 @@ class CubicBezierCurve extends Curve {
 
 }
 
+/**
+ * A curve representing a 3D Cubic Bezier curve.
+ *
+ * @augments Curve
+ */
 class CubicBezierCurve3 extends Curve {
 
+	/**
+	 * Constructs a new Cubic Bezier curve.
+	 *
+	 * @param {Vector3} [v0] - The start point.
+	 * @param {Vector3} [v1] - The first control point.
+	 * @param {Vector3} [v2] - The second control point.
+	 * @param {Vector3} [v3] - The end point.
+	 */
 	constructor( v0 = new Vector3(), v1 = new Vector3(), v2 = new Vector3(), v3 = new Vector3() ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isCubicBezierCurve3 = true;
 
 		this.type = 'CubicBezierCurve3';
 
+		/**
+		 * The start point.
+		 *
+		 * @type {Vector3}
+		 */
 		this.v0 = v0;
+
+		/**
+		 * The first control point.
+		 *
+		 * @type {Vector3}
+		 */
 		this.v1 = v1;
+
+		/**
+		 * The second control point.
+		 *
+		 * @type {Vector3}
+		 */
 		this.v2 = v2;
+
+		/**
+		 * The end point.
+		 *
+		 * @type {Vector3}
+		 */
 		this.v3 = v3;
 
 	}
 
+	/**
+	 * Returns a point on the curve.
+	 *
+	 * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+	 * @param {Vector3} [optionalTarget] - The optional target vector the result is written to.
+	 * @return {Vector3} The position on the curve.
+	 */
 	getPoint( t, optionalTarget = new Vector3() ) {
 
 		const point = optionalTarget;
@@ -47378,21 +54057,57 @@ class CubicBezierCurve3 extends Curve {
 
 }
 
+/**
+ * A curve representing a 2D line segment.
+ *
+ * @augments Curve
+ */
 class LineCurve extends Curve {
 
+	/**
+	 * Constructs a new line curve.
+	 *
+	 * @param {Vector2} [v1] - The start point.
+	 * @param {Vector2} [v2] - The end point.
+	 */
 	constructor( v1 = new Vector2(), v2 = new Vector2() ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isLineCurve = true;
 
 		this.type = 'LineCurve';
 
+		/**
+		 * The start point.
+		 *
+		 * @type {Vector2}
+		 */
 		this.v1 = v1;
+
+		/**
+		 * The end point.
+		 *
+		 * @type {Vector2}
+		 */
 		this.v2 = v2;
 
 	}
 
+	/**
+	 * Returns a point on the line.
+	 *
+	 * @param {number} t - A interpolation factor representing a position on the line. Must be in the range `[0,1]`.
+	 * @param {Vector2} [optionalTarget] - The optional target vector the result is written to.
+	 * @return {Vector2} The position on the line.
+	 */
 	getPoint( t, optionalTarget = new Vector2() ) {
 
 		const point = optionalTarget;
@@ -47466,21 +54181,57 @@ class LineCurve extends Curve {
 
 }
 
+/**
+ * A curve representing a 3D line segment.
+ *
+ * @augments Curve
+ */
 class LineCurve3 extends Curve {
 
+	/**
+	 * Constructs a new line curve.
+	 *
+	 * @param {Vector3} [v1] - The start point.
+	 * @param {Vector3} [v2] - The end point.
+	 */
 	constructor( v1 = new Vector3(), v2 = new Vector3() ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isLineCurve3 = true;
 
 		this.type = 'LineCurve3';
 
+		/**
+		 * The start point.
+		 *
+		 * @type {Vector3}
+		 */
 		this.v1 = v1;
+
+		/**
+		 * The end point.
+		 *
+		 * @type {Vector2}
+		 */
 		this.v2 = v2;
 
 	}
 
+	/**
+	 * Returns a point on the line.
+	 *
+	 * @param {number} t - A interpolation factor representing a position on the line. Must be in the range `[0,1]`.
+	 * @param {Vector3} [optionalTarget] - The optional target vector the result is written to.
+	 * @return {Vector3} The position on the line.
+	 */
 	getPoint( t, optionalTarget = new Vector3() ) {
 
 		const point = optionalTarget;
@@ -47554,22 +54305,81 @@ class LineCurve3 extends Curve {
 
 }
 
+/**
+ * A curve representing a 2D Quadratic Bezier curve.
+ *
+ * ```js
+ * const curve = new THREE.QuadraticBezierCurve(
+ * 	new THREE.Vector2( - 10, 0 ),
+ * 	new THREE.Vector2( 20, 15 ),
+ * 	new THREE.Vector2( 10, 0 )
+ * )
+ *
+ * const points = curve.getPoints( 50 );
+ * const geometry = new THREE.BufferGeometry().setFromPoints( points );
+ *
+ * const material = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+ *
+ * // Create the final object to add to the scene
+ * const curveObject = new THREE.Line( geometry, material );
+ * ```
+ *
+ * @augments Curve
+ */
 class QuadraticBezierCurve extends Curve {
 
+	/**
+	 * Constructs a new Quadratic Bezier curve.
+	 *
+	 * @param {Vector2} [v0] - The start point.
+	 * @param {Vector2} [v1] - The control point.
+	 * @param {Vector2} [v2] - The end point.
+	 */
 	constructor( v0 = new Vector2(), v1 = new Vector2(), v2 = new Vector2() ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isQuadraticBezierCurve = true;
 
 		this.type = 'QuadraticBezierCurve';
 
+		/**
+		 * The start point.
+		 *
+		 * @type {Vector2}
+		 */
 		this.v0 = v0;
+
+		/**
+		 * The control point.
+		 *
+		 * @type {Vector2}
+		 */
 		this.v1 = v1;
+
+		/**
+		 * The end point.
+		 *
+		 * @type {Vector2}
+		 */
 		this.v2 = v2;
 
 	}
 
+	/**
+	 * Returns a point on the curve.
+	 *
+	 * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+	 * @param {Vector2} [optionalTarget] - The optional target vector the result is written to.
+	 * @return {Vector2} The position on the curve.
+	 */
 	getPoint( t, optionalTarget = new Vector2() ) {
 
 		const point = optionalTarget;
@@ -47623,22 +54433,65 @@ class QuadraticBezierCurve extends Curve {
 
 }
 
+/**
+ * A curve representing a 3D Quadratic Bezier curve.
+ *
+ * @augments Curve
+ */
 class QuadraticBezierCurve3 extends Curve {
 
+	/**
+	 * Constructs a new Quadratic Bezier curve.
+	 *
+	 * @param {Vector3} [v0] - The start point.
+	 * @param {Vector3} [v1] - The control point.
+	 * @param {Vector3} [v2] - The end point.
+	 */
 	constructor( v0 = new Vector3(), v1 = new Vector3(), v2 = new Vector3() ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isQuadraticBezierCurve3 = true;
 
 		this.type = 'QuadraticBezierCurve3';
 
+		/**
+		 * The start point.
+		 *
+		 * @type {Vector3}
+		 */
 		this.v0 = v0;
+
+		/**
+		 * The control point.
+		 *
+		 * @type {Vector3}
+		 */
 		this.v1 = v1;
+
+		/**
+		 * The end point.
+		 *
+		 * @type {Vector3}
+		 */
 		this.v2 = v2;
 
 	}
 
+	/**
+	 * Returns a point on the curve.
+	 *
+	 * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+	 * @param {Vector3} [optionalTarget] - The optional target vector the result is written to.
+	 * @return {Vector3} The position on the curve.
+	 */
 	getPoint( t, optionalTarget = new Vector3() ) {
 
 		const point = optionalTarget;
@@ -47693,20 +54546,68 @@ class QuadraticBezierCurve3 extends Curve {
 
 }
 
+/**
+ * A curve representing a 2D spline curve.
+ *
+ * ```js
+ * // Create a sine-like wave
+ * const curve = new THREE.SplineCurve( [
+ * 	new THREE.Vector2( -10, 0 ),
+ * 	new THREE.Vector2( -5, 5 ),
+ * 	new THREE.Vector2( 0, 0 ),
+ * 	new THREE.Vector2( 5, -5 ),
+ * 	new THREE.Vector2( 10, 0 )
+ * ] );
+ *
+ * const points = curve.getPoints( 50 );
+ * const geometry = new THREE.BufferGeometry().setFromPoints( points );
+ *
+ * const material = new THREE.LineBasicMaterial( { color: 0xff0000 } );
+ *
+ * // Create the final object to add to the scene
+ * const splineObject = new THREE.Line( geometry, material );
+ * ```
+ *
+ * @augments Curve
+ */
 class SplineCurve extends Curve {
 
+	/**
+	 * Constructs a new 2D spline curve.
+	 *
+	 * @param {Array<Vector2>} [points] -  An array of 2D points defining the curve.
+	 */
 	constructor( points = [] ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isSplineCurve = true;
 
 		this.type = 'SplineCurve';
 
+		/**
+		 * An array of 2D points defining the curve.
+		 *
+		 * @type {Array<Vector2>}
+		 */
 		this.points = points;
 
 	}
 
+	/**
+	 * Returns a point on the curve.
+	 *
+	 * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+	 * @param {Vector2} [optionalTarget] - The optional target vector the result is written to.
+	 * @return {Vector2} The position on the curve.
+	 */
 	getPoint( t, optionalTarget = new Vector2() ) {
 
 		const point = optionalTarget;
@@ -47799,30 +54700,58 @@ var Curves = /*#__PURE__*/Object.freeze({
 	SplineCurve: SplineCurve
 });
 
-/**************************************************************
- *	Curved Path - a curve path is simply a array of connected
- *  curves, but retains the api of a curve
- **************************************************************/
-
+/**
+ * A base class extending {@link Curve}. `CurvePath` is simply an
+ * array of connected curves, but retains the API of a curve.
+ *
+ * @augments Curve
+ */
 class CurvePath extends Curve {
 
+	/**
+	 * Constructs a new curve path.
+	 */
 	constructor() {
 
 		super();
 
 		this.type = 'CurvePath';
 
+		/**
+		 * An array of curves defining the
+		 * path.
+		 *
+		 * @type {Array<Curve>}
+		 */
 		this.curves = [];
-		this.autoClose = false; // Automatically closes the path
+
+		/**
+		 * Whether the path should automatically be closed
+		 * by a line curve.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
+		this.autoClose = false;
 
 	}
 
+	/**
+	 * Adds a curve to this curve path.
+	 *
+	 * @param {Curve} curve - The curve to add.
+	 */
 	add( curve ) {
 
 		this.curves.push( curve );
 
 	}
 
+	/**
+	 * Adds a line curve to close the path.
+	 *
+	 * @return {CurvePath} A reference to this curve path.
+	 */
 	closePath() {
 
 		// Add a line curve if start and end of lines are not connected
@@ -47840,16 +54769,24 @@ class CurvePath extends Curve {
 
 	}
 
-	// To get accurate point with reference to
-	// entire path distance at time t,
-	// following has to be done:
-
-	// 1. Length of each sub path have to be known
-	// 2. Locate and identify type of curve
-	// 3. Get t for the curve
-	// 4. Return curve.getPointAt(t')
-
+	/**
+	 * This method returns a vector in 2D or 3D space (depending on the curve definitions)
+	 * for the given interpolation factor.
+	 *
+	 * @param {number} t - A interpolation factor representing a position on the curve. Must be in the range `[0,1]`.
+	 * @param {(Vector2|Vector3)} [optionalTarget] - The optional target vector the result is written to.
+	 * @return {?(Vector2|Vector3)} The position on the curve. It can be a 2D or 3D vector depending on the curve definition.
+	 */
 	getPoint( t, optionalTarget ) {
+
+		// To get accurate point with reference to
+		// entire path distance at time t,
+		// following has to be done:
+
+		// 1. Length of each sub path have to be known
+		// 2. Locate and identify type of curve
+		// 3. Get t for the curve
+		// 4. Return curve.getPointAt(t')
 
 		const d = t * this.getLength();
 		const curveLengths = this.getCurveLengths();
@@ -47881,19 +54818,20 @@ class CurvePath extends Curve {
 
 	}
 
-	// We cannot use the default THREE.Curve getPoint() with getLength() because in
-	// THREE.Curve, getLength() depends on getPoint() but in THREE.CurvePath
-	// getPoint() depends on getLength
-
 	getLength() {
+
+		// We cannot use the default THREE.Curve getPoint() with getLength() because in
+		// THREE.Curve, getLength() depends on getPoint() but in THREE.CurvePath
+		// getPoint() depends on getLength
 
 		const lens = this.getCurveLengths();
 		return lens[ lens.length - 1 ];
 
 	}
 
-	// cacheLengths must be recalculated.
 	updateArcLengths() {
+
+		// cacheLengths must be recalculated.
 
 		this.needsUpdate = true;
 		this.cacheLengths = null;
@@ -47901,11 +54839,15 @@ class CurvePath extends Curve {
 
 	}
 
-	// Compute lengths and cache them
-	// We cannot overwrite getLengths() because UtoT mapping uses it.
-
+	/**
+	 * Returns list of cumulative curve lengths of the defined curves.
+	 *
+	 * @return {Array<number>} The curve lengths.
+	 */
 	getCurveLengths() {
 
+		// Compute lengths and cache them
+		// We cannot overwrite getLengths() because UtoT mapping uses it.
 		// We use cache values if curves and cache array are same length
 
 		if ( this.cacheLengths && this.cacheLengths.length === this.curves.length ) {
@@ -48049,14 +54991,46 @@ class CurvePath extends Curve {
 
 }
 
+/**
+ * A 2D path representation. The class provides methods for creating paths
+ * and contours of 2D shapes similar to the 2D Canvas API.
+ *
+ * ```js
+ * const path = new THREE.Path();
+ *
+ * path.lineTo( 0, 0.8 );
+ * path.quadraticCurveTo( 0, 1, 0.2, 1 );
+ * path.lineTo( 1, 1 );
+ *
+ * const points = path.getPoints();
+ *
+ * const geometry = new THREE.BufferGeometry().setFromPoints( points );
+ * const material = new THREE.LineBasicMaterial( { color: 0xffffff } );
+ *
+ * const line = new THREE.Line( geometry, material );
+ * scene.add( line );
+ * ```
+ *
+ * @augments CurvePath
+ */
 let Path$1 = class Path extends CurvePath {
 
+	/**
+	 * Constructs a new path.
+	 *
+	 * @param {Array<Vector2>} [points] - An array of 2D points defining the path.
+	 */
 	constructor( points ) {
 
 		super();
 
 		this.type = 'Path';
 
+		/**
+		 * The current offset of the path. Any new curve added will start here.
+		 *
+		 * @type {Vector2}
+		 */
 		this.currentPoint = new Vector2();
 
 		if ( points ) {
@@ -48067,6 +55041,13 @@ let Path$1 = class Path extends CurvePath {
 
 	}
 
+	/**
+	 * Creates a path from the given list of points. The points are added
+	 * to the path as instances of {@link LineCurve}.
+	 *
+	 * @param {Array<Vector2>} points - An array of 2D points.
+	 * @return {Path} A reference to this path.
+	 */
 	setFromPoints( points ) {
 
 		this.moveTo( points[ 0 ].x, points[ 0 ].y );
@@ -48081,6 +55062,13 @@ let Path$1 = class Path extends CurvePath {
 
 	}
 
+	/**
+	 * Moves {@link Path#currentPoint} to the given point.
+	 *
+	 * @param {number} x - The x coordinate.
+	 * @param {number} y - The y coordinate.
+	 * @return {Path} A reference to this path.
+	 */
 	moveTo( x, y ) {
 
 		this.currentPoint.set( x, y ); // TODO consider referencing vectors instead of copying?
@@ -48089,6 +55077,14 @@ let Path$1 = class Path extends CurvePath {
 
 	}
 
+	/**
+	 * Adds an instance of {@link LineCurve} to the path by connecting
+	 * the current point with the given one.
+	 *
+	 * @param {number} x - The x coordinate of the end point.
+	 * @param {number} y - The y coordinate of the end point.
+	 * @return {Path} A reference to this path.
+	 */
 	lineTo( x, y ) {
 
 		const curve = new LineCurve( this.currentPoint.clone(), new Vector2( x, y ) );
@@ -48100,6 +55096,16 @@ let Path$1 = class Path extends CurvePath {
 
 	}
 
+	/**
+	 * Adds an instance of {@link QuadraticBezierCurve} to the path by connecting
+	 * the current point with the given one.
+	 *
+	 * @param {number} aCPx - The x coordinate of the control point.
+	 * @param {number} aCPy - The y coordinate of the control point.
+	 * @param {number} aX - The x coordinate of the end point.
+	 * @param {number} aY - The y coordinate of the end point.
+	 * @return {Path} A reference to this path.
+	 */
 	quadraticCurveTo( aCPx, aCPy, aX, aY ) {
 
 		const curve = new QuadraticBezierCurve(
@@ -48116,6 +55122,18 @@ let Path$1 = class Path extends CurvePath {
 
 	}
 
+	/**
+	 * Adds an instance of {@link CubicBezierCurve} to the path by connecting
+	 * the current point with the given one.
+	 *
+	 * @param {number} aCP1x - The x coordinate of the first control point.
+	 * @param {number} aCP1y - The y coordinate of the first control point.
+	 * @param {number} aCP2x - The x coordinate of the second control point.
+	 * @param {number} aCP2y - The y coordinate of the second control point.
+	 * @param {number} aX - The x coordinate of the end point.
+	 * @param {number} aY - The y coordinate of the end point.
+	 * @return {Path} A reference to this path.
+	 */
 	bezierCurveTo( aCP1x, aCP1y, aCP2x, aCP2y, aX, aY ) {
 
 		const curve = new CubicBezierCurve(
@@ -48133,7 +55151,14 @@ let Path$1 = class Path extends CurvePath {
 
 	}
 
-	splineThru( pts /*Array of Vector*/ ) {
+	/**
+	 * Adds an instance of {@link SplineCurve} to the path by connecting
+	 * the current point with the given list of points.
+	 *
+	 * @param {Array<Vector2>} pts - An array of points in 2D space.
+	 * @return {Path} A reference to this path.
+	 */
+	splineThru( pts ) {
 
 		const npts = [ this.currentPoint.clone() ].concat( pts );
 
@@ -48146,6 +55171,18 @@ let Path$1 = class Path extends CurvePath {
 
 	}
 
+	/**
+	 * Adds an arc as an instance of {@link EllipseCurve} to the path, positioned relative
+	 * to the current point.
+	 *
+	 * @param {number} aX - The x coordinate of the center of the arc offsetted from the previous curve.
+	 * @param {number} aY - The y coordinate of the center of the arc offsetted from the previous curve.
+	 * @param {number} aRadius - The radius of the arc.
+	 * @param {number} aStartAngle - The start angle in radians.
+	 * @param {number} aEndAngle - The end angle in radians.
+	 * @param {boolean} [aClockwise=false] - Whether to sweep the arc clockwise or not.
+	 * @return {Path} A reference to this path.
+	 */
 	arc( aX, aY, aRadius, aStartAngle, aEndAngle, aClockwise ) {
 
 		const x0 = this.currentPoint.x;
@@ -48158,6 +55195,17 @@ let Path$1 = class Path extends CurvePath {
 
 	}
 
+	/**
+	 * Adds an absolutely positioned arc as an instance of {@link EllipseCurve} to the path.
+	 *
+	 * @param {number} aX - The x coordinate of the center of the arc.
+	 * @param {number} aY - The y coordinate of the center of the arc.
+	 * @param {number} aRadius - The radius of the arc.
+	 * @param {number} aStartAngle - The start angle in radians.
+	 * @param {number} aEndAngle - The end angle in radians.
+	 * @param {boolean} [aClockwise=false] - Whether to sweep the arc clockwise or not.
+	 * @return {Path} A reference to this path.
+	 */
 	absarc( aX, aY, aRadius, aStartAngle, aEndAngle, aClockwise ) {
 
 		this.absellipse( aX, aY, aRadius, aRadius, aStartAngle, aEndAngle, aClockwise );
@@ -48166,6 +55214,20 @@ let Path$1 = class Path extends CurvePath {
 
 	}
 
+	/**
+	 * Adds an ellipse as an instance of {@link EllipseCurve} to the path, positioned relative
+	 * to the current point
+	 *
+	 * @param {number} aX - The x coordinate of the center of the ellipse offsetted from the previous curve.
+	 * @param {number} aY - The y coordinate of the center of the ellipse offsetted from the previous curve.
+	 * @param {number} xRadius - The radius of the ellipse in the x axis.
+	 * @param {number} yRadius - The radius of the ellipse in the y axis.
+	 * @param {number} aStartAngle - The start angle in radians.
+	 * @param {number} aEndAngle - The end angle in radians.
+	 * @param {boolean} [aClockwise=false] - Whether to sweep the ellipse clockwise or not.
+	 * @param {boolean} [aRotation=0] - The rotation angle of the ellipse in radians, counterclockwise from the positive X axis.
+	 * @return {Path} A reference to this path.
+	 */
 	ellipse( aX, aY, xRadius, yRadius, aStartAngle, aEndAngle, aClockwise, aRotation ) {
 
 		const x0 = this.currentPoint.x;
@@ -48177,6 +55239,19 @@ let Path$1 = class Path extends CurvePath {
 
 	}
 
+	/**
+	 * Adds an absolutely positioned ellipse as an instance of {@link EllipseCurve} to the path.
+	 *
+	 * @param {number} aX - The x coordinate of the absolute center of the ellipse.
+	 * @param {number} aY - The y coordinate of the absolute center of the ellipse.
+	 * @param {number} xRadius - The radius of the ellipse in the x axis.
+	 * @param {number} yRadius - The radius of the ellipse in the y axis.
+	 * @param {number} aStartAngle - The start angle in radians.
+	 * @param {number} aEndAngle - The end angle in radians.
+	 * @param {boolean} [aClockwise=false] - Whether to sweep the ellipse clockwise or not.
+	 * @param {number} [aRotation=0] - The rotation angle of the ellipse in radians, counterclockwise from the positive X axis.
+	 * @return {Path} A reference to this path.
+	 */
 	absellipse( aX, aY, xRadius, yRadius, aStartAngle, aEndAngle, aClockwise, aRotation ) {
 
 		const curve = new EllipseCurve( aX, aY, xRadius, yRadius, aStartAngle, aEndAngle, aClockwise, aRotation );
@@ -48235,14 +55310,47 @@ let Path$1 = class Path extends CurvePath {
 
 };
 
+/**
+ * A simple shape of Euclidean geometry. It is constructed from a
+ * number of triangular segments that are oriented around a central point and
+ * extend as far out as a given radius. It is built counter-clockwise from a
+ * start angle and a given central angle. It can also be used to create
+ * regular polygons, where the number of segments determines the number of
+ * sides.
+ *
+ * ```js
+ * const geometry = new THREE.CircleGeometry( 5, 32 );
+ * const material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+ * const circle = new THREE.Mesh( geometry, material );
+ * scene.add( circle )
+ * ```
+ *
+ * @augments BufferGeometry
+ */
 class CircleGeometry extends BufferGeometry {
 
+	/**
+	 * Constructs a new circle geometry.
+	 *
+	 * @param {number} [radius=1] - Radius of the circle.
+	 * @param {number} [segments=32] - Number of segments (triangles), minimum = `3`.
+	 * @param {number} [thetaStart=0] - Start angle for first segment in radians.
+	 * @param {number} [thetaLength=Math.PI*2] - The central angle, often called theta,
+	 * of the circular sector in radians. The default value results in a complete circle.
+	 */
 	constructor( radius = 1, segments = 32, thetaStart = 0, thetaLength = Math.PI * 2 ) {
 
 		super();
 
 		this.type = 'CircleGeometry';
 
+		/**
+		 * Holds the constructor parameters that have been
+		 * used to generate the geometry. Any modification
+		 * after instantiation does not change the geometry.
+		 *
+		 * @type {Object}
+		 */
 		this.parameters = {
 			radius: radius,
 			segments: segments,
@@ -48321,6 +55429,13 @@ class CircleGeometry extends BufferGeometry {
 
 	}
 
+	/**
+	 * Factory method for creating an instance of this class from the given
+	 * JSON object.
+	 *
+	 * @param {Object} data - A JSON object representing the serialized geometry.
+	 * @return {CircleGeometry} A new instance.
+	 */
 	static fromJSON( data ) {
 
 		return new CircleGeometry( data.radius, data.segments, data.thetaStart, data.thetaLength );
@@ -48329,20 +55444,76 @@ class CircleGeometry extends BufferGeometry {
 
 }
 
+/**
+ * Defines an arbitrary 2d shape plane using paths with optional holes. It
+ * can be used with {@link ExtrudeGeometry}, {@link ShapeGeometry}, to get
+ * points, or to get triangulated faces.
+ *
+ * ```js
+ * const heartShape = new THREE.Shape();
+ *
+ * heartShape.moveTo( 25, 25 );
+ * heartShape.bezierCurveTo( 25, 25, 20, 0, 0, 0 );
+ * heartShape.bezierCurveTo( - 30, 0, - 30, 35, - 30, 35 );
+ * heartShape.bezierCurveTo( - 30, 55, - 10, 77, 25, 95 );
+ * heartShape.bezierCurveTo( 60, 77, 80, 55, 80, 35 );
+ * heartShape.bezierCurveTo( 80, 35, 80, 0, 50, 0 );
+ * heartShape.bezierCurveTo( 35, 0, 25, 25, 25, 25 );
+ *
+ * const extrudeSettings = {
+ * 	depth: 8,
+ * 	bevelEnabled: true,
+ * 	bevelSegments: 2,
+ * 	steps: 2,
+ * 	bevelSize: 1,
+ * 	bevelThickness: 1
+ * };
+ *
+ * const geometry = new THREE.ExtrudeGeometry( heartShape, extrudeSettings );
+ * const mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial() );
+ * ```
+ *
+ * @augments Path
+ */
 class Shape extends Path$1 {
 
+	/**
+	 * Constructs a new shape.
+	 *
+	 * @param {Array<Vector2>} [points] - An array of 2D points defining the shape.
+	 */
 	constructor( points ) {
 
 		super( points );
 
+		/**
+		 * The UUID of the shape.
+		 *
+		 * @type {string}
+		 * @readonly
+		 */
 		this.uuid = generateUUID();
 
 		this.type = 'Shape';
 
+		/**
+		 * Defines the holes in the shape. Hole definitions must use the
+		 * opposite winding order (CW/CCW) than the outer shape.
+		 *
+		 * @type {Array<Path>}
+		 * @readonly
+		 */
 		this.holes = [];
 
 	}
 
+	/**
+	 * Returns an array representing each contour of the holes
+	 * as a list of 2D points.
+	 *
+	 * @param {number} divisions - The fineness of the result.
+	 * @return {Array<Array<Vector2>>} The holes as a series of 2D points.
+	 */
 	getPointsHoles( divisions ) {
 
 		const holesPts = [];
@@ -48359,6 +55530,13 @@ class Shape extends Path$1 {
 
 	// get points of shape and holes (keypoints based on segments parameter)
 
+	/**
+	 * Returns an object that holds contour data for the shape and its holes as
+	 * arrays of 2D points.
+	 *
+	 * @param {number} divisions - The fineness of the result.
+	 * @return {{shape:Array<Vector2>,holes:Array<Array<Vector2>>}} An object with contour data.
+	 */
 	extractPoints( divisions ) {
 
 		return {
@@ -48427,12 +55605,23 @@ class Shape extends Path$1 {
 }
 
 /**
- * Port from https://github.com/mapbox/earcut (v2.2.4)
+ * An implementation of the earcut polygon triangulation algorithm. The code
+ * is a port of [mapbox/earcut]{@link https://github.com/mapbox/earcut mapbox/earcut} (v2.2.4).
+ *
+ * @hideconstructor
  */
+class Earcut {
 
-const Earcut = {
-
-	triangulate: function ( data, holeIndices, dim = 2 ) {
+	/**
+	 * Triangulates the given shape definition by returning an array of triangles.
+	 *
+	 * @param {Array<number>} data - An array with 2D points.
+	 * @param {Array<number>} holeIndices - An array with indices defining holes.
+	 * @param {number} [dim=2] - The number of coordinates per vertex in the input array.
+	 * @return {Array<number>} An array representing the triangulated faces. Each face is defined by three consecutive numbers
+	 * representing vertex indices.
+	 */
+	static triangulate( data, holeIndices, dim = 2 ) {
 
 		const hasHoles = holeIndices && holeIndices.length;
 		const outerLen = hasHoles ? holeIndices[ 0 ] * dim : data.length;
@@ -48474,7 +55663,7 @@ const Earcut = {
 
 	}
 
-};
+}
 
 // create a circular doubly linked list from polygon points in the specified winding order
 function linkedList( data, start, end, dim, clockwise ) {
@@ -49214,10 +56403,19 @@ function signedArea( data, start, end, dim ) {
 
 }
 
+/**
+ * A class containing utility functions for shapes.
+ *
+ * @hideconstructor
+ */
 class ShapeUtils {
 
-	// calculate area of the contour polygon
-
+	/**
+	 * Calculate area of a ( 2D ) contour polygon.
+	 *
+	 * @param {Array<Vector2>} contour - An array of 2D points.
+	 * @return {number} The area.
+	 */
 	static area( contour ) {
 
 		const n = contour.length;
@@ -49233,12 +56431,25 @@ class ShapeUtils {
 
 	}
 
+	/**
+	 * Returns `true` if the given contour uses a clockwise winding order.
+	 *
+	 * @param {Array<Vector2>} pts - An array of 2D points defining a polygon.
+	 * @return {boolean} Whether the given contour uses a clockwise winding order or not.
+	 */
 	static isClockWise( pts ) {
 
 		return ShapeUtils.area( pts ) < 0;
 
 	}
 
+	/**
+	 * Triangulates the given shape definition.
+	 *
+	 * @param {Array<Vector2>} contour - An array of 2D points defining the contour.
+	 * @param {Array<Array<Vector2>>} holes - An array that holds arrays of 2D points defining the holes.
+	 * @return {Array<Array<number>>} An array that holds for each face definition an array with three indices.
+	 */
 	static triangulateShape( contour, holes ) {
 
 		const vertices = []; // flat array of vertices like [ x0,y0, x1,y1, x2,y2, ... ]
@@ -49326,14 +56537,58 @@ function addContour( vertices, contour ) {
  */
 
 
+/**
+ * Creates extruded geometry from a path shape.
+ *
+ * ```js
+ * const length = 12, width = 8;
+ *
+ * const shape = new THREE.Shape();
+ * shape.moveTo( 0,0 );
+ * shape.lineTo( 0, width );
+ * shape.lineTo( length, width );
+ * shape.lineTo( length, 0 );
+ * shape.lineTo( 0, 0 );
+ *
+ * const geometry = new THREE.ExtrudeGeometry( shape );
+ * const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+ * const mesh = new THREE.Mesh( geometry, material ) ;
+ * scene.add( mesh );
+ * ```
+ *
+ * @augments BufferGeometry
+ */
 class ExtrudeGeometry extends BufferGeometry {
 
+	/**
+	 * Constructs a new extrude geometry.
+	 *
+	 * @param {Shape|Array<Shape>} [shapes] - A shape or an array of shapes.
+	 * @param {Object} [options={}] - The extrude settings.
+	 * @param {number} [options.curveSegments=12] - Number of points on the curves.
+	 * @param {number} [options.steps=1] - Number of points used for subdividing segments along the depth of the extruded spline.
+	 * @param {number} [options.depth=1] - Depth to extrude the shape.
+	 * @param {boolean} [options.bevelEnabled=true] - Whether to beveling to the shape or not.
+	 * @param {number} [options.bevelThickness=0.2] - How deep into the original shape the bevel goes.
+	 * @param {number} [options.bevelSize=bevelThickness-0.1] - Distance from the shape outline that the bevel extends.
+	 * @param {number} [options.bevelOffset=0] - Distance from the shape outline that the bevel starts.
+	 * @param {number} [options.bevelSegments=3] - Number of bevel layers.
+	 * @param {Curve} [options.extrudePath=3] - A 3D spline path along which the shape should be extruded. Bevels not supported for path extrusion.
+	 * @param {Object} [options.UVGenerator] - An object that provides UV generator functions for custom UV generation.
+	 */
 	constructor( shapes = new Shape( [ new Vector2( 0.5, 0.5 ), new Vector2( -0.5, 0.5 ), new Vector2( -0.5, -0.5 ), new Vector2( 0.5, -0.5 ) ] ), options = {} ) {
 
 		super();
 
 		this.type = 'ExtrudeGeometry';
 
+		/**
+		 * Holds the constructor parameters that have been
+		 * used to generate the geometry. Any modification
+		 * after instantiation does not change the geometry.
+		 *
+		 * @type {Object}
+		 */
 		this.parameters = {
 			shapes: shapes,
 			options: options
@@ -49996,6 +57251,14 @@ class ExtrudeGeometry extends BufferGeometry {
 
 	}
 
+	/**
+	 * Factory method for creating an instance of this class from the given
+	 * JSON object.
+	 *
+	 * @param {Object} data - A JSON object representing the serialized geometry.
+	 * @param {Array<Shape>} shapes - An array of shapes.
+	 * @return {ExtrudeGeometry} A new instance.
+	 */
 	static fromJSON( data, shapes ) {
 
 		const geometryShapes = [];
@@ -50108,14 +57371,44 @@ function toJSON$1( shapes, options, data ) {
 
 }
 
+/**
+ * A class for generating a sphere geometry.
+ *
+ * ```js
+ * const geometry = new THREE.SphereGeometry( 15, 32, 16 );
+ * const material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+ * const sphere = new THREE.Mesh( geometry, material );
+ * scene.add( sphere );
+ * ```
+ *
+ * @augments BufferGeometry
+ */
 class SphereGeometry extends BufferGeometry {
 
+	/**
+	 * Constructs a new sphere geometry.
+	 *
+	 * @param {number} [radius=1] - The sphere radius.
+	 * @param {number} [widthSegments=32] - The number of horizontal segments. Minimum value is `3`.
+	 * @param {number} [heightSegments=16] - The number of vertical segments. Minimum value is `2`.
+	 * @param {number} [phiStart=0] - The horizontal starting angle in radians.
+	 * @param {number} [phiLength=Math.PI*2] - The horizontal sweep angle size.
+	 * @param {number} [thetaStart=0] - The vertical starting angle in radians.
+	 * @param {number} [thetaLength=Math.PI] - The vertical sweep angle size.
+	 */
 	constructor( radius = 1, widthSegments = 32, heightSegments = 16, phiStart = 0, phiLength = Math.PI * 2, thetaStart = 0, thetaLength = Math.PI ) {
 
 		super();
 
 		this.type = 'SphereGeometry';
 
+		/**
+		 * Holds the constructor parameters that have been
+		 * used to generate the geometry. Any modification
+		 * after instantiation does not change the geometry.
+		 *
+		 * @type {Object}
+		 */
 		this.parameters = {
 			radius: radius,
 			widthSegments: widthSegments,
@@ -50232,6 +57525,13 @@ class SphereGeometry extends BufferGeometry {
 
 	}
 
+	/**
+	 * Factory method for creating an instance of this class from the given
+	 * JSON object.
+	 *
+	 * @param {Object} data - A JSON object representing the serialized geometry.
+	 * @return {SphereGeometry} A new instance.
+	 */
 	static fromJSON( data ) {
 
 		return new SphereGeometry( data.radius, data.widthSegments, data.heightSegments, data.phiStart, data.phiLength, data.thetaStart, data.thetaLength );
@@ -51266,22 +58566,87 @@ class LoadingManager {
 
 const DefaultLoadingManager = /*@__PURE__*/ new LoadingManager();
 
+/**
+ * Abstract base class for loaders.
+ *
+ * @abstract
+ */
 class Loader {
 
+	/**
+	 * Constructs a new loader.
+	 *
+	 * @param {LoadingManager} [manager] - The loading manager.
+	 */
 	constructor( manager ) {
 
+		/**
+		 * The loading manager.
+		 *
+		 * @type {LoadingManager}
+		 * @default DefaultLoadingManager
+		 */
 		this.manager = ( manager !== undefined ) ? manager : DefaultLoadingManager;
 
+		/**
+		 * The crossOrigin string to implement CORS for loading the url from a
+		 * different domain that allows CORS.
+		 *
+		 * @type {string}
+		 * @default 'anonymous'
+		 */
 		this.crossOrigin = 'anonymous';
+
+		/**
+		 * Whether the XMLHttpRequest uses credentials.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.withCredentials = false;
+
+		/**
+		 * The base path from which the asset will be loaded.
+		 *
+		 * @type {string}
+		 */
 		this.path = '';
+
+		/**
+		 * The base path from which additional resources like textures will be loaded.
+		 *
+		 * @type {string}
+		 */
 		this.resourcePath = '';
+
+		/**
+		 * The [request header]{@link https://developer.mozilla.org/en-US/docs/Glossary/Request_header}
+		 * used in HTTP request.
+		 *
+		 * @type {Object}
+		 */
 		this.requestHeader = {};
 
 	}
 
+	/**
+	 * This method needs to be implemented by all concrete loaders. It holds the
+	 * logic for loading assets from the backend.
+	 *
+	 * @param {string} url - The path/URL of the file to be loaded.
+	 * @param {Function} onLoad - Executed when the loading process has been finished.
+	 * @param {onProgressCallback} onProgress - Executed while the loading is in progress.
+	 * @param {onErrorCallback} onError - Executed when errors occur.
+	 */
 	load( /* url, onLoad, onProgress, onError */ ) {}
 
+	/**
+	 * A async version of {@link Loader#load}.
+	 *
+	 * @param {string} url - The path/URL of the file to be loaded.
+	 * @param {onProgressCallback} onProgress - Executed while the loading is in progress.
+	 * @return {Promise} A Promise that resolves when the asset has been loaded.
+	 */
 	loadAsync( url, onProgress ) {
 
 		const scope = this;
@@ -51294,8 +58659,21 @@ class Loader {
 
 	}
 
+	/**
+	 * This method needs to be implemented by all concrete loaders. It holds the
+	 * logic for parsing the asset into three.js entities.
+	 *
+	 * @param {any} data - The data to parse.
+	 */
 	parse( /* data */ ) {}
 
+	/**
+	 * Sets the `crossOrigin` String to implement CORS for loading the URL
+	 * from a different domain that allows CORS.
+	 *
+	 * @param {string} crossOrigin - The `crossOrigin` value.
+	 * @return {Loader} A reference to this instance.
+	 */
 	setCrossOrigin( crossOrigin ) {
 
 		this.crossOrigin = crossOrigin;
@@ -51303,6 +58681,15 @@ class Loader {
 
 	}
 
+	/**
+	 * Whether the XMLHttpRequest uses credentials such as cookies, authorization
+	 * headers or TLS client certificates, see [XMLHttpRequest.withCredentials]{@link https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials}.
+	 *
+	 * Note: This setting has no effect if you are loading files locally or from the same domain.
+	 *
+	 * @param {boolean} value - The `withCredentials` value.
+	 * @return {Loader} A reference to this instance.
+	 */
 	setWithCredentials( value ) {
 
 		this.withCredentials = value;
@@ -51310,6 +58697,12 @@ class Loader {
 
 	}
 
+	/**
+	 * Sets the base path for the asset.
+	 *
+	 * @param {string} path - The base path.
+	 * @return {Loader} A reference to this instance.
+	 */
 	setPath( path ) {
 
 		this.path = path;
@@ -51317,6 +58710,12 @@ class Loader {
 
 	}
 
+	/**
+	 * Sets the base path for dependent resources like textures.
+	 *
+	 * @param {string} resourcePath - The resource path.
+	 * @return {Loader} A reference to this instance.
+	 */
 	setResourcePath( resourcePath ) {
 
 		this.resourcePath = resourcePath;
@@ -51324,6 +58723,13 @@ class Loader {
 
 	}
 
+	/**
+	 * Sets the given request header.
+	 *
+	 * @param {Object} requestHeader - A [request header]{@link https://developer.mozilla.org/en-US/docs/Glossary/Request_header}
+	 * for configuring the HTTP request.
+	 * @return {Loader} A reference to this instance.
+	 */
 	setRequestHeader( requestHeader ) {
 
 		this.requestHeader = requestHeader;
@@ -51333,6 +58739,32 @@ class Loader {
 
 }
 
+/**
+ * Callback for onProgress in loaders.
+ *
+ *
+ * @callback onProgressCallback
+ * @param {ProgressEvent} event - An instance of `ProgressEvent` that represents the current loading status.
+ */
+
+/**
+ * Callback for onError in loaders.
+ *
+ *
+ * @callback onErrorCallback
+ * @param {Error} error - The error which occurred during the loading process.
+ */
+
+/**
+ * The default material name that is used by loaders
+ * when creating materials for loaded 3D objects.
+ *
+ * Note: Not all loaders might honor this setting.
+ *
+ * @static
+ * @type {string}
+ * @default '__DEFAULT'
+ */
 Loader.DEFAULT_MATERIAL_NAME = '__DEFAULT';
 
 class ImageLoader extends Loader {
@@ -51455,21 +58887,57 @@ class TextureLoader extends Loader {
 
 }
 
+/**
+ * Abstract base class for lights - all other light types inherit the
+ * properties and methods described here.
+ *
+ * @abstract
+ * @augments Object3D
+ */
 class Light extends Object3D {
 
+	/**
+	 * Constructs a new light.
+	 *
+	 * @param {(number|Color|string)} [color=0xffffff] - The light's color.
+	 * @param {number} [intensity=1] - The light's strength/intensity.
+	 */
 	constructor( color, intensity = 1 ) {
 
 		super();
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isLight = true;
 
 		this.type = 'Light';
 
+		/**
+		 * The light's color.
+		 *
+		 * @type {Color}
+		 */
 		this.color = new Color( color );
+
+		/**
+		 * The light's intensity.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.intensity = intensity;
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever this instance is no longer used in your app.
+	 */
 	dispose() {
 
 		// Empty here in base class; some subclasses override.
@@ -51510,12 +58978,39 @@ class Light extends Object3D {
 
 }
 
+/**
+ * A light source positioned directly above the scene, with color fading from
+ * the sky color to the ground color.
+ *
+ * This light cannot be used to cast shadows.
+ *
+ * ```js
+ * const light = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
+ * scene.add( light );
+ * ```
+ *
+ * @augments Light
+ */
 class HemisphereLight extends Light {
 
+	/**
+	 * Constructs a new hemisphere light.
+	 *
+	 * @param {(number|Color|string)} [skyColor=0xffffff] - The light's sky color.
+	 * @param {(number|Color|string)} [groundColor=0xffffff] - The light's ground color.
+	 * @param {number} [intensity=1] - The light's strength/intensity.
+	 */
 	constructor( skyColor, groundColor, intensity ) {
 
 		super( skyColor, intensity );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isHemisphereLight = true;
 
 		this.type = 'HemisphereLight';
@@ -51523,6 +59018,11 @@ class HemisphereLight extends Light {
 		this.position.copy( Object3D.DEFAULT_UP );
 		this.updateMatrix();
 
+		/**
+		 * The light's ground color.
+		 *
+		 * @type {Color}
+		 */
 		this.groundColor = new Color( groundColor );
 
 	}
@@ -51543,26 +59043,137 @@ const _projScreenMatrix$1 = /*@__PURE__*/ new Matrix4();
 const _lightPositionWorld$1 = /*@__PURE__*/ new Vector3();
 const _lookTarget$1 = /*@__PURE__*/ new Vector3();
 
+/**
+ * Abstract base class for light shadow classes. These classes
+ * represent the shadow configuration for different ligth types.
+ *
+ * @abstract
+ */
 class LightShadow {
 
+	/**
+	 * Constructs a new light shadow.
+	 *
+	 * @param {Camera} camera - The light's view of the world.
+	 */
 	constructor( camera ) {
 
+		/**
+		 * The light's view of the world.
+		 *
+		 * @type {Camera}
+		 */
 		this.camera = camera;
 
+		/**
+		 * The intensity of the shadow. The default is `1`.
+		 * Valid values are in the range `[0, 1]`.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.intensity = 1;
 
+		/**
+		 * Shadow map bias, how much to add or subtract from the normalized depth
+		 * when deciding whether a surface is in shadow.
+		 *
+		 * The default is `0`. Very tiny adjustments here (in the order of `0.0001`)
+		 * may help reduce artifacts in shadows.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.bias = 0;
+
+		/**
+		 * Defines how much the position used to query the shadow map is offset along
+		 * the object normal. The default is `0`. Increasing this value can be used to
+		 * reduce shadow acne especially in large scenes where light shines onto
+		 * geometry at a shallow angle. The cost is that shadows may appear distorted.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
 		this.normalBias = 0;
+
+		/**
+		 * Setting this to values greater than 1 will blur the edges of the shadow.
+		 * High values will cause unwanted banding effects in the shadows - a greater
+		 * map size will allow for a higher value to be used here before these effects
+		 * become visible.
+		 *
+		 * The property has no effect when the shadow map type is `PCFSoftShadowMap` and
+		 * and it is recommended to increase softness by decreasing the shadow map size instead.
+		 *
+		 * The property has no effect when the shadow map type is `BasicShadowMap`.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.radius = 1;
+
+		/**
+		 * The amount of samples to use when blurring a VSM shadow map.
+		 *
+		 * @type {number}
+		 * @default 8
+		 */
 		this.blurSamples = 8;
 
+		/**
+		 * Defines the width and height of the shadow map. Higher values give better quality
+		 * shadows at the cost of computation time. Values must be powers of two.
+		 *
+		 * @type {Vector2}
+		 * @default (512,512)
+		 */
 		this.mapSize = new Vector2( 512, 512 );
 
+		/**
+		 * The depth map generated using the internal camera; a location beyond a
+		 * pixel's depth is in shadow. Computed internally during rendering.
+		 *
+		 * @type {?RenderTarget}
+		 * @default null
+		 */
 		this.map = null;
+
+		/**
+		 * The distribution map generated using the internal camera; an occlusion is
+		 * calculated based on the distribution of depths. Computed internally during
+		 * rendering.
+		 *
+		 * @type {?RenderTarget}
+		 * @default null
+		 */
 		this.mapPass = null;
+
+		/**
+		 * Model to shadow camera space, to compute location and depth in shadow map.
+		 * This is computed internally during rendering.
+		 *
+		 * @type {Matrix4}
+		 */
 		this.matrix = new Matrix4();
 
+		/**
+		 * Enables automatic updates of the light's shadow. If you do not require dynamic
+		 * lighting / shadows, you may set this to `false`.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.autoUpdate = true;
+
+		/**
+		 * When set to `true`, shadow maps will be updated in the next `render` call.
+		 * If you have set {@link LightShadow#autoUpdate} to `false`, you will need to
+		 * set this property to `true` and then make a render call to update the light's shadow.
+		 *
+		 * @type {boolean}
+		 * @default false
+		 */
 		this.needsUpdate = false;
 
 		this._frustum = new Frustum();
@@ -51578,18 +59189,34 @@ class LightShadow {
 
 	}
 
+	/**
+	 * Used internally by the renderer to get the number of viewports that need
+	 * to be rendered for this shadow.
+	 *
+	 * @return {number} The viewport count.
+	 */
 	getViewportCount() {
 
 		return this._viewportCount;
 
 	}
 
+	/**
+	 * Gets the shadow cameras frustum. Used internally by the renderer to cull objects.
+	 *
+	 * @return {Frustum} The shadow camera frustum.
+	 */
 	getFrustum() {
 
 		return this._frustum;
 
 	}
 
+	/**
+	 * Update the matrices for the camera and shadow, used internally by the renderer.
+	 *
+	 * @param {Light} light - The light for which the shadow is being rendered.
+	 */
 	updateMatrices( light ) {
 
 		const shadowCamera = this.camera;
@@ -51616,18 +59243,33 @@ class LightShadow {
 
 	}
 
+	/**
+	 * Returns a viewport definition for the given viewport index.
+	 *
+	 * @param {number} viewportIndex - The viewport index.
+	 * @return {Vector4} The viewport.
+	 */
 	getViewport( viewportIndex ) {
 
 		return this._viewports[ viewportIndex ];
 
 	}
 
+	/**
+	 * Returns the frame extends.
+	 *
+	 * @return {Vector2} The frame extends.
+	 */
 	getFrameExtents() {
 
 		return this._frameExtents;
 
 	}
 
+	/**
+	 * Frees the GPU-related resources allocated by this instance. Call this
+	 * method whenever this instance is no longer used in your app.
+	 */
 	dispose() {
 
 		if ( this.map ) {
@@ -51644,6 +59286,12 @@ class LightShadow {
 
 	}
 
+	/**
+	 * Copies the values of the given light shadow instance to this instance.
+	 *
+	 * @param {LightShadow} source - The light shadow to copy.
+	 * @return {LightShadow} A reference to this light shadow instance.
+	 */
 	copy( source ) {
 
 		this.camera = source.camera.clone();
@@ -51659,12 +59307,23 @@ class LightShadow {
 
 	}
 
+	/**
+	 * Returns a new light shadow instance with copied values from this instance.
+	 *
+	 * @return {LightShadow} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
 
 	}
 
+	/**
+	 * Serializes the light shadow into JSON.
+	 *
+	 * @return {Object} A JSON object representing the serialized light shadow.
+	 * @see {@link ObjectLoader#parse}
+	 */
 	toJSON() {
 
 		const object = {};
@@ -51684,24 +59343,79 @@ class LightShadow {
 
 }
 
+/**
+ * Represents the shadow configuration of directional lights.
+ *
+ * @augments LightShadow
+ */
 class DirectionalLightShadow extends LightShadow {
 
+	/**
+	 * Constructs a new directional light shadow.
+	 */
 	constructor() {
 
 		super( new OrthographicCamera( -5, 5, 5, -5, 0.5, 500 ) );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isDirectionalLightShadow = true;
 
 	}
 
 }
 
+/**
+ * A light that gets emitted in a specific direction. This light will behave
+ * as though it is infinitely far away and the rays produced from it are all
+ * parallel. The common use case for this is to simulate daylight; the sun is
+ * far enough away that its position can be considered to be infinite, and
+ * all light rays coming from it are parallel.
+ *
+ * A common point of confusion for directional lights is that setting the
+ * rotation has no effect. This is because three.js's DirectionalLight is the
+ * equivalent to what is often called a 'Target Direct Light' in other
+ * applications.
+ *
+ * This means that its direction is calculated as pointing from the light's
+ * {@link Object3D#position} to the {@link DirectionalLight#target} position
+ * (as opposed to a 'Free Direct Light' that just has a rotation
+ * component).
+ *
+ * This light can cast shadows - see the {@link DirectionalLightShadow} for details.
+ *
+ * ```js
+ * // White directional light at half intensity shining from the top.
+ * const directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+ * scene.add( directionalLight );
+ * ```
+ *
+ * @augments Light
+ */
 class DirectionalLight extends Light {
 
+	/**
+	 * Constructs a new directional light.
+	 *
+	 * @param {(number|Color|string)} [color=0xffffff] - The light's color.
+	 * @param {number} [intensity=1] - The light's strength/intensity.
+	 */
 	constructor( color, intensity ) {
 
 		super( color, intensity );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isDirectionalLight = true;
 
 		this.type = 'DirectionalLight';
@@ -51709,8 +59423,25 @@ class DirectionalLight extends Light {
 		this.position.copy( Object3D.DEFAULT_UP );
 		this.updateMatrix();
 
+		/**
+		 * The directional light points from its position to the
+		 * target's position.
+		 *
+		 * For the target's position to be changed to anything other
+		 * than the default, it must be added to the scene.
+		 *
+		 * It is also possible to set the target to be another 3D object
+		 * in the scene. The light will now track the target object.
+		 *
+		 * @type {Object3D}
+		 */
 		this.target = new Object3D();
 
+		/**
+		 * This property holds the light's shadow configuration.
+		 *
+		 * @type {DirectionalLightShadow}
+		 */
 		this.shadow = new DirectionalLightShadow();
 
 	}
@@ -51734,12 +59465,37 @@ class DirectionalLight extends Light {
 
 }
 
+/**
+ * This light globally illuminates all objects in the scene equally.
+ *
+ * It cannot be used to cast shadows as it does not have a direction.
+ *
+ * ```js
+ * const light = new THREE.AmbientLight( 0x404040 ); // soft white light
+ * scene.add( light );
+ * ```
+ *
+ * @augments Light
+ */
 class AmbientLight extends Light {
 
+	/**
+	 * Constructs a new ambient light.
+	 *
+	 * @param {(number|Color|string)} [color=0xffffff] - The light's color.
+	 * @param {number} [intensity=1] - The light's strength/intensity.
+	 */
 	constructor( color, intensity ) {
 
 		super( color, intensity );
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isAmbientLight = true;
 
 		this.type = 'AmbientLight';
@@ -51945,23 +59701,54 @@ function now() {
 }
 
 /**
- * Ref: https://en.wikipedia.org/wiki/Spherical_coordinate_system
- *
- * phi (the polar angle) is measured from the positive y-axis. The positive y-axis is up.
- * theta (the azimuthal angle) is measured from the positive z-axis.
+ * This class can be used to represent points in 3D space as
+ * [Spherical coordinates]{@link https://en.wikipedia.org/wiki/Spherical_coordinate_system}.
  */
 class Spherical {
 
+	/**
+	 * Constructs a new spherical.
+	 *
+	 * @param {number} [radius=1] - The radius, or the Euclidean distance (straight-line distance) from the point to the origin.
+	 * @param {number} [phi=0] - The polar angle in radians from the y (up) axis.
+	 * @param {number} [theta=0] - The equator/azimuthal angle in radians around the y (up) axis.
+	 */
 	constructor( radius = 1, phi = 0, theta = 0 ) {
 
+		/**
+		 * The radius, or the Euclidean distance (straight-line distance) from the point to the origin.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.radius = radius;
-		this.phi = phi; // polar angle
-		this.theta = theta; // azimuthal angle
 
-		return this;
+		/**
+		 * The polar angle in radians from the y (up) axis.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
+		this.phi = phi;
+
+		/**
+		 * The equator/azimuthal angle in radians around the y (up) axis.
+		 *
+		 * @type {number}
+		 * @default 0
+		 */
+		this.theta = theta;
 
 	}
 
+	/**
+	 * Sets the spherical components by copying the given values.
+	 *
+	 * @param {number} radius - The radius.
+	 * @param {number} phi - The polar angle.
+	 * @param {number} theta - The azimuthal angle.
+	 * @return {Spherical} A reference to this spherical.
+	 */
 	set( radius, phi, theta ) {
 
 		this.radius = radius;
@@ -51972,6 +59759,12 @@ class Spherical {
 
 	}
 
+	/**
+	 * Copies the values of the given spherical to this instance.
+	 *
+	 * @param {Spherical} other - The spherical to copy.
+	 * @return {Spherical} A reference to this spherical.
+	 */
 	copy( other ) {
 
 		this.radius = other.radius;
@@ -51982,7 +59775,12 @@ class Spherical {
 
 	}
 
-	// restrict phi to be between EPS and PI-EPS
+	/**
+	 * Restricts the polar angle [page:.phi phi] to be between `0.000001` and pi -
+	 * `0.000001`.
+	 *
+	 * @return {Spherical} A reference to this spherical.
+	 */
 	makeSafe() {
 
 		const EPS = 0.000001;
@@ -51992,12 +59790,27 @@ class Spherical {
 
 	}
 
+	/**
+	 * Sets the spherical components from the given vector which is assumed to hold
+	 * Cartesian coordinates.
+	 *
+	 * @param {Vector3} v - The vector to set.
+	 * @return {Spherical} A reference to this spherical.
+	 */
 	setFromVector3( v ) {
 
 		return this.setFromCartesianCoords( v.x, v.y, v.z );
 
 	}
 
+	/**
+	 * Sets the spherical components from the given Cartesian coordinates.
+	 *
+	 * @param {number} x - The x value.
+	 * @param {number} y - The x value.
+	 * @param {number} z - The x value.
+	 * @return {Spherical} A reference to this spherical.
+	 */
 	setFromCartesianCoords( x, y, z ) {
 
 		this.radius = Math.sqrt( x * x + y * y + z * z );
@@ -52018,6 +59831,11 @@ class Spherical {
 
 	}
 
+	/**
+	 * Returns a new spherical with copied values from this instance.
+	 *
+	 * @return {Spherical} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
@@ -52028,17 +59846,52 @@ class Spherical {
 
 const _vector = /*@__PURE__*/ new Vector2();
 
+/**
+ * Represents an axis-aligned bounding box (AABB) in 2D space.
+ */
 class Box2 {
 
+	/**
+	 * Constructs a new bounding box.
+	 *
+	 * @param {Vector2} [min=(Infinity,Infinity)] - A vector representing the lower boundary of the box.
+	 * @param {Vector2} [max=(-Infinity,-Infinity)] - A vector representing the upper boundary of the box.
+	 */
 	constructor( min = new Vector2( + Infinity, + Infinity ), max = new Vector2( - Infinity, - Infinity ) ) {
 
+		/**
+		 * This flag can be used for type testing.
+		 *
+		 * @type {boolean}
+		 * @readonly
+		 * @default true
+		 */
 		this.isBox2 = true;
 
+		/**
+		 * The lower boundary of the box.
+		 *
+		 * @type {Vector2}
+		 */
 		this.min = min;
+
+		/**
+		 * The upper boundary of the box.
+		 *
+		 * @type {Vector2}
+		 */
 		this.max = max;
 
 	}
 
+	/**
+	 * Sets the lower and upper boundaries of this box.
+	 * Please note that this method only copies the values from the given objects.
+	 *
+	 * @param {Vector2} min - The lower boundary of the box.
+	 * @param {Vector2} max - The upper boundary of the box.
+	 * @return {Box2} A reference to this bounding box.
+	 */
 	set( min, max ) {
 
 		this.min.copy( min );
@@ -52048,6 +59901,13 @@ class Box2 {
 
 	}
 
+	/**
+	 * Sets the upper and lower bounds of this box so it encloses the position data
+	 * in the given array.
+	 *
+	 * @param {Array<Vector2>} points - An array holding 2D position data as instances of {@link Vector2}.
+	 * @return {Box2} A reference to this bounding box.
+	 */
 	setFromPoints( points ) {
 
 		this.makeEmpty();
@@ -52062,6 +59922,14 @@ class Box2 {
 
 	}
 
+	/**
+	 * Centers this box on the given center vector and sets this box's width, height and
+	 * depth to the given size values.
+	 *
+	 * @param {Vector2} center - The center of the box.
+	 * @param {Vector2} size - The x and y dimensions of the box.
+	 * @return {Box2} A reference to this bounding box.
+	 */
 	setFromCenterAndSize( center, size ) {
 
 		const halfSize = _vector.copy( size ).multiplyScalar( 0.5 );
@@ -52072,12 +59940,23 @@ class Box2 {
 
 	}
 
+	/**
+	 * Returns a new box with copied values from this instance.
+	 *
+	 * @return {Box2} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
 
 	}
 
+	/**
+	 * Copies the values of the given box to this instance.
+	 *
+	 * @param {Box2} box - The box to copy.
+	 * @return {Box2} A reference to this bounding box.
+	 */
 	copy( box ) {
 
 		this.min.copy( box.min );
@@ -52087,6 +59966,11 @@ class Box2 {
 
 	}
 
+	/**
+	 * Makes this box empty which means in encloses a zero space in 2D.
+	 *
+	 * @return {Box2} A reference to this bounding box.
+	 */
 	makeEmpty() {
 
 		this.min.x = this.min.y = + Infinity;
@@ -52096,6 +59980,13 @@ class Box2 {
 
 	}
 
+	/**
+	 * Returns true if this box includes zero points within its bounds.
+	 * Note that a box with equal lower and upper bounds still includes one
+	 * point, the one both bounds share.
+	 *
+	 * @return {boolean} Whether this box is empty or not.
+	 */
 	isEmpty() {
 
 		// this is a more robust check for empty than ( volume <= 0 ) because volume can get positive with two negative axes
@@ -52104,18 +59995,36 @@ class Box2 {
 
 	}
 
+	/**
+	 * Returns the center point of this box.
+	 *
+	 * @param {Vector2} target - The target vector that is used to store the method's result.
+	 * @return {Vector2} The center point.
+	 */
 	getCenter( target ) {
 
 		return this.isEmpty() ? target.set( 0, 0 ) : target.addVectors( this.min, this.max ).multiplyScalar( 0.5 );
 
 	}
 
+	/**
+	 * Returns the dimensions of this box.
+	 *
+	 * @param {Vector2} target - The target vector that is used to store the method's result.
+	 * @return {Vector2} The size.
+	 */
 	getSize( target ) {
 
 		return this.isEmpty() ? target.set( 0, 0 ) : target.subVectors( this.max, this.min );
 
 	}
 
+	/**
+	 * Expands the boundaries of this box to include the given point.
+	 *
+	 * @param {Vector2} point - The point that should be included by the bounding box.
+	 * @return {Box2} A reference to this bounding box.
+	 */
 	expandByPoint( point ) {
 
 		this.min.min( point );
@@ -52125,6 +60034,15 @@ class Box2 {
 
 	}
 
+	/**
+	 * Expands this box equilaterally by the given vector. The width of this
+	 * box will be expanded by the x component of the vector in both
+	 * directions. The height of this box will be expanded by the y component of
+	 * the vector in both directions.
+	 *
+	 * @param {Vector2} vector - The vector that should expand the bounding box.
+	 * @return {Box2} A reference to this bounding box.
+	 */
 	expandByVector( vector ) {
 
 		this.min.sub( vector );
@@ -52134,6 +60052,13 @@ class Box2 {
 
 	}
 
+	/**
+	 * Expands each dimension of the box by the given scalar. If negative, the
+	 * dimensions of the box will be contracted.
+	 *
+	 * @param {number} scalar - The scalar value that should expand the bounding box.
+	 * @return {Box2} A reference to this bounding box.
+	 */
 	expandByScalar( scalar ) {
 
 		this.min.addScalar( - scalar );
@@ -52143,6 +60068,12 @@ class Box2 {
 
 	}
 
+	/**
+	 * Returns `true` if the given point lies within or on the boundaries of this box.
+	 *
+	 * @param {Vector2} point - The point to test.
+	 * @return {boolean} Whether the bounding box contains the given point or not.
+	 */
 	containsPoint( point ) {
 
 		return point.x >= this.min.x && point.x <= this.max.x &&
@@ -52150,6 +60081,13 @@ class Box2 {
 
 	}
 
+	/**
+	 * Returns `true` if this bounding box includes the entirety of the given bounding box.
+	 * If this box and the given one are identical, this function also returns `true`.
+	 *
+	 * @param {Box2} box - The bounding box to test.
+	 * @return {boolean} Whether the bounding box contains the given bounding box or not.
+	 */
 	containsBox( box ) {
 
 		return this.min.x <= box.min.x && box.max.x <= this.max.x &&
@@ -52157,6 +60095,13 @@ class Box2 {
 
 	}
 
+	/**
+	 * Returns a point as a proportion of this box's width and height.
+	 *
+	 * @param {Vector2} point - A point in 2D space.
+	 * @param {Vector2} target - The target vector that is used to store the method's result.
+	 * @return {Vector2} A point as a proportion of this box's width and height.
+	 */
 	getParameter( point, target ) {
 
 		// This can potentially have a divide by zero if the box
@@ -52169,6 +60114,12 @@ class Box2 {
 
 	}
 
+	/**
+	 * Returns `true` if the given bounding box intersects with this bounding box.
+	 *
+	 * @param {Box2} box - The bounding box to test.
+	 * @return {boolean} Whether the given bounding box intersects with this bounding box.
+	 */
 	intersectsBox( box ) {
 
 		// using 4 splitting planes to rule out intersections
@@ -52178,18 +60129,41 @@ class Box2 {
 
 	}
 
+	/**
+	 * Clamps the given point within the bounds of this box.
+	 *
+	 * @param {Vector2} point - The point to clamp.
+	 * @param {Vector2} target - The target vector that is used to store the method's result.
+	 * @return {Vector2} The clamped point.
+	 */
 	clampPoint( point, target ) {
 
 		return target.copy( point ).clamp( this.min, this.max );
 
 	}
 
+	/**
+	 * Returns the euclidean distance from any edge of this box to the specified point. If
+	 * the given point lies inside of this box, the distance will be `0`.
+	 *
+	 * @param {Vector2} point - The point to compute the distance to.
+	 * @return {number} The euclidean distance.
+	 */
 	distanceToPoint( point ) {
 
 		return this.clampPoint( point, _vector ).distanceTo( point );
 
 	}
 
+	/**
+	 * Computes the intersection of this bounding box and the given one, setting the upper
+	 * bound of this box to the lesser of the two boxes' upper bounds and the
+	 * lower bound of this box to the greater of the two boxes' lower bounds. If
+	 * there's no overlap, makes this box empty.
+	 *
+	 * @param {Box2} box - The bounding box to intersect with.
+	 * @return {Box2} A reference to this bounding box.
+	 */
 	intersect( box ) {
 
 		this.min.max( box.min );
@@ -52201,6 +60175,14 @@ class Box2 {
 
 	}
 
+	/**
+	 * Computes the union of this box and another and the given one, setting the upper
+	 * bound of this box to the greater of the two boxes' upper bounds and the
+	 * lower bound of this box to the lesser of the two boxes' lower bounds.
+	 *
+	 * @param {Box2} box - The bounding box that will be unioned with this instance.
+	 * @return {Box2} A reference to this bounding box.
+	 */
 	union( box ) {
 
 		this.min.min( box.min );
@@ -52210,6 +60192,13 @@ class Box2 {
 
 	}
 
+	/**
+	 * Adds the given offset to both the upper and lower bounds of this bounding box,
+	 * effectively moving it in 2D space.
+	 *
+	 * @param {Vector2} offset - The offset that should be used to translate the bounding box.
+	 * @return {Box2} A reference to this bounding box.
+	 */
 	translate( offset ) {
 
 		this.min.add( offset );
@@ -52219,6 +60208,12 @@ class Box2 {
 
 	}
 
+	/**
+	 * Returns `true` if this bounding box is equal with the given one.
+	 *
+	 * @param {Box2} box - The box to test for equality.
+	 * @return {boolean} Whether this bounding box is equal with the given one.
+	 */
 	equals( box ) {
 
 		return box.min.equals( this.min ) && box.max.equals( this.max );
@@ -52230,15 +60225,42 @@ class Box2 {
 const _startP = /*@__PURE__*/ new Vector3();
 const _startEnd = /*@__PURE__*/ new Vector3();
 
+/**
+ * An analytical line segment in 3D space represented by a start and end point.
+ */
 class Line3 {
 
+	/**
+	 * Constructs a new line segment.
+	 *
+	 * @param {Vector3} [start=(0,0,0)] - Start of the line segment.
+	 * @param {Vector3} [end=(0,0,0)] - End of the line segment.
+	 */
 	constructor( start = new Vector3(), end = new Vector3() ) {
 
+		/**
+		 * Start of the line segment.
+		 *
+		 * @type {Vector3}
+		 */
 		this.start = start;
+
+		/**
+		 * End of the line segment.
+		 *
+		 * @type {Vector3}
+		 */
 		this.end = end;
 
 	}
 
+	/**
+	 * Sets the start and end values by copying the given vectors.
+	 *
+	 * @param {Vector3} start - The start point.
+	 * @param {Vector3} end - The end point.
+	 * @return {Line3} A reference to this line segment.
+	 */
 	set( start, end ) {
 
 		this.start.copy( start );
@@ -52248,6 +60270,12 @@ class Line3 {
 
 	}
 
+	/**
+	 * Copies the values of the given line segment to this instance.
+	 *
+	 * @param {Line3} line - The line segment to copy.
+	 * @return {Line3} A reference to this line segment.
+	 */
 	copy( line ) {
 
 		this.start.copy( line.start );
@@ -52257,36 +60285,72 @@ class Line3 {
 
 	}
 
+	/**
+	 * Returns the center of the line segment.
+	 *
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} The center point.
+	 */
 	getCenter( target ) {
 
 		return target.addVectors( this.start, this.end ).multiplyScalar( 0.5 );
 
 	}
 
+	/**
+	 * Returns the delta vector of the line segment's start and end point.
+	 *
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} The delta vector.
+	 */
 	delta( target ) {
 
 		return target.subVectors( this.end, this.start );
 
 	}
 
+	/**
+	 * Returns the squared Euclidean distance between the line' start and end point.
+	 *
+	 * @return {number} The squared Euclidean distance.
+	 */
 	distanceSq() {
 
 		return this.start.distanceToSquared( this.end );
 
 	}
 
+	/**
+	 * Returns the Euclidean distance between the line' start and end point.
+	 *
+	 * @return {number} The Euclidean distance.
+	 */
 	distance() {
 
 		return this.start.distanceTo( this.end );
 
 	}
 
+	/**
+	 * Returns a vector at a certain position along the line segment.
+	 *
+	 * @param {number} t - A value between `[0,1]` to represent a position along the line segment.
+	 * @param {Vector3} target - The target vector that is used to store the method's result.
+	 * @return {Vector3} The delta vector.
+	 */
 	at( t, target ) {
 
 		return this.delta( target ).multiplyScalar( t ).add( this.start );
 
 	}
 
+	/**
+	 * Returns a point parameter based on the closest point as projected on the line segment.
+	 *
+	 * @param {Vector3} point - The point for which to return a point parameter.
+	 * @param {boolean} clampToLine - Whether to clamp the result to the range `[0,1]` or not.
+	 * @return {number} The point parameter.
+	 */
 	closestPointToPointParameter( point, clampToLine ) {
 
 		_startP.subVectors( point, this.start );
@@ -52307,6 +60371,14 @@ class Line3 {
 
 	}
 
+	/**
+	 * Returns the closets point on the line for a given point.
+	 *
+	 * @param {Vector3} point - The point to compute the closest point on the line for.
+	 * @param {boolean} clampToLine - Whether to clamp the result to the range `[0,1]` or not.
+	 * @param {Vector3} target -  The target vector that is used to store the method's result.
+	 * @return {Vector3} The closest point on the line.
+	 */
 	closestPointToPoint( point, clampToLine, target ) {
 
 		const t = this.closestPointToPointParameter( point, clampToLine );
@@ -52315,6 +60387,12 @@ class Line3 {
 
 	}
 
+	/**
+	 * Applies a 4x4 transformation matrix to this line segment.
+	 *
+	 * @param {Matrix4} matrix - The transformation matrix.
+	 * @return {Line3} A reference to this line segment.
+	 */
 	applyMatrix4( matrix ) {
 
 		this.start.applyMatrix4( matrix );
@@ -52324,12 +60402,23 @@ class Line3 {
 
 	}
 
+	/**
+	 * Returns `true` if this line segment is equal with the given one.
+	 *
+	 * @param {Line3} line - The line segment to test for equality.
+	 * @return {boolean} Whether this line segment is equal with the given one.
+	 */
 	equals( line ) {
 
 		return line.start.equals( this.start ) && line.end.equals( this.end );
 
 	}
 
+	/**
+	 * Returns a new line segment with copied values from this instance.
+	 *
+	 * @return {Line3} A clone of this instance.
+	 */
 	clone() {
 
 		return new this.constructor().copy( this );
@@ -52338,8 +60427,26 @@ class Line3 {
 
 }
 
+/**
+ * A helper object to visualize an instance of {@link Plane}.
+ *
+ * ```js
+ * const plane = new THREE.Plane( new THREE.Vector3( 1, 1, 0.2 ), 3 );
+ * const helper = new THREE.PlaneHelper( plane, 1, 0xffff00 );
+ * scene.add( helper );
+ * ```
+ *
+ * @augments Line
+ */
 class PlaneHelper extends Line$1 {
 
+	/**
+	 * Constructs a new plane helper.
+	 *
+	 * @param {Plane} plane - The plane to be visualized.
+	 * @param {number} [size=1] - The side length of plane helper.
+	 * @param {number|Color|string} [hex=0xffff00] - The helper's color.
+	 */
 	constructor( plane, size = 1, hex = 0xffff00 ) {
 
 		const color = hex;
@@ -52354,8 +60461,19 @@ class PlaneHelper extends Line$1 {
 
 		this.type = 'PlaneHelper';
 
+		/**
+		 * The plane being visualized.
+		 *
+		 * @type {Plane}
+		 */
 		this.plane = plane;
 
+		/**
+		 * The side length of plane helper.
+		 *
+		 * @type {number}
+		 * @default 1
+		 */
 		this.size = size;
 
 		const positions2 = [ 1, 1, 0, -1, 1, 0, -1, -1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0 ];
@@ -52382,6 +60500,10 @@ class PlaneHelper extends Line$1 {
 
 	}
 
+	/**
+	 * Updates the helper to match the position and direction of the
+	 * light being visualized.
+	 */
 	dispose() {
 
 		this.geometry.dispose();
@@ -52393,19 +60515,51 @@ class PlaneHelper extends Line$1 {
 
 }
 
+/**
+ * This class is used to convert a series of paths to an array of
+ * shapes. It is specifically used in context of fonts and SVG.
+ */
 class ShapePath {
 
+	/**
+	 * Constructs a new shape path.
+	 */
 	constructor() {
 
 		this.type = 'ShapePath';
 
+		/**
+		 * The color of the shape.
+		 *
+		 * @type {Color}
+		 */
 		this.color = new Color();
 
+		/**
+		 * The paths that have been generated for this shape.
+		 *
+		 * @type {Array<Path>}
+		 * @default null
+		 */
 		this.subPaths = [];
+
+		/**
+		 * The current path that is being generated.
+		 *
+		 * @type {?Path}
+		 * @default null
+		 */
 		this.currentPath = null;
 
 	}
 
+	/**
+	 * Creates a new path and moves it current point to the given one.
+	 *
+	 * @param {number} x - The x coordinate.
+	 * @param {number} y - The y coordinate.
+	 * @return {ShapePath} A reference to this shape path.
+	 */
 	moveTo( x, y ) {
 
 		this.currentPath = new Path$1();
@@ -52416,6 +60570,14 @@ class ShapePath {
 
 	}
 
+	/**
+	 * Adds an instance of {@link LineCurve} to the path by connecting
+	 * the current point with the given one.
+	 *
+	 * @param {number} x - The x coordinate of the end point.
+	 * @param {number} y - The y coordinate of the end point.
+	 * @return {ShapePath} A reference to this shape path.
+	 */
 	lineTo( x, y ) {
 
 		this.currentPath.lineTo( x, y );
@@ -52424,6 +60586,16 @@ class ShapePath {
 
 	}
 
+	/**
+	 * Adds an instance of {@link QuadraticBezierCurve} to the path by connecting
+	 * the current point with the given one.
+	 *
+	 * @param {number} aCPx - The x coordinate of the control point.
+	 * @param {number} aCPy - The y coordinate of the control point.
+	 * @param {number} aX - The x coordinate of the end point.
+	 * @param {number} aY - The y coordinate of the end point.
+	 * @return {ShapePath} A reference to this shape path.
+	 */
 	quadraticCurveTo( aCPx, aCPy, aX, aY ) {
 
 		this.currentPath.quadraticCurveTo( aCPx, aCPy, aX, aY );
@@ -52432,6 +60604,18 @@ class ShapePath {
 
 	}
 
+	/**
+	 * Adds an instance of {@link CubicBezierCurve} to the path by connecting
+	 * the current point with the given one.
+	 *
+	 * @param {number} aCP1x - The x coordinate of the first control point.
+	 * @param {number} aCP1y - The y coordinate of the first control point.
+	 * @param {number} aCP2x - The x coordinate of the second control point.
+	 * @param {number} aCP2y - The y coordinate of the second control point.
+	 * @param {number} aX - The x coordinate of the end point.
+	 * @param {number} aY - The y coordinate of the end point.
+	 * @return {ShapePath} A reference to this shape path.
+	 */
 	bezierCurveTo( aCP1x, aCP1y, aCP2x, aCP2y, aX, aY ) {
 
 		this.currentPath.bezierCurveTo( aCP1x, aCP1y, aCP2x, aCP2y, aX, aY );
@@ -52440,6 +60624,13 @@ class ShapePath {
 
 	}
 
+	/**
+	 * Adds an instance of {@link SplineCurve} to the path by connecting
+	 * the current point with the given list of points.
+	 *
+	 * @param {Array<Vector2>} pts - An array of points in 2D space.
+	 * @return {ShapePath} A reference to this shape path.
+	 */
 	splineThru( pts ) {
 
 		this.currentPath.splineThru( pts );
@@ -52448,6 +60639,13 @@ class ShapePath {
 
 	}
 
+	/**
+	 * Converts the paths into an array of shapes.
+	 *
+	 * @param {boolean} isCCW - By default solid shapes are  defined clockwise (CW) and holes are defined counterclockwise (CCW).
+	 * If this flag is set to `true`, then those are flipped.
+	 * @return {Array<Shape>} An array of shapes.
+	 */
 	toShapes( isCCW ) {
 
 		function toShapesNoHoles( inSubpaths ) {
@@ -52677,31 +60875,103 @@ class ShapePath {
 
 }
 
+/**
+ * Abstract base class for controls.
+ *
+ * @abstract
+ * @augments EventDispatcher
+ */
 class Controls extends EventDispatcher {
 
+	/**
+	 * Constructs a new controls instance.
+	 *
+	 * @param {Object3D} object - The object that is managed by the controls.
+	 * @param {?HTMLDOMElement} domElement - The HTML element used for event listeners.
+	 */
 	constructor( object, domElement = null ) {
 
 		super();
 
+		/**
+		 * The object that is managed by the controls.
+		 *
+		 * @type {Object3D}
+		 */
 		this.object = object;
+
+		/**
+		 * The HTML element used for event listeners.
+		 *
+		 * @type {?HTMLDOMElement}
+		 * @default null
+		 */
 		this.domElement = domElement;
 
+		/**
+		 * Whether the controls responds to user input or not.
+		 *
+		 * @type {boolean}
+		 * @default true
+		 */
 		this.enabled = true;
 
+		/**
+		 * The internal state of the controls.
+		 *
+		 * @type {number}
+		 * @default -1
+		 */
 		this.state = -1;
 
+		/**
+		 * This object defines the keyboard input of the controls.
+		 *
+		 * @type {Object}
+		 */
 		this.keys = {};
+
+		/**
+		 * This object defines what type of actions are assigned to the available mouse buttons.
+		 * It depends on the control implementation what kind of mouse buttons and actions are supported.
+		 *
+		 * @type {{LEFT: ?number, MIDDLE: ?number, RIGHT: ?number}}
+		 */
 		this.mouseButtons = { LEFT: null, MIDDLE: null, RIGHT: null };
+
+		/**
+		 * This object defines what type of actions are assigned to what kind of touch interaction.
+		 * It depends on the control implementation what kind of touch interaction and actions are supported.
+		 *
+		 * @type {{ONE: ?number, TWO: ?number}}
+		 */
 		this.touches = { ONE: null, TWO: null };
 
 	}
 
+	/**
+	 * Connects the controls to the DOM. This method has so called "side effects" since
+	 * it adds the module's event listeners to the DOM.
+	 */
 	connect() {}
 
+	/**
+	 * Disconnects the controls from the DOM.
+	 */
 	disconnect() {}
 
+	/**
+	 * Call this method if you no longer want use to the controls. It frees all internal
+	 * resources and removes all event listeners.
+	 */
 	dispose() {}
 
+	/**
+	 * Controls should implement this method if they have to update their internal state
+	 * per simulation step.
+	 *
+	 * @param {number} [delta] - The time delta in seconds.
+	 */
 	update( /* delta */ ) {}
 
 }
@@ -57082,11 +65352,11 @@ function createSVGRenderer(as_is, precision, doc) {
            setAttribute(name, value) {
               this._wrapper.svg_attr[name] = value;
            },
-           appendChild(_node) {
+           appendChild(/* node */) {
               this._wrapper.accPath += `<path style="${this._wrapper.path_attr.style}" d="${this._wrapper.path_attr.d}"/>`;
               this._wrapper.path_attr = {};
            },
-           removeChild(_node) {
+           removeChild(/* node */) {
               this.childNodes = [];
            }
         };
@@ -57110,14 +65380,14 @@ function createSVGRenderer(as_is, precision, doc) {
    rndr.originalRender = rndr.render;
 
    rndr.render = function(scene, camera) {
-      const originalDocument = globalThis.document;
+      const _doc = globalThis.document;
       if (isNodeJs())
          globalThis.document = this.doc_wrapper;
 
       this.originalRender(scene, camera);
 
       if (isNodeJs())
-         globalThis.document = originalDocument;
+         globalThis.document = _doc;
    };
 
    rndr.clearHTML = function() {
@@ -57409,10 +65679,13 @@ const Handling3DDrawings = {
          const pos0 = prnt.getBoundingClientRect(), doc = getDocument();
 
          while (prnt) {
-            if (prnt === doc) { prnt = null; break; }
+            if (prnt === doc) {
+               prnt = null;
+               break;
+            }
             try {
                if (getComputedStyle(prnt).position !== 'static') break;
-            } catch (err) {
+            } catch {
                break;
             }
             prnt = prnt.parentNode;
@@ -57512,13 +65785,13 @@ async function createRender3D(width, height, render3d, args) {
       renderer.originalSetSize = renderer.setSize;
 
       // apply size to dom element
-      renderer.setSize = function(width, height, updateStyle) {
+      renderer.setSize = function(w, h, updateStyle) {
          if (this.jsroot_custom_dom) {
-            this.jsroot_dom.setAttribute('width', width);
-            this.jsroot_dom.setAttribute('height', height);
+            this.jsroot_dom.setAttribute('width', w);
+            this.jsroot_dom.setAttribute('height', h);
          }
 
-         this.originalSetSize(width, height, updateStyle);
+         this.originalSetSize(w, h, updateStyle);
       };
 
       renderer.setSize(width, height);
@@ -57820,9 +66093,11 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       }
    }
 
-   function render3DFired(painter) {
-      if (!painter || painter.renderer === undefined) return false;
-      return painter.render_tmout !== undefined; // when timeout configured, object is prepared for rendering
+   function render3DFired(_painter) {
+      if (_painter?.renderer === undefined)
+         return false;
+      // when timeout configured, object is prepared for rendering
+      return _painter.render_tmout !== undefined;
    }
 
    function control_mousewheel(evnt) {
@@ -57987,18 +66262,19 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
 
    control.getInfoAtMousePosition = function(mouse_pos) {
       const intersects = this.getMouseIntersects(mouse_pos);
-      let tip = null, painter = null;
+      let tip = null, _painter = null;
 
       for (let i = 0; i < intersects.length; ++i) {
          if (intersects[i].object.tooltip) {
             tip = intersects[i].object.tooltip(intersects[i]);
-            painter = intersects[i].object.painter;
+            _painter = intersects[i].object.painter;
             break;
          }
       }
 
-      if (tip && painter) {
-         return { obj: painter.getObject(), name: painter.getObject().fName,
+      if (tip && _painter) {
+         return { obj: _painter.getObject(),
+                  name: _painter.getObject().fName,
                   bin: tip.bin, cont: tip.value,
                   binx: tip.ix, biny: tip.iy, binz: tip.iz,
                   grx: (tip.x1+tip.x2)/2, gry: (tip.y1+tip.y2)/2, grz: (tip.z1+tip.z2)/2 };
@@ -58315,8 +66591,6 @@ function disposeThreejsObject(obj, only_childs) {
    delete obj.tooltip;
    delete obj.stack; // used in geom painter
    delete obj.drawn_highlight; // special highlight object
-
-   obj = undefined;
 }
 
 
@@ -58332,7 +66606,7 @@ function createLineSegments(arr, material, index = undefined, only_geometry = fa
    if (material.isLineDashedMaterial) {
       const v1 = new THREE.Vector3(),
             v2 = new THREE.Vector3();
-      let d = 0, distances = null;
+      let d = 0, distances;
 
       if (index) {
          distances = new Float32Array(index.length);
@@ -58371,6 +66645,7 @@ const Box3D = {
               7, 6, 2, 6, 3, 2, 5, 7, 0, 7, 2, 0, 1, 3, 4, 3, 6, 4],
     Normals: [1, 0, 0, -1, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 1, 0, 0, -1],
     Segments: [0, 2, 2, 7, 7, 5, 5, 0, 1, 3, 3, 6, 6, 4, 4, 1, 1, 0, 3, 2, 6, 7, 4, 5],  // segments addresses Vertices
+    Crosses: [0, 7, 2, 5, 0, 3, 1, 2, 7, 3, 2, 6, 5, 6, 4, 7, 5, 1, 0, 4, 3, 4, 1, 6], // addresses Vertices
     MeshSegments: undefined
 };
 
@@ -58498,7 +66773,7 @@ class PointsCreator {
       } else {
          promise = new Promise((resolveFunc, rejectFunc) => {
             const loader = new THREE.TextureLoader();
-            loader.load(dataUrl, res => resolveFunc(res), undefined, () => rejectFunc());
+            loader.load(dataUrl, res => resolveFunc(res), undefined, () => rejectFunc(Error(`Fail to load ${dataUrl}`)));
          });
       }
 
@@ -58555,6 +66830,12 @@ function createTextGeometry(lbl, size) {
  */
 
 /* eslint-disable curly */
+/* eslint-disable no-loss-of-precision */
+/* eslint-disable no-useless-assignment */
+/* eslint-disable no-use-before-define */
+/* eslint-disable no-else-return */
+/* eslint-disable no-shadow */
+/* eslint-disable operator-assignment */
 /* eslint-disable @stylistic/js/comma-spacing */
 /* eslint-disable @stylistic/js/no-floating-decimal */
 /* eslint-disable @stylistic/js/space-in-parens */
@@ -60538,12 +68819,10 @@ function eff_Bayesian(total,passed,level,bUpper,alpha,beta) {
          return beta_quantile((1+level)/2,a,b);
       else
          return 1;
-   } else {
-      if ((a > 0) && (b > 0))
-         return beta_quantile((1-level)/2,a,b);
-      else
-         return 0;
-   }
+   } else if ((a > 0) && (b > 0))
+      return beta_quantile((1-level)/2,a,b);
+
+   return 0;
 }
 
 /** @summary Return function to calculate boundary of TEfficiency
@@ -61552,7 +69831,7 @@ class JSRootMenu {
    addColorMenu(name, value, set_func, fill_kind) {
       if (value === undefined) return;
       const useid = !isStr(value);
-      this.sub('' + name, () => {
+      this.sub(name, () => {
          this.input('Enter color ' + (useid ? '(only id number)' : '(name or id)'), value, useid ? 'int' : 'text', useid ? 0 : undefined, useid ? 9999 : undefined).then(col => {
             const id = parseInt(col);
             if (Number.isInteger(id) && getColor(id))
@@ -61618,7 +69897,7 @@ class JSRootMenu {
          values = values.sort((a, b) => a > b);
       }
 
-      this.sub('' + name, () => this.input('Enter value of ' + name, conv(size_value, true), (step >= 1) ? 'int' : 'float').then(set_func), title);
+      this.sub(name, () => this.input('Enter value of ' + name, conv(size_value, true), (step >= 1) ? 'int' : 'float').then(set_func), title);
       values.forEach(v => this.addchk(match(v), conv(v), v, res => set_func((step >= 1) ? Number.parseInt(res) : Number.parseFloat(res))));
       this.endsub();
    }
@@ -61741,7 +70020,7 @@ class JSRootMenu {
      * @protected */
    addSelectMenu(name, values, value, set_func, title) {
       const use_number = (typeof value === 'number');
-      this.sub('' + name, undefined, undefined, title);
+      this.sub(name, undefined, undefined, title);
       for (let n = 0; n < values.length; ++n)
          this.addchk(use_number ? (n === value) : (values[n] === value), values[n], use_number ? n : values[n], res => set_func(use_number ? Number.parseInt(res) : res));
       this.endsub();
@@ -61753,7 +70032,7 @@ class JSRootMenu {
       // if (value === undefined) return;
       const colors = ['default', 'black', 'white', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
 
-      this.sub('' + name, () => {
+      this.sub(name, () => {
          this.input('Enter color name - empty string will reset color', value).then(set_func);
       });
       let fillcol = 'black';
@@ -61815,7 +70094,7 @@ class JSRootMenu {
    /** @summary Add fill style menu
      * @private */
    addFillStyleMenu(name, value, color_index, set_func) {
-      this.sub('' + name, () => {
+      this.sub(name, () => {
          this.input('Enter fill style id (1001-solid, 3100..4000)', value, 'int', 0, 4000).then(id => {
             if ((id >= 0) && (id <= 4000)) set_func(id);
          });
@@ -61853,7 +70132,7 @@ class JSRootMenu {
    addFontMenu(name, value, set_func) {
       const prec = value && Number.isInteger(value) ? value % 10 : 2;
 
-      this.sub('' + name, () => {
+      this.sub(name, () => {
          this.input('Enter font id from [0..20]', Math.floor(value/10), 'int', 0, 20).then(id => {
             if ((id >= 0) && (id <= 20)) set_func(id*10 + prec);
          });
@@ -62243,7 +70522,7 @@ class JSRootMenu {
 
       const setStyleField = arg => { gStyle[arg.slice(1)] = parseInt(arg[0]); },
             addStyleIntField = (name, field, arr) => {
-         this.sub('' + name);
+         this.sub(name);
          const curr = gStyle[field] >= arr.length ? 1 : gStyle[field];
          for (let v = 0; v < arr.length; ++v)
             this.addchk(curr === v, arr[v], `${v}${field}`, setStyleField);
@@ -62386,7 +70665,7 @@ class JSRootMenu {
      * @return {Promise} with true when 'Ok' pressed or false when 'Cancel' pressed
      * @protected */
    async confirm(title, message) {
-      return this.runModal(title, message, { btns: true, height: 120, width: 400 }).then(elem => { return !!elem; });
+      return this.runModal(title, message, { btns: true, height: 120, width: 400 }).then(elem => Boolean(elem));
    }
 
    /** @summary Input value
@@ -62729,14 +71008,14 @@ class StandaloneMenu extends JSRootMenu {
 
          hovArea.appendChild(text);
 
-         function changeFocus(item, on) {
+         function changeFocus(fitem, on) {
             if (on) {
-               item.classList.add(clfocus);
-               item.style['background-color'] = 'rgb(220, 220, 220)';
-            } else if (item.classList.contains(clfocus)) {
-               item.style['background-color'] = null;
-               item.classList.remove(clfocus);
-               item.querySelector(`.${clname}`)?.remove();
+               fitem.classList.add(clfocus);
+               fitem.style['background-color'] = 'rgb(220, 220, 220)';
+            } else if (fitem.classList.contains(clfocus)) {
+               fitem.style['background-color'] = null;
+               fitem.classList.remove(clfocus);
+               fitem.querySelector(`.${clname}`)?.remove();
             }
          }
 
@@ -62974,7 +71253,7 @@ function createMenu(evnt, handler, menuname) {
 function closeMenu(menuname) {
    const element = getDocument().getElementById(menuname || sDfltName);
    element?.remove();
-   return !!element;
+   return Boolean(element);
 }
 
 /** @summary Returns true if menu or modal dialog present
@@ -63153,7 +71432,7 @@ const AxisPainterMethods = {
             const ms = dt.getMilliseconds();
             res = new Date(dt.toLocaleString('en-US', { timeZone: settings.TimeZone }));
             res.setMilliseconds(ms);
-         } catch (err) {
+         } catch {
             res = dt;
          }
       }
@@ -63179,7 +71458,8 @@ const AxisPainterMethods = {
       if (val <= 0) return null;
       let vlog = Math.log10(val);
       const base = this.logbase;
-      if (base !== 10) vlog = vlog / Math.log10(base);
+      if (base !== 10)
+         vlog /= Math.log10(base);
       if (this.moreloglabels || (Math.abs(vlog - Math.round(vlog)) < 0.001)) {
          if (!this.noexp && (asticks !== 2))
             return this.formatExp(base, Math.floor(vlog + 0.01), val);
@@ -63194,7 +71474,7 @@ const AxisPainterMethods = {
    formatNormal(d, asticks, fmt) {
       let val = parseFloat(d);
       if (asticks && this.order)
-         val = val / Math.pow(10, this.order);
+         val /= Math.pow(10, this.order);
 
       if (gStyle.fStripDecimals && (val === Math.round(val)))
          return Math.abs(val) < 1e9 ? val.toFixed(0) : val.toExponential(4);
@@ -63355,34 +71635,37 @@ const AxisPainterMethods = {
                factor = 10;
             else if (factor < 0.01)
                factor = 0.01;
-            item.min = item.min / Math.pow(10, factor * delta_left * dmin);
-            item.max = item.max * Math.pow(10, factor * delta_right * (1 - dmin));
+            item.min /= Math.pow(10, factor * delta_left * dmin);
+            item.max *= Math.pow(10, factor * delta_right * (1 - dmin));
             // special handling for Z scale - limit zooming of color scale
             if (this.minposbin && this.name === 'zaxis')
                item.min = Math.max(item.min, 0.3*this.minposbin);
          } else if ((delta_left === -delta_right) && !item.reverse) {
             // shift left/right, try to keep range constant
-            let delta = (item.max - item.min) * delta_right * dmin;
+            let delta_shift = (item.max - item.min) * delta_right * dmin;
 
-            if ((Math.round(item.max) === item.max) && (Math.round(item.min) === item.min) && (Math.abs(delta) > 1)) delta = Math.round(delta);
+            if ((Math.round(item.max) === item.max) && (Math.round(item.min) === item.min) && (Math.abs(delta_shift) > 1))
+               delta_shift = Math.round(delta_shift);
 
-            if (item.min + delta < gmin)
-               delta = gmin - item.min;
-            else if (item.max + delta > gmax)
-               delta = gmax - item.max;
+            if (item.min + delta_shift < gmin)
+               delta_shift = gmin - item.min;
+            else if (item.max + delta_shift > gmax)
+               delta_shift = gmax - item.max;
 
-            if (delta !== 0) {
-               item.min += delta;
-               item.max += delta;
+            if (delta_shift !== 0) {
+               item.min += delta_shift;
+               item.max += delta_shift;
              } else {
                delete item.min;
                delete item.max;
             }
          } else {
             let rx_left = (item.max - item.min), rx_right = rx_left;
-            if (delta_left > 0) rx_left = 1.001 * rx_left / (1-delta_left);
+            if (delta_left > 0)
+               rx_left = 1.001 * rx_left / (1-delta_left);
             item.min += -delta_left*dmin*rx_left;
-            if (delta_right > 0) rx_right = 1.001 * rx_right / (1-delta_right);
+            if (delta_right > 0)
+               rx_right = 1.001 * rx_right / (1-delta_right);
             item.max -= -delta_right*(1-dmin)*rx_right;
          }
          if (item.min >= item.max)
@@ -63393,8 +71676,8 @@ const AxisPainterMethods = {
                 ((item.max > gmax) && (lmax === gmax)))
                    item.min = item.max = undefined;
          } else {
-            if (item.min < gmin) item.min = gmin;
-            if (item.max > gmax) item.max = gmax;
+            item.min = Math.max(item.min, gmin);
+            item.max = Math.min(item.max, gmax);
          }
       } else
          item.min = item.max = undefined;
@@ -64170,7 +72453,8 @@ class TAxisPainter extends ObjectPainter {
                   arg.rotate = -mod.fTextAngle;
 
                // only for major text drawing scale factor need to be checked
-               if (lcnt === 0)
+               // for modified labels ignore scaling
+               if ((lcnt === 0) && !mod?.fLabText)
                   arg.post_process = process_drawtext_ready;
 
                this.drawText(arg);
@@ -64241,7 +72525,7 @@ class TAxisPainter extends ObjectPainter {
             tickScalingSize = scalingSize || (this.vertical ? h/pad_h*pad_w : w/pad_w*pad_h),
             bit_plus = axis.TestBit(EAxisBits.kTickPlus), bit_minus = axis.TestBit(EAxisBits.kTickMinus);
 
-      let tickSize = 0, titleColor, titleFontId, offset;
+      let tickSize, titleColor, titleFontId, offset;
 
       this.scalingSize = scalingSize || Math.max(Math.min(pad_w, pad_h), 10);
 
@@ -64672,7 +72956,7 @@ function addDragHandler(_painter, arg) {
    drag_move_off.on('start', null).on('drag', null).on('end', null);
 
    drag_move
-      .on('start', function(evnt) {
+      .on('start', evnt => {
          if (detectRightButton(evnt.sourceEvent) || drag_kind) return;
          if (isFunc(arg.is_disabled) && arg.is_disabled('move')) return;
 
@@ -64700,8 +72984,9 @@ function addDragHandler(_painter, arg) {
             .style('pointer-events', 'none') // let forward double click to underlying elements
             .property('drag_handle', handle)
             .call(addHighlightStyle, true);
-      }).on('drag', function(evnt) {
-         if (!is_dragging(painter, 'move')) return;
+      }).on('drag', evnt => {
+         if (!is_dragging(painter, 'move'))
+            return;
 
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
@@ -64717,8 +73002,9 @@ function addDragHandler(_painter, arg) {
          handle.y = Math.min(Math.max(handle.acc_y1, 0), handle.pad_h);
 
          drag_rect.attr('d', `M${handle.x},${handle.y}${handle.path}`);
-      }).on('end', function(evnt) {
-         if (!is_dragging(painter, 'move')) return;
+      }).on('end', evnt => {
+         if (!is_dragging(painter, 'move'))
+            return;
 
          evnt.sourceEvent.stopPropagation();
          evnt.sourceEvent.preventDefault();
@@ -64805,8 +73091,9 @@ function addDragHandler(_painter, arg) {
          handle.height = Math.abs(y2 - y1);
 
          drag_rect.attr('x', handle.x).attr('y', handle.y).attr('width', handle.width).attr('height', handle.height);
-      }).on('end', function(evnt) {
-         if (!is_dragging(painter, 'resize')) return;
+      }).on('end', evnt => {
+         if (!is_dragging(painter, 'resize'))
+            return;
 
          evnt.sourceEvent.preventDefault();
 
@@ -64937,16 +73224,18 @@ const TooltipHandler = {
             coordinates = pnt ? Math.round(pnt.x) + ',' + Math.round(pnt.y) : '';
       let hintsg = layer.selectChild('.objects_hints'), // group with all tooltips
           title = '', name = '', info = '',
-          hint = null, best_dist2 = 1e10, best_hint = null;
+          hint0 = null, best_dist2 = 1e10, best_hint = null;
 
       // try to select hint with exact match of the position when several hints available
       for (let k = 0; k < hints.length; ++k) {
-         if (!hints[k]) continue;
-         if (!hint) hint = hints[k];
+         if (!hints[k])
+            continue;
+         if (!hint0)
+            hint0 = hints[k];
 
          // select exact hint if this is the only one
-         if (hints[k].exact && (nexact < 2) && (!hint || !hint.exact)) {
-            hint = hints[k];
+         if (hints[k].exact && (nexact < 2) && (!hint0 || !hint0.exact)) {
+            hint0 = hints[k];
             break;
          }
 
@@ -64957,15 +73246,15 @@ const TooltipHandler = {
          if (dist2 < best_dist2) { best_dist2 = dist2; best_hint = hints[k]; }
       }
 
-      if ((!hint || !hint.exact) && (best_dist2 < 400))
-         hint = best_hint;
+      if ((!hint0 || !hint0.exact) && (best_dist2 < 400))
+         hint0 = best_hint;
 
-      if (hint) {
-         name = (hint.lines && hint.lines.length > 1) ? hint.lines[0] : hint.name;
-         title = hint.title || '';
-         info = hint.line;
-         if (!info && hint.lines)
-            info = hint.lines.slice(1).join(' ');
+      if (hint0) {
+         name = (hint0.lines && hint0.lines.length > 1) ? hint0.lines[0] : hint0.name;
+         title = hint0.title || '';
+         info = hint0.line;
+         if (!info && hint0.lines)
+            info = hint0.lines.slice(1).join(' ');
       }
 
       this.showObjectStatus(name, title, info, coordinates);
@@ -65054,17 +73343,18 @@ const TooltipHandler = {
                .attr('opacity', 0) // use attribute, not style to make animation with d3.transition()
                .style('overflow', 'hidden')
                .style('pointer-events', 'none');
-          }
+         }
 
          if (viewmode === 'single')
             curry = pnt.touch ? (pnt.y - hint.height - 5) : Math.min(pnt.y + 15, maxhinty - hint.height - 3) + frame_rect.hint_delta_y;
-          else {
-            for (let n = 0; (n < hints.length) && (gapy < maxhinty); ++n) {
-               const hint = hints[n];
-               if (!hint) continue;
-               if ((hint.y >= gapy - 5) && (hint.y <= gapy + hint.height + 5)) {
-                  gapy = hint.y + 10;
-                  n = -1;
+         else {
+            for (let n2 = 0; (n2 < hints.length) && (gapy < maxhinty); ++n2) {
+               const hint2 = hints[n2];
+               if (!hint2)
+                  continue;
+               if ((hint2.y >= gapy - 5) && (hint2.y <= gapy + hint2.height + 5)) {
+                  gapy = hint2.y + 10;
+                  n2 = -1;
                }
             }
             if ((gapminx === -1111) && (gapmaxx === -1111))
@@ -65407,11 +73697,11 @@ const TooltipHandler = {
    shiftMoveHanlder(evnt, pos0) {
       if (evnt.buttons === this._shifting_buttons) {
          const frame = this.getFrameSvg(),
-             pos = pointer(evnt, frame.node()),
-             main_svg = this.draw_g.selectChild('.main_layer'),
-             dx = pos0[0] - pos[0],
-             dy = (this.scales_ndim === 1) ? 0 : pos0[1] - pos[1],
-             w = this.getFrameWidth(), h = this.getFrameHeight();
+               pos = pointer(evnt, frame.node()),
+               main_svg = this.draw_g.selectChild('.main_layer'),
+               dx = pos0[0] - pos[0],
+               dy = (this.scales_ndim === 1) ? 0 : pos0[1] - pos[1],
+               w = this.getFrameWidth(), h = this.getFrameHeight();
 
          this._shifting_dx = dx;
          this._shifting_dy = dy;
@@ -65470,8 +73760,8 @@ const TooltipHandler = {
          this._shifting_buttons = evnt.buttons;
 
          if (!evnt.$emul) {
-            select(window).on('mousemove.shiftHandler', evnt => this.shiftMoveHanlder(evnt, pos))
-                             .on('mouseup.shiftHandler', evnt => this.shiftUpHanlder(evnt), true);
+            select(window).on('mousemove.shiftHandler', evnt2 => this.shiftMoveHanlder(evnt2, pos))
+                             .on('mouseup.shiftHandler', evnt2 => this.shiftUpHanlder(evnt2), true);
          }
 
          setPainterTooltipEnabled(this, false);
@@ -65515,8 +73805,8 @@ const TooltipHandler = {
       }
 
       if (!evnt.$emul) {
-         select(window).on('mousemove.zoomRect', evnt => this.moveRectSel(evnt))
-                          .on('mouseup.zoomRect', evnt => this.endRectSel(evnt), true);
+         select(window).on('mousemove.zoomRect', evnt2 => this.moveRectSel(evnt2))
+                          .on('mouseup.zoomRect', evnt2 => this.endRectSel(evnt2), true);
       }
 
       this.zoom_rect = null;
@@ -65777,9 +74067,9 @@ const TooltipHandler = {
             .call(addHighlightStyle, true);
 
       if (!evnt.$emul) {
-         select(window).on('touchmove.zoomRect', evnt => this.moveTouchZoom(evnt))
-                          .on('touchcancel.zoomRect', evnt => this.endTouchZoom(evnt))
-                          .on('touchend.zoomRect', evnt => this.endTouchZoom(evnt));
+         select(window).on('touchmove.zoomRect', evnt2 => this.moveTouchZoom(evnt2))
+                          .on('touchcancel.zoomRect', evnt2 => this.endTouchZoom(evnt2))
+                          .on('touchend.zoomRect', evnt2 => this.endTouchZoom(evnt2));
       }
    },
 
@@ -65998,10 +74288,10 @@ const TooltipHandler = {
             domenu = fp.fillContextMenu(menu);
 
          if (domenu) {
-            return exec_painter.fillObjectExecMenu(menu, kind).then(menu => {
+            return exec_painter.fillObjectExecMenu(menu, kind).then(menu2 => {
                 // suppress any running zooming
-                setPainterTooltipEnabled(menu.painter, false);
-                return menu.show().then(() => setPainterTooltipEnabled(menu.painter, true));
+                setPainterTooltipEnabled(menu2.painter, false);
+                return menu2.show().then(() => setPainterTooltipEnabled(menu2.painter, true));
             });
          }
       });
@@ -66024,9 +74314,9 @@ const TooltipHandler = {
 
       setPainterTooltipEnabled(this, false);
 
-      select(window).on('touchmove.singleTouch', kind ? null : evnt => this.moveTouchHandling(evnt, kind, arr[0]))
-                       .on('touchcancel.singleTouch', evnt => this.endSingleTouchHandling(evnt, kind, arr[0], tm))
-                       .on('touchend.singleTouch', evnt => this.endSingleTouchHandling(evnt, kind, arr[0], tm));
+      select(window).on('touchmove.singleTouch', kind ? null : evnt2 => this.moveTouchHandling(evnt2, kind, arr[0]))
+                       .on('touchcancel.singleTouch', evnt2 => this.endSingleTouchHandling(evnt2, kind, arr[0], tm))
+                       .on('touchend.singleTouch', evnt2 => this.endSingleTouchHandling(evnt2, kind, arr[0], tm));
    },
 
    /** @summary Moving of touch pointer
@@ -66038,7 +74328,7 @@ const TooltipHandler = {
 
       try {
         pos = get_touch_pointers(evnt, frame.node())[0];
-      } catch (err) {
+      } catch {
         pos = [0, 0];
         if (evnt?.changedTouches)
            pos = [evnt.changedTouches[0].clientX, evnt.changedTouches[0].clientY];
@@ -66288,30 +74578,28 @@ class TFramePainter extends ObjectPainter {
           umax = pad[`fU${name}max`],
           eps = 1e-7;
 
-            if (name === 'x') {
+      if (name === 'x') {
          if ((Math.abs(pad.fX1) > eps) || (Math.abs(pad.fX2 - 1) > eps)) {
             const dx = pad.fX2 - pad.fX1;
             umin = pad.fX1 + dx*pad.fLeftMargin;
             umax = pad.fX2 - dx*pad.fRightMargin;
          }
-      } else {
-         if ((Math.abs(pad.fY1) > eps) || (Math.abs(pad.fY2 - 1) > eps)) {
-            const dy = pad.fY2 - pad.fY1;
-            umin = pad.fY1 + dy*pad.fBottomMargin;
-            umax = pad.fY2 - dy*pad.fTopMargin;
-         }
+      } else if ((Math.abs(pad.fY1) > eps) || (Math.abs(pad.fY2 - 1) > eps)) {
+         const dy = pad.fY2 - pad.fY1;
+         umin = pad.fY1 + dy*pad.fBottomMargin;
+         umax = pad.fY2 - dy*pad.fTopMargin;
       }
 
-      if ((umin >= umax) || (Math.abs(umin) < eps && Math.abs(umax-1) < eps)) return;
+      if ((umin >= umax) || (Math.abs(umin) < eps && Math.abs(umax-1) < eps))
+         return;
 
       if (pad[`fLog${name}`] > 0) {
          umin = Math.exp(umin * Math.log(10));
          umax = Math.exp(umax * Math.log(10));
       }
 
-      let aname = name;
-      if (this.swap_xy) aname = (name === 'x') ? 'y' : 'x';
-      const smin = this[`scale_${aname}min`],
+      const aname = !this.swap_xy ? name : (name === 'x' ? 'y' : 'x'),
+            smin = this[`scale_${aname}min`],
             smax = this[`scale_${aname}max`];
 
       eps = (smax - smin) * 1e-7;
@@ -67993,13 +76281,14 @@ class GridDisplay extends MDIDisplay {
          handle = separ.property('handle'),
          id = separ.property('separator_id'),
          group = handle.groups[id];
-      let needResize = false, needSetSize = false;
 
       if (action === 'start') {
          group.startpos = group.position;
          group.acc_drag = 0;
          return;
       }
+
+      let needResize, needSetSize = false;
 
       if (action === 'end') {
          if (Math.abs(group.startpos - group.position) < 0.5)
@@ -68422,8 +76711,8 @@ class FlexibleDisplay extends MDIDisplay {
    /** @summary change frame state */
    changeFrameState(frame, newstate, no_redraw) {
       const main = select(frame.parentNode),
-          state = main.property('state'),
-          top = this.selectDom().select('.jsroot_flex_top');
+            state = main.property('state'),
+            top = this.selectDom().select('.jsroot_flex_top');
 
       if (state === newstate)
          return false;
@@ -68464,7 +76753,6 @@ class FlexibleDisplay extends MDIDisplay {
       // adjust position of new minified rect
       if (newstate === 'min') {
          const rect = this.getFrameRect(frame),
-               top = this.selectDom().select('.jsroot_flex_top'),
                ww = top.node().clientWidth,
                hh = top.node().clientHeight,
                arr = [], step = 4,
@@ -68491,7 +76779,6 @@ class FlexibleDisplay extends MDIDisplay {
          main.style('left', rect.x + 'px').style('top', rect.y + 'px');
       } else if (!no_redraw)
          resize(frame);
-
 
       return true;
    }
@@ -68574,27 +76861,28 @@ class FlexibleDisplay extends MDIDisplay {
 
          if (detectRightButton(evnt.sourceEvent)) return;
 
-         const main = select(this.parentNode);
-         if (!main.classed('jsroot_flex_frame') || (main.property('state') === 'max')) return;
+         const mframe = select(this.parentNode);
+         if (!mframe.classed('jsroot_flex_frame') || (mframe.property('state') === 'max'))
+            return;
 
          doing_move = !select(this).classed('jsroot_flex_resize');
-         if (!doing_move && (main.property('state') === 'min')) return;
+         if (!doing_move && (mframe.property('state') === 'min')) return;
 
-         mdi.activateFrame(main.select('.jsroot_flex_draw').node());
+         mdi.activateFrame(mframe.select('.jsroot_flex_draw').node());
 
-         moving_div = top.append('div').attr('style', main.attr('style')).style('border', '2px dotted #00F');
+         moving_div = top.append('div').attr('style', mframe.attr('style')).style('border', '2px dotted #00F');
 
-         if (main.property('state') === 'min') {
-            moving_div.style('width', main.node().clientWidth + 'px')
-                      .style('height', main.node().clientHeight + 'px');
+         if (mframe.property('state') === 'min') {
+            moving_div.style('width', mframe.node().clientWidth + 'px')
+                      .style('height', mframe.node().clientHeight + 'px');
          }
 
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
 
-         moving_frame = main;
+         moving_frame = mframe;
          current = [];
-      }).on('drag', function(evnt) {
+      }).on('drag', evnt => {
          if (!moving_div) return;
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
@@ -68613,7 +76901,7 @@ class FlexibleDisplay extends MDIDisplay {
             changeProp(0, 'width', evnt.dx);
             changeProp(1, 'height', evnt.dy);
          }
-      }).on('end', function(evnt) {
+      }).on('end', evnt => {
          if (!moving_div) return;
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
@@ -69813,11 +78101,13 @@ class TPadPainter extends ObjectPainter {
      * @return new index to continue loop or -111 if main painter removed
      * @private */
    removePrimitive(arg, clean_only_secondary) {
-      let indx = -1, prim = null;
+      let indx, prim;
       if (Number.isInteger(arg)) {
-         indx = arg; prim = this.painters[indx];
+         indx = arg;
+         prim = this.painters[indx];
       } else {
-         indx = this.painters.indexOf(arg); prim = arg;
+         indx = this.painters.indexOf(arg);
+         prim = arg;
       }
       if (indx < 0)
          return indx;
@@ -70025,7 +78315,7 @@ class TPadPainter extends ObjectPainter {
    /** @summary Create SVG element for canvas */
    createCanvasSvg(check_resize, new_size) {
       const is_batch = this.isBatchMode(), lmt = 5;
-      let factor = null, svg = null, rect = null, btns, info, frect;
+      let factor, svg, rect, btns, info, frect;
 
       if (check_resize > 0) {
          if (this._fixed_size)
@@ -70105,8 +78395,10 @@ class TPadPainter extends ObjectPainter {
       this.createAttFill({ attr: this.pad });
 
       if ((rect.width <= lmt) || (rect.height <= lmt)) {
-         svg.style('display', 'none');
-         console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
+         if (this.snapid === undefined) {
+            svg.style('display', 'none');
+            console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
+         }
          if (this.#pad_width && this.#pad_height) {
             // use last valid dimensions
             rect.width = this.#pad_width;
@@ -70503,10 +78795,9 @@ class TPadPainter extends ObjectPainter {
      * @private */
    findInPrimitives(objname, objtype) {
       const match = obj => obj && (obj?.fName === objname) && (objtype ? (obj?._typename === objtype) : true),
-            snap = this._snap_primitives?.find(snap => match((snap.fKind === webSnapIds.kObject) ? snap.fSnapshot : null));
-      if (snap) return snap.fSnapshot;
+            snap = this._snap_primitives?.find(s => match((s.fKind === webSnapIds.kObject) ? s.fSnapshot : null));
 
-      return this.pad?.fPrimitives?.arr.find(match);
+      return snap ? snap.fSnapshot : this.pad?.fPrimitives?.arr.find(match);
    }
 
    /** @summary Try to find painter for specified object
@@ -71106,7 +79397,7 @@ class TPadPainter extends ObjectPainter {
 
          objpainter.assignSnapId(lst[indx].fObjectID);
          const setSubSnaps = p => {
-            if (!p.getUniqueId(true)) return;
+            if (!p._is_primary) return;
             for (let k = 0; k < this.painters.length; ++k) {
                const sub = this.painters[k];
                if (sub.isSecondary(p) && sub.getSecondaryId()) {
@@ -71251,7 +79542,7 @@ class TPadPainter extends ObjectPainter {
          padpainter.decodeOptions(snap.fOption);
          padpainter.addToPadPrimitives();
          padpainter.assignSnapId(snap.fObjectID);
-         padpainter.is_active_pad = !!snap.fActive; // enforce boolean flag
+         padpainter.is_active_pad = Boolean(snap.fActive); // enforce boolean flag
          padpainter._readonly = snap.fReadOnly ?? false; // readonly flag
          padpainter._snap_primitives = snap.fPrimitives; // keep list to be able find primitive
          padpainter._has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
@@ -71275,8 +79566,8 @@ class TPadPainter extends ObjectPainter {
 
       // here the case of normal drawing, will be handled in promise
       if (((snap.fKind === webSnapIds.kObject) || (snap.fKind === webSnapIds.kSVG)) && (snap.fOption !== '__ignore_drawing__')) {
-         return this.drawObject(this, snap.fSnapshot, snap.fOption).then(objpainter => {
-            this.addObjectPainter(objpainter, lst, indx);
+         return this.drawObject(this, snap.fSnapshot, snap.fOption).then(objpainter2 => {
+            this.addObjectPainter(objpainter2, lst, indx);
             return this.drawNextSnap(lst, pindx, indx);
          });
       }
@@ -71318,7 +79609,7 @@ class TPadPainter extends ObjectPainter {
       if (!snap?.fPrimitives)
          return this;
 
-      this.is_active_pad = !!snap.fActive; // enforce boolean flag
+      this.is_active_pad = Boolean(snap.fActive); // enforce boolean flag
       this._readonly = snap.fReadOnly ?? false; // readonly flag
       this._snap_primitives = snap.fPrimitives; // keep list to be able find primitive
       this._has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
@@ -71347,7 +79638,7 @@ class TPadPainter extends ObjectPainter {
 
          const mainid = this.selectDom().attr('id');
 
-         if (!this.isBatchMode() && !this.use_openui && !this.brlayout && mainid && isStr(mainid) && !getHPainter()) {
+         if (!this.isBatchMode() && this.online_canvas && !this.use_openui && !this.brlayout && mainid && isStr(mainid) && !getHPainter()) {
             this.brlayout = new BrowserLayout(mainid, null, this);
             this.brlayout.create(mainid, true);
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas
@@ -71512,7 +79803,7 @@ class TPadPainter extends ObjectPainter {
 
       if (this.snapid) {
          elem = { _typename: 'TWebPadOptions', snapid: this.snapid.toString(),
-                  active: !!this.is_active_pad,
+                  active: Boolean(this.is_active_pad),
                   cw: 0, ch: 0, w: [],
                   bits: 0, primitives: [],
                   logx: this.pad.fLogx, logy: this.pad.fLogy, logz: this.pad.fLogz,
@@ -71600,7 +79891,7 @@ class TPadPainter extends ObjectPainter {
          if (!log) return value;
          if (value <= 0) return err;
          value = Math.log10(value);
-         if (log > 1) value = value/Math.log10(log);
+         if (log > 1) value /= Math.log10(log);
          return value;
       }, frect = main.getFrameRect();
 
@@ -71878,7 +80169,7 @@ class TPadPainter extends ObjectPainter {
                   const obj = pp?.getObject();
                   if (!obj || (shown.indexOf(obj) >= 0))
                      return;
-                  let name = '';
+                  let name;
                   if (isFunc(pp.getMenuHeader))
                      name = pp.getMenuHeader();
                   else {
@@ -72669,7 +80960,7 @@ class TCanvasPainter extends TPadPainter {
       switch (that) {
          case 'Menu': break;
          case 'StatusBar': this.activateStatusBar(on); break;
-         case 'Editor': return this.activateGed(this, null, !!on);
+         case 'Editor': return this.activateGed(this, null, on);
          case 'ToolBar': break;
          case 'ToolTips': this.setTooltipAllowed(on); break;
       }
@@ -72941,7 +81232,7 @@ class TCanvasPainter extends TPadPainter {
 
       if (!nocanvas && can.fCw && can.fCh) {
          const d = painter.selectDom();
-         let apply_size = false;
+         let apply_size;
          if (!painter.isBatchMode()) {
             const rect0 = d.node().getBoundingClientRect();
             apply_size = !rect0.height && (rect0.width > 0.1*can.fCw);
@@ -73343,34 +81634,34 @@ class TPavePainter extends ObjectPainter {
             makeTranslate(text_g, Math.round(width/4), Math.round(height/4));
 
             return this.drawPaveText(w2, h2, arg, text_g);
-         } else {
-            if (pt.fNpaves) {
-               for (let n = pt.fNpaves-1; n > 0; --n) {
-                  this.draw_g.append('svg:path')
-                      .attr('d', `M${dx*4*n},${dy*4*n}h${width}v${height}h${-width}z`)
-                      .call(this.fillatt.func)
-                      .call(this.lineatt.func);
-               }
-            } else
-               this.drawBorder(this.draw_g, width, height, arc_radius);
-
-            if (!this.isBatchMode() || !this.fillatt.empty() || (!this.lineatt.empty() && !noborder)) {
-               if (arc_radius) {
-                  interactive_element = this.draw_g.append('svg:rect')
-                                            .attr('width', width)
-                                            .attr('height', height)
-                                            .attr('rx', arc_radius);
-               } else {
-                  interactive_element = this.draw_g.append('svg:path')
-                                                   .attr('d', `M0,0H${width}V${height}H0Z`);
-               }
-               interactive_element.call(this.fillatt.func);
-               if (!noborder)
-                  interactive_element.call(this.lineatt.func);
-            }
-
-            return isFunc(this.paveDrawFunc) ? this.paveDrawFunc(width, height, arg) : true;
          }
+
+         if (pt.fNpaves) {
+            for (let n = pt.fNpaves-1; n > 0; --n) {
+               this.draw_g.append('svg:path')
+                     .attr('d', `M${dx*4*n},${dy*4*n}h${width}v${height}h${-width}z`)
+                     .call(this.fillatt.func)
+                     .call(this.lineatt.func);
+            }
+         } else
+            this.drawBorder(this.draw_g, width, height, arc_radius);
+
+         if (!this.isBatchMode() || !this.fillatt.empty() || (!this.lineatt.empty() && !noborder)) {
+            if (arc_radius) {
+               interactive_element = this.draw_g.append('svg:rect')
+                                          .attr('width', width)
+                                          .attr('height', height)
+                                          .attr('rx', arc_radius);
+            } else {
+               interactive_element = this.draw_g.append('svg:path')
+                                                .attr('d', `M0,0H${width}V${height}H0Z`);
+            }
+            interactive_element.call(this.fillatt.func);
+            if (!noborder)
+               interactive_element.call(this.lineatt.func);
+         }
+
+         return isFunc(this.paveDrawFunc) ? this.paveDrawFunc(width, height, arg) : true;
       }).then(() => {
          if (this.isBatchMode() || (pt._typename === clTPave))
             return this;
@@ -73425,7 +81716,7 @@ class TPavePainter extends ObjectPainter {
                .style('stroke', scol)
                .style('stroke-width', brd_width);
       } else {
-         let spath = '';
+         let spath;
 
          if ((dx < 0) && (dy < 0))
             spath = `M0,0v${height-brd-1}h${-brd+1}v${-height+2}h${width-2}v${brd-1}z`;
@@ -73584,7 +81875,8 @@ class TPavePainter extends ObjectPainter {
             draw_header = (pt.fLabel.length > 0),
             promises = [],
             margin_x = pt.fMargin * width,
-            stepy = height / (nlines || 1);
+            stepy = height / (nlines || 1),
+            dflt_font_size = 0.85 * stepy;
       let max_font_size = 0;
 
       this.createAttText({ attr: pt, can_rotate: false });
@@ -73597,17 +81889,27 @@ class TPavePainter extends ObjectPainter {
          text_g = this.draw_g;
 
       const fast = (nlines === 1) && pp._fast_drawing;
-      let num_txt = 0, num_custom = 0;
+      let num_txt = 0, num_custom = 0, longest_line = 0, alt_text_size = 0;
 
       arr.forEach(entry => {
-         if ((entry._typename !== clTText) && (entry._typename !== clTLatex)) return;
-         if (!entry.fTitle || !entry.fTitle.trim()) return;
+         if (((entry._typename !== clTText) && (entry._typename !== clTLatex)) || !entry.fTitle?.trim())
+            return;
          num_txt++;
          if (entry.fX || entry.fY || entry.fTextSize)
             num_custom++;
+
+         if (!entry.fTextSize && !this.textatt.size)
+            longest_line = Math.max(longest_line, approximateLabelWidth(entry.fTitle, this.textatt.font, dflt_font_size));
       });
 
-      const pr = (num_txt > num_custom) ? this.startTextDrawingAsync(this.textatt.font, this.$postitle ? this.textatt.getSize(pp, 1, 0.05) : 0.85*height/nlines, text_g, max_font_size) : Promise.resolve();
+      if (longest_line) {
+         alt_text_size = dflt_font_size;
+         if (longest_line > 0.92 * width)
+            alt_text_size *= (0.92 * width / longest_line);
+         alt_text_size = Math.round(alt_text_size);
+      }
+
+      const pr = (num_txt > num_custom) ? this.startTextDrawingAsync(this.textatt.font, this.$postitle ? this.textatt.getSize(pp, 1, 0.05) : dflt_font_size, text_g, max_font_size) : Promise.resolve();
 
       return pr.then(() => {
          for (let nline = 0; nline < nlines; ++nline) {
@@ -73630,7 +81932,7 @@ class TPavePainter extends ObjectPainter {
                            y = entry.fY ? (1 - entry.fY)*height : (texty + (valign === 2 ? stepy / 2 : (valign === 3 ? stepy : 0))),
                            draw_g = text_g.append('svg:g');
 
-                     promises.push(this.startTextDrawingAsync(this.textatt.font, this.textatt.getAltSize(entry.fTextSize, pp), draw_g)
+                     promises.push(this.startTextDrawingAsync(this.textatt.font, this.textatt.getAltSize(entry.fTextSize, pp) || alt_text_size, draw_g)
                                        .then(() => this.drawText({ align, x, y, text: entry.fTitle, color,
                                                                    latex: (entry._typename === clTText) ? 0 : 1, draw_g, fast }))
                                        .then(() => this.finishTextDrawing(draw_g)));
@@ -73830,9 +82132,8 @@ class TPavePainter extends ObjectPainter {
                i = ii;
 
             const lopt = entry.fOption.toLowerCase(),
-                  icol = i % ncols, irow = (i - icol) / ncols;
-                  column_pos[icol + 1] - column_pos[icol];
-                  const x0 = Math.round(column_pos[icol]),
+                  icol = i % ncols, irow = (i - icol) / ncols,
+                  x0 = Math.round(column_pos[icol]),
                   y0 = Math.round(padding_y + irow * (row_height + gap_y)),
                   tpos_x = Math.round(x0 + column_boxwidth),
                   mid_x = Math.round(x0 + (column_boxwidth - padding_x)/2),
@@ -73988,7 +82289,7 @@ class TPavePainter extends ObjectPainter {
             zaxis = is_scatter ? main.getZaxis() : main.getObject()?.fZaxis,
             sizek = pad?.fTickz ? 0.35 : 0.7;
 
-      let zmin = 0, zmax = 100, gzmin, gzmax, axis_transform = '', axis_second = 0;
+      let zmin = 0, zmax = 100, gzmin, gzmax, axis_transform, axis_second = 0;
 
       this._palette_vertical = (palette.fX2NDC - palette.fX1NDC) < (palette.fY2NDC - palette.fY1NDC);
 
@@ -74345,9 +82646,9 @@ class TPavePainter extends ObjectPainter {
             });
          });
          const addStatOpt = (pos, name) => {
-            let opt = (pos < 10) ? pave.fOptStat : pave.fOptFit;
-            opt = parseInt(parseInt(opt) / parseInt(Math.pow(10, pos % 10))) % 10;
-            menu.addchk(opt, name, opt * 100 + pos, arg => {
+            let sopt = (pos < 10) ? pave.fOptStat : pave.fOptFit;
+            sopt = parseInt(parseInt(sopt) / parseInt(Math.pow(10, pos % 10))) % 10;
+            menu.addchk(sopt, name, sopt * 100 + pos, arg => {
                const oldopt = parseInt(arg / 100);
                let newopt = (arg % 100 < 10) ? pave.fOptStat : pave.fOptFit;
                newopt -= (oldopt > 0 ? oldopt : -1) * parseInt(Math.pow(10, arg % 10));
@@ -74485,12 +82786,9 @@ class TPavePainter extends ObjectPainter {
    getBestFormat(tv, e) {
       const ie = tv.indexOf('e'), id = tv.indexOf('.');
 
-      if (ie >= 0) {
-         if ((tv.indexOf('+') < 0) || (e >= 1))
-            return `.${ie-id-1}e`;
-         else
-            return '.1f';
-      } else if (id < 0)
+      if (ie >= 0)
+         return (tv.indexOf('+') < 0) || (e >= 1) ? `.${ie-id-1}e` : '.1f';
+      if (id < 0)
          return '.1f';
 
       return `.${tv.length - id - 1}f`;
@@ -75003,14 +83301,17 @@ class THistDrawOptions {
       if (d.check('LINE_', 'color'))
          this.histoLineColor = getColor(d.color);
 
+      if (d.check('WIDTH_', true))
+         this.histoLineWidth = d.partAsInt();
+
       if (d.check('XAXIS_', 'color'))
          histo.fXaxis.fAxisColor = histo.fXaxis.fLabelColor = histo.fXaxis.fTitleColor = d.color;
 
       if (d.check('YAXIS_', 'color'))
          histo.fYaxis.fAxisColor = histo.fYaxis.fLabelColor = histo.fYaxis.fTitleColor = d.color;
 
-      if (d.check('X+')) { this.AxisPos = 10; this.second_x = !!painter?.getMainPainter(); }
-      if (d.check('Y+')) { this.AxisPos += 1; this.second_y = !!painter?.getMainPainter(); }
+      if (d.check('X+')) { this.AxisPos = 10; this.second_x = Boolean(painter?.getMainPainter()); }
+      if (d.check('Y+')) { this.AxisPos += 1; this.second_y = Boolean(painter?.getMainPainter()); }
 
       if (d.check('SAME0')) { this.Same = true; this.IgnoreMainScale = true; }
       if (d.check('SAMES')) { this.Same = true; this.ForceStat = true; }
@@ -75113,6 +83414,7 @@ class THistDrawOptions {
       this.Box = this.BoxStyle > 0;
 
       if (d.check('CJUST')) this.Cjust = true;
+      if (d.check('COL7')) this.Color = 7; // special color mode with use of bar offset
       if (d.check('COL')) this.Color = true;
       if (d.check('CHAR')) this.Char = 1;
       if (d.check('ALLFUNC')) this.AllFunc = true;
@@ -75189,14 +83491,14 @@ class THistDrawOptions {
       if (d.check('PMC') && !this._pmc)
          this._pmc = 2;
 
-      const check_axis_bit = (opt, axis, bit) => {
+      const check_axis_bit = (aopt, axis, bit) => {
          // ignore Z scale options for 2D plots
          if ((axis === 'fZaxis') && (hdim < 3) && !this.Lego && !this.Surf)
             return;
-         let flag = d.check(opt);
-         if (pad && pad['$'+opt]) {
+         let flag = d.check(aopt);
+         if (pad && pad['$'+aopt]) {
             flag = true;
-            pad['$'+opt] = undefined;
+            pad['$'+aopt] = undefined;
          }
          if (flag && histo)
             histo[axis].SetBit(bit, true);
@@ -75808,7 +84110,7 @@ class THistPainter extends ObjectPainter {
          this.deleteAttr();
       else {
          this.createAttFill({ attr: histo, color: this.options.histoFillColor, pattern: this.options.histoFillPattern, kind: 1 });
-         this.createAttLine({ attr: histo, color0: this.options.histoLineColor });
+         this.createAttLine({ attr: histo, color0: this.options.histoLineColor, width: this.options.histoLineWidth });
       }
    }
 
@@ -76393,7 +84695,7 @@ class THistPainter extends ObjectPainter {
    /** @summary Returns selected index for specified axis
      * @desc be aware - here indexes starts from 0 */
    getSelectIndex(axis, side, add) {
-      let indx = 0, taxis = this.getAxis(axis);
+      let indx, taxis = this.getAxis(axis);
       const nbin = this[`nbins${axis}`] ?? 0;
 
       if (this.options.second_x && axis === 'x')
@@ -76415,7 +84717,6 @@ class THistPainter extends ObjectPainter {
             indx = nbin;
       } else
          indx = (side === 'left') ? 0 : nbin;
-
 
       // TAxis object of histogram, where user range can be stored
       if (taxis) {
@@ -76896,7 +85197,7 @@ class THistPainter extends ObjectPainter {
       let pal = this.findFunction(clTPaletteAxis),
           pal_painter = pp?.findPainterFor(pal);
 
-      const found_in_func = !!pal;
+      const found_in_func = Boolean(pal);
 
       if (this._can_move_colz) {
          delete this._can_move_colz;
@@ -77068,8 +85369,8 @@ class THistPainter extends ObjectPainter {
 
          fp.redraw();
 
-         const pr = !postpone_draw ? this.redraw() : Promise.resolve(true);
-         return pr.then(() => {
+         const pr2 = !postpone_draw ? this.redraw() : Promise.resolve(true);
+         return pr2.then(() => {
              delete this.do_redraw_palette;
              return pal_painter;
          });
@@ -77171,23 +85472,22 @@ class THistPainter extends ObjectPainter {
       res.grx = res.i1 < 0 ? {} : new Float32Array(res.i2 + 1);
       res.gry = res.j1 < 0 ? {} : new Float32Array(res.j2 + 1);
 
-      if ((typeof histo.fBarOffset === 'number') && (typeof histo.fBarWidth === 'number') &&
-           (histo.fBarOffset || histo.fBarWidth !== 1000)) {
-             if (histo.fBarOffset <= 1000)
-                res.xbar1 = res.ybar1 = 0.001*histo.fBarOffset;
-             else if (histo.fBarOffset <= 3000)
-                res.xbar1 = 0.001*(histo.fBarOffset-2000);
-             else if (histo.fBarOffset <= 5000)
-                res.ybar1 = 0.001*(histo.fBarOffset-4000);
+      if ((typeof histo.fBarOffset === 'number') && (typeof histo.fBarWidth === 'number') && (histo.fBarOffset || (histo.fBarWidth !== 1000))) {
+         if (histo.fBarOffset <= 1000)
+            res.xbar1 = res.ybar1 = 0.001 * histo.fBarOffset;
+         else if (histo.fBarOffset <= 3000)
+            res.xbar1 = 0.001 * (histo.fBarOffset - 2000);
+         else if (histo.fBarOffset <= 5000)
+            res.ybar1 = 0.001 * (histo.fBarOffset - 4000);
 
-             if (histo.fBarWidth <= 1000) {
-                res.xbar2 = Math.min(1, res.xbar1 + 0.001*histo.fBarWidth);
-                res.ybar2 = Math.min(1, res.ybar1 + 0.001*histo.fBarWidth);
-             } else if (histo.fBarWidth <= 3000)
-                res.xbar2 = Math.min(1, res.xbar1 + 0.001*(histo.fBarWidth-2000));
-             else if (histo.fBarWidth <= 5000)
-                res.ybar2 = Math.min(1, res.ybar1 + 0.001*(histo.fBarWidth-4000));
-         }
+         if (histo.fBarWidth <= 1000) {
+            res.xbar2 = Math.min(1, res.xbar1 + 0.001 * histo.fBarWidth);
+            res.ybar2 = Math.min(1, res.ybar1 + 0.001 * histo.fBarWidth);
+         } else if (histo.fBarWidth <= 3000)
+            res.xbar2 = Math.min(1, res.xbar1 + 0.001 * (histo.fBarWidth - 2000));
+         else if (histo.fBarWidth <= 5000)
+            res.ybar2 = Math.min(1, res.ybar1 + 0.001 * (histo.fBarWidth - 4000));
+      }
 
       if (args.original) {
          res.original = true;
@@ -77272,11 +85572,12 @@ class THistPainter extends ObjectPainter {
             binz = histo.getBinContent(i + 1, j + 1);
             res.sumz += binz;
             if (args.pixel_density) {
-               binarea = (res.grx[i+1]-res.grx[i])*(res.gry[j]-res.gry[j+1]);
+               binarea = (res.grx[i+1] - res.grx[i]) * (res.gry[j] - res.gry[j+1]);
                if (binarea <= 0) continue;
                res.max = Math.max(res.max, binz);
-               if ((binz > 0) && ((binz < res.min) || (res.min === 0))) res.min = binz;
-               binz = binz/binarea;
+               if ((binz > 0) && ((binz < res.min) || (res.min === 0)))
+                  res.min = binz;
+               binz /= binarea;
             }
             if (is_first) {
                this.maxbin = this.minbin = binz;
@@ -77400,29 +85701,27 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
          arrx = handle.grx,
          arry = handle.gry;
 
-   let lj = 0, ipoly, poly, np, npmax = 0,
-       i, j, k, n, m, ljfill, count,
-       xsave, ysave, itars, ix, jx;
+   let lj = 0;
 
-   const LinearSearch = zc => {
-      if (zc >= last_level)
-         return nlevels-1;
+   const LinearSearch = zvalue => {
+      if (zvalue >= last_level)
+         return nlevels - 1;
 
       for (let kk = 0; kk < nlevels; ++kk) {
-         if (zc < levels[kk])
+         if (zvalue < levels[kk])
             return kk-1;
-       }
-      return nlevels-1;
-   }, BinarySearch = zc => {
-      if (zc < first_level)
+      }
+      return nlevels - 1;
+   }, BinarySearch = zvalue => {
+      if (zvalue < first_level)
          return -1;
-      if (zc >= last_level)
+      if (zvalue >= last_level)
          return nlevels - 1;
 
       let l = 0, r = nlevels - 1, m;
       while (r - l > 1) {
         m = Math.round((r + l) / 2);
-        if (zc < levels[m])
+        if (zvalue < levels[m])
            r = m;
         else
            l = m;
@@ -77459,6 +85758,10 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
       }
       return icount;
    };
+
+   let ipoly, poly, npmax = 0,
+       i, j, k, m, n, ljfill, count,
+       xsave, ysave, itars, ix, jx;
 
    for (j = handle.j1; j < handle.j2-1; ++j) {
       y[1] = y[0] = (arry[j] + arry[j+1])/2;
@@ -77532,7 +85835,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
                   if (!poly)
                      poly = polys[ipoly] = createTPolyLine(kMAXCONTOUR*4, true);
 
-                  np = poly.fLastPoint;
+                  const np = poly.fLastPoint;
                   if (np < poly.fN-2) {
                      poly.fX[np+1] = Math.round(xarr[ix-1]);
                      poly.fY[np+1] = Math.round(yarr[ix-1]);
@@ -77568,7 +85871,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
       if (!poly) continue;
 
       const colindx = has_func ? palette.calcColorIndex(ipoly, levels.length) : ipoly,
-            xx = poly.fX, yy = poly.fY, np = poly.fLastPoint+1,
+            xx = poly.fX, yy = poly.fY, np2 = poly.fLastPoint+1,
             xmin = 0, ymin = 0;
       let istart = 0, iminus, iplus, nadd;
 
@@ -77581,7 +85884,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
          yy[istart] = yy[istart+1] = ymin;
          while (true) {
             nadd = 0;
-            for (i = 2; i < np; i += 2) {
+            for (i = 2; i < np2; i += 2) {
                if ((iplus < 2*npmax-1) && (xx[i] === xp[iplus]) && (yy[i] === yp[iplus])) {
                   iplus++;
                   xp[iplus] = xx[i+1]; yp[iplus] = yy[i+1];
@@ -77604,7 +85907,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
             contour_func(colindx, xp, yp, iminus, iplus, ipoly);
 
          istart = 0;
-         for (i = 2; i < np; i += 2) {
+         for (i = 2; i < np2; i += 2) {
             if (xx[i] !== xmin && yy[i] !== ymin) {
                istart = i;
                break;
@@ -78367,8 +86670,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
             }
 
             if (numpoints > 1) {
-               xx = xx / numpoints;
-               yy = yy / numpoints;
+               xx /= numpoints;
+               yy /= numpoints;
             }
 
             zz = bin.fContent;
@@ -78460,7 +86763,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       res.eff_entries = stat_sumw2 ? stat_sum0*stat_sum0/stat_sumw2 : Math.abs(stat_sum0);
 
       if (count_skew && !this.isTH2Poly()) {
-         let sumx3 = 0, sumy3 = 0, sumx4 = 0, sumy4 = 0, np = 0, w = 0;
+         let sumx3 = 0, sumy3 = 0, sumx4 = 0, sumy4 = 0, np = 0, w;
          for (let xi = xleft; xi < xright; ++xi) {
             xx = xaxis.GetBinCoord(xi + 0.5);
             for (let yi = yleft; yi < yright; ++yi) {
@@ -78569,9 +86872,10 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
             cntr = this.getContour(),
             palette = this.getHistPalette(),
             entries = [],
+            has_sumw2 = histo.fSumw2?.length,
             show_empty = this.options.ShowEmpty,
-            can_merge_x = (handle.xbar2 === 1) && (handle.xbar1 === 0),
-            can_merge_y = (handle.ybar2 === 1) && (handle.ybar1 === 0),
+            can_merge_x = (this.options.Color !== 7) || ((handle.xbar1 === 0) && (handle.xbar2 === 1)),
+            can_merge_y = (this.options.Color !== 7) || ((handle.ybar1 === 0) && (handle.ybar2 === 1)),
             colindx0 = cntr.getPaletteIndex(palette, 0);
 
       let dx, dy, x1, y2, binz, is_zero, colindx, last_entry = null,
@@ -78603,7 +86907,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
          for (let j = handle.j2 - 1; j >= handle.j1; --j) {
             binz = histo.getBinContent(i + 1, j + 1);
-            is_zero = (binz === 0);
+            is_zero = (binz === 0) && (!has_sumw2 || histo.fSumw2[histo.getBin(i + 1, j + 1)] === 0);
 
             skip_bin = is_zero && ((skip_zero === 1) ? !histo.getBinEntries(i + 1, j + 1) : skip_zero);
 
@@ -78661,10 +86965,10 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          if (last_entry) flush_last_entry();
       }
 
-      entries.forEach((entry, colindx) => {
+      entries.forEach((entry, ecolindx) => {
          if (entry) {
             this.draw_g.append('svg:path')
-                .attr('fill', palette.getColor(colindx))
+                .attr('fill', palette.getColor(ecolindx))
                 .attr('d', entry.path);
          }
       });
@@ -78679,6 +86983,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
             cntr = this.getContour(),
             palette = this.getHistPalette(),
             entries = [],
+            has_sumw2 = histo.fSumw2?.length,
             show_empty = this.options.ShowEmpty,
             colindx0 = cntr.getPaletteIndex(palette, 0);
 
@@ -78753,7 +87058,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       for (let i = handle.i1; i < handle.i2; ++i) {
          for (let j = handle.j2 - 1; j >= handle.j1; --j) {
             binz = histo.getBinContent(i + 1, j + 1);
-            is_zero = (binz === 0);
+            is_zero = (binz === 0) && (!has_sumw2 || histo.fSumw2[histo.getBin(i + 1, j + 1)] === 0);
 
             skip_bin = is_zero && ((skip_zero === 1) ? !histo.getBinEntries(i + 1, j + 1) : skip_zero);
 
@@ -78780,14 +87085,13 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          }
       }
 
-      entries.forEach((entry, colindx) => {
+      entries.forEach((entry, ecolindx) => {
          if (entry) {
             this.draw_g.append('svg:path')
-                .attr('fill', palette.getColor(colindx))
+                .attr('fill', palette.getColor(ecolindx))
                 .attr('d', entry.path);
          }
       });
-
 
       return handle;
    }
@@ -78905,8 +87209,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
          const points = [{ x: 0, y: 0 }, { x: frame_w, y: 0 }, { x: frame_w, y: frame_h }, { x: 0, y: frame_h }],
 
-          get_intersect = (i, di) => {
-            const segm = { x1: xp[i], y1: yp[i], x2: 2*xp[i] - xp[i+di], y2: 2*yp[i] - yp[i+di] };
+          get_intersect = (indx, di) => {
+            const segm = { x1: xp[indx], y1: yp[indx], x2: 2*xp[indx] - xp[indx+di], y2: 2*yp[indx] - yp[indx+di] };
             for (let i = 0; i < 4; ++i) {
                const res = get_segm_intersection(segm, { x1: points[i].x, y1: points[i].y, x2: points[(i+1)%4].x, y2: points[(i+1)%4].y });
                if (res) {
@@ -79070,10 +87374,10 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       const cntr = draw_colors ? this.getContour(true) : null,
             palette = cntr ? this.getHistPalette() : null,
-            rejectBin = bin => {
+            rejectBin = bin2 => {
                // check if bin outside visible range
-               return ((bin.fXmin > funcs.scale_xmax) || (bin.fXmax < funcs.scale_xmin) ||
-                       (bin.fYmin > funcs.scale_ymax) || (bin.fYmax < funcs.scale_ymin));
+               return ((bin2.fXmin > funcs.scale_xmax) || (bin2.fXmax < funcs.scale_xmin) ||
+                       (bin2.fYmin > funcs.scale_ymax) || (bin2.fYmax < funcs.scale_ymin));
             };
 
       // check if similar fill attributes
@@ -79172,13 +87476,13 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
                      markeratt = this.createAttMarker({ attr: gr, style: this.options.MarkStyle, std: false });
                if (!npnts || markeratt.empty())
                   continue;
-               let cmd = '';
 
+               let cmdm = '';
                for (let n = 0; n < npnts; ++n)
-                  cmd += markeratt.create(funcs.grx(gr.fX[n]), funcs.gry(gr.fY[n]));
+                  cmdm += markeratt.create(funcs.grx(gr.fX[n]), funcs.gry(gr.fY[n]));
 
                this.draw_g.append('svg:path')
-                   .attr('d', cmd)
+                   .attr('d', cmdm)
                    .call(markeratt.func);
             } // loop over graphs
          } // loop over bins
@@ -79299,29 +87603,34 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       const histo = this.getObject(),
             test_cutg = this.options.cutg,
             handle = this.prepareDraw({ rounding: false }),
+            cntr = this.options.Color ? this.getContour() : null,
+            palette = this.options.Color ? this.getHistPalette() : null,
             scale_x = (handle.grx[handle.i2] - handle.grx[handle.i1])/(handle.i2 - handle.i1 + 1)/2,
             scale_y = (handle.gry[handle.j2] - handle.gry[handle.j1])/(handle.j2 - handle.j1 + 1)/2,
-            makeLine = (dx, dy) => dx ? (dy ? `l${dx},${dy}` : `h${dx}`) : (dy ? `v${dy}` : '');
-      let i, j, dn = 1e-30, dx, dy, xc, yc, cmd = '',
-          dxn, dyn, x1, x2, y1, y2, anr, si, co;
+            makeLine = (dx, dy) => dx ? (dy ? `l${dx},${dy}` : `h${dx}`) : (dy ? `v${dy}` : ''),
+            entries = [];
+      let dn = 1e-30, dx, dy, xc, yc, plain = '',
+          dxn, dyn, x1, x2, y1, y2;
 
       for (let loop = 0; loop < 2; ++loop) {
-         for (i = handle.i1; i < handle.i2; ++i) {
-            for (j = handle.j1; j < handle.j2; ++j) {
+         for (let i = handle.i1; i < handle.i2; ++i) {
+            for (let j = handle.j1; j < handle.j2; ++j) {
                if (test_cutg && !test_cutg.IsInside(histo.fXaxis.GetBinCoord(i + 0.5),
                      histo.fYaxis.GetBinCoord(j + 0.5))) continue;
 
+               const bincont = histo.getBinContent(i+1, j+1);
+
                if (i === handle.i1)
-                  dx = histo.getBinContent(i+2, j+1) - histo.getBinContent(i+1, j+1);
+                  dx = histo.getBinContent(i+2, j+1) - bincont;
                else if (i === handle.i2-1)
-                  dx = histo.getBinContent(i+1, j+1) - histo.getBinContent(i, j+1);
+                  dx = bincont - histo.getBinContent(i, j+1);
                else
                   dx = 0.5*(histo.getBinContent(i+2, j+1) - histo.getBinContent(i, j+1));
 
                if (j === handle.j1)
-                  dy = histo.getBinContent(i+1, j+2) - histo.getBinContent(i+1, j+1);
+                  dy = histo.getBinContent(i+1, j+2) - bincont;
                else if (j === handle.j2-1)
-                  dy = histo.getBinContent(i+1, j+1) - histo.getBinContent(i+1, j);
+                  dy = bincont - histo.getBinContent(i+1, j);
                else
                   dy = 0.5*(histo.getBinContent(i+1, j+2) - histo.getBinContent(i+1, j));
 
@@ -79340,26 +87649,52 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
                   dy = Math.round(y2-y1);
 
                   if (dx || dy) {
-                     cmd += `M${Math.round(x1)},${Math.round(y1)}${makeLine(dx, dy)}`;
+                     let cmd = `M${Math.round(x1)},${Math.round(y1)}${makeLine(dx, dy)}`;
 
                      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-                        anr = Math.sqrt(9/(dx**2 + dy**2));
-                        si = Math.round(anr*(dx + dy));
-                        co = Math.round(anr*(dx - dy));
+                        const anr = Math.sqrt(9/(dx**2 + dy**2)),
+                              si = Math.round(anr*(dx + dy)),
+                              co = Math.round(anr*(dx - dy));
                         if (si || co)
                            cmd += `m${-si},${co}${makeLine(si, -co)}${makeLine(-co, -si)}`;
                      }
+
+                     if (palette && cntr) {
+                        const colindx = cntr.getPaletteIndex(palette, bincont);
+                        if (colindx !== null) {
+                           const entry = entries[colindx];
+                           if (!entry)
+                              entries[colindx] = { path: cmd };
+                           else
+                              entry.path += cmd;
+                        }
+                     } else
+                        plain += cmd;
                   }
                }
             }
          }
       }
 
-      this.draw_g
-         .append('svg:path')
-         .attr('d', cmd)
-         .style('fill', 'none')
-         .call(this.lineatt.func);
+      if (plain) {
+         this.draw_g
+            .append('svg:path')
+            .attr('d', plain)
+            .style('fill', 'none')
+            .call(this.lineatt.func);
+      }
+
+      entries.forEach((entry, colindx) => {
+         if (entry) {
+            const col0 = this.lineatt.color;
+            this.lineatt.color = palette.getColor(colindx);
+            this.draw_g.append('svg:path')
+                  .attr('fill', 'none')
+                  .attr('d', entry.path)
+                  .call(this.lineatt.func);
+            this.lineatt.color = col0;
+         }
+      });
 
       return handle;
    }
@@ -79603,13 +87938,10 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
             cp = this.getCanvPainter(),
             funcs = this.getHistGrFuncs(fp),
             swapXY = isOption(kHorizontal);
-      let bars = '', lines = '', dashed_lines = '',
-          hists = '', hlines = '',
-          markers = '', cmarkers = '', attrcmarkers = null,
-          xx, proj,
-          scaledViolin = gStyle.fViolinScaled,
+      let scaledViolin = gStyle.fViolinScaled,
           scaledCandle = gStyle.fCandleScaled,
-          maxContent = 0, maxIntegral = 0;
+          maxContent = 0,
+          markers = '', cmarkers = '', attrcmarkers = null;
 
       if (this.options.Scaled !== null)
          scaledViolin = scaledCandle = this.options.Scaled;
@@ -79656,9 +87988,13 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          cmarkers += swapXY ? attrcmarkers.create(y, x) : attrcmarkers.create(x, y);
       };
 
-      if (histo.fMarkerColor === 1) histo.fMarkerColor = histo.fLineColor;
+      if (histo.fMarkerColor === 1)
+         histo.fMarkerColor = histo.fLineColor;
 
       handle.candle = []; // array of drawn points
+
+      let xx, bars = '', lines = '', dashed_lines = '', hists = '', hlines = '',
+          proj, maxIntegral = 0;
 
       // Determining the quintiles
       const wRange = gStyle.fCandleWhiskerRange, bRange = gStyle.fCandleBoxRange,
@@ -79767,7 +88103,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
                 show_scat = isOption(kPointsAllScat);
             for (let ii = 0; ii < proj.length; ++ii) {
                const bin_content = proj[ii], binx = (xx[ii] + xx[ii+1])/2;
-               let marker_x = center, marker_y = 0;
+               let marker_x = center, marker_y;
 
                if (!bin_content) continue;
                if (!show_all && (binx >= fWhiskerDown) && (binx <= fWhiskerUp)) continue;
@@ -80103,12 +88439,12 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
          if (this.options.System === kPOLAR)
             handle = this.drawBinsPolar();
+         else if (this.options.Arrow)
+            handle = this.drawBinsArrow();
          else if (this.options.Color)
             handle = this.drawBinsColor();
          else if (this.options.Box)
             handle = this.drawBinsBox();
-         else if (this.options.Arrow)
-            handle = this.drawBinsArrow();
          else if (this.options.Proj)
             handle = this.drawBinsProjected();
          else if (this.options.Contour)
@@ -80250,15 +88586,17 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       }
 
       // do not show less than 2 elements
-      if (used.length < 2) return true;
+      if (used.length < 2)
+         return true;
 
       let ndig = 0, tickStep = 1;
       const rect = this.getPadPainter().getFrameRect(),
+            midx = Math.round(rect.x + rect.width/2),
+            midy = Math.round(rect.y + rect.height/2),
             palette = this.getHistPalette(),
             outerRadius = Math.max(10, Math.min(rect.width, rect.height) * 0.5 - 60),
             innerRadius = Math.max(2, outerRadius - 10),
             data = [], labels = [],
-            getColor = indx => palette.calcColor(indx, used.length),
             formatValue = v => v.toString(),
             formatTicks = v => ndig > 3 ? v.toExponential(0) : v.toFixed(ndig),
             d3_descending = (a, b) => { return b < a ? -1 : b > a ? 1 : b >= a ? 0 : Number.NaN; };
@@ -80294,7 +88632,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       this.createG();
 
-      makeTranslate(this.draw_g, Math.round(rect.x + rect.width/2), Math.round(rect.y + rect.height/2));
+      makeTranslate(this.draw_g, midx + (this._shiftx ?? 0), midy + (this._shifty ?? 0), this._zoom);
 
       const chord$1 = chord()
          .padAngle(10 / innerRadius)
@@ -80323,7 +88661,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       }
 
       group.append('path')
-         .attr('fill', d => getColor(d.index))
+         .attr('fill', d => palette.calcColor(d.index, used.length))
          .attr('d', arc$1);
 
       group.append('title').text(d => `${labels[d.index]} ${formatValue(d.value)}`);
@@ -80356,10 +88694,46 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          .data(chords)
          .join('path')
          .style('mix-blend-mode', 'multiply')
-         .attr('fill', d => getColor(d.source.index))
+         .attr('fill', d => palette.calcColor(d.source.index, used.length))
          .attr('d', ribbon)
          .append('title')
          .text(d => `${formatValue(d.source.value)} ${labels[d.target.index]} → ${labels[d.source.index]}${d.source.index === d.target.index ? '' : `\n${formatValue(d.target.value)} ${labels[d.source.index]} → ${labels[d.target.index]}`}`);
+
+      if (!this.isBatchMode()) {
+         this.draw_g.insert('ellipse', ':first-child')
+                    .attr('cx', 0)
+                    .attr('cy', 0)
+                    .attr('rx', outerRadius*1.2)
+                    .attr('ry', outerRadius*1.2)
+                    .style('opacity', 0)
+                    .style('fill', 'none')
+                    .style('pointer-events', 'visibleFill');
+         if (settings.Zooming && settings.ZoomWheel) {
+            this.draw_g.on('wheel', evnt => {
+               if (!this._zoom) {
+                  this._zoom = 1;
+                  this._shiftx = 0;
+                  this._shifty = 0;
+               }
+               const pos = pointer(evnt, this.draw_g.node()),
+                     delta = evnt.wheelDelta ? -evnt.wheelDelta : (evnt.deltaY || evnt.detail),
+                     prev_zoom = this._zoom;
+
+               this._zoom *= (delta > 0) ? 0.8 : 1.2;
+               this._shiftx += pos[0] * (prev_zoom - this._zoom);
+               this._shifty += pos[1] * (prev_zoom - this._zoom);
+
+               makeTranslate(this.draw_g, midx + this._shiftx, midy + this._shifty, this._zoom);
+            }).on('dblclick', () => {
+               delete this._zoom;
+               delete this._shiftx;
+               delete this._shifty;
+               makeTranslate(this.draw_g, midx, midy);
+            });
+         }
+
+         assignContextMenu(this);
+      }
 
       return true;
    }
@@ -80368,19 +88742,19 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
    getBinTooltips(i, j) {
       const histo = this.getHisto(),
             profile2d = this.matchObjectType(clTProfile2D) && isFunc(histo.getBinEntries),
-            bincontent = histo.getBinContent(i+1, j+1);
+            bincontent = histo.getBinContent(i + 1, j + 1);
       let binz = bincontent;
 
       if (histo.$baseh)
-         binz -= histo.$baseh.getBinContent(i+1, j+1);
+         binz -= histo.$baseh.getBinContent(i + 1, j + 1);
 
       const lines = [this.getObjectHint(),
                    'x = ' + this.getAxisBinTip('x', histo.fXaxis, i),
                    'y = ' + this.getAxisBinTip('y', histo.fYaxis, j),
-                   `bin = ${histo.getBin(i+1, j+1)}  x: ${i+1}  y: ${j+1}`,
+                   `bin = ${histo.getBin(i + 1, j + 1)}  x: ${i + 1}  y: ${j + 1}`,
                    'content = ' + ((binz === Math.round(binz)) ? binz : floatToString(binz, gStyle.fStatFormat))];
 
-      if ((this.options.TextKind === 'E') || profile2d) {
+      if ((this.options.TextKind === 'E') || profile2d || histo.fSumw2?.length) {
          const errs = this.getBinErrors(histo, histo.getBin(i + 1, j + 1), bincontent);
          if (errs.poisson)
             lines.push('error low = ' + floatToString(errs.low, gStyle.fPaintTextFormat), 'error up = ' + floatToString(errs.up, gStyle.fPaintTextFormat));
@@ -80438,8 +88812,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          }
 
          if (numpoints > 1) {
-            realx = realx / numpoints;
-            realy = realy / numpoints;
+            realx /= numpoints;
+            realy /= numpoints;
          }
       }
 
@@ -80638,18 +89012,14 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
             if (fp.reverse_x) {
                if ((pnt.x > x1) || (pnt.x <= x2))
                   match = false;
-            } else {
-               if ((pnt.x < x1) || (pnt.x >= x2))
-                  match = false;
-            }
+            } else if ((pnt.x < x1) || (pnt.x >= x2))
+               match = false;
 
             if (fp.reverse_y) {
                if ((pnt.y > y1) || (pnt.y <= y2))
                   match = false;
-            } else {
-               if ((pnt.y < y1) || (pnt.y >= y2))
-                  match = false;
-            }
+            } else if ((pnt.y < y1) || (pnt.y >= y2))
+               match = false;
          }
 
          binz = histo.getBinContent(i+1, j+1);
@@ -81333,9 +89703,9 @@ function create3DControl(fp) {
          }
       }
 
-      const fp = obj_painter.getFramePainter();
-      if (isFunc(fp?.showContextMenu))
-         fp.showContextMenu(kind, pos, p);
+      const ofp = obj_painter.getFramePainter();
+      if (isFunc(ofp?.showContextMenu))
+         ofp.showContextMenu(kind, pos, p);
    };
 }
 
@@ -81932,7 +90302,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       mesh.size_3d = size_3d;
       mesh.tsz = tsz;
       mesh.use_y_for_z = use_y_for_z;
-      if (kind === 'y') mesh.rotateZ(Math.PI/2).rotateX(Math.PI);
+      if (kind === 'y')
+         mesh.rotateZ(Math.PI/2).rotateX(Math.PI);
 
       mesh.v1 = new THREE.Vector3(positions[0], positions[1], positions[2]);
       mesh.v2 = new THREE.Vector3(positions[6], positions[7], positions[8]);
@@ -81965,7 +90336,6 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       mesh.showSelection = function(pnt1, pnt2) {
          // used to show selection
 
-         const kind = this.zoom;
          let tgtmesh = this.children ? this.children[0] : null, gg;
          if (!pnt1 || !pnt2) {
             if (tgtmesh) {
@@ -81975,29 +90345,31 @@ function drawXYZ(toplevel, AxisPainter, opts) {
             return tgtmesh;
          }
 
-         if (!this.geometry) return false;
+         if (!this.geometry)
+            return false;
 
          if (!tgtmesh) {
             gg = this.geometry.clone();
             const pos = gg.getAttribute('position').array;
 
             // original vertices [0, 2, 1, 0, 3, 2]
-            if (kind === 'z') pos[6] = pos[3] = pos[15] = this.tsz;
-                         else pos[4] = pos[16] = pos[13] = -this.tsz;
+            if (this.zoom === 'z')
+               pos[6] = pos[3] = pos[15] = this.tsz;
+            else
+               pos[4] = pos[16] = pos[13] = -this.tsz;
             tgtmesh = new THREE.Mesh(gg, new THREE.MeshBasicMaterial({ color: 0xFF00, side: THREE.DoubleSide, vertexColors: false }));
             this.add(tgtmesh);
          } else
             gg = tgtmesh.geometry;
 
-
          const pos = gg.getAttribute('position').array;
 
-         if (kind === 'z') {
-            pos[2] = pos[11] = pos[8] = pnt1[kind];
-            pos[5] = pos[17] = pos[14] = pnt2[kind];
+         if (this.zoom === 'z') {
+            pos[2] = pos[11] = pos[8] = pnt1[this.zoom];
+            pos[5] = pos[17] = pos[14] = pnt2[this.zoom];
          } else {
-            pos[0] = pos[9] = pos[12] = pnt1[kind];
-            pos[6] = pos[3] = pos[15] = pnt2[kind];
+            pos[0] = pos[9] = pos[12] = pnt1[this.zoom];
+            pos[6] = pos[3] = pos[15] = pnt2[this.zoom];
          }
 
          gg.getAttribute('position').needsUpdate = true;
@@ -82458,10 +90830,44 @@ function assignFrame3DMethods(fpainter) {
    Object.assign(fpainter, { create3DScene, add3DMesh, remove3DMeshes, render3D, resize3D, change3DCamera, highlightBin3D, set3DOptions, drawXYZ, convert3DtoPadNDC });
 }
 
+function _meshLegoToolTip(intersect) {
+   if ((intersect.faceIndex < 0) || (intersect.faceIndex >= this.face_to_bins_index.length))
+      return null;
+
+   const p = this.painter,
+         handle = this.handle,
+         main = p.getFramePainter(),
+         histo = p.getHisto(),
+         tip = p.get3DToolTip(this.face_to_bins_index[intersect.faceIndex]),
+         x1 = Math.min(main.size_x3d, Math.max(-main.size_x3d, handle.grx[tip.ix-1] + handle.xbar1*(handle.grx[tip.ix] - handle.grx[tip.ix-1]))),
+         x2 = Math.min(main.size_x3d, Math.max(-main.size_x3d, handle.grx[tip.ix-1] + handle.xbar2*(handle.grx[tip.ix] - handle.grx[tip.ix-1]))),
+         y1 = Math.min(main.size_y3d, Math.max(-main.size_y3d, handle.gry[tip.iy-1] + handle.ybar1*(handle.gry[tip.iy] - handle.gry[tip.iy-1]))),
+         y2 = Math.min(main.size_y3d, Math.max(-main.size_y3d, handle.gry[tip.iy-1] + handle.ybar2*(handle.gry[tip.iy] - handle.gry[tip.iy-1])));
+
+   tip.x1 = Math.min(x1, x2);
+   tip.x2 = Math.max(x1, x2);
+   tip.y1 = Math.min(y1, y2);
+   tip.y2 = Math.max(y1, y2);
+
+   let binz1 = this.baseline, binz2 = tip.value;
+   if (histo.$baseh) binz1 = histo.$baseh.getBinContent(tip.ix, tip.iy);
+   if (binz2 < binz1) [binz1, binz2] = [binz2, binz1];
+
+   tip.z1 = main.grz(Math.max(this.zmin, binz1));
+   tip.z2 = main.grz(Math.min(this.zmax, binz2));
+
+   tip.color = this.tip_color;
+   tip.$painter = p;
+   tip.$projection = p.is_projection && (p.getDimension() === 2);
+
+   return tip;
+}
+
 /** @summary Draw histograms in 3D mode
   * @private */
 function drawBinsLego(painter, is_v7 = false) {
-   if (!painter.draw_content) return;
+   if (!painter.draw_content)
+      return;
 
    // Perform TH1/TH2 lego plot with BufferGeometry
 
@@ -82484,7 +90890,7 @@ function drawBinsLego(painter, is_v7 = false) {
 
    if ((i1 >= i2) || (j1 >= j2)) return;
 
-   let zmin, zmax, i, j, k, vert, x1, x2, y1, y2, binz1, binz2, reduced, nobottom, notop,
+   let zmin, zmax, i, j, k, vert, binz1, binz2, reduced, nobottom, notop,
        axis_zmin = main.z_handle.getScaleMin(),
        axis_zmax = main.z_handle.getScaleMax();
 
@@ -82549,7 +90955,7 @@ function drawBinsLego(painter, is_v7 = false) {
       if (palette && (nlevel === levels.length - 2) && zmax < axis_zmax) zmax = axis_zmax;
 
       const grzmin = main.grz(zmin), grzmax = main.grz(zmax);
-      let z1 = 0, z2 = 0, numvertices = 0, num2vertices = 0;
+      let numvertices = 0, num2vertices = 0;
 
       // now calculate size of buffer geometry for boxes
 
@@ -82578,22 +90984,21 @@ function drawBinsLego(painter, is_v7 = false) {
             norm2 = (num2vertices === 0) ? null : new Float32Array(num2vertices*3),
             face_to_bins_indx2 = (num2vertices === 0) ? null : (use16indx ? new Uint16Array(num2vertices/3) : new Uint32Array(num2vertices/3));
 
-      let v = 0, v2 = 0, vert, k, nn;
+      let v = 0, v2 = 0, nn;
 
       for (i = i1; i < i2; ++i) {
-         x1 = handle.grx[i] + handle.xbar1*(handle.grx[i+1] - handle.grx[i]);
-         x2 = handle.grx[i] + handle.xbar2*(handle.grx[i+1] - handle.grx[i]);
+         const x1 = handle.grx[i] + handle.xbar1*(handle.grx[i+1] - handle.grx[i]),
+               x2 = handle.grx[i] + handle.xbar2*(handle.grx[i+1] - handle.grx[i]);
          for (j = j1; j < j2; ++j) {
             if (!getBinContent(i, j, nlevel)) continue;
 
             nobottom = !reduced && (nlevel > 0);
             notop = !reduced && (binz2 > zmax) && (nlevel < levels.length - 2);
 
-            y1 = handle.gry[j] + handle.ybar1*(handle.gry[j+1] - handle.gry[j]);
-            y2 = handle.gry[j] + handle.ybar2*(handle.gry[j+1] - handle.gry[j]);
-
-            z1 = (binz1 <= zmin) ? grzmin : main.grz(binz1);
-            z2 = (binz2 > zmax) ? grzmax : main.grz(binz2);
+            const y1 = handle.gry[j] + handle.ybar1*(handle.gry[j+1] - handle.gry[j]),
+                  y2 = handle.gry[j] + handle.ybar2*(handle.gry[j+1] - handle.gry[j]),
+                  z1 = (binz1 <= zmin) ? grzmin : main.grz(binz1),
+                  z2 = (binz2 > zmax) ? grzmax : main.grz(binz2);
 
             nn = 0; // counter over the normals, each normals correspond to 6 vertices
             k = 0; // counter over vertices
@@ -82658,7 +91063,7 @@ function drawBinsLego(painter, is_v7 = false) {
       }
 
       const material = new THREE.MeshBasicMaterial(getMaterialArgs(fcolor, { vertexColors: false })),
-          mesh = new THREE.Mesh(geometry, material);
+            mesh = new THREE.Mesh(geometry, material);
 
       mesh.face_to_bins_index = face_to_bins_index;
       mesh.painter = painter;
@@ -82667,38 +91072,7 @@ function drawBinsLego(painter, is_v7 = false) {
       mesh.baseline = (painter.options.BaseLine !== false) ? painter.options.BaseLine : (painter.options.Zero ? axis_zmin : 0);
       mesh.tip_color = (rootcolor=== 3) ? 0xFF0000 : 0x00FF00;
       mesh.handle = handle;
-
-      mesh.tooltip = function(intersect) {
-         if ((intersect.faceIndex < 0) || (intersect.faceIndex >= this.face_to_bins_index.length)) return null;
-
-         const p = this.painter,
-               handle = this.handle,
-               main = p.getFramePainter(),
-               histo = p.getHisto(),
-               tip = p.get3DToolTip(this.face_to_bins_index[intersect.faceIndex]),
-               x1 = Math.min(main.size_x3d, Math.max(-main.size_x3d, handle.grx[tip.ix-1] + handle.xbar1*(handle.grx[tip.ix] - handle.grx[tip.ix-1]))),
-               x2 = Math.min(main.size_x3d, Math.max(-main.size_x3d, handle.grx[tip.ix-1] + handle.xbar2*(handle.grx[tip.ix] - handle.grx[tip.ix-1]))),
-               y1 = Math.min(main.size_y3d, Math.max(-main.size_y3d, handle.gry[tip.iy-1] + handle.ybar1*(handle.gry[tip.iy] - handle.gry[tip.iy-1]))),
-               y2 = Math.min(main.size_y3d, Math.max(-main.size_y3d, handle.gry[tip.iy-1] + handle.ybar2*(handle.gry[tip.iy] - handle.gry[tip.iy-1])));
-
-         tip.x1 = Math.min(x1, x2);
-         tip.x2 = Math.max(x1, x2);
-         tip.y1 = Math.min(y1, y2);
-         tip.y2 = Math.max(y1, y2);
-
-         let binz1 = this.baseline, binz2 = tip.value;
-         if (histo.$baseh) binz1 = histo.$baseh.getBinContent(tip.ix, tip.iy);
-         if (binz2 < binz1) [binz1, binz2] = [binz2, binz1];
-
-         tip.z1 = main.grz(Math.max(this.zmin, binz1));
-         tip.z2 = main.grz(Math.min(this.zmax, binz2));
-
-         tip.color = this.tip_color;
-         tip.$painter = p;
-         tip.$projection = p.is_projection && (p.getDimension() === 2);
-
-         return tip;
-      };
+      mesh.tooltip = _meshLegoToolTip;
 
       main.add3DMesh(mesh);
 
@@ -82710,7 +91084,7 @@ function drawBinsLego(painter, is_v7 = false) {
          mesh2.face_to_bins_index = face_to_bins_indx2;
          mesh2.painter = painter;
          mesh2.handle = mesh.handle;
-         mesh2.tooltip = mesh.tooltip;
+         mesh2.tooltip = _meshLegoToolTip;
          mesh2.zmin = mesh.zmin;
          mesh2.zmax = mesh.zmax;
          mesh2.baseline = mesh.baseline;
@@ -82744,27 +91118,26 @@ function drawBinsLego(painter, is_v7 = false) {
    // skip index usage at all. It happens for relatively large histograms (100x100 bins)
    const uselineindx = (numlinevertices <= 0xFFF0);
 
-   if (!uselineindx) numlinevertices = numsegments*3;
+   if (!uselineindx)
+      numlinevertices = numsegments * 3;
 
    const lpositions = new Float32Array(numlinevertices * 3),
          lindicies = uselineindx ? new Uint16Array(numsegments) : null,
          grzmin = main.grz(axis_zmin),
          grzmax = main.grz(axis_zmax);
-   let z1 = 0, z2 = 0, ll = 0, ii = 0;
+   let ll = 0, ii = 0;
 
    for (i = i1; i < i2; ++i) {
-      x1 = handle.grx[i] + handle.xbar1*(handle.grx[i+1] - handle.grx[i]);
-      x2 = handle.grx[i] + handle.xbar2*(handle.grx[i+1] - handle.grx[i]);
+      const x1 = handle.grx[i] + handle.xbar1*(handle.grx[i+1] - handle.grx[i]),
+            x2 = handle.grx[i] + handle.xbar2*(handle.grx[i+1] - handle.grx[i]);
       for (j = j1; j < j2; ++j) {
          if (!getBinContent(i, j, 0)) continue;
 
-         y1 = handle.gry[j] + handle.ybar1*(handle.gry[j+1] - handle.gry[j]);
-         y2 = handle.gry[j] + handle.ybar2*(handle.gry[j+1] - handle.gry[j]);
-
-         z1 = (binz1 <= axis_zmin) ? grzmin : main.grz(binz1);
-         z2 = (binz2 > axis_zmax) ? grzmax : main.grz(binz2);
-
-         const seg = reduced ? rsegments : segments,
+         const y1 = handle.gry[j] + handle.ybar1*(handle.gry[j+1] - handle.gry[j]),
+               y2 = handle.gry[j] + handle.ybar2*(handle.gry[j+1] - handle.gry[j]),
+               z1 = (binz1 <= axis_zmin) ? grzmin : main.grz(binz1),
+               z2 = (binz2 > axis_zmax) ? grzmax : main.grz(binz2),
+               seg = reduced ? rsegments : segments,
                vvv = reduced ? rvertices : vertices;
 
          if (uselineindx) {
@@ -82810,6 +91183,32 @@ function drawBinsLego(painter, is_v7 = false) {
    */
 
    main.add3DMesh(line);
+}
+
+function _lineErrToolTip(intersect) {
+   const pos = Math.floor(intersect.index / 6);
+   if ((pos < 0) || (pos >= this.intersect_index.length))
+      return null;
+   const p = this.painter,
+         histo = p.getHisto(),
+         main = p.getFramePainter(),
+         tip = p.get3DToolTip(this.intersect_index[pos]),
+         tx1 = Math.min(main.size_x3d, Math.max(-main.size_x3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix)))),
+         tx2 = Math.min(main.size_x3d, Math.max(-main.size_x3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix+1)))),
+         ty1 = Math.min(main.size_y3d, Math.max(-main.size_y3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy)))),
+         ty2 = Math.min(main.size_y3d, Math.max(-main.size_y3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy+1))));
+
+   tip.x1 = Math.min(tx1, tx2);
+   tip.x2 = Math.max(tx1, tx2);
+   tip.y1 = Math.min(ty1, ty2);
+   tip.y2 = Math.max(ty1, ty2);
+
+   tip.z1 = main.grz(tip.value - tip.error < this.zmin ? this.zmin : tip.value - tip.error);
+   tip.z2 = main.grz(tip.value + tip.error > this.zmax ? this.zmax : tip.value + tip.error);
+
+   tip.color = this.tip_color;
+
+   return tip;
 }
 
 /** @summary Draw TH2 histogram in error mode
@@ -82880,41 +91279,17 @@ function drawBinsError3D(painter, is_v7 = false) {
       }
    }
 
-    // create lines
-    const lcolor = is_v7 ? painter.v7EvalColor('line_color', 'lightblue') : painter.getColor(histo.fLineColor),
-          material = new THREE.LineBasicMaterial(getMaterialArgs(lcolor, { linewidth: is_v7 ? painter.v7EvalAttr('line_width', 1) : histo.fLineWidth })),
-          line = createLineSegments(lpos, material);
+   // create lines
+   const lcolor = is_v7 ? painter.v7EvalColor('line_color', 'lightblue') : painter.getColor(histo.fLineColor),
+         material = new THREE.LineBasicMaterial(getMaterialArgs(lcolor, { linewidth: is_v7 ? painter.v7EvalAttr('line_width', 1) : histo.fLineWidth })),
+         line = createLineSegments(lpos, material);
 
-    line.painter = painter;
-    line.intersect_index = binindx;
-    line.zmin = zmin;
-    line.zmax = zmax;
-    line.tip_color = (histo.fLineColor === 3) ? 0xFF0000 : 0x00FF00;
-
-    line.tooltip = function(intersect) {
-       const pos = Math.floor(intersect.index / 6);
-       if ((pos < 0) || (pos >= this.intersect_index.length)) return null;
-       const p = this.painter,
-           histo = p.getHisto(),
-           main = p.getFramePainter(),
-           tip = p.get3DToolTip(this.intersect_index[pos]),
-           x1 = Math.min(main.size_x3d, Math.max(-main.size_x3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix)))),
-           x2 = Math.min(main.size_x3d, Math.max(-main.size_x3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix+1)))),
-           y1 = Math.min(main.size_y3d, Math.max(-main.size_y3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy)))),
-           y2 = Math.min(main.size_y3d, Math.max(-main.size_y3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy+1))));
-
-       tip.x1 = Math.min(x1, x2);
-       tip.x2 = Math.max(x1, x2);
-       tip.y1 = Math.min(y1, y2);
-       tip.y2 = Math.max(y1, y2);
-
-       tip.z1 = main.grz(tip.value-tip.error < this.zmin ? this.zmin : tip.value-tip.error);
-       tip.z2 = main.grz(tip.value+tip.error > this.zmax ? this.zmax : tip.value+tip.error);
-
-       tip.color = this.tip_color;
-
-       return tip;
-    };
+   line.painter = painter;
+   line.intersect_index = binindx;
+   line.zmin = zmin;
+   line.zmax = zmax;
+   line.tip_color = (histo.fLineColor === 3) ? 0xFF0000 : 0x00FF00;
+   line.tooltip = _lineErrToolTip;
 
     main.add3DMesh(line);
 }
@@ -83022,7 +91397,8 @@ function drawBinsSurf3D(painter, is_v7 = false) {
             for (let jj = handle.j1; jj < handle.j2; ++jj) {
                const bin = ((ii-handle.i1) * (handle.j2 - handle.j1) + (jj - handle.j1)) * 8;
 
-               if (normindx[bin] === -1) continue; // nothing there
+               if (normindx[bin] === -1)
+                  continue; // nothing there
 
                const beg = (normindx[bin] >= 0) ? bin : bin + 9 + normindx[bin],
                      end = bin + 8;
@@ -83036,7 +91412,9 @@ function drawBinsSurf3D(painter, is_v7 = false) {
                   sumz += normals[indx+2];
                }
 
-               sumx = sumx/(end-beg); sumy = sumy/(end-beg); sumz = sumz/(end-beg);
+               sumx /= end - beg;
+               sumy /= end - beg;
+               sumz /= end - beg;
 
                for (let kk = beg; kk < end; ++kk) {
                   const indx = normindx[kk];
@@ -83098,11 +91476,11 @@ function drawBinsSurf3D(painter, is_v7 = false) {
       handle = painter.prepareDraw({ rounding: false, use3d: true, extra: 100, middle: 0 });
 
       // get levels
-      const levels = painter.getContourLevels(), // init contour
-            palette = painter.getHistPalette();
+      const levels2 = painter.getContourLevels(), // init contour
+            palette2 = painter.getHistPalette();
       let lastcolindx = -1, layerz = main_grz_max;
 
-      buildHist2dContour(histo, handle, levels, palette,
+      buildHist2dContour(histo, handle, levels2, palette2,
          (colindx, xp, yp, iminus, iplus) => {
              // no need for duplicated point
              if ((xp[iplus] === xp[iminus]) && (yp[iplus] === yp[iminus])) iplus--;
@@ -83148,7 +91526,7 @@ function drawBinsSurf3D(painter, is_v7 = false) {
              }
 
              const geometry = createLegoGeom(painter, pos, norm, handle.i2 - handle.i1, handle.j2 - handle.j1),
-                   material = new THREE.MeshBasicMaterial(getMaterialArgs(palette.getColor(colindx), { side: THREE.DoubleSide, opacity: 0.5, vertexColors: false })),
+                   material = new THREE.MeshBasicMaterial(getMaterialArgs(palette2.getColor(colindx), { side: THREE.DoubleSide, opacity: 0.5, vertexColors: false })),
                    mesh = new THREE.Mesh(geometry, material);
              mesh.painter = painter;
              main.add3DMesh(mesh);
@@ -83293,9 +91671,10 @@ function _getTF1Save(func, x) {
   * @desc First try evaluate, if not possible - check saved buffer
   * @private */
 function getTF1Value(func, x, skip_eval = undefined) {
-   let y = 0, iserr = false;
    if (!func)
       return 0;
+
+   let iserr = false;
 
    if (!skip_eval && !func.evalPar) {
       try {
@@ -83308,16 +91687,15 @@ function getTF1Value(func, x, skip_eval = undefined) {
 
    if (func.evalPar && !iserr) {
       try {
-         y = func.evalPar(x);
-         return y;
+         return func.evalPar(x);
       } catch {
-         y = 0;
+         /* eslint-disable-next-line  no-useless-assignment */
+         iserr = true;
       }
    }
 
    const np = func.fSave.length - 3;
-   if ((np < 2) || (func.fSave[np + 1] === func.fSave[np + 2])) return 0;
-   return _getTF1Save(func, x);
+   return (np < 2) || (func.fSave[np + 1] === func.fSave[np + 2]) ? 0 : _getTF1Save(func, x);
 }
 
 const PadDrawOptions = ['LOGXY', 'LOGX', 'LOGY', 'LOGZ', 'LOGV', 'LOG', 'LOG2X', 'LOG2Y', 'LOG2',
@@ -83455,14 +91833,12 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             } else {
                this.ymin = 0; this.ymax = hmin * 2;
             }
+         } else if (pad_logy) {
+            this.ymin = (hmin_nz || hmin) * 0.5;
+            this.ymax = hmax*2*(0.9/0.95);
          } else {
-            if (pad_logy) {
-               this.ymin = (hmin_nz || hmin) * 0.5;
-               this.ymax = hmax*2*(0.9/0.95);
-            } else {
-               this.ymin = hmin;
-               this.ymax = hmax;
-            }
+            this.ymin = hmin;
+            this.ymax = hmax;
          }
       }
 
@@ -83557,7 +91933,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
                     eff_entries: 0, xmax: 0, wmax: 0, skewx: 0, skewd: 0, kurtx: 0, kurtd: 0 },
             has_counted_stat = !fp.isAxisZoomed('x') && (Math.abs(histo.fTsumw) > 1e-300);
       let stat_sumw = 0, stat_sumw2 = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
-          i, xx = 0, w = 0, xmax = null, wmax = null;
+          i, xx, w, xmax = null, wmax = null;
 
       if (!isFunc(cond)) cond = null;
 
@@ -84127,14 +92503,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             }
          }
 
-         const fill_for_interactive = want_tooltip && this.fillatt.empty() && draw_hist && !draw_markers && !show_line && !show_curve && !this._ignore_frame,
-         add_hist = () => {
-            this.draw_g.append('svg:path')
-                     .attr('d', res + ((!this.fillatt.empty() || fill_for_interactive) ? close_path : ''))
-                     .style('stroke-linejoin', 'miter')
-                     .call(this.lineatt.func)
-                     .call(this.fillatt.func);
-         };
+         const fill_for_interactive = want_tooltip && this.fillatt.empty() && draw_hist && !draw_markers && !show_line && !show_curve && !this._ignore_frame;
          let h0 = height + 3;
          if (!fill_for_interactive) {
             const gry0 = Math.round(funcs.gry(0));
@@ -84143,7 +92512,13 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             else if (gry0 < height)
                h0 = gry0;
          }
-         const close_path = `L${currx},${h0}H${startx}Z`;
+         const close_path = `L${currx},${h0}H${startx}Z`, add_hist = () => {
+            this.draw_g.append('svg:path')
+                       .attr('d', res + ((!this.fillatt.empty() || fill_for_interactive) ? close_path : ''))
+                       .style('stroke-linejoin', 'miter')
+                       .call(this.lineatt.func)
+                       .call(this.fillatt.func);
+         };
 
          if (res && draw_hist && !this.fillatt.empty()) {
             add_hist();
@@ -84290,8 +92665,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             right = this.getSelectIndex('x', 'right', 2);
       let width = pmain.getFrameWidth(),
           height = pmain.getFrameHeight(),
-          findbin = null, show_rect,
-          grx1, grx2, gry1, gry2, gapx = 2,
+          show_rect, grx1, grx2, gry1, gry2, gapx = 2,
           l = left, r = right, pnt_x = pnt.x, pnt_y = pnt.y;
 
       const GetBinGrX = i => {
@@ -84318,7 +92692,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
           else { l++; r--; }
       }
 
-      findbin = r = l;
+      let findbin = r = l;
       grx1 = GetBinGrX(findbin);
 
       if (descent_order) {
@@ -84806,7 +93180,7 @@ function drawTH2PolyLego(painter) {
             try {
                if (pnts.length > 2)
                   faces = THREE.ShapeUtils.triangulateShape(pnts, []);
-            } catch (e) {
+            } catch {
                faces = null;
             }
 
@@ -84852,7 +93226,7 @@ function drawTH2PolyLego(painter) {
             }
          }
 
-         if (z1>z0) {
+         if (z1 > z0) {
             for (let n = 0; n < pnts.length; ++n) {
                const pnt1 = pnts[n], pnt2 = pnts[n > 0 ? n - 1 : pnts.length - 1];
 
@@ -84905,14 +93279,14 @@ function drawTH2PolyLego(painter) {
       mesh.tip_color = 0x00FF00;
 
       mesh.tooltip = function(/* intersects */) {
-         const p = this.painter, main = p.getFramePainter(),
-               bin = p.getObject().fBins.arr[this.bins_index],
+         const p = this.painter, fp = p.getFramePainter(),
+               tbin = p.getObject().fBins.arr[this.bins_index],
          tip = {
             use_itself: true, // indicate that use mesh itself for highlighting
-            x1: main.grx(bin.fXmin),
-            x2: main.grx(bin.fXmax),
-            y1: main.gry(bin.fYmin),
-            y2: main.gry(bin.fYmax),
+            x1: fp.grx(tbin.fXmin),
+            x2: fp.grx(tbin.fXmax),
+            y1: fp.gry(tbin.fYmin),
+            y2: fp.gry(tbin.fYmax),
             z1: this.draw_z0,
             z2: this.draw_z1,
             bin: this.bins_index,
@@ -85095,7 +93469,8 @@ class TH3Painter extends THistPainter {
           stat_sum0 = 0, stat_sumw2 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
           stat_sumz1 = 0, stat_sumx2 = 0, stat_sumy2 = 0, stat_sumz2 = 0;
 
-      if (!isFunc(cond)) cond = null;
+      if (!isFunc(cond))
+         cond = null;
 
       for (xi = 0; xi < this.nbinsx+2; ++xi) {
          xx = xaxis.GetBinCoord(xi - 0.5);
@@ -85156,15 +93531,15 @@ class TH3Painter extends THistPainter {
       res.eff_entries = stat_sumw2 ? stat_sum0*stat_sum0/stat_sumw2 : Math.abs(stat_sum0);
 
       if (count_skew && !this.isTH2Poly()) {
-         let sumx3 = 0, sumy3 = 0, sumz3 = 0, sumx4 = 0, sumy4 = 0, sumz4 = 0, np = 0, w = 0;
-         for (let xi = i1; xi < i2; ++xi) {
+         let sumx3 = 0, sumy3 = 0, sumz3 = 0, sumx4 = 0, sumy4 = 0, sumz4 = 0, np = 0;
+         for (xi = i1; xi < i2; ++xi) {
             xx = xaxis.GetBinCoord(xi + 0.5);
-            for (let yi = j1; yi < j2; ++yi) {
+            for (yi = j1; yi < j2; ++yi) {
                yy = yaxis.GetBinCoord(yi + 0.5);
-               for (let zi = k1; zi < k2; ++zi) {
+               for (zi = k1; zi < k2; ++zi) {
                   zz = zaxis.GetBinCoord(zi + 0.5);
                   if (cond && !cond(xx, yy, zz)) continue;
-                  w = histo.getBinContent(xi + 1, yi + 1, zi + 1);
+                  const w = histo.getBinContent(xi + 1, yi + 1, zi + 1);
                   np += w;
                   sumx3 += w * Math.pow(xx - res.meanx, 3);
                   sumy3 += w * Math.pow(yy - res.meany, 3);
@@ -85365,16 +93740,17 @@ class TH3Painter extends THistPainter {
             const indx = Math.floor(intersect.index / this.nvertex);
             if ((indx < 0) || (indx >= this.bins.length)) return null;
 
-            const p = this.painter, histo = p.getHisto(),
-                main = p.getFramePainter(),
-                tip = p.get3DToolTip(this.bins[indx]);
+            const p = this.painter,
+                  thisto = p.getHisto(),
+                  fp = p.getFramePainter(),
+                  tip = p.get3DToolTip(this.bins[indx]);
 
-            tip.x1 = main.grx(histo.fXaxis.GetBinLowEdge(tip.ix));
-            tip.x2 = main.grx(histo.fXaxis.GetBinLowEdge(tip.ix+1));
-            tip.y1 = main.gry(histo.fYaxis.GetBinLowEdge(tip.iy));
-            tip.y2 = main.gry(histo.fYaxis.GetBinLowEdge(tip.iy+1));
-            tip.z1 = main.grz(histo.fZaxis.GetBinLowEdge(tip.iz));
-            tip.z2 = main.grz(histo.fZaxis.GetBinLowEdge(tip.iz+1));
+            tip.x1 = fp.grx(thisto.fXaxis.GetBinLowEdge(tip.ix));
+            tip.x2 = fp.grx(thisto.fXaxis.GetBinLowEdge(tip.ix+1));
+            tip.y1 = fp.gry(thisto.fYaxis.GetBinLowEdge(tip.iy));
+            tip.y2 = fp.gry(thisto.fYaxis.GetBinLowEdge(tip.iy+1));
+            tip.z1 = fp.grz(thisto.fZaxis.GetBinLowEdge(tip.iz));
+            tip.z2 = fp.grz(thisto.fZaxis.GetBinLowEdge(tip.iz+1));
             tip.color = this.tip_color;
             tip.opacity = 0.3;
 
@@ -85494,7 +93870,7 @@ class TH3Painter extends THistPainter {
 
       const cntr = use_colors ? this.getContour() : null,
             palette = use_colors ? this.getHistPalette() : null,
-            bins_matrixes = [], bins_colors = [], bins_ids = [], bin_opacities = [],
+            bins_matrixes = [], bins_colors = [], bins_ids = [], negative_matrixes = [], bin_opacities = [],
             transfer = (this.transferFunc && proivdeEvalPar(this.transferFunc, true)) ? this.transferFunc : null;
 
       for (let i = i1; i < i2; ++i) {
@@ -85530,30 +93906,31 @@ class TH3Painter extends THistPainter {
                bin_matrix.scale(new THREE.Vector3((grx2 - grx1) * wei, (gry2 - gry1) * wei, (grz2 - grz1) * wei));
                bin_matrix.setPosition((grx2 + grx1) / 2, (gry2 + gry1) / 2, (grz2 + grz1) / 2);
                bins_matrixes.push(bin_matrix);
+               if (bin_content < 0)
+                  negative_matrixes.push(bin_matrix);
             }
          }
       }
 
       function getBinTooltip(intersect) {
-         let binid = 0;
+         let binid = this.binid;
 
-         if (this.binid !== undefined)
-            binid = this.binid;
-         else {
-            if ((intersect.instanceId === undefined) || (intersect.instanceId >= this.bins.length)) return;
+         if (binid === undefined) {
+            if ((intersect.instanceId === undefined) || (intersect.instanceId >= this.bins.length))
+               return;
             binid = this.bins[intersect.instanceId];
          }
 
          const p = this.painter,
-               histo = p.getHisto(),
-               main = p.getFramePainter(),
+               thisto = p.getHisto(),
+               fp = p.getFramePainter(),
                tip = p.get3DToolTip(binid),
-               grx1 = main.grx(histo.fXaxis.GetBinCoord(tip.ix-1)),
-               grx2 = main.grx(histo.fXaxis.GetBinCoord(tip.ix)),
-               gry1 = main.gry(histo.fYaxis.GetBinCoord(tip.iy-1)),
-               gry2 = main.gry(histo.fYaxis.GetBinCoord(tip.iy)),
-               grz1 = main.grz(histo.fZaxis.GetBinCoord(tip.iz-1)),
-               grz2 = main.grz(histo.fZaxis.GetBinCoord(tip.iz)),
+               grx1 = fp.grx(thisto.fXaxis.GetBinCoord(tip.ix-1)),
+               grx2 = fp.grx(thisto.fXaxis.GetBinCoord(tip.ix)),
+               gry1 = fp.gry(thisto.fYaxis.GetBinCoord(tip.iy-1)),
+               gry2 = fp.gry(thisto.fYaxis.GetBinCoord(tip.iy)),
+               grz1 = fp.grz(thisto.fZaxis.GetBinCoord(tip.iz-1)),
+               grz2 = fp.grz(thisto.fZaxis.GetBinCoord(tip.iz)),
                wei2 = this.get_weight(tip.value) * this.tipscale;
 
          tip.x1 = (grx2 + grx1) / 2 - (grx2 - grx1) * wei2;
@@ -85612,23 +93989,24 @@ class TH3Painter extends THistPainter {
       }
 
       if (use_helper) {
-         const helper_segments = Box3D.Segments,
-               helper_positions = new Float32Array(bins_matrixes.length * Box3D.Segments.length * 3);
-         let vvv = 0;
-         for (let i = 0; i < bins_matrixes.length; ++i) {
-            const m = bins_matrixes[i].elements;
-            for (let n = 0; n < helper_segments.length; ++n, vvv += 3) {
-               const vert = Box3D.Vertices[helper_segments[n]];
-               helper_positions[vvv] = m[12] + (vert.x - 0.5) * m[0];
-               helper_positions[vvv+1] = m[13] + (vert.y - 0.5) * m[5];
-               helper_positions[vvv+2] = m[14] + (vert.z - 0.5) * m[10];
+         const helper_material = new THREE.LineBasicMaterial({ color: this.getColor(histo.fLineColor) });
+         function addLines(segments, matrixes) {
+            if (!matrixes)
+               return;
+            const positions = new Float32Array(matrixes.length * segments.length * 3);
+            for (let i = 0, vvv = 0; i < matrixes.length; ++i) {
+               const m = matrixes[i].elements;
+               for (let n = 0; n < segments.length; ++n, vvv += 3) {
+                  const vert = Box3D.Vertices[segments[n]];
+                  positions[vvv] = m[12] + (vert.x - 0.5) * m[0];
+                  positions[vvv+1] = m[13] + (vert.y - 0.5) * m[5];
+                  positions[vvv+2] = m[14] + (vert.z - 0.5) * m[10];
+               }
             }
+            main.add3DMesh(createLineSegments(positions, helper_material));
          }
-
-         const helper_material = new THREE.LineBasicMaterial({ color: this.getColor(histo.fLineColor) }),
-               lines = createLineSegments(helper_positions, helper_material);
-
-         main.add3DMesh(lines);
+         addLines(Box3D.Segments, bins_matrixes);
+         addLines(Box3D.Crosses, negative_matrixes);
       }
 
       return true;
@@ -85882,8 +94260,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
          opt = opt.slice(5);
 
       const graph = this.getGraph(),
-          is_gme = !!this.get_gme(),
-          has_main = first_time ? !!this.getMainPainter() : !this.axes_draw;
+          is_gme = Boolean(this.get_gme()),
+          has_main = first_time ? Boolean(this.getMainPainter()) : !this.axes_draw;
       let blocks_gme = [];
 
       if (!this.options) this.options = {};
@@ -86541,10 +94919,10 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
       if (options.Errors) {
          // to show end of error markers, use line width attribute
-         let lw = lineatt.width + gStyle.fEndErrorSize, bb = 0;
+         let lw = lineatt.width + gStyle.fEndErrorSize;
          const vv = options.Ends ? `m0,${lw}v${-2*lw}` : '',
                hh = options.Ends ? `m${lw},0h${-2*lw}` : '';
-         let vleft = vv, vright = vv, htop = hh, hbottom = hh;
+         let vleft = vv, vright = vv, htop = hh, hbottom = hh, bb;
 
          const mainLine = (dx, dy) => {
             if (!options.MainError) return `M${dx},${dy}`;
@@ -86664,20 +95042,18 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
             yxmin = (graph.fYq2 - graph.fYq1)*(funcs.scale_xmin-graph.fXq1)/(graph.fXq2-graph.fXq1) + graph.fYq1,
             yxmax = (graph.fYq2-graph.fYq1)*(funcs.scale_xmax-graph.fXq1)/(graph.fXq2-graph.fXq1) + graph.fYq1;
 
-      let path2 = '';
+      let path2;
       if (yxmin < funcs.scale_ymin) {
          const xymin = (graph.fXq2 - graph.fXq1)*(funcs.scale_ymin-graph.fYq1)/(graph.fYq2-graph.fYq1) + graph.fXq1;
          path2 = makeLine(xymin, funcs.scale_ymin, xqmin, yqmin);
       } else
          path2 = makeLine(funcs.scale_xmin, yxmin, xqmin, yqmin);
 
-
       if (yxmax > funcs.scale_ymax) {
          const xymax = (graph.fXq2-graph.fXq1)*(funcs.scale_ymax-graph.fYq1)/(graph.fYq2-graph.fYq1) + graph.fXq1;
          path2 += makeLine(xqmax, yqmax, xymax, funcs.scale_ymax);
       } else
          path2 += makeLine(xqmax, yqmax, funcs.scale_xmax, yxmax);
-
 
       const latt1 = this.createAttLine({ style: 1, width: 1, color: kBlack, std: false }),
             latt2 = this.createAttLine({ style: 2, width: 1, color: kBlack, std: false });
@@ -86730,7 +95106,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       if (this.options.pos3d)
          return this.drawBins3D(pmain, graph);
 
-      const is_gme = !!this.get_gme(),
+      const is_gme = Boolean(this.get_gme()),
             funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
             w = pmain.getFrameWidth(),
             h = pmain.getFrameHeight();
@@ -86935,7 +95311,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
          const IsInside = (x, x1, x2) => ((x1 >= x) && (x >= x2)) || ((x1 <= x) && (x <= x2));
 
-         let bin0 = this.bins[0], grx0 = funcs.grx(bin0.x), gry0, posy = 0;
+         let bin0 = this.bins[0], grx0 = funcs.grx(bin0.x), gry0, posy;
          for (n = 1; n < this.bins.length; ++n) {
             bin = this.bins[n];
             grx = funcs.grx(bin.x);
@@ -87406,7 +95782,7 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       if ((!painter.getMainPainter() || painter.options.second_x || painter.options.second_y) && painter.options.Axis) {
          promise = painter.drawAxisHisto().then(hist_painter => {
             hist_painter?.setSecondaryId(painter, 'hist');
-            painter.axes_draw = !!hist_painter;
+            painter.axes_draw = Boolean(hist_painter);
          });
       }
 
@@ -87961,7 +96337,7 @@ class Geometry {
       } else if (geometry instanceof Node) {
          this.tree = geometry;
          this.matrix = null; // new Matrix4;
-         return this;
+         return;
       } else if (geometry instanceof THREE.BufferGeometry) {
          const pos_buf = geometry.getAttribute('position').array,
                norm_buf = geometry.getAttribute('normal').array,
@@ -87988,8 +96364,9 @@ class Geometry {
          }
 
          this.tree = new Node(polygons, nodeid);
-         if (nodeid !== undefined) this.maxid = this.tree.maxnodeid;
-         return this;
+         if (nodeid !== undefined)
+            this.maxid = this.tree.maxnodeid;
+         return;
       } else if (geometry.polygons && (geometry.polygons[0] instanceof Polygon$1)) {
          const polygons = geometry.polygons;
 
@@ -88008,11 +96385,11 @@ class Geometry {
          }
 
          this.tree = new Node(polygons, nodeid);
-         if (nodeid !== undefined) this.maxid = this.tree.maxnodeid;
-         return this;
+         if (nodeid !== undefined)
+            this.maxid = this.tree.maxnodeid;
+         return;
       } else
          throw Error('ThreeBSP: Given geometry is unsupported');
-
 
       const polygons = [], nfaces = geometry.faces.length;
       let face, polygon, vertex, normal, useVertexNormals;
@@ -88293,40 +96670,44 @@ function createNormal(axis_name, pos, size) {
    return new Geometry(node);
 }
 
-const cfg$1 = {
+const _cfg = {
    GradPerSegm: 6,       // grad per segment in cylinder/spherical symmetry shapes
    CompressComp: true    // use faces compression in composite shapes
 };
 
+/** @summary Returns or set geometry config values
+ * @desc Supported 'GradPerSegm' and 'CompressComp'
+ * @private */
+
 function geoCfg(name, value) {
    if (value === undefined)
-      return cfg$1[name];
+      return _cfg[name];
 
-   cfg$1[name] = value;
+   _cfg[name] = value;
 }
 
 const kindGeo = 0,    // TGeoNode / TGeoShape
       kindEve = 1,    // TEveShape / TEveGeoShapeExtract
       kindShape = 2,  // special kind for single shape handling
 
-/** @summary TGeo-related bits
-  * @private */
- geoBITS = {
-   kVisOverride: BIT(0),  // volume's vis. attributes are overwritten
-   kVisNone: BIT(1),  // the volume/node is invisible, as well as daughters
-   kVisThis: BIT(2),  // this volume/node is visible
-   kVisDaughters: BIT(3),  // all leaves are visible
-   kVisOneLevel: BIT(4),  // first level daughters are visible (not used)
-   kVisStreamed: BIT(5),  // true if attributes have been streamed
-   kVisTouched: BIT(6),  // true if attributes are changed after closing geom
-   kVisOnScreen: BIT(7),  // true if volume is visible on screen
-   kVisContainers: BIT(12), // all containers visible
-   kVisOnly: BIT(13), // just this visible
-   kVisBranch: BIT(14), // only a given branch visible
-   kVisRaytrace: BIT(15)  // raytracing flag
-},
+      /** @summary TGeo-related bits
+       * @private */
+      geoBITS = {
+         kVisOverride: BIT(0),  // volume's vis. attributes are overwritten
+         kVisNone: BIT(1),  // the volume/node is invisible, as well as daughters
+         kVisThis: BIT(2),  // this volume/node is visible
+         kVisDaughters: BIT(3),  // all leaves are visible
+         kVisOneLevel: BIT(4),  // first level daughters are visible (not used)
+         kVisStreamed: BIT(5),  // true if attributes have been streamed
+         kVisTouched: BIT(6),  // true if attributes are changed after closing geom
+         kVisOnScreen: BIT(7),  // true if volume is visible on screen
+         kVisContainers: BIT(12), // all containers visible
+         kVisOnly: BIT(13), // just this visible
+         kVisBranch: BIT(14), // only a given branch visible
+         kVisRaytrace: BIT(15)  // raytracing flag
+      },
 
- clTGeoBBox = 'TGeoBBox',
+      clTGeoBBox = 'TGeoBBox',
       clTGeoArb8 = 'TGeoArb8',
       clTGeoCone = 'TGeoCone',
       clTGeoConeSeg = 'TGeoConeSeg',
@@ -88369,7 +96750,7 @@ function setGeoBit(volume, f, value) {
   * @private */
 function toggleGeoBit(volume, f) {
    if (volume.fGeoAtt !== undefined)
-      volume.fGeoAtt = volume.fGeoAtt ^ (f & 0xffffff);
+      volume.fGeoAtt ^= f & 0xffffff;
 }
 
 /** @summary Implementation of TGeoVolume::InvisibleAll
@@ -89189,7 +97570,7 @@ function createTubeBuffer(shape, faces_limit) {
       thetaLength = shape.fPhi2 - shape.fPhi1;
    }
 
-   const radiusSegments = Math.max(4, Math.round(thetaLength/cfg$1.GradPerSegm));
+   const radiusSegments = Math.max(4, Math.round(thetaLength / _cfg.GradPerSegm));
 
    // external surface
    let numfaces = radiusSegments * (((outerR[0] <= 0) || (outerR[1] <= 0)) ? 1 : 2);
@@ -89311,7 +97692,7 @@ function createTubeBuffer(shape, faces_limit) {
 /** @summary Creates eltu geometry
   * @private */
 function createEltuBuffer(shape, faces_limit) {
-   const radiusSegments = Math.max(4, Math.round(360/cfg$1.GradPerSegm));
+   const radiusSegments = Math.max(4, Math.round(360 / _cfg.GradPerSegm));
 
    if (faces_limit < 0) return radiusSegments*4;
 
@@ -89329,7 +97710,7 @@ function createEltuBuffer(shape, faces_limit) {
 
    // create tube faces
    for (let seg = 0; seg < radiusSegments; ++seg) {
-      creator.addFace4(x[seg], y[seg], +shape.fDZ,
+      creator.addFace4(x[seg], y[seg], shape.fDZ,
                        x[seg], y[seg], -shape.fDZ,
                        x[seg+1], y[seg+1], -shape.fDZ,
                        x[seg+1], y[seg+1], shape.fDZ);
@@ -89339,7 +97720,8 @@ function createEltuBuffer(shape, faces_limit) {
       nx2 = x[seg+1] * shape.fRmax / shape.fRmin;
       ny2 = y[seg+1] * shape.fRmin / shape.fRmax;
       const dist = Math.sqrt(nx2**2 + ny2**2);
-      nx2 = nx2 / dist; ny2 = ny2/dist;
+      nx2 /= dist;
+      ny2 /= dist;
 
       creator.setNormal_12_34(nx1, ny1, 0, nx2, ny2, 0);
    }
@@ -89362,8 +97744,8 @@ function createEltuBuffer(shape, faces_limit) {
   * @private */
 function createTorusBuffer(shape, faces_limit) {
    const radius = shape.fR;
-   let radialSegments = Math.max(6, Math.round(360/cfg$1.GradPerSegm)),
-       tubularSegments = Math.max(8, Math.round(shape.fDphi/cfg$1.GradPerSegm)),
+   let radialSegments = Math.max(6, Math.round(360 / _cfg.GradPerSegm)),
+       tubularSegments = Math.max(8, Math.round(shape.fDphi / _cfg.GradPerSegm)),
        numfaces = (shape.fRmin > 0 ? 4 : 2) * radialSegments * (tubularSegments + (shape.fDphi !== 360 ? 1 : 0));
 
    if (faces_limit < 0) return numfaces;
@@ -89461,7 +97843,7 @@ function createPolygonBuffer(shape, faces_limit) {
       radiusSegments = shape.fNedges;
       factor = 1.0 / Math.cos(Math.PI/180 * thetaLength / radiusSegments / 2);
    } else {
-      radiusSegments = Math.max(5, Math.round(thetaLength/cfg$1.GradPerSegm));
+      radiusSegments = Math.max(5, Math.round(thetaLength / _cfg.GradPerSegm));
       factor = 1;
    }
 
@@ -89688,7 +98070,7 @@ function createXtruBuffer(shape, faces_limit) {
 /** @summary Creates para geometry
   * @private */
 function createParaboloidBuffer(shape, faces_limit) {
-   let radiusSegments = Math.max(4, Math.round(360/cfg$1.GradPerSegm)),
+   let radiusSegments = Math.max(4, Math.round(360 / _cfg.GradPerSegm)),
        heightSegments = 30;
 
    if (faces_limit > 0) {
@@ -89729,11 +98111,13 @@ function createParaboloidBuffer(shape, faces_limit) {
    let lastz = zmin, lastr = 0, lastnxy = 0, lastnz = -1;
 
    for (let layer = 0; layer <= heightSegments + 1; ++layer) {
-      let layerz = 0, radius = 0, nxy = 0, nz = -1;
+      if ((layer === 0) && (rmin === 0))
+         continue;
 
-      if ((layer === 0) && (rmin === 0)) continue;
+      if ((layer === heightSegments + 1) && (lastr === 0))
+         break;
 
-      if ((layer === heightSegments + 1) && (lastr === 0)) break;
+      let layerz, radius;
 
       switch (layer) {
          case 0: layerz = zmin; radius = rmin; break;
@@ -89748,10 +98132,9 @@ function createParaboloidBuffer(shape, faces_limit) {
          }
       }
 
-      nxy = shape.fA * radius;
-      nz = (shape.fA > 0) ? -1 : 1;
-
-      const skip = (lastr === 0) ? 1 : ((radius === 0) ? 2 : 0);
+      const nxy = shape.fA * radius,
+            nz = (shape.fA > 0) ? -1 : 1,
+            skip = (lastr === 0) ? 1 : ((radius === 0) ? 2 : 0);
 
       for (let seg = 0; seg < radiusSegments; ++seg) {
          creator.addFace4(radius*_cos[seg], radius*_sin[seg], layerz,
@@ -89783,11 +98166,12 @@ function createHypeBuffer(shape, faces_limit) {
    if ((shape.fTin === 0) && (shape.fTout === 0))
       return createTubeBuffer(shape, faces_limit);
 
-   let radiusSegments = Math.max(4, Math.round(360/cfg$1.GradPerSegm)),
+   let radiusSegments = Math.max(4, Math.round(360 / _cfg.GradPerSegm)),
        heightSegments = 30,
        numfaces = radiusSegments * (heightSegments + 1) * ((shape.fRmin > 0) ? 4 : 2);
 
-   if (faces_limit < 0) return numfaces;
+   if (faces_limit < 0)
+      return numfaces;
 
    if ((faces_limit > 0) && (faces_limit > numfaces)) {
       radiusSegments = Math.max(4, Math.floor(radiusSegments/Math.sqrt(numfaces/faces_limit)));
@@ -89891,6 +98275,7 @@ function createMatrix(matrix) {
       case 'TGeoScale': scale = matrix.fScale; break;
       case 'TGeoGenTrans':
          scale = matrix.fScale; // no break, translation and rotation follows
+      // eslint-disable-next-line  no-fallthrough
       case 'TGeoCombiTrans':
          translation = matrix.fTranslation;
          if (matrix.fRotation) rotation = matrix.fRotation.fRotationMatrix;
@@ -90082,9 +98467,9 @@ function createHalfSpace(shape, geom) {
    geometry.computeVertexNormals();
 
    for (let k = 0; k < positions.length; k += 3) {
-      positions[k] = positions[k] + vertex.x;
-      positions[k+1] = positions[k+1] + vertex.y;
-      positions[k+2] = positions[k+2] + vertex.z;
+      positions[k] += vertex.x;
+      positions[k+1] += vertex.y;
+      positions[k+2] += vertex.z;
    }
 
    return geometry;
@@ -90106,6 +98491,8 @@ function countGeometryFaces(geom) {
    const attr = geom.getAttribute('position');
    return attr?.count ? Math.round(attr.count / 3) : 0;
 }
+
+let createGeometry = null;
 
 /** @summary Creates geometry for composite shape
   * @private */
@@ -90156,7 +98543,7 @@ function createComposite(shape, faces_limit) {
       return geom1;
    }
 
-   let bsp1 = new Geometry(geom1, matrix1, cfg$1.CompressComp ? 0 : undefined);
+   let bsp1 = new Geometry(geom1, matrix1, _cfg.CompressComp ? 0 : undefined);
 
    const bsp2 = new Geometry(geom2, matrix2, bsp1.maxid);
 
@@ -90225,7 +98612,7 @@ function projectGeometry(geom, matrix, projection, position, flippedMesh) {
   *  - if limit < 0 just returns estimated number of faces
   *  - if limit > 0 return list of CsgPolygons (used only for composite shapes)
   * @private */
-function createGeometry(shape, limit) {
+createGeometry = function(shape, limit) {
    if (limit === undefined) limit = 0;
 
    try {
@@ -90260,8 +98647,9 @@ function createGeometry(shape, limit) {
             return res;
          }
          case clTGeoHalfSpace:
-            if (limit < 0) return 1; // half space if just plane used in composite
-            // no break here - warning may appear
+            if (limit < 0)
+               return 1; // half space if just plane used in composite
+         // eslint-disable-next-line  no-fallthrough
          default:
             geoWarn(`unsupported shape type ${shape._typename}`);
       }
@@ -90276,7 +98664,7 @@ function createGeometry(shape, limit) {
    }
 
    return limit < 0 ? 0 : null;
-}
+};
 
 
 /** @summary Create single shape from EVE7 render date
@@ -90342,29 +98730,26 @@ function createServerGeometry(rd, nsegm) {
 
    rd.nsegm = nsegm;
 
-   let g = null;
+   let geom;
 
    if (rd.shape) {
       // case when TGeoShape provided as is
-      g = createGeometry(rd.shape);
+      geom = createGeometry(rd.shape);
    } else {
       if (!rd.raw?.buffer) {
          console.error('No raw data at all');
          return null;
       }
 
-      if (rd.sz)
-         g = makeEveGeometry(rd);
-      else
-         g = makeViewerGeometry(rd);
+      geom = rd.sz ? makeEveGeometry(rd) : makeViewerGeometry(rd);
    }
 
    // shape handle is similar to created in TGeoPainter
    return {
       _typename: '$$Shape$$', // indicate that shape can be used as is
       ready: true,
-      geom: g,
-      nfaces: numGeometryFaces(g)
+      geom,
+      nfaces: numGeometryFaces(geom)
    };
 }
 
@@ -90402,6 +98787,7 @@ function provideObjectInfo(obj) {
       case clTGeoBBox: break;
       case clTGeoPara: info.push(`Alpha=${shape.fAlpha} Phi=${shape.fPhi} Theta=${shape.fTheta}`); break;
       case clTGeoTrd2: info.push(`Dy1=${conv(shape.fDy1)} Dy2=${conv(shape.fDy1)}`); // no break
+      // eslint-disable-next-line  no-fallthrough
       case clTGeoTrd1: info.push(`Dx1=${conv(shape.fDx1)} Dx2=${conv(shape.fDx1)}`); break;
       case clTGeoArb8: break;
       case clTGeoTrap: break;
@@ -90413,7 +98799,7 @@ function provideObjectInfo(obj) {
          break;
       case clTGeoConeSeg:
          info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
-         // intentional no break;
+      // eslint-disable-next-line  no-fallthrough
       case clTGeoCone:
          info.push(`Rmin1=${conv(shape.fRmin1)} Rmax1=${conv(shape.fRmax1)}`,
                    `Rmin2=${conv(shape.fRmin2)} Rmax2=${conv(shape.fRmax2)}`);
@@ -90421,7 +98807,7 @@ function provideObjectInfo(obj) {
       case clTGeoCtub:
       case clTGeoTubeSeg:
          info.push(`Phi1=${shape.fPhi1} Phi2=${shape.fPhi2}`);
-         // intentional no break
+      // eslint-disable-next-line  no-fallthrough
       case clTGeoEltu:
       case clTGeoTube:
          info.push(`Rmin=${conv(shape.fRmin)} Rmax=${conv(shape.fRmax)}`);
@@ -90622,6 +99008,79 @@ function isSameStack(stack1, stack2) {
 }
 
 
+function createFlippedGeom(geom) {
+   let pos = geom.getAttribute('position').array,
+       norm = geom.getAttribute('normal').array;
+   const index = geom.getIndex();
+
+   if (index) {
+      // we need to unfold all points to
+      const arr = index.array,
+            i0 = geom.drawRange.start;
+      let ilen = geom.drawRange.count;
+      if (i0 + ilen > arr.length) ilen = arr.length - i0;
+
+      const dpos = new Float32Array(ilen*3), dnorm = new Float32Array(ilen*3);
+      for (let ii = 0; ii < ilen; ++ii) {
+         const k = arr[i0 + ii];
+         if ((k < 0) || (k*3 >= pos.length))
+            console.log(`strange index ${k*3} totallen = ${pos.length}`);
+         dpos[ii*3] = pos[k*3];
+         dpos[ii*3+1] = pos[k*3+1];
+         dpos[ii*3+2] = pos[k*3+2];
+         dnorm[ii*3] = norm[k*3];
+         dnorm[ii*3+1] = norm[k*3+1];
+         dnorm[ii*3+2] = norm[k*3+2];
+      }
+
+      pos = dpos; norm = dnorm;
+   }
+
+   const len = pos.length,
+         newpos = new Float32Array(len),
+         newnorm = new Float32Array(len);
+
+   // we should swap second and third point in each face
+   for (let n = 0, shift = 0; n < len; n += 3) {
+      newpos[n] = pos[n+shift];
+      newpos[n+1] = pos[n+1+shift];
+      newpos[n+2] = -pos[n+2+shift];
+
+      newnorm[n] = norm[n+shift];
+      newnorm[n+1] = norm[n+1+shift];
+      newnorm[n+2] = -norm[n+2+shift];
+
+      shift+=3; if (shift===6) shift=-3; // values 0,3,-3
+   }
+
+   const geomZ = new THREE.BufferGeometry();
+   geomZ.setAttribute('position', new THREE.BufferAttribute(newpos, 3));
+   geomZ.setAttribute('normal', new THREE.BufferAttribute(newnorm, 3));
+
+   return geomZ;
+}
+
+
+/** @summary Create flipped mesh for the shape
+  * @desc When transformation matrix includes one or several inversion of axis,
+  * one should inverse geometry object, otherwise three.js cannot correctly draw it
+  * @param {Object} shape - TGeoShape object
+  * @param {Object} material - material
+  * @private */
+function createFlippedMesh(shape, material) {
+   if (shape.geomZ === undefined)
+      shape.geomZ = createFlippedGeom(shape.geom);
+
+   const mesh = new THREE.Mesh(shape.geomZ, material);
+   mesh.scale.copy(new THREE.Vector3(1, 1, -1));
+   mesh.updateMatrix();
+
+   mesh._flippedMesh = true;
+
+   return mesh;
+}
+
+
 /**
   * @summary class for working with cloned nodes
   *
@@ -90739,7 +99198,7 @@ class ClonedNodes {
       this.origin.push(obj);
       if (sublevel > this.maxdepth) this.maxdepth = sublevel;
 
-      let chlds = null;
+      let chlds;
       if (kind === kindGeo)
          chlds = obj.fVolume?.fNodes?.arr || null;
       else
@@ -90751,7 +99210,8 @@ class ClonedNodes {
             this.createClones(chlds[i], sublevel + 1, kind);
       }
 
-      if (sublevel > 1) return;
+      if (sublevel > 1)
+         return;
 
       this.nodes = [];
 
@@ -90767,18 +99227,12 @@ class ClonedNodes {
 
       // than fill children lists
       for (let n = 0; n < this.origin.length; ++n) {
-         const obj = this.origin[n], clone = this.nodes[n];
-         let chlds = null, shape = null;
+         const obj2 = this.origin[n],
+               clone = this.nodes[n],
+               shape = kind === kindEve ? obj2.fShape : obj2.fVolume.fShape,
+               chlds2 = kind === kindEve ? obj2.fElements?.arr : obj2.fVolume.fNodes?.arr,
+               matrix = getNodeMatrix(kind, obj2);
 
-         if (kind === kindEve) {
-            shape = obj.fShape;
-            if (obj.fElements) chlds = obj.fElements.arr;
-         } else if (obj.fVolume) {
-            shape = obj.fVolume.fShape;
-            if (obj.fVolume.fNodes) chlds = obj.fVolume.fNodes.arr;
-         }
-
-         const matrix = getNodeMatrix(kind, obj);
          if (matrix) {
             clone.matrix = matrix.elements; // take only matrix elements, matrix will be constructed in worker
             if (clone.matrix && (clone.matrix[0] === 1)) {
@@ -90798,15 +99252,16 @@ class ClonedNodes {
             if (shape.$nfaces === undefined)
                shape.$nfaces = createGeometry(shape, -1);
             clone.nfaces = shape.$nfaces;
-            if (clone.nfaces <= 0) clone.vol = 0;
+            if (clone.nfaces <= 0)
+               clone.vol = 0;
          }
 
-         if (!chlds) continue;
-
-         // in cloned object children is only list of ids
-         clone.chlds = new Array(chlds.length);
-         for (let k = 0; k < chlds.length; ++k)
-            clone.chlds[k] = chlds[k]._refid;
+         if (chlds2) {
+            // in cloned object children is only list of ids
+            clone.chlds = new Array(chlds2.length);
+            for (let k = 0; k < chlds2.length; ++k)
+               clone.chlds[k] = chlds2[k]._refid;
+         }
       }
 
       // remove _refid identifiers from original objects
@@ -90971,8 +99426,9 @@ class ClonedNodes {
          do_clear = true;
          if (!this.fVisibility) return;
       } else
-         on = !!on;
-      if (!stack) return;
+         on = Boolean(on);
+      if (!stack)
+         return;
 
       if (!this.fVisibility)
          this.fVisibility = [];
@@ -91086,10 +99542,10 @@ class ClonedNodes {
       if ((arg.nodeid === 0) && arg.main_visible)
          node_vis = vislvl + 1;
       else if (arg.testPhysVis) {
-         const res = arg.testPhysVis();
-         if (res !== undefined) {
-            node_vis = res && !node.chlds ? vislvl + 1 : 0;
-            node_nochlds = !res;
+         const res2 = arg.testPhysVis();
+         if (res2 !== undefined) {
+            node_vis = res2 && !node.chlds ? vislvl + 1 : 0;
+            node_nochlds = !res2;
          }
       }
 
@@ -91243,13 +99699,15 @@ class ClonedNodes {
 
    /** @summary Returns true if stack includes at any place provided nodeid */
    isIdInStack(nodeid, stack) {
-      if (!nodeid) return true;
+      if (!nodeid)
+         return true;
 
-      let node = this.nodes[0], id = 0;
+      let node = this.nodes[0];
 
       for (let lvl = 0; lvl < stack.length; ++lvl) {
-         id = node.chlds[stack[lvl]];
-         if (id === nodeid) return true;
+         const id = node.chlds[stack[lvl]];
+         if (id === nodeid)
+            return true;
          node = this.nodes[id];
       }
 
@@ -91765,7 +100223,7 @@ class ClonedNodes {
 
       this.actual_level = arg.vislvl; // not used, can be shown somewhere in the gui
 
-      let minVol = 0, maxVol = 0, camVol = -1, camFact = 10, sortidcut = this.nodes.length + 1;
+      let minVol = 0, maxVol, camVol = -1, camFact = 10, sortidcut = this.nodes.length + 1;
 
       if (arg.facecnt > maxnumfaces) {
          const bignumfaces = maxnumfaces * (frustum ? 0.8 : 1.0),
@@ -92019,78 +100477,6 @@ class ClonedNodes {
    }
 
 } // class ClonedNodes
-
-function createFlippedGeom(geom) {
-   let pos = geom.getAttribute('position').array,
-       norm = geom.getAttribute('normal').array;
-   const index = geom.getIndex();
-
-   if (index) {
-      // we need to unfold all points to
-      const arr = index.array,
-            i0 = geom.drawRange.start;
-      let ilen = geom.drawRange.count;
-      if (i0 + ilen > arr.length) ilen = arr.length - i0;
-
-      const dpos = new Float32Array(ilen*3), dnorm = new Float32Array(ilen*3);
-      for (let ii = 0; ii < ilen; ++ii) {
-         const k = arr[i0 + ii];
-         if ((k < 0) || (k*3 >= pos.length))
-            console.log(`strange index ${k*3} totallen = ${pos.length}`);
-         dpos[ii*3] = pos[k*3];
-         dpos[ii*3+1] = pos[k*3+1];
-         dpos[ii*3+2] = pos[k*3+2];
-         dnorm[ii*3] = norm[k*3];
-         dnorm[ii*3+1] = norm[k*3+1];
-         dnorm[ii*3+2] = norm[k*3+2];
-      }
-
-      pos = dpos; norm = dnorm;
-   }
-
-   const len = pos.length,
-         newpos = new Float32Array(len),
-         newnorm = new Float32Array(len);
-
-   // we should swap second and third point in each face
-   for (let n = 0, shift = 0; n < len; n += 3) {
-      newpos[n] = pos[n+shift];
-      newpos[n+1] = pos[n+1+shift];
-      newpos[n+2] = -pos[n+2+shift];
-
-      newnorm[n] = norm[n+shift];
-      newnorm[n+1] = norm[n+1+shift];
-      newnorm[n+2] = -norm[n+2+shift];
-
-      shift+=3; if (shift===6) shift=-3; // values 0,3,-3
-   }
-
-   const geomZ = new THREE.BufferGeometry();
-   geomZ.setAttribute('position', new THREE.BufferAttribute(newpos, 3));
-   geomZ.setAttribute('normal', new THREE.BufferAttribute(newnorm, 3));
-
-   return geomZ;
-}
-
-
-/** @summary Create flipped mesh for the shape
-  * @desc When transformation matrix includes one or several inversion of axis,
-  * one should inverse geometry object, otherwise three.js cannot correctly draw it
-  * @param {Object} shape - TGeoShape object
-  * @param {Object} material - material
-  * @private */
-function createFlippedMesh(shape, material) {
-   if (shape.geomZ === undefined)
-      shape.geomZ = createFlippedGeom(shape.geom);
-
-   const mesh = new THREE.Mesh(shape.geomZ, material);
-   mesh.scale.copy(new THREE.Vector3(1, 1, -1));
-   mesh.updateMatrix();
-
-   mesh._flippedMesh = true;
-
-   return mesh;
-}
 
 /** @summary extract code of Box3.expandByObject
   * @desc Major difference - do not traverse hierarchy, support InstancedMesh
@@ -94876,110 +103262,6 @@ function getHistPainter3DCfg(painter) {
 }
 
 
-/** @summary create list entity for geo object
-  * @private */
-function createList(parent, lst, name, title) {
-   if (!lst?.arr?.length) return;
-
-   const list_item = {
-       _name: name,
-       _kind: prROOT + clTList,
-       _title: title,
-       _more: true,
-       _geoobj: lst,
-       _parent: parent,
-       _get(item /* , itemname */) {
-          return Promise.resolve(item._geoobj || null);
-       },
-       _expand(node, lst) {
-          // only childs
-
-          if (lst.fVolume)
-             lst = lst.fVolume.fNodes;
-
-          if (!lst.arr) return false;
-
-          node._childs = [];
-
-          checkDuplicates(null, lst.arr);
-
-          for (const n in lst.arr)
-             createItem(node, lst.arr[n]);
-
-          return true;
-       }
-   };
-
-   if (!parent._childs)
-      parent._childs = [];
-   parent._childs.push(list_item);
-}
-
-
-/** @summary Expand geo object
-  * @private */
-function expandGeoObject(parent, obj) {
-   injectGeoStyle();
-
-   if (!parent || !obj) return false;
-
-   const isnode = (obj._typename.indexOf(clTGeoNode) === 0),
-         isvolume = (obj._typename.indexOf(clTGeoVolume) === 0),
-         ismanager = (obj._typename === clTGeoManager),
-         iseve = ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)),
-         isoverlap = (obj._typename === clTGeoOverlap);
-
-   if (!isnode && !isvolume && !ismanager && !iseve && !isoverlap) return false;
-
-   if (parent._childs) return true;
-
-   if (ismanager) {
-      createList(parent, obj.fMaterials, 'Materials', 'list of materials');
-      createList(parent, obj.fMedia, 'Media', 'list of media');
-      createList(parent, obj.fTracks, 'Tracks', 'list of tracks');
-      createList(parent, obj.fOverlaps, 'Overlaps', 'list of detected overlaps');
-      createItem(parent, obj.fMasterVolume);
-      return true;
-   }
-
-   if (isoverlap) {
-      createItem(parent, obj.fVolume1);
-      createItem(parent, obj.fVolume2);
-      createItem(parent, obj.fMarker, 'Marker');
-      return true;
-   }
-
-   let volume, subnodes, shape;
-
-   if (iseve) {
-      subnodes = obj.fElements?.arr;
-      shape = obj.fShape;
-   } else {
-      volume = isnode ? obj.fVolume : obj;
-      subnodes = volume?.fNodes?.arr;
-      shape = volume?.fShape;
-   }
-
-   if (!subnodes && (shape?._typename === clTGeoCompositeShape) && shape?.fNode) {
-      if (!parent._childs) {
-         createItem(parent, shape.fNode.fLeft, 'Left');
-         createItem(parent, shape.fNode.fRight, 'Right');
-      }
-
-      return true;
-   }
-
-   if (!subnodes) return false;
-
-   checkDuplicates(obj, subnodes);
-
-   for (let i = 0; i < subnodes.length; ++i)
-      createItem(parent, subnodes[i]);
-
-   return true;
-}
-
-
 /** @summary find item with 3d painter
   * @private */
 function findItemWithPainter(hitem, funcname) {
@@ -95319,7 +103601,7 @@ class TGeoPainter extends ObjectPainter {
             { name: 'MeshMatcapMaterial', value: 'matcap' },
             { name: 'MeshToonMaterial', value: 'toon' }
          ],
-         getMaterialCfg: function() {
+         getMaterialCfg() {
              let cfg;
              this.materialKinds.forEach(item => {
                 if (item.value === this.material_kind)
@@ -96227,6 +104509,8 @@ class TGeoPainter extends ObjectPainter {
       // Scene Options
 
       const scene = this._gui.addFolder('Scene');
+      // following items used in handlers and cannot be constants
+      let light_pnts = null, strength = null, hcolor = null, overlay = null;
 
       scene.add(this.ctrl.light, 'kind', makeLil(this.ctrl.lightKindItems)).name('Light')
            .listen().onChange(() => {
@@ -96235,7 +104519,7 @@ class TGeoPainter extends ObjectPainter {
            });
 
       this.ctrl.light._pnts = this.ctrl.light.specular ? 0 : (this.ctrl.light.front ? 1 : 2);
-      const light_pnts = scene.add(this.ctrl.light, '_pnts', { specular: 0, front: 1, box: 2 })
+      light_pnts = scene.add(this.ctrl.light, '_pnts', { specular: 0, front: 1, box: 2 })
                 .name('Positions')
                 .show(this.ctrl.light.kind === 'mix' || this.ctrl.light.kind === 'points')
                 .onChange(v => {
@@ -96264,9 +104548,9 @@ class TGeoPainter extends ObjectPainter {
                    hcolor.show(this.ctrl._highlight === 1);
                 });
 
-      const hcolor = appearance.addColor(this.ctrl, 'highlight_color').name('Hightlight color')
-                         .show(this.ctrl._highlight === 1),
-            strength = appearance.add(this.ctrl, 'bloom_strength', 0, 3).name('Bloom strength')
+      hcolor = appearance.addColor(this.ctrl, 'highlight_color').name('Hightlight color')
+                         .show(this.ctrl._highlight === 1);
+      strength = appearance.add(this.ctrl, 'bloom_strength', 0, 3).name('Bloom strength')
                            .listen().onChange(() => this.changedHighlight())
                            .show(this.ctrl._highlight === 2);
 
@@ -96334,7 +104618,7 @@ class TGeoPainter extends ObjectPainter {
 
       camera.add(this, 'focusCamera').name('Reset position');
 
-      const overlay = camera.add(this.ctrl, 'camera_overlay', makeLil(this.ctrl.cameraOverlayItems))
+      overlay = camera.add(this.ctrl, 'camera_overlay', makeLil(this.ctrl.cameraOverlayItems))
                       .name('Overlay').listen().onChange(() => this.changeCamera())
                       .show(this.ctrl.camera_kind.indexOf('ortho') === 0);
 
@@ -96534,8 +104818,8 @@ class TGeoPainter extends ObjectPainter {
                      menu.add('Hide all before', n, indx => {
                         const items = [];
                         for (let i = 0; i < indx; ++i) {
-                           const stack = getIntersectStack(intersects[i]);
-                           if (stack) items.push(this.getStackFullName(stack));
+                           const stack2 = getIntersectStack(intersects[i]);
+                           if (stack2) items.push(this.getStackFullName(stack2));
                         }
                         this.hidePhysicalNode(items);
                      });
@@ -96567,15 +104851,14 @@ class TGeoPainter extends ObjectPainter {
                      if (this._last_manifest)
                         this._last_manifest.wireframe = !this._last_manifest.wireframe;
 
-                     if (this._last_hidden)
-                        this._last_hidden.forEach(obj => { obj.visible = true; });
+                     this._last_hidden?.forEach(obj2 => { obj2.visible = true; });
 
                      this._last_hidden = [];
 
                      for (let i = 0; i < indx; ++i)
                         this._last_hidden.push(intersects[i].object);
 
-                     this._last_hidden.forEach(obj => { obj.visible = false; });
+                     this._last_hidden.forEach(obj2 => { obj2.visible = false; });
 
                      this._last_manifest = intersects[indx].object.material;
 
@@ -96773,7 +105056,8 @@ class TGeoPainter extends ObjectPainter {
          for (let k = 0; (k < curr_mesh.length) && same; ++k)
             if ((curr_mesh[k] !== active_mesh[k]) || get_ctrl(curr_mesh[k]).checkHighlightIndex(geo_index)) same = false;
       }
-      if (same) return !!curr_mesh;
+      if (same)
+         return Boolean(curr_mesh);
 
       if (curr_mesh) {
          for (let k = 0; k < curr_mesh.length; ++k)
@@ -96789,7 +105073,7 @@ class TGeoPainter extends ObjectPainter {
 
       this.render3D(0);
 
-      return !!active_mesh;
+      return Boolean(active_mesh);
    }
 
    /** @summary handle mouse click event */
@@ -96955,7 +105239,7 @@ class TGeoPainter extends ObjectPainter {
              matrix = null, frustum = null;
 
          if (!numvis)
-            numvis = this._clones.markVisibles(false, false, !!this.geo_manager && !this.ctrl.showtop);
+            numvis = this._clones.markVisibles(false, false, Boolean(this.geo_manager) && !this.ctrl.showtop);
 
          if (this.ctrl.select_in_view && !this._first_drawing) {
             // extract camera projection matrix for selection
@@ -97063,18 +105347,15 @@ class TGeoPainter extends ObjectPainter {
             const job = { limit: this._current_face_limit, shapes: [] };
             let cnt = 0;
             for (let n = 0; n < this._build_shapes.length; ++n) {
-               let cl = null;
                const item = this._build_shapes[n];
                // only submit not-done items
                if (item.ready || item.geom) {
                   // this is place holder for existing geometry
-                  cl = { id: item.id, ready: true, nfaces: countGeometryFaces(item.geom), refcnt: item.refcnt };
+                  job.shapes.push({ id: item.id, ready: true, nfaces: countGeometryFaces(item.geom), refcnt: item.refcnt });
                } else {
-                  cl = clone(item, null, true);
+                  job.shapes.push(clone(item, null, true));
                   cnt++;
                }
-
-               job.shapes.push(cl);
             }
 
             if (cnt > 0) {
@@ -97350,7 +105631,8 @@ class TGeoPainter extends ObjectPainter {
          switch (this._camera._lights) {
             case 'ambient' : this._camera.add(new THREE.AmbientLight(0xefefef, p)); break;
             case 'hemisphere' : this._camera.add(new THREE.HemisphereLight(0xffffbb, 0x080820, p)); break;
-            case 'mix': this._camera.add(new THREE.AmbientLight(0xefefef, p)); // intentionally without break
+            case 'mix': this._camera.add(new THREE.AmbientLight(0xefefef, p));
+            // eslint-disable-next-line  no-fallthrough
             default: // 6 point lights
                for (let n = 0; n < 6; ++n) {
                   const l = new THREE.DirectionalLight(0xefefef, p);
@@ -97976,10 +106258,8 @@ class TGeoPainter extends ObjectPainter {
 
          if (this._animating)
             requestAnimationFrame(animate);
-          else {
-            if (!this._geom_viewer)
-               this.startDrawGeometry();
-         }
+          else if (!this._geom_viewer)
+            this.startDrawGeometry();
          const smoothFactor = -Math.cos((2.0*Math.PI*step)/frames) + 1.0;
          this._camera.position.add(posIncrement.clone().multiplyScalar(smoothFactor));
          oldTarget.add(targetIncrement.clone().multiplyScalar(smoothFactor));
@@ -98189,10 +106469,11 @@ class TGeoPainter extends ObjectPainter {
          if (indx >= 0) this._extraObjects.opt[indx] = itemname;
       }
 
-      if (indx < 0) return;
+      if (indx < 0)
+         return;
 
       const obj = this._extraObjects.arr[indx];
-      let res = !!obj.$hidden_via_menu;
+      let res = Boolean(obj.$hidden_via_menu);
 
       if (toggle) {
          obj.$hidden_via_menu = res;
@@ -98465,6 +106746,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Draw extra shape on the geometry */
    drawExtraShape(obj, itemname) {
+      // eslint-disable-next-line no-use-before-define
       const mesh = build(obj);
       if (!mesh) return false;
 
@@ -98580,7 +106862,8 @@ class TGeoPainter extends ObjectPainter {
          while (indx < lines.length) {
             let line = lines[indx++].trim();
 
-            if (line.indexOf('//') === 0) continue;
+            if (line.indexOf('//') === 0)
+               continue;
 
             if (line.indexOf('gGeoManager') < 0) continue;
             line = line.replace('->GetVolume', '.GetVolume');
@@ -98591,12 +106874,13 @@ class TGeoPainter extends ObjectPainter {
             line = line.replace('->SetTransparency', '.SetTransparency');
             line = line.replace('->SetLineColor', '.SetLineColor');
             line = line.replace('->SetVisLevel', '.SetVisLevel');
-            if (line.indexOf('->') >= 0) continue;
+            if (line.indexOf('->') >= 0)
+               continue;
 
             try {
                const func = new Function('gGeoManager', line);
                func(mgr);
-            } catch (err) {
+            } catch {
                console.error(`Problem by processing ${line}`);
             }
          }
@@ -98712,7 +106996,7 @@ class TGeoPainter extends ObjectPainter {
 
          this._clones.name_prefix = name_prefix;
 
-         const hide_top_volume = !!this.geo_manager && !this.ctrl.showtop;
+         const hide_top_volume = Boolean(this.geo_manager) && !this.ctrl.showtop;
          let uniquevis = this.ctrl.no_screen ? 0 : this._clones.markVisibles(true, false, hide_top_volume);
 
          if (uniquevis <= 0)
@@ -98738,7 +107022,7 @@ class TGeoPainter extends ObjectPainter {
 
          const pp = this.getPadPainter();
 
-         this._on_pad = !!pp;
+         this._on_pad = Boolean(pp);
 
          if (this._on_pad) {
             let size, render3d, fp;
@@ -98779,7 +107063,7 @@ class TGeoPainter extends ObjectPainter {
             this._fit_main_area = (size.can3d === -1);
 
             promise = this.createScene(size.width, size.height, render3d)
-                          .then(dom => this.add3dCanvas(size, dom, this._webgl));
+                          .then(dom2 => this.add3dCanvas(size, dom2, this._webgl));
          }
       }
 
@@ -99117,12 +107401,12 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Draw axes and camera overlay */
    drawAxesAndOverlay(norender) {
       const res1 = this.drawAxes(),
-          res2 = this.drawOverlay();
+            res2 = this.drawOverlay();
 
       if (!res1 && !res2)
          return norender ? null : this.render3D();
-      else
-         return this.changedDepthMethod(norender ? 'norender' : undefined);
+
+      return this.changedDepthMethod(norender ? 'norender' : undefined);
    }
 
    /** @summary Draw overlay for the orthographic cameras */
@@ -99132,18 +107416,18 @@ class TGeoPainter extends ObjectPainter {
          return false;
 
       const zoom = 0.5 / this._camera.zoom,
-          midx = (this._camera.left + this._camera.right) / 2,
-          midy = (this._camera.bottom + this._camera.top) / 2,
-          xmin = midx - (this._camera.right - this._camera.left) * zoom,
-          xmax = midx + (this._camera.right - this._camera.left) * zoom,
-          ymin = midy - (this._camera.top - this._camera.bottom) * zoom,
-          ymax = midy + (this._camera.top - this._camera.bottom) * zoom,
-          tick_size = (ymax - ymin) * 0.02,
-          text_size = (ymax - ymin) * 0.015,
-          grid_gap = (ymax - ymin) * 0.001,
-          x1 = xmin + text_size * 5, x2 = xmax - text_size * 5,
-          y1 = ymin + text_size * 3, y2 = ymax - text_size * 3,
-          x_handle = new TAxisPainter(null, create$1(clTAxis));
+            midx = (this._camera.left + this._camera.right) / 2,
+            midy = (this._camera.bottom + this._camera.top) / 2,
+            xmin = midx - (this._camera.right - this._camera.left) * zoom,
+            xmax = midx + (this._camera.right - this._camera.left) * zoom,
+            ymin = midy - (this._camera.top - this._camera.bottom) * zoom,
+            ymax = midy + (this._camera.top - this._camera.bottom) * zoom,
+            tick_size = (ymax - ymin) * 0.02,
+            text_size = (ymax - ymin) * 0.015,
+            grid_gap = (ymax - ymin) * 0.001,
+            x1 = xmin + text_size * 5, x2 = xmax - text_size * 5,
+            y1 = ymin + text_size * 3, y2 = ymax - text_size * 3,
+            x_handle = new TAxisPainter(null, create$1(clTAxis));
 
       x_handle.configureAxis('xaxis', x1, x2, x1, x2, false, [x1, x2],
                              { log: 0, reverse: false });
@@ -99189,36 +107473,37 @@ class TGeoPainter extends ObjectPainter {
       if (this.ctrl.camera_overlay === 'bar') {
          const container = this.getExtrasContainer('create', 'overlay');
 
-         let x1 = xmin * 0.15 + xmax * 0.85,
-             x2 = xmin * 0.05 + xmax * 0.95;
-         const y1 = ymax * 0.9 + ymin * 0.1,
-               y2 = ymax * 0.86 + ymin * 0.14,
+         let ox1 = xmin * 0.15 + xmax * 0.85,
+             ox2 = xmin * 0.05 + xmax * 0.95;
+         const oy1 = ymax * 0.9 + ymin * 0.1,
+               oy2 = ymax * 0.86 + ymin * 0.14,
                ticks = x_handle.createTicks();
 
          if (ticks.major?.length > 1) {
-            x1 = ticks.major.at(-2);
-            x2 = ticks.major.at(-1);
+            ox1 = ticks.major.at(-2);
+            ox2 = ticks.major.at(-1);
          }
 
-         buf = new Float32Array(3*6); pos = 0;
+         buf = new Float32Array(3*6);
+         pos = 0;
 
-         addPoint(x1, y1, midZ);
-         addPoint(x1, y2, midZ);
+         addPoint(ox1, oy1, midZ);
+         addPoint(ox1, oy2, midZ);
 
-         addPoint(x1, (y1 + y2) / 2, midZ);
-         addPoint(x2, (y1 + y2) / 2, midZ);
+         addPoint(ox1, (oy1 + oy2) / 2, midZ);
+         addPoint(ox2, (oy1 + oy2) / 2, midZ);
 
-         addPoint(x2, y1, midZ);
-         addPoint(x2, y2, midZ);
+         addPoint(ox2, oy1, midZ);
+         addPoint(ox2, oy2, midZ);
 
          const lineMaterial = new THREE.LineBasicMaterial({ color: 'green' }),
                textMaterial = new THREE.MeshBasicMaterial({ color: 'green', vertexColors: false });
 
          container.add(createLineSegments(buf, lineMaterial));
 
-         const text3d = createText(x_handle.format(x2-x1, true), Math.abs(y2-y1));
+         const text3d = createText(x_handle.format(ox2 - ox1, true), Math.abs(oy2 - oy1));
 
-         container.add(createTextMesh(text3d, textMaterial, (x2 + x1) / 2, (y1 + y2) / 2 + text3d._height * 0.8, midZ));
+         container.add(createTextMesh(text3d, textMaterial, (ox2 + ox1) / 2, (oy1 + oy2) / 2 + text3d._height * 0.8, midZ));
          return true;
       }
 
@@ -99393,10 +107678,10 @@ class TGeoPainter extends ObjectPainter {
          mesh = new THREE.Mesh(text3d, textMaterial);
          mesh._no_clip = true; // skip from clipping
 
-         function setSideRotation(mesh, normal) {
-            mesh._other_side = false;
-            mesh._axis_norm = normal ?? new THREE.Vector3(1, 0, 0);
-            mesh._axis_flip = function(vect) {
+         function setSideRotation(mesh2, normal) {
+            mesh2._other_side = false;
+            mesh2._axis_norm = normal ?? new THREE.Vector3(1, 0, 0);
+            mesh2._axis_flip = function(vect) {
                const other_side = vect.dot(this._axis_norm) < 0;
                if (this._other_side !== other_side) {
                   this._other_side = other_side;
@@ -99405,10 +107690,10 @@ class TGeoPainter extends ObjectPainter {
             };
          }
 
-         function setTopRotation(mesh, first_angle = -1) {
-            mesh._last_angle = first_angle;
-            mesh._axis_flip = function(vect) {
-               let angle = 0;
+         function setTopRotation(mesh2, first_angle = -1) {
+            mesh2._last_angle = first_angle;
+            mesh2._axis_flip = function(vect) {
+               let angle;
                switch (this._axis_name) {
                   case 'x': angle = -Math.atan2(vect.y, vect.z); break;
                   case 'y': angle = -Math.atan2(vect.z, vect.x); break;
@@ -99552,13 +107837,13 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Specify wireframe mode */
    setWireFrame(on) {
-      this.ctrl.wireframe = !!on;
+      this.ctrl.wireframe = Boolean(on);
       this.changedWireFrame();
    }
 
    /** @summary Specify showtop draw options, relevant only for TGeoManager */
    setShowTop(on) {
-      this.ctrl.showtop = !!on;
+      this.ctrl.showtop = Boolean(on);
       this.redrawObject('same');
    }
 
@@ -99629,8 +107914,8 @@ class TGeoPainter extends ObjectPainter {
 
       this._clipCfg = clip_cfg;
 
-      const any_clipping = !!panels, ci = this.ctrl.clipIntersect,
-          material_side = any_clipping ? THREE.DoubleSide : THREE.FrontSide;
+      const any_clipping = Boolean(panels), ci = this.ctrl.clipIntersect,
+            material_side = any_clipping ? THREE.DoubleSide : THREE.FrontSide;
 
       if (force_traverse || changed) {
          this._scene.traverse(node => {
@@ -100107,7 +108392,6 @@ class TGeoPainter extends ObjectPainter {
       } else
          obj = null;
 
-
       if (isStr(opt) && opt.indexOf('comp') === 0 && shape && (shape._typename === clTGeoCompositeShape) && shape.fNode) {
          let maxlvl = 1;
          opt = opt.slice(4);
@@ -100115,13 +108399,13 @@ class TGeoPainter extends ObjectPainter {
          obj = buildCompositeVolume(shape, maxlvl);
       }
 
-      if (!obj && shape) {
-         obj = Object.assign(create$1(clTNamed),
-                   { _typename: clTEveGeoShapeExtract, fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 1], fElements: null, fRnrSelf: true });
-      }
+      if (!obj && shape)
+         obj = Object.assign(create$1(clTNamed), { _typename: clTEveGeoShapeExtract, fTrans: null, fShape: shape, fRGBA: [0, 1, 0, 1], fElements: null, fRnrSelf: true });
 
-      if (!obj) return null;
+      if (!obj)
+         return null;
 
+      // eslint-disable-next-line no-use-before-define
       const painter = createGeoPainter(dom, obj, opt);
 
       if (painter.ctrl.is_main && !obj.$geo_painter)
@@ -100147,6 +108431,55 @@ class TGeoPainter extends ObjectPainter {
 
 
 let add_settings = false;
+
+/** @summary Get icon for the browser
+  * @private */
+function getBrowserIcon(hitem, hpainter) {
+   let icon = '';
+   switch (hitem._kind) {
+      case prROOT + clTEveTrack: icon = 'img_evetrack'; break;
+      case prROOT + clTEvePointSet: icon = 'img_evepoints'; break;
+      case prROOT + clTPolyMarker3D: icon = 'img_evepoints'; break;
+   }
+   if (icon) {
+      const drawitem = findItemWithPainter(hitem);
+      if (drawitem?._painter?.extraObjectVisible(hpainter, hitem))
+         icon += ' geovis_this';
+   }
+   return icon;
+}
+
+/** @summary handle click on browser icon
+  * @private */
+function browserIconClick(hitem, hpainter) {
+   if (hitem._volume) {
+      if (hitem._more && hitem._volume.fNodes?.arr?.length)
+         toggleGeoBit(hitem._volume, geoBITS.kVisDaughters);
+      else
+         toggleGeoBit(hitem._volume, geoBITS.kVisThis);
+
+      updateBrowserIcons(hitem._volume, hpainter);
+
+      findItemWithPainter(hitem, 'testGeomChanges');
+      return false; // no need to update icon - we did it ourself
+   }
+
+   if (hitem._geoobj && ((hitem._geoobj._typename === clTEveGeoShapeExtract) || (hitem._geoobj._typename === clREveGeoShapeExtract))) {
+      hitem._geoobj.fRnrSelf = !hitem._geoobj.fRnrSelf;
+
+      updateBrowserIcons(hitem._geoobj, hpainter);
+      findItemWithPainter(hitem, 'testGeomChanges');
+      return false; // no need to update icon - we did it ourself
+   }
+
+   // first check that geo painter assigned with the item
+   const drawitem = findItemWithPainter(hitem),
+         newstate = drawitem?._painter?.extraObjectVisible(hpainter, hitem, true);
+
+   // return true means browser should update icon for the item
+   return newstate !== undefined;
+}
+
 
 /** @summary Create geo-related css entries
   * @private */
@@ -100224,25 +108557,26 @@ function provideMenu(menu, item, hpainter) {
    const obj = item._geoobj, vol = item._volume,
          iseve = ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract));
 
-   if (!vol && !iseve) return false;
+   if (!vol && !iseve)
+      return false;
 
    menu.separator();
 
-   const scanEveVisible = (obj, arg, skip_this) => {
+   const scanEveVisible = (obj2, arg, skip_this) => {
       if (!arg) arg = { visible: 0, hidden: 0 };
 
       if (!skip_this) {
          if (arg.assign !== undefined)
-            obj.fRnrSelf = arg.assign;
-         else if (obj.fRnrSelf)
+            obj2.fRnrSelf = arg.assign;
+         else if (obj2.fRnrSelf)
             arg.vis++;
          else
             arg.hidden++;
       }
 
-      if (obj.fElements) {
-         for (let n = 0; n < obj.fElements.arr.length; ++n)
-            scanEveVisible(obj.fElements.arr[n], arg, false);
+      if (obj2.fElements) {
+         for (let n = 0; n < obj2.fElements.arr.length; ++n)
+            scanEveVisible(obj2.fElements.arr[n], arg, false);
       }
 
       return arg;
@@ -100320,59 +108654,118 @@ function provideMenu(menu, item, hpainter) {
    return true;
 }
 
-/** @summary handle click on browser icon
+let createItem = null;
+
+/** @summary create list entity for geo object
   * @private */
-function browserIconClick(hitem, hpainter) {
-   if (hitem._volume) {
-      if (hitem._more && hitem._volume.fNodes?.arr?.length)
-         toggleGeoBit(hitem._volume, geoBITS.kVisDaughters);
-      else
-         toggleGeoBit(hitem._volume, geoBITS.kVisThis);
+function createList(parent, lst, name, title) {
+   if (!lst?.arr?.length)
+      return;
 
-      updateBrowserIcons(hitem._volume, hpainter);
+   const list_item = {
+      _name: name,
+      _kind: prROOT + clTList,
+      _title: title,
+      _more: true,
+      _geoobj: lst,
+      _parent: parent,
+      _get(item /* , itemname */) {
+         return Promise.resolve(item._geoobj || null);
+      },
+      _expand(node, lst2) {
+         // only childs
 
-      findItemWithPainter(hitem, 'testGeomChanges');
-      return false; // no need to update icon - we did it ourself
-   }
+         if (lst2.fVolume)
+            lst2 = lst2.fVolume.fNodes;
 
-   if (hitem._geoobj && ((hitem._geoobj._typename === clTEveGeoShapeExtract) || (hitem._geoobj._typename === clREveGeoShapeExtract))) {
-      hitem._geoobj.fRnrSelf = !hitem._geoobj.fRnrSelf;
+         if (!lst2.arr)
+            return false;
 
-      updateBrowserIcons(hitem._geoobj, hpainter);
-      findItemWithPainter(hitem, 'testGeomChanges');
-      return false; // no need to update icon - we did it ourself
-   }
+         node._childs = [];
 
-   // first check that geo painter assigned with the item
-   const drawitem = findItemWithPainter(hitem),
-       newstate = drawitem?._painter?.extraObjectVisible(hpainter, hitem, true);
+         checkDuplicates(null, lst2.arr);
 
-   // return true means browser should update icon for the item
-   return newstate !== undefined;
+         for (const n in lst2.arr)
+            createItem(node, lst2.arr[n]);
+
+         return true;
+      }
+   };
+
+   if (!parent._childs)
+      parent._childs = [];
+   parent._childs.push(list_item);
 }
 
 
-/** @summary Get icon for the browser
+/** @summary Expand geo object
   * @private */
-function getBrowserIcon(hitem, hpainter) {
-   let icon = '';
-   switch (hitem._kind) {
-      case prROOT + clTEveTrack: icon = 'img_evetrack'; break;
-      case prROOT + clTEvePointSet: icon = 'img_evepoints'; break;
-      case prROOT + clTPolyMarker3D: icon = 'img_evepoints'; break;
+function expandGeoObject(parent, obj) {
+   injectGeoStyle();
+
+   if (!parent || !obj) return false;
+
+   const isnode = (obj._typename.indexOf(clTGeoNode) === 0),
+         isvolume = (obj._typename.indexOf(clTGeoVolume) === 0),
+         ismanager = (obj._typename === clTGeoManager),
+         iseve = ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)),
+         isoverlap = (obj._typename === clTGeoOverlap);
+
+   if (!isnode && !isvolume && !ismanager && !iseve && !isoverlap) return false;
+
+   if (parent._childs) return true;
+
+   if (ismanager) {
+      createList(parent, obj.fMaterials, 'Materials', 'list of materials');
+      createList(parent, obj.fMedia, 'Media', 'list of media');
+      createList(parent, obj.fTracks, 'Tracks', 'list of tracks');
+      createList(parent, obj.fOverlaps, 'Overlaps', 'list of detected overlaps');
+      createItem(parent, obj.fMasterVolume);
+      return true;
    }
-   if (icon) {
-      const drawitem = findItemWithPainter(hitem);
-      if (drawitem?._painter?.extraObjectVisible(hpainter, hitem))
-         icon += ' geovis_this';
+
+   if (isoverlap) {
+      createItem(parent, obj.fVolume1);
+      createItem(parent, obj.fVolume2);
+      createItem(parent, obj.fMarker, 'Marker');
+      return true;
    }
-   return icon;
+
+   let volume, subnodes, shape;
+
+   if (iseve) {
+      subnodes = obj.fElements?.arr;
+      shape = obj.fShape;
+   } else {
+      volume = isnode ? obj.fVolume : obj;
+      subnodes = volume?.fNodes?.arr;
+      shape = volume?.fShape;
+   }
+
+   if (!subnodes && (shape?._typename === clTGeoCompositeShape) && shape?.fNode) {
+      if (!parent._childs) {
+         createItem(parent, shape.fNode.fLeft, 'Left');
+         createItem(parent, shape.fNode.fRight, 'Right');
+      }
+
+      return true;
+   }
+
+   if (!subnodes)
+      return false;
+
+   checkDuplicates(obj, subnodes);
+
+   for (let i = 0; i < subnodes.length; ++i)
+      createItem(parent, subnodes[i]);
+
+   return true;
 }
 
 
 /** @summary create hierarchy item for geo object
   * @private */
-function createItem(node, obj, name) {
+createItem = function(node, obj, name) {
    const sub = {
       _kind: prROOT + obj._typename,
       _name: name || getObjectName(obj),
@@ -100420,9 +108813,9 @@ function createItem(node, obj, name) {
       } else if (shape && (shape._typename === clTGeoCompositeShape) && shape.fNode) {
          sub._more = true;
          sub._shape = shape;
-         sub._expand = function(node /* , obj */) {
-            createItem(node, node._shape.fNode.fLeft, 'Left');
-            createItem(node, node._shape.fNode.fRight, 'Right');
+         sub._expand = function(node2 /* , obj */) {
+            createItem(node2, node2._shape.fNode.fLeft, 'Left');
+            createItem(node2, node2._shape.fNode.fRight, 'Right');
             return true;
          };
       }
@@ -100447,7 +108840,8 @@ function createItem(node, obj, name) {
       sub._icon_click = browserIconClick;
    }
 
-   if (!node._childs) node._childs = [];
+   if (!node._childs)
+      node._childs = [];
 
    if (!sub._name) {
       if (isStr(node._name)) {
@@ -100462,7 +108856,7 @@ function createItem(node, obj, name) {
    node._childs.push(sub);
 
    return sub;
-}
+};
 
 /** @summary Draw dummy geometry
   * @private */
@@ -100532,7 +108926,7 @@ function build(obj, opt) {
 
    opt.info = { num_meshes: 0, num_faces: 0 };
 
-   let clones = null, visibles = null;
+   let clones, visibles;
 
    if (obj.visibles && obj.nodes && obj.numnodes) {
       // case of draw message from geometry viewer
@@ -101192,46 +109586,6 @@ const DirectStreamers = {
       // if ((version % 1000) > 2) buf.shift(18); // skip fUUID
    },
 
-   TBasket(buf, obj) {
-      buf.classStreamer(obj, clTKey);
-      const ver = buf.readVersion();
-      obj.fBufferSize = buf.ntoi4();
-      obj.fNevBufSize = buf.ntoi4();
-      obj.fNevBuf = buf.ntoi4();
-      obj.fLast = buf.ntoi4();
-      if (obj.fLast > obj.fBufferSize) obj.fBufferSize = obj.fLast;
-      const flag = buf.ntoi1();
-
-      if (flag === 0) return;
-
-      if ((flag % 10) !== 2) {
-         if (obj.fNevBuf) {
-            obj.fEntryOffset = buf.readFastArray(buf.ntoi4(), kInt);
-            if ((flag > 20) && (flag < 40)) {
-               for (let i = 0, kDisplacementMask = 0xFF000000; i < obj.fNevBuf; ++i)
-                  obj.fEntryOffset[i] &= ~kDisplacementMask;
-            }
-         }
-
-         if (flag > 40)
-            obj.fDisplacement = buf.readFastArray(buf.ntoi4(), kInt);
-      }
-
-      if ((flag === 1) || (flag > 10)) {
-         // here is reading of raw data
-         const sz = (ver.val <= 1) ? buf.ntoi4() : obj.fLast;
-
-         if (sz > obj.fKeylen) {
-            // buffer includes again complete TKey data - exclude it
-            const blob = buf.extract([buf.o + obj.fKeylen, sz - obj.fKeylen]);
-            obj.fBufferRef = new TBuffer(blob, 0, buf.fFile, sz - obj.fKeylen);
-            obj.fBufferRef.fTagOffset = obj.fKeylen;
-         }
-
-         buf.shift(sz);
-      }
-   },
-
    TRef(buf, obj) {
       buf.classStreamer(obj, clTObject);
       if (obj.fBits & kHasUUID)
@@ -101315,6 +109669,30 @@ function getTypeId(typname, norecursion) {
    return -1;
 }
 
+/** @summary Analyze and returns arrays kind
+  * @return 0 if TString (or equivalent), positive value - some basic type, -1 - any other kind
+  * @private */
+function getArrayKind(type_name) {
+   if ((type_name === clTString) || (type_name === 'string') ||
+      (CustomStreamers[type_name] === clTString)) return 0;
+   if ((type_name.length < 7) || (type_name.indexOf('TArray') !== 0)) return -1;
+   if (type_name.length === 7) {
+      switch (type_name[6]) {
+         case 'I': return kInt;
+         case 'D': return kDouble;
+         case 'F': return kFloat;
+         case 'S': return kShort;
+         case 'C': return kChar;
+         case 'L': return kLong;
+         default: return -1;
+      }
+   }
+
+   return type_name === 'TArrayL64' ? kLong64 : -1;
+}
+
+let createPairStreamer;
+
 /** @summary create element of the streamer
   * @private  */
 function createStreamerElement(name, typename, file) {
@@ -101333,7 +109711,8 @@ function createStreamerElement(name, typename, file) {
       typename = elem.fTypeName = BasicTypeNames[elem.fType] || 'int';
    }
 
-   if (elem.fType > 0) return elem; // basic type
+   if (elem.fType > 0)
+      return elem; // basic type
 
    // check if there are STL containers
    const pos = typename.indexOf('<');
@@ -101354,6 +109733,9 @@ function createStreamerElement(name, typename, file) {
       return elem;
    }
 
+   if ((pos > 0) && (typename.slice(0, pos) == 'pair') && file && isFunc(createPairStreamer))
+      createPairStreamer(typename, file);
+
    const isptr = typename.at(-1) === '*';
 
    if (isptr)
@@ -101369,38 +109751,107 @@ function createStreamerElement(name, typename, file) {
    return elem;
 }
 
+/** @summary Function to read vector element in the streamer
+  * @private */
+function readVectorElement(buf) {
+   if (this.member_wise) {
+      const n = buf.ntou4(), ver = this.stl_version;
+
+      if (n === 0)
+         return []; // for empty vector no need to search split streamers
+
+      if (n > 1000000)
+         throw new Error(`member-wise streaming of ${this.conttype} num ${n} member ${this.name}`);
+
+      let streamer;
+
+      if ((ver.val === this.member_ver) && (ver.checksum === this.member_checksum))
+         streamer = this.member_streamer;
+      else {
+         streamer = buf.fFile.getStreamer(this.conttype, ver);
+
+         this.member_streamer = streamer = buf.fFile.getSplittedStreamer(streamer);
+         this.member_ver = ver.val;
+         this.member_checksum = ver.checksum;
+      }
+
+      const res = new Array(n);
+      let i, k, member;
+
+      for (i = 0; i < n; ++i)
+         res[i] = { _typename: this.conttype }; // create objects
+      if (!streamer)
+         console.error(`Fail to create split streamer for ${this.conttype} need to read ${n} objects version ${ver}`);
+      else {
+         for (k = 0; k < streamer.length; ++k) {
+            member = streamer[k];
+            if (member.split_func)
+               member.split_func(buf, res, n);
+            else {
+               for (i = 0; i < n; ++i)
+                  member.func(buf, res[i]);
+            }
+         }
+      }
+      return res;
+   }
+
+   const n = buf.ntou4(), res = new Array(n);
+   let i = 0;
+
+   if (n > 200000) {
+      console.error(`vector streaming for ${this.conttype} at ${n}`);
+      return res;
+   }
+
+   if (this.arrkind > 0)
+      while (i < n) res[i++] = buf.readFastArray(buf.ntou4(), this.arrkind);
+   else if (this.arrkind === 0)
+      while (i < n) res[i++] = buf.readTString();
+   else if (this.isptr)
+      while (i < n) res[i++] = buf.readObjectAny();
+   else if (this.submember)
+      while (i < n) res[i++] = this.submember.readelem(buf);
+   else
+      while (i < n) res[i++] = buf.classStreamer({}, this.conttype);
+
+   return res;
+}
+
+/** @summary Create streamer info for pair object
+  * @private */
+createPairStreamer = function(typename, file) {
+   let si = file.findStreamerInfo(typename);
+   if (si)
+      return si;
+   let p1 = typename.indexOf('<');
+   const p2 = typename.lastIndexOf('>');
+   function getNextName() {
+      let res = '', p = p1 + 1, cnt = 0;
+      while ((p < p2) && (cnt >= 0)) {
+         switch (typename[p]) {
+            case '<': cnt++; break;
+            case ',': if (cnt === 0) cnt--; break;
+            case '>': cnt--; break;
+         }
+         if (cnt >= 0) res += typename[p];
+         p++;
+      }
+      p1 = p - 1;
+      return res.trim();
+   }
+   si = { _typename: 'TStreamerInfo', fClassVersion: 0, fName: typename, fElements: create$1(clTList) };
+   si.fElements.Add(createStreamerElement('first', getNextName(), file));
+   si.fElements.Add(createStreamerElement('second', getNextName(), file));
+   file.fStreamerInfos.arr.push(si);
+   return si;
+};
 
 /** @summary Function creates streamer for std::pair object
   * @private */
 function getPairStreamer(si, typname, file) {
-   if (!si) {
-      if (typname.indexOf('pair') !== 0)
-         return null;
-
-      si = file.findStreamerInfo(typname);
-
-      if (!si) {
-         let p1 = typname.indexOf('<');
-         const p2 = typname.lastIndexOf('>');
-         function getNextName() {
-            let res = '', p = p1 + 1, cnt = 0;
-            while ((p < p2) && (cnt >= 0)) {
-               switch (typname[p]) {
-                  case '<': cnt++; break;
-                  case ',': if (cnt === 0) cnt--; break;
-                  case '>': cnt--; break;
-               }
-               if (cnt >= 0) res += typname[p];
-               p++;
-            }
-            p1 = p - 1;
-            return res.trim();
-         }
-         si = { _typename: 'TStreamerInfo', fVersion: 1, fName: typname, fElements: create$1(clTList) };
-         si.fElements.Add(createStreamerElement('first', getNextName(), file));
-         si.fElements.Add(createStreamerElement('second', getNextName(), file));
-      }
-   }
+   if (!si)
+      si = createPairStreamer(typname, file);
 
    const streamer = file.getStreamer(typname, null, si);
    if (!streamer) return null;
@@ -101420,6 +109871,58 @@ function getPairStreamer(si, typname, file) {
    }
 
    return streamer;
+}
+
+/** @summary Function used in streamer to read std::map object
+  * @private */
+function readMapElement(buf) {
+   let streamer = this.streamer;
+
+   if (this.member_wise) {
+      // when member-wise streaming is used, version is written
+      const si = buf.fFile.findStreamerInfo(this.pairtype, this.stl_version.val, this.stl_version.checksum);
+
+      if (si && (this.si !== si)) {
+         streamer = getPairStreamer(si, this.pairtype, buf.fFile);
+         if (streamer?.length !== 2) {
+            console.log(`Fail to produce streamer for ${this.pairtype}`);
+            return null;
+         }
+      }
+   }
+
+   const n = buf.ntoi4(), res = new Array(n);
+
+   // no extra data written for empty map
+   if (n === 0)
+      return res;
+
+   if (this.member_wise && (buf.remain() >= 6)) {
+      if (buf.ntoi2() === kStreamedMemberWise)
+         buf.shift(4); // skip checksum
+      else
+         buf.shift(-2); // rewind
+   }
+
+   for (let i = 0; i < n; ++i) {
+      res[i] = { _typename: this.pairtype };
+      streamer[0].func(buf, res[i]);
+      if (!this.member_wise) streamer[1].func(buf, res[i]);
+   }
+
+   // due-to member-wise streaming second element read after first is completed
+   if (this.member_wise) {
+      if (buf.remain() >= 6) {
+         if (buf.ntoi2() === kStreamedMemberWise)
+            buf.shift(4);  // skip checksum
+         else
+            buf.shift(-2);  // rewind
+      }
+      for (let i = 0; i < n; ++i)
+         streamer[1].func(buf, res[i]);
+   }
+
+   return res;
 }
 
 
@@ -101501,8 +110004,8 @@ function createMemberStreamer(element, file) {
             member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
             member.minus1 = true;
             member.func = function(buf, obj) {
-               obj[this.name] = buf.readNdimArray(this, (buf, handle) =>
-                  buf.readFastArray(handle.arrlength, handle.type - kOffsetL));
+               obj[this.name] = buf.readNdimArray(this, (buf2, handle) =>
+                  buf2.readFastArray(handle.arrlength, handle.type - kOffsetL));
             };
          }
          break;
@@ -101516,8 +110019,8 @@ function createMemberStreamer(element, file) {
             member.minus1 = true; // one dimension used for char*
             member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
             member.func = function(buf, obj) {
-               obj[this.name] = buf.readNdimArray(this, (buf, handle) =>
-                  buf.readFastString(handle.arrlength));
+               obj[this.name] = buf.readNdimArray(this, (buf2, handle) =>
+                  buf2.readFastString(handle.arrlength));
             };
          }
          break;
@@ -101549,6 +110052,7 @@ function createMemberStreamer(element, file) {
       case kOffsetL + kDouble32:
       case kOffsetP + kDouble32:
          member.double32 = true;
+      // eslint-disable-next-line  no-fallthrough
       case kFloat16:
       case kOffsetL + kFloat16:
       case kOffsetP + kFloat16:
@@ -101592,7 +110096,7 @@ function createMemberStreamer(element, file) {
                   member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
                   member.minus1 = true;
                   member.func = function(buf, obj) {
-                     obj[this.name] = buf.readNdimArray(this, (buf, handle) => handle.readarr(buf, handle.arrlength));
+                     obj[this.name] = buf.readNdimArray(this, (buf2, handle) => handle.readarr(buf2, handle.arrlength));
                   };
                }
          break;
@@ -101600,7 +110104,7 @@ function createMemberStreamer(element, file) {
       case kAnyP:
       case kObjectP:
          member.func = function(buf, obj) {
-            obj[this.name] = buf.readNdimArray(this, buf => buf.readObjectAny());
+            obj[this.name] = buf.readNdimArray(this, buf2 => buf2.readObjectAny());
          };
          break;
 
@@ -101624,7 +110128,7 @@ function createMemberStreamer(element, file) {
 
             if (element.fArrayLength > 1) {
                member.func = function(buf, obj) {
-                  obj[this.name] = buf.readNdimArray(this, (buf, handle) => buf.classStreamer({}, handle.classname));
+                  obj[this.name] = buf.readNdimArray(this, (buf2, handle) => buf2.classStreamer({}, handle.classname));
                };
             } else {
                member.func = function(buf, obj) {
@@ -101645,10 +110149,12 @@ function createMemberStreamer(element, file) {
          member.arrkind = getArrayKind(classname);
          if (member.arrkind < 0) member.classname = classname;
          member.func = function(buf, obj) {
-            obj[this.name] = buf.readNdimArray(this, (buf, handle) => {
-               if (handle.arrkind > 0) return buf.readFastArray(buf.ntou4(), handle.arrkind);
-               if (handle.arrkind === 0) return buf.readTString();
-               return buf.classStreamer({}, handle.classname);
+            obj[this.name] = buf.readNdimArray(this, (buf2, handle) => {
+               if (handle.arrkind > 0)
+                  return buf2.readFastArray(buf.ntou4(), handle.arrkind);
+               if (handle.arrkind === 0)
+                  return buf2.readTString();
+               return buf2.classStreamer({}, handle.classname);
             });
          };
          break;
@@ -101676,9 +110182,10 @@ function createMemberStreamer(element, file) {
          member.typename = element.fTypeName;
          member.func = function(buf, obj) {
             const ver = buf.readVersion();
-            obj[this.name] = buf.readNdimArray(this, (buf, handle) => {
-               if (handle.typename === clTString) return buf.readTString();
-               return buf.classStreamer({}, handle.typename);
+            obj[this.name] = buf.readNdimArray(this, (buf2, handle) => {
+               if (handle.typename === clTString)
+                  return buf2.readTString();
+               return buf2.classStreamer({}, handle.typename);
             });
             buf.checkByteCount(ver, this.typename + '[]');
          };
@@ -101804,7 +110311,7 @@ function createMemberStreamer(element, file) {
                member.readelem = readVectorElement;
 
                if (!member.isptr && (member.arrkind < 0)) {
-                  const subelem = createStreamerElement('temp', member.conttype);
+                  const subelem = createStreamerElement('temp', member.conttype, file);
                   if (subelem.fType === kStreamer) {
                      subelem.$fictional = true;
                      member.submember = createMemberStreamer(subelem, file);
@@ -101812,6 +110319,7 @@ function createMemberStreamer(element, file) {
                }
             }
          } else if ((stl === kSTLmap) || (stl === kSTLmultimap)) {
+
             const p1 = member.typename.indexOf('<'),
                   p2 = member.typename.lastIndexOf('>');
 
@@ -101848,7 +110356,7 @@ function createMemberStreamer(element, file) {
 
                   this.stl_version = undefined;
                   if (this.member_wise) {
-                     ver.val = ver.val & ~kStreamedMemberWise;
+                     ver.val &= ~kStreamedMemberWise;
                      this.stl_version = { val: buf.ntoi2() };
                      if (this.stl_version.val <= 0) this.stl_version.checksum = buf.ntou4();
                   }
@@ -101912,28 +110420,6 @@ function createMemberStreamer(element, file) {
    return member;
 }
 
-
-/** @summary Analyze and returns arrays kind
-  * @return 0 if TString (or equivalent), positive value - some basic type, -1 - any other kind
-  * @private */
-function getArrayKind(type_name) {
-   if ((type_name === clTString) || (type_name === 'string') ||
-      (CustomStreamers[type_name] === clTString)) return 0;
-   if ((type_name.length < 7) || (type_name.indexOf('TArray') !== 0)) return -1;
-   if (type_name.length === 7) {
-      switch (type_name[6]) {
-         case 'I': return kInt;
-         case 'D': return kDouble;
-         case 'F': return kFloat;
-         case 'S': return kShort;
-         case 'C': return kChar;
-         case 'L': return kLong;
-         default: return -1;
-      }
-   }
-
-   return type_name === 'TArrayL64' ? kLong64 : -1;
-}
 
 /** @summary Let directly assign methods when doing I/O
   * @private */
@@ -102048,7 +110534,7 @@ function ZIP_inflate(arr, tgt) {
       x = Array(BMAX+1).fill(0), // bit offsets, then code stack
       r = { e: 0, b: 0, n: 0, t: null }, // new zip_HuftNode(), // table entry for structure assignment
       el = (n > 256) ? b[256] : BMAX; // set length of EOB code, if any
-      let rr = null, // temporary variable, use in assignment
+      let rr,        // temporary variable, use in assignment
           a,         // counter for codes of length k
           f,         // i repeats in table every f entries
           h,         // table level
@@ -102831,8 +111317,10 @@ class TBuffer {
    readTString() {
       let len = this.ntou1();
       // large strings
-      if (len === 255) len = this.ntou4();
-      if (len === 0) return '';
+      if (len === 255)
+         len = this.ntou4();
+      if (len === 0)
+         return '';
 
       const pos = this.o;
       this.o += len;
@@ -102841,13 +111329,23 @@ class TBuffer {
    }
 
     /** @summary read Char_t array as string
-      * @desc string either contains all symbols or until 0 symbol */
+      * @desc stops when 0 is found */
+    readNullTerminatedString() {
+      let res = '', code;
+      while ((code = this.ntou1()) !== 0)
+         res += String.fromCharCode(code);
+      return res;
+   }
+
+    /** @summary read Char_t array as string */
    readFastString(n) {
-      let res = '', code, closed = false;
-      for (let i = 0; (n < 0) || (i < n); ++i) {
-         code = this.ntou1();
-         if (code === 0) { closed = true; if (n < 0) break; }
-         if (!closed) res += String.fromCharCode(code);
+      let res = '', reading = true;
+      for (let i = 0; i < n; ++i) {
+         const code = this.ntou1();
+         if (code === 0)
+            reading = false;
+         if (reading)
+            res += String.fromCharCode(code);
       }
 
       return res;
@@ -103104,13 +111602,10 @@ class TBuffer {
 
    /** @summary read class definition from I/O buffer */
    readClass() {
-      const classInfo = { name: -1 }, bcnt = this.ntou4(), startpos = this.o;
-      let tag;
-
-      if (!(bcnt & kByteCountMask) || (bcnt === kNewClassTag))
-         tag = bcnt;
-      else
-         tag = this.ntou4();
+      const classInfo = { name: -1 },
+            bcnt = this.ntou4(),
+            startpos = this.o,
+            tag = !(bcnt & kByteCountMask) || (bcnt === kNewClassTag) ? bcnt : this.ntou4();
 
       if (!(tag & kClassMask)) {
          classInfo.objtag = tag + this.fDisplacement; // indicate that we have deal with objects tag
@@ -103118,7 +111613,7 @@ class TBuffer {
       }
       if (tag === kNewClassTag) {
          // got a new class description followed by a new object
-         classInfo.name = this.readFastString(-1);
+         classInfo.name = this.readNullTerminatedString();
 
          if (this.getMappedClass(this.fTagOffset + startpos + kMapOffset) === -1)
             this.mapClass(this.fTagOffset + startpos + kMapOffset, classInfo.name);
@@ -103140,10 +111635,11 @@ class TBuffer {
             clRef = this.readClass();
 
       // class identified as object and should be handled so
-      if ('objtag' in clRef)
+      if (clRef.objtag !== undefined)
          return this.getMappedObject(clRef.objtag);
 
-      if (clRef.name === -1) return null;
+      if (clRef.name === -1)
+         return null;
 
       const arrkind = getArrayKind(clRef.name);
       let obj;
@@ -103184,7 +111680,7 @@ class TBuffer {
       } else {
          // just skip bytes belonging to not-recognized object
          // console.warn(`skip object ${classname}`);
-         addMethods(obj);
+         exports.addMethods(obj);
       }
 
       this.checkByteCount(ver, classname);
@@ -103193,6 +111689,51 @@ class TBuffer {
    }
 
 } // class TBuffer
+
+// ==============================================================================
+
+/** @summary Direct streamer for TBasket,
+  * @desc uses TBuffer therefore defined later
+  * @private */
+DirectStreamers[clTBasket] = function(buf, obj) {
+   buf.classStreamer(obj, clTKey);
+   const ver = buf.readVersion();
+   obj.fBufferSize = buf.ntoi4();
+   obj.fNevBufSize = buf.ntoi4();
+   obj.fNevBuf = buf.ntoi4();
+   obj.fLast = buf.ntoi4();
+   if (obj.fLast > obj.fBufferSize) obj.fBufferSize = obj.fLast;
+   const flag = buf.ntoi1();
+
+   if (flag === 0) return;
+
+   if ((flag % 10) !== 2) {
+      if (obj.fNevBuf) {
+         obj.fEntryOffset = buf.readFastArray(buf.ntoi4(), kInt);
+         if ((flag > 20) && (flag < 40)) {
+            for (let i = 0, kDisplacementMask = 0xFF000000; i < obj.fNevBuf; ++i)
+               obj.fEntryOffset[i] &= ~kDisplacementMask;
+         }
+      }
+
+      if (flag > 40)
+         obj.fDisplacement = buf.readFastArray(buf.ntoi4(), kInt);
+   }
+
+   if ((flag === 1) || (flag > 10)) {
+      // here is reading of raw data
+      const sz = (ver.val <= 1) ? buf.ntoi4() : obj.fLast;
+
+      if (sz > obj.fKeylen) {
+         // buffer includes again complete TKey data - exclude it
+         const blob = buf.extract([buf.o + obj.fKeylen, sz - obj.fKeylen]);
+         obj.fBufferRef = new TBuffer(blob, 0, buf.fFile, sz - obj.fKeylen);
+         obj.fBufferRef.fTagOffset = obj.fKeylen;
+      }
+
+      buf.shift(sz);
+   }
+};
 
 // ==============================================================================
 
@@ -103310,7 +111851,8 @@ class TFile {
       this.fStreamers = [];
       this.fBasicTypes = {}; // custom basic types, in most case enumerations
 
-      if (!isStr(this.fURL)) return this;
+      if (!isStr(this.fURL))
+         return;
 
       if (this.fURL.at(-1) === '+') {
          this.fURL = this.fURL.slice(0, this.fURL.length - 1);
@@ -103844,18 +112386,19 @@ class TFile {
                      }
                   }
                }
-               if (typ >= 60) continue;
+               if (typ >= 60)
+                  continue;
             } else {
                if ((typ > 20) && (typname.at(-1) === '*'))
                   typname = typname.slice(0, typname.length - 1);
-               typ = typ % 20;
+               typ %= 20;
             }
 
             const kind = getTypeId(typname);
-            if (kind === typ) continue;
-
-            if ((typ === kBits) && (kind === kUInt)) continue;
-            if ((typ === kCounter) && (kind === kInt)) continue;
+            if ((kind === typ) ||
+               ((typ === kBits) && (kind === kUInt)) ||
+               ((typ === kCounter) && (kind === kInt)))
+               continue;
 
             if (typname && typ && (this.fBasicTypes[typname] !== typ))
                this.fBasicTypes[typname] = typ;
@@ -103979,18 +112522,21 @@ class TFile {
          let cache = this.fStreamerInfos.cache;
          if (!cache) cache = this.fStreamerInfos.cache = {};
          let si = cache[checksum];
-         if (si !== undefined)
+         if (si && (!clname || (si.fName === clname)))
             return si;
 
          for (let i = 0; i < len; ++i) {
             si = arr[i];
             if (si.fCheckSum === checksum) {
                cache[checksum] = si;
-               return si;
+               if (!clname || (si.fName === clname))
+                  return si;
             }
          }
          cache[checksum] = null; // checksum did not found, do not try again
-      } else {
+      }
+
+      if (clname) {
          for (let i = 0; i < len; ++i) {
             const si = arr[i];
             if ((si.fName === clname) && ((si.fClassVersion === clversion) || (clversion === undefined)))
@@ -104037,7 +112583,8 @@ class TFile {
       }
 
       // check element in streamer infos, one can have special cases
-      if (!s_i) s_i = this.findStreamerInfo(clname, ver.val, ver.checksum);
+      if (!s_i)
+         s_i = this.findStreamerInfo(clname, ver.val, ver.checksum);
 
       if (!s_i) {
          delete this.fStreamers[fullname];
@@ -104121,128 +112668,6 @@ class TFile {
 
 } // class TFile
 
-/** @summary Function to read vector element in the streamer
-  * @private */
-function readVectorElement(buf) {
-   if (this.member_wise) {
-      const n = buf.ntou4(), ver = this.stl_version;
-      let streamer = null;
-
-      if (n === 0) return []; // for empty vector no need to search split streamers
-
-      if (n > 1000000)
-         throw new Error(`member-wise streaming of ${this.conttype} num ${n} member ${this.name}`);
-
-      if ((ver.val === this.member_ver) && (ver.checksum === this.member_checksum))
-         streamer = this.member_streamer;
-      else {
-         streamer = buf.fFile.getStreamer(this.conttype, ver);
-
-         this.member_streamer = streamer = buf.fFile.getSplittedStreamer(streamer);
-         this.member_ver = ver.val;
-         this.member_checksum = ver.checksum;
-      }
-
-      const res = new Array(n);
-      let i, k, member;
-
-      for (i = 0; i < n; ++i)
-         res[i] = { _typename: this.conttype }; // create objects
-      if (!streamer)
-         console.error(`Fail to create split streamer for ${this.conttype} need to read ${n} objects version ${ver}`);
-      else {
-         for (k = 0; k < streamer.length; ++k) {
-            member = streamer[k];
-            if (member.split_func)
-               member.split_func(buf, res, n);
-            else {
-               for (i = 0; i < n; ++i)
-                  member.func(buf, res[i]);
-            }
-         }
-      }
-      return res;
-   }
-
-   const n = buf.ntou4(), res = new Array(n);
-   let i = 0;
-
-   if (n > 200000) {
-      console.error(`vector streaming for ${this.conttype} at ${n}`);
-      return res;
-   }
-
-   if (this.arrkind > 0)
-      while (i < n) res[i++] = buf.readFastArray(buf.ntou4(), this.arrkind);
-   else if (this.arrkind === 0)
-      while (i < n) res[i++] = buf.readTString();
-   else if (this.isptr)
-      while (i < n) res[i++] = buf.readObjectAny();
-   else if (this.submember)
-      while (i < n) res[i++] = this.submember.readelem(buf);
-   else
-      while (i < n) res[i++] = buf.classStreamer({}, this.conttype);
-
-   return res;
-}
-
-
-/** @summary Function used in streamer to read std::map object
-  * @private */
-function readMapElement(buf) {
-   let streamer = this.streamer;
-
-   if (this.member_wise) {
-      // when member-wise streaming is used, version is written
-      const ver = this.stl_version;
-
-      if (this.si) {
-         const si = buf.fFile.findStreamerInfo(this.pairtype, ver.val, ver.checksum);
-
-         if (this.si !== si) {
-            streamer = getPairStreamer(si, this.pairtype, buf.fFile);
-            if (!streamer || streamer.length !== 2) {
-               console.log(`Fail to produce streamer for ${this.pairtype}`);
-               return null;
-            }
-         }
-      }
-   }
-
-   const n = buf.ntoi4(), res = new Array(n);
-
-   // no extra data written for empty map
-   if (n === 0)
-      return res;
-
-   if (this.member_wise && (buf.remain() >= 6)) {
-      if (buf.ntoi2() === kStreamedMemberWise)
-         buf.shift(4); // skip checksum
-      else
-         buf.shift(-2); // rewind
-   }
-
-   for (let i = 0; i < n; ++i) {
-      res[i] = { _typename: this.pairtype };
-      streamer[0].func(buf, res[i]);
-      if (!this.member_wise) streamer[1].func(buf, res[i]);
-   }
-
-   // due-to member-wise streaming second element read after first is completed
-   if (this.member_wise) {
-      if (buf.remain() >= 6) {
-         if (buf.ntoi2() === kStreamedMemberWise)
-            buf.shift(4);  // skip checksum
-         else
-            buf.shift(-2);  // rewind
-      }
-      for (let i = 0; i < n; ++i)
-         streamer[1].func(buf, res[i]);
-   }
-
-   return res;
-}
-
 // =============================================================
 
 /**
@@ -104275,19 +112700,27 @@ class TLocalFile extends TFile {
       const file = this.fLocalFile;
 
       return new Promise((resolve, reject) => {
-         if (filename)
-            return reject(Error(`Cannot access other local file ${filename}`));
+         if (filename) {
+            reject(Error(`Cannot access other local file ${filename}`));
+            return;
+         }
 
          const reader = new FileReader(), blobs = [];
          let cnt = 0;
 
          reader.onload = function(evnt) {
             const res = new DataView(evnt.target.result);
-            if (place.length === 2) return resolve(res);
+            if (place.length === 2) {
+               resolve(res);
+               return;
+            }
 
             blobs.push(res);
             cnt += 2;
-            if (cnt >= place.length) return resolve(blobs);
+            if (cnt >= place.length) {
+               resolve(blobs);
+               return;
+            }
             reader.readAsArrayBuffer(file.slice(place[cnt], place[cnt] + place[cnt + 1]));
          };
 
@@ -104322,19 +112755,19 @@ class TNodejsFile extends TFile {
       return Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(fs => {
          this.fs = fs;
 
-         return new Promise((resolve, reject) =>
-
+         return new Promise((resolve, reject) => {
             this.fs.open(this.fFileName, 'r', (status, fd) => {
                if (status) {
                   console.log(status.message);
-                  return reject(Error(`Not possible to open ${this.fFileName} inside node.js`));
+                  reject(Error(`Not possible to open ${this.fFileName} inside node.js`));
+               } else {
+                  const stats = this.fs.fstatSync(fd);
+                  this.fEND = stats.size;
+                  this.fd = fd;
+                  this.readKeys().then(resolve).catch(reject);
                }
-               const stats = this.fs.fstatSync(fd);
-               this.fEND = stats.size;
-               this.fd = fd;
-               this.readKeys().then(resolve).catch(reject);
-            })
-         );
+            });
+         });
       });
    }
 
@@ -104342,11 +112775,15 @@ class TNodejsFile extends TFile {
      * @return {Promise} with requested blocks */
    async readBuffer(place, filename /* , progress_callback */) {
       return new Promise((resolve, reject) => {
-         if (filename)
-            return reject(Error(`Cannot access other local file ${filename}`));
+         if (filename) {
+            reject(Error(`Cannot access other local file ${filename}`));
+            return;
+         }
 
-         if (!this.fs || !this.fd)
-            return reject(Error(`File is not opened ${this.fFileName}`));
+         if (!this.fs || !this.fd) {
+            reject(Error(`File is not opened ${this.fFileName}`));
+            return;
+         }
 
          const blobs = [];
          let cnt = 0;
@@ -104727,6 +113164,49 @@ class ArrayIterator {
 } // class ArrayIterator
 
 
+/** @summary return TStreamerElement associated with the branch - if any
+  * @desc unfortunately, branch.fID is not number of element in streamer info
+  * @private */
+function findBrachStreamerElement(branch, file) {
+   if (!branch || !file || (branch._typename !== clTBranchElement) || (branch.fID < 0) || (branch.fStreamerType < 0)) return null;
+
+   const s_i = file.findStreamerInfo(branch.fClassName, branch.fClassVersion, branch.fCheckSum),
+         arr = (s_i && s_i.fElements) ? s_i.fElements.arr : null;
+   if (!arr) return null;
+
+   let match_name = branch.fName,
+      pos = match_name.indexOf('[');
+   if (pos > 0) match_name = match_name.slice(0, pos);
+   pos = match_name.lastIndexOf('.');
+   if (pos > 0) match_name = match_name.slice(pos + 1);
+
+   function match_elem(elem) {
+      if (!elem) return false;
+      if (elem.fName !== match_name) return false;
+      if (elem.fType === branch.fStreamerType) return true;
+      if ((elem.fType === kBool) && (branch.fStreamerType === kUChar)) return true;
+      if (((branch.fStreamerType === kSTL) || (branch.fStreamerType === kSTL + kOffsetL) ||
+           (branch.fStreamerType === kSTLp) || (branch.fStreamerType === kSTLp + kOffsetL)) &&
+          (elem.fType === kStreamer)) return true;
+      console.warn(`Should match element ${elem.fType} with branch ${branch.fStreamerType}`);
+      return false;
+   }
+
+   // first check branch fID - in many cases gut guess
+   if (match_elem(arr[branch.fID]))
+      return arr[branch.fID];
+
+   for (let k = 0; k < arr.length; ++k) {
+      if ((k !== branch.fID) && match_elem(arr[k]))
+         return arr[k];
+   }
+
+   console.error(`Did not found/match element for branch ${branch.fName} class ${branch.fClassName}`);
+
+   return null;
+}
+
+
 /** @summary return class name of the object, stored in the branch
   * @private */
 function getBranchObjectClass(branch, tree, with_clones = false, with_leafs = false) {
@@ -104913,7 +113393,7 @@ class TDrawVariable {
 
       this.code = (only_branch?.fName ?? '') + code;
 
-      let pos = 0, pos2 = 0, br = null;
+      let pos = 0, pos2 = 0, br;
       while ((pos < code.length) || only_branch) {
          let arriter = [];
 
@@ -104933,7 +113413,7 @@ class TDrawVariable {
                }
                if (repl) {
                   code = code.slice(0, pos) + repl + code.slice(pos2 + 1);
-                  pos = pos + repl.length;
+                  pos += repl.length;
                   continue;
                }
             }
@@ -105052,7 +113532,7 @@ class TDrawVariable {
 
          const replace = 'arg.var' + (this.branches.length - 1);
          code = code.slice(0, pos) + replace + code.slice(pos2);
-         pos = pos + replace.length;
+         pos += replace.length;
       }
 
       // support usage of some standard TMath functions
@@ -105299,7 +113779,7 @@ class TDrawSelector extends TSelector {
       // parse option for histogram creation
       this.hist_title = `drawing '${expr}' from ${tree.fName}`;
 
-      let pos = 0;
+      let pos;
       if (args.cut)
          cut = args.cut;
       else {
@@ -105590,7 +114070,7 @@ class TDrawSelector extends TSelector {
          this.y = y;
          this.z = z;
       } else
-         hist.fBits = hist.fBits | kNoStats;
+         hist.fBits |= kNoStats;
 
       return hist;
    }
@@ -105928,48 +114408,6 @@ class TDrawSelector extends TSelector {
 } // class TDrawSelector
 
 
-/** @summary return TStreamerElement associated with the branch - if any
-  * @desc unfortunately, branch.fID is not number of element in streamer info
-  * @private */
-function findBrachStreamerElement(branch, file) {
-   if (!branch || !file || (branch._typename !== clTBranchElement) || (branch.fID < 0) || (branch.fStreamerType < 0)) return null;
-
-   const s_i = file.findStreamerInfo(branch.fClassName, branch.fClassVersion, branch.fCheckSum),
-         arr = (s_i && s_i.fElements) ? s_i.fElements.arr : null;
-   if (!arr) return null;
-
-   let match_name = branch.fName,
-      pos = match_name.indexOf('[');
-   if (pos > 0) match_name = match_name.slice(0, pos);
-   pos = match_name.lastIndexOf('.');
-   if (pos > 0) match_name = match_name.slice(pos + 1);
-
-   function match_elem(elem) {
-      if (!elem) return false;
-      if (elem.fName !== match_name) return false;
-      if (elem.fType === branch.fStreamerType) return true;
-      if ((elem.fType === kBool) && (branch.fStreamerType === kUChar)) return true;
-      if (((branch.fStreamerType === kSTL) || (branch.fStreamerType === kSTL + kOffsetL) ||
-           (branch.fStreamerType === kSTLp) || (branch.fStreamerType === kSTLp + kOffsetL)) &&
-          (elem.fType === kStreamer)) return true;
-      console.warn(`Should match element ${elem.fType} with branch ${branch.fStreamerType}`);
-      return false;
-   }
-
-   // first check branch fID - in many cases gut guess
-   if (match_elem(arr[branch.fID]))
-      return arr[branch.fID];
-
-   for (let k = 0; k < arr.length; ++k) {
-      if ((k !== branch.fID) && match_elem(arr[k]))
-         return arr[k];
-   }
-
-   console.error(`Did not found/match element for branch ${branch.fName} class ${branch.fClassName}`);
-
-   return null;
-}
-
 /** @summary return type name of given member in the class
   * @private */
 function defineMemberTypeName(file, parent_class, member_name) {
@@ -106063,7 +114501,7 @@ async function treeProcess(tree, selector, args) {
       process_arrays: true // one can process all branches as arrays
    }, createLeafElem = (leaf, name) => {
       // function creates TStreamerElement which corresponds to the elementary leaf
-      let datakind = 0;
+      let datakind;
       switch (leaf._typename) {
          case 'TLeafF': datakind = kFloat; break;
          case 'TLeafD': datakind = kDouble; break;
@@ -106187,7 +114625,7 @@ async function treeProcess(tree, selector, args) {
       let elem = null, // TStreamerElement used to create reader
           member = null, // member for actual reading of the branch
           child_scan = 0, // scan child branches after main branch is appended
-          item_cnt = null, item_cnt2 = null, object_class = '';
+          item_cnt = null, item_cnt2 = null, object_class;
 
       if (branch.fBranchCount) {
          item_cnt = findInHandle(branch.fBranchCount);
@@ -106252,15 +114690,18 @@ async function treeProcess(tree, selector, args) {
             if ((chld_kind > 0) && (br.fType !== chld_kind)) continue;
 
             if (br.fType === kBaseClassNode) {
-               if (!scanBranches(br.fBranches, master_target, chld_kind)) return false;
+               if (!scanBranches(br.fBranches, master_target, chld_kind))
+                  return false;
                continue;
             }
 
-            const elem = findBrachStreamerElement(br, handle.file);
-            if (elem?.fTypeName === kBaseClass) {
+            const elem2 = findBrachStreamerElement(br, handle.file);
+            if (elem2?.fTypeName === kBaseClass) {
                // if branch is data of base class, map it to original target
-               if (br.fTotBytes && !addBranchForReading(br, target_object, target_name, read_mode)) return false;
-               if (!scanBranches(br.fBranches, master_target, chld_kind)) return false;
+               if (br.fTotBytes && !addBranchForReading(br, target_object, target_name, read_mode))
+                  return false;
+               if (!scanBranches(br.fBranches, master_target, chld_kind))
+                  return false;
                continue;
             }
 
@@ -106294,8 +114735,7 @@ async function treeProcess(tree, selector, args) {
             typename: branch.fClassName,
             virtual: leaf.fVirtual,
             func(buf, obj) {
-               let clname = this.typename;
-               if (this.virtual) clname = buf.readFastString(buf.ntou1() + 1);
+               const clname = this.virtual ? buf.readFastString(buf.ntou1() + 1) : this.typename;
                obj[this.name] = buf.classStreamer({}, clname);
             }
          };
@@ -106801,7 +115241,7 @@ async function treeProcess(tree, selector, args) {
 
             const req = extractPlaces();
             if (req)
-               return handle.file.readBuffer(req.places, req.filename, readProgress).then(blobs => processBlobs(blobs)).catch(() => { return null; });
+               return handle.file.readBuffer(req.places, req.filename, readProgress).then(blobs2 => processBlobs(blobs2)).catch(() => null);
 
             return Promise.resolve(bitems);
           }
@@ -106817,6 +115257,8 @@ async function treeProcess(tree, selector, args) {
 
       return Promise.resolve(null);
    }
+
+   let processBaskets = null;
 
    function readNextBaskets() {
       const bitems = [];
@@ -106917,7 +115359,7 @@ async function treeProcess(tree, selector, args) {
       throw new Error('No any data is requested - never come here');
    }
 
-   function processBaskets(bitems) {
+   processBaskets = function(bitems) {
       // this is call-back when next baskets are read
 
       if ((handle.selector._break !== 0) || (bitems === null)) {
@@ -107032,7 +115474,7 @@ async function treeProcess(tree, selector, args) {
             return resolveFunc(handle.selector);
          }
       }
-   }
+   };
 
    return new Promise((resolve, reject) => {
       resolveFunc = resolve;
@@ -107065,10 +115507,8 @@ async function treeDraw(tree, args) {
    if (args.branch) {
       if (!selector.drawOnlyBranch(tree, args.branch, args.expr, args))
         return Promise.reject(Error(`Fail to create draw expression ${args.expr} for branch ${args.branch.fName}`));
-   } else {
-      if (!selector.parseDrawExpression(tree, args))
-          return Promise.reject(Error(`Fail to create draw expression ${args.expr}`));
-   }
+   } else if (!selector.parseDrawExpression(tree, args))
+      return Promise.reject(Error(`Fail to create draw expression ${args.expr}`));
 
    selector.setCallback(null, args.progress);
 
@@ -107166,9 +115606,10 @@ function treeIOTest(tree, args) {
 
 /** @summary Create hierarchy of TTree object
   * @private */
-function treeHierarchy(node, obj) {
+function treeHierarchy(tree_node, obj) {
    function createBranchItem(node, branch, tree, parent_branch) {
-      if (!node || !branch) return false;
+      if (!node || !branch)
+         return false;
 
       const nb_branches = branch.fBranches?.arr?.length ?? 0,
             nb_leaves = branch.fLeaves?.arr?.length ?? 0;
@@ -107268,11 +115709,11 @@ function treeHierarchy(node, obj) {
    if (obj.fBranches === undefined)
       return false;
 
-   node._childs = [];
-   node._tree = obj;  // set reference, will be used later by TTree::Draw
+   tree_node._childs = [];
+   tree_node._tree = obj;  // set reference, will be used later by TTree::Draw
 
    for (let i = 0; i < obj.fBranches.arr?.length; ++i)
-      createBranchItem(node, obj.fBranches.arr[i], obj);
+      createBranchItem(tree_node, obj.fBranches.arr[i], obj);
 
    return true;
 }
@@ -145497,13 +153938,7 @@ async function import_tree() { return Promise.resolve().then(function () { retur
 
 async function import_h() { return Promise.resolve().then(function () { return HierarchyPainter$1; }); }
 
-async function import_geo() {
-   return Promise.resolve().then(function () { return TGeoPainter$1; }).then(geo => {
-      const handle = getDrawHandle(prROOT + 'TGeoVolumeAssembly');
-      if (handle) handle.icon = 'img_geoassembly';
-      return geo;
-   });
-}
+let import_v7 = null, import_geo = null;
 
 const clTGraph2D = 'TGraph2D', clTH2Poly = 'TH2Poly', clTEllipse = 'TEllipse',
       clTSpline3 = 'TSpline3', clTTree = 'TTree', clTCanvasWebSnapshot = 'TCanvasWebSnapshot',
@@ -145537,7 +153972,7 @@ drawFuncs = { lst: [
    { name: clTH2Poly, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), opt: ';COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;TEXT;same', expand_item: 'fBins', theonly: true },
    { name: 'TProfile2Poly', sameas: clTH2Poly },
    { name: 'TH2PolyBin', icon: 'img_histo2d', draw_field: 'fPoly', draw_field_opt: 'L' },
-   { name: /^TH2/, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), opt: ';COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;PROJXY1;PROJXY2;PROJXY3;SCAT;TEXT;TEXTE;TEXTE0;CANDLE;CANDLE1;CANDLE2;CANDLE3;CANDLE4;CANDLE5;CANDLE6;CANDLEY1;CANDLEY2;CANDLEY3;CANDLEY4;CANDLEY5;CANDLEY6;VIOLIN;VIOLIN1;VIOLIN2;VIOLINY1;VIOLINY2;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same', ctrl: 'lego', expand_item: fFunctions, for_derived: true },
+   { name: /^TH2/, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), opt: ';COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;COL_POL;COL_ARR;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;PROJXY1;PROJXY2;PROJXY3;SCAT;TEXT;TEXTE;TEXTE0;CANDLE;CANDLE1;CANDLE2;CANDLE3;CANDLE4;CANDLE5;CANDLE6;CANDLEY1;CANDLEY2;CANDLEY3;CANDLEY4;CANDLEY5;CANDLEY6;VIOLIN;VIOLIN1;VIOLIN2;VIOLINY1;VIOLINY2;CONT;CONT1;CONT2;CONT3;CONT4;ARR;CHORD;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same', ctrl: 'lego', expand_item: fFunctions, for_derived: true },
    { name: clTProfile2D, sameas: clTH2, opt2: ';projxyb;projxyc=e;projxyw' },
    { name: /^TH3/, icon: 'img_histo3d', class: () => Promise.resolve().then(function () { return TH3Painter$1; }).then(h => h.TH3Painter), opt: ';SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL', expand_item: fFunctions, for_derived: true },
    { name: clTProfile3D, sameas: clTH3 },
@@ -145560,7 +153995,7 @@ drawFuncs = { lst: [
    { name: /^RooCurve/, sameas: clTGraph },
    { name: /^RooEllipse/, sameas: clTGraph },
    { name: 'TScatter', icon: 'img_graph', class: () => Promise.resolve().then(function () { return TScatterPainter$1; }).then(h => h.TScatterPainter), opt: ';A' },
-   { name: 'RooPlot', icon: 'img_canvas', func: drawRooPlot },
+   { name: 'RooPlot', icon: 'img_canvas', draw: () => Promise.resolve().then(function () { return TGraphTimePainter$1; }).then(h => h.drawRooPlot) },
    { name: 'TRatioPlot', icon: 'img_mgraph', class: () => Promise.resolve().then(function () { return TRatioPlotPainter$1; }).then(h => h.TRatioPlotPainter), opt: '' },
    { name: clTMultiGraph, icon: 'img_mgraph', class: () => Promise.resolve().then(function () { return TMultiGraphPainter$1; }).then(h => h.TMultiGraphPainter), opt: ';ac;l;p;3d;pads', expand_item: 'fGraphs' },
    { name: clTStreamerInfoList, icon: 'img_question', draw: () => import_h().then(h => h.drawStreamerInfo) },
@@ -145625,25 +154060,25 @@ drawFuncs = { lst: [
    { name: 'Session', icon: 'img_globe' },
    { name: 'kind:TopFolder', icon: 'img_base' },
    { name: 'kind:Folder', icon: 'img_folder', icon2: 'img_folderopen', noinspect: true },
-   { name: nsREX+'RCanvas', icon: 'img_canvas', class: () => init_v7().then(h => h.RCanvasPainter), opt: '', expand_item: fPrimitives },
-   { name: nsREX+'RCanvasDisplayItem', icon: 'img_canvas', draw: () => init_v7().then(h => h.drawRPadSnapshot), opt: '', expand_item: fPrimitives },
-   { name: nsREX+'RHist1Drawable', icon: 'img_histo1d', class: () => init_v7('rh1').then(h => h.RH1Painter), opt: '' },
-   { name: nsREX+'RHist2Drawable', icon: 'img_histo2d', class: () => init_v7('rh2').then(h => h.RH2Painter), opt: '' },
-   { name: nsREX+'RHist3Drawable', icon: 'img_histo3d', class: () => init_v7('rh3').then(h => h.RH3Painter), opt: '' },
-   { name: nsREX+'RHistDisplayItem', icon: 'img_histo1d', draw: () => init_v7('rh3').then(h => h.drawHistDisplayItem), opt: '' },
-   { name: nsREX+'RText', icon: 'img_text', draw: () => init_v7('more').then(h => h.drawText), opt: '', direct: 'v7', csstype: 'text' },
-   { name: nsREX+'RFrameTitle', icon: 'img_text', draw: () => init_v7().then(h => h.drawRFrameTitle), opt: '', direct: 'v7', csstype: 'title' },
-   { name: nsREX+'RPaletteDrawable', icon: 'img_text', class: () => init_v7('more').then(h => h.RPalettePainter), opt: '' },
-   { name: nsREX+'RDisplayHistStat', icon: 'img_pavetext', class: () => init_v7('pave').then(h => h.RHistStatsPainter), opt: '' },
-   { name: nsREX+'RLine', icon: 'img_graph', draw: () => init_v7('more').then(h => h.drawLine), opt: '', direct: 'v7', csstype: 'line' },
-   { name: nsREX+'RBox', icon: 'img_graph', draw: () => init_v7('more').then(h => h.drawBox), opt: '', direct: 'v7', csstype: 'box' },
-   { name: nsREX+'RMarker', icon: 'img_graph', draw: () => init_v7('more').then(h => h.drawMarker), opt: '', direct: 'v7', csstype: 'marker' },
-   { name: nsREX+'RPave', icon: 'img_pavetext', class: () => init_v7('pave').then(h => h.RPavePainter), opt: '' },
-   { name: nsREX+'RLegend', icon: 'img_graph', class: () => init_v7('pave').then(h => h.RLegendPainter), opt: '' },
-   { name: nsREX+'RPaveText', icon: 'img_pavetext', class: () => init_v7('pave').then(h => h.RPaveTextPainter), opt: '' },
-   { name: nsREX+'RFrame', icon: 'img_frame', draw: () => init_v7().then(h => h.drawRFrame), opt: '' },
-   { name: nsREX+'RFont', icon: 'img_text', draw: () => init_v7().then(h => h.drawRFont), opt: '', direct: 'v7', csstype: 'font' },
-   { name: nsREX+'RAxisDrawable', icon: 'img_frame', draw: () => init_v7().then(h => h.drawRAxis), opt: '' }
+   { name: nsREX+'RCanvas', icon: 'img_canvas', class: () => import_v7().then(h => h.RCanvasPainter), opt: '', expand_item: fPrimitives },
+   { name: nsREX+'RCanvasDisplayItem', icon: 'img_canvas', draw: () => import_v7().then(h => h.drawRPadSnapshot), opt: '', expand_item: fPrimitives },
+   { name: nsREX+'RHist1Drawable', icon: 'img_histo1d', class: () => import_v7('rh1').then(h => h.RH1Painter), opt: '' },
+   { name: nsREX+'RHist2Drawable', icon: 'img_histo2d', class: () => import_v7('rh2').then(h => h.RH2Painter), opt: '' },
+   { name: nsREX+'RHist3Drawable', icon: 'img_histo3d', class: () => import_v7('rh3').then(h => h.RH3Painter), opt: '' },
+   { name: nsREX+'RHistDisplayItem', icon: 'img_histo1d', draw: () => import_v7('rh3').then(h => h.drawHistDisplayItem), opt: '' },
+   { name: nsREX+'RText', icon: 'img_text', draw: () => import_v7('more').then(h => h.drawText), opt: '', direct: 'v7', csstype: 'text' },
+   { name: nsREX+'RFrameTitle', icon: 'img_text', draw: () => import_v7().then(h => h.drawRFrameTitle), opt: '', direct: 'v7', csstype: 'title' },
+   { name: nsREX+'RPaletteDrawable', icon: 'img_text', class: () => import_v7('more').then(h => h.RPalettePainter), opt: '' },
+   { name: nsREX+'RDisplayHistStat', icon: 'img_pavetext', class: () => import_v7('pave').then(h => h.RHistStatsPainter), opt: '' },
+   { name: nsREX+'RLine', icon: 'img_graph', draw: () => import_v7('more').then(h => h.drawLine), opt: '', direct: 'v7', csstype: 'line' },
+   { name: nsREX+'RBox', icon: 'img_graph', draw: () => import_v7('more').then(h => h.drawBox), opt: '', direct: 'v7', csstype: 'box' },
+   { name: nsREX+'RMarker', icon: 'img_graph', draw: () => import_v7('more').then(h => h.drawMarker), opt: '', direct: 'v7', csstype: 'marker' },
+   { name: nsREX+'RPave', icon: 'img_pavetext', class: () => import_v7('pave').then(h => h.RPavePainter), opt: '' },
+   { name: nsREX+'RLegend', icon: 'img_graph', class: () => import_v7('pave').then(h => h.RLegendPainter), opt: '' },
+   { name: nsREX+'RPaveText', icon: 'img_pavetext', class: () => import_v7('pave').then(h => h.RPaveTextPainter), opt: '' },
+   { name: nsREX+'RFrame', icon: 'img_frame', draw: () => import_v7().then(h => h.drawRFrame), opt: '' },
+   { name: nsREX+'RFont', icon: 'img_text', draw: () => import_v7().then(h => h.drawRFont), opt: '', direct: 'v7', csstype: 'font' },
+   { name: nsREX+'RAxisDrawable', icon: 'img_frame', draw: () => import_v7().then(h => h.drawRAxis), opt: '' }
 ], cache: {} };
 
 
@@ -145781,7 +154216,7 @@ function getDrawSettings(kind, selector) {
 
    res.inspect = !noinspect;
    res.expand = canexpand;
-   res.draw = !!res.opts;
+   res.draw = Boolean(res.opts);
 
    return res;
 }
@@ -145923,7 +154358,7 @@ async function draw(dom, obj, opt) {
       if (modules)
          init_promise = loadModules(modules);
       else if (!internals.ignore_v6) {
-         init_promise = _ensureJSROOT().then(v6 => {
+         init_promise = exports._ensureJSROOT().then(v6 => {
             const pr = handle.prereq ? v6.require(handle.prereq) : Promise.resolve(true);
             return pr.then(() => {
                if (handle.script)
@@ -146127,7 +154562,8 @@ async function makeImage(args) {
 
          function clear_element() {
             const elem = select(this);
-            if (elem.style('display') === 'none') elem.remove();
+            if (elem.style('display') === 'none')
+               elem.remove();
          }
 
          main.selectAll('g.root_frame').each(clear_element);
@@ -146182,8 +154618,16 @@ function assignPadPainterDraw(PadPainterClass) {
 // only now one can draw primitives in the canvas
 assignPadPainterDraw(TPadPainter);
 
+import_geo = async function() {
+   return Promise.resolve().then(function () { return TGeoPainter$1; }).then(geo => {
+      const handle = getDrawHandle(prROOT + 'TGeoVolumeAssembly');
+      if (handle) handle.icon = 'img_geoassembly';
+      return geo;
+   });
+};
+
 // load v7 only on demand
-async function init_v7(arg) {
+import_v7 = async function(arg) {
    return Promise.resolve().then(function () { return RCanvasPainter$1; }).then(h => {
       // only now one can draw primitives in the canvas
       assignPadPainterDraw(h.RPadPainter);
@@ -146196,25 +154640,12 @@ async function init_v7(arg) {
       }
       return h;
    });
-}
-
+};
 
 // to avoid cross-dependency between modules
 Object.assign(internals, { addStreamerInfosForPainter, addDrawFunc, setDefaultDrawOpt, makePDF });
 
 Object.assign(internals.jsroot, { draw, redraw, makeSVG, makeImage, addDrawFunc });
-
-
-/** @summary Draw TRooPlot
-  * @private */
-async function drawRooPlot(dom, plot) {
-   return draw(dom, plot._hist, 'hist').then(async hp => {
-      const arr = [];
-      for (let i = 0; i < plot._items.arr.length; ++i)
-         arr.push(draw(dom, plot._items.arr[i], plot._items.opt[i]));
-      return Promise.all(arr).then(() => hp);
-   });
-}
 
 const kTopFolder = 'TopFolder', kExpand = 'expand', kPM = 'plusminus', kDfltDrawOpt = '__default_draw_option__',
       cssValueNum = 'h_value_num', cssButton = 'h_button', cssItem = 'h_item', cssTree = 'h_tree';
@@ -146307,20 +154738,21 @@ async function drawList(dom, lst, opt) {
       return null;
 
    const handle = {
-     dom, lst, opt,
-     indx: -1, painter: null,
-     draw_next() {
-        while (++this.indx < this.lst.arr.length) {
-           const item = this.lst.arr[this.indx],
-               opt = (this.lst.opt && this.lst.opt[this.indx]) ? this.lst.opt[this.indx] : this.opt;
-           if (!item) continue;
-           return draw(this.dom, item, opt).then(p => {
-              if (p && !this.painter) this.painter = p;
-              return this.draw_next(); // reenter loop
-           });
-        }
-        return this.painter;
-     }
+      dom, lst, opt,
+      indx: -1, painter: null,
+      draw_next() {
+         while (++this.indx < this.lst.arr.length) {
+            const item = this.lst.arr[this.indx],
+                  opt2 = (this.lst.opt && this.lst.opt[this.indx]) ? this.lst.opt[this.indx] : this.opt;
+            if (!item)
+               continue;
+            return draw(this.dom, item, opt2).then(p => {
+               if (p && !this.painter) this.painter = p;
+               return this.draw_next(); // reenter loop
+            });
+         }
+         return this.painter;
+      }
    };
 
    return handle.draw_next();
@@ -146343,34 +154775,6 @@ function folderHierarchy(item, obj) {
 
    for (let i = 0; i < obj.fFolders.arr.length; ++i) {
       const chld = obj.fFolders.arr[i];
-      item._childs.push({
-         _name: chld.fName,
-         _kind: prROOT + chld._typename,
-         _obj: chld
-      });
-   }
-   return true;
-}
-
-/** @summary Create hierarchy elements for TTask object
-  * @private */
-function taskHierarchy(item, obj) {
-   // function can be used for different derived classes
-   // we show not only child tasks, but all complex data members
-
-   if (!obj?.fTasks) return false;
-
-   objectHierarchy(item, obj, { exclude: ['fTasks', 'fName'] });
-
-   if ((obj.fTasks.arr.length === 0) && (item._childs.length === 0)) {
-      item._more = false;
-      return true;
-   }
-
-   // item._childs = [];
-
-   for (let i = 0; i < obj.fTasks.arr.length; ++i) {
-      const chld = obj.fTasks.arr[i];
       item._childs.push({
          _name: chld.fName,
          _kind: prROOT + chld._typename,
@@ -146760,6 +155164,33 @@ function objectHierarchy(top, obj, args = undefined) {
    return true;
 }
 
+/** @summary Create hierarchy elements for TTask object
+  * @desc function can be used for different derived classes
+  * we show not only child tasks, but all complex data members
+  * @private */
+function taskHierarchy(item, obj) {
+   if (!obj?.fTasks)
+      return false;
+
+   objectHierarchy(item, obj, { exclude: ['fTasks', 'fName'] });
+
+   if ((obj.fTasks.arr.length === 0) && (item._childs.length === 0)) {
+      item._more = false;
+      return true;
+   }
+
+   for (let i = 0; i < obj.fTasks.arr.length; ++i) {
+      const chld = obj.fTasks.arr[i];
+      item._childs.push({
+         _name: chld.fName,
+         _kind: prROOT + chld._typename,
+         _obj: chld
+      });
+   }
+
+   return true;
+}
+
 /** @summary Create hierarchy for streamer info object
   * @private */
 function createStreamerInfoContent(lst) {
@@ -146888,6 +155319,7 @@ function parseAsArray(val) {
          case '"': ndouble++; break;
          case '[': nbr++; break;
          case ']': if (indx < val.length - 1) { nbr--; break; }
+         // eslint-disable-next-line  no-fallthrough
          case ',':
             if (nbr === 0) {
                let sub = val.substring(last, indx).trim();
@@ -147002,51 +155434,54 @@ class HierarchyPainter extends BasePainter {
       folder._had_direct_read = false;
       // this is central get method, item or itemname can be used, returns promise
       folder._get = function(item, itemname) {
-            if (item?._readobj)
-               return Promise.resolve(item._readobj);
+         if (item?._readobj)
+            return Promise.resolve(item._readobj);
 
-            if (item) itemname = painter.itemFullName(item, this);
+         if (item)
+            itemname = painter.itemFullName(item, this);
 
-            const readFileObject = file => {
-               if (!this._file) this._file = file;
+         const readFileObject = file2 => {
+            if (!this._file)
+               this._file = file2;
 
-               if (!file) return Promise.resolve(null);
+            if (!file2)
+               return Promise.resolve(null);
 
-               return file.readObject(itemname).then(obj => {
-                  // if object was read even when item did not exist try to reconstruct new hierarchy
-                  if (!item && obj) {
-                     // first try to found last read directory
-                     const d = painter.findItem({ name: itemname, top: this, last_exists: true, check_keys: true });
-                     if ((d?.last !== undefined) && (d.last !== this)) {
-                        // reconstruct only sub-directory hierarchy
-                        const dir = file.getDir(painter.itemFullName(d.last, this));
-                        if (dir) {
-                           d.last._name = d.last._keyname;
-                           const dirname = painter.itemFullName(d.last, this);
-                           keysHierarchy(d.last, dir.fKeys, file, dirname + '/');
-                        }
-                     } else {
-                        // reconstruct full file hierarchy
-                        keysHierarchy(this, file.fKeys, file, '');
+            return file2.readObject(itemname).then(obj => {
+               // if object was read even when item did not exist try to reconstruct new hierarchy
+               if (!item && obj) {
+                  // first try to found last read directory
+                  const d = painter.findItem({ name: itemname, top: this, last_exists: true, check_keys: true });
+                  if ((d?.last !== undefined) && (d.last !== this)) {
+                     // reconstruct only sub-directory hierarchy
+                     const dir = file2.getDir(painter.itemFullName(d.last, this));
+                     if (dir) {
+                        d.last._name = d.last._keyname;
+                        const dirname = painter.itemFullName(d.last, this);
+                        keysHierarchy(d.last, dir.fKeys, file2, dirname + '/');
                      }
-                     item = painter.findItem({ name: itemname, top: this });
+                  } else {
+                     // reconstruct full file hierarchy
+                     keysHierarchy(this, file2.fKeys, file2, '');
                   }
+                  item = painter.findItem({ name: itemname, top: this });
+               }
 
-                  if (item) {
-                     item._readobj = obj;
-                     // remove cycle number for objects supporting expand
-                     if ('_expand' in item) item._name = item._keyname;
-                  }
+               if (item) {
+                  item._readobj = obj;
+                  // remove cycle number for objects supporting expand
+                  if ('_expand' in item) item._name = item._keyname;
+               }
 
-                  return obj;
-               });
-            };
-
-            if (this._file) return readFileObject(this._file);
-            if (this._localfile) return openFile(this._localfile).then(f => readFileObject(f));
-            if (this._fullurl) return openFile(this._fullurl).then(f => readFileObject(f));
-            return Promise.resolve(null);
+               return obj;
+            });
          };
+
+         if (this._file) return readFileObject(this._file);
+         if (this._localfile) return openFile(this._localfile).then(f => readFileObject(f));
+         if (this._fullurl) return openFile(this._fullurl).then(f => readFileObject(f));
+         return Promise.resolve(null);
+      };
 
       keysHierarchy(folder, file.fKeys, file, '');
 
@@ -147169,7 +155604,7 @@ class HierarchyPainter extends BasePainter {
          return arg.last_exists ? { last: top, rest: fullname } : null;
       }
 
-      let top = this.h, itemname = '';
+      let top = this.h, itemname;
 
       if (isStr(arg)) {
          itemname = arg;
@@ -147226,16 +155661,14 @@ class HierarchyPainter extends BasePainter {
       * @param [arg1] - first optional argument
       * @param [arg2] - second optional argument and so on
       * @return {Promise} with command result */
-   async executeCommand(itemname, elem) {
+   async executeCommand(itemname, elem, ...userargs) {
       const hitem = this.findItem(itemname),
             url = this.getOnlineItemUrl(hitem) + '/cmd.json',
             d3node = select(elem),
             cmdargs = [];
 
-      if ('_numargs' in hitem) {
-         for (let n = 0; n < hitem._numargs; ++n)
-            cmdargs.push((n+2 < arguments.length) ? arguments[n+2] : '');
-      }
+      for (let n = 0; n < (hitem._numargs ?? 0); ++n)
+         cmdargs.push(n < userargs.length ? userargs[n] : '');
 
       const promise = (cmdargs.length === 0) || !elem
                        ? Promise.resolve(cmdargs)
@@ -147415,7 +155848,7 @@ class HierarchyPainter extends BasePainter {
       d3cont.attr('item', itemname);
 
       // line with all html elements for this item (excluding childs)
-      const d3line = d3cont.append('div').attr('class', 'h_line');
+      const h = this, d3line = d3cont.append('div').attr('class', 'h_line');
 
       // build indent
       let prnt = isroot ? null : hitem._parent, upcnt = 1;
@@ -147434,8 +155867,6 @@ class HierarchyPainter extends BasePainter {
          plusminus = true;
       } else
          icon_class = 'img_join';
-
-      const h = this;
 
       if (icon_class) {
          if (break_list || this.isLastSibling(hitem)) icon_class += 'bottom';
@@ -148184,7 +156615,7 @@ class HierarchyPainter extends BasePainter {
       if (!isStr(item?._player))
          return null;
 
-      let player_func = null;
+      let player_func;
 
       if (item._module) {
          const hh = await this.importModule(item._module);
@@ -148375,7 +156806,7 @@ class HierarchyPainter extends BasePainter {
      * @private  */
    enableDrop(frame) {
       const h = this;
-      select(frame).on('dragover', function(ev) {
+      select(frame).on('dragover', ev => {
          const itemname = ev.dataTransfer.getData('item'),
               ditem = h.findItem(itemname);
          if (isStr(ditem?._kind) && (ditem._kind.indexOf(prROOT) === 0))
@@ -148478,7 +156909,7 @@ class HierarchyPainter extends BasePainter {
          if (arg === undefined)
            arg = !this.isMonitoring();
          want_update_all = true;
-         only_auto_items = !!arg;
+         only_auto_items = Boolean(arg);
       }
 
       // first collect items
@@ -148676,7 +157107,7 @@ class HierarchyPainter extends BasePainter {
                if (items[cnt] === null) continue; // ignore completed item
                if (items_wait[cnt] && items.indexOf(items[cnt]) === cnt) {
                   items_wait[cnt] = false;
-                  return h.display(items[cnt], options[cnt], doms[cnt]).then(painter => dropNextItem(cnt, painter));
+                  return h.display(items[cnt], options[cnt], doms[cnt]).then(drop_painter => dropNextItem(cnt, drop_painter));
                }
             }
          }
@@ -148835,7 +157266,7 @@ class HierarchyPainter extends BasePainter {
                   _item._expand = handle.expand;
                else if (isStr(handle.expand)) {
                   if (!internals.ignore_v6) {
-                     const v6 = await _ensureJSROOT();
+                     const v6 = await exports._ensureJSROOT();
                      await v6.require(handle.prereq);
                      await v6._complete_loading();
                   }
@@ -148853,10 +157284,8 @@ class HierarchyPainter extends BasePainter {
                   _item._parent._isopen = true; // also show parent
                   if (!silent)
                      hpainter.updateTreeNode(_item._parent);
-               } else {
-                  if (!silent)
-                     hpainter.updateTreeNode(_item, d3cont);
-               }
+               } else if (!silent)
+                  hpainter.updateTreeNode(_item, d3cont);
                return _item;
             }
          }
@@ -148866,10 +157295,8 @@ class HierarchyPainter extends BasePainter {
             if (_item._parent && !_item._parent._isopen) {
                _item._parent._isopen = true; // also show parent
                if (!silent) hpainter.updateTreeNode(_item._parent);
-            } else {
-               if (!silent)
-                  hpainter.updateTreeNode(_item, d3cont);
-            }
+            } else if (!silent)
+               hpainter.updateTreeNode(_item, d3cont);
             return _item;
          }
 
@@ -148889,17 +157316,20 @@ class HierarchyPainter extends BasePainter {
             return;
          }
 
-         if (hitem._obj) promise = doExpandItem(hitem, hitem._obj);
+         if (hitem._obj)
+            promise = doExpandItem(hitem, hitem._obj);
       }
 
       return promise.then(res => {
-         if (res !== -1) return res; // done
+         if (res !== -1)
+            return res; // done
 
          showProgress('Loading ' + itemname);
 
-         return this.getObject(itemname, silent ? 'hierarchy_expand' : 'hierarchy_expand_verbose').then(res => {
+         return this.getObject(itemname, silent ? 'hierarchy_expand' : 'hierarchy_expand_verbose').then(res2 => {
             showProgress();
-            if (res.obj) return doExpandItem(res.item, res.obj).then(res => { return (res !== -1) ? res : undefined; });
+            if (res2.obj)
+               return doExpandItem(res2.item, res2.obj).then(res3 => { return res3 !== -1 ? res3 : undefined; });
          });
       });
    }
@@ -148944,17 +157374,17 @@ class HierarchyPainter extends BasePainter {
       this.forEachJsonFile(item => { if (item._jsonfile === filepath) isfileopened = true; });
       if (isfileopened) return;
 
-      return httpRequest(filepath, 'object').then(res => {
-         if (!res) return;
-         const h1 = { _jsonfile: filepath, _kind: prROOT + res._typename, _jsontmp: res, _name: filepath.split('/').pop() };
-         if (res.fTitle) h1._title = res.fTitle;
+      return httpRequest(filepath, 'object').then(res2 => {
+         if (!res2) return;
+         const h1 = { _jsonfile: filepath, _kind: prROOT + res2._typename, _jsontmp: res2, _name: filepath.split('/').pop() };
+         if (res2.fTitle) h1._title = res2.fTitle;
          h1._get = function(item /* ,itemname */) {
             if (item._jsontmp)
                return Promise.resolve(item._jsontmp);
             return httpRequest(item._jsonfile, 'object')
-                         .then(res => {
-                             item._jsontmp = res;
-                             return res;
+                         .then(res3 => {
+                             item._jsontmp = res3;
+                             return res3;
                           });
          };
          if (!this.h)
@@ -149075,13 +157505,13 @@ class HierarchyPainter extends BasePainter {
                h._childs.push({
                   _name: fname, _title: dirname + fname, _jsonfile: dirname + fname, _can_draw: true,
                   _get: item => {
-                     return httpRequest(item._jsonfile, 'object').then(res => {
-                        if (res) {
-                          item._kind = prROOT + res._typename;
-                          item._jsontmp = res;
+                     return httpRequest(item._jsonfile, 'object').then(res2 => {
+                        if (res2) {
+                          item._kind = prROOT + res2._typename;
+                          item._jsontmp = res2;
                           this.updateTreeNode(item);
                         }
-                        return res;
+                        return res2;
                      });
                   }
                });
@@ -149126,7 +157556,7 @@ class HierarchyPainter extends BasePainter {
       while (item._parent) {
          item = item._parent;
          if ('_file' in item)
-            return { kind: 'file', fileurl: item._file.fURL, itemname: subname, localfile: !!item._file.fLocalFile };
+            return { kind: 'file', fileurl: item._file.fURL, itemname: subname, localfile: Boolean(item._file.fLocalFile) };
 
          if ('_jsonfile' in item)
             return { kind: 'json', fileurl: item._jsonfile, itemname: subname };
@@ -149643,7 +158073,7 @@ class HierarchyPainter extends BasePainter {
       if (internals.ignore_v6 || use_inject)
          return loadScript(scripts);
 
-      return _ensureJSROOT().then(v6 => {
+      return exports._ensureJSROOT().then(v6 => {
          return v6.require(modules)
                   .then(() => loadScript(scripts))
                   .then(() => v6._complete_loading());
@@ -149732,7 +158162,7 @@ class HierarchyPainter extends BasePainter {
           monitor = getOption('monitoring'),
           statush = 0, status = getOption('status'),
           browser_kind = getOption('browser'),
-          browser_configured = !!browser_kind;
+          browser_configured = Boolean(browser_kind);
 
       if (monitor === null)
          monitor = 0;
@@ -150149,33 +158579,7 @@ class HierarchyPainter extends BasePainter {
 
 } // class HierarchyPainter
 
-
-/** @summary Show object in inspector for provided object
-  * @protected */
-ObjectPainter.prototype.showInspector = function(opt, obj) {
-   if (opt === 'check')
-      return true;
-
-   const main = this.selectDom(),
-         rect = getElementRect(main),
-         w = Math.round(rect.width * 0.05) + 'px',
-         h = Math.round(rect.height * 0.05) + 'px',
-         id = 'root_inspector_' + internals.id_counter++;
-
-   main.append('div')
-       .attr('id', id)
-       .attr('class', 'jsroot_inspector')
-       .style('position', 'absolute')
-       .style('top', h)
-       .style('bottom', h)
-       .style('left', w)
-       .style('right', w);
-
-   if (!obj?._typename)
-      obj = isFunc(this.getPrimaryObject) ? this.getPrimaryObject() : this.getObject();
-
-   return drawInspector(id, obj, opt);
-};
+// ======================================================================================
 
 
 /** @summary Display streamer info
@@ -150199,8 +158603,6 @@ async function drawStreamerInfo(dom, lst) {
       return painter;
    });
 }
-
-// ======================================================================================
 
 /** @summary Display inspector
   * @private */
@@ -150244,16 +158646,16 @@ async function drawInspector(dom, obj, opt) {
       if (sett.opts) {
          menu.addDrawMenu('nosub:Draw', sett.opts, arg => {
             if (!hitem?._obj) return;
-            const obj = hitem._obj;
+            const obj2 = hitem._obj;
             let ddom = this.selectDom().node();
             if (isFunc(this.removeInspector)) {
                ddom = ddom.parentNode;
                this.removeInspector();
                if (arg.indexOf(kInspect) === 0)
-                  return this.showInspector(arg, obj);
+                  return this.showInspector(arg, obj2);
             }
             cleanup(ddom);
-            draw(ddom, obj, arg);
+            draw(ddom, obj2, arg);
          });
       }
    };
@@ -150265,6 +158667,35 @@ async function drawInspector(dom, obj, opt) {
       return painter.exapndToLevel(expand_level);
    });
 }
+
+
+/** @summary Show object in inspector for provided object
+  * @protected */
+ObjectPainter.prototype.showInspector = function(opt, obj) {
+   if (opt === 'check')
+      return true;
+
+   const main = this.selectDom(),
+         rect = getElementRect(main),
+         w = Math.round(rect.width * 0.05) + 'px',
+         h = Math.round(rect.height * 0.05) + 'px',
+         id = 'root_inspector_' + internals.id_counter++;
+
+   main.append('div')
+       .attr('id', id)
+       .attr('class', 'jsroot_inspector')
+       .style('position', 'absolute')
+       .style('top', h)
+       .style('bottom', h)
+       .style('left', w)
+       .style('right', w);
+
+   if (!obj?._typename)
+      obj = isFunc(this.getPrimaryObject) ? this.getPrimaryObject() : this.getObject();
+
+   return drawInspector(id, obj, opt);
+};
+
 
 internals.drawInspector = drawInspector;
 
@@ -150645,14 +159076,14 @@ async function drawText$1() {
       if (!this.moveEnd) {
          this.moveEnd = function(not_changed) {
             if (not_changed) return;
-            const text = this.getObject();
+            const txt = this.getObject();
             let fx = this.svgToAxis('x', this.pos_x + this.pos_dx, this.isndc),
                 fy = this.svgToAxis('y', this.pos_y + this.pos_dy, this.isndc);
             if (this.swap_xy)
                [fx, fy] = [fy, fx];
 
-            text.fX = fx;
-            text.fY = fy;
+            txt.fX = fx;
+            txt.fY = fy;
             this.submitCanvExec(`SetX(${fx});;SetY(${fy});;`);
          };
       }
@@ -150786,10 +159217,10 @@ function drawEllipse() {
 
    this.moveEnd = function(not_changed) {
       if (not_changed) return;
-      const ellipse = this.getObject();
-      ellipse.fX1 = this.svgToAxis('x', this.x);
-      ellipse.fY1 = this.svgToAxis('y', this.y);
-      this.submitCanvExec(`SetX1(${ellipse.fX1});;SetY1(${ellipse.fY1});;Notify();;`);
+      const ell = this.getObject();
+      ell.fX1 = this.svgToAxis('x', this.x);
+      ell.fY1 = this.svgToAxis('y', this.y);
+      this.submitCanvExec(`SetX1(${ell.fX1});;SetY1(${ell.fY1});;Notify();;`);
    };
 }
 
@@ -150877,13 +159308,13 @@ function drawMarker$1() {
 
    this.moveEnd = function(not_changed) {
       if (not_changed) return;
-      const marker = this.getObject();
-      let fx = this.svgToAxis('x', this.axisToSvg('x', marker.fX, this.isndc) + this.dx, this.isndc),
-          fy = this.svgToAxis('y', this.axisToSvg('y', marker.fY, this.isndc) + this.dy, this.isndc);
+      const mrk = this.getObject();
+      let fx = this.svgToAxis('x', this.axisToSvg('x', mrk.fX, this.isndc) + this.dx, this.isndc),
+          fy = this.svgToAxis('y', this.axisToSvg('y', mrk.fY, this.isndc) + this.dy, this.isndc);
       if (swap_xy)
          [fx, fy] = [fy, fx];
-      marker.fX = fx;
-      marker.fY = fy;
+      mrk.fX = fx;
+      mrk.fY = fy;
       this.submitCanvExec(`SetX(${fx});;SetY(${fy});;Notify();;`);
       this.redraw();
    };
@@ -150923,15 +159354,15 @@ function drawPolyMarker() {
 
    this.moveEnd = function(not_changed) {
       if (not_changed) return;
-      const poly = this.getObject(),
-            func = this.getAxisToSvgFunc();
+      const poly2 = this.getObject(),
+            func2 = this.getAxisToSvgFunc();
 
       let exec = '';
-      for (let n = 0; n <= poly.fLastPoint; ++n) {
-         const x = this.svgToAxis('x', func.x(poly.fX[n]) + this.dx),
-               y = this.svgToAxis('y', func.y(poly.fY[n]) + this.dy);
-         poly.fX[n] = x;
-         poly.fY[n] = y;
+      for (let n = 0; n <= poly2.fLastPoint; ++n) {
+         const x = this.svgToAxis('x', func2.x(poly2.fX[n]) + this.dx),
+               y = this.svgToAxis('y', func2.y(poly2.fY[n]) + this.dy);
+         poly2.fX[n] = x;
+         poly2.fY[n] = y;
          exec += `SetPoint(${n},${x},${y});;`;
       }
       this.submitCanvExec(exec + 'Notify();;');
@@ -151025,14 +159456,15 @@ async function drawPolyMarker3D$1() {
 
       mesh.tooltip = function(intersect) {
          let indx = Math.floor(intersect.index / this.nvertex);
-         if ((indx < 0) || (indx >= this.index.length)) return null;
+         if ((indx < 0) || (indx >= this.index.length))
+            return null;
 
          indx = this.index[indx];
 
-         const fp = this.fp,
-               grx = fp.grx(this.poly.fP[indx]),
-               gry = fp.gry(this.poly.fP[indx+1]),
-               grz = fp.grz(this.poly.fP[indx+2]);
+         const fp2 = this.fp,
+               grx = fp2.grx(this.poly.fP[indx]),
+               gry = fp2.gry(this.poly.fP[indx+1]),
+               grz = fp2.grz(this.poly.fP[indx+2]);
 
          return {
             x1: grx - this.scale0,
@@ -151044,9 +159476,9 @@ async function drawPolyMarker3D$1() {
             color: this.tip_color,
             lines: [this.tip_name,
                      'pnt: ' + indx/3,
-                     'x: ' + fp.axisAsText('x', this.poly.fP[indx]),
-                     'y: ' + fp.axisAsText('y', this.poly.fP[indx+1]),
-                     'z: ' + fp.axisAsText('z', this.poly.fP[indx+2])
+                     'x: ' + fp2.axisAsText('x', this.poly.fP[indx]),
+                     'y: ' + fp2.axisAsText('y', this.poly.fP[indx+1]),
+                     'z: ' + fp2.axisAsText('z', this.poly.fP[indx+2])
                    ]
          };
       };
@@ -151574,12 +160006,12 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
          if (!match && (xnext.fNbins > 0) && (xnext.fNbins < xprev.fNbins) && (xnext.fXmin === xprev.fXmin) &&
              (Math.abs((xnext.fXmax - xnext.fXmin)/xnext.fNbins - (xprev.fXmax - xprev.fXmin)/xprev.fNbins) < 0.0001)) {
             // simple extension of histogram to make sum
-            const arr = new Array(hprev.fNcells).fill(0);
+            const arr2 = new Array(hprev.fNcells).fill(0);
             for (let n = 1; n <= xnext.fNbins; ++n)
-               arr[n] = hnext.fArray[n];
+               arr2[n] = hnext.fArray[n];
             hnext.fNcells = hprev.fNcells;
             Object.assign(xnext, xprev);
-            hnext.fArray = arr;
+            hnext.fArray = arr2;
             match = true;
          }
          if (!match) {
@@ -151766,15 +160198,16 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
       const stack = this.getObject(),
             hist = stack.fHistogram || (stack.fHists ? stack.fHists.arr[0] : null) || (this.fStack ? this.fStack.arr[0] : null),
 
-       hasErrors = hist => {
-         if (hist.fSumw2 && (hist.fSumw2.length > 0)) {
-            for (let n = 0; n < hist.fSumw2.length; ++n)
-               if (hist.fSumw2[n] > 0) return true;
+       hasErrors = hist2 => {
+         const len = hist2.fSumw2?.length ?? 0;
+         for (let n = 0; n < len; ++n) {
+            if (hist2.fSumw2[n] > 0)
+               return true;
          }
          return false;
       };
 
-      if (hist && (hist._typename.indexOf(clTH2) === 0))
+      if (hist?._typename.indexOf(clTH2) === 0)
          this.options.ndim = 2;
 
       if ((this.options.ndim === 2) && !opt)
@@ -152324,9 +160757,22 @@ class TGraphTimePainter extends ObjectPainter {
 
 } // class TGraphTimePainter
 
+
+/** @summary Draw TRooPlot
+  * @private */
+async function drawRooPlot(dom, plot) {
+   return draw(dom, plot._hist, 'hist').then(async hp => {
+      const arr = [];
+      for (let i = 0; i < plot._items.arr.length; ++i)
+         arr.push(draw(dom, plot._items.arr[i], plot._items.opt[i]));
+      return Promise.all(arr).then(() => hp);
+   });
+}
+
 var TGraphTimePainter$1 = /*#__PURE__*/Object.freeze({
 __proto__: null,
-TGraphTimePainter: TGraphTimePainter
+TGraphTimePainter: TGraphTimePainter,
+drawRooPlot: drawRooPlot
 });
 
 function getMax(arr) {
@@ -152600,8 +161046,8 @@ class TGraphDelaunay {
                nx = sy;
                ny = -sx;
                nn = Math.sqrt(nx*nx+ny*ny);
-               nx = nx/nn;
-               ny = ny/nn;
+               nx /= nn;
+               ny /= nn;
                mx = this.fXN[p3]-xm;
                my = this.fYN[p3]-ym;
                mdotn = mx*nx+my*ny;
@@ -152791,6 +161237,7 @@ class TGraphDelaunay {
       let thevalue,
           it, ntris_tried, p, n, m,
           i, j, k, l, z, f, d, o1, o2, a, b, t1, t2, t3,
+          /* eslint-disable-next-line no-useless-assignment */
           ndegen = 0, degen = 0, fdegen = 0, o1degen = 0, o2degen = 0,
           vxN, vyN,
           d1, d2, d3, c1, c2, dko1, dko2, dfo1,
@@ -152949,15 +161396,13 @@ class TGraphDelaunay {
                            // different fZ's. If they don't then this is harmless.
                            console.warn(`Interpolate Two of these three points are coincident ${a} ${b} ${z}`);
                         }
-                     } else {
-                        if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) < 0) {
-                           skip_this_triangle = true;
-                           break;
-                           // goto L90;
-                        } else if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) === 0) {
-                           // At least two points are sitting on top of each other - see above.
-                           console.warn(`Interpolate Two of these three points are coincident ${a} ${b} ${z}`);
-                        }
+                     } else if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) < 0) {
+                        skip_this_triangle = true;
+                        break;
+                        // goto L90;
+                     } else if (((this.fYN[z]-this.fYN[a])*(this.fYN[z]-this.fYN[b])) === 0) {
+                        // At least two points are sitting on top of each other - see above.
+                        console.warn(`Interpolate Two of these three points are coincident ${a} ${b} ${z}`);
                      }
                      // point is outside the circle, move to next point
                      continue; // goto L50;
@@ -153145,7 +161590,7 @@ class TGraphDelaunay {
       if (!this.fNdt)
          return null;
 
-      let graph = null,     // current graph
+      let graph,     // current graph
           // Find all the segments making the contour
           r21, r20, r10, p0, p1, p2, x0, y0, z0, x1, y1, z1, x2, y2, z2,
           it, i0, i1, i2, nbSeg = 0,
@@ -153176,6 +161621,7 @@ class TGraphDelaunay {
 
          // Order along Z axis the points (xi,yi,zi) where "i" belongs to {0,1,2}
          // After this z0 < z1 < z2
+         /* eslint-disable-next-line no-useless-assignment */
          i0 = i1 = i2 = 0;
          if (this.fZ[p1] <= z0) { z0 = this.fZ[p1]; x0 = this.fX[p1]; y0 = this.fY[p1]; i0 = 1; }
          if (this.fZ[p1] > z2) { z2 = this.fZ[p1]; x2 = this.fX[p1]; y2 = this.fY[p1]; i2 = 1; }
@@ -153183,7 +161629,7 @@ class TGraphDelaunay {
          if (this.fZ[p2] > z2) { z2 = this.fZ[p2]; x2 = this.fX[p2]; y2 = this.fY[p2]; i2 = 2; }
          if (i0 === 0 && i2 === 0) {
             console.error('GetContourList: wrong vertices ordering');
-            return nullptr;
+            return null;
          }
 
          i1 = 3 - i2 - i0;
@@ -153332,7 +161778,8 @@ class TGraphDelaunay {
    /** @summary Function handles tooltips in the mesh */
 function graph2DTooltip(intersect) {
    let indx = Math.floor(intersect.index / this.nvertex);
-   if ((indx < 0) || (indx >= this.index.length)) return null;
+   if ((indx < 0) || (indx >= this.index.length))
+      return null;
    const sqr = v => v*v;
 
    indx = this.index[indx];
@@ -153378,7 +161825,7 @@ function graph2DTooltip(intersect) {
 class TGraph2DPainter extends ObjectPainter {
 
    /** @summary Decode options string  */
-   decodeOptions(opt, _gr) {
+   decodeOptions(opt) {
       const d = new DrawOptions(opt);
 
       if (!this.options)
@@ -153692,11 +162139,9 @@ class TGraph2DPainter extends ObjectPainter {
       const countSelected = (zmin, zmax) => {
          let cnt = 0;
          for (let i = 0; i < graph.fNpoints; ++i) {
-            if ((graph.fX[i] < fp.scale_xmin) || (graph.fX[i] > fp.scale_xmax) ||
-                (graph.fY[i] < fp.scale_ymin) || (graph.fY[i] > fp.scale_ymax) ||
-                (graph.fZ[i] < zmin) || (graph.fZ[i] >= zmax)) continue;
-
-            ++cnt;
+            if ((graph.fX[i] >= fp.scale_xmin) && (graph.fX[i] <= fp.scale_xmax) &&
+                (graph.fY[i] >= fp.scale_ymin) && (graph.fY[i] <= fp.scale_ymax) &&
+                (graph.fZ[i] >= zmin) && (graph.fZ[i] < zmax)) ++cnt;
          }
          return cnt;
       };
@@ -153722,7 +162167,8 @@ class TGraph2DPainter extends ObjectPainter {
       if (this.options.Circles)
          scale = 0.06 * fp.size_x3d;
 
-      if (fp.usesvg) scale *= 0.3;
+      if (fp.usesvg)
+         scale *= 0.3;
 
       scale *= 7 * Math.max(fp.size_x3d / fp.getFrameWidth(), fp.size_z3d / fp.getFrameHeight());
 
@@ -153738,23 +162184,17 @@ class TGraph2DPainter extends ObjectPainter {
          const lvl_zmin = Math.max(levels[lvl], fp.scale_zmin),
                lvl_zmax = Math.min(levels[lvl+1], fp.scale_zmax);
 
-         if (lvl_zmin >= lvl_zmax) continue;
+         if (lvl_zmin >= lvl_zmax)
+            continue;
 
          const size = Math.floor(countSelected(lvl_zmin, lvl_zmax) / step),
-               index = new Int32Array(size);
-         let pnts = null, select = 0, icnt = 0,
-             err = null, asymm = false, line = null, ierr = 0, iline = 0;
+               index = new Int32Array(size),
+               pnts = this.options.Markers || this.options.Circles ? new PointsCreator(size, fp.webgl, scale/3) : null,
+               err = this.options.Error ? new Float32Array(size*6*3) : null,
+               asymm = err && this.matchObjectType(clTGraph2DAsymmErrors),
+               line = this.options.Line ? new Float32Array((size-1)*6) : null;
 
-         if (this.options.Markers || this.options.Circles)
-            pnts = new PointsCreator(size, fp.webgl, scale/3);
-
-         if (this.options.Error) {
-            err = new Float32Array(size*6*3);
-            asymm = this.matchObjectType(clTGraph2DAsymmErrors);
-          }
-
-         if (this.options.Line)
-            line = new Float32Array((size-1)*6);
+         let select = 0, icnt = 0, ierr = 0, iline = 0;
 
          for (let i = 0; i < graph.fNpoints; ++i) {
             if ((graph.fX[i] < fp.scale_xmin) || (graph.fX[i] > fp.scale_xmax) ||
@@ -153768,11 +162208,9 @@ class TGraph2DPainter extends ObjectPainter {
 
             index[icnt++] = i; // remember point index for tooltip
 
-            const x = fp.grx(graph.fX[i]),
-                y = fp.gry(graph.fY[i]),
-                z = fp.grz(graph.fZ[i]);
+            const x = fp.grx(graph.fX[i]), y = fp.gry(graph.fY[i]), z = fp.grz(graph.fZ[i]);
 
-            if (pnts) pnts.addPoint(x, y, z);
+            pnts?.addPoint(x, y, z);
 
             if (err) {
                err[ierr] = fp.grx(graph.fX[i] - (asymm ? graph.fEXlow[i] : graph.fEX[i]));
@@ -153799,11 +162237,11 @@ class TGraph2DPainter extends ObjectPainter {
             }
 
             if (line) {
-               if (iline>=6) {
+               if (iline >= 6) {
                   line[iline] = line[iline-3];
                   line[iline+1] = line[iline-2];
                   line[iline+2] = line[iline-1];
-                  iline+=3;
+                  iline += 3;
                }
                line[iline] = x;
                line[iline+1] = y;
@@ -153853,7 +162291,7 @@ class TGraph2DPainter extends ObjectPainter {
             if (!this.options.Circles || this.options.Color)
                color = palette?.calcColor(lvl, levels.length) ?? this.getColor(graph.fMarkerColor);
 
-            const pr = pnts.createPoints({ color, fill: 'white', style: this.options.Circles ? 4 : graph.fMarkerStyle }).then(mesh => {
+            const pr = pnts.createPoints({ color, fill: this.options.Circles ? 'white' : undefined, style: this.options.Circles ? 4 : graph.fMarkerStyle }).then(mesh => {
                mesh.graph = graph;
                mesh.fp = fp;
                mesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
@@ -153870,12 +162308,12 @@ class TGraph2DPainter extends ObjectPainter {
       }
 
       return Promise.all(promises).then(() => {
-         const main = this.getMainPainter(),
-               handle_palette = this.axes_draw || (main?.draw_content === false);
+         const main2 = this.getMainPainter(),
+               handle_palette = this.axes_draw || (main2?.draw_content === false);
          if (!handle_palette)
             return;
 
-         const pal = main?.findFunction(clTPaletteAxis),
+         const pal = main2?.findFunction(clTPaletteAxis),
                pal_painter = this.getPadPainter()?.findPainterFor(pal);
          if (!pal_painter)
             return;
@@ -153884,8 +162322,8 @@ class TGraph2DPainter extends ObjectPainter {
 
          if (this.options.Zscale)
             return pal_painter.drawPave();
-         else
-            pal_painter.removeG(); // completely remove drawing without need to redraw complete pad
+
+         pal_painter.removeG(); // completely remove drawing without need to redraw complete pad
       }).then(() => {
          fp.render3D(100);
          return this;
@@ -154090,7 +162528,7 @@ class TGraphPolargramPainter extends ObjectPainter {
    }
 
    /** @summary Process mouse double click event */
-   mouseDoubleClick(evnt) {
+   mouseDoubleClick() {
       if (this.zoom_rmin || this.zoom_rmax) {
          this.zoom_rmin = this.zoom_rmax = 0;
          this.redrawPad();
@@ -154857,7 +163295,7 @@ class TF1Painter extends TH1Painter$2 {
             let y = 0;
             try {
                y = tf1.evalPar(x);
-            } catch (err) {
+            } catch {
                iserror = true;
             }
 
@@ -154955,7 +163393,7 @@ class TF1Painter extends TH1Painter$2 {
       return (axis === 'x') || (axis === 'y');
    }
 
-      /** @summary return tooltips for TF2 */
+   /** @summary return tooltips for TF2 */
    getTF1Tooltips(pnt) {
       delete this.$tmp_tooltip;
       const lines = [this.getObjectHint()],
@@ -154969,12 +163407,12 @@ class TF1Painter extends TH1Painter$2 {
       const x = funcs.revertAxis('x', pnt.x);
       let y = 0, gry = 0, iserror = false;
 
-       try {
-          y = this.$func.evalPar(x);
-          gry = Math.round(funcs.gry(y));
-       } catch {
-          iserror = true;
-       }
+      try {
+         y = this.$func.evalPar(x);
+         gry = Math.round(funcs.gry(y));
+      } catch {
+         iserror = true;
+      }
 
       lines.push('x = ' + funcs.axisAsText('x', x),
                  'value = ' + (iserror ? '<fail>' : floatToString(y, gStyle.fStatFormat)));
@@ -155121,13 +163559,10 @@ class TEfficiencyPainter extends ObjectPainter {
             bb = total - passed + beta;
          }
 
-         if (!obj.TestBit(kPosteriorMode))
-            return BetaMean(aa, bb);
-         else
-            return BetaMode(aa, bb);
+         return !obj.TestBit(kPosteriorMode) ? BetaMean(aa, bb) : BetaMode(aa, bb);
       }
 
-      return total ? passed/total : 0;
+      return total ? passed / total : 0;
    }
 
    /** @summary Calculate efficiency error low */
@@ -155213,14 +163648,13 @@ class TEfficiencyPainter extends ObjectPainter {
 
       for (let i = 0; i < nbinsx+2; ++i) {
          for (let j = 0; j < nbinsy+2; ++j) {
-            const bin = hist.getBin(i, j),
-                value = this.getEfficiency(eff, bin);
-            hist.fArray[bin] = value;
+            const bin = hist.getBin(i, j);
+            hist.fArray[bin] = this.getEfficiency(eff, bin);
          }
       }
 
       hist.fTitle = eff.fTitle;
-      hist.fBits = hist.fBits | kNoStats;
+      hist.fBits |= kNoStats;
       this.copyAttributes(hist, eff);
    }
 
@@ -155797,7 +164231,7 @@ class TRatioPlotPainter extends ObjectPainter {
             pp = this.getPadPainter();
 
       if (this.$oldratio === undefined)
-         this.$oldratio = !!pp.findPainterFor(ratio.fTopPad, k_top_pad, clTPad);
+         this.$oldratio = Boolean(pp.findPainterFor(ratio.fTopPad, k_top_pad, clTPad));
 
       // configure ratio interactive at the end
       pp.$userInteractive = () => this.configureInteractive();
@@ -156277,13 +164711,13 @@ class TWebPaintingPainter extends ObjectPainter {
          }
       }, read_attr = (str, names) => {
          let lastp = 0;
-         const obj = { _typename: 'any' };
+         const obj2 = { _typename: 'any' };
          for (let k = 0; k < names.length; ++k) {
             const p = str.indexOf(':', lastp+1);
-            obj[names[k]] = parseInt(str.slice(lastp+1, (p > lastp) ? p : undefined));
+            obj2[names[k]] = parseInt(str.slice(lastp+1, (p > lastp) ? p : undefined));
             lastp = p;
          }
-         return obj;
+         return obj2;
       }, process = k => {
          while (++k < arr.length) {
             oper = arr[k][0];
@@ -156553,15 +164987,13 @@ class TF2Painter extends TH2Painter {
       if (this.#use_saved_points) {
          npx = Math.round(func.fSave[nsave+4]);
          npy = Math.round(func.fSave[nsave+5]);
-         const xmin = func.fSave[nsave], xmax = func.fSave[nsave+1],
-               ymin = func.fSave[nsave+2], ymax = func.fSave[nsave+3],
-               dx = (xmax - xmin) / npx,
-               dy = (ymax - ymin) / npy;
-          function getSave(x, y) {
-            if (x < xmin || x > xmax) return 0;
-            if (dx <= 0) return 0;
-            if (y < ymin || y > ymax) return 0;
-            if (dy <= 0) return 0;
+         xmin = func.fSave[nsave];
+         xmax = func.fSave[nsave+1];
+         ymin = func.fSave[nsave+2];
+         ymax = func.fSave[nsave+3];
+         const dx = (xmax - xmin) / npx, dy = (ymax - ymin) / npy, getSave = (x, y) => {
+            if (x < xmin || x > xmax || dx <= 0) return 0;
+            if (y < ymin || y > ymax || dy <= 0) return 0;
             const ibin = Math.min(npx-1, Math.floor((x-xmin)/dx)),
                   jbin = Math.min(npy-1, Math.floor((y-ymin)/dy)),
                   xlow = xmin + ibin*dx,
@@ -156573,7 +165005,7 @@ class TF2Painter extends TH2Painter {
                   k3 = (jbin+1)*(npx+1) + ibin +1,
                   k4 = (jbin+1)*(npx+1) + ibin;
             return (1-t)*(1-u)*func.fSave[k1] +t*(1-u)*func.fSave[k2] +t*u*func.fSave[k3] + (1-t)*u*func.fSave[k4];
-         }
+         };
 
          ensureBins(func.fNpx, func.fNpy);
          hist.fXaxis.fXmin = func.fXmin;
@@ -157285,7 +165717,7 @@ class TSplinePainter extends ObjectPainter {
       if (axis !== 'x') return false;
 
       // spline can always be calculated and therefore one can zoom inside
-      return !!this.getObject();
+      return Boolean(this.getObject());
    }
 
    /** @summary Decode options for TSpline drawing */
@@ -157294,7 +165726,7 @@ class TSplinePainter extends ObjectPainter {
 
       if (!this.options) this.options = {};
 
-      const has_main = !!this.getMainPainter();
+      const has_main = Boolean(this.getMainPainter());
 
       Object.assign(this.options, {
          Same: d.check('SAME'),
@@ -157708,7 +166140,7 @@ class TGaxisPainter extends TAxisPainter {
       res.eval = function(v) {
          try {
             v = res._func.evalPar(v);
-         } catch (err) {
+         } catch {
             v = 0;
          }
          return Number.isFinite(v) ? v : 0;
@@ -158005,7 +166437,7 @@ class TASImagePainter extends ObjectPainter {
                arr[dst++] = this.rgba[iii++];
                arr[dst++] = this.rgba[iii++];
                arr[dst++] = this.rgba[iii++];
-               arr[dst++] = this.rgba[iii++];
+               arr[dst++] = this.rgba[iii];
             }
          }
 
@@ -158172,7 +166604,7 @@ class TASImagePainter extends ObjectPainter {
          if (!res?.url)
             return this;
 
-         const img = this.createG(!!fp)
+         const img = this.createG(fp)
              .append('image')
              .attr('href', res.url)
              .attr('width', rect.width)
@@ -158366,8 +166798,9 @@ class RObjectPainter extends ObjectPainter {
          const typ1 = typeof dflt, typ2 = typeof res;
          if (typ1 === typ2) return res;
          if (typ1 === 'boolean') {
-            if (typ2 === 'string') return (res !== '') && (res !== '0') && (res !== 'no') && (res !== 'off');
-            return !!res;
+            if (typ2 === 'string')
+               return (res !== '') && (res !== '0') && (res !== 'no') && (res !== 'off');
+            return Boolean(res);
          }
          if ((typ1 === 'number') && (typ2 === 'string'))
             return parseFloat(res);
@@ -158598,7 +167031,6 @@ class RObjectPainter extends ObjectPainter {
       if (this.cssprefix) name = this.cssprefix + name;
       req.ids.push(this.snapid);
       req.names.push(name);
-      let obj = null;
 
       if ((value === null) || (value === undefined)) {
         if (!kind) kind = 'none';
@@ -158612,10 +167044,10 @@ class RObjectPainter extends ObjectPainter {
          }
       }
 
-      obj = { _typename: `${nsREX}RAttrMap::` };
+      const obj = { _typename: `${nsREX}RAttrMap::` };
       switch (kind) {
          case 'none': obj._typename += 'NoValue_t'; break;
-         case 'boolean': obj._typename += 'BoolValue_t'; obj.v = !!value; break;
+         case 'boolean': obj._typename += 'BoolValue_t'; obj.v = Boolean(value); break;
          case 'int': obj._typename += 'IntValue_t'; obj.v = parseInt(value); break;
          case 'double': obj._typename += 'DoubleValue_t'; obj.v = parseFloat(value); break;
          default: obj._typename += 'StringValue_t'; obj.v = isStr(value) ? value : JSON.stringify(value); break;
@@ -158630,7 +167062,7 @@ class RObjectPainter extends ObjectPainter {
       const canp = this.getCanvPainter();
       if (canp && req?._typename) {
          if (do_update !== undefined)
-            req.update = !!do_update;
+            req.update = Boolean(do_update);
          canp.v7SubmitRequest('', req);
       }
    }
@@ -159250,7 +167682,7 @@ class RAxisPainter extends RObjectPainter {
       }
 
       while (this.handle.next(true)) {
-         let h1 = Math.round(this.ticksSize/4), h2 = 0;
+         let h1 = Math.round(this.ticksSize/4), h2;
 
          if (this.handle.kind < 3)
             h1 = Math.round(this.ticksSize/2);
@@ -159435,7 +167867,7 @@ class RAxisPainter extends RObjectPainter {
             rotated = this.isTitleRotated();
 
       return this.startTextDrawingAsync(this.titleFont, 'font', title_g).then(() => {
-         let title_shift_x = 0, title_shift_y = 0, title_basepos = 0;
+         let title_shift_x, title_shift_y, title_basepos;
 
          this.title_align = this.titleCenter ? 'middle' : (this.titleOpposite ^ (this.isReverseAxis() || rotated) ? 'begin' : 'end');
 
@@ -159678,11 +168110,12 @@ class RAxisPainter extends RObjectPainter {
                evnt.stopPropagation();
                evnt.preventDefault();
 
-               const pos = pointer(evnt, this.draw_g.node()),
-                   coord = this.vertical ? (1 - pos[1] / len) : pos[0] / len,
-                   item = this.analyzeWheelEvent(evnt, coord);
+               const pos2 = pointer(evnt, this.draw_g.node()),
+                     coord = this.vertical ? (1 - pos2[1] / len) : pos2[0] / len,
+                     item = this.analyzeWheelEvent(evnt, coord);
 
-               if (item.changed) this.zoomStandalone(item.min, item.max);
+               if (item.changed)
+                  this.zoomStandalone(item.min, item.max);
             });
          }
       });
@@ -159703,12 +168136,12 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Change axis attribute, submit changes to server and redraw axis when specified
      * @desc Arguments as redraw_mode, name1, value1, name2, value2, ... */
-   changeAxisAttr(redraw_mode) {
+   changeAxisAttr(redraw_mode, ...args) {
       const changes = {};
-      let indx = 1;
-      while (indx < arguments.length - 1) {
-         this.v7AttrChange(changes, arguments[indx], arguments[indx+1]);
-         this.v7SetAttr(arguments[indx], arguments[indx+1]);
+      let indx = 0;
+      while (indx < args.length) {
+         this.v7AttrChange(changes, args[indx], args[indx + 1]);
+         this.v7SetAttr(args[indx], args[indx+1]);
          indx += 2;
       }
       this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
@@ -161091,7 +169524,7 @@ class RPadPainter extends RObjectPainter {
    getPadScale() { return this.#pad_scale || 1; }
 
    /** @summary return pad log state x or y are allowed */
-   getPadLog(name) { return false; }
+   getPadLog(/* name */) { return false; }
 
    /** @summary get pad rect */
    getPadRect() {
@@ -161158,7 +169591,7 @@ class RPadPainter extends RObjectPainter {
      * @return new index to continue loop or -111 if main painter removed
      * @private */
    removePrimitive(arg, clean_only_secondary) {
-      let indx = -1, prim = null;
+      let indx, prim = null;
       if (Number.isInteger(arg)) {
          indx = arg; prim = this.painters[indx];
       } else {
@@ -161199,7 +169632,7 @@ class RPadPainter extends RObjectPainter {
    /** @summary try to find object by name in list of pad primitives
      * @desc used to find title drawing
      * @private */
-   findInPrimitives(objname, objtype) {
+   findInPrimitives(/* objname, objtype */) {
       console.warn('findInPrimitives not implemented for RPad');
       return null;
    }
@@ -161243,7 +169676,7 @@ class RPadPainter extends RObjectPainter {
              fInterpolate: true,
              fNormalized: true
          };
-         addMethods(this.fDfltPalette, `${nsREX}RPalette`);
+         exports.addMethods(this.fDfltPalette, `${nsREX}RPalette`);
       }
 
       return this.fDfltPalette;
@@ -161337,7 +169770,7 @@ class RPadPainter extends RObjectPainter {
    /** @summary Create SVG element for the canvas */
    createCanvasSvg(check_resize, new_size) {
       const lmt = 5;
-      let factor = null, svg = null, rect = null, btns, frect;
+      let factor, svg, rect, btns, frect;
 
       if (check_resize > 0) {
          if (this._fixed_size)
@@ -161410,9 +169843,19 @@ class RPadPainter extends RObjectPainter {
       this.createAttFill({ pattern: 1001, color: 0 });
 
       if ((rect.width <= lmt) || (rect.height <= lmt)) {
-         svg.style('display', 'none');
-         console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
-         rect.width = 200; rect.height = 100; // just to complete drawing
+         if (this.snapid === undefined) {
+            svg.style('display', 'none');
+            console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
+         }
+         if (this.#pad_width && this.#pad_height) {
+            // use last valid dimensions
+            rect.width = this.#pad_width;
+            rect.height = this.#pad_height;
+         } else {
+            // just to complete drawing.
+            rect.width = 800;
+            rect.height = 600;
+         }
       } else
          svg.style('display', null);
 
@@ -161509,7 +169952,7 @@ class RPadPainter extends RObjectPainter {
             pad_enlarged = svg_can.property('pad_enlarged');
       let pad_visible = true,
           w = width, h = height, x = 0, y = 0,
-          svg_pad = null, svg_rect = null, btns = null;
+          svg_pad, svg_rect, btns = null;
 
       if (this.pad?.fPos && this.pad?.fSize) {
          x = Math.round(width * this.pad.fPos.fHoriz.fArr[0]);
@@ -161605,7 +170048,7 @@ class RPadPainter extends RObjectPainter {
 
    /** @summary Add pad interactive features like dragging and resize
     * @private */
-   addPadInteractive(cleanup = false) {
+   addPadInteractive(/* cleanup = false */) {
       if (isFunc(this.$userInteractive)) {
          this.$userInteractive();
          delete this.$userInteractive;
@@ -162100,8 +170543,8 @@ class RPadPainter extends RObjectPainter {
       this.next_rstyle = snap.fStyle || this.rstyle;
 
       // TODO - fDrawable is v7, fObject from v6, maybe use same data member?
-      return this.drawObject(this, snap.fDrawable || snap.fObject || snap, snap.fOption || '').then(objpainter => {
-         this.addObjectPainter(objpainter, lst, indx);
+      return this.drawObject(this, snap.fDrawable || snap.fObject || snap, snap.fOption || '').then(objp => {
+         this.addObjectPainter(objp, lst, indx);
          return this.drawNextSnap(lst, pindx, indx);
       });
    }
@@ -162159,7 +170602,7 @@ class RPadPainter extends RObjectPainter {
 
          const mainid = this.selectDom().attr('id');
 
-         if (!this.isBatchMode() && !this.use_openui && !this.brlayout && mainid && isStr(mainid) && !getHPainter()) {
+         if (!this.isBatchMode() && this.online_canvas && !this.use_openui && !this.brlayout && mainid && isStr(mainid) && !getHPainter()) {
             this.brlayout = new BrowserLayout(mainid, null, this);
             this.brlayout.create(mainid, true);
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas
@@ -162973,8 +171416,8 @@ class RCanvasPainter extends RPadPainter {
                   onWebsocketOpened() {
                   },
 
-                  onWebsocketMsg(panel_handle, msg) {
-                     const panel_name = (msg.indexOf('SHOWPANEL:') === 0) ? msg.slice(10) : '';
+                  onWebsocketMsg(panel_handle, msg2) {
+                     const panel_name = (msg2.indexOf('SHOWPANEL:') === 0) ? msg2.slice(10) : '';
                      this.cpainter.showUI5Panel(panel_name, panel_handle)
                                   .then(res => handle.send(reply + (res ? 'true' : 'false')));
                   },
@@ -163736,7 +172179,7 @@ class RPalettePainter extends RObjectPainter {
       const pal = this.getObject()?.fPalette;
 
       if (pal && !isFunc(pal.getColor))
-         addMethods(pal, `${nsREX}RPalette`);
+         exports.addMethods(pal, `${nsREX}RPalette`);
 
       return pal;
    }
@@ -164087,7 +172530,7 @@ class RPavePainter extends RObjectPainter {
             rect = this.getPadPainter().getPadRect(),
             fr = this.onFrame ? this.getFramePainter().getFrameRect() : rect,
             changes = {};
-      let offsetx = 0, offsety = 0;
+      let offsetx, offsety;
 
       switch (this.corner) {
          case ECorner.kTopLeft:
@@ -164320,11 +172763,11 @@ class RHistStatsPainter extends RPavePainter {
 
    /** @summary Change mask */
    changeMask(nbit) {
-      const obj = this.getObject(), mask = (1<<nbit);
+      const obj = this.getObject(), mask = 1 << nbit;
       if (obj.fShowMask & mask)
-         obj.fShowMask = obj.fShowMask & ~mask;
+         obj.fShowMask &= ~mask;
       else
-         obj.fShowMask = obj.fShowMask | mask;
+         obj.fShowMask |= mask;
 
       if (this.fillStatistic())
          this.drawStatistic(this.stats_lines);
@@ -164929,14 +173372,17 @@ class RHistPainter extends RObjectPainter {
       // be aware - here indexes starts from 0
       const taxis = this.getAxis(axis),
             nbins = this['nbins'+axis] || 0;
-      let indx = 0;
 
-      if (this.options.second_x && axis === 'x') axis = 'x2';
-      if (this.options.second_y && axis === 'y') axis = 'y2';
+      if (this.options.second_x && axis === 'x')
+         axis = 'x2';
+      if (this.options.second_y && axis === 'y')
+         axis = 'y2';
 
       const main = this.getFramePainter(),
             min = main ? main[`zoom_${axis}min`] : 0,
             max = main ? main[`zoom_${axis}max`] : 0;
+
+      let indx;
 
       if ((min !== max) && taxis) {
          if (size === 'left')
@@ -164949,7 +173395,6 @@ class RHistPainter extends RObjectPainter {
             indx = nbins;
       } else
          indx = (size === 'left') ? 0 : nbins;
-
 
       return indx;
    }
@@ -165299,11 +173744,11 @@ class RHistPainter extends RObjectPainter {
             if (!Number.isFinite(binz)) continue;
             res.sumz += binz;
             if (args.pixel_density) {
-               binarea = (res.grx[i+res.stepi]-res.grx[i])*(res.gry[j]-res.gry[j+res.stepj]);
+               binarea = (res.grx[i+res.stepi] - res.grx[i]) * (res.gry[j] - res.gry[j+res.stepj]);
                if (binarea <= 0) continue;
                res.max = Math.max(res.max, binz);
                if ((binz > 0) && ((binz < res.min) || (res.min === 0))) res.min = binz;
-               binz = binz/binarea;
+               binz /= binarea;
             }
             if (is_first) {
                this.maxbin = this.minbin = binz;
@@ -165440,14 +173885,14 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
             stat_sumwy = 0, stat_sumwy2 = 0,
             res = { name: 'histo', meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0, entries: this.stat_entries, xmax: 0, wmax: 0 };
       let stat_sumw = 0, stat_sumwx = 0, stat_sumwx2 = 0,
-          i, xx = 0, w = 0, xmax = null, wmax = null;
+          i, xmax = null, wmax = null;
 
       for (i = left; i < right; ++i) {
-         xx = xaxis.GetBinCoord(i+0.5);
+         const xx = xaxis.GetBinCoord(i+0.5);
 
          if (cond && !cond(xx)) continue;
 
-         w = histo.getBinContent(i + 1);
+         const w = histo.getBinContent(i + 1);
 
          if ((xmax === null) || (w > wmax)) { xmax = xx; wmax = w; }
 
@@ -165976,8 +174421,7 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
             left = this.getSelectIndex('x', 'left', -1),
             right = this.getSelectIndex('x', 'right', 2);
 
-      let findbin = null, show_rect,
-          grx1, grx2, gry1, gry2, gapx = 2,
+      let show_rect, grx1, grx2, gry1, gry2, gapx = 2,
           l = left, r = right;
 
       function GetBinGrX(i) {
@@ -166005,7 +174449,7 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
           else { l++; r--; }
       }
 
-      findbin = r = l;
+      let findbin = r = l;
       grx1 = GetBinGrX(findbin);
 
       if (funcs.swap_xy) {
@@ -166306,9 +174750,9 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
             painter.options.Render3D = constants$1.Render3D.fromString(d.part.toLowerCase());
 
          const kind = painter.v7EvalAttr('kind', 'hist'),
-             sub = painter.v7EvalAttr('sub', 0),
-             has_main = !!painter.getMainPainter(),
-             o = painter.options;
+               sub = painter.v7EvalAttr('sub', 0),
+               has_main = Boolean(painter.getMainPainter()),
+               o = painter.options;
 
          o.Text = painter.v7EvalAttr('drawtext', false);
          o.BarOffset = painter.v7EvalAttr('baroffset', 0.0);
@@ -166373,12 +174817,12 @@ class RH1Painter extends RH1Painter$2 {
 
       return pr.then(() => this.drawingBins(reason)).then(() => {
          // called when bins received from server, must be reentrant
-         const main = this.getFramePainter();
+         const fp = this.getFramePainter();
 
          drawBinsLego(this, true);
          this.updatePaletteDraw();
-         main.render3D();
-         main.addKeysHandler();
+         fp.render3D();
+         fp.addKeysHandler();
          return this;
       });
    }
@@ -166751,9 +175195,9 @@ let RH2Painter$2 = class RH2Painter extends RHistPainter {
       if ((print_under > 0) || (print_over > 0)) {
          const m = data.matrix;
 
-         stat.addText('' + m[6].toFixed(0) + ' | ' + m[7].toFixed(0) + ' | ' + m[7].toFixed(0));
-         stat.addText('' + m[3].toFixed(0) + ' | ' + m[4].toFixed(0) + ' | ' + m[5].toFixed(0));
-         stat.addText('' + m[0].toFixed(0) + ' | ' + m[1].toFixed(0) + ' | ' + m[2].toFixed(0));
+         stat.addText(m[6].toFixed(0) + ' | ' + m[7].toFixed(0) + ' | ' + m[7].toFixed(0));
+         stat.addText(m[3].toFixed(0) + ' | ' + m[4].toFixed(0) + ' | ' + m[5].toFixed(0));
+         stat.addText(m[0].toFixed(0) + ' | ' + m[1].toFixed(0) + ' | ' + m[2].toFixed(0));
       }
 
       return true;
@@ -166817,12 +175261,12 @@ let RH2Painter$2 = class RH2Painter extends RHistPainter {
          if (last_entry) flush_last_entry();
       }
 
-      entries.forEach((entry, colindx) => {
-         if (entry) {
+      entries.forEach((entry2, ecolindx) => {
+         if (entry2) {
             this.draw_g
                 .append('svg:path')
-                .attr('d', entry.path)
-                .style('fill', handle.palette.getColor(colindx));
+                .attr('d', entry2.path)
+                .style('fill', handle.palette.getColor(ecolindx));
          }
       });
 
@@ -167622,11 +176066,11 @@ class RH2Painter extends RH2Painter$2 {
 
       return pr.then(() => this.drawingBins(reason)).then(() => {
          // called when bins received from server, must be reentrant
-         const main = this.getFramePainter();
+         const fp = this.getFramePainter();
 
          this.draw3DBins();
-         main.render3D();
-         main.addKeysHandler();
+         fp.render3D();
+         fp.addKeysHandler();
 
          return this;
       });
@@ -167881,15 +176325,15 @@ class RH3Painter extends RHistPainter {
             if ((indx < 0) || (indx >= this.bins.length)) return null;
 
             const p = this.painter,
-                main = p.getFramePainter(),
-                tip = p.get3DToolTip(this.bins[indx]);
+                  fp = p.getFramePainter(),
+                  tip = p.get3DToolTip(this.bins[indx]);
 
-            tip.x1 = main.grx(p.getAxis('x').GetBinLowEdge(tip.ix));
-            tip.x2 = main.grx(p.getAxis('x').GetBinLowEdge(tip.ix+di));
-            tip.y1 = main.gry(p.getAxis('y').GetBinLowEdge(tip.iy));
-            tip.y2 = main.gry(p.getAxis('y').GetBinLowEdge(tip.iy+dj));
-            tip.z1 = main.grz(p.getAxis('z').GetBinLowEdge(tip.iz));
-            tip.z2 = main.grz(p.getAxis('z').GetBinLowEdge(tip.iz+dk));
+            tip.x1 = fp.grx(p.getAxis('x').GetBinLowEdge(tip.ix));
+            tip.x2 = fp.grx(p.getAxis('x').GetBinLowEdge(tip.ix+di));
+            tip.y1 = fp.gry(p.getAxis('y').GetBinLowEdge(tip.iy));
+            tip.y2 = fp.gry(p.getAxis('y').GetBinLowEdge(tip.iy+dj));
+            tip.z1 = fp.grz(p.getAxis('z').GetBinLowEdge(tip.iz));
+            tip.z2 = fp.grz(p.getAxis('z').GetBinLowEdge(tip.iz+dk));
             tip.color = this.tip_color;
             tip.opacity = 0.3;
 
@@ -168010,24 +176454,23 @@ class RH3Painter extends RHistPainter {
       }
 
       function getBinTooltip(intersect) {
-         let binid = 0;
+         let binid = this.binid;
 
-         if (this.binid !== undefined)
-            binid = this.binid;
-         else {
-            if ((intersect.instanceId === undefined) || (intersect.instanceId >= this.bins.length)) return;
+         if (binid === undefined) {
+            if ((intersect.instanceId === undefined) || (intersect.instanceId >= this.bins.length))
+               return;
             binid = this.bins[intersect.instanceId];
          }
 
          const p = this.painter,
-               main = p.getFramePainter(),
+               fp = p.getFramePainter(),
                tip = p.get3DToolTip(binid),
-               grx1 = main.grx(xaxis.GetBinCoord(tip.ix-1)),
-               grx2 = main.grx(xaxis.GetBinCoord(tip.ix)),
-               gry1 = main.gry(yaxis.GetBinCoord(tip.iy-1)),
-               gry2 = main.gry(yaxis.GetBinCoord(tip.iy)),
-               grz1 = main.grz(zaxis.GetBinCoord(tip.iz-1)),
-               grz2 = main.grz(zaxis.GetBinCoord(tip.iz)),
+               grx1 = fp.grx(xaxis.GetBinCoord(tip.ix-1)),
+               grx2 = fp.grx(xaxis.GetBinCoord(tip.ix)),
+               gry1 = fp.gry(yaxis.GetBinCoord(tip.iy-1)),
+               gry2 = fp.gry(yaxis.GetBinCoord(tip.iy)),
+               grz1 = fp.grz(zaxis.GetBinCoord(tip.iz-1)),
+               grz2 = fp.grz(zaxis.GetBinCoord(tip.iz)),
                wei2 = (this.use_scale ? Math.pow(Math.abs(tip.value*this.use_scale), 0.3333) : 1) * this.tipscale;
 
          tip.x1 = (grx2 + grx1) / 2 - (grx2 - grx1) * wei2;
@@ -168327,11 +176770,9 @@ exports.TPadPainter = TPadPainter;
 exports.TRandom = TRandom;
 exports.TSelector = TSelector;
 exports.TabsDisplay = TabsDisplay;
-exports._ensureJSROOT = _ensureJSROOT;
 exports._loadJSDOM = _loadJSDOM;
 exports.addDrawFunc = addDrawFunc;
 exports.addHighlightStyle = addHighlightStyle;
-exports.addMethods = addMethods;
 exports.addMoveHandler = addMoveHandler;
 exports.addUserStreamer = addUserStreamer;
 exports.assignContextMenu = assignContextMenu;

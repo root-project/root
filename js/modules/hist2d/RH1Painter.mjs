@@ -115,14 +115,14 @@ class RH1Painter extends RHistPainter {
             stat_sumwy = 0, stat_sumwy2 = 0,
             res = { name: 'histo', meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0, entries: this.stat_entries, xmax: 0, wmax: 0 };
       let stat_sumw = 0, stat_sumwx = 0, stat_sumwx2 = 0,
-          i, xx = 0, w = 0, xmax = null, wmax = null;
+          i, xmax = null, wmax = null;
 
       for (i = left; i < right; ++i) {
-         xx = xaxis.GetBinCoord(i+0.5);
+         const xx = xaxis.GetBinCoord(i+0.5);
 
          if (cond && !cond(xx)) continue;
 
-         w = histo.getBinContent(i + 1);
+         const w = histo.getBinContent(i + 1);
 
          if ((xmax === null) || (w > wmax)) { xmax = xx; wmax = w; }
 
@@ -651,8 +651,7 @@ class RH1Painter extends RHistPainter {
             left = this.getSelectIndex('x', 'left', -1),
             right = this.getSelectIndex('x', 'right', 2);
 
-      let findbin = null, show_rect,
-          grx1, grx2, gry1, gry2, gapx = 2,
+      let show_rect, grx1, grx2, gry1, gry2, gapx = 2,
           l = left, r = right;
 
       function GetBinGrX(i) {
@@ -680,7 +679,7 @@ class RH1Painter extends RHistPainter {
           else { l++; r--; }
       }
 
-      findbin = r = l;
+      let findbin = r = l;
       grx1 = GetBinGrX(findbin);
 
       if (funcs.swap_xy) {
@@ -981,9 +980,9 @@ class RH1Painter extends RHistPainter {
             painter.options.Render3D = constants.Render3D.fromString(d.part.toLowerCase());
 
          const kind = painter.v7EvalAttr('kind', 'hist'),
-             sub = painter.v7EvalAttr('sub', 0),
-             has_main = !!painter.getMainPainter(),
-             o = painter.options;
+               sub = painter.v7EvalAttr('sub', 0),
+               has_main = Boolean(painter.getMainPainter()),
+               o = painter.options;
 
          o.Text = painter.v7EvalAttr('drawtext', false);
          o.BarOffset = painter.v7EvalAttr('baroffset', 0.0);

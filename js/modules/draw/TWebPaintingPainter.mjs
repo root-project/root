@@ -78,13 +78,13 @@ class TWebPaintingPainter extends ObjectPainter {
          }
       }, read_attr = (str, names) => {
          let lastp = 0;
-         const obj = { _typename: 'any' };
+         const obj2 = { _typename: 'any' };
          for (let k = 0; k < names.length; ++k) {
             const p = str.indexOf(':', lastp+1);
-            obj[names[k]] = parseInt(str.slice(lastp+1, (p > lastp) ? p : undefined));
+            obj2[names[k]] = parseInt(str.slice(lastp+1, (p > lastp) ? p : undefined));
             lastp = p;
          }
-         return obj;
+         return obj2;
       }, process = k => {
          while (++k < arr.length) {
             oper = arr[k][0];

@@ -263,7 +263,7 @@ class TSplinePainter extends ObjectPainter {
       if (axis !== 'x') return false;
 
       // spline can always be calculated and therefore one can zoom inside
-      return !!this.getObject();
+      return Boolean(this.getObject());
    }
 
    /** @summary Decode options for TSpline drawing */
@@ -272,7 +272,7 @@ class TSplinePainter extends ObjectPainter {
 
       if (!this.options) this.options = {};
 
-      const has_main = !!this.getMainPainter();
+      const has_main = Boolean(this.getMainPainter());
 
       Object.assign(this.options, {
          Same: d.check('SAME'),

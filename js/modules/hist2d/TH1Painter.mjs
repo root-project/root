@@ -140,14 +140,12 @@ class TH1Painter extends THistPainter {
             } else {
                this.ymin = 0; this.ymax = hmin * 2;
             }
+         } else if (pad_logy) {
+            this.ymin = (hmin_nz || hmin) * 0.5;
+            this.ymax = hmax*2*(0.9/0.95);
          } else {
-            if (pad_logy) {
-               this.ymin = (hmin_nz || hmin) * 0.5;
-               this.ymax = hmax*2*(0.9/0.95);
-            } else {
-               this.ymin = hmin;
-               this.ymax = hmax;
-            }
+            this.ymin = hmin;
+            this.ymax = hmax;
          }
       }
 
@@ -242,7 +240,7 @@ class TH1Painter extends THistPainter {
                     eff_entries: 0, xmax: 0, wmax: 0, skewx: 0, skewd: 0, kurtx: 0, kurtd: 0 },
             has_counted_stat = !fp.isAxisZoomed('x') && (Math.abs(histo.fTsumw) > 1e-300);
       let stat_sumw = 0, stat_sumw2 = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
-          i, xx = 0, w = 0, xmax = null, wmax = null;
+          i, xx, w, xmax = null, wmax = null;
 
       if (!isFunc(cond)) cond = null;
 
@@ -812,14 +810,7 @@ class TH1Painter extends THistPainter {
             }
          }
 
-         const fill_for_interactive = want_tooltip && this.fillatt.empty() && draw_hist && !draw_markers && !show_line && !show_curve && !this._ignore_frame,
-         add_hist = () => {
-            this.draw_g.append('svg:path')
-                     .attr('d', res + ((!this.fillatt.empty() || fill_for_interactive) ? close_path : ''))
-                     .style('stroke-linejoin', 'miter')
-                     .call(this.lineatt.func)
-                     .call(this.fillatt.func);
-         };
+         const fill_for_interactive = want_tooltip && this.fillatt.empty() && draw_hist && !draw_markers && !show_line && !show_curve && !this._ignore_frame;
          let h0 = height + 3;
          if (!fill_for_interactive) {
             const gry0 = Math.round(funcs.gry(0));
@@ -828,7 +819,13 @@ class TH1Painter extends THistPainter {
             else if (gry0 < height)
                h0 = gry0;
          }
-         const close_path = `L${currx},${h0}H${startx}Z`;
+         const close_path = `L${currx},${h0}H${startx}Z`, add_hist = () => {
+            this.draw_g.append('svg:path')
+                       .attr('d', res + ((!this.fillatt.empty() || fill_for_interactive) ? close_path : ''))
+                       .style('stroke-linejoin', 'miter')
+                       .call(this.lineatt.func)
+                       .call(this.fillatt.func);
+         };
 
          if (res && draw_hist && !this.fillatt.empty()) {
             add_hist();
@@ -975,8 +972,7 @@ class TH1Painter extends THistPainter {
             right = this.getSelectIndex('x', 'right', 2);
       let width = pmain.getFrameWidth(),
           height = pmain.getFrameHeight(),
-          findbin = null, show_rect,
-          grx1, grx2, gry1, gry2, gapx = 2,
+          show_rect, grx1, grx2, gry1, gry2, gapx = 2,
           l = left, r = right, pnt_x = pnt.x, pnt_y = pnt.y;
 
       const GetBinGrX = i => {
@@ -1003,7 +999,7 @@ class TH1Painter extends THistPainter {
           else { l++; r--; }
       }
 
-      findbin = r = l;
+      let findbin = r = l;
       grx1 = GetBinGrX(findbin);
 
       if (descent_order) {

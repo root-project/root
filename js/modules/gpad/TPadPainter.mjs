@@ -1,6 +1,6 @@
 import { gStyle, settings, constants, browser, internals, BIT,
          create, toJSON, isBatchMode, loadModules, loadScript, injectCode, isPromise, getPromise, postponePromise,
-         isObject, isFunc, isStr, clTObjArray, clTPaveText, clTColor, clTPad, clTCanvas, clTFrame, clTStyle, clTLegend,
+         isObject, isFunc, isStr, clTObjArray, clTColor, clTPad, clTFrame, clTStyle, clTLegend,
          clTHStack, clTMultiGraph, clTLegendEntry, nsSVG, kTitle, clTList, urlClassPrefix } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
 import { ColorPalette, adoptRootColors, getColorPalette, getGrayColors, extendRootColors,
@@ -416,11 +416,13 @@ class TPadPainter extends ObjectPainter {
      * @return new index to continue loop or -111 if main painter removed
      * @private */
    removePrimitive(arg, clean_only_secondary) {
-      let indx = -1, prim = null;
+      let indx, prim;
       if (Number.isInteger(arg)) {
-         indx = arg; prim = this.painters[indx];
+         indx = arg;
+         prim = this.painters[indx];
       } else {
-         indx = this.painters.indexOf(arg); prim = arg;
+         indx = this.painters.indexOf(arg);
+         prim = arg;
       }
       if (indx < 0)
          return indx;
@@ -628,7 +630,7 @@ class TPadPainter extends ObjectPainter {
    /** @summary Create SVG element for canvas */
    createCanvasSvg(check_resize, new_size) {
       const is_batch = this.isBatchMode(), lmt = 5;
-      let factor = null, svg = null, rect = null, btns, info, frect;
+      let factor, svg, rect, btns, info, frect;
 
       if (check_resize > 0) {
          if (this._fixed_size)
@@ -708,8 +710,10 @@ class TPadPainter extends ObjectPainter {
       this.createAttFill({ attr: this.pad });
 
       if ((rect.width <= lmt) || (rect.height <= lmt)) {
-         svg.style('display', 'none');
-         console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
+         if (this.snapid === undefined) {
+            svg.style('display', 'none');
+            console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
+         }
          if (this.#pad_width && this.#pad_height) {
             // use last valid dimensions
             rect.width = this.#pad_width;
@@ -1106,10 +1110,9 @@ class TPadPainter extends ObjectPainter {
      * @private */
    findInPrimitives(objname, objtype) {
       const match = obj => obj && (obj?.fName === objname) && (objtype ? (obj?._typename === objtype) : true),
-            snap = this._snap_primitives?.find(snap => match((snap.fKind === webSnapIds.kObject) ? snap.fSnapshot : null));
-      if (snap) return snap.fSnapshot;
+            snap = this._snap_primitives?.find(s => match((s.fKind === webSnapIds.kObject) ? s.fSnapshot : null));
 
-      return this.pad?.fPrimitives?.arr.find(match);
+      return snap ? snap.fSnapshot : this.pad?.fPrimitives?.arr.find(match);
    }
 
    /** @summary Try to find painter for specified object
@@ -1709,7 +1712,7 @@ class TPadPainter extends ObjectPainter {
 
          objpainter.assignSnapId(lst[indx].fObjectID);
          const setSubSnaps = p => {
-            if (!p.getUniqueId(true)) return;
+            if (!p._is_primary) return;
             for (let k = 0; k < this.painters.length; ++k) {
                const sub = this.painters[k];
                if (sub.isSecondary(p) && sub.getSecondaryId()) {
@@ -1854,7 +1857,7 @@ class TPadPainter extends ObjectPainter {
          padpainter.decodeOptions(snap.fOption);
          padpainter.addToPadPrimitives();
          padpainter.assignSnapId(snap.fObjectID);
-         padpainter.is_active_pad = !!snap.fActive; // enforce boolean flag
+         padpainter.is_active_pad = Boolean(snap.fActive); // enforce boolean flag
          padpainter._readonly = snap.fReadOnly ?? false; // readonly flag
          padpainter._snap_primitives = snap.fPrimitives; // keep list to be able find primitive
          padpainter._has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
@@ -1878,8 +1881,8 @@ class TPadPainter extends ObjectPainter {
 
       // here the case of normal drawing, will be handled in promise
       if (((snap.fKind === webSnapIds.kObject) || (snap.fKind === webSnapIds.kSVG)) && (snap.fOption !== '__ignore_drawing__')) {
-         return this.drawObject(this, snap.fSnapshot, snap.fOption).then(objpainter => {
-            this.addObjectPainter(objpainter, lst, indx);
+         return this.drawObject(this, snap.fSnapshot, snap.fOption).then(objpainter2 => {
+            this.addObjectPainter(objpainter2, lst, indx);
             return this.drawNextSnap(lst, pindx, indx);
          });
       }
@@ -1921,7 +1924,7 @@ class TPadPainter extends ObjectPainter {
       if (!snap?.fPrimitives)
          return this;
 
-      this.is_active_pad = !!snap.fActive; // enforce boolean flag
+      this.is_active_pad = Boolean(snap.fActive); // enforce boolean flag
       this._readonly = snap.fReadOnly ?? false; // readonly flag
       this._snap_primitives = snap.fPrimitives; // keep list to be able find primitive
       this._has_execs = snap.fHasExecs ?? false; // are there pad execs, enables some interactive features
@@ -1950,7 +1953,7 @@ class TPadPainter extends ObjectPainter {
 
          const mainid = this.selectDom().attr('id');
 
-         if (!this.isBatchMode() && !this.use_openui && !this.brlayout && mainid && isStr(mainid) && !getHPainter()) {
+         if (!this.isBatchMode() && this.online_canvas && !this.use_openui && !this.brlayout && mainid && isStr(mainid) && !getHPainter()) {
             this.brlayout = new BrowserLayout(mainid, null, this);
             this.brlayout.create(mainid, true);
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas
@@ -2115,7 +2118,7 @@ class TPadPainter extends ObjectPainter {
 
       if (this.snapid) {
          elem = { _typename: 'TWebPadOptions', snapid: this.snapid.toString(),
-                  active: !!this.is_active_pad,
+                  active: Boolean(this.is_active_pad),
                   cw: 0, ch: 0, w: [],
                   bits: 0, primitives: [],
                   logx: this.pad.fLogx, logy: this.pad.fLogy, logz: this.pad.fLogz,
@@ -2203,7 +2206,7 @@ class TPadPainter extends ObjectPainter {
          if (!log) return value;
          if (value <= 0) return err;
          value = Math.log10(value);
-         if (log > 1) value = value/Math.log10(log);
+         if (log > 1) value /= Math.log10(log);
          return value;
       }, frect = main.getFrameRect();
 
@@ -2481,7 +2484,7 @@ class TPadPainter extends ObjectPainter {
                   const obj = pp?.getObject();
                   if (!obj || (shown.indexOf(obj) >= 0))
                      return;
-                  let name = '';
+                  let name;
                   if (isFunc(pp.getMenuHeader))
                      name = pp.getMenuHeader();
                   else {

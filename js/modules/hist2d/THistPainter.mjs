@@ -234,14 +234,17 @@ class THistDrawOptions {
       if (d.check('LINE_', 'color'))
          this.histoLineColor = getColor(d.color);
 
+      if (d.check('WIDTH_', true))
+         this.histoLineWidth = d.partAsInt();
+
       if (d.check('XAXIS_', 'color'))
          histo.fXaxis.fAxisColor = histo.fXaxis.fLabelColor = histo.fXaxis.fTitleColor = d.color;
 
       if (d.check('YAXIS_', 'color'))
          histo.fYaxis.fAxisColor = histo.fYaxis.fLabelColor = histo.fYaxis.fTitleColor = d.color;
 
-      if (d.check('X+')) { this.AxisPos = 10; this.second_x = !!painter?.getMainPainter(); }
-      if (d.check('Y+')) { this.AxisPos += 1; this.second_y = !!painter?.getMainPainter(); }
+      if (d.check('X+')) { this.AxisPos = 10; this.second_x = Boolean(painter?.getMainPainter()); }
+      if (d.check('Y+')) { this.AxisPos += 1; this.second_y = Boolean(painter?.getMainPainter()); }
 
       if (d.check('SAME0')) { this.Same = true; this.IgnoreMainScale = true; }
       if (d.check('SAMES')) { this.Same = true; this.ForceStat = true; }
@@ -344,6 +347,7 @@ class THistDrawOptions {
       this.Box = this.BoxStyle > 0;
 
       if (d.check('CJUST')) this.Cjust = true;
+      if (d.check('COL7')) this.Color = 7; // special color mode with use of bar offset
       if (d.check('COL')) this.Color = true;
       if (d.check('CHAR')) this.Char = 1;
       if (d.check('ALLFUNC')) this.AllFunc = true;
@@ -420,14 +424,14 @@ class THistDrawOptions {
       if (d.check('PMC') && !this._pmc)
          this._pmc = 2;
 
-      const check_axis_bit = (opt, axis, bit) => {
+      const check_axis_bit = (aopt, axis, bit) => {
          // ignore Z scale options for 2D plots
          if ((axis === 'fZaxis') && (hdim < 3) && !this.Lego && !this.Surf)
             return;
-         let flag = d.check(opt);
-         if (pad && pad['$'+opt]) {
+         let flag = d.check(aopt);
+         if (pad && pad['$'+aopt]) {
             flag = true;
-            pad['$'+opt] = undefined;
+            pad['$'+aopt] = undefined;
          }
          if (flag && histo)
             histo[axis].SetBit(bit, true);
@@ -1039,7 +1043,7 @@ class THistPainter extends ObjectPainter {
          this.deleteAttr();
       else {
          this.createAttFill({ attr: histo, color: this.options.histoFillColor, pattern: this.options.histoFillPattern, kind: 1 });
-         this.createAttLine({ attr: histo, color0: this.options.histoLineColor });
+         this.createAttLine({ attr: histo, color0: this.options.histoLineColor, width: this.options.histoLineWidth });
       }
    }
 
@@ -1624,7 +1628,7 @@ class THistPainter extends ObjectPainter {
    /** @summary Returns selected index for specified axis
      * @desc be aware - here indexes starts from 0 */
    getSelectIndex(axis, side, add) {
-      let indx = 0, taxis = this.getAxis(axis);
+      let indx, taxis = this.getAxis(axis);
       const nbin = this[`nbins${axis}`] ?? 0;
 
       if (this.options.second_x && axis === 'x')
@@ -1646,7 +1650,6 @@ class THistPainter extends ObjectPainter {
             indx = nbin;
       } else
          indx = (side === 'left') ? 0 : nbin;
-
 
       // TAxis object of histogram, where user range can be stored
       if (taxis) {
@@ -2127,7 +2130,7 @@ class THistPainter extends ObjectPainter {
       let pal = this.findFunction(clTPaletteAxis),
           pal_painter = pp?.findPainterFor(pal);
 
-      const found_in_func = !!pal;
+      const found_in_func = Boolean(pal);
 
       if (this._can_move_colz) {
          delete this._can_move_colz;
@@ -2299,8 +2302,8 @@ class THistPainter extends ObjectPainter {
 
          fp.redraw();
 
-         const pr = !postpone_draw ? this.redraw() : Promise.resolve(true);
-         return pr.then(() => {
+         const pr2 = !postpone_draw ? this.redraw() : Promise.resolve(true);
+         return pr2.then(() => {
              delete this.do_redraw_palette;
              return pal_painter;
          });
@@ -2402,23 +2405,22 @@ class THistPainter extends ObjectPainter {
       res.grx = res.i1 < 0 ? {} : new Float32Array(res.i2 + 1);
       res.gry = res.j1 < 0 ? {} : new Float32Array(res.j2 + 1);
 
-      if ((typeof histo.fBarOffset === 'number') && (typeof histo.fBarWidth === 'number') &&
-           (histo.fBarOffset || histo.fBarWidth !== 1000)) {
-             if (histo.fBarOffset <= 1000)
-                res.xbar1 = res.ybar1 = 0.001*histo.fBarOffset;
-             else if (histo.fBarOffset <= 3000)
-                res.xbar1 = 0.001*(histo.fBarOffset-2000);
-             else if (histo.fBarOffset <= 5000)
-                res.ybar1 = 0.001*(histo.fBarOffset-4000);
+      if ((typeof histo.fBarOffset === 'number') && (typeof histo.fBarWidth === 'number') && (histo.fBarOffset || (histo.fBarWidth !== 1000))) {
+         if (histo.fBarOffset <= 1000)
+            res.xbar1 = res.ybar1 = 0.001 * histo.fBarOffset;
+         else if (histo.fBarOffset <= 3000)
+            res.xbar1 = 0.001 * (histo.fBarOffset - 2000);
+         else if (histo.fBarOffset <= 5000)
+            res.ybar1 = 0.001 * (histo.fBarOffset - 4000);
 
-             if (histo.fBarWidth <= 1000) {
-                res.xbar2 = Math.min(1, res.xbar1 + 0.001*histo.fBarWidth);
-                res.ybar2 = Math.min(1, res.ybar1 + 0.001*histo.fBarWidth);
-             } else if (histo.fBarWidth <= 3000)
-                res.xbar2 = Math.min(1, res.xbar1 + 0.001*(histo.fBarWidth-2000));
-             else if (histo.fBarWidth <= 5000)
-                res.ybar2 = Math.min(1, res.ybar1 + 0.001*(histo.fBarWidth-4000));
-         }
+         if (histo.fBarWidth <= 1000) {
+            res.xbar2 = Math.min(1, res.xbar1 + 0.001 * histo.fBarWidth);
+            res.ybar2 = Math.min(1, res.ybar1 + 0.001 * histo.fBarWidth);
+         } else if (histo.fBarWidth <= 3000)
+            res.xbar2 = Math.min(1, res.xbar1 + 0.001 * (histo.fBarWidth - 2000));
+         else if (histo.fBarWidth <= 5000)
+            res.ybar2 = Math.min(1, res.ybar1 + 0.001 * (histo.fBarWidth - 4000));
+      }
 
       if (args.original) {
          res.original = true;
@@ -2503,11 +2505,12 @@ class THistPainter extends ObjectPainter {
             binz = histo.getBinContent(i + 1, j + 1);
             res.sumz += binz;
             if (args.pixel_density) {
-               binarea = (res.grx[i+1]-res.grx[i])*(res.gry[j]-res.gry[j+1]);
+               binarea = (res.grx[i+1] - res.grx[i]) * (res.gry[j] - res.gry[j+1]);
                if (binarea <= 0) continue;
                res.max = Math.max(res.max, binz);
-               if ((binz > 0) && ((binz < res.min) || (res.min === 0))) res.min = binz;
-               binz = binz/binarea;
+               if ((binz > 0) && ((binz < res.min) || (res.min === 0)))
+                  res.min = binz;
+               binz /= binarea;
             }
             if (is_first) {
                this.maxbin = this.minbin = binz;

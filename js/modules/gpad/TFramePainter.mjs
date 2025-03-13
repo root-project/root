@@ -204,7 +204,7 @@ function addDragHandler(_painter, arg) {
    drag_move_off.on('start', null).on('drag', null).on('end', null);
 
    drag_move
-      .on('start', function(evnt) {
+      .on('start', evnt => {
          if (detectRightButton(evnt.sourceEvent) || drag_kind) return;
          if (isFunc(arg.is_disabled) && arg.is_disabled('move')) return;
 
@@ -232,8 +232,9 @@ function addDragHandler(_painter, arg) {
             .style('pointer-events', 'none') // let forward double click to underlying elements
             .property('drag_handle', handle)
             .call(addHighlightStyle, true);
-      }).on('drag', function(evnt) {
-         if (!is_dragging(painter, 'move')) return;
+      }).on('drag', evnt => {
+         if (!is_dragging(painter, 'move'))
+            return;
 
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
@@ -249,8 +250,9 @@ function addDragHandler(_painter, arg) {
          handle.y = Math.min(Math.max(handle.acc_y1, 0), handle.pad_h);
 
          drag_rect.attr('d', `M${handle.x},${handle.y}${handle.path}`);
-      }).on('end', function(evnt) {
-         if (!is_dragging(painter, 'move')) return;
+      }).on('end', evnt => {
+         if (!is_dragging(painter, 'move'))
+            return;
 
          evnt.sourceEvent.stopPropagation();
          evnt.sourceEvent.preventDefault();
@@ -337,8 +339,9 @@ function addDragHandler(_painter, arg) {
          handle.height = Math.abs(y2 - y1);
 
          drag_rect.attr('x', handle.x).attr('y', handle.y).attr('width', handle.width).attr('height', handle.height);
-      }).on('end', function(evnt) {
-         if (!is_dragging(painter, 'resize')) return;
+      }).on('end', evnt => {
+         if (!is_dragging(painter, 'resize'))
+            return;
 
          evnt.sourceEvent.preventDefault();
 
@@ -469,16 +472,18 @@ const TooltipHandler = {
             coordinates = pnt ? Math.round(pnt.x) + ',' + Math.round(pnt.y) : '';
       let hintsg = layer.selectChild('.objects_hints'), // group with all tooltips
           title = '', name = '', info = '',
-          hint = null, best_dist2 = 1e10, best_hint = null;
+          hint0 = null, best_dist2 = 1e10, best_hint = null;
 
       // try to select hint with exact match of the position when several hints available
       for (let k = 0; k < hints.length; ++k) {
-         if (!hints[k]) continue;
-         if (!hint) hint = hints[k];
+         if (!hints[k])
+            continue;
+         if (!hint0)
+            hint0 = hints[k];
 
          // select exact hint if this is the only one
-         if (hints[k].exact && (nexact < 2) && (!hint || !hint.exact)) {
-            hint = hints[k];
+         if (hints[k].exact && (nexact < 2) && (!hint0 || !hint0.exact)) {
+            hint0 = hints[k];
             break;
          }
 
@@ -489,15 +494,15 @@ const TooltipHandler = {
          if (dist2 < best_dist2) { best_dist2 = dist2; best_hint = hints[k]; }
       }
 
-      if ((!hint || !hint.exact) && (best_dist2 < 400))
-         hint = best_hint;
+      if ((!hint0 || !hint0.exact) && (best_dist2 < 400))
+         hint0 = best_hint;
 
-      if (hint) {
-         name = (hint.lines && hint.lines.length > 1) ? hint.lines[0] : hint.name;
-         title = hint.title || '';
-         info = hint.line;
-         if (!info && hint.lines)
-            info = hint.lines.slice(1).join(' ');
+      if (hint0) {
+         name = (hint0.lines && hint0.lines.length > 1) ? hint0.lines[0] : hint0.name;
+         title = hint0.title || '';
+         info = hint0.line;
+         if (!info && hint0.lines)
+            info = hint0.lines.slice(1).join(' ');
       }
 
       this.showObjectStatus(name, title, info, coordinates);
@@ -586,17 +591,18 @@ const TooltipHandler = {
                .attr('opacity', 0) // use attribute, not style to make animation with d3.transition()
                .style('overflow', 'hidden')
                .style('pointer-events', 'none');
-          }
+         }
 
          if (viewmode === 'single')
             curry = pnt.touch ? (pnt.y - hint.height - 5) : Math.min(pnt.y + 15, maxhinty - hint.height - 3) + frame_rect.hint_delta_y;
-          else {
-            for (let n = 0; (n < hints.length) && (gapy < maxhinty); ++n) {
-               const hint = hints[n];
-               if (!hint) continue;
-               if ((hint.y >= gapy - 5) && (hint.y <= gapy + hint.height + 5)) {
-                  gapy = hint.y + 10;
-                  n = -1;
+         else {
+            for (let n2 = 0; (n2 < hints.length) && (gapy < maxhinty); ++n2) {
+               const hint2 = hints[n2];
+               if (!hint2)
+                  continue;
+               if ((hint2.y >= gapy - 5) && (hint2.y <= gapy + hint2.height + 5)) {
+                  gapy = hint2.y + 10;
+                  n2 = -1;
                }
             }
             if ((gapminx === -1111) && (gapmaxx === -1111))
@@ -939,11 +945,11 @@ const TooltipHandler = {
    shiftMoveHanlder(evnt, pos0) {
       if (evnt.buttons === this._shifting_buttons) {
          const frame = this.getFrameSvg(),
-             pos = d3_pointer(evnt, frame.node()),
-             main_svg = this.draw_g.selectChild('.main_layer'),
-             dx = pos0[0] - pos[0],
-             dy = (this.scales_ndim === 1) ? 0 : pos0[1] - pos[1],
-             w = this.getFrameWidth(), h = this.getFrameHeight();
+               pos = d3_pointer(evnt, frame.node()),
+               main_svg = this.draw_g.selectChild('.main_layer'),
+               dx = pos0[0] - pos[0],
+               dy = (this.scales_ndim === 1) ? 0 : pos0[1] - pos[1],
+               w = this.getFrameWidth(), h = this.getFrameHeight();
 
          this._shifting_dx = dx;
          this._shifting_dy = dy;
@@ -1002,8 +1008,8 @@ const TooltipHandler = {
          this._shifting_buttons = evnt.buttons;
 
          if (!evnt.$emul) {
-            d3_select(window).on('mousemove.shiftHandler', evnt => this.shiftMoveHanlder(evnt, pos))
-                             .on('mouseup.shiftHandler', evnt => this.shiftUpHanlder(evnt), true);
+            d3_select(window).on('mousemove.shiftHandler', evnt2 => this.shiftMoveHanlder(evnt2, pos))
+                             .on('mouseup.shiftHandler', evnt2 => this.shiftUpHanlder(evnt2), true);
          }
 
          setPainterTooltipEnabled(this, false);
@@ -1047,8 +1053,8 @@ const TooltipHandler = {
       }
 
       if (!evnt.$emul) {
-         d3_select(window).on('mousemove.zoomRect', evnt => this.moveRectSel(evnt))
-                          .on('mouseup.zoomRect', evnt => this.endRectSel(evnt), true);
+         d3_select(window).on('mousemove.zoomRect', evnt2 => this.moveRectSel(evnt2))
+                          .on('mouseup.zoomRect', evnt2 => this.endRectSel(evnt2), true);
       }
 
       this.zoom_rect = null;
@@ -1309,9 +1315,9 @@ const TooltipHandler = {
             .call(addHighlightStyle, true);
 
       if (!evnt.$emul) {
-         d3_select(window).on('touchmove.zoomRect', evnt => this.moveTouchZoom(evnt))
-                          .on('touchcancel.zoomRect', evnt => this.endTouchZoom(evnt))
-                          .on('touchend.zoomRect', evnt => this.endTouchZoom(evnt));
+         d3_select(window).on('touchmove.zoomRect', evnt2 => this.moveTouchZoom(evnt2))
+                          .on('touchcancel.zoomRect', evnt2 => this.endTouchZoom(evnt2))
+                          .on('touchend.zoomRect', evnt2 => this.endTouchZoom(evnt2));
       }
    },
 
@@ -1530,10 +1536,10 @@ const TooltipHandler = {
             domenu = fp.fillContextMenu(menu);
 
          if (domenu) {
-            return exec_painter.fillObjectExecMenu(menu, kind).then(menu => {
+            return exec_painter.fillObjectExecMenu(menu, kind).then(menu2 => {
                 // suppress any running zooming
-                setPainterTooltipEnabled(menu.painter, false);
-                return menu.show().then(() => setPainterTooltipEnabled(menu.painter, true));
+                setPainterTooltipEnabled(menu2.painter, false);
+                return menu2.show().then(() => setPainterTooltipEnabled(menu2.painter, true));
             });
          }
       });
@@ -1556,9 +1562,9 @@ const TooltipHandler = {
 
       setPainterTooltipEnabled(this, false);
 
-      d3_select(window).on('touchmove.singleTouch', kind ? null : evnt => this.moveTouchHandling(evnt, kind, arr[0]))
-                       .on('touchcancel.singleTouch', evnt => this.endSingleTouchHandling(evnt, kind, arr[0], tm))
-                       .on('touchend.singleTouch', evnt => this.endSingleTouchHandling(evnt, kind, arr[0], tm));
+      d3_select(window).on('touchmove.singleTouch', kind ? null : evnt2 => this.moveTouchHandling(evnt2, kind, arr[0]))
+                       .on('touchcancel.singleTouch', evnt2 => this.endSingleTouchHandling(evnt2, kind, arr[0], tm))
+                       .on('touchend.singleTouch', evnt2 => this.endSingleTouchHandling(evnt2, kind, arr[0], tm));
    },
 
    /** @summary Moving of touch pointer
@@ -1570,7 +1576,7 @@ const TooltipHandler = {
 
       try {
         pos = get_touch_pointers(evnt, frame.node())[0];
-      } catch (err) {
+      } catch {
         pos = [0, 0];
         if (evnt?.changedTouches)
            pos = [evnt.changedTouches[0].clientX, evnt.changedTouches[0].clientY];
@@ -1820,30 +1826,28 @@ class TFramePainter extends ObjectPainter {
           umax = pad[`fU${name}max`],
           eps = 1e-7;
 
-            if (name === 'x') {
+      if (name === 'x') {
          if ((Math.abs(pad.fX1) > eps) || (Math.abs(pad.fX2 - 1) > eps)) {
             const dx = pad.fX2 - pad.fX1;
             umin = pad.fX1 + dx*pad.fLeftMargin;
             umax = pad.fX2 - dx*pad.fRightMargin;
          }
-      } else {
-         if ((Math.abs(pad.fY1) > eps) || (Math.abs(pad.fY2 - 1) > eps)) {
-            const dy = pad.fY2 - pad.fY1;
-            umin = pad.fY1 + dy*pad.fBottomMargin;
-            umax = pad.fY2 - dy*pad.fTopMargin;
-         }
+      } else if ((Math.abs(pad.fY1) > eps) || (Math.abs(pad.fY2 - 1) > eps)) {
+         const dy = pad.fY2 - pad.fY1;
+         umin = pad.fY1 + dy*pad.fBottomMargin;
+         umax = pad.fY2 - dy*pad.fTopMargin;
       }
 
-      if ((umin >= umax) || (Math.abs(umin) < eps && Math.abs(umax-1) < eps)) return;
+      if ((umin >= umax) || (Math.abs(umin) < eps && Math.abs(umax-1) < eps))
+         return;
 
       if (pad[`fLog${name}`] > 0) {
          umin = Math.exp(umin * Math.log(10));
          umax = Math.exp(umax * Math.log(10));
       }
 
-      let aname = name;
-      if (this.swap_xy) aname = (name === 'x') ? 'y' : 'x';
-      const smin = this[`scale_${aname}min`],
+      const aname = !this.swap_xy ? name : (name === 'x' ? 'y' : 'x'),
+            smin = this[`scale_${aname}min`],
             smax = this[`scale_${aname}max`];
 
       eps = (smax - smin) * 1e-7;

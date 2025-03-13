@@ -2,7 +2,10 @@
 
 ## Changes in dev
 1. Implement 'cont5' draw option for `TGraph2D` using Delaunay algorithm
-1. Implement 'pol' draw option for `TH2`
+1. Implement 'pol' and 'arr_colz' draw option for `TH2`
+1. Only 'col7' draw option uses bar offset and width for color `TH2` drawing
+1. Interactive zooming and context menu on 'chord' `TH2` drawing
+1. Implement 'box1' for `TH3` with negative bins
 1. Adjust histogram title drawing with native implementation
 1. Improve float to string conversion when 'g' is specified
 1. Support 'same' option for first histogram, draw directly on pad
@@ -13,12 +16,19 @@
 1. Provide context menus for all derived from `TPave` classes
 1. Let edit histograms and graphs title via context menu
 1. Support Poisson errors for `TH1`/`TH2`, https://root-forum.cern.ch/t/62335/
+1. Test fSumw2 when detect empty TH2 bin, sync with https://github.com/root-project/root/pull/17948
 1. Support `TLink` and `TButton` object, used in `TInspectCanvas`
 1. Support `TF12` - projection of `TF2`
-1. Upgrade three.js r168 -> r173
-1. Internals - use private members in JSROOT classes like `#draw_object`
+1. Upgrade three.js r168 -> r174
+1. Internals - use private members and methods
+1. Internals - use `WeakRef` class for cross-referencing of painters
+1. Internals - use negative indexes in arrays and Strings
 1. Fix - handle `TPave` NDC position also when fInit is not set
 1. Fix - properly handle image sizes in svg2pdf
+1. Fix - drawing `TPaveText` with zero text size
+1. Fix - hidden canvas in Jupyter Lab, https://root-forum.cern.ch/t/63097/
+1. Fix - latex super-script without leading symbol, https://root-forum.cern.ch/t/63114/
+1. Fix - correctly read std::pair<> without dictionary, https://root-forum.cern.ch/t/63114/
 
 
 ## Changes in 7.8.1

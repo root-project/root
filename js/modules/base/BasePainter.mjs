@@ -316,10 +316,10 @@ function buildSvgCurve(p, args) {
    }, conv = val => {
       if (!args.ndig || (Math.round(val) === val))
          return val.toFixed(0);
-      let s = val.toFixed(args.ndig), p = s.length - 1;
-      while (s[p] === '0') p--;
-      if (s[p] === '.') p--;
-      s = s.slice(0, p+1);
+      let s = val.toFixed(args.ndig), p1 = s.length - 1;
+      while (s[p1] === '0') p1--;
+      if (s[p1] === '.') p1--;
+      s = s.slice(0, p1+1);
       return (s === '-0') ? '0' : s;
    };
 
@@ -742,11 +742,17 @@ async function _loadJSDOM() {
 /** @summary Return translate string for transform attribute of some svg element
   * @return string or null if x and y are zeros
   * @private */
-function makeTranslate(g, x, y) {
+function makeTranslate(g, x, y, scale = 1) {
    if (!isObject(g)) {
-      y = x; x = g; g = null;
+      scale = y; y = x; x = g; g = null;
    }
-   const res = y ? `translate(${x},${y})` : (x ? `translate(${x})` : null);
+   let res = y ? `translate(${x},${y})` : (x ? `translate(${x})` : null);
+   if (scale && scale !== 1) {
+      if (res) res += ' ';
+          else res = '';
+      res += `scale(${scale.toFixed(3)})`;
+   }
+
    return g ? g.attr('transform', res) : res;
 }
 
@@ -856,7 +862,7 @@ function convertDate(dt) {
    if (settings.TimeZone && isStr(settings.TimeZone)) {
      try {
         res = dt.toLocaleString('en-GB', { timeZone: settings.TimeZone });
-     } catch (err) {
+     } catch {
         res = '';
      }
    }

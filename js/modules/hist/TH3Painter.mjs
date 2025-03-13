@@ -73,7 +73,8 @@ class TH3Painter extends THistPainter {
           stat_sum0 = 0, stat_sumw2 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
           stat_sumz1 = 0, stat_sumx2 = 0, stat_sumy2 = 0, stat_sumz2 = 0;
 
-      if (!isFunc(cond)) cond = null;
+      if (!isFunc(cond))
+         cond = null;
 
       for (xi = 0; xi < this.nbinsx+2; ++xi) {
          xx = xaxis.GetBinCoord(xi - 0.5);
@@ -134,15 +135,15 @@ class TH3Painter extends THistPainter {
       res.eff_entries = stat_sumw2 ? stat_sum0*stat_sum0/stat_sumw2 : Math.abs(stat_sum0);
 
       if (count_skew && !this.isTH2Poly()) {
-         let sumx3 = 0, sumy3 = 0, sumz3 = 0, sumx4 = 0, sumy4 = 0, sumz4 = 0, np = 0, w = 0;
-         for (let xi = i1; xi < i2; ++xi) {
+         let sumx3 = 0, sumy3 = 0, sumz3 = 0, sumx4 = 0, sumy4 = 0, sumz4 = 0, np = 0;
+         for (xi = i1; xi < i2; ++xi) {
             xx = xaxis.GetBinCoord(xi + 0.5);
-            for (let yi = j1; yi < j2; ++yi) {
+            for (yi = j1; yi < j2; ++yi) {
                yy = yaxis.GetBinCoord(yi + 0.5);
-               for (let zi = k1; zi < k2; ++zi) {
+               for (zi = k1; zi < k2; ++zi) {
                   zz = zaxis.GetBinCoord(zi + 0.5);
                   if (cond && !cond(xx, yy, zz)) continue;
-                  w = histo.getBinContent(xi + 1, yi + 1, zi + 1);
+                  const w = histo.getBinContent(xi + 1, yi + 1, zi + 1);
                   np += w;
                   sumx3 += w * Math.pow(xx - res.meanx, 3);
                   sumy3 += w * Math.pow(yy - res.meany, 3);
@@ -343,16 +344,17 @@ class TH3Painter extends THistPainter {
             const indx = Math.floor(intersect.index / this.nvertex);
             if ((indx < 0) || (indx >= this.bins.length)) return null;
 
-            const p = this.painter, histo = p.getHisto(),
-                main = p.getFramePainter(),
-                tip = p.get3DToolTip(this.bins[indx]);
+            const p = this.painter,
+                  thisto = p.getHisto(),
+                  fp = p.getFramePainter(),
+                  tip = p.get3DToolTip(this.bins[indx]);
 
-            tip.x1 = main.grx(histo.fXaxis.GetBinLowEdge(tip.ix));
-            tip.x2 = main.grx(histo.fXaxis.GetBinLowEdge(tip.ix+1));
-            tip.y1 = main.gry(histo.fYaxis.GetBinLowEdge(tip.iy));
-            tip.y2 = main.gry(histo.fYaxis.GetBinLowEdge(tip.iy+1));
-            tip.z1 = main.grz(histo.fZaxis.GetBinLowEdge(tip.iz));
-            tip.z2 = main.grz(histo.fZaxis.GetBinLowEdge(tip.iz+1));
+            tip.x1 = fp.grx(thisto.fXaxis.GetBinLowEdge(tip.ix));
+            tip.x2 = fp.grx(thisto.fXaxis.GetBinLowEdge(tip.ix+1));
+            tip.y1 = fp.gry(thisto.fYaxis.GetBinLowEdge(tip.iy));
+            tip.y2 = fp.gry(thisto.fYaxis.GetBinLowEdge(tip.iy+1));
+            tip.z1 = fp.grz(thisto.fZaxis.GetBinLowEdge(tip.iz));
+            tip.z2 = fp.grz(thisto.fZaxis.GetBinLowEdge(tip.iz+1));
             tip.color = this.tip_color;
             tip.opacity = 0.3;
 
@@ -472,7 +474,7 @@ class TH3Painter extends THistPainter {
 
       const cntr = use_colors ? this.getContour() : null,
             palette = use_colors ? this.getHistPalette() : null,
-            bins_matrixes = [], bins_colors = [], bins_ids = [], bin_opacities = [],
+            bins_matrixes = [], bins_colors = [], bins_ids = [], negative_matrixes = [], bin_opacities = [],
             transfer = (this.transferFunc && proivdeEvalPar(this.transferFunc, true)) ? this.transferFunc : null;
 
       for (let i = i1; i < i2; ++i) {
@@ -508,30 +510,31 @@ class TH3Painter extends THistPainter {
                bin_matrix.scale(new THREE.Vector3((grx2 - grx1) * wei, (gry2 - gry1) * wei, (grz2 - grz1) * wei));
                bin_matrix.setPosition((grx2 + grx1) / 2, (gry2 + gry1) / 2, (grz2 + grz1) / 2);
                bins_matrixes.push(bin_matrix);
+               if (bin_content < 0)
+                  negative_matrixes.push(bin_matrix);
             }
          }
       }
 
       function getBinTooltip(intersect) {
-         let binid = 0;
+         let binid = this.binid;
 
-         if (this.binid !== undefined)
-            binid = this.binid;
-         else {
-            if ((intersect.instanceId === undefined) || (intersect.instanceId >= this.bins.length)) return;
+         if (binid === undefined) {
+            if ((intersect.instanceId === undefined) || (intersect.instanceId >= this.bins.length))
+               return;
             binid = this.bins[intersect.instanceId];
          }
 
          const p = this.painter,
-               histo = p.getHisto(),
-               main = p.getFramePainter(),
+               thisto = p.getHisto(),
+               fp = p.getFramePainter(),
                tip = p.get3DToolTip(binid),
-               grx1 = main.grx(histo.fXaxis.GetBinCoord(tip.ix-1)),
-               grx2 = main.grx(histo.fXaxis.GetBinCoord(tip.ix)),
-               gry1 = main.gry(histo.fYaxis.GetBinCoord(tip.iy-1)),
-               gry2 = main.gry(histo.fYaxis.GetBinCoord(tip.iy)),
-               grz1 = main.grz(histo.fZaxis.GetBinCoord(tip.iz-1)),
-               grz2 = main.grz(histo.fZaxis.GetBinCoord(tip.iz)),
+               grx1 = fp.grx(thisto.fXaxis.GetBinCoord(tip.ix-1)),
+               grx2 = fp.grx(thisto.fXaxis.GetBinCoord(tip.ix)),
+               gry1 = fp.gry(thisto.fYaxis.GetBinCoord(tip.iy-1)),
+               gry2 = fp.gry(thisto.fYaxis.GetBinCoord(tip.iy)),
+               grz1 = fp.grz(thisto.fZaxis.GetBinCoord(tip.iz-1)),
+               grz2 = fp.grz(thisto.fZaxis.GetBinCoord(tip.iz)),
                wei2 = this.get_weight(tip.value) * this.tipscale;
 
          tip.x1 = (grx2 + grx1) / 2 - (grx2 - grx1) * wei2;
@@ -590,23 +593,25 @@ class TH3Painter extends THistPainter {
       }
 
       if (use_helper) {
-         const helper_segments = Box3D.Segments,
-               helper_positions = new Float32Array(bins_matrixes.length * Box3D.Segments.length * 3);
-         let vvv = 0;
-         for (let i = 0; i < bins_matrixes.length; ++i) {
-            const m = bins_matrixes[i].elements;
-            for (let n = 0; n < helper_segments.length; ++n, vvv += 3) {
-               const vert = Box3D.Vertices[helper_segments[n]];
-               helper_positions[vvv] = m[12] + (vert.x - 0.5) * m[0];
-               helper_positions[vvv+1] = m[13] + (vert.y - 0.5) * m[5];
-               helper_positions[vvv+2] = m[14] + (vert.z - 0.5) * m[10];
+         const helper_material = new THREE.LineBasicMaterial({ color: this.getColor(histo.fLineColor) });
+         function addLines(segments, matrixes) {
+            if (!matrixes)
+               return;
+            const positions = new Float32Array(matrixes.length * segments.length * 3);
+            for (let i = 0, vvv = 0; i < matrixes.length; ++i) {
+               const m = matrixes[i].elements;
+               for (let n = 0; n < segments.length; ++n, vvv += 3) {
+                  const vert = Box3D.Vertices[segments[n]];
+                  positions[vvv] = m[12] + (vert.x - 0.5) * m[0];
+                  positions[vvv+1] = m[13] + (vert.y - 0.5) * m[5];
+                  positions[vvv+2] = m[14] + (vert.z - 0.5) * m[10];
+               }
             }
-         }
+            main.add3DMesh(createLineSegments(positions, helper_material));
+         };
 
-         const helper_material = new THREE.LineBasicMaterial({ color: this.getColor(histo.fLineColor) }),
-               lines = createLineSegments(helper_positions, helper_material);
-
-         main.add3DMesh(lines);
+         addLines(Box3D.Segments, bins_matrixes);
+         addLines(Box3D.Crosses, negative_matrixes);
       }
 
       return true;

@@ -216,6 +216,9 @@ extra_symbols_width = {945:1002,946:996,967:917,948:953,949:834,966:1149,947:847
 /** @summary Calculate approximate labels width
   * @private */
 function approximateLabelWidth(label, font, fsize) {
+   if (Number.isInteger(font))
+      font = new FontHandler(font, fsize);
+
    const len = label.length,
          symbol_width = (fsize || font.size) * font.aver_width;
    if (font.isMonospace())
@@ -295,7 +298,7 @@ function remapSymbolTtfCode(code) {
       for (const key in symbols_map) {
          const symbol = symbols_map[key];
          if (symbol.length === 1) {
-            let letter = 0;
+            let letter;
             if (cnt < 54) {
                const opGreek = cnt;
                // see code in TLatex.cxx, line 1302
@@ -314,16 +317,16 @@ function remapSymbolTtfCode(code) {
                   case 81: letter = 0o44; break; // #exists
                }
             }
-            const code = symbol.charCodeAt(0);
-            if (code > 0x80)
-               symbolsPdfMap[code] = letter;
+            const scode = symbol.charCodeAt(0);
+            if (scode > 0x80)
+               symbolsPdfMap[scode] = letter;
          }
          if (++cnt > 54 + 82) break;
       }
       for (let k = 0; k < symbolsMap.length; ++k) {
-         const code = symbolsMap[k];
-         if (code)
-            symbolsPdfMap[code] = k + 33;
+         const scode2 = symbolsMap[k];
+         if (scode2)
+            symbolsPdfMap[scode2] = k + 33;
       }
    }
    return symbolsPdfMap[code] ?? code;
@@ -480,8 +483,8 @@ function parseLatex(node, arg, label, curr) {
          if (!match(lbrace)) {
             console.log(`not starting with ${lbrace} in ${label}`);
             return -1;
-         } else
-            label = label.slice(lbrace.length);
+         }
+         label = label.slice(lbrace.length);
       }
 
       while ((n !== 0) && (pos < label.length)) {
@@ -747,7 +750,8 @@ function parseLatex(node, arg, label, curr) {
          }
 
          if (pos_up) {
-            if (!pos_low) yup = Math.min(yup, curr.rect.last_y1);
+            if (!pos_low && curr.rect)
+               yup = Math.min(yup, curr.rect.last_y1);
             positionGNode(pos_up, x+dx, yup - pos_up.rect.y1 - curr.fsize*0.1);
             w1 = pos_up.rect.width;
          }
@@ -1030,11 +1034,18 @@ async function loadMathjax() {
    if (!loading && (typeof globalThis.MathJax !== 'undefined'))
       return globalThis.MathJax;
 
-   if (!loading) _mj_loading = [];
+   if (!loading)
+      _mj_loading = [];
 
-   const promise = new Promise(resolve => { _mj_loading ? _mj_loading.push(resolve) : resolve(globalThis.MathJax); });
+   const promise = new Promise(resolve => {
+      if (_mj_loading)
+         _mj_loading.push(resolve);
+      else
+         resolve(globalThis.MathJax);
+   });
 
-   if (loading) return promise;
+   if (loading)
+      return promise;
 
    const svg = {
        scale: 1,                      // global scaling factor for all expressions
@@ -1088,9 +1099,9 @@ async function loadMathjax() {
    return _loadJSDOM().then(handle => {
       JSDOM = handle.JSDOM;
       return import('mathjax');
-   }).then(mj => {
+   }).then(mj0 => {
       // return Promise with mathjax loading
-      mj.init({
+      mj0.init({
          loader: {
             load: ['input/tex', 'output/svg', '[tex]/color', '[tex]/upgreek', '[tex]/mathtools', '[tex]/physics']
           },
@@ -1448,8 +1459,8 @@ function applyAttributesToMathJax(painter, mj_node, svg, arg, font_size, svg_fac
 
    if (Number.isInteger(mh) && Number.isInteger(mw)) {
       if (svg_factor > 0) {
-         mw = mw / svg_factor;
-         mh = mh / svg_factor;
+         mw /= svg_factor;
+         mh /= svg_factor;
          svg.attr('width', Math.round(mw)).attr('height', Math.round(mh));
       }
    } else {
@@ -1459,7 +1470,7 @@ function applyAttributesToMathJax(painter, mj_node, svg, arg, font_size, svg_fac
    }
 
    if ((svg_factor > 0) && arg.valign)
-      arg.valign = arg.valign / svg_factor;
+      arg.valign /= svg_factor;
 
    if (arg.valign === null)
       arg.valign = (font_size - mh) / 2;

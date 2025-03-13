@@ -201,7 +201,7 @@ class TRatioPlotPainter extends ObjectPainter {
             pp = this.getPadPainter();
 
       if (this.$oldratio === undefined)
-         this.$oldratio = !!pp.findPainterFor(ratio.fTopPad, k_top_pad, clTPad);
+         this.$oldratio = Boolean(pp.findPainterFor(ratio.fTopPad, k_top_pad, clTPad));
 
       // configure ratio interactive at the end
       pp.$userInteractive = () => this.configureInteractive();
