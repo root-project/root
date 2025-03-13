@@ -85,13 +85,13 @@ public:
    }
 
    // return input type (defined abstract in ROperator class )
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) {
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       // only one input in Pool operators
       return input;
    }
 
    // function returning output shape given input
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) {
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       // shape of pooling input has to be (according to ONNX): NxCxHxW
       // Where N is batch size, C : input  channels, H : input height, W = input width
       // or it can be [N, C, F1,F2,....FN] . Minimum dimension is 3
@@ -237,14 +237,13 @@ public:
 
    }
 
-   std::string GenerateInitCode() {
+   std::string GenerateInitCode() override {
       std::stringstream out;
       return out.str();
    }
 
    // generate code for Session data members (e.g. internal vectors)
-   virtual std::string GenerateSessionMembersCode(std::string opName)
-   {
+   virtual std::string GenerateSessionMembersCode(std::string opName) override {
       opName = "op_" + opName;
       std::stringstream out;
       // input matrix padded with zero
@@ -266,7 +265,7 @@ public:
       return out.str();
    }
 
-   std::string Generate(std::string OpName) {
+   std::string Generate(std::string OpName) override {
       OpName = "op_" + OpName;
 
       if (fShapeX.empty() || fShapeY.empty()) {
