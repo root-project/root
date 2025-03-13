@@ -70,6 +70,7 @@ TEST(RNTuple, TClassDefaultTemplateParameter)
       model->AddField(RFieldBase::Create("f4", "struct DataVector<bool,vector<unsigned>>").Unwrap());
       model->AddField(RFieldBase::Create("f5", "DataVector<Double32_t>").Unwrap());
       model->AddField(RFieldBase::Create("f6", "DataVector<int, double>").Unwrap());
+      model->MakeField<DataVector<StructUsingCollectionProxy<int>>>("f7");
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
    }
 
@@ -99,6 +100,11 @@ TEST(RNTuple, TClassDefaultTemplateParameter)
    auto v1 = reader->GetView<DataVector<int>>("f1");
    auto v3 = reader->GetView<DataVector<int>>("f3");
    EXPECT_THROW(reader->GetView<DataVector<int>>("f2"), ROOT::RException);
+
+   // Ensure the typed API does not throw an exception
+   auto f1 = reader->GetModel().GetDefaultEntry().GetPtr<DataVector<int>>("f1");
+   auto f4 = reader->GetModel().GetDefaultEntry().GetPtr<DataVector<bool, std::vector<unsigned int>>>("f4");
+   auto f7 = reader->GetModel().GetDefaultEntry().GetPtr<DataVector<StructUsingCollectionProxy<int>>>("f7");
 }
 
 TEST(RNTuple, TemplateArgIntegerNormalization)

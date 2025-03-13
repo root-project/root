@@ -28,6 +28,7 @@
 #pragma link C++ class DataVector < int, double> + ;
 #pragma link C++ class DataVector < int, float> + ;
 #pragma link C++ class DataVector < bool, std::vector < unsigned int>> + ;
+#pragma link C++ class DataVector < StructUsingCollectionProxy < int>, double> + ;
 #pragma link C++ class DataVector < int, double> ::Inner + ;
 #pragma link C++ class DataVector < int, double> ::Inner + ;
 #pragma link C++ class DataVector < int, float> ::Inner + ;
