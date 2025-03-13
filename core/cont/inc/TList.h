@@ -85,10 +85,15 @@ public:
    void              AddLast(TObject *obj) override;
    virtual void      AddLast(TObject *obj, Option_t *opt);
    void              AddAt(TObject *obj, Int_t idx) override;
+   void              AddAt(TObject *obj, Int_t idx, Option_t *option);
    void              AddAfter(const TObject *after, TObject *obj) override;
    virtual void      AddAfter(TObjLink *after, TObject *obj);
+   void              AddAfter(const TObject *after, TObject *obj, Option_t *option);
+   void              AddAfter(TObjLink *after, TObject *obj, Option_t *option);
    void              AddBefore(const TObject *before, TObject *obj) override;
    virtual void      AddBefore(TObjLink *before, TObject *obj);
+   void              AddBefore(const TObject *before, TObject *obj, Option_t *option);
+   void              AddBefore(TObjLink *before, TObject *obj, Option_t *option);
    TObject  *Remove(TObject *obj) override;
    virtual TObject  *Remove(TObjLink *lnk);
    TObject          *Remove(const TObjLinkPtr_t &lnk) { return Remove(lnk.get()); }
