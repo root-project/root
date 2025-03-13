@@ -3068,7 +3068,6 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
      }
    } else {
       normalizedName = cl->GetName(); // Use the fact that all TClass names are normalized.
-      checkTable = load && (normalizedName != name);
    }
 
    if (!load) return nullptr;
