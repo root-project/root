@@ -3089,7 +3089,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
 
    // Early return to release the lock without having to execute the
    // long-ish normalization.
-   if (cl && (cl->IsLoaded() || cl->TestBit(kUnloading))) return cl;
+   if (cl && (cl->IsLoaded() || cl->TestBit(kUnloading)))
+      return cl;
 
    R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
@@ -3098,7 +3099,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
 
    cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
    if (cl) {
-      if (cl->IsLoaded() || cl->TestBit(kUnloading)) return cl;
+      if (cl->IsLoaded() || cl->TestBit(kUnloading))
+         return cl;
 
       // We could speed-up some of the search by adding (the equivalent of)
       //
@@ -3135,7 +3137,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
    if (dict) {
       // The name is normalized, so the result of the first search is
       // authoritative.
-      if (!cl && !load) return nullptr;
+      if (!cl && !load)
+         return nullptr;
 
       TClass *loadedcl = (dict)();
       if (loadedcl) {
@@ -3160,7 +3163,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
          cl = (TClass*)gROOT->GetListOfClasses()->FindObject(normalizedName.c_str());
 
          if (cl) {
-            if (cl->IsLoaded() || cl->TestBit(kUnloading)) return cl;
+            if (cl->IsLoaded() || cl->TestBit(kUnloading))
+               return cl;
 
             //we may pass here in case of a dummy class created by TVirtualStreamerInfo
             load = kTRUE;
@@ -3171,8 +3175,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
       normalizedName = cl->GetName(); // Use the fact that all TClass names are normalized.
    }
 
-   if (!load) return nullptr;
-
+   if (!load)
+      return nullptr;
 // This assertion currently fails because of
 //   TClass *c1 = TClass::GetClass("basic_iostream<char,char_traits<char> >");
 //   TClass *c2 = TClass::GetClass("std::iostream");
@@ -3244,11 +3248,13 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
 
    // See if the TClassGenerator can produce the TClass we need.
    loadedcl = LoadClassCustom(normalizedName.c_str(),silent);
-   if (loadedcl) return loadedcl;
+   if (loadedcl)
+      return loadedcl;
 
    // We have not been able to find a loaded TClass, return the Emulated
    // TClass if we have one.
-   if (cl) return cl;
+   if (cl)
+      return cl;
 
    if (ispair) {
       if (hint_pair_offset && hint_pair_size) {
@@ -3277,8 +3283,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
             }
          }
       }
-   } else if (TClassEdit::IsSTLCont( normalizedName.c_str() )) {
-
+   } else if (TClassEdit::IsSTLCont( normalizedName.c_str() ))
+   {
       return gInterpreter->GenerateTClass(normalizedName.c_str(), kTRUE, silent);
    }
 
@@ -5892,7 +5898,7 @@ TClass *TClass::LoadClassDefault(const char *requestedname, Bool_t /* silent */)
    DictFuncPtr_t dict = TClassTable::GetDictNorm(requestedname);
 
    if (!dict) {
-      if (gInterpreter->AutoLoad(requestedname,kTRUE)) {
+      if (gInterpreter->AutoLoad(requestedname, kTRUE)) {
          dict = TClassTable::GetDictNorm(requestedname);
       }
    }
