@@ -64,13 +64,13 @@ public:
     }
 
    // output type is same as input
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       auto ret = std::vector<ETensorType>(1, input[0]);
       return ret;
    }
 
    // output shape
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       auto & input_shape = input[0];
        // assume dimension of output shape is SAME AS INPUT !
       std::vector<std::vector<size_t>> ret(1, input_shape);
@@ -214,7 +214,7 @@ public:
       }
    }
 
-   std::string Generate(std::string OpName){
+   std::string Generate(std::string OpName) override {
       if (fIsOutputConstant) return "";  //no op for constant tensors
 
       OpName = "op_" + OpName;

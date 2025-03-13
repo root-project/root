@@ -35,11 +35,11 @@ public:
          fOutputTensorNames = { fNY };
    }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       return input;
    }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       std::vector<std::vector<size_t>>  ret;
       ret[0].push_back(input[0].size());
       return ret;
@@ -81,7 +81,7 @@ public:
 
    }
 
-   std::string Generate(std::string OpName){
+   std::string Generate(std::string OpName) override {
       // no need to generate code if the output is constant
       if (fIsOutputConstant) return "";
 

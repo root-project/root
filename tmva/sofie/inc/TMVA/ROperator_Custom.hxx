@@ -40,8 +40,8 @@ public:
         }
     }
 
-    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>>) {return {{}};};
-    std::vector<ETensorType> TypeInference(std::vector<ETensorType>){ return {};};
+    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>>) override {return {{}};};
+    std::vector<ETensorType> TypeInference(std::vector<ETensorType>) override { return {};};
 
    void Initialize(RModel& model) override {
       model.AddNeededCustomHeader(fHeaderName);
@@ -75,7 +75,7 @@ public:
       model.AddNeededCustomHeader("ROOT/RSpan.hxx");
    }
 
-    std::string Generate(std::string OpName){
+    std::string Generate(std::string OpName) override {
       OpName = "op_" + OpName;
       std::stringstream out;
       out << "\n//------ "<<fOpName<<" \n";

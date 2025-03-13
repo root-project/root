@@ -68,13 +68,13 @@ public:
    }
 
    // output type is same as input
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       auto ret = std::vector<ETensorType>(1, input[0]);
       return ret;
    }
 
    // output shape
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       std::vector<std::vector<size_t>> ret;
       auto & input_shape = input[0];
 
@@ -167,7 +167,7 @@ public:
    }
 
    void Initialize(RModel& model) override {
-      
+
       fVerbose = model.Verbose();
       if (model.CheckIfTensorAlreadyExist(fNData) == false) {
           // input must be a graph input, or already initialized intermediate tensor
@@ -220,8 +220,7 @@ public:
       }
    }
 
-   std::string Generate(std::string OpName)
-   {
+   std::string Generate(std::string OpName) override {
       if (fIsOutputConstant) return "";  //no op for constant tensors
 
       OpName = "op_" + OpName;

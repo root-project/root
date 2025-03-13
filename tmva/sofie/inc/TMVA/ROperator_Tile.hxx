@@ -31,11 +31,11 @@ public:
          fOutputTensorNames = { fNY };
       }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       return input;
    }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       std::vector<size_t> ret = input[0];
 
       for(size_t i=0; i < input[1].size(); i++) {
@@ -88,7 +88,7 @@ public:
             << " given repeats " << ConvertShapeToString(repeats_vector) << std::endl;
    }
 
-   std::string Generate(std::string OpName){
+   std::string Generate(std::string OpName) override {
       OpName = "op_" + OpName;
       if (fShapeInput.empty() || fShapeY.empty()) {
             throw std::runtime_error("TMVA SOFIE Tile Op called to Generate without being initialized first");

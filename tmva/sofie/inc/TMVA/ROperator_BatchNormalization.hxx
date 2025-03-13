@@ -52,7 +52,7 @@ public:
    fNX(UTILITY::Clean_name(nameX)), fNScale(UTILITY::Clean_name(nameScale)),
    fNB(UTILITY::Clean_name(nameB)), fNMean(UTILITY::Clean_name(nameMean)),
    fNVar(UTILITY::Clean_name(nameVar)), fNY(UTILITY::Clean_name(nameY)), fActivation(activation)
-   {  
+   {
       fInputTensorNames = { fNX };
       fOutputTensorNames = { fNY };
 
@@ -66,12 +66,12 @@ public:
    }
 
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) {
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       ETensorType out = input[0];
       return {out};
    }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) {
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       if (input.size() != 5 ) {
          throw
          std::runtime_error("TMVA SOFIE BatchNormalization Op Shape inference need 5 input tensors");
@@ -184,7 +184,7 @@ public:
       }
    }
 
-   std::string Generate(std::string OpName){
+   std::string Generate(std::string OpName) override {
       OpName = "op_" + OpName;
       if (fShapeX.empty()){
          throw std::runtime_error("TMVA SOFIE Batch Normalization called to Generate without being initialized first");
@@ -229,7 +229,7 @@ public:
       return out.str();
    }
 
-   std::vector<std::string> GetBlasRoutines() { return { std::string("Copy"), std::string("Axpy") }; }
+   std::vector<std::string> GetBlasRoutines() override { return { std::string("Copy"), std::string("Axpy") }; }
 };
 
 }//SOFIE

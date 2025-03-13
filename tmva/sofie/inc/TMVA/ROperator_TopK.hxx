@@ -42,12 +42,12 @@ public:
             fOutputTensorNames = { fNVal, fNInd };
         }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) {
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
          ETensorType ret = input[0];
          return {ret, ret};
       }
 
-   std::vector<std::vector<size_t>> ShapeInference(const std::vector<std::vector<size_t>> input) {
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       if (input.size() != 2) {
          throw std::runtime_error("TMVA SOFIE TopK Op Shape Inference needs exactly 2 input tensors");
       }
@@ -109,8 +109,7 @@ public:
       fType = ConvertTypeToString(model.GetTensorType(fNX));
    }
 
-   std::string Generate(std::string OpName)
-   {
+   std::string Generate(std::string OpName) override {
       OpName = "op_" + OpName;
       if (fShapeX.empty()) {
          throw std::runtime_error("TMVA SOFIE Operator TopK called to Generate without being initialized first");

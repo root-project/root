@@ -34,18 +34,18 @@ public:
          fNYs.reserve(namesY.size());
          for (auto & name : namesY)
             fNYs.push_back(UTILITY::Clean_name(name));
-      
+
          fInputTensorNames = { fNX };
          fOutputTensorNames.resize(fNYs.size());
          std::transform(fNYs.begin(), fNYs.end(), fOutputTensorNames.begin(),
                    [](const std::string& s) -> std::string_view { return s; });
       }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       return input;
    }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       auto ret = input; //suggest copy to compiler
       return ret;
    }
@@ -107,7 +107,7 @@ public:
    }
 
 
-   std::string Generate(std::string OpName){
+   std::string Generate(std::string OpName) override {
       OpName = "op_" + OpName;
       if (fOutputShapes.empty()){
          throw std::runtime_error("TMVA SOFIE Operator Split called to Generate without being initialized first");

@@ -42,11 +42,11 @@ public:
          fOutputTensorNames = { fNOutput };
    }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       return input;
    }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       if (input.size() > 1) throw std::runtime_error("TMVA SOFIE Tranpose Op Shape Inference only need 1 input tensor");
       auto& data = input[0];
       if (fAttrPerm.size() != data.size() )
@@ -113,7 +113,7 @@ public:
       }
    }
 
-   std::string Generate(std::string OpName){
+   std::string Generate(std::string OpName) override {
       if (fIsOutputConstant) return "";  //no op for constant tensors
       OpName = "op_" + OpName;
       if (fShapeData.empty() || fShapeOutput.empty()){

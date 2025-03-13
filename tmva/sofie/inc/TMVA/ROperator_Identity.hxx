@@ -30,16 +30,16 @@ public:
          fOutputTensorNames = { fNY };
       }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       return input;
    }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       auto ret = input; //suggest copy to compiler
       return ret;
    }
 
-   void Initialize(RModel& model){
+   void Initialize(RModel& model) override {
        //input must be a graph input, or already initialized intermediate tensor
       if (model.CheckIfTensorAlreadyExist(fNX) == false){
         throw std::runtime_error("TMVA SOFIE Identity Op Input Tensor is not found in model");
@@ -63,7 +63,7 @@ public:
          model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShape);
    }
 
-   std::string GenerateInitCode() {
+   std::string GenerateInitCode() override {
       // generate init code for identity operator
       if (!fIsInputInitialized) return "";
       std::stringstream out;
@@ -74,7 +74,7 @@ public:
    }
 
 
-   std::string Generate(std::string OpName){
+   std::string Generate(std::string OpName) override {
       if (fIsOutputConstant || fIsInputInitialized) return "";
       OpName = "op_" + OpName;
       if (fShape.empty()) {
