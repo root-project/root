@@ -1343,6 +1343,57 @@ void tgaxis5()
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// 6th TGaxis test - modified labels
+
+void tgaxis6()
+{
+   TCanvas *C = StartTest(900, 300);
+
+   C->Range(-6,0,6,1.5);
+   auto *axis = new TGaxis(-5.5,0.4,5.5,0.4,0.0,100,510,"S");
+   axis->SetName("axis1");
+   axis->SetTitle("ChangeLabel axis");
+   axis->SetTitleSize(0.08);
+   axis->SetLabelSize(0.07);
+   axis->SetTickSize(0.05);
+   axis->SetTitleColor(kBlue);
+   axis->SetTitleFont(42);
+   axis->ChangeLabel(1,-1,-1,-1,kRed);
+   axis->ChangeLabel(3,-1,0.);
+   axis->ChangeLabel(5,30.,-1,0);
+   axis->ChangeLabel(6,-1,-1,-1,kGreen,-1,"6th label");
+   axis->ChangeLabel(-2,-1,-1,-1,kGreen,-1,"2nd to last label");
+   C->Add(axis);
+
+   axis = new TGaxis(-5.5,0.8,5.5,0.8,0.0,100,510,"S");
+   axis->SetName("axis2");
+   axis->SetTitle("ChangeLabelByValue axis");
+   axis->SetTitleSize(0.08);
+   axis->SetLabelSize(0.07);
+   axis->SetTickSize(0.05);
+   axis->SetTitleColor(kBlue);
+   axis->SetTitleFont(42);
+   axis->ChangeLabelByValue(0., -1, -1, -1, kRed);
+   axis->ChangeLabelByValue(20., -1, 0);
+   axis->ChangeLabelByValue(40., 30.);
+   axis->ChangeLabelByValue(50., -1, -1, -1, kBlue, -1, "blue for 50.");
+   axis->ChangeLabelByValue(90., -1, -1, -1, kGreen, -1, "green for 90.");
+   C->Add(axis);
+
+   axis = new TGaxis(-5.5,1.2,5.5,1.2,0.0,100,510,"S");
+   axis->SetName("axis3");
+   axis->SetTitle("Original axis");
+   axis->SetTitleSize(0.08);
+   axis->SetLabelSize(0.07);
+   axis->SetTickSize(0.05);
+   axis->SetTitleColor(kBlue);
+   axis->SetTitleFont(42);
+   C->Add(axis);
+
+   TestReport(C, "TGaxis 6 (Modified labels)");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Alphanumeric labels in a 1-d histogram
 
 void labels1()
@@ -2767,6 +2818,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    tgaxis3       ();
    tgaxis4       ();
    tgaxis5       ();
+   tgaxis6       ();
    labels1       ();
    tellipse      ();
    feynman       ();
