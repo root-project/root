@@ -164,7 +164,7 @@ public:
 
       // copy the selected elements in the output
       out << SP << SP << "for (size_t l = 0; l < " << fK << "; l++) {\n";
-      out << SP << SP << SP << "tensor_" << fNX   << "[yoffset + " << strideY[axis] << "*l + j] = elements[l].first;\n";
+      out << SP << SP << SP << "tensor_" << fNVal   << "[yoffset + " << strideY[axis] << "*l + j] = elements[l].first;\n";
       out << SP << SP << SP << "tensor_" << fNInd << "[yoffset + " << strideY[axis] << "*l + j] = elements[l].second;\n";
       out << SP << SP << "}\n";
       if (n_after > 1) out << SP << SP << "}\n";

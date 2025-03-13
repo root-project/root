@@ -48,7 +48,7 @@ public:
    // Check if the operator is registered
    bool IsRegisteredOperator(const std::string &name);
 
-   // List of registered operators
+   // List of registered operators (in alphabetical order)
    std::vector<std::string> GetRegisteredOperators();
 
    // Set the type of the tensor
