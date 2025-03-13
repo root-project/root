@@ -120,10 +120,23 @@ void TLegendEntry::SaveEntry(std::ostream &out, const char* name)
 
    TString objname = fObject ? fObject->GetName() : "NULL";
    out << name << "->AddEntry(\"" << objname << "\",\"" << TString(fLabel).ReplaceSpecialCppChars() << "\",\""
-       << TString(fOption).ReplaceSpecialCppChars() << "\");" << std::endl;
+       << TString(fOption).ReplaceSpecialCppChars() << "\");\n";
+   // if default style is detected - copy attributes from object
+   // it can happen when legend was not paint before writing into the file
+   if (fObject && GetFillStyle() == 0 && GetFillColor() == 0 && GetLineStyle() == 1 && GetLineColor() == 1 && GetLineWidth() == 1) {
+      TString opt = fOption;
+      opt.ToLower();
+      if (opt.Contains("f") && fObject->InheritsFrom(TAttFill::Class()))
+         dynamic_cast<TAttFill*>(fObject)->Copy(*this);
+      if (opt.Contains("p") && fObject->InheritsFrom(TAttMarker::Class()))
+         dynamic_cast<TAttMarker*>(fObject)->Copy(*this);
+      if ((opt.Contains("l") || opt.Contains("f")) && fObject->InheritsFrom(TAttLine::Class()))
+         dynamic_cast<TAttLine*>(fObject)->Copy(*this);
+   }
+
    SaveFillAttributes(out, "legentry", 0, 0);
-   SaveLineAttributes(out, "legentry", 0, 0, 0);
-   SaveMarkerAttributes(out, "legentry", 0, 0, 0);
+   SaveLineAttributes(out, "legentry", 1, 1, 1);
+   SaveMarkerAttributes(out, "legentry", 1, 21, 1);
    SaveTextAttributes(out, "legentry", 0, 0, 0, 0, 0);
 }
 
