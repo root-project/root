@@ -12,7 +12,7 @@ on:
         description: 'Do incremental build'
         type: boolean
         required: true
-        default: true
+        default: false
       # docu_input: # opportunity: overwrite makeinput.sh with these args
       #   description: Folders to build documentation for. All folders are built if empty.
       #   type: string

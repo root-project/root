@@ -111,7 +111,7 @@ jobs:
       run: ".github/workflows/root-ci-config/build_root.py
                   --buildtype      Release
                   --platform       ${{ env.PLATFORM }}
-                  --incremental    false
+                  --incremental    ${{ inputs.incremental }}
                   --base_ref       ${BASE_REF}
                   --head_ref       ${BASE_REF}
                   --binaries       false
@@ -122,7 +122,7 @@ jobs:
       run: ".github/workflows/root-ci-config/build_root.py
                   --buildtype      Release
                   --platform       ${{ env.PLATFORM }}
-                  --incremental    false
+                  --incremental    ${{ inputs.incremental }}
                   --base_ref       ${BASE_REF}
                   --head_ref       ${BASE_REF}
                   --binaries       false
