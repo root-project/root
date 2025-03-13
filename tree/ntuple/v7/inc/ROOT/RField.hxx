@@ -18,6 +18,7 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RFieldBase.hxx>
+#include <ROOT/RFieldUtils.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RSpan.hxx>
@@ -291,7 +292,7 @@ public:
 template <typename T, typename = void>
 class RField final : public RClassField {
 public:
-   static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
+   static std::string TypeName() { return ROOT::Internal::GetRenormalizedDemangledTypeName(typeid(T)); }
    RField(std::string_view name) : RClassField(name, TypeName())
    {
       static_assert(std::is_class_v<T>, "no I/O support for this basic C++ type");
