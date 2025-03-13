@@ -39,11 +39,11 @@ public:
          fOutputTensorNames = { fNY };
    }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       return input;
    }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       auto ret = input;
       return ret;
    }
@@ -119,7 +119,7 @@ public:
       }
    }
 
-   std::string Generate(std::string OpName) {
+   std::string Generate(std::string OpName) override {
       if (fIsOutputConstant) {
          // no code to generate here for constant output. Tensor output is defined in Session constructor
          return "//---------------------------------------\n";

@@ -30,11 +30,11 @@ public:
          fOutputTensorNames = { fNY };
       }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       return input;
    }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       auto ret = input; //suggest copy to compiler
       return ret;
    }
@@ -57,7 +57,7 @@ public:
    }
 
 
-   std::string Generate(std::string OpName){
+   std::string Generate(std::string OpName) override {
       OpName = "op_" + OpName;
       if (fShape.empty()){
          throw std::runtime_error("TMVA SOFIE Operator EyeLike called to Generate without being initialized first");

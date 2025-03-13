@@ -39,11 +39,11 @@ public:
                    [](const std::string& s) -> std::string_view { return s; });
       }
 
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       return input;
    }
 
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       auto ret = input; //suggest copy to compiler
       return ret;
    }
@@ -80,7 +80,7 @@ public:
    }
 
 
-   std::string Generate(std::string opName){
+   std::string Generate(std::string opName) override {
       opName = "op_" + opName;
       if (fType == ETensorType::UNDEFINED) {
          throw std::runtime_error("TMVA If operator called to Generate without being initialized first");

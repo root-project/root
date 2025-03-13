@@ -41,14 +41,14 @@ namespace SOFIE{
       std::vector<Dim> fShapeB;
       std::vector<size_t> fShapeC;
       std::vector<Dim> fShapeY;
-      
+
    public:
 
       ROperator_Gemm(){}
       ROperator_Gemm(float alpha, float beta, int_t transA, int_t transB, std::string nameA, std::string nameB, std::string nameY, EActivationType activation=EActivationType::UNDEFINED):
          fAttrAlpha(alpha), fAttrBeta(beta), fAttrTransA(transA), fAttrTransB(transB), fNA(UTILITY::Clean_name(nameA)),
          fNB(UTILITY::Clean_name(nameB)), fNY(UTILITY::Clean_name(nameY))
-      {  
+      {
          fActivation = activation;
          fType = "float";
          static_assert(std::is_same_v<T, float>,
@@ -67,7 +67,7 @@ namespace SOFIE{
          fOutputTensorNames = { fNY };
       }
 
-      std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
+      std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
          ETensorType out = input[0];
          return {out};
       }
@@ -128,7 +128,7 @@ namespace SOFIE{
          return ret;
       }
 
-      std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
+      std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
          return DoShapeInference<size_t>(input);
       }
       std::vector<std::vector<Dim>> DynamicShapeInference(const std::vector<std::vector<Dim>> & input){
@@ -269,8 +269,7 @@ namespace SOFIE{
          model.AddNeededStdLib("algorithm");
       }
 
-      std::string GenerateInitCode()
-      {
+      std::string GenerateInitCode() override {
          std::stringstream out;
          // generate initialization code for broadcasting of bias tensor
          if (fShapeC.size() != fShapeY.size() && fNC != fNC2) {
@@ -291,7 +290,7 @@ namespace SOFIE{
          return out.str();
       }
 
-      std::string Generate(std::string opName){
+      std::string Generate(std::string opName) override {
          opName = "op_" + opName;
 
          if (fShapeA.empty() || fShapeB.empty() || fShapeY.empty() || (fNC != "" && fShapeC.empty())) {
@@ -391,8 +390,8 @@ namespace SOFIE{
          return out.str();
       }
 
-      std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Gemv") }; }
-      
+      std::vector<std::string> GetBlasRoutines() override { return { std::string("Gemm"), std::string("Gemv") }; }
+
    };
 
 

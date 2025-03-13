@@ -58,12 +58,12 @@ public:
    }
 
    // type of output given input
-   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
+   std::vector<ETensorType> TypeInference(std::vector<ETensorType> input) override {
       return input;
    }
 
    // shape of output tensors given input tensors
-   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
+   std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) override {
       auto ret = input; //suggest copy to compiler
       auto & outputShape = ret[0];
       for (size_t j = 0; j < fAttrAxes.size(); j++) {
