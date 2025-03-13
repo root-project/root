@@ -625,13 +625,7 @@ void TPaletteAxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    if (!fH)
       return;
 
-   TString args;
-   if (fOption.Contains("NDC"))
-      args.Form("%g, %g, %g, %g, %s", fX1NDC, fY1NDC, fX2NDC, fY2NDC, fH->GetName());
-   else
-      args.Form("%g, %g, %g, %g, %s", fX1, fY1, fX2, fY2, fH->GetName());
-
-   SavePrimitiveConstructor(out, Class(), "palette", args);
+   SavePrimitiveConstructor(out, Class(), "palette", GetSavePaveArgs(fH->GetName(), kFALSE));
    out << "   palette->SetNdivisions(" << fH->GetZaxis()->GetNdivisions() << ");\n";
    out << "   palette->SetAxisColor(" << TColor::SavePrimitiveColor(fH->GetZaxis()->GetAxisColor()) << ");\n";
    out << "   palette->SetLabelColor(" << TColor::SavePrimitiveColor(fH->GetZaxis()->GetLabelColor()) << ");\n";

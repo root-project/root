@@ -733,27 +733,19 @@ void TPaveText::SaveLines(std::ostream &out, const char *name, Bool_t)
 
 void TPaveText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   TString args;
-   if (fOption.Contains("NDC"))
-      args.Form("%g, %g, %g, %g, \"%s\"", fX1NDC, fY1NDC, fX2NDC, fY2NDC,
-                TString(fOption).ReplaceSpecialCppChars().Data());
-   else if (gPad)
-      args.Form("%g, %g, %g, %g, \"%s\"", gPad->PadtoX(fX1), gPad->PadtoY(fY1), gPad->PadtoX(fX2), gPad->PadtoY(fY2),
-                TString(fOption).ReplaceSpecialCppChars().Data());
-
-   SavePrimitiveConstructor(out, Class(), "pt", args);
+   SavePrimitiveConstructor(out, Class(), "pt", GetSavePaveArgs());
 
    if (strcmp(GetName(), "TPave"))
-      out << "   pt->SetName(\"" << GetName() << "\");" << std::endl;
+      out << "   pt->SetName(\"" << GetName() << "\");\n";
    if (fLabel.Length() > 0)
-      out << "   pt->SetLabel(\"" << TString(fLabel).ReplaceSpecialCppChars() << "\");" << std::endl;
+      out << "   pt->SetLabel(\"" << TString(fLabel).ReplaceSpecialCppChars() << "\");\n";
    if (fBorderSize != 4)
-      out << "   pt->SetBorderSize(" << fBorderSize << ");" << std::endl;
+      out << "   pt->SetBorderSize(" << fBorderSize << ");\n";
    SaveFillAttributes(out, "pt", 19, 1001);
    SaveLineAttributes(out, "pt", 1, 1, 1);
    SaveTextAttributes(out, "pt", 22, 0, 1, 62, 0);
    SaveLines(out, "pt", kTRUE);
-   out << "   pt->Draw();" << std::endl;
+   out << "   pt->Draw();\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
