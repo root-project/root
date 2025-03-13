@@ -104,7 +104,8 @@ public:
 
 
       model.AddIntermediateTensor(fNVal, model.GetTensorType(fNX), fShapeY);
-      model.AddIntermediateTensor(fNInd, model.GetTensorType(fNX), fShapeY);
+      // output indices should be an int64 tensor
+      model.AddIntermediateTensor(fNInd, ETensorType::INT64, fShapeY);
       fType = ConvertTypeToString(model.GetTensorType(fNX));
    }
 
@@ -116,66 +117,59 @@ public:
       }
       std::stringstream out;
       size_t size = fShapeX.size();
-      size_t axis = fAttrAxis < 0 ? size + fAttrAxis : fAttrAxis;  // not really needed
+      size_t axis = fAttrAxis < 0 ? size + fAttrAxis : fAttrAxis;
       out << "\n" << SP << "//------ TopK\n";
 
       size_t length=ConvertShapeToLength(fShapeX);
-      size_t bound=1;
-      for(size_t i = 0; i < axis; i++)
-         bound *= fShapeX[i]; //bound decider
+      auto strideX = UTILITY::ComputeStrideFromShape(fShapeX);
+      auto strideY = UTILITY::ComputeStrideFromShape(fShapeX);
+      // we perform loop on dimension before sorted axis and after sorted axis
+      size_t n_before = (axis>0) ? length/strideX[axis-1] : 1;
+      size_t n_after = strideX[axis];
+      size_t n_elements = fShapeX[axis]; // number of elements to be sorted
 
-      // first we create boundaries in the input
-      // [m,n,o,k,p] => boundary's size = length/(m*n*o)
-      size_t groupSize = length/bound; //final search space for topK elements
-
-      size_t jump= groupSize/fShapeX[axis]; /// this is stride[axis]
-      //candidates to check in group
-      size_t numOfChecksInGrp=groupSize/jump;
-      size_t numOfCheckersInGrp=groupSize/numOfChecksInGrp;
-
-      // for(int i=0;i<length;i++){
-      //    if(i==groupSize)dim=0;
       // }
       out << SP << "{\n"; // to define a separate scope for the operator code
-      out<<SP<<"size_t itr = 0, p = 0;\n";
-      out<<SP<<"std::vector<std::vector<std::pair<float,int>>>groupElements;\n";
-      out<<SP<<"for (size_t i = 0; i < "<<length<<"; i++) {\n";
-      //main logic
-      out<<SP<<SP<<"size_t tempitr = 0, jtmp = 0;\n";
-      out<<SP<<SP<<"std::vector<std::pair<float,int>>elements;\n";
-      out<<SP<<SP<<"while(tempitr < "<<groupSize<<"){\n";
-      out<<SP<<SP<<SP<<"elements.push_back({tensor_"<<fNX<<"[i+tempitr]"<<",tempitr});\n";
-      out<<SP<<SP<<SP<<"jtmp++;\n";
-      out<<SP<<SP<<SP<<"tempitr = jtmp * " <<jump<<";\n";
-      out<<SP<<SP<<"}\n";
+      out << SP << "std::vector<std::pair<float,int64_t>> elements(" << n_elements << ");\n";
+      // loop on elements before
+      if (n_before > 1) {
+         out << SP << "for (size_t i = 0; i < " << n_before << "; i++) {\n";
+         out << SP << SP << "size_t xoffset = i*" << strideX[axis-1] << ";\n";
+         out << SP << SP << "size_t yoffset = i*" << strideY[axis-1] << ";\n";
+         out << SP;
+      } else {
+         out << SP << "size_t xoffset = 0;\n";
+         out << SP << "size_t yoffset = 0;\n";
+      }
+      if (n_after > 1)
+         out << SP << "for (size_t j = 0; j < " << n_after << "; j++) {\n";
+      else
+         out << SP << "const size_t j = 0;\n";
+
+      // copy elements to be sorted in vector of pair
+      out << SP << SP << "for (size_t l = 0; l < " << n_elements << "; l++) {\n";
+      out << SP << SP << SP << "elements[l] = std::make_pair(tensor_" << fNX << "[xoffset + " << strideX[axis] << "*l + j], l);\n";
+      out << SP << SP << "}\n";
+
       if (fAttrSorted) {
          if (fAttrLargest) {
-            out<<SP<<SP << "std::partial_sort(elements.begin(),elements.begin()+" << fK << ",elements.end(),[](std::pair<float,int>a,std::pair<float,int>b){return "
-                   "a.first>b.first;});\n";
+            out<<SP<<SP << "std::partial_sort(elements.begin(),elements.begin()+" << fK << ",elements.end()," <<
+               "[](std::pair<float,int64_t>a,std::pair<float,int64_t>b){return (a.first!=b.first) ? (a.first>b.first) : a.second < b.second;});\n";
+
          } else
-            out<<SP<<SP << "std::partial_sort(elements.begin(),elements.begin()+" << fK << ",elements.end(),[](std::pair<float,int>a,std::pair<float,int>b){return "
-                   "a.first<b.first;});\n";
+            out<<SP<<SP << "std::partial_sort(elements.begin(),elements.begin()+" << fK << ",elements.end()," <<
+            "[](std::pair<float,int64_t>a,std::pair<float,int64_t>b){return (a.first!=b.first) ? (a.first<b.first) : a.second < b.second;});\n";
       } else
+         // in this case we don;t need to return sorted elements, so we keep same order as before
          out<<SP<<SP << "std::partial_sort(elements.begin(),elements.begin()+" << fK << ",elements.end());\n";
 
-      out<<SP<<SP<<"itr++;\n";
-      out<<SP<<SP<<"std::vector<std::pair<float,int>>kelems;\n";
-      out<<SP<<SP<<"for (int j = 0; j < " << fK <<"; j++){\n";
-      out<<SP<<SP<<SP<<"kelems.push_back({elements[j].first,elements[j].second});\n";
-      out<<SP<<SP<<"}\n";
-      out<<SP<<SP<<"groupElements.push_back(kelems);\n";
-      out<<SP<<SP<<"if(itr == "<<numOfCheckersInGrp<<"){\n";
-      out<<SP<<SP<<SP<<"itr = 0;\n";
-      out<<SP<<SP<<SP<<"i += "<<groupSize-numOfCheckersInGrp/*to compensate the default i++*/  <<";\n";
-      out<<SP<<SP<<SP<<"for (size_t j = 0; j < groupElements[0].size(); j++) {\n";
-      out<<SP<<SP<<SP<<SP<<"for(size_t k = 0; k < groupElements.size(); k++) {\n";
-      out<<SP<<SP<<SP<<SP<<SP<<"tensor_"<<fNVal<<"[p] = (groupElements[k][j].first);\n";
-      out<<SP<<SP<<SP<<SP<<SP<<"tensor_"<<fNInd<<"[p++] = (groupElements[k][j].second);\n";
-      out<<SP<<SP<<SP<<SP<<"}\n";// end for on k
-      out<<SP<<SP<<SP<<"}\n";// end for on j
-      out<<SP<<SP<<SP<<"groupElements.clear();\n";
-      out<<SP<<SP<<"}\n";//end if
-      out<<SP<<"\n}\n"; // end for on i (input elements)
+      // copy the selected elements in the output
+      out << SP << SP << "for (size_t l = 0; l < " << fK << "; l++) {\n";
+      out << SP << SP << SP << "tensor_" << fNX   << "[yoffset + " << strideY[axis] << "*l + j] = elements[l].first;\n";
+      out << SP << SP << SP << "tensor_" << fNInd << "[yoffset + " << strideY[axis] << "*l + j] = elements[l].second;\n";
+      out << SP << SP << "}\n";
+      if (n_after > 1) out << SP << SP << "}\n";
+      if (n_before> 1) out << SP << "}\n";
       out << SP << "}\n"; // end operator scope
       return out.str();
    }
