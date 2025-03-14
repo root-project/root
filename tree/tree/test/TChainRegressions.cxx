@@ -30,3 +30,26 @@ TEST(TChain, GetReadCacheBug)
 
    gSystem->Unlink(filename);
 }
+
+// https://its.cern.ch/jira/browse/ROOT-7855
+TEST(TChain, CloneTreeZeroEntries)
+{
+   auto filename = "file7855.root";
+   {
+      TFile f(filename, "RECREATE");
+      TTree t("tree", "tree");
+      int n;
+      t.Branch("n", &n, "n/I");
+      t.Write();
+      f.Close();
+   }
+   auto c = new TChain("tree");
+   c->Add(filename);
+   auto cc = c->CloneTree(-1, "fast OptimizeBaskets");
+   EXPECT_NE(cc, nullptr);
+   EXPECT_NE(cc->FindBranch("n"), nullptr);
+   auto tc = c->GetTree()->CloneTree(-1, "fast OptimizeBaskets");
+   EXPECT_NE(tc, nullptr);
+   EXPECT_NE(tc->FindBranch("n"), nullptr);
+   gSystem->Unlink(filename);
+}
