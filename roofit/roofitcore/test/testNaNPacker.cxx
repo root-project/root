@@ -155,7 +155,7 @@ TEST(RooNaNPacker, FitSimpleLinear)
 
    RooArgSet normSet{x};
    ASSERT_FALSE(std::isnan(pdf.getVal(normSet)));
-   a1.setVal(-9.);
+   a1.setVal(-5.);
    ASSERT_TRUE(std::isnan(pdf.getVal(normSet)));
 
    RooMinimizer minim(*nll);
