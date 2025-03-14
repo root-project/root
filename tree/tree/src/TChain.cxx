@@ -359,7 +359,7 @@ Int_t TChain::Add(TChain* chain)
 ///  }
 /// ~~~
 ///
-/// \note To add all the files of a another \p TChain to this one, use
+/// \note To add all the files of another \p TChain to this one, use
 ///       TChain::Add(TChain* chain).
 
 Int_t TChain::Add(const char *name, Long64_t nentries /* = TTree::kMaxEntries */)
@@ -1320,7 +1320,7 @@ Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
 /// In case of error, LoadTree returns a negative number:
 ///   * -1: The chain is empty.
 ///   * -2: The requested entry number is less than zero or too large for the chain.
-///   * -3: The file corresponding to the entry could not be correctly open
+///   * -3: The file corresponding to the entry could not be correctly opened
 ///   * -4: The TChainElement corresponding to the entry is missing or
 ///       the TTree is missing from the file.
 ///   * -5: Internal error, please report the circumstance when this happen
