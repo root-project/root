@@ -3511,20 +3511,6 @@ public:
       gStyle->SetPalette(1);
       TH2 *hcorr = r->correlationHist();
 
-      // Sample dataset with parameter values according to distribution
-      // of covariance matrix of fit result
-      RooDataSet randPars("randPars", "randPars", r->floatParsFinal());
-      for (int i = 0; i < 10000; i++) {
-         randPars.add(r->randomizePars());
-      }
-
-      // make histogram of 2D distribution in sigma1 vs sig1frac
-      TH1 *hhrand =
-         randPars.createHistogram("hhrand", sigma1, Binning(35, 0.25, 0.65), YVar(sig1frac, Binning(35, 0.3, 1.1)));
-
-      regTH(hcorr, "rf607_hcorr");
-      regTH(hhrand, "rf607_hhand");
-
       return true;
    }
 };
