@@ -1,0 +1,3 @@
+[submodule "interpreter/cling/AdaptiveCpp"]
+	path = interpreter/cling/AdaptiveCpp
+	url = https://github.com/devajithvs/AdaptiveCpp.git
