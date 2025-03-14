@@ -1351,11 +1351,6 @@ public:
                                      "way to convert TTrees to RNTuple is through the RNTupleImporter.");
          }
 
-         if (!dirname.empty()) {
-            throw std::runtime_error(
-               "RDataFrame: Snapshotting an RNTuple to a TFile sub-directory is currently not supported.");
-         }
-
          // The data source of the RNTuple resulting from the Snapshot action does not exist yet here, so we create one
          // without a data source for now, and set it once the actual data source can be created (i.e., after
          // writing the RNTuple).
@@ -3250,11 +3245,6 @@ private:
          if (fLoopManager->GetTree()) {
             throw std::runtime_error("Snapshotting from TTree to RNTuple is not yet supported. The current recommended "
                                      "way to convert TTrees to RNTuple is through the RNTupleImporter.");
-         }
-
-         if (!dirname.empty()) {
-            throw std::runtime_error(
-               "RDataFrame: Snapshotting an RNTuple to a TFile sub-directory is currently not supported.");
          }
 
          auto newRDF =

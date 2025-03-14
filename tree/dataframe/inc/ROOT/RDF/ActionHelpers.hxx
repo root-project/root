@@ -1901,6 +1901,7 @@ void SetFieldsHelper(T &value, std::string_view fieldName, ROOT::Experimental::R
 template <typename... ColTypes>
 class R__CLING_PTRCHECK(off) SnapshotRNTupleHelper : public RActionImpl<SnapshotRNTupleHelper<ColTypes...>> {
    std::string fFileName;
+   std::string fDirName;
    std::string fNTupleName;
 
    std::unique_ptr<TFile> fOutputFile{nullptr};
@@ -1917,10 +1918,11 @@ class R__CLING_PTRCHECK(off) SnapshotRNTupleHelper : public RActionImpl<Snapshot
 
 public:
    using ColumnTypes_t = TypeList<ColTypes...>;
-   SnapshotRNTupleHelper(std::string_view filename, std::string_view ntuplename, const ColumnNames_t &vfnames,
-                         const ColumnNames_t &fnames, const RSnapshotOptions &options,
+   SnapshotRNTupleHelper(std::string_view filename, std::string_view dirname, std::string_view ntuplename,
+                         const ColumnNames_t &vfnames, const ColumnNames_t &fnames, const RSnapshotOptions &options,
                          ROOT::Detail::RDF::RLoopManager *lm, std::vector<bool> &&isDefine)
       : fFileName(filename),
+        fDirName(dirname),
         fNTupleName(ntuplename),
         fOptions(options),
         fLoopManager(lm),
@@ -1969,17 +1971,21 @@ public:
       ROOT::RNTupleWriteOptions writeOptions;
       writeOptions.SetCompression(fOptions.fCompressionAlgorithm, fOptions.fCompressionLevel);
 
-      TString checkupdate = fOptions.fMode;
-      checkupdate.ToLower();
+      fOutputFile.reset(TFile::Open(fFileName.c_str(), fOptions.fMode.c_str()));
+      if (!fOutputFile)
+         throw std::runtime_error("Snapshot: could not create output file " + fFileName);
 
-      if (checkupdate == "update") {
-         fOutputFile = std::unique_ptr<TFile>(TFile::Open(fFileName.c_str(), fOptions.fMode.c_str()));
-         if (!fOutputFile)
-            throw std::runtime_error("Snapshot: could not create output file " + fFileName);
-         fWriter = ROOT::Experimental::RNTupleWriter::Append(std::move(model), fNTupleName, *fOutputFile, writeOptions);
-      } else {
-         fWriter = ROOT::Experimental::RNTupleWriter::Recreate(std::move(model), fNTupleName, fFileName, writeOptions);
+      TDirectory *outputDir = fOutputFile.get();
+      if (!fDirName.empty()) {
+         TString checkupdate = fOptions.fMode;
+         checkupdate.ToLower();
+         if (checkupdate == "update")
+            outputDir = fOutputFile->mkdir(fDirName.c_str(), "", true); // do not overwrite existing directory
+         else
+            outputDir = fOutputFile->mkdir(fDirName.c_str());
       }
+
+      fWriter = ROOT::Experimental::RNTupleWriter::Append(std::move(model), fNTupleName, *outputDir, writeOptions);
    }
 
    template <std::size_t... S>
@@ -1993,7 +1999,8 @@ public:
    {
       fWriter.reset();
       // We can now set the data source of the loop manager for the RDataFrame that is returned by the Snapshot call.
-      fLoopManager->SetDataSource(std::make_unique<ROOT::Experimental::RNTupleDS>(fNTupleName, fFileName));
+      fLoopManager->SetDataSource(
+         std::make_unique<ROOT::Experimental::RNTupleDS>(fDirName + "/" + fNTupleName, fFileName));
    }
 
    std::string GetActionName() { return "Snapshot"; }

@@ -787,3 +787,24 @@ TEST_F(RNTupleDSArraysDataset, UseArraySizeColumnMT)
    UseArraySizeColumn(fNtplName, fFileName);
 }
 #endif
+
+TEST(RNTupleDS, TDirectory)
+{
+   FileRAII fileGuard("test_rntupleds_tdirectoryfile.root");
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto dir = std::unique_ptr<TDirectory>(file->mkdir("a/b"));
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<float>("x");
+      auto ntuple = RNTupleWriter::Append(std::move(model), "ntuple", *dir);
+
+      for (unsigned i = 0; i < 5; ++i) {
+         *fldX = static_cast<float>(i);
+         ntuple->Fill();
+      }
+   }
+
+   RNTupleDS ds("a/b/ntuple", fileGuard.GetPath());
+   EXPECT_EQ(1ull, ds.GetNFiles());
+   EXPECT_EQ(std::vector<std::string>{"x"}, ds.GetColumnNames());
+}
