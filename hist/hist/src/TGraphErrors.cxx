@@ -220,9 +220,9 @@ TGraphErrors::TGraphErrors(const TH1 *h)
 ///
 /// Convention for format (default=`"%lg %lg %lg %lg"`)
 ///
-///   - format = `%lg %lg`         read only 2 first columns into X,Y
-///   - format = `%lg %lg %lg`     read only 3 first columns into X,Y and EY
-///   - format = `%lg %lg %lg %lg` read only 4 first columns into X,Y,EX,EY.
+///   - format = `"%lg %lg"` read only 2 first columns into X,Y
+///   - format = `"%lg %lg %lg"` read only 3 first columns into X,Y and EY
+///   - format = `"%lg %lg %lg %lg"` read only 4 first columns into X,Y,EX,EY.
 ///
 /// For files separated by a specific delimiter different from ' ' and `\\t` (e.g. `;` in csv files)
 /// you can avoid using `%*s` to bypass this delimiter by explicitly specify the `option` argument,
