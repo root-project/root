@@ -497,13 +497,16 @@ TEST(RDFSnapshotRNTuple, TDirectory)
    RSnapshotOptions opts;
    opts.fOutputFormat = ESnapshotOutputFormat::kRNTuple;
 
-   try {
-      auto sdf = df.Define("x", [] { return 10; }).Snapshot<int>("dir/ntuple", fileGuard.GetPath(), {"x"}, opts);
-      FAIL() << "attempting to snapshot a RNTuple to a TFile sub-directory should fail";
-   } catch (const std::runtime_error &err) {
-      EXPECT_STREQ(err.what(),
-                   "RDataFrame: Snapshotting an RNTuple to a TFile sub-directory is currently not supported.");
-   }
+   df.Define("x", [] { return 10; }).Snapshot<int>("dir/ntuple", fileGuard.GetPath(), {"x"}, opts);
+
+   // Check that we can open the snapshotted file through RNTupleReader...
+   auto ntuple = RNTupleReader::Open("dir/ntuple", fileGuard.GetPath());
+   EXPECT_EQ(1ull, ntuple->GetNEntries());
+
+   // ... and also create an RDF from scratch with it
+   auto sdf = ROOT::RDataFrame("dir/ntuple", fileGuard.GetPath());
+   std::vector<std::string> expected = {"x"};
+   EXPECT_EQ(expected, sdf.GetColumnNames());
 }
 
 void WriteTestTree(const std::string &tname, const std::string &fname)
