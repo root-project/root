@@ -261,19 +261,17 @@ void  TParallelCoord::ApplySelectionToTree()
    fCurrentFirst = 0;
    fCurrentN = fNentries;
    fTree->SetEntryList(fCurrentEntries);
-   TString varexp = "";
+   TString varexp;
    TIter next(fVarList);
-   TParallelCoordVar* var;
-   while ((var = (TParallelCoordVar*)next())) varexp.Append(Form(":%s",var->GetTitle()));
+   while (auto var = (TParallelCoordVar*)next())
+      varexp.Append(TString::Format(":%s",var->GetTitle()));
    varexp.Remove(TString::kLeading,':');
    TSelectorDraw* selector = (TSelectorDraw*)((TTreePlayer*)fTree->GetPlayer())->GetSelector();
    fTree->Draw(varexp.Data(),"","goff");
    next.Reset();
    Int_t i = 0;
-   while ((var = (TParallelCoordVar*)next())) {
-      var->SetValues(fNentries, selector->GetVal(i));
-      ++i;
-   }
+   while (auto var = (TParallelCoordVar*)next())
+      var->SetValues(fNentries, selector->GetVal(i++));
    if (fSelectList) {           // FIXME It would be better to update the selections by deleting
       fSelectList->Delete();    // the meaningless ranges (selecting everything or nothing for example)
       fCurrentSelection = nullptr;    // after applying a new entrylist to the tree.
@@ -290,17 +288,18 @@ void  TParallelCoord::BuildParallelCoord(TSelectorDraw* selector, bool candle)
    TParallelCoord* pc = new TParallelCoord(selector->GetTree(),selector->GetNfill());
    pc->SetBit(kCanDelete);
    selector->SetObject(pc);
-   TString varexp = "";
+   TString varexp;
    for(Int_t i=0;i<selector->GetDimension();++i) {
       if (selector->GetVal(i)) {
          if (selector->GetVar(i)) {
             pc->AddVariable(selector->GetVal(i),selector->GetVar(i)->GetTitle());
-            varexp.Append(Form(":%s",selector->GetVar(i)->GetTitle()));
+            varexp.Append(TString::Format(":%s",selector->GetVar(i)->GetTitle()));
          }
       }
    }
    varexp.Remove(TString::kLeading,':');
-   if (selector->GetSelect()) varexp.Append(Form("{%s}",selector->GetSelect()->GetTitle()));
+   if (selector->GetSelect())
+      varexp.Append(TString::Format("{%s}",selector->GetSelect()->GetTitle()));
    pc->SetTitle(varexp.Data());
    if (!candle) pc->Draw();
    else pc->Draw("candle");
@@ -540,19 +539,17 @@ TTree* TParallelCoord::GetTree()
          return nullptr;
       } else {
          fTree->SetEntryList(fCurrentEntries);
-         TString varexp = "";
+         TString varexp;
          TIter next(fVarList);
-         TParallelCoordVar* var;
-         while ((var = (TParallelCoordVar*)next())) varexp.Append(Form(":%s",var->GetTitle()));
+         while (auto var = (TParallelCoordVar*)next())
+            varexp.Append(TString::Format(":%s",var->GetTitle()));
          varexp.Remove(TString::kLeading,':');
          fTree->Draw(varexp.Data(),"","goff");
          TSelectorDraw* selector = (TSelectorDraw*)((TTreePlayer*)fTree->GetPlayer())->GetSelector();
          next.Reset();
          Int_t i = 0;
-         while ((var = (TParallelCoordVar*)next())) {
-            var->SetValues(fNentries, selector->GetVal(i));
-            ++i;
-         }
+         while (auto var = (TParallelCoordVar*)next())
+            var->SetValues(fNentries, selector->GetVal(i++));
          return fTree;
       }
    }
@@ -766,16 +763,15 @@ void TParallelCoord::ResetTree()
    fCurrentN = fNentries;
    TString varexp = "";
    TIter next(fVarList);
-   TParallelCoordVar* var;
-   while ((var = (TParallelCoordVar*)next())) varexp.Append(Form(":%s",var->GetTitle()));
+   while (auto var = (TParallelCoordVar*)next())
+      varexp.Append(TString::Format(":%s",var->GetTitle()));
    varexp.Remove(TString::kLeading,':');
    fTree->Draw(varexp.Data(),"","goff");
    next.Reset();
    TSelectorDraw* selector = (TSelectorDraw*)((TTreePlayer*)fTree->GetPlayer())->GetSelector();
    Int_t i = 0;
-   while ((var = (TParallelCoordVar*)next())) {
-      var->SetValues(fNentries, selector->GetVal(i));
-      ++i;
+   while (auto var = (TParallelCoordVar*)next()) {
+      var->SetValues(fNentries, selector->GetVal(i++));
    }
    if (fSelectList) {           // FIXME It would be better to update the selections by deleting
       fSelectList->Delete();    // the meaningless ranges (selecting everything or nothing for example)
@@ -791,7 +787,8 @@ void TParallelCoord::ResetTree()
 void TParallelCoord::SaveEntryLists(const char* filename, bool overwrite)
 {
    TString sfile = filename;
-   if (sfile == "") sfile = Form("%s_parallelcoord_entries.root",fTree->GetName());
+   if (sfile.IsNull())
+      sfile.Form("%s_parallelcoord_entries.root",fTree->GetName());
 
    TFile* f = TFile::Open(sfile.Data());
    if (f) {
@@ -805,7 +802,7 @@ void TParallelCoord::SaveEntryLists(const char* filename, bool overwrite)
    gDirectory = f;
    fInitEntries->Write("initentries");
    fCurrentEntries->Write("currententries");
-   Info("SaveEntryLists","File \"%s\" written.",sfile.Data());
+   Info("SaveEntryLists", "File \"%s\" written.", sfile.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -815,65 +812,69 @@ void TParallelCoord::SavePrimitive(std::ostream & out, Option_t* options)
 {
    TString opt = options;
    opt.ToLower();
-   //bool overwrite = opt.Contains("overwrite"); // Is there a way to specify "options" when saving ?
-   // Save the entrylists.
-   const char* filename = Form("%s_parallelcoord_entries.root",fTree->GetName());
-   SaveEntryLists(filename,true); // FIXME overwriting by default.
-   SaveTree(fTreeFileName,true);  // FIXME overwriting by default.
-   out<<"   // Create a TParallelCoord."<<std::endl;
-   out<<"   TFile *f = TFile::Open(\""<<fTreeFileName.Data()<<"\");"<<std::endl;
-   out<<"   TTree* tree = (TTree*)f->Get(\""<<fTreeName.Data()<<"\");"<<std::endl;
-   out<<"   TParallelCoord* para = new TParallelCoord(tree,"<<fNentries<<");"<<std::endl;
-   out<<"   // Load the entrylists."<<std::endl;
-   out<<"   TFile *entries = TFile::Open(\""<<filename<<"\");"<<std::endl;
-   out<<"   TEntryList *currententries = (TEntryList*)entries->Get(\"currententries\");"<<std::endl;
-   out<<"   tree->SetEntryList(currententries);"<<std::endl;
-   out<<"   para->SetInitEntries((TEntryList*)entries->Get(\"initentries\"));"<<std::endl;
-   out<<"   para->SetCurrentEntries(currententries);"<<std::endl;
+   // bool overwrite = opt.Contains("overwrite"); // Is there a way to specify "options" when saving ?
+   //  Save the entrylists.
+   TString filename = TString::Format("%s_parallelcoord_entries.root", fTree->GetName());
+   SaveEntryLists(filename, true); // FIXME overwriting by default.
+   SaveTree(fTreeFileName, true);  // FIXME overwriting by default.
+   out << "   // Create a TParallelCoord.\n";
+   out << "   TFile *f = TFile::Open(\"" << fTreeFileName.Data() << "\");\n";
+   out << "   TTree* tree = (TTree*)f->Get(\"" << fTreeName.Data() << "\");\n";
+   out << "   TParallelCoord* para = new TParallelCoord(tree," << fNentries << ");\n";
+   out << "   // Load the entrylists.\n";
+   out << "   TFile *entries = TFile::Open(\"" << filename << "\");\n";
+   out << "   TEntryList *currententries = (TEntryList*)entries->Get(\"currententries\");\n";
+   out << "   tree->SetEntryList(currententries);\n";
+   out << "   para->SetInitEntries((TEntryList*)entries->Get(\"initentries\"));\n";
+   out << "   para->SetCurrentEntries(currententries);\n";
    TIter next(fSelectList);
-   TParallelCoordSelect* sel;
-   out<<"   TParallelCoordSelect* sel;"<<std::endl;
-   out<<"   para->GetSelectList()->Delete();"<<std::endl;
-   while ((sel = (TParallelCoordSelect*)next())) {
-      out<<"   para->AddSelection(\""<<sel->GetTitle()<<"\");"<<std::endl;
-      out<<"   sel = (TParallelCoordSelect*)para->GetSelectList()->Last();"<<std::endl;
+   out << "   TParallelCoordSelect *sel = nullptr;\n";
+   out << "   para->GetSelectList()->Delete();\n";
+   while (auto sel = (TParallelCoordSelect *)next()) {
+      out << "   para->AddSelection(\"" << TString(sel->GetTitle()).ReplaceSpecialCppChars() << "\");\n";
+      out << "   sel = (TParallelCoordSelect*)para->GetSelectList()->Last();\n";
       sel->SaveLineAttributes(out, "sel", -1, -1, 1);
    }
    TIter nextbis(fVarList);
-   TParallelCoordVar* var;
-   TString varexp = "";
-   while ((var = (TParallelCoordVar*)nextbis())) varexp.Append(Form(":%s",var->GetTitle()));
-   varexp.Remove(TString::kLeading,':');
-   out<<"   tree->Draw(\""<<varexp.Data()<<"\",\"\",\"goff\");"<<std::endl;
-   out<<"   TSelectorDraw* selector = (TSelectorDraw*)((TTreePlayer*)tree->GetPlayer())->GetSelector();"<<std::endl;
-   nextbis.Reset();
-   Int_t i=0;
-   out<<"   TParallelCoordVar* var;"<<std::endl;
-   while ((var = (TParallelCoordVar*)nextbis())) {
-      out<<"   //***************************************"<<std::endl;
-      out<<"   // Create the axis \""<<var->GetTitle()<<"\"."<<std::endl;
-      out<<"   para->AddVariable(selector->GetVal("<<i<<"),\""<<var->GetTitle()<<"\");"<<std::endl;
-      out<<"   var = (TParallelCoordVar*)para->GetVarList()->Last();"<<std::endl;
-      var->SavePrimitive(out,"pcalled");
-      ++i;
+   TString varexp;
+   while (auto var = (TParallelCoordVar *)nextbis()) {
+      if (!varexp.IsNull())
+         varexp.Append(":");
+      varexp.Append(var->GetTitle());
    }
-   out<<"   //***************************************"<<std::endl;
-   out<<"   // Set the TParallelCoord parameters."<<std::endl;
-   out<<"   para->SetCurrentFirst("<<fCurrentFirst<<");"<<std::endl;
-   out<<"   para->SetCurrentN("<<fCurrentN<<");"<<std::endl;
-   out<<"   para->SetWeightCut("<<fWeightCut<<");"<<std::endl;
-   out<<"   para->SetDotsSpacing("<<fDotsSpacing<<");"<<std::endl;
-   out<<"   para->SetLineColor("<<TColor::SavePrimitiveColor(GetLineColor())<<");"<<std::endl;
-   out<<"   para->SetLineWidth("<<GetLineWidth()<<");"<<std::endl;
-   out<<"   para->SetBit(TParallelCoord::kVertDisplay,"<<TestBit(kVertDisplay)<<");"<<std::endl;
-   out<<"   para->SetBit(TParallelCoord::kCurveDisplay,"<<TestBit(kCurveDisplay)<<");"<<std::endl;
-   out<<"   para->SetBit(TParallelCoord::kPaintEntries,"<<TestBit(kPaintEntries)<<");"<<std::endl;
-   out<<"   para->SetBit(TParallelCoord::kLiveUpdate,"<<TestBit(kLiveUpdate)<<");"<<std::endl;
-   out<<"   para->SetBit(TParallelCoord::kGlobalLogScale,"<<TestBit(kGlobalLogScale)<<");"<<std::endl;
-   if (TestBit(kGlobalScale)) out<<"   para->SetGlobalScale(true);"<<std::endl;
-   if (TestBit(kCandleChart)) out<<"   para->SetCandleChart(true);"<<std::endl;
-   if (TestBit(kGlobalLogScale)) out<<"   para->SetGlobalLogScale(true);"<<std::endl;
-   out<<std::endl<<"   para->Draw();"<<std::endl;
+   out << "   tree->Draw(\"" << varexp.ReplaceSpecialCppChars() << "\", \"\", \"goff\");\n";
+   out << "   auto selector = (TSelectorDraw *)((TTreePlayer *)tree->GetPlayer())->GetSelector();\n";
+   nextbis.Reset();
+   Int_t i = 0;
+   out << "   TParallelCoordVar* var;\n";
+   while (auto var = (TParallelCoordVar *)nextbis()) {
+      out << "   //***************************************\n";
+      out << "   // Create the axis \"" << var->GetTitle() << "\".\n";
+      out << "   para->AddVariable(selector->GetVal(" << i++ << "),\"" << TString(var->GetTitle()).ReplaceSpecialCppChars() << "\");\n";
+      out << "   var = (TParallelCoordVar*)para->GetVarList()->Last();\n";
+      var->SavePrimitive(out, "pcalled");
+   }
+   out << "   //***************************************\n";
+   out << "   // Set the TParallelCoord parameters.\n";
+   out << "   para->SetCurrentFirst(" << fCurrentFirst << ");\n";
+   out << "   para->SetCurrentN(" << fCurrentN << ");\n";
+   out << "   para->SetWeightCut(" << fWeightCut << ");\n";
+   out << "   para->SetDotsSpacing(" << fDotsSpacing << ");\n";
+   out << "   para->SetLineColor(" << TColor::SavePrimitiveColor(GetLineColor()) << ");\n";
+   out << "   para->SetLineWidth(" << GetLineWidth() << ");\n";
+   out << "   para->SetBit(TParallelCoord::kVertDisplay," << TestBit(kVertDisplay) << ");\n";
+   out << "   para->SetBit(TParallelCoord::kCurveDisplay," << TestBit(kCurveDisplay) << ");\n";
+   out << "   para->SetBit(TParallelCoord::kPaintEntries," << TestBit(kPaintEntries) << ");\n";
+   out << "   para->SetBit(TParallelCoord::kLiveUpdate," << TestBit(kLiveUpdate) << ");\n";
+   out << "   para->SetBit(TParallelCoord::kGlobalLogScale," << TestBit(kGlobalLogScale) << ");\n";
+   if (TestBit(kGlobalScale))
+      out << "   para->SetGlobalScale(true);\n";
+   if (TestBit(kCandleChart))
+      out << "   para->SetCandleChart(true);\n";
+   if (TestBit(kGlobalLogScale))
+      out << "   para->SetGlobalLogScale(true);\n";
+   out << "   \n";
+   out << "   para->Draw();\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -881,9 +882,11 @@ void TParallelCoord::SavePrimitive(std::ostream & out, Option_t* options)
 
 void TParallelCoord::SaveTree(const char* filename, bool overwrite)
 {
-   if (!(fTreeFileName=="")) return;
+   if (!fTreeFileName.IsNull())
+      return;
    TString sfile = filename;
-   if (sfile == "") sfile = Form("%s.root",fTree->GetName());
+   if (sfile.IsNull())
+      sfile.Form("%s.root",fTree->GetName());
 
    TFile* f = TFile::Open(sfile.Data());
    if (f) {
@@ -897,7 +900,7 @@ void TParallelCoord::SaveTree(const char* filename, bool overwrite)
    gDirectory = f;
    fTree->Write(fTreeName.Data());
    fTreeFileName = sfile;
-   Info("SaveTree","File \"%s\" written.",sfile.Data());
+   Info("SaveTree", "File \"%s\" written.",sfile.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1115,7 +1118,7 @@ void TParallelCoord::SetDotsSpacing(Int_t s)
    if (gPad->GetCanvas()->SupportAlpha()) return;
    if (s == fDotsSpacing) return;
    fDotsSpacing = s;
-   gStyle->SetLineStyleString(11,Form("%d %d",4,s*8));
+   gStyle->SetLineStyleString(11, TString::Format("%d %d",4,s*8));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
