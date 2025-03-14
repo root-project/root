@@ -4,7 +4,7 @@
 ///
 /// This tutorial demonstrates how TSQLServer can be used to create a
 /// connection with a SQlite3 database. It accesses the Sqlite data base.
-/// Download from https://root.cern/files/root_download_stats.sqlite
+/// Download from https://root-test.web.cern.ch/files/root_download_stats.sqlite
 /// In order to display the Platform Distribution of ROOT, we choose to create two TH1F
 /// histograms: one that includes all types of platforms, other filtering and classifying them.
 /// This procedure is taking as parameter the values stored in the "Platform" column from the

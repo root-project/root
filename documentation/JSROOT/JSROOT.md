@@ -268,11 +268,11 @@ One and two dimensional draw expressions can be resulted into TGraph object, usi
 
 For any integer value one can accumulate histogram with value bits distribution, specifying as output ">>bits(16)" or ">>bits":
 
-   - [opt=event.fTracks.fBits>>bits](https://root.cern/js/latest/?file=https://root.cern/files/Event100000.root&item=T;2&opt=event.fTracks.fBits>>bits)
+   - [opt=event.fTracks.fBits>>bits](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/Event100000.root&item=T;2&opt=event.fTracks.fBits>>bits)
 
 There is special handling of TBits objects:
 
-   - [opt=event.fTriggerBits](https://root.cern/js/latest/?file=https://root.cern/files/event/event_0.root&item=EventTree&opt=event.fTriggerBits)
+   - [opt=event.fTriggerBits](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/event/event_0.root&item=EventTree&opt=event.fTriggerBits)
 
 It is allowed to use different expressions with branch values:
 
@@ -303,11 +303,11 @@ Or one could dump values produced with draw expression (also first 10 entries by
 Working with array indexes is supported. By default, all elements in array are used for the drawing.
 One could specify index for any array dimension (-1 means last element in the array). For instance, dump last element from `event.fTracks` array:
 
-   - [opt=event.fTracks[-1].fBits>>dump](https://root.cern/js/latest/?file=https://root.cern/files/event/event_0.root&item=EventTree&opt=event.fTracks[-1].fBits>>dump)
+   - [opt=event.fTracks[-1].fBits>>dump](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/event/event_0.root&item=EventTree&opt=event.fTracks[-1].fBits>>dump)
 
 For any array or collection kind one could extract its size with expression:
 
-   - [opt=event.fTracks.@size](https://root.cern/js/latest/?file=https://root.cern/files/event/event_0.root&item=EventTree&opt=event.fTracks.@size;num:3000)
+   - [opt=event.fTracks.@size](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/event/event_0.root&item=EventTree&opt=event.fTracks.@size;num:3000)
 
 At the end of expression one can add several parameters with the syntax:
 
@@ -324,7 +324,7 @@ Following parameters are supported:
   - "drawopt" - drawing option for produced histogram
   - "graph" - draw into TGraph object
 
-Example - [opt=event.fTracks[].fTriggerBits;entries:1000;first:200;maxrange:25](https://root.cern/js/latest/?file=https://root.cern/files/event/event_0.root&item=EventTree&opt=event.fTracks[].fTriggerBits;entries:1000;first:200;maxrange:25)
+Example - [opt=event.fTracks[].fTriggerBits;entries:1000;first:200;maxrange:25](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/event/event_0.root&item=EventTree&opt=event.fTracks[].fTriggerBits;entries:1000;first:200;maxrange:25)
 
 
 ## Geometry viewer
@@ -399,7 +399,7 @@ Another way to configure visibility flags is usage of ROOT macros, which typical
 
 ```cpp
 {
-   TGeoManager::Import("http://root.cern/files/alice2.root");
+   TGeoManager::Import("http://root-test.web.cern.ch/files/alice2.root");
    gGeoManager->DefaultColors();
    //   gGeoManager->SetVisLevel(4);
    gGeoManager->GetVolume("HALL")->InvisibleAll();
@@ -425,19 +425,19 @@ All other will be ignored.
 
 
 Example of major LHC detectors:
- * ALICE: [full](https://root.cern/js/latest/?file=https://root.cern/files/alice2.root&item=Geometry;1&opt=macro:https://root.cern/js/files/geomAlice.C)
- * ATLAS: [full](https://root.cern/js/latest/?file=https://root.cern/files/atlas.root&item=atlas;1&opt=clipxyz), [cryo](https://root.cern/js/latest/?file=https://root.cern/files/atlas.root&item=atlas;1&opt=macro:https://root.cern/files/atlas_cryo.C), [sctt](https://root.cern/js/latest/?file=https://root.cern/files/atlas.root&item=atlas;1&opt=macro:https://root.cern/files/atlas_sctt.C)
- * CMS: [cmse](https://root.cern/js/latest/?file=https://root.cern/files/cms.root&item=cms;1&opt=macro:https://root.cern/files/cms_cmse.C;clipxyz), [calo](https://root.cern/js/latest/?file=https://root.cern/files/cms.root&item=cms;1&opt=macro:https://root.cern/files/cms_calo.C;clipxyz)
- * LHCb: [full](https://root.cern/js/latest/?file=https://root.cern/files/lhcbfull.root&item=Geometry;1&opt=all;dflt)
+ * ALICE: [full](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/alice2.root&item=Geometry;1&opt=macro:https://root.cern/js/files/geomAlice.C)
+ * ATLAS: [full](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/atlas.root&item=atlas;1&opt=clipxyz), [cryo](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/atlas.root&item=atlas;1&opt=macro:https://root-test.web.cern.ch/files/atlas_cryo.C), [sctt](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/atlas.root&item=atlas;1&opt=macro:https://root-test.web.cern.ch/files/atlas_sctt.C)
+ * CMS: [cmse](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/cms.root&item=cms;1&opt=macro:https://root-test.web.cern.ch/files/cms_cmse.C;clipxyz), [calo](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/cms.root&item=cms;1&opt=macro:https://root-test.web.cern.ch/files/cms_calo.C;clipxyz)
+ * LHCb: [full](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/lhcbfull.root&item=Geometry;1&opt=all;dflt)
 
 Other detectors examples:
- * HADES: [full](https://root.cern/js/latest/?file=https://root.cern/files/hades2.root&item=CBMGeom;1&opt=all;dflt), [preselected](https://root.cern/js/latest/?json=../files/geom/hades.json.gz)
- * BABAR: [full](https://root.cern/js/latest/?file=https://root.cern/files/babar.root&item=babar;1&opt=macro:https://root.cern/files/babar_all.C), [emca](https://root.cern/js/latest/?file=https://root.cern/files/babar.root&item=babar;1&opt=macro:https://root.cern/files/babar_emca.C)
- * STAR: [full](https://root.cern/js/latest/?file=https://root.cern/files/star.root&item=star;1&opt=macro:https://root.cern/files/star_all.C;clipxyz), [svtt](https://root.cern/js/latest/?file=https://root.cern/files/star.root&item=star;1&opt=macro:https://root.cern/files/star_svtt.C)
- * D0: [full](https://root.cern/js/latest/?file=https://root.cern/files/d0.root&item=d0;1&opt=clipxyz)
- * NA47: [full](https://root.cern/js/latest/?file=https://root.cern/files/na47.root&item=na47;1&opt=dflt)
- * BRAHMS: [full](https://root.cern/js/latest/?file=https://root.cern/files/brahms.root&item=brahms;1&opt=dflt)
- * SLD: [full](https://root.cern/js/latest/?file=https://root.cern/files/sld.root&item=sld;1&opt=dflt;clipxyz)
+ * HADES: [full](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/hades2.root&item=CBMGeom;1&opt=all;dflt), [preselected](https://root.cern/js/latest/?json=../files/geom/hades.json.gz)
+ * BABAR: [full](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/babar.root&item=babar;1&opt=macro:https://root-test.web.cern.ch/files/babar_all.C), [emca](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/babar.root&item=babar;1&opt=macro:https://root-test.web.cern.ch/files/babar_emca.C)
+ * STAR: [full](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/star.root&item=star;1&opt=macro:https://root-test.web.cern.ch/files/star_all.C;clipxyz), [svtt](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/star.root&item=star;1&opt=macro:https://root-test.web.cern.ch/files/star_svtt.C)
+ * D0: [full](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/d0.root&item=d0;1&opt=clipxyz)
+ * NA47: [full](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/na47.root&item=na47;1&opt=dflt)
+ * BRAHMS: [full](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/brahms.root&item=brahms;1&opt=dflt)
+ * SLD: [full](https://root.cern/js/latest/?file=https://root-test.web.cern.ch/files/sld.root&item=sld;1&opt=dflt;clipxyz)
 
 Together with geometry one could display tracks (TEveTrack) and hits (TEvePointSet, TPolyMarker3D) objects.
 Either one do it interactively by drag and drop, or superimpose drawing with `+` sign like:
