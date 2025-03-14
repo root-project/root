@@ -131,8 +131,17 @@ TGraph *TGraphSmooth::SmoothKern(TGraph *grin, Option_t *option,
    }
 
    fGout = new TGraph(fNout);
-   for (Int_t i=0;i<fNout;i++) {
+   // To calculate x coordinates and avoid a rounding issue in last point,
+   // (fMin + (fNout-1)* delta > fMaxX) if fNout is large,
+   // we split the calculation in two loops,
+   // the left half of x points is calculated as min + i*delta
+   // the right half of x points as max - j*delta
+   for (Int_t i=0;i<fNout/2;i++) {
       if (xout == nullptr) fGout->SetPoint(i,fMinX + i*delta, 0);
+      else           fGout->SetPoint(i,xout[index[i]], 0);
+   }
+   for (Int_t i=fNout/2;i<fNout;i++) {
+      if (xout == nullptr) fGout->SetPoint(i,fMaxX + (i + 1 - fNout)*delta, 0);
       else           fGout->SetPoint(i,xout[index[i]], 0);
    }
 
@@ -264,7 +273,7 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
    Double_t *rw  = ((TGraphErrors*)fGout)->GetEX();
    Double_t *res = ((TGraphErrors*)fGout)->GetEY();
 
-// at least two, at most n poInt_ts
+// at least two, at most n points
    ns = TMath::Max(2, TMath::Min(n, (Int_t)(span*n + 1e-7)));
 
 // robustness iterations
@@ -272,8 +281,8 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
    while (iiter <= iter+1) {
       nleft = 1;
       nright = ns;
-      last = 0;   // index of prev estimated poInt_t
-      i = 1;      // index of current poInt_t
+      last = 0;   // index of prev estimated point
+      i = 1;      // index of current point
 
       for(;;) {
          if (nright < n) {
@@ -300,17 +309,17 @@ void TGraphSmooth::Lowess(Double_t *x, Double_t *y, Int_t n, Double_t *ys,
          if (last < i-1) {
             denom = x[i]-x[last];
 
-         // skipped poInt_ts -- Int_terpolate non-zero - proof?
+         // skipped points -- Int_terpolate non-zero - proof?
             for(j = last+1; j < i; j++) {
                alpha = (x[j]-x[last])/denom;
                ys[j] = alpha*ys[i] + (1.-alpha)*ys[last];
             }
       }
 
-      // last poInt_t actually estimated
+      // last point actually estimated
          last = i;
 
-      // x coord of close poInt_ts
+      // x coord of close points
          cut = x[last] + delta;
          for (i = last+1; i <= n; i++) {
             if (x[i] > cut)
@@ -426,7 +435,7 @@ void TGraphSmooth::Lowest(Double_t *x, Double_t *y, Int_t n, Double_t &xs,
             c += w[j]*(x[j]-a)*(x[j]-a);
          if (TMath::Sqrt(c) > 0.001*range) {
             b /= c;
-         // poInt_ts are spread out enough to compute slope
+         // points are spread out enough to compute slope
             for(j=nleft; j <= nrt; j++)
                w[j] *= (b*(x[j]-a) + 1.);
          }
@@ -1040,11 +1049,17 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
    fGout = new TGraph(fNout);
 
    Double_t x;
-   for (Int_t i=0;i<fNout;i++) {
+   for (Int_t i=0;i<fNout/2;i++) {
       if (xout == nullptr) x = fMinX + i*delta;
       else           x = xout[i];
       Double_t yout = Approx1(x, f, fGin->GetX(), fGin->GetY(), fNin, iKind, ylow, yhigh);
-      fGout->SetPoint(i,x, yout);
+      fGout->SetPoint(i, x, yout);
+   }
+   for (Int_t i=fNout/2;i<fNout;i++) {
+      if (xout == nullptr) x = fMaxX + delta*(i + 1 - fNout);
+      else           x = xout[i];
+      Double_t yout = Approx1(x, f, fGin->GetX(), fGin->GetY(), fNin, iKind, ylow, yhigh);
+      fGout->SetPoint(i, x, yout);
    }
 
    return fGout;
