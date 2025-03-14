@@ -2696,10 +2696,11 @@ void parallelcoord()
    para->SetLineColor(25);
    TColor *col25 = gROOT->GetColor(25);
    if (col25) col25->SetAlpha(0.05);
+
    C->cd(2);
    ntuple->Draw("px:py:pz:random:px*py*pz","","candle");
 
-   TestReport(C, "Parallel Coordinates", kSkipCCode);
+   TestReport(C, "Parallel Coordinates");
 }
 
 
