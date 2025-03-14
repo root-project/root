@@ -39,20 +39,24 @@
 #include <TROOT.h>
 #include <TError.h>
 #include <TRandom.h>
+#include <TRandom3.h>
 #include <TBenchmark.h>
 #include <TSystem.h>
 #include <TApplication.h>
 #include <TDatime.h>
 #include <TFile.h>
 #include <TF1.h>
-#include "TF2.h"
+#include <TF2.h>
 #include <TF3.h>
 #include <TH2.h>
 #include <TH2Poly.h>
 #include <TNtuple.h>
 #include <TKey.h>
 #include <TProfile.h>
-#include "TString.h"
+#include <TProfile2D.h>
+#include <TProfile2Poly.h>
+#include <TProfile3D.h>
+#include <TString.h>
 
 #include <TStyle.h>
 #include <TCanvas.h>
@@ -74,18 +78,24 @@
 #include <TPaveLabel.h>
 #include <TRatioPlot.h>
 #include <TGaxis.h>
+#include <TSpline.h>
+#include <TPolyMarker.h>
+#include <TScatter.h>
+#include <TEfficiency.h>
 #include <TGraph.h>
 #include <TGraphErrors.h>
 #include <TGraphAsymmErrors.h>
 #include <TGraphBentErrors.h>
 #include <TMultiGraph.h>
 #include <TGraph2D.h>
+#include <TGraph2DErrors.h>
+#include <TGraph2DAsymmErrors.h>
 #include <TParallelCoord.h>
 #include <TImage.h>
 #include <TMath.h>
 
 
-const int kMaxNumTests = 60;
+const int kMaxNumTests = 70;
 
 // Global variables.
 Int_t     gVerbose = 0;
@@ -205,20 +215,24 @@ Int_t StatusPrint(const TString &filename, Int_t id, const char *title, Int_t te
       if (TMath::Abs(res - ref) <= err) {
          std::cout << line;
          for (Int_t i = nch; i < 67; i++) std::cout << ".";
-         std::cout << " OK" << std::endl;
+         std::cout << " OK\n";
          if (!gOptionK)
             gSystem->Unlink(filename.Data());
       } else {
          std::cout << line;
          Int_t ndots = 60;
          Int_t w = 3;
-         if (testnum < 10) { ndots++; w--;}
-         for (Int_t i = nch; i < ndots; i++) std::cout << ".";
-         std::cout << std::setw(w) << testnum << " FAILED" << std::endl;
-         std::cout << "         Result    = "  << res << std::endl;
-         std::cout << "         Reference = "  << ref << std::endl;
-         std::cout << "         Error     = "  << TMath::Abs(res-ref)
-                                          << " (was " << err << ")"<< std::endl;
+         if (testnum < 10) {
+            ndots++;
+            w--;
+         }
+         for (Int_t i = nch; i < ndots; i++)
+            std::cout << ".";
+         std::cout << std::setw(w) << testnum << " FAILED\n";
+         ;
+         std::cout << "         Result    = " << res << "\n";
+         std::cout << "         Reference = " << ref << "\n";
+         std::cout << "         Error     = " << TMath::Abs(res - ref) << " (was " << err << ")\n";
          gTestsFailed++;
          return 1;
       }
@@ -376,7 +390,6 @@ void webcanv_batch_mode(int number)
       gErrorIgnoreLevel = 0;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Starts new block of tests
 /// In web mode configure number of batch images
@@ -384,14 +397,13 @@ void webcanv_batch_mode(int number)
 void start_block(const TString &title)
 {
    if (!gOptionR) {
-      std::cout << "**********************************************************************" <<std::endl;
-      std::cout << "*  Starting " << title << " - S T R E S S " << TString(' ', 41 - title.Length()) << " *" << std::endl;
-      std::cout << "**********************************************************************" <<std::endl;
+      std::cout << "**********************************************************************\n";
+      std::cout << "*  Starting " << title << " - S T R E S S " << TString(' ', 41 - title.Length()) << " *\n";
+      std::cout << "**********************************************************************\n";
    }
 
    webcanv_batch_mode(80);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Analyze and print reports for performed tests
@@ -1445,6 +1457,35 @@ void labels1()
    delete hlab1;
 }
 
+void th2_custom_axis_labels()
+{
+  auto C = StartTest(600, 600);
+
+  auto h = new TH2D ("h2","h2",10,0.5,10.5,10,0.5,10.5);
+  h->SetDirectory(nullptr);
+  h->Fill(1.,1.,1.);
+  h->Fill(2.,2.,0);
+  // printf("Error for bin #%d = %g\n",2,h->GetBinError(2,2));
+  h->Fill(3.,3.,3.);
+  h->Fill(4.,4.,4.);
+  h->Fill(5.,5.,5.);
+  h->Fill(6.,6.,6.);
+  h->Fill(6.,6.,-6.);
+  // printf("Error for bin #%d = %g\n",6,h->GetBinError(6,6));
+  h->Fill(7.,7.,-7.);
+  // printf("Error for bin #%d = %g\n",8,h->GetBinError(8,8));
+
+  h->GetXaxis()->ChangeLabel(2,-1,-1,-1,kGreen,-1,"2nd label");
+  h->GetXaxis()->ChangeLabel(-2,-1,-1,-1,kGreen,-1,"2nd to last");
+
+  h->GetYaxis()->ChangeLabelByValue(3., 30., -1, -1, kBlue, -1, "Value 3.");
+  h->GetYaxis()->ChangeLabelByValue(8., 330., -1, -1, kBlue, -1, "Value 8.");
+
+  C->Add(h, "COL1");
+
+  TestReport(C, "TH2 with custom axis labels");
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TEllipse test.
@@ -2202,6 +2243,113 @@ void tgraph2d2()
    delete [] rz;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TGraph2DErros Test
+
+void graph2derr_test()
+{
+  auto C = StartTest(600, 600);
+
+  Double_t P = 6.;
+  const Int_t np   = 200;
+  std::vector<Double_t> rx(np), ry(np), rz(np), ex(np), ey(np), ez(np);
+  TRandom r;
+
+  for (Int_t N=0; N<np;N++) {
+     rx[N] = 2*P*(r.Rndm(N))-P;
+     ry[N] = 2*P*(r.Rndm(N))-P;
+     rz[N] = rx[N]*rx[N]-ry[N]*ry[N];
+     rx[N] += 10.;
+     ry[N] += 10.;
+     rz[N] += 40.;
+     ex[N] = r.Rndm(N);
+     ey[N] = r.Rndm(N);
+     ez[N] = 10*r.Rndm(N);
+  }
+
+  auto g = new TGraph2DErrors(np, rx.data(), ry.data(), rz.data(), ex.data(), ey.data(), ez.data());
+
+  g->SetTitle("TGraph2D with error bars: option \"ERR\"");
+  g->SetName("gr2derrors");
+  g->SetFillColor(29);
+  g->SetMarkerSize(0.8);
+  g->SetMarkerStyle(20);
+  g->SetMarkerColor(kRed);
+  g->SetLineColor(kBlue-3);
+  g->SetLineWidth(2);
+  C->SetLogy(1);
+  g->Draw("err p0");
+
+  TestReport(C, "TGraph2DErrors (ERR and P0)");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TGraph2DAsymmErros Test
+
+void graph2dassym_test()
+{
+  auto C = StartTest(600, 600);
+
+  Double_t P = 6.;
+  Int_t np   = 200;
+
+  std::vector<Double_t> rx(np), ry(np), rz(np), exl(np), exh(np), eyl(np), eyh(np), ezl(np), ezh(np);
+
+  TRandom r;
+  r.SetSeed(2000);
+
+  for (Int_t N=0; N<np;N++) {
+     rx[N] = 2*P*(r.Rndm(N))-P;
+     ry[N] = 2*P*(r.Rndm(N))-P;
+     rz[N] = rx[N]*rx[N]-ry[N]*ry[N];
+     rx[N] += 10.;
+     ry[N] += 10.;
+     rz[N] += 40.;
+     exl[N] = r.Rndm(N);
+     exh[N] = r.Rndm(N);
+     eyl[N] = r.Rndm(N);
+     eyh[N] = r.Rndm(N);
+     ezl[N] = 10*r.Rndm(N);
+     ezh[N] = 10*r.Rndm(N);
+  }
+
+  auto g = new TGraph2DAsymmErrors(np, rx.data(), ry.data(), rz.data(), exl.data(), exh.data(), eyl.data(), eyh.data(), ezl.data(), ezh.data());
+  g->SetName("gr2dasymmerrors");
+  g->SetTitle("TGraph2D with asymmetric error bars: option \"ERR\"");
+  g->SetFillColor(29);
+  g->SetMarkerSize(0.8);
+  g->SetMarkerStyle(20);
+  g->SetMarkerColor(kRed);
+  g->SetLineColor(kBlue-3);
+  g->SetLineWidth(2);
+  C->SetLogy(1);
+  g->Draw("err p0");
+
+  TestReport(C, "TGraph2DAsymmErrors (ERR and P0)");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TProfile3D Test
+
+
+void profile3d_test()
+{
+  auto C = StartTest(700, 500);
+  auto hprof3d = new TProfile3D("hprof3d", "Profile of pt versus px, py and pz", 40, -4, 4, 40, -4, 4, 40, 0, 20);
+  hprof3d->SetDirectory(nullptr);
+  Double_t px, py, pz, pt;
+  TRandom r;
+  r.SetSeed(2000);
+  for (Int_t i = 0; i < 25000; i++) {
+    r.Rannor(px, py);
+    pz = px * px + py * py;
+    pt = r.Landau(0, 1);
+    hprof3d->Fill(px, py, pz, pt, 1);
+  }
+  hprof3d->Draw();
+  TestReport(C, "TProfile3D");
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 3rd TGraph2D Test
@@ -2708,6 +2856,285 @@ void waves()
    TestReport(C, "TGraph, TArc, TPalette and TColor");
 }
 
+void splines_test()
+{
+  auto C = StartTest(800, 600);
+
+  Int_t nnp = 23;
+  Double_t a = -0.5;
+  Double_t b = 31;
+  const Double_t power = 0.75;
+
+  Double_t xmin = a - 0.05 * (b - a), xmax = b + 0.05 * (b - a);
+
+   // Define the original function
+   TF1 *f = new TF1("f", "sin(x)*sin(x/10)", xmin, xmax);
+   // Draw function
+   f->Draw("lc");
+
+   std::vector<Double_t> xx(nnp), yy(nnp);
+
+   for (Int_t i = 0; i < nnp; ++i) {
+      xx[i] = a + (b - a) * TMath::Power(i / Double_t(nnp - 1), power);
+      yy[i] = f->Eval(xx[i]);
+   }
+
+    // Evaluate fifth spline coefficients
+    Double_t eps = (b - a) * 1.e-5;
+    auto spline5 = new TSpline5("Spline5", xx.data(), f, nnp, "b1e1b2e2", f->Derivative(a), f->Derivative(b),
+                            (f->Derivative(a + eps) - f->Derivative(a)) / eps,
+                            (f->Derivative(b) - f->Derivative(b - eps)) / eps);
+
+    spline5->SetLineColor(kRed);
+    spline5->SetLineWidth(3);
+
+    // Draw the quintic spline
+    spline5->Draw("lcsame");
+
+    // Evaluate third spline coefficients
+    auto spline3 = new TSpline3("Spline3", xx.data(), yy.data(), nnp, "b1e1", f->Derivative(a), f->Derivative(b));
+
+    spline3->SetLineColor(kGreen);
+    spline3->SetLineWidth(3);
+    spline3->SetMarkerColor(kBlue);
+    spline3->SetMarkerStyle(20);
+    spline3->SetMarkerSize(1.5);
+
+    // Draw the third spline
+    spline3->Draw("lcpsame");
+
+    C->BuildLegend(0.6, 0.7, 0.88, 0.88);
+
+    TestReport(C, "TSpline3 and TSpline5");
+
+}
+
+void scatter_test()
+{
+   auto C = StartTest(800, 800);
+   C->SetRightMargin(0.14);
+
+   gStyle->SetPalette(kBird, nullptr, 0.6); // define a transparent palette
+
+   const int n = 175;
+   double x[n], y[n], c[n], s[n];
+
+   // Define four random data sets
+   TRandom r;
+   r.SetSeed(5000);
+   for (int i=0; i<n; i++) {
+      x[i] = 100*r.Rndm(i);
+      y[i] = 200*r.Rndm(i);
+      c[i] = 300*r.Rndm(i);
+      s[i] = 400*r.Rndm(i);
+   }
+
+   auto scatter = new TScatter(n, x, y, c, s);
+   scatter->SetMarkerStyle(20);
+   scatter->SetTitle("Scatter plot title;X title;Y title;Z title");
+   scatter->GetXaxis()->SetRangeUser(20.,90.);
+   scatter->GetYaxis()->SetRangeUser(55.,90.);
+   scatter->GetZaxis()->SetRangeUser(10.,200.);
+   scatter->Draw("A");
+
+   auto pm = new TPolyMarker(n, x, y);
+   pm->SetMarkerColor(kGreen);
+   pm->SetMarkerStyle(29);
+   pm->SetMarkerSize(1.4);
+   pm->Draw();
+
+   TestReport(C, "TScatter with TPolyMarker test");
+}
+
+void efficiency_test()
+{
+  auto C = StartTest(600, 400);
+
+  //canvas only needed for the documentation
+  C->Divide(2);
+  C->SetFillStyle(1001);
+  C->SetFillColor(kWhite);
+
+  //create one-dimensional TEfficiency object with fixed bin size
+  TEfficiency* pEff = new TEfficiency("eff","different confidence levels;x;#epsilon",20,0,10);
+  TRandom3 rand3;
+  rand3.SetSeed(9000);
+
+  for(int i=0; i<1000; ++i) {
+     //simulate events with variable under investigation
+     Double_t x = rand3.Uniform(10);
+     //check selection: bPassed = DoesEventPassSelection(x)
+     Bool_t bPassed = rand3.Rndm() < TMath::Gaus(x,5,4);
+     pEff->Fill(bPassed, x);
+  }
+
+  //set style attributes
+  pEff->SetFillStyle(3004);
+  pEff->SetFillColor(kRed);
+
+  //copy current TEfficiency object and set new confidence level
+  TEfficiency* pCopy = new TEfficiency(*pEff);
+  pCopy->SetConfidenceLevel(0.90);
+
+  //set style attributes
+  pCopy->SetFillStyle(3005);
+  pCopy->SetFillColor(kBlue);
+
+  C->cd(1);
+
+  //add legend
+  TLegend* leg1 = new TLegend(0.3,0.1,0.7,0.5);
+  leg1->AddEntry(pEff,"68.3%","F");
+  leg1->AddEntry(pCopy,"90%","F");
+
+  pEff->Draw("A4");
+  pCopy->Draw("same4");
+  leg1->Draw();
+
+  //use same confidence level but different statistic methods
+  TEfficiency* pEff2 = new TEfficiency(*pEff);
+  TEfficiency* pCopy2 = new TEfficiency(*pEff);
+
+  pEff2->SetStatisticOption(TEfficiency::kFNormal);
+  pCopy2->SetStatisticOption(TEfficiency::kFAC);
+
+  pEff2->SetTitle("different statistic options;x;#epsilon");
+
+  //set style attributes
+  pCopy2->SetFillStyle(3005);
+  pCopy2->SetFillColor(kBlue);
+
+  C->cd(2);
+
+  //add legend
+  TLegend* leg2 = new TLegend(0.3,0.1,0.7,0.5);
+  leg2->AddEntry(pEff2,"kFNormal","F");
+  leg2->AddEntry(pCopy2,"kFAC","F");
+
+  pEff2->Draw("a4");
+  pCopy2->Draw("same4");
+  leg2->Draw();
+
+  TestReport(C, "TEfficiency test");
+}
+
+void profile_2d()
+{
+  auto C = StartTest(700, 500);
+
+  auto hprof2d  = new TProfile2D("hprof2d", "Profile of pz versus px and py",40,-4,4,40,-4,4,0,20);
+  hprof2d->SetDirectory(nullptr);
+
+  TRandom r;
+  r.SetSeed(300);
+  Float_t px, py, pz;
+  for (Int_t i = 0; i < 25000; i++) {
+    r.Rannor(px, py);
+    pz = px * px + py * py;
+    hprof2d->Fill(px, py, pz, 1);
+  }
+  C->Add(hprof2d);
+
+  TestReport(C, "TProfile2D");
+}
+
+void profile_2poly()
+{
+   Int_t numEvents = 1000000;
+
+   TRandom ran;
+   ran.SetSeed(1000);
+
+   auto C = StartTest(800, 400);
+
+   // -------------------- Construct detector bins ------------------------
+   auto th2p = new TH2Poly();
+   th2p->SetName("th2p");
+   auto avg = new TProfile2Poly();
+   avg->SetName("prof2avg");
+   auto err = new TProfile2Poly();
+   err->SetName("prof2err");
+
+   std::ifstream infile;
+   TString dir = gROOT->GetTutorialDir();
+   dir.Append("/hist/data/tprofile2poly_tutorial.data");
+   infile.open(dir.Data());
+
+   if (!infile) { // Verify that the file was open successfully
+      std::cerr << dir.Data() << "\n";                             // Report error
+      std::cerr << "Error code: " << std::strerror(errno) << "\n"; // Get some info as to why
+      return;
+   }
+
+   std::vector<std::pair<Double_t, Double_t>> allCoords;
+   Double_t a, b;
+   while (infile >> a >> b)
+      allCoords.emplace_back(a, b);
+
+   if (allCoords.size() % 3 != 0) {
+      std::cout << "[ERROR] Bad file\n";
+      return;
+   }
+
+   Double_t x[3], y[3];
+   for (UInt_t i = 0; i < allCoords.size(); i += 3) {
+      x[0] = allCoords[i + 0].first;
+      y[0] = allCoords[i + 0].second;
+      x[1] = allCoords[i + 1].first;
+      y[1] = allCoords[i + 1].second;
+      x[2] = allCoords[i + 2].first;
+      y[2] = allCoords[i + 2].second;
+      th2p->AddBin(3, x, y);
+      avg->AddBin(3, x, y);
+      err->AddBin(3, x, y);
+   }
+
+   // -------------------- Generate particles ------------------------
+   for (int j = 0; j < numEvents; ++j) {
+      Double_t r1 = ran.Gaus(0, 10);
+      Double_t r2 = ran.Gaus(0, 8);
+      Double_t rok = ran.Gaus(20, 2);
+      Double_t rbad1 = ran.Gaus(1, 2);
+      Double_t rbad2 = ran.Gaus(2, 0);
+
+      Double_t val = rok;
+      // --------------------  Malfunctioning panels -------------------
+      if (th2p->IsInsideBin(4, r1, r2))
+         val = rok - rbad1;
+      if (th2p->IsInsideBin(20, r1, r2))
+         val = rok - rbad2;
+      if (th2p->IsInsideBin(13, r1, r2))
+         val = rok + rbad1;
+      if (th2p->IsInsideBin(37, r1, r2))
+         val = rok + rbad2;
+
+      // -------------------- Fill histograms ------------------------
+      th2p->Fill(r1, r2, val);
+      avg->Fill(r1, r2, val);
+      err->Fill(r1, r2, val);
+   }
+
+   C->Divide(3, 1);
+
+   // -------------------- Display end state ------------------------
+   C->cd(1);
+   th2p->SetStats(0);
+   th2p->SetTitle("total hits");
+   th2p->Draw("COLZ");
+
+   C->cd(2);
+   avg->SetStats(0);
+   avg->SetTitle("average charge");
+   avg->Draw("COLZ");
+
+   C->cd(3);
+   err->SetStats(0);
+   err->SetContentToError();
+   err->SetTitle("error");
+   err->Draw("COLZ");
+
+   TestReport(C, "TH2Poly and TPofile2Poly");
+}
 
 void PrintRefHeader()
 {
@@ -2767,12 +3194,14 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    if (!gVerbose)
       gErrorIgnoreLevel = 0;
 
-   const char *ref_name = "stressGraphics.ref";
+   const char *ref_name = "stressGraphics.ref", *ref_kind = "   ";
    if (gWebMode) {
       ref_name = "stressGraphics_web.ref";
+      ref_kind = " WEB";
    } else {
 #ifdef R__HAS_CLOUDFLARE_ZLIB
       ref_name = "stressGraphics_builtinzlib.ref";
+      ref_kind = "ZLIB";
 #endif
    }
 
@@ -2784,8 +3213,8 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    if (gOptionR) {
       PrintRefHeader();
    } else {
-      std::cout << "**********************************************************************" <<std::endl;
-      std::cout << "*  Starting  Graphics - S T R E S S suite                            *" <<std::endl;
+      std::cout << "**********************************************************************\n";
+      std::cout << "*  Starting  Graphics - S T R E S S suite                       " << ref_kind << " *\n";
    }
 
    gTestNum     = 0;
@@ -2820,6 +3249,7 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    tgaxis5       ();
    tgaxis6       ();
    labels1       ();
+   th2_custom_axis_labels();
    tellipse      ();
    feynman       ();
    ratioplot     ();
@@ -2830,6 +3260,11 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    tmultigraph1  ();
    tmultigraph2  ();
    waves         ();
+   splines_test  ();
+   scatter_test  ();
+   efficiency_test();
+   profile_2d    ();
+   profile_2poly ();
    print_reports ();
 
    start_block("High Level 3D Primitives");
@@ -2844,10 +3279,13 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    }
    earth         ();
    if (gSkip3D) {
-      gTestNum += 2;
+      gTestNum += 5;
    } else {
       tgraph2d1  ();
       tgraph2d2  ();
+      graph2derr_test();
+      graph2dassym_test();
+      profile3d_test();
    }
    tgraph2d3     ();
    print_reports ();
@@ -2869,14 +3307,14 @@ void stressGraphics(Int_t verbose = 0, Bool_t generate = kFALSE, Bool_t keep_fil
    print_reports ();
 
    if (!gOptionR) {
-      std::cout << "**********************************************************************" <<std::endl;
+      std::cout << "**********************************************************************\n";
       if (!gTestsFailed) {
-         std::cout << "*  All the tests passed. :-)" <<std::endl;
+         std::cout << "*  All the tests passed. :-)\n";
       } else {
-         if (gTestsFailed>1) std::cout << "*  " << gTestsFailed <<" tests failed. :-(" <<std::endl;
-         else                std::cout << "*  " << gTestsFailed <<" test failed. :-(" <<std::endl;
+         if (gTestsFailed>1) std::cout << "*  " << gTestsFailed <<" tests failed. :-(\n";
+         else                std::cout << "*  " << gTestsFailed <<" test failed. :-(\n";
       }
-      std::cout << "**********************************************************************" <<std::endl;
+      std::cout << "**********************************************************************\n";
 
       gBenchmark->Stop("stressGraphics");
 
