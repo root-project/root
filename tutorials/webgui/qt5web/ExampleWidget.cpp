@@ -91,7 +91,7 @@ void ExampleWidget::ImportCmsGeometry()
 {
    TFile::SetCacheFileDir(".");
 
-   if (!TGeoManager::Import("https://root.cern/files/cms.root")) {
+   if (!TGeoManager::Import("https://root-test.web.cern.ch/files/cms.root")) {
       CreateDummyGeometry();
       return;
    }
