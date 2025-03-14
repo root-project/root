@@ -104,7 +104,7 @@ root (cont'ed, cancel with .@) [1]<< "ROOT\n";
 
 - `rootls` now follows the same logic of `TFile::ls()` to print the key cycle number and its tag when listing contents of a file with the `-l` option (PR [#7878](https://github.com/root-project/root/pull/7878)):
 ```
-$: rootls -l https://root.cern/files/ttree_read_imt.root
+$: rootls -l https://root-test.web.cern.ch/files/ttree_read_imt.root
 TTree  Mar 13 17:17 2019 TreeIMT;2 "TTree for IMT test" [current cycle]
 TTree  Mar 13 17:17 2019 TreeIMT;1 "TTree for IMT test" [backup cycle]
 ```
