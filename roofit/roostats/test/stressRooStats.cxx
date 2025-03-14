@@ -311,7 +311,7 @@ int main(int argc, const char *argv[])
    bool doTreeStore = false;
    auto backend = RooFit::EvalBackend::Legacy();
 
-   // string refFileName = "http://root.cern/files/stressRooStats_v534_ref.root" ;
+   // string refFileName = "http://root-test.web.cern.ch/files/stressRooStats_v534_ref.root" ;
    string refFileName = "stressRooStats_ref.root";
    string minimizerName = "Minuit";
 
