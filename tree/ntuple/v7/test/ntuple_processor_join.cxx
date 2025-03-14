@@ -241,24 +241,21 @@ TEST_F(RNTupleJoinProcessorTest, MissingEntries)
 
 TEST_F(RNTupleJoinProcessorTest, WithModel)
 {
-   auto model1 = RNTupleModel::Create();
-   auto i = model1->MakeField<int>("i");
-   auto x = model1->MakeField<float>("x");
+   auto primaryModel = RNTupleModel::Create();
+   auto i = primaryModel->MakeField<int>("i");
+   auto x = primaryModel->MakeField<float>("x");
 
-   auto model2 = RNTupleModel::Create();
-   auto y = model2->MakeField<std::vector<float>>("y");
+   std::vector<std::unique_ptr<RNTupleModel>> auxModels;
 
-   auto model3 = RNTupleModel::Create();
-   auto z = model3->MakeField<float>("z");
+   auxModels.push_back(RNTupleModel::Create());
+   auto y = auxModels.back()->MakeField<std::vector<float>>("y");
 
-   std::vector<std::unique_ptr<RNTupleModel>> models;
-   models.push_back(std::move(model1));
-   models.push_back(std::move(model2));
-   models.push_back(std::move(model3));
+   auxModels.push_back(RNTupleModel::Create());
+   auto z = auxModels.back()->MakeField<float>("z");
 
    auto proc = RNTupleProcessor::CreateJoin({fNTupleNames[0], fFileNames[0]},
                                             {{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}, {"i"},
-                                            std::move(models));
+                                            std::move(primaryModel), std::move(auxModels));
 
    int nEntries = 0;
    std::vector<float> yExpected;
@@ -286,4 +283,98 @@ TEST_F(RNTupleJoinProcessorTest, WithModel)
    }
 
    EXPECT_EQ(5, proc->GetNEntriesProcessed());
+}
+
+TEST_F(RNTupleJoinProcessorTest, PartialModels)
+{
+   {
+      std::vector<std::unique_ptr<RNTupleModel>> auxModels;
+
+      auxModels.emplace_back(RNTupleModel::Create());
+      auto y = auxModels.back()->MakeField<std::vector<float>>("y");
+
+      auxModels.emplace_back(RNTupleModel::Create());
+      auto z = auxModels.back()->MakeField<float>("z");
+
+      // no primary model provided, aux models have been provided
+      auto procNoPrimaryModel = RNTupleProcessor::CreateJoin(
+         {fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}, {"i"},
+         nullptr, std::move(auxModels));
+
+      auto i = procNoPrimaryModel->GetEntry().GetPtr<int>("i");
+      std::vector<float> yExpected;
+      for (auto &entry : *procNoPrimaryModel) {
+         EXPECT_EQ(procNoPrimaryModel->GetCurrentEntryNumber() * 2, *i);
+         EXPECT_FLOAT_EQ(*i * 0.5f, *entry.GetPtr<float>("x"));
+         yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
+         EXPECT_EQ(yExpected, *y);
+         EXPECT_FLOAT_EQ(static_cast<float>(*i * 2.f), *z);
+
+         try {
+            entry.GetPtr<float>("ntuple2.z");
+            FAIL() << "should not be able to access values from fields not present in the provided models";
+         } catch (const ROOT::RException &err) {
+            EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: ntuple2.z"));
+         }
+      }
+   }
+   {
+      // primary model provided, no aux models have been provided
+      auto primaryModel = RNTupleModel::Create();
+      auto i = primaryModel->MakeField<int>("i");
+      auto x = primaryModel->MakeField<float>("x");
+
+      auto procNoAuxModels = RNTupleProcessor::CreateJoin(
+         {fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}, {"i"},
+         std::move(primaryModel));
+
+      std::vector<float> yExpected;
+      for (auto &entry : *procNoAuxModels) {
+         EXPECT_EQ(procNoAuxModels->GetCurrentEntryNumber() * 2, *i);
+         EXPECT_FLOAT_EQ(*i * 0.5f, *x);
+         yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
+         EXPECT_EQ(yExpected, *entry.GetPtr<std::vector<float>>("ntuple2.y"));
+         EXPECT_FLOAT_EQ(static_cast<float>(*i * 2.f), *entry.GetPtr<float>("ntuple3.z"));
+
+         try {
+            entry.GetPtr<float>("ntuple2.z");
+            FAIL() << "should not be able to access values from fields not present in the provided models";
+         } catch (const ROOT::RException &err) {
+            EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: ntuple2.z"));
+         }
+      }
+   }
+   {
+      // primary model and model for first aux ntuple has been provided, but not for the second
+      auto primaryModel = RNTupleModel::Create();
+      auto i = primaryModel->MakeField<int>("i");
+      auto x = primaryModel->MakeField<float>("x");
+
+      std::vector<std::unique_ptr<RNTupleModel>> partialAuxModels;
+
+      partialAuxModels.emplace_back(RNTupleModel::Create());
+      auto y = partialAuxModels.back()->MakeField<std::vector<float>>("y");
+
+      partialAuxModels.emplace_back(nullptr);
+
+      auto procPartialAuxModels = RNTupleProcessor::CreateJoin(
+         {fNTupleNames[0], fFileNames[0]}, {{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}, {"i"},
+         std::move(primaryModel), std::move(partialAuxModels));
+
+      std::vector<float> yExpected;
+      for (auto &entry : *procPartialAuxModels) {
+         EXPECT_EQ(procPartialAuxModels->GetCurrentEntryNumber() * 2, *i);
+         EXPECT_FLOAT_EQ(*i * 0.5f, *x);
+         yExpected = {static_cast<float>(*i * 0.2), 3.14, static_cast<float>(*i * 1.3)};
+         EXPECT_EQ(yExpected, *y);
+         EXPECT_FLOAT_EQ(static_cast<float>(*i * 2.f), *entry.GetPtr<float>("ntuple3.z"));
+
+         try {
+            entry.GetPtr<float>("ntuple2.z");
+            FAIL() << "should not be able to access values from fields not present in the provided models";
+         } catch (const ROOT::RException &err) {
+            EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: ntuple2.z"));
+         }
+      }
+   }
 }
