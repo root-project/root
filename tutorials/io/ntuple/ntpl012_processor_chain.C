@@ -29,7 +29,7 @@ using ROOT::Experimental::RNTupleWriter;
 // Number of events to generate for each ntuple.
 constexpr int kNEvents = 10000;
 
-void Write(const RNTupleOpenSpec &ntuple)
+void Write(std::string_view ntupleName, std::string_view fileName)
 {
    auto model = RNTupleModel::Create();
 
@@ -38,7 +38,7 @@ void Write(const RNTupleOpenSpec &ntuple)
    auto fldVpz = model->MakeField<std::vector<float>>("vpz");
    auto fldN = model->MakeField<std::uint64_t>("vn");
 
-   auto writer = RNTupleWriter::Recreate(std::move(model), ntuple.fNTupleName, ntuple.fStorage);
+   auto writer = RNTupleWriter::Recreate(std::move(model), ntupleName, fileName);
 
    for (int i = 0; i < kNEvents; ++i) {
       fldVpx->clear();
@@ -81,8 +81,8 @@ void Read(const std::vector<RNTupleOpenSpec> &ntuples)
       // a new ntuple in the chain is opened for processing.
       if (static_cast<int>(processor->GetCurrentProcessorNumber()) > prevProcessorNumber) {
          prevProcessorNumber = processor->GetCurrentProcessorNumber();
-         std::cout << "Processing " << ntuples.at(prevProcessorNumber).fNTupleName << " ("
-                   << processor->GetNEntriesProcessed() << " total entries processed so far)" << std::endl;
+         std::cout << "Processing `ntuple" << prevProcessorNumber + 1 << "` (" << processor->GetNEntriesProcessed()
+                   << " total entries processed so far)" << std::endl;
       }
 
       // We can use the pointer to the field obtained while creating our model to read the field's data for the current
@@ -99,14 +99,14 @@ void Read(const std::vector<RNTupleOpenSpec> &ntuples)
 
 void ntpl012_processor_chain()
 {
+   Write("ntuple1", "ntuple1.root");
+   Write("ntuple2", "ntuple2.root");
+   Write("ntuple3", "ntuple3.root");
+
    // The ntuples to generate and subsequently process. The model of the first ntuple will be used to construct the
    // entry used by the processor.
    std::vector<RNTupleOpenSpec> ntuples = {
       {"ntuple1", "ntuple1.root"}, {"ntuple2", "ntuple2.root"}, {"ntuple3", "ntuple3.root"}};
-
-   for (const auto &ntuple : ntuples) {
-      Write(ntuple);
-   }
 
    Read(ntuples);
 }

@@ -2,6 +2,8 @@
 
 #include <ROOT/RNTupleProcessor.hxx>
 
+#include <TMemFile.h>
+
 class RNTupleChainProcessorTest : public testing::Test {
 protected:
    const std::array<std::string, 4> fFileNames{"test_ntuple_chain_processor1.root", "test_ntuple_chain_processor2.root",
@@ -71,9 +73,8 @@ protected:
 
 TEST(RNTupleChainProcessor, EmptySpec)
 {
-   std::vector<RNTupleOpenSpec> ntuples;
    try {
-      auto proc = RNTupleProcessor::CreateChain(ntuples);
+      auto proc = RNTupleProcessor::CreateChain(std::vector<RNTupleOpenSpec>{});
       FAIL() << "creating a processor without at least one RNTuple should throw";
    } catch (const ROOT::RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("at least one RNTuple must be provided"));
@@ -82,10 +83,8 @@ TEST(RNTupleChainProcessor, EmptySpec)
 
 TEST_F(RNTupleChainProcessorTest, SingleNTuple)
 {
-   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleName, fFileNames[0]}};
-
    int nEntries = 0;
-   auto proc = RNTupleProcessor::CreateChain(ntuples);
+   auto proc = RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}});
    for (const auto &entry : *proc) {
       EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
       EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
@@ -99,15 +98,14 @@ TEST_F(RNTupleChainProcessorTest, SingleNTuple)
 
 TEST_F(RNTupleChainProcessorTest, Basic)
 {
-   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}};
-
    std::uint64_t nEntries = 0;
-   auto proc = RNTupleProcessor::CreateChain(ntuples);
+   auto proc = RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}});
 
    EXPECT_STREQ("ntuple", proc->GetProcessorName().c_str());
 
    {
-      auto namedProc = RNTupleProcessor::CreateChain(ntuples, "my_ntuple");
+      auto namedProc =
+         RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}}, "my_ntuple");
       EXPECT_STREQ("my_ntuple", namedProc->GetProcessorName().c_str());
    }
 
@@ -131,9 +129,8 @@ TEST_F(RNTupleChainProcessorTest, WithModel)
    auto model = RNTupleModel::Create();
    auto fldX = model->MakeField<float>("x");
 
-   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}};
-
-   auto proc = RNTupleProcessor::CreateChain(ntuples, std::move(model));
+   auto proc =
+      RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}}, std::move(model));
    for (const auto &entry : *proc) {
       auto x = entry.GetPtr<float>("x");
       EXPECT_EQ(static_cast<float>(proc->GetNEntriesProcessed() - 1), *x);
@@ -152,9 +149,8 @@ TEST_F(RNTupleChainProcessorTest, WithBareModel)
    auto model = RNTupleModel::CreateBare();
    auto fldY = model->MakeField<std::vector<float>>("y");
 
-   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}};
-
-   auto proc = RNTupleProcessor::CreateChain(ntuples, std::move(model));
+   auto proc =
+      RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}}, std::move(model));
    for (const auto &entry : *proc) {
       auto y = entry.GetPtr<std::vector<float>>("y");
       std::vector<float> yExp = {static_cast<float>(proc->GetNEntriesProcessed() - 1),
@@ -172,9 +168,7 @@ TEST_F(RNTupleChainProcessorTest, WithBareModel)
 
 TEST_F(RNTupleChainProcessorTest, MissingFields)
 {
-   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[2]}};
-
-   auto proc = RNTupleProcessor::CreateChain(ntuples);
+   auto proc = RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[2]}});
    auto entry = proc->begin();
 
    while (proc->GetNEntriesProcessed() < 5) {
@@ -206,12 +200,10 @@ TEST_F(RNTupleChainProcessorTest, EmptyNTuples)
    std::uint64_t nEntries = 0;
 
    // Empty ntuples are skipped (as long as their model complies)
-   ntuples = {{fNTupleName, fileGuard.GetPath()},
-              {fNTupleName, fFileNames[0]},
-              {fNTupleName, fileGuard.GetPath()},
-              {fNTupleName, fFileNames[1]}};
-
-   auto proc = RNTupleProcessor::CreateChain(ntuples);
+   auto proc = RNTupleProcessor::CreateChain({{fNTupleName, fileGuard.GetPath()},
+                                              {fNTupleName, fFileNames[0]},
+                                              {fNTupleName, fileGuard.GetPath()},
+                                              {fNTupleName, fFileNames[1]}});
 
    for (const auto &entry : *proc) {
       auto x = entry.GetPtr<float>("x");
@@ -235,9 +227,7 @@ TEST_F(RNTupleChainProcessorTest, LoadRandomEntry)
 {
    using ROOT::Experimental::Internal::RNTupleProcessorEntryLoader;
 
-   std::vector<RNTupleOpenSpec> ntuples = {{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}};
-
-   auto proc = RNTupleProcessor::CreateChain(ntuples);
+   auto proc = RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, fFileNames[1]}});
    auto x = proc->GetEntry().GetPtr<float>("x");
 
    RNTupleProcessorEntryLoader::LoadEntry(*proc, 3);
@@ -257,4 +247,34 @@ TEST_F(RNTupleChainProcessorTest, LoadRandomEntry)
    EXPECT_EQ(0, proc->GetCurrentProcessorNumber());
 
    EXPECT_EQ(ROOT::kInvalidNTupleIndex, RNTupleProcessorEntryLoader::LoadEntry(*proc, 8));
+}
+
+TEST_F(RNTupleChainProcessorTest, TMemFile)
+{
+   TMemFile memFile("test_ntuple_processor_chain_tmemfile_second.root", "RECREATE");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<float>("x");
+      auto fldY = model->MakeField<std::vector<float>>("y");
+      auto ntuple = RNTupleWriter::Append(std::move(model), fNTupleName, memFile);
+
+      for (unsigned i = 5; i < 10; i++) {
+         *fldX = static_cast<float>(i);
+         *fldY = {static_cast<float>(i), static_cast<float>(i * 2)};
+         ntuple->Fill();
+      }
+   }
+
+   auto proc = RNTupleProcessor::CreateChain({{fNTupleName, fFileNames[0]}, {fNTupleName, &memFile}});
+
+   std::uint64_t nEntries = 0;
+   auto x = proc->GetEntry().GetPtr<float>("x");
+   for ([[maybe_unused]] const auto &entry : *proc) {
+      EXPECT_EQ(++nEntries, proc->GetNEntriesProcessed());
+      EXPECT_EQ(nEntries - 1, proc->GetCurrentEntryNumber());
+
+      EXPECT_EQ(static_cast<float>(nEntries - 1), *x);
+   }
+   EXPECT_EQ(nEntries, 10);
+   EXPECT_EQ(nEntries, proc->GetNEntriesProcessed());
 }
