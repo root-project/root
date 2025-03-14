@@ -1768,7 +1768,6 @@ void th2poly()
 {
    TCanvas *C = StartTest(800,400);
 
-   Int_t i;
    const Int_t nx = 48;
    const char *states [nx] = {
       "alabama",      "arizona",        "arkansas",       "california",
@@ -1801,7 +1800,7 @@ void th2poly()
    if (!gVerbose)
       gErrorIgnoreLevel = 9999;
    TFile::SetCacheFileDir(".");
-   TFile *f = TFile::Open("http://root.cern/files/usa.root", "CACHEREAD");
+   auto f = TFile::Open("http://root.cern/files/usa.root", "CACHEREAD");
 
    if (!f) {
       printf("Cannot access usa.root. Is internet working ?\n");
@@ -1809,25 +1808,26 @@ void th2poly()
    }
 
    // Define the TH2Poly bins.
-   TMultiGraph *mg;
-   TKey *key;
    TIter nextkey(gDirectory->GetListOfKeys());
-   while ((key = (TKey*)nextkey())) {
+   while (auto key = (TKey*)nextkey()) {
       TObject *obj = key->ReadObj();
       if (obj->InheritsFrom("TMultiGraph")) {
-         mg = (TMultiGraph*)obj;
+         auto mg = (TMultiGraph*)obj;
          p->AddBin(mg);
       }
    }
 
    // Fill TH2Poly.
-   for (i=0; i<nx; i++) p->Fill(states[i], pop[i]);
+   for (Int_t i = 0; i < nx; i++)
+      p->Fill(states[i], pop[i]);
 
    gStyle->SetOptStat(11);
    gStyle->SetPalette(kBird);
    p->DrawClone("COL");
 
    TestReport(C, "TH2Poly.(DrawClone() and remote file access)");
+
+   delete f;
 }
 
 
@@ -1841,21 +1841,21 @@ void tmultigraph1()
    gStyle->SetOptFit();
    C->SetGrid();
    TMultiGraph *mg = new TMultiGraph();
-   Int_t n1 = 10;
-   Double_t x1[]  = {-0.1, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
-   Double_t y1[]  = {-1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
-   Double_t ex1[] = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
-   Double_t ey1[] = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
+   const Int_t n1 = 10;
+   Double_t x1[n1]  = {-0.1, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
+   Double_t y1[n1]  = {-1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
+   Double_t ex1[n1] = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
+   Double_t ey1[n1] = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
    TGraphErrors *gr1 = new TGraphErrors(n1,x1,y1,ex1,ey1);
    gr1->SetMarkerColor(kBlue);
    gr1->SetMarkerStyle(21);
    gr1->Fit("pol6","q ex0");
    mg->Add(gr1);
-   Int_t n2 = 10;
-   Float_t x2[]  = {-0.28, 0.005, 0.19, 0.29, 0.45, 0.56,0.65,0.80,0.90,1.01};
-   Float_t y2[]  = {2.1,3.86,7,9,10,10.55,9.64,7.26,5.42,2};
-   Float_t ex2[] = {.04,.12,.08,.06,.05,.04,.07,.06,.08,.04};
-   Float_t ey2[] = {.6,.8,.7,.4,.3,.3,.4,.5,.6,.7};
+   const Int_t n2 = 10;
+   Float_t x2[n2]  = {-0.28, 0.005, 0.19, 0.29, 0.45, 0.56,0.65,0.80,0.90,1.01};
+   Float_t y2[n2]  = {2.1,3.86,7,9,10,10.55,9.64,7.26,5.42,2};
+   Float_t ex2[n2] = {.04,.12,.08,.06,.05,.04,.07,.06,.08,.04};
+   Float_t ey2[n2] = {.6,.8,.7,.4,.3,.3,.4,.5,.6,.7};
    TGraphErrors *gr2 = new TGraphErrors(n2,x2,y2,ex2,ey2);
    gr2->SetMarkerColor(kRed);
    gr2->SetMarkerStyle(20);
@@ -1863,12 +1863,16 @@ void tmultigraph1()
    mg->Add(gr2);
    mg->Draw("ap");
    C->Update();
-   TPaveStats *stats1 = (TPaveStats*)gr1->GetListOfFunctions()->FindObject("stats");
-   TPaveStats *stats2 = (TPaveStats*)gr2->GetListOfFunctions()->FindObject("stats");
+   auto stats1 = static_cast<TPaveStats *>(gr1->GetListOfFunctions()->FindObject("stats"));
+   auto stats2 = static_cast<TPaveStats *>(gr2->GetListOfFunctions()->FindObject("stats"));
    stats1->SetTextColor(kBlue);
    stats2->SetTextColor(kRed);
-   stats1->SetX1NDC(0.12); stats1->SetX2NDC(0.32); stats1->SetY1NDC(0.75);
-   stats2->SetX1NDC(0.72); stats2->SetX2NDC(0.92); stats2->SetY1NDC(0.78);
+   stats1->SetX1NDC(0.12);
+   stats1->SetX2NDC(0.32);
+   stats1->SetY1NDC(0.75);
+   stats2->SetX1NDC(0.72);
+   stats2->SetX2NDC(0.92);
+   stats2->SetY1NDC(0.78);
    C->Modified();
 
    TestReport(C, "TMultigraph and TGraphErrors");
@@ -1894,29 +1898,29 @@ void tmultigraph2()
    TMultiGraph *mg4 = new TMultiGraph();
 
    // Vectors used to build the graphs
-   Int_t n1 = 10;
-   Double_t x1[]    = {-0.1, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
-   Double_t y1[]    = {-1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
-   Double_t exl1[]  = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
-   Double_t eyl1[]  = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
-   Double_t exh1[]  = {.02,.08,.05,.05,.03,.03,.04,.05,.06,.03};
-   Double_t eyh1[]  = {.6,.5,.4,.3,.2,.2,.3,.4,.5,.6};
-   Double_t exld1[] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
-   Double_t eyld1[] = {.0,.0,.05,.0,.0,.0,.0,.0,.0,.0};
-   Double_t exhd1[] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
-   Double_t eyhd1[] = {.0,.0,.0,.0,.0,.0,.0,.0,.05,.0};
+   const Int_t n1 = 10;
+   Double_t x1[n1]    = {-0.1, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
+   Double_t y1[n1]    = {-1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
+   Double_t exl1[n1]  = {.05,.1,.07,.07,.04,.05,.06,.07,.08,.05};
+   Double_t eyl1[n1]  = {.8,.7,.6,.5,.4,.4,.5,.6,.7,.8};
+   Double_t exh1[n1]  = {.02,.08,.05,.05,.03,.03,.04,.05,.06,.03};
+   Double_t eyh1[n1]  = {.6,.5,.4,.3,.2,.2,.3,.4,.5,.6};
+   Double_t exld1[n1] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
+   Double_t eyld1[n1] = {.0,.0,.05,.0,.0,.0,.0,.0,.0,.0};
+   Double_t exhd1[n1] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
+   Double_t eyhd1[n1] = {.0,.0,.0,.0,.0,.0,.0,.0,.05,.0};
 
-   Int_t n2 = 10;
-   Float_t  x2[]    = {-0.28, 0.005, 0.19, 0.29, 0.45, 0.56,0.65,0.80,0.90,1.01};
-   Float_t  y2[]    = {2.1,3.86,7,9,10,10.55,9.64,7.26,5.42,2};
-   Float_t  exl2[]  = {.04,.12,.08,.06,.05,.04,.07,.06,.08,.04};
-   Float_t  eyl2[]  = {.6,.8,.7,.4,.3,.3,.4,.5,.6,.7};
-   Float_t  exh2[]  = {.02,.08,.05,.05,.03,.03,.04,.05,.06,.03};
-   Float_t  eyh2[]  = {.6,.5,.4,.3,.2,.2,.3,.4,.5,.6};
-   Float_t  exld2[] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
-   Float_t  eyld2[] = {.0,.0,.05,.0,.0,.0,.0,.0,.0,.0};
-   Float_t  exhd2[] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
-   Float_t  eyhd2[] = {.0,.0,.0,.0,.0,.0,.0,.0,.05,.0};
+   const Int_t n2 = 10;
+   Float_t  x2[n2]    = {-0.28, 0.005, 0.19, 0.29, 0.45, 0.56,0.65,0.80,0.90,1.01};
+   Float_t  y2[n2]    = {2.1,3.86,7,9,10,10.55,9.64,7.26,5.42,2};
+   Float_t  exl2[n2]  = {.04,.12,.08,.06,.05,.04,.07,.06,.08,.04};
+   Float_t  eyl2[n2]  = {.6,.8,.7,.4,.3,.3,.4,.5,.6,.7};
+   Float_t  exh2[n2]  = {.02,.08,.05,.05,.03,.03,.04,.05,.06,.03};
+   Float_t  eyh2[n2]  = {.6,.5,.4,.3,.2,.2,.3,.4,.5,.6};
+   Float_t  exld2[n2] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
+   Float_t  eyld2[n2] = {.0,.0,.05,.0,.0,.0,.0,.0,.0,.0};
+   Float_t  exhd2[n2] = {.0,.0,.0,.0,.0,.0,.0,.0,.0,.0};
+   Float_t  eyhd2[n2] = {.0,.0,.0,.0,.0,.0,.0,.0,.05,.0};
 
    // Create 1st multigraph
    C->cd(1);
@@ -2030,7 +2034,8 @@ void options2d2()
    gPad->SetGrid();
    C->SetFillColor(17);
    C->SetGrid();
-   gH2->Draw("text"); pl2.DrawPaveLabel(x1,y1,x2,y2,"TEXT","brNDC");
+   gH2->Draw("text");
+   pl2.DrawPaveLabel(x1,y1,x2,y2,"TEXT","brNDC");
 
    TestReport(C, "Text option");
 }
@@ -2134,14 +2139,16 @@ void earth()
    TH2F *h3 = new TH2F("h03","Sinusoidal",50, -180, 180, 50, -90.5, 90.5);
    TH2F *h4 = new TH2F("h04","Parabolic", 50, -180, 180, 50, -90.5, 90.5);
    std::ifstream in;
-   in.open("../tutorials/visualisation/graphics/earth.dat");
+   TString fname = gROOT->GetTutorialDir();
+   fname.Append("/visualisation/graphics/earth.dat");
+   in.open(fname.Data());
    if (!in) {
       in.clear();
       in.open("earth.dat");
    }
    if (!in)
       printf("Cannot find earth.dat!\n");
-   Float_t x,y;
+   Float_t x, y;
    while (1) {
      in >> x >> y;
      if (!in.good()) break;
@@ -2219,18 +2226,15 @@ void tgraph2d2()
    Double_t Px = 6.;
    Double_t Py = 6.;
    Int_t np    = 1000;
-   Double_t *rx=0, *ry=0, *rz=0;
-   rx = new Double_t[np];
-   ry = new Double_t[np];
-   rz = new Double_t[np];
-   TRandom *r = new TRandom();
+   std::vector<Double_t> rx(np), ry(np), rz(np);
+   TRandom r;
    for (Int_t N=0; N<np; N++) {
-      rx[N]=2*Px*(r->Rndm())-Px;
-      ry[N]=2*Py*(r->Rndm())-Py;
-      rz[N]=sin(sqrt(rx[N]*rx[N]+ry[N]*ry[N]))+1;
+      rx[N] = 2*Px*(r.Rndm())-Px;
+      ry[N] = 2*Py*(r.Rndm())-Py;
+      rz[N] = sin(sqrt(rx[N]*rx[N]+ry[N]*ry[N]))+1;
    }
    gStyle->SetPalette(kBird);
-   TGraph2D *dt = new TGraph2D( np, rx, ry, rz);
+   auto dt = new TGraph2D(np, rx.data(), ry.data(), rz.data());
    dt->SetName("Graph2DA");
    dt->SetFillColor(0);
    dt->SetMarkerStyle(20);
@@ -2238,9 +2242,6 @@ void tgraph2d2()
 
    TestReport(C, "TGraph2D 2 (COL and P)", dt->GetName());
    delete dt;
-   delete [] rx;
-   delete [] ry;
-   delete [] rz;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2364,18 +2365,15 @@ void tgraph2d3()
    Double_t Px = 6.;
    Double_t Py = 6.;
    Int_t np    = 200;
-   Double_t *rx=0, *ry=0, *rz=0;
-   rx = new Double_t[np];
-   ry = new Double_t[np];
-   rz = new Double_t[np];
-   TRandom *r = new TRandom();
+   std::vector<Double_t> rx(np), ry(np), rz(np);
+   TRandom r;
    for (Int_t N=0; N<np; N++) {
-      rx[N]=2*Px*(r->Rndm())-Px;
-      ry[N]=2*Py*(r->Rndm())-Py;
-      rz[N]=sin(sqrt(rx[N]*rx[N]+ry[N]*ry[N]))+1;
+      rx[N] = 2*Px*(r.Rndm())-Px;
+      ry[N] = 2*Py*(r.Rndm())-Py;
+      rz[N] = sin(sqrt(rx[N]*rx[N]+ry[N]*ry[N]))+1;
    }
    gStyle->SetPalette(kBird);
-   TGraph2D *dt = new TGraph2D( np, rx, ry, rz);
+   auto dt = new TGraph2D(np, rx.data(), ry.data(), rz.data());
    dt->SetName("Graph2DA");
    dt->SetFillColor(0);
    dt->Draw("CONT5  ");
@@ -2383,9 +2381,6 @@ void tgraph2d3()
    TestReport(C, "TGraph2D 3 (CONT5)", dt->GetName());
 
    delete dt;
-   delete [] rx;
-   delete [] ry;
-   delete [] rz;
 }
 
 
@@ -2857,6 +2852,9 @@ void waves()
    TestReport(C, "TGraph, TArc, TPalette and TColor");
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TSpline3 / TSpline5
+
 void splines_test()
 {
   auto C = StartTest(800, 600);
@@ -2907,8 +2905,10 @@ void splines_test()
     C->BuildLegend(0.6, 0.7, 0.88, 0.88);
 
     TestReport(C, "TSpline3 and TSpline5");
-
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// TScatter
 
 void scatter_test()
 {
@@ -2946,6 +2946,9 @@ void scatter_test()
 
    TestReport(C, "TScatter with TPolyMarker test");
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// TEfficiency
 
 void efficiency_test()
 {
@@ -3019,6 +3022,9 @@ void efficiency_test()
   TestReport(C, "TEfficiency test");
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TProfile2D
+
 void profile_2d()
 {
   auto C = StartTest(700, 500);
@@ -3038,6 +3044,9 @@ void profile_2d()
 
   TestReport(C, "TProfile2D");
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// TProfile2Poly
 
 void profile_2poly()
 {
