@@ -76,6 +76,7 @@ public:
    void    Set(Int_t n) override;
    void    SetPoint(Int_t i, Double_t x, Double_t y, Double_t z) override;
    virtual void    SetPointError(Int_t i, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh, Double_t ezl, Double_t ezh);
+   void          SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDefOverride(TGraph2DAsymmErrors,1)  //A 2D graph with error bars
 };
