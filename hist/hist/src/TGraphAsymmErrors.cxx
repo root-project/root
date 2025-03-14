@@ -284,17 +284,19 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1* pass, const TH1* total, Option_t
 /// TGraphAsymmErrors constructor reading input from filename
 /// filename is assumed to contain at least 2 columns of numbers
 ///
-/// convention for format (default=`"%lg %lg %lg %lg %lg %lg"`)
-///  - format = `"%lg %lg"`         read only 2 first columns into X, Y
-///  - format = `"%lg %lg %lg %lg"`     read only 4 first columns into X, Y,  ELY, EHY
-///  - format = `"%lg %lg %lg %lg %lg %lg"` read only 6 first columns into X, Y, EXL, EYH, EYL, EHY
+/// Convention for format (default=`"%lg %lg %lg %lg %lg %lg"`)
 ///
-/// For files separated by a specific delimiter different from `' '` and `'\\t'` (e.g. `';'` in csv files)
-/// you can avoid using `%*s` to bypass this delimiter by explicitly specify the `"option" argument,
-/// e.g. `option=" \\t,;"` for columns of figures separated by any of these characters `(' ', '\\t', ',', ';')`
-/// used once `(e.g. "1;1")` or in a combined way `(" 1;,;;  1")`.
+///  - format = `"%lg %lg"` read only 2 first columns into X, Y
+///  - format = `"%lg %lg %lg %lg"` read only 4 first columns into X, Y, EYL, EYH
+///  - format = `"%lg %lg %lg %lg %lg %lg"` read only 6 first columns into X, Y, EXL, EXH, EYL, EYH
+///
+/// For files separated by a specific delimiter different from ' ' and `\\t` (e.g. `;` in csv files)
+/// you can avoid using `%*s` to bypass this delimiter by explicitly specify the `option` argument,
+/// e.g. `option=" \\t,;"` for columns of figures separated by any of these characters (`' ', '\\t', ',', ';'`)
+/// used once (e.g. `"1;1"`) or in a combined way (`" 1;,;;  1"`).
+///
 /// Note in that case, the instantiation is about 2 times slower.
-/// In case a delimiter is specified, the format `"%lg %lg %lg"` will read X,Y,EX.
+/// In case a delimiter is specified, the format `"%lg %lg %lg"` will read X,Y,EXL.
 
 TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, Option_t *option)
    : TGraph(100)
