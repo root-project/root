@@ -324,15 +324,12 @@ TGraph2D::TGraph2D(TH2 *h2)
    // need to call later because sets title in ref histogram
    SetTitle(h2->GetTitle());
 
-
-
    TAxis *xaxis = h2->GetXaxis();
    TAxis *yaxis = h2->GetYaxis();
    Int_t xfirst = xaxis->GetFirst();
    Int_t xlast  = xaxis->GetLast();
    Int_t yfirst = yaxis->GetFirst();
    Int_t ylast  = yaxis->GetLast();
-
 
    Double_t x, y, z;
    Int_t k = 0;
@@ -537,8 +534,6 @@ TGraph2D::TGraph2D(const TGraph2D &g)
          fDirectory->Append(this);
       }
    }
-
-
 }
 
 
@@ -583,8 +578,6 @@ TGraph2D& TGraph2D::operator=(const TGraph2D &g)
    fUserHisto = g.fUserHisto;
    if (g.fHistogram)
       fHistogram = (fUserHisto ) ? g.fHistogram : new TH2D(*g.fHistogram);
-
-
 
    // copy the points
    for (Int_t n = 0; n < fSize; n++) {
@@ -1472,7 +1465,7 @@ Int_t TGraph2D::RemovePoint(Int_t ipoint)
 ////////////////////////////////////////////////////////////////////////////////
 /// Saves primitive as a C++ statement(s) on output stream out
 
-void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
+void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option)
 {
    TString arrx = SavePrimitiveArray(out, "graph2d_x", fNpoints, fX, kTRUE);
    TString arry = SavePrimitiveArray(out, "graph2d_y", fNpoints, fY);
@@ -1481,9 +1474,10 @@ void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    SavePrimitiveConstructor(out, Class(), "graph2d",
                             TString::Format("%d, %s, %s, %s", fNpoints, arrx.Data(), arry.Data(), arrz.Data()), kFALSE);
 
-   out << "   graph2d->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
+   if (strcmp(GetName(), "Graph2D"))
+      out << "   graph2d->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
 
-   TString title = fTitle;
+   TString title = GetTitle();
    if (fHistogram)
       title = TString(fHistogram->GetTitle()) + ";" + fHistogram->GetXaxis()->GetTitle() + ";" +
               fHistogram->GetYaxis()->GetTitle() + ";" + fHistogram->GetZaxis()->GetTitle();
