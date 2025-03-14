@@ -654,55 +654,29 @@ void TTreePerfStats::SaveAs(const char *filename, Option_t * /*option*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
-void TTreePerfStats::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
+void TTreePerfStats::SavePrimitive(std::ostream &out, Option_t *option)
 {
-   char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TTreePerfStats::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TTreePerfStats *";
-   }
-   out<<"ps = new TTreePerfStats();"<<std::endl;
-   out<<"   ps->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
-   out<<"   ps->SetHostInfo("<<quote<<GetHostInfo()<<quote<<");"<<std::endl;
-   out<<"   ps->SetTreeCacheSize("<<fTreeCacheSize<<");"<<std::endl;
-   out<<"   ps->SetNleaves("<<fNleaves<<");"<<std::endl;
-   out<<"   ps->SetReadCalls("<<fReadCalls<<");"<<std::endl;
-   out<<"   ps->SetReadaheadSize("<<fReadaheadSize<<");"<<std::endl;
-   out<<"   ps->SetBytesRead("<<fBytesRead<<");"<<std::endl;
-   out<<"   ps->SetBytesReadExtra("<<fBytesReadExtra<<");"<<std::endl;
-   out<<"   ps->SetRealNorm("<<fRealNorm<<");"<<std::endl;
-   out<<"   ps->SetRealTime("<<fRealTime<<");"<<std::endl;
-   out<<"   ps->SetCpuTime("<<fCpuTime<<");"<<std::endl;
-   out<<"   ps->SetDiskTime("<<fDiskTime<<");"<<std::endl;
-   out<<"   ps->SetUnzipTime("<<fUnzipTime<<");"<<std::endl;
-   out<<"   ps->SetCompress("<<fCompress<<");"<<std::endl;
+   SavePrimitiveConstructor(out, Class(), "perfstats");
+   out << "   perfstats->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
+   out << "   perfstats->SetHostInfo(\"" << TString(GetHostInfo()).ReplaceSpecialCppChars() << "\");\n";
+   out << "   perfstats->SetTreeCacheSize(" << fTreeCacheSize << ");\n";
+   out << "   perfstats->SetNleaves(" << fNleaves << ");\n";
+   out << "   perfstats->SetReadCalls(" << fReadCalls << ");\n";
+   out << "   perfstats->SetReadaheadSize(" << fReadaheadSize << ");\n";
+   out << "   perfstats->SetBytesRead(" << fBytesRead << ");\n";
+   out << "   perfstats->SetBytesReadExtra(" << fBytesReadExtra << ");\n";
+   out << "   perfstats->SetRealNorm(" << fRealNorm << ");\n";
+   out << "   perfstats->SetRealTime(" << fRealTime << ");\n";
+   out << "   perfstats->SetCpuTime(" << fCpuTime << ");\n";
+   out << "   perfstats->SetDiskTime(" << fDiskTime << ");\n";
+   out << "   perfstats->SetUnzipTime(" << fUnzipTime << ");\n";
+   out << "   perfstats->SetCompress(" << fCompress << ");\n";
 
-   Int_t i, npoints = fGraphIO->GetN();
-   out<<"   TGraphErrors *psGraphIO = new TGraphErrors("<<npoints<<");"<<std::endl;
-   out<<"   psGraphIO->SetName("<<quote<<fGraphIO->GetName()<<quote<<");"<<std::endl;
-   out<<"   psGraphIO->SetTitle("<<quote<<fGraphIO->GetTitle()<<quote<<");"<<std::endl;
-   out<<"   ps->SetGraphIO(psGraphIO);"<<std::endl;
-   fGraphIO->SaveFillAttributes(out,"psGraphIO",0,1001);
-   fGraphIO->SaveLineAttributes(out,"psGraphIO",1,1,1);
-   fGraphIO->SaveMarkerAttributes(out,"psGraphIO",1,1,1);
-   for (i=0;i<npoints;i++) {
-      out<<"   psGraphIO->SetPoint("<<i<<","<<fGraphIO->GetX()[i]<<","<<fGraphIO->GetY()[i]<<");"<<std::endl;
-      out<<"   psGraphIO->SetPointError("<<i<<",0,"<<fGraphIO->GetEY()[i]<<");"<<std::endl;
-   }
-   npoints = fGraphTime->GetN();
-   out<<"   TGraphErrors *psGraphTime = new TGraphErrors("<<npoints<<");"<<std::endl;
-   out<<"   psGraphTime->SetName("<<quote<<fGraphTime->GetName()<<quote<<");"<<std::endl;
-   out<<"   psGraphTime->SetTitle("<<quote<<fGraphTime->GetTitle()<<quote<<");"<<std::endl;
-   out<<"   ps->SetGraphTime(psGraphTime);"<<std::endl;
-   fGraphTime->SaveFillAttributes(out,"psGraphTime",0,1001);
-   fGraphTime->SaveLineAttributes(out,"psGraphTime",1,1,1);
-   fGraphTime->SaveMarkerAttributes(out,"psGraphTime",1,1,1);
-   for (i=0;i<npoints;i++) {
-      out<<"   psGraphTime->SetPoint("<<i<<","<<fGraphTime->GetX()[i]<<","<<fGraphTime->GetY()[i]<<");"<<std::endl;
-      out<<"   psGraphTime->SetPointError("<<i<<",0,"<<fGraphTime->GetEY()[i]<<");"<<std::endl;
-   }
+   fGraphIO->SavePrimitive(out, "nodraw");
+   out << "   perfstats->SetGraphIO(gre);\n";
 
-   out<<"   ps->Draw("<<quote<<option<<quote<<");"<<std::endl;
+   fGraphTime->SavePrimitive(out, "nodraw");
+   out << "   perfstats->SetGraphTime(gre);\n";
+
+   out << "   perfstats->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
 }
