@@ -130,7 +130,7 @@ void TestReadWithoutGlobalRegistrationIfPossible(const char *fname)
 // We prefer not to read remotely files from Windows, if possible
 TEST(TFile, ReadWithoutGlobalRegistrationWeb)
 {
-   const auto webFile = "http://root.cern/files/h1/dstarmb.root";
+   const auto webFile = "http://root-eos.web.cern.ch/files/h1/dstarmb.root";
    TestReadWithoutGlobalRegistrationIfPossible(webFile);
 }
 TEST(TFile, ReadWithoutGlobalRegistrationNet)
