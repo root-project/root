@@ -31,7 +31,7 @@
 
 
 const char* histFile =
-   "http://root.cern/files/cms_calo_hist.root";
+   "http://root-eos.web.cern.ch/files/cms_calo_hist.root";
 
 TEveCaloLego* MakeCaloLego(TEveCaloData* data, TEveWindowSlot* slot);
 TEveCalo2D* MakeCalo2D(TEveCalo3D* calo3d, TEveWindowSlot* slot, TEveProjection::EPType_e t);

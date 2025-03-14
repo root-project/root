@@ -187,7 +187,7 @@ to never delete the object.  For example:
 </ul>
 <h4>Misc.</h4>
 <ul>
-<li><tt>TFile::Open</tt> now does variable expansion so that you can include the protocol in the variable (for example: <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">export H1="http://root.cern/files/h1"
+<li><tt>TFile::Open</tt> now does variable expansion so that you can include the protocol in the variable (for example: <pre style="border:gray 1px solid;padding:0.5em 2em;background:#ffe">export H1="http://root-eos.web.cern.ch/files/h1"
 ...
  TFile::Open("$H1/dstarmb.root");</pre></li>
 <li>Added warning if the file does contain any StreamerInfo objects and was written with a different version of ROOT.</li>
