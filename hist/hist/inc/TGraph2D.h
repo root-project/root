@@ -72,8 +72,6 @@ private:
 
    void CreateInterpolator(Bool_t oldInterp);
 
-protected:
-
 public:
 
    TGraph2D();
@@ -93,14 +91,14 @@ public:
    virtual void          AddPoint(Double_t x, Double_t y, Double_t z) { SetPoint(fNpoints, x, y, z); } ///< Append a new point to the graph.
    virtual void          Add(TF2 *f, Double_t c1=1);
    virtual void          Apply(TF2 *f);
-   void          Browse(TBrowser *) override;
-   void          Clear(Option_t *option="") override;
+   void                  Browse(TBrowser *) override;
+   void                  Clear(Option_t *option="") override;
    virtual void          DirectoryAutoAdd(TDirectory *);
    Int_t                 DistancetoPrimitive(Int_t px, Int_t py) override;
-   void          Draw(Option_t *option="P0") override;
+   void                  Draw(Option_t *option="P0") override;
    void                  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
-   TObject      *FindObject(const char *name) const override;
-   TObject      *FindObject(const TObject *obj) const override;
+   TObject              *FindObject(const char *name) const override;
+   TObject              *FindObject(const TObject *obj) const override;
    virtual TFitResultPtr Fit(const char *formula ,Option_t *option="" ,Option_t *goption=""); // *MENU*
    virtual TFitResultPtr Fit(TF2 *f2 ,Option_t *option="" ,Option_t *goption=""); // *MENU*
    virtual void          FitPanel(); // *MENU*
@@ -148,11 +146,11 @@ public:
    virtual Int_t         GetPoint(Int_t i, Double_t &x, Double_t &y, Double_t &z) const;
    Double_t              Interpolate(Double_t x, Double_t y);
    void                  Paint(Option_t *option="") override;
-   void          Print(Option_t *chopt="") const override;
+   void                  Print(Option_t *chopt="") const override;
    TH1                  *Project(Option_t *option="x") const; // *MENU*
    void                  RecursiveRemove(TObject *obj) override;
    Int_t                 RemovePoint(Int_t ipoint); // *MENU*
-   void          SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void                  SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void          Scale(Double_t c1=1., Option_t *option="z"); // *MENU*
    virtual void          Set(Int_t n);
    virtual void          SetDirectory(TDirectory *dir);
@@ -162,13 +160,12 @@ public:
    void                  SetMaximum(Double_t maximum=-1111); // *MENU*
    void                  SetMinimum(Double_t minimum=-1111); // *MENU*
    void                  SetMaxIter(Int_t n=100000) {fMaxIter = n;} // *MENU*
-   void          SetName(const char *name) override; // *MENU*
-   void          SetNameTitle(const char *name, const char *title) override;
+   void                  SetName(const char *name) override; // *MENU*
+   void                  SetNameTitle(const char *name, const char *title) override;
    void                  SetNpx(Int_t npx=40); // *MENU*
    void                  SetNpy(Int_t npx=40); // *MENU*
    virtual void          SetPoint(Int_t point, Double_t x, Double_t y, Double_t z); // *MENU*
-   void          SetTitle(const char *title="") override; // *MENU*
-
+   void                  SetTitle(const char *title="") override; // *MENU*
 
    ClassDefOverride(TGraph2D,1)  //Set of n x[n],y[n],z[n] points with 3-d graphics including Delaunay triangulation
 };
