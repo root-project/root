@@ -27,10 +27,7 @@ factory = TMVA.Factory('TMVAClassification', output,
                        '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=Classification')
 
 # Load data
-if not isfile('tmva_class_example.root'):
-    call(['curl', '-L', '-O', 'http://root.cern/files/tmva_class_example.root'])
-
-data = TFile.Open('tmva_class_example.root')
+data = TFile.Open(str(ROOT.gROOT.GetTutorialDir()) + '/tmva/data/tmva_class_example.root')
 signal = data.Get('TreeS')
 background = data.Get('TreeB')
 

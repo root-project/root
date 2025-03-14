@@ -173,18 +173,7 @@ int TMVAClassification( TString myMethodList = "" )
    // Read training and test data
    // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
    TFile *input(0);
-   TString fname = "./tmva_class_example.root";
-   if (!gSystem->AccessPathName( fname )) {
-      input = TFile::Open( fname ); // check if file in local directory exists
-   }
-   else {
-      TFile::SetCacheFileDir(".");
-      input = TFile::Open("http://root.cern/files/tmva_class_example.root", "CACHEREAD");
-   }
-   if (!input) {
-      std::cout << "ERROR: could not open data file" << std::endl;
-      exit(1);
-   }
+   input = TFile::Open(str(ROOT.gROOT.GetTutorialDir()) + "/tmva/data/tmva_class_example.root")
    std::cout << "--- TMVAClassification       : Using input file: " << input->GetName() << std::endl;
 
    // Register the training and test trees
