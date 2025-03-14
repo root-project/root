@@ -832,30 +832,30 @@ void TParallelCoordVar::SavePrimitive(std::ostream &out, Option_t *options)
 {
    TString opt = options;
    if (opt.Contains("pcalled")) {
-      out << "   var->SetBit(TParallelCoordVar::kLogScale," << TestBit(kLogScale) << ");\n";
-      out << "   var->SetBit(TParallelCoordVar::kShowBox," << TestBit(kShowBox) << ");\n";
-      out << "   var->SetBit(TParallelCoordVar::kShowBarHisto," << TestBit(kShowBarHisto) << ");\n";
-      out << "   var->SetHistogramBinning(" << fNbins << ");\n";
-      out << "   var->SetHistogramLineWidth(" << fHistoLW << ");\n";
-      out << "   var->SetInitMin(" << fMinInit << ");\n";
-      out << "   var->SetInitMax(" << fMaxInit << ");\n";
-      out << "   var->SetHistogramHeight(" << fHistoHeight << ");\n";
-      out << "   var->GetMinMaxMean();\n";
-      out << "   var->GetHistogram();\n";
-      SaveFillAttributes(out, "var", -1, -1);
-      SaveLineAttributes(out, "var", -1, -1, -1);
+      out << "   para_var->SetBit(TParallelCoordVar::kLogScale," << TestBit(kLogScale) << ");\n";
+      out << "   para_var->SetBit(TParallelCoordVar::kShowBox," << TestBit(kShowBox) << ");\n";
+      out << "   para_var->SetBit(TParallelCoordVar::kShowBarHisto," << TestBit(kShowBarHisto) << ");\n";
+      out << "   para_var->SetHistogramBinning(" << fNbins << ");\n";
+      out << "   para_var->SetHistogramLineWidth(" << fHistoLW << ");\n";
+      out << "   para_var->SetInitMin(" << fMinInit << ");\n";
+      out << "   para_var->SetInitMax(" << fMaxInit << ");\n";
+      out << "   para_var->SetHistogramHeight(" << fHistoHeight << ");\n";
+      out << "   para_var->GetMinMaxMean();\n";
+      out << "   para_var->GetHistogram();\n";
+      SaveFillAttributes(out, "para_var", -1, -1);
+      SaveLineAttributes(out, "para_var", -1, -1, -1);
       if (TestBit(kShowBox))
-         out << "   var->GetQuantiles();\n";
+         out << "   para_var->GetQuantiles();\n";
       TIter next(fRanges);
       Int_t i = 1;
       while (auto range = static_cast<TParallelCoordRange *>(next())) {
          out << "   //***************************************\n";
          out << "   // Create the " << i++ << "th range owned by the axis \"" << GetTitle() << "\".\n";
-         out << "   sel = para->GetSelection(\"" << range->GetSelection()->GetTitle() << "\");\n";
-         SavePrimitiveConstructor(out, TParallelCoordRange::Class(), "newrange",
-                                  TString::Format("var, %g, %g, sel", range->GetMin(), range->GetMax()));
-         out << "   var->AddRange(newrange);\n";
-         out << "   sel->Add(newrange);\n";
+         out << "   para_sel = para->GetSelection(\"" << range->GetSelection()->GetTitle() << "\");\n";
+         SavePrimitiveConstructor(out, TParallelCoordRange::Class(), "para_newrange",
+                                  TString::Format("para_var, %g, %g, para_sel", range->GetMin(), range->GetMax()));
+         out << "   para_var->AddRange(para_newrange);\n";
+         out << "   para_sel->Add(para_newrange);\n";
       }
    }
 }

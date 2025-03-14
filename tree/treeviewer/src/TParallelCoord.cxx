@@ -817,23 +817,32 @@ void TParallelCoord::SavePrimitive(std::ostream & out, Option_t* options)
    TString filename = TString::Format("%s_parallelcoord_entries.root", fTree->GetName());
    SaveEntryLists(filename, true); // FIXME overwriting by default.
    SaveTree(fTreeFileName, true);  // FIXME overwriting by default.
+
+   if (!gROOT->ClassSaved(Class())) {
+      out << "   TFile *para_f = nullptr, *para_entries = nullptr;\n";
+      out << "   TTree* para_tree = nullptr;\n";
+      out << "   TEntryList *para_currententries = nullptr;\n";
+      out << "   TParallelCoordSelect *para_sel = nullptr;\n";
+      out << "   TParallelCoordVar* para_var = nullptr;\n";
+      out << "   TSelectorDraw *para_selector = nullptr;\n";
+      out << "   TParallelCoord *para = nullptr;\n";
+   }
    out << "   // Create a TParallelCoord.\n";
-   out << "   TFile *f = TFile::Open(\"" << fTreeFileName.Data() << "\");\n";
-   out << "   TTree* tree = (TTree*)f->Get(\"" << fTreeName.Data() << "\");\n";
-   out << "   TParallelCoord* para = new TParallelCoord(tree," << fNentries << ");\n";
+   out << "   para_f = TFile::Open(\"" << fTreeFileName.Data() << "\");\n";
+   out << "   para_tree = (TTree *)para_f->Get(\"" << fTreeName.Data() << "\");\n";
+   out << "   para = new TParallelCoord(para_tree," << fNentries << ");\n";
    out << "   // Load the entrylists.\n";
-   out << "   TFile *entries = TFile::Open(\"" << filename << "\");\n";
-   out << "   TEntryList *currententries = (TEntryList*)entries->Get(\"currententries\");\n";
-   out << "   tree->SetEntryList(currententries);\n";
-   out << "   para->SetInitEntries((TEntryList*)entries->Get(\"initentries\"));\n";
-   out << "   para->SetCurrentEntries(currententries);\n";
+   out << "   para_entries = TFile::Open(\"" << filename << "\");\n";
+   out << "   para_currententries = (TEntryList *)para_entries->Get(\"currententries\");\n";
+   out << "   para_tree->SetEntryList(para_currententries);\n";
+   out << "   para->SetInitEntries((TEntryList*)para_entries->Get(\"initentries\"));\n";
+   out << "   para->SetCurrentEntries(para_currententries);\n";
    TIter next(fSelectList);
-   out << "   TParallelCoordSelect *sel = nullptr;\n";
    out << "   para->GetSelectList()->Delete();\n";
    while (auto sel = (TParallelCoordSelect *)next()) {
       out << "   para->AddSelection(\"" << TString(sel->GetTitle()).ReplaceSpecialCppChars() << "\");\n";
-      out << "   sel = (TParallelCoordSelect*)para->GetSelectList()->Last();\n";
-      sel->SaveLineAttributes(out, "sel", -1, -1, 1);
+      out << "   para_sel = (TParallelCoordSelect*)para->GetSelectList()->Last();\n";
+      sel->SaveLineAttributes(out, "para_sel", -1, -1, 1);
    }
    TIter nextbis(fVarList);
    TString varexp;
@@ -842,16 +851,15 @@ void TParallelCoord::SavePrimitive(std::ostream & out, Option_t* options)
          varexp.Append(":");
       varexp.Append(var->GetTitle());
    }
-   out << "   tree->Draw(\"" << varexp.ReplaceSpecialCppChars() << "\", \"\", \"goff\");\n";
-   out << "   auto selector = (TSelectorDraw *)((TTreePlayer *)tree->GetPlayer())->GetSelector();\n";
+   out << "   para_tree->Draw(\"" << varexp.ReplaceSpecialCppChars() << "\", \"\", \"goff\");\n";
+   out << "   para_selector = (TSelectorDraw *)((TTreePlayer *)para_tree->GetPlayer())->GetSelector();\n";
    nextbis.Reset();
    Int_t i = 0;
-   out << "   TParallelCoordVar* var;\n";
    while (auto var = (TParallelCoordVar *)nextbis()) {
       out << "   //***************************************\n";
       out << "   // Create the axis \"" << var->GetTitle() << "\".\n";
-      out << "   para->AddVariable(selector->GetVal(" << i++ << "),\"" << TString(var->GetTitle()).ReplaceSpecialCppChars() << "\");\n";
-      out << "   var = (TParallelCoordVar*)para->GetVarList()->Last();\n";
+      out << "   para->AddVariable(para_selector->GetVal(" << i++ << "),\"" << TString(var->GetTitle()).ReplaceSpecialCppChars() << "\");\n";
+      out << "   para_var = (TParallelCoordVar *)para->GetVarList()->Last();\n";
       var->SavePrimitive(out, "pcalled");
    }
    out << "   //***************************************\n";
