@@ -51,12 +51,13 @@ public:
    Double_t        GetYminE() const override;
    Double_t        GetZmaxE() const override;
    Double_t        GetZminE() const override;
-   void    Print(Option_t *chopt="") const override;
+   void            Print(Option_t *chopt="") const override;
    Int_t           RemovePoint(Int_t ipoint); // *MENU*
-   void    Scale(Double_t c1=1., Option_t *option="z") override; // *MENU*
-   void    Set(Int_t n) override;
-   void    SetPoint(Int_t i, Double_t x, Double_t y, Double_t z) override;
+   void            Scale(Double_t c1=1., Option_t *option="z") override; // *MENU*
+   void            Set(Int_t n) override;
+   void            SetPoint(Int_t i, Double_t x, Double_t y, Double_t z) override;
    virtual void    SetPointError(Int_t i, Double_t ex, Double_t ey, Double_t ez);
+   void            SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDefOverride(TGraph2DErrors,1)  //A 2D graph with error bars
 };

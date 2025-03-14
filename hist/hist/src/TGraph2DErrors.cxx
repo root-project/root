@@ -32,34 +32,26 @@ following example shows how to use it:
 Begin_Macro(source)
 {
    auto c = new TCanvas("c","TGraph2DErrors example",0,0,600,600);
+
    Double_t P = 6.;
-   Int_t np   = 200;
-
-   Double_t *rx=0, *ry=0, *rz=0;
-   Double_t *ex=0, *ey=0, *ez=0;
-
-   rx = new Double_t[np];
-   ry = new Double_t[np];
-   rz = new Double_t[np];
-   ex = new Double_t[np];
-   ey = new Double_t[np];
-   ez = new Double_t[np];
-
-   auto r = new TRandom();
+   const Int_t np   = 200;
+   std::vector<Double_t> rx(np), ry(np), rz(np), ex(np), ey(np), ez(np);
+   TRandom r;
 
    for (Int_t N=0; N<np;N++) {
-      rx[N] = 2*P*(r->Rndm(N))-P;
-      ry[N] = 2*P*(r->Rndm(N))-P;
+      rx[N] = 2*P*(r.Rndm(N))-P;
+      ry[N] = 2*P*(r.Rndm(N))-P;
       rz[N] = rx[N]*rx[N]-ry[N]*ry[N];
-      rx[N] = 10.+rx[N];
-      ry[N] = 10.+ry[N];
-      rz[N] = 40.+rz[N];
-      ex[N] = r->Rndm(N);
-      ey[N] = r->Rndm(N);
-      ez[N] = 10*r->Rndm(N);
+      rx[N] += 10.;
+      ry[N] += 10.;
+      rz[N] += 40.;
+      ex[N] = r.Rndm(N);
+      ey[N] = r.Rndm(N);
+      ez[N] = 10*r.Rndm(N);
    }
 
-   auto g = new TGraph2DErrors(np, rx, ry, rz, ex, ey, ez);
+   auto g = new TGraph2DErrors(np, rx.data(), ry.data(), rz.data(), ex.data(), ey.data(), ez.data());
+
    g->SetTitle("TGraph2D with error bars: option \"ERR\"");
    g->SetFillColor(29);
    g->SetMarkerSize(0.8);
@@ -455,6 +447,46 @@ void TGraph2DErrors::SetPointError(Int_t i, Double_t ex, Double_t ey, Double_t e
    fEZ[i] = ez;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Saves primitive as a C++ statement(s) on output stream out
+
+void TGraph2DErrors::SavePrimitive(std::ostream &out, Option_t *option)
+{
+   TString arrx = SavePrimitiveArray(out, "gr2derr_x", fNpoints, fX, kTRUE);
+   TString arry = SavePrimitiveArray(out, "gr2derr_y", fNpoints, fY);
+   TString arrz = SavePrimitiveArray(out, "gr2derr_z", fNpoints, fZ);
+   TString arrex = SavePrimitiveArray(out, "gr2derr_ex", fNpoints, fEX);
+   TString arrey = SavePrimitiveArray(out, "gr2derr_ey", fNpoints, fEY);
+   TString arrez = SavePrimitiveArray(out, "gr2derr_ez", fNpoints, fEZ);
+
+   SavePrimitiveConstructor(out, Class(), "gr2derr",
+                            TString::Format("%d, %s, %s, %s, %s, %s, %s", fNpoints, arrx.Data(), arry.Data(),
+                                            arrz.Data(), arrex.Data(), arrey.Data(), arrez.Data()),
+                            kFALSE);
+
+   if (strcmp(GetName(), "Graph2D"))
+      out << "   gr2derr->SetName(\"" << TString(GetName()).ReplaceSpecialCppChars() << "\");\n";
+
+   TString title = GetTitle();
+   if (fHistogram)
+      title = TString(fHistogram->GetTitle()) + ";" + fHistogram->GetXaxis()->GetTitle() + ";" +
+              fHistogram->GetYaxis()->GetTitle() + ";" + fHistogram->GetZaxis()->GetTitle();
+
+   out << "   gr2derr->SetTitle(\"" << title.ReplaceSpecialCppChars() << "\");\n";
+
+   if (!fDirectory)
+      out << "   gr2derr->SetDirectory(nullptr);\n";
+
+   SaveFillAttributes(out, "gr2derr", 0, 1001);
+   SaveLineAttributes(out, "gr2derr", 1, 1, 1);
+   SaveMarkerAttributes(out, "gr2derr", 1, 1, 1);
+
+   TH1::SavePrimitiveFunctions(out, "gr2derr", fFunctions);
+
+   if (!option || !strstr(option, "nodraw"))
+      out << "   gr2derr->Draw(\"" << TString(option).ReplaceSpecialCppChars() << "\");\n";
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream an object of class TGraph2DErrors.
