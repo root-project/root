@@ -283,8 +283,8 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
          auto loopManager = snapHelperArgs->fLoopManager;
 
          actionPtr.reset(new Action_t(
-            Helper_t(filename, treename, colNames, outputColNames, options, loopManager, std::move(isDefine)), colNames,
-            prevNode, colRegister));
+            Helper_t(filename, dirname, treename, colNames, outputColNames, options, loopManager, std::move(isDefine)),
+            colNames, prevNode, colRegister));
       } else {
          // multi-thread snapshot to RNTuple is not yet supported
          // TODO(fdegeus) Add MT snapshotting
