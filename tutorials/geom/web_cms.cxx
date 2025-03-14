@@ -16,7 +16,7 @@ void web_cms(bool split = false)
 {
    TFile::SetCacheFileDir(".");
 
-   TGeoManager::Import("https://root-test.web.cern.ch/files/cms.root");
+   TGeoManager::Import("https://root.cern/files/cms.root");
 
    gGeoManager->DefaultColors();
    gGeoManager->SetVisLevel(4);

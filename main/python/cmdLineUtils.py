@@ -973,7 +973,7 @@ def _rootLsPrintLongLs(keyList, indent, treeListing):
     An example:
 
     ```
-    $ rootls -l https://root-test.web.cern.ch/files/tutorials/hsimple.root
+    $ rootls -l https://root.cern/files/tutorials/hsimple.root
     TProfile  Jun 30 23:59 2018 hprof;1  "Profile of pz versus px"
     TH1F      Jun 30 23:59 2018 hpx;1    "This is the px distribution"
     TH2F      Jun 30 23:59 2018 hpxpy;1  "py vs px"
