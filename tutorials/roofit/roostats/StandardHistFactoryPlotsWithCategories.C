@@ -176,14 +176,14 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
          RooPlot *frame = obs->frame();
          frame->SetYTitle(var->GetName());
          data->plotOn(frame, MarkerSize(1));
-         var->setVal(0);
+         const double value = var->getVal();
          mc->GetPdf()->plotOn(frame, LineWidth(1.));
-         var->setVal(1);
+         var->setVal(value + var->getError());
          mc->GetPdf()->plotOn(frame, LineColor(kRed), LineStyle(kDashed), LineWidth(1));
-         var->setVal(-1);
+         var->setVal(value - var->getError());
          mc->GetPdf()->plotOn(frame, LineColor(kGreen), LineStyle(kDashed), LineWidth(1));
          frameList.push_back(frame);
-         var->setVal(0);
+         var->setVal(value);
       }
 
    } else {
@@ -223,57 +223,35 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
             Double_t normCount =
                data->sumEntries(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str()));
 
-            if (strcmp(var->GetName(), "Lumi") == 0) {
-               cout << "working on lumi" << endl;
-               var->setVal(w->var("nominalLumi")->getVal());
-               var->Print();
-            } else {
-               var->setVal(0);
-            }
+            // remember the nominal value
+            const double value = var->getVal();
+
             // w->allVars().Print("v");
             // mc->GetNuisanceParameters()->Print("v");
             // pdftmp->plotOn(frame,LineWidth(2.));
             // mc->GetPdf()->plotOn(frame,LineWidth(2.),Slice(*channelCat,catName.c_str()),ProjWData(*data));
             // pdftmp->plotOn(frame,LineWidth(2.),Slice(*channelCat,catName.c_str()),ProjWData(*data));
             normCount = pdftmp->expectedEvents(*obs);
-            pdftmp->plotOn(frame, LineWidth(2.), Normalization(normCount, RooAbsReal::NumEvent));
+            pdftmp->plotOn(frame, LineWidth(2.), Normalization(normCount, RooAbsReal::NumEvent)); // nominal
 
-            if (strcmp(var->GetName(), "Lumi") == 0) {
-               cout << "working on lumi" << endl;
-               var->setVal(w->var("nominalLumi")->getVal() + 0.05);
-               var->Print();
-            } else {
-               var->setVal(nSigmaToVary);
-            }
+            var->setVal(value + nSigmaToVary * var->getError());
             // pdftmp->plotOn(frame,LineColor(kRed),LineStyle(kDashed),LineWidth(2));
             // mc->GetPdf()->plotOn(frame,LineColor(kRed),LineStyle(kDashed),LineWidth(2.),Slice(*channelCat,catName.c_str()),ProjWData(*data));
             // pdftmp->plotOn(frame,LineColor(kRed),LineStyle(kDashed),LineWidth(2.),Slice(*channelCat,catName.c_str()),ProjWData(*data));
             normCount = pdftmp->expectedEvents(*obs);
             pdftmp->plotOn(frame, LineWidth(2.), LineColor(kRed), LineStyle(kDashed),
-                           Normalization(normCount, RooAbsReal::NumEvent));
+                           Normalization(normCount, RooAbsReal::NumEvent)); // +n sigma
 
-            if (strcmp(var->GetName(), "Lumi") == 0) {
-               cout << "working on lumi" << endl;
-               var->setVal(w->var("nominalLumi")->getVal() - 0.05);
-               var->Print();
-            } else {
-               var->setVal(-nSigmaToVary);
-            }
+            var->setVal(value - nSigmaToVary * var->getError());
             // pdftmp->plotOn(frame,LineColor(kGreen),LineStyle(kDashed),LineWidth(2));
             // mc->GetPdf()->plotOn(frame,LineColor(kGreen),LineStyle(kDashed),LineWidth(2),Slice(*channelCat,catName.c_str()),ProjWData(*data));
             // pdftmp->plotOn(frame,LineColor(kGreen),LineStyle(kDashed),LineWidth(2),Slice(*channelCat,catName.c_str()),ProjWData(*data));
             normCount = pdftmp->expectedEvents(*obs);
             pdftmp->plotOn(frame, LineWidth(2.), LineColor(kGreen), LineStyle(kDashed),
-                           Normalization(normCount, RooAbsReal::NumEvent));
+                           Normalization(normCount, RooAbsReal::NumEvent)); // -n sigma
 
             // set them back to normal
-            if (strcmp(var->GetName(), "Lumi") == 0) {
-               cout << "working on lumi" << endl;
-               var->setVal(w->var("nominalLumi")->getVal());
-               var->Print();
-            } else {
-               var->setVal(0);
-            }
+            var->setVal(value);
 
             frameList.push_back(frame);
 

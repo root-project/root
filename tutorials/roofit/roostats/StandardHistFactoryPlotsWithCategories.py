@@ -154,14 +154,14 @@ def StandardHistFactoryPlotsWithCategories(
             frame = obs.frame()
             frame.SetYTitle(var.GetName())
             data.plotOn(frame, MarkerSize(1))
-            var.setVal(0)
+            value = var.getVal()
             mc.GetPdf().plotOn(frame, LineWidth(1))
-            var.setVal(1)
+            var.setVal(value + var.getError());
             mc.GetPdf().plotOn(frame, LineColor(kRed), LineStyle(kDashed), LineWidth(1))
-            var.setVal(-1)
+            var.setVal(value - var.getError());
             mc.GetPdf().plotOn(frame, LineColor(kGreen), LineStyle(kDashed), LineWidth(1))
             frameList.append(frame)
-            var.setVal(0)
+            var.setVal(value)
 
     else:
         channelCat = simPdf.indexCat()
@@ -204,12 +204,8 @@ def StandardHistFactoryPlotsWithCategories(
 
                 normCount = data.sumEntries(cut)
 
-                if str(var.GetName()) == "Lumi":
-                    print(f"working on lumi")
-                    var.setVal(w.var("nominalLumi").getVal())
-                    var.Print()
-                else:
-                    var.setVal(0)
+                # remember the nominal value
+                value = var.getVal()
 
                 # w.allVars().Print("v")
                 # mc.GetNuisanceParameters().Print("v")
@@ -231,14 +227,9 @@ def StandardHistFactoryPlotsWithCategories(
                 # instead, we have to use obstmp
                 # normCount = pdftmp.expectedEvents(RooArgSet(obstmp)) #doesn´t work properly
                 normCount = pdftmp.expectedEvents(obstmp)
-                pdftmp.plotOn(frame, ROOT.RooFit.Normalization(normCount, ROOT.RooAbsReal.NumEvent), LineWidth=2)
+                pdftmp.plotOn(frame, ROOT.RooFit.Normalization(normCount, ROOT.RooAbsReal.NumEvent), LineWidth=2) # nominal
 
-                if str(var.GetName()) == "Lumi":
-                    print(f"working on lumi")
-                    var.setVal(w.var("nominalLumi").getVal() + 0.05)
-                    var.Print()
-                else:
-                    var.setVal(nSigmaToVary)
+                var.setVal(value + nSigmaToVary * var.getError())
 
                 # pdftmp.plotOn(frame,LineColor(kRed),LineStyle(kDashed),LineWidth(2))
                 # mc.GetPdf().plotOn(frame,LineColor(kRed),LineStyle(kDashed),LineWidth(2.),Slice(channelCat,catName.c_str()),ProjWData(data))
@@ -250,14 +241,9 @@ def StandardHistFactoryPlotsWithCategories(
                     LineWidth=2,
                     LineColor="r",
                     LineStyle="--",
-                )
+                ) # +n sigma
 
-                if str(var.GetName()) == "Lumi":
-                    print(f"working on lumi")
-                    var.setVal(w.var("nominalLumi").getVal() - 0.05)
-                    var.Print()
-                else:
-                    var.setVal(-nSigmaToVary)
+                var.setVal(value - nSigmaToVary * var.getError())
 
                 # pdftmp.plotOn(frame,LineColor(kGreen),LineStyle(kDashed),LineWidth(2))
                 # mc.GetPdf().plotOn(frame,LineColor(kGreen),LineStyle(kDashed),LineWidth(2),Slice(channelCat,catName.c_str()),ProjWData(data))
@@ -269,15 +255,10 @@ def StandardHistFactoryPlotsWithCategories(
                     LineWidth=2,
                     LineColor="g",
                     LineStyle="--",
-                )
+                ) # -n sigma
 
                 # set them back to normal
-                if str(var.GetName()) == "Lumi":
-                    print(f"working on lumi")
-                    var.setVal(w.var("nominalLumi").getVal())
-                    var.Print()
-                else:
-                    var.setVal(0)
+                var.setVal(value)
 
                 frameList.append(frame)
 
