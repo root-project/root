@@ -36,7 +36,7 @@ void geom_threejs()
 
    TFile::SetCacheFileDir(".");
 
-   TGeoManager::Import("https://root.cern/files/cms.root");
+   TGeoManager::Import("https://root-eos.web.cern.ch/files/cms.root");
 
    gGeoManager->DefaultColors();
    gGeoManager->SetVisLevel(4);

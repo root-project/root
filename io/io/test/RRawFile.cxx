@@ -100,12 +100,12 @@ TEST(RRawFile, Basic)
 TEST(RRawFile, Remote)
 {
 #ifdef R__HAS_DAVIX
-   auto f = RRawFile::Create("http://root.cern/files/davix.test");
+   auto f = RRawFile::Create("http://root-eos.web.cern.ch/files/davix.test");
    std::string line;
    EXPECT_TRUE(f->Readln(line));
    EXPECT_STREQ("Hello, World", line.c_str());
 #else
-   EXPECT_THROW(RRawFile::Create("http://root.cern/files/davix.test"), std::runtime_error);
+   EXPECT_THROW(RRawFile::Create("http://root-eos.web.cern.ch/files/davix.test"), std::runtime_error);
 #endif
 }
 
