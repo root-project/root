@@ -49,7 +49,7 @@ print("Generating inference code for the Keras model from ",modelFile,"in the he
 #Generating inference
 
 inputFileName = "Higgs_data.root"
-inputFile = ROOT.gROOT.GetTutorialDir() + "/tmva/data/" + inputFileName
+inputFile = str(ROOT.gROOT.GetTutorialDir()) + "/tmva/data/" + inputFileName
 
 
 
