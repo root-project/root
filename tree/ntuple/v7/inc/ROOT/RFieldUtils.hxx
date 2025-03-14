@@ -10,6 +10,7 @@
 
 #include <string>
 #include <string_view>
+#include <typeinfo>
 #include <tuple>
 #include <vector>
 
@@ -57,6 +58,8 @@ std::tuple<std::string, std::vector<std::size_t>> ParseArrayType(const std::stri
 /// E.g., gets {"int", "std::variant<double,int>"} from "int,std::variant<double,int>".
 /// TODO(jblomer): Try to merge with TClassEdit::TSplitType
 std::vector<std::string> TokenizeTypeList(std::string_view templateType);
+
+std::string GetDemangledRenormalizedTypeName(const std::type_info &ti);
 
 } // namespace Internal
 
